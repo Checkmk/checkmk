@@ -2,7 +2,6 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 """
 This module implements generic functionality of the Checkmk backup
 system. It is used to configure the site and system backup.
@@ -35,26 +34,6 @@ from cmk.gui import forms, key_mgmt
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKUserError
-from cmk.gui.form_specs.converter import (
-    SimplePassword,
-    TransformDataForLegacyFormatOrRecomposeFunction,
-    Tuple,
-)
-from cmk.gui.form_specs.generators.alternative_utils import enable_deprecated_alternative
-from cmk.gui.form_specs.generators.dict_to_catalog import create_flat_catalog_from_dictionary
-from cmk.gui.form_specs.private import (
-    LegacyValueSpec,
-    ListExtended,
-    SingleChoiceElementExtended,
-    SingleChoiceExtended,
-)
-from cmk.gui.form_specs.vue import (
-    DisplayMode,
-    parse_data_from_frontend,
-    RawDiskData,
-    read_data_from_frontend,
-    render_form_spec,
-)
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -73,8 +52,6 @@ from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Key
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
-from cmk.gui.utils.html import HTML
-from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     DocReference,
@@ -85,27 +62,24 @@ from cmk.gui.utils.urls import (
     makeuri_contextless,
 )
 from cmk.gui.utils.user_errors import user_errors
-from cmk.gui.valuespec import AbsoluteDirname, ID, SchedulePeriod
-from cmk.rulesets.v1 import Help, Label, Message, Title
-from cmk.rulesets.v1.form_specs import (
-    BooleanChoice,
-    CascadingSingleChoice,
-    CascadingSingleChoiceElement,
-    DefaultValue,
-    DictElement,
+from cmk.gui.valuespec import (
+    AbsoluteDirname,
+    Alternative,
+    CascadingDropdown,
+    Checkbox,
     Dictionary,
-    FieldSize,
+    DictionaryElements,
+    DropdownChoice,
     FixedValue,
-    Integer,
-    InvalidElementMode,
-    InvalidElementValidator,
-    migrate_to_password,
+    ID,
+    ListOf,
     Password,
-    SingleChoice,
-    SingleChoiceElement,
-    String,
-    validators,
+    SchedulePeriod,
+    TextInput,
+    Timeofday,
+    ValueSpecText,
 )
+from cmk.gui.wato import IndividualOrStoredPassword
 from cmk.utils import render
 from cmk.utils.backup.config import Config as RawConfig
 from cmk.utils.backup.job import JobConfig, JobState, ScheduleConfig
@@ -130,8 +104,6 @@ from cmk.utils.backup.utils import BACKUP_INFO_FILENAME
 from cmk.utils.certs import CertManagementEvent
 from cmk.utils.paths import omd_root
 from cmk.utils.schedule import next_scheduled_time
-
-DictionaryElements = Sequence[DictElement]
 
 
 def register() -> None:
@@ -701,7 +673,6 @@ class PageEditBackupJob:
         super().__init__()
         self.key_store = key_store
         job_ident = request.get_str_input("job")
-        self._received_data_from_frontend = False
 
         if job_ident is not None:
             try:
@@ -730,208 +701,163 @@ class PageEditBackupJob:
             _("Job"), breadcrumb, form_name="edit_job", button_name="_save"
         )
 
-    def fs_backup_schedule(self) -> TransformDataForLegacyFormatOrRecomposeFunction:
-        return enable_deprecated_alternative(
-            wrapped_form_spec=CascadingSingleChoice(
-                title=Title("Schedule"),
-                elements=[
-                    CascadingSingleChoiceElement(
-                        name="alternative_0",
-                        title=Title("Execute manually"),
-                        parameter_form=FixedValue(
-                            value=None,
-                            title=Title("Execute manually"),
-                            label=Label("Only execute manually"),
+    def vs_backup_schedule(self) -> Alternative:
+        return Alternative(
+            title=_("Schedule"),
+            elements=[
+                FixedValue(
+                    value=None,
+                    title=_("Execute manually"),
+                    totext=_("Only execute manually"),
+                ),
+                Dictionary(
+                    title=_("Schedule execution"),
+                    elements=[
+                        (
+                            "disabled",
+                            Checkbox(
+                                title=_("Disable"),
+                                label=_("Currently disable scheduled execution of this job"),
+                            ),
                         ),
-                    ),
-                    CascadingSingleChoiceElement(
-                        name="alternative_1",
-                        title=Title("Schedule execution"),
-                        parameter_form=Dictionary(
-                            title=Title("Schedule execution"),
-                            elements={
-                                "disabled": DictElement(
-                                    required=True,
-                                    parameter_form=BooleanChoice(
-                                        title=Title("Disable"),
-                                        label=Label(
-                                            "Currently disable scheduled execution of this job"
-                                        ),
-                                    ),
+                        ("period", SchedulePeriod(from_end=False)),
+                        (
+                            "timeofday",
+                            ListOf(
+                                valuespec=Timeofday(
+                                    default_value=(0, 0),
+                                    allow_empty=False,
                                 ),
-                                "period": DictElement(
-                                    required=True,
-                                    parameter_form=LegacyValueSpec.wrap(
-                                        SchedulePeriod(from_end=False)
-                                    ),
-                                ),
-                                "timeofday": DictElement(
-                                    required=True,
-                                    parameter_form=ListExtended(
-                                        element_template=Tuple(
-                                            layout="horizontal",
-                                            elements=[
-                                                Integer(
-                                                    title=Title("Hour"),
-                                                ),
-                                                Integer(
-                                                    title=Title("Minute"),
-                                                ),
-                                            ],
-                                        ),
-                                        title=Title("Time of day to start the backup at"),
-                                        editable_order=False,
-                                        prefill=DefaultValue([(0, 0)]),
-                                        add_element_label=Label("Add new time"),
-                                        custom_validate=[
-                                            validators.LengthInRange(
-                                                min_value=1,
-                                                error_msg=Message(
-                                                    "Please specify at least one time."
-                                                ),
-                                            )
-                                        ],
-                                    ),
-                                ),
-                            },
+                                title=_("Time of day to start the backup at"),
+                                movable=False,
+                                default_value=[(0, 0)],
+                                add_label=_("Add new time"),
+                                empty_text=_("Please specify at least one time."),
+                                allow_empty=False,
+                            ),
                         ),
-                    ),
-                ],
-            )
+                    ],
+                    optional_keys=[],
+                ),
+            ],
         )
 
-    def _fs_backup_job(self, backup_config: BackupConfig) -> Dictionary:
+    def vs_backup_job(self, backup_config: BackupConfig) -> Dictionary:
         if self._new:
-            ident_attr = {
-                "ident": DictElement(
-                    required=True,
-                    parameter_form=LegacyValueSpec.wrap(
-                        ID(
-                            title=_("Unique ID"),
-                            help=_(
-                                "The ID of the job must be a unique text. It will be used as an internal key "
-                                "when objects refer to the job."
-                            ),
-                            allow_empty=False,
-                            size=_OUTER_TEXT_FIELD_SIZE,
-                            validate=lambda ident, varprefix: self._validate_backup_job_ident(
-                                backup_config,
-                                ident,
-                                varprefix,
-                            ),
-                        )
-                    ),
-                )
-            }
-        else:
-            ident_attr = {
-                "ident": DictElement(
-                    required=True,
-                    parameter_form=FixedValue(value=self._ident, title=Title("Unique ID")),
-                )
-            }
-
-        def target_validation(target_id: str) -> None:
-            self._validate_target(backup_config, cast(TargetId, target_id))
-
-        return Dictionary(
-            title=Title("Backup job"),
-            elements={
-                **ident_attr,
-                "title": DictElement(
-                    required=True,
-                    parameter_form=String(
-                        title=Title("Title"),
-                        custom_validate=[
-                            validators.LengthInRange(
-                                min_value=1, error_msg=Message("Text field can not be empty")
-                            )
-                        ],
-                        field_size=FieldSize.LARGE,
-                    ),
-                ),
-                "target": DictElement(
-                    required=True,
-                    parameter_form=SingleChoice(
-                        title=Title("Target"),
-                        elements=self.backup_target_choices(backup_config),
-                        custom_validate=[target_validation],
-                        invalid_element_validation=InvalidElementValidator(
-                            mode=InvalidElementMode.COMPLAIN
+            ident_attr: list[tuple[str, TextInput | FixedValue]] = [
+                (
+                    "ident",
+                    ID(
+                        title=_("Unique ID"),
+                        help=_(
+                            "The ID of the job must be a unique text. It will be used as an internal key "
+                            "when objects refer to the job."
+                        ),
+                        allow_empty=False,
+                        size=_OUTER_TEXT_FIELD_SIZE,
+                        validate=lambda ident, varprefix: self._validate_backup_job_ident(
+                            backup_config,
+                            ident,
+                            varprefix,
                         ),
                     ),
+                )
+            ]
+        else:
+            ident_attr = [
+                (
+                    "ident",
+                    FixedValue(value=self._ident, title=_("Unique ID")),
+                )
+            ]
+
+        return Dictionary(
+            title=_("Backup job"),
+            elements=ident_attr
+            + [
+                (
+                    "title",
+                    TextInput(
+                        title=_("Title"),
+                        allow_empty=False,
+                        size=_OUTER_TEXT_FIELD_SIZE,
+                    ),
                 ),
-                "schedule": DictElement(required=True, parameter_form=self.fs_backup_schedule()),
-                "compress": DictElement(
-                    required=True,
-                    parameter_form=BooleanChoice(
-                        title=Title("Compression"),
-                        help_text=Help(
+                (
+                    "target",
+                    DropdownChoice(
+                        title=_("Target"),
+                        choices=self.backup_target_choices(backup_config),
+                        validate=lambda target_id, varprefix: self._validate_target(
+                            backup_config,
+                            target_id,
+                            varprefix,
+                        ),
+                        invalid_choice="complain",
+                    ),
+                ),
+                ("schedule", self.vs_backup_schedule()),
+                (
+                    "compress",
+                    Checkbox(
+                        title=_("Compression"),
+                        help=_(
                             "Enable gzip compression of the backed up files. The tar archives "
                             "created by the backup are gzipped during backup."
                         ),
-                        label=Label("Compress the backed up files"),
+                        label=_("Compress the backed up files"),
                     ),
                 ),
-                "encrypt": DictElement(
-                    required=True,
-                    parameter_form=enable_deprecated_alternative(
-                        CascadingSingleChoice(
-                            title=Title("Encryption"),
-                            help_text=Help(
-                                "Enable encryption of the backed up files. The tar archives "
-                                "created by the backup are encrypted using the specified key "
-                                "during backup. You will need the private key and the "
-                                "passphrase to decrypt the backup."
+                (
+                    "encrypt",
+                    Alternative(
+                        title=_("Encryption"),
+                        help=_(
+                            "Enable encryption of the backed up files. The tar archives "
+                            "created by the backup are encrypted using the specified key "
+                            "during backup. You will need the private key and the "
+                            "passphrase to decrypt the backup."
+                        ),
+                        elements=[
+                            FixedValue(
+                                value=None,
+                                title=_("Do not encrypt the backup"),
+                                totext="",
                             ),
-                            elements=[
-                                CascadingSingleChoiceElement(
-                                    name="alternative_0",
-                                    title=Title("Do not encrypt the backup"),
-                                    parameter_form=FixedValue(
-                                        value=None,
-                                        title=Title("Do not encrypt the backup"),
-                                        label=Label(""),
-                                    ),
-                                ),
-                                CascadingSingleChoiceElement(
-                                    name="alternative_1",
-                                    title=Title("Encrypt the backup using the key:"),
-                                    parameter_form=SingleChoiceExtended(
-                                        title=Title("Encrypt the backup using the key:"),
-                                        invalid_element_validation=InvalidElementValidator(
-                                            mode=InvalidElementMode.COMPLAIN
-                                        ),
-                                        elements=self.backup_key_choices(),
-                                    ),
-                                ),
-                            ],
-                        )
+                            DropdownChoice(
+                                title=_("Encrypt the backup using the key:"),
+                                choices=self.backup_key_choices,
+                                invalid_choice="complain",
+                            ),
+                        ],
                     ),
                 ),
-                "no_history": DictElement(
-                    required=True,
-                    parameter_form=BooleanChoice(
-                        title=Title("Do not backup historical data"),
-                        help_text=Help(
+                (
+                    "no_history",
+                    Checkbox(
+                        title=_("Do not backup historical data"),
+                        help=_(
                             "You may use this option to create a much smaller partial backup of the site."
                         ),
-                        label=Label(
+                        label=_(
                             "Do not backup metric data (RRD files), the monitoring history and log files"
                         ),
                     ),
                 ),
-            },
+            ],
+            optional_keys=[],
+            render="form",
         )
 
     def _validate_target(
         self,
         backup_config: BackupConfig,
         target_id: TargetId | None,
+        varprefix: str,
     ) -> None:
         if not target_id:
-            raise MKUserError("", _("You need to provide an ID"))
-        backup_config.all_targets[target_id].validate()
+            raise MKUserError(varprefix, _("You need to provide an ID"))
+        backup_config.all_targets[target_id].validate(varprefix)
 
     def _validate_backup_job_ident(
         self, backup_config: BackupConfig, value: str, varprefix: str
@@ -942,17 +868,14 @@ class PageEditBackupJob:
         if value in backup_config.jobs:
             raise MKUserError(varprefix, _("This ID is already used by another backup job."))
 
-    def backup_key_choices(self) -> Sequence[SingleChoiceElementExtended]:
-        return [
-            SingleChoiceElementExtended(name=ident, title=Title(title))  # pylint: disable=localization-of-non-literal-string
-            for ident, title in self.key_store.choices()
-        ]
+    def backup_key_choices(self) -> Sequence[tuple[str, str]]:
+        return self.key_store.choices()
 
-    def backup_target_choices(self, backup_config: BackupConfig) -> Sequence[SingleChoiceElement]:
+    def backup_target_choices(self, backup_config: BackupConfig) -> Sequence[tuple[TargetId, str]]:
         return [
-            SingleChoiceElement(
-                name=target.ident,
-                title=Title(target.title),  # pylint: disable=localization-of-non-literal-string
+            (
+                target.ident,
+                target.title,
             )
             for target in sorted(
                 backup_config.all_targets.values(),
@@ -967,12 +890,10 @@ class PageEditBackupJob:
             return HTTPRedirect(makeuri_contextless(request, [("mode", "backup")]))
 
         backup_config = BackupConfig.load()
-        flat_catalog = create_flat_catalog_from_dictionary(self._fs_backup_job(backup_config))
-        try:
-            job_config = cast(dict, parse_data_from_frontend(flat_catalog, "edit_job"))
-        except MKUserError as e:
-            self._received_data_from_frontend = True
-            raise e
+        vs = self.vs_backup_job(backup_config)
+
+        job_config = vs.from_html_vars("edit_job")
+        vs.validate_value(job_config, "edit_job")
 
         if "ident" in job_config:
             self._ident = job_config.pop("ident")
@@ -990,22 +911,15 @@ class PageEditBackupJob:
         return HTTPRedirect(makeuri_contextless(request, [("mode", "backup")]))
 
     def page(self, config: Config) -> None:
-        backup_config = BackupConfig.load()
-        flat_catalog = create_flat_catalog_from_dictionary(self._fs_backup_job(backup_config))
-        value_for_frontend = (
-            read_data_from_frontend("edit_job")
-            if self._received_data_from_frontend
-            else RawDiskData(self._job_cfg)
-        )
-
         with html.form_context("edit_job", method="POST"):
             html.prevent_password_auto_completion()
-            render_form_spec(
-                flat_catalog,
-                "edit_job",
-                value_for_frontend,
-                do_validate=self._received_data_from_frontend,
-            )
+
+            vs = self.vs_backup_job(BackupConfig.load())
+
+            vs.render_input("edit_job", dict(self._job_cfg))
+            vs.set_focus("edit_job")
+            forms.end()
+
             html.hidden_fields()
 
 
@@ -1169,19 +1083,19 @@ class ABCBackupTargetType(abc.ABC):
     def title() -> str: ...
 
     @classmethod
-    def form_spec(cls) -> Dictionary:
+    def valuespec(cls) -> Dictionary:
         return Dictionary(
             elements=cls.dictionary_elements(),
-            # TODO: migrate
-            # validate=lambda params, varprefix: cls(params).validate(varprefix),
+            optional_keys=[],
+            validate=lambda params, varprefix: cls(params).validate(varprefix),
         )
 
     @classmethod
     @abc.abstractmethod
-    def dictionary_elements(cls) -> Mapping[str, DictElement]: ...
+    def dictionary_elements(cls) -> DictionaryElements: ...
 
     @abc.abstractmethod
-    def validate(self) -> None: ...
+    def validate(self, varprefix: str) -> None: ...
 
     def backups(self) -> _Backups:
         _check_if_target_ready(self.target)
@@ -1196,16 +1110,8 @@ class ABCBackupTargetType(abc.ABC):
     @abc.abstractmethod
     def remove_backup(self, backup_ident: str) -> None: ...
 
-    def render(self) -> HTML:
-        with output_funnel.plugged():
-            render_form_spec(
-                self.form_spec(),
-                "target_parameters",
-                RawDiskData(dict(self.parameters)),
-                display_mode=DisplayMode.READONLY,
-                do_validate=False,
-            )
-            return HTML(output_funnel.drain(), escape=False)
+    def render(self) -> ValueSpecText:
+        return self.valuespec().value_to_html(dict(self.parameters))
 
 
 class TargetTypeRegistry(Registry[type[ABCBackupTargetType]]):
@@ -1238,12 +1144,13 @@ class BackupTargetLocal(ABCBackupTargetType):
         return _("Local path")
 
     @classmethod
-    def dictionary_elements(cls) -> Mapping[str, DictElement]:
-        return _local_directory_configuration_elements(77)
+    def dictionary_elements(cls) -> DictionaryElements:
+        yield from _local_directory_configuration_elements(77)
 
-    def validate(self) -> None:
+    def validate(self, varprefix: str) -> None:
         _validate_local_target(
             self.target,
+            varprefix,
         )
 
     def remove_backup(self, backup_ident: str) -> None:
@@ -1271,28 +1178,28 @@ class ABCBackupTargetRemote(ABCBackupTargetType, Generic[TRemoteParams, TRemoteS
         return self._target
 
     @classmethod
-    def dictionary_elements(cls) -> Mapping[str, DictElement]:
-        return {
-            "remote": DictElement(
-                required=True,
-                parameter_form=Dictionary(
-                    title=Title("Remote configuration"),
-                    elements=dict(cls._remote_dictionary_elements().items()),
-                ),
+    def dictionary_elements(cls) -> DictionaryElements:
+        yield (
+            "remote",
+            Dictionary(
+                title=_("Remote configuration"),
+                elements=cls._remote_dictionary_elements(),
+                optional_keys=[],
             ),
-            "temp_folder": DictElement(
-                required=True,
-                parameter_form=Dictionary(
-                    elements=_local_directory_configuration_elements(cls._INNER_TEXT_FIELD_SIZE),
-                    title=Title("Temporary local destination"),
-                    help_text=Help(
-                        "This directory will be used for temporarily storing backups before "
-                        "uploading and after downloading. You can for example use the <tt>/tmp</tt> "
-                        "directory. Please note that Checkmk will not clean up this directory."
-                    ),
+        )
+        yield (
+            "temp_folder",
+            Dictionary(
+                elements=_local_directory_configuration_elements(cls._INNER_TEXT_FIELD_SIZE),
+                title=_("Temporary local destination"),
+                help=_(
+                    "This directory will be used for temporarily storing backups before "
+                    "uploading and after downloading. You can for example use the <tt>/tmp</tt> "
+                    "directory. Please note that Checkmk will not clean up this directory."
                 ),
+                optional_keys=[],
             ),
-        }
+        )
 
     def remove_backup(self, backup_ident: str) -> None:
         backup_info = self.backups().get(backup_ident)
@@ -1307,8 +1214,8 @@ class ABCBackupTargetRemote(ABCBackupTargetType, Generic[TRemoteParams, TRemoteS
                     f"Removal of {remote_key} in remote storage failed. Original error: {e}"
                 )
 
-    def validate(self) -> None:
-        _validate_remote_target(self.target)
+    def validate(self, varprefix: str) -> None:
+        _validate_remote_target(self.target, varprefix)
 
     @staticmethod
     @abc.abstractmethod
@@ -1318,7 +1225,7 @@ class ABCBackupTargetRemote(ABCBackupTargetType, Generic[TRemoteParams, TRemoteS
 
     @classmethod
     @abc.abstractmethod
-    def _remote_dictionary_elements(cls) -> Mapping[str, DictElement]: ...
+    def _remote_dictionary_elements(cls) -> DictionaryElements: ...
 
 
 class BackupTargetAWSS3Bucket(ABCBackupTargetRemote[S3Params, S3Bucket]):
@@ -1335,45 +1242,33 @@ class BackupTargetAWSS3Bucket(ABCBackupTargetRemote[S3Params, S3Bucket]):
         return S3Target(TargetId(""), params)
 
     @classmethod
-    def _remote_dictionary_elements(cls) -> Mapping[str, DictElement]:
-        return {
-            "access_key": DictElement(
-                required=True,
-                parameter_form=String(
-                    title=Title("Access key"),
-                    help_text=Help("The access key for your AWS account"),
-                    custom_validate=[
-                        validators.LengthInRange(
-                            min_value=1, error_msg=Message("Text field can not be empty")
-                        )
-                    ],
-                ),
+    def _remote_dictionary_elements(cls) -> DictionaryElements:
+        yield (
+            "access_key",
+            TextInput(
+                title=_("Access key"),
+                help=_("The access key for your AWS account"),
+                allow_empty=False,
+                size=cls._INNER_TEXT_FIELD_SIZE,
             ),
-            "secret": DictElement(
-                required=True,
-                parameter_form=Password(
-                    title=Title("Secret key"),
-                    help_text=Help("The secret key for your AWS account"),
-                    custom_validate=[
-                        validators.LengthInRange(
-                            min_value=1, error_msg=Message("Text field can not be empty")
-                        )
-                    ],
-                    migrate=migrate_to_password,
-                ),
+        )
+        yield (
+            "secret",
+            IndividualOrStoredPassword(
+                title=_("Secret key"),
+                help=_("The secret key for your AWS account"),
+                allow_empty=False,
+                size=cls._INNER_PASSWORD_FIELD_SIZE,
             ),
-            "bucket": DictElement(
-                required=True,
-                parameter_form=String(
-                    title=Title("Bucket name"),
-                    custom_validate=[
-                        validators.LengthInRange(
-                            min_value=1, error_msg=Message("Password field can not be empty")
-                        )
-                    ],
-                ),
+        )
+        yield (
+            "bucket",
+            TextInput(
+                title=_("Bucket name"),
+                allow_empty=False,
+                size=cls._INNER_TEXT_FIELD_SIZE,
             ),
-        }
+        )
 
 
 class BackupTargetAzureBlobStorage(ABCBackupTargetRemote[BlobStorageParams, BlobStorage]):
@@ -1392,169 +1287,136 @@ class BackupTargetAzureBlobStorage(ABCBackupTargetRemote[BlobStorageParams, Blob
         return BlobStorageTarget(TargetId(""), params)
 
     @classmethod
-    def _remote_dictionary_elements(cls) -> Mapping[str, DictElement]:
-        return {
-            "storage_account_name": DictElement(
-                required=True,
-                parameter_form=String(
-                    title=Title("Storage account name"),
-                    custom_validate=[
-                        validators.LengthInRange(
-                            min_value=1, error_msg=Message("Text field can not be empty")
-                        )
-                    ],
-                ),
+    def _remote_dictionary_elements(cls) -> DictionaryElements:
+        yield (
+            "storage_account_name",
+            TextInput(
+                title=_("Storage account name"),
+                allow_empty=False,
+                size=cls._INNER_TEXT_FIELD_SIZE,
             ),
-            "container": DictElement(
-                required=True,
-                parameter_form=String(
-                    title=Title("Container name"),
-                    custom_validate=[
-                        validators.LengthInRange(
-                            min_value=1, error_msg=Message("Text field can not be empty")
-                        )
-                    ],
-                ),
+        )
+        yield (
+            "container",
+            TextInput(
+                title=_("Container name"),
+                allow_empty=False,
+                size=cls._INNER_TEXT_FIELD_SIZE,
             ),
-            "credentials": DictElement(
-                required=True,
-                parameter_form=CascadingSingleChoice(
-                    title=Title("Credentials"),
-                    elements=[
-                        CascadingSingleChoiceElement(
-                            name="shared_key",
-                            title=Title("Storage account shared key"),
-                            parameter_form=Password(
-                                title=Title("Shared key"),
-                                migrate=migrate_to_password,
-                                custom_validate=[
-                                    validators.LengthInRange(
-                                        min_value=1,
-                                        error_msg=Message("Text field can not be empty"),
-                                    )
-                                ],
-                            ),
+        )
+        yield (
+            "credentials",
+            CascadingDropdown(
+                title=_("Credentials"),
+                choices=[
+                    (
+                        "shared_key",
+                        _("Storage account shared key"),
+                        IndividualOrStoredPassword(
+                            title=_("Shared key"),
+                            allow_empty=False,
+                            size=cls._INNER_PASSWORD_FIELD_SIZE,
                         ),
-                        CascadingSingleChoiceElement(
-                            name="active_directory",
-                            title=Title("Active Directory credentials"),
-                            parameter_form=Dictionary(
-                                elements={
-                                    "client_id": DictElement(
-                                        required=True,
-                                        parameter_form=String(
-                                            title=Title("Application (client) ID"),
-                                            custom_validate=[
-                                                validators.LengthInRange(
-                                                    min_value=1,
-                                                    error_msg=Message(
-                                                        "Text field can not be empty"
-                                                    ),
-                                                )
-                                            ],
-                                        ),
+                    ),
+                    # Do not use cls._INNER_TEXT_FIELD_SIZE / cls._INNER_PASSWORD_FIELD_SIZE below,
+                    # since we are now at valuespec nesting level 2.
+                    (
+                        "active_directory",
+                        _("Active Directory credentials"),
+                        Dictionary(
+                            elements=[
+                                (
+                                    "client_id",
+                                    TextInput(
+                                        title=_("Application (client) ID"),
+                                        allow_empty=False,
+                                        size=71,
                                     ),
-                                    "tenant_id": DictElement(
-                                        required=True,
-                                        parameter_form=String(
-                                            title=Title("Directory (tenant) ID"),
-                                            custom_validate=[
-                                                validators.LengthInRange(
-                                                    min_value=1,
-                                                    error_msg=Message(
-                                                        "Text field can not be empty"
-                                                    ),
-                                                )
-                                            ],
-                                        ),
+                                ),
+                                (
+                                    "tenant_id",
+                                    TextInput(
+                                        title=_("Directory (tenant) ID"),
+                                        allow_empty=False,
+                                        size=71,
                                     ),
-                                    "client_secret": DictElement(
-                                        required=True,
-                                        parameter_form=Password(
-                                            title=Title("Client secret"),
-                                            migrate=migrate_to_password,
-                                            custom_validate=[
-                                                validators.LengthInRange(
-                                                    min_value=1,
-                                                    error_msg=Message(
-                                                        "Text field can not be empty"
-                                                    ),
-                                                )
-                                            ],
-                                        ),
+                                ),
+                                (
+                                    "client_secret",
+                                    IndividualOrStoredPassword(
+                                        title=_("Client secret"),
+                                        allow_empty=False,
+                                        size=58,
                                     ),
-                                }
-                            ),
+                                ),
+                            ],
+                            optional_keys=[],
                         ),
-                    ],
-                ),
+                    ),
+                ],
             ),
-        }
+        )
 
 
 def _local_directory_configuration_elements(
     directory_field_size: int,
-) -> Mapping[str, DictElement]:
-    return {
-        "path": DictElement(
-            required=True,
-            parameter_form=LegacyValueSpec.wrap(
-                AbsoluteDirname(
-                    title=_("Directory to save the backup to"),
-                    help=_(
-                        "This can be a local directory of your choice. You can also use this "
-                        "option if you want to save your backup to a network share using "
-                        "NFS, Samba or similar. But you will have to care about mounting the "
-                        "network share on your own."
-                    ),
-                    allow_empty=False,
-                    size=directory_field_size,
-                )
+) -> DictionaryElements:
+    yield (
+        "path",
+        AbsoluteDirname(
+            title=_("Directory to save the backup to"),
+            help=_(
+                "This can be a local directory of your choice. You can also use this "
+                "option if you want to save your backup to a network share using "
+                "NFS, Samba or similar. But you will have to care about mounting the "
+                "network share on your own."
             ),
+            allow_empty=False,
+            size=directory_field_size,
         ),
-        "is_mountpoint": DictElement(
-            required=True,
-            parameter_form=BooleanChoice(
-                title=Title("Mountpoint"),
-                label=Label("Is mountpoint"),
-                help_text=Help(
-                    "When this is checked, the backup ensures that the configured path "
-                    "is a mountpoint. If there is no active mount on the path, the backup "
-                    "fails with an error message."
-                ),
-                prefill=DefaultValue(True),
+    )
+    yield (
+        "is_mountpoint",
+        Checkbox(
+            title=_("Mountpoint"),
+            label=_("Is mountpoint"),
+            help=_(
+                "When this is checked, the backup ensures that the configured path "
+                "is a mountpoint. If there is no active mount on the path, the backup "
+                "fails with an error message."
             ),
+            default_value=True,
         ),
-    }
+    )
 
 
-def _check_if_target_ready(target: TargetProtocol) -> None:
+def _check_if_target_ready(target: TargetProtocol, varprefix: str | None = None) -> None:
     try:
         target.check_ready()
     except MKGeneralException as e:
-        raise MKUserError("", str(e))
+        raise MKUserError(varprefix, str(e))
 
 
-def _validate_local_target(local_target: LocalTarget) -> None:
-    _check_if_target_ready(local_target)
-    _validate_local_write_access(local_target.path)
+def _validate_local_target(local_target: LocalTarget, varprefix: str) -> None:
+    _check_if_target_ready(local_target, varprefix=varprefix)
+    _validate_local_write_access(local_target.path, varprefix)
 
 
-def _validate_local_write_access(path: Path) -> None:
+def _validate_local_write_access(path: Path, varprefix: str) -> None:
     with _write_access_test_file(path) as test_file_path:
         try:
             test_file_path.write_bytes(b"")
         except OSError:
             if cmk_version.is_cma():
                 raise MKUserError(
-                    "",
+                    varprefix,
                     _(
                         "Failed to write to the configured directory. The target directory needs "
                         "to be writable."
                     ),
                 )
             raise MKUserError(
-                "",
+                varprefix,
                 _(
                     "Failed to write to the configured directory. The site user needs to be able to "
                     "write the target directory. The recommended way is to make it writable by the "
@@ -1565,9 +1427,10 @@ def _validate_local_write_access(path: Path) -> None:
 
 def _validate_remote_target(
     remote_target: RemoteTarget[TRemoteParams, TRemoteStorage],
+    varprefix: str,
 ) -> None:
-    _check_if_target_ready(remote_target)
-    _validate_local_write_access(remote_target.local_target.path)
+    _check_if_target_ready(remote_target, varprefix=varprefix)
+    _validate_local_write_access(remote_target.local_target.path, varprefix)
 
     with _write_access_test_file(remote_target.local_target.path) as local_test_file_path:
         local_test_file_path.write_bytes(b"")
@@ -1576,21 +1439,21 @@ def _validate_remote_target(
             remote_target.remote_storage.upload(local_test_file_path, remote_key)
         except Exception as e:
             raise MKUserError(
-                "",
+                varprefix,
                 _("File upload test for remote storage failed. Original error message: %s") % e,
             )
         try:
             remote_target.remote_storage.download(remote_key, remote_target.local_target.path)
         except Exception as e:
             raise MKUserError(
-                "",
+                varprefix,
                 _("File download test for remote storage failed. Original error message: %s") % e,
             )
         try:
             remote_target.remote_storage.remove(remote_key)
         except Exception as e:
             raise MKUserError(
-                "",
+                varprefix,
                 _("File removal test for remote storage failed. Original error message: %s") % e,
             )
 
@@ -1649,10 +1512,10 @@ class Target:
     def remove_backup(self, backup_ident: str) -> None:
         self._target_type().remove_backup(backup_ident)
 
-    def validate(self) -> None:
-        self._target_type().validate()
+    def validate(self, varprefix: str) -> None:
+        self._target_type().validate(varprefix)
 
-    def render_destination(self) -> HTML:
+    def render_destination(self) -> ValueSpecText:
         return self._target_type().render()
 
     def render_type(self) -> str:
@@ -1792,7 +1655,6 @@ class PageEditBackupTarget:
         super().__init__()
         target_ident = request.var("target")
 
-        self._received_data_from_frontend = False
         if target_ident is not None:
             target_ident = TargetId(target_ident)
             try:
@@ -1818,67 +1680,67 @@ class PageEditBackupTarget:
             _("Target"), breadcrumb, form_name="edit_target", button_name="_save"
         )
 
-    def fs_backup_target(self, backup_config: BackupConfig) -> Dictionary:
+    def vs_backup_target(self, backup_config: BackupConfig) -> Dictionary:
         if self._new:
-            ident_attr = {
-                "ident": DictElement(
-                    required=True,
-                    parameter_form=LegacyValueSpec.wrap(
-                        ID(
-                            title=_("Unique ID"),
-                            help=_(
-                                "The ID of the target must be a unique text. It will be used as an internal key "
-                                "when objects refer to the target."
-                            ),
-                            allow_empty=False,
-                            size=_OUTER_TEXT_FIELD_SIZE,
-                            validate=lambda ident, varprefix: self.validate_backup_target_ident(
-                                backup_config,
-                                ident,
-                                varprefix,
-                            ),
+            ident_attr: list[tuple[str, TextInput | FixedValue]] = [
+                (
+                    "ident",
+                    ID(
+                        title=_("Unique ID"),
+                        help=_(
+                            "The ID of the target must be a unique text. It will be used as an internal key "
+                            "when objects refer to the target."
+                        ),
+                        allow_empty=False,
+                        size=_OUTER_TEXT_FIELD_SIZE,
+                        validate=lambda ident, varprefix: self.validate_backup_target_ident(
+                            backup_config,
+                            ident,
+                            varprefix,
                         ),
                     ),
-                )
-            }
+                ),
+            ]
         else:
-            ident_attr = {
-                "ident": DictElement(
-                    required=True,
-                    parameter_form=FixedValue(value=self._ident, title=Title("Unique ID")),
-                )
-            }
-
-        return Dictionary(
-            title=Title("Backup target"),
-            elements={
-                **ident_attr,
-                "title": DictElement(
-                    required=True,
-                    parameter_form=String(
-                        title=Title("Title"),
-                        custom_validate=[
-                            validators.LengthInRange(
-                                min_value=1, error_msg=Message("Text field can not be empty")
-                            )
-                        ],
+            ident_attr = [
+                (
+                    "ident",
+                    FixedValue(
+                        value=self._ident,
+                        title=_("Unique ID"),
                     ),
                 ),
-                "remote": DictElement(
-                    required=True,
-                    parameter_form=CascadingSingleChoice(
-                        title=Title("Destination"),
-                        elements=[
-                            CascadingSingleChoiceElement(
-                                name=target_type.ident(),
-                                title=Title(target_type.title()),  # pylint: disable=localization-of-non-literal-string
-                                parameter_form=target_type.form_spec(),
+            ]
+
+        return Dictionary(
+            title=_("Backup target"),
+            elements=ident_attr
+            + [
+                (
+                    "title",
+                    TextInput(
+                        title=_("Title"),
+                        allow_empty=False,
+                        size=_OUTER_TEXT_FIELD_SIZE,
+                    ),
+                ),
+                (
+                    "remote",
+                    CascadingDropdown(
+                        title=_("Destination"),
+                        choices=[
+                            (
+                                target_type.ident(),
+                                target_type.title(),
+                                target_type.valuespec(),
                             )
                             for target_type in target_type_registry.values()
                         ],
                     ),
                 ),
-            },
+            ],
+            optional_keys=[],
+            render="form",
         )
 
     def validate_backup_target_ident(
@@ -1894,12 +1756,10 @@ class PageEditBackupTarget:
             return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
         backup_config = BackupConfig.load()
-        flat_catalog = create_flat_catalog_from_dictionary(self.fs_backup_target(backup_config))
-        self._received_data_from_frontend = True
-        try:
-            target_config = cast(dict, parse_data_from_frontend(flat_catalog, "edit_target"))
-        except MKUserError as e:
-            raise e
+        vs = self.vs_backup_target(backup_config)
+
+        target_config = vs.from_html_vars("edit_target")
+        vs.validate_value(target_config, "edit_target")
 
         if "ident" in target_config:
             self._ident = TargetId(target_config.pop("ident"))
@@ -1918,23 +1778,13 @@ class PageEditBackupTarget:
         return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
     def page(self, config: Config) -> None:
-        flat_catalog = create_flat_catalog_from_dictionary(
-            self.fs_backup_target(BackupConfig.load())
-        )
-        value_for_frontend = (
-            read_data_from_frontend("edit_target")
-            if self._received_data_from_frontend
-            else RawDiskData(self._target_cfg)
-        )
-
         with html.form_context("edit_target", method="POST"):
             html.prevent_password_auto_completion()
-            render_form_spec(
-                flat_catalog,
-                "edit_target",
-                value_for_frontend,
-                do_validate=self._received_data_from_frontend,
-            )
+
+            vs = self.vs_backup_target(BackupConfig.load())
+
+            vs.render_input("edit_target", dict(self._target_cfg))
+            vs.set_focus("edit_target")
             forms.end()
 
             html.hidden_fields()
@@ -2283,14 +2133,11 @@ class PageBackupRestore:
                 % key_digest,
             )
 
-        key_field_id = "_key"
-        do_validate_form = False
         if html.form_submitted("key"):
             try:
-                fs = self._fs_key()
-                value = parse_data_from_frontend(fs, key_field_id)
-                assert isinstance(value, dict)
-                if "passphrase" in value:
+                value = self._vs_key().from_html_vars("_key")
+                if request.has_var("_key_p_passphrase"):
+                    self._vs_key().validate_value(value, "_key")
                     passphrase = PasswordType(value["passphrase"])
 
                     # Validate the passphrase
@@ -2304,7 +2151,6 @@ class PageBackupRestore:
                     flash(_("The restore has been started."))
                     return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_restore")]))
             except MKUserError as e:
-                do_validate_form = True
                 user_errors.add(e)
 
         # Special handling for Checkmk / CMA differences
@@ -2319,29 +2165,32 @@ class PageBackupRestore:
                 "passphrase of the encryption key."
             )
         )
-        with html.form_context("key", method="POST"):
+        with html.form_context("key", method="GET"):
             html.hidden_field("_action", "start")
             html.hidden_field("_backup", backup_ident)
             html.prevent_password_auto_completion()
-            render_form_spec(
-                self._fs_key(), key_field_id, RawDiskData({}), do_validate=do_validate_form
-            )
+            self._vs_key().render_input("_key", {})
             html.button("upload", _("Start restore"))
+            self._vs_key().set_focus("_key")
             html.hidden_fields()
         html.footer()
         return FinalizeRequest(code=200)
 
-    def _fs_key(self) -> Dictionary:
+    def _vs_key(self) -> Dictionary:
         return Dictionary(
-            title=Title("Properties"),
-            elements={
-                "passphrase": DictElement(
-                    required=True,
-                    parameter_form=SimplePassword(
-                        title=Title("Passphrase"),
+            title=_("Properties"),
+            elements=[
+                (
+                    "passphrase",
+                    Password(
+                        title=_("Passphrase"),
+                        allow_empty=False,
+                        is_stored_plain=False,
                     ),
-                )
-            },
+                ),
+            ],
+            optional_keys=False,
+            render="form",
         )
 
     def _start_unencrypted_restore(self, backup_ident: str) -> ActionResult:

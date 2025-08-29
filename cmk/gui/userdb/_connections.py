@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, assert_never, cast, Literal, overload, override, TypeGuard
+from typing import Any, assert_never, Literal, overload, override, TypeGuard
 
 from cmk.ccc import store
 from cmk.ccc.site import SiteId
@@ -115,11 +115,7 @@ builtin_connections: list[UserConnectionConfig] = [_HTPASSWD_CONNECTION]
 
 
 def get_ldap_connections() -> dict[str, LDAPUserConnectionConfig]:
-    ldap_connections = cast(
-        dict[str, LDAPUserConnectionConfig],
-        {c["id"]: c for c in active_config.user_connections if c["type"] == "ldap"},
-    )
-    return ldap_connections
+    return {c["id"]: c for c in active_config.user_connections if is_ldap(c)}
 
 
 def get_active_ldap_connections() -> dict[str, LDAPUserConnectionConfig]:
@@ -131,11 +127,7 @@ def get_active_ldap_connections() -> dict[str, LDAPUserConnectionConfig]:
 
 
 def get_saml_connections() -> dict[str, SAMLUserConnectionConfig]:
-    saml_connections = cast(
-        dict[str, SAMLUserConnectionConfig],
-        {c["id"]: c for c in active_config.user_connections if c["type"] == "saml2"},
-    )
-    return saml_connections
+    return {c["id"]: c for c in active_config.user_connections if is_saml(c)}
 
 
 def get_active_saml_connections() -> dict[str, SAMLUserConnectionConfig]:

@@ -42697,6 +42697,10 @@ msgstr "アカウントをロックするためのログオン失敗の数"
 msgid "Number of matching rules in this pack: %d"
 msgstr "このパックの一致するルールの数: %d"
 
+#, fuzzy
+msgid "Number of max hops"
+msgstr "ホップ数"
+
 msgid "Number of messages currently queued"
 msgstr "現在キューに入れられているメッセージの数"
 
@@ -57086,6 +57090,10 @@ msgid "Specify roles of a control plane node"
 msgstr "コントロールプレーンノードの役割の指定"
 
 msgid "Specify sites this OpenTelemetry collector should run on."
+msgstr "OpenTelemetry コレクターを実行するサイトを指定します。"
+
+#, fuzzy
+msgid "Specify sites this OpenTelemetry collector should run on. "
 msgstr "OpenTelemetry コレクターを実行するサイトを指定します。"
 
 msgid "Specify storage account names that the rule should apply to"

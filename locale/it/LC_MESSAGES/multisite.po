@@ -45072,6 +45072,10 @@ msgstr "Numero di mancati accessi per bloccare l'account"
 msgid "Number of matching rules in this pack: %d"
 msgstr "Numero di regole corrispondenti in questo pacchetto: %d"
 
+#, fuzzy
+msgid "Number of max hops"
+msgstr "Numero di salti"
+
 msgid "Number of messages currently queued"
 msgstr "Numero di messaggi attualmente in coda"
 
@@ -60343,6 +60347,12 @@ msgstr "Specificare i ruoli di un nodo del piano di controllo"
 
 #, fuzzy
 msgid "Specify sites this OpenTelemetry collector should run on."
+msgstr ""
+"Specificare uno, più o tutti i siti su cui deve essere eseguita la "
+"connessione."
+
+#, fuzzy
+msgid "Specify sites this OpenTelemetry collector should run on. "
 msgstr ""
 "Specificare uno, più o tutti i siti su cui deve essere eseguita la "
 "connessione."

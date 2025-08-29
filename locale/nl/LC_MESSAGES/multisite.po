@@ -45449,6 +45449,10 @@ msgstr "Aantal mislukte aanmeldingen om de rekening te vergrendelen"
 msgid "Number of matching rules in this pack: %d"
 msgstr "Aantal overeenstemmende regels in dit pakket: %d"
 
+#, fuzzy
+msgid "Number of max hops"
+msgstr "Aantal hops"
+
 msgid "Number of messages currently queued"
 msgstr "Aantal berichten in de wachtrij"
 
@@ -60822,6 +60826,11 @@ msgstr "De rollen van een knooppunt van het besturingsvlak specificeren"
 
 #, fuzzy
 msgid "Specify sites this OpenTelemetry collector should run on."
+msgstr ""
+"Specificeer één, meerdere of alle sites waarop deze verbinding moet lopen."
+
+#, fuzzy
+msgid "Specify sites this OpenTelemetry collector should run on. "
 msgstr ""
 "Specificeer één, meerdere of alle sites waarop deze verbinding moet lopen."
 

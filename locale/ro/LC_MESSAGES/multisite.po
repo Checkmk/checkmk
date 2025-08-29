@@ -45521,6 +45521,10 @@ msgstr "Numărul de eșecuri la conectare pentru a bloca contul"
 msgid "Number of matching rules in this pack: %d"
 msgstr "Numărul de reguli corespunzătoare din acest pachet: %d."
 
+#, fuzzy
+msgid "Number of max hops"
+msgstr "Numărul de salturi"
+
 msgid "Number of messages currently queued"
 msgstr "Numărul de mesaje aflate în prezent în coadă de așteptare"
 
@@ -60975,6 +60979,12 @@ msgstr "Specificarea rolurilor unui nod de plan de control"
 
 #, fuzzy
 msgid "Specify sites this OpenTelemetry collector should run on."
+msgstr ""
+"Precizați unul, mai multe sau toate site-urile pe care trebuie să "
+"funcționeze această conexiune."
+
+#, fuzzy
+msgid "Specify sites this OpenTelemetry collector should run on. "
 msgstr ""
 "Precizați unul, mai multe sau toate site-urile pe care trebuie să "
 "funcționeze această conexiune."

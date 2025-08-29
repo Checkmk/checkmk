@@ -199,7 +199,7 @@ class PerformanceDb:
                 self.user,
                 self.host,
                 self.port,
-                self.sslrootcert if sslmode in ("verify-ca", "verify-full") else "",
+                self.sslrootcert,
                 self.sslcert,
                 self.sslkey,
             )
@@ -708,10 +708,9 @@ class PerftestPlotArgs(argparse.Namespace):
         validate_baselines (bool): Enable performance baseline validation.
         alert_on_failure (bool): Enable Jira alerter on baseline validation failure.
         sslmode (SslMode): The SSL mode for the Postgres authentication.
-        sslrootcert_var (str): The name of the environment variable that holds the root certificate.
-        sslcert_var (str): The name of the environment variable that holds the Postgres certificate.
-        sslkey_var (str): The name of the environment variable that holds the Postgres key.
-        cert_folder (Path): The folder in which the certificate files are stored.
+        sslrootcert (Path): The path of the root certificate.
+        sslcert (Path): The path of the Postgres certificate.
+        sslkey (Path): The path of the Postgres key.
         jira_url (str): The URL of the Jira server.
         jira_token_var (str): The name of the environment variable that holds the Jira token.
         jira_token_path (Path): The path of file that holds the Jira token.
@@ -735,10 +734,9 @@ class PerftestPlotArgs(argparse.Namespace):
     validate_baselines: bool
     alert_on_failure: bool
     sslmode: SslMode
-    sslrootcert_var: str
-    sslcert_var: str
-    sslkey_var: str
-    cert_folder: Path
+    sslrootcert: Path
+    sslcert: Path
+    sslkey: Path
     jira_url: str
     jira_token_var: str
     jira_token_path: Path
@@ -768,12 +766,11 @@ class PerftestPlot:
         self.read_from_filesystem = not self.args.skip_filesystem_reads
         self.write_to_database = not self.args.skip_database_writes
         if self.args.dbhost and (self.read_from_database or self.write_to_database):
-            sslrootcert, sslcert, sslkey = self.setup_db_certificates()
             try:
                 self.database = PerformanceDb(
-                    sslrootcert=sslrootcert,
-                    sslcert=sslcert,
-                    sslkey=sslkey,
+                    sslrootcert=self.args.sslrootcert,
+                    sslcert=self.args.sslcert,
+                    sslkey=self.args.sslkey,
                     sslmode=self.args.sslmode,
                     dbname=self.args.dbname,
                     user=self.args.dbuser,
@@ -885,56 +882,6 @@ class PerftestPlot:
             Path: The path to the scenario's resources JSON file.
         """
         return self.root_dir / f"{job_name}/{scenario_name}.resources.json"
-
-    def setup_db_certificates(self) -> tuple[Path, Path, Path]:
-        """
-        Set up PostgreSQL SSL certificates in the user's home directory.
-
-        Creates a directory and writes three certificate files:
-        - postgresql.crt: Client certificate (mode 644)
-        - postgresql.key: Client private key (mode 600)
-        - root.crt: Root CA certificate (mode 600)
-
-        The certificate content is read from environment variables specified in
-        self.args.sslcert_var, self.args.sslkey_var, and
-        self.args.sslrootcert_var respectively.
-
-        If the directory already exists, the setup is skipped.
-        Any existing certificate files are removed before writing new ones.
-
-        Prints status messages indicating setup progress and created files.
-
-        Returns a tuple with the paths to the client cert, client key and root cert.
-        """
-        sslrootcert_path = self.args.cert_folder / "root.crt"
-        sslcert_path = self.args.cert_folder / "postgresql.crt"
-        sslkey_path = self.args.cert_folder / "postgresql.key"
-        if not (self.args.cert_folder).exists():
-            logger.info("Certificate setup...")
-            sslrootcert = getenv(self.args.sslrootcert_var, "")
-            sslcert = getenv(self.args.sslcert_var, "")
-            sslkey = getenv(self.args.sslkey_var, "")
-            self.args.cert_folder.mkdir(mode=750)
-            sslrootcert_path.unlink(missing_ok=True)
-            if self.args.sslmode in ("verify-ca", "verify-full"):
-                sslrootcert_path.write_text(sslrootcert)
-                sslrootcert_path.chmod(mode=600)
-            sslcert_path.unlink(missing_ok=True)
-            sslcert_path.write_text(sslcert)
-            sslcert_path.chmod(mode=644)
-            sslkey_path.unlink(missing_ok=True)
-            sslkey_path.write_text(sslkey)
-            sslkey_path.chmod(mode=600)
-            cert_files = ", ".join(_.name for _ in self.args.cert_folder.glob("*"))
-            if cert_files:
-                logger.info("Certificate files created: %s", cert_files)
-            else:
-                logger.error("Certificate setup failed!")
-        return (
-            sslrootcert_path,
-            sslcert_path,
-            sslkey_path,
-        )
 
     def _plottable_benchmark_data(
         self, scenario_name: str
@@ -1579,6 +1526,8 @@ def parse_args() -> PerftestPlotArgs:
         argparse.ArgumentTypeError: If a job name does not match the required pattern.
     """
 
+    repo_root_dir = Path(__file__).parent.parent.parent
+
     def job_name() -> Callable:
         pattern = r"[0-9](\.[0-9]){2}-[0-9]{4}(\.[0-9]{2}){2}\.c[cemrs]e"
 
@@ -1614,7 +1563,7 @@ def parse_args() -> PerftestPlotArgs:
         "-r",
         dest="root_dir",
         type=Path,
-        default=Path(__file__).parent.parent.parent / "results" / "performance",
+        default=repo_root_dir / "results" / "performance",
         help="The root directory for all job files on disk (default: %(default)s).",
     )
     parser.add_argument(
@@ -1730,24 +1679,36 @@ def parse_args() -> PerftestPlotArgs:
         help="Enable Jira alerter on baseline validation failure (default: %(default)s).",
     )
     parser.add_argument(
-        "--sslrootcert-var",
-        dest="sslrootcert_var",
-        type=str,
-        default="QA_ROOT_CERT",
+        "--sslrootcert",
+        dest="sslrootcert",
+        type=Path,
+        default=(
+            user_sslrootcert
+            if (user_sslrootcert := Path().home() / ".postgresql/root.crt").exists()
+            else repo_root_dir / "QA_ROOT_CERT"
+        ),
         help="The name of the root certificate variable (default: %(default)s).",
     )
     parser.add_argument(
-        "--sslcert-var",
-        dest="sslcert_var",
-        type=str,
-        default="QA_POSTGRES_CERT",
+        "--sslcert",
+        dest="sslcert",
+        type=Path,
+        default=(
+            user_sslcert
+            if (user_sslcert := Path().home() / ".postgresql/postgresql.crt").exists()
+            else repo_root_dir / "QA_POSTGRES_CERT"
+        ),
         help="The name of the Postgres certificate variable (default: %(default)s).",
     )
     parser.add_argument(
-        "--sslkey-var",
-        dest="sslkey_var",
-        type=str,
-        default="QA_POSTGRES_KEY",
+        "--sslkey",
+        dest="sslkey",
+        type=Path,
+        default=(
+            user_sslkey
+            if (user_sslkey := Path().home() / ".postgresql/postgresql.key").exists()
+            else repo_root_dir / "QA_POSTGRES_KEY"
+        ),
         help="The name of the Postgres key variable (default: %(default)s).",
     )
     parser.add_argument(
@@ -1756,13 +1717,6 @@ def parse_args() -> PerftestPlotArgs:
         type=sslmode(),
         default="require",
         help="The SSL mode for the Postgres authentication (default: %(default)s).",
-    )
-    parser.add_argument(
-        "--cert-folder",
-        dest="cert_folder",
-        type=Path,
-        default=Path.home() / ".postgresql",
-        help="The path to write the certificate files to (default: %(default)s).",
     )
     parser.add_argument(
         "--jira-url",

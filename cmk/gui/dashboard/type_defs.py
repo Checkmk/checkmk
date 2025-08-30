@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Literal, NotRequired, TypedDict
+from typing import Any, Literal, NewType, NotRequired, TypedDict
 
 from cmk.gui.type_defs import (
     FilterName,
@@ -21,6 +21,16 @@ DashletRefreshInterval = bool | int
 DashletRefreshAction = str | None
 DashletSize = tuple[int, int]
 DashletPosition = tuple[int, int]
+ResponsiveGridLayoutID = NewType("ResponsiveGridLayoutID", str)
+
+# NOTE: this is limited to 5 different breakpoints, as the library only officially supports 5 types
+#       see the frontend implementation for more details
+type ResponsiveGridBreakpoint = Literal["XS", "S", "M", "L", "XL"]
+
+
+class DashletSizeAndPosition(TypedDict):
+    size: DashletSize
+    position: DashletPosition
 
 
 class _DashletConfigMandatory(TypedDict):
@@ -36,6 +46,9 @@ class DashletConfig(_DashletConfigMandatory, total=False):
     reload_on_resize: bool
     position: DashletPosition
     size: DashletSize
+    responsive_grid_layouts: dict[
+        ResponsiveGridLayoutID, dict[ResponsiveGridBreakpoint, DashletSizeAndPosition]
+    ]
     background: bool
     show_title: bool | Literal["transparent"]
 
@@ -176,8 +189,27 @@ class NtopFlowsDashletConfig(DashletConfig): ...
 class NtopTopTalkersDashletConfig(DashletConfig): ...
 
 
+class DashboardRelativeGridLayoutSpec(TypedDict):
+    type: Literal["relative_grid"]
+
+
+class DashboardResponsiveGridLayoutSettings(TypedDict):
+    title: str
+    breakpoints: set[ResponsiveGridBreakpoint]
+
+
+class DashboardResponsiveGridLayoutSpec(TypedDict):
+    type: Literal["responsive_grid"]
+    layouts: dict[ResponsiveGridLayoutID, DashboardResponsiveGridLayoutSettings]
+
+
 class DashboardConfig(Visual):
+    # TODO: rename dashlets to widgets, change list to dict -> update action
+    #       this can include complete overhaul for how widgets are stored
     mtime: int
     dashlets: list[DashletConfig]
     show_title: bool
     mandatory_context_filters: list[FilterName]
+    layout: NotRequired[
+        DashboardRelativeGridLayoutSpec | DashboardResponsiveGridLayoutSpec
+    ]  # default: relative_grid

@@ -10,6 +10,7 @@ import pytest
 
 from cmk.gui.dashboard.api import ApiCustomGraphValidation
 from cmk.gui.dashboard.api._utils import INTERNAL_TO_API_TYPE_NAME
+from cmk.gui.dashboard.api.model.constants import RESPONSIVE_GRID_BREAKPOINTS
 from cmk.gui.dashboard.api.model.widget_content import _CONTENT_TYPES
 from cmk.gui.dashboard.api.model.widget_content._base import BaseWidgetContent
 from cmk.gui.views.icon.registry import all_icons
@@ -52,6 +53,18 @@ def test_show_dashboard_constants(clients: ClientRegistry) -> None:
         "Expected at least one widget to be returned"
     )
     assert set(list(resp.json["extensions"]["widgets"].values())[0]) == {"layout", "filter_context"}
+    assert (
+        resp.json["extensions"]["responsive_grid_breakpoints"].keys()
+        == RESPONSIVE_GRID_BREAKPOINTS.keys()
+    ), "Expected all and only the configured breakpoints to be returned"
+    for breakpoint_id, config in RESPONSIVE_GRID_BREAKPOINTS.items():
+        response_config = resp.json["extensions"]["responsive_grid_breakpoints"][breakpoint_id]
+        assert response_config["min_width"] == config["min_width"], (
+            "Expected min width response to match the internal one"
+        )
+        assert response_config["columns"] == config["columns"], (
+            "Expected columns response to match the internal one"
+        )
 
 
 def test_show_dashboard(clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection) -> None:

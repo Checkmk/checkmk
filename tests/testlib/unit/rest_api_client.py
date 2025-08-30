@@ -3349,12 +3349,20 @@ class VisualFilterClient(RestApiClient):
 class DashboardClient(RestApiClient):
     domain: DomainType = "dashboard"
     domain_relative: DomainType = "dashboard_relative_grid"
+    domain_responsive: DomainType = "dashboard_responsive_grid"
     default_version = APIVersion.UNSTABLE
 
     def get_relative_grid_dashboard(self, dashboard_id: str, expect_ok: bool = True) -> Response:
         return self.request(
             "get",
             url=f"/objects/{self.domain_relative}/{dashboard_id}",
+            expect_ok=expect_ok,
+        )
+
+    def get_responsive_grid_dashboard(self, dashboard_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain_responsive}/{dashboard_id}",
             expect_ok=expect_ok,
         )
 
@@ -3368,12 +3376,32 @@ class DashboardClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def create_responsive_grid_dashboard(
+        self, payload: dict[str, Any], expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain_responsive}/collections/all",
+            body=payload,
+            expect_ok=expect_ok,
+        )
+
     def edit_relative_grid_dashboard(
         self, dashboard_id: str, payload: dict[str, Any], expect_ok: bool = True
     ) -> Response:
         return self.request(
             "put",
             url=f"/objects/{self.domain_relative}/{dashboard_id}",
+            body=payload,
+            expect_ok=expect_ok,
+        )
+
+    def edit_responsive_grid_dashboard(
+        self, dashboard_id: str, payload: dict[str, Any], expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain_responsive}/{dashboard_id}",
             body=payload,
             expect_ok=expect_ok,
         )

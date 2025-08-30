@@ -56,7 +56,7 @@ def show_relative_grid_dashboard_v1(
 ENDPOINT_SHOW_RELATIVE_GRID_DASHBOARD = VersionedEndpoint(
     metadata=EndpointMetadata(
         path=object_href("dashboard_relative_grid", "{dashboard_id}"),
-        link_relation="cmk/show",
+        link_relation="cmk/show_dashboard_relative_grid",
         method="get",
     ),
     permissions=EndpointPermissions(required=PERMISSIONS_DASHBOARD),

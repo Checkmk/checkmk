@@ -75,7 +75,7 @@ def edit_relative_grid_dashboard_v1(
 ENDPOINT_EDIT_RELATIVE_GRID_DASHBOARD = VersionedEndpoint(
     metadata=EndpointMetadata(
         path=object_href("dashboard_relative_grid", "{dashboard_id}"),
-        link_relation=".../update",
+        link_relation="cmk/edit_dashboard_relative_grid",
         method="put",
     ),
     permissions=EndpointPermissions(required=PERMISSIONS_DASHBOARD),

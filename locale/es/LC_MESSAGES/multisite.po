@@ -2621,10 +2621,6 @@ msgstr ""
 "proporcionó un ID externo, entonces proporcione ese valor en el parámetro ID "
 "externo. "
 
-#, python-format
-msgid "A user with the id \"%s\" does not exist."
-msgstr "Un usuario con el id \"%s\" no existe."
-
 msgid "A value in seconds"
 msgstr "Un valor en segundos"
 
@@ -4240,6 +4236,10 @@ msgstr "Añadir una nueva acción"
 
 msgid "Add new aggregation"
 msgstr "Añadir una nueva agregación"
+
+#, fuzzy
+msgid "Add new credentials"
+msgstr "Utilizar las credenciales"
 
 msgid "Add new element"
 msgstr "Añadir un nuevo elemento"
@@ -7823,7 +7823,7 @@ msgid "Authorizations per DB security group"
 msgstr "Autorizaciones por grupo de seguridad de la BD"
 
 #, fuzzy
-msgid "Authorized users"
+msgid "Authorized user"
 msgstr "Sitios autorizados"
 
 #, fuzzy
@@ -8939,6 +8939,14 @@ msgstr "Bases de datos Azure"
 
 msgid "Azure Load Balancer Health"
 msgstr "Salud del balanceador de carga de Azure"
+
+#, fuzzy
+msgid "Azure Redis CPU utilization"
+msgstr "Utilización de la CPU de GCP/Redis"
+
+#, fuzzy
+msgid "Azure Redis connections"
+msgstr "Conexiones de bases de datos"
 
 #, fuzzy
 msgid "Azure SQL database CPU usage"
@@ -15266,6 +15274,14 @@ msgstr "Conectarse sin contraseña"
 msgid "Connect without proxy"
 msgstr "Conectar sin proxy"
 
+#, fuzzy
+msgid "Connected Clients"
+msgstr "Conexiones"
+
+#, fuzzy
+msgid "Connected clients"
+msgstr "Número de clientes conectados"
+
 msgid "Connecter and connectee sites must be different."
 msgstr ""
 
@@ -15376,6 +15392,14 @@ msgstr "Tipo de conexión"
 
 msgid "Connections"
 msgstr "Conexiones"
+
+#, fuzzy
+msgid "Connections closed rate"
+msgstr "La conexión se ha cortado tarde"
+
+#, fuzzy
+msgid "Connections created rate"
+msgstr "La conexión se ha cortado tarde"
 
 msgid "Connections dropped"
 msgstr "Conexiones caídas"
@@ -20174,9 +20198,6 @@ msgstr "Desactivar los servicios desaparecidos"
 
 msgid "Disabled"
 msgstr "Desactivado"
-
-msgid "Disabled "
-msgstr "Discapacitados "
 
 msgid "Disabled (configured away by admin)"
 msgstr "Desactivado (configurado por el administrador)"
@@ -35898,9 +35919,6 @@ msgstr "Credenciales de acceso no válidas."
 
 msgid "Invalid man page: Failed to get the title"
 msgstr "Página de manual inválida: Fallo en la obtención del título"
-
-msgid "Invalid messaging method selected."
-msgstr "Se ha seleccionado un método de mensajería no válido."
 
 #, fuzzy, python-format
 msgid "Invalid mime type, supported types are: %s"
@@ -51650,9 +51668,6 @@ msgstr "Seleccione al menos un elemento"
 #, fuzzy
 msgid "Please select at least one item to monitor"
 msgstr "Seleccione al menos un elemento"
-
-msgid "Please select at least one messaging method."
-msgstr "Por favor, seleccione al menos un método de mensajería."
 
 #, fuzzy
 msgid "Please select at least one or more regions to continue."
@@ -67790,26 +67805,26 @@ msgstr ""
 msgid "The host name attribute needs to be assigned to a column."
 msgstr "Es necesario asignar el atributo de nombre de host a una columna."
 
-#, python-brace-format
+#, python-format
 msgid ""
 "The host name computation computes the name of the host that should have the "
 "corresponding Checkmk services. The computation is done by the OpenTelemetry "
-"collector and the result is stored in the \"{attr}\" attribute. For every "
-"rule configured here, the provided fields are concatenated in the order they "
-"are listed. The first rule that results in a non-empty value is used. For "
+"collector and the result is stored in the \"%s\" attribute. For every rule "
+"configured here, the provided fields are concatenated in the order they are "
+"listed. The first rule that results in a non-empty value is used. For "
 "example:\n"
-"{startol}A first rule consisting of one field \"Value of attribute: "
-"service.name\" will set \"{attr}\" to the value of that attribute, if it is "
+"<ol><li>A first rule consisting of one field \"Value of attribute: "
+"service.name\" will set \"%s\" to the value of that attribute, if it is "
 "present. This attribute will be set to the prometheus scrape jobs name, for "
-"example.{newli}A second rule consisting of one field \"Value of attribute: "
-"container.name\" will set \"{attr}\" to the value of that attribute, if it "
-"is present and \"{attr}\" has not been set by the previous rule.{newli}A "
-"third rule consisting of two fields \"Resource attribute value: "
-"custom_attr\" and \"Literal string: some_suffix\" will set \"{attr}\" to "
-"\"VALUEsome_suffix\", if the attribute is present and \"{attr}\" has not "
-"been set by the previous rules.{newli}A last rule consisting of one field "
-"\"Literal string: fallback_host\" will set all \"{attr}\" attributes that "
-"are not yet filled to \"fallback_host\".{endol}"
+"example.</li><li>A second rule consisting of one field \"Value of attribute: "
+"container.name\" will set \"%s\" to the value of that attribute, if it is "
+"present and \"%s\" has not been set by the previous rule.</li><li>A third "
+"rule consisting of two fields \"Resource attribute value: custom_attr\" and "
+"\"Literal string: some_suffix\" will set \"%s\" to \"VALUEsome_suffix\", if "
+"the attribute is present and \"%s\" has not been set by the previous rules.</"
+"li><li>A last rule consisting of one field \"Literal string: fallback_host\" "
+"will set all \"%s\" attributes that are not yet filled to \"fallback_host\"."
+"</li></ol>"
 msgstr ""
 
 #, fuzzy
@@ -74360,6 +74375,22 @@ msgstr ""
 "donde esto puede ser útil. Una de ellas es cuando se utiliza el Checkmk "
 "Micro Core con SMART Ping y se desea realizar un seguimiento de los datos de "
 "rendimiento del PING a algunos hosts, no obstante."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis CPU utilization "
+"monitoring"
+msgstr ""
+"Esta regla permite configurar los niveles de bloat para el tablespace y el "
+"indexspace de una base de datos."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis connections "
+"monitoring"
+msgstr ""
+"Esta regla permite configurar los niveles de bloat para el tablespace y el "
+"indexspace de una base de datos."
 
 #, fuzzy
 msgid "This ruleset allows you to configure levels for the Storage data flows"
@@ -88250,11 +88281,6 @@ msgstr "Debe seleccionar al menos un usuario."
 msgid "You have to specify a connector to migrate to."
 msgstr "Tienes que especificar un conector al que migrar."
 
-msgid ""
-"You have to specify at least one authenticated user to use Basic "
-"Authentication on an endpoint"
-msgstr ""
-
 #, fuzzy, python-format
 msgid "You have to specify at least one receiver: %s"
 msgstr "Debe seleccionar al menos un usuario."
@@ -88490,9 +88516,6 @@ msgstr ""
 
 msgid "You need to provide a key file."
 msgstr "Es necesario proporcionar un archivo de claves."
-
-msgid "You need to provide a text."
-msgstr "Es necesario proporcionar un texto."
 
 #, fuzzy
 msgid ""
@@ -90842,6 +90865,10 @@ msgid_plural "sites"
 msgstr[0] "sitio web"
 msgstr[1] "sitio web"
 
+#, fuzzy, python-format
+msgid "site must be a list. Current type is: %s "
+msgstr "El tipo debe ser lista, pero es %s"
+
 msgid "slots"
 msgstr "ranuras"
 
@@ -91240,6 +91267,22 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, python-format
+#~ msgid "A user with the id \"%s\" does not exist."
+#~ msgstr "Un usuario con el id \"%s\" no existe."
+
+#~ msgid "Disabled "
+#~ msgstr "Discapacitados "
+
+#~ msgid "Invalid messaging method selected."
+#~ msgstr "Se ha seleccionado un método de mensajería no válido."
+
+#~ msgid "Please select at least one messaging method."
+#~ msgstr "Por favor, seleccione al menos un método de mensajería."
+
+#~ msgid "You need to provide a text."
+#~ msgstr "Es necesario proporcionar un texto."
 
 #, fuzzy
 #~ msgid "License expired: Renew license now to reactivate change activation."

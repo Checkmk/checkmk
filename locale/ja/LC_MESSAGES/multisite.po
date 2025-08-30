@@ -2514,10 +2514,6 @@ msgstr ""
 "ロールが属するアカウントの管理者から外部IDが提供された場合は、その値を 外部"
 "ID パラメーターに指定します。 "
 
-#, python-format
-msgid "A user with the id \"%s\" does not exist."
-msgstr "IDが\"%s\"のユーザーは存在しません。"
-
 msgid "A value in seconds"
 msgstr "秒単位の値"
 
@@ -4019,6 +4015,10 @@ msgstr "新しいアクションを追加する"
 
 msgid "Add new aggregation"
 msgstr "アグリゲーションを追加"
+
+#, fuzzy
+msgid "Add new credentials"
+msgstr "資格情報を使用する"
 
 msgid "Add new element"
 msgstr "新しい要素を追加する"
@@ -7326,7 +7326,8 @@ msgstr "承認設定"
 msgid "Authorizations per DB security group"
 msgstr "DBセキュリティグループごとの承認"
 
-msgid "Authorized users"
+#, fuzzy
+msgid "Authorized user"
 msgstr "認証ユーザー"
 
 msgid "Auto"
@@ -8275,6 +8276,14 @@ msgstr "Azureデータベース"
 
 msgid "Azure Load Balancer Health"
 msgstr "Azureロードバランサーヘルス"
+
+#, fuzzy
+msgid "Azure Redis CPU utilization"
+msgstr "GCP/Redis CPU使用率"
+
+#, fuzzy
+msgid "Azure Redis connections"
+msgstr "Azure データベース接続"
 
 msgid "Azure SQL database CPU usage"
 msgstr "AzureSQLデータベースCPU使用量"
@@ -14211,6 +14220,14 @@ msgstr "パスワードなしで接続する"
 msgid "Connect without proxy"
 msgstr "プロキシなしで接続する"
 
+#, fuzzy
+msgid "Connected Clients"
+msgstr "接続"
+
+#, fuzzy
+msgid "Connected clients"
+msgstr "接続されているクライアントの数"
+
 msgid "Connecter and connectee sites must be different."
 msgstr "コネクターサイトとコネクティーサイトは異なる必要があります。"
 
@@ -14317,6 +14334,14 @@ msgstr "接続タイプ"
 
 msgid "Connections"
 msgstr "接続"
+
+#, fuzzy
+msgid "Connections closed rate"
+msgstr "接続が遅れて切断されました"
+
+#, fuzzy
+msgid "Connections created rate"
+msgstr "接続が遅れて切断されました"
 
 msgid "Connections dropped"
 msgstr "接続が切断されました"
@@ -18813,9 +18838,6 @@ msgstr "消失したサービスを無効にする"
 
 msgid "Disabled"
 msgstr "無効"
-
-msgid "Disabled "
-msgstr "無効 "
 
 msgid "Disabled (configured away by admin)"
 msgstr "無効にする（管理者が設定しない）"
@@ -33380,9 +33402,6 @@ msgstr "ログイン資格情報が無効です。"
 msgid "Invalid man page: Failed to get the title"
 msgstr "無効なマニュアルページ: タイトルの取得に失敗しました"
 
-msgid "Invalid messaging method selected."
-msgstr "選択されたメッセージ送信方法が無効です。"
-
 #, python-format
 msgid "Invalid mime type, supported types are: %s"
 msgstr "無効な MIME タイプです。サポートされているタイプは:%s"
@@ -47890,9 +47909,6 @@ msgstr "少なくとも1つの要素を選択してください"
 
 msgid "Please select at least one item to monitor"
 msgstr "モニターする項目を1つ以上選択してください"
-
-msgid "Please select at least one messaging method."
-msgstr "メッセージ送信方法を少なくとも1つ選択してください。"
 
 msgid "Please select at least one or more regions to continue."
 msgstr "少なくとも1つ以上の地域を選択してください。"
@@ -62977,26 +62993,26 @@ msgstr ""
 msgid "The host name attribute needs to be assigned to a column."
 msgstr "ホスト名属性を列に割り当てる必要があります。"
 
-#, python-brace-format
+#, fuzzy, python-format
 msgid ""
 "The host name computation computes the name of the host that should have the "
 "corresponding Checkmk services. The computation is done by the OpenTelemetry "
-"collector and the result is stored in the \"{attr}\" attribute. For every "
-"rule configured here, the provided fields are concatenated in the order they "
-"are listed. The first rule that results in a non-empty value is used. For "
+"collector and the result is stored in the \"%s\" attribute. For every rule "
+"configured here, the provided fields are concatenated in the order they are "
+"listed. The first rule that results in a non-empty value is used. For "
 "example:\n"
-"{startol}A first rule consisting of one field \"Value of attribute: "
-"service.name\" will set \"{attr}\" to the value of that attribute, if it is "
+"<ol><li>A first rule consisting of one field \"Value of attribute: "
+"service.name\" will set \"%s\" to the value of that attribute, if it is "
 "present. This attribute will be set to the prometheus scrape jobs name, for "
-"example.{newli}A second rule consisting of one field \"Value of attribute: "
-"container.name\" will set \"{attr}\" to the value of that attribute, if it "
-"is present and \"{attr}\" has not been set by the previous rule.{newli}A "
-"third rule consisting of two fields \"Resource attribute value: "
-"custom_attr\" and \"Literal string: some_suffix\" will set \"{attr}\" to "
-"\"VALUEsome_suffix\", if the attribute is present and \"{attr}\" has not "
-"been set by the previous rules.{newli}A last rule consisting of one field "
-"\"Literal string: fallback_host\" will set all \"{attr}\" attributes that "
-"are not yet filled to \"fallback_host\".{endol}"
+"example.</li><li>A second rule consisting of one field \"Value of attribute: "
+"container.name\" will set \"%s\" to the value of that attribute, if it is "
+"present and \"%s\" has not been set by the previous rule.</li><li>A third "
+"rule consisting of two fields \"Resource attribute value: custom_attr\" and "
+"\"Literal string: some_suffix\" will set \"%s\" to \"VALUEsome_suffix\", if "
+"the attribute is present and \"%s\" has not been set by the previous rules.</"
+"li><li>A last rule consisting of one field \"Literal string: fallback_host\" "
+"will set all \"%s\" attributes that are not yet filled to \"fallback_host\"."
+"</li></ol>"
 msgstr ""
 "ホスト名の計算は、対応するCheckmkサービスを持つべきホストのな目を計算する。計"
 "算はOpenTelemetryコレクタによって行われ、結果は \"{attr}\"属性に格納される。"
@@ -69288,6 +69304,21 @@ msgstr ""
 "これが役立つ場合もあります。それらの1つは、SMART PingでCheckmk Micro Coreを使"
 "用していて、それでも一部のホストへのPINGのパフォーマンスデータを追跡したい場"
 "合です。"
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis CPU utilization "
+"monitoring"
+msgstr ""
+"このルールでは、データベースのCPU使用率のレベルを設定することができます"
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis connections "
+"monitoring"
+msgstr ""
+"このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
+"きます"
 
 msgid "This ruleset allows you to configure levels for the Storage data flows"
 msgstr "このルールセットでは、ストレージのデータフローのレベルを設定できます"
@@ -81813,13 +81844,6 @@ msgstr "少なくとも1つのユーザーを選択する必要があります�
 msgid "You have to specify a connector to migrate to."
 msgstr "移行先のコネクタを指定する必要があります。"
 
-msgid ""
-"You have to specify at least one authenticated user to use Basic "
-"Authentication on an endpoint"
-msgstr ""
-"エンドポイントでベーシックな認証を使用するには、少なくとも１人の認証済みユー"
-"ザーを指定する必要があります"
-
 #, python-format
 msgid "You have to specify at least one receiver: %s"
 msgstr "少なくとも１つのレシーバーを指定しなければならない: %s"
@@ -82064,9 +82088,6 @@ msgstr ""
 
 msgid "You need to provide a key file."
 msgstr "キーファイルを提供する必要があります。"
-
-msgid "You need to provide a text."
-msgstr "テキストを提供する必要があります。"
 
 msgid ""
 "You need to provide a valid \"host name\". Only letters, digits, dash, "
@@ -84301,6 +84322,10 @@ msgid "site"
 msgid_plural "sites"
 msgstr[0] "サイト"
 
+#, fuzzy, python-format
+msgid "site must be a list. Current type is: %s "
+msgstr "タイプはリストされる必要がありますが、%s です"
+
 msgid "slots"
 msgstr "スロット"
 
@@ -84697,6 +84722,29 @@ msgid ""
 msgstr ""
 "サービス制限を下回るまで、「変更を有効にする」はブロックされます。利用限度額"
 "を上げたい場合、 "
+
+#, python-format
+#~ msgid "A user with the id \"%s\" does not exist."
+#~ msgstr "IDが\"%s\"のユーザーは存在しません。"
+
+#~ msgid "Disabled "
+#~ msgstr "無効 "
+
+#~ msgid "Invalid messaging method selected."
+#~ msgstr "選択されたメッセージ送信方法が無効です。"
+
+#~ msgid "Please select at least one messaging method."
+#~ msgstr "メッセージ送信方法を少なくとも1つ選択してください。"
+
+#~ msgid ""
+#~ "You have to specify at least one authenticated user to use Basic "
+#~ "Authentication on an endpoint"
+#~ msgstr ""
+#~ "エンドポイントでベーシックな認証を使用するには、少なくとも１人の認証済み"
+#~ "ユーザーを指定する必要があります"
+
+#~ msgid "You need to provide a text."
+#~ msgstr "テキストを提供する必要があります。"
 
 #~ msgid "License expired: Renew license now to reactivate change activation."
 #~ msgstr "ライセンスの有効期限切れ：今すぐライセンスを更新してください。"

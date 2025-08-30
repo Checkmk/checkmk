@@ -2608,10 +2608,6 @@ msgstr ""
 "een externe ID heeft gegeven, geef die waarde dan op in de parameter Externe "
 "ID. "
 
-#, python-format
-msgid "A user with the id \"%s\" does not exist."
-msgstr "Een gebruiker met het id \"%s\" bestaat niet."
-
 msgid "A value in seconds"
 msgstr "Een waarde in seconden"
 
@@ -4219,6 +4215,10 @@ msgstr "Nieuwe actie toevoegen"
 
 msgid "Add new aggregation"
 msgstr "Nieuwe aggregatie toevoegen"
+
+#, fuzzy
+msgid "Add new credentials"
+msgstr "Gebruik geloofsbrieven"
 
 msgid "Add new element"
 msgstr "Nieuw element toevoegen"
@@ -7761,7 +7761,7 @@ msgid "Authorizations per DB security group"
 msgstr "Autorisaties per DB-beveiligingsgroep"
 
 #, fuzzy
-msgid "Authorized users"
+msgid "Authorized user"
 msgstr "Toegestane sites"
 
 #, fuzzy
@@ -8869,6 +8869,14 @@ msgstr "Azure Databases"
 
 msgid "Azure Load Balancer Health"
 msgstr "Gezondheid Azure Load Balancer"
+
+#, fuzzy
+msgid "Azure Redis CPU utilization"
+msgstr "GCP/Redis CPU-gebruik"
+
+#, fuzzy
+msgid "Azure Redis connections"
+msgstr "Databaseverbindingen"
 
 #, fuzzy
 msgid "Azure SQL database CPU usage"
@@ -15153,6 +15161,14 @@ msgstr "Verbinden zonder wachtwoord"
 msgid "Connect without proxy"
 msgstr "Verbinden zonder proxy"
 
+#, fuzzy
+msgid "Connected Clients"
+msgstr "Verbindingen"
+
+#, fuzzy
+msgid "Connected clients"
+msgstr "Aantal aangesloten cliënten"
+
 msgid "Connecter and connectee sites must be different."
 msgstr ""
 
@@ -15262,6 +15278,14 @@ msgstr "Type aansluiting"
 
 msgid "Connections"
 msgstr "Verbindingen"
+
+#, fuzzy
+msgid "Connections closed rate"
+msgstr "Verbinding laat verbroken"
+
+#, fuzzy
+msgid "Connections created rate"
+msgstr "Verbinding laat verbroken"
 
 msgid "Connections dropped"
 msgstr "Verbindingen verbroken"
@@ -20027,9 +20051,6 @@ msgstr "Schakel verdwenen diensten uit"
 
 msgid "Disabled"
 msgstr "Uitgeschakeld"
-
-msgid "Disabled "
-msgstr "Uitgeschakeld "
 
 msgid "Disabled (configured away by admin)"
 msgstr "Uitgeschakeld (weg geconfigureerd door admin)"
@@ -35624,9 +35645,6 @@ msgstr "Ongeldige inloggegevens."
 
 msgid "Invalid man page: Failed to get the title"
 msgstr "Ongeldige man pagina: Mislukt om de titel te krijgen"
-
-msgid "Invalid messaging method selected."
-msgstr "Ongeldige berichtmethode geselecteerd."
 
 #, fuzzy, python-format
 msgid "Invalid mime type, supported types are: %s"
@@ -51255,9 +51273,6 @@ msgstr "Selecteer ten minste één element"
 #, fuzzy
 msgid "Please select at least one item to monitor"
 msgstr "Selecteer ten minste één element"
-
-msgid "Please select at least one messaging method."
-msgstr "Kies ten minste één berichtmethode."
 
 #, fuzzy
 msgid "Please select at least one or more regions to continue."
@@ -67221,26 +67236,26 @@ msgstr ""
 msgid "The host name attribute needs to be assigned to a column."
 msgstr "Het hostnaam-attribuut moet aan een kolom worden toegewezen."
 
-#, python-brace-format
+#, python-format
 msgid ""
 "The host name computation computes the name of the host that should have the "
 "corresponding Checkmk services. The computation is done by the OpenTelemetry "
-"collector and the result is stored in the \"{attr}\" attribute. For every "
-"rule configured here, the provided fields are concatenated in the order they "
-"are listed. The first rule that results in a non-empty value is used. For "
+"collector and the result is stored in the \"%s\" attribute. For every rule "
+"configured here, the provided fields are concatenated in the order they are "
+"listed. The first rule that results in a non-empty value is used. For "
 "example:\n"
-"{startol}A first rule consisting of one field \"Value of attribute: "
-"service.name\" will set \"{attr}\" to the value of that attribute, if it is "
+"<ol><li>A first rule consisting of one field \"Value of attribute: "
+"service.name\" will set \"%s\" to the value of that attribute, if it is "
 "present. This attribute will be set to the prometheus scrape jobs name, for "
-"example.{newli}A second rule consisting of one field \"Value of attribute: "
-"container.name\" will set \"{attr}\" to the value of that attribute, if it "
-"is present and \"{attr}\" has not been set by the previous rule.{newli}A "
-"third rule consisting of two fields \"Resource attribute value: "
-"custom_attr\" and \"Literal string: some_suffix\" will set \"{attr}\" to "
-"\"VALUEsome_suffix\", if the attribute is present and \"{attr}\" has not "
-"been set by the previous rules.{newli}A last rule consisting of one field "
-"\"Literal string: fallback_host\" will set all \"{attr}\" attributes that "
-"are not yet filled to \"fallback_host\".{endol}"
+"example.</li><li>A second rule consisting of one field \"Value of attribute: "
+"container.name\" will set \"%s\" to the value of that attribute, if it is "
+"present and \"%s\" has not been set by the previous rule.</li><li>A third "
+"rule consisting of two fields \"Resource attribute value: custom_attr\" and "
+"\"Literal string: some_suffix\" will set \"%s\" to \"VALUEsome_suffix\", if "
+"the attribute is present and \"%s\" has not been set by the previous rules.</"
+"li><li>A last rule consisting of one field \"Literal string: fallback_host\" "
+"will set all \"%s\" attributes that are not yet filled to \"fallback_host\"."
+"</li></ol>"
 msgstr ""
 
 #, fuzzy
@@ -73733,6 +73748,22 @@ msgstr ""
 "zijn echter enkele situaties waarin dit nuttig kan zijn. Eén daarvan is "
 "wanneer u de Checkmk Micro Core met SMART Ping gebruikt en u toch "
 "prestatiegegevens van de PING naar sommige hosts wilt bijhouden."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis CPU utilization "
+"monitoring"
+msgstr ""
+"Deze regel staat je toe om bloat levels te configureren voor een databases "
+"tablespace en indexspace."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis connections "
+"monitoring"
+msgstr ""
+"Deze regel staat je toe om bloat levels te configureren voor een databases "
+"tablespace en indexspace."
 
 #, fuzzy
 msgid "This ruleset allows you to configure levels for the Storage data flows"
@@ -87560,11 +87591,6 @@ msgstr "U moet ten minste één gebruiker selecteren."
 msgid "You have to specify a connector to migrate to."
 msgstr "U moet een connector opgeven waarnaar u wilt migreren."
 
-msgid ""
-"You have to specify at least one authenticated user to use Basic "
-"Authentication on an endpoint"
-msgstr ""
-
 #, fuzzy, python-format
 msgid "You have to specify at least one receiver: %s"
 msgstr "U moet ten minste één gebruiker selecteren."
@@ -87797,9 +87823,6 @@ msgstr ""
 
 msgid "You need to provide a key file."
 msgstr "U moet een sleutelbestand opgeven."
-
-msgid "You need to provide a text."
-msgstr "Je moet een tekst geven."
 
 #, fuzzy
 msgid ""
@@ -90120,6 +90143,10 @@ msgid_plural "sites"
 msgstr[0] "website"
 msgstr[1] "website"
 
+#, fuzzy, python-format
+msgid "site must be a list. Current type is: %s "
+msgstr "Het type moet lijst zijn, maar is %s"
+
 msgid "slots"
 msgstr "slots"
 
@@ -90518,6 +90545,22 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, python-format
+#~ msgid "A user with the id \"%s\" does not exist."
+#~ msgstr "Een gebruiker met het id \"%s\" bestaat niet."
+
+#~ msgid "Disabled "
+#~ msgstr "Uitgeschakeld "
+
+#~ msgid "Invalid messaging method selected."
+#~ msgstr "Ongeldige berichtmethode geselecteerd."
+
+#~ msgid "Please select at least one messaging method."
+#~ msgstr "Kies ten minste één berichtmethode."
+
+#~ msgid "You need to provide a text."
+#~ msgstr "Je moet een tekst geven."
 
 #, fuzzy
 #~ msgid "License expired: Renew license now to reactivate change activation."

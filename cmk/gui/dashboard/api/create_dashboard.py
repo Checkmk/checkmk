@@ -22,9 +22,9 @@ from cmk.gui.openapi.restful_objects.constructors import collection_href
 from .. import DashboardConfig
 from ..store import DashboardStore, save_all_dashboards
 from ._family import DASHBOARD_FAMILY
-from ._model.dashboard import BaseDashboardRequest, DashboardResponse
-from ._model.response_model import DashboardDomainObject
 from ._utils import PERMISSIONS_DASHBOARD, serialize_dashboard, sync_user_to_remotes
+from .model.dashboard import BaseDashboardRequest, DashboardResponse
+from .model.response_model import DashboardDomainObject
 
 
 @api_model

@@ -22,14 +22,14 @@ from cmk.gui.type_defs import AnnotatedUserId
 
 from ..store import get_all_dashboards, save_all_dashboards
 from ._family import DASHBOARD_FAMILY
-from ._model.dashboard import BaseDashboardRequest, DashboardResponse
-from ._model.response_model import DashboardDomainObject
 from ._utils import (
     get_permitted_user_id,
     PERMISSIONS_DASHBOARD,
     serialize_dashboard,
     sync_user_to_remotes,
 )
+from .model.dashboard import BaseDashboardRequest, DashboardResponse
+from .model.response_model import DashboardDomainObject
 
 
 @api_model

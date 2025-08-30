@@ -18,9 +18,9 @@ from cmk.gui.openapi.utils import ProblemException
 
 from ..store import get_permitted_dashboards
 from ._family import DASHBOARD_FAMILY
-from ._model.dashboard import DashboardResponse
-from ._model.response_model import DashboardDomainObject
 from ._utils import PERMISSIONS_DASHBOARD, serialize_dashboard
+from .model.dashboard import DashboardResponse
+from .model.response_model import DashboardDomainObject
 
 
 def show_dashboard_v1(

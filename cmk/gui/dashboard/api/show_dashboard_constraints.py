@@ -18,9 +18,9 @@ from cmk.gui.openapi.framework.model.base_models import DomainObjectModel
 from cmk.gui.openapi.restful_objects.constructors import object_href
 
 from ._family import DASHBOARD_FAMILY
-from ._model.type_defs import AnnotatedInfoName
-from ._model.widget import WidgetPosition, WidgetSize
 from ._utils import INTERNAL_TO_API_TYPE_NAME
+from .model.type_defs import AnnotatedInfoName
+from .model.widget import WidgetPosition, WidgetSize
 
 
 @api_model

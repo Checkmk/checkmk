@@ -22,8 +22,8 @@ from cmk.gui.watolib.automations import RemoteAutomationConfig
 from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional_wrapper
 from cmk.gui.watolib.users import get_enabled_remote_sites_for_logged_in_user
 
-from ._model.dashboard import DashboardResponse
-from ._model.response_model import DashboardDomainObject
+from .model.dashboard import DashboardResponse
+from .model.response_model import DashboardDomainObject
 
 INTERNAL_TO_API_TYPE_NAME: Mapping[str, str] = {
     "problem_graph": "problem_graph",

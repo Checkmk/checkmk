@@ -16,9 +16,9 @@ from cmk.gui.openapi.restful_objects.constructors import collection_href
 from ...openapi.framework.model.base_models import LinkModel
 from ..store import get_permitted_dashboards
 from ._family import DASHBOARD_FAMILY
-from ._model.dashboard import DashboardResponse
-from ._model.response_model import DashboardDomainObjectCollection
 from ._utils import PERMISSIONS_DASHBOARD, serialize_dashboard
+from .model.dashboard import DashboardResponse
+from .model.response_model import DashboardDomainObjectCollection
 
 
 def list_dashboards_v1() -> DashboardDomainObjectCollection:

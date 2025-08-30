@@ -9,9 +9,9 @@ from typing import Any, get_args, get_type_hints
 import pytest
 
 from cmk.gui.dashboard.api import ApiCustomGraphValidation
-from cmk.gui.dashboard.api._model.widget_content import _CONTENT_TYPES
-from cmk.gui.dashboard.api._model.widget_content._base import BaseWidgetContent
 from cmk.gui.dashboard.api._utils import INTERNAL_TO_API_TYPE_NAME
+from cmk.gui.dashboard.api.model.widget_content import _CONTENT_TYPES
+from cmk.gui.dashboard.api.model.widget_content._base import BaseWidgetContent
 from cmk.gui.views.icon.registry import all_icons
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from tests.testlib.common.repo import (

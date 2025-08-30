@@ -54,31 +54,19 @@ def test_show_dashboard_constants(clients: ClientRegistry) -> None:
     assert set(list(resp.json["extensions"]["widgets"].values())[0]) == {"layout", "filter_context"}
 
 
-def test_list_dashboards(
-    clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
-) -> None:
-    # NOTE: `mock_livestatus` is used, because graph widgets want the connected site PIDs.
-    # No queries are actually executed.
-
-    # we expect at least one builtin dashboard to be present, and that all of them can be serialized
-    resp = clients.DashboardClient.get_all()
-    assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
-    assert len(resp.json["value"]) > 0, "Expected at least one dashboard to be returned"
-
-
 def test_show_dashboard(clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection) -> None:
     # NOTE: `mock_livestatus` is used, because graph widgets want the connected site PIDs.
     # No queries are actually executed.
 
     # main builtin dashboard should always be present
-    resp = clients.DashboardClient.get("main")
+    resp = clients.DashboardClient.get_relative_grid_dashboard("main")
     assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
     # check that we got the correct dashboard
     assert resp.json["id"] == "main", "Expected dashboard ID to be 'main'"
 
 
 def test_show_non_existent_dashboard(clients: ClientRegistry) -> None:
-    resp = clients.DashboardClient.get("non_existent" * 4, expect_ok=False)
+    resp = clients.DashboardClient.get_relative_grid_dashboard("non_existent" * 4, expect_ok=False)
     assert resp.status_code == 404, f"Expected 404, got {resp.status_code} {resp.body!r}"
 
 
@@ -108,16 +96,16 @@ def _create_dashboard_payload(
         "mandatory_context_filters": [],
         "filter_context": {"restricted_to_single": [], "filters": {}},
         "widgets": widgets,
+        "layout": {"type": "relative_grid"},
     }
 
 
 def _create_widget(content: dict[str, object]) -> dict[str, object]:
     return {
         "layout": {
-            "relative_grid": {
-                "position": {"x": 1, "y": 1},
-                "size": {"width": 10, "height": 10},
-            }
+            "type": "relative_grid",
+            "position": {"x": 1, "y": 1},
+            "size": {"width": 10, "height": 10},
         },
         "general_settings": {
             "title": {"text": "Test Widget", "render_mode": "with_background"},
@@ -129,7 +117,9 @@ def _create_widget(content: dict[str, object]) -> dict[str, object]:
 
 
 def test_create_empty_dashboard(clients: ClientRegistry) -> None:
-    resp = clients.DashboardClient.create(_create_dashboard_payload("test_dashboard", {}))
+    resp = clients.DashboardClient.create_relative_grid_dashboard(
+        _create_dashboard_payload("test_dashboard", {})
+    )
     assert resp.status_code == 201, f"Expected 201, got {resp.status_code} {resp.body!r}"
     assert resp.json["id"] == "test_dashboard", (
         "Expected created dashboard ID to be 'test_dashboard'"
@@ -141,7 +131,7 @@ def test_create_empty_dashboard(clients: ClientRegistry) -> None:
     "dashboard_id", [pytest.param("", id="empty"), "with whitespace", "with_special_chars!!!"]
 )
 def test_create_dashboard_with_invalid_id(clients: ClientRegistry, dashboard_id: str) -> None:
-    resp = clients.DashboardClient.create(
+    resp = clients.DashboardClient.create_relative_grid_dashboard(
         _create_dashboard_payload(dashboard_id, {}), expect_ok=False
     )
     assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
@@ -153,17 +143,19 @@ def test_create_dashboard_with_invalid_widget_type(clients: ClientRegistry) -> N
         "invalid_widget_type",
         {"test_widget": _create_widget({"type": "not_a_real_type"})},
     )
-    resp = clients.DashboardClient.create(payload, expect_ok=False)
+    resp = clients.DashboardClient.create_relative_grid_dashboard(payload, expect_ok=False)
     assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
 
 
 def test_delete_dashboard(clients: ClientRegistry) -> None:
     dashboard_id = "to_delete"
-    clients.DashboardClient.create(_create_dashboard_payload(dashboard_id, {}))
+    clients.DashboardClient.create_relative_grid_dashboard(
+        _create_dashboard_payload(dashboard_id, {})
+    )
 
     resp = clients.DashboardClient.delete(dashboard_id)
     assert resp.status_code == 204, f"Expected 204, got {resp.status_code} {resp.body!r}"
-    resp = clients.DashboardClient.get(dashboard_id, expect_ok=False)
+    resp = clients.DashboardClient.get_relative_grid_dashboard(dashboard_id, expect_ok=False)
     assert resp.status_code == 404, f"Expected 404, got {resp.status_code} {resp.body!r}"
 
 
@@ -173,7 +165,7 @@ class TestDashboardIcon:
         icons = list(all_icons())
         icon_config = {"name": icons[0]}
 
-        resp = clients.DashboardClient.create(
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
             _create_dashboard_payload("test_dashboard_with_icon", {}, icon_config=icon_config)
         )
         assert resp.status_code == 201, f"Expected 201, got {resp.status_code} {resp.body!r}"
@@ -184,14 +176,14 @@ class TestDashboardIcon:
         icons = list(all_icons())
         icon_config = {"name": icons[0], "emblem": icons[-1]}
 
-        resp = clients.DashboardClient.create(
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
             _create_dashboard_payload("test_dashboard_with_icon", {}, icon_config=icon_config)
         )
         assert resp.status_code == 201, f"Expected 201, got {resp.status_code} {resp.body!r}"
         assert resp.json["extensions"]["menu"]["icon"] == icon_config, "Expected icon to be set"
 
     def test_invalid_icon_name(self, clients: ClientRegistry) -> None:
-        resp = clients.DashboardClient.create(
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
             _create_dashboard_payload(
                 "test_dashboard_with_invalid_icon",
                 {},
@@ -210,7 +202,7 @@ def _check_widget_create(
     content: dict[str, object],
 ) -> None:
     expected_type = content["type"]
-    resp = clients.DashboardClient.create(
+    resp = clients.DashboardClient.create_relative_grid_dashboard(
         _create_dashboard_payload(
             "test_dashboard",
             {"test_widget": _create_widget(content)},
@@ -273,7 +265,7 @@ class TestCombinedGraphContent:
         ],
     )
     def test_invalid_graph_template(self, clients: ClientRegistry, graph_template: str) -> None:
-        resp = clients.DashboardClient.create(
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
             _create_dashboard_payload(
                 "test_dashboard",
                 {
@@ -317,7 +309,7 @@ class TestSingleTimeseriesContent:
         )
 
     def test_invalid_metric(self, clients: ClientRegistry) -> None:
-        resp = clients.DashboardClient.create(
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
             _create_dashboard_payload(
                 "test_dashboard",
                 {
@@ -379,7 +371,7 @@ class TestPerformanceGraphContent:
         )
 
     def test_invalid_source(self, clients: ClientRegistry) -> None:
-        resp = clients.DashboardClient.create(
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
             _create_dashboard_payload(
                 "test_dashboard",
                 {
@@ -416,7 +408,7 @@ class TestBarplotContent:
         )
 
     def test_invalid_metric(self, clients: ClientRegistry) -> None:
-        resp = clients.DashboardClient.create(
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
             _create_dashboard_payload(
                 "test_dashboard",
                 {
@@ -437,7 +429,7 @@ class TestBarplotContent:
         ].startswith("Value error, Value 'non_existent_metric' is not allowed, valid options are:")
 
     def test_invalid_display_range_unit(self, clients: ClientRegistry) -> None:
-        resp = clients.DashboardClient.create(
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
             _create_dashboard_payload(
                 "test_dashboard",
                 {
@@ -483,7 +475,7 @@ class TestGaugeContent:
         )
 
     def test_invalid_metric(self, clients: ClientRegistry) -> None:
-        resp = clients.DashboardClient.create(
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
             _create_dashboard_payload(
                 "test_dashboard",
                 {
@@ -509,7 +501,7 @@ class TestGaugeContent:
         ].startswith("Value error, Value 'non_existent_metric' is not allowed, valid options are:")
 
     def test_invalid_display_range_unit(self, clients: ClientRegistry) -> None:
-        resp = clients.DashboardClient.create(
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
             _create_dashboard_payload(
                 "test_dashboard",
                 {
@@ -557,7 +549,7 @@ class TestSingleMetricContent:
         )
 
     def test_invalid_metric(self, clients: ClientRegistry) -> None:
-        resp = clients.DashboardClient.create(
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
             _create_dashboard_payload(
                 "test_dashboard",
                 {
@@ -581,7 +573,7 @@ class TestSingleMetricContent:
         ].startswith("Value error, Value 'non_existent_metric' is not allowed, valid options are:")
 
     def test_invalid_display_range_unit(self, clients: ClientRegistry) -> None:
-        resp = clients.DashboardClient.create(
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
             _create_dashboard_payload(
                 "test_dashboard",
                 {
@@ -628,7 +620,7 @@ class TestAverageScatterplotContent:
         )
 
     def test_invalid_metric(self, clients: ClientRegistry) -> None:
-        resp = clients.DashboardClient.create(
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
             _create_dashboard_payload(
                 "test_dashboard",
                 {
@@ -671,7 +663,7 @@ class TestTopListContent:
         )
 
     def test_invalid_metric(self, clients: ClientRegistry) -> None:
-        resp = clients.DashboardClient.create(
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
             _create_dashboard_payload(
                 "test_dashboard",
                 {
@@ -698,7 +690,7 @@ class TestTopListContent:
         ].startswith("Value error, Value 'non_existent_metric' is not allowed, valid options are:")
 
     def test_invalid_display_range_unit(self, clients: ClientRegistry) -> None:
-        resp = clients.DashboardClient.create(
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
             _create_dashboard_payload(
                 "test_dashboard",
                 {
@@ -851,7 +843,7 @@ class TestSidebarElementContent:
         )
 
     def test_invalid_element_name(self, clients: ClientRegistry) -> None:
-        resp = clients.DashboardClient.create(
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
             _create_dashboard_payload(
                 "test_dashboard",
                 {
@@ -904,7 +896,7 @@ class TestLinkedViewContent:
         )
 
     def test_invalid_view_name(self, clients: ClientRegistry) -> None:
-        resp = clients.DashboardClient.create(
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
             _create_dashboard_payload(
                 "test_dashboard",
                 {
@@ -966,7 +958,7 @@ class TestEmbeddedViewContent:
     def test_invalid_restricted_to_single(self, clients: ClientRegistry) -> None:
         content = self._create_embedded_view_content()
         content["restricted_to_single"] = ["invalid_info_name"]
-        resp = clients.DashboardClient.create(
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
             _create_dashboard_payload(
                 "test_dashboard",
                 {"test_widget": _create_widget(content)},
@@ -984,7 +976,7 @@ class TestEmbeddedViewContent:
     def test_invalid_data_source(self, clients: ClientRegistry) -> None:
         content = self._create_embedded_view_content()
         content["datasource"] = "non_existent_datasource"
-        resp = clients.DashboardClient.create(
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
             _create_dashboard_payload(
                 "test_dashboard",
                 {"test_widget": _create_widget(content)},
@@ -1002,7 +994,7 @@ class TestEmbeddedViewContent:
     def test_invalid_layout(self, clients: ClientRegistry) -> None:
         content = self._create_embedded_view_content()
         content["layout"] = "non_existent_layout"
-        resp = clients.DashboardClient.create(
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
             _create_dashboard_payload(
                 "test_dashboard",
                 {"test_widget": _create_widget(content)},
@@ -1018,7 +1010,7 @@ class TestEmbeddedViewContent:
     def test_invalid_painter_name(self, clients: ClientRegistry) -> None:
         content = self._create_embedded_view_content()
         content["columns"][0]["name"] = "non_existent_painter"
-        resp = clients.DashboardClient.create(
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
             _create_dashboard_payload(
                 "test_dashboard",
                 {"test_widget": _create_widget(content)},
@@ -1034,7 +1026,7 @@ class TestEmbeddedViewContent:
     def test_invalid_link_spec(self, clients: ClientRegistry) -> None:
         content = self._create_embedded_view_content()
         content["columns"][1]["link_spec"]["name"] = "non_existent_view"
-        resp = clients.DashboardClient.create(
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
             _create_dashboard_payload(
                 "test_dashboard",
                 {"test_widget": _create_widget(content)},
@@ -1069,7 +1061,7 @@ class TestNtopContent:
 
 class TestNotSupportedContent:
     def test_create(self, clients: ClientRegistry) -> None:
-        resp = clients.DashboardClient.create(
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
             _create_dashboard_payload(
                 "test_dashboard",
                 {

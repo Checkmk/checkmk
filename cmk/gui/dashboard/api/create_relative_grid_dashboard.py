@@ -22,13 +22,13 @@ from cmk.gui.openapi.restful_objects.constructors import collection_href
 from .. import DashboardConfig
 from ..store import DashboardStore, save_all_dashboards
 from ._family import DASHBOARD_FAMILY
-from ._utils import PERMISSIONS_DASHBOARD, serialize_dashboard, sync_user_to_remotes
-from .model.dashboard import BaseDashboardRequest, DashboardResponse
-from .model.response_model import DashboardDomainObject
+from ._utils import PERMISSIONS_DASHBOARD, serialize_relative_grid_dashboard, sync_user_to_remotes
+from .model.dashboard import BaseRelativeGridDashboardRequest, RelativeGridDashboardResponse
+from .model.response_model import RelativeGridDashboardDomainObject
 
 
 @api_model
-class CreateDashboardV1(BaseDashboardRequest):
+class CreateDashboardV1(BaseRelativeGridDashboardRequest):
     dashboard_id: str = api_field(
         serialization_alias="id",
         description="Unique identifier for the dashboard.",
@@ -46,9 +46,9 @@ def _save_dashboard_to_file(sites: SiteConfigurations, dashboard: DashboardConfi
     sync_user_to_remotes(sites)
 
 
-def create_dashboard_v1(
+def create_relative_grid_dashboard_v1(
     api_context: ApiContext, body: CreateDashboardV1
-) -> TypedResponse[DashboardDomainObject]:
+) -> TypedResponse[RelativeGridDashboardDomainObject]:
     """Create a dashboard."""
     body.validate(api_context)
     user.need_permission("general.edit_dashboards")
@@ -57,18 +57,20 @@ def create_dashboard_v1(
     _save_dashboard_to_file(api_context.config.sites, internal)
 
     return ApiResponse(
-        serialize_dashboard(body.dashboard_id, DashboardResponse.from_internal(internal)),
+        serialize_relative_grid_dashboard(
+            body.dashboard_id, RelativeGridDashboardResponse.from_internal(internal)
+        ),
         status_code=201,
     )
 
 
-ENDPOINT_CREATE_DASHBOARD = VersionedEndpoint(
+ENDPOINT_CREATE_RELATIVE_GRID_DASHBOARD = VersionedEndpoint(
     metadata=EndpointMetadata(
-        path=collection_href("dashboard"),
+        path=collection_href("dashboard_relative_grid"),
         link_relation="cmk/create",
         method="post",
     ),
     permissions=EndpointPermissions(required=PERMISSIONS_DASHBOARD),
     doc=EndpointDoc(family=DASHBOARD_FAMILY.name),
-    versions={APIVersion.UNSTABLE: EndpointHandler(handler=create_dashboard_v1)},
+    versions={APIVersion.UNSTABLE: EndpointHandler(handler=create_relative_grid_dashboard_v1)},
 )

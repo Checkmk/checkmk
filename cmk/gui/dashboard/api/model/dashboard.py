@@ -11,6 +11,7 @@ from pydantic import AfterValidator, Discriminator
 from cmk.ccc.user import UserId
 from cmk.gui.dashboard import DashboardConfig
 from cmk.gui.dashboard.page_edit_dashboard import dashboard_info_handler
+from cmk.gui.dashboard.type_defs import DashboardRelativeGridLayoutSpec
 from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.converter import (
@@ -24,7 +25,7 @@ from cmk.gui.views.icon.registry import all_icons
 from cmk.gui.watolib.main_menu import main_module_topic_registry
 
 from .type_defs import AnnotatedInfoName
-from .widget import WidgetRequest, WidgetResponse
+from .widget import RelativeGridWidgetRequest, RelativeGridWidgetResponse
 
 
 @api_model
@@ -160,6 +161,16 @@ class DashboardVisibility:
 
 
 @api_model
+class DashboardRelativeGridLayout:
+    type: Literal["relative_grid"] = api_field(
+        description="The dashboard is in a relative grid layout.",
+    )
+
+    def to_internal(self) -> DashboardRelativeGridLayoutSpec:
+        return DashboardRelativeGridLayoutSpec(type=self.type)
+
+
+@api_model
 class DashboardFilterContext:
     restricted_to_single: list[AnnotatedInfoName] = api_field(
         description=(
@@ -191,7 +202,7 @@ class DashboardFilterContextResponse(DashboardFilterContext):
 
 
 @api_model
-class _BaseApiDashboard:
+class BaseDashboardRequest:
     title: DashboardTitle = api_field(
         description="Title settings.", example={"text": "My Dashboard", "render": True}
     )
@@ -200,35 +211,20 @@ class _BaseApiDashboard:
         default_factory=ApiOmitted,
         example="This dashboard shows ...",
     )
-    filter_context: DashboardFilterContext = api_field(
-        description="Filter context for the dashboard.",
-    )
     menu: DashboardMenuSettings = api_field(description="Settings relating to the main menu.")
     visibility: DashboardVisibility = api_field(
         description="Settings relating to the dashboards visibility."
+    )
+    filter_context: DashboardFilterContext = api_field(
+        description="Filter context for the dashboard.",
     )
     mandatory_context_filters: list[FilterName] = api_field(
         description="Filters that are required to use this dashboard."
     )
 
-
-@api_model
-class BaseDashboardRequest(_BaseApiDashboard):
-    widgets: dict[str, WidgetRequest] = api_field(
-        description="All widgets that are part of this dashboard.",
-    )
-
-    def validate(self, context: ApiContext) -> None:
-        """Run additional validation that depends on the API context (or rather the config)."""
-        errors = [
-            error
-            for widget_id, widget in self.widgets.items()
-            for error in widget.iter_validation_errors(("body", "widgets", widget_id), context)
-        ]
-        if errors:
-            raise RequestDataValidator.format_error_details(errors)
-
-    def to_internal(self, owner: UserId, dashboard_id: str) -> DashboardConfig:
+    def _to_internal_without_layout_and_widgets(
+        self, owner: UserId, dashboard_id: str
+    ) -> DashboardConfig:
         return DashboardConfig(
             owner=owner,
             name=dashboard_id,
@@ -248,14 +244,14 @@ class BaseDashboardRequest(_BaseApiDashboard):
             link_from={},
             main_menu_search_terms=self.menu.search_terms,
             mtime=int(dt.datetime.now(tz=dt.UTC).timestamp()),
-            dashlets=[widget.to_internal() for widget in self.widgets.values()],
             show_title=self.title.render,
             mandatory_context_filters=self.mandatory_context_filters,
+            dashlets=[],
         )
 
 
 @api_model
-class DashboardResponse(_BaseApiDashboard):
+class BaseDashboardResponse(BaseDashboardRequest):
     # these fields should only be present in responses
     owner: AnnotatedUserId = api_field(description="The owner of the dashboard.", example="admin")
     last_modified_at: dt.datetime = api_field(
@@ -264,8 +260,40 @@ class DashboardResponse(_BaseApiDashboard):
     filter_context: DashboardFilterContextResponse = api_field(
         description="Filter context for the dashboard."
     )
-    widgets: dict[str, WidgetResponse] = api_field(
-        description="All widgets that are part of this dashboard."
+
+
+@api_model
+class BaseRelativeGridDashboardRequest(BaseDashboardRequest):
+    layout: DashboardRelativeGridLayout = api_field(description="The layout the dashboard uses.")
+    widgets: dict[str, RelativeGridWidgetRequest] = api_field(
+        description="All widgets that are part of this dashboard.",
+    )
+
+    def validate(self, context: ApiContext) -> None:
+        """Run additional validation that depends on the API context (or rather the config)."""
+        errors = [
+            error
+            for widget_id, widget in self.widgets.items()
+            for error in widget.iter_validation_errors(
+                ("body", "widgets", widget_id),
+                context=context,
+            )
+        ]
+        if errors:
+            raise RequestDataValidator.format_error_details(errors)
+
+    def to_internal(self, owner: UserId, dashboard_id: str) -> DashboardConfig:
+        config = self._to_internal_without_layout_and_widgets(owner, dashboard_id)
+        config["layout"] = self.layout.to_internal()
+        config["dashlets"] = [widget.to_internal() for widget in self.widgets.values()]
+        return config
+
+
+@api_model
+class RelativeGridDashboardResponse(BaseDashboardResponse):
+    layout: DashboardRelativeGridLayout = api_field(description="The layout the dashboard uses.")
+    widgets: dict[str, RelativeGridWidgetResponse] = api_field(
+        description="All widgets that are part of this dashboard.",
     )
 
     @classmethod
@@ -293,9 +321,10 @@ class DashboardResponse(_BaseApiDashboard):
             last_modified_at=dt.datetime.fromtimestamp(dashboard["mtime"], tz=dt.UTC),
             filter_context=DashboardFilterContextResponse.from_internal(dashboard),
             widgets={
-                f"{dashboard['name']}-{idx}": WidgetResponse.from_internal(dashlet)
+                f"{dashboard['name']}-{idx}": RelativeGridWidgetResponse.from_internal(dashlet)
                 for idx, dashlet in enumerate(dashboard["dashlets"])
             },
+            layout=DashboardRelativeGridLayout(type="relative_grid"),
         )
         if "description" in dashboard:
             api_dashboard.description = str(dashboard["description"])

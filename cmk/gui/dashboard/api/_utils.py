@@ -22,8 +22,9 @@ from cmk.gui.watolib.automations import RemoteAutomationConfig
 from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional_wrapper
 from cmk.gui.watolib.users import get_enabled_remote_sites_for_logged_in_user
 
-from .model.dashboard import DashboardResponse
-from .model.response_model import DashboardDomainObject
+from .. import DashboardConfig
+from .model.dashboard import RelativeGridDashboardResponse
+from .model.response_model import RelativeGridDashboardDomainObject
 
 INTERNAL_TO_API_TYPE_NAME: Mapping[str, str] = {
     "problem_graph": "problem_graph",
@@ -108,8 +109,15 @@ def get_permitted_user_id(owner: UserId | ApiOmitted, action: Literal["delete", 
     return owner
 
 
-def serialize_dashboard(dashboard_id: str, dashboard: DashboardResponse) -> DashboardDomainObject:
-    return DashboardDomainObject(
+def dashboard_uses_relative_grid(dashboard: DashboardConfig) -> bool:
+    """Check if the given dashboard configuration uses the relative grid layout."""
+    return "layout" not in dashboard or dashboard["layout"].get("type") == "relative_grid"
+
+
+def serialize_relative_grid_dashboard(
+    dashboard_id: str, dashboard: RelativeGridDashboardResponse
+) -> RelativeGridDashboardDomainObject:
+    return RelativeGridDashboardDomainObject(
         domainType="dashboard",
         id=dashboard_id,
         title=dashboard.title.text,

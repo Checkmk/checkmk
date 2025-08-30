@@ -27,6 +27,7 @@ DomainType = Literal[
     "constant",
     "contact_group_config",
     "dashboard",
+    "dashboard_relative_grid",
     "dcd",
     "discovery_run",
     "downtime",

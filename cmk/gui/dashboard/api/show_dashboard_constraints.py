@@ -20,15 +20,15 @@ from cmk.gui.openapi.restful_objects.constructors import object_href
 from ._family import DASHBOARD_FAMILY
 from ._utils import INTERNAL_TO_API_TYPE_NAME
 from .model.type_defs import AnnotatedInfoName
-from .model.widget import WidgetPosition, WidgetSize
+from .model.widget import WidgetRelativeGridPosition, WidgetRelativeGridSize
 
 
 @api_model
 class RelativeLayoutConstraints:
-    initial_size: WidgetSize = api_field(
+    initial_size: WidgetRelativeGridSize = api_field(
         description="Initial size as (width, height) in relative grid units."
     )
-    initial_position: WidgetPosition = api_field(
+    initial_position: WidgetRelativeGridPosition = api_field(
         description="Initial position as (x, y) in relative grid units."
     )
     is_resizable: bool = api_field(description="Whether the widget is resizable.")
@@ -80,8 +80,10 @@ def show_dashboard_constraints_v1() -> DashboardConstraintsObject:
             widgets_metadata[api_type_name] = WidgetConstraints(
                 layout=LayoutConstraints(
                     relative=RelativeLayoutConstraints(
-                        initial_size=WidgetSize.from_internal(widget.initial_size()),
-                        initial_position=WidgetPosition.from_internal(widget.initial_position()),
+                        initial_size=WidgetRelativeGridSize.from_internal(widget.initial_size()),
+                        initial_position=WidgetRelativeGridPosition.from_internal(
+                            widget.initial_position()
+                        ),
                         is_resizable=widget.is_resizable(),
                     )
                 ),

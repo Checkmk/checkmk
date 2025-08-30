@@ -3348,34 +3348,32 @@ class VisualFilterClient(RestApiClient):
 
 class DashboardClient(RestApiClient):
     domain: DomainType = "dashboard"
+    domain_relative: DomainType = "dashboard_relative_grid"
     default_version = APIVersion.UNSTABLE
 
-    def get_all(self, expect_ok: bool = True) -> Response:
+    def get_relative_grid_dashboard(self, dashboard_id: str, expect_ok: bool = True) -> Response:
         return self.request(
             "get",
-            url=f"/domain-types/{self.domain}/collections/all",
+            url=f"/objects/{self.domain_relative}/{dashboard_id}",
             expect_ok=expect_ok,
         )
 
-    def get(self, dashboard_id: str, expect_ok: bool = True) -> Response:
-        return self.request(
-            "get",
-            url=f"/objects/{self.domain}/{dashboard_id}",
-            expect_ok=expect_ok,
-        )
-
-    def create(self, payload: dict[str, Any], expect_ok: bool = True) -> Response:
+    def create_relative_grid_dashboard(
+        self, payload: dict[str, Any], expect_ok: bool = True
+    ) -> Response:
         return self.request(
             "post",
-            url=f"/domain-types/{self.domain}/collections/all",
+            url=f"/domain-types/{self.domain_relative}/collections/all",
             body=payload,
             expect_ok=expect_ok,
         )
 
-    def edit(self, dashboard_id: str, payload: dict[str, Any], expect_ok: bool = True) -> Response:
+    def edit_relative_grid_dashboard(
+        self, dashboard_id: str, payload: dict[str, Any], expect_ok: bool = True
+    ) -> Response:
         return self.request(
             "put",
-            url=f"/objects/{self.domain}/{dashboard_id}",
+            url=f"/objects/{self.domain_relative}/{dashboard_id}",
             body=payload,
             expect_ok=expect_ok,
         )

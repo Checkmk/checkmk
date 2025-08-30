@@ -25,19 +25,19 @@ from ._family import DASHBOARD_FAMILY
 from ._utils import (
     get_permitted_user_id,
     PERMISSIONS_DASHBOARD,
-    serialize_dashboard,
+    serialize_relative_grid_dashboard,
     sync_user_to_remotes,
 )
-from .model.dashboard import BaseDashboardRequest, DashboardResponse
-from .model.response_model import DashboardDomainObject
+from .model.dashboard import BaseRelativeGridDashboardRequest, RelativeGridDashboardResponse
+from .model.response_model import RelativeGridDashboardDomainObject
 
 
 @api_model
-class EditDashboardV1(BaseDashboardRequest):
+class EditDashboardV1(BaseRelativeGridDashboardRequest):
     pass
 
 
-def edit_dashboard_v1(
+def edit_relative_grid_dashboard_v1(
     api_context: ApiContext,
     body: EditDashboardV1,
     dashboard_id: Annotated[
@@ -51,7 +51,7 @@ def edit_dashboard_v1(
             example="admin",
         ),
     ] = ApiOmitted(),
-) -> DashboardDomainObject:
+) -> RelativeGridDashboardDomainObject:
     """Edit a dashboard."""
     body.validate(api_context)
     user_id = get_permitted_user_id(owner, action="edit")
@@ -67,16 +67,18 @@ def edit_dashboard_v1(
     dashboards[key] = body.to_internal(user_id, dashboard_id)
     save_all_dashboards()
     sync_user_to_remotes(api_context.config.sites)
-    return serialize_dashboard(dashboard_id, DashboardResponse.from_internal(dashboards[key]))
+    return serialize_relative_grid_dashboard(
+        dashboard_id, RelativeGridDashboardResponse.from_internal(dashboards[key])
+    )
 
 
-ENDPOINT_EDIT_DASHBOARD = VersionedEndpoint(
+ENDPOINT_EDIT_RELATIVE_GRID_DASHBOARD = VersionedEndpoint(
     metadata=EndpointMetadata(
-        path=object_href("dashboard", "{dashboard_id}"),
+        path=object_href("dashboard_relative_grid", "{dashboard_id}"),
         link_relation=".../update",
         method="put",
     ),
     permissions=EndpointPermissions(required=PERMISSIONS_DASHBOARD),
     doc=EndpointDoc(family=DASHBOARD_FAMILY.name),
-    versions={APIVersion.UNSTABLE: EndpointHandler(handler=edit_dashboard_v1)},
+    versions={APIVersion.UNSTABLE: EndpointHandler(handler=edit_relative_grid_dashboard_v1)},
 )

@@ -10,7 +10,11 @@ from pydantic_core import ErrorDetails
 
 from cmk.ccc.user import UserId
 from cmk.gui.dashboard import DashboardConfig, dashlet_registry, GROW, MAX
-from cmk.gui.dashboard.type_defs import DashletConfig, DashletPosition, DashletSize
+from cmk.gui.dashboard.type_defs import (
+    DashletConfig,
+    DashletPosition,
+    DashletSize,
+)
 from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.type_defs import VisualContext
@@ -67,7 +71,7 @@ class WidgetTitle:
 
 
 @api_model
-class WidgetPosition:
+class WidgetRelativeGridPosition:
     # if x & y > 0, anchor top left
     # if x <= 0, y <= 0, anchor bottom right
     # if x <= 0, anchor top right
@@ -89,7 +93,7 @@ type WidgetSizeValue = Literal["auto", "max"] | _PositiveInt
 
 
 @api_model
-class WidgetSize:
+class WidgetRelativeGridSize:
     width: WidgetSizeValue = api_field(description="Width of the widget.")
     height: WidgetSizeValue = api_field(description="Height of the widget.")
 
@@ -126,16 +130,20 @@ class WidgetSize:
 
 
 @api_model
-class RelativeGridLayout:
-    position: WidgetPosition = api_field(description="Position of the widget.")
-    size: WidgetSize = api_field(description="Size of the widget.")
-
-
-@api_model
-class WidgetLayout:
-    relative_grid: RelativeGridLayout = api_field(
-        description="Layout of the widget in a relative grid.",
+class WidgetRelativeGridLayout:
+    type: Literal["relative_grid"] = api_field(
+        description="This setting must be in sync with the dashboards layout.",
     )
+    position: WidgetRelativeGridPosition = api_field(description="Position of the widget.")
+    size: WidgetRelativeGridSize = api_field(description="Size of the widget.")
+
+    @classmethod
+    def from_internal(cls, config: DashletConfig) -> Self:
+        return cls(
+            type="relative_grid",
+            position=WidgetRelativeGridPosition.from_internal(config["position"]),
+            size=WidgetRelativeGridSize.from_internal(config["size"]),
+        )
 
 
 @api_model
@@ -151,15 +159,6 @@ class WidgetGeneralSettings:
 
 @api_model
 class _BaseWidget:
-    layout: WidgetLayout = api_field(
-        description="Layout of the widget.",
-        example={
-            "relative_grid": {
-                "position": {"x": 1, "y": 1},
-                "size": {"width": 4, "height": 2},
-            }
-        },
-    )
     general_settings: WidgetGeneralSettings = api_field(
         description="General settings for the widget.",
         example={
@@ -178,7 +177,7 @@ class _BaseWidget:
 
 
 @api_model
-class WidgetRequest(_BaseWidget):
+class BaseWidgetRequest(_BaseWidget):
     filters: VisualContext = api_field(
         description="Active filters in the format filter_id -> (variable -> value)",
     )
@@ -191,7 +190,7 @@ class WidgetRequest(_BaseWidget):
             location + ("content", self.content.type), context
         )
 
-    def to_internal(self) -> DashletConfig:
+    def _to_internal_without_layout(self) -> DashletConfig:
         config = self.content.to_internal()
         if not isinstance(self.general_settings.title, ApiOmitted):
             config["title"] = self.general_settings.title.text
@@ -205,9 +204,25 @@ class WidgetRequest(_BaseWidget):
         config["single_infos"] = dashlet_type.single_infos()
         config["context"] = self.filters
         config.setdefault("reload_on_resize", False)
-        config["position"] = self.layout.relative_grid.position.to_internal()
-        config["size"] = self.layout.relative_grid.size.to_internal()
         config["background"] = self.general_settings.render_background
+        return config
+
+
+@api_model
+class RelativeGridWidgetRequest(BaseWidgetRequest):
+    layout: WidgetRelativeGridLayout = api_field(
+        description="Layout of the widget.",
+        example={
+            "type": "relative_grid",
+            "position": {"x": 0, "y": 0},
+            "size": {"width": 2, "height": 1},
+        },
+    )
+
+    def to_internal(self) -> DashletConfig:
+        config = self._to_internal_without_layout()
+        config["position"] = self.layout.position.to_internal()
+        config["size"] = self.layout.size.to_internal()
         return config
 
 
@@ -275,24 +290,31 @@ class WidgetFilterContext:
 
 
 @api_model
-class WidgetResponse(_BaseWidget):
+class BaseWidgetResponse(_BaseWidget):
     filter_context: WidgetFilterContext = api_field(
         description="The filter context for the widget.",
+    )
+
+
+@api_model
+class RelativeGridWidgetResponse(BaseWidgetResponse):
+    layout: WidgetRelativeGridLayout = api_field(
+        description="Layout of the widget.",
+        example={
+            "type": "relative_grid",
+            "position": {"x": 0, "y": 0},
+            "size": {"width": 2, "height": 1},
+        },
     )
 
     @classmethod
     def from_internal(cls, config: DashletConfig) -> Self:
         return cls(
-            layout=WidgetLayout(
-                relative_grid=RelativeGridLayout(
-                    position=WidgetPosition.from_internal(config["position"]),
-                    size=WidgetSize.from_internal(config["size"]),
-                )
-            ),
             general_settings=WidgetGeneralSettings(
                 title=WidgetTitle.from_internal(config),
                 render_background=config.get("background", True),
             ),
             content=content_from_internal(config),
             filter_context=WidgetFilterContext.from_internal(config),
+            layout=WidgetRelativeGridLayout.from_internal(config),
         )

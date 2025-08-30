@@ -5,21 +5,14 @@
 from typing import Literal
 
 from cmk.gui.openapi.framework.model import api_field, api_model
-from cmk.gui.openapi.framework.model.base_models import (
-    DomainObjectCollectionModel,
-    DomainObjectModel,
-)
+from cmk.gui.openapi.framework.model.base_models import DomainObjectModel
 
-from .dashboard import DashboardResponse
+from .dashboard import RelativeGridDashboardResponse
 
 
 @api_model
-class DashboardDomainObject(DomainObjectModel):
+class RelativeGridDashboardDomainObject(DomainObjectModel):
     domainType: Literal["dashboard"] = api_field(description="The domain type of the object.")
-    extensions: DashboardResponse = api_field(description="All the data and metadata of this host.")
-
-
-@api_model
-class DashboardDomainObjectCollection(DomainObjectCollectionModel):
-    domainType: Literal["dashboard"] = api_field(description="The domain type of the object.")
-    value: list[DashboardDomainObject] = api_field(description="A list of dashboards.")
+    extensions: RelativeGridDashboardResponse = api_field(
+        description="All the data about this dashboard."
+    )

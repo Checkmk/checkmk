@@ -40,7 +40,7 @@ from cmk.gui.views.command import (
     CommandGroupVarious,
     PERMISSION_SECTION_ACTION,
 )
-from cmk.gui.views.sorter import cmp_simple_number, Sorter
+from cmk.gui.views.sorter import cmp_simple_number, cmp_simple_string, Sorter
 from cmk.gui.visuals.filter import Filter
 
 from .helpers import local_files_involved_in_crash
@@ -101,7 +101,7 @@ class CrashReportsRowTable(RowTable):
             except json.JSONDecodeError:
                 continue  # skip broken crash infos like b'' or b'\n'
 
-            yield {
+            row = {
                 "site": raw_row["site"],
                 "crash_id": raw_row["crash_id"],
                 "crash_type": raw_row["crash_type"],
@@ -110,6 +110,17 @@ class CrashReportsRowTable(RowTable):
                 "crash_exc_type": crash_info_raw["exc_type"],
                 "crash_exc_value": crash_info_raw["exc_value"],
                 "crash_exc_traceback": crash_info_raw["exc_traceback"],
+            }
+            details = crash_info_raw.get("details")
+            if not isinstance(details, dict):
+                yield row
+                continue
+            yield {
+                **row,
+                **({"crash_host": h} if (h := details.get("host")) else {}),
+                **({"crash_item": i} if (i := details.get("item")) else {}),
+                **({"crash_check_type": c} if (c := details.get("check_type")) else {}),
+                **({"crash_service_name": s} if (s := details.get("description")) else {}),
             }
 
     def get_crash_report_rows(
@@ -175,7 +186,7 @@ class PainterCrashIdent(Painter):
         return "crash_ident"
 
     def title(self, cell: Cell) -> str:
-        return _("Crash Ident")
+        return _("Crash ident")
 
     def short_title(self, cell: Cell) -> str:
         return _("ID")
@@ -247,7 +258,7 @@ class PainterCrashTime(Painter):
         return "crash_time"
 
     def title(self, cell: Cell) -> str:
-        return _("Crash Time")
+        return _("Crash time")
 
     def short_title(self, cell: Cell) -> str:
         return _("Time")
@@ -276,7 +287,7 @@ class PainterCrashVersion(Painter):
         return "crash_version"
 
     def title(self, cell: Cell) -> str:
-        return _("Crash Checkmk Version")
+        return _("Crash Checkmk version")
 
     def short_title(self, cell: Cell) -> str:
         return _("Version")
@@ -295,7 +306,7 @@ class PainterCrashException(Painter):
         return "crash_exception"
 
     def title(self, cell: Cell) -> str:
-        return _("Crash Exception")
+        return _("Crash exception")
 
     def short_title(self, cell: Cell) -> str:
         return _("Exc.")
@@ -386,4 +397,181 @@ CommandDeleteCrashReports = Command(
     render=command_delete_crash_report_render,
     action=command_delete_crash_report_action,
     affected_output_cb=command_delete_crash_report_affected,
+)
+
+
+class PainterCrashHost(Painter):
+    @property
+    def ident(self) -> str:
+        return "crash_host"
+
+    def title(self, cell):
+        return _("Crash host")
+
+    def short_title(self, cell):
+        return _("Host")
+
+    @property
+    def columns(self) -> Sequence[ColumnName]:
+        return ["crash_host"]
+
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+        if not row.get("crash_host"):
+            return None, ""
+
+        url = makeuri_contextless(
+            self.request,
+            [
+                ("host", row["crash_host"]),
+                ("site", row["site"]),
+                ("view_name", "host"),
+            ],
+            filename="view.py",
+        )
+        return None, HTMLWriter.render_a(row["crash_host"], href=url)
+
+
+class PainterCrashItem(Painter):
+    @property
+    def ident(self) -> str:
+        return "crash_item"
+
+    def title(self, cell):
+        return _("Crash service item")
+
+    def short_title(self, cell):
+        return _("Item")
+
+    @property
+    def columns(self) -> Sequence[ColumnName]:
+        return ["crash_item"]
+
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+        return None, row.get("crash_item", "")
+
+
+class PainterCrashCheckType(Painter):
+    @property
+    def ident(self) -> str:
+        return "crash_check_type"
+
+    def title(self, cell):
+        return _("Crash check type")
+
+    def short_title(self, cell):
+        return _("Check")
+
+    @property
+    def columns(self) -> Sequence[ColumnName]:
+        return ["crash_check_type"]
+
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+        return None, row.get("crash_check_type", "")
+
+
+class PainterCrashServiceName(Painter):
+    @property
+    def ident(self) -> str:
+        return "crash_service_name"
+
+    def title(self, cell):
+        return _("Crash service name")
+
+    def short_title(self, cell):
+        return _("Service")
+
+    @property
+    def columns(self) -> Sequence[ColumnName]:
+        return ["crash_service_name"]
+
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+        if not row.get("crash_service_name"):
+            return None, ""
+
+        url = makeuri_contextless(
+            self.request,
+            [
+                ("host", row["crash_host"]),
+                ("site", row["site"]),
+                ("view_name", "service"),
+                ("service", row["crash_service_name"]),
+            ],
+            filename="view.py",
+        )
+        return None, HTMLWriter.render_a(row["crash_service_name"], href=url)
+
+
+def _sort_crash_host(
+    r1: Row,
+    r2: Row,
+    *,
+    parameters: Mapping[str, Any] | None,
+    config: Config,
+    request: Request,
+) -> int:
+    return cmp_simple_string("crash_host", r1, r2)
+
+
+SorterCrashHost = Sorter(
+    ident="crash_host",
+    title=_l("Crash host"),
+    columns=["crash_host"],
+    sort_function=_sort_crash_host,
+)
+
+
+def _sort_crash_item(
+    r1: Row,
+    r2: Row,
+    *,
+    parameters: Mapping[str, Any] | None,
+    config: Config,
+    request: Request,
+) -> int:
+    return cmp_simple_string("crash_item", r1, r2)
+
+
+SorterCrashItem = Sorter(
+    ident="crash_item",
+    title=_l("Crash item"),
+    columns=["crash_item"],
+    sort_function=_sort_crash_item,
+)
+
+
+def _sort_crash_check_type(
+    r1: Row,
+    r2: Row,
+    *,
+    parameters: Mapping[str, Any] | None,
+    config: Config,
+    request: Request,
+) -> int:
+    return cmp_simple_string("crash_check_type", r1, r2)
+
+
+SorterCrashCheckType = Sorter(
+    ident="crash_check_type",
+    title=_l("Crash check type"),
+    columns=["crash_check_type"],
+    sort_function=_sort_crash_check_type,
+)
+
+
+def _sort_crash_service_name(
+    r1: Row,
+    r2: Row,
+    *,
+    parameters: Mapping[str, Any] | None,
+    config: Config,
+    request: Request,
+) -> int:
+    return cmp_simple_string("crash_service_name", r1, r2)
+
+
+SorterCrashServiceName = Sorter(
+    ident="crash_service_name",
+    title=_l("Crash service name"),
+    columns=["crash_service_name"],
+    sort_function=_sort_crash_service_name,
 )

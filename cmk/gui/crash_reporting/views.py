@@ -421,7 +421,7 @@ class PainterCrashHost(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["crash_host"]
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         if not row.get("crash_host"):
             return None, ""
 
@@ -452,7 +452,7 @@ class PainterCrashItem(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["crash_item"]
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return None, row.get("crash_item", "")
 
 
@@ -471,7 +471,7 @@ class PainterCrashCheckName(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["crash_check_type"]
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return None, row.get("crash_check_type", "")
 
 
@@ -490,7 +490,7 @@ class PainterCrashServiceDescription(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["crash_service_description"]
 
-    def render(self, row: Row, cell: Cell) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         if not row.get("crash_service_description"):
             return None, ""
 

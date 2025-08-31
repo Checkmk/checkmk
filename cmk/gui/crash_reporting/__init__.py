@@ -15,25 +15,21 @@ from ._settings import ConfigVariableCrashReportTarget, ConfigVariableCrashRepor
 from .views import (
     CommandDeleteCrashReports,
     DataSourceCrashReports,
+    PainterCrashCheckName,
     PainterCrashException,
+    PainterCrashHost,
     PainterCrashIdent,
+    PainterCrashItem,
+    PainterCrashServiceDescription,
     PainterCrashSource,
     PainterCrashTime,
     PainterCrashType,
     PainterCrashVersion,
-    SorterCrashTime,
-
-    #
-    # added by thl-cmk@outlook.com
-    #
-    PainterCrashHost,
-    PainterCrashItem,
-    PainterCrashCheckName,
-    PainterCrashServiceDescription,
+    SorterCrashCheckName,
     SorterCrashHost,
     SorterCrashItem,
-    SorterCrashCheckName,
     SorterCrashServiceDescription,
+    SorterCrashTime,
 )
 
 

@@ -37,7 +37,7 @@ from cmk.gui.views.command import (
     CommandGroupVarious,
     PERMISSION_SECTION_ACTION,
 )
-from cmk.gui.views.sorter import cmp_simple_number, Sorter
+from cmk.gui.views.sorter import cmp_simple_number, cmp_simple_string, Sorter
 from cmk.gui.visuals.filter import Filter
 
 from .helpers import local_files_involved_in_crash
@@ -409,7 +409,7 @@ class PainterCrashHost(Painter):
             return None, ""
 
         url = makeuri_contextless(
-            request,
+            self.request,
             [
                 ("host", row["crash_host"]),
                 ("site", row["site"]),
@@ -478,7 +478,7 @@ class PainterCrashServiceDescription(Painter):
             return None, ""
 
         url = makeuri_contextless(
-            request,
+            self.request,
             [
                 ("host", row["crash_host"]),
                 ("site", row["site"]),

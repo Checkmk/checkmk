@@ -555,7 +555,7 @@ def _sort_crash_service_description(
     return cmp_simple_string("crash_service_description", r1, r2)
 
 
-SorterCrashCheckName = Sorter(
+SorterCrashServiceDescription = Sorter(
     ident="crash_service_description",
     title=_l("Crash Service Description"),
     columns=["crash_service_description"],

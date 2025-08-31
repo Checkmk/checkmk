@@ -488,12 +488,12 @@ class PainterCrashServiceDescription(Painter):
 
 
 def _sort_crash_host(
-        r1: Row,
-        r2: Row,
-        *,
-        parameters: Mapping[str, Any] | None,
-        config: Config,
-        request: Request,
+    r1: Row,
+    r2: Row,
+    *,
+    parameters: Mapping[str, Any] | None,
+    config: Config,
+    request: Request,
 ) -> int:
     return cmp_simple_string("crash_host", r1, r2)
 
@@ -507,12 +507,12 @@ SorterCrashHost = Sorter(
 
 
 def _sort_crash_item(
-        r1: Row,
-        r2: Row,
-        *,
-        parameters: Mapping[str, Any] | None,
-        config: Config,
-        request: Request,
+    r1: Row,
+    r2: Row,
+    *,
+    parameters: Mapping[str, Any] | None,
+    config: Config,
+    request: Request,
 ) -> int:
     return cmp_simple_string("crash_item", r1, r2)
 
@@ -526,12 +526,12 @@ SorterCrashItem = Sorter(
 
 
 def _sort_crash_check_type(
-        r1: Row,
-        r2: Row,
-        *,
-        parameters: Mapping[str, Any] | None,
-        config: Config,
-        request: Request,
+    r1: Row,
+    r2: Row,
+    *,
+    parameters: Mapping[str, Any] | None,
+    config: Config,
+    request: Request,
 ) -> int:
     return cmp_simple_string("crash_check_type", r1, r2)
 
@@ -545,12 +545,12 @@ SorterCrashCheckName = Sorter(
 
 
 def _sort_crash_service_description(
-        r1: Row,
-        r2: Row,
-        *,
-        parameters: Mapping[str, Any] | None,
-        config: Config,
-        request: Request,
+    r1: Row,
+    r2: Row,
+    *,
+    parameters: Mapping[str, Any] | None,
+    config: Config,
+    request: Request,
 ) -> int:
     return cmp_simple_string("crash_service_description", r1, r2)
 

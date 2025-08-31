@@ -386,9 +386,6 @@ CommandDeleteCrashReports = Command(
 )
 
 
-#
-# added by thl-cmk@outlook.com
-#
 class PainterCrashHost(Painter):
     @property
     def ident(self) -> str:
@@ -489,13 +486,14 @@ class PainterCrashServiceDescription(Painter):
         )
         return None, HTMLWriter.render_a(row["crash_service_description"], href=url)
 
+
 def _sort_crash_host(
-    r1: Row,
-    r2: Row,
-    *,
-    parameters: Mapping[str, Any] | None,
-    config: Config,
-    request: Request,
+        r1: Row,
+        r2: Row,
+        *,
+        parameters: Mapping[str, Any] | None,
+        config: Config,
+        request: Request,
 ) -> int:
     return cmp_simple_string("crash_host", r1, r2)
 
@@ -507,13 +505,14 @@ SorterCrashHost = Sorter(
     sort_function=_sort_crash_host,
 )
 
+
 def _sort_crash_item(
-    r1: Row,
-    r2: Row,
-    *,
-    parameters: Mapping[str, Any] | None,
-    config: Config,
-    request: Request,
+        r1: Row,
+        r2: Row,
+        *,
+        parameters: Mapping[str, Any] | None,
+        config: Config,
+        request: Request,
 ) -> int:
     return cmp_simple_string("crash_item", r1, r2)
 
@@ -525,13 +524,14 @@ SorterCrashItem = Sorter(
     sort_function=_sort_crash_item,
 )
 
+
 def _sort_crash_check_type(
-    r1: Row,
-    r2: Row,
-    *,
-    parameters: Mapping[str, Any] | None,
-    config: Config,
-    request: Request,
+        r1: Row,
+        r2: Row,
+        *,
+        parameters: Mapping[str, Any] | None,
+        config: Config,
+        request: Request,
 ) -> int:
     return cmp_simple_string("crash_check_type", r1, r2)
 
@@ -543,13 +543,14 @@ SorterCrashCheckName = Sorter(
     sort_function=_sort_crash_check_type,
 )
 
+
 def _sort_crash_service_description(
-    r1: Row,
-    r2: Row,
-    *,
-    parameters: Mapping[str, Any] | None,
-    config: Config,
-    request: Request,
+        r1: Row,
+        r2: Row,
+        *,
+        parameters: Mapping[str, Any] | None,
+        config: Config,
+        request: Request,
 ) -> int:
     return cmp_simple_string("crash_service_description", r1, r2)
 

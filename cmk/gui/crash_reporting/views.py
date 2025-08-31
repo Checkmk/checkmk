@@ -384,3 +384,175 @@ CommandDeleteCrashReports = Command(
     action=command_delete_crash_report_action,
     affected_output_cb=command_delete_crash_report_affected,
 )
+
+
+#
+# added by thl-cmk@outlook.com
+#
+class PainterCrashHost(Painter):
+    @property
+    def ident(self) -> str:
+        return "crash_host"
+
+    def title(self, cell):
+        return _("Crash Host")
+
+    def short_title(self, cell):
+        return _("Host")
+
+    @property
+    def columns(self) -> Sequence[ColumnName]:
+        return ["crash_host"]
+
+    def render(self, row: Row, cell: Cell) -> CellSpec:
+        if not row.get("crash_host"):
+            return None, ""
+
+        url = makeuri_contextless(
+            request,
+            [
+                ("host", row["crash_host"]),
+                ("site", row["site"]),
+                ("view_name", "host"),
+            ],
+            filename="view.py",
+        )
+        return None, HTMLWriter.render_a(row["crash_host"], href=url)
+
+
+class PainterCrashItem(Painter):
+    @property
+    def ident(self) -> str:
+        return "crash_item"
+
+    def title(self, cell):
+        return _("Crash Service Item")
+
+    def short_title(self, cell):
+        return _("Item")
+
+    @property
+    def columns(self) -> Sequence[ColumnName]:
+        return ["crash_item"]
+
+    def render(self, row: Row, cell: Cell) -> CellSpec:
+        return None, row.get("crash_item", "")
+
+
+class PainterCrashCheckName(Painter):
+    @property
+    def ident(self) -> str:
+        return "crash_check_type"
+
+    def title(self, cell):
+        return _("Crash Check Name")
+
+    def short_title(self, cell):
+        return _("Check")
+
+    @property
+    def columns(self) -> Sequence[ColumnName]:
+        return ["crash_check_type"]
+
+    def render(self, row: Row, cell: Cell) -> CellSpec:
+        return None, row.get("crash_check_type", "")
+
+
+class PainterCrashServiceDescription(Painter):
+    @property
+    def ident(self) -> str:
+        return "crash_service_description"
+
+    def title(self, cell):
+        return _("Crash Service Description")
+
+    def short_title(self, cell):
+        return _("Service")
+
+    @property
+    def columns(self) -> Sequence[ColumnName]:
+        return ["crash_service_description"]
+
+    def render(self, row: Row, cell: Cell) -> CellSpec:
+        if not row.get("crash_service_description"):
+            return None, ""
+
+        url = makeuri_contextless(
+            request,
+            [
+                ("host", row["crash_host"]),
+                ("site", row["site"]),
+                ("view_name", "service"),
+                ("service", row["crash_service_description"]),
+            ],
+            filename="view.py",
+        )
+        return None, HTMLWriter.render_a(row["crash_service_description"], href=url)
+
+
+class SorterCrashHost(Sorter):
+    @property
+    def ident(self) -> str:
+        return "crash_host"
+
+    @property
+    def title(self) -> str:
+        return _("Crash Host")
+
+    @property
+    def columns(self) -> Sequence[ColumnName]:
+        return ["crash_host"]
+
+    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
+        return cmp_simple_string("crash_host", r1, r2)
+
+
+class SorterCrashItem(Sorter):
+    @property
+    def ident(self) -> str:
+        return "crash_item"
+
+    @property
+    def title(self) -> str:
+        return _("Crash Item")
+
+    @property
+    def columns(self) -> Sequence[ColumnName]:
+        return ["crash_item"]
+
+    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
+        return cmp_simple_string("crash_item", r1, r2)
+
+
+class SorterCrashCheckName(Sorter):
+    @property
+    def ident(self) -> str:
+        return "crash_check_type"
+
+    @property
+    def title(self) -> str:
+        return _("Crash Check Name")
+
+    @property
+    def columns(self) -> Sequence[ColumnName]:
+        return ["crash_check_type"]
+
+    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
+        return cmp_simple_string("crash_check_type", r1, r2)
+
+
+class SorterCrashServiceDescription(Sorter):
+    @property
+    def ident(self) -> str:
+        return "crash_service_description"
+
+    @property
+    def title(self) -> str:
+        return _("CCrash Service Description")
+
+    @property
+    def columns(self) -> Sequence[ColumnName]:
+        return ["crash_service_description"]
+
+    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
+        return cmp_simple_string("crash_service_description", r1, r2)

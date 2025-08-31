@@ -22,6 +22,18 @@ from .views import (
     PainterCrashType,
     PainterCrashVersion,
     SorterCrashTime,
+
+    #
+    # added by thl-cmk@outlook.com
+    #
+    PainterCrashHost,
+    PainterCrashItem,
+    PainterCrashCheckName,
+    PainterCrashServiceDescription,
+    SorterCrashHost,
+    SorterCrashItem,
+    SorterCrashCheckName,
+    SorterCrashServiceDescription,
 )
 
 
@@ -46,3 +58,15 @@ def register(
     painter_registry.register(PainterCrashVersion)
     config_variable_registry.register(ConfigVariableCrashReportTarget)
     config_variable_registry.register(ConfigVariableCrashReportURL)
+
+    #
+    # added by thl-cmk@outlook.com
+    #
+    painter_registry.register(PainterCrashHost)
+    painter_registry.register(PainterCrashItem)
+    painter_registry.register(PainterCrashCheckName)
+    painter_registry.register(PainterCrashServiceDescription)
+    sorter_registry.register(SorterCrashHost)
+    sorter_registry.register(SorterCrashItem)
+    sorter_registry.register(SorterCrashCheckName)
+    sorter_registry.register(SorterCrashServiceDescription)

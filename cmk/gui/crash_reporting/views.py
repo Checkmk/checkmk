@@ -107,14 +107,26 @@ class CrashReportsRowTable(RowTable):
                 "crash_exc_type": crash_info_raw["exc_type"],
                 "crash_exc_value": crash_info_raw["exc_value"],
                 "crash_exc_traceback": crash_info_raw["exc_traceback"],
-                **({"crash_host": crash_info_raw.get("details").get("host")} if crash_info_raw.get("details", {}).get(
-                    "host") else {}),
-                **({"crash_item": crash_info_raw.get("details").get("item")} if crash_info_raw.get("details", {}).get(
-                    "item") else {}),
-                **({"crash_check_type": crash_info_raw.get("details").get("check_type")} if crash_info_raw.get(
-                    "details", {}).get("check_type") else {}),
-                **({"crash_service_description": crash_info_raw.get("details").get(
-                    "description")} if crash_info_raw.get("details", {}).get("description") else {}),
+                **(
+                    {"crash_host": crash_info_raw.get("details").get("host")}
+                    if crash_info_raw.get("details", {}).get("host")
+                    else {}
+                ),
+                **(
+                    {"crash_item": crash_info_raw.get("details").get("item")}
+                    if crash_info_raw.get("details", {}).get("item")
+                    else {}
+                ),
+                **(
+                    {"crash_check_type": crash_info_raw.get("details").get("check_type")}
+                    if crash_info_raw.get("details", {}).get("check_type")
+                    else {}
+                ),
+                **(
+                    {"crash_service_description": crash_info_raw.get("details").get("description")}
+                    if crash_info_raw.get("details", {}).get("description")
+                    else {}
+                ),
             }
 
     def get_crash_report_rows(

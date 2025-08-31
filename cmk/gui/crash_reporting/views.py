@@ -489,70 +489,74 @@ class PainterCrashServiceDescription(Painter):
         )
         return None, HTMLWriter.render_a(row["crash_service_description"], href=url)
 
-
-class SorterCrashHost(Sorter):
-    @property
-    def ident(self) -> str:
-        return "crash_host"
-
-    @property
-    def title(self) -> str:
-        return _("Crash Host")
-
-    @property
-    def columns(self) -> Sequence[ColumnName]:
-        return ["crash_host"]
-
-    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
-        return cmp_simple_string("crash_host", r1, r2)
+def _sort_crash_host(
+    r1: Row,
+    r2: Row,
+    *,
+    parameters: Mapping[str, Any] | None,
+    config: Config,
+    request: Request,
+) -> int:
+    return cmp_simple_string("crash_host", r1, r2)
 
 
-class SorterCrashItem(Sorter):
-    @property
-    def ident(self) -> str:
-        return "crash_item"
+SorterCrashHost = Sorter(
+    ident="crash_host",
+    title=_l("Crash Host"),
+    columns=["crash_host"],
+    sort_function=_sort_crash_host,
+)
 
-    @property
-    def title(self) -> str:
-        return _("Crash Item")
-
-    @property
-    def columns(self) -> Sequence[ColumnName]:
-        return ["crash_item"]
-
-    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
-        return cmp_simple_string("crash_item", r1, r2)
-
-
-class SorterCrashCheckName(Sorter):
-    @property
-    def ident(self) -> str:
-        return "crash_check_type"
-
-    @property
-    def title(self) -> str:
-        return _("Crash Check Name")
-
-    @property
-    def columns(self) -> Sequence[ColumnName]:
-        return ["crash_check_type"]
-
-    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
-        return cmp_simple_string("crash_check_type", r1, r2)
+def _sort_crash_item(
+    r1: Row,
+    r2: Row,
+    *,
+    parameters: Mapping[str, Any] | None,
+    config: Config,
+    request: Request,
+) -> int:
+    return cmp_simple_string("crash_item", r1, r2)
 
 
-class SorterCrashServiceDescription(Sorter):
-    @property
-    def ident(self) -> str:
-        return "crash_service_description"
+SorterCrashItem = Sorter(
+    ident="crash_item",
+    title=_l("Crash Item"),
+    columns=["crash_item"],
+    sort_function=_sort_crash_item,
+)
 
-    @property
-    def title(self) -> str:
-        return _("CCrash Service Description")
+def _sort_crash_check_type(
+    r1: Row,
+    r2: Row,
+    *,
+    parameters: Mapping[str, Any] | None,
+    config: Config,
+    request: Request,
+) -> int:
+    return cmp_simple_string("crash_check_type", r1, r2)
 
-    @property
-    def columns(self) -> Sequence[ColumnName]:
-        return ["crash_service_description"]
 
-    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
-        return cmp_simple_string("crash_service_description", r1, r2)
+SorterCrashCheckName = Sorter(
+    ident="crash_check_type",
+    title=_l("Crash Check Name"),
+    columns=["crash_check_type"],
+    sort_function=_sort_crash_check_type,
+)
+
+def _sort_crash_service_description(
+    r1: Row,
+    r2: Row,
+    *,
+    parameters: Mapping[str, Any] | None,
+    config: Config,
+    request: Request,
+) -> int:
+    return cmp_simple_string("crash_service_description", r1, r2)
+
+
+SorterCrashCheckName = Sorter(
+    ident="crash_service_description",
+    title=_l("Crash Service Description"),
+    columns=["crash_service_description"],
+    sort_function=_sort_crash_service_description,
+)

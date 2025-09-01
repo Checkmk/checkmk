@@ -63,6 +63,28 @@ def single_user_session_enabled(set_config: SetConfig, user_id: UserId) -> Gener
         yield
 
 
+@pytest.fixture(scope="function")
+def single_auth_request(wsgi_app: WebTestAppForCMK, auth_request: http.Request) -> SingleRequest:
+    """Do a single authenticated request, thereby persisting the session to disk."""
+
+    def caller(*, in_the_past: int = 0) -> tuple[UserId, SessionInfo]:
+        wsgi_app.get(auth_request)
+        infos = load_session_infos(session.user.ident, lock=True)
+
+        # When `in_the_past` is a positive integer, the resulting session will have happened
+        # that many seconds in the past.
+        session.session_info.last_activity -= in_the_past
+        session.session_info.started_at -= in_the_past
+
+        session_id = session.session_info.session_id
+        user_id = auth_request.environ["REMOTE_USER"]
+        userdb.session.save_session_infos(user_id, session_infos={session_id: session.session_info})
+        assert session.user.id == user_id
+        return session.user.id, infos[session_id]
+
+    return caller
+
+
 def _load_users_uncached(*, lock: bool) -> userdb.Users:
     try:
         # The magic attribute has been added by the lru_cache decorator.

@@ -86,11 +86,6 @@ const hideHelpIcon = getUserFrontendConfig()?.hide_contextual_help_icon ?? false
 </template>
 
 <style scoped>
-body.inline_help_as_text .help-text__trigger,
-body.inline_help_as_text .help-text__icon {
-  display: none;
-}
-
 .help-text__trigger {
   margin-bottom: -2px;
   border: none;
@@ -120,5 +115,10 @@ body.inline_help_as_text .help-text__icon {
   .text {
     line-height: 1.2;
   }
+}
+
+body.inline_help_as_text .help-text__trigger,
+body.inline_help_as_text .help-text__icon {
+  display: none;
 }
 </style>

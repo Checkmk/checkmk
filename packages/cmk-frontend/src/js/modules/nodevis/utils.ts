@@ -274,6 +274,7 @@ export class SearchFilters {
             .text(host_regex);
         update_browser_url({host_regex: host_regex});
     }
+
     get_filter_params() {
         const inputs = this._root_node.selectAll<HTMLInputElement, null>(
             "input,select",
@@ -281,6 +282,12 @@ export class SearchFilters {
         const params: Record<string, string> = {};
         inputs.each((_d, idx, nodes) => {
             const input = nodes[idx];
+            if (input.closest(".vlof_prototype") !== null)
+                return;
+            if (input.closest(".orig_index") !== null)
+                return;
+            if (input.name === "")
+                return;
             if (input.type == "checkbox")
                 params[input.name] = input.checked ? "1" : "";
             else params[input.name] = input.value;

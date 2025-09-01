@@ -5,7 +5,7 @@ The `dist` folder is the base for `~/share/check_mk/web/htdocs` in the site.
 
 ## webpack-watch
 
-`npm run webpack-watch` is a a simple watch mode for js/css files.
+`npm run build-watch` is a a simple watch mode for js/css files.
 To play together with a site its `etc/apache/conf.d/check_mk.conf` has
 to be adapted. Either use the `-w` option of `omd-vonheute` or replace the
 paths to `/omd/sites/*` in the following lines :

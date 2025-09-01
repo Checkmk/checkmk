@@ -205,6 +205,31 @@ function _parse_topology_settings(data: TopologySettings): TopologySettings {
     );
 }
 
+function updateUrlParams(
+    url: string,
+    newParams: Record<string, string | number | boolean>,
+): string {
+    const updatedUrl = new URL(url);
+    const searchParams: URLSearchParams = updatedUrl.searchParams;
+    if (searchParams.has("start_url")) {
+        const start_url_searchParams = new URLSearchParams(
+            searchParams.get("start_url") as string,
+        );
+        Object.entries(newParams).forEach(([key, value]) => {
+            start_url_searchParams.set(key, String(value));
+        });
+        updatedUrl.searchParams.set(
+            "start_url",
+            start_url_searchParams.toString(),
+        );
+        return updatedUrl.toString();
+    }
+    Object.entries(newParams).forEach(([key, value]) => {
+        updatedUrl.searchParams.set(key, String(value));
+    });
+    return updatedUrl.toString();
+}
+
 export class TopologyVisualization extends NodeVisualization {
     _custom_topology_fetch_parameters: {[name: string]: any} = {};
     _custom_node_settings_memory: Record<string, any> = {};
@@ -388,6 +413,17 @@ export class TopologyVisualization extends NodeVisualization {
     }
 
     override update_browser_url(): void {
+        const search_params = new URLSearchParams(
+            new SearchFilters().get_filter_params(),
+        );
+        history.replaceState(
+            null,
+            "",
+            updateUrlParams(
+                window.location.href,
+                Object.fromEntries(search_params.entries()),
+            ),
+        );
         return;
     }
 

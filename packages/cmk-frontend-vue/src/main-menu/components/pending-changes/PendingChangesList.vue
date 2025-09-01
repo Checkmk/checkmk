@@ -125,6 +125,7 @@ const changesSideTitle = computed(() => {
   height: calc(100% - 158px);
 }
 
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
 :deep(.cmk-collapsible__content) {
   height: 100%;
 }

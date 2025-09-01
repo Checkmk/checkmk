@@ -80,11 +80,13 @@ span {
     cursor: not-allowed;
     opacity: 0.6;
 
+    /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
     & :deep(.cmk-checkbox__button) {
       cursor: not-allowed;
     }
   }
 
+  /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
   & :deep(.cmk-checkbox__button) {
     background-color: var(--default-form-element-bg-color);
     border: 1px solid var(--default-form-element-bg-color);
@@ -97,6 +99,7 @@ span {
     vertical-align: middle; /* otherwise will jump without cmk-frontend styles when checked/unchecked */
   }
 
+  /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
   &:hover:not(.cmk-checkbox__disabled) :deep(.cmk-checkbox__button) {
     background-color: var(--input-hover-bg-color);
   }

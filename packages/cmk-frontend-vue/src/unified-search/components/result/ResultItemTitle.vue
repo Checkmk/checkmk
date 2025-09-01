@@ -17,6 +17,7 @@ export default defineComponent({
 </script>
 
 <style scoped>
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
 :deep(.highlight-query) {
   display: inline-block;
   background: transparent;

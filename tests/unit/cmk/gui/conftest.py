@@ -234,15 +234,6 @@ def suppress_remote_automation_calls(mocker: MagicMock) -> Iterator[RemoteAutoma
 
 
 @pytest.fixture()
-def make_html_object_explode(mocker: MagicMock) -> None:
-    class HtmlExploder:
-        def __init__(self, *args: object, **kw: object) -> None:
-            raise NotImplementedError("Tried to instantiate html")
-
-    mocker.patch("cmk.gui.htmllib.html", new=HtmlExploder)
-
-
-@pytest.fixture()
 def inline_background_jobs(mocker: MockerFixture) -> None:
     """Prevent threading.Thread to spin off a new thread
 

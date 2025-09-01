@@ -1001,6 +1001,21 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("omd/packages/enterprise/bin/fetch-ad-hoc"): Component("cmk.cee.helpers"),
     ModulePath("omd/packages/appliance/webconf_snapin.py"): Component("cmk.gui"),
     ModulePath("cmk/active_checks/check_cmk_inv.py"): Component("cmk.base"),
+    # Notification plugins
+    ModulePath("notifications/asciimail"): Component("cmk.notification_plugins"),
+    ModulePath("notifications/cisco_webex_teams"): Component("cmk.notification_plugins"),
+    ModulePath("notifications/ilert"): Component("cmk.notification_plugins"),
+    ModulePath("notifications/mail"): Component("cmk.notification_plugins"),
+    ModulePath("notifications/msteams"): Component("cmk.notification_plugins"),
+    ModulePath("notifications/opsgenie_issues"): Component("cmk.notification_plugins"),
+    ModulePath("notifications/pagerduty"): Component("cmk.notification_plugins"),
+    ModulePath("notifications/pushover"): Component("cmk.notification_plugins"),
+    ModulePath("notifications/signl4"): Component("cmk.notification_plugins"),
+    ModulePath("notifications/slack"): Component("cmk.notification_plugins"),
+    ModulePath("notifications/sms"): Component("cmk.notification_plugins"),
+    ModulePath("notifications/sms_api"): Component("cmk.notification_plugins"),
+    ModulePath("notifications/spectrum"): Component("cmk.notification_plugins"),
+    ModulePath("notifications/victorops"): Component("cmk.notification_plugins"),
     # CEE specific notification plugins
     ModulePath("notifications/servicenow"): Component("cmk.cee.notification_plugins"),
     ModulePath("notifications/jira_issues"): Component("cmk.cee.notification_plugins"),
@@ -1084,13 +1099,7 @@ class CMKModuleLayerChecker(BaseChecker):
         if importing.in_component(component):
             return True
 
-        explicit_component = _EXPLICIT_FILE_TO_COMPONENT.get(importing_path)
-        if explicit_component is not None:
-            return explicit_component == component
-
         return (
-            component == Component("cmk.notification_plugins")
-            and importing_path.is_below("notifications")
-        ) or (
-            component == Component("cmk.active_checks") and importing_path.is_below("active_checks")
+            importing_path in _EXPLICIT_FILE_TO_COMPONENT
+            and component == _EXPLICIT_FILE_TO_COMPONENT[importing_path]
         )

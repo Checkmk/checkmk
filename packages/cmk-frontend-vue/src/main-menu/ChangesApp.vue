@@ -495,7 +495,7 @@ onMounted(() => {
 }
 
 .cmk-span-site-name {
-  color: var(---font-color);
+  color: var(--font-color);
   font-size: 12px;
   font-style: normal;
   font-weight: 700;
@@ -519,10 +519,6 @@ onMounted(() => {
   margin-right: 10px;
 }
 
-.collapsible-title {
-  margin-top: 16px;
-}
-
 .cmk-scroll-pending-changes-container {
   width: inherit;
   display: flex;
@@ -534,6 +530,7 @@ onMounted(() => {
   height: calc(100% - 158px);
 }
 
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
 :deep(.cmk-collapsible__content) {
   height: 100%;
 }
@@ -552,6 +549,7 @@ onMounted(() => {
 .collapsible-title {
   position: relative;
   height: auto;
+  margin-top: 16px;
   padding: 4px 10px 3px 9px;
   font-weight: bold;
   letter-spacing: 1px;

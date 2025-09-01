@@ -145,25 +145,11 @@ immediateWatch(
 
 <style scoped>
 .demo {
-  padding: 10px 10px 10px 0;
-}
-
-.demo ul.breadcrumbs > li {
-  display: inline;
-  margin: 0;
-  padding: 0;
-}
-
-.demo ul.breadcrumbs > li > a {
-  padding: 0;
-  padding-right: 0.3em;
-}
-
-.demo {
   display: flex;
   color: var(--font-color);
   background-color: var(--default-bg-color);
   height: 100vh;
+  padding: 10px 10px 10px 0;
 
   main {
     h1 {
@@ -190,9 +176,22 @@ immediateWatch(
         margin: 0.2em 0;
       }
     }
+  }
 
+  ul.breadcrumbs {
     a {
       color: inherit;
+    }
+
+    & > li {
+      display: inline;
+      margin: 0;
+      padding: 0;
+
+      & > a {
+        padding: 0;
+        padding-right: 0.3em;
+      }
     }
 
     a.page.router-link-exact-active {
@@ -201,6 +200,7 @@ immediateWatch(
   }
 
   fieldset {
+    /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
     :deep(button) {
       min-width: 50px;
     }

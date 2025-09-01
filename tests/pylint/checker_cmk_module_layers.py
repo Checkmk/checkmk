@@ -6,12 +6,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Final
+from typing import Final, Protocol
 
 from astroid.nodes import Import, ImportFrom  # type: ignore[import-untyped]
-from mypy_extensions import NamedArg
 from pylint.checkers import BaseChecker
 from pylint.checkers.utils import only_required_for_messages
 from pylint.lint.pylinter import PyLinter
@@ -68,6 +67,15 @@ class ModuleName:
         return is_prefix_of(component.parts, self.parts)
 
 
+class ImportCheckerProtocol(Protocol):
+    def __call__(
+        self,
+        *,
+        imported: ModuleName,
+        component: Component,
+    ) -> bool: ...
+
+
 def is_prefix_of[T](x: Sequence[T], y: Sequence[T]) -> bool:
     return x == y[: len(x)]
 
@@ -97,7 +105,7 @@ def _is_package(node: ImportFrom) -> bool:
 
 def _allow(
     *modules: str,
-) -> Callable[[NamedArg(ModuleName, "imported"), NamedArg(Component, "component")], bool]:
+) -> ImportCheckerProtocol:
     def _is_allowed(
         *,
         imported: ModuleName,
@@ -759,7 +767,11 @@ COMPONENTS = {
     Component("cmk.helper_interface"): _allow("cmk.ccc"),  # should become a package
     Component("cmk.ec"): _is_default_allowed_import,
     Component("cmk.notification_plugins"): _is_default_allowed_import,
-    Component("cmk.piggyback.hub"): _allow_for_cmk_piggyback_hub,
+    Component("cmk.piggyback"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_MESSAGING,
+        "cmk.utils.paths",
+    ),
     **{  # some plugin families that refuse to play by the rules:
         Component(f"cmk.plugins.{family}"): _allow(
             *PACKAGE_PLUGIN_APIS,
@@ -998,21 +1010,20 @@ class CMKModuleLayerChecker(BaseChecker):
     def _is_import_allowed(
         self, importing_path: ModulePath, importing: ModuleName, imported: ModuleName
     ) -> bool:
-        for component, component_specific_checker in COMPONENTS.items():
-            if self._is_part_of_component(importing, importing_path, component):
-                return component_specific_checker(imported=imported, component=component)
+        if component := self._find_component(importing, importing_path):
+            return COMPONENTS[component](imported=imported, component=component)
 
         # the rest (matched no component)
         return _is_allowed_import(imported)
 
     @staticmethod
-    def _is_part_of_component(
-        importing: ModuleName, importing_path: ModulePath, component: Component
-    ) -> bool:
-        if importing.in_component(component):
-            return True
-
-        return (
-            importing_path in _EXPLICIT_FILE_TO_COMPONENT
-            and component == _EXPLICIT_FILE_TO_COMPONENT[importing_path]
-        )
+    def _find_component(importing: ModuleName, importing_path: ModulePath) -> Component | None:
+        # Let's *not* check the explicit list first. We don't want to encourage to define exceptions.
+        # What's below cmk/foobar, belongs to cmk.foobar, PERIOD.
+        for component in COMPONENTS:
+            if importing.in_component(component):
+                return component
+        try:
+            return _EXPLICIT_FILE_TO_COMPONENT[importing_path]
+        except KeyError:
+            return None

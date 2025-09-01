@@ -40,7 +40,9 @@ defineEmits(['toggleOpen'])
     <span v-if="sideTitle" class="cmk-collapsible-title__side-text">
       {{ sideTitle }}
     </span>
-    <HelpText v-if="help_text" :help="help_text" />
+    <span class="cmk-collapsible-title__help">
+      <HelpText v-if="help_text" :help="help_text" />
+    </span>
   </button>
 </template>
 
@@ -65,7 +67,7 @@ defineEmits(['toggleOpen'])
   font-weight: var(--font-weight-bold);
 }
 
-.cmk-collapsible-title ::v-deep(.help-text__trigger) {
+.cmk-collapsible-title__help {
   margin-left: var(--spacing);
 }
 

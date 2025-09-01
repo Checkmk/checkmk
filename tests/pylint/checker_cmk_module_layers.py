@@ -385,19 +385,6 @@ def _allow_default_plus_gui_and_base(
     )
 
 
-def _is_allowed_for_diskspace(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    return any(
-        (
-            imported.in_component(Component("cmk.diskspace")),
-            imported.in_component(Component("cmk.ccc")),
-        )
-    )
-
-
 def _allow_default_plus_component_under_test(
     *,
     imported: ModuleName,
@@ -471,29 +458,6 @@ def _allow_default_plus_component_under_test_bakery_checkengine(
     )
 
 
-def _allowed_for_robotmk(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    return any(
-        (
-            _allow_default_plus_gui_and_base(imported=imported, component=component),
-            _allow(
-                "cmk.agent_based.v2",
-                "cmk.graphing.v1",
-                "cmk.rulesets.v1",
-                "cmk.server_side_calls.v1",
-                "cmk.special_agents.v0_unstable",
-                "cmk.plugins",
-                "cmk.checkengine",
-                "cmk.cee.bakery",
-                "cmk.inventory_ui.v1_alpha",
-            ),
-        )
-    )
-
-
 def _allow_for_cmk_piggyback_hub(
     *,
     imported: ModuleName,
@@ -526,20 +490,6 @@ def _allow_for_cmkcert(
     component: Component,
 ) -> bool:
     return any((_is_default_allowed_import(imported=imported, component=component),))
-
-
-def _is_allowed_for_rrd(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    return any(
-        (
-            imported.in_component(Component("cmk.rrd")),
-            imported.in_component(Component("cmk.ccc")),
-            imported.in_component(Component("cmk.utils")),
-        )
-    )
 
 
 _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
@@ -975,10 +925,29 @@ COMPONENTS = (
     (Component("cmk.cee.liveproxy"), _is_default_allowed_import),
     (Component("cmk.cee.notification_plugins"), _is_default_allowed_import),
     (Component("cmk.post_rename_site"), _allow_default_plus_gui_and_base),
-    (Component("cmk.active_checks"), _is_default_allowed_import),
-    (Component("cmk.cee.robotmk"), _allowed_for_robotmk),
-    (Component("cmk.diskspace"), _is_allowed_for_diskspace),
-    (Component("cmk.rrd"), _is_allowed_for_rrd),
+    (
+        Component("cmk.cee.robotmk"),
+        _allow(
+            *PACKAGE_CCC,
+            *PACKAGE_PLUGIN_APIS,
+            # I don't think we have any idea of how to fix this.
+            "cmk.base.cee.bakery",
+            "cmk.base.plugins.bakery",
+            "cmk.cee.bakery",
+            "cmk.checkengine",
+            "cmk.gui",
+            "cmk.shared_typing",
+            "cmk.utils",
+        ),
+    ),
+    (Component("cmk.diskspace"), _allow(*PACKAGE_CCC)),
+    (
+        Component("cmk.rrd"),
+        _allow(
+            *PACKAGE_CCC,
+            "cmk.utils",
+        ),
+    ),
     (
         Component("cmk.inventory"),
         _allow(

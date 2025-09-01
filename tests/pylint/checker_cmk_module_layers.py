@@ -672,6 +672,26 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
     ),
 }
 
+PACKAGE_PLUGIN_APIS = (
+    "cmk.agent_based.prediction_backend",
+    "cmk.agent_based.legacy",
+    "cmk.agent_based.v1",
+    "cmk.agent_based.v2",
+    "cmk.graphing.v1",
+    "cmk.inventory_ui.v1_alpha",
+    "cmk.rulesets.v1",
+    "cmk.server_side_calls.v1",
+)
+
+PACKAGE_CCC = ("cmk.ccc",)
+
+PACKAGE_MESSAGING = ("cmk.messaging",)
+
+PACKAGE_WERKS = ("cmk.werks",)
+
+PACKAGE_CRYPTO = ("cmk.crypto",)
+
+PACKAGE_TRACE = ("cmk.trace",)
 
 COMPONENTS = (
     (Component("tests.unit.cmk"), _allow_default_plus_component_under_test),
@@ -822,11 +842,7 @@ COMPONENTS = (
         (
             Component(f"cmk.plugins.{family}"),
             _allow(
-                "cmk.agent_based.v2",
-                "cmk.graphing.v1",
-                "cmk.inventory_ui.v1_alpha",
-                "cmk.rulesets.v1",
-                "cmk.server_side_calls.v1",
+                *PACKAGE_PLUGIN_APIS,
                 "cmk.special_agents.v0_unstable",
                 "cmk.utils.password_store",
                 *violations,
@@ -837,13 +853,8 @@ COMPONENTS = (
     (
         Component("cmk.plugins"),
         _allow(
-            "cmk.agent_based.v1",
-            "cmk.agent_based.v2",
+            *PACKAGE_PLUGIN_APIS,
             "cmk.bakery.v2_unstable",
-            "cmk.graphing.v1",
-            "cmk.inventory_ui.v1_alpha",
-            "cmk.rulesets.v1",
-            "cmk.server_side_calls.v1",
             "cmk.special_agents.v0_unstable",
             "cmk.utils.password_store",
         ),
@@ -851,16 +862,16 @@ COMPONENTS = (
     (
         Component("cmk.server_side_calls_backend"),
         _allow(
-            "cmk.ccc",
+            *PACKAGE_PLUGIN_APIS,
+            *PACKAGE_CCC,
             "cmk.discover_plugins",
-            "cmk.server_side_calls.v1",
             "cmk.utils",
         ),
     ),
     (
         Component("cmk.special_agents"),
         _allow(
-            "cmk.ccc",
+            *PACKAGE_CCC,
             "cmk.utils.password_store",
             "cmk.utils.paths",
         ),
@@ -868,9 +879,10 @@ COMPONENTS = (
     (
         Component("cmk.update_config"),
         _allow(
-            "cmk.agent_based",
+            *PACKAGE_CCC,
+            *PACKAGE_PLUGIN_APIS,
+            *PACKAGE_WERKS,
             "cmk.base",
-            "cmk.ccc",
             "cmk.checkengine",
             "cmk.cee.robotmk",
             "cmk.discover_plugins",
@@ -882,26 +894,32 @@ COMPONENTS = (
             "cmk.server_side_calls.v1",
             "cmk.utils",
             "cmk.validate_config",
-            "cmk.werks",
         ),
     ),
     (
         Component("cmk.validate_config"),
         _allow(
+            *PACKAGE_CCC,
             "cmk.base",
-            "cmk.ccc",
             "cmk.checkengine",
             "cmk.gui",
             "cmk.utils",
         ),
     ),
     (Component("cmk.validate_plugins"), _is_default_allowed_import),
-    (Component("cmk.utils.certs"), _allow("cmk.crypto", "cmk.ccc", "cmk.utils.log")),
+    (
+        Component("cmk.utils.certs"),
+        _allow(
+            *PACKAGE_CRYPTO,
+            *PACKAGE_CCC,
+            "cmk.utils.log",
+        ),
+    ),
     (
         Component("cmk.utils.prediction"),
         _allow(
+            *PACKAGE_CCC,
             "cmk.agent_based.prediction_backend",
-            "cmk.ccc",
             "cmk.utils.servicename",
             "cmk.utils.log",
         ),
@@ -909,8 +927,8 @@ COMPONENTS = (
     (
         Component("cmk.utils.rulesets"),
         _allow(
-            "cmk.trace",
-            "cmk.ccc",
+            *PACKAGE_CCC,
+            *PACKAGE_TRACE,
             "cmk.utils.global_ident_type",
             "cmk.utils.labels",
             "cmk.utils.parameters",
@@ -923,13 +941,13 @@ COMPONENTS = (
     (Component("cmk.utils.structured_data"), _allow("cmk.inventory", "cmk.ccc")),
     (
         Component("cmk.utils.werks"),
-        _allow("cmk.werks", "cmk.ccc", "cmk.utils.mail", "cmk.utils.paths"),
+        _allow(*PACKAGE_CCC, *PACKAGE_WERKS, "cmk.utils.mail", "cmk.utils.paths"),
     ),
     (
         Component("cmk.utils"),
         _allow(
-            "cmk.ccc",
-            "cmk.crypto",
+            *PACKAGE_CCC,
+            *PACKAGE_CRYPTO,
             "cmk.events",
             "cmk.otel_collector",
         ),
@@ -937,6 +955,8 @@ COMPONENTS = (
     (
         Component("cmk.cee.bakery"),
         _allow(
+            *PACKAGE_CCC,
+            *PACKAGE_CRYPTO,
             "cmk.base",
             "cmk.base.checkers",
             "cmk.base.config",
@@ -946,11 +966,6 @@ COMPONENTS = (
             "cmk.base.plugins.bakery.bakery_api.v1",
             "cmk.base.sources",
             "cmk.base.utils",
-            "cmk.ccc.hostaddress",
-            "cmk.ccc.store",
-            "cmk.crypto.certificate",
-            "cmk.crypto.hash",
-            "cmk.crypto.keys",
             "cmk.utils.paths",
         ),
     ),
@@ -967,7 +982,7 @@ COMPONENTS = (
     (
         Component("cmk.inventory"),
         _allow(
-            "cmk.ccc",
+            *PACKAGE_CCC,
             "cmk.utils.paths",
             "cmk.utils.regex",
             "cmk.utils.structured_data",

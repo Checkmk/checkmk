@@ -29,39 +29,37 @@ SELECT UPPER(d.NAME),                                     -- Database name (uppe
        iversion                                           -- Database version from v$instance
 FROM v$database d,
      v$instance i, -- Instance info
-     (
-         SELECT f.file_name,
-                f.tablespace_name,
-                f.status               fstatus,
-                f.autoextensible,
-                f.blocks,
-                f.maxblocks,
-                f.user_blocks,
-                f.increment_by,
-                f.online_status,
-                t.block_size,
-                t.status               tstatus,
-                NVL(SUM(fs.blocks), 0) free_blocks, -- Free blocks from dba_free_space
-                t.contents,
-                (
-                    SELECT version
-                    FROM v$instance
-                )                      iversion     -- Instance version
-         FROM dba_data_files f
-                  JOIN dba_tablespaces t ON f.tablespace_name = t.tablespace_name
-                  LEFT JOIN dba_free_space fs ON f.file_id = fs.file_id
-         GROUP BY f.file_name,
-                  f.tablespace_name,
-                  f.status,
-                  f.autoextensible,
-                  f.blocks,
-                  f.maxblocks,
-                  f.user_blocks,
-                  f.increment_by,
-                  f.online_status,
-                  t.block_size,
-                  t.status,
-                  t.contents
+     (SELECT f.file_name,
+             f.tablespace_name,
+             f.status               fstatus,
+             f.autoextensible,
+             f.blocks,
+             f.maxblocks,
+             f.user_blocks,
+             f.increment_by,
+             f.online_status,
+             t.block_size,
+             t.status               tstatus,
+             NVL(SUM(fs.blocks), 0) free_blocks, -- Free blocks from dba_free_space
+             t.contents,
+             (SELECT version
+              FROM v$instance
+             )                      iversion     -- Instance version
+      FROM dba_data_files f
+               JOIN dba_tablespaces t ON f.tablespace_name = t.tablespace_name
+               LEFT JOIN dba_free_space fs ON f.file_id = fs.file_id
+      GROUP BY f.file_name,
+               f.tablespace_name,
+               f.status,
+               f.autoextensible,
+               f.blocks,
+               f.maxblocks,
+               f.user_blocks,
+               f.increment_by,
+               f.online_status,
+               t.block_size,
+               t.status,
+               t.contents
      )
 WHERE d.database_role = 'PRIMARY' -- Report only for PRIMARY DB
 
@@ -85,41 +83,39 @@ SELECT UPPER(dbf.name),                                   -- Database name
        i.version                                          -- DB version from v$instance
 FROM v$database d
          JOIN v$instance i ON 1 = 1
-         JOIN (
-    SELECT vp.name,
-           f.file_name,
-           t.tablespace_name,
-           f.status                          fstatus,
-           f.autoextensible,
-           f.blocks,
-           f.maxblocks,
-           f.user_blocks,
-           f.increment_by,
-           'ONLINE'                          online_status, -- Temp always ONLINE
-           t.block_size,
-           t.status                          tstatus,
-           f.blocks - NVL(SUM(tu.blocks), 0) free_blocks,   -- Used deducted
-           t.contents
-    FROM dba_tablespaces t
-             JOIN (
-        SELECT 0, name
-        FROM v$database
-                  ) vp ON 1 = 1
-             LEFT JOIN dba_temp_files f ON t.tablespace_name = f.tablespace_name
-             LEFT JOIN gv$tempseg_usage tu
-                       ON f.tablespace_name = tu.tablespace
-                           AND f.RELATIVE_FNO = tu.SEGRFNO#
-    WHERE t.contents = 'TEMPORARY' -- Only TEMPORARY tablespaces
-    GROUP BY vp.name,
-             f.file_name,
-             t.tablespace_name,
-             f.status,
-             f.autoextensible,
-             f.blocks,
-             f.maxblocks,
-             f.user_blocks,
-             f.increment_by,
-             t.block_size,
-             t.status,
-             t.contents
+         JOIN (SELECT vp.name,
+                      f.file_name,
+                      t.tablespace_name,
+                      f.status                          fstatus,
+                      f.autoextensible,
+                      f.blocks,
+                      f.maxblocks,
+                      f.user_blocks,
+                      f.increment_by,
+                      'ONLINE'                          online_status, -- Temp always ONLINE
+                      t.block_size,
+                      t.status                          tstatus,
+                      f.blocks - NVL(SUM(tu.blocks), 0) free_blocks,   -- Used deducted
+                      t.contents
+               FROM dba_tablespaces t
+                        JOIN (SELECT 0, name
+                              FROM v$database
+                             ) vp ON 1 = 1
+                        LEFT JOIN dba_temp_files f ON t.tablespace_name = f.tablespace_name
+                        LEFT JOIN gv$tempseg_usage tu
+                                  ON f.tablespace_name = tu.tablespace
+                                      AND f.RELATIVE_FNO = tu.SEGRFNO#
+               WHERE t.contents = 'TEMPORARY' -- Only TEMPORARY tablespaces
+               GROUP BY vp.name,
+                        f.file_name,
+                        t.tablespace_name,
+                        f.status,
+                        f.autoextensible,
+                        f.blocks,
+                        f.maxblocks,
+                        f.user_blocks,
+                        f.increment_by,
+                        t.block_size,
+                        t.status,
+                        t.contents
               ) dbf ON 1 = 1

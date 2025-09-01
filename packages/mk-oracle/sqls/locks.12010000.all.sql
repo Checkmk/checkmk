@@ -26,19 +26,18 @@ FROM v$session b
               ON bs.inst_id = b.BLOCKING_INSTANCE -- Match blocking session's instance
                   AND bs.sid = b.BLOCKING_SESSION -- Match blocking session's SID
                   AND bs.con_id = b.con_id -- Match same container (PDB)
-         JOIN (
-    -- Map con_id to instance + PDB name
-    SELECT vp.con_id,
-           i.instance_name || '.' || vp.name AS name
-    FROM v$containers vp
-             JOIN v$instance i ON 1 = 1
-             JOIN v$database d ON 1 = 1
-    WHERE d.cdb = 'YES'
-      AND vp.con_id <> 2 -- Exclude seed PDB
-    UNION ALL
-    -- Non-CDB fallback
-    SELECT 0, instance_name
-    FROM v$instance
+-- Map con_id to instance + PDB name
+         JOIN (SELECT vp.con_id,
+                      i.instance_name || '.' || vp.name AS name
+               FROM v$containers vp
+                        JOIN v$instance i ON 1 = 1
+                        JOIN v$database d ON 1 = 1
+               WHERE d.cdb = 'YES'
+                 AND vp.con_id <> 2 -- Exclude seed PDB
+               UNION ALL
+               -- Non-CDB fallback
+               SELECT 0, instance_name
+               FROM v$instance
               ) vp
               ON b.con_id = vp.con_id
 WHERE b.BLOCKING_SESSION IS NOT NULL -- Only show blocked sessions

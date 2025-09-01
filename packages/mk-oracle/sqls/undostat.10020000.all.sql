@@ -13,10 +13,9 @@ FROM v$instance i, -- Instance information
      (
          -- Subquery: Get the most recent undo statistics entry
          SELECT *
-         FROM (
-                  SELECT *
-                  FROM v$undostat -- View of undo usage statistics (per 10 min interval typically)
-                  ORDER BY end_time DESC -- Sort by most recent snapshot
+         FROM (SELECT *
+               FROM v$undostat -- View of undo usage statistics (per 10 min interval typically)
+               ORDER BY end_time DESC -- Sort by most recent snapshot
               )
          WHERE ROWNUM = 1 -- Only keep the latest record
            AND TUNED_UNDORETENTION > 0 -- Ensure auto-tuned undo retention is valid

@@ -4,7 +4,7 @@
 
 -- Section recovery_area: retrieves the usage of the Oracle Fast Recovery Area (FRA)
 SELECT UPPER(
-           DECODE(NVL(:IGNORE_DB_NAME, 0), NULL, d.NAME, i.instance_name)
+               DECODE(NVL(:IGNORE_DB_NAME, 0), NULL, d.NAME, i.instance_name)
        )                                      AS instance_name,  -- Database name or Instance name (uppercase), depends on :IGNORE_DB_NAME
        ROUND((SPACE_USED - SPACE_RECLAIMABLE) /
              (CASE NVL(SPACE_LIMIT, 1)

@@ -26,8 +26,7 @@ FROM (
          -- Step 2: Join with resource limits
          JOIN v$resource_limit rl
               ON RESOURCE_NAME = 'sessions' -- Only look at session resource limit
-
-         -- Step 3: Count active sessions per container
+    -- Step 3: Count active sessions per container
          LEFT OUTER JOIN v$session vs
                          ON vp.con_id = vs.con_id -- Map sessions to each container
 GROUP BY vp.name, vp.con_id, rl.LIMIT_VALUE, rl.MAX_UTILIZATION

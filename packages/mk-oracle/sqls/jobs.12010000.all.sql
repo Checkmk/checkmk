@@ -13,48 +13,46 @@ SELECT vp.instance_name,                              -- Instance name (or DB na
        j.run_count,                                   -- Number of times the job has executed
        j.enabled,                                     -- Whether the job is enabled (TRUE/FALSE)
        TO_CHAR(
-           NVL(j.next_run_date,
-               TO_DATE('1970-01-01', 'YYYY-MM-DD'))
+               NVL(j.next_run_date,
+                   TO_DATE('1970-01-01', 'YYYY-MM-DD'))
        )                         AS next_run_date,    -- Next scheduled run date/time (defaulted if null)
        NVL(j.schedule_name, '-') AS schedule_name,    -- Associated schedule name (or '-' if none)
        jd.status                                      -- Status of the most recent run (SUCCEEDED, FAILED, STOPPED, etc.)
 FROM cdb_scheduler_jobs j -- CDB view of scheduler jobs across all PDBs
-         JOIN (
-    -- Subquery: maps container ID to instance and container names
-    SELECT c.con_id,
-           UPPER(DECODE(NVL(:IGNORE_DB_NAME, 0),
-                        1, d.NAME, -- If :IGNORE_DB_NAME = 1 → show DB name
-                        i.instance_name -- Else → show instance name
-                 )) AS instance_name,
-           c.name   AS container_name -- PDB name
-    FROM v$containers c
-             JOIN v$database d ON 1 = 1
-             LEFT JOIN v$instance i
-                       ON i.con_id = d.con_id
-    WHERE d.cdb = 'YES'               -- Must be a multitenant container database
-      AND c.con_id <> 2               -- Exclude seed PDB (con_id = 2)
-      AND d.database_role = 'PRIMARY' -- Only primary DB (exclude standby)
-      AND d.open_mode = 'READ WRITE'  -- Only open databases
-    UNION ALL
-    -- Handles non-CDB-like representation (fallback case)
-    SELECT 0, d.name, c.name
-    FROM v$database d
-             JOIN v$instance i
-                  ON i.con_id = d.con_id
-             LEFT JOIN v$containers c
-                       ON c.dbid = d.dbid
-    WHERE d.database_role = 'PRIMARY'
-      AND d.open_mode = 'READ WRITE'
+-- Join with Subquery: maps container ID to instance and container names
+         JOIN (SELECT c.con_id,
+                      UPPER(DECODE(NVL(:IGNORE_DB_NAME, 0),
+                                   1, d.NAME, -- If :IGNORE_DB_NAME = 1 → show DB name
+                                   i.instance_name -- Else → show instance name
+                            )) AS instance_name,
+                      c.name   AS container_name -- PDB name
+               FROM v$containers c
+                        JOIN v$database d ON 1 = 1
+                        LEFT JOIN v$instance i
+                                  ON i.con_id = d.con_id
+               WHERE d.cdb = 'YES'               -- Must be a multitenant container database
+                 AND c.con_id <> 2               -- Exclude seed PDB (con_id = 2)
+                 AND d.database_role = 'PRIMARY' -- Only primary DB (exclude standby)
+                 AND d.open_mode = 'READ WRITE'  -- Only open databases
+               UNION ALL
+               -- Handles non-CDB-like representation (fallback case)
+               SELECT 0, d.name, c.name
+               FROM v$database d
+                        JOIN v$instance i
+                             ON i.con_id = d.con_id
+                        LEFT JOIN v$containers c
+                                  ON c.dbid = d.dbid
+               WHERE d.database_role = 'PRIMARY'
+                 AND d.open_mode = 'READ WRITE'
               ) vp
               ON j.con_id = vp.con_id
-         LEFT JOIN (
-    -- Subquery: get latest run log ID per job
-    SELECT con_id,
-           owner,
-           job_name,
-           MAX(log_id) log_id
-    FROM cdb_scheduler_job_run_details dd
-    GROUP BY con_id, owner, job_name
+-- Join with Subquery: get latest run log ID per job
+         LEFT JOIN (SELECT con_id,
+                           owner,
+                           job_name,
+                           MAX(log_id) log_id
+                    FROM cdb_scheduler_job_run_details dd
+                    GROUP BY con_id, owner, job_name
                    ) jm
                    ON jm.job_name = j.job_name
                        AND jm.owner = j.owner

@@ -14,18 +14,17 @@ SELECT UPPER(vp.name) AS pdb_instance_name, -- Fully qualified instance/containe
        s.last_call_et,                      -- Elapsed time (in seconds) since the SQL started
        s.sql_id                             -- SQL_ID of the executing statement
 FROM v$session s
-         JOIN (
-    -- Build list of instances and containers (CDB + PDBs)
-    SELECT vp.con_id,
-           i.instance_name || '.' || vp.name AS name -- Qualify instance with PDB name
-    FROM v$containers vp
-             JOIN v$instance i ON 1 = 1
-             JOIN v$database d ON 1 = 1
-    WHERE d.cdb = 'YES'  -- Only applies if database is a Container Database
-      AND vp.con_id <> 2 -- Exclude PDB$SEED (template PDB)
-    UNION ALL
-    SELECT 0, instance_name -- Non-CDB fallback
-    FROM v$instance
+         -- Build list of instances and containers (CDB + PDBs)
+         JOIN (SELECT vp.con_id,
+                      i.instance_name || '.' || vp.name AS name -- Qualify instance with PDB name
+               FROM v$containers vp
+                        JOIN v$instance i ON 1 = 1
+                        JOIN v$database d ON 1 = 1
+               WHERE d.cdb = 'YES'  -- Only applies if database is a Container Database
+                 AND vp.con_id <> 2 -- Exclude PDB$SEED (template PDB)
+               UNION ALL
+               SELECT 0, instance_name -- Non-CDB fallback
+               FROM v$instance
               ) vp
               ON 1 = 1 -- Cartesian join, allows tagging sessions with instance/container
 WHERE s.status = 'ACTIVE'          -- Only active sessions

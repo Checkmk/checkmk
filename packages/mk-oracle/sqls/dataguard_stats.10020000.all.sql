@@ -5,11 +5,11 @@
 -- Section dataguard_stats: Provides an overview of the current
 -- Data Guard configuration, role, synchronization status, and failover readiness
 SELECT UPPER(
-           DECODE(
-               NVL(:IGNORE_DB_NAME, 0),
-               0, d.NAME,
-               i.instance_name
-           )
+               DECODE(
+                       NVL(:IGNORE_DB_NAME, 0),
+                       0, d.NAME,
+                       i.instance_name
+               )
        ),                              -- Outputs DB name or instance name depending on bind variable
        UPPER(d.DB_UNIQUE_NAME),        -- Unique name for Data Guard (can differ from DB_NAME)
        d.DATABASE_ROLE,                -- Role: PRIMARY, PHYSICAL STANDBY, LOGICAL STANDBY, etc.
@@ -28,11 +28,10 @@ FROM v$database d
          JOIN v$parameter vp ON 1 = 1 -- Dummy join to include a specific parameter filter
          JOIN v$instance i ON 1 = 1 -- Dummy join to get instance name
          LEFT OUTER JOIN v$dataguard_stats ds ON 1 = 1 -- Includes transport/recovery lag and other DG metrics
-         LEFT OUTER JOIN (
-    SELECT LISTAGG(TO_CHAR(inst_id) || '.' || status, ', ')
-                   WITHIN GROUP (ORDER BY TO_CHAR(inst_id) || '.' || status) AS status
-    FROM gv$managed_standby
-    WHERE PROCESS = 'MRP0' -- Multitenant Recovery Process for physical standby
+         LEFT OUTER JOIN (SELECT LISTAGG(TO_CHAR(inst_id) || '.' || status, ', ')
+                                         WITHIN GROUP (ORDER BY TO_CHAR(inst_id) || '.' || status) AS status
+                          FROM gv$managed_standby
+                          WHERE PROCESS = 'MRP0' -- Multitenant Recovery Process for physical standby
                          ) ms ON 1 = 1
 WHERE vp.name = 'log_archive_config' -- Ensures only Data Guard-enabled environments are included
   AND vp.value IS NOT NULL

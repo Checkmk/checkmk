@@ -6,10 +6,9 @@
 SELECT UPPER(i.instance_name) AS instance_name, -- Current Oracle instance name (uppercased)
        logswitches                              -- Number of redo log switches in the last hour
 FROM v$instance i,
-     (
-         SELECT COUNT(1) logswitches -- Count how many log switches occurred
-         FROM v$loghist h, -- Historical log switch events
-              v$instance i
-         WHERE h.first_time > SYSDATE - 1 / 24 -- Only consider log switches in the last 1 hour
-           AND h.thread# = i.instance_number -- Match redo thread to the current instance (RAC support)
+     (SELECT COUNT(1) logswitches -- Count how many log switches occurred
+      FROM v$loghist h, -- Historical log switch events
+           v$instance i
+      WHERE h.first_time > SYSDATE - 1 / 24 -- Only consider log switches in the last 1 hour
+        AND h.thread# = i.instance_number -- Match redo thread to the current instance (RAC support)
      )

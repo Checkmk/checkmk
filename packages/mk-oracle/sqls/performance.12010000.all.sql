@@ -17,7 +17,7 @@ Collects metrics from:
 
 -- === Section 1: System time model (CPU & DB time) ===
 SELECT UPPER(
-           DECODE(cdb, 'NO', instance_name, instance_name || '.' || con_name)
+               DECODE(cdb, 'NO', instance_name, instance_name || '.' || con_name)
        )                AS instance_name,
        'sys_time_model' AS metric_type, -- Label to identify metric group
        STAT_NAME,                       -- 'DB time' or 'DB CPU'
@@ -55,7 +55,7 @@ SELECT UPPER(DECODE(cdb, 'NO', INSTANCE_NAME, INSTANCE_NAME || '.' || con_name))
        'sys_wait_class',                        -- Label for wait events
        WAIT_CLASS,                              -- e.g., "Concurrency", "Commit", etc.
        ROUND(total_waits),
-       CAST(ROUND(time_waited) AS varchar(64)), -- Time waited in centiseconds
+       CAST(ROUND(time_waited) AS VARCHAR(64)), -- Time waited in centiseconds
        ROUND(total_waits_fg),                   -- Foreground (user session) waits
        ROUND(time_waited_fg),                   -- Foreground wait time
        NULL,
@@ -101,7 +101,7 @@ SELECT UPPER(DECODE(d.cdb, 'NO', i.instance_name, i.instance_name || '.CDB$ROOT'
        'buffer_pool_statistics',
        b.name,             -- Buffer pool name (DEFAULT, KEEP, RECYCLE)
        b.db_block_gets,    -- # of block gets
-       CAST(b.db_block_change AS varchar(64)),
+       CAST(b.db_block_change AS VARCHAR(64)),
        b.consistent_gets,  -- Consistent reads
        b.physical_reads,   -- Physical reads
        b.physical_writes,  -- Physical writes
@@ -135,7 +135,7 @@ SELECT UPPER(DECODE(d.cdb, 'NO', i.instance_name, i.instance_name || '.CDB$ROOT'
        'librarycache',
        b.namespace,                    -- Cache namespace (SQL AREA, TABLE/PROCEDURE, etc.)
        b.gets,                         -- Lookups
-       CAST(b.gethits AS varchar(64)), -- Lookup hits
+       CAST(b.gethits AS VARCHAR(64)), -- Lookup hits
        b.pins,                         -- Executions
        b.pinhits,                      -- Execution hits
        b.reloads,                      -- Reloads required
@@ -162,11 +162,10 @@ FROM v$containers c
          JOIN v$database d ON 1 = 1
          JOIN v$instance i ON 1 = 1
          JOIN v$pgastat p ON p.con_id = c.con_id
-WHERE c.con_id IN (
-    SELECT con_id
-    FROM v$containers
-    WHERE c.open_mode LIKE 'READ %' -- Only open/readable PDBs
-      AND c.name <> 'PDB$SEED'
+WHERE c.con_id IN (SELECT con_id
+                   FROM v$containers
+                   WHERE c.open_mode LIKE 'READ %' -- Only open/readable PDBs
+                     AND c.name <> 'PDB$SEED'
                   )
 
 UNION ALL

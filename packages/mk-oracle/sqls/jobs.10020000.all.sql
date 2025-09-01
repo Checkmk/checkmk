@@ -4,19 +4,19 @@
 
 -- Section jobs: retrieves information about DBA Scheduler jobs in the primary, open database
 SELECT UPPER(
-           DECODE(NVL(:IGNORE_DB_NAME, 0), 0, vd.NAME, i.instance_name)
+               DECODE(NVL(:IGNORE_DB_NAME, 0), 0, vd.NAME, i.instance_name)
        )                         AS db_or_instance,   -- If :IGNORE_DB_NAME = 0 → use DB name, else use instance name
        j.owner,                                       -- Schema/owner of the job
        j.job_name,                                    -- Name of the scheduler job
        j.state,                                       -- Current state (e.g., ENABLED, DISABLED, RUNNING)
        ROUND(
-           (TRUNC(SYSDATE) + j.last_run_duration - TRUNC(SYSDATE)) * 86400
+               (TRUNC(SYSDATE) + j.last_run_duration - TRUNC(SYSDATE)) * 86400
        )                         AS last_run_seconds, -- Duration of the last job run, converted to seconds
        j.run_count,                                   -- Number of times the job has executed
        j.enabled,                                     -- Whether the job is enabled (TRUE/FALSE)
        TO_CHAR(
-           NVL(j.next_run_date,
-               TO_DATE('1970-01-01', 'YYYY-MM-DD'))
+               NVL(j.next_run_date,
+                   TO_DATE('1970-01-01', 'YYYY-MM-DD'))
        )                         AS next_run_date,    -- Next scheduled run (defaulted if null)
        NVL(j.schedule_name, '-') AS schedule_name,    -- Schedule name associated with the job (or '-' if none)
        jd.status                                      -- Status of the most recent run (e.g., SUCCEEDED, FAILED, STOPPED)

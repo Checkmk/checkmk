@@ -5,7 +5,7 @@
 -- Section ts_quotas: retrieves tablespace quotas assigned to database users
 -- Main query: Fetch user tablespace quotas
 SELECT UPPER(
-           DECODE(NVL(:IGNORE_DB_NAME, 0), NULL, d.NAME, i.instance_name)
+               DECODE(NVL(:IGNORE_DB_NAME, 0), NULL, d.NAME, i.instance_name)
        ) AS db_or_instance_name,
        Q.USERNAME,        -- Database user
        Q.TABLESPACE_NAME, -- Tablespace assigned to the user

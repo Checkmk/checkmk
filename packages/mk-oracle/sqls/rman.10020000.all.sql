@@ -13,35 +13,34 @@ SELECT UPPER(name),                                       -- Database name or in
        INCREMENTAL_LEVEL,                                 -- Incremental level (0 = full, >0 = incremental)
        ROUND(((SYSDATE - COMPLETION_TIME) * 24 * 60), 0), -- Elapsed minutes since backup completed
        INCREMENTAL_CHANGE#                                -- SCN of incremental backup
-FROM (
-         SELECT UPPER(
-                    DECODE(NVL(:IGNORE_DB_NAME, 0), 0, d.NAME, i.instance_name)
-                )                        name,
-                bd2.INCREMENTAL_LEVEL,
-                bd2.INCREMENTAL_CHANGE#,
-                MIN(bd2.COMPLETION_TIME) COMPLETION_TIME -- Earliest completion time for grouping
-         FROM (
-                  -- Get the latest backup time per file and level
-                  SELECT bd.file#,
-                         bd.INCREMENTAL_LEVEL,
-                         MAX(bd.COMPLETION_TIME) COMPLETION_TIME
-                  FROM v$backup_datafile bd
-                           JOIN v$datafile_header dh
-                                ON dh.file# = bd.file#
-                  WHERE dh.status = 'ONLINE' -- Only consider ONLINE datafiles
-                  GROUP BY bd.file#, bd.INCREMENTAL_LEVEL
-              ) bd
-                  JOIN v$backup_datafile bd2
-                       ON bd2.file# = bd.file#
-                           AND bd2.COMPLETION_TIME = bd.COMPLETION_TIME
-                  JOIN v$database d
-                       ON d.RESETLOGS_CHANGE# = bd2.RESETLOGS_CHANGE# -- Ensure correct incarnation
-                  JOIN v$instance i
-                       ON 1 = 1
-         GROUP BY UPPER(DECODE(NVL(:IGNORE_DB_NAME, 0), 0, d.NAME, i.instance_name)),
-                  bd2.INCREMENTAL_LEVEL,
-                  bd2.INCREMENTAL_CHANGE#
-         ORDER BY name, bd2.INCREMENTAL_LEVEL
+FROM (SELECT UPPER(
+                     DECODE(NVL(:IGNORE_DB_NAME, 0), 0, d.NAME, i.instance_name)
+             )                        name,
+             bd2.INCREMENTAL_LEVEL,
+             bd2.INCREMENTAL_CHANGE#,
+             MIN(bd2.COMPLETION_TIME) COMPLETION_TIME -- Earliest completion time for grouping
+      FROM (
+               -- Get the latest backup time per file and level
+               SELECT bd.file#,
+                      bd.INCREMENTAL_LEVEL,
+                      MAX(bd.COMPLETION_TIME) COMPLETION_TIME
+               FROM v$backup_datafile bd
+                        JOIN v$datafile_header dh
+                             ON dh.file# = bd.file#
+               WHERE dh.status = 'ONLINE' -- Only consider ONLINE datafiles
+               GROUP BY bd.file#, bd.INCREMENTAL_LEVEL
+           ) bd
+               JOIN v$backup_datafile bd2
+                    ON bd2.file# = bd.file#
+                        AND bd2.COMPLETION_TIME = bd.COMPLETION_TIME
+               JOIN v$database d
+                    ON d.RESETLOGS_CHANGE# = bd2.RESETLOGS_CHANGE# -- Ensure correct incarnation
+               JOIN v$instance i
+                    ON 1 = 1
+      GROUP BY UPPER(DECODE(NVL(:IGNORE_DB_NAME, 0), 0, d.NAME, i.instance_name)),
+               bd2.INCREMENTAL_LEVEL,
+               bd2.INCREMENTAL_CHANGE#
+      ORDER BY name, bd2.INCREMENTAL_LEVEL
      )
 
 UNION ALL
@@ -55,15 +54,14 @@ SELECT name,
        NULL,
        ROUND((SYSDATE - CHECKPOINT_TIME) * 24 * 60),      -- Elapsed minutes since controlfile backup
        0
-FROM (
-         SELECT UPPER(DECODE(NVL(:IGNORE_DB_NAME, 0), 0, d.NAME, i.instance_name)) name,
-                MAX(bcd.CHECKPOINT_TIME)                                           CHECKPOINT_TIME -- Latest controlfile checkpoint
-         FROM v$database d
-                  JOIN v$backup_controlfile_details bcd
-                       ON d.RESETLOGS_CHANGE# = bcd.RESETLOGS_CHANGE# -- Ensure correct database incarnation
-                  JOIN v$instance i
-                       ON 1 = 1
-         GROUP BY UPPER(DECODE(NVL(:IGNORE_DB_NAME, 0), 0, d.NAME, i.instance_name))
+FROM (SELECT UPPER(DECODE(NVL(:IGNORE_DB_NAME, 0), 0, d.NAME, i.instance_name)) name,
+             MAX(bcd.CHECKPOINT_TIME)                                           CHECKPOINT_TIME -- Latest controlfile checkpoint
+      FROM v$database d
+               JOIN v$backup_controlfile_details bcd
+                    ON d.RESETLOGS_CHANGE# = bcd.RESETLOGS_CHANGE# -- Ensure correct database incarnation
+               JOIN v$instance i
+                    ON 1 = 1
+      GROUP BY UPPER(DECODE(NVL(:IGNORE_DB_NAME, 0), 0, d.NAME, i.instance_name))
      )
 
 UNION ALL
@@ -77,19 +75,17 @@ SELECT name,
        NULL,
        ROUND((SYSDATE - completed) * 24 * 60, 0),   -- Elapsed minutes since archivelog backup
        NULL
-FROM (
-         SELECT UPPER(DECODE(NVL(:IGNORE_DB_NAME, 0), 0, d.NAME, i.instance_name)) name,
-                MAX(a.completion_time)                                             completed, -- Most recent archivelog backup
-                CASE WHEN a.backup_count > 0 THEN 1 ELSE 0 END                                -- Ensure at least one backup exists
-         FROM v$archived_log a,
-              v$database d,
-              v$instance i
-         WHERE a.backup_count > 0 -- Only archived logs that were backed up
-           AND a.dest_id IN (
-             SELECT b.dest_id
-             FROM v$archive_dest b
-             WHERE b.target = 'PRIMARY' -- Only primary destinations
-               AND b.SCHEDULE = 'ACTIVE' -- Only active destinations
-                            )
-         GROUP BY d.NAME, i.instance_name, CASE WHEN a.backup_count > 0 THEN 1 ELSE 0 END
+FROM (SELECT UPPER(DECODE(NVL(:IGNORE_DB_NAME, 0), 0, d.NAME, i.instance_name)) name,
+             MAX(a.completion_time)                                             completed, -- Most recent archivelog backup
+             CASE WHEN a.backup_count > 0 THEN 1 ELSE 0 END                                -- Ensure at least one backup exists
+      FROM v$archived_log a,
+           v$database d,
+           v$instance i
+      WHERE a.backup_count > 0 -- Only archived logs that were backed up
+        AND a.dest_id IN (SELECT b.dest_id
+                          FROM v$archive_dest b
+                          WHERE b.target = 'PRIMARY' -- Only primary destinations
+                            AND b.SCHEDULE = 'ACTIVE' -- Only active destinations
+                         )
+      GROUP BY d.NAME, i.instance_name, CASE WHEN a.backup_count > 0 THEN 1 ELSE 0 END
      )

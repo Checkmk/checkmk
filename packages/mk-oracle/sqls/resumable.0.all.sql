@@ -9,11 +9,11 @@ SELECT UPPER(i.instance_name), -- Instance name in uppercase
        a.status,               -- Current status (SUSPENDED, RESUMED, TIMEOUT)
        a.TIMEOUT,              -- Timeout in seconds before automatic resume/abort
        ROUND(
-           (SYSDATE - TO_DATE(a.suspend_time, 'MM/DD/YY HH24:MI:SS')) * 24 * 60 * 60
+               (SYSDATE - TO_DATE(a.suspend_time, 'MM/DD/YY HH24:MI:SS')) * 24 * 60 * 60
        ),                      -- Elapsed time (seconds) since the session was suspended
        a.error_number,         -- Oracle error number that caused suspension
        TO_CHAR(
-           TO_DATE(a.suspend_time, 'MM/DD/YY HH24:MI:SS'), 'MM/DD/YY_HH24:MI:SS'
+               TO_DATE(a.suspend_time, 'MM/DD/YY HH24:MI:SS'), 'MM/DD/YY_HH24:MI:SS'
        ),                      -- Formatted suspend timestamp
        a.resume_time,          -- Resume time (if resumed)
        a.error_msg             -- Error message text

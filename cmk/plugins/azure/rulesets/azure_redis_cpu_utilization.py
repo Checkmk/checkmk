@@ -36,7 +36,7 @@ def _make_form() -> Dictionary:
 rule_spec_azure_redis_cpu_utilization = CheckParameters(
     name="azure_redis_cpu_utilization",
     title=Title("Azure Redis CPU utilization"),
-    topic=Topic.DATABASES,
+    topic=Topic.APPLICATIONS,
     parameter_form=_make_form,
     condition=HostCondition(),
 )

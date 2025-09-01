@@ -6,6 +6,7 @@
 
 import re
 
+import pytest
 from playwright.sync_api import expect
 
 from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
@@ -123,6 +124,7 @@ def _cleanup(dashboard_page: Dashboard) -> None:
     dashboard_page.main_area.expect_no_entries()
 
 
+@pytest.mark.skip("Flaky, uses old valuespec varprefixes. See CMK-25653")
 def test_backups(dashboard_page: Dashboard) -> None:
     _go_to_backups_page(dashboard_page)
     dashboard_page.main_area.expect_no_entries()

@@ -6,7 +6,6 @@
 from collections.abc import Iterator, Sequence
 from typing import Literal, TypedDict
 
-import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
 from cmk.utils.regex import regex
 
@@ -39,9 +38,6 @@ class InvHousekeepingParams(TypedDict):
     for_hosts: Sequence[InvHousekeepingParamsOfHosts]
     default: InvHousekeepingParamsDefaultCombined | None
     abandoned_file_age: int
-
-
-CONFIG_DIR_INV_HOUSEKEEPING_PARAMS = cmk.utils.paths.default_config_dir / "inventory.d/wato/"
 
 
 def matches(*, regex_or_name: str, host_name: HostName) -> bool:

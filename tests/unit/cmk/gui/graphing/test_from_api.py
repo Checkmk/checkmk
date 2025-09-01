@@ -363,6 +363,7 @@ _ALLOWED_DUPLICATES = {
         "aws_dynamodb_maximum_consumed_rcu",
     },
     "Memory used": {"memused_couchbase_bucket", "memory_used"},
+    "Memory utilization": {"azure_redis_memory_utilization", "memory_util"},
     "Minimum single-request consumption": {
         "aws_dynamodb_minimum_consumed_rcu",
         "aws_dynamodb_minimum_consumed_wcu",

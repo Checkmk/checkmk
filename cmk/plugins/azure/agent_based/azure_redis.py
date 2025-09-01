@@ -163,3 +163,60 @@ check_plugin_azure_redis_cache_effectiveness = CheckPlugin(
         "cache_hit_ratio": ("fixed", (85.0, 80.0)),
     },
 )
+
+
+check_plugin_azure_redis_memory = CheckPlugin(
+    name="azure_redis_memory",
+    sections=["azure_redis"],
+    service_name="Azure/Redis Memory",
+    discovery_function=create_discover_by_metrics_function_single(
+        "total_allusedmemorypercentage",
+        "total_allusedmemoryRss",
+        "total_allevictedkeys",
+        "total_allexpiredkeys",
+    ),
+    check_function=create_check_metrics_function_single(
+        [
+            MetricData(
+                "total_allusedmemorypercentage",
+                "azure_redis_memory_utilization",
+                "Memory utilization",
+                render.percent,
+                upper_levels_param="memory_util",
+            ),
+            MetricData(
+                "total_allusedmemory",
+                "azure_redis_used_memory",
+                "Used memory",
+                render.bytes,
+                notice_only=True,
+            ),
+            MetricData(
+                "total_allusedmemoryRss",
+                "azure_redis_used_memory_rss",
+                "Used memory RSS",
+                render.bytes,
+                notice_only=True,
+            ),
+            MetricData(
+                "total_allevictedkeys",
+                "azure_redis_evicted_keys",
+                "Evicted keys",
+                str,
+                upper_levels_param="evicted_keys",
+            ),
+            MetricData(
+                "total_allexpiredkeys",
+                "azure_redis_expired_keys",
+                "Expired keys",
+                str,
+            ),
+        ],
+        check_levels=check_levels_v2,  # Force v2 so default params work without migration params
+    ),
+    check_ruleset_name="azure_redis_memory",
+    check_default_parameters={
+        "memory_util": ("fixed", (70.0, 80.0)),
+        "evicted_keys": ("no_levels", None),
+    },
+)

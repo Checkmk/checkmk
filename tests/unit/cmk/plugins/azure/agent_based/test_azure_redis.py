@@ -75,6 +75,24 @@ AZURE_REDIS_WITH_METRICS = {
                 value=484,
                 unit="count",
             ),
+            "total_allusedmemorypercentage": AzureMetric(
+                name="allusedmemorypercentage",
+                aggregation="total",
+                value=29,
+                unit="percent",
+            ),
+            "total_allusedmemoryRss": AzureMetric(
+                name="allusedmemoryRss",
+                aggregation="total",
+                value=60170240,
+                unit="bytes",
+            ),
+            "total_allevictedkeys": AzureMetric(
+                name="allevictedkeys", aggregation="total", value=42, unit="count"
+            ),
+            "total_allexpiredkeys": AzureMetric(
+                name="allexpiredkeys", aggregation="total", value=140, unit="count"
+            ),
         },
         subscription="ba9f74ff-6a4c-41e0-ab55-15c7fe79632f",
     ),
@@ -152,6 +170,28 @@ def test_check_azure_redis(
                 Metric("azure_redis_gets", 484.0),
             ],
             id="redis Cache effectiveness",
+        ),
+        pytest.param(
+            AZURE_REDIS_WITH_METRICS,
+            {
+                "memory_util": ("fixed", (20.0, 30.0)),
+                "evicted_keys": ("fixed", (35, 40)),
+            },
+            azure_redis.check_plugin_azure_redis_memory,
+            [
+                Result(
+                    state=State.WARN,
+                    summary="Memory utilization: 29.00% (warn/crit at 20.00%/30.00%)",
+                ),
+                Metric("azure_redis_memory_utilization", 29.0, levels=(20.0, 30.0)),
+                Result(state=State.OK, notice="Used memory RSS: 57.4 MiB"),
+                Metric("azure_redis_used_memory_rss", 60170240.0),
+                Result(state=State.CRIT, summary="Evicted keys: 42 (warn/crit at 35/40)"),
+                Metric("azure_redis_evicted_keys", 42.0, levels=(35, 40)),
+                Result(state=State.OK, summary="Expired keys: 140"),
+                Metric("azure_redis_expired_keys", 140.0),
+            ],
+            id="redis memory",
         ),
     ],
 )

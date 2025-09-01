@@ -416,4 +416,8 @@ GRAPHS_ORDER = [
     "audiocodes_active_calls_in_out",
     "audiocodes_established_calls_in_out",
     "audiocodes_abnormal_terminated_calls_in_out",
+    "azure_redis_memory_utilization",
+    "azure_redis_used_memory",
+    "azure_redis_evicted_keys",
+    "azure_redis_expired_keys",
 ]

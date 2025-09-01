@@ -108,23 +108,23 @@ class CrashReportsRowTable(RowTable):
                 "crash_exc_value": crash_info_raw["exc_value"],
                 "crash_exc_traceback": crash_info_raw["exc_traceback"],
                 **(
-                    {"crash_host": crash_info_raw.get("details").get("host")}
-                    if crash_info_raw.get("details", {}).get("host")
+                    {"crash_host": crash_info_raw["details"]["host"]}
+                    if isinstance(crash_info_raw.get("details"), dict) and crash_info_raw["details"].get("host")
                     else {}
                 ),
                 **(
-                    {"crash_item": crash_info_raw.get("details").get("item")}
-                    if crash_info_raw.get("details", {}).get("item")
+                    {"crash_item": crash_info_raw["details"]["item"]}
+                    if isinstance(crash_info_raw.get("details"), dict) and crash_info_raw["details"].get("item")
                     else {}
                 ),
                 **(
-                    {"crash_check_type": crash_info_raw.get("details").get("check_type")}
-                    if crash_info_raw.get("details", {}).get("check_type")
+                    {"crash_check_type": crash_info_raw["details"]["check_type"]}
+                    if isinstance(crash_info_raw.get("details"), dict) and crash_info_raw["details"].get("check_type")
                     else {}
                 ),
                 **(
-                    {"crash_service_description": crash_info_raw.get("details").get("description")}
-                    if crash_info_raw.get("details", {}).get("description")
+                    {"crash_service_description": crash_info_raw["details"]["description"]}
+                    if isinstance(crash_info_raw.get("details"), dict) and crash_info_raw["details"].get("description")
                     else {}
                 ),
             }

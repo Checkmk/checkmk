@@ -796,7 +796,6 @@ COMPONENTS = {
     ),
     Component("cmk.inventory"): _allow(
         *PACKAGE_CCC,
-        "cmk.utils.paths",
         "cmk.utils.regex",
     ),
     Component("omdlib"): _allow(
@@ -819,7 +818,6 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("bin/cmk-migrate-extension-rulesets"): Component("cmk.update_config"),
     ModulePath("bin/cmk-validate-config"): Component("cmk.validate_config"),
     ModulePath("bin/cmk-validate-plugins"): Component("cmk.validate_plugins"),
-    ModulePath("bin/cmk-transform-inventory-trees"): Component("cmk.inventory"),
     ModulePath("bin/post-rename-site"): Component("cmk.post_rename_site"),
     ModulePath("bin/mkeventd"): Component("cmk.ec"),
     ModulePath("bin/cmk-convert-rrds"): Component("cmk.rrd"),
@@ -873,6 +871,10 @@ _EXPLICIT_FILE_TO_DEPENDENCIES = {
     ModulePath("bin/cmk-update-license-usage"): _allow(
         *PACKAGE_CCC,
         "cmk.utils",
+    ),
+    ModulePath("bin/cmk-transform-inventory-trees"): _allow(
+        "cmk.inventory",
+        "cmk.utils.paths",
     ),
     ModulePath("bin/init-redis"): _allow("cmk.utils.setup_search_index"),
     ModulePath("bin/mkbackup"): _allow(*PACKAGE_CCC, "cmk.utils"),

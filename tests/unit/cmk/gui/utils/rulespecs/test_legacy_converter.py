@@ -540,7 +540,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     choices=[
                         (
                             "environment",
-                            _("Use from environment"),
+                            _("Auto-detect proxy settings for this network"),
                             legacy_valuespecs.FixedValue(
                                 value="environment",
                                 help=_(
@@ -557,7 +557,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                         ),
                         (
                             "no_proxy",
-                            _("Connect without proxy"),
+                            _("No proxy"),
                             legacy_valuespecs.FixedValue(
                                 value=None,
                                 totext=_(
@@ -567,7 +567,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                         ),
                         (
                             "global",
-                            _("Use globally configured proxy"),
+                            _("Globally configured proxy"),
                             legacy_valuespecs.DropdownChoice(
                                 choices=lambda: [],
                                 sorted=True,
@@ -575,7 +575,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                         ),
                         (
                             "url",
-                            _("Use explicit proxy settings"),
+                            _("Manual proxy configuration"),
                             legacy_valuespecs.Url(
                                 title=_("Proxy URL"),
                                 default_scheme="http",
@@ -608,7 +608,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     choices=[
                         (
                             "environment",
-                            _("Use from environment"),
+                            _("Auto-detect proxy settings for this network"),
                             legacy_valuespecs.FixedValue(
                                 value="environment",
                                 help=_(
@@ -625,7 +625,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                         ),
                         (
                             "no_proxy",
-                            _("Connect without proxy"),
+                            _("No proxy"),
                             legacy_valuespecs.FixedValue(
                                 value=None,
                                 totext=_(
@@ -635,7 +635,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                         ),
                         (
                             "global",
-                            _("Use globally configured proxy"),
+                            _("Globally configured proxy"),
                             legacy_valuespecs.DropdownChoice(
                                 choices=lambda: [],
                                 sorted=True,
@@ -643,7 +643,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                         ),
                         (
                             "url",
-                            _("Use explicit proxy settings"),
+                            _("Manual proxy configuration"),
                             legacy_valuespecs.Url(
                                 title=_("Proxy URL"),
                                 default_scheme="http",

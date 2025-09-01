@@ -2175,7 +2175,9 @@ def _convert_to_legacy_http_proxy(
             choices=[
                 (
                     "environment",
-                    ruleset_api_v1.Title("Use from environment").localize(localizer),
+                    ruleset_api_v1.Title("Auto-detect proxy settings for this network").localize(
+                        localizer
+                    ),
                     legacy_valuespecs.FixedValue(
                         value="environment",
                         help=ruleset_api_v1.Help(
@@ -2192,7 +2194,7 @@ def _convert_to_legacy_http_proxy(
                 ),
                 (
                     "no_proxy",
-                    ruleset_api_v1.Title("Connect without proxy").localize(localizer),
+                    ruleset_api_v1.Title("No proxy").localize(localizer),
                     legacy_valuespecs.FixedValue(
                         value=None,
                         totext=ruleset_api_v1.Label(
@@ -2202,7 +2204,7 @@ def _convert_to_legacy_http_proxy(
                 ),
                 (
                     "global",
-                    ruleset_api_v1.Title("Use globally configured proxy").localize(localizer),
+                    ruleset_api_v1.Title("Globally configured proxy").localize(localizer),
                     legacy_valuespecs.DropdownChoice(
                         choices=_global_proxy_choices,
                         sorted=True,
@@ -2210,7 +2212,7 @@ def _convert_to_legacy_http_proxy(
                 ),
                 (
                     "url",
-                    ruleset_api_v1.Title("Use explicit proxy settings").localize(localizer),
+                    ruleset_api_v1.Title("Manual proxy configuration").localize(localizer),
                     legacy_valuespecs.Url(
                         title=ruleset_api_v1.Title("Proxy URL").localize(localizer),
                         default_scheme="http",

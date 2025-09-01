@@ -110,7 +110,7 @@ def recompose(
     elements: list[CascadingSingleChoiceElement[Any]] = [
         CascadingSingleChoiceElement(
             name="environment",
-            title=Title("Use from environment"),
+            title=Title("Auto-detect proxy settings for this network"),
             parameter_form=FixedValue(
                 value="environment",
                 help_text=Help(
@@ -127,7 +127,7 @@ def recompose(
         ),
         CascadingSingleChoiceElement(
             name="no_proxy",
-            title=Title("Connect without proxy"),
+            title=Title("No proxy"),
             parameter_form=FixedValue(
                 value=None,
                 label=Label("Connect directly to the destination instead of using a proxy."),
@@ -135,7 +135,7 @@ def recompose(
         ),
         CascadingSingleChoiceElement(
             name="global_",
-            title=Title("Use globally configured proxy"),
+            title=Title("Globally configured proxy"),
             parameter_form=SingleChoice(
                 elements=global_proxy_choices,
                 no_elements_text=Message("There are no elements defined for this selection yet."),
@@ -143,7 +143,7 @@ def recompose(
         ),
         CascadingSingleChoiceElement(
             name="url",
-            title=Title("Use explicit proxy settings"),
+            title=Title("Manual proxy configuration"),
             parameter_form=String(
                 custom_validate=[
                     LengthInRange(min_value=1),

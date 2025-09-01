@@ -40,7 +40,7 @@ def HTTPProxyReference(allowed_schemes: Iterable[_Schemes] = _allowed_schemes) -
         choices=[
             (
                 "environment",
-                _("Use from environment"),
+                _("Auto-detect proxy settings for this network"),
                 FixedValue(
                     value="environment",
                     help=_(
@@ -57,7 +57,7 @@ def HTTPProxyReference(allowed_schemes: Iterable[_Schemes] = _allowed_schemes) -
             ),
             (
                 "no_proxy",
-                _("Connect without proxy"),
+                _("No proxy"),
                 FixedValue(
                     value=None,
                     totext=_("Connect directly to the destination instead of using a proxy."),
@@ -65,13 +65,13 @@ def HTTPProxyReference(allowed_schemes: Iterable[_Schemes] = _allowed_schemes) -
             ),
             (
                 "global",
-                _("Use globally configured proxy"),
+                _("Globally configured proxy"),
                 DropdownChoice(
                     choices=_global_proxy_choices,
                     sorted=True,
                 ),
             ),
-            ("url", _("Use explicit proxy settings"), HTTPProxyInput(allowed_schemes)),
+            ("url", _("Manual proxy configuration"), HTTPProxyInput(allowed_schemes)),
         ],
         sorted=False,
     )

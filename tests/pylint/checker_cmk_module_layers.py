@@ -4,8 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Checker to prevent disallowed imports of modules"""
 
+from __future__ import annotations
+
 from collections.abc import Callable, Sequence
 from pathlib import Path
+from typing import Final
 
 from astroid.nodes import Import, ImportFrom  # type: ignore[import-untyped]
 from mypy_extensions import NamedArg
@@ -23,34 +26,38 @@ class ModulePath(Path):
 
 class Component:
     def __init__(self, name: str):
-        self._parts = name.split(".")
-
-    @property
-    def parts(self) -> Sequence[str]:
-        return self._parts
+        self.name: Final = name
+        self.parts: Final = tuple(name.split("."))
 
     def __repr__(self) -> str:
-        return ".".join(self.parts)
+        return f"{self.__class__.__name__}({self.name!r})"
+
+    def __str__(self) -> str:
+        return self.name
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Component):
             return NotImplemented
         return self.parts == other.parts
 
-    def is_below(self, component: str) -> bool:
-        return is_prefix_of(Component(component).parts, self.parts)
+    def __hash__(self) -> int:
+        return hash(self.parts)
+
+    def is_below(self, component: str | Component) -> bool:
+        component = component if isinstance(component, Component) else Component(component)
+        return is_prefix_of(component.parts, self.parts)
 
 
 class ModuleName:
     def __init__(self, name: str):
-        self._parts = name.split(".")
-
-    @property
-    def parts(self) -> Sequence[str]:
-        return self._parts
+        self.name: Final = name
+        self.parts: Final = tuple(name.split("."))
 
     def __repr__(self) -> str:
-        return ".".join(self.parts)
+        return f"{self.__class__.__name__}({self.name!r})"
+
+    def __str__(self) -> str:
+        return self.name
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, ModuleName):
@@ -759,7 +766,7 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
 }
 
 
-_COMPONENTS = (
+COMPONENTS = (
     (Component("tests.unit.cmk"), _allow_default_plus_component_under_test),
     (Component("tests.unit.checks"), _is_allowed_for_legacy_check_tests),
     (Component("tests.extension_compatibility"), _allow_default_plus_gui_and_base),
@@ -1155,7 +1162,7 @@ class CMKModuleLayerChecker(BaseChecker):
     def _is_import_allowed(
         self, importing_path: ModulePath, importing: ModuleName, imported: ModuleName
     ) -> bool:
-        for component, component_specific_checker in _COMPONENTS:
+        for component, component_specific_checker in COMPONENTS:
             if self._is_part_of_component(importing, importing_path, component):
                 return component_specific_checker(imported=imported, component=component)
 

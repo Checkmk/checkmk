@@ -631,6 +631,8 @@ export default defineComponent({
 </script>
 
 <style scoped>
+/* stylelint-disable no-descending-specificity */
+
 .form-readonly__error {
   background-color: var(--form-readonly-error-bg-color);
 }

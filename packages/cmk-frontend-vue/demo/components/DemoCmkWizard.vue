@@ -46,5 +46,3 @@ const currentMode = ref<'guided' | 'overview'>('guided')
     </CmkWizardStep>
   </CmkWizard>
 </template>
-
-<style scoped></style>

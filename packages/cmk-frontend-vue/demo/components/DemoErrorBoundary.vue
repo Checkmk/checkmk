@@ -62,5 +62,3 @@ const { ErrorBoundary } = useErrorBoundary()
   <!-- I would have expected that this also triggers the onErrorCaptured method in useErrorBoundary, but its also fine this way -->
   <button @click="throwError('another error')">throw new Error() outside error boundary</button>
 </template>
-
-<style scoped></style>

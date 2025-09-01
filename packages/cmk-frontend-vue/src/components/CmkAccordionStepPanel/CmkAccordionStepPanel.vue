@@ -14,5 +14,3 @@ const model = defineModel<string[]>({ required: true })
     <slot />
   </CmkAccordion>
 </template>
-
-<style scoped></style>

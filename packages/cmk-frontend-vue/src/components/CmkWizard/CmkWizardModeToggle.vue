@@ -22,5 +22,3 @@ const currentMode = defineModel<string>({ required: true })
     ]"
   />
 </template>
-
-<style scoped></style>

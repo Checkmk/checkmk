@@ -149,5 +149,3 @@ function getElementBySelector<T>(selector: string): T {
     :setup-error="setupError"
   ></AgentConnectionTest>
 </template>
-
-<style scoped></style>

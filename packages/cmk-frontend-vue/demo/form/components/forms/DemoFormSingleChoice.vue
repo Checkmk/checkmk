@@ -49,5 +49,3 @@ function getSingleChoiceSpec(): SingleChoice {
   <pre>{{ JSON.stringify(data) }}</pre>
   <FormEdit v-model:data="data" :spec="getSingleChoiceSpec()" :backend-validation="[]" />
 </template>
-
-<style scoped></style>

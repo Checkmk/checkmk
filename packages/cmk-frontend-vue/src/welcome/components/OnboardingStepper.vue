@@ -56,5 +56,3 @@ const openedItems = ref<string[]>(getFirstNotFinishedStep(props.finishedSteps))
     />
   </CmkAccordionStepPanel>
 </template>
-
-<style scoped></style>

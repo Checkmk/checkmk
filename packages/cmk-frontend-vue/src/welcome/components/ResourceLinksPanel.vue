@@ -49,5 +49,3 @@ defineProps<{
     />
   </CmkLinkCardContainer>
 </template>
-
-<style scoped></style>

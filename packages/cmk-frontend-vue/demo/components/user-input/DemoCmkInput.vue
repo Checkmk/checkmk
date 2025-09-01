@@ -72,5 +72,3 @@ const externalErrors = ref<string[]>([])
     :validators="[(v: unknown) => ((v as number) < 0 ? ['Value must be positive'] : [])]"
   />
 </template>
-
-<style scoped></style>

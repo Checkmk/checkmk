@@ -152,5 +152,3 @@ const currentStep: Ref<number> = usePersistentRef<number>(`${props.stepId}-curre
     </CmkWizard>
   </CmkAccordionStepPanelItem>
 </template>
-
-<style scoped></style>

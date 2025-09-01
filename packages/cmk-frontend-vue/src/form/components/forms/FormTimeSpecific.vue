@@ -92,5 +92,3 @@ const { FormEditDispatcher } = useFormEditDispatcher()
     <FormValidation :validation="localValidation"></FormValidation>
   </span>
 </template>
-
-<style scoped></style>

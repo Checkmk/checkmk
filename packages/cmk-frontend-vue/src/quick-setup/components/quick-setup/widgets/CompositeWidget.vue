@@ -27,5 +27,3 @@ const updateData = (id: string, value: object) => emit('update', id, value)
     />
   </div>
 </template>
-
-<style scoped></style>

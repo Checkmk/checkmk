@@ -8,5 +8,3 @@ conditions defined in the file COPYING, which is part of this source code packag
 <template>
   <div />
 </template>
-
-<style scoped></style>

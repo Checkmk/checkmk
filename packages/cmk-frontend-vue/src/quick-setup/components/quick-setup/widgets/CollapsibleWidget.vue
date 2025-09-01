@@ -53,5 +53,3 @@ const updateData = (id: string, value: Ref) => {
     />
   </div>
 </template>
-
-<style scoped></style>

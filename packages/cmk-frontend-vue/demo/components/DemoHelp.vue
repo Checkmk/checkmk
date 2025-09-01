@@ -33,5 +33,3 @@ defineProps<{ screenshotMode: boolean }>()
     <HelpText :help="`${Array.from({ length: 10 }, () => `<p>${lorem}</p>`).join('')}`" />
   </p>
 </template>
-
-<style scoped></style>

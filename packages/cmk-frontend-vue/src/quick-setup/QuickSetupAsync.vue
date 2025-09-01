@@ -571,5 +571,3 @@ showQuickSetup.value = true
     :hide-wait-icon="hideWaitIcon"
   />
 </template>
-
-<style scoped></style>

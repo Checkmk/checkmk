@@ -12,5 +12,3 @@ defineProps<{ screenshotMode: boolean }>()
   <h2>Welcome to the demo!</h2>
   <i>choose demo from navigation</i>
 </template>
-
-<style scoped></style>

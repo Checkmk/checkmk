@@ -21,5 +21,3 @@ defineProps<{ screenshotMode: boolean }>()
   <CmkParagraph> Paragraph 1 </CmkParagraph>
   <CmkParagraph> Paragraph 2 </CmkParagraph>
 </template>
-
-<style scoped></style>

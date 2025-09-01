@@ -63,5 +63,3 @@ const variantSelected = ref<'standard' | 'borderless'>('standard')
     :open-in-new-tab="false"
   />
 </template>
-
-<style scoped></style>

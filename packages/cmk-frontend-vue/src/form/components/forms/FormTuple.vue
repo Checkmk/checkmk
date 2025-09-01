@@ -89,15 +89,20 @@ const { FormEditDispatcher } = useFormEditDispatcher()
   flex-wrap: wrap;
 }
 
-.form-tuple.horizontal .form-tuple_item:not(:first-child),
-.form-tuple.horizontal_titles_top .form-tuple_item:not(:first-child) {
-  margin-left: var(--spacing);
-}
-
 /* Horizontal layout - titles beside content */
 .form-tuple.horizontal .form-tuple_item {
   display: flex;
   align-items: flex-start;
+}
+
+.form-tuple.vertical .form-tuple_item {
+  display: flex;
+  margin-bottom: var(--spacing-half);
+}
+
+.form-tuple.horizontal .form-tuple_item:not(:first-child),
+.form-tuple.horizontal_titles_top .form-tuple_item:not(:first-child) {
+  margin-left: var(--spacing);
 }
 
 .form-tuple.horizontal .form-tuple_label {
@@ -107,11 +112,6 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 /* Vertical layout */
 .form-tuple.vertical {
   flex-direction: column;
-}
-
-.form-tuple.vertical .form-tuple_item {
-  display: flex;
-  margin-bottom: var(--spacing-half);
 }
 
 .form-tuple.vertical .form-tuple_item:last-child {

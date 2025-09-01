@@ -120,7 +120,7 @@ public:
     [[nodiscard]] virtual std::unique_ptr<const IGlobalFlags> globalFlags()
         const = 0;
     [[nodiscard]] virtual std::unique_ptr<const IPaths> paths() const = 0;
-    virtual void dumpPaths(Logger *logger) const;
+    virtual void dumpPaths() const;
     [[nodiscard]] virtual std::chrono::system_clock::time_point
     programStartTime() const = 0;
     [[nodiscard]] virtual std::chrono::system_clock::time_point

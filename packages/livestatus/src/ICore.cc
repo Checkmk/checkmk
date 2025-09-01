@@ -10,8 +10,9 @@
 #include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
 
-void ICore::dumpPaths(Logger *logger) const {
+void ICore::dumpPaths() const {
     auto p{paths()};
+    auto *logger{loggerCore()};
     Notice(logger) << "log file = " << p->log_file();
     Notice(logger) << "crash reports directory = "
                    << p->crash_reports_directory();

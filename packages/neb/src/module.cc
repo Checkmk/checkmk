@@ -974,7 +974,7 @@ int broker_process(int callback_type, void *data) {
             // Called immediately prior to entering the main event execution.
             g_timeperiods_cache->update(from_timeval(info->timestamp));
             start_threads();
-            fl_core->dumpPaths(fl_core->loggerLivestatus());
+            fl_core->dumpPaths();
             break;
         case NEBTYPE_PROCESS_EVENTLOOPEND:
             // Called immediately after exiting the main event execution loop

@@ -127,10 +127,8 @@ immediateWatch(
     width: 100%;
     height: 100%;
   }
-}
 
-/* Primary icon colors */
-.cmk-multitone-icon {
+  /* Primary icon colors */
   &.primary-color-green {
     --icon-primary-color: var(--color-corporate-green-60);
   }
@@ -170,10 +168,8 @@ immediateWatch(
   &.color-brown {
     --icon-primary-color: var(--color-brown-60);
   }
-}
 
-/* Secondary icon colors */
-.cmk-multitone-icon {
+  /* Secondary icon colors */
   &.color-secondary-green {
     --icon-secondary-color: var(--color-corporate-green-60);
   }
@@ -213,10 +209,8 @@ immediateWatch(
   &.color-secondary-brown {
     --icon-secondary-color: var(--color-brown-60);
   }
-}
 
-/* Secondary icon colors */
-.cmk-multitone-icon {
+  /* Secondary icon colors */
   &.color-tertiary-green {
     --icon-tertiary-color: var(--color-corporate-green-60);
   }

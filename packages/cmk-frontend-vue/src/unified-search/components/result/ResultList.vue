@@ -15,7 +15,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 .result-list {
   padding: 0;
   margin: 0;
-  list-style-type: 0;
+  list-style-type: none;
   width: 100%;
   height: 100%;
   position: relative;

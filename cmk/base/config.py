@@ -171,7 +171,7 @@ _ContactgroupName = str
 
 # TODO: Prefix helper functions with "_".
 
-# Default values for retry and check intervals in minutes
+# Default values for retry and check intervals in MINUTES
 # Hosts. Check and retry intervals are same
 SMARTPING_CHECK_INTERVAL: Final = 0.1
 HOST_CHECK_INTERVAL: Final = 1.0
@@ -3664,8 +3664,8 @@ def make_parser_config(
     )
 
     def _check_mk_check_interval(host_name: HostName) -> float:
-        """Return the check interval for a host"""
-        return check_interval_config(
+        """Return the check interval in seconds for a host"""
+        return 60 * check_interval_config(
             host_name,
             "Check_MK",
             label_manager.labels_of_service(host_name, "Check_MK", discovered_labels={}),

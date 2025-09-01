@@ -33,7 +33,7 @@ const style = computed(() => {
 </script>
 
 <template>
-  <div style="flex">
+  <div>
     <div v-if="spec.label">
       <FormLabel> {{ spec.label }}</FormLabel
       ><br />

@@ -30,6 +30,23 @@ def test_locked_host_attributes_after_site_copy(site: Site, site_factory: SiteFa
         # instead of discovered again in the copied site.
         site.openapi.dcd.delete(piggyback_info.dcd_id)
         site.openapi.rules.delete(piggyback_info.datasource_id)
+        site.openapi.rules.create(
+            {
+                "api_key": (
+                    "cmk_postprocessed",
+                    "explicit_password",
+                    ("uuid9276bb6e-5b8f-4766-b835-e98e4fc27b4a", "checkmk"),
+                )
+            },
+            "special_agents:cisco_meraki",
+            "/",
+            {
+                "host_name": {
+                    "match_on": ["test-copy-site-non-existent"],
+                    "operator": "one_of",
+                },
+            },
+        )
         site.openapi.changes.activate_and_wait_for_completion()
 
         with site_factory.copy_site(site, "copy") as copied_site:

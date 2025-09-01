@@ -15,22 +15,22 @@ from cmk.discover_plugins import (
     discover_plugins_from_modules,
     PluginGroup,
 )
-from cmk.gui import main_modules  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.config import active_config  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.rulespec import register_plugins  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.utils.rule_specs.loader import (  # pylint: disable=cmk-module-layer-violation
+from cmk.gui import main_modules
+from cmk.gui.config import active_config
+from cmk.gui.rulespec import register_plugins
+from cmk.gui.utils.rule_specs.loader import (
     load_discovered_rule_specs,
     RuleSpec,
 )
-from cmk.gui.utils.script_helpers import gui_context  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.watolib.notification_parameter import (  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.utils.script_helpers import gui_context
+from cmk.gui.watolib.notification_parameter import (
     notification_parameter_registry,
 )
-from cmk.gui.watolib.rulesets import (  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.watolib.rulesets import (
     AllRulesets,
     RulesetCollection,
 )
-from cmk.gui.watolib.rulespecs import (  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.watolib.rulespecs import (
     rulespec_registry,
 )
 from cmk.mkp_tool import Installer, Manifest, PackageName, PackagePart
@@ -51,10 +51,10 @@ from cmk.rulesets.v1.rule_specs import (
     SNMP,
     SpecialAgent,
 )
-from cmk.update_config.plugins.actions.rulesets import (  # pylint: disable=cmk-module-layer-violation
+from cmk.update_config.plugins.actions.rulesets import (
     validate_rule_values,
 )
-from cmk.update_config.plugins.lib.rulesets import (  # pylint: disable=cmk-module-layer-violation
+from cmk.update_config.plugins.lib.rulesets import (
     transform_wato_rulesets_params,
 )
 from cmk.utils import paths

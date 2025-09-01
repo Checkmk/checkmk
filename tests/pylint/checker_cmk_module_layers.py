@@ -72,7 +72,7 @@ class ImportCheckerProtocol(Protocol):
         self,
         *,
         imported: ModuleName,
-        component: Component,
+        component: Component | None,
     ) -> bool: ...
 
 
@@ -109,9 +109,9 @@ def _allow(
     def _is_allowed(
         *,
         imported: ModuleName,
-        component: Component,
+        component: Component | None,
     ) -> bool:
-        return imported.in_component(component) or any(
+        return (component is not None and imported.in_component(component)) or any(
             imported.in_component(Component(m)) for m in modules
         )
 
@@ -466,19 +466,6 @@ def _allow_default_plus_component_under_test_bakery_checkengine(
     )
 
 
-def _allow_for_cmk_piggyback_hub(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    return any(
-        (
-            _is_default_allowed_import(imported=imported, component=component),
-            imported.in_component(Component("cmk.messaging")),
-        )
-    )
-
-
 def _allow_for_cmkpasswd(
     *,
     imported: ModuleName,
@@ -645,6 +632,8 @@ PACKAGE_CCC = ("cmk.ccc",)
 
 PACKAGE_MESSAGING = ("cmk.messaging",)
 
+PACKAGE_MKP_TOOL = ("cmk.mkp_tool",)
+
 PACKAGE_WERKS = ("cmk.werks",)
 
 PACKAGE_CRYPTO = ("cmk.crypto",)
@@ -663,6 +652,8 @@ COMPONENTS = {
         "tests.integration.cmk.base"
     ): _allow_default_plus_component_under_test_bakery_checkengine,
     Component("tests.integration.cmk.cee.robotmk"): _allow_default_plus_component_under_test,
+    Component("tests.integration"): _allow_default_plus_component_under_test,
+    Component("tests"): _is_default_allowed_import,
     Component("cmk.bakery"): _allow(),  # only allow itself, this is the future :-)
     Component("cmk.base.api.bakery"): _allow(
         "cmk.bakery",
@@ -694,6 +685,7 @@ COMPONENTS = {
     Component("cmk.base.cee"): _allowed_for_base_cee,
     Component("cmk.base.core.cee"): _allowed_for_base_cee,
     Component("cmk.base"): _allowed_for_base,
+    Component("cmk.bi"): _is_default_allowed_import,
     Component("cmk.cmkcert"): _allow_for_cmkcert,
     Component("cmk.cmkpasswd"): _allow_for_cmkpasswd,
     Component("cmk.checkengine.value_store"): _allow("cmk.utils", "cmk.ccc"),
@@ -730,6 +722,7 @@ COMPONENTS = {
         "cmk.piggyback.backend",
         "cmk.snmplib",
     ),
+    Component("cmk.fields"): _is_default_allowed_import,
     Component("cmk.cee.helpers"): _allow(
         "cmk.ccc",
         "cmk.checkengine",
@@ -898,6 +891,7 @@ COMPONENTS = {
         "cmk.utils.regex",
         "cmk.utils.structured_data",
     ),
+    Component("omdlib"): _is_default_allowed_import,
 }
 
 _EXPLICIT_FILE_TO_COMPONENT = {
@@ -907,10 +901,10 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("bin/cmk-cert"): Component("cmk.cmkcert"),
     ModulePath("bin/cmk-compute-api-spec"): Component("cmk.gui"),
     ModulePath("bin/cmk-passwd"): Component("cmk.cmkpasswd"),
-    ModulePath("bin/cmk-piggyback-hub"): Component("cmk.piggyback"),
     ModulePath("bin/cmk-ui-job-scheduler"): Component("cmk.gui"),
     ModulePath("bin/cmk-update-config"): Component("cmk.update_config"),
     ModulePath("bin/cmk-migrate-http"): Component("cmk.update_config"),
+    ModulePath("bin/cmk-migrate-extension-rulesets"): Component("cmk.update_config"),
     ModulePath("bin/cmk-validate-config"): Component("cmk.validate_config"),
     ModulePath("bin/cmk-validate-plugins"): Component("cmk.validate_plugins"),
     ModulePath("bin/cmk-transform-inventory-trees"): Component("cmk.inventory"),
@@ -918,6 +912,7 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("bin/mkeventd"): Component("cmk.ec"),
     ModulePath("bin/cmk-convert-rrds"): Component("cmk.rrd"),
     ModulePath("bin/cmk-create-rrd"): Component("cmk.rrd"),
+    ModulePath("omd/packages/maintenance/diskspace.py"): Component("cmk.diskspace"),
     ModulePath("omd/packages/enterprise/bin/liveproxyd"): Component("cmk.cee.liveproxy"),
     ModulePath("omd/packages/enterprise/bin/mknotifyd"): Component("cmk.cee.mknotifyd"),
     ModulePath("omd/packages/enterprise/bin/dcd"): Component("cmk.cee.dcd"),
@@ -944,6 +939,45 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     # CEE specific notification plugins
     ModulePath("notifications/servicenow"): Component("cmk.cee.notification_plugins"),
     ModulePath("notifications/jira_issues"): Component("cmk.cee.notification_plugins"),
+}
+
+_EXPLICIT_FILE_TO_DEPENDENCIES = {
+    # We have files that depend on more than one component, yet we do not want to
+    # add all those dependencies to one of those components.
+    ModulePath("bin/cmk-broker-test"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_MESSAGING,
+        "cmk.utils.paths",
+    ),
+    ModulePath("bin/cmk-piggyback-hub"): _allow(
+        *PACKAGE_CCC,
+        "cmk.piggyback",
+        "cmk.utils",
+    ),
+    ModulePath("bin/cmk-piggyback"): _allow(
+        "cmk.piggyback",
+        "cmk.utils",
+    ),
+    ModulePath("bin/cmk-update-license-usage"): _allow(
+        *PACKAGE_CCC,
+        "cmk.utils",
+    ),
+    ModulePath("bin/init-redis"): _allow("cmk.utils.setup_search_index"),
+    ModulePath("bin/mkbackup"): _allow(*PACKAGE_CCC, "cmk.utils"),
+    ModulePath("bin/mkp"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_MKP_TOOL,
+        "cmk.utils",
+        "cmk.discover_plugins",
+    ),
+    ModulePath("buildscripts/scripts/assert_build_artifacts.py"): _allow(*PACKAGE_CCC),
+    ModulePath("buildscripts/scripts/publish_cloud_images.py"): _allow(*PACKAGE_CCC),
+    ModulePath("buildscripts/scripts/unpublish-container-image.py"): _allow(*PACKAGE_CCC),
+    ModulePath("buildscripts/scripts/lib/registry.py"): _allow(*PACKAGE_CCC),
+    ModulePath("omd/packages/check_mk/post-create/01_create-sample-config.py"): _allow(),
+    ModulePath("omd/packages/enterprise/bin/cmk-license-email-notification"): _allow(
+        "cmk.utils.cee.licensing"
+    ),
 }
 
 
@@ -1002,10 +1036,15 @@ class CMKModuleLayerChecker(BaseChecker):
         # real module name from the file path of the module.
         # Emacs' flycheck stores files to be checked in a temporary file with a prefix.
         p = path.with_name(path.name.removeprefix("flycheck_").removesuffix(".py"))
+
+        if p.is_below("cmk") or p.is_below("tests"):
+            return ModuleName(".".join(p.parts))
+
+        if p.is_below("omd/packages/omd/omdlib"):
+            return ModuleName(".".join(p.parts[3:]))
+
         # For all modules which don't live below cmk after mangling, just assume a toplevel module.
-        return ModuleName(
-            ".".join(p.parts) if p.is_below("cmk") or p.is_below("tests") else p.parts[-1]
-        )
+        return ModuleName(p.parts[-1])
 
     def _is_import_allowed(
         self, importing_path: ModulePath, importing: ModuleName, imported: ModuleName
@@ -1013,8 +1052,13 @@ class CMKModuleLayerChecker(BaseChecker):
         if component := self._find_component(importing, importing_path):
             return COMPONENTS[component](imported=imported, component=component)
 
-        # the rest (matched no component)
-        return _is_allowed_import(imported)
+        try:
+            file_specific_checker = _EXPLICIT_FILE_TO_DEPENDENCIES[importing_path]
+        except KeyError:
+            # This file does not belong to any component, and is not listed in
+            # _EXPLICIT_FILE_TO_DEPENDENCIES. We don't allow any cmk imports.
+            return False
+        return file_specific_checker(imported=imported, component=component)
 
     @staticmethod
     def _find_component(importing: ModuleName, importing_path: ModulePath) -> Component | None:

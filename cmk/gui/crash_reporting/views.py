@@ -107,7 +107,6 @@ class CrashReportsRowTable(RowTable):
                 "crash_exc_type": crash_info_raw["exc_type"],
                 "crash_exc_value": crash_info_raw["exc_value"],
                 "crash_exc_traceback": crash_info_raw["exc_traceback"],
-                "crash_exc_traceback": crash_info_raw["exc_traceback"],
                 **(
                     {"crash_host": crash_info_raw["details"]["host"]}
                     if isinstance(crash_info_raw.get("details"), dict)

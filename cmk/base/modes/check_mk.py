@@ -104,6 +104,16 @@ from cmk.fetchers.config import make_cached_snmp_sections_dir, make_persisted_se
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.helper_interface import FetcherType, SourceType
 from cmk.inventory.paths import Paths as InventoryPaths
+from cmk.inventory.structured_data import (
+    ImmutableTree,
+    InventoryStore,
+    make_meta,
+    MutableTree,
+    RawIntervalFromConfig,
+    SDPath,
+    UpdateResultAttributes,
+    UpdateResultTable,
+)
 from cmk.piggyback import backend as piggyback_backend
 from cmk.server_side_calls_backend import load_active_checks
 from cmk.snmplib import (
@@ -136,16 +146,6 @@ from cmk.utils.paths import configuration_lockfile
 from cmk.utils.rulesets.ruleset_matcher import BundledHostRulesetMatcher, RulesetMatcher, RuleSpec
 from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist
 from cmk.utils.servicename import ServiceName
-from cmk.utils.structured_data import (
-    ImmutableTree,
-    InventoryStore,
-    make_meta,
-    MutableTree,
-    RawIntervalFromConfig,
-    SDPath,
-    UpdateResultAttributes,
-    UpdateResultTable,
-)
 from cmk.utils.tags import TagID
 from cmk.utils.timeout import Timeout
 from cmk.utils.timeperiod import load_timeperiods

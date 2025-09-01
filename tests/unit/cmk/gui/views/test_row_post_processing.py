@@ -9,9 +9,9 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.views.row_post_processing import post_process_rows, row_post_processor_registry
 from cmk.gui.views.store import multisite_builtin_views
+from cmk.inventory.structured_data import ImmutableTree
 from cmk.utils import paths
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-from cmk.utils.structured_data import ImmutableTree
 
 
 def test_post_processor_registrations() -> None:

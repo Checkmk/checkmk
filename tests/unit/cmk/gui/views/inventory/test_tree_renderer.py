@@ -23,7 +23,7 @@ from cmk.gui.views.inventory._tree_renderer import (
     _SDItemsSorter,
     SDItem,
 )
-from cmk.utils.structured_data import (
+from cmk.inventory.structured_data import (
     ImmutableAttributes,
     ImmutableDeltaAttributes,
     ImmutableDeltaTable,

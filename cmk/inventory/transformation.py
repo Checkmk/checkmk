@@ -13,11 +13,10 @@ from pathlib import Path
 from typing import TypedDict
 
 import cmk.ccc.store
-import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
-from cmk.utils.structured_data import transform
 
 from .paths import Paths, TreePath, TreePathGz
+from .structured_data import transform
 
 
 @dataclass(frozen=True)

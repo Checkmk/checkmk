@@ -176,6 +176,7 @@ from cmk.fetchers.config import make_cached_snmp_sections_dir, make_persisted_se
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge, NoCache
 from cmk.fetchers.snmp import make_backend as make_snmp_backend
 from cmk.helper_interface import AgentRawData, FetcherType, SourceType
+from cmk.inventory import structured_data
 from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.piggyback.backend import move_for_host_rename as move_piggyback_for_host_rename
 from cmk.server_side_calls_backend import (
@@ -194,7 +195,7 @@ from cmk.snmplib import (
     SNMPVersion,
     walk_for_export,
 )
-from cmk.utils import config_warnings, ip_lookup, log, man_pages, structured_data
+from cmk.utils import config_warnings, ip_lookup, log, man_pages
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.caching import cache_manager
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters

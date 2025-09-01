@@ -28,8 +28,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.plugins import SectionName
 from cmk.helper_interface import SourceType
 from cmk.inventory.paths import Paths as InventoryPaths
-from cmk.utils.log import console, section
-from cmk.utils.structured_data import (
+from cmk.inventory.structured_data import (
     ImmutableTree,
     MutableTree,
     parse_visible_raw_path,
@@ -42,6 +41,7 @@ from cmk.utils.structured_data import (
     UpdateResultAttributes,
     UpdateResultTable,
 )
+from cmk.utils.log import console, section
 
 from .checkresults import ActiveCheckResult
 from .fetcher import FetcherFunction, HostKey

@@ -22,7 +22,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.valuespec import Checkbox, Dictionary, FixedValue
 from cmk.gui.view_utils import CellSpec, CSVExportError
-from cmk.utils.structured_data import (
+from cmk.inventory.structured_data import (
     ImmutableAttributes,
     ImmutableDeltaTree,
     ImmutableTree,

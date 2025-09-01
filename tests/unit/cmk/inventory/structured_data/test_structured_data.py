@@ -11,7 +11,7 @@ from typing import Literal
 import pytest
 
 from cmk.ccc.hostaddress import HostName
-from cmk.utils.structured_data import (
+from cmk.inventory.structured_data import (
     _DeltaDict,
     _deserialize_retention_interval,
     _parse_from_unzipped,
@@ -41,7 +41,6 @@ from cmk.utils.structured_data import (
     serialize_delta_tree,
     serialize_tree,
 )
-from tests.testlib.common.repo import repo_path
 
 
 @pytest.mark.parametrize(
@@ -894,7 +893,7 @@ def test_filter_tree_mixed() -> None:
 
 
 def _get_inventory_store() -> InventoryStore:
-    return InventoryStore(repo_path() / "tests/unit/cmk/utils/structured_data/tree_test_data")
+    return InventoryStore(Path(__file__).parent / "tree_test_data")
 
 
 @pytest.mark.parametrize(

@@ -66,7 +66,7 @@ from cmk.gui.views.inventory import (
 )
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
-from cmk.utils.structured_data import SDPath
+from cmk.inventory.structured_data import SDPath
 
 from .layout import layout_registry
 from .sorter import all_sorters, ParameterizedSorter, Sorter

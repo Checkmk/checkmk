@@ -37,14 +37,14 @@ from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.submitters import Submittee, Submitter
 from cmk.checkengine.summarize import SummarizerFunction
 from cmk.helper_interface import AgentRawData, SourceInfo
+from cmk.inventory.structured_data import (
+    InventoryStore,
+)
 from cmk.snmplib import SNMPRawData
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.log import console
 from cmk.utils.regex import regex
 from cmk.utils.servicename import ServiceName
-from cmk.utils.structured_data import (
-    InventoryStore,
-)
 from cmk.utils.timeperiod import check_timeperiod, TimeperiodName
 
 __all__ = [

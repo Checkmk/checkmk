@@ -9,7 +9,6 @@
 #include <cstdlib>
 #include <memory>
 #include <optional>
-#include <stdexcept>
 #include <utility>
 
 #include "livestatus/Row.h"

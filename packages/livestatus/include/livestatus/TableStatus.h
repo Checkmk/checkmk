@@ -12,7 +12,6 @@
 
 class ColumnOffsets;
 enum class Counter;
-class ICore;
 
 class TableStatus : public Table {
 public:

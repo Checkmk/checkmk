@@ -15,11 +15,12 @@
 #include "livestatus/ListColumn.h"
 #include "livestatus/Row.h"
 
+class ICore;
 class ListFilter;
 class Logger;
+class User;
 enum class RelationalOperator;
 enum class ServiceState;
-class User;
 
 namespace column::service_group_members {
 

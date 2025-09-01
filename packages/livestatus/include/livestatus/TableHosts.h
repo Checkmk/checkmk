@@ -11,7 +11,6 @@
 #include "livestatus/Table.h"
 
 class ColumnOffsets;
-class ICore;
 
 class TableHosts : public Table {
 public:

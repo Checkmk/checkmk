@@ -13,6 +13,8 @@
 #include "livestatus/ColumnFilter.h"
 
 class Logger;
+class Row;
+enum class RelationalOperator;
 
 class DoubleFilter : public ColumnFilter {
 public:

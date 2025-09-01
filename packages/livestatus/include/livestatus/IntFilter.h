@@ -12,6 +12,10 @@
 #include <string>
 
 #include "livestatus/ColumnFilter.h"
+#include "livestatus/Filter.h"
+#include "livestatus/Row.h"
+
+enum class RelationalOperator;
 
 class IntFilter : public ColumnFilter {
     using function_type = std::function<int(Row, const User &, const ICore &)>;

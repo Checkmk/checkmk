@@ -11,15 +11,17 @@
 #include <chrono>
 #include <functional>
 #include <memory>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
 #include "livestatus/ColumnFilter.h"
 #include "livestatus/Row.h"
 
+class ICore;
 class Logger;
 class RegExp;
+class User;
+enum class RelationalOperator;
 
 class ListFilter : public ColumnFilter {
     using function_type = std::function<std::vector<std::string>(

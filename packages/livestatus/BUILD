@@ -20,7 +20,6 @@ cc_library(
         "-std=c++20",
     ],
     strip_include_prefix = "include/",
-    tags = ["manual"],
     visibility = ["//:__subpackages__"],
 )
 
@@ -29,7 +28,6 @@ cc_library(
     hdrs = glob(["include/livestatus/*.h"]),
     copts = ["-std=c++20"],
     strip_include_prefix = "include/",
-    tags = ["manual"],
     visibility = ["//:__subpackages__"],
     deps = ["@asio"],
 )
@@ -52,7 +50,6 @@ cc_library(
         "ASIO_DISABLE_CONCEPTS",
         "ASIO_NO_DEPRECATED",
     ],
-    tags = ["manual"],
     visibility = [
         # Should rather be private
         "//packages/neb:__pkg__",

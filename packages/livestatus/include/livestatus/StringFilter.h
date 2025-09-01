@@ -14,6 +14,8 @@
 #include "livestatus/ColumnFilter.h"
 
 class RegExp;
+class Row;
+enum class RelationalOperator;
 
 class StringFilter : public ColumnFilter {
 public:

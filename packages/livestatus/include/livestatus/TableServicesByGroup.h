@@ -9,7 +9,6 @@
 #include <string>
 
 #include "livestatus/Table.h"
-class ICore;
 
 class TableServicesByGroup : public Table {
 public:

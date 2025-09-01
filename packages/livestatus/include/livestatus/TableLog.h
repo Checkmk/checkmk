@@ -9,7 +9,6 @@
 #include <string>
 
 #include "livestatus/Table.h"
-class ICore;
 class LogCache;
 
 class TableLog : public Table {

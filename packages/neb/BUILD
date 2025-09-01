@@ -15,7 +15,6 @@ cc_library(
     srcs = ["src/CmkVersion.cc"],
     hdrs = ["include/neb/CmkVersion.h"],
     strip_include_prefix = "include/",
-    tags = ["manual"],
     deps = [":cmk_version_define"],
 )
 
@@ -29,10 +28,7 @@ cc_library(
         ],
     ),
     strip_include_prefix = "third_party/include/",
-    tags = [
-        "manual",
-        "no-clang-tidy",
-    ],
+    tags = ["manual"],
 )
 
 cc_library(
@@ -72,7 +68,6 @@ cc_library(
         "-std=c++20",
     ],
     strip_include_prefix = "include/",
-    tags = ["manual"],
     deps = [
         ":neb_nagios_headers",
         ":neb_version",

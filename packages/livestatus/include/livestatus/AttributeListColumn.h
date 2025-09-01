@@ -16,9 +16,10 @@
 #include "livestatus/Row.h"
 #include "livestatus/User.h"
 
-enum class RelationalOperator;
+class ICore;
 class IntFilter;
 class Logger;
+enum class RelationalOperator;
 
 namespace column::attribute_list {
 struct AttributeBit {

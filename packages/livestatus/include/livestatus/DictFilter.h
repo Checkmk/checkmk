@@ -14,9 +14,11 @@
 
 #include "Interface.h"
 #include "livestatus/ColumnFilter.h"
+#include "livestatus/Row.h"
 
 class Logger;
 class RegExp;
+enum class RelationalOperator;
 
 class DictStrValueFilter : public ColumnFilter {
     using function_type = std::function<Attributes(Row)>;

@@ -12,8 +12,6 @@
 #include <utility>
 
 #include "livestatus/ChronoUtils.h"
-#include "livestatus/ICore.h"
-#include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
 #include "livestatus/Query.h"
 

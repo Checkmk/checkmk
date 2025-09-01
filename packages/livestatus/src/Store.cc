@@ -6,9 +6,11 @@
 #include "livestatus/Store.h"
 
 #include <functional>
+#include <memory>
 #include <utility>
 
 #include "livestatus/ICore.h"
+#include "livestatus/Interface.h"
 #include "livestatus/OutputBuffer.h"
 #include "livestatus/ParsedQuery.h"
 #include "livestatus/Query.h"

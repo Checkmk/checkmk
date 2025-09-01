@@ -11,7 +11,6 @@
 #include "livestatus/DynamicColumn.h"
 
 class ColumnOffsets;
-class ICore;
 
 class DynamicEventConsoleReplicationColumn : public DynamicColumn {
 public:

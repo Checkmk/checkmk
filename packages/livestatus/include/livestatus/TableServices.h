@@ -10,7 +10,6 @@
 
 #include "livestatus/Table.h"
 class ColumnOffsets;
-class ICore;
 
 class TableServices : public Table {
 public:

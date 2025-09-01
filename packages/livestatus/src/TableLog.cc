@@ -20,6 +20,7 @@
 #include "livestatus/Column.h"
 #include "livestatus/ICore.h"
 #include "livestatus/IntColumn.h"
+#include "livestatus/Interface.h"
 #include "livestatus/LogCache.h"
 #include "livestatus/LogEntry.h"
 #include "livestatus/Logfile.h"
@@ -32,9 +33,6 @@
 #include "livestatus/TableServices.h"
 #include "livestatus/TimeColumn.h"
 #include "livestatus/User.h"
-class IContact;
-class IHost;
-class IService;
 
 namespace {
 class LogRow {

@@ -93,10 +93,10 @@
     "terser-webpack-plugin": "^5.3.10",
     "ts-jest": "^29.2.5",
     "typescript": "^5.7.2",
+    "vnu-jar": "^24.10.17",
     "webpack": "^5.97.0",
     "webpack-cli": "^5.1.4",
-    "webpack-remove-empty-scripts": "^1.0.4",
-    "vnu-jar": "^24.10.17"
+    "webpack-remove-empty-scripts": "^1.0.4"
   },
   "dependencies": {
     "@yaireo/tagify": "^4.32.1",

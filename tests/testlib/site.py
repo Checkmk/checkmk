@@ -1210,8 +1210,6 @@ class Site:
         else:
             logger.info("Site is already running")
 
-        if self.id.startswith("perf_"):
-            return
         assert self.path("tmp").is_mount(), (
             "The site does not have a tmpfs mounted! We require this for good performing tests"
         )
@@ -1313,8 +1311,7 @@ class Site:
         # 0 -> fully running
         # 1 -> fully stopped
         # 2 -> partially running
-        omd_status = self.omd("status").returncode
-        return omd_status in (1, 2) if self.id.startswith("perf_") else omd_status == 1
+        return self.omd("status").returncode == 1
 
     @contextmanager
     def omd_stopped(self) -> Iterator[None]:

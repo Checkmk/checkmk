@@ -864,9 +864,9 @@ httpcore==1.0.9 \
     # via
     #   -c requirements.txt
     #   httpx
-httplib2==0.22.0 \
-    --hash=sha256:14ae0a53c1ba8f3d37e9e27cf37eabb0fb9980f435ba405d546948b009dd64dc \
-    --hash=sha256:d7a10bc5ef5ab08322488bde8c726eeee5c8618723fdb399597ec58f3d82df81
+httplib2==0.30.0 \
+    --hash=sha256:d10443a2bdfe0ea5dbb17e016726146d48b574208dafd41e854cf34e7d78842c \
+    --hash=sha256:d5b23c11fcf8e57e00ff91b7008656af0f6242c8886fd97065c97509e4e548c5
     # via
     #   -c requirements.txt
     #   google-api-python-client
@@ -2517,9 +2517,9 @@ recurring-ical-events==3.8.0 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-redfish==3.3.3 \
-    --hash=sha256:19c102cfabf56796eb37195c3ef187d6df45d3f32b3667be5d095bcbbb8379a9 \
-    --hash=sha256:b3cbd54b246ee796b2a9c90226c02ea5532565c1732594989bce79f777a38c22
+redfish==3.3.4 \
+    --hash=sha256:77257477a8bc3880ae740be5ded6bc0a6803e0c1c9f71289051be1d5ff2ed0e2 \
+    --hash=sha256:a72cbe6dac4df8b2a41d701592866705901a06b9a3410ecfe8c5d49d728c72b0
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in

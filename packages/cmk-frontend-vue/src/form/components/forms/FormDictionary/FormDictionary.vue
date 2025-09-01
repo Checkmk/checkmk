@@ -186,6 +186,10 @@ tr:first-of-type > td > .form-dictionary__group-title {
   margin-top: 0;
 }
 
+.form-dictionary__group_elem {
+  margin-bottom: var(--spacing);
+}
+
 tr:last-of-type > td > div > .form-dictionary__group_elem:last-of-type {
   margin-bottom: 0;
 }
@@ -202,9 +206,5 @@ tr:last-of-type > td > div > .form-dictionary__group_elem:last-of-type {
   &.horizontal_groups {
     display: flex;
   }
-}
-
-.form-dictionary__group_elem {
-  margin-bottom: var(--spacing);
 }
 </style>

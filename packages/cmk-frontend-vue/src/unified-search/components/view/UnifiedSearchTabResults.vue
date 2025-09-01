@@ -150,37 +150,6 @@ function searchResultNotEmpty(): boolean {
   justify-content: space-between;
 }
 
-.cmk-unified-search-tab-info {
-  position: absolute;
-  right: var(--spacing-double);
-  margin-top: 3px;
-  line-height: 14px;
-  font-size: var(--font-size-small);
-  font-weight: var(--font-weight-default);
-  opacity: 0.5;
-
-  .arrow-key {
-    width: 11px;
-    display: inline-flex;
-    height: 12px;
-    margin-bottom: -4px;
-
-    &::after {
-      font-size: 21px;
-      position: absolute;
-      margin: -4px 0 0 -5px;
-    }
-
-    &.left::after {
-      content: '\2190';
-    }
-
-    &.right::after {
-      content: '\2192';
-    }
-  }
-}
-
 .arrow-key {
   width: 11px;
   display: inline-flex;
@@ -215,6 +184,37 @@ function searchResultNotEmpty(): boolean {
 
   &.enter::after {
     content: '\21B5';
+  }
+}
+
+.cmk-unified-search-tab-info {
+  position: absolute;
+  right: var(--spacing-double);
+  margin-top: 3px;
+  line-height: 14px;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-default);
+  opacity: 0.5;
+
+  .arrow-key {
+    width: 11px;
+    display: inline-flex;
+    height: 12px;
+    margin-bottom: -4px;
+
+    &::after {
+      font-size: 21px;
+      position: absolute;
+      margin: -4px 0 0 -5px;
+    }
+
+    &.left::after {
+      content: '\2190';
+    }
+
+    &.right::after {
+      content: '\2192';
+    }
   }
 }
 

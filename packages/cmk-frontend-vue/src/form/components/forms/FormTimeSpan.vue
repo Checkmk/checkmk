@@ -119,7 +119,6 @@ const localValidation = ref<Array<string>>([])
 
 .no-spinner[type='number'] {
   appearance: textfield;
-  appearance: textfield;
 }
 
 input {

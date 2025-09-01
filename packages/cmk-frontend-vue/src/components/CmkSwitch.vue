@@ -38,7 +38,6 @@ const data = defineModel('data', { type: Boolean, default: false })
   inset: 0;
   background-color: #ccc;
   transition: 0.4s;
-  transition: 0.4s;
   border-radius: 5px; /* Rounded sliders */
 
   &::before {
@@ -50,7 +49,6 @@ const data = defineModel('data', { type: Boolean, default: false })
     bottom: 1px;
     background-color: white;
     transition: 0.4s;
-    transition: 0.4s;
     border-radius: 50%; /* Rounded sliders */
   }
 }
@@ -59,8 +57,6 @@ input:checked + .cmk-switch__slider {
   background-color: #13d389;
 
   &::before {
-    transform: translateX(8px);
-    transform: translateX(8px);
     transform: translateX(8px);
   }
 }

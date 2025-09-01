@@ -91,15 +91,15 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
   }
 
   &[data-state='open'] {
-    animation: slideDown 0.3s ease-out;
+    animation: cmk-accordion-item__slide-down 0.3s ease-out;
   }
 
   &[data-state='closed'] {
-    animation: slideUp 0.3s ease-out;
+    animation: cmk-accordion-item__slide-up 0.3s ease-out;
   }
 }
 
-@keyframes slideDown {
+@keyframes cmk-accordion-item__slide-down {
   from {
     opacity: 0;
     height: 0;
@@ -111,7 +111,7 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
   }
 }
 
-@keyframes slideUp {
+@keyframes cmk-accordion-item__slide-up {
   from {
     opacity: 1;
     height: var(--radix-accordion-content-height);

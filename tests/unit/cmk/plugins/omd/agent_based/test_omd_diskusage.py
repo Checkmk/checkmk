@@ -43,6 +43,7 @@ TABLE_2 = [
 4096    /omd/sites/local/var/mkeventd/history/
 743561	/omd/sites/local/var/check_mk/core/
 13208	/omd/sites/local/var/check_mk/inventory_archive/
+1099	/omd/sites/local/var/check_mk/otel_collector/
 """.split("\n")
 ]
 
@@ -161,6 +162,7 @@ SitesV2 = [
                 Result(state=State.OK, summary="Inventory: 12.9 KiB"),
                 Result(state=State.OK, summary="Local: 316 KiB"),
                 Result(state=State.OK, summary="Logs: 808 KiB"),
+                Result(state=State.OK, summary="OTel: 1.07 KiB"),
                 Result(state=State.OK, summary="RRDs: 146 MiB"),
                 Result(state=State.OK, summary="Tmp: 12.0 KiB"),
             ],
@@ -172,6 +174,7 @@ SitesV2 = [
                 Metric("omd_inventory_size", 13208.0),
                 Metric("omd_local_size", 323595.0),
                 Metric("omd_log_size", 827498.0),
+                Metric("omd_otel_collector_size", 1099.0),
                 Metric("omd_rrd_size", 152635621.0),
                 Metric("omd_tmp_size", 12288.0),
             ],

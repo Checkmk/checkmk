@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
 from argparse import ArgumentParser
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
+from contextlib import contextmanager
 from dataclasses import dataclass
 
 import cmk.ccc.debug
@@ -17,6 +19,7 @@ from cmk.ccc.version import Edition, edition
 from cmk.gui import main_modules
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
+from cmk.gui.watolib.automations import ENV_VARIABLE_FORCE_CLI_INTERFACE
 from cmk.utils import paths
 from cmk.utils.log import VERBOSE
 from cmk.utils.plugin_loader import load_plugins_with_exceptions, PluginFailures
@@ -106,7 +109,7 @@ def run(debug: bool, old_site_id: SiteId, new_site_id: SiteId) -> bool:
 
     main_modules.load_plugins()
 
-    with gui_context(), SuperUserContext():
+    with _force_automations_cli_interface(), gui_context(), SuperUserContext():
         logger.debug("Starting actions...")
         actions = sorted(rename_action_registry.values(), key=lambda a: a.sort_index)
         total = len(actions)
@@ -122,3 +125,12 @@ def run(debug: bool, old_site_id: SiteId, new_site_id: SiteId) -> bool:
 
     logger.log(VERBOSE, "Done")
     return has_errors
+
+
+@contextmanager
+def _force_automations_cli_interface() -> Iterator[None]:
+    try:
+        os.environ[ENV_VARIABLE_FORCE_CLI_INTERFACE] = "True"
+        yield
+    finally:
+        os.environ.pop(ENV_VARIABLE_FORCE_CLI_INTERFACE, None)

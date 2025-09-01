@@ -13,6 +13,8 @@ description:
  utilization is omitted if any container has a limit of zero. The reason for omission is displayed
  in the check's details.
 
+ The primary metric driving Kubernetes' memory-based restart decisions is
+ container_memory_working_set_bytes. The plug-in reports this metric under the label "Usage".
  Some care must be taken, when interpreting the usage on individual nodes. The "Memory resources"
  service reports the usage of running pods only. This means that the usage of operating and
  Kubernetes system daemons is not reflected. If you need full usage, use the "Memory" service

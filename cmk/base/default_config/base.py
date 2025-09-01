@@ -10,6 +10,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.discovery import RediscoveryParameters
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.fetchers import IPMICredentials
+from cmk.inventory.structured_data import RawIntervalFromConfig
 from cmk.server_side_calls_backend import ConfigSet as SSCConfigSet
 from cmk.snmplib import SNMPCredentials, SNMPTiming
 from cmk.utils.host_storage import FolderAttributesForBase
@@ -18,7 +19,6 @@ from cmk.utils.notify_types import Contact, ContactName
 from cmk.utils.password_store import Password
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec, TagsOfHosts
 from cmk.utils.servicename import ServiceName
-from cmk.utils.structured_data import RawIntervalFromConfig
 from cmk.utils.tags import TagConfigSpec
 from cmk.utils.timeperiod import TimeperiodSpecs
 

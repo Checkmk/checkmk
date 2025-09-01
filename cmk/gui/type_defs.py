@@ -27,10 +27,10 @@ from cmk.crypto.secrets import Secret
 from cmk.gui.exceptions import FinalizeRequest
 from cmk.gui.http import Request
 from cmk.gui.utils.speaklater import LazyString
+from cmk.inventory.structured_data import SDPath
 from cmk.utils.labels import Labels
 from cmk.utils.metrics import MetricName
 from cmk.utils.notify_types import DisabledNotificationsOptions, EventRule
-from cmk.utils.structured_data import SDPath
 
 _ContactgroupName = str
 SizePT = NewType("SizePT", float)

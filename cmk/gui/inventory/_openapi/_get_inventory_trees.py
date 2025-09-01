@@ -11,7 +11,7 @@ from cmk.gui.openapi.framework import QueryParam
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import DomainObjectCollectionModel, LinkModel
 from cmk.gui.openapi.restful_objects.constructors import collection_href
-from cmk.utils.structured_data import ImmutableTree
+from cmk.inventory.structured_data import ImmutableTree
 
 from .._tree import inventory_of_host
 

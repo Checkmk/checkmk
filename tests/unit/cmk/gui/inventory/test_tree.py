@@ -25,7 +25,7 @@ from cmk.gui.inventory._tree import (
     TreeSource,
 )
 from cmk.gui.watolib.groups_io import PermittedPath
-from cmk.utils.structured_data import (
+from cmk.inventory.structured_data import (
     deserialize_tree,
     HistoryStore,
     ImmutableTree,

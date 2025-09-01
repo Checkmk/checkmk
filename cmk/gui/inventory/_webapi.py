@@ -17,7 +17,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
-from cmk.utils.structured_data import SDRawTree, serialize_tree
+from cmk.inventory.structured_data import SDRawTree, serialize_tree
 
 from . import _xml
 from ._tree import inventory_of_host, make_filter_choices_from_api_request_paths

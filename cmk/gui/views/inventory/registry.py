@@ -25,11 +25,11 @@ from cmk.gui.inventory.filters import (
 )
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
-from cmk.utils.structured_data import SDValue
+from cmk.inventory.structured_data import SDValue
 
 
 class _Comparable(Protocol):
-    # TODO This protocol can also be used in cmk.utils.structured_data.py
+    # TODO This protocol can also be used in cmk.inventory.structured_data.py
     @abc.abstractmethod
     def __eq__(self, other: object) -> bool: ...
 

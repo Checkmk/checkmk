@@ -18,7 +18,7 @@ from cmk.gui.type_defs import Row, Rows, ViewSpec
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.view import View
 from cmk.gui.visuals.filter import Filter
-from cmk.utils.structured_data import ImmutableTree, SDKey, SDPath, SDValue
+from cmk.inventory.structured_data import ImmutableTree, SDKey, SDPath, SDValue
 
 from ..sorter import SorterEntry
 

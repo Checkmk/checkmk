@@ -27,9 +27,7 @@ from cmk.checkengine.parser import HostSections
 from cmk.checkengine.plugins import ParsedSectionName, SectionName
 from cmk.checkengine.sectionparser import SectionPlugin
 from cmk.helper_interface import AgentRawData, FetcherType, SourceInfo, SourceType
-from cmk.snmplib import SNMPRawData
-from cmk.utils.everythingtype import EVERYTHING
-from cmk.utils.structured_data import (
+from cmk.inventory.structured_data import (
     _serialize_retention_interval,
     deserialize_tree,
     ImmutableAttributes,
@@ -44,6 +42,8 @@ from cmk.utils.structured_data import (
     UpdateResultAttributes,
     UpdateResultTable,
 )
+from cmk.snmplib import SNMPRawData
+from cmk.utils.everythingtype import EVERYTHING
 
 
 def _make_immutable_tree(tree: MutableTree) -> ImmutableTree:

@@ -24,7 +24,7 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.groups_io import PermittedPath
-from cmk.utils.structured_data import (
+from cmk.inventory.structured_data import (
     HistoryArchivePath,
     HistoryDeltaPath,
     HistoryEntry,
@@ -100,7 +100,7 @@ def parse_internal_raw_path(raw: str) -> InventoryPath:
 
 # TODO Cleanup variation:
 #   - parse_internal_raw_path parses NOT visible, internal tree paths used in displayhints/views
-#   - cmk.utils.structured_data.py::parse_visible_raw_path
+#   - cmk.inventory.structured_data.py::parse_visible_raw_path
 #     parses visible, internal tree paths for contact groups etc.
 # => Should be unified one day.
 

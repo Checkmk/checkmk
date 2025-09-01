@@ -26,7 +26,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.valuespec import Hostname
 from cmk.gui.views.store import get_permitted_views
 from cmk.gui.visuals.type import VisualType
-from cmk.utils.structured_data import (
+from cmk.inventory.structured_data import (
     HistoryStore,
     ImmutableDeltaTree,
     ImmutableTree,

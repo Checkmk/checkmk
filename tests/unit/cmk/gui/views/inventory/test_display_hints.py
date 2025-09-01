@@ -45,6 +45,7 @@ from cmk.gui.views.inventory._paint_functions import (
     inv_paint_size,
 )
 from cmk.gui.views.inventory.registry import inventory_displayhints
+from cmk.inventory.structured_data import SDKey, SDNodeName, SDPath
 from cmk.inventory_ui.v1_alpha import AgeNotation as AgeNotationFromAPI
 from cmk.inventory_ui.v1_alpha import Alignment as AlignmentFromAPI
 from cmk.inventory_ui.v1_alpha import BoolField as BoolFieldFromAPI
@@ -62,7 +63,6 @@ from cmk.inventory_ui.v1_alpha import TextField as TextFieldFromAPI
 from cmk.inventory_ui.v1_alpha import TimeNotation as TimeNotationFromAPI
 from cmk.inventory_ui.v1_alpha import Title as TitleFromAPI
 from cmk.inventory_ui.v1_alpha import Unit as UnitFromAPI
-from cmk.utils.structured_data import SDKey, SDNodeName, SDPath
 
 
 def test_display_hint_titles() -> None:

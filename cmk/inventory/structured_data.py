@@ -26,8 +26,9 @@ from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.resulttype import Error, OK, Result
-from cmk.inventory.paths import Paths as InventoryPaths
-from cmk.inventory.paths import TreePath, TreePathGz
+
+from .paths import Paths as InventoryPaths
+from .paths import TreePath, TreePathGz
 
 # TODO Cleanup path in utils, base, gui, find ONE place (type defs or similar)
 # TODO filter table rows?

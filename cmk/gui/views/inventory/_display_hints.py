@@ -50,6 +50,7 @@ from cmk.gui.unit_formatter import (
 )
 from cmk.gui.unit_formatter import StrictPrecision as StrictPrecisionFormatter
 from cmk.gui.utils.html import HTML
+from cmk.inventory.structured_data import SDKey, SDNodeName, SDPath, SDValue
 from cmk.inventory_ui.v1_alpha import AgeNotation as AgeNotationFromAPI
 from cmk.inventory_ui.v1_alpha import Alignment as AlignmentFromAPI
 from cmk.inventory_ui.v1_alpha import AutoPrecision as AutoPrecisionFromAPI
@@ -75,7 +76,6 @@ from cmk.inventory_ui.v1_alpha import TextField as TextFieldFromAPI
 from cmk.inventory_ui.v1_alpha import TimeNotation as TimeNotationFromAPI
 from cmk.inventory_ui.v1_alpha import Title as TitleFromAPI
 from cmk.inventory_ui.v1_alpha import Unit as UnitFromAPI
-from cmk.utils.structured_data import SDKey, SDNodeName, SDPath, SDValue
 
 from ._paint_functions import inv_paint_generic
 from .registry import (

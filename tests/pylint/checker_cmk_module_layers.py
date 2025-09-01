@@ -507,7 +507,6 @@ COMPONENTS = {
         "cmk.utils.regex",
         "cmk.utils.rulesets",
         "cmk.utils.servicename",
-        "cmk.utils.structured_data",
         "cmk.utils.timeout",
         "cmk.utils.timeperiod",
         "cmk.utils.translations",
@@ -731,10 +730,6 @@ COMPONENTS = {
         "cmk.utils.servicename",
         "cmk.utils.tags",
     ),
-    Component("cmk.utils.structured_data"): _allow(
-        *PACKAGE_CCC,
-        "cmk.inventory",
-    ),
     Component("cmk.utils.werks"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_WERKS,
@@ -803,7 +798,6 @@ COMPONENTS = {
         *PACKAGE_CCC,
         "cmk.utils.paths",
         "cmk.utils.regex",
-        "cmk.utils.structured_data",
     ),
     Component("omdlib"): _allow(
         *PACKAGE_CCC,

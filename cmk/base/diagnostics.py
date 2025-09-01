@@ -37,6 +37,11 @@ from cmk.ccc.crash_reporting import crash_dir
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.i18n import _
 from cmk.ccc.site import omd_site
+from cmk.inventory.structured_data import (
+    InventoryStore,
+    SDNodeName,
+    serialize_tree,
+)
 from cmk.utils.diagnostics import (
     CheckmkFileEncryption,
     CheckmkFileInfoByRelFilePathMap,
@@ -64,11 +69,6 @@ from cmk.utils.licensing.usage import deserialize_dump
 from cmk.utils.local_secrets import SiteInternalSecret
 from cmk.utils.log import console, section
 from cmk.utils.paths import omd_root
-from cmk.utils.structured_data import (
-    InventoryStore,
-    SDNodeName,
-    serialize_tree,
-)
 
 if cmk_version.edition(cmk.utils.paths.omd_root) in [
     cmk_version.Edition.CEE,

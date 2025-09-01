@@ -10,7 +10,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.ifaceoper import interface_oper_state_name, interface_port_types
 from cmk.gui.utils.escaping import escape_text
-from cmk.utils.structured_data import SDValue
+from cmk.inventory.structured_data import SDValue
 
 from .registry import InvPaintFunction, InvPaintFunctions, PaintResult
 

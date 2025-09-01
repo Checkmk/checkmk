@@ -22,7 +22,7 @@ import cmk.utils.paths
 from cmk.base import diagnostics
 from cmk.ccc.crash_reporting import crash_dir
 from cmk.ccc.hostaddress import HostName
-from cmk.utils.structured_data import (
+from cmk.inventory.structured_data import (
     deserialize_tree,
     InventoryStore,
     make_meta,

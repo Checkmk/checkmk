@@ -6,7 +6,7 @@
 from collections.abc import Sequence
 from typing import TypedDict
 
-from cmk.utils.structured_data import SDKey, SDPath
+from cmk.inventory.structured_data import SDKey, SDPath
 
 from ._display_hints import AttributeDisplayHint, ColumnDisplayHintOfView
 from .registry import SortFunction

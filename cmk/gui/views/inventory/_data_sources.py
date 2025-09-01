@@ -23,7 +23,7 @@ from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.visuals import get_livestatus_filter_headers
 from cmk.gui.visuals.filter import Filter
-from cmk.utils.structured_data import HistoryStore, RetentionInterval, SDValue
+from cmk.inventory.structured_data import HistoryStore, RetentionInterval, SDValue
 
 
 class ABCDataSourceInventory(ABCDataSource):

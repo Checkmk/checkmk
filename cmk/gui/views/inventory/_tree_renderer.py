@@ -28,7 +28,7 @@ from cmk.gui.theme.current_theme import theme as gui_theme
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
-from cmk.utils.structured_data import (
+from cmk.inventory.structured_data import (
     HistoryStore,
     ImmutableAttributes,
     ImmutableDeltaAttributes,

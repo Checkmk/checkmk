@@ -16,7 +16,7 @@ from cmk.gui.views.inventory._display_hints import (
 from cmk.gui.views.inventory._paint_functions import inv_paint_generic
 from cmk.gui.views.inventory._sorter import attribute_sorter_from_hint
 from cmk.gui.views.sorter import sorter_registry
-from cmk.utils.structured_data import ImmutableTree, SDKey
+from cmk.inventory.structured_data import ImmutableTree, SDKey
 
 
 def test_registered_sorter_cmp() -> None:

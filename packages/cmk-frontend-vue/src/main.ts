@@ -13,6 +13,7 @@ import ModeHostApp from '@/mode-host/ModeHostApp.vue'
 import NotificationParametersOverviewApp from '@/notification/NotificationParametersOverviewApp.vue'
 import WelcomeSnapinSlideout from '@/welcome/components/snapin/WelcomeSnapinSlideout.vue'
 
+import Dashboard from './dashboard-wip/DashboardApp.vue'
 import ChangesApp from './main-menu/ChangesApp.vue'
 import NotificationOverview from './notification/NotificationOverviewApp.vue'
 import QuickSetup from './quick-setup/QuickSetupApp.vue'
@@ -23,6 +24,7 @@ import WelcomeSnapin from './welcome/components/snapin/WelcomeSnapin.vue'
 
 defineCmkComponent('cmk-form-spec', FormApp)
 defineCmkComponent('cmk-quick-setup', QuickSetup)
+defineCmkComponent('cmk-dashboard', Dashboard)
 defineCmkComponent('cmk-notification-overview', NotificationOverview)
 defineCmkComponent('cmk-agent-download', AgentDownload)
 defineCmkComponent('cmk-notification-parameters-overview', NotificationParametersOverviewApp)

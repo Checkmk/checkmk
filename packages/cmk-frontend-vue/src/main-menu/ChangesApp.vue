@@ -16,6 +16,8 @@ import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
 import CmkDialog from '@/components/CmkDialog.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
 
+import { useSiteStatus } from '@/main-menu/useSiteStatus'
+
 import type {
   ActivatePendingChangesResponse,
   ActivationStatusResponse,
@@ -50,6 +52,9 @@ const sitesAndChanges = ref<SitesAndChanges>({
   sites: [],
   pendingChanges: []
 })
+
+const sitesRef = computed(() => sitesAndChanges.value.sites)
+const { hasSitesWithChangesOrErrors } = useSiteStatus(sitesRef)
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const cmk: any
@@ -390,7 +395,7 @@ onMounted(() => {
         </ChangesActivationResult>
 
         <SiteStatusList
-          v-if="sitesAndChanges.pendingChanges.length > 0"
+          v-if="hasSitesWithChangesOrErrors"
           v-model="selectedSites"
           :sites="sitesAndChanges.sites"
           :open="activationStatusCollapsible"

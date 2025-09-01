@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, toRef } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
@@ -14,6 +14,8 @@ import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 import CmkTab from '@/components/CmkTabs/CmkTab.vue'
 import CmkTabContent from '@/components/CmkTabs/CmkTabContent.vue'
 import CmkTabs from '@/components/CmkTabs/CmkTabs.vue'
+
+import { useSiteStatus } from '@/main-menu/useSiteStatus'
 
 import type { Site } from '../../ChangesInterfaces'
 import SiteStatusItem from './SiteStatusItem.vue'
@@ -28,21 +30,8 @@ const props = defineProps<{
 }>()
 
 const selectedSites = defineModel<string[]>({ required: true })
-type ActiveTab = 'sites-with-changes' | 'sites-with-errors'
-const activeTab = ref<ActiveTab>('sites-with-changes')
-const sitesWithChanges = ref<Site[]>([])
-const sitesWithErrors = ref<Site[]>([])
-
-function siteHasChanges(site: Site): boolean {
-  return site.changes > 0
-}
-
-function siteHasErrors(site: Site): boolean {
-  return (
-    (site.lastActivationStatus && ['error', 'warning'].includes(site.lastActivationStatus.state)) ||
-    site.onlineStatus !== 'online'
-  )
-}
+const activeTab = ref<string | number>('sites-with-changes')
+const { sitesWithChanges, sitesWithErrors, siteHasErrors } = useSiteStatus(toRef(props, 'sites'))
 
 function toggleSelectedSite(siteId: string, value: boolean) {
   if (value) {
@@ -55,10 +44,9 @@ function toggleSelectedSite(siteId: string, value: boolean) {
 immediateWatch(
   () => ({ newSites: props.sites }),
   async ({ newSites }) => {
-    sitesWithChanges.value = newSites.filter(siteHasChanges)
-    sitesWithErrors.value = newSites.filter(siteHasErrors)
+    const currentSitesWithErrors = newSites.filter(siteHasErrors)
 
-    if (sitesWithErrors.value.length > 0) {
+    if (currentSitesWithErrors.length > 0) {
       activeTab.value = 'sites-with-errors'
     }
   }
@@ -71,7 +59,7 @@ immediateWatch(
       v-if="props.sites.length === 1 && typeof props.sites[0] !== 'undefined' && !activating"
       class="cmk-changes-site-single"
     >
-      <div class="cmk-changes-site-single-title">{{ _t('Sites') }}</div>
+      <div class="cmk-changes-site-single-title">{{ _t('Site') }}</div>
       <SiteStatusItem
         :idx="0"
         :site="props.sites[0]"
@@ -82,6 +70,7 @@ immediateWatch(
         @update-checked="toggleSelectedSite"
       ></SiteStatusItem>
     </div>
+
     <CmkTabs v-if="props.sites.length > 1" v-model="activeTab">
       <template #tabs>
         <CmkTab id="sites-with-changes" :disabled="sitesWithChanges.length === 0">{{

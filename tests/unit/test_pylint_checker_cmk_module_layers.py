@@ -11,7 +11,7 @@ def test_no_component_masked_by_more_general_component():
     # dependencies are tolerated (desired or not is a different question).
     # This tests makes sure that no general rule masks a more specific one.
     seen_components = set[Component]()
-    for component, _allowed_imports in COMPONENTS:
+    for component in COMPONENTS:
         shadowed = {c for c in seen_components if component.is_below(c)}
         seen_components.add(component)
         assert not shadowed

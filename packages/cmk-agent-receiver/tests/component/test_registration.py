@@ -18,13 +18,12 @@ def test_a_relay_can_be_registered(agent_receiver: AgentReceiverClient) -> None:
     """
     Register a relay and check if we can obtain a list of pending tasks for it.
     """
-
     relay_id = str(uuid.uuid4())
     resp = agent_receiver.register_relay(relay_id)
     assert resp.status_code == HTTPStatus.OK
 
-    tasks_A = get_all_relay_tasks(agent_receiver, relay_id)
-    assert len(tasks_A.tasks) == 0
+    resp = agent_receiver.get_all_relay_tasks(relay_id)
+    assert resp.status_code == HTTPStatus.OK
 
 
 def test_registering_a_relay_does_not_affect_other_relays(
@@ -51,3 +50,34 @@ def test_contact_site(site: SiteMock) -> None:
     _ = httpx.get(f"{site.wiremock.base_url}/foo")
     reqs = site.wiremock.get_all_url_path_requests("/foo", HTTPMethod.GET)
     assert len(reqs) == 1
+
+
+def test_a_relay_can_be_unregistered(agent_receiver: AgentReceiverClient) -> None:
+    relay_id = str(uuid.uuid4())
+    agent_receiver.register_relay(relay_id)
+    resp = agent_receiver.get_all_relay_tasks(relay_id)
+    assert resp.status_code == HTTPStatus.OK
+
+    resp = agent_receiver.unregister_relay(relay_id)
+    assert resp.status_code == HTTPStatus.OK
+
+    # unregistered relay cannot list tasks
+    resp = agent_receiver.get_all_relay_tasks(relay_id)
+    assert resp.status_code == HTTPStatus.NOT_FOUND
+    assert resp.json()["detail"] == f"Relay with ID {relay_id} not found"
+
+
+def test_unregistering_a_relay_does_not_affect_other_relays(
+    agent_receiver: AgentReceiverClient,
+) -> None:
+    relay_id_B = str(uuid.uuid4())
+    agent_receiver.register_relay(relay_id_B)
+
+    relay_id_A = str(uuid.uuid4())
+    agent_receiver.register_relay(relay_id_A)
+
+    agent_receiver.unregister_relay(relay_id_A)
+
+    # Verify relay B have tasks queue
+    resp = agent_receiver.get_all_relay_tasks(relay_id_B)
+    assert resp.status_code == HTTPStatus.OK

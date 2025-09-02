@@ -907,6 +907,10 @@ class Overridable(Base[_T_OverridableConfig]):
         cls, instances: OverridableInstances[Self], user_permissions: UserPermissions
     ) -> None:
         for instance in instances.instances():
+            # Skip the permission declaration for the fallback topic.
+            # Otherwise, users can disable it leading to a crashed GUI
+            if instance.name() == cls.default_topic():
+                continue
             if instance.is_public(user_permissions):
                 cls.declare_permission(instance, user_permissions)
 
@@ -2339,12 +2343,15 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
         """Returns either the requested topic or fallback to "other"."""
         instances = PagetypeTopics.load(user_permissions)
         other_page = instances.find_page("other", user_permissions)
+        # should never happen
         if not other_page:
-            raise MKUserError(
-                None,
-                _("No permission for fallback topic 'Other'. Please contact your administrator."),
-            )
+            raise MKGeneralException(_("Cannot find fallback topic 'Other'"))
         return instances.find_page(topic_id, user_permissions) or other_page
+
+    @override
+    @classmethod
+    def reserved_unique_ids(cls) -> list[str]:
+        return [cls.default_topic()]
 
 
 declare(PagetypeTopics)

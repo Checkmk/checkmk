@@ -105,386 +105,25 @@ def _is_package(node: ImportFrom) -> bool:
 
 def _allow(
     *modules: str,
+    exclude: tuple[str, ...] = (),
 ) -> ImportCheckerProtocol:
+    # I don't like having to support excludes, but the current rule for
+    # `gui` is everything from "self" but not "cmk.gui.plugins"
+    allowed = {Component(m) for m in modules}
+    forbidden = {Component(m) for m in exclude}
+
     def _is_allowed(
         *,
         imported: ModuleName,
         component: Component | None,
     ) -> bool:
+        if any(imported.in_component(m) for m in forbidden):
+            return False
         return (component is not None and imported.in_component(component)) or any(
-            imported.in_component(Component(m)) for m in modules
+            imported.in_component(m) for m in allowed
         )
 
     return _is_allowed
-
-
-def _is_allowed_import(imported: ModuleName) -> bool:
-    """these are allowed to be imported from all over the place"""
-    return any(
-        (
-            imported == ModuleName("cmk"),
-            imported.in_component(Component("cmk.ccc")),
-            imported.in_component(Component("cmk.crypto")),
-            imported.in_component(Component("cmk.utils")),
-            imported.in_component(Component("cmk.fields")),
-            imported.in_component(Component("cmk.automations")),
-            imported.in_component(Component("cmk.bi")),
-            imported.in_component(Component("cmk.piggyback")),
-            imported.in_component(Component("cmk.discover_plugins")),
-            imported.in_component(Component("cmk.agent_based")),
-            imported.in_component(Component("cmk.rulesets")),
-            imported.in_component(Component("cmk.shared_typing")),
-            imported.in_component(Component("cmk.server_side_calls")),
-            imported.in_component(Component("cmk.werks")),
-            imported.in_component(Component("cmk.messaging")),
-            imported.in_component(Component("cmk.mkp_tool")),
-            imported.in_component(Component("cmk.graphing")),
-            imported.in_component(Component("cmk.trace")),
-            imported.in_component(Component("cmk.events")),
-            imported.in_component(Component("cmk.otel_collector")),
-            imported.in_component(Component("cmk.inventory.config")),
-            imported.in_component(Component("cmk.inventory.paths")),
-            imported.in_component(Component("cmk.inventory_ui")),
-            imported.in_component(Component("cmk.livestatus_client")),
-        )
-    )
-
-
-def _is_default_allowed_import(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    return _is_allowed_import(imported) or imported.in_component(component)
-
-
-def _allow_default_plus_fetchers_and_snmplib(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    """
-    Allow import of `cmk.checkengine`, `cmk.fetchers` and `cmk.snmplib`.
-
-    `cmk.fetchers` are concrete fetchers implementations to the check engine.
-    The module shouldn't be required in too many places, always prefer the
-    more abstract `cmk.checkengine` or refactor the code so that `cmk.checkengine` can
-    be used instead.
-
-    `cmk.snmplib` is part of the SNMP fetcher backend.  The same restrictions apply.
-
-    """
-    return any(
-        (
-            _is_default_allowed_import(imported=imported, component=component),
-            imported.in_component(Component("cmk.fetchers")),
-            imported.in_component(Component("cmk.snmplib")),
-        )
-    )
-
-
-def _allow_default_plus_fetchers_checkers_and_snmplib(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    """
-    Allow import of `cmk.fetchers`, `cmk.checkengine` and `cmk.snmplib`.
-
-    The layering is such that `fetchers` and `snmplib` is between
-    `utils` and `base` so that importing `fetchers` in `utils` is
-    wrong but anywhere else is OK.
-    """
-    return any(
-        (
-            _allow_default_plus_fetchers_and_snmplib(
-                imported=imported,
-                component=component,
-            ),
-            imported.in_component(Component("cmk.checkengine")),
-        )
-    )
-
-
-def _allowed_for_base(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    return any(
-        (
-            _allow_default_plus_fetchers_checkers_and_snmplib(
-                imported=imported,
-                component=component,
-            ),
-            imported.in_component(Component("cmk.cee.helpers")),
-            imported.in_component(Component("cmk.cee.bakery")),
-            imported.in_component(Component("cmk.ec.export")),
-            imported.in_component(Component("cmk.rrd.config")),
-            imported.in_component(Component("cmk.server_side_calls_backend")),
-            imported.in_component(Component("cmk.helper_interface")),
-        )
-    )
-
-
-def _allowed_for_base_cee(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    return any(
-        (
-            _allowed_for_base(imported=imported, component=component),
-            imported.in_component(Component("cmk.base")),
-            imported.in_component(Component("cmk.cee.robotmk.licensing")),
-            imported.in_component(Component("cmk.cee.robotmk.html_log_dir")),
-            imported.in_component(Component("cmk.cee.robotmk.bakery.core_bakelets")),
-            imported.in_component(Component("cmk.rrd.config")),
-        )
-    )
-
-
-def _allow_for_gui_plugins(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    return any(
-        (
-            _is_allowed_import(imported=imported),
-            imported.in_component(Component("cmk.gui")),
-            imported.in_component(Component("cmk.checkengine")),
-            imported.in_component(Component("cmk.fetchers")),
-            imported.in_component(Component("cmk.cee.bakery")),
-        )
-    )
-
-
-def _allow_for_gui(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    return any(
-        (
-            _is_allowed_import(imported=imported),
-            (
-                imported.in_component(Component("cmk.gui"))
-                and not imported.in_component(Component("cmk.gui.cee"))
-                and not imported.in_component(Component("cmk.gui.cce"))
-                and not imported.in_component(Component("cmk.gui.cme"))
-                and not _is_a_plugin_import(imported=imported)
-            ),
-            imported.in_component(Component("cmk.checkengine")),
-            imported.in_component(Component("cmk.messaging")),
-            imported.in_component(Component("cmk.server_side_calls_backend")),
-            imported.in_component(Component("cmk.diskspace.config")),
-        )
-    )
-
-
-def _allow_for_gui_cee(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    return any(
-        (
-            _is_allowed_import(imported=imported),
-            (
-                imported.in_component(Component("cmk.gui"))
-                and not imported.in_component(Component("cmk.gui.cce"))
-                and not imported.in_component(Component("cmk.gui.cme"))
-                and not _is_a_plugin_import(imported=imported)
-            ),
-            imported.in_component(Component("cmk.checkengine")),
-            imported.in_component(Component("cmk.fetchers")),
-            imported.in_component(Component("cmk.cee.bakery")),
-            imported.in_component(Component("cmk.cee.robotmk.gui")),
-        )
-    )
-
-
-def _allow_for_gui_cce(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    return any(
-        (
-            _is_allowed_import(imported=imported),
-            (
-                imported.in_component(Component("cmk.gui"))
-                and not imported.in_component(Component("cmk.gui.cme"))
-                and not _is_a_plugin_import(imported=imported)
-            ),
-            imported.in_component(Component("cmk.checkengine")),
-            imported.in_component(Component("cmk.fetchers")),
-            imported.in_component(Component("cmk.cee.bakery")),
-            imported.in_component(Component("cmk.cee.robotmk.gui")),
-        )
-    )
-
-
-def _allow_for_gui_cme(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    return any(
-        (
-            _is_allowed_import(imported=imported),
-            (
-                imported.in_component(Component("cmk.gui"))
-                and not _is_a_plugin_import(imported=imported)
-            ),
-            imported.in_component(Component("cmk.checkengine")),
-            imported.in_component(Component("cmk.fetchers")),
-            imported.in_component(Component("cmk.cee.bakery")),
-            imported.in_component(Component("cmk.cee.robotmk.gui")),
-        )
-    )
-
-
-def _allow_for_gui_cse(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    return any(
-        (
-            _is_allowed_import(imported=imported),
-            (
-                imported.in_component(Component("cmk.gui"))
-                and not _is_a_plugin_import(imported=imported)
-            ),
-            imported.in_component(Component("cmk.cee.robotmk.gui")),
-        )
-    )
-
-
-def _is_a_plugin_import(*, imported: ModuleName) -> bool:
-    return any(
-        (
-            imported.in_component(Component("cmk.gui.plugins")),
-            imported.in_component(Component("cmk.gui.cee.plugins")),
-            imported.in_component(Component("cmk.gui.cce.plugins")),
-        )
-    )
-
-
-def _allow_default_plus_gui_and_base(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    """
-    Allow import of `cmk.gui` and `cmk.base`.
-
-    The `gui` and `base` are different components, but for specific cases, like `cmk_update_config`
-    and `post_rename_site` it is allowed to import both.
-    """
-    return any(
-        (
-            _is_default_allowed_import(imported=imported, component=component),
-            imported.in_component(Component("cmk.base")),
-            imported.in_component(Component("cmk.gui")),
-        )
-    )
-
-
-def _allow_default_plus_component_under_test(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    if component.is_below("tests.unit.checks"):
-        component_under_test = Component("cmk.plugins")
-    elif (
-        component.is_below("tests.unit")
-        or component.is_below("tests.integration")
-        or component.is_below("tests.integration_redfish")
-    ):
-        component_under_test = Component(".".join(component.parts[2:]))
-    else:
-        raise ValueError(f"Unhandled component: {component}")
-
-    return any(
-        (
-            _is_default_allowed_import(imported=imported, component=component),
-            _is_default_allowed_import(imported=imported, component=component_under_test),
-        )
-    )
-
-
-def _is_allowed_for_legacy_checks(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    return any(
-        (
-            imported.in_component(Component("cmk.base.legacy_checks")),
-            imported.in_component(Component("cmk.base.check_legacy_includes")),
-            imported.in_component(Component("cmk.plugins")),
-            imported.in_component(Component("cmk.base.config")),
-            imported.in_component(Component("cmk.agent_based.legacy.v0_unstable")),
-            imported.in_component(Component("cmk.agent_based")),
-        )
-    )
-
-
-def _is_allowed_for_legacy_check_tests(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    return any(
-        (
-            _allow_default_plus_component_under_test(imported=imported, component=component),
-            imported.in_component(Component("cmk.base.legacy_checks")),
-            imported.in_component(Component("cmk.base.check_legacy_includes")),
-            imported.in_component(Component("cmk.server_side_calls_backend")),
-            imported.in_component(Component("cmk.checkengine")),
-            imported.in_component(Component("cmk.snmplib")),
-            imported.in_component(Component("cmk.plugins")),
-        )
-    )
-
-
-def _allow_default_plus_component_under_test_bakery_checkengine(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    return any(
-        (
-            _allow_default_plus_component_under_test(imported=imported, component=component),
-            imported.in_component(Component("cmk.checkengine")),
-            imported.in_component(Component("cmk.cee.bakery")),
-        )
-    )
-
-
-def _allow_for_cmkpasswd(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    return any(
-        (
-            _is_default_allowed_import(imported=imported, component=component),
-            imported.in_component(Component("cmk.gui.utils.htpasswd")),
-        )
-    )
-
-
-def _allow_for_cmkcert(
-    *,
-    imported: ModuleName,
-    component: Component,
-) -> bool:
-    return any((_is_default_allowed_import(imported=imported, component=component),))
 
 
 _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
@@ -641,19 +280,115 @@ PACKAGE_CRYPTO = ("cmk.crypto",)
 PACKAGE_TRACE = ("cmk.trace",)
 
 COMPONENTS = {
-    Component("tests.unit.cmk"): _allow_default_plus_component_under_test,
-    Component("tests.unit.checks"): _is_allowed_for_legacy_check_tests,
-    Component("tests.extension_compatibility"): _allow_default_plus_gui_and_base,
-    Component("tests.integration.cmk.post_rename_site"): _allow_default_plus_component_under_test,
-    Component("tests.integration.cmk.snmplib"): _allow_default_plus_component_under_test,
-    Component("tests.integration.cmk.gui"): _allow_default_plus_component_under_test,
-    Component("tests.integration.cmk.cee.liveproxy"): _allow_default_plus_component_under_test,
-    Component(
-        "tests.integration.cmk.base"
-    ): _allow_default_plus_component_under_test_bakery_checkengine,
-    Component("tests.integration.cmk.cee.robotmk"): _allow_default_plus_component_under_test,
-    Component("tests.integration"): _allow_default_plus_component_under_test,
-    Component("tests"): _is_default_allowed_import,
+    Component("tests.unit.cmk"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_PLUGIN_APIS,
+        *PACKAGE_CRYPTO,
+        *PACKAGE_MESSAGING,
+        *PACKAGE_MKP_TOOL,
+        *PACKAGE_TRACE,
+        *PACKAGE_WERKS,
+        "cmk.automations",
+        "cmk.bakery",
+        "cmk.base",
+        "cmk.bi",
+        "cmk.cee.bakery",
+        "cmk.cee.dcd",
+        "cmk.cee.helpers",
+        "cmk.cee.liveproxy",
+        "cmk.cee.robotmk",
+        "cmk.checkengine",
+        "cmk.cmkcert",
+        "cmk.cmkpasswd",
+        "cmk.discover_plugins",
+        "cmk.diskspace",
+        "cmk.ec",
+        "cmk.events",
+        "cmk.fetchers",
+        "cmk.fields",
+        "cmk.gui",
+        "cmk.helper_interface",
+        "cmk.inventory",
+        "cmk.livestatus_client",
+        "cmk.notification_plugins",
+        "cmk.otel_collector",
+        "cmk.piggyback",
+        "cmk.plugins",
+        "cmk.post_rename_site",
+        "cmk.rrd",
+        "cmk.server_side_calls_backend",
+        "cmk.shared_typing",
+        "cmk.snmplib",
+        "cmk.special_agents",
+        "cmk.trace",
+        "cmk.update_config",
+        "cmk.utils",
+        "cmk.validate_config",
+    ),
+    Component("tests.unit.checks"): _allow(
+        *PACKAGE_PLUGIN_APIS,
+        "cmk.base.check_legacy_includes",
+        "cmk.base.legacy_checks",
+        "cmk.checkengine.plugins",
+        "cmk.discover_plugins",
+        "cmk.plugins",
+        "cmk.utils.paths",
+    ),
+    Component("tests.extension_compatibility"): _allow(
+        *PACKAGE_CCC,
+        "cmk.base.config",
+        "cmk.gui.main_modules",
+        "cmk.gui.utils",
+        "cmk.utils.paths",
+    ),
+    Component("tests.integration.cmk.post_rename_site"): _allow(
+        "cmk.post_rename_site",
+    ),
+    Component("tests.integration.cmk.snmplib"): _allow(
+        *PACKAGE_CCC,
+        "cmk.snmplib",
+        "cmk.utils",
+    ),
+    Component("tests.integration.cmk.gui"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_PLUGIN_APIS,
+        *PACKAGE_CRYPTO,
+        "cmk.bi",
+        "cmk.gui",
+        "cmk.utils",
+    ),
+    Component("tests.integration.cmk.cee.liveproxy"): _allow(
+        *PACKAGE_CCC,
+        "cmk.cee.liveproxy",
+    ),
+    Component("tests.integration.cmk.base"): _allow(
+        *PACKAGE_CCC,
+        "cmk.automations",
+        "cmk.base",
+        "cmk.cee.bakery",
+        "cmk.checkengine",
+        "cmk.discover_plugins",
+        "cmk.utils",
+    ),
+    Component("tests.integration.cmk.cee.robotmk"): _allow(
+        *PACKAGE_CCC,
+        "cmk.cee.robotmk",
+        "cmk.utils.rulesets",
+        "cmk.utils.servicename",
+    ),
+    Component("tests.integration"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_MKP_TOOL,
+        "cmk.utils",
+    ),
+    Component("tests"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_WERKS,
+        *PACKAGE_PLUGIN_APIS,
+        *PACKAGE_CRYPTO,
+        "cmk.piggyback",
+        "cmk.utils",
+    ),
     Component("cmk.bakery"): _allow(),  # only allow itself, this is the future :-)
     Component("cmk.base.api.bakery"): _allow(
         "cmk.bakery",
@@ -673,25 +408,87 @@ COMPONENTS = {
         "cmk.discover_plugins",
         "cmk.utils",
     ),
-    Component("cmk.base.check_legacy_includes"): _is_allowed_for_legacy_checks,
-    Component("cmk.base.legacy_checks"): _is_allowed_for_legacy_checks,
-    # importing config in ip_lookup repeatedly lead to import cycles. It's cleanup now.
-    Component("cmk.base.ip_lookup"): _is_default_allowed_import,
+    Component("cmk.base.check_legacy_includes"): _allow(
+        *PACKAGE_PLUGIN_APIS,
+        "cmk.plugins",
+    ),
+    Component("cmk.base.legacy_checks"): _allow(
+        *PACKAGE_PLUGIN_APIS,
+        "cmk.plugins",
+        "cmk.base.check_legacy_includes",
+    ),
     Component("cmk.base.plugins.bakery.bakery_api"): _allow(
         "cmk.bakery",
         "cmk.base.api.bakery",
         "cmk.utils",
     ),
-    Component("cmk.base.cee"): _allowed_for_base_cee,
-    Component("cmk.base.core.cee"): _allowed_for_base_cee,
-    Component("cmk.base"): _allowed_for_base,
-    Component("cmk.bi"): _is_default_allowed_import,
-    Component("cmk.cmkcert"): _allow(*PACKAGE_CCC, *PACKAGE_MESSAGING, "cmk.utils"),
-    Component("cmk.cmkpasswd"): _allow_for_cmkpasswd,
-    Component("cmk.checkengine.value_store"): _allow("cmk.utils", "cmk.ccc"),
+    Component("cmk.base.cee"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_PLUGIN_APIS,
+        "cmk.base",
+        "cmk.cee.helpers",
+        "cmk.checkengine",
+        "cmk.events",
+        "cmk.fetchers",
+        "cmk.helper_interface",
+        "cmk.utils",
+    ),
+    Component("cmk.base.core.cee"): _allow(
+        *PACKAGE_CCC,
+        "cmk.base.cee",
+        "cmk.base.config",
+        "cmk.base.core",
+        "cmk.cee.helpers",
+        "cmk.cee.robotmk",
+        "cmk.checkengine",
+        "cmk.fetchers",
+        "cmk.inventory",
+        "cmk.rrd",
+        "cmk.utils",
+    ),
+    Component("cmk.base"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_PLUGIN_APIS,
+        *PACKAGE_TRACE,
+        "cmk.automations",
+        "cmk.cee.bakery",
+        "cmk.cee.helpers",
+        "cmk.checkengine",
+        "cmk.discover_plugins",
+        "cmk.ec",
+        "cmk.events",
+        "cmk.fetchers",
+        "cmk.helper_interface",
+        "cmk.inventory",
+        "cmk.piggyback",
+        "cmk.rrd",
+        "cmk.server_side_calls_backend",
+        "cmk.snmplib",
+        "cmk.utils",
+    ),
+    Component("cmk.bi"): _allow(
+        *PACKAGE_CCC,
+        "cmk.fields",
+        "cmk.utils",
+    ),
+    Component("cmk.cmkcert"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_MESSAGING,
+        "cmk.utils",
+    ),
+    Component("cmk.cmkpasswd"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_CRYPTO,
+        "cmk.gui",
+        "cmk.utils",
+    ),
+    Component("cmk.checkengine.value_store"): _allow(
+        *PACKAGE_CCC,
+        "cmk.utils",
+    ),
     Component("cmk.checkengine"): _allow(
-        "cmk.agent_based",
-        "cmk.ccc",
+        *PACKAGE_CCC,
+        *PACKAGE_PLUGIN_APIS,
         "cmk.discover_plugins",
         "cmk.inventory",
         "cmk.piggyback.backend",
@@ -716,15 +513,15 @@ COMPONENTS = {
         "cmk.utils.translations",
     ),
     Component("cmk.fetchers"): _allow(
-        "cmk.ccc",
+        *PACKAGE_CCC,
         "cmk.crypto.deprecated",
         "cmk.helper_interface",
         "cmk.piggyback.backend",
         "cmk.snmplib",
     ),
-    Component("cmk.fields"): _is_default_allowed_import,
+    Component("cmk.fields"): _allow(*PACKAGE_CCC),
     Component("cmk.cee.helpers"): _allow(
-        "cmk.ccc",
+        *PACKAGE_CCC,
         "cmk.checkengine",
         "cmk.fetchers",
         "cmk.helper_interface",
@@ -735,7 +532,7 @@ COMPONENTS = {
         "cmk.utils.timeout",
     ),
     Component("cmk.automations"): _allow(
-        "cmk.ccc",
+        *PACKAGE_CCC,
         "cmk.checkengine",
         "cmk.helper_interface",
         "cmk.utils.check_utils",
@@ -746,20 +543,111 @@ COMPONENTS = {
         "cmk.utils.rulesets.ruleset_matcher",
         "cmk.utils.servicename",
     ),
-    Component("cmk.snmplib"): _allow(
-        "cmk.ccc",
+    Component("cmk.snmplib"): _allow(*PACKAGE_CCC),
+    Component("cmk.gui.plugins"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_PLUGIN_APIS,
+        "cmk.bi",
+        "cmk.checkengine",
+        "cmk.gui",
+        "cmk.inventory",
+        "cmk.utils",
     ),
-    Component("cmk.gui.plugins"): _allow_for_gui_plugins,
-    Component("cmk.gui.cee.plugins"): _allow_for_gui_plugins,
-    Component("cmk.gui.cce.plugins"): _allow_for_gui_plugins,
-    Component("cmk.gui.cee"): _allow_for_gui_cee,
-    Component("cmk.gui.cce"): _allow_for_gui_cce,
-    Component("cmk.gui.cme"): _allow_for_gui_cme,
-    Component("cmk.gui.cse"): _allow_for_gui_cse,
-    Component("cmk.gui"): _allow_for_gui,
-    Component("cmk.helper_interface"): _allow("cmk.ccc"),  # should become a package
-    Component("cmk.ec"): _is_default_allowed_import,
-    Component("cmk.notification_plugins"): _is_default_allowed_import,
+    Component("cmk.gui.cee.plugins"): _allow(
+        *PACKAGE_CCC,
+        "cmk.gui",
+        "cmk.utils",
+    ),
+    Component("cmk.gui.cce.plugins"): _allow(
+        "cmk.gui",
+    ),
+    Component("cmk.gui.cee"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_PLUGIN_APIS,
+        *PACKAGE_CRYPTO,
+        *PACKAGE_MKP_TOOL,
+        "cmk.cee.bakery",
+        "cmk.cee.robotmk.gui",
+        "cmk.discover_plugins",
+        "cmk.fields",
+        "cmk.gui",
+        "cmk.shared_typing",
+        "cmk.utils",
+        exclude=("cmk.gui.plugins", "cmk.gui.cee.plugins"),
+    ),
+    Component("cmk.gui.cce"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_PLUGIN_APIS,
+        "cmk.checkengine",
+        "cmk.cee.robotmk.gui",
+        "cmk.fields",
+        "cmk.gui",
+        "cmk.otel_collector",
+        "cmk.shared_typing",
+        "cmk.utils",
+        exclude=("cmk.gui.plugins", "cmk.gui.cee.plugins"),
+    ),
+    Component("cmk.gui.cme"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_CRYPTO,
+        *PACKAGE_MESSAGING,
+        "cmk.bi",
+        "cmk.cee.robotmk.gui",
+        "cmk.gui",
+        "cmk.inventory",
+        "cmk.piggyback",
+        "cmk.utils",
+        exclude=("cmk.gui.plugins", "cmk.gui.cee.plugins"),
+    ),
+    Component("cmk.gui.cse"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_CRYPTO,
+        *PACKAGE_TRACE,
+        "cmk.fields",
+        "cmk.gui",
+        "cmk.utils",
+        exclude=("cmk.gui.plugins", "cmk.gui.cee.plugins"),
+    ),
+    Component("cmk.gui"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_PLUGIN_APIS,
+        *PACKAGE_CRYPTO,
+        *PACKAGE_MESSAGING,
+        *PACKAGE_MKP_TOOL,
+        *PACKAGE_TRACE,
+        *PACKAGE_WERKS,
+        "cmk.automations",
+        "cmk.bi",
+        "cmk.checkengine",
+        "cmk.discover_plugins",
+        "cmk.diskspace",
+        "cmk.fields",
+        "cmk.inventory",
+        "cmk.inventory_ui",
+        "cmk.livestatus_client",
+        "cmk.piggyback",
+        "cmk.server_side_calls_backend",
+        "cmk.shared_typing",
+        "cmk.utils",
+        exclude=(
+            "cmk.gui.plugins",
+            "cmk.gui.cee.plugins",
+            "cmk.gui.cee",
+            "cmk.gui.cce",
+            "cmk.gui.cme",
+        ),
+    ),
+    Component("cmk.helper_interface"): _allow(*PACKAGE_CCC),  # should become a package
+    Component("cmk.ec"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_MKP_TOOL,
+        "cmk.events",
+        "cmk.utils",
+    ),
+    Component("cmk.notification_plugins"): _allow(
+        *PACKAGE_CCC,
+        "cmk.utils",
+    ),
     Component("cmk.piggyback"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_MESSAGING,
@@ -804,7 +692,6 @@ COMPONENTS = {
         "cmk.gui",
         "cmk.mkp_tool",
         "cmk.otel_collector",
-        "cmk.server_side_calls.v1",
         "cmk.utils",
         "cmk.validate_config",
     ),
@@ -815,7 +702,13 @@ COMPONENTS = {
         "cmk.gui",
         "cmk.utils",
     ),
-    Component("cmk.validate_plugins"): _is_default_allowed_import,
+    Component("cmk.validate_plugins"): _allow(
+        *PACKAGE_PLUGIN_APIS,
+        *PACKAGE_CCC,
+        "cmk.discover_plugins",
+        "cmk.utils.paths",
+        "cmk.utils.rulesets",
+    ),
     Component("cmk.utils.certs"): _allow(
         *PACKAGE_CRYPTO,
         *PACKAGE_CCC,
@@ -838,9 +731,15 @@ COMPONENTS = {
         "cmk.utils.servicename",
         "cmk.utils.tags",
     ),
-    Component("cmk.utils.structured_data"): _allow("cmk.inventory", "cmk.ccc"),
+    Component("cmk.utils.structured_data"): _allow(
+        *PACKAGE_CCC,
+        "cmk.inventory",
+    ),
     Component("cmk.utils.werks"): _allow(
-        *PACKAGE_CCC, *PACKAGE_WERKS, "cmk.utils.mail", "cmk.utils.paths"
+        *PACKAGE_CCC,
+        *PACKAGE_WERKS,
+        "cmk.utils.mail",
+        "cmk.utils.paths",
     ),
     Component("cmk.utils"): _allow(
         *PACKAGE_CCC,
@@ -851,7 +750,6 @@ COMPONENTS = {
     Component("cmk.cee.bakery"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_CRYPTO,
-        "cmk.base",
         "cmk.base.checkers",
         "cmk.base.config",
         "cmk.base.configlib.loaded_config",
@@ -862,12 +760,27 @@ COMPONENTS = {
         "cmk.base.utils",
         "cmk.utils.paths",
     ),
-    Component("cmk.cee.dcd"): _is_default_allowed_import,
-    Component("cmk.cee.mknotifyd"): _is_default_allowed_import,
-    Component("cmk.cee.snmp_backend"): _is_default_allowed_import,
-    Component("cmk.cee.liveproxy"): _is_default_allowed_import,
-    Component("cmk.cee.notification_plugins"): _is_default_allowed_import,
-    Component("cmk.post_rename_site"): _allow_default_plus_gui_and_base,
+    Component("cmk.cee.dcd"): _allow(
+        *PACKAGE_CCC,
+        "cmk.otel_collector",
+        "cmk.piggyback",
+        "cmk.utils",
+    ),
+    Component("cmk.cee.mknotifyd"): _allow(),
+    Component("cmk.cee.snmp_backend"): _allow(),
+    Component("cmk.cee.liveproxy"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_TRACE,
+        "cmk.inventory",
+        "cmk.utils",
+    ),
+    Component("cmk.cee.notification_plugins"): _allow("cmk.utils"),
+    Component("cmk.post_rename_site"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_MESSAGING,
+        "cmk.gui",
+        "cmk.utils",
+    ),
     Component("cmk.cee.robotmk"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_PLUGIN_APIS,
@@ -891,7 +804,11 @@ COMPONENTS = {
         "cmk.utils.regex",
         "cmk.utils.structured_data",
     ),
-    Component("omdlib"): _is_default_allowed_import,
+    Component("omdlib"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_CRYPTO,
+        "cmk.utils",
+    ),
 }
 
 _EXPLICIT_FILE_TO_COMPONENT = {

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.ccc.user import UserId
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.api_endpoints.user_role.utils import (
     RW_PERMISSIONS,
@@ -18,7 +19,10 @@ from cmk.gui.openapi.framework import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.restful_objects.constructors import collection_href
-from cmk.gui.watolib.userroles import clone_role, get_all_roles
+from cmk.gui.permissions import permission_registry
+from cmk.gui.userdb import load_roles
+from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.watolib.userroles import clone_role
 
 from .endpoint_family import USER_ROLE_FAMILY
 from .models.request_models import CreateUserRoleModel
@@ -39,7 +43,15 @@ def create_user_role_v1(api_context: ApiContext, body: CreateUserRoleModel) -> U
             else None,
             pprint_value=api_context.config.wato_pprint_config,
         ),
-        get_all_roles(),
+        UserPermissions(
+            load_roles(),
+            permission_registry,
+            user_roles={
+                UserId(user_id): user["roles"]
+                for user_id, user in api_context.config.multisite_users.items()
+            },
+            default_user_profile_roles=api_context.config.default_user_profile["roles"],
+        ),
     )
 
 

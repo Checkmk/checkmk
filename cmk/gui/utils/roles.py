@@ -137,13 +137,6 @@ def user_may(user_id: UserId | None, pname: str) -> bool:
     return UserPermissions.from_config(active_config, permission_registry).user_may(user_id, pname)
 
 
-# TODO: Move to UserPermissions.get_role_permissions
-def get_role_permissions(
-    roles: Mapping[str, CustomUserRole | BuiltInUserRole],
-) -> dict[str, list[str]]:
-    return UserPermissions.from_config(active_config, permission_registry).get_role_permissions()
-
-
 # TODO: Move to UserPermissions.may_with_roles
 def may_with_roles(some_role_ids: list[str], pname: str) -> bool:
     return UserPermissions.from_config(active_config, permission_registry).may_with_roles(

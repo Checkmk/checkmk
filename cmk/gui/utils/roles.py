@@ -132,18 +132,10 @@ def roles_of_user(
 
     if user_id in active_config.multisite_users:
         return existing_role_ids(active_config.multisite_users[user_id]["roles"])
-    if user_id in active_config.admin_users:
-        return ["admin"]
-    if user_id in active_config.guest_users:
-        return ["guest"]
-    if active_config.users is not None and user_id in active_config.users:
-        return ["user"]
     if user_id is not None and is_automation_user(user_id):
         return ["guest"]  # unknown user with automation account
     if "roles" in active_config.default_user_profile:
         return existing_role_ids(active_config.default_user_profile["roles"])
-    if active_config.default_user_role:
-        return existing_role_ids([active_config.default_user_role])
     return []
 
 

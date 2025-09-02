@@ -91,6 +91,7 @@ from .rulespecs import (
 from .sample_config import (
     ConfigGeneratorAcknowledgeInitialWerks,
     ConfigGeneratorBasicWATOConfig,
+    ConfigGeneratorInitialAdminUser,
     ConfigGeneratorLocalSiteConnection,
     ConfigGeneratorRegistrationUser,
 )
@@ -150,6 +151,7 @@ def register(
     sample_config_generator_registry.register(ConfigGeneratorLocalSiteConnection)
     sample_config_generator_registry.register(ConfigGeneratorAcknowledgeInitialWerks)
     sample_config_generator_registry.register(ConfigGeneratorRegistrationUser)
+    sample_config_generator_registry.register(ConfigGeneratorInitialAdminUser)
     contact_group_usage_finder_registry_.register(find_usages_of_contact_group_in_hosts_and_folders)
     contact_group_usage_finder_registry_.register(
         find_usages_of_contact_group_in_notification_rules

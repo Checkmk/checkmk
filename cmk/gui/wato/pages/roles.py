@@ -6,13 +6,8 @@
 
 In order to make getting started easier - Checkmk Multisite comes with three
 builtin-roles: admin, user and guest. These roles have predefined permissions.
-The built-in roles cannot be deleted. Users listed in admin_users in
-multisite.mk automatically get the role admin - even if no such user or contact
-has been configured yet. By that way an initial login - e.g. as omdamin - is
-possible. The admin role cannot be removed from that user as long as he is
-listed in admin_users. Also the variables guest_users, users and default_user_
-role still work. That way Multisite is fully operable without Setup and also
-backwards compatible.  In Setup you can create further roles and also edit the
+The built-in roles cannot be deleted.
+In Setup you can create further roles and also edit the
 permissions of the existing roles. Users can be assigned to built-in and custom
 roles.  This modes manages the creation of custom roles and the permissions
 configuration of all roles.

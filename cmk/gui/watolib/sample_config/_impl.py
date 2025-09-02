@@ -13,9 +13,17 @@ from livestatus import SiteConfiguration, SiteConfigurations
 
 from cmk.ccc import store
 from cmk.ccc.site import omd_site, url_prefix
+from cmk.ccc.user import UserId
 from cmk.gui.groups import GroupSpec
 from cmk.gui.log import logger
-from cmk.gui.userdb import create_cmk_automation_user, get_user_attributes
+from cmk.gui.userdb import (
+    create_cmk_automation_user,
+    get_user_attributes,
+    load_users,
+    save_users,
+    UserSpec,
+)
+from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.watolib.config_domain_name import (
     sample_config_generator_registry,
     SampleConfigGenerator,
@@ -48,7 +56,7 @@ from cmk.utils.notify_types import (
     NotificationRuleID,
     NotifyPlugin,
 )
-from cmk.utils.paths import configuration_lockfile, site_cert_file
+from cmk.utils.paths import configuration_lockfile, htpasswd_file, site_cert_file
 from cmk.utils.tags import sample_tag_config, TagConfig
 
 from ._abc import SampleConfigGeneratorABCGroups
@@ -284,6 +292,52 @@ class ConfigGeneratorAcknowledgeInitialWerks(SampleConfigGenerator):
         from cmk.gui import werks
 
         werks.acknowledge_all_werks(check_permission=False)
+
+
+class ConfigGeneratorInitialAdminUser(SampleConfigGenerator):
+    """Create the configuration for the "cmkadmin" user
+
+    'omd create' already creates this user in the htpasswd file, but not in
+    the user database. So we create it here to have a complete user setup.
+    """
+
+    @classmethod
+    def ident(cls) -> str:
+        return "create_initial_admin_user"
+
+    @classmethod
+    def sort_index(cls) -> int:
+        return 55
+
+    def generate(self) -> None:
+        pw_hash = Htpasswd(htpasswd_file).get_hash(UserId("cmkadmin"))
+        if pw_hash is None:
+            raise ValueError("No password found for user 'cmkadmin'")
+
+        save_users(
+            {
+                **load_users(lock=True),
+                UserId("cmkadmin"): UserSpec(
+                    {
+                        "alias": "cmkadmin",
+                        "connector": "htpasswd",
+                        # The password was set through 'omd create'. Get it so that it is not
+                        # removed by Htpasswd.save_users().
+                        "password": pw_hash,
+                        "locked": False,
+                        "roles": ["admin"],
+                        "language": "en",
+                        "start_url": "welcome.py",
+                        "user_scheme_serial": 1,
+                    }
+                ),
+            },
+            get_user_attributes([]),
+            user_connections=[],
+            now=datetime.now(),
+            pprint_value=True,
+            call_users_saved_hook=False,
+        )
 
 
 class ConfigGeneratorRegistrationUser(SampleConfigGenerator):

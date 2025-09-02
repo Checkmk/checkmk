@@ -13,6 +13,7 @@ def test_registered_generators() -> None:
         "acknowledge_initial_werks",
         "contact_groups",
         "basic_wato_config",
+        "create_initial_admin_user",
         "create_local_site_connection",
         "create_registration_automation_user",
         "ec_sample_rule_pack",
@@ -43,6 +44,7 @@ def test_get_sorted_generators() -> None:
     expected += [
         "acknowledge_initial_werks",
         "ec_sample_rule_pack",
+        "create_initial_admin_user",
         "create_registration_automation_user",
     ]
 

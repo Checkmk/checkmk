@@ -5,6 +5,7 @@
 
 from typing import Annotated
 
+from cmk.ccc.user import UserId
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.api_endpoints.user_role.utils import (
     RW_PERMISSIONS,
@@ -23,10 +24,10 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import RestAPIRequestGeneralException
-from cmk.gui.permissions import load_dynamic_permissions
-from cmk.gui.userdb import UserRole
+from cmk.gui.permissions import load_dynamic_permissions, permission_registry
+from cmk.gui.userdb import load_roles, UserRole
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.userroles import (
-    get_all_roles,
     get_role,
     RoleID,
     update_permissions,
@@ -104,7 +105,18 @@ def edit_user_role_v1(
         pprint_value=api_context.config.wato_pprint_config,
     )
 
-    return serialize_role(existing_userrole_copy, get_all_roles())
+    return serialize_role(
+        existing_userrole_copy,
+        UserPermissions(
+            load_roles(),
+            permission_registry,
+            user_roles={
+                UserId(user_id): user["roles"]
+                for user_id, user in api_context.config.multisite_users.items()
+            },
+            default_user_profile_roles=api_context.config.default_user_profile["roles"],
+        ),
+    )
 
 
 ENDPOINT_EDIT_USER_ROLE = VersionedEndpoint(

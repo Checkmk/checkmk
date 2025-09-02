@@ -35,17 +35,14 @@
 # Returns true/false whether or not the user is permitted
 
 import copy
-from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Literal
 
 from cmk.ccc import store
-from cmk.gui import userdb
 from cmk.gui.groups import GroupName
 from cmk.gui.hooks import ClearEvent
-from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
 from cmk.gui.type_defs import Users
-from cmk.gui.utils.roles import get_role_permissions
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.paths import wato_var_dir
 
@@ -183,7 +180,9 @@ function permitted_maps($username) {{
 
 
 def _create_auth_file(
-    callee: _CalleeHooks, users: Users, roles: Mapping[str, CustomUserRole | BuiltInUserRole]
+    callee: _CalleeHooks,
+    users: Users,
+    user_permissions: UserPermissions,
 ) -> None:
     contactgroups = load_contact_group_information()
     groups = {}
@@ -191,12 +190,12 @@ def _create_auth_file(
         if "nagvis_maps" in group and group["nagvis_maps"]:
             groups[gid] = group["nagvis_maps"]
 
-    _create_php_file(callee, users, get_role_permissions(roles), groups)
+    _create_php_file(callee, users, user_permissions.get_role_permissions(), groups)
 
 
-def _on_userdb_job() -> None:
+def _on_userdb_job(users: Users, user_permissions: UserPermissions) -> None:
     # Working around the problem that the auth.php file needed for multisite based
     # authorization of external addons might not exist when setting up a new installation
     # This is a good place to replace old api based files in the future.
     if not _auth_php().exists() or _auth_php().stat().st_size == 0:
-        _create_auth_file("page_hook", userdb.load_users(), userdb.load_roles())
+        _create_auth_file("page_hook", users, user_permissions)

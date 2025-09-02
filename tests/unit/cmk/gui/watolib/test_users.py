@@ -93,7 +93,7 @@ def _changed_sites(sites: list[SiteId]) -> list[SiteId]:
             [
                 (
                     USER1_ID,
-                    UserSpec({"alias": "user1", "locked": False}),
+                    UserSpec({"alias": "user1", "locked": False, "roles": []}),
                 ),
             ],
             [SITE1, SITE2, SITE3],
@@ -103,7 +103,14 @@ def _changed_sites(sites: list[SiteId]) -> list[SiteId]:
             [
                 (
                     USER1_ID,
-                    UserSpec({"alias": "user1", "locked": False, "authorized_sites": [SITE1]}),
+                    UserSpec(
+                        {
+                            "alias": "user1",
+                            "locked": False,
+                            "authorized_sites": [SITE1],
+                            "roles": [],
+                        }
+                    ),
                 )
             ],
             [SITE1],
@@ -113,11 +120,18 @@ def _changed_sites(sites: list[SiteId]) -> list[SiteId]:
             [
                 (
                     USER1_ID,
-                    UserSpec({"alias": "user1", "locked": False}),
+                    UserSpec({"alias": "user1", "locked": False, "roles": []}),
                 ),
                 (
                     USER2_ID,
-                    UserSpec({"alias": "user2", "locked": False, "authorized_sites": [SITE1]}),
+                    UserSpec(
+                        {
+                            "alias": "user2",
+                            "locked": False,
+                            "authorized_sites": [SITE1],
+                            "roles": [],
+                        }
+                    ),
                 ),
             ],
             [SITE1, SITE2, SITE3],
@@ -151,7 +165,7 @@ def test_only_affected_sites_require_activation_when_changing_user(sites: list[S
     # GIVEN one user added on site1
     create_user(
         USER1_ID,
-        UserSpec({"alias": "user1", "locked": False, "authorized_sites": [SITE1]}),
+        UserSpec({"alias": "user1", "locked": False, "authorized_sites": [SITE1], "roles": []}),
         default_sites,
         get_user_attributes([]),
         use_git=False,
@@ -161,7 +175,11 @@ def test_only_affected_sites_require_activation_when_changing_user(sites: list[S
 
     # WHEN "moving" this user to site2
     edit_users(
-        {USER1_ID: UserSpec({"alias": "user1", "locked": False, "authorized_sites": [SITE2]})},
+        {
+            USER1_ID: UserSpec(
+                {"alias": "user1", "locked": False, "authorized_sites": [SITE2], "roles": []}
+            )
+        },
         default_sites,
         get_user_attributes([]),
         use_git=False,
@@ -199,7 +217,7 @@ def test_only_affected_sites_require_activation_when_deleting_users(
     # GIVEN "global" user1 and user2 on site2
     create_user(
         USER1_ID,
-        UserSpec({"alias": "user1", "locked": False}),
+        UserSpec({"alias": "user1", "locked": False, "roles": []}),
         default_sites,
         get_user_attributes([]),
         use_git=False,
@@ -207,7 +225,7 @@ def test_only_affected_sites_require_activation_when_deleting_users(
     )
     create_user(
         USER2_ID,
-        UserSpec({"alias": "user2", "locked": False, "authorized_sites": [SITE2]}),
+        UserSpec({"alias": "user2", "locked": False, "authorized_sites": [SITE2], "roles": []}),
         default_sites,
         get_user_attributes([]),
         use_git=False,

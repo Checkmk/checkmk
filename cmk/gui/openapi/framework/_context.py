@@ -20,6 +20,7 @@ from cmk.gui.type_defs import (
     CustomUserAttrSpec,
     GraphTimerange,
     PasswordPolicy,
+    UserSpec,
 )
 from cmk.utils.tags import TagGroup
 
@@ -84,6 +85,8 @@ class ApiConfig:
     wato_use_git: bool
     roles: Mapping[str, CustomUserRole | BuiltInUserRole]
     wato_user_attrs: Sequence[CustomUserAttrSpec]
+    multisite_users: Mapping[str, UserSpec]
+    default_user_profile: UserSpec
 
     @classmethod
     def from_config(cls, config: Config) -> Self:
@@ -99,6 +102,8 @@ class ApiConfig:
             wato_use_git=config.wato_use_git,
             roles=config.roles,
             wato_user_attrs=config.wato_user_attrs,
+            multisite_users=config.multisite_users,
+            default_user_profile=config.default_user_profile,
         )
 
 

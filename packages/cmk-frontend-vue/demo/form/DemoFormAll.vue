@@ -29,7 +29,6 @@ import type {
   Password,
   SimplePassword,
   SingleChoice,
-  SingleChoiceEditable,
   String,
   TimeSpan,
   TimeSpecific,
@@ -126,7 +125,7 @@ function getDictionary(name: string, options?: Partial<Omit<Dictionary, 'type'>>
         required: true,
         render_only: false,
         group: null,
-        default_value: 'default value required',
+        default_value: '"default value required"',
         parameter_form: getString('required_string_in_dict')
       },
       {
@@ -134,7 +133,7 @@ function getDictionary(name: string, options?: Partial<Omit<Dictionary, 'type'>>
         required: false,
         render_only: false,
         group: null,
-        default_value: 'default value optional',
+        default_value: '"default value optional"',
         parameter_form: getString('optional_string_in_dict')
       }
     ],
@@ -431,7 +430,7 @@ function getTimeSpan(name: string, options?: Partial<Omit<TimeSpan, 'type'>>): T
     ...options
   }
 }
-
+/*
 function getSingleChoiceEditable(
   name: string,
   options?: Partial<Omit<SingleChoiceEditable, 'type'>>
@@ -463,6 +462,7 @@ function getSingleChoiceEditable(
     ...options
   }
 }
+  */
 
 function getTuple(name: string, options?: Partial<Omit<Tuple, 'type'>>): Tuple {
   return {
@@ -623,7 +623,7 @@ const forms: Array<[string, (name: string) => Components, unknown]> = [
     getFileUpload,
     { input_uuid: 'smth', file_name: null, file_type: null, file_content_encrypted: null }
   ],
-  ['FixedValue', getFixedValue, undefined],
+  ['FixedValue', getFixedValue, 'hello'],
   ['Float', getFloat, 0],
   ['Integer', getInteger, 0],
   ['Labels', getLabels, { some: 'thing' }],
@@ -634,7 +634,7 @@ const forms: Array<[string, (name: string) => Components, unknown]> = [
   ['OptionalChoice', getOptionalChoice, 'one'],
   ['Password', getPassword, ['explicit_password', 'one', 'two', false]],
   ['SimplePassword', getSimplePassword, [['password', false]]],
-  ['SingleChoiceEditable', getSingleChoiceEditable, 'one'],
+  //['SingleChoiceEditable', getSingleChoiceEditable, 'one'],
   ['SingleChoice', getSingleChoice, 'one'],
   ['String', getString, ''],
   ['TimeSpan', getTimeSpan, null],

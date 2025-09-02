@@ -83,6 +83,7 @@ def expected_items() -> dict[str, list[str]]:
         cmk_version.Edition.CME,
     ]:
         hosts_items.append("otel_collectors")
+        hosts_items.append("relays")
 
     users_items = []
     if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:

@@ -13,7 +13,6 @@ import cmk.gui.visuals as visuals
 from cmk.gui.bi import is_part_of_aggregation
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource
-from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -140,13 +139,6 @@ def _get_context_page_menu_topics(
         try:
             topic = topics[visual["topic"]]
         except KeyError:
-            if "other" not in topics:
-                raise MKUserError(
-                    None,
-                    _(
-                        "No permission for fallback topic 'Other'. Please contact your administrator."
-                    ),
-                )
             topic = topics["other"]
 
         entry = _make_page_menu_entry_for_visual(

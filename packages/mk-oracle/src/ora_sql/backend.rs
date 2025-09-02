@@ -73,17 +73,18 @@ impl OraDbEngine for StdEngine {
         }
         Ok(())
     }
-    /*
-        let x: &[(&str, &dyn ToSql)] = query
-        .params()
-        .iter()
-        .map(|(k, v)| { (k.as_str(), *v) })
-        .collect::<Vec<(&str, &dyn ToSql)>>()
-        .as_slice();
-        let x2 = &[("sep", 1u8)];
-        let rows = conn.query_named(query.as_str(), x2)?;
-    */
+
     fn query(&self, query: &SqlQuery, sep: &str) -> Result<Vec<String>> {
+        let table = self.query_table(query)?;
+        let result: Vec<String> = table
+            .into_iter()
+            .map(|row| row.join(sep))
+            .collect::<Vec<String>>();
+
+        Ok(result)
+    }
+
+    fn query_table(&self, query: &SqlQuery) -> Result<Vec<Vec<String>>> {
         let conn = self
             .connection
             .as_ref()
@@ -98,19 +99,6 @@ impl OraDbEngine for StdEngine {
             .collect::<Vec<(&str, &dyn ToSql)>>();
 
         let rows = conn.query_named(query.as_str(), x.as_slice())?;
-        // Process rows if needed
-        let result: Vec<String> = rows
-            .map(|row| row_to_string(&row, sep))
-            .collect::<Vec<String>>();
-
-        Ok(result)
-    }
-    fn query_table(&self, query: &SqlQuery) -> Result<Vec<Vec<String>>> {
-        let conn = self
-            .connection
-            .as_ref()
-            .ok_or_else(|| anyhow::anyhow!("No connection established"))?;
-        let rows = conn.query(query.as_str(), &[])?;
         // Process rows if needed
         let result = rows
             .map(|row| row_to_vector(&row))
@@ -128,10 +116,6 @@ impl Clone for Box<dyn OraDbEngine> {
     fn clone(&self) -> Box<dyn OraDbEngine> {
         self.clone_box()
     }
-}
-
-fn row_to_string(row: &oracle::Result<oracle::Row>, sep: &str) -> String {
-    row_to_vector(row).join(sep)
 }
 
 fn row_to_vector(row: &oracle::Result<oracle::Row>) -> Vec<String> {

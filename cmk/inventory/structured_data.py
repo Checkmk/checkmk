@@ -44,11 +44,6 @@ from .paths import TreePath, TreePathGz
 #   - ('choices', ['some', 'keys'])
 #   - MISSING (see mk/base/agent_based/inventory.py::_get_intervals_from_config) -> _use_nothing
 #   - 'all' -> _use_all
-# TODO Centralize different stores and loaders of tree files:
-#   - inventory/HOSTNAME, inventory/HOSTNAME.gz, inventory/.last
-#   - inventory_archive/HOSTNAME/TIMESTAMP,
-#   - inventory_delta_cache/HOSTNAME/TIMESTAMP_{TIMESTAMP,None}
-#   - status_data/HOSTNAME, status_data/HOSTNAME.gz
 
 SDNodeName = NewType("SDNodeName", str)
 SDPath = tuple[SDNodeName, ...]

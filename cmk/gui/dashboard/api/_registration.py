@@ -10,6 +10,7 @@ from .compute_widget_attributes import ENDPOINT_COMPUTE_WIDGET_ATTRIBUTES
 from .create_relative_grid_dashboard import ENDPOINT_CREATE_RELATIVE_GRID_DASHBOARD
 from .delete_dashboard import ENDPOINT_DELETE_DASHBOARD
 from .edit_relative_grid_dashboard import ENDPOINT_EDIT_RELATIVE_GRID_DASHBOARD
+from .list_dashboard_metadata import ENDPOINT_LIST_DASHBOARD_METADATA
 from .show_dashboard_constraints import ENDPOINT_SHOW_DASHBOARD_CONSTANTS
 from .show_relative_grid_dashboard import ENDPOINT_SHOW_RELATIVE_GRID_DASHBOARD
 
@@ -39,4 +40,7 @@ def register_endpoints(
     )
     versioned_endpoint_registry.register(
         ENDPOINT_COMPUTE_WIDGET_ATTRIBUTES, ignore_duplicates=ignore_duplicates
+    )
+    versioned_endpoint_registry.register(
+        ENDPOINT_LIST_DASHBOARD_METADATA, ignore_duplicates=ignore_duplicates
     )

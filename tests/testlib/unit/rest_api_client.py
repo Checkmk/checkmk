@@ -3350,7 +3350,15 @@ class DashboardClient(RestApiClient):
     domain: DomainType = "dashboard"
     domain_relative: DomainType = "dashboard_relative_grid"
     domain_responsive: DomainType = "dashboard_responsive_grid"
+    domain_metadata: DomainType = "dashboard_metadata"
     default_version = APIVersion.UNSTABLE
+
+    def list_dashboard_metadata(self) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain_metadata}/collections/all",
+            expect_ok=True,
+        )
 
     def get_relative_grid_dashboard(self, dashboard_id: str, expect_ok: bool = True) -> Response:
         return self.request(

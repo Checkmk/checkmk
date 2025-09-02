@@ -5,6 +5,7 @@
 
 from collections.abc import Mapping
 
+from cmk.gui.form_specs.private.validators import HostAddress
 from cmk.gui.quick_setup.config_setups.aws.ruleset_helper import formspec_aws_tags
 
 from cmk.plugins.aws.lib import aws_region_to_monitor  # pylint: disable=cmk-module-layer-violation
@@ -243,7 +244,7 @@ def formspec_aws_proxy_details() -> Mapping[str, DictElement]:
                         parameter_form=String(
                             title=Title("Proxy host"),
                             custom_validate=[
-                                validators.HostAddress(
+                                HostAddress(
                                     error_msg=Message("Invalid hostname or IP address."),
                                 )
                             ],

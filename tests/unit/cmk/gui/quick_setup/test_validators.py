@@ -3,13 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from contextlib import nullcontext as does_not_raise
+from typing import ContextManager
+
 import pytest
 
+from cmk.gui.form_specs.private.validators import HostAddress
 from cmk.gui.wato.pages.notifications.quick_setup import (
     validate_notification_count_values,
     validate_throttling_values,
 )
 
+from cmk.rulesets.v1 import Message
 from cmk.rulesets.v1.form_specs.validators import ValidationError
 
 
@@ -66,3 +71,84 @@ def test_validate_notification_count_values_valid(payload: tuple[int, ...]) -> N
 def test_validate_notification_count_values_raises(payload: tuple[int, ...]) -> None:
     with pytest.raises(ValidationError):
         validate_notification_count_values(payload)
+
+
+EXPECTED_HOSTADDRESS_ERROR_MESSAGE = Message("Your input is not a valid hostname or IP address.")
+
+
+@pytest.mark.parametrize(
+    ["test_value", "expected_raises", "expected_message"],
+    [
+        # Valid IP addressses
+        pytest.param("127.0.0.1", does_not_raise(), None, id="IPv4 loopback address"),
+        pytest.param("178.26.239.245", does_not_raise(), None, id="valid IPv4"),
+        pytest.param("2001:db8::1", does_not_raise(), None, id="valid IPv6 address"),
+        pytest.param("::1", does_not_raise(), None, id="IPv6 loopback address"),
+        # Invalid IP addresses
+        pytest.param(
+            "23.75.345.200",
+            pytest.raises(ValidationError),
+            EXPECTED_HOSTADDRESS_ERROR_MESSAGE,
+            id="`The Net` invalid IPv4",
+        ),
+        # Valid hostnames
+        pytest.param("localhost", does_not_raise(), None, id="hostname"),
+        pytest.param("example.com", does_not_raise(), None, id="full name address"),
+        pytest.param("www.example.com", does_not_raise(), None, id="full name address"),
+        pytest.param(
+            "very.long.hostname.that.exceeds.the.maximum.allowed.length.and.should.fail.validation.com",
+            does_not_raise(),
+            None,
+            id="long address",
+        ),
+        pytest.param("123.tld", does_not_raise(), None, id="Contains digits"),
+        pytest.param("valid-hostname", does_not_raise(), None, id="Contains hyphen"),
+        pytest.param("trailing.dot.", does_not_raise(), None, id="Trailing dot"),
+        # Invalid hostnames
+        pytest.param(
+            "invalid..com",
+            pytest.raises(ValidationError),
+            EXPECTED_HOSTADDRESS_ERROR_MESSAGE,
+            id="Multiple dots",
+        ),
+        pytest.param(
+            "under_score.com",
+            pytest.raises(ValidationError),
+            EXPECTED_HOSTADDRESS_ERROR_MESSAGE,
+            id="Underscore",
+        ),
+        pytest.param(
+            "-starts-with-hyphen.com",
+            pytest.raises(ValidationError),
+            EXPECTED_HOSTADDRESS_ERROR_MESSAGE,
+            id="Starts with hyphen",
+        ),
+        pytest.param(
+            "ends-with-hyphen-.com",
+            pytest.raises(ValidationError),
+            EXPECTED_HOSTADDRESS_ERROR_MESSAGE,
+            id="Ends with hyphen",
+        ),
+        pytest.param(
+            "",
+            pytest.raises(ValidationError),
+            EXPECTED_HOSTADDRESS_ERROR_MESSAGE,
+            id="Empty string",
+        ),
+        pytest.param(
+            ".leading.dot",
+            pytest.raises(ValidationError),
+            EXPECTED_HOSTADDRESS_ERROR_MESSAGE,
+            id="Leading dot",
+        ),
+    ],
+)
+def test_host_address(
+    test_value: str,
+    expected_raises: ContextManager[pytest.ExceptionInfo[ValidationError]],
+    expected_message: Message | None,
+) -> None:
+    with expected_raises as e:
+        HostAddress(EXPECTED_HOSTADDRESS_ERROR_MESSAGE)(test_value)
+
+    assert expected_message is None or e.value.message == expected_message

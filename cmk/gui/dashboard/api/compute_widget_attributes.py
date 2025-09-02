@@ -55,8 +55,6 @@ def compute_widget_attributes_v1(body: ComputedWidgetSpecRequest) -> ComputedWid
     """Compute widget specification attributes"""
     user.need_permission("general.edit_dashboards")
     widget_config = body.content.to_internal()
-    if "context" not in widget_config:
-        widget_config["context"] = {}  # setting a dummy context
     return ComputedWidgetSpecResponse(
         domainType="widget-compute",
         value=ComputedWidgetSpec(

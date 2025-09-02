@@ -228,12 +228,6 @@ class RelativeGridWidgetRequest(BaseWidgetRequest):
 
 @api_model
 class WidgetFilterContext:
-    restricted_to_single: list[AnnotatedInfoName] = api_field(
-        description=(
-            "A list of single infos that this widget content is restricted to. "
-            "This means that the widget must be filtered to exactly one item for each info name."
-        )
-    )
     uses_infos: list[AnnotatedInfoName] = api_field(
         description=(
             "A list of info names that this widget content uses. "
@@ -247,9 +241,8 @@ class WidgetFilterContext:
     @classmethod
     def from_internal(cls, config: DashletConfig) -> Self:
         return cls(
-            restricted_to_single=list(config["single_infos"]),
             uses_infos=determine_widget_filter_used_infos(config),
-            filters=config["context"],
+            filters=config.get("context", {}),
         )
 
 
@@ -286,6 +279,9 @@ class RelativeGridWidgetResponse(BaseWidgetResponse):
 
 def determine_widget_filter_used_infos(widget_config: DashletConfig) -> list[AnnotatedInfoName]:
     dashlet_type = dashlet_registry[widget_config["type"]]
+    if "context" not in widget_config:
+        # setting a dummy context, since the widget might access it
+        widget_config = {**widget_config, "context": {}}
     # pretty sure the only thing used here is the (empty) dashboard context...
     dummy_dashboard = DashboardConfig(
         owner=UserId.builtin(),

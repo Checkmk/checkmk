@@ -7789,6 +7789,10 @@ msgstr "Automatisch krimpen uit"
 msgid "Auto shrink on"
 msgstr "Automatisch krimpen aan"
 
+#, fuzzy
+msgid "Auto-detect proxy settings for this network"
+msgstr "Flapdetectie-instellingen voor hosts"
+
 msgid "Auto-disconnect time"
 msgstr "Automatische ontkoppelingstijd"
 
@@ -8873,6 +8877,10 @@ msgstr "Gezondheid Azure Load Balancer"
 #, fuzzy
 msgid "Azure Redis CPU utilization"
 msgstr "GCP/Redis CPU-gebruik"
+
+#, fuzzy
+msgid "Azure Redis Cache effectiveness"
+msgstr "Databaseverbindingen"
 
 #, fuzzy
 msgid "Azure Redis connections"
@@ -11277,6 +11285,10 @@ msgstr "Cachegrootte"
 
 msgid "Cache misses per second"
 msgstr "Cache missers per seconde"
+
+#, fuzzy
+msgid "Cache requests"
+msgstr "Mislukte verzoeken"
 
 msgid "Cache several non-status queries"
 msgstr "Cache verschillende niet-status queries"
@@ -15158,9 +15170,6 @@ msgstr "Verbinden via UNIX socket"
 msgid "Connect without password"
 msgstr "Verbinden zonder wachtwoord"
 
-msgid "Connect without proxy"
-msgstr "Verbinden zonder proxy"
-
 #, fuzzy
 msgid "Connected Clients"
 msgstr "Verbindingen"
@@ -16521,6 +16530,10 @@ msgstr "Nieuwe tijdsperiode aangemaakt %s"
 #, python-format
 msgid "Created new users: %s"
 msgstr "Nieuwe gebruikers aangemaakt: %s"
+
+#, fuzzy, python-format
+msgid "Created relay '%s'"
+msgstr "Nieuwe rol '%s' aangemaakt"
 
 msgid "Created with Checkmk Version $CHECK_MK_VERSION$"
 msgstr "Aangemaakt met Checkmk-versie $CHECK_MK_VERSION$"
@@ -19025,6 +19038,10 @@ msgstr "Kennisgevingsregel verwijderen #%d"
 #, python-format
 msgid "Deleted notification rule %d of user %s"
 msgstr "Verwijderde notificatie regel %d van gebruiker %s"
+
+#, fuzzy, python-format
+msgid "Deleted relay '%s'"
+msgstr "Verwijderde rol '%s'"
 
 #, python-format
 msgid "Deleted role '%s'"
@@ -22531,6 +22548,10 @@ msgstr "Bewerkte host tag groep %s (%s)"
 #, python-format
 msgid "Edited properties of folder %s"
 msgstr "Bewerkte eigenschappen van map %s"
+
+#, fuzzy, python-format
+msgid "Edited relay '%s'"
+msgstr "Wijzig regel '%s'"
 
 #, python-format
 msgid "Edited rule in ruleset \"%s\" in folder \"%s\""
@@ -27197,6 +27218,10 @@ msgstr "Verbinding bewerken"
 msgid "Gerrit instance to query."
 msgstr "Jenkins instantie om te bevragen."
 
+#, fuzzy
+msgid "Get commands"
+msgstr "geen commando's"
+
 msgid "Get file from SFTP server"
 msgstr "Bestand van SFTP-server halen"
 
@@ -27284,6 +27309,10 @@ msgstr "Globale instellingen die overeenkomen met '%s'"
 
 msgid "GlobalProtect Utilization"
 msgstr "GlobalProtect Gebruik"
+
+#, fuzzy
+msgid "Globally configured proxy"
+msgstr "Gebruik globaal geconfigureerde proxy"
 
 msgid "Globbing pattern for input files"
 msgstr "Globbing patroon voor invoerbestanden"
@@ -29267,6 +29296,10 @@ msgstr "Geschiedenis van de kennisgevingen"
 
 msgid "History of scheduled downtimes"
 msgstr "Geschiedenis van geplande uitvaltijd"
+
+#, fuzzy
+msgid "Hit ratio"
+msgstr "Init duur"
 
 msgid "Hits"
 msgstr "Hits"
@@ -40326,6 +40359,10 @@ msgstr "configuratie"
 msgid "Manual page for this check type"
 msgstr "Handboekpagina voor dit controletype"
 
+#, fuzzy
+msgid "Manual proxy configuration"
+msgstr "configuratie"
+
 msgid "Manual snapshots"
 msgstr "Handmatige momentopnamen"
 
@@ -49783,6 +49820,10 @@ msgstr "Wachtwoord bestaat niet of gebruik niet toegestaan"
 #, fuzzy
 msgid "Password does not exist or using not permitted."
 msgstr "Wachtwoord bestaat niet of gebruik niet toegestaan"
+
+#, fuzzy
+msgid "Password field can not be empty"
+msgstr "Toegangssleutel"
 
 msgid "Password for binding, if your server requires an authentication"
 msgstr "Wachtwoord voor binding, als uw server een authenticatie vereist"
@@ -64792,6 +64833,10 @@ msgstr "Test"
 msgid "Text"
 msgstr "Tekst"
 
+#, fuzzy
+msgid "Text field can not be empty"
+msgstr "Geheime sleutel"
+
 msgid "Text groups from regular expression match, separated by spaces"
 msgstr "Tekstgroepen van reguliere expressie-match, gescheiden door spaties"
 
@@ -73759,6 +73804,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure Redis Cache "
+"effectiveness monitoring"
+msgstr ""
+"Deze regel staat je toe om bloat levels te configureren voor een databases "
+"tablespace en indexspace."
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure Redis connections "
 "monitoring"
 msgstr ""
@@ -81030,9 +81083,6 @@ msgstr "Gebruik expliciete AWS service tags en overrul algemene AWS tags"
 msgid "Use explicit names"
 msgstr "Gebruik expliciete namen"
 
-msgid "Use explicit proxy settings"
-msgstr "Gebruik expliciete proxy-instellingen"
-
 msgid "Use explicit service names and ignore overall AWS tags"
 msgstr "Gebruik expliciete dienstnamen en negeer algemene AWS-tags"
 
@@ -81042,17 +81092,11 @@ msgstr "Gebruik vaste breedte (ten opzichte van lettergrootte)"
 msgid "Use for all connections"
 msgstr "Gebruik voor alle verbindingen"
 
-msgid "Use from environment"
-msgstr "Gebruik van omgeving"
-
 msgid "Use global connection parameters"
 msgstr "Globale verbindingsparameters gebruiken"
 
 msgid "Use global rule limit"
 msgstr "Globale regel limiet gebruiken"
-
-msgid "Use globally configured proxy"
-msgstr "Gebruik globaal geconfigureerde proxy"
 
 msgid "Use graph title"
 msgstr "Grafiektitel gebruiken"
@@ -90545,6 +90589,15 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#~ msgid "Connect without proxy"
+#~ msgstr "Verbinden zonder proxy"
+
+#~ msgid "Use explicit proxy settings"
+#~ msgstr "Gebruik expliciete proxy-instellingen"
+
+#~ msgid "Use from environment"
+#~ msgstr "Gebruik van omgeving"
 
 #, python-format
 #~ msgid "A user with the id \"%s\" does not exist."

@@ -7836,6 +7836,10 @@ msgstr "Arrêt automatique de la rétraction"
 msgid "Auto shrink on"
 msgstr "Rétrécissement automatique activé"
 
+#, fuzzy
+msgid "Auto-detect proxy settings for this network"
+msgstr "Paramètres de détection des volets pour les hôtes"
+
 msgid "Auto-disconnect time"
 msgstr "Délai de déconnexion automatique"
 
@@ -8924,6 +8928,10 @@ msgstr "Santé de l'équilibreur de charge Azure"
 #, fuzzy
 msgid "Azure Redis CPU utilization"
 msgstr "Utilisation de l'unité centrale de GCP/Redis"
+
+#, fuzzy
+msgid "Azure Redis Cache effectiveness"
+msgstr "Connexions à la base de données"
 
 #, fuzzy
 msgid "Azure Redis connections"
@@ -11332,6 +11340,10 @@ msgstr "Taille du cache"
 
 msgid "Cache misses per second"
 msgstr "Cache manqués par seconde"
+
+#, fuzzy
+msgid "Cache requests"
+msgstr "Demandes rejetées"
 
 msgid "Cache several non-status queries"
 msgstr "Mise en cache de plusieurs requêtes sans statut"
@@ -15251,9 +15263,6 @@ msgstr "Connexion via un socket UNIX"
 msgid "Connect without password"
 msgstr "Se connecter sans mot de passe"
 
-msgid "Connect without proxy"
-msgstr "Se connecter sans proxy"
-
 #, fuzzy
 msgid "Connected Clients"
 msgstr "Connexions"
@@ -16631,6 +16640,10 @@ msgstr "Création d'une nouvelle période de temps %s"
 #, python-format
 msgid "Created new users: %s"
 msgstr "Création de nouveaux utilisateurs : %s"
+
+#, fuzzy, python-format
+msgid "Created relay '%s'"
+msgstr "Création d'un nouveau rôle '%s'"
 
 msgid "Created with Checkmk Version $CHECK_MK_VERSION$"
 msgstr "Créée avec la version de Checkmk $CHECK_MK_VERSION"
@@ -19155,6 +19168,10 @@ msgstr "Supprimer la règle de notification #%d"
 #, python-format
 msgid "Deleted notification rule %d of user %s"
 msgstr "Règle de notification supprimée %d de l'utilisateur %s"
+
+#, fuzzy, python-format
+msgid "Deleted relay '%s'"
+msgstr "Suppression du rôle '%s'"
 
 #, python-format
 msgid "Deleted role '%s'"
@@ -22697,6 +22714,10 @@ msgstr "Groupe de balises d'hôte modifié %s (%s)"
 #, python-format
 msgid "Edited properties of folder %s"
 msgstr "Propriétés modifiées du dossier %s"
+
+#, fuzzy, python-format
+msgid "Edited relay '%s'"
+msgstr "Modifier la règle '%s'"
 
 #, python-format
 msgid "Edited rule in ruleset \"%s\" in folder \"%s\""
@@ -27401,6 +27422,10 @@ msgstr "Modifier la connexion"
 msgid "Gerrit instance to query."
 msgstr "Instance Jenkins à interroger."
 
+#, fuzzy
+msgid "Get commands"
+msgstr "aucune commande"
+
 msgid "Get file from SFTP server"
 msgstr "Obtenir un fichier du serveur SFTP"
 
@@ -27492,6 +27517,10 @@ msgstr "Paramètres globaux correspondant à '%s'"
 
 msgid "GlobalProtect Utilization"
 msgstr "Utilisation de GlobalProtect"
+
+#, fuzzy
+msgid "Globally configured proxy"
+msgstr "Utiliser le proxy configuré globalement"
 
 msgid "Globbing pattern for input files"
 msgstr "Modèle de globalisation pour les fichiers d'entrée"
@@ -29511,6 +29540,10 @@ msgstr "Historique des notifications"
 
 msgid "History of scheduled downtimes"
 msgstr "Historique des temps d'arrêt programmés"
+
+#, fuzzy
+msgid "Hit ratio"
+msgstr "Durée d'initialisation"
 
 msgid "Hits"
 msgstr "Hits"
@@ -40631,6 +40664,10 @@ msgstr "configuration"
 msgid "Manual page for this check type"
 msgstr "Page de manuel pour ce type de chèque"
 
+#, fuzzy
+msgid "Manual proxy configuration"
+msgstr "configuration"
+
 msgid "Manual snapshots"
 msgstr "Instantanés manuels"
 
@@ -50155,6 +50192,10 @@ msgstr "Le mot de passe n'existe pas ou son utilisation n'est pas autorisée"
 #, fuzzy
 msgid "Password does not exist or using not permitted."
 msgstr "Le mot de passe n'existe pas ou son utilisation n'est pas autorisée"
+
+#, fuzzy
+msgid "Password field can not be empty"
+msgstr "Clé d'accès"
 
 msgid "Password for binding, if your server requires an authentication"
 msgstr ""
@@ -65336,6 +65377,10 @@ msgstr "Test"
 msgid "Text"
 msgstr "Texte"
 
+#, fuzzy
+msgid "Text field can not be empty"
+msgstr "Clé secrète"
+
 msgid "Text groups from regular expression match, separated by spaces"
 msgstr ""
 "Groupes de texte de la correspondance de l'expression régulière, séparés par "
@@ -74406,6 +74451,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure Redis Cache "
+"effectiveness monitoring"
+msgstr ""
+"Cette règle vous permet de configurer les niveaux de bloat pour un "
+"tablespace et un index de bases de données."
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure Redis connections "
 "monitoring"
 msgstr ""
@@ -81736,9 +81789,6 @@ msgstr ""
 msgid "Use explicit names"
 msgstr "Utiliser des noms explicites"
 
-msgid "Use explicit proxy settings"
-msgstr "Utiliser des paramètres proxy explicites"
-
 msgid "Use explicit service names and ignore overall AWS tags"
 msgstr ""
 "Utilisez des noms de service explicites et ignorez les balises AWS générales"
@@ -81749,17 +81799,11 @@ msgstr "Utiliser une largeur fixe (par rapport à la taille de la police)"
 msgid "Use for all connections"
 msgstr "Utilisation pour toutes les connexions"
 
-msgid "Use from environment"
-msgstr "Utilisation de l'environnement"
-
 msgid "Use global connection parameters"
 msgstr "Utiliser les paramètres de connexion globaux"
 
 msgid "Use global rule limit"
 msgstr "Utiliser la limite globale des règles"
-
-msgid "Use globally configured proxy"
-msgstr "Utiliser le proxy configuré globalement"
 
 msgid "Use graph title"
 msgstr "Utiliser le titre du graphique"
@@ -91360,6 +91404,15 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#~ msgid "Connect without proxy"
+#~ msgstr "Se connecter sans proxy"
+
+#~ msgid "Use explicit proxy settings"
+#~ msgstr "Utiliser des paramètres proxy explicites"
+
+#~ msgid "Use from environment"
+#~ msgstr "Utilisation de l'environnement"
 
 #, python-format
 #~ msgid "A user with the id \"%s\" does not exist."

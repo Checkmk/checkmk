@@ -7790,6 +7790,10 @@ msgstr "Auto shrink off"
 msgid "Auto shrink on"
 msgstr "Auto shrink on"
 
+#, fuzzy
+msgid "Auto-detect proxy settings for this network"
+msgstr "Setări de detectare a flapsurilor pentru gazde"
+
 msgid "Auto-disconnect time"
 msgstr "Timp de deconectare automată"
 
@@ -8872,6 +8876,10 @@ msgstr "Sănătatea Azure Load Balancer"
 #, fuzzy
 msgid "Azure Redis CPU utilization"
 msgstr "GCP/Redis Utilizare CPU"
+
+#, fuzzy
+msgid "Azure Redis Cache effectiveness"
+msgstr "Conexiuni la baza de date"
 
 #, fuzzy
 msgid "Azure Redis connections"
@@ -11306,6 +11314,10 @@ msgstr "Dimensiunea cache-ului"
 
 msgid "Cache misses per second"
 msgstr "Ratarea memoriei cache pe secundă"
+
+#, fuzzy
+msgid "Cache requests"
+msgstr "Solicitări eșuate"
 
 msgid "Cache several non-status queries"
 msgstr "Memorarea în memoria cache a mai multor interogări fără statut"
@@ -15170,9 +15182,6 @@ msgstr "Conectare prin socket UNIX"
 msgid "Connect without password"
 msgstr "Conectare fără parolă"
 
-msgid "Connect without proxy"
-msgstr "Conectare fără proxy"
-
 #, fuzzy
 msgid "Connected Clients"
 msgstr "Conexiuni"
@@ -16534,6 +16543,10 @@ msgstr "A creat o nouă perioadă de timp %s."
 #, python-format
 msgid "Created new users: %s"
 msgstr "A creat noi utilizatori: %s"
+
+#, fuzzy, python-format
+msgid "Created relay '%s'"
+msgstr "A creat un nou rol '%s'"
 
 msgid "Created with Checkmk Version $CHECK_MK_VERSION$"
 msgstr "Creat cu versiunea Checkmk $CHECK_MK_VERSION$."
@@ -19042,6 +19055,10 @@ msgstr "Ștergerea regulii de notificare #%d"
 #, python-format
 msgid "Deleted notification rule %d of user %s"
 msgstr "Regulă de notificare ștearsă %d a utilizatorului %s"
+
+#, fuzzy, python-format
+msgid "Deleted relay '%s'"
+msgstr "Rol șters '%s'"
 
 #, python-format
 msgid "Deleted role '%s'"
@@ -22568,6 +22585,10 @@ msgstr "A fost editat grupul de etichete gazdă %s (%s)"
 #, python-format
 msgid "Edited properties of folder %s"
 msgstr "Proprietăți editate ale dosarului %s"
+
+#, fuzzy, python-format
+msgid "Edited relay '%s'"
+msgstr "Editați regula '%s'"
 
 #, python-format
 msgid "Edited rule in ruleset \"%s\" in folder \"%s\""
@@ -27258,6 +27279,10 @@ msgstr "Editați conexiunea"
 msgid "Gerrit instance to query."
 msgstr "Instanța Jenkins de interogat."
 
+#, fuzzy
+msgid "Get commands"
+msgstr "fără comenzi"
+
 msgid "Get file from SFTP server"
 msgstr "Obțineți fișierul de pe serverul SFTP"
 
@@ -27346,6 +27371,10 @@ msgstr "Setări globale care se potrivesc cu \"%s"
 
 msgid "GlobalProtect Utilization"
 msgstr "Utilizare GlobalProtect"
+
+#, fuzzy
+msgid "Globally configured proxy"
+msgstr "Utilizați proxy-ul configurat la nivel global"
 
 msgid "Globbing pattern for input files"
 msgstr "Model de globbing pentru fișierele de intrare"
@@ -29325,6 +29354,10 @@ msgstr "Istoricul notificărilor"
 
 msgid "History of scheduled downtimes"
 msgstr "Istoricul întreruperilor programate"
+
+#, fuzzy
+msgid "Hit ratio"
+msgstr "Durata de init"
 
 msgid "Hits"
 msgstr "Lovituri"
@@ -40403,6 +40436,10 @@ msgstr "configurare"
 msgid "Manual page for this check type"
 msgstr "Pagina de manual pentru acest tip de control"
 
+#, fuzzy
+msgid "Manual proxy configuration"
+msgstr "configurare"
+
 msgid "Manual snapshots"
 msgstr "Instantanee manuale"
 
@@ -49862,6 +49899,10 @@ msgstr "Parola nu există sau utilizarea nu este permisă"
 #, fuzzy
 msgid "Password does not exist or using not permitted."
 msgstr "Parola nu există sau utilizarea nu este permisă"
+
+#, fuzzy
+msgid "Password field can not be empty"
+msgstr "Cheie de acces"
 
 msgid "Password for binding, if your server requires an authentication"
 msgstr "Parola pentru legare, dacă serverul dvs. necesită o autentificare"
@@ -64956,6 +64997,10 @@ msgstr "Test"
 msgid "Text"
 msgstr "Text"
 
+#, fuzzy
+msgid "Text field can not be empty"
+msgstr "Cheia secretă"
+
 msgid "Text groups from regular expression match, separated by spaces"
 msgstr "Grupuri de text din expresia regulată, separate prin spații"
 
@@ -74021,6 +74066,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure Redis Cache "
+"effectiveness monitoring"
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure Redis connections "
 "monitoring"
 msgstr ""
@@ -81217,9 +81270,6 @@ msgstr ""
 msgid "Use explicit names"
 msgstr "Utilizați nume explicite"
 
-msgid "Use explicit proxy settings"
-msgstr "Utilizați setări proxy explicite"
-
 msgid "Use explicit service names and ignore overall AWS tags"
 msgstr ""
 "Utilizați nume de servicii explicite și ignorați etichetele AWS generale"
@@ -81230,17 +81280,11 @@ msgstr "Utilizați lățimea fixă (în raport cu dimensiunea fontului)"
 msgid "Use for all connections"
 msgstr "Utilizați pentru toate conexiunile"
 
-msgid "Use from environment"
-msgstr "Utilizarea din mediul înconjurător"
-
 msgid "Use global connection parameters"
 msgstr "Utilizați parametrii globali de conectare"
 
 msgid "Use global rule limit"
 msgstr "Utilizați limita globală a regulilor"
-
-msgid "Use globally configured proxy"
-msgstr "Utilizați proxy-ul configurat la nivel global"
 
 msgid "Use graph title"
 msgstr "Utilizați titlul graficului"
@@ -90764,6 +90808,15 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#~ msgid "Connect without proxy"
+#~ msgstr "Conectare fără proxy"
+
+#~ msgid "Use explicit proxy settings"
+#~ msgstr "Utilizați setări proxy explicite"
+
+#~ msgid "Use from environment"
+#~ msgstr "Utilizarea din mediul înconjurător"
 
 #, python-format
 #~ msgid "A user with the id \"%s\" does not exist."

@@ -7354,6 +7354,10 @@ msgstr "自動シュリンクオフ"
 msgid "Auto shrink on"
 msgstr "自動縮小オン"
 
+#, fuzzy
+msgid "Auto-detect proxy settings for this network"
+msgstr "ホストのフラップ検出設定"
+
 msgid "Auto-disconnect time"
 msgstr "自動切断時間"
 
@@ -8280,6 +8284,10 @@ msgstr "Azureロードバランサーヘルス"
 #, fuzzy
 msgid "Azure Redis CPU utilization"
 msgstr "GCP/Redis CPU使用率"
+
+#, fuzzy
+msgid "Azure Redis Cache effectiveness"
+msgstr "Azure データベース接続"
 
 #, fuzzy
 msgid "Azure Redis connections"
@@ -10539,6 +10547,10 @@ msgstr "キャッシュミス"
 
 msgid "Cache misses per second"
 msgstr "1秒あたりのキャッシュミス"
+
+#, fuzzy
+msgid "Cache requests"
+msgstr "失敗したリクエスト"
 
 msgid "Cache several non-status queries"
 msgstr "いくつかの非ステータスクエリをキャッシュする"
@@ -14217,9 +14229,6 @@ msgstr "UNIXソケット経由で接続"
 msgid "Connect without password"
 msgstr "パスワードなしで接続する"
 
-msgid "Connect without proxy"
-msgstr "プロキシなしで接続する"
-
 #, fuzzy
 msgid "Connected Clients"
 msgstr "接続"
@@ -15522,6 +15531,10 @@ msgstr "新しい期 %sを作成しました"
 #, python-format
 msgid "Created new users: %s"
 msgstr "作成された新しいユーザー: %s"
+
+#, fuzzy, python-format
+msgid "Created relay '%s'"
+msgstr "新しい役割 '%s'を作成しました"
 
 msgid "Created with Checkmk Version $CHECK_MK_VERSION$"
 msgstr "Checkmkバージョン$ CHECK_MK_VERSION $で作成"
@@ -17922,6 +17935,10 @@ msgstr "通知ルール#%sを削除"
 #, python-format
 msgid "Deleted notification rule %d of user %s"
 msgstr "通知ルール%d（ユーザー%sのルール）は削除されました"
+
+#, fuzzy, python-format
+msgid "Deleted relay '%s'"
+msgstr "削除された役割 '%s'"
 
 #, python-format
 msgid "Deleted role '%s'"
@@ -21160,6 +21177,10 @@ msgstr "編集されたホストタググループ%s(%s)"
 #, python-format
 msgid "Edited properties of folder %s"
 msgstr "フォルダ%sの編集されたプロパティ"
+
+#, fuzzy, python-format
+msgid "Edited relay '%s'"
+msgstr "ルール '%s' を編集する"
 
 #, python-format
 msgid "Edited rule in ruleset \"%s\" in folder \"%s\""
@@ -25620,6 +25641,10 @@ msgstr "Gerrit 接続"
 msgid "Gerrit instance to query."
 msgstr "クエリするGerritインスタンス。"
 
+#, fuzzy
+msgid "Get commands"
+msgstr "コマンドなし"
+
 msgid "Get file from SFTP server"
 msgstr "SFTPサーバーからファイルを取得する"
 
@@ -25703,6 +25728,10 @@ msgstr "グローバル設定'%s'に一致する"
 
 msgid "GlobalProtect Utilization"
 msgstr "グローバルプロテクトの使用率"
+
+#, fuzzy
+msgid "Globally configured proxy"
+msgstr "グローバルに設定されたプロキシを使用する"
 
 msgid "Globbing pattern for input files"
 msgstr "入力ファイルのグロブパターン"
@@ -27571,6 +27600,10 @@ msgstr "通知の履歴"
 
 msgid "History of scheduled downtimes"
 msgstr "スケジュールされたダウンタイムの履歴"
+
+#, fuzzy
+msgid "Hit ratio"
+msgstr "初期所要時間"
 
 msgid "Hits"
 msgstr "ヒット"
@@ -37813,6 +37846,10 @@ msgstr "主導構成"
 msgid "Manual page for this check type"
 msgstr "このチェックタイプのマニュアルページ"
 
+#, fuzzy
+msgid "Manual proxy configuration"
+msgstr "主導構成"
+
 msgid "Manual snapshots"
 msgstr "手動スナップショット"
 
@@ -46535,6 +46572,10 @@ msgstr "パスワードが存在しないか、使用が許可されていませ
 
 msgid "Password does not exist or using not permitted."
 msgstr "パスワードが存在しないか、使用が許可されていません。"
+
+#, fuzzy
+msgid "Password field can not be empty"
+msgstr "パスワードは空欄にできません"
 
 msgid "Password for binding, if your server requires an authentication"
 msgstr "サーバーに認証が必要な場合のバインド用のパスワード"
@@ -60634,6 +60675,10 @@ msgstr "テスト"
 msgid "Text"
 msgstr "テキスト"
 
+#, fuzzy
+msgid "Text field can not be empty"
+msgstr "入力を空にすることはできません"
+
 msgid "Text groups from regular expression match, separated by spaces"
 msgstr "スペースで区切られた正規表現一致のテキストグループ"
 
@@ -69314,6 +69359,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure Redis Cache "
+"effectiveness monitoring"
+msgstr ""
+"このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
+"きます"
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure Redis connections "
 "monitoring"
 msgstr ""
@@ -75776,9 +75829,6 @@ msgstr "明示的なAWSサービスタグを使用し、AWSタグ全体を無効
 msgid "Use explicit names"
 msgstr "明示的な名前を使用する"
 
-msgid "Use explicit proxy settings"
-msgstr "明示的なプロキシ設定を使用する"
-
 msgid "Use explicit service names and ignore overall AWS tags"
 msgstr "明示的なサービス名を使用し、AWSタグ全体を無視します"
 
@@ -75788,17 +75838,11 @@ msgstr "固定幅を使用(フォントサイズに対して)"
 msgid "Use for all connections"
 msgstr "すべての接続に使用"
 
-msgid "Use from environment"
-msgstr "環境からの使用"
-
 msgid "Use global connection parameters"
 msgstr "グローバル接続パラメータを使用する"
 
 msgid "Use global rule limit"
 msgstr "グローバルルール制限を使用する"
-
-msgid "Use globally configured proxy"
-msgstr "グローバルに設定されたプロキシを使用する"
 
 msgid "Use graph title"
 msgstr "グラフタイトルを使用する"
@@ -84722,6 +84766,15 @@ msgid ""
 msgstr ""
 "サービス制限を下回るまで、「変更を有効にする」はブロックされます。利用限度額"
 "を上げたい場合、 "
+
+#~ msgid "Connect without proxy"
+#~ msgstr "プロキシなしで接続する"
+
+#~ msgid "Use explicit proxy settings"
+#~ msgstr "明示的なプロキシ設定を使用する"
+
+#~ msgid "Use from environment"
+#~ msgstr "環境からの使用"
 
 #, python-format
 #~ msgid "A user with the id \"%s\" does not exist."

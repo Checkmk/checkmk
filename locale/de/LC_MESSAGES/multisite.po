@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-08-26 18:35+0000\n"
+"PO-Revision-Date: 2025-09-01 19:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -4144,9 +4144,8 @@ msgstr "Aktion hinzufügen"
 msgid "Add new aggregation"
 msgstr "Neue Aggregation hinzufügen"
 
-#, fuzzy
 msgid "Add new credentials"
-msgstr "Zugangsdaten angeben"
+msgstr "Neue Zugangsdaten hinzufügen"
 
 msgid "Add new element"
 msgstr "Element hinzufügen"
@@ -7568,9 +7567,8 @@ msgstr "Einstellungen zur Berechtigung"
 msgid "Authorizations per DB security group"
 msgstr "Berechtigungen pro DB-Sicherheitsgruppe"
 
-#, fuzzy
 msgid "Authorized user"
-msgstr "Berechtigte Benutzer"
+msgstr "Berechtigter Benutzer"
 
 msgid "Auto"
 msgstr "Auto"
@@ -7595,6 +7593,10 @@ msgstr "Auto-Shrink aus"
 
 msgid "Auto shrink on"
 msgstr "Auto-Shrink an"
+
+#, fuzzy
+msgid "Auto-detect proxy settings for this network"
+msgstr "Unstetigkeitserkennnung für Hosts"
 
 msgid "Auto-disconnect time"
 msgstr "Automatische Abschaltzeit"
@@ -8526,13 +8528,15 @@ msgstr "Azure Datenbanken"
 msgid "Azure Load Balancer Health"
 msgstr "Azure Load Balancer Zustand"
 
-#, fuzzy
 msgid "Azure Redis CPU utilization"
-msgstr "GCP/Redis CPU-Auslastung"
+msgstr "Azure Redis CPU-Auslastung"
 
 #, fuzzy
+msgid "Azure Redis Cache effectiveness"
+msgstr "Azure Redis Verbindungen"
+
 msgid "Azure Redis connections"
-msgstr "Azure Datenbank-Verbindungen"
+msgstr "Azure Redis Verbindungen"
 
 msgid "Azure SQL database CPU usage"
 msgstr "CPU-Auslastung der Azure SQL-Datenbank"
@@ -10858,6 +10862,10 @@ msgstr "Cache Misses"
 
 msgid "Cache misses per second"
 msgstr "Cache Misses pro Sekunde"
+
+#, fuzzy
+msgid "Cache requests"
+msgstr "Fehlgeschlagene Anfragen"
 
 msgid "Cache several non-status queries"
 msgstr "Etliche statusfreie Anfragen zwischenspeichern"
@@ -14679,16 +14687,11 @@ msgstr "Verbindung über Unix-Socket"
 msgid "Connect without password"
 msgstr "Verbinden ohne Passwort"
 
-msgid "Connect without proxy"
-msgstr "Verbinden ohne Proxy"
-
-#, fuzzy
 msgid "Connected Clients"
-msgstr "Verbindungen"
+msgstr "Verbundene Clients"
 
-#, fuzzy
 msgid "Connected clients"
-msgstr "Anzahl der verbundenen Clients"
+msgstr "Verbundene Clients"
 
 msgid "Connecter and connectee sites must be different."
 msgstr ""
@@ -14803,13 +14806,11 @@ msgstr "Verbindungstyp"
 msgid "Connections"
 msgstr "Verbindungen"
 
-#, fuzzy
 msgid "Connections closed rate"
-msgstr "Verbindung spät fallen gelassen"
+msgstr "Rate an geschlossenen Verbindungen"
 
-#, fuzzy
 msgid "Connections created rate"
-msgstr "Verbindung spät fallen gelassen"
+msgstr "Rate an aufgebauten Verbindungen"
 
 msgid "Connections dropped"
 msgstr "Verbindungen fallen gelassen"
@@ -16023,6 +16024,10 @@ msgstr "Neue Zeitperiode %s erzeugt"
 #, python-format
 msgid "Created new users: %s"
 msgstr "Nutzer angelegt: %s"
+
+#, fuzzy, python-format
+msgid "Created relay '%s'"
+msgstr "Neue Rolle '%s' erzeugt"
 
 msgid "Created with Checkmk Version $CHECK_MK_VERSION$"
 msgstr "Erstellt mit Checkmk Version $CHECK_MK_VERSION$"
@@ -18464,6 +18469,10 @@ msgstr "Benachrichtigungsregel #%s wurde gelöscht"
 #, python-format
 msgid "Deleted notification rule %d of user %s"
 msgstr "Benachrichtigungsregel %d von Benutzer %s gelöscht"
+
+#, fuzzy, python-format
+msgid "Deleted relay '%s'"
+msgstr "Rolle '%s' gelöscht"
 
 #, python-format
 msgid "Deleted role '%s'"
@@ -21777,6 +21786,10 @@ msgstr "Host-Merkmalgruppe %s (%s) bearbeitet"
 #, python-format
 msgid "Edited properties of folder %s"
 msgstr "Eigenschaften von Ordner %s bearbeitet"
+
+#, fuzzy, python-format
+msgid "Edited relay '%s'"
+msgstr "Regel '%s' bearbeiten"
 
 #, python-format
 msgid "Edited rule in ruleset \"%s\" in folder \"%s\""
@@ -26344,6 +26357,10 @@ msgstr "Gerrit-Verbindung"
 msgid "Gerrit instance to query."
 msgstr "Abzufragende Gerrit-Instanz."
 
+#, fuzzy
+msgid "Get commands"
+msgstr "Keine Befehle"
+
 msgid "Get file from SFTP server"
 msgstr "Datei von SFTP-Server holen"
 
@@ -26430,6 +26447,10 @@ msgstr "Globale Einstellungen zum Suchbegriff '%s'"
 
 msgid "GlobalProtect Utilization"
 msgstr "GlobalProtect-Auslastung"
+
+#, fuzzy
+msgid "Globally configured proxy"
+msgstr "Verwendung eines global konfigurierten Proxy"
 
 msgid "Globbing pattern for input files"
 msgstr "Globbing Pattern für Eingabedateien"
@@ -28355,6 +28376,10 @@ msgstr "Historie der Benachrichtigungen"
 
 msgid "History of scheduled downtimes"
 msgstr "Historie der Wartungszeiten"
+
+#, fuzzy
+msgid "Hit ratio"
+msgstr "Initialisierungsdauer"
 
 msgid "Hits"
 msgstr "Zugriffe"
@@ -32393,13 +32418,13 @@ msgstr ""
 "Prozesse, die Lesezugriff auf diese Datei haben, können die graphische "
 "Benutzeroberfläche (GUI) ohne weitere Konfiguration als Webdienst nutzen."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "If you want to continue to use Checkmk and keep your data, please contact "
 "the Checkmk sales team at %s."
 msgstr ""
-"Wenn Sie Checkmk weiterhin nutzen möchten, kontaktieren Sie das Checkmk-"
-"Verkaufsteam unter %s."
+"Wenn Sie Checkmk weiterhin nutzen und Ihre Daten behalten möchten, "
+"kontaktieren Sie das Checkmk-Verkaufsteam unter %s."
 
 #, python-format
 msgid ""
@@ -36703,13 +36728,13 @@ msgstr "Lizenz ausgesetzt: Kontaktieren Sie jetzt das Checkmk-Verkaufsteam"
 msgid "License suspended: Contact Checkmk sales team now."
 msgstr "Lizenz ausgesetzt: Kontaktieren Sie jetzt das Checkmk-Verkaufsteam."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "License terminated. Your license expires in %d days. Renew license now to "
 "avoid site deletion."
 msgstr ""
-"Die Lizenz ist abgelaufen: Erneuern Sie Ihre Lizenz jetzt, um die Löschung "
-"der Instanz zu vermeiden."
+"Lizenz endet bald. Ihre Lizenz läuft in %d Tagen ab. Verlängern Sie Ihre "
+"Lizenz jetzt, um zu verhindern, dass Ihre Instanz gelöscht wird."
 
 msgid "License usage"
 msgstr "Lizenznutzung"
@@ -38844,6 +38869,10 @@ msgstr "Manuelle Konfiguration"
 
 msgid "Manual page for this check type"
 msgstr "Dokumentation für diesen Check-Typ"
+
+#, fuzzy
+msgid "Manual proxy configuration"
+msgstr "Manuelle Konfiguration"
 
 msgid "Manual snapshots"
 msgstr "Manuelle Schnappschüsse"
@@ -41801,9 +41830,8 @@ msgstr "Name der Gruppe"
 msgid "Name of group in service name"
 msgstr "Name der Gruppe in Service-Name"
 
-#, fuzzy
 msgid "Name of group2"
-msgstr "Name der Gruppe"
+msgstr "Name der Gruppe2"
 
 msgid "Name of indice"
 msgstr "Name des Indexes"
@@ -42099,9 +42127,8 @@ msgstr ""
 msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "Negation: Host, die das Paket <b>nicht</b> haben"
 
-#, fuzzy
 msgid "Negative age tolerance"
-msgstr "Negative Werte sind nicht erlaubt"
+msgstr ""
 
 msgid "Negative match (Exclude matching hosts from the set)"
 msgstr ""
@@ -44284,9 +44311,8 @@ msgstr "Anzahl von Anmeldefehlern bis zu Sperrung"
 msgid "Number of matching rules in this pack: %d"
 msgstr "Anzahl zutreffender Regeln in diesem Paket: %d"
 
-#, fuzzy
 msgid "Number of max hops"
-msgstr "Anzahl der Hops"
+msgstr "Anzahl der maximalen Hops"
 
 msgid "Number of messages currently queued"
 msgstr "Anzahl von Meldungen in der Warteschlange"
@@ -47728,6 +47754,10 @@ msgstr "Passwort existiert nicht oder Nutzung nicht erlaubt"
 
 msgid "Password does not exist or using not permitted."
 msgstr "Passwort existiert nicht oder Nutzung ist nicht erlaubt."
+
+#, fuzzy
+msgid "Password field can not be empty"
+msgstr "Das Passwort darf nicht leer sein"
 
 msgid "Password for binding, if your server requires an authentication"
 msgstr "Anmeldepasswort, falls der Server Authentifizierung erfordert"
@@ -58009,9 +58039,8 @@ msgstr "Größe der Agenten"
 msgid "Size of core"
 msgstr "Größe des Kerns"
 
-#, fuzzy
 msgid "Size of crashes"
-msgstr "Größe des Kerns"
+msgstr ""
 
 msgid "Size of deferred mail queue"
 msgstr "Größe der Deferred-Mailqueue"
@@ -59087,10 +59116,10 @@ msgid "Specify sites this OpenTelemetry collector should run on."
 msgstr ""
 "Geben Sie Instanzen an, auf denen der OpenTelemetry-Kollektor laufen soll."
 
-#, fuzzy
 msgid "Specify sites this OpenTelemetry collector should run on. "
 msgstr ""
-"Geben Sie Instanzen an, auf denen der OpenTelemetry-Kollektor laufen soll."
+"Geben Sie Instanzen an, auf denen dieser OpenTelemetry-Kollektor laufen "
+"soll. "
 
 msgid "Specify storage account names that the rule should apply to"
 msgstr ""
@@ -62162,6 +62191,10 @@ msgstr "Tests"
 msgid "Text"
 msgstr "Text"
 
+#, fuzzy
+msgid "Text field can not be empty"
+msgstr "Die Eingabe darf nicht leer sein"
+
 msgid "Text groups from regular expression match, separated by spaces"
 msgstr "Textgruppen von regulären Ausdrücken, mit Leerzeichen separiert"
 
@@ -64305,6 +64338,9 @@ msgid ""
 "The file age of files with creation time from the future will be set to 0 if "
 "the creation time is within the tolerance period."
 msgstr ""
+"Das Dateialter von Dateien mit einem Erstellungszeitpunkt in der Zukunft "
+"wird auf 0 gesetzt, wenn der Erstellungszeitpunkt innerhalb der "
+"Toleranzperiode liegt."
 
 msgid "The file does not contain XML text"
 msgstr "Die Datei enthält keinen XML-Text"
@@ -71395,21 +71431,27 @@ msgstr ""
 "Sie den Checkmk Micro Core mit Smart Ping verwenden und trotzdem die "
 "Metriken des Ping zu einigen Hosts verfolgen wollen."
 
-#, fuzzy
 msgid ""
 "This ruleset allows you to configure levels for Azure Redis CPU utilization "
 "monitoring"
 msgstr ""
-"Dieser Regelsatz ermöglicht es Ihnen, Levels für die CPU-Nutzung der "
-"Datenbank zu konfigurieren"
+"Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring der CPU-"
+"Nutzung für Azure Redis zu konfigurieren"
 
 #, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis Cache "
+"effectiveness monitoring"
+msgstr ""
+"Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring von Azure "
+"Redis Verbindungen zu konfigurieren"
+
 msgid ""
 "This ruleset allows you to configure levels for Azure Redis connections "
 "monitoring"
 msgstr ""
-"Dieser Regelsatz ermöglicht es Ihnen, Levels für den genutzten Speicherplatz "
-"in Prozent zu konfigurieren"
+"Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring von Azure "
+"Redis Verbindungen zu konfigurieren"
 
 msgid "This ruleset allows you to configure levels for the Storage data flows"
 msgstr ""
@@ -78007,9 +78049,6 @@ msgstr ""
 msgid "Use explicit names"
 msgstr "Verwenden Sie explizite Namen"
 
-msgid "Use explicit proxy settings"
-msgstr "Explizite Proxy-Einstellungen verwenden"
-
 msgid "Use explicit service names and ignore overall AWS tags"
 msgstr ""
 "Explizite Service-Namen verwenden und allgemeine AWS-Merkmale ignorieren"
@@ -78020,17 +78059,11 @@ msgstr "Feste Breite (relativ zur Schriftgröße) verwenden"
 msgid "Use for all connections"
 msgstr "Für alle Verbindungen verwenden"
 
-msgid "Use from environment"
-msgstr "Verwendung aus der Umgebung"
-
 msgid "Use global connection parameters"
 msgstr "Globale Verbindungsparameter nutzen"
 
 msgid "Use global rule limit"
 msgstr "Globales Regel-Limit nutzen"
-
-msgid "Use globally configured proxy"
-msgstr "Verwendung eines global konfigurierten Proxy"
 
 msgid "Use graph title"
 msgstr "Benutze Graphtitel"
@@ -84201,6 +84234,7 @@ msgstr ""
 #, python-format
 msgid "You have a grace period of %d days before your site is deleted. "
 msgstr ""
+"Sie haben eine Karenzzeit von %d Tagen, bevor Ihre Instanz gelöscht wird. "
 
 msgid ""
 "You have an agent updater rule configured that enables use of plain text "
@@ -84861,9 +84895,9 @@ msgstr ""
 "angeben. Zum Beispiel müssen Sie \\\\ statt \\ verwenden, wenn Sie nach "
 "einem einzelnen Backslash suchen möchten."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Your license expires on %s. "
-msgstr "Ihre Lizenz ist am %s abgelaufen. "
+msgstr "Ihre Lizenz läuft am %s ab. "
 
 #, python-format
 msgid ""
@@ -87317,6 +87351,15 @@ msgid ""
 msgstr ""
 "\"Änderungen aktivieren\" ist blockiert, bis Sie Ihr Service-Limit "
 "unterschritten haben. Wenn Sie Ihr Service-Limit erhöhen möchten, "
+
+#~ msgid "Connect without proxy"
+#~ msgstr "Verbinden ohne Proxy"
+
+#~ msgid "Use explicit proxy settings"
+#~ msgstr "Explizite Proxy-Einstellungen verwenden"
+
+#~ msgid "Use from environment"
+#~ msgstr "Verwendung aus der Umgebung"
 
 #, python-format
 #~ msgid "A user with the id \"%s\" does not exist."

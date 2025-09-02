@@ -1835,7 +1835,6 @@ dependencies = [
  "flexi_logger",
  "futures",
  "log",
- "openssl",
  "oracle",
  "rayon",
  "tempfile",

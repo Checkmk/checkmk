@@ -1,5 +1,5 @@
 {
-  "checksum": "a9bb5e656edd44902cf01cfdf3bb52dff929614bd4b8246357ee2b7e6a3f74e7",
+  "checksum": "f231b3f947e196341af2e8735f2da561ce2ee9a6d3a46b87f24aab5dbe208047",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -11055,10 +11055,6 @@
             {
               "id": "log 0.4.27",
               "target": "log"
-            },
-            {
-              "id": "openssl 0.10.73",
-              "target": "openssl"
             },
             {
               "id": "oracle 0.6.3",

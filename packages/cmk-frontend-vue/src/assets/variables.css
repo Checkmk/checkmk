@@ -111,6 +111,7 @@
   --icon-opentelemetry: url('~cmk-frontend/themes/facelift/images/icon_opentelemetry.svg');
   --icon-dashboard: url('~cmk-frontend/themes/facelift/images/icon_dashboard.svg');
   --icon-dashboard-problems: url('~cmk-frontend/themes/facelift/images/icon_dashboard_problems.svg');
+  --icon-dashboard-grid: url('~cmk-frontend/themes/facelift/images/icon_dashboard_grid.svg');
   --icon-svc-problems: url('~cmk-frontend/themes/facelift/images/icon_svc_problems.svg');
   --icon-timeperiods: url('~cmk-frontend/themes/facelift/images/icon_timeperiods.svg');
   --icon-hostgroups: url('~cmk-frontend/themes/facelift/images/icon_hostgroups.svg');
@@ -118,6 +119,7 @@
   --icon-analysis: url('~cmk-frontend/themes/facelift/images/icon_analysis.svg');
   --icon-new: url('~cmk-frontend/themes/facelift/images/icon_new.svg');
   --icon-copied: url('~cmk-frontend/themes/facelift/images/icon_copied.svg');
+  --icon-global-settings: url('~cmk-frontend/themes/facelift/images/icon_global_settings.svg');
 
   --icon-topic-administration: url('~cmk-frontend/themes/facelift/images/icon_topic_administration.png');
   --icon-topic-agents: url('~cmk-frontend/themes/facelift/images/icon_topic_agents.png');

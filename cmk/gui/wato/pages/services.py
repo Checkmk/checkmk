@@ -766,7 +766,7 @@ class DiscoveryPageRenderer:
                         request=request,
                     ),
                 )
-                if "[agent]" in output and state == 2:
+                if "[agent]" in output and state == 2 and "No cached data available" not in output:
                     html.open_td()
                     self._render_agent_download_tooltip(output)
                     html.close_td()

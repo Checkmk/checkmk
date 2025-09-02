@@ -2,6 +2,8 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import ipaddress
+import re
 import typing
 
 from cmk.rulesets.v1._localize import Message
@@ -69,3 +71,57 @@ def not_empty(error_msg: Message | None = None) -> LengthInRange:
         if error_msg is not None
         else Message("An empty value is not allowed here"),
     )
+
+
+class HostAddress:
+    """Validator that ensures the validated value is a hostname or IP address.
+
+    It does not resolve the hostname or check if the IP address is reachable.
+    """
+
+    def __init__(
+        self,
+        error_msg: Message = Message("Your input is not a valid hostname or IP address."),
+    ) -> None:
+        self.error_msg = error_msg
+
+    def _validate_ipaddress(self, value: str) -> None:
+        ipaddress.ip_address(value)
+
+    def _validate_hostname(self, value: str) -> None:
+        total_length = len(value)
+        if value.endswith("."):
+            value = value[:-1]
+            total_length -= 1
+
+        if total_length > 253:
+            raise ValidationError(self.error_msg)
+
+        labels = value.split(".")
+
+        if any(len(label) > 63 for label in labels):
+            raise ValidationError(self.error_msg)
+
+        pattern = r"(?!-)[a-z0-9-]{1,63}(?<!-)$"
+        allowed = re.compile(pattern, re.IGNORECASE)
+
+        # TLD must not be all numeric
+        if re.match(r"[0-9]+$", labels[-1]):
+            raise ValidationError(self.error_msg)
+
+        # Check each label
+        for label in labels:
+            if (not label) or (not allowed.match(label)):
+                raise ValidationError(self.error_msg)
+
+    def __call__(self, value: str) -> None:
+        if not value:
+            raise ValidationError(self.error_msg)
+
+        try:
+            self._validate_ipaddress(value)
+            return
+        except ValueError:
+            pass
+
+        self._validate_hostname(value)

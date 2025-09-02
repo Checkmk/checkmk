@@ -14,7 +14,7 @@ beautifulsoup4 = "==4.12.3"  # used by the GUI crawler and various tests
 boto3-stubs = {extras = ["logs"], version = "==1.34.15"}  # used for type checking, keep version in sync with boto3
 botocore-stubs = "==1.34.15"  # used for type checking, keep version in sync with botocore
 bson = "==0.5.10"  # used by test_mk_mongodb unit test
-checkmk-dev-tools = "==0.1.57"  # provides tooling for build artifacts
+checkmk-dev-tools = "==0.12.0"  # provides tooling for build artifacts
 compiledb = "==0.10.1"  # used by the Livestatus/CMC Makefiles for building compile_command.json
 devpi-client = "==7.0.2" # Managing the devpi server
 dill = "==0.3.8"
@@ -102,7 +102,7 @@ webtest = "==3.0.0"  # used by WSGI based tests
 setuptools = "<79"  # workaround for mypy/pylint issues introduced by https://github.com/pypa/setuptools/pull/4953
 setuptools-scm = "==4.1.2"  # needed by various setup.py
 six = "==1.16.0"  # direct dependency + needed by python-dateutil, vcrpy, python-active-directory
-python-dateutil = "==2.8.2"  # direct dependency
+python-dateutil = "==2.9.0.post0"  # direct dependency
 pyyaml = "==6.0.1"  # needed by vcrpy
 wrapt = "==1.15.0"  # needed by vcrpy
 multidict = "==6.0.4"  # needed by yarl
@@ -118,7 +118,7 @@ pysnmp-lextudio = "==5.0.31"  # needed by Event Console
 snmpsim-lextudio = "==1.0.5"  # needed by pysnmp integration tests
 urllib3 = "~=1.26.15"  # needed by requests
 pyopenssl = "==24.0.0"
-pbr = "==5.11.1"  # needed by jira
+pbr = "==7.0.1"  # needed by jira
 pyghmi = "==1.5.60"  # needed by base for IPMI
 requests = "~=2.31"
 requests-kerberos = "==0.14.0"  # needed by check_bi_aggr
@@ -160,8 +160,8 @@ marshmallow = "==3.19.0"  # direct dependency
 marshmallow-oneofschema = "==3.0.1"  # direct dependency
 oracledb = "==2.5.1"  # used by active check_sql
 apispec-oneofschema = "==3.0.0"  # direct dependency
-pydantic = "==2.9.0"
-pydantic_core = "==2.23.2"  # used by pydantic and by us
+pydantic = "==2.11.7"
+pydantic_core = "==2.33.2"  # used by pydantic and by us
 annotated-types = "==0.7.0"  # provides validators for pydantic2
 paho-mqtt = "==1.6.1"  # needed for MQTT special agent
 python-active-directory = "==2.0.1"
@@ -200,7 +200,7 @@ pyjwt = {version = "*", extras = ["crypto"]}  # used for SSO via OAUTH2
 GitPython = "~=3.1"  # used for werk collecting
 icalendar = "==5.0.7"  # used for importing .ical files
 recurring_ical_events = "==2.0.2"  # used for parsing recurring events in icalendar objects
-typing-extensions = "==4.9.0"
+typing-extensions = "==4.15.0"
 xmltodict = "==0.13.0" # used for parsing robotmk test results
 netapp-ontap = "==9.14.1.0"  # used by netapp special agent
 redfish = "~= 3.2.2"  # used for management board monitoring via Redfish, used by optional MKP

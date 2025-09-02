@@ -15,7 +15,7 @@ from tests.gui_e2e.testlib.playwright.pom.dashboard import Dashboard
 
 @pytest.mark.parametrize("snapin_id", [("snapin_container_time"), ("snapin_container_speedometer")])
 def test_add_remove_snapin(dashboard_page: Dashboard, snapin_id: str) -> None:
-    """add and remove a snapin (aka a sidebar element)"""
+    """Add and remove a snapin (aka a sidebar element)"""
 
     add_sidebar_element_page = AddSidebarElement(dashboard_page.page)
     add_sidebar_element_page.add_snapin_to_sidebar(snapin_id)

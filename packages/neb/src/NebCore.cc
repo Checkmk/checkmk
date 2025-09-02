@@ -644,6 +644,8 @@ bool NebCore::pnp4nagiosEnabled() const {
     return true;  // TODO(sp) ???
 }
 
+bool NebCore::isShuttingDown() const { return false; }
+
 void NebCore::logRequest(const std::string &line,
                          const std::vector<std::string> &lines) {
     Informational log(_logger);

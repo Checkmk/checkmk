@@ -267,11 +267,10 @@ class DummyMonitoringCore : public ICore {
         return {};
     }
     [[nodiscard]] bool pnp4nagiosEnabled() const override { return {}; }
+    [[nodiscard]] bool isShuttingDown() const override { return {}; }
 
 private:
     Triggers triggers_;
-
-    [[nodiscard]] void *implInternal() const override { return {}; }
 };
 
 #endif  // DummyMonitoringCore_h

@@ -187,15 +187,7 @@ public:
         const std::string &host_name, const std::string &service_description,
         const Metric::Name &var) const = 0;
     [[nodiscard]] virtual bool pnp4nagiosEnabled() const = 0;
-
-    // Our escape hatch, this should die in the long run...
-    template <typename T>
-    [[nodiscard]] T *impl() const {
-        return static_cast<T *>(implInternal());
-    }
-
-private:
-    [[nodiscard]] virtual void *implInternal() const = 0;
+    [[nodiscard]] virtual bool isShuttingDown() const = 0;
 };
 
 #endif  // ICore_h

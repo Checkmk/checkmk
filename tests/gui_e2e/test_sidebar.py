@@ -30,10 +30,10 @@ def test_add_remove_snapin(dashboard_page: Dashboard, snapin_id: str) -> None:
 def test_monitor_searchbar(dashboard_page: Dashboard) -> None:
     """Navigate to the CPU inventory from the monitor searchbar."""
 
-    dashboard_page.main_menu.monitor_searchbar.fill("all hosts")
+    dashboard_page.main_menu.global_searchbar.fill("all hosts")
 
-    expect(dashboard_page.locator("#Monitor")).to_contain_text("All hosts")
-    expect(dashboard_page.locator("#Monitor")).to_contain_text("CPU inventory of all hosts")
+    expect(dashboard_page.locator(".result-list")).to_contain_text("All hosts")
+    expect(dashboard_page.locator(".result-list")).to_contain_text("CPU inventory of all hosts")
 
     dashboard_page.press_keyboard(Keys.ArrowDown)
     dashboard_page.press_keyboard(Keys.ArrowDown)

@@ -35,13 +35,20 @@ class Ruleset(CmkPage):
     @override
     def navigate(self) -> None:
         logger.info("Navigate to '%s' page", self.rule_name)
-        self.main_menu.setup_searchbar.fill(self.rule_name)
+        self.main_menu.global_searchbar.fill(self.rule_name)
+
+        results_root = ".cmk-unified-search-result-tabs"
+        results = self.main_menu.locator(results_root).get_by_role(role="listitem")
+        rule_pattern = re.compile(f"{re.escape(self.rule_name)}$")
+
         if self.section_name:
-            self.main_menu.locator(f"div[id='{self.section_name}']").get_by_role(
-                role="link", name=self.rule_name, exact=self._exact
-            ).click()
+            selection = results.filter(has_text=self.section_name).get_by_role(
+                role="link", name=rule_pattern, exact=self._exact
+            )
         else:
-            self.main_menu.locator().get_by_role(role="link", name=self.rule_name).click()
+            selection = results.get_by_role(role="link", name=rule_pattern)
+
+        selection.click()
         self.page.wait_for_url(url=re.compile(quote_plus("mode=edit_ruleset")), wait_until="load")
         self.validate_page()
 

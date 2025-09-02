@@ -223,6 +223,10 @@ class MainMenu(LocatorHelper):
     def main_page(self) -> Locator:
         return self._sub_menu("Go to main page", sub_menu=None)
 
+    def search_menu(self) -> Locator:
+        """main menu -> Open search -> focus on search input"""
+        return self._sub_menu("Search", None)
+
     def monitor_menu(
         self, sub_menu: str | None = None, show_more: bool = False, exact: bool = False
     ) -> Locator:
@@ -262,11 +266,19 @@ class MainMenu(LocatorHelper):
         self.help_menu(rest_api_text)
         return self._sub_menu(rest_api_text, sub_menu, show_more=False, exact=exact)
 
-    def _searchbar(self, menu: Literal["Setup", "Monitor"], searchbar_name: str) -> Locator:
+    def _searchbar(
+        self, menu: Literal["Search", "Setup", "Monitor"], searchbar_name: str
+    ) -> Locator:
         self._sub_menu(menu, sub_menu=None).click()
         _location = self.locator().get_by_role(role="textbox", name=searchbar_name)
         self._unique_web_element(_location)
         return _location
+
+    @property
+    def global_searchbar(self) -> Locator:
+        return self._searchbar(
+            menu="Search", searchbar_name="Search across Checkmk – Type '/' for search operators"
+        )
 
     @property
     def monitor_searchbar(self) -> Locator:

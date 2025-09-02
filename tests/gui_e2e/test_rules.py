@@ -165,7 +165,7 @@ def test_create_rules(
         else nullcontext()
     ):
         # set up "Custom icons and actions"
-        dashboard_page.main_menu.setup_searchbar.fill("Custom icons and actions")
+        dashboard_page.main_menu.global_searchbar.fill("Custom icons and actions")
         dashboard_page.click_and_wait(
             dashboard_page.main_menu.locator().get_by_role(
                 role="link", name="Custom icons and actions"

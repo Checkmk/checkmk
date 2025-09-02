@@ -1066,7 +1066,7 @@ connection:
   hostname: "h1"
 alias: "a1"
 piggyback:
-  hostname: "piggy"
+  hostname: "Piggy"
   sections:
   cache_age: 123
 "#;
@@ -1438,7 +1438,7 @@ discovery:
         assert_eq!(instance.conn().hostname(), "h1".to_string().into());
         assert_eq!(instance.calc_real_host(), "h1".to_string().into());
         assert_eq!(instance.alias(), &Some("a1".to_string().into()));
-        assert_eq!(instance.piggyback().unwrap().hostname(), "piggy");
+        assert_eq!(instance.piggyback().unwrap().hostname(), "Piggy");
         assert_eq!(instance.piggyback().unwrap().sections().cache_age(), 123);
     }
 

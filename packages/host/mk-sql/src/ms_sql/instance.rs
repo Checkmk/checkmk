@@ -119,7 +119,7 @@ impl SqlInstanceBuilder {
         self
     }
     pub fn piggyback(mut self, piggyback: Option<PiggybackHostName>) -> Self {
-        self.piggyback = piggyback.map(|s| s.to_string().to_lowercase().into());
+        self.piggyback = piggyback.map(|s| s.to_string().into());
         self
     }
 
@@ -2633,7 +2633,7 @@ mod tests {
             "\
              <<<mssql_instance:sep(124)>>>\n\
              MSSQL_A|config|||\n\
-             <<<<y>>>>\n\
+             <<<<Y>>>>\n\
              <<<mssql_instance:sep(124)>>>\n\
              MSSQL_B|config|||\n\
              <<<<>>>>\n\
@@ -2673,7 +2673,7 @@ mssql:
         <<<mssql_instance:sep(124)>>>\n\
         ";
         const EXPECTED_PB_BLOCK: &str = "\
-        <<<<y>>>>\n\
+        <<<<Y>>>>\n\
         <<<mssql_instance:sep(124)>>>\n\
         <<<mssql_backup:sep(124)>>>\n\
         <<<mssql_instance:sep(124)>>>\n\
@@ -2703,7 +2703,7 @@ mssql:
             .name("test_name")
             .piggyback(Some("Y".to_string().into()))
             .build();
-        assert_eq!(piggyback.generate_header(), "<<<<y>>>>\n");
+        assert_eq!(piggyback.generate_header(), "<<<<Y>>>>\n");
         assert_eq!(piggyback.generate_footer(), "<<<<>>>>\n");
     }
 
@@ -2754,7 +2754,7 @@ mssql:
         assert_eq!(s.port, Some(Port(2u16)));
         assert_eq!(s.dynamic_port, Some(Port(1u16)));
 
-        assert_eq!(s.piggyback(), &Some("piggyback".to_string().into()));
+        assert_eq!(s.piggyback(), &Some("piggYback".to_string().into()));
         assert_eq!(s.computer_name(), &Some("computer_name".to_string().into()));
         assert_eq!(s.temp_dir(), Some(Path::new(".")));
         assert_eq!(s.full_name(), "localhost/NAME");

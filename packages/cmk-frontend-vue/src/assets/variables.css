@@ -156,6 +156,14 @@
   --icon-topic-synthetic-monitoring: url('~cmk-frontend/themes/facelift/images/icon_synthetic_monitoring_topic.svg');
   --icon-topic-pagetype: url('~cmk-frontend/themes/facelift/images/icon_pagetype_topic.svg');
   --icon-topic-search: url('~cmk-frontend/themes/facelift/images/icon_main_search_active.svg');
+
+  --icon-event-console: url('~cmk-frontend/themes/facelift/images/icon_event_console.svg');
+  --icon-graph: url('~cmk-frontend/themes/facelift/images/icon_graph.svg');
+  --icon-view: url('~cmk-frontend/themes/facelift/images/icon_view.svg');
+  --icon-site-overview: url('~cmk-frontend/themes/facelift/images/icon_site_overview.svg');
+  --icon-inventory: url('~cmk-frontend/themes/facelift/images/icon_inventory.svg');
+  --icon-alerts: url('~cmk-frontend/themes/facelift/images/icon_alerts.svg');
+  --icon-static-text: url('~cmk-frontend/themes/facelift/images/icon_static_text.svg');
 }
 
 @layer theme {
@@ -197,6 +205,8 @@
     --icon-export-link: url('~cmk-frontend/themes/facelift/images/icon_export_link.svg');
     --icon-reload: url('~cmk-frontend/themes/facelift/images/icon_reload_cmk.svg');
     --icon-toggle-off: url('~cmk-frontend/themes/facelift/images/icon_toggle_off.svg');
+
+    --icon-add: url('~cmk-frontend/themes/facelift/images/emblem_add.svg');
 
     /* Colors */
     --default-submit-button-border-color: var(--success-dimmed);
@@ -267,6 +277,8 @@
     --icon-reload: url('~cmk-frontend/themes/modern-dark/images/icon_reload_cmk.svg');
     --icon-main-changes: url('~cmk-frontend/themes/modern-dark/images/icon_main_changes.svg');
     --icon-assign: url('~cmk-frontend/themes/modern-dark/images/icon_assign.svg');
+
+    --icon-add: url('~cmk-frontend/themes/modern-dark/images/emblem_add.svg');
 
     /* Colors */
     --default-submit-button-border-color: rgb(8 94 61);

@@ -1,0 +1,32 @@
+<!--
+Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+conditions defined in the file COPYING, which is part of this source code package.
+-->
+<script setup lang="ts">
+import CmkIcon from '@/components/CmkIcon.vue'
+
+defineProps<{ icon: string; icon_emblem?: string | undefined }>()
+</script>
+
+<template>
+  <div class="icon-with-emblem__wrapper">
+    <CmkIcon :name="icon" size="xxlarge" />
+    <div v-if="icon_emblem" class="icon-with-emblem__icon_emblem">
+      <CmkIcon :name="icon_emblem" size="large" />
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.icon-with-emblem__icon_emblem {
+  position: absolute;
+  bottom: -5px;
+  right: -5px;
+}
+
+.icon-with-emblem__wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+</style>

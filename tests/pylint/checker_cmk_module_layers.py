@@ -686,7 +686,7 @@ COMPONENTS = {
     Component("cmk.base.core.cee"): _allowed_for_base_cee,
     Component("cmk.base"): _allowed_for_base,
     Component("cmk.bi"): _is_default_allowed_import,
-    Component("cmk.cmkcert"): _allow_for_cmkcert,
+    Component("cmk.cmkcert"): _allow(*PACKAGE_CCC, *PACKAGE_MESSAGING, "cmk.utils"),
     Component("cmk.cmkpasswd"): _allow_for_cmkpasswd,
     Component("cmk.checkengine.value_store"): _allow("cmk.utils", "cmk.ccc"),
     Component("cmk.checkengine"): _allow(
@@ -1003,7 +1003,7 @@ class CMKModuleLayerChecker(BaseChecker):
 
         assert node.modname
 
-        imported = [node.modname]  # TODO: deal with 'from cmk import something'
+        imported = [f"{node.modname}.{n}" for n, _ in node.names]
         for modname in imported:
             self._check_import(
                 node,

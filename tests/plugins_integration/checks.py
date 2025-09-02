@@ -5,6 +5,7 @@
 import json
 import logging
 import os
+import pprint
 import re
 import shlex
 import subprocess
@@ -202,6 +203,13 @@ def process_check_output(
     check_results = {
         _: item.get("extensions") for _, item in get_check_results(site, host_name).items()
     }
+
+    if config.mode == CheckModes.DEFAULT:
+        assert len(check_results) == len(check_canons), (
+            f"Number of services found for host {host_name} has changed:\n"
+            f"Expected: {len(check_canons)}, Found: {len(check_results)}\n"
+            f"Diff: {pprint.pformat(set(check_canons) ^ set(check_results))}"
+        )
     for check_id, results in check_results.items():
         if check_id in (config.skipped_checks or []):
             logger.info("Check %s currently skipped", check_id)

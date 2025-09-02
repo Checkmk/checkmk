@@ -1,11 +1,23 @@
+#!/usr/bin/env python3
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+from typing import final
+
 import httpx
 from fastapi.testclient import TestClient
 
 from cmk.relay_protocols.tasks import TaskType
 
 
-class RelayProxy:
-    """Proxy for /relay routes that builds URLs with the site_name."""
+@final
+class AgentReceiverClient:
+    """A wrapper class that gives more human readable api for writing tests
+
+    It gives still direct access to the APIs and generally returns the raw api responses
+
+    """
 
     def __init__(self, client: TestClient, site_name: str) -> None:
         self.client = client

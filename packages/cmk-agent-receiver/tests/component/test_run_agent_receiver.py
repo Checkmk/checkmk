@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from .test_lib.relay_proxy import RelayProxy
+from .test_lib.agent_receiver import AgentReceiverClient
 
 
-def test_health_check(relay_proxy: RelayProxy) -> None:
-    response = relay_proxy.client.get(f"/{relay_proxy.site_name}/agent-receiver/openapi.json")
+def test_health_check(agent_receiver: AgentReceiverClient) -> None:
+    response = agent_receiver.client.get(f"/{agent_receiver.site_name}/agent-receiver/openapi.json")
     assert response.status_code == 200

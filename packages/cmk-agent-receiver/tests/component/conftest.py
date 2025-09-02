@@ -11,8 +11,8 @@ from fastapi.testclient import TestClient
 
 from cmk.agent_receiver.main import main_app
 
+from .test_lib.agent_receiver import AgentReceiverClient
 from .test_lib.container import Container, run_container
-from .test_lib.relay_proxy import RelayProxy
 from .test_lib.site_mock import SiteMock
 from .test_lib.wiremock import Wiremock
 
@@ -23,7 +23,7 @@ def site_name() -> str:
 
 
 @pytest.fixture()
-def agent_receiver_test_client(site_name: str, tmp_path: pathlib.Path) -> TestClient:
+def test_client(site_name: str, tmp_path: pathlib.Path) -> TestClient:
     # setting up some checkmk stuff required by the agent receiver
     base_dir = tmp_path / site_name
     os.environ["OMD_ROOT"] = str(base_dir)
@@ -36,11 +36,6 @@ def agent_receiver_test_client(site_name: str, tmp_path: pathlib.Path) -> TestCl
     app = main_app()
     client = TestClient(app)
     return client
-
-
-@pytest.fixture()
-def relay_proxy(agent_receiver_test_client: TestClient, site_name: str) -> RelayProxy:
-    return RelayProxy(agent_receiver_test_client, site_name)
 
 
 @pytest.fixture(scope="session")
@@ -66,3 +61,8 @@ def site(wiremock: Wiremock) -> SiteMock:
     Create a site mock instance.
     """
     return SiteMock(wiremock=wiremock)
+
+
+@pytest.fixture
+def agent_receiver(test_client: TestClient, site_name: str) -> AgentReceiverClient:
+    return AgentReceiverClient(test_client, site_name)

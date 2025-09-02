@@ -4,13 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import uuid
+from http import HTTPStatus
 
-from .test_lib.relay_proxy import RelayProxy
-from .test_lib.relays import register_relay, unregister_relay
-from .test_lib.tasks import get_all_relay_tasks
+from .test_lib.agent_receiver import AgentReceiverClient
 
 
-def test_a_relay_can_be_unregistered(relay_proxy: RelayProxy) -> None:
+def test_a_relay_can_be_unregistered(agent_receiver: AgentReceiverClient) -> None:
     """
     Test CT-2. Description:
 
@@ -24,20 +23,17 @@ def test_a_relay_can_be_unregistered(relay_proxy: RelayProxy) -> None:
     """
 
     relay_id_A = str(uuid.uuid4())
-    register_relay(relay_id_A, relay_proxy)
+    agent_receiver.register_relay(relay_id_A)
 
     relay_id_B = str(uuid.uuid4())
-    register_relay(relay_id_B, relay_proxy)
+    agent_receiver.register_relay(relay_id_B)
 
-    unregister_relay(relay_id_A, relay_proxy)
+    agent_receiver.unregister_relay(relay_id_A)
 
     # Verify relay B have tasks queue
-    tasks_B = get_all_relay_tasks(relay_proxy, relay_id_B)
-    assert len(tasks_B.tasks) == 0
+    resp = agent_receiver.get_all_relay_tasks(relay_id_B)
+    assert resp.status_code == HTTPStatus.OK
 
-    get_all_relay_tasks(
-        relay_proxy,
-        relay_id_A,
-        expected_status_code=404,
-        expected_error_message=f"Relay with ID {relay_id_A} not found",
-    )
+    resp = agent_receiver.get_all_relay_tasks(relay_id_A)
+    assert resp.status_code == HTTPStatus.NOT_FOUND
+    assert resp.json()["detail"] == f"Relay with ID {relay_id_A} not found"

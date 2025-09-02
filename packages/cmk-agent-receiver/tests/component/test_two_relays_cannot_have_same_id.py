@@ -4,15 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import uuid
+from http import HTTPStatus
 
-from starlette.status import HTTP_409_CONFLICT
-
-from .test_lib.relay_proxy import RelayProxy
-from .test_lib.relays import register_relay
+from .test_lib.agent_receiver import AgentReceiverClient
 
 
 def test_two_relays_cannot_have_the_same_id(
-    relay_proxy: RelayProxy,
+    agent_receiver: AgentReceiverClient,
 ) -> None:
     """
     Test CT-3. Description:
@@ -22,5 +20,8 @@ def test_two_relays_cannot_have_the_same_id(
     """
 
     relay_id = str(uuid.uuid4())
-    register_relay(relay_id, relay_proxy)
-    register_relay(relay_id, relay_proxy, expected_status_code=HTTP_409_CONFLICT)
+    resp = agent_receiver.register_relay(relay_id)
+    assert resp.status_code == HTTPStatus.OK
+
+    resp = agent_receiver.register_relay(relay_id)
+    assert resp.status_code == HTTPStatus.CONFLICT

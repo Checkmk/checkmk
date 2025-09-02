@@ -482,10 +482,10 @@ class OverridableInstances(Generic[_T]):
             elif page.is_published_to_me() and page.may_see():
                 if page.is_public_forced():
                     forced = page
-                elif page.is_builtin():
-                    builtin = page
                 else:
                     foreign = page
+            elif page.is_builtin():
+                builtin = page
 
         if mine:
             return mine
@@ -697,8 +697,10 @@ class Overridable(Base[_T_OverridableSpec]):
         """Whether or not a user is allowed to see an instance
 
         Same logic as `permitted_instances_sorted`."""
-        return (self.is_mine() and self.may_see()) or (
-            not self.is_mine() and self.is_published_to_me() and self.may_see()
+        return (
+            (self.is_builtin() and self.may_see())
+            or (self.is_mine() and self.may_see())
+            or (not self.is_mine() and self.is_published_to_me() and self.may_see())
         )
 
     def may_delete(self) -> bool:

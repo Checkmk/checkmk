@@ -84,7 +84,7 @@ py_pytest_main(
 py_test(
     name = "unit",
     size = "small",
-    srcs = glob(["tests/**/*.py"]) + [":__test__.py"],
+    srcs = glob(["tests/unit/*.py"]) + [":__test__.py"],
     main = "__test__.py",
     deps = [
         ":__test__",

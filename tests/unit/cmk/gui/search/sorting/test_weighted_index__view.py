@@ -5,8 +5,6 @@
 
 import functools
 
-import pytest
-
 from cmk.gui.search.sorting import get_sorter
 from cmk.gui.search.type_defs import UnifiedSearchResultItem
 
@@ -30,7 +28,6 @@ def get_results_alphabetically() -> list[UnifiedSearchResultItem]:
     ]
 
 
-@pytest.mark.xfail(reason="CMK-25121: improve weighted sorting")
 def test_weighted_index_sorting_with_view_query() -> None:
     results = get_results_alphabetically()
     get_sorter("weighted_index", query="view")(results)
@@ -38,17 +35,17 @@ def test_weighted_index_sorting_with_view_query() -> None:
     value = [(result.title, result.topic) for result in results]
     expected = [
         ("Views", "Visualization"),  # customize
+        ("Certificate overview", "Setup"),
+        ("Cisco Meraki Organisation Licenses Overview", "Service monitoring rules"),
         ("Couchbase Node: Size of couch views", "Service monitoring rules"),
         ("Couchbase Node: Size of spacial views", "Service monitoring rules"),
         ("Hide hosttags in Setup folder view", "Global settings"),
         ("Limit the number of rows in View tables", "Global settings"),
         ("Sounds in Views", "Global settings"),
         ("Threshold for slow views", "Global settings"),
+        ("Cisco Meraki Organisation Licenses Overview", "Enforced services"),
         ("Couchbase Node: Size of couch views", "Enforced services"),
         ("Couchbase Node: Size of spacial views", "Enforced services"),
-        ("Certificate overview", "Setup"),
-        ("Cisco Meraki Organisation Licenses Overview", "Service monitoring rules"),
-        ("Cisco Meraki Organisation Licenses Overview", "Enforced services"),
     ]
 
     assert value == expected

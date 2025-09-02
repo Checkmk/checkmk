@@ -5,8 +5,6 @@
 
 import functools
 
-import pytest
-
 from cmk.gui.search.sorting import get_sorter
 from cmk.gui.search.type_defs import UnifiedSearchResultItem
 
@@ -38,7 +36,6 @@ def get_results_alphabetically() -> list[UnifiedSearchResultItem]:
     ]
 
 
-@pytest.mark.xfail(reason="CMK-25121: improve weighted sorting")
 def test_weighted_index_sorting_with_notifications_query() -> None:
     results = get_results_alphabetically()
     get_sorter("weighted_index", query="notifications")(results)
@@ -46,14 +43,14 @@ def test_weighted_index_sorting_with_notifications_query() -> None:
     value = [(result.title, result.topic) for result in results]
     expected = [
         ("Notifications", "Setup"),
+        ("Notifications of host & services", "Monitor"),
         ("Analyze recent notifications", "Setup"),
         ("Test notifications", "Setup"),
-        ("Push Notifications (using Pushover)", "Notification parameter"),
         ("Failed notifications", "Monitor"),
-        ("Notifications of host & services", "Monitor"),
         ("Delay host notifications", "Host monitoring rules"),
         ("Enable/disable notifications for hosts", "Host monitoring rules"),
         ("Periodic notifications during host problems", "Host monitoring rules"),
+        ("Push Notifications (using Pushover)", "Notification parameter"),
         ("Delay service notifications", "Service monitoring rules"),
         ("Enable/disable notifications for services", "Service monitoring rules"),
         ("Periodic notifications during service problems", "Service monitoring rules"),

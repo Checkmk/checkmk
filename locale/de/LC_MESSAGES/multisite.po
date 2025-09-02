@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-08-26 00:35+0000\n"
+"PO-Revision-Date: 2025-09-01 22:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -43823,9 +43823,8 @@ msgstr "Anzahl von Anmeldefehlern bis zu Sperrung"
 msgid "Number of matching rules in this pack: %d"
 msgstr "Anzahl zutreffender Regeln in diesem Paket: %d"
 
-#, fuzzy
 msgid "Number of max hops"
-msgstr "Anzahl der Hops"
+msgstr "Anzahl der maximalen Hops"
 
 msgid "Number of messages currently queued"
 msgstr "Anzahl von Meldungen in der Warteschlange"
@@ -58547,10 +58546,10 @@ msgid "Specify sites this OpenTelemetry collector should run on."
 msgstr ""
 "Geben Sie Instanzen an, auf denen der OpenTelemetry-Kollektor laufen soll."
 
-#, fuzzy
 msgid "Specify sites this OpenTelemetry collector should run on. "
 msgstr ""
-"Geben Sie Instanzen an, auf denen der OpenTelemetry-Kollektor laufen soll."
+"Geben Sie Instanzen an, auf denen dieser OpenTelemetry-Kollektor laufen "
+"soll. "
 
 msgid "Specify storage account names that the rule should apply to"
 msgstr ""

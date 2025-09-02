@@ -255,8 +255,18 @@ Only rely on non-standard modules that are mentioned in the `Pipfile`.
 ### File extensions
 
 All python files must have a `.py`-extension. 
-Vice versa all files with `.py`-extension must be valid python files.  
-Executable python scripts without file extension can be achieved via symbolic links.
+Vice versa all files with `.py`-extension must be valid python files.
+For a transition phase existing files are still tolerated.
+
+Executable python scripts should be replaced by shell wrappers like
+```
+#!/bin/sh
+# $LICENSE-TEXT
+ 
+exec python3 -m cmk.something.ninja_module "$@"
+```
+
+For the license text, please refer to [Copyright and Licensing](#copyright-and-licensing)
 
 ### Agent plugins: Supported Python versions
 

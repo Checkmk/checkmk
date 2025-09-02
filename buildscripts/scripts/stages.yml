@@ -28,6 +28,9 @@ VARIABLES:
     - NAME: CHANGED_FILES_REL_WITHOUT_DELETED_FILES
       SH: "git --no-pager diff --name-only --diff-filter=d ${BASE_COMMIT_ID}..HEAD | sort"
 
+    - NAME: CHANGED_FILES_WITH_MODE
+      SH: "git diff-tree --no-commit-id --name-status -r ${BASE_COMMIT_ID}..HEAD | sort"
+
     - NAME: CHANGED_MAKEFILE
       SH: "echo '${CHANGED_FILES_REL}' | grep '^Makefile' || true"
 
@@ -325,7 +328,13 @@ STAGES:
       DIR: "tests"
       ENV_VARS:
           PYTEST_ADDOPTS: "--color=no"
-      COMMAND: "make test-py-extensions &> ${RESULTS}/python-extensions.txt"
+      # CHANGED_FILES_WITH_MODE can be huge, so we use a file to transport the list
+      # also we need to explicitly handover the path variable to make test-py-extensions
+      COMMAND: |
+          CHANGED_FILES_WITH_MODE_FILE=$(mktemp)
+          echo "${CHANGED_FILES_WITH_MODE}" > $CHANGED_FILES_WITH_MODE_FILE
+          trap "rm -f $CHANGED_FILES_WITH_MODE_FILE" EXIT
+          CHANGED_FILES_WITH_MODE_FILE=$CHANGED_FILES_WITH_MODE_FILE RESULTS_FILE=${RESULTS}/python-extensions.txt make test-py-extensions
       BAZEL_LOCKS_AMOUNT: 1
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/python-extensions.txt"
@@ -338,6 +347,7 @@ STAGES:
           PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-file-content-junit.xml --color=no"
       # ${CHANGED_FILES_REL} can be huge, so we use a file to transport the list
       # to the pytest command. This will be tidied up with CMK-17048
+      # TODO: CHANGED_FILES_REL_FILE needs to be set in the environment for make test-file-content
       COMMAND: |
           CHANGED_FILES_REL_FILE=$(mktemp)
           echo "${CHANGED_FILES_REL}" > $CHANGED_FILES_REL_FILE

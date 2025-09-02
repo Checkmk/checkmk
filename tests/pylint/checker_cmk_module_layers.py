@@ -997,8 +997,13 @@ class CMKModuleLayerChecker(BaseChecker):
 
     @only_required_for_messages("cmk-module-layer-violation")
     def visit_importfrom(self, node: ImportFrom) -> None:
-        # handle 'from . import foo, bar'
-        imported = [node.modname] if node.modname else [n for n, _ in node.names]
+        if node.level in {1, 2}:
+            # This is a relative import. Assume this is fine.
+            return
+
+        assert node.modname
+
+        imported = [node.modname]  # TODO: deal with 'from cmk import something'
         for modname in imported:
             self._check_import(
                 node,

@@ -2,17 +2,19 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-
 import os
 import pathlib
+from collections.abc import Iterator
 
 import pytest
 from fastapi.testclient import TestClient
 
 from cmk.agent_receiver.main import main_app
 
+from .test_lib.container import Container, run_container
 from .test_lib.relay_proxy import RelayProxy
+from .test_lib.site_mock import SiteMock
+from .test_lib.wiremock import Wiremock
 
 
 @pytest.fixture()
@@ -39,3 +41,28 @@ def agent_receiver_test_client(site_name: str, tmp_path: pathlib.Path) -> TestCl
 @pytest.fixture()
 def relay_proxy(agent_receiver_test_client: TestClient, site_name: str) -> RelayProxy:
     return RelayProxy(agent_receiver_test_client, site_name)
+
+
+@pytest.fixture(scope="session")
+def wiremock_container() -> Iterator[Container]:
+    with run_container() as container:
+        yield container
+
+
+@pytest.fixture(scope="session")
+def wiremock(wiremock_container: Container) -> Wiremock:
+    """
+    Provide a Wiremock instance for the tests.
+    """
+    return Wiremock(
+        port=wiremock_container.port,
+        wiremock_hostname=wiremock_container.address,
+    )
+
+
+@pytest.fixture
+def site(wiremock: Wiremock) -> SiteMock:
+    """
+    Create a site mock instance.
+    """
+    return SiteMock(wiremock=wiremock)

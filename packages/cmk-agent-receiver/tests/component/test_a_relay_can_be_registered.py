@@ -4,9 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import uuid
+from http import HTTPMethod
+
+import httpx
 
 from .test_lib.relay_proxy import RelayProxy
 from .test_lib.relays import register_relay
+from .test_lib.site_mock import SiteMock
 from .test_lib.tasks import get_all_relay_tasks
 
 
@@ -32,3 +36,10 @@ def test_a_relay_can_be_registered(relay_proxy: RelayProxy) -> None:
 
     tasks_B = get_all_relay_tasks(relay_proxy, relay_id_B)
     assert len(tasks_B.tasks) == 0
+
+
+def test_contact_site(site: SiteMock) -> None:
+    site.wiremock.base_url
+    _ = httpx.get(f"{site.wiremock.base_url}/foo")
+    reqs = site.wiremock.get_all_url_path_requests("/foo", HTTPMethod.GET)
+    assert len(reqs) == 1

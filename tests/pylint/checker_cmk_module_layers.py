@@ -984,7 +984,7 @@ _EXPLICIT_FILE_TO_DEPENDENCIES = {
 class CMKModuleLayerChecker(BaseChecker):
     name = "cmk-module-layer-violation"
     msgs = {
-        "C8410": ("Import of %r not allowed in module %r", "cmk-module-layer-violation", "whoop?"),
+        "C8410": ("Import of %s not allowed in %r", "cmk-module-layer-violation", "whoop?"),
     }
 
     # This doesn't change during a pylint run, so let's save a realpath() call per import.
@@ -1032,8 +1032,11 @@ class CMKModuleLayerChecker(BaseChecker):
             return
 
         importing = self._get_module_name_of_files(importing_path)
-        if not self._is_import_allowed(importing_path, importing, imported):
-            self.add_message("cmk-module-layer-violation", node=node, args=(imported, importing))
+        component = self._find_component(importing, importing_path)
+        if not self._is_import_allowed(component, importing_path, imported):
+            self.add_message(
+                "cmk-module-layer-violation", node=node, args=(imported, component or importing)
+            )
 
     @staticmethod
     def _get_module_name_of_files(path: ModulePath) -> ModuleName:
@@ -1052,9 +1055,9 @@ class CMKModuleLayerChecker(BaseChecker):
         return ModuleName(p.parts[-1])
 
     def _is_import_allowed(
-        self, importing_path: ModulePath, importing: ModuleName, imported: ModuleName
+        self, component: Component | None, importing_path: ModulePath, imported: ModuleName
     ) -> bool:
-        if component := self._find_component(importing, importing_path):
+        if component:
             return COMPONENTS[component](imported=imported, component=component)
 
         try:

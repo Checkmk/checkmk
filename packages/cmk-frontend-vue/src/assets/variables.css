@@ -86,6 +86,7 @@
   --icon-edit: url('~cmk-frontend/themes/facelift/images/icon_edit.svg');
   --icon-load-graph: url('~cmk-frontend/themes/facelift/images/load_graph.png');
   --icon-filter: url('~cmk-frontend/themes/facelift/images/icon_filter.svg');
+  --icon-toggle-on: url('~cmk-frontend/themes/facelift/images/icon_toggle_on.svg');
 
   --icon-help-activated: url('~cmk-frontend/themes/facelift/images/icon_help_activated.svg');
   --icon-connection-tests: url('~cmk-frontend/themes/facelift/images/icon_connection_tests.svg');
@@ -198,6 +199,7 @@
     --icon-checkmark-plus: url('~cmk-frontend/themes/facelift/images/icon_checkmark_plus.svg');
     --icon-export-link: url('~cmk-frontend/themes/facelift/images/icon_export_link.svg');
     --icon-reload: url('~cmk-frontend/themes/facelift/images/icon_reload_cmk.svg');
+    --icon-toggle-off: url('~cmk-frontend/themes/facelift/images/icon_toggle_off.svg');
 
     /* Colors */
     --default-submit-button-border-color: var(--success-dimmed);
@@ -260,6 +262,7 @@
     --icon-close: url('~cmk-frontend/themes/modern-dark/images/icon_close.svg');
     --icon-folder-blue: url('~cmk-frontend/themes/modern-dark/images/icon_folder_blue.svg');
     --icon-drag: url('~cmk-frontend/themes/modern-dark/images/icon_drag.svg');
+    --icon-toggle-off: url('~cmk-frontend/themes/modern-dark/images/icon_toggle_off.svg');
 
     --icon-info-circle: url('~cmk-frontend/themes/modern-dark/images/icon_info_circle.svg');
     --icon-tree-closed: url('~cmk-frontend/themes/modern-dark/images/tree_closed.svg');

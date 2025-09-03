@@ -22,20 +22,20 @@ AIX_INSTANTCLIENT_ZIP = aix.ppc64.instantclient_19_28.zip
 DOWNLOAD_TOOL = $(shell command -v wget >/dev/null 2>&1 && echo "wget -O" || (command -v curl >/dev/null 2>&1 && echo "curl -o"))
 
 $(SOLARIS_INSTANT_CLIENT_ZIP):
-        $(DOWNLOAD_TOOL) $(SOLARIS_INSTANTCLIENT_ZIP) $(SOLARIS_INSTANTCLIENT_DOWNLOAD_LINK)
+	$(DOWNLOAD_TOOL) $(SOLARIS_INSTANTCLIENT_ZIP) $(SOLARIS_INSTANTCLIENT_DOWNLOAD_LINK)
 
 $(AIX_INSTANTCLIENT_ZIP):
-        $(DOWNLOAD_TOOL) $(AIX_INSTANTCLIENT_ZIP) $(AIX_INSTANTCLIENT_DOWNLOAD_LINK)
+	$(DOWNLOAD_TOOL) $(AIX_INSTANTCLIENT_ZIP) $(AIX_INSTANTCLIENT_DOWNLOAD_LINK)
 
 $(SOLARIS_OCI_LIBS): $(SOLARIS_INSTANTCLIENT_ZIP)
-        mkdir -p $(SOLARIS_LIBDIR)
-        unzip -uo $(SOLARIS_INSTANTCLIENT_ZIP) -d $(SOLARIS_LIBDIR)
-        rm $(SOLARIS_INSTANTCLIENT_ZIP) # Otherwise, the timestamps of the extracted files will be older than the zip file, causing 'make' to try to extract again next time.
+	mkdir -p $(SOLARIS_LIBDIR)
+	unzip -uo $(SOLARIS_INSTANTCLIENT_ZIP) -d $(SOLARIS_LIBDIR)
+	rm $(SOLARIS_INSTANTCLIENT_ZIP) # Otherwise, the timestamps of the extracted files will be older than the zip file, causing 'make' to try to extract again next time.
 
 $(AIX_OCI_LIBS): $(AIX_INSTANTCLIENT_ZIP)
-        mkdir -p $(AIX_LIBDIR)
-        unzip -uo $(AIX_INSTANTCLIENT_ZIP) -d $(AIX_LIBDIR)
-        rm $(AIX_INSTANTCLIENT_ZIP) # Otherwise, the timestamps of the extracted files will be older than the zip file, causing 'make' to try to extract again next time.
+	mkdir -p $(AIX_LIBDIR)
+	unzip -uo $(AIX_INSTANTCLIENT_ZIP) -d $(AIX_LIBDIR)
+	rm $(AIX_INSTANTCLIENT_ZIP) # Otherwise, the timestamps of the extracted files will be older than the zip file, causing 'make' to try to extract again next time.
 
 solaris_libs: $(SOLARIS_OCI_LIBS)
 

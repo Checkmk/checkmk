@@ -991,27 +991,30 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         )
 
     def _collect_infos(self) -> SDRawTree:
-        checkmk_server_host = verify_checkmk_server_host(self.checkmk_server_host)
-        try:
-            tree = self.inventory_store.load_inventory_tree(host_name=checkmk_server_host)
-        except FileNotFoundError:
-            raise DiagnosticsElementError(
-                "No HW/SW Inventory tree of '%s' found" % checkmk_server_host
-            )
+        return _get_checkmk_overview_content(self.inventory_store, self.checkmk_server_host)
 
-        if not (
-            node := tree.get_tree(
-                (
-                    SDNodeName("software"),
-                    SDNodeName("applications"),
-                    SDNodeName("check_mk"),
-                )
+
+# TODO: some of this should go to the inventory component
+def _get_checkmk_overview_content(
+    inventory_store: InventoryStore, checkmk_server_host: str
+) -> SDRawTree:
+    checkmk_server_host = verify_checkmk_server_host(checkmk_server_host)
+    try:
+        tree = inventory_store.load_inventory_tree(host_name=checkmk_server_host)
+    except FileNotFoundError:
+        raise DiagnosticsElementError("No HW/SW Inventory tree of '%s' found" % checkmk_server_host)
+
+    if not (
+        node := tree.get_tree(
+            (
+                SDNodeName("software"),
+                SDNodeName("applications"),
+                SDNodeName("check_mk"),
             )
-        ):
-            raise DiagnosticsElementError(
-                "No HW/SW Inventory node 'Software > Applications > Checkmk'"
-            )
-        return serialize_tree(node)
+        )
+    ):
+        raise DiagnosticsElementError("No HW/SW Inventory node 'Software > Applications > Checkmk'")
+    return serialize_tree(node)
 
 
 #   ---collect exiting files------------------------------------------------

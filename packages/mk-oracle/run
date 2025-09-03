@@ -160,7 +160,7 @@ run_test_all() {
             cargo test
             ;;
         'AIX')
-            make -C runtimes aix_libs
+            /opt/freeware/bin/make -C runtimes aix_libs
             LIB_PATH="$(pwd)/runtimes/solaris_x86-64/instantclient_19_28:${LIB_PATH}"
             export LIB_PATH
             cargo test

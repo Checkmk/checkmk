@@ -1969,7 +1969,8 @@ class PageRenderer(OverridableContainer[_T_PageRendererSpec]):
             except ValueError as e:
                 raise MKUserError("owner", str(e)) from e
 
-            cls.need_overriding_permission("see_user")
+            if owner != user.id:
+                cls.need_overriding_permission("see_user")
             if foreign := instances.find_foreign_page(owner, name):
                 return foreign
 

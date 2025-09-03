@@ -104,11 +104,12 @@ def get_load_average() -> perf_dict:
 
 def get_memory_info() -> perf_dict:
     """Get memory metrics."""
+    conversion_factor = 1024.0**3  # GiB
     data: perf_dict = {
-        "virtual_memory_total": psutil.virtual_memory().total / (1024.0**3),
-        "virtual_memory_available": psutil.virtual_memory().available / (1024.0**3),
+        "virtual_memory_total": psutil.virtual_memory().total / conversion_factor,
+        "virtual_memory_available": psutil.virtual_memory().available / conversion_factor,
         "virtual_memory_percent": psutil.virtual_memory().percent,
-        "virtual_memory_used": psutil.virtual_memory().used / (1024.0**3),
+        "virtual_memory_used": psutil.virtual_memory().used / conversion_factor,
     }
     return _named_section("memory_info", data)
 

@@ -99,7 +99,7 @@ def _log_error_message_obsolete_files(logger: Logger, paths: Sequence[Path]) -> 
     for path in paths:
         logger.error(f"Obsolete file: '{path}'")
     logger.error(
-        "The file(s) residing in `local/lib/check_mk/plugins/agent_based` will no longer be loaded in Checkmk 2.4. "
+        "The file(s) residing in `local/lib/python3/cmk/plugins/agent_based` will no longer be loaded in Checkmk 2.4. "
     )
     logger.error("See: %s", werk_reference_url(WerkReference.DECOMMISSION_V1_API))
 

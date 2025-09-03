@@ -1875,7 +1875,8 @@ class PageRenderer(OverridableContainer[_T_PageRendererConfig]):
     @classmethod
     def requested_page_by_name(cls, instances: OverridableInstances[Self], name: str) -> Self:
         if owner := request.get_validated_type_input(UserId, "owner"):
-            cls.need_overriding_permission("see_user")
+            if owner != user.id:
+                cls.need_overriding_permission("see_user")
             if foreign := instances.find_foreign_page(owner, name):
                 return foreign
 

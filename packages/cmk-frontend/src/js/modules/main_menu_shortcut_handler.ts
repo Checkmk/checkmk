@@ -58,8 +58,7 @@ export function register_shortcuts(keyShortcuts: KeyShortcutService): void {
     keyShortcuts.on(
         {
             key: ["k"],
-            ctrl: true,
-            preventDefault: true,
+            alt: true,
         },
         () => {
             handle_main_menu("search");

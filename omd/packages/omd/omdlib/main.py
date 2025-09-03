@@ -346,6 +346,10 @@ def walk_skel(
         "local/lib/python3/cmk/base/plugins/agent_based",
         "local/lib/python3/cmk/base/plugins",
         "local/lib/python3/cmk/base",
+        "local/lib/python3/cmk/special_agents",
+        "local/share/check_mk/agents/special",
+        "local/share/check_mk/checkman",
+        "local/share/check_mk/checks",
     ]
 
     with contextlib.chdir(root):

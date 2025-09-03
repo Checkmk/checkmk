@@ -550,21 +550,6 @@ CONFIG_TMPFS='on'"""
     shutil.rmtree(str(etc_omd_dir))
 
 
-def test_diagnostics_element_checkmk_overview(tmp_path: Path) -> None:
-    diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement(
-        InventoryStore(tmp_path), ""
-    )
-    assert diagnostics_element.ident == "checkmk_overview"
-    assert diagnostics_element.title == "Checkmk Overview of Checkmk Server"
-    assert diagnostics_element.description == (
-        "Checkmk Agent, Number, version and edition of sites, cluster host; "
-        "number of hosts, services, CMK Helper, Live Helper, "
-        "Helper usage; state of daemons: Apache, Core, Crontab, "
-        "DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
-        "(Agent plug-in mk_inventory needs to be installed)"
-    )
-
-
 @pytest.mark.parametrize(
     "host_list, raw_tree, error",
     [
@@ -592,7 +577,6 @@ def test_diagnostics_element_checkmk_overview_error(
     error: str,
 ) -> None:
     inv_store = InventoryStore(tmp_path)
-    diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement(inv_store, "")
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
 
@@ -604,18 +588,18 @@ def test_diagnostics_element_checkmk_overview_error(
             meta=make_meta(do_archive=False),
         )
 
-    tmppath = Path(tmp_path).joinpath("tmp")
-
     with pytest.raises(diagnostics.DiagnosticsElementError) as e:
-        next(diagnostics_element.add_or_get_files(tmppath))
+        diagnostics._get_checkmk_overview_content(inv_store, "")
         assert error == str(e)
 
 
-@pytest.mark.parametrize(
-    "host_list, raw_tree",
-    [
-        (
-            [["checkmk-server-name"]],
+def test_diagnostics_element_checkmk_overview_content(tmp_path: Path) -> None:
+    inv_store = InventoryStore(tmp_path)
+
+    # Fake HW/SW Inventory tree
+    inv_store.save_inventory_tree(
+        host_name=HostName("checkmk-server-name"),
+        tree=deserialize_tree(
             {
                 "hardware": {},
                 "networking": {},
@@ -652,36 +636,14 @@ def test_diagnostics_element_checkmk_overview_error(
                         }
                     }
                 },
-            },
+            }
         ),
-    ],
-)
-def test_diagnostics_element_checkmk_overview_content(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-    _fake_local_connection: Callable,
-    host_list: Sequence[Sequence[str]],
-    raw_tree: SDRawTree,
-) -> None:
-    inv_store = InventoryStore(tmp_path)
-    diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement(inv_store, "")
-
-    monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
-
-    # Fake HW/SW Inventory tree
-    inv_store.save_inventory_tree(
-        host_name=HostName("checkmk-server-name"),
-        tree=deserialize_tree(raw_tree),
         meta=make_meta(do_archive=False),
     )
 
-    tmppath = Path(tmp_path).joinpath("tmp")
-    filepath = next(diagnostics_element.add_or_get_files(tmppath))
-
-    assert isinstance(filepath, Path)
-    assert filepath == tmppath.joinpath("checkmk_overview.json")
-
-    content = json.loads(filepath.open().read())
+    content = json.loads(
+        diagnostics._get_checkmk_overview_content(inv_store, "checkmk-server-name")
+    )
 
     assert content["Nodes"]["cluster"]["Attributes"]["Pairs"] == {
         "is_cluster": False,

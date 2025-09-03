@@ -12,7 +12,6 @@ from typing import Any, Literal, NamedTuple, TypedDict
 
 import cmk.utils.paths
 from cmk.ccc.site import SiteId
-from cmk.utils.structured_data import SDRawTree
 
 # This is an awful type, but just putting `Any` and hoping for the best is no solution.
 _JSONSerializable = (
@@ -23,7 +22,7 @@ DiagnosticsCLParameters = list[str]
 DiagnosticsModesParameters = dict[str, Any]
 DiagnosticsOptionalParameters = dict[str, Any]
 CheckmkFilesMap = dict[str, Path]
-DiagnosticsElementJSONResult = Mapping[str, _JSONSerializable] | SDRawTree
+DiagnosticsElementJSONResult = Mapping[str, _JSONSerializable]
 DiagnosticsElementCSVResult = str
 DiagnosticsElementFilepaths = Iterator[Path]
 

@@ -60,3 +60,18 @@ def test_process_create_task_non_existent_relay(
             task_payload="any payload",
             authorization=test_authorization,
         )
+
+
+def test_tasks_repository_ttl_validation() -> None:
+    """Test that TasksRepository validates TTL is greater than 0."""
+    # Test zero TTL raises ValueError
+    with pytest.raises(ValueError, match="ttl_seconds must be greater than 0"):
+        TasksRepository(ttl_seconds=0.0)
+
+    # Test negative TTL raises ValueError
+    with pytest.raises(ValueError, match="ttl_seconds must be greater than 0"):
+        TasksRepository(ttl_seconds=-1.0)
+
+    # Test positive TTL works
+    repository = TasksRepository(ttl_seconds=120.0)
+    assert repository.ttl_seconds == 120.0

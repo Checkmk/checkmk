@@ -179,17 +179,19 @@ def write_statistics(file: IO, all: bool = False, close: bool = False) -> None:
     if close:
         file.write("[]" if file.tell() == 0 else "\n]")
         return
+
     timestamp = datetime.datetime.now().astimezone().isoformat()
     statistics = get_statistics(timestamp, all=all)
-    data = json.dumps(statistics)
-    data = ("[\n" if file.tell() == 0 else ",\n") + data
-    file.write(data)
+    separator = "[\n" if file.tell() == 0 else ",\n"
+    file.write(separator)
+    json.dump(statistics, file, separators=(",", ":"))
 
 
 def _init_resources_file(task_name: str) -> Path:
     version_directory = CMKPackageInfo(version_from_env(), edition_from_env()).version_directory()
     result_dir = Path(os.getenv("RESULT_PATH", Path(__file__).parent.parent.parent / "results"))
     report_dir = result_dir / "performance" / version_directory
+    report_dir.parent.mkdir(parents=True, exist_ok=True)
     benchmark_json_name = next(
         (_.split("=", 1)[-1] for _ in argv if _.startswith("--benchmark-json=")),
         "cmk.benchmark.json",
@@ -206,7 +208,6 @@ def _log_resources(
 ) -> None:
     max_duration = 0.0
     statistics_interval = 1
-    file_path.parent.mkdir(parents=True, exist_ok=True)
     with open(file_path, "w") as stats_file:
         while not stop_event.is_set():
             start_time = time.time()

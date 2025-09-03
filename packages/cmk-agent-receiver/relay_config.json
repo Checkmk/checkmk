@@ -1,0 +1,4 @@
+{
+  "task_ttl": 120.0,
+  "max_tasks_per_relay": 1000
+}

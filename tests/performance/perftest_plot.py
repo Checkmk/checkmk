@@ -746,6 +746,10 @@ class PerftestPlot:
         """
         super().__init__()
         self.args = args
+
+        self.cpu_usage_metric = "cpu_info.cpu_percent"
+        self.memory_usage_metric = "memory_info.virtual_memory_percent"
+
         self.root_dir = self.args.root_dir
         self.root_dir.mkdir(parents=True, exist_ok=True)
         self.read_from_database = not self.args.skip_database_reads
@@ -1014,7 +1018,7 @@ class PerftestPlot:
 
     @staticmethod
     def _plottable_resource_data(
-        statistics: MeasurementsList, section: str, indicator: str
+        statistics: MeasurementsList, metric_name: str
     ) -> tuple[list[float], list[float]]:
         """
         Extracts and prepares resource usage data for plotting from a list of measurement values.
@@ -1022,8 +1026,7 @@ class PerftestPlot:
         Args:
             statistics (MeasurementsList): A list of measurement dictionaries containing timestamp
                 and resource usage data.
-            section (str): The section name used to identify the resource.
-            indicator (str): The indicator name used to identify the specific metric.
+            metric_name (str): The name used to identify the specific metric.
 
         Returns:
             tuple[list[float], list[float]]:
@@ -1063,7 +1066,7 @@ class PerftestPlot:
             if not isinstance(stats, dict):
                 continue
             timestamp = str(stats["time"])
-            raw_value = stats[f"{section}.{indicator}"]
+            raw_value = stats[metric_name]
             if isinstance(raw_value, int | float | str):
                 value = float(raw_value)
                 timestamps.append(timestamp)
@@ -1123,16 +1126,14 @@ class PerftestPlot:
                 statistics = data[1].get(scenario_name, [])
                 color = colors[job_idx % len(colors)]
 
-                for subplot, section, indicator, title in [
-                    (ax_cpu, "cpu_info", "cpu_percent", "CPU"),
-                    (ax_mem, "memory_info", "virtual_memory_percent", "Virtual Memory"),
+                for subplot, metric_name, title in [
+                    (ax_cpu, self.cpu_usage_metric, "CPU"),
+                    (ax_mem, self.memory_usage_metric, "Virtual Memory"),
                 ]:
                     if not statistics:
                         continue
 
-                    durations, values = self._plottable_resource_data(
-                        statistics, section, indicator
-                    )
+                    durations, values = self._plottable_resource_data(statistics, metric_name)
                     xmax = int(durations[-1]) if durations and durations[-1] > xmax else xmax
                     average = fmean(values or [0])
 
@@ -1489,10 +1490,8 @@ class PerftestPlot:
                 continue
             if not (measurements := job[1][scenario_name]):
                 continue
-            cpu_averages.append(self._get_mean_value(measurements, "cpu_info.cpu_percent"))
-            mem_averages.append(
-                self._get_mean_value(measurements, "memory_info.virtual_memory_percent")
-            )
+            cpu_averages.append(self._get_mean_value(measurements, self.cpu_usage_metric))
+            mem_averages.append(self._get_mean_value(measurements, self.memory_usage_metric))
         time_baseline = fmean(time_averages) if time_averages else 0.0
         cpu_baseline = fmean(cpu_averages) if cpu_averages else 0.0
         mem_baseline = fmean(mem_averages) if mem_averages else 0.0
@@ -1523,8 +1522,8 @@ class PerftestPlot:
         if not benchmark:
             return None
         time_avg = benchmark["stats"]["mean"]
-        cpu_avg = self._get_mean_value(job[1][scenario_name], "cpu_info.cpu_percent")
-        mem_avg = self._get_mean_value(job[1][scenario_name], "memory_info.virtual_memory_percent")
+        cpu_avg = self._get_mean_value(job[1][scenario_name], self.cpu_usage_metric)
+        mem_avg = self._get_mean_value(job[1][scenario_name], self.memory_usage_metric)
 
         return AverageValues(*(time_avg, cpu_avg, mem_avg))
 

@@ -56,7 +56,6 @@ PREV_BUTTON_LABEL = _("Back")
 
 FIRST_LEVEL_DICT_TITLES: dict[str, Title] = {
     "proxy": Title("HTTP proxy"),
-    "piggyback_vms": Title("Map data"),
     "filter_tags": Title("Filter tags"),
 }
 

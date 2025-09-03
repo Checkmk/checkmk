@@ -50,7 +50,6 @@ class AzureParams(BaseModel):
     proxy: URLProxy | NoProxy | EnvProxy | None = None
     services: list[str]
     config: Config
-    piggyback_vms: str | None = None
     filter_tags: (
         tuple[Literal["filter_tags"], str] | tuple[Literal["dont_import_tags"], None] | None
     ) = None
@@ -129,9 +128,6 @@ def agent_azure_arguments(
         args += ["--connection-test"]
         yield SpecialAgentCommand(command_arguments=args)
         return
-
-    if params.piggyback_vms:
-        args += ["--piggyback_vms", params.piggyback_vms]
 
     if params.services:
         args += [

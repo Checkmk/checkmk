@@ -8,7 +8,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from cmk.bakery.v2_unstable import BakeryPlugin, OS, Plugin, PluginConfig
+from cmk.bakery.v2_alpha import BakeryPlugin, OS, Plugin, PluginConfig
 
 
 class CephConfig(BaseModel):

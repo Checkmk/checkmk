@@ -261,6 +261,7 @@ PACKAGE_PLUGIN_APIS = (
     "cmk.agent_based.legacy",
     "cmk.agent_based.v1",
     "cmk.agent_based.v2",
+    "cmk.bakery.v2_alpha",
     "cmk.graphing.v1",
     "cmk.inventory_ui.v1_alpha",
     "cmk.rulesets.v1",
@@ -712,9 +713,9 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.rulesets",
     ),
     Component("cmk.cee.bakery"): _allow(
+        *PACKAGE_PLUGIN_APIS,
         *PACKAGE_CCC,
         *PACKAGE_CRYPTO,
-        "cmk.bakery.v2_unstable",
         "cmk.base.checkers",
         "cmk.base.config",
         "cmk.base.configlib.loaded_config",

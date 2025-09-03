@@ -50,7 +50,7 @@ def no_op_parser(
     return parameters
 
 
-def _nothing(conf: object) -> Iterable[Never]:
+def _nothing(_conf: object) -> Iterable[Never]:
     return ()
 
 

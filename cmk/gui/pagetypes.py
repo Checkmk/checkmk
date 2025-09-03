@@ -1933,7 +1933,8 @@ class PageRenderer(OverridableContainer[_T_PageRendererConfig]):
         cls, instances: OverridableInstances[Self], name: str, user_permissions: UserPermissions
     ) -> Self:
         if owner := request.get_validated_type_input(UserId, "owner"):
-            cls.need_overriding_permission("see_user")
+            if owner != user.id:
+                cls.need_overriding_permission("see_user")
             if foreign := instances.find_foreign_page(owner, name):
                 return foreign
 

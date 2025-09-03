@@ -59,9 +59,9 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     )
 
 
-@pytest.fixture(name="track_resources", scope="function")
+@pytest.fixture(name="track_system_resources", scope="function")
 def _track_resources(request: pytest.FixtureRequest) -> Iterator[None]:
-    """Track the resource usage of an entire test case."""
+    """Track the resource usage of the entire system during the test case execution."""
     with track_resources(request.node.name):
         yield
 

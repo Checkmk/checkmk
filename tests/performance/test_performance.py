@@ -300,7 +300,7 @@ def _perftest_dist(
 
 
 def test_performance_hosts(
-    perftest_dist: PerformanceTest, benchmark: BenchmarkFixture, track_resources: None
+    perftest_dist: PerformanceTest, benchmark: BenchmarkFixture, track_system_resources: None
 ) -> None:
     """Bulk host creation"""
     benchmark.pedantic(
@@ -326,7 +326,7 @@ def test_performance_hosts_restart(perftest: PerformanceTest, benchmark: Benchma
     reason="Not supported on Checkmk versions below 2.4.0!",
 )
 def test_performance_services(
-    perftest: PerformanceTest, benchmark: BenchmarkFixture, track_resources: None
+    perftest: PerformanceTest, benchmark: BenchmarkFixture, track_system_resources: None
 ) -> None:
     """Bulk service discovery"""
     benchmark.pedantic(
@@ -338,7 +338,7 @@ def test_performance_services(
 
 
 def test_performance_piggyback(
-    perftest: PerformanceTest, benchmark: BenchmarkFixture, track_resources: None
+    perftest: PerformanceTest, benchmark: BenchmarkFixture, track_system_resources: None
 ) -> None:
     benchmark.pedantic(
         perftest.scenario_performance_dcd_piggyback,
@@ -349,7 +349,7 @@ def test_performance_piggyback(
 
 
 def test_performance_ui_response(
-    perftest: PerformanceTest, benchmark: BenchmarkFixture, track_resources: None
+    perftest: PerformanceTest, benchmark: BenchmarkFixture, track_system_resources: None
 ) -> None:
     benchmark.pedantic(
         perftest.scenario_performance_ui_response,

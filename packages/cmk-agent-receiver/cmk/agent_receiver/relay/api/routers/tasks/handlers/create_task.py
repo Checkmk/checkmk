@@ -27,7 +27,10 @@ class CreateTaskHandler:
     relays_repository: RelaysRepository
 
     def process(self, relay_id: RelayID, task_type: TaskType, task_payload: str) -> TaskID:
-        task = Task(type=task_type, payload=task_payload, creation_timestamp=datetime.now())
+        now = datetime.now()
+        task = Task(
+            type=task_type, payload=task_payload, creation_timestamp=now, update_timestamp=now
+        )
         return self._store_task(relay_id, task)
 
     def _store_task(self, relay_id: RelayID, task: Task) -> TaskID:

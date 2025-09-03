@@ -23,9 +23,11 @@ def push_task(
     return TaskCreateResponse.model_validate(response.json())
 
 
-def get_all_relay_tasks(agent_receiver: AgentReceiverClient, relay_id: str) -> TaskListResponse:
+def get_relay_tasks(
+    agent_receiver: AgentReceiverClient, relay_id: str, status: str | None = None
+) -> TaskListResponse:
     """helper to push tasks for a relay.
     It abstracts away the reponses and gives you a reasonable type to work with."""
-    response = agent_receiver.get_all_relay_tasks(relay_id)
+    response = agent_receiver.get_relay_tasks(relay_id, status=status)
     assert response.status_code == HTTPStatus.OK, response.text
     return TaskListResponse.model_validate(response.json())

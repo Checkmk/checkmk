@@ -11,7 +11,7 @@ from cmk.relay_protocols.tasks import TaskType
 
 from .test_lib.agent_receiver import AgentReceiverClient
 from .test_lib.site_mock import SiteMock
-from .test_lib.tasks import get_all_relay_tasks, push_task
+from .test_lib.tasks import get_relay_tasks, push_task
 
 
 def test_a_relay_can_be_registered(agent_receiver: AgentReceiverClient) -> None:
@@ -22,7 +22,7 @@ def test_a_relay_can_be_registered(agent_receiver: AgentReceiverClient) -> None:
     resp = agent_receiver.register_relay(relay_id)
     assert resp.status_code == HTTPStatus.OK
 
-    resp = agent_receiver.get_all_relay_tasks(relay_id)
+    resp = agent_receiver.get_relay_tasks(relay_id)
     assert resp.status_code == HTTPStatus.OK
 
 
@@ -41,7 +41,7 @@ def test_registering_a_relay_does_not_affect_other_relays(
     relay_id_B = str(uuid.uuid4())
     agent_receiver.register_relay(relay_id_B)
 
-    tasks_A = get_all_relay_tasks(agent_receiver, relay_id_A)
+    tasks_A = get_relay_tasks(agent_receiver, relay_id_A)
     assert len(tasks_A.tasks) == 1
 
 
@@ -55,14 +55,14 @@ def test_contact_site(site: SiteMock) -> None:
 def test_a_relay_can_be_unregistered(agent_receiver: AgentReceiverClient) -> None:
     relay_id = str(uuid.uuid4())
     agent_receiver.register_relay(relay_id)
-    resp = agent_receiver.get_all_relay_tasks(relay_id)
+    resp = agent_receiver.get_relay_tasks(relay_id)
     assert resp.status_code == HTTPStatus.OK
 
     resp = agent_receiver.unregister_relay(relay_id)
     assert resp.status_code == HTTPStatus.OK
 
     # unregistered relay cannot list tasks
-    resp = agent_receiver.get_all_relay_tasks(relay_id)
+    resp = agent_receiver.get_relay_tasks(relay_id)
     assert resp.status_code == HTTPStatus.NOT_FOUND
     assert resp.json()["detail"] == f"Relay with ID {relay_id} not found"
 
@@ -79,5 +79,5 @@ def test_unregistering_a_relay_does_not_affect_other_relays(
     agent_receiver.unregister_relay(relay_id_A)
 
     # Verify relay B have tasks queue
-    resp = agent_receiver.get_all_relay_tasks(relay_id_B)
+    resp = agent_receiver.get_relay_tasks(relay_id_B)
     assert resp.status_code == HTTPStatus.OK

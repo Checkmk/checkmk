@@ -11,6 +11,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     Task,
     TaskID,
     TasksRepository,
+    TaskStatus,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     TaskNotFoundError as RepositoryTaskNotFoundError,
@@ -48,6 +49,7 @@ class UpdateTaskHandler:
                 task_id=task_id,
                 result_type=result_type,
                 result_payload=result_payload,
+                status=TaskStatus.FINISHED if result_type == ResultType.OK else TaskStatus.FAILED,
             )
         except RepositoryTaskNotFoundError as e:
             raise TaskNotFoundError(f"Task with ID {task_id} does not exist") from e

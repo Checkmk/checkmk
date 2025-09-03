@@ -38,6 +38,7 @@ class Task:
     type: TaskType
     payload: str
     creation_timestamp: datetime
+    update_timestamp: datetime
     result_type: ResultType | None = None
     result_payload: str | None = None
     status: TaskStatus = TaskStatus.PENDING
@@ -74,7 +75,13 @@ class TasksRepository:
         return task
 
     def update_task(
-        self, relay_id: RelayID, task_id: TaskID, result_type: ResultType, result_payload: str
+        self,
+        *,
+        relay_id: RelayID,
+        task_id: TaskID,
+        result_type: ResultType,
+        result_payload: str,
+        status: TaskStatus,
     ) -> Task:
         try:
             task = GLOBAL_TASKS[relay_id][task_id]
@@ -86,6 +93,8 @@ class TasksRepository:
             task,
             result_type=result_type,
             result_payload=result_payload,
+            status=status,
+            update_timestamp=datetime.now(),
         )
         GLOBAL_TASKS[relay_id][task_id] = new_task
         return new_task

@@ -39,6 +39,7 @@ class AgentReceiverClient:
 
     def push_task(
         self,
+        *,
         relay_id: str,
         task_type: TaskType,
         task_payload: str,
@@ -51,5 +52,21 @@ class AgentReceiverClient:
             },
         )
 
-    def get_all_relay_tasks(self, relay_id: str) -> httpx.Response:
-        return self.client.get(f"/{self.site_name}/agent-receiver/relays/{relay_id}/tasks")
+    def get_relay_tasks(self, relay_id: str, status: str | None = None) -> httpx.Response:
+        params: dict[str, str] = {}
+        if status:
+            params = {"status": status}
+        return self.client.get(
+            f"/{self.site_name}/agent-receiver/relays/{relay_id}/tasks", params=params
+        )
+
+    def update_task(
+        self, *, relay_id: str, task_id: str, result_type: str, result_payload: str
+    ) -> httpx.Response:
+        return self.client.patch(
+            f"/{self.site_name}/agent-receiver/relays/{relay_id}/tasks/{task_id}",
+            json={
+                "result_type": result_type,
+                "result_payload": result_payload,
+            },
+        )

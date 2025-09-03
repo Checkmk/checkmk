@@ -60,11 +60,13 @@ def test_process_update_task(
     relays_repository.add_relay(relay_id)
 
     # insert a task in the repository
+    now = datetime.now()
     task = Task(
         id=TaskID(str(uuid.uuid4())),
         type=TaskType.FETCH_AD_HOC,
         payload='{"url": "http://example.com/data"}',
-        creation_timestamp=datetime.now(),
+        creation_timestamp=now,
+        update_timestamp=now,
     )
     tasks_repository.store_task(relay_id=relay_id, task=task)
 

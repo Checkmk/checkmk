@@ -9,7 +9,7 @@ from http import HTTPStatus
 from cmk.relay_protocols.tasks import TaskType
 
 from .test_lib.agent_receiver import AgentReceiverClient
-from .test_lib.tasks import get_all_relay_tasks, push_task
+from .test_lib.tasks import get_relay_tasks, push_task
 
 
 def test_store_fetching_task(agent_receiver: AgentReceiverClient) -> None:
@@ -23,7 +23,7 @@ def test_store_fetching_task(agent_receiver: AgentReceiverClient) -> None:
         task_payload="any payload",
     )
 
-    tasks_1 = get_all_relay_tasks(agent_receiver, relay_id)
+    tasks_1 = get_relay_tasks(agent_receiver, relay_id)
     assert len(tasks_1.tasks) == 1
     assert tasks_1.tasks[0].type == TaskType.FETCH_AD_HOC
     assert tasks_1.tasks[0].payload == "any payload"
@@ -44,9 +44,9 @@ def test_store_fetching_tasks_does_not_affect_other_relays(
         task_payload="any payload",
     )
 
-    tasks_A = get_all_relay_tasks(agent_receiver, relay_id_A)
+    tasks_A = get_relay_tasks(agent_receiver, relay_id_A)
     assert len(tasks_A.tasks) == 1
-    tasks_B = get_all_relay_tasks(agent_receiver, relay_id_B)
+    tasks_B = get_relay_tasks(agent_receiver, relay_id_B)
     assert len(tasks_B.tasks) == 0
 
     push_task(
@@ -56,10 +56,10 @@ def test_store_fetching_tasks_does_not_affect_other_relays(
         task_payload="any payload",
     )
 
-    tasks_A = get_all_relay_tasks(agent_receiver, relay_id_A)
+    tasks_A = get_relay_tasks(agent_receiver, relay_id_A)
     assert len(tasks_A.tasks) == 2
     assert tasks_A.tasks[1].id != tasks_A.tasks[0].id
-    tasks_B = get_all_relay_tasks(agent_receiver, relay_id_B)
+    tasks_B = get_relay_tasks(agent_receiver, relay_id_B)
     assert len(tasks_B.tasks) == 0
 
 

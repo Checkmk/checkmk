@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-09-01 19:35+0000\n"
+"PO-Revision-Date: 2025-09-02 21:35+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -7594,9 +7594,8 @@ msgstr "Auto-Shrink aus"
 msgid "Auto shrink on"
 msgstr "Auto-Shrink an"
 
-#, fuzzy
 msgid "Auto-detect proxy settings for this network"
-msgstr "Unstetigkeitserkennnung für Hosts"
+msgstr "Automatische Erkennung von Proxy-Einstellungen für dieses Netzwerk"
 
 msgid "Auto-disconnect time"
 msgstr "Automatische Abschaltzeit"
@@ -8531,9 +8530,8 @@ msgstr "Azure Load Balancer Zustand"
 msgid "Azure Redis CPU utilization"
 msgstr "Azure Redis CPU-Auslastung"
 
-#, fuzzy
 msgid "Azure Redis Cache effectiveness"
-msgstr "Azure Redis Verbindungen"
+msgstr "Effektivität des Azure Redis Caches"
 
 msgid "Azure Redis connections"
 msgstr "Azure Redis Verbindungen"
@@ -10863,9 +10861,8 @@ msgstr "Cache Misses"
 msgid "Cache misses per second"
 msgstr "Cache Misses pro Sekunde"
 
-#, fuzzy
 msgid "Cache requests"
-msgstr "Fehlgeschlagene Anfragen"
+msgstr "Cache-Anfragen"
 
 msgid "Cache several non-status queries"
 msgstr "Etliche statusfreie Anfragen zwischenspeichern"
@@ -16025,9 +16022,9 @@ msgstr "Neue Zeitperiode %s erzeugt"
 msgid "Created new users: %s"
 msgstr "Nutzer angelegt: %s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Created relay '%s'"
-msgstr "Neue Rolle '%s' erzeugt"
+msgstr ""
 
 msgid "Created with Checkmk Version $CHECK_MK_VERSION$"
 msgstr "Erstellt mit Checkmk Version $CHECK_MK_VERSION$"
@@ -18470,9 +18467,9 @@ msgstr "Benachrichtigungsregel #%s wurde gelöscht"
 msgid "Deleted notification rule %d of user %s"
 msgstr "Benachrichtigungsregel %d von Benutzer %s gelöscht"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Deleted relay '%s'"
-msgstr "Rolle '%s' gelöscht"
+msgstr ""
 
 #, python-format
 msgid "Deleted role '%s'"
@@ -21787,9 +21784,9 @@ msgstr "Host-Merkmalgruppe %s (%s) bearbeitet"
 msgid "Edited properties of folder %s"
 msgstr "Eigenschaften von Ordner %s bearbeitet"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Edited relay '%s'"
-msgstr "Regel '%s' bearbeiten"
+msgstr ""
 
 #, python-format
 msgid "Edited rule in ruleset \"%s\" in folder \"%s\""
@@ -26357,9 +26354,8 @@ msgstr "Gerrit-Verbindung"
 msgid "Gerrit instance to query."
 msgstr "Abzufragende Gerrit-Instanz."
 
-#, fuzzy
 msgid "Get commands"
-msgstr "Keine Befehle"
+msgstr "Befehle erhalten"
 
 msgid "Get file from SFTP server"
 msgstr "Datei von SFTP-Server holen"
@@ -26448,9 +26444,8 @@ msgstr "Globale Einstellungen zum Suchbegriff '%s'"
 msgid "GlobalProtect Utilization"
 msgstr "GlobalProtect-Auslastung"
 
-#, fuzzy
 msgid "Globally configured proxy"
-msgstr "Verwendung eines global konfigurierten Proxy"
+msgstr "Global konfigurierter Proxy"
 
 msgid "Globbing pattern for input files"
 msgstr "Globbing Pattern für Eingabedateien"
@@ -28377,9 +28372,8 @@ msgstr "Historie der Benachrichtigungen"
 msgid "History of scheduled downtimes"
 msgstr "Historie der Wartungszeiten"
 
-#, fuzzy
 msgid "Hit ratio"
-msgstr "Initialisierungsdauer"
+msgstr "Hit Ratio"
 
 msgid "Hits"
 msgstr "Zugriffe"
@@ -38870,9 +38864,8 @@ msgstr "Manuelle Konfiguration"
 msgid "Manual page for this check type"
 msgstr "Dokumentation für diesen Check-Typ"
 
-#, fuzzy
 msgid "Manual proxy configuration"
-msgstr "Manuelle Konfiguration"
+msgstr "Manuelle Proxy-Konfiguration"
 
 msgid "Manual snapshots"
 msgstr "Manuelle Schnappschüsse"
@@ -42128,7 +42121,7 @@ msgid "Negate: find hosts <b>not</b> having this package"
 msgstr "Negation: Host, die das Paket <b>nicht</b> haben"
 
 msgid "Negative age tolerance"
-msgstr ""
+msgstr "Toleranz für negative Altersangaben"
 
 msgid "Negative match (Exclude matching hosts from the set)"
 msgstr ""
@@ -47755,9 +47748,8 @@ msgstr "Passwort existiert nicht oder Nutzung nicht erlaubt"
 msgid "Password does not exist or using not permitted."
 msgstr "Passwort existiert nicht oder Nutzung ist nicht erlaubt."
 
-#, fuzzy
 msgid "Password field can not be empty"
-msgstr "Das Passwort darf nicht leer sein"
+msgstr "Passwortfeld darf nicht leer sein"
 
 msgid "Password for binding, if your server requires an authentication"
 msgstr "Anmeldepasswort, falls der Server Authentifizierung erfordert"
@@ -51872,7 +51864,7 @@ msgid "Relative time of alert"
 msgstr "Relativer Zeitpunkt des Alerts"
 
 msgid "Relay log size"
-msgstr "Relay Log-Größe"
+msgstr "Relais Log-Größe"
 
 msgid "Release"
 msgstr "Release"
@@ -58040,7 +58032,7 @@ msgid "Size of core"
 msgstr "Größe des Kerns"
 
 msgid "Size of crashes"
-msgstr ""
+msgstr "Größe von Abstürzen"
 
 msgid "Size of deferred mail queue"
 msgstr "Größe der Deferred-Mailqueue"
@@ -62191,9 +62183,8 @@ msgstr "Tests"
 msgid "Text"
 msgstr "Text"
 
-#, fuzzy
 msgid "Text field can not be empty"
-msgstr "Die Eingabe darf nicht leer sein"
+msgstr "Textfeld darf nicht leer sein"
 
 msgid "Text groups from regular expression match, separated by spaces"
 msgstr "Textgruppen von regulären Ausdrücken, mit Leerzeichen separiert"
@@ -71438,13 +71429,12 @@ msgstr ""
 "Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring der CPU-"
 "Nutzung für Azure Redis zu konfigurieren"
 
-#, fuzzy
 msgid ""
 "This ruleset allows you to configure levels for Azure Redis Cache "
 "effectiveness monitoring"
 msgstr ""
-"Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring von Azure "
-"Redis Verbindungen zu konfigurieren"
+"Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring der "
+"Effektivität des Azure Redis Caches zu konfigurieren"
 
 msgid ""
 "This ruleset allows you to configure levels for Azure Redis connections "
@@ -86950,9 +86940,9 @@ msgid_plural "sites"
 msgstr[0] "Instanz"
 msgstr[1] "Instanzen"
 
-#, fuzzy, python-format
+#, python-format
 msgid "site must be a list. Current type is: %s "
-msgstr "Typ muss eine Liste sein - ist aber %s"
+msgstr "Instanz muss eine Liste sein. Aktueller Typ ist: %s "
 
 msgid "slots"
 msgstr "Slots"

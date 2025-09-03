@@ -1758,9 +1758,9 @@ meraki==1.41.0 \
     --hash=sha256:697706311aa48953e72c462bcc830b0e21575aeac144d94c8383a745de6396b6 \
     --hash=sha256:6b3f31981d278cbba2cce5229436528da4ecac5054d1cb7da6467f6d854cac84
     # via -r requirements_all.txt
-more-itertools==10.7.0 \
-    --hash=sha256:9fddd5403be01a94b204faadcff459ec3568cf110265d3c54323e1e866ad29d3 \
-    --hash=sha256:d43980384673cb07d2f7d2d918c616b30c659c089ee23953f601d6609c67510e
+more-itertools==10.8.0 \
+    --hash=sha256:52d4362373dcf7c52546bc4af9a86ee7c4579df9a8dc268be0a2f949d376cc9b \
+    --hash=sha256:f638ddf8a1a0d134181275fb5d58b086ead7c6a72429ad725c67503f13ba30bd
     # via
     #   jaraco-classes
     #   jaraco-functools
@@ -3048,9 +3048,9 @@ pysnmpcrypto==0.0.4 \
     # via
     #   -r requirements_all.txt
     #   pysnmp-lextudio
-pyspnego==0.11.2 \
-    --hash=sha256:74abc1fb51e59360eb5c5c9086e5962174f1072c7a50cf6da0bda9a4bcfdfbd4 \
-    --hash=sha256:994388d308fb06e4498365ce78d222bf4f3570b6df4ec95738431f61510c971b
+pyspnego==0.12.0 \
+    --hash=sha256:84cc8dae6ad21e04b37c50c1d3c743f05f193e39498f6010cc68ec1146afd007 \
+    --hash=sha256:e1d9cd3520a87a1d6db8d68783b17edc4e1464eae3d51ead411a51c82dbaae67
     # via
     #   -r requirements_all.txt
     #   requests-ntlm

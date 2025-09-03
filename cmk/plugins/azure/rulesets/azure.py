@@ -262,6 +262,7 @@ def _migrate(value: object) -> Mapping[str, object]:
 
     value.pop("sequential", None)
     value.pop("import_tags", None)
+    value.pop("piggyback_vms", None)
     return value
 
 
@@ -420,23 +421,6 @@ def configuration_advanced() -> Mapping[str, DictElement]:
                 },
             ),
             required=True,
-        ),
-        "piggyback_vms": DictElement(
-            parameter_form=SingleChoice(
-                title=Title("Map data relating to VMs"),
-                help_text=Help(
-                    "By default, data relating to a VM is sent to the group host"
-                    " corresponding to the resource group of the VM, the same way"
-                    " as for any other resource. If the VM is present in your"
-                    " monitoring as a separate host, you can choose to send the data"
-                    " to the VM itself."
-                ),
-                elements=[
-                    SingleChoiceElement(name="grouphost", title=Title("Map data to group host")),
-                    SingleChoiceElement(name="self", title=Title("Map data to the VM itself")),
-                ],
-                prefill=DefaultValue("grouphost"),
-            ),
         ),
         "filter_tags": DictElement(
             parameter_form=CascadingSingleChoice(

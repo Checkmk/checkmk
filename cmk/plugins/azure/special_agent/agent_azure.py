@@ -341,12 +341,6 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
         type=int,
         help="""Timeout for individual processes in seconds (default 10)""",
     )
-    parser.add_argument(
-        "--piggyback_vms",
-        default="grouphost",
-        choices=["grouphost", "self"],
-        help="""Send VM piggyback data to group host (default) or the VM itself""",
-    )
 
     group_subscription = parser.add_mutually_exclusive_group(required=False)
 
@@ -1601,10 +1595,6 @@ async def _gather_metrics(
 
     tasks = set()
     for (resource_type, resource_location), resource_ids in grouped_resource_ids.items():
-        if resource_type == FetchedResource.virtual_machines.type:
-            if args.piggyback_vms != "self":
-                continue
-
         metric_definitions = ALL_METRICS.get(resource_type, [])
         for metric_definition in metric_definitions:
             cache = MetricCache(
@@ -1660,6 +1650,7 @@ def get_resource_host_labels_section(
         "subscription_id": subscription.id,
     }
     # for backward compatibility
+    # TODO: remove? To be decided
     if resource.info["type"] == "Microsoft.Compute/virtualMachines":
         labels["vm_instance"] = True
 
@@ -1969,12 +1960,10 @@ async def process_resource_health(
 
 
 # TODO: test
-async def process_virtual_machines(
+async def _collect_virtual_machines_resources(
     api_client: BaseAsyncApiClient,
-    args: Args,
-    group_labels: GroupLabels,
     monitored_resources: Mapping[ResourceId, AzureResource],
-) -> Sequence[AzureSection]:
+) -> Sequence[AzureResource]:
     response = await api_client.get_async(
         "providers/Microsoft.Compute/virtualMachines",
         params={
@@ -2002,19 +1991,7 @@ async def process_virtual_machines(
         resource.info["specific_info"] = {"statuses": statuses}
         virtual_machines.append(resource)
 
-    sections: list[AzureSection] = []
-    for resource in virtual_machines:
-        if args.piggyback_vms == "self":
-            sections.append(get_resource_host_labels_section(resource, group_labels))
-
-        section = AzureResourceSection(
-            resource,
-            HostTarget.RESOURCE_NAME if args.piggyback_vms == "self" else HostTarget.PIGGYTARGETS,
-        )
-        section.add(resource.dumpinfo())
-        sections.append(section)
-
-    return sections
+    return virtual_machines
 
 
 # TODO: test
@@ -2149,15 +2126,9 @@ async def process_bulk_resources(
     monitored_resources: Mapping[ResourceId, AzureResource],
     subscription: AzureSubscription,
 ) -> Sequence[AzureSection]:
-    sections: list[AzureSection] = []
-    if FetchedResource.virtual_machines.type in monitored_services:
-        vm_sections = await process_virtual_machines(
-            mgmt_client, args, group_labels, monitored_resources
-        )
-
-        sections.extend(vm_sections)
-
     tasks = set()
+    if FetchedResource.virtual_machines.type in monitored_services:
+        tasks.add(_collect_virtual_machines_resources(mgmt_client, monitored_resources))
     if FetchedResource.app_gateways.type in monitored_services:
         tasks.add(_collect_app_gateways_resources(mgmt_client, monitored_resources))
     if FetchedResource.load_balancers.type in monitored_services:
@@ -2176,10 +2147,7 @@ async def process_bulk_resources(
 
         processed_resources.extend(resources_async)
 
-    async_sections = _gather_sections_from_resources(processed_resources, group_labels)
-    sections.extend(async_sections)
-
-    return sections
+    return _gather_sections_from_resources(processed_resources, group_labels)
 
 
 # TODO: test

@@ -572,8 +572,8 @@ def _parse_command_options(
     description: str, args: Arguments, options: list[Option]
 ) -> tuple[Arguments, CommandOptions]:
     # Give a short overview over the command specific options
-    # when the user specifies --help:
-    if len(args) and args[0] in ["-h", "--help"]:
+    # when the user specifies --help or -h:
+    if any(arg in ["-h", "--help"] for arg in args):
         sys.stdout.write("%s\n\n" % description)
         if options:
             sys.stdout.write("Possible options for this command:\n")

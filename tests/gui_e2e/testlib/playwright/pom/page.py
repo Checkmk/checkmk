@@ -266,36 +266,19 @@ class MainMenu(LocatorHelper):
         self.help_menu(rest_api_text)
         return self._sub_menu(rest_api_text, sub_menu, show_more=False, exact=exact)
 
-    def _searchbar(
-        self, menu: Literal["Search", "Setup", "Monitor"], searchbar_name: str
-    ) -> Locator:
-        self._sub_menu(menu, sub_menu=None).click()
-        _location = self.locator().get_by_role(role="textbox", name=searchbar_name)
-        self._unique_web_element(_location)
-        return _location
-
     @property
     def global_searchbar(self) -> Locator:
-        return self._searchbar(
-            menu="Search", searchbar_name="Search across Checkmk – Type '/' for search operators"
+        self._sub_menu("Search", sub_menu=None).click()
+        _location = self.locator().get_by_role(
+            role="textbox", name="Search across Checkmk – Type '/' for search operators"
         )
-
-    @property
-    def monitor_searchbar(self) -> Locator:
-        """Main menu -> Open monitor -> searchbar"""
-        return self._searchbar(menu="Monitor", searchbar_name="Search with regular expressions")
+        self._unique_web_element(_location)
+        return _location
 
     @property
     def monitor_all_hosts(self) -> Locator:
         """main menu -> monitoring -> All hosts"""
         return self.monitor_menu("All hosts")
-
-    @property
-    def setup_searchbar(self) -> Locator:
-        """Main menu -> Open setup -> searchbar"""
-        return self._searchbar(
-            menu="Setup", searchbar_name="Search for menu entries, settings, hosts and rule sets"
-        )
 
     @property
     def setup_hosts(self) -> Locator:

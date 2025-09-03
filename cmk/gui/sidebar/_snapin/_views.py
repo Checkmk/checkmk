@@ -12,7 +12,6 @@ from cmk.gui import pagetypes
 from cmk.gui.config import active_config, Config
 from cmk.gui.dashboard import get_permitted_dashboards
 from cmk.gui.hooks import request_memoize
-from cmk.gui.htmllib.html import html
 from cmk.gui.http import response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
@@ -21,7 +20,6 @@ from cmk.gui.nodevis.topology import ParentChildTopologyPage
 from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import (
-    ABCMainMenuSearch,
     MainMenu,
     MainMenuTopic,
     Visual,
@@ -50,7 +48,6 @@ def register(
             icon="main_monitoring",
             sort_index=5,
             topics=view_menu_topics,
-            search=MonitoringSearch("monitoring_search"),
         )
     )
 
@@ -149,50 +146,3 @@ def view_menu_items(
     visuals_to_show += page_type_items
 
     return visuals_to_show
-
-
-class MonitoringSearch(ABCMainMenuSearch):
-    """Search field in the monitoring menu"""
-
-    def show_search_field(self) -> None:
-        html.open_div(id_="mk_side_search_monitoring")
-        # TODO: Implement submit action (e.g. show all results of current query)
-        with html.form_context(f"mk_side_{self.name}", add_transid=False, onsubmit="return false;"):
-            tooltip = _(
-                "Search with regular expressions for menu entries, \n"
-                "hosts, services or host and service groups.\n\n"
-                "You can use the following filters:\n"
-                "h: Host\n"
-                "s: Service\n"
-                "hg: Host group\n"
-                "sg: Service group\n"
-                "ad: Address\n"
-                "al: Alias\n"
-                "tg: Host tag\n"
-                "hl: Host label (e.g. hl: cmk/os_family:linux)\n"
-                "sl: Service label (e.g. sl: cmk/os_family:linux)\n"
-                "st: Service state (e.g. st: crit [ok|warn|crit|unkn|pend])\n\n"
-                "Note that for simplicity '*' will be substituted with '.*'."
-            )
-            html.input(
-                id_=f"mk_side_search_field_{self.name}",
-                type_="text",
-                name="search",
-                title=tooltip,
-                autocomplete="off",
-                placeholder=_("Search in Monitoring"),
-                onkeydown="cmk.search.on_key_down('monitoring')",
-                oninput="cmk.search.on_input_search('monitoring')",
-            )
-            html.input(
-                id_=f"mk_side_search_field_clear_{self.name}",
-                name="reset",
-                type_="button",
-                onclick="cmk.search.on_click_reset('monitoring');",
-                # When the user searched for something, let him jump to the first result with the first
-                # <TAB> key press instead of jumping to the reset button. The reset can be triggered via
-                # the <ESC> key.
-                tabindex="-1",
-            )
-        html.close_div()
-        html.div("", id_="mk_side_clear")

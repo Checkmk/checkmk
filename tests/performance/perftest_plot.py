@@ -711,6 +711,8 @@ class PerftestPlotArgs(argparse.Namespace):
         jira_url (str): The URL of the Jira server.
         jira_token_var (str): The name of the environment variable that holds the Jira token.
         jira_token_path (Path): The path of file that holds the Jira token.
+        branch_version (str): The default branch version.
+        edition (str): The default edition.
         log_level (str): Logging level of the application.
     """
 

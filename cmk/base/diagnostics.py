@@ -19,10 +19,11 @@ import traceback
 import urllib.parse
 import uuid
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import datetime
 from functools import cache
 from pathlib import Path
-from typing import Any, override
+from typing import Any, Final, override
 
 import requests
 
@@ -66,7 +67,6 @@ from cmk.utils.paths import omd_root
 from cmk.utils.structured_data import (
     InventoryStore,
     SDNodeName,
-    SDRawTree,
     serialize_tree,
 )
 
@@ -83,6 +83,18 @@ else:
 
     def cmc_specific_attrs(loaded_config: LoadedConfigFragment) -> Mapping[str, int]:
         return {}
+
+
+# TODO: why is there localization in this module?
+
+
+# I think for proper separation, we need to pass these from the outside to this module.
+@dataclass(frozen=True, kw_only=True)
+class _DiagnosticsElement:
+    ident: str
+    title: str
+    description: str
+    content: str
 
 
 SUFFIX = ".tar.gz"
@@ -199,9 +211,22 @@ class DiagnosticsDump:
 
         if OPT_CHECKMK_OVERVIEW in parameters:
             optional_elements.append(
-                CheckmkOverviewDiagnosticsElement(
-                    InventoryStore(cmk.utils.paths.omd_root),
-                    parameters.get(OPT_CHECKMK_OVERVIEW, ""),
+                _DiagnosticsElementWrapper(
+                    _DiagnosticsElement(
+                        ident="checkmk_overview.json",
+                        title=_("Checkmk Overview of Checkmk Server"),
+                        description=_(
+                            "Checkmk Agent, Number, version and edition of sites, cluster host; "
+                            "number of hosts, services, CMK Helper, Live Helper, "
+                            "Helper usage; state of daemons: Apache, Core, Crontab, "
+                            "DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
+                            "(Agent plug-in mk_inventory needs to be installed)"
+                        ),
+                        content=_get_checkmk_overview_content(
+                            InventoryStore(cmk.utils.paths.omd_root),
+                            parameters.get(OPT_CHECKMK_OVERVIEW, ""),
+                        ),
+                    )
                 )
             )
 
@@ -384,6 +409,20 @@ class ABCDiagnosticsElementTextDump(ABCDiagnosticsElement):
     @abc.abstractmethod
     def _collect_infos(self) -> str:
         raise NotImplementedError()
+
+
+class _DiagnosticsElementWrapper(ABCDiagnosticsElementTextDump):
+    """Temporary wrapper to prepare for a cleaner diagnostics API (WIP)"""
+
+    def __init__(self, wrapped: _DiagnosticsElement):
+        self.ident: Final = wrapped.ident
+        self.title: Final = wrapped.title
+        self.description: Final = wrapped.description
+        self._wrapped = wrapped
+
+    @override
+    def _collect_infos(self) -> str:
+        return self._wrapped.content
 
 
 class ABCDiagnosticsElementJSONDump(ABCDiagnosticsElement):
@@ -964,40 +1003,8 @@ class OMDConfigDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         return get_omd_config()
 
 
-class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
-    def __init__(self, inventory_store: InventoryStore, checkmk_server_host: str) -> None:
-        self.inventory_store = inventory_store
-        self.checkmk_server_host = checkmk_server_host
-
-    @override
-    @property
-    def ident(self) -> str:
-        return "checkmk_overview"
-
-    @override
-    @property
-    def title(self) -> str:
-        return _("Checkmk Overview of Checkmk Server")
-
-    @override
-    @property
-    def description(self) -> str:
-        return _(
-            "Checkmk Agent, Number, version and edition of sites, cluster host; "
-            "number of hosts, services, CMK Helper, Live Helper, "
-            "Helper usage; state of daemons: Apache, Core, Crontab, "
-            "DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
-            "(Agent plug-in mk_inventory needs to be installed)"
-        )
-
-    def _collect_infos(self) -> SDRawTree:
-        return _get_checkmk_overview_content(self.inventory_store, self.checkmk_server_host)
-
-
 # TODO: some of this should go to the inventory component
-def _get_checkmk_overview_content(
-    inventory_store: InventoryStore, checkmk_server_host: str
-) -> SDRawTree:
+def _get_checkmk_overview_content(inventory_store: InventoryStore, checkmk_server_host: str) -> str:
     checkmk_server_host = verify_checkmk_server_host(checkmk_server_host)
     try:
         tree = inventory_store.load_inventory_tree(host_name=checkmk_server_host)
@@ -1014,7 +1021,7 @@ def _get_checkmk_overview_content(
         )
     ):
         raise DiagnosticsElementError("No HW/SW Inventory node 'Software > Applications > Checkmk'")
-    return serialize_tree(node)
+    return json.dumps(serialize_tree(node), sort_keys=True, indent=4)
 
 
 #   ---collect exiting files------------------------------------------------

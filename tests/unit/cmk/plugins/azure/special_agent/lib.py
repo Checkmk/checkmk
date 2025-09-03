@@ -26,4 +26,5 @@ def fake_azure_subscription() -> AzureSubscription:
         name="mock_subscription_name",
         tags={},
         safe_hostnames=False,
+        tenant_id="c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
     )

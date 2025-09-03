@@ -10,6 +10,7 @@ from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
     IgnoreResultsError,
+    InventoryPlugin,
     render,
     Result,
     Service,
@@ -20,6 +21,7 @@ from cmk.plugins.lib.azure import (
     create_check_metrics_function_single,
     create_discover_by_metrics_function_single,
     get_service_labels_from_resource_tags,
+    inventory_common_azure,
     MetricData,
     parse_resources,
     Section,
@@ -219,4 +221,9 @@ check_plugin_azure_redis_memory = CheckPlugin(
         "memory_util": ("fixed", (70.0, 80.0)),
         "evicted_keys": ("no_levels", None),
     },
+)
+
+inventory_plugin_azure_redis = InventoryPlugin(
+    name="azure_redis",
+    inventory_function=inventory_common_azure,
 )

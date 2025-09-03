@@ -51,12 +51,7 @@ Args = argparse.Namespace
                     "group": "BurningMan",
                 },
                 TagsImportPatternOption.import_all,
-                subscription=AzureSubscription(
-                    id="mock_subscription_id",
-                    name="mock_subscription_name",
-                    tags={},
-                    safe_hostnames=False,
-                ),
+                subscription=fake_azure_subscription(),
             ),
             {
                 "burningman": {
@@ -241,7 +236,13 @@ def test_write_group_info(
     write_group_info(
         monitored_groups,
         monitored_resources,
-        AzureSubscription("subscription_id", "subscription_name", {}, False),
+        AzureSubscription(
+            "subscription_id",
+            "subscription_name",
+            {},
+            False,
+            "c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
+        ),
         group_tags,
     )
     captured = capsys.readouterr()
@@ -263,7 +264,11 @@ _monitored_vm_resource = lambda tag_pattern_option: {
         },
         tag_pattern_option,
         subscription=AzureSubscription(
-            id="mock_subscription_id", name="mock_subscription_name", tags={}, safe_hostnames=False
+            id="mock_subscription_id",
+            name="mock_subscription_name",
+            tags={},
+            safe_hostnames=False,
+            tenant_id="c8d03e63-0d65-41a7-81fd-0ccc184bdd1a",
         ),
     )
 }

@@ -290,11 +290,19 @@ BULK_QUERIED_RESOURCES = {
 
 
 class AzureSubscription:
-    def __init__(self, id: str, name: str, tags: Mapping[str, str], safe_hostnames: bool) -> None:
+    def __init__(
+        self,
+        id: str,
+        name: str,
+        tags: Mapping[str, str],
+        safe_hostnames: bool,
+        tenant_id: str,
+    ) -> None:
         self.id: Final[str] = id
         self.tags: Final[Mapping[str, str]] = tags
-        self._name: Final[str] = name
+        self.name: Final[str] = name
         self.hostname: Final[str] = HostAddress.project_valid(name)
+        self.tenant_id: Final[str] = tenant_id
 
         self._safe_name_suffix: Final[str] = self.id[-8:]
         self._safe_hostnames: Final[bool] = safe_hostnames
@@ -784,7 +792,12 @@ class AzureResource:
     ) -> None:
         super().__init__()
         self.tags = filter_tags(info.get("tags", {}), tag_key_pattern)
-        self.info = {**info, "tags": self.tags}
+        self.info = {
+            **info,
+            "tags": self.tags,
+            "tenant_id": subscription.tenant_id,
+            "subscription_name": subscription.name,
+        }
         self.info.update(get_attrs_from_uri(info["id"]))
         self.subscription = subscription
 
@@ -2321,6 +2334,7 @@ async def _get_subscriptions(args: Args) -> set[AzureSubscription]:
                     name=item["displayName"],
                     tags=item.get("tags", {}),
                     safe_hostnames=args.safe_hostnames,
+                    tenant_id=args.tenant,
                 )
                 for item in response.get("value", [])
             }

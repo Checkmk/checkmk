@@ -31,9 +31,7 @@ pub trait OraDbEngine {
 
     fn close(&mut self) -> Result<()>;
 
-    fn query(&self, query: &SqlQuery, sep: &str) -> Result<Vec<String>>;
-
-    fn query_table(&self, query: &SqlQuery) -> Result<Vec<Vec<String>>>;
+    fn query_table(&self, query: &SqlQuery) -> QueryResult;
 
     fn clone_box(&self) -> Box<dyn OraDbEngine>;
 }
@@ -74,37 +72,30 @@ impl OraDbEngine for StdEngine {
         Ok(())
     }
 
-    fn query(&self, query: &SqlQuery, sep: &str) -> Result<Vec<String>> {
-        let table = self.query_table(query)?;
-        let result: Vec<String> = table
-            .into_iter()
-            .map(|row| row.join(sep))
-            .collect::<Vec<String>>();
+    fn query_table(&self, query: &SqlQuery) -> QueryResult {
+        fn _query_table(
+            connection: Option<&Connection>,
+            query: &SqlQuery,
+        ) -> Result<Vec<Vec<String>>> {
+            let conn = connection.ok_or_else(|| anyhow::anyhow!("No connection established"))?;
+            let x = query
+                .params()
+                .iter()
+                .map(|(k, v)| {
+                    let z: &dyn ToSql = v;
+                    (k.as_str(), z)
+                })
+                .collect::<Vec<(&str, &dyn ToSql)>>();
 
-        Ok(result)
-    }
+            Ok(conn
+                .query_named(query.as_str(), x.as_slice())?
+                .map(|row| row_to_vector(&row))
+                .collect::<Vec<Vec<String>>>())
+        }
 
-    fn query_table(&self, query: &SqlQuery) -> Result<Vec<Vec<String>>> {
-        let conn = self
-            .connection
-            .as_ref()
-            .ok_or_else(|| anyhow::anyhow!("No connection established"))?;
-        let x = query
-            .params()
-            .iter()
-            .map(|(k, v)| {
-                let z: &dyn ToSql = v;
-                (k.as_str(), z)
-            })
-            .collect::<Vec<(&str, &dyn ToSql)>>();
+        let result = _query_table(self.connection.as_ref(), query);
 
-        let rows = conn.query_named(query.as_str(), x.as_slice())?;
-        // Process rows if needed
-        let result = rows
-            .map(|row| row_to_vector(&row))
-            .collect::<Vec<Vec<String>>>();
-
-        Ok(result)
+        QueryResult(result)
     }
 
     fn clone_box(&self) -> Box<dyn OraDbEngine> {
@@ -158,11 +149,9 @@ impl OraDbEngine for SqlPlusEngine {
         Ok(()) // No operation needed for Sql*Plus
     }
 
-    fn query(&self, _query: &SqlQuery, _sep: &str) -> Result<Vec<String>> {
-        anyhow::bail!("Sql*Plus engine is not implemented yet")
-    }
-    fn query_table(&self, _query: &SqlQuery) -> Result<Vec<Vec<String>>> {
-        anyhow::bail!("Sql*Plus engine is not implemented yet")
+    fn query_table(&self, _query: &SqlQuery) -> QueryResult {
+        let result = Err(anyhow::anyhow!("Sql*Plus engine is not implemented yet"));
+        QueryResult(result)
     }
     fn clone_box(&self) -> Box<dyn OraDbEngine> {
         Box::new(self.clone())
@@ -179,12 +168,9 @@ impl OraDbEngine for JdbcEngine {
         Ok(()) // No operation needed for Sql*Plus
     }
 
-    fn query(&self, _query: &SqlQuery, _sep: &str) -> Result<Vec<String>> {
-        anyhow::bail!("Jdbc engine is not implemented yet")
-    }
-
-    fn query_table(&self, _query: &SqlQuery) -> Result<Vec<Vec<String>>> {
-        anyhow::bail!("Sql*Plus engine is not implemented yet")
+    fn query_table(&self, _query: &SqlQuery) -> QueryResult {
+        let result = Err(anyhow::anyhow!("Sql*Plus engine is not implemented yet"));
+        QueryResult(result)
     }
     fn clone_box(&self) -> Box<dyn OraDbEngine> {
         Box::new(self.clone())
@@ -263,6 +249,20 @@ impl Spot<Closed> {
     }
 }
 
+pub struct QueryResult(pub Result<Vec<Vec<String>>>);
+
+impl QueryResult {
+    pub fn format(self, sep: &str) -> Result<Vec<String>> {
+        let result: Vec<String> = self
+            .0?
+            .into_iter()
+            .map(|row| row.join(sep))
+            .collect::<Vec<String>>();
+
+        Ok(result)
+    }
+}
+
 impl Spot<Opened> {
     pub fn close(mut self) -> Spot<Closed> {
         if let Err(e) = self.engine.close() {
@@ -277,11 +277,7 @@ impl Spot<Opened> {
         }
     }
 
-    pub fn query(&self, query: &SqlQuery, sep: &str) -> Result<Vec<String>> {
-        self.engine.query(query, sep)
-    }
-
-    pub fn query_table(&self, query: &SqlQuery) -> Result<Vec<Vec<String>>> {
+    pub fn query_table(&self, query: &SqlQuery) -> QueryResult {
         self.engine.query_table(query)
     }
 

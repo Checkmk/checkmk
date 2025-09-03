@@ -217,7 +217,7 @@ fn test_local_connection() {
     for i in [None, Some(&InstanceName::from(&endpoint.instance))] {
         let spot = backend::make_spot(&config.endpoint()).unwrap();
         let conn = spot.connect(i).unwrap();
-        let result = conn.query(&TEST_SQL_INSTANCE, "");
+        let result = conn.query_table(&TEST_SQL_INSTANCE).format("");
         assert!(result.is_ok());
         let rows = result.unwrap();
         eprintln!(
@@ -241,7 +241,7 @@ fn test_remote_mini_connection() {
     let spot = backend::make_spot(&config.endpoint()).unwrap();
     println!("Target {:?}", spot.target());
     let conn = spot.connect(None).unwrap();
-    let result = conn.query(&TEST_SQL_INSTANCE, "");
+    let result = conn.query_table(&TEST_SQL_INSTANCE).format("");
     assert!(result.is_ok());
     let rows = result.unwrap();
     assert!(!rows.is_empty());
@@ -346,7 +346,9 @@ fn connect_and_query(
         Separator::default(),
         config.params(),
     );
-    conn.query(&q, &DEFAULT_SEP.to_string()).unwrap()
+    conn.query_table(&q)
+        .format(&DEFAULT_SEP.to_string())
+        .unwrap()
 }
 
 #[test]

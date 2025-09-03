@@ -43,26 +43,30 @@ impl WorkInstances {
 }
 
 fn _get_instances(spot: &OpenedSpot, custom_query: Option<&str>) -> Result<_InstanceEntries> {
-    if let Ok(result) = spot.query_table(&SqlQuery::new(
-        custom_query.unwrap_or(sqls::query::internal::INSTANCE_INFO_SQL_TEXT_NEW),
-        Separator::default(),
-        &Vec::new(),
-    )) {
-        Ok(_to_instance_entries(result))
-    } else {
-        let mut result = spot.query_table(&SqlQuery::new(
-            sqls::query::internal::INSTANCE_INFO_SQL_TEXT_OLD,
+    if let Ok(result) = spot
+        .query_table(&SqlQuery::new(
+            custom_query.unwrap_or(sqls::query::internal::INSTANCE_INFO_SQL_TEXT_NEW),
             Separator::default(),
             &Vec::new(),
-        ))?;
-        let result_with_version = spot.query(
-            &SqlQuery::new(
+        ))
+        .0
+    {
+        Ok(_to_instance_entries(result))
+    } else {
+        let mut result = spot
+            .query_table(&SqlQuery::new(
+                sqls::query::internal::INSTANCE_INFO_SQL_TEXT_OLD,
+                Separator::default(),
+                &Vec::new(),
+            ))
+            .0?;
+        let result_with_version = spot
+            .query_table(&SqlQuery::new(
                 sqls::query::internal::INSTANCE_APPROXIMATE_VERSION,
                 Separator::default(),
                 &Vec::new(),
-            ),
-            "",
-        )?;
+            ))
+            .format("")?;
         if let Some(version) = _extract_version(result_with_version) {
             log::info!("Extracted version: {version}");
             for r in result.iter_mut() {
@@ -123,8 +127,8 @@ pub fn convert_to_num_version(version: &InstanceVersion) -> Option<InstanceNumVe
 mod tests {
     use super::*;
     use crate::config::ora_sql::Endpoint;
-    use crate::ora_sql::backend::OraDbEngine;
     use crate::ora_sql::backend::SpotBuilder;
+    use crate::ora_sql::backend::{OraDbEngine, QueryResult};
     use crate::ora_sql::sqls::query;
     use crate::ora_sql::types::Target;
 
@@ -138,11 +142,8 @@ mod tests {
             Ok(())
         }
 
-        fn query(&self, _query: &SqlQuery, _sep: &str) -> Result<Vec<String>> {
-            Ok(vec![])
-        }
-        fn query_table(&self, query: &SqlQuery) -> Result<Vec<Vec<String>>> {
-            if query.as_str() == query::internal::INSTANCE_INFO_SQL_TEXT_NEW {
+        fn query_table(&self, query: &SqlQuery) -> QueryResult {
+            let result = if query.as_str() == query::internal::INSTANCE_INFO_SQL_TEXT_NEW {
                 Ok(vec![vec![
                     "free".to_string(),       // instance name
                     "0".to_string(),          // CON_ID
@@ -152,7 +153,8 @@ mod tests {
                 ]])
             } else {
                 Err(anyhow::anyhow!("Query not recognized"))
-            }
+            };
+            QueryResult(result)
         }
 
         fn clone_box(&self) -> Box<dyn OraDbEngine> {

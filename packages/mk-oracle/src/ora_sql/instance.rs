@@ -183,16 +183,13 @@ fn _exec_queries(
                 .iter()
                 .flat_map(|(query, title)| {
                     log::info!("Executing query: {}", query.as_str());
-                    let mut result =
-                        conn.query(query, &DEFAULT_SEP.to_string())
-                            .unwrap_or_else(|e| {
-                                log::error!(
-                                    "Failed to execute query for instance {}: {}",
-                                    instance,
-                                    e
-                                );
-                                vec![e.to_string()]
-                            });
+                    let mut result = conn
+                        .query_table(query)
+                        .format(&DEFAULT_SEP.to_string())
+                        .unwrap_or_else(|e| {
+                            log::error!("Failed to execute query for instance {}: {}", instance, e);
+                            vec![e.to_string()]
+                        });
                     result.insert(0, title.clone());
                     result
                 })

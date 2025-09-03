@@ -595,7 +595,7 @@ def _dashboard_edit_entries(
         yield PageMenuEntry(
             title=_("Clone built-in dashboard"),
             icon_name="edit",
-            item=make_simple_link(makeuri(request, [("edit", 1)])),
+            item=make_simple_link(makeuri(request, [("edit", 1), ("owner", user.id)])),
         )
         return
 

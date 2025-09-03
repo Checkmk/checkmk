@@ -48,6 +48,7 @@ def register(
             icon="main_monitoring",
             sort_index=5,
             topics=view_menu_topics,
+            hint=_("Press Ctrl + K to trigger search"),
         )
     )
 

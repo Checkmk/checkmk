@@ -102,15 +102,17 @@ def test_artifact_function_yielded_values() -> None:
     )
 
 
-def files_function_with_aghash(conf: Any, aghash: str) -> FileGenerator:
+def files_function_with_aghash(_conf: Any, _aghash: str) -> FileGenerator:
     yield Plugin(base_os=OS.LINUX, source=Path("dummy"))
 
 
-def scriptlets_function_with_dummy(conf: Any, aghash: str, dummy: Any) -> ScriptletGenerator:
+def scriptlets_function_with_dummy(_conf: Any, _aghash: str, _dummy: Any) -> ScriptletGenerator:
     yield Scriptlet(step=RpmStep.POST, lines=[])
 
 
-def windows_config_function_with_hurz(conf: Any, aghash: str, hurz: Any) -> WindowsConfigGenerator:
+def windows_config_function_with_hurz(
+    _conf: Any, _aghash: str, _hurz: Any
+) -> WindowsConfigGenerator:
     yield WindowsGlobalConfigEntry(name="dummy", content=False)
 
 

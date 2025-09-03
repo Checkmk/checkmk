@@ -45,6 +45,22 @@ py_library(
 )
 
 py_library(
+    name = "bakery",
+    srcs = [
+        "cmk/bakery/v1/__init__.py",
+        "cmk/bakery/v1/_artifact_types.py",
+        "cmk/bakery/v1/_constants.py",
+        "cmk/bakery/v1/_function_types.py",
+        "cmk/bakery/v2_alpha/__init__.py",
+        "cmk/bakery/v2_alpha/_config.py",
+        "cmk/bakery/v2_alpha/_plugins.py",
+    ],
+    data = ["cmk/bakery/py.typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)
+
+py_library(
     name = "graphing",
     srcs = [
         "cmk/graphing/__init__.py",
@@ -122,6 +138,7 @@ py_doc_test(
     size = "small",
     srcs = [
         ":agent_based",
+        ":bakery",
         ":graphing",
         ":inventory_ui",
         ":rulesets",
@@ -145,6 +162,18 @@ py_test(
     deps = [
         ":__test__",
         ":agent_based",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "bakery-test",
+    size = "small",
+    srcs = glob(["tests/cmk/bakery/**/*.py"]) + [":__test__.py"],
+    main = ":__test__.py",
+    deps = [
+        ":__test__",
+        ":bakery",
         requirement("pytest"),
     ],
 )
@@ -205,6 +234,7 @@ py_wheel(
     version = "1.0.0",
     deps = [
         ":agent_based",
+        ":bakery",
         ":graphing",
         ":inventory_ui",
         ":py_typed",
@@ -217,6 +247,7 @@ filegroup(
     name = "py_typed",
     srcs = [
         "cmk/agent_based/py.typed",
+        "cmk/bakery/py.typed",
         "cmk/graphing/py.typed",
         "cmk/inventory_ui/py.typed",
         "cmk/rulesets/py.typed",

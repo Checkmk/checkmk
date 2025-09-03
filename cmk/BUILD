@@ -170,6 +170,7 @@ CMK_PACKAGES = [
     "//packages/cmk-messaging",
     "//packages/cmk-mkp-tool",
     "//packages/cmk-plugin-apis:agent_based",
+    "//packages/cmk-plugin-apis:bakery",
     "//packages/cmk-plugin-apis:graphing",
     "//packages/cmk-plugin-apis:rulesets",
     "//packages/cmk-plugin-apis:server_side_calls",

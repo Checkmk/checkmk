@@ -5,7 +5,7 @@
 
 from pathlib import Path
 
-from cmk.bakery.v2_unstable import OS, Plugin, PluginConfig
+from cmk.bakery.v2_alpha import OS, Plugin, PluginConfig
 from cmk.plugins.ceph.bakery.ceph import bakery_plugin_ceph
 
 

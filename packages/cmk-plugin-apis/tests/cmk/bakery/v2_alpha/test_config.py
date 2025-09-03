@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.bakery.v2_unstable import Secret
+from cmk.bakery.v2_alpha import Secret
 
 _SECRET_VALUE = "t0ps3cr3t%$%!"
 

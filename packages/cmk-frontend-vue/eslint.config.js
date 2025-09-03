@@ -19,7 +19,8 @@ export default [
       '**/dist-dev/**',
       '**/dist-ssr/**',
       '**/coverage/**',
-      'demo/public/mockServiceWorker.js'
+      'demo/public/mockServiceWorker.js',
+      'src/lib/rest-api-client/openapi_internal.d.ts'
     ]
   },
 

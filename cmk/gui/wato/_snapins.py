@@ -30,7 +30,6 @@ from cmk.gui.sidebar import (
     SnapinRegistry,
 )
 from cmk.gui.type_defs import (
-    ABCMainMenuSearch,
     Choices,
     MainMenu,
     MainMenuItem,
@@ -129,45 +128,12 @@ def _hide_menu() -> bool:
     )
 
 
-class SetupSearch(ABCMainMenuSearch):
-    """Search field in the setup menu"""
-
-    def show_search_field(self) -> None:
-        html.open_div(id_="mk_side_search_setup")
-        # TODO: Implement submit action (e.g. show all results of current query)
-        with html.form_context(f"mk_side_{self.name}", add_transid=False, onsubmit="return false;"):
-            tooltip = _("Search for menu entries, settings, hosts and rule sets.")
-            html.input(
-                id_=f"mk_side_search_field_{self.name}",
-                type_="text",
-                name="search",
-                title=tooltip,
-                autocomplete="off",
-                placeholder=_("Search in Setup"),
-                onkeydown="cmk.search.on_key_down('setup')",
-                oninput="cmk.search.on_input_search('setup');",
-            )
-            html.input(
-                id_=f"mk_side_search_field_clear_{self.name}",
-                name="reset",
-                type_="button",
-                onclick="cmk.search.on_click_reset('setup');",
-                # When the user searched for something, let him jump to the first result with the first
-                # <TAB> key press instead of jumping to the reset button. The reset can be triggered via
-                # the <ESC> key.
-                tabindex="-1",
-            )
-        html.close_div()
-        html.div("", id_="mk_side_clear")
-
-
 MainMenuSetup = MainMenu(
     name="setup",
     title=_l("Setup"),
     icon="main_setup",
     sort_index=15,
     topics=get_wato_menu_items,
-    search=SetupSearch("setup_search"),
     hide=_hide_menu,
 )
 

@@ -41,8 +41,6 @@ def test_registered_pages() -> None:
         "ajax_popup_move_to_folder",
         "ajax_reschedule",
         "ajax_search",
-        "ajax_search_monitoring",
-        "ajax_search_setup",
         "ajax_service_discovery",
         "ajax_set_dashboard_start_url",
         "ajax_set_foldertree",

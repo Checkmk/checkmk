@@ -14,7 +14,6 @@ import * as foldable_container from "./modules/foldable_container";
 import * as main_menu_shortcut_handler from "./modules/main_menu_shortcut_handler";
 import * as popup_menu from "./modules/popup_menu";
 import * as quicksearch from "./modules/quicksearch";
-import * as search from "./modules/search";
 import * as sidebar from "./modules/sidebar";
 import * as utils from "./modules/utils";
 import * as valuespecs from "./modules/valuespecs";
@@ -40,6 +39,5 @@ export const cmk_export = {
         visibility_detection: visibility_detection,
         valuespecs: valuespecs,
         popup_menu: popup_menu,
-        search: search,
     },
 };

@@ -651,6 +651,7 @@ class MainMenu(NamedTuple):
     hide: Callable[[], bool] = lambda: False
     vue_app: MainMenuVueApp | None = None
     onopen: str | None = None
+    hint: str | None = None
 
 
 SearchQuery = str

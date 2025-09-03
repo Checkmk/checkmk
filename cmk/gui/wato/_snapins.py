@@ -135,6 +135,7 @@ MainMenuSetup = MainMenu(
     sort_index=15,
     topics=get_wato_menu_items,
     hide=_hide_menu,
+    hint=_("Press Ctrl + K to trigger search"),
 )
 
 

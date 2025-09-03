@@ -244,6 +244,11 @@
               display: none;
             }
           }
+
+          span.main_menu_hint {
+            padding-left: 24px;
+            color: $font-color-dimmed;
+          }
         }
       }
 

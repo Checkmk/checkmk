@@ -198,6 +198,7 @@ def register(main_menu_registry_: MainMenuRegistry) -> None:
             sort_index=10,
             topics=_customize_menu_topics,
             hide=hide_customize_menu,
+            hint=_("Press Ctrl + K to trigger search"),
         )
     )
 

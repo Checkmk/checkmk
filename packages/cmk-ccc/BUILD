@@ -306,6 +306,21 @@ py_test(
     ],
 )
 
+py_test(
+    name = "user-tests",
+    size = "small",
+    srcs = [
+        "__test__.py",
+        "tests/test_user.py",
+    ],
+    main = "__test__.py",
+    deps = [
+        "__test__",
+        "user",
+        requirement("pytest"),
+    ],
+)
+
 py_wheel(
     name = "wheel",
     distribution = "cmk-ccc",

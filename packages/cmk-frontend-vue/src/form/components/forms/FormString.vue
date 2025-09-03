@@ -69,7 +69,7 @@ const componentId = useId()
     :type="'text'"
     :placeholder="untranslated(spec.input_hint || '')"
     :aria-label="untranslated(spec.label || spec.title || '')"
-    :size="props.spec.field_size"
+    :field-size="props.spec.field_size"
     :external-errors="validation"
   />
 </template>

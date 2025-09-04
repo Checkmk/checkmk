@@ -235,6 +235,7 @@ ALL_METRICS: dict[str, list[tuple[str, str, str]]] = {
             "PT1M",
             "total",
         ),
+        ("LatencyP99,cacheLatency", "PT1M", "average"),
     ],
 }
 

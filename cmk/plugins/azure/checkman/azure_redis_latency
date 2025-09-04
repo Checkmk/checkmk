@@ -1,0 +1,13 @@
+title: Microsoft Azure Redis Cache - latency
+agents: azure
+catalog: cloud/azure
+license: GPLv2
+distribution: check_mk
+description:
+ This check reports the P99 server-side command latency and cache internode latency for
+ a Microsoft Cache for Azure instance.
+
+ The thresholds can be configured using the rule "Azure Redis latency".
+
+discovery:
+ One service is created.

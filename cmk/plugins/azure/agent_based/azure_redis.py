@@ -29,6 +29,11 @@ from cmk.plugins.lib.azure import (
 
 agent_section_azure_redis = AgentSection(name="azure_redis", parse_function=parse_resources)
 
+inventory_plugin_azure_redis = InventoryPlugin(
+    name="azure_redis",
+    inventory_function=inventory_common_azure,
+)
+
 
 def discover_azure_redis(section: Section) -> DiscoveryResult:
     for item, resource in section.items():
@@ -223,7 +228,38 @@ check_plugin_azure_redis_memory = CheckPlugin(
     },
 )
 
-inventory_plugin_azure_redis = InventoryPlugin(
-    name="azure_redis",
-    inventory_function=inventory_common_azure,
+check_plugin_azure_redis_latency = CheckPlugin(
+    name="azure_redis_latency",
+    sections=["azure_redis"],
+    service_name="Azure/Redis Latency",
+    discovery_function=create_discover_by_metrics_function_single(
+        "average_LatencyP99",
+        "average_cacheLatency",
+    ),
+    check_function=create_check_metrics_function_single(
+        [
+            MetricData(
+                "average_LatencyP99",
+                "azure_redis_latency_serverside",
+                "Server-side",
+                render.timespan,
+                upper_levels_param="serverside_upper",
+                map_func=lambda us: us / 1000000.0,  # render.timespan wants seconds, not microsec.
+            ),
+            MetricData(
+                "average_cacheLatency",
+                "azure_redis_latency_internode",
+                "Cache internode",
+                render.timespan,
+                upper_levels_param="internode_upper",
+                map_func=lambda us: us / 1000000.0,  # render.timespan wants seconds, not microsec.
+            ),
+        ],
+        check_levels=check_levels_v2,  # Force v2 so default params work without migration params
+    ),
+    check_ruleset_name="azure_redis_latency",
+    check_default_parameters={
+        "serverside_upper": ("no_levels", None),
+        "internode_upper": ("no_levels", None),
+    },
 )

@@ -88,10 +88,28 @@ AZURE_REDIS_WITH_METRICS = {
                 unit="bytes",
             ),
             "total_allevictedkeys": AzureMetric(
-                name="allevictedkeys", aggregation="total", value=42, unit="count"
+                name="allevictedkeys",
+                aggregation="total",
+                value=42,
+                unit="count",
             ),
             "total_allexpiredkeys": AzureMetric(
-                name="allexpiredkeys", aggregation="total", value=140, unit="count"
+                name="allexpiredkeys",
+                aggregation="total",
+                value=140,
+                unit="count",
+            ),
+            "average_LatencyP99": AzureMetric(
+                name="LatencyP99",
+                aggregation="average",
+                value=19765,
+                unit="count",
+            ),
+            "average_cacheLatency": AzureMetric(
+                name="cacheLatency",
+                aggregation="average",
+                value=11469.8,
+                unit="count",
             ),
         },
         subscription="ba9f74ff-6a4c-41e0-ab55-15c7fe79632f",
@@ -192,6 +210,27 @@ def test_check_azure_redis(
                 Metric("azure_redis_expired_keys", 140.0),
             ],
             id="redis memory",
+        ),
+        pytest.param(
+            AZURE_REDIS_WITH_METRICS,
+            {
+                "serverside_upper": ("fixed", (0.019, 0.05)),
+                "internode_upper": ("fixed", (0.009, 0.01)),
+            },
+            azure_redis.check_plugin_azure_redis_latency,
+            [
+                Result(
+                    state=State.WARN,
+                    summary="Server-side: 20 milliseconds (warn/crit at 19 milliseconds/50 milliseconds)",
+                ),
+                Metric("azure_redis_latency_serverside", 0.019765, levels=(0.019, 0.05)),
+                Result(
+                    state=State.CRIT,
+                    summary="Cache internode: 11 milliseconds (warn/crit at 9 milliseconds/10 milliseconds)",
+                ),
+                Metric("azure_redis_latency_internode", 0.011469799999999999, levels=(0.009, 0.01)),
+            ],
+            id="redis latency",
         ),
     ],
 )

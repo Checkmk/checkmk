@@ -15,12 +15,20 @@ from ._settings import ConfigVariableCrashReportTarget, ConfigVariableCrashRepor
 from .views import (
     CommandDeleteCrashReports,
     DataSourceCrashReports,
+    PainterCrashCheckName,
     PainterCrashException,
+    PainterCrashHost,
     PainterCrashIdent,
+    PainterCrashItem,
+    PainterCrashServiceDescription,
     PainterCrashSource,
     PainterCrashTime,
     PainterCrashType,
     PainterCrashVersion,
+    SorterCrashCheckName,
+    SorterCrashHost,
+    SorterCrashItem,
+    SorterCrashServiceDescription,
     SorterCrashTime,
 )
 
@@ -36,13 +44,21 @@ def register(
 ) -> None:
     crash_reporting_pages.register(page_registry)
     data_source_registry.register(DataSourceCrashReports)
+    sorter_registry.register(SorterCrashCheckName)
+    sorter_registry.register(SorterCrashHost)
+    sorter_registry.register(SorterCrashItem)
+    sorter_registry.register(SorterCrashServiceDescription)
     sorter_registry.register(SorterCrashTime)
     command_registry.register(CommandDeleteCrashReports)
+    painter_registry.register(PainterCrashCheckName)
     painter_registry.register(PainterCrashException)
+    painter_registry.register(PainterCrashHost)
     painter_registry.register(PainterCrashIdent)
+    painter_registry.register(PainterCrashItem)
+    painter_registry.register(PainterCrashServiceDescription)
+    painter_registry.register(PainterCrashSource)
     painter_registry.register(PainterCrashTime)
     painter_registry.register(PainterCrashType)
-    painter_registry.register(PainterCrashSource)
     painter_registry.register(PainterCrashVersion)
     config_variable_registry.register(ConfigVariableCrashReportTarget)
     config_variable_registry.register(ConfigVariableCrashReportURL)

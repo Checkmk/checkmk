@@ -164,7 +164,7 @@ mod tests {
     #[test]
     fn test_get_version() {
         let simulated_spot = SpotBuilder::new()
-            .target(&Endpoint::default())
+            .endpoint_target(&Endpoint::default())
             .custom_engine(Box::new(TestOra))
             .build()
             .unwrap();

@@ -270,24 +270,30 @@ impl Default for Discovery {
 }
 
 impl Discovery {
+    pub fn new(detect: bool, include: Vec<String>, exclude: Vec<String>) -> Self {
+        Self {
+            detect,
+            include,
+            exclude,
+        }
+    }
     pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>> {
         let discovery = yaml.get(keys::DISCOVERY);
         if discovery.is_badvalue() {
             return Ok(None);
         }
-        Ok(Some(Self {
-            detect: discovery.get_bool(keys::DETECT, defaults::DISCOVERY_DETECT),
-            include: discovery
-                .get_string_vector(keys::INCLUDE, &[])
-                .into_iter()
-                .map(|x| x.to_uppercase())
-                .collect(),
-            exclude: discovery
-                .get_string_vector(keys::EXCLUDE, &[])
-                .into_iter()
-                .map(|x| x.to_uppercase())
-                .collect(),
-        }))
+        let detect = discovery.get_bool(keys::DETECT, defaults::DISCOVERY_DETECT);
+        let include = discovery
+            .get_string_vector(keys::INCLUDE, &[])
+            .into_iter()
+            .map(|x| x.to_uppercase())
+            .collect();
+        let exclude = discovery
+            .get_string_vector(keys::EXCLUDE, &[])
+            .into_iter()
+            .map(|x| x.to_uppercase())
+            .collect();
+        Ok(Some(Self::new(detect, include, exclude)))
     }
     pub fn detect(&self) -> bool {
         self.detect
@@ -347,6 +353,22 @@ pub struct CustomInstance {
 }
 
 impl CustomInstance {
+    pub fn new(
+        name: InstanceName,
+        auth: Authentication,
+        conn: Connection,
+        alias: Option<InstanceAlias>,
+        piggyback: Option<Piggyback>,
+    ) -> Self {
+        Self {
+            name,
+            auth,
+            conn,
+            alias,
+            piggyback,
+        }
+    }
+
     pub fn from_yaml(
         yaml: &Yaml,
         main_auth: &Authentication,
@@ -359,13 +381,13 @@ impl CustomInstance {
                 .as_str(),
         );
         let (auth, conn) = CustomInstance::ensure_auth_and_conn(yaml, main_auth, main_conn, &name)?;
-        Ok(Self {
+        Ok(Self::new(
             name,
             auth,
             conn,
-            alias: yaml.get_string(keys::ALIAS).map(InstanceAlias::from),
-            piggyback: Piggyback::from_yaml(yaml, sections)?,
-        })
+            yaml.get_string(keys::ALIAS).map(InstanceAlias::from),
+            Piggyback::from_yaml(yaml, sections)?,
+        ))
     }
 
     /// Make auth and conn for custom instance using yaml

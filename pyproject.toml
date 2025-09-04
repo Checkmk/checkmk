@@ -202,6 +202,7 @@ module = [
   "test_mk_postgres",
   "test_mk_sap",
   "test_mtr",
+  "test_nginx_status",
   "test_plesk_backups",
   "test_plesk_domains",
 ]

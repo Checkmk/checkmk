@@ -52,8 +52,9 @@ class PostResponse(BaseModel):
 
 @final
 class SiteMock:
-    def __init__(self, wiremock: Wiremock) -> None:
+    def __init__(self, wiremock: Wiremock, site_name: str) -> None:
         self.wiremock = wiremock
+        self.site_name = site_name
 
     @property
     def base_url(self) -> str:
@@ -61,7 +62,7 @@ class SiteMock:
 
     @property
     def base_route(self) -> str:
-        return "/check_mk/api/1.0"
+        return f"/{self.site_name}/check_mk/api/1.0"
 
     def set_scenario(self, relays: list[Relay], changes: Sequence[Change] | None = None) -> None:
         """Setup a WireMock scenario for relay management testing.

@@ -19,6 +19,7 @@ def test_basic_commands(site: Site) -> None:
         "bin/cmk-piggyback",
         "bin/cmk-piggyback-hub",
         "bin/cmk-update-config",
+        "bin/cmk-config-anonymizer.py",
         "bin/cmk-validate-plugins",
     ]
 

@@ -192,13 +192,17 @@ def get_site_globals(site_id: SiteId, site_config: SiteConfiguration) -> SiteGlo
 
 
 def create_distributed_wato_files(base_dir: Path, site_id: SiteId, is_remote: bool) -> None:
-    _create_distributed_wato_file_for_base(base_dir, site_id, is_remote)
-    _create_distributed_wato_file_for_dcd(base_dir, is_remote)
-    _create_distributed_wato_file_for_omd(base_dir, is_remote)
+    _create_distributed_wato_file_for_base(
+        base_dir.joinpath("etc/check_mk/conf.d/distributed_wato.mk"), site_id, is_remote
+    )
+    _create_distributed_wato_file_for_dcd(
+        base_dir.joinpath("etc/check_mk/dcd.d/wato/distributed.mk"), is_remote
+    )
+    _create_distributed_wato_file_for_omd(base_dir / "etc/omd/distributed.mk", is_remote)
 
 
 def _create_distributed_wato_file_for_base(
-    base_dir: Path, site_id: SiteId, is_remote: bool
+    output_file_path: Path, site_id: SiteId, is_remote: bool
 ) -> None:
     output = wato_fileheader()
     output += (
@@ -209,23 +213,23 @@ def _create_distributed_wato_file_for_base(
     output += "distributed_wato_site = '%s'\n" % site_id
     output += "is_distributed_setup_remote_site = %r\n" % is_remote
 
-    store.save_text_to_file(base_dir.joinpath("etc/check_mk/conf.d/distributed_wato.mk"), output)
+    store.save_text_to_file(output_file_path, output)
 
 
-def _create_distributed_wato_file_for_dcd(base_dir: Path, is_remote: bool) -> None:
+def _create_distributed_wato_file_for_dcd(output_file_path: Path, is_remote: bool) -> None:
     if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.COMMUNITY:
         return
 
     output = wato_fileheader()
     output += "dcd_is_wato_remote_site = %r\n" % is_remote
 
-    store.save_text_to_file(base_dir.joinpath("etc/check_mk/dcd.d/wato/distributed.mk"), output)
+    store.save_text_to_file(output_file_path, output)
 
 
-def _create_distributed_wato_file_for_omd(base_dir: Path, is_remote: bool) -> None:
+def _create_distributed_wato_file_for_omd(output_file_path: Path, is_remote: bool) -> None:
     output = wato_fileheader()
     output += f"is_wato_remote_site = {is_remote}\n"
-    store.save_text_to_file(base_dir / "etc/omd/distributed.mk", output)
+    store.save_text_to_file(output_file_path, output)
 
 
 def create_rabbitmq_new_definitions_file(base_dir: Path, definition: rabbitmq.Definitions) -> None:

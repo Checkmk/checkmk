@@ -694,7 +694,7 @@ class CREConfig:
     wato_hide_help_in_lists: bool = True
 
     # new in 2.1
-    config_storage_format: Literal["standard", "raw", "pickle"] = "pickle"
+    config_storage_format: Literal["standard", "raw", "pickle", "anon"] = "pickle"
 
     # Development tools
 

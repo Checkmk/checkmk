@@ -128,7 +128,7 @@ SearchCriteria = Mapping[str, Any]
 class HostsAndFoldersConfig:
     """Configuration needed by the hosts_and_folders module."""
 
-    config_storage_format: Literal["standard", "pickle", "raw"]
+    config_storage_format: Literal["standard", "pickle", "raw", "anon"]
     wato_hide_folders_without_read_permissions: bool
     wato_host_attrs: Sequence[CustomHostAttrSpec]
     tags: TagConfig
@@ -783,12 +783,12 @@ class _PickleWATOInfoStorage(_ABCWATOInfoStorage):
 class _WATOInfoStorageManager:
     """Handles read/write operations for the .wato file"""
 
-    def __init__(self, storage_format: Literal["standard", "pickle", "raw"]) -> None:
+    def __init__(self, storage_format: Literal["standard", "pickle", "raw", "anon"]) -> None:
         self._write_storages = self._get_write_storages(storage_format)
         self._read_storages = list(reversed(self._write_storages))
 
     def _get_write_storages(
-        self, storage_format: Literal["standard", "pickle", "raw"]
+        self, storage_format: Literal["standard", "pickle", "raw", "anon"]
     ) -> list[_ABCWATOInfoStorage]:
         storages: list[_ABCWATOInfoStorage] = [_StandardWATOInfoStorage()]
         if get_storage_format(storage_format) == StorageFormat.PICKLE:
@@ -1407,14 +1407,18 @@ class Folder(FolderProtocol):
             for host in self._hosts.values():
                 host.drop_caches()
 
-            self._save_hosts_file(pprint_value=pprint_value)
+            self._save_hosts_file(
+                storage_list=self.get_storage_formatters(), pprint_value=pprint_value
+            )
             if may_use_redis():
                 # Inform redis that the modified-timestamp of the folder has been updated.
                 self.tree.redis_client.folder_updated(self.filesystem_path())
 
         call_hook_hosts_changed(self)
 
-    def _save_hosts_file(self, *, pprint_value: bool) -> None:
+    def _save_hosts_file(
+        self, *, storage_list: Sequence[ABCHostsStorage], pprint_value: bool
+    ) -> None:
         Path(self.filesystem_path()).mkdir(mode=0o770, parents=True, exist_ok=True)
         exposed_folder_attributes_for_base = self._folder_attributes_for_base_config()
         if not self.has_hosts() and not exposed_folder_attributes_for_base:
@@ -1534,12 +1538,6 @@ class Folder(FolderProtocol):
             folder_attributes=exposed_folder_attributes_for_base,
         )
 
-        storage_list: list[ABCHostsStorage] = [StandardHostsStorage()]
-        if experimental_storage := make_experimental_hosts_storage(
-            get_storage_format(active_config.config_storage_format)
-        ):
-            storage_list.append(experimental_storage)
-
         formatter = pprint.pformat if pprint_value else repr
         for storage_module in storage_list:
             storage_module.write(
@@ -1547,6 +1545,14 @@ class Folder(FolderProtocol):
                 data,
                 formatter,
             )
+
+    def get_storage_formatters(self) -> list[ABCHostsStorage]:
+        storage_list: list[ABCHostsStorage] = [StandardHostsStorage()]
+        if experimental_storage := make_experimental_hosts_storage(
+            get_storage_format(active_config.config_storage_format)
+        ):
+            storage_list.append(experimental_storage)
+        return storage_list
 
     def _folder_attributes_for_base_config(self) -> dict[str, FolderAttributesForBase]:
         # TODO:

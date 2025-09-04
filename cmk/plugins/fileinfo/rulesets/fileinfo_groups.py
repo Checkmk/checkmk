@@ -150,7 +150,7 @@ def _valuespec_fileinfo_groups() -> Dictionary:
                             "group_name": DictElement(
                                 required=True,
                                 parameter_form=String(
-                                    title=Title("Name of group2"), field_size=FieldSize.MEDIUM
+                                    title=Title("Name of group"), field_size=FieldSize.MEDIUM
                                 ),
                             ),
                             "pattern_configs": DictElement(

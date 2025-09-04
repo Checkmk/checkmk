@@ -1,0 +1,10 @@
+module(
+    name = "cpp-httplib",
+    version = "0.22.0.cmk.1",
+    bazel_compatibility = [">=7.2.1"],
+    compatibility_level = 1,
+)
+
+# bazel_dep(name = "openssl", version = "...")  # req. CMK-25756
+bazel_dep(name = "rules_cc", version = "0.1.2")
+bazel_dep(name = "zlib", version = "1.3.1.bcr.6")

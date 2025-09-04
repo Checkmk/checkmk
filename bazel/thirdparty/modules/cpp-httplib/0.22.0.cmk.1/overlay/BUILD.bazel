@@ -1,0 +1,23 @@
+cc_library(
+    name = "httplib",
+    hdrs = ["httplib.h"],
+    copts = [
+        "-DCPPHTTPLIB_OPENSSL_SUPPORT",
+        "-DCPPHTTPLIB_ZLIB_SUPPORT",
+    ],
+    features = [
+        "parse_headers",
+    ],
+    includes = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        # "@openssl",  # req. CMK-25756
+        "@zlib",
+    ],
+)
+
+alias(
+    name = "cpp-httplib",
+    actual = ":httplib",
+    visibility = ["//visibility:public"],
+)

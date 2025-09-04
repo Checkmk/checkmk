@@ -2,57 +2,40 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import dataclasses
 from collections.abc import Mapping
 from http import HTTPMethod, HTTPStatus
 from typing import Literal
 
 import httpx
+from pydantic import BaseModel, Field
 
-UrlType = Literal["url", "urlPath", "urlPatter,", "urlPathPattern"]
 PatternType = Literal["matchesJsonSchema", "equalTo", "matchesJsonSchema"]
 
 
-@dataclasses.dataclass
-class Request:
+class Request(BaseModel):
     method: Literal["GET", "POST", "PUT", "PATCH", "DELETE"]
-    url_type: UrlType
     url: str
-    body_patterns: list[Mapping[PatternType, str]] | None = None
-    query_parameters: Mapping[str, Mapping[PatternType, str]] | None = None
-
-    def as_dict(self) -> dict[str, object]:
-        d: dict[str, object] = {"method": self.method, self.url_type: self.url}
-        if self.query_parameters:
-            d["queryParameters"] = self.query_parameters
-        if self.body_patterns:
-            d["bodyPatterns"] = self.body_patterns
-        return d
+    bodyPatterns: list[Mapping[PatternType, str]] | None = None
+    queryParameters: Mapping[str, Mapping[PatternType, str]] | None = None
 
 
-@dataclasses.dataclass
-class Response:
+class Response(BaseModel):
     status: int
-    body: str
-    headers: Mapping[str, str]
-
-    def as_dict(self) -> Mapping[str, object]:
-        return dataclasses.asdict(self)
+    body: str | None = None
+    headers: Mapping[str, str] = Field(default_factory=dict)
 
 
-@dataclasses.dataclass
-class WMapping:
+class WMapping(BaseModel):
     # See: https://wiremock.org/docs/standalone/admin-api-reference/#tag/Stub-Mappings
     request: Request
     response: Response
     priority: int = 1
+    scenarioName: str | None = None
+    requiredScenarioState: str | None = None
+    newScenarioState: str | None = None
 
-    def as_dict(self) -> Mapping[str, object]:
-        return {"request": self.request.as_dict(), "response": self.response.as_dict()}
 
-
-@dataclasses.dataclass
-class Wiremock:
+class Wiremock(BaseModel):
     port: int
     wiremock_hostname: str
 
@@ -74,7 +57,7 @@ class Wiremock:
     ) -> None:
         response = httpx.post(
             f"{self.admin_url}/mappings",
-            json=mapping.as_dict(),
+            json=mapping.model_dump(exclude_none=True),
             timeout=1,
         )
         response.raise_for_status()

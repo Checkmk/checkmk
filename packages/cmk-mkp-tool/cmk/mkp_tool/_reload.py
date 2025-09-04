@@ -12,7 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def reload_services_affected_by_mkp_changes() -> None:
     # order matters :-(
-    _omd_service("reload", "automation-helper")
+    _omd_service("restart", "automation-helper")  # to see new plugins we need to restart.
     _omd_service("reload", "ui-job-scheduler")
     _omd_service("reload", "redis")
     _omd_service("reload", "apache")

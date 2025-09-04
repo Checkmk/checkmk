@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from http import HTTPStatus
 
+from cmk.relay_protocols.relays import RelayRegistrationResponse
 from cmk.relay_protocols.tasks import TaskType
 
 from .test_lib.agent_receiver import AgentReceiverClient, register_relay
@@ -14,9 +15,10 @@ def test_a_relay_can_be_registered(agent_receiver: AgentReceiverClient) -> None:
     """
     Register a relay and check if we can obtain a list of pending tasks for it.
     """
-    relay_id = "relay_id"
-    resp = agent_receiver.register_relay(relay_id)
+    resp = agent_receiver.register_relay()
     assert resp.status_code == HTTPStatus.OK
+    parsed = RelayRegistrationResponse.model_validate_json(resp.text)
+    relay_id = parsed.relay_id
 
     resp = agent_receiver.get_relay_tasks(relay_id)
     assert resp.status_code == HTTPStatus.OK

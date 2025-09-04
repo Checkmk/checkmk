@@ -5,18 +5,18 @@
 from __future__ import annotations
 
 from typing import final
-from uuid import uuid4
 
 import httpx
 from fastapi.testclient import TestClient
 
+from cmk.relay_protocols.relays import RelayRegistrationResponse
 from cmk.relay_protocols.tasks import TaskType
 
 
 def register_relay(ar: AgentReceiverClient) -> str:
-    relay_id = str(uuid4())
-    _ = ar.register_relay(relay_id)
-    return relay_id
+    resp = ar.register_relay()
+    parsed = RelayRegistrationResponse.model_validate_json(resp.text)
+    return parsed.relay_id
 
 
 @final
@@ -30,11 +30,10 @@ class AgentReceiverClient:
         self.client = client
         self.site_name = site_name
 
-    def register_relay(self, relay_id: str) -> httpx.Response:
+    def register_relay(self) -> httpx.Response:
         return self.client.post(
             f"/{self.site_name}/agent-receiver/relays",
             json={
-                "relay_id": relay_id,
                 "relay_name": "Relay A",  # TODO: Remove still unused create relay fields
                 "csr": "CSR for Relay A",
             },

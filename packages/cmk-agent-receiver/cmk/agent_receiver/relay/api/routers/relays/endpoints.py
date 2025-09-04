@@ -13,21 +13,19 @@ from cmk.agent_receiver.relay.api.routers.relays.dependencies import (
 )
 from cmk.agent_receiver.relay.api.routers.relays.handlers import (
     RegisterRelayHandler,
-    RelayAlreadyRegisteredError,
     RelayNotFoundError,
     UnregisterRelayHandler,
 )
 from cmk.agent_receiver.relay.lib.shared_types import RelayID
-from cmk.relay_protocols.relays import RelayRegistrationRequest
+from cmk.relay_protocols.relays import RelayRegistrationResponse
 
 router = fastapi.APIRouter()
 
 
 @router.post("/", status_code=fastapi.status.HTTP_200_OK)
 async def register_relay(
-    request: RelayRegistrationRequest,
     handler: Annotated[RegisterRelayHandler, fastapi.Depends(get_register_relay_handler)],
-) -> fastapi.Response:
+) -> RelayRegistrationResponse:
     """Register a new relay entity.
 
     This endpoint allows relay entities to register themselves with the Agent Receiver.
@@ -43,21 +41,8 @@ async def register_relay(
         - Relay ID uniqueness is controlled during registration
         - Collision with existing relay IDs is not allowed
     """
-    # Business logic for relay registration intentionally not implemented
-    # - Validate relay_id uniqueness
-    # - Process CSR
-    # - Store relay information
-    # - Generate and return appropriate certificates
-
-    try:
-        handler.process(RelayID(str(request.relay_id)))
-    except RelayAlreadyRegisteredError:
-        return fastapi.Response(
-            status_code=fastapi.status.HTTP_409_CONFLICT, content="Relay ID already registered"
-        )
-    return fastapi.Response(
-        status_code=fastapi.status.HTTP_200_OK, content="Relay registered successfully"
-    )
+    relay_id = handler.process()
+    return RelayRegistrationResponse(relay_id=relay_id)
 
 
 @router.delete("/{relay_id}")

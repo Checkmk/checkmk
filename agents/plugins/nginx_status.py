@@ -72,10 +72,10 @@ def ensure_str(s, encoding="utf-8", errors="strict"):
     return s
 
 
-def try_detect_servers(ssl_ports):
+def extract_stats_from_netstat(lines, ssl_ports):
     pids = []
     results = []
-    for netstat_line in os.popen("netstat -tlnp 2>/dev/null").readlines():
+    for netstat_line in lines:
         parts = netstat_line.split()
         # Skip lines with wrong format
         if len(parts) < 7 or "/" not in parts[6]:
@@ -118,6 +118,11 @@ def try_detect_servers(ssl_ports):
         results.append((server_proto, server_address, server_port))
 
     return results
+
+
+def try_detect_servers(ssl_ports):
+    netstat_lines = os.popen("netstat -tlnp 2>/dev/null").readlines()
+    return extract_stats_from_netstat(netstat_lines, ssl_ports)
 
 
 def main():

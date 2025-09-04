@@ -3646,12 +3646,12 @@ def make_fetcher_trigger(
 ) -> FetcherTrigger:
     match edition:
         case cmk_version.Edition.CCE | cmk_version.Edition.CME | cmk_version.Edition.CSE:
-            if (_relay_id := get_relay_id(host_labels)) is not None:
+            if (relay_id := get_relay_id(host_labels)) is not None:
                 from cmk.fetchers.cce.trigger import (  # type: ignore[import-not-found, unused-ignore]
                     RelayFetcherTrigger,
                 )
 
-                return RelayFetcherTrigger()
+                return RelayFetcherTrigger(relay_id=relay_id, omd_root=cmk.utils.paths.omd_root)
             return PlainFetcherTrigger()
         case cmk_version.Edition.CEE | cmk_version.Edition.CRE:
             return PlainFetcherTrigger()

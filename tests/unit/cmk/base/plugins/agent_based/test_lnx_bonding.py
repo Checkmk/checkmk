@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterator
+from typing import TypedDict
+
 import pytest
-from typing_extensions import Iterator, TypedDict
 
 from cmk.base.plugins.agent_based import lnx_bonding
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
@@ -15,7 +17,6 @@ from cmk.plugins.lib import bonding
 DATA_FAILOVER = [
     ["==> ./bond0 <=="],
     ["Ethernet Channel Bonding Driver", " v5.13.19-5-pve"],
-    #
     ["Bonding Mode", " fault-tolerance (active-backup)"],
     ["Primary Slave", " None"],
     ["Currently Active Slave", " enp129s0f2"],
@@ -24,7 +25,6 @@ DATA_FAILOVER = [
     ["Up Delay (ms)", " 200"],
     ["Down Delay (ms)", " 200"],
     ["Peer Notification Delay (ms)", " 0"],
-    #
     ["Slave Interface", " enp129s0f2"],
     ["MII Status", " up"],
     ["Speed", " 10000 Mbps"],
@@ -32,7 +32,6 @@ DATA_FAILOVER = [
     ["Link Failure Count", " 0"],
     ["Permanent HW addr", " 3c", "ec", "ef", "28", "4a", "56"],
     ["Slave queue ID", " 0"],
-    #
     ["Slave Interface", " enp129s0f3"],
     ["MII Status", " up"],
     ["Speed", " 10000 Mbps"],

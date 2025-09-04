@@ -750,6 +750,7 @@ COMPONENTS = {
     Component("cmk.cee.bakery"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_CRYPTO,
+        "cmk.bakery.v2_unstable",
         "cmk.base.checkers",
         "cmk.base.config",
         "cmk.base.configlib.loaded_config",

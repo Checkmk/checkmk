@@ -37,3 +37,41 @@ def test_cleanup_host_directories_outdated(tmp_path: Path) -> None:
 
     assert {"outdated_dir"} == _cleanup_host_directories(12300005.0, 3, set(), str(tmp_path))
     assert not outdated.exists()
+
+
+def test_cleanup_host_directories_outdated_files(tmp_path: Path) -> None:
+    (outdated := tmp_path / "outdated_dir").mkdir()
+    (outdated_file := outdated / "outdated").touch()
+    os.utime(outdated_file, (12300000.0, 12300000.0))
+    (outdated_file_2 := outdated / "outdated_2").touch()
+    os.utime(outdated_file_2, (12300000.0, 12300000.0))
+
+    assert {"outdated_dir"} == _cleanup_host_directories(12300005.0, 3, set(), str(tmp_path))
+    assert not outdated.exists()
+
+
+def test_cleanup_host_directories_ignore_keep(tmp_path: Path) -> None:
+    (outdated := tmp_path / "outdated_dir").mkdir()
+    (outdated_file := outdated / "outdated").touch()
+    os.utime(outdated_file, (12300000.0, 12300000.0))
+    (keep := tmp_path / "keep_dir").mkdir()
+    (keep_file := keep / "keep").touch()
+    os.utime(keep_file, (12300000.0, 12300000.0))
+
+    assert {"outdated_dir"} == _cleanup_host_directories(12300005.0, 3, {"keep_dir"}, str(tmp_path))
+    assert not outdated.exists()
+    assert keep.exists()
+
+
+def test_cleanup_host_directories_ignore_outdated_with_subdirectory(tmp_path: Path) -> None:
+    # This test is just for documenting current behaviour. `outdated_file` is an undefined state,
+    # since we use `os.listdir` under the hood and stop once we encounter the subdirectory.
+    (outdated := tmp_path / "outdated_dir").mkdir()
+    (outdated_file := outdated / "outdated").touch()
+    os.utime(outdated_file, (12300000.0, 12300000.0))
+    (outdated_sub := outdated / "sub").mkdir()
+    os.utime(outdated_sub, (12300000.0, 12300000.0))
+
+    assert {"outdated_dir"} == _cleanup_host_directories(12300005.0, 3, set(), str(tmp_path))
+    assert outdated.exists()
+    assert outdated_sub.exists()

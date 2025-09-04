@@ -35,6 +35,9 @@ impl OdbcClient {
     }
 }
 
+/// Unified client for MS SQL, could be `tiberius` or `odbc`
+/// We allow large enum variant because we do not want Box in this old release
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug)]
 pub enum UniClient {
     Std(StdClient),

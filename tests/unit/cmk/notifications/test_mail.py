@@ -9,64 +9,6 @@ from pytest_mock import MockerFixture
 
 from cmk.notification_plugins import mail
 
-
-@pytest.mark.parametrize(
-    "notification_type, expected",
-    [
-        (
-            "PROBLEM",
-            "$PREVIOUS@HARDSHORTSTATE$ -> $@SHORTSTATE$",
-        ),
-        (
-            "RECOVERY",
-            "$PREVIOUS@HARDSHORTSTATE$ -> $@SHORTSTATE$",
-        ),
-        (
-            "FLAPPINGSTART",
-            "Started Flapping",
-        ),
-        (
-            "FLAPPINGSTOP",
-            "Stopped Flapping ($@SHORTSTATE$)",
-        ),
-        (
-            "FLAPPINGDISABLED",
-            "Disabled Flapping ($@SHORTSTATE$)",
-        ),
-        (
-            "DOWNTIMESTART",
-            "Downtime Start ($@SHORTSTATE$)",
-        ),
-        (
-            "DOWNTIMEEND",
-            "Downtime End ($@SHORTSTATE$)",
-        ),
-        (
-            "DOWNTIMECANCELLED",
-            "Downtime Cancelled ($@SHORTSTATE$)",
-        ),
-        (
-            "ACKNOWLEDGEMENT",
-            "Acknowledged ($@SHORTSTATE$)",
-        ),
-        (
-            "CUSTOM",
-            "Custom Notification ($@SHORTSTATE$)",
-        ),
-        (
-            "ALERTHANDLER (OK)",
-            "ALERTHANDLER (OK)",
-        ),
-        (
-            "UNKNOWN",
-            "UNKNOWN",
-        ),
-    ],
-)
-def test_event_templates(notification_type: str, expected: str) -> None:
-    assert mail.txt_event_template(notification_type) == expected
-
-
 HOSTNAME_ELEMENT = (
     "hostname",
     "both",

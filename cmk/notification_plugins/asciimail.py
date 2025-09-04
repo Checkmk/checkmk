@@ -43,53 +43,6 @@ tmpl_alerthandler_service_body = "Service:  $SERVICEDESC$\n" + tmpl_alerthandler
 
 
 def construct_content(context: dict[str, str]) -> str:
-    # Create a notification summary in a new context variable
-    # Note: This code could maybe move to cmk --notify in order to
-    # make it available every in all notification scripts
-    # We have the following types of notifications:
-
-    # - Alerts                OK -> CRIT
-    #   NOTIFICATIONTYPE is "PROBLEM" or "RECOVERY"
-
-    # - Flapping              Started, Ended
-    #   NOTIFICATIONTYPE is "FLAPPINGSTART" or "FLAPPINGSTOP"
-
-    # - Downtimes             Started, Ended, Cancelled
-    #   NOTIFICATIONTYPE is "DOWNTIMESTART", "DOWNTIMECANCELLED", or "DOWNTIMEEND"
-
-    # - Acknowledgements
-    #   NOTIFICATIONTYPE is "ACKNOWLEDGEMENT"
-
-    # - Custom notifications
-    #   NOTIFICATIONTYPE is "CUSTOM"
-
-    notification_type = context["NOTIFICATIONTYPE"]
-    if notification_type in ["PROBLEM", "RECOVERY"]:
-        txt_info = "$PREVIOUS@HARDSHORTSTATE$ -> $@SHORTSTATE$"
-
-    elif notification_type.startswith("FLAP"):
-        if "START" in notification_type:
-            txt_info = "Started Flapping"
-        else:
-            txt_info = "Stopped Flapping ($@SHORTSTATE$)"
-
-    elif notification_type.startswith("DOWNTIME"):
-        what = notification_type[8:].title()
-        txt_info = "Downtime " + what + " ($@SHORTSTATE$)"
-
-    elif notification_type == "ACKNOWLEDGEMENT":
-        txt_info = "Acknowledged ($@SHORTSTATE$)"
-
-    elif notification_type == "CUSTOM":
-        txt_info = "Custom Notification ($@SHORTSTATE$)"
-
-    else:
-        txt_info = notification_type  # Should neven happen
-
-    txt_info = utils.substitute_context(txt_info.replace("@", context["WHAT"]), context)
-
-    context["EVENT_TXT"] = txt_info
-
     # Prepare the mail contents
     if "PARAMETER_COMMON_BODY" in context:
         tmpl_body = context["PARAMETER_COMMON_BODY"]

@@ -12,10 +12,10 @@ from cmk.diskspace.abandoned import _cleanup_host_directories
 def test_cleanup_host_directories(tmp_path: Path) -> None:
     (outdated := tmp_path / "outdated_dir").mkdir()
     (outdated_file := outdated / "outdated").touch()
-    os.utime(str(outdated_file), (12300000.0, 12300000.0))
+    os.utime(outdated_file, (12300000.0, 12300000.0))
     (recent_enough := tmp_path / "recent_enough").mkdir()
     (recent_enough_file1 := recent_enough / "file1").touch()
-    os.utime(str(recent_enough), (12300003.0, 12300003.0))
+    os.utime(recent_enough, (12300003.0, 12300003.0))
     (ignored_outdated_file := recent_enough / "outdated").touch()
     os.utime(ignored_outdated_file, (12300000.0, 12300000.0))
 

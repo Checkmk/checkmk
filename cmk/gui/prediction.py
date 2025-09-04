@@ -30,7 +30,9 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request as request_
 from cmk.gui.i18n import _
 from cmk.gui.pages import PageEndpoint, PageRegistry
+from cmk.gui.permissions import permission_registry
 from cmk.gui.sites import live
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view_breadcrumbs import make_service_breadcrumb
 from cmk.utils.metrics import MetricName
 from cmk.utils.prediction import estimate_levels, PredictionData, PredictionQuerier
@@ -164,7 +166,8 @@ def page_graph(config: Config) -> None:
     metric_name = MetricName(request_.get_str_input_mandatory("dsname"))
     livestatus_connection = live().get_connection(SiteId(request_.get_str_input_mandatory("site")))
 
-    breadcrumb = make_service_breadcrumb(host_name, service_name)
+    user_permissions = UserPermissions.from_config(config, permission_registry)
+    breadcrumb = make_service_breadcrumb(host_name, service_name, user_permissions)
     make_header(
         html,
         _("Prediction for %s - %s - %s") % (host_name, service_name, metric_name),

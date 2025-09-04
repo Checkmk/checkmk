@@ -25,6 +25,7 @@ from cmk.gui.painter_options import painter_option_registry, PainterOptions
 from cmk.gui.role_types import CustomUserRole
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnSpec, SorterSpec
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view import View
 from cmk.gui.views import command
@@ -328,6 +329,7 @@ def test_legacy_register_command(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
     registered_painters = all_painters(active_config.tags.tag_groups)
+    user_permissions = UserPermissions({}, {}, {}, [])
     painters: list[Painter] = [
         painter_class(
             config=active_config,
@@ -335,11 +337,20 @@ def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> No
             painter_options=PainterOptions.get_instance(),
             theme=theme,
             url_renderer=RenderLink(request, response, display_options),
+            user_permissions=user_permissions,
         )
         for painter_class in registered_painters.values()
     ]
     painters_and_cells: list[tuple[Painter, Cell]] = [
-        (painter, Cell(ColumnSpec(name=painter.ident), None, registered_painters))
+        (
+            painter,
+            Cell(
+                ColumnSpec(name=painter.ident),
+                None,
+                registered_painters,
+                user_permissions,
+            ),
+        )
         for painter in painters
     ]
 
@@ -379,8 +390,9 @@ def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) ->
         painter_options=PainterOptions.get_instance(),
         theme=theme,
         url_renderer=RenderLink(request, response, display_options),
+        user_permissions=(user_permissions := UserPermissions({}, {}, {}, [])),
     )
-    dummy_cell = Cell(ColumnSpec(name=painter.ident), None, registered_painters)
+    dummy_cell = Cell(ColumnSpec(name=painter.ident), None, registered_painters, user_permissions)
     assert isinstance(painter, Painter)
     assert painter.ident == "abc"
     assert painter.title(dummy_cell) == "A B C"
@@ -396,7 +408,7 @@ def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) ->
 def test_create_view_basics() -> None:
     view_name = "allhosts"
     view_spec = multisite_builtin_views[view_name]
-    view = View(view_name, view_spec, view_spec.get("context", {}))
+    view = View(view_name, view_spec, view_spec.get("context", {}), UserPermissions({}, {}, {}, []))
 
     assert view.name == view_name
     assert view.spec == view_spec

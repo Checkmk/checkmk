@@ -15,7 +15,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import sites
-from cmk.gui.config import Config
+from cmk.gui.config import active_config, Config
 from cmk.gui.dashboard.type_defs import DashletId, DashletSize
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api
@@ -38,9 +38,11 @@ from cmk.gui.graphing._valuespecs import vs_graph_render_options
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.permissions import permission_registry
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import Choices, GraphRenderOptionsVS, SingleInfos, SizePT, VisualContext
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import (
     Dictionary,
     DictionaryElements,
@@ -269,6 +271,7 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
             graph_recipes = graph_specification.recipes(
                 metrics_from_api,
                 graphs_from_api,
+                UserPermissions.from_config(active_config, permission_registry),
             )
         except MKMissingDataError:
             raise

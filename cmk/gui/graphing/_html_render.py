@@ -40,6 +40,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import Timerange, TimerangeValue
 from cmk.utils.jsontype import JsonSerializable
@@ -102,6 +103,7 @@ def host_service_graph_popup_cmk(
     service_description: ServiceName,
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
+    user_permissions: UserPermissions,
 ) -> None:
     graph_render_config = GraphRenderConfig.from_user_context_and_options(
         user,
@@ -133,6 +135,7 @@ def host_service_graph_popup_cmk(
             graph_render_config,
             registered_metrics,
             registered_graphs,
+            user_permissions,
             render_async=False,
         )
     )
@@ -688,12 +691,15 @@ def render_graphs_from_specification_html(
     graph_render_config: GraphRenderConfig,
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
+    user_permissions: UserPermissions,
     *,
     render_async: bool = True,
     graph_display_id: str = "",
 ) -> HTML:
     try:
-        graph_recipes = graph_specification.recipes(registered_metrics, registered_graphs)
+        graph_recipes = graph_specification.recipes(
+            registered_metrics, registered_graphs, user_permissions
+        )
     except MKLivestatusNotFoundError:
         return render_graph_error_html(
             title=_("Cannot calculate graph recipes"),
@@ -1043,6 +1049,7 @@ def host_service_graph_dashlet_cmk(
     graph_render_config: GraphRenderConfig,
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
+    user_permissions: UserPermissions,
     *,
     graph_display_id: str = "",
 ) -> HTML:
@@ -1075,7 +1082,9 @@ def host_service_graph_dashlet_cmk(
     graph_data_range = make_graph_data_range((start_time, end_time), graph_render_config.size[1])
 
     try:
-        graph_recipes = graph_specification.recipes(registered_metrics, registered_graphs)
+        graph_recipes = graph_specification.recipes(
+            registered_metrics, registered_graphs, user_permissions
+        )
     except MKLivestatusNotFoundError:
         return render_graph_error_html(
             title=_("Cannot calculate graph recipes"),

@@ -33,6 +33,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_external_link, PageMenuDropdown, PageMenuEntry, PageMenuTopic
 from cmk.gui.painter.v0 import Cell, columns_of_cells
 from cmk.gui.painter_options import PainterOptions
+from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import (
     ColumnName,
     PainterParameters,
@@ -42,6 +43,7 @@ from cmk.gui.type_defs import (
     SorterSpec,
     ViewSpec,
 )
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.view import View
 from cmk.gui.view_renderer import ABCViewRenderer, GUIViewRenderer
@@ -78,7 +80,9 @@ def page_show_view(
         datasource = data_source_registry[view_spec["datasource"]]()
         context = visuals.active_context_from_request(datasource.infos, view_spec["context"])
 
-        view = View(view_name, view_spec, context)
+        view = View(
+            view_name, view_spec, context, UserPermissions.from_config(config, permission_registry)
+        )
         view.row_limit = get_limit()
 
         view.only_sites = get_only_sites_from_context(context)

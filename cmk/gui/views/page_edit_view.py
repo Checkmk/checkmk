@@ -25,6 +25,7 @@ from cmk.gui.pages import AjaxPage, PageResult
 from cmk.gui.painter.v0 import all_painters, Cell, Painter
 from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
+from cmk.gui.permissions import permission_registry
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import (
     ColumnName,
@@ -40,6 +41,7 @@ from cmk.gui.type_defs import (
     VisualTypeName,
 )
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import (
     CascadingDropdown,
     CascadingDropdownChoice,
@@ -219,9 +221,13 @@ def view_inventory_join_macros(
     )
 
 
-def view_editor_column_spec(ident: str, ds_name: str) -> Dictionary:
-    choices = [_get_common_vs_column_choice(ds_name, add_custom_column_title=True)]
-    if join_vs_column_choice := _get_join_vs_column_choice(ds_name):
+def view_editor_column_spec(
+    ident: str, ds_name: str, user_permissions: UserPermissions
+) -> Dictionary:
+    choices = [
+        _get_common_vs_column_choice(ds_name, user_permissions, add_custom_column_title=True)
+    ]
+    if join_vs_column_choice := _get_join_vs_column_choice(ds_name, user_permissions):
         choices.append(join_vs_column_choice)
 
     if join_inv_vs_column_choice := _get_join_inv_vs_column_choice(ds_name):
@@ -237,13 +243,19 @@ def view_editor_column_spec(ident: str, ds_name: str) -> Dictionary:
     )
 
 
-def view_editor_grouping_spec(ident: str, ds_name: str) -> Dictionary:
+def view_editor_grouping_spec(
+    ident: str, ds_name: str, user_permissions: UserPermissions
+) -> Dictionary:
     return _view_editor_spec(
         ds_name=ds_name,
         ident=ident,
         title=_("Grouping"),
         vs_column=CascadingDropdown(
-            choices=[_get_common_vs_column_choice(ds_name, add_custom_column_title=False)]
+            choices=[
+                _get_common_vs_column_choice(
+                    ds_name, user_permissions, add_custom_column_title=False
+                )
+            ]
         ),
         allow_empty=True,
         empty_text=None,
@@ -256,8 +268,12 @@ class _VSColumnChoice(NamedTuple):
     vs: Dictionary
 
 
-def _get_common_vs_column_choice(ds_name: str, add_custom_column_title: bool) -> _VSColumnChoice:
-    painters = painters_of_datasource(ds_name)
+def _get_common_vs_column_choice(
+    ds_name: str,
+    user_permissions: UserPermissions,
+    add_custom_column_title: bool,
+) -> _VSColumnChoice:
+    painters = painters_of_datasource(ds_name, user_permissions)
 
     elements = [_get_vs_column_dropdown(ds_name, "painter", painters)]
     if add_custom_column_title:
@@ -278,8 +294,10 @@ def _get_vs_column_title() -> tuple[str, TextInput]:
     return ("column_title", TextInput(title=_("Title")))
 
 
-def _get_join_vs_column_choice(ds_name: str) -> None | _VSColumnChoice:
-    if not (join_painters := join_painters_of_datasource(ds_name)):
+def _get_join_vs_column_choice(
+    ds_name: str, user_permissions: UserPermissions
+) -> None | _VSColumnChoice:
+    if not (join_painters := join_painters_of_datasource(ds_name, user_permissions)):
         return None
 
     return _VSColumnChoice(
@@ -687,7 +705,7 @@ def _column_link_choices() -> list[CascadingDropdownChoice]:
 
 
 def view_editor_sorter_specs(
-    ident: str, ds_name: str, painters: Sequence[ColumnSpec]
+    ident: str, ds_name: str, painters: Sequence[ColumnSpec], user_permissions: UserPermissions
 ) -> Dictionary:
     def _sorter_choices(
         ds_name: str, painters: Sequence[ColumnSpec]
@@ -695,8 +713,9 @@ def view_editor_sorter_specs(
         datasource: ABCDataSource = data_source_registry[ds_name]()
         unsupported_columns: list[ColumnName] = datasource.unsupported_columns
         registered_painters = all_painters(active_config.tags.tag_groups)
+        user_permissions = UserPermissions.from_config(active_config, permission_registry)
 
-        for name, p in sorters_of_datasource(ds_name).items():
+        for name, p in sorters_of_datasource(ds_name, user_permissions).items():
             if any(column in p.columns for column in unsupported_columns):
                 continue
             # Sorters may provide a third element: That Dictionary will be displayed after the
@@ -704,11 +723,14 @@ def view_editor_sorter_specs(
             if isinstance(p, ParameterizedSorter):
                 yield (
                     name,
-                    get_sorter_plugin_title_for_choices(p, registered_painters),
+                    get_sorter_plugin_title_for_choices(p, registered_painters, user_permissions),
                     p.vs_parameters(active_config, painters),
                 )
             else:
-                yield name, get_sorter_plugin_title_for_choices(p, registered_painters)
+                yield (
+                    name,
+                    get_sorter_plugin_title_for_choices(p, registered_painters, user_permissions),
+                )
 
     return Dictionary(
         title=_("Sorting"),
@@ -745,10 +767,11 @@ class PageAjaxCascadingRenderPainterParameters(AjaxPage):
     def page(self, config: Config) -> PageResult:
         api_request = request.get_request()
 
+        user_permissions = UserPermissions.from_config(config, permission_registry)
         if api_request["painter_type"] == "painter":
-            painters = painters_of_datasource(api_request["ds_name"])
+            painters = painters_of_datasource(api_request["ds_name"], user_permissions)
         elif api_request["painter_type"] == "join_painter":
-            painters = join_painters_of_datasource(api_request["ds_name"])
+            painters = join_painters_of_datasource(api_request["ds_name"], user_permissions)
         else:
             raise NotImplementedError()
 
@@ -790,13 +813,16 @@ def render_view_config(view_spec: ViewSpec, general_properties: bool = True) -> 
             [h.table.columns for h in inv_display_hints if isinstance(h.table, TableWithView)],
         ).render_input("macros", value.get("inventory_join_macros"))
 
-    vs_columns = view_editor_column_spec("columns", ds_name)
+    user_permissions = UserPermissions.from_config(active_config, permission_registry)
+    vs_columns = view_editor_column_spec("columns", ds_name, user_permissions)
     vs_columns.render_input("columns", value["columns"])
 
-    vs_sorting = view_editor_sorter_specs("sorting", ds_name, value["columns"]["columns"])
+    vs_sorting = view_editor_sorter_specs(
+        "sorting", ds_name, value["columns"]["columns"], user_permissions
+    )
     vs_sorting.render_input("sorting", value["sorting"])
 
-    vs_grouping = view_editor_grouping_spec("grouping", ds_name)
+    vs_grouping = view_editor_grouping_spec("grouping", ds_name, user_permissions)
     vs_grouping.render_input("grouping", value["grouping"])
 
 
@@ -877,10 +903,13 @@ def create_view_from_valuespec(old_view, view):
         vs.validate_value(attrs, ident)
         view.update(_transform_valuespec_value_to_view(ident, attrs))
 
+    user_permissions = UserPermissions.from_config(active_config, permission_registry)
     update_view("view", view_editor_general_properties(ds_name))
-    update_view("columns", view_editor_column_spec("columns", ds_name))
-    update_view("grouping", view_editor_grouping_spec("grouping", ds_name))
-    update_view("sorting", view_editor_sorter_specs("sorting", ds_name, view["painters"]))
+    update_view("columns", view_editor_column_spec("columns", ds_name, user_permissions))
+    update_view("grouping", view_editor_grouping_spec("grouping", ds_name, user_permissions))
+    update_view(
+        "sorting", view_editor_sorter_specs("sorting", ds_name, view["painters"], user_permissions)
+    )
 
     if _is_inventory_datasource(ds_name):
         update_view(
@@ -900,11 +929,14 @@ def _painter_choices(painters: Mapping[str, Painter]) -> DropdownChoiceEntries:
 
 def _painter_choices_with_params(painters: Mapping[str, Painter]) -> list[CascadingDropdownChoice]:
     registered_painters = all_painters(active_config.tags.tag_groups)
+    user_permissions = UserPermissions.from_config(active_config, permission_registry)
     return sorted(
         (
             (
                 name,
-                _get_painter_plugin_title_for_choices(painter, registered_painters),
+                _get_painter_plugin_title_for_choices(
+                    painter, registered_painters, user_permissions
+                ),
                 painter.parameters if painter.parameters else None,
             )
             for name, painter in painters.items()
@@ -914,16 +946,20 @@ def _painter_choices_with_params(painters: Mapping[str, Painter]) -> list[Cascad
 
 
 def _get_painter_plugin_title_for_choices(
-    plugin: Painter, registered_painters: Mapping[str, type[Painter]]
+    plugin: Painter,
+    registered_painters: Mapping[str, type[Painter]],
+    user_permissions: UserPermissions,
 ) -> str:
-    dummy_cell = Cell(ColumnSpec(plugin.ident), None, registered_painters)
+    dummy_cell = Cell(ColumnSpec(plugin.ident), None, registered_painters, user_permissions)
     return f"{_get_info_title(plugin)}: {plugin.list_title(dummy_cell)}"
 
 
 def get_sorter_plugin_title_for_choices(
-    plugin: Sorter, registered_painters: Mapping[str, type[Painter]]
+    plugin: Sorter,
+    registered_painters: Mapping[str, type[Painter]],
+    user_permissions: UserPermissions,
 ) -> str:
-    dummy_cell = Cell(ColumnSpec(plugin.ident), None, registered_painters)
+    dummy_cell = Cell(ColumnSpec(plugin.ident), None, registered_painters, user_permissions)
     title: str
     if callable(plugin.title):
         title = plugin.title(dummy_cell)
@@ -988,23 +1024,29 @@ def infos_needed_by_plugin(plugin: Painter | Sorter, add_columns: list | None = 
     return {c.split("_", 1)[0] for c in plugin.columns if c != "site" and c not in add_columns}
 
 
-def sorters_of_datasource(ds_name: str) -> Mapping[str, Sorter]:
-    return _allowed_for_datasource(all_sorters(active_config), ds_name)
+def sorters_of_datasource(ds_name: str, user_permissions: UserPermissions) -> Mapping[str, Sorter]:
+    return _allowed_for_datasource(all_sorters(active_config), ds_name, user_permissions)
 
 
-def painters_of_datasource(ds_name: str) -> Mapping[str, Painter]:
-    return _allowed_for_datasource(all_painters(active_config.tags.tag_groups), ds_name)
+def painters_of_datasource(
+    ds_name: str, user_permissions: UserPermissions
+) -> Mapping[str, Painter]:
+    return _allowed_for_datasource(
+        all_painters(active_config.tags.tag_groups), ds_name, user_permissions
+    )
 
 
-def join_painters_of_datasource(ds_name: str) -> Mapping[str, Painter]:
+def join_painters_of_datasource(
+    ds_name: str, user_permissions: UserPermissions
+) -> Mapping[str, Painter]:
     datasource = data_source_registry[ds_name]()
     if datasource.join is None:
         return {}  # no joining with this datasource
 
     # Get the painters allowed for the join "source" and "target"
-    painters = painters_of_datasource(ds_name)
+    painters = painters_of_datasource(ds_name, user_permissions)
     join_painters_unfiltered = _allowed_for_datasource(
-        all_painters(active_config.tags.tag_groups), datasource.join[0]
+        all_painters(active_config.tags.tag_groups), datasource.join[0], user_permissions
     )
 
     # Filter out painters associated with the "join source" datasource
@@ -1018,13 +1060,13 @@ def join_painters_of_datasource(ds_name: str) -> Mapping[str, Painter]:
 
 @overload
 def _allowed_for_datasource(
-    collection: Mapping[str, type[Painter]], ds_name: str
+    collection: Mapping[str, type[Painter]], ds_name: str, user_permissions: UserPermissions
 ) -> Mapping[str, Painter]: ...
 
 
 @overload
 def _allowed_for_datasource(
-    collection: Mapping[str, Sorter], ds_name: str
+    collection: Mapping[str, Sorter], ds_name: str, user_permissions: UserPermissions
 ) -> Mapping[str, Sorter]: ...
 
 
@@ -1033,6 +1075,7 @@ def _allowed_for_datasource(
 def _allowed_for_datasource(
     collection: Mapping[str, type[Painter]] | Mapping[str, Sorter],
     ds_name: str,
+    user_permissions: UserPermissions,
 ) -> Mapping[str, Sorter | Painter]:
     datasource: ABCDataSource = data_source_registry[ds_name]()
     infos_available: set[str] = set(datasource.infos)
@@ -1051,6 +1094,7 @@ def _allowed_for_datasource(
                 painter_options=PainterOptions.get_instance(),
                 theme=theme,
                 url_renderer=RenderLink(request, response, display_options),
+                user_permissions=user_permissions,
             )
         else:
             raise TypeError(f"Unexpected instance type ({type(instance)}): {instance}")

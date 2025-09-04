@@ -26,11 +26,13 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pagetypes import page_menu_add_to_topics
+from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import Choices, VisualContext
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.regex import validate_regex
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import AjaxDropdownChoice
 from cmk.gui.visuals.type import visual_type_registry
 from cmk.utils import paths
@@ -39,7 +41,9 @@ from cmk.utils import paths
 def ajax_popup_add(config: Config) -> None:
     # name is unused at the moment in this, hand over as empty name
     page_menu_dropdown = page_menu_dropdown_add_to_visual(
-        add_type=request.get_ascii_input_mandatory("add_type"), name=""
+        add_type=request.get_ascii_input_mandatory("add_type"),
+        name="",
+        user_permissions=UserPermissions.from_config(config, permission_registry),
     )[0]
 
     html.open_ul()
@@ -71,7 +75,9 @@ def ajax_popup_add(config: Config) -> None:
     html.close_ul()
 
 
-def page_menu_dropdown_add_to_visual(add_type: str, name: str) -> list[PageMenuDropdown]:
+def page_menu_dropdown_add_to_visual(
+    add_type: str, name: str, user_permissions: UserPermissions
+) -> list[PageMenuDropdown]:
     """Create the dropdown menu for adding a visual to other visuals / pagetypes
 
     Please not that this data structure is not only used for rendering the dropdown
@@ -121,7 +127,7 @@ def page_menu_dropdown_add_to_visual(add_type: str, name: str) -> list[PageMenuD
         PageMenuDropdown(
             name="add_to",
             title=_("Add to"),
-            topics=page_menu_add_to_topics(add_type) + visual_topics,
+            topics=page_menu_add_to_topics(add_type, user_permissions) + visual_topics,
             popup_data=[
                 add_type,
                 _encode_page_context(g.get("page_context", {})),

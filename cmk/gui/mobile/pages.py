@@ -21,6 +21,7 @@ from cmk.gui.page_menu_utils import collect_context_links
 from cmk.gui.pages import Page, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.painter_options import PainterOptions
+from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import Rows, VisualContext
 from cmk.gui.userdb import get_active_saml_connections
 from cmk.gui.utils import escaping
@@ -28,6 +29,7 @@ from cmk.gui.utils.confirm_with_preview import command_confirm_dialog
 from cmk.gui.utils.escaping import escape_text
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.login import show_saml2_login, show_user_errors
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri, requested_file_name
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.view import View
@@ -233,11 +235,12 @@ def page_login(config: Config) -> None:
 
 class PageMobileIndex(Page):
     def page(self, config: Config) -> PageResult:
-        _page_index()
+        _page_index(config)
         return None
 
 
-def _page_index() -> None:
+def _page_index(config: Config) -> None:
+    user_permissions = UserPermissions.from_config(config, permission_registry)
     title = _("Checkmk Mobile")
     mobile_html_head(title)
     jqm_page_header(
@@ -251,7 +254,7 @@ def _page_index() -> None:
             datasource = data_source_registry[view_spec["datasource"]]()
             context = visuals.active_context_from_request(datasource.infos, view_spec["context"])
 
-            view = View(view_name, view_spec, context)
+            view = View(view_name, view_spec, context, user_permissions)
             view.row_limit = get_limit()
             view.only_sites = get_only_sites_from_context(context)
             view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
@@ -264,7 +267,7 @@ def _page_index() -> None:
                 painter_options.load(view_name)
                 count = '<span class="ui-li-count">%d</span>' % get_row_count(view)
 
-            topic = PagetypeTopics.get_topic(view_spec.get("topic", ""))
+            topic = PagetypeTopics.get_topic(view_spec.get("topic", ""), user_permissions)
             items.append(
                 (topic.title(), url, "{} {}".format(escape_text(view_spec["title"]), count))
             )
@@ -293,14 +296,14 @@ def _page_index() -> None:
 
 class PageMobileView(Page):
     def page(self, config: Config) -> PageResult:
-        _page_view(debug=config.debug)
+        _page_view(config, debug=config.debug)
         return None
 
 
-def _page_view(*, debug: bool) -> None:
+def _page_view(config: Config, *, debug: bool) -> None:
     view_name = request.var("view_name")
     if not view_name:
-        return _page_index()
+        return _page_index(config)
 
     view_spec = get_permitted_views().get(view_name)
     if not view_spec:
@@ -309,7 +312,8 @@ def _page_view(*, debug: bool) -> None:
     datasource = data_source_registry[view_spec["datasource"]]()
     context = visuals.active_context_from_request(datasource.infos, view_spec["context"])
 
-    view = View(view_name, view_spec, context)
+    user_permissions = UserPermissions.from_config(config, permission_registry)
+    view = View(view_name, view_spec, context, user_permissions)
     view.row_limit = get_limit()
     view.only_sites = get_only_sites_from_context(context)
     view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)

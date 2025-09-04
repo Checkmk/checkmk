@@ -6,6 +6,7 @@
 import pytest
 
 from cmk.ccc.user import UserId
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.views.store import get_all_views
 
@@ -14,4 +15,4 @@ from cmk.gui.views.store import get_all_views
 def view_fixture(request_context: None) -> View:
     view_name = "allhosts"
     view_spec = get_all_views()[(UserId.builtin(), view_name)].copy()
-    return View(view_name, view_spec, view_spec.get("context", {}))
+    return View(view_name, view_spec, view_spec.get("context", {}), UserPermissions({}, {}, {}, []))

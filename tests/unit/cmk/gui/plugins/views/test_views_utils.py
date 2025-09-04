@@ -17,6 +17,7 @@ from cmk.gui.painter.v0.helpers import RenderLink, replace_action_url_macros
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnSpec, Row, SorterSpec, ViewSpec
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.layout import group_value
 from cmk.gui.views.page_show_view import _parse_url_sorters
 from cmk.gui.views.sort_url import _encode_sorter_url
@@ -113,7 +114,10 @@ def test_group_value(monkeypatch: pytest.MonkeyPatch, view_spec: ViewSpec) -> No
         painter_options=PainterOptions.get_instance(),
         theme=theme,
         url_renderer=RenderLink(request, response, display_options),
+        user_permissions=(user_permissions := UserPermissions({}, {}, {}, [])),
     )
-    dummy_cell: Cell = Cell(ColumnSpec(name=painter.ident), None, painter_registry)
+    dummy_cell: Cell = Cell(
+        ColumnSpec(name=painter.ident), None, painter_registry, user_permissions
+    )
 
     assert group_value({"host_tags": {"networking": "dmz"}}, [dummy_cell]) == ("dmz",)

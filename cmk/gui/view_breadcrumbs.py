@@ -9,14 +9,17 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _u
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.pagetypes import PagetypeTopics
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.views.store import get_permitted_views
 from cmk.gui.visuals import view_title
 from cmk.utils.servicename import ServiceName
 
 
-def make_service_breadcrumb(host_name: HostName, service_name: ServiceName) -> Breadcrumb:
-    breadcrumb = make_host_breadcrumb(host_name)
+def make_service_breadcrumb(
+    host_name: HostName, service_name: ServiceName, user_permissions: UserPermissions
+) -> Breadcrumb:
+    breadcrumb = make_host_breadcrumb(host_name, user_permissions)
     breadcrumb.append(_service_breadcrumb(host_name, service_name))
     return breadcrumb
 
@@ -40,14 +43,14 @@ def _service_breadcrumb(host_name: HostName, service_name: ServiceName) -> Bread
     return BreadcrumbItem(title="Service", url=None)
 
 
-def make_host_breadcrumb(host_name: HostName) -> Breadcrumb:
+def make_host_breadcrumb(host_name: HostName, user_permissions: UserPermissions) -> Breadcrumb:
     """Create the breadcrumb down to the "host home page" level"""
     permitted_views = get_permitted_views()
     allhosts_view_spec = permitted_views["allhosts"]
 
     breadcrumb = make_topic_breadcrumb(
         main_menu_registry.menu_monitoring(),
-        PagetypeTopics.get_topic(allhosts_view_spec["topic"]).title(),
+        PagetypeTopics.get_topic(allhosts_view_spec["topic"], user_permissions).title(),
     )
 
     # 1. level: list of all hosts

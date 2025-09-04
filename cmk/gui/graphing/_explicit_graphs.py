@@ -7,6 +7,7 @@ from collections.abc import Mapping, Sequence
 from typing import Literal
 
 from cmk.graphing.v1 import graphs as graphs_api
+from cmk.gui.utils.roles import UserPermissions
 
 from ._from_api import RegisteredMetric
 from ._graph_specification import (
@@ -38,6 +39,7 @@ class ExplicitGraphSpecification(GraphSpecification, frozen=True):
         self,
         registered_metrics: Mapping[str, RegisteredMetric],
         registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
+        user_permissions: UserPermissions,
     ) -> list[GraphRecipe]:
         return [
             GraphRecipe(

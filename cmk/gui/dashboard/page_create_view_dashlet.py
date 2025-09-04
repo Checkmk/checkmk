@@ -17,7 +17,9 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
+from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import ViewName
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import DropdownChoice
@@ -41,7 +43,12 @@ __all__ = ["page_create_link_view_dashlet", "page_create_view_dashlet"]
 def page_create_link_view_dashlet(config: Config) -> None:
     """Choose an existing view from the list of available views"""
     name = request.get_str_input_mandatory("name")
-    choose_view(name, _("Embed existing view"), _create_linked_view_dashlet_spec)
+    choose_view(
+        name,
+        _("Embed existing view"),
+        _create_linked_view_dashlet_spec,
+        UserPermissions.from_config(config, permission_registry),
+    )
 
 
 def _create_linked_view_dashlet_spec(dashlet_id: int, view_name: str) -> LinkedViewDashletConfig:
@@ -72,7 +79,12 @@ def page_create_view_dashlet(config: Config) -> None:
 
     else:
         # Choose an existing view from the list of available views
-        choose_view(name, _("Copy existing view"), _create_cloned_view_dashlet_spec)
+        choose_view(
+            name,
+            _("Copy existing view"),
+            _create_cloned_view_dashlet_spec,
+            UserPermissions.from_config(config, permission_registry),
+        )
 
 
 def _create_cloned_view_dashlet_spec(dashlet_id: int, view_name: str) -> ViewDashletConfig:
@@ -136,6 +148,7 @@ def choose_view(
     name: DashboardName,
     title: str,
     create_dashlet_spec_func: Callable[[DashletId, ViewName], DashletConfig],
+    user_permissions: UserPermissions,
 ) -> None:
     vs_view = DropdownChoice[str](
         title=_("View name"),
@@ -149,7 +162,7 @@ def choose_view(
     except KeyError:
         raise MKUserError("name", _("The requested dashboard does not exist."))
 
-    breadcrumb = dashlet_editor_breadcrumb(name, dashboard, title)
+    breadcrumb = dashlet_editor_breadcrumb(name, dashboard, title, user_permissions)
     make_header(
         html,
         title,

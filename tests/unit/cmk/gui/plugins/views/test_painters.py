@@ -23,6 +23,7 @@ from cmk.gui.painter.v0 import all_painters
 from cmk.gui.painter.v0.painters import _paint_custom_notes
 from cmk.gui.type_defs import ColumnSpec, Row
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.views.page_edit_view import painters_of_datasource
 from cmk.gui.visual_link import render_link_to_view
@@ -881,7 +882,7 @@ def test_registered_painters() -> None:
 
 @pytest.fixture(name="service_painter_idents")
 def fixture_service_painter_names() -> list[str]:
-    return sorted(list(painters_of_datasource("services").keys()))
+    return sorted(list(painters_of_datasource("services", UserPermissions({}, {}, {}, [])).keys()))
 
 
 @pytest.mark.usefixtures("request_context", "patch_theme")
@@ -937,6 +938,7 @@ def _test_painter(painter_ident: str, live: MockLiveStatusConnection) -> None:
             "main_menu_search_terms": [],
         },
         context={},
+        user_permissions=UserPermissions({}, {}, {}, []),
     )
 
     row = _service_row()

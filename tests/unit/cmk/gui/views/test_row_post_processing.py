@@ -5,6 +5,7 @@
 
 import cmk.ccc.version as cmk_version
 from cmk.gui.type_defs import Rows
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.views.row_post_processing import post_process_rows, row_post_processor_registry
 from cmk.gui.views.store import multisite_builtin_views
@@ -50,4 +51,6 @@ def test_post_process_rows_adds_inventory_data(
 
 def inventory_view() -> View:
     view_spec = multisite_builtin_views["inv_hosts_cpu"].copy()
-    return View("inv_hosts_cpu", view_spec, view_spec.get("context", {}))
+    return View(
+        "inv_hosts_cpu", view_spec, view_spec.get("context", {}), UserPermissions({}, {}, {}, [])
+    )

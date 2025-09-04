@@ -309,9 +309,9 @@ boto3==1.37.24 \
     # via
     #   -c constraints.txt
     #   -r cmk/requirements.in
-boto3-stubs[logs]==1.40.21 \
-    --hash=sha256:e396a0b9978d384d7fe22ba1e15eb0109d7e2d7572e746db979d25bf07877fd9 \
-    --hash=sha256:ef36f65c7fe86ffbc93c1418fa8904803ce3bcffc3c932c3d1ae33a9d02fa1cd
+boto3-stubs[logs]==1.40.23 \
+    --hash=sha256:7ac95e297aecf64f393cf7dd5d43ac118b6af1c13be0ab784bf4663df639056c \
+    --hash=sha256:c3d54635b89ac922fa07074094d1802ea6a45c3534354f2a0cb48c3cfd747fdc
     # via -r dev-requirements.in
 botocore==1.37.38 \
     --hash=sha256:23b4097780e156a4dcaadfc1ed156ce25cb95b6087d010c4bb7f7f5d9bc9d219 \
@@ -320,9 +320,9 @@ botocore==1.37.38 \
     #   -r cmk/requirements.in
     #   boto3
     #   s3transfer
-botocore-stubs==1.40.21 \
-    --hash=sha256:10aa6e3c4818d978047fb9ff87f1686ab597899db29e08eb824081fea7d4cbba \
-    --hash=sha256:1a5777e4e4f0335ed7d3185b0f2a55c1fc5ea1e60fe264cdea51a171c3b0b011
+botocore-stubs==1.40.23 \
+    --hash=sha256:552b006bb3312148c04ae5a5b6aadfec2d1003b5c1556d4095727953b75a36a9 \
+    --hash=sha256:dccba3c973db15f63e19e70c1d0045b85be204d13b73126018d88ca4a17e4a4a
     # via
     #   -r dev-requirements.in
     #   boto3-stubs
@@ -1130,9 +1130,9 @@ google-api-core[grpc]==2.25.1 \
     #   google-cloud-monitoring
     #   google-cloud-org-policy
     #   google-cloud-os-config
-google-api-python-client==2.179.0 \
-    --hash=sha256:76a774a49dd58af52e74ce7114db387e58f0aaf6760c9cf9201ab6d731d8bd8d \
-    --hash=sha256:79ab5039d70c59dab874fd18333fca90fb469be51c96113cb133e5fc1f0b2a79
+google-api-python-client==2.181.0 \
+    --hash=sha256:348730e3ece46434a01415f3d516d7a0885c8e624ce799f50f2d4d86c2475fb7 \
+    --hash=sha256:d7060962a274a16a2c6f8fb4b1569324dbff11bfbca8eb050b88ead1dd32261c
     # via -r cmk/requirements.in
 google-auth==2.40.3 \
     --hash=sha256:1370d4593e86213563547f97a92752fc658456fe4514c809544f330fed45a7ca \
@@ -1350,9 +1350,9 @@ httpx==0.28.1 \
     #   -r non-free/packages/cmk-relay-engine/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   schemathesis
-hypothesis==6.138.13 \
-    --hash=sha256:09f1130deb08e5d12fb3b59b55c113fd79debaaab9b224ffac17be8341de4326 \
-    --hash=sha256:2bea91629b8b3bb103a5b51442b1037cede3aae26e56ec063c52b9d5d8eaf70b
+hypothesis==6.138.14 \
+    --hash=sha256:1a702ecfff7034b3252d7a83328093388641cdba863197169559839e841c2154 \
+    --hash=sha256:5c1aa1ce3f1094b5c04ea03476017695bda408a174330e5275e40ddd06d3307a
     # via
     #   -r dev-requirements.in
     #   hypothesis-graphql
@@ -2098,9 +2098,9 @@ meraki==2.0.3 \
     --hash=sha256:91909fb24fe4659495c2d42342c6b6c5d201179f7eec8246d7e8d6fa49a9bfaf \
     --hash=sha256:f2990c6f9d894f0a6990aefd6dc9df385647477c44b5c33a17518347e0a093fd
     # via -r cmk/requirements.in
-more-itertools==10.7.0 \
-    --hash=sha256:9fddd5403be01a94b204faadcff459ec3568cf110265d3c54323e1e866ad29d3 \
-    --hash=sha256:d43980384673cb07d2f7d2d918c616b30c659c089ee23953f601d6609c67510e
+more-itertools==10.8.0 \
+    --hash=sha256:52d4362373dcf7c52546bc4af9a86ee7c4579df9a8dc268be0a2f949d376cc9b \
+    --hash=sha256:f638ddf8a1a0d134181275fb5d58b086ead7c6a72429ad725c67503f13ba30bd
     # via
     #   inflect
     #   jaraco-classes
@@ -3428,9 +3428,9 @@ pysnmpcrypto==0.0.4 \
     --hash=sha256:5889733caa030f45d9e03ea9d6370fb06426a8cb7f839aabbcdde33c6f634679 \
     --hash=sha256:b635fb3b1ec6637b9a0033f50506214e16eb84574b1d25ab027bbde4caa55129
     # via pysnmp-lextudio
-pyspnego==0.11.2 \
-    --hash=sha256:74abc1fb51e59360eb5c5c9086e5962174f1072c7a50cf6da0bda9a4bcfdfbd4 \
-    --hash=sha256:994388d308fb06e4498365ce78d222bf4f3570b6df4ec95738431f61510c971b
+pyspnego==0.12.0 \
+    --hash=sha256:84cc8dae6ad21e04b37c50c1d3c743f05f193e39498f6010cc68ec1146afd007 \
+    --hash=sha256:e1d9cd3520a87a1d6db8d68783b17edc4e1464eae3d51ead411a51c82dbaae67
     # via requests-ntlm
 pytest==8.3.5 \
     --hash=sha256:c69214aa47deac29fad6c2a4f590b9c4a9fdb16a403176fe154b79c0b4d4d820 \
@@ -4361,8 +4361,8 @@ sphinxcontrib-jsmath==1.0.1 \
     --hash=sha256:2ec2eaebfb78f3f2078e73666b1415417a116cc848b72e5172e596c871103178 \
     --hash=sha256:a9925e4a4587247ed2191a22df5f6970656cb8ca2bd6284309578f2153e0c4b8
     # via sphinx
-sphinxcontrib-plantuml==0.30 \
-    --hash=sha256:2a1266ca43bddf44640ae44107003df4490de2b3c3154a0d627cfb63e9a169bf
+sphinxcontrib-plantuml==0.31 \
+    --hash=sha256:fd74752f8ea070e641c3f8a402fccfa1d4a4056e0967b56033d2a76282d9f956
     # via -r dev-requirements.in
 sphinxcontrib-qthelp==2.0.0 \
     --hash=sha256:4fe7d0ac8fc171045be623aba3e2a8f613f8682731f9153bb2e40ece16b9bbab \

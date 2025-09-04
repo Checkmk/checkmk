@@ -10,7 +10,7 @@ exports_files(glob(["bin/**"]))
 directory(
     # Our hermetic clang-tidy uses this target to find the C++ headers.
     name = "x86_64-buildroot-linux-gnu",
-    srcs = ["lib/gcc/x86_64-buildroot-linux-gnu/13.3.0"],
+    srcs = ["lib/gcc/x86_64-buildroot-linux-gnu/14.3.0"],
 )
 
 directory(
@@ -30,7 +30,7 @@ subdirectory(
 subdirectory(
     name = "include-x86_64-buildroot-linux-gnu",
     parent = ":toolchain_root",
-    path = "lib/gcc/x86_64-buildroot-linux-gnu/13.3.0/include",
+    path = "lib/gcc/x86_64-buildroot-linux-gnu/14.3.0/include",
 )
 
 filegroup(

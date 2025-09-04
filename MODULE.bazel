@@ -215,7 +215,7 @@ http_file(
 http_archive(
     name = "gcc-linux-x86_64",
     build_file = "//bazel/toolchains/cc/gcc/bootlin:BUILD.bootlin.bazel",
-    integrity = "sha256-kygjypo+Bn5+KimBCmZtIMnMW7VQ3pR/aHnjis4aqVU=",
+    integrity = "sha256-dgrNXDFZRIthjiN7YZNTNbqtp0/gzcDXYRgmy0m0HIw=",
     patch_cmds = [
         # The tools used by foreign_cc search the tools under their standard,
         # non-decorated names and pass them all the flags, including `--sysroot`.
@@ -234,8 +234,8 @@ exec "$(dirname -- "${BASH_SOURCE[0]}")"/ld.orig "${args[@]}"
 """,
         "chmod 755 x86_64-buildroot-linux-gnu/bin/ld",
     ],
-    strip_prefix = "x86-64--glibc--stable-2024.05-1",
-    urls = ["https://toolchains.bootlin.com/downloads/releases/toolchains/x86-64/tarballs/x86-64--glibc--stable-2024.05-1.tar.xz"],
+    strip_prefix = "x86-64--glibc--stable-2025.08-1",
+    urls = ["https://toolchains.bootlin.com/downloads/releases/toolchains/x86-64/tarballs/x86-64--glibc--stable-2025.08-1.tar.xz"],
 )
 
 http_archive(

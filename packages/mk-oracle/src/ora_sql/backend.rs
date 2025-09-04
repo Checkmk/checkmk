@@ -2,6 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use crate::config::ora_sql::CustomInstance;
 use crate::config::{
     authentication::{AuthType, Authentication, Role},
     connection::EngineTag,
@@ -207,7 +208,7 @@ pub struct Opened;
 pub type OpenedSpot = Spot<Opened>;
 pub type ClosedSpot = Spot<Closed>;
 pub struct Spot<State> {
-    target: Target,
+    pub target: Target,
     engine: Box<dyn OraDbEngine>,
     _database: Option<String>,
     _state: PhantomData<State>,
@@ -300,7 +301,7 @@ impl SpotBuilder {
         self
     }
 
-    pub fn target(mut self, endpoint: &Endpoint) -> Self {
+    pub fn endpoint_target(mut self, endpoint: &Endpoint) -> Self {
         self.target = Some(Target {
             host: endpoint.hostname().clone(),
             instance: endpoint.conn().instance().map(|i| i.to_owned()),
@@ -308,6 +309,19 @@ impl SpotBuilder {
             service_type: endpoint.conn().service_type().map(|t| t.to_owned()),
             port: endpoint.conn().port().clone(),
             auth: endpoint.auth().clone(),
+        });
+        self
+    }
+
+    pub fn custom_instance_target(mut self, instance: &CustomInstance) -> Self {
+        let ep = &instance.endpoint();
+        self.target = Some(Target {
+            host: ep.hostname().clone(),
+            instance: Some(instance.name().clone()),
+            service_name: ep.conn().service_name().map(|n| n.to_owned()),
+            service_type: ep.conn().service_type().map(|t| t.to_owned()),
+            port: ep.conn().port().clone(),
+            auth: ep.auth().clone(),
         });
         self
     }
@@ -344,16 +358,16 @@ impl SpotBuilder {
 
 pub fn make_spot(endpoint: &Endpoint) -> Result<ClosedSpot> {
     SpotBuilder::new()
-        .target(endpoint)
+        .endpoint_target(endpoint)
         .engine_type(endpoint.conn().engine_tag())
         .build()
 }
 
-pub fn make_custom_spot(endpoint: &Endpoint, instance: &InstanceName) -> Result<ClosedSpot> {
-    make_spot(endpoint).map(|mut s| {
-        s.target.instance = Some(instance.to_owned());
-        s
-    })
+pub fn make_custom_spot(instance: &CustomInstance) -> Result<ClosedSpot> {
+    SpotBuilder::new()
+        .custom_instance_target(instance)
+        .engine_type(instance.endpoint().conn().engine_tag())
+        .build()
 }
 
 pub fn obtain_config_credentials(auth: &Authentication) -> Option<Credentials> {

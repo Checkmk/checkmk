@@ -3,15 +3,17 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::config::{self, OracleConfig};
-use crate::ora_sql::backend::{make_spot, ClosedSpot, OpenedSpot};
+use crate::ora_sql::backend::{make_custom_spot, make_spot, ClosedSpot, OpenedSpot};
 use crate::ora_sql::custom::get_sql_dir;
 use crate::ora_sql::section::Section;
 use crate::ora_sql::system::WorkInstances;
 use crate::setup::Env;
 use crate::types::{InstanceName, InstanceNumVersion, Separator, SqlBindParam, SqlQuery, Tenant};
 use crate::utils;
+use std::collections::HashSet;
 
 use crate::config::defines::defaults::DEFAULT_SEP;
+use crate::config::ora_sql::CustomInstance;
 use anyhow::Result;
 
 impl OracleConfig {
@@ -69,7 +71,8 @@ async fn generate_data(
     // TODO: customize instances
     // TODO: resulting in the list of endpoints
 
-    let all = calc_spots(vec![ora_sql.endpoint()]);
+    let all = calc_all_spots(vec![ora_sql.endpoint()], ora_sql.instances());
+    let all = filter_spots(all, ora_sql.discovery());
     let connected = connect_spots(all, None);
 
     let sections = ora_sql
@@ -255,7 +258,37 @@ fn connect_spots(spots: Vec<ClosedSpot>, instance: Option<&InstanceName>) -> Vec
     connected
 }
 
-fn calc_spots(endpoints: Vec<config::ora_sql::Endpoint>) -> Vec<ClosedSpot> {
+fn calc_all_spots(
+    endpoints: Vec<config::ora_sql::Endpoint>,
+    instances: &[CustomInstance],
+) -> Vec<ClosedSpot> {
+    let mut all = calc_main_spots(endpoints);
+    all.extend(calc_custom_spots(instances));
+    all
+}
+
+fn filter_spots(spots: Vec<ClosedSpot>, discovery: &config::ora_sql::Discovery) -> Vec<ClosedSpot> {
+    let include: HashSet<&String> = HashSet::from_iter(discovery.include());
+    let exclude: HashSet<&String> = if include.is_empty() {
+        HashSet::from_iter(discovery.exclude())
+    } else {
+        HashSet::new()
+    };
+    spots
+        .into_iter()
+        .filter(|spot| {
+            let name: String = spot.target().instance.clone().unwrap_or_default().into();
+            if !include.is_empty() {
+                return include.contains(&name);
+            } else if !exclude.is_empty() {
+                return !exclude.contains(&name);
+            }
+            true
+        })
+        .collect()
+}
+
+fn calc_main_spots(endpoints: Vec<config::ora_sql::Endpoint>) -> Vec<ClosedSpot> {
     log::info!("ENDPOINTS: {:?}", endpoints);
     endpoints
         .into_iter()
@@ -271,17 +304,79 @@ fn calc_spots(endpoints: Vec<config::ora_sql::Endpoint>) -> Vec<ClosedSpot> {
         .collect::<Vec<ClosedSpot>>()
 }
 
+fn calc_custom_spots(instances: &[CustomInstance]) -> Vec<ClosedSpot> {
+    log::info!("CUSTOM INSTANCES: {:?}", instances);
+    instances
+        .iter()
+        .filter_map(|instance| {
+            make_custom_spot(instance).map_or_else(
+                |error| {
+                    log::error!("Error creating spot for endpoint {error}");
+                    None
+                },
+                Some,
+            )
+        })
+        .collect::<Vec<ClosedSpot>>()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::ora_sql::Discovery;
 
     #[test]
     fn test_calc_spots() {
-        assert!(calc_spots(vec![]).is_empty());
-        let all = calc_spots(vec![
+        assert!(calc_main_spots(vec![]).is_empty());
+        let all = calc_main_spots(vec![
             config::ora_sql::Endpoint::default(),
             config::ora_sql::Endpoint::default(),
         ]);
         assert_eq!(all.len(), 2);
+    }
+    fn make_instance(name: &str) -> config::ora_sql::CustomInstance {
+        config::ora_sql::CustomInstance::new(
+            InstanceName::from(name),
+            config::authentication::Authentication::default(),
+            config::connection::Connection::default(),
+            None,
+            None,
+        )
+    }
+    #[test]
+    fn test_calc_custom_spots() {
+        assert!(calc_custom_spots(&[]).is_empty());
+        let all = calc_custom_spots(&[make_instance("A"), make_instance("B")]);
+        assert_eq!(all.len(), 2);
+    }
+    #[test]
+    fn test_filter_spots() {
+        let all = calc_all_spots(
+            vec![config::ora_sql::Endpoint::default()],
+            &[make_instance("A"), make_instance("B")],
+        );
+        assert_eq!(all.len(), 3);
+        let d = Discovery::default();
+        assert_eq!(filter_spots(all.clone(), &d).len(), 3);
+        let d = Discovery::new(false, vec!["".to_string()], vec![]);
+        assert_eq!(filter_spots(all.clone(), &d).len(), 1);
+        let d = Discovery::new(
+            false,
+            vec!["".to_string(), "A".to_string(), "x".to_string()], // 2 left
+            vec!["".to_string(), "A".to_string(), "B".to_string()], // ignored
+        );
+        assert_eq!(filter_spots(all.clone(), &d).len(), 2);
+        let d = Discovery::new(
+            false,
+            vec![],                                                 // 2 left
+            vec!["".to_string(), "A".to_string(), "B".to_string()], // ignored
+        );
+        assert_eq!(filter_spots(all.clone(), &d).len(), 0);
+        let d = Discovery::new(
+            false,
+            vec![],                                 // 2 left
+            vec!["A".to_string(), "B".to_string()], // ignored
+        );
+        assert_eq!(filter_spots(all.clone(), &d).len(), 1);
     }
 }

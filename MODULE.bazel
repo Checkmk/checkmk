@@ -178,11 +178,11 @@ new_local_repository(
 filegroup(
     name = "cpp_libs",
     srcs = glob([
-        "gcc-13.2.0/lib64/libgcc_s.so",
-        "gcc-13.2.0/lib64/libgcc_s.so.1",
-        "gcc-13.2.0/lib64/libstdc++.so",
-        "gcc-13.2.0/lib64/libstdc++.so.6",
-        "gcc-13.2.0/lib64/libstdc++.so.6.0.32",
+        "gcc-14.2.0/lib64/libgcc_s.so",
+        "gcc-14.2.0/lib64/libgcc_s.so.1",
+        "gcc-14.2.0/lib64/libstdc++.so",
+        "gcc-14.2.0/lib64/libstdc++.so.6",
+        "gcc-14.2.0/lib64/libstdc++.so.6.0.32",
     ],
     allow_empty = True,
     ),

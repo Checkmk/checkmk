@@ -60,6 +60,7 @@ def site(wiremock: Wiremock) -> SiteMock:
     """
     Create a site mock instance.
     """
+    wiremock.reset()
     return SiteMock(wiremock=wiremock)
 
 

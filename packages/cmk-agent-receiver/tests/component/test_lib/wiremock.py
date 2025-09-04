@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import dataclasses
 from collections.abc import Mapping
-from http import HTTPMethod
+from http import HTTPMethod, HTTPStatus
 from typing import Literal
 
 import httpx
@@ -60,12 +60,20 @@ class Wiremock:
     def base_url(self) -> str:
         return f"http://{self.wiremock_hostname}:{self.port}"
 
+    @property
+    def admin_url(self) -> str:
+        return f"{self.base_url}/__admin"
+
+    def reset(self) -> None:
+        resp = httpx.delete(f"{self.admin_url}/mappings")
+        assert resp.status_code == HTTPStatus.OK
+
     def setup_mapping(
         self,
         mapping: WMapping,
     ) -> None:
         response = httpx.post(
-            f"{self.base_url}/__admin/mappings",
+            f"{self.admin_url}/mappings",
             json=mapping.as_dict(),
             timeout=1,
         )
@@ -78,7 +86,7 @@ class Wiremock:
         }
 
         response = httpx.post(
-            f"{self.base_url}/__admin/requests/find",
+            f"{self.admin_url}/requests/find",
             json=query,
             timeout=1,
         )

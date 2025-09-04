@@ -4269,7 +4269,13 @@ COMMANDS: Final = [
             Option("version", "V", True, "only start services having version ARG"),
             Option("parallel", "p", False, "Invoke start of sites in parallel"),
         ],
-        description="Start services of one or all sites",
+        description=(
+            "Start services of one or all sites. This command reports one of the following exit codes.\n"
+            " * 0: All services started successfully.\n"
+            " * 1: The command failed to start any service.\n"
+            " * 2: When targeting a single site, this indicates that one or more services failed to start. "
+            "When targeting multiple sites, this indicates that an unspecific error occurred."
+        ),
         confirm_text="",
     ),
     Command(

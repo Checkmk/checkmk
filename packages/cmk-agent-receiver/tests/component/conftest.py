@@ -56,12 +56,12 @@ def wiremock(wiremock_container: Container) -> Wiremock:
 
 
 @pytest.fixture
-def site(wiremock: Wiremock) -> SiteMock:
+def site(wiremock: Wiremock, site_name: str) -> SiteMock:
     """
     Create a site mock instance.
     """
     wiremock.reset()
-    return SiteMock(wiremock=wiremock)
+    return SiteMock(wiremock, site_name)
 
 
 @pytest.fixture

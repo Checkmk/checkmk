@@ -10,4 +10,3 @@ class RelayRegistrationRequest(BaseModel, frozen=True):
     relay_id: str
     relay_name: str
     csr: str
-    auth_token: str

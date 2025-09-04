@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-import uuid
 
 import pytest
 
@@ -16,7 +15,7 @@ from cmk.relay_protocols.tasks import (
     TaskType,
 )
 
-from .test_lib.agent_receiver import AgentReceiverClient
+from .test_lib.agent_receiver import AgentReceiverClient, register_relay
 from .test_lib.tasks import get_relay_tasks, push_task
 
 RESPONSE_PAYLOAD = "some response payload"
@@ -172,9 +171,7 @@ def test_the_other_tasks_are_not_changed(
 
 @pytest.fixture
 def relay_id(agent_receiver: AgentReceiverClient) -> str:
-    relay_id = str(uuid.uuid4())
-    agent_receiver.register_relay(relay_id=relay_id)
-    return relay_id
+    return register_relay(agent_receiver)
 
 
 def add_tasks(count: int, agent_receiver: AgentReceiverClient, relay_id: str) -> list[TaskID]:

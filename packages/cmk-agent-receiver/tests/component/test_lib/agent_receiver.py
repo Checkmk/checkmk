@@ -2,8 +2,10 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from __future__ import annotations
 
 from typing import final
+from uuid import uuid4
 
 import httpx
 from fastapi.testclient import TestClient
@@ -11,12 +13,17 @@ from fastapi.testclient import TestClient
 from cmk.relay_protocols.tasks import TaskType
 
 
+def register_relay(ar: AgentReceiverClient) -> str:
+    relay_id = str(uuid4())
+    _ = ar.register_relay(relay_id)
+    return relay_id
+
+
 @final
 class AgentReceiverClient:
     """A wrapper class that gives more human readable api for writing tests
 
     It gives still direct access to the APIs and generally returns the raw api responses
-
     """
 
     def __init__(self, client: TestClient, site_name: str) -> None:
@@ -30,7 +37,6 @@ class AgentReceiverClient:
                 "relay_id": relay_id,
                 "relay_name": "Relay A",  # TODO: Remove still unused create relay fields
                 "csr": "CSR for Relay A",
-                "auth_token": "auth-token-A",
             },
         )
 

@@ -4239,6 +4239,10 @@ msgstr "Adăugați o nouă agregare"
 msgid "Add new constant"
 msgstr "Adăugați o nouă constantă"
 
+#, fuzzy
+msgid "Add new credentials"
+msgstr "Utilizați acreditările"
+
 msgid "Add new element"
 msgstr "Adaungă un nou element"
 
@@ -7753,7 +7757,7 @@ msgid "Authorizations per DB security group"
 msgstr "Autorizații per grup de securitate DB"
 
 #, fuzzy
-msgid "Authorized users"
+msgid "Authorized user"
 msgstr "Site-uri autorizate"
 
 #, fuzzy
@@ -33371,6 +33375,14 @@ msgstr ""
 "fișier local. Procesele cu acces de citire la acel fișier vor putea utiliza "
 "Multisite ca serviciu web fără alte configurări."
 
+#, fuzzy, python-format
+msgid ""
+"If you want to continue to use Checkmk and keep your data, please contact "
+"the Checkmk sales team at %s."
+msgstr ""
+"Dacă doriți să continuați să folosiți Checkmk, vă rugăm să achiziționați o "
+"licență de suport %s sau să contactați echipa de vânzări Checkmk la %s."
+
 #, python-format
 msgid ""
 "If you want to continue to use Checkmk without restrictions, please contact "
@@ -33381,14 +33393,6 @@ msgstr ""
 "contactați echipa de vânzări Checkmk la %s și să vă reînnoiți licența. Dacă "
 "v-ați achiziționat licența prin intermediul unui %s, vă rugăm să îl "
 "contactați."
-
-#, fuzzy, python-format
-msgid ""
-"If you want to continue to use Checkmk, please contact the Checkmk sales "
-"team at %s."
-msgstr ""
-"Dacă doriți să continuați să folosiți Checkmk, vă rugăm să achiziționați o "
-"licență de suport %s sau să contactați echipa de vânzări Checkmk la %s."
 
 #, python-format
 msgid ""
@@ -37775,10 +37779,6 @@ msgstr "Licența a expirat: Reînnoiți licența acum"
 
 #, fuzzy
 msgid "License expired: Renew license now to avoid site deletion."
-msgstr "Licența a expirat: Reînnoiți licența acum"
-
-#, fuzzy
-msgid "License expired: Renew license now to reactivate change activation."
 msgstr "Licența a expirat: Reînnoiți licența acum"
 
 msgid "License start"
@@ -66557,26 +66557,26 @@ msgstr ""
 msgid "The host name attribute needs to be assigned to a column."
 msgstr "Atributul \"host name\" trebuie să fie atribuit unei coloane."
 
-#, python-brace-format
+#, python-format
 msgid ""
 "The host name computation computes the name of the host that should have the "
 "corresponding Checkmk services. The computation is done by the OpenTelemetry "
-"collector and the result is stored in the \"{attr}\" attribute. For every "
-"rule configured here, the provided fields are concatenated in the order they "
-"are listed. The first rule that results in a non-empty value is used. For "
+"collector and the result is stored in the \"%s\" attribute. For every rule "
+"configured here, the provided fields are concatenated in the order they are "
+"listed. The first rule that results in a non-empty value is used. For "
 "example:\n"
-"{startol}A first rule consisting of one field \"Value of attribute: "
-"service.name\" will set \"{attr}\" to the value of that attribute, if it is "
+"<ol><li>A first rule consisting of one field \"Value of attribute: "
+"service.name\" will set \"%s\" to the value of that attribute, if it is "
 "present. This attribute will be set to the prometheus scrape jobs name, for "
-"example.{newli}A second rule consisting of one field \"Value of attribute: "
-"container.name\" will set \"{attr}\" to the value of that attribute, if it "
-"is present and \"{attr}\" has not been set by the previous rule.{newli}A "
-"third rule consisting of two fields \"Resource attribute value: "
-"custom_attr\" and \"Literal string: some_suffix\" will set \"{attr}\" to "
-"\"VALUEsome_suffix\", if the attribute is present and \"{attr}\" has not "
-"been set by the previous rules.{newli}A last rule consisting of one field "
-"\"Literal string: fallback_host\" will set all \"{attr}\" attributes that "
-"are not yet filled to \"fallback_host\".{endol}"
+"example.</li><li>A second rule consisting of one field \"Value of attribute: "
+"container.name\" will set \"%s\" to the value of that attribute, if it is "
+"present and \"%s\" has not been set by the previous rule.</li><li>A third "
+"rule consisting of two fields \"Resource attribute value: custom_attr\" and "
+"\"Literal string: some_suffix\" will set \"%s\" to \"VALUEsome_suffix\", if "
+"the attribute is present and \"%s\" has not been set by the previous rules.</"
+"li><li>A last rule consisting of one field \"Literal string: fallback_host\" "
+"will set all \"%s\" attributes that are not yet filled to \"fallback_host\"."
+"</li></ol>"
 msgstr ""
 
 #, fuzzy
@@ -86707,11 +86707,6 @@ msgstr "Trebuie să selectați cel puțin un utilizator."
 msgid "You have to specify a connector to migrate to."
 msgstr "Trebuie să specificați un conector către care să migrați."
 
-msgid ""
-"You have to specify at least one authenticated user to use Basic "
-"Authentication on an endpoint"
-msgstr ""
-
 #, fuzzy, python-format
 msgid "You have to specify at least one receiver: %s"
 msgstr "Trebuie să selectați cel puțin un utilizator."
@@ -89297,6 +89292,10 @@ msgstr[0] "site"
 msgstr[1] "site"
 msgstr[2] "site"
 
+#, fuzzy, python-format
+msgid "site must be a list. Current type is: %s "
+msgstr "Tipul trebuie să fie listă, dar este %s."
+
 msgid "slots"
 msgstr "slot-uri"
 
@@ -89691,6 +89690,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, fuzzy
+#~ msgid "License expired: Renew license now to reactivate change activation."
+#~ msgstr "Licența a expirat: Reînnoiți licența acum"
 
 #, fuzzy
 #~ msgid "Define levels for"

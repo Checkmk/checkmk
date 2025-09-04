@@ -4268,6 +4268,10 @@ msgstr "Ajouter une nouvelle agrégation"
 msgid "Add new constant"
 msgstr "Ajouter une nouvelle constante"
 
+#, fuzzy
+msgid "Add new credentials"
+msgstr "Utiliser les informations d'identification"
+
 msgid "Add new element"
 msgstr "Ajouter un nouvel élément"
 
@@ -7817,7 +7821,7 @@ msgid "Authorizations per DB security group"
 msgstr "Autorisations par groupe de sécurité de la BD"
 
 #, fuzzy
-msgid "Authorized users"
+msgid "Authorized user"
 msgstr "Sites autorisés"
 
 #, fuzzy
@@ -33621,6 +33625,14 @@ msgstr ""
 "local. Les processus ayant un accès en lecture à ce fichier seront en mesure "
 "d'utiliser Multisite comme un webservice sans autre configuration."
 
+#, fuzzy, python-format
+msgid ""
+"If you want to continue to use Checkmk and keep your data, please contact "
+"the Checkmk sales team at %s."
+msgstr ""
+"Si vous souhaitez continuer à utiliser Checkmk, veuillez contacter l'équipe "
+"de vente de Checkmk à %s."
+
 #, python-format
 msgid ""
 "If you want to continue to use Checkmk without restrictions, please contact "
@@ -33631,14 +33643,6 @@ msgstr ""
 "contacter l'équipe de vente de Checkmk à %s et renouveler votre licence. Si "
 "vous avez acheté votre licence par l'intermédiaire d'un %s, veuillez le "
 "contacter."
-
-#, python-format
-msgid ""
-"If you want to continue to use Checkmk, please contact the Checkmk sales "
-"team at %s."
-msgstr ""
-"Si vous souhaitez continuer à utiliser Checkmk, veuillez contacter l'équipe "
-"de vente de Checkmk à %s."
 
 #, python-format
 msgid ""
@@ -38036,9 +38040,6 @@ msgid "License expired: Renew license now"
 msgstr ""
 
 msgid "License expired: Renew license now to avoid site deletion."
-msgstr ""
-
-msgid "License expired: Renew license now to reactivate change activation."
 msgstr ""
 
 #, fuzzy
@@ -67010,26 +67011,26 @@ msgstr ""
 msgid "The host name attribute needs to be assigned to a column."
 msgstr "L'attribut de nom d'hôte doit être affecté à une colonne."
 
-#, python-brace-format
+#, python-format
 msgid ""
 "The host name computation computes the name of the host that should have the "
 "corresponding Checkmk services. The computation is done by the OpenTelemetry "
-"collector and the result is stored in the \"{attr}\" attribute. For every "
-"rule configured here, the provided fields are concatenated in the order they "
-"are listed. The first rule that results in a non-empty value is used. For "
+"collector and the result is stored in the \"%s\" attribute. For every rule "
+"configured here, the provided fields are concatenated in the order they are "
+"listed. The first rule that results in a non-empty value is used. For "
 "example:\n"
-"{startol}A first rule consisting of one field \"Value of attribute: "
-"service.name\" will set \"{attr}\" to the value of that attribute, if it is "
+"<ol><li>A first rule consisting of one field \"Value of attribute: "
+"service.name\" will set \"%s\" to the value of that attribute, if it is "
 "present. This attribute will be set to the prometheus scrape jobs name, for "
-"example.{newli}A second rule consisting of one field \"Value of attribute: "
-"container.name\" will set \"{attr}\" to the value of that attribute, if it "
-"is present and \"{attr}\" has not been set by the previous rule.{newli}A "
-"third rule consisting of two fields \"Resource attribute value: "
-"custom_attr\" and \"Literal string: some_suffix\" will set \"{attr}\" to "
-"\"VALUEsome_suffix\", if the attribute is present and \"{attr}\" has not "
-"been set by the previous rules.{newli}A last rule consisting of one field "
-"\"Literal string: fallback_host\" will set all \"{attr}\" attributes that "
-"are not yet filled to \"fallback_host\".{endol}"
+"example.</li><li>A second rule consisting of one field \"Value of attribute: "
+"container.name\" will set \"%s\" to the value of that attribute, if it is "
+"present and \"%s\" has not been set by the previous rule.</li><li>A third "
+"rule consisting of two fields \"Resource attribute value: custom_attr\" and "
+"\"Literal string: some_suffix\" will set \"%s\" to \"VALUEsome_suffix\", if "
+"the attribute is present and \"%s\" has not been set by the previous rules.</"
+"li><li>A last rule consisting of one field \"Literal string: fallback_host\" "
+"will set all \"%s\" attributes that are not yet filled to \"fallback_host\"."
+"</li></ol>"
 msgstr ""
 
 #, fuzzy
@@ -87394,11 +87395,6 @@ msgstr "Vous devez sélectionner au moins un utilisateur."
 msgid "You have to specify a connector to migrate to."
 msgstr "Vous devez spécifier un connecteur vers lequel migrer."
 
-msgid ""
-"You have to specify at least one authenticated user to use Basic "
-"Authentication on an endpoint"
-msgstr ""
-
 #, fuzzy, python-format
 msgid "You have to specify at least one receiver: %s"
 msgstr "Vous devez sélectionner au moins un utilisateur."
@@ -89973,6 +89969,10 @@ msgid "site"
 msgid_plural "sites"
 msgstr[0] "site web"
 msgstr[1] "site web"
+
+#, fuzzy, python-format
+msgid "site must be a list. Current type is: %s "
+msgstr "Le type doit être une liste, mais est %s"
 
 msgid "slots"
 msgstr "Machines à sous"

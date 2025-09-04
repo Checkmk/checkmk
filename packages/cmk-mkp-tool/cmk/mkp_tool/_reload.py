@@ -5,25 +5,26 @@
 
 import logging
 import subprocess
+from typing import Literal
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def reload_services_affected_by_mkp_changes() -> None:
     # order matters :-(
-    _reload_service("automation-helper")
-    _reload_service("ui-job-scheduler")
-    _reload_service("redis")
-    _reload_service("apache")
+    _omd_service("reload", "automation-helper")
+    _omd_service("reload", "ui-job-scheduler")
+    _omd_service("reload", "redis")
+    _omd_service("reload", "apache")
 
 
-def _reload_service(service_name: str) -> None:
+def _omd_service(command: Literal["reload", "restart"], service_name: str) -> None:
     try:
         subprocess.run(["omd", "status", service_name], capture_output=True, check=True)
     except subprocess.CalledProcessError:
         return
 
     try:
-        subprocess.run(["omd", "reload", service_name], capture_output=True, check=True)
+        subprocess.run(["omd", command, service_name], capture_output=True, check=True)
     except subprocess.CalledProcessError:
-        _LOGGER.error("Error reloading %s", service_name, exc_info=True)
+        _LOGGER.error("Error %sing %s", command, service_name, exc_info=True)

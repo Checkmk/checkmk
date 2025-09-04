@@ -3,6 +3,17 @@ export default {
   extends: 'stylelint-config-standard',
   rules: {},
   overrides: [
+    {
+      files: ['*.css', '**/*.css'],
+      rules: {
+        'selector-class-pattern': [
+          '^$',
+          {
+            message: 'Expected no selectors in css files, only variable definitions.'
+          }
+        ]
+      }
+    },
     // https://github.com/ota-meshi/stylelint-config-standard-vue/blob/main/lib/index.js
     // https://github.com/ota-meshi/stylelint-config-standard-vue/blob/main/lib/vue-specific-rules.js
     {

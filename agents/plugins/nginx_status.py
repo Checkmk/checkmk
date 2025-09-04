@@ -72,6 +72,43 @@ def ensure_str(s, encoding="utf-8", errors="strict"):
     return s
 
 
+def extract_stats_from_iproute2(lines, ssl_ports):
+    results = []
+
+    line_maxsplit = 5
+    seen_process_ids = set()
+    process_regex = re.compile(r'^\w+:\(\("(nginx|nginx.conf)",pid=(\d+).*$')
+
+    for line in lines[1:]:  # skip column headers
+        _, _, _, local_addr, _, process_info = line.split(None, line_maxsplit)
+
+        process_match = process_regex.match(process_info)
+        if process_match is None:
+            continue
+
+        pid = process_match.group(2)
+        if pid in seen_process_ids:
+            continue
+
+        seen_process_ids.add(pid)
+
+        raw_host, raw_port = local_addr.rsplit(":", 1)
+
+        if raw_host == "0.0.0.0":
+            host = "127.0.0.1"
+        elif raw_host == "[::]":
+            host = "::1"
+        else:
+            host = raw_host
+
+        port = int(raw_port)
+        proto = "https" if port in ssl_ports else "http"
+
+        results.append((proto, host, port))
+
+    return results
+
+
 def extract_stats_from_netstat(lines, ssl_ports):
     pids = []
     results = []
@@ -121,6 +158,16 @@ def extract_stats_from_netstat(lines, ssl_ports):
 
 
 def try_detect_servers(ssl_ports):
+    """Fetch network statistics for nginx server(s).
+
+    Try and fetch the stats from the `ss` utility. If tool not available, fallback to the `netstat`
+    utility (deprecated). If both network utilities are unavailable or nginx is not running on the
+    machine, no statistics will be returned.
+    """
+    iproute2_lines = os.popen("ss -tlnp 2>/dev/null").readlines()
+    if iproute2_lines:
+        return extract_stats_from_iproute2(iproute2_lines, ssl_ports)
+
     netstat_lines = os.popen("netstat -tlnp 2>/dev/null").readlines()
     return extract_stats_from_netstat(netstat_lines, ssl_ports)
 

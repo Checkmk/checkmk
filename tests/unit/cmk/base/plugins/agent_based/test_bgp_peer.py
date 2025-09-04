@@ -5,7 +5,7 @@
 
 import pytest
 
-import cmk.base.plugins.agent_based.bgp_peer as bgp_peer
+from cmk.base.plugins.agent_based import bgp_peer
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Metric,
     Result,
@@ -89,6 +89,29 @@ DATA_IPV6_WITH_ZONE_INDEX: StringByteTable = [
         "",
         "1.4.20.254.128.1.2.0.5.6.7.42.189.21.255.254.199.233.193.0.0.14.132",
     ],
+]
+
+DATA_IETF_BGB_PEER_NO_ERROR: list[StringByteTable] = [
+    [
+        ["10.255.252.18", "65500", "10.5.0.11", "2", "6", [0, 0], "385012", "10.255.252.1"],
+        ["10.255.253.19", "65500", "10.5.0.11", "2", "6", [0, 0], "125072", "10.255.253.1"],
+    ],
+    [["10.4.0.11"]],
+]
+
+DATA_IETF_BGB_PEER_ERROR_WITHOUT_SUBCODE: list[StringByteTable] = [
+    [["10.255.252.18", "65500", "10.5.0.11", "2", "6", [4, 0], "385012", "10.255.252.1"]],
+    [["10.4.0.11"]],
+]
+
+DATA_IETF_BGB_PEER_ERROR_WITH_SUBCODE: list[StringByteTable] = [
+    [["10.255.252.18", "65500", "10.5.0.11", "2", "6", [3, 1], "385012", "10.255.252.1"]],
+    [["10.4.0.11"]],
+]
+
+DATA_IETF_BGB_PEER_UNKNOWN_SUBCODE: list[StringByteTable] = [
+    [["10.255.252.18", "65500", "10.5.0.11", "2", "6", [4, 1], "385012", "10.255.252.1"]],
+    [["10.4.0.11"]],
 ]
 
 
@@ -181,6 +204,104 @@ def test_bgp_peer_parse_cisco_2(data: StringByteTable, result: bgp_peer.Section)
 @pytest.mark.parametrize(
     "data, result",
     [
+        pytest.param(
+            DATA_IETF_BGB_PEER_NO_ERROR,
+            {
+                "10.255.252.1": bgp_peer.BGPData(
+                    local_address="10.255.252.18",
+                    local_identifier="10.4.0.11",
+                    remote_as_number=65500,
+                    remote_identifier="10.5.0.11",
+                    admin_state="running",
+                    peer_state="established",
+                    last_received_error="No error",
+                    established_time=385012,
+                    description="n/a",
+                    bgp_version=4,
+                ),
+                "10.255.253.1": bgp_peer.BGPData(
+                    local_address="10.255.253.19",
+                    local_identifier="10.4.0.11",
+                    remote_as_number=65500,
+                    remote_identifier="10.5.0.11",
+                    admin_state="running",
+                    peer_state="established",
+                    last_received_error="No error",
+                    established_time=125072,
+                    description="n/a",
+                    bgp_version=4,
+                ),
+            },
+            id="no error",
+        ),
+        pytest.param(
+            DATA_IETF_BGB_PEER_ERROR_WITH_SUBCODE,
+            {
+                "10.255.252.1": bgp_peer.BGPData(
+                    local_address="10.255.252.18",
+                    local_identifier="10.4.0.11",
+                    remote_as_number=65500,
+                    remote_identifier="10.5.0.11",
+                    admin_state="running",
+                    peer_state="established",
+                    last_received_error="UPDATE Message Error: Malformed Attribute List",
+                    established_time=385012,
+                    description="n/a",
+                    bgp_version=4,
+                ),
+            },
+            id="error with subcode",
+        ),
+        pytest.param(
+            DATA_IETF_BGB_PEER_ERROR_WITHOUT_SUBCODE,
+            {
+                "10.255.252.1": bgp_peer.BGPData(
+                    local_address="10.255.252.18",
+                    local_identifier="10.4.0.11",
+                    remote_as_number=65500,
+                    remote_identifier="10.5.0.11",
+                    admin_state="running",
+                    peer_state="established",
+                    last_received_error="Hold Timer Expired",
+                    established_time=385012,
+                    description="n/a",
+                    bgp_version=4,
+                ),
+            },
+            id="error without subcode",
+        ),
+        pytest.param(
+            DATA_IETF_BGB_PEER_UNKNOWN_SUBCODE,
+            {
+                "10.255.252.1": bgp_peer.BGPData(
+                    local_address="10.255.252.18",
+                    local_identifier="10.4.0.11",
+                    remote_as_number=65500,
+                    remote_identifier="10.5.0.11",
+                    admin_state="running",
+                    peer_state="established",
+                    last_received_error="Hold Timer Expired: unknown(1)",
+                    established_time=385012,
+                    description="n/a",
+                    bgp_version=4,
+                ),
+            },
+            id="unknown subcode",
+        ),
+        pytest.param(
+            [[], []],
+            {},
+            id="empty input",
+        ),
+    ],
+)
+def test_bgp_peer_parse_ietf(data: list[StringByteTable], result: bgp_peer.Section) -> None:
+    assert bgp_peer.parse_ietf_bgp_peer(data) == result
+
+
+@pytest.mark.parametrize(
+    "data, result",
+    [
         (
             DATA_SIMPLE,
             [
@@ -208,7 +329,7 @@ def test_bgp_peer_discover(data: StringByteTable, result: DiscoveryResult) -> No
 @pytest.mark.parametrize(
     "item, section, result",
     [
-        (
+        pytest.param(
             "192.168.1.2",
             bgp_peer.parse_bgp_peer([DATA_SIMPLE]),
             [
@@ -228,8 +349,9 @@ def test_bgp_peer_discover(data: StringByteTable, result: DiscoveryResult) -> No
                 Result(state=State.OK, notice="Remote address: '192.168.1.2'"),
                 Metric("uptime", 100),
             ],
+            id="simple",
         ),
-        (
+        pytest.param(
             "10.255.0.1",
             bgp_peer.parse_bgp_peer_cisco_2([DATA_CISCO_PEER_2]),
             [
@@ -249,6 +371,69 @@ def test_bgp_peer_discover(data: StringByteTable, result: DiscoveryResult) -> No
                 Result(state=State.OK, notice="Remote address: '10.255.0.1'"),
                 Metric("uptime", 904312.0),
             ],
+            id="cisco peer 2",
+        ),
+        pytest.param(
+            "10.255.252.1",
+            bgp_peer.parse_ietf_bgp_peer(DATA_IETF_BGB_PEER_NO_ERROR),
+            [
+                Result(state=State.OK, summary="Description: 'n/a'"),
+                Result(state=State.OK, summary="Local address: '10.255.252.18'"),
+                Result(state=State.OK, summary="Admin state: 'running'"),
+                Result(state=State.OK, summary="Peer state: 'established'"),
+                Result(state=State.OK, summary="Established time: 4 days 10 hours"),
+                Result(state=State.OK, notice="Local identifier: '10.4.0.11'"),
+                Result(state=State.OK, notice="Remote identifier: '10.5.0.11'"),
+                Result(state=State.OK, notice="Remote AS number: 65500"),
+                Result(state=State.OK, notice="Last received error: 'No error'"),
+                Result(state=State.OK, notice="BGP version: 4"),
+                Result(state=State.OK, notice="Remote address: '10.255.252.1'"),
+                Metric("uptime", 385012.0),
+            ],
+            id="ietf bgb peer no error",
+        ),
+        pytest.param(
+            "10.255.252.1",
+            bgp_peer.parse_ietf_bgp_peer(DATA_IETF_BGB_PEER_ERROR_WITH_SUBCODE),
+            [
+                Result(state=State.OK, summary="Description: 'n/a'"),
+                Result(state=State.OK, summary="Local address: '10.255.252.18'"),
+                Result(state=State.OK, summary="Admin state: 'running'"),
+                Result(state=State.OK, summary="Peer state: 'established'"),
+                Result(state=State.OK, summary="Established time: 4 days 10 hours"),
+                Result(state=State.OK, notice="Local identifier: '10.4.0.11'"),
+                Result(state=State.OK, notice="Remote identifier: '10.5.0.11'"),
+                Result(state=State.OK, notice="Remote AS number: 65500"),
+                Result(
+                    state=State.OK,
+                    notice="Last received error: 'UPDATE Message Error: Malformed Attribute List'",
+                ),
+                Result(state=State.OK, notice="BGP version: 4"),
+                Result(state=State.OK, notice="Remote address: '10.255.252.1'"),
+                Metric("uptime", 385012.0),
+            ],
+            id="ietf bgb peer known subcode",
+        ),
+        pytest.param(
+            "10.255.252.1",
+            bgp_peer.parse_ietf_bgp_peer(DATA_IETF_BGB_PEER_UNKNOWN_SUBCODE),
+            [
+                Result(state=State.OK, summary="Description: 'n/a'"),
+                Result(state=State.OK, summary="Local address: '10.255.252.18'"),
+                Result(state=State.OK, summary="Admin state: 'running'"),
+                Result(state=State.OK, summary="Peer state: 'established'"),
+                Result(state=State.OK, summary="Established time: 4 days 10 hours"),
+                Result(state=State.OK, notice="Local identifier: '10.4.0.11'"),
+                Result(state=State.OK, notice="Remote identifier: '10.5.0.11'"),
+                Result(state=State.OK, notice="Remote AS number: 65500"),
+                Result(
+                    state=State.OK, notice="Last received error: 'Hold Timer Expired: unknown(1)'"
+                ),
+                Result(state=State.OK, notice="BGP version: 4"),
+                Result(state=State.OK, notice="Remote address: '10.255.252.1'"),
+                Metric("uptime", 385012.0),
+            ],
+            id="ietf bgb peer unknown subcodes",
         ),
     ],
 )

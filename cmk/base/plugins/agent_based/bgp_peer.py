@@ -156,10 +156,85 @@ DEFAULT_PEER_STATE_MAPPING: PeerStateMapping = {
     "established": 0,
 }
 
+
+class BGPErrorCode(NamedTuple):
+    name: str
+    subcodes: dict[int, str]
+
+
+# from https://www.iana.org/assignments/bgp-parameters/bgp-parameters.xhtml
+BGP_ERROR_CODE_NAME_MAPPING: dict[int, BGPErrorCode] = {
+    0: BGPErrorCode("No error", {0: ""}),
+    1: BGPErrorCode(
+        "Message Header Error",
+        {
+            1: "Connection Not Synchronized",
+            2: "Bad Message Length",
+            3: "Bad Message Type",
+        },
+    ),
+    2: BGPErrorCode(
+        "OPEN Message Error",
+        {
+            1: "Unsupported Version Number",
+            2: "Bad Peer AS",
+            3: "Bad BGP Identifier",
+            4: "Unsupported Authentication Code",
+            # 5: Deprecated
+            6: "Unacceptable Hold Time",
+            7: "Unsupported Capability",
+            # 8-10: Deprecated
+            11: "Role Mismatch",
+        },
+    ),
+    3: BGPErrorCode(
+        "UPDATE Message Error",
+        {
+            1: "Malformed Attribute List",
+            2: "Unrecognized Well-known Attribute",
+            3: "Missing Well-known Attribute",
+            4: "Attribute Flags Error",
+            5: "Attribute Length Error",
+            6: "Invalid ORIGIN Attribute",
+            # 7: Deprecated
+            8: "Invalid NEXT_HOP Attribute",
+            9: "Optional Attribute Error",
+            10: "Invalid Network Field",
+            11: "Malformed AS_PATH",
+        },
+    ),
+    4: BGPErrorCode("Hold Timer Expired", {0: ""}),
+    5: BGPErrorCode("Finite State Machine Error", {0: ""}),
+    6: BGPErrorCode(
+        "Cease",
+        {
+            1: "Receive Unexpected Message in OpenSent State",
+            2: "Receive Unexpected Message in OpenConfirm State",
+            3: "Receive Unexpected Message in Established State",
+        },
+    ),
+    7: BGPErrorCode("ROUTE-REFRESH Message Error", {1: "Invalid Message Length"}),
+    8: BGPErrorCode("Send Hold Timer Expired", {0: ""}),
+    9: BGPErrorCode("Loss of LSDB Synchronization", {0: ""}),
+}
+
 DEFAULT_BGP_PEER_PARAMS = BGPPeerParams(
     admin_state_mapping=DEFAULT_ADMIN_STATE_MAPPING,
     peer_state_mapping=DEFAULT_PEER_STATE_MAPPING,
 )
+
+
+def bgp_error_lookup(error_code: int, subcode: int) -> str:
+    if (error_info := BGP_ERROR_CODE_NAME_MAPPING.get(error_code)) is None:
+        return f"unknown({[error_code, subcode]})"
+
+    if subcode not in (subcodes := error_info.subcodes):
+        return f"{error_info.name}: unknown({subcode})"
+
+    if subcodes[subcode] == "":
+        return f"{error_info.name}"
+
+    return f"{error_info.name}: {subcodes[subcode]}"
 
 
 def _convert_address(value: str | list[int]) -> str:
@@ -169,6 +244,16 @@ def _convert_address(value: str | list[int]) -> str:
         return clean_v4_address(value) if len(value) == 4 else clean_v6_address(value)
     split_value = value.split(".")
     return clean_v4_address(split_value) if len(split_value) == 4 else clean_v6_address(split_value)
+
+
+def _format_last_received_error(error_entry: str | list[int]) -> str:
+    match error_entry:
+        case str(msg):
+            return msg
+        case [error_code, error_subcode]:
+            return bgp_error_lookup(int(error_code), int(error_subcode))
+        case _:
+            return f"unknown({error_entry!r})"
 
 
 def _create_item_data(entry: list[str | list[int]]) -> BGPData:
@@ -189,7 +274,7 @@ def _create_item_data(entry: list[str | list[int]]) -> BGPData:
             "5": "openconfirm",
             "6": "established",
         }.get(entry[5] if isinstance(entry[5], str) else "0", "unknown(%r)" % entry[5]),
-        last_received_error=entry[6] if isinstance(entry[6], str) else "unknown(%r)" % entry[6],
+        last_received_error=_format_last_received_error(entry[6]),
         established_time=int(entry[7]) if isinstance(entry[7], str) else 0,
         description=(
             (entry[-2] if isinstance(entry[-2], str) else "unknown(%r)" % entry[-2])
@@ -233,7 +318,6 @@ def _clean_address(address_as_oids: Sequence[str]) -> str:
             raise ValueError("DNS domain names are currently unsupported")
         case _:
             raise ValueError(f"Unknown address type: {addr_type}")
-    return clean_v4_address(addr_elements) if addr_type == 1 else clean_v6_address(addr_elements)
 
 
 def _render_zone_index(elements: Iterable[str]) -> str:
@@ -284,6 +368,27 @@ def parse_bgp_peer_cisco_3(string_table: list[StringByteTable]) -> Section:
 
     _check_string_table(string_table)
     return {remote_addr(str(entry[-1])): _create_item_data(entry) for entry in string_table[0]}
+
+
+def _parse_ietf_remote_addr(oid_end: str) -> str:
+    """In BGP4-MIB::bgpPeerEntry, the RemoteAddr is always ipv4"""
+    return clean_v4_address(oid_end.split("."))
+
+
+def parse_ietf_bgp_peer(string_table: list[StringByteTable]) -> Section:
+    if not string_table[0]:
+        return {}
+
+    local_identifier = string_table[1][0]
+    recombined_string_table = [
+        entry[:1] + local_identifier + entry[1:] for entry in string_table[0]
+    ]
+
+    _check_string_table([recombined_string_table])
+    return {
+        _parse_ietf_remote_addr(str(entry[-1])): _create_item_data(entry)
+        for entry in recombined_string_table
+    }
 
 
 def discover_bgp_peer(section: Section) -> DiscoveryResult:
@@ -402,6 +507,38 @@ register.snmp_section(
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1"),
         exists(".1.3.6.1.4.1.9.9.187.1.2.9.1.*"),
+    ),
+)
+
+register.snmp_section(
+    name="ietf_bgp_peer",
+    parse_function=parse_ietf_bgp_peer,
+    parsed_section_name="bgp_peer",
+    fetch=[
+        SNMPTree(
+            base=".1.3.6.1.2.1.15.3.1",  # BGP4-MIB::bgpPeerEntry
+            oids=[
+                "5",  # bgpPeerLocalAddr
+                #
+                "9",  # bgpPeerRemoteAs
+                "1",  # bgpPeerIdentifier
+                "3",  # bgpPeerAdminStatus
+                "2",  # bgpPeerState
+                OIDBytes("14"),  # bgpPeerLastError
+                "16",  # bgpPeerFsmEstablishedTime
+                "7",  # bgpPeerRemoteAddr
+            ],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.2.1.15",  # BGP4-MIB::bgp
+            oids=[
+                "4",  # bgpIdentifier
+            ],
+        ),
+    ],
+    detect=all_of(
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1.1001"),  # Fortinet FortiGate
+        exists(".1.3.6.1.2.1.15.3.1.*"),
     ),
 )
 

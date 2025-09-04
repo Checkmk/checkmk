@@ -193,8 +193,32 @@ def test_substitute_context(context: dict[str, str], template: str, result: str)
 
 
 def test_read_bulk_contents(monkeypatch: MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
-    monkeypatch.setattr("sys.stdin", ("key=val", "\n", "key2=val2", "a comment"))
-    assert utils.read_bulk_contexts() == ({"key": "val"}, [{"key2": "val2"}])
+    monkeypatch.setattr(
+        "sys.stdin",
+        (
+            "key=val",
+            "\n",
+            "key2=val2",
+            "a comment",
+            "NOTIFICATIONTYPE=PROBLEM",
+            "WHAT=HOST",
+            "PREVIOUSHOSTHARDSHORTSTATE=UP",
+            "HOSTSHORTSTATE=DOWN",
+        ),
+    )
+    assert utils.read_bulk_contexts() == (
+        {"key": "val"},
+        [
+            {
+                "key2": "val2",
+                "NOTIFICATIONTYPE": "PROBLEM",
+                "WHAT": "HOST",
+                "PREVIOUSHOSTHARDSHORTSTATE": "UP",
+                "HOSTSHORTSTATE": "DOWN",
+                "EVENT_TXT": "UP -> DOWN",
+            }
+        ],
+    )
     assert capsys.readouterr().err == "Invalid line 'a comment' in bulked notification context\n"
 
 
@@ -606,3 +630,60 @@ def test_render_cmk_graphs(capsys: pytest.CaptureFixture) -> None:
             utils.Graph("heute-Filesystem_x47boot-1.png", b"b"),
         ]
         assert capsys.readouterr().err == ""
+
+
+@pytest.mark.parametrize(
+    "notification_type, expected",
+    [
+        (
+            "PROBLEM",
+            "$PREVIOUS@HARDSHORTSTATE$ -> $@SHORTSTATE$",
+        ),
+        (
+            "RECOVERY",
+            "$PREVIOUS@HARDSHORTSTATE$ -> $@SHORTSTATE$",
+        ),
+        (
+            "FLAPPINGSTART",
+            "Started Flapping",
+        ),
+        (
+            "FLAPPINGSTOP",
+            "Stopped Flapping ($@SHORTSTATE$)",
+        ),
+        (
+            "FLAPPINGDISABLED",
+            "Disabled Flapping ($@SHORTSTATE$)",
+        ),
+        (
+            "DOWNTIMESTART",
+            "Downtime Start ($@SHORTSTATE$)",
+        ),
+        (
+            "DOWNTIMEEND",
+            "Downtime End ($@SHORTSTATE$)",
+        ),
+        (
+            "DOWNTIMECANCELLED",
+            "Downtime Cancelled ($@SHORTSTATE$)",
+        ),
+        (
+            "ACKNOWLEDGEMENT",
+            "Acknowledged ($@SHORTSTATE$)",
+        ),
+        (
+            "CUSTOM",
+            "Custom Notification ($@SHORTSTATE$)",
+        ),
+        (
+            "ALERTHANDLER (OK)",
+            "ALERTHANDLER (OK)",
+        ),
+        (
+            "UNKNOWN",
+            "UNKNOWN",
+        ),
+    ],
+)
+def test_event_text_templates(notification_type: str, expected: str) -> None:
+    assert utils._event_text_template(notification_type) == expected

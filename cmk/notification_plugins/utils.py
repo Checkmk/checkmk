@@ -33,7 +33,9 @@ format_plugin_output = replace_state_markers
 
 
 def collect_context() -> PluginNotificationContext:
-    return {var[7:]: value for var, value in os.environ.items() if var.startswith("NOTIFY_")}
+    context = {var[7:]: value for var, value in os.environ.items() if var.startswith("NOTIFY_")}
+    set_event_text_context_variable(context)
+    return context
 
 
 def format_link(template: str, url: str, text: str) -> str:
@@ -195,34 +197,88 @@ def substitute_context(template: str, context: PluginNotificationContext) -> str
     return template
 
 
+def _event_text_template(notification_type: str) -> str:
+    # Returns an event summary
+    if notification_type in ["PROBLEM", "RECOVERY"]:
+        return "$PREVIOUS@HARDSHORTSTATE$ -> $@SHORTSTATE$"
+    if notification_type == "FLAPPINGSTART":
+        return "Started Flapping"
+    if notification_type == "FLAPPINGSTOP":
+        return "Stopped Flapping ($@SHORTSTATE$)"
+    if notification_type == "FLAPPINGDISABLED":
+        return "Disabled Flapping ($@SHORTSTATE$)"
+    if notification_type == "DOWNTIMESTART":
+        return "Downtime Start ($@SHORTSTATE$)"
+    if notification_type == "DOWNTIMEEND":
+        return "Downtime End ($@SHORTSTATE$)"
+    if notification_type == "DOWNTIMECANCELLED":
+        return "Downtime Cancelled ($@SHORTSTATE$)"
+    if notification_type == "ACKNOWLEDGEMENT":
+        return "Acknowledged ($@SHORTSTATE$)"
+    if notification_type == "CUSTOM":
+        return "Custom Notification ($@SHORTSTATE$)"
+    if notification_type.startswith("ALERTHANDLER"):
+        # The notification_type here is "ALERTHANDLER (exit_code)"
+        return notification_type
+    return notification_type
+
+
+def set_event_text_context_variable(context: PluginNotificationContext) -> None:
+    event_text_template = _event_text_template(context["NOTIFICATIONTYPE"])
+    context["EVENT_TXT"] = substitute_context(
+        event_text_template.replace("@", context["WHAT"]), context
+    )
+
+
 ###############################################################################
 # Mail
+
+
+def _iter_stdin_key_value_sections() -> Iterable[list[tuple[str, str]]]:
+    """Split up stdin into sections with key-value pairs.
+
+    Sections are separated by empty lines.
+    Lines must be of the form `key=value`. Invalid lines will be ignored with a warning to stderr.
+    Newlines within values must be encoded as `\1`. They are decoded back into `\n`.
+    """
+    section: list[tuple[str, str]] = []
+    for line in sys.stdin:
+        line = line.strip()
+        if not line:
+            yield section
+            section = []
+            continue
+
+        try:
+            key, value = line.split("=", 1)
+            value = value.replace("\1", "\n")
+        except ValueError:
+            sys.stderr.write("Invalid line '%s' in bulked notification context\n" % line)
+            continue
+
+        section.append((key, value))
+
+    if section:
+        yield section
 
 
 def read_bulk_contexts() -> tuple[dict[str, str], list[dict[str, str]]]:
     parameters = {}
     contexts = []
-    in_params = True
 
-    # First comes a section with global variables
-    for line in sys.stdin:
-        line = line.strip()
-        if not line:
-            in_params = False
-            context: PluginNotificationContext = {}
-            contexts.append(context)
-        else:
-            try:
-                key, value = line.split("=", 1)
-                value = value.replace("\1", "\n")
-            except ValueError:
-                sys.stderr.write("Invalid line '%s' in bulked notification context\n" % line)
-                continue
+    section_iterator = iter(_iter_stdin_key_value_sections())
 
-            if in_params:
-                parameters[key] = value
-            else:
-                context[key] = value
+    # First section are the global parameters
+    for key, value in next(section_iterator, []):
+        parameters[key] = value
+
+    for section in section_iterator:
+        context: PluginNotificationContext = {}
+        for key, value in section:
+            context[key] = value
+
+        set_event_text_context_variable(context)
+        contexts.append(context)
 
     return parameters, contexts
 

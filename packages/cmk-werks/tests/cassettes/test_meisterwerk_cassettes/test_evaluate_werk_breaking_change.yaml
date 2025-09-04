@@ -1,0 +1,68 @@
+interactions:
+- request:
+    body: '{"werk": {"title": "Breaking API Change", "date": "2024-06-01T00:00:00Z",
+      "level": "1", "versions": ["2.0.0"], "werk_class": "breaking", "component":
+      "api", "compatible": false, "werk_text": "Removed deprecated API endpoints.
+      This change requires user migration. Please update your API calls to use the
+      new endpoints. The old endpoints will return 404 errors after the upgrade."}}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '364'
+      content-type:
+      - application/json
+      host:
+      - meisterwerk.lan.checkmk.net
+      user-agent:
+      - python-httpx/0.28.1
+      user-id:
+      - cli_user
+      x-request-id:
+      - 5f3083b9-22de-4b27-97d1-c2accdd2b4db
+    method: POST
+    uri: http://meisterwerk.lan.checkmk.net/werks/evaluate/werk
+  response:
+    body:
+      string: '{"user_id":"python-httpx/0.28.1","request_id":"5f3083b9-22de-4b27-97d1-c2accdd2b4db","response_datetime":"2025-09-18T13:42:57.106284Z","evaluation":{"aggregated_scores":{"grammar_score":3,"user_impact_clarity_score":2,"paragraph_division_score":1,"non_compatible_werk_score":2,"english_style_score":2},"aggregated_suggestions":{"grammar_suggestions_to_improve_text":"No
+        improvements necessary.","user_impact_clarity_suggestions_to_improve_text":"Specify
+        which API endpoints are deprecated and removed, and provide a brief explanation
+        or reference on how users can update their API calls. For example: \"The following
+        API endpoints have been removed: [list or example]. Please update your integrations
+        to use the new endpoints as documented in [link or location]. Failure to do
+        so will cause your API calls to fail with 404 errors after upgrading.\"","paragraph_division_suggestions_to_improve_text":"Break
+        the text into three paragraphs: first, state that deprecated API endpoints
+        were removed; second, explain that this requires user migration and updating
+        API calls; third, warn that old endpoints will return 404 errors after upgrade.
+        This separation clarifies each concept and improves readability.","non_compatible_werk_suggestions_to_improve_text":"Start
+        with a clear condition such as: \"If your integrations use the deprecated
+        API endpoints, you must update your API calls to the new endpoints immediately
+        after upgrading.\" Then provide precise instructions or references on how
+        to perform the migration, for example: \"Refer to the migration guide at [link]
+        or update your API URLs as follows: ...\" This helps users quickly identify
+        if they are affected and know exactly what to do.","english_style_suggestions_to_improve_text":"Start
+        with ''API endpoints removed deprecated versions.'' Combine migration requirement
+        and update instruction into one sentence. Use active voice and remove filler
+        phrases. For example: ''Removed deprecated API endpoints. Users must migrate
+        and update API calls to new endpoints; old endpoints return 404 errors after
+        upgrade.''"}}}'
+    headers:
+      Content-Length:
+      - '2069'
+      Content-Type:
+      - text/html; charset=utf-8
+      - application/json
+      Date:
+      - Mon, 22 Sep 2025 12:01:43 GMT
+      Server:
+      - uvicorn
+      Via:
+      - 1.1 Caddy
+    status:
+      code: 200
+      message: OK
+version: 1

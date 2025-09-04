@@ -1,0 +1,151 @@
+interactions:
+- request:
+    body: '{"werk": {"title": "Performance Optimization in Data Processing Pipeline",
+      "date": "2024-03-01T00:00:00Z", "level": "3", "versions": ["1.4.0"], "werk_class":
+      "feature", "component": "processing", "compatible": true, "werk_text": "Optimized
+      data processing pipeline using advanced algorithms and caching mechanisms. The
+      implementation uses thread pooling, memory mapping, and vectorized operations.
+      Performance improvements range from 200% to 500% depending on data size. Memory
+      usage reduced by 30%. Configuration parameters include thread count, cache size,
+      and batch processing thresholds."}}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '578'
+      content-type:
+      - application/json
+      host:
+      - meisterwerk.lan.checkmk.net
+      user-agent:
+      - python-httpx/0.28.1
+      user-id:
+      - cli_user
+      x-request-id:
+      - 3fe4dba0-098f-43eb-a54b-95b1495e019a
+    method: POST
+    uri: http://meisterwerk.lan.checkmk.net/werks/evaluate/werk
+  response:
+    body:
+      string: '{"user_id":"python-httpx/0.28.1","request_id":"3fe4dba0-098f-43eb-a54b-95b1495e019a","response_datetime":"2025-09-18T13:42:57.106284Z","evaluation":{"aggregated_scores":{"grammar_score":3,"user_impact_clarity_score":1,"paragraph_division_score":1,"non_compatible_werk_score":null,"english_style_score":2},"aggregated_suggestions":{"grammar_suggestions_to_improve_text":"No
+        improvements necessary.","user_impact_clarity_suggestions_to_improve_text":"Explain
+        that users will notice significantly faster data processing, especially with
+        large datasets, and that reduced memory usage helps maintain system stability.
+        Indicate that users can adjust new configuration parameters such as thread
+        count, cache size, and batch processing thresholds to optimize performance
+        for their environment.","paragraph_division_suggestions_to_improve_text":"Divide
+        the text into multiple paragraphs as follows: (1) Optimized data processing
+        pipeline using advanced algorithms and caching mechanisms. (2) The implementation
+        uses thread pooling, memory mapping, and vectorized operations. (3) Performance
+        improvements range from 200% to 500% depending on data size. (4) Memory usage
+        reduced by 30%. (5) Configuration parameters include thread count, cache size,
+        and batch processing thresholds.","non_compatible_werk_suggestions_to_improve_text":null,"english_style_suggestions_to_improve_text":"Start
+        with the component or feature name, e.g., ''Data processing pipeline''. Use
+        active verbs like ''optimizes'' or ''reduces''. Split the text into two or
+        three short sentences focusing on the main improvements and their effects.
+        For example, ''The data processing pipeline optimizes performance using advanced
+        algorithms, thread pooling, memory mapping, and vectorized operations. It
+        improves speed by 200% to 500% depending on data size and reduces memory usage
+        by 30%. Users can configure thread count, cache size, and batch processing
+        thresholds.'' This structure improves clarity, concision, and user focus."}}}'
+    headers:
+      Content-Length:
+      - '1983'
+      Content-Type:
+      - text/html; charset=utf-8
+      - application/json
+      Date:
+      - Mon, 22 Sep 2025 12:02:42 GMT
+      Server:
+      - uvicorn
+      Via:
+      - 1.1 Caddy
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"werk": {"title": "Performance Optimization in Data Processing Pipeline",
+      "date": "2024-03-01T00:00:00Z", "level": "3", "versions": ["1.4.0"], "werk_class":
+      "feature", "component": "processing", "compatible": true, "werk_text": "Optimized
+      data processing pipeline using advanced algorithms and caching mechanisms. The
+      implementation uses thread pooling, memory mapping, and vectorized operations.
+      Performance improvements range from 200% to 500% depending on data size. Memory
+      usage reduced by 30%. Configuration parameters include thread count, cache size,
+      and batch processing thresholds."}, "evaluation": {"aggregated_scores": {"grammar_score":
+      3, "user_impact_clarity_score": 1, "paragraph_division_score": 1, "non_compatible_werk_score":
+      null, "english_style_score": 2}, "aggregated_suggestions": {"grammar_suggestions_to_improve_text":
+      "No improvements necessary.", "user_impact_clarity_suggestions_to_improve_text":
+      "Explain that users will notice significantly faster data processing, especially
+      with large datasets, and that reduced memory usage helps maintain system stability.
+      Indicate that users can adjust new configuration parameters such as thread count,
+      cache size, and batch processing thresholds to optimize performance for their
+      environment.", "paragraph_division_suggestions_to_improve_text": "Divide the
+      text into multiple paragraphs as follows: (1) Optimized data processing pipeline
+      using advanced algorithms and caching mechanisms. (2) The implementation uses
+      thread pooling, memory mapping, and vectorized operations. (3) Performance improvements
+      range from 200% to 500% depending on data size. (4) Memory usage reduced by
+      30%. (5) Configuration parameters include thread count, cache size, and batch
+      processing thresholds.", "non_compatible_werk_suggestions_to_improve_text":
+      null, "english_style_suggestions_to_improve_text": "Start with the component
+      or feature name, e.g., ''Data processing pipeline''. Use active verbs like ''optimizes''
+      or ''reduces''. Split the text into two or three short sentences focusing on
+      the main improvements and their effects. For example, ''The data processing
+      pipeline optimizes performance using advanced algorithms, thread pooling, memory
+      mapping, and vectorized operations. It improves speed by 200% to 500% depending
+      on data size and reduces memory usage by 30%. Users can configure thread count,
+      cache size, and batch processing thresholds.'' This structure improves clarity,
+      concision, and user focus."}}}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '2426'
+      content-type:
+      - application/json
+      host:
+      - meisterwerk.lan.checkmk.net
+      user-agent:
+      - werk-tool-v1.0.0
+      user-id:
+      - cli_user
+      x-request-id:
+      - b13c533f-7a61-4323-b46a-3b361f1b6e5e
+    method: POST
+    uri: http://meisterwerk.lan.checkmk.net/werks/generate/rewrite
+  response:
+    body:
+      string: '{"user_id":"werk-tool-v1.0.0","request_id":"b13c533f-7a61-4323-b46a-3b361f1b6e5e","response_datetime":"2025-09-18T13:42:57.106799Z","rewritten_text":"The
+        data processing pipeline optimizes performance using advanced algorithms and
+        caching mechanisms. It employs thread pooling, memory mapping, and vectorized
+        operations to achieve these improvements.\n\nUsers will experience significantly
+        faster data processing speeds, with performance gains ranging from 200% to
+        500% depending on the size of the data. Additionally, memory usage is reduced
+        by 30%, which helps maintain system stability during intensive operations.\n\nTo
+        tailor performance to specific environments, users can configure parameters
+        such as thread count, cache size, and batch processing thresholds. Adjusting
+        these settings allows for further optimization based on workload and system
+        capabilities."}'
+    headers:
+      Content-Length:
+      - '868'
+      Content-Type:
+      - text/html; charset=utf-8
+      - application/json
+      Date:
+      - Mon, 22 Sep 2025 12:02:42 GMT
+      Server:
+      - uvicorn
+      Via:
+      - 1.1 Caddy
+    status:
+      code: 200
+      message: OK
+version: 1

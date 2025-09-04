@@ -1,0 +1,132 @@
+interactions:
+- request:
+    body: '{"werk": {"title": "some_title", "date": "2025-09-22T12:06:40Z", "level":
+      "1", "versions": ["0.1.0"], "werk_class": "feature", "component": "ccc", "compatible":
+      true, "werk_text": "\n"}}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '170'
+      content-type:
+      - application/json
+      host:
+      - meisterwerk.lan.checkmk.net
+      user-agent:
+      - python-httpx/0.28.1
+      user-id:
+      - cli_user
+      x-request-id:
+      - f3bd2648-acba-4d6b-b6f2-771c057eca56
+    method: POST
+    uri: http://meisterwerk.lan.checkmk.net/werks/evaluate/werk
+  response:
+    body:
+      string: '{"user_id":"python-httpx/0.28.1","request_id":"f3bd2648-acba-4d6b-b6f2-771c057eca56","response_datetime":"2025-09-18T13:42:57.106284Z","evaluation":{"aggregated_scores":{"grammar_score":1,"user_impact_clarity_score":1,"paragraph_division_score":1,"non_compatible_werk_score":null,"english_style_score":1},"aggregated_suggestions":{"grammar_suggestions_to_improve_text":"Correct
+        any grammar, spelling, and punctuation errors to ensure clarity and professionalism.","user_impact_clarity_suggestions_to_improve_text":"Clarify
+        how this library change affects users by explaining if it fixes bugs, improves
+        performance, changes behavior, or requires user actions such as configuration
+        updates or restarts.","paragraph_division_suggestions_to_improve_text":"Divide
+        the text into multiple paragraphs as follows: 1. Describe the initial problem
+        with storing values that do not match the \"value_raw\" field. 2. Explain
+        the validation and migration process and how it could lead to issues. 3. Provide
+        the example with the diskstat_inventory rule. 4. Detail the fix implemented
+        to ensure correct rule data persistence. 5. List the user actions required
+        to fix existing invalid data. Use short transition phrases such as \"For example,\"
+        \"As of this fix,\" and \"If you used the REST API\" to guide the reader through
+        the concepts.","non_compatible_werk_suggestions_to_improve_text":null,"english_style_suggestions_to_improve_text":"Improve
+        the English style by using clear, concise sentences and active voice to enhance
+        readability and user comprehension."}}}'
+    headers:
+      Content-Length:
+      - '1550'
+      Content-Type:
+      - text/html; charset=utf-8
+      - application/json
+      Date:
+      - Mon, 22 Sep 2025 12:06:40 GMT
+      Server:
+      - uvicorn
+      Via:
+      - 1.1 Caddy
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"werk": {"title": "some_title", "date": "2025-09-22T12:06:40Z", "level":
+      "1", "versions": ["0.1.0"], "werk_class": "feature", "component": "ccc", "compatible":
+      true, "werk_text": "\n"}, "evaluation": {"aggregated_scores": {"grammar_score":
+      1, "user_impact_clarity_score": 1, "paragraph_division_score": 1, "non_compatible_werk_score":
+      null, "english_style_score": 1}, "aggregated_suggestions": {"grammar_suggestions_to_improve_text":
+      "Correct any grammar, spelling, and punctuation errors to ensure clarity and
+      professionalism.", "user_impact_clarity_suggestions_to_improve_text": "Clarify
+      how this library change affects users by explaining if it fixes bugs, improves
+      performance, changes behavior, or requires user actions such as configuration
+      updates or restarts.", "paragraph_division_suggestions_to_improve_text": "Divide
+      the text into multiple paragraphs as follows: 1. Describe the initial problem
+      with storing values that do not match the \"value_raw\" field. 2. Explain the
+      validation and migration process and how it could lead to issues. 3. Provide
+      the example with the diskstat_inventory rule. 4. Detail the fix implemented
+      to ensure correct rule data persistence. 5. List the user actions required to
+      fix existing invalid data. Use short transition phrases such as \"For example,\"
+      \"As of this fix,\" and \"If you used the REST API\" to guide the reader through
+      the concepts.", "non_compatible_werk_suggestions_to_improve_text": null, "english_style_suggestions_to_improve_text":
+      "Improve the English style by using clear, concise sentences and active voice
+      to enhance readability and user comprehension."}}}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '1585'
+      content-type:
+      - application/json
+      host:
+      - meisterwerk.lan.checkmk.net
+      user-agent:
+      - werk-tool-v1.0.0
+      user-id:
+      - cli_user
+      x-request-id:
+      - 538fcdfe-16ba-4629-8299-85b37677008a
+    method: POST
+    uri: http://meisterwerk.lan.checkmk.net/werks/generate/rewrite
+  response:
+    body:
+      string: '{"user_id":"werk-tool-v1.0.0","request_id":"538fcdfe-16ba-4629-8299-85b37677008a","response_datetime":"2025-09-18T13:42:57.106799Z","rewritten_text":"In
+        the past, storing values that did not match the \"value_raw\" field could
+        cause inconsistencies in rule data. This issue arose because the system did
+        not validate or migrate these values properly, which sometimes led to invalid
+        data being saved.\n\nFor example, the diskstat_inventory rule was affected
+        by this problem. When values outside the expected format were stored, it could
+        result in incorrect or unusable rule configurations.\n\nAs of this fix, the
+        system now validates and migrates rule data correctly, ensuring that only
+        valid values are persisted. This change prevents the storage of invalid data
+        and maintains the integrity of rule configurations.\n\nIf you used the REST
+        API or other methods that might have created invalid rule data, you will need
+        to update or recreate those rules to correct any existing issues. This action
+        ensures that all rule data conforms to the expected format and functions properly
+        going forward."}'
+    headers:
+      Content-Length:
+      - '1092'
+      Content-Type:
+      - text/html; charset=utf-8
+      - application/json
+      Date:
+      - Mon, 22 Sep 2025 12:06:48 GMT
+      Server:
+      - uvicorn
+      Via:
+      - 1.1 Caddy
+    status:
+      code: 200
+      message: OK
+version: 1

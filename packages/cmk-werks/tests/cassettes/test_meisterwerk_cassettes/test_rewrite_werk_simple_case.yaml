@@ -1,0 +1,130 @@
+interactions:
+- request:
+    body: '{"werk": {"title": "Bug Fix in Parser", "date": "2024-02-01T00:00:00Z",
+      "level": "2", "versions": ["1.1.0"], "werk_class": "fix", "component": "parser",
+      "compatible": true, "werk_text": "Fixed bug in parser that caused issues. The
+      parser now work better and handle edge cases. User should see improved performance."}}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '301'
+      content-type:
+      - application/json
+      host:
+      - meisterwerk.lan.checkmk.net
+      user-agent:
+      - python-httpx/0.28.1
+      user-id:
+      - cli_user
+      x-request-id:
+      - cb79ed52-c764-4967-9d10-b47b91f5b527
+    method: POST
+    uri: http://meisterwerk.lan.checkmk.net/werks/evaluate/werk
+  response:
+    body:
+      string: '{"user_id":"python-httpx/0.28.1","request_id":"cb79ed52-c764-4967-9d10-b47b91f5b527","response_datetime":"2025-09-18T13:42:57.106284Z","evaluation":{"aggregated_scores":{"grammar_score":1,"user_impact_clarity_score":1,"paragraph_division_score":1,"non_compatible_werk_score":null,"english_style_score":1},"aggregated_suggestions":{"grammar_suggestions_to_improve_text":"Correct
+        subject-verb agreement by changing ''work'' to ''works'' and ''handle'' to
+        ''handles''. Clarify ''User'' to ''Users'' or ''The user'' to match the intended
+        meaning.","user_impact_clarity_suggestions_to_improve_text":"Explain the specific
+        problems users encountered due to the parser bug, such as errors, crashes,
+        or incorrect data. Describe how the fix improves their experience by enabling
+        faster processing and reducing errors. Clarify whether users need to take
+        any action to benefit from the fix.","paragraph_division_suggestions_to_improve_text":"Divide
+        the text into three paragraphs: first, state the bug fix in the parser; second,
+        describe how the parser now works better and handles edge cases; third, mention
+        that users should see improved performance.","non_compatible_werk_suggestions_to_improve_text":null,"english_style_suggestions_to_improve_text":"Start
+        with the component name (e.g., ''Parser'') and use a strong past-tense verb
+        like ''Fixed''. Specify the visible problem caused by the bug. Replace vague
+        phrases like ''work better'' with precise descriptions of the fix. Use active
+        voice and concise sentences. For example, write: ''Fixed parser bug that caused
+        incorrect handling of edge cases, improving performance and reliability for
+        users.''"}}}'
+    headers:
+      Content-Length:
+      - '1625'
+      Content-Type:
+      - text/html; charset=utf-8
+      - application/json
+      Date:
+      - Mon, 22 Sep 2025 12:02:18 GMT
+      Server:
+      - uvicorn
+      Via:
+      - 1.1 Caddy
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"werk": {"title": "Bug Fix in Parser", "date": "2024-02-01T00:00:00Z",
+      "level": "2", "versions": ["1.1.0"], "werk_class": "fix", "component": "parser",
+      "compatible": true, "werk_text": "Fixed bug in parser that caused issues. The
+      parser now work better and handle edge cases. User should see improved performance."},
+      "evaluation": {"aggregated_scores": {"grammar_score": 1, "user_impact_clarity_score":
+      1, "paragraph_division_score": 1, "non_compatible_werk_score": null, "english_style_score":
+      1}, "aggregated_suggestions": {"grammar_suggestions_to_improve_text": "Correct
+      subject-verb agreement by changing ''work'' to ''works'' and ''handle'' to ''handles''.
+      Clarify ''User'' to ''Users'' or ''The user'' to match the intended meaning.",
+      "user_impact_clarity_suggestions_to_improve_text": "Explain the specific problems
+      users encountered due to the parser bug, such as errors, crashes, or incorrect
+      data. Describe how the fix improves their experience by enabling faster processing
+      and reducing errors. Clarify whether users need to take any action to benefit
+      from the fix.", "paragraph_division_suggestions_to_improve_text": "Divide the
+      text into three paragraphs: first, state the bug fix in the parser; second,
+      describe how the parser now works better and handles edge cases; third, mention
+      that users should see improved performance.", "non_compatible_werk_suggestions_to_improve_text":
+      null, "english_style_suggestions_to_improve_text": "Start with the component
+      name (e.g., ''Parser'') and use a strong past-tense verb like ''Fixed''. Specify
+      the visible problem caused by the bug. Replace vague phrases like ''work better''
+      with precise descriptions of the fix. Use active voice and concise sentences.
+      For example, write: ''Fixed parser bug that caused incorrect handling of edge
+      cases, improving performance and reliability for users.''"}}}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '1791'
+      content-type:
+      - application/json
+      host:
+      - meisterwerk.lan.checkmk.net
+      user-agent:
+      - werk-tool-v1.0.0
+      user-id:
+      - cli_user
+      x-request-id:
+      - 97247191-5043-49f3-9750-d59954778389
+    method: POST
+    uri: http://meisterwerk.lan.checkmk.net/werks/generate/rewrite
+  response:
+    body:
+      string: '{"user_id":"werk-tool-v1.0.0","request_id":"97247191-5043-49f3-9750-d59954778389","response_datetime":"2025-09-18T13:42:57.106799Z","rewritten_text":"Fixed
+        a parser bug that caused incorrect handling of edge cases, which could lead
+        to errors or unexpected behavior during data processing.\n\nThe parser now
+        correctly handles these edge cases, resulting in more reliable and accurate
+        parsing of input data.\n\nUsers should experience improved performance and
+        stability without needing to take any additional action."}'
+    headers:
+      Content-Length:
+      - '516'
+      Content-Type:
+      - text/html; charset=utf-8
+      - application/json
+      Date:
+      - Mon, 22 Sep 2025 12:02:18 GMT
+      Server:
+      - uvicorn
+      Via:
+      - 1.1 Caddy
+    status:
+      code: 200
+      message: OK
+version: 1

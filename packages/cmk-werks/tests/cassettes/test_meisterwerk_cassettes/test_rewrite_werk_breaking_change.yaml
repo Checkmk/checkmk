@@ -1,0 +1,144 @@
+interactions:
+- request:
+    body: '{"werk": {"title": "Configuration File Format Change", "date": "2024-05-15T00:00:00Z",
+      "level": "1", "versions": ["2.0.0"], "werk_class": "breaking", "component":
+      "configuration", "compatible": false, "werk_text": "Changed configuration file
+      format from INI to YAML for better structure. Users need to migrate their configuration
+      files. Old format will not work after upgrade."}}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '363'
+      content-type:
+      - application/json
+      host:
+      - meisterwerk.lan.checkmk.net
+      user-agent:
+      - python-httpx/0.28.1
+      user-id:
+      - cli_user
+      x-request-id:
+      - 6a9d3156-ea47-41bf-9808-68f4dae4aebc
+    method: POST
+    uri: http://meisterwerk.lan.checkmk.net/werks/evaluate/werk
+  response:
+    body:
+      string: '{"user_id":"python-httpx/0.28.1","request_id":"6a9d3156-ea47-41bf-9808-68f4dae4aebc","response_datetime":"2025-09-18T13:42:57.106284Z","evaluation":{"aggregated_scores":{"grammar_score":3,"user_impact_clarity_score":2,"paragraph_division_score":1,"non_compatible_werk_score":2,"english_style_score":2},"aggregated_suggestions":{"grammar_suggestions_to_improve_text":"No
+        improvements necessary.","user_impact_clarity_suggestions_to_improve_text":"Explain
+        that after upgrading, users must manually convert their existing configuration
+        files from INI to YAML format to ensure the system continues to work correctly.
+        Specify that failure to migrate will cause the configuration to be ignored
+        or cause errors, potentially disrupting monitoring. Provide guidance or references
+        on how to perform the migration, and mention if any tools or scripts are available
+        to assist.","paragraph_division_suggestions_to_improve_text":"Break the text
+        into two paragraphs: first, explain the change from INI to YAML format; second,
+        state that users need to migrate their configuration files because the old
+        format will not work after upgrade.","non_compatible_werk_suggestions_to_improve_text":"If
+        you have existing configuration files in the old INI format, you must migrate
+        them to the new YAML format after upgrading. Run the migration tool ''cmk-migrate-config''
+        or manually convert your INI files to YAML format before restarting the service.
+        This helps users immediately identify if they are affected and know exactly
+        what to do.","english_style_suggestions_to_improve_text":"Start with the component
+        name, e.g., ''Configuration files''. Use active voice and strong verbs, e.g.,
+        ''Configuration files now use YAML format instead of INI.'' Split into two
+        sentences to separate the change and the user action: ''Users must migrate
+        their configuration files because the old INI format will not work after the
+        upgrade.'' Remove vague phrases like ''for better structure'' or replace with
+        a more specific benefit if known."}}}'
+    headers:
+      Content-Length:
+      - '1996'
+      Content-Type:
+      - text/html; charset=utf-8
+      - application/json
+      Date:
+      - Mon, 22 Sep 2025 12:02:18 GMT
+      Server:
+      - uvicorn
+      Via:
+      - 1.1 Caddy
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"werk": {"title": "Configuration File Format Change", "date": "2024-05-15T00:00:00Z",
+      "level": "1", "versions": ["2.0.0"], "werk_class": "breaking", "component":
+      "configuration", "compatible": false, "werk_text": "Changed configuration file
+      format from INI to YAML for better structure. Users need to migrate their configuration
+      files. Old format will not work after upgrade."}, "evaluation": {"aggregated_scores":
+      {"grammar_score": 3, "user_impact_clarity_score": 2, "paragraph_division_score":
+      1, "non_compatible_werk_score": 2, "english_style_score": 2}, "aggregated_suggestions":
+      {"grammar_suggestions_to_improve_text": "No improvements necessary.", "user_impact_clarity_suggestions_to_improve_text":
+      "Explain that after upgrading, users must manually convert their existing configuration
+      files from INI to YAML format to ensure the system continues to work correctly.
+      Specify that failure to migrate will cause the configuration to be ignored or
+      cause errors, potentially disrupting monitoring. Provide guidance or references
+      on how to perform the migration, and mention if any tools or scripts are available
+      to assist.", "paragraph_division_suggestions_to_improve_text": "Break the text
+      into two paragraphs: first, explain the change from INI to YAML format; second,
+      state that users need to migrate their configuration files because the old format
+      will not work after upgrade.", "non_compatible_werk_suggestions_to_improve_text":
+      "If you have existing configuration files in the old INI format, you must migrate
+      them to the new YAML format after upgrading. Run the migration tool ''cmk-migrate-config''
+      or manually convert your INI files to YAML format before restarting the service.
+      This helps users immediately identify if they are affected and know exactly
+      what to do.", "english_style_suggestions_to_improve_text": "Start with the component
+      name, e.g., ''Configuration files''. Use active voice and strong verbs, e.g.,
+      ''Configuration files now use YAML format instead of INI.'' Split into two sentences
+      to separate the change and the user action: ''Users must migrate their configuration
+      files because the old INI format will not work after the upgrade.'' Remove vague
+      phrases like ''for better structure'' or replace with a more specific benefit
+      if known."}}}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '2224'
+      content-type:
+      - application/json
+      host:
+      - meisterwerk.lan.checkmk.net
+      user-agent:
+      - werk-tool-v1.0.0
+      user-id:
+      - cli_user
+      x-request-id:
+      - 2357c6a9-e344-4e48-b1c3-2a7ca7206847
+    method: POST
+    uri: http://meisterwerk.lan.checkmk.net/werks/generate/rewrite
+  response:
+    body:
+      string: '{"user_id":"werk-tool-v1.0.0","request_id":"2357c6a9-e344-4e48-b1c3-2a7ca7206847","response_datetime":"2025-09-18T13:42:57.106799Z","rewritten_text":"Configuration
+        files now use the YAML format instead of the previous INI format. This change
+        improves the clarity and maintainability of the configuration structure.\n\nAfter
+        upgrading, you must migrate your existing configuration files from INI to
+        YAML format. The old INI files will no longer be recognized and may cause
+        errors or disrupt monitoring if not converted. To assist with this process,
+        run the migration tool `cmk-migrate-config` or manually convert your INI files
+        to YAML before restarting the service. For detailed instructions, please refer
+        to the migration documentation."}'
+    headers:
+      Content-Length:
+      - '739'
+      Content-Type:
+      - text/html; charset=utf-8
+      - application/json
+      Date:
+      - Mon, 22 Sep 2025 12:02:42 GMT
+      Server:
+      - uvicorn
+      Via:
+      - 1.1 Caddy
+    status:
+      code: 200
+      message: OK
+version: 1

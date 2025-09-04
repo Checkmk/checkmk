@@ -3594,6 +3594,7 @@ pytest==8.3.5 \
     #   pytest-opentelemetry
     #   pytest-playwright
     #   pytest-random-order
+    #   pytest-recording
     #   pytest-repeat
     #   pytest-socket
     #   pytest-subtests
@@ -3652,6 +3653,10 @@ pytest-random-order==1.2.0 \
     #   -r non-free/packages/cmk-relay-engine/dev-requirements.in
     #   -r packages/cmk-agent-receiver/dev-requirements.in
     #   -r tests/dev-requirements.in
+pytest-recording==0.13.4 \
+    --hash=sha256:568d64b2a85992eec4ae0a419c855d5fd96782c5fb016784d86f18053792768c \
+    --hash=sha256:ad49a434b51b1c4f78e85b1e6b74fdcc2a0a581ca16e52c798c6ace971f7f439
+    # via -r packages/cmk-werks/dev-requirements.in
 pytest-repeat==0.9.4 \
     --hash=sha256:c1738b4e412a6f3b3b9e0b8b29fcd7a423e50f87381ad9307ef6f5a8601139f3 \
     --hash=sha256:d92ac14dfaa6ffcfe6917e5d16f0c9bc82380c135b03c2a5f412d2637f224485
@@ -3996,6 +4001,7 @@ rich==14.1.0 \
     --hash=sha256:536f5f1785986d6dbdea3c75205c473f970777b4a0d6c6dd1b696aa05a3fa04f \
     --hash=sha256:e497a48b844b0320d45007cdebfeaeed8db2a4f4bcf49f15e455cfc4af11eaa8
     # via
+    #   -r packages/cmk-werks/requirements.in
     #   bandit
     #   checkmk-dev-tools
     #   twine
@@ -5016,7 +5022,9 @@ uvicorn-worker==0.4.0 \
 vcrpy==7.0.0 \
     --hash=sha256:176391ad0425edde1680c5b20738ea3dc7fb942520a48d2993448050986b3a50 \
     --hash=sha256:55791e26c18daa363435054d8b35bd41a4ac441b6676167635d1b37a71dbe124
-    # via -r cmk/requirements.in
+    # via
+    #   -r cmk/requirements.in
+    #   pytest-recording
 virtualenv==20.34.0 \
     --hash=sha256:341f5afa7eee943e4984a9207c025feedd768baff6753cd660c857ceb3e36026 \
     --hash=sha256:44815b2c9dee7ed86e387b842a84f20b93f7f417f95886ca1996a72a4138eb1a

@@ -8293,6 +8293,10 @@ msgstr "Azure データベース接続"
 msgid "Azure Redis connections"
 msgstr "Azure データベース接続"
 
+#, fuzzy
+msgid "Azure Redis memory"
+msgstr "絶対使用メモリ"
+
 msgid "Azure SQL database CPU usage"
 msgstr "AzureSQLデータベースCPU使用量"
 
@@ -19182,6 +19186,10 @@ msgstr "Ntopのエンゲージ、過去、フローのアラートを表示す�
 msgid "Display Ntop flow information"
 msgstr "Ntopフロー情報を表示する"
 
+#, fuzzy
+msgid "Display Options"
+msgstr "テーブルアクションの表示"
+
 msgid "Display SLA statistics"
 msgstr "SLA統計を表示する"
 
@@ -22630,6 +22638,10 @@ msgstr ""
 msgid "Every week on..."
 msgstr "毎週..."
 
+#, fuzzy
+msgid "Evicted keys"
+msgstr "退去キー数"
+
 msgid "Evictions"
 msgstr "エビクション"
 
@@ -23066,6 +23078,10 @@ msgstr "有効期限"
 
 msgid "Expire time"
 msgstr "有効期限"
+
+#, fuzzy
+msgid "Expired keys"
+msgstr "期限切れのオブジェクト"
 
 msgid "Expired objects"
 msgstr "期限切れのオブジェクト"
@@ -33485,6 +33501,10 @@ msgstr ""
 
 msgid "Invalid receipt"
 msgstr "無効なレシート"
+
+#, python-brace-format
+msgid "Invalid regex pattern. Expected: {validate_pattern}"
+msgstr ""
 
 msgid "Invalid regular expression"
 msgstr "無効な正規表現"
@@ -50453,6 +50473,10 @@ msgstr "ソフトウェアを検索するためのレジストリキー(Windows)
 
 msgid "Regular Asserts"
 msgstr "定期的なアサート"
+
+#, fuzzy
+msgid "Regular Expression"
+msgstr "正規表現"
 
 msgid "Regular expression"
 msgstr "正規表現"
@@ -69373,6 +69397,13 @@ msgstr ""
 "このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
 "きます"
 
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis memory monitoring"
+msgstr ""
+"このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
+"きます"
+
 msgid "This ruleset allows you to configure levels for the Storage data flows"
 msgstr "このルールセットでは、ストレージのデータフローのレベルを設定できます"
 
@@ -76482,6 +76513,14 @@ msgstr "使用されたログファイル:絶対または相対的な上位レ�
 
 msgid "Used logical space"
 msgstr "使用済み論理スペース"
+
+#, fuzzy
+msgid "Used memory"
+msgstr "使用済みCPUメモリ"
+
+#, fuzzy
+msgid "Used memory RSS"
+msgstr "使用済みCPUメモリ"
 
 msgid "Used meta data"
 msgstr "使用したメタデータ"

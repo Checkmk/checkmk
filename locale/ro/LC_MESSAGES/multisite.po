@@ -8886,6 +8886,10 @@ msgid "Azure Redis connections"
 msgstr "Conexiuni la baza de date"
 
 #, fuzzy
+msgid "Azure Redis memory"
+msgstr "Memorie absolută utilizată"
+
+#, fuzzy
 msgid "Azure SQL database CPU usage"
 msgstr "Baze de date Azure"
 
@@ -20433,6 +20437,10 @@ msgstr "Afișarea alertelor Ntop angajate, trecute și de flux"
 msgid "Display Ntop flow information"
 msgstr "Afișarea informațiilor privind fluxul Ntop"
 
+#, fuzzy
+msgid "Display Options"
+msgstr "Afișarea acțiunilor din tabel"
+
 msgid "Display SLA statistics"
 msgstr "Afișarea statisticilor SLA"
 
@@ -24115,6 +24123,10 @@ msgstr ""
 msgid "Every week on..."
 msgstr "În fiecare săptămână, la..."
 
+#, fuzzy
+msgid "Evicted keys"
+msgstr "Numărul de chei evacuate"
+
 msgid "Evictions"
 msgstr "Evacuări"
 
@@ -24565,6 +24577,10 @@ msgstr "Expiră la"
 
 msgid "Expire time"
 msgstr "Timp de expirare"
+
+#, fuzzy
+msgid "Expired keys"
+msgstr "Obiecte expirate"
 
 msgid "Expired objects"
 msgstr "Obiecte expirate"
@@ -35831,6 +35847,10 @@ msgstr "Schemă URL invalidă. Trebuie să fie una dintre următoarele: %s"
 #, fuzzy
 msgid "Invalid receipt"
 msgstr "Raport invalid"
+
+#, python-brace-format
+msgid "Invalid regex pattern. Expected: {validate_pattern}"
+msgstr ""
 
 msgid "Invalid regular expression"
 msgstr "Expresie regulată invalidă"
@@ -54084,6 +54104,10 @@ msgstr "Chei de registru pentru căutarea de software (Windows)"
 #, fuzzy
 msgid "Regular Asserts"
 msgstr "Bătăi regulate ale inimii"
+
+#, fuzzy
+msgid "Regular Expression"
+msgstr "Expresie regulată"
 
 msgid "Regular expression"
 msgstr "Expresie regulată"
@@ -74081,6 +74105,13 @@ msgstr ""
 "tablespace și un indexspace al bazei de date."
 
 #, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis memory monitoring"
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
+#, fuzzy
 msgid "This ruleset allows you to configure levels for the Storage data flows"
 msgstr ""
 "Această regulă vă permite să configurați nivelurile de bloat pentru un "
@@ -81990,6 +82021,14 @@ msgstr "Fișiere jurnal utilizate: Niveluri superioare absolute sau relative"
 
 msgid "Used logical space"
 msgstr "Spațiu logic utilizat"
+
+#, fuzzy
+msgid "Used memory"
+msgstr "Memorie CPU utilizată"
+
+#, fuzzy
+msgid "Used memory RSS"
+msgstr "Memorie CPU utilizată"
 
 msgid "Used meta data"
 msgstr "Metadate utilizate"

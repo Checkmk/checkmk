@@ -8822,6 +8822,10 @@ msgid "Azure Redis connections"
 msgstr "Connessioni al database"
 
 #, fuzzy
+msgid "Azure Redis memory"
+msgstr "Memoria assoluta utilizzata"
+
+#, fuzzy
 msgid "Azure SQL database CPU usage"
 msgstr "Basi di dati Azure"
 
@@ -20232,6 +20236,10 @@ msgstr "Visualizza Ntop impegnato, passato e avvisi di flusso"
 msgid "Display Ntop flow information"
 msgstr "Visualizzare le informazioni sul flusso Ntop"
 
+#, fuzzy
+msgid "Display Options"
+msgstr "Visualizza le azioni della tabella"
+
 msgid "Display SLA statistics"
 msgstr "Visualizzare le statistiche SLA"
 
@@ -23851,6 +23859,10 @@ msgstr ""
 msgid "Every week on..."
 msgstr "Ogni settimana su..."
 
+#, fuzzy
+msgid "Evicted keys"
+msgstr "Numero di chiavi sfrattate"
+
 msgid "Evictions"
 msgstr "Sfratti"
 
@@ -24296,6 +24308,10 @@ msgstr "Scadenza il"
 
 msgid "Expire time"
 msgstr "Scadenza"
+
+#, fuzzy
+msgid "Expired keys"
+msgstr "Oggetti scaduti"
 
 msgid "Expired objects"
 msgstr "Oggetti scaduti"
@@ -35450,6 +35466,10 @@ msgstr "Schema URL non valido. Deve essere uno di: %s"
 #, fuzzy
 msgid "Invalid receipt"
 msgstr "Rapporto non valido"
+
+#, python-brace-format
+msgid "Invalid regex pattern. Expected: {validate_pattern}"
+msgstr ""
 
 msgid "Invalid regular expression"
 msgstr "Espressione regolare non valida"
@@ -53554,6 +53574,10 @@ msgstr "Chiavi di registro per cercare software (Windows)"
 #, fuzzy
 msgid "Regular Asserts"
 msgstr "Battito cardiaco regolare"
+
+#, fuzzy
+msgid "Regular Expression"
+msgstr "Espressione regolare"
 
 msgid "Regular expression"
 msgstr "Espressione regolare"
@@ -73256,6 +73280,13 @@ msgstr ""
 "l'indexspace di un database."
 
 #, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis memory monitoring"
+msgstr ""
+"Questa regola permette di configurare i livelli di bloat per il tablespace e "
+"l'indexspace di un database."
+
+#, fuzzy
 msgid "This ruleset allows you to configure levels for the Storage data flows"
 msgstr ""
 "Questa regola permette di configurare i livelli di bloat per il tablespace e "
@@ -81113,6 +81144,14 @@ msgstr "File di log usati: Livelli superiori assoluti o relativi"
 
 msgid "Used logical space"
 msgstr "Spazio logico utilizzato"
+
+#, fuzzy
+msgid "Used memory"
+msgstr "Memoria della CPU usata"
+
+#, fuzzy
+msgid "Used memory RSS"
+msgstr "Memoria della CPU usata"
 
 msgid "Used meta data"
 msgstr "Metadati usati"

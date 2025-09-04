@@ -8536,6 +8536,10 @@ msgstr "Effektivität des Azure Redis Caches"
 msgid "Azure Redis connections"
 msgstr "Azure Redis Verbindungen"
 
+#, fuzzy
+msgid "Azure Redis memory"
+msgstr "Absoluter genutzter Speicherplatz"
+
 msgid "Azure SQL database CPU usage"
 msgstr "CPU-Auslastung der Azure SQL-Datenbank"
 
@@ -19736,6 +19740,10 @@ msgstr "Zeige aktive, vergangene und Flow Alerts aus Ntop an"
 msgid "Display Ntop flow information"
 msgstr "Ntop-Flow Informationen anzeigen"
 
+#, fuzzy
+msgid "Display Options"
+msgstr "Tabellenaktionen anzeigen"
+
 msgid "Display SLA statistics"
 msgstr "SLA Statistiken anzeigen"
 
@@ -23286,6 +23294,10 @@ msgstr ""
 msgid "Every week on..."
 msgstr "Jede Woche am..."
 
+#, fuzzy
+msgid "Evicted keys"
+msgstr "Anzahl der entzogenen Schlüssel"
+
 msgid "Evictions"
 msgstr "Räumungen"
 
@@ -23723,6 +23735,10 @@ msgstr "Läuft ab am"
 
 msgid "Expire time"
 msgstr "Ablaufzeit"
+
+#, fuzzy
+msgid "Expired keys"
+msgstr "Ausgelaufene Objekte"
 
 msgid "Expired objects"
 msgstr "Ausgelaufene Objekte"
@@ -34425,6 +34441,10 @@ msgstr "Ungültiges Proxy-Schema angegeben. Muss eines der folgenden sein: %s"
 
 msgid "Invalid receipt"
 msgstr "Ungültiger Beleg"
+
+#, python-brace-format
+msgid "Invalid regex pattern. Expected: {validate_pattern}"
+msgstr ""
 
 msgid "Invalid regular expression"
 msgstr "Ungültiger regulärer Ausdruck"
@@ -51721,6 +51741,10 @@ msgstr "Registrierungsschlüssel, in denen nach Software gesucht wird (Windows)"
 
 msgid "Regular Asserts"
 msgstr "Reguläre Asserts"
+
+#, fuzzy
+msgid "Regular Expression"
+msgstr "Regulärer Ausdruck"
 
 msgid "Regular expression"
 msgstr "Regulärer Ausdruck"
@@ -71443,6 +71467,13 @@ msgstr ""
 "Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring von Azure "
 "Redis Verbindungen zu konfigurieren"
 
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis memory monitoring"
+msgstr ""
+"Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring von Azure "
+"Redis Verbindungen zu konfigurieren"
+
 msgid "This ruleset allows you to configure levels for the Storage data flows"
 msgstr ""
 "Dieser Regelsatz ermöglicht es Ihnen, Levels für die Speicherdatenflüsse zu "
@@ -78731,6 +78762,14 @@ msgstr "Verwendete Log-Dateien: Absolute oder relative Obergrenzen"
 
 msgid "Used logical space"
 msgstr "Verwendeter logischer Platz"
+
+#, fuzzy
+msgid "Used memory"
+msgstr "Verwendeter CPU Speicher"
+
+#, fuzzy
+msgid "Used memory RSS"
+msgstr "Verwendeter CPU Speicher"
 
 msgid "Used meta data"
 msgstr "Genutzte Metadaten"

@@ -8900,6 +8900,10 @@ msgid "Azure Redis connections"
 msgstr "Ligações à base de dados"
 
 #, fuzzy
+msgid "Azure Redis memory"
+msgstr "Memória livre absoluta"
+
+#, fuzzy
 msgid "Azure SQL database CPU usage"
 msgstr "Bases de dados Azure"
 
@@ -20402,6 +20406,10 @@ msgstr "Mostrar alertas Ntop engatado, passado e fluxo"
 msgid "Display Ntop flow information"
 msgstr "Exibir informação de fluxo Ntop"
 
+#, fuzzy
+msgid "Display Options"
+msgstr "Exibir ações de tabela"
+
 msgid "Display SLA statistics"
 msgstr "Exibir estatísticas de SLA"
 
@@ -24044,6 +24052,10 @@ msgstr ""
 msgid "Every week on..."
 msgstr "Todas as semanas em..."
 
+#, fuzzy
+msgid "Evicted keys"
+msgstr "Número de chaves despejadas"
+
 msgid "Evictions"
 msgstr "Despejos"
 
@@ -24489,6 +24501,10 @@ msgstr "Expira"
 
 msgid "Expire time"
 msgstr "Expirar o tempo"
+
+#, fuzzy
+msgid "Expired keys"
+msgstr "Objetos expirados"
 
 msgid "Expired objects"
 msgstr "Objetos expirados"
@@ -35721,6 +35737,10 @@ msgstr "Esquema de URL inválido. Deve ser um de: %s"
 #, fuzzy
 msgid "Invalid receipt"
 msgstr "Relatório inválido"
+
+#, python-brace-format
+msgid "Invalid regex pattern. Expected: {validate_pattern}"
+msgstr ""
 
 msgid "Invalid regular expression"
 msgstr "Expressão inválida regular"
@@ -53969,6 +53989,10 @@ msgstr "Chaves de Registro para procurar por software (Windows)"
 #, fuzzy
 msgid "Regular Asserts"
 msgstr "Ritmo cardíaco regular"
+
+#, fuzzy
+msgid "Regular Expression"
+msgstr "Expressão regular"
 
 msgid "Regular expression"
 msgstr "Expressão regular"
@@ -73773,6 +73797,13 @@ msgstr ""
 "tabela e espaço de índice em bancos de dados."
 
 #, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis memory monitoring"
+msgstr ""
+"Esta regra permite que você configure níveis de inchaço para um espaço de "
+"tabela e espaço de índice em bancos de dados."
+
+#, fuzzy
 msgid "This ruleset allows you to configure levels for the Storage data flows"
 msgstr ""
 "Esta regra permite que você configure níveis de inchaço para um espaço de "
@@ -81724,6 +81755,14 @@ msgstr "Ficheiros de registo usados: Níveis superiores absolutos ou relativos"
 
 msgid "Used logical space"
 msgstr "Espaço lógico utilizado"
+
+#, fuzzy
+msgid "Used memory"
+msgstr "Memória de CPU usada"
+
+#, fuzzy
+msgid "Used memory RSS"
+msgstr "Memória de CPU usada"
 
 msgid "Used meta data"
 msgstr "Metadados usados"

@@ -8938,6 +8938,10 @@ msgid "Azure Redis connections"
 msgstr "Connexions à la base de données"
 
 #, fuzzy
+msgid "Azure Redis memory"
+msgstr "Mémoire utilisée absolue"
+
+#, fuzzy
 msgid "Azure SQL database CPU usage"
 msgstr "Bases de données Azure"
 
@@ -20549,6 +20553,10 @@ msgstr "Affichage des alertes Ntop engagées, passées et de débit"
 msgid "Display Ntop flow information"
 msgstr "Afficher les informations de flux Ntop"
 
+#, fuzzy
+msgid "Display Options"
+msgstr "Afficher les actions du tableau"
+
 msgid "Display SLA statistics"
 msgstr "Afficher les statistiques SLA"
 
@@ -24233,6 +24241,10 @@ msgstr ""
 msgid "Every week on..."
 msgstr "Chaque semaine sur..."
 
+#, fuzzy
+msgid "Evicted keys"
+msgstr "Nombre de clés expulsées"
+
 msgid "Evictions"
 msgstr "Expulsions"
 
@@ -24686,6 +24698,10 @@ msgstr "Expiration"
 
 msgid "Expire time"
 msgstr "Temps d'expiration"
+
+#, fuzzy
+msgid "Expired keys"
+msgstr "Objets périmés"
 
 msgid "Expired objects"
 msgstr "Objets périmés"
@@ -36017,6 +36033,10 @@ msgstr "Schéma d'URL non valide. Doit être l'un de : %s"
 #, fuzzy
 msgid "Invalid receipt"
 msgstr "Rapport invalide"
+
+#, python-brace-format
+msgid "Invalid regex pattern. Expected: {validate_pattern}"
+msgstr ""
 
 msgid "Invalid regular expression"
 msgstr "Expression régulière invalide"
@@ -54419,6 +54439,10 @@ msgstr "Clés de registre pour la recherche de logiciels (Windows)"
 #, fuzzy
 msgid "Regular Asserts"
 msgstr "Un rythme cardiaque régulier"
+
+#, fuzzy
+msgid "Regular Expression"
+msgstr "Expression régulière"
 
 msgid "Regular expression"
 msgstr "Expression régulière"
@@ -74466,6 +74490,13 @@ msgstr ""
 "tablespace et un index de bases de données."
 
 #, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis memory monitoring"
+msgstr ""
+"Cette règle vous permet de configurer les niveaux de bloat pour un "
+"tablespace et un index de bases de données."
+
+#, fuzzy
 msgid "This ruleset allows you to configure levels for the Storage data flows"
 msgstr ""
 "Cette règle vous permet de configurer les niveaux de bloat pour un "
@@ -82510,6 +82541,14 @@ msgstr "Fichiers journaux utilisés : Niveaux supérieurs absolus ou relatifs"
 
 msgid "Used logical space"
 msgstr "Espace logique utilisé"
+
+#, fuzzy
+msgid "Used memory"
+msgstr "Mémoire CPU utilisée"
+
+#, fuzzy
+msgid "Used memory RSS"
+msgstr "Mémoire CPU utilisée"
 
 msgid "Used meta data"
 msgstr "Méta-données utilisées"

@@ -8957,6 +8957,10 @@ msgid "Azure Redis connections"
 msgstr "Conexiones de bases de datos"
 
 #, fuzzy
+msgid "Azure Redis memory"
+msgstr "Memoria libre absoluta"
+
+#, fuzzy
 msgid "Azure SQL database CPU usage"
 msgstr "Bases de datos Azure"
 
@@ -20566,6 +20570,10 @@ msgstr "Visualización de las alertas de Ntop comprometida, pasada y de flujo"
 msgid "Display Ntop flow information"
 msgstr "Mostrar información de flujo Ntop"
 
+#, fuzzy
+msgid "Display Options"
+msgstr "Mostrar acciones de la tabla"
+
 msgid "Display SLA statistics"
 msgstr "Visualizar las estadísticas del SLA"
 
@@ -24240,6 +24248,10 @@ msgstr ""
 msgid "Every week on..."
 msgstr "Cada semana en..."
 
+#, fuzzy
+msgid "Evicted keys"
+msgstr "Número de llaves desalojadas"
+
 msgid "Evictions"
 msgstr "Desahucios"
 
@@ -24691,6 +24703,10 @@ msgstr "Expira"
 
 msgid "Expire time"
 msgstr "Tiempo de caducidad"
+
+#, fuzzy
+msgid "Expired keys"
+msgstr "Objetos caducados"
 
 msgid "Expired objects"
 msgstr "Objetos caducados"
@@ -36002,6 +36018,10 @@ msgstr "Esquema de URL inválido. Debe ser uno de los siguientes: %s"
 #, fuzzy
 msgid "Invalid receipt"
 msgstr "Informe no válido"
+
+#, python-brace-format
+msgid "Invalid regex pattern. Expected: {validate_pattern}"
+msgstr ""
 
 msgid "Invalid regular expression"
 msgstr "Expresión regular no válida"
@@ -54421,6 +54441,10 @@ msgstr "Claves del registro para buscar software (Windows)"
 #, fuzzy
 msgid "Regular Asserts"
 msgstr "Regular heartbeat"
+
+#, fuzzy
+msgid "Regular Expression"
+msgstr "Expresión regular"
 
 msgid "Regular expression"
 msgstr "Expresión regular"
@@ -74446,6 +74470,13 @@ msgstr ""
 "indexspace de una base de datos."
 
 #, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis memory monitoring"
+msgstr ""
+"Esta regla permite configurar los niveles de bloat para el tablespace y el "
+"indexspace de una base de datos."
+
+#, fuzzy
 msgid "This ruleset allows you to configure levels for the Storage data flows"
 msgstr ""
 "Esta regla permite configurar los niveles de bloat para el tablespace y el "
@@ -82462,6 +82493,14 @@ msgstr ""
 
 msgid "Used logical space"
 msgstr "Espacio lógico utilizado"
+
+#, fuzzy
+msgid "Used memory"
+msgstr "Memoria de la CPU utilizada"
+
+#, fuzzy
+msgid "Used memory RSS"
+msgstr "Memoria de la CPU utilizada"
 
 msgid "Used meta data"
 msgstr "Metadatos utilizados"

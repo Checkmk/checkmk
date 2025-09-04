@@ -8887,6 +8887,10 @@ msgid "Azure Redis connections"
 msgstr "Databaseverbindingen"
 
 #, fuzzy
+msgid "Azure Redis memory"
+msgstr "Absoluut vrij geheugen"
+
+#, fuzzy
 msgid "Azure SQL database CPU usage"
 msgstr "Azure Databases"
 
@@ -20414,6 +20418,10 @@ msgstr "Weergave Ntop bezet, verleden en stroom waarschuwingen"
 msgid "Display Ntop flow information"
 msgstr "Geef Ntop stroom informatie weer"
 
+#, fuzzy
+msgid "Display Options"
+msgstr "Toon tabel acties"
+
 msgid "Display SLA statistics"
 msgstr "SLA-statistieken weergeven"
 
@@ -24050,6 +24058,10 @@ msgstr ""
 msgid "Every week on..."
 msgstr "Elke week op..."
 
+#, fuzzy
+msgid "Evicted keys"
+msgstr "Aantal uitgezette sleutels"
+
 msgid "Evictions"
 msgstr "Uitzettingen"
 
@@ -24499,6 +24511,10 @@ msgstr "Verloopt op"
 
 msgid "Expire time"
 msgstr "Verlooptijd"
+
+#, fuzzy
+msgid "Expired keys"
+msgstr "Verlopen objecten"
 
 msgid "Expired objects"
 msgstr "Verlopen objecten"
@@ -35728,6 +35744,10 @@ msgstr "Ongeldig URL-schema. Moet een van zijn: %s"
 #, fuzzy
 msgid "Invalid receipt"
 msgstr "Ongeldig rapport"
+
+#, python-brace-format
+msgid "Invalid regex pattern. Expected: {validate_pattern}"
+msgstr ""
 
 msgid "Invalid regular expression"
 msgstr "Ongeldige reguliere uitdrukking"
@@ -54002,6 +54022,10 @@ msgstr "Registersleutels om naar software te zoeken (Windows)"
 #, fuzzy
 msgid "Regular Asserts"
 msgstr "Regelmatige hartslag"
+
+#, fuzzy
+msgid "Regular Expression"
+msgstr "Reguliere uitdrukking"
 
 msgid "Regular expression"
 msgstr "Reguliere uitdrukking"
@@ -73819,6 +73843,13 @@ msgstr ""
 "tablespace en indexspace."
 
 #, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis memory monitoring"
+msgstr ""
+"Deze regel staat je toe om bloat levels te configureren voor een databases "
+"tablespace en indexspace."
+
+#, fuzzy
 msgid "This ruleset allows you to configure levels for the Storage data flows"
 msgstr ""
 "Deze regel staat je toe om bloat levels te configureren voor een databases "
@@ -81788,6 +81819,14 @@ msgstr "Gebruikte logbestanden: Absolute of relatieve bovenste niveaus"
 
 msgid "Used logical space"
 msgstr "Gebruikte logische ruimte"
+
+#, fuzzy
+msgid "Used memory"
+msgstr "Gebruikt CPU-geheugen"
+
+#, fuzzy
+msgid "Used memory RSS"
+msgstr "Gebruikt CPU-geheugen"
 
 msgid "Used meta data"
 msgstr "Gebruikte metagegevens"

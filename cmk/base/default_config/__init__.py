@@ -10,3 +10,4 @@ from .base import *  # noqa: F403
 from .cmc import *  # noqa: F403
 from .customer import *  # noqa: F403
 from .notify import *  # noqa: F403
+from .relays import *  # noqa: F403

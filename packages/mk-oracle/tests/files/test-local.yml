@@ -1,0 +1,10 @@
+---
+oracle:
+  main: # mandatory, to be used if no specific config
+    connection: # mandatory
+      hostname: localhost
+    authentication: # mandatory
+      username: $CI_ORA1_DB_TEST
+      password: $CI_ORA1_DB_TEST
+      type: standard
+      role: sysdba # it may be not enabled by Oracle DBA

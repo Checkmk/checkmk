@@ -6,6 +6,8 @@ cc_binary(
     name = "unixcat",
     srcs = ["src/unixcat.cc"],
     copts = [
+        # Warning comes from livestatus.
+        "-Wno-deprecated-declarations",  # CMK-25750
         "-std=c++20",
         "-O3",
     ],

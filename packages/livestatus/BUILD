@@ -16,6 +16,7 @@ cc_library(
         "include/livestatus/Poller.h",
     ],
     copts = [
+        "-Wno-deprecated-declarations",  # CMK-25750
         "-O3",
         "-std=c++20",
     ],

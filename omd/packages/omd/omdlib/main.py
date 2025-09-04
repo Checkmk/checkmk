@@ -3307,7 +3307,10 @@ def main_config(  # pylint: disable=too-many-branches
         else:
             config_usage()
 
-    if set(set_hooks).intersection({"APACHE_TCP_ADDR", "APACHE_TCP_PORT", "APACHE_MODE"}):
+    if (
+        set(set_hooks).intersection({"APACHE_TCP_ADDR", "APACHE_TCP_PORT", "APACHE_MODE"})
+        and not omdlib.utils.is_containerized()
+    ):
         sys.stdout.write(
             f"WARNING: You have to execute 'omd update-apache-config {site.name}' as "
             "root to update and apply the configuration of the system apache.\n"

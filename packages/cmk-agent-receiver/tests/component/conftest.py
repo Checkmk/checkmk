@@ -23,17 +23,19 @@ def site_name() -> str:
 
 
 @pytest.fixture()
-def test_client(site_name: str, tmp_path: pathlib.Path) -> TestClient:
+def test_client(site_name: str, tmp_path: pathlib.Path, wiremock: Wiremock) -> TestClient:
     # setting up some checkmk stuff required by the agent receiver
     base_dir = tmp_path / site_name
     os.environ["OMD_ROOT"] = str(base_dir)
     os.environ["OMD_SITE"] = site_name
+    os.environ["SITE_URL"] = wiremock.base_url
     log_dir = base_dir / "var" / "log" / "agent-receiver"
     log_dir.mkdir(parents=True, exist_ok=True)
     (log_dir / "agent-receiver.log").touch()
 
     # start the app
     app = main_app()
+
     client = TestClient(app)
     return client
 

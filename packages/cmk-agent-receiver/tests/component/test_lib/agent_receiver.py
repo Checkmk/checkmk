@@ -9,14 +9,7 @@ from typing import final
 import httpx
 from fastapi.testclient import TestClient
 
-from cmk.relay_protocols.relays import RelayRegistrationResponse
 from cmk.relay_protocols.tasks import TaskType
-
-
-def register_relay(ar: AgentReceiverClient) -> str:
-    resp = ar.register_relay()
-    parsed = RelayRegistrationResponse.model_validate_json(resp.text)
-    return parsed.relay_id
 
 
 @final

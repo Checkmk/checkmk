@@ -86,6 +86,38 @@ def test_scenario_can_delete_relay(site: SiteMock, client: httpx.Client) -> None
     assert to_delete_relay not in {r.id for r in list_parsed.value}
 
 
+def test_scenario_start_empty_add_relay(site: SiteMock, client: httpx.Client) -> None:
+    new_relay = "relay_first"
+    site.set_scenario(relays=[], changes=[(new_relay, OP.ADD)])
+
+    # verify initial state - should be empty
+    resp = client.get("/domain-types/relay/collections/all")
+    assert resp.status_code == HTTPStatus.OK
+    list_parsed = ListResponse.model_validate(resp.json())
+    assert len(list_parsed.value) == 0
+
+    # add the first relay
+    resp = client.post(
+        "/domain-types/relay/collections/all", json={"alias": "foo", "siteid": "bar"}
+    )
+    assert resp.status_code == HTTPStatus.OK
+    parsed = PostResponse.model_validate(resp.json())
+    assert parsed.id == new_relay
+
+    # verify we can get it
+    resp = client.get(f"/objects/relay/{new_relay}")
+    assert resp.status_code == HTTPStatus.OK
+    get_parsed = GetResponse.model_validate(resp.json())
+    assert get_parsed.id == new_relay
+
+    # verify it's in the collection
+    resp = client.get("/domain-types/relay/collections/all")
+    assert resp.status_code == HTTPStatus.OK
+    list_parsed = ListResponse.model_validate(resp.json())
+    assert len(list_parsed.value) == 1
+    assert list_parsed.value[0].id == new_relay
+
+
 def test_scenario_multiple_changes(site: SiteMock, client: httpx.Client) -> None:
     initial_relays = ["relay_a", "relay_b"]
     changes = [

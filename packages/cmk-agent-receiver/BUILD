@@ -58,6 +58,7 @@ py_library(
         requirement("fastapi"),
         requirement("gunicorn"),
         requirement("h11"),
+        requirement("httpx"),
         requirement("python-dateutil"),
         requirement("python-multipart"),
         requirement("requests"),

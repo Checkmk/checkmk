@@ -7,14 +7,25 @@ from http import HTTPStatus
 from cmk.relay_protocols.relays import RelayRegistrationResponse
 from cmk.relay_protocols.tasks import TaskType
 
-from .test_lib.agent_receiver import AgentReceiverClient, register_relay
+from .test_lib.agent_receiver import AgentReceiverClient
+from .test_lib.site_mock import OP, SiteMock
 from .test_lib.tasks import get_relay_tasks, push_task
 
 
-def test_a_relay_can_be_registered(agent_receiver: AgentReceiverClient) -> None:
+def register_relay(ar: AgentReceiverClient) -> str:
+    resp = ar.register_relay()
+    parsed = RelayRegistrationResponse.model_validate_json(resp.text)
+    return parsed.relay_id
+
+
+def test_a_relay_can_be_registered(
+    site: SiteMock,
+    agent_receiver: AgentReceiverClient,
+) -> None:
     """
     Register a relay and check if we can obtain a list of pending tasks for it.
     """
+    site.set_scenario([], [("relay1", OP.ADD)])
     resp = agent_receiver.register_relay()
     assert resp.status_code == HTTPStatus.OK
     parsed = RelayRegistrationResponse.model_validate_json(resp.text)
@@ -26,7 +37,9 @@ def test_a_relay_can_be_registered(agent_receiver: AgentReceiverClient) -> None:
 
 def test_registering_a_relay_does_not_affect_other_relays(
     agent_receiver: AgentReceiverClient,
+    site: SiteMock,
 ) -> None:
+    site.set_scenario([], [("relay1", OP.ADD), ("relay2", OP.ADD)])
     relay_id_A = register_relay(agent_receiver)
     push_task(
         agent_receiver=agent_receiver,
@@ -41,7 +54,11 @@ def test_registering_a_relay_does_not_affect_other_relays(
     assert len(tasks_A.tasks) == 1
 
 
-def test_a_relay_can_be_unregistered(agent_receiver: AgentReceiverClient) -> None:
+def test_a_relay_can_be_unregistered(
+    agent_receiver: AgentReceiverClient,
+    site: SiteMock,
+) -> None:
+    site.set_scenario([], [("relay1", OP.ADD), ("relay1", OP.DEL)])
     relay_id = register_relay(agent_receiver)
     resp = agent_receiver.get_relay_tasks(relay_id)
     assert resp.status_code == HTTPStatus.OK
@@ -57,7 +74,9 @@ def test_a_relay_can_be_unregistered(agent_receiver: AgentReceiverClient) -> Non
 
 def test_unregistering_a_relay_does_not_affect_other_relays(
     agent_receiver: AgentReceiverClient,
+    site: SiteMock,
 ) -> None:
+    site.set_scenario([], [("relay1", OP.ADD), ("relay2", OP.ADD), ("relay1", OP.DEL)])
     relay_id_A = register_relay(agent_receiver)
     relay_id_B = register_relay(agent_receiver)
 

@@ -64,7 +64,9 @@ class SiteMock:
     def base_route(self) -> str:
         return f"/{self.site_name}/check_mk/api/1.0"
 
-    def set_scenario(self, relays: list[Relay], changes: Sequence[Change] | None = None) -> None:
+    def set_scenario(
+        self, relays: list[Relay] | Relay, changes: Sequence[Change] | None = None
+    ) -> None:
         """Setup a WireMock scenario for relay management testing.
 
         Examples:
@@ -77,6 +79,8 @@ class SiteMock:
                 changes=[("relay2", OP.ADD), ("relay1", OP.DEL)]
             )
         """
+        if isinstance(relays, str):
+            relays = [relays]
         changes = changes or []
         # use a random scenario name to ensure test isolation
         name = f"testcase-{secrets.token_urlsafe(5)}"

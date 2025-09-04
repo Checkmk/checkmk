@@ -8,6 +8,7 @@ from cmk.gui.http import request
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.type_defs import HTTPVariables, VisualContext
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 from .type_defs import DashboardConfig
@@ -16,11 +17,15 @@ __all__ = ["dashboard_breadcrumb"]
 
 
 def dashboard_breadcrumb(
-    name: str, board: DashboardConfig, title: str, context: VisualContext
+    name: str,
+    board: DashboardConfig,
+    title: str,
+    context: VisualContext,
+    user_permissions: UserPermissions,
 ) -> Breadcrumb:
     breadcrumb = make_topic_breadcrumb(
         main_menu_registry.menu_monitoring(),
-        PagetypeTopics.get_topic(board["topic"]).title(),
+        PagetypeTopics.get_topic(board["topic"], user_permissions).title(),
     )
 
     if "kubernetes" in name:

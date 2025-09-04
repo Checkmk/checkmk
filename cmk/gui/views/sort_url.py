@@ -13,6 +13,7 @@ from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnSpec, PainterName, PainterParameters, SorterName, SorterSpec
+from cmk.gui.utils.roles import UserPermissions
 
 from .sorter import ParameterizedSorter, Sorter
 
@@ -26,6 +27,7 @@ def compute_sort_url_parameter(
     user_sorters: Sequence[SorterSpec],
     registered_sorters: Mapping[str, Sorter],
     registered_painters: Mapping[str, type[Painter]],
+    user_permissions: UserPermissions,
 ) -> str:
     """Computes the `sort` URL parameter value for a column header
 
@@ -38,7 +40,12 @@ def compute_sort_url_parameter(
     sorters = []
 
     group_sort, user_sort, view_sort = _get_separated_sorters(
-        group_painters, config_sorters, list(user_sorters), registered_sorters, registered_painters
+        group_painters,
+        config_sorters,
+        list(user_sorters),
+        registered_sorters,
+        registered_painters,
+        user_permissions,
     )
 
     sorters = group_sort + user_sort + view_sort
@@ -47,7 +54,9 @@ def compute_sort_url_parameter(
     # - Negate/Disable when at first position
     # - Move to the first position when already in sorters
     # - Add in the front of the user sorters when not set
-    sorter_name = _get_sorter_name_of_painter(painter_name, registered_sorters, registered_painters)
+    sorter_name = _get_sorter_name_of_painter(
+        painter_name, registered_sorters, registered_painters, user_permissions
+    )
     if sorter_name is None:
         # Do not change anything in case there is no sorter for the current column
         return _encode_sorter_url(sorters)
@@ -93,8 +102,11 @@ def _get_separated_sorters(
     user_sorters: list[SorterSpec],
     registered_sorters: Mapping[str, Sorter],
     registered_painters: Mapping[str, type[Painter]],
+    user_permissions: UserPermissions,
 ) -> tuple[list[SorterSpec], list[SorterSpec], list[SorterSpec]]:
-    group_sort = _get_group_sorters(group_painters, registered_sorters, registered_painters)
+    group_sort = _get_group_sorters(
+        group_painters, registered_sorters, registered_painters, user_permissions
+    )
     view_sort = [s for s in config_sorters if not any(s.sorter == gs.sorter for gs in group_sort)]
     user_sort = user_sorters
 
@@ -108,12 +120,15 @@ def _get_group_sorters(
     group_painters: Sequence[ColumnSpec],
     registered_sorters: Mapping[str, Sorter],
     registered_painters: Mapping[str, type[Painter]],
+    user_permissions: UserPermissions,
 ) -> list[SorterSpec]:
     group_sort: list[SorterSpec] = []
     for p in group_painters:
         if p.name not in registered_painters:
             continue
-        sorter_name = _get_sorter_name_of_painter(p, registered_sorters, registered_painters)
+        sorter_name = _get_sorter_name_of_painter(
+            p, registered_sorters, registered_painters, user_permissions
+        )
         if sorter_name is None:
             continue
 
@@ -125,6 +140,7 @@ def _get_sorter_name_of_painter(
     painter_name_or_spec: PainterName | ColumnSpec,
     registered_sorters: Mapping[str, Sorter],
     registered_painters: Mapping[str, type[Painter]],
+    user_permissions: UserPermissions,
 ) -> SorterName | None:
     painter_name = (
         painter_name_or_spec.name
@@ -137,6 +153,7 @@ def _get_sorter_name_of_painter(
         painter_options=PainterOptions.get_instance(),
         theme=theme,
         url_renderer=RenderLink(request, response, display_options),
+        user_permissions=user_permissions,
     )
     if painter.sorter:
         return painter.sorter

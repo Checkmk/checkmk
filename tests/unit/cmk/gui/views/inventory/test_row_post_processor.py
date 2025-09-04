@@ -7,6 +7,7 @@ import pytest
 
 from cmk.gui.painter.v0 import JoinCell, painter_registry
 from cmk.gui.type_defs import ColumnSpec, PainterParameters
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.inventory._row_post_processor import _join_inventory_rows
 from cmk.utils.structured_data import deserialize_tree, ImmutableTree, SDNodeName
 
@@ -127,6 +128,7 @@ def test_row_post_processor() -> None:
                 ),
                 "",
                 painter_registry,
+                UserPermissions({}, {}, {}, []),
             ),
             # Match 'version'
             _FakeJoinCell(
@@ -142,6 +144,7 @@ def test_row_post_processor() -> None:
                 ),
                 "",
                 painter_registry,
+                UserPermissions({}, {}, {}, []),
             ),
             # Match 'bar', not unique
             _FakeJoinCell(
@@ -157,6 +160,7 @@ def test_row_post_processor() -> None:
                 ),
                 "",
                 painter_registry,
+                UserPermissions({}, {}, {}, []),
             ),
             # Unknown macro
             _FakeJoinCell(
@@ -172,6 +176,7 @@ def test_row_post_processor() -> None:
                 ),
                 "",
                 painter_registry,
+                UserPermissions({}, {}, {}, []),
             ),
             # Unknown node
             _FakeJoinCell(
@@ -187,6 +192,7 @@ def test_row_post_processor() -> None:
                 ),
                 "",
                 painter_registry,
+                UserPermissions({}, {}, {}, []),
             ),
         ],
         view_datasource_ident="invorainstance",

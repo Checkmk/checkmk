@@ -20,6 +20,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.painter_options import PainterOptions
+from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import (
     ColumnSpec,
     HTTPVariables,
@@ -29,6 +30,7 @@ from cmk.gui.type_defs import (
     ViewSpec,
     VisualContext,
 )
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
 from cmk.gui.valuespec import DictionaryEntry, DropdownChoice
 from cmk.gui.view import View
@@ -171,7 +173,11 @@ class ABCViewDashlet(IFrameDashlet[VT]):
         return True
 
     def _show_view_as_dashlet(
-        self, view_spec: ViewSpec | ViewDashletConfig, *, debug: bool
+        self,
+        view_spec: ViewSpec | ViewDashletConfig,
+        user_permissions: UserPermissions,
+        *,
+        debug: bool,
     ) -> None:
         html.add_body_css_class("view")
         html.open_div(id_="dashlet_content_wrapper")
@@ -219,7 +225,12 @@ class ABCViewDashlet(IFrameDashlet[VT]):
         # We are only interested in the ViewSpec specific attributes here. Once we have the full
         # picture (dashlets typed (already done) and reports typed), we can better decide how to do
         # it
-        view = View(self._dashlet_spec["name"], view_spec, context)  # type: ignore[arg-type]
+        view = View(
+            self._dashlet_spec["name"],
+            view_spec,  # type: ignore[arg-type]
+            context,
+            user_permissions,
+        )
         view.row_limit = get_limit()
         view.only_sites = get_only_sites_from_context(context)
         view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
@@ -310,8 +321,12 @@ class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):
             "is_show_more": False,
         }
 
-    def update(self):
-        self._show_view_as_dashlet(self._dashlet_spec, debug=active_config.debug)
+    def update(self) -> None:
+        self._show_view_as_dashlet(
+            self._dashlet_spec,
+            UserPermissions.from_config(active_config, permission_registry),
+            debug=active_config.debug,
+        )
         html.javascript('cmk.utils.add_simplebar_scrollbar("dashlet_content_wrapper");')
 
     def infos(self) -> SingleInfos:
@@ -434,7 +449,11 @@ class LinkedViewDashlet(ABCViewDashlet[LinkedViewDashletConfig]):
         return makeuri_contextless(request, request_vars, filename="view.py")
 
     def update(self) -> None:
-        self._show_view_as_dashlet(self._get_view_spec(), debug=active_config.debug)
+        self._show_view_as_dashlet(
+            self._get_view_spec(),
+            UserPermissions.from_config(active_config, permission_registry),
+            debug=active_config.debug,
+        )
         html.javascript('cmk.utils.add_simplebar_scrollbar("dashlet_content_wrapper");')
 
     def infos(self) -> SingleInfos:

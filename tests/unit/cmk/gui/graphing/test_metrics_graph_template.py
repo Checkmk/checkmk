@@ -13,6 +13,7 @@ from cmk.gui.graphing._metric_operation import MetricOpRRDSource
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, IECNotation
 from cmk.gui.type_defs import Row
 from cmk.gui.unit_formatter import AutoPrecision
+from cmk.gui.utils.roles import UserPermissions
 
 
 class FakeTemplateGraphSpecification(TemplateGraphSpecification):
@@ -94,6 +95,7 @@ def test_template_recipes() -> None:
                 conflicting=["reserved"],
             ),
         },
+        UserPermissions({}, {}, {}, []),
     ) == [
         GraphRecipe(
             title="Size and used space",

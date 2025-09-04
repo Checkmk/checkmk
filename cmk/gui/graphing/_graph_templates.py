@@ -23,6 +23,7 @@ from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.logged_in import user
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import Row, VisualContext
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visuals import livestatus_query_bare
 from cmk.utils.servicename import ServiceName
 
@@ -749,6 +750,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         self,
         registered_metrics: Mapping[str, RegisteredMetric],
         registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
+        user_permissions: UserPermissions,
     ) -> list[GraphRecipe]:
         row = self._get_graph_data_from_livestatus()
         translated_metrics = translated_metrics_from_row(row, registered_metrics)

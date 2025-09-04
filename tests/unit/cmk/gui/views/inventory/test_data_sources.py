@@ -9,6 +9,7 @@ from livestatus import LivestatusResponse, LivestatusRow, OnlySites
 
 import cmk.gui.inventory
 import cmk.gui.utils
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.views.inventory._data_sources import RowTableInventory, RowTableInventoryHistory
 from cmk.gui.views.store import multisite_builtin_views
@@ -39,7 +40,7 @@ EXPECTED_INV_HIST_KEYS = [
 def fixture_view() -> View:
     """Provide some arbitrary view for testing"""
     view_spec = multisite_builtin_views["invinterface_of_host"]
-    return View("invdockerimages", view_spec, view_spec["context"])
+    return View("invdockerimages", view_spec, view_spec["context"], UserPermissions({}, {}, {}, []))
 
 
 class RowTableInventoryTest1(RowTableInventory):

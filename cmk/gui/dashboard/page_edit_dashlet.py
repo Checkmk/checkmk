@@ -24,7 +24,9 @@ from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.pages import Page, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
+from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import SingleInfos
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     Checkbox,
@@ -113,7 +115,12 @@ class EditDashletPage(Page):
 
             title = _("Edit element: %s") % dashlet_type.title()
 
-        breadcrumb = dashlet_editor_breadcrumb(self._board, self._dashboard, title)
+        breadcrumb = dashlet_editor_breadcrumb(
+            self._board,
+            self._dashboard,
+            title,
+            UserPermissions.from_config(config, permission_registry),
+        )
         make_header(
             html,
             title,
@@ -310,10 +317,12 @@ def _dashlet_editor_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
     )
 
 
-def dashlet_editor_breadcrumb(name: str, board: DashboardConfig, title: str) -> Breadcrumb:
+def dashlet_editor_breadcrumb(
+    name: str, board: DashboardConfig, title: str, user_permissions: UserPermissions
+) -> Breadcrumb:
     breadcrumb = make_topic_breadcrumb(
         main_menu_registry.menu_monitoring(),
-        PagetypeTopics.get_topic(board["topic"]).title(),
+        PagetypeTopics.get_topic(board["topic"], user_permissions).title(),
     )
     breadcrumb.append(
         BreadcrumbItem(

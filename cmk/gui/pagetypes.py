@@ -89,7 +89,7 @@ from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import is_ntop_configured
-from cmk.gui.utils.roles import is_user_with_publish_permissions, user_may
+from cmk.gui.utils.roles import is_user_with_publish_permissions, UserPermissions
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
@@ -394,7 +394,7 @@ class OverridableInstances(Generic[_T]):
         self.add_instance((new_page.owner(), new_page.name()), new_page)
 
     @request_memoize(maxsize=4096)
-    def find_page(self, name: str) -> _T | None:
+    def find_page(self, name: str, user_permissions: UserPermissions) -> _T | None:
         """Find a page by name, implements shadowing and publishing und overriding by admins"""
         mine = None
         forced = None
@@ -409,7 +409,7 @@ class OverridableInstances(Generic[_T]):
                 mine = page
 
             elif page.is_published_to_me() and page.may_see():
-                if page.is_public_forced():
+                if page.is_public_forced(user_permissions):
                     forced = page
                 elif page.is_builtin():
                     builtin = page
@@ -432,7 +432,7 @@ class OverridableInstances(Generic[_T]):
         except KeyError:
             return None
 
-    def pages(self) -> list[_T]:
+    def pages(self, user_permissions: UserPermissions) -> list[_T]:
         """Return all pages visible to the user, implements shadowing etc."""
         pages = {}
 
@@ -448,7 +448,11 @@ class OverridableInstances(Generic[_T]):
 
         # Public pages by admin users, forcing their versions over others
         for page in self.instances():
-            if page.is_published_to_me() and page.may_see() and page.is_public_forced():
+            if (
+                page.is_published_to_me()
+                and page.may_see()
+                and page.is_public_forced(user_permissions)
+            ):
                 pages[page.name()] = page
 
         # My own pages
@@ -458,8 +462,8 @@ class OverridableInstances(Generic[_T]):
 
         return sorted(pages.values(), key=lambda x: x.title())
 
-    def page_choices(self) -> list[tuple[str, str]]:
-        return [(page.name(), page.title()) for page in self.pages()]
+    def page_choices(self, user_permissions: UserPermissions) -> list[tuple[str, str]]:
+        return [(page.name(), page.title()) for page in self.pages(user_permissions)]
 
 
 class Overridable(Base[_T_OverridableConfig]):
@@ -537,9 +541,11 @@ class Overridable(Base[_T_OverridableConfig]):
             "pagetype", self.owner(), self.type_name()
         )
 
-    def is_public_forced(self) -> bool:
+    def is_public_forced(self, user_permissions: UserPermissions) -> bool:
         """Whether the user is allowed to override built-in pagetypes"""
-        return self.is_public() and user_may(self.owner(), "general.force_" + self.type_name())
+        return self.is_public() and user_permissions.user_may(
+            self.owner(), "general.force_" + self.type_name()
+        )
 
     def is_published_to_me(self) -> bool:
         """Whether the page is published to the currently active user"""
@@ -568,17 +574,21 @@ class Overridable(Base[_T_OverridableConfig]):
     def is_mine_and_may_have_own(self) -> bool:
         return self.is_mine() and user.may("general.edit_" + self.type_name())
 
-    def render_title(self, instances: OverridableInstances[Self]) -> str | HTML:
+    def render_title(
+        self, instances: OverridableInstances[Self], user_permissions: UserPermissions
+    ) -> str | HTML:
         return _u(self.title())
 
-    def _can_be_linked(self, instances: OverridableInstances[Self]) -> bool:
+    def _can_be_linked(
+        self, instances: OverridableInstances[Self], user_permissions: UserPermissions
+    ) -> bool:
         """Whether or not the thing can be linked to"""
         if self.is_mine():
             return True
 
         # Is this the visual which would be shown to the user in case the user
         # requests a visual with the current name?
-        page = instances.find_page(self.name())
+        page = instances.find_page(self.name(), user_permissions)
         if page and page.owner() != self.owner():
             return False
 
@@ -607,7 +617,7 @@ class Overridable(Base[_T_OverridableConfig]):
         # TODO: Permissions
         # ## visual = visuals[(owner, visual_name)]
         # ## if owner == user.id or \
-        # ##    (visual["public"] and owner != '' and user_may(owner, "general.publish_" + what)):
+        # ##    (visual["public"] and owner != '' and user_permissions.user_may(owner, "general.publish_" + what)):
         # ##     custom.append((owner, visual_name, visual))
         # ## elif visual["public"] and owner == "":
         # ##     builtin.append((owner, visual_name, visual))
@@ -957,6 +967,7 @@ class ListPage(Page, Generic[_T]):
     def page(self, config: Config) -> None:
         instances = self._type.load()
         self._type.need_overriding_permission("edit")
+        user_permissions = UserPermissions.from_config(config, permission_registry)
 
         title_plural = self._type.phrase("title_plural")
         breadcrumb = make_breadcrumb(title_plural, "list", self._type.list_url())
@@ -1044,12 +1055,14 @@ class ListPage(Page, Generic[_T]):
 
                 if what != "builtin":
                     with html.form_context("bulk_delete", method="POST"):
-                        self._show_table(instances, scope_instances, deletable=True)
+                        self._show_table(
+                            instances, scope_instances, user_permissions, deletable=True
+                        )
                         html.hidden_field("selection_id", SelectionId.from_request(request))
                         html.hidden_fields()
                         init_rowselect(self._type.type_name())
                 else:
-                    self._show_table(instances, scope_instances)
+                    self._show_table(instances, scope_instances, user_permissions, deletable=False)
 
         html.javascript("cmk.page_menu.check_menu_entry_by_checkboxes('delete')")
         html.footer()
@@ -1099,7 +1112,9 @@ class ListPage(Page, Generic[_T]):
         self,
         instances: OverridableInstances[_T],
         scope_instances: Sequence[_T],
-        deletable: bool = False,
+        user_permissions: UserPermissions,
+        *,
+        deletable: bool,
     ) -> None:
         with table_element(limit=None) as table:
             for instance in scope_instances:
@@ -1149,7 +1164,7 @@ class ListPage(Page, Generic[_T]):
 
                 # Title
                 table.cell(_("Title"))
-                html.write_text_permissive(instance.render_title(instances))
+                html.write_text_permissive(instance.render_title(instances, user_permissions))
                 html.help(_u(instance.description()))
 
                 # Custom columns specific to that page type
@@ -1647,11 +1662,13 @@ class OverridableContainer(Overridable[_T_OverridableContainerConfig]):
     def may_contain(cls, element_type_name: str) -> bool: ...
 
     @classmethod
-    def page_menu_add_to_topics(cls, added_type: str) -> list[PageMenuTopic]:
+    def page_menu_add_to_topics(
+        cls, added_type: str, user_permissions: UserPermissions
+    ) -> list[PageMenuTopic]:
         if not cls.may_contain(added_type):
             return []
 
-        pages = cls.load().pages()
+        pages = cls.load().pages(user_permissions)
         if not pages:
             return []
 
@@ -1700,7 +1717,10 @@ class OverridableContainer(Overridable[_T_OverridableContainerConfig]):
         page_ty = page_types[page_type_name]
         assert issubclass(page_ty, OverridableContainer)
         target_page, need_sidebar_reload = page_ty.add_element_via_popup(
-            page_name, element_type, create_info
+            page_name,
+            element_type,
+            create_info,
+            UserPermissions.from_config(config, permission_registry),
         )
         # Redirect user to tha page this displays the thing we just added to
         if target_page:
@@ -1713,13 +1733,17 @@ class OverridableContainer(Overridable[_T_OverridableContainerConfig]):
     # Default implementation for generic containers - used e.g. by GraphCollection
     @classmethod
     def add_element_via_popup(
-        cls, page_name: str, element_type: str, create_info: ElementSpec
+        cls,
+        page_name: str,
+        element_type: str,
+        create_info: ElementSpec,
+        user_permissions: UserPermissions,
     ) -> tuple[str | None, bool]:
         cls.need_overriding_permission("edit")
 
         need_sidebar_reload = False
         instances = cls.load()
-        page = instances.find_page(page_name)
+        page = instances.find_page(page_name, user_permissions)
         if page is None:
             raise MKGeneralException(
                 _("Cannot find %s with the name %s") % (cls.phrase("title"), page_name)
@@ -1868,20 +1892,25 @@ class PageRenderer(OverridableContainer[_T_PageRendererConfig]):
     def page_show(cls, config: Config) -> None: ...
 
     @classmethod
-    def requested_page(cls, instances: OverridableInstances[Self]) -> Self:
+    def requested_page(
+        cls, instances: OverridableInstances[Self], user_permissions: UserPermissions
+    ) -> Self:
         return cls.requested_page_by_name(
             instances,
             request.get_ascii_input_mandatory(cls.ident_attr(), ""),
+            user_permissions,
         )
 
     @classmethod
-    def requested_page_by_name(cls, instances: OverridableInstances[Self], name: str) -> Self:
+    def requested_page_by_name(
+        cls, instances: OverridableInstances[Self], name: str, user_permissions: UserPermissions
+    ) -> Self:
         if owner := request.get_validated_type_input(UserId, "owner"):
             cls.need_overriding_permission("see_user")
             if foreign := instances.find_foreign_page(owner, name):
                 return foreign
 
-        page = instances.find_page(name)
+        page = instances.find_page(name, user_permissions)
         if not page:
             raise MKGeneralException(
                 _("Cannot find %s with the name %s") % (cls.phrase("title"), name)
@@ -1916,10 +1945,12 @@ class PageRenderer(OverridableContainer[_T_PageRendererConfig]):
         return makeuri_contextless(request, http_vars, filename="%s.py" % self.type_name())
 
     @override
-    def render_title(self, instances: OverridableInstances[Self]) -> str | HTML:
-        if self._can_be_linked(instances):
+    def render_title(
+        self, instances: OverridableInstances[Self], user_permissions: UserPermissions
+    ) -> str | HTML:
+        if self._can_be_linked(instances, user_permissions):
             return HTMLWriter.render_a(self.title(), href=self.page_url())
-        return super().render_title(instances)
+        return super().render_title(instances, user_permissions)
 
     def to_visual(self) -> Visual:
         return {
@@ -1982,11 +2013,13 @@ def all_page_types() -> Mapping[str, type[Overridable]]:
 # Global module functions for the integration into the rest of the code
 
 
-def page_menu_add_to_topics(added_type: str) -> list[PageMenuTopic]:
+def page_menu_add_to_topics(
+    added_type: str, user_permissions: UserPermissions
+) -> list[PageMenuTopic]:
     topics = []
     for page_ty in page_types.values():
         if issubclass(page_ty, OverridableContainer):
-            topics += page_ty.page_menu_add_to_topics(added_type)
+            topics += page_ty.page_menu_add_to_topics(added_type, user_permissions)
     return topics
 
 
@@ -2277,16 +2310,16 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
         ]
 
     @classmethod
-    def get_topic(cls, topic_id: str) -> PagetypeTopics:
+    def get_topic(cls, topic_id: str, user_permissions: UserPermissions) -> PagetypeTopics:
         """Returns either the requested topic or fallback to "other"."""
         instances = PagetypeTopics.load()
-        other_page = instances.find_page("other")
+        other_page = instances.find_page("other", user_permissions)
         if not other_page:
             raise MKUserError(
                 None,
                 _("No permission for fallback topic 'Other'. Please contact your administrator."),
             )
-        return instances.find_page(topic_id) or other_page
+        return instances.find_page(topic_id, user_permissions) or other_page
 
 
 declare(PagetypeTopics)

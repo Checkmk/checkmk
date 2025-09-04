@@ -32,8 +32,10 @@ from cmk.gui.http import ContentDispositionType, Request, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import Page, PageEndpoint, PageRegistry
+from cmk.gui.permissions import permission_registry
 from cmk.gui.theme import make_theme
 from cmk.gui.utils.escaping import escape_attribute
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.view_breadcrumbs import make_host_breadcrumb
@@ -176,9 +178,15 @@ class AgentOutputPage(Page, abc.ABC):
 class PageFetchAgentOutput(AgentOutputPage):
     def page(self, config: Config) -> None:
         title = self._title()
-        make_header(html, title, self._breadcrumb(title))
+        make_header(
+            html,
+            title,
+            self._breadcrumb(
+                title, user_permissions := UserPermissions.from_config(config, permission_registry)
+            ),
+        )
 
-        self._action()
+        self._action(user_permissions)
 
         automation_config = make_automation_config(config.sites[self._request.host.site_id()])
         if request.has_var("_start"):
@@ -190,8 +198,8 @@ class PageFetchAgentOutput(AgentOutputPage):
     def _title(self) -> str:
         return _("%s: Download agent output") % self._request.host.name()
 
-    def _breadcrumb(self, title: str) -> Breadcrumb:
-        breadcrumb = make_host_breadcrumb(self._request.host.name())
+    def _breadcrumb(self, title: str, user_permissions: UserPermissions) -> Breadcrumb:
+        breadcrumb = make_host_breadcrumb(self._request.host.name(), user_permissions)
         breadcrumb.append(
             BreadcrumbItem(
                 title=title,
@@ -200,11 +208,11 @@ class PageFetchAgentOutput(AgentOutputPage):
         )
         return breadcrumb
 
-    def _action(self) -> None:
+    def _action(self, user_permissions: UserPermissions) -> None:
         if not transactions.transaction_valid():
             return
 
-        action_handler = ActionHandler(self._breadcrumb(self._title()))
+        action_handler = ActionHandler(self._breadcrumb(self._title(), user_permissions))
 
         if action_handler.handle_actions() and action_handler.did_delete_job():
             raise HTTPRedirect(

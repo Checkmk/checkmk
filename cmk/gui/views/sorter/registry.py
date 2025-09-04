@@ -16,6 +16,7 @@ from cmk.gui.painter.v0.host_tag_painters import HashableTagGroups
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnName, PainterName, SorterFunction
+from cmk.gui.utils.roles import UserPermissions
 
 from .base import Sorter
 from .host_tag_sorters import host_tag_config_based_sorters
@@ -68,12 +69,13 @@ def declare_1to1_sorter(
         painter_options=PainterOptions.get_instance(),
         theme=theme,
         url_renderer=RenderLink(request, response, display_options),
+        user_permissions=UserPermissions({}, {}, {}, []),
     )
 
     sorter_registry.register(
         Sorter(
             ident=painter_name,
-            title=painter.title(EmptyCell(None, None, None)),
+            title=painter.title(EmptyCell()),
             columns=painter.columns,
             sort_function=(
                 (lambda r1, r2, **_kwargs: func(painter.columns[col_num], r2, r1))

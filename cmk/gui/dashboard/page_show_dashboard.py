@@ -44,11 +44,13 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
+from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import InfoName, VisualContext
 from cmk.gui.utils.filter import check_if_non_default_filter_in_request
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
 from cmk.gui.visuals.info import visual_info_registry
@@ -97,7 +99,7 @@ def page_dashboard(config: Config) -> None:
         name = _get_default_dashboard_name()
         request.set_var("name", name)  # make sure that URL context is always complete
 
-    _draw_dashboard(name, config.sites)
+    _draw_dashboard(name, config.sites, UserPermissions.from_config(config, permission_registry))
 
 
 def _get_default_dashboard_name() -> str:
@@ -121,7 +123,9 @@ def _get_default_dashboard_name() -> str:
     return "main" if user.may("general.see_all") and user.may("dashboard.main") else "problems"
 
 
-def _draw_dashboard(name: DashboardName, site_configs: SiteConfigurations) -> None:
+def _draw_dashboard(
+    name: DashboardName, site_configs: SiteConfigurations, user_permissions: UserPermissions
+) -> None:
     mode = "display"
     if request.var("edit") == "1":
         mode = "edit"
@@ -175,7 +179,7 @@ def _draw_dashboard(name: DashboardName, site_configs: SiteConfigurations) -> No
         unconfigured_single_infos.update(dashlet.unconfigured_single_infos())
 
     html.add_body_css_class("dashboard")
-    breadcrumb = dashboard_breadcrumb(name, board, title, board_context)
+    breadcrumb = dashboard_breadcrumb(name, board, title, board_context, user_permissions)
     make_header(
         html,
         title,

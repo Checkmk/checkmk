@@ -76,8 +76,10 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import AjaxPage, Page, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
+from cmk.gui.permissions import permission_registry
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnSpec, PainterParameters, Row, Visual, VisualLinkSpec
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.views.icon import Icon, IconRegistry
 from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
@@ -216,13 +218,13 @@ class ABCTopologyPage(Page):
     def page(self, config: Config) -> None:
         """Determines the hosts to be shown"""
         user.need_permission("general.parent_child_topology")
-        self.show_topology()
+        self.show_topology(UserPermissions.from_config(config, permission_registry))
 
-    def show_topology(self) -> None:
+    def show_topology(self, user_permissions: UserPermissions) -> None:
         visual_spec = self.visual_spec()
         breadcrumb = make_topic_breadcrumb(
             main_menu_registry.menu_monitoring(),
-            PagetypeTopics.get_topic(visual_spec["topic"]).title(),
+            PagetypeTopics.get_topic(visual_spec["topic"], user_permissions).title(),
         )
         breadcrumb.append(make_current_page_breadcrumb_item(str(visual_spec["title"])))
         page_menu = PageMenu(breadcrumb=breadcrumb)

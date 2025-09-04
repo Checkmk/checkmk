@@ -19,12 +19,14 @@ from cmk.gui.logged_in import user
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.nodevis.topology import ParentChildTopologyPage
 from cmk.gui.pages import PageEndpoint, PageRegistry
+from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import (
     ABCMainMenuSearch,
     MainMenu,
     MainMenuTopic,
     Visual,
 )
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.store import get_permitted_views
 
 from ._base import SidebarSnapin
@@ -69,7 +71,13 @@ class Views(SidebarSnapin):
     def show(self, config: Config) -> None:
         show_main_menu(
             treename="views",
-            menu=make_main_menu(view_menu_items(config.visible_views, config.hidden_views)),
+            menu=make_main_menu(
+                view_menu_items(
+                    config.visible_views,
+                    config.hidden_views,
+                    UserPermissions.from_config(config, permission_registry),
+                )
+            ),
         )
 
         links = []
@@ -89,11 +97,19 @@ def ajax_export_views(config: Config) -> None:
 
 @request_memoize()
 def default_view_menu_topics() -> list[MainMenuTopic]:
-    return make_main_menu(view_menu_items(active_config.visible_views, active_config.hidden_views))
+    return make_main_menu(
+        view_menu_items(
+            active_config.visible_views,
+            active_config.hidden_views,
+            UserPermissions.from_config(active_config, permission_registry),
+        )
+    )
 
 
 def view_menu_items(
-    visible_views: Sequence[str] | None, hidden_views: Sequence[str] | None
+    visible_views: Sequence[str] | None,
+    hidden_views: Sequence[str] | None,
+    user_permissions: UserPermissions,
 ) -> list[tuple[str, tuple[str, Visual]]]:
     # The page types that are implementing the PageRenderer API should also be
     # part of the menu. Bring them into a visual like structure to make it easy to
@@ -103,7 +119,7 @@ def view_menu_items(
         if not issubclass(page_type, pagetypes.PageRenderer):
             continue
 
-        for page in page_type.load().pages():
+        for page in page_type.load().pages(user_permissions):
             if page._show_in_sidebar():
                 visual = page.to_visual()
                 visual["hidden"] = False  # Is currently not configurable for pagetypes

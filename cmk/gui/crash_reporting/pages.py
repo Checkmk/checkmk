@@ -47,8 +47,10 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import Page, PageEndpoint, PageRegistry
 from cmk.gui.pagetypes import PagetypeTopics
+from cmk.gui.permissions import permission_registry
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode, urlencode_vars
 from cmk.gui.utils.user_errors import user_errors
@@ -120,7 +122,9 @@ class PageCrash(ABCCrashReportPage):
         crash_info = self._get_crash_info(row)
 
         title = _("Crash report: %s") % self._crash_id
-        breadcrumb = self._breadcrumb(title)
+        breadcrumb = self._breadcrumb(
+            title, UserPermissions.from_config(config, permission_registry)
+        )
         make_header(html, title, breadcrumb, self._page_menu(breadcrumb, crash_info))
 
         # Do not reveal crash context information to unauthenticated users or not permitted
@@ -161,10 +165,10 @@ class PageCrash(ABCCrashReportPage):
 
         html.footer()
 
-    def _breadcrumb(self, title: str) -> Breadcrumb:
+    def _breadcrumb(self, title: str, user_permissions: UserPermissions) -> Breadcrumb:
         breadcrumb = make_topic_breadcrumb(
             main_menu_registry.menu_monitoring(),
-            PagetypeTopics.get_topic("analyze").title(),
+            PagetypeTopics.get_topic("analyze", user_permissions).title(),
         )
 
         # Add the parent element: List of all crashes

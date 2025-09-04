@@ -44,6 +44,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view_utils import CellSpec, CSVExportError, JSONExportError, PythonExportError
@@ -82,12 +83,14 @@ class Painter(abc.ABC):
         painter_options: PainterOptions,
         theme: Theme,
         url_renderer: RenderLink,
+        user_permissions: UserPermissions,
     ):
         self.config = config
         self.request = request
         self._painter_options = painter_options
         self.theme = theme
         self.url_renderer = url_renderer
+        self._user_permissions = user_permissions
 
     def to_v1_painter(self) -> V1Painter[object]:
         """Convert an instance of an old painter to a v1 Painter."""
@@ -96,7 +99,7 @@ class Painter(abc.ABC):
             return rows
 
         # Needed because of old calling conventions. Doesn't have any effect.
-        empty_cell = EmptyCell(None, None, None)
+        empty_cell = EmptyCell()
 
         def format_html(
             row: Row, _painter_configuration: PainterConfiguration, user: LoggedInUser
@@ -336,6 +339,7 @@ class Cell:
         column_spec: ColumnSpec | None,
         sort_url_parameter: str | None,
         registered_painters: Mapping[str, type[Painter]] | None,
+        user_permissions: UserPermissions,
     ) -> None:
         self._painter_name: PainterName | None
         self._painter_params: PainterParameters | None
@@ -360,6 +364,7 @@ class Cell:
             self._tooltip_painter_name = None
 
         self._sort_url_parameter = sort_url_parameter
+        self._user_permissions = user_permissions
 
     def needed_columns(self, permitted_views: Mapping[ViewName, ViewSpec]) -> set[ColumnName]:
         """Get a list of columns we need to fetch in order to render this cell"""
@@ -399,6 +404,7 @@ class Cell:
                 painter_options=painter_options_inst,
                 theme=theme,
                 url_renderer=RenderLink(request, response, display_options),
+                user_permissions=self._user_permissions,
             )
         except KeyError:
             assert self._registered_painters is not None
@@ -408,6 +414,7 @@ class Cell:
                 painter_options=painter_options_inst,
                 theme=theme,
                 url_renderer=RenderLink(request, response, display_options),
+                user_permissions=self._user_permissions,
             )
 
     def painter_name(self) -> PainterName:
@@ -478,6 +485,7 @@ class Cell:
             painter_options=PainterOptions.get_instance(),
             theme=theme,
             url_renderer=RenderLink(request, response, display_options),
+            user_permissions=self._user_permissions,
         )
 
     def paint_as_header(self) -> None:
@@ -535,7 +543,10 @@ class Cell:
         if content and self.has_tooltip():
             assert isinstance(content, str | HTML)
             tooltip_cell = Cell(
-                ColumnSpec(self.tooltip_painter_name()), None, self._registered_painters
+                ColumnSpec(self.tooltip_painter_name()),
+                None,
+                self._registered_painters,
+                self._user_permissions,
             )
             _tooltip_tdclass, tooltip_content = tooltip_cell.render_content(row, user=user)
             assert not isinstance(tooltip_content, Mapping)
@@ -694,8 +705,9 @@ class JoinCell(Cell):
         column_spec: ColumnSpec,
         sort_url_parameter: str | None,
         registered_painters: Mapping[str, type[Painter]],
+        user_permissions: UserPermissions,
     ) -> None:
-        super().__init__(column_spec, sort_url_parameter, registered_painters)
+        super().__init__(column_spec, sort_url_parameter, registered_painters, user_permissions)
         if (join_value := column_spec.join_value) is None:
             raise ValueError()
 
@@ -717,6 +729,9 @@ def join_row(row: Row, cell: Cell) -> Row:
 
 
 class EmptyCell(Cell):
+    def __init__(self) -> None:
+        super().__init__(None, None, None, UserPermissions({}, {}, {}, []))
+
     def render(
         self,
         row: Row,
@@ -755,6 +770,7 @@ class PainterAdapter(Painter):
         painter_options: PainterOptions,
         theme: Theme,
         url_renderer: RenderLink,
+        user_permissions: UserPermissions,
     ):
         super().__init__(
             config=config,
@@ -762,6 +778,7 @@ class PainterAdapter(Painter):
             painter_options=painter_options,
             theme=theme,
             url_renderer=url_renderer,
+            user_permissions=user_permissions,
         )
         self._painter = painter
 

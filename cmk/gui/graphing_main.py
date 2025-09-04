@@ -47,6 +47,8 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.log import logger
 from cmk.gui.pages import PageResult
+from cmk.gui.permissions import permission_registry
+from cmk.gui.utils.roles import UserPermissions
 from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
@@ -185,6 +187,7 @@ class PageHostServiceGraphPopup(cmk.gui.pages.Page):
             ServiceName(request.get_str_input_mandatory("service")),
             metrics_from_api,
             graphs_from_api,
+            UserPermissions.from_config(config, permission_registry),
         )
         return None  # for mypy
 
@@ -198,6 +201,7 @@ class PageGraphDashlet(cmk.gui.pages.Page):
                 GraphRenderConfig.model_validate_json(request.get_str_input_mandatory("config")),
                 metrics_from_api,
                 graphs_from_api,
+                UserPermissions.from_config(config, permission_registry),
                 graph_display_id=request.get_str_input_mandatory("id"),
             )
         )

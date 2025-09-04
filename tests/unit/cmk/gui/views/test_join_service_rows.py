@@ -9,6 +9,7 @@ import pytest
 
 import cmk.ccc.version as cmk_version
 from cmk.gui.type_defs import ColumnSpec
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.views._join_service_rows import _get_needed_join_columns
 from cmk.utils import paths
@@ -21,7 +22,7 @@ def test_get_needed_join_columns(view: View) -> None:
         *view_spec["painters"],
         ColumnSpec(name="service_description", join_value="CPU load"),
     ]
-    view = View(view.name, view_spec, view_spec.get("context", {}))
+    view = View(view.name, view_spec, view_spec.get("context", {}), UserPermissions({}, {}, {}, []))
 
     columns = _get_needed_join_columns(view.join_cells, view.sorters)
 

@@ -38,8 +38,10 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import PageEndpoint, PageRegistry
+from cmk.gui.permissions import permission_registry
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import HTTPVariables
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
 from cmk.gui.view_breadcrumbs import make_host_breadcrumb
@@ -77,10 +79,11 @@ def page_show(config: Config) -> None:
         show_log_list(debug=config.debug)
         return
 
+    user_permissions = UserPermissions.from_config(config, permission_registry)
     if file_name:
-        show_file(site, host_name, file_name, debug=config.debug)
+        show_file(site, host_name, file_name, user_permissions, debug=config.debug)
     else:
-        show_host_log_list(site, host_name, debug=config.debug)
+        show_host_log_list(site, host_name, user_permissions, debug=config.debug)
 
 
 def show_log_list(*, debug: bool) -> None:
@@ -183,10 +186,12 @@ def analyse_url(
     )
 
 
-def show_host_log_list(site: SiteId | None, host_name: HostName, *, debug: bool) -> None:
+def show_host_log_list(
+    site: SiteId | None, host_name: HostName, user_permissions: UserPermissions, *, debug: bool
+) -> None:
     """Shows all problematic logfiles of a host"""
     title = _("Logfiles of host %s") % host_name
-    breadcrumb = _host_log_list_breadcrumb(host_name, title)
+    breadcrumb = _host_log_list_breadcrumb(host_name, title, user_permissions)
     make_header(html, title, breadcrumb, _host_log_list_page_menu(breadcrumb, site, host_name))
 
     if request.has_var("_ack") and not request.var("_do_actions") == _("No"):
@@ -200,8 +205,10 @@ def show_host_log_list(site: SiteId | None, host_name: HostName, *, debug: bool)
     html.footer()
 
 
-def _host_log_list_breadcrumb(host_name: HostName, title: str) -> Breadcrumb:
-    breadcrumb = make_host_breadcrumb(host_name)
+def _host_log_list_breadcrumb(
+    host_name: HostName, title: str, user_permissions: UserPermissions
+) -> Breadcrumb:
+    breadcrumb = make_host_breadcrumb(host_name, user_permissions)
     breadcrumb.append(make_current_page_breadcrumb_item(title))
     return breadcrumb
 
@@ -302,11 +309,18 @@ def list_logs(
                 table.cell(_("Entries"), _("Corrupted"))
 
 
-def show_file(site: SiteId | None, host_name: HostName, file_name: str, *, debug: bool) -> None:
+def show_file(
+    site: SiteId | None,
+    host_name: HostName,
+    file_name: str,
+    user_permissions: UserPermissions,
+    *,
+    debug: bool,
+) -> None:
     int_filename = form_file_to_int(file_name)
 
     title = _("Logfiles of Host %s: %s") % (host_name, int_filename)
-    breadcrumb = _show_file_breadcrumb(host_name, title)
+    breadcrumb = _show_file_breadcrumb(host_name, title, user_permissions)
     make_header(
         html,
         title,
@@ -371,8 +385,10 @@ def show_file(site: SiteId | None, host_name: HostName, file_name: str, *, debug
     html.footer()
 
 
-def _show_file_breadcrumb(host_name: HostName, title: str) -> Breadcrumb:
-    breadcrumb = make_host_breadcrumb(host_name)
+def _show_file_breadcrumb(
+    host_name: HostName, title: str, user_permissions: UserPermissions
+) -> Breadcrumb:
+    breadcrumb = make_host_breadcrumb(host_name, user_permissions)
     breadcrumb.append(
         BreadcrumbItem(
             title=_("Log files of host %s") % host_name,

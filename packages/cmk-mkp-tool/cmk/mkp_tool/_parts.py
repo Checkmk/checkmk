@@ -153,19 +153,19 @@ def ui_title(part: PackagePart, _: Callable[[str], str]) -> str:
         case PackagePart.AGENT_BASED:
             return _("Agent based plug-ins (outdated, ignored)")
         case PackagePart.CHECKS:
-            return _("Legacy check plug-ins (deprecated)")
+            return _("Legacy check plug-ins (outdated, ignored)")
         case PackagePart.HASI:
-            return _("Legacy inventory plug-ins (deprecated)")
+            return _("Legacy inventory plug-ins (outdated, ignored)")
         case PackagePart.CHECKMAN:
-            return _("Checks' man pages (deprecated)")
+            return _("Checks' man pages (outdated, ignored)")
         case PackagePart.AGENTS:
             return _("Agents")
         case PackagePart.NOTIFICATIONS:
             return _("Notification scripts")
         case PackagePart.GUI:
-            return _("GUI extensions (deprecated)")
+            return _("GUI extensions")
         case PackagePart.WEB:
-            return _("Legacy GUI extensions (deprecated)")
+            return _("Legacy GUI extensions")
         case PackagePart.PNP_TEMPLATES:
             return _("PNP4Nagios templates (deprecated)")
         case PackagePart.DOC:

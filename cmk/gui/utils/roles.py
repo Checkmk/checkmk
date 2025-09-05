@@ -73,38 +73,38 @@ class UserPermissions:
             return ["guest"]  # unknown user with automation account
         return existing_role_ids(self._default_user_profile_roles)
 
-    def user_may(self, user_id: UserId | None, pname: str) -> bool:
-        key = (user_id, pname)
+    def user_may(self, user_id: UserId | None, permission_name: str) -> bool:
+        key = (user_id, permission_name)
         if key not in self._user_may_memo:
-            self._user_may_memo[key] = self._user_may_no_memoize(user_id, pname)
+            self._user_may_memo[key] = self._user_may_no_memoize(user_id, permission_name)
         return self._user_may_memo[key]
 
-    def _user_may_no_memoize(self, user_id: UserId | None, pname: str) -> bool:
-        return self.may_with_roles(self.roles_of_user(user_id), pname)
+    def _user_may_no_memoize(self, user_id: UserId | None, permission_name: str) -> bool:
+        return self.may_with_roles(self.roles_of_user(user_id), permission_name)
 
-    def may_with_roles(self, some_role_ids: list[str], pname: str) -> bool:
+    def may_with_roles(self, some_role_ids: list[str], permission_name: str) -> bool:
         # TODO: Can we get rid of the "admin" special case here? We should rather ensure
         # such permissions are not removed while editing the admin role.
-        if "admin" in some_role_ids and pname in self._default_admin_permissions:
+        if "admin" in some_role_ids and permission_name in self._default_admin_permissions:
             return True
 
         # If at least one of the given roles has this permission, it's fine
         for role_id in some_role_ids:
             role = self._roles[role_id]
 
-            they_may = role.get("permissions", {}).get(pname)
+            they_may = role.get("permissions", {}).get(permission_name)
             # Handle compatibility with permissions without "general." that
             # users might have saved in their own custom roles.
-            if they_may is None and pname.startswith("general."):
-                they_may = role.get("permissions", {}).get(pname[8:])
+            if they_may is None and permission_name.startswith("general."):
+                they_may = role.get("permissions", {}).get(permission_name[8:])
 
             if they_may is None:  # not explicitely listed -> take defaults
                 base_role_id = (
                     role["basedon"] if not role["builtin"] else builtin_role_id_from_str(role_id)
                 )
-                if pname not in self._permissions:
+                if permission_name not in self._permissions:
                     return False  # Permission unknown. Assume False. Functionality might be missing
-                perm = self._permissions[pname]
+                perm = self._permissions[permission_name]
                 they_may = base_role_id in perm.defaults
             if they_may:
                 return True

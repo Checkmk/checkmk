@@ -40,6 +40,7 @@ def register(
     autocompleter_registry: AutocompleterRegistry,
     endpoint_family_registry: EndpointFamilyRegistry,
     versioned_endpoint_registry: VersionedEndpointRegistry,
+    ignore_duplicate_endpoints: bool = False,
 ) -> None:
     visual_type_registry.register(VisualTypeDashboards)
     permission_section_registry.register(PERMISSION_SECTION_DASHBOARD)
@@ -70,7 +71,7 @@ def register(
     register_endpoints(
         endpoint_family_registry,
         versioned_endpoint_registry,
-        ignore_duplicates=False,
+        ignore_duplicates=ignore_duplicate_endpoints,
     )
 
 

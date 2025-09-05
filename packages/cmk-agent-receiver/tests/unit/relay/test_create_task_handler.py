@@ -2,10 +2,9 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import uuid
-from collections.abc import Iterator
 
 import pytest
+from pydantic import SecretStr
 
 from cmk.agent_receiver.relay.api.routers.tasks.handlers.create_task import (
     CreateTaskHandler,
@@ -15,51 +14,29 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     TasksRepository,
     TaskType,
 )
-from cmk.agent_receiver.relay.lib.relays_repository import (
-    RelaysRepository,
-)
+from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.shared_types import RelayID
-
-
-@pytest.fixture()
-def tasks_repository() -> Iterator[TasksRepository]:
-    repository = TasksRepository()
-    yield repository
-
-
-@pytest.fixture()
-def relays_repository() -> Iterator[RelaysRepository]:
-    repository = RelaysRepository()
-    yield repository
-
-
-@pytest.fixture()
-def create_task_handler(
-    tasks_repository: TasksRepository, relays_repository: RelaysRepository
-) -> Iterator[CreateTaskHandler]:
-    handler = CreateTaskHandler(
-        tasks_repository=tasks_repository, relays_repository=relays_repository
-    )
-    yield handler
 
 
 def test_process_create_task(
     create_task_handler: CreateTaskHandler,
     relays_repository: RelaysRepository,
     tasks_repository: TasksRepository,
+    test_authorization: SecretStr,
 ) -> None:
     # arrange
-    # some task parameters
     task_type = TaskType.FETCH_AD_HOC
     task_payload = '{"url": "http://example.com/data"}'
 
-    # Let's register a relay
-    relay_id = RelayID(str(uuid.uuid4()))
-    relays_repository.add_relay(relay_id)
+    # Register a relay first
+    relay_id = relays_repository.add_relay(test_authorization, alias="test-relay")
 
     # act
     task_id = create_task_handler.process(
-        relay_id=relay_id, task_type=task_type, task_payload=task_payload
+        relay_id=relay_id,
+        task_type=task_type,
+        task_payload=task_payload,
+        authorization=test_authorization,
     )
 
     # assert
@@ -70,12 +47,17 @@ def test_process_create_task(
     assert tasks_enqueued[0].payload == task_payload
 
 
-def test_process_create_task_non_existent_relay(create_task_handler: CreateTaskHandler) -> None:
+def test_process_create_task_non_existent_relay(
+    create_task_handler: CreateTaskHandler, test_authorization: SecretStr
+) -> None:
     # arrange
-    relay_id = RelayID(str(uuid.uuid4()))  # Any, non existent
+    relay_id = RelayID("non-existent-relay-id")
 
     # act
     with pytest.raises(RelayNotFoundError):
         create_task_handler.process(
-            relay_id=relay_id, task_type=TaskType.FETCH_AD_HOC, task_payload="any payload"
+            relay_id=relay_id,
+            task_type=TaskType.FETCH_AD_HOC,
+            task_payload="any payload",
+            authorization=test_authorization,
         )

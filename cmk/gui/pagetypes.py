@@ -49,7 +49,7 @@ from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l, _u
-from cmk.gui.logged_in import LoggedInUser, save_user_file, user
+from cmk.gui.logged_in import save_user_file, user
 from cmk.gui.main_menu import main_menu_registry, MainMenuRegistry
 from cmk.gui.page_menu import (
     doc_reference_to_page_menu,
@@ -908,13 +908,15 @@ class Overridable(Base[_T_OverridableConfig]):
                 cls.declare_permission(instance, user_permissions)
 
     @classmethod
-    def save_user_instances(cls, instances: OverridableInstances[Self], owner: UserId) -> None:
+    def save_user_instances(
+        cls, instances: OverridableInstances[Self], user_permissions: UserPermissions, owner: UserId
+    ) -> None:
         save_dict = {}
         save_dict_by_owner: dict[UserId, dict[str, object]] = {}
         for page in instances.instances():
             if (page_owner := page.owner()) == owner:
                 save_dict[page.name()] = page.serialize()
-            elif LoggedInUser(owner).may("general.edit_foreign_%s" % cls.type_name()):
+            elif user_permissions.user_may(owner, "general.edit_foreign_%s" % cls.type_name()):
                 save_dict_by_owner.setdefault(page_owner, {}).setdefault(
                     page.name(), page.serialize()
                 )
@@ -1035,14 +1037,14 @@ class ListPage(Page, Generic[_T]):
 
             try:
                 instances.remove_instance((owner, delname))
-                self._type.save_user_instances(instances, owner)
+                self._type.save_user_instances(instances, user_permissions, owner)
                 flash(_("Your %s has been deleted.") % pagetype_title)
                 html.reload_whole_page()
             except MKUserError as e:
                 html.user_error(e)
 
         elif request.var("_bulk_delete") and transactions.check_transaction():
-            self._bulk_delete_after_confirm(instances)
+            self._bulk_delete_after_confirm(instances, user_permissions)
 
         my_instances, foreign_instances, builtin_instances = self._partition_instances(
             instances, user_permissions
@@ -1090,7 +1092,9 @@ class ListPage(Page, Generic[_T]):
 
         return my_instances, foreign_instances, builtin_instances
 
-    def _bulk_delete_after_confirm(self, instances: OverridableInstances[_T]) -> None:
+    def _bulk_delete_after_confirm(
+        self, instances: OverridableInstances[_T], user_permissions: UserPermissions
+    ) -> None:
         to_delete: list[tuple[UserId, str]] = []
         for varname, _value in request.itervars(prefix="_c_"):
             if html.get_checkbox(varname):
@@ -1104,7 +1108,7 @@ class ListPage(Page, Generic[_T]):
             instances.remove_instance((owner, instance_id))
 
         for owner in {e[0] for e in to_delete}:
-            self._type.save_user_instances(instances, owner)
+            self._type.save_user_instances(instances, user_permissions, owner)
 
         if len(to_delete) > 1:
             flash(_("Selected %s have been deleted.") % self._type.phrase("title_plural").lower())
@@ -1310,7 +1314,7 @@ class EditPage(Page, Generic[_T_OverridableConfig, _T]):
                 new_page = self._type.deserialize(page_dict)
 
                 instances.add_page(new_page)
-                self._type.save_user_instances(instances, owner_id)
+                self._type.save_user_instances(instances, user_permissions, owner_id)
                 if request.var("save_and_view"):
                     redirect_url = new_page.after_create_url() or makeuri_contextless(
                         request,
@@ -1769,7 +1773,7 @@ class OverridableContainer(Overridable[_T_OverridableContainerConfig]):
 
         page.add_element(create_info)  # can be overridden
         assert user.id is not None
-        cls.save_user_instances(instances, user.id)
+        cls.save_user_instances(instances, user_permissions, user.id)
         return None, need_sidebar_reload
         # With a redirect directly to the page afterwards do it like this:
         # return page, need_sidebar_reload

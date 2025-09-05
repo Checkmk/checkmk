@@ -348,7 +348,7 @@ class Bookmarks(SidebarSnapin):
 
         bookmarks = instances.instance((user.id, "my_bookmarks"))
         bookmarks.add_bookmark(title, self._try_shorten_url(url))
-        BookmarkList.save_user_instances(instances)
+        BookmarkList.save_user_instances(instances, user.id)
 
     def _try_shorten_url(self, url: str) -> str:
         referer = request.referer

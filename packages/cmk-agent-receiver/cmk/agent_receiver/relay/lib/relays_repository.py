@@ -12,6 +12,14 @@ from pydantic import SecretStr
 
 from cmk.agent_receiver.relay.lib.shared_types import RelayID
 
+
+@final
+class CheckmkAPIError(Exception):
+    def __init__(self, msg: str) -> None:
+        super().__init__(msg)
+        self.msg = msg
+
+
 logger = logging.getLogger("agent-receiver")
 
 
@@ -34,7 +42,7 @@ class RelaysRepository:
         )
         if resp.status_code != HTTPStatus.OK:
             logger.error("could not register relay %s : %s", resp.status_code, resp.text)
-            raise RuntimeError()  # FIXME
+            raise CheckmkAPIError(resp.text)
         return resp.json()["id"]
 
     def list_relays(self, authorization: SecretStr) -> list[RelayID]:
@@ -43,7 +51,8 @@ class RelaysRepository:
             headers={"Authorization": authorization.get_secret_value()},
         )
         if resp.status_code != HTTPStatus.OK:
-            raise RuntimeError()  # FIXME
+            logger.error("could not list relays %s : %s", resp.status_code, resp.text)
+            raise CheckmkAPIError(resp.text)
         values = resp.json()["value"]
         return [v["id"] for v in values]
 
@@ -56,7 +65,8 @@ class RelaysRepository:
             return False
         if resp.status_code == HTTPStatus.OK:
             return True
-        raise RuntimeError
+        logger.error("could not check if relay exists %s : %s", resp.status_code, resp.text)
+        raise CheckmkAPIError(resp.text)
 
     def remove_relay(self, relay_id: RelayID, authorization: SecretStr) -> None:
         resp = self.client.delete(
@@ -64,4 +74,5 @@ class RelaysRepository:
             headers={"Authorization": authorization.get_secret_value()},
         )
         if resp.status_code != HTTPStatus.NO_CONTENT:
-            raise RuntimeError
+            logger.error("could not delete relay %s : %s", resp.status_code, resp.text)
+            raise CheckmkAPIError(resp.text)

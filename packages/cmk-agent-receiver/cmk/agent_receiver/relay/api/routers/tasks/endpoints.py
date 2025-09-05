@@ -33,6 +33,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.serializers import (
     TaskListResponseSerializer,
     TaskResponseSerializer,
 )
+from cmk.agent_receiver.relay.lib.relays_repository import CheckmkAPIError
 from cmk.agent_receiver.relay.lib.shared_types import RelayID
 from cmk.relay_protocols import tasks as tasks_protocol
 
@@ -94,6 +95,11 @@ async def create_task_endpoint(
         raise fastapi.HTTPException(
             status_code=fastapi.status.HTTP_404_NOT_FOUND,
             detail=f"Relay with ID {relay_id} not found",
+        )
+    except CheckmkAPIError as e:
+        raise fastapi.HTTPException(
+            status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
+            detail=e.msg,
         )
     return tasks_protocol.TaskCreateResponse(task_id=UUID(task_id))
 
@@ -164,6 +170,11 @@ async def update_task(
             status_code=fastapi.status.HTTP_404_NOT_FOUND,
             detail=f"Task with ID {task_id} not found",
         )
+    except CheckmkAPIError as e:
+        raise fastapi.HTTPException(
+            status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
+            detail=e.msg,
+        )
     return TaskResponseSerializer.serialize(updated_task)
 
 
@@ -210,4 +221,9 @@ async def get_tasks_endpoint(
             status_code=fastapi.status.HTTP_404_NOT_FOUND,
             detail=f"Relay with ID {relay_id} not found",
         ) from None
+    except CheckmkAPIError as e:
+        raise fastapi.HTTPException(
+            status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
+            detail=e.msg,
+        )
     return TaskListResponseSerializer.serialize(tasks)

@@ -11,18 +11,52 @@ use crate::common::tools::{
     platform::add_runtime_to_path, ORA_ENDPOINT_ENV_VAR_EXT, ORA_ENDPOINT_ENV_VAR_LOCAL,
 };
 use mk_oracle::config::authentication::{AuthType, Authentication, Role, SqlDbEndpoint};
-use mk_oracle::config::defines::defaults::DEFAULT_SEP;
+use mk_oracle::config::defines::defaults::SECTION_SEPARATOR;
 use mk_oracle::config::ora_sql::Config;
 use mk_oracle::ora_sql::backend;
 use mk_oracle::ora_sql::sqls;
 use mk_oracle::ora_sql::system;
+use mk_oracle::types::SqlQuery;
 use mk_oracle::types::{Credentials, InstanceName, InstanceNumVersion, InstanceVersion, Tenant};
-use mk_oracle::types::{Separator, SqlQuery};
 use std::collections::HashSet;
 use std::str::FromStr;
 use std::sync::LazyLock;
 
 pub static ORA_TEST_ENDPOINTS: &str = include_str!("files/endpoints.txt");
+
+static ORA_TEST_INSTANCE_DATA: &str = r"
+XE|21.3.0.0.0|OPEN|ALLOWED|STOPPED|1496|3073262481|
+NOARCHIVELOG|PRIMARY|NO|XE|030220252229|TRUE|2|PDB$SEED
+|1566296130|READ ONLY|NO|770703360|ENABLED|1483|8192|oralinux810.myguest.virtualbox.org";
+static ORA_TEST_SESSION_PDB_DATA: &str = "XE.XEPDB1|1";
+static ORA_TEST_SESSION_CDB_DATA: &str = "XE|61|472|-1";
+static ORA_TEST_LOGSWITCHES_DATA: &str = "XE|0";
+static ORA_TEST_UNDOSTAT_DATA: &str = "XE|160|1|900|0|0";
+static ORA_TEST_PROCESSES_DATA: &str = "XE|52|300";
+static ORA_TEST_RECOVERY_STATUS_DATA: &str = r"
+XE|XE|PRIMARY|READ WRITE|1|1753809286|1488|ONLINE|NO|YES|14817978|NOT ACTIVE|0";
+static ORA_TEST_LONGACTIVESESSIONS_DATA: &str = "XE.CDB$ROOT||||||||";
+static ORA_TEST_PERFORMANCE_SYSTIMEMODEL_DATA: &str = "XE.CDB$ROOT|sys_time_model|DB CPU|16";
+static ORA_TEST_PERFORMANCE_SYSWAITCLASS_DATA: &str = r"
+XE.CDB$ROOT|sys_wait_class|Administrative|103|0|103|0";
+static ORA_TEST_PERFORMANCE_BUFFERPOOL_DATA: &str = r"
+XE.CDB$ROOT|buffer_pool_statistics|DEFAULT|20121|25027|345233|19206|1592|0|17";
+static ORA_TEST_PERFORMANCE_SGAINFO_DATA: &str = "XE.CDB$ROOT|SGA_info|Fixed SGA Size|9691632";
+static ORA_TEST_PERFORMANCE_LIBRARYCACHE_DATA: &str = r"
+XE.CDB$ROOT|librarycache|SQL AREA|12297|8158|87660|79684|216|351";
+static ORA_TEST_PERFORMANCE_PGAINFO_DATA: &str = r"
+XE.CDB$ROOT|PGA_info|MGA allocated (under PGA)|0|bytes";
+static ORA_TEST_LOCKS_DATA: &str = "XE.CDB$ROOT|||||||||||||||||";
+static ORA_TEST_TABLESPACES_DATA: &str = r"
+XE|/opt/oracle/oradata/XE/users01.dbf|
+USERS|AVAILABLE|YES|640|4194302|512|160|ONLINE|8192|ONLINE|296|PERMANENT|21.0.0.0.0";
+static ORA_TEST_JOBS_DATA: &str = r"
+XE|CDB$ROOT|ORACLE_OCM|MGMT_STATS_CONFIG_JOB
+|SCHEDULED|1|3|TRUE|01-AUG-25 01.01.01.502927 AM +01:00|-|SUCCEEDED";
+static ORA_TEST_IOSTAT_DATA: &str = r"
+XE.CDB$ROOT|iostat_file|Archive Log|0|0|0|0|0|0|0|0|0|0|0|0";
+static ORA_TEST_SYSTEMPARAM_DATA: &str = "XE|lock_name_space||TRUE";
+static ORA_TEST_RESUMABLE_DATA: &str = "XE|||||||||";
 
 fn make_base_config(
     credentials: &Credentials,
@@ -177,7 +211,6 @@ static TEST_SQL_INSTANCE: LazyLock<SqlQuery> = LazyLock::new(|| {
         v$sys_time_model s
     where s.stat_name in('DB time', 'DB CPU')
     order by s.stat_name",
-        Separator::No,
         &Vec::new(),
     )
 });
@@ -297,7 +330,12 @@ fn test_io_stats_query() {
         let name_dot = format!("{}.", &endpoint.instance);
         for r in &rows {
             let values: Vec<String> = r.split('|').map(|s| s.to_string()).collect();
-            assert_eq!(values.len(), 15, "Row does not have enough columns: {}", r);
+            assert_eq!(
+                values.len(),
+                ORA_TEST_IOSTAT_DATA.split('|').collect::<Vec<_>>().len(),
+                "Row does not have enough columns: {}",
+                r
+            );
             assert!(
                 values[0].starts_with(name_dot.as_str()),
                 "Row does not start with instance name: {}",
@@ -341,14 +379,27 @@ fn connect_and_query(
 
     let spot = backend::make_spot(&config.endpoint()).unwrap();
     let conn = spot.connect(None).unwrap();
-    let q = SqlQuery::new(
-        sqls::get_factory_query(id, version, Tenant::All, None).unwrap(),
-        Separator::default(),
-        config.params(),
-    );
-    conn.query_table(&q)
-        .format(&DEFAULT_SEP.to_string())
+    let queries = sqls::get_factory_query(id, version, Tenant::All, None)
         .unwrap()
+        .split(';')
+        .filter_map(|q| {
+            let trimmed = q.trim();
+            if !trimmed.is_empty() {
+                Some(SqlQuery::new(trimmed, config.params()))
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<_>>();
+
+    queries
+        .iter()
+        .flat_map(|q| {
+            conn.query_table(q)
+                .format(&SECTION_SEPARATOR.to_string())
+                .unwrap()
+        })
+        .collect()
 }
 
 #[test]
@@ -372,7 +423,12 @@ fn test_jobs() {
         assert!(rows.len() > 10);
         rows.iter().for_each(|r| {
             let line: Vec<&str> = r.split("|").collect();
-            assert_eq!(line.len(), 11, "Row does not have enough columns: {}", r);
+            assert_eq!(
+                line.len(),
+                ORA_TEST_JOBS_DATA.split('|').collect::<Vec<_>>().len(),
+                "Row does not have enough columns: {}",
+                r
+            );
             assert_eq!(line[0], endpoint.instance.as_str());
             assert!(
                 [1, 2, 3, 4, 6, 7, 8]
@@ -415,7 +471,13 @@ fn test_resumable() {
     for endpoint in WORKING_ENDPOINTS.iter() {
         println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(endpoint, sqls::Id::Resumable, None);
-        assert_eq!(rows.len(), 1);
+        rows.iter().for_each(|r| {
+            let line: Vec<&str> = r.split("|").collect();
+            assert_eq!(
+                line.len(),
+                ORA_TEST_RESUMABLE_DATA.split('|').collect::<Vec<_>>().len(),
+            );
+        });
         assert_eq!(rows[0], format!("{}|||||||||", &endpoint.instance));
     }
 }
@@ -431,7 +493,12 @@ fn test_undo_stats() {
             assert_eq!(rows.len(), 1);
             let r = &rows[0];
             let line: Vec<&str> = r.split("|").collect();
-            assert_eq!(line.len(), 6, "Row does not have enough columns: {}", r);
+            assert_eq!(
+                line.len(),
+                ORA_TEST_UNDOSTAT_DATA.split('|').collect::<Vec<_>>().len(),
+                "Row does not have enough columns: {}",
+                r,
+            );
             assert_eq!(line[0], endpoint.instance.as_str());
             assert!(
                 [2, 3, 4, 5]
@@ -451,6 +518,15 @@ fn test_locks_last() {
         println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(endpoint, sqls::Id::Locks, None);
         assert!(rows.len() >= 3);
+        rows.iter().for_each(|r| {
+            let line: Vec<&str> = r.split("|").collect();
+            assert_eq!(
+                line.len(),
+                ORA_TEST_LOCKS_DATA.split('|').collect::<Vec<_>>().len(),
+                "Row does not have enough columns: {}",
+                rows.len()
+            );
+        });
         assert_eq!(
             rows[0],
             format!("{}.CDB$ROOT|||||||||||||||||", &endpoint.instance)
@@ -473,6 +549,15 @@ fn test_locks_old() {
             sqls::Id::Locks,
             Some(InstanceNumVersion::from(12_00_00_00)),
         );
+        rows.iter().for_each(|r| {
+            let line: Vec<&str> = r.split("|").collect();
+            assert_eq!(
+                line.len(),
+                ORA_TEST_LOCKS_DATA.split('|').collect::<Vec<_>>().len(),
+                "Row does not have enough columns: {}",
+                rows.len()
+            );
+        });
         assert!(!rows.is_empty());
         assert_eq!(rows[0], format!("{}|||||||||||||||||", &endpoint.instance));
     }
@@ -484,6 +569,18 @@ fn test_log_switches() {
     for endpoint in WORKING_ENDPOINTS.iter() {
         println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(endpoint, sqls::Id::LogSwitches, None);
+        rows.iter().for_each(|r| {
+            let line: Vec<&str> = r.split("|").collect();
+            assert_eq!(
+                line.len(),
+                ORA_TEST_LOGSWITCHES_DATA
+                    .split('|')
+                    .collect::<Vec<_>>()
+                    .len(),
+                "Row does not have enough columns: {}",
+                rows.len()
+            );
+        });
         assert!(!rows.is_empty());
         assert_eq!(rows[0], format!("{}|0", &endpoint.instance));
     }
@@ -496,6 +593,18 @@ fn test_long_active_sessions_last() {
         println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(endpoint, sqls::Id::LongActiveSessions, None);
         assert!(rows.len() >= 3);
+        rows.iter().for_each(|r| {
+            let line: Vec<&str> = r.split("|").collect();
+            assert_eq!(
+                line.len(),
+                ORA_TEST_LONGACTIVESESSIONS_DATA
+                    .split('|')
+                    .collect::<Vec<_>>()
+                    .len(),
+                "Row does not have enough columns: {}",
+                rows.len()
+            );
+        });
         assert_eq!(rows[0], format!("{}.CDB$ROOT||||||||", &endpoint.instance));
         assert_eq!(rows[1], format!("{0}.{0}PDB1||||||||", &endpoint.instance));
         assert_eq!(rows[2], format!("{}||||||||", &endpoint.instance));
@@ -525,6 +634,12 @@ fn test_processes() {
         let rows = connect_and_query(endpoint, sqls::Id::Processes, None);
         assert!(!rows.is_empty());
         let array = rows[0].split('|').collect::<Vec<&str>>();
+        assert_eq!(
+            array.len(),
+            ORA_TEST_PROCESSES_DATA.split('|').collect::<Vec<_>>().len(),
+            "Row does not have enough columns: {}",
+            rows.len()
+        );
         assert_eq!(array[0], endpoint.instance.as_str());
         assert!(array[1].parse::<u32>().is_ok());
         assert!(array[2].parse::<u32>().is_ok());
@@ -539,7 +654,13 @@ fn test_recovery_status_last() {
         let rows = connect_and_query(endpoint, sqls::Id::RecoveryStatus, None);
         for r in rows {
             let array = r.split('|').collect::<Vec<&str>>();
-            assert_eq!(array.len(), 13);
+            assert_eq!(
+                array.len(),
+                ORA_TEST_RECOVERY_STATUS_DATA
+                    .split('|')
+                    .collect::<Vec<_>>()
+                    .len(),
+            );
             assert!(array[0].starts_with(endpoint.instance.as_str()));
             assert_eq!(array[1], endpoint.instance.as_str());
             assert!(!array[2].is_empty());
@@ -619,7 +740,13 @@ fn test_sessions_last() {
             assert!(r.starts_with(start.as_str()));
 
             let line: Vec<&str> = r.split("|").collect();
-            assert_eq!(line.len(), 4);
+            assert_eq!(
+                line.len(),
+                ORA_TEST_SESSION_PDB_DATA
+                    .split('|')
+                    .collect::<Vec<_>>()
+                    .len(),
+            );
             assert!(
                 line[1].parse::<i32>().is_ok(),
                 "Value is not a number: {}",
@@ -628,7 +755,13 @@ fn test_sessions_last() {
         }
 
         let line_2: Vec<&str> = rows[2].split("|").collect();
-        assert_eq!(line_2.len(), 4);
+        assert_eq!(
+            line_2.len(),
+            ORA_TEST_SESSION_CDB_DATA
+                .split('|')
+                .collect::<Vec<_>>()
+                .len(),
+        );
         line_2[1..].iter().for_each(|s| {
             assert!(s.parse::<i32>().is_ok(), "Value is not a number: {}", s);
         });
@@ -663,7 +796,13 @@ fn test_system_parameter() {
         assert!(rows.len() > 100);
         rows.iter().for_each(|r| {
             let line: Vec<&str> = r.split("|").collect();
-            assert_eq!(line.len(), 4);
+            assert_eq!(
+                line.len(),
+                ORA_TEST_SYSTEMPARAM_DATA
+                    .split('|')
+                    .collect::<Vec<_>>()
+                    .len(),
+            );
             assert_eq!(line[0], endpoint.instance.as_str());
             assert!(!line[1].is_empty());
             assert!(
@@ -684,7 +823,13 @@ fn test_table_spaces() {
         assert!(rows.len() > 2);
         rows.iter().for_each(|r| {
             let line: Vec<&str> = r.split("|").collect();
-            assert_eq!(line.len(), 15);
+            assert_eq!(
+                line.len(),
+                ORA_TEST_TABLESPACES_DATA
+                    .split('|')
+                    .collect::<Vec<_>>()
+                    .len(),
+            );
             assert_eq!(line[0], endpoint.instance.as_str());
             assert!(
                 line[1].to_uppercase().ends_with(".DBF"),
@@ -781,7 +926,10 @@ fn test_instance() {
         assert!(rows.len() > 2);
         rows.iter().for_each(|r| {
             let line: Vec<&str> = r.split("|").collect();
-            assert_eq!(line.len(), 23);
+            assert_eq!(
+                line.len(),
+                ORA_TEST_INSTANCE_DATA.split('|').collect::<Vec<_>>().len(),
+            );
             assert_eq!(line[0], endpoint.instance.as_str());
             assert!(
                 convert_to_num_version(&InstanceVersion::from(line[1].to_string())).is_some(),
@@ -936,6 +1084,51 @@ fn test_performance_new() {
         assert!(rows.len() > 30);
         rows.iter().for_each(|r| {
             let line: Vec<&str> = r.split("|").collect();
+            match line[1] {
+                "PGA_info" => assert_eq!(
+                    line.len(),
+                    ORA_TEST_PERFORMANCE_PGAINFO_DATA
+                        .split('|')
+                        .collect::<Vec<_>>()
+                        .len()
+                ),
+                "SGA_info" => assert_eq!(
+                    line.len(),
+                    ORA_TEST_PERFORMANCE_SGAINFO_DATA
+                        .split('|')
+                        .collect::<Vec<_>>()
+                        .len()
+                ),
+                "librarycache" => assert_eq!(
+                    line.len(),
+                    ORA_TEST_PERFORMANCE_LIBRARYCACHE_DATA
+                        .split('|')
+                        .collect::<Vec<_>>()
+                        .len()
+                ),
+                "sys_time_model" => assert_eq!(
+                    line.len(),
+                    ORA_TEST_PERFORMANCE_SYSTIMEMODEL_DATA
+                        .split('|')
+                        .collect::<Vec<_>>()
+                        .len()
+                ),
+                "sys_wait_class" => assert_eq!(
+                    line.len(),
+                    ORA_TEST_PERFORMANCE_SYSWAITCLASS_DATA
+                        .split('|')
+                        .collect::<Vec<_>>()
+                        .len()
+                ),
+                "buffer_pool_statistics" => assert_eq!(
+                    line.len(),
+                    ORA_TEST_PERFORMANCE_BUFFERPOOL_DATA
+                        .split('|')
+                        .collect::<Vec<_>>()
+                        .len()
+                ),
+                _ => panic!("Unknown category: {} in line {}", line[1], r),
+            }
             assert!(line[0].starts_with(format!("{}.", endpoint.instance.as_str()).as_str()));
             assert!(
                 [4, 5, 7, 9, 10].contains(&line.len()),

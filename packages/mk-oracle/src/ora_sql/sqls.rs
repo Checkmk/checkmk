@@ -339,7 +339,7 @@ pub fn get_modern_factory_query<T: Borrow<Id>>(query_id: T) -> Result<String> {
 mod tests {
     use super::*;
     use crate::ora_sql::sqls::query::RawMetadata;
-    use crate::types::{InstanceNumVersion, Separator, SqlQuery};
+    use crate::types::{InstanceNumVersion, SqlQuery};
 
     static TEST_QUERY_MAP: LazyLock<HashMap<Id, Vec<query::Metadata>>> = LazyLock::new(|| {
         HashMap::from([query::build_query_metadata(
@@ -422,7 +422,6 @@ mod tests {
     fn test_find_io_stats() {
         let q = SqlQuery::new(
             get_factory_query(Id::IoStats, None, Tenant::All, None).unwrap(),
-            Separator::default(),
             &Vec::new(),
         );
         assert!(!q.as_str().is_empty());
@@ -437,7 +436,6 @@ mod tests {
                 None,
             )
             .unwrap(),
-            Separator::default(),
             &Vec::new(),
         );
         assert!(!q.as_str().is_empty());

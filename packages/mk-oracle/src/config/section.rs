@@ -127,7 +127,7 @@ impl SectionBuilder {
         let is_async = PREDEFINED_ASYNC_SECTIONS.contains(&name.as_str());
         Self {
             name: name.clone(),
-            sep: defaults::DEFAULT_SEP,
+            sep: defaults::SECTION_SEPARATOR,
             is_async,
             is_disabled: false,
             sql: None,

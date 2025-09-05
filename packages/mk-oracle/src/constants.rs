@@ -24,11 +24,6 @@ pub mod environment {
     pub const VAR_DIR_ENV_VAR: &str = "MK_VARDIR";
 }
 
-pub mod sqls {
-    pub const DEFAULT_SEPARATOR: char = '|';
-    pub const SEPARATOR_DECORATION: &str = "|| '{}' ||";
-}
-
 pub const ODBC_CONNECTION_TIMEOUT: u32 = 2;
 
 pub static LOCAL_HOST: LazyLock<HostName> = LazyLock::new(|| "localhost".to_owned().into());

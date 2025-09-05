@@ -4,9 +4,7 @@
 
 use crate::ora_sql::backend::OpenedSpot;
 use crate::ora_sql::sqls;
-use crate::types::{
-    InstanceName, InstanceNumVersion, InstanceVersion, Separator, SqlQuery, Tenant,
-};
+use crate::types::{InstanceName, InstanceNumVersion, InstanceVersion, SqlQuery, Tenant};
 use anyhow::Result;
 use std::collections::HashMap;
 
@@ -46,7 +44,6 @@ fn _get_instances(spot: &OpenedSpot, custom_query: Option<&str>) -> Result<_Inst
     if let Ok(result) = spot
         .query_table(&SqlQuery::new(
             custom_query.unwrap_or(sqls::query::internal::INSTANCE_INFO_SQL_TEXT_NEW),
-            Separator::default(),
             &Vec::new(),
         ))
         .0
@@ -56,14 +53,12 @@ fn _get_instances(spot: &OpenedSpot, custom_query: Option<&str>) -> Result<_Inst
         let mut result = spot
             .query_table(&SqlQuery::new(
                 sqls::query::internal::INSTANCE_INFO_SQL_TEXT_OLD,
-                Separator::default(),
                 &Vec::new(),
             ))
             .0?;
         let result_with_version = spot
             .query_table(&SqlQuery::new(
                 sqls::query::internal::INSTANCE_APPROXIMATE_VERSION,
-                Separator::default(),
                 &Vec::new(),
             ))
             .format("")?;

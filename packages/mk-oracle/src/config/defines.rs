@@ -93,5 +93,5 @@ pub mod defaults {
     pub const DISCOVERY_DETECT: bool = true;
 
     pub const TRUST_SERVER_CERTIFICATE: bool = true;
-    pub const DEFAULT_SEP: char = '|';
+    pub const SECTION_SEPARATOR: char = '|';
 }

@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 PatternType = Literal["matchesJsonSchema", "equalTo", "matchesJsonSchema"]
 
 Operation = Literal["matches", "equalTo"]
+AllowedHeader = Literal["Content-Type", "Authorization"]
 
 
 class Request(BaseModel):
@@ -19,7 +20,7 @@ class Request(BaseModel):
     url: str
     bodyPatterns: list[Mapping[PatternType, str]] | None = None
     queryParameters: Mapping[str, Mapping[PatternType, str]] | None = None
-    headers: Mapping[str, Mapping[Operation, str]] = Field(default_factory=dict)
+    headers: Mapping[AllowedHeader, Mapping[Operation, str]] = Field(default_factory=dict)
 
 
 class Response(BaseModel):

@@ -6,6 +6,8 @@
 
 import dataclasses
 
+from pydantic import SecretStr
+
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     ResultType,
     Task,
@@ -34,9 +36,14 @@ class UpdateTaskHandler:
     relays_repository: RelaysRepository
 
     def process(
-        self, relay_id: RelayID, task_id: TaskID, result_type: ResultType, result_payload: str
+        self,
+        relay_id: RelayID,
+        task_id: TaskID,
+        result_type: ResultType,
+        result_payload: str,
+        authorization: SecretStr,
     ) -> Task:
-        if not self.relays_repository.has_relay(relay_id):
+        if not self.relays_repository.has_relay(relay_id, authorization):
             raise RelayNotFoundError(f"Relay with ID {relay_id} does not exist")
         return self._update_task(relay_id, task_id, result_type, result_payload)
 

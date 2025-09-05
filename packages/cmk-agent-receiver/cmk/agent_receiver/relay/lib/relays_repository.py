@@ -7,6 +7,7 @@ from http import HTTPStatus
 from typing import final
 
 import httpx
+from pydantic import SecretStr
 
 from cmk.agent_receiver.relay.lib.shared_types import RelayID
 
@@ -23,33 +24,41 @@ class RelaysRepository:
             headers={"Content-Type": "application/json"},
         )
 
-    def add_relay(self) -> RelayID:
+    def add_relay(self, authorization: SecretStr) -> RelayID:
         resp = self.client.post(
             "/domain-types/relay/collections/all",
+            headers={"Authorization": authorization.get_secret_value()},
         )
         if resp.status_code != HTTPStatus.OK:
             logger.error("could not register relay %s : %s", resp.status_code, resp.text)
             raise RuntimeError()  # FIXME
         return resp.json()["id"]
 
-    def list_relays(self) -> list[RelayID]:
+    def list_relays(self, authorization: SecretStr) -> list[RelayID]:
         resp = self.client.get(
             "/domain-types/relay/collections/all",
+            headers={"Authorization": authorization.get_secret_value()},
         )
         if resp.status_code != HTTPStatus.OK:
             raise RuntimeError()  # FIXME
         values = resp.json()["value"]
         return [v["id"] for v in values]
 
-    def has_relay(self, relay_id: RelayID) -> bool:
-        resp = self.client.get(url=f"objects/relay/{relay_id}")
+    def has_relay(self, relay_id: RelayID, authorization: SecretStr) -> bool:
+        resp = self.client.get(
+            url=f"objects/relay/{relay_id}",
+            headers={"Authorization": authorization.get_secret_value()},
+        )
         if resp.status_code == HTTPStatus.NOT_FOUND:
             return False
         if resp.status_code == HTTPStatus.OK:
             return True
         raise RuntimeError
 
-    def remove_relay(self, relay_id: RelayID) -> None:
-        resp = self.client.delete(url=f"objects/relay/{relay_id}")
+    def remove_relay(self, relay_id: RelayID, authorization: SecretStr) -> None:
+        resp = self.client.delete(
+            url=f"objects/relay/{relay_id}",
+            headers={"Authorization": authorization.get_secret_value()},
+        )
         if resp.status_code != HTTPStatus.NO_CONTENT:
             raise RuntimeError

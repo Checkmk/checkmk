@@ -6,6 +6,7 @@
 from typing import Annotated
 
 import fastapi
+from pydantic import SecretStr
 
 from cmk.agent_receiver.relay.api.routers.relays.dependencies import (
     get_register_relay_handler,
@@ -25,6 +26,7 @@ router = fastapi.APIRouter()
 @router.post("/", status_code=fastapi.status.HTTP_200_OK)
 async def register_relay(
     handler: Annotated[RegisterRelayHandler, fastapi.Depends(get_register_relay_handler)],
+    authorization: Annotated[SecretStr, fastapi.Header()],
 ) -> RelayRegistrationResponse:
     """Register a new relay entity.
 
@@ -41,7 +43,7 @@ async def register_relay(
         - Relay ID uniqueness is controlled during registration
         - Collision with existing relay IDs is not allowed
     """
-    relay_id = handler.process()
+    relay_id = handler.process(authorization)
     return RelayRegistrationResponse(relay_id=relay_id)
 
 
@@ -49,6 +51,7 @@ async def register_relay(
 async def unregister_relay(
     relay_id: str,
     handler: Annotated[UnregisterRelayHandler, fastapi.Depends(get_unregister_relay_handler)],
+    authorization: Annotated[SecretStr, fastapi.Header()],
 ) -> fastapi.Response:
     """Unregister a relay entity.
 
@@ -67,7 +70,7 @@ async def unregister_relay(
         - This endpoint is idempotent
     """
     try:
-        handler.process(RelayID(relay_id))
+        handler.process(RelayID(relay_id), authorization)
     except RelayNotFoundError:
         # When the relay is not found we chose to return a 200 to make this endpoint idempotent
         return fastapi.Response(

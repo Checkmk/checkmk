@@ -56,12 +56,17 @@ class User:
     name: str
     password: str
 
+    @property
+    def bearer(self) -> str:
+        return f"Bearer {self.name} {self.password}"
+
 
 @final
 class SiteMock:
-    def __init__(self, wiremock: Wiremock, site_name: str) -> None:
+    def __init__(self, wiremock: Wiremock, site_name: str, user: User) -> None:
         self.wiremock = wiremock
         self.site_name = site_name
+        self.user = user
 
     @property
     def base_url(self) -> str:
@@ -118,6 +123,9 @@ class SiteMock:
             request=Request(
                 method="DELETE",
                 url=f"{self.base_route}/objects/relay/{relayid}",
+                headers={
+                    "Authorization": {"matches": self.user.bearer},
+                },
             ),
             response=Response(
                 status=HTTPStatus.NO_CONTENT,
@@ -133,6 +141,10 @@ class SiteMock:
             request=Request(
                 method="POST",
                 url=f"{self.base_route}/domain-types/relay/collections/all",
+                headers={
+                    "Content-Type": {"matches": "application/json"},
+                    "Authorization": {"matches": self.user.bearer},
+                },
             ),
             response=Response(
                 status=HTTPStatus.OK,
@@ -148,7 +160,10 @@ class SiteMock:
             request=Request(
                 method="GET",
                 url=f"{self.base_route}/domain-types/relay/collections/all",
-                headers={"Content-Type": {"matches": "application/json"}},
+                headers={
+                    "Content-Type": {"matches": "application/json"},
+                    "Authorization": {"matches": self.user.bearer},
+                },
             ),
             response=Response(
                 status=200,
@@ -164,7 +179,10 @@ class SiteMock:
                 request=Request(
                     method="GET",
                     url=f"{self.base_route}/objects/relay/{r}",
-                    headers={"Content-Type": {"matches": "application/json"}},
+                    headers={
+                        "Content-Type": {"matches": "application/json"},
+                        "Authorization": {"matches": self.user.bearer},
+                    },
                 ),
                 response=Response(status=200, body=GetResponse(id=r).model_dump_json()),
             )

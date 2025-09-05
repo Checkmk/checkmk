@@ -99,7 +99,7 @@ from omdlib.tmpfs import (
 )
 from omdlib.type_defs import Config, ConfigChoiceHasError, Replacements
 from omdlib.update import ManageUpdate
-from omdlib.update_check import determine_update_config
+from omdlib.update_check import check_update_possible
 from omdlib.user_processes import kill_site_user_processes, terminate_site_user_processes
 from omdlib.users_and_groups import (
     find_processes_of_user,
@@ -2730,7 +2730,7 @@ def main_update(
     to_version = omdlib.__version__
 
     from_edition, to_edition = get_edition(from_version), get_edition(to_version)
-    determine_update_config(
+    check_update_possible(
         from_edition,
         to_edition,
         from_version,

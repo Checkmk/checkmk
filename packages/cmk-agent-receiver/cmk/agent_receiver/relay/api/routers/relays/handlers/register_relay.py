@@ -14,8 +14,5 @@ from cmk.agent_receiver.relay.lib.shared_types import RelayID
 class RegisterRelayHandler:
     relays_repository: RelaysRepository
 
-    def process(self, authorization: SecretStr) -> RelayID:
-        return self._add_registry(authorization)
-
-    def _add_registry(self, authorization: SecretStr) -> RelayID:
-        return self.relays_repository.add_relay(authorization)
+    def process(self, authorization: SecretStr, alias: str) -> RelayID:
+        return self.relays_repository.add_relay(authorization, alias)

@@ -12,8 +12,8 @@ from .test_lib.site_mock import OP, SiteMock
 from .test_lib.tasks import get_relay_tasks, push_task
 
 
-def register_relay(ar: AgentReceiverClient) -> str:
-    resp = ar.register_relay()
+def register_relay(ar: AgentReceiverClient, name: str) -> str:
+    resp = ar.register_relay(name)
     parsed = RelayRegistrationResponse.model_validate_json(resp.text)
     return parsed.relay_id
 
@@ -26,7 +26,7 @@ def test_a_relay_can_be_registered(
     Register a relay and check if we can obtain a list of pending tasks for it.
     """
     site.set_scenario([], [("relay1", OP.ADD)])
-    resp = agent_receiver.register_relay()
+    resp = agent_receiver.register_relay("relay1")
     assert resp.status_code == HTTPStatus.OK
     parsed = RelayRegistrationResponse.model_validate_json(resp.text)
     relay_id = parsed.relay_id
@@ -40,7 +40,7 @@ def test_registering_a_relay_does_not_affect_other_relays(
     site: SiteMock,
 ) -> None:
     site.set_scenario([], [("relay1", OP.ADD), ("relay2", OP.ADD)])
-    relay_id_A = register_relay(agent_receiver)
+    relay_id_A = register_relay(agent_receiver, "relay1")
     push_task(
         agent_receiver=agent_receiver,
         relay_id=relay_id_A,
@@ -48,7 +48,7 @@ def test_registering_a_relay_does_not_affect_other_relays(
         task_payload="any payload",
     )
 
-    _ = register_relay(agent_receiver)
+    _ = register_relay(agent_receiver, "relay2")
 
     tasks_A = get_relay_tasks(agent_receiver, relay_id_A)
     assert len(tasks_A.tasks) == 1
@@ -59,7 +59,7 @@ def test_a_relay_can_be_unregistered(
     site: SiteMock,
 ) -> None:
     site.set_scenario([], [("relay1", OP.ADD), ("relay1", OP.DEL)])
-    relay_id = register_relay(agent_receiver)
+    relay_id = register_relay(agent_receiver, "relay1")
     resp = agent_receiver.get_relay_tasks(relay_id)
     assert resp.status_code == HTTPStatus.OK
 
@@ -77,8 +77,8 @@ def test_unregistering_a_relay_does_not_affect_other_relays(
     site: SiteMock,
 ) -> None:
     site.set_scenario([], [("relay1", OP.ADD), ("relay2", OP.ADD), ("relay1", OP.DEL)])
-    relay_id_A = register_relay(agent_receiver)
-    relay_id_B = register_relay(agent_receiver)
+    relay_id_A = register_relay(agent_receiver, "relay1")
+    relay_id_B = register_relay(agent_receiver, "relay2")
 
     agent_receiver.unregister_relay(relay_id_A)
 

@@ -146,6 +146,13 @@ class SiteMock:
                     "Content-Type": {"matches": "application/json"},
                     "Authorization": {"matches": self.user.bearer},
                 },
+                bodyPatterns=[
+                    {
+                        "equalToJson": RelayData(
+                            alias=relayid, siteid=self.site_name
+                        ).model_dump_json()
+                    }
+                ],
             ),
             response=Response(
                 status=HTTPStatus.OK,

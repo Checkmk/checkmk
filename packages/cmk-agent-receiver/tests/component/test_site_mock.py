@@ -55,7 +55,7 @@ def test_scenario_can_add_relay(site: SiteMock, client: httpx.Client) -> None:
 
     # we add a relay
     resp = client.post(
-        "/domain-types/relay/collections/all", json={"alias": "foo", "siteid": "bar"}
+        "/domain-types/relay/collections/all", json={"alias": new_relay, "siteid": site.site_name}
     )
     assert resp.status_code == HTTPStatus.OK, resp.url
     parsed = PostResponse.model_validate(resp.json())
@@ -104,7 +104,7 @@ def test_scenario_start_empty_add_relay(site: SiteMock, client: httpx.Client) ->
 
     # add the first relay
     resp = client.post(
-        "/domain-types/relay/collections/all", json={"alias": "foo", "siteid": "bar"}
+        "/domain-types/relay/collections/all", json={"alias": new_relay, "siteid": site.site_name}
     )
     assert resp.status_code == HTTPStatus.OK
     parsed = PostResponse.model_validate(resp.json())
@@ -145,7 +145,11 @@ def test_scenario_multiple_changes(site: SiteMock, client: httpx.Client) -> None
 
     # step 1: add relay_new1
     resp = client.post(
-        "/domain-types/relay/collections/all", json={"alias": "foo", "siteid": "bar"}
+        "/domain-types/relay/collections/all",
+        json={
+            "alias": "relay_new1",
+            "siteid": site.site_name,
+        },
     )
     assert resp.status_code == HTTPStatus.OK
     parsed = PostResponse.model_validate(resp.json())
@@ -174,7 +178,8 @@ def test_scenario_multiple_changes(site: SiteMock, client: httpx.Client) -> None
 
     # step 3: add relay_new2
     resp = client.post(
-        "/domain-types/relay/collections/all", json={"alias": "foo", "siteid": "bar"}
+        "/domain-types/relay/collections/all",
+        json={"alias": "relay_new2", "siteid": site.site_name},
     )
     assert resp.status_code == HTTPStatus.OK
     parsed = PostResponse.model_validate(resp.json())
@@ -203,7 +208,8 @@ def test_scenario_multiple_changes(site: SiteMock, client: httpx.Client) -> None
 
     # step 5: add relay_final
     resp = client.post(
-        "/domain-types/relay/collections/all", json={"alias": "foo", "siteid": "bar"}
+        "/domain-types/relay/collections/all",
+        json={"alias": "relay_final", "siteid": site.site_name},
     )
     assert resp.status_code == HTTPStatus.OK
     parsed = PostResponse.model_validate(resp.json())

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 from http import HTTPStatus
+from typing import final
 
 import httpx
 
@@ -12,12 +13,14 @@ from cmk.agent_receiver.relay.lib.shared_types import RelayID
 logger = logging.getLogger("agent-receiver")
 
 
+@final
 class RelaysRepository:
     def __init__(self, site_url: str, site_name: str) -> None:
         base_url = f"{site_url}/{site_name}/check_mk/api/1.0"
         # FIXME async client
         self.client = httpx.Client(
             base_url=base_url,
+            headers={"Content-Type": "application/json"},
         )
 
     def add_relay(self) -> RelayID:

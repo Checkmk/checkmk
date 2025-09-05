@@ -12,7 +12,7 @@ from .test_lib.site_mock import GetResponse, ListResponse, OP, PostResponse, Sit
 
 @pytest.fixture
 def client(site: SiteMock) -> httpx.Client:
-    return httpx.Client(base_url=site.base_url)
+    return httpx.Client(base_url=site.base_url, headers={"Content-Type": "application/json"})
 
 
 @pytest.mark.parametrize(

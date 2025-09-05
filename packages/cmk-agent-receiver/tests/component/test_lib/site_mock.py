@@ -5,6 +5,7 @@
 
 import secrets
 from collections.abc import Sequence
+from dataclasses import dataclass
 from enum import auto, Enum
 from http import HTTPStatus
 from typing import assert_never, final, NewType
@@ -48,6 +49,12 @@ class PostResponse(BaseModel):
     id: Relay
     links: list[str] = Field(default_factory=list)  # keep empty here
     domainType: str = "relay"
+
+
+@dataclass(frozen=True)
+class User:
+    name: str
+    password: str
 
 
 @final
@@ -141,6 +148,7 @@ class SiteMock:
             request=Request(
                 method="GET",
                 url=f"{self.base_route}/domain-types/relay/collections/all",
+                headers={"Content-Type": {"matches": "application/json"}},
             ),
             response=Response(
                 status=200,
@@ -156,6 +164,7 @@ class SiteMock:
                 request=Request(
                     method="GET",
                     url=f"{self.base_route}/objects/relay/{r}",
+                    headers={"Content-Type": {"matches": "application/json"}},
                 ),
                 response=Response(status=200, body=GetResponse(id=r).model_dump_json()),
             )

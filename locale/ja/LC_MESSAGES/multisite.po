@@ -8294,6 +8294,10 @@ msgid "Azure Redis connections"
 msgstr "Azure データベース接続"
 
 #, fuzzy
+msgid "Azure Redis latency"
+msgstr "平均ディスク遅延"
+
+#, fuzzy
 msgid "Azure Redis memory"
 msgstr "絶対使用メモリ"
 
@@ -10542,6 +10546,10 @@ msgstr "キャッシュ ヒット"
 
 msgid "Cache hits for pass"
 msgstr "パスへのキャッシュヒット"
+
+#, fuzzy
+msgid "Cache internode latency"
+msgstr "会議の遅延を作成する"
 
 msgid "Cache interval"
 msgstr "キャッシュ間隔"
@@ -40791,10 +40799,6 @@ msgstr "グループ名"
 msgid "Name of group in service name"
 msgstr "サービス名にあるグループの名前"
 
-#, fuzzy
-msgid "Name of group2"
-msgstr "グループ名"
-
 msgid "Name of indice"
 msgstr "インデックスの名前"
 
@@ -54409,6 +54413,10 @@ msgstr "使用したサーバーのログストレージ"
 msgid "Server performance"
 msgstr "サーバーのパフォーマンス"
 
+#, fuzzy
+msgid "Server side command latency"
+msgstr "サーバーの待ち時間"
+
 msgid "Server side handling of unencrypted data"
 msgstr "サーバー側の未暗号化データのハンドリング"
 
@@ -54418,6 +54426,10 @@ msgstr "サーバー時間"
 #, python-format
 msgid "Server time (currently: %s)"
 msgstr "サーバ時間 (現在: %s)"
+
+#, fuzzy
+msgid "Server-side command latency"
+msgstr "サーバーの待ち時間"
 
 msgid "Service"
 msgstr "サービス"
@@ -64340,10 +64352,6 @@ msgstr ""
 "ここで指定するパターンは、センサーの状態の始まりと正確に一致する必要がありま"
 "す（大文字と小文字を区別します）。"
 
-#, python-brace-format
-msgid "The pattern {value} is not a valid regular expression: {err_msg}"
-msgstr "パターン {value} は有効な正規表現ではありません: {err_msg}"
-
 msgid ""
 "The performance graph will always display the occupied memory. This is "
 "independent of the actual check levels which can be set for both free and "
@@ -69392,6 +69400,14 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This ruleset allows you to configure levels for Azure Redis connections "
+"monitoring"
+msgstr ""
+"このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
+"きます"
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis latency "
 "monitoring"
 msgstr ""
 "このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
@@ -84805,6 +84821,14 @@ msgid ""
 msgstr ""
 "サービス制限を下回るまで、「変更を有効にする」はブロックされます。利用限度額"
 "を上げたい場合、 "
+
+#, fuzzy
+#~ msgid "Name of group2"
+#~ msgstr "グループ名"
+
+#, python-brace-format
+#~ msgid "The pattern {value} is not a valid regular expression: {err_msg}"
+#~ msgstr "パターン {value} は有効な正規表現ではありません: {err_msg}"
 
 #~ msgid "Connect without proxy"
 #~ msgstr "プロキシなしで接続する"

@@ -116,7 +116,7 @@ class UserPermissions:
         """Returns the set of permissions for all roles"""
         role_permissions: dict[str, list[str]] = {}
         roleids = set(self._roles.keys())
-        for perm in permission_registry.values():
+        for perm in self._permissions.values():
             for role_id in roleids:
                 if role_id not in role_permissions:
                     role_permissions[role_id] = []

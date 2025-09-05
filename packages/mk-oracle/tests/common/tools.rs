@@ -4,7 +4,7 @@
 
 use mk_oracle::config::authentication::{AuthType, SqlDbEndpoint};
 use mk_oracle::config::ora_sql::Config;
-use mk_oracle::types::Credentials;
+use mk_oracle::types::{Credentials, InstanceAlias};
 
 pub const ORA_ENDPOINT_ENV_VAR_LOCAL: &str = "CI_ORA1_DB_TEST";
 pub const ORA_ENDPOINT_ENV_VAR_EXT: &str = "CI_ORA2_DB_TEST";
@@ -27,15 +27,18 @@ pub mod platform {
             return PathBuf::from(path);
         }
         let _this_file: PathBuf = PathBuf::from(file!());
-        _this_file
+        let base_root = _this_file
             .parent()
             .unwrap()
             .parent()
             .unwrap()
             .parent()
-            .unwrap()
-            .join("runtimes")
-            .join(RUNTIME_NAME)
+            .unwrap();
+        std::env::set_var(
+            "TNS_ADMIN",
+            base_root.join("tests").join("files").join("tns"),
+        );
+        base_root.join("runtimes").join(RUNTIME_NAME)
     }
 
     fn _patch_path() {
@@ -87,7 +90,15 @@ fn _make_mini_config_custom_instance(
     auth_type: AuthType,
     address: &str,
     include: &str,
+    alias: Option<InstanceAlias>,
 ) -> Config {
+    fn alias_raw(alias: &Option<InstanceAlias>) -> String {
+        if let Some(a) = alias {
+            format!("alias: {a}")
+        } else {
+            String::new()
+        }
+    }
     let config_str = format!(
         r#"
 ---
@@ -101,6 +112,7 @@ oracle:
     connection:
        hostname: absent.{4}
        timeout: 5
+       tns_admin: ./tests/files/tns
     sections: # optional, if absent will use default as defined below
       - instance: # special section
     discovery: # optional, defines instances to be monitored
@@ -109,6 +121,7 @@ oracle:
       exclude: [] # optional
     instances: # optional
       - sid: FREE
+        {6}
         connection: # mandatory
           hostname: {4}
         authentication: # mandatory
@@ -122,12 +135,17 @@ oracle:
         auth_type,
         if address == "localhost" { "sysdba" } else { "" },
         address,
-        include
+        include,
+        alias_raw(&alias)
     );
     Config::from_string(config_str).unwrap().unwrap()
 }
 
-pub fn make_mini_config_custom_instance(endpoint: &SqlDbEndpoint, include: &str) -> Config {
+pub fn make_mini_config_custom_instance(
+    endpoint: &SqlDbEndpoint,
+    include: &str,
+    alias: Option<InstanceAlias>,
+) -> Config {
     _make_mini_config_custom_instance(
         &Credentials {
             user: endpoint.user.clone(),
@@ -136,6 +154,7 @@ pub fn make_mini_config_custom_instance(endpoint: &SqlDbEndpoint, include: &str)
         AuthType::Standard,
         &endpoint.host,
         include,
+        alias,
     )
 }
 

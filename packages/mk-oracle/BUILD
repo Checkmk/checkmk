@@ -138,6 +138,7 @@ rust_test_suite(
         "tests/test_ora_sql.rs",
     ],
     compile_data = [
+        "tests/files/tns/tnsnames.ora",
         "tests/files/not-ora_sql.yml",
         "tests/files/not-yaml.yml",
         "tests/files/test-config.yml",
@@ -148,6 +149,7 @@ rust_test_suite(
     env_inherit = [
         "CI_ORA2_DB_TEST",
         "LD_LIBRARY_PATH",
+        "MK_CONFDIR",
     ],
     deps = all_crate_deps() + [
         ":mk-oracle",

@@ -135,6 +135,26 @@ impl Connection {
     }
 }
 
+/// This function is used to set the TNS_ADMIN environment variable
+/// Location may be changed in the future
+pub fn add_tns_admin_to_env(conn: &Connection) {
+    if let Some(tns_admin) = conn.tns_admin() {
+        let config = std::path::PathBuf::from(std::env::var("MK_CONFDIR").unwrap_or_default());
+        let tns_admin = config.join(tns_admin);
+        if tns_admin.exists() && tns_admin.is_dir() {
+            log::info!("TNS_ADMIN directory '{}' ", tns_admin.display());
+            unsafe {
+                std::env::set_var("TNS_ADMIN", tns_admin);
+            }
+        } else {
+            log::warn!(
+                "TNS_ADMIN directory '{}' does not exist or is not a directory",
+                tns_admin.display()
+            );
+        }
+    }
+}
+
 impl Default for Connection {
     fn default() -> Self {
         Self {

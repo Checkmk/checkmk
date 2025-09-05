@@ -5,8 +5,8 @@
 use crate::config::{self, section, section::names};
 use crate::emit::{header, signaling_header};
 use crate::ora_sql::sqls;
-use crate::types::SectionAffinity;
 use crate::types::{InstanceNumVersion, SectionName, Tenant};
+use crate::types::{SectionAffinity, SqlBindParam, SqlQuery};
 use crate::{constants, utils};
 use anyhow::Result;
 use std::collections::HashMap;
@@ -106,18 +106,31 @@ impl Section {
         &self.section_affinity
     }
 
-    pub fn find_query(
+    pub fn find_queries(
         &self,
         sql_dir: Option<PathBuf>,
         instance_version: InstanceNumVersion,
         tenant: Tenant,
-    ) -> Option<String> {
-        self.find_custom_query(sql_dir, instance_version)
-            .or_else(|| {
-                get_sql_id(&self.header_name)
-                    .and_then(|s| Self::find_known_query(s, instance_version, tenant))
-                    .map(|s| s.to_owned())
-            })
+        params: &[SqlBindParam],
+    ) -> Option<Vec<SqlQuery>> {
+        Some(
+            self.find_custom_query(sql_dir, instance_version)
+                .or_else(|| {
+                    get_sql_id(&self.header_name)
+                        .and_then(|s| Self::find_known_query(s, instance_version, tenant))
+                        .map(|s| s.to_owned())
+                })?
+                .split(';')
+                .filter_map(|q| {
+                    let trimmed = q.trim();
+                    if !trimmed.is_empty() {
+                        Some(SqlQuery::new(trimmed, params))
+                    } else {
+                        None
+                    }
+                })
+                .collect::<Vec<_>>(),
+        )
     }
 
     pub fn find_custom_query(
@@ -138,6 +151,7 @@ impl Section {
                     .ok()
             })
     }
+
     fn find_known_query(
         id: sqls::Id,
         version: InstanceNumVersion,

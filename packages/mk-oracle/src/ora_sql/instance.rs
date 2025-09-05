@@ -8,11 +8,11 @@ use crate::ora_sql::custom::get_sql_dir;
 use crate::ora_sql::section::Section;
 use crate::ora_sql::system::WorkInstances;
 use crate::setup::Env;
-use crate::types::{InstanceName, InstanceNumVersion, Separator, SqlBindParam, SqlQuery, Tenant};
+use crate::types::{InstanceName, SqlBindParam, SqlQuery};
 use crate::utils;
 use std::collections::HashSet;
 
-use crate::config::defines::defaults::DEFAULT_SEP;
+use crate::config::defines::defaults::SECTION_SEPARATOR;
 use crate::config::ora_sql::CustomInstance;
 use anyhow::Result;
 
@@ -57,7 +57,7 @@ impl OracleConfig {
     }
 }
 
-type InstanceWorks = (InstanceName, Vec<(SqlQuery, String)>);
+type InstanceWorks = (InstanceName, Vec<(Vec<SqlQuery>, String)>);
 type SpotWorks = (ClosedSpot, Vec<InstanceWorks>);
 
 /// Generate data as defined by config
@@ -134,16 +134,11 @@ fn make_spot_works(
                                 );
                                 return None;
                             }
-                            _find_section_query(
-                                section,
-                                info.0,
-                                info.1,
-                                Separator::Decorated(section.sep()),
-                                params,
-                            )
-                            .map(|q| (q, section.to_work_header()))
+                            section
+                                .find_queries(get_sql_dir(), info.0, info.1, params)
+                                .map(|q| (q, section.to_work_header()))
                         })
-                        .collect::<Vec<(SqlQuery, String)>>();
+                        .collect::<Vec<(Vec<SqlQuery>, String)>>();
                     (instance.clone(), queries)
                 })
                 .collect::<Vec<InstanceWorks>>();
@@ -176,7 +171,7 @@ fn process_spot_works(works: Vec<SpotWorks>) -> Vec<String> {
 fn _exec_queries(
     spot: &ClosedSpot,
     instance: &InstanceName,
-    queries: &[(SqlQuery, String)],
+    queries: &[(Vec<SqlQuery>, String)],
 ) -> Vec<String> {
     let r = spot.clone().connect(Some(instance));
     match r {
@@ -184,15 +179,23 @@ fn _exec_queries(
             log::info!("Connected to : {}", instance);
             queries
                 .iter()
-                .flat_map(|(query, title)| {
-                    log::info!("Executing query: {}", query.as_str());
-                    let mut result = conn
-                        .query_table(query)
-                        .format(&DEFAULT_SEP.to_string())
-                        .unwrap_or_else(|e| {
-                            log::error!("Failed to execute query for instance {}: {}", instance, e);
-                            vec![e.to_string()]
-                        });
+                .flat_map(|(queries, title)| {
+                    let mut result: Vec<String> = queries
+                        .iter()
+                        .flat_map(|query| {
+                            log::info!("Executing query: {}", query.as_str());
+                            conn.query_table(query)
+                                .format(&SECTION_SEPARATOR.to_string())
+                                .unwrap_or_else(|e| {
+                                    log::error!(
+                                        "Failed to execute query for instance {}: {}",
+                                        instance,
+                                        e
+                                    );
+                                    vec![e.to_string()]
+                                })
+                        })
+                        .collect();
                     result.insert(0, title.clone());
                     result
                 })
@@ -203,36 +206,6 @@ fn _exec_queries(
             vec![] // Skip this instance if connection fails
         }
     }
-}
-fn _find_section_query(
-    section: &Section,
-    version: InstanceNumVersion,
-    tenant: Tenant,
-    sep: Separator,
-    params: &[SqlBindParam],
-) -> Option<SqlQuery> {
-    let section_name = section.name();
-    log::info!("Generating data for instance: {}", section_name);
-
-    section
-        .find_query(get_sql_dir(), version, tenant)
-        .map_or_else(
-            || {
-                log::warn!(
-                    "No query found for section: {} {} {:?}",
-                    section_name,
-                    version,
-                    tenant
-                );
-                None
-            },
-            |query| {
-                log::info!("Found query for section {}: {}", section_name, query);
-                // Here you would execute the query and process the results
-                // For now, we just return the query as a placeholder
-                Some(SqlQuery::new(query.as_str(), sep, params))
-            },
-        )
 }
 
 // tested only in integration tests

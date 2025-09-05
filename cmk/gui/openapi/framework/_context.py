@@ -11,9 +11,11 @@ from werkzeug.datastructures import ETags
 
 from livestatus import SiteConfigurations
 
+from cmk.ccc.user import UserId
 from cmk.gui.config import Config
 from cmk.gui.openapi.restful_objects.constructors import ETagHash, hash_of_dict
 from cmk.gui.openapi.utils import ProblemException
+from cmk.gui.permissions import permission_registry
 from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
 from cmk.gui.type_defs import (
     AgentControllerCertificates,
@@ -22,6 +24,7 @@ from cmk.gui.type_defs import (
     PasswordPolicy,
     UserSpec,
 )
+from cmk.gui.utils.roles import UserPermissions
 from cmk.utils.tags import TagGroup
 
 from .api_config import APIVersion
@@ -104,6 +107,16 @@ class ApiConfig:
             wato_user_attrs=config.wato_user_attrs,
             multisite_users=config.multisite_users,
             default_user_profile=config.default_user_profile,
+        )
+
+    def user_permissions(self) -> "UserPermissions":
+        return UserPermissions(
+            roles=self.roles,
+            permissions=permission_registry,
+            user_roles={
+                UserId(user_id): user["roles"] for user_id, user in self.multisite_users.items()
+            },
+            default_user_profile_roles=self.default_user_profile["roles"],
         )
 
 

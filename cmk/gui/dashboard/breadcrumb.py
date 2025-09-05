@@ -16,6 +16,13 @@ from .type_defs import DashboardConfig
 __all__ = ["dashboard_breadcrumb"]
 
 
+def dashboard_topic_breadcrumb(topic: str, user_permissions: UserPermissions) -> Breadcrumb:
+    return make_topic_breadcrumb(
+        main_menu_registry.menu_monitoring(),
+        PagetypeTopics.get_topic(topic, user_permissions).title(),
+    )
+
+
 def dashboard_breadcrumb(
     name: str,
     board: DashboardConfig,
@@ -23,10 +30,7 @@ def dashboard_breadcrumb(
     context: VisualContext,
     user_permissions: UserPermissions,
 ) -> Breadcrumb:
-    breadcrumb = make_topic_breadcrumb(
-        main_menu_registry.menu_monitoring(),
-        PagetypeTopics.get_topic(board["topic"], user_permissions).title(),
-    )
+    breadcrumb = dashboard_topic_breadcrumb(board["topic"], user_permissions)
 
     if "kubernetes" in name:
         return kubernetes_dashboard_breadcrumb(name, board, title, breadcrumb, context)

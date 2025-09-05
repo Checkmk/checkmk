@@ -21,7 +21,9 @@ from pytest_metadata.plugin import metadata_key  # type: ignore[import-untyped]
 # TODO: Can we somehow push some of the registrations below to the subdirectories?
 # Needs to be executed before the import of those modules
 pytest.register_assert_rewrite(
-    "tests.testlib", "tests.unit.checks.checktestlib", "tests.unit.checks.generictests.run"
+    "tests.testlib",
+    "tests.unit.cmk.base,legacy_checks.checktestlib",
+    "tests.unit.checks.generictests.run",
 )
 
 from tests.testlib.common.repo import (  # noqa: E402

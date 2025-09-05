@@ -7,6 +7,7 @@ from typing import Annotated
 from uuid import UUID
 
 import fastapi
+from pydantic import SecretStr
 
 from cmk.agent_receiver.relay.api.routers.tasks.dependencies import (
     get_create_task_handler,
@@ -49,6 +50,7 @@ async def create_task_endpoint(
     relay_id: str,
     request: tasks_protocol.TaskCreateRequest,
     handler: Annotated[CreateTaskHandler, fastapi.Depends(get_create_task_handler)],
+    authorization: Annotated[SecretStr, fastapi.Header()],
 ) -> tasks_protocol.TaskCreateResponse:
     """Create a new Service Fetching Task for a specific relay.
 
@@ -82,7 +84,12 @@ async def create_task_endpoint(
     # - Store task in database
 
     try:
-        task_id = handler.process(RelayID(relay_id), TaskType(request.type), request.payload)
+        task_id = handler.process(
+            RelayID(relay_id),
+            TaskType(request.type),
+            request.payload,
+            authorization,
+        )
     except CreateTaskRelayNotFoundError:
         raise fastapi.HTTPException(
             status_code=fastapi.status.HTTP_404_NOT_FOUND,
@@ -103,6 +110,7 @@ async def update_task(
     task_id: str,
     request: tasks_protocol.TaskUpdateRequest,
     handler: Annotated[UpdateTaskHandler, fastapi.Depends(get_update_task_handler)],
+    authorization: Annotated[SecretStr, fastapi.Header()],
 ) -> tasks_protocol.TaskResponse:
     """Update a task with results.
 
@@ -144,6 +152,7 @@ async def update_task(
             TaskID(task_id),
             ResultType(request.result_type.value),
             request.result_payload,
+            authorization,
         )
     except UpdateTaskRelayNotFoundError:
         raise fastapi.HTTPException(
@@ -162,6 +171,7 @@ async def update_task(
 async def get_tasks_endpoint(
     relay_id: str,
     handler: Annotated[GetRelayTasksHandler, fastapi.Depends(get_relay_tasks_handler)],
+    authorization: Annotated[SecretStr, fastapi.Header()],
     status: tasks_protocol.TaskStatus | None = fastapi.Query(
         None, description="Filter tasks by status"
     ),
@@ -192,7 +202,9 @@ async def get_tasks_endpoint(
     #         instead of having a separate cleanup task
     # - Return filtered task list
     try:
-        tasks = handler.process(RelayID(relay_id), TaskStatus(status.value) if status else None)
+        tasks = handler.process(
+            RelayID(relay_id), TaskStatus(status.value) if status else None, authorization
+        )
     except GetTasksRelayNotFoundError:
         raise fastapi.HTTPException(
             status_code=fastapi.status.HTTP_404_NOT_FOUND,

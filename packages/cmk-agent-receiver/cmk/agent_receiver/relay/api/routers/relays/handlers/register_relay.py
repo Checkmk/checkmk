@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import dataclasses
 
+from pydantic import SecretStr
+
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.shared_types import RelayID
 
@@ -12,8 +14,8 @@ from cmk.agent_receiver.relay.lib.shared_types import RelayID
 class RegisterRelayHandler:
     relays_repository: RelaysRepository
 
-    def process(self) -> RelayID:
-        return self._add_registry()
+    def process(self, authorization: SecretStr) -> RelayID:
+        return self._add_registry(authorization)
 
-    def _add_registry(self) -> RelayID:
-        return self.relays_repository.add_relay()
+    def _add_registry(self, authorization: SecretStr) -> RelayID:
+        return self.relays_repository.add_relay(authorization)

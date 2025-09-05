@@ -7,12 +7,18 @@ from http import HTTPStatus
 import httpx
 import pytest
 
-from .test_lib.site_mock import GetResponse, ListResponse, OP, PostResponse, SiteMock
+from .test_lib.site_mock import GetResponse, ListResponse, OP, PostResponse, SiteMock, User
 
 
 @pytest.fixture
-def client(site: SiteMock) -> httpx.Client:
-    return httpx.Client(base_url=site.base_url, headers={"Content-Type": "application/json"})
+def client(site: SiteMock, user: User) -> httpx.Client:
+    return httpx.Client(
+        base_url=site.base_url,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": user.bearer,
+        },
+    )
 
 
 @pytest.mark.parametrize(

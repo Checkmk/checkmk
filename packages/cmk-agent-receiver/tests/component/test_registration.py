@@ -64,7 +64,7 @@ def test_a_relay_can_be_unregistered(
     assert resp.status_code == HTTPStatus.OK
 
     resp = agent_receiver.unregister_relay(relay_id)
-    assert resp.status_code == HTTPStatus.OK
+    assert resp.status_code == HTTPStatus.OK, resp.text
 
     # unregistered relay cannot list tasks
     resp = agent_receiver.get_relay_tasks(relay_id)

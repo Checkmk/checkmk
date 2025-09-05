@@ -7,6 +7,8 @@
 import dataclasses
 from datetime import datetime
 
+from pydantic import SecretStr
+
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     Task,
     TaskID,
@@ -26,15 +28,14 @@ class CreateTaskHandler:
     tasks_repository: TasksRepository
     relays_repository: RelaysRepository
 
-    def process(self, relay_id: RelayID, task_type: TaskType, task_payload: str) -> TaskID:
+    def process(
+        self, relay_id: RelayID, task_type: TaskType, task_payload: str, authorization: SecretStr
+    ) -> TaskID:
+        if not self.relays_repository.has_relay(relay_id, authorization):
+            raise RelayNotFoundError(f"Relay with ID {relay_id} does not exist")
         now = datetime.now()
         task = Task(
             type=task_type, payload=task_payload, creation_timestamp=now, update_timestamp=now
         )
-        return self._store_task(relay_id, task)
-
-    def _store_task(self, relay_id: RelayID, task: Task) -> TaskID:
-        if not self.relays_repository.has_relay(relay_id):
-            raise RelayNotFoundError(f"Relay with ID {relay_id} does not exist")
         task_created = self.tasks_repository.store_task(relay_id, task)
         return task_created.id

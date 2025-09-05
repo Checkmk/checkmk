@@ -12,6 +12,7 @@ use crate::types::{InstanceName, SqlBindParam, SqlQuery};
 use crate::utils;
 use std::collections::HashSet;
 
+use crate::config::connection::add_tns_admin_to_env;
 use crate::config::defines::defaults::SECTION_SEPARATOR;
 use crate::config::ora_sql::CustomInstance;
 use anyhow::Result;
@@ -66,6 +67,9 @@ pub async fn generate_data(
     ora_sql: &config::ora_sql::Config,
     environment: &Env,
 ) -> Result<Vec<String>> {
+    // we need to set TNS_ADMIN for Oracle client for the case alias is used
+    add_tns_admin_to_env(ora_sql.conn());
+
     // TODO: detect instances
     // TODO: apply to config detected instances
     // TODO: customize instances

@@ -181,10 +181,11 @@ run_test_all() {
             if [ -e "${libaio}" ]; then
                 ln -sf "${libaio}" "${path_to_runtime}/libaio.so.1"
             else
-                echo "libaio absent. Integration tsting is not possible"
+                echo "libaio absent. Integration testing is not possible"
             fi
 
             export LD_LIBRARY_PATH=${path_to_runtime}:${LD_LIBRARY_PATH}
+            export MK_CONFDIR="${PWD}"
             bazel test :all
             ;;
     esac

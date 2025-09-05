@@ -19,8 +19,8 @@ use mk_oracle::ora_sql::instance::generate_data;
 use mk_oracle::ora_sql::sqls;
 use mk_oracle::ora_sql::system;
 use mk_oracle::setup::Env;
-use mk_oracle::types::SqlQuery;
 use mk_oracle::types::{Credentials, InstanceName, InstanceNumVersion, InstanceVersion, Tenant};
+use mk_oracle::types::{InstanceAlias, SqlQuery};
 use std::collections::HashSet;
 use std::str::FromStr;
 use std::sync::LazyLock;
@@ -192,6 +192,7 @@ fn test_environment() {
         .unwrap();
     assert_eq!(env_value, "-DNDEBUG");
 }
+
 #[allow(clippy::const_is_empty)]
 #[test]
 fn test_local_connection() {
@@ -255,7 +256,7 @@ fn test_remote_mini_connection() {
 async fn test_remote_custom_instance_connection() {
     add_runtime_to_path();
     let endpoint = remote_reference_endpoint();
-    let config = make_mini_config_custom_instance(&endpoint, "FREE");
+    let config = make_mini_config_custom_instance(&endpoint, "FREE", None);
     let env = Env::default();
     let r = generate_data(&config, &env).await;
 
@@ -271,17 +272,41 @@ async fn test_remote_custom_instance_connection() {
         assert!(r.starts_with("FREE"));
     }
 }
+
 #[tokio::test(flavor = "multi_thread")]
 async fn test_absent_remote_custom_instance_connection() {
     add_runtime_to_path();
 
     let endpoint = remote_reference_endpoint();
-    let config = make_mini_config_custom_instance(&endpoint, "absent");
+    let config = make_mini_config_custom_instance(&endpoint, "absent", None);
     let env = Env::default();
     let r = generate_data(&config, &env).await;
 
     assert!(r.is_ok());
     assert_eq!(r.unwrap()[0], "<<<oracle_instance>>>");
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_remote_tns_custom_instance_connection() {
+    add_runtime_to_path();
+    let endpoint = remote_reference_endpoint();
+    let config = make_mini_config_custom_instance(
+        &endpoint,
+        "FREE",
+        Some(InstanceAlias::from("ora_remote".to_string())),
+    );
+    let env = Env::default();
+    let r = generate_data(&config, &env).await;
+
+    assert!(r.is_ok());
+    let table = r.unwrap();
+    assert_eq!(table.len(), 2);
+    assert_eq!(table[0], "<<<oracle_instance>>>");
+    let rows: Vec<&str> = table[1].split("\n").collect();
+    assert_eq!(rows[0], "<<<oracle_instance:sep(124)>>>");
+    for r in rows[1..].iter() {
+        assert!(r.starts_with("FREE"));
+    }
 }
 
 pub const INSTANCE_INFO_SQL_TEXT_FAIL: &str = r"

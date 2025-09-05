@@ -7,6 +7,7 @@ oracle:
   main: # mandatory, to be used if no specific config
     connection: # mandatory
       hostname: absent.oracle-win.dev.checkmk.net # non exists/disabled
+      tns_admin: ./tests/files/tns # optional, default: agent plugin config folder. Points to the location of sqlnet.ora and tnsnames.ora
     authentication: # mandatory
       username: $CI_ORA2_DB_TEST
       password: $CI_ORA2_DB_TEST

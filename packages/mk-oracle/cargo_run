@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 #  imitates agent behavior: setup LD_LIBRARY_PATH to include the runtime library
+# also adds MK_CONFDIR which may be needed for Oracle connections - this is not mandatory burt worth a check
 path_to_runtime="${PWD}/runtimes/oci_light_lin_x64.zip"
+export MK_CONFDIR="${PWD}"
 export LD_LIBRARY_PATH=${path_to_runtime}:${LD_LIBRARY_PATH}
 cargo "$@"

@@ -2,6 +2,10 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use mk_oracle::config::authentication::{AuthType, SqlDbEndpoint};
+use mk_oracle::config::ora_sql::Config;
+use mk_oracle::types::Credentials;
+
 pub const ORA_ENDPOINT_ENV_VAR_LOCAL: &str = "CI_ORA1_DB_TEST";
 pub const ORA_ENDPOINT_ENV_VAR_EXT: &str = "CI_ORA2_DB_TEST";
 
@@ -52,4 +56,96 @@ pub mod platform {
     pub fn add_runtime_to_path() {
         // script is responsible for setting up the environment
     }
+}
+
+fn _make_mini_config(credentials: &Credentials, auth_type: AuthType, address: &str) -> Config {
+    let config_str = format!(
+        r#"
+---
+oracle:
+  main:
+    authentication:
+       username: "{}"
+       password: "{}"
+       type: {}
+       role: {}
+    connection:
+       hostname: {}
+       timeout: 10
+"#,
+        credentials.user,
+        credentials.password,
+        auth_type,
+        if address == "localhost" { "sysdba" } else { "" },
+        address,
+    );
+    Config::from_string(config_str).unwrap().unwrap()
+}
+
+fn _make_mini_config_custom_instance(
+    credentials: &Credentials,
+    auth_type: AuthType,
+    address: &str,
+    include: &str,
+) -> Config {
+    let config_str = format!(
+        r#"
+---
+oracle:
+  main:
+    authentication:
+       username: "{0}"
+       password: "{1}"
+       type: {2}
+       role: {3}
+    connection:
+       hostname: absent.{4}
+       timeout: 5
+    sections: # optional, if absent will use default as defined below
+      - instance: # special section
+    discovery: # optional, defines instances to be monitored
+      detect: no # optional
+      include: [{5}] # optional
+      exclude: [] # optional
+    instances: # optional
+      - sid: FREE
+        connection: # mandatory
+          hostname: {4}
+        authentication: # mandatory
+          username: "{0}"
+          password: "{1}"
+          type: standard
+  #      role: sysdba # it may be not enabled by Oracle DBA
+"#,
+        credentials.user,
+        credentials.password,
+        auth_type,
+        if address == "localhost" { "sysdba" } else { "" },
+        address,
+        include
+    );
+    Config::from_string(config_str).unwrap().unwrap()
+}
+
+pub fn make_mini_config_custom_instance(endpoint: &SqlDbEndpoint, include: &str) -> Config {
+    _make_mini_config_custom_instance(
+        &Credentials {
+            user: endpoint.user.clone(),
+            password: endpoint.pwd.clone(),
+        },
+        AuthType::Standard,
+        &endpoint.host,
+        include,
+    )
+}
+
+pub fn make_mini_config(endpoint: &SqlDbEndpoint) -> Config {
+    _make_mini_config(
+        &Credentials {
+            user: endpoint.user.clone(),
+            password: endpoint.pwd.clone(),
+        },
+        AuthType::Standard,
+        &endpoint.host,
+    )
 }

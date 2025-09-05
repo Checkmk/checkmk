@@ -8,14 +8,17 @@ extern crate common;
 mod common;
 
 use crate::common::tools::{
-    platform::add_runtime_to_path, ORA_ENDPOINT_ENV_VAR_EXT, ORA_ENDPOINT_ENV_VAR_LOCAL,
+    make_mini_config, make_mini_config_custom_instance, platform::add_runtime_to_path,
+    ORA_ENDPOINT_ENV_VAR_EXT, ORA_ENDPOINT_ENV_VAR_LOCAL,
 };
 use mk_oracle::config::authentication::{AuthType, Authentication, Role, SqlDbEndpoint};
 use mk_oracle::config::defines::defaults::SECTION_SEPARATOR;
 use mk_oracle::config::ora_sql::Config;
 use mk_oracle::ora_sql::backend;
+use mk_oracle::ora_sql::instance::generate_data;
 use mk_oracle::ora_sql::sqls;
 use mk_oracle::ora_sql::system;
+use mk_oracle::setup::Env;
 use mk_oracle::types::SqlQuery;
 use mk_oracle::types::{Credentials, InstanceName, InstanceNumVersion, InstanceVersion, Tenant};
 use std::collections::HashSet;
@@ -98,43 +101,8 @@ oracle:
     Config::from_string(config_str).unwrap().unwrap()
 }
 
-fn _make_mini_config(credentials: &Credentials, auth_type: AuthType, address: &str) -> Config {
-    let config_str = format!(
-        r#"
----
-oracle:
-  main:
-    authentication:
-       username: "{}"
-       password: "{}"
-       type: {}
-       role: {}
-    connection:
-       hostname: {}
-       timeout: 10
-"#,
-        credentials.user,
-        credentials.password,
-        auth_type,
-        if address == "localhost" { "sysdba" } else { "" },
-        address,
-    );
-    Config::from_string(config_str).unwrap().unwrap()
-}
-
-fn make_mini_config(endpoint: &SqlDbEndpoint) -> Config {
-    _make_mini_config(
-        &Credentials {
-            user: endpoint.user.clone(),
-            password: endpoint.pwd.clone(),
-        },
-        AuthType::Standard,
-        &endpoint.host,
-    )
-}
-
 fn load_endpoints() -> Vec<SqlDbEndpoint> {
-    let mut r = reference_endpoint();
+    let mut r = remote_reference_endpoint();
     let content = ORA_TEST_ENDPOINTS.to_owned();
     let mut endpoints = content
         .split("\n")
@@ -164,7 +132,7 @@ fn load_endpoints() -> Vec<SqlDbEndpoint> {
     endpoints
 }
 
-fn reference_endpoint() -> SqlDbEndpoint {
+fn remote_reference_endpoint() -> SqlDbEndpoint {
     SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_EXT).unwrap()
 }
 
@@ -268,7 +236,7 @@ fn test_local_connection() {
 #[test]
 fn test_remote_mini_connection() {
     add_runtime_to_path();
-    let endpoint = reference_endpoint();
+    let endpoint = remote_reference_endpoint();
     let config = make_mini_config(&endpoint);
 
     let spot = backend::make_spot(&config.endpoint()).unwrap();
@@ -281,6 +249,39 @@ fn test_remote_mini_connection() {
     assert!(rows[0].starts_with(&format!("{}|sys_time_model|DB CPU|", &endpoint.instance)));
     assert!(rows[1].starts_with(&format!("{}|sys_time_model|DB time|", &endpoint.instance)));
     assert_eq!(rows.len(), 2);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_remote_custom_instance_connection() {
+    add_runtime_to_path();
+    let endpoint = remote_reference_endpoint();
+    let config = make_mini_config_custom_instance(&endpoint, "FREE");
+    let env = Env::default();
+    let r = generate_data(&config, &env).await;
+
+    assert!(r.is_ok());
+    let table = r.unwrap();
+    eprintln!("{:?}", table);
+    assert_eq!(table.len(), 2);
+    assert_eq!(table[0], "<<<oracle_instance>>>");
+    let rows: Vec<&str> = table[1].split("\n").collect();
+    eprintln!("{rows:?}");
+    assert_eq!(rows[0], "<<<oracle_instance:sep(124)>>>");
+    for r in rows[1..].iter() {
+        assert!(r.starts_with("FREE"));
+    }
+}
+#[tokio::test(flavor = "multi_thread")]
+async fn test_absent_remote_custom_instance_connection() {
+    add_runtime_to_path();
+
+    let endpoint = remote_reference_endpoint();
+    let config = make_mini_config_custom_instance(&endpoint, "absent");
+    let env = Env::default();
+    let r = generate_data(&config, &env).await;
+
+    assert!(r.is_ok());
+    assert_eq!(r.unwrap()[0], "<<<oracle_instance>>>");
 }
 
 pub const INSTANCE_INFO_SQL_TEXT_FAIL: &str = r"

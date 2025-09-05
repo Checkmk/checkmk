@@ -203,6 +203,54 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/domain-types/agent/actions/automatic-deployment/invoke': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Show the status of the automatic deployment system
+     * @description
+     *
+     *     This endpoint requires the following permissions:
+     *      * Manage monitoring agents (`wato.agents`): Manage customized packaged monitoring agents for Linux, Windows and other operating systems
+     *
+     */
+    get: operations['cmk.gui.cee.agent_bakery._openapi.automatic_deployment_status']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/domain-types/agent/actions/baking_status/invoke': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Show the baking status
+     * @description
+     *
+     *     This endpoint requires the following permissions:
+     *      * Manage monitoring agents (`wato.agents`): Manage customized packaged monitoring agents for Linux, Windows and other operating systems
+     *
+     */
+    get: operations['cmk.gui.cee.agent_bakery._openapi.baking_status']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/domain-types/agent/actions/download/invoke': {
     parameters: {
       query?: never
@@ -214,6 +262,195 @@ export interface paths {
     get: operations['cmk.gui.openapi.endpoints.agent.download_agent']
     put?: never
     post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/domain-types/agent/actions/download_by_hash/invoke': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Download an agent by agent hash and operating system
+     * @description
+     *
+     *     This endpoint requires the following permissions:
+     *      * All of:
+     *        * Manage monitoring agents (`wato.agents`): Manage customized packaged monitoring agents for Linux, Windows and other operating systems
+     *        * Optionally:
+     *          * Register host & download monitoring agents of your hosts (`wato.download_agents`): Register hosts that you are a contact for and then download monitoring agents that have been created with the Agent Bakery for these hosts. Please note that these agents might contain confidential information such as passwords.
+     *        * Optionally:
+     *          * Register all hosts & download all monitoring agents (`wato.download_all_agents`): Register all hosts with the Agent Bakery and download all monitoring agents that have been created with the Agent Bakery, even if you are not a contact for the host in question. Please note that these agents might contain confidential information such as passwords.
+     *
+     */
+    get: operations['cmk.gui.cee.agent_bakery._openapi.download_agent_by_hash']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/domain-types/agent/actions/download_by_host/invoke': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Download an agent by host or folder name and operating system
+     * @description To download the vanilla agent (factory defaults) set `agent_type` to `"vanilla"`
+     *     and omit the fields `host_name` and `folder_name`.
+     *
+     *     To download the agent of a specific host, set `agent_type` to `"host_name"`
+     *     and set `host_name` to the name of the host (omitting `folder_name`).
+     *
+     *     To download the generic agent of a specific folder, set `agent_type` to `"generic"`.
+     *     You can then either omit the `folder_name` (defaulting to the root folder), or specify
+     *     the path of a specific folder *on disk*, starting from the root folder
+     *     (e.g. to download the agent for the folder shown as "Main / My-Folder" in the GUI,
+     *     specify "/My_Folder/").
+     *     The correct folder can be found in the agents downloads page.
+     *     The field `host_name` should be omitted.This endpoint requires the following permissions:
+     *      * All of:
+     *        * Manage monitoring agents (`wato.agents`): Manage customized packaged monitoring agents for Linux, Windows and other operating systems
+     *        * Optionally:
+     *          * Register host & download monitoring agents of your hosts (`wato.download_agents`): Register hosts that you are a contact for and then download monitoring agents that have been created with the Agent Bakery for these hosts. Please note that these agents might contain confidential information such as passwords.
+     *        * Optionally:
+     *          * Register all hosts & download all monitoring agents (`wato.download_all_agents`): Register all hosts with the Agent Bakery and download all monitoring agents that have been created with the Agent Bakery, even if you are not a contact for the host in question. Please note that these agents might contain confidential information such as passwords.
+     *
+     */
+    get: operations['cmk.gui.cee.agent_bakery._openapi.download_agent_by_host']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/domain-types/agent/collections/all': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Show all agents
+     * @description
+     *
+     *     This endpoint requires the following permissions:
+     *      * Manage monitoring agents (`wato.agents`): Manage customized packaged monitoring agents for Linux, Windows and other operating systems
+     *
+     */
+    get: operations['cmk.gui.cee.agent_bakery._openapi.list_agents']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/objects/agent/{agent_hash}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Show Configuration of a single agent */
+    get: operations['cmk.gui.cee.agent_bakery._openapi.show_agent_information']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/domain-types/agent/actions/bake/invoke': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Bake all agents
+     * @description
+     *
+     *     This endpoint requires the following permissions:
+     *      * All of:
+     *        * Manage monitoring agents (`wato.agents`): Manage customized packaged monitoring agents for Linux, Windows and other operating systems
+     *        * Bake agents (`wato.bake_agents`): Bake new agent packages for Linux, Windows and other operating systems
+     *
+     */
+    post: operations['cmk.gui.cee.agent_bakery._openapi.bake_all_agents']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/domain-types/agent/actions/bake_and_sign/invoke': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Bake and sign all agents
+     * @description
+     *
+     *     This endpoint requires the following permissions:
+     *      * All of:
+     *        * Manage monitoring agents (`wato.agents`): Manage customized packaged monitoring agents for Linux, Windows and other operating systems
+     *        * Bake agents (`wato.bake_agents`): Bake new agent packages for Linux, Windows and other operating systems
+     *        * Configuration of agent updates (`wato.agent_deployment`): This permissions allows full control of the automatic agent updates.
+     *        * Sign agents (`wato.sign_agents`): Sign baked agent packages for Linux, Windows and other operating systems
+     *
+     */
+    post: operations['cmk.gui.cee.agent_bakery._openapi.bake_and_sign_all_agents']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/domain-types/agent/actions/sign/invoke': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Sign all agents
+     * @description
+     *
+     *     This endpoint requires the following permissions:
+     *      * All of:
+     *        * Configuration of agent updates (`wato.agent_deployment`): This permissions allows full control of the automatic agent updates.
+     *        * Sign agents (`wato.sign_agents`): Sign baked agent packages for Linux, Windows and other operating systems
+     *
+     */
+    post: operations['cmk.gui.cee.agent_bakery._openapi.sign_agents']
     delete?: never
     options?: never
     head?: never
@@ -1156,6 +1393,10 @@ export interface paths {
      *          * See user dashboards (`general.see_user_dashboards`): Is needed for seeing dashboards that other users have created.
      *        * Optionally:
      *          * See packaged dashboards (`general.see_packaged_dashboards`): Is needed for seeing dashboards that are provided via extension packages.
+     *        * Optionally:
+     *          * All of:
+     *            * See user topics (`general.see_user_pagetype_topic`): Is needed for seeing topics that other users have created.
+     *            * Some permissions starting with `pagetype_topic`:
      *        * Some permissions starting with `dashboard`:
      *        * Optionally:
      *          * All of:
@@ -1211,6 +1452,10 @@ export interface paths {
      *          * See user dashboards (`general.see_user_dashboards`): Is needed for seeing dashboards that other users have created.
      *        * Optionally:
      *          * See packaged dashboards (`general.see_packaged_dashboards`): Is needed for seeing dashboards that are provided via extension packages.
+     *        * Optionally:
+     *          * All of:
+     *            * See user topics (`general.see_user_pagetype_topic`): Is needed for seeing topics that other users have created.
+     *            * Some permissions starting with `pagetype_topic`:
      *        * Some permissions starting with `dashboard`:
      *        * Optionally:
      *          * All of:
@@ -1234,6 +1479,10 @@ export interface paths {
      *          * See user dashboards (`general.see_user_dashboards`): Is needed for seeing dashboards that other users have created.
      *        * Optionally:
      *          * See packaged dashboards (`general.see_packaged_dashboards`): Is needed for seeing dashboards that are provided via extension packages.
+     *        * Optionally:
+     *          * All of:
+     *            * See user topics (`general.see_user_pagetype_topic`): Is needed for seeing topics that other users have created.
+     *            * Some permissions starting with `pagetype_topic`:
      *        * Some permissions starting with `dashboard`:
      *        * Optionally:
      *          * All of:
@@ -1244,6 +1493,74 @@ export interface paths {
      *
      */
     put: operations['Dashboards.edit_relative_grid_dashboard_v1']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/objects/dashboard_responsive_grid/{dashboard_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Show a dashboard.
+     * @description
+     *
+     *     This endpoint requires the following permissions:
+     *      * All of:
+     *        * Customize dashboards and use them (`general.edit_dashboards`): Allows to create own dashboards, customize built-in dashboards and use them.
+     *        * Optionally:
+     *          * Modify built-in dashboards (`general.force_dashboards`): Make own published dashboards override built-in dashboards for all users.
+     *        * Optionally:
+     *          * See user dashboards (`general.see_user_dashboards`): Is needed for seeing dashboards that other users have created.
+     *        * Optionally:
+     *          * See packaged dashboards (`general.see_packaged_dashboards`): Is needed for seeing dashboards that are provided via extension packages.
+     *        * Optionally:
+     *          * All of:
+     *            * See user topics (`general.see_user_pagetype_topic`): Is needed for seeing topics that other users have created.
+     *            * Some permissions starting with `pagetype_topic`:
+     *        * Some permissions starting with `dashboard`:
+     *        * Optionally:
+     *          * All of:
+     *            * Customize views and use them (`general.edit_views`): Allows to create own views, customize built-in views and use them.
+     *            * See user views (`general.see_user_views`): Is needed for seeing views that other users have created.
+     *            * See packaged views (`general.see_packaged_views`): Is needed for seeing views that are provided via extension packages.
+     *            * Some permissions starting with `view`:
+     *
+     */
+    get: operations['Dashboards.show_responsive_grid_dashboard_v1']
+    /**
+     * Edit a dashboard.
+     * @description
+     *
+     *     This endpoint requires the following permissions:
+     *      * All of:
+     *        * Customize dashboards and use them (`general.edit_dashboards`): Allows to create own dashboards, customize built-in dashboards and use them.
+     *        * Optionally:
+     *          * Modify built-in dashboards (`general.force_dashboards`): Make own published dashboards override built-in dashboards for all users.
+     *        * Optionally:
+     *          * See user dashboards (`general.see_user_dashboards`): Is needed for seeing dashboards that other users have created.
+     *        * Optionally:
+     *          * See packaged dashboards (`general.see_packaged_dashboards`): Is needed for seeing dashboards that are provided via extension packages.
+     *        * Optionally:
+     *          * All of:
+     *            * See user topics (`general.see_user_pagetype_topic`): Is needed for seeing topics that other users have created.
+     *            * Some permissions starting with `pagetype_topic`:
+     *        * Some permissions starting with `dashboard`:
+     *        * Optionally:
+     *          * All of:
+     *            * Customize views and use them (`general.edit_views`): Allows to create own views, customize built-in views and use them.
+     *            * See user views (`general.see_user_views`): Is needed for seeing views that other users have created.
+     *            * See packaged views (`general.see_packaged_views`): Is needed for seeing views that are provided via extension packages.
+     *            * Some permissions starting with `view`:
+     *
+     */
+    put: operations['Dashboards.edit_responsive_grid_dashboard_v1']
     post?: never
     delete?: never
     options?: never
@@ -1273,6 +1590,10 @@ export interface paths {
      *          * See user dashboards (`general.see_user_dashboards`): Is needed for seeing dashboards that other users have created.
      *        * Optionally:
      *          * See packaged dashboards (`general.see_packaged_dashboards`): Is needed for seeing dashboards that are provided via extension packages.
+     *        * Optionally:
+     *          * All of:
+     *            * See user topics (`general.see_user_pagetype_topic`): Is needed for seeing topics that other users have created.
+     *            * Some permissions starting with `pagetype_topic`:
      *        * Some permissions starting with `dashboard`:
      *        * Optionally:
      *          * All of:
@@ -1311,6 +1632,10 @@ export interface paths {
      *          * See user dashboards (`general.see_user_dashboards`): Is needed for seeing dashboards that other users have created.
      *        * Optionally:
      *          * See packaged dashboards (`general.see_packaged_dashboards`): Is needed for seeing dashboards that are provided via extension packages.
+     *        * Optionally:
+     *          * All of:
+     *            * See user topics (`general.see_user_pagetype_topic`): Is needed for seeing topics that other users have created.
+     *            * Some permissions starting with `pagetype_topic`:
      *        * Some permissions starting with `dashboard`:
      *        * Optionally:
      *          * All of:
@@ -1321,6 +1646,48 @@ export interface paths {
      *
      */
     post: operations['Dashboards.create_relative_grid_dashboard_v1']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/domain-types/dashboard_responsive_grid/collections/all': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Create a dashboard.
+     * @description
+     *
+     *     This endpoint requires the following permissions:
+     *      * All of:
+     *        * Customize dashboards and use them (`general.edit_dashboards`): Allows to create own dashboards, customize built-in dashboards and use them.
+     *        * Optionally:
+     *          * Modify built-in dashboards (`general.force_dashboards`): Make own published dashboards override built-in dashboards for all users.
+     *        * Optionally:
+     *          * See user dashboards (`general.see_user_dashboards`): Is needed for seeing dashboards that other users have created.
+     *        * Optionally:
+     *          * See packaged dashboards (`general.see_packaged_dashboards`): Is needed for seeing dashboards that are provided via extension packages.
+     *        * Optionally:
+     *          * All of:
+     *            * See user topics (`general.see_user_pagetype_topic`): Is needed for seeing topics that other users have created.
+     *            * Some permissions starting with `pagetype_topic`:
+     *        * Some permissions starting with `dashboard`:
+     *        * Optionally:
+     *          * All of:
+     *            * Customize views and use them (`general.edit_views`): Allows to create own views, customize built-in views and use them.
+     *            * See user views (`general.see_user_views`): Is needed for seeing views that other users have created.
+     *            * See packaged views (`general.see_packaged_views`): Is needed for seeing views that are provided via extension packages.
+     *            * Some permissions starting with `view`:
+     *
+     */
+    post: operations['Dashboards.create_responsive_grid_dashboard_v1']
     delete?: never
     options?: never
     head?: never
@@ -1350,6 +1717,10 @@ export interface paths {
      *          * See user dashboards (`general.see_user_dashboards`): Is needed for seeing dashboards that other users have created.
      *        * Optionally:
      *          * See packaged dashboards (`general.see_packaged_dashboards`): Is needed for seeing dashboards that are provided via extension packages.
+     *        * Optionally:
+     *          * All of:
+     *            * See user topics (`general.see_user_pagetype_topic`): Is needed for seeing topics that other users have created.
+     *            * Some permissions starting with `pagetype_topic`:
      *        * Some permissions starting with `dashboard`:
      *        * Optionally:
      *          * All of:
@@ -1501,6 +1872,92 @@ export interface paths {
      *
      */
     post: operations['cmk.gui.openapi.endpoints.downtime.create_service_related_downtime']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/objects/dcd/{dcd_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Show a dynamic host configuration
+     * @description
+     *
+     *     This endpoint requires the following permissions:
+     *      * All of:
+     *        * Make changes, perform actions (`wato.edit`): This permission is needed in order to make any changes or perform any actions at all. Without this permission, the user is only able to view data, and that only in modules he has explicit permissions for.
+     *        * Manage dynamic configuration (`wato.dcd_connections`): Manage the Dynamic configuration connections
+     *
+     */
+    get: operations['cmk.gui.cee.dcd._openapi.show_rule']
+    put?: never
+    post?: never
+    /**
+     * Delete a dynamic host configuration
+     * @description
+     *
+     *     This endpoint requires the following permissions:
+     *      * All of:
+     *        * Make changes, perform actions (`wato.edit`): This permission is needed in order to make any changes or perform any actions at all. Without this permission, the user is only able to view data, and that only in modules he has explicit permissions for.
+     *        * Manage dynamic configuration (`wato.dcd_connections`): Manage the Dynamic configuration connections
+     *
+     */
+    delete: operations['cmk.gui.cee.dcd._openapi.delete_rule']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/domain-types/dcd/actions/fetch_phase_one/invoke': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Fetch Phase 1 Result
+     * @description
+     *
+     *     This endpoint requires the following permissions:
+     *      * Manage dynamic configuration (`wato.dcd_connections`): Manage the Dynamic configuration connections
+     *
+     */
+    post: operations['cmk.gui.cee.dcd._openapi.fetch_phase1_result']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/domain-types/dcd/collections/all': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Create a dynamic host configuration
+     * @description
+     *
+     *     This endpoint requires the following permissions:
+     *      * All of:
+     *        * Make changes, perform actions (`wato.edit`): This permission is needed in order to make any changes or perform any actions at all. Without this permission, the user is only able to view data, and that only in modules he has explicit permissions for.
+     *        * Manage dynamic configuration (`wato.dcd_connections`): Manage the Dynamic configuration connections
+     *
+     */
+    post: operations['cmk.gui.cee.dcd._openapi.create_rule']
     delete?: never
     options?: never
     head?: never
@@ -2691,6 +3148,152 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/domain-types/license_request/actions/download/invoke': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Download a license request for offline verification
+     * @description
+     *
+     *     This endpoint requires the following permissions:
+     *      * Access the licensing mode (`wato.licensing`): All related information or settings of licensing of Checkmk sites.
+     *
+     */
+    get: operations['cmk.gui.cse.licensing._openapi.download_license_request']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/domain-types/license_usage/actions/download/invoke': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Download the license usage of Checkmk
+     * @description
+     *
+     *     This endpoint requires the following permissions:
+     *      * Access the license usage mode (`wato.license_usage`): Show license usage information of Checkmk sites.
+     *
+     */
+    get: operations['cmk.gui.cee.licensing._openapi.download_license_usage']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/domain-types/licensing/actions/configure/invoke': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    /**
+     * Configure the licensing settings
+     * @description
+     *
+     *     This endpoint requires the following permissions:
+     *      * All of:
+     *        * Access the licensing mode (`wato.licensing`): All related information or settings of licensing of Checkmk sites.
+     *        * Make changes, perform actions (`wato.edit`): This permission is needed in order to make any changes or perform any actions at all. Without this permission, the user is only able to view data, and that only in modules he has explicit permissions for.
+     *
+     */
+    put: operations['cmk.gui.cee.licensing._openapi.configure_licensing_settings']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/domain-types/license_response/actions/upload/invoke': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Trigger the offline license verification and receive its results
+     * @description
+     *
+     *     This endpoint requires the following permissions:
+     *      * Access the licensing mode (`wato.licensing`): All related information or settings of licensing of Checkmk sites.
+     *
+     */
+    post: operations['cmk.gui.cee.licensing._openapi.verify_offline']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/domain-types/licensing/actions/verify/invoke': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Trigger the license verification and receive its results
+     * @description
+     *
+     *     This endpoint requires the following permissions:
+     *      * Access the licensing mode (`wato.licensing`): All related information or settings of licensing of Checkmk sites.
+     *
+     */
+    post: operations['cmk.gui.cee.licensing._openapi.verify_online']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/domain-types/metric/actions/filter/invoke': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Get metrics using filters
+     * @description Select a site, filter for a host and a service to obtain a graph
+     *     (consisting of multiple metrics) or a single metric.
+     *     You can also aggregate the result.
+     *     This endpoint is internal and may change at any point, without notice.
+     *     For a simpler and supported interface see "Get a graph".
+     */
+    post: operations['cmk.gui.cee.openapi.endpoints.metric.internal.get_graph_using_filters']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/domain-types/metric/actions/get/invoke': {
     parameters: {
       query?: never
@@ -2819,6 +3422,32 @@ export interface paths {
      *
      */
     post: operations['cmk.gui.openapi.endpoints.notification_rules.delete_rule']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/objects/onboarding/agent': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * get info to download an agent for the onboarding
+     * @description
+     *
+     *     This endpoint requires the following permissions:
+     *      * All of:
+     *        * Register all hosts & download all monitoring agents (`wato.download_all_agents`): Register all hosts with the Agent Bakery and download all monitoring agents that have been created with the Agent Bakery, even if you are not a contact for the host in question. Please note that these agents might contain confidential information such as passwords.
+     *        * Manage monitoring agents (`wato.agents`): Manage customized packaged monitoring agents for Linux, Windows and other operating systems
+     *
+     */
+    get: operations['cmk.gui.cse.onboarding.get_agent_download_info']
+    put?: never
+    post?: never
     delete?: never
     options?: never
     head?: never
@@ -3051,6 +3680,43 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/domain-types/relay/collections/all': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Show all relays */
+    get: operations['Relays.list_relays_v1']
+    put?: never
+    /** Create a relay */
+    post: operations['Relays.create_relay_v1']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/objects/relay/{relay_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Show a relay */
+    get: operations['Relays.show_relay_v1']
+    /** Edit a relay */
+    put: operations['Relays.edit_relay_v1']
+    post?: never
+    /** Delete a relay */
+    delete: operations['Relays.delete_relay_v1']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/domain-types/rule/collections/all': {
     parameters: {
       query?: never
@@ -3214,6 +3880,91 @@ export interface paths {
     get: operations['cmk.gui.openapi.endpoints.ruleset.show_ruleset']
     put?: never
     post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/domain-types/saml_connection/collections/all': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Show all SAML connections
+     * @description
+     *
+     *     This endpoint requires the following permissions:
+     *      * Global settings (`wato.global`): Access to the module <i>Global settings</i>
+     *
+     */
+    get: operations['cmk.gui.cee.saml2._openapi.show_saml_connections']
+    put?: never
+    /**
+     * Create a SAML connection
+     * @description
+     *
+     *     This endpoint requires the following permissions:
+     *      * All of:
+     *        * Make changes, perform actions (`wato.edit`): This permission is needed in order to make any changes or perform any actions at all. Without this permission, the user is only able to view data, and that only in modules he has explicit permissions for.
+     *        * Global settings (`wato.global`): Access to the module <i>Global settings</i>
+     *
+     */
+    post: operations['cmk.gui.cee.saml2._openapi.create_saml_connection']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/objects/saml_connection/{saml_connection_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Show a SAML connection
+     * @description
+     *
+     *     This endpoint requires the following permissions:
+     *      * Global settings (`wato.global`): Access to the module <i>Global settings</i>
+     *
+     */
+    get: operations['cmk.gui.cee.saml2._openapi.show_saml_connection']
+    put?: never
+    post?: never
+    /**
+     * Delete a SAML connection
+     * @description
+     *
+     *     This endpoint requires the following permissions:
+     *      * All of:
+     *        * Make changes, perform actions (`wato.edit`): This permission is needed in order to make any changes or perform any actions at all. Without this permission, the user is only able to view data, and that only in modules he has explicit permissions for.
+     *        * Global settings (`wato.global`): Access to the module <i>Global settings</i>
+     *
+     */
+    delete: operations['cmk.gui.cee.saml2._openapi.delete_saml_connection']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/domain-types/sla/actions/compute/invoke': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Compute the SLA data */
+    post: operations['cmk.gui.cee.sla._openapi.compute_sla_rows']
     delete?: never
     options?: never
     head?: never
@@ -4012,6 +4763,92 @@ export interface paths {
     get: operations['Visual Filters.list_filters_v1']
     put?: never
     post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/domain-types/otel_collector_config/collections/all': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * List all configurations for OpenTelemetry collector
+     * @description
+     *
+     *     This endpoint requires the following permissions:
+     *      * Manage OpenTelemetry configurations (experimental) (`wato.otel_collector`): Add, edit and delete OpenTelemetry configurations.
+     *
+     */
+    get: operations['open-telemetry.handler_list']
+    put?: never
+    /**
+     * Create a new OpenTelemetry collector configuration
+     * @description
+     *
+     *     This endpoint requires the following permissions:
+     *      * Manage OpenTelemetry configurations (experimental) (`wato.otel_collector`): Add, edit and delete OpenTelemetry configurations.
+     *
+     */
+    post: operations['open-telemetry.handler_create']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/objects/otel_collector_config/{config_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    /**
+     * Update an OpenTelemetry collector configuration
+     * @description
+     *
+     *     This endpoint requires the following permissions:
+     *      * Manage OpenTelemetry configurations (experimental) (`wato.otel_collector`): Add, edit and delete OpenTelemetry configurations.
+     *
+     */
+    put: operations['open-telemetry.handler_update']
+    post?: never
+    /**
+     * Delete an OpenTelemetry collector configuration
+     * @description
+     *
+     *     This endpoint requires the following permissions:
+     *      * Manage OpenTelemetry configurations (experimental) (`wato.otel_collector`): Add, edit and delete OpenTelemetry configurations.
+     *
+     */
+    delete: operations['open-telemetry.handler_delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/domain-types/metric/actions/get_custom_graph/invoke': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Get a custom graph
+     * @description Custom graphs can be created within Checkmk, see [Checkmk
+     *     guide](https://docs.checkmk.com/latest/en/graphing.html#custom_graphs) for
+     *     an introduction.
+     */
+    post: operations['cmk.gui.cee.openapi.endpoints.metric.get_custom_graph']
     delete?: never
     options?: never
     head?: never
@@ -5235,6 +6072,198 @@ export interface components {
        */
       extensions?: components['schemas']['ActivationExtensionFields']
     }
+    ActionResultObjectValue: {
+      links: components['schemas']['Link'][]
+      /** @example {
+       *       "duration": "5 seconds."
+       *     } */
+      value: {
+        [key: string]: unknown
+      }
+    }
+    ActionResultObject: {
+      /**
+       * @description list of links to other resources.
+       * @example null
+       */
+      links: components['schemas']['Link'][]
+      /**
+       * @description The type of the result.
+       * @enum {string}
+       */
+      resultType?: 'object' | 'scalar'
+      /**
+       * @description Some attributes alongside the result.
+       * @example {
+       *       "some": "values"
+       *     }
+       */
+      extensions?: {
+        [key: string]: unknown
+      }
+      /** @description The result of the action. In this case, an object. */
+      result?: components['schemas']['ActionResultObjectValue']
+    }
+    Api404DefaultError: {
+      /**
+       * @description The HTTP status code.
+       * @example 404
+       */
+      status?: number
+      /**
+       * @description Detailed information on what exactly went wrong.
+       * @example The requested object has not be found.
+       */
+      detail?: string
+      /**
+       * @description A summary of the problem.
+       * @example Not Found
+       */
+      title?: string
+      /** @description Detailed error messages on all fields failing validation. */
+      fields?: {
+        [key: string]: unknown
+      }
+      /** @description Additional information about the error. */
+      ext?: {
+        [key: string]: unknown
+      }
+    }
+    AgentObject: {
+      /**
+       * @description list of links to other resources.
+       * @example null
+       */
+      links: components['schemas']['Link'][]
+      /**
+       * @description The domain type of the object.
+       * @default agent
+       */
+      domainType: unknown
+      /** @description The unique identifier for this domain-object type. */
+      id?: string
+      /** @description A human readable title of this object. Can be used for user interfaces. */
+      title?: string
+      /** @description The container for external resources, like linked foreign objects or actions. */
+      members?: {
+        [key: string]: unknown
+      }
+      /** @description All the attributes of the domain object. */
+      extensions?: {
+        [key: string]: unknown
+      }
+    }
+    AgentCollection: {
+      /**
+       * @description list of links to other resources.
+       * @example null
+       */
+      links: components['schemas']['Link'][]
+      /**
+       * @description The name of this collection.
+       * @default all
+       */
+      id: string
+      /**
+       * @description The domain type of the objects in the collection.
+       * @default agent
+       */
+      domainType: unknown
+      /** @description A human readable title of this object. Can be used for user interfaces. */
+      title?: string
+      /** @description A list of agent objects. */
+      value?: components['schemas']['AgentObject'][]
+      /** @description Additional attributes alongside the collection. */
+      extensions?: {
+        [key: string]: unknown
+      }
+    }
+    DomainObject: {
+      /**
+       * @description list of links to other resources.
+       * @example null
+       */
+      links: components['schemas']['Link'][]
+      /** @description The "domain-type" of the object. */
+      domainType: string
+      /** @description The unique identifier for this domain-object type. */
+      id?: string
+      /** @description A human readable title of this object. Can be used for user interfaces. */
+      title?: string
+      /** @description The container for external resources, like linked foreign objects or actions. */
+      members?: {
+        [key: string]: unknown
+      }
+      /** @description All the attributes of the domain object. */
+      extensions?: {
+        [key: string]: unknown
+      }
+    }
+    Api409DefaultError: {
+      /**
+       * @description The HTTP status code.
+       * @example 409
+       */
+      status?: number
+      /**
+       * @description Detailed information on what exactly went wrong.
+       * @example The request is in conflict with the stored resource.
+       */
+      detail?: string
+      /**
+       * @description A summary of the problem.
+       * @example Conflict
+       */
+      title?: string
+      /** @description Detailed error messages on all fields failing validation. */
+      fields?: {
+        [key: string]: unknown
+      }
+      /** @description Additional information about the error. */
+      ext?: {
+        [key: string]: unknown
+      }
+    }
+    ActionResultScalarValue: {
+      links: components['schemas']['Link'][]
+      /** @example Done. */
+      value: string
+    }
+    ActionResultScalar: {
+      /**
+       * @description list of links to other resources.
+       * @example null
+       */
+      links: components['schemas']['Link'][]
+      /**
+       * @description The type of the result.
+       * @enum {string}
+       */
+      resultType?: 'object' | 'scalar'
+      /**
+       * @description Some attributes alongside the result.
+       * @example {
+       *       "some": "values"
+       *     }
+       */
+      extensions?: {
+        [key: string]: unknown
+      }
+      /** @description The scalar result of the action. */
+      result?: components['schemas']['ActionResultScalarValue']
+    }
+    AgentSign: {
+      /**
+       * @description The id under that the desired agent signature key is stored
+       * @example 42
+       */
+      key_id: number
+      /**
+       * @description The password to unlock the agent signature key
+       * @example sw0rdfish
+       */
+      passphrase: string
+    }
     AuditLogExtension: {
       /** @description Timestamp of when the event occurred */
       time?: number
@@ -5322,31 +6351,6 @@ export interface components {
        *     }
        */
       parameters?: components['schemas']['Params']
-    }
-    Api404DefaultError: {
-      /**
-       * @description The HTTP status code.
-       * @example 404
-       */
-      status?: number
-      /**
-       * @description Detailed information on what exactly went wrong.
-       * @example The requested object has not be found.
-       */
-      detail?: string
-      /**
-       * @description A summary of the problem.
-       * @example Not Found
-       */
-      title?: string
-      /** @description Detailed error messages on all fields failing validation. */
-      fields?: {
-        [key: string]: unknown
-      }
-      /** @description Additional information about the error. */
-      ext?: {
-        [key: string]: unknown
-      }
     }
     Choice: {
       /** @description The id of the choice. */
@@ -5481,31 +6485,6 @@ export interface components {
        * @example AuxTagExampleHelp
        */
       help: string
-    }
-    Api409DefaultError: {
-      /**
-       * @description The HTTP status code.
-       * @example 409
-       */
-      status?: number
-      /**
-       * @description Detailed information on what exactly went wrong.
-       * @example The request is in conflict with the stored resource.
-       */
-      detail?: string
-      /**
-       * @description A summary of the problem.
-       * @example Conflict
-       */
-      title?: string
-      /** @description Detailed error messages on all fields failing validation. */
-      fields?: {
-        [key: string]: unknown
-      }
-      /** @description Additional information about the error. */
-      ext?: {
-        [key: string]: unknown
-      }
     }
     StatusLogInfo: {
       /**
@@ -6281,27 +7260,6 @@ export interface components {
        * @example pack1
        */
       pack_id: string
-    }
-    DomainObject: {
-      /**
-       * @description list of links to other resources.
-       * @example null
-       */
-      links: components['schemas']['Link'][]
-      /** @description The "domain-type" of the object. */
-      domainType: string
-      /** @description The unique identifier for this domain-object type. */
-      id?: string
-      /** @description A human readable title of this object. Can be used for user interfaces. */
-      title?: string
-      /** @description The container for external resources, like linked foreign objects or actions. */
-      members?: {
-        [key: string]: unknown
-      }
-      /** @description All the attributes of the domain object. */
-      extensions?: {
-        [key: string]: unknown
-      }
     }
     BINodeVisNoneStyle: {
       /**
@@ -7320,8 +8278,8 @@ export interface components {
        */
       entries: string[]
     }
-    /** Api406DefaultError8BF904D6B97C7BE8 */
-    Api406DefaultError8BF904D6B97C7BE8: {
+    /** Api406DefaultErrorBCF1447A1057CB49 */
+    Api406DefaultErrorBCF1447A1057CB49: {
       /**
        * Status
        * @description The HTTP status code.
@@ -7361,6 +8319,19 @@ export interface components {
         [key: string]: string
       }
     }
+    /** BreadcrumbItem */
+    BreadcrumbItem: {
+      /**
+       * Title
+       * @description The title of the breadcrumb item
+       */
+      title: string
+      /**
+       * Link
+       * @description The link of the breadcrumb item
+       */
+      link: string | null
+    }
     /** DashboardDisplay */
     DashboardDisplay: {
       /**
@@ -7368,11 +8339,8 @@ export interface components {
        * @description The title of the dashboard
        */
       title: string
-      /**
-       * Topic
-       * @description Topic area the dashboard covers
-       */
-      topic: string
+      /** @description Topic area the dashboard covers */
+      topic: components['schemas']['Topic']
       /**
        * Hidden
        * @description Whether the dashboard is hidden from general listings
@@ -7403,6 +8371,11 @@ export interface components {
        * @description Whether the dashboard is a built-in (system) dashboard.
        */
       is_built_in: boolean
+      /**
+       * Is Editable
+       * @description Whether the user can edit the dashboard.
+       */
+      is_editable: boolean
       /** @description Layout system used: 'relative' for absolute positioning, 'responsive' for adaptive design. */
       layout_type: components['schemas']['DashboardLayoutType']
       /** @description Display and presentation preferences. */
@@ -7491,6 +8464,19 @@ export interface components {
        *     }
        */
       body_params?: Record<string, never>
+    }
+    /** Topic */
+    Topic: {
+      /**
+       * Name
+       * @description Id of the topic
+       */
+      name: string
+      /**
+       * Breadcrumb
+       * @description Breadcrumb navigation for the topic.
+       */
+      breadcrumb: components['schemas']['BreadcrumbItem'][]
     }
     /** DashboardMetadataCollectionModel */
     DashboardMetadataCollectionModel: {
@@ -7657,8 +8643,8 @@ export interface components {
       /** @description All the constants data of a dashboard. */
       extensions: components['schemas']['DashboardConstantsResponse']
     }
-    /** Api404DefaultError7DA0A31593576CB7 */
-    Api404DefaultError7DA0A31593576CB7: {
+    /** Api404DefaultError1F4828D4BC1C021F */
+    Api404DefaultError1F4828D4BC1C021F: {
       /**
        * Status
        * @description The HTTP status code.
@@ -7996,10 +8982,36 @@ export interface components {
         }
       }
       /**
+       * Mandatory Context Filters
+       * @description Filters that are required to use this dashboard.
+       */
+      mandatory_context_filters: string[]
+      /**
        * Uses Infos
        * @description A list of info names that this dashboard uses. This is used to determine the available filters.
        */
       uses_infos: components['schemas']['AnnotatedInfoName'][]
+    }
+    /** DashboardGeneralSettings */
+    DashboardGeneralSettings: {
+      /**
+       * @description Title settings.
+       * @example {
+       *       "render": true,
+       *       "text": "My Dashboard"
+       *     }
+       */
+      title: components['schemas']['DashboardTitle']
+      /**
+       * Description
+       * @description Description of the dashboard.
+       * @example This dashboard shows ...
+       */
+      description?: string
+      /** @description Settings relating to the main menu. */
+      menu: components['schemas']['DashboardMenuSettings']
+      /** @description Settings relating to the dashboards visibility. */
+      visibility: components['schemas']['DashboardVisibility']
     }
     /** DashboardIcon */
     DashboardIcon: {
@@ -8587,31 +9599,10 @@ export interface components {
     }
     /** RelativeGridDashboardResponse */
     RelativeGridDashboardResponse: {
-      /**
-       * @description Title settings.
-       * @example {
-       *       "render": true,
-       *       "text": "My Dashboard"
-       *     }
-       */
-      title: components['schemas']['DashboardTitle']
-      /**
-       * Description
-       * @description Description of the dashboard.
-       * @example This dashboard shows ...
-       */
-      description?: string
-      /** @description Settings relating to the main menu. */
-      menu: components['schemas']['DashboardMenuSettings']
-      /** @description Settings relating to the dashboards visibility. */
-      visibility: components['schemas']['DashboardVisibility']
+      /** @description General settings for the dashboard. */
+      general_settings: components['schemas']['DashboardGeneralSettings']
       /** @description Filter context for the dashboard. */
       filter_context: components['schemas']['DashboardFilterContextResponse']
-      /**
-       * Mandatory Context Filters
-       * @description Filters that are required to use this dashboard.
-       */
-      mandatory_context_filters: string[]
       /**
        * Owner
        * @description The owner of the dashboard.
@@ -9131,6 +10122,206 @@ export interface components {
       /** @description All the data about this dashboard. */
       extensions: components['schemas']['RelativeGridDashboardResponse']
     }
+    /** DashboardResponsiveGridLayout */
+    DashboardResponsiveGridLayout: {
+      /**
+       * Type
+       * @description The dashboard is in a responsive grid layout, that changes based on screen size.
+       * @constant
+       */
+      type: 'responsive_grid'
+      /**
+       * Layouts
+       * @description The configured responsive layouts. Every widget must configure it's size and position for every layout and breakpoint defined here.
+       */
+      layouts: {
+        [key: string]: components['schemas']['ResponsiveGridLayoutSettings']
+      }
+    }
+    /** ResponsiveGridDashboardResponse */
+    ResponsiveGridDashboardResponse: {
+      /** @description General settings for the dashboard. */
+      general_settings: components['schemas']['DashboardGeneralSettings']
+      /** @description Filter context for the dashboard. */
+      filter_context: components['schemas']['DashboardFilterContextResponse']
+      /**
+       * Owner
+       * @description The owner of the dashboard.
+       * @example admin
+       */
+      owner: string
+      /**
+       * Last Modified At
+       * Format: date-time
+       * @description The last modification time of the dashboard.
+       */
+      last_modified_at: string
+      /** @description The layout the dashboard uses. */
+      layout: components['schemas']['DashboardResponsiveGridLayout']
+      /**
+       * Widgets
+       * @description All widgets that are part of this dashboard.
+       */
+      widgets: {
+        [key: string]: components['schemas']['ResponsiveGridWidgetResponse']
+      }
+    }
+    /** ResponsiveGridLayoutSettings */
+    ResponsiveGridLayoutSettings: {
+      /**
+       * Title
+       * @description The display name of the responsive grid layout.
+       */
+      title: string
+      /**
+       * Breakpoints
+       * @description The allowed/configured breakpoints for the layout.
+       */
+      breakpoints: components['schemas']['ResponsiveGridBreakpoint'][]
+    }
+    /** ResponsiveGridWidgetResponse */
+    ResponsiveGridWidgetResponse: {
+      /**
+       * @description General settings for the widget.
+       * @example {
+       *       "render_background": true,
+       *       "title": {
+       *         "render_mode": "with-background",
+       *         "text": "My Widget",
+       *         "url": "https://example.com"
+       *       }
+       *     }
+       */
+      general_settings: components['schemas']['WidgetGeneralSettings']
+      /**
+       * @description Content of the widget.
+       * @example {
+       *       "text": "This is a static text widget.",
+       *       "type": "static_text"
+       *     }
+       */
+      content: components['schemas']['WidgetContent']
+      /** @description The filter context for the widget. */
+      filter_context: components['schemas']['WidgetFilterContext']
+      /**
+       * @description Layout of the widget.
+       * @example {
+       *       "layouts": {
+       *         "default": {
+       *           "L": {
+       *             "position": {
+       *               "x": 0,
+       *               "y": 0
+       *             },
+       *             "size": {
+       *               "columns": 6,
+       *               "rows": 2
+       *             }
+       *           },
+       *           "XL": {
+       *             "position": {
+       *               "x": 0,
+       *               "y": 0
+       *             },
+       *             "size": {
+       *               "columns": 8,
+       *               "rows": 2
+       *             }
+       *           }
+       *         }
+       *       },
+       *       "type": "responsive_grid"
+       *     }
+       */
+      layout: components['schemas']['WidgetResponsiveGridLayouts']
+    }
+    /** WidgetResponsiveGridLayout */
+    WidgetResponsiveGridLayout: {
+      /** @description Position of the widget. In case the size is larger than 1, the position is the top-left corner. */
+      position: components['schemas']['WidgetResponsiveGridPosition']
+      /** @description Size of the widget. Must fit into the available columns. */
+      size: components['schemas']['WidgetResponsiveGridSize']
+    }
+    /** WidgetResponsiveGridLayouts */
+    WidgetResponsiveGridLayouts: {
+      /**
+       * Type
+       * @description This setting must be in sync with the dashboards layout.
+       * @constant
+       */
+      type: 'responsive_grid'
+      /**
+       * Layouts
+       * @description Position and size of the widget for each layout and breakpoint.
+       */
+      layouts: {
+        [key: string]: {
+          [key: string]: components['schemas']['WidgetResponsiveGridLayout']
+        }
+      }
+    }
+    /** WidgetResponsiveGridPosition */
+    WidgetResponsiveGridPosition: {
+      /**
+       * X
+       * @description X position of the widget.
+       */
+      x: number
+      /**
+       * Y
+       * @description Y position of the widget.
+       */
+      y: number
+    }
+    /** WidgetResponsiveGridSize */
+    WidgetResponsiveGridSize: {
+      /**
+       * Columns
+       * @description Width of the widget in number of columns.
+       */
+      columns: number
+      /**
+       * Rows
+       * @description Height of the widget in number of rows.
+       */
+      rows: number
+    }
+    /** ResponsiveGridDashboardDomainObject */
+    ResponsiveGridDashboardDomainObject: {
+      /**
+       * Links
+       * @description List of links to other resources.
+       * @example [
+       *       {
+       *         "href": "https://.../api_resource",
+       *         "method": "GET",
+       *         "rel": "self",
+       *         "type": "application/json"
+       *       }
+       *     ]
+       */
+      links: components['schemas']['LinkModel'][]
+      /**
+       * Domaintype
+       * @description The domain type of the object.
+       * @constant
+       */
+      domainType: 'dashboard'
+      /**
+       * ID
+       * @description The unique identifier for this domain-object type.
+       * @example host1
+       */
+      id?: string
+      /**
+       * Title
+       * @description A human readable title of this object. Can be used for user interfaces.
+       * @example My Host
+       */
+      title?: string
+      /** @description All the data about this dashboard. */
+      extensions: components['schemas']['ResponsiveGridDashboardResponse']
+    }
     /** DashboardFilterContext */
     DashboardFilterContext: {
       /**
@@ -9147,6 +10338,11 @@ export interface components {
           [key: string]: string
         }
       }
+      /**
+       * Mandatory Context Filters
+       * @description Filters that are required to use this dashboard.
+       */
+      mandatory_context_filters: string[]
     }
     /** RelativeGridWidgetRequest */
     RelativeGridWidgetRequest: {
@@ -9197,31 +10393,10 @@ export interface components {
     }
     /** EditDashboardV1 */
     EditDashboardV1: {
-      /**
-       * @description Title settings.
-       * @example {
-       *       "render": true,
-       *       "text": "My Dashboard"
-       *     }
-       */
-      title: components['schemas']['DashboardTitle']
-      /**
-       * Description
-       * @description Description of the dashboard.
-       * @example This dashboard shows ...
-       */
-      description?: string
-      /** @description Settings relating to the main menu. */
-      menu: components['schemas']['DashboardMenuSettings']
-      /** @description Settings relating to the dashboards visibility. */
-      visibility: components['schemas']['DashboardVisibility']
+      /** @description General settings for the dashboard. */
+      general_settings: components['schemas']['DashboardGeneralSettings']
       /** @description Filter context for the dashboard. */
       filter_context: components['schemas']['DashboardFilterContext']
-      /**
-       * Mandatory Context Filters
-       * @description Filters that are required to use this dashboard.
-       */
-      mandatory_context_filters: string[]
       /** @description The layout the dashboard uses. */
       layout: components['schemas']['DashboardRelativeGridLayout']
       /**
@@ -9232,8 +10407,8 @@ export interface components {
         [key: string]: components['schemas']['RelativeGridWidgetRequest']
       }
     }
-    /** Api400DefaultErrorC330B240BA6CA61C */
-    Api400DefaultErrorC330B240BA6CA61C: {
+    /** Api400DefaultErrorFB6BDF7D3BCB12F0 */
+    Api400DefaultErrorFB6BDF7D3BCB12F0: {
       /**
        * Status
        * @description The HTTP status code.
@@ -9273,8 +10448,8 @@ export interface components {
         [key: string]: string
       }
     }
-    /** Api415DefaultError1672ACB74E09BF41 */
-    Api415DefaultError1672ACB74E09BF41: {
+    /** Api415DefaultError18F4B8AE28E5CF3E */
+    Api415DefaultError18F4B8AE28E5CF3E: {
       /**
        * Status
        * @description The HTTP status code.
@@ -9314,6 +10489,85 @@ export interface components {
         [key: string]: string
       }
     }
+    /** ResponsiveGridWidgetRequest */
+    ResponsiveGridWidgetRequest: {
+      /**
+       * @description General settings for the widget.
+       * @example {
+       *       "render_background": true,
+       *       "title": {
+       *         "render_mode": "with-background",
+       *         "text": "My Widget",
+       *         "url": "https://example.com"
+       *       }
+       *     }
+       */
+      general_settings: components['schemas']['WidgetGeneralSettings']
+      /**
+       * @description Content of the widget.
+       * @example {
+       *       "text": "This is a static text widget.",
+       *       "type": "static_text"
+       *     }
+       */
+      content: components['schemas']['WidgetContent']
+      /**
+       * Filters
+       * @description Active filters in the format filter_id -> (variable -> value)
+       */
+      filters: {
+        [key: string]: {
+          [key: string]: string
+        }
+      }
+      /**
+       * @description Layout of the widget.
+       * @example {
+       *       "layouts": {
+       *         "default": {
+       *           "L": {
+       *             "position": {
+       *               "x": 0,
+       *               "y": 0
+       *             },
+       *             "size": {
+       *               "columns": 6,
+       *               "rows": 2
+       *             }
+       *           },
+       *           "XL": {
+       *             "position": {
+       *               "x": 0,
+       *               "y": 0
+       *             },
+       *             "size": {
+       *               "columns": 8,
+       *               "rows": 2
+       *             }
+       *           }
+       *         }
+       *       },
+       *       "type": "responsive_grid"
+       *     }
+       */
+      layout: components['schemas']['WidgetResponsiveGridLayouts']
+    }
+    /** EditResponsiveGridDashboardV1 */
+    EditResponsiveGridDashboardV1: {
+      /** @description General settings for the dashboard. */
+      general_settings: components['schemas']['DashboardGeneralSettings']
+      /** @description Filter context for the dashboard. */
+      filter_context: components['schemas']['DashboardFilterContext']
+      /** @description The layout the dashboard uses. */
+      layout: components['schemas']['DashboardResponsiveGridLayout']
+      /**
+       * Widgets
+       * @description All widgets that are part of this dashboard.
+       */
+      widgets: {
+        [key: string]: components['schemas']['ResponsiveGridWidgetRequest']
+      }
+    }
     /** ComputedWidgetSpecRequest */
     ComputedWidgetSpecRequest: {
       /** @description Widget content to compute attributes for. */
@@ -9345,31 +10599,10 @@ export interface components {
     }
     /** CreateDashboardV1 */
     CreateDashboardV1: {
-      /**
-       * @description Title settings.
-       * @example {
-       *       "render": true,
-       *       "text": "My Dashboard"
-       *     }
-       */
-      title: components['schemas']['DashboardTitle']
-      /**
-       * Description
-       * @description Description of the dashboard.
-       * @example This dashboard shows ...
-       */
-      description?: string
-      /** @description Settings relating to the main menu. */
-      menu: components['schemas']['DashboardMenuSettings']
-      /** @description Settings relating to the dashboards visibility. */
-      visibility: components['schemas']['DashboardVisibility']
+      /** @description General settings for the dashboard. */
+      general_settings: components['schemas']['DashboardGeneralSettings']
       /** @description Filter context for the dashboard. */
       filter_context: components['schemas']['DashboardFilterContext']
-      /**
-       * Mandatory Context Filters
-       * @description Filters that are required to use this dashboard.
-       */
-      mandatory_context_filters: string[]
       /** @description The layout the dashboard uses. */
       layout: components['schemas']['DashboardRelativeGridLayout']
       /**
@@ -9378,6 +10611,28 @@ export interface components {
        */
       widgets: {
         [key: string]: components['schemas']['RelativeGridWidgetRequest']
+      }
+      /**
+       * Id
+       * @description Unique identifier for the dashboard.
+       * @example custom_dashboard
+       */
+      id: string
+    }
+    /** CreateResponsiveGridDashboardV1 */
+    CreateResponsiveGridDashboardV1: {
+      /** @description General settings for the dashboard. */
+      general_settings: components['schemas']['DashboardGeneralSettings']
+      /** @description Filter context for the dashboard. */
+      filter_context: components['schemas']['DashboardFilterContext']
+      /** @description The layout the dashboard uses. */
+      layout: components['schemas']['DashboardResponsiveGridLayout']
+      /**
+       * Widgets
+       * @description All widgets that are part of this dashboard.
+       */
+      widgets: {
+        [key: string]: components['schemas']['ResponsiveGridWidgetRequest']
       }
       /**
        * Id
@@ -10161,6 +11416,811 @@ export interface components {
       | components['schemas']['CreateServiceDowntime']
       | components['schemas']['CreateServiceGroupDowntime']
       | components['schemas']['CreateServiceQueryDowntime']
+    HostContactGroup: {
+      /** @description A list of contact groups. */
+      groups: string[]
+      /**
+       * @description Add these contact groups to the host.
+       * @default false
+       */
+      use: boolean
+      /**
+       * @description <p>Always add host contact groups also to its services.</p>With this option contact groups that are added to hosts are always being added to services, as well. This only makes a difference if you have assigned other contact groups to services via rules in <i>Host & Service Parameters</i>. As long as you do not have any such rule a service always inherits all contact groups from its host.
+       * @default false
+       */
+      use_for_services: boolean
+      /**
+       * @description Add these groups as contacts to all hosts in all sub-folders of this folder.
+       * @default false
+       */
+      recurse_use: boolean
+      /**
+       * @description Give these groups also permission on all sub-folders.
+       * @default false
+       */
+      recurse_perms: boolean
+    }
+    SNMPCommunity: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: 'v1_v2_community'
+      /** @description SNMP community (SNMP Versions 1 and 2c) */
+      community: string
+    }
+    SNMPv3NoAuthNoPrivacy: {
+      /**
+       * @description The type of credentials to use. (enum property replaced by openapi-typescript)
+       * @enum {string}
+       */
+      type: 'v3_no_auth_no_privacy'
+      /** @description Security name */
+      security_name: string
+    }
+    SNMPv3AuthNoPrivacy: {
+      /**
+       * @description The type of credentials to use. (enum property replaced by openapi-typescript)
+       * @enum {string}
+       */
+      type: 'v3_auth_no_privacy'
+      /**
+       * @description Authentication protocol.
+       * @enum {string}
+       */
+      auth_protocol: 'MD5-96' | 'SHA-1-96' | 'SHA-2-224' | 'SHA-2-256' | 'SHA-2-384' | 'SHA-2-512'
+      /** @description Security name */
+      security_name: string
+      /** @description Authentication pass phrase. */
+      auth_password: string
+    }
+    SNMPv3AuthPrivacy: {
+      /**
+       * @description SNMPv3 with authentication and privacy. (enum property replaced by openapi-typescript)
+       * @enum {string}
+       */
+      type: 'v3_auth_privacy'
+      /**
+       * @description Authentication protocol.
+       * @enum {string}
+       */
+      auth_protocol: 'MD5-96' | 'SHA-1-96' | 'SHA-2-224' | 'SHA-2-256' | 'SHA-2-384' | 'SHA-2-512'
+      /** @description Security name */
+      security_name: string
+      /** @description Authentication pass phrase. */
+      auth_password: string
+      /**
+       * @description The privacy protocol. The only supported values in the Raw Edition are CBC-DES and AES-128. If selected, privacy_password needs to be supplied as well.
+       * @enum {string}
+       */
+      privacy_protocol:
+        | 'CBC-DES'
+        | 'AES-128'
+        | '3DES-EDE'
+        | 'AES-192'
+        | 'AES-256'
+        | 'AES-192-Blumenthal'
+        | 'AES-256-Blumenthal'
+      /** @description Privacy pass phrase. If filled, privacy_protocol needs to be selected as well. */
+      privacy_password: string
+    }
+    SNMPCredentials:
+      | components['schemas']['SNMPCommunity']
+      | components['schemas']['SNMPv3NoAuthNoPrivacy']
+      | components['schemas']['SNMPv3AuthNoPrivacy']
+      | components['schemas']['SNMPv3AuthPrivacy']
+    IPAddressRange: {
+      /**
+       * @description A range of addresses. (enum property replaced by openapi-typescript)
+       * @enum {string}
+       */
+      type: 'address_range'
+      /** @description The first IPv4 address of this range. */
+      from_address?: string
+      /** @description The last IPv4 address of this range. */
+      to_address?: string
+    }
+    IPNetwork: {
+      /**
+       * @description A single IPv4 network in CIDR notation. (enum property replaced by openapi-typescript)
+       * @enum {string}
+       */
+      type: 'network_range'
+      /** @description A IPv4 network in CIDR notation. Minimum prefix length is 8 bit, maximum prefix length is 30 bit.
+       *
+       *     Valid examples:
+       *
+       *      * `192.168.0.0/24`
+       *      * `192.168.0.0/255.255.255.0` */
+      network?: string
+    }
+    IPAddresses: {
+      /**
+       * @description A list of single IPv4 addresses. (enum property replaced by openapi-typescript)
+       * @enum {string}
+       */
+      type: 'explicit_addresses'
+      addresses?: string[]
+    }
+    IPRegexp: {
+      /**
+       * @description IPv4 addresses which match a regexp pattern (enum property replaced by openapi-typescript)
+       * @enum {string}
+       */
+      type: 'exclude_by_regexp'
+      /** @description A list of regular expressions which are matched against the found IP addresses. The matches will be excluded from the result. */
+      regexp_list?: string[]
+    }
+    IPRangeWithRegexp:
+      | components['schemas']['IPAddressRange']
+      | components['schemas']['IPNetwork']
+      | components['schemas']['IPAddresses']
+      | components['schemas']['IPRegexp']
+    TimeAllowedRange: {
+      /** @description The start time of day. Inclusive. Use ISO8601 format. Seconds are stripped. */
+      start: string
+      /** @description The end time of day. Inclusive. Use ISO8601 format. Seconds are stripped. */
+      end: string
+    }
+    RegexpRewrites: {
+      /** @description The search regexp. May contain match-groups, conditional matches, etc. This follows the Python regular expression syntax.
+       *
+       *     For details see:
+       *
+       *      * https://docs.python.org/3/library/re.html */
+      search: string
+      /** @description The replacement string. Match-groups can only be identified by `\1`, `\2`, etc. Highest supported match group is `\99`. Named lookups are not supported. */
+      replace_with: string
+    }
+    DirectMapping: {
+      /** @description The host name to be replaced. */
+      hostname: string
+      /** @description The replacement string. */
+      replace_with: string
+    }
+    TranslateNames: {
+      /**
+       * @description Convert all detected host names to upper- or lower-case.
+       *
+       *      * `nop` - Do not convert anything
+       *      * `lower` - Convert all host names to lowercase.
+       *      * `upper` - Convert all host names to uppercase.
+       * @default nop
+       * @enum {string}
+       */
+      convert_case: 'nop' | 'lower' | 'upper'
+      /** @description Drop the rest of the domain, only keep the host name. Will not affect IP addresses.
+       *
+       *     Examples:
+       *
+       *      * `192.168.0.1` -> `192.168.0.1`
+       *      * `foobar.example.com` -> `foobar`
+       *      * `example.com` -> `example`
+       *      * `example` -> `example`
+       *
+       *     This will be executed **after**:
+       *
+       *      * `convert_case`
+       *      */
+      drop_domain?: boolean
+      /** @description Rewrite discovered host names with multiple regular expressions. The replacements will be done one after another in the order they appear in the list. If not anchored at the end by a `$` character, the regexpwill be anchored at the end implicitly by adding a `$` character.
+       *
+       *     These will be executed **after**:
+       *
+       *      * `convert_case`
+       *      * `drop_domain`
+       *      */
+      regexp_rewrites?: components['schemas']['RegexpRewrites'][]
+      /** @description Replace one value with another.
+       *
+       *     These will be executed **after**:
+       *
+       *      * `convert_case`
+       *      * `drop_domain`
+       *      * `regexp_rewrites`
+       *      */
+      hostname_replacement?: components['schemas']['DirectMapping'][]
+    }
+    NetworkScan: {
+      /** @description IPv4 addresses to include. */
+      addresses: components['schemas']['IPRangeWithRegexp'][]
+      /** @description IPv4 addresses to exclude. */
+      exclude_addresses?: components['schemas']['IPRangeWithRegexp'][]
+      /**
+       * @description Scan interval in seconds. Default is 1 day, minimum is 1 hour.
+       * @default 86400
+       */
+      scan_interval: number
+      /** @description Only execute the discovery during this time range each day.. */
+      time_allowed: components['schemas']['TimeAllowedRange'][]
+      /**
+       * @description When set, the found IPv4 address is set on the discovered host.
+       * @default true
+       */
+      set_ip_address: boolean
+      /**
+       * @description Set the maximum number of concurrent pings sent to target IP addresses.
+       * @default 100
+       */
+      max_parallel_pings: number
+      /** @description Execute the network scan in the Checkmk user context of the chosen user. This user needs the permission to add new hosts to this folder. */
+      run_as?: string
+      /** @description Specify which criticality tag to set on the host created by the network scan. This field is required if the criticality tag group exists, otherwise it as to be omitted. */
+      tag_criticality?: string
+      translate_names?: components['schemas']['TranslateNames']
+    }
+    IPMIParameters: {
+      username: string
+      password: string
+    }
+    LockedBy: {
+      /** @description Site ID */
+      site_id: string
+      /** @description Program ID */
+      program_id: string
+      /** @description Instance ID */
+      instance_id: string
+    }
+    NetworkScanResult: {
+      /**
+       * Format: date-time
+       * @description When the scan started
+       */
+      start?: string | null
+      /**
+       * Format: date-time
+       * @description When the scan finished. Will be Null if not yet run.
+       */
+      end?: string | null
+      /**
+       * @description Last scan result
+       * @enum {string}
+       */
+      state?: 'running' | 'succeeded' | 'failed'
+      /** @description Short human readable description of what is happening. */
+      output?: string
+    }
+    MetaData: {
+      /**
+       * Format: date-time
+       * @description When has this object been created.
+       */
+      created_at?: string | null
+      /**
+       * Format: date-time
+       * @description When this object was last changed.
+       */
+      updated_at?: string | null
+      /** @description The user id under which this object has been created. */
+      created_by?: string | null
+    }
+    HostViewAttribute: {
+      /**
+       * @description The IP address family of the host.
+       * @example ip-v4-only
+       * @enum {string}
+       */
+      tag_address_family?: 'no-ip' | 'ip-v4v6' | 'ip-v6-only' | 'ip-v4-only'
+      /**
+       * @description Agent and API integrations
+       * @example cmk-agent
+       * @enum {string}
+       */
+      tag_agent?: 'no-agent' | 'all-agents' | 'special-agents' | 'cmk-agent'
+      /**
+       * @description The SNMP data source of the host.
+       * @example snmp-v2
+       * @enum {string}
+       */
+      tag_snmp_ds?: 'no-snmp' | 'snmp-v1' | 'snmp-v2'
+      /**
+       * @description Use piggyback data for this host.
+       * @example piggyback
+       * @enum {string}
+       */
+      tag_piggyback?: 'piggyback' | 'no-piggyback' | 'auto-piggyback'
+      /** @description Add a comment or describe this host */
+      alias?: string
+      /** @description The site that should monitor this host. */
+      site?: string
+      /** @description A list of parents of this host. */
+      parents?: string[]
+      /** @description Only members of the contact groups listed here have Setup permission for the host/folder. Optionally, you can make these contact groups automatically monitor contacts. The assignment of hosts to contact groups can also be defined by <a href='wato.py?mode=edit_ruleset&varname=host_contactgroups'>rules</a>. */
+      contactgroups?: components['schemas']['HostContactGroup']
+      /** @description An IPv4 address. */
+      ipaddress?: string
+      /** @description An IPv6 address. */
+      ipv6address?: string
+      /** @description A list of IPv4 addresses. */
+      additional_ipv4addresses?: string[]
+      /** @description A list of IPv6 addresses. */
+      additional_ipv6addresses?: string[]
+      /** @description [Enterprise, Cloud, Saas, Managed editions only] Bake agent packages for this folder even if it is empty. */
+      bake_agent_package?: boolean
+      /**
+       * @description [Cloud, Managed editions only] This configures the communication direction of this host.
+       *      * `pull-agent` (default) - The server will try to contact the monitored host and pull the data by initializing a TCP connection
+       *      * `push-agent` - the host is expected to send the data to the monitoring server without being triggered
+       *
+       * @enum {string}
+       */
+      cmk_agent_connection?: 'pull-agent' | 'push-agent'
+      /** @description The SNMP access configuration. A configured SNMP v1/v2 community here will have precedence over any configured SNMP community rule. For this attribute to take effect, the attribute `tag_snmp_ds` needs to be set first. */
+      snmp_community?: components['schemas']['SNMPCredentials']
+      /** @description Labels allow you to flexibly group your hosts in order to refer to them later at other places in Checkmk, e.g. in rule chains.<br><b>Label format:</b> key:value<br><br>Neither the key nor the value can contain ‘:’. Checkmk does not perform any other validation on the labels you use. */
+      labels?: {
+        [key: string]: string
+      }
+      /**
+       * @description This indicates that the host is waiting for a bulk discovery. It is set to True once the host is in the queue. It will be removed after the discovery is ended.
+       * @example false
+       */
+      waiting_for_discovery?: boolean
+      /** @description Configuration for automatic network scan. Pings will besent to each IP address in the configured ranges to checkif a host is up or down. Each found host will be added tothe folder by it's host name (if possible) or IP address. */
+      network_scan?: components['schemas']['NetworkScan']
+      /**
+       * @description The protocol used to connect to the management board.
+       *
+       *     Valid options are:
+       *
+       *      * `none` - No management board
+       *      * `snmp` - Connect using SNMP
+       *      * `ipmi` - Connect using IPMI
+       *
+       * @enum {string}
+       */
+      management_protocol?: 'none' | 'snmp' | 'ipmi'
+      /** @description Address (IPv4, IPv6 or host name) under which the management board can be reached. */
+      management_address?: string
+      /** @description SNMP credentials */
+      management_snmp_community?: components['schemas']['SNMPCredentials'] | null
+      /** @description IPMI credentials */
+      management_ipmi_credentials?: components['schemas']['IPMIParameters'] | null
+      /** @description Identity of the entity which locked the locked_attributes. The identity is built out of the Site ID, the program name and the connection ID. */
+      locked_by?: components['schemas']['LockedBy']
+      /** @description Name of host attributes which are locked in the UI. */
+      locked_attributes?: string[]
+      /**
+       * @description Whether or not the last bulk discovery failed. It is set to True once it fails and unset in case a later discovery succeeds.
+       * @example false
+       */
+      inventory_failed?: boolean
+      /** @description [Cloud, Saas, Managed editions only] The name/address of the relay through which this host is monitored, if not empty. */
+      relay?: string
+      /** @description Read only access to the network scan result */
+      network_scan_result?: components['schemas']['NetworkScanResult']
+      /** @description Read only access to configured metadata. */
+      meta_data?: components['schemas']['MetaData']
+    } & {
+      [key: string]: string
+    }
+    CreationRuleAttribute: {
+      /**
+       * @description Name of the folder the connection creates hosts in. Once created, you can choose to move the host to another folder.
+       *
+       *     Path delimiters can be either `~`, `/` or `\`. Please use the one most appropriate for your quoting/escaping needs. A good default choice is `~`.
+       * @example /folder_1/subfolder_a
+       */
+      folder_path?: string
+      /**
+       * @description Attributes to set on the newly created host.
+       * @default {}
+       * @example {
+       *       "ipaddress": "192.168.0.123"
+       *     }
+       */
+      host_attributes: components['schemas']['HostViewAttribute']
+      /**
+       * @description Delete the hosts created by this connection whose piggyback data is no longer present.
+       * @example false
+       */
+      delete_hosts?: boolean
+      /**
+       * @description Restrict host creation using regular expressions.
+       * @example [
+       *       "host1",
+       *       "host2",
+       *       "regular.+expression"
+       *     ]
+       */
+      matching_hosts?: string[]
+    }
+    PiggybackConnector: {
+      /**
+       * @description The type of the connector. (enum property replaced by openapi-typescript)
+       * @enum {string}
+       */
+      connector_type: 'piggyback'
+      /**
+       * @description Only care about hosts that receive piggyback data from hosts which name matches one of these regular expressions.
+       * @example [
+       *       "host1",
+       *       "host2",
+       *       "regular.+expression"
+       *     ]
+       */
+      restrict_source_hosts?: string[]
+      /**
+       * @description The interval in seconds the connection will be executed to check the available piggyback and update the configuration.
+       * @example 60
+       */
+      interval?: number
+      /**
+       * @description The first matching rule is used. You must specify at least one rule.
+       * @example [
+       *       {
+       *         "folder_path": "/",
+       *         "host_attributes": {
+       *           "tag_snmp_ds": "no-snmp",
+       *           "tag_agent": "no-agent",
+       *           "tag_piggyback": "piggyback",
+       *           "tag_address_family": "no-ip"
+       *         },
+       *         "delete_hosts": false
+       *       }
+       *     ]
+       */
+      creation_rules?: components['schemas']['CreationRuleAttribute'][]
+      /**
+       * @description Automatically runs a service discovery on any new hosts created by this connection. This step will add any new services to the monitoring.
+       * @example true
+       */
+      discover_on_creation?: boolean
+      /**
+       * @description Seconds to prevent host deletion after site startup, e.g. when booting the Checkmk server.
+       * @example 600
+       */
+      no_deletion_time_after_init?: number
+      /**
+       * @description Seconds to keep hosts when piggyback source only sends piggyback data for other hosts.
+       * @example 3600
+       */
+      max_cache_age?: number
+      /**
+       * @description Seconds to continue consider outdated piggyback data as valid.
+       * @example 60
+       */
+      validity_period?: number
+    }
+    OneOfConnector: components['schemas']['PiggybackConnector']
+    DCDExtensions: {
+      /**
+       * @description Name your connection for easy recognition.
+       * @example My fancy dynamic host configuration
+       */
+      title: string
+      /**
+       * @description Add a comment to your dynamic host configuration
+       * @default
+       * @example This rule updates the host configuration from Initech cloud provider.
+       */
+      comment: string
+      /**
+       * Format: url
+       * @description Add a URL linking to a documentation or any other page. You can use either global URLs (starting with http://), absolute local URLs (starting with /) or relative URLs (relative to check_mk/).
+       * @default
+       * @example https://example.com/doc
+       */
+      documentation_url: string
+      /**
+       * @description The dynamic host configuration can be disabled but will remain part of the site.
+       * @default false
+       * @example false
+       */
+      disabled: boolean
+      /**
+       * @description Specify the site where you want this connector to run. Only this site will process the data.
+       * @example global
+       */
+      site: string
+      /**
+       * @description The unique identifier of the dynamic host configuration.
+       * @example MyDcd01
+       */
+      dcd_id: string
+      /** @description The connector configuration. */
+      connector: components['schemas']['OneOfConnector']
+    }
+    ShowDCD: {
+      /**
+       * @description list of links to other resources.
+       * @example null
+       */
+      links: components['schemas']['Link'][]
+      /**
+       * @description The domain type of the object.
+       * @default dcd
+       */
+      domainType: unknown
+      /** @description The unique identifier for this domain-object type. */
+      id?: string
+      /** @description A human readable title of this object. Can be used for user interfaces. */
+      title?: string
+      /** @description The container for external resources, like linked foreign objects or actions. */
+      members?: {
+        [key: string]: unknown
+      }
+      /** @description All the data and metadata of this dcd connection. */
+      extensions?: components['schemas']['DCDExtensions']
+    }
+    ConnectionFetchPhaseOne: {
+      /**
+       * @description The site id
+       * @example master
+       */
+      site_id: string
+      /**
+       * @description The connection id
+       * @example connection_id
+       */
+      connection_id: string
+    }
+    HostCreateAttribute: {
+      /**
+       * @description The IP address family of the host.
+       * @example ip-v4-only
+       * @enum {string}
+       */
+      tag_address_family?: 'no-ip' | 'ip-v4v6' | 'ip-v6-only' | 'ip-v4-only'
+      /**
+       * @description Agent and API integrations
+       * @example cmk-agent
+       * @enum {string}
+       */
+      tag_agent?: 'no-agent' | 'all-agents' | 'special-agents' | 'cmk-agent'
+      /**
+       * @description The SNMP data source of the host.
+       * @example snmp-v2
+       * @enum {string}
+       */
+      tag_snmp_ds?: 'no-snmp' | 'snmp-v1' | 'snmp-v2'
+      /**
+       * @description Use piggyback data for this host.
+       * @example piggyback
+       * @enum {string}
+       */
+      tag_piggyback?: 'piggyback' | 'no-piggyback' | 'auto-piggyback'
+      /** @description Add a comment or describe this host */
+      alias?: string
+      /** @description The site that should monitor this host. */
+      site?: string
+      /** @description A list of parents of this host. */
+      parents?: string[]
+      /** @description Only members of the contact groups listed here have Setup permission for the host/folder. Optionally, you can make these contact groups automatically monitor contacts. The assignment of hosts to contact groups can also be defined by <a href='wato.py?mode=edit_ruleset&varname=host_contactgroups'>rules</a>. */
+      contactgroups?: components['schemas']['HostContactGroup']
+      /** @description An IPv4 address. */
+      ipaddress?: string
+      /** @description An IPv6 address. */
+      ipv6address?: string
+      /** @description A list of IPv4 addresses. */
+      additional_ipv4addresses?: string[]
+      /** @description A list of IPv6 addresses. */
+      additional_ipv6addresses?: string[]
+      /** @description [Enterprise, Cloud, Saas, Managed editions only] Bake agent packages for this folder even if it is empty. */
+      bake_agent_package?: boolean
+      /**
+       * @description [Cloud, Managed editions only] This configures the communication direction of this host.
+       *      * `pull-agent` (default) - The server will try to contact the monitored host and pull the data by initializing a TCP connection
+       *      * `push-agent` - the host is expected to send the data to the monitoring server without being triggered
+       *
+       * @enum {string}
+       */
+      cmk_agent_connection?: 'pull-agent' | 'push-agent'
+      /** @description The SNMP access configuration. A configured SNMP v1/v2 community here will have precedence over any configured SNMP community rule. For this attribute to take effect, the attribute `tag_snmp_ds` needs to be set first. */
+      snmp_community?: components['schemas']['SNMPCredentials']
+      /** @description Labels allow you to flexibly group your hosts in order to refer to them later at other places in Checkmk, e.g. in rule chains.<br><b>Label format:</b> key:value<br><br>Neither the key nor the value can contain ‘:’. Checkmk does not perform any other validation on the labels you use. */
+      labels?: {
+        [key: string]: string
+      }
+      /**
+       * @description This indicates that the host is waiting for a bulk discovery. It is set to True once the host is in the queue. It will be removed after the discovery is ended.
+       * @example false
+       */
+      waiting_for_discovery?: boolean
+      /** @description Configuration for automatic network scan. Pings will besent to each IP address in the configured ranges to checkif a host is up or down. Each found host will be added tothe folder by it's host name (if possible) or IP address. */
+      network_scan?: components['schemas']['NetworkScan']
+      /**
+       * @description The protocol used to connect to the management board.
+       *
+       *     Valid options are:
+       *
+       *      * `none` - No management board
+       *      * `snmp` - Connect using SNMP
+       *      * `ipmi` - Connect using IPMI
+       *
+       * @enum {string}
+       */
+      management_protocol?: 'none' | 'snmp' | 'ipmi'
+      /** @description Address (IPv4, IPv6 or host name) under which the management board can be reached. */
+      management_address?: string
+      /** @description SNMP credentials */
+      management_snmp_community?: components['schemas']['SNMPCredentials'] | null
+      /** @description IPMI credentials */
+      management_ipmi_credentials?: components['schemas']['IPMIParameters'] | null
+      /** @description Identity of the entity which locked the locked_attributes. The identity is built out of the Site ID, the program name and the connection ID. */
+      locked_by?: components['schemas']['LockedBy']
+      /** @description Name of host attributes which are locked in the UI. */
+      locked_attributes?: string[]
+      /**
+       * @description Whether or not the last bulk discovery failed. It is set to True once it fails and unset in case a later discovery succeeds.
+       * @example false
+       */
+      inventory_failed?: boolean
+      /** @description [Cloud, Saas, Managed editions only] The name/address of the relay through which this host is monitored, if not empty. */
+      relay?: string
+    } & {
+      [key: string]: string
+    }
+    CreateCreationRuleAttribute: {
+      /**
+       * @description Name of the folder the connection creates hosts in. Once created, you can choose to move the host to another folder.
+       *
+       *     Path delimiters can be either `~`, `/` or `\`. Please use the one most appropriate for your quoting/escaping needs. A good default choice is `~`.
+       * @default /
+       */
+      folder_path: string
+      /**
+       * @description Attributes to set on the newly created host. You can specify custom attributes and tag groups in addition to the built-in ones listed below.
+       * @default {
+       *       "tag_snmp_ds": "no-snmp",
+       *       "tag_agent": "no-agent",
+       *       "tag_piggyback": "piggyback",
+       *       "tag_address_family": "no-ip"
+       *     }
+       * @example {
+       *       "tag_address_family": "no-ip"
+       *     }
+       */
+      host_attributes: components['schemas']['HostCreateAttribute']
+      /**
+       * @description Delete the hosts created by this connection whose piggyback data is no longer present.
+       * @default false
+       */
+      delete_hosts: boolean
+      /** @description Restrict host creation using regular expressions. */
+      matching_hosts?: string[]
+    }
+    CreatePiggybackDCD: {
+      /**
+       * @description The name of the plug-in to be used. Currently only piggyback is supported. (enum property replaced by openapi-typescript)
+       * @enum {string}
+       */
+      connector_type: 'piggyback'
+      /** @description Only care about hosts that receive piggyback data from hosts which name matches one of these regular expressions. */
+      restrict_source_hosts?: string[]
+      /**
+       * @description The interval in seconds the connection will be executed to check the available piggyback and update the configuration.
+       * @default 60
+       */
+      interval: number
+      /**
+       * @description The first matching rule is used. You must specify at least one rule.
+       * @default [
+       *       {
+       *         "folder_path": "/",
+       *         "host_attributes": {
+       *           "tag_snmp_ds": "no-snmp",
+       *           "tag_agent": "no-agent",
+       *           "tag_piggyback": "piggyback",
+       *           "tag_address_family": "no-ip"
+       *         },
+       *         "delete_hosts": false
+       *       }
+       *     ]
+       */
+      creation_rules: components['schemas']['CreateCreationRuleAttribute'][]
+      /**
+       * @description Automatically runs a service discovery on any new hosts created by this connection. This step will add any new services to the monitoring.
+       * @default true
+       */
+      discover_on_creation: boolean
+      /**
+       * @description Seconds to prevent host deletion after site startup, e.g. when booting the Checkmk server.
+       * @default 600
+       */
+      no_deletion_time_after_init: number
+      /**
+       * @description Seconds to keep hosts when piggyback source only sends piggyback data for other hosts.
+       * @default 3600
+       */
+      max_cache_age: number
+      /**
+       * @description Seconds to continue consider outdated piggyback data as valid
+       * @default 60
+       */
+      validity_period: number
+    }
+    CreateConnector: components['schemas']['CreatePiggybackDCD']
+    CreateDCD: {
+      /**
+       * @description Name your connection for easy recognition.
+       * @example My fancy dynamic host configuration
+       */
+      title: string
+      /**
+       * @description Add a comment to your dynamic host configuration
+       * @default
+       * @example This rule updates the host configuration from Initech cloud provider.
+       */
+      comment: string
+      /**
+       * Format: url
+       * @description Add a URL linking to a documentation or any other page. You can use either global URLs (starting with http://), absolute local URLs (starting with /) or relative URLs (relative to check_mk/).
+       * @default
+       * @example https://example.com/doc
+       */
+      documentation_url: string
+      /**
+       * @description The dynamic host configuration can be disabled but will remain part of the site.
+       * @default false
+       * @example false
+       */
+      disabled: boolean
+      /**
+       * @description Specify the site where you want this connector to run. Only this site will process the data.
+       * @example global
+       */
+      site: string
+      /**
+       * @description The unique ID of the Piggyback dynamic host configuration to be created.
+       * @example MyDcd01
+       */
+      dcd_id: string
+      /**
+       * @description The connector configuration.
+       * @example {
+       *       "connector_type": "piggyback",
+       *       "restrict_source_hosts": [
+       *         "host1",
+       *         "host2",
+       *         "regular.+expression"
+       *       ],
+       *       "interval": 60,
+       *       "creation_rules": [
+       *         {
+       *           "folder_path": "/",
+       *           "host_attributes": {
+       *             "tag_snmp_ds": "no-snmp",
+       *             "tag_agent": "no-agent",
+       *             "tag_piggyback": "piggyback",
+       *             "tag_address_family": "no-ip"
+       *           },
+       *           "delete_hosts": false
+       *         }
+       *       ],
+       *       "discover_on_creation": true,
+       *       "no_deletion_time_after_init": 600,
+       *       "max_cache_age": 3600,
+       *       "validity_period": 60
+       *     }
+       */
+      connector: components['schemas']['CreateConnector']
+    }
+    Api404CustomError2: {
+      /**
+       * @description The HTTP status code.
+       * @example 404
+       */
+      status?: number
+      /**
+       * @description Detailed information on what exactly went wrong.
+       * @example The dynamic host configuration was not found.
+       */
+      detail?: string
+      /**
+       * @description A summary of the problem.
+       * @example Not Found
+       */
+      title?: string
+      /** @description Detailed error messages on all fields failing validation. */
+      fields?: {
+        [key: string]: unknown
+      }
+      /** @description Additional information about the error. */
+      ext?: {
+        [key: string]: unknown
+      }
+    }
     ECEventAttributes: {
       /**
        * @description The site id of the EC event.
@@ -10686,301 +12746,31 @@ export interface components {
       /** @description An action which triggers the move of this folder to another folder. */
       move?: components['schemas']['ObjectActionMember']
     }
-    HostContactGroup: {
-      /** @description A list of contact groups. */
-      groups: string[]
-      /**
-       * @description Add these contact groups to the host.
-       * @default false
-       */
-      use: boolean
-      /**
-       * @description <p>Always add host contact groups also to its services.</p>With this option contact groups that are added to hosts are always being added to services, as well. This only makes a difference if you have assigned other contact groups to services via rules in <i>Host & Service Parameters</i>. As long as you do not have any such rule a service always inherits all contact groups from its host.
-       * @default false
-       */
-      use_for_services: boolean
-      /**
-       * @description Add these groups as contacts to all hosts in all sub-folders of this folder.
-       * @default false
-       */
-      recurse_use: boolean
-      /**
-       * @description Give these groups also permission on all sub-folders.
-       * @default false
-       */
-      recurse_perms: boolean
-    }
-    SNMPCommunity: {
-      /**
-       * @description discriminator enum property added by openapi-typescript
-       * @enum {string}
-       */
-      type: 'v1_v2_community'
-      /** @description SNMP community (SNMP Versions 1 and 2c) */
-      community: string
-    }
-    SNMPv3NoAuthNoPrivacy: {
-      /**
-       * @description The type of credentials to use. (enum property replaced by openapi-typescript)
-       * @enum {string}
-       */
-      type: 'v3_no_auth_no_privacy'
-      /** @description Security name */
-      security_name: string
-    }
-    SNMPv3AuthNoPrivacy: {
-      /**
-       * @description The type of credentials to use. (enum property replaced by openapi-typescript)
-       * @enum {string}
-       */
-      type: 'v3_auth_no_privacy'
-      /**
-       * @description Authentication protocol.
-       * @enum {string}
-       */
-      auth_protocol: 'MD5-96' | 'SHA-1-96' | 'SHA-2-224' | 'SHA-2-256' | 'SHA-2-384' | 'SHA-2-512'
-      /** @description Security name */
-      security_name: string
-      /** @description Authentication pass phrase. */
-      auth_password: string
-    }
-    SNMPv3AuthPrivacy: {
-      /**
-       * @description SNMPv3 with authentication and privacy. (enum property replaced by openapi-typescript)
-       * @enum {string}
-       */
-      type: 'v3_auth_privacy'
-      /**
-       * @description Authentication protocol.
-       * @enum {string}
-       */
-      auth_protocol: 'MD5-96' | 'SHA-1-96' | 'SHA-2-224' | 'SHA-2-256' | 'SHA-2-384' | 'SHA-2-512'
-      /** @description Security name */
-      security_name: string
-      /** @description Authentication pass phrase. */
-      auth_password: string
-      /**
-       * @description The privacy protocol. The only supported values in the Raw Edition are CBC-DES and AES-128. If selected, privacy_password needs to be supplied as well.
-       * @enum {string}
-       */
-      privacy_protocol:
-        | 'CBC-DES'
-        | 'AES-128'
-        | '3DES-EDE'
-        | 'AES-192'
-        | 'AES-256'
-        | 'AES-192-Blumenthal'
-        | 'AES-256-Blumenthal'
-      /** @description Privacy pass phrase. If filled, privacy_protocol needs to be selected as well. */
-      privacy_password: string
-    }
-    SNMPCredentials:
-      | components['schemas']['SNMPCommunity']
-      | components['schemas']['SNMPv3NoAuthNoPrivacy']
-      | components['schemas']['SNMPv3AuthNoPrivacy']
-      | components['schemas']['SNMPv3AuthPrivacy']
-    IPAddressRange: {
-      /**
-       * @description A range of addresses. (enum property replaced by openapi-typescript)
-       * @enum {string}
-       */
-      type: 'address_range'
-      /** @description The first IPv4 address of this range. */
-      from_address?: string
-      /** @description The last IPv4 address of this range. */
-      to_address?: string
-    }
-    IPNetwork: {
-      /**
-       * @description A single IPv4 network in CIDR notation. (enum property replaced by openapi-typescript)
-       * @enum {string}
-       */
-      type: 'network_range'
-      /** @description A IPv4 network in CIDR notation. Minimum prefix length is 8 bit, maximum prefix length is 30 bit.
-       *
-       *     Valid examples:
-       *
-       *      * `192.168.0.0/24`
-       *      * `192.168.0.0/255.255.255.0` */
-      network?: string
-    }
-    IPAddresses: {
-      /**
-       * @description A list of single IPv4 addresses. (enum property replaced by openapi-typescript)
-       * @enum {string}
-       */
-      type: 'explicit_addresses'
-      addresses?: string[]
-    }
-    IPRegexp: {
-      /**
-       * @description IPv4 addresses which match a regexp pattern (enum property replaced by openapi-typescript)
-       * @enum {string}
-       */
-      type: 'exclude_by_regexp'
-      /** @description A list of regular expressions which are matched against the found IP addresses. The matches will be excluded from the result. */
-      regexp_list?: string[]
-    }
-    IPRangeWithRegexp:
-      | components['schemas']['IPAddressRange']
-      | components['schemas']['IPNetwork']
-      | components['schemas']['IPAddresses']
-      | components['schemas']['IPRegexp']
-    TimeAllowedRange: {
-      /** @description The start time of day. Inclusive. Use ISO8601 format. Seconds are stripped. */
-      start: string
-      /** @description The end time of day. Inclusive. Use ISO8601 format. Seconds are stripped. */
-      end: string
-    }
-    RegexpRewrites: {
-      /** @description The search regexp. May contain match-groups, conditional matches, etc. This follows the Python regular expression syntax.
-       *
-       *     For details see:
-       *
-       *      * https://docs.python.org/3/library/re.html */
-      search: string
-      /** @description The replacement string. Match-groups can only be identified by `\1`, `\2`, etc. Highest supported match group is `\99`. Named lookups are not supported. */
-      replace_with: string
-    }
-    DirectMapping: {
-      /** @description The host name to be replaced. */
-      hostname: string
-      /** @description The replacement string. */
-      replace_with: string
-    }
-    TranslateNames: {
-      /**
-       * @description Convert all detected host names to upper- or lower-case.
-       *
-       *      * `nop` - Do not convert anything
-       *      * `lower` - Convert all host names to lowercase.
-       *      * `upper` - Convert all host names to uppercase.
-       * @default nop
-       * @enum {string}
-       */
-      convert_case: 'nop' | 'lower' | 'upper'
-      /** @description Drop the rest of the domain, only keep the host name. Will not affect IP addresses.
-       *
-       *     Examples:
-       *
-       *      * `192.168.0.1` -> `192.168.0.1`
-       *      * `foobar.example.com` -> `foobar`
-       *      * `example.com` -> `example`
-       *      * `example` -> `example`
-       *
-       *     This will be executed **after**:
-       *
-       *      * `convert_case`
-       *      */
-      drop_domain?: boolean
-      /** @description Rewrite discovered host names with multiple regular expressions. The replacements will be done one after another in the order they appear in the list. If not anchored at the end by a `$` character, the regexpwill be anchored at the end implicitly by adding a `$` character.
-       *
-       *     These will be executed **after**:
-       *
-       *      * `convert_case`
-       *      * `drop_domain`
-       *      */
-      regexp_rewrites?: components['schemas']['RegexpRewrites'][]
-      /** @description Replace one value with another.
-       *
-       *     These will be executed **after**:
-       *
-       *      * `convert_case`
-       *      * `drop_domain`
-       *      * `regexp_rewrites`
-       *      */
-      hostname_replacement?: components['schemas']['DirectMapping'][]
-    }
-    NetworkScan: {
-      /** @description IPv4 addresses to include. */
-      addresses: components['schemas']['IPRangeWithRegexp'][]
-      /** @description IPv4 addresses to exclude. */
-      exclude_addresses?: components['schemas']['IPRangeWithRegexp'][]
-      /**
-       * @description Scan interval in seconds. Default is 1 day, minimum is 1 hour.
-       * @default 86400
-       */
-      scan_interval: number
-      /** @description Only execute the discovery during this time range each day.. */
-      time_allowed: components['schemas']['TimeAllowedRange'][]
-      /**
-       * @description When set, the found IPv4 address is set on the discovered host.
-       * @default true
-       */
-      set_ip_address: boolean
-      /**
-       * @description Set the maximum number of concurrent pings sent to target IP addresses.
-       * @default 100
-       */
-      max_parallel_pings: number
-      /** @description Execute the network scan in the Checkmk user context of the chosen user. This user needs the permission to add new hosts to this folder. */
-      run_as?: string
-      /** @description Specify which criticality tag to set on the host created by the network scan. This field is required if the criticality tag group exists, otherwise it as to be omitted. */
-      tag_criticality?: string
-      translate_names?: components['schemas']['TranslateNames']
-    }
-    IPMIParameters: {
-      username: string
-      password: string
-    }
-    NetworkScanResult: {
-      /**
-       * Format: date-time
-       * @description When the scan started
-       */
-      start?: string | null
-      /**
-       * Format: date-time
-       * @description When the scan finished. Will be Null if not yet run.
-       */
-      end?: string | null
-      /**
-       * @description Last scan result
-       * @enum {string}
-       */
-      state?: 'running' | 'succeeded' | 'failed'
-      /** @description Short human readable description of what is happening. */
-      output?: string
-    }
-    MetaData: {
-      /**
-       * Format: date-time
-       * @description When has this object been created.
-       */
-      created_at?: string | null
-      /**
-       * Format: date-time
-       * @description When this object was last changed.
-       */
-      updated_at?: string | null
-      /** @description The user id under which this object has been created. */
-      created_by?: string | null
-    }
     FolderViewAttribute: {
       /**
        * @description The IP address family of the host.
        * @example ip-v4-only
        * @enum {string}
        */
-      tag_address_family?: 'no-ip' | 'ip-v4-only' | 'ip-v4v6' | 'ip-v6-only'
+      tag_address_family?: 'no-ip' | 'ip-v4v6' | 'ip-v6-only' | 'ip-v4-only'
       /**
        * @description Agent and API integrations
        * @example cmk-agent
        * @enum {string}
        */
-      tag_agent?: 'no-agent' | 'special-agents' | 'cmk-agent' | 'all-agents'
+      tag_agent?: 'no-agent' | 'all-agents' | 'special-agents' | 'cmk-agent'
       /**
        * @description The SNMP data source of the host.
        * @example snmp-v2
        * @enum {string}
        */
-      tag_snmp_ds?: 'snmp-v2' | 'no-snmp' | 'snmp-v1'
+      tag_snmp_ds?: 'no-snmp' | 'snmp-v1' | 'snmp-v2'
       /**
        * @description Use piggyback data for this host.
        * @example piggyback
        * @enum {string}
        */
-      tag_piggyback?: 'piggyback' | 'auto-piggyback' | 'no-piggyback'
+      tag_piggyback?: 'piggyback' | 'no-piggyback' | 'auto-piggyback'
       /** @description The site that should monitor this host. */
       site?: string
       /** @description A list of parents of this host. */
@@ -11075,114 +12865,6 @@ export interface components {
       /** @description The folder in which this host resides. It is represented by a hexadecimal identifier which is it's 'primary key'. The folder can be accessed via the `self`-link provided in the links array. */
       folder_config?: components['schemas']['Folder']
     }
-    LockedBy: {
-      /** @description Site ID */
-      site_id: string
-      /** @description Program ID */
-      program_id: string
-      /** @description Instance ID */
-      instance_id: string
-    }
-    HostViewAttribute: {
-      /**
-       * @description The IP address family of the host.
-       * @example ip-v4-only
-       * @enum {string}
-       */
-      tag_address_family?: 'no-ip' | 'ip-v4-only' | 'ip-v4v6' | 'ip-v6-only'
-      /**
-       * @description Agent and API integrations
-       * @example cmk-agent
-       * @enum {string}
-       */
-      tag_agent?: 'no-agent' | 'special-agents' | 'cmk-agent' | 'all-agents'
-      /**
-       * @description The SNMP data source of the host.
-       * @example snmp-v2
-       * @enum {string}
-       */
-      tag_snmp_ds?: 'snmp-v2' | 'no-snmp' | 'snmp-v1'
-      /**
-       * @description Use piggyback data for this host.
-       * @example piggyback
-       * @enum {string}
-       */
-      tag_piggyback?: 'piggyback' | 'auto-piggyback' | 'no-piggyback'
-      /** @description Add a comment or describe this host */
-      alias?: string
-      /** @description The site that should monitor this host. */
-      site?: string
-      /** @description A list of parents of this host. */
-      parents?: string[]
-      /** @description Only members of the contact groups listed here have Setup permission for the host/folder. Optionally, you can make these contact groups automatically monitor contacts. The assignment of hosts to contact groups can also be defined by <a href='wato.py?mode=edit_ruleset&varname=host_contactgroups'>rules</a>. */
-      contactgroups?: components['schemas']['HostContactGroup']
-      /** @description An IPv4 address. */
-      ipaddress?: string
-      /** @description An IPv6 address. */
-      ipv6address?: string
-      /** @description A list of IPv4 addresses. */
-      additional_ipv4addresses?: string[]
-      /** @description A list of IPv6 addresses. */
-      additional_ipv6addresses?: string[]
-      /** @description [Enterprise, Cloud, Saas, Managed editions only] Bake agent packages for this folder even if it is empty. */
-      bake_agent_package?: boolean
-      /**
-       * @description [Cloud, Managed editions only] This configures the communication direction of this host.
-       *      * `pull-agent` (default) - The server will try to contact the monitored host and pull the data by initializing a TCP connection
-       *      * `push-agent` - the host is expected to send the data to the monitoring server without being triggered
-       *
-       * @enum {string}
-       */
-      cmk_agent_connection?: 'pull-agent' | 'push-agent'
-      /** @description The SNMP access configuration. A configured SNMP v1/v2 community here will have precedence over any configured SNMP community rule. For this attribute to take effect, the attribute `tag_snmp_ds` needs to be set first. */
-      snmp_community?: components['schemas']['SNMPCredentials']
-      /** @description Labels allow you to flexibly group your hosts in order to refer to them later at other places in Checkmk, e.g. in rule chains.<br><b>Label format:</b> key:value<br><br>Neither the key nor the value can contain ‘:’. Checkmk does not perform any other validation on the labels you use. */
-      labels?: {
-        [key: string]: string
-      }
-      /**
-       * @description This indicates that the host is waiting for a bulk discovery. It is set to True once the host is in the queue. It will be removed after the discovery is ended.
-       * @example false
-       */
-      waiting_for_discovery?: boolean
-      /** @description Configuration for automatic network scan. Pings will besent to each IP address in the configured ranges to checkif a host is up or down. Each found host will be added tothe folder by it's host name (if possible) or IP address. */
-      network_scan?: components['schemas']['NetworkScan']
-      /**
-       * @description The protocol used to connect to the management board.
-       *
-       *     Valid options are:
-       *
-       *      * `none` - No management board
-       *      * `snmp` - Connect using SNMP
-       *      * `ipmi` - Connect using IPMI
-       *
-       * @enum {string}
-       */
-      management_protocol?: 'none' | 'snmp' | 'ipmi'
-      /** @description Address (IPv4, IPv6 or host name) under which the management board can be reached. */
-      management_address?: string
-      /** @description SNMP credentials */
-      management_snmp_community?: components['schemas']['SNMPCredentials'] | null
-      /** @description IPMI credentials */
-      management_ipmi_credentials?: components['schemas']['IPMIParameters'] | null
-      /** @description Identity of the entity which locked the locked_attributes. The identity is built out of the Site ID, the program name and the connection ID. */
-      locked_by?: components['schemas']['LockedBy']
-      /** @description Name of host attributes which are locked in the UI. */
-      locked_attributes?: string[]
-      /**
-       * @description Whether or not the last bulk discovery failed. It is set to True once it fails and unset in case a later discovery succeeds.
-       * @example false
-       */
-      inventory_failed?: boolean
-      /** @description [Cloud, Saas, Managed editions only] The name/address of the relay through which this host is monitored, if not empty. */
-      relay?: string
-      /** @description Read only access to the network scan result */
-      network_scan_result?: components['schemas']['NetworkScanResult']
-      /** @description Read only access to configured metadata. */
-      meta_data?: components['schemas']['MetaData']
-    } & {
-      [key: string]: string
-    }
     HostExtensions: {
       /** @description The folder, in which this host resides.
        *
@@ -11263,25 +12945,25 @@ export interface components {
        * @example ip-v4-only
        * @enum {string}
        */
-      tag_address_family?: 'no-ip' | 'ip-v4-only' | 'ip-v4v6' | 'ip-v6-only'
+      tag_address_family?: 'no-ip' | 'ip-v4v6' | 'ip-v6-only' | 'ip-v4-only'
       /**
        * @description Agent and API integrations
        * @example cmk-agent
        * @enum {string}
        */
-      tag_agent?: 'no-agent' | 'special-agents' | 'cmk-agent' | 'all-agents'
+      tag_agent?: 'no-agent' | 'all-agents' | 'special-agents' | 'cmk-agent'
       /**
        * @description The SNMP data source of the host.
        * @example snmp-v2
        * @enum {string}
        */
-      tag_snmp_ds?: 'snmp-v2' | 'no-snmp' | 'snmp-v1'
+      tag_snmp_ds?: 'no-snmp' | 'snmp-v1' | 'snmp-v2'
       /**
        * @description Use piggyback data for this host.
        * @example piggyback
        * @enum {string}
        */
-      tag_piggyback?: 'piggyback' | 'auto-piggyback' | 'no-piggyback'
+      tag_piggyback?: 'piggyback' | 'no-piggyback' | 'auto-piggyback'
       /** @description The site that should monitor this host. */
       site?: string
       /** @description A list of parents of this host. */
@@ -11399,25 +13081,25 @@ export interface components {
        * @example ip-v4-only
        * @enum {string}
        */
-      tag_address_family?: 'no-ip' | 'ip-v4-only' | 'ip-v4v6' | 'ip-v6-only'
+      tag_address_family?: 'no-ip' | 'ip-v4v6' | 'ip-v6-only' | 'ip-v4-only'
       /**
        * @description Agent and API integrations
        * @example cmk-agent
        * @enum {string}
        */
-      tag_agent?: 'no-agent' | 'special-agents' | 'cmk-agent' | 'all-agents'
+      tag_agent?: 'no-agent' | 'all-agents' | 'special-agents' | 'cmk-agent'
       /**
        * @description The SNMP data source of the host.
        * @example snmp-v2
        * @enum {string}
        */
-      tag_snmp_ds?: 'snmp-v2' | 'no-snmp' | 'snmp-v1'
+      tag_snmp_ds?: 'no-snmp' | 'snmp-v1' | 'snmp-v2'
       /**
        * @description Use piggyback data for this host.
        * @example piggyback
        * @enum {string}
        */
-      tag_piggyback?: 'piggyback' | 'auto-piggyback' | 'no-piggyback'
+      tag_piggyback?: 'piggyback' | 'no-piggyback' | 'auto-piggyback'
       /** @description The site that should monitor this host. */
       site?: string
       /** @description A list of parents of this host. */
@@ -12069,7 +13751,7 @@ export interface components {
        */
       tags: components['schemas']['HostTag'][]
     }
-    Api404CustomError2: {
+    Api404CustomError3: {
       /**
        * @description The HTTP status code.
        * @example 404
@@ -12094,8 +13776,8 @@ export interface components {
         [key: string]: unknown
       }
     }
-    /** Api403DefaultError96A40CC4DB60D504 */
-    Api403DefaultError96A40CC4DB60D504: {
+    /** Api403DefaultErrorF94C922ABB4460C0 */
+    Api403DefaultErrorF94C922ABB4460C0: {
       /**
        * Status
        * @description The HTTP status code.
@@ -13152,25 +14834,25 @@ export interface components {
        * @example ip-v4-only
        * @enum {string}
        */
-      tag_address_family?: 'no-ip' | 'ip-v4-only' | 'ip-v4v6' | 'ip-v6-only'
+      tag_address_family?: 'no-ip' | 'ip-v4v6' | 'ip-v6-only' | 'ip-v4-only'
       /**
        * @description Agent and API integrations
        * @example cmk-agent
        * @enum {string}
        */
-      tag_agent?: 'no-agent' | 'special-agents' | 'cmk-agent' | 'all-agents'
+      tag_agent?: 'no-agent' | 'all-agents' | 'special-agents' | 'cmk-agent'
       /**
        * @description The SNMP data source of the host.
        * @example snmp-v2
        * @enum {string}
        */
-      tag_snmp_ds?: 'snmp-v2' | 'no-snmp' | 'snmp-v1'
+      tag_snmp_ds?: 'no-snmp' | 'snmp-v1' | 'snmp-v2'
       /**
        * @description Use piggyback data for this host.
        * @example piggyback
        * @enum {string}
        */
-      tag_piggyback?: 'piggyback' | 'auto-piggyback' | 'no-piggyback'
+      tag_piggyback?: 'piggyback' | 'no-piggyback' | 'auto-piggyback'
       /** @description Add a comment or describe this host */
       alias?: string
       /** @description The site that should monitor this host. */
@@ -13419,102 +15101,6 @@ export interface components {
         [key: string]: unknown
       }
     }
-    HostCreateAttribute: {
-      /**
-       * @description The IP address family of the host.
-       * @example ip-v4-only
-       * @enum {string}
-       */
-      tag_address_family?: 'no-ip' | 'ip-v4-only' | 'ip-v4v6' | 'ip-v6-only'
-      /**
-       * @description Agent and API integrations
-       * @example cmk-agent
-       * @enum {string}
-       */
-      tag_agent?: 'no-agent' | 'special-agents' | 'cmk-agent' | 'all-agents'
-      /**
-       * @description The SNMP data source of the host.
-       * @example snmp-v2
-       * @enum {string}
-       */
-      tag_snmp_ds?: 'snmp-v2' | 'no-snmp' | 'snmp-v1'
-      /**
-       * @description Use piggyback data for this host.
-       * @example piggyback
-       * @enum {string}
-       */
-      tag_piggyback?: 'piggyback' | 'auto-piggyback' | 'no-piggyback'
-      /** @description Add a comment or describe this host */
-      alias?: string
-      /** @description The site that should monitor this host. */
-      site?: string
-      /** @description A list of parents of this host. */
-      parents?: string[]
-      /** @description Only members of the contact groups listed here have Setup permission for the host/folder. Optionally, you can make these contact groups automatically monitor contacts. The assignment of hosts to contact groups can also be defined by <a href='wato.py?mode=edit_ruleset&varname=host_contactgroups'>rules</a>. */
-      contactgroups?: components['schemas']['HostContactGroup']
-      /** @description An IPv4 address. */
-      ipaddress?: string
-      /** @description An IPv6 address. */
-      ipv6address?: string
-      /** @description A list of IPv4 addresses. */
-      additional_ipv4addresses?: string[]
-      /** @description A list of IPv6 addresses. */
-      additional_ipv6addresses?: string[]
-      /** @description [Enterprise, Cloud, Saas, Managed editions only] Bake agent packages for this folder even if it is empty. */
-      bake_agent_package?: boolean
-      /**
-       * @description [Cloud, Managed editions only] This configures the communication direction of this host.
-       *      * `pull-agent` (default) - The server will try to contact the monitored host and pull the data by initializing a TCP connection
-       *      * `push-agent` - the host is expected to send the data to the monitoring server without being triggered
-       *
-       * @enum {string}
-       */
-      cmk_agent_connection?: 'pull-agent' | 'push-agent'
-      /** @description The SNMP access configuration. A configured SNMP v1/v2 community here will have precedence over any configured SNMP community rule. For this attribute to take effect, the attribute `tag_snmp_ds` needs to be set first. */
-      snmp_community?: components['schemas']['SNMPCredentials']
-      /** @description Labels allow you to flexibly group your hosts in order to refer to them later at other places in Checkmk, e.g. in rule chains.<br><b>Label format:</b> key:value<br><br>Neither the key nor the value can contain ‘:’. Checkmk does not perform any other validation on the labels you use. */
-      labels?: {
-        [key: string]: string
-      }
-      /**
-       * @description This indicates that the host is waiting for a bulk discovery. It is set to True once the host is in the queue. It will be removed after the discovery is ended.
-       * @example false
-       */
-      waiting_for_discovery?: boolean
-      /** @description Configuration for automatic network scan. Pings will besent to each IP address in the configured ranges to checkif a host is up or down. Each found host will be added tothe folder by it's host name (if possible) or IP address. */
-      network_scan?: components['schemas']['NetworkScan']
-      /**
-       * @description The protocol used to connect to the management board.
-       *
-       *     Valid options are:
-       *
-       *      * `none` - No management board
-       *      * `snmp` - Connect using SNMP
-       *      * `ipmi` - Connect using IPMI
-       *
-       * @enum {string}
-       */
-      management_protocol?: 'none' | 'snmp' | 'ipmi'
-      /** @description Address (IPv4, IPv6 or host name) under which the management board can be reached. */
-      management_address?: string
-      /** @description SNMP credentials */
-      management_snmp_community?: components['schemas']['SNMPCredentials'] | null
-      /** @description IPMI credentials */
-      management_ipmi_credentials?: components['schemas']['IPMIParameters'] | null
-      /** @description Identity of the entity which locked the locked_attributes. The identity is built out of the Site ID, the program name and the connection ID. */
-      locked_by?: components['schemas']['LockedBy']
-      /** @description Name of host attributes which are locked in the UI. */
-      locked_attributes?: string[]
-      /**
-       * @description Whether or not the last bulk discovery failed. It is set to True once it fails and unset in case a later discovery succeeds.
-       * @example false
-       */
-      inventory_failed?: boolean
-      /** @description [Cloud, Saas, Managed editions only] The name/address of the relay through which this host is monitored, if not empty. */
-      relay?: string
-    } & {
-      [key: string]: string
-    }
     CreateHost: {
       /**
        * @description The hostname or IP address of the host to be created.
@@ -13740,25 +15326,25 @@ export interface components {
        * @example ip-v4-only
        * @enum {string}
        */
-      tag_address_family?: 'no-ip' | 'ip-v4-only' | 'ip-v4v6' | 'ip-v6-only'
+      tag_address_family?: 'no-ip' | 'ip-v4v6' | 'ip-v6-only' | 'ip-v4-only'
       /**
        * @description Agent and API integrations
        * @example cmk-agent
        * @enum {string}
        */
-      tag_agent?: 'no-agent' | 'special-agents' | 'cmk-agent' | 'all-agents'
+      tag_agent?: 'no-agent' | 'all-agents' | 'special-agents' | 'cmk-agent'
       /**
        * @description The SNMP data source of the host.
        * @example snmp-v2
        * @enum {string}
        */
-      tag_snmp_ds?: 'snmp-v2' | 'no-snmp' | 'snmp-v1'
+      tag_snmp_ds?: 'no-snmp' | 'snmp-v1' | 'snmp-v2'
       /**
        * @description Use piggyback data for this host.
        * @example piggyback
        * @enum {string}
        */
-      tag_piggyback?: 'piggyback' | 'auto-piggyback' | 'no-piggyback'
+      tag_piggyback?: 'piggyback' | 'no-piggyback' | 'auto-piggyback'
       /** @description Add a comment or describe this host */
       alias?: string
       /** @description The site that should monitor this host. */
@@ -16276,26 +17862,220 @@ export interface components {
        */
       ldap_connection: components['schemas']['LDAPConnectionCreateRequest']
     }
+    VerificationRequest: {
+      /**
+       * @description The version of the request
+       * @example 3.0
+       */
+      VERSION: string
+      /**
+       * @description The ID of the request
+       * @example df17e557-0daf-4b78-b9f2-f3550252a8b5
+       */
+      request_id: string
+      /**
+       * @description The ID of the instance the request is for
+       * @example 6b9e78d1-de99-46ef-9644-32ee33a2b489
+       */
+      instance_id: string
+      /**
+       * @description The creation timestamp
+       * @example 1690379907
+       */
+      created_at: number
+      /**
+       * @description How the request was uploaded
+       * @example manual
+       */
+      upload_origin: string
+      /**
+       * @description The license usage reports
+       * @example [
+       *       {}
+       *     ]
+       */
+      raw_reports: {
+        [key: string]: unknown
+      }[]
+    }
+    Api403CustomError5: {
+      /**
+       * @description The HTTP status code.
+       * @example 403
+       */
+      status?: number
+      /**
+       * @description Detailed information on what exactly went wrong.
+       * @example You have insufficient permissions for this operation.
+       */
+      detail?: string
+      /**
+       * @description A summary of the problem.
+       * @example Forbidden
+       */
+      title?: string
+      /** @description Detailed error messages on all fields failing validation. */
+      fields?: {
+        [key: string]: unknown
+      }
+      /** @description Additional information about the error. */
+      ext?: {
+        [key: string]: unknown
+      }
+    }
+    BaseSettingMode: {
+      /**
+       * @description With which mode to perform the license verification: 'online' or 'offline'. If 'online' is chosen, credentials have to be provided (enum property replaced by openapi-typescript)
+       * @enum {string}
+       */
+      mode: 'offline'
+    }
+    LicenseCredentials: {
+      /** @example application-account-id */
+      username: string
+      /** @example application-account-password */
+      password: string
+    }
+    OnlineSettingMode: {
+      /**
+       * @description With which mode to perform the license verification: 'online' or 'offline'. If 'online' is chosen, credentials have to be provided (enum property replaced by openapi-typescript)
+       * @enum {string}
+       */
+      mode: 'online'
+      /**
+       * @description The credentials to use for online license configuration
+       * @example {
+       *       "username": "application-account-id",
+       *       "password": "application-account-password"
+       *     }
+       */
+      credentials: components['schemas']['LicenseCredentials']
+    }
+    LicenceSettingMode:
+      | components['schemas']['BaseSettingMode']
+      | components['schemas']['OnlineSettingMode']
+    LicenseSettings: {
+      /**
+       * @description The settings required for the configuration of licensing settings
+       * @example {
+       *       "mode": "online",
+       *       "credentials": {
+       *         "username": "application-account-id",
+       *         "password": "application-account-password"
+       *       }
+       *     }
+       */
+      settings: components['schemas']['LicenceSettingMode']
+    }
+    VerificationResponse: {
+      /**
+       * @description The version of the response
+       * @example 3.0
+       */
+      VERSION: string
+      /**
+       * @description The ID of the request
+       * @example df17e557-0daf-4b78-b9f2-f3550252a8b5
+       */
+      request_id: string
+      /**
+       * @description The ID of the response
+       * @example 6b9e78d1-de99-46ef-9644-32ee33a2b489
+       */
+      response_id: string
+      /**
+       * @description The creation timestamp
+       * @example 1690379907
+       */
+      created_at: number
+      /**
+       * @description The signature of the response
+       * @example
+       */
+      signature: string
+      /**
+       * @description The certificate of the response
+       * @example -----BEGIN CERTIFICATE-----...
+       */
+      certificate: string
+      /**
+       * @description The payload of the response
+       * @example {}
+       */
+      payload: {
+        [key: string]: unknown
+      }
+    }
+    Api422CustomError4: {
+      /**
+       * @description The HTTP status code.
+       * @example 422
+       */
+      status?: number
+      /**
+       * @description Detailed information on what exactly went wrong.
+       * @example Offline verification procedure was not successful
+       */
+      detail?: string
+      /**
+       * @description A summary of the problem.
+       * @example Unprocessable Entity
+       */
+      title?: string
+      /** @description Detailed error messages on all fields failing validation. */
+      fields?: {
+        [key: string]: unknown
+      }
+      /** @description Additional information about the error. */
+      ext?: {
+        [key: string]: unknown
+      }
+    }
+    Api422CustomError5: {
+      /**
+       * @description The HTTP status code.
+       * @example 422
+       */
+      status?: number
+      /**
+       * @description Detailed information on what exactly went wrong.
+       * @example Online verification procedure was not successful
+       */
+      detail?: string
+      /**
+       * @description A summary of the problem.
+       * @example Unprocessable Entity
+       */
+      title?: string
+      /** @description Detailed error messages on all fields failing validation. */
+      fields?: {
+        [key: string]: unknown
+      }
+      /** @description Additional information about the error. */
+      ext?: {
+        [key: string]: unknown
+      }
+    }
     TimeRange: {
       /**
        * Format: date-time
        * @description The approximate time of the first sample.
-       * @example 2025-09-03 09:50:23.991903
+       * @example 2025-09-05 17:14:04.135684
        */
       start: string
       /**
        * Format: date-time
        * @description The approximate time of the last sample.
-       * @example 2025-09-03 10:05:23.991948
+       * @example 2025-09-05 17:29:04.135713
        */
       end: string
     }
-    GetGraph: {
+    FilterGraph: {
       /**
        * @description The time range from which to source the metrics.
        * @example {
-       *       "start": "2025-09-03 09:50:23.992274",
-       *       "end": "2025-09-03 10:05:23.992280"
+       *       "start": "2025-09-05 17:14:04.135923",
+       *       "end": "2025-09-05 17:29:04.135928"
        *     }
        */
       time_range: components['schemas']['TimeRange']
@@ -16307,20 +18087,56 @@ export interface components {
        */
       reduce: 'min' | 'max' | 'average'
       /**
-       * @description The name of the site. Even though this is optional, specifying a site will greatly improve performance in large distributed systems.
-       * @example heute
+       * @description Filter for hosts, services and sites. Entries of the filter are combined with logical AND. Depending of the configuration of Checkmk you have to specify a certain set of filters, otherwise Checkmk will refuse to return a result, as too many metrics would have to be returned. See example for commonly used filters.
+       * @example {
+       *       "siteopt": {
+       *         "site": "site_name"
+       *       },
+       *       "host": {
+       *         "host": "host_name"
+       *       },
+       *       "hostregex": {
+       *         "host_regex": "windows.*",
+       *         "neg_host_regex": "on"
+       *       },
+       *       "service": {
+       *         "service": "Check_MK"
+       *       },
+       *       "serviceregex": {
+       *         "service_regex": ".+"
+       *       },
+       *       "host_labels": {
+       *         "host_labels_count": "1",
+       *         "host_labels_1_vs_count": "1",
+       *         "host_labels_1_bool": "and",
+       *         "host_labels_indexof_1": "1",
+       *         "host_labels_1_vs_1_bool": "and",
+       *         "host_labels_1_vs_1_vs": "cmk/os_family:linux",
+       *         "host_labels_1_vs_indexof_1": "1"
+       *       },
+       *       "opthostgroup": {
+       *         "opthost_group": "check_mk"
+       *       },
+       *       "optservicegroup": {
+       *         "optservice_group": "APT_Updates"
+       *       },
+       *       "host_tags": {
+       *         "host_tag_0_op": "is",
+       *         "host_tag_0_grp": "criticality",
+       *         "host_tag_0_val": "test"
+       *       }
+       *     }
        */
-      site?: string
+      filter: {
+        [key: string]: unknown
+      }
       /**
-       * @description The host name to use.
-       * @example my.cool.host
+       * @description A result that contains multiple metrics of the same type can be aggregated together. Aggregation is disabled by default.
+       * @default off
+       * @example maximum
+       * @enum {string}
        */
-      host_name: string
-      /**
-       * @description The service, whose data to request.
-       * @example Check_MK
-       */
-      service_description: string
+      aggregation: 'off' | 'sum' | 'average' | 'minimum' | 'maximum'
       /**
        * @description Specify whether you want to receive a single metric (via metric_id), or a predefined graph containing multiple metrics (via graph_id). (enum property replaced by openapi-typescript)
        * @enum {string}
@@ -16332,12 +18148,12 @@ export interface components {
        */
       graph_id: string
     }
-    GetMetric: {
+    FilterMetric: {
       /**
        * @description The time range from which to source the metrics.
        * @example {
-       *       "start": "2025-09-03 09:50:23.992274",
-       *       "end": "2025-09-03 10:05:23.992280"
+       *       "start": "2025-09-05 17:14:04.135923",
+       *       "end": "2025-09-05 17:29:04.135928"
        *     }
        */
       time_range: components['schemas']['TimeRange']
@@ -16349,20 +18165,56 @@ export interface components {
        */
       reduce: 'min' | 'max' | 'average'
       /**
-       * @description The name of the site. Even though this is optional, specifying a site will greatly improve performance in large distributed systems.
-       * @example heute
+       * @description Filter for hosts, services and sites. Entries of the filter are combined with logical AND. Depending of the configuration of Checkmk you have to specify a certain set of filters, otherwise Checkmk will refuse to return a result, as too many metrics would have to be returned. See example for commonly used filters.
+       * @example {
+       *       "siteopt": {
+       *         "site": "site_name"
+       *       },
+       *       "host": {
+       *         "host": "host_name"
+       *       },
+       *       "hostregex": {
+       *         "host_regex": "windows.*",
+       *         "neg_host_regex": "on"
+       *       },
+       *       "service": {
+       *         "service": "Check_MK"
+       *       },
+       *       "serviceregex": {
+       *         "service_regex": ".+"
+       *       },
+       *       "host_labels": {
+       *         "host_labels_count": "1",
+       *         "host_labels_1_vs_count": "1",
+       *         "host_labels_1_bool": "and",
+       *         "host_labels_indexof_1": "1",
+       *         "host_labels_1_vs_1_bool": "and",
+       *         "host_labels_1_vs_1_vs": "cmk/os_family:linux",
+       *         "host_labels_1_vs_indexof_1": "1"
+       *       },
+       *       "opthostgroup": {
+       *         "opthost_group": "check_mk"
+       *       },
+       *       "optservicegroup": {
+       *         "optservice_group": "APT_Updates"
+       *       },
+       *       "host_tags": {
+       *         "host_tag_0_op": "is",
+       *         "host_tag_0_grp": "criticality",
+       *         "host_tag_0_val": "test"
+       *       }
+       *     }
        */
-      site?: string
+      filter: {
+        [key: string]: unknown
+      }
       /**
-       * @description The host name to use.
-       * @example my.cool.host
+       * @description A result that contains multiple metrics of the same type can be aggregated together. Aggregation is disabled by default.
+       * @default off
+       * @example maximum
+       * @enum {string}
        */
-      host_name: string
-      /**
-       * @description The service, whose data to request.
-       * @example Check_MK
-       */
-      service_description: string
+      aggregation: 'off' | 'sum' | 'average' | 'minimum' | 'maximum'
       /**
        * @description Specify whether you want to receive a single metric (via metric_id), or a predefined graph containing multiple metrics (via graph_id). (enum property replaced by openapi-typescript)
        * @enum {string}
@@ -16374,7 +18226,7 @@ export interface components {
        */
       metric_id: string
     }
-    Get: components['schemas']['GetGraph'] | components['schemas']['GetMetric']
+    Filter: components['schemas']['FilterGraph'] | components['schemas']['FilterMetric']
     Metric: {
       /**
        * @description The color of the metric as displayed in Checkmk. Color is in HTML notation.
@@ -16442,6 +18294,91 @@ export interface components {
        */
       metrics: components['schemas']['Metric'][]
     }
+    GetGraph: {
+      /**
+       * @description The time range from which to source the metrics.
+       * @example {
+       *       "start": "2025-09-05 17:14:04.135923",
+       *       "end": "2025-09-05 17:29:04.135928"
+       *     }
+       */
+      time_range: components['schemas']['TimeRange']
+      /**
+       * @description Specify how to reduce a segment of data points to a single data point of the output metric. This can be useful to find spikes in your data that would be smoothed out by computing the average.
+       * @default average
+       * @example max
+       * @enum {string}
+       */
+      reduce: 'min' | 'max' | 'average'
+      /**
+       * @description The name of the site. Even though this is optional, specifying a site will greatly improve performance in large distributed systems.
+       * @example heute
+       */
+      site?: string
+      /**
+       * @description The host name to use.
+       * @example my.cool.host
+       */
+      host_name: string
+      /**
+       * @description The service, whose data to request.
+       * @example Check_MK
+       */
+      service_description: string
+      /**
+       * @description Specify whether you want to receive a single metric (via metric_id), or a predefined graph containing multiple metrics (via graph_id). (enum property replaced by openapi-typescript)
+       * @enum {string}
+       */
+      type: 'predefined_graph'
+      /**
+       * @description The ID of the predefined graph. After activating the "Show internal IDs" in the "display options" of the Service view, you can see the ID of a predefined graph in the title of the graph.
+       * @example cmk_cpu_time_by_phase
+       */
+      graph_id: string
+    }
+    GetMetric: {
+      /**
+       * @description The time range from which to source the metrics.
+       * @example {
+       *       "start": "2025-09-05 17:14:04.135923",
+       *       "end": "2025-09-05 17:29:04.135928"
+       *     }
+       */
+      time_range: components['schemas']['TimeRange']
+      /**
+       * @description Specify how to reduce a segment of data points to a single data point of the output metric. This can be useful to find spikes in your data that would be smoothed out by computing the average.
+       * @default average
+       * @example max
+       * @enum {string}
+       */
+      reduce: 'min' | 'max' | 'average'
+      /**
+       * @description The name of the site. Even though this is optional, specifying a site will greatly improve performance in large distributed systems.
+       * @example heute
+       */
+      site?: string
+      /**
+       * @description The host name to use.
+       * @example my.cool.host
+       */
+      host_name: string
+      /**
+       * @description The service, whose data to request.
+       * @example Check_MK
+       */
+      service_description: string
+      /**
+       * @description Specify whether you want to receive a single metric (via metric_id), or a predefined graph containing multiple metrics (via graph_id). (enum property replaced by openapi-typescript)
+       * @enum {string}
+       */
+      type: 'single_metric'
+      /**
+       * @description The ID of the single metric.After activating the "Show internal IDs" in the "display options" of the Service view, you can see the ID of a single metric in the legend of the graph.
+       * @example cmk_time_agent
+       */
+      metric_id: string
+    }
+    Get: components['schemas']['GetGraph'] | components['schemas']['GetMetric']
     InstalledVersions: {
       /**
        * @description The site where this API call was made on.
@@ -19777,6 +21714,10 @@ export interface components {
        *     } */
       rule_config: components['schemas']['RuleNotification']
     }
+    Response1: {
+      /** @description Secret of the download user */
+      secret: string
+    }
     PerformanceSettings: {
       /**
        * @description Timeout for responses
@@ -20116,8 +22057,8 @@ export interface components {
        */
       customer?: string
     }
-    /** Api412DefaultErrorC3824BF101199377 */
-    Api412DefaultErrorC3824BF101199377: {
+    /** Api412DefaultError39ACC6ED6CA0CFF3 */
+    Api412DefaultError39ACC6ED6CA0CFF3: {
       /**
        * Status
        * @description The HTTP status code.
@@ -20157,8 +22098,8 @@ export interface components {
         [key: string]: string
       }
     }
-    /** Api428DefaultError8BA7300877444788 */
-    Api428DefaultError8BA7300877444788: {
+    /** Api428DefaultError1D6D091244FC9835 */
+    Api428DefaultError1D6D091244FC9835: {
       /**
        * Status
        * @description The HTTP status code.
@@ -20598,6 +22539,98 @@ export interface components {
        *     ]
        */
       stages?: components['schemas']['QuickSetupStageRequest'][]
+    }
+    /** RelayConfigModel */
+    RelayConfigModel: {
+      /**
+       * Alias
+       * @description The relay alias.
+       */
+      alias: string
+      /**
+       * Siteid
+       * @description The relay site ID.
+       */
+      siteid: string
+    }
+    /** RelayModel */
+    RelayModel: {
+      /**
+       * Links
+       * @description List of links to other resources.
+       * @example [
+       *       {
+       *         "href": "https://.../api_resource",
+       *         "method": "GET",
+       *         "rel": "self",
+       *         "type": "application/json"
+       *       }
+       *     ]
+       */
+      links: components['schemas']['LinkModel'][]
+      /**
+       * Domaintype
+       * @description The domain type of the object.
+       * @constant
+       */
+      domainType: 'relay'
+      /**
+       * ID
+       * @description The unique identifier for this domain-object type.
+       * @example host1
+       */
+      id?: string
+      /**
+       * Title
+       * @description A human readable title of this object. Can be used for user interfaces.
+       * @example My Host
+       */
+      title?: string
+      /** @description All the data and metadata of this relay. */
+      extensions: components['schemas']['RelayConfigModel']
+    }
+    /** RelayCollectionModel */
+    RelayCollectionModel: {
+      /**
+       * Links
+       * @description List of links to other resources.
+       * @example [
+       *       {
+       *         "href": "https://.../api_resource",
+       *         "method": "GET",
+       *         "rel": "self",
+       *         "type": "application/json"
+       *       }
+       *     ]
+       */
+      links: components['schemas']['LinkModel'][]
+      /**
+       * Id
+       * @description The name of this collection.
+       */
+      id: string
+      /**
+       * Domaintype
+       * @description The domain type of the objects in the collection
+       * @example relay
+       * @constant
+       */
+      domainType: 'relay'
+      /**
+       * Title
+       * @description A human readable title of this object. Can be used for user interfaces.
+       */
+      title?: string
+      /**
+       * Value
+       * @description A list of relay objects
+       */
+      value: components['schemas']['RelayModel'][]
+      /**
+       * Extensions
+       * @description Additional attributes alongside the collection.
+       */
+      extensions?: Record<string, never>
     }
     Properties: {
       /**
@@ -21179,7 +23212,7 @@ export interface components {
       | components['schemas']['MoveToFolder']
       | components['schemas']['MoveToSpecificRule']
       | components['schemas']['MoveToSpecificRule']
-    Api404CustomError3: {
+    Api404CustomError4: {
       /**
        * @description The HTTP status code.
        * @example 404
@@ -21297,6 +23330,689 @@ export interface components {
       /** @description Specific attributes related to rulesets. */
       extensions?: components['schemas']['RulesetExtensions']
     }
+    GeneralProperties: {
+      /** @description Display name for the SAML connection. */
+      name: string
+      /**
+       * @description Add a title or describe this rule.
+       * @default
+       */
+      description: string
+      /**
+       * @description An optional comment to explain the purpose of this object. The comment is only visible in this dialog and can help other users to understand the intentions of the configured attributes.
+       * @default
+       */
+      comment: string
+      /**
+       * @description An optional URL linking documentation or any other page. An icon links to the page and opens in a new tab when clicked. You can use either global URLs (starting with http://), absolute local URLs (starting with /) or relative URLs (relative to check_mk/).
+       * @default
+       */
+      documentation_url: string
+      /**
+       * @description Selecting 'deactivated' will disable the rule, but it will remain in the configuration.
+       * @default activated
+       * @enum {string}
+       */
+      rule_activation: 'activated' | 'deactivated'
+      /** @description A SAML connection ID string. */
+      id: string
+    }
+    Metadata: {
+      /** @description Entity ID for this connection. */
+      entity_id: string
+      /**
+       * Format: url
+       * @description Metadata endpoint for this connection.
+       */
+      metadata_endpoint: string
+      /**
+       * Format: url
+       * @description Assertion Consumer Service endpoint for this connection.
+       */
+      assertion_consumer_service_endpoint: string
+    }
+    IdpMetadataURL: {
+      /**
+       * @description Automatically determine identity provider metadata by querying an endpoint. (enum property replaced by openapi-typescript)
+       * @enum {string}
+       */
+      type: 'url'
+      /**
+       * Format: url
+       * @description URL to fetch identity provider metadata from.
+       */
+      url: string
+    }
+    IdpMetadataXML: {
+      /**
+       * @description Static configuration in XML format. (enum property replaced by openapi-typescript)
+       * @enum {string}
+       */
+      type: 'xml'
+      /** @description Identity provider metadata xml. */
+      xml: string
+    }
+    IdpMetadata: components['schemas']['IdpMetadataURL'] | components['schemas']['IdpMetadataXML']
+    IdpTimeout: {
+      /**
+       * @description Connect timeout.
+       * @default 12
+       */
+      connect: number
+      /**
+       * @description Read timeout.
+       * @default 12
+       */
+      read: number
+    }
+    ConnectionConfig: {
+      /**
+       * Format: url
+       * @description URL of the CheckMK server.
+       */
+      checkmk_server_url: string
+      /** @description Identity provider metadata. */
+      identity_provider_metadata: components['schemas']['IdpMetadata']
+      /**
+       * @description Configured timeouts.
+       * @default {
+       *       "connect": 12,
+       *       "read": 12
+       *     }
+       */
+      identity_provider_timeout: components['schemas']['IdpTimeout']
+    }
+    BuiltinCertificate: {
+      /**
+       * @description Use the certificate that comes with Checkmk. (enum property replaced by openapi-typescript)
+       * @enum {string}
+       */
+      type: 'builtin'
+    }
+    CustomCertificate: {
+      /**
+       * @description Specify a custom certificate. (enum property replaced by openapi-typescript)
+       * @enum {string}
+       */
+      type: 'custom'
+      /** @description Private key in PEM format. */
+      private_key: string
+      /** @description Public key in PEM format. Must be a single certificate, not a chain. */
+      certificate: string
+    }
+    Certificate:
+      | components['schemas']['BuiltinCertificate']
+      | components['schemas']['CustomCertificate']
+    Security: {
+      /**
+       * @description Certificate to sign requests to the identity provider.
+       * @default {
+       *       "type": "builtin"
+       *     }
+       */
+      signing_certificate: components['schemas']['Certificate']
+      /** @description Certificate to decrypt authentication responses. */
+      decrypt_auth_certificate?: components['schemas']['Certificate']
+    }
+    ContactGroupMapping: {
+      /** @description Value to compare to the attribute. */
+      attribute_value: string
+      /** @description List of contact groups. */
+      contact_groups: string[]
+    }
+    ContactGroupMapValue: {
+      /** @description Attribute for contact group sync. */
+      attribute: string
+      /**
+       * @description The attribute value will be compared to values in the mapping. The contact groups specified for that value will be applied. (enum property replaced by openapi-typescript)
+       * @enum {string}
+       */
+      type: 'map'
+      /** @description Mapping of attribute values to contact groups. */
+      mapping: components['schemas']['ContactGroupMapping'][]
+    }
+    ContactGroupFromAttributeValue: {
+      /** @description Attribute for contact group sync. */
+      attribute: string
+      /**
+       * @description The attribute value will be mapped to an existing contact group with the same name. If no such group exists, they will not be mapped. (enum property replaced by openapi-typescript)
+       * @enum {string}
+       */
+      type: 'from_attribute_value'
+    }
+    ContactGroupCnFromLdapDn: {
+      /** @description Attribute for contact group sync. */
+      attribute: string
+      /**
+       * @description The attribute value will be interpreted as a distinguished name (DN). The common name (CN) will be mapped to an existing contact group. If no such group exists, they will not be mapped. (enum property replaced by openapi-typescript)
+       * @enum {string}
+       */
+      type: 'cn_from_ldap_dn'
+    }
+    ContactGroups:
+      | components['schemas']['ContactGroupMapValue']
+      | components['schemas']['ContactGroupFromAttributeValue']
+      | components['schemas']['ContactGroupCnFromLdapDn']
+    RolesMap: {
+      /** @enum {string} */
+      type: 'map'
+      /** @description Attribute which will be checked for a match. */
+      attribute: string
+      /** @description Mapping of roles and attribute values. Roles will be added to the user if one of the values matches the attribute value. */
+      roles?: {
+        [key: string]: string[]
+      }
+    }
+    Users: {
+      /** @description Attribute used to uniquely identify the users. */
+      id_attribute: string
+      /**
+       * @description Attribute used for the full name, if not set the ID is used.
+       * @default
+       */
+      full_name_attribute: string
+      /**
+       * @description Attribute used for the email.
+       * @default
+       */
+      email_attribute: string
+      /** @description Contact group sync configuration. */
+      contact_groups?: components['schemas']['ContactGroups']
+      /** @description Role sync configuration. */
+      roles?: components['schemas']['RolesMap']
+    }
+    SAMLConnectionConfig: {
+      /** @description General properties of a SAML connection. */
+      general_properties: components['schemas']['GeneralProperties']
+      /** @description Generated service provider metadata. */
+      metadata: components['schemas']['Metadata']
+      /** @description SAML connection configuration. */
+      connection_config: components['schemas']['ConnectionConfig']
+      /** @description SAML security configuration. */
+      security: components['schemas']['Security']
+      /** @description User sync configuration. */
+      users: components['schemas']['Users']
+    }
+    SAMLConnectionResponse: {
+      /**
+       * @description list of links to other resources.
+       * @example null
+       */
+      links: components['schemas']['Link'][]
+      /**
+       * @description The domain type of the object.
+       * @default saml_connection
+       */
+      domainType: unknown
+      /** @description The unique identifier for this domain-object type. */
+      id?: string
+      /** @description A human readable title of this object. Can be used for user interfaces. */
+      title?: string
+      /** @description The container for external resources, like linked foreign objects or actions. */
+      members?: {
+        [key: string]: unknown
+      }
+      /** @description The configuration attributes of a user SAML connection. */
+      extensions: components['schemas']['SAMLConnectionConfig']
+    }
+    SAMLConnectionResponseCollection: {
+      /**
+       * @description list of links to other resources.
+       * @example null
+       */
+      links: components['schemas']['Link'][]
+      /**
+       * @description The name of this collection.
+       * @default all
+       */
+      id: string
+      /**
+       * @description The domain type of the objects in the collection.
+       * @default saml_connection
+       */
+      domainType: unknown
+      /** @description A human readable title of this object. Can be used for user interfaces. */
+      title?: string
+      /** @description A list of SAML connections. */
+      value?: components['schemas']['SAMLConnectionResponse'][]
+      /** @description Additional attributes alongside the collection. */
+      extensions?: {
+        [key: string]: unknown
+      }
+    }
+    GeneralPropertiesCreate: {
+      /** @description Display name for the SAML connection. */
+      name: string
+      /**
+       * @description Add a title or describe this rule.
+       * @default
+       */
+      description: string
+      /**
+       * @description An optional comment to explain the purpose of this object. The comment is only visible in this dialog and can help other users to understand the intentions of the configured attributes.
+       * @default
+       */
+      comment: string
+      /**
+       * @description An optional URL linking documentation or any other page. An icon links to the page and opens in a new tab when clicked. You can use either global URLs (starting with http://), absolute local URLs (starting with /) or relative URLs (relative to check_mk/).
+       * @default
+       */
+      documentation_url: string
+      /**
+       * @description Selecting 'deactivated' will disable the rule, but it will remain in the configuration.
+       * @default activated
+       * @enum {string}
+       */
+      rule_activation: 'activated' | 'deactivated'
+      /** @description A SAML connection ID string. */
+      id: string
+    }
+    SAMLConnectionCreateRequest: {
+      /**
+       * @description General properties of a SAML connection.
+       * @example {
+       *       "id": "saml_1",
+       *       "name": "SAML Auth",
+       *       "description": "1st saml connection",
+       *       "comment": "test_comment",
+       *       "documentation_url": "https://docs.checkmk.com/latest/en/saml.html",
+       *       "rule_activation": "activated"
+       *     }
+       */
+      general_properties: components['schemas']['GeneralPropertiesCreate']
+      /**
+       * @description SAML connection configuration.
+       * @example {
+       *       "checkmk_server_url": "https://localhost",
+       *       "identity_provider_metadata": {
+       *         "type": "url",
+       *         "url": "https://localhost/saml"
+       *       },
+       *       "identity_provider_timeout": {
+       *         "connect": 12,
+       *         "read": 12
+       *       }
+       *     }
+       */
+      connection_config: components['schemas']['ConnectionConfig']
+      /**
+       * @description SAML security configuration.
+       * @default {
+       *       "signing_certificate": {
+       *         "type": "builtin"
+       *       }
+       *     }
+       * @example {
+       *       "signing_certificate": {
+       *         "type": "builtin"
+       *       },
+       *       "decrypt_auth_certificate": {
+       *         "type": "builtin"
+       *       }
+       *     }
+       */
+      security: components['schemas']['Security']
+      /**
+       * @description User sync configuration.
+       * @example {
+       *       "id_attribute": "user_id",
+       *       "full_name_attribute": "",
+       *       "email_attribute": "",
+       *       "contact_groups": {
+       *         "type": "from_attribute_value",
+       *         "attribute": "contact_group_attribute"
+       *       },
+       *       "roles": {
+       *         "type": "map",
+       *         "attribute": "roles_attribute",
+       *         "roles": {
+       *           "user": [
+       *             "value1"
+       *           ],
+       *           "guest": [
+       *             "value2",
+       *             "value3"
+       *           ]
+       *         }
+       *       }
+       *     }
+       */
+      users: components['schemas']['Users']
+    }
+    PreDefinedTimeRange: {
+      /**
+       * @description The type of the time range. (enum property replaced by openapi-typescript)
+       * @enum {string}
+       */
+      range_type: 'pre_defined'
+      /**
+       * @description The pre-defined time range.
+       * @example today
+       * @enum {string}
+       */
+      range:
+        | 'today'
+        | 'yesterday'
+        | 'this_week'
+        | 'last_week'
+        | 'this_month'
+        | 'last_month'
+        | 'this_year'
+        | 'last_year'
+    }
+    CustomTimeRange: {
+      /**
+       * @description The type of the time range. (enum property replaced by openapi-typescript)
+       * @enum {string}
+       */
+      range_type: 'custom'
+      /**
+       * Format: iso8601
+       * @description The start datetime of the SLA compute period range. The format has to conform to the ISO 8601 profile
+       * @example 2017-07-21T17:32:28Z
+       */
+      start: string
+      /**
+       * Format: iso8601
+       * @description The end datetime of the SLA compute period range. The format has to conform to the ISO 8601 profile
+       * @example 2017-07-21T17:32:28Z
+       */
+      end: string
+    }
+    TimeRange1:
+      | components['schemas']['PreDefinedTimeRange']
+      | components['schemas']['CustomTimeRange']
+    Service: {
+      /** @example example.com */
+      host_name: string
+      /**
+       * @description The service whose SLA data is to be computed.
+       * @example CPU load
+       */
+      service_description: string
+    }
+    SLAComputeTarget: {
+      /**
+       * @description The ids of the SLA configurations for which the SLA should be computed.
+       * @example [
+       *       "sla_configuration_1",
+       *       "sla_configuration_2"
+       *     ]
+       */
+      sla_ids: string[]
+      /**
+       * @description The time ranges for which the SLA should be computed.
+       * @example [
+       *       {
+       *         "range_type": "pre_defined",
+       *         "range": "today"
+       *       }
+       *     ]
+       */
+      time_ranges: components['schemas']['TimeRange1'][]
+      /**
+       * @description The services for which the SLA should be computed.
+       * @example [
+       *       {
+       *         "host_name": "heute",
+       *         "service_description": "CPU load"
+       *       }
+       *     ]
+       */
+      services: components['schemas']['Service'][]
+    }
+    SLAComputeRequest: {
+      /**
+       * @description The SLA compute targets for which the SLA should be computed.
+       * @example [
+       *       {
+       *         "sla_ids": [
+       *           "sla_configuration_1"
+       *         ],
+       *         "time_ranges": [
+       *           {
+       *             "range_type": "pre_defined",
+       *             "range": "today"
+       *           }
+       *         ],
+       *         "services": [
+       *           {
+       *             "host_name": "heute",
+       *             "service_description": "CPU load"
+       *           }
+       *         ]
+       *       }
+       *     ]
+       */
+      sla_compute_targets: components['schemas']['SLAComputeTarget'][]
+    }
+    ServiceOutput: {
+      /**
+       * @description The ID of the site.
+       * @example production
+       */
+      site?: string
+      /**
+       * @description The name of the host.
+       * @example heute
+       */
+      host_name?: string
+      /**
+       * @description The description of the service for which the SLA is computed.
+       * @example CPU load
+       */
+      service_description?: string
+    }
+    SLATimeRange:
+      | components['schemas']['PreDefinedTimeRange']
+      | components['schemas']['CustomTimeRange']
+    TimeRangeOutput: {
+      /**
+       * Format: date-time
+       * @description The start time of the period
+       * @example 2025-09-05 17:28:05.720518
+       */
+      start: string
+      /**
+       * Format: date-time
+       * @description The end time of the period
+       * @example 2025-09-05 17:29:05.720550
+       */
+      end: string
+    }
+    StateDurations: {
+      /**
+       * @description The time duration for how long the service was in the OK state or in downtime.
+       * @example 10
+       */
+      ok_indowntime?: number
+      /**
+       * @description The time duration for how long the service was in the WARN state.
+       * @example 10
+       */
+      warn?: number
+      /**
+       * @description The time duration for how long the service was in the CRIT state.
+       * @example 10
+       */
+      crit?: number
+      /**
+       * @description The time duration for how long the service was in the UNKNOWN state or unmonitored.
+       * @example 10
+       */
+      unknown_unmonitored?: number
+    }
+    StateSubResult: {
+      /**
+       * @description The deviation value of the SLA agreement. The deviation value is the difference between the observed and computed value. The meaning differs depending on the configured SLA computation type.
+       * @example 1
+       */
+      deviation_value?: number
+      /**
+       * @description The deviation state of the SLA agreement. The deviation state is respective to the configured warn and crit levels and the determined deviation value.
+       * @example ok
+       * @enum {string}
+       */
+      deviation_state?: 'ok' | 'warn' | 'crit'
+      /**
+       * @description Whether the SLA agreement was broken or fulfilled during this period.The agreement is considered broken if at least one agreement of the defined state configurations was broken.
+       * @example false
+       * @enum {string}
+       */
+      sla_agreement: 'broken' | 'fulfilled'
+    }
+    ServiceStatePercentageStateRequirement: {
+      /**
+       * @description The configured state for which the SLA agreement is checked.
+       * @example ok
+       * @enum {string}
+       */
+      observed_state?: 'ok' | 'warn' | 'crit' | 'unknown'
+      /**
+       * @description The reference condition for which the observed state is compared to.
+       * @example more_than
+       * @enum {string}
+       */
+      condition?: 'more_than' | 'less_than'
+      /**
+       * @description The reference percentage value for which the condition is checked.
+       * @example 10
+       */
+      observed_percentage?: number
+    }
+    Levels: {
+      /**
+       * @description The warning level of the SLA agreement.
+       * @example 10
+       */
+      warn?: number
+      /**
+       * @description The critical level of the SLA agreement.
+       * @example 10
+       */
+      crit?: number
+    }
+    MonitoringLevels: {
+      /**
+       * @description The levels of the SLA agreement.
+       * @example {
+       *       "warn": 10,
+       *       "crit": 10
+       *     }
+       */
+      levels?: components['schemas']['Levels']
+      /**
+       * @description The limit of the SLA agreement.
+       * @example 10
+       */
+      limit?: number
+    }
+    ServiceStatePercentageConfig: {
+      /** @description The configured state for which the SLA agreement is checked. */
+      state_requirement?: components['schemas']['ServiceStatePercentageStateRequirement']
+      /**
+       * @description The monitoring levels for which the SLA agreement is checked.
+       * @example {
+       *       "levels": {
+       *         "warn": 10,
+       *         "crit": 10
+       *       },
+       *       "limit": 10
+       *     }
+       */
+      monitoring_levels?: components['schemas']['MonitoringLevels']
+    }
+    ServiceStatePercentageSubResult: {
+      /**
+       * @description The state of the SLA agreement
+       * @example {
+       *       "deviation_value": 1,
+       *       "deviation_state": "ok",
+       *       "sla_agreement": "fulfilled"
+       *     }
+       */
+      state?: components['schemas']['StateSubResult']
+      config?: components['schemas']['ServiceStatePercentageConfig']
+    }
+    ServicePercentagePeriodResult: {
+      /**
+       * @description The duration of the time range in seconds.
+       * @example 3600
+       */
+      duration?: number
+      /** @description The time range of the period. */
+      time_range?: components['schemas']['TimeRangeOutput']
+      /**
+       * @description Whether the SLA agreement was broken or fulfilled during this period.The agreement is considered broken if at least one agreement of the defined state configurations was broken.
+       * @example false
+       * @enum {string}
+       */
+      sla_agreement: 'broken' | 'fulfilled'
+      /**
+       * @description The percentage of the duration for which the service was in the underlying states
+       * @example {
+       *       "ok": 10,
+       *       "warn": 10,
+       *       "crit": 10,
+       *       "unknown": 10
+       *     }
+       */
+      state_durations?: components['schemas']['StateDurations']
+      /** @description The sub results of the service state percentage period result. */
+      sub_results?: components['schemas']['ServiceStatePercentageSubResult'][]
+    }
+    PluginPercentageStateComputedResult: {
+      /**
+       * @description The id of the plugin. (enum property replaced by openapi-typescript)
+       * @enum {string}
+       */
+      plugin_id: 'service_state_percentage' | 'service_outage_count'
+      /**
+       * @description The duration of the time range in seconds.
+       * @example 3600
+       */
+      time_range_sla_duration: number
+      /** @description The period results of the service percentage state computation plugin. */
+      period_results?: components['schemas']['ServicePercentagePeriodResult'][]
+    }
+    PluginResult:
+      | components['schemas']['PluginPercentageStateComputedResult']
+      | components['schemas']['PluginPercentageStateComputedResult']
+    SLAComputeResult: {
+      /**
+       * @description The service entity for which the SLA is computed.
+       * @example {
+       *       "site_id": "production",
+       *       "host_name": "heute",
+       *       "service_description": "CPU load"
+       *     }
+       */
+      service?: components['schemas']['ServiceOutput']
+      /**
+       * @description The ID of the SLA.
+       * @example sla_configuration_1
+       */
+      sla_id?: string
+      /** @description The time range for which the SLA is computed. */
+      time_range?: components['schemas']['SLATimeRange']
+      /**
+       * @description The configured SLA period.
+       * @example monthly
+       * @enum {string}
+       */
+      sla_period?: 'monthly' | 'weekly' | 'daily'
+      /** @description The period results of the SLA computation. */
+      results?: components['schemas']['PluginResult'][]
+    }
+    SLAComputedResultCollection: {
+      /**
+       * @description The domain type of the objects in the collection
+       * @default sla_computed
+       */
+      domainType: unknown
+      /** @description The list of SLA computed results. */
+      value?: components['schemas']['SLAComputeResult'][]
+    }
     ServiceDiscoveryResultCheckTableValueExtensions: {
       /** @description The name of the host */
       host_name: string
@@ -21407,7 +24123,7 @@ export interface components {
       /** @description Additional information about the service discovery run */
       extensions: components['schemas']['ServiceDiscoveryRunExtensions']
     }
-    Api404CustomError4: {
+    Api404CustomError5: {
       /**
        * @description The HTTP status code.
        * @example 404
@@ -21467,7 +24183,7 @@ export interface components {
         | 'undecided'
         | 'vanished'
     }
-    Api404CustomError5: {
+    Api404CustomError6: {
       /**
        * @description The HTTP status code.
        * @example 404
@@ -22840,7 +25556,7 @@ export interface components {
         [key: string]: unknown
       }
     }
-    TimeRange1: {
+    TimeRange2: {
       /**
        * Format: time
        * @description The start time of the period's time range
@@ -22883,7 +25599,7 @@ export interface components {
        *       }
        *     ]
        */
-      time_ranges: components['schemas']['TimeRange1'][]
+      time_ranges: components['schemas']['TimeRange2'][]
     }
     TimePeriodException: {
       /**
@@ -22901,7 +25617,7 @@ export interface components {
        *       }
        *     ]
        */
-      time_ranges: components['schemas']['TimeRange1'][]
+      time_ranges: components['schemas']['TimeRange2'][]
     }
     UpdateTimePeriod: {
       /**
@@ -24239,6 +26955,316 @@ export interface components {
        */
       extensions?: Record<string, never>
     }
+    /** BasicAuthentication */
+    BasicAuthentication: {
+      /**
+       * @description Authentication type (enum property replaced by openapi-typescript)
+       * @enum {string}
+       */
+      type: 'basicauth'
+      /**
+       * Userlist
+       * @description List of users
+       */
+      userlist: components['schemas']['User'][]
+    }
+    /** CustomHostNameRule */
+    CustomHostNameRule: {
+      /**
+       * @description Type of rule (enum property replaced by openapi-typescript)
+       * @enum {string}
+       */
+      type: 'custom'
+      /**
+       * Value
+       * @description List of host name rules
+       */
+      value: components['schemas']['HostNameRule'][]
+    }
+    /** HostNameRule */
+    HostNameRule: {
+      /**
+       * Type
+       * @description Type of rule
+       * @enum {string}
+       */
+      type: 'free' | 'key'
+      /**
+       * Value
+       * @description Literal string or Otel attribute name
+       */
+      value: string
+    }
+    /** NoAuthentication */
+    NoAuthentication: {
+      /**
+       * @description Authentication type (enum property replaced by openapi-typescript)
+       * @enum {string}
+       */
+      type: 'none'
+    }
+    /** OTelCollectorEndpointConfig */
+    OTelCollectorEndpointConfig: {
+      /**
+       * Address
+       * @description Host address
+       */
+      address: string
+      /**
+       * Port
+       * @description Port number
+       */
+      port: number
+    }
+    /** OTelCollectorObject */
+    OTelCollectorObject: {
+      /**
+       * Links
+       * @description List of links to other resources.
+       * @example [
+       *       {
+       *         "href": "https://.../api_resource",
+       *         "method": "GET",
+       *         "rel": "self",
+       *         "type": "application/json"
+       *       }
+       *     ]
+       */
+      links: components['schemas']['LinkModel'][]
+      /**
+       * Domaintype
+       * @description The domain type of the objects in the collection
+       * @example otel_collector_config
+       * @constant
+       */
+      domainType: 'otel_collector_config'
+      /**
+       * ID
+       * @description The unique identifier for this domain-object type.
+       * @example host1
+       */
+      id?: string
+      /**
+       * Title
+       * @description A human readable title of this object. Can be used for user interfaces.
+       * @example My Host
+       */
+      title?: string
+      /** @description All the data and metadata of this collector configuration. */
+      extensions: components['schemas']['OTelCollectorSpec']
+    }
+    /** OTelCollectorPrometheusScrapeConfig */
+    OTelCollectorPrometheusScrapeConfig: {
+      /**
+       * Job Name
+       * @description Job Name. This will get translated to a host name
+       */
+      job_name: string
+      /**
+       * Scrape Interval
+       * @description Time period for periodically scraping target (in seconds)
+       */
+      scrape_interval: number
+      /**
+       * Metrics Path
+       * @description URL path to metrics endpoint
+       */
+      metrics_path: string | null
+      /**
+       * Targets
+       * @description Definition of targets to scrape
+       */
+      targets: components['schemas']['OTelCollectorEndpointConfig'][]
+      /**
+       * Host Name Rules
+       * @description Rules for generating host names from scraped data
+       */
+      host_name_rules: (
+        | components['schemas']['StaticHostNameRule']
+        | components['schemas']['CustomHostNameRule']
+      )[]
+      /**
+       * Encryption
+       * @description Encryption configuration
+       */
+      encryption: boolean
+    }
+    /** OTelCollectorProtocolConfig */
+    OTelCollectorProtocolConfig: {
+      endpoint: components['schemas']['OTelEndpointExtended']
+    }
+    /** OTelCollectorSpec */
+    OTelCollectorSpec: {
+      /**
+       * Ident
+       * @description Unique identifier
+       */
+      ident: string
+      /**
+       * Title
+       * @description Title of the collection configuration
+       */
+      title: string
+      /**
+       * Disabled
+       * @description Should the configuration be disabled?
+       */
+      disabled: boolean
+      /**
+       * Site
+       * @description Sites for which the collector should be configured. Note: There is only one configuration allowed per site.
+       */
+      site: string[]
+      /** Comment */
+      comment?: string
+      /** Docu Url */
+      docu_url?: string
+      /**
+       * Receiver Protocol Grpc
+       * @description Configure the receiver for the GRPC protocol
+       */
+      receiver_protocol_grpc?: components['schemas']['OTelCollectorProtocolConfig']
+      /**
+       * Receiver Protocol Http
+       * @description Configure the receiver for the HTTP protocol
+       */
+      receiver_protocol_http?: components['schemas']['OTelCollectorProtocolConfig']
+      /**
+       * Prometheus Scrape Configs
+       * @description Configure targets supporting the Prometheus protocol for active scraping
+       */
+      prometheus_scrape_configs?: components['schemas']['OTelCollectorPrometheusScrapeConfig'][]
+    }
+    /** OTelEndpointExtended */
+    OTelEndpointExtended: {
+      /**
+       * Address
+       * @description Host address
+       */
+      address: string
+      /**
+       * Port
+       * @description Port number
+       */
+      port: number
+      /**
+       * Host Name Rules
+       * @description The host name computation computes the name of the host that should have the corresponding Checkmk services. The computation is done by the OpenTelemetry collector and the result is stored in the '{attr}' attribute. For every rule configured here, the provided fields are concatenated in the order they are listed. The first rule that results in a non-empty value is used. For an example see the help text in the UI.
+       */
+      host_name_rules: components['schemas']['HostNameRule'][][]
+      /**
+       * Export To Syslog
+       * @description Set to 'true' to enable forwarding to syslog and Event Console
+       */
+      export_to_syslog: boolean
+      /**
+       * Auth
+       * @description Authentication configuration
+       */
+      auth: components['schemas']['NoAuthentication'] | components['schemas']['BasicAuthentication']
+      /**
+       * Encryption
+       * @description Encryption configuration
+       */
+      encryption: boolean
+    }
+    /** Password */
+    Password: {
+      /**
+       * Type
+       * @description Password lookup type
+       * @enum {string}
+       */
+      type: 'explicit' | 'store'
+      /**
+       * Value
+       * @description Actual password string or name from the password store
+       */
+      value: string
+    }
+    /** StaticHostNameRule */
+    StaticHostNameRule: {
+      /**
+       * @description Type of rule (enum property replaced by openapi-typescript)
+       * @enum {string}
+       */
+      type: 'service_instance_id'
+    }
+    /** User */
+    User: {
+      /**
+       * Username
+       * @description Username
+       */
+      username: string
+      /** @description Password */
+      password: components['schemas']['Password']
+    }
+    /** OTelCollectorCollection */
+    OTelCollectorCollection: {
+      /**
+       * Links
+       * @description List of links to other resources.
+       * @example [
+       *       {
+       *         "href": "https://.../api_resource",
+       *         "method": "GET",
+       *         "rel": "self",
+       *         "type": "application/json"
+       *       }
+       *     ]
+       */
+      links: components['schemas']['LinkModel'][]
+      /**
+       * Id
+       * @description The name of this collection.
+       */
+      id: string
+      /**
+       * Domaintype
+       * @description The domain type of the objects in the collection
+       * @example otel_collector_config
+       * @constant
+       */
+      domainType: 'otel_collector_config'
+      /**
+       * Title
+       * @description A human readable title of this object. Can be used for user interfaces.
+       */
+      title?: string
+      /**
+       * Value
+       * @description A list of collector configuration objects
+       */
+      value: components['schemas']['OTelCollectorObject'][]
+      /**
+       * Extensions
+       * @description Additional attributes alongside the collection.
+       */
+      extensions?: Record<string, never>
+    }
+    GetCustomGraph: {
+      /**
+       * @description The time range from which to source the metrics.
+       * @example {
+       *       "start": "2025-09-05 17:14:04.135923",
+       *       "end": "2025-09-05 17:29:04.135928"
+       *     }
+       */
+      time_range: components['schemas']['TimeRange']
+      /**
+       * @description Specify how to reduce a segment of data points to a single data point of the output metric. This can be useful to find spikes in your data that would be smoothed out by computing the average.
+       * @default average
+       * @example max
+       * @enum {string}
+       */
+      reduce: 'min' | 'max' | 'average'
+      /**
+       * @description The ID of the requested custom graph.
+       * @example my_cool_graph
+       */
+      custom_graph_id: string
+    }
   }
   responses: never
   parameters: {
@@ -24815,6 +27841,112 @@ export interface operations {
       }
     }
   }
+  'cmk.gui.cee.agent_bakery._openapi.automatic_deployment_status': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResultObject']
+        }
+      }
+      /** @description Forbidden: Configuration via Setup is disabled. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api403DefaultError']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultError']
+        }
+      }
+    }
+  }
+  'cmk.gui.cee.agent_bakery._openapi.baking_status': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResultObject']
+        }
+      }
+      /** @description Forbidden: Configuration via Setup is disabled. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api403DefaultError']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultError']
+        }
+      }
+    }
+  }
   'cmk.gui.openapi.endpoints.agent.download_agent': {
     parameters: {
       query: {
@@ -24876,6 +28008,521 @@ export interface operations {
         }
         content: {
           'application/problem+json': components['schemas']['Api406DefaultError']
+        }
+      }
+    }
+  }
+  'cmk.gui.cee.agent_bakery._openapi.download_agent_by_hash': {
+    parameters: {
+      query: {
+        /** @description The configuration hash representing an agent. */
+        agent_hash: string
+        /** @description The type of the operating system. May be one of aix_tgz, linux_deb, linux_rpm, linux_tgz, solaris_pkg, solaris_tgz, windows_msi */
+        os_type:
+          | 'aix_tgz'
+          | 'linux_deb'
+          | 'linux_rpm'
+          | 'linux_tgz'
+          | 'solaris_pkg'
+          | 'solaris_tgz'
+          | 'windows_msi'
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          [name: string]: unknown
+        }
+        content: {
+          'application/octet-stream': string
+        }
+      }
+      /** @description Bad Request: Parameter or validation failure. */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api400DefaultError']
+        }
+      }
+      /** @description Forbidden: Configuration via Setup is disabled. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api403DefaultError']
+        }
+      }
+      /** @description Not Found: The requested object has not be found. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api404DefaultError']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultError']
+        }
+      }
+    }
+  }
+  'cmk.gui.cee.agent_bakery._openapi.download_agent_by_host': {
+    parameters: {
+      query: {
+        /** @description Type of agent. */
+        agent_type?: 'host_name' | 'vanilla' | 'generic'
+        /** @description A host name. */
+        host_name?: string
+        /** @description A folder name.
+         *
+         *     Path delimiters can be either `~`, `/` or `\`. Please use the one most appropriate for your quoting/escaping needs. A good default choice is `~`. */
+        folder_name?: string
+        /** @description The type of the operating system. May be one of aix_tgz, linux_deb, linux_rpm, linux_tgz, solaris_pkg, solaris_tgz, windows_msi */
+        os_type:
+          | 'aix_tgz'
+          | 'linux_deb'
+          | 'linux_rpm'
+          | 'linux_tgz'
+          | 'solaris_pkg'
+          | 'solaris_tgz'
+          | 'windows_msi'
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          [name: string]: unknown
+        }
+        content: {
+          'application/octet-stream': string
+        }
+      }
+      /** @description Bad Request: Parameter or validation failure. */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api400DefaultError']
+        }
+      }
+      /** @description Forbidden: Configuration via Setup is disabled. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api403DefaultError']
+        }
+      }
+      /** @description Not Found: The requested object has not be found. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api404DefaultError']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultError']
+        }
+      }
+    }
+  }
+  'cmk.gui.cee.agent_bakery._openapi.list_agents': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AgentCollection']
+        }
+      }
+      /** @description Forbidden: Configuration via Setup is disabled. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api403DefaultError']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultError']
+        }
+      }
+    }
+  }
+  'cmk.gui.cee.agent_bakery._openapi.show_agent_information': {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @description The configuration hash representing an agent. */
+        agent_hash: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DomainObject']
+        }
+      }
+      /** @description Forbidden: Configuration via Setup is disabled. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api403DefaultError']
+        }
+      }
+      /** @description Not Found: The requested object has not be found. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api404DefaultError']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultError']
+        }
+      }
+    }
+  }
+  'cmk.gui.cee.agent_bakery._openapi.bake_all_agents': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResultScalar']
+        }
+      }
+      /** @description Bad Request: Parameter or validation failure. */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api400DefaultError']
+        }
+      }
+      /** @description Forbidden: Configuration via Setup is disabled. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api403DefaultError']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultError']
+        }
+      }
+      /** @description Conflict: The request is in conflict with the stored resource. */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api409DefaultError']
+        }
+      }
+      /** @description Unsupported Media Type: The submitted content-type is not supported. */
+      415: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api415DefaultError']
+        }
+      }
+    }
+  }
+  'cmk.gui.cee.agent_bakery._openapi.bake_and_sign_all_agents': {
+    parameters: {
+      query?: never
+      header: {
+        /**
+         * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+         * @example application/json
+         */
+        'Content-Type': string
+      }
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AgentSign']
+      }
+    }
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResultScalar']
+        }
+      }
+      /** @description Bad Request: Parameter or validation failure. */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api400DefaultError']
+        }
+      }
+      /** @description Forbidden: Configuration via Setup is disabled. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api403DefaultError']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultError']
+        }
+      }
+      /** @description Unsupported Media Type: The submitted content-type is not supported. */
+      415: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api415DefaultError']
+        }
+      }
+    }
+  }
+  'cmk.gui.cee.agent_bakery._openapi.sign_agents': {
+    parameters: {
+      query?: never
+      header: {
+        /**
+         * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+         * @example application/json
+         */
+        'Content-Type': string
+      }
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AgentSign']
+      }
+    }
+    responses: {
+      /** @description No Content: Operation done successfully. No further output. */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Bad Request: Parameter or validation failure. */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api400DefaultError']
+        }
+      }
+      /** @description Forbidden: Configuration via Setup is disabled. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api403DefaultError']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultError']
+        }
+      }
+      /** @description Unsupported Media Type: The submitted content-type is not supported. */
+      415: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api415DefaultError']
         }
       }
     }
@@ -28516,7 +32163,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultError8BF904D6B97C7BE8']
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
         }
       }
     }
@@ -28566,7 +32213,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultError8BF904D6B97C7BE8']
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
         }
       }
     }
@@ -28618,7 +32265,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultError7DA0A31593576CB7']
+          'application/problem+json': components['schemas']['Api404DefaultError1F4828D4BC1C021F']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -28627,7 +32274,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultError8BF904D6B97C7BE8']
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
         }
       }
     }
@@ -28685,7 +32332,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorC330B240BA6CA61C']
+          'application/problem+json': components['schemas']['Api400DefaultErrorFB6BDF7D3BCB12F0']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -28694,7 +32341,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultError7DA0A31593576CB7']
+          'application/problem+json': components['schemas']['Api404DefaultError1F4828D4BC1C021F']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -28703,7 +32350,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultError8BF904D6B97C7BE8']
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -28712,7 +32359,153 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultError1672ACB74E09BF41']
+          'application/problem+json': components['schemas']['Api415DefaultError18F4B8AE28E5CF3E']
+        }
+      }
+    }
+  }
+  'Dashboards.show_responsive_grid_dashboard_v1': {
+    parameters: {
+      query?: never
+      header: {
+        /**
+         * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+         * @example application/json
+         */
+        'Content-Type': string
+      }
+      path: {
+        dashboard_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ResponsiveGridDashboardDomainObject']
+        }
+      }
+      /** @description Not Found: The requested object has not be found. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api404DefaultError1F4828D4BC1C021F']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
+        }
+      }
+    }
+  }
+  'Dashboards.edit_responsive_grid_dashboard_v1': {
+    parameters: {
+      query?: {
+        owner?: string
+      }
+      header: {
+        /**
+         * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+         * @example application/json
+         */
+        'Content-Type': string
+      }
+      path: {
+        dashboard_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EditResponsiveGridDashboardV1']
+      }
+    }
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ResponsiveGridDashboardDomainObject']
+        }
+      }
+      /** @description Bad Request: Parameter or validation failure. */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api400DefaultErrorFB6BDF7D3BCB12F0']
+        }
+      }
+      /** @description Not Found: The requested object has not be found. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api404DefaultError1F4828D4BC1C021F']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
+        }
+      }
+      /** @description Unsupported Media Type: The submitted content-type is not supported. */
+      415: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api415DefaultError18F4B8AE28E5CF3E']
         }
       }
     }
@@ -28766,7 +32559,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorC330B240BA6CA61C']
+          'application/problem+json': components['schemas']['Api400DefaultErrorFB6BDF7D3BCB12F0']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -28775,7 +32568,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultError8BF904D6B97C7BE8']
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -28784,7 +32577,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultError1672ACB74E09BF41']
+          'application/problem+json': components['schemas']['Api415DefaultError18F4B8AE28E5CF3E']
         }
       }
     }
@@ -28838,7 +32631,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorC330B240BA6CA61C']
+          'application/problem+json': components['schemas']['Api400DefaultErrorFB6BDF7D3BCB12F0']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -28847,7 +32640,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultError8BF904D6B97C7BE8']
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -28856,7 +32649,79 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultError1672ACB74E09BF41']
+          'application/problem+json': components['schemas']['Api415DefaultError18F4B8AE28E5CF3E']
+        }
+      }
+    }
+  }
+  'Dashboards.create_responsive_grid_dashboard_v1': {
+    parameters: {
+      query?: never
+      header: {
+        /**
+         * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+         * @example application/json
+         */
+        'Content-Type': string
+      }
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateResponsiveGridDashboardV1']
+      }
+    }
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ResponsiveGridDashboardDomainObject']
+        }
+      }
+      /** @description Bad Request: Parameter or validation failure. */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api400DefaultErrorFB6BDF7D3BCB12F0']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
+        }
+      }
+      /** @description Unsupported Media Type: The submitted content-type is not supported. */
+      415: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api415DefaultError18F4B8AE28E5CF3E']
         }
       }
     }
@@ -28887,7 +32752,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorC330B240BA6CA61C']
+          'application/problem+json': components['schemas']['Api400DefaultErrorFB6BDF7D3BCB12F0']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -28896,7 +32761,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultError7DA0A31593576CB7']
+          'application/problem+json': components['schemas']['Api404DefaultError1F4828D4BC1C021F']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -28905,7 +32770,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultError8BF904D6B97C7BE8']
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
         }
       }
     }
@@ -29276,6 +33141,291 @@ export interface operations {
         }
         content: {
           'application/problem+json': components['schemas']['Api422DefaultError']
+        }
+      }
+    }
+  }
+  'cmk.gui.cee.dcd._openapi.show_rule': {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @description The unique ID of an existing dynamic host configuration. */
+        dcd_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          /**
+           * @description The HTTP ETag header for this resource. It identifies the current state of the object and needs to be sent along in the "If-Match" request-header for subsequent modifications. Please note that the actual ETag returned by some endpoints may look different than the one shown in this example.
+           * @example "a20ceacf346041dc"
+           */
+          ETag?: string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ShowDCD']
+        }
+      }
+      /** @description Forbidden: Configuration via Setup is disabled. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api403DefaultError']
+        }
+      }
+      /** @description Not Found: The requested object has not be found. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api404DefaultError']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultError']
+        }
+      }
+    }
+  }
+  'cmk.gui.cee.dcd._openapi.delete_rule': {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @description The unique ID of an existing dynamic host configuration. */
+        dcd_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description No Content: Operation done successfully. No further output. */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Forbidden: Configuration via Setup is disabled. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api403DefaultError']
+        }
+      }
+      /** @description Not Found: The dynamic host configuration was not found. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api404CustomError2']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultError']
+        }
+      }
+    }
+  }
+  'cmk.gui.cee.dcd._openapi.fetch_phase1_result': {
+    parameters: {
+      query?: never
+      header: {
+        /**
+         * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+         * @example application/json
+         */
+        'Content-Type': string
+      }
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ConnectionFetchPhaseOne']
+      }
+    }
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DomainObject']
+        }
+      }
+      /** @description Bad Request: Parameter or validation failure. */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api400DefaultError']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultError']
+        }
+      }
+      /** @description Conflict: The request is in conflict with the stored resource. */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api409DefaultError']
+        }
+      }
+      /** @description Unsupported Media Type: The submitted content-type is not supported. */
+      415: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api415DefaultError']
+        }
+      }
+    }
+  }
+  'cmk.gui.cee.dcd._openapi.create_rule': {
+    parameters: {
+      query?: never
+      header: {
+        /**
+         * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+         * @example application/json
+         */
+        'Content-Type': string
+      }
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateDCD']
+      }
+    }
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          /**
+           * @description The HTTP ETag header for this resource. It identifies the current state of the object and needs to be sent along in the "If-Match" request-header for subsequent modifications. Please note that the actual ETag returned by some endpoints may look different than the one shown in this example.
+           * @example "a20ceacf346041dc"
+           */
+          ETag?: string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ShowDCD']
+        }
+      }
+      /** @description Bad Request: Parameter or validation failure. */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api400DefaultError']
+        }
+      }
+      /** @description Forbidden: Configuration via Setup is disabled. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api403DefaultError']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultError']
+        }
+      }
+      /** @description Unsupported Media Type: The submitted content-type is not supported. */
+      415: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api415DefaultError']
         }
       }
     }
@@ -30485,7 +34635,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultError8BF904D6B97C7BE8']
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
         }
       }
     }
@@ -30537,7 +34687,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultError7DA0A31593576CB7']
+          'application/problem+json': components['schemas']['Api404DefaultError1F4828D4BC1C021F']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -30546,7 +34696,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultError8BF904D6B97C7BE8']
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
         }
       }
     }
@@ -30598,7 +34748,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorC330B240BA6CA61C']
+          'application/problem+json': components['schemas']['Api400DefaultErrorFB6BDF7D3BCB12F0']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -30607,7 +34757,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultError8BF904D6B97C7BE8']
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
         }
       }
     }
@@ -31909,7 +36059,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404CustomError2']
+          'application/problem+json': components['schemas']['Api404CustomError3']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -31974,7 +36124,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorC330B240BA6CA61C']
+          'application/problem+json': components['schemas']['Api400DefaultErrorFB6BDF7D3BCB12F0']
         }
       }
       /** @description Forbidden: Configuration via Setup is disabled. */
@@ -31983,7 +36133,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultError96A40CC4DB60D504']
+          'application/problem+json': components['schemas']['Api403DefaultErrorF94C922ABB4460C0']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -31992,7 +36142,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultError8BF904D6B97C7BE8']
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
         }
       }
     }
@@ -32053,7 +36203,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorC330B240BA6CA61C']
+          'application/problem+json': components['schemas']['Api400DefaultErrorFB6BDF7D3BCB12F0']
         }
       }
       /** @description Forbidden: Configuration via Setup is disabled. */
@@ -32062,7 +36212,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultError96A40CC4DB60D504']
+          'application/problem+json': components['schemas']['Api403DefaultErrorF94C922ABB4460C0']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -32071,7 +36221,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultError8BF904D6B97C7BE8']
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -32080,7 +36230,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultError1672ACB74E09BF41']
+          'application/problem+json': components['schemas']['Api415DefaultError18F4B8AE28E5CF3E']
         }
       }
     }
@@ -32137,7 +36287,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultError96A40CC4DB60D504']
+          'application/problem+json': components['schemas']['Api403DefaultErrorF94C922ABB4460C0']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -32146,7 +36296,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultError7DA0A31593576CB7']
+          'application/problem+json': components['schemas']['Api404DefaultError1F4828D4BC1C021F']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -32155,7 +36305,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultError8BF904D6B97C7BE8']
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
         }
       }
     }
@@ -33680,6 +37830,422 @@ export interface operations {
       }
     }
   }
+  'cmk.gui.cse.licensing._openapi.download_license_request': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['VerificationRequest']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultError']
+        }
+      }
+    }
+  }
+  'cmk.gui.cee.licensing._openapi.download_license_usage': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          [name: string]: unknown
+        }
+        content: {
+          'application/x-tgz': string
+        }
+      }
+      /** @description Forbidden: You have insufficient permissions for this operation. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api403CustomError5']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultError']
+        }
+      }
+    }
+  }
+  'cmk.gui.cee.licensing._openapi.configure_licensing_settings': {
+    parameters: {
+      query?: never
+      header: {
+        /**
+         * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+         * @example application/json
+         */
+        'Content-Type': string
+      }
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LicenseSettings']
+      }
+    }
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResultObject']
+        }
+      }
+      /** @description Bad Request: Parameter or validation failure. */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api400DefaultError']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultError']
+        }
+      }
+      /** @description Unsupported Media Type: The submitted content-type is not supported. */
+      415: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api415DefaultError']
+        }
+      }
+    }
+  }
+  'cmk.gui.cee.licensing._openapi.verify_offline': {
+    parameters: {
+      query?: never
+      header: {
+        /**
+         * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+         * @example application/json
+         */
+        'Content-Type': string
+      }
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['VerificationResponse']
+      }
+    }
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResultObject']
+        }
+      }
+      /** @description No Content: Offline verification procedure was successful */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Bad Request: Parameter or validation failure. */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api400DefaultError']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultError']
+        }
+      }
+      /** @description Unsupported Media Type: The submitted content-type is not supported. */
+      415: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api415DefaultError']
+        }
+      }
+      /** @description Unprocessable Entity: Offline verification procedure was not successful */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api422CustomError4']
+        }
+      }
+    }
+  }
+  'cmk.gui.cee.licensing._openapi.verify_online': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResultObject']
+        }
+      }
+      /** @description No Content: Online verification procedure was successful */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Bad Request: Parameter or validation failure. */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api400DefaultError']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultError']
+        }
+      }
+      /** @description Unsupported Media Type: The submitted content-type is not supported. */
+      415: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api415DefaultError']
+        }
+      }
+      /** @description Unprocessable Entity: Online verification procedure was not successful */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api422CustomError5']
+        }
+      }
+    }
+  }
+  'cmk.gui.cee.openapi.endpoints.metric.internal.get_graph_using_filters': {
+    parameters: {
+      query?: never
+      header: {
+        /**
+         * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+         * @example application/json
+         */
+        'Content-Type': string
+      }
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Filter']
+      }
+    }
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['GraphCollection']
+        }
+      }
+      /** @description Bad Request: Parameter or validation failure. */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api400DefaultError']
+        }
+      }
+      /** @description Not Found: The requested object has not be found. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api404DefaultError']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultError']
+        }
+      }
+      /** @description Unsupported Media Type: The submitted content-type is not supported. */
+      415: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api415DefaultError']
+        }
+      }
+    }
+  }
   'cmk.gui.openapi.endpoints.metric.get_graph': {
     parameters: {
       query?: never
@@ -34154,6 +38720,50 @@ export interface operations {
       }
     }
   }
+  'cmk.gui.cse.onboarding.get_agent_download_info': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Response1']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultError']
+        }
+      }
+    }
+  }
   'cmk.gui.openapi.endpoints.parent_scan.start_parent_scan_background_job': {
     parameters: {
       query?: never
@@ -34289,7 +38899,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultError96A40CC4DB60D504']
+          'application/problem+json': components['schemas']['Api403DefaultErrorF94C922ABB4460C0']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -34298,7 +38908,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultError8BF904D6B97C7BE8']
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
         }
       }
     }
@@ -34357,7 +38967,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorC330B240BA6CA61C']
+          'application/problem+json': components['schemas']['Api400DefaultErrorFB6BDF7D3BCB12F0']
         }
       }
       /** @description Forbidden: Configuration via Setup is disabled. */
@@ -34366,7 +38976,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultError96A40CC4DB60D504']
+          'application/problem+json': components['schemas']['Api403DefaultErrorF94C922ABB4460C0']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -34375,7 +38985,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultError8BF904D6B97C7BE8']
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -34384,7 +38994,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultError1672ACB74E09BF41']
+          'application/problem+json': components['schemas']['Api415DefaultError18F4B8AE28E5CF3E']
         }
       }
     }
@@ -34441,7 +39051,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultError96A40CC4DB60D504']
+          'application/problem+json': components['schemas']['Api403DefaultErrorF94C922ABB4460C0']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -34450,7 +39060,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultError7DA0A31593576CB7']
+          'application/problem+json': components['schemas']['Api404DefaultError1F4828D4BC1C021F']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -34459,7 +39069,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultError8BF904D6B97C7BE8']
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
         }
       }
     }
@@ -34525,7 +39135,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorC330B240BA6CA61C']
+          'application/problem+json': components['schemas']['Api400DefaultErrorFB6BDF7D3BCB12F0']
         }
       }
       /** @description Forbidden: Configuration via Setup is disabled. */
@@ -34534,7 +39144,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultError96A40CC4DB60D504']
+          'application/problem+json': components['schemas']['Api403DefaultErrorF94C922ABB4460C0']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -34543,7 +39153,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultError7DA0A31593576CB7']
+          'application/problem+json': components['schemas']['Api404DefaultError1F4828D4BC1C021F']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -34552,7 +39162,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultError8BF904D6B97C7BE8']
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
         }
       }
       /** @description Precondition Failed: The value of the If-Match header doesn't match the object's ETag. */
@@ -34561,7 +39171,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api412DefaultErrorC3824BF101199377']
+          'application/problem+json': components['schemas']['Api412DefaultError39ACC6ED6CA0CFF3']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -34570,7 +39180,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultError1672ACB74E09BF41']
+          'application/problem+json': components['schemas']['Api415DefaultError18F4B8AE28E5CF3E']
         }
       }
       /** @description Precondition Required: The required If-Match header is missing. */
@@ -34579,7 +39189,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api428DefaultError8BA7300877444788']
+          'application/problem+json': components['schemas']['Api428DefaultError1D6D091244FC9835']
         }
       }
     }
@@ -34614,7 +39224,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultError96A40CC4DB60D504']
+          'application/problem+json': components['schemas']['Api403DefaultErrorF94C922ABB4460C0']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -34623,7 +39233,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultError7DA0A31593576CB7']
+          'application/problem+json': components['schemas']['Api404DefaultError1F4828D4BC1C021F']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -34632,7 +39242,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultError8BF904D6B97C7BE8']
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
         }
       }
       /** @description Precondition Failed: The value of the If-Match header doesn't match the object's ETag. */
@@ -34641,7 +39251,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api412DefaultErrorC3824BF101199377']
+          'application/problem+json': components['schemas']['Api412DefaultError39ACC6ED6CA0CFF3']
         }
       }
       /** @description Precondition Required: The required If-Match header is missing. */
@@ -34650,7 +39260,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api428DefaultError8BA7300877444788']
+          'application/problem+json': components['schemas']['Api428DefaultError1D6D091244FC9835']
         }
       }
     }
@@ -35198,6 +39808,372 @@ export interface operations {
       }
     }
   }
+  'Relays.list_relays_v1': {
+    parameters: {
+      query?: never
+      header: {
+        /**
+         * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+         * @example application/json
+         */
+        'Content-Type': string
+      }
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RelayCollectionModel']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
+        }
+      }
+    }
+  }
+  'Relays.create_relay_v1': {
+    parameters: {
+      query?: never
+      header: {
+        /**
+         * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+         * @example application/json
+         */
+        'Content-Type': string
+      }
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RelayConfigModel']
+      }
+    }
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          /**
+           * @description The HTTP ETag header for this resource. It identifies the current state of the object and needs to be sent along in the "If-Match" request-header for subsequent modifications. Please note that the actual ETag returned by some endpoints may look different than the one shown in this example.
+           * @example "a20ceacf346041dc"
+           */
+          ETag?: string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RelayModel']
+        }
+      }
+      /** @description Bad Request: Parameter or validation failure. */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api400DefaultErrorFB6BDF7D3BCB12F0']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
+        }
+      }
+      /** @description Unsupported Media Type: The submitted content-type is not supported. */
+      415: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api415DefaultError18F4B8AE28E5CF3E']
+        }
+      }
+    }
+  }
+  'Relays.show_relay_v1': {
+    parameters: {
+      query?: never
+      header: {
+        /**
+         * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+         * @example application/json
+         */
+        'Content-Type': string
+      }
+      path: {
+        relay_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          /**
+           * @description The HTTP ETag header for this resource. It identifies the current state of the object and needs to be sent along in the "If-Match" request-header for subsequent modifications. Please note that the actual ETag returned by some endpoints may look different than the one shown in this example.
+           * @example "a20ceacf346041dc"
+           */
+          ETag?: string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RelayModel']
+        }
+      }
+      /** @description Not Found: The requested object has not be found. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api404DefaultError1F4828D4BC1C021F']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
+        }
+      }
+    }
+  }
+  'Relays.edit_relay_v1': {
+    parameters: {
+      query?: never
+      header: {
+        /**
+         * @description The value of the, to be modified, object's ETag header. You can get this value by displaying the object it individually. When ETag validation is enabled in the REST API, update operations require that the ETag value you provide matches the object's current server-side ETag. The content of the ETag can potentially be anything and should be treated as semantically opaque.
+         * @example "a20ceacf346041dc"
+         */
+        'If-Match': string
+        /**
+         * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+         * @example application/json
+         */
+        'Content-Type': string
+      }
+      path: {
+        relay_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RelayConfigModel']
+      }
+    }
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          /**
+           * @description The HTTP ETag header for this resource. It identifies the current state of the object and needs to be sent along in the "If-Match" request-header for subsequent modifications. Please note that the actual ETag returned by some endpoints may look different than the one shown in this example.
+           * @example "a20ceacf346041dc"
+           */
+          ETag?: string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RelayModel']
+        }
+      }
+      /** @description Bad Request: Parameter or validation failure. */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api400DefaultErrorFB6BDF7D3BCB12F0']
+        }
+      }
+      /** @description Not Found: The requested object has not be found. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api404DefaultError1F4828D4BC1C021F']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
+        }
+      }
+      /** @description Precondition Failed: The value of the If-Match header doesn't match the object's ETag. */
+      412: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api412DefaultError39ACC6ED6CA0CFF3']
+        }
+      }
+      /** @description Unsupported Media Type: The submitted content-type is not supported. */
+      415: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api415DefaultError18F4B8AE28E5CF3E']
+        }
+      }
+      /** @description Precondition Required: The required If-Match header is missing. */
+      428: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api428DefaultError1D6D091244FC9835']
+        }
+      }
+    }
+  }
+  'Relays.delete_relay_v1': {
+    parameters: {
+      query?: never
+      header: {
+        /**
+         * @description The value of the, to be modified, object's ETag header. You can get this value by displaying the object it individually. When ETag validation is enabled in the REST API, update operations require that the ETag value you provide matches the object's current server-side ETag. The content of the ETag can potentially be anything and should be treated as semantically opaque.
+         * @example "a20ceacf346041dc"
+         */
+        'If-Match': string
+      }
+      path: {
+        relay_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description No Content: Operation done successfully. No further output. */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found: The requested object has not be found. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api404DefaultError1F4828D4BC1C021F']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
+        }
+      }
+      /** @description Precondition Failed: The value of the If-Match header doesn't match the object's ETag. */
+      412: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api412DefaultError39ACC6ED6CA0CFF3']
+        }
+      }
+      /** @description Precondition Required: The required If-Match header is missing. */
+      428: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api428DefaultError1D6D091244FC9835']
+        }
+      }
+    }
+  }
   'cmk.gui.openapi.endpoints.rule.list_rules': {
     parameters: {
       query: {
@@ -35578,7 +40554,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404CustomError3']
+          'application/problem+json': components['schemas']['Api404CustomError4']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -35853,6 +40829,368 @@ export interface operations {
       }
     }
   }
+  'cmk.gui.cee.saml2._openapi.show_saml_connections': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['SAMLConnectionResponseCollection']
+        }
+      }
+      /** @description Forbidden: Configuration via Setup is disabled. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api403DefaultError']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultError']
+        }
+      }
+    }
+  }
+  'cmk.gui.cee.saml2._openapi.create_saml_connection': {
+    parameters: {
+      query?: never
+      header: {
+        /**
+         * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+         * @example application/json
+         */
+        'Content-Type': string
+      }
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SAMLConnectionCreateRequest']
+      }
+    }
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          /**
+           * @description The HTTP ETag header for this resource. It identifies the current state of the object and needs to be sent along in the "If-Match" request-header for subsequent modifications. Please note that the actual ETag returned by some endpoints may look different than the one shown in this example.
+           * @example "a20ceacf346041dc"
+           */
+          ETag?: string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['SAMLConnectionResponse']
+        }
+      }
+      /** @description Bad Request: Parameter or validation failure. */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api400DefaultError']
+        }
+      }
+      /** @description Forbidden: Configuration via Setup is disabled. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api403DefaultError']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultError']
+        }
+      }
+      /** @description Unsupported Media Type: The submitted content-type is not supported. */
+      415: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api415DefaultError']
+        }
+      }
+    }
+  }
+  'cmk.gui.cee.saml2._openapi.show_saml_connection': {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @description The SAML connection ID. */
+        saml_connection_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          /**
+           * @description The HTTP ETag header for this resource. It identifies the current state of the object and needs to be sent along in the "If-Match" request-header for subsequent modifications. Please note that the actual ETag returned by some endpoints may look different than the one shown in this example.
+           * @example "a20ceacf346041dc"
+           */
+          ETag?: string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['SAMLConnectionResponse']
+        }
+      }
+      /** @description Forbidden: Configuration via Setup is disabled. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api403DefaultError']
+        }
+      }
+      /** @description Not Found: The requested object has not be found. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api404DefaultError']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultError']
+        }
+      }
+    }
+  }
+  'cmk.gui.cee.saml2._openapi.delete_saml_connection': {
+    parameters: {
+      query?: never
+      header: {
+        /**
+         * @description The value of the, to be modified, object's ETag header. You can get this value by displaying the object it individually. When ETag validation is enabled in the REST API, update operations require that the ETag value you provide matches the object's current server-side ETag. The content of the ETag can potentially be anything and should be treated as semantically opaque.
+         * @example "a20ceacf346041dc"
+         */
+        'If-Match': string
+      }
+      path: {
+        /** @description The SAML connection ID. */
+        saml_connection_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description No Content: Operation done successfully. No further output. */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Forbidden: Configuration via Setup is disabled. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api403DefaultError']
+        }
+      }
+      /** @description Not Found: The requested object has not be found. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api404DefaultError']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultError']
+        }
+      }
+      /** @description Precondition Failed: The value of the If-Match header doesn't match the object's ETag. */
+      412: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api412DefaultError']
+        }
+      }
+      /** @description Precondition Required: The required If-Match header is missing. */
+      428: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api428DefaultError']
+        }
+      }
+    }
+  }
+  'cmk.gui.cee.sla._openapi.compute_sla_rows': {
+    parameters: {
+      query?: never
+      header: {
+        /**
+         * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+         * @example application/json
+         */
+        'Content-Type': string
+      }
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SLAComputeRequest']
+      }
+    }
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['SLAComputedResultCollection']
+        }
+      }
+      /** @description Bad Request: Parameter or validation failure. */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api400DefaultError']
+        }
+      }
+      /** @description Not Found: The requested object has not be found. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api404DefaultError']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultError']
+        }
+      }
+      /** @description Unsupported Media Type: The submitted content-type is not supported. */
+      415: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api415DefaultError']
+        }
+      }
+    }
+  }
   'cmk.gui.openapi.endpoints.service_discovery.show_service_discovery_result': {
     parameters: {
       query?: never
@@ -36033,7 +41371,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404CustomError4']
+          'application/problem+json': components['schemas']['Api404CustomError5']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -36100,7 +41438,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404CustomError5']
+          'application/problem+json': components['schemas']['Api404CustomError6']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -37327,7 +42665,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultError96A40CC4DB60D504']
+          'application/problem+json': components['schemas']['Api403DefaultErrorF94C922ABB4460C0']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -37336,7 +42674,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultError8BF904D6B97C7BE8']
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
         }
       }
     }
@@ -37390,7 +42728,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorC330B240BA6CA61C']
+          'application/problem+json': components['schemas']['Api400DefaultErrorFB6BDF7D3BCB12F0']
         }
       }
       /** @description Forbidden: Configuration via Setup is disabled. */
@@ -37399,7 +42737,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultError96A40CC4DB60D504']
+          'application/problem+json': components['schemas']['Api403DefaultErrorF94C922ABB4460C0']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -37408,7 +42746,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultError8BF904D6B97C7BE8']
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -37417,7 +42755,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultError1672ACB74E09BF41']
+          'application/problem+json': components['schemas']['Api415DefaultError18F4B8AE28E5CF3E']
         }
       }
     }
@@ -37469,7 +42807,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultError96A40CC4DB60D504']
+          'application/problem+json': components['schemas']['Api403DefaultErrorF94C922ABB4460C0']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -37478,7 +42816,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultError7DA0A31593576CB7']
+          'application/problem+json': components['schemas']['Api404DefaultError1F4828D4BC1C021F']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -37487,7 +42825,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultError8BF904D6B97C7BE8']
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
         }
       }
     }
@@ -37543,7 +42881,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorC330B240BA6CA61C']
+          'application/problem+json': components['schemas']['Api400DefaultErrorFB6BDF7D3BCB12F0']
         }
       }
       /** @description Forbidden: Configuration via Setup is disabled. */
@@ -37552,7 +42890,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultError96A40CC4DB60D504']
+          'application/problem+json': components['schemas']['Api403DefaultErrorF94C922ABB4460C0']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -37561,7 +42899,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultError7DA0A31593576CB7']
+          'application/problem+json': components['schemas']['Api404DefaultError1F4828D4BC1C021F']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -37570,7 +42908,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultError8BF904D6B97C7BE8']
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -37579,7 +42917,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultError1672ACB74E09BF41']
+          'application/problem+json': components['schemas']['Api415DefaultError18F4B8AE28E5CF3E']
         }
       }
     }
@@ -37608,7 +42946,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorC330B240BA6CA61C']
+          'application/problem+json': components['schemas']['Api400DefaultErrorFB6BDF7D3BCB12F0']
         }
       }
       /** @description Forbidden: Configuration via Setup is disabled. */
@@ -37617,7 +42955,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultError96A40CC4DB60D504']
+          'application/problem+json': components['schemas']['Api403DefaultErrorF94C922ABB4460C0']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -37626,7 +42964,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultError7DA0A31593576CB7']
+          'application/problem+json': components['schemas']['Api404DefaultError1F4828D4BC1C021F']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -37635,7 +42973,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultError8BF904D6B97C7BE8']
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -37644,7 +42982,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultError1672ACB74E09BF41']
+          'application/problem+json': components['schemas']['Api415DefaultError18F4B8AE28E5CF3E']
         }
       }
     }
@@ -37677,7 +43015,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorC330B240BA6CA61C']
+          'application/problem+json': components['schemas']['Api400DefaultErrorFB6BDF7D3BCB12F0']
         }
       }
       /** @description Forbidden: Configuration via Setup is disabled. */
@@ -37686,7 +43024,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultError96A40CC4DB60D504']
+          'application/problem+json': components['schemas']['Api403DefaultErrorF94C922ABB4460C0']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -37695,7 +43033,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultError7DA0A31593576CB7']
+          'application/problem+json': components['schemas']['Api404DefaultError1F4828D4BC1C021F']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -37704,7 +43042,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultError8BF904D6B97C7BE8']
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -37713,7 +43051,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultError1672ACB74E09BF41']
+          'application/problem+json': components['schemas']['Api415DefaultError18F4B8AE28E5CF3E']
         }
       }
     }
@@ -37742,7 +43080,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorC330B240BA6CA61C']
+          'application/problem+json': components['schemas']['Api400DefaultErrorFB6BDF7D3BCB12F0']
         }
       }
       /** @description Forbidden: Configuration via Setup is disabled. */
@@ -37751,7 +43089,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultError96A40CC4DB60D504']
+          'application/problem+json': components['schemas']['Api403DefaultErrorF94C922ABB4460C0']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -37760,7 +43098,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultError7DA0A31593576CB7']
+          'application/problem+json': components['schemas']['Api404DefaultError1F4828D4BC1C021F']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -37769,7 +43107,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultError8BF904D6B97C7BE8']
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -37778,7 +43116,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultError1672ACB74E09BF41']
+          'application/problem+json': components['schemas']['Api415DefaultError18F4B8AE28E5CF3E']
         }
       }
     }
@@ -38257,7 +43595,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultError96A40CC4DB60D504']
+          'application/problem+json': components['schemas']['Api403DefaultErrorF94C922ABB4460C0']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -38266,7 +43604,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultError8BF904D6B97C7BE8']
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
         }
       }
     }
@@ -38320,7 +43658,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorC330B240BA6CA61C']
+          'application/problem+json': components['schemas']['Api400DefaultErrorFB6BDF7D3BCB12F0']
         }
       }
       /** @description Forbidden: Configuration via Setup is disabled. */
@@ -38329,7 +43667,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultError96A40CC4DB60D504']
+          'application/problem+json': components['schemas']['Api403DefaultErrorF94C922ABB4460C0']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -38338,7 +43676,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultError8BF904D6B97C7BE8']
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -38347,7 +43685,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultError1672ACB74E09BF41']
+          'application/problem+json': components['schemas']['Api415DefaultError18F4B8AE28E5CF3E']
         }
       }
     }
@@ -38399,7 +43737,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultError96A40CC4DB60D504']
+          'application/problem+json': components['schemas']['Api403DefaultErrorF94C922ABB4460C0']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -38408,7 +43746,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultError7DA0A31593576CB7']
+          'application/problem+json': components['schemas']['Api404DefaultError1F4828D4BC1C021F']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -38417,7 +43755,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultError8BF904D6B97C7BE8']
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
         }
       }
     }
@@ -38473,7 +43811,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorC330B240BA6CA61C']
+          'application/problem+json': components['schemas']['Api400DefaultErrorFB6BDF7D3BCB12F0']
         }
       }
       /** @description Forbidden: Configuration via Setup is disabled. */
@@ -38482,7 +43820,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultError96A40CC4DB60D504']
+          'application/problem+json': components['schemas']['Api403DefaultErrorF94C922ABB4460C0']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -38491,7 +43829,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultError7DA0A31593576CB7']
+          'application/problem+json': components['schemas']['Api404DefaultError1F4828D4BC1C021F']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -38500,7 +43838,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultError8BF904D6B97C7BE8']
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -38509,7 +43847,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultError1672ACB74E09BF41']
+          'application/problem+json': components['schemas']['Api415DefaultError18F4B8AE28E5CF3E']
         }
       }
     }
@@ -38538,7 +43876,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultError96A40CC4DB60D504']
+          'application/problem+json': components['schemas']['Api403DefaultErrorF94C922ABB4460C0']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -38547,7 +43885,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultError7DA0A31593576CB7']
+          'application/problem+json': components['schemas']['Api404DefaultError1F4828D4BC1C021F']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -38556,7 +43894,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultError8BF904D6B97C7BE8']
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
         }
       }
     }
@@ -39039,7 +44377,367 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultError8BF904D6B97C7BE8']
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
+        }
+      }
+    }
+  }
+  'open-telemetry.handler_list': {
+    parameters: {
+      query?: never
+      header: {
+        /**
+         * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+         * @example application/json
+         */
+        'Content-Type': string
+      }
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['OTelCollectorCollection']
+        }
+      }
+      /** @description Forbidden: Configuration via Setup is disabled. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api403DefaultErrorF94C922ABB4460C0']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
+        }
+      }
+    }
+  }
+  'open-telemetry.handler_create': {
+    parameters: {
+      query?: never
+      header: {
+        /**
+         * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+         * @example application/json
+         */
+        'Content-Type': string
+      }
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['OTelCollectorSpec']
+      }
+    }
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['OTelCollectorObject']
+        }
+      }
+      /** @description Bad Request: Parameter or validation failure. */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api400DefaultErrorFB6BDF7D3BCB12F0']
+        }
+      }
+      /** @description Forbidden: Configuration via Setup is disabled. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api403DefaultErrorF94C922ABB4460C0']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
+        }
+      }
+      /** @description Unsupported Media Type: The submitted content-type is not supported. */
+      415: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api415DefaultError18F4B8AE28E5CF3E']
+        }
+      }
+    }
+  }
+  'open-telemetry.handler_update': {
+    parameters: {
+      query?: never
+      header: {
+        /**
+         * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+         * @example application/json
+         */
+        'Content-Type': string
+      }
+      path: {
+        config_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['OTelCollectorSpec']
+      }
+    }
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['OTelCollectorObject']
+        }
+      }
+      /** @description Bad Request: Parameter or validation failure. */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api400DefaultErrorFB6BDF7D3BCB12F0']
+        }
+      }
+      /** @description Forbidden: Configuration via Setup is disabled. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api403DefaultErrorF94C922ABB4460C0']
+        }
+      }
+      /** @description Not Found: The requested object has not be found. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api404DefaultError1F4828D4BC1C021F']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
+        }
+      }
+      /** @description Unsupported Media Type: The submitted content-type is not supported. */
+      415: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api415DefaultError18F4B8AE28E5CF3E']
+        }
+      }
+    }
+  }
+  'open-telemetry.handler_delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        config_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description No Content: Operation done successfully. No further output. */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Forbidden: Configuration via Setup is disabled. */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api403DefaultErrorF94C922ABB4460C0']
+        }
+      }
+      /** @description Not Found: The requested object has not be found. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api404DefaultError1F4828D4BC1C021F']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultErrorBCF1447A1057CB49']
+        }
+      }
+    }
+  }
+  'cmk.gui.cee.openapi.endpoints.metric.get_custom_graph': {
+    parameters: {
+      query?: never
+      header: {
+        /**
+         * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+         * @example application/json
+         */
+        'Content-Type': string
+      }
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GetCustomGraph']
+      }
+    }
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['GraphCollection']
+        }
+      }
+      /** @description Bad Request: Parameter or validation failure. */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api400DefaultError']
+        }
+      }
+      /** @description Not Found: The requested object has not be found. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api404DefaultError']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultError']
+        }
+      }
+      /** @description Unsupported Media Type: The submitted content-type is not supported. */
+      415: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api415DefaultError']
         }
       }
     }

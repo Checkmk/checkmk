@@ -60,6 +60,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import Page, PageEndpoint, PageRegistry
+from cmk.gui.permissions import permission_registry
 from cmk.gui.session import session
 from cmk.gui.site_config import has_distributed_setup_remote_sites, is_distributed_setup_remote_site
 from cmk.gui.table import Table, table_element
@@ -83,6 +84,7 @@ from cmk.gui.userdb import (
 from cmk.gui.userdb.store import save_custom_attr, save_two_factor_credentials
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.security_log_events import TwoFactorEvent, TwoFactorEventType, TwoFAFailureEvent
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
@@ -526,7 +528,11 @@ class UserTwoFactorOverview(Page):
         html.footer()
 
     def page(self, config: Config) -> None:
-        verify_requirements("general.manage_2fa", config.wato_enabled)
+        verify_requirements(
+            UserPermissions.from_config(config, permission_registry),
+            "general.manage_2fa",
+            config.wato_enabled,
+        )
         title = self._page_title()
         breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_user(), self._page_title())
         make_header(html, title, breadcrumb, self._page_menu(breadcrumb))
@@ -697,7 +703,11 @@ class UserTwoFactorEnforce(Page):
         html.footer()
 
     def page(self, config: Config) -> None:
-        verify_requirements("general.manage_2fa", config.wato_enabled)
+        verify_requirements(
+            UserPermissions.from_config(config, permission_registry),
+            "general.manage_2fa",
+            config.wato_enabled,
+        )
         title = self._page_title()
         breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_user(), self._page_title())
         make_header(html, title, breadcrumb, self._page_menu(breadcrumb))
@@ -857,7 +867,11 @@ class RegisterTotpSecret(Page):
         html.footer()
 
     def page(self, config: Config) -> None:
-        verify_requirements("general.manage_2fa", config.wato_enabled)
+        verify_requirements(
+            UserPermissions.from_config(config, permission_registry),
+            "general.manage_2fa",
+            config.wato_enabled,
+        )
         title = self._page_title()
         breadcrumb = self._breadcrumb()
         make_header(html, title, breadcrumb, self._page_menu(breadcrumb))
@@ -965,7 +979,11 @@ class EditCredentialAlias(Page):
         html.footer()
 
     def page(self, config: Config) -> None:
-        verify_requirements("general.manage_2fa", config.wato_enabled)
+        verify_requirements(
+            UserPermissions.from_config(config, permission_registry),
+            "general.manage_2fa",
+            config.wato_enabled,
+        )
         title = self._page_title()
         breadcrumb = self._breadcrumb()
         make_header(html, title, breadcrumb, self._page_menu(breadcrumb))
@@ -1048,7 +1066,9 @@ class UserWebAuthnRegisterBegin(JsonPage):
     def page(self, config: Config) -> JsonSerializable:
         assert user.id is not None
 
-        if not session.two_factor_enforced():
+        if not session.two_factor_enforced(
+            UserPermissions.from_config(config, permission_registry)
+        ):
             user.need_permission("general.manage_2fa")
 
         registration_data, state = make_fido2_server().register_begin(
@@ -1074,7 +1094,9 @@ class UserWebAuthnRegisterComplete(JsonPage):
     def page(self, config: Config) -> JsonSerializable:
         assert user.id is not None
 
-        if not session.two_factor_enforced():
+        if not session.two_factor_enforced(
+            UserPermissions.from_config(config, permission_registry)
+        ):
             user.need_permission("general.manage_2fa")
 
         raw_data = request.get_data()

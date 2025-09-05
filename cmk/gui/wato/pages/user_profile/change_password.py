@@ -19,11 +19,13 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.pages import Page, PageEndpoint, PageRegistry
+from cmk.gui.permissions import permission_registry
 from cmk.gui.session import session
 from cmk.gui.userdb import get_user_attributes, UserAttribute
 from cmk.gui.userdb._connections import get_connection
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.security_log_events import UserManagementEvent
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri_contextless
@@ -148,7 +150,11 @@ class UserChangePasswordPage(Page):
         raise redirect(origtarget)
 
     def page(self, config: Config) -> None:
-        verify_requirements("general.change_password", config.wato_enabled)
+        verify_requirements(
+            UserPermissions.from_config(config, permission_registry),
+            "general.change_password",
+            config.wato_enabled,
+        )
         title = self._page_title()
         breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_user(), self._page_title())
         make_header(html, title, breadcrumb, user_profile_page_menu(breadcrumb))

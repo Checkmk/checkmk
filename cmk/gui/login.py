@@ -36,6 +36,7 @@ from cmk.gui.logged_in import (
 )
 from cmk.gui.main import get_page_heading
 from cmk.gui.pages import Page, PageEndpoint, PageRegistry
+from cmk.gui.permissions import permission_registry
 from cmk.gui.session import session, UserContext
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.userdb import get_active_saml_connections, get_user_attributes
@@ -44,6 +45,7 @@ from cmk.gui.utils import roles
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.login import show_saml2_login, show_user_errors
 from cmk.gui.utils.mobile import is_mobile
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.security_log_events import AuthenticationFailureEvent, AuthenticationSuccessEvent
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, requested_file_name, urlencode
@@ -239,7 +241,9 @@ class LoginPage(Page):
                     )
 
                 # Having this before password updating to prevent redirect access issues
-                if session.two_factor_enforced():
+                if session.two_factor_enforced(
+                    UserPermissions.from_config(config, permission_registry)
+                ):
                     session.session_info.two_factor_required = True
                     raise HTTPRedirect(
                         "user_two_factor_enforce.py?_origtarget=%s"

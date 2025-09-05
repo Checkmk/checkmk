@@ -27,9 +27,10 @@ from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import session_attr
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.i18n import _
+from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import DismissableWarning, UserSpec
 from cmk.gui.utils.permission_verification import BasePerm
-from cmk.gui.utils.roles import may_with_roles, roles_of_user
+from cmk.gui.utils.roles import roles_of_user, UserPermissions
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.shared_typing.user_frontend_config import UserFrontendConfig
@@ -448,7 +449,9 @@ class LoggedInUser:
         )
 
     def may(self, pname: str) -> bool:
-        they_may = (pname in self.explicitly_given_permissions) or may_with_roles(
+        # TODO: Needs to be pulled up!
+        user_permissions = UserPermissions.from_config(active_config, permission_registry)
+        they_may = (pname in self.explicitly_given_permissions) or user_permissions.may_with_roles(
             self.role_ids, pname
         )
         hooks.call("permission-checked", pname)

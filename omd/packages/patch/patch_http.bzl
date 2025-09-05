@@ -6,7 +6,8 @@ def patch(version_str, sha256):
     http_archive(
         name = "patch",
         urls = [
-            "https://ftp.gnu.org/gnu/patch/" + filename,
+            # Fast mirror located nearby, see https://www.gnu.org/prep/ftp.en.html
+            "https://ftpmirror.gnu.org/gnu/patch/" + filename,
             UPSTREAM_MIRROR_URL + filename,
         ],
         sha256 = sha256,

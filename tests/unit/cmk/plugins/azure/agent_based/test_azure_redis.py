@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
+from copy import deepcopy
 from typing import Any
 
 import pytest
@@ -111,10 +112,35 @@ AZURE_REDIS_WITH_METRICS = {
                 value=11469.8,
                 unit="count",
             ),
+            "minimum_GeoReplicationHealthy": AzureMetric(
+                name="GeoReplicationHealthy",
+                aggregation="minimum",
+                value=1,
+                unit="count",
+            ),
+            "average_GeoReplicationConnectivityLag": AzureMetric(
+                name="GeoReplicationConnectivityLag",
+                aggregation="average",
+                value=2.5,
+                unit="seconds",
+            ),
         },
         subscription="ba9f74ff-6a4c-41e0-ab55-15c7fe79632f",
     ),
 }
+
+
+def resource_fixture_but(**kwargs):
+    """
+    Return a copy of AZURE_REDIS_WITH_METRICS, but with some metric values
+    overridden.
+    """
+    resources = deepcopy(AZURE_REDIS_WITH_METRICS)
+    for k, v in kwargs.items():
+        metric = resources["az-redis-test"].metrics[k]
+        assert isinstance(resources["az-redis-test"].metrics, dict)  # Hack, mypy
+        resources["az-redis-test"].metrics[k] = metric._replace(value=v)
+    return resources
 
 
 @pytest.mark.parametrize(
@@ -231,6 +257,42 @@ def test_check_azure_redis(
                 Metric("azure_redis_latency_internode", 0.011469799999999999, levels=(0.009, 0.01)),
             ],
             id="redis latency",
+        ),
+        pytest.param(
+            AZURE_REDIS_WITH_METRICS,
+            {
+                "replication_connectivity_lag_upper": ("fixed", (0.3, 1.0)),
+            },
+            azure_redis.check_plugin_azure_redis_replication,
+            [
+                Result(state=State.OK, summary="Healthy"),
+                Result(
+                    state=State.CRIT,
+                    summary="Connectivity lag: 2 seconds (warn/crit at 300 milliseconds/1 second)",
+                ),
+                Metric("azure_redis_replication_connectivity_lag", 2.5, levels=(0.3, 1.0)),
+            ],
+            id="redis replication",
+        ),
+        pytest.param(
+            resource_fixture_but(
+                minimum_GeoReplicationHealthy=0,
+                average_GeoReplicationConnectivityLag=20.0,
+            ),
+            {
+                "replication_connectivity_lag_upper": ("fixed", (0.3, 1.0)),
+                "replication_unhealthy_status": State.WARN,
+            },
+            azure_redis.check_plugin_azure_redis_replication,
+            [
+                Result(state=State.WARN, summary="Unhealthy"),
+                Result(
+                    state=State.CRIT,
+                    summary="Connectivity lag: 20 seconds (warn/crit at 300 milliseconds/1 second)",
+                ),
+                Metric("azure_redis_replication_connectivity_lag", 20.0, levels=(0.3, 1.0)),
+            ],
+            id="redis replication with unhealthy geo link",
         ),
     ],
 )

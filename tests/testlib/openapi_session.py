@@ -508,6 +508,27 @@ class FoldersAPI(BaseAPI):
             response.headers["Etag"],
         )
 
+    def delete(self, folder: str, delete_mode: str = "recursive") -> None:
+        """Delete a folder.
+
+        Args:
+            folder: The path of the folder to delete. Path delimiters should be '/'.
+            delete_mode: Delete policy. Options:
+                - 'recursive': Deletes the folder and all elements it contains (default)
+                - 'abort_on_nonempty': Deletes the folder only if it is empty
+        Raises:
+            UnexpectedResponse: If the delete operation fails
+        """
+        # Convert folder path delimiters from '/' to '~' for the API
+        folder_path = folder.replace("/", "~")
+
+        response = self.session.delete(
+            f"/objects/folder_config/{folder_path}", params={"delete_mode": delete_mode}
+        )
+
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
 
 class HostsAPI(BaseAPI):
     def create(
@@ -856,6 +877,7 @@ class RulesAPI(BaseAPI):
         ruleset_name: str | None = None,
         folder: str = "/",
         conditions: dict[str, Any] | None = None,
+        properties: dict[str, Any] | None = None,
     ) -> str:
         response = self.session.post(
             "/domain-types/rule/collections/all",
@@ -863,11 +885,9 @@ class RulesAPI(BaseAPI):
                 {
                     "ruleset": ruleset_name,
                     "folder": folder,
-                    "properties": {
-                        "disabled": False,
-                    },
                     "value_raw": repr(value),
                     "conditions": conditions or {},
+                    "properties": properties or {"disabled": False},
                 }
                 if ruleset_name
                 else value
@@ -894,15 +914,54 @@ class RulesAPI(BaseAPI):
             response.headers["Etag"],
         )
 
+    def update(
+        self,
+        rule_id: str,
+        value_raw: object | None = None,
+        properties: dict[str, Any] | None = None,
+        conditions: dict[str, Any] | None = None,
+        etag: str = "*",
+    ) -> None:
+        """Update an existing rule."""
+        update_data: dict[str, Any] = {}
+        if value_raw is not None:
+            update_data["value_raw"] = repr(value_raw)
+        if properties is not None:
+            update_data["properties"] = properties
+        if conditions is not None:
+            update_data["conditions"] = conditions
+
+        response = self.session.put(
+            f"/objects/rule/{rule_id}",
+            json=update_data,
+            headers={"If-Match": etag},
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
     def delete(self, rule_id: str) -> None:
         response = self.session.delete(f"/objects/rule/{rule_id}")
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
 
-    def get_all(self, ruleset_name: str) -> list[dict[str, Any]]:
+    def get_all(
+        self,
+        ruleset_name: str | None = None,
+        folder: str | None = None,
+        include_extensions: bool = True,
+    ) -> list[dict[str, Any]]:
+        """Get all rules, optionally filtered by ruleset and folder."""
+        params = {}
+        if ruleset_name:
+            params["ruleset_name"] = ruleset_name
+        if folder:
+            params["folder"] = folder
+        if not include_extensions:
+            params["include_extensions"] = "false"
+
         response = self.session.get(
             "/domain-types/rule/collections/all",
-            params={"ruleset_name": ruleset_name},
+            params=params,
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
@@ -911,6 +970,21 @@ class RulesAPI(BaseAPI):
 
     def get_all_names(self, ruleset_name: str) -> list[str]:
         return [_["id"] for _ in self.get_all(ruleset_name)]
+
+    def move(
+        self,
+        rule_id: str,
+        folder: str,
+    ) -> None:
+        """Move a rule to a different folder."""
+        move_data = {"folder": folder}
+
+        response = self.session.post(
+            f"/objects/rule/{rule_id}/actions/move/invoke",
+            json=move_data,
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
 
 
 class RulesetsAPI(BaseAPI):

@@ -1,0 +1,27 @@
+# Used to check custom instances
+# also only one section is provided
+---
+oracle:
+  main: # mandatory, to be used if no specific config
+    connection: # mandatory
+      hostname: absent.oracle-win.dev.checkmk.net # non exists/disabled
+    authentication: # mandatory
+      username: $CI_ORA2_DB_TEST
+      password: $CI_ORA2_DB_TEST
+      type: standard
+#      role: sysdba # it may be not enabled by Oracle DBA
+    sections: # optional, if absent will use default as defined below
+      - instance: # special section
+    discovery: # optional, defines instances to be monitored
+      detect: no # optional
+      include: ["FREE"] # optional
+      exclude: [] # optional
+    instances: # optional
+      - sid: FREE
+        connection: # mandatory
+          hostname: oracle-win.dev.checkmk.net
+        authentication: # mandatory
+          username: $CI_ORA2_DB_TEST
+          password: $CI_ORA2_DB_TEST
+          type: standard
+  #      role: sysdba # it may be not enabled by Oracle DBA

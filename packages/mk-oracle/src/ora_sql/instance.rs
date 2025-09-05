@@ -62,7 +62,7 @@ type SpotWorks = (ClosedSpot, Vec<InstanceWorks>);
 
 /// Generate data as defined by config
 /// Consists from two parts: instance entries + sections for every instance
-async fn generate_data(
+pub async fn generate_data(
     ora_sql: &config::ora_sql::Config,
     environment: &Env,
 ) -> Result<Vec<String>> {

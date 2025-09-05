@@ -241,6 +241,7 @@ class ABCViewDashlet(IFrameDashlet[VT]):
                 show_buttons=False,
                 page_menu_dropdowns_callback=lambda x, y, z: None,
             ),
+            user_permissions,
             debug=debug,
         )
 

@@ -15,6 +15,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import get_main_menu_items_prefixed_by_segment, MainMenuRegistry
+from cmk.gui.permissions import permission_registry
 from cmk.gui.search import (
     ABCMatchItemGenerator,
     MatchItem,
@@ -38,6 +39,7 @@ from cmk.gui.type_defs import (
     ViewSpec,
     Visual,
 )
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.store import get_permitted_views
 from cmk.gui.watolib.activate_changes import ActivateChanges
 from cmk.gui.watolib.hosts_and_folders import folder_tree, FolderTree
@@ -371,6 +373,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         )
 
     def show(self, config: Config) -> None:
+        user_permissions = UserPermissions.from_config(config, permission_registry)
         if not site_config.is_distributed_setup_remote_site(config.sites):
             if not config.wato_enabled:
                 html.write_text_permissive(_("Setup is disabled."))
@@ -403,7 +406,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         ]
         visuals_to_show += [("dashboards", (k, v)) for k, v in get_permitted_dashboards().items()]
 
-        topics = make_main_menu(visuals_to_show)
+        topics = make_main_menu(visuals_to_show, user_permissions)
         topic_choices: Choices = [(topic.title, topic.title) for topic in topics]
 
         html.open_table()

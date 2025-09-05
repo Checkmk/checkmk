@@ -330,7 +330,7 @@ def _page_view(config: Config, *, debug: bool) -> None:
     painter_options.load(view_name)
 
     try:
-        process_view(MobileViewRenderer(view), debug=debug)
+        process_view(MobileViewRenderer(view), user_permissions, debug=debug)
     except Exception as e:
         logger.exception("error showing mobile view")
         if debug:
@@ -349,6 +349,7 @@ class MobileViewRenderer(ABCViewRenderer):
         num_columns: int,
         show_filters: list[Filter],
         unfiltered_amount_of_rows: int,
+        user_permissions: UserPermissions,
         *,
         debug: bool,
     ) -> None:

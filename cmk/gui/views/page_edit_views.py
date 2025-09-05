@@ -9,10 +9,18 @@ from cmk.gui import visuals
 from cmk.gui.config import Config
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.i18n import _
+from cmk.gui.permissions import permission_registry
+from cmk.gui.utils.roles import UserPermissions
 
 from .store import get_all_views
 
 
 def page_edit_views(config: Config) -> None:
     cols = [(_("Datasource"), lambda v: data_source_registry[v["datasource"]]().title)]
-    visuals.page_list("views", _("Edit Views"), get_all_views(), cols)
+    visuals.page_list(
+        "views",
+        _("Edit Views"),
+        get_all_views(),
+        UserPermissions.from_config(config, permission_registry),
+        cols,
+    )

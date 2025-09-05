@@ -10,8 +10,10 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request, response
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageEndpoint, PageRegistry
+from cmk.gui.permissions import permission_registry
 from cmk.gui.sidebar import SidebarRenderer
 from cmk.gui.utils.mobile import is_mobile
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri
 from cmk.utils.urls import is_allowed_url
 
@@ -27,6 +29,7 @@ def page_index(config: Config) -> None:
 
     SidebarRenderer().show(
         config=config,
+        user_permissions=UserPermissions.from_config(config, permission_registry),
         title=get_page_heading(config),
         content=HTMLWriter.render_iframe("", src=_get_start_url(config), name="main"),
         sidebar_config=config.sidebar,

@@ -20,6 +20,7 @@ from cmk.gui.main_menu import get_main_menu_items_prefixed_by_segment
 from cmk.gui.sites import SiteStatus, states
 from cmk.gui.type_defs import Choices, Icon, MainMenuItem, MainMenuTopic, Visual
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visuals import visual_title
 
 # Constants to be used in snap-ins
@@ -129,9 +130,14 @@ def _filter_available_site_choices(choices: list[tuple[SiteId, str]]) -> list[tu
 
 
 def make_main_menu(
-    visuals: Sequence[tuple[str, tuple[str, Visual]]],
+    visuals: Sequence[tuple[str, tuple[str, Visual]]], user_permissions: UserPermissions
 ) -> list[MainMenuTopic]:
-    topics = {p.name(): p for p in pagetypes.PagetypeTopics.load().permitted_instances_sorted()}
+    topics = {
+        p.name(): p
+        for p in pagetypes.PagetypeTopics.load(user_permissions).permitted_instances_sorted(
+            user_permissions
+        )
+    }
 
     by_topic: dict[pagetypes.PagetypeTopics, MainMenuTopic] = {}
 

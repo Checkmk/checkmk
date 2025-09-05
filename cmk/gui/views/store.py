@@ -12,6 +12,7 @@ from cmk.gui import visuals
 from cmk.gui.config import active_config
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.hooks import request_memoize
+from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import (
     AllViewSpecs,
     ColumnSpec,
@@ -20,6 +21,7 @@ from cmk.gui.type_defs import (
     ViewName,
     ViewSpec,
 )
+from cmk.gui.utils.roles import UserPermissions
 from cmk.utils import paths
 
 from .builtin_views import builtin_view_extender_registry
@@ -62,8 +64,9 @@ class ViewStore:
         return cls()
 
     def __init__(self) -> None:
+        user_permissions = UserPermissions.from_config(active_config, permission_registry)
         self.all: Final = ViewStore._load_all_views()
-        self.permitted: Final = ViewStore._load_permitted_views(self.all)
+        self.permitted: Final = ViewStore._load_permitted_views(self.all, user_permissions)
 
     @staticmethod
     def _load_all_views() -> AllViewSpecs:
@@ -81,9 +84,11 @@ class ViewStore:
         }
 
     @staticmethod
-    def _load_permitted_views(all_views: AllViewSpecs) -> PermittedViewSpecs:
+    def _load_permitted_views(
+        all_views: AllViewSpecs, user_permissions: UserPermissions
+    ) -> PermittedViewSpecs:
         """Returns all view defitions that a user is allowed to use"""
-        return visuals.available("views", all_views)
+        return visuals.available("views", all_views, user_permissions)
 
 
 def get_all_views() -> AllViewSpecs:

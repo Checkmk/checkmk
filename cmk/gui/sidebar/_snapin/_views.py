@@ -75,8 +75,9 @@ class Views(SidebarSnapin):
                 view_menu_items(
                     config.visible_views,
                     config.hidden_views,
-                    UserPermissions.from_config(config, permission_registry),
-                )
+                    (user_permissions := UserPermissions.from_config(config, permission_registry)),
+                ),
+                user_permissions,
             ),
         )
 
@@ -101,8 +102,9 @@ def default_view_menu_topics() -> list[MainMenuTopic]:
         view_menu_items(
             active_config.visible_views,
             active_config.hidden_views,
-            UserPermissions.from_config(active_config, permission_registry),
-        )
+            (user_permissions := UserPermissions.from_config(active_config, permission_registry)),
+        ),
+        user_permissions,
     )
 
 
@@ -119,7 +121,7 @@ def view_menu_items(
         if not issubclass(page_type, pagetypes.PageRenderer):
             continue
 
-        for page in page_type.load().pages(user_permissions):
+        for page in page_type.load(user_permissions).pages(user_permissions):
             if page._show_in_sidebar():
                 visual = page.to_visual()
                 visual["hidden"] = False  # Is currently not configurable for pagetypes

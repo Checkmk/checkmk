@@ -132,11 +132,6 @@ def builtin_role_id_from_str(role_id: str) -> BuiltInUserRoleID:
     return cast(BuiltInUserRoleID, role_id)
 
 
-# TODO: Move to UserPermissions.user_may
-def user_may(user_id: UserId | None, pname: str) -> bool:
-    return UserPermissions.from_config(active_config, permission_registry).user_may(user_id, pname)
-
-
 # TODO: Move to UserPermissions.may_with_roles
 def may_with_roles(some_role_ids: list[str], pname: str) -> bool:
     return UserPermissions.from_config(active_config, permission_registry).may_with_roles(
@@ -158,6 +153,7 @@ def is_user_with_publish_permissions(
     for_type: Literal["visual", "pagetype"],
     user_id: UserId | None,
     type_name: str,
+    user_permissions: UserPermissions,
 ) -> bool:
     """
     Visuals and PageTypes have different permission naming. We handle both
@@ -181,10 +177,10 @@ def is_user_with_publish_permissions(
     )
 
     return (
-        user_may(user_id, publish_all_permission)
-        or user_may(user_id, publish_groups_permission)
-        or user_may(user_id, publish_foreign_groups_permission)
-        or user_may(user_id, publish_sites_permission)
+        user_permissions.user_may(user_id, publish_all_permission)
+        or user_permissions.user_may(user_id, publish_groups_permission)
+        or user_permissions.user_may(user_id, publish_foreign_groups_permission)
+        or user_permissions.user_may(user_id, publish_sites_permission)
     )
 
 

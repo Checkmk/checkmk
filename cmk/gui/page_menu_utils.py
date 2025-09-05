@@ -24,6 +24,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.type_defs import InfoName, Rows, SingleInfos, Visual
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.view import View
 from cmk.gui.visual_link import get_linked_visual_request_vars, make_linked_visual_url
@@ -33,7 +34,9 @@ from cmk.gui.visuals.type import visual_type_registry, VisualType
 from cmk.utils import paths
 
 
-def get_context_page_menu_dropdowns(view: View, rows: Rows, mobile: bool) -> list[PageMenuDropdown]:
+def get_context_page_menu_dropdowns(
+    view: View, rows: Rows, user_permissions: UserPermissions
+) -> list[PageMenuDropdown]:
     """For the given visual find other visuals to link to
 
     Based on the (single_infos and infos of the data source) we have different categories,
@@ -47,7 +50,12 @@ def get_context_page_menu_dropdowns(view: View, rows: Rows, mobile: bool) -> lis
     """
     dropdowns = []
 
-    topics = {p.name(): p for p in pagetypes.PagetypeTopics.load().permitted_instances_sorted()}
+    topics = {
+        p.name(): p
+        for p in pagetypes.PagetypeTopics.load(user_permissions).permitted_instances_sorted(
+            user_permissions
+        )
+    }
 
     # First gather a flat list of all visuals to be linked to
     singlecontext_request_vars = visuals.get_singlecontext_vars(
@@ -56,7 +64,11 @@ def get_context_page_menu_dropdowns(view: View, rows: Rows, mobile: bool) -> lis
     # Reports are displayed by separate dropdown (Export > Report)
     linked_visuals = list(
         _collect_linked_visuals(
-            view, rows, singlecontext_request_vars, mobile, visual_types=["views", "dashboards"]
+            view,
+            rows,
+            singlecontext_request_vars,
+            mobile=False,
+            visual_types=["views", "dashboards"],
         )
     )
 
@@ -92,7 +104,7 @@ def get_context_page_menu_dropdowns(view: View, rows: Rows, mobile: bool) -> lis
                         topics,
                         dropdown_visuals,
                         singlecontext_request_vars,
-                        mobile,
+                        mobile=False,
                     )
                 ),
             )

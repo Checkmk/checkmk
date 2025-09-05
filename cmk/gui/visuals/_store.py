@@ -26,7 +26,7 @@ from cmk.gui.logged_in import save_user_file, user
 from cmk.gui.permissions import declare_permission, permission_registry
 from cmk.gui.site_config import enabled_sites
 from cmk.gui.type_defs import PermissionName, RoleName, Visual, VisualName, VisualTypeName
-from cmk.gui.utils.roles import user_may
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.speaklater import LazyString
 from cmk.mkp_tool import id_to_mkp, Installer, PackageName, PackagePart
 from cmk.utils.escaping import escape
@@ -461,9 +461,10 @@ def declare_packaged_visuals_permissions(what: VisualTypeName) -> None:
 def available(
     what: VisualTypeName,
     all_visuals: dict[tuple[UserId, VisualName], TVisual],
+    user_permissions: UserPermissions,
 ) -> dict[VisualName, TVisual]:
     visuals: dict[VisualName, TVisual] = {}
-    for visual_name, _visuals in available_by_owner(what, all_visuals).items():
+    for visual_name, _visuals in available_by_owner(what, all_visuals, user_permissions).items():
         for user_id, visual in sorted(_visuals.items()):
             # Built-in
             if user_id == UserId.builtin():
@@ -482,6 +483,7 @@ def available(
 def available_by_owner(
     what: VisualTypeName,
     all_visuals: dict[tuple[UserId, VisualName], TVisual],
+    user_permissions: UserPermissions,
 ) -> dict[VisualName, dict[UserId, TVisual]]:
     visuals: dict[VisualName, dict[UserId, TVisual]] = {}
     permprefix = what[:-1]
@@ -507,7 +509,7 @@ def available_by_owner(
         if (
             visual_name not in visuals
             and published_to_user(visual)
-            and user_may(user_id, "general.force_" + what)
+            and user_permissions.user_may(user_id, "general.force_" + what)
             and user.may("general.see_user_" + what)
             and not restricted_visual(visual_name)
         ):

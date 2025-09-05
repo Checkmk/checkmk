@@ -21,6 +21,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.permissions import load_dynamic_permissions, permission_registry
 from cmk.gui.userdb import connection_choices
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib import groups_io, tags
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.passwords import load_passwords
@@ -61,13 +62,15 @@ def TypedPlainValidator[T](input_type: type[T], validator: Callable[[T], object]
 
 @dataclass(slots=True)
 class RegistryConverter[T]:
-    registry_or_getter: Mapping[str, T] | Callable[[], Mapping[str, T]]
+    registry_or_getter: Mapping[str, T] | Callable[[UserPermissions], Mapping[str, T]]
     custom_error_message: str | None = None
 
     @property
     def _registry(self) -> Mapping[str, T]:
         if not isinstance(self.registry_or_getter, Mapping):
-            self.registry_or_getter = self.registry_or_getter()
+            self.registry_or_getter = self.registry_or_getter(
+                UserPermissions.from_config(active_config, permission_registry)
+            )
 
         return self.registry_or_getter
 

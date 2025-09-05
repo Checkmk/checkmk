@@ -1650,7 +1650,6 @@ def get_resource_host_labels_section(
         "subscription_id": subscription.id,
     }
     # for backward compatibility
-    # TODO: remove? To be decided
     if resource.info["type"] == "Microsoft.Compute/virtualMachines":
         labels["vm_instance"] = True
 

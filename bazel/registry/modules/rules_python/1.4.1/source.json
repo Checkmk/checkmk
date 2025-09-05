@@ -1,0 +1,9 @@
+{
+    "integrity": "sha256-n587MAqSZOTHeZkxLOZjvl3umlbjYaH2/n7GDhvu+aM=",
+    "strip_prefix": "rules_python-1.4.1",
+    "url": "https://github.com/bazel-contrib/rules_python/releases/download/1.4.1/rules_python-1.4.1.tar.gz",
+    "patches": {
+        "module_dot_bazel_version.patch": "sha256-jog4iTSLzT5uaLYtQ2JMuD3PDk75GvQ4SxEQaU3cb7o="
+    },
+    "patch_strip": 1
+}

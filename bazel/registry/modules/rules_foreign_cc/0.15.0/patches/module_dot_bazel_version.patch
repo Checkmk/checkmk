@@ -1,0 +1,14 @@
+===================================================================
+--- a/MODULE.bazel
++++ b/MODULE.bazel
+@@ -1,9 +1,9 @@
+ """bazel-contrib/rules_foreign_cc"""
+ 
+ module(
+     name = "rules_foreign_cc",
+-    version = "0.0.0",
++    version = "0.15.0",
+     compatibility_level = 1,
+ )
+ 
+ bazel_dep(name = "bazel_features", version = "1.21.0")

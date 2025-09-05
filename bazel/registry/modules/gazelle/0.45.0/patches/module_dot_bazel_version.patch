@@ -1,0 +1,13 @@
+===================================================================
+--- a/MODULE.bazel
++++ b/MODULE.bazel
+@@ -1,8 +1,8 @@
+ module(
+     name = "gazelle",
+     # Updated by the Publish to BCR app.
+-    version = "",
++    version = "0.45.0",
+     repo_name = "bazel_gazelle",
+ )
+ 
+ bazel_dep(name = "bazel_features", version = "1.9.1")

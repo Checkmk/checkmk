@@ -1,0 +1,33 @@
+{
+    "homepage": "https://github.com/bazel-contrib/musl-toolchain",
+    "maintainers": [
+        {
+            "email": "dawagner@gmail.com",
+            "github": "illicitonion",
+            "name": "Daniel Wagner-Hall",
+            "github_user_id": 1131704
+        },
+        {
+            "email": "fabian@meumertzhe.im",
+            "github": "fmeum",
+            "name": "Fabian Meumertzheim",
+            "github_user_id": 4312191
+        }
+    ],
+    "repository": [
+        "github:bazel-contrib/musl-toolchain"
+    ],
+    "versions": [
+        "0.1.14",
+        "0.1.15",
+        "0.1.16",
+        "0.1.17",
+        "0.1.18",
+        "0.1.19",
+        "0.1.20",
+        "0.1.25",
+        "0.1.26",
+        "0.1.27"
+    ],
+    "yanked_versions": {}
+}

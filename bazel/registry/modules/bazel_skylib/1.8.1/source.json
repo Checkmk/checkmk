@@ -1,0 +1,5 @@
+{
+    "integrity": "sha256-UbUQWnYLNTdz+QTSu8XmZNCYf7ryImUWTeZdQ+kQ2Kw=",
+    "strip_prefix": "",
+    "url": "https://github.com/bazelbuild/bazel-skylib/releases/download/1.8.1/bazel-skylib-1.8.1.tar.gz"
+}

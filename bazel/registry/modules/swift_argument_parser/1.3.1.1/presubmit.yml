@@ -1,0 +1,10 @@
+tasks:
+  verify_targets:
+    name: Verify build targets
+    platform: macos
+    bazel: 7.x
+    build_targets:
+      - '@swift_argument_parser//:ArgumentParser'
+    build_flags:
+      - --macos_minimum_os=12.0
+      - "--repo_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1"

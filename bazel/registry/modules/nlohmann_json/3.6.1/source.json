@@ -1,0 +1,9 @@
+{
+    "url": "https://github.com/nlohmann/json/releases/download/v3.6.1/include.zip",
+    "integrity": "sha256-acyIIHzpE0fqUwsif/B3bbgty43mcE4aPXT0hBvGUc8=",
+    "patches": {
+        "add_build_file.patch": "sha256-q7pmw7dn3H7Le3BgkydhrvZG+1e75JisnM+PLaPjCI0=",
+        "module_dot_bazel.patch": "sha256-91o2FwT6kCVE+BBM+L2rxXFYbVDeDSkKHabs50GBa5o="
+    },
+    "patch_strip": 0
+}

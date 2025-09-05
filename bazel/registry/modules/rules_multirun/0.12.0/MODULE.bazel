@@ -1,0 +1,15 @@
+module(
+    name = "rules_multirun",
+    version = "0.12.0",
+    compatibility_level = 1,
+)
+
+bazel_dep(name = "bazel_skylib", version = "1.4.2")
+bazel_dep(name = "rules_python", version = "0.36.0")
+
+bazel_dep(
+    name = "stardoc",
+    version = "0.7.1",
+    dev_dependency = True,
+    repo_name = "io_bazel_stardoc",
+)

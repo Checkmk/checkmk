@@ -1,0 +1,37 @@
+{
+    "homepage": "https://github.com/bazelbuild/rules_android",
+    "maintainers": [
+        {
+            "email": "tedx@google.com",
+            "github": "ted-xie",
+            "name": "Ted Xie",
+            "github_user_id": 4371677
+        },
+        {
+            "email": "ahumesky@google.com",
+            "github": "ahumesky",
+            "name": "Alex Humesky",
+            "github_user_id": 8110723
+        }
+    ],
+    "repository": [
+        "github:bazelbuild/rules_android"
+    ],
+    "versions": [
+        "0.1.1",
+        "0.5.0.bcr.1",
+        "0.5.1",
+        "0.6.0-alpha1.bcr.1",
+        "0.6.0",
+        "0.6.1",
+        "0.6.2",
+        "0.6.3",
+        "0.6.4",
+        "0.6.5",
+        "0.6.6"
+    ],
+    "yanked_versions": {
+        "0.5.0": "Bug in compatibility_level made v0.5.0 incompatible with rules_jvm_external.",
+        "0.6.0-alpha1": "Patch of a file with no newline before EOF not compatible with bzlmod."
+    }
+}

@@ -1,0 +1,32 @@
+module(
+    name = "rules_pkg",
+    version = "1.1.0",  # Must sync with version.bzl.
+    compatibility_level = 1,
+    repo_name = "rules_pkg",
+)
+
+# Do not update to newer versions until you need a specific new feature.
+bazel_dep(name = "rules_license", version = "1.0.0")
+bazel_dep(name = "rules_python", version = "1.0.0")
+bazel_dep(name = "bazel_skylib", version = "1.7.1")
+
+# Only for development
+bazel_dep(name = "platforms", version = "0.0.10", dev_dependency = True)
+bazel_dep(name = "rules_cc", version = "0.0.17", dev_dependency = True)
+bazel_dep(name = "stardoc", version = "0.7.2", dev_dependency = True)
+
+# Find the system rpmbuild if one is available.
+find_rpm = use_extension("//toolchains/rpm:rpmbuild_configure.bzl", "find_system_rpmbuild_bzlmod", dev_dependency = True)
+use_repo(find_rpm, "rules_pkg_rpmbuild")
+
+register_toolchains(
+    "@rules_pkg_rpmbuild//:all",
+    dev_dependency = True,
+)
+
+local_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:local.bzl", "local_repository")
+
+local_repository(
+    name = "mappings_test_external_repo",
+    path = "tests/mappings/external_repo",
+)

@@ -1,0 +1,37 @@
+{
+    "homepage": "https://github.com/abseil/abseil-cpp",
+    "maintainers": [
+        {
+            "email": "dmauro@google.com",
+            "github": "derekmauro",
+            "github_user_id": 761129,
+            "name": "Derek Mauro"
+        }
+    ],
+    "repository": [
+        "github:abseil/abseil-cpp"
+    ],
+    "versions": [
+        "20210324.2",
+        "20211102.0",
+        "20220623.1",
+        "20230125.1",
+        "20230802.0",
+        "20230802.0.bcr.1",
+        "20230802.1",
+        "20240116.0",
+        "20240116.1",
+        "20240116.2",
+        "20240116.3",
+        "20240722.0",
+        "20240722.0.bcr.1",
+        "20240722.0.bcr.2",
+        "20240722.1",
+        "20250127.0",
+        "20250127.1",
+        "20250512.0",
+        "20250512.1",
+        "20250814.0"
+    ],
+    "yanked_versions": {}
+}

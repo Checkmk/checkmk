@@ -1,0 +1,167 @@
+commit 99af4b12716531021b9160fa2c622df4c5e8a0de
+Author: Alex Eagle <alex@aspect.dev>
+Date:   Wed Oct 11 15:04:35 2023 -0700
+
+    feat: support bzlmod
+    
+    Bazel modules are moving away from setup in WORKSPACE files, towards a 'package manager' called bzlmod.
+    Such modules are published on https://registry.bazel.build and are easier for developers to consume in their Bazel projects.
+
+diff --git a/MODULE.bazel b/MODULE.bazel
+new file mode 100644
+index 0000000..973e2ba
+--- /dev/null
++++ b/MODULE.bazel
+@@ -0,0 +1,16 @@
++"Bazel module definition for bzlmod"
++module(
++    name = "rules_buf",
++    version = "0.1.1", # Replaced when publishing
++    compatibility_level = 1,
++)
++
++bazel_dep(name = "platforms", version = "0.0.4")
++# Only needed because rules_proto doesn't provide the protoc toolchain yet.
++# TODO(alex/sahin): remove in the future
++bazel_dep(name = "protobuf", version = "21.7", repo_name = "com_google_protobuf")
++bazel_dep(name = "rules_proto", version = "5.3.0-21.7")
++
++ext = use_extension("//buf:extensions.bzl", "ext")
++use_repo(ext, "rules_buf_toolchains")
++register_toolchains("@rules_buf_toolchains//:all")
+diff --git a/buf/extensions.bzl b/buf/extensions.bzl
+new file mode 100644
+index 0000000..472dfad
+--- /dev/null
++++ b/buf/extensions.bzl
+@@ -0,0 +1,16 @@
++"""Define module extensions for using rules_buf with bzlmod.
++See https://bazel.build/docs/bzlmod#extension-definition
++"""
++
++load("//buf/internal:toolchain.bzl", "buf_download_releases")
++
++def _extension_impl(module_ctx):
++    buf_download_releases(
++        name = "rules_buf_toolchains",
++        # TODO: get desired version from the attr
++        version = "v1.27.0",
++    )
++
++ext = module_extension(
++    implementation = _extension_impl,
++)
+diff --git a/buf/internal/toolchain.bzl b/buf/internal/toolchain.bzl
+index 33d3564..6fda129 100644
+--- a/buf/internal/toolchain.bzl
++++ b/buf/internal/toolchain.bzl
+@@ -63,7 +63,7 @@ def declare_buf_toolchains(os, cpu, rules_buf_repo_name):
+         native.toolchain(
+             name = cmd + "_toolchain",
+             toolchain = ":" + toolchain_impl,
+-            toolchain_type = "@{}//tools/{}:toolchain_type".format(rules_buf_repo_name, cmd),
++            toolchain_type = "@@{}//tools/{}:toolchain_type".format(rules_buf_repo_name, cmd),
+             exec_compatible_with = [
+                 "@platforms//os:" + os,
+                 "@platforms//cpu:" + cpu,
+@@ -199,7 +199,7 @@ def _buf_download_releases_impl(ctx):
+     )
+     return update_attrs(ctx.attr, ["version"], {"version": version})
+ 
+-_buf_download_releases = repository_rule(
++buf_download_releases = repository_rule(
+     implementation = _buf_download_releases_impl,
+     attrs = {
+         "version": attr.string(
+@@ -217,7 +217,7 @@ def rules_buf_toolchains(name = _TOOLCHAINS_REPO, version = None):
+         version: Release version, eg: `v.1.0.0-rc12`. If `None` defaults to latest
+     """
+ 
+-    _buf_download_releases(name = name, version = version)
++    buf_download_releases(name = name, version = version)
+ 
+     _register_toolchains(name, "buf")
+     _register_toolchains(name, "protoc-gen-buf-breaking")
+diff --git a/examples/bzlmod/.bazelrc b/examples/bzlmod/.bazelrc
+new file mode 100644
+index 0000000..3ce91d2
+--- /dev/null
++++ b/examples/bzlmod/.bazelrc
+@@ -0,0 +1 @@
++common --enable_bzlmod
+diff --git a/examples/bzlmod/BUILD.bazel b/examples/bzlmod/BUILD.bazel
+new file mode 100644
+index 0000000..762ad1e
+--- /dev/null
++++ b/examples/bzlmod/BUILD.bazel
+@@ -0,0 +1,20 @@
++load("@rules_buf//buf:defs.bzl", "buf_lint_test")
++
++exports_files(["buf.yaml"], visibility = ["//visibility:public"])
++
++proto_library(
++    name = "unused",
++    srcs = ["unused.proto"],
++)
++
++proto_library(
++    name = "foo_proto",
++    srcs = ["file.proto"],
++    deps = [":unused"],
++)
++
++buf_lint_test(
++    name = "foo_proto_lint",
++    targets = [":foo_proto"],
++    config = "buf.yaml",
++)
+diff --git a/examples/bzlmod/MODULE.bazel b/examples/bzlmod/MODULE.bazel
+new file mode 100644
+index 0000000..74cdc32
+--- /dev/null
++++ b/examples/bzlmod/MODULE.bazel
+@@ -0,0 +1,10 @@
++"Bazel dependencies"
++bazel_dep(name = "rules_buf", dev_dependency = True, version = "0.0.0")
++
++local_path_override(
++    module_name = "rules_buf",
++    path = "../..",
++)
++# Only needed because rules_proto doesn't provide the protoc toolchain yet.
++# TODO(alex/sahin): remove in the future
++bazel_dep(name = "protobuf", version = "21.7", repo_name = "com_google_protobuf")
+diff --git a/examples/bzlmod/WORKSPACE b/examples/bzlmod/WORKSPACE
+new file mode 100644
+index 0000000..9f0c4f0
+--- /dev/null
++++ b/examples/bzlmod/WORKSPACE
+@@ -0,0 +1 @@
++# Marker that this folder is the root of a Bazel workspace
+diff --git a/examples/bzlmod/buf.yaml b/examples/bzlmod/buf.yaml
+new file mode 100644
+index 0000000..29fd418
+--- /dev/null
++++ b/examples/bzlmod/buf.yaml
+@@ -0,0 +1,4 @@
++version: v1
++lint:
++  use:
++    - IMPORT_USED
+diff --git a/examples/bzlmod/file.proto b/examples/bzlmod/file.proto
+new file mode 100644
+index 0000000..eef262a
+--- /dev/null
++++ b/examples/bzlmod/file.proto
+@@ -0,0 +1,3 @@
++syntax = "proto3";
++
++import "unused.proto";
+diff --git a/examples/bzlmod/unused.proto b/examples/bzlmod/unused.proto
+new file mode 100644
+index 0000000..d95660e
+--- /dev/null
++++ b/examples/bzlmod/unused.proto
+@@ -0,0 +1 @@
++syntax = "proto3";
+\ No newline at end of file

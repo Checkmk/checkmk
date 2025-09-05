@@ -1,0 +1,9 @@
+{
+    "integrity": "sha256-g+WvTRc4XRwyaMMa4hfb/IUlqnvPUlCNxoZLr/yLlQE=",
+    "strip_prefix": "rules_js-2.3.7",
+    "url": "https://github.com/aspect-build/rules_js/releases/download/v2.3.7/rules_js-v2.3.7.tar.gz",
+    "patches": {
+        "module_dot_bazel_version.patch": "sha256-WjBEoMytW67FM5JI3ocM6K2mfx8D1aziTmA+CHclB+Q="
+    },
+    "patch_strip": 1
+}

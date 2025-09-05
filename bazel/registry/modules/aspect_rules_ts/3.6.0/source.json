@@ -1,0 +1,9 @@
+{
+    "integrity": "sha256-axWsHGnywPEoLkGrRp/WPNQOsuLYMHXhm2imp2Zpdz8=",
+    "strip_prefix": "rules_ts-3.6.0",
+    "url": "https://github.com/aspect-build/rules_ts/releases/download/v3.6.0/rules_ts-v3.6.0.tar.gz",
+    "patches": {
+        "module_dot_bazel_version.patch": "sha256-t8HlpjWUErg10zkpyxKwPeW9mJIaFftJQm7u3BpO2mw="
+    },
+    "patch_strip": 1
+}

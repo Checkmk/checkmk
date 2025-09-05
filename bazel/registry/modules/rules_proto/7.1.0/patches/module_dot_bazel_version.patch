@@ -1,0 +1,14 @@
+===================================================================
+--- a/MODULE.bazel
++++ b/MODULE.bazel
+@@ -2,9 +2,9 @@
+ 
+ module(
+     name = "rules_proto",
+     # Note: the publish-to-BCR app will patch this line to stamp the version being published.
+-    version = "0.0.0",
++    version = "7.1.0",
+     compatibility_level = 1,
+ )
+ 
+ bazel_dep(name = "protobuf", version = "27.1", repo_name = "com_google_protobuf")

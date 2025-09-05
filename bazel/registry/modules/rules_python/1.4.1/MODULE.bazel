@@ -1,0 +1,269 @@
+module(
+    name = "rules_python",
+    version = "1.4.1",
+    compatibility_level = 1,
+)
+
+bazel_dep(name = "bazel_features", version = "1.21.0")
+bazel_dep(name = "bazel_skylib", version = "1.7.1")
+bazel_dep(name = "rules_cc", version = "0.0.16")
+bazel_dep(name = "platforms", version = "0.0.11")
+
+# Those are loaded only when using py_proto_library
+# Use py_proto_library directly from protobuf repository
+bazel_dep(name = "protobuf", version = "29.0-rc2", repo_name = "com_google_protobuf")
+
+internal_deps = use_extension("//python/private:internal_deps.bzl", "internal_deps")
+use_repo(
+    internal_deps,
+    "pypi__build",
+    "pypi__click",
+    "pypi__colorama",
+    "pypi__importlib_metadata",
+    "pypi__installer",
+    "pypi__more_itertools",
+    "pypi__packaging",
+    "pypi__pep517",
+    "pypi__pip",
+    "pypi__pip_tools",
+    "pypi__pyproject_hooks",
+    "pypi__setuptools",
+    "pypi__tomli",
+    "pypi__wheel",
+    "pypi__zipp",
+    "rules_python_internal",
+)
+
+# We need to do another use_extension call to expose the "pythons_hub"
+# repo.
+python = use_extension("//python/extensions:python.bzl", "python")
+
+# The default toolchain to use if nobody configures a toolchain.
+# NOTE: This is not a stable version. It is provided for convenience, but will
+# change frequently to track the most recent Python version.
+# NOTE: The root module can override this.
+python.toolchain(
+    is_default = True,
+    python_version = "3.11",
+)
+use_repo(
+    python,
+    "python_3_11",
+    "pythons_hub",
+    python = "python_versions",
+)
+
+# This call registers the Python toolchains.
+register_toolchains("@pythons_hub//:all")
+
+#####################
+# Install twine for our own runfiles wheel publishing and allow bzlmod users to use it.
+
+pip = use_extension("//python/extensions:pip.bzl", "pip")
+pip.parse(
+    # NOTE @aignas 2024-10-26: We have an integration test that depends on us
+    # being able to build sdists for this hub, so explicitly set this to False.
+    download_only = False,
+    experimental_index_url = "https://pypi.org/simple",
+    hub_name = "rules_python_publish_deps",
+    python_version = "3.11",
+    requirements_by_platform = {
+        "//tools/publish:requirements_darwin.txt": "osx_*",
+        "//tools/publish:requirements_linux.txt": "linux_*",
+        "//tools/publish:requirements_windows.txt": "windows_*",
+    },
+)
+use_repo(pip, "rules_python_publish_deps")
+
+# Not a dev dependency to allow usage of //sphinxdocs code, which refers to stardoc repos.
+bazel_dep(name = "stardoc", version = "0.7.2", repo_name = "io_bazel_stardoc")
+
+# ===== DEV ONLY DEPS AND SETUP BELOW HERE =====
+bazel_dep(name = "rules_bazel_integration_test", version = "0.27.0", dev_dependency = True)
+bazel_dep(name = "rules_testing", version = "0.6.0", dev_dependency = True)
+bazel_dep(name = "rules_shell", version = "0.3.0", dev_dependency = True)
+bazel_dep(name = "rules_multirun", version = "0.9.0", dev_dependency = True)
+bazel_dep(name = "bazel_ci_rules", version = "1.0.0", dev_dependency = True)
+bazel_dep(name = "rules_pkg", version = "1.0.1", dev_dependency = True)
+bazel_dep(name = "other", version = "0", dev_dependency = True)
+
+# Extra gazelle plugin deps so that WORKSPACE.bzlmod can continue including it for e2e tests.
+# We use `WORKSPACE.bzlmod` because it is impossible to have dev-only local overrides.
+bazel_dep(name = "rules_go", version = "0.41.0", dev_dependency = True, repo_name = "io_bazel_rules_go")
+bazel_dep(name = "rules_python_gazelle_plugin", version = "0", dev_dependency = True)
+bazel_dep(name = "gazelle", version = "0.40.0", dev_dependency = True, repo_name = "bazel_gazelle")
+
+internal_dev_deps = use_extension(
+    "//python/private:internal_dev_deps.bzl",
+    "internal_dev_deps",
+    dev_dependency = True,
+)
+use_repo(internal_dev_deps, "buildkite_config", "wheel_for_testing")
+
+# Add gazelle plugin so that we can run the gazelle example as an e2e integration
+# test and include the distribution files.
+local_path_override(
+    module_name = "rules_python_gazelle_plugin",
+    path = "gazelle",
+)
+
+local_path_override(
+    module_name = "other",
+    path = "tests/modules/other",
+)
+
+dev_python = use_extension(
+    "//python/extensions:python.bzl",
+    "python",
+    dev_dependency = True,
+)
+dev_python.override(
+    register_all_versions = True,
+)
+
+dev_pip = use_extension(
+    "//python/extensions:pip.bzl",
+    "pip",
+    dev_dependency = True,
+)
+dev_pip.parse(
+    download_only = True,
+    experimental_index_url = "https://pypi.org/simple",
+    hub_name = "dev_pip",
+    python_version = "3.11",
+    requirements_lock = "//docs:requirements.txt",
+)
+dev_pip.parse(
+    download_only = True,
+    experimental_index_url = "https://pypi.org/simple",
+    hub_name = "dev_pip",
+    python_version = "3.13",
+    requirements_lock = "//docs:requirements.txt",
+)
+dev_pip.parse(
+    download_only = True,
+    experimental_index_url = "https://pypi.org/simple",
+    hub_name = "pypiserver",
+    python_version = "3.11",
+    requirements_lock = "//examples/wheel:requirements_server.txt",
+)
+use_repo(dev_pip, "dev_pip", "pypiserver")
+
+# Bazel integration test setup below
+
+bazel_binaries = use_extension(
+    "@rules_bazel_integration_test//:extensions.bzl",
+    "bazel_binaries",
+    dev_dependency = True,
+)
+
+# Keep in sync with //:version.bzl
+bazel_binaries.local(
+    name = "self",
+    path = "tests/integration/bazel_from_env",
+)
+bazel_binaries.download(version = "7.4.1")
+bazel_binaries.download(version = "8.0.0")
+
+# For now, don't test with rolling, because that's Bazel 9, which is a ways
+# away.
+# bazel_binaries.download(version = "rolling")
+use_repo(
+    bazel_binaries,
+    "bazel_binaries",
+    # These don't appear necessary, but are reported as direct dependencies
+    # that should be use_repo()'d, so we add them as requested
+    "bazel_binaries_bazelisk",
+    "build_bazel_bazel_7_4_1",
+    "build_bazel_bazel_8_0_0",
+    # "build_bazel_bazel_rolling",
+    "build_bazel_bazel_self",
+)
+
+# TODO @aignas 2025-01-27: should this be moved to `//python/extensions:uv.bzl` or should
+# it stay as it is? I think I may prefer to move it.
+uv = use_extension("//python/uv:uv.bzl", "uv")
+
+# Here is how we can define platforms for the `uv` binaries - this will affect
+# all of the downstream callers because we are using the extension without
+# `dev_dependency = True`.
+uv.default(
+    base_url = "https://github.com/astral-sh/uv/releases/download",
+    manifest_filename = "dist-manifest.json",
+    version = "0.6.3",
+)
+uv.default(
+    compatible_with = [
+        "@platforms//os:macos",
+        "@platforms//cpu:aarch64",
+    ],
+    platform = "aarch64-apple-darwin",
+)
+uv.default(
+    compatible_with = [
+        "@platforms//os:linux",
+        "@platforms//cpu:aarch64",
+    ],
+    platform = "aarch64-unknown-linux-gnu",
+)
+uv.default(
+    compatible_with = [
+        "@platforms//os:linux",
+        "@platforms//cpu:ppc",
+    ],
+    platform = "powerpc64-unknown-linux-gnu",
+)
+uv.default(
+    compatible_with = [
+        "@platforms//os:linux",
+        "@platforms//cpu:ppc64le",
+    ],
+    platform = "powerpc64le-unknown-linux-gnu",
+)
+uv.default(
+    compatible_with = [
+        "@platforms//os:linux",
+        "@platforms//cpu:s390x",
+    ],
+    platform = "s390x-unknown-linux-gnu",
+)
+uv.default(
+    compatible_with = [
+        "@platforms//os:linux",
+        "@platforms//cpu:riscv64",
+    ],
+    platform = "riscv64-unknown-linux-gnu",
+)
+uv.default(
+    compatible_with = [
+        "@platforms//os:macos",
+        "@platforms//cpu:x86_64",
+    ],
+    platform = "x86_64-apple-darwin",
+)
+uv.default(
+    compatible_with = [
+        "@platforms//os:windows",
+        "@platforms//cpu:x86_64",
+    ],
+    platform = "x86_64-pc-windows-msvc",
+)
+uv.default(
+    compatible_with = [
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+    ],
+    platform = "x86_64-unknown-linux-gnu",
+)
+use_repo(uv, "uv")
+
+register_toolchains("@uv//:all")
+
+uv_dev = use_extension(
+    "//python/uv:uv.bzl",
+    "uv",
+    dev_dependency = True,
+)
+uv_dev.configure(
+    version = "0.6.2",
+)

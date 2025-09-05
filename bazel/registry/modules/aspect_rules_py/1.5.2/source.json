@@ -1,0 +1,10 @@
+{
+    "integrity": "sha256-jfpLaBVKrTFTT7DnAGqKtAVrLQW/9iPJD4b8axohjuI=",
+    "strip_prefix": "rules_py-1.5.2",
+    "url": "https://github.com/aspect-build/rules_py/releases/download/v1.5.2/rules_py-v1.5.2.tar.gz",
+    "patches": {
+        "rust_dev_dep.patch": "sha256-1PopCaD4O1SjCtQt2WJhXdRyn/rJKF9M8H8adwaW2bY=",
+        "module_dot_bazel_version.patch": "sha256-Eh4UP+Objzeu4c38zRdSLyZRzOenqcTrV8lectrxwEE="
+    },
+    "patch_strip": 1
+}

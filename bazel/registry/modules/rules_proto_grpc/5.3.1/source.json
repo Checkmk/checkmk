@@ -1,0 +1,7 @@
+{
+    "integrity": "sha256-Q57AImFynojvyCfzN1Qu0EpApvBY7dYur+NawZVFSTY=",
+    "strip_prefix": "rules_proto_grpc-5.3.1",
+    "url": "https://github.com/rules-proto-grpc/rules_proto_grpc/releases/download/5.3.1/rules_proto_grpc-5.3.1.tar.gz",
+    "patches": {},
+    "patch_strip": 0
+}

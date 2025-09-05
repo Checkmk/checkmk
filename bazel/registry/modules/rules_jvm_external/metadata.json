@@ -1,0 +1,44 @@
+{
+    "homepage": "https://github.com/bazelbuild/rules_jvm_external",
+    "maintainers": [
+        {
+            "email": "",
+            "github": "jin",
+            "github_user_id": 347918,
+            "name": "Jingwen Chen"
+        },
+        {
+            "email": "simon.m.stewart@gmail.com",
+            "github": "shs96c",
+            "github_user_id": 28229,
+            "name": "Simon Stewart"
+        },
+        {
+            "email": "",
+            "github": "cheister",
+            "github_user_id": 399602,
+            "name": "Chris Heisterkamp"
+        }
+    ],
+    "repository": [
+        "github:bazel-contrib/rules_jvm_external",
+        "github:bazelbuild/rules_jvm_external"
+    ],
+    "versions": [
+        "4.4.2",
+        "4.5",
+        "5.1",
+        "5.2",
+        "5.3",
+        "6.0",
+        "6.1",
+        "6.2",
+        "6.3",
+        "6.4",
+        "6.5",
+        "6.6",
+        "6.7",
+        "6.8"
+    ],
+    "yanked_versions": {}
+}

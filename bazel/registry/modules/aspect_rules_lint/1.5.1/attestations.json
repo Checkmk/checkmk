@@ -1,0 +1,17 @@
+{
+    "mediaType": "application/vnd.build.bazel.registry.attestation+json;version=1.0.0",
+    "attestations": {
+        "source.json": {
+            "url": "https://github.com/aspect-build/rules_lint/releases/download/v1.5.1/source.json.intoto.jsonl",
+            "integrity": "sha256-7Qo9kH0sei3N6ecra5TXS6sgvf9NGfrtkFpfqHFHAbs="
+        },
+        "MODULE.bazel": {
+            "url": "https://github.com/aspect-build/rules_lint/releases/download/v1.5.1/MODULE.bazel.intoto.jsonl",
+            "integrity": "sha256-q/1MvGVLrYj+wTM+IzmnQ/gBRF7iaGKFZL2jEy5S1iM="
+        },
+        "rules_lint-v1.5.1.tar.gz": {
+            "url": "https://github.com/aspect-build/rules_lint/releases/download/v1.5.1/rules_lint-v1.5.1.tar.gz.intoto.jsonl",
+            "integrity": "sha256-FOqIWHQq9tG503F82548pwuyuquVODMi0uGTHlRu60I="
+        }
+    }
+}

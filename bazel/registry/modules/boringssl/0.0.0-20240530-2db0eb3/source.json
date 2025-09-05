@@ -1,0 +1,9 @@
+{
+    "url": "https://github.com/google/boringssl/archive/2db0eb3f96a5756298dcd7f9319e56a98585bd10.tar.gz",
+    "integrity": "sha256-zSQL8nRQ91zV9BxRKgYpfABkbNusn4e2BOkxJ3HbFaY=",
+    "strip_prefix": "boringssl-2db0eb3f96a5756298dcd7f9319e56a98585bd10",
+    "patch_strip": 0,
+    "patches": {
+        "module_dot_bazel.patch": "sha256-ROmpGIa6bWfDTV1c02V7xp0uScaKaRWYJKoz0uAhaoA="
+    }
+}

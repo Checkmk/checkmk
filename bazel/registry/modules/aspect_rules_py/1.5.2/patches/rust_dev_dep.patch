@@ -1,0 +1,36 @@
+diff --git a/MODULE.bazel b/MODULE.bazel
+index 967dad2..5022390 100644
+--- a/MODULE.bazel
++++ b/MODULE.bazel
+@@ -45,13 +45,13 @@ register_toolchains(
+ bazel_dep(
+     name = "rules_rust",
+     version = "0.53.0",
+-    # In released versions: dev_dependency = True
++    dev_dependency = True,
+ )
+ 
+ rust = use_extension(
+     "@rules_rust//rust:extensions.bzl",
+     "rust",
+-    # In released versions: dev_dependency = True
++    dev_dependency = True,
+ )
+ rust.toolchain(
+     edition = "2021",
+@@ -61,13 +61,13 @@ use_repo(rust, "rust_toolchains")
+ 
+ register_toolchains(
+     "@rust_toolchains//:all",
+-    # In released versions: dev_dependency = True
++    dev_dependency = True,
+ )
+ 
+ crate = use_extension(
+     "@rules_rust//crate_universe:extension.bzl",
+     "crate",
+-    # In released versions: dev_dependency = True
++    dev_dependency = True,
+ )
+ crate.from_cargo(
+     name = "crate_index",

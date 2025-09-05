@@ -1,0 +1,39 @@
+bcr_test_module:
+  module_path: ""
+  matrix:
+    platform: ["macos_arm64", "ubuntu2004"]
+    bazel: ["7.x", "8.x"]
+  tasks:
+    run_tests:
+      working_directory: examples/hello_world
+      name: "Run test module"
+      platform: ${{ platform }}
+      bazel: ${{ bazel }}
+      shell_commands:
+        # Remove the lockfile because we generate on Bazel 7, but test on Bazel 6 which may not be able to parse a future-generated lockfile.
+        - "rm MODULE.bazel.lock || true"
+      run_targets:
+        - "//third-party-in-workspace:vendor"
+        - "@rules_rust//tools/rust_analyzer:gen_rust_project"
+      test_targets:
+        - "//..."
+# Windows is run separately because currently gen_rust_project doesn't run on windows, although it does build
+bcr_test_module_windows:
+  module_path: ""
+  matrix:
+    bazel: ["7.x", "8.x"]
+  tasks:
+    run_tests:
+      working_directory: examples/hello_world
+      name: "Run test module"
+      platform: windows
+      bazel: ${{ bazel }}
+      shell_commands:
+        # Remove the lockfile because we generate on Bazel 7, but test on Bazel 6 which may not be able to parse a future-generated lockfile.
+        - "rm MODULE.bazel.lock || true"
+      run_targets:
+        - "//third-party-in-workspace:vendor"
+      build_targets:
+        - "@rules_rust//tools/rust_analyzer:gen_rust_project"
+      test_targets:
+        - "//..."

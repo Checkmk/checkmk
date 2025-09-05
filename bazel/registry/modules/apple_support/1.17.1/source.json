@@ -1,0 +1,9 @@
+{
+    "integrity": "sha256-tT9kkedCVJ8ThmYo3f/MddHzstaYfcTxShayQhE8iQs=",
+    "strip_prefix": "",
+    "url": "https://github.com/bazelbuild/apple_support/releases/download/1.17.1/apple_support.1.17.1.tar.gz",
+    "patches": {
+        "module_dot_bazel_version.patch": "sha256-a16RdMX1fJF/OgGZLN/bKckiJ0KMc2dzsqBCJ0xKIwU="
+    },
+    "patch_strip": 1
+}

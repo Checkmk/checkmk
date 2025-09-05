@@ -1,0 +1,10 @@
+matrix:
+  platform: ["rockylinux8", "debian10", "macos", "ubuntu2004", "windows"]
+  bazel: ['7.x', '8.x']
+tasks:
+  verify_build_targets:
+    name: "Verify build targets"
+    bazel: ${{ bazel }}
+    platform: ${{ platform }}
+    build_targets:
+      - "@rules_proto//proto/..."

@@ -1,0 +1,18 @@
+bcr_test_module:
+  module_path: test/bcr_test
+  matrix:
+    platform:
+      - rockylinux8
+      - debian11
+      - ubuntu2204
+      - macos
+      - macos_arm64
+      - windows
+    bazel: [6.x, 7.x, 8.x]
+  tasks:
+    run_test_module:
+      name: Run test module
+      platform: ${{ platform }}
+      bazel: ${{ bazel }}
+      test_targets:
+        - "//..."

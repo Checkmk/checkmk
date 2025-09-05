@@ -1,0 +1,20 @@
+"aspect-build/rules_webpack"
+
+module(
+    name = "aspect_rules_webpack",
+    version = "0.17.0",
+    compatibility_level = 1,
+)
+
+# Lower-bounds (minimum) versions for direct runtime dependencies
+bazel_dep(name = "aspect_bazel_lib", version = "2.7.7")
+bazel_dep(name = "aspect_rules_js", version = "2.0.0")
+bazel_dep(name = "bazel_skylib", version = "1.5.0")
+
+####### Dev dependencies ########
+
+bazel_dep(name = "bazel_features", version = "0.1.0", dev_dependency = True)
+bazel_dep(name = "bazel_skylib_gazelle_plugin", version = "1.5.0", dev_dependency = True)
+bazel_dep(name = "buildifier_prebuilt", version = "6.4.0", dev_dependency = True)
+bazel_dep(name = "gazelle", version = "0.36.0", dev_dependency = True, repo_name = "bazel_gazelle")
+bazel_dep(name = "stardoc", version = "0.6.2", dev_dependency = True, repo_name = "io_bazel_stardoc")

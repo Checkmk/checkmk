@@ -1,0 +1,243 @@
+"aspect-build/rules_js"
+
+module(
+    name = "aspect_rules_js",
+    version = "2.3.7",
+    bazel_compatibility = [">=6.0.0"],
+    compatibility_level = 1,
+)
+
+# Lower-bounds (minimum) versions for direct runtime dependencies.
+# Do not bump these unless rules_js requires a newer version to function.
+bazel_dep(name = "aspect_bazel_lib", version = "2.14.0")
+bazel_dep(name = "bazel_features", version = "1.9.0")
+bazel_dep(name = "bazel_skylib", version = "1.5.0")
+bazel_dep(name = "platforms", version = "0.0.5")
+bazel_dep(name = "rules_nodejs", version = "6.3.0")
+
+node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node")
+use_repo(node, "nodejs_toolchains")
+use_repo(node, "nodejs_darwin_amd64")
+use_repo(node, "nodejs_darwin_arm64")
+use_repo(node, "nodejs_linux_amd64")
+use_repo(node, "nodejs_linux_arm64")
+use_repo(node, "nodejs_linux_ppc64le")
+use_repo(node, "nodejs_linux_s390x")
+use_repo(node, "nodejs_windows_amd64")
+
+pnpm = use_extension("@aspect_rules_js//npm:extensions.bzl", "pnpm")
+pnpm.pnpm(
+    name = "pnpm",
+    pnpm_version = "8.6.7",
+    pnpm_version_integrity = "sha512-vRIWpD/L4phf9Bk2o/O2TDR8fFoJnpYrp2TKqTIZF/qZ2/rgL3qKXzHofHgbXsinwMoSEigz28sqk3pQ+yMEQQ==",
+)
+use_repo(pnpm, "pnpm", "pnpm__links")
+
+bazel_lib_toolchains = use_extension("@aspect_bazel_lib//lib:extensions.bzl", "toolchains")
+bazel_lib_toolchains.tar()
+use_repo(bazel_lib_toolchains, "coreutils_toolchains")
+use_repo(bazel_lib_toolchains, "yq_darwin_amd64")
+use_repo(bazel_lib_toolchains, "yq_darwin_arm64")
+use_repo(bazel_lib_toolchains, "yq_linux_amd64")
+use_repo(bazel_lib_toolchains, "yq_linux_arm64")
+use_repo(bazel_lib_toolchains, "yq_linux_ppc64le")
+use_repo(bazel_lib_toolchains, "yq_linux_s390x")
+use_repo(bazel_lib_toolchains, "yq_windows_amd64")
+use_repo(bazel_lib_toolchains, "bsd_tar_toolchains")
+
+####### Dev dependencies ########
+
+bazel_dep(name = "aspect_rules_lint", version = "1.1.0", dev_dependency = True)
+bazel_dep(name = "buildifier_prebuilt", version = "8.0.1", dev_dependency = True)
+
+host = use_extension(
+    "@aspect_bazel_lib//lib:extensions.bzl",
+    "host",
+    dev_dependency = True,
+)
+host.host()
+use_repo(host, "aspect_bazel_lib_host")
+
+node_dev = use_extension(
+    "@rules_nodejs//nodejs:extensions.bzl",
+    "node",
+    dev_dependency = True,
+)
+use_repo(node_dev, "node20_linux_amd64")
+use_repo(node_dev, "node20_darwin_arm64")
+use_repo(node_dev, "node20_darwin_amd64")
+use_repo(node_dev, "node20_linux_arm64")
+use_repo(node_dev, "node20_linux_s390x")
+use_repo(node_dev, "node20_linux_ppc64le")
+use_repo(node_dev, "node20_windows_amd64")
+use_repo(node_dev, "node18_linux_amd64")
+use_repo(node_dev, "node18_darwin_arm64")
+use_repo(node_dev, "node18_darwin_amd64")
+use_repo(node_dev, "node18_linux_arm64")
+use_repo(node_dev, "node18_linux_s390x")
+use_repo(node_dev, "node18_linux_ppc64le")
+use_repo(node_dev, "node18_windows_amd64")
+use_repo(node_dev, "node16_linux_amd64")
+use_repo(node_dev, "node16_darwin_arm64")
+use_repo(node_dev, "node16_darwin_amd64")
+use_repo(node_dev, "node16_linux_arm64")
+use_repo(node_dev, "node16_linux_s390x")
+use_repo(node_dev, "node16_linux_ppc64le")
+use_repo(node_dev, "node16_windows_amd64")
+node_dev.toolchain(node_version = "16.14.2")
+node_dev.toolchain(
+    name = "node16",
+    node_version = "16.13.1",
+)
+node_dev.toolchain(
+    name = "node18",
+    node_version = "18.13.0",
+)
+node_dev.toolchain(
+    name = "node20",
+    node_version = "20.11.1",
+)
+
+############################################
+# npm dependencies used by examples
+
+npm = use_extension(
+    "@aspect_rules_js//npm:extensions.bzl",
+    "npm",
+    dev_dependency = True,
+)
+npm.npm_translate_lock(
+    name = "npm",
+    bins = {
+        # derived from "bin" attribute in node_modules/typescript/package.json
+        "typescript": [
+            "tsc=./bin/tsc",
+            "tsserver=./bin/tsserver",
+        ],
+    },
+    custom_postinstalls = {
+        "@aspect-test/c": "echo moo > cow.txt",
+        "@aspect-test/c@2.0.2": "echo mooo >> cow.txt",
+        "pngjs": "chmod -R a+X *",  # fixes malformed tarball content file permissions in this package after extraction (see https://github.com/aspect-build/rules_js/issues/1637 for more details)
+    },
+    data = [
+        "//:examples/npm_deps/patches/meaning-of-life@1.0.0-pnpm.patch",
+        "//:package.json",
+        "//:pnpm-workspace.yaml",
+        "//examples/js_binary:package.json",
+        "//examples/js_lib_pkg/a:package.json",
+        "//examples/js_lib_pkg/b:package.json",
+        "//examples/linked_consumer:package.json",
+        "//examples/linked_empty_node_modules:package.json",
+        "//examples/linked_lib:package.json",
+        "//examples/linked_pkg:package.json",
+        "//examples/macro:package.json",
+        "//examples/nextjs:package.json",
+        "//examples/npm_deps:package.json",
+        "//examples/npm_package/libs/lib_a:package.json",
+        "//examples/npm_package/packages/pkg_a:package.json",
+        "//examples/npm_package/packages/pkg_b:package.json",
+        "//examples/npm_package/packages/pkg_d:package.json",
+        "//examples/npm_package/packages/pkg_e:package.json",
+        "//examples/runfiles:package.json",
+        "//examples/stack_traces:package.json",
+        "//examples/webpack_cli:package.json",
+        "//js/private/coverage/bundle:package.json",
+        "//js/private/test/image:package.json",
+        "//js/private/test/js_run_devserver:package.json",
+        "//js/private/worker/src:package.json",
+        "//npm/private/test:package.json",
+        "//npm/private/test:vendored/lodash-4.17.21.tgz",
+        "//npm/private/test/npm_package:package.json",
+        "//npm/private/test/npm_package_publish:package.json",
+        "//npm/private/test/vendored/is-odd:package.json",
+        "//npm/private/test/vendored/semver-max:package.json",
+    ],
+    exclude_package_contents = {
+        "chalk": ["**/README*"],
+    },
+    generate_bzl_library_targets = True,
+    lifecycle_hooks = {
+        # We fetch @kubernetes/client-node from source and it has a `prepare` lifecycle hook that needs to be run
+        # which runs the `build` package.json script: https://github.com/kubernetes-client/javascript/blob/fc681991e61c6808dd26012a2331f83671a11218/package.json#L28.
+        # Here we run run build so we just run `tsc` instead of `npm run build` which ends up just running `tsc`.
+        "@kubernetes/client-node": ["build"],
+        # 'install' hook fails as it assumes the following path to `node-pre-gyp`: ./node_modules/.bin/node-pre-gyp
+        # https://github.com/stultuss/protoc-gen-grpc-ts/blob/53d52a9d0e1fe3cbe930dec5581eca89b3dde807/package.json#L28
+        "protoc-gen-grpc@2.0.3": [],
+    },
+    lifecycle_hooks_execution_requirements = {
+        "*": [
+            "no-sandbox",
+        ],
+        # If @kubernetes/client-node is not sandboxed, will fail with
+        # ```
+        # src/azure_auth.ts(97,43): error TS2575: No overload expects 2 arguments, but overloads do exist that expect either 1 or 4 arguments.
+        # src/azure_auth.ts(98,34): error TS2575: No overload expects 2 arguments, but overloads do exist that expect either 1 or 4 arguments.
+        # src/gcp_auth.ts(93,43): error TS2575: No overload expects 2 arguments, but overloads do exist that expect either 1 or 4 arguments.
+        # src/gcp_auth.ts(94,34): error TS2575: No overload expects 2 arguments, but overloads do exist that expect either 1 or 4 arguments.
+        # ```
+        # since a `jsonpath-plus@7.2.0` that is newer then the transitive dep `jsonpath-plus@0.19.0` is found outside of the sandbox that
+        # includes typings that don't match the 0.19.0 "any" usage.
+        "@kubernetes/client-node": [],
+        "@figma/nodegit": [
+            "no-sandbox",
+            "requires-network",
+        ],
+        "esbuild": [
+            "no-sandbox",
+            "requires-network",
+        ],
+        "segfault-handler": [
+            "no-sandbox",
+            "requires-network",
+        ],
+        "puppeteer": [
+            "no-remote",
+            "no-sandbox",
+            "requires-network",
+        ],
+    },
+    npmrc = "//:.npmrc",
+    package_visibility = {
+        "unused": ["//visibility:private"],
+        "@mycorp/pkg-a": ["//examples:__subpackages__"],
+    },
+    pnpm_lock = "//:pnpm-lock.yaml",
+    public_hoist_packages = {
+        # Instructs the linker to hoist the ms@2.1.3 npm package to `node_modules/ms` in the `examples/npm_deps` package.
+        # Similar to adding `public-hoist-pattern[]=ms` in .npmrc but with control over which version to hoist and where
+        # to hoist it. This hoisted package can be referenced by the label `//examples/npm_deps:node_modules/ms` same as
+        # other direct dependencies in the `examples/npm_deps/package.json`.
+        "ms@2.1.3": ["examples/npm_deps"],
+    },
+    update_pnpm_lock = True,
+    verify_node_modules_ignored = "//:.bazelignore",
+    verify_patches = "//examples/npm_deps/patches:patches",
+)
+use_repo(
+    npm,
+    "npm",
+    "npm__fsevents__2.3.2__links",
+    "npm__rollup__2.70.2",
+    "npm__rollup__2.70.2__links",
+    "npm__unused__0.2.2__links",
+    "npm__webpack-bundle-analyzer__4.5.0_bufferutil_4.0.8",
+)
+
+# As an example, manually import a package using explicit coordinates.
+# Just a demonstration of the syntax de-sugaring.
+npm.npm_import(
+    name = "acorn__8.4.0",
+    bins = {"acorn": "./bin/acorn"},
+    integrity = "sha512-ULr0LDaEqQrMFGyQ3bhJkLsbtrQ8QibAseGZeaSUiT/6zb9IvIkomWHJIvgvwad+hinRAgsI51JcWk2yvwyL+w==",
+    package = "acorn",
+    # Root package where to link the package store
+    root_package = "",
+    version = "8.4.0",
+)
+use_repo(
+    npm,
+    "acorn__8.4.0",
+    "acorn__8.4.0__links",
+)

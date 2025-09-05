@@ -1,0 +1,20 @@
+--- MODULE.bazel
++++ MODULE.bazel
+@@ -6,7 +6,7 @@
+
+ module(
+     name = "re2",
+-    version = "2024-07-02",
++    version = "2024-07-02.bcr.1",
+     compatibility_level = 1,
+ )
+
+@@ -19,7 +19,7 @@
+
+ # This is a temporary hack for `x64_x86_windows`.
+ # TODO(junyer): Remove whenever no longer needed.
+-cc_configure = use_extension("@bazel_tools//tools/cpp:cc_configure.bzl", "cc_configure_extension")
++cc_configure = use_extension("@bazel_tools//tools/cpp:cc_configure.bzl", "cc_configure_extension", dev_dependency = True)
+ use_repo(cc_configure, "local_config_cc")
+
+ # These dependencies will be ignored when the `re2` module is not

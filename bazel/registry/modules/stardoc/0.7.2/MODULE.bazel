@@ -1,0 +1,34 @@
+module(
+    name = "stardoc",
+    version = "0.7.2",
+    bazel_compatibility = [">=7.0.0"],
+    compatibility_level = 1,
+)
+
+bazel_dep(name = "protobuf", version = "29.0-rc3", repo_name = "com_google_protobuf")
+bazel_dep(name = "bazel_skylib", version = "1.7.1")
+bazel_dep(name = "rules_java", version = "8.5.1")
+bazel_dep(name = "rules_jvm_external", version = "6.3")
+bazel_dep(name = "rules_license", version = "1.0.0")
+
+# Maven artifacts required by Stardoc; keep consistent with deps.bzl
+STARDOC_MAVEN_ARTIFACTS = [
+    "com.beust:jcommander:1.82",
+    "com.google.escapevelocity:escapevelocity:1.1",
+    "com.google.guava:guava:31.1-jre",
+    "com.google.truth:truth:1.1.3",
+    "junit:junit:4.13.2",
+]
+
+maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
+maven.install(
+    name = "stardoc_maven",
+    artifacts = STARDOC_MAVEN_ARTIFACTS,
+    fail_if_repin_required = True,
+    lock_file = "//:maven_install.json",
+    repositories = [
+        "https://repo1.maven.org/maven2",
+    ],
+    strict_visibility = True,
+)
+use_repo(maven, "stardoc_maven")

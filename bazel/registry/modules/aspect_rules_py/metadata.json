@@ -1,0 +1,62 @@
+{
+    "homepage": "https://docs.aspect.build/rules/aspect_rules_py",
+    "maintainers": [
+        {
+            "email": "alex@aspect.build",
+            "github": "alexeagle",
+            "name": "Alex Eagle",
+            "github_user_id": 47395
+        },
+        {
+            "email": "sahin@aspect.build",
+            "github": "thesayyn",
+            "name": "Şahin Yort",
+            "github_user_id": 20563340
+        },
+        {
+            "email": "reid@aspect.build",
+            "github": "arrdem",
+            "name": "Reid D McKenzie",
+            "github_user_id": 704767
+        }
+    ],
+    "repository": [
+        "github:aspect-build/rules_py"
+    ],
+    "versions": [
+        "0.3.0",
+        "0.4.0",
+        "0.5.0",
+        "0.7.1",
+        "0.7.2",
+        "0.7.3",
+        "0.7.4",
+        "0.8.0",
+        "0.8.1",
+        "0.8.2",
+        "0.9.1",
+        "1.0.0-rc0",
+        "1.0.0-rc1",
+        "1.0.0",
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "1.3.0",
+        "1.3.1",
+        "1.3.2",
+        "1.3.3",
+        "1.3.4",
+        "1.4.0",
+        "1.5.0",
+        "1.5.1",
+        "1.5.2",
+        "1.6.0-rc0",
+        "1.6.0",
+        "1.6.1",
+        "1.6.2",
+        "1.6.3"
+    ],
+    "yanked_versions": {
+        "1.5.0": "Regression in prebuilt artifacts leads to missing rules_rust dep"
+    }
+}

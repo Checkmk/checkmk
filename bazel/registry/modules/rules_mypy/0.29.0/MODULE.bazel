@@ -1,0 +1,32 @@
+"rules_mypy"
+
+module(
+    name = "rules_mypy",
+    version = "0.29.0",
+)
+
+bazel_dep(name = "bazel_skylib", version = "1.4.1")
+bazel_dep(name = "buildifier_prebuilt", version = "7.3.1")
+bazel_dep(name = "platforms", version = "0.0.8")
+bazel_dep(name = "rules_python", version = "1.1.0")
+bazel_dep(name = "rules_uv", version = "0.21.0")
+
+# configuration
+PYTHON_VERSION = "3.12"
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    is_default = True,
+    python_version = PYTHON_VERSION,
+)
+
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+pip.parse(
+    enable_implicit_namespace_pkgs = True,
+    hub_name = "rules_mypy_pip",
+    python_version = PYTHON_VERSION,
+    requirements_by_platform = {
+        "//mypy/private:requirements.txt": "*",
+    },
+)
+use_repo(pip, "rules_mypy_pip")

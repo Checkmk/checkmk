@@ -1,0 +1,5 @@
+{
+    "integrity": "sha256-pYwlxf4GOnAFf6IMuOFfO9oZsQMDBby1M68eRfNqSlU=",
+    "strip_prefix": "pybind11_bazel-2.12.0",
+    "url": "https://github.com/pybind/pybind11_bazel/releases/download/v2.12.0/pybind11_bazel-2.12.0.zip"
+}

@@ -1,0 +1,9 @@
+{
+    "integrity": "sha256-ZGHBxXREQrOU9GZFlX1r00IOsbQhkI/mPKoDCRsbNlU=",
+    "strip_prefix": "rules_android-0.1.1",
+    "url": "https://github.com/bazelbuild/rules_android/archive/refs/tags/v0.1.1.tar.gz",
+    "patch_strip": 0,
+    "patches": {
+        "module_dot_bazel.patch": "sha256-X/ORvZyYKdY8sYMMPZpolwCWsC1Xj93OmYUkLGATpHU="
+    }
+}

@@ -1,0 +1,170 @@
+{
+    "homepage": "https://github.com/protocolbuffers/protobuf",
+    "maintainers": [
+        {
+            "email": "protobuf-packages@google.com",
+            "github": "protobuf-team-bot",
+            "name": "Protobuf Team",
+            "github_user_id": 105450428
+        },
+        {
+            "email": "sandyzhang@google.com",
+            "github": "zhangskz",
+            "name": "Sandy Zhang",
+            "github_user_id": 89936743
+        },
+        {
+            "email": "mkruskal@google.com",
+            "github": "mkruskal-google",
+            "name": "Mike Kruskal",
+            "github_user_id": 62662355
+        },
+        {
+            "email": "gberg@google.com",
+            "github": "googleberg",
+            "name": "Jerry Berg",
+            "github_user_id": 107155935
+        },
+        {
+            "email": "acozzette@google.com",
+            "github": "acozzette",
+            "name": "Adam Cozzette",
+            "do_not_notify": true,
+            "github_user_id": 1115459
+        },
+        {
+            "email": "deannagarcia@google.com",
+            "github": "deannagarcia",
+            "name": "Deanna Garcia",
+            "do_not_notify": true,
+            "github_user_id": 69992229
+        },
+        {
+            "email": "esrauch@google.com",
+            "github": "esrauchg",
+            "name": "Em Rauch",
+            "do_not_notify": true,
+            "github_user_id": 140440793
+        },
+        {
+            "email": "haberman@google.com",
+            "github": "haberman",
+            "name": "Josh Haberman",
+            "do_not_notify": true,
+            "github_user_id": 1270
+        },
+        {
+            "email": "hongshin@google.com",
+            "github": "honglooker",
+            "name": "Hong Shin",
+            "do_not_notify": true,
+            "github_user_id": 58193390
+        },
+        {
+            "email": "jatl@google.com",
+            "github": "JasonLunn",
+            "name": "Jason Lunn",
+            "do_not_notify": true,
+            "github_user_id": 778854
+        },
+        {
+            "email": "jieluo@google.com",
+            "github": "anandolee",
+            "name": "Jie Luo",
+            "do_not_notify": true,
+            "github_user_id": 11618033
+        },
+        {
+            "email": "salo@google.com",
+            "github": "salo",
+            "name": "Eric Salo",
+            "do_not_notify": true,
+            "github_user_id": 152465
+        },
+        {
+            "email": "sangki@google.com",
+            "github": "jguamie",
+            "name": "John Lee",
+            "do_not_notify": true,
+            "github_user_id": 35405521
+        },
+        {
+            "email": "sbenza@google.com",
+            "github": "sbenzaquen",
+            "name": "Samuel Benzaquen",
+            "do_not_notify": true,
+            "github_user_id": 14094653
+        },
+        {
+            "email": "shaod@google.com",
+            "github": "shaod2",
+            "name": "Dennis Shao",
+            "do_not_notify": true,
+            "github_user_id": 67387070
+        },
+        {
+            "email": "tonyliaoss@google.com",
+            "github": "tonyliaoss",
+            "name": "Tony Liao",
+            "do_not_notify": true,
+            "github_user_id": 1459994
+        }
+    ],
+    "repository": [
+        "github:protocolbuffers/protobuf"
+    ],
+    "versions": [
+        "3.19.0",
+        "3.19.2",
+        "3.19.6",
+        "21.7",
+        "23.1",
+        "24.4",
+        "25.5",
+        "25.6",
+        "26.0",
+        "26.0.bcr.1",
+        "26.0.bcr.2",
+        "27.0-rc2",
+        "27.0",
+        "27.0.bcr.1",
+        "27.1",
+        "27.1.bcr.1",
+        "27.2",
+        "27.3",
+        "27.4",
+        "27.5",
+        "28.0-rc1",
+        "28.0-rc2",
+        "28.0",
+        "28.1",
+        "28.2",
+        "28.3",
+        "29.0-rc1",
+        "29.0-rc2",
+        "29.0-rc2.bcr.1",
+        "29.0-rc3",
+        "29.0",
+        "29.1",
+        "29.2",
+        "29.3",
+        "29.4",
+        "29.5",
+        "30.0-rc1",
+        "30.0-rc2",
+        "30.0",
+        "30.1",
+        "30.2",
+        "31.0-rc1",
+        "31.0-rc2",
+        "31.0",
+        "31.1",
+        "32.0-rc1",
+        "32.0-rc2",
+        "32.0"
+    ],
+    "yanked_versions": {
+        "3.19.0": "CVE-2022-3171 (https://github.com/advisories/GHSA-h4h5-3hr4-j3g2)",
+        "3.19.2": "CVE-2022-3171 (https://github.com/advisories/GHSA-h4h5-3hr4-j3g2)"
+    }
+}

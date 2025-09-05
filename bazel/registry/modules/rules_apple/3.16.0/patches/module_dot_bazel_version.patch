@@ -1,0 +1,12 @@
+===================================================================
+--- a/MODULE.bazel
++++ b/MODULE.bazel
+@@ -1,7 +1,7 @@
+ module(
+     name = "rules_apple",
+-    version = "0",
++    version = "3.16.0",
+     bazel_compatibility = [">=7.0.0"],
+     compatibility_level = 1,
+ )
+ 

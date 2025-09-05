@@ -1,0 +1,112 @@
+"aspect-build/rules_py"
+
+module(
+    name = "aspect_rules_py",
+    version = "1.5.2",
+    compatibility_level = 1,
+)
+
+# Lower-bound versions of direct dependencies.
+# When bumping, add a comment explaining what's required from the newer release.
+
+# py_image_layer requires 2.x for the `tar` rule.
+# py_image_layer needs compute_unused_inputs attribute
+# py_image_layer needs repo_mapping fix.
+bazel_dep(name = "aspect_bazel_lib", version = "2.16.0")
+bazel_dep(name = "bazel_skylib", version = "1.4.2")
+bazel_dep(name = "rules_python", version = "0.29.0")
+bazel_dep(name = "platforms", version = "0.0.7")
+
+bazel_lib = use_extension("@aspect_bazel_lib//lib:extensions.bzl", "toolchains")
+bazel_lib.expand_template()
+
+# Custom python version for testing only
+python = use_extension("@rules_python//python/extensions:python.bzl", "python", dev_dependency = True)
+python.toolchain(
+    is_default = False,
+    python_version = "3.9",
+)
+
+tools = use_extension("//py:extensions.bzl", "py_tools")
+tools.rules_py_tools()
+use_repo(tools, "rules_py_tools")
+use_repo(tools, "rules_py_pex_2_3_1")
+
+register_toolchains(
+    "@rules_py_tools//:all",
+
+    # Register the "from source" toolchains last, so there's no accidental dependency on Rust
+    # For manual testing: comment these out to force use of pre-built binaries.
+    "@aspect_rules_py//py/private/toolchain/venv/...",
+    "@aspect_rules_py//py/private/toolchain/unpack/...",
+    "@aspect_rules_py//py/private/toolchain/shim/...",
+)
+
+# To allow Rust binaries in /py/tools to be built from source
+# NOTE: when publishing to BCR, we patch these to be dev_dependency, as we publish pre-built binaries
+# along with our releases.
+
+bazel_dep(
+    name = "rules_rust",
+    version = "0.53.0",
+    dev_dependency = True,
+)
+
+rust = use_extension(
+    "@rules_rust//rust:extensions.bzl",
+    "rust",
+    dev_dependency = True,
+)
+rust.toolchain(
+    edition = "2021",
+    versions = ["1.81.0"],
+)
+use_repo(rust, "rust_toolchains")
+
+register_toolchains(
+    "@rust_toolchains//:all",
+    dev_dependency = True,
+)
+
+crate = use_extension(
+    "@rules_rust//crate_universe:extension.bzl",
+    "crate",
+    dev_dependency = True,
+)
+crate.from_cargo(
+    name = "crate_index",
+    cargo_lockfile = "//:Cargo.lock",
+    # Apparently not needed under bzlmod?
+    # lockfile = "//:Cargo.Bazel.lock",
+    manifests = [
+        "//:Cargo.toml",
+        "//py/tools/py:Cargo.toml",
+        "//py/tools/unpack_bin:Cargo.toml",
+        "//py/tools/venv_bin:Cargo.toml",
+        "//py/tools/venv_shim:Cargo.toml",
+    ],
+)
+use_repo(crate, "crate_index")
+
+# For building test images with py_image_layer
+bazel_dep(name = "container_structure_test", version = "1.19.3", dev_dependency = True)
+git_override(
+    module_name = "container_structure_test",
+    commit = "56c7201716d770c0f820a9c19207ba2ea77c34f8",
+    remote = "https://github.com/GoogleContainerTools/container-structure-test.git",
+)
+
+bazel_dep(name = "rules_oci", version = "2.0.1", dev_dependency = True)
+
+oci = use_extension("@rules_oci//oci:extensions.bzl", "oci", dev_dependency = True)
+oci.pull(
+    name = "ubuntu",
+    digest = "sha256:80dd3c3b9c6cecb9f1667e9290b3bc61b78c2678c02cbdae5f0fea92cc6734ab",
+    image = "ubuntu",
+    platforms = [
+        "linux/arm64/v8",
+        "linux/amd64",
+    ],
+    tag = "latest",
+)
+use_repo(oci, "ubuntu", "ubuntu_linux_amd64", "ubuntu_linux_arm64_v8")

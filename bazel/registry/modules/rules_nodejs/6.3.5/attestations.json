@@ -1,0 +1,17 @@
+{
+    "mediaType": "application/vnd.build.bazel.registry.attestation+json;version=1.0.0",
+    "attestations": {
+        "source.json": {
+            "url": "https://github.com/bazel-contrib/rules_nodejs/releases/download/v6.3.5/source.json.intoto.jsonl",
+            "integrity": "sha256-Z79nFK3EKVSZIM9eJHNCCjvi6A/K6+1+ascW5NroPWc="
+        },
+        "MODULE.bazel": {
+            "url": "https://github.com/bazel-contrib/rules_nodejs/releases/download/v6.3.5/MODULE.bazel.intoto.jsonl",
+            "integrity": "sha256-vIQ56jIIcy7oeppP27lQ8XEB+SS/3fA72cteRHomr5c="
+        },
+        "rules_nodejs-v6.3.5.tar.gz": {
+            "url": "https://github.com/bazel-contrib/rules_nodejs/releases/download/v6.3.5/rules_nodejs-v6.3.5.tar.gz.intoto.jsonl",
+            "integrity": "sha256-ZEBTLdwvBvOZD846wddvmIbNHzKAg+p7dEP9szdktx4="
+        }
+    }
+}

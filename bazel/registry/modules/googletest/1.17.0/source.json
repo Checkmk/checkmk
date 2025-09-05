@@ -1,0 +1,5 @@
+{
+    "url": "https://github.com/google/googletest/releases/download/v1.17.0/googletest-1.17.0.tar.gz",
+    "strip_prefix": "googletest-1.17.0",
+    "integrity": "sha256-Zfq3AdmCnTjLd8FKzcQx0hCL/b+JeeQOuK5Wft8Qsnw="
+}

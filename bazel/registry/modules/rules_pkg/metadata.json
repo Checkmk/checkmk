@@ -1,0 +1,24 @@
+{
+    "homepage": "https://github.com/bazelbuild/rules_pkg.git",
+    "maintainers": [
+        {
+            "email": "bcr-maintainers@bazel.build",
+            "name": "No Maintainer Specified"
+        }
+    ],
+    "repository": [
+        "github:bazelbuild/rules_pkg"
+    ],
+    "versions": [
+        "0.5.1",
+        "0.7.0",
+        "0.8.1",
+        "0.9.0",
+        "0.9.1",
+        "0.10.0",
+        "0.10.1",
+        "1.0.1",
+        "1.1.0"
+    ],
+    "yanked_versions": {}
+}

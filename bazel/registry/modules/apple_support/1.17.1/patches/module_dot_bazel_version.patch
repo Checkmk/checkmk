@@ -1,0 +1,12 @@
+===================================================================
+--- a/MODULE.bazel
++++ b/MODULE.bazel
+@@ -1,7 +1,7 @@
+ module(
+     name = "apple_support",
+-    version = "0",
++    version = "1.17.1",
+     bazel_compatibility = [">=6.0.0"],
+     compatibility_level = 1,
+     repo_name = "build_bazel_apple_support",
+ )

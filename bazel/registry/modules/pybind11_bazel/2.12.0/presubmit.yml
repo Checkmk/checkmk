@@ -1,0 +1,16 @@
+matrix:
+  platform:
+  - rockylinux8
+  - debian10
+  - ubuntu2004
+  - macos
+  - windows
+  bazel:
+  - 6.x
+  - 7.x
+tasks:
+  build:
+    platform: ${{ platform }}
+    bazel: ${{ bazel }}
+    build_targets:
+    - '@pybind11_bazel//...'

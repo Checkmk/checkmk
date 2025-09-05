@@ -1,0 +1,87 @@
+{
+    "homepage": "https://github.com/bazelbuild/rules_swift",
+    "maintainers": [
+        {
+            "email": "keithbsmiley@gmail.com",
+            "github": "keith",
+            "name": "Keith Smiley",
+            "github_user_id": 283886
+        },
+        {
+            "email": "me@patrickbalestra.com",
+            "github": "BalestraPatrick",
+            "name": "Patrick Balestra",
+            "github_user_id": 3658887
+        },
+        {
+            "email": "github@brentleyjones.com",
+            "github": "brentleyjones",
+            "name": "Brentley Jones",
+            "github_user_id": 158658
+        },
+        {
+            "email": "t@thi.im",
+            "github": "thii",
+            "name": "Thi Doãn",
+            "github_user_id": 4506500
+        },
+        {
+            "email": "heyluispadron@gmail.com",
+            "github": "luispadron",
+            "name": "Luis Padron",
+            "github_user_id": 13840545
+        }
+    ],
+    "repository": [
+        "github:bazelbuild/rules_swift"
+    ],
+    "versions": [
+        "1.2.0",
+        "1.5.0",
+        "1.5.1",
+        "1.6.0",
+        "1.7.0",
+        "1.7.1",
+        "1.8.0",
+        "1.9.0",
+        "1.9.1",
+        "1.10.0",
+        "1.10.1",
+        "1.11.0",
+        "1.12.0",
+        "1.13.0",
+        "1.14.0",
+        "1.15.0",
+        "1.15.1",
+        "1.16.0",
+        "1.17.0",
+        "1.18.0",
+        "2.0.0-rc1",
+        "2.0.0",
+        "2.1.0",
+        "2.1.1",
+        "2.2.0",
+        "2.2.1",
+        "2.2.2",
+        "2.2.3",
+        "2.2.4",
+        "2.3.0",
+        "2.3.1",
+        "2.4.0",
+        "2.5.0",
+        "2.6.0",
+        "2.7.0",
+        "2.8.0",
+        "2.8.1",
+        "2.8.2",
+        "2.9.0",
+        "3.0.0",
+        "3.0.2",
+        "3.1.0",
+        "3.1.1",
+        "3.1.2"
+    ],
+    "yanked_versions": {
+        "3.0.0": "Using wrong compatibility_level of 2 when should be 3. Fixed in 3.0.2."
+    }
+}

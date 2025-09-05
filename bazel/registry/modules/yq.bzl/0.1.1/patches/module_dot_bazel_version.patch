@@ -1,0 +1,14 @@
+===================================================================
+--- a/MODULE.bazel
++++ b/MODULE.bazel
+@@ -1,9 +1,9 @@
+ "Bazel dependencies"
+ 
+ module(
+     name = "yq.bzl",
+-    version = "0.0.0",
++    version = "0.1.1",
+     compatibility_level = 1,
+ )
+ 
+ bazel_dep(name = "aspect_bazel_lib", version = "2.8.1")

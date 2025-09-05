@@ -1,8 +1,0 @@
-{
-  "integrity": "sha256-eTEF6ku4nPnYJBHL7kC2h0CF9TAxRgCIdTniFOSXCjo=",
-  "strip_prefix": "rules_multitool-0.4.0",
-  "url": "https://github.com/theoremlp/rules_multitool/releases/download/v0.4.0/rules_multitool-0.4.0.tar.gz",
-  "mirror_urls": [
-    "https://artifacts.lan.tribe29.com/repository/upstream-archives/theoremlp/rules_multitool/releases/download/v0.4.0/rules_multitool-0.4.0.tar.gz"
-  ]
-}

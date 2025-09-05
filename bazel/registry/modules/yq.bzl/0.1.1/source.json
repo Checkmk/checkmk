@@ -1,0 +1,9 @@
+{
+    "integrity": "sha256-tR2CtWGnirIdJlEHsO2/mNaKOQtBA5ktCwMli7OBlgE=",
+    "strip_prefix": "yq.bzl-0.1.1",
+    "url": "https://github.com/bazel-contrib/yq.bzl/releases/download/v0.1.1/yq.bzl-v0.1.1.tar.gz",
+    "patches": {
+        "module_dot_bazel_version.patch": "sha256-718lXFtdkM+0Fdqd1j+u3OlIvq9c45xSiqaB99Hooh8="
+    },
+    "patch_strip": 1
+}

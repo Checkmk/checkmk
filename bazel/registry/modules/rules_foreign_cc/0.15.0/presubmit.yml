@@ -1,0 +1,11 @@
+matrix:
+  platform: ["centos7", "debian10", "macos", "ubuntu2004", "windows"]
+  bazel: ["7.x"]
+
+tasks:
+  verify_targets:
+    name: "Verify build targets"
+    platform: ${{ platform }}
+    bazel: ${{ bazel }}
+    build_targets:
+      - "@rules_foreign_cc//toolchains/private:make_tool"

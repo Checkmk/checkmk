@@ -1,0 +1,17 @@
+{
+    "mediaType": "application/vnd.build.bazel.registry.attestation+json;version=1.0.0",
+    "attestations": {
+        "source.json": {
+            "url": "https://github.com/bazel-contrib/supply-chain/releases/download/v0.0.5/package_metadata.source.json.intoto.jsonl",
+            "integrity": "sha256-bjlpH3MiYU2pLQeWYAdDlgBwwqx3yzKIIAzvFJ2gqos="
+        },
+        "MODULE.bazel": {
+            "url": "https://github.com/bazel-contrib/supply-chain/releases/download/v0.0.5/package_metadata.MODULE.bazel.intoto.jsonl",
+            "integrity": "sha256-gnykzDMfpe5k1WCNMkFoFuQu7NYx218e0QLzpIsy82Y="
+        },
+        "supply-chain-v0.0.5.tar.gz": {
+            "url": "https://github.com/bazel-contrib/supply-chain/releases/download/v0.0.5/supply-chain-v0.0.5.tar.gz.intoto.jsonl",
+            "integrity": "sha256-7DnYvEhiWtAddYG+bM8SvYZgEvpcT7k4ODIxec0BQVI="
+        }
+    }
+}

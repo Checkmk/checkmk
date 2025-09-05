@@ -1,0 +1,14 @@
+module(
+    name = "bazel_skylib",
+    # Keep in sync with version.bzl and @bazel_skylib_gazelle_plugin//:MODULE.bazel
+    version = "1.8.1",
+    compatibility_level = 1,
+)
+
+register_toolchains(
+    "//toolchains/unittest:cmd_toolchain",
+    "//toolchains/unittest:bash_toolchain",
+)
+
+bazel_dep(name = "platforms", version = "0.0.10")
+bazel_dep(name = "rules_license", version = "1.0.0")

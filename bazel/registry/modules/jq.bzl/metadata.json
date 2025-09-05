@@ -1,0 +1,26 @@
+{
+    "homepage": "https://github.com/bazel-contrib/jq.bzl",
+    "maintainers": [
+        {
+            "email": "alex@aspect.build",
+            "github": "alexeagle",
+            "name": "Alex Eagle",
+            "github_user_id": 47395
+        },
+        {
+            "email": "derek@aspect.build",
+            "github": "kormide",
+            "name": "Derek Cormier",
+            "github_user_id": 4948761
+        }
+    ],
+    "repository": [
+        "github:bazel-contrib/jq.bzl"
+    ],
+    "versions": [
+        "0.1.0",
+        "0.2.0",
+        "0.2.2"
+    ],
+    "yanked_versions": {}
+}

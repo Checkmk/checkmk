@@ -1,0 +1,51 @@
+{
+    "homepage": "https://github.com/bazelbuild/rules_cc",
+    "maintainers": [
+        {
+            "email": "ilist@google.com",
+            "github": "comius",
+            "name": "Ivo Ristovski List",
+            "github_user_id": 1796240
+        },
+        {
+            "email": "pzembrod@google.com",
+            "github": "pzembrod",
+            "name": "Philip Zembrod",
+            "github_user_id": 7567300
+        }
+    ],
+    "versions": [
+        "0.0.1",
+        "0.0.2",
+        "0.0.4",
+        "0.0.5",
+        "0.0.6",
+        "0.0.8",
+        "0.0.9",
+        "0.0.10",
+        "0.0.11",
+        "0.0.12",
+        "0.0.13",
+        "0.0.14",
+        "0.0.15",
+        "0.0.16",
+        "0.0.17",
+        "0.1.0",
+        "0.1.1",
+        "0.1.2",
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.2.0",
+        "0.2.1",
+        "0.2.2",
+        "0.2.3"
+    ],
+    "yanked_versions": {
+        "0.0.14": "rules_cc 0.0.14 is yanked due to incompatible change (prematurely removing cc_proto_library from defs.bzl), please upgrade to 0.0.15",
+        "0.1.0": "rules_cc 0.1.0 is yanked due to incompatible change (prematurely removing cc_proto_library from defs.bzl), please upgrade to 0.1.1"
+    },
+    "repository": [
+        "github:bazelbuild/rules_cc"
+    ]
+}

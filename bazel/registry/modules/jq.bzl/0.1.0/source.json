@@ -1,0 +1,9 @@
+{
+    "integrity": "sha256-e2NDWqGcxqDP0agvvfLHovCpTbGnn/ekRp/6lChiYas=",
+    "strip_prefix": "jq.bzl-0.1.0",
+    "url": "https://github.com/bazel-contrib/jq.bzl/releases/download/v0.1.0/jq.bzl-v0.1.0.tar.gz",
+    "patches": {
+        "module_dot_bazel_version.patch": "sha256-yGog/7t4/vaOhn4wSOKk+Um6xB3cs1PazPGQEw0JiEI="
+    },
+    "patch_strip": 1
+}

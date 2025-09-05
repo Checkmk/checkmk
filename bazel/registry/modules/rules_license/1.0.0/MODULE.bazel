@@ -1,0 +1,18 @@
+module(
+    name = "rules_license",
+    version = "1.0.0",  # Keep in sync with version.bzl
+    compatibility_level = 1,
+)
+
+# NOTE: rules_license must not depend on any other repositories if you are
+# just using basic rules under //rules/... and //licenses/...
+
+# TODO(aiuto): Create an extension to enable the rules under //tools/...
+# That will require rules_python, which we do not want to force on people who
+# do not need //tools.
+
+# Only for development
+bazel_dep(name = "bazel_skylib", version = "1.7.1", dev_dependency = True)
+bazel_dep(name = "rules_pkg", version = "1.0.1", dev_dependency = True)
+bazel_dep(name = "rules_python", version = "0.35.0", dev_dependency = True)
+bazel_dep(name = "stardoc", version = "0.6.2", dev_dependency = True)

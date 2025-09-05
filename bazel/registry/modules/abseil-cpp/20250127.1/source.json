@@ -1,0 +1,5 @@
+{
+    "url": "https://github.com/abseil/abseil-cpp/releases/download/20250127.1/abseil-cpp-20250127.1.tar.gz",
+    "strip_prefix": "abseil-cpp-20250127.1",
+    "integrity": "sha256-s5ZAH9KeLmecrOd4Z0gdOIyAdnHcKsxgKgJZ7rebeBE="
+}

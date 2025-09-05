@@ -1,0 +1,9 @@
+{
+    "integrity": "sha256-hv+cOix7wwj+8zm81bOBmqc1IVAziGzCgetj8QzReXY=",
+    "strip_prefix": "",
+    "url": "https://github.com/bazelbuild/rules_apple/releases/download/3.16.0/rules_apple.3.16.0.tar.gz",
+    "patches": {
+        "module_dot_bazel_version.patch": "sha256-tc1zjSKWZcwJgw84Baye8gdG6De+/REqSj9Ra17Xcoo="
+    },
+    "patch_strip": 1
+}

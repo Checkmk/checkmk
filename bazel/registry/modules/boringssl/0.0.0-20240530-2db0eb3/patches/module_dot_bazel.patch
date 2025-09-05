@@ -1,0 +1,11 @@
+--- MODULE.bazel
++++ MODULE.bazel
+@@ -16,7 +16,7 @@
+ # 0.0.0-YYYYMMDD-HASH, e.g. "0.0.0-20240126-22d349c".
+ module(
+     name = "boringssl",
+-    version = "0.0.0-dev",
++    version = "0.0.0-20240530-2db0eb3",
+     compatibility_level = 2,
+ )
+ 

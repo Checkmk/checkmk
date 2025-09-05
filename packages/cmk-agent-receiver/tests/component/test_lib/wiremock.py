@@ -11,12 +11,15 @@ from pydantic import BaseModel, Field
 
 PatternType = Literal["matchesJsonSchema", "equalTo", "matchesJsonSchema"]
 
+Operation = Literal["matches", "equalTo"]
+
 
 class Request(BaseModel):
     method: Literal["GET", "POST", "PUT", "PATCH", "DELETE"]
     url: str
     bodyPatterns: list[Mapping[PatternType, str]] | None = None
     queryParameters: Mapping[str, Mapping[PatternType, str]] | None = None
+    headers: Mapping[str, Mapping[Operation, str]] = Field(default_factory=dict)
 
 
 class Response(BaseModel):
@@ -60,7 +63,7 @@ class Wiremock(BaseModel):
             json=mapping.model_dump(exclude_none=True),
             timeout=1,
         )
-        response.raise_for_status()
+        assert response.status_code < 400, response.text
 
     def get_all_url_path_requests(self, url_path: str, method: HTTPMethod) -> list[dict]:
         query = {
@@ -73,7 +76,7 @@ class Wiremock(BaseModel):
             json=query,
             timeout=1,
         )
-        response.raise_for_status()
+        assert response.status_code < 400, response.text
 
         all_requests = response.json()["requests"]
         return list(all_requests)

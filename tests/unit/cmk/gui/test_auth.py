@@ -9,6 +9,7 @@ from unittest.mock import patch
 import pytest
 
 from cmk.gui.auth import _check_internal_token
+from cmk.gui.config import Config
 from cmk.gui.pseudo_users import SiteInternalPseudoUser
 from cmk.utils.local_secrets import SiteInternalSecret
 
@@ -25,18 +26,18 @@ def test_check_internal_token(
         environ: dict[str, str] = {}
 
     with patch("cmk.gui.auth.request", _RequestMock()) as request:
-        assert _check_internal_token() is None
+        assert _check_internal_token(config := Config()) is None
 
         request.environ["HTTP_AUTHORIZATION"] = "Zm9v"  # foo
-        assert _check_internal_token() is None
+        assert _check_internal_token(config) is None
 
         request.environ["HTTP_AUTHORIZATION"] = "InternalToken foo"  # invalid base64
-        assert _check_internal_token() is None
+        assert _check_internal_token(config) is None
 
         request.environ["HTTP_AUTHORIZATION"] = "InternalToken Zm9v"
-        assert _check_internal_token() is None
+        assert _check_internal_token(config) is None
 
         request.environ["HTTP_AUTHORIZATION"] = (
             "InternalToken dW5pdHRlc3RzZWNyZXQ="  # unittestsecret
         )
-        assert isinstance(_check_internal_token(), SiteInternalPseudoUser)
+        assert isinstance(_check_internal_token(config), SiteInternalPseudoUser)

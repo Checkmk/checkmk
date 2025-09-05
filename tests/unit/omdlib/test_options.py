@@ -5,13 +5,12 @@
 
 import pytest
 
-from omdlib.options import main_help, parse_args_or_exec_other_omd
-
-
-def test_main_help(capsys: pytest.CaptureFixture[str]) -> None:
-    main_help()
-    stdout = capsys.readouterr()[0]
-    assert "omd COMMAND -h" in stdout
+from omdlib.options import (
+    _get_command,
+    _parse_command_options,
+    parse_args_or_exec_other_omd,
+)
+from omdlib.update_check import prepare_conflict_resolution
 
 
 def test_parse_args_or_exec_other_omd() -> None:
@@ -79,3 +78,40 @@ def test_parse_args_or_exec_other_omd_arg_parsing(
     assert all(expected in command_options for expected in expected_command_options)
     assert all(expected in parsed_args for expected in expected_parsed_args)
     assert command.needs_site == needs_site
+
+
+def test_parse_command_options_update() -> None:
+    command = _get_command("update")
+    args, options = _parse_command_options(
+        command.description,
+        [
+            "--confirm-version",
+            "--confirm-edition",
+            "--ignore-editions-incompatible",
+            "--confirm-requires-root",
+            "--ignore-versions-incompatible",
+        ],
+        command.options,
+    )
+    assert not args
+    prepare_conflict_resolution(options, False)
+
+
+def test_parse_command_options_update_incorrect_usage() -> None:
+    command = _get_command("update")
+    with pytest.raises(SystemExit):
+        _parse_command_options(command.description, ["--confirm-choice"], command.options)
+
+
+def test_parse_command_options_update_force() -> None:
+    command = _get_command("update")
+    args, options = _parse_command_options(command.description, [], command.options)
+    assert not args
+    prepare_conflict_resolution(options, True)
+
+
+def test_parse_command_options_update_default() -> None:
+    command = _get_command("update")
+    args, options = _parse_command_options(command.description, [], command.options)
+    assert not args
+    prepare_conflict_resolution(options, False)

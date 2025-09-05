@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import enum
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from omdlib.dialog import dialog_menu, dialog_yesno
 from omdlib.site_paths import SitePaths
@@ -17,7 +18,7 @@ from omdlib.version import omd_versions
 from cmk.ccc.version import Version, versions_compatible, VersionsIncompatible
 
 
-class ConfirmChoice(enum.StrEnum):
+class ConfirmVersion(enum.StrEnum):
     INSTALL = "install"
     ASK = "ask"
 
@@ -27,27 +28,42 @@ class ConfirmEdition(enum.StrEnum):
     ASK = "ask"
 
 
-class EditionsIncompatibleAction(enum.StrEnum):
+class IgnoreEditionsIncompatible(enum.StrEnum):
     INSTALL = "install"
     ABORT = "abort"
 
 
-class RequiresRoot(enum.StrEnum):
+class ConfirmRequiresRoot(enum.StrEnum):
     INSTALL = "install"
     ASK = "ask"
 
 
-class VersionsIncompatibleAction(enum.StrEnum):
+class IgnoreVersionsIncompatible(enum.StrEnum):
     INSTALL = "install"
     ABORT = "abort"
 
 
-class ConflictResolution(BaseModel, frozen=True):
-    confirm_choice: ConfirmChoice
-    confirm_edition: ConfirmEdition
-    editions_incompatible: EditionsIncompatibleAction
-    requires_root: RequiresRoot
-    versions_incompatible: VersionsIncompatibleAction
+class ConflictResolution(BaseModel, frozen=True, extra="forbid"):
+    confirm_version: ConfirmVersion = Field(
+        ConfirmVersion.ASK,
+        validation_alias="confirm-version",
+    )
+    confirm_edition: ConfirmEdition = Field(
+        ConfirmEdition.ASK,
+        validation_alias="confirm-edition",
+    )
+    ignore_editions_incompatible: IgnoreEditionsIncompatible = Field(
+        IgnoreEditionsIncompatible.ABORT,
+        validation_alias="ignore-editions-incompatible",
+    )
+    confirm_requires_root: ConfirmRequiresRoot = Field(
+        ConfirmRequiresRoot.ASK,
+        validation_alias="confirm-requires-root",
+    )
+    ignore_versions_incompatible: IgnoreVersionsIncompatible = Field(
+        IgnoreVersionsIncompatible.ABORT,
+        validation_alias="ignore-versions-incompatible",
+    )
 
 
 def _omd_to_check_mk_version(omd_version: str) -> Version:
@@ -78,23 +94,34 @@ def _omd_to_check_mk_version(omd_version: str) -> Version:
 def _obtain_force_options(force: bool) -> dict[str, str]:
     if force:
         return {
-            "confirm_choice": ConfirmChoice.INSTALL,
-            "confirm_edition": ConfirmEdition.INSTALL,
-            "editions_incompatible": EditionsIncompatibleAction.INSTALL,
-            "requires_root": RequiresRoot.INSTALL,
-            "versions_incompatible": VersionsIncompatibleAction.INSTALL,
+            "confirm-version": ConfirmVersion.INSTALL,
+            "confirm-edition": ConfirmEdition.INSTALL,
+            "ignore-editions-incompatible": IgnoreEditionsIncompatible.INSTALL,
+            "confirm-requires-root": ConfirmRequiresRoot.INSTALL,
+            "ignore-versions-incompatible": IgnoreVersionsIncompatible.INSTALL,
         }
-    return {
-        "confirm_choice": ConfirmChoice.ASK,
-        "confirm_edition": ConfirmEdition.ASK,
-        "editions_incompatible": EditionsIncompatibleAction.ABORT,
-        "requires_root": RequiresRoot.ASK,
-        "versions_incompatible": VersionsIncompatibleAction.ABORT,
+    return {}
+
+
+def prepare_conflict_resolution(options: Mapping[str, object], force: bool) -> ConflictResolution:
+    set_options = {
+        option: set_value
+        for option, set_value in [
+            ("confirm-version", ConfirmVersion.INSTALL),
+            ("confirm-edition", ConfirmEdition.INSTALL),
+            ("ignore-editions-incompatible", IgnoreEditionsIncompatible.INSTALL),
+            ("confirm-requires-root", ConfirmRequiresRoot.INSTALL),
+            ("ignore-versions-incompatible", IgnoreVersionsIncompatible.INSTALL),
+        ]
+        if option in options
     }
-
-
-def prepare_conflict_resolution(force: bool) -> ConflictResolution:
-    return ConflictResolution.model_validate(_obtain_force_options(force))
+    force_options = _obtain_force_options(force)
+    if force_options and set_options:
+        sys.exit(
+            "legacy argument --force cannot be combined with the option(s): "
+            + ", ".join(set_options)
+        )
+    return ConflictResolution.model_validate(_obtain_force_options(force) | set_options)
 
 
 def check_update_possible(
@@ -132,7 +159,7 @@ def check_update_possible(
 
     cmk_from_version = _omd_to_check_mk_version(from_version)
     cmk_to_version = _omd_to_check_mk_version(to_version)
-    if resolution.versions_incompatible is VersionsIncompatibleAction.ABORT and isinstance(
+    if resolution.ignore_versions_incompatible is IgnoreVersionsIncompatible.ABORT and isinstance(
         compatibility := versions_compatible(cmk_from_version, cmk_to_version),
         VersionsIncompatible,
     ):
@@ -142,15 +169,13 @@ def check_update_possible(
             "* Major downgrades are not supported\n"
             "* Major version updates need to be done step by step.\n\n"
             "If you are really sure about what you are doing, you can still do the "
-            "update with '-f'.\n"
-            "You can execute the command in the following way:\n"
-            "'omd -f update' or 'omd --force update'"
+            "update with '--ignore-versions-incompatible'.\n"
             "But you will be on your own from there."
         )
 
     # This line is reached, if the version of the OMD binary (the target)
     # is different from the current version of the site.
-    if resolution.confirm_choice is ConfirmChoice.ASK and not dialog_yesno(
+    if resolution.confirm_version is ConfirmVersion.ASK and not dialog_yesno(
         "You are going to update the site %s from version %s to version %s. "
         "This will include updating all of your configuration files and merging "
         "changes in the default files with changes made by you. In case of conflicts "
@@ -163,7 +188,7 @@ def check_update_possible(
     # In case the user changes the installed Checkmk Edition during update let the
     # user confirm this step.
     if (
-        resolution.editions_incompatible is EditionsIncompatibleAction.ABORT
+        resolution.ignore_editions_incompatible is IgnoreEditionsIncompatible.ABORT
         and from_edition == "managed"
         and to_edition != "managed"
     ):
@@ -186,7 +211,7 @@ def check_update_possible(
         hook_up_to_date = False
 
     if (
-        resolution.requires_root is RequiresRoot.ASK
+        resolution.confirm_requires_root is ConfirmRequiresRoot.ASK
         and not hook_up_to_date
         and not dialog_yesno(
             "This update requires additional actions: The system apache configuration has changed "

@@ -352,7 +352,37 @@ COMMANDS: Final = [
                 None,
                 True,
                 "non-interactive conflict resolution. ARG is install, keepold, abort or ask",
-            )
+            ),
+            Option(
+                "confirm-version",
+                None,
+                False,
+                "suppress the confirmation dialog, which displays information about the target version",
+            ),
+            Option(
+                "confirm-edition",
+                None,
+                False,
+                "suppress the confirmation dialog, which displays information about the target edition",
+            ),
+            Option(
+                "ignore-editions-incompatible",
+                None,
+                False,
+                "force OMD to update despite the target edition being incompatible. These types are of updates are not supported and may leave the site in an irreparable state",
+            ),
+            Option(
+                "confirm-requires-root",
+                None,
+                False,
+                "suppress the confirmation dialog, which is shown in case root priviledges are required for the update",
+            ),
+            Option(
+                "ignore-versions-incompatible",
+                None,
+                False,
+                "force OMD to update despite the target version being incompatible. These types are of updates are not supported and may leave the site in an irreparable state",
+            ),
         ],
         description="Update site to other version of OMD",
         confirm_text="",
@@ -726,13 +756,13 @@ def parse_args_or_exec_other_omd(
         main_help()
         sys.exit(1)
 
-    args = main_args[1:]
-
     command = _get_command(main_args[0])
 
     # Parse command options. We need to do this now in order to know
     # if a site name has been specified or not.
-    args, command_options = _parse_command_options(command.description, args, command.options)
+    args, command_options = _parse_command_options(
+        command.description, main_args[1:], command.options
+    )
 
     # Some commands need a site to be specified. If we are
     # called as root, this must be done explicitly. If we

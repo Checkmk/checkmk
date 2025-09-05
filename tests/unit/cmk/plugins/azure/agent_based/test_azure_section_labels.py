@@ -112,6 +112,22 @@ def test_parse_host_labels(
             ],
             id="Labels and tags",
         ),
+        pytest.param(
+            LabelsSection(
+                host_labels={
+                    "key:with:colons": "rg-pm-weu",
+                    "another_label": "value:with:colons",
+                    "empty_value": "",
+                },
+                tags={},
+            ),
+            [
+                HostLabel("cmk/azure/key_with_colons", "rg-pm-weu"),
+                HostLabel("cmk/azure/another_label", "value_with_colons"),
+                HostLabel("cmk/azure/empty_value", "true"),
+            ],
+            id="Labels with special characters",
+        ),
     ],
 )
 def test_host_labels(

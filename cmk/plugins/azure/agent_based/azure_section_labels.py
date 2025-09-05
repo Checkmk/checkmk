@@ -58,15 +58,20 @@ def host_labels(section: LabelsSection) -> HostLabelGenerator:
             the label is set for each tag of the monitored resource,
             merged with the tags of its own resource group.
     """
-    for label, value in section.host_labels.items():
+    # We are basically accepting every label coming from the special agent, even though they are well defined.
+    # This is to be sure we only work with valid labels
+    labels = custom_tags_to_valid_labels(
+        {key: str(val) for key, val in section.host_labels.items()}
+    )
+    for label, value in labels.items():
         if label == "group_name":
-            yield HostLabel("cmk/azure/resource_group", str(value))
+            yield HostLabel("cmk/azure/resource_group", value)
             continue
         if label == "vm_instance":
             yield HostLabel("cmk/azure/vm", "instance")
             continue
 
-        yield HostLabel(f"cmk/azure/{label}", str(value))
+        yield HostLabel(f"cmk/azure/{label}", value)
 
     if not section.tags:
         return

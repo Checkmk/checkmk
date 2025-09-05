@@ -28,7 +28,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.pseudo_users import PseudoUserId, RemoteSitePseudoUser, SiteInternalPseudoUser
 from cmk.gui.site_config import enabled_sites
-from cmk.gui.type_defs import AuthType
+from cmk.gui.type_defs import AuthType, UserSpec
 from cmk.gui.userdb import get_user_attributes, UserAttribute
 from cmk.gui.userdb.session import generate_auth_hash
 from cmk.gui.utils.htpasswd import Htpasswd
@@ -212,7 +212,7 @@ def _check_auth_by_header(
 
     # Could be an automation user or a regular user
     if _verify_automation_login(user_id, password.raw) or _verify_user_login(
-        user_id, password, user_attributes
+        user_id, password, user_attributes, active_config.default_user_profile
     ):
         return user_id
 
@@ -392,6 +392,7 @@ def _verify_user_login(
     user_id: UserId,
     password: Password,
     user_attributes: Sequence[tuple[str, UserAttribute]],
+    default_user_profile: UserSpec,
 ) -> bool:
     """Verify the user's login credentials.
 
@@ -405,6 +406,7 @@ def _verify_user_login(
                 password,
                 user_attributes,
                 datetime.now(),
+                default_user_profile,
             )
         )
     except MKUserError:

@@ -2839,10 +2839,10 @@ class LDAPAttributePluginGroupsToRoles(LDAPAttributePlugin):
                 if dn in ldap_groups and user_cmp_val in ldap_groups[dn]["members"]:
                     roles.append(role_id)
 
-        # Load default roles from default user profile when the user got no role
+        # Take default roles from default user profile when the user got no role
         # by the role sync plugin
         if not roles:
-            roles = active_config.default_user_profile["roles"][:]
+            return {}
 
         return {"roles": roles}
 

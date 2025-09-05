@@ -39,6 +39,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.table import show_row_count, table_element
 from cmk.gui.type_defs import ActionResult, Choices, CustomUserAttrSpec, PermissionName, UserSpec
+from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.userdb import (
     active_connections,
@@ -160,11 +161,11 @@ class ModeUsers(WatoMode):
         topics += [
             PageMenuTopic(
                 title=_("On selected users"),
-                entries=list(self._page_menu_entries_on_selected_users()),
+                entries=list(self._page_menu_entries_on_selected_users(config.user_connections)),
             ),
             PageMenuTopic(
                 title=_("Synchronized users"),
-                entries=list(self._page_menu_entries_synchronized_users()),
+                entries=list(self._page_menu_entries_synchronized_users(config.user_connections)),
             ),
             PageMenuTopic(
                 title=_("User messages"),
@@ -196,7 +197,9 @@ class ModeUsers(WatoMode):
         menu.add_doc_reference(_("Users, roles and permissions"), DocReference.WATO_USER)
         return menu
 
-    def _page_menu_entries_on_selected_users(self) -> Iterator[PageMenuEntry]:
+    def _page_menu_entries_on_selected_users(
+        self, user_connections: Sequence[UserConnectionConfig]
+    ) -> Iterator[PageMenuEntry]:
         if self._can_create_and_delete_users:
             yield PageMenuEntry(
                 title=_("Delete users"),
@@ -227,12 +230,14 @@ class ModeUsers(WatoMode):
                 ),
                 is_shortcut=True,
                 is_suggested=True,
-                is_enabled=len(active_connections(active_config.user_connections)) > 1,
+                is_enabled=len(active_connections(user_connections)) > 1,
                 disabled_tooltip=_("There is only one active user connector available"),
             )
 
-    def _page_menu_entries_synchronized_users(self) -> Iterator[PageMenuEntry]:
-        if _sync_possible():
+    def _page_menu_entries_synchronized_users(
+        self, user_connections: Sequence[UserConnectionConfig]
+    ) -> Iterator[PageMenuEntry]:
+        if _sync_possible(user_connections):
             if not self._job_snapshot.is_active:
                 yield PageMenuEntry(
                     title=_("Synchronize users"),
@@ -708,7 +713,7 @@ class ModeEditUser(WatoMode):
 
         self._can_edit_users = edition(paths.omd_root) != Edition.CSE
 
-    def _from_vars(self):
+    def _from_vars(self) -> None:
         # TODO: Should we turn the both fields below into UserId | None?
         try:
             self._user_id = request.get_validated_type_input(UserId, "edit", empty_is_none=True)
@@ -1540,9 +1545,9 @@ def select_language(user_spec: UserSpec, default_language: str) -> None:
     )
 
 
-def _sync_possible() -> bool:
+def _sync_possible(user_connections: Sequence[UserConnectionConfig]) -> bool:
     """When at least one LDAP connection is defined and active a sync is possible"""
     return any(
         connection.type() == ConnectorType.LDAP
-        for _connection_id, connection in active_connections(active_config.user_connections)
+        for _connection_id, connection in active_connections(user_connections)
     )

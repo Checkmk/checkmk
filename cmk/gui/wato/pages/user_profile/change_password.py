@@ -77,6 +77,7 @@ class UserChangePasswordPage(Page):
                 cur_password,
                 (user_attributes := get_user_attributes(config.wato_user_attrs)),
                 now,
+                config.default_user_profile,
             )
             is False
         ):

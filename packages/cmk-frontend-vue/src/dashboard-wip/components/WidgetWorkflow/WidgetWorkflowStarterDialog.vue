@@ -12,6 +12,7 @@ import { ref } from 'vue'
 import usei18n from '@/lib/i18n'
 
 import AddWidgetDialog from './StarterDialog/AddWidgetDialog.vue'
+import AddWidgetPage from './StarterPage/AddWidgetPage.vue'
 import { dashboardWidgetWorkflows } from './WidgetWorkflowTypes'
 
 const { _t } = usei18n()
@@ -34,5 +35,8 @@ function handleSelect(id: string) {
       @close="openDialog = false"
       @select="handleSelect"
     />
+  </div>
+  <div>
+    <AddWidgetPage :workflow-items="dashboardWidgetWorkflows" @select="handleSelect" />
   </div>
 </template>

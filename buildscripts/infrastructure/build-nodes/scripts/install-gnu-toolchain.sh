@@ -9,7 +9,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 # shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh
 . "${SCRIPT_DIR}/build_lib.sh"
 
-MIRROR_URL="https://gcc.gnu.org/pub/gcc/releases"
+# Fast mirror located nearby, see https://www.gnu.org/prep/ftp.en.html
+MIRROR_URL="https://ftpmirror.gnu.org/gcc"
 
 GCC_MAJOR=$(get_version "$SCRIPT_DIR" GCC_VERSION_MAJOR)
 GCC_MINOR=$(get_version "$SCRIPT_DIR" GCC_VERSION_MINOR)

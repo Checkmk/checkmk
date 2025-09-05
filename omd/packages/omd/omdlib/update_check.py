@@ -2,10 +2,11 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-
+import enum
 import sys
 from pathlib import Path
+
+from pydantic import BaseModel
 
 from omdlib.dialog import dialog_menu, dialog_yesno
 from omdlib.site_paths import SitePaths
@@ -14,6 +15,39 @@ from omdlib.utils import exec_other_omd
 from omdlib.version import omd_versions
 
 from cmk.ccc.version import Version, versions_compatible, VersionsIncompatible
+
+
+class ConfirmChoice(enum.StrEnum):
+    INSTALL = "install"
+    ASK = "ask"
+
+
+class ConfirmEdition(enum.StrEnum):
+    INSTALL = "install"
+    ASK = "ask"
+
+
+class EditionsIncompatibleAction(enum.StrEnum):
+    INSTALL = "install"
+    ABORT = "abort"
+
+
+class RequiresRoot(enum.StrEnum):
+    INSTALL = "install"
+    ASK = "ask"
+
+
+class VersionsIncompatibleAction(enum.StrEnum):
+    INSTALL = "install"
+    ABORT = "abort"
+
+
+class ConflictResolution(BaseModel, frozen=True):
+    confirm_choice: ConfirmChoice
+    confirm_edition: ConfirmEdition
+    editions_incompatible: EditionsIncompatibleAction
+    requires_root: RequiresRoot
+    versions_incompatible: VersionsIncompatibleAction
 
 
 def _omd_to_check_mk_version(omd_version: str) -> Version:
@@ -41,13 +75,35 @@ def _omd_to_check_mk_version(omd_version: str) -> Version:
     return Version.from_str(".".join(parts))
 
 
+def _obtain_force_options(force: bool) -> dict[str, str]:
+    if force:
+        return {
+            "confirm_choice": ConfirmChoice.INSTALL,
+            "confirm_edition": ConfirmEdition.INSTALL,
+            "editions_incompatible": EditionsIncompatibleAction.INSTALL,
+            "requires_root": RequiresRoot.INSTALL,
+            "versions_incompatible": VersionsIncompatibleAction.INSTALL,
+        }
+    return {
+        "confirm_choice": ConfirmChoice.ASK,
+        "confirm_edition": ConfirmEdition.ASK,
+        "editions_incompatible": EditionsIncompatibleAction.ABORT,
+        "requires_root": RequiresRoot.ASK,
+        "versions_incompatible": VersionsIncompatibleAction.ABORT,
+    }
+
+
+def prepare_conflict_resolution(force: bool) -> ConflictResolution:
+    return ConflictResolution.model_validate(_obtain_force_options(force))
+
+
 def check_update_possible(
     from_edition: str,
     to_edition: str,
     from_version: str,
     to_version: str,
     site_name: str,
-    force: bool,
+    resolution: ConflictResolution,
     versions_path: Path = Path("/omd/versions/"),
 ) -> None:
     # source and target are identical if 'omd update' is called
@@ -76,12 +132,9 @@ def check_update_possible(
 
     cmk_from_version = _omd_to_check_mk_version(from_version)
     cmk_to_version = _omd_to_check_mk_version(to_version)
-    if (
-        isinstance(
-            compatibility := versions_compatible(cmk_from_version, cmk_to_version),
-            VersionsIncompatible,
-        )
-        and not force
+    if resolution.versions_incompatible is VersionsIncompatibleAction.ABORT and isinstance(
+        compatibility := versions_compatible(cmk_from_version, cmk_to_version),
+        VersionsIncompatible,
     ):
         sys.exit(
             f"ERROR: You are trying to update from {from_version} to {to_version} which is not "
@@ -97,7 +150,7 @@ def check_update_possible(
 
     # This line is reached, if the version of the OMD binary (the target)
     # is different from the current version of the site.
-    if not force and not dialog_yesno(
+    if resolution.confirm_choice is ConfirmChoice.ASK and not dialog_yesno(
         "You are going to update the site %s from version %s to version %s. "
         "This will include updating all of your configuration files and merging "
         "changes in the default files with changes made by you. In case of conflicts "
@@ -109,12 +162,16 @@ def check_update_possible(
 
     # In case the user changes the installed Checkmk Edition during update let the
     # user confirm this step.
-    if from_edition == "managed" and to_edition != "managed" and not force:
+    if (
+        resolution.editions_incompatible is EditionsIncompatibleAction.ABORT
+        and from_edition == "managed"
+        and to_edition != "managed"
+    ):
         sys.exit(f"ERROR: Updating from {from_edition} to {to_edition} is not possible. Aborted.")
 
     if (
-        from_edition != to_edition
-        and not force
+        resolution.confirm_edition is ConfirmEdition.ASK
+        and from_edition != to_edition
         and not dialog_yesno(
             text=f"You are updating from {from_edition.title()} Edition to {to_edition.title()} Edition. Is this intended?",
             default_no=True,
@@ -129,8 +186,8 @@ def check_update_possible(
         hook_up_to_date = False
 
     if (
-        not hook_up_to_date
-        and not force
+        resolution.requires_root is RequiresRoot.ASK
+        and not hook_up_to_date
         and not dialog_yesno(
             "This update requires additional actions: The system apache configuration has changed "
             "with the new version and needs to be updated.\n\n"

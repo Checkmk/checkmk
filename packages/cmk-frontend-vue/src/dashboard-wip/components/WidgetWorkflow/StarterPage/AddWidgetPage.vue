@@ -4,36 +4,22 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import usei18n from '@/lib/i18n'
-
-import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
-
 import type { WorkflowItem } from '../WidgetWorkflowTypes'
-import WorkflowListItem from './WorkflowListItem.vue'
-
-const { _t } = usei18n()
+import WorkflowCard from './WorkflowCard.vue'
 
 export interface AddWidgetDialogProperties {
   workflowItems: Record<string, WorkflowItem>
-  open: boolean
 }
 
 const props = defineProps<AddWidgetDialogProperties>()
 
-const emit = defineEmits(['close', 'select'])
+const emit = defineEmits(['select'])
 </script>
 
 <template>
-  <CmkSlideInDialog
-    :open="props.open"
-    :header="{
-      title: _t('Add widget'),
-      closeButton: true
-    }"
-    @close="emit('close')"
-  >
-    <div class="add-widget-dialog__container">
-      <WorkflowListItem
+  <div class="add-widget-page__wrapper">
+    <div class="add-widget-page__grid-container">
+      <WorkflowCard
         v-for="(item, id) in props.workflowItems"
         :key="id"
         :title="item.title"
@@ -43,14 +29,31 @@ const emit = defineEmits(['close', 'select'])
         @select="emit('select', id)"
       />
     </div>
-  </CmkSlideInDialog>
+  </div>
 </template>
 
 <style scoped>
-.add-widget-dialog__container {
+.add-widget-page__wrapper {
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing);
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
   padding: var(--spacing-double);
+  box-sizing: border-box;
+}
+
+.add-widget-page__grid-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-gap: var(--spacing-double);
+  padding: var(--spacing-double);
+  width: 100%;
+}
+
+@media (max-width: 800px) {
+  .add-widget-page__grid-container {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

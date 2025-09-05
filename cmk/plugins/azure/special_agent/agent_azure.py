@@ -238,6 +238,7 @@ ALL_METRICS: dict[str, list[tuple[str, str, str]]] = {
         ("LatencyP99,cacheLatency", "PT1M", "average"),
         ("GeoReplicationHealthy", "PT1M", "minimum"),
         ("GeoReplicationConnectivityLag", "PT1M", "average"),
+        ("allcacheRead,allcacheWrite", "PT1M", "maximum"),
     ],
 }
 

@@ -299,3 +299,37 @@ check_plugin_azure_redis_replication = CheckPlugin(
         "replication_connectivity_lag_upper": ("no_levels", None),
     },
 )
+
+check_plugin_azure_redis_throughput = CheckPlugin(
+    name="azure_redis_throughput",
+    sections=["azure_redis"],
+    service_name="Azure/Redis Throughput",
+    discovery_function=create_discover_by_metrics_function_single(
+        "maximum_allcacheRead",
+        "maximum_allcacheWrite",
+    ),
+    check_function=create_check_metrics_function_single(
+        [
+            MetricData(
+                "maximum_allcacheRead",
+                "azure_redis_throughput_cache_read",
+                "Read",
+                render.iobandwidth,
+                upper_levels_param="cache_read_upper",
+            ),
+            MetricData(
+                "maximum_allcacheWrite",
+                "azure_redis_throughput_cache_write",
+                "Write",
+                render.iobandwidth,
+                upper_levels_param="cache_write_upper",
+            ),
+        ],
+        check_levels=check_levels_v2,  # Force v2 so default params work without migration params
+    ),
+    check_ruleset_name="azure_redis_throughput",
+    check_default_parameters={
+        "cache_read_upper": ("no_levels", None),
+        "cache_write_upper": ("no_levels", None),
+    },
+)

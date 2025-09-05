@@ -8887,6 +8887,10 @@ msgid "Azure Redis connections"
 msgstr "Databaseverbindingen"
 
 #, fuzzy
+msgid "Azure Redis latency"
+msgstr "Gemiddelde schijflatentie"
+
+#, fuzzy
 msgid "Azure Redis memory"
 msgstr "Absoluut vrij geheugen"
 
@@ -11279,6 +11283,10 @@ msgstr "Cache %s"
 #, fuzzy
 msgid "Cache hits for pass"
 msgstr "hits voor pass"
+
+#, fuzzy
+msgid "Cache internode latency"
+msgstr "Conferentie Latency creëren"
 
 msgid "Cache interval"
 msgstr "Cache-interval"
@@ -43504,10 +43512,6 @@ msgstr "Naam van de groep"
 msgid "Name of group in service name"
 msgstr "Naam van groep in dienstbeschrijving"
 
-#, fuzzy
-msgid "Name of group2"
-msgstr "Naam van de groep"
-
 msgid "Name of indice"
 msgstr "Naam van het streepje"
 
@@ -58156,6 +58160,10 @@ msgstr "Server log opslag gebruikt"
 msgid "Server performance"
 msgstr "Serverprestaties"
 
+#, fuzzy
+msgid "Server side command latency"
+msgstr "Serververtraging"
+
 msgid "Server side handling of unencrypted data"
 msgstr "Serverzijde behandeling van niet-gecodeerde gegevens"
 
@@ -58166,6 +58174,10 @@ msgstr "Server tijd"
 #, python-format
 msgid "Server time (currently: %s)"
 msgstr ""
+
+#, fuzzy
+msgid "Server-side command latency"
+msgstr "Serververtraging"
 
 msgid "Service"
 msgstr "Dienst"
@@ -68623,11 +68635,6 @@ msgstr ""
 "Het hier gespecificeerde patroon moet precies overeenkomen met het begin van "
 "de sensortoestand (hoofdlettergevoelig)."
 
-#, fuzzy, python-brace-format
-msgid "The pattern {value} is not a valid regular expression: {err_msg}"
-msgstr ""
-"De hier ingevoerde tekst wordt behandeld als een regulier expressiepatroon."
-
 msgid ""
 "The performance graph will always display the occupied memory. This is "
 "independent of the actual check levels which can be set for both free and "
@@ -73837,6 +73844,14 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This ruleset allows you to configure levels for Azure Redis connections "
+"monitoring"
+msgstr ""
+"Deze regel staat je toe om bloat levels te configureren voor een databases "
+"tablespace en indexspace."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis latency "
 "monitoring"
 msgstr ""
 "Deze regel staat je toe om bloat levels te configureren voor een databases "
@@ -90628,6 +90643,16 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid "Name of group2"
+#~ msgstr "Naam van de groep"
+
+#, fuzzy, python-brace-format
+#~ msgid "The pattern {value} is not a valid regular expression: {err_msg}"
+#~ msgstr ""
+#~ "De hier ingevoerde tekst wordt behandeld als een regulier "
+#~ "expressiepatroon."
 
 #~ msgid "Connect without proxy"
 #~ msgstr "Verbinden zonder proxy"

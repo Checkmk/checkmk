@@ -8537,6 +8537,10 @@ msgid "Azure Redis connections"
 msgstr "Azure Redis Verbindungen"
 
 #, fuzzy
+msgid "Azure Redis latency"
+msgstr "Durchschnittliche Disk-Latenz"
+
+#, fuzzy
 msgid "Azure Redis memory"
 msgstr "Absoluter genutzter Speicherplatz"
 
@@ -10855,6 +10859,10 @@ msgstr "Cache-Treffer"
 
 msgid "Cache hits for pass"
 msgstr "Durchgelassene Cache-Treffer"
+
+#, fuzzy
+msgid "Cache internode latency"
+msgstr "Latenz bei Erstellung von Konferenzen"
 
 msgid "Cache interval"
 msgstr "Speicherintervall"
@@ -41843,9 +41851,6 @@ msgstr "Name der Gruppe"
 msgid "Name of group in service name"
 msgstr "Name der Gruppe in Service-Name"
 
-msgid "Name of group2"
-msgstr "Name der Gruppe2"
-
 msgid "Name of indice"
 msgstr "Name des Indexes"
 
@@ -55739,6 +55744,10 @@ msgstr "Verwendeter Server-Log-Speicher"
 msgid "Server performance"
 msgstr "Server-Performance"
 
+#, fuzzy
+msgid "Server side command latency"
+msgstr "Serverlatenz"
+
 msgid "Server side handling of unencrypted data"
 msgstr "Server-seitige Behandlung unverschlüsselter Daten"
 
@@ -55748,6 +55757,10 @@ msgstr "Server-Zeit"
 #, python-format
 msgid "Server time (currently: %s)"
 msgstr "Server-Zeit (aktuell: %s)"
+
+#, fuzzy
+msgid "Server-side command latency"
+msgstr "Serverlatenz"
 
 msgid "Service"
 msgstr "Service"
@@ -66109,10 +66122,6 @@ msgstr ""
 "Das hier angegebene Pattern muss exakt mit dem Anfang des "
 "Sensorzustandstexts übereinstimmen (Groß-/Kleinschreibung beachten)."
 
-#, python-brace-format
-msgid "The pattern {value} is not a valid regular expression: {err_msg}"
-msgstr "Das Pattern {value} ist kein gültiger regulärer Ausdruck:{err_msg}"
-
 msgid ""
 "The performance graph will always display the occupied memory. This is "
 "independent of the actual check levels which can be set for both free and "
@@ -71462,6 +71471,14 @@ msgstr ""
 
 msgid ""
 "This ruleset allows you to configure levels for Azure Redis connections "
+"monitoring"
+msgstr ""
+"Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring von Azure "
+"Redis Verbindungen zu konfigurieren"
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis latency "
 "monitoring"
 msgstr ""
 "Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring von Azure "
@@ -87380,6 +87397,13 @@ msgid ""
 msgstr ""
 "\"Änderungen aktivieren\" ist blockiert, bis Sie Ihr Service-Limit "
 "unterschritten haben. Wenn Sie Ihr Service-Limit erhöhen möchten, "
+
+#~ msgid "Name of group2"
+#~ msgstr "Name der Gruppe2"
+
+#, python-brace-format
+#~ msgid "The pattern {value} is not a valid regular expression: {err_msg}"
+#~ msgstr "Das Pattern {value} ist kein gültiger regulärer Ausdruck:{err_msg}"
 
 #~ msgid "Connect without proxy"
 #~ msgstr "Verbinden ohne Proxy"

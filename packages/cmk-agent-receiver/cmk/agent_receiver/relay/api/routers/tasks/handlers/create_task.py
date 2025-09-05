@@ -11,12 +11,11 @@ from pydantic import SecretStr
 
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     Task,
-    TaskID,
     TasksRepository,
     TaskType,
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
-from cmk.agent_receiver.relay.lib.shared_types import RelayID
+from cmk.agent_receiver.relay.lib.shared_types import RelayID, TaskID
 
 
 class RelayNotFoundError(Exception):

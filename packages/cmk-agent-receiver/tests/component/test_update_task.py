@@ -7,7 +7,7 @@ import time
 
 import pytest
 
-from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import TaskID
+from cmk.agent_receiver.relay.lib.shared_types import TaskID
 from cmk.relay_protocols.tasks import (
     ResultType,
     TaskResponse,

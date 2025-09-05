@@ -1,0 +1,33 @@
+{
+    "homepage": "https://github.com/bazel-contrib/tar.bzl",
+    "maintainers": [
+        {
+            "email": "alex@aspect.build",
+            "github": "alexeagle",
+            "name": "Alex Eagle",
+            "github_user_id": 47395
+        },
+        {
+            "email": "sahin@aspect.build",
+            "github": "thesayyn",
+            "name": "Şahin Yort",
+            "github_user_id": 20563340
+        }
+    ],
+    "repository": [
+        "github:bazel-contrib/tar.bzl"
+    ],
+    "versions": [
+        "0.2.0",
+        "0.2.1",
+        "0.3.0",
+        "0.3.3",
+        "0.4.0",
+        "0.5.1",
+        "0.5.2",
+        "0.5.3",
+        "0.5.4",
+        "0.5.5"
+    ],
+    "yanked_versions": {}
+}

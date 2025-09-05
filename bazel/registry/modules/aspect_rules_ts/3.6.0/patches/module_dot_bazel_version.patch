@@ -1,0 +1,14 @@
+===================================================================
+--- a/MODULE.bazel
++++ b/MODULE.bazel
+@@ -1,9 +1,9 @@
+ "aspect-build/rules_ts"
+ 
+ module(
+     name = "aspect_rules_ts",
+-    version = "0.0.0",
++    version = "3.6.0",
+     compatibility_level = 1,
+ )
+ 
+ # Lower-bounds (minimum) versions for direct runtime dependencies

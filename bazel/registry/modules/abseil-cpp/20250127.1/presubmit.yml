@@ -1,0 +1,19 @@
+matrix:
+  bazel:
+  - 7.x
+  - 8.x
+  platform:
+  - debian11
+  - ubuntu2404
+  - macos
+  - windows
+tasks:
+  verify_targets:
+    name: Verify build targets
+    platform: ${{ platform }}
+    bazel: ${{ bazel }}
+    build_flags:
+    - '--cxxopt=-std=c++14'
+    build_targets:
+    - '@abseil-cpp//absl/strings'
+    - '@abseil-cpp//absl/flags:flag'

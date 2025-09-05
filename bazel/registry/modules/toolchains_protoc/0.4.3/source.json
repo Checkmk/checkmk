@@ -1,0 +1,9 @@
+{
+    "integrity": "sha256-MBn57RJz1UczTaIATmNDQMiW2eJN1tiZkR4DtpT9wfU=",
+    "strip_prefix": "toolchains_protoc-0.4.3",
+    "url": "https://github.com/aspect-build/toolchains_protoc/releases/download/v0.4.3/toolchains_protoc-v0.4.3.tar.gz",
+    "patches": {
+        "module_dot_bazel_version.patch": "sha256-OLJusBTeTvHw3semRuy1wcOeXm4XDOtEcvPphFx3a9s="
+    },
+    "patch_strip": 1
+}

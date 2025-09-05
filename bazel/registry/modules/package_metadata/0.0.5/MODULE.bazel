@@ -1,0 +1,7 @@
+module(
+    name = "package_metadata",
+    version = "0.0.5",  # Automatically updated by release pipeline.
+)
+
+# This is a fundamental module that's depended on by virtually every bazel
+# module and **MUST NOT** have any dependencies.

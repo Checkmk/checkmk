@@ -1,0 +1,9 @@
+{
+    "url": "https://github.com/open-source-parsers/jsoncpp/archive/refs/tags/1.9.6.tar.gz",
+    "integrity": "sha256-+Ttt1855axPQLBCLyfeYEiRaguV3WBxMmqvlcHXJDqI=",
+    "strip_prefix": "jsoncpp-1.9.6",
+    "patches": {
+        "module_dot_bazel.patch": "sha256-OE/Wj/2VLvClX5AaWX2jI/lf07RgyoCT4/aNHnkY/Yg="
+    },
+    "patch_strip": 1
+}

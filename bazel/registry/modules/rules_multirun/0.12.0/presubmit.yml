@@ -1,0 +1,11 @@
+matrix:
+  platform: ["macos", "ubuntu2004", "windows"]
+  bazel: ["6.x", "7.x", "rolling"]
+
+tasks:
+  verify_targets:
+    name: "Verify build targets"
+    platform: ${{ platform }}
+    bazel: ${{ bazel }}
+    test_targets:
+      - '@rules_multirun//tests/...'

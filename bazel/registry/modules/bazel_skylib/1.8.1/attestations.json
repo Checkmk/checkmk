@@ -1,0 +1,17 @@
+{
+    "mediaType": "application/vnd.build.bazel.registry.attestation+json;version=1.0.0",
+    "attestations": {
+        "source.json": {
+            "url": "https://github.com/bazelbuild/bazel-skylib/releases/download/1.8.1/bazel_skylib.source.json.intoto.jsonl",
+            "integrity": "sha256-tisT8xI/iIPHXNQ0UFx8i4Yra14YHRT5LjutBSLzN+U="
+        },
+        "MODULE.bazel": {
+            "url": "https://github.com/bazelbuild/bazel-skylib/releases/download/1.8.1/bazel_skylib.MODULE.bazel.intoto.jsonl",
+            "integrity": "sha256-V4VHOZh8UZB5kWyFJ3xTei7BPpnyQaNsXEMWLkglxhg="
+        },
+        "bazel-skylib-1.8.1.tar.gz": {
+            "url": "https://github.com/bazelbuild/bazel-skylib/releases/download/1.8.1/bazel-skylib-1.8.1.tar.gz.intoto.jsonl",
+            "integrity": "sha256-mlIZH5ZE/FX8OX79RXmjaCSEMkvtgEhbDy0VfQxtRP4="
+        }
+    }
+}

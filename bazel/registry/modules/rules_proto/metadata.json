@@ -1,0 +1,32 @@
+{
+    "homepage": "https://github.com/bazelbuild/rules_proto",
+    "maintainers": [
+        {
+            "github": "googleberg",
+            "name": "Jerry Berg",
+            "github_user_id": 107155935
+        },
+        {
+            "github": "zhangskz",
+            "github_user_id": 89936743
+        }
+    ],
+    "versions": [
+        "4.0.0",
+        "5.3.0-21.7",
+        "6.0.0-rc1",
+        "6.0.0-rc2",
+        "6.0.0-rc3",
+        "6.0.0",
+        "6.0.0.bcr.1",
+        "6.0.2",
+        "7.0.0",
+        "7.0.1",
+        "7.0.2",
+        "7.1.0"
+    ],
+    "yanked_versions": {},
+    "repository": [
+        "github:bazelbuild/rules_proto"
+    ]
+}

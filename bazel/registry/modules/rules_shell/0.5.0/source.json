@@ -1,0 +1,9 @@
+{
+    "integrity": "sha256-sVzC5pijxVPXc/9K8160s84pg8MZFjcH3d2ecPqqBi0=",
+    "strip_prefix": "rules_shell-0.5.0",
+    "url": "https://github.com/bazelbuild/rules_shell/releases/download/v0.5.0/rules_shell-v0.5.0.tar.gz",
+    "patches": {
+        "module_dot_bazel_version.patch": "sha256-2QuD7S0T9PUpMom400Dba3BOFy1QoVRyaGUEK9fOslw="
+    },
+    "patch_strip": 1
+}

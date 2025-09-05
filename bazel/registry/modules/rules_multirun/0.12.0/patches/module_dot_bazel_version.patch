@@ -1,0 +1,12 @@
+===================================================================
+--- a/MODULE.bazel
++++ b/MODULE.bazel
+@@ -1,7 +1,7 @@
+ module(
+     name = "rules_multirun",
+-    version = "0",
++    version = "0.12.0",
+     compatibility_level = 1,
+ )
+ 
+ bazel_dep(name = "bazel_skylib", version = "1.4.2")

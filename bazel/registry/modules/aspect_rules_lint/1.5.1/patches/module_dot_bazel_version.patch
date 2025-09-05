@@ -1,0 +1,14 @@
+===================================================================
+--- a/MODULE.bazel
++++ b/MODULE.bazel
+@@ -1,9 +1,9 @@
+ "Bazel dependencies"
+ 
+ module(
+     name = "aspect_rules_lint",
+-    version = "0.0.0",
++    version = "1.5.1",
+     compatibility_level = 1,
+ )
+ 
+ bazel_dep(name = "aspect_bazel_lib", version = "2.7.7")

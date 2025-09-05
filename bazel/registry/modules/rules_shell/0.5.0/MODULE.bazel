@@ -1,0 +1,15 @@
+module(
+    name = "rules_shell",
+    version = "0.5.0",
+)
+
+bazel_dep(name = "bazel_features", version = "1.18.0")
+bazel_dep(name = "bazel_skylib", version = "1.6.1")
+bazel_dep(name = "platforms", version = "0.0.10")
+
+sh_configure = use_extension("//shell/private/extensions:sh_configure.bzl", "sh_configure")
+use_repo(sh_configure, "local_config_shell")
+
+register_toolchains("@local_config_shell//:all")
+
+bazel_dep(name = "rules_shellcheck", version = "0.3.3", dev_dependency = True)

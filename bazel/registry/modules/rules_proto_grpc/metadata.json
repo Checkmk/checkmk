@@ -1,0 +1,30 @@
+{
+    "homepage": "https://rules-proto-grpc.com",
+    "maintainers": [
+        {
+            "email": "adam@rules-proto-grpc.com",
+            "github": "aaliddell",
+            "name": "Adam Liddell",
+            "github_user_id": 9061354
+        }
+    ],
+    "repository": [
+        "github:rules-proto-grpc/rules_proto_grpc"
+    ],
+    "yanked_versions": {},
+    "versions": [
+        "5.0.0-alpha2",
+        "5.0.0",
+        "5.0.1",
+        "5.1.0",
+        "5.2.0",
+        "5.2.1",
+        "5.3.0",
+        "5.3.1",
+        "5.4.0",
+        "5.5.0",
+        "5.6.0",
+        "5.7.0",
+        "5.7.1"
+    ]
+}

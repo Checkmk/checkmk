@@ -1,0 +1,10 @@
+{
+    "integrity": "sha256-5RMeRNsjRZvR7QRjXyrlQ2vIP144Yp4Ht1wL8gbwkkU=",
+    "strip_prefix": "bazel-lib-2.17.1",
+    "url": "https://github.com/bazel-contrib/bazel-lib/releases/download/v2.17.1/bazel-lib-v2.17.1.tar.gz",
+    "patches": {
+        "go_dev_dep.patch": "sha256-VisWDx/BkcKul0/HXaEq9LKcjRxMCZG4QJni2rAfI/Q=",
+        "module_dot_bazel_version.patch": "sha256-ovdk5tXyICvNkNn+PPUJfGax3FwhiLverzTt5Xd1ufw="
+    },
+    "patch_strip": 1
+}

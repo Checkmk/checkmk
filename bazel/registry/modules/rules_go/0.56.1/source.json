@@ -1,0 +1,9 @@
+{
+    "integrity": "sha256-idIFBBBgIULJrK/QHJW69Itl+N0W9HcdN8ifgvXhR/I=",
+    "strip_prefix": "",
+    "url": "https://github.com/bazel-contrib/rules_go/releases/download/v0.56.1/rules_go-v0.56.1.zip",
+    "patches": {
+        "module_dot_bazel_version.patch": "sha256-XgWxZo3XJsgqy7Ao0BOn97vt/JomabMhhaqjF+XiRUo="
+    },
+    "patch_strip": 1
+}

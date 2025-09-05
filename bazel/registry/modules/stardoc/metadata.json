@@ -1,0 +1,35 @@
+{
+    "homepage": "https://github.com/bazelbuild/stardoc",
+    "maintainers": [
+        {
+            "name": "Alexandre Rostovtsev",
+            "email": "arostovtsev@google.com",
+            "github": "tetromino",
+            "github_user_id": 52517
+        },
+        {
+            "name": "Jon Brandvein",
+            "email": "brandjon@google.com",
+            "github": "brandjon",
+            "github_user_id": 1308070
+        }
+    ],
+    "repository": [
+        "github:bazelbuild/stardoc"
+    ],
+    "versions": [
+        "0.5.0",
+        "0.5.1",
+        "0.5.3",
+        "0.5.4",
+        "0.5.6",
+        "0.6.0",
+        "0.6.1",
+        "0.6.2",
+        "0.7.0",
+        "0.7.1",
+        "0.7.2",
+        "0.8.0"
+    ],
+    "yanked_versions": {}
+}

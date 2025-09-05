@@ -1,0 +1,25 @@
+{
+    "homepage": "https://github.com/bazel-contrib/yq.bzl",
+    "maintainers": [
+        {
+            "email": "alex@aspect.build",
+            "github": "alexeagle",
+            "name": "Alex Eagle",
+            "github_user_id": 47395
+        },
+        {
+            "email": "derek@aspect.build",
+            "github": "kormide",
+            "name": "Derek Cormier",
+            "github_user_id": 4948761
+        }
+    ],
+    "repository": [
+        "github:bazel-contrib/yq.bzl"
+    ],
+    "versions": [
+        "0.1.1",
+        "0.2.0"
+    ],
+    "yanked_versions": {}
+}

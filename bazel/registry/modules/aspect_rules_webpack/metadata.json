@@ -1,0 +1,25 @@
+{
+    "homepage": "https://docs.aspect.build/rules/aspect_rules_webpack",
+    "maintainers": [
+        {
+            "email": "jason@aspect.build",
+            "github": "jbedard",
+            "name": "Jason Bedard",
+            "github_user_id": 89246
+        }
+    ],
+    "repository": [
+        "github:aspect-build/rules_webpack"
+    ],
+    "versions": [
+        "0.13.0",
+        "0.14.0",
+        "0.15.0-alpha.0",
+        "0.15.0",
+        "0.16.0-rc0",
+        "0.16.0",
+        "0.17.0",
+        "0.17.1"
+    ],
+    "yanked_versions": {}
+}

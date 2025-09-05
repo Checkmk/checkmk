@@ -1,0 +1,32 @@
+{
+    "homepage": "https://github.com/keith/buildifier-prebuilt",
+    "maintainers": [
+        {
+            "email": "keithbsmiley@gmail.com",
+            "github": "keith",
+            "name": "Keith Smiley",
+            "github_user_id": 283886
+        }
+    ],
+    "repository": [
+        "github:keith/buildifier-prebuilt"
+    ],
+    "versions": [
+        "6.0.0.1",
+        "6.1.0",
+        "6.1.2",
+        "6.1.2.1",
+        "6.1.2.2",
+        "6.3.3",
+        "6.4.0",
+        "7.1.2",
+        "7.3.1",
+        "8.0.0",
+        "8.0.1",
+        "8.0.3",
+        "8.2.0",
+        "8.2.0.1",
+        "8.2.0.2"
+    ],
+    "yanked_versions": {}
+}

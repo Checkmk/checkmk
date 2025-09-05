@@ -1,0 +1,30 @@
+diff --git a/MODULE.bazel b/MODULE.bazel
+index 2a69659..1281fd1 100644
+--- a/MODULE.bazel
++++ b/MODULE.bazel
+@@ -7,7 +7,7 @@ module(
+     compatibility_level = 1,
+ )
+ 
+-bazel_dep(name = "protobuf", version = "27.1", repo_name = "com_google_protobuf")
++bazel_dep(name = "protobuf", version = "29.1", repo_name = "com_google_protobuf")
+ bazel_dep(name = "bazel_skylib", version = "1.3.0")
+ bazel_dep(name = "rules_cc", version = "0.0.15")
+ bazel_dep(name = "rules_license", version = "0.0.7")
+diff --git a/MODULE.bazel.lock b/MODULE.bazel.lock
+index df66d56..0605596 100644
+--- a/MODULE.bazel.lock
++++ b/MODULE.bazel.lock
+@@ -50,10 +50,10 @@
+     "https://bcr.bazel.build/modules/platforms/0.0.8/MODULE.bazel": "9f142c03e348f6d263719f5074b21ef3adf0b139ee4c5133e2aa35664da9eb2d",
+     "https://bcr.bazel.build/modules/protobuf/21.7/MODULE.bazel": "a5a29bb89544f9b97edce05642fac225a808b5b7be74038ea3640fae2f8e66a7",
+     "https://bcr.bazel.build/modules/protobuf/27.0/MODULE.bazel": "7873b60be88844a0a1d8f80b9d5d20cfbd8495a689b8763e76c6372998d3f64c",
+-    "https://bcr.bazel.build/modules/protobuf/27.1/MODULE.bazel": "703a7b614728bb06647f965264967a8ef1c39e09e8f167b3ca0bb1fd80449c0d",
+     "https://bcr.bazel.build/modules/protobuf/29.0-rc2/MODULE.bazel": "6241d35983510143049943fc0d57937937122baf1b287862f9dc8590fc4c37df",
+     "https://bcr.bazel.build/modules/protobuf/29.0/MODULE.bazel": "319dc8bf4c679ff87e71b1ccfb5a6e90a6dbc4693501d471f48662ac46d04e4e",
+-    "https://bcr.bazel.build/modules/protobuf/29.0/source.json": "b857f93c796750eef95f0d61ee378f3420d00ee1dd38627b27193aa482f4f981",
++    "https://bcr.bazel.build/modules/protobuf/29.1/MODULE.bazel": "557c3457560ff49e122ed76c0bc3397a64af9574691cb8201b4e46d4ab2ecb95",
++    "https://bcr.bazel.build/modules/protobuf/29.1/source.json": "04cca85dce26b895ed037d98336d860367fe09919208f2ad383f0df1aff63199",
+     "https://bcr.bazel.build/modules/protobuf/3.19.0/MODULE.bazel": "6b5fbb433f760a99a22b18b6850ed5784ef0e9928a72668b66e4d7ccd47db9b0",
+     "https://bcr.bazel.build/modules/pybind11_bazel/2.11.1/MODULE.bazel": "88af1c246226d87e65be78ed49ecd1e6f5e98648558c14ce99176da041dc378e",
+     "https://bcr.bazel.build/modules/pybind11_bazel/2.11.1/source.json": "be4789e951dd5301282729fe3d4938995dc4c1a81c2ff150afc9f1b0504c6022",

@@ -1,0 +1,9 @@
+{
+    "integrity": "sha256-pmACf1qH8TIkq1S43G4ZFpPFVPJpL8ykbo4p7n2rxDs=",
+    "strip_prefix": "bazel_features-1.30.0",
+    "url": "https://github.com/bazel-contrib/bazel_features/releases/download/v1.30.0/bazel_features-v1.30.0.tar.gz",
+    "patches": {
+        "module_dot_bazel_version.patch": "sha256-BSaT4TEsvkWjavZkZ+vYj0I8bzxEEj1s3L9YMr8ylO0="
+    },
+    "patch_strip": 1
+}

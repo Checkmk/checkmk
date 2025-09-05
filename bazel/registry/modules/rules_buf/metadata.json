@@ -1,0 +1,24 @@
+{
+    "homepage": "https://github.com/bufbuild/rules_buf",
+    "maintainers": [
+        {
+            "name": "Buf Team",
+            "email": "bcr-github@buf.build",
+            "github": "bcr-buf",
+            "github_user_id": 196968995
+        }
+    ],
+    "repository": [
+        "github:bufbuild/rules_buf"
+    ],
+    "versions": [
+        "0.1.1",
+        "0.2.0",
+        "0.3.0",
+        "0.4.0",
+        "0.5.0",
+        "0.5.1",
+        "0.5.2"
+    ],
+    "yanked_versions": {}
+}

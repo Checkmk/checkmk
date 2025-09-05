@@ -1,0 +1,16 @@
+module(
+    name = "bazel_features",
+    version = "1.30.0",
+)
+
+bazel_dep(name = "bazel_skylib", version = "1.6.1")
+
+bazel_dep(
+    name = "stardoc",
+    version = "0.6.2",
+    dev_dependency = True,
+    repo_name = "io_bazel_stardoc",
+)
+
+version = use_extension("//private:extensions.bzl", "version_extension")
+use_repo(version, "bazel_features_globals", "bazel_features_version")

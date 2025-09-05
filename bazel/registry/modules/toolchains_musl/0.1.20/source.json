@@ -1,0 +1,5 @@
+{
+    "integrity": "sha256-hr+SjmsR6B0tM8qOBEuHXx7XxwFrYHN23VV123NCwx4=",
+    "strip_prefix": "",
+    "url": "https://github.com/bazel-contrib/musl-toolchain/releases/download/v0.1.20/musl_toolchain-v0.1.20.tar.gz"
+}

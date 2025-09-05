@@ -1,0 +1,9 @@
+{
+    "integrity": "sha256-HRMPaW9p/CX+k8QgQ+He1SQY7Xiw/crmeOJHra2MNrE=",
+    "strip_prefix": "",
+    "url": "https://github.com/keith/rules_multirun/releases/download/0.12.0/rules_multirun.0.12.0.tar.gz",
+    "patches": {
+        "module_dot_bazel_version.patch": "sha256-AhAxJE2lPGoiGrE/nmAZNimKL+r/jmA1pm8OVne1WWc="
+    },
+    "patch_strip": 1
+}

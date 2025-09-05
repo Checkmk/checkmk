@@ -1,0 +1,13 @@
+===================================================================
+--- a/MODULE.bazel
++++ b/MODULE.bazel
+@@ -1,8 +1,9 @@
+ module(
+     name = "rules_go",
+     compatibility_level = 0,
+     repo_name = "io_bazel_rules_go",
++    version = "0.56.1",
+ )
+ 
+ # The custom repo_name is used to prevent our bazel_features polyfill for WORKSPACE builds from
+ # conflicting with the real bazel_features repo.

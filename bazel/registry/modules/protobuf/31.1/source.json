@@ -1,0 +1,5 @@
+{
+    "integrity": "sha256-VU6EfkbHBb/ET7LQrlv3jzQ5X8v9hrp0czi1cO7yZ3E=",
+    "strip_prefix": "protobuf-31.1",
+    "url": "https://github.com/protocolbuffers/protobuf/releases/download/v31.1/protobuf-31.1.zip"
+}

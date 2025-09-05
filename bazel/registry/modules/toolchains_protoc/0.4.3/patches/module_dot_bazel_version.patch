@@ -1,0 +1,14 @@
+===================================================================
+--- a/MODULE.bazel
++++ b/MODULE.bazel
+@@ -1,9 +1,9 @@
+ "Bazel dependencies"
+ 
+ module(
+     name = "toolchains_protoc",
+-    version = "0.0.0",
++    version = "0.4.3",
+     compatibility_level = 1,
+ )
+ 
+ bazel_dep(name = "bazel_features", version = "1.9.0")

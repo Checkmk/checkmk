@@ -1,0 +1,12 @@
+module(
+    name = "toolchains_musl",
+    version = "0.1.20",
+)
+
+bazel_dep(name = "bazel_features", version = "1.9.0")
+bazel_dep(name = "platforms", version = "0.0.9")
+
+toolchains_musl = use_extension("//:toolchains_musl.bzl", "toolchains_musl")
+use_repo(toolchains_musl, "musl_toolchains_hub")
+
+register_toolchains("@musl_toolchains_hub//:all")

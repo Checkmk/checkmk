@@ -1,0 +1,32 @@
+{
+    "homepage": "https://github.com/bazelbuild/rules_shell",
+    "maintainers": [
+        {
+            "email": "pcloudy@google.com",
+            "github": "meteorcloudy",
+            "name": "Yun Peng",
+            "github_user_id": 4171702
+        },
+        {
+            "email": "fabian@meumertzhe.im",
+            "github": "fmeum",
+            "name": "Fabian Meumertzheim",
+            "github_user_id": 4312191
+        }
+    ],
+    "repository": [
+        "github:bazelbuild/rules_shell"
+    ],
+    "versions": [
+        "0.1.1",
+        "0.1.2",
+        "0.2.0",
+        "0.3.0",
+        "0.4.0",
+        "0.4.1",
+        "0.5.0",
+        "0.5.1",
+        "0.6.0"
+    ],
+    "yanked_versions": {}
+}

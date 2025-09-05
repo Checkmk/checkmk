@@ -1,0 +1,9 @@
+{
+    "integrity": "sha256-Fk8b1+KmerP2yvW0m1PH3WJdKTUTFU+nIOMNOeqoKF8=",
+    "strip_prefix": "rules_nodejs-6.3.5",
+    "url": "https://github.com/bazel-contrib/rules_nodejs/releases/download/v6.3.5/rules_nodejs-v6.3.5.tar.gz",
+    "patches": {
+        "module_dot_bazel_version.patch": "sha256-qMIl5LMVT0cH9vi9ZxheKiYMYRVRtJ/HdoQcK1cadtE="
+    },
+    "patch_strip": 1
+}

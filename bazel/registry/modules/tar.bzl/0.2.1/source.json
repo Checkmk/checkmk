@@ -1,0 +1,9 @@
+{
+    "integrity": "sha256-nHby+lRAdZewEsheWBPYJZtp5q/Lmx76J6bMcg0I40c=",
+    "strip_prefix": "tar.bzl-0.2.1",
+    "url": "https://github.com/bazel-contrib/tar.bzl/releases/download/v0.2.1/tar.bzl-v0.2.1.tar.gz",
+    "patches": {
+        "module_dot_bazel_version.patch": "sha256-xetqVa4/Au1nRw7RoYbk5psb+NBGveJKw54MdzrfOZ0="
+    },
+    "patch_strip": 1
+}

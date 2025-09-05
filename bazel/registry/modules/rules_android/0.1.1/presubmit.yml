@@ -1,0 +1,16 @@
+platforms:
+  rockylinux8:
+    build_targets:
+    - '@rules_android//...'
+  debian10:
+    build_targets:
+    - '@rules_android//...'
+  macos:
+    build_targets:
+    - '@rules_android//...'
+  ubuntu2004:
+    build_targets:
+    - '@rules_android//...'
+  windows:
+    build_targets:
+    - '@rules_android//...'

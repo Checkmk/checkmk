@@ -1,0 +1,9 @@
+{
+    "integrity": "sha256-a8xZsu9HoB7OWFcr6TbV/tXHz5FFjLan92jXMyoDjeM=",
+    "strip_prefix": "rules_webpack-0.17.0",
+    "url": "https://github.com/aspect-build/rules_webpack/releases/download/v0.17.0/rules_webpack-v0.17.0.tar.gz",
+    "patches": {
+        "module_dot_bazel_version.patch": "sha256-XAx9GrjDiv6qoMhVTeVq3+jMTEIAoiBC/JkXTDhNym8="
+    },
+    "patch_strip": 1
+}

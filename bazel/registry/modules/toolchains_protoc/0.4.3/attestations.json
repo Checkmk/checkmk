@@ -1,0 +1,17 @@
+{
+    "mediaType": "application/vnd.build.bazel.registry.attestation+json;version=1.0.0",
+    "attestations": {
+        "source.json": {
+            "url": "https://github.com/aspect-build/toolchains_protoc/releases/download/v0.4.3/source.json.intoto.jsonl",
+            "integrity": "sha256-OynEXIkGwEmhGm47jEtaHrfkvnD7fUgDSldlMQlSRyU="
+        },
+        "MODULE.bazel": {
+            "url": "https://github.com/aspect-build/toolchains_protoc/releases/download/v0.4.3/MODULE.bazel.intoto.jsonl",
+            "integrity": "sha256-Urid9vdUFHhkZ4WwkynfoIgRw2nxchxC3gpv5gfVIq0="
+        },
+        "toolchains_protoc-v0.4.3.tar.gz": {
+            "url": "https://github.com/aspect-build/toolchains_protoc/releases/download/v0.4.3/toolchains_protoc-v0.4.3.tar.gz.intoto.jsonl",
+            "integrity": "sha256-yVEmIuT3d98mw+RsnbJE+4uObb/rwjWQCz8P4dgKDos="
+        }
+    }
+}

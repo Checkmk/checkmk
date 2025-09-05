@@ -1,0 +1,17 @@
+"Bazel dependencies"
+
+module(
+    name = "rules_proto",
+    # Note: the publish-to-BCR app will patch this line to stamp the version being published.
+    version = "7.1.0",
+    compatibility_level = 1,
+)
+
+bazel_dep(name = "protobuf", version = "29.1", repo_name = "com_google_protobuf")
+bazel_dep(name = "bazel_skylib", version = "1.3.0")
+bazel_dep(name = "rules_cc", version = "0.0.15")
+bazel_dep(name = "rules_license", version = "0.0.7")
+
+# Dependencies needed in tests
+bazel_dep(name = "platforms", version = "0.0.8", dev_dependency = True)
+bazel_dep(name = "googletest", version = "1.11.0", dev_dependency = True, repo_name = "com_google_googletest")

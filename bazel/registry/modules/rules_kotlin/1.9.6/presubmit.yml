@@ -1,0 +1,13 @@
+matrix:
+  platform: ["macos", "ubuntu2004"]
+  bazel: ["6.x", "7.x", "rolling"]
+tasks:
+  verify_targets:
+    name: "Verify build targets"
+    platform: ${{ platform }}
+    bazel: ${{ bazel }}
+    build_flags:
+      - "--enable_bzlmod=true"
+    build_targets:
+      - "@rules_kotlin//kotlin/..."
+      - "@rules_kotlin//src/..."

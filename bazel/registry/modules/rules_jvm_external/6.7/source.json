@@ -1,0 +1,5 @@
+{
+    "url": "https://github.com/bazel-contrib/rules_jvm_external/releases/download/6.7/rules_jvm_external-6.7.tar.gz",
+    "integrity": "sha256-oeNRYH8E/tKWujPEl30/4qYV7VDfeJZna2eqyZPFPBg=",
+    "strip_prefix": "rules_jvm_external-6.7"
+}

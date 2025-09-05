@@ -1,0 +1,14 @@
+--- /dev/null
++++ BUILD.bazel
+@@ -0,0 +1,11 @@
++package(default_visibility = ["//visibility:public"])
++
++cc_library(
++    name = "json",
++    srcs = glob(
++        ["include/nlohmann/**/*.hpp"],
++        exclude = ["include/nlohmann/json.hpp"],
++    ),
++    hdrs = ["include/nlohmann/json.hpp"],
++    includes = ["include"],
++)

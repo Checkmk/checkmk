@@ -1,0 +1,29 @@
+bcr_test_module:
+  module_path: tests/bcr/go_mod
+  matrix:
+    platform:
+      - ubuntu2404
+      - macos
+      - windows
+    bazel: [6.*, 7.*, 8.*]
+  tasks:
+    run_test_module:
+      name: Run test module
+      platform: ${{ platform }}
+      bazel: ${{ bazel }}
+      shell_commands:
+      # Regenerate the BUILD files for the test module using Gazelle.
+      - rm pkg/BUILD.bazel proto/BUILD.bazel
+      - bazel run //:gazelle -- update pkg proto
+      - bazel run //:gazelle -- pkg proto
+      # Verify that bazel mod tidy doesn't remove use_repos required to build and test.
+      - bazel mod tidy || true # Unsupported on Bazel 6
+      build_targets:
+      - //...
+      - //:gazelle
+      test_targets:
+      # Specify these targets explicitly to verify that Gazelle generates them correctly.
+      - "//pkg:pkg_test"
+      - "//proto:proto_test"
+      - "//..."
+      - "@test_dep//..."

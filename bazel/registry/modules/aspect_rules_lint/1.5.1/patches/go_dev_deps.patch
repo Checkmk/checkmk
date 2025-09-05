@@ -1,0 +1,11 @@
+--- a/MODULE.bazel
++++ b/MODULE.bazel
+@@ -34,7 +34,7 @@ use_repo(multitool, "multitool")
+ 
+ # To allow /tools to be built from source
+ # NOTE: when publishing to BCR, we patch this to be True, as we publish pre-built binaries with our releases.
+-IS_RELEASE = False
++IS_RELEASE = True
+ 
+ bazel_dep(
+     name = "toolchains_protoc",

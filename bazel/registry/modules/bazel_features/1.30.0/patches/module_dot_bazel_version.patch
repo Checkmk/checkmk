@@ -1,0 +1,12 @@
+===================================================================
+--- a/MODULE.bazel
++++ b/MODULE.bazel
+@@ -1,7 +1,7 @@
+ module(
+     name = "bazel_features",
+-    version = "0.0.0",
++    version = "1.30.0",
+ )
+ 
+ bazel_dep(name = "bazel_skylib", version = "1.6.1")
+ 

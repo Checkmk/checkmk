@@ -1,0 +1,17 @@
+{
+    "mediaType": "application/vnd.build.bazel.registry.attestation+json;version=1.0.0",
+    "attestations": {
+        "source.json": {
+            "url": "https://github.com/bazel-contrib/tar.bzl/releases/download/v0.2.1/source.json.intoto.jsonl",
+            "integrity": "sha256-mSyCiOoq7O5hmH5StqwVD2itT/QzaD2u6S5sWyIImsQ="
+        },
+        "MODULE.bazel": {
+            "url": "https://github.com/bazel-contrib/tar.bzl/releases/download/v0.2.1/MODULE.bazel.intoto.jsonl",
+            "integrity": "sha256-dt4loGmPVSBaNKnRp2+3lx6OLanGK8eQO0233HMNC6A="
+        },
+        "tar.bzl-v0.2.1.tar.gz": {
+            "url": "https://github.com/bazel-contrib/tar.bzl/releases/download/v0.2.1/tar.bzl-v0.2.1.tar.gz.intoto.jsonl",
+            "integrity": "sha256-FnUcN9WzIG0M3dd7vLXVFE19Ss1CycpHQaPoBGFm44o="
+        }
+    }
+}

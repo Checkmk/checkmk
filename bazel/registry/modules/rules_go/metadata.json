@@ -1,0 +1,73 @@
+{
+    "homepage": "https://github.com/bazelbuild/rules_go",
+    "maintainers": [
+        {
+            "email": "fabian@meumertzhe.im",
+            "github": "fmeum",
+            "name": "Fabian Meumertzheim",
+            "github_user_id": 4312191
+        },
+        {
+            "email": "zplin@uber.com",
+            "github": "linzhp",
+            "name": "Zhongpeng Lin",
+            "github_user_id": 98395
+        },
+        {
+            "email": "tfrench@uber.com",
+            "github": "tyler-french",
+            "name": "Tyler French",
+            "github_user_id": 66684063
+        }
+    ],
+    "repository": [
+        "github:bazel-contrib/rules_go"
+    ],
+    "versions": [
+        "0.33.0",
+        "0.34.0",
+        "0.35.0",
+        "0.36.0",
+        "0.37.0",
+        "0.38.0",
+        "0.38.1",
+        "0.39.0",
+        "0.39.1",
+        "0.40.0",
+        "0.40.1",
+        "0.41.0",
+        "0.42.0",
+        "0.43.0",
+        "0.44.0",
+        "0.44.1",
+        "0.44.2",
+        "0.45.1",
+        "0.46.0",
+        "0.47.0",
+        "0.47.1",
+        "0.48.0",
+        "0.48.1",
+        "0.49.0",
+        "0.50.0",
+        "0.50.1",
+        "0.51.0-rc1",
+        "0.51.0-rc2",
+        "0.51.0",
+        "0.52.0",
+        "0.53.0",
+        "0.54.0",
+        "0.54.1",
+        "0.55.0",
+        "0.55.1",
+        "0.56.0",
+        "0.56.1",
+        "0.57.0"
+    ],
+    "yanked_versions": {
+        "0.33.0": "Obsolete experimental version that emits debug prints. Update to 0.39.1 or higher",
+        "0.34.0": "Obsolete experimental version that emits debug prints. Update to 0.39.1 or higher",
+        "0.35.0": "Obsolete experimental version that emits debug prints. Update to 0.39.1 or higher",
+        "0.36.0": "Obsolete experimental version that emits debug prints. Update to 0.39.1 or higher",
+        "0.37.0": "Obsolete experimental version that emits debug prints. Update to 0.39.1 or higher"
+    }
+}

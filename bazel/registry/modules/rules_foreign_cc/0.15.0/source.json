@@ -1,0 +1,9 @@
+{
+    "integrity": "sha256-kr8jffR3du9RJ1BiNBNaSN6Tm1dVPCUwl7Yycm2IGn0=",
+    "strip_prefix": "rules_foreign_cc-0.15.0",
+    "url": "https://github.com/bazel-contrib/rules_foreign_cc/releases/download/0.15.0/rules_foreign_cc-0.15.0.tar.gz",
+    "patches": {
+        "module_dot_bazel_version.patch": "sha256-b+daYo3jlx8KQOXTW5nhfiIEr5UGuSDeQKG2b4GZdxU="
+    },
+    "patch_strip": 1
+}

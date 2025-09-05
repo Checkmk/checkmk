@@ -1,0 +1,27 @@
+matrix:
+  bazel:
+  - 8.x
+  unix_platform:
+  - debian11
+  - ubuntu2404
+  - macos
+  - macos_arm64
+  windows_platform:
+  - windows
+tasks:
+  unix_presubmit:
+    name: Unix Presubmit
+    platform: ${{ unix_platform }}
+    bazel: ${{ bazel }}
+    build_flags:
+    - '--cxxopt=-std=c++17'
+    build_targets:
+    - '@googletest//:all'
+  windows_presubmit:
+    name: Windows Presubmit
+    platform: ${{ windows_platform }}
+    bazel: ${{ bazel }}
+    build_flags:
+    - '--cxxopt=/std:c++17'
+    build_targets:
+    - '@googletest//:all'

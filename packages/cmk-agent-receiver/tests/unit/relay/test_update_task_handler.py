@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from datetime import datetime
-
 import pytest
 from pydantic import SecretStr
 
@@ -17,7 +15,6 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     ResultType,
     Task,
     TasksRepository,
-    TaskType,
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, TaskID
@@ -25,24 +22,10 @@ from cmk.agent_receiver.relay.lib.shared_types import RelayID, TaskID
 
 def test_process_update_task(
     update_task_handler: UpdateTaskHandler,
-    relays_repository: RelaysRepository,
-    tasks_repository: TasksRepository,
+    populated_repos: tuple[RelayID, Task, RelaysRepository, TasksRepository],
     test_authorization: SecretStr,
 ) -> None:
-    # arrange
-    # register a relay in the repository
-    relay_id = relays_repository.add_relay(test_authorization, alias="test-relay")
-
-    # insert a task in the repository
-    now = datetime.now()
-    task = Task(
-        id=TaskID("test-task-id"),
-        type=TaskType.FETCH_AD_HOC,
-        payload='{"url": "http://example.com/data"}',
-        creation_timestamp=now,
-        update_timestamp=now,
-    )
-    tasks_repository.store_task(relay_id=relay_id, task=task)
+    relay_id, task, relays_repository, tasks_repository = populated_repos
 
     # act
     update_task_handler.process(

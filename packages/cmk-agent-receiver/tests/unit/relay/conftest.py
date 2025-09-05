@@ -2,9 +2,9 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 import uuid
 from collections.abc import Iterator
+from datetime import datetime
 from http import HTTPStatus
 
 import httpx
@@ -24,9 +24,12 @@ from cmk.agent_receiver.relay.api.routers.tasks.handlers.update_task import (
     UpdateTaskHandler,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
+    Task,
     TasksRepository,
+    TaskType,
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
+from cmk.agent_receiver.relay.lib.shared_types import RelayID, TaskID
 
 
 def create_relay_mock_transport() -> httpx.MockTransport:
@@ -129,3 +132,27 @@ def update_task_handler(
         tasks_repository=tasks_repository, relays_repository=relays_repository
     )
     yield handler
+
+
+@pytest.fixture
+def populated_repos(
+    relays_repository: RelaysRepository,
+    tasks_repository: TasksRepository,
+    test_authorization: SecretStr,
+) -> tuple[RelayID, Task, RelaysRepository, TasksRepository]:
+    # arrange
+    # register a relay in the repository
+    relay_id = relays_repository.add_relay(test_authorization, alias="test-relay")
+
+    # insert a task in the repository
+    now = datetime.now()
+    task = Task(
+        id=TaskID("test-task-id"),
+        type=TaskType.FETCH_AD_HOC,
+        payload='{"url": "http://example.com/data"}',
+        creation_timestamp=now,
+        update_timestamp=now,
+    )
+    tasks_repository.store_task(relay_id=relay_id, task=task)
+
+    return relay_id, task, relays_repository, tasks_repository

@@ -17,6 +17,7 @@ from cmk.agent_receiver.relay.api.routers.relays.handlers import (
     RelayNotFoundError,
     UnregisterRelayHandler,
 )
+from cmk.agent_receiver.relay.lib.relays_repository import CheckmkAPIError
 from cmk.agent_receiver.relay.lib.shared_types import RelayID
 from cmk.relay_protocols.relays import RelayRegistrationRequest, RelayRegistrationResponse
 
@@ -44,7 +45,13 @@ async def register_relay(
         - Relay ID uniqueness is controlled during registration
         - Collision with existing relay IDs is not allowed
     """
-    relay_id = handler.process(authorization, alias=payload.relay_name)
+    try:
+        relay_id = handler.process(authorization, alias=payload.relay_name)
+    except CheckmkAPIError as e:
+        raise fastapi.HTTPException(
+            status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
+            detail=e.msg,
+        )
     return RelayRegistrationResponse(relay_id=relay_id)
 
 
@@ -76,6 +83,11 @@ async def unregister_relay(
         # When the relay is not found we chose to return a 200 to make this endpoint idempotent
         return fastapi.Response(
             status_code=fastapi.status.HTTP_200_OK, content="Relay unregistered successfully"
+        )
+    except CheckmkAPIError as e:
+        raise fastapi.HTTPException(
+            status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
+            detail=e.msg,
         )
 
     return fastapi.Response(

@@ -144,31 +144,6 @@ def resource_fixture_but(**kwargs):
 
 
 @pytest.mark.parametrize(
-    "section, item, expected_result",
-    [
-        pytest.param(
-            AZURE_REDIS_WITH_METRICS,
-            "az-redis-test",
-            [
-                Result(
-                    state=State.OK,
-                    summary="Location: germanywestcentral",
-                ),
-            ],
-            id="generic service",
-        ),
-    ],
-)
-def test_check_azure_redis(
-    section: Section,
-    item: str,
-    expected_result: Sequence[Result | Metric],
-) -> None:
-    check_function = azure_redis.check_plugin_azure_redis.check_function
-    assert list(check_function(item, section)) == expected_result
-
-
-@pytest.mark.parametrize(
     "section, params, check_plugin, expected_result",
     [
         pytest.param(

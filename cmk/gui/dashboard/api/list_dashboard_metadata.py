@@ -5,6 +5,7 @@
 from typing import Literal
 
 from cmk.ccc.user import UserId
+from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
     APIVersion,
     EndpointDoc,
@@ -49,6 +50,9 @@ class DashboardMetadata:
     is_built_in: bool = api_field(
         description="Whether the dashboard is a built-in (system) dashboard."
     )
+    is_editable: bool = api_field(
+        description="Whether the user can edit the dashboard.",
+    )
     layout_type: DashboardLayoutType = api_field(
         description="Layout system used: 'relative' for absolute positioning, 'responsive' for adaptive design."
     )
@@ -90,10 +94,20 @@ def list_dashboard_metadata_v1() -> DashboardMetadataCollectionModel:
             hidden=dashboard["hidden"],
             sort_index=dashboard["sort_index"],
         )
+        is_built_in = dashboard["owner"] == UserId.builtin()
+        # Note: from legacy build page header code it seems that permission edit_foreign_dashboards
+        # are not taken into account to determine if the user is allowed to edit a dashboard.
+        # This could be changed in the future.
+        is_editable = (
+            not is_built_in
+            and user.may("general.edit_dashboards")
+            and dashboard["owner"] == user.id
+        )
         metadata = DashboardMetadata(
             name=dashboard["name"],
             owner=dashboard["owner"] if dashboard["owner"] != UserId.builtin() else None,
-            is_built_in=dashboard["owner"] == UserId.builtin(),
+            is_built_in=is_built_in,
+            is_editable=is_editable,
             layout_type=layout_type,
             display=display,
         )

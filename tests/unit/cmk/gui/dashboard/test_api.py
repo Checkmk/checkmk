@@ -98,16 +98,21 @@ def _create_dashboard_payload(
         menu["icon"] = icon_config
     return {
         "id": dashboard_id,
-        "title": {"text": "Test Dashboard", "render": True, "include_context": False},
-        "description": "This is a test dashboard",
-        "menu": menu,
-        "visibility": {
-            "hide_in_monitor_menu": False,
-            "hide_in_drop_down_menus": False,
-            "share": "no",
+        "general_settings": {
+            "title": {"text": "Test Dashboard", "render": True, "include_context": False},
+            "description": "This is a test dashboard",
+            "menu": menu,
+            "visibility": {
+                "hide_in_monitor_menu": False,
+                "hide_in_drop_down_menus": False,
+                "share": "no",
+            },
         },
-        "mandatory_context_filters": [],
-        "filter_context": {"restricted_to_single": [], "filters": {}},
+        "filter_context": {
+            "restricted_to_single": [],
+            "filters": {},
+            "mandatory_context_filters": [],
+        },
         "widgets": widgets,
         "layout": {"type": "relative_grid"},
     }
@@ -190,7 +195,9 @@ class TestDashboardIcon:
             _create_dashboard_payload("test_dashboard_with_icon", {}, icon_config=icon_config)
         )
         assert resp.status_code == 201, f"Expected 201, got {resp.status_code} {resp.body!r}"
-        assert resp.json["extensions"]["menu"]["icon"] == icon_config, "Expected icon to be set"
+        assert resp.json["extensions"]["general_settings"]["menu"]["icon"] == icon_config, (
+            "Expected icon to be set"
+        )
 
     def test_create_with_icon_with_emblem(self, clients: ClientRegistry) -> None:
         # use a random icon name, the list of available icons may change depending on editions
@@ -201,7 +208,9 @@ class TestDashboardIcon:
             _create_dashboard_payload("test_dashboard_with_icon", {}, icon_config=icon_config)
         )
         assert resp.status_code == 201, f"Expected 201, got {resp.status_code} {resp.body!r}"
-        assert resp.json["extensions"]["menu"]["icon"] == icon_config, "Expected icon to be set"
+        assert resp.json["extensions"]["general_settings"]["menu"]["icon"] == icon_config, (
+            "Expected icon to be set"
+        )
 
     def test_invalid_icon_name(self, clients: ClientRegistry) -> None:
         resp = clients.DashboardClient.create_relative_grid_dashboard(
@@ -213,9 +222,9 @@ class TestDashboardIcon:
             expect_ok=False,
         )
         assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
-        assert resp.json["fields"]["body.menu.icon.DashboardIcon.name"]["msg"].startswith(
-            "Value error, Value 'non_existent_icon' is not allowed, valid options are:"
-        )
+        assert resp.json["fields"]["body.general_settings.menu.icon.DashboardIcon.name"][
+            "msg"
+        ].startswith("Value error, Value 'non_existent_icon' is not allowed, valid options are:")
 
 
 def _check_widget_create(

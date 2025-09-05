@@ -280,6 +280,27 @@ PACKAGE_CRYPTO = ("cmk.crypto",)
 PACKAGE_TRACE = ("cmk.trace",)
 
 COMPONENTS = {
+    Component("tests.code_quality"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_WERKS,
+        "cmk.utils.werks",
+    ),
+    Component("tests.composition"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_CRYPTO,
+        "cmk.piggyback.backend",
+        "cmk.utils.agent_registration",
+        "cmk.utils.rulesets",
+    ),
+    Component("tests.gui_e2e"): _allow(
+        *PACKAGE_CRYPTO,
+        "cmk.utils.cee.licensing",
+        "cmk.utils.paths",
+    ),
+    Component("tests.integration_redfish"): _allow(
+        *PACKAGE_CCC,
+    ),
+    Component("tests.pylint"): _allow("cmk.utils.escaping"),
     Component("tests.unit.cmk.base.legacy_checks"): _allow(
         *PACKAGE_PLUGIN_APIS,
         "cmk.base.check_legacy_includes",
@@ -334,6 +355,10 @@ COMPONENTS = {
         "cmk.utils",
         "cmk.validate_config",
     ),
+    Component("tests.update"): _allow(
+        *PACKAGE_CCC,
+        "cmk.utils.licensing",
+    ),
     Component("tests.extension_compatibility"): _allow(
         *PACKAGE_CCC,
         "cmk.base.config",
@@ -381,7 +406,7 @@ COMPONENTS = {
         *PACKAGE_MKP_TOOL,
         "cmk.utils",
     ),
-    Component("tests"): _allow(
+    Component("tests.unit"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_WERKS,
         *PACKAGE_PLUGIN_APIS,

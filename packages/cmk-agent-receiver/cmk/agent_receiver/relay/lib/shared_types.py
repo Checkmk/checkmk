@@ -5,3 +5,4 @@
 from typing import NewType
 
 RelayID = NewType("RelayID", str)
+TaskID = NewType("TaskID", str)

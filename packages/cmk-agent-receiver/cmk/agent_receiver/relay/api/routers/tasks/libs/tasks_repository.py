@@ -9,18 +9,14 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
-from typing import NewType
 
-from cmk.agent_receiver.relay.lib.shared_types import RelayID
+from cmk.agent_receiver.relay.lib.shared_types import RelayID, TaskID
 
 
 class TaskStatus(StrEnum):
     PENDING = "PENDING"
     FINISHED = "FINISHED"
     FAILED = "FAILED"
-
-
-TaskID = NewType("TaskID", str)
 
 
 class TaskType(StrEnum):

@@ -28,6 +28,7 @@ from cmk.checkengine.plugins import ParsedSectionName, SectionName
 from cmk.checkengine.sectionparser import SectionPlugin
 from cmk.helper_interface import AgentRawData, FetcherType, SourceInfo, SourceType
 from cmk.inventory.structured_data import (
+    _MutableAttributes,
     _serialize_retention_interval,
     deserialize_tree,
     ImmutableAttributes,
@@ -39,8 +40,6 @@ from cmk.inventory.structured_data import (
     SDNodeName,
     SDRowIdent,
     serialize_tree,
-    UpdateResultAttributes,
-    UpdateResultTable,
 )
 from cmk.snmplib import SNMPRawData
 from cmk.utils.everythingtype import EVERYTHING
@@ -109,7 +108,7 @@ def test_item_collisions(item: Attributes | TableRow, known_class_name: str) -> 
 
 
 def test__inventorize_real_host_only_items() -> None:
-    trees, update_results = _inventorize_real_host(
+    trees = _inventorize_real_host(
         now=0,
         items_of_inventory_plugins=[
             ItemsOfInventoryPlugin(
@@ -158,6 +157,7 @@ def test__inventorize_real_host_only_items() -> None:
         raw_intervals_from_config=[],
         previous_tree=ImmutableTree(),
     )
+    update_results = trees.inventory.get_update_results()
 
     assert serialize_tree(trees.inventory) == {
         "Attributes": {},
@@ -278,7 +278,7 @@ def test__inventorize_real_host_only_intervals(
     table_choices: Literal["all"] | tuple[str, list[str]],
     table_expected_retentions: Mapping[SDRowIdent, Mapping[SDKey, RetentionInterval]],
 ) -> None:
-    trees, update_results = _inventorize_real_host(
+    trees = _inventorize_real_host(
         now=10,
         items_of_inventory_plugins=[
             ItemsOfInventoryPlugin(
@@ -338,6 +338,7 @@ def test__inventorize_real_host_only_intervals(
         ],
         previous_tree=ImmutableTree(),
     )
+    update_results = trees.inventory.get_update_results()
 
     if attrs_expected_retentions:
         raw_attributes = {
@@ -430,6 +431,7 @@ def test__inventorize_real_host_only_intervals(
         "Table": {},
     }
 
+    update_results = trees.inventory.get_update_results()
     if attrs_expected_retentions or table_expected_retentions:
         assert len(update_results) > 0
     else:
@@ -487,7 +489,7 @@ def test__inventorize_real_host_raw_cache_info_and_only_intervals(
     table_choices: Literal["all"] | tuple[str, list[str]],
     table_expected_retentions: Mapping[SDRowIdent, Mapping[SDKey, RetentionInterval]],
 ) -> None:
-    trees, update_results = _inventorize_real_host(
+    trees = _inventorize_real_host(
         now=10,
         items_of_inventory_plugins=[
             ItemsOfInventoryPlugin(
@@ -547,6 +549,7 @@ def test__inventorize_real_host_raw_cache_info_and_only_intervals(
         ],
         previous_tree=ImmutableTree(),
     )
+    update_results = trees.inventory.get_update_results()
 
     if attrs_expected_retentions:
         raw_attributes = {
@@ -777,12 +780,13 @@ def test__inventorize_real_host_no_items(
     raw_intervals: list,
     previous_node: ImmutableTree,
 ) -> None:
-    trees, update_results = _inventorize_real_host(
+    trees = _inventorize_real_host(
         now=10,
         items_of_inventory_plugins=[],
         raw_intervals_from_config=raw_intervals,
         previous_tree=previous_node,
     )
+    update_results = trees.inventory.get_update_results()
 
     assert not trees.inventory
     assert not trees.status_data
@@ -808,7 +812,7 @@ def test_updater_merge_previous_attributes(
         previous_table_retentions={},
         raw_cache_info=(-1, -2),
     )
-    trees, update_results = _inventorize_real_host(
+    trees = _inventorize_real_host(
         now=-1,
         items_of_inventory_plugins=[],
         raw_intervals_from_config=[
@@ -820,6 +824,7 @@ def test_updater_merge_previous_attributes(
         ],
         previous_tree=previous_tree,
     )
+    update_results = trees.inventory.get_update_results()
 
     if expected_retentions:
         assert len(update_results) > 0
@@ -848,7 +853,7 @@ def test_updater_merge_previous_attributes_outdated(choices: tuple[str, list[str
         previous_table_retentions={},
         raw_cache_info=(-1, -2),
     )
-    trees, update_results = _inventorize_real_host(
+    trees = _inventorize_real_host(
         now=1000,
         items_of_inventory_plugins=[],
         raw_intervals_from_config=[
@@ -860,6 +865,8 @@ def test_updater_merge_previous_attributes_outdated(choices: tuple[str, list[str
         ],
         previous_tree=previous_tree,
     )
+    update_results = trees.inventory.get_update_results()
+
     assert not trees.inventory
     assert len(update_results) == 0
 
@@ -894,7 +901,7 @@ def test_updater_merge_previous_tables(
         },
         raw_cache_info=(-1, -2),
     )
-    trees, update_results = _inventorize_real_host(
+    trees = _inventorize_real_host(
         now=-1,
         items_of_inventory_plugins=[],
         raw_intervals_from_config=[
@@ -906,6 +913,7 @@ def test_updater_merge_previous_tables(
         ],
         previous_tree=previous_tree,
     )
+    update_results = trees.inventory.get_update_results()
 
     if expected_retentions:
         assert len(update_results) > 0
@@ -938,7 +946,7 @@ def test_updater_merge_previous_tables_outdated(choices: tuple[str, list[str]]) 
         },
         raw_cache_info=(-1, -2),
     )
-    trees, update_results = _inventorize_real_host(
+    trees = _inventorize_real_host(
         now=1000,
         items_of_inventory_plugins=[],
         raw_intervals_from_config=[
@@ -950,6 +958,7 @@ def test_updater_merge_previous_tables_outdated(choices: tuple[str, list[str]]) 
         ],
         previous_tree=previous_tree,
     )
+    update_results = trees.inventory.get_update_results()
 
     assert not trees.inventory
     assert len(update_results) == 0
@@ -986,7 +995,7 @@ def test_updater_merge_attributes(
         previous_table_retentions={},
         raw_cache_info=(4, 5),
     )
-    trees, update_results = _inventorize_real_host(
+    trees = _inventorize_real_host(
         now=-1,
         items_of_inventory_plugins=items_of_inventory_plugins,
         raw_intervals_from_config=[
@@ -998,6 +1007,7 @@ def test_updater_merge_attributes(
         ],
         previous_tree=previous_tree,
     )
+    update_results = trees.inventory.get_update_results()
 
     if expected_retentions:
         assert len(update_results) > 0
@@ -1039,7 +1049,7 @@ def test_updater_merge_attributes_outdated(
         previous_table_retentions={},
         raw_cache_info=(4, 5),
     )
-    trees, update_results = _inventorize_real_host(
+    trees = _inventorize_real_host(
         now=1000,
         items_of_inventory_plugins=items_of_inventory_plugins,
         raw_intervals_from_config=[
@@ -1051,6 +1061,7 @@ def test_updater_merge_attributes_outdated(
         ],
         previous_tree=previous_tree,
     )
+    update_results = trees.inventory.get_update_results()
 
     if expected_retentions:
         assert len(update_results) > 0
@@ -1105,7 +1116,7 @@ def test_updater_merge_tables(
         },
         raw_cache_info=(4, 5),
     )
-    trees, update_results = _inventorize_real_host(
+    trees = _inventorize_real_host(
         now=-1,
         items_of_inventory_plugins=items_of_inventory_plugins,
         raw_intervals_from_config=[
@@ -1117,6 +1128,7 @@ def test_updater_merge_tables(
         ],
         previous_tree=previous_tree,
     )
+    update_results = trees.inventory.get_update_results()
 
     if expected_retentions:
         assert len(update_results) > 0
@@ -1175,7 +1187,7 @@ def test_updater_merge_tables_outdated(
         },
         raw_cache_info=(4, 5),
     )
-    trees, update_results = _inventorize_real_host(
+    trees = _inventorize_real_host(
         now=1000,
         items_of_inventory_plugins=items_of_inventory_plugins,
         raw_intervals_from_config=[
@@ -1187,6 +1199,7 @@ def test_updater_merge_tables_outdated(
         ],
         previous_tree=previous_tree,
     )
+    update_results = trees.inventory.get_update_results()
 
     if expected_retentions:
         assert len(update_results) > 0
@@ -1394,14 +1407,8 @@ def test__check_fetched_data_or_trees_only_cluster_property(
     )
 
 
-def _create_root_tree(pairs: Mapping[SDKey, int | float | str | None]) -> MutableTree:
-    tree = MutableTree()
-    tree.add(path=(), pairs=[pairs])
-    return tree
-
-
 @pytest.mark.parametrize(
-    "previous_tree, inventory_tree, update_results, expected_save_tree_actions",
+    "previous_tree, inventory_tree, expected_save_tree_actions",
     [
         (
             deserialize_tree(
@@ -1413,23 +1420,11 @@ def _create_root_tree(pairs: Mapping[SDKey, int | float | str | None]) -> Mutabl
             ),
             # No further impact, may not be realistic here
             MutableTree(),
-            # Content of path does not matter here
-            [
-                UpdateResultAttributes(
-                    path=(SDNodeName("path-to-node"),), title="A title", message="A message"
-                )
-            ],
             _SaveTreeActions(do_archive=True, do_save=False),
         ),
         (
             ImmutableTree(),
-            _create_root_tree({SDKey("key"): "new value"}),
-            # Content of path does not matter here
-            [
-                UpdateResultAttributes(
-                    path=(SDNodeName("path-to-node"),), title="A title", message="A message"
-                )
-            ],
+            MutableTree(attributes=_MutableAttributes(pairs={SDKey("key"): "value"})),
             _SaveTreeActions(do_archive=False, do_save=True),
         ),
         (
@@ -1440,13 +1435,7 @@ def _create_root_tree(pairs: Mapping[SDKey, int | float | str | None]) -> Mutabl
                     "Nodes": {},
                 }
             ),
-            _create_root_tree({SDKey("key"): "new value"}),
-            # Content of path does not matter here
-            [
-                UpdateResultAttributes(
-                    path=(SDNodeName("path-to-node"),), title="A title", message="A message"
-                )
-            ],
+            MutableTree(attributes=_MutableAttributes(pairs={SDKey("key"): "new value"})),
             _SaveTreeActions(do_archive=True, do_save=True),
         ),
         (
@@ -1457,25 +1446,27 @@ def _create_root_tree(pairs: Mapping[SDKey, int | float | str | None]) -> Mutabl
                     "Nodes": {},
                 }
             ),
-            _create_root_tree({SDKey("key"): "new value"}),
-            [],
+            MutableTree(
+                attributes=_MutableAttributes(
+                    pairs={SDKey("key"): "new value"},
+                    update_results=["Update result"],
+                ),
+            ),
             _SaveTreeActions(do_archive=True, do_save=True),
         ),
         (
             deserialize_tree({"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}),
-            _create_root_tree({SDKey("key"): "value"}),
-            [],
+            MutableTree(attributes=_MutableAttributes(pairs={SDKey("key"): "value"})),
             _SaveTreeActions(do_archive=False, do_save=False),
         ),
         (
             deserialize_tree({"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}),
-            _create_root_tree({SDKey("key"): "value"}),
-            # Content of path does not matter here
-            [
-                UpdateResultAttributes(
-                    path=(SDNodeName("path-to-node"),), title="A title", message="A message"
-                )
-            ],
+            MutableTree(
+                attributes=_MutableAttributes(
+                    pairs={SDKey("key"): "value"},
+                    update_results=["Update result"],
+                ),
+            ),
             _SaveTreeActions(do_archive=False, do_save=True),
         ),
     ],
@@ -1483,15 +1474,10 @@ def _create_root_tree(pairs: Mapping[SDKey, int | float | str | None]) -> Mutabl
 def test_save_tree_actions(
     previous_tree: ImmutableTree,
     inventory_tree: MutableTree,
-    update_results: Sequence[UpdateResultAttributes | UpdateResultTable],
     expected_save_tree_actions: _SaveTreeActions,
 ) -> None:
     assert (
-        _get_save_tree_actions(
-            previous_tree=previous_tree,
-            inventory_tree=inventory_tree,
-            update_results=update_results,
-        )
+        _get_save_tree_actions(previous_tree=previous_tree, inventory_tree=inventory_tree)
         == expected_save_tree_actions
     )
 

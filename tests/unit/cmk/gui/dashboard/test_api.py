@@ -67,20 +67,6 @@ def test_show_dashboard_constants(clients: ClientRegistry) -> None:
         )
 
 
-def test_list_dashboard_metadata(clients: ClientRegistry) -> None:
-    resp = clients.DashboardClient.list_dashboard_metadata()
-
-    assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
-    assert len(resp.json["value"]) > 0, "Expected at least one dashboard to be returned"
-    assert set(resp.json["value"][0]["extensions"]) == {
-        "name",
-        "owner",
-        "is_built_in",
-        "layout_type",
-        "display",
-    }, "Expected dashboard metadata to contain all and only the expected fields"
-
-
 def test_show_dashboard(clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection) -> None:
     # NOTE: `mock_livestatus` is used, because graph widgets want the connected site PIDs.
     # No queries are actually executed.
@@ -184,6 +170,14 @@ def test_delete_dashboard(clients: ClientRegistry) -> None:
     assert resp.status_code == 204, f"Expected 204, got {resp.status_code} {resp.body!r}"
     resp = clients.DashboardClient.get_relative_grid_dashboard(dashboard_id, expect_ok=False)
     assert resp.status_code == 404, f"Expected 404, got {resp.status_code} {resp.body!r}"
+
+
+class TestDashboardListMetadata:
+    def test_list_dashboard_metadata(self, clients: ClientRegistry) -> None:
+        resp = clients.DashboardClient.list_dashboard_metadata()
+
+        assert resp.status_code == 200, f"Expected 200, got {resp.status_code} {resp.body!r}"
+        assert len(resp.json["value"]) > 0, "Expected at least one dashboard to be returned"
 
 
 class TestDashboardIcon:

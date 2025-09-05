@@ -213,6 +213,7 @@ def register(
         autocompleter_registry,
         endpoint_family_registry,
         versioned_endpoint_registry,
+        ignore_duplicate_endpoints=ignore_duplicate_endpoints,
     )
     crash_reporting.register(
         page_registry,

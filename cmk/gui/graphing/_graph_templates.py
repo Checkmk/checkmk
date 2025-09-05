@@ -729,6 +729,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         row: Row,
         translated_metrics: Mapping[str, TranslatedMetric],
         index: int,
+        user_permissions: UserPermissions,
     ) -> GraphRecipe | None:
         return _create_graph_recipe_from_template(
             row["site"],
@@ -769,6 +770,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
                     row=row,
                     translated_metrics=translated_metrics,
                     index=index,
+                    user_permissions=user_permissions,
                 )
             )
         ]

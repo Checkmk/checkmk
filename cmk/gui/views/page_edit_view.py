@@ -87,6 +87,7 @@ def page_edit_view(config: Config) -> None:
     visuals.page_edit_visual(
         "views",
         get_all_views(),
+        UserPermissions.from_config(config, permission_registry),
         custom_field_handler=render_view_config,
         create_handler=create_view_from_valuespec,
         info_handler=get_view_infos,

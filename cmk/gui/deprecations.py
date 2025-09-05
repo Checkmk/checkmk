@@ -28,12 +28,13 @@ from cmk.gui.i18n import _
 from cmk.gui.job_scheduler_client import JobSchedulerClient
 from cmk.gui.log import logger
 from cmk.gui.message import create_message, get_gui_messages, MessageText, send_message
+from cmk.gui.permissions import permission_registry
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.sites import states
 from cmk.gui.type_defs import Users
 from cmk.gui.userdb import load_users
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.roles import user_may
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.analyze_configuration import ACResultState, ACTestResult, perform_tests
 from cmk.mkp_tool import get_stored_manifests, Manifest, PackageStore, PathConfig
@@ -398,14 +399,16 @@ class _NotifiableUser:
     sent_messages: Sequence[str]
 
 
-def _filter_notifiable_users(users: Users) -> Iterator[_NotifiableUser]:
+def _filter_notifiable_users(
+    users: Users, user_permissions: UserPermissions
+) -> Iterator[_NotifiableUser]:
     for user_id, user_spec in users.items():
         if user_id is None:
             continue
         notification_categories = []
-        if user_may(user_id, "wato.manage_mkps"):
+        if user_permissions.user_may(user_id, "wato.manage_mkps"):
             notification_categories.append(_NotificationCategory.manage_mkps)
-        if "admin" in user_spec["roles"] and user_may(user_id, "wato.rulesets"):
+        if "admin" in user_spec["roles"] and user_permissions.user_may(user_id, "wato.rulesets"):
             notification_categories.append(_NotificationCategory.rule_sets)
         if notification_categories:
             yield _NotifiableUser(
@@ -493,7 +496,12 @@ def execute_deprecation_tests_and_notify_users(config: Config) -> None:
     for problem_to_send in _find_problems_to_send(
         Version.from_str(__version__).version_base,
         _find_ac_test_result_problems(not_ok_ac_test_results, manifests_by_path),
-        list(_filter_notifiable_users(load_users())),
+        list(
+            _filter_notifiable_users(
+                load_users(),
+                UserPermissions.from_config(config, permission_registry),
+            )
+        ),
     ):
         match problem_to_send:
             case _ProblemToSend():

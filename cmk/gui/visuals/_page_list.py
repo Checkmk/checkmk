@@ -28,6 +28,7 @@ from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import HTTPVariables, Icon, VisualName, VisualTypeName
 from cmk.gui.user_async_replication import user_profile_async_replication_page
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     DocReference,
@@ -59,6 +60,7 @@ def page_list(
     what: VisualTypeName,
     title: str,
     visuals: dict[tuple[UserId, VisualName], TVisual],
+    user_permissions: UserPermissions,
     custom_columns: Iterable[tuple[HTMLContent, Callable[[TVisual], HTMLContent]]] | None = None,
     render_custom_buttons: Callable[[VisualName, TVisual], None] | None = None,
     render_custom_columns: Callable[[Table, VisualName, TVisual], None] | None = None,
@@ -135,7 +137,7 @@ def page_list(
         except MKUserError as e:
             html.user_error(e)
 
-    available_visuals = available(what, visuals)
+    available_visuals = available(what, visuals, user_permissions)
     installed_packages: dict[str, PackageName | None] = get_installed_packages(what)
     for source, title1, visual_group in _partition_visuals(visuals, what):
         if not visual_group:

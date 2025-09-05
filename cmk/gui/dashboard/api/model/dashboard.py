@@ -35,7 +35,7 @@ class DashboardTitle:
     include_context: bool = api_field(description="Include the context in the title.")
 
 
-type IconName = Annotated[str, AfterValidator(RegistryConverter(all_icons).validate)]
+type IconName = Annotated[str, AfterValidator(RegistryConverter(lambda x: all_icons()).validate)]
 
 
 @api_model

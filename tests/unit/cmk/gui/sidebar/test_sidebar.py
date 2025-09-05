@@ -14,6 +14,7 @@ from cmk.gui.config import active_config, Config
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.sidebar import UserSidebarSnapin
+from cmk.gui.utils.roles import UserPermissions
 
 
 @pytest.fixture(scope="function", autouse=True)
@@ -25,7 +26,8 @@ def fixture_user(request_context: None, monkeypatch: pytest.MonkeyPatch) -> Iter
 
 
 def test_user_config_fold_unfold() -> None:
-    user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
+    user_permissions = UserPermissions({}, {}, {}, [])
+    user_config = sidebar.UserSidebarConfig(user, active_config.sidebar, user_permissions)
     assert user_config.folded is False
     user_config.folded = True
     assert user_config.folded is True
@@ -34,24 +36,27 @@ def test_user_config_fold_unfold() -> None:
 
 
 def test_user_config_add_snapin() -> None:
-    user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
+    user_permissions = UserPermissions({}, {}, {}, [])
+    user_config = sidebar.UserSidebarConfig(user, active_config.sidebar, user_permissions)
     del user_config.snapins[:]
-    snapin = UserSidebarSnapin.from_snapin_type_id("tactical_overview")
+    snapin = UserSidebarSnapin.from_snapin_type_id("tactical_overview", user_permissions)
     user_config.add_snapin(snapin)
     assert user_config.snapins == [snapin]
 
 
 def test_user_config_get_snapin() -> None:
-    user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
+    user_permissions = UserPermissions({}, {}, {}, [])
+    user_config = sidebar.UserSidebarConfig(user, active_config.sidebar, user_permissions)
     del user_config.snapins[:]
-    snapin = UserSidebarSnapin.from_snapin_type_id("tactical_overview")
+    snapin = UserSidebarSnapin.from_snapin_type_id("tactical_overview", user_permissions)
     user_config.add_snapin(snapin)
 
     assert user_config.get_snapin("tactical_overview") == snapin
 
 
 def test_user_config_get_not_existing_snapin() -> None:
-    user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
+    user_permissions = UserPermissions({}, {}, {}, [])
+    user_config = sidebar.UserSidebarConfig(user, active_config.sidebar, user_permissions)
     del user_config.snapins[:]
 
     with pytest.raises(KeyError) as e:
@@ -90,13 +95,14 @@ def test_user_config_get_not_existing_snapin() -> None:
 def test_user_config_move_snapin_before(
     move_id: str, before_id: str, result: Sequence[str]
 ) -> None:
-    user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
+    user_permissions = UserPermissions({}, {}, {}, [])
+    user_config = sidebar.UserSidebarConfig(user, active_config.sidebar, user_permissions)
     del user_config.snapins[:]
     user_config.snapins.extend(
         [
-            UserSidebarSnapin.from_snapin_type_id("performance"),
-            UserSidebarSnapin.from_snapin_type_id("views"),
-            UserSidebarSnapin.from_snapin_type_id("tactical_overview"),
+            UserSidebarSnapin.from_snapin_type_id("performance", user_permissions),
+            UserSidebarSnapin.from_snapin_type_id("views", user_permissions),
+            UserSidebarSnapin.from_snapin_type_id("tactical_overview", user_permissions),
         ]
     )
 
@@ -115,17 +121,18 @@ def test_user_config_move_snapin_before(
 
     user_config.move_snapin_before(move, before)
     assert user_config.snapins == [
-        UserSidebarSnapin.from_snapin_type_id(snapin_id) for snapin_id in result
+        UserSidebarSnapin.from_snapin_type_id(snapin_id, user_permissions) for snapin_id in result
     ]
 
 
 def test_load_default_config() -> None:
-    user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
+    user_permissions = UserPermissions({}, {}, {}, [])
+    user_config = sidebar.UserSidebarConfig(user, active_config.sidebar, user_permissions)
     assert user_config.folded is False
     assert user_config.snapins == [
-        UserSidebarSnapin.from_snapin_type_id("a_welcome"),
-        UserSidebarSnapin.from_snapin_type_id("tactical_overview"),
-        UserSidebarSnapin.from_snapin_type_id("bookmarks"),
+        UserSidebarSnapin.from_snapin_type_id("a_welcome", user_permissions),
+        UserSidebarSnapin.from_snapin_type_id("tactical_overview", user_permissions),
+        UserSidebarSnapin.from_snapin_type_id("bookmarks", user_permissions),
         UserSidebarSnapin(
             sidebar.snapin_registry["master_control"], sidebar.SnapinVisibility.CLOSED
         ),
@@ -139,10 +146,11 @@ def test_load_legacy_list_user_config(monkeypatch: pytest.MonkeyPatch) -> None:
         lambda x: [("tactical_overview", "open"), ("views", "closed")],
     )
 
-    user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
+    user_permissions = UserPermissions({}, {}, {}, [])
+    user_config = sidebar.UserSidebarConfig(user, active_config.sidebar, user_permissions)
     assert user_config.folded is False
     assert user_config.snapins == [
-        UserSidebarSnapin.from_snapin_type_id("tactical_overview"),
+        UserSidebarSnapin.from_snapin_type_id("tactical_overview", user_permissions),
         UserSidebarSnapin(sidebar.snapin_registry["views"], sidebar.SnapinVisibility.CLOSED),
     ]
 
@@ -154,7 +162,8 @@ def test_load_legacy_off_user_config(monkeypatch: pytest.MonkeyPatch) -> None:
         lambda x: [("search", "off"), ("views", "closed")],
     )
 
-    user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
+    user_permissions = UserPermissions({}, {}, {}, [])
+    user_config = sidebar.UserSidebarConfig(user, active_config.sidebar, user_permissions)
     assert user_config.folded is False
     assert user_config.snapins == [
         UserSidebarSnapin(sidebar.snapin_registry["views"], sidebar.SnapinVisibility.CLOSED),
@@ -168,7 +177,8 @@ def test_load_skip_not_existing(monkeypatch: pytest.MonkeyPatch) -> None:
         lambda x: {"fold": False, "snapins": [("bla", "closed"), ("views", "closed")]},
     )
 
-    user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
+    user_permissions = UserPermissions({}, {}, {}, [])
+    user_config = sidebar.UserSidebarConfig(user, active_config.sidebar, user_permissions)
     assert user_config.folded is False
     assert user_config.snapins == [
         UserSidebarSnapin(sidebar.snapin_registry["views"], sidebar.SnapinVisibility.CLOSED),
@@ -187,7 +197,8 @@ def test_load_skip_not_permitted(monkeypatch: pytest.MonkeyPatch) -> None:
     with monkeypatch.context() as m:
         m.setattr(user, "may", lambda x: x != "sidesnap.tactical_overview")
 
-        user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
+        user_permissions = UserPermissions({}, {}, {}, [])
+        user_config = sidebar.UserSidebarConfig(user, active_config.sidebar, user_permissions)
         assert user_config.folded is False
         assert user_config.snapins == [
             UserSidebarSnapin(sidebar.snapin_registry["views"], sidebar.SnapinVisibility.CLOSED),
@@ -207,11 +218,12 @@ def test_load_user_config(monkeypatch: pytest.MonkeyPatch) -> None:
         },
     )
 
-    user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
+    user_permissions = UserPermissions({}, {}, {}, [])
+    user_config = sidebar.UserSidebarConfig(user, active_config.sidebar, user_permissions)
     assert user_config.folded is True
     assert user_config.snapins == [
         UserSidebarSnapin(sidebar.snapin_registry["search"], sidebar.SnapinVisibility.CLOSED),
-        UserSidebarSnapin.from_snapin_type_id("views"),
+        UserSidebarSnapin.from_snapin_type_id("views", user_permissions),
     ]
 
 
@@ -219,7 +231,8 @@ def test_save_user_config_denied(mocker: MockerFixture, monkeypatch: pytest.Monk
     with monkeypatch.context() as m:
         m.setattr(user, "may", lambda x: x != "general.configure_sidebar")
         save_user_file_mock = mocker.patch.object(user, "save_file")
-        user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
+        user_permissions = UserPermissions({}, {}, {}, [])
+        user_config = sidebar.UserSidebarConfig(user, active_config.sidebar, user_permissions)
         user_config.save()
         save_user_file_mock.assert_not_called()
         mocker.stopall()
@@ -229,7 +242,8 @@ def test_save_user_config_allowed(mocker: MockerFixture, monkeypatch: pytest.Mon
     with monkeypatch.context() as m:
         m.setattr(user, "may", lambda x: x == "general.configure_sidebar")
         save_user_file_mock = mocker.patch.object(user, "save_file")
-        user_config = sidebar.UserSidebarConfig(user, active_config.sidebar)
+        user_permissions = UserPermissions({}, {}, {}, [])
+        user_config = sidebar.UserSidebarConfig(user, active_config.sidebar, user_permissions)
         user_config._config = {"fold": True, "snapins": []}
         user_config.save()
         save_user_file_mock.assert_called_once_with("sidebar", {"fold": True, "snapins": []})
@@ -302,17 +316,16 @@ def test_ajax_openclose_close(mocker: MockerFixture, origin_state: str, set_stat
     )
     m_save = mocker.patch.object(user, "save_file")
 
+    user_permissions = UserPermissions({}, {}, {}, [])
     sidebar.AjaxOpenCloseSnapin().page(Config())
 
-    snapins = [
-        UserSidebarSnapin.from_snapin_type_id("views"),
-    ]
+    snapins = [UserSidebarSnapin.from_snapin_type_id("views", user_permissions)]
 
     if set_state != "off":
         snapins.insert(
             0,
             UserSidebarSnapin.from_config(
-                {"snapin_type_id": "tactical_overview", "visibility": set_state}
+                {"snapin_type_id": "tactical_overview", "visibility": set_state}, user_permissions
             ),
         )
 

@@ -37,6 +37,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
+from cmk.gui.permissions import permission_registry
 from cmk.gui.table import show_row_count, table_element
 from cmk.gui.type_defs import ActionResult, Choices, CustomUserAttrSpec, PermissionName, UserSpec
 from cmk.gui.user_connection_config_types import UserConnectionConfig
@@ -58,7 +59,7 @@ from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import get_ntop_connection_mandatory, is_ntop_available
-from cmk.gui.utils.roles import user_may
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
@@ -1057,10 +1058,17 @@ class ModeEditUser(WatoMode):
         load_notification_scripts()
 
         with html.form_context("user", method="POST"):
-            self._show_form(config.default_language, config.wato_user_attrs)
+            self._show_form(
+                config.default_language,
+                config.wato_user_attrs,
+                UserPermissions.from_config(config, permission_registry),
+            )
 
     def _show_form(
-        self, default_language: str, custom_user_attributes: Sequence[CustomUserAttrSpec]
+        self,
+        default_language: str,
+        custom_user_attributes: Sequence[CustomUserAttrSpec],
+        user_permissions: UserPermissions,
     ) -> None:
         html.prevent_password_auto_completion()
         custom_user_attr_topics = get_user_attributes_by_topic(custom_user_attributes)
@@ -1079,6 +1087,7 @@ class ModeEditUser(WatoMode):
                 },
                 custom_user_attr_topics,
                 is_automation_user,
+                user_permissions,
             )
         elif is_automation_user:
             self._render_security(
@@ -1088,6 +1097,7 @@ class ModeEditUser(WatoMode):
                 },
                 None,
                 is_automation_user,
+                user_permissions,
             )
 
         # Contact groups
@@ -1276,6 +1286,7 @@ class ModeEditUser(WatoMode):
         ],
         custom_user_attr_topics: dict[str, list[tuple[str, UserAttribute]]] | None,
         is_automation: bool,
+        user_permissions: UserPermissions,
     ) -> None:
         forms.header(_("Security"))
 
@@ -1311,8 +1322,8 @@ class ModeEditUser(WatoMode):
                 html.open_td()
                 # Only make password enforcement selection possible when user is allowed to change the PW
                 if self._is_new_user or (
-                    user_may(self._user_id, "general.edit_profile")
-                    and user_may(self._user_id, "general.change_password")
+                    user_permissions.user_may(self._user_id, "general.edit_profile")
+                    and user_permissions.user_may(self._user_id, "general.change_password")
                 ):
                     html.checkbox(
                         "enforce_pw_change",

@@ -7,7 +7,9 @@ from cmk.gui.config import Config
 from cmk.gui.dashboard import get_permitted_dashboards
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import MainMenuTopic
+from cmk.gui.utils.roles import UserPermissions
 
 from ._base import SidebarSnapin
 from ._helpers import footnotelinks, make_main_menu, show_main_menu
@@ -27,7 +29,12 @@ class Dashboards(SidebarSnapin):
         return _("Links to all dashboards")
 
     def show(self, config: Config) -> None:
-        show_main_menu(treename="dashboards", menu=self._get_dashboard_menu_items())
+        show_main_menu(
+            treename="dashboards",
+            menu=self._get_dashboard_menu_items(
+                UserPermissions.from_config(config, permission_registry)
+            ),
+        )
 
         links = []
         if user.may("general.edit_dashboards"):
@@ -36,7 +43,8 @@ class Dashboards(SidebarSnapin):
             links.append((_("Edit"), "edit_dashboards.py"))
             footnotelinks(links)
 
-    def _get_dashboard_menu_items(self) -> list[MainMenuTopic]:
+    def _get_dashboard_menu_items(self, user_permissions: UserPermissions) -> list[MainMenuTopic]:
         return make_main_menu(
-            [("dashboards", (k, v)) for k, v in get_permitted_dashboards().items()]
+            [("dashboards", (k, v)) for k, v in get_permitted_dashboards().items()],
+            user_permissions,
         )

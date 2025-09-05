@@ -77,6 +77,7 @@ def page_show_view(
         )
         _patch_view_context(view_spec)
 
+        user_permissions = UserPermissions.from_config(config, permission_registry)
         datasource = data_source_registry[view_spec["datasource"]]()
         context = visuals.active_context_from_request(datasource.infos, view_spec["context"])
 
@@ -107,6 +108,7 @@ def page_show_view(
                 show_buttons=True,
                 page_menu_dropdowns_callback=page_menu_dropdowns_callback,
             ),
+            user_permissions,
             debug=config.debug,
         )
 
@@ -178,15 +180,19 @@ def _patch_view_context(view_spec: ViewSpec) -> None:
             request.set_var("event_host", request.get_str_input_mandatory("host"))
 
 
-def process_view(view_renderer: ABCViewRenderer, *, debug: bool) -> None:
+def process_view(
+    view_renderer: ABCViewRenderer, user_permissions: UserPermissions, *, debug: bool
+) -> None:
     """Rendering all kind of views"""
     if request.var("mode") == "availability":
         _process_availability_view(view_renderer, debug=debug)
     else:
-        _process_regular_view(view_renderer, debug=debug)
+        _process_regular_view(view_renderer, user_permissions, debug=debug)
 
 
-def _process_regular_view(view_renderer: ABCViewRenderer, *, debug: bool) -> None:
+def _process_regular_view(
+    view_renderer: ABCViewRenderer, user_permissions: UserPermissions, *, debug: bool
+) -> None:
     all_active_filters = get_all_active_filters(view_renderer.view)
     with livestatus.intercept_queries() as queries:
         unfiltered_amount_of_rows, rows = _get_view_rows(
@@ -201,7 +207,7 @@ def _process_regular_view(view_renderer: ABCViewRenderer, *, debug: bool) -> Non
         return
 
     _add_rest_api_menu_entries(view_renderer, intercepted_queries)
-    _show_view(view_renderer, unfiltered_amount_of_rows, rows, debug=debug)
+    _show_view(view_renderer, unfiltered_amount_of_rows, rows, user_permissions, debug=debug)
 
 
 def _add_rest_api_menu_entries(view_renderer: ABCViewRenderer, queries: list[str]) -> None:
@@ -396,7 +402,12 @@ def _fetch_rows_from_livestatus(view: View, all_active_filters: list[Filter]) ->
 
 
 def _show_view(
-    view_renderer: ABCViewRenderer, unfiltered_amount_of_rows: int, rows: Rows, *, debug: bool
+    view_renderer: ABCViewRenderer,
+    unfiltered_amount_of_rows: int,
+    rows: Rows,
+    user_permissions: UserPermissions,
+    *,
+    debug: bool,
 ) -> None:
     view = view_renderer.view
 
@@ -429,6 +440,7 @@ def _show_view(
             num_columns,
             show_filters,
             unfiltered_amount_of_rows,
+            user_permissions,
             debug=debug,
         )
     view.process_tracking.duration_view_render = view_render_tracker.duration

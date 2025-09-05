@@ -9,7 +9,9 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.permissions import permission_registry
 from cmk.gui.theme.current_theme import theme
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import DropdownChoice
 
 from ._snapin import all_snapins
@@ -61,14 +63,26 @@ class SnapinDashlet(IFrameDashlet[SnapinDashletConfig]):
 
     @classmethod
     def _snapin_choices(cls):
-        return sorted([(k, v.title()) for k, v in all_snapins().items()], key=lambda x: x[1])
+        return sorted(
+            [
+                (k, v.title())
+                for k, v in all_snapins(
+                    UserPermissions.from_config(active_config, permission_registry)
+                ).items()
+            ],
+            key=lambda x: x[1],
+        )
 
     def default_display_title(self) -> str:
-        return all_snapins()[self._dashlet_spec["snapin"]].title()
+        return all_snapins(
+            UserPermissions.from_config(active_config, permission_registry),
+        )[self._dashlet_spec["snapin"]].title()
 
-    def update(self):
+    def update(self) -> None:
         dashlet = self._dashlet_spec
-        snapin = all_snapins().get(self._dashlet_spec["snapin"])
+        snapin = all_snapins(UserPermissions.from_config(active_config, permission_registry)).get(
+            self._dashlet_spec["snapin"]
+        )
         if not snapin:
             raise MKUserError(None, _("The configured element does not exist."))
         snapin_instance = snapin()

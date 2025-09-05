@@ -17,6 +17,10 @@ from cmk.agent_receiver.relay.api.routers.relays.handlers.register_relay import 
 from cmk.agent_receiver.relay.api.routers.relays.handlers.unregister_relay import (
     UnregisterRelayHandler,
 )
+from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
+    GetRelayTaskHandler,
+    GetRelayTasksHandler,
+)
 from cmk.agent_receiver.relay.api.routers.tasks.handlers.create_task import (
     CreateTaskHandler,
 )
@@ -130,6 +134,26 @@ def update_task_handler(
     """Provides an UpdateTaskHandler with mock dependencies."""
     handler = UpdateTaskHandler(
         tasks_repository=tasks_repository, relays_repository=relays_repository
+    )
+    yield handler
+
+
+@pytest.fixture()
+def get_task_handler(
+    tasks_repository: TasksRepository, relays_repository: RelaysRepository
+) -> Iterator[GetRelayTaskHandler]:
+    handler = GetRelayTaskHandler(
+        tasks_repository=tasks_repository, relay_repository=relays_repository
+    )
+    yield handler
+
+
+@pytest.fixture()
+def get_tasks_handler(
+    tasks_repository: TasksRepository, relays_repository: RelaysRepository
+) -> Iterator[GetRelayTasksHandler]:
+    handler = GetRelayTasksHandler(
+        tasks_repository=tasks_repository, relay_repository=relays_repository
     )
     yield handler
 

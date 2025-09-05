@@ -7,11 +7,14 @@ from logging import Logger
 from typing import Generic, override, Protocol, TypeVar
 
 from cmk.ccc.user import UserId
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.pagetypes import (
     Overridable,
     OverridableInstances,
 )
+from cmk.gui.permissions import permission_registry
+from cmk.gui.utils.roles import UserPermissions
 from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.plugins.pre_actions.utils import (
     ConflictMode,
@@ -67,7 +70,11 @@ class UpdatePagetypes(UpdateAction, Generic[_TOverridable_co]):
         for user_id in (
             user_id for (user_id, name) in instances.instances_dict() if user_id != UserId.builtin()
         ):
-            self._updater.target_type.save_user_instances(instances, owner=user_id)
+            self._updater.target_type.save_user_instances(
+                instances,
+                UserPermissions.from_config(active_config, permission_registry),
+                owner=user_id,
+            )
 
 
 class PreUpdatePagetypes(PreUpdateAction, Generic[_TOverridable_co]):

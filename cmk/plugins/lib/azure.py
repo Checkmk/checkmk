@@ -23,7 +23,7 @@ from cmk.agent_based.v2 import (
     StringTable,
     TableRow,
 )
-from cmk.plugins.lib.labels import custom_tags_to_valid_labels
+from cmk.plugins.lib.labels import ensure_valid_labels
 
 AZURE_AGENT_SEPARATOR = "|"
 
@@ -211,7 +211,7 @@ def parse_resources(string_table: StringTable) -> Mapping[str, Resource]:
 
 
 def get_service_labels_from_resource_tags(tags: Mapping[str, str]) -> Sequence[ServiceLabel]:
-    labels = custom_tags_to_valid_labels(tags)
+    labels = ensure_valid_labels(tags)
     return [ServiceLabel(f"cmk/azure/tag/{key}", value) for key, value in labels.items()]
 
 

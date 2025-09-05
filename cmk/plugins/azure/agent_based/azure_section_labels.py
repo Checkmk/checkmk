@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from cmk.agent_based.v1 import HostLabel
 from cmk.agent_based.v1.type_defs import HostLabelGenerator, StringTable
 from cmk.agent_based.v2 import AgentSection
-from cmk.plugins.lib.labels import custom_tags_to_valid_labels
+from cmk.plugins.lib.labels import ensure_valid_labels
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -60,9 +60,7 @@ def host_labels(section: LabelsSection) -> HostLabelGenerator:
     """
     # We are basically accepting every label coming from the special agent, even though they are well defined.
     # This is to be sure we only work with valid labels
-    labels = custom_tags_to_valid_labels(
-        {key: str(val) for key, val in section.host_labels.items()}
-    )
+    labels = ensure_valid_labels({key: str(val) for key, val in section.host_labels.items()})
     for label, value in labels.items():
         if label == "group_name":
             yield HostLabel("cmk/azure/resource_group", value)
@@ -76,7 +74,7 @@ def host_labels(section: LabelsSection) -> HostLabelGenerator:
     if not section.tags:
         return
 
-    tags = custom_tags_to_valid_labels(section.tags)
+    tags = ensure_valid_labels(section.tags)
     for label, value in tags.items():
         yield HostLabel(f"cmk/azure/tag/{label}", value)
 

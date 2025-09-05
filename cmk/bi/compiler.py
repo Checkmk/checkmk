@@ -248,13 +248,13 @@ class BICompiler:
             self._compiled_aggregations = self._manage_frozen_branches(self._compiled_aggregations)
             self._generate_part_of_aggregation_lookup(self._compiled_aggregations)
 
-        known_sites = {kv[0]: kv[1] for kv in current_configstatus.get("known_sites", set())}
-        self._cleanup_vanished_aggregations()
-        self._bi_structure_fetcher.cleanup_orphaned_files(known_sites)
-        store.save_text_to_file(
-            str(self._path_compilation_timestamp),
-            str(current_configstatus["configfile_timestamp"]),
-        )
+            known_sites = {kv[0]: kv[1] for kv in current_configstatus.get("known_sites", set())}
+            self._cleanup_vanished_aggregations()
+            self._bi_structure_fetcher.cleanup_orphaned_files(known_sites)
+            store.save_text_to_file(
+                str(self._path_compilation_timestamp),
+                str(current_configstatus["configfile_timestamp"]),
+            )
 
     def _get_multiprocessing_pool(self, aggregation_count: int) -> Pool:
         # HACK: due to known constraints with multiprocessing in Python, this is a simple way to

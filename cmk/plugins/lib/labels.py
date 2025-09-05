@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 
 
-def custom_tags_to_valid_labels(tags: Mapping[str, str]) -> Mapping[str, str]:
+def ensure_valid_labels(tags: Mapping[str, str]) -> Mapping[str, str]:
     # Make sure we only generate valid labels, i.e.
     # 1) no empty values - we insert "true" for now, but empty values will be allowed in the future
     #    see CMK-10380

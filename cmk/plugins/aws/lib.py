@@ -24,7 +24,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.aws.constants import AWSRegions
-from cmk.plugins.lib.labels import custom_tags_to_valid_labels
+from cmk.plugins.lib.labels import ensure_valid_labels
 
 GenericAWSSection = Sequence[Any]
 AWSSectionMetrics = Mapping[str, Mapping[str, Any]]
@@ -108,7 +108,7 @@ def aws_host_labels(section: Mapping[str, str]) -> HostLabelGenerator:
             These labels are yielded for each tag of an AWS resource
             that is monitored as its own host.
     """
-    labels = custom_tags_to_valid_labels(section)
+    labels = ensure_valid_labels(section)
     for key, value in labels.items():
         yield HostLabel(f"cmk/aws/tag/{key}", value)
 

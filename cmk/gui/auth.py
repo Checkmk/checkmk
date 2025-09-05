@@ -21,14 +21,14 @@ from cmk.crypto import password_hashing
 from cmk.crypto.password import Password
 from cmk.crypto.secrets import Secret
 from cmk.gui import userdb
-from cmk.gui.config import active_config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.pseudo_users import PseudoUserId, RemoteSitePseudoUser, SiteInternalPseudoUser
 from cmk.gui.site_config import enabled_sites
-from cmk.gui.type_defs import AuthType, UserSpec
+from cmk.gui.type_defs import AuthType, CustomUserAttrSpec, UserSpec
 from cmk.gui.userdb import get_user_attributes, UserAttribute
 from cmk.gui.userdb.session import generate_auth_hash
 from cmk.gui.utils.htpasswd import Htpasswd
@@ -40,17 +40,17 @@ from cmk.utils.log.security_event import log_security_event
 auth_logger = logger.getChild("auth")
 
 
-AuthFunction = Callable[[], UserId | PseudoUserId | None]
+AuthFunction = Callable[[Config], UserId | PseudoUserId | None]
 
 
-def check_auth() -> tuple[UserId | PseudoUserId, AuthType]:
+def check_auth(config: Config) -> tuple[UserId | PseudoUserId, AuthType]:
     """Try to authenticate a user from the current request.
 
     This will attempt to authenticate the user via all possible authentication types.
     If any of them succeeds, the user's ID and the succeeding authentication type are returned.
     Some attempted authentication types may raise exceptions and abort this function preemptively.
     """
-    if not active_config.user_login and not is_site_login():
+    if not config.user_login and not is_site_login():
         raise MKAuthException("Site can't be logged into.")
 
     auth_methods: list[tuple[AuthFunction, AuthType]] = [
@@ -71,7 +71,7 @@ def check_auth() -> tuple[UserId | PseudoUserId, AuthType]:
         # strange is happening. This will abort the whole process, regardless of which auth method
         # succeeded or not.
         try:
-            if user_id := auth_method():
+            if user_id := auth_method(config):
                 # The last auth_method is the most specific one, use that.
                 selected = (user_id, auth_type)
         except Exception as e:
@@ -155,12 +155,12 @@ def parse_and_check_cookie(raw_cookie: str) -> tuple[UserId, str, str]:
     return user_id, session_id, cookie_hash
 
 
-def _check_auth_by_custom_http_header() -> UserId | None:
+def _check_auth_by_custom_http_header(config: Config) -> UserId | None:
     """When http header auth is enabled, try to read the user_id from the var
 
     WARNING: This way of authentication does NOT verify any credentials!
     """
-    if (auth_by_http_header := active_config.auth_by_http_header) and (
+    if (auth_by_http_header := config.auth_by_http_header) and (
         username := request.headers.get(auth_by_http_header, type=str)
     ):
         return _try_user_id(username)
@@ -168,7 +168,7 @@ def _check_auth_by_custom_http_header() -> UserId | None:
     return None
 
 
-def _check_auth_by_remote_user() -> UserId | None:
+def _check_auth_by_remote_user(config: Config) -> UserId | None:
     """Try to get the authenticated user from the HTTP request
 
     The user may have configured (basic) authentication by the web server. In
@@ -187,7 +187,12 @@ def _check_auth_by_remote_user() -> UserId | None:
 
 
 def _check_auth_by_header(
-    token_name: Literal["Basic", "Bearer"], parse_token: Callable[[str], tuple[str, str]]
+    token_name: Literal["Basic", "Bearer"],
+    parse_token: Callable[[str], tuple[str, str]],
+    custom_user_attributes: Sequence[CustomUserAttrSpec],
+    lock_on_logon_failures: int | None,
+    log_logon_failures: bool,
+    default_user_profile: UserSpec,
 ) -> UserId | None:
     """Parse the auth header and verify the credentials"""
     if not (
@@ -208,11 +213,11 @@ def _check_auth_by_header(
         # Note: not wrong, invalid. E.g. contains null bytes or is empty
         raise MKAuthException(f"Invalid password: {e}")
 
-    user_attributes = get_user_attributes(active_config.wato_user_attrs)
+    user_attributes = get_user_attributes(custom_user_attributes)
 
     # Could be an automation user or a regular user
     if _verify_automation_login(user_id, password.raw) or _verify_user_login(
-        user_id, password, user_attributes, active_config.default_user_profile
+        user_id, password, user_attributes, default_user_profile
     ):
         return user_id
 
@@ -222,14 +227,14 @@ def _check_auth_by_header(
         user_id,
         user_attributes,
         now=datetime.now(),
-        lock_on_logon_failures=active_config.lock_on_logon_failures,
-        log_logon_failures=active_config.log_logon_failures,
+        lock_on_logon_failures=lock_on_logon_failures,
+        log_logon_failures=log_logon_failures,
     )
 
     raise MKAuthException(f"Wrong credentials ({token_name} header)")
 
 
-def _check_auth_by_basic_header() -> UserId | None:
+def _check_auth_by_basic_header(config: Config) -> UserId | None:
     """Authenticate the user via Basic Auth token in the HTTP_AUTHORIZATION header
 
     Returns:
@@ -240,12 +245,21 @@ def _check_auth_by_basic_header() -> UserId | None:
         MKAuthException: when the header is found but the credentials are not valid
         MKAuthException: when the user in REMOTE_USER is different to the one in HTTP_AUTHORIZATION
     """
-    if not (user_id := _check_auth_by_header("Basic", _parse_basic_auth_token)):
+    if not (
+        user_id := _check_auth_by_header(
+            "Basic",
+            _parse_basic_auth_token,
+            config.wato_user_attrs,
+            config.lock_on_logon_failures,
+            config.log_logon_failures,
+            config.default_user_profile,
+        )
+    ):
         return None
 
     # Even if the credentials verify that the user may log in, if these don't match, we
     # abort anyway, because this doesn't make any sense.
-    if (remote_user := _check_auth_by_remote_user()) and user_id != remote_user:
+    if (remote_user := _check_auth_by_remote_user(config)) and user_id != remote_user:
         raise MKAuthException("Mismatch in authentication headers.")
 
     return user_id
@@ -278,7 +292,7 @@ def _parse_basic_auth_token(token: str) -> tuple[str, str]:
     return user_id, password
 
 
-def _check_auth_by_bearer_header() -> UserId | None:
+def _check_auth_by_bearer_header(config: Config) -> UserId | None:
     """Authenticate the user via Bearer token in the HTTP_AUTHORIZATION header
 
     Returns:
@@ -288,10 +302,17 @@ def _check_auth_by_bearer_header() -> UserId | None:
     Raises:
         MKAuthException: when the header is found but the credentials are not valid
     """
-    return _check_auth_by_header("Bearer", _parse_bearer_token)
+    return _check_auth_by_header(
+        "Bearer",
+        _parse_bearer_token,
+        config.wato_user_attrs,
+        config.lock_on_logon_failures,
+        config.log_logon_failures,
+        config.default_user_profile,
+    )
 
 
-def _check_internal_token() -> SiteInternalPseudoUser | None:
+def _check_internal_token(config: Config) -> SiteInternalPseudoUser | None:
     if not (auth_header := request.environ.get("HTTP_AUTHORIZATION", "")).startswith(
         "InternalToken "
     ):
@@ -306,7 +327,7 @@ def _check_internal_token() -> SiteInternalPseudoUser | None:
     return None
 
 
-def _check_remote_site() -> RemoteSitePseudoUser | None:
+def _check_remote_site(config: Config) -> RemoteSitePseudoUser | None:
     if not (auth_header := request.environ.get("HTTP_AUTHORIZATION", "")).startswith("RemoteSite "):
         return None
 
@@ -316,7 +337,7 @@ def _check_remote_site() -> RemoteSitePseudoUser | None:
         raise MKAuthException(f"RemoteSite auth for invalid page: {page_name}")
 
     with contextlib.suppress(binascii.Error):  # base64 decoding failure
-        for enabled_site in enabled_sites(active_config.sites).values():
+        for enabled_site in enabled_sites(config.sites).values():
             if "secret" not in enabled_site:
                 continue
             if Secret.from_b64(token).compare(Secret(enabled_site["secret"].encode())):

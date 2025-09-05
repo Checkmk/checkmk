@@ -24,6 +24,7 @@ from cmk.gui.auth import (
     check_auth,
     parse_and_check_cookie,
 )
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInNobody, LoggedInRemoteSite, LoggedInSuperUser, LoggedInUser
@@ -332,13 +333,15 @@ class FileBasedSession(SessionInterface):
             return None
         return sess
 
-    def _authenticate_and_open(self, app: Flask, request: flask.Request) -> CheckmkFileBasedSession:
+    def _authenticate_and_open(
+        self, app: Flask, request: flask.Request, config: Config
+    ) -> CheckmkFileBasedSession:
         """Authenticate and open new session
 
         try to authenticate a request based on headers, password login is
         handled in login.py"""
 
-        identity, auth_type = check_auth()
+        identity, auth_type = check_auth(config)
 
         if isinstance(identity, PseudoUserId):
             return self.session_class.create_pseudo_user_session(identity)
@@ -379,7 +382,9 @@ class FileBasedSession(SessionInterface):
         config.initialize()
 
         try:
-            return self._resume_session(app, request) or self._authenticate_and_open(app, request)
+            return self._resume_session(app, request) or self._authenticate_and_open(
+                app, request, config.active_config
+            )
         except MKAuthException as exc:
             return self.session_class.create_empty_session(exc=exc)
 

@@ -11,4 +11,4 @@ def get_relays_repository() -> RelaysRepository:
     site_name = os.environ["OMD_SITE"]
     # Here as normal dependency injection does not work with the double app approach
     url = os.environ.get("SITE_URL", "http://localhost")
-    return RelaysRepository(url, site_name)
+    return RelaysRepository.from_site(url, site_name)

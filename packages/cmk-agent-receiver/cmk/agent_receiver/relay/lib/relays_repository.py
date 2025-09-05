@@ -25,14 +25,21 @@ logger = logging.getLogger("agent-receiver")
 
 @final
 class RelaysRepository:
-    def __init__(self, site_url: str, site_name: str) -> None:
+    def __init__(self, client: httpx.Client, siteid: str) -> None:
+        self.client = client
+        self.siteid = siteid
+
+    @classmethod
+    def from_site(cls, site_url: str, site_name: str) -> "RelaysRepository":
+        """Create RelaysRepository from site configuration."""
         base_url = f"{site_url}/{site_name}/check_mk/api/1.0"
         # FIXME async client
-        self.client = httpx.Client(
+        client = httpx.Client(
             base_url=base_url,
             headers={"Content-Type": "application/json"},
         )
-        self.siteid = os.environ["OMD_SITE"]
+        siteid = os.environ["OMD_SITE"]
+        return cls(client, siteid)
 
     def add_relay(self, authorization: SecretStr, alias: str) -> RelayID:
         resp = self.client.post(

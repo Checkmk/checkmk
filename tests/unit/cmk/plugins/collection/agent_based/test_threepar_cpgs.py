@@ -18,7 +18,7 @@ from cmk.plugins.collection.agent_based.threepar_cpgs import (
     parse_threepar_cpgs,
 )
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
-from tests.unit.checks.checktestlib import mock_item_state
+from tests.unit.cmk.base.legacy_checks.checktestlib import mock_item_state
 
 STRING_TABLE = [
     [

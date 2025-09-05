@@ -3,39 +3,109 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.legacy_checks.mem_vmalloc import check_mem_vmalloc, inventory_mem_vmalloc
+import pytest
 
-_SECTION = {
-    "VmallocTotal": 2 * 1024**2,
-    "VmallocUsed": 1.8 * 1024**2,
-    "VmallocChunk": 43 * 1024**2,
-}
+from cmk.agent_based.v2 import StringTable
+from cmk.plugins.collection.agent_based.mem import parse_proc_meminfo_bytes
+from cmk.plugins.lib.memory import SectionMem
 
 
-def test_inventory_mem_vmalloc() -> None:
-    assert list(inventory_mem_vmalloc(_SECTION)) == [(None, {})]
-
-
-def test_check_mem_vmalloc() -> None:
-    assert list(
-        check_mem_vmalloc(
-            None,
+@pytest.mark.parametrize(
+    "section, parsed",
+    [
+        (
+            [
+                ["MemTotal:", "24707592", "kB"],
+                ["MemFree:", "441224", "kB"],
+                ["Buffers:", "320672", "kB"],
+                ["Cached:", "19981008", "kB"],
+                ["SwapCached:", "6172", "kB"],
+                ["Active:", "8756876", "kB"],
+                ["Inactive:", "13360444", "kB"],
+                ["Active(anon):", "1481236", "kB"],
+                ["Inactive(anon):", "371260", "kB"],
+                ["Active(file):", "7275640", "kB"],
+                ["Inactive(file):", "12989184", "kB"],
+                ["Unevictable:", "964808", "kB"],
+                ["Mlocked:", "964808", "kB"],
+                ["SwapTotal:", "16777212", "kB"],
+                ["SwapFree:", "16703328", "kB"],
+                ["Dirty:", "4408124", "kB"],
+                ["Writeback:", "38020", "kB"],
+                ["AnonPages:", "2774444", "kB"],
+                ["Mapped:", "69456", "kB"],
+                ["Shmem:", "33772", "kB"],
+                ["Slab:", "861028", "kB"],
+                ["SReclaimable:", "756236", "kB"],
+                ["SUnreclaim:", "104792", "kB"],
+                ["KernelStack:", "4176", "kB"],
+                ["PageTables:", "15892", "kB"],
+                ["NFS_Unstable:", "0", "kB"],
+                ["Bounce:", "0", "kB"],
+                ["WritebackTmp:", "0", "kB"],
+                ["CommitLimit:", "39014044", "kB"],
+                ["Committed_AS:", "3539808", "kB"],
+                ["VmallocTotal:", "34359738367", "kB"],
+                ["VmallocUsed:", "347904", "kB"],
+                ["VmallocChunk:", "34346795572", "kB"],
+                ["HardwareCorrupted:", "6", "kB"],
+                ["AnonHugePages:", "0", "kB"],
+                ["HugePages_Total:", "0"],
+                ["HugePages_Free:", "0"],
+                ["HugePages_Rsvd:", "0"],
+                ["HugePages_Surp:", "0"],
+                ["Hugepagesize:", "2048", "kB"],
+                ["DirectMap4k:", "268288", "kB"],
+                ["DirectMap2M:", "8112128", "kB"],
+                ["DirectMap1G:", "16777216", "kB"],
+            ],
             {
-                "levels_used_perc": (80.0, 90.0),
-                "levels_lower_chunk_mb": (64, 32),
+                "MemTotal": 25300574208,
+                "MemFree": 451813376,
+                "Buffers": 328368128,
+                "Cached": 20460552192,
+                "SwapCached": 6320128,
+                "Active": 8967041024,
+                "Inactive": 13681094656,
+                "Active(anon)": 1516785664,
+                "Inactive(anon)": 380170240,
+                "Active(file)": 7450255360,
+                "Inactive(file)": 13300924416,
+                "Unevictable": 987963392,
+                "Mlocked": 987963392,
+                "SwapTotal": 17179865088,
+                "SwapFree": 17104207872,
+                "Dirty": 4513918976,
+                "Writeback": 38932480,
+                "AnonPages": 2841030656,
+                "Mapped": 71122944,
+                "Shmem": 34582528,
+                "Slab": 881692672,
+                "SReclaimable": 774385664,
+                "SUnreclaim": 107307008,
+                "KernelStack": 4276224,
+                "PageTables": 16273408,
+                "NFS_Unstable": 0,
+                "Bounce": 0,
+                "WritebackTmp": 0,
+                "CommitLimit": 39950381056,
+                "Committed_AS": 3624763392,
+                "VmallocTotal": 35184372087808,
+                "VmallocUsed": 356253696,
+                "VmallocChunk": 35171118665728,
+                "HardwareCorrupted": 6144,
+                "AnonHugePages": 0,
+                "HugePages_Total": 0,
+                "HugePages_Free": 0,
+                "HugePages_Rsvd": 0,
+                "HugePages_Surp": 0,
+                "Hugepagesize": 2097152,
+                "DirectMap4k": 274726912,
+                "DirectMap2M": 8306819072,
+                "DirectMap1G": 17179869184,
             },
-            _SECTION,
-        )
-    ) == [
-        (0, "Total: 2.0 MB"),
-        (
-            2,
-            "Used: 1.8 MB (warn/crit at 1.6 MB/1.8 MB)",
-            [("used", 1.8, 1.6, 1.8, 0.0, 2.0)],
         ),
-        (
-            1,
-            "Largest chunk: 43.0 MB (warn/crit below 64.0 MB/32.0 MB)",
-            [("chunk", 43.0, None, None, 0.0, 2.0)],
-        ),
-    ]
+    ],
+)
+def test_cpu_threads_regression(section: StringTable, parsed: SectionMem | None) -> None:
+    assert parsed == parse_proc_meminfo_bytes(section)

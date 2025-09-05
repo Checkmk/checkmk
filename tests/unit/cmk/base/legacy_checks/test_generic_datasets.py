@@ -30,6 +30,7 @@ import time_machine
 from tests.unit.mocks_and_helpers import FixPluginLegacy
 
 from . import generictests
+from .generictests import datasets
 
 # Making this a single test with a loop instead of a parameterized test cuts down the runtime
 # from 15.7s to 4.3s. Furthermore, freezing the time only once is a big win, too. OTOH, if
@@ -55,5 +56,5 @@ def test_dataset_one_by_one(datasetname: str, fix_plugin_legacy: FixPluginLegacy
 
 
 def run_tests_for(datasetname: str, fix_plugin_legacy: FixPluginLegacy) -> None:
-    dataset = import_module(f"tests.unit.checks.generictests.datasets.{datasetname}")
+    dataset = import_module(f"{datasets.__name__}.{datasetname}")
     generictests.run(fix_plugin_legacy.check_info, dataset)

@@ -280,6 +280,15 @@ PACKAGE_CRYPTO = ("cmk.crypto",)
 PACKAGE_TRACE = ("cmk.trace",)
 
 COMPONENTS = {
+    Component("tests.unit.cmk.base.legacy_checks"): _allow(
+        *PACKAGE_PLUGIN_APIS,
+        "cmk.base.check_legacy_includes",
+        "cmk.base.legacy_checks",
+        "cmk.checkengine.plugins",
+        "cmk.discover_plugins",
+        "cmk.plugins",
+        "cmk.utils.paths",
+    ),
     Component("tests.unit.cmk"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_PLUGIN_APIS,
@@ -324,15 +333,6 @@ COMPONENTS = {
         "cmk.update_config",
         "cmk.utils",
         "cmk.validate_config",
-    ),
-    Component("tests.unit.checks"): _allow(
-        *PACKAGE_PLUGIN_APIS,
-        "cmk.base.check_legacy_includes",
-        "cmk.base.legacy_checks",
-        "cmk.checkengine.plugins",
-        "cmk.discover_plugins",
-        "cmk.plugins",
-        "cmk.utils.paths",
     ),
     Component("tests.extension_compatibility"): _allow(
         *PACKAGE_CCC,

@@ -32,7 +32,7 @@ def test_process_adds_new_relay_id_to_registry(
     register_relay_handler: RegisterRelayHandler,
 ) -> None:
     relay_id = RelayID(str(uuid.uuid4()))
-    register_relay_handler.process(relay_id)
+    register_relay_handler.process(relay_id, alias="test")
     assert register_relay_handler.relays_repository.has_relay(relay_id)
 
 

@@ -26,11 +26,11 @@ class AgentReceiverClient:
         self.site_name = site_name
         self.user = user
 
-    def register_relay(self) -> httpx.Response:
+    def register_relay(self, name: str) -> httpx.Response:
         return self.client.post(
             f"/{self.site_name}/agent-receiver/relays",
             json={
-                "relay_name": "Relay A",  # TODO: Remove still unused create relay fields
+                "relay_name": name,
                 "csr": "CSR for Relay A",
             },
             headers={"Authorization": self.user.bearer},

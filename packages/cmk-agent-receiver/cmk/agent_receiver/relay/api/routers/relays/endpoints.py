@@ -18,7 +18,7 @@ from cmk.agent_receiver.relay.api.routers.relays.handlers import (
     UnregisterRelayHandler,
 )
 from cmk.agent_receiver.relay.lib.shared_types import RelayID
-from cmk.relay_protocols.relays import RelayRegistrationResponse
+from cmk.relay_protocols.relays import RelayRegistrationRequest, RelayRegistrationResponse
 
 router = fastapi.APIRouter()
 
@@ -27,6 +27,7 @@ router = fastapi.APIRouter()
 async def register_relay(
     handler: Annotated[RegisterRelayHandler, fastapi.Depends(get_register_relay_handler)],
     authorization: Annotated[SecretStr, fastapi.Header()],
+    payload: RelayRegistrationRequest,
 ) -> RelayRegistrationResponse:
     """Register a new relay entity.
 
@@ -43,7 +44,7 @@ async def register_relay(
         - Relay ID uniqueness is controlled during registration
         - Collision with existing relay IDs is not allowed
     """
-    relay_id = handler.process(authorization)
+    relay_id = handler.process(authorization, alias=payload.relay_name)
     return RelayRegistrationResponse(relay_id=relay_id)
 
 

@@ -9,9 +9,7 @@ from typing import Literal
 import httpx
 from pydantic import BaseModel, Field
 
-PatternType = Literal["matchesJsonSchema", "equalTo", "matchesJsonSchema"]
-
-Operation = Literal["matches", "equalTo"]
+PatternType = Literal["matchesJsonSchema", "equalTo", "matches", "equalToJson"]
 AllowedHeader = Literal["Content-Type", "Authorization"]
 
 
@@ -20,7 +18,7 @@ class Request(BaseModel):
     url: str
     bodyPatterns: list[Mapping[PatternType, str]] | None = None
     queryParameters: Mapping[str, Mapping[PatternType, str]] | None = None
-    headers: Mapping[AllowedHeader, Mapping[Operation, str]] = Field(default_factory=dict)
+    headers: Mapping[AllowedHeader, Mapping[PatternType, str]] = Field(default_factory=dict)
 
 
 class Response(BaseModel):

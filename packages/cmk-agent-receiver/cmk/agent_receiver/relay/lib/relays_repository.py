@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
+import os
 from http import HTTPStatus
 from typing import final
 
@@ -23,11 +24,13 @@ class RelaysRepository:
             base_url=base_url,
             headers={"Content-Type": "application/json"},
         )
+        self.siteid = os.environ["OMD_SITE"]
 
-    def add_relay(self, authorization: SecretStr) -> RelayID:
+    def add_relay(self, authorization: SecretStr, alias: str) -> RelayID:
         resp = self.client.post(
             "/domain-types/relay/collections/all",
             headers={"Authorization": authorization.get_secret_value()},
+            json={"alias": alias, "siteid": self.siteid},
         )
         if resp.status_code != HTTPStatus.OK:
             logger.error("could not register relay %s : %s", resp.status_code, resp.text)

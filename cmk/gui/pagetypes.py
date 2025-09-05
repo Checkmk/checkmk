@@ -908,13 +908,7 @@ class Overridable(Base[_T_OverridableConfig]):
                 cls.declare_permission(instance, user_permissions)
 
     @classmethod
-    def save_user_instances(
-        cls, instances: OverridableInstances[Self], owner: UserId | None = None
-    ) -> None:
-        if not owner:
-            owner = user.id
-        assert owner is not None
-
+    def save_user_instances(cls, instances: OverridableInstances[Self], owner: UserId) -> None:
         save_dict = {}
         save_dict_by_owner: dict[UserId, dict[str, object]] = {}
         for page in instances.instances():
@@ -1774,7 +1768,8 @@ class OverridableContainer(Overridable[_T_OverridableContainerConfig]):
                 need_sidebar_reload = True
 
         page.add_element(create_info)  # can be overridden
-        cls.save_user_instances(instances)
+        assert user.id is not None
+        cls.save_user_instances(instances, user.id)
         return None, need_sidebar_reload
         # With a redirect directly to the page afterwards do it like this:
         # return page, need_sidebar_reload

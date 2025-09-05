@@ -35,6 +35,7 @@ from cmk.gui.userdb.session import auth_cookie_value
 from cmk.gui.userdb.store import convert_idle_timeout, load_custom_attr
 from cmk.gui.utils import roles
 from cmk.gui.utils.flashed_messages import MsgType
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.security_log_events import AuthenticationSuccessEvent
 from cmk.gui.wsgi.utils import dict_property
 from cmk.utils.log.security_event import log_security_event
@@ -276,10 +277,10 @@ class CheckmkFileBasedSession(dict, SessionMixin):
             and not self.session_info.two_factor_completed
         )
 
-    def two_factor_enforced(self) -> bool:
+    def two_factor_enforced(self, user_permissions: UserPermissions) -> bool:
         return (
             config.active_config.require_two_factor_all_users
-            or roles.is_two_factor_required(logged_in_user.ident)
+            or roles.is_two_factor_required(user_permissions, logged_in_user.ident)
         ) and not self.session_info.two_factor_completed
 
 

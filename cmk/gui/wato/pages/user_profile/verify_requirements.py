@@ -8,18 +8,21 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.session import session
+from cmk.gui.utils.roles import UserPermissions
 
 
-def verify_requirements(permission: str, wato_enabled: bool) -> None:
+def verify_requirements(
+    user_permissions: UserPermissions, permission: str, wato_enabled: bool
+) -> None:
     if not user.id:
         raise MKUserError(None, _("Not logged in."))
 
     # If the user is obligated to change his password, or 2FA is
     # enforced, he should be allowed to do so.
-    if (
-        request.get_ascii_input("reason") not in ("expired", "enforced")
-        and not session.two_factor_enforced()
-    ):
+    if request.get_ascii_input("reason") not in (
+        "expired",
+        "enforced",
+    ) and not session.two_factor_enforced(user_permissions):
         if not user.may(permission):
             raise MKAuthException(_("You are not allowed to edit your user profile."))
 

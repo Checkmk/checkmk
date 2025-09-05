@@ -132,15 +132,8 @@ def builtin_role_id_from_str(role_id: str) -> BuiltInUserRoleID:
     return cast(BuiltInUserRoleID, role_id)
 
 
-# TODO: Move to UserPermissions.may_with_roles
-def may_with_roles(some_role_ids: list[str], pname: str) -> bool:
-    return UserPermissions.from_config(active_config, permission_registry).may_with_roles(
-        some_role_ids, pname
-    )
-
-
-def is_two_factor_required(user_id: UserId) -> bool:
-    users_roles = roles_of_user(user_id)
+def is_two_factor_required(user_permissions: UserPermissions, user_id: UserId) -> bool:
+    users_roles = user_permissions.roles_of_user(user_id)
 
     return any(
         active_config.roles[role_id].get("two_factor", False)

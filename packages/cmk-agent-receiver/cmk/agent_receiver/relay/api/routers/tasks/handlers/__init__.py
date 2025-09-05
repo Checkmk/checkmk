@@ -10,6 +10,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.handlers.create_task import (
     RelayNotFoundError as CreateTaskRelayNotFoundError,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.handlers.get_tasks import (
+    GetRelayTaskHandler,
     GetRelayTasksHandler,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.handlers.get_tasks import (
@@ -26,6 +27,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.handlers.update_task import (
 )
 
 __all__ = [
+    "GetRelayTaskHandler",
     "GetRelayTasksHandler",
     "GetTasksRelayNotFoundError",
     "CreateTaskHandler",

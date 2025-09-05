@@ -64,6 +64,12 @@ class TasksRepository:
             return []
         return list(tasks.values())
 
+    def get_task(self, relay_id: RelayID, task_id: TaskID) -> Task:
+        try:
+            return GLOBAL_TASKS[relay_id][task_id]
+        except KeyError:
+            raise TaskNotFoundError(task_id)
+
     def store_task(self, relay_id: RelayID, task: Task) -> Task:
         if relay_id not in GLOBAL_TASKS:
             GLOBAL_TASKS[relay_id] = {}

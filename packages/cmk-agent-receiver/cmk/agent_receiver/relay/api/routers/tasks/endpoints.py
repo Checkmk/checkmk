@@ -11,12 +11,14 @@ from pydantic import SecretStr
 
 from cmk.agent_receiver.relay.api.routers.tasks.dependencies import (
     get_create_task_handler,
+    get_relay_task_handler,
     get_relay_tasks_handler,
     get_update_task_handler,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
     CreateTaskHandler,
     CreateTaskRelayNotFoundError,
+    GetRelayTaskHandler,
     GetRelayTasksHandler,
     GetTasksRelayNotFoundError,
     UpdateTaskHandler,
@@ -25,6 +27,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
 )
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     ResultType,
+    TaskNotFoundError,
     TaskStatus,
     TaskType,
 )
@@ -226,3 +229,41 @@ async def get_tasks_endpoint(
             detail=e.msg,
         )
     return TaskListResponseSerializer.serialize(tasks)
+
+
+@router.get("/{relay_id}/tasks/{task_id}")
+async def get_task_endpoint(
+    relay_id: str,
+    task_id: str,
+    handler: Annotated[GetRelayTaskHandler, fastapi.Depends(get_relay_task_handler)],
+    authorization: Annotated[SecretStr, fastapi.Header()],
+) -> tasks_protocol.TaskResponse:
+    """
+    Get a specific task for a relay
+
+    Args:
+        relay_id: UUID of the relay
+        task_id: UUID of the task
+
+    Returns:
+        TaskResponse containing task details
+    """
+    try:
+        task = handler.process(RelayID(relay_id), TaskID(task_id), authorization)
+    except GetTasksRelayNotFoundError:
+        raise fastapi.HTTPException(
+            status_code=fastapi.status.HTTP_404_NOT_FOUND,
+            detail=f"Relay with ID {relay_id} not found",
+        )
+    except TaskNotFoundError:
+        raise fastapi.HTTPException(
+            status_code=fastapi.status.HTTP_404_NOT_FOUND,
+            detail=f"Task with ID {task_id} not found",
+        )
+    except CheckmkAPIError as e:
+        raise fastapi.HTTPException(
+            status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
+            detail=e.msg,
+        )
+
+    return TaskResponseSerializer.serialize(task)

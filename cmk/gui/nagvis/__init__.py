@@ -13,7 +13,7 @@ from cmk.gui.sidebar._snapin._registry import SnapinRegistry
 from cmk.gui.type_defs import Users
 from cmk.gui.userdb import UserRolesConfigFile
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.watolib.global_settings import load_configuration_settings
+from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.groups import (
     ContactGroupUsageFinderRegistry as ContactGroupUsageFinderRegistry,
 )
@@ -36,12 +36,10 @@ def _make_user_permissions(users: Users) -> UserPermissions:
     return UserPermissions(
         UserRolesConfigFile().load_for_reading(),
         permission_registry,
-        user_roles={
-            UserId(user_id): user["roles"] for user_id, user in userdb.load_users().items()
-        },
-        default_user_profile_roles=load_configuration_settings().get(
-            "default_user_profile", {"roles": ["user"]}
-        )["roles"],
+        user_roles={UserId(user_id): user["roles"] for user_id, user in users.items()},
+        default_user_profile_roles=ConfigDomainGUI()
+        .load()
+        .get("default_user_profile", {"roles": ["user"]})["roles"],
     )
 
 

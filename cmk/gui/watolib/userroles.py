@@ -97,7 +97,6 @@ def delete_role(
     if role_to_delete.builtin:
         raise MKUserError(None, _("You cannot delete the built-in roles!"))
 
-    # Check if currently being used by a user
     users = load_users()
     for user in users.values():
         if role_id in user["roles"]:
@@ -106,35 +105,9 @@ def delete_role(
                 _("You cannot delete roles, that are still in use (%s)!") % role_id,
             )
 
-    # TODO: Not sure this call is required. Error is already raised above if an existing user has this role.
-    _rename_user_role(
-        role_id, new_role_id=None, user_attributes=user_attributes
-    )  # Remove from existing users
-
     del all_roles[role_id]
     UserRolesConfigFile().save(
         {role.name: role.to_dict() for role in all_roles.values()}, pprint_value
-    )
-
-
-def _rename_user_role(
-    role_id: RoleID,
-    new_role_id: RoleID | None,
-    user_attributes: Sequence[tuple[str, UserAttribute]],
-) -> None:
-    users = load_users(lock=True)
-    for user in users.values():
-        if role_id in user["roles"]:
-            user["roles"].remove(role_id)
-            if new_role_id:
-                user["roles"].append(new_role_id)
-    save_users(
-        users,
-        user_attributes,
-        active_config.user_connections,
-        now=datetime.now(),
-        pprint_value=active_config.wato_pprint_config,
-        call_users_saved_hook=True,
     )
 
 

@@ -6,11 +6,13 @@
 
 import ast
 import csv
+import json
 import logging
 import re
+import subprocess
 import warnings
 from collections import defaultdict
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from functools import cache
 from itertools import chain
 from pathlib import Path
@@ -26,6 +28,11 @@ from tests.testlib.common.repo import (
     is_enterprise_repo,
     repo_path,
 )
+
+BUILD_DEPS_DENYLIST = [
+    # we use openssl
+    "boringssl",
+]
 
 IGNORED_LIBS = {
     "agent_receiver",
@@ -471,3 +478,30 @@ def test_constraints() -> None:
                 continue
             offenses.append(f"Constraint for {r.name} has no ticket to be removed")
     assert not offenses, "\n".join(offenses)
+
+
+def test_denied_build_deps() -> None:
+    def traverse(node: dict[str, object], path: tuple[str, ...] = ()) -> Iterator[Sequence[str]]:
+        name = node["name"]
+        assert isinstance(name, str)
+        path += (name,)
+
+        if node["name"] in BUILD_DEPS_DENYLIST:
+            yield path
+            return
+
+        dependencies = node.get("dependencies", ())
+        assert isinstance(dependencies, Iterable)
+        for dep in dependencies:
+            yield from traverse(dep, path)
+
+    bazel_mod_graph = subprocess.run(
+        ["bazel", "mod", "graph", "--output", "json"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    graph = json.loads(bazel_mod_graph.stdout)
+
+    found = ["->".join(_) for _ in traverse(graph)]
+    assert not found, f"Found denied build dependencies {found}"

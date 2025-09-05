@@ -2736,7 +2736,7 @@ def main_update(
         from_version,
         to_version,
         site.name,
-        prepare_conflict_resolution(global_opts.force),
+        prepare_conflict_resolution(options, global_opts.force),
         versions_path,
     )
 

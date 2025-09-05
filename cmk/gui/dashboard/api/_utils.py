@@ -60,6 +60,15 @@ INTERNAL_TO_API_TYPE_NAME: Mapping[str, str] = {
     "view": "embedded_view",
 }
 
+PERMISSIONS_PAGE_TOPICS = permissions.Optional(
+    permissions.AllPerm(
+        [
+            permissions.Perm("general.see_user_pagetype_topic"),
+            permissions.PrefixPerm("pagetype_topic"),
+        ]
+    )
+)
+
 # if a dashboard contains view widgets, these might come up (even for reads)
 PERMISSIONS_VIEW_WIDGET = permissions.Optional(
     permissions.AllPerm(
@@ -80,6 +89,8 @@ PERMISSIONS_DASHBOARD = permissions.AllPerm(
         permissions.Optional(permissions.Perm("general.force_dashboards")),
         permissions.Optional(permissions.Perm("general.see_user_dashboards")),
         permissions.Optional(permissions.Perm("general.see_packaged_dashboards")),
+        # breadcrumb metadata optional, required for every dashboard
+        PERMISSIONS_PAGE_TOPICS,
         # every dashboard has its own permissions, all of which might be checked (and are optional)
         permissions.PrefixPerm("dashboard"),
         # dashboards which contain view widgets need extra permissions to view/modify them

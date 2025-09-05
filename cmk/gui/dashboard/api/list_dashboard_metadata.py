@@ -7,6 +7,7 @@ from typing import Literal
 from cmk.ccc.user import UserId
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
+    ApiContext,
     APIVersion,
     EndpointDoc,
     EndpointHandler,
@@ -22,6 +23,7 @@ from cmk.gui.openapi.framework.model.base_models import (
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.type_defs import AnnotatedUserId
 
+from ..breadcrumb import dashboard_topic_breadcrumb
 from ..store import get_permitted_dashboards
 from ._family import DASHBOARD_FAMILY
 from ._utils import dashboard_uses_relative_grid, PERMISSIONS_DASHBOARD
@@ -30,11 +32,23 @@ type DashboardLayoutType = Literal["relative_grid", "responsive_grid"]
 
 
 @api_model
+class BreadcrumbItem:
+    title: str = api_field(description="The title of the breadcrumb item")
+    link: str | None = api_field(description="The link of the breadcrumb item")
+
+
+@api_model
+class Topic:
+    name: str = api_field(description="Id of the topic")
+    breadcrumb: list[BreadcrumbItem] = api_field(description="Breadcrumb navigation for the topic.")
+
+
+@api_model
 class DashboardDisplay:
     """Display and presentation settings for dashboard listings."""
 
     title: str = api_field(description="The title of the dashboard")
-    topic: str = api_field(description="Topic area the dashboard covers")
+    topic: Topic = api_field(description="Topic area the dashboard covers")
     hidden: bool = api_field(description="Whether the dashboard is hidden from general listings")
     sort_index: int = api_field(description="Numeric value used for ordering dashboards in lists.")
 
@@ -79,9 +93,10 @@ class DashboardMetadataCollectionModel(DomainObjectCollectionModel):
     )
 
 
-def list_dashboard_metadata_v1() -> DashboardMetadataCollectionModel:
+def list_dashboard_metadata_v1(api_context: ApiContext) -> DashboardMetadataCollectionModel:
     """List permitted dashboard metadata."""
     dashboards = []
+    user_permissions = api_context.config.user_permissions()
     for dashboard_id, dashboard in get_permitted_dashboards().items():
         # Determine layout type based on dashboard configuration
         layout_type: DashboardLayoutType = (
@@ -90,7 +105,14 @@ def list_dashboard_metadata_v1() -> DashboardMetadataCollectionModel:
 
         display = DashboardDisplay(
             title=str(dashboard["title"]),
-            topic=dashboard["topic"],
+            topic=Topic(
+                name=dashboard["topic"],
+                # LazyString to str conversion to avoid issues with OpenAPI generation
+                breadcrumb=[
+                    BreadcrumbItem(title=str(item.title), link=item.url)
+                    for item in dashboard_topic_breadcrumb(dashboard["topic"], user_permissions)
+                ],
+            ),
             hidden=dashboard["hidden"],
             sort_index=dashboard["sort_index"],
         )

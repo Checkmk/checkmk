@@ -11,12 +11,10 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    DiscoveryResult,
     IgnoreResultsError,
     InventoryPlugin,
     render,
     Result,
-    Service,
     State,
 )
 from cmk.agent_based.v2 import check_levels as check_levels_v2
@@ -24,7 +22,6 @@ from cmk.plugins.lib.azure import (
     check_resource_metrics,
     create_check_metrics_function_single,
     create_discover_by_metrics_function_single,
-    get_service_labels_from_resource_tags,
     inventory_common_azure,
     MetricData,
     parse_resources,
@@ -37,28 +34,6 @@ inventory_plugin_azure_redis = InventoryPlugin(
     name="azure_redis",
     inventory_function=inventory_common_azure,
 )
-
-
-def discover_azure_redis(section: Section) -> DiscoveryResult:
-    for item, resource in section.items():
-        yield Service(item=item, labels=get_service_labels_from_resource_tags(resource.tags))
-
-
-def check_azure_redis(item: str, section: Section) -> CheckResult:
-    if (resource := section.get(item)) is None:
-        raise IgnoreResultsError("Data not present at the moment")
-    # TODO: Maybe something more than location here... but for now...
-    yield Result(state=State.OK, summary=f"Location: {resource.location}")
-
-
-check_plugin_azure_redis = CheckPlugin(
-    name="azure_redis",
-    sections=["azure_redis"],
-    service_name="Azure/Redis %s",
-    discovery_function=discover_azure_redis,
-    check_function=check_azure_redis,
-)
-
 
 check_plugin_azure_redis_connections = CheckPlugin(
     name="azure_redis_connections",

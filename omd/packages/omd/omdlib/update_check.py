@@ -41,7 +41,7 @@ def _omd_to_check_mk_version(omd_version: str) -> Version:
     return Version.from_str(".".join(parts))
 
 
-def determine_update_config(
+def check_update_possible(
     from_edition: str,
     to_edition: str,
     from_version: str,

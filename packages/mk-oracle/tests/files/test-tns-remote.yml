@@ -1,10 +1,29 @@
+# Used to check custom instances with entry from tnsnames.ora
+# also only one section is provided
+# expects to find the FREE database in CI_ORA2_DB_TEST
+# expects ora_remote correctly defined in tnsnames.ora, i.e. TNS_ADMIN set properly
 ---
 oracle:
   main: # mandatory, to be used if no specific config
     connection: # mandatory
-      tns_entry: ora_remote
+      hostname: absent.oracle-win.dev.checkmk.net # non exists/disabled
     authentication: # mandatory
       username: $CI_ORA2_DB_TEST
       password: $CI_ORA2_DB_TEST
       type: standard
-      #role: sysdba # it may be not enabled by Oracle DBA
+    #      role: sysdba # it may be not enabled by Oracle DBA
+    sections: # optional, if absent will use default as defined below
+      - instance: # special section
+    discovery: # optional, defines instances to be monitored
+      detect: no # optional
+      include: ["FREE"] # optional
+      exclude: [] # optional
+    instances: # optional
+      - sid: FREE
+        alias: ora_remote
+        connection: # mandatory
+        authentication: # mandatory
+          username: $CI_ORA2_DB_TEST
+          password: $CI_ORA2_DB_TEST
+          type: standard
+          #role: sysdba # it may be not enabled by Oracle DBA

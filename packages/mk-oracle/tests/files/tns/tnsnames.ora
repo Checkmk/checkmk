@@ -8,3 +8,16 @@ ora_local =
  (SERVER = DEDICATED)
  )
  )
+
+
+ora_remote =
+  (DESCRIPTION =
+  (ADDRESS_LIST =
+  (ADDRESS = (PROTOCOL = TCP)(HOST =  oracle-win.dev.checkmk.net)(PORT = 1521))
+  )
+  (CONNECT_DATA =
+  (SID = FREE)
+  (SERVER = DEDICATED)
+  )
+  )
+

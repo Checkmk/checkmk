@@ -94,7 +94,7 @@ impl Connection {
                     .unwrap_or_default()
                     .to_lowercase();
                 EngineTag::from_string(value.as_str()).unwrap_or_else(|| {
-                    log::error!("Unknown engine '{}'", &value);
+                    log::info!("Unknown engine '{}'", &value);
                     EngineTag::default()
                 })
             },

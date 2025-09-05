@@ -26,15 +26,15 @@ State = NewType("State", str)
 
 
 class RelayData(BaseModel):
-    alias: str = "name"
-    siteid: str = "somesite"
+    alias: str
+    siteid: str
 
 
 class GetResponse(BaseModel):
     """basic structure of a checkmk GET response for a single item"""
 
     id: str
-    extensions: RelayData = RelayData()
+    extensions: RelayData
     links: list[str] = Field(default_factory=list)  # keep empty here
     domainType: str = "relay"
 
@@ -80,6 +80,7 @@ class SiteMock:
         self, relays: list[Relay] | Relay, changes: Sequence[Change] | None = None
     ) -> None:
         """Setup a WireMock scenario for relay management testing.
+        limited to work on one site.
 
         Examples:
             # Simple static scenario
@@ -167,7 +168,12 @@ class SiteMock:
             ),
             response=Response(
                 status=200,
-                body=ListResponse(value=[GetResponse(id=r) for r in relays]).model_dump_json(),
+                body=ListResponse(
+                    value=[
+                        GetResponse(id=r, extensions=RelayData(alias=r, siteid=self.site_name))
+                        for r in relays
+                    ]
+                ).model_dump_json(),
             ),
         )
         self.wiremock.setup_mapping(mapping)
@@ -184,6 +190,11 @@ class SiteMock:
                         "Authorization": {"matches": self.user.bearer},
                     },
                 ),
-                response=Response(status=200, body=GetResponse(id=r).model_dump_json()),
+                response=Response(
+                    status=200,
+                    body=GetResponse(
+                        id=r, extensions=RelayData(alias=r, siteid=self.site_name)
+                    ).model_dump_json(),
+                ),
             )
             self.wiremock.setup_mapping(mapping)

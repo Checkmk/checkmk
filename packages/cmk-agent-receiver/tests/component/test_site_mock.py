@@ -222,3 +222,27 @@ def test_scenario_multiple_changes(site: SiteMock, client: httpx.Client) -> None
         assert resp.status_code == HTTPStatus.OK
         get_parsed = GetResponse.model_validate(resp.json())
         assert get_parsed.id == relay_id
+
+
+def test_sitename_alias_return_bodies(site: SiteMock, client: httpx.Client) -> None:
+    test_relays = ["relay_with_alias", "another_relay"]
+    site.set_scenario(relays=test_relays)
+
+    # test single relay endpoint returns correct sitename and alias
+    for relay_id in test_relays:
+        resp = client.get(f"/objects/relay/{relay_id}")
+        assert resp.status_code == HTTPStatus.OK
+        get_parsed = GetResponse.model_validate(resp.json())
+        assert get_parsed.id == relay_id
+        assert get_parsed.extensions.alias == relay_id
+        assert get_parsed.extensions.siteid == site.site_name
+
+    # test collection endpoint returns correct sitename and alias for all relays
+    resp = client.get("/domain-types/relay/collections/all")
+    assert resp.status_code == HTTPStatus.OK
+    list_parsed = ListResponse.model_validate(resp.json())
+
+    for relay_response in list_parsed.value:
+        assert relay_response.id in test_relays
+        assert relay_response.extensions.alias == relay_response.id
+        assert relay_response.extensions.siteid == site.site_name

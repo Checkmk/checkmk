@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Mapping
+from typing import Any
+
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
@@ -18,6 +21,7 @@ from cmk.agent_based.v2 import (
 )
 from cmk.agent_based.v2 import check_levels as check_levels_v2
 from cmk.plugins.lib.azure import (
+    check_resource_metrics,
     create_check_metrics_function_single,
     create_discover_by_metrics_function_single,
     get_service_labels_from_resource_tags,
@@ -261,5 +265,62 @@ check_plugin_azure_redis_latency = CheckPlugin(
     check_default_parameters={
         "serverside_upper": ("no_levels", None),
         "internode_upper": ("no_levels", None),
+    },
+)
+
+
+def check_azure_redis_replication(params: Mapping[str, Any], section: Section) -> CheckResult:
+    """
+    Check function for Azure Redis replication.
+
+    This needs to be a special snowflake, because we effectively get a boolean
+    value back as one of the metrics ("GeoReplicationHealthy" will be 1 if
+    healthy, 0 otherwise). So we need to process that and then take into account
+    what status the param asks for when it's reported unhealthy (0).
+
+    For "GeoReplicationConnectivityLag" we can use the normal
+    check_resource_metrics, since it's just in seconds.
+    """
+    if len(section) != 1:
+        raise IgnoreResultsError("Only one resource expected")
+
+    resource = list(section.values())[0]
+    health_metric = resource.metrics.get("minimum_GeoReplicationHealthy")
+    if health_metric is not None:
+        is_healthy = health_metric.value == 1
+        if is_healthy:
+            yield Result(state=State.OK, summary="Healthy")
+        else:
+            yield Result(state=State(params["replication_unhealthy_status"]), summary="Unhealthy")
+
+    yield from check_resource_metrics(
+        resource,
+        params,
+        [
+            MetricData(
+                "average_GeoReplicationConnectivityLag",
+                "azure_redis_replication_connectivity_lag",
+                "Connectivity lag",
+                render.timespan,
+                upper_levels_param="replication_connectivity_lag_upper",
+            ),
+        ],
+        check_levels=check_levels_v2,
+    )
+
+
+check_plugin_azure_redis_replication = CheckPlugin(
+    name="azure_redis_replication",
+    sections=["azure_redis"],
+    service_name="Azure/Redis Replication",
+    discovery_function=create_discover_by_metrics_function_single(
+        "minimum_GeoReplicationHealthy",
+        "average_GeoReplicationConnectivityLag",
+    ),
+    check_function=check_azure_redis_replication,
+    check_ruleset_name="azure_redis_replication",
+    check_default_parameters={
+        "replication_unhealthy_status": int(State.CRIT),
+        "replication_connectivity_lag_upper": ("no_levels", None),
     },
 )

@@ -124,6 +124,18 @@ AZURE_REDIS_WITH_METRICS = {
                 value=2.5,
                 unit="seconds",
             ),
+            "maximum_allcacheRead": AzureMetric(
+                name="allcacheRead",
+                aggregation="maximum",
+                value=40706,
+                unit="bytespersecond",
+            ),
+            "maximum_allcacheWrite": AzureMetric(
+                name="allcacheWrite",
+                aggregation="maximum",
+                value=31375,
+                unit="bytespersecond",
+            ),
         },
         subscription="ba9f74ff-6a4c-41e0-ab55-15c7fe79632f",
     ),
@@ -268,6 +280,23 @@ def resource_fixture_but(**kwargs):
                 Metric("azure_redis_replication_connectivity_lag", 20.0, levels=(0.3, 1.0)),
             ],
             id="redis replication with unhealthy geo link",
+        ),
+        pytest.param(
+            AZURE_REDIS_WITH_METRICS,
+            {
+                "cache_read_upper": ("fixed", (38_000, 60_000)),
+                "cache_write_upper": ("fixed", (33_000, 38_000)),
+            },
+            azure_redis.check_plugin_azure_redis_throughput,
+            [
+                Result(
+                    state=State.WARN, summary="Read: 40.7 kB/s (warn/crit at 38.0 kB/s/60.0 kB/s)"
+                ),
+                Metric("azure_redis_throughput_cache_read", 40706.0, levels=(38000.0, 60000.0)),
+                Result(state=State.OK, summary="Write: 31.4 kB/s"),
+                Metric("azure_redis_throughput_cache_write", 31375.0, levels=(33000.0, 38000.0)),
+            ],
+            id="redis throughput",
         ),
     ],
 )

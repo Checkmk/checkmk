@@ -307,6 +307,7 @@ impl SpotBuilder {
             instance: endpoint.conn().instance().map(|i| i.to_owned()),
             service_name: endpoint.conn().service_name().map(|n| n.to_owned()),
             service_type: endpoint.conn().service_type().map(|t| t.to_owned()),
+            alias: None,
             port: endpoint.conn().port().clone(),
             auth: endpoint.auth().clone(),
         });
@@ -320,6 +321,7 @@ impl SpotBuilder {
             instance: Some(instance.name().clone()),
             service_name: ep.conn().service_name().map(|n| n.to_owned()),
             service_type: ep.conn().service_type().map(|t| t.to_owned()),
+            alias: instance.alias().clone(),
             port: ep.conn().port().clone(),
             auth: ep.auth().clone(),
         });

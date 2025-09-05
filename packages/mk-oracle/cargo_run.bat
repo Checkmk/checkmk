@@ -7,6 +7,7 @@
 @echo off
 set "OLD_PATH=%PATH%"
 set "PATH=%cd%\runtimes\oci_light_win_x64.zip;%PATH%"
+set TNS_ADMIN=%cd%\tests\files\tns
 cargo %*
 set "PATH=%OLD_PATH%"
 

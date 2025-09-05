@@ -183,7 +183,7 @@ fn _exec_queries(
                     let mut result: Vec<String> = queries
                         .iter()
                         .flat_map(|query| {
-                            log::info!("Executing query: {}", query.as_str());
+                            log::debug!("Executing query: {}", query.as_str());
                             conn.query_table(query)
                                 .format(&SECTION_SEPARATOR.to_string())
                                 .unwrap_or_else(|e| {

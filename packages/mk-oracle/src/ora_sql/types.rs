@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::types::{HostName, InstanceName, Port, ServiceName, ServiceType};
+use crate::types::{HostName, InstanceAlias, InstanceName, Port, ServiceName, ServiceType};
 
 use crate::config::authentication::Authentication;
 
@@ -12,6 +12,7 @@ pub struct Target {
     pub instance: Option<InstanceName>,
     pub service_type: Option<ServiceType>,
     pub service_name: Option<ServiceName>,
+    pub alias: Option<InstanceAlias>,
     pub port: Port,
     pub auth: Authentication,
 }
@@ -27,13 +28,17 @@ impl Target {
                 String::new()
             }
         }
+        if let Some(alias) = &self.alias {
+            log::info!("Using alias connection: {alias}");
+            return format!("{}", alias);
+        }
         let work_instance = if self.instance.is_some() {
             self.instance.as_ref()
         } else {
             optional_instance
         };
 
-        if let Some(service_name) = &self.service_name {
+        let conn_string = if let Some(service_name) = &self.service_name {
             format!(
                 "{}:{}/{}{}{}",
                 self.host,
@@ -49,7 +54,9 @@ impl Target {
                 self.port,
                 &format_entry(work_instance, "/")
             )
-        }
+        };
+        log::info!("Using normal connection: {conn_string}");
+        conn_string
     }
 }
 
@@ -72,6 +79,7 @@ authentication:
             instance: Some(InstanceName::from("orcl")),
             service_type: Some(ServiceType::from("dedicated")),
             service_name: Some(ServiceName::from("my_service")),
+            alias: None,
             port: Port(1521),
             auth: Authentication::from_yaml(&create_yaml(AUTH_YAML))
                 .unwrap()
@@ -87,9 +95,26 @@ authentication:
         );
         let target = Target {
             host: HostName::from("localhost".to_owned()),
+            instance: Some(InstanceName::from("orcl")),
+            service_type: Some(ServiceType::from("dedicated")),
+            service_name: Some(ServiceName::from("my_service")),
+            alias: Some(InstanceAlias::from("my_alias".to_string())),
+            port: Port(1521),
+            auth: Authentication::from_yaml(&create_yaml(AUTH_YAML))
+                .unwrap()
+                .unwrap(),
+        };
+        assert_eq!(
+            target.make_connection_string(Some(InstanceName::from("XYZ")).as_ref()),
+            "my_alias"
+        );
+        assert_eq!(target.make_connection_string((None).as_ref()), "my_alias");
+        let target = Target {
+            host: HostName::from("localhost".to_owned()),
             instance: None,
             service_type: None,
             service_name: None,
+            alias: None,
             port: Port(1521),
             auth: Authentication::from_yaml(&create_yaml(AUTH_YAML))
                 .unwrap()
@@ -101,6 +126,7 @@ authentication:
             instance: Some(InstanceName::from("orcl")),
             service_type: None,
             service_name: None,
+            alias: None,
             port: Port(1521),
             auth: Authentication::from_yaml(&create_yaml(AUTH_YAML))
                 .unwrap()

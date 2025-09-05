@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Final, Protocol
 
@@ -279,7 +279,7 @@ PACKAGE_CRYPTO = ("cmk.crypto",)
 
 PACKAGE_TRACE = ("cmk.trace",)
 
-COMPONENTS = {
+COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     Component("tests.code_quality"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_WERKS,
@@ -301,6 +301,8 @@ COMPONENTS = {
         *PACKAGE_CCC,
     ),
     Component("tests.pylint"): _allow("cmk.utils.escaping"),
+    # Tests are allowed to import everything for now. Should be cleaned up soon (TM)
+    Component("tests.testlib"): lambda *_a, **_kw: True,
     Component("tests.unit.cmk.base.legacy_checks"): _allow(
         *PACKAGE_PLUGIN_APIS,
         "cmk.base.check_legacy_includes",
@@ -960,15 +962,12 @@ class CMKModuleLayerChecker(BaseChecker):
 
     def _check_import(self, node: Import | ImportFrom, imported: ModuleName) -> None:
         # We only care about imports of our own modules.
+        # ... blissfully ignoring tests/.
         if not imported.in_component(Component("cmk")):
             return
 
         # We use paths relative to our project root, but not for our "pasting magic".
         importing_path = ModulePath(node.root().file).relative_to(self.cmk_path_cached)
-
-        # Tests are allowed to import everything for now. Should be cleaned up soon
-        if importing_path.is_below("tests/testlib"):
-            return
 
         importing = self._get_module_name_of_files(importing_path)
         component = self._find_component(importing, importing_path)

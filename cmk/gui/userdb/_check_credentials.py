@@ -19,6 +19,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.logged_in import LoggedInUser
+from cmk.gui.type_defs import UserSpec
 from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.utils.security_log_events import UserManagementEvent
 from cmk.utils.log.security_event import log_security_event
@@ -36,6 +37,7 @@ def check_credentials(
     password: Password,
     user_attributes: Sequence[tuple[str, UserAttribute]],
     now: datetime,
+    default_user_profile: UserSpec,
 ) -> UserId | Literal[False]:
     """Verify the credentials given by a user using all auth connections"""
     for connection_id, connection in active_connections(active_config.user_connections):
@@ -47,7 +49,7 @@ def check_credentials(
             password,
             user_attributes,
             active_config.user_connections,
-            active_config.default_user_profile,
+            default_user_profile,
         )
 
         if result is False:
@@ -70,7 +72,9 @@ def check_credentials(
         #    and Checkmk does not have a user entry yet
         #
         # In this situation a user account with the "default profile" should be created
-        _create_non_existing_user(connection_id, user_id, user_attributes, now)
+        _create_non_existing_user(
+            connection_id, user_id, user_attributes, now, default_user_profile
+        )
 
         if not is_customer_user_allowed_to_login(user_id):
             # A CME not assigned with the current sites customer
@@ -94,6 +98,7 @@ def _create_non_existing_user(
     username: UserId,
     user_attributes: Sequence[tuple[str, UserAttribute]],
     now: datetime,
+    default_user_profile: UserSpec,
 ) -> None:
     # Since user_exists also looks into the htpasswd and treats all users that can be found there as
     # "existing users", we don't care about partially known users here and don't create them ad-hoc.
@@ -104,7 +109,7 @@ def _create_non_existing_user(
         return  # User exists. Nothing to do...
 
     users = load_users(lock=True)
-    users[username] = new_user_template(connection_id, active_config.default_user_profile)
+    users[username] = new_user_template(connection_id, default_user_profile)
     users[username].setdefault("alias", username)
     save_users(
         users,
@@ -137,7 +142,7 @@ def _create_non_existing_user(
             user_attributes=user_attributes,
             load_users_func=load_users,
             save_users_func=save_users,
-            default_user_profile=active_config.default_user_profile,
+            default_user_profile=default_user_profile,
         )
     except Exception as e:
         _show_exception(connection_id, _("Error during sync"), e, debug=active_config.debug)

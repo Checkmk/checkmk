@@ -30,6 +30,7 @@ from cmk.gui.type_defs import (
     SessionInfo,
     TotpCredential,
     TwoFactorCredentials,
+    UserSpec,
     WebAuthnCredential,
 )
 from cmk.gui.user_connection_config_types import (
@@ -622,7 +623,15 @@ def test_check_credentials_local_user(with_user: tuple[UserId, str]) -> None:
     username, password = with_user
     assert (
         userdb.check_credentials(
-            username, Password(password), get_user_attributes([]), datetime.now()
+            username,
+            Password(password),
+            get_user_attributes([]),
+            datetime.now(),
+            UserSpec(
+                contactgroups=[],
+                roles=["user"],
+                force_authuser=False,
+            ),
         )
         == username
     )
@@ -643,7 +652,17 @@ def test_check_credentials_local_user_create_htpasswd_user_ad_hoc() -> None:
     assert user_id in _load_users_uncached(lock=False)
 
     assert (
-        userdb.check_credentials(user_id, Password("cmk"), get_user_attributes([]), datetime.now())
+        userdb.check_credentials(
+            user_id,
+            Password("cmk"),
+            get_user_attributes([]),
+            datetime.now(),
+            UserSpec(
+                contactgroups=[],
+                roles=["user"],
+                force_authuser=False,
+            ),
+        )
         == user_id
     )
 
@@ -657,7 +676,20 @@ def test_check_credentials_local_user_disallow_locked(with_user: tuple[UserId, s
     now = datetime.now()
     user_id, password = with_user
     user_attributes = get_user_attributes([])
-    assert userdb.check_credentials(user_id, Password(password), user_attributes, now) == user_id
+    assert (
+        userdb.check_credentials(
+            user_id,
+            Password(password),
+            user_attributes,
+            now,
+            UserSpec(
+                contactgroups=[],
+                roles=["user"],
+                force_authuser=False,
+            ),
+        )
+        == user_id
+    )
 
     users = _load_users_uncached(lock=True)
 
@@ -672,7 +704,17 @@ def test_check_credentials_local_user_disallow_locked(with_user: tuple[UserId, s
     )
 
     with pytest.raises(MKUserError, match="User is locked"):
-        userdb.check_credentials(user_id, Password(password), user_attributes, now)
+        userdb.check_credentials(
+            user_id,
+            Password(password),
+            user_attributes,
+            now,
+            UserSpec(
+                contactgroups=[],
+                roles=["user"],
+                force_authuser=False,
+            ),
+        )
 
 
 # user_id needs to be used here because it executes a reload of the config and the monkeypatch of
@@ -705,7 +747,20 @@ def test_check_credentials_managed_global_user_is_allowed(with_user: tuple[UserI
         pprint_value=True,
         call_users_saved_hook=False,
     )
-    assert userdb.check_credentials(user_id, Password(password), user_attributes, now) == user_id
+    assert (
+        userdb.check_credentials(
+            user_id,
+            Password(password),
+            user_attributes,
+            now,
+            UserSpec(
+                contactgroups=[],
+                roles=["user"],
+                force_authuser=False,
+            ),
+        )
+        == user_id
+    )
 
 
 @pytest.mark.skipif(not is_managed_repo(), reason="managed-edition-only test")
@@ -723,7 +778,20 @@ def test_check_credentials_managed_customer_user_is_allowed(with_user: tuple[Use
         pprint_value=True,
         call_users_saved_hook=False,
     )
-    assert userdb.check_credentials(user_id, Password(password), user_attributes, now) == user_id
+    assert (
+        userdb.check_credentials(
+            user_id,
+            Password(password),
+            user_attributes,
+            now,
+            UserSpec(
+                contactgroups=[],
+                roles=["user"],
+                force_authuser=False,
+            ),
+        )
+        == user_id
+    )
 
 
 @pytest.mark.skipif(not is_managed_repo(), reason="managed-edition-only test")
@@ -743,7 +811,20 @@ def test_check_credentials_managed_wrong_customer_user_is_denied(
         pprint_value=True,
         call_users_saved_hook=False,
     )
-    assert userdb.check_credentials(user_id, Password(password), user_attributes, now) is False
+    assert (
+        userdb.check_credentials(
+            user_id,
+            Password(password),
+            user_attributes,
+            now,
+            UserSpec(
+                contactgroups=[],
+                roles=["user"],
+                force_authuser=False,
+            ),
+        )
+        is False
+    )
 
 
 def test_load_custom_attr_not_existing(user_id: UserId) -> None:

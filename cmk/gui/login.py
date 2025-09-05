@@ -215,6 +215,7 @@ class LoginPage(Page):
                 password,
                 (user_attributes := get_user_attributes(config.wato_user_attrs)),
                 now,
+                config.default_user_profile,
             ):
                 # use the username provided by the successful login function, this function
                 # might have transformed the username provided by the user. e.g. switched

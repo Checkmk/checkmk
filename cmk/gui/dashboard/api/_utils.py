@@ -131,7 +131,7 @@ def serialize_relative_grid_dashboard(
     return RelativeGridDashboardDomainObject(
         domainType="dashboard",
         id=dashboard_id,
-        title=dashboard.title.text,
+        title=dashboard.general_settings.title.text,
         links=generate_links("dashboard", dashboard_id),
         extensions=dashboard,
     )

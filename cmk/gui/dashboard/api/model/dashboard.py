@@ -181,6 +181,50 @@ class DashboardFilterContext:
     filters: VisualContext = api_field(
         description="Active filters in the format filter_id -> (variable -> value)"
     )
+    mandatory_context_filters: list[FilterName] = api_field(
+        description="Filters that are required to use this dashboard."
+    )
+
+
+@api_model
+class DashboardGeneralSettings:
+    title: DashboardTitle = api_field(
+        description="Title settings.", example={"text": "My Dashboard", "render": True}
+    )
+    description: str | ApiOmitted = api_field(
+        description="Description of the dashboard.",
+        default_factory=ApiOmitted,
+        example="This dashboard shows ...",
+    )
+    menu: DashboardMenuSettings = api_field(description="Settings relating to the main menu.")
+    visibility: DashboardVisibility = api_field(
+        description="Settings relating to the dashboards visibility."
+    )
+
+    @classmethod
+    def from_internal(cls, dashboard: DashboardConfig) -> Self:
+        api_general_settings = cls(
+            title=DashboardTitle(
+                text=str(dashboard["title"]),
+                render=dashboard["show_title"],
+                include_context=dashboard["add_context_to_title"],
+            ),
+            menu=DashboardMenuSettings(
+                topic=dashboard["topic"],
+                sort_index=dashboard["sort_index"],
+                icon=DashboardIcon.from_internal(dashboard.get("icon")),
+                is_show_more=dashboard["is_show_more"],
+                search_terms=list(dashboard["main_menu_search_terms"]),
+            ),
+            visibility=DashboardVisibility(
+                hide_in_monitor_menu=dashboard.get("hidden", False),
+                hide_in_drop_down_menus=dashboard.get("hidebutton", False),
+                share=DashboardVisibility.share_from_internal(dashboard["public"]),
+            ),
+        )
+        if "description" in dashboard:
+            api_general_settings.description = str(dashboard["description"])
+        return api_general_settings
 
 
 @api_model
@@ -198,28 +242,17 @@ class DashboardFilterContextResponse(DashboardFilterContext):
             restricted_to_single=list(dashboard["single_infos"]),
             filters=dashboard["context"],
             uses_infos=list(dashboard_info_handler(dashboard)),
+            mandatory_context_filters=dashboard["mandatory_context_filters"],
         )
 
 
 @api_model
 class BaseDashboardRequest:
-    title: DashboardTitle = api_field(
-        description="Title settings.", example={"text": "My Dashboard", "render": True}
-    )
-    description: str | ApiOmitted = api_field(
-        description="Description of the dashboard.",
-        default_factory=ApiOmitted,
-        example="This dashboard shows ...",
-    )
-    menu: DashboardMenuSettings = api_field(description="Settings relating to the main menu.")
-    visibility: DashboardVisibility = api_field(
-        description="Settings relating to the dashboards visibility."
+    general_settings: DashboardGeneralSettings = api_field(
+        description="General settings for the dashboard.",
     )
     filter_context: DashboardFilterContext = api_field(
         description="Filter context for the dashboard.",
-    )
-    mandatory_context_filters: list[FilterName] = api_field(
-        description="Filters that are required to use this dashboard."
     )
 
     def _to_internal_without_layout_and_widgets(
@@ -230,22 +263,24 @@ class BaseDashboardRequest:
             name=dashboard_id,
             context=self.filter_context.filters,
             single_infos=self.filter_context.restricted_to_single,
-            add_context_to_title=self.title.include_context,
-            title=self.title.text,
-            description="" if isinstance(self.description, ApiOmitted) else self.description,
-            topic=self.menu.topic,
-            sort_index=self.menu.sort_index,
-            is_show_more=self.menu.is_show_more,
-            icon=DashboardIcon.to_internal(self.menu.icon),
-            hidden=self.visibility.hide_in_monitor_menu,
-            hidebutton=self.visibility.hide_in_drop_down_menus,
-            public=self.visibility.share_to_internal(),
+            add_context_to_title=self.general_settings.title.include_context,
+            title=self.general_settings.title.text,
+            description=""
+            if isinstance(self.general_settings.description, ApiOmitted)
+            else self.general_settings.description,
+            topic=self.general_settings.menu.topic,
+            sort_index=self.general_settings.menu.sort_index,
+            is_show_more=self.general_settings.menu.is_show_more,
+            icon=DashboardIcon.to_internal(self.general_settings.menu.icon),
+            hidden=self.general_settings.visibility.hide_in_monitor_menu,
+            hidebutton=self.general_settings.visibility.hide_in_drop_down_menus,
+            public=self.general_settings.visibility.share_to_internal(),
             packaged=False,
             link_from={},
-            main_menu_search_terms=self.menu.search_terms,
+            main_menu_search_terms=self.general_settings.menu.search_terms,
             mtime=int(dt.datetime.now(tz=dt.UTC).timestamp()),
-            show_title=self.title.render,
-            mandatory_context_filters=self.mandatory_context_filters,
+            show_title=self.general_settings.title.render,
+            mandatory_context_filters=self.filter_context.mandatory_context_filters,
             dashlets=[],
         )
 
@@ -300,25 +335,8 @@ class RelativeGridDashboardResponse(BaseDashboardResponse):
     def from_internal(cls, dashboard: DashboardConfig) -> Self:
         api_dashboard = cls(
             owner=dashboard["owner"],
-            title=DashboardTitle(
-                text=str(dashboard["title"]),
-                render=dashboard["show_title"],
-                include_context=dashboard["add_context_to_title"],
-            ),
-            menu=DashboardMenuSettings(
-                topic=dashboard["topic"],
-                sort_index=dashboard["sort_index"],
-                icon=DashboardIcon.from_internal(dashboard.get("icon")),
-                is_show_more=dashboard["is_show_more"],
-                search_terms=list(dashboard["main_menu_search_terms"]),
-            ),
-            visibility=DashboardVisibility(
-                hide_in_monitor_menu=dashboard.get("hidden", False),
-                hide_in_drop_down_menus=dashboard.get("hidebutton", False),
-                share=DashboardVisibility.share_from_internal(dashboard["public"]),
-            ),
-            mandatory_context_filters=dashboard["mandatory_context_filters"],
             last_modified_at=dt.datetime.fromtimestamp(dashboard["mtime"], tz=dt.UTC),
+            general_settings=DashboardGeneralSettings.from_internal(dashboard),
             filter_context=DashboardFilterContextResponse.from_internal(dashboard),
             widgets={
                 f"{dashboard['name']}-{idx}": RelativeGridWidgetResponse.from_internal(dashlet)
@@ -326,6 +344,4 @@ class RelativeGridDashboardResponse(BaseDashboardResponse):
             },
             layout=DashboardRelativeGridLayout(type="relative_grid"),
         )
-        if "description" in dashboard:
-            api_dashboard.description = str(dashboard["description"])
         return api_dashboard

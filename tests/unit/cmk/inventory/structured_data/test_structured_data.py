@@ -1720,7 +1720,13 @@ def test_update_from_previous_1() -> None:
     choices = SDRetentionFilterChoices(path=(), interval=6)
     choices.add_columns_choice(choice="all", cache_info=(4, 5))
 
-    assert len(current_tree_.update(now=0, previous_tree=previous_tree, choices=choices)) > 0
+    current_tree_.update(now=0, previous_tree=previous_tree, choices=choices)
+    assert current_tree_.get_update_results() == {
+        (): [
+            "[Table] 'KC': Added row: message",
+            "[Table] 'KC': Keep until: message",
+        ]
+    }
 
     current_tree = _make_immutable_tree(current_tree_)
     assert current_tree.table.key_columns == ["kc"]
@@ -1759,8 +1765,13 @@ def test_update_from_previous_2() -> None:
     )
     choices = SDRetentionFilterChoices(path=(), interval=6)
     choices.add_columns_choice(choice=[SDKey("c2"), SDKey("c3")], cache_info=(4, 5))
-
-    assert len(current_tree_.update(now=0, previous_tree=previous_tree, choices=choices)) > 0
+    current_tree_.update(now=0, previous_tree=previous_tree, choices=choices)
+    assert current_tree_.get_update_results() == {
+        (): [
+            "[Table] 'KC': Added row: message",
+            "[Table] 'KC': Keep until: message",
+        ],
+    }
 
     current_tree = _make_immutable_tree(current_tree_)
     assert current_tree.table.key_columns == ["kc"]

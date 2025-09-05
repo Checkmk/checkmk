@@ -157,27 +157,6 @@ class RetentionInterval:
         return self.cached_at + self.cache_interval + self.retention_interval
 
 
-@dataclass(frozen=True, kw_only=True)
-class UpdateResultAttributes:
-    path: SDPath
-    title: str
-    message: str
-
-    def __str__(self) -> str:
-        return f"[Attributes] {self.title}: self.message"
-
-
-@dataclass(frozen=True, kw_only=True)
-class UpdateResultTable:
-    path: SDPath
-    ident: SDRowIdent
-    title: str
-    message: str
-
-    def __str__(self) -> str:
-        return f"[Table] '{', '.join(map(str, self.ident))}': {self.title}: self.message"
-
-
 def parse_visible_raw_path(raw_path: str) -> SDPath:
     return tuple(SDNodeName(part) for part in raw_path.split(".") if part)
 
@@ -679,10 +658,15 @@ def deserialize_delta_tree(raw_tree: SDRawDeltaTree) -> ImmutableDeltaTree:
 #   '----------------------------------------------------------------------'
 
 
+def _format_update_result_attrs(*, title: str, message: str) -> str:
+    return f"[Attributes] {title}: message"
+
+
 @dataclass(kw_only=True)
 class _MutableAttributes:
     pairs: dict[SDKey, SDValue] = field(default_factory=dict)
     retentions: Mapping[SDKey, RetentionInterval] = field(default_factory=dict)
+    update_results: list[str] = field(default_factory=list)
 
     def __len__(self) -> int:
         # The attribute 'pairs' is decisive. Other attributes like 'retentions' have no impact
@@ -704,7 +688,7 @@ class _MutableAttributes:
         path: SDPath,
         interval: int,
         choice: _SDRetentionFilterChoice,
-    ) -> Sequence[UpdateResultAttributes]:
+    ) -> None:
         filter_func = _make_filter_func(choice.choice)
         retention_interval = RetentionInterval.from_config(*choice.cache_info, interval)
         compared_keys = _DictKeys.compare(
@@ -730,12 +714,10 @@ class _MutableAttributes:
         for key in compared_keys.both.union(compared_keys.only_right):
             retentions[key] = retention_interval
 
-        update_results = []
         if pairs:
             self.add(pairs)
-            update_results.append(
-                UpdateResultAttributes(
-                    path=path,
+            self.update_results.append(
+                _format_update_result_attrs(
                     title="Added pairs",
                     message=", ".join(sorted(pairs)),
                 )
@@ -743,15 +725,14 @@ class _MutableAttributes:
 
         if retentions:
             self.retentions = retentions
-            update_results.append(
-                UpdateResultAttributes(
-                    path=path,
+            self.update_results.append(
+                _format_update_result_attrs(
                     title="Keep until",
-                    message=", ".join([f"{k} ({v.keep_until})" for k, v in retentions.items()]),
+                    message=", ".join(
+                        [f"{k} ({retentions[k].keep_until})" for k in sorted(retentions)]
+                    ),
                 )
             )
-
-        return update_results
 
     @property
     def bare(self) -> SDBareAttributes:
@@ -762,11 +743,16 @@ class _MutableAttributes:
         }
 
 
+def _format_update_result_table(ident: SDRowIdent, *, title: str, message: str) -> str:
+    return f"[Table] '{', '.join(map(str, ident))}': {title}: message"
+
+
 @dataclass(kw_only=True)
 class _MutableTable:
     key_columns: Sequence[SDKey] = field(default_factory=list)
     rows_by_ident: dict[SDRowIdent, dict[SDKey, SDValue]] = field(default_factory=dict)
     retentions: Mapping[SDRowIdent, Mapping[SDKey, RetentionInterval]] = field(default_factory=dict)
+    update_results: list[str] = field(default_factory=list)
 
     def __len__(self) -> int:
         # The attribute 'rows' is decisive. Other attributes like 'key_columns' or 'retentions'
@@ -811,7 +797,7 @@ class _MutableTable:
         path: SDPath,
         interval: int,
         choice: _SDRetentionFilterChoice,
-    ) -> Sequence[UpdateResultTable]:
+    ) -> None:
         filter_func = _make_filter_func(choice.choice)
         retention_interval = RetentionInterval.from_config(*choice.cache_info, interval)
         self._add_key_columns(previous.key_columns)
@@ -840,7 +826,6 @@ class _MutableTable:
         )
 
         retentions: dict[SDRowIdent, dict[SDKey, RetentionInterval]] = {}
-        update_results = []
         for ident in compared_row_idents.only_left:
             previous_row: dict[SDKey, SDValue] = {}
             for key, value in previous_filtered_rows[ident].items():
@@ -853,9 +838,8 @@ class _MutableTable:
                 # Update row with key column entries
                 previous_row |= {k: previous.rows_by_ident[ident][k] for k in previous.key_columns}
                 self._add_row(ident, previous_row)
-                update_results.append(
-                    UpdateResultTable(
-                        path=path,
+                self.update_results.append(
+                    _format_update_result_table(
                         ident=ident,
                         title="Added row",
                         message=", ".join(sorted(previous_row)),
@@ -886,9 +870,8 @@ class _MutableTable:
                     }
                 )
                 self._add_row(ident, row)
-                update_results.append(
-                    UpdateResultTable(
-                        path=path,
+                self.update_results.append(
+                    _format_update_result_table(
                         ident=ident,
                         title="Added row",
                         message=", ".join(sorted(row)),
@@ -902,18 +885,18 @@ class _MutableTable:
         if retentions:
             self.retentions = retentions
             for ident, intervals_by_key in retentions.items():
-                update_results.append(
-                    UpdateResultTable(
-                        path=path,
+                self.update_results.append(
+                    _format_update_result_table(
                         ident=ident,
                         title="Keep until",
                         message=", ".join(
-                            [f"{k} ({v.keep_until})" for k, v in intervals_by_key.items()]
+                            [
+                                f"{k} ({intervals_by_key[k].keep_until})"
+                                for k in sorted(intervals_by_key)
+                            ]
                         ),
                     )
                 )
-
-        return update_results
 
     @property
     def bare(self) -> SDBareTable:
@@ -984,20 +967,13 @@ class MutableTree:
         now: int,
         previous_tree: ImmutableTree,
         choices: SDRetentionFilterChoices,
-    ) -> Sequence[UpdateResultAttributes | UpdateResultTable]:
+    ) -> None:
         node = self.setdefault_node(choices.path)
         previous_node = previous_tree.get_tree(choices.path)
-        return [
-            r
-            for c in choices.pairs
-            for r in node.attributes.update(
-                now, previous_node.attributes, choices.path, choices.interval, c
-            )
-        ] + [
-            r
-            for c in choices.columns
-            for r in node.table.update(now, previous_node.table, choices.path, choices.interval, c)
-        ]
+        for c in choices.pairs:
+            node.attributes.update(now, previous_node.attributes, choices.path, choices.interval, c)
+        for c in choices.columns:
+            node.table.update(now, previous_node.table, choices.path, choices.interval, c)
 
     def setdefault_node(self, path: SDPath) -> MutableTree:
         if not path:
@@ -1021,6 +997,17 @@ class MutableTree:
 
     def has_table(self, path: SDPath) -> bool:
         return len(self.get_tree(path).table) > 0
+
+    def get_update_results(self) -> Mapping[SDPath, Sequence[str]]:
+        by_path = {}
+        if self.attributes.update_results or self.table.update_results:
+            by_path[self.path] = list(self.attributes.update_results) + list(
+                self.table.update_results
+            )
+        for node in self.nodes_by_name.values():
+            if update_results := node.get_update_results():
+                by_path.update({p: list(rs) for p, rs in update_results.items()})
+        return by_path
 
     @property
     def bare(self) -> SDBareTree:

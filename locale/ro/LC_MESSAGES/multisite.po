@@ -5422,10 +5422,6 @@ msgstr "Arborele grupului de agregare"
 msgid "Aggregation groups"
 msgstr "Grupuri de agregare"
 
-#, fuzzy
-msgid "Aggregation method"
-msgstr "Denumire agregare"
-
 msgid "Aggregation name"
 msgstr "Denumire agregare"
 
@@ -10464,19 +10460,6 @@ msgstr ""
 "relevantă pentru securitate în această etapă, a se vedea <a href=\"https://"
 "checkmk.com/werk/14715\" target=\"_blank\">werk #14715</a>."
 
-#, fuzzy
-msgid ""
-"By default, data relating to a VM is sent to the group host corresponding to "
-"the resource group of the VM, the same way as for any other resource. If the "
-"VM is present in your monitoring as a separate host, you can choose to send "
-"the data to the VM itself."
-msgstr ""
-"În mod implicit, datele referitoare la o mașină virtuală sunt trimise către "
-"gazda grupului care corespunde grupului de resurse al mașinii virtuale, la "
-"fel ca pentru orice altă resursă. În cazul în care VM este prezentă în "
-"monitorizare ca gazdă separată, puteți alege să trimiteți datele către VM "
-"însăși."
-
 msgid ""
 "By default, each host has a piggyback data source.<br><br><b>Use piggyback "
 "data from other hosts if present:</b><br>If selected, the <tt>Check_MK</tt> "
@@ -11790,6 +11773,10 @@ msgstr "Utilizarea cozii de carbon"
 msgid "Carbon queue usage rate"
 msgstr "Rata de utilizare a cozii de carbon"
 
+#, fuzzy
+msgid "Cardinality reduction aggregation method"
+msgstr "Rata de reducere a datelor"
+
 msgid "Casa module: CPU temperature"
 msgstr "Modulul Casa: Temperatura CPU"
 
@@ -12782,6 +12769,9 @@ msgstr ""
 msgid "Checkmk helper usage"
 msgstr "Utilizarea ajutorului Checkmk"
 
+msgid "Checkmk metrics are created from OTel datapoints. Configure them here."
+msgstr ""
+
 msgid "Checkmk partner or reseller"
 msgstr "Checkmk partener sau distribuitor"
 
@@ -13034,7 +13024,8 @@ msgstr ""
 msgid "Checks via SSH. "
 msgstr "Verifică prin SSH. "
 
-msgid "Checks' man pages (deprecated)"
+#, fuzzy
+msgid "Checks' man pages (outdated, ignored)"
 msgstr "Pagini de manual 'Verifică' (depreciat)"
 
 msgid "Child Node Generation"
@@ -27113,8 +27104,9 @@ msgid ""
 "work anymore due to unknown imports or objects (File: %s)."
 msgstr ""
 
-msgid "GUI extensions (deprecated)"
-msgstr "Extensii GUI (depreciat)"
+#, fuzzy
+msgid "GUI extensions"
+msgstr "Extensii GUI sparte"
 
 #, python-format
 msgid ""
@@ -32997,6 +32989,11 @@ msgid ""
 "two-factor authentication' in global settings will override this setting."
 msgstr ""
 
+msgid ""
+"If too many metrics are produced by a service, they will be aggregated. "
+"Configure the aggregation method here."
+msgstr ""
+
 msgid "If value is a tuple it has to have length of two."
 msgstr ""
 "Dacă valoarea este un tupluplu, acesta trebuie să aibă o lungime de două."
@@ -37456,7 +37453,8 @@ msgid ""
 "not work anymore due to unknown imports or objects (File: %s)."
 msgstr ""
 
-msgid "Legacy GUI extensions (deprecated)"
+#, fuzzy
+msgid "Legacy GUI extensions"
 msgstr "Extensii GUI vechi (depreciate)"
 
 #, python-format
@@ -37470,11 +37468,11 @@ msgid "Legacy agent management"
 msgstr "Gestionarea agenților vechi"
 
 #, fuzzy
-msgid "Legacy check plug-ins (deprecated)"
-msgstr "Plugin-uri de verificare anterioare (depreciate)"
+msgid "Legacy check plug-ins (outdated, ignored)"
+msgstr "Plugin-uri bazate pe agent (depreciat)"
 
 #, fuzzy
-msgid "Legacy inventory plug-ins (deprecated)"
+msgid "Legacy inventory plug-ins (outdated, ignored)"
 msgstr "Plugin-uri de inventar vechi (depreciate)"
 
 msgid "Legacy run"
@@ -40569,21 +40567,8 @@ msgstr ""
 "interfețelor care corespund stării operaționale <i>și</i> admin. De exemplu, "
 "o interfață care este down, dar admin up nu va fi afectată."
 
-#, fuzzy
-msgid "Map data"
-msgstr "Date cartografiate"
-
-msgid "Map data relating to VMs"
-msgstr "Date cartografice referitoare la mașinile virtuale"
-
-msgid "Map data to group host"
-msgstr "Maparea datelor către gazda grupului"
-
 msgid "Map data to specific host (Piggyback)"
 msgstr "Maparea datelor către o anumită gazdă (Piggyback)"
-
-msgid "Map data to the VM itself"
-msgstr "Maparea datelor pe VM în sine"
 
 msgid "Map device state"
 msgstr "Starea dispozitivului de hartă"
@@ -41893,6 +41878,10 @@ msgstr "Prognoză metrică"
 
 msgid "Metric History"
 msgstr "Istoria metrică"
+
+#, fuzzy
+msgid "Metric configuration"
+msgstr "Configurație gazdă"
 
 msgid "Metric label"
 msgstr "Etichetă metrică"
@@ -54829,6 +54818,10 @@ msgstr "Refaceți această notificare, trimiteți-o din nou!"
 #, python-format
 msgid "Replayed notification number %d"
 msgstr "Număr de notificare reprodus %d"
+
+#, fuzzy
+msgid "Replica aggregation method"
+msgstr "Denumire agregare"
 
 msgid "Replica available state"
 msgstr "Replică stare disponibilă"
@@ -90863,6 +90856,42 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid ""
+#~ "By default, data relating to a VM is sent to the group host corresponding "
+#~ "to the resource group of the VM, the same way as for any other resource. "
+#~ "If the VM is present in your monitoring as a separate host, you can "
+#~ "choose to send the data to the VM itself."
+#~ msgstr ""
+#~ "În mod implicit, datele referitoare la o mașină virtuală sunt trimise "
+#~ "către gazda grupului care corespunde grupului de resurse al mașinii "
+#~ "virtuale, la fel ca pentru orice altă resursă. În cazul în care VM este "
+#~ "prezentă în monitorizare ca gazdă separată, puteți alege să trimiteți "
+#~ "datele către VM însăși."
+
+#~ msgid "GUI extensions (deprecated)"
+#~ msgstr "Extensii GUI (depreciat)"
+
+#~ msgid "Legacy GUI extensions (deprecated)"
+#~ msgstr "Extensii GUI vechi (depreciate)"
+
+#, fuzzy
+#~ msgid "Legacy check plug-ins (deprecated)"
+#~ msgstr "Plugin-uri de verificare anterioare (depreciate)"
+
+#, fuzzy
+#~ msgid "Map data"
+#~ msgstr "Date cartografiate"
+
+#~ msgid "Map data relating to VMs"
+#~ msgstr "Date cartografice referitoare la mașinile virtuale"
+
+#~ msgid "Map data to group host"
+#~ msgstr "Maparea datelor către gazda grupului"
+
+#~ msgid "Map data to the VM itself"
+#~ msgstr "Maparea datelor pe VM în sine"
 
 #, fuzzy
 #~ msgid "Name of group2"

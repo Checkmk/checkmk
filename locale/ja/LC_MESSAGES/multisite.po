@@ -12147,7 +12147,8 @@ msgstr ""
 msgid "Checks via SSH. "
 msgstr "SSH経由でチェックします。 "
 
-msgid "Checks' man pages (deprecated)"
+#, fuzzy
+msgid "Checks' man pages (outdated, ignored)"
 msgstr "チェックのmanページ(廃止予定)"
 
 msgid "Child Node Generation"
@@ -25241,8 +25242,9 @@ msgstr ""
 "インポートまたはオブジェクトが原因で動作しなくなる可能性があります (File: "
 "%s)。"
 
-msgid "GUI extensions (deprecated)"
-msgstr "GUI拡張機能（非推奨）"
+#, fuzzy
+msgid "GUI extensions"
+msgstr "壊れたGUI拡張機能"
 
 #, python-format
 msgid ""
@@ -34656,8 +34658,9 @@ msgstr ""
 "のインポートやオブジェクト（ファイル: %s）のため、機能しなくなる可能性があり"
 "ます。"
 
-msgid "Legacy GUI extensions (deprecated)"
-msgstr "レガシーGUI拡張機能（非推奨）"
+#, fuzzy
+msgid "Legacy GUI extensions"
+msgstr "レガシーGUI拡張機能%r"
 
 #, python-format
 msgid ""
@@ -34672,10 +34675,12 @@ msgstr ""
 msgid "Legacy agent management"
 msgstr "レガシーエージェント管理"
 
-msgid "Legacy check plug-ins (deprecated)"
-msgstr "Legact check plug-ins（非推奨）"
+#, fuzzy
+msgid "Legacy check plug-ins (outdated, ignored)"
+msgstr "エージェントベースのプラグイン（廃止、無視）"
 
-msgid "Legacy inventory plug-ins (deprecated)"
+#, fuzzy
+msgid "Legacy inventory plug-ins (outdated, ignored)"
 msgstr "Legact inventory plug-ins（非推奨）"
 
 msgid "Legacy run"
@@ -83887,6 +83892,15 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠Robotmk Core MKP がインストールされているため<b>利用できません</b>"
+
+#~ msgid "GUI extensions (deprecated)"
+#~ msgstr "GUI拡張機能（非推奨）"
+
+#~ msgid "Legacy GUI extensions (deprecated)"
+#~ msgstr "レガシーGUI拡張機能（非推奨）"
+
+#~ msgid "Legacy check plug-ins (deprecated)"
+#~ msgstr "Legact check plug-ins（非推奨）"
 
 #~ msgid "License expired: Renew license now to reactivate change activation."
 #~ msgstr "ライセンスの有効期限切れ：今すぐライセンスを更新してください。"

@@ -12966,7 +12966,8 @@ msgstr ""
 msgid "Checks via SSH. "
 msgstr "Verifică prin SSH. "
 
-msgid "Checks' man pages (deprecated)"
+#, fuzzy
+msgid "Checks' man pages (outdated, ignored)"
 msgstr "Pagini de manual 'Verifică' (depreciat)"
 
 msgid "Child Node Generation"
@@ -26813,8 +26814,9 @@ msgid ""
 "work anymore due to unknown imports or objects (File: %s)."
 msgstr ""
 
-msgid "GUI extensions (deprecated)"
-msgstr "Extensii GUI (depreciat)"
+#, fuzzy
+msgid "GUI extensions"
+msgstr "Extensii GUI sparte"
 
 #, python-format
 msgid ""
@@ -37028,7 +37030,8 @@ msgid ""
 "not work anymore due to unknown imports or objects (File: %s)."
 msgstr ""
 
-msgid "Legacy GUI extensions (deprecated)"
+#, fuzzy
+msgid "Legacy GUI extensions"
 msgstr "Extensii GUI vechi (depreciate)"
 
 #, python-format
@@ -37042,11 +37045,11 @@ msgid "Legacy agent management"
 msgstr "Gestionarea agenților vechi"
 
 #, fuzzy
-msgid "Legacy check plug-ins (deprecated)"
-msgstr "Plugin-uri de verificare anterioare (depreciate)"
+msgid "Legacy check plug-ins (outdated, ignored)"
+msgstr "Plugin-uri bazate pe agent (depreciat)"
 
 #, fuzzy
-msgid "Legacy inventory plug-ins (deprecated)"
+msgid "Legacy inventory plug-ins (outdated, ignored)"
 msgstr "Plugin-uri de inventar vechi (depreciate)"
 
 msgid "Legacy run"
@@ -89690,6 +89693,16 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#~ msgid "GUI extensions (deprecated)"
+#~ msgstr "Extensii GUI (depreciat)"
+
+#~ msgid "Legacy GUI extensions (deprecated)"
+#~ msgstr "Extensii GUI vechi (depreciate)"
+
+#, fuzzy
+#~ msgid "Legacy check plug-ins (deprecated)"
+#~ msgstr "Plugin-uri de verificare anterioare (depreciate)"
 
 #, fuzzy
 #~ msgid "License expired: Renew license now to reactivate change activation."

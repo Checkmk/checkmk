@@ -12531,7 +12531,8 @@ msgstr ""
 msgid "Checks via SSH. "
 msgstr "Checks über SSH. "
 
-msgid "Checks' man pages (deprecated)"
+#, fuzzy
+msgid "Checks' man pages (outdated, ignored)"
 msgstr "Handbuchseiten der Checks (veraltet)"
 
 msgid "Child Node Generation"
@@ -25961,8 +25962,9 @@ msgstr ""
 "gekennzeichnet ist und aufgrund von unbekannten Importen oder Objekten "
 "möglicherweise nicht mehr funktioniert (Datei: %s)."
 
-msgid "GUI extensions (deprecated)"
-msgstr "GUI-Erweiterungen (veraltet)"
+#, fuzzy
+msgid "GUI extensions"
+msgstr "Defekte GUI-Erweiterungen"
 
 #, python-format
 msgid ""
@@ -35634,8 +35636,9 @@ msgstr ""
 "gekennzeichnet ist und aufgrund unbekannter Importe oder Objekte "
 "möglicherweise nicht mehr funktioniert (Datei: %s)."
 
-msgid "Legacy GUI extensions (deprecated)"
-msgstr "Legacy GUI-Erweiterungen (veraltet)"
+#, fuzzy
+msgid "Legacy GUI extensions"
+msgstr "Legacy GUI-Erweiterung in %r"
 
 #, python-format
 msgid ""
@@ -35650,10 +35653,12 @@ msgstr ""
 msgid "Legacy agent management"
 msgstr "Verwaltung von Legacy-Agenten"
 
-msgid "Legacy check plug-ins (deprecated)"
-msgstr "Legacy-Check-Plugins (veraltet)"
+#, fuzzy
+msgid "Legacy check plug-ins (outdated, ignored)"
+msgstr "Agenten-basierte Plugins (veraltet, ignoriert)"
 
-msgid "Legacy inventory plug-ins (deprecated)"
+#, fuzzy
+msgid "Legacy inventory plug-ins (outdated, ignored)"
 msgstr "Legacy-Inventurplugins (veraltet)"
 
 msgid "Legacy run"
@@ -86477,6 +86482,15 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b>, da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid "GUI extensions (deprecated)"
+#~ msgstr "GUI-Erweiterungen (veraltet)"
+
+#~ msgid "Legacy GUI extensions (deprecated)"
+#~ msgstr "Legacy GUI-Erweiterungen (veraltet)"
+
+#~ msgid "Legacy check plug-ins (deprecated)"
+#~ msgstr "Legacy-Check-Plugins (veraltet)"
 
 #~ msgid "License expired: Renew license now to reactivate change activation."
 #~ msgstr ""

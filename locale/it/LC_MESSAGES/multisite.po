@@ -12829,7 +12829,8 @@ msgstr ""
 msgid "Checks via SSH. "
 msgstr "Controlla via SSH. "
 
-msgid "Checks' man pages (deprecated)"
+#, fuzzy
+msgid "Checks' man pages (outdated, ignored)"
 msgstr "Pagine man dei controlli (deprecate)"
 
 msgid "Child Node Generation"
@@ -26553,8 +26554,9 @@ msgid ""
 "work anymore due to unknown imports or objects (File: %s)."
 msgstr ""
 
-msgid "GUI extensions (deprecated)"
-msgstr "Estensioni della GUI (deprecate)"
+#, fuzzy
+msgid "GUI extensions"
+msgstr "Estensioni GUI rotte"
 
 #, python-format
 msgid ""
@@ -36657,7 +36659,8 @@ msgid ""
 "not work anymore due to unknown imports or objects (File: %s)."
 msgstr ""
 
-msgid "Legacy GUI extensions (deprecated)"
+#, fuzzy
+msgid "Legacy GUI extensions"
 msgstr "Estensioni dell'interfaccia grafica legacy (deprecate)"
 
 #, python-format
@@ -36671,11 +36674,11 @@ msgid "Legacy agent management"
 msgstr "Gestione degli agenti legacy"
 
 #, fuzzy
-msgid "Legacy check plug-ins (deprecated)"
-msgstr "Plugin di controllo legacy (deprecati)"
+msgid "Legacy check plug-ins (outdated, ignored)"
+msgstr "Plugin basati su agenti (deprecati)"
 
 #, fuzzy
-msgid "Legacy inventory plug-ins (deprecated)"
+msgid "Legacy inventory plug-ins (outdated, ignored)"
 msgstr "Plugin di inventario legacy (deprecato)"
 
 msgid "Legacy run"
@@ -88733,6 +88736,16 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usa SSL per la connessione."
+
+#~ msgid "GUI extensions (deprecated)"
+#~ msgstr "Estensioni della GUI (deprecate)"
+
+#~ msgid "Legacy GUI extensions (deprecated)"
+#~ msgstr "Estensioni dell'interfaccia grafica legacy (deprecate)"
+
+#, fuzzy
+#~ msgid "Legacy check plug-ins (deprecated)"
+#~ msgstr "Plugin di controllo legacy (deprecati)"
 
 #, fuzzy
 #~ msgid "Define levels for"

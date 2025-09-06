@@ -12954,7 +12954,7 @@ msgid "Checks via SSH. "
 msgstr "Verificações via SSH. "
 
 #, fuzzy
-msgid "Checks' man pages (deprecated)"
+msgid "Checks' man pages (outdated, ignored)"
 msgstr "Páginas de cheques"
 
 msgid "Child Node Generation"
@@ -26768,8 +26768,8 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "GUI extensions (deprecated)"
-msgstr "Extensões GUI"
+msgid "GUI extensions"
+msgstr "Extensões GUI quebradas"
 
 #, python-format
 msgid ""
@@ -36935,7 +36935,7 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Legacy GUI extensions (deprecated)"
+msgid "Legacy GUI extensions"
 msgstr "Extensões GUI herdadas"
 
 #, python-format
@@ -36949,11 +36949,11 @@ msgid "Legacy agent management"
 msgstr "Gestão de agentes legados"
 
 #, fuzzy
-msgid "Legacy check plug-ins (deprecated)"
-msgstr "Plugins de verificação legados"
+msgid "Legacy check plug-ins (outdated, ignored)"
+msgstr "Plugins baseados em agentes (verificações, inventário)"
 
 #, fuzzy
-msgid "Legacy inventory plug-ins (deprecated)"
+msgid "Legacy inventory plug-ins (outdated, ignored)"
 msgstr "Plugins de inventário legados"
 
 msgid "Legacy run"
@@ -89388,6 +89388,18 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
+
+#, fuzzy
+#~ msgid "GUI extensions (deprecated)"
+#~ msgstr "Extensões GUI"
+
+#, fuzzy
+#~ msgid "Legacy GUI extensions (deprecated)"
+#~ msgstr "Extensões GUI herdadas"
+
+#, fuzzy
+#~ msgid "Legacy check plug-ins (deprecated)"
+#~ msgstr "Plugins de verificação legados"
 
 #, fuzzy
 #~ msgid "License expired: Renew license now to reactivate change activation."

@@ -114,6 +114,20 @@ def test_diagnostics_cleanup_dump_folder() -> None:
 #   '----------------------------------------------------------------------'
 
 
+def test_diagnostics_element_wrapper() -> None:
+    wrapper = diagnostics._DiagnosticsElementWrapper(
+        diagnostics._DiagnosticsElement(
+            ident="ident",
+            title="Title",
+            description="Bla",
+            content="hallo",
+        )
+    )
+    assert wrapper.ident == "ident"
+    assert wrapper.title == "Title"
+    assert wrapper.description == "Bla"
+
+
 def test_diagnostics_element_general() -> None:
     diagnostics_element = diagnostics.GeneralDiagnosticsElement()
     assert diagnostics_element.ident == "general"

@@ -415,10 +415,22 @@ class _DiagnosticsElementWrapper(ABCDiagnosticsElementTextDump):
     """Temporary wrapper to prepare for a cleaner diagnostics API (WIP)"""
 
     def __init__(self, wrapped: _DiagnosticsElement):
-        self.ident: Final = wrapped.ident
-        self.title: Final = wrapped.title
-        self.description: Final = wrapped.description
-        self._wrapped = wrapped
+        self._wrapped: Final = wrapped
+
+    @override
+    @property
+    def ident(self) -> str:
+        return self._wrapped.ident
+
+    @override
+    @property
+    def title(self) -> str:
+        return self._wrapped.title
+
+    @override
+    @property
+    def description(self) -> str:
+        return self._wrapped.description
 
     @override
     def _collect_infos(self) -> str:

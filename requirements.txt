@@ -332,10 +332,7 @@ bson==0.5.10 \
 build==1.3.0 \
     --hash=sha256:698edd0ea270bde950f53aed21f3a0135672206f3911e0176261a31e0e07b397 \
     --hash=sha256:7145f0b5061ba90a1500d60bd1b13ca0a8a4cebdd0cc16ed8adf1c0e739f43b4
-    # via
-    #   check-manifest
-    #   devpi-client
-    #   meraki
+    # via meraki
 cached-property==2.0.1 \
     --hash=sha256:484d617105e3ee0e4f1f58725e72a8ef9e93deee462222dbd51cd91230897641 \
     --hash=sha256:f617d70ab1100b7bcf6e42228f9ddcb78c676ffa167278d9f730d1c2fba69ccb
@@ -531,10 +528,6 @@ charset-normalizer==3.4.3 \
     # via
     #   reportlab
     #   requests
-check-manifest==0.50 \
-    --hash=sha256:6ab3e3aa72a008da3314b432f4c768c9647b4d6d8032f9e1a4672a572118e48c \
-    --hash=sha256:d300f9f292986aa1a30424af44eb45c5644e0a810e392e62d553b24bb3393494
-    # via devpi-client
 checkmk-dev-tools==0.12.0 \
     --hash=sha256:c803051c7b1606f4bf8574aead02719d2630d2a38a655672ed130c7d13039fcd \
     --hash=sha256:d059531f45ee37be33a79ad7bf49fb0a82a0cb3c4c9da90b8a5fb3dc571a19fb
@@ -804,14 +797,6 @@ defusedxml==0.7.1 \
     #   exchangelib
     #   jira
     #   pysaml2
-devpi-client==7.2.0 \
-    --hash=sha256:0dc11d8e3d73e38d87748f6bde07e451565aac0ed4bd99ce4634aa590035b5c3 \
-    --hash=sha256:c143368458c3878ba7bee6a1d9b418e2e659571a3856614f58d76b8a28269d7b
-    # via -r dev-requirements.in
-devpi-common==4.1.0 \
-    --hash=sha256:58d7f761e3fe7fdfe449c4a6a9e2350d4ddfbeb66cb0f6d208025142943030d3 \
-    --hash=sha256:d1e48a1cb68ad473591fdaf562c39aee2a0ca2762a32228bd7b4235ea97c0679
-    # via devpi-client
 dill==0.4.0 \
     --hash=sha256:0633f1d2df477324f53a895b02c901fb961bdbf65a17122586ea7019292cbcf0 \
     --hash=sha256:44f54bf6412c2c8464c14e8243eb163690a9800dbe2c367330883b19c7561049
@@ -1430,9 +1415,7 @@ influxdb-client==1.49.0 \
 iniconfig==2.1.0 \
     --hash=sha256:3abbd2e30b36733fee78f9c7f7308f2d0050e88f0087fd25c2645f63c773e1c7 \
     --hash=sha256:9deba5723312380e77435581c6bf4935c94cbfab9b1ed33ef8d238ea168eb760
-    # via
-    #   devpi-client
-    #   pytest
+    # via pytest
 invoke==2.2.0 \
     --hash=sha256:6ea924cc53d4f78e3d98bc436b08069a03077e6f85ad1ddaa8a116d7dad15820 \
     --hash=sha256:ee6cbb101af1a859c7fe84f2a264c059020b0cb7fe3535f9424300ab568f6bd5
@@ -1654,10 +1637,6 @@ kubernetes==33.1.0 \
     --hash=sha256:544de42b24b64287f7e0aa9513c93cb503f7f40eea39b20f66810011a86eabc5 \
     --hash=sha256:f64d829843a54c251061a8e7a14523b521f2dc5c896cf6d65ccf348648a88993
     # via -r cmk/requirements.in
-lazy==1.6 \
-    --hash=sha256:449375c125c7acac6b7a93f71b8e7ccb06546c37b161613f92d2d3981f793244 \
-    --hash=sha256:7127324ec709e8324f08cb4611c1abe01776bda53bb9ce68dc5dfa46ca0ed3e9
-    # via devpi-common
 lazy-object-proxy==1.12.0 \
     --hash=sha256:029d2b355076710505c9545aef5ab3f750d89779310e26ddf2b7b23f6ea03cd8 \
     --hash=sha256:08c465fb5cd23527512f9bd7b4c7ba6cec33e28aad36fbbe46bf7b858f9f3f7f \
@@ -2633,16 +2612,11 @@ packaging==25.0 \
     #   marshmallow
     #   matplotlib
     #   opentelemetry-instrumentation
-    #   packaging-legacy
     #   pytest
     #   requirements-parser
     #   setuptools-scm
     #   sphinx
     #   twine
-packaging-legacy==23.0.post0 \
-    --hash=sha256:6cd21cd283c09409349bccc10bb55bfd837b4aab86a7b0f87bfcb8dd9831a8a3 \
-    --hash=sha256:c974a42291a77112313f0198b87ad96e07a3c357295d572560a4b9c368f7d9db
-    # via devpi-common
 paho-mqtt==2.1.0 \
     --hash=sha256:12d6e7511d4137555a3f6ea167ae846af2c7357b10bc6fa4f7c3968fc1723834 \
     --hash=sha256:6db9ba9b34ed5bc6b6e3812718c7e06e2fd7444540df2455d2c51bd58808feee
@@ -2791,16 +2765,11 @@ pillow==11.3.0 \
 pipfile==0.0.2 \
     --hash=sha256:f7d9f15de8b660986557eb3cc5391aa1a16207ac41bc378d03f414762d36c984
     # via -r dev-requirements.in
-pkginfo==1.12.1.2 \
-    --hash=sha256:5cd957824ac36f140260964eba3c6be6442a8359b8c48f4adf90210f33a04b7b \
-    --hash=sha256:c783ac885519cab2c34927ccfa6bf64b5a704d7c69afaea583dd9b7afe969343
-    # via devpi-client
 platformdirs==4.4.0 \
     --hash=sha256:abd01743f24e5287cd7a5db3752faf1a2d65353f38ec26d98e25a6db65958c85 \
     --hash=sha256:ca753cf4d81dc309bc67b0ea38fd15dc97bc30ce419a7f58d13eb3bf14c4febf
     # via
     #   black
-    #   devpi-client
     #   pylint
     #   virtualenv
 playwright==1.55.0 \
@@ -2820,7 +2789,6 @@ pluggy==1.5.0 \
     --hash=sha256:44e1ad92c8ca002de6377e165f3e0f1be63266ab4d554740532335b9d75ea669
     # via
     #   -c constraints.txt
-    #   devpi-client
     #   pytest
     #   pytest-cov
     #   python-lsp-server
@@ -3754,7 +3722,6 @@ requests==2.32.5 \
     #   -r cmk/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   azure-core
-    #   devpi-common
     #   docker
     #   exchangelib
     #   google-api-core
@@ -4160,7 +4127,6 @@ setuptools==78.1.1 \
     --hash=sha256:fcc17fd9cd898242f6b4adfaca46137a9edef687f43e6f78469692a5e70d851d
     # via
     #   -r cmk/requirements.in
-    #   check-manifest
     #   influxdb-client
     #   meraki
     #   opsgenie-sdk

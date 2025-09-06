@@ -9,7 +9,6 @@ botocore-stubs  # used for type checking, keep version in sync with botocore
 bson  # used by test_mk_mongodb unit test
 checkmk-dev-tools  # provides tooling for build artifacts
 datamodel-code-generator  # used for cmk-shared-typing generation
-devpi-client # Managing the devpi server
 dill
 docker  # used by test_docker test and mk_docker agent plugin
 dockerpty  # used by dockerized tests for opening debug shells

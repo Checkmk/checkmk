@@ -5280,9 +5280,6 @@ msgstr "Aggregationsgruppenbaum"
 msgid "Aggregation groups"
 msgstr "Aggregationsgruppen"
 
-msgid "Aggregation method"
-msgstr "Aggregationsmethode"
-
 msgid "Aggregation name"
 msgstr "Aggregationsname"
 
@@ -10049,18 +10046,6 @@ msgstr ""
 "werk/14715\" target=\"_blank\">Werk #14715</a>."
 
 msgid ""
-"By default, data relating to a VM is sent to the group host corresponding to "
-"the resource group of the VM, the same way as for any other resource. If the "
-"VM is present in your monitoring as a separate host, you can choose to send "
-"the data to the VM itself."
-msgstr ""
-"Standardmäßig werden Daten, die sich auf eine VM beziehen, an den Gruppen-"
-"Host gesendet, welcher der Ressourcegruppe der VM entspricht, wie bei jeder "
-"anderen Ressource. Wenn die VM in Ihrem Monitoring als separater Host "
-"vorhanden ist, können Sie wählen, ob Sie die Daten an die VM selbst senden "
-"möchten."
-
-msgid ""
 "By default, each host has a piggyback data source.<br><br><b>Use piggyback "
 "data from other hosts if present:</b><br>If selected, the <tt>Check_MK</tt> "
 "service of this host will process the piggyback data, but will not warn if "
@@ -11356,6 +11341,10 @@ msgstr "Warteschlangenauslastung des Carbon"
 msgid "Carbon queue usage rate"
 msgstr "Auslastungsrate der Warteschlange für Carbon"
 
+#, fuzzy
+msgid "Cardinality reduction aggregation method"
+msgstr "Datenreduzierungsrate"
+
 msgid "Casa module: CPU temperature"
 msgstr "Casa module: CPU-Temperatur"
 
@@ -12334,6 +12323,9 @@ msgstr ""
 msgid "Checkmk helper usage"
 msgstr "Auslastung Checkmk-Helper"
 
+msgid "Checkmk metrics are created from OTel datapoints. Configure them here."
+msgstr ""
+
 msgid "Checkmk partner or reseller"
 msgstr "Checkmk-Partner und -Reseller"
 
@@ -12566,7 +12558,8 @@ msgstr ""
 msgid "Checks via SSH. "
 msgstr "Checks über SSH. "
 
-msgid "Checks' man pages (deprecated)"
+#, fuzzy
+msgid "Checks' man pages (outdated, ignored)"
 msgstr "Handbuchseiten der Checks (veraltet)"
 
 msgid "Child Node Generation"
@@ -26192,8 +26185,9 @@ msgstr ""
 "gekennzeichnet ist und aufgrund von unbekannten Importen oder Objekten "
 "möglicherweise nicht mehr funktioniert (Datei: %s)."
 
-msgid "GUI extensions (deprecated)"
-msgstr "GUI-Erweiterungen (veraltet)"
+#, fuzzy
+msgid "GUI extensions"
+msgstr "Defekte GUI-Erweiterungen"
 
 #, python-format
 msgid ""
@@ -31673,6 +31667,11 @@ msgstr ""
 "nicht aktiviert haben. Die Option \"Zwei-Faktor-Authentifizierung "
 "erzwingen\" in den globalen Einstellungen überschreibt diese Einstellung."
 
+msgid ""
+"If too many metrics are produced by a service, they will be aggregated. "
+"Configure the aggregation method here."
+msgstr ""
+
 msgid "If value is a tuple it has to have length of two."
 msgstr "Wenn der Wert ein Tupel ist, muss er die Länge zwei haben."
 
@@ -35965,8 +35964,9 @@ msgstr ""
 "gekennzeichnet ist und aufgrund unbekannter Importe oder Objekte "
 "möglicherweise nicht mehr funktioniert (Datei: %s)."
 
-msgid "Legacy GUI extensions (deprecated)"
-msgstr "Legacy GUI-Erweiterungen (veraltet)"
+#, fuzzy
+msgid "Legacy GUI extensions"
+msgstr "Legacy GUI-Erweiterung in %r"
 
 #, python-format
 msgid ""
@@ -35981,10 +35981,12 @@ msgstr ""
 msgid "Legacy agent management"
 msgstr "Verwaltung von Legacy-Agenten"
 
-msgid "Legacy check plug-ins (deprecated)"
-msgstr "Legacy-Check-Plugins (veraltet)"
+#, fuzzy
+msgid "Legacy check plug-ins (outdated, ignored)"
+msgstr "Agenten-basierte Plugins (veraltet, ignoriert)"
 
-msgid "Legacy inventory plug-ins (deprecated)"
+#, fuzzy
+msgid "Legacy inventory plug-ins (outdated, ignored)"
 msgstr "Legacy-Inventurplugins (veraltet)"
 
 msgid "Legacy run"
@@ -38996,20 +38998,8 @@ msgstr ""
 "Admin-Zustand entsprechen. Zum Beispiel wäre eine Schnittstelle, die DOWN, "
 "aber Admin UP ist, nicht betroffen."
 
-msgid "Map data"
-msgstr "Daten zuordnen"
-
-msgid "Map data relating to VMs"
-msgstr "Daten von VMs zuordnen"
-
-msgid "Map data to group host"
-msgstr "Daten dem Gruppen-Host zuordnen"
-
 msgid "Map data to specific host (Piggyback)"
 msgstr "Daten einem spezifischen Host zuordnen (Piggyback)"
-
-msgid "Map data to the VM itself"
-msgstr "Daten der VM selbst zuordnen"
 
 msgid "Map device state"
 msgstr "Gerätezustand abbilden"
@@ -40274,6 +40264,10 @@ msgstr "Metrik-Vorhersage"
 
 msgid "Metric History"
 msgstr "Metrik-Historie"
+
+#, fuzzy
+msgid "Metric configuration"
+msgstr "Konfiguration testen"
 
 msgid "Metric label"
 msgstr "Metrik-Bezeichnung"
@@ -52440,6 +52434,10 @@ msgstr "Diese Benachrichtigung erneut zustellen!"
 #, python-format
 msgid "Replayed notification number %d"
 msgstr "Nummer der wiederholten Benachrichtigungen %d"
+
+#, fuzzy
+msgid "Replica aggregation method"
+msgstr "Aggregationsmethode"
 
 msgid "Replica available state"
 msgstr "Verfügbarkeitszustand des Replikats"
@@ -87397,6 +87395,39 @@ msgid ""
 msgstr ""
 "\"Änderungen aktivieren\" ist blockiert, bis Sie Ihr Service-Limit "
 "unterschritten haben. Wenn Sie Ihr Service-Limit erhöhen möchten, "
+
+#~ msgid ""
+#~ "By default, data relating to a VM is sent to the group host corresponding "
+#~ "to the resource group of the VM, the same way as for any other resource. "
+#~ "If the VM is present in your monitoring as a separate host, you can "
+#~ "choose to send the data to the VM itself."
+#~ msgstr ""
+#~ "Standardmäßig werden Daten, die sich auf eine VM beziehen, an den Gruppen-"
+#~ "Host gesendet, welcher der Ressourcegruppe der VM entspricht, wie bei "
+#~ "jeder anderen Ressource. Wenn die VM in Ihrem Monitoring als separater "
+#~ "Host vorhanden ist, können Sie wählen, ob Sie die Daten an die VM selbst "
+#~ "senden möchten."
+
+#~ msgid "GUI extensions (deprecated)"
+#~ msgstr "GUI-Erweiterungen (veraltet)"
+
+#~ msgid "Legacy GUI extensions (deprecated)"
+#~ msgstr "Legacy GUI-Erweiterungen (veraltet)"
+
+#~ msgid "Legacy check plug-ins (deprecated)"
+#~ msgstr "Legacy-Check-Plugins (veraltet)"
+
+#~ msgid "Map data"
+#~ msgstr "Daten zuordnen"
+
+#~ msgid "Map data relating to VMs"
+#~ msgstr "Daten von VMs zuordnen"
+
+#~ msgid "Map data to group host"
+#~ msgstr "Daten dem Gruppen-Host zuordnen"
+
+#~ msgid "Map data to the VM itself"
+#~ msgstr "Daten der VM selbst zuordnen"
 
 #~ msgid "Name of group2"
 #~ msgstr "Name der Gruppe2"

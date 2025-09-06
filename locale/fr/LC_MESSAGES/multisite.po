@@ -5444,10 +5444,6 @@ msgstr "Arbre du groupe d'agrégation"
 msgid "Aggregation groups"
 msgstr "Groupes d'agrégation"
 
-#, fuzzy
-msgid "Aggregation method"
-msgstr "Nom de l'agrégation"
-
 msgid "Aggregation name"
 msgstr "Nom de l'agrégation"
 
@@ -10498,18 +10494,6 @@ msgstr ""
 "pertinente pour la sécurité à ce stade, voir <a href=\"https://checkmk.com/"
 "werk/14715\" target=\"_blank\">werk #14715</a>."
 
-#, fuzzy
-msgid ""
-"By default, data relating to a VM is sent to the group host corresponding to "
-"the resource group of the VM, the same way as for any other resource. If the "
-"VM is present in your monitoring as a separate host, you can choose to send "
-"the data to the VM itself."
-msgstr ""
-"Par défaut, les données relatives à une VM sont envoyées à l'hôte de groupe "
-"correspondant au groupe de ressources de la VM, de la même manière que pour "
-"toute autre ressource. Si la VM est présente dans votre monitoring comme un "
-"hôte séparé, vous pouvez choisir d'envoyer les données à la VM elle-même."
-
 msgid ""
 "By default, each host has a piggyback data source.<br><br><b>Use piggyback "
 "data from other hosts if present:</b><br>If selected, the <tt>Check_MK</tt> "
@@ -11822,6 +11806,10 @@ msgstr "Utilisation de la file d'attente carbone"
 msgid "Carbon queue usage rate"
 msgstr "Taux d'utilisation de la file d'attente carbone"
 
+#, fuzzy
+msgid "Cardinality reduction aggregation method"
+msgstr "Taux de détection"
+
 msgid "Casa module: CPU temperature"
 msgstr "Module Casa : Température du CPU"
 
@@ -12832,6 +12820,9 @@ msgstr ""
 msgid "Checkmk helper usage"
 msgstr "Utilisation de l'aide Checkmk"
 
+msgid "Checkmk metrics are created from OTel datapoints. Configure them here."
+msgstr ""
+
 msgid "Checkmk partner or reseller"
 msgstr "Partenaire ou revendeur Checkmk"
 
@@ -13089,7 +13080,7 @@ msgid "Checks via SSH. "
 msgstr "Vérifications via SSH. "
 
 #, fuzzy
-msgid "Checks' man pages (deprecated)"
+msgid "Checks' man pages (outdated, ignored)"
 msgstr "Pages de manuel des vérifications"
 
 msgid "Child Node Generation"
@@ -27253,8 +27244,8 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "GUI extensions (deprecated)"
-msgstr "Extensions de l'interface graphique"
+msgid "GUI extensions"
+msgstr "Extensions de l'interface graphique cassées"
 
 #, python-format
 msgid ""
@@ -33197,6 +33188,11 @@ msgid ""
 "two-factor authentication' in global settings will override this setting."
 msgstr ""
 
+msgid ""
+"If too many metrics are produced by a service, they will be aggregated. "
+"Configure the aggregation method here."
+msgstr ""
+
 msgid "If value is a tuple it has to have length of two."
 msgstr "Si la valeur est un tuple, elle doit avoir une longueur de deux."
 
@@ -37654,7 +37650,7 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Legacy GUI extensions (deprecated)"
+msgid "Legacy GUI extensions"
 msgstr "Extensions de l'interface graphique héritée"
 
 #, python-format
@@ -37668,11 +37664,11 @@ msgid "Legacy agent management"
 msgstr "Gestion des anciens agents"
 
 #, fuzzy
-msgid "Legacy check plug-ins (deprecated)"
-msgstr "Plugins de vérification de l'héritage"
+msgid "Legacy check plug-ins (outdated, ignored)"
+msgstr "Plugins basés sur les agents (Contrôles, Inventaire)"
 
 #, fuzzy
-msgid "Legacy inventory plug-ins (deprecated)"
+msgid "Legacy inventory plug-ins (outdated, ignored)"
 msgstr "Anciens plugins d'inventaire"
 
 msgid "Legacy run"
@@ -40800,21 +40796,8 @@ msgstr ""
 "mais admin up ne serait pas affectée."
 
 #, fuzzy
-msgid "Map data"
-msgstr "Données cartographiées"
-
-msgid "Map data relating to VMs"
-msgstr "Données cartographiques relatives aux VM"
-
-msgid "Map data to group host"
-msgstr "Données cartographiques sur l'hôte du groupe"
-
-#, fuzzy
 msgid "Map data to specific host (Piggyback)"
 msgstr "les groupes explicitement spécifiés"
-
-msgid "Map data to the VM itself"
-msgstr "Mapper les données sur la VM elle-même"
 
 msgid "Map device state"
 msgstr "Cartographier l'état du dispositif"
@@ -42140,6 +42123,10 @@ msgstr "Prévision métrique"
 
 msgid "Metric History"
 msgstr "Histoire du système métrique"
+
+#, fuzzy
+msgid "Metric configuration"
+msgstr "Configuration de l'hôte"
 
 msgid "Metric label"
 msgstr "Étiquette métrique"
@@ -55173,6 +55160,10 @@ msgstr "Rejouez cette notification, envoyez-la à nouveau !"
 #, python-format
 msgid "Replayed notification number %d"
 msgstr "Numéro de notification rejoué %d"
+
+#, fuzzy
+msgid "Replica aggregation method"
+msgstr "Nom de l'agrégation"
 
 msgid "Replica available state"
 msgstr "État de la réplique disponible"
@@ -91459,6 +91450,40 @@ msgid ""
 "‘Activate changes' is blocked until you go below your service limit. In case "
 "you want to increase your service limit, "
 msgstr ""
+
+#, fuzzy
+#~ msgid ""
+#~ "By default, data relating to a VM is sent to the group host corresponding "
+#~ "to the resource group of the VM, the same way as for any other resource. "
+#~ "If the VM is present in your monitoring as a separate host, you can "
+#~ "choose to send the data to the VM itself."
+#~ msgstr ""
+#~ "Par défaut, les données relatives à une VM sont envoyées à l'hôte de "
+#~ "groupe correspondant au groupe de ressources de la VM, de la même manière "
+#~ "que pour toute autre ressource. Si la VM est présente dans votre "
+#~ "monitoring comme un hôte séparé, vous pouvez choisir d'envoyer les "
+#~ "données à la VM elle-même."
+
+#, fuzzy
+#~ msgid "GUI extensions (deprecated)"
+#~ msgstr "Extensions de l'interface graphique"
+
+#, fuzzy
+#~ msgid "Legacy check plug-ins (deprecated)"
+#~ msgstr "Plugins de vérification de l'héritage"
+
+#, fuzzy
+#~ msgid "Map data"
+#~ msgstr "Données cartographiées"
+
+#~ msgid "Map data relating to VMs"
+#~ msgstr "Données cartographiques relatives aux VM"
+
+#~ msgid "Map data to group host"
+#~ msgstr "Données cartographiques sur l'hôte du groupe"
+
+#~ msgid "Map data to the VM itself"
+#~ msgstr "Mapper les données sur la VM elle-même"
 
 #, fuzzy
 #~ msgid "Name of group2"

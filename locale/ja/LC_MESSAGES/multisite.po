@@ -5118,9 +5118,6 @@ msgstr "集約グループツリー"
 msgid "Aggregation groups"
 msgstr "集約グループ"
 
-msgid "Aggregation method"
-msgstr "集約方法"
-
 msgid "Aggregation name"
 msgstr "集計名"
 
@@ -9758,16 +9755,6 @@ msgstr ""
 "target=\"_blank\">werk #14715</a>を参照してください。"
 
 msgid ""
-"By default, data relating to a VM is sent to the group host corresponding to "
-"the resource group of the VM, the same way as for any other resource. If the "
-"VM is present in your monitoring as a separate host, you can choose to send "
-"the data to the VM itself."
-msgstr ""
-"デフォルトでは、VMに関連するデータは、他のリソースの場合と同じように、VMのリ"
-"ソースグループに対応するグループホストに送信されます。VMが別のホストとしてモ"
-"ニタリングに存在する場合は、VM自体にデータを送信することを選択できます。"
-
-msgid ""
 "By default, each host has a piggyback data source.<br><br><b>Use piggyback "
 "data from other hosts if present:</b><br>If selected, the <tt>Check_MK</tt> "
 "service of this host will process the piggyback data, but will not warn if "
@@ -11016,6 +11003,10 @@ msgstr "カーボンキュー使用量"
 msgid "Carbon queue usage rate"
 msgstr "カーボンキュー使用率"
 
+#, fuzzy
+msgid "Cardinality reduction aggregation method"
+msgstr "データ削減率"
+
 msgid "Casa module: CPU temperature"
 msgstr "Casaモジュール: CPU温度"
 
@@ -11971,6 +11962,9 @@ msgstr ""
 msgid "Checkmk helper usage"
 msgstr "Checkmkヘルパーの使用量"
 
+msgid "Checkmk metrics are created from OTel datapoints. Configure them here."
+msgstr ""
+
 msgid "Checkmk partner or reseller"
 msgstr "Checkmkパートナーまたはリセラー"
 
@@ -12191,7 +12185,8 @@ msgstr ""
 msgid "Checks via SSH. "
 msgstr "SSH経由でチェックします。 "
 
-msgid "Checks' man pages (deprecated)"
+#, fuzzy
+msgid "Checks' man pages (outdated, ignored)"
 msgstr "チェックのmanページ(廃止予定)"
 
 msgid "Child Node Generation"
@@ -25482,8 +25477,9 @@ msgstr ""
 "インポートまたはオブジェクトが原因で動作しなくなる可能性があります (File: "
 "%s)。"
 
-msgid "GUI extensions (deprecated)"
-msgstr "GUI拡張機能（非推奨）"
+#, fuzzy
+msgid "GUI extensions"
+msgstr "壊れたGUI拡張機能"
 
 #, python-format
 msgid ""
@@ -30821,6 +30817,11 @@ msgstr ""
 "ログアウトされます。グローバル設定の'二要素認証を強制適用'設定は、この設定を"
 "上書きします。"
 
+msgid ""
+"If too many metrics are produced by a service, they will be aggregated. "
+"Configure the aggregation method here."
+msgstr ""
+
 msgid "If value is a tuple it has to have length of two."
 msgstr "valueがタプルである場合、長さは2である必要があります。"
 
@@ -35000,8 +35001,9 @@ msgstr ""
 "のインポートやオブジェクト（ファイル: %s）のため、機能しなくなる可能性があり"
 "ます。"
 
-msgid "Legacy GUI extensions (deprecated)"
-msgstr "レガシーGUI拡張機能（非推奨）"
+#, fuzzy
+msgid "Legacy GUI extensions"
+msgstr "レガシーGUI拡張機能%r"
 
 #, python-format
 msgid ""
@@ -35016,10 +35018,12 @@ msgstr ""
 msgid "Legacy agent management"
 msgstr "レガシーエージェント管理"
 
-msgid "Legacy check plug-ins (deprecated)"
-msgstr "Legact check plug-ins（非推奨）"
+#, fuzzy
+msgid "Legacy check plug-ins (outdated, ignored)"
+msgstr "エージェントベースのプラグイン（廃止、無視）"
 
-msgid "Legacy inventory plug-ins (deprecated)"
+#, fuzzy
+msgid "Legacy inventory plug-ins (outdated, ignored)"
 msgstr "Legact inventory plug-ins（非推奨）"
 
 msgid "Legacy run"
@@ -37977,20 +37981,8 @@ msgstr ""
 "フェースにのみ適用されます。例えば、ダウンしているが管理状態がアップのイン"
 "ターフェースは影響を受けません。"
 
-msgid "Map data"
-msgstr "マップされたデータ"
-
-msgid "Map data relating to VMs"
-msgstr "VMsに関連するマップデータ"
-
-msgid "Map data to group host"
-msgstr "データをグループホストにマップします"
-
 msgid "Map data to specific host (Piggyback)"
 msgstr "データを特定のホストにマッピングする（ピギーバック）"
-
-msgid "Map data to the VM itself"
-msgstr "データをVM自体にマップします"
 
 msgid "Map device state"
 msgstr "デバイスの状態をマップします"
@@ -39233,6 +39225,10 @@ msgstr "メトリック予測"
 
 msgid "Metric History"
 msgstr "メトリック履歴"
+
+#, fuzzy
+msgid "Metric configuration"
+msgstr "テスト構成"
 
 msgid "Metric label"
 msgstr "メトリックのラベル"
@@ -51161,6 +51157,10 @@ msgstr "この通知をリプレイして、もう一度送信してください
 #, python-format
 msgid "Replayed notification number %d"
 msgstr "リプレイ通知番号 %d"
+
+#, fuzzy
+msgid "Replica aggregation method"
+msgstr "集約方法"
 
 msgid "Replica available state"
 msgstr "レプリカ利用可能状態"
@@ -84821,6 +84821,38 @@ msgid ""
 msgstr ""
 "サービス制限を下回るまで、「変更を有効にする」はブロックされます。利用限度額"
 "を上げたい場合、 "
+
+#~ msgid ""
+#~ "By default, data relating to a VM is sent to the group host corresponding "
+#~ "to the resource group of the VM, the same way as for any other resource. "
+#~ "If the VM is present in your monitoring as a separate host, you can "
+#~ "choose to send the data to the VM itself."
+#~ msgstr ""
+#~ "デフォルトでは、VMに関連するデータは、他のリソースの場合と同じように、VMの"
+#~ "リソースグループに対応するグループホストに送信されます。VMが別のホストとし"
+#~ "てモニタリングに存在する場合は、VM自体にデータを送信することを選択できま"
+#~ "す。"
+
+#~ msgid "GUI extensions (deprecated)"
+#~ msgstr "GUI拡張機能（非推奨）"
+
+#~ msgid "Legacy GUI extensions (deprecated)"
+#~ msgstr "レガシーGUI拡張機能（非推奨）"
+
+#~ msgid "Legacy check plug-ins (deprecated)"
+#~ msgstr "Legact check plug-ins（非推奨）"
+
+#~ msgid "Map data"
+#~ msgstr "マップされたデータ"
+
+#~ msgid "Map data relating to VMs"
+#~ msgstr "VMsに関連するマップデータ"
+
+#~ msgid "Map data to group host"
+#~ msgstr "データをグループホストにマップします"
+
+#~ msgid "Map data to the VM itself"
+#~ msgstr "データをVM自体にマップします"
 
 #, fuzzy
 #~ msgid "Name of group2"

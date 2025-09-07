@@ -50,8 +50,7 @@ def _make_exception(error_data: object) -> ApiError:
     match error_data:
         case {"code": "Authorization_RequestDenied", **rest}:
             message = rest.get("message", error_data)
-            assert isinstance(message, Mapping)
-            return ApiErrorAuthorizationRequestDenied(**message)
+            return ApiErrorAuthorizationRequestDenied(message)
         case {"code": _, "message": message}:
             return ApiError(message)
         case other:

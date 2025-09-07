@@ -1748,7 +1748,7 @@ def write_to_agent_info_section(
 ) -> None:
     value = json.dumps((status, f"{component}: {message}"))
     section = AzureSection(
-        "agent_info", [subscription.hostname if subscription else ""], subscription=subscription
+        "agent_info", [subscription.hostname] if subscription else None, subscription=subscription
     )
     section.add(("agent-bailout", value))
     section.write()
@@ -2360,7 +2360,9 @@ async def _get_subscriptions(args: Args) -> set[AzureSubscription]:
     monitored_subscriptions = set()
     for subscription in args.subscriptions:
         if subscription not in subscriptions:
-            raise ApiError(f"Subscription {subscription} not found in Azure API")
+            raise ApiError(
+                f"Subscription {subscription} not found in Azure API, please check the client permissions."
+            )
 
         monitored_subscriptions.add(subscriptions[subscription])
 

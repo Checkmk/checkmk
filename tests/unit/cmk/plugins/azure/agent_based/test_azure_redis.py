@@ -185,6 +185,18 @@ def resource_fixture_but(**kwargs):
         pytest.param(
             AZURE_REDIS_WITH_METRICS,
             {
+                "cpu_utilization": ("fixed", (24.0, 30.0)),
+            },
+            azure_redis.check_plugin_azure_redis_cpu_utilization,
+            [
+                Result(state=State.WARN, summary="Total CPU: 25.00% (warn/crit at 24.00%/30.00%)"),
+                Metric("util", 25.0, levels=(24.0, 30.0)),
+            ],
+            id="redis CPU utilization with explicit levels",
+        ),
+        pytest.param(
+            AZURE_REDIS_WITH_METRICS,
+            {
                 "cache_hit_ratio": ("fixed", (85.0, 80.0)),
             },
             azure_redis.check_plugin_azure_redis_cache_effectiveness,

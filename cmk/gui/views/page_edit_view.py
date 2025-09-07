@@ -231,7 +231,7 @@ def view_editor_column_spec(
     if join_vs_column_choice := _get_join_vs_column_choice(ds_name, user_permissions):
         choices.append(join_vs_column_choice)
 
-    if join_inv_vs_column_choice := _get_join_inv_vs_column_choice(ds_name):
+    if join_inv_vs_column_choice := _get_join_inv_vs_column_choice(ds_name, user_permissions):
         choices.append(join_inv_vs_column_choice)
 
     return _view_editor_spec(
@@ -276,10 +276,10 @@ def _get_common_vs_column_choice(
 ) -> _VSColumnChoice:
     painters = painters_of_datasource(ds_name, user_permissions)
 
-    elements = [_get_vs_column_dropdown(ds_name, "painter", painters)]
+    elements = [_get_vs_column_dropdown(ds_name, "painter", painters, user_permissions)]
     if add_custom_column_title:
         elements.append(_get_vs_column_title())
-    elements.extend(_get_vs_link_or_tooltip_elements(painters))
+    elements.extend(_get_vs_link_or_tooltip_elements(painters, user_permissions))
 
     return _VSColumnChoice(
         column_type="column",
@@ -311,7 +311,7 @@ def _get_join_vs_column_choice(
                 "service name of the service you like to show the data for."
             ),
             elements=[
-                _get_vs_column_dropdown(ds_name, "join_painter", join_painters),
+                _get_vs_column_dropdown(ds_name, "join_painter", join_painters, user_permissions),
                 (
                     "join_value",
                     TextOrRegExp(
@@ -331,13 +331,15 @@ def _get_join_vs_column_choice(
                 ),
                 _get_vs_column_title(),
             ]
-            + _get_vs_link_or_tooltip_elements(join_painters),
+            + _get_vs_link_or_tooltip_elements(join_painters, user_permissions),
             optional_keys=["link_spec", "tooltip"],
         ),
     )
 
 
-def _get_join_inv_vs_column_choice(ds_name: str) -> _VSColumnChoice | None:
+def _get_join_inv_vs_column_choice(
+    ds_name: str, user_permissions: UserPermissions
+) -> _VSColumnChoice | None:
     if not _is_inventory_datasource(ds_name):
         return None
 
@@ -405,7 +407,7 @@ def _get_join_inv_vs_column_choice(ds_name: str) -> _VSColumnChoice | None:
         column_type="join_inv_column",
         title=_("Joined inventory column"),
         vs=Dictionary(
-            elements=elements + _get_vs_link_or_tooltip_elements({}),
+            elements=elements + _get_vs_link_or_tooltip_elements({}, user_permissions),
             optional_keys=["link_spec", "tooltip"],
         ),
     )
@@ -459,13 +461,16 @@ def _get_inventory_column_infos(
 
 
 def _get_vs_column_dropdown(
-    ds_name: str, painter_type: str, painters: Mapping[str, Painter]
+    ds_name: str,
+    painter_type: str,
+    painters: Mapping[str, Painter],
+    user_permissions: UserPermissions,
 ) -> tuple[str, ValueSpec]:
     return (
         "painter_spec",
         CascadingDropdown(
             title=_("Column"),
-            choices=_painter_choices_with_params(painters),
+            choices=_painter_choices_with_params(painters, user_permissions),
             no_preselect_title="",
             render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
             render_sub_vs_request_vars={
@@ -478,6 +483,7 @@ def _get_vs_column_dropdown(
 
 def _get_vs_link_or_tooltip_elements(
     painters: Mapping[str, Painter],
+    user_permissions: UserPermissions,
 ) -> list[tuple[str, ValueSpec]]:
     return [
         (
@@ -492,7 +498,7 @@ def _get_vs_link_or_tooltip_elements(
             "tooltip",
             DropdownChoice(
                 title=_("Tooltip"),
-                choices=_painter_choices(painters),
+                choices=_painter_choices(painters, user_permissions),
             ),
         ),
     ]
@@ -776,7 +782,7 @@ class PageAjaxCascadingRenderPainterParameters(AjaxPage):
         else:
             raise NotImplementedError()
 
-        vs = CascadingDropdown(choices=_painter_choices_with_params(painters))
+        vs = CascadingDropdown(choices=_painter_choices_with_params(painters, user_permissions))
         sub_vs = self._get_sub_vs(vs, ast.literal_eval(api_request["choice_id"]))
         value = ast.literal_eval(api_request["encoded_value"])
 
@@ -924,13 +930,16 @@ def create_view_from_valuespec(old_view, view):
     return view
 
 
-def _painter_choices(painters: Mapping[str, Painter]) -> DropdownChoiceEntries:
-    return [(c[0], c[1]) for c in _painter_choices_with_params(painters)]
+def _painter_choices(
+    painters: Mapping[str, Painter], user_permissions: UserPermissions
+) -> DropdownChoiceEntries:
+    return [(c[0], c[1]) for c in _painter_choices_with_params(painters, user_permissions)]
 
 
-def _painter_choices_with_params(painters: Mapping[str, Painter]) -> list[CascadingDropdownChoice]:
+def _painter_choices_with_params(
+    painters: Mapping[str, Painter], user_permissions: UserPermissions
+) -> list[CascadingDropdownChoice]:
     registered_painters = all_painters(active_config.tags.tag_groups)
-    user_permissions = UserPermissions.from_config(active_config, permission_registry)
     return sorted(
         (
             (

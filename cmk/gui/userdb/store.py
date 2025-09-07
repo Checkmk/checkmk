@@ -45,14 +45,14 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.gui.utils.htpasswd import Htpasswd
-from cmk.gui.utils.roles import AutomationUserFile, roles_of_user
+from cmk.gui.utils.roles import AutomationUserFile
 from cmk.utils.local_secrets import AutomationUserSecret
 from cmk.utils.paths import htpasswd_file, var_dir
 
 from ._connections import active_connections, get_connection, get_connection_uncached
 from ._connector import UserConnector
 from ._user_attribute import UserAttribute
-from ._user_spec import add_internal_attributes
+from ._user_spec import add_internal_attributes, new_user_template
 
 T = TypeVar("T")
 
@@ -281,13 +281,10 @@ def _add_passwords(users: Users) -> Users:
             users[uid]["password"] = password
             users[uid]["locked"] = locked
         else:
-            # Create entry if this is an admin user
-            new_user = UserSpec(
-                roles=roles_of_user(uid),
-                password=password,
-                locked=False,
-                connector="htpasswd",
-            )
+            # Creating users based on htpasswd entries only. This is an ancient feature,
+            # which we keep for the moment, but aim to remove it soon.
+            new_user = new_user_template("htpasswd", active_config.default_user_profile)
+            new_user["password"] = password
 
             add_internal_attributes(new_user)
 

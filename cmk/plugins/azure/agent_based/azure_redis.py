@@ -91,7 +91,7 @@ check_plugin_azure_redis_cpu_utilization = CheckPlugin(
                 "util",
                 "Total CPU",
                 render.percent,
-                upper_levels_param="connected_clients",
+                upper_levels_param="cpu_utilization",
             ),
         ],
         check_levels=check_levels_v2,

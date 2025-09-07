@@ -16,7 +16,7 @@ from cmk.ccc.user import UserId
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.utils.roles import roles_of_user
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib import check_mk_automations
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundle, ConfigBundleStore
 from cmk.gui.watolib.host_attributes import HostAttributes
@@ -274,6 +274,7 @@ def create_config_bundle(
     bundle: ConfigBundle,
     entities: CreateBundleEntities,
     *,
+    user_permissions: UserPermissions,
     user_id: UserId | None,
     pprint_value: bool,
     use_git: bool,
@@ -309,6 +310,7 @@ def create_config_bundle(
     except Exception as e:
         delete_config_bundle(
             bundle_id,
+            user_permissions=user_permissions,
             user_id=user_id,
             pprint_value=pprint_value,
             use_git=use_git,
@@ -320,6 +322,7 @@ def create_config_bundle(
 def delete_config_bundle(
     bundle_id: BundleId,
     *,
+    user_permissions: UserPermissions,
     user_id: UserId | None,
     pprint_value: bool,
     use_git: bool,
@@ -332,7 +335,7 @@ def delete_config_bundle(
 
     references = identify_bundle_references(bundle["group"], {bundle_id})[bundle_id]
     # First check permissions for all the needed deletions
-    user_may_delete_config_bundle_objects(bundle_id, references)
+    _user_may_delete_config_bundle_objects(bundle_id, references, user_permissions)
 
     # we have to delete the bundle itself first, so the overview page doesn't error out
     # when someone refreshes it while the deletion is in progress
@@ -346,15 +349,20 @@ def delete_config_bundle(
     )
 
 
-def user_may_delete_config_bundle_objects(
+def _user_may_delete_config_bundle_objects(
     bundle_id: BundleId,
     references: BundleReferences,
+    user_permissions: UserPermissions,
 ) -> None:
     bundle = read_config_bundle(bundle_id)
     owned_by = bundle.get("owned_by")
 
     # Only admins may delete bundles which were created by an admin
-    if owned_by and "admin" in roles_of_user(UserId(owned_by)) and "admin" not in user.role_ids:
+    if (
+        owned_by
+        and "admin" in user_permissions.roles_of_user(UserId(owned_by))
+        and "admin" not in user.role_ids
+    ):
         raise MKAuthException(
             _(
                 "You are not permitted to perform this action. Only an admin is permitted to "

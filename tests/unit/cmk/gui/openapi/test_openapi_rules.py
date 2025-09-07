@@ -11,6 +11,7 @@ import pytest
 
 from cmk.ccc.store import load_mk_file, save_mk_file, save_to_mk_file
 from cmk.gui.logged_in import user
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundleStore
 from cmk.gui.watolib.configuration_bundles import create_config_bundle, CreateBundleEntities
 from cmk.utils import paths
@@ -525,6 +526,7 @@ def fixture_locked_rule_id() -> Iterable[str]:
             "program_id": program_id,
         },
         entities=CreateBundleEntities(),
+        user_permissions=UserPermissions({}, {}, {}, []),
         user_id=user.id,
         pprint_value=False,
         use_git=False,

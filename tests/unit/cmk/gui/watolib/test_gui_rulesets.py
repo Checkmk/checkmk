@@ -23,6 +23,7 @@ from cmk.ccc.user import UserId
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.wato.check_parameters.local import _parameter_valuespec_local
 from cmk.gui.plugins.wato.check_parameters.ps import _valuespec_inventory_processes_rules
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.rule_specs import legacy_converter
 from cmk.gui.watolib import rulesets
 from cmk.gui.watolib.configuration_bundle_store import BundleId
@@ -574,6 +575,7 @@ def _setup_rules(rule_a_locked: bool, rule_b_locked: bool) -> tuple[Ruleset, Fol
             "program_id": program_id,
         },
         entities=CreateBundleEntities(),
+        user_permissions=UserPermissions({}, {}, {}, []),
         user_id=user.id,
         pprint_value=False,
         use_git=False,

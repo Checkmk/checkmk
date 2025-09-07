@@ -25,6 +25,7 @@ from cmk.gui.openapi.endpoints._common.host_attribute_schemas import (
     BaseHostTagGroup,
 )
 from cmk.gui.type_defs import CustomHostAttrSpec
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundleStore
 from cmk.gui.watolib.configuration_bundles import create_config_bundle, CreateBundleEntities
 from cmk.gui.watolib.custom_attributes import CustomAttrSpecs, save_custom_attrs_to_mk_file
@@ -60,6 +61,7 @@ def quick_setup_config_bundle() -> Iterator[tuple[BundleId, str]]:
             "program_id": program_id,
         },
         entities=CreateBundleEntities(),
+        user_permissions=UserPermissions({}, {}, {}, []),
         user_id=user.id,
         pprint_value=False,
         use_git=False,

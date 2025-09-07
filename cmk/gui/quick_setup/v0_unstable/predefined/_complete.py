@@ -14,6 +14,7 @@ from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.permissions import permission_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import (
     QSHostName,
     QSHostPath,
@@ -32,6 +33,7 @@ from cmk.gui.quick_setup.v0_unstable.predefined._utils import (
 from cmk.gui.quick_setup.v0_unstable.setups import ProgressLogger, StepStatus
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData
 from cmk.gui.site_config import is_replication_enabled, site_is_local
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.automations import (
     fetch_service_discovery_background_job_status,
@@ -302,6 +304,7 @@ def _create_and_save_special_agent_bundle(
     progress_logger.log_new_progress_step(
         "create_config_bundle", "Create underlying configurations"
     )
+    user_permissions = UserPermissions.from_config(active_config, permission_registry)
     create_config_bundle(
         bundle_id=bundle_id,
         bundle=ConfigBundle(
@@ -332,6 +335,7 @@ def _create_and_save_special_agent_bundle(
                 bundle_id, site_id, validated_host_name, folder
             ),
         ),
+        user_permissions=user_permissions,
         user_id=user.id,
         pprint_value=active_config.wato_pprint_config,
         use_git=active_config.wato_use_git,
@@ -363,6 +367,7 @@ def _create_and_save_special_agent_bundle(
             progress_logger.log_new_progress_step("delete_config_bundle", "Revert changes")
             delete_config_bundle(
                 BundleId(bundle_id),
+                user_permissions=user_permissions,
                 user_id=user.id,
                 pprint_value=active_config.wato_pprint_config,
                 use_git=active_config.wato_use_git,

@@ -26,12 +26,14 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.page_menu_entry import enable_page_menu_entry
+from cmk.gui.permissions import permission_registry
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.table import Foldable, Table, table_element
 from cmk.gui.type_defs import ActionResult, HTTPVariables, Icon, PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link
 from cmk.gui.valuespec import Dictionary, DictionaryEntry, FixedValue, RuleComment, TextInput
@@ -253,7 +255,13 @@ class ModeEditConfigurationBundles(WatoMode):
         self._bundles_listing(self._name)
 
     def _delete_bundle(
-        self, bundle_id: BundleId, *, pprint_value: bool, use_git: bool, debug: bool
+        self,
+        bundle_id: BundleId,
+        *,
+        user_permissions: UserPermissions,
+        pprint_value: bool,
+        use_git: bool,
+        debug: bool,
     ) -> None:
         if self._bundle_group_type is RuleGroupType.SPECIAL_AGENTS:
             # revert changes does not work correctly when a config sync to another site occurred
@@ -264,6 +272,7 @@ class ModeEditConfigurationBundles(WatoMode):
 
         delete_config_bundle(
             bundle_id,
+            user_permissions=user_permissions,
             user_id=user.id,
             pprint_value=pprint_value,
             use_git=use_git,
@@ -332,6 +341,7 @@ class ModeEditConfigurationBundles(WatoMode):
         if action == "delete":
             self._delete_bundle(
                 bundle_id,
+                user_permissions=UserPermissions.from_config(config, permission_registry),
                 pprint_value=config.wato_pprint_config,
                 use_git=config.wato_use_git,
                 debug=config.debug,

@@ -13,6 +13,7 @@ from cmk.automations.results import DeleteHostsResult
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundle
 from cmk.gui.watolib.configuration_bundles import (
     create_config_bundle,
@@ -53,6 +54,7 @@ def test_create_config_bundle_empty(with_admin_login: UserId) -> None:
         bundle_id,
         bundle,
         CreateBundleEntities(),
+        user_permissions=UserPermissions({}, {}, {}, []),
         user_id=with_admin_login,
         pprint_value=False,
         use_git=False,
@@ -72,6 +74,7 @@ def test_create_config_bundle_duplicate_id(with_admin_login: UserId) -> None:
         bundle_id,
         bundle,
         CreateBundleEntities(),
+        user_permissions=UserPermissions({}, {}, {}, []),
         user_id=with_admin_login,
         pprint_value=False,
         use_git=False,
@@ -83,6 +86,7 @@ def test_create_config_bundle_duplicate_id(with_admin_login: UserId) -> None:
             bundle_id,
             bundle,
             CreateBundleEntities(),
+            user_permissions=UserPermissions({}, {}, {}, []),
             user_id=with_admin_login,
             pprint_value=False,
             use_git=False,
@@ -97,6 +101,7 @@ def test_delete_config_bundle_empty(with_admin_login: UserId) -> None:
         bundle_id,
         bundle,
         CreateBundleEntities(),
+        user_permissions=UserPermissions({}, {}, {}, []),
         user_id=with_admin_login,
         pprint_value=False,
         use_git=False,
@@ -104,6 +109,7 @@ def test_delete_config_bundle_empty(with_admin_login: UserId) -> None:
     )
     delete_config_bundle(
         bundle_id,
+        user_permissions=UserPermissions({}, {}, {}, []),
         user_id=with_admin_login,
         pprint_value=False,
         use_git=False,
@@ -115,6 +121,7 @@ def test_delete_config_bundle_unknown_id() -> None:
     with pytest.raises(MKGeneralException, match="does not exist"):
         delete_config_bundle(
             BundleId("unknown"),
+            user_permissions=UserPermissions({}, {}, {}, []),
             user_id=UserId("harry"),
             pprint_value=False,
             use_git=False,
@@ -168,6 +175,7 @@ def test_create_and_delete_config_bundle_hosts(other_folder: str, with_admin_log
         bundle_id,
         bundle,
         CreateBundleEntities(hosts=hosts),
+        user_permissions=UserPermissions({}, {}, {}, []),
         user_id=with_admin_login,
         pprint_value=False,
         use_git=False,
@@ -182,6 +190,7 @@ def test_create_and_delete_config_bundle_hosts(other_folder: str, with_admin_log
 
     delete_config_bundle(
         bundle_id,
+        user_permissions=UserPermissions({}, {}, {}, []),
         user_id=with_admin_login,
         pprint_value=False,
         use_git=False,
@@ -214,6 +223,7 @@ def test_create_and_delete_config_bundle_passwords(with_admin_login: UserId) -> 
         bundle_id,
         bundle,
         CreateBundleEntities(passwords=passwords),
+        user_permissions=UserPermissions({}, {}, {}, []),
         user_id=with_admin_login,
         pprint_value=False,
         use_git=False,
@@ -227,6 +237,7 @@ def test_create_and_delete_config_bundle_passwords(with_admin_login: UserId) -> 
 
     delete_config_bundle(
         bundle_id,
+        user_permissions=UserPermissions({}, {}, {}, []),
         user_id=with_admin_login,
         pprint_value=False,
         use_git=False,
@@ -276,6 +287,7 @@ def test_create_and_delete_config_bundle_rules(other_folder: str, with_admin_log
         bundle_id,
         bundle,
         CreateBundleEntities(rules=rules),
+        user_permissions=UserPermissions({}, {}, {}, []),
         user_id=with_admin_login,
         pprint_value=False,
         use_git=False,
@@ -289,6 +301,7 @@ def test_create_and_delete_config_bundle_rules(other_folder: str, with_admin_log
 
     delete_config_bundle(
         bundle_id,
+        user_permissions=UserPermissions({}, {}, {}, []),
         user_id=with_admin_login,
         pprint_value=False,
         use_git=False,

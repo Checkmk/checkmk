@@ -18,7 +18,6 @@ from typing import NoReturn
 
 from jinja2 import Environment, FileSystemLoader
 
-from cmk.ccc.exceptions import MKException
 from cmk.notification_plugins import utils
 from cmk.notification_plugins.utils import get_password_from_env_or_context, render_cmk_graphs
 from cmk.utils.escaping import escape_permissive
@@ -260,10 +259,6 @@ TMPL_SERVICE_SUBJECT = "Checkmk: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$"
 
 opt_debug = "-d" in sys.argv
 bulk_mode = "--bulk" in sys.argv
-
-
-class GraphException(MKException):
-    pass
 
 
 class TemplateRenderer:

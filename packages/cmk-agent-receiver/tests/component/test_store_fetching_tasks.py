@@ -76,4 +76,4 @@ def test_store_fetching_task_non_existent_relay(agent_receiver: AgentReceiverCli
         task_payload="stuff",
     )
     assert response.status_code == HTTPStatus.NOT_FOUND
-    assert response.json()["detail"] == f"Relay with ID {relay_id} not found"
+    assert response.json()["detail"] == f"Relay with ID '{relay_id}' not found"

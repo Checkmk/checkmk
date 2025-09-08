@@ -14,17 +14,11 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     TaskStatus,
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
-from cmk.agent_receiver.relay.lib.shared_types import RelayID, TaskID
-
-
-class RelayNotFoundError(Exception):
-    """Exception raised when a relay is not found in the registry."""
-
-    pass
-
-
-class TaskNotFoundError(Exception):
-    pass
+from cmk.agent_receiver.relay.lib.shared_types import (
+    RelayID,
+    RelayNotFoundError,
+    TaskID,
+)
 
 
 @dataclasses.dataclass
@@ -36,7 +30,7 @@ class GetRelayTasksHandler:
         self, relay_id: RelayID, status: TaskStatus | None, authorization: SecretStr
     ) -> list[Task]:
         if not self.relay_repository.has_relay(relay_id, authorization):
-            raise RelayNotFoundError(f"Relay with ID {relay_id} not found")
+            raise RelayNotFoundError(relay_id)
         return self._get_tasks(relay_id, status)
 
     def _get_tasks(self, relay_id: RelayID, status: TaskStatus | None) -> list[Task]:
@@ -55,7 +49,7 @@ class GetRelayTaskHandler:
 
     def process(self, relay_id: RelayID, task_id: TaskID, authorization: SecretStr) -> Task:
         if not self.relay_repository.has_relay(relay_id, authorization):
-            raise RelayNotFoundError(f"Relay with ID {relay_id} not found")
+            raise RelayNotFoundError(relay_id)
         return self._get_task(relay_id, task_id)
 
     def _get_task(self, relay_id: RelayID, task_id: TaskID) -> Task:

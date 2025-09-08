@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 
-from cmk.agent_receiver.relay.lib.shared_types import RelayID, TaskID
+from cmk.agent_receiver.relay.lib.shared_types import RelayID, TaskID, TaskNotFoundError
 
 
 class TaskStatus(StrEnum):
@@ -48,10 +48,6 @@ class Task:
 # to make this thread-safe as this should not be accessed by multiple threads
 # concurrently.
 GLOBAL_TASKS: dict[RelayID, dict[TaskID, Task]] = {}
-
-
-class TaskNotFoundError(Exception):
-    pass
 
 
 @dataclasses.dataclass

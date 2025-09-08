@@ -17,17 +17,12 @@ from cmk.agent_receiver.relay.api.routers.tasks.dependencies import (
 )
 from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
     CreateTaskHandler,
-    CreateTaskRelayNotFoundError,
     GetRelayTaskHandler,
     GetRelayTasksHandler,
-    GetTasksRelayNotFoundError,
     UpdateTaskHandler,
-    UpdateTaskNotFoundError,
-    UpdateTaskRelayNotFoundError,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     ResultType,
-    TaskNotFoundError,
     TaskStatus,
     TaskType,
 )
@@ -93,11 +88,6 @@ async def create_task_endpoint(
             request.payload,
             authorization,
         )
-    except CreateTaskRelayNotFoundError:
-        raise fastapi.HTTPException(
-            status_code=fastapi.status.HTTP_404_NOT_FOUND,
-            detail=f"Relay with ID {relay_id} not found",
-        )
     except CheckmkAPIError as e:
         raise fastapi.HTTPException(
             status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
@@ -162,16 +152,6 @@ async def update_task(
             request.result_payload,
             authorization,
         )
-    except UpdateTaskRelayNotFoundError:
-        raise fastapi.HTTPException(
-            status_code=fastapi.status.HTTP_404_NOT_FOUND,
-            detail=f"Relay with ID {relay_id} not found",
-        )
-    except UpdateTaskNotFoundError:
-        raise fastapi.HTTPException(
-            status_code=fastapi.status.HTTP_404_NOT_FOUND,
-            detail=f"Task with ID {task_id} not found",
-        )
     except CheckmkAPIError as e:
         raise fastapi.HTTPException(
             status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
@@ -218,11 +198,6 @@ async def get_tasks_endpoint(
         tasks = handler.process(
             RelayID(relay_id), TaskStatus(status.value) if status else None, authorization
         )
-    except GetTasksRelayNotFoundError:
-        raise fastapi.HTTPException(
-            status_code=fastapi.status.HTTP_404_NOT_FOUND,
-            detail=f"Relay with ID {relay_id} not found",
-        ) from None
     except CheckmkAPIError as e:
         raise fastapi.HTTPException(
             status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
@@ -250,16 +225,6 @@ async def get_task_endpoint(
     """
     try:
         task = handler.process(RelayID(relay_id), TaskID(task_id), authorization)
-    except GetTasksRelayNotFoundError:
-        raise fastapi.HTTPException(
-            status_code=fastapi.status.HTTP_404_NOT_FOUND,
-            detail=f"Relay with ID {relay_id} not found",
-        )
-    except TaskNotFoundError:
-        raise fastapi.HTTPException(
-            status_code=fastapi.status.HTTP_404_NOT_FOUND,
-            detail=f"Task with ID {task_id} not found",
-        )
     except CheckmkAPIError as e:
         raise fastapi.HTTPException(
             status_code=fastapi.status.HTTP_502_BAD_GATEWAY,

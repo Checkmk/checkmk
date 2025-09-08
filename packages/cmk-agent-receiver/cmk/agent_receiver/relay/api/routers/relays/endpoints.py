@@ -14,11 +14,10 @@ from cmk.agent_receiver.relay.api.routers.relays.dependencies import (
 )
 from cmk.agent_receiver.relay.api.routers.relays.handlers import (
     RegisterRelayHandler,
-    RelayNotFoundError,
     UnregisterRelayHandler,
 )
 from cmk.agent_receiver.relay.lib.relays_repository import CheckmkAPIError
-from cmk.agent_receiver.relay.lib.shared_types import RelayID
+from cmk.agent_receiver.relay.lib.shared_types import RelayID, RelayNotFoundError
 from cmk.relay_protocols.relays import RelayRegistrationRequest, RelayRegistrationResponse
 
 router = fastapi.APIRouter()

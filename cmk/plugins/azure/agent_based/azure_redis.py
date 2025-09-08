@@ -333,3 +333,33 @@ check_plugin_azure_redis_throughput = CheckPlugin(
         "cache_write_upper": ("no_levels", None),
     },
 )
+
+check_plugin_azure_redis_server_load = CheckPlugin(
+    name="azure_redis_server_load",
+    sections=["azure_redis"],
+    service_name="Azure/Redis Server load",
+    discovery_function=create_discover_by_metrics_function_single(
+        "maximum_serverLoad",
+    ),
+    check_function=create_check_metrics_function_single(
+        [
+            MetricData(
+                "maximum_serverLoad",
+                "azure_redis_server_load",
+                "Server load",
+                render.percent,
+                upper_levels_param="levels",
+                average_mins_param="average_mins",
+                sustained_threshold_param=(
+                    lambda params: params.get("for_time", {}).get("threshold_for_time")
+                ),
+                sustained_levels_time_param=(
+                    lambda params: params.get("for_time", {}).get("limit_secs_for_time")
+                ),
+                sustained_label="Server under high load for",
+            ),
+        ],
+    ),
+    check_ruleset_name="azure_redis_server_load",
+    check_default_parameters={},
+)

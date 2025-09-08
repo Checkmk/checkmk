@@ -9,7 +9,7 @@ from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import Any, IO
 
-from cmk.ccc.exceptions import MKException, MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.crypto.certificate import Certificate, CertificatePEM
 from cmk.crypto.deprecated import (
     AesCbcCipher,
@@ -19,6 +19,7 @@ from cmk.crypto.deprecated import (
 )
 from cmk.crypto.keys import EncryptedPrivateKeyPEM, PrivateKey, PublicKey
 from cmk.crypto.password import Password
+from cmk.crypto.pem import PEMDecodingError
 
 
 # Using RSA directly to encrypt the whole backup is a bad idea. So we use the RSA
@@ -223,12 +224,18 @@ class RestoreStream(MKBackupStream):
             )
 
         try:
-            return PrivateKey.load_pem(
-                EncryptedPrivateKeyPEM(key["private_key"]), Password(passphrase)
-            )
-        except (ValueError, IndexError, TypeError, MKException):
-            if self.debug:
-                raise
+            parsed_passphrase = Password(passphrase)
+        except () if self.debug else ValueError:
+            raise MKGeneralException("Failed to load private key (wrong passphrase?)")
+
+        try:
+            parsed_priv_key = EncryptedPrivateKeyPEM(key["private_key"])
+        except () if self.debug else TypeError:
+            raise MKGeneralException("Failed to load private key (wrong passphrase?)")
+
+        try:
+            return PrivateKey.load_pem(parsed_priv_key, parsed_passphrase)
+        except () if self.debug else (PEMDecodingError, ValueError):
             raise MKGeneralException("Failed to load private key (wrong passphrase?)")
 
     def _decrypt_secret_key(

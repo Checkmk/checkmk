@@ -8,11 +8,7 @@ import dataclasses
 from pydantic import SecretStr
 
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
-from cmk.agent_receiver.relay.lib.shared_types import RelayID
-
-
-class RelayNotFoundError(Exception):
-    """Exception raised when a relay is not found in the registry."""
+from cmk.agent_receiver.relay.lib.shared_types import RelayID, RelayNotFoundError
 
 
 @dataclasses.dataclass
@@ -21,6 +17,6 @@ class UnregisterRelayHandler:
 
     def process(self, relay_id: RelayID, authorization: SecretStr) -> None:
         if not self.relays_repository.has_relay(relay_id, authorization):
-            raise RelayNotFoundError(f"Relay ID {relay_id} is not registered.")
+            raise RelayNotFoundError(relay_id)
 
         self.relays_repository.remove_relay(relay_id, authorization)

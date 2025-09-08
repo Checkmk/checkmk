@@ -8,14 +8,13 @@ from pydantic import SecretStr
 
 from cmk.agent_receiver.relay.api.routers.tasks.handlers.create_task import (
     CreateTaskHandler,
-    RelayNotFoundError,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     TasksRepository,
     TaskType,
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
-from cmk.agent_receiver.relay.lib.shared_types import RelayID
+from cmk.agent_receiver.relay.lib.shared_types import RelayID, RelayNotFoundError
 
 
 def test_process_create_task(

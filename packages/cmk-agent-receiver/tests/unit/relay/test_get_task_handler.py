@@ -8,16 +8,19 @@ from pydantic import SecretStr
 from cmk.agent_receiver.relay.api.routers.tasks.handlers.get_tasks import (
     GetRelayTaskHandler,
     GetRelayTasksHandler,
-    RelayNotFoundError,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     Task,
-    TaskNotFoundError,
     TasksRepository,
     TaskStatus,
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
-from cmk.agent_receiver.relay.lib.shared_types import RelayID, TaskID
+from cmk.agent_receiver.relay.lib.shared_types import (
+    RelayID,
+    RelayNotFoundError,
+    TaskID,
+    TaskNotFoundError,
+)
 
 
 def test_get_task_handler(
@@ -55,7 +58,9 @@ def test_get_task_handler_with_unknown_task(
 
     with pytest.raises(TaskNotFoundError):
         get_task_handler.process(
-            relay_id=relay_id, task_id=TaskID("unknown-task-id"), authorization=test_authorization
+            relay_id=relay_id,
+            task_id=TaskID("unknown-task-id"),
+            authorization=test_authorization,
         )
 
 

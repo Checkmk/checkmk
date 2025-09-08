@@ -7,8 +7,6 @@ import pytest
 from pydantic import SecretStr
 
 from cmk.agent_receiver.relay.api.routers.tasks.handlers.update_task import (
-    RelayNotFoundError,
-    TaskNotFoundError,
     UpdateTaskHandler,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
@@ -17,7 +15,12 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     TasksRepository,
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
-from cmk.agent_receiver.relay.lib.shared_types import RelayID, TaskID
+from cmk.agent_receiver.relay.lib.shared_types import (
+    RelayID,
+    RelayNotFoundError,
+    TaskID,
+    TaskNotFoundError,
+)
 
 
 def test_process_update_task(

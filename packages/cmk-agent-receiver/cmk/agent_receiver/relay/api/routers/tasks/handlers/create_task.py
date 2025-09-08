@@ -15,11 +15,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     TaskType,
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
-from cmk.agent_receiver.relay.lib.shared_types import RelayID, TaskID
-
-
-class RelayNotFoundError(Exception):
-    pass
+from cmk.agent_receiver.relay.lib.shared_types import RelayID, RelayNotFoundError, TaskID
 
 
 @dataclasses.dataclass
@@ -31,7 +27,7 @@ class CreateTaskHandler:
         self, relay_id: RelayID, task_type: TaskType, task_payload: str, authorization: SecretStr
     ) -> TaskID:
         if not self.relays_repository.has_relay(relay_id, authorization):
-            raise RelayNotFoundError(f"Relay with ID {relay_id} does not exist")
+            raise RelayNotFoundError(relay_id)
         now = datetime.now()
         task = Task(
             type=task_type, payload=task_payload, creation_timestamp=now, update_timestamp=now

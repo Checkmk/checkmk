@@ -7,12 +7,10 @@ from cmk.agent_receiver.relay.api.routers.relays.handlers.register_relay import 
     RegisterRelayHandler,
 )
 from cmk.agent_receiver.relay.api.routers.relays.handlers.unregister_relay import (
-    RelayNotFoundError,
     UnregisterRelayHandler,
 )
 
 __all__ = [
     "RegisterRelayHandler",
     "UnregisterRelayHandler",
-    "RelayNotFoundError",
 ]

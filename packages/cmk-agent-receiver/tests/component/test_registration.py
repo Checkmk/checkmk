@@ -69,7 +69,7 @@ def test_a_relay_can_be_unregistered(
     # unregistered relay cannot list tasks
     resp = agent_receiver.get_relay_tasks(relay_id)
     assert resp.status_code == HTTPStatus.NOT_FOUND
-    assert resp.json()["detail"] == f"Relay with ID {relay_id} not found"
+    assert resp.json()["detail"] == f"Relay with ID '{relay_id}' not found"
 
 
 def test_unregistering_a_relay_does_not_affect_other_relays(

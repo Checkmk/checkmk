@@ -7,11 +7,10 @@ import pytest
 from pydantic import SecretStr
 
 from cmk.agent_receiver.relay.api.routers.relays.handlers.unregister_relay import (
-    RelayNotFoundError,
     UnregisterRelayHandler,
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
-from cmk.agent_receiver.relay.lib.shared_types import RelayID
+from cmk.agent_receiver.relay.lib.shared_types import RelayID, RelayNotFoundError
 
 
 def test_process_removes_relay_id_from_registry(

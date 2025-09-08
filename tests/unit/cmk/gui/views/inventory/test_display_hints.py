@@ -188,6 +188,7 @@ def test_paths() -> None:
             ("software", "applications", "oracle", "systemparameter"),
             ("software", "applications", "oracle", "tablespaces"),
             ("software", "applications", "podman"),
+            ("software", "applications", "podman", "containers"),
             ("software", "applications", "synthetic_monitoring"),
             ("software", "applications", "synthetic_monitoring", "plans"),
             ("software", "applications", "synthetic_monitoring", "tests"),
@@ -950,6 +951,15 @@ _KNOWN_COLUMNS_KEY_ORDERS = {
         "gateway",
     ],
     ("software", "applications", "vmwareesx"): ["clusters"],
+    ("software", "applications", "podman", "containers"): [
+        "id",
+        "creation",
+        "name",
+        "labels",
+        "state",
+        "status",
+        "image",
+    ],
 }
 
 

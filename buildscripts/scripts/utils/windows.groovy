@@ -43,6 +43,7 @@ def build(Map args) {
                     "OpenHardwareMonitorLib.dll",
                     "OpenHardwareMonitorCLI.exe",
                     "robotmk_ext.exe",
+                    "mk-oracle.exe",
                     "mk-sql.exe",
                     "windows_files_hashes.txt",
                 ].join(",")] :
@@ -63,6 +64,11 @@ def build(Map args) {
                 "packages/cmk-agent-ctl",
                 "call run.cmd --all",
                 ""] :
+            (args.TARGET == "mk_oracle_no_sign") ? [
+                "packages/mk-oracle",
+                "call run.cmd --all",
+                "mk-oracle.exe"] :
+
             (args.TARGET == "mk_sql_no_sign") ? [
                 "packages/mk-sql",
                 "call run.cmd --all",

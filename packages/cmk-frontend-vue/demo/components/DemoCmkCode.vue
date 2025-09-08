@@ -45,7 +45,7 @@ const multilineShortCodeText = `C:\\Program Files (x86)\\checkmk\\service\\cmk-a
 </script>
 
 <template>
-  <div class="demo-code-container">
+  <div class="demo-cmk-code__container">
     <h2>Short code</h2>
     <br />
     <CmkCode title="Some title" :code_txt="shortCodeText" />
@@ -62,7 +62,7 @@ const multilineShortCodeText = `C:\\Program Files (x86)\\checkmk\\service\\cmk-a
 </template>
 
 <style scoped>
-.demo-code-container {
+.demo-cmk-code__container {
   max-width: 800px;
   width: 100%;
 }

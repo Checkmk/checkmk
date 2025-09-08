@@ -9,8 +9,7 @@ import requests
 
 import cmk.ccc.resulttype as result
 from cmk.gui.i18n import _
-from cmk.gui.utils.unixsocket_http import make_session as make_unixsocket_session
-from cmk.utils import paths
+from cmk.utils import paths, unixsocket_http
 
 
 class StartupError(Exception): ...
@@ -21,7 +20,7 @@ class JobSchedulerClient:
     _BASE_URL: Final = "http://local-ui-job-scheduler"
 
     def __init__(self) -> None:
-        self._session = make_unixsocket_session(
+        self._session = unixsocket_http.make_session(
             self._SOCKET_PATH,
             self._BASE_URL,
         )

@@ -12,10 +12,10 @@ from typing import assert_never, Final
 import requests
 
 from cmk.automations.helper_api import AutomationPayload, AutomationResponse
-from cmk.gui.exceptions import MKInternalError
-from cmk.gui.i18n import _
-from cmk.gui.utils.unixsocket_http import make_session as make_unixsocket_session
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.i18n import _
 from cmk.utils import paths
+from cmk.utils.unixsocket_http import make_session as make_unixsocket_session
 
 from .automation_executor import arguments_with_timeout, AutomationExecutor, LocalAutomationResult
 
@@ -47,7 +47,7 @@ class HelperExecutor(AutomationExecutor):
         try:
             response = session.post(f"{self._BASE_URL}/automation", json=payload)
         except requests.ConnectionError as e:
-            raise MKInternalError(
+            raise MKGeneralException(
                 _(
                     "Could not connect to automation helper. "
                     "Possibly the service <tt>automation-helper</tt> is not started, "

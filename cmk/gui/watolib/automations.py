@@ -31,6 +31,9 @@ from livestatus import SiteConfiguration
 
 import cmk.ccc.version as cmk_version
 from cmk import trace
+from cmk.automations.automation_executor import AutomationExecutor
+from cmk.automations.automation_helper import HelperExecutor
+from cmk.automations.automation_subprocess import SubprocessExecutor
 from cmk.automations.results import SerializedResult
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
@@ -62,9 +65,6 @@ from cmk.gui.watolib.utils import mk_repr
 from cmk.utils import paths
 from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import get_license_state
-
-from . import automation_helper, automation_subprocess
-from .automation_executor import AutomationExecutor
 
 auto_logger = logger.getChild("automations")
 tracer = trace.get_tracer()
@@ -150,11 +150,11 @@ def check_mk_local_automation_serialized(
             call_hook_pre_activate_changes(collect_all_hosts)
 
         executor: AutomationExecutor = (
-            automation_subprocess.SubprocessExecutor()
+            SubprocessExecutor()
             if force_cli_interface
             or os.environ.get(ENV_VARIABLE_FORCE_CLI_INTERFACE)
             or not _automation_helper_enabled_in_omd_config()
-            else automation_helper.HelperExecutor()
+            else HelperExecutor()
         )
 
         try:

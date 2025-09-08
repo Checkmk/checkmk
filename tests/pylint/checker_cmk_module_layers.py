@@ -428,6 +428,7 @@ CROSS_DEPENDING_UTILS_MODULES = (
 COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     Component("cmk.automations"): _allow(
         *PACKAGE_CCC,
+        *PACKAGE_TRACE,
         "cmk.checkengine",
         "cmk.helper_interface",
         "cmk.utils.check_utils",
@@ -435,9 +436,12 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.http_proxy_config",
         "cmk.utils.ip_lookup",
         "cmk.utils.labels",
+        "cmk.utils.log",
         "cmk.utils.notify_types",
+        "cmk.utils.paths",
         "cmk.utils.rulesets.ruleset_matcher",
         "cmk.utils.servicename",
+        "cmk.utils.unixsocket_http",
     ),
     Component("cmk.bakery"): _allow(),  # only allow itself, this is the future :-)
     Component("cmk.base.api.bakery"): _allow(
@@ -833,6 +837,8 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.statename",
         "cmk.utils.tags",
         "cmk.utils.timeperiod",
+        "cmk.utils.translations",
+        "cmk.utils.unixsocket_http",
         "cmk.utils.urls",
         "cmk.utils.http_proxy_config",
         "cmk.utils.visuals",

@@ -1434,9 +1434,6 @@ class ImmutableTree:
     def merge(self, right: ImmutableTree) -> ImmutableTree:
         return _merge_nodes(self, right)
 
-    def difference(self, right: ImmutableTree) -> ImmutableDeltaTree:
-        return _compare_trees(self, right)
-
     def get_attribute(self, path: SDPath, key: SDKey) -> SDValue:
         return self.get_tree(path).attributes.pairs.get(key)
 
@@ -2175,8 +2172,9 @@ class HistoryStore:
                 entry = HistoryEntry.from_delta_tree(
                     previous_timestamp=path.previous.timestamp,
                     current_timestamp=path.current.timestamp,
-                    delta_tree=self._lookup_tree(path.current.tree_path).difference(
-                        self._lookup_tree(path.previous.tree_path)
+                    delta_tree=_compare_trees(
+                        self._lookup_tree(path.current.tree_path),
+                        self._lookup_tree(path.previous.tree_path),
                     ),
                 )
 

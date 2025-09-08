@@ -346,10 +346,10 @@ class _FilterTree:
 
 
 def _make_filter_tree(filters: Iterable[SDFilterChoice]) -> _FilterTree:
-    filter_tree = _FilterTree()
+    filter_tree_ = _FilterTree()
     for f in filters:
-        filter_tree.append(f.path, f)
-    return filter_tree
+        filter_tree_.append(f.path, f)
+    return filter_tree_
 
 
 def _make_retentions_filter_func(
@@ -1054,42 +1054,46 @@ class MutableTree:
 
 
 def _filter_attributes(
-    attributes: ImmutableAttributes, filter_tree: _FilterTree
+    attributes: ImmutableAttributes, filter_tree_: _FilterTree
 ) -> ImmutableAttributes:
     return ImmutableAttributes(
-        pairs=filter_tree.filter_pairs(attributes.pairs),
+        pairs=filter_tree_.filter_pairs(attributes.pairs),
         retentions=attributes.retentions,
     )
 
 
-def _filter_table(table: ImmutableTable, filter_tree: _FilterTree) -> ImmutableTable:
+def _filter_table(table: ImmutableTable, filter_tree_: _FilterTree) -> ImmutableTable:
     return ImmutableTable(
         key_columns=table.key_columns,
         rows_by_ident={
             ident: filtered_row
             for ident, row in table.rows_by_ident.items()
-            if (filtered_row := filter_tree.filter_row(row))
+            if (filtered_row := filter_tree_.filter_row(row))
         },
         retentions=table.retentions,
     )
 
 
-def _filter_tree(tree: ImmutableTree, filter_tree: _FilterTree) -> ImmutableTree:
+def _filter_tree(tree: ImmutableTree, filter_tree_: _FilterTree) -> ImmutableTree:
     return ImmutableTree(
         path=tree.path,
-        attributes=_filter_attributes(tree.attributes, filter_tree),
-        table=_filter_table(tree.table, filter_tree),
+        attributes=_filter_attributes(tree.attributes, filter_tree_),
+        table=_filter_table(tree.table, filter_tree_),
         nodes_by_name={
             name: filtered_node
-            for name in filter_tree.filter_node_names(set(tree.nodes_by_name))
+            for name in filter_tree_.filter_node_names(set(tree.nodes_by_name))
             if (
                 filtered_node := _filter_tree(
                     tree.nodes_by_name.get(name, ImmutableTree(path=tree.path + (name,))),
-                    filter_tree.filters_by_name.get(name, _FilterTree()),
+                    filter_tree_.filters_by_name.get(name, _FilterTree()),
                 )
             )
         },
     )
+
+
+def filter_tree(tree: ImmutableTree, filters: Iterable[SDFilterChoice]) -> ImmutableTree:
+    return _filter_tree(tree, _make_filter_tree(filters))
 
 
 def _merge_attributes(left: ImmutableAttributes, right: ImmutableAttributes) -> ImmutableAttributes:
@@ -1427,9 +1431,6 @@ class ImmutableTree:
             self.nodes_by_name[n] == other.nodes_by_name[n] for n in compared_node_names.both
         )
 
-    def filter(self, filters: Iterable[SDFilterChoice]) -> ImmutableTree:
-        return _filter_tree(self, _make_filter_tree(filters))
-
     def merge(self, right: ImmutableTree) -> ImmutableTree:
         return _merge_nodes(self, right)
 
@@ -1483,36 +1484,42 @@ class ImmutableTree:
 
 
 def _filter_delta_attributes(
-    attributes: ImmutableDeltaAttributes, filter_tree: _FilterTree
+    attributes: ImmutableDeltaAttributes, filter_tree_: _FilterTree
 ) -> ImmutableDeltaAttributes:
-    return ImmutableDeltaAttributes(pairs=filter_tree.filter_pairs(attributes.pairs))
+    return ImmutableDeltaAttributes(pairs=filter_tree_.filter_pairs(attributes.pairs))
 
 
 def _filter_delta_table(
-    table: ImmutableDeltaTable, filter_tree: _FilterTree
+    table: ImmutableDeltaTable, filter_tree_: _FilterTree
 ) -> ImmutableDeltaTable:
     return ImmutableDeltaTable(
         key_columns=table.key_columns,
-        rows=[filtered_row for row in table.rows if (filtered_row := filter_tree.filter_row(row))],
+        rows=[filtered_row for row in table.rows if (filtered_row := filter_tree_.filter_row(row))],
     )
 
 
-def _filter_delta_tree(tree: ImmutableDeltaTree, filter_tree: _FilterTree) -> ImmutableDeltaTree:
+def _filter_delta_tree(tree: ImmutableDeltaTree, filter_tree_: _FilterTree) -> ImmutableDeltaTree:
     return ImmutableDeltaTree(
         path=tree.path,
-        attributes=_filter_delta_attributes(tree.attributes, filter_tree),
-        table=_filter_delta_table(tree.table, filter_tree),
+        attributes=_filter_delta_attributes(tree.attributes, filter_tree_),
+        table=_filter_delta_table(tree.table, filter_tree_),
         nodes_by_name={
             name: filtered_node
-            for name in filter_tree.filter_node_names(set(tree.nodes_by_name))
+            for name in filter_tree_.filter_node_names(set(tree.nodes_by_name))
             if (
                 filtered_node := _filter_delta_tree(
                     tree.nodes_by_name.get(name, ImmutableDeltaTree(path=tree.path + (name,))),
-                    filter_tree.filters_by_name.get(name, _FilterTree()),
+                    filter_tree_.filters_by_name.get(name, _FilterTree()),
                 )
             )
         },
     )
+
+
+def filter_delta_tree(
+    tree: ImmutableDeltaTree, filters: Iterable[SDFilterChoice]
+) -> ImmutableDeltaTree:
+    return _filter_delta_tree(tree, _make_filter_tree(filters))
 
 
 _SDEncodeAs = Callable[[SDValue], SDDeltaValue]
@@ -1626,9 +1633,6 @@ class ImmutableDeltaTree:
             return self
         node = self.nodes_by_name.get(path[0])
         return ImmutableDeltaTree() if node is None else node.get_tree(path[1:])
-
-    def filter(self, filters: Iterable[SDFilterChoice]) -> ImmutableDeltaTree:
-        return _filter_delta_tree(self, _make_filter_tree(filters))
 
     def get_stats(self) -> SDDeltaCounter:
         counter: SDDeltaCounter = Counter()
@@ -2255,7 +2259,7 @@ def load_history(
                 delta_tree=d,
             )
             for e in entries
-            if (d := e.delta_tree.filter(delta_tree_filters))
+            if (d := filter_delta_tree(e.delta_tree, delta_tree_filters))
         ],
         corrupted=list(corrupted),
     )

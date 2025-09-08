@@ -6,8 +6,11 @@
 from collections.abc import Mapping, Sequence
 from copy import deepcopy
 from typing import Any
+from unittest import mock
+from unittest.mock import Mock
 
 import pytest
+import time_machine
 
 from cmk.agent_based.v2 import CheckPlugin, Metric, Result, State
 from cmk.plugins.azure.agent_based import azure_redis
@@ -136,10 +139,18 @@ AZURE_REDIS_WITH_METRICS = {
                 value=31375,
                 unit="bytespersecond",
             ),
+            "maximum_serverLoad": AzureMetric(
+                name="serverLoad",
+                aggregation="maximum",
+                value=26,
+                unit="percent",
+            ),
         },
         subscription="ba9f74ff-6a4c-41e0-ab55-15c7fe79632f",
     ),
 }
+
+EPOCH = 1757328437.8742359
 
 
 def resource_fixture_but(**kwargs):
@@ -310,6 +321,16 @@ def resource_fixture_but(**kwargs):
             ],
             id="redis throughput",
         ),
+        pytest.param(
+            AZURE_REDIS_WITH_METRICS,
+            {},
+            azure_redis.check_plugin_azure_redis_server_load,
+            [
+                Result(state=State.OK, summary="Server load: 26.00%"),
+                Metric("azure_redis_server_load", 26.0),
+            ],
+            id="redis server load (no params)",
+        ),
     ],
 )
 def test_check_azure_redis_check_functions(
@@ -320,3 +341,43 @@ def test_check_azure_redis_check_functions(
 ) -> None:
     check_function = check_plugin.check_function
     assert list(check_function(params, section)) == expected_result
+
+
+@mock.patch(
+    "cmk.plugins.lib.azure.get_value_store",
+    return_value={"azure_redis_server_load_average": (EPOCH - 300, EPOCH, 99)},
+)
+@time_machine.travel(EPOCH + 300)
+def test_check_azure_redis_server_load_average(_get_value_store: Mock) -> None:
+    check_function = azure_redis.check_plugin_azure_redis_server_load.check_function
+    params = {
+        "average_mins": 5,
+    }
+    assert list(check_function(params, AZURE_REDIS_WITH_METRICS)) == [
+        Metric("azure_redis_server_load", 26.0),
+        Result(state=State.OK, summary="Server load: 62.50%"),
+        Metric("azure_redis_server_load_average", 62.5),
+    ]
+
+
+@mock.patch(
+    "cmk.plugins.lib.azure.get_value_store",
+    return_value={"azure_redis_server_load_sustained_threshold": EPOCH - 45.0},
+)
+@time_machine.travel(EPOCH)
+def test_check_azure_redis_server_load_sustained(_get_value_store: Mock) -> None:
+    check_function = azure_redis.check_plugin_azure_redis_server_load.check_function
+    params = {
+        "for_time": {
+            "threshold_for_time": 25,
+            "limit_secs_for_time": ("fixed", (30.0, 60.0)),
+        },
+    }
+    assert list(check_function(params, AZURE_REDIS_WITH_METRICS)) == [
+        Result(
+            state=State.WARN,
+            summary="Server under high load for: 45 seconds (warn/crit at 30 seconds/1 minute 0 seconds)",
+        ),
+        Result(state=State.OK, summary="Server load: 26.00%"),
+        Metric("azure_redis_server_load", 26.0),
+    ]

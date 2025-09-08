@@ -1075,6 +1075,17 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.podman.containers_stopped": {"title": _l("#Containers stopped")},
         ".software.applications.podman.containers_exited": {"title": _l("#Containers exited")},
         ".software.applications.podman.images": {"title": _l("#Images")},
+        ".software.applications.podman.containers:": {
+            "title": _l("Containers"),
+            "keyorder": ["id", "creation", "name", "labels", "state", "status", "image"],
+        },
+        ".software.applications.podman.containers:*.id": {"title": _l("ID")},
+        ".software.applications.podman.containers:*.creation": {"title": _l("Creation"), "paint": "date_and_time"},
+        ".software.applications.podman.containers:*.name": {"title": _l("Name")},
+        ".software.applications.podman.containers:*.labels": {"title": _l("Labels")},
+        ".software.applications.podman.containers:*.state": {"title": _l("State")},
+        ".software.applications.podman.containers:*.status": {"title": _l("Status")},
+        ".software.applications.podman.containers:*.image": {"title": _l("Image")},
         ".software.applications.synthetic_monitoring.": {"title": _l("Synthetic monitoring")},
         ".software.applications.synthetic_monitoring.plans:": {
             "title": _l("Plans"),

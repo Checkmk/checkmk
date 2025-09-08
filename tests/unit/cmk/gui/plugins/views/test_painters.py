@@ -444,6 +444,7 @@ def test_registered_painters() -> None:
         "inv_software_applications_oracle_systemparameter",
         "inv_software_applications_oracle_tablespaces",
         "inv_software_applications_podman",
+        "inv_software_applications_podman_containers",
         "inv_software_applications_podman_containers_exited",
         "inv_software_applications_podman_containers_paused",
         "inv_software_applications_podman_containers_running",

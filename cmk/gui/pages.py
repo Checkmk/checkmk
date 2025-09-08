@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from typing import Any, override
 
 import cmk.ccc.plugin_registry
-from cmk.ccc.exceptions import MKException
+from cmk.ccc.exceptions import MKException, MKGeneralException
 from cmk.gui.config import Config
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
@@ -65,7 +65,8 @@ class AjaxPage(Page, abc.ABC):
     def _handle_exc(self, config: Config, method: Callable[[Config], PageResult]) -> None:
         try:
             method(config)
-        except MKException as e:
+        # I added MKGeneralException during a refactoring, but I did not check if it is needed.
+        except (MKException, MKGeneralException) as e:
             response.status_code = http_client.BAD_REQUEST
             html.write_text_permissive(str(e))
         except Exception as e:
@@ -88,7 +89,8 @@ class AjaxPage(Page, abc.ABC):
             resp = {"result_code": 0, "result": action_response, "severity": "success"}
         except MKMissingDataError as e:
             resp = {"result_code": 1, "result": str(e), "severity": "success"}
-        except MKException as e:
+        # I added MKGeneralException during a refactoring, but I did not check if it is needed.
+        except (MKException, MKGeneralException) as e:
             resp = {"result_code": 1, "result": str(e), "severity": "error"}
 
         except Exception as e:

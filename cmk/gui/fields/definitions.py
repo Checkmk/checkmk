@@ -23,7 +23,7 @@ from marshmallow.types import StrSequenceOrSet
 from marshmallow_oneofschema import OneOfSchema
 
 from cmk.ccc import version
-from cmk.ccc.exceptions import MKException
+from cmk.ccc.exceptions import MKException, MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.user import UserId
 from cmk.fields import base, Boolean, DateTime, validators
@@ -219,7 +219,8 @@ class FolderField(base.String):
         assert isinstance(x, str), f"Expected a string value, got {value!r}"
         try:
             return self.load_folder(x)
-        except MKException:
+        # I added MKGeneralException during a refactoring, but I did not check if it is needed.
+        except (MKException, MKGeneralException):
             if x:
                 raise self.make_error("not_found", folder_id=x)
         return None

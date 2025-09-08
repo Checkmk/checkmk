@@ -18,7 +18,7 @@ import livestatus
 import cmk.ccc.store
 import cmk.utils.paths
 from cmk import trace
-from cmk.ccc.exceptions import MKException
+from cmk.ccc.exceptions import MKException, MKGeneralException
 from cmk.crypto import MKCryptoException
 from cmk.gui import pages, sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -248,7 +248,8 @@ def _process_request(
         resp = _render_exception(e, title=_("Configuration error"))
         logger.error("MKConfigError: %s", e)
 
-    except (MKException, MKCryptoException) as e:
+    # I added MKGeneralException during a refactoring, but I did not check if it is needed.
+    except (MKException, MKCryptoException, MKGeneralException) as e:
         resp = _render_exception(e, title=_("General error"))
         logger.error("%s: %s", e.__class__.__name__, e)
 

@@ -17,7 +17,7 @@ from typing import Literal
 from livestatus import SiteConfigurations
 
 import cmk.ccc.version as cmk_version
-from cmk.ccc.exceptions import MKException
+from cmk.ccc.exceptions import MKException, MKGeneralException
 from cmk.ccc.user import UserId
 from cmk.gui import crash_handler, visuals
 from cmk.gui.breadcrumb import Breadcrumb
@@ -453,7 +453,8 @@ def render_dashlet_exception_content(dashlet: Dashlet, e: Exception) -> HTML | s
             dashlet.type_name(),
         )
 
-    if isinstance(e, MKException):
+    # I added MKGeneralException during a refactoring, but I did not check if it is needed.
+    if isinstance(e, MKException | MKGeneralException):
         return html.render_error(
             _(
                 "Problem while rendering dashboard element %d of type %s: %s. Have a look at "

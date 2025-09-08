@@ -27,7 +27,7 @@ class MKException(Exception):
     pass
 
 
-class MKGeneralException(MKException):
+class MKGeneralException(Exception):
     """An exception signaling the user can fix the underlying problem
 
     Important: This should not be used for errors that indicate actual bugs.

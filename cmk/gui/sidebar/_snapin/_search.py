@@ -8,7 +8,7 @@ import traceback
 
 import livestatus
 
-from cmk.ccc.exceptions import MKException
+from cmk.ccc.exceptions import MKException, MKGeneralException
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import HTTPRedirect
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -98,7 +98,8 @@ class QuicksearchSnapin(SidebarSnapin):
         except IncorrectLabelInputError:
             pass
 
-        except MKException as e:
+        # I added MKGeneralException during a refactoring, but I did not check if it is needed.
+        except (MKException, MKGeneralException) as e:
             html.show_error("%s" % e)
 
         except Exception:

@@ -868,9 +868,6 @@ _EXPLICIT_FILE_TO_DEPENDENCIES = {
         "cmk.piggyback",
         "cmk.utils",
     ),
-    ModulePath("bin/cmk-monitor-otel-collector"): _allow(
-        "cmk.otel_collector",
-    ),
     ModulePath("bin/cmk-update-license-usage"): _allow(
         *PACKAGE_CCC,
         "cmk.utils",

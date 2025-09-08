@@ -10,4 +10,5 @@ export type ConfiguredFilters = Record<string, ConfiguredValues>
 
 export type DropdownConfig = components['schemas']['DropdownComponentModel']
 export type DynamicDropdownConfig = components['schemas']['DynamicDropdownComponentModel']
+export type RadioButtonConfig = components['schemas']['RadioButtonComponentModel']
 export type TextInputConfig = components['schemas']['TextInputComponentModel']

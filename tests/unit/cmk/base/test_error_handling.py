@@ -7,7 +7,7 @@ import pytest
 
 from cmk.base.errorhandling import CheckResultErrorHandler
 from cmk.ccc.crash_reporting import crash_dir
-from cmk.ccc.exceptions import MKAgentError, MKGeneralException, MKTimeout
+from cmk.ccc.exceptions import MKFetcherError, MKGeneralException, MKTimeout
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.exitspec import ExitSpec
@@ -55,7 +55,7 @@ def test_MKTimeout_exception_returns_2() -> None:
 
 def test_MKAgentError_exception_returns_2() -> None:
     with _handler() as handler:
-        raise MKAgentError("oops!")
+        raise MKFetcherError("oops!")
 
     assert handler.result is not None
     assert handler.result.state == 2

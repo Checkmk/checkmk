@@ -16,7 +16,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import assert_never, Literal
 
-from cmk.ccc.exceptions import MKBailOut, MKConfigLockTimeout, MKTimeout
+from cmk.ccc.exceptions import MKBailOut, MKTimeout
 from cmk.ccc.i18n import _
 
 __all__ = [
@@ -51,7 +51,7 @@ def lock_checkmk_configuration(lockfile: Path) -> Iterator[None]:
     try:
         acquire_lock(lockfile)
     except MKTimeout as e:
-        raise MKConfigLockTimeout(
+        raise MKTimeout(
             _(
                 "Couldn't lock the Checkmk configuration. Another "
                 "process is running that holds this lock. In order for you to be "

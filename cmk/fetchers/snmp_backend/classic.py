@@ -8,7 +8,7 @@ from collections.abc import Iterable
 from typing import assert_never, Literal, TypeAlias
 
 from cmk.ccc import tty
-from cmk.ccc.exceptions import MKGeneralException, MKSNMPError, MKTimeout
+from cmk.ccc.exceptions import MKFetcherError, MKGeneralException, MKTimeout
 from cmk.snmplib import OID, SNMPBackend, SNMPContext, SNMPRawValue, SNMPRowInfo, SNMPVersion
 
 from ._utils import strip_snmp_value
@@ -138,7 +138,7 @@ class ClassicSNMPBackend(SNMPBackend):
 
         if snmp_process.returncode:
             self._logger.debug(f"{tty.red}{tty.bold}ERROR: {tty.normal}SNMP error: {error.strip()}")
-            raise MKSNMPError(
+            raise MKFetcherError(
                 f"SNMP Error on {ipaddress}: {error.strip()} (Exit-Code: {snmp_process.returncode})"
             )
         return rowinfo

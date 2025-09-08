@@ -16,7 +16,7 @@ from pytest import MonkeyPatch
 
 import cmk.snmplib._table as _snmp_table
 from cmk.base.config import ConfigCache
-from cmk.ccc.exceptions import MKSNMPError
+from cmk.ccc.exceptions import MKFetcherError
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.helper_interface import SourceType
 from cmk.snmplib import (
@@ -198,7 +198,7 @@ def test_walk_passes_on_timeout_with_snmpv3_context_continue_on_timeout() -> Non
             raise SNMPContextTimeout
 
     section_name = SNMPSectionName("section")
-    with pytest.raises(MKSNMPError) as excinfo:
+    with pytest.raises(MKFetcherError) as excinfo:
         _snmp_table.get_snmpwalk(
             section_name,
             ".1.2.3",
@@ -234,7 +234,7 @@ def test_walk_raises_on_timeout_without_snmpv3_context_stop_on_timeout() -> None
             raise SNMPContextTimeout
 
     section_name = SNMPSectionName("section")
-    with pytest.raises(MKSNMPError) as excinfo:
+    with pytest.raises(MKFetcherError) as excinfo:
         _snmp_table.get_snmpwalk(
             section_name,
             ".1.2.3",

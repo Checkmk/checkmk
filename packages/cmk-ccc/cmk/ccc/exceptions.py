@@ -7,15 +7,12 @@
 import enum
 
 __all__ = [
-    "MKAgentError",
     "MKBailOut",
-    "MKConfigLockTimeout",
     "MKIPAddressLookupError",
     "MKException",
     "MKFetcherError",
     "MKGeneralException",
     "MKSkipCheck",
-    "MKSNMPError",
     "MKTerminate",
     "MKTimeout",
     "OnError",
@@ -34,14 +31,6 @@ class MKException(Exception):
 
 class MKFetcherError(MKException):
     """An exception common to the fetchers."""
-
-
-class MKAgentError(MKFetcherError):
-    pass
-
-
-class MKSNMPError(MKFetcherError):
-    pass
 
 
 class MKSkipCheck(MKException):
@@ -95,7 +84,3 @@ class OnError(enum.Enum):
     RAISE = "raise"
     WARN = "warn"
     IGNORE = "ignore"
-
-
-class MKConfigLockTimeout(MKTimeout):
-    """Special exception to signalize timeout waiting for the global configuration lock"""

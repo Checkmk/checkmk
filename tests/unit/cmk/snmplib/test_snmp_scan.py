@@ -13,7 +13,7 @@ import pytest
 import cmk.fetchers._snmpcache as snmp_cache
 import cmk.fetchers._snmpscan as snmp_scan
 from cmk.agent_based.v2 import SimpleSNMPSection, SNMPSection
-from cmk.ccc.exceptions import MKSNMPError, OnError
+from cmk.ccc.exceptions import MKFetcherError, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.plugins.collection.agent_based import aironet_clients, brocade_info
@@ -200,7 +200,7 @@ def cache_oids(backend, tmp_path):
 def test_snmp_scan_prefetch_description_object__oid_missing(oid: OID, backend: SNMPBackend) -> None:
     snmp_cache.single_oid_cache()[oid] = None
 
-    with pytest.raises(MKSNMPError, match=r"Cannot fetch [\w ]+ OID %s" % oid):
+    with pytest.raises(MKFetcherError, match=r"Cannot fetch [\w ]+ OID %s" % oid):
         snmp_scan._prefetch_description_object(backend=backend)
 
 

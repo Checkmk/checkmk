@@ -13,10 +13,8 @@ from typing import Protocol
 
 import cmk.ccc.resulttype as result
 from cmk.ccc.exceptions import (
-    MKAgentError,
     MKFetcherError,
     MKIPAddressLookupError,
-    MKSNMPError,
     MKTimeout,
 )
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -79,10 +77,7 @@ def summarize_success(exit_spec: ExitSpec) -> Sequence[ActiveCheckResult]:
 
 def summarize_failure(exit_spec: ExitSpec, exc: Exception) -> Sequence[ActiveCheckResult]:
     def extract_status(exc: Exception) -> int:
-        if isinstance(
-            exc,
-            MKAgentError | MKFetcherError | MKIPAddressLookupError | MKSNMPError,
-        ):
+        if isinstance(exc, MKFetcherError | MKIPAddressLookupError):
             return exit_spec.get("connection", 2)
         if isinstance(exc, MKTimeout):
             return exit_spec.get("timeout", 2)

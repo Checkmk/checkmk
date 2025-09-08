@@ -9,11 +9,9 @@ from typing import Final, Literal
 
 import cmk.ccc.debug
 from cmk.ccc.exceptions import (
-    MKAgentError,
     MKFetcherError,
     MKGeneralException,
     MKIPAddressLookupError,
-    MKSNMPError,
     MKTimeout,
 )
 from cmk.ccc.hostaddress import HostName
@@ -89,7 +87,7 @@ def _handle_failure(
             raise exc
         return exit_spec.get("timeout", 2), "Timed out"
 
-    if isinstance(exc, MKAgentError | MKFetcherError | MKSNMPError | MKIPAddressLookupError):
+    if isinstance(exc, MKFetcherError | MKIPAddressLookupError):
         return exit_spec.get("connection", 2), str(exc)
 
     if isinstance(exc, MKGeneralException):

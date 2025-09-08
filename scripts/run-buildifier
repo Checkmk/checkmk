@@ -16,6 +16,8 @@ get_bazel_files() {
         \! -path "${REPO_PATH}/.docker_workspace/*" -a \
         \! -path "${REPO_PATH}/tests/qa-test-data/*" -a \
         \! -path "${REPO_PATH}/.cache/*" -a \
+        \! -path "${REPO_PATH}/bazel/registry/*" -a \
+        \! -path "${REPO_PATH}/bazel/thirdparty/*" -a \
         \( -name '*.bzl' \
         -o -name '*.sky' \
         -o -name BUILD.bazel \

@@ -66,7 +66,6 @@ pkg_files(
         ":cmk-monitor-diskusage",
         ":cmk-monitor-mkbackup",
         ":cmk-monitor-mknotifyd",
-        ":cmk-monitor-otel-collector",
         ":cmk-passwd",
         ":cmk-piggyback",
         ":cmk-piggyback-hub",

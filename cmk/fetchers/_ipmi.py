@@ -20,9 +20,9 @@ if TYPE_CHECKING:
     import pyghmi.ipmi.command as ipmi_cmd
     import pyghmi.ipmi.sdr as ipmi_sdr
 
-from cmk.ccc.exceptions import MKFetcherError, MKTimeout
+from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.hostaddress import HostAddress
-from cmk.helper_interface import AgentRawData
+from cmk.helper_interface import AgentRawData, FetcherError
 
 from ._abstract import Fetcher, Mode
 
@@ -173,7 +173,7 @@ class IPMIFetcher(Fetcher[AgentRawData]):
                 privlevel=2,
             )
         except IpmiException as exc:
-            raise MKFetcherError("IPMI connection failed") from exc
+            raise FetcherError("IPMI connection failed") from exc
 
     def close(self) -> None:
         if self._command is None:

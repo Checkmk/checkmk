@@ -10,7 +10,6 @@ __all__ = [
     "MKBailOut",
     "MKIPAddressLookupError",
     "MKException",
-    "MKFetcherError",
     "MKGeneralException",
     "MKTerminate",
     "MKTimeout",
@@ -26,10 +25,6 @@ __all__ = [
 # and move the exceptions to the packages they actually belong to.
 class MKException(Exception):
     pass
-
-
-class MKFetcherError(MKException):
-    """An exception common to the fetchers."""
 
 
 class MKGeneralException(MKException):

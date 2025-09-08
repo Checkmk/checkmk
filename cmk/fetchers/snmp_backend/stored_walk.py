@@ -9,7 +9,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Final
 
-from cmk.ccc.exceptions import MKFetcherError
+from cmk.helper_interface import FetcherError
 from cmk.snmplib import OID, SNMPBackend, SNMPContext, SNMPHostConfig, SNMPRawValue, SNMPRowInfo
 
 from ._utils import strip_snmp_value
@@ -22,7 +22,7 @@ class StoredWalkSNMPBackend(SNMPBackend):
         super().__init__(snmp_config, logger)
         self.path: Final = path
         if not self.path.exists():
-            raise MKFetcherError(f"No snmpwalk file {self.path}")
+            raise FetcherError(f"No snmpwalk file {self.path}")
 
     def get(self, /, oid: OID, *, context: SNMPContext) -> SNMPRawValue | None:
         walk = self.walk(oid, context=context)
@@ -101,7 +101,7 @@ class StoredWalkSNMPBackend(SNMPBackend):
         try:
             return self.read_walk_from_path(self.path, self._logger)
         except OSError:
-            raise MKFetcherError(f"No snmpwalk file {self.path}")
+            raise FetcherError(f"No snmpwalk file {self.path}")
 
     @staticmethod
     def _compare_oids(a: OID, b: OID) -> int:

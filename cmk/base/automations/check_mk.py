@@ -124,7 +124,6 @@ from cmk.base.sources import make_parser
 from cmk.ccc import tty, version
 from cmk.ccc.exceptions import (
     MKBailOut,
-    MKFetcherError,
     MKGeneralException,
     MKTimeout,
     OnError,
@@ -178,7 +177,7 @@ from cmk.fetchers.config import (
 )
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge, NoCache
 from cmk.fetchers.snmp import make_backend as make_snmp_backend
-from cmk.helper_interface import AgentRawData, FetcherType, SourceType
+from cmk.helper_interface import AgentRawData, FetcherError, FetcherType, SourceType
 from cmk.inventory import structured_data
 from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.piggyback.backend import move_for_host_rename as move_piggyback_for_host_rename
@@ -3318,7 +3317,7 @@ class AutomationDiagHost(Automation):
 
             if test.startswith("snmp"):
                 if config.simulation_mode:
-                    raise MKFetcherError(
+                    raise FetcherError(
                         "Simulation mode enabled. Not trying to contact snmp datasource"
                     )
                 return DiagHostResult(

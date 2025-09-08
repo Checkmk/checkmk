@@ -12,8 +12,9 @@ from pathlib import Path
 
 import cmk.fetchers._snmpcache as snmp_cache
 from cmk.ccc import tty
-from cmk.ccc.exceptions import MKFetcherError, MKGeneralException, MKTimeout, OnError
+from cmk.ccc.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.ccc.tty import format_warning
+from cmk.helper_interface import FetcherError
 from cmk.snmplib import (
     get_single_oid,
     SNMPBackend,
@@ -101,7 +102,7 @@ def _prefetch_description_object(*, backend: SNMPBackend) -> None:
             )
             is None
         ):
-            raise MKFetcherError(
+            raise FetcherError(
                 "Cannot fetch %s OID %s. Please check your SNMP "
                 "configuration. Possible reason might be: Wrong credentials, "
                 "wrong SNMP version, Firewall rules, etc." % (name, oid),

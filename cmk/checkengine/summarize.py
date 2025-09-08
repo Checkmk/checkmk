@@ -13,7 +13,6 @@ from typing import Protocol
 
 import cmk.ccc.resulttype as result
 from cmk.ccc.exceptions import (
-    MKFetcherError,
     MKIPAddressLookupError,
     MKTimeout,
 )
@@ -22,7 +21,7 @@ from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.parser import AgentRawDataSection, HostSections
 from cmk.checkengine.plugins import SectionName
-from cmk.helper_interface import FetcherType, SourceInfo
+from cmk.helper_interface import FetcherError, FetcherType, SourceInfo
 from cmk.piggyback.backend import Config as PiggybackConfig
 from cmk.piggyback.backend import PiggybackMetaData, PiggybackTimeSettings
 
@@ -77,7 +76,7 @@ def summarize_success(exit_spec: ExitSpec) -> Sequence[ActiveCheckResult]:
 
 def summarize_failure(exit_spec: ExitSpec, exc: Exception) -> Sequence[ActiveCheckResult]:
     def extract_status(exc: Exception) -> int:
-        if isinstance(exc, MKFetcherError | MKIPAddressLookupError):
+        if isinstance(exc, FetcherError | MKIPAddressLookupError):
             return exit_spec.get("connection", 2)
         if isinstance(exc, MKTimeout):
             return exit_spec.get("timeout", 2)

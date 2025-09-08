@@ -9,7 +9,6 @@ from zlib import compress
 
 import pytest
 
-from cmk.ccc.exceptions import MKFetcherError
 from cmk.fetchers._agentprtcl import (
     AgentCtlMessage,
     CompressionType,
@@ -21,6 +20,7 @@ from cmk.fetchers._agentprtcl import (
     validate_agent_protocol,
     Version,
 )
+from cmk.helper_interface import FetcherError
 
 
 @pytest.fixture(name="uncompressed_data")
@@ -267,7 +267,7 @@ def test_legacy_encryption_mac_mismatch(protocol: TransportProtocol, encrypted: 
 
 class TestValidateAgentProtocol:
     def test_validate_protocol_plaintext_with_enforce_raises(self) -> None:
-        with pytest.raises(MKFetcherError):
+        with pytest.raises(FetcherError):
             validate_agent_protocol(
                 TransportProtocol.PLAIN, TCPEncryptionHandling.ANY_ENCRYPTED, is_registered=False
             )
@@ -276,7 +276,7 @@ class TestValidateAgentProtocol:
         for p in TransportProtocol:
             if p is TransportProtocol.TLS:
                 continue
-            with pytest.raises(MKFetcherError):
+            with pytest.raises(FetcherError):
                 validate_agent_protocol(p, TCPEncryptionHandling.ANY_AND_PLAIN, is_registered=True)
 
     def test_validate_protocol_tls_always_ok(self) -> None:
@@ -293,7 +293,7 @@ class TestValidateAgentProtocol:
         for p in TransportProtocol:
             if p is TransportProtocol.TLS:
                 continue
-            with pytest.raises(MKFetcherError, match="TLS"):
+            with pytest.raises(FetcherError, match="TLS"):
                 validate_agent_protocol(
                     p,
                     TCPEncryptionHandling.TLS_ENCRYPTED_ONLY,

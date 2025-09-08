@@ -10,33 +10,33 @@ from cmk.ccc.hostaddress import HostName
 from cmk.utils.regex import regex
 
 
-class InvHousekeepingParamsCombined(TypedDict):
+class InvCleanupParamsCombined(TypedDict):
     strategy: Literal["and", "or"]
     file_age: int
     number_of_history_entries: int
 
 
-type InvHousekeepingParamsChoice = (
+type InvCleanupParamsChoice = (
     tuple[Literal["file_age"], int]
     | tuple[Literal["number_of_history_entries"], int]
-    | tuple[Literal["combined"], InvHousekeepingParamsCombined]
+    | tuple[Literal["combined"], InvCleanupParamsCombined]
 )
 
 
-class InvHousekeepingParamsOfHosts(TypedDict):
+class InvCleanupParamsOfHosts(TypedDict):
     regex_or_explicit: Sequence[str]
-    parameters: InvHousekeepingParamsChoice
+    parameters: InvCleanupParamsChoice
 
 
-class InvHousekeepingParamsDefaultCombined(TypedDict):
+class InvCleanupParamsDefaultCombined(TypedDict):
     strategy: Literal["and"]
     file_age: int
     number_of_history_entries: int
 
 
-class InvHousekeepingParams(TypedDict):
-    for_hosts: Sequence[InvHousekeepingParamsOfHosts]
-    default: InvHousekeepingParamsDefaultCombined | None
+class InvCleanupParams(TypedDict):
+    for_hosts: Sequence[InvCleanupParamsOfHosts]
+    default: InvCleanupParamsDefaultCombined | None
     abandoned_file_age: int
 
 
@@ -58,18 +58,18 @@ def _filter_regex_or_explicit(
                 yield regex_or_name
 
 
-def filter_inventory_housekeeping_parameters(
+def filter_inventory_cleanup_parameters(
     *,
-    housekeeping_parameters: InvHousekeepingParams,
+    cleanup_parameters: InvCleanupParams,
     host_names: Sequence[HostName],
-) -> InvHousekeepingParams:
-    return InvHousekeepingParams(
+) -> InvCleanupParams:
+    return InvCleanupParams(
         for_hosts=[
-            InvHousekeepingParamsOfHosts(
+            InvCleanupParamsOfHosts(
                 regex_or_explicit=regex_or_explicit,
                 parameters=p["parameters"],
             )
-            for p in housekeeping_parameters["for_hosts"]
+            for p in cleanup_parameters["for_hosts"]
             if (
                 regex_or_explicit := list(
                     _filter_regex_or_explicit(
@@ -79,6 +79,6 @@ def filter_inventory_housekeeping_parameters(
                 )
             )
         ],
-        default=housekeeping_parameters["default"],
-        abandoned_file_age=housekeeping_parameters["abandoned_file_age"],
+        default=cleanup_parameters["default"],
+        abandoned_file_age=cleanup_parameters["abandoned_file_age"],
     )

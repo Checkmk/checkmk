@@ -34,9 +34,9 @@ from cmk.gui.watolib.config_domain_name import (
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupSiteManagement
 from cmk.inventory.config import (
-    InvHousekeepingParamsChoice,
-    InvHousekeepingParamsDefaultCombined,
-    InvHousekeepingParamsOfHosts,
+    InvCleanupParamsChoice,
+    InvCleanupParamsDefaultCombined,
+    InvCleanupParamsOfHosts,
     matches,
 )
 from cmk.inventory.paths import Paths as InventoryPaths
@@ -105,10 +105,10 @@ def _vs_choices() -> CascadingDropdown:
     )
 
 
-ConfigVariableInventoryHousekeeping = ConfigVariable(
+ConfigVariableInventoryCleanup = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     domain=ConfigDomainGUI,
-    ident="inventory_housekeeping",
+    ident="inventory_cleanup",
     valuespec=lambda: Dictionary(
         title=_("HW/SW Inventory cleanup"),
         elements=[
@@ -249,7 +249,7 @@ class _ParamFileAgeNumberHistoryEntries:
 
 
 def _compute_params(
-    params: InvHousekeepingParamsChoice,
+    params: InvCleanupParamsChoice,
 ) -> _ParamsFileAge | _ParamsNumberHistoryEntries | _ParamFileAgeNumberHistoryEntries:
     match params[0]:
         case "file_age":
@@ -268,8 +268,8 @@ def _compute_params(
 
 
 def _compute_host_params(
-    hosts_params: Sequence[InvHousekeepingParamsOfHosts],
-    default_params: InvHousekeepingParamsDefaultCombined | None,
+    hosts_params: Sequence[InvCleanupParamsOfHosts],
+    default_params: InvCleanupParamsDefaultCombined | None,
     host_name: HostName,
 ) -> _ParamsFileAge | _ParamsNumberHistoryEntries | _ParamFileAgeNumberHistoryEntries | None:
     for host_params in hosts_params:
@@ -542,15 +542,15 @@ def _cleanup_abandoned_files_of_host(abandoned_files_of_host: _AbandonedFilesOfH
         file.path.unlink(missing_ok=True)
 
 
-class InventoryHousekeeping:
+class InventoryCleanup:
     def __init__(self, omd_root: Path) -> None:
         super().__init__()
         self.inv_paths = InventoryPaths(omd_root)
 
     def _run(self, config: Config, *, host_names: Sequence[HostName], now: int) -> None:
-        hosts_params = config.inventory_housekeeping["for_hosts"]
-        default_params = config.inventory_housekeeping["default"]
-        abandoned_params = _ParamsFileAge(config.inventory_housekeeping["abandoned_file_age"])
+        hosts_params = config.inventory_cleanup["for_hosts"]
+        default_params = config.inventory_cleanup["default"]
+        abandoned_params = _ParamsFileAge(config.inventory_cleanup["abandoned_file_age"])
 
         classified_file_paths = _compute_classified_file_paths(self.inv_paths, host_names)
 

@@ -29,7 +29,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.user_connection_config_types import ConfigurableUserConnectionSpec
 from cmk.gui.utils.temperate_unit import TemperatureUnit
-from cmk.inventory.config import InvHousekeepingParams
+from cmk.inventory.config import InvCleanupParams
 from cmk.utils import paths
 from cmk.utils.tags import TagConfigSpec
 
@@ -169,8 +169,8 @@ class CREConfig:
     multisite_servicegroups: dict = field(default_factory=dict)
     multisite_contactgroups: dict = field(default_factory=dict)
 
-    inventory_housekeeping: InvHousekeepingParams = field(
-        default_factory=lambda: InvHousekeepingParams(
+    inventory_cleanup: InvCleanupParams = field(
+        default_factory=lambda: InvCleanupParams(
             for_hosts=[],
             default=None,
             abandoned_file_age=30 * 86400,

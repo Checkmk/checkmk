@@ -19,7 +19,7 @@ from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 
 from . import _rulespec
-from ._housekeeping import ConfigVariableInventoryHousekeeping, InventoryHousekeeping
+from ._cleanup import ConfigVariableInventoryCleanup, InventoryCleanup
 from ._icon import InventoryHistoryIcon, InventoryIcon
 from ._openapi import register as openapi_register
 from ._rulespec import RulespecGroupInventory
@@ -73,12 +73,12 @@ def register(
     *,
     ignore_duplicate_endpoints: bool = False,
 ) -> None:
-    config_variable_registry.register(ConfigVariableInventoryHousekeeping)
+    config_variable_registry.register(ConfigVariableInventoryCleanup)
     page_registry.register(PageEndpoint("host_inv_api", page_host_inv_api))
     cron_job_registry.register(
         CronJob(
-            name="execute_inventory_housekeeping_job",
-            callable=InventoryHousekeeping(cmk.utils.paths.omd_root),
+            name="execute_inventory_cleanup_job",
+            callable=InventoryCleanup(cmk.utils.paths.omd_root),
             interval=timedelta(hours=24),
         )
     )

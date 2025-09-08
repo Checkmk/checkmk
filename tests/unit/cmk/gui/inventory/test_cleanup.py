@@ -9,13 +9,13 @@ from pathlib import Path
 
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.config import Config
-from cmk.gui.inventory._housekeeping import (
-    InventoryHousekeeping,
+from cmk.gui.inventory._cleanup import (
+    InventoryCleanup,
 )
 from cmk.inventory.config import (
-    InvHousekeepingParams,
-    InvHousekeepingParamsCombined,
-    InvHousekeepingParamsOfHosts,
+    InvCleanupParams,
+    InvCleanupParamsCombined,
+    InvCleanupParamsOfHosts,
 )
 from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.inventory.paths import TreePath, TreePathGz
@@ -26,9 +26,9 @@ def test_nothing_to_do(tmp_path: Path) -> None:
     archive_host = inv_paths.archive_host(HostName("hostname"))
     delta_cache_host = inv_paths.delta_cache_host(HostName("hostname"))
 
-    InventoryHousekeeping(tmp_path)._run(
+    InventoryCleanup(tmp_path)._run(
         Config(
-            inventory_housekeeping=InvHousekeepingParams(
+            inventory_cleanup=InvCleanupParams(
                 for_hosts=[],
                 default=None,
                 abandoned_file_age=100,
@@ -47,9 +47,9 @@ def test_only_archive_host(tmp_path: Path) -> None:
     archive_host.mkdir(parents=True, exist_ok=True)
     delta_cache_host = inv_paths.delta_cache_host(HostName("hostname"))
 
-    InventoryHousekeeping(tmp_path)._run(
+    InventoryCleanup(tmp_path)._run(
         Config(
-            inventory_housekeeping=InvHousekeepingParams(
+            inventory_cleanup=InvCleanupParams(
                 for_hosts=[],
                 default=None,
                 abandoned_file_age=100,
@@ -68,9 +68,9 @@ def test_only_delta_cache_host_exists(tmp_path: Path) -> None:
     delta_cache_host = inv_paths.delta_cache_host(HostName("hostname"))
     delta_cache_host.mkdir(parents=True, exist_ok=True)
 
-    InventoryHousekeeping(tmp_path)._run(
+    InventoryCleanup(tmp_path)._run(
         Config(
-            inventory_housekeeping=InvHousekeepingParams(
+            inventory_cleanup=InvCleanupParams(
                 for_hosts=[],
                 default=None,
                 abandoned_file_age=100,
@@ -90,9 +90,9 @@ def test_both_exist(tmp_path: Path) -> None:
     delta_cache_host = inv_paths.delta_cache_host(HostName("hostname"))
     delta_cache_host.mkdir(parents=True, exist_ok=True)
 
-    InventoryHousekeeping(tmp_path)._run(
+    InventoryCleanup(tmp_path)._run(
         Config(
-            inventory_housekeeping=InvHousekeepingParams(
+            inventory_cleanup=InvCleanupParams(
                 for_hosts=[],
                 default=None,
                 abandoned_file_age=100,
@@ -146,9 +146,9 @@ def _setup_one_archive_file(tmp_path: Path, *, timestamp: int) -> _OneArchiveFil
 
 def test_one_archive(tmp_path: Path) -> None:
     files = _setup_one_archive_file(tmp_path, timestamp=100)
-    InventoryHousekeeping(tmp_path)._run(
+    InventoryCleanup(tmp_path)._run(
         Config(
-            inventory_housekeeping=InvHousekeepingParams(
+            inventory_cleanup=InvCleanupParams(
                 for_hosts=[],
                 default=None,
                 abandoned_file_age=1,
@@ -165,11 +165,11 @@ def test_one_archive(tmp_path: Path) -> None:
 
 def test_one_archive_file_file_age(tmp_path: Path) -> None:
     files = _setup_one_archive_file(tmp_path, timestamp=100)
-    InventoryHousekeeping(tmp_path)._run(
+    InventoryCleanup(tmp_path)._run(
         Config(
-            inventory_housekeeping=InvHousekeepingParams(
+            inventory_cleanup=InvCleanupParams(
                 for_hosts=[
-                    InvHousekeepingParamsOfHosts(
+                    InvCleanupParamsOfHosts(
                         regex_or_explicit=["hostname"],
                         parameters=("file_age", 2),
                     ),
@@ -189,11 +189,11 @@ def test_one_archive_file_file_age(tmp_path: Path) -> None:
 
 def test_one_archive_file_number_of_history_entries(tmp_path: Path) -> None:
     files = _setup_one_archive_file(tmp_path, timestamp=100)
-    InventoryHousekeeping(tmp_path)._run(
+    InventoryCleanup(tmp_path)._run(
         Config(
-            inventory_housekeeping=InvHousekeepingParams(
+            inventory_cleanup=InvCleanupParams(
                 for_hosts=[
-                    InvHousekeepingParamsOfHosts(
+                    InvCleanupParamsOfHosts(
                         regex_or_explicit=["hostname"],
                         parameters=("number_of_history_entries", 1),
                     ),
@@ -213,15 +213,15 @@ def test_one_archive_file_number_of_history_entries(tmp_path: Path) -> None:
 
 def test_one_archive_file_file_age_and_number_of_history_entries(tmp_path: Path) -> None:
     files = _setup_one_archive_file(tmp_path, timestamp=100)
-    InventoryHousekeeping(tmp_path)._run(
+    InventoryCleanup(tmp_path)._run(
         Config(
-            inventory_housekeeping=InvHousekeepingParams(
+            inventory_cleanup=InvCleanupParams(
                 for_hosts=[
-                    InvHousekeepingParamsOfHosts(
+                    InvCleanupParamsOfHosts(
                         regex_or_explicit=["hostname"],
                         parameters=(
                             "combined",
-                            InvHousekeepingParamsCombined(
+                            InvCleanupParamsCombined(
                                 strategy="and",
                                 file_age=2,
                                 number_of_history_entries=1,
@@ -244,15 +244,15 @@ def test_one_archive_file_file_age_and_number_of_history_entries(tmp_path: Path)
 
 def test_one_archive_file_file_age_or_number_of_history_entries(tmp_path: Path) -> None:
     files = _setup_one_archive_file(tmp_path, timestamp=100)
-    InventoryHousekeeping(tmp_path)._run(
+    InventoryCleanup(tmp_path)._run(
         Config(
-            inventory_housekeeping=InvHousekeepingParams(
+            inventory_cleanup=InvCleanupParams(
                 for_hosts=[
-                    InvHousekeepingParamsOfHosts(
+                    InvCleanupParamsOfHosts(
                         regex_or_explicit=["hostname"],
                         parameters=(
                             "combined",
-                            InvHousekeepingParamsCombined(
+                            InvCleanupParamsCombined(
                                 strategy="or",
                                 file_age=2,
                                 number_of_history_entries=1,
@@ -349,11 +349,11 @@ def _setup_files(tmp_path: Path, host_name: HostName, *, timestamp: int) -> _Fil
 
 def test_file_age(tmp_path: Path) -> None:
     files = _setup_files(tmp_path, HostName("hostname"), timestamp=100)
-    InventoryHousekeeping(tmp_path)._run(
+    InventoryCleanup(tmp_path)._run(
         Config(
-            inventory_housekeeping=InvHousekeepingParams(
+            inventory_cleanup=InvCleanupParams(
                 for_hosts=[
-                    InvHousekeepingParamsOfHosts(
+                    InvCleanupParamsOfHosts(
                         regex_or_explicit=["hostname"],
                         parameters=("file_age", 3),
                     )
@@ -381,11 +381,11 @@ def test_file_age(tmp_path: Path) -> None:
 
 def test_number_of_history_entries(tmp_path: Path) -> None:
     files = _setup_files(tmp_path, HostName("hostname"), timestamp=100)
-    InventoryHousekeeping(tmp_path)._run(
+    InventoryCleanup(tmp_path)._run(
         Config(
-            inventory_housekeeping=InvHousekeepingParams(
+            inventory_cleanup=InvCleanupParams(
                 for_hosts=[
-                    InvHousekeepingParamsOfHosts(
+                    InvCleanupParamsOfHosts(
                         regex_or_explicit=["hostname"],
                         parameters=("number_of_history_entries", 2),
                     )
@@ -413,15 +413,15 @@ def test_number_of_history_entries(tmp_path: Path) -> None:
 
 def test_file_age_and_number_of_history_entries(tmp_path: Path) -> None:
     files = _setup_files(tmp_path, HostName("hostname"), timestamp=100)
-    InventoryHousekeeping(tmp_path)._run(
+    InventoryCleanup(tmp_path)._run(
         Config(
-            inventory_housekeeping=InvHousekeepingParams(
+            inventory_cleanup=InvCleanupParams(
                 for_hosts=[
-                    InvHousekeepingParamsOfHosts(
+                    InvCleanupParamsOfHosts(
                         regex_or_explicit=["hostname"],
                         parameters=(
                             "combined",
-                            InvHousekeepingParamsCombined(
+                            InvCleanupParamsCombined(
                                 strategy="and",
                                 file_age=3,
                                 number_of_history_entries=2,
@@ -452,15 +452,15 @@ def test_file_age_and_number_of_history_entries(tmp_path: Path) -> None:
 
 def test_file_age_or_number_of_history_entries(tmp_path: Path) -> None:
     files = _setup_files(tmp_path, HostName("hostname"), timestamp=100)
-    InventoryHousekeeping(tmp_path)._run(
+    InventoryCleanup(tmp_path)._run(
         Config(
-            inventory_housekeeping=InvHousekeepingParams(
+            inventory_cleanup=InvCleanupParams(
                 for_hosts=[
-                    InvHousekeepingParamsOfHosts(
+                    InvCleanupParamsOfHosts(
                         regex_or_explicit=["hostname"],
                         parameters=(
                             "combined",
-                            InvHousekeepingParamsCombined(
+                            InvCleanupParamsCombined(
                                 strategy="or",
                                 file_age=3,
                                 number_of_history_entries=2,
@@ -492,9 +492,9 @@ def test_file_age_or_number_of_history_entries(tmp_path: Path) -> None:
 def test_abandoned_file_age_youngest_too_old(tmp_path: Path) -> None:
     known_files = _setup_files(tmp_path, HostName("known"), timestamp=100)
     unknown_files = _setup_files(tmp_path, HostName("unknown"), timestamp=100)
-    InventoryHousekeeping(tmp_path)._run(
+    InventoryCleanup(tmp_path)._run(
         Config(
-            inventory_housekeeping=InvHousekeepingParams(
+            inventory_cleanup=InvCleanupParams(
                 for_hosts=[],
                 default=None,
                 abandoned_file_age=1,
@@ -534,9 +534,9 @@ def test_abandoned_file_age_youngest_too_old(tmp_path: Path) -> None:
 def test_abandoned_file_age_youngest_not_too_old(tmp_path: Path) -> None:
     known_files = _setup_files(tmp_path, HostName("known"), timestamp=100)
     unknown_files = _setup_files(tmp_path, HostName("unknown"), timestamp=100)
-    InventoryHousekeeping(tmp_path)._run(
+    InventoryCleanup(tmp_path)._run(
         Config(
-            inventory_housekeeping=InvHousekeepingParams(
+            inventory_cleanup=InvCleanupParams(
                 for_hosts=[],
                 default=None,
                 abandoned_file_age=2,
@@ -611,9 +611,9 @@ def test_abandoned_file_age_remaining_files_too_old(tmp_path: Path) -> None:
     unknown_files_no_history = _setup_files_no_history(
         tmp_path, HostName("unknown-no-history"), timestamp=99
     )
-    InventoryHousekeeping(tmp_path)._run(
+    InventoryCleanup(tmp_path)._run(
         Config(
-            inventory_housekeeping=InvHousekeepingParams(
+            inventory_cleanup=InvCleanupParams(
                 for_hosts=[],
                 default=None,
                 abandoned_file_age=2,
@@ -657,9 +657,9 @@ def test_abandoned_file_age_remaining_files_not_too_old(tmp_path: Path) -> None:
     unknown_files_no_history = _setup_files_no_history(
         tmp_path, HostName("unknown-no-history"), timestamp=100
     )
-    InventoryHousekeeping(tmp_path)._run(
+    InventoryCleanup(tmp_path)._run(
         Config(
-            inventory_housekeeping=InvHousekeepingParams(
+            inventory_cleanup=InvCleanupParams(
                 for_hosts=[],
                 default=None,
                 abandoned_file_age=2,

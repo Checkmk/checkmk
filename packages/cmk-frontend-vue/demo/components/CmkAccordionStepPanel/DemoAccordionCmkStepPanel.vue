@@ -16,7 +16,7 @@ const openedItems = ref<string[]>(['step-1'])
 </script>
 
 <template>
-  <CmkAccordionStepPanel v-model="openedItems" class="cmk-demo-step-panel">
+  <CmkAccordionStepPanel v-model="openedItems" class="demo-accordion-cmk-step-panel">
     <CmkAccordionStepPanelItem
       :accomplished="true"
       :step="1"
@@ -39,7 +39,7 @@ const openedItems = ref<string[]>(['step-1'])
 </template>
 
 <style scoped>
-.cmk-demo-step-panel {
+.demo-accordion-cmk-step-panel {
   width: 400px;
 }
 </style>

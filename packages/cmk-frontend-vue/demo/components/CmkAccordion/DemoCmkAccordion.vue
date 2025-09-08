@@ -133,7 +133,7 @@ const maxOpenSelected = ref<'1' | '2' | '3'>('1')
     v-model="openedItems"
     :max-open="parseInt(maxOpenSelected)"
     :min-open="parseInt(minOpenSelected)"
-    class="cmk-demo-accordion"
+    class="cmk-demo-cmk-accordion"
   >
     <CmkAccordionItem
       v-for="item in items"
@@ -142,14 +142,14 @@ const maxOpenSelected = ref<'1' | '2' | '3'>('1')
       :disabled="item.disabled"
     >
       <template #header>
-        <CmkIcon :name="item.header.icon.name" class="demo-accordion-header-icon"></CmkIcon>
-        <span class="demo-accordion-header-title">
+        <CmkIcon :name="item.header.icon.name" class="demo-cmk-accordion__header-icon"></CmkIcon>
+        <span class="demo-cmk-accordion__header-title">
           {{ item.header.title }}
           <CmkAccordionItemStateIndicator :value="item.id"></CmkAccordionItemStateIndicator>
         </span>
       </template>
       <template #content>
-        <div v-if="item.id === 'item-1'" class="additional-div">
+        <div v-if="item.id === 'item-1'" class="demo-cmk-accordion__additional-div">
           This is only rendered in item 1
         </div>
         {{ item.content }}
@@ -163,15 +163,15 @@ const maxOpenSelected = ref<'1' | '2' | '3'>('1')
 </template>
 
 <style scoped>
-.demo-accordion-header-icon {
+.demo-cmk-accordion__header-icon {
   margin-right: 16px;
 }
 
-.demo-accordion-header-title {
+.demo-cmk-accordion__header-title {
   margin: 0;
 }
 
-.additional-div {
+.demo-cmk-accordion__additional-div {
   background: red;
   padding: 16px;
   margin: 0 0 16px;

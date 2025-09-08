@@ -17,10 +17,7 @@ import json
 from typing import override
 
 import cmk.ccc.debug
-import cmk.ccc.plugin_registry
 import cmk.gui.pages
-import cmk.utils
-import cmk.utils.render
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup

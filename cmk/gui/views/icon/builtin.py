@@ -8,7 +8,6 @@ import re
 from collections.abc import Mapping, Sequence
 from typing import Literal
 
-import cmk.utils
 import cmk.utils.render
 from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options

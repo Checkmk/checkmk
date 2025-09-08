@@ -11,7 +11,6 @@ from pathlib import Path
 from typing import Any, cast, Final, Generic, get_args, TypeVar
 
 import cmk.ccc.version as cmk_version
-import cmk.utils
 import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException

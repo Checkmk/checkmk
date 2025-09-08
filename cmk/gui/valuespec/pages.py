@@ -7,7 +7,6 @@ import abc
 import socket
 from collections.abc import Mapping
 
-import cmk.utils
 import cmk.utils.paths
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError

@@ -11,7 +11,6 @@ from contextlib import contextmanager
 import cmk.gui.utils
 import cmk.gui.watolib.git
 import cmk.gui.watolib.sidebar_reload
-import cmk.utils
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config

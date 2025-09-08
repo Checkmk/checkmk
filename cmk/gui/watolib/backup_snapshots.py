@@ -18,7 +18,6 @@ from hashlib import sha256
 from pathlib import Path
 from typing import IO, Literal, NotRequired, TypedDict, TypeVar
 
-import cmk.utils
 import cmk.utils.paths
 from cmk import trace
 from cmk.ccc.exceptions import MKGeneralException

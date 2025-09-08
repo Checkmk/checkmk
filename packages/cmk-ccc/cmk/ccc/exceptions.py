@@ -12,7 +12,6 @@ __all__ = [
     "MKException",
     "MKFetcherError",
     "MKGeneralException",
-    "MKSkipCheck",
     "MKTerminate",
     "MKTimeout",
     "OnError",
@@ -31,10 +30,6 @@ class MKException(Exception):
 
 class MKFetcherError(MKException):
     """An exception common to the fetchers."""
-
-
-class MKSkipCheck(MKException):
-    pass
 
 
 class MKGeneralException(MKException):

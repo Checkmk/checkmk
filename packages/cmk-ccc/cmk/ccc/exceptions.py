@@ -24,6 +24,10 @@ __all__ = [
 
 # never used directly in the code. Just some wrapper to make all of our
 # exceptions handleable with one call
+# NOTE: this might have been a good idea at some point in the past, but
+# now it introduces a lot of dependencies, and makes it harder to follow
+# where exceptions are actually coming from. Let's get rid of this,
+# and move the exceptions to the packages they actually belong to.
 class MKException(Exception):
     pass
 

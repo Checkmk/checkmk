@@ -148,7 +148,7 @@ def test_default_config_from_plugins() -> None:
         "configuration_bundles",
         "default_dynamic_visual_permission",
         "require_two_factor_all_users",
-        "inventory_housekeeping",
+        "inventory_cleanup",
     ]
 
     # The below lines are confusing and incorrect. The reason we need them is

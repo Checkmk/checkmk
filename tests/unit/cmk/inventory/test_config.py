@@ -9,21 +9,21 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.inventory.config import (
-    filter_inventory_housekeeping_parameters,
-    InvHousekeepingParams,
-    InvHousekeepingParamsCombined,
-    InvHousekeepingParamsDefaultCombined,
-    InvHousekeepingParamsOfHosts,
+    filter_inventory_cleanup_parameters,
+    InvCleanupParams,
+    InvCleanupParamsCombined,
+    InvCleanupParamsDefaultCombined,
+    InvCleanupParamsOfHosts,
 )
 
 
 @pytest.mark.parametrize(
-    "housekeeping_parameters, hosts_of_site, expected",
+    "cleanup_parameters, hosts_of_site, expected",
     [
         pytest.param(
-            InvHousekeepingParams(
+            InvCleanupParams(
                 for_hosts=[],
-                default=InvHousekeepingParamsDefaultCombined(
+                default=InvCleanupParamsDefaultCombined(
                     strategy="and",
                     file_age=123,
                     number_of_history_entries=456,
@@ -31,9 +31,9 @@ from cmk.inventory.config import (
                 abandoned_file_age=100,
             ),
             [],
-            InvHousekeepingParams(
+            InvCleanupParams(
                 for_hosts=[],
-                default=InvHousekeepingParamsDefaultCombined(
+                default=InvCleanupParamsDefaultCombined(
                     strategy="and",
                     file_age=123,
                     number_of_history_entries=456,
@@ -43,13 +43,13 @@ from cmk.inventory.config import (
             id="no-of-hosts-and-no-hosts-of-site",
         ),
         pytest.param(
-            InvHousekeepingParams(
+            InvCleanupParams(
                 for_hosts=[
-                    InvHousekeepingParamsOfHosts(
+                    InvCleanupParamsOfHosts(
                         regex_or_explicit=["hostname"],
                         parameters=(
                             "combined",
-                            InvHousekeepingParamsCombined(
+                            InvCleanupParamsCombined(
                                 strategy="and",
                                 file_age=1,
                                 number_of_history_entries=2,
@@ -57,7 +57,7 @@ from cmk.inventory.config import (
                         ),
                     )
                 ],
-                default=InvHousekeepingParamsDefaultCombined(
+                default=InvCleanupParamsDefaultCombined(
                     strategy="and",
                     file_age=123,
                     number_of_history_entries=456,
@@ -65,9 +65,9 @@ from cmk.inventory.config import (
                 abandoned_file_age=100,
             ),
             [],
-            InvHousekeepingParams(
+            InvCleanupParams(
                 for_hosts=[],
-                default=InvHousekeepingParamsDefaultCombined(
+                default=InvCleanupParamsDefaultCombined(
                     strategy="and",
                     file_age=123,
                     number_of_history_entries=456,
@@ -77,9 +77,9 @@ from cmk.inventory.config import (
             id="of-hosts-and-no-hosts-of-site",
         ),
         pytest.param(
-            InvHousekeepingParams(
+            InvCleanupParams(
                 for_hosts=[],
-                default=InvHousekeepingParamsDefaultCombined(
+                default=InvCleanupParamsDefaultCombined(
                     strategy="and",
                     file_age=123,
                     number_of_history_entries=456,
@@ -87,9 +87,9 @@ from cmk.inventory.config import (
                 abandoned_file_age=100,
             ),
             [HostName("hostname")],
-            InvHousekeepingParams(
+            InvCleanupParams(
                 for_hosts=[],
-                default=InvHousekeepingParamsDefaultCombined(
+                default=InvCleanupParamsDefaultCombined(
                     strategy="and",
                     file_age=123,
                     number_of_history_entries=456,
@@ -99,13 +99,13 @@ from cmk.inventory.config import (
             id="no-of-hosts-and-hosts-of-site",
         ),
         pytest.param(
-            InvHousekeepingParams(
+            InvCleanupParams(
                 for_hosts=[
-                    InvHousekeepingParamsOfHosts(
+                    InvCleanupParamsOfHosts(
                         regex_or_explicit=["hostname1"],
                         parameters=(
                             "combined",
-                            InvHousekeepingParamsCombined(
+                            InvCleanupParamsCombined(
                                 strategy="and",
                                 file_age=1,
                                 number_of_history_entries=2,
@@ -113,7 +113,7 @@ from cmk.inventory.config import (
                         ),
                     )
                 ],
-                default=InvHousekeepingParamsDefaultCombined(
+                default=InvCleanupParamsDefaultCombined(
                     strategy="and",
                     file_age=123,
                     number_of_history_entries=456,
@@ -121,9 +121,9 @@ from cmk.inventory.config import (
                 abandoned_file_age=100,
             ),
             [HostName("hostname2")],
-            InvHousekeepingParams(
+            InvCleanupParams(
                 for_hosts=[],
-                default=InvHousekeepingParamsDefaultCombined(
+                default=InvCleanupParamsDefaultCombined(
                     strategy="and",
                     file_age=123,
                     number_of_history_entries=456,
@@ -133,13 +133,13 @@ from cmk.inventory.config import (
             id="of-hosts-and-hosts-of-site-and-no-match",
         ),
         pytest.param(
-            InvHousekeepingParams(
+            InvCleanupParams(
                 for_hosts=[
-                    InvHousekeepingParamsOfHosts(
+                    InvCleanupParamsOfHosts(
                         regex_or_explicit=["hostname"],
                         parameters=(
                             "combined",
-                            InvHousekeepingParamsCombined(
+                            InvCleanupParamsCombined(
                                 strategy="and",
                                 file_age=1,
                                 number_of_history_entries=2,
@@ -147,7 +147,7 @@ from cmk.inventory.config import (
                         ),
                     )
                 ],
-                default=InvHousekeepingParamsDefaultCombined(
+                default=InvCleanupParamsDefaultCombined(
                     strategy="and",
                     file_age=123,
                     number_of_history_entries=456,
@@ -155,13 +155,13 @@ from cmk.inventory.config import (
                 abandoned_file_age=100,
             ),
             [HostName("hostname")],
-            InvHousekeepingParams(
+            InvCleanupParams(
                 for_hosts=[
-                    InvHousekeepingParamsOfHosts(
+                    InvCleanupParamsOfHosts(
                         regex_or_explicit=["hostname"],
                         parameters=(
                             "combined",
-                            InvHousekeepingParamsCombined(
+                            InvCleanupParamsCombined(
                                 strategy="and",
                                 file_age=1,
                                 number_of_history_entries=2,
@@ -169,7 +169,7 @@ from cmk.inventory.config import (
                         ),
                     )
                 ],
-                default=InvHousekeepingParamsDefaultCombined(
+                default=InvCleanupParamsDefaultCombined(
                     strategy="and",
                     file_age=123,
                     number_of_history_entries=456,
@@ -179,13 +179,13 @@ from cmk.inventory.config import (
             id="of-hosts-and-hosts-of-site-and-match",
         ),
         pytest.param(
-            InvHousekeepingParams(
+            InvCleanupParams(
                 for_hosts=[
-                    InvHousekeepingParamsOfHosts(
+                    InvCleanupParamsOfHosts(
                         regex_or_explicit=["~h", "~g", "hostname"],
                         parameters=(
                             "combined",
-                            InvHousekeepingParamsCombined(
+                            InvCleanupParamsCombined(
                                 strategy="and",
                                 file_age=1,
                                 number_of_history_entries=2,
@@ -193,7 +193,7 @@ from cmk.inventory.config import (
                         ),
                     )
                 ],
-                default=InvHousekeepingParamsDefaultCombined(
+                default=InvCleanupParamsDefaultCombined(
                     strategy="and",
                     file_age=123,
                     number_of_history_entries=456,
@@ -201,13 +201,13 @@ from cmk.inventory.config import (
                 abandoned_file_age=100,
             ),
             [HostName("hostname")],
-            InvHousekeepingParams(
+            InvCleanupParams(
                 for_hosts=[
-                    InvHousekeepingParamsOfHosts(
+                    InvCleanupParamsOfHosts(
                         regex_or_explicit=["~h", "hostname"],
                         parameters=(
                             "combined",
-                            InvHousekeepingParamsCombined(
+                            InvCleanupParamsCombined(
                                 strategy="and",
                                 file_age=1,
                                 number_of_history_entries=2,
@@ -215,7 +215,7 @@ from cmk.inventory.config import (
                         ),
                     )
                 ],
-                default=InvHousekeepingParamsDefaultCombined(
+                default=InvCleanupParamsDefaultCombined(
                     strategy="and",
                     file_age=123,
                     number_of_history_entries=456,
@@ -225,13 +225,13 @@ from cmk.inventory.config import (
             id="regex-match",
         ),
         pytest.param(
-            InvHousekeepingParams(
+            InvCleanupParams(
                 for_hosts=[
-                    InvHousekeepingParamsOfHosts(
+                    InvCleanupParamsOfHosts(
                         regex_or_explicit=["~g"],
                         parameters=(
                             "combined",
-                            InvHousekeepingParamsCombined(
+                            InvCleanupParamsCombined(
                                 strategy="and",
                                 file_age=1,
                                 number_of_history_entries=2,
@@ -239,7 +239,7 @@ from cmk.inventory.config import (
                         ),
                     ),
                 ],
-                default=InvHousekeepingParamsDefaultCombined(
+                default=InvCleanupParamsDefaultCombined(
                     strategy="and",
                     file_age=123,
                     number_of_history_entries=456,
@@ -247,9 +247,9 @@ from cmk.inventory.config import (
                 abandoned_file_age=100,
             ),
             [HostName("hostname")],
-            InvHousekeepingParams(
+            InvCleanupParams(
                 for_hosts=[],
-                default=InvHousekeepingParamsDefaultCombined(
+                default=InvCleanupParamsDefaultCombined(
                     strategy="and",
                     file_age=123,
                     number_of_history_entries=456,
@@ -260,14 +260,14 @@ from cmk.inventory.config import (
         ),
     ],
 )
-def test_filter_inventory_housekeeping_parameters(
-    housekeeping_parameters: InvHousekeepingParams,
+def test_filter_inventory_cleanup_parameters(
+    cleanup_parameters: InvCleanupParams,
     hosts_of_site: Sequence[HostName],
-    expected: InvHousekeepingParams,
+    expected: InvCleanupParams,
 ) -> None:
     assert (
-        filter_inventory_housekeeping_parameters(
-            housekeeping_parameters=housekeeping_parameters,
+        filter_inventory_cleanup_parameters(
+            cleanup_parameters=cleanup_parameters,
             host_names=hosts_of_site,
         )
         == expected

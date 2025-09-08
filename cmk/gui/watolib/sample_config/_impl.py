@@ -40,8 +40,8 @@ from cmk.gui.watolib.sites import site_management_registry
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
 from cmk.inventory.config import (
-    InvHousekeepingParams,
-    InvHousekeepingParamsDefaultCombined,
+    InvCleanupParams,
+    InvCleanupParamsDefaultCombined,
 )
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.log import VERBOSE
@@ -211,9 +211,9 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                     or []
                 ),
             },
-            "inventory_housekeeping": InvHousekeepingParams(
+            "inventory_cleanup": InvCleanupParams(
                 for_hosts=[],
-                default=InvHousekeepingParamsDefaultCombined(
+                default=InvCleanupParamsDefaultCombined(
                     strategy="and",
                     file_age=400 * 86400,
                     number_of_history_entries=100,

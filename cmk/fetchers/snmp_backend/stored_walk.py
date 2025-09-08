@@ -9,7 +9,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Final
 
-from cmk.ccc.exceptions import MKException, MKGeneralException, MKSNMPError
+from cmk.ccc.exceptions import MKSNMPError
 from cmk.snmplib import OID, SNMPBackend, SNMPContext, SNMPHostConfig, SNMPRawValue, SNMPRowInfo
 
 from ._utils import strip_snmp_value
@@ -115,12 +115,7 @@ class StoredWalkSNMPBackend(SNMPBackend):
 
     @staticmethod
     def _to_bin_string(oid: OID) -> tuple[int, ...]:
-        try:
-            return tuple(map(int, oid.strip(".").split(".")))
-        except MKException:
-            raise
-        except Exception:
-            raise MKGeneralException(f"Invalid OID {oid}")
+        return tuple(map(int, oid.strip(".").split(".")))
 
     @staticmethod
     def _collect_until(

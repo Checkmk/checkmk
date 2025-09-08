@@ -189,6 +189,7 @@ def test_paths() -> None:
             ("software", "applications", "oracle", "tablespaces"),
             ("software", "applications", "podman"),
             ("software", "applications", "podman", "containers"),
+            ("software", "applications", "podman", "images"),
             ("software", "applications", "synthetic_monitoring"),
             ("software", "applications", "synthetic_monitoring", "plans"),
             ("software", "applications", "synthetic_monitoring", "tests"),
@@ -366,7 +367,7 @@ _KNOWN_ATTRIBUTES_KEY_ORDERS = {
         "containers_paused",
         "containers_stopped",
         "containers_exited",
-        "images",
+        "images_num",
     ],
     ("software", "applications", "mobileiron"): ["partition_name", "registration_state"],
     ("software", "applications", "citrix", "controller"): ["controller_version"],
@@ -959,6 +960,14 @@ _KNOWN_COLUMNS_KEY_ORDERS = {
         "state",
         "status",
         "image",
+    ],
+    ("software", "applications", "podman", "images"): [
+        "id",
+        "creation",
+        "size",
+        "container_num",
+        "repository",
+        "tag",
     ],
 }
 

@@ -71,6 +71,7 @@ def provide_agent_binaries(Map args) {
                     check_mk.user.yml \
                     OpenHardwareMonitorLib.dll \
                     OpenHardwareMonitorCLI.exe \
+                    mk-oracle.exe \
                     mk-sql.exe \
                     robotmk_ext.exe \
                     windows_files_hashes.txt \

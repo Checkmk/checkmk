@@ -26,7 +26,7 @@ from livestatus import LivestatusTestingError
 import cmk.ccc.version as cmk_version
 from cmk import trace
 from cmk.ccc import crash_reporting, store
-from cmk.ccc.exceptions import MKException
+from cmk.ccc.exceptions import MKException, MKGeneralException
 from cmk.ccc.site import omd_site, SiteId
 from cmk.crypto import MKCryptoException
 from cmk.gui import session
@@ -696,7 +696,8 @@ class CheckmkRESTAPI(AbstractWSGIApp):
                 detail=str(exc),
             )
 
-        except (MKException, MKCryptoException) as exc:
+        # I added MKGeneralException during a refactoring, but I did not check if it is needed.
+        except (MKException, MKCryptoException, MKGeneralException) as exc:
             if self.debug and not self.testing:
                 raise
             response = problem(

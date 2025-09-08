@@ -9,7 +9,7 @@ import json
 from collections.abc import Mapping
 from typing import Literal, TypedDict
 
-from cmk.ccc.exceptions import MKException
+from cmk.ccc.exceptions import MKException, MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.config import Config
@@ -86,7 +86,8 @@ def page_host_inv_api(config: Config) -> None:
 
         resp = {"result_code": 0, "result": result}
 
-    except MKException as e:
+    # I added MKGeneralException during a refactoring, but I did not check if it is needed.
+    except (MKException, MKGeneralException) as e:
         resp = {"result_code": 1, "result": "%s" % e}
 
     except Exception as e:

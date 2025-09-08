@@ -38,7 +38,7 @@ inventory_plugin_azure_redis = InventoryPlugin(
 check_plugin_azure_redis_connections = CheckPlugin(
     name="azure_redis_connections",
     sections=["azure_redis"],
-    service_name="Azure/Redis connections",
+    service_name="Azure/Redis Connections",
     discovery_function=create_discover_by_metrics_function_single(
         "maximum_allconnectedclients",
         "maximum_allConnectionsCreatedPerSecond",

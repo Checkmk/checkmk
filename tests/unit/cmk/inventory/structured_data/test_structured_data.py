@@ -27,6 +27,7 @@ from cmk.inventory.structured_data import (
     ImmutableTree,
     InventoryStore,
     make_meta,
+    merge_trees,
     MutableTree,
     parse_from_gzipped,
     parse_visible_raw_path,
@@ -1327,8 +1328,9 @@ def test_merge_trees_1(
     tree_name: HostName, edges: Sequence[str], sub_children: Sequence[tuple[str, Sequence[str]]]
 ) -> None:
     inv_store = _get_inventory_store()
-    tree = inv_store.load_inventory_tree(host_name=HostName("tree_old_addresses")).merge(
-        inv_store.load_inventory_tree(host_name=tree_name)
+    tree = merge_trees(
+        inv_store.load_inventory_tree(host_name=HostName("tree_old_addresses")),
+        inv_store.load_inventory_tree(host_name=tree_name),
     )
 
     for edge in edges:
@@ -1346,7 +1348,7 @@ def test_merge_trees_2() -> None:
     inv_store = _get_inventory_store()
     inventory_tree = inv_store.load_inventory_tree(host_name=HostName("tree_inv"))
     status_data_tree = inv_store.load_inventory_tree(host_name=HostName("tree_status"))
-    tree = inventory_tree.merge(status_data_tree)
+    tree = merge_trees(inventory_tree, status_data_tree)
     assert "foobar" in serialize_tree(tree)["Nodes"]
     table = tree.get_tree((SDNodeName("foobar"),)).table
     assert len(table) == 19
@@ -1354,11 +1356,12 @@ def test_merge_trees_2() -> None:
 
 
 def test_merge_with_empty_tables() -> None:
-    assert ImmutableTree().merge(ImmutableTree()) == ImmutableTree()
+    assert merge_trees(ImmutableTree(), ImmutableTree()) == ImmutableTree()
 
 
 def test_merge_with_empty_left_table() -> None:
-    assert ImmutableTree().merge(
+    assert merge_trees(
+        ImmutableTree(),
         ImmutableTree(
             table=ImmutableTable(
                 key_columns=[SDKey("key_column")],
@@ -1366,7 +1369,7 @@ def test_merge_with_empty_left_table() -> None:
                     ("Key Column",): {SDKey("key_column"): "Key Column", SDKey("value"): "Value"}
                 },
             )
-        )
+        ),
     ) == ImmutableTree(
         table=ImmutableTable(
             key_columns=[SDKey("key_column")],
@@ -1378,14 +1381,17 @@ def test_merge_with_empty_left_table() -> None:
 
 
 def test_merge_with_empty_right_table() -> None:
-    assert ImmutableTree(
-        table=ImmutableTable(
-            key_columns=[SDKey("key_column")],
-            rows_by_ident={
-                ("Key Column",): {SDKey("key_column"): "Key Column", SDKey("value"): "Value"}
-            },
-        )
-    ).merge(ImmutableTree()) == ImmutableTree(
+    assert merge_trees(
+        ImmutableTree(
+            table=ImmutableTable(
+                key_columns=[SDKey("key_column")],
+                rows_by_ident={
+                    ("Key Column",): {SDKey("key_column"): "Key Column", SDKey("value"): "Value"}
+                },
+            )
+        ),
+        ImmutableTree(),
+    ) == ImmutableTree(
         table=ImmutableTable(
             key_columns=[SDKey("key_column")],
             rows_by_ident={

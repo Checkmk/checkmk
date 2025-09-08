@@ -34,6 +34,7 @@ from cmk.inventory.structured_data import (
     ImmutableTree,
     InventoryStore,
     load_history,
+    merge_trees,
     parse_from_raw_status_data_tree,
     parse_visible_raw_path,
     SDFilterChoice,
@@ -250,7 +251,7 @@ def load_tree(*, host_name: HostName | None, raw_status_data_tree: bytes) -> Imm
         else _load_tree_from_file(tree_type="status_data", host_name=host_name)
     )
 
-    merged_tree = inventory_tree.merge(status_data_tree)
+    merged_tree = merge_trees(inventory_tree, status_data_tree)
     if isinstance(permitted_paths := _get_permitted_inventory_paths(), list):
         return filter_tree(merged_tree, _make_filter_choices_from_permitted_paths(permitted_paths))
 

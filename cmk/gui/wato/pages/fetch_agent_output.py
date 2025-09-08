@@ -11,12 +11,13 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException, MKTimeout
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundJobRegistry,
+    BackgroundJobTimedOut,
     BackgroundProcessInterface,
     InitialStatusArgs,
     JobStatusSpec,
@@ -418,7 +419,7 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
 
                 job_interface.send_result_message(result)
 
-                raise MKTimeout
+                raise BackgroundJobTimedOut()
             raise MKGeneralException()
 
         preview_filepath = Path(job_interface.get_work_dir()) / AgentOutputPage.file_name(

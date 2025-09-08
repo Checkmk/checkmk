@@ -298,6 +298,29 @@ class PerformanceDb:
             raise ValueError(f'Error retrieving job "{job_name}"!')
         return JobDetails(*job_details)
 
+    def delete_job(self, job_name: str) -> bool:
+        """
+        Delete job details for a given job name from the database.
+
+        Args:
+            job_name (str): The name of the job to delete.
+
+        Returns:
+            bool: True if the job was deleted, False if the job was not found.
+
+        Raises:
+            ValueError: If no job with the specified name is found in the database.
+        """
+        with self._cursor() as cursor:
+            cursor.execute(
+                """
+                DELETE FROM jobs
+                WHERE job_name = %s
+                """,
+                (job_name,),
+            )
+        return cursor.rowcount > 0
+
     def check_job(self, job_name: str) -> bool:
         """
         Determines whether a job with the specified name exists.
@@ -700,6 +723,8 @@ class PerftestPlotArgs(argparse.Namespace):
         jira_token_path (Path): The path of file that holds the Jira token.
         branch_version (str): The default branch version.
         edition (str): The default edition.
+        update_db (bool): If True, update existing job data in the database.
+        purge_db (bool): If True, delete existing job data from the database.
         log_level (str): Logging level of the application.
     """
 
@@ -728,6 +753,8 @@ class PerftestPlotArgs(argparse.Namespace):
     jira_token_path: Path
     branch_version: str
     edition: str
+    update_db: bool
+    purge_db: bool
     log_level: str
 
 
@@ -755,6 +782,8 @@ class PerftestPlot:
         self.read_from_database = not self.args.skip_database_reads
         self.read_from_filesystem = not self.args.skip_filesystem_reads
         self.write_to_database = not self.args.skip_database_writes
+        self.update_db = self.args.update_db and len(self.args.job_names) > 0
+        self.purge_db = self.args.purge_db and len(self.args.job_names) > 0
         if self.args.dbhost and (self.read_from_database or self.write_to_database):
             try:
                 self.database = PerformanceDb(
@@ -782,14 +811,21 @@ class PerftestPlot:
             self.jobs = {}
             sys_exit()
 
-        self.write_json_files = self.args.write_json_files and not self.args.skip_filesystem_writes
+        self.write_json_files = self.args.write_json_files and not (
+            self.args.skip_filesystem_writes or self.update_db or self.purge_db
+        )
         self.write_graph_files = not (
-            self.args.skip_graph_generation or self.args.skip_filesystem_writes
+            self.args.skip_graph_generation
+            or self.args.skip_filesystem_writes
+            or self.update_db
+            or self.purge_db
         )
         self.jira_url = self.args.jira_url
         self.jira_token = self._read_jira_token()
         self.alert_on_failure = self.args.alert_on_failure and self.jira_url and self.jira_token
-        self.validate_baselines = self.args.validate_baselines or self.alert_on_failure
+        self.validate_baselines = (
+            self.args.validate_baselines or self.alert_on_failure
+        ) and not self.purge_db
         self.job_names = self._read_job_names()
         self.scenario_names = self._read_scenario_names()
         self.jobs = self.read_performance_data()
@@ -1411,6 +1447,10 @@ class PerftestPlot:
 
             if self.write_to_database:
                 logger.info('Writing data for job "%s" to the database...', job_name)
+                if self.update_db or self.purge_db:
+                    self.database.delete_job(job_name=job_name)
+                if self.purge_db:
+                    continue
                 for scenario_name, performance_data in scenario_data.items():
                     job_endtime = (
                         Datetime.fromisoformat(str(_ts))
@@ -1851,6 +1891,22 @@ def parse_args() -> PerftestPlotArgs:
         type=str,
         default="cee",
         help="The default edition for jobs (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--update-db",
+        action=argparse.BooleanOptionalAction,
+        dest="update_db",
+        type=bool,
+        default=False,
+        help="Specifies if the DB will be updated, even if job data for that job exists already.",
+    )
+    parser.add_argument(
+        "--purge-db",
+        action=argparse.BooleanOptionalAction,
+        dest="purge_db",
+        type=bool,
+        default=False,
+        help="Specifies if the DB will be purged, if job data for a selected job exists already.",
     )
     parser.add_argument(
         "--log-level",

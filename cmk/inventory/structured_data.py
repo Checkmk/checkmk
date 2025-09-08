@@ -1892,75 +1892,6 @@ class RawInventoryStore:
         _archive_inventory_tree(self.inv_paths, host_name)
 
 
-@dataclass(frozen=True)
-class HistoryDeltaPath:
-    file_path: Path
-    previous_timestamp: int
-    current_timestamp: int
-
-
-@dataclass(frozen=True)
-class HistoryPath:
-    tree_path: TreePath
-    timestamp: int
-
-
-@dataclass(frozen=True, kw_only=True)
-class HistoryArchivePath:
-    previous: HistoryPath
-    current: HistoryPath
-
-    @property
-    def current_timestamp(self) -> int:
-        return self.current.timestamp
-
-
-@dataclass(frozen=True, kw_only=True)
-class HistoryEntry:
-    previous_timestamp: int
-    current_timestamp: int
-    new: int
-    changed: int
-    removed: int
-    delta_tree: ImmutableDeltaTree
-
-    @classmethod
-    def from_raw(
-        cls,
-        *,
-        previous_timestamp: int,
-        current_timestamp: int,
-        raw: tuple[int, int, int, SDRawDeltaTree],
-    ) -> HistoryEntry:
-        new, changed, removed, raw_delta_tree = raw
-        return cls(
-            previous_timestamp=previous_timestamp,
-            current_timestamp=current_timestamp,
-            new=new,
-            changed=changed,
-            removed=removed,
-            delta_tree=deserialize_delta_tree(raw_delta_tree),
-        )
-
-    @classmethod
-    def from_delta_tree(
-        cls,
-        *,
-        previous_timestamp: int,
-        current_timestamp: int,
-        delta_tree: ImmutableDeltaTree,
-    ) -> HistoryEntry:
-        delta_stats = delta_tree.get_stats()
-        return cls(
-            previous_timestamp=previous_timestamp,
-            current_timestamp=current_timestamp,
-            new=delta_stats["new"],
-            changed=delta_stats["changed"],
-            removed=delta_stats["removed"],
-            delta_tree=delta_tree,
-        )
-
-
 class InventoryStore:
     def __init__(self, omd_root: Path) -> None:
         self.inv_paths = InventoryPaths(omd_root)
@@ -2029,6 +1960,75 @@ class InventoryStore:
 
     def archive_inventory_tree(self, *, host_name: HostName) -> None:
         _archive_inventory_tree(self.inv_paths, host_name)
+
+
+@dataclass(frozen=True)
+class HistoryDeltaPath:
+    file_path: Path
+    previous_timestamp: int
+    current_timestamp: int
+
+
+@dataclass(frozen=True)
+class HistoryPath:
+    tree_path: TreePath
+    timestamp: int
+
+
+@dataclass(frozen=True, kw_only=True)
+class HistoryArchivePath:
+    previous: HistoryPath
+    current: HistoryPath
+
+    @property
+    def current_timestamp(self) -> int:
+        return self.current.timestamp
+
+
+@dataclass(frozen=True, kw_only=True)
+class HistoryEntry:
+    previous_timestamp: int
+    current_timestamp: int
+    new: int
+    changed: int
+    removed: int
+    delta_tree: ImmutableDeltaTree
+
+    @classmethod
+    def from_raw(
+        cls,
+        *,
+        previous_timestamp: int,
+        current_timestamp: int,
+        raw: tuple[int, int, int, SDRawDeltaTree],
+    ) -> HistoryEntry:
+        new, changed, removed, raw_delta_tree = raw
+        return cls(
+            previous_timestamp=previous_timestamp,
+            current_timestamp=current_timestamp,
+            new=new,
+            changed=changed,
+            removed=removed,
+            delta_tree=deserialize_delta_tree(raw_delta_tree),
+        )
+
+    @classmethod
+    def from_delta_tree(
+        cls,
+        *,
+        previous_timestamp: int,
+        current_timestamp: int,
+        delta_tree: ImmutableDeltaTree,
+    ) -> HistoryEntry:
+        delta_stats = delta_tree.get_stats()
+        return cls(
+            previous_timestamp=previous_timestamp,
+            current_timestamp=current_timestamp,
+            new=delta_stats["new"],
+            changed=delta_stats["changed"],
+            removed=delta_stats["removed"],
+            delta_tree=delta_tree,
+        )
 
 
 class HistoryStore:

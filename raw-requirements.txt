@@ -3323,9 +3323,9 @@ psutil==7.0.0 \
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   opentelemetry-resourcedetector-process
-psycopg==3.2.9 \
-    --hash=sha256:01a8dadccdaac2123c916208c96e06631641c0566b22005493f09663c7a8d3b6 \
-    --hash=sha256:2fbb46fcd17bc81f993f28c47f1ebea38d66ae97cc2dbc3cad73b37cefbff700
+psycopg==3.2.10 \
+    --hash=sha256:0bce99269d16ed18401683a8569b2c5abd94f72f8364856d56c0389bcd50972a \
+    --hash=sha256:ab5caf09a9ec42e314a21f5216dbcceac528e0e05142e42eea83a3b28b320ac3
     # via
     #   -c requirements.txt
     #   -r dev-requirements.in
@@ -3916,9 +3916,9 @@ pytest-opentelemetry==1.1.0 \
     # via
     #   -c requirements.txt
     #   -r dev-requirements.in
-pytest-playwright==0.7.0 \
-    --hash=sha256:2516d0871fa606634bfe32afbcc0342d68da2dbff97fe3459849e9c428486da2 \
-    --hash=sha256:b3f2ea514bbead96d26376fac182f68dcd6571e7cb41680a89ff1673c05d60b6
+pytest-playwright==0.7.1 \
+    --hash=sha256:94b551b2677ecdc16284fcd6a4f0045eafda47a60e74410f3fe4d8260e12cabf \
+    --hash=sha256:fcc46510fb75f8eba6df3bc8e84e4e902483d92be98075f20b9d160651a36d90
     # via
     #   -c requirements.txt
     #   -r dev-requirements.in

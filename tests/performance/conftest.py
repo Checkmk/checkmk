@@ -34,7 +34,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         action="store",
         type=int,
         help="The number of rounds used for each scenario.",
-        default=5,
+        default=4,
     )
     parser.addoption(
         "--warmup-rounds",
@@ -48,7 +48,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         action="store",
         type=int,
         help="The number of iterations used for each scenario.",
-        default=1,
+        default=4,
     )
     parser.addoption(
         "--object-count",

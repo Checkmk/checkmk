@@ -42,11 +42,11 @@ class PerformanceTest:
         super().__init__()
         self._sites = sites
 
-        self.rounds = val if isinstance((val := config.getoption("rounds")), int) else 5
+        self.rounds = val if isinstance((val := config.getoption("rounds")), int) else 4
         self.warmup_rounds = (
             val if isinstance((val := config.getoption("warmup_rounds")), int) else 0
         )
-        self.iterations = val if isinstance((val := config.getoption("iterations")), int) else 1
+        self.iterations = val if isinstance((val := config.getoption("iterations")), int) else 4
         self.object_count = (
             val if isinstance((val := config.getoption("object_count")), int) else 100
         )
@@ -315,9 +315,9 @@ def test_performance_hosts_restart(perftest: PerformanceTest, benchmark: Benchma
     """Bulk host creation"""
     benchmark.pedantic(
         perftest.scenario_create_and_delete_hosts,
-        args=[perftest.rounds],  # pass the rounds to switch to restart mode
-        rounds=1,  # run a single round in total
-        iterations=perftest.iterations,
+        args=[perftest.iterations],  # pass the iterations to switch to restart mode
+        rounds=perftest.rounds,
+        iterations=1,  # run a single time (iterations passed to scenario)
     )
 
 

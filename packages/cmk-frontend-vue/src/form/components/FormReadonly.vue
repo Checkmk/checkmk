@@ -79,6 +79,8 @@ function renderForm(
     case 'integer':
     case 'float':
     case 'metric':
+    case 'date_picker':
+    case 'time_picker':
       return renderSimpleValue(formSpec, value as string, backendValidation)
     case 'single_choice_editable':
     case 'single_choice':

@@ -51,6 +51,48 @@
                 }
             ]
         },
+        "date_picker": {
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/$defs/form_spec"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "const": "date_picker",
+                            "default": "date_picker"
+                        },
+                        "label": {
+                            "type": ["string", "null"]
+                        }
+                    },
+                    "required": ["type", "label"]
+                }
+            ]
+        },
+        "time_picker": {
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/$defs/form_spec"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "const": "time_picker",
+                            "default": "time_picker"
+                        },
+                        "label": {
+                            "type": ["string", "null"]
+                        }
+                    },
+                    "required": ["type", "label"]
+                }
+            ]
+        },
         "float": {
             "type": "object",
             "allOf": [
@@ -1685,6 +1727,12 @@
                 },
                 {
                     "$ref": "#/$defs/time_specific"
+                },
+                {
+                    "$ref": "#/$defs/date_picker"
+                },
+                {
+                    "$ref": "#/$defs/time_picker"
                 }
             ]
         }

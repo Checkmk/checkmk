@@ -6,6 +6,7 @@ from .cascading_single_choice_extended import CascadingSingleChoiceExtended
 from .catalog import Catalog, Topic, TopicElement, TopicGroup
 from .comment_text_area import CommentTextArea
 from .condition_choices import ConditionChoices
+from .date_picker import DatePicker
 from .dictionary_extended import DictionaryExtended
 from .labels import Labels, Source, World
 from .legacy_valuespec import LegacyValueSpec
@@ -29,6 +30,7 @@ from .string_autocompleter import (
     AutocompleterParams,
     StringAutocompleter,
 )
+from .time_picker import TimePicker
 from .time_specific import TimeSpecific
 from .two_column_dictionary import TwoColumnDictionary
 from .user_selection import UserSelection
@@ -41,6 +43,7 @@ __all__ = [
     "TopicGroup",
     "CommentTextArea",
     "ConditionChoices",
+    "DatePicker",
     "DictionaryExtended",
     "Labels",
     "LegacyValueSpec",
@@ -61,6 +64,7 @@ __all__ = [
     "AutocompleterData",
     "AutocompleterParams",
     "StringAutocompleter",
+    "TimePicker",
     "TimeSpecific",
     "TwoColumnDictionary",
     "Topic",

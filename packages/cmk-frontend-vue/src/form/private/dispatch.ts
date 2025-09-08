@@ -12,6 +12,7 @@ import FormCheckboxListChoice from '@/form/components/forms/FormCheckboxListChoi
 import FormCommentTextArea from '@/form/components/forms/FormCommentTextArea.vue'
 import FormConditionChoices from '@/form/components/forms/FormConditionChoices'
 import FormDataSize from '@/form/components/forms/FormDataSize.vue'
+import FormDatePicker from '@/form/components/forms/FormDatePicker.vue'
 import FormDictionary from '@/form/components/forms/FormDictionary/FormDictionary.vue'
 import FormDualListChoice from '@/form/components/forms/FormDualListChoice.vue'
 import FormFileUpload from '@/form/components/forms/FormFileUpload.vue'
@@ -30,6 +31,7 @@ import FormSimplePassword from '@/form/components/forms/FormSimplePassword.vue'
 import FormSingleChoice from '@/form/components/forms/FormSingleChoice.vue'
 import FormSingleChoiceEditable from '@/form/components/forms/FormSingleChoiceEditable.vue'
 import FormString from '@/form/components/forms/FormString.vue'
+import FormTimePicker from '@/form/components/forms/FormTimePicker.vue'
 import FormTimeSpan from '@/form/components/forms/FormTimeSpan.vue'
 import FormTimeSpecific from '@/form/components/forms/FormTimeSpecific.vue'
 import FormTuple from '@/form/components/forms/FormTuple.vue'
@@ -47,6 +49,8 @@ const components: Record<Components['type'], Component> = {
   comment_text_area: FormCommentTextArea,
   condition_choices: FormConditionChoices,
   data_size: FormDataSize,
+  date_picker: FormDatePicker,
+  time_picker: FormTimePicker,
   dictionary: FormDictionary,
   two_column_dictionary: FormTwoColumnDictionary,
   dual_list_choice: FormDualListChoice,

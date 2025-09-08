@@ -16,6 +16,7 @@ from cmk.gui.form_specs.private import (
     Catalog,
     CommentTextArea,
     ConditionChoices,
+    DatePicker,
     DictionaryExtended,
     Labels,
     LegacyValueSpec,
@@ -28,6 +29,7 @@ from cmk.gui.form_specs.private import (
     SingleChoiceEditable,
     SingleChoiceExtended,
     StringAutocompleter,
+    TimePicker,
     TimeSpecific,
     UserSelection,
 )
@@ -120,6 +122,8 @@ from .visitors import (
     TupleVisitor,
     TwoColumnDictionaryVisitor,
 )
+from .visitors.date_picker import DatePickerVisitor
+from .visitors.time_picker import TimePickerVisitor
 
 
 def register() -> None:
@@ -161,6 +165,8 @@ def register_form_specs() -> None:
     register_visitor_class(Labels, LabelsVisitor)
     register_visitor_class(TimeSpecific, TimeSpecificVisitor)
     register_visitor_class(FileUpload, FileUploadVisitor)
+    register_visitor_class(DatePicker, DatePickerVisitor)
+    register_visitor_class(TimePicker, TimePickerVisitor)
 
     # Recomposed
     register_recomposer_function(RegularExpression, recompose_regular_expression)

@@ -3,7 +3,7 @@ Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts" generic="T extends 'text' | 'number' = 'text'">
+<script setup lang="ts" generic="T extends 'text' | 'number' | 'date' | 'time' = 'text'">
 import { type VariantProps, cva } from 'class-variance-authority'
 import { ref, watch } from 'vue'
 
@@ -20,7 +20,9 @@ const propsCva = cva('cmk-input', {
   variants: {
     type: {
       text: 'cmk-input--text',
-      number: 'cmk-input--number'
+      number: 'cmk-input--number',
+      date: 'cmk-input--date',
+      time: 'cmk-input--time'
     }
   }
 })

@@ -26,7 +26,9 @@ const fieldSizeOptions: { name: NonNullable<PropTypes['fieldSize']>; title: stri
 const type = ref<NonNullable<PropTypes['type']>>('text')
 const typeOptions: { name: NonNullable<PropTypes['type']>; title: string }[] = [
   { name: 'text', title: 'Text' },
-  { name: 'number', title: 'Number' }
+  { name: 'number', title: 'Number' },
+  { name: 'date', title: 'Date' },
+  { name: 'time', title: 'Time' }
 ]
 
 const externalErrors = ref<string[]>([])

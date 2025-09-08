@@ -19,7 +19,7 @@ from pytest import MonkeyPatch
 
 import cmk.ccc.resulttype as result
 import cmk.fetchers._snmp as snmp
-from cmk.ccc.exceptions import MKFetcherError, MKTimeout, OnError
+from cmk.ccc.exceptions import MKTimeout, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.plugins import SectionName
 from cmk.fetchers import (
@@ -46,7 +46,7 @@ from cmk.fetchers.filecache import (
     SNMPFileCache,
 )
 from cmk.fetchers.snmp import SNMPPluginStore, SNMPPluginStoreItem
-from cmk.helper_interface import AgentRawData
+from cmk.helper_interface import AgentRawData, FetcherError
 from cmk.snmplib import (
     BackendOIDSpec,
     BackendSNMPTree,
@@ -308,7 +308,7 @@ class TestIPMIFetcher:
         with IPMIFetcherStub(address=HostAddress("127.0.0.1"), username="", password="") as fetcher:
             raw_data = PlainFetcherTrigger().get_raw_data(file_cache, fetcher, Mode.CHECKING)
 
-        assert isinstance(raw_data.error, MKFetcherError)
+        assert isinstance(raw_data.error, FetcherError)
 
 
 class TestPiggybackFetcher:
@@ -912,7 +912,7 @@ class TestTCPFetcher:
         ) as fetcher:
             raw_data = PlainFetcherTrigger().get_raw_data(file_cache, fetcher, Mode.CHECKING)
 
-        assert isinstance(raw_data.error, MKFetcherError)
+        assert isinstance(raw_data.error, FetcherError)
 
 
 class TestFetcherCaching:

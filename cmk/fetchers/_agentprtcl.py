@@ -13,9 +13,9 @@ from collections.abc import Buffer, Callable, Iterator
 from enum import Enum
 from typing import assert_never, Final, Self
 
-from cmk.ccc.exceptions import MKFetcherError
 from cmk.crypto.deprecated import AesCbcCipher
 from cmk.fetchers.serializertype import Deserializer, Serializer
+from cmk.helper_interface import FetcherError
 
 OPENSSL_SALTED_MARKER = "Salted__"
 
@@ -148,20 +148,20 @@ def validate_agent_protocol(
         return
 
     if is_registered:
-        raise MKFetcherError(
+        raise FetcherError(
             "Refused: A TLS connection is registered on the monitoring server "
             "but the agent is not providing it"
         )
 
     match encryption_handling:
         case TCPEncryptionHandling.TLS_ENCRYPTED_ONLY:
-            raise MKFetcherError(
+            raise FetcherError(
                 "Refused: TLS is enforced on the monitoring server "
                 "but the agent is not providing it"
             )
         case TCPEncryptionHandling.ANY_ENCRYPTED:
             if protocol is TransportProtocol.PLAIN:
-                raise MKFetcherError(
+                raise FetcherError(
                     "Refused: Encryption is enforced on the monitoring server "
                     "but agent is only providing plaintext"
                 )

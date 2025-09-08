@@ -56,7 +56,8 @@ from pathlib import Path
 from typing import Any, Final, Generic, NamedTuple, NoReturn, TypeVar
 
 from cmk.ccc import store
-from cmk.ccc.exceptions import MKFetcherError, MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException
+from cmk.helper_interface import FetcherError
 
 from .._abstract import Mode
 
@@ -182,10 +183,10 @@ class FileCache(Generic[_TRawData], abc.ABC):
             return raw_data
 
         if self.simulation:
-            raise MKFetcherError("No cached data available (caching enforced via simulation mode)")
+            raise FetcherError("No cached data available (caching enforced via simulation mode)")
 
         if self.use_only_cache:
-            raise MKFetcherError("No cached data available")
+            raise FetcherError("No cached data available")
 
         return raw_data
 

@@ -9,7 +9,8 @@ from functools import partial
 from typing import final, Self, TypeVar
 
 import cmk.ccc.resulttype as result
-from cmk.ccc.exceptions import MKFetcherError, MKTimeout
+from cmk.ccc.exceptions import MKTimeout
+from cmk.helper_interface import FetcherError
 
 from ._abstract import Fetcher, Mode
 from .filecache import FileCache
@@ -30,10 +31,10 @@ class FetcherTrigger(abc.ABC):
                 return result.OK(cached)
 
             if file_cache.simulation:
-                raise MKFetcherError(f"{fetcher}: data unavailable in simulation mode")
+                raise FetcherError(f"{fetcher}: data unavailable in simulation mode")
 
             fetched: result.Result[_TRawData, Exception] = result.Error(
-                MKFetcherError("unknown error")
+                FetcherError("unknown error")
             )
             fetched = self._trigger(fetcher, mode)
             fetched.map(partial(file_cache.write, mode=mode))

@@ -8,13 +8,14 @@ import time
 
 import pytest
 
-from cmk.ccc.exceptions import MKFetcherError, MKTimeout
+from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.parser import HostSections
 from cmk.checkengine.plugins import SectionName
 from cmk.checkengine.summarize import summarize_failure, summarize_piggyback, summarize_success
+from cmk.helper_interface import FetcherError
 from cmk.piggyback.backend import PiggybackMetaData
 
 
@@ -26,7 +27,7 @@ class TestAgentSummarizer:
         assert summarize_failure(ExitSpec(), Exception()) == [ActiveCheckResult(state=3)]
 
     def test_summarize_MKAgentError_exception(self) -> None:
-        assert summarize_failure(ExitSpec(), MKFetcherError()) == [ActiveCheckResult(state=2)]
+        assert summarize_failure(ExitSpec(), FetcherError()) == [ActiveCheckResult(state=2)]
 
     def test_summarize_MKTimeout_exception(self) -> None:
         assert summarize_failure(ExitSpec(), MKTimeout()) == [ActiveCheckResult(state=2)]

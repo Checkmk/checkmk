@@ -10,8 +10,7 @@ import subprocess
 from contextlib import suppress
 from typing import Final
 
-from cmk.ccc.exceptions import MKFetcherError
-from cmk.helper_interface import AgentRawData
+from cmk.helper_interface import AgentRawData, FetcherError
 
 from ._abstract import Fetcher, Mode
 
@@ -117,9 +116,9 @@ class ProgramFetcher(Fetcher[AgentRawData]):
         )
         if self._process.returncode == 127:
             exepath = self.cmdline.split()[0]  # for error message, hide options!
-            raise MKFetcherError(f"Program '{exepath}' not found (exit code 127)")
+            raise FetcherError(f"Program '{exepath}' not found (exit code 127)")
         if self._process.returncode:
-            raise MKFetcherError(
+            raise FetcherError(
                 f"Agent exited with code {self._process.returncode}: {stderr.decode().strip()}"
             )
         return stdout

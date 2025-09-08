@@ -8,8 +8,7 @@ from __future__ import annotations
 import enum
 from typing import Final, NoReturn
 
-from cmk.ccc.exceptions import MKFetcherError
-from cmk.helper_interface import AgentRawData
+from cmk.helper_interface import AgentRawData, FetcherError
 
 from ._abstract import Fetcher, Mode
 
@@ -44,4 +43,4 @@ class NoFetcher(Fetcher[AgentRawData]):
         pass
 
     def _fetch_from_io(self, mode: Mode) -> NoReturn:
-        raise MKFetcherError(self.canned.value)
+        raise FetcherError(self.canned.value)

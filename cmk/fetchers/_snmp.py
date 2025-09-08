@@ -20,8 +20,9 @@ from pathlib import Path
 from typing import Any, Final
 
 from cmk.ccc import store
-from cmk.ccc.exceptions import MKFetcherError, MKTimeout, OnError
+from cmk.ccc.exceptions import MKTimeout, OnError
 from cmk.ccc.hostaddress import HostName
+from cmk.helper_interface import FetcherError
 from cmk.snmplib import (
     get_snmp_table,
     SNMPBackend,
@@ -388,7 +389,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         )
         if mode is Mode.DISCOVERY and not section_names:
             # Nothing to discover? That can't be right.
-            raise MKFetcherError("Got no data")
+            raise FetcherError("Got no data")
 
         walk_cache = WalkCache(self.walk_cache_path / str(self._backend.hostname), self._logger)
         if mode is Mode.CHECKING:
@@ -415,7 +416,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
                     for tree in self.plugin_store[section_name].trees
                 ]
             except SNMPTimeout as exc:
-                raise MKFetcherError(str(exc)) from exc
+                raise FetcherError(str(exc)) from exc
 
         walk_cache.save()
         sections_cache.store(fetched_data)

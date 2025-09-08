@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ._agentdatatype import AgentRawData as AgentRawData
-from ._exceptions import FetcherError as FetcherError
-from ._source_info import FetcherType as FetcherType
-from ._source_info import SourceInfo as SourceInfo
-from ._source_info import SourceType as SourceType
+
+class FetcherError(Exception):
+    """An exception common to the fetchers."""

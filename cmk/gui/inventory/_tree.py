@@ -25,6 +25,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.groups_io import PermittedPath
 from cmk.inventory.structured_data import (
+    filter_tree,
     HistoryArchivePath,
     HistoryDeltaPath,
     HistoryEntry,
@@ -251,7 +252,7 @@ def load_tree(*, host_name: HostName | None, raw_status_data_tree: bytes) -> Imm
 
     merged_tree = inventory_tree.merge(status_data_tree)
     if isinstance(permitted_paths := _get_permitted_inventory_paths(), list):
-        return merged_tree.filter(_make_filter_choices_from_permitted_paths(permitted_paths))
+        return filter_tree(merged_tree, _make_filter_choices_from_permitted_paths(permitted_paths))
 
     return merged_tree
 
@@ -280,7 +281,7 @@ def inventory_of_host(
         host_name=host_name,
         raw_status_data_tree=get_raw_status_data_via_livestatus(site_id, host_name),
     )
-    return tree.filter(filters) if filters else tree
+    return filter_tree(tree, filters) if filters else tree
 
 
 def load_latest_delta_tree(history_store: HistoryStore, hostname: HostName) -> ImmutableDeltaTree:

@@ -15,17 +15,19 @@ import {
 } from 'cmk-shared-typing/typescript/graph_designer'
 import { type Ref, computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
+import type { TranslatedString } from '@/lib/i18nString'
 import useDragging from '@/lib/useDragging'
 
 import CmkColorPicker from '@/components/CmkColorPicker.vue'
+import CmkDropdown from '@/components/CmkDropdown.vue'
 import CmkSwitch from '@/components/CmkSwitch.vue'
+import type { Suggestion } from '@/components/suggestions'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
 import { type ValidationMessages } from '@/form'
 import FormEdit from '@/form/components/FormEdit.vue'
 
 import FixedMetricRowRenderer from '@/graph-designer/components/FixedMetricRowRenderer.vue'
-import FormLineType from '@/graph-designer/components/FormLineType.vue'
 import FormMetricCells, { type Metric } from '@/graph-designer/components/FormMetricCells.vue'
 import FormTitle from '@/graph-designer/components/FormTitle.vue'
 import MetricRowRenderer from '@/graph-designer/components/MetricRowRenderer.vue'
@@ -47,7 +49,8 @@ import {
   makeSingleChoice,
   makeString
 } from '@/graph-designer/specs'
-import { type SpecLineType, type Topic } from '@/graph-designer/type_defs'
+
+import type { Topic } from './type_defs'
 
 const props = defineProps<{
   graph_id: string
@@ -102,11 +105,11 @@ const dataConstant = ref(1)
 const specConstant = makeFloat('', '')
 const backendValidationConstant: ValidationMessages = []
 
-const specLineType: SpecLineType = {
-  line: props.i18n.line,
-  area: props.i18n.area,
-  stack: props.i18n.stack
-}
+const formLineType: Suggestion[] = [
+  { name: 'line', title: props.i18n.line as TranslatedString },
+  { name: 'area', title: props.i18n.area as TranslatedString },
+  { name: 'stack', title: props.i18n.stack as TranslatedString }
+]
 
 const dataTransformation = ref(95)
 const specTransformation = makeFloat('', props.i18n.percentile)
@@ -890,9 +893,18 @@ const graphDesignerContentAsJson = computed(() => {
         <td class="nobr narrow">{{ graphLine.auto_title }}</td>
         <td class="nobr narrow"><FormTitle v-model:data="graphLine.custom_title" /></td>
         <td class="buttons"><CmkSwitch v-model:data="graphLine.visible" /></td>
+
         <td class="narrow">
-          <FormLineType v-model:data="graphLine.line_type" :spec="specLineType" />
+          <CmkDropdown
+            v-model:selected-option="graphLine.line_type"
+            :options="{
+              type: 'fixed',
+              suggestions: formLineType
+            }"
+            :label="props.i18n.line_style as TranslatedString"
+          />
         </td>
+
         <td class="buttons"><CmkSwitch v-model:data="graphLine.mirrored" /></td>
         <td>
           <div v-if="graphLine.type === 'metric'">

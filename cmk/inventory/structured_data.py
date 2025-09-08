@@ -1157,7 +1157,7 @@ def _merge_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableTable
     )
 
 
-def _merge_nodes(left: ImmutableTree, right: ImmutableTree) -> ImmutableTree:
+def merge_trees(left: ImmutableTree, right: ImmutableTree) -> ImmutableTree:
     compared_node_names = _DictKeys.compare(
         left=set(left.nodes_by_name),
         right=set(right.nodes_by_name),
@@ -1168,7 +1168,7 @@ def _merge_nodes(left: ImmutableTree, right: ImmutableTree) -> ImmutableTree:
         nodes_by_name[name] = left.nodes_by_name[name]
 
     for name in compared_node_names.both:
-        nodes_by_name[name] = _merge_nodes(
+        nodes_by_name[name] = merge_trees(
             left=left.nodes_by_name[name], right=right.nodes_by_name[name]
         )
 
@@ -1430,9 +1430,6 @@ class ImmutableTree:
         return all(
             self.nodes_by_name[n] == other.nodes_by_name[n] for n in compared_node_names.both
         )
-
-    def merge(self, right: ImmutableTree) -> ImmutableTree:
-        return _merge_nodes(self, right)
 
     def get_attribute(self, path: SDPath, key: SDKey) -> SDValue:
         return self.get_tree(path).attributes.pairs.get(key)

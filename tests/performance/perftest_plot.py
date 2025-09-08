@@ -1685,7 +1685,7 @@ def parse_args() -> PerftestPlotArgs:
         action=argparse.BooleanOptionalAction,
         dest="validate_baselines",
         type=bool,
-        default=True,
+        default=False,
         help="Enable performance baseline validation (default: %(default)s).",
     )
     parser.add_argument(

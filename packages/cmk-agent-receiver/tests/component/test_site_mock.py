@@ -21,6 +21,13 @@ def client(site: SiteMock, user: User) -> httpx.Client:
     )
 
 
+def test_can_only_setup_one_scenario(site: SiteMock) -> None:
+    relays = ["a", "b"]
+    site.set_scenario(relays=relays)
+    with pytest.raises(RuntimeError):
+        site.set_scenario(relays=relays)
+
+
 @pytest.mark.parametrize(
     "relays",
     [

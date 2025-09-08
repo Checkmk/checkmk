@@ -14,9 +14,3 @@ export interface Topic {
   title: string
   elements: Element[]
 }
-
-export interface SpecLineType {
-  line: string
-  area: string
-  stack: string
-}

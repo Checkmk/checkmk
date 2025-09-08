@@ -218,7 +218,9 @@ class PerformanceTest:
 
             # Recreate rule to change number of piggybacked hosts
             self.central_site.openapi.rules.delete(piggyback_info.datasource_id)
-            self.central_site.openapi.changes.activate_and_wait_for_completion()
+            self.central_site.openapi.changes.activate_and_wait_for_completion(
+                force_foreign_changes=True
+            )
             with dummy_agent_dump_generator(
                 self.central_site,
                 pb_host_count=0,

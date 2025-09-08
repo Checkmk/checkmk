@@ -124,8 +124,8 @@ from cmk.base.sources import make_parser
 from cmk.ccc import tty, version
 from cmk.ccc.exceptions import (
     MKBailOut,
+    MKFetcherError,
     MKGeneralException,
-    MKSNMPError,
     MKTimeout,
     OnError,
 )
@@ -3318,7 +3318,7 @@ class AutomationDiagHost(Automation):
 
             if test.startswith("snmp"):
                 if config.simulation_mode:
-                    raise MKSNMPError(
+                    raise MKFetcherError(
                         "Simulation mode enabled. Not trying to contact snmp datasource"
                     )
                 return DiagHostResult(

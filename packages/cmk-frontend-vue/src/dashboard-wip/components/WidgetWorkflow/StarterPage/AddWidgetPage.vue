@@ -46,12 +46,12 @@ const emit = defineEmits(['select'])
 .add-widget-page__grid-container {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-gap: var(--spacing-double);
+  gap: var(--spacing-double);
   padding: var(--spacing-double);
   width: 100%;
 }
 
-@media (max-width: 800px) {
+@media (width < 800px) {
   .add-widget-page__grid-container {
     grid-template-columns: 1fr;
   }

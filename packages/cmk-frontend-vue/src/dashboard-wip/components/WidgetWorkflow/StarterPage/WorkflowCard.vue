@@ -42,17 +42,13 @@ const emit = defineEmits(['select'])
   cursor: pointer;
 
   &:hover {
-    background-color: var(--ux-theme-5);
+    background-color: var(--input-hover-bg-color);
   }
 
   &:focus,
   &:focus-visible {
     outline: var(--default-border-color-green) auto var(--dimension-1);
   }
-}
-
-.workflow-card:hover {
-  background-color: var(--input-hover-bg-color);
 }
 
 .workflow-card__content {

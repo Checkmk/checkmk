@@ -450,6 +450,7 @@ def test_registered_painters() -> None:
         "inv_software_applications_podman_containers_running",
         "inv_software_applications_podman_containers_stopped",
         "inv_software_applications_podman_images",
+        "inv_software_applications_podman_images_num",
         "inv_software_applications_podman_mode",
         "inv_software_applications_podman_registry",
         "inv_software_applications_podman_version",

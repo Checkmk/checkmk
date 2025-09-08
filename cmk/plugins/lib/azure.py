@@ -4,19 +4,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
+from collections.abc import Callable, Generator, Iterable, Mapping, MutableMapping, Sequence
 from datetime import datetime
+from enum import auto, Enum
 from typing import Any, NamedTuple
 
 from pydantic import BaseModel, Field
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v1 import Metric, Result
+from cmk.agent_based.v2 import check_levels as check_levels_v2
 from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
     IgnoreResultsError,
     InventoryResult,
+    LevelsT,
     render,
     Service,
     ServiceLabel,
@@ -49,6 +52,16 @@ class Resource(NamedTuple):
     subscription: str | None = None
     subscription_name: str | None = None
     tenant_id: str | None = None
+
+
+class SustainedLevelDirection(Enum):
+    """
+    When using sustained threshold checking, decides if the threshold is
+    an upper bound or a lower bound.
+    """
+
+    UPPER_BOUND = auto()
+    LOWER_BOUND = auto()
 
 
 class MetricData(NamedTuple):
@@ -491,3 +504,63 @@ def inventory_common_azure(section: Section) -> InventoryResult:
             key_columns={"name": tag_key},
             inventory_columns={"value": tag_value},
         )
+
+
+def _threshold_hit_for_time[NumberT: (int, float)](
+    current_value: float,
+    threshold: float,
+    # We assume v2-style limits
+    limits: LevelsT[NumberT] | None,
+    now: float,
+    value_store: MutableMapping[str, Any],
+    value_store_key: str,
+    direction: SustainedLevelDirection = SustainedLevelDirection.UPPER_BOUND,
+    label: str | None = None,
+) -> CheckResult:
+    """
+    Alert if the threshold has been hit or exceeded for longer than 'limits'
+    amount of time.
+
+    To accomplish this, when the threshold is hit, the timestamp is stored in the
+    value store. Later, if the threshold is NOT met, the timestamp is removed from
+    the value store. Otherwise if the threshold is still hit, the time since the
+    original hit is compared to the current time, and if more seconds have
+    elapsed than 'limits' allows, an alert is raised.
+
+    The 'value_store_key' is required so that this can be used multiple times
+    in one check plugin (to check different kinds of values).
+
+    If 'direction' is LOWER_BOUND, then the alerting happens when the
+    value dips and stays _below_ the threshold.
+    """
+    if direction == SustainedLevelDirection.LOWER_BOUND:
+        drop_from_value_store = current_value > threshold
+        if label is None:
+            label = "Below the threshold for"
+    else:
+        drop_from_value_store = current_value < threshold
+        if label is None:
+            label = "Above the threshold for"
+
+    if drop_from_value_store:
+        # If we are under the threshold, clear out any previous record of
+        # being over it, because now it doesn't matter anymore, we're not
+        # going to alert.
+        value_store[value_store_key] = None
+    else:
+        # Otherwise we're at or over the threshold.
+        threshold_hit_time = value_store.get(value_store_key)
+        if threshold_hit_time is None:
+            # This is the first time we're over the threshold in this "series"
+            # Don't alert here, just store the value in case we need to alert next time
+            value_store[value_store_key] = now
+        else:
+            # We already had a value stored from before, compare it to see
+            # if it's time to alert.
+            yield from check_levels_v2(
+                now - threshold_hit_time,
+                levels_upper=limits,
+                render_func=render.timespan,
+                label=label,
+                notice_only=True,
+            )

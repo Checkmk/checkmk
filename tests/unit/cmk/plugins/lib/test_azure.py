@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
+from types import EllipsisType
 from typing import Any
 
 import pytest
@@ -27,6 +28,7 @@ from cmk.plugins.lib.azure import (
     _get_metrics,
     _get_metrics_number,
     _parse_resource,
+    _threshold_hit_for_time,
     AzureMetric,
     check_connections,
     check_cpu,
@@ -43,6 +45,7 @@ from cmk.plugins.lib.azure import (
     parse_resources,
     Resource,
     Section,
+    SustainedLevelDirection,
 )
 
 RESOURCES = [
@@ -807,3 +810,168 @@ def test_inventory_common_azure():
     assert tags["tag1"] == "value1"
     assert tags["tag2"] == "value2"
     assert len(tags) == 2
+
+
+EPOCH = 1757328437.8742359
+
+
+@pytest.mark.parametrize(
+    "current_value1, current_value2, threshold, limits, now1, now2, timestamp_in_vs, direction, label, expected1, expected2",
+    [
+        pytest.param(
+            50,
+            48,
+            60,
+            (60, 120),
+            EPOCH,
+            EPOCH + 30,
+            ...,
+            SustainedLevelDirection.UPPER_BOUND,
+            None,
+            [],
+            [],
+            id="threshold not crossed",
+        ),
+        pytest.param(
+            50,
+            48,
+            30,
+            (60, 120),
+            EPOCH,
+            EPOCH + 30,
+            ...,
+            SustainedLevelDirection.UPPER_BOUND,
+            None,
+            [],
+            [
+                Result(state=State.OK, notice="Above the threshold for: 30 seconds"),
+            ],
+            id="threshold crossed, but time not crossed",
+        ),
+        pytest.param(
+            50,
+            48,
+            30,
+            (60, 120),
+            EPOCH,
+            EPOCH + 61,
+            ...,
+            SustainedLevelDirection.UPPER_BOUND,
+            None,
+            [],
+            [
+                Result(
+                    state=State.WARN,
+                    notice="Above the threshold for: 1 minute 1 second (warn/crit at 1 minute 0 seconds/2 minutes 0 seconds)",
+                ),
+            ],
+            id="threshold crossed first run, time crossed second run",
+        ),
+        pytest.param(
+            50,
+            48,
+            30,
+            (60, 120),
+            EPOCH,
+            EPOCH + 1,
+            ...,
+            SustainedLevelDirection.UPPER_BOUND,
+            None,
+            [],
+            [
+                Result(state=State.OK, notice="Above the threshold for: 1 second"),
+            ],
+            id="threshold crossed first and second run, but time not crossed",
+        ),
+        pytest.param(
+            50,
+            28,
+            30,
+            (60, 120),
+            EPOCH,
+            EPOCH + 30,
+            EPOCH - 15,
+            SustainedLevelDirection.UPPER_BOUND,
+            None,
+            [
+                Result(state=State.OK, notice="Above the threshold for: 15 seconds"),
+            ],
+            [],
+            id="threshold still crossed from previous run, then ok",
+        ),
+        pytest.param(
+            27,
+            28,
+            30,
+            (60, 120),
+            EPOCH,
+            EPOCH + 30,
+            EPOCH - 15,
+            SustainedLevelDirection.UPPER_BOUND,
+            None,
+            [],
+            [],
+            id="threshold no longer crossed from previous run",
+        ),
+        pytest.param(
+            50,
+            68,
+            70,
+            (60, 120),
+            EPOCH,
+            EPOCH + 80,
+            EPOCH - 15,
+            SustainedLevelDirection.LOWER_BOUND,
+            "Value is too low since",
+            [
+                Result(state=State.OK, notice="Value is too low since: 15 seconds"),
+            ],
+            [
+                Result(
+                    state=State.WARN,
+                    notice="Value is too low since: 1 minute 35 seconds (warn/crit at 1 minute 0 seconds/2 minutes 0 seconds)",
+                ),
+            ],
+            id="threshold crossed first run, is lower bound",
+        ),
+    ],
+)
+def test_threshold_hit_for_time(
+    current_value1: float,
+    current_value2: float,
+    threshold: float,
+    limits: tuple[float, float],
+    now1: float,
+    now2: float,
+    timestamp_in_vs: Mapping[str, float] | EllipsisType,
+    direction: SustainedLevelDirection,
+    label: str | None,
+    expected1: Sequence[Metric | Result],
+    expected2: Sequence[Metric | Result],
+) -> None:
+    value_store = {}
+    if timestamp_in_vs is not ...:
+        value_store["timestamp"] = timestamp_in_vs
+
+    first_result = _threshold_hit_for_time(
+        current_value1,
+        threshold,
+        ("fixed", limits),
+        now1,
+        value_store,
+        "timestamp",
+        direction=direction,
+        label=label,
+    )
+    assert list(first_result) == expected1
+    second_result = _threshold_hit_for_time(
+        current_value2,
+        threshold,
+        ("fixed", limits),
+        now2,
+        value_store,
+        "timestamp",
+        direction=direction,
+        label=label,
+    )
+    assert list(second_result) == expected2

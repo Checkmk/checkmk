@@ -8,7 +8,7 @@ repo_license = use_repo_rule("//bazel/rules:repo_license.bzl", "detect_repo_lice
 
 bazel_dep(name = "aspect_bazel_lib", version = "2.17.1")
 bazel_dep(name = "aspect_rules_js", version = "2.3.7")
-bazel_dep(name = "aspect_rules_lint", version = "1.5.1")
+bazel_dep(name = "aspect_rules_lint", version = "1.7.0")
 bazel_dep(name = "aspect_rules_py", version = "1.5.2")
 bazel_dep(name = "aspect_rules_ts", version = "3.6.0")
 bazel_dep(name = "aspect_rules_webpack", version = "0.17.0")

@@ -79,6 +79,7 @@ const classes = computed(() => [
     outline: var(--default-border-color-green) auto 1px;
   }
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   &.disabled {
     opacity: 0.5;
     pointer-events: none;

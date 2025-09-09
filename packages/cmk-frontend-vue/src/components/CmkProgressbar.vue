@@ -83,10 +83,10 @@ const cmkProgressbaId = useId()
     </label>
     <div
       v-if="max !== 'unknown'"
-      class="cmk-progressbar-indicator"
+      class="cmk-progressbar__indicator"
       :style="`transform: translateX(-${100 - progressRatio * 100}%)`"
     />
-    <div v-if="max === 'unknown'" class="cmk-progressbar-indicator-infinite" />
+    <div v-if="max === 'unknown'" class="cmk-progressbar__indicator--infinite" />
   </div>
 </template>
 
@@ -103,7 +103,7 @@ const cmkProgressbaId = useId()
   align-items: center;
 }
 
-.cmk-progressbar-indicator {
+.cmk-progressbar__indicator {
   background: var(--success);
   width: 100%;
   height: 100%;
@@ -111,7 +111,7 @@ const cmkProgressbaId = useId()
   transition: transform 660ms ease-in-out;
 }
 
-.cmk-progressbar-indicator-infinite {
+.cmk-progressbar__indicator--infinite {
   background: var(--success);
   width: 50%;
   height: 100%;
@@ -130,6 +130,7 @@ const cmkProgressbaId = useId()
   }
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .cmk-progress-label {
   width: 100%;
   text-align: center;
@@ -138,26 +139,32 @@ const cmkProgressbaId = useId()
   font-size: 8px;
   visibility: hidden;
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   &.visible {
     visibility: visible;
   }
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .small {
   height: 4px;
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   &:has(.cmk-progress-label.visible) {
     height: 8px;
   }
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .medium {
   height: 8px;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .large {
   height: 12px;
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   .cmk-progress-label {
     font-size: 10px;
   }

@@ -31,6 +31,7 @@ defineProps<CmkTabContentProps>()
     border: 1px solid var(--success);
   }
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   &.spacing-none {
     padding: 0;
   }

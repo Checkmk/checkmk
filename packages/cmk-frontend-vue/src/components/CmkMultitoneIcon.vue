@@ -111,6 +111,7 @@ immediateWatch(
 </template>
 
 <style>
+/* stylelint-disable checkmk/vue-bem-naming-convention */
 .cmk-multitone-icon {
   margin: 0;
   padding: 0;

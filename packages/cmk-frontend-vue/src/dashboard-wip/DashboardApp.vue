@@ -6,7 +6,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import usei18n from '@/lib/i18n.ts'
 
+import type { DashboardPageProperties } from '@/dashboard-wip/types/page.ts'
+
 const { _t } = usei18n()
+
+defineProps<DashboardPageProperties>()
 </script>
 
 <template>

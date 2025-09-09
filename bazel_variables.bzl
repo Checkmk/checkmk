@@ -8,24 +8,20 @@ edition_python_deps = {
         "//non-free/packages/cmk-mknotifyd",
         "//non-free/packages/cmk-otel-collector",
         "//non-free/packages/cmk-update-agent",
-		"//omd/packages/enterprise",
     ],
     "cee": [
         "//non-free/packages/cmk-mknotifyd",
         "//non-free/packages/cmk-update-agent",
-		"//omd/packages/enterprise",
     ],
     "cme": [
         "//non-free/packages/cmk-mknotifyd",
         "//non-free/packages/cmk-update-agent",
         "//non-free/packages/cmk-otel-collector",
-		"//omd/packages/enterprise",
     ],
     "cse": [
         "//non-free/packages/cmk-mknotifyd",
         "//non-free/packages/cmk-update-agent",
         "//non-free/packages/cmk-otel-collector",
-		"//omd/packages/enterprise",
     ],
 }
 

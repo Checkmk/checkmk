@@ -20,7 +20,7 @@ from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.unit_formatter import Label, NotationFormatter
+from cmk.gui.unit_formatter import Label, NegativeYRange, NotationFormatter, PositiveYRange
 
 from ._from_api import RegisteredMetric
 from ._graph_specification import (
@@ -584,75 +584,58 @@ def _compute_labels_from_api(
     min_y: float,
     max_y: float,
 ) -> Sequence[Label]:
-    abs_min_y = abs(min_y)
-    abs_max_y = abs(max_y)
-
     # min_y / max_y might be of type np.floating (or similar), which is a sub-type of float.
     # If this is the case, eg. min_y >= 0 is of type np.bool, which does *not* match bool 😱.
     match bool(min_y >= 0), bool(max_y >= 0):
         case True, True:
-            return ([Label(0, "0")] if abs_min_y == 0 else []) + list(
-                formatter.render_y_labels(
-                    min_y=min(abs_min_y, abs_max_y),
-                    max_y=max(abs_min_y, abs_max_y),
-                    mean_num_labels=height_ex / 4.0 + 1,
-                )
+            return formatter.render_y_labels(
+                y_range=PositiveYRange(start=min_y, end=max_y),
+                target_number_of_labels=height_ex / 4.0 + 1,
             )
         case False, True:
+            abs_min_y = abs(min_y)
+            abs_max_y = abs(max_y)
+
             if mirrored:
                 labels = formatter.render_y_labels(
-                    min_y=0,
-                    max_y=max(abs_min_y, abs_max_y),
-                    mean_num_labels=height_ex / 8.0 + 1,
+                    y_range=PositiveYRange(start=0, end=max(abs_min_y, abs_max_y)),
+                    target_number_of_labels=height_ex / 8.0 + 1,
                 )
-                return (
-                    [Label(-1 * l.position, l.text) for l in labels]
-                    + [Label(0, "0")]
-                    + list(labels)
-                )
+                return [
+                    *(
+                        Label(
+                            -l.position,
+                            l.text,
+                        )
+                        for l in labels[
+                            1:  # exclude zero label
+                        ]
+                    ),
+                    *labels,
+                ] or [Label(0, "0")]
 
-            if abs_min_y == abs_max_y:
-                labels = formatter.render_y_labels(
-                    min_y=0,
-                    max_y=max(abs_min_y, abs_max_y),
-                    mean_num_labels=height_ex / 8.0 + 1,
-                )
-                return (
-                    [Label(-1 * l.position, f"-{l.text}") for l in labels]
-                    + [Label(0, "0")]
-                    + list(labels)
-                )
-
-            mean_num_labels = height_ex / 4.0 + 1
-            min_mean_num_labels = round(mean_num_labels * abs_min_y / (abs_min_y + abs_max_y))
-            max_mean_num_labels = mean_num_labels - min_mean_num_labels
-            return (
-                [
-                    Label(-1 * l.position, f"-{l.text}")
-                    for l in formatter.render_y_labels(
-                        min_y=0,
-                        max_y=abs_min_y,
-                        mean_num_labels=abs(min_mean_num_labels),
-                    )
-                ]
-                + [Label(0, "0")]
-                + list(
-                    formatter.render_y_labels(
-                        min_y=0,
-                        max_y=abs_max_y,
-                        mean_num_labels=abs(max_mean_num_labels),
-                    )
-                )
-            )
-        case False, False:
+            # Computing labels for the negative and positive range separately is a product decision,
+            # not a workaround.
+            target_num_labels = height_ex / 4.0 + 1
+            target_num_labels_neg = target_num_labels * abs_min_y / (abs_min_y + abs_max_y)
+            target_num_labels_pos = target_num_labels - target_num_labels_neg
             return [
-                Label(-1 * l.position, f"-{l.text}")
-                for l in formatter.render_y_labels(
-                    min_y=min(abs_min_y, abs_max_y),
-                    max_y=max(abs_min_y, abs_max_y),
-                    mean_num_labels=height_ex / 4.0 + 1,
-                )
-            ] + ([Label(0, "0")] if abs_max_y == 0 else [])
+                *formatter.render_y_labels(
+                    y_range=NegativeYRange(start=min_y, end=0),
+                    target_number_of_labels=target_num_labels_neg,
+                )[
+                    1:  # exclude zero label
+                ],
+                *formatter.render_y_labels(
+                    y_range=PositiveYRange(start=0, end=max_y),
+                    target_number_of_labels=target_num_labels_pos,
+                ),
+            ] or [Label(0, "0")]
+        case False, False:
+            return formatter.render_y_labels(
+                y_range=NegativeYRange(start=min_y, end=max_y),
+                target_number_of_labels=height_ex / 4.0 + 1,
+            )
         case _:
             raise ValueError((min_y, max_y))
 

@@ -15,7 +15,9 @@ from cmk.gui.unit_formatter import (
     EngineeringScientificFormatter,
     IECFormatter,
     Label,
+    NegativeYRange,
     NotationFormatter,
+    PositiveYRange,
     SIFormatter,
     StandardScientificFormatter,
     StrictPrecision,
@@ -394,13 +396,14 @@ def test_render_unit_notation(
 
 
 @pytest.mark.parametrize(
-    "formatter, max_y, expected_ident, expected_labels",
+    "formatter, y_range, expected_ident, expected_labels",
     [
         pytest.param(
             DecimalFormatter("u", AutoPrecision(digits=2)),
-            0.00123,
+            PositiveYRange(start=0.0, end=0.00123),
             "Decimal",
             [
+                Label(0, "0"),
                 Label(0.0002, "0.0002 u"),
                 Label(0.0004, "0.0004 u"),
                 Label(0.0006000000000000001, "0.0006 u"),
@@ -412,9 +415,10 @@ def test_render_unit_notation(
         ),
         pytest.param(
             DecimalFormatter("u", AutoPrecision(digits=2)),
-            123456.789,
+            PositiveYRange(start=0.0, end=123456.789),
             "Decimal",
             [
+                Label(0, "0"),
                 Label(20000, "20 000 u"),
                 Label(40000, "40 000 u"),
                 Label(60000, "60 000 u"),
@@ -425,10 +429,24 @@ def test_render_unit_notation(
             id="decimal-large",
         ),
         pytest.param(
+            DecimalFormatter("u", AutoPrecision(digits=2)),
+            NegativeYRange(start=-11.19, end=-2.123),
+            "Decimal",
+            [
+                Label(-2.0, "-2 u"),
+                Label(-4.0, "-4 u"),
+                Label(-6.0, "-6 u"),
+                Label(-8.0, "-8 u"),
+                Label(-10.0, "-10 u"),
+            ],
+            id="decimal-negative",
+        ),
+        pytest.param(
             SIFormatter("u", AutoPrecision(digits=2)),
-            0.00123,
+            PositiveYRange(start=0.0, end=0.00123),
             "SI",
             [
+                Label(0, "0"),
                 Label(0.0002, "0.2 mu"),
                 Label(0.0004, "0.4 mu"),
                 Label(0.0006000000000000001, "0.6 mu"),
@@ -440,9 +458,10 @@ def test_render_unit_notation(
         ),
         pytest.param(
             SIFormatter("u", AutoPrecision(digits=2)),
-            123456.789,
+            PositiveYRange(start=0.0, end=123456.789),
             "SI",
             [
+                Label(0, "0"),
                 Label(20000, "20 ku"),
                 Label(40000, "40 ku"),
                 Label(60000, "60 ku"),
@@ -453,10 +472,25 @@ def test_render_unit_notation(
             id="si-large",
         ),
         pytest.param(
+            SIFormatter("u", AutoPrecision(digits=2)),
+            NegativeYRange(start=-1.12e5, end=-423),
+            "SI",
+            [
+                Label(0, "0"),
+                Label(-20000, "-20 ku"),
+                Label(-40000, "-40 ku"),
+                Label(-60000, "-60 ku"),
+                Label(-80000, "-80 ku"),
+                Label(-100000, "-100 ku"),
+            ],
+            id="si-negative",
+        ),
+        pytest.param(
             IECFormatter("u", AutoPrecision(digits=2)),
-            0.00123,
+            PositiveYRange(start=0.0, end=0.00123),
             "IEC",
             [
+                Label(0, "0"),
                 Label(0.0002, "0.0002 u"),
                 Label(0.0004, "0.0004 u"),
                 Label(0.0006000000000000001, "0.0006 u"),
@@ -468,9 +502,10 @@ def test_render_unit_notation(
         ),
         pytest.param(
             IECFormatter("u", AutoPrecision(digits=2)),
-            123456.789,
+            PositiveYRange(start=0.0, end=123456.789),
             "IEC",
             [
+                Label(0, "0"),
                 Label(16384, "16 Kiu"),
                 Label(32768, "32 Kiu"),
                 Label(49152, "48 Kiu"),
@@ -482,10 +517,27 @@ def test_render_unit_notation(
             id="iec-large",
         ),
         pytest.param(
+            IECFormatter("u", AutoPrecision(digits=2)),
+            NegativeYRange(start=-0.144, end=-4.432e-4),
+            "IEC",
+            [
+                Label(0, "0"),
+                Label(-0.02, "-0.02 u"),
+                Label(-0.04, "-0.04 u"),
+                Label(-0.06, "-0.06 u"),
+                Label(-0.08, "-0.08 u"),
+                Label(-0.1, "-0.1 u"),
+                Label(-0.12, "-0.12 u"),
+                Label(-0.14, "-0.14 u"),
+            ],
+            id="iec-negative",
+        ),
+        pytest.param(
             StandardScientificFormatter("u", AutoPrecision(digits=2)),
-            0.00123,
+            PositiveYRange(start=0.0, end=0.00123),
             "StandardScientific",
             [
+                Label(0, "0"),
                 Label(0.0002, "2e-4 u"),
                 Label(0.0004, "4e-4 u"),
                 Label(0.0006000000000000001, "6e-4 u"),
@@ -497,9 +549,10 @@ def test_render_unit_notation(
         ),
         pytest.param(
             StandardScientificFormatter("u", AutoPrecision(digits=2)),
-            123456.789,
+            PositiveYRange(start=0.0, end=123456.789),
             "StandardScientific",
             [
+                Label(0, "0"),
                 Label(20000, "2e+4 u"),
                 Label(40000, "4e+4 u"),
                 Label(60000, "6e+4 u"),
@@ -510,10 +563,24 @@ def test_render_unit_notation(
             id="std-sci-large",
         ),
         pytest.param(
+            StandardScientificFormatter("u", AutoPrecision(digits=2)),
+            NegativeYRange(start=-5e10, end=-1e10),
+            "StandardScientific",
+            [
+                Label(-10000000000, "-1e+10 u"),
+                Label(-20000000000, "-2e+10 u"),
+                Label(-30000000000, "-3e+10 u"),
+                Label(-40000000000, "-4e+10 u"),
+                Label(-50000000000, "-5e+10 u"),
+            ],
+            id="std-sci-negative",
+        ),
+        pytest.param(
             EngineeringScientificFormatter("u", AutoPrecision(digits=2)),
-            0.00123,
+            PositiveYRange(start=0.0, end=0.00123),
             "EngineeringScientific",
             [
+                Label(0, "0"),
                 Label(0.0002, "200e-6 u"),
                 Label(0.0004, "400e-6 u"),
                 Label(0.0006000000000000001, "600e-6 u"),
@@ -525,9 +592,10 @@ def test_render_unit_notation(
         ),
         pytest.param(
             EngineeringScientificFormatter("u", AutoPrecision(digits=2)),
-            123456.789,
+            PositiveYRange(start=0.0, end=123456.789),
             "EngineeringScientific",
             [
+                Label(0, "0"),
                 Label(20000, "20e+3 u"),
                 Label(40000, "40e+3 u"),
                 Label(60000, "60e+3 u"),
@@ -538,10 +606,25 @@ def test_render_unit_notation(
             id="eng-sci-large",
         ),
         pytest.param(
+            EngineeringScientificFormatter("u", AutoPrecision(digits=2)),
+            NegativeYRange(start=-5e10, end=-1e2),
+            "EngineeringScientific",
+            [
+                Label(0, "0"),
+                Label(-10000000000, "-10e+9 u"),
+                Label(-20000000000, "-20e+9 u"),
+                Label(-30000000000, "-30e+9 u"),
+                Label(-40000000000, "-40e+9 u"),
+                Label(-50000000000, "-50e+9 u"),
+            ],
+            id="eng-sci-negative",
+        ),
+        pytest.param(
             TimeFormatter("s", AutoPrecision(digits=2)),
-            0.00123,
+            PositiveYRange(start=0.0, end=0.00123),
             "Time",
             [
+                Label(0, "0"),
                 Label(0.0002, "0.2 ms"),
                 Label(0.0004, "0.4 ms"),
                 Label(0.0006000000000000001, "0.6 ms"),
@@ -553,9 +636,10 @@ def test_render_unit_notation(
         ),
         pytest.param(
             TimeFormatter("s", AutoPrecision(digits=2)),
-            123456.789,
+            PositiveYRange(start=0.0, end=123456.789),
             "Time",
             [
+                Label(0, "0"),
                 Label(21600, "6 h"),
                 Label(43200, "12 h"),
                 Label(64800, "18 h"),
@@ -566,53 +650,85 @@ def test_render_unit_notation(
         ),
         pytest.param(
             TimeFormatter("s", AutoPrecision(digits=2)),
-            31536001,
+            PositiveYRange(start=0, end=31536001),
             "Time",
             [
-                Label(position=4320000, text="50 d"),
-                Label(position=8640000, text="100 d"),
-                Label(position=12960000, text="150 d"),
-                Label(position=17280000, text="200 d"),
-                Label(position=21600000, text="250 d"),
-                Label(position=25920000, text="300 d"),
-                Label(position=30240000, text="350 d"),
+                Label(0, "0"),
+                Label(4320000, "50 d"),
+                Label(8640000, "100 d"),
+                Label(12960000, "150 d"),
+                Label(17280000, "200 d"),
+                Label(21600000, "250 d"),
+                Label(25920000, "300 d"),
+                Label(30240000, "350 d"),
             ],
             id="time->year",
         ),
         pytest.param(
             TimeFormatter("s", AutoPrecision(digits=2)),
-            15552000.123,
+            PositiveYRange(start=0.0, end=15552000.123),
             "Time",
             [
-                Label(position=4320000, text="50 d"),
-                Label(position=8640000, text="100 d"),
-                Label(position=12960000, text="150 d"),
+                Label(0, "0"),
+                Label(4320000, "50 d"),
+                Label(8640000, "100 d"),
+                Label(12960000, "150 d"),
             ],
             id="time-half-year",
         ),
         pytest.param(
             TimeFormatter("s", AutoPrecision(digits=2)),
-            94608000,
+            PositiveYRange(start=0, end=94608000),
             "Time",
             [
-                Label(position=31536000, text="1 y"),
-                Label(position=63072000, text="2 y"),
-                Label(position=94608000, text="3 y"),
+                Label(0, "0"),
+                Label(31536000, "1 y"),
+                Label(63072000, "2 y"),
+                Label(94608000, "3 y"),
             ],
             id="time-three-years",
         ),
         pytest.param(
             TimeFormatter("s", AutoPrecision(digits=2)),
-            315360000,
+            PositiveYRange(start=0, end=315360000),
             "Time",
             [
-                Label(position=63072000, text="2 y"),
-                Label(position=126144000, text="4 y"),
-                Label(position=189216000, text="6 y"),
-                Label(position=252288000, text="8 y"),
-                Label(position=315360000, text="10 y"),
+                Label(0, "0"),
+                Label(63072000, "2 y"),
+                Label(126144000, "4 y"),
+                Label(189216000, "6 y"),
+                Label(252288000, "8 y"),
+                Label(315360000, "10 y"),
             ],
             id="time-ten-years",
+        ),
+        pytest.param(
+            TimeFormatter("s", AutoPrecision(digits=2)),
+            NegativeYRange(start=-10.123, end=-5.11),
+            "Time",
+            [
+                Label(-5, "-5 s"),
+                Label(-6, "-6 s"),
+                Label(-7, "-7 s"),
+                Label(-8, "-8 s"),
+                Label(-9, "-9 s"),
+                Label(-10, "-10 s"),
+            ],
+            id="time-negative-small",
+        ),
+        pytest.param(
+            TimeFormatter("s", AutoPrecision(digits=2)),
+            NegativeYRange(start=-25552000.123, end=-15552000.123),
+            "Time",
+            [
+                Label(-15552000, "-180 d"),
+                Label(-17280000, "-200 d"),
+                Label(-19008000, "-220 d"),
+                Label(-20736000, "-240 d"),
+                Label(-22464000, "-260 d"),
+                Label(-24192000, "-280 d"),
+            ],
+            id="time-negative-large",
         ),
     ],
 )
@@ -625,87 +741,68 @@ def test_render_y_labels(
         | EngineeringScientificFormatter
         | TimeFormatter
     ),
-    max_y: int | float,
+    y_range: PositiveYRange | NegativeYRange,
     expected_ident: Literal[
         "Decimal", "SI", "IEC", "StandardScientific", "EngineeringScientific", "Time"
     ],
     expected_labels: Sequence[Label],
 ) -> None:
     assert formatter.ident() == expected_ident
-    assert formatter.render_y_labels(min_y=0, max_y=max_y, mean_num_labels=5) == expected_labels
+    assert formatter.render_y_labels(y_range, target_number_of_labels=5) == expected_labels
 
 
 @pytest.mark.parametrize(
-    "min_y, max_y, expected_labels",
+    "y_range, expected_labels",
     [
         pytest.param(
-            0.00123,
-            0.00456,
+            PositiveYRange(start=0.00123, end=0.00456),
             [
-                Label(
-                    position=0.001,
-                    text="0.001 u",
-                ),
-                Label(
-                    position=0.002,
-                    text="0.002 u",
-                ),
-                Label(
-                    position=0.003,
-                    text="0.003 u",
-                ),
-                Label(
-                    position=0.004,
-                    text="0.004 u",
-                ),
+                Label(0, "0"),
+                Label(0.001, "0.001 u"),
+                Label(0.002, "0.002 u"),
+                Label(0.003, "0.003 u"),
+                Label(0.004, "0.004 u"),
             ],
             id="decimal-small",
         ),
         pytest.param(
-            123.456,
-            456.789,
+            PositiveYRange(start=123.456, end=456.789),
             [
-                Label(
-                    position=123,
-                    text="123 u",
-                ),
-                Label(
-                    position=173,
-                    text="173 u",
-                ),
-                Label(
-                    position=223,
-                    text="223 u",
-                ),
-                Label(
-                    position=273,
-                    text="273 u",
-                ),
-                Label(
-                    position=323,
-                    text="323 u",
-                ),
-                Label(
-                    position=373,
-                    text="373 u",
-                ),
-                Label(
-                    position=423,
-                    text="423 u",
-                ),
+                Label(100, "100 u"),
+                Label(150, "150 u"),
+                Label(200, "200 u"),
+                Label(250, "250 u"),
+                Label(300, "300 u"),
+                Label(350, "350 u"),
+                Label(400, "400 u"),
+                Label(450, "450 u"),
             ],
             id="decimal-large",
+        ),
+        pytest.param(
+            NegativeYRange(start=-456.789, end=-123.456),
+            [
+                Label(-100, "-100 u"),
+                Label(-150, "-150 u"),
+                Label(-200, "-200 u"),
+                Label(-250, "-250 u"),
+                Label(-300, "-300 u"),
+                Label(-350, "-350 u"),
+                Label(-400, "-400 u"),
+                Label(-450, "-450 u"),
+            ],
+            id="decimal-negative",
         ),
     ],
 )
 def test_decimal_render_y_labels_with_min_y(
-    min_y: float, max_y: float, expected_labels: Sequence[Label]
+    y_range: PositiveYRange | NegativeYRange,
+    expected_labels: Sequence[Label],
 ) -> None:
     assert (
         DecimalFormatter("u", AutoPrecision(digits=2)).render_y_labels(
-            min_y=min_y,
-            max_y=max_y,
-            mean_num_labels=5,
+            y_range,
+            target_number_of_labels=5,
         )
         == expected_labels
     )

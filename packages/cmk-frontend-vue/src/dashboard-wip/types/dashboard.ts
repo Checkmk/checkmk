@@ -19,6 +19,10 @@ export type DashboardMetadata = components['schemas']['DashboardMetadata']
 export type DashboardConstants = components['schemas']['DashboardConstantsResponse']
 
 // Dashboard Response types
+export type RelativeGridDashboardDomainObject =
+  components['schemas']['RelativeGridDashboardDomainObject']
+export type ResponsiveGridDashboardDomainObject =
+  components['schemas']['ResponsiveGridDashboardDomainObject']
 export type DashboardFilterContext = components['schemas']['DashboardFilterContext']
 export type DashboardGeneralSettings = components['schemas']['DashboardGeneralSettings']
 export type DashboardRelativeGridLayout = components['schemas']['DashboardRelativeGridLayout']

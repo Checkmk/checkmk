@@ -287,16 +287,15 @@ def load_latest_delta_tree(history_store: HistoryStore, hostname: HostName) -> I
     if "/" in hostname:
         return ImmutableDeltaTree()
 
-    filter_delta_tree = (
-        _make_filter_choices_from_permitted_paths(permitted_paths)
-        if isinstance(permitted_paths := _get_permitted_inventory_paths(), list)
-        else None
-    )
     history = load_history(
         history_store,
         hostname,
-        filter_history_paths=lambda paths: [paths[-1]] if paths else [],
-        filter_delta_tree=filter_delta_tree,
+        history_paths_filter=lambda paths: [paths[-1]] if paths else [],
+        delta_tree_filters=(
+            _make_filter_choices_from_permitted_paths(permitted_paths)
+            if isinstance(permitted_paths := _get_permitted_inventory_paths(), list)
+            else None
+        ),
     )
     return history.entries[0].delta_tree if history.entries else ImmutableDeltaTree()
 
@@ -329,16 +328,15 @@ def load_delta_tree(
             % (timestamp, hostname)
         )
 
-    filter_delta_tree = (
-        _make_filter_choices_from_permitted_paths(permitted_paths)
-        if isinstance(permitted_paths := _get_permitted_inventory_paths(), list)
-        else None
-    )
     history = load_history(
         history_store,
         hostname,
-        filter_history_paths=lambda paths: _search_timestamps(paths, timestamp),
-        filter_delta_tree=filter_delta_tree,
+        history_paths_filter=lambda paths: _search_timestamps(paths, timestamp),
+        delta_tree_filters=(
+            _make_filter_choices_from_permitted_paths(permitted_paths)
+            if isinstance(permitted_paths := _get_permitted_inventory_paths(), list)
+            else None
+        ),
     )
     return (
         history.entries[0].delta_tree if history.entries else ImmutableDeltaTree(),
@@ -352,16 +350,15 @@ def get_history(
     if "/" in hostname:
         return [], []  # just for security reasons
 
-    filter_delta_tree = (
-        _make_filter_choices_from_permitted_paths(permitted_paths)
-        if isinstance(permitted_paths := _get_permitted_inventory_paths(), list)
-        else None
-    )
     history = load_history(
         history_store,
         hostname,
-        filter_history_paths=lambda paths: paths,
-        filter_delta_tree=filter_delta_tree,
+        history_paths_filter=lambda paths: paths,
+        delta_tree_filters=(
+            _make_filter_choices_from_permitted_paths(permitted_paths)
+            if isinstance(permitted_paths := _get_permitted_inventory_paths(), list)
+            else None
+        ),
     )
     return history.entries, _sort_corrupted_history_files(
         history_store.inv_paths.archive_dir, history.corrupted

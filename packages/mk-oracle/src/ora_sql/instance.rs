@@ -15,11 +15,15 @@ use std::collections::HashSet;
 use crate::config::connection::add_tns_admin_to_env;
 use crate::config::defines::defaults::SECTION_SEPARATOR;
 use crate::config::ora_sql::CustomInstance;
+use crate::platform::get_local_instances;
 use anyhow::Result;
 
 impl OracleConfig {
     pub async fn exec(&self, environment: &Env) -> Result<String> {
         if let Some(ora_sql) = self.ora_sql() {
+            if environment.detect_only() {
+                return Ok(dump_local_instances());
+            };
             OracleConfig::prepare_cache_sub_dir(environment, &ora_sql.config_cache_dir());
             log::info!("Generating main data");
             let mut output: Vec<String> = Vec::new();
@@ -56,6 +60,26 @@ impl OracleConfig {
             None => log::warn!("No cache dir defined, caching is not possible"),
         }
     }
+}
+
+fn dump_local_instances() -> String {
+    let instances = get_local_instances().unwrap_or_else(|e| {
+        log::error!("{:?}", e);
+        vec![]
+    });
+    let rows = instances
+        .iter()
+        .map(|i| {
+            format!(
+                "'{:16}': home={:60} base={:60}",
+                i.name,
+                i.home.display().to_string(),
+                i.base.display().to_string()
+            )
+        })
+        .collect::<Vec<String>>()
+        .join("\n");
+    format!("{}\nTotal instances found: {}\n", rows, instances.len())
 }
 
 type InstanceWorks = (InstanceName, Vec<(Vec<SqlQuery>, String)>);

@@ -447,7 +447,7 @@ def graph_templates_autocompleter(
     Called by the webservice with the current input field value and the
     completions_params to get the list of choices"""
     if not params.get("context") and params.get("show_independent_of_context") is True:
-        _sorted_matching_graph_template_choices(
+        return _sorted_matching_graph_template_choices(
             value_entered_by_user,
             get_graph_template_choices(graphs_from_api),
         )

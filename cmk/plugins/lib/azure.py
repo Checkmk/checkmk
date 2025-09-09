@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+import time
 from collections.abc import Callable, Generator, Iterable, Mapping, MutableMapping, Sequence
 from datetime import datetime
 from enum import auto, Enum
@@ -17,6 +18,8 @@ from cmk.agent_based.v2 import check_levels as check_levels_v2
 from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
+    get_average,
+    get_value_store,
     IgnoreResultsError,
     InventoryResult,
     LevelsT,
@@ -72,10 +75,18 @@ class MetricData(NamedTuple):
     upper_levels_param: str = ""
     lower_levels_param: str = ""
     boundaries: tuple[float | None, float | None] | None = None
+
     # Apply this function to the value before using it when yielding metrics
     # This gives the opportunity to manipulate metrics before they are counted.
     map_func: Callable[[float], float] | None = None
     notice_only: bool = False
+    # Optionally, average the value over time
+    average_mins_param: str = ""
+    # Optionally, allow for monitoring a sustained threshold
+    sustained_threshold_param: str = ""
+    sustained_levels_time_param: str = ""
+    sustained_level_direction: SustainedLevelDirection = SustainedLevelDirection.UPPER_BOUND
+    sustained_label: str | None = None
 
 
 class PublicIP(BaseModel):
@@ -304,15 +315,50 @@ def check_resource_metrics(
     if not any(metrics) and not suppress_error:
         raise IgnoreResultsError("Data not present at the moment")
 
+    now = time.time()
+
     for metric, metric_data in zip(metrics, metrics_data):
         if not metric:
             continue
 
+        if (
+            metric_data.sustained_threshold_param
+            and (threshold := params.get(metric_data.sustained_threshold_param)) is not None
+        ):
+            yield from _threshold_hit_for_time(
+                current_value=metric.value,
+                threshold=threshold,
+                limits=params.get(metric_data.sustained_levels_time_param),
+                now=now,
+                value_store=get_value_store(),
+                value_store_key=f"{metric_data.metric_name}_sustained_threshold",
+                direction=metric_data.sustained_level_direction,
+                label=metric_data.sustained_label,
+            )
+
+        if (
+            metric_data.average_mins_param is not None
+            and (average_mins := params.get(metric_data.average_mins_param)) is not None
+        ):
+            # Even if we alert on the average, we still emit the instantaneous value as a metric.
+            yield Metric(metric_data.metric_name, metric.value)
+            metric_name = f"{metric_data.metric_name}_average"
+            metric_value = get_average(
+                get_value_store(),
+                metric_name,  # value_store key, we just use the metric name
+                now,
+                metric.value,
+                average_mins,
+            )
+        else:
+            metric_name = metric_data.metric_name
+            metric_value = metric.value
+
         yield from check_levels(
-            metric_data.map_func(metric.value) if metric_data.map_func else metric.value,
+            metric_data.map_func(metric_value) if metric_data.map_func else metric_value,
             levels_upper=params.get(metric_data.upper_levels_param),
             levels_lower=params.get(metric_data.lower_levels_param),
-            metric_name=metric_data.metric_name,
+            metric_name=metric_name,
             label=metric_data.metric_label,
             render_func=metric_data.render_func,
             boundaries=metric_data.boundaries,

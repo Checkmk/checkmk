@@ -1287,6 +1287,7 @@ class HTMLGenerator(HTMLWriter):
         # Temporary measure for not having to change all call-sites at once.
         # The first step was to only change call sites from painters.
         theme: Theme = theme,
+        download: str | None = None,
     ) -> HTML:
         classes = [] if cssclass is None else [cssclass]
         if isinstance(class_, list):
@@ -1307,6 +1308,7 @@ class HTMLGenerator(HTMLWriter):
             target=target if target else "",
             onfocus="if (this.blur) this.blur();",
             onclick=onclick,
+            download=download,
         )
 
     def icon_button(
@@ -1323,10 +1325,21 @@ class HTMLGenerator(HTMLWriter):
         # Temporary measure for not having to change all call-sites at once.
         # The first step was to only change call sites from painters.
         theme: Theme = theme,
+        download: str | None = None,
     ) -> None:
         self.write_html(
             HTMLGenerator.render_icon_button(
-                url, title, icon, id_, onclick, style, target, cssclass, class_, theme=theme
+                url,
+                title,
+                icon,
+                id_,
+                onclick,
+                style,
+                target,
+                cssclass,
+                class_,
+                theme=theme,
+                download=download,
             )
         )
 

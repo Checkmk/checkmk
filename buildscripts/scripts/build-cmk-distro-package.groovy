@@ -87,7 +87,7 @@ def main() {
     }
 
     stage("Prepare workspace") {
-        container("minimal-ubuntu-checkmk-master") {
+        container("minimal-container") {
             dir("${checkout_dir}") {
                 sh("""
                     make buildclean

@@ -8,6 +8,7 @@ import type { components } from '@/lib/rest-api-client/openapi_internal'
 export type ConfiguredValues = Record<string, string | null>
 export type ConfiguredFilters = Record<string, ConfiguredValues>
 
+export type CheckboxConfig = components['schemas']['CheckboxComponentModel']
 export type DropdownConfig = components['schemas']['DropdownComponentModel']
 export type DynamicDropdownConfig = components['schemas']['DynamicDropdownComponentModel']
 export type HiddenConfig = components['schemas']['HiddenComponentModel']

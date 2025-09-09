@@ -26,7 +26,9 @@ xgettext -w 80 --sort-output --force-po -L python --from-code=utf-8 \
     $(find -L "${TOP_DIR}/cmk" -type f -name "*.py") 1>/dev/null
 
 (
-    cd ../packages/cmk-frontend-vue
+    cd "${TOP_DIR}/packages/cmk-frontend-vue"
+    bazel run -- @pnpm//:pnpm --dir "$PWD" install 1>/dev/null
+    mkdir locale || true
     bazel run -- @pnpm//:pnpm --dir "$PWD" exec vue-gettext-extract 1>/dev/null
 )
 

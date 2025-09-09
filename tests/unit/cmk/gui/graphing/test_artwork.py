@@ -935,8 +935,8 @@ def test_order_graph_curves_for_legend_and_mouse_hover_layouted_curves(
     "min_y, max_y, mirrored, expected",
     [
         pytest.param(
-            1,
-            5,
+            1.34,
+            5.44,
             False,
             [
                 Label(
@@ -963,8 +963,8 @@ def test_order_graph_curves_for_legend_and_mouse_hover_layouted_curves(
             id="pos,pos",
         ),
         pytest.param(
-            -5,
-            5,
+            -4.67,
+            5.44,
             False,
             [
                 Label(
@@ -1019,8 +1019,8 @@ def test_order_graph_curves_for_legend_and_mouse_hover_layouted_curves(
             id="neg,neg",
         ),
         pytest.param(
-            1,
-            5,
+            1.36,
+            5.333333333333333333333,
             True,
             [
                 Label(
@@ -1047,8 +1047,8 @@ def test_order_graph_curves_for_legend_and_mouse_hover_layouted_curves(
             id="mirrored,pos,pos",
         ),
         pytest.param(
-            -5,
-            5,
+            -4.5,
+            5.44,
             True,
             [
                 Label(

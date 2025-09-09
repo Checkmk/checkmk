@@ -5,12 +5,14 @@ license: GPLv2
 distribution: check_mk
 description:
  This check monitors the status of the Input and Output Ports of
- the Rittal CMC-III IO Units,
- No limits are set in the check.  The state given by the Rittal device is
- taken as the state of the check as follows:
- For input ports the state is {OK} when the value at the port is {0}.
- For output ports the state is {OK} when the status of the port is {Off}.
- Otherwise the checks are {WARN}.
+ the Rittal CMC-III IO Units.
+ No limits are set in the check. The state given by the Rittal device is
+ taken as the state of the check as follows:\
+ The service state is {OK} when the device status is "OK", "Off", "Closed", or 0 for input ports.
+ The service state is {WARN} when the device status is "On" or "Open".
+ All other unknown states default to {WARN}.
+ Additional information such as Logic, Delay, and Relay settings are displayed
+ in the check output but do not impact the service state.
 
  Firmware versions using the MIB of firmware V3.15.20 are supported.
 

@@ -849,6 +849,46 @@ def test_check_resource_sustained_threshold(get_value_store: Mock) -> None:
     get_value_store.assert_called_once()
 
 
+@mock.patch(
+    "cmk.plugins.lib.azure.get_value_store",
+    return_value={"connections_failed_sustained_threshold": EPOCH - 1000},
+)
+@time_machine.travel(EPOCH)
+def test_check_resource_sustained_threshold_map_func(get_value_store: Mock) -> None:
+    metric_data = MetricData(
+        "total_connections_failed",
+        "connections_failed",
+        "Connections failed",
+        str,
+        sustained_threshold_param="threshold",
+        sustained_levels_time_param="threshold_levels",
+        sustained_level_direction=SustainedLevelDirection.UPPER_BOUND,
+        map_func=lambda value: value * 100,
+    )
+
+    check_result = check_resource_metrics(
+        PARSED_RESOURCES["checkmk-mysql-server"],
+        {
+            "threshold": 199,
+            "threshold_levels": ("fixed", (30.0, 60.0)),
+        },
+        [metric_data],
+    )
+
+    assert list(check_result) == (
+        [
+            Result(
+                state=State.CRIT,
+                summary="Above the threshold for: 16 minutes 40 seconds (warn/crit at 30 seconds/1 minute 0 seconds)",
+            ),
+            Result(state=State.OK, summary="Connections failed: 200.0"),
+            Metric("connections_failed", 200.0),
+        ]
+    )
+
+    get_value_store.assert_called_once()
+
+
 def test_inventory_common_azure():
     inventory = list(inventory_common_azure(PARSED_RESOURCES))
 

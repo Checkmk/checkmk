@@ -335,7 +335,9 @@ def check_resource_metrics(
 
         if threshold and threshold_levels:
             yield from _threshold_hit_for_time(
-                current_value=metric.value,
+                current_value=(
+                    metric_data.map_func(metric.value) if metric_data.map_func else metric.value
+                ),
                 threshold=threshold,
                 limits=threshold_levels,
                 now=now,

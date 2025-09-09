@@ -9,13 +9,13 @@ import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 </script>
 
 <template>
-  <CmkParagraph class="step-paragraph">
+  <CmkParagraph class="welcome-step-paragraph">
     <slot />
   </CmkParagraph>
 </template>
 
 <style scoped>
-.step-paragraph {
+.welcome-step-paragraph {
   margin-bottom: var(--spacing);
 }
 </style>

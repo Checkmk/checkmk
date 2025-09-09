@@ -15,6 +15,7 @@ import CmkHeading from '@/components/typography/CmkHeading.vue'
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .step-section-heading {
   margin-bottom: var(--spacing-half);
 }

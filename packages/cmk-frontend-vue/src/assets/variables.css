@@ -232,6 +232,8 @@
     --input-hover-bg-color: var(--ux-theme-4);
     --code-background-color: var(--color-daylight-grey-50);
     --wizard-progress-bar-background-color: var(--color-daylight-grey-60);
+    --headline-color: var(--ux-theme-4);
+    --db-content-bg-color: var(--ux-theme-1);
   }
 
   body[data-theme='modern-dark'] {
@@ -303,6 +305,8 @@
     --input-hover-bg-color: var(--ux-theme-4);
     --code-background-color: var(--color-midnight-grey-100);
     --wizard-progress-bar-background-color: var(--white);
+    --headline-color: var(--ux-theme-3);
+    --db-content-bg-color: var(--ux-theme-2);
   }
 }
 

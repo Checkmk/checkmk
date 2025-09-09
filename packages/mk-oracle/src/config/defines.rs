@@ -8,7 +8,7 @@ pub mod keys {
 
     pub const OPTIONS: &str = "options";
     pub const MAX_CONNECTIONS: &str = "max_connections";
-    pub const USE_PREINSTALLED_OCI: &str = "use_preinstalled_oci";
+    pub const USE_HOST_CLIENT: &str = "use_host_client";
     pub const IGNORE_DB_NAME: &str = "IGNORE_DB_NAME";
 
     pub const AUTHENTICATION: &str = "authentication";
@@ -81,6 +81,7 @@ pub mod values {
 pub mod defaults {
     use super::values;
     pub const MAX_CONNECTIONS: u32 = 6;
+    pub const USE_HOST_CLIENT: &str = "auto";
     pub const MAX_QUERIES: u32 = 16;
 
     pub const AUTH_TYPE: &str = values::STANDARD;

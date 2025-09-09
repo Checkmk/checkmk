@@ -480,6 +480,7 @@ mod tests {
 
     use super::*;
     use crate::config::authentication::AuthType;
+    use crate::config::options::UseHostClient;
     use crate::config::{section::SectionKind, yaml::test_tools::create_yaml};
     use crate::types::{MaxConnections, MaxQueries};
     mod data {
@@ -490,6 +491,8 @@ oracle:
   main: # mandatory, to be used if no specific config
     options:
       max_connections: 5
+      use_host_client: never
+      IGNORE_DB_NAME: 13 # wrong value for normal config, just to test params
     authentication:
       username: "foo"
       password: "bar"
@@ -677,6 +680,7 @@ piggyback:
     fn test_config_all() {
         let c = Config::from_string(data::TEST_CONFIG).unwrap().unwrap();
         assert_eq!(c.options().max_connections(), MaxConnections::from(5));
+        assert_eq!(c.options().use_host_client(), &UseHostClient::Never);
         assert_eq!(c.options().max_queries(), MaxQueries::from(16));
         let auth = c.auth();
         assert_eq!(auth.username(), "foo");
@@ -903,7 +907,13 @@ connection:
     #[test]
     fn test_config() {
         let c = Config::from_string(data::TEST_CONFIG).unwrap().unwrap();
-        assert_eq!(c.options(), &Options::new(5.into()));
+        assert_eq!(c.options().max_connections(), MaxConnections::from(5));
+        assert_eq!(c.options().max_queries(), MaxQueries::from(16));
+        assert_eq!(c.options().use_host_client(), &UseHostClient::Never);
+        assert_eq!(
+            c.options().params(),
+            &vec![(keys::IGNORE_DB_NAME.to_string(), 13)]
+        );
     }
 
     #[test]

@@ -50,8 +50,6 @@ def main() {
     def build_image = PUSH_TO_REGISTRY_ONLY!='true';
     def fake_windows_artifacts = params.FAKE_WINDOWS_ARTIFACTS;
 
-    def relative_job_name = "${branch_base_folder}/builders/build-cmk-distro-package";
-
     print(
         """
         |===== CONFIGURATION ===============================
@@ -137,7 +135,7 @@ def main() {
                 build_instance = smart_build(
                     // see global-defaults.yml, needs to run in minimal container
                     use_upstream_build: true,
-                    relative_job_name: "${branch_base_folder}/builders/build-cmk-distro-package",
+                    relative_job_name: "${branch_base_folder}/builders/trigger-cmk-distro-package",
                     build_params: [
                         CUSTOM_GIT_REF: effective_git_ref,
                         VERSION: params.VERSION,
@@ -161,7 +159,7 @@ def main() {
                 raiseOnError: true,
             ) {
                 copyArtifacts(
-                    projectName: "${branch_base_folder}/builders/build-cmk-distro-package",
+                    projectName: "${branch_base_folder}/builders/trigger-cmk-distro-package",
                     selector: specific(build_instance.getId()),
                     target: source_dir,
                     fingerprintArtifacts: true,

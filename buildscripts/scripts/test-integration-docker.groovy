@@ -39,7 +39,7 @@ def main() {
     def distro = "ubuntu-22.04";
     def fake_windows_artifacts = params.FAKE_WINDOWS_ARTIFACTS;
 
-    def relative_job_name = "${branch_base_folder}/builders/build-cmk-distro-package";
+    def relative_job_name = "${branch_base_folder}/builders/trigger-cmk-distro-package";
     def setup_values = single_tests.common_prepare(version: VERSION, make_target: make_target, docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD);
 
     stage("Prepare workspace") {
@@ -102,7 +102,7 @@ def main() {
                 build_instance = smart_build(
                     // see global-defaults.yml, needs to run in minimal container
                     use_upstream_build: true,
-                    relative_job_name: "${branch_base_folder}/builders/build-cmk-distro-package",
+                    relative_job_name: relative_job_name,
                     build_params: [
                         CUSTOM_GIT_REF: effective_git_ref,
                         VERSION: params.VERSION,
@@ -127,7 +127,7 @@ def main() {
                 raiseOnError: true,
             ) {
                 copyArtifacts(
-                    projectName: "${branch_base_folder}/builders/build-cmk-distro-package",
+                    projectName: relative_job_name,
                     selector: specific(build_instance.getId()),
                     target: source_dir,
                     fingerprintArtifacts: true,

@@ -84,7 +84,13 @@ def page_show_view(
         view = View(
             view_name, view_spec, context, UserPermissions.from_config(config, permission_registry)
         )
-        view.row_limit = get_limit()
+        view.row_limit = get_limit(
+            request_limit_mode=request.get_ascii_input_mandatory("limit", "soft"),
+            soft_query_limit=config.soft_query_limit,
+            may_ignore_soft_limit=user.may("general.ignore_soft_limit"),
+            hard_query_limit=config.hard_query_limit,
+            may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
+        )
 
         view.only_sites = get_only_sites_from_context(context)
 
@@ -633,14 +639,20 @@ def get_want_checkboxes() -> bool:
     return request.get_integer_input_mandatory("show_checkboxes", 0) == 1
 
 
-def get_limit() -> int | None:
+def get_limit(
+    *,
+    request_limit_mode: str,
+    soft_query_limit: int,
+    may_ignore_soft_limit: bool,
+    hard_query_limit: int,
+    may_ignore_hard_limit: bool,
+) -> int | None:
     """How many data rows may the user query?"""
-    limitvar = request.var("limit", "soft")
-    if limitvar == "hard" and user.may("general.ignore_soft_limit"):
-        return active_config.hard_query_limit
-    if limitvar == "none" and user.may("general.ignore_hard_limit"):
+    if request_limit_mode == "hard" and may_ignore_soft_limit:
+        return hard_query_limit
+    if request_limit_mode == "none" and may_ignore_hard_limit:
         return None
-    return active_config.soft_query_limit
+    return soft_query_limit
 
 
 def _link_to_folder_by_path(path: str) -> str:

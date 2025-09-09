@@ -818,23 +818,6 @@ def _compute_v_axis_min_max(
     return _VAxisMinMax(distance, (min_value, max_value))
 
 
-def _label_spec(
-    *,
-    position: float,
-    label_distance: float,
-    mirrored: bool,
-) -> tuple[float, float, int] | None:
-    f = math.modf(position / label_distance)[0]
-    if abs(f) <= 0.00000000001 or abs(f) >= 0.99999999999:
-        if mirrored:
-            label_value = abs(position)
-        else:
-            label_value = position
-
-        return (position, label_value, 2)
-    return None
-
-
 def render_labels(
     label_specs: Iterable[tuple[float, str, int]],
 ) -> tuple[list[VerticalAxisLabel], int]:

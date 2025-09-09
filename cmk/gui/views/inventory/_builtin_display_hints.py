@@ -96,19 +96,19 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
             "title": _l("Update possible"),
             "paint": "bool",
         },
-        ".hardware.memory.": {
-            "title": _l("Memory (RAM)"),
-            "keyorder": ["total_ram_usable", "total_swap", "total_vmalloc"],
-        },
-        ".hardware.memory.total_ram_usable": {
-            "title": _l("Total usable RAM"),
-            "paint": "bytes_rounded",
-        },
-        ".hardware.memory.total_swap": {"title": _l("Total swap space"), "paint": "bytes_rounded"},
-        ".hardware.memory.total_vmalloc": {
-            "title": _l("Virtual addresses for mapping"),
-            "paint": "bytes_rounded",
-        },
+        # MIGRATED ".hardware.memory.": {
+        # MIGRATED     "title": _l("Memory (RAM)"),
+        # MIGRATED     "keyorder": ["total_ram_usable", "total_swap", "total_vmalloc"],
+        # MIGRATED },
+        # MIGRATED ".hardware.memory.total_ram_usable": {
+        # MIGRATED     "title": _l("Total usable RAM"),
+        # MIGRATED     "paint": "bytes_rounded",
+        # MIGRATED },
+        # MIGRATED ".hardware.memory.total_swap": {"title": _l("Total swap space"), "paint": "bytes_rounded"},
+        # MIGRATED ".hardware.memory.total_vmalloc": {
+        # MIGRATED     "title": _l("Virtual addresses for mapping"),
+        # MIGRATED     "paint": "bytes_rounded",
+        # MIGRATED },
         ".hardware.memory.arrays:": {
             "title": _l("Arrays (Controllers)"),
             "keyorder": ["maximum_capacity"],

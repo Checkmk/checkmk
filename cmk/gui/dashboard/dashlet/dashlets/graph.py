@@ -14,11 +14,12 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
+from cmk.graphing.v1 import graphs as graphs_api
 from cmk.gui import sites
 from cmk.gui.config import active_config, Config
 from cmk.gui.dashboard.type_defs import DashletId, DashletSize
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
-from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api
+from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api, RegisteredMetric
 from cmk.gui.graphing._graph_render_config import (
     GraphRenderConfig,
     GraphRenderOptions,
@@ -446,17 +447,34 @@ def graph_templates_autocompleter(
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the
     completions_params to get the list of choices"""
+    return _graph_templates_autocompleter_testable(
+        config=config,
+        value_entered_by_user=value_entered_by_user,
+        params=params,
+        registered_metrics=metrics_from_api,
+        registered_graphs=graphs_from_api,
+    )
+
+
+def _graph_templates_autocompleter_testable(
+    *,
+    config: object,
+    value_entered_by_user: str,
+    params: Mapping[str, Any],
+    registered_metrics: Mapping[str, RegisteredMetric],
+    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
+) -> Choices:
     if not params.get("context") and params.get("show_independent_of_context") is True:
         return _sorted_matching_graph_template_choices(
             value_entered_by_user,
-            get_graph_template_choices(graphs_from_api),
+            get_graph_template_choices(registered_graphs),
         )
 
     graph_template_choices, single_metric_template_choices = (
         graph_and_single_metric_templates_choices_for_context(
             params["context"],
-            metrics_from_api,
-            graphs_from_api,
+            registered_metrics,
+            registered_graphs,
         )
     )
 

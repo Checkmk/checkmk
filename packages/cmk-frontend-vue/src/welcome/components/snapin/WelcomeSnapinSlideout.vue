@@ -79,6 +79,7 @@ function openSlideIn() {
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .full-view-button {
   margin-bottom: var(--spacing);
 }

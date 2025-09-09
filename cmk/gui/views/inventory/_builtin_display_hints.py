@@ -28,7 +28,7 @@ from .registry import InventoryHintRegistry
 # fmt: off
 def register(inventory_displayhints: InventoryHintRegistry) -> None:
     inventory_displayhints.update({
-        ".hardware.": {"title": _l("Hardware"), "icon": "hardware"},
+        # MIGRATED ".hardware.": {"title": _l("Hardware"), "icon": "hardware"},
         ".hardware.chassis.": {"title": _l("Chassis")},
         ".hardware.cpu.": {
             "title": _l("Processor"),

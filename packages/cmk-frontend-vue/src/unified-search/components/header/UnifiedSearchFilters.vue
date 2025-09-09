@@ -136,9 +136,9 @@ searchUtils.input.onEmptyBackspace(() => {
   <div
     v-if="searchUtils.input.suggestionsActive.value === true"
     v-click-outside="hideFilterSuggestions"
-    class="unified-search-filter-suggestions"
+    class="unified-search-filters__suggestions"
   >
-    <ul ref="unified-search-filter-suggestions" class="unified-search-filter-suggestions-list">
+    <ul ref="unified-search-filters__suggestions" class="unified-search-filters__suggestions-list">
       <FilterOptionEntry
         v-for="(opt, idx) in getFilterOptions()"
         :key="opt.type.concat(opt.value)"
@@ -153,11 +153,11 @@ searchUtils.input.onEmptyBackspace(() => {
     <CmkAlertBox
       v-if="getFilterOptions().length === 0"
       variant="info"
-      class="unified-search-filter-suggestions-info not-found"
+      class="unified-search-filters__suggestions-info not-found"
     >
       {{ _t('No filters can be applied to your current search query.') }}
     </CmkAlertBox>
-    <CmkAlertBox variant="info" class="unified-search-filter-suggestions-info">
+    <CmkAlertBox variant="info" class="unified-search-filters__suggestions-info">
       {{
         _t(
           'Search with regular expressions for menu entries, hosts, services or host and service groups.'
@@ -171,7 +171,7 @@ searchUtils.input.onEmptyBackspace(() => {
 </template>
 
 <style scoped>
-.unified-search-filter-suggestions {
+.unified-search-filters__suggestions {
   position: absolute;
   top: 30px;
   left: var(--spacing-half);
@@ -184,14 +184,14 @@ searchUtils.input.onEmptyBackspace(() => {
   z-index: +1;
 }
 
-.unified-search-filter-suggestions-list {
+.unified-search-filters__suggestions-list {
   position: relative;
   border: 1px solid var(--ux-theme-6);
   padding: 0;
   margin: 0;
 }
 
-.unified-search-filter-suggestions-info {
+.unified-search-filters__suggestions-info {
   border: 1px solid var(--ux-theme-6);
   border-top: 0;
   margin: 0;
@@ -200,6 +200,7 @@ searchUtils.input.onEmptyBackspace(() => {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   &.not-found {
     border-radius: 0;
   }

@@ -6,6 +6,7 @@ new_local_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:local.
 
 repo_license = use_repo_rule("//bazel/rules:repo_license.bzl", "detect_repo_license")
 
+bazel_dep(name = "asio", version = "1.34.2.cmk.1")
 bazel_dep(name = "aspect_bazel_lib", version = "2.17.1")
 bazel_dep(name = "aspect_rules_js", version = "2.3.7")
 bazel_dep(name = "aspect_rules_lint", version = "1.7.0")

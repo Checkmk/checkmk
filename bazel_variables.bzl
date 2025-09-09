@@ -41,6 +41,7 @@ edition_deps = {
         "//non-free/packages/cmk-relay-engine:pkg_tar",
         "//omd/packages/jaeger:pkg_tar",
         "//omd/packages/nagvis:pkg_tar",
+        "//omd/packages/enterprise",
     ],
     "cee": [
         "//non-free/packages/cmk-mknotifyd:pkg_tar",
@@ -48,6 +49,7 @@ edition_deps = {
         "//non-free/packages/cmk-update-agent:pkg_tar",
         "//omd/packages/jaeger:pkg_tar",
         "//omd/packages/nagvis:pkg_tar",
+        "//omd/packages/enterprise",
     ],
     "cme": [
         "//non-free/packages/cmk-mknotifyd:pkg_tar",
@@ -57,6 +59,7 @@ edition_deps = {
         "//non-free/packages/cmk-relay-engine:pkg_tar",
         "//omd/packages/jaeger:pkg_tar",
         "//omd/packages/nagvis:pkg_tar",
+        "//omd/packages/enterprise",
     ],
     "cse": [
         "//non-free/packages/cmk-mknotifyd:pkg_tar",
@@ -64,6 +67,7 @@ edition_deps = {
         "//non-free/packages/cmk-relay-engine:pkg_tar",
         "//non-free/packages/cmk-otel-collector:pkg_tar",
         "//non-free/packages/cmk-update-agent:pkg_tar",
+        "//omd/packages/enterprise",
     ],
 }
 
@@ -88,6 +92,7 @@ edition_skel_permissions = {
         "//omd/packages/nagios:skel.permissions",
         "//omd/packages/rabbitmq:skel.permissions",
         "//omd/packages/nagvis:skel.permissions",
+        "//omd/packages/enterprise:skel.permissions",
     ],
     "cee": [
         "//omd/packages/maintenance:skel.permissions",
@@ -99,6 +104,7 @@ edition_skel_permissions = {
         "//omd/packages/nagios:skel.permissions",
         "//omd/packages/rabbitmq:skel.permissions",
         "//omd/packages/nagvis:skel.permissions",
+        "//omd/packages/enterprise:skel.permissions",
     ],
     "cme": [
         "//omd/packages/maintenance:skel.permissions",
@@ -110,6 +116,7 @@ edition_skel_permissions = {
         "//omd/packages/nagios:skel.permissions",
         "//omd/packages/rabbitmq:skel.permissions",
         "//omd/packages/nagvis:skel.permissions",
+        "//omd/packages/enterprise:skel.permissions",
     ],
     "cse": [
         "//omd/packages/maintenance:skel.permissions",
@@ -119,5 +126,6 @@ edition_skel_permissions = {
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
         "//omd/packages/nagios:skel.permissions",
         "//omd/packages/rabbitmq:skel.permissions",
+        "//omd/packages/enterprise:skel.permissions",
     ],
 }

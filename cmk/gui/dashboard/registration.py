@@ -28,7 +28,12 @@ from .page_edit_dashboard import page_edit_dashboard
 from .page_edit_dashboard_actions import ajax_dashlet_pos, page_clone_dashlet, page_delete_dashlet
 from .page_edit_dashboards import page_edit_dashboards
 from .page_edit_dashlet import EditDashletPage
-from .page_show_dashboard import ajax_dashlet, AjaxInitialDashboardFilters, page_dashboard
+from .page_show_dashboard import (
+    ajax_dashlet,
+    AjaxInitialDashboardFilters,
+    page_dashboard,
+    page_dashboard_app,
+)
 from .visual_type import VisualTypeDashboards
 
 
@@ -53,7 +58,9 @@ def register(
     )
     page_registry.register(PageEndpoint("edit_dashlet", EditDashletPage))
     page_registry.register(PageEndpoint("delete_dashlet", page_delete_dashlet))
+    # TODO: old dashboard page should be removed
     page_registry.register(PageEndpoint("dashboard", page_dashboard))
+    page_registry.register(PageEndpoint("dashboard_wip", page_dashboard_app))
     page_registry.register(PageEndpoint("dashboard_dashlet", ajax_dashlet))
     page_registry.register(PageEndpoint("edit_dashboards", page_edit_dashboards))
     page_registry.register(PageEndpoint("create_dashboard", page_create_dashboard))

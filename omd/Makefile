@@ -29,16 +29,22 @@ PACKAGES := \
     check_mk \
     omd
 
+ifeq ($(EDITION),enterprise)
+PACKAGES += enterprise
+endif
 ifeq ($(EDITION),managed)
+PACKAGES += enterprise
 PACKAGES += cloud
 PACKAGES += managed
 PACKAGES += otel-collector
 endif
 ifeq ($(EDITION),cloud)
+PACKAGES += enterprise
 PACKAGES += cloud
 PACKAGES += otel-collector
 endif
 ifeq ($(EDITION),saas)
+PACKAGES += enterprise
 PACKAGES += cloud
 PACKAGES += saas
 endif

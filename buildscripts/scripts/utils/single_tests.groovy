@@ -73,6 +73,7 @@ def fetch_package(Map args) {
                 CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: args.docker_tag,
             ],
             dest: args.download_dir,
+            no_remove_others: args.no_remove_others,    // do not delete other files in the dest dir
             no_venv: true,          // run ci-artifacts call without venv
             omit_build_venv: true,  // do not check or build a venv first
         );

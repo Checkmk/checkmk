@@ -158,8 +158,8 @@ def active_context_from_request(infos: SingleInfos, context: VisualContext) -> V
     if request.has_var("_active"):
         return vs_filterlist.from_html_vars("")
 
-    # Test if filters are in url and rescostruct them. This is because we
-    # contruct crosslinks manually without the filter menu.
+    # Test if filters are in url and reconstruct them. This is because we
+    # construct crosslinks manually without the filter menu.
     # We must merge with the view context as many views have defaults, which
     # are not included in the crosslink.
     if flag := _active_filter_flag(set(vs_filterlist._filters.keys()), request.itervars()):
@@ -167,6 +167,24 @@ def active_context_from_request(infos: SingleInfos, context: VisualContext) -> V
             request.set_var("_active", flag)
             return get_merged_context(context, vs_filterlist.from_html_vars(""))
     return context
+
+
+def requested_context_from_request(infos: SingleInfos) -> VisualContext:
+    """Returns the filter context as requested by the user in the URL
+
+    Differs from active_context_from_request() as it does not merge with the view context.
+    """
+    vs_filterlist = VisualFilterListWithAddPopup(info_list=infos)
+    if request.has_var("_active"):
+        return vs_filterlist.from_html_vars("")
+
+    # Test if filters are in url and reconstruct them. This is because we
+    # construct cross-links manually without the filter menu.
+    if flag := _active_filter_flag(set(vs_filterlist._filters.keys()), request.itervars()):
+        with request.stashed_vars():
+            request.set_var("_active", flag)
+            return vs_filterlist.from_html_vars("")
+    return {}
 
 
 def _active_filter_flag(allowed_filters: set[str], url_vars: Iterator[tuple[str, str]]) -> str:

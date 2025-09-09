@@ -83,8 +83,10 @@ class MetricData(NamedTuple):
     # Optionally, average the value over time
     average_mins_param: str = ""
     # Optionally, allow for monitoring a sustained threshold
-    sustained_threshold_param: str = ""
-    sustained_levels_time_param: str = ""
+    # The Callable looks weird but allows for pulling params out of deeply nested rulespecs
+    # e.g. sustained_threshold_param=lambda params: params.get("time_based", {}).get("threshold")
+    sustained_threshold_param: str | Callable[[Mapping[str, Any]], str] = ""
+    sustained_levels_time_param: str | Callable[[Mapping[str, Any]], str] = ""
     sustained_level_direction: SustainedLevelDirection = SustainedLevelDirection.UPPER_BOUND
     sustained_label: str | None = None
 
@@ -321,14 +323,21 @@ def check_resource_metrics(
         if not metric:
             continue
 
-        if (
-            metric_data.sustained_threshold_param
-            and (threshold := params.get(metric_data.sustained_threshold_param)) is not None
-        ):
+        if isinstance(metric_data.sustained_threshold_param, str):
+            threshold = params.get(metric_data.sustained_threshold_param)
+        else:
+            threshold = metric_data.sustained_threshold_param(params)
+
+        if isinstance(metric_data.sustained_levels_time_param, str):
+            threshold_levels = params.get(metric_data.sustained_levels_time_param)
+        else:
+            threshold_levels = metric_data.sustained_levels_time_param(params)
+
+        if threshold and threshold_levels:
             yield from _threshold_hit_for_time(
                 current_value=metric.value,
                 threshold=threshold,
-                limits=params.get(metric_data.sustained_levels_time_param),
+                limits=threshold_levels,
                 now=now,
                 value_store=get_value_store(),
                 value_store_key=f"{metric_data.metric_name}_sustained_threshold",
@@ -556,7 +565,7 @@ def _threshold_hit_for_time[NumberT: (int, float)](
     current_value: float,
     threshold: float,
     # We assume v2-style limits
-    limits: LevelsT[NumberT] | None,
+    limits: LevelsT[NumberT],
     now: float,
     value_store: MutableMapping[str, Any],
     value_store_key: str,

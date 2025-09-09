@@ -22,9 +22,8 @@ from cmk.gui.graphing._unit import user_specific_unit
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.logged_in import user
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.type_defs import Row, VisualContext
+from cmk.gui.type_defs import Row
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.visuals import livestatus_query_bare
 from cmk.utils.servicename import ServiceName
 
 from ._from_api import RegisteredMetric
@@ -355,35 +354,6 @@ def graph_and_single_metric_template_choices_for_metrics(
                     _("Metric: %s") % translated_metric.title,
                 )
             )
-    return graph_template_choices, single_metric_template_choices
-
-
-def graph_and_single_metric_templates_choices_for_context(
-    context: VisualContext,
-    registered_metrics: Mapping[str, RegisteredMetric],
-    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
-) -> tuple[list[GraphTemplateChoice], list[GraphTemplateChoice]]:
-    graph_template_choices: list[GraphTemplateChoice] = []
-    single_metric_template_choices: list[GraphTemplateChoice] = []
-
-    for row in livestatus_query_bare(
-        "service",
-        context,
-        ["service_check_command", "service_perf_data", "service_metrics"],
-    ):
-        graph_template_choices_for_row, single_metric_template_choices_for_row = (
-            graph_and_single_metric_template_choices_for_metrics(
-                translated_metrics_from_row(
-                    row,
-                    registered_metrics,
-                ),
-                registered_metrics,
-                registered_graphs,
-            )
-        )
-        graph_template_choices.extend(graph_template_choices_for_row)
-        single_metric_template_choices.extend(single_metric_template_choices_for_row)
-
     return graph_template_choices, single_metric_template_choices
 
 

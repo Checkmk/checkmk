@@ -6,7 +6,6 @@
 import math
 import time
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
-from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
 from itertools import zip_longest
@@ -658,12 +657,6 @@ def _compute_labels_from_api(
             raise ValueError((min_y, max_y))
 
 
-@dataclass(frozen=True)
-class _VAxisMinMax:
-    distance: float
-    label_range: tuple[float, float]
-
-
 # Compute the displayed vertical range and the labelling
 # and scale of the vertical axis.
 # If mirrored == True, then the graph uses the negative
@@ -683,7 +676,7 @@ def _compute_graph_v_axis(
     # distance   -> amount of values visible in vaxis (max_value - min_value)
     # min_value  -> value of lowest v axis label (taking extra margin and zooming into account)
     # max_value  -> value of highest v axis label (taking extra margin and zooming into account)
-    v_axis_min_max = _compute_v_axis_min_max(
+    v_axis_min, v_axis_max = _compute_v_axis_min_max(
         explicit_vertical_range,
         layouted_curves,
         graph_data_range.vertical_range,
@@ -694,13 +687,13 @@ def _compute_graph_v_axis(
         unit_spec.formatter,
         height_ex,
         mirrored,
-        min_y=v_axis_min_max.label_range[0],
-        max_y=v_axis_min_max.label_range[1],
+        min_y=v_axis_min,
+        max_y=v_axis_max,
     )
     label_positions = [l.position for l in labels]
     label_range = (
-        min([v_axis_min_max.label_range[0]] + label_positions),
-        max([v_axis_min_max.label_range[1]] + label_positions),
+        min([v_axis_min, *label_positions]),
+        max([v_axis_max, *label_positions]),
     )
     rendered_labels = [
         VerticalAxisLabel(position=label.position, text=label.text, line_width=2)
@@ -781,7 +774,7 @@ def _compute_v_axis_min_max(
     graph_data_vrange: tuple[float, float] | None,
     mirrored: bool,
     height: SizeEx,
-) -> _VAxisMinMax:
+) -> tuple[float, float]:
     # An explizit range set by user zoom has always precedence!
     min_value, max_value = graph_data_vrange or _compute_min_max(
         explicit_vertical_range, layouted_curves
@@ -802,12 +795,10 @@ def _compute_v_axis_min_max(
         else:
             max_value = min_value + 1
 
-    distance = max_value - min_value
-
     # Make range a little bit larger, approx by 0.5 ex. But only if no zooming
     # is being done.
     if not graph_data_vrange:
-        distance_per_ex = distance / height
+        distance_per_ex = (max_value - min_value) / height
 
         # Let displayed range have a small border
         if min_value != 0:
@@ -815,7 +806,7 @@ def _compute_v_axis_min_max(
         if max_value != 0:
             max_value += 0.5 * distance_per_ex
 
-    return _VAxisMinMax(distance, (min_value, max_value))
+    return min_value, max_value
 
 
 def render_labels(

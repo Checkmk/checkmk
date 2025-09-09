@@ -18,7 +18,6 @@ from cmk.gui.graphing._artwork import (
     _halfstep_interpolation,
     _t_axis_labels_seconds,
     _t_axis_labels_week,
-    _VAxisMinMax,
     Curve,
     LayoutedCurve,
     LayoutedCurveArea,
@@ -45,7 +44,7 @@ from cmk.gui.unit_formatter import AutoPrecision, DecimalFormatter, Label
             [],
             None,
             False,
-            _VAxisMinMax(1.0, (0.0, 1.5)),
+            (0.0, 1.5),
             id="default",
         ),
         pytest.param(
@@ -53,7 +52,7 @@ from cmk.gui.unit_formatter import AutoPrecision, DecimalFormatter, Label
             [],
             None,
             True,
-            _VAxisMinMax(2.0, (-2.0, 2.0)),
+            (-2.0, 2.0),
             id="default-mirrored",
         ),
         #
@@ -62,7 +61,7 @@ from cmk.gui.unit_formatter import AutoPrecision, DecimalFormatter, Label
             [],
             None,
             False,
-            _VAxisMinMax(0.01, (0.005, 0.025)),
+            (0.005, 0.025),
             id="small-pos",
         ),
         pytest.param(
@@ -70,7 +69,7 @@ from cmk.gui.unit_formatter import AutoPrecision, DecimalFormatter, Label
             [],
             None,
             True,
-            _VAxisMinMax(0.04, (-0.04, 0.04)),
+            (-0.04, 0.04),
             id="small-pos-mirrored",
         ),
         pytest.param(
@@ -78,7 +77,7 @@ from cmk.gui.unit_formatter import AutoPrecision, DecimalFormatter, Label
             [],
             None,
             False,
-            _VAxisMinMax(0.03, (-0.025, 0.035)),
+            (-0.025, 0.035),
             id="small-neg",
         ),
         pytest.param(
@@ -86,7 +85,7 @@ from cmk.gui.unit_formatter import AutoPrecision, DecimalFormatter, Label
             [],
             None,
             True,
-            _VAxisMinMax(0.04, (-0.04, 0.04)),
+            (-0.04, 0.04),
             id="small-neg-mirrored",
         ),
         #
@@ -95,7 +94,7 @@ from cmk.gui.unit_formatter import AutoPrecision, DecimalFormatter, Label
             [],
             None,
             False,
-            _VAxisMinMax(15.0, (-12.5, 17.5)),
+            (-12.5, 17.5),
             id="explicit_vertical_range",
         ),
         pytest.param(
@@ -103,7 +102,7 @@ from cmk.gui.unit_formatter import AutoPrecision, DecimalFormatter, Label
             [],
             None,
             True,
-            _VAxisMinMax(20.0, (-20.0, 20.0)),
+            (-20.0, 20.0),
             id="explicit_vertical_range-mirrored",
         ),
         pytest.param(
@@ -119,7 +118,7 @@ from cmk.gui.unit_formatter import AutoPrecision, DecimalFormatter, Label
             ],
             None,
             False,
-            _VAxisMinMax(15.0, (-12.5, 17.5)),
+            (-12.5, 17.5),
             id="layouted_curves",
         ),
         pytest.param(
@@ -135,7 +134,7 @@ from cmk.gui.unit_formatter import AutoPrecision, DecimalFormatter, Label
             ],
             None,
             True,
-            _VAxisMinMax(20.0, (-20.0, 20.0)),
+            (-20.0, 20.0),
             id="layouted_curves-mirrored",
         ),
         pytest.param(
@@ -143,7 +142,7 @@ from cmk.gui.unit_formatter import AutoPrecision, DecimalFormatter, Label
             [],
             (-5.0, 10.0),
             False,
-            _VAxisMinMax(15.0, (-5.0, 10.0)),
+            (-5.0, 10.0),
             id="graph_data_vrange",
         ),
         pytest.param(
@@ -151,7 +150,7 @@ from cmk.gui.unit_formatter import AutoPrecision, DecimalFormatter, Label
             [],
             (-5.0, 10.0),
             True,
-            _VAxisMinMax(20.0, (-10.0, 10.0)),
+            (-10.0, 10.0),
             id="graph_data_vrange-mirrored",
         ),
     ],
@@ -161,7 +160,7 @@ def test__compute_v_axis_min_max(
     layouted_curves: Sequence[LayoutedCurve],
     graph_data_vrange: tuple[float, float] | None,
     mirrored: bool,
-    expected_v_axis_min_max: _VAxisMinMax,
+    expected_v_axis_min_max: tuple[float, float],
 ) -> None:
     assert (
         _compute_v_axis_min_max(
@@ -190,7 +189,7 @@ def test__compute_v_axis_min_max(
                 )
             ],
             None,
-            _VAxisMinMax(1500.0, (-1250.0, 1750.0)),
+            (-1250.0, 1750.0),
             id="explicit_vertical_range_fixed-and-layouted_curves",
         ),
         pytest.param(
@@ -205,7 +204,7 @@ def test__compute_v_axis_min_max(
                 )
             ],
             None,
-            _VAxisMinMax(1500.0, (-1250.0, 1750.0)),
+            (-1250.0, 1750.0),
             id="explicit_vertical_range_minimal-and-layouted_curves_smaller",
         ),
         pytest.param(
@@ -220,7 +219,7 @@ def test__compute_v_axis_min_max(
                 )
             ],
             None,
-            _VAxisMinMax(3000.0, (-2500.0, 3500.0)),
+            (-2500.0, 3500.0),
             id="explicit_vertical_range_minimal-and-layouted_curves_larger",
         ),
         pytest.param(
@@ -235,14 +234,14 @@ def test__compute_v_axis_min_max(
                 )
             ],
             None,
-            _VAxisMinMax(1000.0, (500.0, 2500.0)),
+            (500.0, 2500.0),
             id="layouted_curves_without_zero",
         ),
         pytest.param(
             FixedVerticalRange(min=-500.0, max=1000.0),
             [],
             (-5.0, 10.0),
-            _VAxisMinMax(15.0, (-5.0, 10.0)),
+            (-5.0, 10.0),
             id="graph_data_vrange-precedence-over-explicit_vertical_range",
         ),
         pytest.param(
@@ -257,7 +256,7 @@ def test__compute_v_axis_min_max(
                 )
             ],
             (-5.0, 10.0),
-            _VAxisMinMax(15.0, (-5.0, 10.0)),
+            (-5.0, 10.0),
             id="graph_data_vrange-precedence-over-layouted_curves",
         ),
     ],
@@ -266,7 +265,7 @@ def test__compute_v_axis_min_max_precedence(
     explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None,
     layouted_curves: Sequence[LayoutedCurve],
     graph_data_vrange: tuple[float, float] | None,
-    expected_v_axis_min_max: _VAxisMinMax,
+    expected_v_axis_min_max: tuple[float, float],
 ) -> None:
     assert (
         _compute_v_axis_min_max(

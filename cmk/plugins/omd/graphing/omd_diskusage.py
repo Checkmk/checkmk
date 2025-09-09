@@ -77,6 +77,13 @@ metric_omd_size = metrics.Metric(
     color=metrics.Color.DARK_BROWN,
 )
 
+metric_omd_otel_collector_size = metrics.Metric(
+    name="omd_otel_collector_size",
+    title=Title("Size of OTel Collector"),
+    unit=UNIT_BYTES,
+    color=metrics.Color.LIGHT_BLUE,
+)
+
 graph_omd_fileusage = graphs.Graph(
     name="omd_fileusage",
     title=Title("OMD filesystem usage"),
@@ -90,6 +97,7 @@ graph_omd_fileusage = graphs.Graph(
         "omd_history_size",
         "omd_core_size",
         "omd_inventory_size",
+        "omd_otel_collector_size",
     ],
     simple_lines=["omd_size"],
     optional=[
@@ -102,5 +110,6 @@ graph_omd_fileusage = graphs.Graph(
         "omd_history_size",
         "omd_core_size",
         "omd_inventory_size",
+        "omd_otel_collector_size",
     ],
 )

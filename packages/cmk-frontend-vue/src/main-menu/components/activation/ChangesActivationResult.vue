@@ -12,7 +12,7 @@ const props = defineProps<{ type: 'success' | 'warning'; title: string; info: st
 
 <template>
   <div>
-    <div class="cmk-changes-activation-result">
+    <div class="mm-changes-activation-result">
       <CmkIcon v-if="props.type === 'success'" variant="plain" size="xxlarge" name="save" />
       <CmkIcon
         v-if="props.type === 'warning'"
@@ -20,7 +20,7 @@ const props = defineProps<{ type: 'success' | 'warning'; title: string; info: st
         size="xxlarge"
         name="validation-error"
       />
-      <span class="cmk-changes-activation-result-title">{{ props.title }}</span>
+      <span class="mm-changes-activation-result__title">{{ props.title }}</span>
 
       <span>{{ props.info }}</span>
     </div>
@@ -28,7 +28,7 @@ const props = defineProps<{ type: 'success' | 'warning'; title: string; info: st
 </template>
 
 <style scoped>
-.cmk-changes-activation-result {
+.mm-changes-activation-result {
   display: flex;
   padding: 0 29px;
   flex-direction: column;
@@ -38,7 +38,7 @@ const props = defineProps<{ type: 'success' | 'warning'; title: string; info: st
   align-self: stretch;
 }
 
-.cmk-changes-activation-result-title {
+.mm-changes-activation-result__title {
   font-weight: var(--font-weight-bold);
 }
 </style>

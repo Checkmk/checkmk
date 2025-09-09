@@ -9,7 +9,8 @@ oracle:
     options: # optional
       max_connections: 6 # optional, default: absent, 6
       max_queries: 16 # optional, for the future use
-      preinstalled_oci: no # optional, default: no, values: auto, no, "/path/to/oci"
+      use_host_client: never # optional, default: auto, values: auto, never, always, "path-to-oci-lib"
+      IGNORE_DB_NAME: 0 # optional, default: 0, values: 0, 1. If 1, will not check the DB name against the instance name
     authentication: # mandatory
       username: "foo" # mandatory if not using wallet, examples: "mydbuser", "c##multitenantuser"
       password: "bar" # optional

@@ -8,9 +8,36 @@ use crate::types::{MaxConnections, MaxQueries, SqlBindParam};
 use anyhow::Result;
 
 #[derive(PartialEq, Debug, Clone)]
+pub enum UseHostClient {
+    Always,
+    Never,
+    Auto,
+    Path(String),
+}
+
+impl Default for UseHostClient {
+    fn default() -> Self {
+        UseHostClient::from_str(defaults::USE_HOST_CLIENT).unwrap()
+    }
+}
+
+impl UseHostClient {
+    fn from_str(s: &str) -> Option<Self> {
+        match s.to_lowercase().as_str() {
+            "always" => Some(UseHostClient::Always),
+            "never" => Some(UseHostClient::Never),
+            "auto" => Some(UseHostClient::Auto),
+            _ if s.starts_with('/') || s.contains('\\') => Some(UseHostClient::Path(s.to_string())),
+            _ => None,
+        }
+    }
+}
+
+#[derive(PartialEq, Debug, Clone)]
 pub struct Options {
     max_connections: MaxConnections,
     max_queries: MaxQueries,
+    use_host_client: UseHostClient,
     params: Vec<SqlBindParam>,
 }
 
@@ -19,6 +46,7 @@ impl Default for Options {
         Self {
             max_connections: defaults::MAX_CONNECTIONS.into(),
             max_queries: defaults::MAX_QUERIES.into(),
+            use_host_client: UseHostClient::default(),
             params: vec![(keys::IGNORE_DB_NAME.to_string(), 0)],
         }
     }
@@ -29,6 +57,7 @@ impl Options {
         Self {
             max_connections,
             max_queries: defaults::MAX_QUERIES.into(),
+            use_host_client: UseHostClient::default(),
             params: vec![(keys::IGNORE_DB_NAME.to_string(), 0)],
         }
     }
@@ -41,9 +70,14 @@ impl Options {
         self.max_queries.clone()
     }
 
+    pub fn use_host_client(&self) -> &UseHostClient {
+        &self.use_host_client
+    }
+
     pub fn params(&self) -> &Vec<SqlBindParam> {
         &self.params
     }
+
     pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>> {
         let options = yaml.get(keys::OPTIONS);
         if options.is_badvalue() {
@@ -59,6 +93,13 @@ impl Options {
                 })
                 .into(),
             max_queries: defaults::MAX_QUERIES.into(),
+            use_host_client: UseHostClient::from_str(
+                options
+                    .get_string(keys::USE_HOST_CLIENT)
+                    .unwrap_or_default()
+                    .as_str(),
+            )
+            .unwrap_or_default(),
             params: vec![(
                 keys::IGNORE_DB_NAME.to_string(),
                 options
@@ -79,11 +120,13 @@ mod tests {
         const OPTIONS_YAML: &str = r"
 options:   
     max_connections: 100
+    use_host_client: always
     IGNORE_DB_NAME: 1
     ";
         let yaml = create_yaml(OPTIONS_YAML);
         let options = Options::from_yaml(&yaml).unwrap().unwrap();
         assert_eq!(options.max_connections(), MaxConnections(100));
+        assert_eq!(options.use_host_client(), &UseHostClient::Always);
         assert_eq!(options.max_queries(), defaults::MAX_QUERIES.into());
         assert_eq!(
             options.params(),
@@ -95,10 +138,39 @@ options:
     fn test_default_options() {
         let options = Options::default();
         assert_eq!(options.max_connections(), defaults::MAX_CONNECTIONS.into());
+        assert_eq!(options.use_host_client(), &UseHostClient::default());
         assert_eq!(options.max_queries(), defaults::MAX_QUERIES.into());
         assert_eq!(
             options.params(),
             &vec![(keys::IGNORE_DB_NAME.to_string(), 0)]
         );
+    }
+    #[test]
+    fn test_default_use_host_client() {
+        assert_eq!(UseHostClient::default(), UseHostClient::Auto);
+    }
+    #[test]
+    fn test_use_host_client_parser() {
+        assert_eq!(
+            UseHostClient::from_str("always").unwrap(),
+            UseHostClient::Always
+        );
+        assert_eq!(
+            UseHostClient::from_str("never").unwrap(),
+            UseHostClient::Never
+        );
+        assert_eq!(
+            UseHostClient::from_str("auto").unwrap(),
+            UseHostClient::Auto
+        );
+        assert_eq!(
+            UseHostClient::from_str("/p").unwrap(),
+            UseHostClient::Path("/p".to_string())
+        );
+        assert_eq!(
+            UseHostClient::from_str("c:\\P").unwrap(),
+            UseHostClient::Path("c:\\P".to_string())
+        );
+        assert!(UseHostClient::from_str("trash").is_none());
     }
 }

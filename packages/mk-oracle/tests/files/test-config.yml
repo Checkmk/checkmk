@@ -9,6 +9,7 @@ orasql:
     options: # optional
       max_connections: 6 # optional, default: absent, 6
       max_queries: 16 # optional, for the future use
+      use_host_oci: auto # optional, default: no, values: auto, never, always, "path-to-oci-lib"
   target: # mandatory
     connection:
       name: localhost

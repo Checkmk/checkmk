@@ -13,6 +13,7 @@ export type CheckboxGroupConfig = components['schemas']['CheckboxGroupComponentM
 export type DropdownConfig = components['schemas']['DropdownComponentModel']
 export type DynamicDropdownConfig = components['schemas']['DynamicDropdownComponentModel']
 export type HiddenConfig = components['schemas']['HiddenComponentModel']
+export type LabelQueryBuilderConfig = components['schemas']['LabelGroupFilterComponentModel']
 export type RadioButtonConfig = components['schemas']['RadioButtonComponentModel']
 export type SliderConfig = components['schemas']['SliderComponentModel']
 export type TextInputConfig = components['schemas']['TextInputComponentModel']

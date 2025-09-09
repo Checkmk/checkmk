@@ -70,7 +70,7 @@ const tooltipOpen = ref(true)
               variant: 'optional'
             }
           ]"
-          class="agent-download-dialog__dialog"
+          class="setup-agent-download-dialog__dialog"
         />
       </TooltipContent>
     </Tooltip>
@@ -98,10 +98,11 @@ const tooltipOpen = ref(true)
 </template>
 
 <style scoped>
-.agent-download-dialog__dialog {
+.setup-agent-download-dialog__dialog {
   margin: 0 !important;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .tooltip-close {
   position: absolute;
   top: 2px;

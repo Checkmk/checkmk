@@ -28,6 +28,7 @@ import string
 import sys
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
 from enum import auto, Enum, StrEnum
 from multiprocessing import Lock
 from pathlib import Path
@@ -47,6 +48,13 @@ from cmk.plugins.azure_v2.special_agent.azure_api_client import (
     NoConsumptionAPIError,
     RateLimitException,
     SharedSessionApiClient,
+)
+from cmk.plugins.azure_v2.special_agent.azure_metrics import (
+    Aggregations,
+    ALL_METRICS,
+    AzureMetric,
+    Intervals,
+    OPTIONAL_METRICS,
 )
 from cmk.special_agents.v0_unstable.agent_common import special_agent_main
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
@@ -71,204 +79,6 @@ SUPPORTED_FLEXIBLE_DATABASE_SERVER_RESOURCE_TYPES = frozenset(
         "Microsoft.DBforPostgreSQL/flexibleServers",
     }
 )
-
-ALL_METRICS: dict[str, list[tuple[str, str, str]]] = {
-    # to add a new metric, just add a made up name, run the
-    # agent, and you'll get a error listing available metrics!
-    # key: list of (name(s), interval, aggregation, filter)
-    # NB: Azure API won't have requests with more than 20 metric names at once
-    # Also remember to add the service to the WATO rule:
-    # cmk/gui/plugins/wato/special_agents/azure.py
-    "Microsoft.Network/virtualNetworkGateways": [
-        ("AverageBandwidth,P2SBandwidth", "PT5M", "average"),
-        ("TunnelIngressBytes", "PT5M", "count"),
-        ("TunnelEgressBytes", "PT5M", "count"),
-        ("TunnelIngressPacketDropCount", "PT5M", "count"),
-        ("TunnelEgressPacketDropCount", "PT5M", "count"),
-        ("P2SConnectionCount", "PT1M", "maximum"),
-    ],
-    "Microsoft.Sql/servers/databases": [
-        (
-            "storage_percent,deadlock,cpu_percent,dtu_consumption_percent,"
-            "connection_successful,connection_failed",
-            "PT1M",
-            "average",
-        ),
-    ],
-    "Microsoft.Storage/storageAccounts": [
-        (
-            "UsedCapacity,Ingress,Egress,Transactions",
-            "PT1H",
-            "total",
-        ),
-        (
-            "SuccessServerLatency,SuccessE2ELatency,Availability",
-            "PT1H",
-            "average",
-        ),
-    ],
-    "Microsoft.Web/sites": [
-        ("CpuTime,AverageResponseTime,Http5xx", "PT1M", "total"),
-    ],
-    "Microsoft.DBforMySQL/servers": [
-        (
-            "cpu_percent,memory_percent,io_consumption_percent,serverlog_storage_percent,"
-            "storage_percent,active_connections",
-            "PT1M",
-            "average",
-        ),
-        (
-            "connections_failed,network_bytes_ingress,network_bytes_egress",
-            "PT1M",
-            "total",
-        ),
-        (
-            "seconds_behind_master",
-            "PT1M",
-            "maximum",
-        ),
-    ],
-    "Microsoft.DBforMySQL/flexibleServers": [
-        (
-            # NOTE: the "serverlog_storage_percent" metric may soon be phased out of the MySQL
-            # flexible server as it is no longer mentioned in the documentation and is not present
-            # in PostgreSQL flexible server documentation.
-            "cpu_percent,memory_percent,io_consumption_percent,serverlog_storage_percent,"
-            "storage_percent,active_connections",
-            "PT1M",
-            "average",
-        ),
-        (
-            "aborted_connections,network_bytes_ingress,network_bytes_egress",
-            "PT1M",
-            "total",
-        ),
-        (
-            "replication_lag",
-            "PT1M",
-            "maximum",
-        ),
-    ],
-    "Microsoft.DBforPostgreSQL/servers": [
-        (
-            "cpu_percent,memory_percent,io_consumption_percent,serverlog_storage_percent,"
-            "storage_percent,active_connections",
-            "PT1M",
-            "average",
-        ),
-        (
-            "connections_failed,network_bytes_ingress,network_bytes_egress",
-            "PT1M",
-            "total",
-        ),
-        (
-            "pg_replica_log_delay_in_seconds",
-            "PT1M",
-            "maximum",
-        ),
-    ],
-    "Microsoft.DBforPostgreSQL/flexibleServers": [
-        (
-            "cpu_percent,memory_percent,disk_iops_consumed_percentage,storage_percent,active_connections",
-            "PT1M",
-            "average",
-        ),
-        (
-            "connections_failed,network_bytes_ingress,network_bytes_egress",
-            "PT1M",
-            "total",
-        ),
-        (
-            "physical_replication_delay_in_seconds",
-            "PT1M",
-            "maximum",
-        ),
-    ],
-    "Microsoft.Network/trafficmanagerprofiles": [
-        (
-            "QpsByEndpoint",
-            "PT1M",
-            "total",
-        ),
-        (
-            "ProbeAgentCurrentEndpointStateByProfileResourceId",
-            "PT1M",
-            "maximum",
-        ),
-    ],
-    "Microsoft.Network/loadBalancers": [
-        (
-            "ByteCount",
-            "PT1M",
-            "total",
-        ),
-        (
-            "AllocatedSnatPorts,UsedSnatPorts,VipAvailability,DipAvailability",
-            "PT1M",
-            "average",
-        ),
-    ],
-    "Microsoft.Network/applicationGateways": [
-        ("HealthyHostCount", "PT1M", "average"),
-        ("FailedRequests", "PT1M", "count"),
-    ],
-    "Microsoft.Compute/virtualMachines": [
-        (
-            "Percentage CPU,CPU Credits Consumed,CPU Credits Remaining,Available Memory Bytes,Disk Read Operations/Sec,Disk Write Operations/Sec",
-            "PT1M",
-            "average",
-        ),
-        (
-            "Network In Total,Network Out Total,Disk Read Bytes,Disk Write Bytes",
-            "PT1M",
-            "total",
-        ),
-    ],
-    "Microsoft.Cache/Redis": [
-        (
-            "allconnectedclients",
-            "PT1M",
-            "maximum",
-        ),
-        (
-            "allConnectionsCreatedPerSecond,allConnectionsClosedPerSecond",
-            "PT1M",
-            "maximum",
-        ),
-        ("allpercentprocessortime", "PT1M", "maximum"),
-        ("allcachehits,allcachemisses,cachemissrate,allgetcommands", "PT1M", "total"),
-        (
-            "allusedmemory,allusedmemorypercentage,allusedmemoryRss,allevictedkeys,allexpiredkeys",
-            "PT1M",
-            "total",
-        ),
-        ("LatencyP99,cacheLatency", "PT1M", "average"),
-        ("GeoReplicationHealthy", "PT1M", "minimum"),
-        ("GeoReplicationConnectivityLag", "PT1M", "average"),
-        ("allcacheRead,allcacheWrite", "PT1M", "maximum"),
-        ("serverLoad", "PT1M", "maximum"),
-    ],
-    "Microsoft.Network/natGateways": [
-        ("DatapathAvailability", "PT1M", "average"),
-    ],
-}
-
-OPTIONAL_METRICS: Mapping[str, Sequence[str]] = {
-    "Microsoft.Sql/servers/databases": [
-        "storage_percent",
-        "deadlock",
-        "dtu_consumption_percent",
-    ],
-    "Microsoft.DBforMySQL/servers": ["seconds_behind_master"],
-    "Microsoft.DBforMySQL/flexibleServers": ["replication_lag"],
-    "Microsoft.DBforPostgreSQL/servers": ["pg_replica_log_delay_in_seconds"],
-    "Microsoft.DBforPostgreSQL/flexibleServers": ["physical_replication_delay_in_seconds"],
-    "Microsoft.Network/loadBalancers": ["AllocatedSnatPorts", "UsedSnatPorts"],
-    "Microsoft.Compute/virtualMachines": [
-        "CPU Credits Consumed",
-        "CPU Credits Remaining",
-    ],
-}
 
 
 class FetchedResource(Enum):
@@ -1408,24 +1218,38 @@ class UsageDetailsCache(AzureAsyncCache):
                         await asyncio.sleep(retry_after + 1)
 
 
+@dataclass(frozen=True, kw_only=True)
+class CacheMetricsGroupDefinition:
+    interval: Intervals
+    aggregation: Aggregations
+    metrics: Sequence[AzureMetric]
+    resource_type: str
+    region: str
+
+
 class MetricCache(AzureAsyncCache):
     def __init__(
         self,
         *,
-        metric_definition: tuple[str, str, str],
-        resource_type: str,
-        region: str,
+        metrics_definition: CacheMetricsGroupDefinition,
         subscription: str,
         cache_id: str,
         ref_time: datetime.datetime,
         debug: bool = False,
     ) -> None:
-        self.metric_definition = metric_definition
-        metric_names = metric_definition[0]
-        self._cache_path = self.get_cache_path(cache_id, resource_type, region, subscription)
+        self.metrics_definitions = metrics_definition
+        self.metric_names = ",".join([metric.name for metric in metrics_definition.metrics])
+
+        self._cache_path = self.get_cache_path(
+            cache_id,
+            self.metrics_definitions.resource_type,
+            self.metrics_definitions.region,
+            subscription,
+        )
+        cache_file_name = self.metric_names.replace("/", "_")  # do not create random directories
         super().__init__(
             self._cache_path,
-            metric_names,
+            cache_file_name,
             debug=debug,
         )
         self.remaining_reads = None
@@ -1433,7 +1257,7 @@ class MetricCache(AzureAsyncCache):
             "PT1M": datetime.timedelta(minutes=1),
             "PT5M": datetime.timedelta(minutes=5),
             "PT1H": datetime.timedelta(hours=1),
-        }[metric_definition[1]]
+        }[metrics_definition.interval]
         # For 1-min metrics, the start time should be at least 4 minutes before because of the
         # ingestion time of Azure metrics (we had to change from 3 minutes to 5 minutes because we
         # were missing some metrics with 3 minutes).
@@ -1503,15 +1327,14 @@ class MetricCache(AzureAsyncCache):
         resource_type: str = args[3]
         err: IssueCollector = args[4]
 
-        metric_names, interval, aggregation = self.metric_definition
-
         params = {
             "starttime": self.start_time,
             "endtime": self.end_time,
-            "interval": interval,
-            "metricnames": metric_names,
+            "interval": self.metrics_definitions.interval,
+            # NB: Azure API won't have requests with more than 20 metric names at once
+            "metricnames": self.metric_names,
             "metricnamespace": resource_type,
-            "aggregation": aggregation,
+            "aggregation": self.metrics_definitions.aggregation,
         }
 
         raw_metrics = []
@@ -1524,7 +1347,11 @@ class MetricCache(AzureAsyncCache):
             resource_id = resource_metrics["resourceid"]
 
             for raw_metric in resource_metrics["value"]:
-                parsed_metric = create_metric_dict(raw_metric, aggregation, interval)
+                parsed_metric = create_metric_dict(
+                    raw_metric,
+                    self.metrics_definitions.aggregation,
+                    self.metrics_definitions.interval,
+                )
                 if parsed_metric is not None:
                     metrics[resource_id].append(parsed_metric)
                 else:
@@ -1532,7 +1359,9 @@ class MetricCache(AzureAsyncCache):
                     if metric_name in OPTIONAL_METRICS.get(resource_type, []):
                         continue
 
-                    msg = f"metric not found: {metric_name} ({aggregation})"
+                    msg = (
+                        f"metric not found: {metric_name} ({self.metrics_definitions.aggregation})"
+                    )
                     err.add("info", resource_id, msg)
                     LOGGER.info(msg)
 
@@ -1614,27 +1443,41 @@ async def _gather_metrics(
     tasks = set()
     for (resource_type, resource_location), resource_ids in grouped_resource_ids.items():
         metric_definitions = ALL_METRICS.get(resource_type, [])
+
+        grouped_metrics = defaultdict(list)
         for metric_definition in metric_definitions:
-            cache = MetricCache(
-                metric_definition=metric_definition,
-                resource_type=resource_type,
-                region=resource_location,
-                subscription=subscription.id,
-                cache_id=args.cache_id,
-                ref_time=NOW,
-                debug=args.debug,
+            grouped_metrics[(metric_definition.interval, metric_definition.aggregation)].append(
+                metric_definition
             )
 
-            tasks.add(
-                cache.get_data(
-                    mgmt_client,
-                    resource_location,
-                    resource_ids,
-                    resource_type,
-                    err,
-                    use_cache=cache.cache_interval > 60,
+        for (interval, aggregation), definitions in grouped_metrics.items():
+            # chunk of 4 because the list of metrics will be _part_ of the cache-file-name
+            # we don't want something too long here
+            for definitions_chunk in _chunks(definitions, 4):
+                cache = MetricCache(
+                    metrics_definition=CacheMetricsGroupDefinition(
+                        interval=interval,
+                        aggregation=aggregation,
+                        metrics=definitions_chunk,
+                        resource_type=resource_type,
+                        region=resource_location,
+                    ),
+                    subscription=subscription.id,
+                    cache_id=args.cache_id,
+                    ref_time=NOW,
+                    debug=args.debug,
                 )
-            )
+
+                tasks.add(
+                    cache.get_data(
+                        mgmt_client,
+                        resource_location,
+                        resource_ids,
+                        resource_type,
+                        err,
+                        use_cache=cache.cache_interval > 60,
+                    )
+                )
 
     results = await asyncio.gather(*tasks, return_exceptions=True)
     for result in results:

@@ -5,8 +5,6 @@
  */
 import type { components } from '@/lib/rest-api-client/openapi_internal'
 
-import type { RelativeGridWidget, ResponsiveGridWidget } from '@/dashboard-wip/types/widget.ts'
-
 export interface Thresholds {
   height: number
   width: number
@@ -30,16 +28,21 @@ export type DashboardResponsiveGridLayout = components['schemas']['DashboardResp
 
 export type ContentRelativeGrid = {
   layout: DashboardRelativeGridLayout
-  widgets: { [key: string]: RelativeGridWidget }
+  widgets: components['schemas']['RelativeGridDashboardResponse']['widgets']
 }
 
 export type ContentResponsiveGrid = {
   layout: DashboardResponsiveGridLayout
-  widgets: { [key: string]: ResponsiveGridWidget }
+  widgets: components['schemas']['ResponsiveGridDashboardResponse']['widgets']
 }
 
 export type DashboardModel = {
   general_settings: DashboardGeneralSettings
   filter_context: DashboardFilterContext
   content: ContentResponsiveGrid | ContentRelativeGrid
+}
+
+export enum DashboardLayout {
+  RELATIVE_GRID = 'relative_grid',
+  RESPONSIVE_GRID = 'responsive_grid'
 }

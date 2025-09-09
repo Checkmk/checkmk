@@ -9,8 +9,6 @@ export type WidgetContent = components['schemas']['WidgetContent']
 export type WidgetSizeValue = components['schemas']['WidgetSizeValue']
 export type WidgetGeneralSettings = components['schemas']['WidgetGeneralSettings']
 export type WidgetFilterContext = components['schemas']['WidgetFilterContext']
-export type RelativeGridWidget = components['schemas']['RelativeGridWidgetResponse']
-export type ResponsiveGridWidget = components['schemas']['ResponsiveGridWidgetResponse']
 
 export interface BaseWidget {
   widget_id: string

@@ -76,7 +76,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="cmk-unified-search-empty-result">
+  <div class="unified-search-empty-results">
     <div class="shruggy">{{ _t('¯\\_(ツ)_/¯') }}</div>
     <div>
       {{ _t('No results found for your search') }}
@@ -93,16 +93,18 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.cmk-unified-search-empty-result {
+.unified-search-empty-results {
   display: flex;
   flex-direction: column;
   align-items: center;
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   .shruggy {
     font-size: 38px;
     margin: calc(6 * var(--spacing)) 0;
   }
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   .reset-button {
     margin: calc(3 * var(--spacing)) 0;
     gap: var(--spacing);

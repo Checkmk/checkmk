@@ -146,6 +146,7 @@ function toggleOperatorOptions() {
 </template>
 
 <style scoped>
+/* stylelint-disable checkmk/vue-bem-naming-convention */
 .unified-search-operator-switch {
   border-radius: var(--border-radius);
   border: 1px solid transparent;

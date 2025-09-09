@@ -29,11 +29,13 @@ function getSkelNum(): number {
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .cmk-result-skeleton-wrapper {
   margin: var(--spacing-double);
   display: flex;
   flex-direction: column;
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   .cmk-result-skeleton-header {
     width: 100px;
   }

@@ -3,7 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.inventory_ui.v1_alpha import IECNotation, Node, NumberField, Title, Unit
+from cmk.inventory_ui.v1_alpha import (
+    IECNotation,
+    Node,
+    NumberField,
+    Table,
+    TextField,
+    Title,
+    Unit,
+)
 
 UNIT_BYTES = Unit(IECNotation("B"))
 
@@ -22,4 +30,19 @@ node_hardware_memory = Node(
         "total_swap": NumberField(Title("Total swap space"), render=UNIT_BYTES),
         "total_vmalloc": NumberField(Title("Virtual addresses for mapping"), render=UNIT_BYTES),
     },
+)
+
+node_hardware_system_nodes = Node(
+    name="hardware_system_nodes",
+    path=["hardware", "system", "nodes"],
+    title=Title("Node system"),
+    table=Table(
+        columns={
+            "node_name": TextField(Title("Node name")),
+            "id": TextField(Title("ID")),
+            "model": TextField(Title("Model name")),
+            "product": TextField(Title("Product")),
+            "serial": TextField(Title("Serial number")),
+        },
+    ),
 )

@@ -19,5 +19,9 @@ export interface BaseWidget {
 type AnnotatedInfoName = components['schemas']['AnnotatedInfoName']
 
 export interface EffectiveWidgetFilterContext extends WidgetFilterContext {
-  restricted_to_single: AnnotatedInfoName
+  restricted_to_single: AnnotatedInfoName[]
 }
+
+// Specific widget types
+export type LinkedViewContent = components['schemas']['LinkedViewContent']
+export type StaticTextContent = components['schemas']['StaticTextContent']

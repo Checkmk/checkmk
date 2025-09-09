@@ -416,6 +416,7 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* stylelint-disable checkmk/vue-bem-naming-convention */
 .cmk-default-popup-mainmenu {
   display: flex;
   width: 484px;

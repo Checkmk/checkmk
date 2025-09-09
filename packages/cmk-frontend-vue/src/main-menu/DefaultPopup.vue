@@ -11,6 +11,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .main-menu-popup-menu {
   position: absolute;
   top: 58px;

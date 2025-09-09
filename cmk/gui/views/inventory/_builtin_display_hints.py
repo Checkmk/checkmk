@@ -180,21 +180,21 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # Legacy ones. Kept to not break existing views - DON'T use these values for new plugins
         ".hardware.system.serial_number": {"title": _l("Serial number - LEGACY, don't use")},
         ".hardware.system.model_name": {"title": _l("Model name - LEGACY, don't use")},
-        ".hardware.system.nodes:": {
-            "title": _l("Node system"),
-            "keyorder": [
-                "node_name",
-                "id",
-                "model",
-                "product",
-                "serial",
-            ],
-        },
-        ".hardware.system.nodes:*.node_name": {"title": _l("Node name")},
-        ".hardware.system.nodes:*.id": {"title": _l("ID")},
-        ".hardware.system.nodes:*.model": {"title": _l("Model name")},
-        ".hardware.system.nodes:*.product": {"title": _l("Product")},
-        ".hardware.system.nodes:*.serial": {"title": _l("Serial number")},
+        # MIGRATED ".hardware.system.nodes:": {
+        # MIGRATED     "title": _l("Node system"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "node_name",
+        # MIGRATED         "id",
+        # MIGRATED         "model",
+        # MIGRATED         "product",
+        # MIGRATED         "serial",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".hardware.system.nodes:*.node_name": {"title": _l("Node name")},
+        # MIGRATED ".hardware.system.nodes:*.id": {"title": _l("ID")},
+        # MIGRATED ".hardware.system.nodes:*.model": {"title": _l("Model name")},
+        # MIGRATED ".hardware.system.nodes:*.product": {"title": _l("Product")},
+        # MIGRATED ".hardware.system.nodes:*.serial": {"title": _l("Serial number")},
         ".hardware.uploaded_files.": {
             "title": _l("Uploaded files"),
             "keyorder": [

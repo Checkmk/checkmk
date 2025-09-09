@@ -6,8 +6,11 @@
 from collections.abc import Mapping, Sequence
 from types import EllipsisType
 from typing import Any
+from unittest import mock
+from unittest.mock import Mock
 
 import pytest
+import time_machine
 
 from cmk.agent_based.v2 import (
     check_levels as check_levels_v2,
@@ -162,6 +165,8 @@ MULTIPLE_RESOURCE_SECTION = {
         subscription="2fac104f-cb9c-461d-be57-037039662426",
     ),
 }
+
+EPOCH = 1757328437.8742359
 
 
 @pytest.mark.parametrize(
@@ -772,6 +777,78 @@ def test_check_resource_metric_notice_only() -> None:
     )
 
 
+@mock.patch("cmk.plugins.lib.azure.get_value_store", return_value={})
+@time_machine.travel(EPOCH)
+def test_check_resource_metric_average(get_value_store: Mock) -> None:
+    metric_data = MetricData(
+        "total_connections_failed",
+        "connections_failed",
+        "Connections failed",
+        str,
+        average_mins_param="average_mins",
+    )
+
+    check_result = check_resource_metrics(
+        PARSED_RESOURCES["checkmk-mysql-server"],
+        {
+            "average_mins": 5,
+        },
+        [metric_data],
+    )
+
+    assert list(check_result) == (
+        [
+            Metric("connections_failed", 2.0),
+            Result(state=State.OK, summary="Connections failed: 2.0"),
+            Metric("connections_failed_average", 2.0),
+        ]
+    )
+
+    get_value_store.assert_called_once()
+
+
+@mock.patch(
+    "cmk.plugins.lib.azure.get_value_store",
+    return_value={"connections_failed_sustained_threshold": EPOCH - 1000},
+)
+@time_machine.travel(EPOCH)
+def test_check_resource_sustained_threshold(get_value_store: Mock) -> None:
+    metric_data = MetricData(
+        "total_connections_failed",
+        "connections_failed",
+        "Connections failed",
+        str,
+        sustained_threshold_param="threshold",
+        sustained_levels_time_param="threshold_levels",
+        sustained_level_direction=SustainedLevelDirection.UPPER_BOUND,
+    )
+
+    check_result = check_resource_metrics(
+        PARSED_RESOURCES["checkmk-mysql-server"],
+        {
+            "threshold": 1.5,
+            "threshold_levels": ("fixed", (30.0, 60.0)),
+        },
+        [metric_data],
+    )
+
+    assert list(check_result) == (
+        [
+            Result(
+                state=State.CRIT,
+                summary=(
+                    "Above the threshold for: 16 minutes 40 seconds "
+                    "(warn/crit at 30 seconds/1 minute 0 seconds)"
+                ),
+            ),
+            Result(state=State.OK, summary="Connections failed: 2.0"),
+            Metric("connections_failed", 2.0),
+        ]
+    )
+
+    get_value_store.assert_called_once()
+
+
 def test_inventory_common_azure():
     inventory = list(inventory_common_azure(PARSED_RESOURCES))
 
@@ -810,9 +887,6 @@ def test_inventory_common_azure():
     assert tags["tag1"] == "value1"
     assert tags["tag2"] == "value2"
     assert len(tags) == 2
-
-
-EPOCH = 1757328437.8742359
 
 
 @pytest.mark.parametrize(

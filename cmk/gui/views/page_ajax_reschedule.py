@@ -6,6 +6,7 @@
 """Ajax webservice for reschedulung host- and service checks"""
 
 import time
+from datetime import datetime
 from typing import Any
 
 import livestatus
@@ -19,6 +20,11 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageResult
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.livestatus_client.commands import (
+    Command,
+    ScheduleForcedHostCheck,
+    ScheduleForcedServiceCheck,
+)
 
 
 class PageRescheduleCheck(AjaxPage):
@@ -29,18 +35,12 @@ class PageRescheduleCheck(AjaxPage):
         return self._do_reschedule(api_request, config.reschedule_timeout)
 
     @staticmethod
-    def _force_check(now: int, cmd: str, spec: str, site: SiteId) -> None:
-        sites.live().command(
-            "[%d] SCHEDULE_FORCED_%s_CHECK;%s;%d" % (now, cmd, livestatus.lqencode(spec), now), site
-        )
-
-    @staticmethod
     def _wait_for(
         site: SiteId,
         host: str,
         what: str,
         wait_spec: str,
-        now: int,
+        now: datetime,
         add_filter: str,
         reschedule_timeout: float,
     ) -> livestatus.LivestatusRow:
@@ -58,7 +58,7 @@ class PageRescheduleCheck(AjaxPage):
                 % (
                     what,
                     livestatus.lqencode(wait_spec),
-                    now,
+                    int(now.timestamp()),
                     reschedule_timeout * 1000,
                     livestatus.lqencode(host),
                     add_filter,
@@ -78,11 +78,12 @@ class PageRescheduleCheck(AjaxPage):
 
         service = api_request.get("service", "")
         wait_svc = api_request.get("wait_svc", "")
+        now = datetime.now()
 
         if service:
-            cmd = "SVC"
-            what = "service"
+            cmd: Command = ScheduleForcedServiceCheck(host, now, service)
             spec = f"{host};{service}"
+            what = "service"
 
             if wait_svc:
                 wait_spec = f"{host};{wait_svc}"
@@ -91,13 +92,11 @@ class PageRescheduleCheck(AjaxPage):
                 wait_spec = spec
                 add_filter = "Filter: service_description = %s\n" % livestatus.lqencode(service)
         else:
-            cmd = "HOST"
+            cmd = ScheduleForcedHostCheck(host, now)
             what = "host"
             spec = host
             wait_spec = spec
             add_filter = ""
-
-        now = int(time.time())
 
         if service in ("Check_MK Discovery", "Check_MK Inventory"):
             # During discovery, the allowed cache age is (by default) 120 seconds, such that the
@@ -105,7 +104,7 @@ class PageRescheduleCheck(AjaxPage):
             # But we do want to see new services, so for SNMP we set the cache age to zero.
             # For TCP, we ensure updated caches by triggering the "Check_MK" service whenever the
             # user manually triggers "Check_MK Discovery".
-            self._force_check(now, "SVC", f"{host};Check_MK", site)
+            sites.live().command_obj(ScheduleForcedServiceCheck(host, now, "Check_MK"), site)
             self._wait_for(
                 site,
                 host,
@@ -116,11 +115,11 @@ class PageRescheduleCheck(AjaxPage):
                 reschedule_timeout,
             )
 
-        self._force_check(now, cmd, spec, site)
+        sites.live().command_obj(cmd, site)
         row = self._wait_for(site, host, what, wait_spec, now, add_filter, reschedule_timeout)
 
         last_check = row[0]
-        if last_check < now:
+        if last_check < int(now.timestamp()):
             return {
                 "state": "TIMEOUT",
                 "message": _("Check not executed within %d seconds") % (reschedule_timeout),

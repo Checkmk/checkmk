@@ -11,9 +11,17 @@
         },
         "graph_options": {
             "$ref": "#/$defs/graph_options"
+        },
+        "metric_backend_available": {
+            "type": "boolean"
         }
     },
-    "required": ["graph_id", "graph_lines", "graph_options"],
+    "required": [
+        "graph_id",
+        "graph_lines",
+        "graph_options",
+        "metric_backend_available"
+    ],
     "$defs": {
         "graph_line_id": {
             "type": "integer"
@@ -45,6 +53,56 @@
         },
         "graph_line_metric_name": {
             "type": "string"
+        },
+        "graph_line_query_attributes": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "graph_line_query": {
+            "type": "object",
+            "title": "query",
+            "properties": {
+                "id": { "$ref": "#/$defs/graph_line_id" },
+                "type": { "type": "string", "enum": ["query"] },
+                "color": { "$ref": "#/$defs/graph_line_color" },
+                "auto_title": { "$ref": "#/$defs/graph_line_auto_title" },
+                "custom_title": { "$ref": "#/$defs/graph_line_custom_title" },
+                "visible": { "$ref": "#/$defs/graph_line_visible" },
+                "line_type": {
+                    "$ref": "#/$defs/graph_line_line_type"
+                },
+                "mirrored": {
+                    "$ref": "#/$defs/graph_line_mirrored"
+                },
+                "metric_name": {
+                    "$ref": "#/$defs/graph_line_metric_name"
+                },
+                "resource_attributes": {
+                    "$ref": "#/$defs/graph_line_query_attributes"
+                },
+                "scope_attributes": {
+                    "$ref": "#/$defs/graph_line_query_attributes"
+                },
+                "data_point_attributes": {
+                    "$ref": "#/$defs/graph_line_query_attributes"
+                }
+            },
+            "required": [
+                "id",
+                "type",
+                "color",
+                "auto_title",
+                "custom_title",
+                "visible",
+                "line_type",
+                "mirrored",
+                "metric_name",
+                "resource_attributes",
+                "scope_attributes",
+                "data_point_attributes"
+            ]
         },
         "graph_line_metric": {
             "type": "object",
@@ -314,6 +372,7 @@
         },
         "graph_line": {
             "anyOf": [
+                { "$ref": "#/$defs/graph_line_query" },
                 {
                     "$ref": "#/$defs/graph_line_metric"
                 },

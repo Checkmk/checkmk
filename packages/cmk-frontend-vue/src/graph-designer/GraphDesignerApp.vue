@@ -14,6 +14,7 @@ defineProps<{
   graph_id: string
   graph_lines: GraphLines
   graph_options: GraphOptions
+  metric_backend_available: boolean
   graph_renderer?: typeof graphRenderer
 }>()
 </script>
@@ -23,6 +24,7 @@ defineProps<{
     :graph_id="graph_id"
     :graph_lines="graph_lines"
     :graph_options="graph_options"
+    :metric_backend_available="metric_backend_available"
     :graph_renderer="graph_renderer || graphRenderer"
   />
 </template>

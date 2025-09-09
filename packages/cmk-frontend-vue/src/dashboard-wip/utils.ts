@@ -5,6 +5,8 @@
  */
 import { fetchRestAPI } from '@/lib/cmkFetch.ts'
 
+import type { DashboardConstants } from '@/dashboard-wip/types/dashboard.ts'
+
 const API_ROOT = 'api/unstable'
 
 export const dashboardAPI = {
@@ -14,5 +16,12 @@ export const dashboardAPI = {
     const response = await fetchRestAPI(url, 'GET')
     await response.raiseForStatus()
     return await response.json()
+  },
+  getDashboardConstants: async (): Promise<DashboardConstants> => {
+    const url = `${API_ROOT}/objects/constant/dashboard`
+    const response = await fetchRestAPI(url, 'GET')
+    await response.raiseForStatus()
+    const content = await response.json()
+    return content.extensions
   }
 }

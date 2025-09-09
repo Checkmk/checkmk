@@ -48,7 +48,6 @@ def save_configuration_entity(
     entity_type_specifier: str,
     data: object,
     user: LoggedInUser,
-    object_id: EntityId | None,
 ) -> ConfigurationEntityDescription:
     """Save a configuration entity.
 
@@ -61,7 +60,7 @@ def save_configuration_entity(
                 notification_parameter_registry,
                 NotificationParameterMethod(entity_type_specifier),
                 data,
-                NotificationParameterID(object_id) if object_id else None,
+                object_id=None,
             )
             return ConfigurationEntityDescription(
                 ident=EntityId(param.ident), description=param.description
@@ -76,6 +75,36 @@ def save_configuration_entity(
             return ConfigurationEntityDescription(
                 ident=EntityId(password.id), description=password.title
             )
+        case other:
+            assert_never(other)
+
+
+def update_configuration_entity(
+    entity_type: ConfigEntityType,
+    entity_type_specifier: str,
+    data: object,
+    object_id: EntityId,
+) -> ConfigurationEntityDescription:
+    """Update a configuration entity.
+
+    Raises:
+        FormSpecValidationError: if the data does not match the form spec
+    """
+    match entity_type:
+        case ConfigEntityType.notification_parameter:
+            param = save_notification_parameter(
+                notification_parameter_registry,
+                NotificationParameterMethod(entity_type_specifier),
+                data,
+                object_id=NotificationParameterID(object_id),
+            )
+            return ConfigurationEntityDescription(
+                ident=EntityId(param.ident), description=param.description
+            )
+        case ConfigEntityType.folder:
+            raise NotImplementedError("Editing folders via config entity API is not supported.")
+        case ConfigEntityType.passwordstore_password:
+            raise NotImplementedError("Editing passwords via config entity API is not supported.")
         case other:
             assert_never(other)
 

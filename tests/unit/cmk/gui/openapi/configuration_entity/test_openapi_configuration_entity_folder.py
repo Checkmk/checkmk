@@ -225,3 +225,19 @@ def test_create_folder_with_permissions(clients: ClientRegistry) -> None:
     assert resp.json["title"] == "Protected Folder/New Folder"
     folder_tree().invalidate_caches()
     assert folder_tree().all_folders()["protected-folder/new_folder"].title() == "New Folder"
+
+
+def test_update_folder_not_implemented(clients: ClientRegistry) -> None:
+    # WHEN
+    resp = clients.ConfigurationEntity.update_configuration_entity(
+        {
+            "entity_type": ConfigEntityType.folder.value,
+            "entity_type_specifier": "xyz",
+            "entity_id": "xyz",
+            "data": {},
+        },
+        expect_ok=False,
+    )
+
+    # THEN
+    resp.assert_rest_api_crash()

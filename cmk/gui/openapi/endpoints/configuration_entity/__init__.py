@@ -38,6 +38,7 @@ from cmk.gui.watolib.configuration_entity.configuration_entity import (
     EntityId,
     get_configuration_entity_schema,
     save_configuration_entity,
+    update_configuration_entity,
 )
 
 from cmk import fields
@@ -101,7 +102,12 @@ def _create_configuration_entity(params: Mapping[str, Any]) -> Response:
     data = body["data"]
 
     try:
-        data = save_configuration_entity(entity_type, entity_type_specifier, data, user, None)
+        data = save_configuration_entity(
+            entity_type,
+            entity_type_specifier,
+            data,
+            user,
+        )
     except FormSpecValidationError as exc:
         return _serve_validations(exc.messages)
 
@@ -126,7 +132,12 @@ def _update_configuration_entity(params: Mapping[str, Any]) -> Response:
     data = body["data"]
 
     try:
-        data = save_configuration_entity(entity_type, entity_type_specifier, data, user, entity_id)
+        data = update_configuration_entity(
+            entity_type,
+            entity_type_specifier,
+            data,
+            object_id=entity_id,
+        )
     except FormSpecValidationError as exc:
         return _serve_validations(exc.messages)
 

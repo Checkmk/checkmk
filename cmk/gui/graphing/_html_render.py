@@ -17,6 +17,7 @@ import cmk.utils.render
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.ccc.user import UserId
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.gui.color import render_color_icon
 from cmk.gui.config import active_config, Config
@@ -31,7 +32,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
-from cmk.gui.logged_in import LoggedInUser, user, UserGraphDataRangeFileName
+from cmk.gui.logged_in import load_user_file, save_user_file, user, UserGraphDataRangeFileName
 from cmk.gui.pages import AjaxPage, PageResult
 from cmk.gui.sites import get_alias_of_host
 from cmk.gui.theme.current_theme import theme
@@ -625,7 +626,8 @@ def render_ajax_graph(
     if graph_render_config.editing and (
         specification_id := context.get("definition", {}).get("specification", {}).get("id")
     ):
-        UserGraphDataRangeStore(user).save(specification_id, graph_data_range)
+        assert user.id is not None
+        UserGraphDataRangeStore(user.id).save(specification_id, graph_data_range)
 
     graph_artwork = compute_graph_artwork(
         graph_recipe,
@@ -657,21 +659,25 @@ def _user_graph_data_range_file_name(custom_graph_id: str) -> UserGraphDataRange
 
 
 class UserGraphDataRangeStore:
-    def __init__(self, user_: LoggedInUser) -> None:
-        self.user = user_
+    def __init__(self, user_id: UserId) -> None:
+        self.user_id = user_id
 
     def save(self, custom_graph_id: str, graph_data_range: GraphDataRange) -> None:
-        self.user.save_file(
+        save_user_file(
             _user_graph_data_range_file_name(custom_graph_id),
             graph_data_range.model_dump(),
+            self.user_id,
         )
 
     def load(self, custom_graph_id: str) -> GraphDataRange | None:
         return (
             GraphDataRange.model_validate(raw_range)
             if (
-                raw_range := self.user.load_file(
-                    _user_graph_data_range_file_name(custom_graph_id), None
+                raw_range := load_user_file(
+                    _user_graph_data_range_file_name(custom_graph_id),
+                    self.user_id,
+                    deflt=None,
+                    lock=False,
                 )
             )
             else None
@@ -679,9 +685,7 @@ class UserGraphDataRangeStore:
 
     def remove(self, custom_graph_id: str) -> None:
         (
-            profile_dir
-            / self.user.ident
-            / f"{_user_graph_data_range_file_name(custom_graph_id)}.mk"
+            profile_dir / self.user_id / f"{_user_graph_data_range_file_name(custom_graph_id)}.mk"
         ).unlink(missing_ok=True)
 
 

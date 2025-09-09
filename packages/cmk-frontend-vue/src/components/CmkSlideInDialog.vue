@@ -29,21 +29,25 @@ const emit = defineEmits(['close'])
 
 <template>
   <CmkSlideIn :open="open" @close="emit('close')">
-    <DialogTitle v-if="header" class="slide-in__title">
+    <DialogTitle v-if="header" class="cmk-slide-in-dialog__title">
       <CmkHeading type="h1">{{ header.title }}</CmkHeading>
-      <DialogClose v-if="header.closeButton" class="slide-in__close" @click="emit('close')">
+      <DialogClose
+        v-if="header.closeButton"
+        class="cmk-slide-in-dialog__close"
+        @click="emit('close')"
+      >
         <CmkIcon :aria-label="_t('Close')" name="close" size="xsmall" />
       </DialogClose>
     </DialogTitle>
 
-    <CmkScrollContainer type="outer" class="slide-in__content">
+    <CmkScrollContainer type="outer" class="cmk-slide-in-dialog__content">
       <slot />
     </CmkScrollContainer>
   </CmkSlideIn>
 </template>
 
 <style scoped>
-.slide-in__title {
+.cmk-slide-in-dialog__title {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -54,11 +58,11 @@ const emit = defineEmits(['close'])
   }
 }
 
-.slide-in__content {
+.cmk-slide-in-dialog__content {
   padding: 0 20px;
 }
 
-.slide-in__close {
+.cmk-slide-in-dialog__close {
   background: none;
   border: none;
   margin: 0;

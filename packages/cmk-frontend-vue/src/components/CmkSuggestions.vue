@@ -294,10 +294,12 @@ defineExpose({
   padding: 0;
   list-style-type: none;
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   span.input {
     display: flex;
     padding: 4px;
 
+    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
     &.hidden {
       display: none;
     }
@@ -318,10 +320,12 @@ defineExpose({
       outline: none;
     }
 
+    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
     &.selectable {
       cursor: pointer;
       color: var(--font-color);
 
+      /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
       &.selected {
         color: var(--default-select-focus-color);
       }

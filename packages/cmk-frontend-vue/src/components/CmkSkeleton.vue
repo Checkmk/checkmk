@@ -61,6 +61,8 @@ defineProps<{ type?: SkeletonType | undefined }>()
     content: '';
   }
 
+  /* stylelint-disable checkmk/vue-bem-naming-convention */
+
   &.box {
     height: 100%;
     width: 100%;

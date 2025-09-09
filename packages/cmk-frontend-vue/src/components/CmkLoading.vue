@@ -21,6 +21,7 @@ withDefaults(defineProps<CmkLoadingProps>(), {
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .spinner > div {
   width: v-bind(height);
   height: v-bind(height);
@@ -30,10 +31,12 @@ withDefaults(defineProps<CmkLoadingProps>(), {
   animation: sk-bouncedelay 1.4s infinite ease-in-out both;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .spinner .bounce1 {
   animation-delay: -0.32s;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .spinner .bounce2 {
   animation-delay: -0.16s;
 }

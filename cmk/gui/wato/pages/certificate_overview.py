@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Mode for showing the certificates."""
 
+import urllib.parse
 from collections.abc import Collection
 from dataclasses import dataclass
 from datetime import date
@@ -49,6 +50,7 @@ class CertificateView:
     key_type_length: str
     stored_location: Path
     purpose: str | None
+    certificate_dump: str
 
     def get_fields(self) -> dict[str, str | HTML]:
         """Get title and value of fields."""
@@ -61,6 +63,14 @@ class CertificateView:
             _("Key type and length"): self.key_type_length,
             _("Stored location"): str(self.stored_location),
             _("Purpose"): self.purpose or _("None"),
+            _("Download"): html.render_icon_button(
+                url=f"data:text/plain;charset=utf-8,{urllib.parse.quote(self.certificate_dump)}",
+                title="download",
+                icon="download",
+                download=str(self.stored_location).rsplit("/", maxsplit=1)[-1]
+                if self.stored_location.exists()
+                else "certificate.pem",
+            ),
         }
 
     @classmethod
@@ -75,6 +85,7 @@ class CertificateView:
             key_type_length=cert.public_key.show_type(),
             stored_location=path,
             purpose=purpose,
+            certificate_dump=cert.dump_pem().bytes.decode("utf-8"),
         )
 
 

@@ -483,16 +483,9 @@ class LoggedInUser:
     ) -> Any:
         if self.confdir is None:
             return deflt
-
-        path = self.confdir / (name + ".mk")
-
-        # The user files we load with this function are mostly some kind of persisted states.  In
-        # case a file is corrupted for some reason we rather start over with the default instead of
-        # failing at some random places.
-        try:
-            return store.load_object_from_file(path, default=deflt, lock=lock)
-        except (ValueError, SyntaxError):
+        if self.id is None:
             return deflt
+        return load_user_file(name, self.id, deflt, lock=lock)
 
     def save_file(
         self, name: UserFileName | _RowSelection | UserGraphDataRangeFileName, content: object
@@ -574,6 +567,25 @@ def _confdir_for_user_id(user_id: UserId | None) -> Path | None:
     confdir = cmk.utils.paths.profile_dir / user_id
     confdir.mkdir(mode=0o770, exist_ok=True)
     return confdir
+
+
+def load_user_file(
+    name: UserFileName | _RowSelection | UserGraphDataRangeFileName,
+    user_id: UserId,
+    deflt: object,
+    *,
+    lock: bool,
+) -> object:
+    path = cmk.utils.paths.profile_dir / user_id / (name + ".mk")
+    path.parent.mkdir(mode=0o770, exist_ok=True)
+
+    # The user files we load with this function are mostly some kind of persisted states.  In
+    # case a file is corrupted for some reason we rather start over with the default instead of
+    # failing at some random places.
+    try:
+        return store.load_object_from_file(path, default=deflt, lock=lock)
+    except (ValueError, SyntaxError):
+        return deflt
 
 
 def save_user_file(name: str, data: Any, user_id: UserId) -> None:

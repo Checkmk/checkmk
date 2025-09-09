@@ -34,7 +34,7 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.logged_in import LoggedInUser, save_user_file
+from cmk.gui.logged_in import load_user_file, save_user_file
 from cmk.gui.type_defs import (
     SessionInfo,
     TwoFactorCredentials,
@@ -778,7 +778,7 @@ def _save_cached_profile(
 
 
 def load_cached_profile(user_id: UserId) -> UserSpec | None:
-    return LoggedInUser(user_id).load_file("cached_profile", None)
+    return cast(UserSpec | None, load_user_file("cached_profile", user_id, deflt=None, lock=False))
 
 
 def contactgroups_of_user(user_id: UserId) -> list[_ContactgroupName]:

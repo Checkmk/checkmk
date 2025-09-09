@@ -49,6 +49,8 @@ def common_prepare(Map args) {
 def fetch_package(Map args) {
     // this is a quick fix for FIPS based tests, see CMK-20851
     def build_node = params.CIPARAM_OVERRIDE_BUILD_NODE;
+    def relative_job_name = args.relative_job_name == null ? "builders/sign-cmk-distro-package" : args.relative_job_name;
+
     if (build_node == "fips") {
         // Do not start builds on FIPS node
         println("Detected build node 'fips', switching this to 'fra'.");
@@ -57,7 +59,7 @@ def fetch_package(Map args) {
 
     inside_container_minimal(safe_branch_name: args.safe_branch_name) {
         upstream_build(
-            relative_job_name: "builders/build-cmk-distro-package",
+            relative_job_name: relative_job_name,
             build_params: [
                 /// currently CUSTOM_GIT_REF must match, but in the future
                 /// we should define dependency paths for build-cmk-distro-package

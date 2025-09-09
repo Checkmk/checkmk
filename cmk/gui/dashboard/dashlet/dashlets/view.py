@@ -19,6 +19,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import (
@@ -231,7 +232,13 @@ class ABCViewDashlet(IFrameDashlet[VT]):
             context,
             user_permissions,
         )
-        view.row_limit = get_limit()
+        view.row_limit = get_limit(
+            request_limit_mode=request.get_ascii_input_mandatory("limit", "soft"),
+            soft_query_limit=active_config.soft_query_limit,
+            may_ignore_soft_limit=user.may("general.ignore_soft_limit"),
+            hard_query_limit=active_config.hard_query_limit,
+            may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
+        )
         view.only_sites = get_only_sites_from_context(context)
         view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
 

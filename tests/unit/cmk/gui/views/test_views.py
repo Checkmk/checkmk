@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Any, Literal
+from typing import Any
 
 import pytest
 
@@ -22,7 +22,6 @@ from cmk.gui.painter.v0 import all_painters, Cell, Painter, PainterRegistry, reg
 from cmk.gui.painter.v0 import registry as painter_registry_module
 from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter_options import painter_option_registry, PainterOptions
-from cmk.gui.role_types import CustomUserRole
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnSpec, SorterSpec
 from cmk.gui.utils.roles import UserPermissions
@@ -427,47 +426,34 @@ def test_view_row_limit(view: View) -> None:
 
 
 @pytest.mark.parametrize(
-    "limit,permissions,result",
+    "limit,ignore_soft_limit,ignore_hard_limit,result",
     [
-        (None, [], 1000),
-        ("soft", {}, 1000),
-        ("hard", {}, 1000),
-        ("none", {}, 1000),
-        ("soft", {"general.ignore_soft_limit": True}, 1000),
-        ("hard", {"general.ignore_soft_limit": True}, 5000),
+        (None, False, False, 1000),
+        ("soft", False, False, 1000),
+        ("hard", False, False, 1000),
+        ("none", False, False, 1000),
+        ("soft", True, False, 1000),
+        ("hard", True, False, 5000),
         # Strange. Shouldn't this stick to the hard limit?
-        ("none", {"general.ignore_soft_limit": True}, 1000),
-        ("soft", {"general.ignore_soft_limit": True, "general.ignore_hard_limit": True}, 1000),
-        ("hard", {"general.ignore_soft_limit": True, "general.ignore_hard_limit": True}, 5000),
-        ("none", {"general.ignore_soft_limit": True, "general.ignore_hard_limit": True}, None),
+        ("none", True, False, 1000),
+        ("soft", True, True, 1000),
+        ("hard", True, True, 5000),
+        ("none", True, True, None),
     ],
 )
-@pytest.mark.usefixtures("request_context")
 def test_gui_view_row_limit(
-    monkeypatch: pytest.MonkeyPatch,
-    limit: Literal["soft", "hard", "none"] | None,
-    permissions: dict[str, bool],
-    result: int | None,
+    limit: str, ignore_soft_limit: bool, ignore_hard_limit: bool, result: int | None
 ) -> None:
-    with monkeypatch.context() as m:
-        if limit is not None:
-            monkeypatch.setitem(request._vars, "limit", limit)
-        m.setattr(
-            active_config,
-            "roles",
-            {
-                "nobody": CustomUserRole(
-                    {
-                        "alias": "",
-                        "builtin": False,
-                        "basedon": "no_permissions",
-                        "permissions": permissions,
-                    }
-                ),
-            },
+    assert (
+        get_limit(
+            request_limit_mode=limit,
+            soft_query_limit=1000,
+            may_ignore_soft_limit=ignore_soft_limit,
+            hard_query_limit=5000,
+            may_ignore_hard_limit=ignore_hard_limit,
         )
-        m.setattr(user, "role_ids", ["nobody"])
-        assert get_limit() == result
+        == result
+    )
 
 
 def test_view_only_sites(view: View) -> None:

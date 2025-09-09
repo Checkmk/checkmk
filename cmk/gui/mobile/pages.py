@@ -249,13 +249,20 @@ def _page_index(config: Config) -> None:
         id_="data",
     )
     items = []
+    row_limit = get_limit(
+        request_limit_mode=request.get_ascii_input_mandatory("limit", "soft"),
+        soft_query_limit=config.soft_query_limit,
+        may_ignore_soft_limit=user.may("general.ignore_soft_limit"),
+        hard_query_limit=config.hard_query_limit,
+        may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
+    )
     for view_name, view_spec in get_permitted_views().items():
         if view_spec.get("mobile") and not view_spec.get("hidden"):
             datasource = data_source_registry[view_spec["datasource"]]()
             context = visuals.active_context_from_request(datasource.infos, view_spec["context"])
 
             view = View(view_name, view_spec, context, user_permissions)
-            view.row_limit = get_limit()
+            view.row_limit = row_limit
             view.only_sites = get_only_sites_from_context(context)
             view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
             view.want_checkboxes = get_want_checkboxes()
@@ -314,7 +321,13 @@ def _page_view(config: Config, *, debug: bool) -> None:
 
     user_permissions = UserPermissions.from_config(config, permission_registry)
     view = View(view_name, view_spec, context, user_permissions)
-    view.row_limit = get_limit()
+    view.row_limit = get_limit(
+        request_limit_mode=request.get_ascii_input_mandatory("limit", "soft"),
+        soft_query_limit=config.soft_query_limit,
+        may_ignore_soft_limit=user.may("general.ignore_soft_limit"),
+        hard_query_limit=config.hard_query_limit,
+        may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
+    )
     view.only_sites = get_only_sites_from_context(context)
     view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
     view.want_checkboxes = get_want_checkboxes()

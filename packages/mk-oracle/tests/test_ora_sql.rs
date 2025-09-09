@@ -18,6 +18,7 @@ use mk_oracle::ora_sql::backend;
 use mk_oracle::ora_sql::instance::generate_data;
 use mk_oracle::ora_sql::sqls;
 use mk_oracle::ora_sql::system;
+use mk_oracle::platform::registry::get_instances;
 use mk_oracle::setup::Env;
 use mk_oracle::types::{Credentials, InstanceName, InstanceNumVersion, InstanceVersion, Tenant};
 use mk_oracle::types::{InstanceAlias, SqlQuery};
@@ -1183,7 +1184,6 @@ fn test_performance_new() {
 
 #[test]
 fn test_performance_old() {
-    add_runtime_to_path();
     for endpoint in WORKING_ENDPOINTS.iter() {
         println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(
@@ -1215,5 +1215,24 @@ fn test_performance_old() {
                 line[2]
             );
         });
+    }
+}
+
+#[test]
+fn test_detection_registry() {
+    let r = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL);
+    if r.is_err() {
+        eprintln!("Skipping test_detection_registry: {}", r.err().unwrap());
+        return;
+    }
+    let instances = get_instances(None).unwrap();
+    eprintln!("{:?}", instances);
+    assert!(!instances.is_empty());
+    for i in instances {
+        assert!(i.name == InstanceName::from("XE") || i.name == InstanceName::from("FREE"));
+        assert!(std::path::PathBuf::from(&i.home).is_dir());
+        assert!(std::path::PathBuf::from(&i.home).exists());
+        assert!(std::path::PathBuf::from(&i.base).is_dir());
+        assert!(std::path::PathBuf::from(&i.base).exists());
     }
 }

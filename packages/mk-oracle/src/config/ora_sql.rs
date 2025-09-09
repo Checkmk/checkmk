@@ -8,8 +8,6 @@ use super::yaml::{Get, Yaml};
 use crate::config::authentication::Authentication;
 use crate::config::connection::Connection;
 use crate::config::options::Options;
-use crate::platform::registry::get_instances;
-use crate::platform::InstanceInfo;
 use crate::types::{HostName, InstanceAlias, InstanceName, SqlBindParam};
 use anyhow::{anyhow, bail, Context, Result};
 use std::collections::hash_map::DefaultHasher;
@@ -191,12 +189,6 @@ impl Config {
     pub fn params(&self) -> &Vec<SqlBindParam> {
         self.options.params()
     }
-}
-
-pub fn get_registry_instance_info(name: &InstanceName) -> Option<InstanceInfo> {
-    let all = get_instances(None);
-    let a = all.iter().find(|i| &i.name == name);
-    a.cloned()
 }
 
 fn get_additional_registry_instances(

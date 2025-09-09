@@ -1,0 +1,12 @@
+diff -Nur asio-1.34.2.orig/asio/include/asio/basic_socket_streambuf.hpp asio-1.34.2/asio/include/asio/basic_socket_streambuf.hpp
+--- asio-1.34.2.orig/asio/include/asio/basic_socket_streambuf.hpp	2025-03-03 22:59:27.022198391 +0100
++++ asio-1.34.2/asio/include/asio/basic_socket_streambuf.hpp	2025-07-22 12:57:40.050065274 +0200
+@@ -174,7 +174,7 @@
+   virtual ~basic_socket_streambuf()
+   {
+     if (pptr() != pbase())
+-      overflow(traits_type::eof());
++      overflow(traits_type::eof());  // NOLINT(clang-analyzer-optin.cplusplus.VirtualCall)
+   }
+ 
+   /// Establish a connection.

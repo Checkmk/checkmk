@@ -1,0 +1,13 @@
+{
+    "integrity": "sha256-87rAFTBfu3AFRb0pWfvFLXWh7C4F+cf2lYASc863jPU=",
+    "strip_prefix": "asio-asio-1-34-2",
+    "url": "https://github.com/chriskohlhoff/asio/archive/refs/tags/asio-1-34-2.tar.gz",
+    "overlay": {
+        "BUILD.bazel": "sha256-eRQfOu8GpkQbc23hgT+TNGv8smbhR2ZSdTqtsWvX7Pk=",
+        "MODULE.bazel": "sha256-mFYx0HmPZ9DcwDWKKFH9LzWlisq1ORY5B6thP9fVRhs="
+    },
+    "patches": {
+        "disable_lint.patch": "sha256-jSnqIPTkubLRsqL7Ov3qJ4KuZuw7L16xRGwd2GzHbbI="
+    },
+    "patch_strip": 1
+}

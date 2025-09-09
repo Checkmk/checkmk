@@ -11,6 +11,7 @@ import copy
 import json
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
+from dataclasses import asdict
 from typing import Literal
 
 from livestatus import SiteConfigurations
@@ -53,12 +54,14 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
+from cmk.gui.visuals import visual_page_breadcrumb
+from cmk.gui.visuals._filter_context import requested_context_from_request
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.watolib.users import get_enabled_remote_sites_for_logged_in_user
 from cmk.utils import paths
 
 from ._network_topology import get_topology_context_and_filters
-from .breadcrumb import dashboard_breadcrumb
+from .breadcrumb import dashboard_breadcrumb, EvaluatedBreadcrumbItem
 from .builtin_dashboards import GROW, MAX
 from .dashlet import (
     ABCFigureDashlet,
@@ -71,6 +74,7 @@ from .dashlet import (
     StaticTextDashlet,
     StaticTextDashletConfig,
 )
+from .metadata import DashboardMetadataObject
 from .store import (
     get_all_dashboards,
     get_permitted_dashboards,
@@ -100,6 +104,63 @@ def page_dashboard(config: Config) -> None:
         request.set_var("name", name)  # make sure that URL context is always complete
 
     _draw_dashboard(name, config.sites, UserPermissions.from_config(config, permission_registry))
+
+
+def page_dashboard_app(config: Config) -> None:
+    mode: Literal["display", "create"] = "display"  # edit mode lives within the page
+    if request.var("create") == "1":
+        if not user.may("general.edit_dashboards"):
+            raise MKAuthException(_("You are not allowed to create dashboards."))
+        mode = "create"
+
+    loaded_dashboard_properties = None
+    if mode == "display":
+        name = _get_default_dashboard_name()
+        permitted_dashboards = get_permitted_dashboards()
+        board = load_dashboard(permitted_dashboards, name)
+        requested_context = requested_context_from_request(["host", "service"])
+
+        board_context = visuals.active_context_from_request(["host", "service"], board["context"])
+        board["context"] = board_context
+        title = visuals.visual_title("dashboard", board, board_context)
+        user_permissions = UserPermissions.from_config(config, permission_registry)
+        # some dashboards have more complicated context requirements when loaded, these are
+        # constructed when clicking on a linking dashboard which means that this will (for now
+        # with the current architecture) always go through a full page reload rather than a
+        # state changing action. Hence, we can rely on the breadcrumb building mechanism here
+        # Loading a dashboard on the frontend through other means will only necessitate the
+        # simple breadcrumb as it does not have any prior context
+        breadcrumb = dashboard_breadcrumb(name, board, title, board_context, user_permissions)
+
+        loaded_dashboard_properties = {
+            "name": name,
+            "metadata": DashboardMetadataObject.from_dashboard_config(board, user_permissions),
+            "filter_context": {
+                "context": requested_context,
+                # determines if the requested filters should overwrite the dashboard filters or
+                # merge them with dashboard filters
+                "application_mode": "overwrite" if request.has_var("active_") else "merge",
+            },
+        }
+    else:
+        visual_name = "dashboard"
+        title = _("Create %s") % visual_name
+        breadcrumb = visual_page_breadcrumb(visual_name, title, "create")
+
+    html.body_start()
+    html.begin_page_content(enable_scrollbar=True)
+
+    page_properties = {
+        "initial_breadcrumb": [
+            asdict(EvaluatedBreadcrumbItem.from_breadcrumb_item(item)) for item in breadcrumb
+        ],
+        # TODO: consider adding initial title as well due to context generation
+        "dashboard": loaded_dashboard_properties,
+        "mode": mode,
+        # required for edit, clone and new dashboard creation
+        "can_edit_dashboards": user.may("general.edit_dashboards"),
+    }
+    html.vue_component("cmk-dashboard", data=page_properties)
 
 
 def _get_default_dashboard_name() -> str:

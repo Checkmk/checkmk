@@ -383,6 +383,8 @@ function onClose() {
 </template>
 
 <style scoped>
+/* stylelint-disable checkmk/vue-bem-naming-convention */
+
 button {
   border: none;
   margin: 0;

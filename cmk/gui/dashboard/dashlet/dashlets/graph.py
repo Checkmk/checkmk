@@ -28,12 +28,13 @@ from cmk.gui.graphing._graph_specification import GraphSpecification
 from cmk.gui.graphing._graph_templates import (
     get_graph_template_choices,
     get_template_graph_specification,
-    graph_and_single_metric_templates_choices_for_context,
+    graph_and_single_metric_template_choices_for_metrics,
     GraphTemplateChoice,
     TemplateGraphSpecification,
 )
 from cmk.gui.graphing._html_render import GraphDestinations
 from cmk.gui.graphing._metrics import get_metric_spec
+from cmk.gui.graphing._translated_metrics import translated_metrics_from_row
 from cmk.gui.graphing._utils import MKCombinedGraphLimitExceededError
 from cmk.gui.graphing._valuespecs import vs_graph_render_options
 from cmk.gui.htmllib.html import html
@@ -55,6 +56,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.visuals import (
     get_only_sites_from_context,
     get_singlecontext_vars,
+    livestatus_query_bare,
 )
 from cmk.utils.macros import MacroMapping
 
@@ -471,7 +473,7 @@ def _graph_templates_autocompleter_testable(
         )
 
     graph_template_choices, single_metric_template_choices = (
-        graph_and_single_metric_templates_choices_for_context(
+        _graph_and_single_metric_templates_choices_for_context(
             params["context"],
             registered_metrics,
             registered_graphs,
@@ -485,6 +487,35 @@ def _graph_templates_autocompleter_testable(
         value_entered_by_user,
         single_metric_template_choices,
     )
+
+
+def _graph_and_single_metric_templates_choices_for_context(
+    context: VisualContext,
+    registered_metrics: Mapping[str, RegisteredMetric],
+    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
+) -> tuple[list[GraphTemplateChoice], list[GraphTemplateChoice]]:
+    graph_template_choices: list[GraphTemplateChoice] = []
+    single_metric_template_choices: list[GraphTemplateChoice] = []
+
+    for row in livestatus_query_bare(
+        "service",
+        context,
+        ["service_check_command", "service_perf_data", "service_metrics"],
+    ):
+        graph_template_choices_for_row, single_metric_template_choices_for_row = (
+            graph_and_single_metric_template_choices_for_metrics(
+                translated_metrics_from_row(
+                    row,
+                    registered_metrics,
+                ),
+                registered_metrics,
+                registered_graphs,
+            )
+        )
+        graph_template_choices.extend(graph_template_choices_for_row)
+        single_metric_template_choices.extend(single_metric_template_choices_for_row)
+
+    return graph_template_choices, single_metric_template_choices
 
 
 def _sorted_matching_graph_template_choices(

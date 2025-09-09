@@ -73,6 +73,26 @@ class StrictPrecision(BaseModel, frozen=True):
     digits: int
 
 
+@dataclass(frozen=True, kw_only=True)
+class PositiveYRange:
+    start: float
+    end: float
+
+    def __post_init__(self) -> None:
+        if self.start < 0 or self.start > self.end:
+            raise ValueError("PositiveRange must have 0 <= start <= end")
+
+
+@dataclass(frozen=True, kw_only=True)
+class NegativeYRange:
+    start: float
+    end: float
+
+    def __post_init__(self) -> None:
+        if self.start > 0 or self.start > self.end:
+            raise ValueError("NegativeRange must have start <= end <= 0")
+
+
 @dataclass(frozen=True)
 class NotationFormatter:
     symbol: str
@@ -174,53 +194,70 @@ class NotationFormatter:
 
     def render_y_labels(
         self,
-        *,
-        min_y: int | float,
-        max_y: int | float,
-        mean_num_labels: float,
+        y_range: PositiveYRange | NegativeYRange,
+        target_number_of_labels: float,
     ) -> Sequence[Label]:
-        assert min_y >= 0
-        assert max_y >= 0
-        assert mean_num_labels >= 0
+        assert target_number_of_labels >= 0
 
-        if 0 < min_y < 1:
-            min_y = 0
-        elif min_y > 1:
-            min_y = math.floor(min_y)
+        if isinstance(y_range, PositiveYRange):
+            y_start_pos_rounded = math.floor(y_range.start)
+            y_end_pos = y_range.end
+            sign_text: Literal["", "-"] = ""
+            sign_number = 1
+        else:
+            y_start_pos_rounded = math.floor(-y_range.end)
+            y_end_pos = -y_range.start
+            sign_text = "-"
+            sign_number = -1
 
-        delta = max_y - min_y
-
-        if delta == 0 or mean_num_labels == 0:
+        delta = y_end_pos - y_start_pos_rounded
+        if delta == 0 or target_number_of_labels == 0:
             return []
 
-        if max_y < 1:
-            atoms = self._compute_small_y_label_atoms(delta)
-        else:  # max_y >= 1
-            atoms = self._compute_large_y_label_atoms(delta)
+        atoms = (
+            self._compute_small_y_label_atoms
+            if y_end_pos < 1
+            else self._compute_large_y_label_atoms
+        )(delta)
 
-        if possible_atoms := [(a, q) for a in atoms if (q := int(delta // a))]:
-            atom, quotient = min(possible_atoms, key=lambda t: abs(t[1] - mean_num_labels))
+        if possible_atoms := [
+            (a, n_labels_for_atom) for a in atoms if (n_labels_for_atom := int(delta // a))
+        ]:
+            selected_atom, _n_labels_for_selected_atom = min(
+                possible_atoms, key=lambda t: abs(t[1] - target_number_of_labels)
+            )
         else:
-            atom = int(delta / mean_num_labels)
-            quotient = int(delta // atom)
+            selected_atom = int(delta / target_number_of_labels)
 
-        first = self._preformat(min_y + atom)[0]
+        position_of_first_label = y_start_pos_rounded - y_start_pos_rounded % selected_atom
+        n_labels = int((y_end_pos - position_of_first_label) // selected_atom)
+        first_formatted_label = self._preformat(
+            position_of_first_label or (position_of_first_label + selected_atom)
+        )[0]
+
         return [
-            Label(
-                p,
+            Label(0, "0")
+            if label_position == 0
+            else Label(
+                sign_number * label_position,
                 Formatted(
-                    sign="",
+                    sign=sign_text,
                     parts=list(
                         self._postformat(
-                            self._preformat(p, use_prefix=first.prefix, use_symbol=first.symbol),
+                            self._preformat(
+                                label_position,
+                                use_prefix=first_formatted_label.prefix,
+                                use_symbol=first_formatted_label.symbol,
+                            ),
                             lambda exponent, digits: exponent + digits,
                             self.use_max_digits_for_labels,
                         )
                     ),
                 ).render(),
             )
-            for i in range(0 if min_y else 1, quotient + 1)
-            for p in (min_y + atom * i,)
+            for label_position in (
+                position_of_first_label + selected_atom * i for i in range(n_labels + 1)
+            )
         ]
 
 

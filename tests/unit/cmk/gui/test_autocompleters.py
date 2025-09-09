@@ -21,6 +21,7 @@ def test_builtin_autocompleters_registered() -> None:
         "monitored_hostname",
         "monitored_metrics",
         "monitored_service_description",
+        "relay_choices",
         "service_levels",
         "sites",
         "syslog_facilities",

@@ -32,7 +32,7 @@ const emit = defineEmits(['close', 'select'])
     }"
     @close="emit('close')"
   >
-    <div class="add-widget-dialog__container">
+    <div class="db-add-widget-dialog__container">
       <WorkflowListItem
         v-for="(item, id) in props.workflowItems"
         :key="id"
@@ -47,7 +47,7 @@ const emit = defineEmits(['close', 'select'])
 </template>
 
 <style scoped>
-.add-widget-dialog__container {
+.db-add-widget-dialog__container {
   display: flex;
   flex-direction: column;
   gap: var(--spacing);

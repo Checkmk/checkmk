@@ -20,6 +20,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.type_defs import InfoName, Row, Rows, ViewSpec
 from cmk.gui.utils.confirm_with_preview import command_confirm_dialog
 from cmk.gui.utils.selection_id import SelectionId
+from cmk.livestatus_client.commands import Command as LivestatusCommand
 
 from .base import Command, CommandConfirmDialogOptions, CommandExecutor, CommandSpec
 from .group import CommandGroup
@@ -53,7 +54,7 @@ def core_command(
         spec = str(row[what + "_id"])
         cmdtag = "SVC" if descr else "HOST"
 
-    commands: Sequence[CommandSpec] | None = None
+    commands: LivestatusCommand | Sequence[CommandSpec] | None = None
     # Call all command actions. The first one that detects
     # itself to be executed (by examining the HTML variables)
     # will return a command to execute and confirm dialog options for the
@@ -72,7 +73,7 @@ def core_command(
 
     # Some commands return lists of commands, others
     # just return one basic command. Convert those
-    if isinstance(commands, str):
+    if isinstance(commands, LivestatusCommand):
         commands = [commands]
 
     return commands, confirm_options, confirm_dialog_options, executor

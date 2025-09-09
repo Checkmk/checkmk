@@ -42,6 +42,9 @@ from cmk.gui.views.command import (
 )
 from cmk.gui.views.sorter import cmp_simple_number, cmp_simple_string, Sorter
 from cmk.gui.visuals.filter import Filter
+from cmk.livestatus_client.commands import (
+    DeleteCrashReport,
+)
 
 from .helpers import local_files_involved_in_crash
 
@@ -381,7 +384,7 @@ def command_delete_crash_report_action(
     action_rows: Rows,
 ) -> CommandActionResult:
     if active_request.has_var("_delete_crash_reports"):
-        commands = [("DEL_CRASH_REPORT;%s" % row["crash_id"])]
+        commands = DeleteCrashReport(row["crash_id"])
         return commands, command.confirm_dialog_options(cmdtag, row, action_rows)
     return None
 

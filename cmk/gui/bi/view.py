@@ -58,9 +58,9 @@ from cmk.gui.views.command import (
     CommandSpec,
     PERMISSION_SECTION_ACTION,
 )
-from cmk.gui.views.command.base import CommandSpecWithoutSite
 from cmk.gui.visuals import get_livestatus_filter_headers
 from cmk.gui.visuals.filter import Filter
+from cmk.livestatus_client.commands import Dummy
 from cmk.utils.servicename import ServiceName
 from cmk.utils.statename import short_service_state_name
 
@@ -1162,7 +1162,7 @@ def command_freeze_aggregation_action(
                 branch_title=compiled_aggregation.id,
             )
             return (
-                [str(frozen_path)],
+                Dummy(str(frozen_path)),
                 command.confirm_dialog_options(cmdtag, row, action_rows),
             )
 
@@ -1171,8 +1171,8 @@ def command_freeze_aggregation_action(
 
 def command_freeze_aggregation_executor(command: CommandSpec, site: SiteId | None) -> None:
     """Function that is called to execute this action"""
-    assert isinstance(command, CommandSpecWithoutSite)
-    Path(command).unlink(missing_ok=True)
+    assert isinstance(command, Dummy)
+    Path(command.arg).unlink(missing_ok=True)
 
 
 CommandFreezeAggregation = Command(

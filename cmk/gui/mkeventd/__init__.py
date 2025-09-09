@@ -6,7 +6,6 @@
 from .config_domain import ConfigDomainEventConsole
 from .defines import action_whats, phase_names, syslog_facilities, syslog_priorities
 from .helpers import action_choices, service_levels
-from .livestatus import execute_command
 
 __all__ = [
     "syslog_priorities",
@@ -15,6 +14,5 @@ __all__ = [
     "action_whats",
     "service_levels",
     "action_choices",
-    "execute_command",
     "ConfigDomainEventConsole",
 ]

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import time
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import Literal
@@ -16,12 +15,12 @@ from cmk.gui.permissions import Permission
 from cmk.gui.type_defs import Row, Rows
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
+from cmk.livestatus_client.commands import Command as LivestatusCommand
 
 from .group import CommandGroup
 
-CommandSpecWithoutSite = str
-CommandSpecWithSite = tuple[SiteId | None, CommandSpecWithoutSite]
-CommandSpec = CommandSpecWithoutSite | CommandSpecWithSite
+CommandSpecWithSite = tuple[SiteId | None, LivestatusCommand]
+CommandSpec = LivestatusCommand | CommandSpecWithSite
 
 
 @dataclass
@@ -37,7 +36,7 @@ class CommandConfirmDialogOptions:
 
 
 CommandActionResult = (
-    tuple[CommandSpecWithoutSite | Sequence[CommandSpec], CommandConfirmDialogOptions] | None
+    tuple[LivestatusCommand | Sequence[CommandSpec], CommandConfirmDialogOptions] | None
 )
 CommandExecutor = Callable[[CommandSpec, SiteId | None], None]
 
@@ -167,8 +166,8 @@ class Command(abc.ABC):
         """Function that is called to execute this action"""
         # We only get CommandSpecWithoutSite here. Can be cleaned up once we have a dedicated
         # object type for the command
-        assert isinstance(command, str)
+        assert isinstance(command, LivestatusCommand)
         if self._executor:
             self._executor(command, site)
             return
-        sites.live().command("[%d] %s" % (int(time.time()), command), site)
+        sites.live().command_obj(command, site)

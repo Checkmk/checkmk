@@ -5,6 +5,7 @@
 
 from collections.abc import Iterable
 from datetime import datetime, UTC
+from unittest.mock import Mock  # Import Mock
 
 import time_machine
 from pytest import MonkeyPatch
@@ -70,11 +71,11 @@ def test_match_item_generator_ec_rule_packs_and_rules() -> None:
 
 @time_machine.travel(datetime.fromtimestamp(1622638021, tz=UTC))
 def test_send_event(monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr(
-        mkeventd_wato,
-        "execute_command",
-        lambda *args, **kwargs: None,
-    )
+    mock_sites = Mock()
+
+    mock_sites.live.return_value = mock_sites
+
+    monkeypatch.setattr(mkeventd_wato, "sites", mock_sites)
     assert (
         mkeventd_wato.send_event(
             ec.Event(

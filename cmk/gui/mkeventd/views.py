@@ -17,6 +17,7 @@ from livestatus import OnlySites
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
+from cmk.gui import sites
 from cmk.gui.config import Config, default_authorized_builtin_role_ids
 from cmk.gui.dashboard.type_defs import DashletConfig, LinkedViewDashletConfig, ViewDashletConfig
 from cmk.gui.data_source import ABCDataSource, DataSourceRegistry, row_id, RowTableLivestatus
@@ -69,11 +70,18 @@ from cmk.gui.views.sorter import (
 )
 from cmk.gui.views.store import get_permitted_views, multisite_builtin_views
 from cmk.gui.visuals.filter import Filter
+from cmk.livestatus_client.commands import Command as LivestatusCommand
+from cmk.livestatus_client.commands import (
+    ECAction,
+    ECChangeState,
+    ECDelete,
+    ECDeleteEventsOfHost,
+    ECUpdate,
+)
 from cmk.utils.statename import short_service_state_name
 
 from .defines import action_whats, phase_names, syslog_facilities, syslog_priorities
 from .helpers import action_choices
-from .livestatus import execute_command
 from .permission_section import PERMISSION_SECTION_EVENT_CONSOLE
 
 
@@ -1297,10 +1305,8 @@ class ECCommand(Command):
         )
 
     def executor(self, command: CommandSpec, site: SiteId | None) -> None:
-        # We only get CommandSpecWithoutSite here. Can be cleaned up once we have a dedicated
-        # object type for the command
-        assert isinstance(command, str)
-        execute_command(command, site=site)
+        assert isinstance(command, LivestatusCommand)
+        sites.live().command_obj(command, site)
 
 
 def command_update_event_render(what: str) -> None:
@@ -1358,11 +1364,11 @@ def command_update_event_action(
         else:
             contact = ""
         ack = html.get_checkbox("_mkeventd_acknowledge")
-        events = ",".join(str(entry["event_id"]) for entry in action_rows)
-        return (
-            f"UPDATE;{events};{user.id};{ack and 1 or 0};{comment};{contact}",
-            command.confirm_dialog_options(cmdtag, row, action_rows),
+        events = [int(entry["event_id"]) for entry in action_rows]
+        return ECUpdate(events, ack, user.ident, comment, contact), command.confirm_dialog_options(
+            cmdtag, row, action_rows
         )
+
     return None
 
 
@@ -1435,10 +1441,10 @@ def command_change_state_action(
     action_rows: Rows,
 ) -> CommandActionResult:
     if active_request.var("_mkeventd_changestate"):
-        events = ",".join(str(entry["event_id"]) for entry in action_rows)
+        events = [int(entry["event_id"]) for entry in action_rows]
         state = MonitoringState().from_html_vars("_mkeventd_state")
         return (
-            f"CHANGESTATE;{events};{user.id};{state}",
+            ECChangeState(events, user.ident, state),
             command.confirm_dialog_options(cmdtag, row, action_rows),
         )
     return None
@@ -1489,9 +1495,9 @@ def command_custom_actions_action(
 ) -> CommandActionResult:
     for action_id, _title in action_choices(omit_hidden=True):
         if active_request.var("_action_" + action_id):
-            events = ",".join(str(entry["event_id"]) for entry in action_rows)
+            events = [int(entry["event_id"]) for entry in action_rows]
             return (
-                f"ACTION;{events};{user.id};{action_id}",
+                ECAction(events, action_id, user.ident),
                 command.confirm_dialog_options(cmdtag, row, action_rows),
             )
     return None
@@ -1536,8 +1542,8 @@ def command_archive_event_action(
     action_rows: Rows,
 ) -> CommandActionResult:
     if active_request.var("_delete_event"):
-        events = ",".join(str(entry["event_id"]) for entry in action_rows)
-        cmd = f"DELETE;{events};{user.id}"
+        events = [int(entry["event_id"]) for entry in action_rows]
+        cmd = ECDelete(events, user.ident)
         return cmd, command.confirm_dialog_options(cmdtag, row, action_rows)
     return None
 
@@ -1596,7 +1602,7 @@ def command_archive_events_of_host_action(
     action_rows: Rows,
 ) -> CommandActionResult:
     if active_request.var("_archive_events_of_hosts"):
-        commands = [f"DELETE_EVENTS_OF_HOST;{row['host_name']};{user.id}"]
+        commands = [ECDeleteEventsOfHost(HostName(row["host_name"]), row["event_host"])]
         return (
             commands,
             command.confirm_dialog_options(cmdtag, row, action_rows),

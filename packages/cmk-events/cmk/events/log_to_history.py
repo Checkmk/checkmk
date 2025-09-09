@@ -14,10 +14,11 @@ by sending the message to the local monitoring core.
 """
 
 import logging
-import time
 from typing import Final, NewType
 
 import livestatus
+
+from cmk.livestatus_client.commands import Log
 
 from .notification_result import (
     NOTIFICATION_RESULT_OK,
@@ -41,19 +42,15 @@ logger = logging.getLogger(__name__)
 
 
 def log_to_history(message: SanitizedLivestatusLogStr) -> None:
-    _livestatus_cmd(f"LOG;{message}")
-
-
-def _livestatus_cmd(command: str) -> None:
-    logger.info("sending command %s", command)
+    logger.info("sending command LOG;%s", message)
     timeout = 2
     try:
         connection = livestatus.LocalConnection()
         connection.set_timeout(timeout)
-        connection.command(f"[{time.time():.0f}] {command}")
+        connection.command_obj(Log(message=message))
     except livestatus.MKLivestatusException:
         logger.exception("Cannot send livestatus command (Timeout: %d sec)", timeout)
-        logger.info("Command was: %s", command)
+        logger.info("Command was: LOG;%s", message)
 
 
 def _format_notification_message(

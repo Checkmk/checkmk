@@ -11,9 +11,8 @@
 
 import time
 from collections.abc import Sequence
+from datetime import datetime
 from typing import Literal, Protocol
-
-import livestatus
 
 import cmk.ccc.version as cmk_version
 from cmk.bi.trees import CompiledAggrLeaf, CompiledAggrRule, CompiledAggrTree
@@ -43,6 +42,44 @@ from cmk.gui.utils.time import timezone_utc_offset_str
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import AbsoluteDate, Age, Checkbox, DatePicker, Dictionary, TimePicker
 from cmk.gui.view_utils import render_cre_upgrade_button
+from cmk.livestatus_client.commands import (
+    AcknowledgeHostProblem,
+    Acknowledgement,
+    AcknowledgeServiceProblem,
+    AddHostComment,
+    AddServiceComment,
+    BaseDeleteDowntime,
+    ChangeHostModifiedAttributes,
+    ChangeServiceModifiedAttributes,
+    DeleteHostComment,
+    DeleteHostDowntime,
+    DeleteServiceComment,
+    DeleteServiceDowntime,
+    DisableHostCheck,
+    DisableHostNotifications,
+    DisablePassiveHostChecks,
+    DisablePassiveServiceChecks,
+    DisableServiceCheck,
+    DisableServiceNotifications,
+    EnableHostCheck,
+    EnableHostNotifications,
+    EnablePassiveHostChecks,
+    EnablePassiveServiceChecks,
+    EnableServiceCheck,
+    EnableServiceNotifications,
+    NotificationOption,
+    ProcessHostCheckResult,
+    ProcessServiceCheckResult,
+    RemoveHostAcknowledgement,
+    RemoveServiceAcknowledgement,
+    ScheduleForcedHostCheck,
+    ScheduleForcedServiceCheck,
+    ScheduleHostDowntime,
+    ScheduleServiceDowntime,
+    SendCustomHostNotification,
+    SendCustomServiceNotification,
+)
+from cmk.livestatus_client.commands import Command as LivestatusCommand
 from cmk.utils import paths
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables.hosts import Hosts
@@ -181,10 +218,14 @@ def command_reschedule_action(
             )
 
         t = time.time()
-        if spread:
-            t += spread * 60.0 * row_index / len(action_rows)
-
-        cmd = "SCHEDULE_FORCED_" + cmdtag + "_CHECK;%s;%d" % (spec, int(t))
+        t += spread * 60.0 * row_index / len(action_rows)
+        dt = datetime.fromtimestamp(t)
+        if cmdtag == "SVC":
+            cmd: LivestatusCommand = ScheduleForcedServiceCheck(
+                HostName(row["host_name"]), dt, row["service_description"]
+            )
+        else:
+            cmd = ScheduleForcedHostCheck(HostName(row["host_name"]), dt)
         return cmd, command.confirm_dialog_options(
             cmdtag,
             row,
@@ -271,17 +312,29 @@ def command_notifications_action(
     row_index: int,
     action_rows: Rows,
 ) -> CommandActionResult:
-    if request.var("_enable_notifications"):
-        return (
-            "ENABLE_" + cmdtag + "_NOTIFICATIONS;%s" % spec,
-            command.confirm_dialog_options(cmdtag, row, action_rows),
+    if not (
+        (enable := request.var("_enable_notifications")) or request.var("_disable_notifications")
+    ):
+        return None
+
+    host = row["host_name"]
+    if cmdtag == "HOST":
+        cmd: LivestatusCommand = (
+            EnableHostNotifications(HostName(host))
+            if enable
+            else DisableHostNotifications(HostName(host))
         )
-    if request.var("_disable_notifications"):
-        return (
-            "DISABLE_" + cmdtag + "_NOTIFICATIONS;%s" % spec,
-            command.confirm_dialog_options(cmdtag, row, action_rows),
+    else:
+        service = row["service_description"]
+        cmd = (
+            EnableServiceNotifications(HostName(host), service)
+            if enable
+            else DisableServiceNotifications(HostName(host), service)
         )
-    return None
+    return (
+        cmd,
+        command.confirm_dialog_options(cmdtag, row, action_rows),
+    )
 
 
 CommandNotifications = Command(
@@ -343,17 +396,26 @@ def command_toggle_active_checks_action(
     row_index: int,
     action_rows: Rows,
 ) -> CommandActionResult:
-    if request.var("_enable_checks"):
-        return (
-            "ENABLE_" + cmdtag + "_CHECK;%s" % spec,
-            command.confirm_dialog_options(cmdtag, row, action_rows),
+    if not ((enable := request.var("_enable_checks")) or request.var("_disable_checks")):
+        return None
+
+    host = row["host_name"]
+    if cmdtag == "HOST":
+        cmd: LivestatusCommand = (
+            EnableHostCheck(HostName(host)) if enable else DisableHostCheck(HostName(host))
         )
-    if request.var("_disable_checks"):
-        return (
-            "DISABLE_" + cmdtag + "_CHECK;%s" % spec,
-            command.confirm_dialog_options(cmdtag, row, action_rows),
+
+    else:
+        service = row["service_description"]
+        cmd = (
+            EnableServiceCheck(HostName(host), service)
+            if enable
+            else DisableServiceCheck(HostName(host), service)
         )
-    return None
+    return (
+        cmd,
+        command.confirm_dialog_options(cmdtag, row, action_rows),
+    )
 
 
 CommandToggleActiveChecks = Command(
@@ -404,17 +466,29 @@ def command_toggle_passive_checks_action(
     row_index: int,
     action_rows: Rows,
 ) -> CommandActionResult:
-    if request.var("_enable_passive_checks"):
-        return (
-            "ENABLE_PASSIVE_" + cmdtag + "_CHECKS;%s" % spec,
-            command.confirm_dialog_options(cmdtag, row, action_rows),
+    if not (
+        (enable := request.var("_enable_passive_checks")) or request.var("_disable_passive_checks")
+    ):
+        return None
+
+    host = row["host_name"]
+    if cmdtag == "HOST":
+        cmd: LivestatusCommand = (
+            EnablePassiveHostChecks(HostName(host))
+            if enable
+            else DisablePassiveHostChecks(HostName(host))
         )
-    if request.var("_disable_passive_checks"):
-        return (
-            "DISABLE_PASSIVE_" + cmdtag + "_CHECKS;%s" % spec,
-            command.confirm_dialog_options(cmdtag, row, action_rows),
+    else:
+        service = row["service_description"]
+        cmd = (
+            EnablePassiveServiceChecks(HostName(host), service)
+            if enable
+            else DisablePassiveServiceChecks(HostName(host), service)
         )
-    return None
+    return (
+        cmd,
+        command.confirm_dialog_options(cmdtag, row, action_rows),
+    )
 
 
 CommandTogglePassiveChecks = Command(
@@ -494,8 +568,14 @@ def command_clear_modified_attributes_action(
     action_rows: Rows,
 ) -> CommandActionResult:
     if request.var("_clear_modattr"):
+        host = row["host_name"]
+        if cmdtag == "HOST":
+            cmd: LivestatusCommand = ChangeHostModifiedAttributes(HostName(host), 0)
+        else:
+            service = row["service_description"]
+            cmd = ChangeServiceModifiedAttributes(HostName(host), 0, service)
         return (
-            "CHANGE_" + cmdtag + "_MODATTR;%s;0" % spec,
+            cmd,
             command.confirm_dialog_options(cmdtag, row, action_rows),
         )
     return None
@@ -654,12 +734,16 @@ def command_fake_check_result_action(
         if perfdata:
             pluginoutput += "|" + perfdata
 
-        cmd = "PROCESS_{}_CHECK_RESULT;{};{};{}".format(
-            "SERVICE" if cmdtag == "SVC" else cmdtag,
-            spec,
-            state,
-            livestatus.lqencode(pluginoutput),
-        )
+        host = row["host_name"]
+        if cmdtag == "HOST":
+            cmd: LivestatusCommand = ProcessHostCheckResult(
+                HostName(host), int(state) if state else None, pluginoutput
+            )
+        else:
+            service = row["service_description"]
+            cmd = ProcessServiceCheckResult(
+                HostName(host), int(state) if state else None, pluginoutput, service
+            )
 
         return cmd, command.confirm_dialog_options(cmdtag, row, action_rows)
 
@@ -756,7 +840,17 @@ def command_custom_notification_action(
         comment = request.get_str_input_mandatory("_cusnot_comment")
         broadcast = 1 if html.get_checkbox("_cusnot_broadcast") else 0
         forced = 2 if html.get_checkbox("_cusnot_forced") else 0
-        cmd = f"SEND_CUSTOM_{cmdtag}_NOTIFICATION;{spec};{broadcast + forced};{user.id};{livestatus.lqencode(comment)}"
+        option = NotificationOption(broadcast + forced)
+        host = row["host_name"]
+        if cmdtag == "HOST":
+            cmd: LivestatusCommand = SendCustomHostNotification(
+                HostName(host), option, user.ident, comment
+            )
+        else:
+            service = row["service_description"]
+            cmd = SendCustomServiceNotification(
+                HostName(host), option, user.ident, comment, service
+            )
         return cmd, command.confirm_dialog_options(cmdtag, row, action_rows)
     return None
 
@@ -1000,9 +1094,9 @@ def command_acknowledge_action(
             raise MKUserError("_ack_comment", _("The comment must not contain semicolons."))
         non_empty_comment = comment
 
-        sticky = 2 if request.var("_ack_sticky") else 0
-        sendnot = 1 if request.var("_ack_notify") else 0
-        perscomm = 1 if request.var("_ack_persistent") else 0
+        sticky = Acknowledgement.STICKY if request.var("_ack_sticky") else Acknowledgement.NONE
+        sendnot = bool(request.var("_ack_notify"))
+        perscomm = bool(request.var("_ack_persistent"))
 
         if request.var("_ack_expire"):
             expire_date = _vs_date().from_html_vars("_ack_expire_date")
@@ -1019,21 +1113,39 @@ def command_acknowledge_action(
                     _("You cannot set an expiration date and time that is in the past:")
                     + f' "{expire_date} {expire_time}"',
                 )
-            expire_text = ";%d" % expire_timestamp
+            expire_on = datetime.fromtimestamp(expire_timestamp)
         else:
-            expire_text = ""
+            expire_on = None
 
-        def make_command_ack(spec, cmdtag):
-            return (
-                "ACKNOWLEDGE_"
-                + cmdtag
-                + "_PROBLEM;%s;%d;%d;%d;%s" % (spec, sticky, sendnot, perscomm, user.id)
-                + (";%s" % livestatus.lqencode(non_empty_comment))
-                + expire_text
+        def make_command_ack(spec: str, cmdtag: str) -> LivestatusCommand:
+            if cmdtag == "HOST":
+                host = spec
+                return AcknowledgeHostProblem(
+                    HostName(host),
+                    sticky,
+                    sendnot,
+                    perscomm,
+                    user.ident,
+                    non_empty_comment,
+                    expire_on,
+                )
+
+            host, service = spec.split(";", 1)
+            return AcknowledgeServiceProblem(
+                HostName(host),
+                service,
+                sticky,
+                sendnot,
+                perscomm,
+                user.ident,
+                non_empty_comment,
+                expire_on,
             )
 
         if "aggr_tree" in row:  # BI mode
-            commands = [(site, make_command_ack(spec_, cmdtag_)) for site, spec_, cmdtag_ in specs]
+            commands: Sequence[CommandSpec] = [
+                (site, make_command_ack(spec_, cmdtag_)) for site, spec_, cmdtag_ in specs
+            ]
         else:
             commands = [make_command_ack(spec, cmdtag)]
 
@@ -1098,8 +1210,13 @@ def command_remove_acknowledgements_action(
     if not request.var("_remove_acknowledgments"):
         return None
 
-    def make_command_rem(spec, cmdtag):
-        return "REMOVE_" + cmdtag + "_ACKNOWLEDGEMENT;%s" % spec
+    def make_command_rem(spec: str, cmdtag: Literal["HOST", "SVC"]) -> LivestatusCommand:
+        if cmdtag == "HOST":
+            host = spec
+            return RemoveHostAcknowledgement(HostName(host))
+
+        host, service = spec.split(";", 1)
+        return RemoveServiceAcknowledgement(HostName(host), service)
 
     if "aggr_tree" in row:  # BI mode
         specs = []
@@ -1111,7 +1228,9 @@ def command_remove_acknowledgements_action(
                 spec = host
                 cmdtag = "HOST"
             specs.append((site, spec, cmdtag))
-        commands = [(site, make_command_rem(spec, cmdtag)) for site, spec_, cmdtag_ in specs]
+        commands: Sequence[CommandSpec] = [
+            (site, make_command_rem(spec, cmdtag)) for site, spec_, cmdtag_ in specs
+        ]
     else:
         commands = [make_command_rem(spec, cmdtag)]
 
@@ -1212,12 +1331,14 @@ def command_add_comment_action(
         comment = request.get_str_input("_comment")
         if not comment:
             raise MKUserError("_comment", _("You need to supply a comment."))
-        cmd = (
-            "ADD_"
-            + cmdtag
-            + f"_COMMENT;{spec};1;{user.id}"
-            + (";%s" % livestatus.lqencode(comment))
-        )
+
+        host = row["host_name"]
+        if cmdtag == "HOST":
+            cmd: LivestatusCommand = AddHostComment(HostName(host), comment, True, user.ident)
+        else:
+            service = row["service_description"]
+            cmd = AddServiceComment(HostName(host), comment, True, user.ident, service)
+
         return cmd, command.confirm_dialog_options(cmdtag, row, action_rows)
     return None
 
@@ -1903,20 +2024,32 @@ class DowntimeSchedule:
         self.delayed_duration = delayed_duration
         self.comment = comment
 
-    def livestatus_command(self, specification: str, cmdtag: Literal["HOST", "SVC"]) -> str:
-        return (
-            ("SCHEDULE_" + cmdtag + "_DOWNTIME;%s;" % specification)
-            + (
-                "%d;%d;%d;0;%d;%s;"
-                % (
-                    self.start_time,
-                    self.end_time,
-                    self.mode,
-                    self.delayed_duration,
-                    user.id,
-                )
+    def livestatus_command(
+        self, specification: str, cmdtag: Literal["HOST", "SVC"]
+    ) -> LivestatusCommand:
+        if cmdtag == "HOST":
+            host = specification
+            return ScheduleHostDowntime(
+                HostName(host),
+                datetime.fromtimestamp(self.start_time),
+                datetime.fromtimestamp(self.end_time),
+                self.mode,
+                0,
+                self.delayed_duration,
+                user.ident,
+                self.comment,
             )
-            + livestatus.lqencode(self.comment)
+        host, service = specification.split(";", 1)
+        return ScheduleServiceDowntime(
+            HostName(host),
+            datetime.fromtimestamp(self.start_time),
+            datetime.fromtimestamp(self.end_time),
+            self.mode,
+            0,
+            self.delayed_duration,
+            user.ident,
+            self.comment,
+            service,
         )
 
 
@@ -2023,32 +2156,31 @@ def _rm_downtime_from_downtime_datasource(
     action_rows: Rows,
 ) -> CommandActionResult:
     return (
-        f"DEL_{cmdtag}_DOWNTIME;{spec}",
-        command.confirm_dialog_options(
-            cmdtag,
-            row,
-            action_rows,
-        ),
-    )
+        DeleteHostDowntime(int(row["downtime_id"]))
+        if cmdtag == "HOST"
+        else DeleteServiceDowntime(int(row["downtime_id"]))
+    ), command.confirm_dialog_options(cmdtag, row, action_rows)
 
 
 def _rm_downtime_from_hst_or_svc_datasource(
     command: Command, cmdtag: Literal["HOST", "SVC"], row: Row, action_rows: Rows
-) -> tuple[list[str], CommandConfirmDialogOptions] | None:
+) -> tuple[Sequence[LivestatusCommand], CommandConfirmDialogOptions] | None:
     if not user.may("action.remove_all_downtimes"):
         return None
 
     downtime_ids = []
     if cmdtag == "HOST":
         prefix = "host_"
+        cmd: type[BaseDeleteDowntime] = DeleteHostDowntime
     else:
         prefix = "service_"
+        cmd = DeleteServiceDowntime
     for id_ in row[prefix + "downtimes"]:
         if id_ != "":
             downtime_ids.append(int(id_))
     commands = []
     for dtid in downtime_ids:
-        commands.append(f"DEL_{cmdtag}_DOWNTIME;{dtid}\n")
+        commands.append(cmd(dtid))
     return commands, command.confirm_dialog_options(cmdtag, row, action_rows)
 
 
@@ -2140,7 +2272,7 @@ def command_remove_comments_action(
     # general one. The latter one only removes the comment itself, not the "acknowledged" state.
     # NOTE: We get the commend ID (an int) as a str via the spec parameter (why???), but we need
     # the specification of the host or service for REMOVE_FOO_ACKNOWLEDGEMENT.
-    commands = []
+    commands: list[LivestatusCommand] = []
     if row.get("comment_entry_type") == 4:  # an acknowledgement
         # NOTE: REMOVE_FOO_ACKNOWLEDGEMENT removes all non-persistent acknowledgement comments.
         # This means if we remove some acknowledgement comments, we should only fire
@@ -2148,17 +2280,17 @@ def command_remove_comments_action(
         comments_to_be_removed = {str(r["comment_id"]) for r in action_rows}
         if _acknowledgement_needs_removal(cmdtag, comments_to_be_removed):
             if cmdtag == "HOST":
-                rm_ack = f"REMOVE_HOST_ACKNOWLEDGEMENT;{row['host_name']}"
+                rm_ack: LivestatusCommand = RemoveHostAcknowledgement(HostName(row["host_name"]))
             else:
-                rm_ack = (
-                    f"REMOVE_SVC_ACKNOWLEDGEMENT;{row['host_name']};{row['service_description']}"
+                rm_ack = RemoveServiceAcknowledgement(
+                    HostName(row["host_name"]), row["service_description"]
                 )
             commands.append(rm_ack)
     # Nevertheless, we need the general command, too, even for acknowledgements: The
     # acknowledgement might be persistent, so REMOVE_FOO_ACKNOWLEDGEMENT leaves the comment
     # itself, that's the whole point of being persistent. The only way to get rid of such a
     # comment is via DEL_FOO_COMMENT.
-    del_cmt = f"DEL_HOST_COMMENT;{spec}" if cmdtag == "HOST" else f"DEL_SVC_COMMENT;{spec}"
+    del_cmt = DeleteHostComment(int(spec)) if cmdtag == "HOST" else DeleteServiceComment(int(spec))
     commands.append(del_cmt)
     return commands, command.confirm_dialog_options(
         cmdtag,

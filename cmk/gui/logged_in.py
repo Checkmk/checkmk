@@ -13,7 +13,7 @@ import os
 import time
 from collections.abc import Container, Sequence
 from pathlib import Path
-from typing import Any, Final, Literal, NewType, override, TypedDict
+from typing import Any, Final, Literal, NewType, TypedDict
 
 from livestatus import SiteConfigurations
 
@@ -464,8 +464,7 @@ class LoggedInUser:
             return
 
         if not self.may(permission):
-            perm = permissions.permission_registry.get(permission)
-            title = permission if perm is None else perm.title
+            perm = permissions.permission_registry[permission]
             raise MKAuthException(
                 _(
                     "We are sorry, but you lack the permission "
@@ -473,7 +472,7 @@ class LoggedInUser:
                     "then please ask your administrator to provide you with "
                     "the following permission: '<b>%s</b>'."
                 )
-                % title
+                % perm.title
             )
 
     def load_file(
@@ -527,17 +526,11 @@ class LoggedInSuperUser(LoggedInUser):
         self.alias = "Superuser for internal use"
         self.email = "admin"
 
-    @override
     def _gather_roles(self, _user_id: UserId | None) -> list[str]:
         return ["admin"]
 
-    @override
     def save_file(self, name: str, content: Any) -> None:
         raise TypeError("The profiles of LoggedInSuperUser cannot be saved")
-
-    @override
-    def may(self, permission_name: str) -> bool:
-        return True
 
 
 class LoggedInRemoteSite(LoggedInUser):
@@ -547,11 +540,9 @@ class LoggedInRemoteSite(LoggedInUser):
         self.email = "?"
         self.site_name = site_name
 
-    @override
     def _gather_roles(self, _user_id: UserId | None) -> list[str]:
         return ["no_permissions"]
 
-    @override
     def save_file(self, name: str, content: Any) -> None:
         raise TypeError("The profiles of LoggedInRemoteSite cannot be saved")
 
@@ -562,17 +553,11 @@ class LoggedInNobody(LoggedInUser):
         self.alias = "Unauthenticated user"
         self.email = "nobody"
 
-    @override
     def _gather_roles(self, _user_id: UserId | None) -> list[str]:
         return []
 
-    @override
     def save_file(self, name: str, content: Any) -> None:
         raise TypeError("The profiles of LoggedInNobody cannot be saved")
-
-    @override
-    def may(self, permission_name: str) -> bool:
-        return False
 
 
 def _confdir_for_user_id(user_id: UserId | None) -> Path | None:

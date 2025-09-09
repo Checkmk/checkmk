@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.plugins.three_par.server_side_calls.three_par import special_agent_three_par
+from cmk.plugins.hpe_3par.server_side_calls.hpe_3par import special_agent_hpe_3par
 from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgentCommand
 
 HOST_CONFIG = HostConfig(
@@ -137,4 +137,4 @@ HOST_CONFIG = HostConfig(
     ],
 )
 def test_3par(params: Mapping[str, object], result: Sequence[SpecialAgentCommand]) -> None:
-    assert list(special_agent_three_par(params, HOST_CONFIG)) == result
+    assert list(special_agent_hpe_3par(params, HOST_CONFIG)) == result

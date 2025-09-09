@@ -10,10 +10,10 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.threepar_volumes import (
-    check_threepar_volumes,
-    discover_threepar_volumes,
-    parse_threepar_volumes,
+from cmk.plugins.hpe_3par.agent_based.hpe_3par_volumes import (
+    check_hpe_3par_volumes,
+    discover_hpe_3par_volumes,
+    parse_hpe_3par_volumes,
 )
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 from tests.unit.cmk.base.legacy_checks.checktestlib import mock_item_state
@@ -52,7 +52,7 @@ def test_discover_3par_volumes(
     expected_discovery_result: Sequence[Service],
 ) -> None:
     assert (
-        list(discover_threepar_volumes(parse_threepar_volumes(section)))
+        list(discover_hpe_3par_volumes(parse_hpe_3par_volumes(section)))
         == expected_discovery_result
     )
 
@@ -259,10 +259,10 @@ def test_check_3par_volumes(
     ):
         assert (
             list(
-                check_threepar_volumes(
+                check_hpe_3par_volumes(
                     item=item,
                     params=parameters,
-                    section=parse_threepar_volumes(section),
+                    section=parse_hpe_3par_volumes(section),
                 )
             )
             == expected_check_result

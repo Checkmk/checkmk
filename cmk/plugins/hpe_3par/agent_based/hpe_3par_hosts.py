@@ -16,11 +16,11 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.threepar import parse_3par
+from cmk.plugins.hpe_3par.lib.agent_based import parse_3par
 
 
 @dataclass
-class ThreeParHost:
+class HPE3ParHost:
     name: str
     id: int | str
     os: str | None
@@ -28,12 +28,12 @@ class ThreeParHost:
     iscsi_paths_number: int
 
 
-ThreeParHostsSection = Mapping[str, ThreeParHost]
+HPE3ParHostsSection = Mapping[str, HPE3ParHost]
 
 
-def parse_threepar_hosts(string_table: StringTable) -> ThreeParHostsSection:
+def parse_hpe_3par_hosts(string_table: StringTable) -> HPE3ParHostsSection:
     return {
-        host.get("name"): ThreeParHost(
+        host.get("name"): HPE3ParHost(
             name=host.get("name"),
             id=host.get("id"),
             os=host.get("descriptors", {}).get("os"),
@@ -47,18 +47,18 @@ def parse_threepar_hosts(string_table: StringTable) -> ThreeParHostsSection:
 
 agent_section_3par_hosts = AgentSection(
     name="3par_hosts",
-    parse_function=parse_threepar_hosts,
+    parse_function=parse_hpe_3par_hosts,
 )
 
 
-def discover_threepar_hosts(section: ThreeParHostsSection) -> DiscoveryResult:
+def discover_hpe_3par_hosts(section: HPE3ParHostsSection) -> DiscoveryResult:
     for host in section:
         yield Service(item=host)
 
 
-def check_threepar_hosts(
+def check_hpe_3par_hosts(
     item: str,
-    section: ThreeParHostsSection,
+    section: HPE3ParHostsSection,
 ) -> CheckResult:
     if (host := section.get(item)) is None:
         return
@@ -77,6 +77,6 @@ def check_threepar_hosts(
 check_plugin_3par_hosts = CheckPlugin(
     name="3par_hosts",
     service_name="Host %s",
-    discovery_function=discover_threepar_hosts,
-    check_function=check_threepar_hosts,
+    discovery_function=discover_hpe_3par_hosts,
+    check_function=check_hpe_3par_hosts,
 )

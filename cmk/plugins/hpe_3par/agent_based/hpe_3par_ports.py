@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.threepar import parse_3par
+from cmk.plugins.hpe_3par.lib.agent_based import parse_3par
 
 THREEPAR_PORTS_DEFAULT_LEVELS = {
     "1_link": 1,
@@ -86,7 +86,7 @@ MODES = {
 
 
 @dataclass
-class ThreeParPort:
+class HPE3ParPort:
     label: str | None
     type: int
     state: int | None
@@ -108,11 +108,11 @@ class ThreeParPort:
         )
 
 
-ThreeParPortsSection = Mapping[str, ThreeParPort]
+HPE3ParPortsSection = Mapping[str, HPE3ParPort]
 
 
-def parse_3par_ports(string_table: StringTable) -> ThreeParPortsSection:
-    threepar_ports: MutableMapping[str, ThreeParPort] = {}
+def parse_3par_ports(string_table: StringTable) -> HPE3ParPortsSection:
+    hpe_3par_ports: MutableMapping[str, HPE3ParPort] = {}
 
     for port in parse_3par(string_table).get("members", {}):
         if PROTOCOLS.get(port["protocol"]) is None:
@@ -122,7 +122,7 @@ def parse_3par_ports(string_table: StringTable) -> ThreeParPortsSection:
         port_mode = port.get("mode")
         port_failoverState = port.get("failoverState")
 
-        port = ThreeParPort(
+        port = HPE3ParPort(
             label=port.get("label"),
             type=port["type"],
             state=port_state,
@@ -137,9 +137,9 @@ def parse_3par_ports(string_table: StringTable) -> ThreeParPortsSection:
             failoverState=port_failoverState,
             translated_failover=FAILOVERS.get(port_failoverState),
         )
-        threepar_ports.setdefault(port.name, port)
+        hpe_3par_ports.setdefault(port.name, port)
 
-    return threepar_ports
+    return hpe_3par_ports
 
 
 agent_section_3par_ports = AgentSection(
@@ -148,7 +148,7 @@ agent_section_3par_ports = AgentSection(
 )
 
 
-def discover_3par_ports(section: ThreeParPortsSection) -> DiscoveryResult:
+def discover_3par_ports(section: HPE3ParPortsSection) -> DiscoveryResult:
     for port in section.values():
         # Only create an item if not "FREE" (type = 3)
         if port.type != 3:
@@ -158,7 +158,7 @@ def discover_3par_ports(section: ThreeParPortsSection) -> DiscoveryResult:
 def check_3par_ports(
     item: str,
     params: Mapping[str, int],
-    section: ThreeParPortsSection,
+    section: HPE3ParPortsSection,
 ) -> CheckResult:
     if (port := section.get(item)) is None:
         return

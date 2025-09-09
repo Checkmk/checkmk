@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.threepar import parse_3par
+from cmk.plugins.hpe_3par.lib.agent_based import parse_3par
 
 THREEPAR_REMOTECOPY_DEFAULT_LEVELS: Final[Mapping[str, Literal[0, 1, 2, 3]]] = {
     "1": 0,  # NORMAL
@@ -54,7 +54,7 @@ class ThreeparRemoteCopy:
     status_readable: str
 
 
-def parse_threepar_remotecopy(string_table: StringTable) -> ThreeparRemoteCopy:
+def parse_hpe_3par_remotecopy(string_table: StringTable) -> ThreeparRemoteCopy:
     pre_parsed = parse_3par(string_table)
 
     return ThreeparRemoteCopy(
@@ -66,16 +66,16 @@ def parse_threepar_remotecopy(string_table: StringTable) -> ThreeparRemoteCopy:
 
 agent_section_3par_remotecopy = AgentSection(
     name="3par_remotecopy",
-    parse_function=parse_threepar_remotecopy,
+    parse_function=parse_hpe_3par_remotecopy,
 )
 
 
-def discover_threepar_remotecopy(section: ThreeparRemoteCopy) -> DiscoveryResult:
+def discover_hpe_3par_remotecopy(section: ThreeparRemoteCopy) -> DiscoveryResult:
     if section.mode > 1:
         yield Service()
 
 
-def check_threepar_remotecopy(
+def check_hpe_3par_remotecopy(
     params: Mapping[str, Literal[0, 1, 2, 3]],
     section: ThreeparRemoteCopy,
 ) -> CheckResult:
@@ -90,8 +90,8 @@ def check_threepar_remotecopy(
 check_plugin_3par_remotecopy = CheckPlugin(
     name="3par_remotecopy",
     service_name="Remote copy",
-    discovery_function=discover_threepar_remotecopy,
-    check_function=check_threepar_remotecopy,
+    discovery_function=discover_hpe_3par_remotecopy,
+    check_function=check_hpe_3par_remotecopy,
     check_default_parameters=THREEPAR_REMOTECOPY_DEFAULT_LEVELS,
     check_ruleset_name="threepar_remotecopy",
 )

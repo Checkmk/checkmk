@@ -8,10 +8,10 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.threepar_hosts import (
-    check_threepar_hosts,
-    discover_threepar_hosts,
-    parse_threepar_hosts,
+from cmk.plugins.hpe_3par.agent_based.hpe_3par_hosts import (
+    check_hpe_3par_hosts,
+    discover_hpe_3par_hosts,
+    parse_hpe_3par_hosts,
 )
 
 STRING_TABLE = [
@@ -40,7 +40,7 @@ def test_discover_3par_hosts(
     section: StringTable,
     expected_discovery_result: Sequence[Service],
 ) -> None:
-    assert list(discover_threepar_hosts(parse_threepar_hosts(section))) == expected_discovery_result
+    assert list(discover_hpe_3par_hosts(parse_hpe_3par_hosts(section))) == expected_discovery_result
 
 
 @pytest.mark.parametrize(
@@ -104,9 +104,9 @@ def test_check_3par_hosts(
 ) -> None:
     assert (
         list(
-            check_threepar_hosts(
+            check_hpe_3par_hosts(
                 item=item,
-                section=parse_threepar_hosts(section),
+                section=parse_hpe_3par_hosts(section),
             )
         )
         == expected_check_result

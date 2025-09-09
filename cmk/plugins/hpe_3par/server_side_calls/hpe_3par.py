@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from cmk.server_side_calls.v1 import HostConfig, Secret, SpecialAgentCommand, SpecialAgentConfig
 
 
-class ThreeParParams(BaseModel):
+class HPE3ParParams(BaseModel):
     user: str
     password: Secret
     port: int
@@ -19,8 +19,8 @@ class ThreeParParams(BaseModel):
     values: Sequence[str] = []
 
 
-def generate_three_par_command(
-    params: ThreeParParams,
+def generate_hpe_3par_command(
+    params: HPE3ParParams,
     host_config: HostConfig,
 ) -> Iterator[SpecialAgentCommand]:
     args: list[str | Secret] = [
@@ -42,8 +42,8 @@ def generate_three_par_command(
     yield SpecialAgentCommand(command_arguments=args)
 
 
-special_agent_three_par = SpecialAgentConfig(
+special_agent_hpe_3par = SpecialAgentConfig(
     name="three_par",
-    parameter_parser=ThreeParParams.model_validate,
-    commands_function=generate_three_par_command,
+    parameter_parser=HPE3ParParams.model_validate,
+    commands_function=generate_hpe_3par_command,
 )

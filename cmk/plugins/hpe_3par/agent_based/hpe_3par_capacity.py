@@ -18,24 +18,24 @@ from cmk.agent_based.v2 import (
     Service,
     StringTable,
 )
+from cmk.plugins.hpe_3par.lib.agent_based import parse_3par
 from cmk.plugins.lib.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
-from cmk.plugins.lib.threepar import parse_3par
 
 
 @dataclass
-class ThreeParCapacity:
+class HPE3ParCapacity:
     name: str
     total_capacity: float
     free_capacity: float
     failed_capacity: float
 
 
-ThreeParCapacitySection = Mapping[str, ThreeParCapacity]
+HPE3ParCapacitySection = Mapping[str, HPE3ParCapacity]
 
 
-def parse_threepar_capacity(string_table: StringTable) -> ThreeParCapacitySection:
+def parse_hpe_3par_capacity(string_table: StringTable) -> HPE3ParCapacitySection:
     return {
-        raw_name.replace("Capacity", ""): ThreeParCapacity(
+        raw_name.replace("Capacity", ""): HPE3ParCapacity(
             name=raw_name.replace("Capacity", ""),
             total_capacity=float(raw_values["totalMiB"]),
             free_capacity=float(raw_values["freeMiB"]),
@@ -47,21 +47,21 @@ def parse_threepar_capacity(string_table: StringTable) -> ThreeParCapacitySectio
 
 agent_section_3par_capacity = AgentSection(
     name="3par_capacity",
-    parse_function=parse_threepar_capacity,
+    parse_function=parse_hpe_3par_capacity,
 )
 
 
-def discover_threepar_capacity(section: ThreeParCapacitySection) -> DiscoveryResult:
+def discover_hpe_3par_capacity(section: HPE3ParCapacitySection) -> DiscoveryResult:
     for disk in section.values():
         if disk.total_capacity == 0:
             continue
         yield Service(item=disk.name)
 
 
-def check_threepar_capacity(
+def check_hpe_3par_capacity(
     item: str,
     params: Mapping[str, tuple[float, float]],
-    section: ThreeParCapacitySection,
+    section: HPE3ParCapacitySection,
 ) -> CheckResult:
     if (disk := section.get(item)) is None:
         return
@@ -97,11 +97,11 @@ def check_threepar_capacity(
 check_plugin_3par_capacity = CheckPlugin(
     name="3par_capacity",
     service_name="Capacity %s",
-    check_function=check_threepar_capacity,
+    check_function=check_hpe_3par_capacity,
     check_default_parameters={
         **FILESYSTEM_DEFAULT_PARAMS,
         "failed_capacity_levels": (0.0, 0.0),
     },
     check_ruleset_name="threepar_capacity",
-    discovery_function=discover_threepar_capacity,
+    discovery_function=discover_hpe_3par_capacity,
 )

@@ -10,12 +10,12 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.threepar_cpgs import (
-    check_threepar_cpgs,
-    check_threepar_cpgs_usage,
-    discover_threepar_cpgs,
-    discover_threepar_cpgs_usage,
-    parse_threepar_cpgs,
+from cmk.plugins.hpe_3par.agent_based.hpe_3par_cpgs import (
+    check_hpe_3par_cpgs,
+    check_hpe_3par_cpgs_usage,
+    discover_hpe_3par_cpgs,
+    discover_hpe_3par_cpgs_usage,
+    parse_hpe_3par_cpgs,
 )
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 from tests.unit.cmk.base.legacy_checks.checktestlib import mock_item_state
@@ -42,11 +42,11 @@ STRING_TABLE = [
         ),
     ],
 )
-def test_discover_threepar_cpgs(
+def test_discover_hpe_3par_cpgs(
     section: StringTable,
     expected_discovery_result: Sequence[Service],
 ) -> None:
-    assert list(discover_threepar_cpgs(parse_threepar_cpgs(section))) == expected_discovery_result
+    assert list(discover_hpe_3par_cpgs(parse_hpe_3par_cpgs(section))) == expected_discovery_result
 
 
 @pytest.mark.parametrize(
@@ -93,9 +93,9 @@ def test_check_3par_cpgs(
 ) -> None:
     assert (
         list(
-            check_threepar_cpgs(
+            check_hpe_3par_cpgs(
                 item=item,
-                section=parse_threepar_cpgs(section),
+                section=parse_hpe_3par_cpgs(section),
             )
         )
         == expected_check_result
@@ -121,12 +121,12 @@ def test_check_3par_cpgs(
         ),
     ],
 )
-def test_discover_threepar_cpgs_usage(
+def test_discover_hpe_3par_cpgs_usage(
     section: StringTable,
     expected_discovery_result: Sequence[Service],
 ) -> None:
     assert (
-        list(discover_threepar_cpgs_usage(parse_threepar_cpgs(section)))
+        list(discover_hpe_3par_cpgs_usage(parse_hpe_3par_cpgs(section)))
         == expected_discovery_result
     )
 
@@ -246,10 +246,10 @@ def test_check_3par_cpgs_usage(
     ):
         assert (
             list(
-                check_threepar_cpgs_usage(
+                check_hpe_3par_cpgs_usage(
                     item=item,
                     params=FILESYSTEM_DEFAULT_PARAMS,
-                    section=parse_threepar_cpgs(section),
+                    section=parse_hpe_3par_cpgs(section),
                 )
             )
             == expected_check_result

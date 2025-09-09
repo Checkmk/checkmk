@@ -10,10 +10,10 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.threepar_capacity import (
-    check_threepar_capacity,
-    discover_threepar_capacity,
-    parse_threepar_capacity,
+from cmk.plugins.hpe_3par.agent_based.hpe_3par_capacity import (
+    check_hpe_3par_capacity,
+    discover_hpe_3par_capacity,
+    parse_hpe_3par_capacity,
 )
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 from tests.unit.cmk.base.legacy_checks.checktestlib import mock_item_state
@@ -43,12 +43,12 @@ STRING_TABLE = [
         ),
     ],
 )
-def test_discover_threepar_capacity(
+def test_discover_hpe_3par_capacity(
     section: StringTable,
     expected_discovery_result: Sequence[Service],
 ) -> None:
     assert (
-        list(discover_threepar_capacity(parse_threepar_capacity(section)))
+        list(discover_hpe_3par_capacity(parse_hpe_3par_capacity(section)))
         == expected_discovery_result
     )
 
@@ -190,7 +190,7 @@ def test_discover_threepar_capacity(
         ),
     ],
 )
-def test_check_threepar_capacity(
+def test_check_hpe_3par_capacity(
     section: StringTable,
     item: str,
     parameters: Mapping[str, tuple[float, float]],
@@ -202,10 +202,10 @@ def test_check_threepar_capacity(
     ):
         assert (
             list(
-                check_threepar_capacity(
+                check_hpe_3par_capacity(
                     item=item,
                     params=parameters,
-                    section=parse_threepar_capacity(section),
+                    section=parse_hpe_3par_capacity(section),
                 )
             )
             == expected_check_result

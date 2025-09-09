@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.threepar_ports import (
+from cmk.plugins.hpe_3par.agent_based.hpe_3par_ports import (
     check_3par_ports,
     discover_3par_ports,
     parse_3par_ports,

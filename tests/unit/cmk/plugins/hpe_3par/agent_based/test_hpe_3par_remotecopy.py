@@ -8,10 +8,10 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.threepar_remotecopy import (
-    check_threepar_remotecopy,
-    discover_threepar_remotecopy,
-    parse_threepar_remotecopy,
+from cmk.plugins.hpe_3par.agent_based.hpe_3par_remotecopy import (
+    check_hpe_3par_remotecopy,
+    discover_hpe_3par_remotecopy,
+    parse_hpe_3par_remotecopy,
     THREEPAR_REMOTECOPY_DEFAULT_LEVELS,
 )
 
@@ -45,7 +45,7 @@ def test_discover_3par_remotecopy(
     expected_discovery_result: Sequence[Service],
 ) -> None:
     assert (
-        list(discover_threepar_remotecopy(parse_threepar_remotecopy(section)))
+        list(discover_hpe_3par_remotecopy(parse_hpe_3par_remotecopy(section)))
         == expected_discovery_result
     )
 
@@ -93,9 +93,9 @@ def test_check_3par_remotecopy(
 ) -> None:
     assert (
         list(
-            check_threepar_remotecopy(
+            check_hpe_3par_remotecopy(
                 params=THREEPAR_REMOTECOPY_DEFAULT_LEVELS,
-                section=parse_threepar_remotecopy(section),
+                section=parse_hpe_3par_remotecopy(section),
             )
         )
         == expected_check_result

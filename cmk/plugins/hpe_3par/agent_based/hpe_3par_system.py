@@ -16,11 +16,11 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.threepar import parse_3par
+from cmk.plugins.hpe_3par.lib.agent_based import parse_3par
 
 
 @dataclass
-class ThreeParSystem:
+class HPE3ParSystem:
     name: str | None
     serial_number: str
     model: str
@@ -29,10 +29,10 @@ class ThreeParSystem:
     online_nodes: Sequence[int]
 
 
-def parse_threepar_system(string_table: StringTable) -> ThreeParSystem:
+def parse_hpe_3par_system(string_table: StringTable) -> HPE3ParSystem:
     pre_parsed = parse_3par(string_table)
 
-    return ThreeParSystem(
+    return HPE3ParSystem(
         name=pre_parsed.get("name"),
         serial_number=pre_parsed.get("serialNumber", "N/A"),
         model=pre_parsed.get("model", "N/A"),
@@ -44,16 +44,16 @@ def parse_threepar_system(string_table: StringTable) -> ThreeParSystem:
 
 agent_section_3par_system = AgentSection(
     name="3par_system",
-    parse_function=parse_threepar_system,
+    parse_function=parse_hpe_3par_system,
 )
 
 
-def discover_threepar_system(section: ThreeParSystem) -> DiscoveryResult:
+def discover_hpe_3par_system(section: HPE3ParSystem) -> DiscoveryResult:
     if section.name:
         yield Service(item=section.name)
 
 
-def check_threepar_system(item: str, section: ThreeParSystem) -> CheckResult:
+def check_hpe_3par_system(item: str, section: HPE3ParSystem) -> CheckResult:
     yield Result(
         state=State.OK,
         summary=f"Model: {section.model}, Version: {section.system_version}, Serial number: {section.serial_number}, Online nodes: {len(section.online_nodes)}/{len(section.cluster_nodes)}",
@@ -66,7 +66,7 @@ def check_threepar_system(item: str, section: ThreeParSystem) -> CheckResult:
 
 check_plugin_3par_system = CheckPlugin(
     name="3par_system",
-    check_function=check_threepar_system,
-    discovery_function=discover_threepar_system,
+    check_function=check_hpe_3par_system,
+    discovery_function=discover_hpe_3par_system,
     service_name="3PAR %s",
 )

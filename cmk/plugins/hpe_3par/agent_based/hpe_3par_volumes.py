@@ -19,8 +19,8 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.plugins.hpe_3par.lib.agent_based import parse_3par
 from cmk.plugins.lib.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
-from cmk.plugins.lib.threepar import parse_3par
 
 STATES = {
     1: State.OK,
@@ -53,18 +53,18 @@ class ThreePortVolume:
     wwn: str
 
 
-ThreeParVolumeSection = Mapping[str, ThreePortVolume]
+HPE3ParVolumeSection = Mapping[str, ThreePortVolume]
 
 
-def parse_threepar_volumes(string_table: StringTable) -> ThreeParVolumeSection:
-    threepar_volumes: MutableMapping[str, ThreePortVolume] = {}
+def parse_hpe_3par_volumes(string_table: StringTable) -> HPE3ParVolumeSection:
+    hpe_3par_volumes: MutableMapping[str, ThreePortVolume] = {}
 
     for volume in parse_3par(string_table).get("members", {}):
         total_capacity = float(volume["sizeMiB"])
         capacity_efficiency = volume.get(
             "capacityEfficiency"
         )  # Sometimes this section is not available
-        threepar_volumes.setdefault(
+        hpe_3par_volumes.setdefault(
             volume.get("name"),
             ThreePortVolume(
                 name=volume.get("name"),
@@ -100,25 +100,25 @@ def parse_threepar_volumes(string_table: StringTable) -> ThreeParVolumeSection:
             ),
         )
 
-    return threepar_volumes
+    return hpe_3par_volumes
 
 
 agent_section_3par_volumes = AgentSection(
     name="3par_volumes",
-    parse_function=parse_threepar_volumes,
+    parse_function=parse_hpe_3par_volumes,
 )
 
 
-def discover_threepar_volumes(section: ThreeParVolumeSection) -> DiscoveryResult:
+def discover_hpe_3par_volumes(section: HPE3ParVolumeSection) -> DiscoveryResult:
     for volume in section.values():
         if not volume.is_system_volume and volume.name:
             yield Service(item=volume.name)
 
 
-def check_threepar_volumes(
+def check_hpe_3par_volumes(
     item: str,
     params: Mapping[str, Any],
-    section: ThreeParVolumeSection,
+    section: HPE3ParVolumeSection,
 ) -> CheckResult:
     if (volume := section.get(item)) is None:
         return
@@ -153,8 +153,8 @@ def check_threepar_volumes(
 check_plugin_3par_volumes = CheckPlugin(
     name="3par_volumes",
     service_name="Volume %s",
-    discovery_function=discover_threepar_volumes,
-    check_function=check_threepar_volumes,
+    discovery_function=discover_hpe_3par_volumes,
+    check_function=check_hpe_3par_volumes,
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
     check_ruleset_name="filesystem",
 )

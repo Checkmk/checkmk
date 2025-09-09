@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping
 
-from cmk.plugins.three_par.lib.special_agent import DEFAULT_VALUES, VALID_VALUES
+from cmk.plugins.hpe_3par.lib.special_agent import DEFAULT_VALUES, VALID_VALUES
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
@@ -84,7 +84,7 @@ def _form_special_agents_3par() -> Dictionary:
     )
 
 
-rule_spec_three_par = SpecialAgent(
+rule_spec_hpe_3par = SpecialAgent(
     name="three_par",
     title=Title("3PAR configuration"),
     topic=Topic.SERVER_HARDWARE,

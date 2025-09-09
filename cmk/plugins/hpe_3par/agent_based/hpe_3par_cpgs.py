@@ -18,8 +18,8 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.plugins.hpe_3par.lib.agent_based import parse_3par
 from cmk.plugins.lib.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
-from cmk.plugins.lib.threepar import parse_3par
 
 
 class SpaceUsage(pydantic.BaseModel):
@@ -53,48 +53,48 @@ _STATES = {
 }
 
 
-def parse_threepar_cpgs(string_table: StringTable) -> ThreeparCPGSection:
+def parse_hpe_3par_cpgs(string_table: StringTable) -> ThreeparCPGSection:
     if (raw_members := parse_3par(string_table).get("members")) is None:
         return {}
 
     return {cpgs.get("name"): ThreeparCPG.model_validate(cpgs) for cpgs in raw_members}
 
 
-def count_threepar_vvs(cpg: ThreeparCPG) -> int:
+def count_hpe_3par_vvs(cpg: ThreeparCPG) -> int:
     return cpg.num_fpvvs + cpg.num_tdvvs + cpg.num_tpvvs
 
 
 agent_section_3par_cpgs = AgentSection(
     name="3par_cpgs",
-    parse_function=parse_threepar_cpgs,
+    parse_function=parse_hpe_3par_cpgs,
 )
 
 
-def discover_threepar_cpgs(section: ThreeparCPGSection) -> DiscoveryResult:
+def discover_hpe_3par_cpgs(section: ThreeparCPGSection) -> DiscoveryResult:
     for cpg in section.values():
-        if cpg.name and count_threepar_vvs(cpg) > 0:
+        if cpg.name and count_hpe_3par_vvs(cpg) > 0:
             yield Service(item=cpg.name)
 
 
-def check_threepar_cpgs(item: str, section: ThreeparCPGSection) -> CheckResult:
+def check_hpe_3par_cpgs(item: str, section: ThreeparCPGSection) -> CheckResult:
     if (cpg := section.get(item)) is None:
         return
 
     state, state_readable = _STATES[cpg.state]
-    yield Result(state=state, summary=f"{state_readable}, {count_threepar_vvs(cpg)} VVs")
+    yield Result(state=state, summary=f"{state_readable}, {count_hpe_3par_vvs(cpg)} VVs")
 
 
 check_plugin_3par_cpgs = CheckPlugin(
     name="3par_cpgs",
-    discovery_function=discover_threepar_cpgs,
-    check_function=check_threepar_cpgs,
+    discovery_function=discover_hpe_3par_cpgs,
+    check_function=check_hpe_3par_cpgs,
     service_name="CPG %s",
 )
 
 
-def discover_threepar_cpgs_usage(section: ThreeparCPGSection) -> DiscoveryResult:
+def discover_hpe_3par_cpgs_usage(section: ThreeparCPGSection) -> DiscoveryResult:
     for cpg in section.values():
-        if count_threepar_vvs(cpg) > 0:
+        if count_hpe_3par_vvs(cpg) > 0:
             for fs in [
                 "SAUsage",
                 "SDUsage",
@@ -103,7 +103,7 @@ def discover_threepar_cpgs_usage(section: ThreeparCPGSection) -> DiscoveryResult
                 yield Service(item=f"{cpg.name} {fs}")
 
 
-def check_threepar_cpgs_usage(
+def check_hpe_3par_cpgs_usage(
     item: str, params: Mapping[str, Any], section: ThreeparCPGSection
 ) -> CheckResult:
     for cpg in section.values():
@@ -144,8 +144,8 @@ def check_threepar_cpgs_usage(
 
 check_plugin_3par_cpgs_usage = CheckPlugin(
     name="3par_cpgs_usage",
-    discovery_function=discover_threepar_cpgs_usage,
-    check_function=check_threepar_cpgs_usage,
+    discovery_function=discover_hpe_3par_cpgs_usage,
+    check_function=check_hpe_3par_cpgs_usage,
     service_name="CPG %s",
     check_ruleset_name="threepar_cpgs",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,

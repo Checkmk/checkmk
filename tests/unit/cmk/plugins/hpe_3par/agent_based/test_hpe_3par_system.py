@@ -7,10 +7,10 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.threepar_system import (
-    check_threepar_system,
-    discover_threepar_system,
-    parse_threepar_system,
+from cmk.plugins.hpe_3par.agent_based.hpe_3par_system import (
+    check_hpe_3par_system,
+    discover_hpe_3par_system,
+    parse_hpe_3par_system,
 )
 
 STRING_TABLE = [
@@ -42,7 +42,7 @@ def test_discover_3par_system(
     expected_discovery_result: Sequence[Service],
 ) -> None:
     assert (
-        list(discover_threepar_system(parse_threepar_system(section))) == expected_discovery_result
+        list(discover_hpe_3par_system(parse_hpe_3par_system(section))) == expected_discovery_result
     )
 
 
@@ -96,9 +96,9 @@ def test_check_3par_system(
 ) -> None:
     assert (
         list(
-            check_threepar_system(
+            check_hpe_3par_system(
                 item="test-name",
-                section=parse_threepar_system(section),
+                section=parse_hpe_3par_system(section),
             )
         )
         == expected_check_result

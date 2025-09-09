@@ -32,7 +32,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <ol class="quick-setup">
+  <ol class="qs-quick-setup">
     <QuickSetupStage
       v-for="(stg, index) in regularStages"
       :key="index"
@@ -66,7 +66,7 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.quick-setup {
+.qs-quick-setup {
   margin: 8px 0 0;
   padding-left: 0;
   counter-reset: stage-index;

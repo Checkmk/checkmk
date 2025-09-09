@@ -235,17 +235,43 @@ def test_unauthenticated_users_authorized_sites(user: LoggedInUser) -> None:
     }
 
 
-def test_logged_in_nobody_permissions() -> None:
+@pytest.mark.usefixtures("request_context")
+def test_logged_in_nobody_permissions(mocker: MockerFixture, monkeypatch: MonkeyPatch) -> None:
     user = LoggedInNobody()
-    assert user.may("any_permission") is False
-    with pytest.raises(MKAuthException):
-        user.need_permission("any_permission")
+    mocker.patch.object(permissions, "permission_registry")
+    with monkeypatch.context() as m:
+        m.setattr(active_config, "roles", {})
+
+        assert user.may("any_permission") is False
+        with pytest.raises(MKAuthException):
+            user.need_permission("any_permission")
 
 
-def test_logged_in_super_user_permissions() -> None:
+@pytest.mark.usefixtures("request_context")
+def test_logged_in_super_user_permissions(mocker: MockerFixture, monkeypatch: MonkeyPatch) -> None:
     user = LoggedInSuperUser()
-    assert user.may("eat_other_peoples_cake") is True
-    user.need_permission("eat_other_peoples_cake")
+    mocker.patch.object(permissions, "permission_registry")
+    with monkeypatch.context() as m:
+        m.setattr(
+            active_config,
+            "roles",
+            {
+                "admin": CustomUserRole(
+                    {
+                        "alias": "",
+                        "builtin": False,
+                        "basedon": "no_permissions",
+                        "permissions": {"eat_other_peoples_cake": True},
+                    }
+                ),
+            },
+        )
+
+        assert user.may("eat_other_peoples_cake") is True
+        assert user.may("drink_other_peoples_milk") is False
+        user.need_permission("eat_other_peoples_cake")
+        with pytest.raises(MKAuthException):
+            user.need_permission("drink_other_peoples_milk")
 
 
 MONITORING_USER_CACHED_PROFILE = {

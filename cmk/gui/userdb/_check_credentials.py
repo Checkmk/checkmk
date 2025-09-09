@@ -18,7 +18,6 @@ from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
-from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.utils.security_log_events import UserManagementEvent
@@ -76,7 +75,8 @@ def check_credentials(
             connection_id, user_id, user_attributes, now, default_user_profile
         )
 
-        if not is_customer_user_allowed_to_login(user_id):
+        user_spec = load_user(user_id)
+        if not is_customer_user_allowed_to_login(user_id, user_spec):
             # A CME not assigned with the current sites customer
             # is not allowed to login
             auth_logger.debug("User '%s' is not allowed to login: Invalid customer" % user_id)
@@ -84,7 +84,7 @@ def check_credentials(
 
         # Now, after successfull login (and optional user account creation), check whether or
         # not the user is locked.
-        if user_locked(user_id):
+        if user_locked(user_id, user_spec):
             auth_logger.debug("User '%s' is not allowed to login: Account locked" % user_id)
             return False  # The account is locked
 
@@ -166,15 +166,14 @@ def user_exists_according_to_profile(username: UserId) -> bool:
     return base_path.joinpath("transids.mk").exists() or base_path.joinpath("serial.mk").exists()
 
 
-def is_customer_user_allowed_to_login(user_id: UserId) -> bool:
+def is_customer_user_allowed_to_login(user_id: UserId, user_spec: UserSpec) -> bool:
     if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CME:
         return True
 
-    user = LoggedInUser(user_id)
-    if customer_api().is_global(user.customer_id):
+    if customer_api().is_global(user_spec.get("customer")):
         return True
 
-    return customer_api().is_current_customer(user.customer_id)
+    return customer_api().is_current_customer(user_spec.get("customer"))
 
 
 def _show_exception(connection_id: str, title: str, e: Exception, debug: bool = True) -> None:
@@ -184,5 +183,5 @@ def _show_exception(connection_id: str, title: str, e: Exception, debug: bool = 
     )
 
 
-def user_locked(user_id: UserId) -> bool:
-    return load_user(user_id)["locked"]
+def user_locked(user_id: UserId, user_spec: UserSpec) -> bool:
+    return user_spec["locked"]

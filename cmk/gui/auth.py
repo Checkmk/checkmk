@@ -29,7 +29,7 @@ from cmk.gui.log import logger
 from cmk.gui.pseudo_users import PseudoUserId, RemoteSitePseudoUser, SiteInternalPseudoUser
 from cmk.gui.site_config import enabled_sites
 from cmk.gui.type_defs import AuthType, CustomUserAttrSpec, UserSpec
-from cmk.gui.userdb import get_user_attributes, UserAttribute
+from cmk.gui.userdb import get_user_attributes, load_user, UserAttribute
 from cmk.gui.userdb.session import generate_auth_hash
 from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.utils.security_log_events import AuthenticationFailureEvent
@@ -376,7 +376,7 @@ def _parse_bearer_token(token: str) -> tuple[str, str]:
 
 def _check_cme_login(user_id: UserId) -> None:
     """In case of CME, check that the customer is allowed to log in at this site"""
-    if not userdb.is_customer_user_allowed_to_login(user_id):
+    if not userdb.is_customer_user_allowed_to_login(user_id, load_user(user_id)):
         auth_logger.debug("User '%s' is not allowed to authenticate: Invalid customer", user_id)
         raise MKAuthException("Unknown customer. Can't log in.")
 

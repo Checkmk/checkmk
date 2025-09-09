@@ -41,7 +41,12 @@ from cmk.gui.user_connection_config_types import (
 from cmk.gui.userdb import get_user_attributes
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.userdb.session import is_valid_user_session, load_session_infos
-from cmk.gui.userdb.store import load_custom_attr, save_two_factor_credentials, save_users
+from cmk.gui.userdb.store import (
+    load_custom_attr,
+    load_user,
+    save_two_factor_credentials,
+    save_users,
+)
 from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.valuespec import Dictionary
 from tests.testlib.common.repo import is_managed_repo
@@ -144,7 +149,7 @@ def test_on_failed_login_no_locking(user_id: UserId) -> None:
     user_attributes = get_user_attributes([])
     assert active_config.lock_on_logon_failures == 10
     assert _load_failed_logins(user_id) == 0
-    assert not userdb.user_locked(user_id)
+    assert not userdb.user_locked(user_id, load_user(user_id))
 
     userdb.on_failed_login(
         user_id,
@@ -154,7 +159,7 @@ def test_on_failed_login_no_locking(user_id: UserId) -> None:
         log_logon_failures=True,
     )
     assert _load_failed_logins(user_id) == 1
-    assert not userdb.user_locked(user_id)
+    assert not userdb.user_locked(user_id, load_user(user_id))
 
     userdb.on_failed_login(
         user_id,
@@ -164,7 +169,7 @@ def test_on_failed_login_no_locking(user_id: UserId) -> None:
         log_logon_failures=True,
     )
     assert _load_failed_logins(user_id) == 2
-    assert not userdb.user_locked(user_id)
+    assert not userdb.user_locked(user_id, load_user(user_id))
 
     userdb.on_failed_login(
         user_id,
@@ -174,7 +179,7 @@ def test_on_failed_login_no_locking(user_id: UserId) -> None:
         log_logon_failures=True,
     )
     assert _load_failed_logins(user_id) == 3
-    assert not userdb.user_locked(user_id)
+    assert not userdb.user_locked(user_id, load_user(user_id))
 
 
 def test_on_failed_login_count_reset_on_succeeded_login(user_id: UserId) -> None:
@@ -182,7 +187,7 @@ def test_on_failed_login_count_reset_on_succeeded_login(user_id: UserId) -> None
     user_attributes = get_user_attributes(active_config.wato_user_attrs)
     assert active_config.lock_on_logon_failures == 10
     assert _load_failed_logins(user_id) == 0
-    assert not userdb.user_locked(user_id)
+    assert not userdb.user_locked(user_id, load_user(user_id))
 
     userdb.on_failed_login(
         user_id,
@@ -192,18 +197,18 @@ def test_on_failed_login_count_reset_on_succeeded_login(user_id: UserId) -> None
         log_logon_failures=True,
     )
     assert _load_failed_logins(user_id) == 1
-    assert not userdb.user_locked(user_id)
+    assert not userdb.user_locked(user_id, load_user(user_id))
 
     userdb.session.on_succeeded_login(user_id, now)
     assert _load_failed_logins(user_id) == 0
-    assert not userdb.user_locked(user_id)
+    assert not userdb.user_locked(user_id, load_user(user_id))
 
 
 def test_on_failed_login_with_locking(user_id: UserId) -> None:
     now = datetime.now()
     user_attributes = get_user_attributes([])
     assert _load_failed_logins(user_id) == 0
-    assert not userdb.user_locked(user_id)
+    assert not userdb.user_locked(user_id, load_user(user_id))
 
     userdb.on_failed_login(
         user_id,
@@ -213,7 +218,7 @@ def test_on_failed_login_with_locking(user_id: UserId) -> None:
         log_logon_failures=True,
     )
     assert _load_failed_logins(user_id) == 1
-    assert not userdb.user_locked(user_id)
+    assert not userdb.user_locked(user_id, load_user(user_id))
 
     userdb.on_failed_login(
         user_id,
@@ -223,7 +228,7 @@ def test_on_failed_login_with_locking(user_id: UserId) -> None:
         log_logon_failures=True,
     )
     assert _load_failed_logins(user_id) == 2
-    assert not userdb.user_locked(user_id)
+    assert not userdb.user_locked(user_id, load_user(user_id))
 
     userdb.on_failed_login(
         user_id,
@@ -233,7 +238,7 @@ def test_on_failed_login_with_locking(user_id: UserId) -> None:
         log_logon_failures=True,
     )
     assert _load_failed_logins(user_id) == 3
-    assert userdb.user_locked(user_id)
+    assert userdb.user_locked(user_id, load_user(user_id))
 
 
 def test_on_logout_no_session(wsgi_app: WebTestAppForCMK, auth_request: http.Request) -> None:

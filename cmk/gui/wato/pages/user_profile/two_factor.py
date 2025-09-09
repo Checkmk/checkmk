@@ -80,6 +80,7 @@ from cmk.gui.userdb import (
     on_failed_login,
     user_locked,
     UserAttribute,
+    UserSpec,
 )
 from cmk.gui.userdb.store import save_custom_attr, save_two_factor_credentials
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
@@ -147,6 +148,7 @@ def _log_event_auth(two_factor_method: str) -> None:
 
 def _handle_failed_auth(
     user_id: UserId,
+    user_spec: UserSpec,
     user_attributes: Sequence[tuple[str, UserAttribute]],
     lock_on_logon_failures: int | None,
     log_logon_failures: bool,
@@ -158,7 +160,7 @@ def _handle_failed_auth(
         lock_on_logon_failures=lock_on_logon_failures,
         log_logon_failures=log_logon_failures,
     )
-    if user_locked(user_id):
+    if user_locked(user_id, user_spec):
         session.invalidate()
         session.persist()
         raise MKUserError(None, _("User is locked"), HTTPStatus.UNAUTHORIZED)
@@ -1310,6 +1312,7 @@ class UserLoginTwoFactor(Page):
                 _log_event_auth("Authenticator application (TOTP)")
                 _handle_failed_auth(
                     user.id,
+                    user.attributes,
                     user_attributes,
                     lock_on_logon_failures,
                     log_logon_failures,
@@ -1334,6 +1337,7 @@ class UserLoginTwoFactor(Page):
                 _log_event_auth("Backup code")
                 _handle_failed_auth(
                     user.id,
+                    user.attributes,
                     user_attributes,
                     lock_on_logon_failures,
                     log_logon_failures,
@@ -1452,6 +1456,7 @@ class UserWebAuthnLoginComplete(JsonPage):
             _log_event_auth("Webauthn")
             _handle_failed_auth(
                 user.id,
+                user.attributes,
                 get_user_attributes(config.wato_user_attrs),
                 config.lock_on_logon_failures,
                 config.log_logon_failures,

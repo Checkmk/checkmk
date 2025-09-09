@@ -10,6 +10,8 @@ import pytest
 
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
+from tests.unit.cmk.web_test_app import SetConfig
+
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 
 from cmk.shared_typing.configuration_entity import ConfigEntityType
@@ -31,7 +33,7 @@ def create_folder_test_environment(with_admin_login: None, load_config: None) ->
     os.makedirs(tree.root_folder().filesystem_path())
 
 
-def test_list_configuration_entities(clients: ClientRegistry) -> None:
+def test_list_folders(clients: ClientRegistry) -> None:
     # WHEN
     resp = clients.ConfigurationEntity.list_configuration_entities(
         entity_type=ConfigEntityType.folder,
@@ -39,8 +41,45 @@ def test_list_configuration_entities(clients: ClientRegistry) -> None:
     )
 
     # THEN
-    assert len(resp.json["value"]) == 2
-    assert resp.json["value"][0]["id"] == ""
-    assert resp.json["value"][0]["title"] == "Main"
-    assert resp.json["value"][1]["id"] == SUB_FOLDER
-    assert resp.json["value"][1]["title"] == SUB_FOLDER_TITLE
+    titles = set(entry["title"] for entry in resp.json["value"])
+    assert titles == {"Main", SUB_FOLDER_TITLE}
+
+
+def test_list_folders_without_perm(clients: ClientRegistry, set_config: SetConfig) -> None:
+    # GIVEN
+    with set_config(wato_hide_folders_without_read_permissions=True):
+        clients.User.create(
+            username="guest_user1",
+            fullname="guest_user1_alias",
+            auth_option={"auth_type": "password", "password": "supersecretish"},
+            roles=["guest"],
+        )
+        clients.ConfigurationEntity.set_credentials("guest_user1", "supersecretish")
+
+        # WHEN
+        resp = clients.ConfigurationEntity.list_configuration_entities(
+            entity_type=ConfigEntityType.folder,
+            entity_type_specifier="xyz",
+        )
+
+        # THEN
+        titles = set(entry["title"] for entry in resp.json["value"])
+        assert titles == {"Main"}
+
+
+def test_list_folders_as_admin(
+    clients: ClientRegistry, set_config: SetConfig, with_admin: tuple[str, str]
+) -> None:
+    # GIVEN
+    with set_config(wato_hide_folders_without_read_permissions=True):
+        clients.ConfigurationEntity.set_credentials(with_admin[0], with_admin[1])
+
+        # WHEN
+        resp = clients.ConfigurationEntity.list_configuration_entities(
+            entity_type=ConfigEntityType.folder,
+            entity_type_specifier="xyz",
+        )
+
+        # THEN
+        titles = set(entry["title"] for entry in resp.json["value"])
+        assert titles == {"Main", SUB_FOLDER_TITLE}

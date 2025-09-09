@@ -2,6 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import dataclasses
 
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.http import request
@@ -14,6 +15,16 @@ from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from .type_defs import DashboardConfig
 
 __all__ = ["dashboard_breadcrumb"]
+
+
+@dataclasses.dataclass
+class EvaluatedBreadcrumbItem:
+    title: str
+    link: str | None
+
+    @classmethod
+    def from_breadcrumb_item(cls, item: BreadcrumbItem) -> "EvaluatedBreadcrumbItem":
+        return cls(title=str(item.title), link=item.url)
 
 
 def dashboard_topic_breadcrumb(topic: str, user_permissions: UserPermissions) -> Breadcrumb:

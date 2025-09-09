@@ -85,21 +85,19 @@ onBeforeUnmount(() => {
 // Specs
 
 const dataConsolidationType = ref<'average' | 'min' | 'max'>('max')
-const specConsolidationType = makeSingleChoice('', [
-  { name: 'average', title: props.i18n.average },
-  { name: 'min', title: props.i18n.minimum },
-  { name: 'max', title: props.i18n.maximum }
-])
-const backendValidationConsolidationType: ValidationMessages = []
+const consolidationType: Suggestion[] = [
+  { name: 'average', title: props.i18n.average as TranslatedString },
+  { name: 'min', title: props.i18n.minimum as TranslatedString },
+  { name: 'max', title: props.i18n.maximum as TranslatedString }
+]
 
 const dataScalarType = ref<'warn' | 'crit' | 'min' | 'max'>('crit')
-const specScalarType = makeSingleChoice('', [
-  { name: 'warn', title: props.i18n.warning },
-  { name: 'crit', title: props.i18n.critical },
-  { name: 'min', title: props.i18n.minimum },
-  { name: 'max', title: props.i18n.maximum }
-])
-const backendValidationScalarType: ValidationMessages = []
+const scalarType: Suggestion[] = [
+  { name: 'warn', title: props.i18n.warning as TranslatedString },
+  { name: 'crit', title: props.i18n.critical as TranslatedString },
+  { name: 'min', title: props.i18n.minimum as TranslatedString },
+  { name: 'max', title: props.i18n.maximum as TranslatedString }
+]
 
 const dataConstant = ref(1)
 const specConstant = makeFloat('', '')
@@ -923,10 +921,13 @@ const graphDesignerContentAsJson = computed(() => {
                 />
               </template>
               <template #metric_type>
-                <FormEdit
-                  v-model:data="graphLine.consolidation_type"
-                  :spec="specConsolidationType"
-                  :backend-validation="backendValidationConsolidationType"
+                <CmkDropdown
+                  v-model:selected-option="graphLine.consolidation_type"
+                  :options="{
+                    type: 'fixed',
+                    suggestions: consolidationType
+                  }"
+                  :label="props.i18n.formula as TranslatedString"
                 />
               </template>
             </FixedMetricRowRenderer>
@@ -947,10 +948,13 @@ const graphDesignerContentAsJson = computed(() => {
                 />
               </template>
               <template #metric_type>
-                <FormEdit
-                  v-model:data="graphLine.scalar_type"
-                  :spec="specScalarType"
-                  :backend-validation="backendValidationScalarType"
+                <CmkDropdown
+                  v-model:selected-option="graphLine.scalar_type"
+                  :options="{
+                    type: 'fixed',
+                    suggestions: scalarType
+                  }"
+                  :label="props.i18n.scalar as TranslatedString"
                 />
               </template>
             </FixedMetricRowRenderer>
@@ -1012,10 +1016,13 @@ const graphDesignerContentAsJson = computed(() => {
             />
           </template>
           <template #metric_type>
-            <FormEdit
-              v-model:data="dataConsolidationType"
-              :spec="specConsolidationType"
-              :backend-validation="backendValidationConsolidationType"
+            <CmkDropdown
+              v-model:selected-option="dataConsolidationType"
+              :options="{
+                type: 'fixed',
+                suggestions: consolidationType
+              }"
+              :label="props.i18n.formula as TranslatedString"
             />
           </template>
           <template #metric_action>
@@ -1045,10 +1052,13 @@ const graphDesignerContentAsJson = computed(() => {
             />
           </template>
           <template #metric_type>
-            <FormEdit
-              v-model:data="dataScalarType"
-              :spec="specScalarType"
-              :backend-validation="backendValidationScalarType"
+            <CmkDropdown
+              v-model:selected-option="dataScalarType"
+              :options="{
+                type: 'fixed',
+                suggestions: scalarType
+              }"
+              :label="props.i18n.scalar as TranslatedString"
             />
           </template>
           <template #metric_action>

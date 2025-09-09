@@ -46,11 +46,11 @@ const componentId = useId()
     <FormRequired :spec="props.spec" :space="'after'" />
   </template>
   <template v-if="spec.autocompleter">
-    <div class="cmk-form-string--dropdown-container">
+    <div class="form-string--dropdown-container">
       <FormAutocompleter
         :id="componentId"
         v-model="value"
-        class="cmk-form-string--dropdown"
+        class="form-string--dropdown"
         :size="inputSizes[props.spec.field_size].width"
         :autocompleter="spec.autocompleter"
         :placeholder="untranslated(spec.input_hint ?? '')"
@@ -79,7 +79,7 @@ const componentId = useId()
   width: 13px;
 }
 
-.cmk-form-string--dropdown {
+.form-string--dropdown {
   display: block;
   float: left; /* align nicely with clear button */
   margin-right: 1px;

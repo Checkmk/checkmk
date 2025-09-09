@@ -53,10 +53,12 @@ const componentId = useId()
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 div.replace {
   cursor: pointer;
   margin-bottom: -8px;
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   label.filename {
     padding-left: 10px;
   }

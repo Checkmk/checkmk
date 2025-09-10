@@ -32,6 +32,7 @@ from cmk.snmplib import (
     SNMPRowInfo,
     SNMPSectionMarker,
     SNMPSectionName,
+    SNMPTimeout,
 )
 
 from ._abstract import Fetcher, Mode
@@ -402,16 +403,19 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             if section_name in cached_data:
                 continue
             self._logger.debug("%s: Fetching data (%s)", section_name, walk_cache_msg)
-            fetched_data[section_name] = [
-                get_snmp_table(
-                    section_name=section_name,
-                    tree=tree,
-                    walk_cache=walk_cache,
-                    backend=self._backend,
-                    log=self._logger.debug,
-                )
-                for tree in self.plugin_store[section_name].trees
-            ]
+            try:
+                fetched_data[section_name] = [
+                    get_snmp_table(
+                        section_name=section_name,
+                        tree=tree,
+                        walk_cache=walk_cache,
+                        backend=self._backend,
+                        log=self._logger.debug,
+                    )
+                    for tree in self.plugin_store[section_name].trees
+                ]
+            except SNMPTimeout as exc:
+                raise MKFetcherError(str(exc)) from exc
 
         walk_cache.save()
         sections_cache.store(fetched_data)

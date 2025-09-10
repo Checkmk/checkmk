@@ -13,7 +13,6 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, Literal, NamedTuple, NewType, Protocol, Self
 
-from cmk.ccc.exceptions import MKFetcherError
 from cmk.ccc.hostaddress import HostAddress, HostName
 
 # We also have 'SectionName' elsewhere, but this section name is not subject to the same restrictions.
@@ -55,7 +54,7 @@ def _parse_range_limit(raw: object) -> RangeLimit:
     raise ValueError(raw)
 
 
-class SNMPContextTimeout(MKFetcherError):
+class SNMPTimeout(TimeoutError):
     pass
 
 

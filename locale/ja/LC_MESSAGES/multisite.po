@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-08-04 14:09+0000\n"
+"PO-Revision-Date: 2025-09-09 14:26+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/dev/"
 "ja/>\n"
 "Language: ja\n"
@@ -260,6 +260,10 @@ msgstr "#%s 不明なルール %r"
 
 msgid "#Containers"
 msgstr "#コンテナ"
+
+#, fuzzy
+msgid "#Containers exited"
+msgstr "＃コンテナは停止"
 
 msgid "#Containers paused"
 msgstr "#コンテナは一時停止"
@@ -2325,6 +2329,10 @@ msgstr ""
 "<tt> $ </tt>を使用できます。指定されたホスト上の一致するサービスごとに、1つの"
 "子ノードが作成されます。 "
 
+#, fuzzy, python-format
+msgid "A relay with alias '%s' already exists"
+msgstr "このIDのルールパックはすでに存在します。"
+
 msgid ""
 "A reliable backup ensures that your monitoring environment can be restored "
 "in case of data loss.<br><br>We recommend using the <a href=\"wato.py?"
@@ -2864,7 +2872,7 @@ msgid "Abnormal terminated calls in"
 msgstr "アクティブコール"
 
 msgid "Abnormal terminated calls in/out"
-msgstr ""
+msgstr "異常終了した着信/発信"
 
 #, fuzzy
 msgid "Abnormal terminated calls out"
@@ -2897,6 +2905,10 @@ msgstr "絶対"
 #, python-format
 msgid "Absolute %s space"
 msgstr "絶対 %s スペース"
+
+#, fuzzy
+msgid "Absolute Limit"
+msgstr "絶対"
 
 msgid "Absolute archive path"
 msgstr "絶対アーカイブパス"
@@ -4164,6 +4176,10 @@ msgstr "ランダムなホストを追加する"
 msgid "Add recipient"
 msgstr "受取人の追加"
 
+#, fuzzy
+msgid "Add relay configuration"
+msgstr "設定の追加"
+
 msgid "Add remote instance"
 msgstr "リモートインスタンスを追加します"
 
@@ -4272,11 +4288,15 @@ msgid ""
 "Add the tags you want to use to filter the resources. Only resources with "
 "every tags matching, will be monitored."
 msgstr ""
+"リソースをフィルタリングするために使用するタグを追加してください。すべてのタ"
+"グが一致するリソースのみが監視対象となります。"
 
 msgid ""
 "Add the tags you want to use to filter the subscriptions. Only subscriptions "
 "with every tags matching, will be monitored."
 msgstr ""
+"サブスクリプションをフィルタリングするために使用するタグを追加してください。"
+"すべてのタグが一致するサブスクリプションのみが監視対象となります。"
 
 msgid "Add these contact groups to the host"
 msgstr "これらの連絡先グループをホストに追加します"
@@ -5932,6 +5952,9 @@ msgstr ""
 "ユーザが他のユーザのスケジュールされたレポートを変更したり、レポートの宛先と"
 "して任意の電子メールアドレスを指定することを許可する。"
 
+msgid "Allows access to the SaaS onboarding."
+msgstr ""
+
 msgid ""
 "Allows the assignment of the Robotmk plan/test services to another host."
 msgstr "Robotmk の計画/テストサービスを別のホストに割り当てることができます。"
@@ -6826,6 +6849,10 @@ msgstr "監査ログをアーカイブしました"
 
 msgid "Arcserve (German) backups (Windows)"
 msgstr "Arcserve(ドイツ語)バックアップ(Windows)"
+
+#, fuzzy
+msgid "Are you sure you want to delete this relay?"
+msgstr "この%sを削除することはできません。"
 
 msgid "Area"
 msgstr "範囲"
@@ -8297,6 +8324,14 @@ msgstr "平均ディスク遅延"
 #, fuzzy
 msgid "Azure Redis memory"
 msgstr "絶対使用メモリ"
+
+#, fuzzy
+msgid "Azure Redis replication"
+msgstr "Azure データベース接続"
+
+#, fuzzy
+msgid "Azure Redis throughput"
+msgstr "読み取りスループット"
 
 msgid "Azure SQL database CPU usage"
 msgstr "AzureSQLデータベースCPU使用量"
@@ -10548,6 +10583,10 @@ msgid "Cache misses per second"
 msgstr "1秒あたりのキャッシュミス"
 
 #, fuzzy
+msgid "Cache read throughput (/sec)"
+msgstr "FCP 読み取りスループット"
+
+#, fuzzy
 msgid "Cache requests"
 msgstr "失敗したリクエスト"
 
@@ -10559,6 +10598,10 @@ msgstr "キャッシュサイズ"
 
 msgid "Cache this section"
 msgstr "このセクションのキャッシュ"
+
+#, fuzzy
+msgid "Cache write throughput (/sec)"
+msgstr "FCP 書き込みスループット"
 
 msgid "Cached"
 msgstr "キャッシュされた"
@@ -10850,12 +10893,12 @@ msgstr ""
 "HW/SWインベントリ履歴 %s を読み込めません。破損したファイルを削除してくださ"
 "い。"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Cannot load HW/SW Inventory history of %s. Please remove the corrupted files "
 "%s."
 msgstr ""
-"HW/SWインベントリ履歴%s を読み込めません。破損したファイルを削除してくださ"
+"HW/SWインベントリ履歴%s を読み込めません。破損したファイル%sを削除してくださ"
 "い。"
 
 #, fuzzy, python-format
@@ -11228,9 +11271,9 @@ msgstr "ビュー表示の更新を変更する"
 msgid "Changed"
 msgstr "変更"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Changed %s connection %s"
-msgstr "LDAP接続 %s を変更しました"
+msgstr "%s接続 を変更しました%s"
 
 #, python-format
 msgid "Changed %s from %s to %s"
@@ -11445,6 +11488,10 @@ msgstr ""
 
 msgid "Check IMAP/EWS Mailboxes"
 msgstr "IMAP/EWSメールボックスを確認する"
+
+#, fuzzy
+msgid "Check Interval"
+msgstr "キャッシュ間隔"
 
 msgid "Check LDAP service access"
 msgstr "LDAPサービスへのアクセスを確認する"
@@ -14244,6 +14291,10 @@ msgstr "接続"
 msgid "Connected clients"
 msgstr "接続されているクライアントの数"
 
+#, fuzzy
+msgid "Connected relay configurations"
+msgstr "Conda設定"
+
 msgid "Connecter and connectee sites must be different."
 msgstr "コネクターサイトとコネクティーサイトは異なる必要があります。"
 
@@ -14381,6 +14432,10 @@ msgid "Connections per second"
 msgstr "1秒あたりの接続数"
 
 msgid "Connectivity"
+msgstr "接続性"
+
+#, fuzzy
+msgid "Connectivity lag"
 msgstr "接続性"
 
 msgid "Connector outlets"
@@ -15474,9 +15529,9 @@ msgstr "親スキャンによって作成されました"
 msgid "Created events"
 msgstr "作成されたイベント"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Created new %s connection"
-msgstr "新しいLDAP接続を作成しました"
+msgstr "新しい%s接続を作成しました"
 
 msgid "Created new alert handler rule"
 msgstr "新しいアラートハンドラルールを作成しました"
@@ -17110,9 +17165,6 @@ msgstr "デフォルト(%s)"
 msgid "Default BI visualization settings"
 msgstr "デフォルトのBI視覚化設定"
 
-msgid "Default State"
-msgstr "デフォルトステータス"
-
 msgid "Default cleanup parameters"
 msgstr "デフォルトクリーンアップパラメータ"
 
@@ -17677,6 +17729,10 @@ msgstr "許可された地図の削除"
 msgid "Delete processed messages"
 msgstr "処理されたメッセージを削除する"
 
+#, fuzzy
+msgid "Delete relay"
+msgstr "削除された役割 '%s'"
+
 #, python-format
 msgid "Delete report schedule entry #%d"
 msgstr "レポートスケジュールエントリ#%dを削除"
@@ -17830,6 +17886,10 @@ msgstr "この通知パラメータを削除します"
 msgid "Delete this notification rule"
 msgstr "この通知ルールを削除します"
 
+#, fuzzy
+msgid "Delete this relay"
+msgstr "このキーを削除します"
+
 msgid "Delete this role"
 msgstr "この役割を削除する"
 
@@ -17879,9 +17939,9 @@ msgstr "消えたホストを削除する"
 msgid "Deleted %s %d"
 msgstr "%s %d を削除しました"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Deleted %s connection %s"
-msgstr "接続を削除しました %s"
+msgstr "接続%sを削除しました %s"
 
 #, python-format
 msgid "Deleted %s group %s"
@@ -21015,6 +21075,10 @@ msgstr "このルールのプロパティを編集する"
 msgid "Edit properties of this rule pack"
 msgstr "このルールパックのプロパティを編集する"
 
+#, fuzzy
+msgid "Edit relay configuration"
+msgstr "この接続を編集する"
+
 msgid "Edit report content"
 msgstr "レポートの内容を編集する"
 
@@ -21135,6 +21199,10 @@ msgstr "この通知パラメータを編集する"
 
 msgid "Edit this notification rule"
 msgstr "この通知ルールを編集する"
+
+#, fuzzy
+msgid "Edit this relay"
+msgstr "このルールを編集する"
 
 msgid "Edit this report"
 msgstr "このレポートを編集する"
@@ -21346,7 +21414,7 @@ msgstr "電力"
 
 #, no-python-format
 msgid "Electrical tension in % of normal value"
-msgstr "電気張力の正常値に対する割合（%）"
+msgstr "電気張力の正常値に対する%割合"
 
 msgid "Electrical voltage"
 msgstr "電圧"
@@ -29476,14 +29544,15 @@ msgstr "湿度レベル"
 msgid "Humidity levels for devices with a single sensor"
 msgstr "単一センサー搭載機器の湿度レベル"
 
-msgid "Hyper-V Integration Services Status"
-msgstr "Hyper-V統合サービスの状態"
-
 msgid "Hyper-V Server: State of VMs"
 msgstr "Hyper-Vサーバー:VMの状態"
 
 msgid "Hyper-V VM Guest Information (Windows)"
 msgstr "Hyper-V VMゲスト情報(Windows)"
+
+#, fuzzy
+msgid "Hyper-V VM integration services"
+msgstr "Hyper-V統合サービスの状態"
 
 msgid "Hyper-V VMs (Windows)"
 msgstr "Hyper-V VM (Windows)"
@@ -35778,13 +35847,13 @@ msgstr "ライセンスの一時停止：今すぐCheckmk営業チームに連�
 msgid "License suspended: Contact Checkmk sales team now."
 msgstr "ライセンスの一時停止：今すぐCheckmk営業チームに連絡してください。"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "License terminated. Your license expires in %d days. Renew license now to "
 "avoid site deletion."
 msgstr ""
-"ライセンスの有効期限切れ：サイトの削除を避けるために、今すぐライセンスを更新"
-"してください。"
+"ライセンスが終了しました。ライセンスはあと%d日で期限切れとなります。サイト削"
+"除を避けるため、今すぐライセンスを更新してください。"
 
 msgid "License usage"
 msgstr "ライセンスの使用法"
@@ -37805,6 +37874,11 @@ msgstr "監視対象のホストとサービス、およびホストのフォル
 msgid "Manage monitoring agents"
 msgstr "監視エージェントの管理"
 
+msgid ""
+"Manage relay configurations. Relays allow a Checkmk site to monitor SNMP "
+"based devices residing in a network that is not reachable from the internet."
+msgstr ""
+
 msgid "Manage services"
 msgstr "サービス管理"
 
@@ -38501,8 +38575,21 @@ msgstr "最大許容ユーザー"
 msgid "Maximum allowed validity"
 msgstr "最大許容有効期間"
 
+msgid ""
+"Maximum amount of memory targeted to be allocated by the process heap. Note "
+"that typically the total memory usage of process will be about 50MiB higher "
+"than this value. This defines the hard limit."
+msgstr ""
+
 msgid "Maximum amount of non-operational access points"
 msgstr "動作していないアクセスポイントの最大数"
+
+msgid ""
+"Maximum amount of total memory targeted to be allocated by the process heap. "
+"This option is used to calculate memory limit from the total available "
+"memory. For instance setting of 75% with the total memory of 1GiB will "
+"result in the limit of 750 MiB."
+msgstr ""
 
 msgid "Maximum bulk size"
 msgstr "最大バルクサイズ"
@@ -38539,6 +38626,10 @@ msgstr "最大同時リアルタイムチェック"
 
 msgid "Maximum connections per second"
 msgstr "1秒あたりの最大接続数"
+
+#, fuzzy
+msgid "Maximum connectivity lag"
+msgstr "サイト接続性"
 
 msgid "Maximum count"
 msgstr "最大数"
@@ -38744,6 +38835,20 @@ msgstr "バックアップスペース上のすべてのファイルの最大サ
 msgid "Maximum speed"
 msgstr "最大速度"
 
+msgid ""
+"Maximum spike expected between the measurements of memory usage. The value "
+"must be less than limit. This option is used to calculate spike limit from "
+"the total available memory. For instance setting of 25% with the total "
+"memory of 1GiB will result in the spike limit of 250MiB."
+msgstr ""
+
+#, python-format
+msgid ""
+"Maximum spike expected between the measurements of memory usage. The value "
+"must be less than the limit. The soft limit value will be equal to (limit - "
+"spike limit). The recommended value for spike limit is about 20% limit."
+msgstr ""
+
 msgid "Maximum spool duration"
 msgstr "最大スプール持続時間"
 
@@ -38903,6 +39008,14 @@ msgstr "記憶"
 
 msgid "Memory (RAM)"
 msgstr "メモリ(RAM)"
+
+#, fuzzy
+msgid "Memory Limit"
+msgstr "メモリサイズ"
+
+#, fuzzy
+msgid "Memory Limiter"
+msgstr "メモリサイズ"
 
 msgid "Memory Modules"
 msgstr "メモリモジュール"
@@ -40357,13 +40470,13 @@ msgstr ""
 "ルール %s を位置 #%dから #%d に移動します ルールセット \"%s\" フォルダは、%s"
 "です"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Moved rule %s of ruleset \"%s\" from folder \"%s\" to position #%d in folder "
 "\"%s\""
 msgstr ""
-"ルール \"%s\"のプロパティを変更し、フォルダ \"%s\"からフォルダ最上部 \"%s\"に"
-"移動しました"
+"ルール%s（ルールセット \"%s\"の）を、フォルダ \"%s\"から#%d番目（フォルダ "
+"\"%s\"の） の位置に移動しました"
 
 #, python-format
 msgid "Moved rule %s to pack %s"
@@ -41827,6 +41940,10 @@ msgstr "プロキシなし"
 
 msgid "No re-executions"
 msgstr "再実行なし"
+
+#, fuzzy
+msgid "No relays configured yet."
+msgstr "%sの設定はまだありません"
 
 msgid "No replication with this site"
 msgstr "このサイトとの複製はありません"
@@ -48312,6 +48429,10 @@ msgid "Pod resources: StatefulSet"
 msgstr "Podリソース: ステータスフルセット"
 
 #, fuzzy
+msgid "Podman"
+msgstr "Podman コンテナ"
+
+#, fuzzy
 msgid "Podman Container Health"
 msgstr "Podman コンテナ"
 
@@ -50585,6 +50706,10 @@ msgstr "リレーショナルデータベースサービス(RDS)"
 msgid "Relative"
 msgstr "相対的"
 
+#, fuzzy
+msgid "Relative Limit in %"
+msgstr "相対湿度"
+
 msgid "Relative difference"
 msgstr "相対的な差"
 
@@ -50615,8 +50740,36 @@ msgstr "テストスイートファイルまたはフォルダへの相対パス
 msgid "Relative time of alert"
 msgstr "アラートの相対時間"
 
+#, fuzzy
+msgid "Relay"
+msgstr "ディレイ:"
+
+#, fuzzy
+msgid "Relay ID"
+msgstr "キーID"
+
+#, fuzzy
+msgid "Relay configurations"
+msgstr "プラン構成"
+
+#, fuzzy
+msgid "Relay display name"
+msgstr "表示名"
+
 msgid "Relay log size"
 msgstr "中継用ログサイズ"
+
+#, fuzzy
+msgid "Relay name"
+msgstr "名前を変更する"
+
+#, fuzzy
+msgid "Relay properties"
+msgstr "ルールのプロパティ"
+
+#, fuzzy
+msgid "Relays"
+msgstr "ディレイ:"
 
 msgid "Release"
 msgstr "リリース"
@@ -53727,6 +53880,9 @@ msgstr ""
 "api#sounds\" target=\"_blank\">プッシュオーバーサウンド</a>を参照してくださ"
 "い。"
 
+msgid "See SaaS onboarding"
+msgstr ""
+
 msgid "See all events"
 msgstr "すべてのイベントを見る"
 
@@ -54900,6 +55056,10 @@ msgstr "サービスステータス"
 
 msgid "Service status grouping"
 msgstr "サービスステータスのグループ化"
+
+#, fuzzy
+msgid "Service status when geo-replication link is unhealthy"
+msgstr "レプリケーション状態がアクティブであるときの状態"
 
 msgid "Service tags"
 msgstr "サービスタグ"
@@ -56666,6 +56826,10 @@ msgstr "サイズフィルターの仕様は、[OPERATOR][INT]の形式である
 msgid "Size growth per minute"
 msgstr "1分あたりのサイズの増加"
 
+#, fuzzy
+msgid "Size of OTel Collector"
+msgstr "コアのサイズ"
+
 msgid "Size of PNP4Nagios"
 msgstr "PNP4Nagiosのサイズ"
 
@@ -57376,8 +57540,8 @@ msgstr "スペアディスク"
 msgid "Special Agent"
 msgstr "特別なエージェント"
 
-msgid "Special States"
-msgstr "特別なステート"
+msgid "Special cases for specific services"
+msgstr "特定のサービスむけの特別なケース"
 
 msgid "Specific Mappings"
 msgstr "特定のマッピング"
@@ -57720,9 +57884,8 @@ msgstr "コントロールプレーンノードの役割の指定"
 msgid "Specify sites this OpenTelemetry collector should run on."
 msgstr "OpenTelemetry コレクターを実行するサイトを指定します。"
 
-#, fuzzy
 msgid "Specify sites this OpenTelemetry collector should run on. "
-msgstr "OpenTelemetry コレクターを実行するサイトを指定します。"
+msgstr "OpenTelemetry コレクターを実行するサイトを指定してください "
 
 msgid "Specify storage account names that the rule should apply to"
 msgstr "ルールを適用するストレージアカウント名を指定します"
@@ -58066,6 +58229,10 @@ msgstr "速度"
 
 msgid "Speed of interface groups (Netapp only)"
 msgstr "インターフェイスグループの速度(Netappのみ)"
+
+#, fuzzy
+msgid "Spike Limit"
+msgstr "サービス制限"
 
 msgid "Spin retries (id 10)"
 msgstr "スピン再試行 (ID 10)"
@@ -58638,6 +58805,10 @@ msgstr "ノードにmemアラームが有効になっているかどうかの状
 
 msgid "State if node is not in state running"
 msgstr "ノードが実行中の状態にない場合の状態"
+
+#, fuzzy
+msgid "State if not default"
+msgstr "一致するエントリがない場合の状態"
 
 msgid "State if probe state not OK"
 msgstr "プローブ状態がOKでない場合の状態"
@@ -63074,7 +63245,7 @@ msgstr ""
 msgid "The host name attribute needs to be assigned to a column."
 msgstr "ホスト名属性を列に割り当てる必要があります。"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "The host name computation computes the name of the host that should have the "
 "corresponding Checkmk services. The computation is done by the OpenTelemetry "
@@ -63095,21 +63266,22 @@ msgid ""
 "will set all \"%s\" attributes that are not yet filled to \"fallback_host\"."
 "</li></ol>"
 msgstr ""
-"ホスト名の計算は、対応するCheckmkサービスを持つべきホストのな目を計算する。計"
-"算はOpenTelemetryコレクタによって行われ、結果は \"{attr}\"属性に格納される。"
-"ここで設定されたすべてのルールについては、提供されたフィールドがリスト化され"
-"た順に連結される。空でない値になる最初のルールが使用される。例えば：\n"
-"{startol}1つのフィールド \"Value of attribute: service.name\" からなる最初の"
-"ルールは、\"{attr}\"が存在する場合、その属性の値を設定します。この属性は、例"
-"えばprometheusのスクレイプジョブ名に設定されます。{newli}1つのフィールド "
-"\"Value of attribute: container.name \"で構成される2つ目のルールは、それが存"
-"在し、\"{attr}\"が前のルールで設定されていない場合、\"{attr}\"をその属性の値"
-"に設定します。{newli}2つのフィールド \"Resource attribute value: "
-"custom_attr\"と \"Literal string: some_suffix\"からなる3番目のルールは、その"
-"属性が存在し、\"{attr}\"が前のルールで設定されていない場合、\"{attr}\"を "
-"\"VALUEsome_suffix \"に設定します。{newli}1つのフィールド \"Literal string: "
-"fallback_host\" からなる最後のルールは、まだ埋められていないすべての\"{attr}"
-"\"属性を \"fallback_host\"に設定します。{endol}"
+"ホスト名の計算は、対応するCheckmkサービスを持つべきホストの名前を計算します。"
+"この計算はOpenTelemetryコレクタによって行われ、結果は \"%s\"属性に格納されま"
+"す。ここで設定された全てのルールについては、提供されたフィールドがリスト化さ"
+"れた順に連結されます。空ではない値になる最初のルールが使用されます。例え"
+"ば：\n"
+"<ol><li>最初のルールは1つのフィールド \"Value of attribute: service.name\" で"
+"構成され、その属性が存在する場合、その値を\"%s\"と設定します。この属性は、例"
+"えばprometheusのスクレイプジョブ名に設定されます。</li><li>2番目のルールは1つ"
+"のフィールド \"Value of attribute: container.name \"で構成され、その属性が存"
+"在し、かつ前のルールで\"%s\"が設定されていない場合、\"%s\"をその属性の値に設"
+"定します。</li><li>3番目のルールは2つのフィールド \"Resource attribute "
+"value: custom_attr\"と \"Literal string: some_suffix\"から構成され、その属性"
+"が存在し、かつ前のルールで\"%s\"が設定されていない場合、\"%s\"を "
+"\"VALUEsome_suffix \"に設定します。</li><li>最後のルールは1つのフィールド "
+"\"Literal string: fallback_host\" で構成され、まだ設定されていないすべての"
+"\"%s\"属性を \"fallback_host\"に設定します。</li></ol>"
 
 msgid "The host name is missing."
 msgstr "ホスト名がありません。"
@@ -63419,6 +63591,10 @@ msgstr "ライセンスの使用履歴は少なくとも3日前に更新され�
 msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "<tt>v$dataguard_stats </tt>でのトランスポートラグの制限"
 
+#, fuzzy
+msgid "The limit has to be bigger than the spike limit."
+msgstr "タイムアウトは1秒以上でなければなりません。"
+
 msgid "The list needs to have at least one element"
 msgstr "クラスターには少なくとも1つの要素が必要です"
 
@@ -63665,6 +63841,14 @@ msgid ""
 msgstr ""
 "このホストの1つの特定モジュールのメモリレベル。これは、プラガブルカードなど、"
 "いくつかの異なるメモリ領域を持つホストに関連しています"
+
+msgid ""
+"The memory limiter processor is used to prevent out of memory situations on "
+"the collector. Given that the amount and type of data the collector "
+"processes is environment-specific and resource utilization of the collector "
+"is also dependent on the configured processors, it is important to put "
+"checks in place regarding memory usage."
+msgstr ""
 
 #, no-python-format
 msgid ""
@@ -64553,6 +64737,16 @@ msgstr ""
 "場合は、最初のオプションを選択します。ntopngユーザー名がCheckmkユーザー名と同"
 "じでない場合は、ユーザー設定の「アイデンティティ」でntopngユーザー名を"
 "「ntopngユーザー名」として定義することができます。"
+
+#, python-format
+msgid ""
+"The relay '%s' is used by the following host(s): %s. Only relays that are "
+"not being used by a host can be deleted."
+msgstr ""
+
+#, fuzzy, python-format
+msgid "The relay with ID '%s' does not exist."
+msgstr "ルールID%sは存在しません。"
 
 msgid ""
 "The renaming of hosts is a complex operation since a host's name is being "
@@ -69420,6 +69614,22 @@ msgstr ""
 "このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
 "きます"
 
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis replication "
+"monitoring"
+msgstr ""
+"このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
+"きます"
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis throughput "
+"monitoring"
+msgstr ""
+"このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
+"きます"
+
 msgid "This ruleset allows you to configure levels for the Storage data flows"
 msgstr "このルールセットでは、ストレージのデータフローのレベルを設定できます"
 
@@ -70621,6 +70831,13 @@ msgstr "接続がタイムアウトするまでの秒数"
 msgid "Time before the expiration date of the certificate"
 msgstr "証明書の有効期限までの期間"
 
+msgid ""
+"Time between measurements of memory usage. The recommended value is 1 "
+"second. If the expected traffic to the Collector is very spiky then decrease "
+"the check interval or increase spike limit to avoid memory usage going over "
+"the hard limit."
+msgstr ""
+
 msgid "Time between new checks of type Check_MK"
 msgstr "Checkmkタイプの新しいチェック間の時間"
 
@@ -71713,9 +71930,9 @@ msgstr "アクティブなシャード総数の上位レベル"
 msgid "Total number of active shards upper level"
 msgstr "アクティブなシャード総数の上位レベル"
 
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Total number of active {property} upper levels"
-msgstr "アクティブなボリュームの総数上位レベル"
+msgstr "アクティブな{property}上位レベルの総数"
 
 msgid "Total number of collections lower level"
 msgstr "コレクション総数の下位レベル"
@@ -71861,9 +72078,9 @@ msgstr "ユーザー総数の上位レベル"
 msgid "Total number of zombie jobs"
 msgstr "ゾンビジョブの総数"
 
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Total number of {property} upper levels"
-msgstr "ユーザー総数の上位レベル"
+msgstr "{property}上位レベルの総数"
 
 msgid "Total packets maximum"
 msgstr "最大総パケット数"
@@ -78607,9 +78824,8 @@ msgstr "ウィークリーレート"
 msgid "Welcome page"
 msgstr "ウェルカムページ"
 
-#, fuzzy
 msgid "Welcome to Checkmk"
-msgstr "Checkmk Mobileへようこそ。"
+msgstr "Checkmk へようこそ"
 
 msgid "Welcome to Checkmk Mobile."
 msgstr "Checkmk Mobileへようこそ。"
@@ -84421,9 +84637,9 @@ msgid "site"
 msgid_plural "sites"
 msgstr[0] "サイト"
 
-#, fuzzy, python-format
+#, python-format
 msgid "site must be a list. Current type is: %s "
-msgstr "タイプはリストされる必要がありますが、%s です"
+msgstr "タイプはリストされる必要があります。現在のタイプ：%s "
 
 msgid "slots"
 msgstr "スロット"
@@ -84771,7 +84987,7 @@ msgstr "接続オーバーフロー率は %.2f/s です"
 
 #, python-format
 msgid "you need to set %s parameter to either %s."
-msgstr "%sのパラメータを%sに設定する必要があります。"
+msgstr "%sのパラメータを%sのいずれかに設定する必要があります。"
 
 msgid "z/OS"
 msgstr "z/OS"
@@ -84787,9 +85003,8 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 msgid "{checkname} - {check['title']}"
 msgstr "{checkname} - {check['title']}"
 
-#, fuzzy
 msgid "{property.capitalize()} "
-msgstr "{property.capitalize()} Podman コンテナ"
+msgstr "{property.capitalize()} "
 
 msgid "{property.capitalize()} Podman containers"
 msgstr "{property.capitalize()} Podman コンテナ"
@@ -84821,6 +85036,892 @@ msgid ""
 msgstr ""
 "サービス制限を下回るまで、「変更を有効にする」はブロックされます。利用限度額"
 "を上げたい場合、 "
+
+msgid "This string was translated outside of a vue component."
+msgstr ""
+
+#, fuzzy
+msgid "German"
+msgstr "休眠中"
+
+msgid "French"
+msgstr ""
+
+#, fuzzy
+msgid "Loading translations..."
+msgstr "%d翻訳"
+
+#, fuzzy
+msgid "Translations loaded"
+msgstr "翻訳"
+
+#, fuzzy
+msgid "Your name"
+msgstr "ソース名"
+
+#, fuzzy
+msgid "Number of apples"
+msgstr "テーブルの数"
+
+#, fuzzy
+msgid "Hello %{name}!"
+msgstr "フルネーム"
+
+msgid "There is %{ n } apple"
+msgid_plural "There are %{ n } apples"
+msgstr[0] ""
+
+msgid "Toggle accordion item %{item}"
+msgstr ""
+
+msgid "Copy to clipboard failed with error: "
+msgstr ""
+
+#, fuzzy
+msgid "Copied to clipboard"
+msgstr "秘密をクリップボードにコピーする"
+
+#, fuzzy
+msgid "selected"
+msgstr "選択済み"
+
+#, fuzzy
+msgid "No elements"
+msgstr "エレメントを切り替えます"
+
+msgid "Drag to reorder"
+msgstr ""
+
+#, fuzzy
+msgid "Remove element"
+msgstr "この要素を削除します"
+
+#, fuzzy
+msgid "Close"
+msgstr "クローズド"
+
+#, fuzzy
+msgid "filter"
+msgstr "フィルタ"
+
+#, fuzzy
+msgid "Next step"
+msgstr "ホスト状態概要"
+
+#, fuzzy
+msgid "Previous step"
+msgstr "前のサイクル"
+
+#, fuzzy
+msgid "Finish"
+msgstr "終了しました"
+
+#, fuzzy
+msgid "Guided"
+msgstr "ガイドモード"
+
+#, fuzzy
+msgid "An unexpected error occurred"
+msgstr "接続エラーが発生しました: %s"
+
+#, fuzzy
+msgid ""
+"Refresh the page to try again. If the problem persists, reach out to the "
+"Checkmk support."
+msgstr "このエラーが続く場合は、Checkmkサポートチームまでご連絡ください。"
+
+msgid "required"
+msgstr "必須"
+
+#, fuzzy
+msgid "Select an option..."
+msgstr "オプション選択"
+
+#, fuzzy
+msgid "Type to search..."
+msgstr "検索するインデックス"
+
+#, fuzzy
+msgid "Add widget"
+msgstr "ターゲットを追加"
+
+#, fuzzy
+msgid "Add Widget"
+msgstr "ターゲットを追加"
+
+#, fuzzy
+msgid "Metrics & graphs"
+msgstr "サービスグラフ"
+
+msgid "Visualize key metrics using charts and graphs"
+msgstr ""
+
+msgid "Visualize built-in and preconfigured custom graphs"
+msgstr ""
+
+#, fuzzy
+msgid "Embed saved views"
+msgstr "既存のビューを埋め込む"
+
+#, fuzzy
+msgid "Host & site overview"
+msgstr "ホストの概要"
+
+msgid "Summarize key system components"
+msgstr ""
+
+#, fuzzy
+msgid "Service overview"
+msgstr "サイトの概要"
+
+#, fuzzy
+msgid "Summarize key services"
+msgstr "古いサービス"
+
+#, fuzzy
+msgid "HW/SW inventory"
+msgstr "HW/SWインベントリ"
+
+#, fuzzy
+msgid "Summarize key hardware and software components"
+msgstr "ホストの完全なハードウェアおよびソフトウェアインベントリ"
+
+#, fuzzy
+msgid "Alerts & notifications"
+msgstr "テスト通知"
+
+#, fuzzy
+msgid "Summarize alerts and notifications"
+msgstr "ホスト通知の概要"
+
+#, fuzzy
+msgid "Summarize events"
+msgstr "サービスイベント"
+
+#, fuzzy
+msgid "Other elements"
+msgstr "サイドバー要素"
+
+msgid "Display user messages, sidebar elements, text or embed a URL"
+msgstr ""
+
+#, fuzzy
+msgid "Empty dashboard app"
+msgstr "ダッシュボードを編集する"
+
+#, fuzzy
+msgid "explicit password"
+msgstr "新しいパスワード"
+
+#, fuzzy
+msgid "Open full view"
+msgstr "ファイルを開く"
+
+msgid ""
+"Changes are saved in a temporary environment first, letting you review and "
+"adjust them safely.\n"
+"             Activate changes to apply them to live monitoring."
+msgstr ""
+
+msgid "Successfully activated %{numberOfChangesLastActivation} changes"
+msgstr ""
+
+#, fuzzy
+msgid "Everything is up to date"
+msgstr "同期状態の取得"
+
+msgid "No pending changes"
+msgstr "保留中の変更はありません"
+
+msgid "Problems detected during activation"
+msgstr ""
+
+msgid "Some things may not be monitored properly."
+msgstr ""
+
+#, fuzzy
+msgid "Activating changes on "
+msgstr "変更のアクティブ化: "
+
+#, fuzzy
+msgid "Activating changes... "
+msgstr "変更のアクティブ化: "
+
+msgid "You can safely navigate away - we'll keep working in the background"
+msgstr ""
+
+#, fuzzy
+msgid "Changes: (%{n})"
+msgstr "変更"
+
+#, fuzzy
+msgid "Foreign changes: (%{n})"
+msgstr "他者の変更を戻す"
+
+#, fuzzy
+msgid "You haven't selected any sites"
+msgstr "少なくとも1つのユーザーを選択する必要があります。"
+
+#, fuzzy
+msgid "Changes:"
+msgstr "変更"
+
+#, fuzzy
+msgid "No changes"
+msgstr " 変更"
+
+#, fuzzy
+msgid "Sites with changes: %{n}"
+msgstr "変更の有効化を開始しました: %s"
+
+#, fuzzy
+msgid "Sites with errors: %{n}"
+msgstr "%d サイトでエラーが発生しました: %s"
+
+#, fuzzy
+msgid "Agent connection test running"
+msgstr "接続タイムアウトを設定する"
+
+#, fuzzy
+msgid "Agent connection successful"
+msgstr "エージェント%sが成功しました"
+
+msgid ""
+"Connection failed, enter new hostname to check again or download and install "
+"the Checkmk agent."
+msgstr ""
+
+#, fuzzy
+msgid "Please enter a hostname to test Checkmk agent connection"
+msgstr "ホスト状態を再分類するためのホスト名を設定してください"
+
+#, fuzzy
+msgid "Test Checkmk agent connection"
+msgstr "Checkmkエージェント接続モード"
+
+#, fuzzy
+msgid "Register agent"
+msgstr "登録エージェント"
+
+#, fuzzy
+msgid "Install Checkmk agent"
+msgstr "Checkmkエージェント"
+
+#, fuzzy
+msgid "Re-test agent connection"
+msgstr "接続ごとのリクエスト"
+
+#, fuzzy
+msgid "Agent connection failed"
+msgstr "Checkmkエージェント接続モード"
+
+#, fuzzy
+msgid "Failed to connect to the Checkmk agent"
+msgstr "Checkmkエージェントに接続するためのTCPポート"
+
+msgid ""
+"This may be because the agent is not installed or not running on the target "
+"system."
+msgstr ""
+
+msgid "Download & install agent"
+msgstr "ダウンロード済・インストール済のエージェント"
+
+#, fuzzy
+msgid "Download Checkmk agent"
+msgstr "CheckmkエージェントVanillaをダウンロード"
+
+#, fuzzy
+msgid "Agent not registered"
+msgstr "未登録"
+
+#, fuzzy
+msgid ""
+"The agent has been installed on the target system but has not yet been "
+"registered."
+msgstr "このサイトのステータスはまだ決定されていません。"
+
+#, fuzzy
+msgid "Register Checkmk agent"
+msgstr "登録エージェント"
+
+#, fuzzy
+msgid "TLS connection not provided"
+msgstr "接続タイムアウトを設定する"
+
+msgid ""
+"The agent has been installed on the target system but is not providing a TLS "
+"connection."
+msgstr ""
+
+#, fuzzy
+msgid "Provide TLS connection"
+msgstr "新しいTLS接続"
+
+#, fuzzy
+msgid "Test agent connection"
+msgstr "Checkmkエージェント接続モード"
+
+#, fuzzy
+msgid "Testing agent connection ..."
+msgstr "Checkmkエージェント接続モード"
+
+#, fuzzy
+msgid "Successfully connected to agent."
+msgstr "クリップボードへのコピーに成功しました。"
+
+#, fuzzy
+msgid "Close slideout"
+msgstr "接続タイムアウト"
+
+#, fuzzy
+msgid "Close & test connection"
+msgstr "テスト接続"
+
+#, fuzzy
+msgid "View all agents"
+msgstr "全てのエージェント"
+
+#, fuzzy
+msgid "Select the type of system you want to monitor"
+msgstr "監視したいサブスクリプションを選択してください。"
+
+#, fuzzy
+msgid "Save host"
+msgstr "古いホスト"
+
+msgid ""
+"Agent registration is only possible for hosts that already exist in Checkmk "
+"(they don’t need to be activated yet)."
+msgstr ""
+
+msgid ""
+"Could not save host \"${hostName}\". Close the slideout and review your "
+"input."
+msgstr ""
+
+#, fuzzy
+msgid "Host \"${hostName}\" exists"
+msgstr "ホストはすでに存在します"
+
+#, fuzzy
+msgid "Close and revise form"
+msgstr "モデルと改訂"
+
+#, fuzzy
+msgid "Close & review"
+msgstr "クローン ビュー"
+
+#, fuzzy
+msgid "Save host & next step"
+msgstr "保存してテストする"
+
+#, fuzzy
+msgid "Download and install"
+msgstr "ダウンロード済・インストール済のエージェント"
+
+msgid "Run this command to download and install the Checkmk agent."
+msgstr ""
+
+#, fuzzy
+msgid "Next step: Register agent"
+msgstr "次のステップ：受信者"
+
+msgid ""
+"Agent registration will establish trust between the Agent Controller\n"
+"                    on the host and the Agent Receiver on the Checkmk server."
+msgstr ""
+
+msgid "Run this command to register the Checkmk agent controller."
+msgstr ""
+
+msgid ""
+"Test if you have configured everything correctly with pasting the following\n"
+"                  command into the CLI of the target system."
+msgstr ""
+
+#, fuzzy
+msgid "Install the legacy Checkmk agent"
+msgstr "Checkmkエージェントにも連絡してください"
+
+msgid ""
+"Run this command on your Windows host to download and install the Checkmk "
+"agent."
+msgstr ""
+
+msgid ""
+"After you have downloaded the agent, run this command on your Windows host "
+"to register the Checkmk agent controller."
+msgstr ""
+
+msgid ""
+"Run this command on your Linux host to download and install the Checkmk "
+"agent."
+msgstr ""
+
+msgid ""
+"If you want to install the Checkmk agent on Linux, please read how to "
+"install the legacy agent"
+msgstr ""
+
+msgid ""
+"After you have downloaded the agent, run this command on your Linux host to "
+"register the Checkmk agent controller."
+msgstr ""
+
+msgid "Run this command on your Solaris host to download the Checkmk agent."
+msgstr ""
+
+msgid ""
+"If you want to install the Checkmk agent on Solaris, please read how to "
+"install the legacy agent"
+msgstr ""
+
+msgid ""
+"After you have downloaded the agent, run this command on your Solaris host "
+"to install the Checkmk agent."
+msgstr ""
+
+msgid ""
+"Run this command on your AIX host to download and install the Checkmk agent."
+msgstr ""
+
+msgid ""
+"If you want to install the Checkmk agent on AIX, please read how to install "
+"the legacy agent"
+msgstr ""
+
+msgid ""
+"After you have downloaded the agent, run this command on your AIX host to "
+"register the Checkmk agent controller."
+msgstr ""
+
+msgid ""
+"To monitor systems like Linux or Windows with Checkmk, you need to install "
+"an agent on these systems.\n"
+"           This agent acts as a small program that collects data about the "
+"systems state, such as how much storage is used or the CPU load."
+msgstr ""
+
+#, fuzzy
+msgid "Already installed the Checkmk agent?"
+msgstr "すでにエージェントはインストール済？"
+
+msgid ""
+"This problem might be caused by a missing agent or the firewall settings."
+msgstr ""
+"この問題は、エージェントが欠落しているか、ファイアウォールの設定が原因である"
+"可能性があります。"
+
+#, fuzzy
+msgid "Already registered the Checkmk agent?"
+msgstr "すでにエージェントはインストール済？"
+
+#, fuzzy
+msgid "This problem might be caused by a missing agent registration."
+msgstr ""
+"この問題は、エージェントが欠落しているか、ファイアウォールの設定が原因である"
+"可能性があります。"
+
+msgid "Read Checkmk user guide"
+msgstr "Checkmk公式ユーザーガイドをお読みください"
+
+#, fuzzy
+msgid "Close & run service discovery"
+msgstr "サービスディスカバリの実行と保存"
+
+msgid "No filters can be applied to your current search query."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Search with regular expressions for menu entries, hosts, services or host "
+"and service groups."
+msgstr "ホストグループ名の正規表現と部分一致が可能な検索フィールド"
+
+msgid "Note that for simplicity '*' will be substituted with '.*'."
+msgstr ""
+
+msgid "Search across Checkmk – Type '/' for search operators"
+msgstr ""
+
+msgid "Search in monitoring – Type '/' for search operators"
+msgstr ""
+
+#, fuzzy
+msgid "Search in customize"
+msgstr "カスタマイズされた %d アイコン"
+
+#, fuzzy
+msgid "Search in setup"
+msgstr "セットアップで検索"
+
+#, fuzzy
+msgid "Press"
+msgstr "圧力"
+
+#, fuzzy
+msgid "to trigger host/service search"
+msgstr "一致するホスト/サービスがありません。"
+
+msgid "Only available for 'Monitoring' and 'All'"
+msgstr ""
+
+#, fuzzy
+msgid "Search operators"
+msgstr "検索パターン"
+
+msgid "Type \"/\" to use search operator"
+msgstr ""
+
+#, fuzzy
+msgid "Search in"
+msgstr "検索インデックス"
+
+msgid "¯\\_(ツ)_/¯"
+msgstr ""
+
+#, fuzzy
+msgid "No results found for your search"
+msgstr "このホストのログは見つかりませんでした。"
+
+#, fuzzy
+msgid "Reset search"
+msgstr "検索を絞り込む"
+
+msgid "Find rules, hosts, dashboards, settings ..."
+msgstr ""
+
+msgid "Tip: Press"
+msgstr ""
+
+msgid ""
+"to view all search operator and, e.g., find all hosts with the same host "
+"label (hl:)"
+msgstr ""
+
+#, fuzzy
+msgid "Recently viewed"
+msgstr "ビューを選択"
+
+#, fuzzy
+msgid "Clear all"
+msgstr "ログをクリアする"
+
+#, fuzzy
+msgid "Recently searched"
+msgstr "最近変更されたサービス"
+
+msgid "What's next?"
+msgstr ""
+
+#, fuzzy
+msgid "Set up backup"
+msgstr "サイトのバックアップ"
+
+msgid ""
+"No backup, no mercy! Protect your configuration and data with automated "
+"backups."
+msgstr ""
+
+#, fuzzy
+msgid "Scale your monitoring"
+msgstr "フェイルオーバー監視"
+
+msgid "Add more hosts, sites, or distributed setups as your environment grows."
+msgstr ""
+
+#, fuzzy
+msgid "Fine-tune your monitoring"
+msgstr "Windowsプロセスの監視を微調整する"
+
+msgid ""
+"Dive deep into the details and learn how to optimize checks, thresholds, and "
+"notifications."
+msgstr ""
+
+#, fuzzy
+msgid "License your site"
+msgstr "ライセンスの状態"
+
+msgid ""
+"It’s time to enjoy the full experience! Set up automated licensing for a "
+"smooth experience."
+msgstr ""
+
+#, fuzzy
+msgid "First steps with Checkmk"
+msgstr "Checkmkに同梱されているMIB"
+
+#, fuzzy
+msgid "Resources"
+msgstr "ソース"
+
+msgid ""
+"Your assistant for Checkmk - ask anything from setup to troubleshooting."
+msgstr ""
+
+#, fuzzy
+msgid "Read the Beginner’s Guide"
+msgstr "ビギナーズガイド"
+
+msgid ""
+"A step-by-step introduction to help you get started quickly and confidently."
+msgstr ""
+
+#, fuzzy
+msgid "Join the community"
+msgstr "プレーンテキストによる通信"
+
+msgid "Connect with other users and ask questions in our active forum."
+msgstr ""
+
+#, fuzzy
+msgid "All steps completed"
+msgstr "サイトのすべてのホスト"
+
+#, fuzzy
+msgid "Continue setup"
+msgstr "検索を続ける"
+
+#, fuzzy
+msgid "What's next"
+msgstr "次 "
+
+#, fuzzy
+msgid "Next steps with Checkmk"
+msgstr "Checkmkに同梱されているMIB"
+
+#, fuzzy
+msgid "Add your first host"
+msgstr "現ホストに対するルールを追加"
+
+#, fuzzy
+msgid "2-5 min"
+msgstr "5分"
+
+msgid ""
+"Each host includes a number of services that represent what you want to "
+"monitor, for example,\n"
+"  CPU usage, disk space, running processes, or hardware sensors. Checkmk "
+"makes this easy with the\n"
+"  Service Discovery, which automatically detects relevant services on your "
+"host, so you can start\n"
+"  monitoring with minimal setup."
+msgstr ""
+
+msgid "On-premise-hosts"
+msgstr ""
+
+#, fuzzy
+msgid "Server (Linux, Windows, Solaris, ...)"
+msgstr "ハードウェア / ソフトウェアインベントリ(Linux、Windows、Solaris、AIX)"
+
+#, fuzzy
+msgid "Network devices and SNMP"
+msgstr "ネットワークスキャン"
+
+#, fuzzy
+msgid "Application monitoring"
+msgstr "監視アイコン"
+
+#, fuzzy
+msgid "OpenTelemetry (Beta)"
+msgstr "OpenTelemetry（実験的）"
+
+#, fuzzy
+msgid "Adjust services"
+msgstr "すべてのサービス"
+
+#, fuzzy
+msgid "5-7 min"
+msgstr "5分"
+
+msgid ""
+"Each service in Checkmk comes with default parameter values.\n"
+"            You can customize these to match your monitoring needs,\n"
+"            most commonly by setting thresholds for WARN and CRIT states "
+"using rules.\n"
+"            To find the right ruleset for a service, start with the Service "
+"Discovery page."
+msgstr ""
+
+#, fuzzy
+msgid "Run a service discovery"
+msgstr "サービスディスカバリ実行"
+
+msgid "To adjust parameters for a host, start by running a service discovery."
+msgstr ""
+
+#, fuzzy
+msgid "In the host table, click on the"
+msgstr "ホストアクションメニューを開く"
+
+#, fuzzy
+msgid "-icon next to the host to open the service discovery."
+msgstr "サービスディスカバリの実行と保存"
+
+#, fuzzy
+msgid "View host table"
+msgstr "テーブル表示"
+
+#, fuzzy
+msgid "Open the ruleset for a check parameter"
+msgstr "このチェックタイプのパラメータルールセットを編集する"
+
+msgid "In the Service Discovery view, find the service you want to configure."
+msgstr ""
+
+#, fuzzy
+msgid "Click the"
+msgstr "URLを確認する"
+
+msgid "-icon next to it to open the corresponding ruleset."
+msgstr ""
+
+#, fuzzy
+msgid "Create a check parameter rule"
+msgstr "不明なチェックパラメータールールセット"
+
+msgid ""
+"In the ruleset view, click Add rule for current host to create a rule that "
+"applies specifically to the selected host."
+msgstr ""
+
+msgid ""
+"You can now define custom parameters like thresholds or other check settings."
+msgstr ""
+
+#, fuzzy
+msgid "Mark as complete"
+msgstr "PGs 未完了"
+
+#, fuzzy
+msgid "Assign responsibilities"
+msgstr "サービスフィルター"
+
+msgid ""
+"The recommended way to manage responsibilities in Checkmk is by using "
+"contact groups.\n"
+"            Contact groups can be assigned to users, hosts, and services, "
+"making them a flexible\n"
+"            and scalable tool for defining who is responsible for what."
+msgstr ""
+
+#, fuzzy
+msgid "Create a contact group"
+msgstr "連絡先グループと一致する"
+
+msgid "On default, there is one contact group available \"Everything\"."
+msgstr ""
+
+#, fuzzy
+msgid "Go to Setup > Users > Contact groups to create or edit contact groups."
+msgstr "有効な連絡先グループ(ホストまたはルールの連絡先グループ)"
+
+#, fuzzy
+msgid "Assign users to a contact group"
+msgstr "連絡先グループへのサービスの割り当て"
+
+msgid ""
+"Each user can belong to multiple contact groups. You can assign them to "
+"contact groups in the \"Contact groups\" section when editing or creating a "
+"user"
+msgstr ""
+
+#, fuzzy
+msgid "Assign the contact group to hosts"
+msgstr "これらの連絡先グループをホストに追加します"
+
+msgid ""
+"There are two options available for assigning hosts to contact groups. "
+"Either make a direct assignment when creating or editing hosts, or use a "
+"rule."
+msgstr ""
+
+msgid ""
+"We recommend using the latter, as rules can adapt more easily to changes in "
+"your environment."
+msgstr ""
+
+#, fuzzy
+msgid "Customize dashboard"
+msgstr "カスタマイズユーザー"
+
+msgid ""
+"Tailor your monitoring experience by creating a custom dashboard\n"
+"            that highlights what matters most to you.\n"
+"            Whether you want to track specific hosts, services, or metrics,\n"
+"            dashboards help you stay focused and efficient.\n"
+"            You can create your own or explore the list of all dashboards to "
+"find useful presets."
+msgstr ""
+
+#, fuzzy
+msgid "Add custom dashboard"
+msgstr "ダッシュボードに追加"
+
+#, fuzzy
+msgid "List of all dashboards"
+msgstr "すべてのダッシュボードへのリンク"
+
+#, fuzzy
+msgid "Enable notifications"
+msgstr "通知を有効にしますか?"
+
+msgid ""
+"Notifications help you to stay on top of problems without having to "
+"constantly check the interface.\n"
+"            In Checkmk, they are rule-based, enabling you to create a "
+"notification system that evolves alongside\n"
+"            your environment."
+msgstr ""
+
+#, fuzzy
+msgid "Create a notification rule"
+msgstr "新しい通知ルールを作成する"
+
+msgid ""
+"Follow the step-by-step guide in Setup > Notifications to set up "
+"notification rules."
+msgstr ""
+
+#, fuzzy
+msgid "Send a test notification"
+msgstr "カスタム通知の送信"
+
+msgid ""
+"After creation, test your notification rule to make sure alerts reach you "
+"the way you expect."
+msgstr ""
+
+#, fuzzy
+msgid "Your progress"
+msgstr "進行中"
+
+#, fuzzy
+msgid "Steps complete"
+msgstr "コンプリート"
+
+#, fuzzy
+msgid "Welcome to Checkmk!"
+msgstr "Checkmk へようこそ"
+
+msgid "Get started with Checkmk in 5 easy steps."
+msgstr ""
+
+msgid "Show welcome page on start"
+msgstr ""
+
+msgid ""
+"You can still access it later via Help > Learning Checkmk > Welcome page"
+msgstr ""
+
+#~ msgid "Default State"
+#~ msgstr "デフォルトステータス"
+
+#~ msgid "Special States"
+#~ msgstr "特別なステート"
 
 #~ msgid ""
 #~ "By default, data relating to a VM is sent to the group host corresponding "
@@ -84945,21 +86046,6 @@ msgstr ""
 #~ msgid "Agent Download"
 #~ msgstr "エージェントダウンロード"
 
-#~ msgid "Already installed the agent?"
-#~ msgstr "すでにエージェントはインストール済？"
-
-#~ msgid "Download & install agent"
-#~ msgstr "ダウンロード済・インストール済のエージェント"
-
-#~ msgid "Read Checkmk user guide"
-#~ msgstr "Checkmk公式ユーザーガイドをお読みください"
-
-#~ msgid ""
-#~ "This problem might be caused by a missing agent or the firewall settings."
-#~ msgstr ""
-#~ "この問題は、エージェントが欠落しているか、ファイアウォールの設定が原因であ"
-#~ "る可能性があります。"
-
 #, python-format
 #~ msgid ""
 #~ "Cannot load HW/SW Inventory tree %s. Please remove the corrupted file."
@@ -85059,9 +86145,6 @@ msgstr ""
 #~ msgid "Migrated Parents"
 #~ msgstr "移行された親"
 
-#~ msgid "required"
-#~ msgstr "必須"
-
 #~ msgid "Community translated languages"
 #~ msgstr "コミュニティの翻訳言語"
 
@@ -85092,31 +86175,8 @@ msgstr ""
 #~ msgid "Unable to migrate value"
 #~ msgstr "値のレンダリングに失敗しました:"
 
-#, fuzzy
-#~ msgid "Agent connection successful"
-#~ msgstr "エージェント%sが成功しました"
-
-#, fuzzy
-#~ msgid "Agent connection test running"
-#~ msgstr "接続タイムアウトを設定する"
-
-#, fuzzy
-#~ msgid "Checkmk agent connection failed"
-#~ msgstr "Checkmkエージェント接続モード"
-
-#, fuzzy
-#~ msgid "Please enter a hostname to test Checkmk agent connection"
-#~ msgstr "ホスト状態を再分類するためのホスト名を設定してください"
-
-#, fuzzy
-#~ msgid "Test Checkmk agent connection"
-#~ msgstr "Checkmkエージェント接続モード"
-
 #~ msgid "Do you really want to move the selected aggregations?"
 #~ msgstr "選択した集計を本当に移動しますか？"
-
-#~ msgid "No pending changes"
-#~ msgstr "保留中の変更はありません"
 
 #, python-format
 #~ msgid ""
@@ -86048,10 +87108,6 @@ msgstr ""
 #~ msgid "Skip monitoring non discovered hosts"
 #~ msgstr "OMDモニタリングコア"
 
-#, fuzzy
-#~ msgid "The first value must be lower than the second value."
-#~ msgstr "タイムアウトは1秒以上でなければなりません。"
-
 #, python-format
 #~ msgid "The following files are missing in the archive: %s"
 #~ msgstr "以下のファイルがアーカイブにありません：%s"
@@ -86266,10 +87322,6 @@ msgstr ""
 #~ msgid "Collect performance data for disk latency"
 #~ msgstr "ディスク遅延のパフォーマンスデータを収集する"
 
-#, fuzzy
-#~ msgid "Next step: Summary"
-#~ msgstr "ホスト状態概要"
-
 #~ msgid ""
 #~ "Note: enabling performance data for the latency might cause "
 #~ "incompatibilities with existing historical data if you are running "
@@ -86455,10 +87507,6 @@ msgstr ""
 #~ "定では、リモートサイトのビューから中央セットアップサイトのREST APIを設定す"
 #~ "る必要があります。"
 
-#, fuzzy
-#~ msgid "Assignee filters"
-#~ msgstr "サービスフィルター"
-
 #~ msgid "Host & service events"
 #~ msgstr "ホスト&サービスイベント"
 
@@ -86574,10 +87622,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Some value"
 #~ msgstr "すべて削除する"
-
-#, python-format
-#~ msgid "Started activate changes: %s"
-#~ msgstr "変更の有効化を開始しました: %s"
 
 #, fuzzy
 #~ msgid "State of the host manager"
@@ -86786,10 +87830,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Recipients"
 #~ msgstr "受信者"
-
-#, fuzzy
-#~ msgid "Save & go to service discovery"
-#~ msgstr "サービスディスカバリの実行と保存"
 
 #, fuzzy
 #~ msgid "TBD"

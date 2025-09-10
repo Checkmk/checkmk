@@ -1637,19 +1637,19 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".software.applications.azure.load_balancers.inbound_nat_rules.backend_ip_configs:*.backend_ip_config": {"title": _l("Backend IP config")},
         # MIGRATED ".software.applications.azure.load_balancers.inbound_nat_rules.backend_ip_configs:*.ip_address": {"title": _l("IP address")},
         # MIGRATED ".software.applications.azure.load_balancers.inbound_nat_rules.backend_ip_configs:*.ip_allocation_method": {"title": _l("Allocation method")},
-        ".software.applications.azure.load_balancers.outbound_rules:": {
-            "title": _l("Outbound rules"),
-            "keyorder": [
-                "load_balancer",
-                "outbound_rule",
-                "protocol",
-                "idle_timeout",
-            ],
-        },
-        ".software.applications.azure.load_balancers.outbound_rules:*.load_balancer": {"title": _l("Load balancer")},
-        ".software.applications.azure.load_balancers.outbound_rules:*.outbound_rule": {"title": _l("Outbound rule")},
-        ".software.applications.azure.load_balancers.outbound_rules:*.protocol": {"title": _l("Protocol")},
-        ".software.applications.azure.load_balancers.outbound_rules:*.idle_timeout": {"title": _l("Idle timeout")},
+        # MIGRATED ".software.applications.azure.load_balancers.outbound_rules:": {
+        # MIGRATED     "title": _l("Outbound rules"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "load_balancer",
+        # MIGRATED         "outbound_rule",
+        # MIGRATED         "protocol",
+        # MIGRATED         "idle_timeout",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.azure.load_balancers.outbound_rules:*.load_balancer": {"title": _l("Load balancer")},
+        # MIGRATED ".software.applications.azure.load_balancers.outbound_rules:*.outbound_rule": {"title": _l("Outbound rule")},
+        # MIGRATED ".software.applications.azure.load_balancers.outbound_rules:*.protocol": {"title": _l("Protocol")},
+        # MIGRATED ".software.applications.azure.load_balancers.outbound_rules:*.idle_timeout": {"title": _l("Idle timeout")},
         ".software.applications.azure.load_balancers.outbound_rules.backend_pools:": {
             "title": _l("Backend pools"),
             "keyorder": [

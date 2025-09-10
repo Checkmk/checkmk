@@ -1118,6 +1118,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.podman.network.gateway": {"title": _l("Gateway")},
         ".software.applications.podman.network.mac_address": {"title": _l("MAC address")},
         ".software.applications.synthetic_monitoring.": {"title": _l("Synthetic monitoring")},
+        # MIGRATED ".software.applications.synthetic_monitoring.": {"title": _l("Synthetic monitoring")},
         ".software.applications.synthetic_monitoring.plans:": {
             "title": _l("Plans"),
             "keyorder": [

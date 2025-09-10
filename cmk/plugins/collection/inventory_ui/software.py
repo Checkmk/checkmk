@@ -849,3 +849,9 @@ node_software_applications_oracle_tablespaces = Node(
         },
     ),
 )
+
+node_software_applications_synthetic_monitoring = Node(
+    name="software_applications_synthetic_monitoring",
+    path=["software", "applications", "synthetic_monitoring"],
+    title=Title("Synthetic monitoring"),
+)

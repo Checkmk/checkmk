@@ -1813,13 +1813,13 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".networking.total_ethernet_ports": {"title": _l("Ports"), "paint": "count"},
         # MIGRATED ".networking.hostname": {"title": _l("Host name")},
         # MIGRATED ".networking.available_ethernet_ports": {"title": _l("Ports available"), "paint": "count"},
-        ".networking.addresses:": {
-            "title": _l("IP addresses"),
-            "keyorder": ["address", "device", "type"],
-        },
-        ".networking.addresses:*.address": {"title": _l("Address")},
-        ".networking.addresses:*.device": {"title": _l("Device")},
-        ".networking.addresses:*.type": {"title": _l("Address type"), "paint": "ip_address_type"},
+        # MIGRATED ".networking.addresses:": {
+        # MIGRATED     "title": _l("IP addresses"),
+        # MIGRATED     "keyorder": ["address", "device", "type"],
+        # MIGRATED },
+        # MIGRATED ".networking.addresses:*.address": {"title": _l("Address")},
+        # MIGRATED ".networking.addresses:*.device": {"title": _l("Device")},
+        # MIGRATED ".networking.addresses:*.type": {"title": _l("Address type"), "paint": "ip_address_type"},
         ".networking.interfaces:": {
             "title": _l("Network interfaces"),
             "keyorder": [

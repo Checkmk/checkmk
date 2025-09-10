@@ -406,7 +406,6 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     ),
     Component("cmk.cee.helpers"): _allow(
         *PACKAGE_CCC,
-        "cmk.checkengine",
         "cmk.fetchers",
         "cmk.helper_interface",
         "cmk.snmplib",

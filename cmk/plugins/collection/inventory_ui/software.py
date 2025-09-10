@@ -156,3 +156,24 @@ node_software_applications_azure_load_balancers_inbound_nat_rules_backend_ip_con
         },
     ),
 )
+
+node_software_applications_azure_load_balancers_inbound_nat_rules_private_ips = Node(
+    name="software_applications_azure_load_balancers_inbound_nat_rules_private_ips",
+    path=[
+        "software",
+        "applications",
+        "azure",
+        "load_balancers",
+        "inbound_nat_rules",
+        "private_ips",
+    ],
+    title=Title("Private IPs"),
+    table=Table(
+        columns={
+            "load_balancer": TextField(Title("Load balancer")),
+            "inbound_nat_rule": TextField(Title("Inbound NAT rule")),
+            "ip_address": TextField(Title("IP address")),
+            "ip_allocation_method": TextField(Title("Allocation method")),
+        },
+    ),
+)

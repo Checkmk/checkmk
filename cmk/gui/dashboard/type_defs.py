@@ -6,6 +6,7 @@
 from typing import Any, Literal, NewType, NotRequired, TypedDict
 
 from cmk.gui.type_defs import (
+    DashboardEmbeddedViewSpec,
     FilterName,
     GraphPresentation,
     GraphRenderOptionsVS,
@@ -213,3 +214,6 @@ class DashboardConfig(Visual):
     layout: NotRequired[
         DashboardRelativeGridLayoutSpec | DashboardResponsiveGridLayoutSpec
     ]  # default: relative_grid
+    embedded_views: NotRequired[
+        dict[str, DashboardEmbeddedViewSpec]
+    ]  # view definitions for embedded view widgets

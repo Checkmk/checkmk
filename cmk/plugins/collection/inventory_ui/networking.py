@@ -121,3 +121,9 @@ node_networking_tunnels = Node(
         },
     ),
 )
+
+node_networking_wlan = Node(
+    name="networking_wlan",
+    path=["networking", "wlan"],
+    title=Title("WLAN"),
+)

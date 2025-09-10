@@ -879,7 +879,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".software.applications.docker.networks.containers:*.mac_address": {
         # MIGRATED     "title": _l("MAC address"),
         # MIGRATED },
-        ".software.applications.fortinet.": {"title": _l("Fortinet")},
+        # MIGRATED ".software.applications.fortinet.": {"title": _l("Fortinet")},
         ".software.applications.fortinet.fortisandbox:": {
             "title": _l("FortiSandbox software"),
             "keyorder": ["name", "version"],

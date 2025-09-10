@@ -466,3 +466,9 @@ node_software_applications_docker_swarm_manager = Node(
         },
     ),
 )
+
+node_software_applications_fortinet = Node(
+    name="software_applications_fortinet",
+    path=["software", "applications", "fortinet"],
+    title=Title("Fortinet"),
+)

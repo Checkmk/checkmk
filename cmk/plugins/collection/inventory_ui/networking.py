@@ -13,6 +13,7 @@ from cmk.inventory_ui.v1_alpha import (
     TextField,
     Title,
     Unit,
+    View,
 )
 
 UNIT_COUNT = Unit(DecimalNotation(""), StrictPrecision(0))
@@ -100,6 +101,23 @@ node_networking_sip_interfaces = Node(
             "device": TextField(Title("Device")),
             "tcp_port": TextField(Title("TCP Port")),
             "gateway": TextField(Title("Gateway")),
+        },
+    ),
+)
+
+node_networking_tunnels = Node(
+    name="networking_tunnels",
+    path=["networking", "tunnels"],
+    title=Title("Networking tunnels"),
+    table=Table(
+        view=View(name="invtunnels", title=Title("Networking tunnels")),
+        columns={
+            "peername": TextField(Title("Peer name")),
+            "index": TextField(Title("Index")),
+            "peerip": TextField(Title("Peer IP address")),
+            "sourceip": TextField(Title("Source IP address")),
+            "tunnelinterface": TextField(Title("Tunnel interface")),
+            "linkpriority": TextField(Title("Link priority")),
         },
     ),
 )

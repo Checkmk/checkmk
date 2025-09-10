@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.inventory_ui.v1_alpha import (
+    AgeNotation,
     BoolField,
     DecimalNotation,
     Node,
@@ -16,6 +17,7 @@ from cmk.inventory_ui.v1_alpha import (
     View,
 )
 
+UNIT_AGE = Unit(AgeNotation())
 UNIT_COUNT = Unit(DecimalNotation(""), StrictPrecision(0))
 
 node_software = Node(
@@ -702,6 +704,25 @@ node_software_applications_oracle_dataguard_stats = Node(
             "db_unique": TextField(Title("Name")),
             "role": TextField(Title("Role")),
             "switchover": TextField(Title("Switchover")),
+        },
+    ),
+)
+
+node_software_applications_oracle_instance = Node(
+    name="software_applications_oracle_instance",
+    path=["software", "applications", "oracle", "instance"],
+    title=Title("Oracle instances"),
+    table=Table(
+        view=View(name="invorainstance", title=Title("Oracle instances")),
+        columns={
+            "sid": TextField(Title("SID")),
+            "pname": TextField(Title("Process name")),
+            "version": TextField(Title("Version")),
+            "openmode": TextField(Title("Open mode")),
+            "logmode": TextField(Title("Log mode")),
+            "logins": TextField(Title("Logins")),
+            "db_uptime": NumberField(Title("Uptime"), render=UNIT_AGE),
+            "db_creation_time": TextField(Title("Creation time")),
         },
     ),
 )

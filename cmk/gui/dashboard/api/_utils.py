@@ -105,6 +105,7 @@ def get_permitted_user_id(owner: UserId | ApiOmitted, action: Literal["delete", 
     Validates that the user has permission to perform the action on foreign dashboards.
     And that the built-in user was not chosen.
     """
+    user.need_permission("general.edit_dashboards")
     user_id = user.ident
     if isinstance(owner, ApiOmitted) or owner == user_id:
         return user_id

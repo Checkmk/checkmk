@@ -262,6 +262,19 @@ node_hardware_cpu = Node(
     },
 )
 
+node_hardware_cpu_nodes = Node(
+    name="hardware_cpu_nodes",
+    path=["hardware", "cpu", "nodes"],
+    title=Title("Node processor"),
+    table=Table(
+        columns={
+            "node_name": TextField(Title("Node name")),
+            "cores": NumberField(Title("#Cores"), render=UNIT_COUNT),
+            "model": TextField(Title("CPU model")),
+        },
+    ),
+)
+
 node_hardware_memory = Node(
     name="hardware_memory",
     path=["hardware", "memory"],

@@ -71,17 +71,17 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".hardware.cpu.cpus": {"title": _l("#Physical CPUs"), "paint": "count"},
         # MIGRATED ".hardware.cpu.logical_cpus": {"title": _l("#Logical CPUs"), "paint": "count"},
         # MIGRATED ".hardware.cpu.cores": {"title": _l("#Cores"), "paint": "count"},
-        ".hardware.cpu.nodes:": {
-            "title": _l("Node processor"),
-            "keyorder": [
-                "node_name",
-                "cores",
-                "model"
-            ]
-        },
-        ".hardware.cpu.nodes:*.node_name": {"title": _l("Node name")},
-        ".hardware.cpu.nodes:*.cores": {"title": _l("#Cores"), "paint": "count"},
-        ".hardware.cpu.nodes:*.model": {"title": _l("CPU model")},
+        # MIGRATED ".hardware.cpu.nodes:": {
+        # MIGRATED     "title": _l("Node processor"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "node_name",
+        # MIGRATED         "cores",
+        # MIGRATED         "model"
+        # MIGRATED     ]
+        # MIGRATED },
+        # MIGRATED ".hardware.cpu.nodes:*.node_name": {"title": _l("Node name")},
+        # MIGRATED ".hardware.cpu.nodes:*.cores": {"title": _l("#Cores"), "paint": "count"},
+        # MIGRATED ".hardware.cpu.nodes:*.model": {"title": _l("CPU model")},
         ".hardware.firmware.": {"title": _l("Firmware")},
         ".hardware.firmware.redfish:": {
             "title": _l("Redfish"),

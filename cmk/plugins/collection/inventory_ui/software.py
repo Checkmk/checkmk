@@ -643,3 +643,17 @@ node_software_applications_kube_node = Node(
         "kube_proxy_version": TextField(Title("Kube-proxy version")),
     },
 )
+
+node_software_applications_kube_pod = Node(
+    name="software_applications_kube_pod",
+    path=["software", "applications", "kube", "pod"],
+    title=Title("Pod"),
+    attributes={
+        "dns_policy": TextField(Title("DNS policy")),
+        "host_ip": TextField(Title("Host IP")),
+        "host_network": TextField(Title("Host network")),
+        "node": TextField(Title("Node")),
+        "pod_ip": TextField(Title("Pod IP")),
+        "qos_class": TextField(Title("QoS class")),
+    },
+)

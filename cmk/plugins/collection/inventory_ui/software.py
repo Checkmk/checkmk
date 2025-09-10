@@ -88,3 +88,29 @@ node_software_applications_azure_application_gateways_rules_listeners_private_ip
         },
     ),
 )
+
+node_software_applications_azure_application_gateways_rules_listeners_public_ips = Node(
+    name="software_applications_azure_application_gateways_rules_listeners_public_ips",
+    path=[
+        "software",
+        "applications",
+        "azure",
+        "application_gateways",
+        "rules",
+        "listeners",
+        "public_ips",
+    ],
+    title=Title("Public IPs"),
+    table=Table(
+        columns={
+            "application_gateway": TextField(Title("Application gateway")),
+            "rule": TextField(Title("Rule")),
+            "listener": TextField(Title("Listener")),
+            "name": TextField(Title("Name")),
+            "location": TextField(Title("Location")),
+            "ip_address": TextField(Title("IP address")),
+            "allocation_method": TextField(Title("Allocation method")),
+            "dns_fqdn": TextField(Title("DNS FQDN")),
+        },
+    ),
+)

@@ -109,14 +109,14 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED     "title": _l("Virtual addresses for mapping"),
         # MIGRATED     "paint": "bytes_rounded",
         # MIGRATED },
-        ".hardware.memory.arrays:": {
-            "title": _l("Arrays (Controllers)"),
-            "keyorder": ["maximum_capacity"],
-        },
-        ".hardware.memory.arrays:*.maximum_capacity": {
-            "title": _l("Maximum capacity"),
-            "paint": "bytes",
-        },
+        # MIGRATED ".hardware.memory.arrays:": {
+        # MIGRATED     "title": _l("Arrays (Controllers)"),
+        # MIGRATED     "keyorder": ["maximum_capacity"],
+        # MIGRATED },
+        # MIGRATED ".hardware.memory.arrays:*.maximum_capacity": {
+        # MIGRATED     "title": _l("Maximum capacity"),
+        # MIGRATED     "paint": "bytes",
+        # MIGRATED },
         # MIGRATED ".hardware.memory.arrays.devices:": {
         # MIGRATED     "title": _l("Devices"),
         # MIGRATED     "keyorder": [

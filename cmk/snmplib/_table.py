@@ -10,8 +10,6 @@ from collections.abc import Callable, Mapping, MutableMapping, Sequence
 from functools import partial
 from typing import assert_never
 
-from cmk.ccc.exceptions import MKGeneralException
-
 from ._typedefs import (
     BackendSNMPTree,
     ensure_str,
@@ -64,7 +62,7 @@ def get_snmp_table(
         # string or as binary UTF-8 encoded number string
         if isinstance(oid.column, SpecialColumn):
             if index_column >= 0 and index_column != len(columns):
-                raise MKGeneralException(
+                raise ValueError(
                     "Invalid SNMP OID specification in implementation of check. "
                     "You can only use one of OID_END, OID_STRING, OID_BIN, OID_END_BIN "
                     "and OID_END_OCTET_STRING."

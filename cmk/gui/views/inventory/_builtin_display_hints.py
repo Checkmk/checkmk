@@ -1182,7 +1182,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".software.applications.citrix.vm.desktop_group_name": {"title": _l("Desktop group name")},
         # MIGRATED ".software.applications.citrix.vm.catalog": {"title": _l("Catalog")},
         # MIGRATED ".software.applications.citrix.vm.agent_version": {"title": _l("Agent version")},
-        ".software.applications.oracle.": {"title": _l("Oracle DB")},
+        # MIGRATED ".software.applications.oracle.": {"title": _l("Oracle DB")},
         ".software.applications.oracle.systemparameter:": {
             "title": _l("Oracle system parameters"),
             "keyorder": [

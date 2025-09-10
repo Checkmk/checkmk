@@ -684,3 +684,9 @@ node_software_applications_mssql = Node(
     path=["software", "applications", "mssql"],
     title=Title("MSSQL"),
 )
+
+node_software_applications_oracle = Node(
+    name="software_applications_oracle",
+    path=["software", "applications", "oracle"],
+    title=Title("Oracle DB"),
+)

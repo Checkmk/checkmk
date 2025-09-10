@@ -1577,19 +1577,19 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".software.applications.azure.application_gateways.rules.backends:*.protocol": {"title": _l("Protocol")},
         # MIGRATED ".software.applications.azure.application_gateways.rules.backends:*.port": {"title": _l("Port")},
         # MIGRATED ".software.applications.azure.load_balancers.": {"title": _l("Load balancers")},
-        ".software.applications.azure.load_balancers.inbound_nat_rules:": {
-            "title": _l("Inbound NAT rules"),
-            "keyorder": [
-                "load_balancer",
-                "inbound_nat_rule",
-                "frontend_port",
-                "backend_port",
-            ],
-        },
-        ".software.applications.azure.load_balancers.inbound_nat_rules:*.load_balancer": {"title": _l("Load balancer")},
-        ".software.applications.azure.load_balancers.inbound_nat_rules:*.inbound_nat_rule": {"title": _l("Inbound NAT rule")},
-        ".software.applications.azure.load_balancers.inbound_nat_rules:*.frontend_port": {"title": _l("Frontend port")},
-        ".software.applications.azure.load_balancers.inbound_nat_rules:*.backend_port": {"title": _l("Backend port")},
+        # MIGRATED ".software.applications.azure.load_balancers.inbound_nat_rules:": {
+        # MIGRATED     "title": _l("Inbound NAT rules"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "load_balancer",
+        # MIGRATED         "inbound_nat_rule",
+        # MIGRATED         "frontend_port",
+        # MIGRATED         "backend_port",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.azure.load_balancers.inbound_nat_rules:*.load_balancer": {"title": _l("Load balancer")},
+        # MIGRATED ".software.applications.azure.load_balancers.inbound_nat_rules:*.inbound_nat_rule": {"title": _l("Inbound NAT rule")},
+        # MIGRATED ".software.applications.azure.load_balancers.inbound_nat_rules:*.frontend_port": {"title": _l("Frontend port")},
+        # MIGRATED ".software.applications.azure.load_balancers.inbound_nat_rules:*.backend_port": {"title": _l("Backend port")},
         ".software.applications.azure.load_balancers.inbound_nat_rules.public_ips:": {
             "title": _l("Public IPs"),
             "keyorder": [

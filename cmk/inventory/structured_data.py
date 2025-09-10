@@ -161,14 +161,7 @@ def parse_visible_raw_path(raw_path: str) -> SDPath:
     return tuple(SDNodeName(part) for part in raw_path.split(".") if part)
 
 
-#   .--helpers-------------------------------------------------------------.
-#   |                  _          _                                        |
-#   |                 | |__   ___| |_ __   ___ _ __ ___                    |
-#   |                 | '_ \ / _ \ | '_ \ / _ \ '__/ __|                   |
-#   |                 | | | |  __/ | |_) |  __/ |  \__ \                   |
-#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
-#   |                              |_|                                     |
-#   '----------------------------------------------------------------------'
+#   .--helper--------------------------------------------------------------.
 
 
 def _make_row_ident(key_columns: Sequence[SDKey], row: Mapping[SDKey, SDValue]) -> SDRowIdent:
@@ -200,462 +193,7 @@ class _DictKeys(Generic[_T]):
 
 
 # .
-#   .--filters-------------------------------------------------------------.
-#   |                       __ _ _ _                                       |
-#   |                      / _(_) | |_ ___ _ __ ___                        |
-#   |                     | |_| | | __/ _ \ '__/ __|                       |
-#   |                     |  _| | | ||  __/ |  \__ \                       |
-#   |                     |_| |_|_|\__\___|_|  |___/                       |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-@dataclass(frozen=True)
-class SDFilterChoice:
-    path: SDPath
-    pairs: Literal["nothing", "all"] | Sequence[SDKey]
-    columns: Literal["nothing", "all"] | Sequence[SDKey]
-    nodes: Literal["nothing", "all"] | Sequence[SDNodeName]
-
-
-@dataclass(frozen=True)
-class _SDRetentionFilterChoice:
-    choice: Literal["nothing", "all"] | Sequence[SDKey]
-    cache_info: tuple[int, int]
-
-
-@dataclass(frozen=True, kw_only=True)
-class SDRetentionFilterChoices:
-    path: SDPath
-    interval: int
-    _pairs: list[_SDRetentionFilterChoice] = field(default_factory=list)
-    _columns: list[_SDRetentionFilterChoice] = field(default_factory=list)
-
-    @property
-    def pairs(self) -> Sequence[_SDRetentionFilterChoice]:
-        return self._pairs
-
-    @property
-    def columns(self) -> Sequence[_SDRetentionFilterChoice]:
-        return self._columns
-
-    def add_pairs_choice(
-        self, choice: Literal["nothing", "all"] | Sequence[SDKey], cache_info: tuple[int, int]
-    ) -> None:
-        self._pairs.append(_SDRetentionFilterChoice(choice, cache_info))
-
-    def add_columns_choice(
-        self, choice: Literal["nothing", "all"] | Sequence[SDKey], cache_info: tuple[int, int]
-    ) -> None:
-        self._columns.append(_SDRetentionFilterChoice(choice, cache_info))
-
-
-_CT = TypeVar("_CT", SDKey, SDNodeName)
-
-
-def _make_filter_func(choice: Literal["nothing", "all"] | Sequence[_CT]) -> Callable[[_CT], bool]:
-    match choice:
-        case "nothing":
-            return lambda k: False
-        case "all":
-            return lambda k: True
-        case _:
-            return lambda k: k in choice
-
-
-def _consolidate_filter_funcs(
-    choices: Sequence[Literal["nothing", "all"] | Sequence[_CT]],
-) -> Callable[[_CT], bool]:
-    return lambda kn: any(_make_filter_func(c)(kn) for c in choices)
-
-
-_VT_co = TypeVar("_VT_co", covariant=True)
-
-
-def _get_filtered_dict(
-    mapping: Mapping[SDKey, _VT_co], filter_func: Callable[[SDKey], bool]
-) -> Mapping[SDKey, _VT_co]:
-    return {k: v for k, v in mapping.items() if filter_func(k)}
-
-
-@dataclass(frozen=True, kw_only=True)
-class _FilterTree:
-    _filter_choices_by_name: dict[SDNodeName, _FilterTree] = field(default_factory=dict)
-    _filter_choices_pairs: list[Literal["nothing", "all"] | Sequence[SDKey]] = field(
-        default_factory=list
-    )
-    _filter_choices_columns: list[Literal["nothing", "all"] | Sequence[SDKey]] = field(
-        default_factory=list
-    )
-    _filter_choices_nodes: list[Literal["nothing", "all"] | Sequence[SDNodeName]] = field(
-        default_factory=list
-    )
-
-    @property
-    def filters_by_name(self) -> Mapping[SDNodeName, _FilterTree]:
-        return self._filter_choices_by_name
-
-    def filter_pairs(self, pairs: Mapping[SDKey, _VT_co]) -> Mapping[SDKey, _VT_co]:
-        return (
-            _get_filtered_dict(pairs, _consolidate_filter_funcs(self._filter_choices_pairs))
-            if self._filter_choices_pairs
-            else pairs
-        )
-
-    def filter_row(self, row: Mapping[SDKey, _VT_co]) -> Mapping[SDKey, _VT_co]:
-        return (
-            _get_filtered_dict(row, _consolidate_filter_funcs(self._filter_choices_columns))
-            if self._filter_choices_columns
-            else row
-        )
-
-    def filter_node_names(self, node_names: set[SDNodeName]) -> set[SDNodeName]:
-        filter_nodes = _consolidate_filter_funcs(self._filter_choices_nodes)
-        return {n for n in node_names if filter_nodes(n)}.union(self.filters_by_name)
-
-    def append(self, path: SDPath, filter_choice: SDFilterChoice) -> None:
-        if path:
-            self._filter_choices_by_name.setdefault(path[0], _FilterTree()).append(
-                path[1:], filter_choice
-            )
-            return
-        self._filter_choices_pairs.append(filter_choice.pairs)
-        self._filter_choices_columns.append(filter_choice.columns)
-        self._filter_choices_nodes.append(filter_choice.nodes)
-
-
-def _make_filter_tree(filters: Iterable[SDFilterChoice]) -> _FilterTree:
-    filter_tree_ = _FilterTree()
-    for f in filters:
-        filter_tree_.append(f.path, f)
-    return filter_tree_
-
-
-def _make_retentions_filter_func(
-    *,
-    filter_func: Callable[[SDKey], bool],
-    intervals_by_key: Mapping[SDKey, RetentionInterval] | None,
-    now: int,
-) -> Callable[[SDKey], bool]:
-    return lambda k: bool(
-        filter_func(k)
-        and intervals_by_key
-        and (interval := intervals_by_key.get(k))
-        and now <= interval.keep_until
-    )
-
-
-# .
-#   .--serialization-------------------------------------------------------.
-#   |                      _       _ _          _   _                      |
-#   |        ___  ___ _ __(_) __ _| (_)______ _| |_(_) ___  _ __           |
-#   |       / __|/ _ \ '__| |/ _` | | |_  / _` | __| |/ _ \| '_ \          |
-#   |       \__ \  __/ |  | | (_| | | |/ / (_| | |_| | (_) | | | |         |
-#   |       |___/\___|_|  |_|\__,_|_|_/___\__,_|\__|_|\___/|_| |_|         |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def _serialize_retention_interval(
-    retention_interval: RetentionInterval,
-) -> tuple[int, int, int, Literal["previous", "current"]]:
-    return (
-        retention_interval.cached_at,
-        retention_interval.cache_interval,
-        retention_interval.retention_interval,
-        retention_interval.source,
-    )
-
-
-def _serialize_attributes(attributes: _MutableAttributes | ImmutableAttributes) -> SDRawAttributes:
-    raw_attributes: SDRawAttributes = {}
-    if attributes.pairs:
-        raw_attributes["Pairs"] = attributes.pairs
-    if attributes.retentions:
-        raw_attributes["Retentions"] = {
-            k: _serialize_retention_interval(v) for k, v in attributes.retentions.items()
-        }
-    return raw_attributes
-
-
-def _serialize_table(table: _MutableTable | ImmutableTable) -> SDRawTable:
-    raw_table: SDRawTable = {}
-    if table.rows_by_ident:
-        raw_table.update(
-            {
-                "KeyColumns": table.key_columns,
-                "Rows": list(table.rows_by_ident.values()),
-            }
-        )
-    if table.retentions:
-        raw_table["Retentions"] = {
-            i: {k: _serialize_retention_interval(v) for k, v in ri.items()}
-            for i, ri in table.retentions.items()
-        }
-    return raw_table
-
-
-def serialize_tree(tree: MutableTree | ImmutableTree) -> SDRawTree:
-    return {
-        "Attributes": _serialize_attributes(tree.attributes),
-        "Table": _serialize_table(tree.table),
-        "Nodes": {name: serialize_tree(node) for name, node in tree.nodes_by_name.items() if node},
-    }
-
-
-def _deserialize_legacy_attributes(raw_pairs: Mapping[SDKey, SDValue]) -> ImmutableAttributes:
-    return ImmutableAttributes(pairs=raw_pairs)
-
-
-def _deserialize_legacy_table(raw_rows: Sequence[Mapping[SDKey, SDValue]]) -> ImmutableTable:
-    key_columns = sorted({k for r in raw_rows for k in r})
-    rows_by_ident: dict[SDRowIdent, dict[SDKey, SDValue]] = {}
-    for row in raw_rows:
-        rows_by_ident.setdefault(_make_row_ident(key_columns, row), {}).update(row)
-
-    return ImmutableTable(key_columns=key_columns, rows_by_ident=rows_by_ident)
-
-
-def _deserialize_legacy_tree(
-    path: SDPath,
-    raw_tree: Mapping[str, object],
-    raw_rows: Sequence[Mapping] | None = None,
-) -> ImmutableTree:
-    raw_pairs: dict[SDKey, SDValue] = {}
-    raw_tables: dict[SDNodeName, list[dict]] = {}
-    raw_nodes: dict[SDNodeName, dict] = {}
-
-    for key, value in raw_tree.items():
-        if isinstance(value, dict):
-            if not value:
-                continue
-            raw_nodes.setdefault(SDNodeName(key), value)
-
-        elif isinstance(value, list):
-            if not value:
-                continue
-
-            if all(isinstance(v, int | float | str | bool) or v is None for v in value):
-                if w := ", ".join(str(v) for v in value if v):
-                    raw_pairs.setdefault(SDKey(key), w)
-                continue
-
-            if all(not isinstance(v, list | dict) for row in value for v in row.values()):
-                # Either we get:
-                #   [
-                #       {"column1": "value 11", "column2": "value 12",...},
-                #       {"column1": "value 11", "column2": "value 12",...},
-                #       ...
-                #   ]
-                # Or:
-                #   [
-                #       {"attr": "attr1", "table": [...], "node": {...}, "idx-node": [...]},
-                #       ...
-                #   ]
-                raw_tables.setdefault(SDNodeName(key), value)
-                continue
-
-            for idx, entry in enumerate(value):
-                raw_nodes.setdefault(SDNodeName(key), {}).setdefault(str(idx), entry)
-
-        elif isinstance(value, int | float | str | bool) or value is None:
-            raw_pairs.setdefault(SDKey(key), value)
-
-        else:
-            raise TypeError(value)
-
-    return ImmutableTree(
-        path=path,
-        attributes=_deserialize_legacy_attributes(raw_pairs),
-        table=_deserialize_legacy_table(raw_rows) if raw_rows else ImmutableTable(),
-        nodes_by_name={
-            **{
-                name: _deserialize_legacy_tree(
-                    path + (name,),
-                    raw_node,
-                    raw_tables.get(name),
-                )
-                for name, raw_node in raw_nodes.items()
-            },
-            **{
-                name: ImmutableTree(
-                    path=path + (name,),
-                    table=_deserialize_legacy_table(raw_rows),
-                )
-                for name in set(raw_tables) - set(raw_nodes)
-                if (raw_rows := raw_tables[name])
-            },
-        },
-    )
-
-
-def _deserialize_retention_interval(
-    raw_retention_interval: tuple[int, int, int]
-    | tuple[int, int, int, Literal["previous", "current"]],
-) -> RetentionInterval:
-    return (
-        RetentionInterval(*raw_retention_interval)
-        if len(raw_retention_interval) == 4
-        else RetentionInterval(*raw_retention_interval[:3], "current")
-    )
-
-
-def _deserialize_attributes(raw_attributes: SDRawAttributes) -> ImmutableAttributes:
-    return ImmutableAttributes(
-        pairs=raw_attributes.get("Pairs", {}),
-        retentions={
-            key: _deserialize_retention_interval(raw_retention_interval)
-            for key, raw_retention_interval in raw_attributes.get("Retentions", {}).items()
-        },
-    )
-
-
-def _deserialize_table(raw_table: SDRawTable) -> ImmutableTable:
-    rows = raw_table.get("Rows", [])
-    key_columns = raw_table.get("KeyColumns", [])
-
-    rows_by_ident: dict[SDRowIdent, dict[SDKey, SDValue]] = {}
-    for row in rows:
-        rows_by_ident.setdefault(_make_row_ident(key_columns, row), {}).update(row)
-
-    return ImmutableTable(
-        key_columns=key_columns,
-        rows_by_ident=rows_by_ident,
-        retentions={
-            ident: {
-                key: _deserialize_retention_interval(raw_retention_interval)
-                for key, raw_retention_interval in raw_intervals_by_key.items()
-            }
-            for ident, raw_intervals_by_key in raw_table.get("Retentions", {}).items()
-        },
-    )
-
-
-def _deserialize_tree(
-    *,
-    path: SDPath,
-    raw_attributes: SDRawAttributes,
-    raw_table: SDRawTable,
-    raw_nodes: Mapping[SDNodeName, SDRawTree],
-) -> ImmutableTree:
-    return ImmutableTree(
-        path=path,
-        attributes=_deserialize_attributes(raw_attributes),
-        table=_deserialize_table(raw_table),
-        nodes_by_name={
-            name: _deserialize_tree(
-                path=path + (name,),
-                raw_attributes=raw_node["Attributes"],
-                raw_table=raw_node["Table"],
-                raw_nodes=raw_node["Nodes"],
-            )
-            for name, raw_node in raw_nodes.items()
-        },
-    )
-
-
-def deserialize_tree(raw_tree: object) -> ImmutableTree:
-    if not isinstance(raw_tree, dict):
-        raise TypeError(raw_tree)
-    try:
-        raw_attributes = raw_tree["Attributes"]
-        raw_table = raw_tree["Table"]
-        raw_nodes = raw_tree["Nodes"]
-    except KeyError:
-        return _deserialize_legacy_tree(path=(), raw_tree=raw_tree)
-    return _deserialize_tree(
-        path=(),
-        raw_attributes=raw_attributes,
-        raw_table=raw_table,
-        raw_nodes=raw_nodes,
-    )
-
-
-def _serialize_delta_value(delta_value: SDDeltaValue) -> tuple[SDValue, SDValue]:
-    return (delta_value.old, delta_value.new)
-
-
-def _serialize_delta_attributes(delta_attributes: ImmutableDeltaAttributes) -> SDRawDeltaAttributes:
-    return (
-        {"Pairs": {k: _serialize_delta_value(v) for k, v in delta_attributes.pairs.items()}}
-        if delta_attributes.pairs
-        else {}
-    )
-
-
-def _serialize_delta_table(delta_table: ImmutableDeltaTable) -> SDRawDeltaTable:
-    return (
-        {
-            "KeyColumns": delta_table.key_columns,
-            "Rows": [
-                {k: _serialize_delta_value(v) for k, v in r.items()} for r in delta_table.rows
-            ],
-        }
-        if delta_table.rows
-        else {}
-    )
-
-
-def serialize_delta_tree(delta_tree: ImmutableDeltaTree) -> SDRawDeltaTree:
-    return {
-        "Attributes": _serialize_delta_attributes(delta_tree.attributes),
-        "Table": _serialize_delta_table(delta_tree.table),
-        "Nodes": {
-            edge: serialize_delta_tree(node)
-            for edge, node in delta_tree.nodes_by_name.items()
-            if node
-        },
-    }
-
-
-def _deserialize_delta_value(raw_delta_value: tuple[SDValue, SDValue]) -> SDDeltaValue:
-    return SDDeltaValue(old=raw_delta_value[0], new=raw_delta_value[1])
-
-
-def _deserialize_delta_attributes(raw_attributes: SDRawDeltaAttributes) -> ImmutableDeltaAttributes:
-    return ImmutableDeltaAttributes(
-        pairs={k: _deserialize_delta_value(v) for k, v in raw_attributes.get("Pairs", {}).items()}
-    )
-
-
-def _deserialize_delta_table(raw_table: SDRawDeltaTable) -> ImmutableDeltaTable:
-    return ImmutableDeltaTable(
-        key_columns=raw_table.get("KeyColumns", []),
-        rows=[
-            {k: _deserialize_delta_value(v) for k, v in r.items()}
-            for r in raw_table.get("Rows", [])
-        ],
-    )
-
-
-def _deserialize_delta_tree(*, path: SDPath, raw_tree: SDRawDeltaTree) -> ImmutableDeltaTree:
-    return ImmutableDeltaTree(
-        path=path,
-        attributes=_deserialize_delta_attributes(raw_attributes=raw_tree["Attributes"]),
-        table=_deserialize_delta_table(raw_table=raw_tree["Table"]),
-        nodes_by_name={
-            raw_node_name: _deserialize_delta_tree(
-                path=path + (raw_node_name,),
-                raw_tree=raw_node,
-            )
-            for raw_node_name, raw_node in raw_tree["Nodes"].items()
-        },
-    )
-
-
-def deserialize_delta_tree(raw_tree: SDRawDeltaTree) -> ImmutableDeltaTree:
-    return _deserialize_delta_tree(path=(), raw_tree=raw_tree)
-
-
-# .
 #   .--mutable tree--------------------------------------------------------.
-#   |                      _        _     _        _                       |
-#   |      _ __ ___  _   _| |_ __ _| |__ | | ___  | |_ _ __ ___  ___       |
-#   |     | '_ ` _ \| | | | __/ _` | '_ \| |/ _ \ | __| '__/ _ \/ _ \      |
-#   |     | | | | | | |_| | || (_| | |_) | |  __/ | |_| | |  __/  __/      |
-#   |     |_| |_| |_|\__,_|\__\__,_|_.__/|_|\___|  \__|_|  \___|\___|      |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
 
 
 def _format_update_result_attrs(*, title: str, message: str) -> str:
@@ -1025,282 +563,12 @@ class MutableTree:
 
 # .
 #   .--immutable tree------------------------------------------------------.
-#   |          _                           _        _     _                |
-#   |         (_)_ __ ___  _ __ ___  _   _| |_ __ _| |__ | | ___           |
-#   |         | | '_ ` _ \| '_ ` _ \| | | | __/ _` | '_ \| |/ _ \          |
-#   |         | | | | | | | | | | | | |_| | || (_| | |_) | |  __/          |
-#   |         |_|_| |_| |_|_| |_| |_|\__,_|\__\__,_|_.__/|_|\___|          |
-#   |                                                                      |
-#   |                          _                                           |
-#   |                         | |_ _ __ ___  ___                           |
-#   |                         | __| '__/ _ \/ _ \                          |
-#   |                         | |_| | |  __/  __/                          |
-#   |                          \__|_|  \___|\___|                          |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def _filter_attributes(
-    attributes: ImmutableAttributes, filter_tree_: _FilterTree
-) -> ImmutableAttributes:
-    return ImmutableAttributes(
-        pairs=filter_tree_.filter_pairs(attributes.pairs),
-        retentions=attributes.retentions,
-    )
-
-
-def _filter_table(table: ImmutableTable, filter_tree_: _FilterTree) -> ImmutableTable:
-    return ImmutableTable(
-        key_columns=table.key_columns,
-        rows_by_ident={
-            ident: filtered_row
-            for ident, row in table.rows_by_ident.items()
-            if (filtered_row := filter_tree_.filter_row(row))
-        },
-        retentions=table.retentions,
-    )
-
-
-def _filter_tree(tree: ImmutableTree, filter_tree_: _FilterTree) -> ImmutableTree:
-    return ImmutableTree(
-        path=tree.path,
-        attributes=_filter_attributes(tree.attributes, filter_tree_),
-        table=_filter_table(tree.table, filter_tree_),
-        nodes_by_name={
-            name: filtered_node
-            for name in filter_tree_.filter_node_names(set(tree.nodes_by_name))
-            if (
-                filtered_node := _filter_tree(
-                    tree.nodes_by_name.get(name, ImmutableTree(path=tree.path + (name,))),
-                    filter_tree_.filters_by_name.get(name, _FilterTree()),
-                )
-            )
-        },
-    )
-
-
-def filter_tree(tree: ImmutableTree, filters: Iterable[SDFilterChoice]) -> ImmutableTree:
-    return _filter_tree(tree, _make_filter_tree(filters))
-
-
-def _merge_attributes(left: ImmutableAttributes, right: ImmutableAttributes) -> ImmutableAttributes:
-    return ImmutableAttributes(
-        pairs={**left.pairs, **right.pairs},
-        retentions={**left.retentions, **right.retentions},
-    )
-
-
-def _merge_tables_by_same_or_empty_key_columns(
-    key_columns: Sequence[SDKey], left: ImmutableTable, right: ImmutableTable
-) -> ImmutableTable:
-    compared_row_idents = _DictKeys.compare(
-        left=set(left.rows_by_ident),
-        right=set(right.rows_by_ident),
-    )
-
-    rows_by_ident: dict[SDRowIdent, Mapping[SDKey, SDValue]] = {}
-    for ident in compared_row_idents.only_left:
-        rows_by_ident.setdefault(ident, left.rows_by_ident[ident])
-
-    for ident in compared_row_idents.both:
-        rows_by_ident.setdefault(
-            ident,
-            {
-                **left.rows_by_ident[ident],
-                **right.rows_by_ident[ident],
-            },
-        )
-
-    for ident in compared_row_idents.only_right:
-        rows_by_ident.setdefault(ident, right.rows_by_ident[ident])
-
-    return ImmutableTable(
-        key_columns=key_columns,
-        rows_by_ident=rows_by_ident,
-        retentions={**left.retentions, **right.retentions},
-    )
-
-
-def _merge_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableTable:
-    if left.key_columns and not right.key_columns:
-        return _merge_tables_by_same_or_empty_key_columns(left.key_columns, left, right)
-
-    if not left.key_columns and right.key_columns:
-        return _merge_tables_by_same_or_empty_key_columns(right.key_columns, left, right)
-
-    if left.key_columns == right.key_columns:
-        return _merge_tables_by_same_or_empty_key_columns(left.key_columns, left, right)
-
-    # Re-calculate row identifiers for legacy tables or inventory and status tables
-    key_columns = sorted(set(left.key_columns).intersection(right.key_columns))
-    rows_by_ident: dict[SDRowIdent, dict[SDKey, SDValue]] = {}
-    for row in list(left.rows_by_ident.values()) + list(right.rows_by_ident.values()):
-        rows_by_ident.setdefault(_make_row_ident(key_columns, row), {}).update(row)
-
-    return ImmutableTable(
-        key_columns=key_columns,
-        rows_by_ident=rows_by_ident,
-        retentions={**left.retentions, **right.retentions},
-    )
-
-
-def merge_trees(left: ImmutableTree, right: ImmutableTree) -> ImmutableTree:
-    compared_node_names = _DictKeys.compare(
-        left=set(left.nodes_by_name),
-        right=set(right.nodes_by_name),
-    )
-
-    nodes_by_name: dict[SDNodeName, ImmutableTree] = {}
-    for name in compared_node_names.only_left:
-        nodes_by_name[name] = left.nodes_by_name[name]
-
-    for name in compared_node_names.both:
-        nodes_by_name[name] = merge_trees(
-            left=left.nodes_by_name[name], right=right.nodes_by_name[name]
-        )
-
-    for name in compared_node_names.only_right:
-        nodes_by_name[name] = right.nodes_by_name[name]
-
-    return ImmutableTree(
-        path=left.path,
-        attributes=_merge_attributes(left.attributes, right.attributes),
-        table=_merge_tables(left.table, right.table),
-        nodes_by_name=nodes_by_name,
-    )
 
 
 @dataclass(frozen=True, kw_only=True)
 class SDDeltaValue:
     old: SDValue
     new: SDValue
-
-
-def _encode_as_new(value: SDValue) -> SDDeltaValue:
-    return SDDeltaValue(old=None, new=value)
-
-
-def _encode_as_removed(value: SDValue) -> SDDeltaValue:
-    return SDDeltaValue(old=value, new=None)
-
-
-@dataclass(frozen=True, kw_only=True)
-class _DeltaDict:
-    result: Mapping[SDKey, SDDeltaValue]
-    has_changes: bool
-
-    @classmethod
-    def compare(
-        cls, *, left: Mapping[SDKey, SDValue], right: Mapping[SDKey, SDValue], keep_identical: bool
-    ) -> Self:
-        """
-        Format of compared entries:
-          new:          {k: (None, new_value), ...}
-          changed:      {k: (old_value, new_value), ...}
-          removed:      {k: (old_value, None), ...}
-          identical:    {k: (value, value), ...}
-        """
-        compared_keys = _DictKeys.compare(left=set(left), right=set(right))
-        compared_dict: dict[SDKey, SDDeltaValue] = {}
-
-        has_changes = False
-        for key in compared_keys.both:
-            if (left_value := left[key]) != (right_value := right[key]):
-                compared_dict.setdefault(key, SDDeltaValue(old=right_value, new=left_value))
-                has_changes = True
-            elif keep_identical:
-                compared_dict.setdefault(key, SDDeltaValue(old=left_value, new=left_value))
-
-        compared_dict |= {k: _encode_as_removed(right[k]) for k in compared_keys.only_right}
-        compared_dict |= {k: _encode_as_new(left[k]) for k in compared_keys.only_left}
-
-        return cls(
-            result=compared_dict,
-            has_changes=bool(has_changes or compared_keys.only_right or compared_keys.only_left),
-        )
-
-
-def _compare_attributes(
-    left: ImmutableAttributes, right: ImmutableAttributes
-) -> ImmutableDeltaAttributes:
-    return ImmutableDeltaAttributes(
-        pairs=_DeltaDict.compare(
-            left=left.pairs,
-            right=right.pairs,
-            keep_identical=False,
-        ).result,
-    )
-
-
-def _compare_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableDeltaTable:
-    compared_row_idents = _DictKeys.compare(
-        left=set(left.rows_by_ident),
-        right=set(right.rows_by_ident),
-    )
-
-    rows: list[Mapping[SDKey, SDDeltaValue]] = []
-
-    for ident in compared_row_idents.only_left:
-        rows.append({k: _encode_as_new(v) for k, v in left.rows_by_ident[ident].items()})
-
-    for ident in compared_row_idents.both:
-        # Note: Rows which have at least one change also provide all table fields.
-        # Example:
-        # If the version of a package (below "Software > Packages") has changed from 1.0 to 2.0
-        # then it would be very annoying if the rest of the row is not shown.
-        if (
-            compared_dict_result := _DeltaDict.compare(
-                left=left.rows_by_ident[ident],
-                right=right.rows_by_ident[ident],
-                keep_identical=True,
-            )
-        ).has_changes:
-            rows.append(compared_dict_result.result)
-
-    for ident in compared_row_idents.only_right:
-        rows.append({k: _encode_as_removed(v) for k, v in right.rows_by_ident[ident].items()})
-
-    return ImmutableDeltaTable(
-        key_columns=sorted(set(left.key_columns).union(right.key_columns)),
-        rows=rows,
-    )
-
-
-def _compare_trees(left: ImmutableTree, right: ImmutableTree) -> ImmutableDeltaTree:
-    nodes: dict[SDNodeName, ImmutableDeltaTree] = {}
-
-    compared_node_names = _DictKeys.compare(
-        left=set(left.nodes_by_name),
-        right=set(right.nodes_by_name),
-    )
-
-    for name in compared_node_names.only_left:
-        if child_left := left.nodes_by_name[name]:
-            nodes[name] = ImmutableDeltaTree.from_tree(
-                tree=child_left,
-                encode_as=_encode_as_new,
-            )
-
-    for name in compared_node_names.both:
-        if (child_left := left.nodes_by_name[name]) == (child_right := right.nodes_by_name[name]):
-            continue
-
-        if (node := _compare_trees(child_left, child_right)).get_stats():
-            nodes[name] = node
-
-    for name in compared_node_names.only_right:
-        if child_right := right.nodes_by_name[name]:
-            nodes[name] = ImmutableDeltaTree.from_tree(
-                tree=child_right,
-                encode_as=_encode_as_removed,
-            )
-
-    return ImmutableDeltaTree(
-        path=left.path,
-        attributes=_compare_attributes(left.attributes, right.attributes),
-        table=_compare_tables(left.table, right.table),
-        nodes_by_name=nodes,
-    )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -1449,58 +717,6 @@ class ImmutableTree:
 
 # .
 #   .--immutable delta tree------------------------------------------------.
-#   |          _                           _        _     _                |
-#   |         (_)_ __ ___  _ __ ___  _   _| |_ __ _| |__ | | ___           |
-#   |         | | '_ ` _ \| '_ ` _ \| | | | __/ _` | '_ \| |/ _ \          |
-#   |         | | | | | | | | | | | | |_| | || (_| | |_) | |  __/          |
-#   |         |_|_| |_| |_|_| |_| |_|\__,_|\__\__,_|_.__/|_|\___|          |
-#   |                                                                      |
-#   |                  _      _ _          _                               |
-#   |               __| | ___| | |_ __ _  | |_ _ __ ___  ___               |
-#   |              / _` |/ _ \ | __/ _` | | __| '__/ _ \/ _ \              |
-#   |             | (_| |  __/ | || (_| | | |_| | |  __/  __/              |
-#   |              \__,_|\___|_|\__\__,_|  \__|_|  \___|\___|              |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def _filter_delta_attributes(
-    attributes: ImmutableDeltaAttributes, filter_tree_: _FilterTree
-) -> ImmutableDeltaAttributes:
-    return ImmutableDeltaAttributes(pairs=filter_tree_.filter_pairs(attributes.pairs))
-
-
-def _filter_delta_table(
-    table: ImmutableDeltaTable, filter_tree_: _FilterTree
-) -> ImmutableDeltaTable:
-    return ImmutableDeltaTable(
-        key_columns=table.key_columns,
-        rows=[filtered_row for row in table.rows if (filtered_row := filter_tree_.filter_row(row))],
-    )
-
-
-def _filter_delta_tree(tree: ImmutableDeltaTree, filter_tree_: _FilterTree) -> ImmutableDeltaTree:
-    return ImmutableDeltaTree(
-        path=tree.path,
-        attributes=_filter_delta_attributes(tree.attributes, filter_tree_),
-        table=_filter_delta_table(tree.table, filter_tree_),
-        nodes_by_name={
-            name: filtered_node
-            for name in filter_tree_.filter_node_names(set(tree.nodes_by_name))
-            if (
-                filtered_node := _filter_delta_tree(
-                    tree.nodes_by_name.get(name, ImmutableDeltaTree(path=tree.path + (name,))),
-                    filter_tree_.filters_by_name.get(name, _FilterTree()),
-                )
-            )
-        },
-    )
-
-
-def filter_delta_tree(
-    tree: ImmutableDeltaTree, filters: Iterable[SDFilterChoice]
-) -> ImmutableDeltaTree:
-    return _filter_delta_tree(tree, _make_filter_tree(filters))
 
 
 _SDEncodeAs = Callable[[SDValue], SDDeltaValue]
@@ -1638,14 +854,745 @@ class ImmutableDeltaTree:
 
 
 # .
+#   .--filtering-----------------------------------------------------------.
+
+
+@dataclass(frozen=True)
+class SDFilterChoice:
+    path: SDPath
+    pairs: Literal["nothing", "all"] | Sequence[SDKey]
+    columns: Literal["nothing", "all"] | Sequence[SDKey]
+    nodes: Literal["nothing", "all"] | Sequence[SDNodeName]
+
+
+@dataclass(frozen=True)
+class _SDRetentionFilterChoice:
+    choice: Literal["nothing", "all"] | Sequence[SDKey]
+    cache_info: tuple[int, int]
+
+
+@dataclass(frozen=True, kw_only=True)
+class SDRetentionFilterChoices:
+    path: SDPath
+    interval: int
+    _pairs: list[_SDRetentionFilterChoice] = field(default_factory=list)
+    _columns: list[_SDRetentionFilterChoice] = field(default_factory=list)
+
+    @property
+    def pairs(self) -> Sequence[_SDRetentionFilterChoice]:
+        return self._pairs
+
+    @property
+    def columns(self) -> Sequence[_SDRetentionFilterChoice]:
+        return self._columns
+
+    def add_pairs_choice(
+        self, choice: Literal["nothing", "all"] | Sequence[SDKey], cache_info: tuple[int, int]
+    ) -> None:
+        self._pairs.append(_SDRetentionFilterChoice(choice, cache_info))
+
+    def add_columns_choice(
+        self, choice: Literal["nothing", "all"] | Sequence[SDKey], cache_info: tuple[int, int]
+    ) -> None:
+        self._columns.append(_SDRetentionFilterChoice(choice, cache_info))
+
+
+_CT = TypeVar("_CT", SDKey, SDNodeName)
+
+
+def _make_filter_func(choice: Literal["nothing", "all"] | Sequence[_CT]) -> Callable[[_CT], bool]:
+    match choice:
+        case "nothing":
+            return lambda k: False
+        case "all":
+            return lambda k: True
+        case _:
+            return lambda k: k in choice
+
+
+def _consolidate_filter_funcs(
+    choices: Sequence[Literal["nothing", "all"] | Sequence[_CT]],
+) -> Callable[[_CT], bool]:
+    return lambda kn: any(_make_filter_func(c)(kn) for c in choices)
+
+
+_VT_co = TypeVar("_VT_co", covariant=True)
+
+
+def _get_filtered_dict(
+    mapping: Mapping[SDKey, _VT_co], filter_func: Callable[[SDKey], bool]
+) -> Mapping[SDKey, _VT_co]:
+    return {k: v for k, v in mapping.items() if filter_func(k)}
+
+
+@dataclass(frozen=True, kw_only=True)
+class _FilterTree:
+    _filter_choices_by_name: dict[SDNodeName, _FilterTree] = field(default_factory=dict)
+    _filter_choices_pairs: list[Literal["nothing", "all"] | Sequence[SDKey]] = field(
+        default_factory=list
+    )
+    _filter_choices_columns: list[Literal["nothing", "all"] | Sequence[SDKey]] = field(
+        default_factory=list
+    )
+    _filter_choices_nodes: list[Literal["nothing", "all"] | Sequence[SDNodeName]] = field(
+        default_factory=list
+    )
+
+    @property
+    def filters_by_name(self) -> Mapping[SDNodeName, _FilterTree]:
+        return self._filter_choices_by_name
+
+    def filter_pairs(self, pairs: Mapping[SDKey, _VT_co]) -> Mapping[SDKey, _VT_co]:
+        return (
+            _get_filtered_dict(pairs, _consolidate_filter_funcs(self._filter_choices_pairs))
+            if self._filter_choices_pairs
+            else pairs
+        )
+
+    def filter_row(self, row: Mapping[SDKey, _VT_co]) -> Mapping[SDKey, _VT_co]:
+        return (
+            _get_filtered_dict(row, _consolidate_filter_funcs(self._filter_choices_columns))
+            if self._filter_choices_columns
+            else row
+        )
+
+    def filter_node_names(self, node_names: set[SDNodeName]) -> set[SDNodeName]:
+        filter_nodes = _consolidate_filter_funcs(self._filter_choices_nodes)
+        return {n for n in node_names if filter_nodes(n)}.union(self.filters_by_name)
+
+    def append(self, path: SDPath, filter_choice: SDFilterChoice) -> None:
+        if path:
+            self._filter_choices_by_name.setdefault(path[0], _FilterTree()).append(
+                path[1:], filter_choice
+            )
+            return
+        self._filter_choices_pairs.append(filter_choice.pairs)
+        self._filter_choices_columns.append(filter_choice.columns)
+        self._filter_choices_nodes.append(filter_choice.nodes)
+
+
+def _make_filter_tree(filters: Iterable[SDFilterChoice]) -> _FilterTree:
+    filter_tree_ = _FilterTree()
+    for f in filters:
+        filter_tree_.append(f.path, f)
+    return filter_tree_
+
+
+def _make_retentions_filter_func(
+    *,
+    filter_func: Callable[[SDKey], bool],
+    intervals_by_key: Mapping[SDKey, RetentionInterval] | None,
+    now: int,
+) -> Callable[[SDKey], bool]:
+    return lambda k: bool(
+        filter_func(k)
+        and intervals_by_key
+        and (interval := intervals_by_key.get(k))
+        and now <= interval.keep_until
+    )
+
+
+def _filter_attributes(
+    attributes: ImmutableAttributes, filter_tree_: _FilterTree
+) -> ImmutableAttributes:
+    return ImmutableAttributes(
+        pairs=filter_tree_.filter_pairs(attributes.pairs),
+        retentions=attributes.retentions,
+    )
+
+
+def _filter_table(table: ImmutableTable, filter_tree_: _FilterTree) -> ImmutableTable:
+    return ImmutableTable(
+        key_columns=table.key_columns,
+        rows_by_ident={
+            ident: filtered_row
+            for ident, row in table.rows_by_ident.items()
+            if (filtered_row := filter_tree_.filter_row(row))
+        },
+        retentions=table.retentions,
+    )
+
+
+def _filter_tree(tree: ImmutableTree, filter_tree_: _FilterTree) -> ImmutableTree:
+    return ImmutableTree(
+        path=tree.path,
+        attributes=_filter_attributes(tree.attributes, filter_tree_),
+        table=_filter_table(tree.table, filter_tree_),
+        nodes_by_name={
+            name: filtered_node
+            for name in filter_tree_.filter_node_names(set(tree.nodes_by_name))
+            if (
+                filtered_node := _filter_tree(
+                    tree.nodes_by_name.get(name, ImmutableTree(path=tree.path + (name,))),
+                    filter_tree_.filters_by_name.get(name, _FilterTree()),
+                )
+            )
+        },
+    )
+
+
+def filter_tree(tree: ImmutableTree, filters: Iterable[SDFilterChoice]) -> ImmutableTree:
+    return _filter_tree(tree, _make_filter_tree(filters))
+
+
+def _filter_delta_attributes(
+    attributes: ImmutableDeltaAttributes, filter_tree_: _FilterTree
+) -> ImmutableDeltaAttributes:
+    return ImmutableDeltaAttributes(pairs=filter_tree_.filter_pairs(attributes.pairs))
+
+
+def _filter_delta_table(
+    table: ImmutableDeltaTable, filter_tree_: _FilterTree
+) -> ImmutableDeltaTable:
+    return ImmutableDeltaTable(
+        key_columns=table.key_columns,
+        rows=[filtered_row for row in table.rows if (filtered_row := filter_tree_.filter_row(row))],
+    )
+
+
+def _filter_delta_tree(tree: ImmutableDeltaTree, filter_tree_: _FilterTree) -> ImmutableDeltaTree:
+    return ImmutableDeltaTree(
+        path=tree.path,
+        attributes=_filter_delta_attributes(tree.attributes, filter_tree_),
+        table=_filter_delta_table(tree.table, filter_tree_),
+        nodes_by_name={
+            name: filtered_node
+            for name in filter_tree_.filter_node_names(set(tree.nodes_by_name))
+            if (
+                filtered_node := _filter_delta_tree(
+                    tree.nodes_by_name.get(name, ImmutableDeltaTree(path=tree.path + (name,))),
+                    filter_tree_.filters_by_name.get(name, _FilterTree()),
+                )
+            )
+        },
+    )
+
+
+def filter_delta_tree(
+    tree: ImmutableDeltaTree, filters: Iterable[SDFilterChoice]
+) -> ImmutableDeltaTree:
+    return _filter_delta_tree(tree, _make_filter_tree(filters))
+
+
+# .
+#   .--merging-------------------------------------------------------------.
+
+
+def _merge_attributes(left: ImmutableAttributes, right: ImmutableAttributes) -> ImmutableAttributes:
+    return ImmutableAttributes(
+        pairs={**left.pairs, **right.pairs},
+        retentions={**left.retentions, **right.retentions},
+    )
+
+
+def _merge_tables_by_same_or_empty_key_columns(
+    key_columns: Sequence[SDKey], left: ImmutableTable, right: ImmutableTable
+) -> ImmutableTable:
+    compared_row_idents = _DictKeys.compare(
+        left=set(left.rows_by_ident),
+        right=set(right.rows_by_ident),
+    )
+
+    rows_by_ident: dict[SDRowIdent, Mapping[SDKey, SDValue]] = {}
+    for ident in compared_row_idents.only_left:
+        rows_by_ident.setdefault(ident, left.rows_by_ident[ident])
+
+    for ident in compared_row_idents.both:
+        rows_by_ident.setdefault(
+            ident,
+            {
+                **left.rows_by_ident[ident],
+                **right.rows_by_ident[ident],
+            },
+        )
+
+    for ident in compared_row_idents.only_right:
+        rows_by_ident.setdefault(ident, right.rows_by_ident[ident])
+
+    return ImmutableTable(
+        key_columns=key_columns,
+        rows_by_ident=rows_by_ident,
+        retentions={**left.retentions, **right.retentions},
+    )
+
+
+def _merge_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableTable:
+    if left.key_columns and not right.key_columns:
+        return _merge_tables_by_same_or_empty_key_columns(left.key_columns, left, right)
+
+    if not left.key_columns and right.key_columns:
+        return _merge_tables_by_same_or_empty_key_columns(right.key_columns, left, right)
+
+    if left.key_columns == right.key_columns:
+        return _merge_tables_by_same_or_empty_key_columns(left.key_columns, left, right)
+
+    # Re-calculate row identifiers for legacy tables or inventory and status tables
+    key_columns = sorted(set(left.key_columns).intersection(right.key_columns))
+    rows_by_ident: dict[SDRowIdent, dict[SDKey, SDValue]] = {}
+    for row in list(left.rows_by_ident.values()) + list(right.rows_by_ident.values()):
+        rows_by_ident.setdefault(_make_row_ident(key_columns, row), {}).update(row)
+
+    return ImmutableTable(
+        key_columns=key_columns,
+        rows_by_ident=rows_by_ident,
+        retentions={**left.retentions, **right.retentions},
+    )
+
+
+def merge_trees(left: ImmutableTree, right: ImmutableTree) -> ImmutableTree:
+    compared_node_names = _DictKeys.compare(
+        left=set(left.nodes_by_name),
+        right=set(right.nodes_by_name),
+    )
+
+    nodes_by_name: dict[SDNodeName, ImmutableTree] = {}
+    for name in compared_node_names.only_left:
+        nodes_by_name[name] = left.nodes_by_name[name]
+
+    for name in compared_node_names.both:
+        nodes_by_name[name] = merge_trees(
+            left=left.nodes_by_name[name], right=right.nodes_by_name[name]
+        )
+
+    for name in compared_node_names.only_right:
+        nodes_by_name[name] = right.nodes_by_name[name]
+
+    return ImmutableTree(
+        path=left.path,
+        attributes=_merge_attributes(left.attributes, right.attributes),
+        table=_merge_tables(left.table, right.table),
+        nodes_by_name=nodes_by_name,
+    )
+
+
+# .
+#   .--comparing-----------------------------------------------------------.
+
+
+def _encode_as_new(value: SDValue) -> SDDeltaValue:
+    return SDDeltaValue(old=None, new=value)
+
+
+def _encode_as_removed(value: SDValue) -> SDDeltaValue:
+    return SDDeltaValue(old=value, new=None)
+
+
+@dataclass(frozen=True, kw_only=True)
+class _DeltaDict:
+    result: Mapping[SDKey, SDDeltaValue]
+    has_changes: bool
+
+    @classmethod
+    def compare(
+        cls, *, left: Mapping[SDKey, SDValue], right: Mapping[SDKey, SDValue], keep_identical: bool
+    ) -> Self:
+        """
+        Format of compared entries:
+          new:          {k: (None, new_value), ...}
+          changed:      {k: (old_value, new_value), ...}
+          removed:      {k: (old_value, None), ...}
+          identical:    {k: (value, value), ...}
+        """
+        compared_keys = _DictKeys.compare(left=set(left), right=set(right))
+        compared_dict: dict[SDKey, SDDeltaValue] = {}
+
+        has_changes = False
+        for key in compared_keys.both:
+            if (left_value := left[key]) != (right_value := right[key]):
+                compared_dict.setdefault(key, SDDeltaValue(old=right_value, new=left_value))
+                has_changes = True
+            elif keep_identical:
+                compared_dict.setdefault(key, SDDeltaValue(old=left_value, new=left_value))
+
+        compared_dict |= {k: _encode_as_removed(right[k]) for k in compared_keys.only_right}
+        compared_dict |= {k: _encode_as_new(left[k]) for k in compared_keys.only_left}
+
+        return cls(
+            result=compared_dict,
+            has_changes=bool(has_changes or compared_keys.only_right or compared_keys.only_left),
+        )
+
+
+def _compare_attributes(
+    left: ImmutableAttributes, right: ImmutableAttributes
+) -> ImmutableDeltaAttributes:
+    return ImmutableDeltaAttributes(
+        pairs=_DeltaDict.compare(
+            left=left.pairs,
+            right=right.pairs,
+            keep_identical=False,
+        ).result,
+    )
+
+
+def _compare_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableDeltaTable:
+    compared_row_idents = _DictKeys.compare(
+        left=set(left.rows_by_ident),
+        right=set(right.rows_by_ident),
+    )
+
+    rows: list[Mapping[SDKey, SDDeltaValue]] = []
+
+    for ident in compared_row_idents.only_left:
+        rows.append({k: _encode_as_new(v) for k, v in left.rows_by_ident[ident].items()})
+
+    for ident in compared_row_idents.both:
+        # Note: Rows which have at least one change also provide all table fields.
+        # Example:
+        # If the version of a package (below "Software > Packages") has changed from 1.0 to 2.0
+        # then it would be very annoying if the rest of the row is not shown.
+        if (
+            compared_dict_result := _DeltaDict.compare(
+                left=left.rows_by_ident[ident],
+                right=right.rows_by_ident[ident],
+                keep_identical=True,
+            )
+        ).has_changes:
+            rows.append(compared_dict_result.result)
+
+    for ident in compared_row_idents.only_right:
+        rows.append({k: _encode_as_removed(v) for k, v in right.rows_by_ident[ident].items()})
+
+    return ImmutableDeltaTable(
+        key_columns=sorted(set(left.key_columns).union(right.key_columns)),
+        rows=rows,
+    )
+
+
+def _compare_trees(left: ImmutableTree, right: ImmutableTree) -> ImmutableDeltaTree:
+    nodes: dict[SDNodeName, ImmutableDeltaTree] = {}
+
+    compared_node_names = _DictKeys.compare(
+        left=set(left.nodes_by_name),
+        right=set(right.nodes_by_name),
+    )
+
+    for name in compared_node_names.only_left:
+        if child_left := left.nodes_by_name[name]:
+            nodes[name] = ImmutableDeltaTree.from_tree(
+                tree=child_left,
+                encode_as=_encode_as_new,
+            )
+
+    for name in compared_node_names.both:
+        if (child_left := left.nodes_by_name[name]) == (child_right := right.nodes_by_name[name]):
+            continue
+
+        if (node := _compare_trees(child_left, child_right)).get_stats():
+            nodes[name] = node
+
+    for name in compared_node_names.only_right:
+        if child_right := right.nodes_by_name[name]:
+            nodes[name] = ImmutableDeltaTree.from_tree(
+                tree=child_right,
+                encode_as=_encode_as_removed,
+            )
+
+    return ImmutableDeltaTree(
+        path=left.path,
+        attributes=_compare_attributes(left.attributes, right.attributes),
+        table=_compare_tables(left.table, right.table),
+        nodes_by_name=nodes,
+    )
+
+
+# .
+#   .--de/serialization----------------------------------------------------.
+
+
+def _serialize_retention_interval(
+    retention_interval: RetentionInterval,
+) -> tuple[int, int, int, Literal["previous", "current"]]:
+    return (
+        retention_interval.cached_at,
+        retention_interval.cache_interval,
+        retention_interval.retention_interval,
+        retention_interval.source,
+    )
+
+
+def _serialize_attributes(attributes: _MutableAttributes | ImmutableAttributes) -> SDRawAttributes:
+    raw_attributes: SDRawAttributes = {}
+    if attributes.pairs:
+        raw_attributes["Pairs"] = attributes.pairs
+    if attributes.retentions:
+        raw_attributes["Retentions"] = {
+            k: _serialize_retention_interval(v) for k, v in attributes.retentions.items()
+        }
+    return raw_attributes
+
+
+def _serialize_table(table: _MutableTable | ImmutableTable) -> SDRawTable:
+    raw_table: SDRawTable = {}
+    if table.rows_by_ident:
+        raw_table.update(
+            {
+                "KeyColumns": table.key_columns,
+                "Rows": list(table.rows_by_ident.values()),
+            }
+        )
+    if table.retentions:
+        raw_table["Retentions"] = {
+            i: {k: _serialize_retention_interval(v) for k, v in ri.items()}
+            for i, ri in table.retentions.items()
+        }
+    return raw_table
+
+
+def serialize_tree(tree: MutableTree | ImmutableTree) -> SDRawTree:
+    return {
+        "Attributes": _serialize_attributes(tree.attributes),
+        "Table": _serialize_table(tree.table),
+        "Nodes": {name: serialize_tree(node) for name, node in tree.nodes_by_name.items() if node},
+    }
+
+
+def _deserialize_legacy_attributes(raw_pairs: Mapping[SDKey, SDValue]) -> ImmutableAttributes:
+    return ImmutableAttributes(pairs=raw_pairs)
+
+
+def _deserialize_legacy_table(raw_rows: Sequence[Mapping[SDKey, SDValue]]) -> ImmutableTable:
+    key_columns = sorted({k for r in raw_rows for k in r})
+    rows_by_ident: dict[SDRowIdent, dict[SDKey, SDValue]] = {}
+    for row in raw_rows:
+        rows_by_ident.setdefault(_make_row_ident(key_columns, row), {}).update(row)
+
+    return ImmutableTable(key_columns=key_columns, rows_by_ident=rows_by_ident)
+
+
+def _deserialize_legacy_tree(
+    path: SDPath,
+    raw_tree: Mapping[str, object],
+    raw_rows: Sequence[Mapping] | None = None,
+) -> ImmutableTree:
+    raw_pairs: dict[SDKey, SDValue] = {}
+    raw_tables: dict[SDNodeName, list[dict]] = {}
+    raw_nodes: dict[SDNodeName, dict] = {}
+
+    for key, value in raw_tree.items():
+        if isinstance(value, dict):
+            if not value:
+                continue
+            raw_nodes.setdefault(SDNodeName(key), value)
+
+        elif isinstance(value, list):
+            if not value:
+                continue
+
+            if all(isinstance(v, int | float | str | bool) or v is None for v in value):
+                if w := ", ".join(str(v) for v in value if v):
+                    raw_pairs.setdefault(SDKey(key), w)
+                continue
+
+            if all(not isinstance(v, list | dict) for row in value for v in row.values()):
+                # Either we get:
+                #   [
+                #       {"column1": "value 11", "column2": "value 12",...},
+                #       {"column1": "value 11", "column2": "value 12",...},
+                #       ...
+                #   ]
+                # Or:
+                #   [
+                #       {"attr": "attr1", "table": [...], "node": {...}, "idx-node": [...]},
+                #       ...
+                #   ]
+                raw_tables.setdefault(SDNodeName(key), value)
+                continue
+
+            for idx, entry in enumerate(value):
+                raw_nodes.setdefault(SDNodeName(key), {}).setdefault(str(idx), entry)
+
+        elif isinstance(value, int | float | str | bool) or value is None:
+            raw_pairs.setdefault(SDKey(key), value)
+
+        else:
+            raise TypeError(value)
+
+    return ImmutableTree(
+        path=path,
+        attributes=_deserialize_legacy_attributes(raw_pairs),
+        table=_deserialize_legacy_table(raw_rows) if raw_rows else ImmutableTable(),
+        nodes_by_name={
+            **{
+                name: _deserialize_legacy_tree(
+                    path + (name,),
+                    raw_node,
+                    raw_tables.get(name),
+                )
+                for name, raw_node in raw_nodes.items()
+            },
+            **{
+                name: ImmutableTree(
+                    path=path + (name,),
+                    table=_deserialize_legacy_table(raw_rows),
+                )
+                for name in set(raw_tables) - set(raw_nodes)
+                if (raw_rows := raw_tables[name])
+            },
+        },
+    )
+
+
+def _deserialize_retention_interval(
+    raw_retention_interval: tuple[int, int, int]
+    | tuple[int, int, int, Literal["previous", "current"]],
+) -> RetentionInterval:
+    return (
+        RetentionInterval(*raw_retention_interval)
+        if len(raw_retention_interval) == 4
+        else RetentionInterval(*raw_retention_interval[:3], "current")
+    )
+
+
+def _deserialize_attributes(raw_attributes: SDRawAttributes) -> ImmutableAttributes:
+    return ImmutableAttributes(
+        pairs=raw_attributes.get("Pairs", {}),
+        retentions={
+            key: _deserialize_retention_interval(raw_retention_interval)
+            for key, raw_retention_interval in raw_attributes.get("Retentions", {}).items()
+        },
+    )
+
+
+def _deserialize_table(raw_table: SDRawTable) -> ImmutableTable:
+    rows = raw_table.get("Rows", [])
+    key_columns = raw_table.get("KeyColumns", [])
+
+    rows_by_ident: dict[SDRowIdent, dict[SDKey, SDValue]] = {}
+    for row in rows:
+        rows_by_ident.setdefault(_make_row_ident(key_columns, row), {}).update(row)
+
+    return ImmutableTable(
+        key_columns=key_columns,
+        rows_by_ident=rows_by_ident,
+        retentions={
+            ident: {
+                key: _deserialize_retention_interval(raw_retention_interval)
+                for key, raw_retention_interval in raw_intervals_by_key.items()
+            }
+            for ident, raw_intervals_by_key in raw_table.get("Retentions", {}).items()
+        },
+    )
+
+
+def _deserialize_tree(
+    *,
+    path: SDPath,
+    raw_attributes: SDRawAttributes,
+    raw_table: SDRawTable,
+    raw_nodes: Mapping[SDNodeName, SDRawTree],
+) -> ImmutableTree:
+    return ImmutableTree(
+        path=path,
+        attributes=_deserialize_attributes(raw_attributes),
+        table=_deserialize_table(raw_table),
+        nodes_by_name={
+            name: _deserialize_tree(
+                path=path + (name,),
+                raw_attributes=raw_node["Attributes"],
+                raw_table=raw_node["Table"],
+                raw_nodes=raw_node["Nodes"],
+            )
+            for name, raw_node in raw_nodes.items()
+        },
+    )
+
+
+def deserialize_tree(raw_tree: object) -> ImmutableTree:
+    if not isinstance(raw_tree, dict):
+        raise TypeError(raw_tree)
+    try:
+        raw_attributes = raw_tree["Attributes"]
+        raw_table = raw_tree["Table"]
+        raw_nodes = raw_tree["Nodes"]
+    except KeyError:
+        return _deserialize_legacy_tree(path=(), raw_tree=raw_tree)
+    return _deserialize_tree(
+        path=(),
+        raw_attributes=raw_attributes,
+        raw_table=raw_table,
+        raw_nodes=raw_nodes,
+    )
+
+
+def _serialize_delta_value(delta_value: SDDeltaValue) -> tuple[SDValue, SDValue]:
+    return (delta_value.old, delta_value.new)
+
+
+def _serialize_delta_attributes(delta_attributes: ImmutableDeltaAttributes) -> SDRawDeltaAttributes:
+    return (
+        {"Pairs": {k: _serialize_delta_value(v) for k, v in delta_attributes.pairs.items()}}
+        if delta_attributes.pairs
+        else {}
+    )
+
+
+def _serialize_delta_table(delta_table: ImmutableDeltaTable) -> SDRawDeltaTable:
+    return (
+        {
+            "KeyColumns": delta_table.key_columns,
+            "Rows": [
+                {k: _serialize_delta_value(v) for k, v in r.items()} for r in delta_table.rows
+            ],
+        }
+        if delta_table.rows
+        else {}
+    )
+
+
+def serialize_delta_tree(delta_tree: ImmutableDeltaTree) -> SDRawDeltaTree:
+    return {
+        "Attributes": _serialize_delta_attributes(delta_tree.attributes),
+        "Table": _serialize_delta_table(delta_tree.table),
+        "Nodes": {
+            edge: serialize_delta_tree(node)
+            for edge, node in delta_tree.nodes_by_name.items()
+            if node
+        },
+    }
+
+
+def _deserialize_delta_value(raw_delta_value: tuple[SDValue, SDValue]) -> SDDeltaValue:
+    return SDDeltaValue(old=raw_delta_value[0], new=raw_delta_value[1])
+
+
+def _deserialize_delta_attributes(raw_attributes: SDRawDeltaAttributes) -> ImmutableDeltaAttributes:
+    return ImmutableDeltaAttributes(
+        pairs={k: _deserialize_delta_value(v) for k, v in raw_attributes.get("Pairs", {}).items()}
+    )
+
+
+def _deserialize_delta_table(raw_table: SDRawDeltaTable) -> ImmutableDeltaTable:
+    return ImmutableDeltaTable(
+        key_columns=raw_table.get("KeyColumns", []),
+        rows=[
+            {k: _deserialize_delta_value(v) for k, v in r.items()}
+            for r in raw_table.get("Rows", [])
+        ],
+    )
+
+
+def _deserialize_delta_tree(*, path: SDPath, raw_tree: SDRawDeltaTree) -> ImmutableDeltaTree:
+    return ImmutableDeltaTree(
+        path=path,
+        attributes=_deserialize_delta_attributes(raw_attributes=raw_tree["Attributes"]),
+        table=_deserialize_delta_table(raw_table=raw_tree["Table"]),
+        nodes_by_name={
+            raw_node_name: _deserialize_delta_tree(
+                path=path + (raw_node_name,),
+                raw_tree=raw_node,
+            )
+            for raw_node_name, raw_node in raw_tree["Nodes"].items()
+        },
+    )
+
+
+def deserialize_delta_tree(raw_tree: SDRawDeltaTree) -> ImmutableDeltaTree:
+    return _deserialize_delta_tree(path=(), raw_tree=raw_tree)
+
+
+# .
 #   .--IO------------------------------------------------------------------.
-#   |                              ___ ___                                 |
-#   |                             |_ _/ _ \                                |
-#   |                              | | | | |                               |
-#   |                              | | |_| |                               |
-#   |                             |___\___/                                |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
 
 
 def _transform_tree_path(tree_path: TreePath, mtime: float) -> None:

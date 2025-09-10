@@ -574,3 +574,12 @@ node_software_applications_kube = Node(
     path=["software", "applications", "kube"],
     title=Title("Kubernetes"),
 )
+
+node_software_applications_kube_cluster = Node(
+    name="software_applications_kube_cluster",
+    path=["software", "applications", "kube", "cluster"],
+    title=Title("Cluster"),
+    attributes={
+        "version": TextField(Title("Version")),
+    },
+)

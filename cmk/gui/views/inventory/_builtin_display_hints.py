@@ -968,8 +968,8 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         },
         ".software.applications.kube.containers:*.restart_count": {"title": _l("Restart count")},
         ".software.applications.kube.containers:*.container_id": {"title": _l("Container ID")},
-        ".software.applications.kube.cluster.": {"title": _l("Cluster"), "keyorder": ["version"]},
-        ".software.applications.kube.cluster.version": {"title": _l("Version")},
+        # MIGRATED ".software.applications.kube.cluster.": {"title": _l("Cluster"), "keyorder": ["version"]},
+        # MIGRATED ".software.applications.kube.cluster.version": {"title": _l("Version")},
         ".software.applications.kube.deployment.": {
             "title": _l("Deployment"),
             "keyorder": [

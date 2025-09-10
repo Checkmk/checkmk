@@ -91,6 +91,25 @@ node_hardware_components_containers = Node(
     ),
 )
 
+node_hardware_components_fans = Node(
+    name="hardware_components_fans",
+    path=["hardware", "components", "fans"],
+    title=Title("Fans"),
+    table=Table(
+        view=View(name="invfan", title=Title("Fans")),
+        columns={
+            "index": TextField(Title("Index")),
+            "name": TextField(Title("Name")),
+            "description": TextField(Title("Description")),
+            "software": TextField(Title("Software")),
+            "serial": TextField(Title("Serial number")),
+            "manufacturer": TextField(Title("Manufacturer")),
+            "model": TextField(Title("Model name")),
+            "location": TextField(Title("Location")),
+        },
+    ),
+)
+
 node_hardware_memory = Node(
     name="hardware_memory",
     path=["hardware", "memory"],

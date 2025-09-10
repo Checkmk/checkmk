@@ -11,6 +11,7 @@ from cmk.inventory_ui.v1_alpha import (
     TextField,
     Title,
     Unit,
+    View,
 )
 
 UNIT_BYTES = Unit(IECNotation("B"))
@@ -31,6 +32,25 @@ node_hardware_components = Node(
     name="hardware_components",
     path=["hardware", "components"],
     title=Title("Physical components"),
+)
+
+node_hardware_components_backplanes = Node(
+    name="hardware_components_backplanes",
+    path=["hardware", "components", "backplanes"],
+    title=Title("Backplanes"),
+    table=Table(
+        view=View(name="invbackplane", title=Title("Backplanes")),
+        columns={
+            "index": TextField(Title("Index")),
+            "name": TextField(Title("Name")),
+            "description": TextField(Title("Description")),
+            "software": TextField(Title("Software")),
+            "serial": TextField(Title("Serial number")),
+            "manufacturer": TextField(Title("Manufacturer")),
+            "model": TextField(Title("Model name")),
+            "location": TextField(Title("Location")),
+        },
+    ),
 )
 
 node_hardware_memory = Node(

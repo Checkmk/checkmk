@@ -72,6 +72,25 @@ node_hardware_components_chassis = Node(
     ),
 )
 
+node_hardware_components_containers = Node(
+    name="hardware_components_containers",
+    path=["hardware", "components", "containers"],
+    title=Title("HW containers"),
+    table=Table(
+        view=View(name="invcontainer", title=Title("HW containers")),
+        columns={
+            "index": TextField(Title("Index")),
+            "name": TextField(Title("Name")),
+            "description": TextField(Title("Description")),
+            "software": TextField(Title("Software")),
+            "serial": TextField(Title("Serial number")),
+            "manufacturer": TextField(Title("Manufacturer")),
+            "model": TextField(Title("Model name")),
+            "location": TextField(Title("Location")),
+        },
+    ),
+)
+
 node_hardware_memory = Node(
     name="hardware_memory",
     path=["hardware", "memory"],

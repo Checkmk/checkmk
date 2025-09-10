@@ -53,6 +53,9 @@ VT = TypeVar("VT", bound=ABCViewDashletConfig)
 class LinkedViewDashletConfig(ABCViewDashletConfig): ...
 
 
+class EmbeddedViewDashletConfig(ABCViewDashletConfig): ...
+
+
 class _ViewDashletConfigMandatory(ABCViewDashletConfig):
     # These fields are redundant between DashletConfig and Visual
     # name: str
@@ -257,6 +260,25 @@ class ABCViewDashlet(IFrameDashlet[VT]):
     def _get_infos_from_view_spec(self, view_spec: ViewSpec | ViewDashletConfig) -> SingleInfos:
         ds_name = view_spec["datasource"]
         return data_source_registry[ds_name]().infos
+
+
+class EmbeddedViewDashlet(ABCViewDashlet[EmbeddedViewDashletConfig]):
+    """Dashlet that displays a Checkmk view"""
+
+    @classmethod
+    def type_name(cls) -> str:
+        return "embedded_view"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("View")
+
+    @classmethod
+    def description(cls) -> str:
+        return _("Copies a view to a dashboard element")
+
+    def update(self) -> None:
+        raise NotImplementedError()
 
 
 class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):

@@ -77,6 +77,7 @@ def test_dashlet_registry_plugins() -> None:
         "url",
         "pnpgraph",
         "view",
+        "embedded_view",
         "linked_view",
         "user_messages",
         "nodata",

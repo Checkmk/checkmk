@@ -438,3 +438,12 @@ node_hardware_system_nodes = Node(
         },
     ),
 )
+
+node_hardware_uploaded_files = Node(
+    name="hardware_uploaded_files",
+    path=["hardware", "uploaded_files"],
+    title=Title("Uploaded files"),
+    attributes={
+        "call_progress_tones": TextField(Title("Call progress tones")),
+    },
+)

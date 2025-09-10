@@ -1391,53 +1391,53 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED     "title": _l("Total freeable PGA memory"),
         # MIGRATED     "paint": "size",
         # MIGRATED },
-        ".software.applications.oracle.tablespaces:": {
-            "title": _l("Oracle tablespaces"),
-            "keyorder": [
-                "sid",
-                "name",
-                "version",
-                "type",
-                "autoextensible",
-                "current_size",
-                "max_size",
-                "used_size",
-                "num_increments",
-                "increment_size",
-                "free_space",
-            ],
-            "view": "invoratablespace",
-        },
-        ".software.applications.oracle.tablespaces:*.sid": {"title": _l("SID")},
-        ".software.applications.oracle.tablespaces:*.name": {"title": _l("Name")},
-        ".software.applications.oracle.tablespaces:*.version": {"title": _l("Version")},
-        ".software.applications.oracle.tablespaces:*.type": {"title": _l("Type")},
-        ".software.applications.oracle.tablespaces:*.autoextensible": {
-            "title": _l("Autoextensible")
-        },
-        ".software.applications.oracle.tablespaces:*.current_size": {
-            "title": _l("Current size"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.tablespaces:*.max_size": {
-            "title": _l("Max. size"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.tablespaces:*.used_size": {
-            "title": _l("Used size"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.tablespaces:*.num_increments": {
-            "title": _l("#Increments"),
-        },
-        ".software.applications.oracle.tablespaces:*.increment_size": {
-            "title": _l("Increment size"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.tablespaces:*.free_space": {
-            "title": _l("Free space"),
-            "paint": "size",
-        },
+        # MIGRATED ".software.applications.oracle.tablespaces:": {
+        # MIGRATED     "title": _l("Oracle tablespaces"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "sid",
+        # MIGRATED         "name",
+        # MIGRATED         "version",
+        # MIGRATED         "type",
+        # MIGRATED         "autoextensible",
+        # MIGRATED         "current_size",
+        # MIGRATED         "max_size",
+        # MIGRATED         "used_size",
+        # MIGRATED         "num_increments",
+        # MIGRATED         "increment_size",
+        # MIGRATED         "free_space",
+        # MIGRATED     ],
+        # MIGRATED     "view": "invoratablespace",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.tablespaces:*.sid": {"title": _l("SID")},
+        # MIGRATED ".software.applications.oracle.tablespaces:*.name": {"title": _l("Name")},
+        # MIGRATED ".software.applications.oracle.tablespaces:*.version": {"title": _l("Version")},
+        # MIGRATED ".software.applications.oracle.tablespaces:*.type": {"title": _l("Type")},
+        # MIGRATED ".software.applications.oracle.tablespaces:*.autoextensible": {
+        # MIGRATED     "title": _l("Autoextensible")
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.tablespaces:*.current_size": {
+        # MIGRATED     "title": _l("Current size"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.tablespaces:*.max_size": {
+        # MIGRATED     "title": _l("Max. size"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.tablespaces:*.used_size": {
+        # MIGRATED     "title": _l("Used size"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.tablespaces:*.num_increments": {
+        # MIGRATED     "title": _l("#Increments"),
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.tablespaces:*.increment_size": {
+        # MIGRATED     "title": _l("Increment size"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.tablespaces:*.free_space": {
+        # MIGRATED     "title": _l("Free space"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
         ".software.applications.vmwareesx:": {"title": _l("VMware ESX")},
         ".software.applications.vmwareesx:*.clusters": {"title": _l("Clusters")},
         # MIGRATED ".software.applications.mssql.": {"title": _l("MSSQL")},

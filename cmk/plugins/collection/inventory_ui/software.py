@@ -827,3 +827,25 @@ node_software_applications_oracle_systemparameter = Node(
         },
     ),
 )
+
+node_software_applications_oracle_tablespaces = Node(
+    name="software_applications_oracle_tablespaces",
+    path=["software", "applications", "oracle", "tablespaces"],
+    title=Title("Oracle tablespaces"),
+    table=Table(
+        view=View(name="invoratablespace", title=Title("Oracle tablespaces")),
+        columns={
+            "sid": TextField(Title("SID")),
+            "name": TextField(Title("Name")),
+            "version": TextField(Title("Version")),
+            "type": TextField(Title("Type")),
+            "autoextensible": TextField(Title("Autoextensible")),
+            "current_size": NumberField(Title("Current size"), render=UNIT_BYTES),
+            "max_size": NumberField(Title("Max. size"), render=UNIT_BYTES),
+            "used_size": NumberField(Title("Used size"), render=UNIT_BYTES),
+            "num_increments": TextField(Title("#Increments")),
+            "increment_size": NumberField(Title("Increment size"), render=UNIT_BYTES),
+            "free_space": NumberField(Title("Free space"), render=UNIT_BYTES),
+        },
+    ),
+)

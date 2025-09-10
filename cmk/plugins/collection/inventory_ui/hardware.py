@@ -21,6 +21,12 @@ node_hardware = Node(
     title=Title("Hardware"),
 )
 
+node_hardware_chassis = Node(
+    name="hardware_chassis",
+    path=["hardware", "chassis"],
+    title=Title("Chassis"),
+)
+
 node_hardware_memory = Node(
     name="hardware_memory",
     path=["hardware", "memory"],

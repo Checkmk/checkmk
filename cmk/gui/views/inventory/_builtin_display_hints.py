@@ -1681,17 +1681,17 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".software.applications.azure.load_balancers.outbound_rules.backend_pools.addresses:*.ip_address": {"title": _l("IP address")},
         # MIGRATED ".software.applications.azure.load_balancers.outbound_rules.backend_pools.addresses:*.ip_allocation_method": {"title": _l("Allocation method")},
         # MIGRATED ".software.applications.azure.load_balancers.outbound_rules.backend_pools.addresses:*.primary": {"title": _l("Primary")},
-        ".software.bios.": {
-            "title": _l("BIOS"),
-            "keyorder": [
-                "vendor",
-                "version",
-                "date",
-            ],
-        },
-        ".software.bios.vendor": {"title": _l("Vendor")},
-        ".software.bios.version": {"title": _l("Version")},
-        ".software.bios.date": {"title": _l("Date"), "paint": "date"},
+        # MIGRATED ".software.bios.": {
+        # MIGRATED     "title": _l("BIOS"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "vendor",
+        # MIGRATED         "version",
+        # MIGRATED         "date",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.bios.vendor": {"title": _l("Vendor")},
+        # MIGRATED ".software.bios.version": {"title": _l("Version")},
+        # MIGRATED ".software.bios.date": {"title": _l("Date"), "paint": "date"},
         ".software.configuration.": {"title": _l("Configuration")},
         ".software.configuration.snmp_info.": {
             "title": _l("SNMP Information"),

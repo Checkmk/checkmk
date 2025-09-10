@@ -3,10 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
+
 from cmk.inventory_ui.v1_alpha import (
     AgeNotation,
     BoolField,
     DecimalNotation,
+    Label,
     Node,
     NumberField,
     SINotation,
@@ -21,6 +24,11 @@ from cmk.inventory_ui.v1_alpha import (
 UNIT_AGE = Unit(AgeNotation())
 UNIT_BYTES = Unit(SINotation("B"))
 UNIT_COUNT = Unit(DecimalNotation(""), StrictPrecision(0))
+
+
+def _render_date(value: int | float) -> Label | str:
+    return str(time.strftime("%Y-%m-%d", time.localtime(value)))
+
 
 node_software = Node(
     name="software",
@@ -899,4 +907,15 @@ node_software_applications_vmwareesx = Node(
             "clusters": TextField(Title("Clusters")),
         },
     ),
+)
+
+node_software_bios = Node(
+    name="software_bios",
+    path=["software", "bios"],
+    title=Title("BIOS"),
+    attributes={
+        "vendor": TextField(Title("Vendor")),
+        "version": TextField(Title("Version")),
+        "date": NumberField(Title("Date"), render=_render_date),
+    },
 )

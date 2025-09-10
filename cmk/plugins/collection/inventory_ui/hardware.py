@@ -309,6 +309,27 @@ node_hardware_memory = Node(
     },
 )
 
+node_hardware_memory_arrays_devices = Node(
+    name="hardware_memory_arrays_devices",
+    path=["hardware", "memory", "arrays", "devices"],
+    title=Title("Devices"),
+    table=Table(
+        columns={
+            "index": TextField(Title("Index")),
+            "locator": TextField(Title("Locator")),
+            "bank_locator": TextField(Title("Bank locator")),
+            "type": TextField(Title("Type")),
+            "form_factor": TextField(Title("Form factor")),
+            "speed": NumberField(Title("Speed"), render=UNIT_HZ),
+            "data_width": TextField(Title("Data width")),
+            "total_width": TextField(Title("Total width")),
+            "manufacturer": TextField(Title("Manufacturer")),
+            "serial": TextField(Title("Serial")),
+            "size": NumberField(Title("Size"), render=UNIT_BYTES),
+        },
+    ),
+)
+
 node_hardware_system_nodes = Node(
     name="hardware_system_nodes",
     path=["hardware", "system", "nodes"],

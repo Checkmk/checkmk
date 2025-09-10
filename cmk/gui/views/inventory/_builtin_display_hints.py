@@ -202,7 +202,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
             ],
         },
         ".hardware.uploaded_files.call_progress_tones": {"title": _l("Call progress tones")},
-        ".hardware.components.": {"title": _l("Physical components")},
+        # MIGRATED ".hardware.components.": {"title": _l("Physical components")},
         ".hardware.components.others:": {
             "title": _l("Other entities"),
             "keyorder": [

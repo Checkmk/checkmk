@@ -221,3 +221,28 @@ node_software_applications_azure_load_balancers_outbound_rules_backend_pools = N
         },
     ),
 )
+
+node_software_applications_azure_load_balancers_outbound_rules_backend_pools_addresses = Node(
+    name="software_applications_azure_load_balancers_outbound_rules_backend_pools_addresses",
+    path=[
+        "software",
+        "applications",
+        "azure",
+        "load_balancers",
+        "outbound_rules",
+        "backend_pools",
+        "addresses",
+    ],
+    title=Title("Addresses"),
+    table=Table(
+        columns={
+            "load_balancer": TextField(Title("Load balancer")),
+            "outbound_rule": TextField(Title("Outbound rule")),
+            "backend_pool": TextField(Title("Backend pool")),
+            "address_name": TextField(Title("Address name")),
+            "ip_address": TextField(Title("IP address")),
+            "ip_allocation_method": TextField(Title("Allocation method")),
+            "primary": TextField(Title("Primary")),
+        },
+    ),
+)

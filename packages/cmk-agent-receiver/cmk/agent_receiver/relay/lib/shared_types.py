@@ -23,3 +23,11 @@ class TaskNotFoundError(HTTPException):
         super().__init__(
             status_code=HTTPStatus.NOT_FOUND, detail=f"Task with ID '{task_id}' not found"
         )
+
+
+class TooManyTasksError(HTTPException):
+    def __init__(self, max_number_of_tasks: int):
+        super().__init__(
+            status_code=HTTPStatus.FORBIDDEN,
+            detail=f"The maximum number of tasks {max_number_of_tasks} has been reached",
+        )

@@ -26,7 +26,10 @@ def get_relay_config() -> RelayConfig:
 def get_tasks_repository(
     config: Annotated[RelayConfig, fastapi.Depends(get_relay_config)],
 ) -> TasksRepository:
-    return TasksRepository(ttl_seconds=config.task_ttl)
+    return TasksRepository(
+        ttl_seconds=config.task_ttl,
+        max_tasks_per_relay=config.max_tasks_per_relay,
+    )
 
 
 def get_relay_tasks_handler(

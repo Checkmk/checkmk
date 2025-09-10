@@ -4,20 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+import uuid
 
 import pytest
 
-from cmk.agent_receiver.relay.lib.shared_types import TaskID
 from cmk.relay_protocols.tasks import (
     ResultType,
     TaskResponse,
     TaskStatus,
-    TaskType,
 )
 
 from .test_lib.agent_receiver import AgentReceiverClient
 from .test_lib.site_mock import SiteMock
-from .test_lib.tasks import get_relay_tasks, push_task
+from .test_lib.tasks import add_tasks, get_all_tasks, get_relay_tasks
 
 RESPONSE_PAYLOAD = "some response payload"
 TASKS_COUNT = 5
@@ -172,28 +171,9 @@ def test_the_other_tasks_are_not_changed(
 
 @pytest.fixture
 def relay_id(site: SiteMock) -> str:
-    relay_id = "testrelay"
+    relay_id = str(uuid.uuid4())
     site.set_scenario(relay_id)
     return relay_id
-
-
-def add_tasks(count: int, agent_receiver: AgentReceiverClient, relay_id: str) -> list[TaskID]:
-    gen = (
-        push_task(
-            agent_receiver=agent_receiver,
-            relay_id=relay_id,
-            task_type=TaskType.FETCH_AD_HOC,
-            task_payload=f"payload_{i}",
-        )
-        for i in range(count)
-    )
-    result = [TaskID(str(r.task_id)) for r in gen if r is not None]
-    assert len(result) == count
-    return result
-
-
-def get_all_tasks(agent_receiver: AgentReceiverClient, relay_id: str) -> list[TaskResponse]:
-    return get_relay_tasks(agent_receiver, relay_id).tasks
 
 
 def get_pending_tasks(agent_receiver: AgentReceiverClient, relay_id: str) -> list[TaskResponse]:

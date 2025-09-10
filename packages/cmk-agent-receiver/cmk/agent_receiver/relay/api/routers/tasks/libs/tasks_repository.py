@@ -10,7 +10,12 @@ from datetime import datetime
 from enum import StrEnum
 
 from cmk.agent_receiver.log import logger
-from cmk.agent_receiver.relay.lib.shared_types import RelayID, TaskID, TaskNotFoundError
+from cmk.agent_receiver.relay.lib.shared_types import (
+    RelayID,
+    TaskID,
+    TaskNotFoundError,
+    TooManyTasksError,
+)
 
 
 class TaskStatus(StrEnum):
@@ -52,7 +57,8 @@ GLOBAL_TASKS: dict[RelayID, "TasksRepository.TimedTaskStore"] = {}
 
 @dataclasses.dataclass
 class TasksRepository:
-    ttl_seconds: float = 120.0  # Default TTL from config
+    ttl_seconds: float
+    max_tasks_per_relay: int
 
     def __post_init__(self) -> None:
         if self.ttl_seconds <= 0:
@@ -81,6 +87,8 @@ class TasksRepository:
 
     def store_task(self, relay_id: RelayID, task: Task) -> Task:
         tasks = self._get_or_create_storage(relay_id)
+        if len(tasks) >= self.max_tasks_per_relay:
+            raise TooManyTasksError(self.max_tasks_per_relay)
         tasks[task.id] = task
         return task
 
@@ -147,3 +155,6 @@ class TasksRepository:
         def __contains__(self, key: TaskID) -> bool:
             self._cleanup_expired()
             return key in self._tasks
+
+        def __len__(self) -> int:
+            return len(self._tasks)

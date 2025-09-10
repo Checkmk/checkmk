@@ -352,3 +352,12 @@ node_software_applications_citrix = Node(
     path=["software", "applications", "citrix"],
     title=Title("Citrix"),
 )
+
+node_software_applications_citrix_controller = Node(
+    name="software_applications_citrix_controller",
+    path=["software", "applications", "citrix", "controller"],
+    title=Title("Controller"),
+    attributes={
+        "controller_version": TextField(Title("Controller version")),
+    },
+)

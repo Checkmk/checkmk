@@ -1164,13 +1164,13 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.mobileiron.partition_name": {"title": _l("Partition name")},
         ".software.applications.mobileiron.registration_state": {"title": _l("Registration state")},
         # MIGRATED ".software.applications.citrix.": {"title": _l("Citrix")},
-        ".software.applications.citrix.controller.": {
-            "title": _l("Controller"),
-            "keyorder": ["controller_version"],
-        },
-        ".software.applications.citrix.controller.controller_version": {
-            "title": _l("Controller version"),
-        },
+        # MIGRATED ".software.applications.citrix.controller.": {
+        # MIGRATED     "title": _l("Controller"),
+        # MIGRATED     "keyorder": ["controller_version"],
+        # MIGRATED },
+        # MIGRATED ".software.applications.citrix.controller.controller_version": {
+        # MIGRATED     "title": _l("Controller version"),
+        # MIGRATED },
         ".software.applications.citrix.vm.": {
             "title": _l("Virtual machine"),
             "keyorder": [

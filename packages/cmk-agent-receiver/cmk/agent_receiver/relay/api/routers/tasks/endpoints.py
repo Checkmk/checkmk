@@ -9,6 +9,7 @@ from uuid import UUID
 import fastapi
 from pydantic import SecretStr
 
+from cmk.agent_receiver.log import bound_contextvars
 from cmk.agent_receiver.relay.api.routers.tasks.dependencies import (
     get_create_task_handler,
     get_relay_task_handler,
@@ -145,13 +146,14 @@ async def update_task(
     # - Store updated task
 
     try:
-        updated_task = handler.process(
-            RelayID(relay_id),
-            TaskID(task_id),
-            ResultType(request.result_type.value),
-            request.result_payload,
-            authorization,
-        )
+        with bound_contextvars(task_id=task_id):
+            updated_task = handler.process(
+                RelayID(relay_id),
+                TaskID(task_id),
+                ResultType(request.result_type.value),
+                request.result_payload,
+                authorization,
+            )
     except CheckmkAPIError as e:
         raise fastapi.HTTPException(
             status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
@@ -224,7 +226,8 @@ async def get_task_endpoint(
         TaskResponse containing task details
     """
     try:
-        task = handler.process(RelayID(relay_id), TaskID(task_id), authorization)
+        with bound_contextvars(task_id=task_id):
+            task = handler.process(RelayID(relay_id), TaskID(task_id), authorization)
     except CheckmkAPIError as e:
         raise fastapi.HTTPException(
             status_code=fastapi.status.HTTP_502_BAD_GATEWAY,

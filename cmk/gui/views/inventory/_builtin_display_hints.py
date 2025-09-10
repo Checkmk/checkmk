@@ -1540,27 +1540,27 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".software.applications.azure.application_gateways.rules.listeners.private_ips:*.listener": {"title": _l("Listener")},
         # MIGRATED ".software.applications.azure.application_gateways.rules.listeners.private_ips:*.ip_address": {"title": _l("IP address")},
         # MIGRATED ".software.applications.azure.application_gateways.rules.listeners.private_ips:*.allocation_method": {"title": _l("Allocation method")},
-        ".software.applications.azure.application_gateways.rules.listeners.public_ips:": {
-            "title": _l("Public IPs"),
-            "keyorder": [
-                "application_gateway",
-                "rule",
-                "listener",
-                "name",
-                "location",
-                "ip_address",
-                "allocation_method",
-                "dns_fqdn"
-            ],
-        },
-        ".software.applications.azure.application_gateways.rules.listeners.public_ips:*.application_gateway": {"title": _l("Application gateway")},
-        ".software.applications.azure.application_gateways.rules.listeners.public_ips:*.rule": {"title": _l("Rule")},
-        ".software.applications.azure.application_gateways.rules.listeners.public_ips:*.listener": {"title": _l("Listener")},
-        ".software.applications.azure.application_gateways.rules.listeners.public_ips:*.name": {"title": _l("Name")},
-        ".software.applications.azure.application_gateways.rules.listeners.public_ips:*.location": {"title": _l("Location")},
-        ".software.applications.azure.application_gateways.rules.listeners.public_ips:*.ip_address": {"title": _l("IP address")},
-        ".software.applications.azure.application_gateways.rules.listeners.public_ips:*.allocation_method": {"title": _l("Allocation method")},
-        ".software.applications.azure.application_gateways.rules.listeners.public_ips:*.dns_fqdn": {"title": _l("DNS FQDN")},
+        # MIGRATED ".software.applications.azure.application_gateways.rules.listeners.public_ips:": {
+        # MIGRATED     "title": _l("Public IPs"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "application_gateway",
+        # MIGRATED         "rule",
+        # MIGRATED         "listener",
+        # MIGRATED         "name",
+        # MIGRATED         "location",
+        # MIGRATED         "ip_address",
+        # MIGRATED         "allocation_method",
+        # MIGRATED         "dns_fqdn"
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.azure.application_gateways.rules.listeners.public_ips:*.application_gateway": {"title": _l("Application gateway")},
+        # MIGRATED ".software.applications.azure.application_gateways.rules.listeners.public_ips:*.rule": {"title": _l("Rule")},
+        # MIGRATED ".software.applications.azure.application_gateways.rules.listeners.public_ips:*.listener": {"title": _l("Listener")},
+        # MIGRATED ".software.applications.azure.application_gateways.rules.listeners.public_ips:*.name": {"title": _l("Name")},
+        # MIGRATED ".software.applications.azure.application_gateways.rules.listeners.public_ips:*.location": {"title": _l("Location")},
+        # MIGRATED ".software.applications.azure.application_gateways.rules.listeners.public_ips:*.ip_address": {"title": _l("IP address")},
+        # MIGRATED ".software.applications.azure.application_gateways.rules.listeners.public_ips:*.allocation_method": {"title": _l("Allocation method")},
+        # MIGRATED ".software.applications.azure.application_gateways.rules.listeners.public_ips:*.dns_fqdn": {"title": _l("DNS FQDN")},
         # MIGRATED ".software.applications.azure.application_gateways.rules.backends:": {
         # MIGRATED     "title": _l("Backends"),
         # MIGRATED     "keyorder": [

@@ -135,6 +135,25 @@ node_hardware_components_modules = Node(
     ),
 )
 
+node_hardware_components_others = Node(
+    name="hardware_components_others",
+    path=["hardware", "components", "others"],
+    title=Title("Other entities"),
+    table=Table(
+        view=View(name="invother", title=Title("Other entities")),
+        columns={
+            "index": TextField(Title("Index")),
+            "name": TextField(Title("Name")),
+            "description": TextField(Title("Description")),
+            "software": TextField(Title("Software")),
+            "serial": TextField(Title("Serial number")),
+            "manufacturer": TextField(Title("Manufacturer")),
+            "model": TextField(Title("Model name")),
+            "location": TextField(Title("Location")),
+        },
+    ),
+)
+
 node_hardware_memory = Node(
     name="hardware_memory",
     path=["hardware", "memory"],

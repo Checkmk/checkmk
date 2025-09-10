@@ -880,12 +880,12 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED     "title": _l("MAC address"),
         # MIGRATED },
         # MIGRATED ".software.applications.fortinet.": {"title": _l("Fortinet")},
-        ".software.applications.fortinet.fortisandbox:": {
-            "title": _l("FortiSandbox software"),
-            "keyorder": ["name", "version"],
-        },
-        ".software.applications.fortinet.fortisandbox:*.name": {"title": _l("Name")},
-        ".software.applications.fortinet.fortisandbox:*.version": {"title": _l("Version")},
+        # MIGRATED ".software.applications.fortinet.fortisandbox:": {
+        # MIGRATED     "title": _l("FortiSandbox software"),
+        # MIGRATED     "keyorder": ["name", "version"],
+        # MIGRATED },
+        # MIGRATED ".software.applications.fortinet.fortisandbox:*.name": {"title": _l("Name")},
+        # MIGRATED ".software.applications.fortinet.fortisandbox:*.version": {"title": _l("Version")},
         # MIGRATED ".software.applications.fortinet.fortigate_high_availability.": {
         # MIGRATED     "title": _l("FortiGate HighAvailability"),
         # MIGRATED },

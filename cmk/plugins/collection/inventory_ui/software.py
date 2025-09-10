@@ -478,3 +478,15 @@ node_software_applications_fortinet_fortigate_high_availability = Node(
     path=["software", "applications", "fortinet", "fortigate_high_availability"],
     title=Title("FortiGate HighAvailability"),
 )
+
+node_software_applications_fortinet_fortisandbox = Node(
+    name="software_applications_fortinet_fortisandbox",
+    path=["software", "applications", "fortinet", "fortisandbox"],
+    title=Title("FortiSandbox software"),
+    table=Table(
+        columns={
+            "name": TextField(Title("Name")),
+            "version": TextField(Title("Version")),
+        },
+    ),
+)

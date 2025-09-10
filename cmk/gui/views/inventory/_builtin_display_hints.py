@@ -1561,21 +1561,21 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.azure.application_gateways.rules.listeners.public_ips:*.ip_address": {"title": _l("IP address")},
         ".software.applications.azure.application_gateways.rules.listeners.public_ips:*.allocation_method": {"title": _l("Allocation method")},
         ".software.applications.azure.application_gateways.rules.listeners.public_ips:*.dns_fqdn": {"title": _l("DNS FQDN")},
-        ".software.applications.azure.application_gateways.rules.backends:": {
-            "title": _l("Backends"),
-            "keyorder": [
-                "application_gateway",
-                "rule",
-                "address_pool_name",
-                "protocol",
-                "port"
-            ],
-        },
-        ".software.applications.azure.application_gateways.rules.backends:*.application_gateway": {"title": _l("Application gateway")},
-        ".software.applications.azure.application_gateways.rules.backends:*.rule": {"title": _l("Rule")},
-        ".software.applications.azure.application_gateways.rules.backends:*.address_pool_name": {"title": _l("Address pool name")},
-        ".software.applications.azure.application_gateways.rules.backends:*.protocol": {"title": _l("Protocol")},
-        ".software.applications.azure.application_gateways.rules.backends:*.port": {"title": _l("Port")},
+        # MIGRATED ".software.applications.azure.application_gateways.rules.backends:": {
+        # MIGRATED     "title": _l("Backends"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "application_gateway",
+        # MIGRATED         "rule",
+        # MIGRATED         "address_pool_name",
+        # MIGRATED         "protocol",
+        # MIGRATED         "port"
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.azure.application_gateways.rules.backends:*.application_gateway": {"title": _l("Application gateway")},
+        # MIGRATED ".software.applications.azure.application_gateways.rules.backends:*.rule": {"title": _l("Rule")},
+        # MIGRATED ".software.applications.azure.application_gateways.rules.backends:*.address_pool_name": {"title": _l("Address pool name")},
+        # MIGRATED ".software.applications.azure.application_gateways.rules.backends:*.protocol": {"title": _l("Protocol")},
+        # MIGRATED ".software.applications.azure.application_gateways.rules.backends:*.port": {"title": _l("Port")},
         ".software.applications.azure.load_balancers.": {"title": _l("Load balancers")},
         ".software.applications.azure.load_balancers.inbound_nat_rules:": {
             "title": _l("Inbound NAT rules"),

@@ -438,27 +438,27 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".hardware.storage.": {"title": _l("Storage")},
         # MIGRATED ".hardware.storage.controller.": {"title": _l("Controller"), "keyorder": ["version"]},
         # MIGRATED ".hardware.storage.controller.version": {"title": _l("Version")},
-        ".hardware.storage.disks:": {
-            "title": _l("Block devices"),
-            # FIXME Only use key columns used in inventory_lnx_block_devices, inventory_win_disks
-            # hp_proliant_da_phydrv, netapp_api_disk. Cleanup these different entries.
-            # See also
-            # tests/unit/cmk/gui/plugins/views/test_views_builtin_inventory_plugins.py::_IGNORED_KEYS_BY_PATH
-            "keyorder": ["fsnode", "controller", "signature"],
-        },
-        ".hardware.storage.disks:*.fsnode": {"title": _l("Filesystem node")},
-        ".hardware.storage.disks:*.controller": {"title": _l("Controller")},
-        ".hardware.storage.disks:*.drive_index": {"title": _l("Drive")},
-        ".hardware.storage.disks:*.signature": {"title": _l("Disk ID")},
-        ".hardware.storage.disks:*.vendor": {"title": _l("Vendor")},
-        ".hardware.storage.disks:*.local": {"title": _l("Local")},
-        ".hardware.storage.disks:*.bus": {"title": _l("Bus")},
-        ".hardware.storage.disks:*.product": {"title": _l("Product")},
-        ".hardware.storage.disks:*.serial": {"title": _l("Serial number")},
-        ".hardware.storage.disks:*.size": {"title": _l("Size"), "paint": "size"},
-        ".hardware.storage.disks:*.type": {"title": _l("Type")},
-        # this displayhint is for Attributes and NOT for above Table
-        ".hardware.storage.disks.size": {"title": _l("Size"), "paint": "size"},
+        # MIGRATED ".hardware.storage.disks:": {
+        # MIGRATED     "title": _l("Block devices"),
+        # MIGRATED     # FIXME Only use key columns used in inventory_lnx_block_devices, inventory_win_disks
+        # MIGRATED     # hp_proliant_da_phydrv, netapp_api_disk. Cleanup these different entries.
+        # MIGRATED     # See also
+        # MIGRATED     # tests/unit/cmk/gui/plugins/views/test_views_builtin_inventory_plugins.py::_IGNORED_KEYS_BY_PATH
+        # MIGRATED     "keyorder": ["fsnode", "controller", "signature"],
+        # MIGRATED },
+        # MIGRATED ".hardware.storage.disks:*.fsnode": {"title": _l("Filesystem node")},
+        # MIGRATED ".hardware.storage.disks:*.controller": {"title": _l("Controller")},
+        # MIGRATED ".hardware.storage.disks:*.drive_index": {"title": _l("Drive")},
+        # MIGRATED ".hardware.storage.disks:*.signature": {"title": _l("Disk ID")},
+        # MIGRATED ".hardware.storage.disks:*.vendor": {"title": _l("Vendor")},
+        # MIGRATED ".hardware.storage.disks:*.local": {"title": _l("Local")},
+        # MIGRATED ".hardware.storage.disks:*.bus": {"title": _l("Bus")},
+        # MIGRATED ".hardware.storage.disks:*.product": {"title": _l("Product")},
+        # MIGRATED ".hardware.storage.disks:*.serial": {"title": _l("Serial number")},
+        # MIGRATED ".hardware.storage.disks:*.size": {"title": _l("Size"), "paint": "size"},
+        # MIGRATED ".hardware.storage.disks:*.type": {"title": _l("Type")},
+        # MIGRATED # this displayhint is for Attributes and NOT for above Table
+        # MIGRATED ".hardware.storage.disks.size": {"title": _l("Size"), "paint": "size"},
         ".hardware.volumes.": {"title": _l("Volumes")},
         ".hardware.volumes.physical_volumes:": {
             "title": _l("Physical volumes"),

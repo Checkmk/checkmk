@@ -11,6 +11,8 @@ from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
 from starlette.status import HTTP_400_BAD_REQUEST
 
+from .middleware import B3RequestIDMiddleware
+
 
 class _UUIDValidationRoute(APIRoute):
     @override
@@ -46,4 +48,5 @@ def _create_400_bad_request(header_uuid: str, *, url_uuid: str) -> JSONResponse:
 
 
 AGENT_RECEIVER_APP: Final = FastAPI(title="Checkmk Agent Receiver")
+AGENT_RECEIVER_APP.add_middleware(B3RequestIDMiddleware)
 UUID_VALIDATION_ROUTER: Final = APIRouter(route_class=_UUIDValidationRoute)

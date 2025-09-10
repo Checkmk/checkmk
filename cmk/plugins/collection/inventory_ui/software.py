@@ -855,3 +855,18 @@ node_software_applications_synthetic_monitoring = Node(
     path=["software", "applications", "synthetic_monitoring"],
     title=Title("Synthetic monitoring"),
 )
+
+node_software_applications_synthetic_monitoring_plans = Node(
+    name="software_applications_synthetic_monitoring_plans",
+    path=["software", "applications", "synthetic_monitoring", "plans"],
+    title=Title("Plans"),
+    table=Table(
+        view=View(name="invsyntheticmonitoringplans", title=Title("Plans")),
+        columns={
+            "application": TextField(Title("Application")),
+            "suite_name": TextField(Title("Suite name")),
+            "variant": TextField(Title("Variant")),
+            "plan_id": TextField(Title("Plan ID")),
+        },
+    ),
+)

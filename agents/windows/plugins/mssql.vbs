@@ -1,7 +1,7 @@
 ' -----------------------------------------------------------------------------
 ' Check_MK windows agent plugin to gather information from local MSSQL servers
 '
-' This plugin can be used to collect information of all running MSSQL server
+' This plug-in can be used to collect information of all running MSSQL servers
 ' on the local system.
 '
 ' The current implementation of the check uses the "trusted authentication"

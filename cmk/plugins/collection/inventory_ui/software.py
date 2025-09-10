@@ -919,3 +919,9 @@ node_software_bios = Node(
         "date": NumberField(Title("Date"), render=_render_date),
     },
 )
+
+node_software_configuration = Node(
+    name="software_configuration",
+    path=["software", "configuration"],
+    title=Title("Configuration"),
+)

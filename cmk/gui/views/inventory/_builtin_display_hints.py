@@ -1692,7 +1692,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".software.bios.vendor": {"title": _l("Vendor")},
         # MIGRATED ".software.bios.version": {"title": _l("Version")},
         # MIGRATED ".software.bios.date": {"title": _l("Date"), "paint": "date"},
-        ".software.configuration.": {"title": _l("Configuration")},
+        # MIGRATED ".software.configuration.": {"title": _l("Configuration")},
         ".software.configuration.snmp_info.": {
             "title": _l("SNMP Information"),
             "keyorder": [

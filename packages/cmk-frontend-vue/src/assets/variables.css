@@ -167,6 +167,11 @@
   --icon-alert-timeline: url('~cmk-frontend/themes/facelift/images/icon_alert_timeline.svg');
   --icon-notification-timeline: url('~cmk-frontend/themes/facelift/images/icon_notification_timeline.svg');
   --icon-percentage-of-service-problems: url('~cmk-frontend/themes/facelift/images/icon_percentage-of-service-problems.svg');
+  --icon-barplot: url('~cmk-frontend/themes/facelift/images/icon_barplot.svg');
+  --icon-scatterplot: url('~cmk-frontend/themes/facelift/images/icon_scatterplot.svg');
+  --icon-single-metric: url('~cmk-frontend/themes/facelift/images/icon_single_metric.svg');
+  --icon-top-list: url('~cmk-frontend/themes/facelift/images/icon_top-list.svg');
+  --icon-gauge: url('~cmk-frontend/themes/facelift/images/icon_gauge.svg');
 }
 
 @layer theme {

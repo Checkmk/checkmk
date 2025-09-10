@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.inventory_ui.v1_alpha import Node, Title
+from cmk.inventory_ui.v1_alpha import Node, Table, TextField, Title
 
 node_software = Node(
     name="software",
@@ -33,4 +33,19 @@ node_software_applications_azure_application_gateways_rules = Node(
     name="software_applications_azure_application_gateways_rules",
     path=["software", "applications", "azure", "application_gateways", "rules"],
     title=Title("Rules"),
+)
+
+node_software_applications_azure_application_gateways_rules_backends = Node(
+    name="software_applications_azure_application_gateways_rules_backends",
+    path=["software", "applications", "azure", "application_gateways", "rules", "backends"],
+    title=Title("Backends"),
+    table=Table(
+        columns={
+            "application_gateway": TextField(Title("Application gateway")),
+            "rule": TextField(Title("Rule")),
+            "address_pool_name": TextField(Title("Address pool name")),
+            "protocol": TextField(Title("Protocol")),
+            "port": TextField(Title("Port")),
+        },
+    ),
 )

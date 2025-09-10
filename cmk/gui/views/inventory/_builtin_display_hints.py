@@ -1884,7 +1884,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".networking.routes:*.type": {"title": _l("Type of route"), "paint": "route_type"},
         # MIGRATED ".networking.routes:*.gateway": {"title": _l("Gateway")},
         # MIGRATED ".networking.wlan.": {"title": _l("WLAN")},
-        ".networking.wlan.controller.": {"title": _l("Controller")},
+        # MIGRATED ".networking.wlan.controller.": {"title": _l("Controller")},
         ".networking.wlan.controller.accesspoints:": {
             "title": _l("Access points"),
             "keyorder": ["name", "group", "ip_addr", "model", "serial", "sys_location"],

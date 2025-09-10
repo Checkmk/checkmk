@@ -1154,15 +1154,15 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.synthetic_monitoring.tests:*.test_name": {"title": _l("Test")},
         ".software.applications.synthetic_monitoring.tests:*.plan_id": {"title": _l("Plan ID")},
         ".software.applications.synthetic_monitoring.tests:*.test_item": {"title": _l("Item")},
-        ".software.applications.mobileiron.": {
-            "title": _l("Mobileiron"),
-            "keyorder": [
-                "partition_name",
-                "registration_state",
-            ],
-        },
-        ".software.applications.mobileiron.partition_name": {"title": _l("Partition name")},
-        ".software.applications.mobileiron.registration_state": {"title": _l("Registration state")},
+        # MIGRATED ".software.applications.mobileiron.": {
+        # MIGRATED     "title": _l("Mobileiron"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "partition_name",
+        # MIGRATED         "registration_state",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.mobileiron.partition_name": {"title": _l("Partition name")},
+        # MIGRATED ".software.applications.mobileiron.registration_state": {"title": _l("Registration state")},
         # MIGRATED ".software.applications.citrix.": {"title": _l("Citrix")},
         # MIGRATED ".software.applications.citrix.controller.": {
         # MIGRATED     "title": _l("Controller"),

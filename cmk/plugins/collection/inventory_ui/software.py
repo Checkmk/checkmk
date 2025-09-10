@@ -668,3 +668,13 @@ node_software_applications_kube_statefulset = Node(
         "match_expressions": TextField(Title("matchExpressions")),
     },
 )
+
+node_software_applications_mobileiron = Node(
+    name="software_applications_mobileiron",
+    path=["software", "applications", "mobileiron"],
+    title=Title("Mobileiron"),
+    attributes={
+        "partition_name": TextField(Title("Partition name")),
+        "registration_state": TextField(Title("Registration state")),
+    },
+)

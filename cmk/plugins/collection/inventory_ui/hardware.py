@@ -376,6 +376,30 @@ node_hardware_storage_controller = Node(
     },
 )
 
+node_hardware_storage_disks = Node(
+    name="hardware_storage_disks",
+    path=["hardware", "storage", "disks"],
+    title=Title("Block devices"),
+    attributes={
+        "size": NumberField(Title("Size"), render=UNIT_BYTES),
+    },
+    table=Table(
+        columns={
+            "fsnode": TextField(Title("Filesystem node")),
+            "controller": TextField(Title("Controller")),
+            "signature": TextField(Title("Disk ID")),
+            "bus": TextField(Title("Bus")),
+            "drive_index": TextField(Title("Drive")),
+            "local": TextField(Title("Local")),
+            "product": TextField(Title("Product")),
+            "serial": TextField(Title("Serial number")),
+            "size": NumberField(Title("Size"), render=UNIT_BYTES),
+            "type": TextField(Title("Type")),
+            "vendor": TextField(Title("Vendor")),
+        },
+    ),
+)
+
 node_hardware_system_nodes = Node(
     name="hardware_system_nodes",
     path=["hardware", "system", "nodes"],

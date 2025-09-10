@@ -31,6 +31,7 @@ const cmkIconVariants = cva('', {
       inline: 'cmk-icon--inline'
     },
     size: {
+      xxsmall: '8px',
       xsmall: '10px',
       small: '12px',
       medium: '15px',

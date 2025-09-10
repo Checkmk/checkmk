@@ -197,7 +197,7 @@ class PerformanceTest:
     ) -> None:
         """Scenario: DCD piggyback host discovery
 
-        Create a source host with 1000 piggybacked hosts.
+        Create a source host with 100 piggybacked hosts.
         Wait for piggyback host discovery.
         """
         source_host_name = "test-performance-dcd"

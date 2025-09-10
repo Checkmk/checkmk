@@ -18,6 +18,7 @@ from cmk.inventory_ui.v1_alpha import (
     View,
 )
 
+UNIT_BITS_PER_SECOND = Unit(IECNotation("bits/s"))
 UNIT_BYTES = Unit(IECNotation("B"))
 UNIT_COUNT = Unit(DecimalNotation(""), StrictPrecision(0))
 UNIT_HZ = Unit(SINotation("Hz"))
@@ -337,6 +338,25 @@ node_hardware_memory_arrays_devices = Node(
             "manufacturer": TextField(Title("Manufacturer")),
             "serial": TextField(Title("Serial")),
             "size": NumberField(Title("Size"), render=UNIT_BYTES),
+        },
+    ),
+)
+
+node_hardware_nwadapter = Node(
+    name="hardware_nwadapter",
+    path=["hardware", "nwadapter"],
+    title=Title("Network adapters"),
+    table=Table(
+        columns={
+            "name": TextField(Title("Name")),
+            "type": TextField(Title("Type")),
+            "macaddress": TextField(Title("Physical address (MAC)")),
+            "speed": NumberField(Title("Speed"), render=UNIT_BITS_PER_SECOND),
+            "gateway": TextField(Title("Gateway")),
+            "ipv4_address": TextField(Title("IPv4 address")),
+            "ipv6_address": TextField(Title("IPv6 address")),
+            "ipv4_subnet": TextField(Title("IPv4 subnet")),
+            "ipv6_subnet": TextField(Title("IPv6 subnet")),
         },
     ),
 )

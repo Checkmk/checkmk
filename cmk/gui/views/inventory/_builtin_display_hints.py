@@ -525,7 +525,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".hardware.nwadapter:*.ipv6_address": {"title": _l("IPv6 address")},
         # MIGRATED ".hardware.nwadapter:*.ipv6_subnet": {"title": _l("IPv6 subnet")},
         # MIGRATED ".hardware.nwadapter:*.gateway": {"title": _l("Gateway")},
-        ".software.": {"title": _l("Software"), "icon": "software"},
+        # MIGRATED ".software.": {"title": _l("Software"), "icon": "software"},
         ".software.applications.": {"title": _l("Applications")},
         ".software.applications.check_mk.": {
             "title": _l("Checkmk"),

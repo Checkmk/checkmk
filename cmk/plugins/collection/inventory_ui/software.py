@@ -16,3 +16,9 @@ node_software_applications = Node(
     path=["software", "applications"],
     title=Title("Applications"),
 )
+
+node_software_applications_azure = Node(
+    name="software_applications_azure",
+    path=["software", "applications", "azure"],
+    title=Title("Azure"),
+)

@@ -1505,7 +1505,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.ibm_mq.queues:*.created": {"title": _l("Created")},
         ".software.applications.ibm_mq.queues:*.altered": {"title": _l("Altered")},
         ".software.applications.ibm_mq.queues:*.monq": {"title": _l("Monitoring")},
-        ".software.applications.azure.": {"title": _l("Azure")},
+        # MIGRATED ".software.applications.azure.": {"title": _l("Azure")},
         ".software.applications.azure.application_gateways.": {"title": _l("Application gateways")},
         ".software.applications.azure.application_gateways.rules.": {"title": _l("Rules")},
         ".software.applications.azure.application_gateways.rules.listeners:": {

@@ -679,11 +679,11 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED     "title": _l("Cluster host"),
         # MIGRATED     "paint": "bool",
         # MIGRATED },
-        ".software.applications.check_mk.cluster.nodes:": {
-            "title": _l("Nodes"),
-            "keyorder": ["name"],
-        },
-        ".software.applications.check_mk.cluster.nodes:*.name": {"title": _l("Node name")},
+        # MIGRATED ".software.applications.check_mk.cluster.nodes:": {
+        # MIGRATED     "title": _l("Nodes"),
+        # MIGRATED     "keyorder": ["name"],
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.cluster.nodes:*.name": {"title": _l("Node name")},
         ".software.applications.checkmk-agent.": {
             "title": _l("Checkmk Agent"),
             "keyorder": [

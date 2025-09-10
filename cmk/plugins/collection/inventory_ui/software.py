@@ -972,3 +972,20 @@ node_software_kernel_config = Node(
         },
     ),
 )
+
+node_software_os = Node(
+    name="software_os",
+    path=["software", "os"],
+    title=Title("Operating system"),
+    attributes={
+        "name": TextField(Title("Operating system")),
+        "version": TextField(Title("Version")),
+        "vendor": TextField(Title("Vendor")),
+        "type": TextField(Title("Type")),
+        "install_date": NumberField(Title("Install date"), render=_render_date),
+        "kernel_version": TextField(Title("Kernel version")),
+        "arch": TextField(Title("Kernel Architecture")),
+        "service_pack": TextField(Title("Latest service pack")),
+        "build": TextField(Title("Build")),
+    },
+)

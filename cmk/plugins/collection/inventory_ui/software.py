@@ -769,3 +769,16 @@ node_software_applications_oracle_pga = Node(
         },
     ),
 )
+
+node_software_applications_oracle_recovery_area = Node(
+    name="software_applications_oracle_recovery_area",
+    path=["software", "applications", "oracle", "recovery_area"],
+    title=Title("Oracle recovery areas"),
+    table=Table(
+        view=View(name="invorarecoveryarea", title=Title("Oracle recovery areas")),
+        columns={
+            "sid": TextField(Title("SID")),
+            "flashback": TextField(Title("Flashback")),
+        },
+    ),
+)

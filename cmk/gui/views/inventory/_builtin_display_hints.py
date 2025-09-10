@@ -1233,13 +1233,13 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".software.applications.oracle.dataguard_stats:*.db_unique": {"title": _l("Name")},
         # MIGRATED ".software.applications.oracle.dataguard_stats:*.role": {"title": _l("Role")},
         # MIGRATED ".software.applications.oracle.dataguard_stats:*.switchover": {"title": _l("Switchover")},
-        ".software.applications.oracle.recovery_area:": {
-            "title": _l("Oracle recovery areas"),
-            "keyorder": ["sid", "flashback"],
-            "view": "invorarecoveryarea",
-        },
-        ".software.applications.oracle.recovery_area:*.sid": {"title": _l("SID")},
-        ".software.applications.oracle.recovery_area:*.flashback": {"title": _l("Flashback")},
+        # MIGRATED ".software.applications.oracle.recovery_area:": {
+        # MIGRATED     "title": _l("Oracle recovery areas"),
+        # MIGRATED     "keyorder": ["sid", "flashback"],
+        # MIGRATED     "view": "invorarecoveryarea",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.recovery_area:*.sid": {"title": _l("SID")},
+        # MIGRATED ".software.applications.oracle.recovery_area:*.flashback": {"title": _l("Flashback")},
         ".software.applications.oracle.sga:": {
             "title": _l("Oracle SGA info"),
             "keyorder": [

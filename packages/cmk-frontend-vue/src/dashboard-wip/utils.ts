@@ -7,6 +7,8 @@ import { fetchRestAPI } from '@/lib/cmkFetch.ts'
 
 import type {
   DashboardConstants,
+  DashboardMetadata,
+  DashboardMetadataModel,
   RelativeGridDashboardDomainObject,
   ResponsiveGridDashboardDomainObject
 } from '@/dashboard-wip/types/dashboard.ts'
@@ -37,6 +39,15 @@ export const dashboardAPI = {
     await response.raiseForStatus()
     const content = await response.json()
     return content.extensions
+  },
+  listDashboardMetadata: async (): Promise<DashboardMetadata[]> => {
+    const url = `${API_ROOT}/domain-types/dashboard_metadata/collections/all`
+    const response = await fetchRestAPI(url, 'GET')
+    await response.raiseForStatus()
+    const content = await response.json()
+    const metadataModels = content.value as DashboardMetadataModel[]
+
+    return metadataModels.map((model) => model.extensions).filter(Boolean)
   },
   listFilterCollection: async (): Promise<FilterCollection> => {
     const url = `${API_ROOT}/domain-types/visual_filter/collections/all`

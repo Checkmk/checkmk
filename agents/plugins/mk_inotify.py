@@ -96,11 +96,12 @@ if os.path.exists(pid_filename):
     with open(pid_filename) as opened_file:
         pid_str = opened_file.read()
     proc_cmdline = "/proc/%s/cmdline" % pid_str
+    # make sure that the process with that ID is still running, else cleanup.
     if os.path.exists(proc_cmdline):
         with open(proc_cmdline) as opened_inner_file:
             cmdline = opened_inner_file.read()
-        cmdline_tokens = cmdline.split("\0")
-        if "mk_inotify" in cmdline_tokens[1]:
+        # make sure that the process actually belongs to agent plugin command, else cleanup.
+        if "mk_inotify" in cmdline:
             # Another mk_notify process is already running..
             # Simply output the current statistics and exit
             output_data()
@@ -108,6 +109,10 @@ if os.path.exists(pid_filename):
             # The pidfile is also the heartbeat file for the running process
             os.utime(pid_filename, None)
             sys.exit(0)
+        else:
+            os.remove(pid_filename)
+    else:
+        os.remove(pid_filename)
 
 #   .--Fork----------------------------------------------------------------.
 #   |                         _____          _                             |
@@ -126,7 +131,6 @@ if not opt_foreground:
             sys.exit(0)
         # Decouple from parent environment
         os.chdir("/")
-        os.umask(0)
         os.setsid()
 
         # Close all fd
@@ -355,6 +359,10 @@ def main():
         import pprint
 
         sys.stdout.write(pprint.pformat(folder_configs))
+
+    # In the event that new file permissions need to be set, let's clean up.
+    if os.path.exists(configured_paths):
+        os.remove(configured_paths)
 
     # Save monitored file/folder information specified in mk_inotify.cfg
     with open(configured_paths, "w") as opened_conf_paths:

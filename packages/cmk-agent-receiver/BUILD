@@ -20,6 +20,7 @@ py_library(
         "cmk/agent_receiver/endpoints.py",
         "cmk/agent_receiver/log.py",
         "cmk/agent_receiver/main.py",
+        "cmk/agent_receiver/middleware.py",
         "cmk/agent_receiver/models.py",
         "cmk/agent_receiver/relay/__init__.py",
         "cmk/agent_receiver/relay/api/__init__.py",

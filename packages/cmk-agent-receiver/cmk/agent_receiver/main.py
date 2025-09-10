@@ -11,20 +11,28 @@ from cmk.agent_receiver.relay.api.routers.base_router import RELAY_ROUTER
 from . import endpoints as endpoints
 from .apps_and_routers import AGENT_RECEIVER_APP, UUID_VALIDATION_ROUTER
 from .log import configure_logger
+from .middleware import B3RequestIDMiddleware
 from .site_context import log_path, site_name
 
 
 def main_app() -> FastAPI:
-    configure_logger(log_path())
-
-    # this must happen *after* registering the endpoints
-    AGENT_RECEIVER_APP.include_router(UUID_VALIDATION_ROUTER)
-    AGENT_RECEIVER_APP.include_router(RELAY_ROUTER)
-
+    # Create main app first
     main_app_ = FastAPI(
         openapi_url=None,
         docs_url=None,
         redoc_url=None,
     )
+
+    # Configure logger on the main app level so it works with middleware
+    configure_logger(log_path())
+
+    # Add middleware to main app BEFORE mounting sub-apps
+    main_app_.add_middleware(B3RequestIDMiddleware)
+
+    # this must happen *after* registering the endpoints
+    AGENT_RECEIVER_APP.include_router(UUID_VALIDATION_ROUTER)
+    AGENT_RECEIVER_APP.include_router(RELAY_ROUTER)
+
+    # Mount the sub-app
     main_app_.mount(f"/{site_name()}/agent-receiver", AGENT_RECEIVER_APP)
     return main_app_

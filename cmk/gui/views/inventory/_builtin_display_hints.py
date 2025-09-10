@@ -1693,20 +1693,20 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".software.bios.version": {"title": _l("Version")},
         # MIGRATED ".software.bios.date": {"title": _l("Date"), "paint": "date"},
         # MIGRATED ".software.configuration.": {"title": _l("Configuration")},
-        ".software.configuration.snmp_info.": {
-            "title": _l("SNMP Information"),
-            "keyorder": [
-                "contact",
-                "location",
-                "name",
-            ],
-        },
-        ".software.configuration.snmp_info.contact": {"title": _l("Contact")},
-        ".software.configuration.snmp_info.location": {
-            "title": _l("Location"),
-            "is_show_more": False,
-        },
-        ".software.configuration.snmp_info.name": {"title": _l("System name")},
+        # MIGRATED ".software.configuration.snmp_info.": {
+        # MIGRATED     "title": _l("SNMP Information"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "contact",
+        # MIGRATED         "location",
+        # MIGRATED         "name",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.configuration.snmp_info.contact": {"title": _l("Contact")},
+        # MIGRATED ".software.configuration.snmp_info.location": {
+        # MIGRATED     "title": _l("Location"),
+        # MIGRATED     "is_show_more": False,
+        # MIGRATED },
+        # MIGRATED ".software.configuration.snmp_info.name": {"title": _l("System name")},
         # MIGRATED ".software.configuration.organisation.": {
         # MIGRATED     "title": _l("Organisation"),
         # MIGRATED     "keyorder": [

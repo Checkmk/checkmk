@@ -937,3 +937,14 @@ node_software_configuration_organisation = Node(
         "address": TextField(Title("Address")),
     },
 )
+
+node_software_configuration_snmp_info = Node(
+    name="software_configuration_snmp_info",
+    path=["software", "configuration", "snmp_info"],
+    title=Title("SNMP Information"),
+    attributes={
+        "contact": TextField(Title("Contact")),
+        "location": TextField(Title("Location")),
+        "name": TextField(Title("System name")),
+    },
+)

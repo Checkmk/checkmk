@@ -309,6 +309,17 @@ node_hardware_memory = Node(
     },
 )
 
+node_hardware_memory_arrays = Node(
+    name="hardware_memory_arrays",
+    path=["hardware", "memory", "arrays"],
+    title=Title("Arrays (Controllers)"),
+    table=Table(
+        columns={
+            "maximum_capacity": NumberField(Title("Maximum capacity"), render=UNIT_BYTES),
+        },
+    ),
+)
+
 node_hardware_memory_arrays_devices = Node(
     name="hardware_memory_arrays_devices",
     path=["hardware", "memory", "arrays", "devices"],

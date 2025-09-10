@@ -23,6 +23,7 @@ import CmkDropdown from '@/components/CmkDropdown.vue'
 import CmkSwitch from '@/components/CmkSwitch.vue'
 import type { Suggestion } from '@/components/suggestions'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
+import CmkInput from '@/components/user-input/CmkInput.vue'
 
 import { type ValidationMessages } from '@/form'
 import FormEdit from '@/form/components/FormEdit.vue'
@@ -99,9 +100,7 @@ const scalarType: Suggestion[] = [
   { name: 'max', title: props.i18n.maximum as TranslatedString }
 ]
 
-const dataConstant = ref(1)
-const specConstant = makeFloat('', '')
-const backendValidationConstant: ValidationMessages = []
+const dataConstant: Ref<number> = ref(1)
 
 const formLineType: Suggestion[] = [
   { name: 'line', title: props.i18n.line as TranslatedString },
@@ -109,9 +108,7 @@ const formLineType: Suggestion[] = [
   { name: 'stack', title: props.i18n.stack as TranslatedString }
 ]
 
-const dataTransformation = ref(95)
-const specTransformation = makeFloat('', props.i18n.percentile)
-const backendValidationTransformation: ValidationMessages = []
+const dataTransformation: Ref<number> = ref(95)
 
 const dataUnit = ref(convertToUnit(props.graph_options.unit))
 const specUnit = makeCascadingSingleChoice('', [
@@ -961,19 +958,17 @@ const graphDesignerContentAsJson = computed(() => {
           </div>
           <div v-else-if="graphLine.type === 'constant'">
             {{ props.i18n.constant }}
-            <FormEdit
-              v-model:data="graphLine.value"
-              :spec="specConstant"
-              :backend-validation="backendValidationConstant"
-              @update:data="updateGraphLineAutoTitle(graphLine)"
+            <CmkInput
+              v-model="graphLine.value"
+              type="number"
+              @update:model-value="updateGraphLineAutoTitle(graphLine)"
             />
           </div>
           <div v-else-if="graphLine.type === 'transformation'">
-            <FormEdit
-              v-model:data="graphLine.percentile"
-              :spec="specTransformation"
-              :backend-validation="backendValidationTransformation"
-              @update:data="updateGraphLineAutoTitle(graphLine)"
+            <CmkInput
+              v-model="graphLine.percentile"
+              type="number"
+              @update:model-value="updateGraphLineAutoTitle(graphLine)"
             />
             {{ props.i18n.of }}
             <br />
@@ -1076,11 +1071,7 @@ const graphDesignerContentAsJson = computed(() => {
     </template>
     <template #constant>
       <div>
-        <FormEdit
-          v-model:data="dataConstant"
-          :spec="specConstant"
-          :backend-validation="backendValidationConstant"
-        />
+        <CmkInput v-model="dataConstant" type="number" />
         <button @click.prevent="addConstant">
           <img
             :title="props.i18n.add"
@@ -1107,11 +1098,7 @@ const graphDesignerContentAsJson = computed(() => {
     </template>
     <template #transformation>
       <div v-if="transformationIsApplicable()">
-        <FormEdit
-          v-model:data="dataTransformation"
-          :spec="specTransformation"
-          :backend-validation="backendValidationTransformation"
-        />
+        <CmkInput v-model="dataTransformation" type="number" />
         <button @click="applyTransformation">{{ props.i18n.apply }}</button>
       </div>
       <div v-else>{{ props.i18n.no_selected_graph_line }}</div>

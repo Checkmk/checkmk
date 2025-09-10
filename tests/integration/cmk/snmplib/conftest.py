@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 import shutil
@@ -12,19 +13,23 @@ import subprocess
 from collections.abc import Iterator
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 import psutil
 import pytest
-from pysnmp.hlapi import (  # type: ignore[import-untyped]
+from pysnmp.hlapi.asyncio import (  # type: ignore[import-untyped]
     CommunityData,
     ContextData,
     getCmd,
+    Integer32,
     ObjectIdentity,
     ObjectType,
     SnmpEngine,
     UdpTransportTarget,
+    UsmUserData,
 )
+from pysnmp.hlapi.transport import AbstractTransportTarget  # type: ignore[import-untyped]
+from pysnmp.proto.errind import ErrorIndication  # type: ignore[import-untyped]
 
 from cmk.ccc import debug
 from cmk.snmplib import SNMPBackendEnum
@@ -239,7 +244,7 @@ def _is_listening(process_def: ProcessDef) -> bool:
 
     # We got the expected number of listen sockets. One for IPv4 and one for IPv6. Now test
     # whether or not snmpsimd is already answering.
-    g = getCmd(
+    g = getCmdSync(
         SnmpEngine(),
         CommunityData("public"),
         UdpTransportTarget(("127.0.0.1", port)),
@@ -256,6 +261,28 @@ def _is_listening(process_def: ProcessDef) -> bool:
         == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
     )
     return True
+
+
+# This is basically pysnmp.hlapi.asyncio.sync.getCmd() before the synchronous API was removed in
+# pysnmp 6.2.
+def getCmdSync(
+    snmpEngine: SnmpEngine,
+    authData: CommunityData | UsmUserData,
+    transportTarget: AbstractTransportTarget,
+    contextData: ContextData,
+    *varBinds: Any,
+    **options: Any,
+) -> tuple[ErrorIndication, Integer32 | int, Integer32 | int, tuple[ObjectType]]:
+    loop = asyncio.get_event_loop()
+    if loop.is_running():
+        future = asyncio.ensure_future(
+            getCmd(snmpEngine, authData, transportTarget, contextData, *varBinds, **options)
+        )
+        return loop.run_until_complete(future)
+    else:
+        return loop.run_until_complete(
+            getCmd(snmpEngine, authData, transportTarget, contextData, *varBinds, **options)
+        )
 
 
 def _snmpsimd_process(process_def: ProcessDef) -> psutil.Process | None:

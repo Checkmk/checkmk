@@ -447,3 +447,19 @@ node_hardware_uploaded_files = Node(
         "call_progress_tones": TextField(Title("Call progress tones")),
     },
 )
+
+node_hardware_video = Node(
+    name="hardware_video",
+    path=["hardware", "video"],
+    title=Title("Graphic cards"),
+    table=Table(
+        columns={
+            "name": TextField(Title("Graphic card name")),
+            "subsystem": TextField(Title("Vendor and device ID")),
+            "driver": TextField(Title("Driver")),
+            "driver_version": TextField(Title("Driver version")),
+            "driver_date": TextField(Title("Driver date")),
+            "graphic_memory": NumberField(Title("Memory"), render=UNIT_BYTES),
+        },
+    ),
+)

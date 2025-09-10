@@ -20,6 +20,7 @@ from .stats import EventStatsDashlet, HostStatsDashlet, ServiceStatsDashlet, Sta
 from .user_messages import MessageUsersDashlet
 from .view import (
     copy_view_into_dashlet,
+    EmbeddedViewDashlet,
     LinkedViewDashlet,
     LinkedViewDashletConfig,
     ViewDashlet,
@@ -52,6 +53,7 @@ def register_dashlets(
     dashlet_registry.register(EventStatsDashlet)
     dashlet_registry.register(MessageUsersDashlet)
     dashlet_registry.register(ViewDashlet)
+    dashlet_registry.register(EmbeddedViewDashlet)
     dashlet_registry.register(LinkedViewDashlet)
     autocompleter_registry.register_autocompleter(
         GRAPH_TEMPLATE_CHOICE_AUTOCOMPLETER_ID,

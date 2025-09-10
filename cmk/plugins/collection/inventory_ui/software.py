@@ -517,3 +517,19 @@ node_software_applications_ibm_mq = Node(
         "queues": TextField(Title("Queues")),
     },
 )
+
+node_software_applications_ibm_mq_channels = Node(
+    name="software_applications_ibm_mq_channels",
+    path=["software", "applications", "ibm_mq", "channels"],
+    title=Title("IBM MQ channels"),
+    table=Table(
+        view=View(name="invibmmqchannels", title=Title("IBM MQ channels")),
+        columns={
+            "qmgr": TextField(Title("Queue manager name")),
+            "name": TextField(Title("Channel")),
+            "type": TextField(Title("Type")),
+            "status": TextField(Title("Status")),
+            "monchl": TextField(Title("Monitoring")),
+        },
+    ),
+)

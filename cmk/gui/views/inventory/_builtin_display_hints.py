@@ -923,16 +923,16 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.kube.labels:*.label_value": {
             "title": _l("Value"),
         },
-        ".networking.kube:": {
-            "title": _l("Kubernetes"),
-            "keyorder": ["ip", "address_type"],
-        },
-        ".networking.kube:*.ip": {
-            "title": _l("IP address"),
-        },
-        ".networking.kube:*.address_type": {
-            "title": _l("Type"),
-        },
+        # MIGRATED ".networking.kube:": {
+        # MIGRATED     "title": _l("Kubernetes"),
+        # MIGRATED     "keyorder": ["ip", "address_type"],
+        # MIGRATED },
+        # MIGRATED ".networking.kube:*.ip": {
+        # MIGRATED     "title": _l("IP address"),
+        # MIGRATED },
+        # MIGRATED ".networking.kube:*.address_type": {
+        # MIGRATED     "title": _l("Type"),
+        # MIGRATED },
         ".software.applications.kube.containers:": {
             "title": _l("Containers"),
             "keyorder": [

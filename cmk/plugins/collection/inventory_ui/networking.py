@@ -52,3 +52,15 @@ node_networking_addresses = Node(
         },
     ),
 )
+
+node_networking_kube = Node(
+    name="networking_kube",
+    path=["networking", "kube"],
+    title=Title("Kubernetes"),
+    table=Table(
+        columns={
+            "ip": TextField(Title("IP address")),
+            "address_type": TextField(Title("Type")),
+        },
+    ),
+)

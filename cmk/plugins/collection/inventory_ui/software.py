@@ -120,3 +120,17 @@ node_software_applications_azure_load_balancers = Node(
     path=["software", "applications", "azure", "load_balancers"],
     title=Title("Load balancers"),
 )
+
+node_software_applications_azure_load_balancers_inbound_nat_rules = Node(
+    name="software_applications_azure_load_balancers_inbound_nat_rules",
+    path=["software", "applications", "azure", "load_balancers", "inbound_nat_rules"],
+    title=Title("Inbound NAT rules"),
+    table=Table(
+        columns={
+            "load_balancer": TextField(Title("Load balancer")),
+            "inbound_nat_rule": TextField(Title("Inbound NAT rule")),
+            "frontend_port": TextField(Title("Frontend port")),
+            "backend_port": TextField(Title("Backend port")),
+        },
+    ),
+)

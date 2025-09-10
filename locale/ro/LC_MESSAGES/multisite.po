@@ -267,6 +267,10 @@ msgstr "Numărul de alerte necunoscute"
 msgid "#Containers"
 msgstr "#Containere"
 
+#, fuzzy
+msgid "#Containers exited"
+msgstr "#Containere oprite"
+
 msgid "#Containers paused"
 msgstr "#Containerele au făcut o pauză"
 
@@ -2440,6 +2444,10 @@ msgstr ""
 "potrivire exactă. Pentru fiecare serviciu care se potrivește pe gazdele "
 "specificate se va crea un nod copil. "
 
+#, fuzzy, python-format
+msgid "A relay with alias '%s' already exists"
+msgstr "Există deja un pachet de reguli cu acest ID."
+
 msgid ""
 "A reliable backup ensures that your monitoring environment can be restored "
 "in case of data loss.<br><br>We recommend using the <a href=\"wato.py?"
@@ -3045,6 +3053,10 @@ msgstr "Absolut"
 #, python-format
 msgid "Absolute %s space"
 msgstr "Spațiu absolut %s"
+
+#, fuzzy
+msgid "Absolute Limit"
+msgstr "Absolut"
 
 #, fuzzy
 msgid "Absolute archive path"
@@ -4393,6 +4405,10 @@ msgstr "Adăugați gazde aleatorii"
 #, fuzzy
 msgid "Add recipient"
 msgstr "Destinatarul"
+
+#, fuzzy
+msgid "Add relay configuration"
+msgstr "Configurația RRA"
 
 msgid "Add remote instance"
 msgstr "Adăugați o instanță la distanță"
@@ -6286,6 +6302,9 @@ msgstr ""
 "utilizatori și, de asemenea, să specifice adrese de e-mail arbitrare ca "
 "destinație a rapoartelor."
 
+msgid "Allows access to the SaaS onboarding."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Allows the assignment of the Robotmk plan/test services to another host."
@@ -7242,6 +7261,10 @@ msgstr "Jurnal de audit arhivat"
 
 msgid "Arcserve (German) backups (Windows)"
 msgstr "Copii de rezervă Arcserve (germană) (Windows)"
+
+#, fuzzy
+msgid "Are you sure you want to delete this relay?"
+msgstr "Nu aveți voie să ștergeți acest %s."
 
 msgid "Area"
 msgstr "Zona"
@@ -8888,6 +8911,14 @@ msgstr "Latența medie a discului"
 #, fuzzy
 msgid "Azure Redis memory"
 msgstr "Memorie absolută utilizată"
+
+#, fuzzy
+msgid "Azure Redis replication"
+msgstr "Conexiuni la baza de date"
+
+#, fuzzy
+msgid "Azure Redis throughput"
+msgstr "Viteză de citire"
 
 #, fuzzy
 msgid "Azure SQL database CPU usage"
@@ -11311,6 +11342,10 @@ msgid "Cache misses per second"
 msgstr "Ratarea memoriei cache pe secundă"
 
 #, fuzzy
+msgid "Cache read throughput (/sec)"
+msgstr "Viteză de citire"
+
+#, fuzzy
 msgid "Cache requests"
 msgstr "Solicitări eșuate"
 
@@ -11324,6 +11359,10 @@ msgstr "Dimensiunea cache-ului"
 #, fuzzy
 msgid "Cache this section"
 msgstr "dezactivați această secțiune"
+
+#, fuzzy
+msgid "Cache write throughput (/sec)"
+msgstr "Viteza de scriere"
 
 msgid "Cached"
 msgstr "În cache"
@@ -12235,6 +12274,10 @@ msgstr ""
 
 msgid "Check IMAP/EWS Mailboxes"
 msgstr "Verificarea cutiilor poștale IMAP/EWS"
+
+#, fuzzy
+msgid "Check Interval"
+msgstr "Intervalul de cache"
 
 msgid "Check LDAP service access"
 msgstr "Verificați accesul la serviciul LDAP"
@@ -15193,6 +15236,10 @@ msgstr "Conexiuni"
 msgid "Connected clients"
 msgstr "Numărul de clienți conectați"
 
+#, fuzzy
+msgid "Connected relay configurations"
+msgstr "Configurația RRA"
+
 msgid "Connecter and connectee sites must be different."
 msgstr ""
 
@@ -15333,6 +15380,10 @@ msgid "Connections per second"
 msgstr "Conexiuni pe secundă"
 
 msgid "Connectivity"
+msgstr "Conectivitate"
+
+#, fuzzy
+msgid "Connectivity lag"
 msgstr "Conectivitate"
 
 msgid "Connector outlets"
@@ -18189,10 +18240,6 @@ msgid "Default BI visualization settings"
 msgstr "Setări implicite de vizualizare BI"
 
 #, fuzzy
-msgid "Default State"
-msgstr "Stare implicită"
-
-#, fuzzy
 msgid "Default cleanup parameters"
 msgstr "Parametrii impliciți"
 
@@ -18786,6 +18833,10 @@ msgstr "Ștergerea hărților permise"
 msgid "Delete processed messages"
 msgstr "Ștergerea mesajelor procesate"
 
+#, fuzzy
+msgid "Delete relay"
+msgstr "Rol șters '%s'"
+
 #, python-format
 msgid "Delete report schedule entry #%d"
 msgstr "Ștergeți intrarea din programul de raportare #%d"
@@ -18944,6 +18995,10 @@ msgstr "Ștergeți această regulă de notificare"
 
 msgid "Delete this notification rule"
 msgstr "Ștergeți această regulă de notificare"
+
+#, fuzzy
+msgid "Delete this relay"
+msgstr "Ștergeți această cheie"
 
 msgid "Delete this role"
 msgstr "Ștergeți acest rol"
@@ -22417,6 +22472,10 @@ msgstr "Editați proprietățile acestei reguli"
 msgid "Edit properties of this rule pack"
 msgstr "Editați proprietățile acestui pachet de reguli"
 
+#, fuzzy
+msgid "Edit relay configuration"
+msgstr "Configurație gazdă"
+
 msgid "Edit report content"
 msgstr "Editarea conținutului raportului"
 
@@ -22539,6 +22598,10 @@ msgstr "Editați această regulă de notificare"
 
 msgid "Edit this notification rule"
 msgstr "Editați această regulă de notificare"
+
+#, fuzzy
+msgid "Edit this relay"
+msgstr "Editați această regulă"
 
 msgid "Edit this report"
 msgstr "Editați acest raport"
@@ -31554,15 +31617,15 @@ msgstr "Nivelurile de umiditate"
 msgid "Humidity levels for devices with a single sensor"
 msgstr "Niveluri de umiditate pentru dispozitive cu un singur senzor"
 
-#, fuzzy
-msgid "Hyper-V Integration Services Status"
-msgstr "Server Hyper-V: Starea mașinilor virtuale"
-
 msgid "Hyper-V Server: State of VMs"
 msgstr "Server Hyper-V: Starea mașinilor virtuale"
 
 msgid "Hyper-V VM Guest Information (Windows)"
 msgstr "Informații despre Hyper-V VM Guest (Windows)"
+
+#, fuzzy
+msgid "Hyper-V VM integration services"
+msgstr "Server Hyper-V: Starea mașinilor virtuale"
 
 msgid "Hyper-V VMs (Windows)"
 msgstr "VM Hyper-V (Windows)"
@@ -40384,6 +40447,11 @@ msgstr ""
 msgid "Manage monitoring agents"
 msgstr "Gestionarea agenților de monitorizare"
 
+msgid ""
+"Manage relay configurations. Relays allow a Checkmk site to monitor SNMP "
+"based devices residing in a network that is not reachable from the internet."
+msgstr ""
+
 msgid "Manage services"
 msgstr "Gestionați serviciile"
 
@@ -41113,8 +41181,21 @@ msgstr "Numărul maxim de utilizatori permis"
 msgid "Maximum allowed validity"
 msgstr "Valabilitatea maximă permisă"
 
+msgid ""
+"Maximum amount of memory targeted to be allocated by the process heap. Note "
+"that typically the total memory usage of process will be about 50MiB higher "
+"than this value. This defines the hard limit."
+msgstr ""
+
 msgid "Maximum amount of non-operational access points"
 msgstr "Numărul maxim de puncte de acces nefuncționale"
+
+msgid ""
+"Maximum amount of total memory targeted to be allocated by the process heap. "
+"This option is used to calculate memory limit from the total available "
+"memory. For instance setting of 75% with the total memory of 1GiB will "
+"result in the limit of 750 MiB."
+msgstr ""
 
 msgid "Maximum bulk size"
 msgstr "Dimensiunea maximă a vracului"
@@ -41153,6 +41234,10 @@ msgstr "Număr maxim de verificări simultane în timp real"
 
 msgid "Maximum connections per second"
 msgstr "Conexiuni maxime pe secundă"
+
+#, fuzzy
+msgid "Maximum connectivity lag"
+msgstr "Conectivitatea site-ului"
 
 msgid "Maximum count"
 msgstr "Numarul maxim"
@@ -41370,6 +41455,20 @@ msgstr "Dimensiunea maximă a tuturor fișierelor din spațiul de backup"
 msgid "Maximum speed"
 msgstr "Viteza Maxima"
 
+msgid ""
+"Maximum spike expected between the measurements of memory usage. The value "
+"must be less than limit. This option is used to calculate spike limit from "
+"the total available memory. For instance setting of 25% with the total "
+"memory of 1GiB will result in the spike limit of 250MiB."
+msgstr ""
+
+#, python-format
+msgid ""
+"Maximum spike expected between the measurements of memory usage. The value "
+"must be less than the limit. The soft limit value will be equal to (limit - "
+"spike limit). The recommended value for spike limit is about 20% limit."
+msgstr ""
+
 msgid "Maximum spool duration"
 msgstr "Durata maximă a bobinei"
 
@@ -41537,6 +41636,14 @@ msgstr "Memorie"
 
 msgid "Memory (RAM)"
 msgstr "Memorie (RAM)"
+
+#, fuzzy
+msgid "Memory Limit"
+msgstr "Dimensiunea memoriei"
+
+#, fuzzy
+msgid "Memory Limiter"
+msgstr "Dimensiunea memoriei"
 
 #, fuzzy
 msgid "Memory Modules"
@@ -44687,6 +44794,10 @@ msgstr "Fără proxy"
 
 msgid "No re-executions"
 msgstr "Fără re-executări"
+
+#, fuzzy
+msgid "No relays configured yet."
+msgstr "Configurație gazdă"
 
 msgid "No replication with this site"
 msgstr "Nu există replicare cu acest site"
@@ -51794,6 +51905,10 @@ msgid "Pod resources: StatefulSet"
 msgstr "Resursele din pod: StatefulSet"
 
 #, fuzzy
+msgid "Podman"
+msgstr "# Containere"
+
+#, fuzzy
 msgid "Podman Container Health"
 msgstr "# Containere"
 
@@ -54219,6 +54334,10 @@ msgstr "Serviciul de baze de date relaționale (RDS)"
 msgid "Relative"
 msgstr "Relativ"
 
+#, fuzzy
+msgid "Relative Limit in %"
+msgstr "Umiditate relativă"
+
 msgid "Relative difference"
 msgstr "Diferența relativă"
 
@@ -54255,8 +54374,36 @@ msgid "Relative time of alert"
 msgstr "Ora relativă de alertă"
 
 #, fuzzy
+msgid "Relay"
+msgstr "Întârziere:"
+
+#, fuzzy
+msgid "Relay ID"
+msgstr "ID cheie"
+
+#, fuzzy
+msgid "Relay configurations"
+msgstr "configurare"
+
+#, fuzzy
+msgid "Relay display name"
+msgstr "Afișați numele"
+
+#, fuzzy
 msgid "Relay log size"
 msgstr "Dimensiunea jurnalului de releu"
+
+#, fuzzy
+msgid "Relay name"
+msgstr "Redenumiți"
+
+#, fuzzy
+msgid "Relay properties"
+msgstr "Proprietăți ale regulilor"
+
+#, fuzzy
+msgid "Relays"
+msgstr "Întârziere:"
 
 msgid "Release"
 msgstr "Eliberare"
@@ -57549,6 +57696,9 @@ msgstr ""
 "target=\"_blank\">Sunete de pușcă</a> pentru mai multe informații și pentru "
 "a încerca sunetele disponibile."
 
+msgid "See SaaS onboarding"
+msgstr ""
+
 msgid "See all events"
 msgstr "Vezi toate evenimentele"
 
@@ -58803,6 +58953,10 @@ msgstr "Starea serviciului"
 #, fuzzy
 msgid "Service status grouping"
 msgstr "Gruparea stării serviciului"
+
+#, fuzzy
+msgid "Service status when geo-replication link is unhealthy"
+msgstr "Stare când starea de replicare este activă"
 
 # georgem ##############
 msgid "Service tags"
@@ -60691,6 +60845,10 @@ msgid "Size growth per minute"
 msgstr "Creșterea dimensiunii pe minut"
 
 #, fuzzy
+msgid "Size of OTel Collector"
+msgstr "Dimensiunea fișierelor jurnal"
+
+#, fuzzy
 msgid "Size of PNP4Nagios"
 msgstr "Fișiere Spool ale PNP4Nagios"
 
@@ -61431,8 +61589,8 @@ msgid "Special Agent"
 msgstr "Agent special"
 
 #, fuzzy
-msgid "Special States"
-msgstr "Starea operațională"
+msgid "Special cases for specific services"
+msgstr "Afișează starea unui anumit serviciu."
 
 msgid "Specific Mappings"
 msgstr "Mapări specifice"
@@ -62201,6 +62359,10 @@ msgstr "Viteză"
 msgid "Speed of interface groups (Netapp only)"
 msgstr "Viteza grupurilor de interfețe (numai Netapp)"
 
+#, fuzzy
+msgid "Spike Limit"
+msgstr "Limitele serviciului"
+
 msgid "Spin retries (id 10)"
 msgstr ""
 
@@ -62796,6 +62958,10 @@ msgstr "Starea dacă nodul are o alarmă mem în vigoare"
 
 msgid "State if node is not in state running"
 msgstr "Stare dacă nodul nu este în stare de funcționare"
+
+#, fuzzy
+msgid "State if not default"
+msgstr "Stare dacă nicio intrare nu corespunde"
 
 msgid "State if probe state not OK"
 msgstr "Stare dacă starea sondei nu este OK"
@@ -67831,6 +67997,10 @@ msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "Limita pentru decalajul de transport în <tt>v$dataguard_stats</tt>."
 
 #, fuzzy
+msgid "The limit has to be bigger than the spike limit."
+msgstr "Clusterul trebuie să aibă cel puțin un nod"
+
+#, fuzzy
 msgid "The list needs to have at least one element"
 msgstr "Clusterul trebuie să aibă cel puțin un nod"
 
@@ -68096,6 +68266,14 @@ msgstr ""
 "Nivelurile de memorie pentru un anumit modul al acestei gazde. Acest lucru "
 "este relevant pentru gazdele care au mai multe zone de memorie distincte, de "
 "exemplu, carduri conectabile."
+
+msgid ""
+"The memory limiter processor is used to prevent out of memory situations on "
+"the collector. Given that the amount and type of data the collector "
+"processes is environment-specific and resource utilization of the collector "
+"is also dependent on the configured processors, it is important to put "
+"checks in place regarding memory usage."
+msgstr ""
 
 #, no-python-format
 msgid ""
@@ -69014,6 +69192,16 @@ msgstr ""
 "utilizator ntopng nu este egal cu numele dvs. de utilizator Checkmk, puteți "
 "defini numele dvs. de utilizator ntopng ca 'ntopng Username' în setările "
 "dvs. de utilizator în 'Identity'."
+
+#, python-format
+msgid ""
+"The relay '%s' is used by the following host(s): %s. Only relays that are "
+"not being used by a host can be deleted."
+msgstr ""
+
+#, fuzzy, python-format
+msgid "The relay with ID '%s' does not exist."
+msgstr "Rule_id %s nu există."
 
 msgid ""
 "The renaming of hosts is a complex operation since a host's name is being "
@@ -74121,6 +74309,22 @@ msgstr ""
 "tablespace și un indexspace al bazei de date."
 
 #, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis replication "
+"monitoring"
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis throughput "
+"monitoring"
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
+#, fuzzy
 msgid "This ruleset allows you to configure levels for the Storage data flows"
 msgstr ""
 "Această regulă vă permite să configurați nivelurile de bloat pentru un "
@@ -75418,6 +75622,13 @@ msgstr "Secunde înainte de expirarea conexiunii"
 #, fuzzy
 msgid "Time before the expiration date of the certificate"
 msgstr "Timpul scurs de la ultima verificare a serviciului"
+
+msgid ""
+"Time between measurements of memory usage. The recommended value is 1 "
+"second. If the expected traffic to the Collector is very spiky then decrease "
+"the check interval or increase spike limit to avoid memory usage going over "
+"the hard limit."
+msgstr ""
 
 msgid "Time between new checks of type Check_MK"
 msgstr "Timpul dintre noile verificări de tip Checkmk"
@@ -90857,6 +91068,909 @@ msgid ""
 "you want to increase your service limit, "
 msgstr ""
 
+msgid "This string was translated outside of a vue component."
+msgstr ""
+
+#, fuzzy
+msgid "German"
+msgstr "în stare latentă"
+
+msgid "French"
+msgstr ""
+
+#, fuzzy
+msgid "Loading translations..."
+msgstr "%d traduceri"
+
+#, fuzzy
+msgid "Translations loaded"
+msgstr "Traduceri"
+
+#, fuzzy
+msgid "Your name"
+msgstr "Numele sursei"
+
+#, fuzzy
+msgid "Number of apples"
+msgstr "Număr de mese"
+
+#, fuzzy
+msgid "Hello %{name}!"
+msgstr "Nume și prenume"
+
+msgid "There is %{ n } apple"
+msgid_plural "There are %{ n } apples"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+msgid "Toggle accordion item %{item}"
+msgstr ""
+
+msgid "Copy to clipboard failed with error: "
+msgstr ""
+
+#, fuzzy
+msgid "Copied to clipboard"
+msgstr "Secret copiat în clipboard"
+
+#, fuzzy
+msgid "selected"
+msgstr "Selectată"
+
+#, fuzzy
+msgid "No elements"
+msgstr "Elemente de comutare"
+
+msgid "Drag to reorder"
+msgstr ""
+
+#, fuzzy
+msgid "Remove element"
+msgstr "Eliminați acest element"
+
+#, fuzzy
+msgid "Close"
+msgstr "Închis"
+
+#, fuzzy
+msgid "filter"
+msgstr "Filtru"
+
+#, fuzzy
+msgid "Next step"
+msgstr "Rezumat al statului gazdă"
+
+#, fuzzy
+msgid "Previous step"
+msgstr "Descoperit anterior"
+
+#, fuzzy
+msgid "Finish"
+msgstr "Finalizat"
+
+#, fuzzy
+msgid "Guided"
+msgstr "Modul deschis"
+
+#, fuzzy
+msgid "An unexpected error occurred"
+msgstr "S-a produs o excepție: %s"
+
+#, fuzzy
+msgid ""
+"Refresh the page to try again. If the problem persists, reach out to the "
+"Checkmk support."
+msgstr ""
+"Dacă această eroare persistă, vă rugăm să contactați echipa de asistență "
+"Checkmk."
+
+#, fuzzy
+msgid "required"
+msgstr "Port necesar"
+
+#, fuzzy
+msgid "Select an option..."
+msgstr "Conexiuni respinse"
+
+#, fuzzy
+msgid "Type to search..."
+msgstr "Indicii de căutare"
+
+#, fuzzy
+msgid "Add widget"
+msgstr "Adăugați o țintă"
+
+#, fuzzy
+msgid "Add Widget"
+msgstr "Adăugați o țintă"
+
+# georgem ##############
+#, fuzzy
+msgid "Metrics & graphs"
+msgstr "Grafice de servicii"
+
+msgid "Visualize key metrics using charts and graphs"
+msgstr ""
+
+msgid "Visualize built-in and preconfigured custom graphs"
+msgstr ""
+
+#, fuzzy
+msgid "Embed saved views"
+msgstr "Integrați vizualizarea existentă"
+
+#, fuzzy
+msgid "Host & site overview"
+msgstr "Prezentare generală a gazdei"
+
+msgid "Summarize key system components"
+msgstr ""
+
+#, fuzzy
+msgid "Service overview"
+msgstr "Prezentare generală a site-ului"
+
+#, fuzzy
+msgid "Summarize key services"
+msgstr "Servicii învechite"
+
+#, fuzzy
+msgid "HW/SW inventory"
+msgstr "Inventarul HW/SW"
+
+#, fuzzy
+msgid "Summarize key hardware and software components"
+msgstr "Inventarul complet hardware și software al unei gazde"
+
+#, fuzzy
+msgid "Alerts & notifications"
+msgstr "Notificări de testare"
+
+#, fuzzy
+msgid "Summarize alerts and notifications"
+msgstr "Rezumat pentru notificările gazdelor"
+
+#, fuzzy
+msgid "Summarize events"
+msgstr "Nivelul serviciilor"
+
+#, fuzzy
+msgid "Other elements"
+msgstr "Elemente de bară laterală"
+
+msgid "Display user messages, sidebar elements, text or embed a URL"
+msgstr ""
+
+#, fuzzy
+msgid "Empty dashboard app"
+msgstr "Editarea tablourilor de bord"
+
+#, fuzzy
+msgid "explicit password"
+msgstr "Parolă nouă"
+
+#, fuzzy
+msgid "Open full view"
+msgstr "Fișiere deschise"
+
+msgid ""
+"Changes are saved in a temporary environment first, letting you review and "
+"adjust them safely.\n"
+"             Activate changes to apply them to live monitoring."
+msgstr ""
+
+msgid "Successfully activated %{numberOfChangesLastActivation} changes"
+msgstr ""
+
+#, fuzzy
+msgid "Everything is up to date"
+msgstr "Preluarea stării de sincronizare"
+
+msgid "No pending changes"
+msgstr "Nu există modificări în curs de desfășurare"
+
+msgid "Problems detected during activation"
+msgstr ""
+
+msgid "Some things may not be monitored properly."
+msgstr ""
+
+#, fuzzy
+msgid "Activating changes on "
+msgstr "A activat modificările"
+
+#, fuzzy
+msgid "Activating changes... "
+msgstr "A activat modificările"
+
+msgid "You can safely navigate away - we'll keep working in the background"
+msgstr ""
+
+#, fuzzy
+msgid "Changes: (%{n})"
+msgstr "Modificări"
+
+#, fuzzy
+msgid "Foreign changes: (%{n})"
+msgstr "Activați modificările străine"
+
+#, fuzzy
+msgid "You haven't selected any sites"
+msgstr "Trebuie să selectați cel puțin un utilizator."
+
+#, fuzzy
+msgid "Changes:"
+msgstr "Modificări"
+
+#, fuzzy
+msgid "No changes"
+msgstr "%d schimbări"
+
+#, fuzzy
+msgid "Sites with changes: %{n}"
+msgstr "A început să activeze modificările: %s"
+
+#, fuzzy
+msgid "Sites with errors: %{n}"
+msgstr "%d site-uri cu erori: %s"
+
+#, fuzzy
+msgid "Agent connection test running"
+msgstr "Setați timeout-ul conexiunii"
+
+#, fuzzy
+msgid "Agent connection successful"
+msgstr "Agent %s a reușit"
+
+msgid ""
+"Connection failed, enter new hostname to check again or download and install "
+"the Checkmk agent."
+msgstr ""
+
+#, fuzzy
+msgid "Please enter a hostname to test Checkmk agent connection"
+msgstr ""
+"Vă rugăm să setați un nume de gazdă pentru reclasificarea statului de gazdă"
+
+#, fuzzy
+msgid "Test Checkmk agent connection"
+msgstr "Modul de conectare a agentului Checkmk"
+
+#, fuzzy
+msgid "Register agent"
+msgstr "Agenți înregistrați"
+
+#, fuzzy
+msgid "Install Checkmk agent"
+msgstr "Agent Checkmk"
+
+#, fuzzy
+msgid "Re-test agent connection"
+msgstr "Solicitări per conexiune"
+
+#, fuzzy
+msgid "Agent connection failed"
+msgstr "Modul de conectare a agentului Checkmk"
+
+#, fuzzy
+msgid "Failed to connect to the Checkmk agent"
+msgstr "Port TCP pentru conectarea la agentul Checkmk"
+
+msgid ""
+"This may be because the agent is not installed or not running on the target "
+"system."
+msgstr ""
+
+#, fuzzy
+msgid "Download & install agent"
+msgstr "Agent descărcat"
+
+#, fuzzy
+msgid "Download Checkmk agent"
+msgstr "Descărcați Checkmk agent Vanilla"
+
+#, fuzzy
+msgid "Agent not registered"
+msgstr "Neînregistrat"
+
+#, fuzzy
+msgid ""
+"The agent has been installed on the target system but has not yet been "
+"registered."
+msgstr "Statutul acestui sit nu a fost încă stabilit."
+
+#, fuzzy
+msgid "Register Checkmk agent"
+msgstr "Agenți înregistrați"
+
+#, fuzzy
+msgid "TLS connection not provided"
+msgstr "Setați timeout-ul conexiunii"
+
+msgid ""
+"The agent has been installed on the target system but is not providing a TLS "
+"connection."
+msgstr ""
+
+#, fuzzy
+msgid "Provide TLS connection"
+msgstr "Noi conexiuni TLS"
+
+#, fuzzy
+msgid "Test agent connection"
+msgstr "Modul de conectare a agentului Checkmk"
+
+#, fuzzy
+msgid "Testing agent connection ..."
+msgstr "Modul de conectare a agentului Checkmk"
+
+#, fuzzy
+msgid "Successfully connected to agent."
+msgstr "Copiat cu succes în clipboard."
+
+#, fuzzy
+msgid "Close slideout"
+msgstr "Timeout de conectare"
+
+#, fuzzy
+msgid "Close & test connection"
+msgstr "Conexiune de testare"
+
+#, fuzzy
+msgid "View all agents"
+msgstr "toți agenții"
+
+#, fuzzy
+msgid "Select the type of system you want to monitor"
+msgstr "Selectați tipul de element de conținut"
+
+#, fuzzy
+msgid "Save host"
+msgstr "Gazde învechite"
+
+msgid ""
+"Agent registration is only possible for hosts that already exist in Checkmk "
+"(they don’t need to be activated yet)."
+msgstr ""
+
+msgid ""
+"Could not save host \"${hostName}\". Close the slideout and review your "
+"input."
+msgstr ""
+
+#, fuzzy
+msgid "Host \"${hostName}\" exists"
+msgstr "Gazda există deja"
+
+#, fuzzy
+msgid "Close and revise form"
+msgstr "Model și revizionare"
+
+#, fuzzy
+msgid "Close & review"
+msgstr "Vizualizare clonă"
+
+#, fuzzy
+msgid "Save host & next step"
+msgstr "Salvați și testați"
+
+#, fuzzy
+msgid "Download and install"
+msgstr "Agent descărcat"
+
+msgid "Run this command to download and install the Checkmk agent."
+msgstr ""
+
+#, fuzzy
+msgid "Next step: Register agent"
+msgstr "Destinatarul"
+
+msgid ""
+"Agent registration will establish trust between the Agent Controller\n"
+"                    on the host and the Agent Receiver on the Checkmk server."
+msgstr ""
+
+msgid "Run this command to register the Checkmk agent controller."
+msgstr ""
+
+msgid ""
+"Test if you have configured everything correctly with pasting the following\n"
+"                  command into the CLI of the target system."
+msgstr ""
+
+#, fuzzy
+msgid "Install the legacy Checkmk agent"
+msgstr "De asemenea, contactați agentul Checkmk"
+
+msgid ""
+"Run this command on your Windows host to download and install the Checkmk "
+"agent."
+msgstr ""
+
+msgid ""
+"After you have downloaded the agent, run this command on your Windows host "
+"to register the Checkmk agent controller."
+msgstr ""
+
+msgid ""
+"Run this command on your Linux host to download and install the Checkmk "
+"agent."
+msgstr ""
+
+msgid ""
+"If you want to install the Checkmk agent on Linux, please read how to "
+"install the legacy agent"
+msgstr ""
+
+msgid ""
+"After you have downloaded the agent, run this command on your Linux host to "
+"register the Checkmk agent controller."
+msgstr ""
+
+msgid "Run this command on your Solaris host to download the Checkmk agent."
+msgstr ""
+
+msgid ""
+"If you want to install the Checkmk agent on Solaris, please read how to "
+"install the legacy agent"
+msgstr ""
+
+msgid ""
+"After you have downloaded the agent, run this command on your Solaris host "
+"to install the Checkmk agent."
+msgstr ""
+
+msgid ""
+"Run this command on your AIX host to download and install the Checkmk agent."
+msgstr ""
+
+msgid ""
+"If you want to install the Checkmk agent on AIX, please read how to install "
+"the legacy agent"
+msgstr ""
+
+msgid ""
+"After you have downloaded the agent, run this command on your AIX host to "
+"register the Checkmk agent controller."
+msgstr ""
+
+msgid ""
+"To monitor systems like Linux or Windows with Checkmk, you need to install "
+"an agent on these systems.\n"
+"           This agent acts as a small program that collects data about the "
+"systems state, such as how much storage is used or the CPU load."
+msgstr ""
+
+#, fuzzy
+msgid "Already installed the Checkmk agent?"
+msgstr "Instalați întotdeauna Python cu agentul"
+
+#, fuzzy
+msgid ""
+"This problem might be caused by a missing agent or the firewall settings."
+msgstr ""
+"Problemele de mai sus pot fi cauzate de lipsa memoriei cache. Vă rugăm să "
+"declanșați o rescanare."
+
+#, fuzzy
+msgid "Already registered the Checkmk agent?"
+msgstr "Instalați întotdeauna Python cu agentul"
+
+#, fuzzy
+msgid "This problem might be caused by a missing agent registration."
+msgstr ""
+"Problemele de mai sus pot fi cauzate de lipsa memoriei cache. Vă rugăm să "
+"declanșați o rescanare."
+
+#, fuzzy
+msgid "Read Checkmk user guide"
+msgstr "Ghidul oficial al utilizatorului Checkmk"
+
+#, fuzzy
+msgid "Close & run service discovery"
+msgstr "Salvați & rulați descoperirea serviciilor"
+
+msgid "No filters can be applied to your current search query."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Search with regular expressions for menu entries, hosts, services or host "
+"and service groups."
+msgstr ""
+"Câmp de căutare care permite expresii regulate și potriviri parțiale cu "
+"numele grupurilor de gazde"
+
+msgid "Note that for simplicity '*' will be substituted with '.*'."
+msgstr ""
+
+msgid "Search across Checkmk – Type '/' for search operators"
+msgstr ""
+
+msgid "Search in monitoring – Type '/' for search operators"
+msgstr ""
+
+#, fuzzy
+msgid "Search in customize"
+msgstr "%d pictograme personalizate"
+
+#, fuzzy
+msgid "Search in setup"
+msgstr "Căutare în configurare"
+
+#, fuzzy
+msgid "Press"
+msgstr "Presiune"
+
+#, fuzzy
+msgid "to trigger host/service search"
+msgstr "Nu există gazde/servicii corespunzătoare."
+
+msgid "Only available for 'Monitoring' and 'All'"
+msgstr ""
+
+#, fuzzy
+msgid "Search operators"
+msgstr "Model de căutare"
+
+msgid "Type \"/\" to use search operator"
+msgstr ""
+
+#, fuzzy
+msgid "Search in"
+msgstr "Indice de căutare"
+
+msgid "¯\\_(ツ)_/¯"
+msgstr ""
+
+#, fuzzy
+msgid "No results found for your search"
+msgstr "Nu s-au găsit jurnale pentru această gazdă."
+
+#, fuzzy
+msgid "Reset search"
+msgstr "Rafinează căutarea"
+
+msgid "Find rules, hosts, dashboards, settings ..."
+msgstr ""
+
+msgid "Tip: Press"
+msgstr ""
+
+msgid ""
+"to view all search operator and, e.g., find all hosts with the same host "
+"label (hl:)"
+msgstr ""
+
+#, fuzzy
+msgid "Recently viewed"
+msgstr "Selectați vizualizarea"
+
+#, fuzzy
+msgid "Clear all"
+msgstr "Ștergeți jurnalul"
+
+#, fuzzy
+msgid "Recently searched"
+msgstr "Servicii schimbate recent"
+
+msgid "What's next?"
+msgstr ""
+
+#, fuzzy
+msgid "Set up backup"
+msgstr "Copie de rezervă a site-ului"
+
+msgid ""
+"No backup, no mercy! Protect your configuration and data with automated "
+"backups."
+msgstr ""
+
+#, fuzzy
+msgid "Scale your monitoring"
+msgstr "Monitorizarea fumului"
+
+msgid "Add more hosts, sites, or distributed setups as your environment grows."
+msgstr ""
+
+#, fuzzy
+msgid "Fine-tune your monitoring"
+msgstr "Finetune Monitorizarea proceselor Windows"
+
+msgid ""
+"Dive deep into the details and learn how to optimize checks, thresholds, and "
+"notifications."
+msgstr ""
+
+#, fuzzy
+msgid "License your site"
+msgstr "Statul de licență"
+
+msgid ""
+"It’s time to enjoy the full experience! Set up automated licensing for a "
+"smooth experience."
+msgstr ""
+
+#, fuzzy
+msgid "First steps with Checkmk"
+msgstr "MIB-uri livrate cu Checkmk"
+
+#, fuzzy
+msgid "Resources"
+msgstr "Surse"
+
+msgid ""
+"Your assistant for Checkmk - ask anything from setup to troubleshooting."
+msgstr ""
+
+#, fuzzy
+msgid "Read the Beginner’s Guide"
+msgstr "Ghidul începătorului's"
+
+msgid ""
+"A step-by-step introduction to help you get started quickly and confidently."
+msgstr ""
+
+#, fuzzy
+msgid "Join the community"
+msgstr "Comunicarea în text simplu"
+
+msgid "Connect with other users and ask questions in our active forum."
+msgstr ""
+
+#, fuzzy
+msgid "All steps completed"
+msgstr "Toate gazdele site-ului"
+
+#, fuzzy
+msgid "Continue setup"
+msgstr "Continuați căutarea"
+
+#, fuzzy
+msgid "What's next"
+msgstr "Următorul "
+
+#, fuzzy
+msgid "Next steps with Checkmk"
+msgstr "MIB-uri livrate cu Checkmk"
+
+#, fuzzy
+msgid "Add your first host"
+msgstr "Adăugați o regulă pentru gazda curentă"
+
+#, fuzzy
+msgid "2-5 min"
+msgstr "5 minute"
+
+msgid ""
+"Each host includes a number of services that represent what you want to "
+"monitor, for example,\n"
+"  CPU usage, disk space, running processes, or hardware sensors. Checkmk "
+"makes this easy with the\n"
+"  Service Discovery, which automatically detects relevant services on your "
+"host, so you can start\n"
+"  monitoring with minimal setup."
+msgstr ""
+
+msgid "On-premise-hosts"
+msgstr ""
+
+#, fuzzy
+msgid "Server (Linux, Windows, Solaris, ...)"
+msgstr "Inventar hardware/software (Linux, Windows, Solaris, AIX)"
+
+#, fuzzy
+msgid "Network devices and SNMP"
+msgstr "Scanarea rețelei"
+
+#, fuzzy
+msgid "Application monitoring"
+msgstr "Căutare în Monitorizare"
+
+#, fuzzy
+msgid "OpenTelemetry (Beta)"
+msgstr "Configurația stilului selectat"
+
+#, fuzzy
+msgid "Adjust services"
+msgstr "Toate serviciile"
+
+#, fuzzy
+msgid "5-7 min"
+msgstr "5 minute"
+
+msgid ""
+"Each service in Checkmk comes with default parameter values.\n"
+"            You can customize these to match your monitoring needs,\n"
+"            most commonly by setting thresholds for WARN and CRIT states "
+"using rules.\n"
+"            To find the right ruleset for a service, start with the Service "
+"Discovery page."
+msgstr ""
+
+#, fuzzy
+msgid "Run a service discovery"
+msgstr "Rulați descoperirea serviciilor"
+
+msgid "To adjust parameters for a host, start by running a service discovery."
+msgstr ""
+
+#, fuzzy
+msgid "In the host table, click on the"
+msgstr "Deschideți meniul de acțiune al gazdei"
+
+#, fuzzy
+msgid "-icon next to the host to open the service discovery."
+msgstr "Salvați & rulați descoperirea serviciilor"
+
+#, fuzzy
+msgid "View host table"
+msgstr "Vezi tabelul"
+
+#, fuzzy
+msgid "Open the ruleset for a check parameter"
+msgstr "Editarea setului de reguli de parametri pentru acest tip de control"
+
+msgid "In the Service Discovery view, find the service you want to configure."
+msgstr ""
+
+#, fuzzy
+msgid "Click the"
+msgstr "Verificați URL-ul"
+
+msgid "-icon next to it to open the corresponding ruleset."
+msgstr ""
+
+#, fuzzy
+msgid "Create a check parameter rule"
+msgstr "Afișarea parametrilor de verificare"
+
+msgid ""
+"In the ruleset view, click Add rule for current host to create a rule that "
+"applies specifically to the selected host."
+msgstr ""
+
+msgid ""
+"You can now define custom parameters like thresholds or other check settings."
+msgstr ""
+
+#, fuzzy
+msgid "Mark as complete"
+msgstr "complet"
+
+# georgem ##############
+#, fuzzy
+msgid "Assign responsibilities"
+msgstr "Filtre de service"
+
+msgid ""
+"The recommended way to manage responsibilities in Checkmk is by using "
+"contact groups.\n"
+"            Contact groups can be assigned to users, hosts, and services, "
+"making them a flexible\n"
+"            and scalable tool for defining who is responsible for what."
+msgstr ""
+
+#, fuzzy
+msgid "Create a contact group"
+msgstr "Potriviți grupurile de contact"
+
+msgid "On default, there is one contact group available \"Everything\"."
+msgstr ""
+
+#, fuzzy
+msgid "Go to Setup > Users > Contact groups to create or edit contact groups."
+msgstr ""
+"Grupuri de contact efective (grupuri de contact gazdă sau grupuri de contact "
+"cu reguli)"
+
+#, fuzzy
+msgid "Assign users to a contact group"
+msgstr "Atribuirea serviciilor la grupurile de contact"
+
+msgid ""
+"Each user can belong to multiple contact groups. You can assign them to "
+"contact groups in the \"Contact groups\" section when editing or creating a "
+"user"
+msgstr ""
+
+#, fuzzy
+msgid "Assign the contact group to hosts"
+msgstr "Adăugați aceste grupuri de contacte la gazdă"
+
+msgid ""
+"There are two options available for assigning hosts to contact groups. "
+"Either make a direct assignment when creating or editing hosts, or use a "
+"rule."
+msgstr ""
+
+msgid ""
+"We recommend using the latter, as rules can adapt more easily to changes in "
+"your environment."
+msgstr ""
+
+#, fuzzy
+msgid "Customize dashboard"
+msgstr "Personalizați"
+
+msgid ""
+"Tailor your monitoring experience by creating a custom dashboard\n"
+"            that highlights what matters most to you.\n"
+"            Whether you want to track specific hosts, services, or metrics,\n"
+"            dashboards help you stay focused and efficient.\n"
+"            You can create your own or explore the list of all dashboards to "
+"find useful presets."
+msgstr ""
+
+#, fuzzy
+msgid "Add custom dashboard"
+msgstr "Adăugați la tabloul de bord"
+
+#, fuzzy
+msgid "List of all dashboards"
+msgstr "Legături către toate tablourile de bord"
+
+#, fuzzy
+msgid "Enable notifications"
+msgstr "Activați notificările?"
+
+msgid ""
+"Notifications help you to stay on top of problems without having to "
+"constantly check the interface.\n"
+"            In Checkmk, they are rule-based, enabling you to create a "
+"notification system that evolves alongside\n"
+"            your environment."
+msgstr ""
+
+#, fuzzy
+msgid "Create a notification rule"
+msgstr "Creați o nouă regulă de notificare"
+
+msgid ""
+"Follow the step-by-step guide in Setup > Notifications to set up "
+"notification rules."
+msgstr ""
+
+#, fuzzy
+msgid "Send a test notification"
+msgstr "Trimiteți o notificare personalizată"
+
+msgid ""
+"After creation, test your notification rule to make sure alerts reach you "
+"the way you expect."
+msgstr ""
+
+#, fuzzy
+msgid "Your progress"
+msgstr "În curs de desfășurare"
+
+#, fuzzy
+msgid "Steps complete"
+msgstr "complet"
+
+#, fuzzy
+msgid "Welcome to Checkmk!"
+msgstr "Bine ați venit la Checkmk Mobile."
+
+msgid "Get started with Checkmk in 5 easy steps."
+msgstr ""
+
+msgid "Show welcome page on start"
+msgstr ""
+
+msgid ""
+"You can still access it later via Help > Learning Checkmk > Welcome page"
+msgstr ""
+
+#, fuzzy
+#~ msgid "Default State"
+#~ msgstr "Stare implicită"
+
+#, fuzzy
+#~ msgid "Special States"
+#~ msgstr "Starea operațională"
+
 #, fuzzy
 #~ msgid ""
 #~ "By default, data relating to a VM is sent to the group host corresponding "
@@ -90984,25 +92098,6 @@ msgstr ""
 #~ msgid "Agent Download"
 #~ msgstr "Ultima descărcare"
 
-#, fuzzy
-#~ msgid "Already installed the agent?"
-#~ msgstr "Instalați întotdeauna Python cu agentul"
-
-#, fuzzy
-#~ msgid "Download & install agent"
-#~ msgstr "Agent descărcat"
-
-#, fuzzy
-#~ msgid "Read Checkmk user guide"
-#~ msgstr "Ghidul oficial al utilizatorului Checkmk"
-
-#, fuzzy
-#~ msgid ""
-#~ "This problem might be caused by a missing agent or the firewall settings."
-#~ msgstr ""
-#~ "Problemele de mai sus pot fi cauzate de lipsa memoriei cache. Vă rugăm să "
-#~ "declanșați o rescanare."
-
 #, fuzzy, python-format
 #~ msgid ""
 #~ "Cannot load HW/SW Inventory tree %s. Please remove the corrupted file."
@@ -91127,10 +92222,6 @@ msgstr ""
 #~ msgstr "Migrarea utilizatorilor"
 
 #, fuzzy
-#~ msgid "required"
-#~ msgstr "Port necesar"
-
-#, fuzzy
 #~ msgid "Community translated languages"
 #~ msgstr "Activați limbile traduse de comunitate"
 
@@ -91167,33 +92258,8 @@ msgstr ""
 #~ msgid "Unable to migrate value"
 #~ msgstr "Nu a reușit să redea valoarea:"
 
-#, fuzzy
-#~ msgid "Agent connection successful"
-#~ msgstr "Agent %s a reușit"
-
-#, fuzzy
-#~ msgid "Agent connection test running"
-#~ msgstr "Setați timeout-ul conexiunii"
-
-#, fuzzy
-#~ msgid "Checkmk agent connection failed"
-#~ msgstr "Modul de conectare a agentului Checkmk"
-
-#, fuzzy
-#~ msgid "Please enter a hostname to test Checkmk agent connection"
-#~ msgstr ""
-#~ "Vă rugăm să setați un nume de gazdă pentru reclasificarea statului de "
-#~ "gazdă"
-
-#, fuzzy
-#~ msgid "Test Checkmk agent connection"
-#~ msgstr "Modul de conectare a agentului Checkmk"
-
 #~ msgid "Do you really want to move the selected aggregations?"
 #~ msgstr "Chiar doriți să mutați agregările selectate?"
-
-#~ msgid "No pending changes"
-#~ msgstr "Nu există modificări în curs de desfășurare"
 
 #, python-format
 #~ msgid ""
@@ -92093,10 +93159,6 @@ msgstr ""
 #~ msgid "Skip monitoring non discovered hosts"
 #~ msgstr "Miezuri de monitorizare OMD"
 
-#, fuzzy
-#~ msgid "The first value must be lower than the second value."
-#~ msgstr "Clusterul trebuie să aibă cel puțin un nod"
-
 #, fuzzy, python-format
 #~ msgid "The following files are missing in the archive: %s"
 #~ msgstr "Următorul %s nu a putut fi găsit: %s."
@@ -92308,10 +93370,6 @@ msgstr ""
 #~ msgid "Collect performance data for disk latency"
 #~ msgstr "Colectați date de performanță pentru latența discului"
 
-#, fuzzy
-#~ msgid "Next step: Summary"
-#~ msgstr "Rezumat al statului gazdă"
-
 #~ msgid ""
 #~ "Note: enabling performance data for the latency might cause "
 #~ "incompatibilities with existing historical data if you are running "
@@ -92500,11 +93558,6 @@ msgstr ""
 #~ "REST a site-ului central de configurare din punctul de vedere al site-"
 #~ "ului la distanță."
 
-# georgem ##############
-#, fuzzy
-#~ msgid "Assignee filters"
-#~ msgstr "Filtre de service"
-
 #~ msgid "Host & service events"
 #~ msgstr "Gazdă & evenimente de serviciu"
 
@@ -92623,10 +93676,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Some value"
 #~ msgstr "Eliminați toate"
-
-#, python-format
-#~ msgid "Started activate changes: %s"
-#~ msgstr "A început să activeze modificările: %s"
 
 #, fuzzy
 #~ msgid "State of the host manager"
@@ -92842,10 +93891,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Recipients"
 #~ msgstr "Destinatarul"
-
-#, fuzzy
-#~ msgid "Save & go to service discovery"
-#~ msgstr "Salvați & rulați descoperirea serviciilor"
 
 #, fuzzy
 #~ msgid "TBD"

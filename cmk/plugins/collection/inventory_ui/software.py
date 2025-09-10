@@ -925,3 +925,15 @@ node_software_configuration = Node(
     path=["software", "configuration"],
     title=Title("Configuration"),
 )
+
+node_software_configuration_organisation = Node(
+    name="software_configuration_organisation",
+    path=["software", "configuration", "organisation"],
+    title=Title("Organisation"),
+    attributes={
+        "organisation_id": TextField(Title("Organisation ID")),
+        "organisation_name": TextField(Title("Organisation name")),
+        "network_id": TextField(Title("Network ID")),
+        "address": TextField(Title("Address")),
+    },
+)

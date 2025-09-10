@@ -1707,19 +1707,19 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
             "is_show_more": False,
         },
         ".software.configuration.snmp_info.name": {"title": _l("System name")},
-        ".software.configuration.organisation.": {
-            "title": _l("Organisation"),
-            "keyorder": [
-                "organisation_id",
-                "organisation_name",
-                "network_id",
-                "address",
-            ],
-        },
-        ".software.configuration.organisation.organisation_id": {"title": _l("Organisation ID")},
-        ".software.configuration.organisation.organisation_name": {"title": _l("Organisation name")},
-        ".software.configuration.organisation.network_id": {"title": _l("Network ID")},
-        ".software.configuration.organisation.address": {"title": _l("Address")},
+        # MIGRATED ".software.configuration.organisation.": {
+        # MIGRATED     "title": _l("Organisation"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "organisation_id",
+        # MIGRATED         "organisation_name",
+        # MIGRATED         "network_id",
+        # MIGRATED         "address",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.configuration.organisation.organisation_id": {"title": _l("Organisation ID")},
+        # MIGRATED ".software.configuration.organisation.organisation_name": {"title": _l("Organisation name")},
+        # MIGRATED ".software.configuration.organisation.network_id": {"title": _l("Network ID")},
+        # MIGRATED ".software.configuration.organisation.address": {"title": _l("Address")},
         ".software.firmware.": {
             "title": _l("Firmware"),
             "keyorder": [

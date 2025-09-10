@@ -15,6 +15,7 @@ RELAY_CONFIG_FILE = "relay_config.json"
 
 class RelayConfig(BaseModel):
     task_ttl: float = 120.0
+    max_tasks_per_relay: int = 10
 
     @classmethod
     def load(cls, path: Path | None = None) -> RelayConfig:

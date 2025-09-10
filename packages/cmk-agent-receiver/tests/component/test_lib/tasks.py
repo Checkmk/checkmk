@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from http import HTTPStatus
 
-from cmk.relay_protocols.tasks import TaskCreateResponse, TaskListResponse, TaskType
+from cmk.agent_receiver.relay.lib.shared_types import TaskID
+from cmk.relay_protocols.tasks import TaskCreateResponse, TaskListResponse, TaskResponse, TaskType
 
 from .agent_receiver import AgentReceiverClient
 
@@ -31,3 +32,22 @@ def get_relay_tasks(
     response = agent_receiver.get_relay_tasks(relay_id, status=status)
     assert response.status_code == HTTPStatus.OK, response.text
     return TaskListResponse.model_validate(response.json())
+
+
+def add_tasks(count: int, agent_receiver: AgentReceiverClient, relay_id: str) -> list[TaskID]:
+    gen = (
+        push_task(
+            agent_receiver=agent_receiver,
+            relay_id=relay_id,
+            task_type=TaskType.FETCH_AD_HOC,
+            task_payload=f"payload_{i}",
+        )
+        for i in range(count)
+    )
+    result = [TaskID(str(r.task_id)) for r in gen if r is not None]
+    assert len(result) == count
+    return result
+
+
+def get_all_tasks(agent_receiver: AgentReceiverClient, relay_id: str) -> list[TaskResponse]:
+    return get_relay_tasks(agent_receiver, relay_id).tasks

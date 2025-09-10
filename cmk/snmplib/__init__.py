@@ -25,7 +25,6 @@ from ._typedefs import SNMPBackend as SNMPBackend
 from ._typedefs import SNMPBackendEnum as SNMPBackendEnum
 from ._typedefs import SNMPContext as SNMPContext
 from ._typedefs import SNMPContextConfig as SNMPContextConfig
-from ._typedefs import SNMPContextTimeout as SNMPContextTimeout
 from ._typedefs import SNMPCredentials as SNMPCredentials
 from ._typedefs import SNMPHostConfig as SNMPHostConfig
 from ._typedefs import SNMPRawValue as SNMPRawValue
@@ -33,6 +32,7 @@ from ._typedefs import SNMPRowInfo as SNMPRowInfo
 from ._typedefs import SNMPSectionMap as SNMPSectionMap
 from ._typedefs import SNMPSectionMarker as SNMPSectionMarker
 from ._typedefs import SNMPSectionName as SNMPSectionName
+from ._typedefs import SNMPTimeout as SNMPTimeout
 from ._typedefs import SNMPTiming as SNMPTiming
 from ._typedefs import SNMPVersion as SNMPVersion
 from ._typedefs import SpecialColumn as SpecialColumn

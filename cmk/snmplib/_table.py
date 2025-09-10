@@ -10,7 +10,7 @@ from collections.abc import Callable, Mapping, MutableMapping, Sequence
 from functools import partial
 from typing import assert_never
 
-from cmk.ccc.exceptions import MKFetcherError, MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException
 
 from ._typedefs import (
     BackendSNMPTree,
@@ -18,11 +18,11 @@ from ._typedefs import (
     OID,
     SNMPBackend,
     SNMPContext,
-    SNMPContextTimeout,
     SNMPRawValue,
     SNMPRowInfo,
     SNMPSectionMarker,
     SNMPSectionName,
+    SNMPTimeout,
     SNMPValueEncoding,
     SpecialColumn,
 )
@@ -207,7 +207,7 @@ def get_snmpwalk(
                 table_base_oid=base_oid,
                 context=context,
             )
-        except SNMPContextTimeout:
+        except SNMPTimeout:
             if context_config.timeout_policy == "stop":
                 raise
 
@@ -231,7 +231,7 @@ def get_snmpwalk(
                 added_oids.add(row_oid)
 
     if skip and not rowinfo:
-        raise MKFetcherError("SNMP Error on %s: SNMP query timed out" % backend.config.hostname)
+        raise SNMPTimeout("SNMP Error on %s: SNMP query timed out" % backend.config.hostname)
 
     walk_cache[(fetchoid, context_hash, save_walk_cache)] = rowinfo
     return rowinfo

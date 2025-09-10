@@ -10,11 +10,11 @@ export type WidgetSizeValue = components['schemas']['WidgetSizeValue']
 export type WidgetGeneralSettings = components['schemas']['WidgetGeneralSettings']
 export type WidgetFilterContext = components['schemas']['WidgetFilterContext']
 
-export interface BaseWidget {
-  widget_id: string
-  general_settings: WidgetGeneralSettings
-  content: WidgetContent
-}
+export type RelativeGridWidgets = components['schemas']['RelativeGridDashboardResponse']['widgets']
+export type ResponsiveGridWidgets =
+  components['schemas']['ResponsiveGridDashboardResponse']['widgets']
+export type WidgetRelativeGridLayout = components['schemas']['WidgetRelativeGridLayout']
+export type WidgetResponsiveGridLayouts = components['schemas']['WidgetResponsiveGridLayouts']
 
 type AnnotatedInfoName = components['schemas']['AnnotatedInfoName']
 

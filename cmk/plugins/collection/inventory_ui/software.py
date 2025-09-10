@@ -208,3 +208,16 @@ node_software_applications_azure_load_balancers_outbound_rules = Node(
         },
     ),
 )
+
+node_software_applications_azure_load_balancers_outbound_rules_backend_pools = Node(
+    name="software_applications_azure_load_balancers_outbound_rules_backend_pools",
+    path=["software", "applications", "azure", "load_balancers", "outbound_rules", "backend_pools"],
+    title=Title("Backend pools"),
+    table=Table(
+        columns={
+            "load_balancer": TextField(Title("Load balancer")),
+            "outbound_rule": TextField(Title("Outbound rule")),
+            "backend_pool": TextField(Title("Backend pool")),
+        },
+    ),
+)

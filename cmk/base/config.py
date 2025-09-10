@@ -3633,16 +3633,22 @@ def _globally_cache_config_cache(config_cache: ConfigCache) -> None:
     cache_manager.obtain_cache("config_cache")["cache"] = config_cache
 
 
+_RELAY_LABEL_KEY = "cmk/relay"
+
+
+def get_relay_id(labels: Labels) -> str | None:
+    return labels.get(_RELAY_LABEL_KEY)
+
+
 def make_fetcher_trigger(
     edition: cmk_version.Edition,
-    host_name: HostName,
-    host_tags: Callable[[HostName], Mapping[TagGroupID, TagID]],
+    host_labels: Labels,
 ) -> FetcherTrigger:
     match edition:
         case cmk_version.Edition.CCE | cmk_version.Edition.CME | cmk_version.Edition.CSE:
-            if "relay" in host_tags(host_name):
-                from cmk.fetchers.cce.trigger import (  # type: ignore[import-not-found, unused-ignore]
-                    RelayFetcherTrigger,
+            if (_relay_id := get_relay_id(host_labels)) is not None:
+                from cmk.fetchers.cce.trigger import (
+                    RelayFetcherTrigger,  # type: ignore[import-not-found, unused-ignore]
                 )
 
                 return RelayFetcherTrigger()

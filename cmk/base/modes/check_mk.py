@@ -659,7 +659,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
         service_name_config,
         plugins.check_plugins,
     )
-    fetcher_trigger = config.make_fetcher_trigger(edition, hostname, config_cache.host_tags.tags)
+    fetcher_trigger = config.make_fetcher_trigger(edition, label_manager.labels_of_host(hostname))
 
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_family = ip_lookup_config.default_address_family(hostname)
@@ -1664,7 +1664,6 @@ def mode_update() -> None:
                     ruleset_matcher,
                     label_manager,
                     loaded_config,
-                    loading_result.config_cache.host_tags.tags,
                     make_plugin_store(plugins),
                     loading_result.config_cache,
                     plugins,
@@ -1779,7 +1778,6 @@ def mode_restart(args: Sequence[HostName]) -> None:
             ruleset_matcher,
             label_manager,
             loaded_config,
-            loading_result.config_cache.host_tags.tags,
             make_plugin_store(plugins),
             loading_result.config_cache,
             plugins,
@@ -1879,7 +1877,6 @@ def mode_reload(args: Sequence[HostName]) -> None:
             ruleset_matcher,
             label_manager,
             loaded_config,
-            loading_result.config_cache.host_tags.tags,
             make_plugin_store(plugins),
             loading_result.config_cache,
             plugins,
@@ -2205,7 +2202,7 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
     discovery_file_cache_max_age = 1.5 * check_interval if file_cache_options.use_outdated else 0
     fetcher = CMKFetcher(
         config_cache,
-        lambda hn: config.make_fetcher_trigger(edition, hn, config_cache.host_tags.tags),
+        lambda hn: config.make_fetcher_trigger(edition, label_manager.labels_of_host(hn)),
         config_cache.fetcher_factory(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,
@@ -2564,7 +2561,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     )
     fetcher = CMKFetcher(
         config_cache,
-        lambda hn: config.make_fetcher_trigger(edition, hn, config_cache.host_tags.tags),
+        lambda hn: config.make_fetcher_trigger(edition, label_manager.labels_of_host(hn)),
         config_cache.fetcher_factory(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,
@@ -2809,7 +2806,7 @@ def run_checking(
     logger = logging.getLogger("cmk.base.checking")
     fetcher = CMKFetcher(
         config_cache,
-        lambda hn: config.make_fetcher_trigger(edition, hn, config_cache.host_tags.tags),
+        lambda hn: config.make_fetcher_trigger(edition, label_manager.labels_of_host(hn)),
         config_cache.fetcher_factory(
             service_configurer,
             ip_address_of,
@@ -3087,7 +3084,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     )
     fetcher = CMKFetcher(
         config_cache,
-        lambda hn: config.make_fetcher_trigger(edition, hn, config_cache.host_tags.tags),
+        lambda hn: config.make_fetcher_trigger(edition, label_manager.labels_of_host(hn)),
         config_cache.fetcher_factory(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,
@@ -3392,7 +3389,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
     )
     fetcher = CMKFetcher(
         config_cache,
-        lambda hn: config.make_fetcher_trigger(edition, hn, config_cache.host_tags.tags),
+        lambda hn: config.make_fetcher_trigger(edition, label_manager.labels_of_host(hn)),
         config_cache.fetcher_factory(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,

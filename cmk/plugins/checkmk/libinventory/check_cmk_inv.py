@@ -170,7 +170,7 @@ def inventory_as_check(
 
     fetcher = CMKFetcher(
         config_cache,
-        lambda hn: config.make_fetcher_trigger(edition, hn, config_cache.host_tags.tags),
+        lambda hn: config.make_fetcher_trigger(edition, label_manager.labels_of_host(hostname)),
         config_cache.fetcher_factory(
             config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
             ip_address_of,

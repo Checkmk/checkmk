@@ -28,3 +28,9 @@ node_software_applications_azure_application_gateways = Node(
     path=["software", "applications", "azure", "application_gateways"],
     title=Title("Application gateways"),
 )
+
+node_software_applications_azure_application_gateways_rules = Node(
+    name="software_applications_azure_application_gateways_rules",
+    path=["software", "applications", "azure", "application_gateways", "rules"],
+    title=Title("Rules"),
+)

@@ -3,11 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable, Mapping
 from typing import assert_never
 
 from cmk.base.config import ConfigCache
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.base.core.interface import MonitoringCore
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Edition, edition
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.fetchers.snmp import SNMPPluginStore
@@ -15,6 +17,7 @@ from cmk.utils import paths
 from cmk.utils.labels import LabelManager
 from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
+from cmk.utils.tags import TagGroupID, TagID
 
 
 def get_licensing_handler_type() -> type[LicensingHandler]:
@@ -34,6 +37,7 @@ def create_core(
     matcher: RulesetMatcher,
     label_manager: LabelManager,
     loaded_config: LoadedConfigFragment,
+    host_tags: Callable[[HostName], Mapping[TagGroupID, TagID]],
     snmp_plugin_store: SNMPPluginStore,
     config_cache: ConfigCache,
     plugins: AgentBasedPlugins,
@@ -51,12 +55,7 @@ def create_core(
 
             helper_config_writers: list[HelperConfigWriter] = [
                 make_fetcher_config_writer(
-                    edition,
-                    loaded_config,
-                    label_manager.labels_of_host,
-                    config_cache,
-                    plugins,
-                    snmp_plugin_store,
+                    edition, loaded_config, host_tags, config_cache, plugins, snmp_plugin_store
                 )
             ]
 

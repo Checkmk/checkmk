@@ -1650,17 +1650,17 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".software.applications.azure.load_balancers.outbound_rules:*.outbound_rule": {"title": _l("Outbound rule")},
         # MIGRATED ".software.applications.azure.load_balancers.outbound_rules:*.protocol": {"title": _l("Protocol")},
         # MIGRATED ".software.applications.azure.load_balancers.outbound_rules:*.idle_timeout": {"title": _l("Idle timeout")},
-        ".software.applications.azure.load_balancers.outbound_rules.backend_pools:": {
-            "title": _l("Backend pools"),
-            "keyorder": [
-                "load_balancer",
-                "outbound_rule",
-                "backend_pool",
-            ],
-        },
-        ".software.applications.azure.load_balancers.outbound_rules.backend_pools:*.load_balancer": {"title": _l("Load balancer")},
-        ".software.applications.azure.load_balancers.outbound_rules.backend_pools:*.outbound_rule": {"title": _l("Outbound rule")},
-        ".software.applications.azure.load_balancers.outbound_rules.backend_pools:*.backend_pool": {"title": _l("Backend pool")},
+        # MIGRATED ".software.applications.azure.load_balancers.outbound_rules.backend_pools:": {
+        # MIGRATED     "title": _l("Backend pools"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "load_balancer",
+        # MIGRATED         "outbound_rule",
+        # MIGRATED         "backend_pool",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.azure.load_balancers.outbound_rules.backend_pools:*.load_balancer": {"title": _l("Load balancer")},
+        # MIGRATED ".software.applications.azure.load_balancers.outbound_rules.backend_pools:*.outbound_rule": {"title": _l("Outbound rule")},
+        # MIGRATED ".software.applications.azure.load_balancers.outbound_rules.backend_pools:*.backend_pool": {"title": _l("Backend pool")},
         ".software.applications.azure.load_balancers.outbound_rules.backend_pools.addresses:": {
             "title": _l("Addresses"),
             "keyorder": [

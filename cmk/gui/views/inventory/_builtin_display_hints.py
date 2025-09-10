@@ -1183,20 +1183,20 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".software.applications.citrix.vm.catalog": {"title": _l("Catalog")},
         # MIGRATED ".software.applications.citrix.vm.agent_version": {"title": _l("Agent version")},
         # MIGRATED ".software.applications.oracle.": {"title": _l("Oracle DB")},
-        ".software.applications.oracle.systemparameter:": {
-            "title": _l("Oracle system parameters"),
-            "keyorder": [
-                "sid",
-                "name",
-                "value",
-                "isdefault",
-            ],
-            "view": "invorasystemparameter",
-        },
-        ".software.applications.oracle.systemparameter:*.sid": {"title": _l("SID")},
-        ".software.applications.oracle.systemparameter:*.name": {"title": _l("Name")},
-        ".software.applications.oracle.systemparameter:*.value": {"title": _l("Value")},
-        ".software.applications.oracle.systemparameter:*.isdefault": {"title": _l("Is default")},
+        # MIGRATED ".software.applications.oracle.systemparameter:": {
+        # MIGRATED     "title": _l("Oracle system parameters"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "sid",
+        # MIGRATED         "name",
+        # MIGRATED         "value",
+        # MIGRATED         "isdefault",
+        # MIGRATED     ],
+        # MIGRATED     "view": "invorasystemparameter",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.systemparameter:*.sid": {"title": _l("SID")},
+        # MIGRATED ".software.applications.oracle.systemparameter:*.name": {"title": _l("Name")},
+        # MIGRATED ".software.applications.oracle.systemparameter:*.value": {"title": _l("Value")},
+        # MIGRATED ".software.applications.oracle.systemparameter:*.isdefault": {"title": _l("Is default")},
         # MIGRATED ".software.applications.oracle.instance:": {
         # MIGRATED     "title": _l("Oracle instances"),
         # MIGRATED     "keyorder": [

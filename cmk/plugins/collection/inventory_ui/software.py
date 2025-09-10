@@ -812,3 +812,18 @@ node_software_applications_oracle_sga = Node(
         },
     ),
 )
+
+node_software_applications_oracle_systemparameter = Node(
+    name="software_applications_oracle_systemparameter",
+    path=["software", "applications", "oracle", "systemparameter"],
+    title=Title("Oracle system parameters"),
+    table=Table(
+        view=View(name="invorasystemparameter", title=Title("Oracle system parameters")),
+        columns={
+            "sid": TextField(Title("SID")),
+            "name": TextField(Title("Name")),
+            "value": TextField(Title("Value")),
+            "isdefault": TextField(Title("Is default")),
+        },
+    ),
+)

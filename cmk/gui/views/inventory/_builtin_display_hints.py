@@ -712,15 +712,15 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.checkmk-agent.plugins:*.cache_interval": {
             "title": _l("Cache interval")
         },
-        ".software.applications.checkmk-agent.local_checks:": {
-            "title": _l("Local checks"),
-            "keyorder": ["name", "version", "cache_interval"],
-        },
-        ".software.applications.checkmk-agent.local_checks:*.name": {"title": _l("Name")},
-        ".software.applications.checkmk-agent.local_checks:*.version": {"title": _l("Version")},
-        ".software.applications.checkmk-agent.local_checks:*.cache_interval": {
-            "title": _l("Cache interval")
-        },
+        # MIGRATED ".software.applications.checkmk-agent.local_checks:": {
+        # MIGRATED     "title": _l("Local checks"),
+        # MIGRATED     "keyorder": ["name", "version", "cache_interval"],
+        # MIGRATED },
+        # MIGRATED ".software.applications.checkmk-agent.local_checks:*.name": {"title": _l("Name")},
+        # MIGRATED ".software.applications.checkmk-agent.local_checks:*.version": {"title": _l("Version")},
+        # MIGRATED ".software.applications.checkmk-agent.local_checks:*.cache_interval": {
+        # MIGRATED     "title": _l("Cache interval")
+        # MIGRATED },
         ".software.applications.docker.": {
             "icon": "docker",
             "title": "Docker",

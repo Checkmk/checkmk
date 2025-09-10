@@ -5415,10 +5415,6 @@ msgstr "Boom van de aggregatiegroep"
 msgid "Aggregation groups"
 msgstr "Aggregatiegroepen"
 
-#, fuzzy
-msgid "Aggregation method"
-msgstr "Aggregatienaam"
-
 msgid "Aggregation name"
 msgstr "Naam aggregatie"
 
@@ -11695,6 +11691,10 @@ msgstr "Koolstof wachtrij gebruik"
 msgid "Carbon queue usage rate"
 msgstr "Verbruik in de koolstofketen"
 
+#, fuzzy
+msgid "Cardinality reduction aggregation method"
+msgstr "Opsporingspercentage"
+
 msgid "Casa module: CPU temperature"
 msgstr "Casa module: CPU temperatuur"
 
@@ -12699,6 +12699,9 @@ msgstr ""
 
 msgid "Checkmk helper usage"
 msgstr "Checkmk helper gebruik"
+
+msgid "Checkmk metrics are created from OTel datapoints. Configure them here."
+msgstr ""
 
 #, fuzzy
 msgid "Checkmk partner or reseller"
@@ -17264,6 +17267,10 @@ msgstr "Fase 1.1: Afhalen van site \"%s\""
 #, fuzzy
 msgid "DCD batch history"
 msgstr "Zoekgeschiedenis"
+
+#, fuzzy
+msgid "DCD cycles and batches."
+msgstr "DR:BD rollen en diskstates"
 
 #, fuzzy
 msgid "DCD global settings"
@@ -32556,6 +32563,11 @@ msgid ""
 "two-factor authentication' in global settings will override this setting."
 msgstr ""
 
+msgid ""
+"If too many metrics are produced by a service, they will be aggregated. "
+"Configure the aggregation method here."
+msgstr ""
+
 msgid "If value is a tuple it has to have length of two."
 msgstr "Indien de waarde een tupel is, moet deze een lengte van twee hebben."
 
@@ -41336,6 +41348,10 @@ msgstr "Metrische prognose"
 
 msgid "Metric History"
 msgstr "Metrische geschiedenis"
+
+#, fuzzy
+msgid "Metric configuration"
+msgstr "Host configuratie"
 
 msgid "Metric label"
 msgstr "Metrisch etiket"
@@ -53996,6 +54012,10 @@ msgstr "Herhaal deze melding, verstuur het opnieuw!"
 msgid "Replayed notification number %d"
 msgstr "Nummer van herhaalde melding %d"
 
+#, fuzzy
+msgid "Replica aggregation method"
+msgstr "Aggregatienaam"
+
 msgid "Replica available state"
 msgstr "Replica beschikbare staat"
 
@@ -54862,6 +54882,11 @@ msgid ""
 "Subscription ID, Tenant ID, Client ID, and the Client secret below. Please "
 "note that the Subscription ID is not needed if only monitoring resources "
 "through the Graph API."
+msgstr ""
+
+msgid ""
+"Returns the current state of DCD cycles and batches. Executes the commands "
+"cmk-dcd -Bv and cmk-dcd -Cv."
 msgstr ""
 
 msgid ""
@@ -59759,6 +59784,10 @@ msgstr ""
 
 msgid "Size growth per minute"
 msgstr "Grootte groei per minuut"
+
+#, fuzzy
+msgid "Size of OTel Collector"
+msgstr "Grootte van de logbestanden"
 
 #, fuzzy
 msgid "Size of PNP4Nagios"

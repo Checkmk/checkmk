@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-08-04 14:09+0000\n"
+"PO-Revision-Date: 2025-09-09 05:05+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -5129,9 +5129,6 @@ msgstr "集約グループツリー"
 
 msgid "Aggregation groups"
 msgstr "集約グループ"
-
-msgid "Aggregation method"
-msgstr "集約方法"
 
 msgid "Aggregation name"
 msgstr "集計名"
@@ -10975,6 +10972,10 @@ msgstr "カーボンキュー使用量"
 msgid "Carbon queue usage rate"
 msgstr "カーボンキュー使用率"
 
+#, fuzzy
+msgid "Cardinality reduction aggregation method"
+msgstr "データ削減率"
+
 msgid "Casa module: CPU temperature"
 msgstr "Casaモジュール: CPU温度"
 
@@ -11923,6 +11924,9 @@ msgstr ""
 
 msgid "Checkmk helper usage"
 msgstr "Checkmkヘルパーの使用量"
+
+msgid "Checkmk metrics are created from OTel datapoints. Configure them here."
+msgstr ""
 
 msgid "Checkmk partner or reseller"
 msgstr "Checkmkパートナーまたはリセラー"
@@ -16255,6 +16259,10 @@ msgstr "DCDマネージャ：サイト\"%s\"からピギーバックホストを
 
 msgid "DCD batch history"
 msgstr "DCDバッチ履歴"
+
+#, fuzzy
+msgid "DCD cycles and batches."
+msgstr "DR:BDの役割とディスク状態"
 
 msgid "DCD global settings"
 msgstr "DCDグローバル設定"
@@ -21211,7 +21219,7 @@ msgstr "電力"
 
 #, no-python-format
 msgid "Electrical tension in % of normal value"
-msgstr "電気張力の正常値に対する割合（%）"
+msgstr "電気張力の正常値に対する%割合"
 
 msgid "Electrical voltage"
 msgstr "電圧"
@@ -30492,6 +30500,11 @@ msgstr ""
 "ログアウトされます。グローバル設定の'二要素認証を強制適用'設定は、この設定を"
 "上書きします。"
 
+msgid ""
+"If too many metrics are produced by a service, they will be aggregated. "
+"Configure the aggregation method here."
+msgstr ""
+
 msgid "If value is a tuple it has to have length of two."
 msgstr "valueがタプルである場合、長さは2である必要があります。"
 
@@ -38834,6 +38847,10 @@ msgstr "メトリック予測"
 msgid "Metric History"
 msgstr "メトリック履歴"
 
+#, fuzzy
+msgid "Metric configuration"
+msgstr "テスト構成"
+
 msgid "Metric label"
 msgstr "メトリックのラベル"
 
@@ -39950,13 +39967,13 @@ msgstr ""
 "ルール %s を位置 #%dから #%d に移動します ルールセット \"%s\" フォルダは、%s"
 "です"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Moved rule %s of ruleset \"%s\" from folder \"%s\" to position #%d in folder "
 "\"%s\""
 msgstr ""
-"ルール \"%s\"のプロパティを変更し、フォルダ \"%s\"からフォルダ最上部 \"%s\"に"
-"移動しました"
+"ルール%s（ルールセット \"%s\"の）を、フォルダ \"%s\"から#%d番目（フォルダ "
+"\"%s\"の） の位置に移動しました"
 
 #, python-format
 msgid "Moved rule %s to pack %s"
@@ -50583,6 +50600,10 @@ msgstr "この通知をリプレイして、もう一度送信してください
 msgid "Replayed notification number %d"
 msgstr "リプレイ通知番号 %d"
 
+#, fuzzy
+msgid "Replica aggregation method"
+msgstr "集約方法"
+
 msgid "Replica available state"
 msgstr "レプリカ利用可能状態"
 
@@ -51434,6 +51455,11 @@ msgstr ""
 "Checkmkに戻り、一意の構成名を設定し、以下のサブスクリプションID、テナントID、"
 "クライアントID、およびクライアントシークレットを使用してください。Graph API経"
 "由でリソースを監視する場合のみ、サブスクリプションIDは不要です。"
+
+msgid ""
+"Returns the current state of DCD cycles and batches. Executes the commands "
+"cmk-dcd -Bv and cmk-dcd -Cv."
+msgstr ""
 
 msgid ""
 "Returns the latest crash dumps of each type as found in var/checkmk/crashes"
@@ -56059,6 +56085,10 @@ msgstr "サイズフィルターの仕様は、[OPERATOR][INT]の形式である
 msgid "Size growth per minute"
 msgstr "1分あたりのサイズの増加"
 
+#, fuzzy
+msgid "Size of OTel Collector"
+msgstr "コアのサイズ"
+
 msgid "Size of PNP4Nagios"
 msgstr "PNP4Nagiosのサイズ"
 
@@ -57099,9 +57129,8 @@ msgstr "コントロールプレーンノードの役割の指定"
 msgid "Specify sites this OpenTelemetry collector should run on."
 msgstr "OpenTelemetry コレクターを実行するサイトを指定します。"
 
-#, fuzzy
 msgid "Specify sites this OpenTelemetry collector should run on. "
-msgstr "OpenTelemetry コレクターを実行するサイトを指定します。"
+msgstr "OpenTelemetry コレクターを実行するサイトを指定してください "
 
 msgid "Specify storage account names that the rule should apply to"
 msgstr "ルールを適用するストレージアカウント名を指定します"
@@ -62340,7 +62369,7 @@ msgstr ""
 msgid "The host name attribute needs to be assigned to a column."
 msgstr "ホスト名属性を列に割り当てる必要があります。"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "The host name computation computes the name of the host that should have the "
 "corresponding Checkmk services. The computation is done by the OpenTelemetry "
@@ -62361,21 +62390,22 @@ msgid ""
 "will set all \"%s\" attributes that are not yet filled to \"fallback_host\"."
 "</li></ol>"
 msgstr ""
-"ホスト名の計算は、対応するCheckmkサービスを持つべきホストのな目を計算する。計"
-"算はOpenTelemetryコレクタによって行われ、結果は \"{attr}\"属性に格納される。"
-"ここで設定されたすべてのルールについては、提供されたフィールドがリスト化され"
-"た順に連結される。空でない値になる最初のルールが使用される。例えば：\n"
-"{startol}1つのフィールド \"Value of attribute: service.name\" からなる最初の"
-"ルールは、\"{attr}\"が存在する場合、その属性の値を設定します。この属性は、例"
-"えばprometheusのスクレイプジョブ名に設定されます。{newli}1つのフィールド "
-"\"Value of attribute: container.name \"で構成される2つ目のルールは、それが存"
-"在し、\"{attr}\"が前のルールで設定されていない場合、\"{attr}\"をその属性の値"
-"に設定します。{newli}2つのフィールド \"Resource attribute value: "
-"custom_attr\"と \"Literal string: some_suffix\"からなる3番目のルールは、その"
-"属性が存在し、\"{attr}\"が前のルールで設定されていない場合、\"{attr}\"を "
-"\"VALUEsome_suffix \"に設定します。{newli}1つのフィールド \"Literal string: "
-"fallback_host\" からなる最後のルールは、まだ埋められていないすべての\"{attr}"
-"\"属性を \"fallback_host\"に設定します。{endol}"
+"ホスト名の計算は、対応するCheckmkサービスを持つべきホストの名前を計算します。"
+"この計算はOpenTelemetryコレクタによって行われ、結果は \"%s\"属性に格納されま"
+"す。ここで設定された全てのルールについては、提供されたフィールドがリスト化さ"
+"れた順に連結されます。空ではない値になる最初のルールが使用されます。例え"
+"ば：\n"
+"<ol><li>最初のルールは1つのフィールド \"Value of attribute: service.name\" で"
+"構成され、その属性が存在する場合、その値を\"%s\"と設定します。この属性は、例"
+"えばprometheusのスクレイプジョブ名に設定されます。</li><li>2番目のルールは1つ"
+"のフィールド \"Value of attribute: container.name \"で構成され、その属性が存"
+"在し、かつ前のルールで\"%s\"が設定されていない場合、\"%s\"をその属性の値に設"
+"定します。</li><li>3番目のルールは2つのフィールド \"Resource attribute "
+"value: custom_attr\"と \"Literal string: some_suffix\"から構成され、その属性"
+"が存在し、かつ前のルールで\"%s\"が設定されていない場合、\"%s\"を "
+"\"VALUEsome_suffix \"に設定します。</li><li>最後のルールは1つのフィールド "
+"\"Literal string: fallback_host\" で構成され、まだ設定されていないすべての"
+"\"%s\"属性を \"fallback_host\"に設定します。</li></ol>"
 
 msgid "The host name is missing."
 msgstr "ホスト名がありません。"
@@ -83500,9 +83530,9 @@ msgid "site"
 msgid_plural "sites"
 msgstr[0] "サイト"
 
-#, fuzzy, python-format
+#, python-format
 msgid "site must be a list. Current type is: %s "
-msgstr "タイプはリストされる必要がありますが、%s です"
+msgstr "タイプはリストされる必要があります。現在のタイプ：%s "
 
 msgid "slots"
 msgstr "スロット"
@@ -83850,7 +83880,7 @@ msgstr "接続オーバーフロー率は %.2f/s です"
 
 #, python-format
 msgid "you need to set %s parameter to either %s."
-msgstr "%sのパラメータを%sに設定する必要があります。"
+msgstr "%sのパラメータを%sのいずれかに設定する必要があります。"
 
 msgid "z/OS"
 msgstr "z/OS"

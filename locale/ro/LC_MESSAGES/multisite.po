@@ -5426,10 +5426,6 @@ msgstr "Arborele grupului de agregare"
 msgid "Aggregation groups"
 msgstr "Grupuri de agregare"
 
-#, fuzzy
-msgid "Aggregation method"
-msgstr "Denumire agregare"
-
 msgid "Aggregation name"
 msgstr "Denumire agregare"
 
@@ -11723,6 +11719,10 @@ msgstr "Utilizarea cozii de carbon"
 msgid "Carbon queue usage rate"
 msgstr "Rata de utilizare a cozii de carbon"
 
+#, fuzzy
+msgid "Cardinality reduction aggregation method"
+msgstr "Rata de reducere a datelor"
+
 msgid "Casa module: CPU temperature"
 msgstr "Modulul Casa: Temperatura CPU"
 
@@ -12710,6 +12710,9 @@ msgstr ""
 
 msgid "Checkmk helper usage"
 msgstr "Utilizarea ajutorului Checkmk"
+
+msgid "Checkmk metrics are created from OTel datapoints. Configure them here."
+msgstr ""
 
 msgid "Checkmk partner or reseller"
 msgstr "Checkmk partener sau distribuitor"
@@ -17275,6 +17278,10 @@ msgstr "Faza 1.1: Preluarea de pe site-ul \"%s\""
 #, fuzzy
 msgid "DCD batch history"
 msgstr "Istoric de căutare"
+
+#, fuzzy
+msgid "DCD cycles and batches."
+msgstr "Roluri și stări de discuri DR:BD"
 
 #, fuzzy
 msgid "DCD global settings"
@@ -32595,6 +32602,11 @@ msgid ""
 "two-factor authentication' in global settings will override this setting."
 msgstr ""
 
+msgid ""
+"If too many metrics are produced by a service, they will be aggregated. "
+"Configure the aggregation method here."
+msgstr ""
+
 msgid "If value is a tuple it has to have length of two."
 msgstr ""
 "Dacă valoarea este un tupluplu, acesta trebuie să aibă o lungime de două."
@@ -41391,6 +41403,10 @@ msgstr "Prognoză metrică"
 
 msgid "Metric History"
 msgstr "Istoria metrică"
+
+#, fuzzy
+msgid "Metric configuration"
+msgstr "Configurație gazdă"
 
 msgid "Metric label"
 msgstr "Etichetă metrică"
@@ -54062,6 +54078,10 @@ msgstr "Refaceți această notificare, trimiteți-o din nou!"
 msgid "Replayed notification number %d"
 msgstr "Număr de notificare reprodus %d"
 
+#, fuzzy
+msgid "Replica aggregation method"
+msgstr "Denumire agregare"
+
 msgid "Replica available state"
 msgstr "Replică stare disponibilă"
 
@@ -54933,6 +54953,11 @@ msgid ""
 "Subscription ID, Tenant ID, Client ID, and the Client secret below. Please "
 "note that the Subscription ID is not needed if only monitoring resources "
 "through the Graph API."
+msgstr ""
+
+msgid ""
+"Returns the current state of DCD cycles and batches. Executes the commands "
+"cmk-dcd -Bv and cmk-dcd -Cv."
 msgstr ""
 
 msgid ""
@@ -59891,6 +59916,10 @@ msgstr ""
 
 msgid "Size growth per minute"
 msgstr "Creșterea dimensiunii pe minut"
+
+#, fuzzy
+msgid "Size of OTel Collector"
+msgstr "Dimensiunea fișierelor jurnal"
 
 #, fuzzy
 msgid "Size of PNP4Nagios"

@@ -5446,10 +5446,6 @@ msgstr "Árbol de grupos de agregación"
 msgid "Aggregation groups"
 msgstr "Grupos de agregación"
 
-#, fuzzy
-msgid "Aggregation method"
-msgstr "Nombre de la agregación"
-
 msgid "Aggregation name"
 msgstr "Nombre de la agregación"
 
@@ -11766,6 +11762,10 @@ msgstr "Uso de la cola de carbono"
 msgid "Carbon queue usage rate"
 msgstr "Tasa de utilización de la cola de carbono"
 
+#, fuzzy
+msgid "Cardinality reduction aggregation method"
+msgstr "Tasa de detección"
+
 msgid "Casa module: CPU temperature"
 msgstr "Módulo Casa: Temperatura de la CPU"
 
@@ -12778,6 +12778,9 @@ msgstr ""
 
 msgid "Checkmk helper usage"
 msgstr "Uso del ayudante Checkmk"
+
+msgid "Checkmk metrics are created from OTel datapoints. Configure them here."
+msgstr ""
 
 #, fuzzy
 msgid "Checkmk partner or reseller"
@@ -17377,6 +17380,10 @@ msgstr "Fase 1.1: Obtención del sitio \"%s\""
 #, fuzzy
 msgid "DCD batch history"
 msgstr "Historial de búsqueda"
+
+#, fuzzy
+msgid "DCD cycles and batches."
+msgstr "Roles y estados de disco DR:BD"
 
 #, fuzzy
 msgid "DCD global settings"
@@ -32798,6 +32805,11 @@ msgid ""
 "two-factor authentication' in global settings will override this setting."
 msgstr ""
 
+msgid ""
+"If too many metrics are produced by a service, they will be aggregated. "
+"Configure the aggregation method here."
+msgstr ""
+
 msgid "If value is a tuple it has to have length of two."
 msgstr "Si el valor es una tupla, debe tener una longitud de dos."
 
@@ -41654,6 +41666,10 @@ msgstr "Previsión de la métrica"
 
 msgid "Metric History"
 msgstr "Historia de la métrica"
+
+#, fuzzy
+msgid "Metric configuration"
+msgstr "Configuración de host"
 
 msgid "Metric label"
 msgstr "Etiqueta métrica"
@@ -54420,6 +54436,10 @@ msgstr "Reproduzca esta notificación, envíela de nuevo!"
 msgid "Replayed notification number %d"
 msgstr "Número de notificación reproducido %d"
 
+#, fuzzy
+msgid "Replica aggregation method"
+msgstr "Nombre de la agregación"
+
 msgid "Replica available state"
 msgstr "Estado disponible de la réplica"
 
@@ -55316,6 +55336,11 @@ msgid ""
 "Subscription ID, Tenant ID, Client ID, and the Client secret below. Please "
 "note that the Subscription ID is not needed if only monitoring resources "
 "through the Graph API."
+msgstr ""
+
+msgid ""
+"Returns the current state of DCD cycles and batches. Executes the commands "
+"cmk-dcd -Bv and cmk-dcd -Cv."
 msgstr ""
 
 msgid ""
@@ -60266,6 +60291,10 @@ msgstr ""
 
 msgid "Size growth per minute"
 msgstr "Crecimiento del tamaño por minuto"
+
+#, fuzzy
+msgid "Size of OTel Collector"
+msgstr "Tamaño de los archivos de registro"
 
 #, fuzzy
 msgid "Size of PNP4Nagios"

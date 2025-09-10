@@ -133,3 +133,62 @@ def test_task_expiration_resets_on_update(
     # Step 8: Verify the task has expired
     tasks_response = get_relay_tasks(agent_receiver, relay_id)
     assert len(tasks_response.tasks) == 0, "Task should have expired and not be present"
+
+
+@pytest.mark.usefixtures("relay_config_with_short_ttl")
+def test_completed_tasks_expiration(
+    site: SiteMock,
+    agent_receiver: AgentReceiverClient,
+) -> None:
+    """
+    Test that verifies that tasks expire regardless of their status.
+    """
+    # Configure short expiration time
+    expiration_time = 1.0
+
+    # Register relay
+    site.set_scenario([], [("Wonderful_relay", OP.ADD)])
+    relay_id = register_relay(agent_receiver, "Wonderful_relay")
+
+    # Step 2: Add a tasks
+    task_a_response = push_task(
+        agent_receiver=agent_receiver,
+        relay_id=relay_id,
+        task_type=TaskType.FETCH_AD_HOC,
+        task_payload="test task A payload",
+    )
+    task_a_id = str(task_a_response.task_id)
+
+    task_b_response = push_task(
+        agent_receiver=agent_receiver,
+        relay_id=relay_id,
+        task_type=TaskType.FETCH_AD_HOC,
+        task_payload="test task B payload",
+    )
+    task_b_id = str(task_b_response.task_id)
+
+    # Step 3: Update the tasks
+    agent_receiver.update_task(
+        relay_id=relay_id,
+        task_id=task_a_id,
+        result_type="OK",
+        result_payload="task updated",
+    )
+    agent_receiver.update_task(
+        relay_id=relay_id,
+        task_id=task_b_id,
+        result_type="ERROR",
+        result_payload="task updated",
+    )
+    # Step 4: Verify tasks are present initially
+    tasks_response = get_relay_tasks(agent_receiver, relay_id)
+    assert len(tasks_response.tasks) == 2, "Both tasks should be present initially"
+    assert str(tasks_response.tasks[0].id) in {task_a_id, task_b_id}
+    assert str(tasks_response.tasks[1].id) in {task_a_id, task_b_id}
+
+    # Step 5: Wait for expiration time
+    time.sleep(expiration_time + 0.1)
+
+    # Step 6: Verify tasks are no longer present
+    tasks_response = get_relay_tasks(agent_receiver, relay_id)
+    assert len(tasks_response.tasks) == 0, "All tasks should have expired and not be present"

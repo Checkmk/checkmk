@@ -1661,25 +1661,25 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".software.applications.azure.load_balancers.outbound_rules.backend_pools:*.load_balancer": {"title": _l("Load balancer")},
         # MIGRATED ".software.applications.azure.load_balancers.outbound_rules.backend_pools:*.outbound_rule": {"title": _l("Outbound rule")},
         # MIGRATED ".software.applications.azure.load_balancers.outbound_rules.backend_pools:*.backend_pool": {"title": _l("Backend pool")},
-        ".software.applications.azure.load_balancers.outbound_rules.backend_pools.addresses:": {
-            "title": _l("Addresses"),
-            "keyorder": [
-                "load_balancer",
-                "outbound_rule",
-                "backend_pool",
-                "address_name",
-                "ip_address",
-                "ip_allocation_method",
-                "primary"
-            ],
-        },
-        ".software.applications.azure.load_balancers.outbound_rules.backend_pools.addresses:*.load_balancer": {"title": _l("Load balancer")},
-        ".software.applications.azure.load_balancers.outbound_rules.backend_pools.addresses:*.outbound_rule": {"title": _l("Outbound rule")},
-        ".software.applications.azure.load_balancers.outbound_rules.backend_pools.addresses:*.backend_pool": {"title": _l("Backend pool")},
-        ".software.applications.azure.load_balancers.outbound_rules.backend_pools.addresses:*.address_name": {"title": _l("Address name")},
-        ".software.applications.azure.load_balancers.outbound_rules.backend_pools.addresses:*.ip_address": {"title": _l("IP address")},
-        ".software.applications.azure.load_balancers.outbound_rules.backend_pools.addresses:*.ip_allocation_method": {"title": _l("Allocation method")},
-        ".software.applications.azure.load_balancers.outbound_rules.backend_pools.addresses:*.primary": {"title": _l("Primary")},
+        # MIGRATED ".software.applications.azure.load_balancers.outbound_rules.backend_pools.addresses:": {
+        # MIGRATED     "title": _l("Addresses"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "load_balancer",
+        # MIGRATED         "outbound_rule",
+        # MIGRATED         "backend_pool",
+        # MIGRATED         "address_name",
+        # MIGRATED         "ip_address",
+        # MIGRATED         "ip_allocation_method",
+        # MIGRATED         "primary"
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.azure.load_balancers.outbound_rules.backend_pools.addresses:*.load_balancer": {"title": _l("Load balancer")},
+        # MIGRATED ".software.applications.azure.load_balancers.outbound_rules.backend_pools.addresses:*.outbound_rule": {"title": _l("Outbound rule")},
+        # MIGRATED ".software.applications.azure.load_balancers.outbound_rules.backend_pools.addresses:*.backend_pool": {"title": _l("Backend pool")},
+        # MIGRATED ".software.applications.azure.load_balancers.outbound_rules.backend_pools.addresses:*.address_name": {"title": _l("Address name")},
+        # MIGRATED ".software.applications.azure.load_balancers.outbound_rules.backend_pools.addresses:*.ip_address": {"title": _l("IP address")},
+        # MIGRATED ".software.applications.azure.load_balancers.outbound_rules.backend_pools.addresses:*.ip_allocation_method": {"title": _l("Allocation method")},
+        # MIGRATED ".software.applications.azure.load_balancers.outbound_rules.backend_pools.addresses:*.primary": {"title": _l("Primary")},
         ".software.bios.": {
             "title": _l("BIOS"),
             "keyorder": [

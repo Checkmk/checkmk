@@ -678,3 +678,9 @@ node_software_applications_mobileiron = Node(
         "registration_state": TextField(Title("Registration state")),
     },
 )
+
+node_software_applications_mssql = Node(
+    name="software_applications_mssql",
+    path=["software", "applications", "mssql"],
+    title=Title("MSSQL"),
+)

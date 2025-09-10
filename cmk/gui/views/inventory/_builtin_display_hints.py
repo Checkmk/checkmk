@@ -1440,7 +1440,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         },
         ".software.applications.vmwareesx:": {"title": _l("VMware ESX")},
         ".software.applications.vmwareesx:*.clusters": {"title": _l("Clusters")},
-        ".software.applications.mssql.": {"title": _l("MSSQL")},
+        # MIGRATED ".software.applications.mssql.": {"title": _l("MSSQL")},
         ".software.applications.mssql.instances:": {
             "title": _l("Instances"),
             "keyorder": [

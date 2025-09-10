@@ -948,3 +948,14 @@ node_software_configuration_snmp_info = Node(
         "name": TextField(Title("System name")),
     },
 )
+
+node_software_firmware = Node(
+    name="software_firmware",
+    path=["software", "firmware"],
+    title=Title("Firmware"),
+    attributes={
+        "vendor": TextField(Title("Vendor")),
+        "version": TextField(Title("Version")),
+        "platform_level": TextField(Title("Platform firmware level")),
+    },
+)

@@ -1720,17 +1720,17 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".software.configuration.organisation.organisation_name": {"title": _l("Organisation name")},
         # MIGRATED ".software.configuration.organisation.network_id": {"title": _l("Network ID")},
         # MIGRATED ".software.configuration.organisation.address": {"title": _l("Address")},
-        ".software.firmware.": {
-            "title": _l("Firmware"),
-            "keyorder": [
-                "vendor",
-                "version",
-                "platform_level",
-            ],
-        },
-        ".software.firmware.vendor": {"title": _l("Vendor")},
-        ".software.firmware.version": {"title": _l("Version")},
-        ".software.firmware.platform_level": {"title": _l("Platform firmware level")},
+        # MIGRATED ".software.firmware.": {
+        # MIGRATED     "title": _l("Firmware"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "vendor",
+        # MIGRATED         "version",
+        # MIGRATED         "platform_level",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.firmware.vendor": {"title": _l("Vendor")},
+        # MIGRATED ".software.firmware.version": {"title": _l("Version")},
+        # MIGRATED ".software.firmware.platform_level": {"title": _l("Platform firmware level")},
         ".software.kernel_config:": {
             "title": _l("Kernel configuration (sysctl)"),
             "keyorder": ["name", "value"],

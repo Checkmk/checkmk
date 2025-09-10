@@ -64,6 +64,7 @@ file_from_flag(
                "//omd/packages/lcab",
                "//omd/packages/maintenance",
                "//omd/packages/mk-livestatus",
+               "//omd/packages/mk-oracle",
                "//omd/packages/mod_fcgid",
                "//omd/packages/mod_wsgi",
                "//omd/packages/monitoring-plugins",

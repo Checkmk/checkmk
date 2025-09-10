@@ -33,7 +33,7 @@ class CombinedGraphsServiceSearch(CmkPage):
 
     def _graph_with_timeranges_container(self, graph_title: str) -> Locator:
         return self.main_area.locator(
-            f"div[class='graph_with_timeranges']:has(div[class='title']:text-is('{graph_title}'))"
+            f"div[class='graph_with_timeranges']:has(div[class='title']:has-text('{graph_title}'))"
         )
 
     def graph(self, graph_title: str) -> Locator:

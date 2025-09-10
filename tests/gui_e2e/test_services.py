@@ -89,9 +89,9 @@ def test_reschedule_active_checks(dashboard_page: Dashboard, created_host: HostD
         pytest.param(
             "filesystem",
             [
-                "Used inodes - {host_name} - sum (1 objects)",
-                "Size and used space - {host_name} - sum (3 objects)",
-                "Growth trend - {host_name} - sum (1 objects)",
+                "Used inodes - {host_name} - sum",
+                "Size and used space - {host_name} - sum",
+                "Growth trend - {host_name} - sum",
             ],
             id="filesystem_service_filter",
         ),

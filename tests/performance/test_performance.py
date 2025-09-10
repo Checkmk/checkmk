@@ -202,8 +202,8 @@ class PerformanceTest:
         """
         source_host_name = "test-performance-dcd"
         pb_host_count = self.object_count
-        dcd_max_count = 60
-        dcd_interval = 10
+        dcd_max_count = 120
+        dcd_interval = 5
         with piggyback_host_from_dummy_generator(
             self.central_site,
             source_host_name,

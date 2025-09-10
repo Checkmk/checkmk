@@ -1609,20 +1609,19 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.azure.load_balancers.inbound_nat_rules.public_ips:*.ip_address": {"title": _l("IP Address")},
         ".software.applications.azure.load_balancers.inbound_nat_rules.public_ips:*.ip_allocation_method": {"title": _l("Allocation method")},
         ".software.applications.azure.load_balancers.inbound_nat_rules.public_ips:*.dns_fqdn": {"title": _l("DNS FQDN")},
-        ".software.applications.azure.load_balancers.inbound_nat_rules.private_ips:": {
-            "title": _l("Private IPs"),
-            "keyorder": [
-                "load_balancer",
-                "inbound_nat_rule",
-                "ip_address",
-                "ip_allocation_method",
-            ],
-        },
-        ".software.applications.azure.load_balancers.inbound_nat_rules.private_ips:*.load_balancer": {"title": _l("Load balancer")},
-        ".software.applications.azure.load_balancers.inbound_nat_rules.private_ips:*.inbound_nat_rule": {"title": _l("Inbound NAT rule")},
-        ".software.applications.azure.load_balancers.inbound_nat_rules.private_ips:*.ip_address": {"title": _l("IP address")},
-        ".software.applications.azure.load_balancers.inbound_nat_rules.private_ips:*.ip_allocation_method": {"title": _l("Allocation method")},
-
+        # MIGRATED ".software.applications.azure.load_balancers.inbound_nat_rules.private_ips:": {
+        # MIGRATED     "title": _l("Private IPs"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "load_balancer",
+        # MIGRATED         "inbound_nat_rule",
+        # MIGRATED         "ip_address",
+        # MIGRATED         "ip_allocation_method",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.azure.load_balancers.inbound_nat_rules.private_ips:*.load_balancer": {"title": _l("Load balancer")},
+        # MIGRATED ".software.applications.azure.load_balancers.inbound_nat_rules.private_ips:*.inbound_nat_rule": {"title": _l("Inbound NAT rule")},
+        # MIGRATED ".software.applications.azure.load_balancers.inbound_nat_rules.private_ips:*.ip_address": {"title": _l("IP address")},
+        # MIGRATED ".software.applications.azure.load_balancers.inbound_nat_rules.private_ips:*.ip_allocation_method": {"title": _l("Allocation method")},
         # MIGRATED ".software.applications.azure.load_balancers.inbound_nat_rules.backend_ip_configs:": {
         # MIGRATED     "title": _l("Public IPs"),
         # MIGRATED     "keyorder": [

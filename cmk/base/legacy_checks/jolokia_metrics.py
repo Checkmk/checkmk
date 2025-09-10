@@ -314,9 +314,15 @@ def check_jolokia_metrics_bea_threads(item, _no_params, info):
         ("StandbyThreadCount", "standby"),
         ("HoggingThreadCount", "hogging"),
     ]:
+        if varname not in app:
+            continue
+
         value = int(app[varname])
         perfdata.append((varname, value))
         infos.append("%s: %d" % (title, value))
+
+    if not infos:
+        return (3, "no metrics found in the data")
 
     return (0, ", ".join(infos), perfdata)
 

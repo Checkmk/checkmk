@@ -65,3 +65,26 @@ node_software_applications_azure_application_gateways_rules_listeners = Node(
         },
     ),
 )
+
+node_software_applications_azure_application_gateways_rules_listeners_private_ips = Node(
+    name="software_applications_azure_application_gateways_rules_listeners_private_ips",
+    path=[
+        "software",
+        "applications",
+        "azure",
+        "application_gateways",
+        "rules",
+        "listeners",
+        "private_ips",
+    ],
+    title=Title("Private IPs"),
+    table=Table(
+        columns={
+            "application_gateway": TextField(Title("Application gateway")),
+            "rule": TextField(Title("Rule")),
+            "listener": TextField(Title("Listener")),
+            "ip_address": TextField(Title("IP address")),
+            "allocation_method": TextField(Title("Allocation method")),
+        },
+    ),
+)

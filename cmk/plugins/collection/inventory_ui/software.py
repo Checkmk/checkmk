@@ -594,3 +594,14 @@ node_software_applications_kube_daemonset = Node(
         "match_expressions": TextField(Title("matchExpressions")),
     },
 )
+
+node_software_applications_kube_deployment = Node(
+    name="software_applications_kube_deployment",
+    path=["software", "applications", "kube", "deployment"],
+    title=Title("Deployment"),
+    attributes={
+        "strategy": TextField(Title("StrategyType")),
+        "match_labels": TextField(Title("matchLabels")),
+        "match_expressions": TextField(Title("matchExpressions")),
+    },
+)

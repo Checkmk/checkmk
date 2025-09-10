@@ -970,26 +970,26 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.kube.containers:*.container_id": {"title": _l("Container ID")},
         # MIGRATED ".software.applications.kube.cluster.": {"title": _l("Cluster"), "keyorder": ["version"]},
         # MIGRATED ".software.applications.kube.cluster.version": {"title": _l("Version")},
-        ".software.applications.kube.deployment.": {
-            "title": _l("Deployment"),
-            "keyorder": [
-                "strategy",
-                "match_labels",
-                "match_expressions",
-            ],
-        },
-        ".software.applications.kube.deployment.strategy": {
-            "title": _l("StrategyType"),
-            "keyorder": [
-                "strategy",
-                "match_labels",
-                "match_expressions",
-            ],
-        },
-        ".software.applications.kube.deployment.match_labels": {"title": _l("matchLabels")},
-        ".software.applications.kube.deployment.match_expressions": {
-            "title": _l("matchExpressions")
-        },
+        # MIGRATED ".software.applications.kube.deployment.": {
+        # MIGRATED     "title": _l("Deployment"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "strategy",
+        # MIGRATED         "match_labels",
+        # MIGRATED         "match_expressions",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.kube.deployment.strategy": {
+        # MIGRATED     "title": _l("StrategyType"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "strategy",
+        # MIGRATED         "match_labels",
+        # MIGRATED         "match_expressions",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.kube.deployment.match_labels": {"title": _l("matchLabels")},
+        # MIGRATED ".software.applications.kube.deployment.match_expressions": {
+        # MIGRATED     "title": _l("matchExpressions")
+        # MIGRATED },
         # MIGRATED ".software.applications.kube.daemonset.": {
         # MIGRATED     "title": _l("DaemonSet"),
         # MIGRATED     "keyorder": [

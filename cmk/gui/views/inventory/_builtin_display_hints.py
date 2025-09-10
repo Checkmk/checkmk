@@ -1885,16 +1885,16 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".networking.routes:*.gateway": {"title": _l("Gateway")},
         # MIGRATED ".networking.wlan.": {"title": _l("WLAN")},
         # MIGRATED ".networking.wlan.controller.": {"title": _l("Controller")},
-        ".networking.wlan.controller.accesspoints:": {
-            "title": _l("Access points"),
-            "keyorder": ["name", "group", "ip_addr", "model", "serial", "sys_location"],
-        },
-        ".networking.wlan.controller.accesspoints:*.name": {"title": _l("Name")},
-        ".networking.wlan.controller.accesspoints:*.group": {"title": _l("Group")},
-        ".networking.wlan.controller.accesspoints:*.ip_addr": {"title": _l("IP address")},
-        ".networking.wlan.controller.accesspoints:*.model": {"title": _l("Model")},
-        ".networking.wlan.controller.accesspoints:*.serial": {"title": _l("Serial number")},
-        ".networking.wlan.controller.accesspoints:*.sys_location": {"title": _l("System location")},
+        # MIGRATED ".networking.wlan.controller.accesspoints:": {
+        # MIGRATED     "title": _l("Access points"),
+        # MIGRATED     "keyorder": ["name", "group", "ip_addr", "model", "serial", "sys_location"],
+        # MIGRATED },
+        # MIGRATED ".networking.wlan.controller.accesspoints:*.name": {"title": _l("Name")},
+        # MIGRATED ".networking.wlan.controller.accesspoints:*.group": {"title": _l("Group")},
+        # MIGRATED ".networking.wlan.controller.accesspoints:*.ip_addr": {"title": _l("IP address")},
+        # MIGRATED ".networking.wlan.controller.accesspoints:*.model": {"title": _l("Model")},
+        # MIGRATED ".networking.wlan.controller.accesspoints:*.serial": {"title": _l("Serial number")},
+        # MIGRATED ".networking.wlan.controller.accesspoints:*.sys_location": {"title": _l("System location")},
         # MIGRATED ".networking.tunnels:": {
         # MIGRATED     "title": _l("Networking tunnels"),
         # MIGRATED     "keyorder": [

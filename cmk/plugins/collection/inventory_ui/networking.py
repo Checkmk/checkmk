@@ -133,3 +133,19 @@ node_networking_wlan_controller = Node(
     path=["networking", "wlan", "controller"],
     title=Title("Controller"),
 )
+
+node_networking_wlan_controller_accesspoints = Node(
+    name="networking_wlan_controller_accesspoints",
+    path=["networking", "wlan", "controller", "accesspoints"],
+    title=Title("Access points"),
+    table=Table(
+        columns={
+            "name": TextField(Title("Name")),
+            "group": TextField(Title("Group")),
+            "ip_addr": TextField(Title("IP address")),
+            "model": TextField(Title("Model")),
+            "serial": TextField(Title("Serial number")),
+            "sys_location": TextField(Title("System location")),
+        },
+    ),
+)

@@ -53,7 +53,7 @@ export function convertToFilterStructure(
  * @returns Array of QueryItem objects
  */
 export function convertFromFilterStructure(
-  params: Record<string, string>,
+  params: Record<string, string | null>,
   prefix: string = 'host_labels'
 ): QueryItem[] {
   const result: QueryItem[] = []

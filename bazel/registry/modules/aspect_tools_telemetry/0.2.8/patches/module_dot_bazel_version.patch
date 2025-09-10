@@ -1,0 +1,10 @@
+===================================================================
+--- a/MODULE.bazel
++++ b/MODULE.bazel
+@@ -1,5 +1,5 @@
+-module(name = "aspect_tools_telemetry", version = "0.0.0")
++module(name = "aspect_tools_telemetry", version = "0.2.8")
+ 
+ # Minimum version constraints, do not increase
+ bazel_dep(name = "aspect_bazel_lib", version = "2.0.0")
+ bazel_dep(name = "bazel_skylib", version = "1.0.3")

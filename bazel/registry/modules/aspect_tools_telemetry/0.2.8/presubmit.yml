@@ -1,0 +1,15 @@
+matrix:
+  platform:
+    - ubuntu2204
+  # We depend on a holdback version of `bazel-lib` to expand compatability. That
+  # ancient version is broken on Bazel 9/rolling. When presubmit runs in
+  # `--external` that dependency gets picked and is broken. Seem comments in
+  # MODULE.bazel. To unblock that we don't list `rolling` here.
+  bazel: [6.*, 7.*, 8.*]
+tasks:
+  verify_targets:
+    name: Verify build targets
+    platform: ${{ platform }}
+    bazel: ${{ bazel }}
+    build_targets:
+      - '@aspect_tools_telemetry//...'

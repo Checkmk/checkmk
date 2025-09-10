@@ -1,0 +1,10 @@
+{
+    "integrity": "sha256-uyE5+LNDAAwSo2cKKUbQTzF7xBuk99uo0n3Cny5fxPI=",
+    "strip_prefix": "rules_lint-1.7.0",
+    "url": "https://github.com/aspect-build/rules_lint/releases/download/v1.7.0/rules_lint-v1.7.0.tar.gz",
+    "patches": {
+        "go_dev_deps.patch": "sha256-BCR68oc7ub1mjIm3kwX+6641GREyEo+pdFkCtRwfECM=",
+        "module_dot_bazel_version.patch": "sha256-rBqF0JNF/HUV1Ek5nr/6Aizg+EgaqTJx5xz/Mi9PSPM="
+    },
+    "patch_strip": 1
+}

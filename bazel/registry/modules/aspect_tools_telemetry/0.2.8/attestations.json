@@ -1,0 +1,17 @@
+{
+    "mediaType": "application/vnd.build.bazel.registry.attestation+json;version=1.0.0",
+    "attestations": {
+        "source.json": {
+            "url": "https://github.com/aspect-build/tools_telemetry/releases/download/v0.2.8/source.json.intoto.jsonl",
+            "integrity": "sha256-nCpIkP1QPPjgKQssvr1Xz2tObh2O2pSBt0f5AocutOQ="
+        },
+        "MODULE.bazel": {
+            "url": "https://github.com/aspect-build/tools_telemetry/releases/download/v0.2.8/MODULE.bazel.intoto.jsonl",
+            "integrity": "sha256-hw7CwhvV8WoBu8+6U2NgX7IGF3Arr6vDizFLdOjGPec="
+        },
+        "tools_telemetry-v0.2.8.tar.gz": {
+            "url": "https://github.com/aspect-build/tools_telemetry/releases/download/v0.2.8/tools_telemetry-v0.2.8.tar.gz.intoto.jsonl",
+            "integrity": "sha256-WaxeqqPvw9e7jYS5Bicf0YbJLximmNecHOX7lBqIMYo="
+        }
+    }
+}

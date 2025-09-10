@@ -20,11 +20,9 @@ module(
     compatibility_level = 1,
 )
 
-cc_configure = use_extension(
-    "@rules_cc//cc:extensions.bzl",
-    "cc_configure_extension",
-    dev_dependency = True,
-)
+cc_configure = use_extension("@rules_cc//cc:extensions.bzl",
+                             "cc_configure_extension",
+                             dev_dependency = True)
 use_repo(cc_configure, "local_config_cc")
 
 # Only direct dependencies need to be listed below.

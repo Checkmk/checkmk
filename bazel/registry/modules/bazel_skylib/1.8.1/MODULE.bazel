@@ -12,3 +12,4 @@ register_toolchains(
 
 bazel_dep(name = "platforms", version = "0.0.10")
 bazel_dep(name = "rules_license", version = "1.0.0")
+

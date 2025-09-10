@@ -703,15 +703,15 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".software.applications.checkmk-agent.pluginsdirectory": {"title": _l("Plug-ins directory")},
         # MIGRATED ".software.applications.checkmk-agent.localdirectory": {"title": _l("Local directory")},
         # MIGRATED ".software.applications.checkmk-agent.agentcontroller": {"title": _l("Agent controller")},
-        ".software.applications.checkmk-agent.plugins:": {
-            "title": _l("Agent plug-ins"),
-            "keyorder": ["name", "version", "cache_interval"],
-        },
-        ".software.applications.checkmk-agent.plugins:*.name": {"title": _l("Name")},
-        ".software.applications.checkmk-agent.plugins:*.version": {"title": _l("Version")},
-        ".software.applications.checkmk-agent.plugins:*.cache_interval": {
-            "title": _l("Cache interval")
-        },
+        # MIGRATED ".software.applications.checkmk-agent.plugins:": {
+        # MIGRATED     "title": _l("Agent plug-ins"),
+        # MIGRATED     "keyorder": ["name", "version", "cache_interval"],
+        # MIGRATED },
+        # MIGRATED ".software.applications.checkmk-agent.plugins:*.name": {"title": _l("Name")},
+        # MIGRATED ".software.applications.checkmk-agent.plugins:*.version": {"title": _l("Version")},
+        # MIGRATED ".software.applications.checkmk-agent.plugins:*.cache_interval": {
+        # MIGRATED     "title": _l("Cache interval")
+        # MIGRATED },
         # MIGRATED ".software.applications.checkmk-agent.local_checks:": {
         # MIGRATED     "title": _l("Local checks"),
         # MIGRATED     "keyorder": ["name", "version", "cache_interval"],

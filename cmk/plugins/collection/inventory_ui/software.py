@@ -333,3 +333,16 @@ node_software_applications_checkmk_agent_local_checks = Node(
         },
     ),
 )
+
+node_software_applications_checkmk_agent_plugins = Node(
+    name="software_applications_checkmk_agent_plugins",
+    path=["software", "applications", "checkmk-agent", "plugins"],
+    title=Title("Agent plug-ins"),
+    table=Table(
+        columns={
+            "name": TextField(Title("Name")),
+            "version": TextField(Title("Version")),
+            "cache_interval": TextField(Title("Cache interval")),
+        },
+    ),
+)

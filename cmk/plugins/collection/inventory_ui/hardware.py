@@ -110,6 +110,31 @@ node_hardware_components_fans = Node(
     ),
 )
 
+node_hardware_components_modules = Node(
+    name="hardware_components_modules",
+    path=["hardware", "components", "modules"],
+    title=Title("Modules"),
+    table=Table(
+        view=View(name="invmodule", title=Title("Modules")),
+        columns={
+            "index": TextField(Title("Index")),
+            "name": TextField(Title("Name")),
+            "description": TextField(Title("Description")),
+            "software": TextField(Title("Software")),
+            "serial": TextField(Title("Serial number")),
+            "model": TextField(Title("Model name")),
+            "manufacturer": TextField(Title("Manufacturer")),
+            "bootloader": TextField(Title("Bootloader")),
+            "firmware": TextField(Title("Firmware")),
+            "type": TextField(Title("Type")),
+            "location": TextField(Title("Location")),
+            "ha_status": TextField(Title("HA status")),
+            "software_version": TextField(Title("Software version")),
+            "license_key_list": TextField(Title("License key list")),
+        },
+    ),
+)
+
 node_hardware_memory = Node(
     name="hardware_memory",
     path=["hardware", "memory"],

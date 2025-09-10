@@ -1,0 +1,34 @@
+services:
+    oracle-free:
+        image: gvenzl/oracle-free:${ORACLE_FREE_VERSION:-latest}
+        ports:
+        - "${ORACLE_PORT:-1521}:1521"
+        # Provide passwords and other environment variables to the container
+        environment:
+            ORACLE_PASSWORD: ${ORACLE_PASSWORD:-oracle}
+        # Mount oracle data so that data is persistent between restarts
+        volumes:
+            - oracle-free-volume:/opt/oracle/oradata
+
+    oracle-xe:
+        image: gvenzl/oracle-xe:${ORACLE_XE_VERSION:-latest}
+        ports:
+            - "${ORACLE_PORT:-1521}:1521"
+        # Provide passwords and other environment variables to the container
+        environment:
+            ORACLE_PASSWORD: ${ORACLE_PASSWORD:-oracle}
+        # Mount oracle data so that data is persistent between restarts
+        volumes:
+            - oracle-xe-volume:/opt/oracle/oradata
+
+    oracle-12c:
+        image: konnecteam/docker-oracle-12c:sequelize
+        ports:
+            - "${ORACLE_PORT:-1521}:1521"
+        volumes:
+            - oracle-12c:/u01/app/oracle
+
+volumes:
+    oracle-free-volume:
+    oracle-xe-volume:
+    oracle-12c:

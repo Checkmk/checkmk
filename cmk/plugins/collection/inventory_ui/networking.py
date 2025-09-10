@@ -127,3 +127,9 @@ node_networking_wlan = Node(
     path=["networking", "wlan"],
     title=Title("WLAN"),
 )
+
+node_networking_wlan_controller = Node(
+    name="networking_wlan_controller",
+    path=["networking", "wlan", "controller"],
+    title=Title("Controller"),
+)

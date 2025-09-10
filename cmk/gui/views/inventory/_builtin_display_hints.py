@@ -1016,27 +1016,27 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.kube.statefulset.match_expressions": {
             "title": _l("matchExpressions")
         },
-        ".software.applications.kube.node.": {
-            "title": _l("Node"),
-            "keyorder": [
-                "operating_system",
-                "os_image",
-                "kernel_version",
-                "architecture",
-                "container_runtime_version",
-                "kubelet_version",
-                "kube_proxy_version",
-            ],
-        },
-        ".software.applications.kube.node.operating_system": {"title": _l("Operating system")},
-        ".software.applications.kube.node.os_image": {"title": _l("OS image")},
-        ".software.applications.kube.node.kernel_version": {"title": _l("Kernel version")},
-        ".software.applications.kube.node.architecture": {"title": _l("Architecture")},
-        ".software.applications.kube.node.container_runtime_version": {
-            "title": _l("Container runtime version")
-        },
-        ".software.applications.kube.node.kubelet_version": {"title": _l("Kubelet version")},
-        ".software.applications.kube.node.kube_proxy_version": {"title": _l("Kube-proxy version")},
+        # MIGRATED ".software.applications.kube.node.": {
+        # MIGRATED     "title": _l("Node"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "operating_system",
+        # MIGRATED         "os_image",
+        # MIGRATED         "kernel_version",
+        # MIGRATED         "architecture",
+        # MIGRATED         "container_runtime_version",
+        # MIGRATED         "kubelet_version",
+        # MIGRATED         "kube_proxy_version",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.kube.node.operating_system": {"title": _l("Operating system")},
+        # MIGRATED ".software.applications.kube.node.os_image": {"title": _l("OS image")},
+        # MIGRATED ".software.applications.kube.node.kernel_version": {"title": _l("Kernel version")},
+        # MIGRATED ".software.applications.kube.node.architecture": {"title": _l("Architecture")},
+        # MIGRATED ".software.applications.kube.node.container_runtime_version": {
+        # MIGRATED     "title": _l("Container runtime version")
+        # MIGRATED },
+        # MIGRATED ".software.applications.kube.node.kubelet_version": {"title": _l("Kubelet version")},
+        # MIGRATED ".software.applications.kube.node.kube_proxy_version": {"title": _l("Kube-proxy version")},
         ".software.applications.kube.pod.": {
             "title": _l("Pod"),
             "keyorder": [

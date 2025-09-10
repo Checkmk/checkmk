@@ -628,3 +628,18 @@ node_software_applications_kube_metadata = Node(
         "namespace": TextField(Title("Namespace")),
     },
 )
+
+node_software_applications_kube_node = Node(
+    name="software_applications_kube_node",
+    path=["software", "applications", "kube", "node"],
+    title=Title("Node"),
+    attributes={
+        "operating_system": TextField(Title("Operating system")),
+        "os_image": TextField(Title("OS image")),
+        "kernel_version": TextField(Title("Kernel version")),
+        "architecture": TextField(Title("Architecture")),
+        "container_runtime_version": TextField(Title("Container runtime version")),
+        "kubelet_version": TextField(Title("Kubelet version")),
+        "kube_proxy_version": TextField(Title("Kube-proxy version")),
+    },
+)

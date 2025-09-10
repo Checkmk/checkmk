@@ -4,9 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.inventory_ui.v1_alpha import (
+    DecimalNotation,
     IECNotation,
     Node,
     NumberField,
+    SINotation,
+    StrictPrecision,
     Table,
     TextField,
     Title,
@@ -15,6 +18,9 @@ from cmk.inventory_ui.v1_alpha import (
 )
 
 UNIT_BYTES = Unit(IECNotation("B"))
+UNIT_COUNT = Unit(DecimalNotation(""), StrictPrecision(0))
+UNIT_HZ = Unit(SINotation("Hz"))
+UNIT_VOLTAGE = Unit(DecimalNotation("V"))
 
 node_hardware = Node(
     name="hardware",
@@ -228,6 +234,32 @@ node_hardware_components_unknowns = Node(
             "location": TextField(Title("Location")),
         },
     ),
+)
+
+node_hardware_cpu = Node(
+    name="hardware_cpu",
+    path=["hardware", "cpu"],
+    title=Title("Processor"),
+    attributes={
+        "arch": TextField(Title("CPU architecture")),
+        "max_speed": NumberField(Title("Maximum speed"), render=UNIT_HZ),
+        "model": TextField(Title("CPU model")),
+        "type": TextField(Title("CPU type")),
+        "threads": NumberField(Title("#Hyperthreads"), render=UNIT_COUNT),
+        "smt_threads": NumberField(Title("SMT threads"), render=UNIT_COUNT),
+        "cpu_max_capa": TextField(Title("Processor max. capacity")),
+        "cpus": NumberField(Title("#Physical CPUs"), render=UNIT_COUNT),
+        "logical_cpus": NumberField(Title("#Logical CPUs"), render=UNIT_COUNT),
+        "cores": NumberField(Title("#Cores"), render=UNIT_COUNT),
+        "cores_per_cpu": NumberField(Title("Cores per CPU"), render=UNIT_COUNT),
+        "threads_per_cpu": NumberField(Title("Hyperthreads per CPU"), render=UNIT_COUNT),
+        "cache_size": NumberField(Title("Cache size"), render=UNIT_BYTES),
+        "bus_speed": NumberField(Title("Bus speed"), render=UNIT_HZ),
+        "voltage": NumberField(Title("Voltage"), render=UNIT_VOLTAGE),
+        "sharing_mode": TextField(Title("Shared processor mode")),
+        "implementation_mode": TextField(Title("Processor implementation mode")),
+        "entitlement": TextField(Title("Processor entitled capacity")),
+    },
 )
 
 node_hardware_memory = Node(

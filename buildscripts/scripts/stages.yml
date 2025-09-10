@@ -350,7 +350,7 @@ STAGES:
           CHANGED_FILES_REL_FILE=$(mktemp)
           echo "${CHANGED_FILES_REL}" > $CHANGED_FILES_REL_FILE
           trap "rm -f $CHANGED_FILES_REL_FILE" EXIT
-          make test-file-content
+          CHANGED_FILES_REL_FILE=$CHANGED_FILES_REL_FILE make test-file-content
       TEXT_ON_SKIP: "No files changed"
       BAZEL_LOCKS_AMOUNT: 1
       RESULT_CHECK_TYPE: "JUNIT"

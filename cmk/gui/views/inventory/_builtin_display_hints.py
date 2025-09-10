@@ -1875,14 +1875,14 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         },
         ".networking.interfaces:*.vlans": {"title": _l("VLANs")},
         ".networking.interfaces:*.vlantype": {"title": _l("VLAN type")},
-        ".networking.routes:": {
-            "title": _l("Routes"),
-            "keyorder": ["target", "device", "type", "gateway"],
-        },
-        ".networking.routes:*.target": {"title": _l("Target"), "paint": "ipv4_network"},
-        ".networking.routes:*.device": {"title": _l("Device")},
-        ".networking.routes:*.type": {"title": _l("Type of route"), "paint": "route_type"},
-        ".networking.routes:*.gateway": {"title": _l("Gateway")},
+        # MIGRATED ".networking.routes:": {
+        # MIGRATED     "title": _l("Routes"),
+        # MIGRATED     "keyorder": ["target", "device", "type", "gateway"],
+        # MIGRATED },
+        # MIGRATED ".networking.routes:*.target": {"title": _l("Target"), "paint": "ipv4_network"},
+        # MIGRATED ".networking.routes:*.device": {"title": _l("Device")},
+        # MIGRATED ".networking.routes:*.type": {"title": _l("Type of route"), "paint": "route_type"},
+        # MIGRATED ".networking.routes:*.gateway": {"title": _l("Gateway")},
         ".networking.wlan.": {"title": _l("WLAN")},
         ".networking.wlan.controller.": {"title": _l("Controller")},
         ".networking.wlan.controller.accesspoints:": {

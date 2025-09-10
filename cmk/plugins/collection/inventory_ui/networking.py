@@ -28,6 +28,14 @@ def _render_ip_address_type(value: str) -> Label | str:
             return value
 
 
+def _render_ipv4_network(value: str) -> Label | str:
+    return Label("Default") if value == "0.0.0.0/0" else value
+
+
+def _render_route_type(value: str) -> Label | str:
+    return Label("Local route") if value == "local" else Label("Gateway route")
+
+
 node_networking = Node(
     name="networking",
     path=["networking"],
@@ -61,6 +69,20 @@ node_networking_kube = Node(
         columns={
             "ip": TextField(Title("IP address")),
             "address_type": TextField(Title("Type")),
+        },
+    ),
+)
+
+node_networking_routes = Node(
+    name="networking_routes",
+    path=["networking", "routes"],
+    title=Title("Routes"),
+    table=Table(
+        columns={
+            "target": TextField(Title("Target"), render=_render_ipv4_network),
+            "device": TextField(Title("Device")),
+            "type": TextField(Title("Type of route"), render=_render_route_type),
+            "gateway": TextField(Title("Gateway")),
         },
     ),
 )

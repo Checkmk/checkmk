@@ -134,3 +134,25 @@ node_software_applications_azure_load_balancers_inbound_nat_rules = Node(
         },
     ),
 )
+
+node_software_applications_azure_load_balancers_inbound_nat_rules_backend_ip_configs = Node(
+    name="software_applications_azure_load_balancers_inbound_nat_rules_backend_ip_configs",
+    path=[
+        "software",
+        "applications",
+        "azure",
+        "load_balancers",
+        "inbound_nat_rules",
+        "backend_ip_configs",
+    ],
+    title=Title("Public IPs"),
+    table=Table(
+        columns={
+            "load_balancer": TextField(Title("Load balancer")),
+            "inbound_nat_rule": TextField(Title("Inbound NAT rule")),
+            "backend_ip_config": TextField(Title("Backend IP config")),
+            "ip_address": TextField(Title("IP address")),
+            "ip_allocation_method": TextField(Title("Allocation method")),
+        },
+    ),
+)

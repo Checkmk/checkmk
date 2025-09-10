@@ -275,6 +275,12 @@ node_hardware_cpu_nodes = Node(
     ),
 )
 
+node_hardware_firmware = Node(
+    name="hardware_firmware",
+    path=["hardware", "firmware"],
+    title=Title("Firmware"),
+)
+
 node_hardware_memory = Node(
     name="hardware_memory",
     path=["hardware", "memory"],

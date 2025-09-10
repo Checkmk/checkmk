@@ -83,19 +83,19 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".hardware.cpu.nodes:*.cores": {"title": _l("#Cores"), "paint": "count"},
         # MIGRATED ".hardware.cpu.nodes:*.model": {"title": _l("CPU model")},
         # MIGRATED ".hardware.firmware.": {"title": _l("Firmware")},
-        ".hardware.firmware.redfish:": {
-            "title": _l("Redfish"),
-            "keyorder": ["component", "version", "location", "description", "updateable"],
-            "view": "invfirmwareredfish",
-        },
-        ".hardware.firmware.redfish:*.component": {"title": _l("Component")},
-        ".hardware.firmware.redfish:*.version": {"title": _l("Version")},
-        ".hardware.firmware.redfish:*.location": {"title": _l("Location")},
-        ".hardware.firmware.redfish:*.description": {"title": _l("Description")},
-        ".hardware.firmware.redfish:*.updateable": {
-            "title": _l("Update possible"),
-            "paint": "bool",
-        },
+        # MIGRATED ".hardware.firmware.redfish:": {
+        # MIGRATED     "title": _l("Redfish"),
+        # MIGRATED     "keyorder": ["component", "version", "location", "description", "updateable"],
+        # MIGRATED     "view": "invfirmwareredfish",
+        # MIGRATED },
+        # MIGRATED ".hardware.firmware.redfish:*.component": {"title": _l("Component")},
+        # MIGRATED ".hardware.firmware.redfish:*.version": {"title": _l("Version")},
+        # MIGRATED ".hardware.firmware.redfish:*.location": {"title": _l("Location")},
+        # MIGRATED ".hardware.firmware.redfish:*.description": {"title": _l("Description")},
+        # MIGRATED ".hardware.firmware.redfish:*.updateable": {
+        # MIGRATED     "title": _l("Update possible"),
+        # MIGRATED     "paint": "bool",
+        # MIGRATED },
         # MIGRATED ".hardware.memory.": {
         # MIGRATED     "title": _l("Memory (RAM)"),
         # MIGRATED     "keyorder": ["total_ram_usable", "total_swap", "total_vmalloc"],

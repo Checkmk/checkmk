@@ -506,9 +506,35 @@ class InventoryJoinMacrosSpec(TypedDict):
     macros: list[tuple[str, str]]
 
 
+# NOTE: keep in sync with `DashboardEmbeddedViewSpec`
 class ViewSpec(Visual):
     datasource: str
     layout: str  # TODO: Replace with literal? See layout_registry.get_choices()
+    group_painters: Sequence[ColumnSpec]
+    painters: Sequence[ColumnSpec]
+    browser_reload: int
+    num_columns: int
+    column_headers: Literal["off", "pergroup", "repeat"]
+    sorters: Sequence[SorterSpec]
+    add_headers: NotRequired[str]
+    # View editor only adds them in case they are truish. In our built-in specs these flags are also
+    # partially set in case they are falsy
+    mobile: NotRequired[bool]
+    mustsearch: NotRequired[bool]
+    force_checkboxes: NotRequired[bool]
+    user_sortable: NotRequired[bool]
+    play_sounds: NotRequired[bool]
+    inventory_join_macros: NotRequired[InventoryJoinMacrosSpec]
+
+
+# NOTE: keep in sync with `ViewSpec`
+# Trimmed down version of `ViewSpec` for embedded views in dashboards
+class DashboardEmbeddedViewSpec(TypedDict):
+    # from Visual
+    single_infos: SingleInfos
+    # from ViewSpec
+    datasource: str
+    layout: str
     group_painters: Sequence[ColumnSpec]
     painters: Sequence[ColumnSpec]
     browser_reload: int

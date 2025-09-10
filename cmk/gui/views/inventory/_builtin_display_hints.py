@@ -82,7 +82,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".hardware.cpu.nodes:*.node_name": {"title": _l("Node name")},
         # MIGRATED ".hardware.cpu.nodes:*.cores": {"title": _l("#Cores"), "paint": "count"},
         # MIGRATED ".hardware.cpu.nodes:*.model": {"title": _l("CPU model")},
-        ".hardware.firmware.": {"title": _l("Firmware")},
+        # MIGRATED ".hardware.firmware.": {"title": _l("Firmware")},
         ".hardware.firmware.redfish:": {
             "title": _l("Redfish"),
             "keyorder": ["component", "version", "location", "description", "updateable"],

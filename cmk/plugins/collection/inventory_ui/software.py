@@ -605,3 +605,15 @@ node_software_applications_kube_deployment = Node(
         "match_expressions": TextField(Title("matchExpressions")),
     },
 )
+
+node_software_applications_kube_labels = Node(
+    name="software_applications_kube_labels",
+    path=["software", "applications", "kube", "labels"],
+    title=Title("Labels"),
+    table=Table(
+        columns={
+            "label_name": TextField(Title("Name")),
+            "label_value": TextField(Title("Value")),
+        },
+    ),
+)

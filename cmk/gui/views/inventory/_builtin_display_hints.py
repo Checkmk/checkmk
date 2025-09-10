@@ -913,16 +913,16 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED     "title": _l("uPnP configuration enabled")
         # MIGRATED },
         # MIGRATED ".software.applications.kube.": {"title": _l("Kubernetes")},
-        ".software.applications.kube.labels:": {
-            "title": _l("Labels"),
-            "keyorder": ["label_name", "label_value"],
-        },
-        ".software.applications.kube.labels:*.label_name": {
-            "title": _l("Name"),
-        },
-        ".software.applications.kube.labels:*.label_value": {
-            "title": _l("Value"),
-        },
+        # MIGRATED ".software.applications.kube.labels:": {
+        # MIGRATED     "title": _l("Labels"),
+        # MIGRATED     "keyorder": ["label_name", "label_value"],
+        # MIGRATED },
+        # MIGRATED ".software.applications.kube.labels:*.label_name": {
+        # MIGRATED     "title": _l("Name"),
+        # MIGRATED },
+        # MIGRATED ".software.applications.kube.labels:*.label_value": {
+        # MIGRATED     "title": _l("Value"),
+        # MIGRATED },
         # MIGRATED ".networking.kube:": {
         # MIGRATED     "title": _l("Kubernetes"),
         # MIGRATED     "keyorder": ["ip", "address_type"],

@@ -454,3 +454,15 @@ node_software_applications_docker_node_labels = Node(
         },
     ),
 )
+
+node_software_applications_docker_swarm_manager = Node(
+    name="software_applications_docker_swarm_manager",
+    path=["software", "applications", "docker", "swarm_manager"],
+    title=Title("Swarm managers"),
+    table=Table(
+        columns={
+            "NodeID": TextField(Title("Node ID")),
+            "Addr": TextField(Title("Address")),
+        },
+    ),
+)

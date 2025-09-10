@@ -346,3 +346,9 @@ node_software_applications_checkmk_agent_plugins = Node(
         },
     ),
 )
+
+node_software_applications_citrix = Node(
+    name="software_applications_citrix",
+    path=["software", "applications", "citrix"],
+    title=Title("Citrix"),
+)

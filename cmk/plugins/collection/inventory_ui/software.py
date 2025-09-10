@@ -9,6 +9,7 @@ from cmk.inventory_ui.v1_alpha import (
     DecimalNotation,
     Node,
     NumberField,
+    SINotation,
     StrictPrecision,
     Table,
     TextField,
@@ -18,6 +19,7 @@ from cmk.inventory_ui.v1_alpha import (
 )
 
 UNIT_AGE = Unit(AgeNotation())
+UNIT_BYTES = Unit(SINotation("B"))
 UNIT_COUNT = Unit(DecimalNotation(""), StrictPrecision(0))
 
 node_software = Node(
@@ -723,6 +725,47 @@ node_software_applications_oracle_instance = Node(
             "logins": TextField(Title("Logins")),
             "db_uptime": NumberField(Title("Uptime"), render=UNIT_AGE),
             "db_creation_time": TextField(Title("Creation time")),
+        },
+    ),
+)
+
+node_software_applications_oracle_pga = Node(
+    name="software_applications_oracle_pga",
+    path=["software", "applications", "oracle", "pga"],
+    title=Title("Oracle PGA info"),
+    table=Table(
+        view=View(name="invorapga", title=Title("Oracle PGA info")),
+        columns={
+            "sid": TextField(Title("SID")),
+            "aggregate_pga_auto_target": NumberField(
+                Title("Aggregate PGA auto target"), render=UNIT_BYTES
+            ),
+            "aggregate_pga_target_parameter": NumberField(
+                Title("Aggregate PGA target parameter"), render=UNIT_BYTES
+            ),
+            "bytes_processed": NumberField(Title("Bytes processed"), render=UNIT_BYTES),
+            "extra_bytes_read_written": NumberField(
+                Title("Extra bytes read/written"), render=UNIT_BYTES
+            ),
+            "global_memory_bound": NumberField(Title("Global memory bound"), render=UNIT_BYTES),
+            "maximum_pga_allocated": NumberField(Title("Maximum PGA allocated"), render=UNIT_BYTES),
+            "maximum_pga_used_for_auto_workareas": NumberField(
+                Title("Maximum PGA used for auto workareas"), render=UNIT_BYTES
+            ),
+            "maximum_pga_used_for_manual_workareas": NumberField(
+                Title("Maximum PGA used for manual workareas"), render=UNIT_BYTES
+            ),
+            "total_pga_allocated": NumberField(Title("Total PGA allocated"), render=UNIT_BYTES),
+            "total_pga_inuse": NumberField(Title("Total PGA inuse"), render=UNIT_BYTES),
+            "total_pga_used_for_auto_workareas": NumberField(
+                Title("Total PGA used for auto workareas"), render=UNIT_BYTES
+            ),
+            "total_pga_used_for_manual_workareas": NumberField(
+                Title("Total PGA used for manual workareas"), render=UNIT_BYTES
+            ),
+            "total_freeable_pga_memory": NumberField(
+                Title("Total freeable PGA memory"), render=UNIT_BYTES
+            ),
         },
     ),
 )

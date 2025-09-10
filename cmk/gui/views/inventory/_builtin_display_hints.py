@@ -1318,79 +1318,79 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
             "title": _l("Free SGA memory available"),
             "paint": "size",
         },
-        ".software.applications.oracle.pga:": {
-            "title": _l("Oracle PGA info"),
-            "keyorder": [
-                "sid",
-                "aggregate_pga_auto_target",
-                "aggregate_pga_target_parameter",
-                "bytes_processed",
-                "extra_bytes_read_written",
-                "global_memory_bound",
-                "maximum_pga_allocated",
-                "maximum_pga_used_for_auto_workareas",
-                "maximum_pga_used_for_manual_workareas",
-                "total_pga_allocated",
-                "total_pga_inuse",
-                "total_pga_used_for_auto_workareas",
-                "total_pga_used_for_manual_workareas",
-                "total_freeable_pga_memory",
-            ],
-            "view": "invorapga",
-        },
-        ".software.applications.oracle.pga:*.sid": {"title": _l("SID")},
-        ".software.applications.oracle.pga:*.aggregate_pga_auto_target": {
-            "title": _l("Aggregate PGA auto target"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.pga:*.aggregate_pga_target_parameter": {
-            "title": _l("Aggregate PGA target parameter"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.pga:*.bytes_processed": {
-            "title": _l("Bytes processed"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.pga:*.extra_bytes_read_written": {
-            "title": _l("Extra bytes read/written"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.pga:*.global_memory_bound": {
-            "title": _l("Global memory bound"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.pga:*.maximum_pga_allocated": {
-            "title": _l("Maximum PGA allocated"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.pga:*.maximum_pga_used_for_auto_workareas": {
-            "title": _l("Maximum PGA used for auto workareas"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.pga:*.maximum_pga_used_for_manual_workareas": {
-            "title": _l("Maximum PGA used for manual workareas"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.pga:*.total_pga_allocated": {
-            "title": _l("Total PGA allocated"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.pga:*.total_pga_inuse": {
-            "title": _l("Total PGA inuse"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.pga:*.total_pga_used_for_auto_workareas": {
-            "title": _l("Total PGA used for auto workareas"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.pga:*.total_pga_used_for_manual_workareas": {
-            "title": _l("Total PGA used for manual workareas"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.pga:*.total_freeable_pga_memory": {
-            "title": _l("Total freeable PGA memory"),
-            "paint": "size",
-        },
+        # MIGRATED ".software.applications.oracle.pga:": {
+        # MIGRATED     "title": _l("Oracle PGA info"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "sid",
+        # MIGRATED         "aggregate_pga_auto_target",
+        # MIGRATED         "aggregate_pga_target_parameter",
+        # MIGRATED         "bytes_processed",
+        # MIGRATED         "extra_bytes_read_written",
+        # MIGRATED         "global_memory_bound",
+        # MIGRATED         "maximum_pga_allocated",
+        # MIGRATED         "maximum_pga_used_for_auto_workareas",
+        # MIGRATED         "maximum_pga_used_for_manual_workareas",
+        # MIGRATED         "total_pga_allocated",
+        # MIGRATED         "total_pga_inuse",
+        # MIGRATED         "total_pga_used_for_auto_workareas",
+        # MIGRATED         "total_pga_used_for_manual_workareas",
+        # MIGRATED         "total_freeable_pga_memory",
+        # MIGRATED     ],
+        # MIGRATED     "view": "invorapga",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.pga:*.sid": {"title": _l("SID")},
+        # MIGRATED ".software.applications.oracle.pga:*.aggregate_pga_auto_target": {
+        # MIGRATED     "title": _l("Aggregate PGA auto target"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.pga:*.aggregate_pga_target_parameter": {
+        # MIGRATED     "title": _l("Aggregate PGA target parameter"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.pga:*.bytes_processed": {
+        # MIGRATED     "title": _l("Bytes processed"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.pga:*.extra_bytes_read_written": {
+        # MIGRATED     "title": _l("Extra bytes read/written"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.pga:*.global_memory_bound": {
+        # MIGRATED     "title": _l("Global memory bound"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.pga:*.maximum_pga_allocated": {
+        # MIGRATED     "title": _l("Maximum PGA allocated"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.pga:*.maximum_pga_used_for_auto_workareas": {
+        # MIGRATED     "title": _l("Maximum PGA used for auto workareas"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.pga:*.maximum_pga_used_for_manual_workareas": {
+        # MIGRATED     "title": _l("Maximum PGA used for manual workareas"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.pga:*.total_pga_allocated": {
+        # MIGRATED     "title": _l("Total PGA allocated"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.pga:*.total_pga_inuse": {
+        # MIGRATED     "title": _l("Total PGA inuse"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.pga:*.total_pga_used_for_auto_workareas": {
+        # MIGRATED     "title": _l("Total PGA used for auto workareas"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.pga:*.total_pga_used_for_manual_workareas": {
+        # MIGRATED     "title": _l("Total PGA used for manual workareas"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.pga:*.total_freeable_pga_memory": {
+        # MIGRATED     "title": _l("Total freeable PGA memory"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
         ".software.applications.oracle.tablespaces:": {
             "title": _l("Oracle tablespaces"),
             "keyorder": [

@@ -886,9 +886,9 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         },
         ".software.applications.fortinet.fortisandbox:*.name": {"title": _l("Name")},
         ".software.applications.fortinet.fortisandbox:*.version": {"title": _l("Version")},
-        ".software.applications.fortinet.fortigate_high_availability.": {
-            "title": _l("FortiGate HighAvailability"),
-        },
+        # MIGRATED ".software.applications.fortinet.fortigate_high_availability.": {
+        # MIGRATED     "title": _l("FortiGate HighAvailability"),
+        # MIGRATED },
         ".software.applications.fritz.": {
             "title": _l("Fritz"),
             "keyorder": [

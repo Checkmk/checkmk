@@ -472,3 +472,9 @@ node_software_applications_fortinet = Node(
     path=["software", "applications", "fortinet"],
     title=Title("Fortinet"),
 )
+
+node_software_applications_fortinet_fortigate_high_availability = Node(
+    name="software_applications_fortinet_fortigate_high_availability",
+    path=["software", "applications", "fortinet", "fortigate_high_availability"],
+    title=Title("FortiGate HighAvailability"),
+)

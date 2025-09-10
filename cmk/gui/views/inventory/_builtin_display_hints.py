@@ -838,31 +838,31 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.docker.container.ports:*.host_addresses": {
             "title": _l("Host addresses")
         },
-        ".software.applications.docker.container.networks:": {
-            "title": _l("Networks"),
-            "keyorder": [
-                "name",
-                "ip_address",
-                "ip_prefixlen",
-                "gateway",
-                "mac_address",
-                "network_id",
-            ],
-        },
-        ".software.applications.docker.container.networks:*.name": {"title": _l("Name")},
-        ".software.applications.docker.container.networks:*.ip_address": {
-            "title": _l("IP address")
-        },
-        ".software.applications.docker.container.networks:*.ip_prefixlen": {
-            "title": _l("IP prefix")
-        },
-        ".software.applications.docker.container.networks:*.gateway": {"title": _l("Gateway")},
-        ".software.applications.docker.container.networks:*.mac_address": {
-            "title": _l("MAC address")
-        },
-        ".software.applications.docker.container.networks:*.network_id": {
-            "title": _l("Network ID")
-        },
+        # MIGRATED ".software.applications.docker.container.networks:": {
+        # MIGRATED     "title": _l("Networks"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "name",
+        # MIGRATED         "ip_address",
+        # MIGRATED         "ip_prefixlen",
+        # MIGRATED         "gateway",
+        # MIGRATED         "mac_address",
+        # MIGRATED         "network_id",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.container.networks:*.name": {"title": _l("Name")},
+        # MIGRATED ".software.applications.docker.container.networks:*.ip_address": {
+        # MIGRATED     "title": _l("IP address")
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.container.networks:*.ip_prefixlen": {
+        # MIGRATED     "title": _l("IP prefix")
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.container.networks:*.gateway": {"title": _l("Gateway")},
+        # MIGRATED ".software.applications.docker.container.networks:*.mac_address": {
+        # MIGRATED     "title": _l("MAC address")
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.container.networks:*.network_id": {
+        # MIGRATED     "title": _l("Network ID")
+        # MIGRATED },
         ".software.applications.docker.networks.containers:": {
             "title": _l("Network containers"),
             "keyorder": ["network_id", "id", "name", "ipv4_address", "ipv6_address", "mac_address"],

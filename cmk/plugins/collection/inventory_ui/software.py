@@ -398,3 +398,19 @@ node_software_applications_docker_container = Node(
         "node_name": TextField(Title("Node name")),
     },
 )
+
+node_software_applications_docker_container_networks = Node(
+    name="software_applications_docker_container_networks",
+    path=["software", "applications", "docker", "container", "networks"],
+    title=Title("Networks"),
+    table=Table(
+        columns={
+            "name": TextField(Title("Name")),
+            "ip_address": TextField(Title("IP address")),
+            "ip_prefixlen": TextField(Title("IP prefix")),
+            "gateway": TextField(Title("Gateway")),
+            "mac_address": TextField(Title("MAC address")),
+            "network_id": TextField(Title("Network ID")),
+        },
+    ),
+)

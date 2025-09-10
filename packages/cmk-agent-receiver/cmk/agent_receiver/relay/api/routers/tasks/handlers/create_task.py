@@ -9,6 +9,7 @@ from datetime import datetime
 
 from pydantic import SecretStr
 
+from cmk.agent_receiver.log import bound_contextvars
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     Task,
     TasksRepository,
@@ -32,5 +33,6 @@ class CreateTaskHandler:
         task = Task(
             type=task_type, payload=task_payload, creation_timestamp=now, update_timestamp=now
         )
-        task_created = self.tasks_repository.store_task(relay_id, task)
+        with bound_contextvars(task_id=task.id):
+            task_created = self.tasks_repository.store_task(relay_id, task)
         return task_created.id

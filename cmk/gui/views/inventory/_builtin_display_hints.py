@@ -527,18 +527,18 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".hardware.nwadapter:*.gateway": {"title": _l("Gateway")},
         # MIGRATED ".software.": {"title": _l("Software"), "icon": "software"},
         # MIGRATED ".software.applications.": {"title": _l("Applications")},
-        ".software.applications.check_mk.": {
-            "title": _l("Checkmk"),
-            "keyorder": ["num_hosts", "num_services"],
-        },
-        ".software.applications.check_mk.num_hosts": {
-            "title": _l("#Hosts"),
-            "sort": cmp_natural_sort,
-        },
-        ".software.applications.check_mk.num_services": {
-            "title": _l("#Services"),
-            "sort": cmp_natural_sort,
-        },
+        # MIGRATED ".software.applications.check_mk.": {
+        # MIGRATED     "title": _l("Checkmk"),
+        # MIGRATED     "keyorder": ["num_hosts", "num_services"],
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.num_hosts": {
+        # MIGRATED     "title": _l("#Hosts"),
+        # MIGRATED     "sort": cmp_natural_sort,
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.num_services": {
+        # MIGRATED     "title": _l("#Services"),
+        # MIGRATED     "sort": cmp_natural_sort,
+        # MIGRATED },
         ".software.applications.check_mk.versions:": {
             "title": _l("Checkmk versions"),
             "keyorder": ["version", "number", "edition", "demo", "num_sites"],

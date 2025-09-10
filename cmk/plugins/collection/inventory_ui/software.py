@@ -246,3 +246,13 @@ node_software_applications_azure_load_balancers_outbound_rules_backend_pools_add
         },
     ),
 )
+
+node_software_applications_check_mk = Node(
+    name="software_applications_check_mk",
+    path=["software", "applications", "check_mk"],
+    title=Title("Checkmk"),
+    attributes={
+        "num_hosts": TextField(Title("#Hosts")),
+        "num_services": TextField(Title("#Services")),
+    },
+)

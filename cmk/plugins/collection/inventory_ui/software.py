@@ -870,3 +870,22 @@ node_software_applications_synthetic_monitoring_plans = Node(
         },
     ),
 )
+
+node_software_applications_synthetic_monitoring_tests = Node(
+    name="software_applications_synthetic_monitoring_tests",
+    path=["software", "applications", "synthetic_monitoring", "tests"],
+    title=Title("Tests"),
+    table=Table(
+        view=View(name="invsyntheticmonitoringtests", title=Title("Tests")),
+        columns={
+            "application": TextField(Title("Application")),
+            "suite_name": TextField(Title("Suite name")),
+            "variant": TextField(Title("Variant")),
+            "top_level_suite_name": TextField(Title("Top level suite")),
+            "bottom_level_suite_name": TextField(Title("Bottom level suite")),
+            "test_name": TextField(Title("Test")),
+            "plan_id": TextField(Title("Plan ID")),
+            "test_item": TextField(Title("Item")),
+        },
+    ),
+)

@@ -459,7 +459,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".hardware.storage.disks:*.type": {"title": _l("Type")},
         # MIGRATED # this displayhint is for Attributes and NOT for above Table
         # MIGRATED ".hardware.storage.disks.size": {"title": _l("Size"), "paint": "size"},
-        ".hardware.volumes.": {"title": _l("Volumes")},
+        # MIGRATED ".hardware.volumes.": {"title": _l("Volumes")},
         ".hardware.volumes.physical_volumes:": {
             "title": _l("Physical volumes"),
             "keyorder": [

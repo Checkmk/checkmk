@@ -173,6 +173,25 @@ node_hardware_components_psus = Node(
     ),
 )
 
+node_hardware_components_sensors = Node(
+    name="hardware_components_sensors",
+    path=["hardware", "components", "sensors"],
+    title=Title("Sensors"),
+    table=Table(
+        view=View(name="invsensor", title=Title("Sensors")),
+        columns={
+            "index": TextField(Title("Index")),
+            "name": TextField(Title("Name")),
+            "description": TextField(Title("Description")),
+            "software": TextField(Title("Software")),
+            "serial": TextField(Title("Serial number")),
+            "manufacturer": TextField(Title("Manufacturer")),
+            "model": TextField(Title("Model name")),
+            "location": TextField(Title("Location")),
+        },
+    ),
+)
+
 node_hardware_memory = Node(
     name="hardware_memory",
     path=["hardware", "memory"],

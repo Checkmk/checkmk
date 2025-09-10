@@ -989,3 +989,14 @@ node_software_os = Node(
         "build": TextField(Title("Build")),
     },
 )
+
+node_software_os_service_packs = Node(
+    name="software_os_service_packs",
+    path=["software", "os", "service_packs"],
+    title=Title("Service packs"),
+    table=Table(
+        columns={
+            "name": TextField(Title("Name")),
+        },
+    ),
+)

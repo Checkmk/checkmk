@@ -1761,8 +1761,8 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".software.os.arch": {"title": _l("Kernel Architecture")},
         # MIGRATED ".software.os.service_pack": {"title": _l("Latest service pack")},
         # MIGRATED ".software.os.build": {"title": _l("Build")},
-        ".software.os.service_packs:": {"title": _l("Service packs"), "keyorder": ["name"]},
-        ".software.os.service_packs:*.name": {"title": _l("Name")},
+        # MIGRATED ".software.os.service_packs:": {"title": _l("Service packs"), "keyorder": ["name"]},
+        # MIGRATED ".software.os.service_packs:*.name": {"title": _l("Name")},
         ".software.packages:": {
             "title": _l("Software packages"),
             "icon": "packages",

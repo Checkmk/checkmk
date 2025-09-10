@@ -94,7 +94,7 @@ class NegativeYRange:
 
 
 @dataclass(frozen=True)
-class NotationFormatter:
+class NotationFormatter(abc.ABC):
     symbol: str
     precision: AutoPrecision | StrictPrecision
     use_max_digits_for_labels: bool = True

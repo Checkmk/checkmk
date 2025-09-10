@@ -690,3 +690,18 @@ node_software_applications_oracle = Node(
     path=["software", "applications", "oracle"],
     title=Title("Oracle DB"),
 )
+
+node_software_applications_oracle_dataguard_stats = Node(
+    name="software_applications_oracle_dataguard_stats",
+    path=["software", "applications", "oracle", "dataguard_stats"],
+    title=Title("Oracle dataguard statistics"),
+    table=Table(
+        view=View(name="invoradataguardstats", title=Title("Oracle dataguard statistics")),
+        columns={
+            "sid": TextField(Title("SID")),
+            "db_unique": TextField(Title("Name")),
+            "role": TextField(Title("Role")),
+            "switchover": TextField(Title("Switchover")),
+        },
+    ),
+)

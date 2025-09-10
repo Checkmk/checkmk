@@ -1224,15 +1224,15 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.oracle.instance:*.db_creation_time": {
             "title": _l("Creation time"),
         },
-        ".software.applications.oracle.dataguard_stats:": {
-            "title": _l("Oracle dataguard statistics"),
-            "keyorder": ["sid", "db_unique", "role", "switchover"],
-            "view": "invoradataguardstats",
-        },
-        ".software.applications.oracle.dataguard_stats:*.sid": {"title": _l("SID")},
-        ".software.applications.oracle.dataguard_stats:*.db_unique": {"title": _l("Name")},
-        ".software.applications.oracle.dataguard_stats:*.role": {"title": _l("Role")},
-        ".software.applications.oracle.dataguard_stats:*.switchover": {"title": _l("Switchover")},
+        # MIGRATED ".software.applications.oracle.dataguard_stats:": {
+        # MIGRATED     "title": _l("Oracle dataguard statistics"),
+        # MIGRATED     "keyorder": ["sid", "db_unique", "role", "switchover"],
+        # MIGRATED     "view": "invoradataguardstats",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.dataguard_stats:*.sid": {"title": _l("SID")},
+        # MIGRATED ".software.applications.oracle.dataguard_stats:*.db_unique": {"title": _l("Name")},
+        # MIGRATED ".software.applications.oracle.dataguard_stats:*.role": {"title": _l("Role")},
+        # MIGRATED ".software.applications.oracle.dataguard_stats:*.switchover": {"title": _l("Switchover")},
         ".software.applications.oracle.recovery_area:": {
             "title": _l("Oracle recovery areas"),
             "keyorder": ["sid", "flashback"],

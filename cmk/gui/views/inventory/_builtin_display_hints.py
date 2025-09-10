@@ -990,19 +990,19 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.kube.deployment.match_expressions": {
             "title": _l("matchExpressions")
         },
-        ".software.applications.kube.daemonset.": {
-            "title": _l("DaemonSet"),
-            "keyorder": [
-                "strategy",
-                "match_labels",
-                "match_expressions",
-            ],
-        },
-        ".software.applications.kube.daemonset.strategy": {"title": _l("StrategyType")},
-        ".software.applications.kube.daemonset.match_labels": {"title": _l("matchLabels")},
-        ".software.applications.kube.daemonset.match_expressions": {
-            "title": _l("matchExpressions")
-        },
+        # MIGRATED ".software.applications.kube.daemonset.": {
+        # MIGRATED     "title": _l("DaemonSet"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "strategy",
+        # MIGRATED         "match_labels",
+        # MIGRATED         "match_expressions",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.kube.daemonset.strategy": {"title": _l("StrategyType")},
+        # MIGRATED ".software.applications.kube.daemonset.match_labels": {"title": _l("matchLabels")},
+        # MIGRATED ".software.applications.kube.daemonset.match_expressions": {
+        # MIGRATED     "title": _l("matchExpressions")
+        # MIGRATED },
         ".software.applications.kube.statefulset.": {
             "title": _l("StatefulSet"),
             "keyorder": [

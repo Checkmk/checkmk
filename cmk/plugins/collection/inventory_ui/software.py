@@ -583,3 +583,14 @@ node_software_applications_kube_cluster = Node(
         "version": TextField(Title("Version")),
     },
 )
+
+node_software_applications_kube_daemonset = Node(
+    name="software_applications_kube_daemonset",
+    path=["software", "applications", "kube", "daemonset"],
+    title=Title("DaemonSet"),
+    attributes={
+        "strategy": TextField(Title("StrategyType")),
+        "match_labels": TextField(Title("matchLabels")),
+        "match_expressions": TextField(Title("matchExpressions")),
+    },
+)

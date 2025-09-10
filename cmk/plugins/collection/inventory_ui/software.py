@@ -782,3 +782,33 @@ node_software_applications_oracle_recovery_area = Node(
         },
     ),
 )
+
+node_software_applications_oracle_sga = Node(
+    name="software_applications_oracle_sga",
+    path=["software", "applications", "oracle", "sga"],
+    title=Title("Oracle SGA info"),
+    table=Table(
+        view=View(name="invorasga", title=Title("Oracle SGA info")),
+        columns={
+            "sid": TextField(Title("SID")),
+            "fixed_size": NumberField(Title("Fixed size"), render=UNIT_BYTES),
+            "redo_buffer": NumberField(Title("Redo buffers"), render=UNIT_BYTES),
+            "buf_cache_size": NumberField(Title("Buffer cache size"), render=UNIT_BYTES),
+            "in_mem_area_size": NumberField(Title("In-memory area"), render=UNIT_BYTES),
+            "shared_pool_size": NumberField(Title("Shared pool size"), render=UNIT_BYTES),
+            "large_pool_size": NumberField(Title("Large pool size"), render=UNIT_BYTES),
+            "java_pool_size": NumberField(Title("Java pool size"), render=UNIT_BYTES),
+            "streams_pool_size": NumberField(Title("Streams pool size"), render=UNIT_BYTES),
+            "shared_io_pool_size": NumberField(Title("Shared pool size"), render=UNIT_BYTES),
+            "data_trans_cache_size": NumberField(
+                Title("Data transfer cache size"), render=UNIT_BYTES
+            ),
+            "granule_size": NumberField(Title("Granule size"), render=UNIT_BYTES),
+            "max_size": NumberField(Title("Maximum size"), render=UNIT_BYTES),
+            "start_oh_shared_pool": NumberField(
+                Title("Startup overhead in shared pool"), render=UNIT_BYTES
+            ),
+            "free_mem_avail": NumberField(Title("Free SGA memory available"), render=UNIT_BYTES),
+        },
+    ),
+)

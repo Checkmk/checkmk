@@ -1240,84 +1240,84 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED },
         # MIGRATED ".software.applications.oracle.recovery_area:*.sid": {"title": _l("SID")},
         # MIGRATED ".software.applications.oracle.recovery_area:*.flashback": {"title": _l("Flashback")},
-        ".software.applications.oracle.sga:": {
-            "title": _l("Oracle SGA info"),
-            "keyorder": [
-                "sid",
-                "fixed_size",
-                "redo_buffer",
-                "buf_cache_size",
-                "in_mem_area_size",
-                "shared_pool_size",
-                "large_pool_size",
-                "java_pool_size",
-                "streams_pool_size",
-                "shared_io_pool_size",
-                "data_trans_cache_size",
-                "granule_size",
-                "max_size",
-                "start_oh_shared_pool",
-                "free_mem_avail",
-            ],
-            "view": "invorasga",
-        },
-        ".software.applications.oracle.sga:*.sid": {"title": _l("SID")},
-        ".software.applications.oracle.sga:*.fixed_size": {
-            "title": _l("Fixed size"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.sga:*.max_size": {
-            "title": _l("Maximum size"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.sga:*.redo_buffer": {
-            "title": _l("Redo buffers"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.sga:*.buf_cache_size": {
-            "title": _l("Buffer cache size"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.sga:*.in_mem_area_size": {
-            "title": _l("In-memory area"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.sga:*.shared_pool_size": {
-            "title": _l("Shared pool size"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.sga:*.large_pool_size": {
-            "title": _l("Large pool size"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.sga:*.java_pool_size": {
-            "title": _l("Java pool size"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.sga:*.streams_pool_size": {
-            "title": _l("Streams pool size"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.sga:*.shared_io_pool_size": {
-            "title": _l("Shared pool size"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.sga:*.data_trans_cache_size": {
-            "title": _l("Data transfer cache size"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.sga:*.granule_size": {
-            "title": _l("Granule size"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.sga:*.start_oh_shared_pool": {
-            "title": _l("Startup overhead in shared pool"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.sga:*.free_mem_avail": {
-            "title": _l("Free SGA memory available"),
-            "paint": "size",
-        },
+        # MIGRATED ".software.applications.oracle.sga:": {
+        # MIGRATED     "title": _l("Oracle SGA info"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "sid",
+        # MIGRATED         "fixed_size",
+        # MIGRATED         "redo_buffer",
+        # MIGRATED         "buf_cache_size",
+        # MIGRATED         "in_mem_area_size",
+        # MIGRATED         "shared_pool_size",
+        # MIGRATED         "large_pool_size",
+        # MIGRATED         "java_pool_size",
+        # MIGRATED         "streams_pool_size",
+        # MIGRATED         "shared_io_pool_size",
+        # MIGRATED         "data_trans_cache_size",
+        # MIGRATED         "granule_size",
+        # MIGRATED         "max_size",
+        # MIGRATED         "start_oh_shared_pool",
+        # MIGRATED         "free_mem_avail",
+        # MIGRATED     ],
+        # MIGRATED     "view": "invorasga",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.sga:*.sid": {"title": _l("SID")},
+        # MIGRATED ".software.applications.oracle.sga:*.fixed_size": {
+        # MIGRATED     "title": _l("Fixed size"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.sga:*.max_size": {
+        # MIGRATED     "title": _l("Maximum size"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.sga:*.redo_buffer": {
+        # MIGRATED     "title": _l("Redo buffers"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.sga:*.buf_cache_size": {
+        # MIGRATED     "title": _l("Buffer cache size"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.sga:*.in_mem_area_size": {
+        # MIGRATED     "title": _l("In-memory area"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.sga:*.shared_pool_size": {
+        # MIGRATED     "title": _l("Shared pool size"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.sga:*.large_pool_size": {
+        # MIGRATED     "title": _l("Large pool size"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.sga:*.java_pool_size": {
+        # MIGRATED     "title": _l("Java pool size"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.sga:*.streams_pool_size": {
+        # MIGRATED     "title": _l("Streams pool size"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.sga:*.shared_io_pool_size": {
+        # MIGRATED     "title": _l("Shared pool size"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.sga:*.data_trans_cache_size": {
+        # MIGRATED     "title": _l("Data transfer cache size"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.sga:*.granule_size": {
+        # MIGRATED     "title": _l("Granule size"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.sga:*.start_oh_shared_pool": {
+        # MIGRATED     "title": _l("Startup overhead in shared pool"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.sga:*.free_mem_avail": {
+        # MIGRATED     "title": _l("Free SGA memory available"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
         # MIGRATED ".software.applications.oracle.pga:": {
         # MIGRATED     "title": _l("Oracle PGA info"),
         # MIGRATED     "keyorder": [

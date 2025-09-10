@@ -367,6 +367,15 @@ node_hardware_storage = Node(
     title=Title("Storage"),
 )
 
+node_hardware_storage_controller = Node(
+    name="hardware_storage_controller",
+    path=["hardware", "storage", "controller"],
+    title=Title("Controller"),
+    attributes={
+        "version": TextField(Title("Version")),
+    },
+)
+
 node_hardware_system_nodes = Node(
     name="hardware_system_nodes",
     path=["hardware", "system", "nodes"],

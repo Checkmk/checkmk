@@ -194,3 +194,17 @@ node_software_applications_azure_load_balancers_inbound_nat_rules_public_ips = N
         },
     ),
 )
+
+node_software_applications_azure_load_balancers_outbound_rules = Node(
+    name="software_applications_azure_load_balancers_outbound_rules",
+    path=["software", "applications", "azure", "load_balancers", "outbound_rules"],
+    title=Title("Outbound rules"),
+    table=Table(
+        columns={
+            "load_balancer": TextField(Title("Load balancer")),
+            "outbound_rule": TextField(Title("Outbound rule")),
+            "protocol": TextField(Title("Protocol")),
+            "idle_timeout": TextField(Title("Idle timeout")),
+        },
+    ),
+)

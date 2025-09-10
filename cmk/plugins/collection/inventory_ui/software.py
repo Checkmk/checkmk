@@ -959,3 +959,16 @@ node_software_firmware = Node(
         "platform_level": TextField(Title("Platform firmware level")),
     },
 )
+
+node_software_kernel_config = Node(
+    name="software_kernel_config",
+    path=["software", "kernel_config"],
+    title=Title("Kernel configuration (sysctl)"),
+    table=Table(
+        view=View(name="invkernelconfig", title=Title("Kernel configuration (sysctl)")),
+        columns={
+            "name": TextField(Title("Parameter name")),
+            "value": TextField(Title("Value")),
+        },
+    ),
+)

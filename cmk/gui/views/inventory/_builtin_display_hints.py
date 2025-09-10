@@ -1731,13 +1731,13 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".software.firmware.vendor": {"title": _l("Vendor")},
         # MIGRATED ".software.firmware.version": {"title": _l("Version")},
         # MIGRATED ".software.firmware.platform_level": {"title": _l("Platform firmware level")},
-        ".software.kernel_config:": {
-            "title": _l("Kernel configuration (sysctl)"),
-            "keyorder": ["name", "value"],
-            "view": "invkernelconfig",
-        },
-        ".software.kernel_config:*.name": {"title": _l("Parameter name")},
-        ".software.kernel_config:*.value": {"title": _l("Value")},
+        # MIGRATED ".software.kernel_config:": {
+        # MIGRATED     "title": _l("Kernel configuration (sysctl)"),
+        # MIGRATED     "keyorder": ["name", "value"],
+        # MIGRATED     "view": "invkernelconfig",
+        # MIGRATED },
+        # MIGRATED ".software.kernel_config:*.name": {"title": _l("Parameter name")},
+        # MIGRATED ".software.kernel_config:*.value": {"title": _l("Value")},
         ".software.os.": {
             "title": _l("Operating system"),
             "keyorder": [

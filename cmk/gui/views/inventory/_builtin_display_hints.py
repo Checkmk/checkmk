@@ -863,22 +863,22 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".software.applications.docker.container.networks:*.network_id": {
         # MIGRATED     "title": _l("Network ID")
         # MIGRATED },
-        ".software.applications.docker.networks.containers:": {
-            "title": _l("Network containers"),
-            "keyorder": ["network_id", "id", "name", "ipv4_address", "ipv6_address", "mac_address"],
-        },
-        ".software.applications.docker.networks.containers:*.network_id": {"title": _l("Network ID")},
-        ".software.applications.docker.networks.containers:*.id": {"title": _l("Container ID")},
-        ".software.applications.docker.networks.containers:*.name": {"title": _l("Name")},
-        ".software.applications.docker.networks.containers:*.ipv4_address": {
-            "title": _l("IPv4 address"),
-        },
-        ".software.applications.docker.networks.containers:*.ipv6_address": {
-            "title": _l("IPv6 address"),
-        },
-        ".software.applications.docker.networks.containers:*.mac_address": {
-            "title": _l("MAC address"),
-        },
+        # MIGRATED ".software.applications.docker.networks.containers:": {
+        # MIGRATED     "title": _l("Network containers"),
+        # MIGRATED     "keyorder": ["network_id", "id", "name", "ipv4_address", "ipv6_address", "mac_address"],
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.networks.containers:*.network_id": {"title": _l("Network ID")},
+        # MIGRATED ".software.applications.docker.networks.containers:*.id": {"title": _l("Container ID")},
+        # MIGRATED ".software.applications.docker.networks.containers:*.name": {"title": _l("Name")},
+        # MIGRATED ".software.applications.docker.networks.containers:*.ipv4_address": {
+        # MIGRATED     "title": _l("IPv4 address"),
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.networks.containers:*.ipv6_address": {
+        # MIGRATED     "title": _l("IPv6 address"),
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.networks.containers:*.mac_address": {
+        # MIGRATED     "title": _l("MAC address"),
+        # MIGRATED },
         ".software.applications.fortinet.": {"title": _l("Fortinet")},
         ".software.applications.fortinet.fortisandbox:": {
             "title": _l("FortiSandbox software"),

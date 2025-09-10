@@ -427,3 +427,19 @@ node_software_applications_docker_container_ports = Node(
         },
     ),
 )
+
+node_software_applications_docker_networks_containers = Node(
+    name="software_applications_docker_networks_containers",
+    path=["software", "applications", "docker", "networks", "containers"],
+    title=Title("Network containers"),
+    table=Table(
+        columns={
+            "network_id": TextField(Title("Network ID")),
+            "id": TextField(Title("Container ID")),
+            "name": TextField(Title("Name")),
+            "ipv4_address": TextField(Title("IPv4 address")),
+            "ipv6_address": TextField(Title("IPv6 address")),
+            "mac_address": TextField(Title("MAC address")),
+        },
+    ),
+)

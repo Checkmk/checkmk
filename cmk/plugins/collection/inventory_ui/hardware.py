@@ -463,3 +463,9 @@ node_hardware_video = Node(
         },
     ),
 )
+
+node_hardware_volumes = Node(
+    name="hardware_volumes",
+    path=["hardware", "volumes"],
+    title=Title("Volumes"),
+)

@@ -912,7 +912,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".software.applications.fritz.upnp_config_enabled": {
         # MIGRATED     "title": _l("uPnP configuration enabled")
         # MIGRATED },
-        ".software.applications.kube.": {"title": _l("Kubernetes")},
+        # MIGRATED ".software.applications.kube.": {"title": _l("Kubernetes")},
         ".software.applications.kube.labels:": {
             "title": _l("Labels"),
             "keyorder": ["label_name", "label_value"],

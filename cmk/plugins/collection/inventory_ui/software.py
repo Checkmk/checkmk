@@ -568,3 +568,9 @@ node_software_applications_ibm_mq_queues = Node(
         },
     ),
 )
+
+node_software_applications_kube = Node(
+    name="software_applications_kube",
+    path=["software", "applications", "kube"],
+    title=Title("Kubernetes"),
+)

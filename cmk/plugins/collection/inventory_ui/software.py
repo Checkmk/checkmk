@@ -10,3 +10,9 @@ node_software = Node(
     path=["software"],
     title=Title("Software"),
 )
+
+node_software_applications = Node(
+    name="software_applications",
+    path=["software", "applications"],
+    title=Title("Applications"),
+)

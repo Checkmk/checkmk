@@ -749,11 +749,11 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED },
         # MIGRATED ".software.applications.docker.num_containers_paused": {"title": _l("#Containers paused")},
         # MIGRATED ".software.applications.docker.num_images": {"title": _l("#Images")},
-        ".software.applications.docker.node_labels:": {
-            "title": _l("Node labels"),
-            "keyorder": ["label"],
-        },
-        ".software.applications.docker.node_labels:*.label": {"title": _l("Label")},
+        # MIGRATED ".software.applications.docker.node_labels:": {
+        # MIGRATED     "title": _l("Node labels"),
+        # MIGRATED     "keyorder": ["label"],
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.node_labels:*.label": {"title": _l("Label")},
         ".software.applications.docker.swarm_manager:": {
             "title": _l("Swarm managers"),
             "keyorder": ["NodeID", "Addr"],

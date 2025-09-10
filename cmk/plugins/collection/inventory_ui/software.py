@@ -443,3 +443,14 @@ node_software_applications_docker_networks_containers = Node(
         },
     ),
 )
+
+node_software_applications_docker_node_labels = Node(
+    name="software_applications_docker_node_labels",
+    path=["software", "applications", "docker", "node_labels"],
+    title=Title("Node labels"),
+    table=Table(
+        columns={
+            "label": TextField(Title("Label")),
+        },
+    ),
+)

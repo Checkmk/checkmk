@@ -17,8 +17,8 @@
 import sys
 
 expected_files = {
-    "mk-sql.exe",
     "mk-oracle.exe",
+    "mk-sql.exe",
     "check_mk_agent.msi",
     "check_mk_service32.exe",
     "check_mk_service64.exe",

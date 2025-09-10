@@ -19,6 +19,7 @@ rsync --verbose --recursive --links --devices --specials --one-file-system --del
     --exclude=.f12* \
     --exclude=__init__.py* \
     --exclude cmk-agent-ctl \
+    --exclude mk-oracle \
     --exclude mk-sql \
     --exclude windows \
     --exclude linux \

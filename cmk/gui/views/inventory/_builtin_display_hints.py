@@ -824,11 +824,11 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
             "title": "Labels",
             "paint": "csv_labels",
         },
-        ".software.applications.docker.container.": {
-            "title": _l("Container"),
-            "keyorder": ["node_name"],
-        },
-        ".software.applications.docker.container.node_name": {"title": _l("Node name")},
+        # MIGRATED ".software.applications.docker.container.": {
+        # MIGRATED     "title": _l("Container"),
+        # MIGRATED     "keyorder": ["node_name"],
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.container.node_name": {"title": _l("Node name")},
         ".software.applications.docker.container.ports:": {
             "title": _l("Ports"),
             "keyorder": ["port", "protocol", "host_addresses"],

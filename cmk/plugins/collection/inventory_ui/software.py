@@ -389,3 +389,12 @@ node_software_applications_docker = Node(
         "num_images": NumberField(Title("#Images"), render=UNIT_COUNT),
     },
 )
+
+node_software_applications_docker_container = Node(
+    name="software_applications_docker_container",
+    path=["software", "applications", "docker", "container"],
+    title=Title("Container"),
+    attributes={
+        "node_name": TextField(Title("Node name")),
+    },
+)

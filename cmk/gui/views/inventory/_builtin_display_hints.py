@@ -829,15 +829,15 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED     "keyorder": ["node_name"],
         # MIGRATED },
         # MIGRATED ".software.applications.docker.container.node_name": {"title": _l("Node name")},
-        ".software.applications.docker.container.ports:": {
-            "title": _l("Ports"),
-            "keyorder": ["port", "protocol", "host_addresses"],
-        },
-        ".software.applications.docker.container.ports:*.port": {"title": _l("Port")},
-        ".software.applications.docker.container.ports:*.protocol": {"title": _l("Protocol")},
-        ".software.applications.docker.container.ports:*.host_addresses": {
-            "title": _l("Host addresses")
-        },
+        # MIGRATED ".software.applications.docker.container.ports:": {
+        # MIGRATED     "title": _l("Ports"),
+        # MIGRATED     "keyorder": ["port", "protocol", "host_addresses"],
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.container.ports:*.port": {"title": _l("Port")},
+        # MIGRATED ".software.applications.docker.container.ports:*.protocol": {"title": _l("Protocol")},
+        # MIGRATED ".software.applications.docker.container.ports:*.host_addresses": {
+        # MIGRATED     "title": _l("Host addresses")
+        # MIGRATED },
         # MIGRATED ".software.applications.docker.container.networks:": {
         # MIGRATED     "title": _l("Networks"),
         # MIGRATED     "keyorder": [

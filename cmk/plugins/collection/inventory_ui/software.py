@@ -414,3 +414,16 @@ node_software_applications_docker_container_networks = Node(
         },
     ),
 )
+
+node_software_applications_docker_container_ports = Node(
+    name="software_applications_docker_container_ports",
+    path=["software", "applications", "docker", "container", "ports"],
+    title=Title("Ports"),
+    table=Table(
+        columns={
+            "port": TextField(Title("Port")),
+            "protocol": TextField(Title("Protocol")),
+            "host_addresses": TextField(Title("Host addresses")),
+        },
+    ),
+)

@@ -671,14 +671,14 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
             "short": _l("NPCD"),
             "paint": "service_status",
         },
-        ".software.applications.check_mk.cluster.": {
-            "title": _l("Cluster"),
-            "keyorder": ["is_cluster"],
-        },
-        ".software.applications.check_mk.cluster.is_cluster": {
-            "title": _l("Cluster host"),
-            "paint": "bool",
-        },
+        # MIGRATED ".software.applications.check_mk.cluster.": {
+        # MIGRATED     "title": _l("Cluster"),
+        # MIGRATED     "keyorder": ["is_cluster"],
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.cluster.is_cluster": {
+        # MIGRATED     "title": _l("Cluster host"),
+        # MIGRATED     "paint": "bool",
+        # MIGRATED },
         ".software.applications.check_mk.cluster.nodes:": {
             "title": _l("Nodes"),
             "keyorder": ["name"],

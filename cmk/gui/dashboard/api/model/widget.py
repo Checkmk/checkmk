@@ -2,8 +2,9 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Iterable
-from typing import Annotated, assert_never, Literal, Self
+from abc import ABC, abstractmethod
+from collections.abc import Container, Iterable
+from typing import Annotated, assert_never, Literal, override, Self
 
 from annotated_types import Ge
 from pydantic_core import ErrorDetails
@@ -177,17 +178,21 @@ class _BaseWidget:
 
 
 @api_model
-class BaseWidgetRequest(_BaseWidget):
+class BaseWidgetRequest(_BaseWidget, ABC):
     filters: VisualContext = api_field(
         description="Active filters in the format filter_id -> (variable -> value)",
     )
 
     def iter_validation_errors(
-        self, location: tuple[str | int, ...], context: ApiContext
+        self,
+        location: tuple[str | int, ...],
+        context: ApiContext,
+        *,
+        embedded_views: Container[str],
     ) -> Iterable[ErrorDetails]:
-        """Run additional validations that depends on the API context (or rather the config)."""
+        """Run additional validations that depends on the config."""
         yield from self.content.iter_validation_errors(
-            location + ("content", self.content.type), context
+            location + ("content", self.content.type), context, embedded_views=embedded_views
         )
 
     def _to_internal_without_layout(self) -> DashletConfig:
@@ -207,6 +212,10 @@ class BaseWidgetRequest(_BaseWidget):
         config["background"] = self.general_settings.render_background
         return config
 
+    @abstractmethod
+    def to_internal(self) -> DashletConfig:
+        pass
+
 
 @api_model
 class RelativeGridWidgetRequest(BaseWidgetRequest):
@@ -219,6 +228,7 @@ class RelativeGridWidgetRequest(BaseWidgetRequest):
         },
     )
 
+    @override
     def to_internal(self) -> DashletConfig:
         config = self._to_internal_without_layout()
         config["position"] = self.layout.position.to_internal()

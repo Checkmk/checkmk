@@ -57,7 +57,7 @@ INTERNAL_TO_API_TYPE_NAME: Mapping[str, str] = {
     "url": "url",
     "user_messages": "user_messages",
     "linked_view": "linked_view",
-    "view": "embedded_view",
+    "embedded_view": "embedded_view",
 }
 
 PERMISSIONS_PAGE_TOPICS = permissions.Optional(

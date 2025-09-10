@@ -53,7 +53,6 @@ def edit_relative_grid_dashboard_v1(
     ] = ApiOmitted(),
 ) -> RelativeGridDashboardDomainObject:
     """Edit a dashboard."""
-    body.validate(api_context)
     user_id = get_permitted_user_id(owner, action="edit")
 
     key = (user_id, dashboard_id)
@@ -64,7 +63,11 @@ def edit_relative_grid_dashboard_v1(
             title="Dashboard not found",
             detail=f"The dashboard with ID '{dashboard_id}' does not exist for user '{user_id}'.",
         )
-    dashboards[key] = body.to_internal(user_id, dashboard_id)
+
+    embedded_views = dashboards[key].get("embedded_views", {})
+    body.validate(api_context, embedded_views=embedded_views)
+
+    dashboards[key] = body.to_internal(user_id, dashboard_id, embedded_views)
     save_all_dashboards()
     sync_user_to_remotes(api_context.config.sites)
     return serialize_relative_grid_dashboard(

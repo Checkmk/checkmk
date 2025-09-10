@@ -50,10 +50,10 @@ def create_relative_grid_dashboard_v1(
     api_context: ApiContext, body: CreateDashboardV1
 ) -> TypedResponse[RelativeGridDashboardDomainObject]:
     """Create a dashboard."""
-    body.validate(api_context)
+    body.validate(api_context, embedded_views={})
     user.need_permission("general.edit_dashboards")
 
-    internal = body.to_internal(user.ident, body.dashboard_id)
+    internal = body.to_internal(user.ident, body.dashboard_id, embedded_views={})
     _save_dashboard_to_file(api_context.config.sites, internal)
 
     return ApiResponse(

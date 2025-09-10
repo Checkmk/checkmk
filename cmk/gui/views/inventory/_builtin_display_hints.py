@@ -1465,13 +1465,13 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.mssql.instances:*.cluster_name": {"title": _l("Cluster name")},
         ".software.applications.mssql.instances:*.active_node": {"title": _l("Active node")},
         ".software.applications.mssql.instances:*.node_names": {"title": _l("Node names")},
-        ".software.applications.ibm_mq.": {
-            "title": _l("IBM MQ"),
-            "keyorder": ["managers", "channels", "queues"],
-        },
-        ".software.applications.ibm_mq.managers": {"title": _l("Managers")},
-        ".software.applications.ibm_mq.channels": {"title": _l("Channels")},
-        ".software.applications.ibm_mq.queues": {"title": _l("Queues")},
+        # MIGRATED ".software.applications.ibm_mq.": {
+        # MIGRATED     "title": _l("IBM MQ"),
+        # MIGRATED     "keyorder": ["managers", "channels", "queues"],
+        # MIGRATED },
+        # MIGRATED ".software.applications.ibm_mq.managers": {"title": _l("Managers")},
+        # MIGRATED ".software.applications.ibm_mq.channels": {"title": _l("Channels")},
+        # MIGRATED ".software.applications.ibm_mq.queues": {"title": _l("Queues")},
         ".software.applications.ibm_mq.managers:": {
             "title": _l("IBM MQ managers"),
             "keyorder": ["name", "instver", "instname", "status", "standby", "ha"],

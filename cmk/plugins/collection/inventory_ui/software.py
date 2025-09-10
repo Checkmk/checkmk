@@ -506,3 +506,14 @@ node_software_applications_fritz = Node(
         "upnp_config_enabled": TextField(Title("uPnP configuration enabled")),
     },
 )
+
+node_software_applications_ibm_mq = Node(
+    name="software_applications_ibm_mq",
+    path=["software", "applications", "ibm_mq"],
+    title=Title("IBM MQ"),
+    attributes={
+        "managers": TextField(Title("Managers")),
+        "channels": TextField(Title("Channels")),
+        "queues": TextField(Title("Queues")),
+    },
+)

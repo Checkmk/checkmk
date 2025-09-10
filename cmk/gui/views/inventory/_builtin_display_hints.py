@@ -1576,7 +1576,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".software.applications.azure.application_gateways.rules.backends:*.address_pool_name": {"title": _l("Address pool name")},
         # MIGRATED ".software.applications.azure.application_gateways.rules.backends:*.protocol": {"title": _l("Protocol")},
         # MIGRATED ".software.applications.azure.application_gateways.rules.backends:*.port": {"title": _l("Port")},
-        ".software.applications.azure.load_balancers.": {"title": _l("Load balancers")},
+        # MIGRATED ".software.applications.azure.load_balancers.": {"title": _l("Load balancers")},
         ".software.applications.azure.load_balancers.inbound_nat_rules:": {
             "title": _l("Inbound NAT rules"),
             "keyorder": [

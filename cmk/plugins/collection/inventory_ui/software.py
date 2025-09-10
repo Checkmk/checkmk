@@ -114,3 +114,9 @@ node_software_applications_azure_application_gateways_rules_listeners_public_ips
         },
     ),
 )
+
+node_software_applications_azure_load_balancers = Node(
+    name="software_applications_azure_load_balancers",
+    path=["software", "applications", "azure", "load_balancers"],
+    title=Title("Load balancers"),
+)

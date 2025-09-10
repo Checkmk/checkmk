@@ -83,6 +83,10 @@ struct Args {
     #[arg(short, long, default_value_t = 443)]
     port: u16,
 
+    /// Connection type: tls, smtp_starttls
+    #[arg(long, default_value = "tls")]
+    connection_type: fetcher::ConnectionType,
+
     /// Verbose output
     #[arg(short, long, action = clap::ArgAction::Count)]
     verbose: u8,
@@ -208,11 +212,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     info("contact host...");
     let start = Instant::now();
+    let connection_type = args.connection_type;
+
     let chain = match fetcher::fetch_server_cert(
         &args.hostname,
         args.port,
         FetcherConfig::builder()
             .timeout((args.timeout != 0).then_some(StdDuration::new(args.timeout, 0)))
+            .connection_type(connection_type)
             .build(),
     ) {
         Ok(chain) => chain,

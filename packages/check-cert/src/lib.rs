@@ -10,4 +10,8 @@ pub mod checker {
     pub mod verification;
 }
 pub mod fetcher;
+pub mod starttls {
+    pub mod smtp;
+    pub mod stream_io;
+}
 pub mod truststore;

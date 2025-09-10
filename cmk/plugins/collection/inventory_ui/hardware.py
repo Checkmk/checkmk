@@ -211,6 +211,25 @@ node_hardware_components_stacks = Node(
     ),
 )
 
+node_hardware_components_unknowns = Node(
+    name="hardware_components_unknowns",
+    path=["hardware", "components", "unknowns"],
+    title=Title("Unknown entities"),
+    table=Table(
+        view=View(name="invunknown", title=Title("Unknown entities")),
+        columns={
+            "index": TextField(Title("Index")),
+            "name": TextField(Title("Name")),
+            "description": TextField(Title("Description")),
+            "software": TextField(Title("Software")),
+            "serial": TextField(Title("Serial number")),
+            "manufacturer": TextField(Title("Manufacturer")),
+            "model": TextField(Title("Model name")),
+            "location": TextField(Title("Location")),
+        },
+    ),
+)
+
 node_hardware_memory = Node(
     name="hardware_memory",
     path=["hardware", "memory"],

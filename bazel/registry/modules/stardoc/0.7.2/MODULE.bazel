@@ -32,3 +32,4 @@ maven.install(
     strict_visibility = True,
 )
 use_repo(maven, "stardoc_maven")
+

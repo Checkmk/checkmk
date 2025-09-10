@@ -1,0 +1,14 @@
+module(name = "aspect_tools_telemetry", version = "0.2.8")
+
+# Minimum version constraints, do not increase
+bazel_dep(name = "aspect_bazel_lib", version = "2.0.0")
+bazel_dep(name = "bazel_skylib", version = "1.0.3")
+
+tel = use_extension("//:extension.bzl", "telemetry")
+use_repo(tel, "aspect_tools_telemetry_report")
+
+# Make our own tests green on Bazel 9, without increasing minimum version for users
+single_version_override(
+    module_name = "aspect_bazel_lib",
+    version = "2.20.0",
+)

@@ -30,6 +30,12 @@
             "github": "luispadron",
             "name": "Luis Padron",
             "github_user_id": 13840545
+        },
+        {
+            "email": "aaronsky@skyaaron.com",
+            "github": "aaronsky",
+            "name": "Aaron Sky",
+            "github_user_id": 10502938
         }
     ],
     "repository": [
@@ -85,7 +91,8 @@
         "4.0.1",
         "4.1.0",
         "4.1.1",
-        "4.1.2"
+        "4.1.2",
+        "4.2.0"
     ],
     "yanked_versions": {}
 }

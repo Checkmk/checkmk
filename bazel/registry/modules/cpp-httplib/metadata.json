@@ -1,0 +1,20 @@
+{
+    "homepage": "https://github.com/yhirose/cpp-httplib",
+    "maintainers": [
+        {
+            "email": "bcr-maintainers@bazel.build",
+            "name": "No Maintainer Specified"
+        }
+    ],
+    "repository": [
+        "github:yhirose/cpp-httplib"
+    ],
+    "versions": [
+        "0.7.15",
+        "0.12.3",
+        "0.16.3",
+        "0.16.3.bzl.1",
+        "0.22.0"
+    ],
+    "yanked_versions": {}
+}

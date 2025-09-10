@@ -305,3 +305,18 @@ node_software_applications_check_mk_versions = Node(
         },
     ),
 )
+
+node_software_applications_checkmk_agent = Node(
+    name="software_applications_checkmk_agent",
+    path=["software", "applications", "checkmk-agent"],
+    title=Title("Checkmk Agent"),
+    attributes={
+        "version": TextField(Title("Version")),
+        "agentdirectory": TextField(Title("Agent directory")),
+        "datadirectory": TextField(Title("Data directory")),
+        "spooldirectory": TextField(Title("Spool directory")),
+        "pluginsdirectory": TextField(Title("Plug-ins directory")),
+        "localdirectory": TextField(Title("Local directory")),
+        "agentcontroller": TextField(Title("Agent controller")),
+    },
+)

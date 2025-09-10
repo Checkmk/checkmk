@@ -550,3 +550,21 @@ node_software_applications_ibm_mq_managers = Node(
         },
     ),
 )
+
+node_software_applications_ibm_mq_queues = Node(
+    name="software_applications_ibm_mq_queues",
+    path=["software", "applications", "ibm_mq", "queues"],
+    title=Title("IBM MQ queues"),
+    table=Table(
+        view=View(name="invibmmqqueues", title=Title("IBM MQ queues")),
+        columns={
+            "qmgr": TextField(Title("Queue manager name")),
+            "name": TextField(Title("Queue")),
+            "maxdepth": TextField(Title("Max depth")),
+            "maxmsgl": TextField(Title("Max length")),
+            "created": TextField(Title("Created")),
+            "altered": TextField(Title("Altered")),
+            "monq": TextField(Title("Monitoring")),
+        },
+    ),
+)

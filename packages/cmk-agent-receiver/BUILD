@@ -98,6 +98,7 @@ py_test(
         requirement("pytest-mock"),
         requirement("requests"),
         requirement("starlette"),
+        requirement("time-machine"),
     ],
 )
 

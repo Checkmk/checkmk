@@ -195,13 +195,13 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".hardware.system.nodes:*.model": {"title": _l("Model name")},
         # MIGRATED ".hardware.system.nodes:*.product": {"title": _l("Product")},
         # MIGRATED ".hardware.system.nodes:*.serial": {"title": _l("Serial number")},
-        ".hardware.uploaded_files.": {
-            "title": _l("Uploaded files"),
-            "keyorder": [
-                "call_progress_tones",
-            ],
-        },
-        ".hardware.uploaded_files.call_progress_tones": {"title": _l("Call progress tones")},
+        # MIGRATED ".hardware.uploaded_files.": {
+        # MIGRATED     "title": _l("Uploaded files"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "call_progress_tones",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".hardware.uploaded_files.call_progress_tones": {"title": _l("Call progress tones")},
         # MIGRATED ".hardware.components.": {"title": _l("Physical components")},
         # MIGRATED ".hardware.components.others:": {
         # MIGRATED     "title": _l("Other entities"),

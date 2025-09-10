@@ -17,3 +17,9 @@ export interface BaseWidget {
   general_settings: WidgetGeneralSettings
   content: WidgetContent
 }
+
+type AnnotatedInfoName = components['schemas']['AnnotatedInfoName']
+
+export interface EffectiveWidgetFilterContext extends WidgetFilterContext {
+  restricted_to_single: AnnotatedInfoName
+}

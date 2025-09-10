@@ -6,7 +6,6 @@
 import sys
 
 import cmk.ccc.debug
-import cmk.utils.paths
 from cmk.bakery.v1 import (
     BakeryPlugin,
     create_bakery_plugin,

@@ -1439,8 +1439,8 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED     "title": _l("Free space"),
         # MIGRATED     "paint": "size",
         # MIGRATED },
-        ".software.applications.vmwareesx:": {"title": _l("VMware ESX")},
-        ".software.applications.vmwareesx:*.clusters": {"title": _l("Clusters")},
+        # MIGRATED ".software.applications.vmwareesx:": {"title": _l("VMware ESX")},
+        # MIGRATED ".software.applications.vmwareesx:*.clusters": {"title": _l("Clusters")},
         # MIGRATED ".software.applications.mssql.": {"title": _l("MSSQL")},
         ".software.applications.mssql.instances:": {
             "title": _l("Instances"),

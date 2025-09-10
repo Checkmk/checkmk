@@ -62,7 +62,7 @@ def dcd_connector(
         no_deletion_time_after_init=no_deletion_time_after_init,
     )
     site.openapi.changes.activate_and_wait_for_completion(
-        timeout=change_activation_timeout, force_foreign_changes=True
+        timeout=change_activation_timeout, force_foreign_changes=True, strict=False
     )
     try:
         yield dcd_id
@@ -70,7 +70,7 @@ def dcd_connector(
         if cleanup and site.openapi.dcd.get(dcd_id):
             site.openapi.dcd.delete(dcd_id)
             site.openapi.changes.activate_and_wait_for_completion(
-                timeout=change_activation_timeout, force_foreign_changes=True
+                timeout=change_activation_timeout, force_foreign_changes=True, strict=False
             )
 
 

@@ -3,7 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.inventory_ui.v1_alpha import BoolField, Node, Table, TextField, Title
+from cmk.inventory_ui.v1_alpha import (
+    BoolField,
+    DecimalNotation,
+    Node,
+    NumberField,
+    StrictPrecision,
+    Table,
+    TextField,
+    Title,
+    Unit,
+    View,
+)
+
+UNIT_COUNT = Unit(DecimalNotation(""), StrictPrecision(0))
 
 node_software = Node(
     name="software",
@@ -273,6 +286,22 @@ node_software_applications_check_mk_cluster_nodes = Node(
     table=Table(
         columns={
             "name": TextField(Title("Node name")),
+        },
+    ),
+)
+
+node_software_applications_check_mk_versions = Node(
+    name="software_applications_check_mk_versions",
+    path=["software", "applications", "check_mk", "versions"],
+    title=Title("Checkmk versions"),
+    table=Table(
+        view=View(name="invcmkversions", title=Title("Checkmk versions")),
+        columns={
+            "version": TextField(Title("Version")),
+            "number": TextField(Title("Number")),
+            "edition": TextField(Title("Edition")),
+            "demo": BoolField(Title("Demo")),
+            "num_sites": NumberField(Title("#Sites"), render=UNIT_COUNT),
         },
     ),
 )

@@ -539,16 +539,16 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED     "title": _l("#Services"),
         # MIGRATED     "sort": cmp_natural_sort,
         # MIGRATED },
-        ".software.applications.check_mk.versions:": {
-            "title": _l("Checkmk versions"),
-            "keyorder": ["version", "number", "edition", "demo", "num_sites"],
-            "view": "invcmkversions",
-        },
-        ".software.applications.check_mk.versions:*.version": {"title": _l("Version")},
-        ".software.applications.check_mk.versions:*.number": {"title": _l("Number")},
-        ".software.applications.check_mk.versions:*.edition": {"title": _l("Edition")},
-        ".software.applications.check_mk.versions:*.demo": {"title": _l("Demo"), "paint": "bool"},
-        ".software.applications.check_mk.versions:*.num_sites": {"title": _l("#Sites"), "filter": FilterInvtableIntegerRange},
+        # ".software.applications.check_mk.versions:": {
+        #     "title": _l("Checkmk versions"),
+        #     "keyorder": ["version", "number", "edition", "demo", "num_sites"],
+        #     "view": "invcmkversions",
+        # },
+        # ".software.applications.check_mk.versions:*.version": {"title": _l("Version")},
+        # ".software.applications.check_mk.versions:*.number": {"title": _l("Number")},
+        # ".software.applications.check_mk.versions:*.edition": {"title": _l("Edition")},
+        # ".software.applications.check_mk.versions:*.demo": {"title": _l("Demo"), "paint": "bool"},
+        # ".software.applications.check_mk.versions:*.num_sites": {"title": _l("#Sites"), "filter": FilterInvtableIntegerRange},
         ".software.applications.check_mk.sites:": {
             "title": _l("Checkmk sites"),
             "keyorder": [

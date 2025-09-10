@@ -721,34 +721,34 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".software.applications.checkmk-agent.local_checks:*.cache_interval": {
         # MIGRATED     "title": _l("Cache interval")
         # MIGRATED },
-        ".software.applications.docker.": {
-            "icon": "docker",
-            "title": "Docker",
-            "keyorder": [
-                "version",
-                "registry",
-                "swarm_state",
-                "swarm_node_id",
-                "num_containers_total",
-                "num_containers_running",
-                "num_containers_stopped",
-                "num_containers_paused",
-                "num_images",
-            ],
-        },
-        ".software.applications.docker.version": {"title": _l("Version")},
-        ".software.applications.docker.registry": {"title": _l("Registry")},
-        ".software.applications.docker.swarm_state": {"title": _l("Swarm state")},
-        ".software.applications.docker.swarm_node_id": {"title": _l("Swarm node ID")},
-        ".software.applications.docker.num_containers_total": {"title": _l("#Containers")},
-        ".software.applications.docker.num_containers_running": {
-            "title": _l("#Containers running")
-        },
-        ".software.applications.docker.num_containers_stopped": {
-            "title": _l("#Containers stopped")
-        },
-        ".software.applications.docker.num_containers_paused": {"title": _l("#Containers paused")},
-        ".software.applications.docker.num_images": {"title": _l("#Images")},
+        # MIGRATED ".software.applications.docker.": {
+        # MIGRATED     "icon": "docker",
+        # MIGRATED     "title": "Docker",
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "version",
+        # MIGRATED         "registry",
+        # MIGRATED         "swarm_state",
+        # MIGRATED         "swarm_node_id",
+        # MIGRATED         "num_containers_total",
+        # MIGRATED         "num_containers_running",
+        # MIGRATED         "num_containers_stopped",
+        # MIGRATED         "num_containers_paused",
+        # MIGRATED         "num_images",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.version": {"title": _l("Version")},
+        # MIGRATED ".software.applications.docker.registry": {"title": _l("Registry")},
+        # MIGRATED ".software.applications.docker.swarm_state": {"title": _l("Swarm state")},
+        # MIGRATED ".software.applications.docker.swarm_node_id": {"title": _l("Swarm node ID")},
+        # MIGRATED ".software.applications.docker.num_containers_total": {"title": _l("#Containers")},
+        # MIGRATED ".software.applications.docker.num_containers_running": {
+        # MIGRATED     "title": _l("#Containers running")
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.num_containers_stopped": {
+        # MIGRATED     "title": _l("#Containers stopped")
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.num_containers_paused": {"title": _l("#Containers paused")},
+        # MIGRATED ".software.applications.docker.num_images": {"title": _l("#Images")},
         ".software.applications.docker.node_labels:": {
             "title": _l("Node labels"),
             "keyorder": ["label"],

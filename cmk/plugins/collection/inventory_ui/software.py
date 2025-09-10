@@ -372,3 +372,20 @@ node_software_applications_citrix_vm = Node(
         "agent_version": TextField(Title("Agent version")),
     },
 )
+
+node_software_applications_docker = Node(
+    name="software_applications_docker",
+    path=["software", "applications", "docker"],
+    title=Title("Docker"),
+    attributes={
+        "version": TextField(Title("Version")),
+        "registry": TextField(Title("Registry")),
+        "swarm_state": TextField(Title("Swarm state")),
+        "swarm_node_id": TextField(Title("Swarm node ID")),
+        "num_containers_total": NumberField(Title("#Containers"), render=UNIT_COUNT),
+        "num_containers_running": NumberField(Title("#Containers running"), render=UNIT_COUNT),
+        "num_containers_stopped": NumberField(Title("#Containers stopped"), render=UNIT_COUNT),
+        "num_containers_paused": NumberField(Title("#Containers paused"), render=UNIT_COUNT),
+        "num_images": NumberField(Title("#Images"), render=UNIT_COUNT),
+    },
+)

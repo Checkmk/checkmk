@@ -1623,21 +1623,21 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.azure.load_balancers.inbound_nat_rules.private_ips:*.ip_address": {"title": _l("IP address")},
         ".software.applications.azure.load_balancers.inbound_nat_rules.private_ips:*.ip_allocation_method": {"title": _l("Allocation method")},
 
-        ".software.applications.azure.load_balancers.inbound_nat_rules.backend_ip_configs:": {
-            "title": _l("Public IPs"),
-            "keyorder": [
-                "load_balancer",
-                "inbound_nat_rule",
-                "backend_ip_config",
-                "ip_address",
-                "ip_allocation_method",
-            ],
-        },
-        ".software.applications.azure.load_balancers.inbound_nat_rules.backend_ip_configs:*.load_balancer": {"title": _l("Load balancer")},
-        ".software.applications.azure.load_balancers.inbound_nat_rules.backend_ip_configs:*.inbound_nat_rule": {"title": _l("Inbound NAT rule")},
-        ".software.applications.azure.load_balancers.inbound_nat_rules.backend_ip_configs:*.backend_ip_config": {"title": _l("Backend IP config")},
-        ".software.applications.azure.load_balancers.inbound_nat_rules.backend_ip_configs:*.ip_address": {"title": _l("IP address")},
-        ".software.applications.azure.load_balancers.inbound_nat_rules.backend_ip_configs:*.ip_allocation_method": {"title": _l("Allocation method")},
+        # MIGRATED ".software.applications.azure.load_balancers.inbound_nat_rules.backend_ip_configs:": {
+        # MIGRATED     "title": _l("Public IPs"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "load_balancer",
+        # MIGRATED         "inbound_nat_rule",
+        # MIGRATED         "backend_ip_config",
+        # MIGRATED         "ip_address",
+        # MIGRATED         "ip_allocation_method",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.azure.load_balancers.inbound_nat_rules.backend_ip_configs:*.load_balancer": {"title": _l("Load balancer")},
+        # MIGRATED ".software.applications.azure.load_balancers.inbound_nat_rules.backend_ip_configs:*.inbound_nat_rule": {"title": _l("Inbound NAT rule")},
+        # MIGRATED ".software.applications.azure.load_balancers.inbound_nat_rules.backend_ip_configs:*.backend_ip_config": {"title": _l("Backend IP config")},
+        # MIGRATED ".software.applications.azure.load_balancers.inbound_nat_rules.backend_ip_configs:*.ip_address": {"title": _l("IP address")},
+        # MIGRATED ".software.applications.azure.load_balancers.inbound_nat_rules.backend_ip_configs:*.ip_allocation_method": {"title": _l("Allocation method")},
         ".software.applications.azure.load_balancers.outbound_rules:": {
             "title": _l("Outbound rules"),
             "keyorder": [

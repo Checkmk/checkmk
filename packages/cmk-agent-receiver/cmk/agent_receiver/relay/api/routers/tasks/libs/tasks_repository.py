@@ -2,12 +2,13 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from __future__ import annotations
 
 import dataclasses
 import uuid
-from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
+from typing import final
 
 from cmk.agent_receiver.log import logger
 from cmk.agent_receiver.relay.lib.shared_types import (
@@ -34,7 +35,7 @@ class ResultType(StrEnum):
     ERROR = "ERROR"
 
 
-@dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, slots=True)
 class Task:
     type: TaskType
     payload: str
@@ -52,10 +53,10 @@ class Task:
 # The persistence layer is for now an in memory dict so we won't need
 # to make this thread-safe as this should not be accessed by multiple threads
 # concurrently.
-GLOBAL_TASKS: dict[RelayID, "TasksRepository.TimedTaskStore"] = {}
+GLOBAL_TASKS: dict[RelayID, TimedTaskStore] = {}
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(slots=True, frozen=True)
 class TasksRepository:
     ttl_seconds: float
     max_tasks_per_relay: int
@@ -64,10 +65,10 @@ class TasksRepository:
         if self.ttl_seconds <= 0:
             raise ValueError("ttl_seconds must be greater than 0")
 
-    def _get_or_create_storage(self, relay_id: RelayID) -> "TimedTaskStore":
+    def _get_or_create_storage(self, relay_id: RelayID) -> TimedTaskStore:
         """Get or create a _TimedTaskStore for the given relay."""
         if relay_id not in GLOBAL_TASKS:
-            GLOBAL_TASKS[relay_id] = self.TimedTaskStore(ttl_seconds=self.ttl_seconds)
+            GLOBAL_TASKS[relay_id] = TimedTaskStore(ttl_seconds=self.ttl_seconds)
         return GLOBAL_TASKS[relay_id]
 
     def get_tasks(self, relay_id: RelayID) -> list[Task]:
@@ -117,44 +118,46 @@ class TasksRepository:
         GLOBAL_TASKS[relay_id][task_id] = new_task
         return new_task
 
-    class TimedTaskStore:
-        """Custom store implementation that uses Task's update_timestamp for expiration."""
 
-        def __init__(self, ttl_seconds: float):
-            self.ttl_seconds = ttl_seconds
-            self._tasks: dict[TaskID, Task] = {}
+@final
+class TimedTaskStore:
+    """Custom store implementation that uses Task's update_timestamp for expiration."""
 
-        def _is_expired(self, task: Task) -> bool:
-            """Check if a task has expired based on its update_timestamp."""
-            now = datetime.now()
-            return (now - task.update_timestamp).total_seconds() > self.ttl_seconds
+    def __init__(self, ttl_seconds: float):
+        self.ttl_seconds = ttl_seconds
+        self._tasks: dict[TaskID, Task] = {}
 
-        def _cleanup_expired(self) -> None:
-            """Remove expired tasks from the store."""
-            expired_task_ids = [
-                task_id for task_id, task in self._tasks.items() if self._is_expired(task)
-            ]
-            logger.debug("Expiring Tasks: %s", expired_task_ids)
+    def _is_expired(self, task: Task) -> bool:
+        """Check if a task has expired based on its update_timestamp."""
+        now = datetime.now()
+        return (now - task.update_timestamp).total_seconds() > self.ttl_seconds
 
-            for task_id in expired_task_ids:
-                del self._tasks[task_id]
+    def _cleanup_expired(self) -> None:
+        """Remove expired tasks from the store."""
+        expired_task_ids = [
+            task_id for task_id, task in self._tasks.items() if self._is_expired(task)
+        ]
+        logger.debug("Expiring Tasks: %s", expired_task_ids)
 
-        def __getitem__(self, key: TaskID) -> Task:
-            self._cleanup_expired()
-            return self._tasks[key]
+        for task_id in expired_task_ids:
+            del self._tasks[task_id]
 
-        def __setitem__(self, key: TaskID, value: Task) -> None:
-            self._cleanup_expired()
-            self._tasks[key] = value
+    def __getitem__(self, key: TaskID) -> Task:
+        self._cleanup_expired()
+        return self._tasks[key]
 
-        def values(self) -> list[Task]:
-            """Return all non-expired tasks."""
-            self._cleanup_expired()
-            return list(self._tasks.values())
+    def __setitem__(self, key: TaskID, value: Task) -> None:
+        self._cleanup_expired()
+        self._tasks[key] = value
 
-        def __contains__(self, key: TaskID) -> bool:
-            self._cleanup_expired()
-            return key in self._tasks
+    def values(self) -> list[Task]:
+        """Return all non-expired tasks."""
+        self._cleanup_expired()
+        return list(self._tasks.values())
 
-        def __len__(self) -> int:
-            return len(self._tasks)
+    def __contains__(self, key: TaskID) -> bool:
+        self._cleanup_expired()
+        return key in self._tasks
+
+    def __len__(self) -> int:
+        return len(self._tasks)

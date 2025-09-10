@@ -377,7 +377,7 @@ class AutomationDiscovery(DiscoveryAutomation):
         )
         fetcher = CMKFetcher(
             config_cache,
-            lambda hn: config.make_fetcher_trigger(edition, label_manager.labels_of_host(hn)),
+            lambda hn: config.make_fetcher_trigger(edition, hn, config_cache.host_tags.tags),
             config_cache.fetcher_factory(
                 service_configurer,
                 ip_address_of,
@@ -629,7 +629,7 @@ class AutomationDiscoveryPreview(Automation):
         )
         fetcher = CMKFetcher(
             config_cache,
-            lambda hn: config.make_fetcher_trigger(edition, label_manager.labels_of_host(hn)),
+            lambda hn: config.make_fetcher_trigger(edition, hn, config_cache.host_tags.tags),
             config_cache.fetcher_factory(
                 service_configurer,
                 ip_address_of_with_fallback,
@@ -1101,7 +1101,7 @@ def _execute_autodiscovery(
     )
     fetcher = CMKFetcher(
         config_cache,
-        lambda hn: config.make_fetcher_trigger(edition, label_manager.labels_of_host(hn)),
+        lambda hn: config.make_fetcher_trigger(edition, hn, config_cache.host_tags.tags),
         config_cache.fetcher_factory(
             service_configurer,
             slightly_different_ip_address_of,
@@ -1266,6 +1266,7 @@ def _execute_autodiscovery(
         ruleset_matcher,
         label_manager,
         loaded_config,
+        config_cache.host_tags.tags,
         make_plugin_store(ab_plugins),
         config_cache,
         ab_plugins,
@@ -1529,6 +1530,7 @@ class AutomationRenameHosts(Automation):
             ruleset_matcher,
             label_manager,
             loaded_config,
+            loading_result.config_cache.host_tags.tags,
             make_plugin_store(plugins),
             loading_result.config_cache,
             plugins,
@@ -2631,6 +2633,7 @@ class AutomationRestart(Automation):
                 ruleset_matcher,
                 label_manager,
                 loaded_config,
+                loading_result.config_cache.host_tags.tags,
                 make_plugin_store(plugins),
                 loading_result.config_cache,
                 plugins,
@@ -3223,8 +3226,6 @@ class AutomationDiagHost(Automation):
 
         plugins = plugins or load_plugins()
         loading_result = loading_result or load_config(extract_known_discovery_rulesets(plugins))
-        label_manager = loading_result.config_cache.label_manager
-
         loading_result.config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(
             {host_name}
         )
@@ -3281,7 +3282,6 @@ class AutomationDiagHost(Automation):
                         edition,
                         loading_result.loaded_config,
                         loading_result.config_cache,
-                        label_manager,
                         (
                             service_name_config
                             := loading_result.config_cache.make_passive_service_name_config(
@@ -3375,7 +3375,6 @@ class AutomationDiagHost(Automation):
         edition: cmk_version.Edition,
         loaded_config: LoadedConfigFragment,
         config_cache: ConfigCache,
-        label_manager: LabelManager,
         service_name_config: PassiveServiceNameConfig,
         service_configurer: ServiceConfigurer,
         plugins: AgentBasedPlugins,
@@ -3408,7 +3407,7 @@ class AutomationDiagHost(Automation):
         state, output = 0, ""
         pending_passwords_file = cmk.utils.password_store.pending_password_store_path()
         passwords = cmk.utils.password_store.load(pending_passwords_file)
-        trigger = config.make_fetcher_trigger(edition, label_manager.labels_of_host(host_name))
+        trigger = config.make_fetcher_trigger(edition, host_name, config_cache.host_tags.tags)
         for source in sources.make_sources(
             plugins,
             host_name,
@@ -3937,7 +3936,7 @@ class AutomationGetAgentOutput(Automation):
 
         # No caching option over commandline here.
         file_cache_options = FileCacheOptions()
-        trigger = config.make_fetcher_trigger(edition, label_manager.labels_of_host(hostname))
+        trigger = config.make_fetcher_trigger(edition, hostname, config_cache.host_tags.tags)
 
         success = True
         output = ""

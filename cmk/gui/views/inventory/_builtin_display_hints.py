@@ -435,7 +435,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".hardware.components.stacks:*.manufacturer": {"title": _l("Manufacturer")},
         # MIGRATED ".hardware.components.stacks:*.model": {"title": _l("Model name")},
         # MIGRATED ".hardware.components.stacks:*.location": {"title": _l("Location")},
-        ".hardware.storage.": {"title": _l("Storage")},
+        # MIGRATED ".hardware.storage.": {"title": _l("Storage")},
         ".hardware.storage.controller.": {"title": _l("Controller"), "keyorder": ["version"]},
         ".hardware.storage.controller.version": {"title": _l("Version")},
         ".hardware.storage.disks:": {

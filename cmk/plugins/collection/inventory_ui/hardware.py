@@ -361,6 +361,12 @@ node_hardware_nwadapter = Node(
     ),
 )
 
+node_hardware_storage = Node(
+    name="hardware_storage",
+    path=["hardware", "storage"],
+    title=Title("Storage"),
+)
+
 node_hardware_system_nodes = Node(
     name="hardware_system_nodes",
     path=["hardware", "system", "nodes"],

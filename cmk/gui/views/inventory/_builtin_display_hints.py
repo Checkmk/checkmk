@@ -1003,19 +1003,19 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".software.applications.kube.daemonset.match_expressions": {
         # MIGRATED     "title": _l("matchExpressions")
         # MIGRATED },
-        ".software.applications.kube.statefulset.": {
-            "title": _l("StatefulSet"),
-            "keyorder": [
-                "strategy",
-                "match_labels",
-                "match_expressions",
-            ],
-        },
-        ".software.applications.kube.statefulset.strategy": {"title": _l("StrategyType")},
-        ".software.applications.kube.statefulset.match_labels": {"title": _l("matchLabels")},
-        ".software.applications.kube.statefulset.match_expressions": {
-            "title": _l("matchExpressions")
-        },
+        # MIGRATED ".software.applications.kube.statefulset.": {
+        # MIGRATED     "title": _l("StatefulSet"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "strategy",
+        # MIGRATED         "match_labels",
+        # MIGRATED         "match_expressions",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.kube.statefulset.strategy": {"title": _l("StrategyType")},
+        # MIGRATED ".software.applications.kube.statefulset.match_labels": {"title": _l("matchLabels")},
+        # MIGRATED ".software.applications.kube.statefulset.match_expressions": {
+        # MIGRATED     "title": _l("matchExpressions")
+        # MIGRATED },
         # MIGRATED ".software.applications.kube.node.": {
         # MIGRATED     "title": _l("Node"),
         # MIGRATED     "keyorder": [

@@ -657,3 +657,14 @@ node_software_applications_kube_pod = Node(
         "qos_class": TextField(Title("QoS class")),
     },
 )
+
+node_software_applications_kube_statefulset = Node(
+    name="software_applications_kube_statefulset",
+    path=["software", "applications", "kube", "statefulset"],
+    title=Title("StatefulSet"),
+    attributes={
+        "strategy": TextField(Title("StrategyType")),
+        "match_labels": TextField(Title("matchLabels")),
+        "match_expressions": TextField(Title("matchExpressions")),
+    },
+)

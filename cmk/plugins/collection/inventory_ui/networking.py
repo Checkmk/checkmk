@@ -86,3 +86,20 @@ node_networking_routes = Node(
         },
     ),
 )
+
+node_networking_sip_interfaces = Node(
+    name="networking_sip_interfaces",
+    path=["networking", "sip_interfaces"],
+    title=Title("SIP Interfaces"),
+    table=Table(
+        columns={
+            "index": TextField(Title("Index")),
+            "name": TextField(Title("Name")),
+            "application_type": TextField(Title("Application Type")),
+            "sys_interface": TextField(Title("System Interface")),
+            "device": TextField(Title("Device")),
+            "tcp_port": TextField(Title("TCP Port")),
+            "gateway": TextField(Title("Gateway")),
+        },
+    ),
+)

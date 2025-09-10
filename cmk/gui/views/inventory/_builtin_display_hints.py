@@ -1913,24 +1913,24 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".networking.tunnels:*.peername": {"title": _l("Peer name")},
         ".networking.tunnels:*.sourceip": {"title": _l("Source IP address")},
         ".networking.tunnels:*.tunnelinterface": {"title": _l("Tunnel interface")},
-        ".networking.sip_interfaces:": {
-            "title": _l("SIP Interfaces"),
-            "keyorder": [
-                "index",
-                "name",
-                "application_type",
-                "sys_interface",
-                "device",
-                "tcp_port",
-                "gateway"
-            ],
-        },
-        ".networking.sip_interfaces:*.index": {"title": _l("Index")},
-        ".networking.sip_interfaces:*.name": {"title": _l("Name")},
-        ".networking.sip_interfaces:*.application_type": {"title": _l("Application Type")},
-        ".networking.sip_interfaces:*.sys_interface": {"title": _l("System Interface")},
-        ".networking.sip_interfaces:*.device": {"title": _l("Device")},
-        ".networking.sip_interfaces:*.tcp_port": {"title": _l("TCP Port")},
-        ".networking.sip_interfaces:*.gateway": {"title": _l("Gateway")},
+        # MIGRATED ".networking.sip_interfaces:": {
+        # MIGRATED     "title": _l("SIP Interfaces"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "index",
+        # MIGRATED         "name",
+        # MIGRATED         "application_type",
+        # MIGRATED         "sys_interface",
+        # MIGRATED         "device",
+        # MIGRATED         "tcp_port",
+        # MIGRATED         "gateway"
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".networking.sip_interfaces:*.index": {"title": _l("Index")},
+        # MIGRATED ".networking.sip_interfaces:*.name": {"title": _l("Name")},
+        # MIGRATED ".networking.sip_interfaces:*.application_type": {"title": _l("Application Type")},
+        # MIGRATED ".networking.sip_interfaces:*.sys_interface": {"title": _l("System Interface")},
+        # MIGRATED ".networking.sip_interfaces:*.device": {"title": _l("Device")},
+        # MIGRATED ".networking.sip_interfaces:*.tcp_port": {"title": _l("TCP Port")},
+        # MIGRATED ".networking.sip_interfaces:*.gateway": {"title": _l("Gateway")},
     })
 # fmt: on

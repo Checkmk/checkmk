@@ -53,6 +53,25 @@ node_hardware_components_backplanes = Node(
     ),
 )
 
+node_hardware_components_chassis = Node(
+    name="hardware_components_chassis",
+    path=["hardware", "components", "chassis"],
+    title=Title("Chassis"),
+    table=Table(
+        view=View(name="invchassis", title=Title("Chassis")),
+        columns={
+            "index": TextField(Title("Index")),
+            "name": TextField(Title("Name")),
+            "description": TextField(Title("Description")),
+            "software": TextField(Title("Software")),
+            "serial": TextField(Title("Serial number")),
+            "manufacturer": TextField(Title("Manufacturer")),
+            "model": TextField(Title("Model name")),
+            "location": TextField(Title("Location")),
+        },
+    ),
+)
+
 node_hardware_memory = Node(
     name="hardware_memory",
     path=["hardware", "memory"],

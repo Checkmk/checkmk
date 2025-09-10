@@ -36,6 +36,8 @@ _ADDED_IMPORTS = (
     "from cmk.gui.form_specs.private import LegacyValueSpec, ListExtended",
     "from cmk.gui.form_specs.generators.cascading_choice_utils import enable_deprecated_cascading_elements, CascadingDataConversion",
     "from cmk.gui.form_specs.generators.alternative_utils import enable_deprecated_alternative",
+    "from cmk.gui.form_specs.generators.absolute_date import AbsoluteTimestamp, DateTimeFormat",
+    "from cmk.gui.form_specs.generators.age import Age",
     "from cmk.rulesets.v1 import Help, Label, Title, Message",
     (
         "from cmk.rulesets.v1.form_specs import ("
@@ -208,6 +210,8 @@ class VSTransformer(cst.CSTTransformer):
     @property
     def _convertable_valuespecs(self) -> set[str]:
         return {
+            "Age",
+            "AbsoluteDate",
             "Dictionary",
             "ListOf",
             "TextAreaUnicode",
@@ -229,9 +233,7 @@ class VSTransformer(cst.CSTTransformer):
 
     @property
     def _known_unconvertable(self) -> set[str]:
-        return {
-            "AbsoluteDate",
-        }
+        return set()
 
     @property
     def _supported_form_specs(self) -> set[str]:
@@ -296,8 +298,12 @@ class VSTransformer(cst.CSTTransformer):
                         convert_call = self._make_dictionary_from_tuple(updated_node)
                 case "TimeSpan":
                     convert_call = self._make_time_span(updated_node)
+                case "Age":
+                    convert_call = self._make_age(updated_node)
                 case "SimpleLevels":
                     convert_call = self._make_simple_levels(updated_node)
+                case "AbsoluteDate":
+                    convert_call = self._make_absolute_date(updated_node)
             if convert_call is not None:
                 self._in_valuespec = False
                 return convert_call
@@ -846,6 +852,51 @@ class VSTransformer(cst.CSTTransformer):
     def _make_time_span(self, old: cst.Call) -> cst.Call:
         return cst.Call(func=cst.Name("TimeSpan"), args=old.args)
 
+    def _make_age(self, old: cst.Call) -> cst.Call:
+        new_args: list[cst.Arg] = []
+        magnitude_map = {
+            "not_supported": "TimeMagnitude.MILLISECOND",
+            "seconds": "TimeMagnitude.SECOND",
+            "minutes": "TimeMagnitude.MINUTE",
+            "hours": "TimeMagnitude.HOUR",
+            "days": "TimeMagnitude.DAY",
+        }
+
+        minvalue: None | str = None
+        maxvalue: None | str = None
+        for arg in old.args:
+            assert arg.keyword, "All args should have a keyword"
+            match arg.keyword.value:
+                case "display":
+                    used_magnitudes = []
+                    for element in cst.ensure_type(arg.value, cst.List).elements:
+                        used_magnitudes.append(
+                            magnitude_map[
+                                cst.ensure_type(element.value, cst.SimpleString).value.strip('"')
+                            ]
+                        )
+                    new_args.append(
+                        cst.Arg(
+                            cst.parse_expression(f"[{', '.join(used_magnitudes)}]"),
+                            cst.Name("displayed_magnitudes"),
+                        )
+                    )
+                case "maxvalue":
+                    maxvalue = cst.ensure_type(arg.value, cst.Integer).value
+                case "minvalue":
+                    minvalue = cst.ensure_type(arg.value, cst.Integer).value
+
+        if minvalue is not None or maxvalue is not None:
+            expression = f"[validators.NumberInRange({minvalue}, {maxvalue})]"
+            new_args.append(
+                cst.Arg(
+                    cst.parse_expression(expression),
+                    cst.Name("custom_validate"),
+                )
+            )
+
+        return cst.Call(func=cst.Name("Age"), args=new_args)
+
     def _make_password(self, old: cst.Call) -> cst.Call:
         old_args = self._replace_allow_empty_args(old.args, "Password field can not be empty")
         old_args = self._drop_args(old_args, ["size"])
@@ -856,6 +907,29 @@ class VSTransformer(cst.CSTTransformer):
                 cst.Arg(cst.Name("migrate_to_password"), cst.Name("migrate")),
             ),
         )
+
+    def _make_absolute_date(self, old: cst.Call) -> cst.Call:
+        new_args: list[cst.Arg] = []
+        format_expression = "DateTimeFormat.DATE"
+        for arg in old.args:
+            assert arg.keyword, "All args should have a keyword"
+            match arg.keyword.value:
+                case "include_time":
+                    format_expression = "DateTimeFormat.DATETIME"
+                case "submit_form_name":
+                    # obsolete
+                    continue
+                case "title":
+                    new_args.append(arg)
+
+        new_args.append(
+            cst.Arg(
+                cst.parse_expression(format_expression),
+                cst.Name("use_format"),
+            )
+        )
+
+        return cst.Call(func=cst.Name("AbsoluteTimestamp"), args=new_args)
 
     def _make_simple_levels(self, old: cst.Call) -> cst.Call:
         args = {k.value: arg.value for arg in old.args if (k := arg.keyword) is not None}

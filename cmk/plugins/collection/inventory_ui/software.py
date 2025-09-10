@@ -490,3 +490,19 @@ node_software_applications_fortinet_fortisandbox = Node(
         },
     ),
 )
+
+node_software_applications_fritz = Node(
+    name="software_applications_fritz",
+    path=["software", "applications", "fritz"],
+    title=Title("Fritz"),
+    attributes={
+        "link_type": TextField(Title("Link type")),
+        "wan_access_type": TextField(Title("WAN access type")),
+        "auto_disconnect_time": TextField(Title("Auto-disconnect time")),
+        "dns_server_1": TextField(Title("DNS server 1")),
+        "dns_server_2": TextField(Title("DNS server 2")),
+        "voip_dns_server_1": TextField(Title("VoIP DNS server 1")),
+        "voip_dns_server_2": TextField(Title("VoIP DNS server 2")),
+        "upnp_config_enabled": TextField(Title("uPnP configuration enabled")),
+    },
+)

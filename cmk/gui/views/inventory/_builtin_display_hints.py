@@ -889,29 +889,29 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".software.applications.fortinet.fortigate_high_availability.": {
         # MIGRATED     "title": _l("FortiGate HighAvailability"),
         # MIGRATED },
-        ".software.applications.fritz.": {
-            "title": _l("Fritz"),
-            "keyorder": [
-                "link_type",
-                "wan_access_type",
-                "auto_disconnect_time",
-                "dns_server_1",
-                "dns_server_2",
-                "voip_dns_server_1",
-                "voip_dns_server_2",
-                "upnp_config_enabled",
-            ],
-        },
-        ".software.applications.fritz.link_type": {"title": _l("Link type")},
-        ".software.applications.fritz.wan_access_type": {"title": _l("WAN access type")},
-        ".software.applications.fritz.auto_disconnect_time": {"title": _l("Auto-disconnect time")},
-        ".software.applications.fritz.dns_server_1": {"title": _l("DNS server 1")},
-        ".software.applications.fritz.dns_server_2": {"title": _l("DNS server 2")},
-        ".software.applications.fritz.voip_dns_server_1": {"title": _l("VoIP DNS server 1")},
-        ".software.applications.fritz.voip_dns_server_2": {"title": _l("VoIP DNS server 2")},
-        ".software.applications.fritz.upnp_config_enabled": {
-            "title": _l("uPnP configuration enabled")
-        },
+        # MIGRATED ".software.applications.fritz.": {
+        # MIGRATED     "title": _l("Fritz"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "link_type",
+        # MIGRATED         "wan_access_type",
+        # MIGRATED         "auto_disconnect_time",
+        # MIGRATED         "dns_server_1",
+        # MIGRATED         "dns_server_2",
+        # MIGRATED         "voip_dns_server_1",
+        # MIGRATED         "voip_dns_server_2",
+        # MIGRATED         "upnp_config_enabled",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.fritz.link_type": {"title": _l("Link type")},
+        # MIGRATED ".software.applications.fritz.wan_access_type": {"title": _l("WAN access type")},
+        # MIGRATED ".software.applications.fritz.auto_disconnect_time": {"title": _l("Auto-disconnect time")},
+        # MIGRATED ".software.applications.fritz.dns_server_1": {"title": _l("DNS server 1")},
+        # MIGRATED ".software.applications.fritz.dns_server_2": {"title": _l("DNS server 2")},
+        # MIGRATED ".software.applications.fritz.voip_dns_server_1": {"title": _l("VoIP DNS server 1")},
+        # MIGRATED ".software.applications.fritz.voip_dns_server_2": {"title": _l("VoIP DNS server 2")},
+        # MIGRATED ".software.applications.fritz.upnp_config_enabled": {
+        # MIGRATED     "title": _l("uPnP configuration enabled")
+        # MIGRATED },
         ".software.applications.kube.": {"title": _l("Kubernetes")},
         ".software.applications.kube.labels:": {
             "title": _l("Labels"),

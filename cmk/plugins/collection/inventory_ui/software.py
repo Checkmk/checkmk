@@ -361,3 +361,14 @@ node_software_applications_citrix_controller = Node(
         "controller_version": TextField(Title("Controller version")),
     },
 )
+
+node_software_applications_citrix_vm = Node(
+    name="software_applications_citrix_vm",
+    path=["software", "applications", "citrix", "vm"],
+    title=Title("Virtual machine"),
+    attributes={
+        "desktop_group_name": TextField(Title("Desktop group name")),
+        "catalog": TextField(Title("Catalog")),
+        "agent_version": TextField(Title("Agent version")),
+    },
+)

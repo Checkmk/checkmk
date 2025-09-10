@@ -49,3 +49,19 @@ node_software_applications_azure_application_gateways_rules_backends = Node(
         },
     ),
 )
+
+node_software_applications_azure_application_gateways_rules_listeners = Node(
+    name="software_applications_azure_application_gateways_rules_listeners",
+    path=["software", "applications", "azure", "application_gateways", "rules", "listeners"],
+    title=Title("Listeners"),
+    table=Table(
+        columns={
+            "application_gateway": TextField(Title("Application gateway")),
+            "rule": TextField(Title("Rule")),
+            "listener": TextField(Title("Listener")),
+            "protocol": TextField(Title("Protocol")),
+            "port": TextField(Title("Port")),
+            "host_names": TextField(Title("Hosts")),
+        },
+    ),
+)

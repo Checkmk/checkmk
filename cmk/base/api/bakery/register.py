@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
+from itertools import chain
 
 import cmk.ccc.debug
 from cmk.bakery.v1 import (
@@ -66,7 +67,14 @@ def bakery_plugin(
 
 
 def get_bakery_plugins() -> dict[str, BakeryPlugin]:
-    for plugin, exception in load_plugins_with_exceptions("cmk.base.cee.plugins.bakery"):
+    for plugin, exception in chain(
+        load_plugins_with_exceptions("cmk.base.cee.plugins.bakery"),
+        # We are in the process of deprecating cmk.base.api.bakery.register,
+        # and migrate our plugins to the new cmk.bakery.v2 API.
+        # For the time being, we also load this namespace, to allow to separate the
+        # migration into two steps ("going public" and using the new API)).
+        load_plugins_with_exceptions("cmk.base.plugins.bakery"),
+    ):
         console.error(f"Error in bakery plug-in {plugin}: {exception}", file=sys.stderr)
         if cmk.ccc.debug.enabled():
             raise exception

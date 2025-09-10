@@ -460,31 +460,31 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED # this displayhint is for Attributes and NOT for above Table
         # MIGRATED ".hardware.storage.disks.size": {"title": _l("Size"), "paint": "size"},
         # MIGRATED ".hardware.volumes.": {"title": _l("Volumes")},
-        ".hardware.volumes.physical_volumes:": {
-            "title": _l("Physical volumes"),
-            "keyorder": [
-                "volume_group_name",
-                "physical_volume_name",
-                "physical_volume_status",
-                "physical_volume_total_partitions",
-                "physical_volume_free_partitions",
-            ],
-        },
-        ".hardware.volumes.physical_volumes:*.volume_group_name": {
-            "title": _l("Volume group name")
-        },
-        ".hardware.volumes.physical_volumes:*.physical_volume_name": {
-            "title": _l("Physical volume name")
-        },
-        ".hardware.volumes.physical_volumes:*.physical_volume_status": {
-            "title": _l("Physical volume status")
-        },
-        ".hardware.volumes.physical_volumes:*.physical_volume_total_partitions": {
-            "title": _l("Physical volume total partitions")
-        },
-        ".hardware.volumes.physical_volumes:*.physical_volume_free_partitions": {
-            "title": _l("Physical volume free partitions")
-        },
+        # MIGRATED ".hardware.volumes.physical_volumes:": {
+        # MIGRATED     "title": _l("Physical volumes"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "volume_group_name",
+        # MIGRATED         "physical_volume_name",
+        # MIGRATED         "physical_volume_status",
+        # MIGRATED         "physical_volume_total_partitions",
+        # MIGRATED         "physical_volume_free_partitions",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".hardware.volumes.physical_volumes:*.volume_group_name": {
+        # MIGRATED     "title": _l("Volume group name")
+        # MIGRATED },
+        # MIGRATED ".hardware.volumes.physical_volumes:*.physical_volume_name": {
+        # MIGRATED     "title": _l("Physical volume name")
+        # MIGRATED },
+        # MIGRATED ".hardware.volumes.physical_volumes:*.physical_volume_status": {
+        # MIGRATED     "title": _l("Physical volume status")
+        # MIGRATED },
+        # MIGRATED ".hardware.volumes.physical_volumes:*.physical_volume_total_partitions": {
+        # MIGRATED     "title": _l("Physical volume total partitions")
+        # MIGRATED },
+        # MIGRATED ".hardware.volumes.physical_volumes:*.physical_volume_free_partitions": {
+        # MIGRATED     "title": _l("Physical volume free partitions")
+        # MIGRATED },
         # MIGRATED ".hardware.video:": {
         # MIGRATED     "title": _l("Graphic cards"),
         # MIGRATED     "keyorder": [

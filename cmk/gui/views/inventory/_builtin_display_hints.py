@@ -485,23 +485,23 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".hardware.volumes.physical_volumes:*.physical_volume_free_partitions": {
             "title": _l("Physical volume free partitions")
         },
-        ".hardware.video:": {
-            "title": _l("Graphic cards"),
-            "keyorder": [
-                "name",
-                "subsystem",
-                "driver",
-                "driver_version",
-                "driver_date",
-                "graphic_memory",
-            ],
-        },
-        ".hardware.video:*.name": {"title": _l("Graphic card name")},
-        ".hardware.video:*.subsystem": {"title": _l("Vendor and device ID")},
-        ".hardware.video:*.driver": {"title": _l("Driver")},
-        ".hardware.video:*.driver_date": {"title": _l("Driver date")},
-        ".hardware.video:*.driver_version": {"title": _l("Driver version")},
-        ".hardware.video:*.graphic_memory": {"title": _l("Memory"), "paint": "bytes_rounded"},
+        # MIGRATED ".hardware.video:": {
+        # MIGRATED     "title": _l("Graphic cards"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "name",
+        # MIGRATED         "subsystem",
+        # MIGRATED         "driver",
+        # MIGRATED         "driver_version",
+        # MIGRATED         "driver_date",
+        # MIGRATED         "graphic_memory",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".hardware.video:*.name": {"title": _l("Graphic card name")},
+        # MIGRATED ".hardware.video:*.subsystem": {"title": _l("Vendor and device ID")},
+        # MIGRATED ".hardware.video:*.driver": {"title": _l("Driver")},
+        # MIGRATED ".hardware.video:*.driver_date": {"title": _l("Driver date")},
+        # MIGRATED ".hardware.video:*.driver_version": {"title": _l("Driver version")},
+        # MIGRATED ".hardware.video:*.graphic_memory": {"title": _l("Memory"), "paint": "bytes_rounded"},
         # MIGRATED ".hardware.nwadapter:": {
         # MIGRATED     "title": _l("Network adapters"),
         # MIGRATED     "keyorder": [

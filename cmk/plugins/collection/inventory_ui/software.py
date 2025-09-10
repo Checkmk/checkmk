@@ -617,3 +617,14 @@ node_software_applications_kube_labels = Node(
         },
     ),
 )
+
+node_software_applications_kube_metadata = Node(
+    name="software_applications_kube_metadata",
+    path=["software", "applications", "kube", "metadata"],
+    title=Title("Metadata"),
+    attributes={
+        "object": TextField(Title("Object")),
+        "name": TextField(Title("Name")),
+        "namespace": TextField(Title("Namespace")),
+    },
+)

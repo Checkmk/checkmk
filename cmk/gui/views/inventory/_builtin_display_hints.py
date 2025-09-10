@@ -945,17 +945,17 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
                 "container_id",
             ],
         },
-        ".software.applications.kube.metadata.": {
-            "title": _l("Metadata"),
-            "keyorder": [
-                "object",
-                "name",
-                "namespace",
-            ],
-        },
-        ".software.applications.kube.metadata.object": {"title": _l("Object")},
-        ".software.applications.kube.metadata.name": {"title": _l("Name")},
-        ".software.applications.kube.metadata.namespace": {"title": _l("Namespace")},
+        # MIGRATED ".software.applications.kube.metadata.": {
+        # MIGRATED     "title": _l("Metadata"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "object",
+        # MIGRATED         "name",
+        # MIGRATED         "namespace",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.kube.metadata.object": {"title": _l("Object")},
+        # MIGRATED ".software.applications.kube.metadata.name": {"title": _l("Name")},
+        # MIGRATED ".software.applications.kube.metadata.namespace": {"title": _l("Namespace")},
         ".software.applications.kube.containers:*.name": {"title": _l("Name")},
         ".software.applications.kube.containers:*.image": {"title": _l("Image")},
         ".software.applications.kube.containers:*.image_pull_policy": {

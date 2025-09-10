@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import datetime as dt
-from collections.abc import Sequence
-from typing import Annotated, Literal, Self
+from abc import ABC, abstractmethod
+from collections.abc import Container, Iterable, Sequence
+from typing import Annotated, Literal, override, Self
 
 from pydantic import AfterValidator, Discriminator
 
@@ -20,12 +21,19 @@ from cmk.gui.openapi.framework.model.converter import (
     SiteIdConverter,
 )
 from cmk.gui.openapi.restful_objects.validators import RequestDataValidator
-from cmk.gui.type_defs import AnnotatedUserId, FilterName, Icon, VisualContext
+from cmk.gui.type_defs import (
+    AnnotatedUserId,
+    DashboardEmbeddedViewSpec,
+    FilterName,
+    Icon,
+    VisualContext,
+)
 from cmk.gui.views.icon.registry import all_icons
 from cmk.gui.watolib.main_menu import main_module_topic_registry
 
 from .type_defs import AnnotatedInfoName
-from .widget import RelativeGridWidgetRequest, RelativeGridWidgetResponse
+from .widget import BaseWidgetRequest, RelativeGridWidgetRequest, RelativeGridWidgetResponse
+from .widget_content.view import EmbeddedViewContent
 
 
 @api_model
@@ -247,7 +255,7 @@ class DashboardFilterContextResponse(DashboardFilterContext):
 
 
 @api_model
-class BaseDashboardRequest:
+class _BaseDashboard:
     general_settings: DashboardGeneralSettings = api_field(
         description="General settings for the dashboard.",
     )
@@ -255,9 +263,35 @@ class BaseDashboardRequest:
         description="Filter context for the dashboard.",
     )
 
-    def _to_internal_without_layout_and_widgets(
-        self, owner: UserId, dashboard_id: str
+
+@api_model
+class BaseDashboardRequest(_BaseDashboard, ABC):
+    @abstractmethod
+    def _iter_widgets(self) -> Iterable[BaseWidgetRequest]:
+        """Iterate over all widgets that are part of this dashboard."""
+        pass
+
+    @abstractmethod
+    def to_internal(
+        self, owner: UserId, dashboard_id: str, embedded_views: dict[str, DashboardEmbeddedViewSpec]
     ) -> DashboardConfig:
+        """Convert the API model to the internal representation."""
+        pass
+
+    def _get_used_embedded_views(self) -> set[str]:
+        """Return a set of all embedded view IDs that are used in this dashboard."""
+        return {
+            widget.content.embedded_id
+            for widget in self._iter_widgets()
+            if isinstance(widget.content, EmbeddedViewContent)
+        }
+
+    def _to_internal_without_layout(
+        self, owner: UserId, dashboard_id: str, embedded_views: dict[str, DashboardEmbeddedViewSpec]
+    ) -> DashboardConfig:
+        used_embedded_views = self._get_used_embedded_views()
+        embedded_views = {k: v for k, v in embedded_views.items() if k in used_embedded_views}
+
         return DashboardConfig(
             owner=owner,
             name=dashboard_id,
@@ -265,9 +299,11 @@ class BaseDashboardRequest:
             single_infos=self.filter_context.restricted_to_single,
             add_context_to_title=self.general_settings.title.include_context,
             title=self.general_settings.title.text,
-            description=""
-            if isinstance(self.general_settings.description, ApiOmitted)
-            else self.general_settings.description,
+            description=(
+                ""
+                if isinstance(self.general_settings.description, ApiOmitted)
+                else self.general_settings.description
+            ),
             topic=self.general_settings.menu.topic,
             sort_index=self.general_settings.menu.sort_index,
             is_show_more=self.general_settings.menu.is_show_more,
@@ -281,12 +317,13 @@ class BaseDashboardRequest:
             mtime=int(dt.datetime.now(tz=dt.UTC).timestamp()),
             show_title=self.general_settings.title.render,
             mandatory_context_filters=self.filter_context.mandatory_context_filters,
-            dashlets=[],
+            dashlets=[widget.to_internal() for widget in self._iter_widgets()],
+            embedded_views=embedded_views,
         )
 
 
 @api_model
-class BaseDashboardResponse(BaseDashboardRequest):
+class BaseDashboardResponse(_BaseDashboard):
     # these fields should only be present in responses
     owner: AnnotatedUserId = api_field(description="The owner of the dashboard.", example="admin")
     last_modified_at: dt.datetime = api_field(
@@ -304,7 +341,7 @@ class BaseRelativeGridDashboardRequest(BaseDashboardRequest):
         description="All widgets that are part of this dashboard.",
     )
 
-    def validate(self, context: ApiContext) -> None:
+    def validate(self, context: ApiContext, *, embedded_views: Container[str]) -> None:
         """Run additional validation that depends on the API context (or rather the config)."""
         errors = [
             error
@@ -312,15 +349,22 @@ class BaseRelativeGridDashboardRequest(BaseDashboardRequest):
             for error in widget.iter_validation_errors(
                 ("body", "widgets", widget_id),
                 context=context,
+                embedded_views=embedded_views,
             )
         ]
         if errors:
             raise RequestDataValidator.format_error_details(errors)
 
-    def to_internal(self, owner: UserId, dashboard_id: str) -> DashboardConfig:
-        config = self._to_internal_without_layout_and_widgets(owner, dashboard_id)
+    @override
+    def _iter_widgets(self) -> Iterable[BaseWidgetRequest]:
+        return self.widgets.values()
+
+    @override
+    def to_internal(
+        self, owner: UserId, dashboard_id: str, embedded_views: dict[str, DashboardEmbeddedViewSpec]
+    ) -> DashboardConfig:
+        config = self._to_internal_without_layout(owner, dashboard_id, embedded_views)
         config["layout"] = self.layout.to_internal()
-        config["dashlets"] = [widget.to_internal() for widget in self.widgets.values()]
         return config
 
 

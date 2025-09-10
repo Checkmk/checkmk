@@ -4,15 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable, Mapping
-from typing import Any, get_args, get_type_hints
+from typing import get_args, get_type_hints
 
 import pytest
 
+from cmk.ccc.user import UserId
+from cmk.gui.dashboard import get_all_dashboards
 from cmk.gui.dashboard.api import ApiCustomGraphValidation
 from cmk.gui.dashboard.api._utils import INTERNAL_TO_API_TYPE_NAME
 from cmk.gui.dashboard.api.model.constants import RESPONSIVE_GRID_BREAKPOINTS
 from cmk.gui.dashboard.api.model.widget_content import _CONTENT_TYPES
 from cmk.gui.dashboard.api.model.widget_content._base import BaseWidgetContent
+from cmk.gui.type_defs import ColumnSpec, DashboardEmbeddedViewSpec, SorterSpec, VisualLinkSpec
 from cmk.gui.views.icon.registry import all_icons
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from tests.testlib.common.repo import (
@@ -32,7 +35,7 @@ def test_widget_api_model_has_valid_type_mapping(widget_api_model: BaseWidgetCon
     internal_widget_type_name = widget_api_model.internal_type()
     mapped_api_type_name = INTERNAL_TO_API_TYPE_NAME.get(internal_widget_type_name)
 
-    assert len(literal_values) == 1, "Widget content model  should have exactly one Literal value"
+    assert len(literal_values) == 1, "Widget content model should have exactly one Literal value"
 
     assert internal_widget_type_name in INTERNAL_TO_API_TYPE_NAME, (
         f"Internal widget type '{internal_widget_type_name}' not found in INTERNAL_TO_API_TYPE_NAME mapping. "
@@ -969,135 +972,62 @@ class TestLinkedViewContent:
 
 
 class TestEmbeddedViewContent:
-    @staticmethod
-    def _create_embedded_view_content() -> dict[str, Any]:
-        return {
-            "type": "embedded_view",
-            "restricted_to_single": [],
-            "datasource": "alert_stats",
-            "layout": "table",
-            "columns": [
-                {"name": "alert_stats_problem", "parameters": {}, "type": "column"},
-                {
-                    "name": "host",
-                    "parameters": {"color_choices": []},
-                    "link_spec": {"type": "views", "name": "hostsvcevents"},
-                    "type": "column",
-                },
-                {
-                    "name": "service_description",
-                    "parameters": {},
-                    "link_spec": {"type": "views", "name": "svcevents"},
-                    "type": "column",
-                },
-            ],
-            "sorters": [
-                {"sorter_name": "alerts_crit", "parameters": {}, "direction": "desc"},
-                {"sorter_name": "alerts_unknown", "parameters": {}, "direction": "desc"},
-                {"sorter_name": "alerts_warn", "parameters": {}, "direction": "desc"},
-                {"sorter_name": "site_host", "parameters": {}, "direction": "asc"},
-                {"sorter_name": "svcdescr", "parameters": {}, "direction": "asc"},
-            ],
-            "reload_interval_seconds": 0,
-            "entries_per_row": 1,
-            "column_headers": "pergroup",
+    def test_edit(self, clients: ClientRegistry, with_automation_user: tuple[UserId, str]) -> None:
+        # with the way embedded views work right now, there is no way to used them on create
+        # so we have to use edit, and modify the underlying config first to set it up
+        user_id = with_automation_user[0]
+        dashboard_id = "test_dashboard"
+        clients.DashboardClient.create_relative_grid_dashboard(
+            _create_dashboard_payload(dashboard_id, {})
+        )
+
+        embedded_id = "some-random-id"
+        dashboards = get_all_dashboards()
+        dashboards[(user_id, dashboard_id)]["embedded_views"] = {
+            embedded_id: DashboardEmbeddedViewSpec(
+                single_infos=[],
+                datasource="alert_stats",
+                layout="table",
+                painters=[
+                    ColumnSpec(name="alert_stats_problem"),
+                    ColumnSpec(
+                        name="host",
+                        parameters={"color_choices": []},
+                        link_spec=VisualLinkSpec(type_name="views", name="hostsvcevents"),
+                    ),
+                    ColumnSpec(
+                        name="service_description",
+                        link_spec=VisualLinkSpec(type_name="views", name="svcevents"),
+                    ),
+                ],
+                group_painters=[],
+                sorters=[
+                    SorterSpec(sorter="alerts_crit", negate=False),
+                    SorterSpec(sorter="alerts_unknown", negate=False),
+                    SorterSpec(sorter="alerts_warn", negate=False),
+                    SorterSpec(sorter="site_host", negate=True),
+                    SorterSpec(sorter="svcdescr", negate=True),
+                ],
+                browser_reload=0,
+                num_columns=1,
+                column_headers="pergroup",
+            )
         }
 
-    def test_create(self, clients: ClientRegistry) -> None:
-        _check_widget_create(clients, self._create_embedded_view_content())
-
-    def test_invalid_restricted_to_single(self, clients: ClientRegistry) -> None:
-        content = self._create_embedded_view_content()
-        content["restricted_to_single"] = ["invalid_info_name"]
-        resp = clients.DashboardClient.create_relative_grid_dashboard(
-            _create_dashboard_payload(
-                "test_dashboard",
-                {"test_widget": _create_widget(content)},
-            ),
-            expect_ok=False,
+        payload = _create_dashboard_payload(
+            dashboard_id,
+            {
+                "test_widget": _create_widget(
+                    {"type": "embedded_view", "embedded_id": embedded_id}
+                ),
+            },
         )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
-        assert resp.json["fields"][
-            "body.widgets.test_widget.content.embedded_view.restricted_to_single.0"
-        ]["msg"].startswith(
-            "Value error, Value 'invalid_info_name' is not allowed, valid options are:"
-        )
-        assert len(resp.json["fields"]) == 1, "Expected only one field error"
-
-    def test_invalid_data_source(self, clients: ClientRegistry) -> None:
-        content = self._create_embedded_view_content()
-        content["datasource"] = "non_existent_datasource"
-        resp = clients.DashboardClient.create_relative_grid_dashboard(
-            _create_dashboard_payload(
-                "test_dashboard",
-                {"test_widget": _create_widget(content)},
-            ),
-            expect_ok=False,
-        )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
-        assert resp.json["fields"]["body.widgets.test_widget.content.embedded_view.datasource"][
-            "msg"
-        ].startswith(
-            "Value error, Value 'non_existent_datasource' is not allowed, valid options are:"
-        )
-        assert len(resp.json["fields"]) == 1, "Expected only one field error"
-
-    def test_invalid_layout(self, clients: ClientRegistry) -> None:
-        content = self._create_embedded_view_content()
-        content["layout"] = "non_existent_layout"
-        resp = clients.DashboardClient.create_relative_grid_dashboard(
-            _create_dashboard_payload(
-                "test_dashboard",
-                {"test_widget": _create_widget(content)},
-            ),
-            expect_ok=False,
-        )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
-        assert resp.json["fields"]["body.widgets.test_widget.content.embedded_view.layout"][
-            "msg"
-        ].startswith("Value error, Value 'non_existent_layout' is not allowed, valid options are:")
-        assert len(resp.json["fields"]) == 1, "Expected only one field error"
-
-    def test_invalid_painter_name(self, clients: ClientRegistry) -> None:
-        content = self._create_embedded_view_content()
-        content["columns"][0]["name"] = "non_existent_painter"
-        resp = clients.DashboardClient.create_relative_grid_dashboard(
-            _create_dashboard_payload(
-                "test_dashboard",
-                {"test_widget": _create_widget(content)},
-            ),
-            expect_ok=False,
-        )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
-        assert resp.json["fields"][
-            "body.widgets.test_widget.content.embedded_view.columns.0.column.name"
-        ]["msg"].startswith("Painter 'non_existent_painter' does not exist.")
-        assert len(resp.json["fields"]) == 1, "Expected only one field error"
-
-    def test_invalid_link_spec(self, clients: ClientRegistry) -> None:
-        content = self._create_embedded_view_content()
-        content["columns"][1]["link_spec"]["name"] = "non_existent_view"
-        resp = clients.DashboardClient.create_relative_grid_dashboard(
-            _create_dashboard_payload(
-                "test_dashboard",
-                {"test_widget": _create_widget(content)},
-            ),
-            expect_ok=False,
-        )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
-        assert resp.json["fields"][
-            "body.widgets.test_widget.content.embedded_view.columns.1.column.link_spec.function-after[_validate(), ApiVisualLink]"
-        ]["msg"].startswith(
-            "Value error, View 'non_existent_view' does not exist or you don't have permission to see it."
-        )
-        # link_spec can be omitted, so there are two validation errors here (we don't yet filter out ApiOmitted errors)
-        assert len(resp.json["fields"]) == 2, "Expected two field errors"
-        assert all(
-            error.startswith(
-                "body.widgets.test_widget.content.embedded_view.columns.1.column.link_spec"
-            )
-            for error in resp.json["fields"]
-        )
+        del payload["id"]  # remove dashboard ID, as it's now in the URL for the edit
+        resp = clients.DashboardClient.edit_relative_grid_dashboard(dashboard_id, payload)
+        widgets = resp.json["extensions"]["widgets"]
+        assert len(widgets) == 1, f"Expected 1 widget, got {len(widgets)}"
+        widget = next(iter(widgets.values()))  # IDs are not consistent
+        assert widget["content"]["type"] == "embedded_view"
 
 
 @pytest.mark.usefixtures("skip_in_raw_edition")

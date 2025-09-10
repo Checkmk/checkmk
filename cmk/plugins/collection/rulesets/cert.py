@@ -7,6 +7,7 @@ from collections.abc import Mapping, Sequence
 
 from cryptography.x509.oid import ObjectIdentifier, SignatureAlgorithmOID
 
+from cmk.plugins.collection.server_side_calls.cert import ConnectionType
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
@@ -47,6 +48,28 @@ def _valuespec_response_time() -> SimpleLevels[float]:
         ),
         level_direction=LevelDirection.UPPER,
         prefill_fixed_levels=DefaultValue((0.1, 0.2)),
+    )
+
+
+def _valuespec_connection_type() -> SingleChoice:
+    return SingleChoice(
+        title=Title("Connection type"),
+        help_text=Help(
+            "Select the connection type for the SSL/TLS check. "
+            "Direct TLS establishes an immediate encrypted connection. "
+            "SMTP STARTTLS negotiates encryption after connecting in plain text."
+        ),
+        elements=[
+            SingleChoiceElement(
+                name=ConnectionType.TLS.value,
+                title=Title("TLS/SSL"),
+            ),
+            SingleChoiceElement(
+                name=ConnectionType.SMTP_STARTTLS.value,
+                title=Title("SMTP STARTTLS"),
+            ),
+        ],
+        prefill=DefaultValue(ConnectionType.TLS.value),
     )
 
 
@@ -342,6 +365,9 @@ def _valuespec_host_settings() -> List[Mapping[str, object]]:
                             "from the standard if you want to keep some of them."
                         ),
                         elements={
+                            "connection_type": DictElement[str](
+                                parameter_form=_valuespec_connection_type()
+                            ),
                             "response_time": DictElement(parameter_form=_valuespec_response_time()),
                             "validity": DictElement[Mapping[str, object]](
                                 parameter_form=_valuespec_validity()
@@ -370,6 +396,7 @@ def _valuespec_standard_settings() -> Dictionary:
                 parameter_form=_valuespec_port(),
                 required=True,
             ),
+            "connection_type": DictElement[str](parameter_form=_valuespec_connection_type()),
             "response_time": DictElement(parameter_form=_valuespec_response_time()),
             "validity": DictElement[Mapping[str, object]](parameter_form=_valuespec_validity()),
             "cert_details": DictElement[Mapping[str, object]](

@@ -28,6 +28,11 @@ class ServicePrefix(StrEnum):
     NONE = "none"
 
 
+class ConnectionType(StrEnum):
+    TLS = "tls"
+    SMTP_STARTTLS = "smtp_starttls"
+
+
 FloatLevels = (
     tuple[Literal[LevelsType.NO_LEVELS], None]
     | tuple[Literal[LevelsType.FIXED], tuple[float, float]]
@@ -74,6 +79,7 @@ class CertificateDetails(BaseModel):
 
 
 class Settings(BaseModel):
+    connection_type: ConnectionType | None = None
     response_time: FloatLevels | None = None
     validity: Certificate | None = None
     cert_details: CertificateDetails | None = None
@@ -143,6 +149,9 @@ def _command_arguments(endpoint: CertEndpoint, host_config: HostConfig) -> Itera
     if (settings := endpoint.individual_settings) is None:
         return
 
+    if (connection_type := settings.connection_type) is not None:
+        yield "--connection-type"
+        yield connection_type
     if (response_time := settings.response_time) is not None:
         yield from _response_time_args(response_time)
     if (validity := settings.validity) is not None:

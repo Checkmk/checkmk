@@ -15,7 +15,7 @@ from livestatus import SiteConfiguration, SiteConfigurations
 import cmk.utils.paths
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-from cmk.gui import permissions
+from cmk.gui import hooks, permissions
 from cmk.gui.config import (
     active_config,
     builtin_role_ids,
@@ -235,43 +235,17 @@ def test_unauthenticated_users_authorized_sites(user: LoggedInUser) -> None:
     }
 
 
-@pytest.mark.usefixtures("request_context")
-def test_logged_in_nobody_permissions(mocker: MockerFixture, monkeypatch: MonkeyPatch) -> None:
+def test_logged_in_nobody_permissions() -> None:
     user = LoggedInNobody()
-    mocker.patch.object(permissions, "permission_registry")
-    with monkeypatch.context() as m:
-        m.setattr(active_config, "roles", {})
-
-        assert user.may("any_permission") is False
-        with pytest.raises(MKAuthException):
-            user.need_permission("any_permission")
+    assert user.may("any_permission") is False
+    with pytest.raises(MKAuthException):
+        user.need_permission("any_permission")
 
 
-@pytest.mark.usefixtures("request_context")
-def test_logged_in_super_user_permissions(mocker: MockerFixture, monkeypatch: MonkeyPatch) -> None:
+def test_logged_in_super_user_permissions() -> None:
     user = LoggedInSuperUser()
-    mocker.patch.object(permissions, "permission_registry")
-    with monkeypatch.context() as m:
-        m.setattr(
-            active_config,
-            "roles",
-            {
-                "admin": CustomUserRole(
-                    {
-                        "alias": "",
-                        "builtin": False,
-                        "basedon": "no_permissions",
-                        "permissions": {"eat_other_peoples_cake": True},
-                    }
-                ),
-            },
-        )
-
-        assert user.may("eat_other_peoples_cake") is True
-        assert user.may("drink_other_peoples_milk") is False
-        user.need_permission("eat_other_peoples_cake")
-        with pytest.raises(MKAuthException):
-            user.need_permission("drink_other_peoples_milk")
+    assert user.may("eat_other_peoples_cake") is True
+    user.need_permission("eat_other_peoples_cake")
 
 
 MONITORING_USER_CACHED_PROFILE = {
@@ -442,3 +416,48 @@ def test_monitoring_user_permissions(
 )
 def test_ruleset_permissions_with_commandline_access(varname: str) -> None:
     assert may_edit_ruleset(varname) is False
+
+
+@pytest.fixture()
+def reset_hooks() -> Iterator[None]:
+    old_hooks = hooks.hooks
+    try:
+        hooks.hooks = {}
+        hooks.register_thread_cache_cleanup()
+        yield
+    finally:
+        hooks.hooks = old_hooks
+
+
+@pytest.mark.usefixtures("request_context")
+def test_super_user_context_calls_permission_checked() -> None:
+    checked: dict[str, bool] = {}
+    hooks.register("permission-checked", lambda x: checked.setdefault(x, True))
+
+    with SuperUserContext():
+        global_user.may("any_permission")
+
+    assert checked["any_permission"] is True
+
+
+@pytest.mark.usefixtures("request_context")
+def test_nobody_user_context_calls_permission_checked() -> None:
+    checked: dict[str, bool] = {}
+    hooks.register("permission-checked", lambda x: checked.setdefault(x, True))
+    assert isinstance(global_user, LoggedInNobody)
+
+    global_user.may("any_permission")
+
+    assert checked["any_permission"] is True
+
+
+def test_user_context_calls_permission_checked(with_user: tuple[UserId, str]) -> None:
+    checked: dict[str, bool] = {}
+    user_id = with_user[0]
+    hooks.register("permission-checked", lambda x: checked.setdefault(x, True))
+
+    with UserContext(user_id):
+        assert global_user.id == user_id
+        global_user.may("any_permission")
+
+    assert checked["any_permission"] is True

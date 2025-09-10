@@ -12,11 +12,17 @@ type Aggregations = Literal["average", "minimum", "maximum", "total", "count"]
 
 
 @dataclass(frozen=True, kw_only=True)
+class DimensionFilter:
+    name: str
+    value: str
+
+
+@dataclass(frozen=True, kw_only=True)
 class AzureMetric:
     name: str
     interval: Intervals
     aggregation: Aggregations
-    filter: str | None = None
+    dimension_filter: DimensionFilter | None = None
 
 
 storage_percent = AzureMetric(name="storage_percent", interval="PT1M", aggregation="average")

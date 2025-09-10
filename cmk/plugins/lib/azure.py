@@ -80,7 +80,12 @@ def _get_metrics(metrics_data: Sequence[Sequence[str]]) -> Iterable[tuple[str, A
     for metric_line in metrics_data:
         metric_dict = json.loads(AZURE_AGENT_SEPARATOR.join(metric_line))
 
-        key = f"{metric_dict['aggregation']}_{metric_dict['name'].replace(' ', '_')}"
+        prefix = (
+            ""
+            if (dimension_filter := metric_dict.get("dimension_filter")) is None
+            else "".join(dimension_filter)
+        )
+        key = f"{prefix}{metric_dict['aggregation']}_{metric_dict['name'].replace(' ', '_')}"
         yield (
             key,
             AzureMetric(

@@ -53,6 +53,7 @@ from cmk.plugins.azure_v2.special_agent.azure_metrics import (
     Aggregations,
     ALL_METRICS,
     AzureMetric,
+    DimensionFilter,
     Intervals,
     OPTIONAL_METRICS,
 )
@@ -556,7 +557,12 @@ class IssueCollector:
         return len(self._list)
 
 
-def create_metric_dict(metric, aggregation, interval_id):
+def create_metric_dict(
+    metric: Mapping[str, Any],
+    aggregation: Aggregations,
+    interval_id: Intervals,
+    dimension_filter: DimensionFilter | None,
+) -> Mapping[str, Any] | None:
     name = metric["name"]["value"]
     metric_dict = {
         "name": name,
@@ -566,6 +572,7 @@ def create_metric_dict(metric, aggregation, interval_id):
         "timestamp": None,
         "interval_id": interval_id,
         "interval": None,
+        "dimension_filter": dimension_filter,
     }
 
     timeseries = metric.get("timeseries")
@@ -1222,6 +1229,7 @@ class UsageDetailsCache(AzureAsyncCache):
 class CacheMetricsGroupDefinition:
     interval: Intervals
     aggregation: Aggregations
+    dimension_filter: DimensionFilter | None
     metrics: Sequence[AzureMetric]
     resource_type: str
     region: str
@@ -1246,7 +1254,11 @@ class MetricCache(AzureAsyncCache):
             self.metrics_definitions.region,
             subscription,
         )
+
         cache_file_name = self.metric_names.replace("/", "_")  # do not create random directories
+        if metrics_definition.dimension_filter:
+            cache_file_name += f"_{metrics_definition.dimension_filter.name}{metrics_definition.dimension_filter.value}"
+
         super().__init__(
             self._cache_path,
             cache_file_name,
@@ -1337,6 +1349,11 @@ class MetricCache(AzureAsyncCache):
             "aggregation": self.metrics_definitions.aggregation,
         }
 
+        if self.metrics_definitions.dimension_filter:
+            params["filter"] = (
+                f"{self.metrics_definitions.dimension_filter.name} eq '{self.metrics_definitions.dimension_filter.value}'"
+            )
+
         raw_metrics = []
         for chunk in _chunks(resource_ids):
             raw_metrics += await self._get_metrics(mgmt_client, region, chunk, params)
@@ -1351,6 +1368,7 @@ class MetricCache(AzureAsyncCache):
                     raw_metric,
                     self.metrics_definitions.aggregation,
                     self.metrics_definitions.interval,
+                    self.metrics_definitions.dimension_filter,
                 )
                 if parsed_metric is not None:
                     metrics[resource_id].append(parsed_metric)
@@ -1359,9 +1377,7 @@ class MetricCache(AzureAsyncCache):
                     if metric_name in OPTIONAL_METRICS.get(resource_type, []):
                         continue
 
-                    msg = (
-                        f"metric not found: {metric_name} ({self.metrics_definitions.aggregation})"
-                    )
+                    msg = f"metric not found: {metric_name} ({self.metrics_definitions.aggregation}), ({self.metrics_definitions.dimension_filter})"
                     err.add("info", resource_id, msg)
                     LOGGER.info(msg)
 
@@ -1446,11 +1462,15 @@ async def _gather_metrics(
 
         grouped_metrics = defaultdict(list)
         for metric_definition in metric_definitions:
-            grouped_metrics[(metric_definition.interval, metric_definition.aggregation)].append(
-                metric_definition
-            )
+            grouped_metrics[
+                (
+                    metric_definition.interval,
+                    metric_definition.aggregation,
+                    metric_definition.dimension_filter,
+                )
+            ].append(metric_definition)
 
-        for (interval, aggregation), definitions in grouped_metrics.items():
+        for (interval, aggregation, dimension_filter), definitions in grouped_metrics.items():
             # chunk of 4 because the list of metrics will be _part_ of the cache-file-name
             # we don't want something too long here
             for definitions_chunk in _chunks(definitions, 4):
@@ -1458,6 +1478,7 @@ async def _gather_metrics(
                     metrics_definition=CacheMetricsGroupDefinition(
                         interval=interval,
                         aggregation=aggregation,
+                        dimension_filter=dimension_filter,
                         metrics=definitions_chunk,
                         resource_type=resource_type,
                         region=resource_location,

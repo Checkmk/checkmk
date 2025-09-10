@@ -162,6 +162,9 @@ def _get_metrics(metrics_data: Sequence[Sequence[str]]) -> Iterable[tuple[str, A
         metric_dict = json.loads(AZURE_AGENT_SEPARATOR.join(metric_line))
 
         key = f"{metric_dict['aggregation']}_{metric_dict['name'].replace(' ', '_')}"
+        if (dimension_filter := metric_dict.get("dimension_filter")) is not None:
+            key = f"{key}_{''.join(dimension_filter)}"
+
         yield (
             key,
             AzureMetric(

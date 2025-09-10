@@ -400,6 +400,30 @@ node_hardware_storage_disks = Node(
     ),
 )
 
+node_hardware_system = Node(
+    name="hardware_system",
+    path=["hardware", "system"],
+    title=Title("System"),
+    attributes={
+        "manufacturer": TextField(Title("Manufacturer")),
+        "product": TextField(Title("Product")),
+        "serial": TextField(Title("Serial number")),
+        "model": TextField(Title("Model name")),
+        "node_name": TextField(Title("Node name")),
+        "partition_name": TextField(Title("Partition name")),
+        "expresscode": TextField(Title("Express servicecode")),
+        "pki_appliance_version": TextField(Title("Version of PKI appliance")),
+        "device_number": TextField(Title("Device number")),
+        "description": TextField(Title("Description")),
+        "mac_address": TextField(Title("MAC address")),
+        "type": TextField(Title("Type")),
+        "software_version": TextField(Title("Software version")),
+        "license_key_list": TextField(Title("License key list")),
+        "model_name": TextField(Title("Model name - LEGACY, don't use")),
+        "serial_number": TextField(Title("Serial number - LEGACY, don't use")),
+    },
+)
+
 node_hardware_system_nodes = Node(
     name="hardware_system_nodes",
     path=["hardware", "system", "nodes"],

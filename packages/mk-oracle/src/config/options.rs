@@ -4,16 +4,8 @@
 
 use super::defines::{defaults, keys};
 use super::yaml::{Get, Yaml};
-use crate::types::{MaxConnections, MaxQueries, SqlBindParam};
+use crate::types::{MaxConnections, MaxQueries, SqlBindParam, UseHostClient};
 use anyhow::Result;
-
-#[derive(PartialEq, Debug, Clone)]
-pub enum UseHostClient {
-    Always,
-    Never,
-    Auto,
-    Path(String),
-}
 
 impl Default for UseHostClient {
     fn default() -> Self {

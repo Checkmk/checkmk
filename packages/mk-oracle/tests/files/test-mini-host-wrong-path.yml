@@ -1,0 +1,15 @@
+# always fails
+---
+oracle:
+  main: # mandatory, to be used if no specific config
+    options: # optional
+      use_host_client: "/path\\xx" # optional, default: no, values: auto, never, always, "path-to-oci-lib"
+    connection: # mandatory
+      hostname: oracle-win.dev.checkmk.net
+    authentication: # mandatory
+      username: $CI_ORA2_DB_TEST
+      password: $CI_ORA2_DB_TEST
+      type: standard
+#      role: sysdba # it may be not enabled by Oracle DBA
+    sections: # optional, if absent will use default as defined below
+      - instance: # special section

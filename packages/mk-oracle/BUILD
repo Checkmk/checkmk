@@ -113,6 +113,9 @@ rust_test(
         "tests/files/endpoints.txt",
     ],
     crate = ":mk-oracle-lib",
+    env_inherit = [
+        "MK_CONFDIR",
+    ],
 )
 
 rust_library(
@@ -150,6 +153,7 @@ rust_test_suite(
         "CI_ORA2_DB_TEST",
         "LD_LIBRARY_PATH",
         "MK_CONFDIR",
+        "MK_LIBDIR",
     ],
     deps = all_crate_deps() + [
         ":mk-oracle",

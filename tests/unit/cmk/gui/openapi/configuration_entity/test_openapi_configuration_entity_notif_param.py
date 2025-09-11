@@ -6,6 +6,7 @@
 # mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
+from collections.abc import Generator
 from unittest import mock
 
 import pytest
@@ -14,6 +15,8 @@ import cmk.gui.watolib.configuration_entity.configuration_entity
 from cmk.ccc.user import UserId
 from cmk.gui.form_specs import RawFrontendData
 from cmk.gui.form_specs.unstable import DictionaryExtended, not_empty
+from cmk.gui.logged_in import user
+from cmk.gui.permissions import declare_permission, permission_registry
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
 from cmk.gui.watolib.notification_parameter import (
     get_notification_parameter,
@@ -29,6 +32,7 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 from tests.testlib.unit.rest_api_client import ClientRegistry
+from tests.testlib.unit.utils import reset_registries
 
 
 def spec() -> ValueSpecDictionary:
@@ -50,7 +54,7 @@ def form_spec() -> DictionaryExtended:
 
 
 @pytest.fixture(name="registry", autouse=True)
-def _registry_fixture(monkeypatch: pytest.MonkeyPatch) -> NotificationParameterRegistry:
+def _registry_fixture(monkeypatch: pytest.MonkeyPatch) -> Generator[NotificationParameterRegistry]:
     notification_parameter_registry = NotificationParameterRegistry()
     notification_parameter_registry.register(
         NotificationParameter(
@@ -64,10 +68,18 @@ def _registry_fixture(monkeypatch: pytest.MonkeyPatch) -> NotificationParameterR
         "notification_parameter_registry",
         notification_parameter_registry,
     )
-    return notification_parameter_registry
+
+    with reset_registries([permission_registry]):
+        declare_permission(
+            "notification_plugin.dummy_params",
+            "Use Dummy Notification Parameters",
+            "Allows the user to create and edit notification parameters of type Dummy.",
+            defaults=["admin"],
+        )
+        yield notification_parameter_registry
 
 
-def test_save_configuration_entity(clients: ClientRegistry) -> None:
+def test_save_notif_param(clients: ClientRegistry) -> None:
     # WHEN
     resp = clients.ConfigurationEntity.create_configuration_entity(
         {
@@ -81,14 +93,10 @@ def test_save_configuration_entity(clients: ClientRegistry) -> None:
     )
 
     # THEN
+    resp.assert_status_code(200)
     assert resp.json["title"] == "foo"
 
 
-@pytest.mark.xfail(
-    raises=AssertionError,
-    reason="REST-API calls without sufficient permissions must fail",
-    strict=True,
-)
 def test_save_configuration_entity_non_admin(
     clients: ClientRegistry, with_automation_user_not_admin: tuple[UserId, str]
 ) -> None:
@@ -114,6 +122,7 @@ def test_save_configuration_entity_non_admin(
     )
 
 
+@pytest.mark.usefixtures("with_admin_login")
 def test_update_configuration_entity(
     clients: ClientRegistry, registry: NotificationParameterRegistry
 ) -> None:
@@ -127,6 +136,7 @@ def test_update_configuration_entity(
                 "parameter_properties": {"method_parameters": {"test_param": "initial_value"}},
             }
         ),
+        user=user,
         object_id=None,
         pprint_value=False,
     )
@@ -150,11 +160,7 @@ def test_update_configuration_entity(
     assert updated_entity["parameter_properties"]["method_parameters"]["test_param"] == "bar"
 
 
-@pytest.mark.xfail(
-    raises=AssertionError,
-    reason="REST-API calls without sufficient permissions must fail",
-    strict=True,
-)
+@pytest.mark.usefixtures("with_admin_login")
 def test_update_configuration_entity_non_admin(
     clients: ClientRegistry,
     registry: NotificationParameterRegistry,
@@ -170,6 +176,7 @@ def test_update_configuration_entity_non_admin(
                 "parameter_properties": {"method_parameters": {"test_param": "initial_value"}},
             }
         ),
+        user=user,
         object_id=None,
         pprint_value=False,
     )
@@ -243,6 +250,7 @@ def test_save_configuration_validation(
     assert resp.json["fields"]["data"] == expected_error_fields
 
 
+@pytest.mark.usefixtures("with_admin_login")
 def test_list_configuration_entities(
     clients: ClientRegistry, registry: NotificationParameterRegistry
 ) -> None:
@@ -256,6 +264,7 @@ def test_list_configuration_entities(
                 "parameter_properties": {"method_parameters": {"test_param": "some_value"}},
             }
         ),
+        user=user,
         object_id=None,
         pprint_value=False,
     )
@@ -272,9 +281,8 @@ def test_list_configuration_entities(
     assert resp.json["value"][0]["title"] == "foo"
 
 
-def test_get_configuration_entity(
-    clients: ClientRegistry, registry: NotificationParameterRegistry
-) -> None:
+@pytest.mark.usefixtures("with_admin_login")
+def test_get_notif_param(clients: ClientRegistry, registry: NotificationParameterRegistry) -> None:
     # GIVEN
     entity = save_notification_parameter(
         registry,
@@ -285,6 +293,7 @@ def test_get_configuration_entity(
                 "parameter_properties": {"method_parameters": {"test_param": "some_value"}},
             }
         ),
+        user=user,
         object_id=None,
         pprint_value=False,
     )
@@ -304,7 +313,7 @@ def test_get_configuration_entity(
     )
 
 
-def test_get_configuration_entity_throws_404(clients: ClientRegistry) -> None:
+def test_get_notif_param_throws_404(clients: ClientRegistry) -> None:
     # WHEN
     resp = clients.ConfigurationEntity.get_configuration_entity(
         entity_type=ConfigEntityType.notification_parameter, entity_id="foo_bar", expect_ok=False

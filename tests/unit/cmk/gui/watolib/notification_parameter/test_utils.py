@@ -2,11 +2,15 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Generator
+
 import pytest
 
 from cmk.gui.form_specs import FormSpecValidationError, RawFrontendData
 from cmk.gui.form_specs.unstable import DictionaryExtended, not_empty
 from cmk.gui.form_specs.visitors.single_choice import SingleChoiceVisitor
+from cmk.gui.logged_in import user
+from cmk.gui.permissions import declare_permission, permission_registry
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
 from cmk.gui.watolib.notification_parameter import (
     get_list_of_notification_parameter,
@@ -30,6 +34,7 @@ from cmk.utils.notify_types import (
     NotificationParameterID,
     NotificationParameterItem,
 )
+from tests.testlib.unit.utils import reset_registries
 
 
 def spec() -> ValueSpecDictionary:
@@ -60,7 +65,7 @@ def form_spec() -> DictionaryExtended:
 
 
 @pytest.fixture(name="registry")
-def _registry() -> NotificationParameterRegistry:
+def _registry() -> Generator[NotificationParameterRegistry]:
     registry = NotificationParameterRegistry()
     registry.register(
         NotificationParameter(
@@ -70,10 +75,18 @@ def _registry() -> NotificationParameterRegistry:
         )
     )
 
-    return registry
+    with reset_registries([permission_registry]):
+        declare_permission(
+            "notification_plugin.dummy_params",
+            "Use Dummy Notification Parameters",
+            "Allows the user to create and edit notification parameters of type Dummy.",
+            defaults=["admin", "user"],
+        )
+        yield registry
 
 
 @pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("with_admin_login")
 def test_save_notification_params(registry: NotificationParameterRegistry) -> None:
     # WHEN
     save_return = save_notification_parameter(
@@ -86,6 +99,7 @@ def test_save_notification_params(registry: NotificationParameterRegistry) -> No
             }
         ),
         object_id=None,
+        user=user,
         pprint_value=False,
     )
 
@@ -98,6 +112,7 @@ def test_save_notification_params(registry: NotificationParameterRegistry) -> No
 
 
 @pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("with_admin_login")
 @pytest.mark.parametrize(
     "params",
     [
@@ -139,6 +154,7 @@ def test_validation_on_saving_notification_params(
             "dummy_params",
             params,
             object_id=None,
+            user=user,
             pprint_value=False,
         )
 

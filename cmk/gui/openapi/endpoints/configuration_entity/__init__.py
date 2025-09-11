@@ -108,7 +108,7 @@ def _create_configuration_entity(params: Mapping[str, Any]) -> Response:
             entity_type_specifier,
             data,
             folder_tree(),
-            user,
+            user=user,
             pprint_value=active_config.wato_pprint_config,
             use_git=active_config.wato_use_git,
         )
@@ -140,6 +140,7 @@ def _update_configuration_entity(params: Mapping[str, Any]) -> Response:
             entity_type,
             entity_type_specifier,
             data,
+            user=user,
             object_id=entity_id,
             pprint_value=active_config.wato_pprint_config,
         )

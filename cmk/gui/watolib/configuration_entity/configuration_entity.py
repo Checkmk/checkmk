@@ -66,6 +66,7 @@ def save_configuration_entity(
                 NotificationParameterMethod(entity_type_specifier),
                 RawFrontendData(data),
                 object_id=None,
+                user=user,
                 pprint_value=pprint_value,
             )
             return ConfigurationEntityDescription(
@@ -93,6 +94,7 @@ def update_configuration_entity(
     entity_type: ConfigEntityType,
     entity_type_specifier: str,
     data: object,
+    user: LoggedInUser,
     object_id: EntityId,
     pprint_value: bool,
 ) -> ConfigurationEntityDescription:
@@ -108,6 +110,7 @@ def update_configuration_entity(
                 NotificationParameterMethod(entity_type_specifier),
                 RawFrontendData(data),
                 object_id=NotificationParameterID(object_id),
+                user=user,
                 pprint_value=pprint_value,
             )
             return ConfigurationEntityDescription(

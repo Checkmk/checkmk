@@ -35,7 +35,24 @@ def _parameter_valuespec_proxmox_ve_snapshot_age_requirements():
                     ),
                     migrate=migrate_to_float_simple_levels,
                 ),
-            )
+            ),
+            "newest_levels": DictElement(
+                required=False,
+                parameter_form=SimpleLevels(
+                    title=Title("Max age of the newest snapshot"),
+                    level_direction=LevelDirection.UPPER,
+                    form_spec_template=TimeSpan(
+                        displayed_magnitudes=[
+                            TimeMagnitude.DAY,
+                            TimeMagnitude.HOUR,
+                            TimeMagnitude.MINUTE,
+                        ]
+                    ),
+                    prefill_fixed_levels=DefaultValue(
+                        value=(60.0 * 60.0 * 24.0, 60.0 * 60.0 * 24.0 * 2.0)
+                    ),
+                ),
+            ),
         }
     )
 

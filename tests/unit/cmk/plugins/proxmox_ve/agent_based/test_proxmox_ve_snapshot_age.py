@@ -3,29 +3,28 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import datetime
 from collections.abc import Mapping, Sequence
-from zoneinfo import ZoneInfo
+from typing import Any
 
 import pytest
-import time_machine
 
-from cmk.agent_based.v2 import IgnoreResults, Metric, Result, State
+from cmk.agent_based.v2 import CheckResult, IgnoreResults, Metric, Result, State
 from cmk.plugins.proxmox_ve.agent_based.proxmox_ve_snapshot_age import (
+    _check_proxmox_ve_snapshot_age_testable,
     check_proxmox_ve_snapshot_age,
     parse_proxmox_ve_snapshot_age,
-    Section,
+    SectionSnapshots,
 )
 
 
 @pytest.mark.parametrize(
     "data,expected",
     [
-        ('{"snaptimes": []}', {"snaptimes": []}),
-        ('{"snaptimes": [1]}', {"snaptimes": [1]}),
+        ('{"snaptimes": []}', SectionSnapshots(snaptimes=[])),
+        ('{"snaptimes": [1]}', SectionSnapshots(snaptimes=[1])),
     ],
 )
-def test_parse_proxmox_ve_snapshot_age(data: str, expected: Section) -> None:
+def test_parse_proxmox_ve_snapshot_age(data: str, expected: SectionSnapshots) -> None:
     assert parse_proxmox_ve_snapshot_age([[data]]) == expected
 
 
@@ -35,7 +34,7 @@ def test_parse_proxmox_ve_snapshot_age(data: str, expected: Section) -> None:
         (
             1,
             {"oldest_levels": ("fixed", (604800, 2592000))},
-            {"snaptimes": []},
+            SectionSnapshots(snaptimes=[]),
             [Result(state=State.OK, summary="No snapshot found")],
         ),
     ],
@@ -43,53 +42,83 @@ def test_parse_proxmox_ve_snapshot_age(data: str, expected: Section) -> None:
 def test_check_proxmox_ve_snapshot_age_no_snapshot(
     now: int | float,
     params: Mapping[str, object],
-    section: Section,
+    section: SectionSnapshots,
     expected: Sequence[IgnoreResults | Metric | Result],
 ) -> None:
-    with time_machine.travel(datetime.datetime.fromtimestamp(now, tz=ZoneInfo("CET"))):
-        assert list(check_proxmox_ve_snapshot_age(params, section)) == expected
+    assert list(check_proxmox_ve_snapshot_age(params, section)) == expected
 
 
 @pytest.mark.parametrize(
-    "params,section_data,expected_state,expected_metric",
+    "params,section_data,expected_result",
     [
         (
             {
                 "oldest_levels": ("fixed", (5000, 10000)),
             },
-            {
-                "snaptimes": [96_000],
-            },
-            State.OK,
-            4000.0,
+            SectionSnapshots(snaptimes=[96_000]),
+            [
+                Result(state=State.OK, summary="Oldest: 1 hour 6 minutes"),
+                Metric(
+                    "oldest_snapshot_age",
+                    4000.0,
+                    levels=(5000.0, 10000.0),
+                    boundaries=(5000.0, 10000.0),
+                ),
+                Result(state=State.OK, summary="Newest: 1 hour 6 minutes"),
+                Metric("newest_snapshot_age", 4000.0),
+                Result(state=State.OK, summary="Snapshots: 1"),
+            ],
         ),
         (
             {
                 "oldest_levels": ("fixed", (5000, 10000)),
             },
-            {
-                "snaptimes": [96_000, 94_000],
-            },
-            State.WARN,
-            6000.0,
+            SectionSnapshots(snaptimes=[96_000, 94_000]),
+            [
+                Result(
+                    state=State.WARN,
+                    summary="Oldest: 1 hour 40 minutes (warn/crit at 1 hour 23 minutes/2 hours 46 minutes)",
+                ),
+                Metric(
+                    "oldest_snapshot_age",
+                    6000.0,
+                    levels=(5000.0, 10000.0),
+                    boundaries=(5000.0, 10000.0),
+                ),
+                Result(state=State.OK, summary="Newest: 1 hour 6 minutes"),
+                Metric("newest_snapshot_age", 4000.0),
+                Result(state=State.OK, summary="Snapshots: 2"),
+            ],
         ),
         (
             {
                 "oldest_levels": ("fixed", (5000, 10000)),
             },
-            {
-                "snaptimes": [96_000, 94_000, 89_000],
-            },
-            State.CRIT,
-            11000.0,
+            SectionSnapshots(snaptimes=[96_000, 94_000, 89_000]),
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="Oldest: 3 hours 3 minutes (warn/crit at 1 hour 23 minutes/2 hours 46 minutes)",
+                ),
+                Metric(
+                    "oldest_snapshot_age",
+                    11000.0,
+                    levels=(5000.0, 10000.0),
+                    boundaries=(5000.0, 10000.0),
+                ),
+                Result(state=State.OK, summary="Newest: 1 hour 6 minutes"),
+                Metric("newest_snapshot_age", 4000.0),
+                Result(state=State.OK, summary="Snapshots: 3"),
+            ],
         ),
     ],
 )
 def test_check_proxmox_ve_snapshot_age_with_snapshot(
-    params, section_data, expected_state, expected_metric
-):
-    with time_machine.travel(datetime.datetime.fromtimestamp(100_000, tz=ZoneInfo("CET"))):
-        result, metric = check_proxmox_ve_snapshot_age(params, section_data)
-        assert isinstance(result, Result) and isinstance(metric, Metric)
-        assert result.state == expected_state
-        assert metric[0] == "age" and metric[1] == expected_metric
+    params: Mapping[str, Any],
+    section_data: SectionSnapshots,
+    expected_result: CheckResult,
+) -> None:
+    assert (
+        list(_check_proxmox_ve_snapshot_age_testable(100_000, params, section_data.snaptimes))
+        == expected_result
+    )

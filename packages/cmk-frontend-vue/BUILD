@@ -24,10 +24,8 @@ vue_gettext_bin.vue_gettext_compile_binary(
     chdir = package_name(),
 )
 
-EXTRACTED_LOCALE_OUTS = [
-    "locale/messages.pot",
+WEBLATE_PO_FILES = [
     "locale/de.po",
-    "locale/en.po",
     "locale/es.po",
     "locale/fr.po",
     "locale/it.po",
@@ -39,7 +37,6 @@ EXTRACTED_LOCALE_OUTS = [
 
 LOCALE_OUTS = [
     "src/assets/locale/de.json",
-    "src/assets/locale/en.json",
     "src/assets/locale/es.json",
     "src/assets/locale/fr.json",
     "src/assets/locale/it.json",
@@ -50,7 +47,7 @@ LOCALE_OUTS = [
 ]
 
 js_run_binary(
-    name = "extract_i18n",
+    name = "extract_pot_file",
     srcs = glob([
         "src/**/*.ts",
         "src/**/*.vue",
@@ -60,18 +57,34 @@ js_run_binary(
         "gettext.config.js",
         ":node_modules/vue3-gettext",
     ],
-    outs = EXTRACTED_LOCALE_OUTS,
+    outs = ["locale/messages.pot"],
     tool = ":gettext-extract",
-    visibility = ["//visibility:private"],
+    visibility = ["//locale:__pkg__"],
+)
+
+genrule(
+    name = "weblate_po_files",
+    srcs = [
+        "//locale:po_files",
+        ":extract_pot_file",
+    ],
+    outs = WEBLATE_PO_FILES,
+    cmd = """
+        mkdir -p $(RULEDIR)/locale
+        vue_pot_file=$(location :extract_pot_file)
+        for po_file in $(locations //locale:po_files); do
+            lang_code=$$(echo $$po_file | rev | cut -d'/' -f3 | rev)
+            msgcomm $$po_file $$vue_pot_file $$po_file > $(RULEDIR)/locale/$$lang_code.po
+        done
+    """,
 )
 
 js_run_binary(
     name = "compile_i18n",
     srcs = [
         "gettext.config.js",
-        ":extract_i18n",
         ":node_modules/vue3-gettext",
-    ],
+    ] + WEBLATE_PO_FILES,
     outs = LOCALE_OUTS,
     tool = ":gettext-compile",
     visibility = ["//visibility:private"],

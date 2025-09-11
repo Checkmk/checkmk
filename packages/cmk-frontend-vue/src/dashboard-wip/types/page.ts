@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { DashboardLayout } from '@/dashboard-wip/types/dashboard.ts'
+import type { DashboardMetadata } from '@/dashboard-wip/types/dashboard.ts'
 
 export interface BreadcrumbItem {
   title: string
@@ -21,8 +21,7 @@ export interface FilterContext {
 
 export interface LoadedDashboardProperties {
   name: string
-  layout_type: DashboardLayout
-  is_editable: boolean
+  metadata: DashboardMetadata
   filter_context: FilterContext
 }
 

@@ -134,7 +134,9 @@ def page_dashboard_app(config: Config) -> None:
 
         loaded_dashboard_properties = {
             "name": name,
-            "metadata": DashboardMetadataObject.from_dashboard_config(board, user_permissions),
+            "metadata": asdict(
+                DashboardMetadataObject.from_dashboard_config(board, user_permissions)
+            ),
             "filter_context": {
                 "context": requested_context,
                 # determines if the requested filters should overwrite the dashboard filters or

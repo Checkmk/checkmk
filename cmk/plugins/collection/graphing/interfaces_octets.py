@@ -40,12 +40,41 @@ perfometer_if_octets = perfometers.Bidirectional(
         name="if_in_octets",
         focus_range=perfometers.FocusRange(
             perfometers.Closed(0),
-            perfometers.Open(125_000_000),
+            perfometers.Closed(
+                metrics.MaximumOf(
+                    "if_in_octets",
+                    color=metrics.Color.BLACK,
+                )
+            ),
         ),
         segments=["if_in_octets"],
     ),
     right=perfometers.Perfometer(
         name="if_out_octets",
+        focus_range=perfometers.FocusRange(
+            perfometers.Closed(0),
+            perfometers.Closed(
+                metrics.MaximumOf(
+                    "if_out_octets",
+                    color=metrics.Color.BLACK,
+                )
+            ),
+        ),
+        segments=["if_out_octets"],
+    ),
+)
+perfometer_if_octets_fallback = perfometers.Bidirectional(
+    name="if_octets_fallback",
+    left=perfometers.Perfometer(
+        name="if_in_octets_fallback",
+        focus_range=perfometers.FocusRange(
+            perfometers.Closed(0),
+            perfometers.Open(125_000_000),
+        ),
+        segments=["if_in_octets"],
+    ),
+    right=perfometers.Perfometer(
+        name="if_out_octets_fallback",
         focus_range=perfometers.FocusRange(
             perfometers.Closed(0),
             perfometers.Open(125_000_000),

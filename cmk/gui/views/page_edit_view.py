@@ -16,6 +16,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
 from cmk.gui import visuals
 from cmk.gui.config import active_config, Config
+from cmk.gui.dashboard.type_defs import ViewDashletConfig
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKInternalError, MKUserError
@@ -901,11 +902,11 @@ def _transform_valuespec_value_to_view(ident, attrs):
 #
 # old_view is the old view dict which might be loaded from storage.
 # view is the new dict object to be updated.
-def create_view_from_valuespec(old_view, view):
-    ds_name = old_view.get("datasource", request.var("datasource"))
+def create_view_from_valuespec[T: (ViewSpec, ViewDashletConfig)](old_view: T, view: T) -> T:
+    ds_name = old_view.get("datasource") or request.get_ascii_input_mandatory("datasource")
     view["datasource"] = ds_name
 
-    def update_view(ident, vs):
+    def update_view(ident: str, vs: Dictionary) -> None:
         attrs = vs.from_html_vars(ident)
         vs.validate_value(attrs, ident)
         view.update(_transform_valuespec_value_to_view(ident, attrs))

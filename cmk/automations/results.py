@@ -933,3 +933,22 @@ class UnknownCheckParameterRuleSetsResult(ABCAutomationResult):
 
 
 result_type_registry.register(UnknownCheckParameterRuleSetsResult)
+
+
+@dataclass
+class NotifyResult(ABCAutomationResult):
+    exit_code: int | None
+    output: str
+
+    @staticmethod
+    def automation_call() -> str:
+        return "notify"
+
+    def serialize(
+        self,
+        for_cmk_version: cmk_version.Version,  # used to stay compatible with older central sites
+    ) -> SerializedResult:
+        return SerializedResult(asdict(self))
+
+
+result_type_registry.register(NotifyResult)

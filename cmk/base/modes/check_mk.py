@@ -6,6 +6,7 @@
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
+import ast
 import dataclasses
 import enum
 import itertools
@@ -33,6 +34,7 @@ import cmk.utils.password_store
 import cmk.utils.paths
 from cmk import trace
 from cmk.agent_based.v1.value_store import set_value_store_manager
+from cmk.automations.automation_helper import HelperExecutor
 from cmk.base import config, profiling, sources
 from cmk.base.checkers import (
     CheckerConfig,
@@ -60,11 +62,11 @@ from cmk.base.modes import Mode, modes, Option
 from cmk.base.snmp_plugin_store import make_plugin_store
 from cmk.base.sources import make_parser
 from cmk.base.utils import register_sigint_handler
-from cmk.ccc import store, tty
+from cmk.ccc import tty
 from cmk.ccc.cpu_tracking import CPUTracker
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
-from cmk.ccc.store import activation_lock
+from cmk.ccc.store import activation_lock, lock_checkmk_configuration
 from cmk.ccc.timeout import Timeout
 from cmk.checkengine import inventory
 from cmk.checkengine.checking import (
@@ -131,7 +133,7 @@ from cmk.snmplib import (
     SNMPSectionName,
     walk_for_export,
 )
-from cmk.utils import config_warnings, http_proxy_config, ip_lookup, log, timeperiod
+from cmk.utils import config_warnings, ip_lookup, log, timeperiod
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.diagnostics import (
@@ -145,10 +147,10 @@ from cmk.utils.diagnostics import (
     OPT_PERFORMANCE_GRAPHS,
 )
 from cmk.utils.everythingtype import EVERYTHING
+from cmk.utils.http_proxy_config import make_http_proxy_getter
 from cmk.utils.ip_lookup import ConfiguredIPLookup
 from cmk.utils.labels import LabelManager
 from cmk.utils.log import console, section
-from cmk.utils.paths import configuration_lockfile
 from cmk.utils.rulesets.ruleset_matcher import (
     BundledHostRulesetMatcher,
     RulesetMatcher,
@@ -2093,16 +2095,21 @@ modes.register(
 
 
 def mode_notify(options: dict, args: list[str]) -> int | None:
-    from cmk.base import notify
-
-    with store.lock_checkmk_configuration(configuration_lockfile):
-        loading_result = config.load(discovery_rulesets=(), with_conf_d=True, validate_hosts=False)
-
     keepalive = "keepalive" in options and (
         cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.COMMUNITY
     )
     if keepalive:
-        register_sigint_handler()
+        return _do_notify_keepalive(options, args)
+
+    return _do_notify_via_automation(options, args)
+
+
+def _do_notify_keepalive(options: dict, args: list[str]) -> int | None:
+    register_sigint_handler()
+    with lock_checkmk_configuration(cmk.utils.paths.configuration_lockfile):
+        loading_result = config.load(discovery_rulesets=(), with_conf_d=True, validate_hosts=False)
+
+    from cmk.base import notify
 
     return notify.do_notify(
         options,
@@ -2112,9 +2119,7 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
         plugin: loading_result.config_cache.notification_plugin_parameters(hostname, plugin),
         rules=config.notification_rules,
         parameters=config.notification_parameter,
-        get_http_proxy=http_proxy_config.make_http_proxy_getter(
-            loading_result.loaded_config.http_proxies
-        ),
+        get_http_proxy=make_http_proxy_getter(loading_result.loaded_config.http_proxies),
         ensure_nagios=notify.make_ensure_nagios(loading_result.loaded_config.monitoring_core),
         bulk_interval=config.notification_bulk_interval,
         plugin_timeout=config.notification_plugin_timeout,
@@ -2124,12 +2129,48 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
         spooling=ConfigCache.notification_spooling(),
         backlog_size=config.notification_backlog,
         logging_level=ConfigCache.notification_logging_level(),
-        keepalive=keepalive,
+        keepalive=True,
         all_timeperiods=timeperiod.get_all_timeperiods(loading_result.loaded_config.timeperiods),
         timeperiods_active=timeperiod.TimeperiodActiveCoreLookup(
             livestatus.get_optional_timeperiods_active_map, notify.logger.warning
         ),
     )
+
+
+def _do_notify_via_automation(options: dict, args: list[str]) -> int | None:
+    log_to_stdout = False
+    if options.get("log-to-stdout"):
+        args.insert(0, "--log-to-stdout")
+        log_to_stdout = True
+
+    from cmk.base import notify
+
+    try:
+        result = HelperExecutor().execute(
+            command="notify",
+            args=args,
+            stdin="",
+            logger=notify.logger,
+            timeout=None,
+        )
+    except Exception as e:
+        notify.logger.error("Error running automation call 'notify': %s", e)
+        return 1
+
+    try:
+        data = ast.literal_eval(result.output)
+    except (SyntaxError, ValueError, TypeError) as e:
+        notify.logger.error("Could not parse automation result %r: %s", result.output, e)
+        return 2
+
+    if isinstance(data, dict):
+        if log_to_stdout:
+            sys.stdout.write(data["output"])
+            sys.stdout.flush()
+        return data.get("exit_code")
+
+    notify.logger.error("Unexpected automation result format: %r", data)
+    return 2
 
 
 modes.register(

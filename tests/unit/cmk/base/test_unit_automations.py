@@ -66,6 +66,7 @@ def test_registered_automations() -> None:
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         needed_automations += [
             "bake-agents",
+            "notify",
         ]
 
     assert sorted(needed_automations) == sorted(

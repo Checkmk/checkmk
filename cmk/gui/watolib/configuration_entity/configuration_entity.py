@@ -61,6 +61,7 @@ def save_configuration_entity(
                 NotificationParameterMethod(entity_type_specifier),
                 data,
                 object_id=None,
+                user=user,
             )
             return ConfigurationEntityDescription(
                 ident=EntityId(param.ident), description=param.description
@@ -83,6 +84,7 @@ def update_configuration_entity(
     entity_type: ConfigEntityType,
     entity_type_specifier: str,
     data: object,
+    user: LoggedInUser,
     object_id: EntityId,
 ) -> ConfigurationEntityDescription:
     """Update a configuration entity.
@@ -97,6 +99,7 @@ def update_configuration_entity(
                 NotificationParameterMethod(entity_type_specifier),
                 data,
                 object_id=NotificationParameterID(object_id),
+                user=user,
             )
             return ConfigurationEntityDescription(
                 ident=EntityId(param.ident), description=param.description

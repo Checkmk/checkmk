@@ -2,14 +2,21 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Generator
 from unittest import mock
 
 import pytest
 
 from tests.testlib.unit.rest_api_client import ClientRegistry
+from tests.testlib.unit.utils import reset_registries
+
+from cmk.utils.user import UserId
 
 import cmk.gui.watolib.configuration_entity.configuration_entity
 from cmk.gui.form_specs.private import DictionaryExtended, not_empty
+from cmk.gui.logged_in import user
+from cmk.gui.permissions import declare_permission, permission_registry
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
 from cmk.gui.watolib.notification_parameter import (
     get_notification_parameter,
@@ -51,7 +58,7 @@ class DummyNotificationParams(NotificationParameter):
 
 
 @pytest.fixture(name="registry", autouse=True)
-def _registry_fixture(monkeypatch: pytest.MonkeyPatch) -> NotificationParameterRegistry:
+def _registry_fixture(monkeypatch: pytest.MonkeyPatch) -> Generator[NotificationParameterRegistry]:
     notification_parameter_registry = NotificationParameterRegistry()
     notification_parameter_registry.register(DummyNotificationParams)
     monkeypatch.setattr(
@@ -59,10 +66,18 @@ def _registry_fixture(monkeypatch: pytest.MonkeyPatch) -> NotificationParameterR
         "notification_parameter_registry",
         notification_parameter_registry,
     )
-    return notification_parameter_registry
+
+    with reset_registries([permission_registry]):
+        declare_permission(
+            "notification_plugin.dummy_params",
+            "Use Dummy Notification Parameters",
+            "Allows the user to create and edit notification parameters of type Dummy.",
+            defaults=["admin"],
+        )
+        yield notification_parameter_registry
 
 
-def test_save_configuration_entity(clients: ClientRegistry) -> None:
+def test_save_notif_param(clients: ClientRegistry) -> None:
     # WHEN
     resp = clients.ConfigurationEntity.create_configuration_entity(
         {
@@ -76,9 +91,34 @@ def test_save_configuration_entity(clients: ClientRegistry) -> None:
     )
 
     # THEN
+    resp.assert_status_code(200)
     assert resp.json["title"] == "foo"
 
 
+def test_save_configuration_entity_non_admin(
+    clients: ClientRegistry, with_user: tuple[UserId, str]
+) -> None:
+    # WHEN
+    clients.ConfigurationEntity.request_handler.set_credentials(with_user[0], with_user[1])
+    resp = clients.ConfigurationEntity.create_configuration_entity(
+        {
+            "entity_type": ConfigEntityType.notification_parameter.value,
+            "entity_type_specifier": "dummy_params",
+            "data": {
+                "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
+                "parameter_properties": {"method_parameters": {"test_param": "bar"}},
+            },
+        },
+        expect_ok=False,
+    )
+
+    # THEN
+    assert (
+        resp.status_code == 401
+    ), f"Expected status code 401 for non-admin user, got {resp.status_code}"
+
+
+@pytest.mark.usefixtures("with_admin_login")
 def test_update_configuration_entity(
     clients: ClientRegistry, registry: NotificationParameterRegistry
 ) -> None:
@@ -90,7 +130,7 @@ def test_update_configuration_entity(
             "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
             "parameter_properties": {"method_parameters": {"test_param": "initial_value"}},
         },
-        None,
+        user,
     )
 
     # WHEN
@@ -110,6 +150,44 @@ def test_update_configuration_entity(
     updated_entity = get_notification_parameter(registry, entity.ident).data
     # Ignore is needed because every plugin model has different keys (and not "test_param"
     assert updated_entity["parameter_properties"]["method_parameters"]["test_param"] == "bar"
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_update_configuration_entity_non_admin(
+    clients: ClientRegistry,
+    registry: NotificationParameterRegistry,
+    with_user: tuple[UserId, str],
+) -> None:
+    # GIVEN
+    entity = save_notification_parameter(
+        registry,
+        "dummy_params",
+        {
+            "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
+            "parameter_properties": {"method_parameters": {"test_param": "initial_value"}},
+        },
+        user=user,
+    )
+
+    # WHEN
+    clients.ConfigurationEntity.request_handler.set_credentials(with_user[0], with_user[1])
+    resp = clients.ConfigurationEntity.update_configuration_entity(
+        {
+            "entity_type": ConfigEntityType.notification_parameter.value,
+            "entity_type_specifier": "dummy_params",
+            "entity_id": entity.ident,
+            "data": {
+                "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
+                "parameter_properties": {"method_parameters": {"test_param": "bar"}},
+            },
+        },
+        expect_ok=False,
+    )
+
+    # THEN
+    assert (
+        resp.status_code == 401
+    ), f"Expected status code 401 for non-admin user, got {resp.status_code}"
 
 
 @pytest.mark.parametrize(
@@ -158,6 +236,7 @@ def test_save_configuration_validation(
     assert resp.json["fields"]["data"] == expected_error_fields
 
 
+@pytest.mark.usefixtures("with_admin_login")
 def test_list_configuration_entities(
     clients: ClientRegistry, registry: NotificationParameterRegistry
 ) -> None:
@@ -169,7 +248,7 @@ def test_list_configuration_entities(
             "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
             "parameter_properties": {"method_parameters": {"test_param": "some_value"}},
         },
-        None,
+        user,
     )
 
     # WHEN
@@ -184,9 +263,8 @@ def test_list_configuration_entities(
     assert resp.json["value"][0]["title"] == "foo"
 
 
-def test_get_configuration_entity(
-    clients: ClientRegistry, registry: NotificationParameterRegistry
-) -> None:
+@pytest.mark.usefixtures("with_admin_login")
+def test_get_notif_param(clients: ClientRegistry, registry: NotificationParameterRegistry) -> None:
     # GIVEN
     entity = save_notification_parameter(
         registry,
@@ -195,7 +273,7 @@ def test_get_configuration_entity(
             "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
             "parameter_properties": {"method_parameters": {"test_param": "some_value"}},
         },
-        None,
+        user,
     )
 
     # WHEN
@@ -213,7 +291,7 @@ def test_get_configuration_entity(
     )
 
 
-def test_get_configuration_entity_throws_404(clients: ClientRegistry) -> None:
+def test_get_notif_param_throws_404(clients: ClientRegistry) -> None:
     # WHEN
     resp = clients.ConfigurationEntity.get_configuration_entity(
         entity_type=ConfigEntityType.notification_parameter, entity_id="foo_bar", expect_ok=False

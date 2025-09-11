@@ -136,6 +136,7 @@ def _update_configuration_entity(params: Mapping[str, Any]) -> Response:
             entity_type,
             entity_type_specifier,
             data,
+            user=user,
             object_id=entity_id,
         )
     except FormSpecValidationError as exc:

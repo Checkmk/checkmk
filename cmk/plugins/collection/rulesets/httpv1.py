@@ -313,7 +313,7 @@ def _parameter_form_mode() -> CascadingSingleChoice:
                                 ),
                                 level_direction=LevelDirection.UPPER,
                                 prefill_fixed_levels=DefaultValue((0.1, 0.2)),
-                                migrate=lambda v: migrate_to_float_simple_levels(v, 1000),
+                                migrate=lambda v: migrate_to_float_simple_levels(v, 0.001),
                             ),
                         ),
                         "timeout": DictElement(

@@ -5500,6 +5500,9 @@ msgstr "Alarmen"
 msgid "Alert"
 msgstr "Waarschuwing"
 
+msgid "Alert after being at or above the threshold for"
+msgstr ""
+
 msgid "Alert handler"
 msgstr "Waarschuwings afhandelaar"
 
@@ -8241,6 +8244,10 @@ msgstr "Gemiddeld aantal berichten bovenste niveaus"
 msgid "Average number of messages"
 msgstr "Gemiddeld aantal berichten"
 
+#, fuzzy
+msgid "Average over"
+msgstr "Gemiddelde waarde"
+
 msgid "Average pending tasks delta"
 msgstr "Gemiddelde delta in afwachting van taken"
 
@@ -8294,6 +8301,12 @@ msgid ""
 msgstr ""
 "Gemiddelde van CPU-gebruik over de gespecificeerde tijdsperiode voordat "
 "niveaus worden toegepast."
+
+msgid ""
+"Average the instantaneous load over the specified number of minutes. Note: "
+"This does NOT affect \"Levels an extended period of time\" above, which "
+"always checks the instantaneous value."
+msgstr ""
 
 msgid "Average time messages stay on queue"
 msgstr "Gemiddelde tijd dat berichten in de wachtrij staan"
@@ -8916,6 +8929,10 @@ msgstr "Absoluut vrij geheugen"
 #, fuzzy
 msgid "Azure Redis replication"
 msgstr "Databaseverbindingen"
+
+#, fuzzy
+msgid "Azure Redis server load"
+msgstr "Redis server naam"
 
 #, fuzzy
 msgid "Azure Redis throughput"
@@ -15271,6 +15288,10 @@ msgstr "Verbinding verbroken"
 msgid "Connection name"
 msgstr "Naam verbinding"
 
+#, fuzzy
+msgid "Connection options"
+msgstr "Duur van de verbinding"
+
 #, fuzzy, python-format
 msgid "Connection representation: %s"
 msgstr "Weergave van de regel: %s"
@@ -19274,6 +19295,10 @@ msgid "Deploy Oracle databases plug-in"
 msgstr "Implementeer ORACLE databases plugin"
 
 #, fuzzy
+msgid "Deploy Oracle plug-in"
+msgstr "Inzet Arcserve plugin"
+
+#, fuzzy
 msgid "Deploy Podman plug-in"
 msgstr "Implementeer Mailman plugin"
 
@@ -20910,6 +20935,10 @@ msgstr "Implementeer OpenHardwareMonitor niet (headless)"
 #, fuzzy
 msgid "Do not deploy Oracle databases plug-in"
 msgstr "Zet geen ORACLE databases plugin in"
+
+#, fuzzy
+msgid "Do not deploy Oracle plug-in"
+msgstr "Geen iptables plugin implementeren"
 
 #, fuzzy
 msgid "Do not deploy Robotmk"
@@ -38148,6 +38177,10 @@ msgstr "Niveaus op gebruikte capaciteit in bytes"
 msgid "Levels on write capacity"
 msgstr "Niveaus op schrijfcapaciteit"
 
+#, fuzzy
+msgid "Levels over an extended period of time"
+msgstr "Niveaus over een langere periode op replicatievertraging"
+
 msgid "Levels over an extended time period on a single core CPU utilization"
 msgstr "Niveaus over een langere periode op een enkele kern CPU-gebruik"
 
@@ -42550,6 +42583,10 @@ msgstr "Monitor Android-apparaten"
 
 msgid "Monitor CloudFront WAFs"
 msgstr "CloudFront WAF's monitoren"
+
+#, fuzzy
+msgid "Monitor Oracle Databases"
+msgstr "Gebeurtenisendatabase"
 
 msgid "Monitor Route53"
 msgstr "Bewaak Route53"
@@ -48077,6 +48114,10 @@ msgid "Oracle count"
 msgstr "Totaal aantal"
 
 #, fuzzy
+msgid "Oracle credentials"
+msgstr "Gebruik geloofsbrieven"
+
+#, fuzzy
 msgid "Oracle data file backup large read bytes"
 msgstr "ORACLE Totaal grote gelezen bytes"
 
@@ -50043,6 +50084,9 @@ msgid ""
 "certificate will not be used."
 msgstr ""
 
+msgid "Path to tnsnames.ora or sqlnet.ora file"
+msgstr ""
+
 msgid "Path to unix socket"
 msgstr "Pad naar unix socket"
 
@@ -51112,11 +51156,6 @@ msgstr ""
 "Neem contact op met het Checkmk-verkoopteam op %s om ervoor te zorgen dat uw "
 "licentie tijdig wordt verlengd. Als u uw licentie hebt gekocht via een %s, "
 "neem dan contact met hen op."
-
-msgid ""
-"Please contact your Checkmk administrator to ensure that your license is "
-"extended in time."
-msgstr ""
 
 msgid "Please contact your administrator."
 msgstr "Neem contact op met uw beheerder."
@@ -58290,6 +58329,22 @@ msgstr "Serververbindingen"
 msgid "Server latency"
 msgstr "Serververtraging"
 
+#, fuzzy
+msgid "Server load"
+msgstr "Belasting Citrix Server"
+
+#, fuzzy
+msgid "Server load %"
+msgstr "Belasting Citrix Server"
+
+#, fuzzy
+msgid "Server load (average)"
+msgstr "Serverlogboekopslag"
+
+#, fuzzy
+msgid "Server load levels"
+msgstr "Dienstverleningsniveau"
+
 msgid "Server log storage"
 msgstr "Serverlogboekopslag"
 
@@ -61467,6 +61522,9 @@ msgstr ""
 "Specificeert hoe de <a href='wato.py?"
 "mode=edit_ruleset&varname=filesystem_groups'>Filesystem grouping patterns</"
 "a> eigenschap dit bestandssysteem verwerkt."
+
+msgid "Specifies the database privilege role used when connecting to Oracle."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -74051,6 +74109,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure Redis server load "
+"monitoring"
+msgstr ""
+"Deze regel staat je toe om bloat levels te configureren voor een databases "
+"tablespace en indexspace."
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure Redis throughput "
 "monitoring"
 msgstr ""
@@ -75062,6 +75128,11 @@ msgid ""
 msgstr ""
 "Dit zal de agent plugin <tt>mk_nfsiostat</tt> inzetten om verschillende "
 "client side NFS IO stats te controleren."
+
+#, fuzzy
+msgid ""
+"This will deploy the agent plug-in <tt>mk_oracle</tt> on your target system."
+msgstr "Implementeer de agent plugin <tt>zorp</tt> op uw doelsysteem."
 
 #, fuzzy
 msgid ""
@@ -79787,6 +79858,9 @@ msgstr "Unicast pakketsnelheden"
 msgid "Unidirectional UDP Traffic"
 msgstr "Unidirectioneel UDP-verkeer"
 
+msgid "Unified Oracle Plugin (Beta)"
+msgstr ""
+
 msgid ""
 "Uninstall the legacy (pre 1.6) agent after installation of the new Windows "
 "agent"
@@ -82106,6 +82180,10 @@ msgstr "Gebruiker"
 msgid "User %s of DCD connection was modified"
 msgstr "Gebruiker %s van DCD-verbinding is gewijzigd"
 
+#, fuzzy
+msgid "User & Password"
+msgstr "Wachtwoord gebruiker"
+
 msgid "User / Group Key"
 msgstr "Gebruiker / Groep Sleutel"
 
@@ -82260,6 +82338,10 @@ msgstr "Gebruikersnaam"
 
 #, fuzzy
 msgid "Username / Password"
+msgstr "Gebruikersnaam/Wachtwoord"
+
+#, fuzzy
+msgid "Username and Password"
 msgstr "Gebruikersnaam/Wachtwoord"
 
 #, fuzzy
@@ -90946,12 +91028,59 @@ msgid "required"
 msgstr "Vereiste poort"
 
 #, fuzzy
+msgid "No items selected"
+msgstr "Niet geselecteerd"
+
+msgid "Placeholder for unknown component type:"
+msgstr ""
+
+#, fuzzy
+msgid "No labels"
+msgstr "Knooppunt Labels"
+
+#, fuzzy
+msgid "not"
+msgstr "geen"
+
+#, fuzzy
+msgid "No labels selected"
+msgstr "Niet geselecteerd"
+
+#, fuzzy
+msgid "No tag filters configured"
+msgstr "Geen IP-bereik geconfigureerd"
+
+#, fuzzy
 msgid "Select an option..."
 msgstr "Afgewezen verbindingen"
 
 #, fuzzy
 msgid "Type to search..."
 msgstr "Indexen om te zoeken"
+
+#, fuzzy
+msgid "Operator"
+msgstr "Operatie"
+
+#, fuzzy
+msgid "Select label..."
+msgstr "Selecteer bestand"
+
+#, fuzzy
+msgid "Group Operator"
+msgstr "Groepspad"
+
+#, fuzzy
+msgid "Select group..."
+msgstr "Afgewezen verbindingen"
+
+#, fuzzy
+msgid "Select value..."
+msgstr "Weergave kiezen"
+
+#, fuzzy
+msgid "Remove row"
+msgstr "Verwijderd: %s"
 
 #, fuzzy
 msgid "Add widget"

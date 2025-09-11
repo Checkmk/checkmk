@@ -25,7 +25,7 @@ const rotate = ref(90)
     <li v-for="variant in variants" :key="variant || 'dflt'">
       <b>variant "{{ variant }}"</b>
       <ul>
-        <li v-for="size in sizes" :key="size || 'dflt'" class="demo-icon-element__entry">
+        <li v-for="size in sizes" :key="size || 'dflt'" class="demo-cmk-icon__element-entry">
           size "{{ size }}":
           <CmkIcon name="main_help" :variant="variant" :size="size" :title="title" />
         </li>
@@ -52,7 +52,7 @@ ul {
 li {
   margin: 1em;
 
-  &.demo-icon-element__entry {
+  &.demo-cmk-icon__element-entry {
     display: flex;
   }
 }

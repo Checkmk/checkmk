@@ -145,15 +145,18 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .form-dictionary__group-title {
   font-weight: bold;
   margin: var(--spacing) 0;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 tr:first-of-type > td > .form-dictionary__group-title {
   margin-top: 0;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .form-dictionary__group-elem__title {
   display: inline-block;
   flex-shrink: 0;
@@ -165,12 +168,14 @@ tr:first-of-type > td > .form-dictionary__group-title {
   white-space: normal;
   min-height: 21px;
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   & > .form-dictionary__required-title {
     display: inline-block;
     margin-bottom: var(--spacing-half);
   }
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .form-dictionary__group_elem {
   padding: 8px 0;
   display: flex;

@@ -34,6 +34,7 @@ defineProps<QuickSetupSaveStageProps>()
 </style>
 
 <style>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .qs-save-stage__content .qs-stage-content__action > button {
   margin-right: 8px;
 }

@@ -17,8 +17,8 @@ const emit = defineEmits(['select'])
 </script>
 
 <template>
-  <div class="add-widget-page__wrapper">
-    <div class="add-widget-page__grid-container">
+  <div class="db-add-widget-page__wrapper">
+    <div class="db-add-widget-page__grid-container">
       <WorkflowCard
         v-for="(item, id) in props.workflowItems"
         :key="id"
@@ -33,7 +33,7 @@ const emit = defineEmits(['select'])
 </template>
 
 <style scoped>
-.add-widget-page__wrapper {
+.db-add-widget-page__wrapper {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -43,7 +43,7 @@ const emit = defineEmits(['select'])
   box-sizing: border-box;
 }
 
-.add-widget-page__grid-container {
+.db-add-widget-page__grid-container {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--spacing-double);
@@ -52,7 +52,7 @@ const emit = defineEmits(['select'])
 }
 
 @media (width < 800px) {
-  .add-widget-page__grid-container {
+  .db-add-widget-page__grid-container {
     grid-template-columns: 1fr;
   }
 }

@@ -153,6 +153,7 @@ const deleteItem = (index: number) => {
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .label-list {
   list-style-type: none;
   padding: 0;
@@ -167,11 +168,13 @@ const deleteItem = (index: number) => {
   }
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 table.nform input {
   margin: 0;
   padding: 2px;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .error {
   margin: 0;
   padding: 5px;

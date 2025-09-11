@@ -15,19 +15,19 @@ const emit = defineEmits(['select'])
 </script>
 
 <template>
-  <a href="#" class="workflow-card" @click="emit('select')">
+  <a href="#" class="db-workflow-card" @click="emit('select')">
     <IconWithEmblem :icon="icon" :icon_emblem="icon_emblem" />
-    <div class="workflow-card__content">
+    <div class="db-workflow-card__content">
       <CmkHeading type="h2">
         {{ title }}
       </CmkHeading>
-      <CmkParagraph class="workflow-card__subtitle">{{ subtitle }}</CmkParagraph>
+      <CmkParagraph class="db-workflow-card__subtitle">{{ subtitle }}</CmkParagraph>
     </div>
   </a>
 </template>
 
 <style scoped>
-.workflow-card {
+.db-workflow-card {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -51,7 +51,7 @@ const emit = defineEmits(['select'])
   }
 }
 
-.workflow-card__content {
+.db-workflow-card__content {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
@@ -59,7 +59,7 @@ const emit = defineEmits(['select'])
   align-items: center;
 }
 
-.workflow-card__subtitle {
+.db-workflow-card__subtitle {
   min-height: 2em;
   color: var(--font-color-dimmed);
 }

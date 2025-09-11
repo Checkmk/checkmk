@@ -15,13 +15,13 @@ defineProps<CmkTabProps>()
 </script>
 
 <template>
-  <TabsTrigger :value="id" :disabled="!!disabled" as="li" class="cmk-tab-li">
+  <TabsTrigger :value="id" :disabled="!!disabled" as="li" class="cmk-tab__li">
     <slot />
   </TabsTrigger>
 </template>
 
 <style scoped>
-.cmk-tab-li {
+.cmk-tab__li {
   display: flex;
   flex-direction: row;
   background: var(--ux-theme-0);

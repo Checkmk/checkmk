@@ -187,10 +187,10 @@ def test_agent_connection_test(dashboard_page: MainDashboard) -> None:
 
     agent_download_button = main_area.locator("div.warn-button-container > button:nth-child(1)")
     agent_download_button.click()
-    slideout = main_area.locator("div.cmk-vue-app.slide-in__container")
+    slideout = main_area.locator("div.cmk-vue-app.cmk-slide-in__container")
     expect(slideout).to_be_visible()
 
-    slidout_close_button = main_area.locator(".slide-in__close")
+    slidout_close_button = main_area.locator(".cmk-slide-in-dialog__close")
     slidout_close_button.click()
 
     add_host.host_name_text_field.fill("")
@@ -236,7 +236,9 @@ def test_agent_test(dashboard_page: MainDashboard) -> None:
     add_host.save_and_run_discovery()
 
     try:
-        agent_download_dialog = dashboard_page.main_area.locator(".agent-download-dialog__dialog")
+        agent_download_dialog = dashboard_page.main_area.locator(
+            ".setup-agent-download-dialog__dialog"
+        )
         expect(agent_download_dialog).to_be_visible()
 
         agent_download_button = dashboard_page.main_area.locator(
@@ -244,10 +246,10 @@ def test_agent_test(dashboard_page: MainDashboard) -> None:
         )
         agent_download_button.click()
 
-        slideout = dashboard_page.main_area.locator("div.cmk-vue-app.slide-in__container")
+        slideout = dashboard_page.main_area.locator("div.cmk-vue-app.cmk-slide-in__container")
         expect(slideout).to_be_visible()
 
-        slideout_close_button = dashboard_page.main_area.locator(".slide-in__close")
+        slideout_close_button = dashboard_page.main_area.locator(".cmk-slide-in-dialog__close")
         slideout_close_button.click()
 
         with dashboard_page.page.expect_popup() as popup_info:

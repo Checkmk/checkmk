@@ -39,7 +39,7 @@ watch(
 </script>
 
 <template>
-  <table class="qs-formspec-widget">
+  <table class="qs-form-spec-widget">
     <tbody>
       <tr>
         <td>
@@ -56,7 +56,7 @@ watch(
 </template>
 
 <style scoped>
-table.qs-formspec-widget {
+table.qs-form-spec-widget {
   border-spacing: 0;
 }
 </style>

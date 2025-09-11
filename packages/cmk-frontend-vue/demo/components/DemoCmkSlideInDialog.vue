@@ -98,7 +98,7 @@ const catalog = ref<Catalog>({
       <CmkButtonSubmit>save</CmkButtonSubmit>
       <CmkButtonCancel @click="slideOut1 = false">cancel</CmkButtonCancel>
     </div>
-    <div class="content">
+    <div class="demo-cmk-slide-in-dialog__content">
       <FormEdit v-model:data="data" :spec="catalog" :backend-validation="[]" />
     </div>
   </CmkSlideInDialog>
@@ -131,7 +131,7 @@ const catalog = ref<Catalog>({
 </template>
 
 <style scoped>
-.content {
+.demo-cmk-slide-in-dialog__content {
   min-width: 600px;
 }
 </style>

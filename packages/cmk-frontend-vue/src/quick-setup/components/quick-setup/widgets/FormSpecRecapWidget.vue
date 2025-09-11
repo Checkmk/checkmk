@@ -12,7 +12,7 @@ defineProps<FormSpecWidgetProps>()
 </script>
 
 <template>
-  <table class="qs-formspec-recap-widget">
+  <table class="qs-form-spec-recap-widget">
     <tbody>
       <tr>
         <td>
@@ -24,7 +24,7 @@ defineProps<FormSpecWidgetProps>()
 </template>
 
 <style scoped>
-table.qs-formspec-recap-widget {
+table.qs-form-spec-recap-widget {
   border-spacing: 0;
 }
 </style>

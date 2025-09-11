@@ -55,7 +55,7 @@ const hideHelpIcon = getUserFrontendConfig()?.hide_contextual_help_icon ?? false
   <TooltipProvider v-if="!!props.help && !hideHelpIcon">
     <Tooltip :open="open" disable-closing-trigger>
       <TooltipTrigger
-        class="help-text__trigger"
+        class="cmk-help-text__trigger"
         as-child
         @click="(e: MouseEvent) => triggerHelp(e)"
       >
@@ -63,7 +63,7 @@ const hideHelpIcon = getUserFrontendConfig()?.hide_contextual_help_icon ?? false
           ref="triggerRef"
           :name="open ? 'icon_help_activated' : 'icon_info_circle'"
           size="medium"
-          class="help-text__icon"
+          class="cmk-help-text__icon"
           aria-label="?"
         />
       </TooltipTrigger>
@@ -71,12 +71,12 @@ const hideHelpIcon = getUserFrontendConfig()?.hide_contextual_help_icon ?? false
         side="top"
         align="start"
         as-child
-        class="help-text__popup"
+        class="cmk-help-text__popup"
         @pointer-down-outside="(e: Event) => checkClosing(e as MouseEvent)"
         @escape-key-down="closeHelp"
       >
         <CmkScrollContainer :max-height="'160px'">
-          <div class="help-text__content">
+          <div class="cmk-help-text__content">
             <CmkHtml :html="props.help" />
           </div>
         </CmkScrollContainer>
@@ -86,7 +86,7 @@ const hideHelpIcon = getUserFrontendConfig()?.hide_contextual_help_icon ?? false
 </template>
 
 <style scoped>
-.help-text__trigger {
+.cmk-help-text__trigger {
   margin-bottom: -2px;
   border: none;
   background: none;
@@ -101,7 +101,7 @@ const hideHelpIcon = getUserFrontendConfig()?.hide_contextual_help_icon ?? false
   }
 }
 
-.help-text__content {
+.cmk-help-text__content {
   background-color: var(--default-tooltip-background-color);
   border-radius: var(--border-radius);
   min-width: 200px;
@@ -112,13 +112,15 @@ const hideHelpIcon = getUserFrontendConfig()?.hide_contextual_help_icon ?? false
     0 2px 4px rgb(0 0 0 / 6%);
   padding: 16px;
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   .text {
     line-height: 1.2;
   }
 }
 
-body.inline_help_as_text .help-text__trigger,
-body.inline_help_as_text .help-text__icon {
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+body.inline_help_as_text .cmk-help-text__trigger,
+body.inline_help_as_text .cmk-help-text__icon {
   display: none;
 }
 </style>

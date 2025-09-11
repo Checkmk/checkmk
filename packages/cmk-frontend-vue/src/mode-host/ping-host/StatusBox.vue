@@ -39,6 +39,7 @@ function getIconName(status: DNSStatus): string {
 
 <style scoped>
 /* TODO: Can be removed when CMK-23811 is fixed */
+/* stylelint-disable checkmk/vue-bem-naming-convention */
 .cmk-icon {
   display: inline-block;
 }

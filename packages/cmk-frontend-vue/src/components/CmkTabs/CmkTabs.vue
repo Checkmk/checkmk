@@ -10,8 +10,8 @@ const model = defineModel<string | number>({ default: 1 })
 </script>
 
 <template>
-  <TabsRoot v-model="model" orientation="horizontal" class="cmk-tabs-root">
-    <TabsList as="ul" class="cmk-tabs-list">
+  <TabsRoot v-model="model" orientation="horizontal" class="cmk-tabs__root">
+    <TabsList as="ul" class="cmk-tabs__list">
       <slot name="tabs" />
     </TabsList>
     <slot name="tab-contents" />
@@ -19,7 +19,7 @@ const model = defineModel<string | number>({ default: 1 })
 </template>
 
 <style scoped>
-.cmk-tabs-root {
+.cmk-tabs__root {
   padding: 0;
   margin: 0;
   display: flex;
@@ -27,7 +27,7 @@ const model = defineModel<string | number>({ default: 1 })
   width: 100%;
 }
 
-.cmk-tabs-list {
+.cmk-tabs__list {
   padding: 0;
   margin: 0;
   display: flex;

@@ -131,6 +131,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 .form-list-of-strings {
   border-spacing: 2px 0;
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   > tbody > .listof_element > .vlof_content {
     vertical-align: top;
     padding-bottom: 8px;

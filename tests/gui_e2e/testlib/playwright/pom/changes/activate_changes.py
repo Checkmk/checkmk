@@ -153,11 +153,11 @@ class ActivateChangesSlideout(LocatorHelper):
 
     def site_online_status(self, site_entry: Locator) -> Locator:
         """Get the locator for the online status badge of a specific site."""
-        return site_entry.locator("div.cmk-badge.cmk-badge-success", has_text="online")
+        return site_entry.locator("div.cmk-badge.cmk-badge--success", has_text="online")
 
     def site_changes_count(self, site_entry: Locator) -> int:
         """Get the locator of round badge showing the number of changes."""
-        txt = site_entry.locator("div.cmk-badge.cmk-badge-warning").text_content()
+        txt = site_entry.locator("div.cmk-badge.cmk-badge--warning").text_content()
         if not txt or not txt.isdigit():
             raise AssertionError(
                 f"The site entry does not contain a valid changes count badge! Found text: '{txt}'"
@@ -175,13 +175,13 @@ class ActivateChangesSlideout(LocatorHelper):
     def ensure_expected_changes_activated(self, expected_changes: int) -> None:
         expect(
             self.slideout.locator(
-                "div.cmk-changes-activating-container span",
+                "div.mm-changes-activating__container span",
                 has_text="You can safely navigate away",
             )
         ).to_be_visible()
         expect(
             self.slideout.locator(
-                "span.cmk-changes-activation-result-title",
+                "span.mm-changes-activation-result__title",
                 has_text=f"Successfully activated {expected_changes} change",
             )
         ).to_be_visible()

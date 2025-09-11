@@ -186,10 +186,12 @@ tr:first-of-type > td > .form-dictionary__group-title {
   margin-top: 0;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .form-dictionary__group_elem {
   margin-bottom: var(--spacing);
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 tr:last-of-type > td > div > .form-dictionary__group_elem:last-of-type {
   margin-bottom: 0;
 }
@@ -203,6 +205,7 @@ tr:last-of-type > td > div > .form-dictionary__group_elem:last-of-type {
   flex-direction: row;
   gap: 0.5em;
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   &.horizontal_groups {
     display: flex;
   }

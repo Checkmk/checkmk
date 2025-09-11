@@ -103,6 +103,8 @@ const changesSideTitle = computed(() => {
 </template>
 
 <style scoped>
+/* stylelint-disable checkmk/vue-bem-naming-convention */
+
 .pending-changes-container {
   display: flex;
   flex-direction: column;

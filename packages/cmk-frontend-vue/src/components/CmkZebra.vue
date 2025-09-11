@@ -17,10 +17,12 @@ defineProps<{ num: number }>()
   width: 100%;
   height: 100%;
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   &.even {
     --default-bg-color: var(--ux-theme-3);
   }
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   &.odd {
     --default-bg-color: var(--ux-theme-2);
   }

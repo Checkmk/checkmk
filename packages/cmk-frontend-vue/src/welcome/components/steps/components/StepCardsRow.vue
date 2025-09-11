@@ -7,13 +7,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts"></script>
 
 <template>
-  <div class="step-cards-row">
+  <div class="welcome-step-cards-row">
     <slot />
   </div>
 </template>
 
 <style scoped>
-.step-cards-row {
+.welcome-step-cards-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--spacing);

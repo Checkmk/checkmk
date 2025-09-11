@@ -649,6 +649,7 @@ table.form-readonly__table {
   table {
     border-collapse: collapse;
 
+    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
     &.force-inline-th > tbody {
       & > tr {
         display: inline-block;
@@ -668,6 +669,7 @@ table.form-readonly__table {
     }
   }
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   .font-weight-normal {
     font-weight: normal;
   }
@@ -682,6 +684,7 @@ table.form-readonly__table {
   border-spacing: 0;
 
   > tr {
+    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
     > td.dict_title {
       min-width: 20ch;
       max-width: 70ch;
@@ -689,6 +692,7 @@ table.form-readonly__table {
       overflow-wrap: break-word;
     }
 
+    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
     &.dict_group {
       > td:first-child {
         padding-left: 8px;
@@ -703,6 +707,7 @@ table.form-readonly__table {
   }
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .form-readonly__dictionary--two_columns > tr {
   line-height: 18px;
 
@@ -726,6 +731,7 @@ table.form-readonly__table {
     content: ', ';
   }
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   &.form-readonly__multiple-choice__max-entries::before {
     content: '';
   }
@@ -758,10 +764,12 @@ table.form-readonly__table {
   gap: 5px 0;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .form-readonly__cascading-single-choice__layout-horizontal {
   margin-bottom: 4px;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .form-readonly__cascading-single-choice__layout-horizontal > div {
   margin-right: var(--spacing-half);
   display: inline-block;
@@ -771,10 +779,12 @@ table.form-readonly__table {
   display: inline;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .form-readonly__tuple__layout-horizontal > span {
   margin: 5px;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .form-readonly__tuple__layout-vertical {
   padding: 3px 0;
 

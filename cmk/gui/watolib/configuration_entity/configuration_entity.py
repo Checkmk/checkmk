@@ -164,6 +164,7 @@ class ConfigurationEntity(NamedTuple):
 def get_configuration_entity(
     entity_type: ConfigEntityType,
     entity_id: EntityId,
+    user: LoggedInUser,
 ) -> ConfigurationEntity:
     """Get configuration entity to supply to frontend.
 
@@ -175,6 +176,7 @@ def get_configuration_entity(
             entity = get_notification_parameter(
                 notification_parameter_registry,
                 NotificationParameterID(entity_id),
+                user,
             )
             return ConfigurationEntity(description=entity.description, data=entity.data)
         case ConfigEntityType.folder:

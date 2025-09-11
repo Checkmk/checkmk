@@ -147,7 +147,7 @@ def test_update_configuration_entity(
     )
 
     # THEN
-    updated_entity = get_notification_parameter(registry, entity.ident).data
+    updated_entity = get_notification_parameter(registry, entity.ident, user).data
     # Ignore is needed because every plugin model has different keys (and not "test_param"
     assert updated_entity["parameter_properties"]["method_parameters"]["test_param"] == "bar"
 
@@ -315,6 +315,41 @@ def test_get_notif_param(
         resp.json["extensions"]["parameter_properties"]["method_parameters"]["test_param"]
         == "some_value"
     )
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_get_notif_param_without_permissions(
+    clients: ClientRegistry, registry: NotificationParameterRegistry
+) -> None:
+    # GIVEN
+    entity = save_notification_parameter(
+        registry,
+        "dummy_params",
+        {
+            "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
+            "parameter_properties": {"method_parameters": {"test_param": "some_value"}},
+        },
+        user=user,
+    )
+
+    clients.User.create(
+        username="guest_user1",
+        fullname="guest_user1_alias",
+        auth_option={"auth_type": "password", "password": "supersecretish"},
+        roles=["guest"],
+    )
+    clients.ConfigurationEntity.set_credentials("guest_user1", "supersecretish")
+
+    # WHEN
+    resp = clients.ConfigurationEntity.get_configuration_entity(
+        entity_type=ConfigEntityType.notification_parameter,
+        entity_id=entity.ident,
+        expect_ok=False,
+    )
+
+    # THEN
+    resp.assert_status_code(401)
+    assert resp.json["title"] == "Unauthorized"
 
 
 def test_get_notif_param_throws_404(clients: ClientRegistry) -> None:

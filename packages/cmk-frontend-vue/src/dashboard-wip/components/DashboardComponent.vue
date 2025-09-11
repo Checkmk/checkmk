@@ -6,10 +6,21 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import type { ContentProps } from '@/dashboard-wip/components/DashboardContent/types'
+import { useErrorBoundary } from '@/components/useErrorBoundary'
+
+import type {
+  ContentProps,
+  ContentPropsRecord
+} from '@/dashboard-wip/components/DashboardContent/types'
+import ResponsiveGrid from '@/dashboard-wip/components/ResponsiveGrid/ResponsiveGrid.vue'
 import type { DashboardFilters } from '@/dashboard-wip/composables/useDashboardFilters'
 import type { DashboardWidgets } from '@/dashboard-wip/composables/useDashboardWidgets.ts'
-import type { DashboardConstants, DashboardModel } from '@/dashboard-wip/types/dashboard'
+import type {
+  ContentResponsiveGrid,
+  DashboardConstants,
+  DashboardModel
+} from '@/dashboard-wip/types/dashboard'
+import type { WidgetLayout } from '@/dashboard-wip/types/widget'
 
 interface DashboardProps {
   constants: DashboardConstants
@@ -24,7 +35,13 @@ const props = defineProps<DashboardProps>()
 
 const dashboard = defineModel<DashboardModel>('dashboard', { required: true })
 
-const widgetContentProps = computed(() => {
+defineEmits<{
+  'widget:edit': [widgetId: string]
+  'widget:delete': [widgetId: string]
+  'widget:clone': [oldWidgetId: string, newLayout: WidgetLayout]
+}>()
+
+const widgetContentProps = computed<ContentPropsRecord>(() => {
   const record: Record<string, ContentProps> = {}
   for (const [widgetId, widget] of Object.entries(props.widgetCores.value)) {
     const widgetConstants = props.constants.widgets[widget.content.type]!
@@ -50,9 +67,21 @@ const widgetContentProps = computed(() => {
   return record
 })
 
-console.log('Remove this log', widgetContentProps, dashboard)
+const { ErrorBoundary: errorBoundary } = useErrorBoundary()
 </script>
 
 <template>
-  <div></div>
+  <errorBoundary>
+    <ResponsiveGrid
+      v-if="dashboard.content.layout.type === 'responsive_grid'"
+      v-model:content="dashboard.content as ContentResponsiveGrid"
+      :dashboard-name="props.dashboardName"
+      :responsive-grid-breakpoints="props.constants.responsive_grid_breakpoints"
+      :content-props="widgetContentProps"
+      :is-editing="isEditing"
+      @widget:edit="$emit('widget:edit', $event)"
+      @widget:delete="$emit('widget:delete', $event)"
+      @widget:clone="(oldWidgetId, newLayout) => $emit('widget:clone', oldWidgetId, newLayout)"
+    />
+  </errorBoundary>
 </template>

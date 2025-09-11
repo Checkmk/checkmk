@@ -58,7 +58,8 @@ VT = TypeVar("VT", bound=ABCViewDashletConfig)
 class LinkedViewDashletConfig(ABCViewDashletConfig): ...
 
 
-class EmbeddedViewDashletConfig(ABCViewDashletConfig): ...
+class EmbeddedViewDashletConfig(ABCViewDashletConfig):
+    datasource: str
 
 
 class _ViewDashletConfigMandatory(ABCViewDashletConfig):

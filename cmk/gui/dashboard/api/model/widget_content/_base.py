@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from abc import ABC, abstractmethod
-from collections.abc import Container, Iterable
+from collections.abc import Iterable, Mapping
 from typing import Self
 
 from pydantic import model_validator
@@ -12,6 +12,7 @@ from pydantic_core import ErrorDetails
 from cmk.gui.dashboard import dashlet_registry, DashletConfig
 from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_model
+from cmk.gui.type_defs import DashboardEmbeddedViewSpec
 
 
 @api_model
@@ -44,7 +45,7 @@ class BaseWidgetContent(ABC):
         location: tuple[str | int, ...],
         context: ApiContext,
         *,
-        embedded_views: Container[str],
+        embedded_views: Mapping[str, DashboardEmbeddedViewSpec],
     ) -> Iterable[ErrorDetails]:
         """Run additional validation based on the config.
 

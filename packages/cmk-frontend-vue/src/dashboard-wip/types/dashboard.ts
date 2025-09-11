@@ -47,3 +47,5 @@ export enum DashboardLayout {
   RELATIVE_GRID = 'relative_grid',
   RESPONSIVE_GRID = 'responsive_grid'
 }
+
+export type ResponsiveGridBreakpoint = components['schemas']['ResponsiveGridBreakpoint']

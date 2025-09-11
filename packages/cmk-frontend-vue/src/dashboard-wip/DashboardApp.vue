@@ -20,6 +20,7 @@ import { useDashboardWidgets } from '@/dashboard-wip/composables/useDashboardWid
 import { useDashboardsManager } from '@/dashboard-wip/composables/useDashboardsManager.ts'
 import type { DashboardLayout, DashboardMetadata } from '@/dashboard-wip/types/dashboard.ts'
 import type { DashboardPageProperties } from '@/dashboard-wip/types/page.ts'
+import type { WidgetLayout } from '@/dashboard-wip/types/widget'
 import { dashboardAPI } from '@/dashboard-wip/utils.ts'
 
 const { ErrorBoundary: errorBoundary } = useErrorBoundary()
@@ -85,6 +86,18 @@ const handleAddWidget = (widgetIdent: string) => {
   // The structure and composables already exist for this in useWidgets
   // TODO: better handling for cancelling
 }
+
+function editWidget(widgetId: string) {
+  // TODO: implement this
+  console.log('edit widget', widgetId)
+}
+
+function cloneWidget(oldWidgetId: string, newLayout: WidgetLayout) {
+  // TODO: generate new ID via dashboard settings & content type so we get a decent prefix
+  // possibly generate IDs within addWidget/cloneWidget
+  const newWidgetId = crypto.randomUUID()
+  dashboardWidgets.cloneWidget(oldWidgetId, newWidgetId, newLayout)
+}
 </script>
 
 <template>
@@ -127,6 +140,9 @@ const handleAddWidget = (widgetIdent: string) => {
         :widget-cores="dashboardWidgets.widgetCores"
         :constants="dashboardsManager.constants.value!"
         :is-editing="isDashboardEditingMode"
+        @widget:edit="editWidget($event)"
+        @widget:delete="dashboardWidgets.deleteWidget($event)"
+        @widget:clone="(oldWidgetId, newLayout) => cloneWidget(oldWidgetId, newLayout)"
       />
     </template>
     <template v-else>

@@ -172,6 +172,9 @@
   --icon-single-metric: url('~cmk-frontend/themes/facelift/images/icon_single_metric.svg');
   --icon-top-list: url('~cmk-frontend/themes/facelift/images/icon_top-list.svg');
   --icon-gauge: url('~cmk-frontend/themes/facelift/images/icon_gauge.svg');
+  --icon-widget-edit: url('~cmk-frontend/themes/facelift/images/icon_widget_edit.svg');
+  --icon-widget-clone: url('~cmk-frontend/themes/facelift/images/icon_widget_clone.svg');
+  --icon-widget-delete: url('~cmk-frontend/themes/facelift/images/icon_widget_delete.svg');
 }
 
 @layer theme {

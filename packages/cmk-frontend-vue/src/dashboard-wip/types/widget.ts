@@ -20,9 +20,11 @@ export type ResponsiveGridWidgets =
   components['schemas']['ResponsiveGridDashboardResponse']['widgets']
 
 export type RelativeGridWidgetLayout = components['schemas']['WidgetRelativeGridLayout']
-export type ResponsiveGridWidgetLayout = components['schemas']['WidgetResponsiveGridLayouts']
+export type ResponsiveGridWidgetLayouts = components['schemas']['WidgetResponsiveGridLayouts']
 
-export type WidgetLayout = RelativeGridWidgetLayout | ResponsiveGridWidgetLayout
+export type WidgetLayout = RelativeGridWidgetLayout | ResponsiveGridWidgetLayouts
+
+export type ResponsiveGridWidgetLayout = components['schemas']['WidgetResponsiveGridLayout']
 
 type AnnotatedInfoName = components['schemas']['AnnotatedInfoName']
 

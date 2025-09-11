@@ -18,6 +18,7 @@ export interface ContentProps {
   dashboardName: string
   dashboardOwner: string
 }
+export type ContentPropsRecord = Readonly<Record<string, ContentProps>>
 
 export type FilterHTTPVars = Record<string, string>
 

@@ -87,6 +87,7 @@ def agent_proxmox_ve_main(args: Args) -> int:
                                 {
                                     "{vmid}": {
                                         "snapshot": [],
+                                        "config": {},
                                     }
                                 }
                             ],
@@ -94,6 +95,7 @@ def agent_proxmox_ve_main(args: Args) -> int:
                                 {
                                     "{vmid}": {
                                         "snapshot": [],
+                                        "config": {},
                                     }
                                 }
                             ],
@@ -135,6 +137,7 @@ def agent_proxmox_ve_main(args: Args) -> int:
 
     node_timezones = {}  # Timezones on nodes can be potentially different
     snapshot_data = {}
+    config_lock_data = {}
 
     for node in data["nodes"]:
         if (timezone := node["time"].get("timezone")) is not None:
@@ -143,6 +146,9 @@ def agent_proxmox_ve_main(args: Args) -> int:
         for vm in node.get("lxc", []) + node.get("qemu", []):
             snapshot_data[str(vm["vmid"])] = {
                 "snaptimes": [x["snaptime"] for x in vm["snapshot"] if "snaptime" in x],
+            }
+            config_lock_data[str(vm["vmid"])] = {
+                "lock": vm["config"].get("lock"),
             }
 
     def date_to_utc(naive_string: str, tz: str) -> str:
@@ -224,6 +230,7 @@ def agent_proxmox_ve_main(args: Args) -> int:
                         "status": vm["status"],
                         "name": vm["name"],
                         "uptime": vm["uptime"],
+                        "lock": config_lock_data.get(vmid, {}).get("lock"),
                     }
                 )
             if vm["type"] != "qemu":

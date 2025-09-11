@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import datetime
-import json
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, Literal
+
+from pydantic import BaseModel, Field
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -18,37 +18,49 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-
-Section = Mapping[str, Any]
-
-
-def parse_proxmox_ve_vm_info(string_table: StringTable) -> Section:
-    return json.loads(string_table[0][0])
+from cmk.plugins.lib.uptime import check as check_uptime_seconds
+from cmk.plugins.lib.uptime import Section as UptimeSection
 
 
-def discover_single(section: Section) -> DiscoveryResult:
+class SectionVMInfo(BaseModel, frozen=True):
+    vmid: str
+    node: str
+    status: str
+    type: Literal["qemu", "lxc"]
+    name: str
+    uptime: int = Field(default=0, ge=0)
+    lock: str | None = None
+
+
+def parse_proxmox_ve_vm_info(string_table: StringTable) -> SectionVMInfo:
+    return SectionVMInfo.model_validate_json(string_table[0][0])
+
+
+def discover_single(section: SectionVMInfo) -> DiscoveryResult:
     yield Service()
 
 
-def check_proxmox_ve_vm_info(params: Mapping[str, Any], section: Section) -> CheckResult:
-    vm_status = section.get("status", "n/a").lower()
+def check_proxmox_ve_vm_info(params: Mapping[str, Any], section: SectionVMInfo) -> CheckResult:
+    yield Result(state=State.OK, summary=f"VM ID: {section.vmid}")
+
+    vm_status = section.status.lower() if section.status else "n/a"
     req_vm_status = (params.get("required_vm_status") or "").lower()
-    yield Result(state=State.OK, summary=f"VM ID: {section.get('vmid')}")
     yield Result(
         state=State.OK if not req_vm_status or vm_status == req_vm_status else State.WARN,
         summary=f"Status: {vm_status}%s" % (req_vm_status and f" (required: {req_vm_status})"),
     )
-    yield Result(state=State.OK, summary=f"Type: {section.get('type')}")
-    yield Result(state=State.OK, summary=f"Host: {section.get('node')}")
-    td = datetime.timedelta(seconds=section.get("uptime", 0))
-    startup_date = datetime.datetime.today() - td
-    startup_string = startup_date.strftime("%Y-%m-%d %H:%M:%S")
-    if td.days > 365:
-        uptime_string = f"Uptime: {td.days % 365} years {td.days // 365} days"
-    else:
-        uptime_string = f"Uptime: {td.days} days {td.seconds // 3600} hours"
-    yield Result(state=State.OK, summary=f"Up since {startup_string}")
-    yield Result(state=State.OK, summary=f"{uptime_string}")
+
+    yield Result(state=State.OK, summary=f"Type: {section.type}, Host: {section.node}")
+
+    yield from check_uptime_seconds(
+        params={},
+        section=UptimeSection(uptime_sec=section.uptime, message=None),
+    )
+
+    yield Result(
+        state=State.OK if not section.lock else State.CRIT,
+        notice=f"Config lock: {section.lock or 'none'}",
+    )
 
 
 agent_section_proxmox_ve_vm_info = AgentSection(

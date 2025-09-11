@@ -5,6 +5,7 @@
 
 import ast
 import pickle
+import re
 import shutil
 import uuid
 from collections.abc import Generator
@@ -21,6 +22,7 @@ from cmk.bi.trees import BICompiledAggregation
 # remains constant. The purpose of this namespace to enable us to generate consistent uuids based on
 # an input value, i.e. aggregation id.
 _IDENTIFIER_NAMESPACE: Final = uuid.UUID("e98ebcdf-debb-4c60-a0b9-e9c6df9b7e5e")
+_IDENTIFIER_REGEX = re.compile(r"[0-9a-f]{32}\Z")
 
 Identifier = NewType("Identifier", str)
 
@@ -48,9 +50,9 @@ class AggregationStore:
 
     def yield_stored_identifiers(self) -> Generator[Identifier, None, None]:
         for path in self.fs_cache.compiled_aggregations.iterdir():
-            if path.is_dir() or path.name.endswith(".new"):
-                continue
-            yield Identifier(path.name)
+            # yield only valid identifiers (filter out temp files with *.new suffix)
+            if path.is_file() and _IDENTIFIER_REGEX.match(path.name):
+                yield Identifier(path.name)
 
     def save(self, aggregation: BICompiledAggregation) -> None:
         path = self.fs_cache.compiled_aggregations / generate_identifier(aggregation.id)

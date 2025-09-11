@@ -78,6 +78,7 @@ def site_ca_fixture(site: Site, tmp_path_factory: pytest.TempPathFactory) -> Pat
     return path
 
 
+@pytest.mark.medium_test_chain
 def test_uuid_check_client_certificate(agent_receiver_url: str) -> None:
     # try to acces the status endpoint by explicitly writing a fake UUID into the HTTP header
     uuid_ = uuid.uuid4()
@@ -147,6 +148,7 @@ def paired_keypair_fixture(
     )
 
 
+@pytest.mark.medium_test_chain
 def test_failing_pairing_no_uuid(agent_receiver_url: str, site: Site) -> None:
     uuid_ = "not a uuid"
     _key, csr = generate_csr_pair(uuid_)
@@ -160,6 +162,7 @@ def test_failing_pairing_no_uuid(agent_receiver_url: str, site: Site) -> None:
     assert agent_receiver_response.status_code == 400
 
 
+@pytest.mark.medium_test_chain
 def test_registration_status_not_registered(
     agent_receiver_url: str, paired_keypair: KeyPairInfo
 ) -> None:
@@ -171,6 +174,7 @@ def test_registration_status_not_registered(
     assert response.json()["detail"] == "Host is not registered"
 
 
+@pytest.mark.medium_test_chain
 def test_register_existing_non_existing(
     agent_receiver_url: str,
     site: Site,
@@ -204,6 +208,7 @@ def test_register_existing_non_existing(
     assert response.status_code == 400
 
 
+@pytest.mark.medium_test_chain
 def test_register_with_hostname_non_existing(
     agent_receiver_url: str,
     site: Site,
@@ -238,6 +243,7 @@ UNSUPPORTED_VERSIONS = (ssl.TLSVersion.SSLv3, ssl.TLSVersion.TLSv1, ssl.TLSVersi
 SUPPORTED_VERSIONS = (ssl.TLSVersion.TLSv1_2, ssl.TLSVersion.TLSv1_3)
 
 
+@pytest.mark.medium_test_chain
 @pytest.mark.parametrize("tls_version", UNSUPPORTED_VERSIONS)
 def test_unsupported_tls_versions(
     site: Site, agent_receiver_port: int, site_ca: Path, tls_version: ssl.TLSVersion
@@ -258,6 +264,7 @@ def test_unsupported_tls_versions(
                 print(ssock.version())
 
 
+@pytest.mark.medium_test_chain
 @pytest.mark.parametrize("tls_version", SUPPORTED_VERSIONS)
 def test_supported_tls_versions(
     site: Site, agent_receiver_port: int, site_ca: Path, tls_version: ssl.TLSVersion
@@ -275,6 +282,7 @@ def test_supported_tls_versions(
             assert ssock.version() == str(tls_version.name).replace("_", ".")
 
 
+@pytest.mark.medium_test_chain
 def test_all_TLS_versions_tested(site: Site, agent_receiver_port: int, site_ca: Path) -> None:
     """Ensure the above tests cover all TLS versions."""
     all_versions = {

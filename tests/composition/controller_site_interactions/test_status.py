@@ -42,6 +42,7 @@ def _get_status_output_json(
         site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
 
 
+@pytest.mark.medium_test_chain
 @pytest.mark.skip_if_not_containerized
 def test_status_pull(
     central_site: Site,
@@ -65,6 +66,7 @@ def test_status_pull(
         )
 
 
+@pytest.mark.medium_test_chain
 @pytest.mark.skip_if_not_containerized
 @pytest.mark.skip_if_not_edition("cloud", "managed")
 def test_status_push(

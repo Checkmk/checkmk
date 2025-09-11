@@ -82,7 +82,8 @@ DOCKERABLE_TESTS := \
 	test-unit-shell \
 	test-unit-testlib \
 	test-werks \
-	test-semgrep
+	test-semgrep \
+	test-medium-chain
 
 # HINT: the "layering_violation" checker is not production ready and left out on purpose
 PYLINT_CUSTOM_CHECKERS := cmk-module-layer-violation,localization-html-tags-checker,localization-literal-string-checker
@@ -533,3 +534,10 @@ what-gerrit-makes:
 	    -e BASE_COMMIT_ID=origin/master \
 	    -e WORKSPACE="$$WORKSPACE" \
 	    -e RESULTS="$$WORKSPACE/results"
+
+EXCLUDE_PATTERN_MEDIUM_CHAIN := unit|unit-shell|agent-plugin-unit|schemathesis_openapi|qa-test-data
+TEST_DIRS_MEDIUM_CHAIN := $(shell find $(realpath) -mindepth 1 -maxdepth 1 -type d | grep -v -E "/($(EXCLUDE_PATTERN_MEDIUM_CHAIN))$$")
+
+test-medium-chain:
+	$(PYTEST) --log-cli-level=INFO -m medium_test_chain \
+	$(TEST_DIRS_MEDIUM_CHAIN) \

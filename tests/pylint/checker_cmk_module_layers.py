@@ -529,6 +529,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     ),
     Component("cmk.gui.cee.plugins"): _allow(
         *PACKAGE_CCC,
+        *PACKAGE_PLUGIN_APIS,
         "cmk.gui",
         "cmk.utils.cee",
         "cmk.utils.mrpe_config",

@@ -18,11 +18,12 @@ const props = defineProps<ContentProps>()
 const iframeUrl = computed(() => {
   const content = props.content as LinkedViewContent
   const httpVars = {
-    dashlet_id: props.widget_id,
+    dashboard: props.dashboardName,
+    widget_id: props.widget_id,
     view_name: content.view_name,
     context: props.effective_filter_context.filters
   }
-  return `iframe_view.py?${urlEncodeVars(httpVars)}`
+  return `widget_iframe_view.py?${urlEncodeVars(httpVars)}`
 })
 </script>
 

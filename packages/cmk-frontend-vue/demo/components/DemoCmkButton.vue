@@ -35,6 +35,13 @@ defineProps<{ screenshotMode: boolean }>()
       <CmkButton variant="success">button</CmkButton>
     </dd>
 
+    <dt>
+      <code>&lt;CmkButton variant="success" :disabled="true"&gt;button&lt;/CmkButton&gt;</code>
+    </dt>
+    <dd>
+      <CmkButton variant="success" :disabled="true">button</CmkButton>
+    </dd>
+
     <dt><code>&lt;CmkButton variant="warning"&gt;button&lt;/CmkButton&gt;</code></dt>
     <dd>
       <CmkButton variant="warning">button</CmkButton>
@@ -48,6 +55,11 @@ defineProps<{ screenshotMode: boolean }>()
     <dt><code>&lt;CmkButton variant="info"&gt;info&lt;/CmkButton&gt;</code></dt>
     <dd>
       <CmkButton variant="info">info</CmkButton>
+    </dd>
+
+    <dt><code>&lt;CmkButton variant="info" :disabled="true"&gt;info&lt;/CmkButton&gt;</code></dt>
+    <dd>
+      <CmkButton variant="info" :disabled="true">info</CmkButton>
     </dd>
 
     <dt><code>&lt;CmkButtonSubmit&gt;button&lt;/CmkButtonSubmit&gt;</code></dt>

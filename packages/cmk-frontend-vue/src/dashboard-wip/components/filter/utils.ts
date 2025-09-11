@@ -3,6 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { type Ref, inject } from 'vue'
+
 import type { FilterDefinition, FilterType } from './types.ts'
 
 export function parseFilterTypes(
@@ -38,4 +40,18 @@ export function parseFilterTypes(
   })
 
   return categories
+}
+
+export function useFilterDefinitions(): Record<string, FilterDefinition> {
+  const filterCollection = inject<Ref<Record<string, FilterDefinition> | null>>('filterCollection')
+  if (!filterCollection) {
+    throw new Error('No provider for filterCollection')
+  }
+
+  const filterDefinitions = filterCollection.value
+  if (!filterDefinitions) {
+    throw new Error('Filter definitions are not available yet')
+  }
+
+  return filterDefinitions
 }

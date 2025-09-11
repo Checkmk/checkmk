@@ -4,9 +4,11 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, inject } from 'vue'
+import { computed } from 'vue'
 
-import type { ConfiguredValues, FilterDefinition } from '../types.ts'
+import { useFilterDefinitions } from '@/dashboard-wip/components/filter/utils.ts'
+
+import type { ConfiguredValues } from '../types.ts'
 import FilterDisplayComponentRenderer from './FilterDisplayComponentRenderer.vue'
 
 interface Props {
@@ -16,11 +18,7 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const filterDefinitions = inject<Record<string, FilterDefinition> | null>('filterDefinitions', null)
-if (!filterDefinitions) {
-  console.error('Filter definitions not found in the provided context')
-  throw new Error('Filter definitions are not available')
-}
+const filterDefinitions = useFilterDefinitions()
 const filterDefinition = filterDefinitions[props.filterId]
 if (!filterDefinition) {
   console.error(`Filter definition for ${props.filterId} not found`)

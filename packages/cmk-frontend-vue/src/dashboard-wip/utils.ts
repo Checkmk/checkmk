@@ -10,6 +10,7 @@ import type {
   RelativeGridDashboardDomainObject,
   ResponsiveGridDashboardDomainObject
 } from '@/dashboard-wip/types/dashboard.ts'
+import type { FilterCollection } from '@/dashboard-wip/types/filter.ts'
 
 const API_ROOT = 'api/unstable'
 
@@ -36,5 +37,11 @@ export const dashboardAPI = {
     await response.raiseForStatus()
     const content = await response.json()
     return content.extensions
+  },
+  listFilterCollection: async (): Promise<FilterCollection> => {
+    const url = `${API_ROOT}/domain-types/visual_filter/collections/all`
+    const response = await fetchRestAPI(url, 'GET')
+    await response.raiseForStatus()
+    return await response.json()
   }
 }

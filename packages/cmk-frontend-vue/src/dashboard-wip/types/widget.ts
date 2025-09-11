@@ -13,6 +13,8 @@ export type WidgetFilterContext = components['schemas']['WidgetFilterContext']
 export type RelativeGridWidget = components['schemas']['RelativeGridWidgetResponse']
 export type ResponsiveGridWidget = components['schemas']['ResponsiveGridWidgetResponse']
 
+export type AnyWidget = RelativeGridWidget | ResponsiveGridWidget
+
 export type RelativeGridWidgets = components['schemas']['RelativeGridDashboardResponse']['widgets']
 export type ResponsiveGridWidgets =
   components['schemas']['ResponsiveGridDashboardResponse']['widgets']

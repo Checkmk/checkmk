@@ -14,6 +14,7 @@ import type {
   WidgetGeneralSettings,
   WidgetLayout
 } from '@/dashboard-wip/types/widget'
+import type { AnyWidget } from '@/dashboard-wip/types/widget'
 
 export interface WidgetCore {
   widget_id: string
@@ -73,6 +74,24 @@ export function useDashboardWidgets(
     }
   }
 
+  function cloneWidget(oldId: string, newId: string, layout: WidgetLayout) {
+    const widgets = widgetsRef.value
+    if (!widgets) {
+      throw new Error('Cannot add widget: widgetsRef is undefined')
+    }
+    if (!widgets[oldId]) {
+      throw new Error(`Widget with ID '${oldId}' doesn't exist`)
+    }
+    if (widgets[newId]) {
+      throw new Error(`Widget with ID '${newId}' already exists`)
+    }
+
+    const widget: AnyWidget = structuredClone(widgets[oldId])
+    widget.layout = layout
+
+    widgets[newId] = widget
+  }
+
   function deleteWidget(widgetId: string) {
     const widgets = widgetsRef.value
     if (!widgets) {
@@ -89,6 +108,7 @@ export function useDashboardWidgets(
     widgetCores,
     getWidget,
     addWidget,
+    cloneWidget,
     deleteWidget
   }
 }

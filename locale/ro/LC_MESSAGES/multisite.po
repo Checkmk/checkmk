@@ -9582,6 +9582,9 @@ msgid "Both - Display the information for both pod and container levels"
 msgstr ""
 "Ambele - Afișează informațiile pentru ambele niveluri, pod și container"
 
+msgid "Both conditions must match (defensive)"
+msgstr ""
+
 msgid "Bottom"
 msgstr "Partea de jos"
 
@@ -13434,6 +13437,14 @@ msgstr "Mesaje de curățare"
 
 msgid "Cleanup of working directory"
 msgstr "Curățarea directorului de lucru"
+
+#, fuzzy
+msgid "Cleanup parameters"
+msgstr "Parametrii impliciți"
+
+#, fuzzy
+msgid "Cleanup strategy"
+msgstr "Mesaje de curățare"
 
 msgid "Cleanup when disk space is below"
 msgstr "Curățare atunci când spațiul pe disc este sub"
@@ -18061,6 +18072,10 @@ msgstr "Implicit (%s)"
 
 msgid "Default BI visualization settings"
 msgstr "Setări implicite de vizualizare BI"
+
+#, fuzzy
+msgid "Default cleanup parameters"
+msgstr "Parametrii impliciți"
 
 msgid "Default color"
 msgstr "Culoare implicită"
@@ -26111,6 +26126,10 @@ msgid "For specific SIDs"
 msgstr "Pentru SID-uri specifice"
 
 #, fuzzy
+msgid "For specific hosts"
+msgstr "Pentru SID-uri specifice"
+
+#, fuzzy
 msgid ""
 "For the host name field, a partial word search (infix search) is used — the "
 "entered text is searched, at any position, in the host name. Furthermore, "
@@ -27779,6 +27798,10 @@ msgstr "Inventarul HW/SW"
 #, fuzzy
 msgid "HW/SW Inventory (Linux, Windows, Solaris, AIX)"
 msgstr "Inventar hardware/software (Linux, Windows, Solaris, AIX)"
+
+#, fuzzy
+msgid "HW/SW Inventory cleanup"
+msgstr "Reguli de inventariere HW/SW"
 
 #, fuzzy
 msgid "HW/SW Inventory history"
@@ -40274,6 +40297,10 @@ msgstr "Potriviți grupurile gazdă"
 msgid "Match host labels"
 msgstr "Potriviți etichetele gazdă"
 
+#, fuzzy
+msgid "Match host names"
+msgstr "Potriviți etichetele gazdă"
+
 msgid "Match host tags"
 msgstr "Potriviți etichetele gazdă"
 
@@ -43954,6 +43981,10 @@ msgid "No datasource defined."
 msgstr "Nu este definită nicio sursă de date."
 
 #, fuzzy
+msgid "No defaults"
+msgstr "Este implicit"
+
+#, fuzzy
 msgid "No deprecated rule sets found."
 msgstr "Seturi de reguli depreciate"
 
@@ -46357,6 +46388,9 @@ msgstr ""
 
 msgid "One RRD per host/service (saves disk IO, only with CMC)"
 msgstr "Un RRD per gazdă/serviciu (economisește IO pe disc, numai cu CMC)"
+
+msgid "One condition needs to match (offensive)"
+msgstr ""
 
 msgid "One heartbeat every"
 msgstr "O bătaie de inimă în fiecare"
@@ -50401,13 +50435,6 @@ msgstr ""
 "că licența dvs. este prelungită la timp. Dacă v-ați achiziționat licența "
 "prin intermediul unui %s, vă rugăm să îl contactați."
 
-msgid ""
-"Please contact your Checkmk administrator to ensure that your license is "
-"extended in time."
-msgstr ""
-"Vă rugăm să contactați administratorul Checkmk pentru a vă asigura că "
-"licența dvs. este prelungită la timp."
-
 msgid "Please contact your administrator."
 msgstr "Vă rugăm să vă contactați administratorul."
 
@@ -53718,6 +53745,10 @@ msgstr "Îndepărtați înregistrarea TLS a gazdelor selectate"
 msgid "Remove Windows Firewall configuration if present"
 msgstr "Îndepărtați configurația Windows Firewall, dacă este prezentă"
 
+#, fuzzy
+msgid "Remove abandoned host files older than"
+msgstr "Curățați fișierele gazdă abandonate mai vechi de"
+
 msgid "Remove acknowledgments"
 msgstr "Îndepărtați confirmarea?"
 
@@ -53751,6 +53782,17 @@ msgstr "Îndepărtați setarea explicită"
 
 msgid "Remove filter"
 msgstr "Eliminați filtrul"
+
+#, fuzzy
+msgid "Remove history entries older than"
+msgstr "Ștergeți fișierele mai vechi de"
+
+msgid "Remove history entries right after"
+msgstr ""
+
+#, fuzzy
+msgid "Remove history entries which meet the following conditions"
+msgstr "Obțineți informații despre următoarele partiții"
 
 #, fuzzy
 msgid "Remove name"
@@ -80448,6 +80490,10 @@ msgstr "Utilizați următoarea culoare"
 msgid "Use the following credentials"
 msgstr "Utilizați următoarele acreditări"
 
+#, fuzzy
+msgid "Use the following defaults"
+msgstr "Utilizați următoarele niveluri"
+
 msgid "Use the following levels"
 msgstr "Utilizați următoarele niveluri"
 
@@ -88032,6 +88078,10 @@ msgstr "intrări"
 msgid "entries (max. 50)"
 msgstr "intrări (max. 50)"
 
+#, fuzzy
+msgid "entry number"
+msgstr "Numărul de serie"
+
 msgid "estimated duration"
 msgstr "durata estimată"
 
@@ -89722,6 +89772,13 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#~ msgid ""
+#~ "Please contact your Checkmk administrator to ensure that your license is "
+#~ "extended in time."
+#~ msgstr ""
+#~ "Vă rugăm să contactați administratorul Checkmk pentru a vă asigura că "
+#~ "licența dvs. este prelungită la timp."
 
 #~ msgid "GUI extensions (deprecated)"
 #~ msgstr "Extensii GUI (depreciat)"

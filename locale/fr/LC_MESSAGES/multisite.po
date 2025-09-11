@@ -9658,6 +9658,9 @@ msgid "Both - Display the information for both pod and container levels"
 msgstr ""
 "Both - Affiche les informations pour les deux niveaux, pod et conteneur"
 
+msgid "Both conditions must match (defensive)"
+msgstr ""
+
 msgid "Bottom"
 msgstr "Fond"
 
@@ -13516,6 +13519,14 @@ msgstr "Messages de nettoyage"
 #, fuzzy
 msgid "Cleanup of working directory"
 msgstr "Nettoyage à vide du travailleur"
+
+#, fuzzy
+msgid "Cleanup parameters"
+msgstr "Paramètres du modèle"
+
+#, fuzzy
+msgid "Cleanup strategy"
+msgstr "Messages de nettoyage"
 
 msgid "Cleanup when disk space is below"
 msgstr "Nettoyage lorsque l'espace disque est insuffisant"
@@ -18204,6 +18215,10 @@ msgstr "Défaut (%s)"
 #, fuzzy
 msgid "Default BI visualization settings"
 msgstr "Paramètres de visualisation BI par défaut"
+
+#, fuzzy
+msgid "Default cleanup parameters"
+msgstr "Paramètres du modèle"
 
 msgid "Default color"
 msgstr "Couleur par défaut"
@@ -26289,6 +26304,10 @@ msgid "For specific SIDs"
 msgstr "Pour des SIDs spécifiques"
 
 #, fuzzy
+msgid "For specific hosts"
+msgstr "Pour des SIDs spécifiques"
+
+#, fuzzy
 msgid ""
 "For the host name field, a partial word search (infix search) is used — the "
 "entered text is searched, at any position, in the host name. Furthermore, "
@@ -27989,6 +28008,10 @@ msgstr "Inventaire HW/SW"
 #, fuzzy
 msgid "HW/SW Inventory (Linux, Windows, Solaris, AIX)"
 msgstr "Inventaire matériel/logiciel (Linux, Windows, Solaris, AIX)"
+
+#, fuzzy
+msgid "HW/SW Inventory cleanup"
+msgstr "Règles d'inventaire HW/SW"
 
 #, fuzzy
 msgid "HW/SW Inventory history"
@@ -40558,6 +40581,10 @@ msgstr "Apparier les groupes d'accueil"
 msgid "Match host labels"
 msgstr "Faire correspondre les étiquettes des hôtes"
 
+#, fuzzy
+msgid "Match host names"
+msgstr "Faire correspondre les étiquettes des hôtes"
+
 msgid "Match host tags"
 msgstr "Faire correspondre les balises d'hôtes"
 
@@ -44252,6 +44279,10 @@ msgid "No datasource defined."
 msgstr "Aucune source de données définie."
 
 #, fuzzy
+msgid "No defaults"
+msgstr "Est par défaut"
+
+#, fuzzy
 msgid "No deprecated rule sets found."
 msgstr "Jeux de règles obsolètes"
 
@@ -46686,6 +46717,9 @@ msgid "One RRD per host/service (saves disk IO, only with CMC)"
 msgstr ""
 "Un RRD par hôte/service (économise les entrées-sorties sur disque, seulement "
 "avec CMC)"
+
+msgid "One condition needs to match (offensive)"
+msgstr ""
 
 msgid "One heartbeat every"
 msgstr "Un battement de cœur chaque"
@@ -50768,11 +50802,6 @@ msgstr ""
 "votre licence est prolongée à temps. Si vous avez acheté votre licence par "
 "l'intermédiaire d'un %s, veuillez le contacter."
 
-msgid ""
-"Please contact your Checkmk administrator to ensure that your license is "
-"extended in time."
-msgstr ""
-
 msgid "Please contact your administrator."
 msgstr "Veuillez contacter votre administrateur."
 
@@ -54113,6 +54142,10 @@ msgid "Remove Windows Firewall configuration if present"
 msgstr "Supprimez la configuration du Pare-feu Windows si elle est présente"
 
 #, fuzzy
+msgid "Remove abandoned host files older than"
+msgstr "Nettoyage des fichiers d'hôtes abandonnés plus anciens que"
+
+#, fuzzy
 msgid "Remove acknowledgments"
 msgstr "Supprimer l'accusé de réception"
 
@@ -54146,6 +54179,17 @@ msgstr "Supprimer le paramètre explicite"
 
 msgid "Remove filter"
 msgstr "Supprimer le filtre"
+
+#, fuzzy
+msgid "Remove history entries older than"
+msgstr "Supprimer les fichiers plus anciens que"
+
+msgid "Remove history entries right after"
+msgstr ""
+
+#, fuzzy
+msgid "Remove history entries which meet the following conditions"
+msgstr "Récupérer des informations sur les partitions suivantes"
 
 #, fuzzy
 msgid "Remove name"
@@ -81031,6 +81075,10 @@ msgstr "Utilisez la couleur suivante"
 msgid "Use the following credentials"
 msgstr "Utilisez les informations d'identification suivantes"
 
+#, fuzzy
+msgid "Use the following defaults"
+msgstr "Utilisez les niveaux suivants"
+
 msgid "Use the following levels"
 msgstr "Utilisez les niveaux suivants"
 
@@ -88714,6 +88762,10 @@ msgstr "entrées"
 
 msgid "entries (max. 50)"
 msgstr ""
+
+#, fuzzy
+msgid "entry number"
+msgstr "Numéro de série"
 
 msgid "estimated duration"
 msgstr "durée estimée"

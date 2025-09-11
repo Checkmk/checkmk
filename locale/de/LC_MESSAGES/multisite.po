@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-09-09 01:39+0000\n"
+"PO-Revision-Date: 2025-09-10 19:39+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -9212,6 +9212,9 @@ msgstr "Beide"
 msgid "Both - Display the information for both pod and container levels"
 msgstr "Beide - Zeige Informationen für das Pod- und das Container-Level"
 
+msgid "Both conditions must match (defensive)"
+msgstr ""
+
 msgid "Bottom"
 msgstr "Unten"
 
@@ -13003,6 +13006,14 @@ msgstr "Meldungen aufräumen"
 msgid "Cleanup of working directory"
 msgstr "Bereinigung des Arbeitsverzeichnisses"
 
+#, fuzzy
+msgid "Cleanup parameters"
+msgstr "Standardparameter"
+
+#, fuzzy
+msgid "Cleanup strategy"
+msgstr "Meldungen aufräumen"
+
 msgid "Cleanup when disk space is below"
 msgstr "Aufräumen, wenn der freie Speicherplatz geringer ist als"
 
@@ -16181,7 +16192,7 @@ msgstr ""
 "ausgeschaltet ist."
 
 msgid "CronJobs"
-msgstr "CronJobs"
+msgstr "Cronjobs"
 
 msgid "Crontab"
 msgstr "Crontab"
@@ -17533,6 +17544,10 @@ msgstr "Voreinstellung (%s)"
 
 msgid "Default BI visualization settings"
 msgstr "Standard BI Visualisierungseinstellungen"
+
+#, fuzzy
+msgid "Default cleanup parameters"
+msgstr "Standardparameter"
 
 msgid "Default color"
 msgstr "Standardfarbe"
@@ -25265,6 +25280,10 @@ msgstr ""
 msgid "For specific SIDs"
 msgstr "Für spezifische SIDs"
 
+#, fuzzy
+msgid "For specific hosts"
+msgstr "Für spezifische SIDs"
+
 msgid ""
 "For the host name field, a partial word search (infix search) is used — the "
 "entered text is searched, at any position, in the host name. Furthermore, "
@@ -26895,6 +26914,10 @@ msgstr "HW-/SW-Inventur"
 
 msgid "HW/SW Inventory (Linux, Windows, Solaris, AIX)"
 msgstr "HW-/SW-Inventur (Linux, Windows, Solaris, AIX)"
+
+#, fuzzy
+msgid "HW/SW Inventory cleanup"
+msgstr "Regeln der HW-/SW-Inventur"
 
 msgid "HW/SW Inventory history"
 msgstr "Historie der HW-/SW-Inventur"
@@ -32016,7 +32039,7 @@ msgid ""
 "instead of using the IP address of the host as configured in your host "
 "properties."
 msgstr ""
-"Wenn Sie hier einen Hostnamen angeben, wird eine dynamische DNS-Suche "
+"Wenn Sie hier einen Host-Namen angeben, wird eine dynamische DNS-Suche "
 "durchgeführt, anstatt die IP-Adresse des Hosts zu verwenden, wie sie in "
 "Ihren Host-Eigenschaften konfiguriert ist."
 
@@ -35085,7 +35108,7 @@ msgid "Kubernetes Collector Info"
 msgstr "Kubernetes Collector Info"
 
 msgid "Kubernetes CronJob status"
-msgstr "Kubernetes CronJob Status"
+msgstr "Kubernetes Cronjob Status"
 
 msgid "Kubernetes DaemonSet"
 msgstr "Kubernetes DaemonSet"
@@ -38807,6 +38830,10 @@ msgstr "Host-Gruppen abgleichen"
 msgid "Match host labels"
 msgstr "Host-Labels abgleichen"
 
+#, fuzzy
+msgid "Match host names"
+msgstr "Host-Labels abgleichen"
+
 msgid "Match host tags"
 msgstr "Host-Merkmale abgleichen"
 
@@ -42302,6 +42329,10 @@ msgstr "Keine Daten."
 msgid "No datasource defined."
 msgstr "Keine Datenquelle definiert."
 
+#, fuzzy
+msgid "No defaults"
+msgstr "Standard"
+
 msgid "No deprecated rule sets found."
 msgstr "Es wurden keine veralteten Regelsätze gefunden."
 
@@ -44630,6 +44661,9 @@ msgstr ""
 
 msgid "One RRD per host/service (saves disk IO, only with CMC)"
 msgstr "Eine RRD pro Host/Service (spart Festplatten-E/A, nur mit CMC)"
+
+msgid "One condition needs to match (offensive)"
+msgstr ""
 
 msgid "One heartbeat every"
 msgstr "Ein Lebenszeichen alle"
@@ -48378,13 +48412,6 @@ msgstr ""
 "sicherzustellen, dass Ihre Lizenz rechtzeitig verlängert wird. Wenn Sie Ihre "
 "Lizenz übereinen %s erworben haben, kontaktieren Sie diesen bitte."
 
-msgid ""
-"Please contact your Checkmk administrator to ensure that your license is "
-"extended in time."
-msgstr ""
-"Bitte kontaktieren Sie Ihren Checkmk-Administrator, um sicherzustellen, dass "
-"Ihre Lizenz rechtzeitig verlängert wird."
-
 msgid "Please contact your administrator."
 msgstr "Bitte wenden Sie sich an Ihren Administrator."
 
@@ -49069,7 +49096,7 @@ msgid "Pods"
 msgstr "Pods"
 
 msgid "Pods of CronJobs"
-msgstr "Pods von CronJobs"
+msgstr "Pods von Cronjobs"
 
 msgid "Point-to-site bandwidth"
 msgstr "Point-to-Site Bandbreite"
@@ -51546,6 +51573,10 @@ msgstr "TLS-Registrierung ausgewählter Hosts entfernen"
 msgid "Remove Windows Firewall configuration if present"
 msgstr "Windows Firewall Konfiguration entfernen, falls vorhanden"
 
+#, fuzzy
+msgid "Remove abandoned host files older than"
+msgstr "Veraltete Host-Dateien löschen, die älter sind als"
+
 msgid "Remove acknowledgments"
 msgstr "Entferne Quittierungen"
 
@@ -51578,6 +51609,17 @@ msgstr "Entferne explizite Einstellungen"
 
 msgid "Remove filter"
 msgstr "Filter entfernen"
+
+#, fuzzy
+msgid "Remove history entries older than"
+msgstr "Lösche Dateien älter als"
+
+msgid "Remove history entries right after"
+msgstr ""
+
+#, fuzzy
+msgid "Remove history entries which meet the following conditions"
+msgstr "Informationen über die folgenden Partitionen einholen"
 
 msgid "Remove name"
 msgstr "Name entfernen"
@@ -54750,13 +54792,13 @@ msgid ""
 "effect if Pods are not monitored"
 msgstr ""
 "Wählen Sie die Kubernetes-Objekte aus, die Sie überwachen möchten. Von "
-"CronJobs gesteuerte Pods werden gesondert behandelt, da sie in der Regel "
+"Cronjobs gesteuerte Pods werden gesondert behandelt, da sie in der Regel "
 "recht kurzlebig sind. Diese Pods werden auf die gleiche Weise überwacht wie "
 "reguläre Pods. Persistente Volume Claims werden nur bei dem zum jeweiligen "
 "Objekt gehörenden Piggyback-Host angezeigt, anstatt bei einem eigenen Host. "
 "Ihre Regel für die dynamische Host-Verwaltung sollte entsprechend "
 "konfiguriert werden, um zu vermeiden, dass die Piggyback-Hosts für beendete "
-"CronJob-Pods zu lange aufbewahrt werden. Die Option 'Pods of CronJobs' hat "
+"Cronjob-Pods zu lange aufbewahrt werden. Die Option 'Pods of Cronjobs' hat "
 "keine Auswirkungen, wenn Pods nicht überwacht werden"
 
 msgid ""
@@ -58356,12 +58398,11 @@ msgstr ""
 "Namens durchgeführt, wenn die Konfiguration aktiviert ist. Der mitgelieferte "
 "DNS-Cache von Checkmk ist in der globalen Konfiguration standardmäßig "
 "aktiviert, um den Aktivierungsprozess zu beschleunigen. Der Cache wird "
-"normalerweise täglich durch einen Cron-Job aktualisiert. Sie können den "
-"Cache manuell mit dem Befehl <tt>cmk -v --update-dns-cache</tt> "
-"aktualisieren.<br><br><b>Nur für dynamische IP-Adressen:</b><br>Wenn Sie "
-"hier einen DNS-Namen eingeben, wird die DNS-Auflösung jedes Mal "
-"durchgeführt, wenn der Host überprüft wird. Der DNS-Cache von Checkmk wird "
-"<b>NICHT</b> abgefragt."
+"normalerweise täglich durch einen Cronjob aktualisiert. Sie können den Cache "
+"manuell mit dem Befehl <tt>cmk -v --update-dns-cache</tt> aktualisieren."
+"<br><br><b>Nur für dynamische IP-Adressen:</b><br>Wenn Sie hier einen DNS-"
+"Namen eingeben, wird die DNS-Auflösung jedes Mal durchgeführt, wenn der Host "
+"überprüft wird. Der DNS-Cache von Checkmk wird <b>NICHT</b> abgefragt."
 
 msgid ""
 "Specify an explicit IPv6 address or resolvable DNS name here, if the host "
@@ -58377,16 +58418,15 @@ msgid ""
 msgstr ""
 "Geben Sie hier eine explizite IPv6-Adresse oder einen auflösbaren DNS-Namen "
 "an, wenn der Host-Name nicht über <tt>/etc/hosts</tt> oder DNS auflösbar "
-"ist. Wenn Sie dieses Attribut nicht setzen, wird die Auflösung des "
-"Hostnamens durchgeführt, wenn die Konfiguration aktiviert ist. Der "
-"mitgelieferte DNS-Cache von Checkmk ist in der globalen Konfiguration "
-"standardmäßig aktiviert, um den Aktivierungsprozess zu beschleunigen. Der "
-"Cache wird normalerweise täglich durch einen Cron-Job aktualisiert. Sie "
-"können den Cache manuell mit dem Befehl <tt>cmk -v --update-dns-cache</tt> "
-"aktualisieren.<br><br><b>Nur für dynamische IP-Adressen:</b><br>Wenn Sie "
-"hier einen DNS-Namen eingeben, wird die DNS-Auflösung jedes Mal "
-"durchgeführt, wenn der Host überprüft wird. Der DNS-Cache von Checkmk wird "
-"<b>NICHT</b> abgefragt."
+"ist. Wenn Sie dieses Attribut nicht setzen, wird die Auflösung des Host-"
+"Namens durchgeführt, wenn die Konfiguration aktiviert ist. Der mitgelieferte "
+"DNS-Cache von Checkmk ist in der globalen Konfiguration standardmäßig "
+"aktiviert, um den Aktivierungsprozess zu beschleunigen. Der Cache wird "
+"normalerweise täglich durch einen Cronjob aktualisiert. Sie können den Cache "
+"manuell mit dem Befehl <tt>cmk -v --update-dns-cache</tt> aktualisieren."
+"<br><br><b>Nur für dynamische IP-Adressen:</b><br>Wenn Sie hier einen DNS-"
+"Namen eingeben, wird die DNS-Auflösung jedes Mal durchgeführt, wenn der Host "
+"überprüft wird. Der DNS-Cache von Checkmk wird <b>NICHT</b> abgefragt."
 
 msgid ""
 "Specify at which time period a new file for the event history will be "
@@ -62197,8 +62237,8 @@ msgid ""
 "locally, use '127.0.0.1' or '::1'. To listen on all interfaces, use "
 "'0.0.0.0' or '::'."
 msgstr ""
-"Die IP-Adresse oder der Hostname, an dem der Empfänger lauschen soll. Um nur "
-"lokal zu hören, verwenden Sie '127.0.0.1' oder '::1'. Um auf allen "
+"Die IP-Adresse oder der Host-Name, an dem der Empfänger lauschen soll. Um "
+"nur lokal zu hören, verwenden Sie '127.0.0.1' oder '::1'. Um auf allen "
 "Schnittstellen zu lauschen, verwenden Sie '0.0.0.0' oder '::'."
 
 msgid "The Index of the Overcurrent Protector"
@@ -77451,6 +77491,10 @@ msgstr "Die folgende Farbe verwenden"
 msgid "Use the following credentials"
 msgstr "Mit den folgenden Daten anmelden"
 
+#, fuzzy
+msgid "Use the following defaults"
+msgstr "Die folgenden Levels benutzen"
+
 msgid "Use the following levels"
 msgstr "Die folgenden Levels benutzen"
 
@@ -82998,7 +83042,7 @@ msgid ""
 msgstr ""
 "Sie können hier Monitoring-Makros verwenden. Die wichtigsten sind:"
 "<ul><li><tt>$HOSTADDRESS$</tt>: IP-Adresse des Hosts</li><li><tt>$HOSTNAME$</"
-"tt>: Hostname</li><li><tt>$_HOSTTAGS$</tt>: Liste der Host-Merkmale</"
+"tt>: Host-Name</li><li><tt>$_HOSTTAGS$</tt>: Liste der Host-Merkmale</"
 "li><li><tt>$_HOSTADDRESS_4$</tt>: Die IPv4-Adresse des Hosts</"
 "li><li><tt>$_HOSTADDRESS_6$</tt>: Die IPv6-Adresse des Hosts</"
 "li><li><tt>$_HOSTADDRESS_FAMILY$</tt>: Die primäre Adress-Familie des Hosts</"
@@ -84866,6 +84910,10 @@ msgstr "Einträge"
 msgid "entries (max. 50)"
 msgstr "Einträge (max. 50)"
 
+#, fuzzy
+msgid "entry number"
+msgstr "Seriennummer"
+
 msgid "estimated duration"
 msgstr "geschätzte Dauer"
 
@@ -86509,6 +86557,13 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b>, da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid ""
+#~ "Please contact your Checkmk administrator to ensure that your license is "
+#~ "extended in time."
+#~ msgstr ""
+#~ "Bitte kontaktieren Sie Ihren Checkmk-Administrator, um sicherzustellen, "
+#~ "dass Ihre Lizenz rechtzeitig verlängert wird."
 
 #~ msgid "GUI extensions (deprecated)"
 #~ msgstr "GUI-Erweiterungen (veraltet)"

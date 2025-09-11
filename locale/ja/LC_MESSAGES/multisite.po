@@ -8963,6 +8963,9 @@ msgstr "両方"
 msgid "Both - Display the information for both pod and container levels"
 msgstr "両方(both)-Podとコンテナの両方のレベルの情報を表示します"
 
+msgid "Both conditions must match (defensive)"
+msgstr ""
+
 msgid "Bottom"
 msgstr "ボトム"
 
@@ -12593,6 +12596,14 @@ msgstr "クリーンアップメッセージ"
 
 msgid "Cleanup of working directory"
 msgstr "ワーキングディレクトリのクリーンアップ"
+
+#, fuzzy
+msgid "Cleanup parameters"
+msgstr "デフォルトパラメータ"
+
+#, fuzzy
+msgid "Cleanup strategy"
+msgstr "クリーンアップメッセージ"
 
 msgid "Cleanup when disk space is below"
 msgstr "ディスク容量が次の値を下回るとクリーンアップ"
@@ -17014,6 +17025,10 @@ msgstr "デフォルト(%s)"
 
 msgid "Default BI visualization settings"
 msgstr "デフォルトのBI視覚化設定"
+
+#, fuzzy
+msgid "Default cleanup parameters"
+msgstr "デフォルトパラメータ"
 
 msgid "Default color"
 msgstr "デフォルトの色"
@@ -24567,6 +24582,10 @@ msgstr ""
 msgid "For specific SIDs"
 msgstr "特定のSIDの場合"
 
+#, fuzzy
+msgid "For specific hosts"
+msgstr "特定のSIDの場合"
+
 msgid ""
 "For the host name field, a partial word search (infix search) is used — the "
 "entered text is searched, at any position, in the host name. Furthermore, "
@@ -26163,6 +26182,10 @@ msgstr "HW/SWインベントリ"
 
 msgid "HW/SW Inventory (Linux, Windows, Solaris, AIX)"
 msgstr "ハードウェア / ソフトウェアインベントリ(Linux、Windows、Solaris、AIX)"
+
+#, fuzzy
+msgid "HW/SW Inventory cleanup"
+msgstr "HW/SWインベントリルール"
 
 msgid "HW/SW Inventory history"
 msgstr "HW/SWインベントリ履歴"
@@ -37771,6 +37794,10 @@ msgstr "ホストグループと一致する"
 msgid "Match host labels"
 msgstr "ホストラベルに一致"
 
+#, fuzzy
+msgid "Match host names"
+msgstr "ホストラベルに一致"
+
 msgid "Match host tags"
 msgstr "ホストタグと一致する"
 
@@ -41224,6 +41251,10 @@ msgstr "データなし。"
 msgid "No datasource defined."
 msgstr "データソースが定義されていません。"
 
+#, fuzzy
+msgid "No defaults"
+msgstr "デフォルトです"
+
 msgid "No deprecated rule sets found."
 msgstr "非推奨のルールセットは見つかりませんでした。"
 
@@ -43496,6 +43527,9 @@ msgstr ""
 
 msgid "One RRD per host/service (saves disk IO, only with CMC)"
 msgstr "ホスト/サービスごとに1つのRRD(CMCでのみディスクIOを節約)"
+
+msgid "One condition needs to match (offensive)"
+msgstr ""
 
 msgid "One heartbeat every"
 msgstr "ハートビートごとに1つ"
@@ -47164,12 +47198,6 @@ msgstr ""
 "ライセンスが期限内に延長されるよう、%s の Checkmk 営業チームまでご連絡くださ"
 "い。ライセンスを%sで購入した場合は、そちらに連絡してください。"
 
-msgid ""
-"Please contact your Checkmk administrator to ensure that your license is "
-"extended in time."
-msgstr ""
-"ライセンスの延長が間に合うように、Checkmkの管理者にお問い合わせください。"
-
 msgid "Please contact your administrator."
 msgstr "管理者にお問い合わせください。"
 
@@ -50251,6 +50279,10 @@ msgstr "選択したホストのTLS登録を削除する"
 msgid "Remove Windows Firewall configuration if present"
 msgstr "存在する場合は、Windowsファイアウォール構成を削除します"
 
+#, fuzzy
+msgid "Remove abandoned host files older than"
+msgstr "設定日以上経過したホストファイルをクリーンアップする"
+
 msgid "Remove acknowledgments"
 msgstr "承認を削除する"
 
@@ -50283,6 +50315,17 @@ msgstr "明示的な設定を削除する"
 
 msgid "Remove filter"
 msgstr "フィルタを取り外します"
+
+#, fuzzy
+msgid "Remove history entries older than"
+msgstr "設定期間経過したファイルを削除する"
+
+msgid "Remove history entries right after"
+msgstr ""
+
+#, fuzzy
+msgid "Remove history entries which meet the following conditions"
+msgstr "次のパーティションに関する情報を取得する"
 
 msgid "Remove name"
 msgstr "名前を削除する"
@@ -75215,6 +75258,10 @@ msgstr "次の色を使用する"
 msgid "Use the following credentials"
 msgstr "次の資格情報を使用します"
 
+#, fuzzy
+msgid "Use the following defaults"
+msgstr "次のレベルを使用します"
+
 msgid "Use the following levels"
 msgstr "次のレベルを使用します"
 
@@ -82302,6 +82349,10 @@ msgstr "エントリ"
 msgid "entries (max. 50)"
 msgstr "エントリー数 (最大50)"
 
+#, fuzzy
+msgid "entry number"
+msgstr "シリアルナンバー"
+
 msgid "estimated duration"
 msgstr "推定期間"
 
@@ -83922,6 +83973,12 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠Robotmk Core MKP がインストールされているため<b>利用できません</b>"
+
+#~ msgid ""
+#~ "Please contact your Checkmk administrator to ensure that your license is "
+#~ "extended in time."
+#~ msgstr ""
+#~ "ライセンスの延長が間に合うように、Checkmkの管理者にお問い合わせください。"
 
 #~ msgid "GUI extensions (deprecated)"
 #~ msgstr "GUI拡張機能（非推奨）"

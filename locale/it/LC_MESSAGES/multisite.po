@@ -9513,6 +9513,9 @@ msgstr ""
 "Entrambi: visualizza le informazioni per entrambi i livelli di baccello e "
 "contenitore."
 
+msgid "Both conditions must match (defensive)"
+msgstr ""
+
 msgid "Bottom"
 msgstr "In basso"
 
@@ -13296,6 +13299,14 @@ msgstr "Messaggi di pulizia"
 
 msgid "Cleanup of working directory"
 msgstr "Pulizia della directory di lavoro"
+
+#, fuzzy
+msgid "Cleanup parameters"
+msgstr "Parametri predefiniti"
+
+#, fuzzy
+msgid "Cleanup strategy"
+msgstr "Messaggi di pulizia"
 
 msgid "Cleanup when disk space is below"
 msgstr "Pulizia quando lo spazio su disco è inferiore a"
@@ -17880,6 +17891,10 @@ msgstr "Predefinito (%s)"
 
 msgid "Default BI visualization settings"
 msgstr "Impostazioni predefinite per la visualizzazione della BI"
+
+#, fuzzy
+msgid "Default cleanup parameters"
+msgstr "Parametri predefiniti"
 
 msgid "Default color"
 msgstr "Colore predefinito"
@@ -25853,6 +25868,10 @@ msgid "For specific SIDs"
 msgstr "Per i SID specifici"
 
 #, fuzzy
+msgid "For specific hosts"
+msgstr "Per i SID specifici"
+
+#, fuzzy
 msgid ""
 "For the host name field, a partial word search (infix search) is used — the "
 "entered text is searched, at any position, in the host name. Furthermore, "
@@ -27518,6 +27537,10 @@ msgstr "Inventario HW/SW"
 #, fuzzy
 msgid "HW/SW Inventory (Linux, Windows, Solaris, AIX)"
 msgstr "Hardware/Software-Inventario (Linux, Windows, Solaris, AIX)"
+
+#, fuzzy
+msgid "HW/SW Inventory cleanup"
+msgstr "Regole di inventario HW/SW"
 
 #, fuzzy
 msgid "HW/SW Inventory history"
@@ -39884,6 +39907,10 @@ msgstr "Abbinare i gruppi ospitanti"
 msgid "Match host labels"
 msgstr "Corrisponde alle etichette dell'host"
 
+#, fuzzy
+msgid "Match host names"
+msgstr "Corrisponde alle etichette dell'host"
+
 msgid "Match host tags"
 msgstr "Corrisponde ai tag dell'host"
 
@@ -43518,6 +43545,10 @@ msgid "No datasource defined."
 msgstr "Nessuna fonte di dati definita."
 
 #, fuzzy
+msgid "No defaults"
+msgstr "È predefinito"
+
+#, fuzzy
 msgid "No deprecated rule sets found."
 msgstr "Set di regole deprecate"
 
@@ -45907,6 +45938,9 @@ msgstr ""
 
 msgid "One RRD per host/service (saves disk IO, only with CMC)"
 msgstr "Un RRD per host/servizio (salva l'IO del disco, solo con CMC)"
+
+msgid "One condition needs to match (offensive)"
+msgstr ""
 
 msgid "One heartbeat every"
 msgstr "Un battito di cuore ogni"
@@ -49926,11 +49960,6 @@ msgstr ""
 "che la licenza venga estesa in tempo. Se la licenza è stata acquistata "
 "tramite il %s, si prega di contattarlo."
 
-msgid ""
-"Please contact your Checkmk administrator to ensure that your license is "
-"extended in time."
-msgstr ""
-
 msgid "Please contact your administrator."
 msgstr "Contattare l'amministratore."
 
@@ -53203,6 +53232,10 @@ msgstr "Rimuovere la registrazione TLS degli host selezionati"
 msgid "Remove Windows Firewall configuration if present"
 msgstr "Rimuovere la configurazione del firewall di Windows, se presente"
 
+#, fuzzy
+msgid "Remove abandoned host files older than"
+msgstr "Pulire i file host abbandonati più vecchi di"
+
 msgid "Remove acknowledgments"
 msgstr "Rimuovere i riconoscimenti"
 
@@ -53236,6 +53269,17 @@ msgstr "Rimuovere l'impostazione esplicita"
 
 msgid "Remove filter"
 msgstr "Rimuovi filtro"
+
+#, fuzzy
+msgid "Remove history entries older than"
+msgstr "Cancellare i file più vecchi di"
+
+msgid "Remove history entries right after"
+msgstr ""
+
+#, fuzzy
+msgid "Remove history entries which meet the following conditions"
+msgstr "Recuperare le informazioni sulle seguenti partizioni"
 
 #, fuzzy
 msgid "Remove name"
@@ -79595,6 +79639,10 @@ msgstr "Usa il seguente colore"
 msgid "Use the following credentials"
 msgstr "Usa le seguenti credenziali"
 
+#, fuzzy
+msgid "Use the following defaults"
+msgstr "Utilizzare i seguenti livelli"
+
 msgid "Use the following levels"
 msgstr "Utilizzare i seguenti livelli"
 
@@ -87103,6 +87151,10 @@ msgstr "voci"
 
 msgid "entries (max. 50)"
 msgstr ""
+
+#, fuzzy
+msgid "entry number"
+msgstr "Numero di serie"
 
 msgid "estimated duration"
 msgstr "durata stimata"

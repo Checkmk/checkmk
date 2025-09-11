@@ -9587,6 +9587,9 @@ msgstr "Zowel"
 msgid "Both - Display the information for both pod and container levels"
 msgstr "Beide - Toon de informatie voor beide, pod en container, niveaus"
 
+msgid "Both conditions must match (defensive)"
+msgstr ""
+
 msgid "Bottom"
 msgstr "Bodem"
 
@@ -13418,6 +13421,14 @@ msgstr "Berichten opruimen"
 #, fuzzy
 msgid "Cleanup of working directory"
 msgstr "Inactief opruimen van werknemer"
+
+#, fuzzy
+msgid "Cleanup parameters"
+msgstr "Modelparameters"
+
+#, fuzzy
+msgid "Cleanup strategy"
+msgstr "Berichten opruimen"
 
 msgid "Cleanup when disk space is below"
 msgstr "Opschonen wanneer schijfruimte minder is"
@@ -18053,6 +18064,10 @@ msgstr "Standaard (%s)"
 #, fuzzy
 msgid "Default BI visualization settings"
 msgstr "Standaard BI-visualisatie-instellingen"
+
+#, fuzzy
+msgid "Default cleanup parameters"
+msgstr "Modelparameters"
 
 msgid "Default color"
 msgstr "Standaard kleur"
@@ -26064,6 +26079,10 @@ msgid "For specific SIDs"
 msgstr "Voor specifieke SID's"
 
 #, fuzzy
+msgid "For specific hosts"
+msgstr "Voor specifieke SID's"
+
+#, fuzzy
 msgid ""
 "For the host name field, a partial word search (infix search) is used — the "
 "entered text is searched, at any position, in the host name. Furthermore, "
@@ -27750,6 +27769,10 @@ msgstr "HW/SW-inventaris"
 #, fuzzy
 msgid "HW/SW Inventory (Linux, Windows, Solaris, AIX)"
 msgstr "Hardware/Software-Inventarisatie (Linux, Windows, Solaris, AIX)"
+
+#, fuzzy
+msgid "HW/SW Inventory cleanup"
+msgstr "HW/SW-inventarisatieregels"
 
 #, fuzzy
 msgid "HW/SW Inventory history"
@@ -40213,6 +40236,10 @@ msgstr "Match gastgroepen"
 msgid "Match host labels"
 msgstr "Overeenkomende host labels"
 
+#, fuzzy
+msgid "Match host names"
+msgstr "Overeenkomende host labels"
+
 msgid "Match host tags"
 msgstr "Overeenkomende host tags"
 
@@ -43881,6 +43908,10 @@ msgid "No datasource defined."
 msgstr "Geen datasource gedefinieerd."
 
 #, fuzzy
+msgid "No defaults"
+msgstr "Is standaard"
+
+#, fuzzy
 msgid "No deprecated rule sets found."
 msgstr "Afgeschreven regelsets"
 
@@ -46298,6 +46329,9 @@ msgstr ""
 
 msgid "One RRD per host/service (saves disk IO, only with CMC)"
 msgstr "Eén RRD per host/service (spaart disk IO, alleen met CMC)"
+
+msgid "One condition needs to match (offensive)"
+msgstr ""
 
 msgid "One heartbeat every"
 msgstr "Een hartslag elke"
@@ -50348,11 +50382,6 @@ msgstr ""
 "licentie tijdig wordt verlengd. Als u uw licentie hebt gekocht via een %s, "
 "neem dan contact met hen op."
 
-msgid ""
-"Please contact your Checkmk administrator to ensure that your license is "
-"extended in time."
-msgstr ""
-
 msgid "Please contact your administrator."
 msgstr "Neem contact op met uw beheerder."
 
@@ -53651,6 +53680,10 @@ msgid "Remove Windows Firewall configuration if present"
 msgstr "Verwijder Windows Firewall configuratie indien aanwezig"
 
 #, fuzzy
+msgid "Remove abandoned host files older than"
+msgstr "Opruimen van achtergelaten host bestanden ouder dan"
+
+#, fuzzy
 msgid "Remove acknowledgments"
 msgstr "Bevestiging verwijderen"
 
@@ -53685,6 +53718,17 @@ msgstr "Expliciete instelling verwijderen"
 
 msgid "Remove filter"
 msgstr "Verwijder filter"
+
+#, fuzzy
+msgid "Remove history entries older than"
+msgstr "Wis bestanden ouder dan"
+
+msgid "Remove history entries right after"
+msgstr ""
+
+#, fuzzy
+msgid "Remove history entries which meet the following conditions"
+msgstr "Informatie opvragen over de volgende partities"
 
 #, fuzzy
 msgid "Remove name"
@@ -80274,6 +80318,10 @@ msgstr "Gebruik de volgende kleur"
 msgid "Use the following credentials"
 msgstr "Gebruik de volgende inloggegevens"
 
+#, fuzzy
+msgid "Use the following defaults"
+msgstr "Gebruik de volgende niveaus"
+
 msgid "Use the following levels"
 msgstr "Gebruik de volgende niveaus"
 
@@ -87840,6 +87888,10 @@ msgstr "inzendingen"
 
 msgid "entries (max. 50)"
 msgstr ""
+
+#, fuzzy
+msgid "entry number"
+msgstr "Serienummer"
 
 msgid "estimated duration"
 msgstr "geschatte looptijd"

@@ -9651,6 +9651,9 @@ msgid "Both - Display the information for both pod and container levels"
 msgstr ""
 "Ambos - Muestra la información de ambos niveles, del pod y del contenedor"
 
+msgid "Both conditions must match (defensive)"
+msgstr ""
+
 msgid "Bottom"
 msgstr "En el fondo"
 
@@ -13504,6 +13507,14 @@ msgstr "Mensajes de limpieza"
 #, fuzzy
 msgid "Cleanup of working directory"
 msgstr "IdleCleanupOfWorker"
+
+#, fuzzy
+msgid "Cleanup parameters"
+msgstr "Parámetros del modelo"
+
+#, fuzzy
+msgid "Cleanup strategy"
+msgstr "Mensajes de limpieza"
 
 msgid "Cleanup when disk space is below"
 msgstr "Limpieza cuando el espacio en disco es inferior a"
@@ -18171,6 +18182,10 @@ msgstr "Por defecto (%s)"
 #, fuzzy
 msgid "Default BI visualization settings"
 msgstr "Configuración por defecto de la visualización de BI"
+
+#, fuzzy
+msgid "Default cleanup parameters"
+msgstr "Parámetros del modelo"
 
 msgid "Default color"
 msgstr "Color por defecto"
@@ -26261,6 +26276,10 @@ msgid "For specific SIDs"
 msgstr "Para las DIM específicas"
 
 #, fuzzy
+msgid "For specific hosts"
+msgstr "Para las DIM específicas"
+
+#, fuzzy
 msgid ""
 "For the host name field, a partial word search (infix search) is used — the "
 "entered text is searched, at any position, in the host name. Furthermore, "
@@ -27962,6 +27981,10 @@ msgstr "Inventario de HW/SW"
 #, fuzzy
 msgid "HW/SW Inventory (Linux, Windows, Solaris, AIX)"
 msgstr "Inventario de hardware/software (Linux, Windows, Solaris, AIX)"
+
+#, fuzzy
+msgid "HW/SW Inventory cleanup"
+msgstr "reglas de inventario de HW/SW"
 
 #, fuzzy
 msgid "HW/SW Inventory history"
@@ -40521,6 +40544,10 @@ msgstr "coincidir con Grupos de hosts"
 msgid "Match host labels"
 msgstr "Coincidir con las labels de los hosts"
 
+#, fuzzy
+msgid "Match host names"
+msgstr "Coincidir con las labels de los hosts"
+
 msgid "Match host tags"
 msgstr "Coincidir con las etiquetas de los hosts"
 
@@ -44219,6 +44246,10 @@ msgid "No datasource defined."
 msgstr "No se ha definido ninguna fuente de datos."
 
 #, fuzzy
+msgid "No defaults"
+msgstr "Es por defecto"
+
+#, fuzzy
 msgid "No deprecated rule sets found."
 msgstr "Juegos de reglas obsoletos"
 
@@ -46661,6 +46692,9 @@ msgstr ""
 
 msgid "One RRD per host/service (saves disk IO, only with CMC)"
 msgstr "Un RRD por host/servicio (ahorra IO de disco, sólo con CMC)"
+
+msgid "One condition needs to match (offensive)"
+msgstr ""
 
 msgid "One heartbeat every"
 msgstr "Un pulso cada"
@@ -50726,13 +50760,6 @@ msgstr ""
 "de que su licencia se amplía a tiempo. Si adquirió su licencia a través de "
 "%s, póngase en contacto con ellos."
 
-msgid ""
-"Please contact your Checkmk administrator to ensure that your license is "
-"extended in time."
-msgstr ""
-"Póngase en contacto con su administrador de Checkmk para asegurarse de que "
-"su licencia se amplía a tiempo."
-
 msgid "Please contact your administrator."
 msgstr "Póngase en contacto con su administrador."
 
@@ -54066,6 +54093,10 @@ msgid "Remove Windows Firewall configuration if present"
 msgstr "Eliminar la configuración del Firewall de Windows si está presente"
 
 #, fuzzy
+msgid "Remove abandoned host files older than"
+msgstr "Limpiar los archivos de host abandonados más antiguos que"
+
+#, fuzzy
 msgid "Remove acknowledgments"
 msgstr "Eliminar el acuse de recibo"
 
@@ -54100,6 +54131,17 @@ msgstr "Eliminar el ajuste explícito"
 
 msgid "Remove filter"
 msgstr "Eliminar el filtro"
+
+#, fuzzy
+msgid "Remove history entries older than"
+msgstr "Eliminar los archivos más antiguos que"
+
+msgid "Remove history entries right after"
+msgstr ""
+
+#, fuzzy
+msgid "Remove history entries which meet the following conditions"
+msgstr "Recuperar información sobre las siguientes particiones"
 
 #, fuzzy
 msgid "Remove name"
@@ -80932,6 +80974,10 @@ msgstr "Utilice el siguiente color"
 msgid "Use the following credentials"
 msgstr "Utilice las siguientes credenciales"
 
+#, fuzzy
+msgid "Use the following defaults"
+msgstr "Utilice los siguientes niveles"
+
 msgid "Use the following levels"
 msgstr "Utilice los siguientes niveles"
 
@@ -88544,6 +88590,10 @@ msgstr "entradas"
 msgid "entries (max. 50)"
 msgstr "inscripciones (máx. 50)"
 
+#, fuzzy
+msgid "entry number"
+msgstr "Número de serie"
+
 msgid "estimated duration"
 msgstr "duración estimada"
 
@@ -90236,6 +90286,13 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usar SSL para la conexión."
+
+#~ msgid ""
+#~ "Please contact your Checkmk administrator to ensure that your license is "
+#~ "extended in time."
+#~ msgstr ""
+#~ "Póngase en contacto con su administrador de Checkmk para asegurarse de "
+#~ "que su licencia se amplía a tiempo."
 
 #, fuzzy
 #~ msgid "GUI extensions (deprecated)"

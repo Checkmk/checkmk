@@ -26,15 +26,27 @@ vue_gettext_bin.vue_gettext_compile_binary(
 
 EXTRACTED_LOCALE_OUTS = [
     "locale/messages.pot",
-    "locale/en.po",
     "locale/de.po",
+    "locale/en.po",
+    "locale/es.po",
     "locale/fr.po",
+    "locale/it.po",
+    "locale/ja.po",
+    "locale/nl.po",
+    "locale/pt_PT.po",
+    "locale/ro.po",
 ]
 
 LOCALE_OUTS = [
-    "src/assets/locale/en.json",
     "src/assets/locale/de.json",
+    "src/assets/locale/en.json",
+    "src/assets/locale/es.json",
     "src/assets/locale/fr.json",
+    "src/assets/locale/it.json",
+    "src/assets/locale/ja.json",
+    "src/assets/locale/nl.json",
+    "src/assets/locale/pt_PT.json",
+    "src/assets/locale/ro.json",
 ]
 
 js_run_binary(

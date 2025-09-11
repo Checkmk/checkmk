@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable, Mapping
-from typing import Any
+from typing import Any, override
 
 from cmk.bi.lib import ABCBISearcher, BIHostData, BIHostSearchMatch, BIServiceSearchMatch
 from cmk.utils.labels import LabelGroups
@@ -46,6 +46,7 @@ class BISearcher(ABCBISearcher):
         self._host_regex_match_cache.clear()
         self._host_regex_miss_cache.clear()
 
+    @override
     def search_hosts(self, conditions: dict) -> list[BIHostSearchMatch]:
         hosts, matched_re_groups = self.filter_host_choice(
             list(self.hosts.values()), conditions["host_choice"]
@@ -55,6 +56,7 @@ class BISearcher(ABCBISearcher):
         matched_hosts = self.filter_host_labels(matched_hosts, conditions["host_label_groups"])
         return [BIHostSearchMatch(x, matched_re_groups[x.name]) for x in matched_hosts]
 
+    @override
     def filter_host_choice(
         self,
         hosts: list[BIHostData],
@@ -74,6 +76,7 @@ class BISearcher(ABCBISearcher):
     def _host_match_groups(self, hosts: list[BIHostData], match: str = "name") -> dict[str, tuple]:
         return {host.name: (getattr(host, match),) for host in hosts}
 
+    @override
     def get_host_name_matches(
         self,
         hosts: list[BIHostData],
@@ -140,6 +143,7 @@ class BISearcher(ABCBISearcher):
             matched_re_groups[host.name] = tuple(match.groups())
         return matched_hosts, matched_re_groups
 
+    @override
     def get_service_description_matches(
         self,
         host_matches: list[BIHostSearchMatch],
@@ -155,6 +159,7 @@ class BISearcher(ABCBISearcher):
                     )
         return matched_services
 
+    @override
     def search_services(self, conditions: dict) -> list[BIServiceSearchMatch]:
         host_matches: list[BIHostSearchMatch] = self.search_hosts(conditions)
         service_matches = self.get_service_description_matches(
@@ -165,6 +170,7 @@ class BISearcher(ABCBISearcher):
         )
         return service_matches
 
+    @override
     def filter_host_folder(
         self,
         hosts: Iterable[BIHostData],
@@ -176,6 +182,7 @@ class BISearcher(ABCBISearcher):
         folder_path = f"{folder_path}/"
         return (x for x in hosts if x.folder.startswith(folder_path))
 
+    @override
     def filter_host_tags(
         self,
         hosts: Iterable[BIHostData],
@@ -194,6 +201,7 @@ class BISearcher(ABCBISearcher):
             )
         )
 
+    @override
     def filter_host_labels(
         self, hosts: Iterable[BIHostData], required_label_groups: LabelGroups
     ) -> Iterable[BIHostData]:

@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Any, Literal, NamedTuple, NotRequired, TypedDict
+from typing import Any, Literal, NamedTuple, NotRequired, override, TypedDict
 
 from marshmallow import pre_dump
 from marshmallow_oneofschema import OneOfSchema
@@ -102,6 +102,7 @@ class CompiledAggrTree(TypedDict):
 
 
 class BICompiledLeaf(ABCBICompiledNode):
+    @override
     @classmethod
     def kind(cls) -> CompiledNodeKind:
         return "leaf"
@@ -119,9 +120,11 @@ class BICompiledLeaf(ABCBICompiledNode):
         self.host_name = host_name
         self.service_description = service_description
 
+    @override
     def _get_comparable_name(self) -> str:
         return ":".join([self.site_id or "", self.host_name, self.service_description or ""])
 
+    @override
     def get_identifiers(self, parent_id: tuple, used_ids: set[tuple]) -> list[NodeIdentifierInfo]:
         own_id = (1, self.host_name, self.service_description)
         while (*parent_id, own_id) in used_ids:
@@ -135,11 +138,13 @@ class BICompiledLeaf(ABCBICompiledNode):
         self.host_name = schema_config["host_name"]
         self.service_description = schema_config["service_description"]
 
+    @override
     def services_of_host(self, host_name: HostName) -> set[ServiceName]:
         if host_name == self.host_name and self.service_description:
             return {self.service_description}
         return set()
 
+    @override
     def compile_postprocess(
         self,
         bi_branch_root: ABCBICompiledNode,
@@ -148,16 +153,20 @@ class BICompiledLeaf(ABCBICompiledNode):
     ) -> list[ABCBICompiledNode]:
         return [self]
 
+    @override
     @instance_method_lru_cache()
     def required_elements(self) -> set[RequiredBIElement]:
         return {RequiredBIElement(self.site_id, self.host_name, self.service_description)}
 
+    @override
     def __str__(self) -> str:
         return f"BICompiledLeaf[Site {self.site_id}, Host: {self.host_name}, Service {self.service_description}]"
 
+    @override
     def __repr__(self):
         return f"{self} / frozen: {self.frozen_marker}"
 
+    @override
     def compute(
         self,
         computation_options: BIAggregationComputationOptions,
@@ -268,6 +277,7 @@ class BICompiledLeaf(ABCBICompiledNode):
     def schema(cls) -> type[BICompiledLeafSchema]:
         return BICompiledLeafSchema
 
+    @override
     def serialize(self):
         return {
             "type": self.kind(),
@@ -309,6 +319,7 @@ class BICompiledLeafSchema(Schema):
 
 
 class BICompiledRule(ABCBICompiledNode):
+    @override
     @classmethod
     def kind(cls) -> CompiledNodeKind:
         return "rule"
@@ -332,6 +343,7 @@ class BICompiledRule(ABCBICompiledNode):
         self.aggregation_function = aggregation_function
         self.node_visualization = node_visualization
 
+    @override
     def __str__(self) -> str:
         return "BICompiledRule[%s, %d rules, %d leaves %d remaining]" % (
             self.properties.title,
@@ -340,12 +352,15 @@ class BICompiledRule(ABCBICompiledNode):
             len([x for x in self.nodes if x.kind() == "remaining"]),
         )
 
+    @override
     def __repr__(self):
         return f"repr(self) / frozen: {self.frozen_marker}"
 
+    @override
     def _get_comparable_name(self) -> str:
         return self.properties.title
 
+    @override
     def get_identifiers(self, parent_id: tuple, used_ids: set[tuple]) -> list[NodeIdentifierInfo]:
         own_id = (1, self.properties.title)
         while (*parent_id, own_id) in used_ids:
@@ -357,6 +372,7 @@ class BICompiledRule(ABCBICompiledNode):
             idents.extend(node.get_identifiers(my_id, used_ids))
         return idents
 
+    @override
     def compile_postprocess(
         self,
         bi_branch_root: ABCBICompiledNode,
@@ -373,10 +389,12 @@ class BICompiledRule(ABCBICompiledNode):
         self.required_elements.cache_clear()  # type: ignore[attr-defined]
         return [self]
 
+    @override
     @instance_method_lru_cache()
     def required_elements(self) -> set[RequiredBIElement]:
         return {result for node in self.nodes for result in node.required_elements()}
 
+    @override
     def services_of_host(self, host_name: HostName) -> set[ServiceName]:
         return {result for node in self.nodes for result in node.services_of_host(host_name)}
 
@@ -385,6 +403,7 @@ class BICompiledRule(ABCBICompiledNode):
             BIHostSpec(element.site_id, element.host_name) for element in self.required_elements()
         }
 
+    @override
     def compute(
         self,
         computation_options: BIAggregationComputationOptions,
@@ -459,6 +478,7 @@ class BICompiledRule(ABCBICompiledNode):
     def schema(cls) -> type[BICompiledRuleSchema]:
         return BICompiledRuleSchema
 
+    @override
     def serialize(self):
         return {
             "id": self.id,
@@ -506,6 +526,7 @@ class BICompiledRuleSchema(Schema):
 class BIRemainingResult(ABCBICompiledNode):
     # The BIRemainingResult lacks a serializable schema, since it is resolved into
     # BICompiledLeaf(s) during the compilation
+    @override
     @classmethod
     def kind(cls) -> CompiledNodeKind:
         return "remaining"
@@ -514,9 +535,11 @@ class BIRemainingResult(ABCBICompiledNode):
         super().__init__()
         self.host_names = host_names
 
+    @override
     def _get_comparable_name(self) -> str:
         return ""
 
+    @override
     def compile_postprocess(
         self,
         bi_branch_root: ABCBICompiledNode,
@@ -538,13 +561,16 @@ class BIRemainingResult(ABCBICompiledNode):
         postprocessed_nodes.sort()
         return postprocessed_nodes
 
+    @override
     @instance_method_lru_cache()
     def required_elements(self) -> set[RequiredBIElement]:
         return set()
 
+    @override
     def services_of_host(self, host_name: HostName) -> set[ServiceName]:
         return set()
 
+    @override
     def compute(
         self,
         computation_options: BIAggregationComputationOptions,
@@ -553,6 +579,7 @@ class BIRemainingResult(ABCBICompiledNode):
     ) -> NodeResultBundle | None:
         return None
 
+    @override
     def serialize(self) -> dict[str, Any]:
         return {}
 
@@ -725,9 +752,11 @@ class BICompiledAggregation:
             "groups": self.groups.serialize(),
         }
 
+    @override
     def __str__(self):
         return f"Aggregation: {self.id}, NumBranches: {len(self.branches)}"
 
+    @override
     def __repr__(self):
         return f"Aggregation: {self.id}, NumBranches: {len(self.branches)}"
 
@@ -758,5 +787,6 @@ class BIResultSchema(OneOfSchema):
         "rule": BICompiledRuleSchema,
     }
 
+    @override
     def get_obj_type(self, obj: ABCBICompiledNode) -> str:
         return obj.kind()

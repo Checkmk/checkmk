@@ -5,7 +5,7 @@
 
 from abc import abstractmethod
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, override
 
 from cmk.bi.lib import (
     ABCBICompiledNode,
@@ -41,6 +41,7 @@ class BIRuleProperties(ABCWithSchema):
         self.docu_url = properties_config["docu_url"]
         self.icon = properties_config["icon"]
 
+    @override
     @classmethod
     def schema(cls) -> type["BIRulePropertiesSchema"]:
         return BIRulePropertiesSchema
@@ -66,6 +67,7 @@ class BIRuleComputationOptions(ABCWithSchema):
         super().__init__()
         self.disabled = computation_config["disabled"]
 
+    @override
     @classmethod
     def schema(cls) -> type[BIRuleComputationOptionsSchema]:
         return BIRuleComputationOptionsSchema
@@ -95,6 +97,7 @@ class ABCBIRule(ABCWithSchema):
     def title(self) -> str:
         raise NotImplementedError()
 
+    @override
     @classmethod
     @abstractmethod
     def schema(cls) -> type[Schema]:
@@ -125,9 +128,11 @@ class ABCBIRule(ABCWithSchema):
 
 
 class BIRuleIDRegistry(Registry[ABCBIRule]):
+    @override
     def plugin_name(self, instance: ABCBIRule) -> str:
         return instance.id
 
+    @override
     def clear(self) -> None:
         self._entries.clear()
 

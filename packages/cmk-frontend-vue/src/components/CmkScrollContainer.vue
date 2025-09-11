@@ -10,7 +10,7 @@ const scrollContainerVariants = cva('', {
   variants: {
     type: {
       inner: '', // Inner style is default and defined in global css via cmk-vue-app class
-      outer: 'cmk-scroll-container--outer'
+      outer: 'scroll-container--outer'
     }
   },
   defaultVariants: {
@@ -35,17 +35,17 @@ const { type, maxHeight = '100%', height = '100%' } = defineProps<ScrollContaine
 </template>
 
 <style scoped>
-.cmk-scroll-container--outer::-webkit-scrollbar {
+.scroll-container--outer::-webkit-scrollbar {
   width: 10px;
 }
 
-.cmk-scroll-container--outer::-webkit-scrollbar-track {
+.scroll-container--outer::-webkit-scrollbar-track {
   background: transparent;
   border-top-right-radius: 4px;
   border-bottom-right-radius: 4px;
 }
 
-.cmk-scroll-container--outer::-webkit-scrollbar-thumb {
+.scroll-container--outer::-webkit-scrollbar-thumb {
   background-color: var(--scrollbar-color);
   border-radius: 16px;
   border: 3px solid transparent;

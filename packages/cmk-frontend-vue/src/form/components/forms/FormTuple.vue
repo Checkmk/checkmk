@@ -79,7 +79,6 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 </template>
 
 <style scoped>
-/* stylelint-disable checkmk/vue-bem-naming-convention */
 .form-tuple {
   display: flex;
 }

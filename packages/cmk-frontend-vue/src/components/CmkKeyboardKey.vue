@@ -9,9 +9,9 @@ import { type VariantProps, cva } from 'class-variance-authority'
 const propsCva = cva('', {
   variants: {
     size: {
-      small: 'cmk-keyboard-key--size-small',
-      medium: 'cmk-keyboard-key--size-medium',
-      large: 'cmk-keyboard-key--size-large'
+      small: 'cmk-keyboard-key-size-small',
+      medium: 'cmk-keyboard-key-size-medium',
+      large: 'cmk-keyboard-key-size-large'
     }
   },
   defaultVariants: {
@@ -103,28 +103,27 @@ function getKeyClass(): string {
   }
 }
 
-.cmk-keyboard-key--size-small {
+.cmk-keyboard-key-size-small {
   font-size: 10px;
   line-height: 10px;
   padding: 1px 3px;
   min-width: 8px;
 }
 
-.cmk-keyboard-key--size-medium {
+.cmk-keyboard-key-size-medium {
   font-size: 12px;
   line-height: 12px;
   padding: 2px 4px;
   min-width: 10px;
 }
 
-.cmk-keyboard-key--size-large {
+.cmk-keyboard-key-size-large {
   font-size: 14px;
   line-height: 14px;
   padding: 4px 5px;
   min-width: 12px;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .unicode {
   overflow: hidden;
   position: relative;
@@ -134,36 +133,33 @@ function getKeyClass(): string {
     margin: 0 0 2px;
   }
 
-  &.cmk-keyboard-key--size-small {
+  &.cmk-keyboard-key-size-small {
     font-size: 16px;
     top: 1px;
   }
 
-  &.cmk-keyboard-key--size-medium {
+  &.cmk-keyboard-key-size-medium {
     font-size: 20px;
     top: 2px;
   }
 
-  &.cmk-keyboard-key--size-large {
+  &.cmk-keyboard-key-size-large {
     font-size: 24px;
     top: 3px;
   }
 
-  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   &.arrow-left,
   &.arrow-right {
     padding-left: 0;
     padding-right: 0;
   }
 
-  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   &.enter {
     span {
       top: 2px;
     }
   }
 
-  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   &.backspace {
     padding-left: 2px;
     padding-right: 2px;

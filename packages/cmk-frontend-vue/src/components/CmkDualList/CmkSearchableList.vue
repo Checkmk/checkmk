@@ -136,19 +136,16 @@ watch(
   flex-direction: column;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .cmk-searchable-list-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .cmk-searchable-list-header .cmk-searchable-list-title {
   font-weight: bold;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .cmk-searchable-list-search-input-wrapper {
   position: relative;
   display: flex;
@@ -156,14 +153,12 @@ watch(
   padding: 0;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .cmk-searchable-list-search-input-wrapper .icon {
   position: absolute;
   top: 0;
   right: 0;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .cmk-searchable-list-search-input-wrapper .icon img {
   content: var(--icon-search);
   cursor: pointer;
@@ -179,7 +174,6 @@ watch(
   box-sizing: border-box;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .cmk-searchable-list-no-element-in-select {
   display: flex;
   justify-content: center;

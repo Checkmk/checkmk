@@ -15,9 +15,9 @@ const { _t } = usei18n()
 </script>
 
 <template>
-  <div class="unified-search-empty-start">
-    <CmkIcon class="unified-search-empty-start__icon" name="search" size="xxxlarge"></CmkIcon>
-    <CmkHeading class="unified-search-empty-start__heading" type="h2">{{
+  <div class="cmk-unified-search-empty-start">
+    <CmkIcon class="cmk-unified-search-empty-start-icon" name="search" size="xxxlarge"></CmkIcon>
+    <CmkHeading class="cmk-unified-search-empty-start-heading" type="h2">{{
       _t('Find rules, hosts, dashboards, settings ...')
     }}</CmkHeading>
     <CmkParagraph
@@ -31,7 +31,7 @@ const { _t } = usei18n()
 </template>
 
 <style scoped>
-.unified-search-empty-start {
+.cmk-unified-search-empty-start {
   opacity: 0.8;
   display: flex;
   flex-direction: column;
@@ -39,7 +39,7 @@ const { _t } = usei18n()
   justify-content: center;
   height: 100%;
 
-  .unified-search-empty-start__icon {
+  .cmk-unified-search-empty-start-icon {
     margin-top: calc(-2 * var(--dimension-10));
     margin-bottom: var(--dimension-10);
     opacity: 0.1;
@@ -49,7 +49,7 @@ const { _t } = usei18n()
     }
   }
 
-  .unified-search-empty-start__heading {
+  .cmk-unified-search-empty-start-heading {
     margin-bottom: var(--dimension-5);
   }
 }

@@ -104,14 +104,12 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 td.title {
   width: 240px;
   min-width: 240px;
   max-width: 240px;
   vertical-align: top;
 
-  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   span.fixed_content_width {
     width: 230px;
     display: inline-block;
@@ -120,20 +118,17 @@ td.title {
   }
 
   label {
-    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
     &.show_pointer {
       cursor: pointer;
     }
   }
 
-  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   span.hidden_checkbox_size {
     width: 13px;
     display: inline-block;
   }
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 td.value {
   width: 100%;
   vertical-align: top;

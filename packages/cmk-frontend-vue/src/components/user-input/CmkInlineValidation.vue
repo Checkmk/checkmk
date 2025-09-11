@@ -12,10 +12,7 @@ const props = defineProps<{
 </script>
 
 <template>
-  <div
-    v-if="props.validation !== undefined && props.validation.length > 0"
-    class="cmk-inline-validation"
-  >
+  <div v-if="props.validation !== undefined && props.validation.length > 0" class="cmk-validation">
     <CmkIcon name="alert_crit" variant="inline" size="large" />
     <div>
       <span v-for="message in props.validation" :key="message">{{ message }}</span>
@@ -24,7 +21,7 @@ const props = defineProps<{
 </template>
 
 <style scoped>
-div.cmk-inline-validation {
+div.cmk-validation {
   margin-top: var(--spacing);
   padding: 8px 12px;
   background-color: var(--error-msg-bg-color);

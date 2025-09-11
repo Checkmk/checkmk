@@ -31,7 +31,7 @@ function toggle() {
     :aria-controls="'cmk-accordion-content-'.concat(props.value)"
     :aria-expanded="isItemExpanded(props.value)"
     :aria-label="_t('Toggle accordion item %{item}', { item: props.value })"
-    class="cmk-accordion-trigger__button"
+    class="cmk-accordion-trigger-button"
     @click="toggle"
     @keydpress.enter="toggle"
     @keydpress.space="toggle"
@@ -41,7 +41,7 @@ function toggle() {
 </template>
 
 <style scoped>
-.cmk-accordion-trigger__button {
+.cmk-accordion-trigger-button {
   padding: 20px;
   margin: 0;
   left: 0;

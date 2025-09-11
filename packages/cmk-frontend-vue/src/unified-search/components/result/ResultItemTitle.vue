@@ -17,7 +17,6 @@ export default defineComponent({
 </script>
 
 <style scoped>
-/* stylelint-disable checkmk/vue-bem-naming-convention */
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
 :deep(.highlight-query) {
   display: inline-block;

@@ -57,7 +57,6 @@ li {
       border: 1px solid var(--success);
     }
 
-    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
     &:hover,
     &.active {
       color: var(--success);

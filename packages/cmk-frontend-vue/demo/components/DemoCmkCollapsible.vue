@@ -16,13 +16,13 @@ const open = ref(false)
 </script>
 
 <template>
-  <div class="demo-cmk-collapsible__title_container">
+  <div class="demo-container">
     <CmkCollapsibleTitle
       :title="'Collapsible Title'"
       :side-title="'Side Title'"
       :open="open"
       :help_text="'Some help text'"
-      class="demo-cmk-collapsible__collapsible"
+      class="collapsible"
       @toggle-open="open = !open"
     />
     <CmkCollapsible :open="open">
@@ -32,11 +32,11 @@ const open = ref(false)
 </template>
 
 <style scoped>
-.demo-cmk-collapsible__title-container {
+.demo-container {
   min-width: 400px;
 }
 
-.demo-cmk-collapsible__collapsible {
+.collapsible {
   width: 100%;
 }
 </style>

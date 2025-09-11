@@ -30,12 +30,12 @@ watch(
 <template>
   <DialogRoot :open="open">
     <DialogPortal>
-      <DialogOverlay class="cmk-slide-in__overlay" />
+      <DialogOverlay class="slide-in__overlay" />
       <!-- As this element exists outside our vue app hierarchy, we manually apply our global Vue CSS class -->
       <!-- @vue-ignore aria-describedby it not a property of DialogContent -->
       <DialogContent
         ref="dialogContentRef"
-        class="cmk-vue-app cmk-slide-in__container"
+        class="cmk-vue-app slide-in__container"
         :aria-describedby="undefined"
         @escape-key-down="emit('close')"
         @open-auto-focus.prevent
@@ -48,7 +48,7 @@ watch(
 </template>
 
 <style scoped>
-.cmk-slide-in__container {
+.slide-in__container {
   width: 80%;
   max-width: 1024px;
   display: flex;
@@ -62,23 +62,23 @@ watch(
   background: var(--default-bg-color);
 
   &[data-state='open'] {
-    animation: cmk-slide-in__container-show 0.2s ease-in-out;
+    animation: slide-in__container-show 0.2s ease-in-out;
   }
 
   &[data-state='closed'] {
-    animation: cmk-slide-in__container-hide 0.2s ease-in-out;
+    animation: slide-in__container-hide 0.2s ease-in-out;
   }
 }
 
 /* Cannot use var() here, see https://drafts.csswg.org/css-env-1/ */
 @media screen and (width <= 1024px) {
-  .cmk-slide-in__container {
+  .slide-in__container {
     width: 100%;
     max-width: 100%;
   }
 }
 
-@keyframes cmk-slide-in__container-show {
+@keyframes slide-in__container-show {
   from {
     opacity: 0;
     transform: translate(50%, 0%);
@@ -90,7 +90,7 @@ watch(
   }
 }
 
-@keyframes cmk-slide-in__container-hide {
+@keyframes slide-in__container-hide {
   from {
     opacity: 1;
     transform: translate(0%, 0%);
@@ -102,14 +102,14 @@ watch(
   }
 }
 
-.cmk-slide-in__overlay {
+.slide-in__overlay {
   backdrop-filter: blur(1.5px);
   position: fixed;
   inset: 0;
-  animation: cmk-slide-in__overlay-show 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  animation: slide-in__overlay-show 150ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes cmk-slide-in__overlay-show {
+@keyframes slide-in__overlay-show {
   from {
     opacity: 0;
   }

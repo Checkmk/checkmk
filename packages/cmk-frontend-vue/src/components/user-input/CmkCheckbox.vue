@@ -32,8 +32,8 @@ const { padding = 'both', label, disabled = false } = defineProps<CmkCheckboxPro
     <label
       class="cmk-checkbox"
       :class="{
-        'cmk-checkbox__pad-top': padding !== 'bottom',
-        'cmk-checkbox__pad-bottom': padding !== 'top',
+        'cmk-checkbox__pad_top': padding !== 'bottom',
+        'cmk-checkbox__pad_bottom': padding !== 'top',
         'cmk-checkbox__disabled': disabled
       }"
     >
@@ -68,11 +68,11 @@ span {
   cursor: pointer;
   display: flex;
 
-  &.cmk-checkbox__pad-top {
+  &.cmk-checkbox__pad_top {
     padding-top: 2px;
   }
 
-  &.cmk-checkbox__pad-bottom {
+  &.cmk-checkbox__pad_bottom {
     padding-bottom: 2px;
   }
 
@@ -118,7 +118,6 @@ span {
     margin-left: var(--spacing-half);
   }
 
-  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   .nowrap {
     white-space: nowrap;
   }

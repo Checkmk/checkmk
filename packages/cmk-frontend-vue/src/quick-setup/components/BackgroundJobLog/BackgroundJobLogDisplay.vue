@@ -33,13 +33,13 @@ const getIcon = (step: LogStep) => {
       <CmkIcon :name="getIcon(item)" variant="inline" size="medium" /> {{ item.title }}
     </li>
     <li v-if="!!props.displayLoading">
-      <CmkLoading class="qs-background-job-log-display__loading-dots" />
+      <CmkLoading class="qs-background-job-loading-dots" />
     </li>
   </ul>
 </template>
 
 <style scoped>
-.qs-background-job-log-display__loading-dots {
+.qs-background-job-loading-dots {
   padding-left: 25px;
 }
 

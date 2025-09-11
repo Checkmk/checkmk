@@ -314,7 +314,6 @@ function getInitStep() {
 </template>
 
 <style scoped>
-/* stylelint-disable checkmk/vue-bem-naming-convention */
 .select-heading {
   margin-top: var(--dimension-5);
   margin-bottom: var(--dimension-4);

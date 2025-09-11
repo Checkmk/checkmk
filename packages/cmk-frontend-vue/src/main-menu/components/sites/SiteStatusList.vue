@@ -117,18 +117,15 @@ immediateWatch(
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .cmk-changes-sites {
   margin-top: var(--dimension-7);
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .cmk-changes-site-single {
   background: var(--ux-theme-3);
   padding: var(--dimension-4);
   border-radius: var(--border-radius);
 
-  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   .cmk-changes-site-single-title {
     color: var(--font-color);
     font-weight: var(--font-weight-bold);

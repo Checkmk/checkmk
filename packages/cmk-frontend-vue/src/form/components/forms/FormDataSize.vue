@@ -62,19 +62,16 @@ const magnitudeOptions = computed(() => {
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .no-spinner::-webkit-outer-spin-button,
 .no-spinner::-webkit-inner-spin-button {
   appearance: none;
   margin: 0;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 input.number {
   width: 5.8ex;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .no-spinner[type='number'] {
   appearance: textfield;
 }

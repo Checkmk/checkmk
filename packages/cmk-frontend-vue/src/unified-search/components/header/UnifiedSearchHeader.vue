@@ -182,8 +182,6 @@ const getSearchInputPlaceholder = computed(() => {
   border-bottom: 1px solid var(--ux-theme-3);
 }
 
-/* stylelint-disable checkmk/vue-bem-naming-convention */
-
 .unified-search-input-panel {
   display: flex;
   flex-direction: row;

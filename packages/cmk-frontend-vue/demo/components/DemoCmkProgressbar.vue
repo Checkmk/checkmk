@@ -115,7 +115,7 @@ onMounted(() => {
     <CmkButton @click="randomValue">Generate random value (cur. {{ value }})</CmkButton>
     <br /><br /><br />
   </div>
-  <div class="demo-cmk-progressbar">
+  <div class="progress-bar">
     <CmkProgressbar
       :value="value"
       :size="sizeSelected"
@@ -133,7 +133,7 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.demo-cmk-progressbar {
+.progress-bar {
   width: 100%;
   height: 20px;
 }

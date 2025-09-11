@@ -152,7 +152,6 @@ const provideri18n: Record<QueryProvider, string> = {
 </template>
 
 <style scoped>
-/* stylelint-disable checkmk/vue-bem-naming-convention */
 .unified-search-provider-switch {
   background: var(--ux-theme-7);
   height: 100%;

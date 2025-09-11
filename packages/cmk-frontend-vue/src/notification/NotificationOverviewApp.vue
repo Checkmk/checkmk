@@ -67,25 +67,21 @@ function toggleContent() {
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .notification-overview__fallback-warning {
   margin: 8px 0 24px;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .notification-overview__container {
   display: flex;
   margin-bottom: 24px;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .notification-overview__header {
   margin: 0 0 12px;
   font-size: var(--font-size-normal);
   cursor: pointer;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .notification-overview__stats-container {
   max-width: min-content;
 }

@@ -125,8 +125,8 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 
 <template>
   <div
-    class="form-cascading-single-choice"
-    :class="{ 'form-cascading-single-choice__horizontal': props.spec.layout === 'horizontal' }"
+    class="form_cascading_single_choice"
+    :class="{ form_cascading_single_choice__horizontal: props.spec.layout === 'horizontal' }"
   >
     <div>
       <FormLabel v-if="$props.spec.label" :for="componentId">
@@ -138,7 +138,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
         <ToggleButtonGroup
           v-model="selectedOption"
           :options="buttonGroupButtons"
-          class="form-cascading-single-choice__button-group"
+          class="form_cascading_single_choice__button_group"
         />
       </template>
       <template v-else>
@@ -181,15 +181,15 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 </template>
 
 <style scoped>
-.form-cascading-single-choice {
+.form_cascading_single_choice {
   display: flex;
   flex-direction: column;
 
-  &.form-cascading-single-choice__horizontal {
+  &.form_cascading_single_choice__horizontal {
     flex-direction: row;
   }
 
-  .form-cascading-single-choice__button-group {
+  .form_cascading_single_choice__button_group {
     display: inline-block;
   }
 }

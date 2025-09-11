@@ -199,12 +199,10 @@ const truncatedButtonLabel = computed(() =>
     color: #888;
     margin: 0 3px 0 10px;
 
-    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
     &.rotated {
       transform: rotate(180deg);
     }
 
-    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
     &.disabled {
       opacity: 0.4;
     }

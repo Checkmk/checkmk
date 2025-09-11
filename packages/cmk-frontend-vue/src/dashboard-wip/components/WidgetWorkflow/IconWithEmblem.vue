@@ -19,14 +19,12 @@ defineProps<{ icon: string; icon_emblem?: string | undefined }>()
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .icon-with-emblem__icon_emblem {
   position: absolute;
   bottom: -5px;
   right: -5px;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .icon-with-emblem__wrapper {
   position: relative;
   flex-shrink: 0;

@@ -77,7 +77,6 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 span.embedded_title {
   margin-right: 3px;
 }

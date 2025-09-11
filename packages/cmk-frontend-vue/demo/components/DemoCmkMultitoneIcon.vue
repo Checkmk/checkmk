@@ -103,7 +103,7 @@ const toneSuggestions = [
     />
   </div>
 
-  <div class="demo-cmk-multitone-icon">
+  <div class="icon">
     <CmkMultitoneIcon
       :name="icon"
       :primary-color="primaryTone"
@@ -114,7 +114,7 @@ const toneSuggestions = [
 </template>
 
 <style scoped>
-.demo-cmk-multitone-icon {
+.icon {
   width: 100%;
   height: auto;
   display: flex;

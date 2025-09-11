@@ -72,14 +72,12 @@ tr {
   padding-bottom: 4px;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 td.group_title {
   width: 240px;
   min-width: 240px;
   max-width: 240px;
   vertical-align: top;
 
-  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   span.fixed_content_width {
     width: 230px;
     display: inline-block;
@@ -88,7 +86,6 @@ td.group_title {
   }
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 td.value {
   width: 100%;
   vertical-align: top;

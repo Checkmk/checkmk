@@ -1,11 +1,27 @@
-load("@rules_pkg//:pkg.bzl", "pkg_zip")
-load("@rules_pkg//pkg:mappings.bzl", "pkg_mklink")
+load("@rules_pkg//:pkg.bzl", "pkg_tar", "pkg_zip")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mklink")
 
 pkg_zip(
     name = "oci_light_win_x64",
     srcs = ["@oci-basic-light-win-x64//:srcs"],
     stamp = 1,
     tags = ["manual"],
+    visibility = ["//visibility:public"],
+)
+
+pkg_files(
+    name = "oci_light_win_x64_pkg",
+    srcs = [":oci_light_win_x64"],
+    attributes = pkg_attributes(mode = "0644"),
+    renames = {":oci_light_win_x64": "share/check_mk/agents/linux/oci_light_win_x64.zip"},
+    tags = ["manual"],
+)
+
+pkg_tar(
+    name = "oci_light_win_x64.tar",
+    srcs = [":oci_light_win_x64_pkg"],
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
 )
 
 clntsh_symlinks = [

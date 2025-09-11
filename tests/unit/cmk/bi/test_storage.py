@@ -51,6 +51,20 @@ class TestAggregationStore:
 
         assert value == expected
 
+    @pytest.mark.parametrize(
+        "bad_file",
+        [
+            pytest.param("af9c5722478b48fcb3d1f8c4573e06de.new", id="temp file suffix"),
+            pytest.param("af9c5722478b48fcb3d1f8c4573e06de.newp2g9two4", id="CMK-25807"),
+            pytest.param("this-isnt-a-proper-aggregation-filename", id="random name"),
+        ],
+    )
+    def test_yield_stored_identifiers_with_bad_files(
+        self, aggregation_store: AggregationStore, bad_file: str
+    ) -> None:
+        (aggregation_store.fs_cache.compiled_aggregations / bad_file).touch()
+        assert not list(aggregation_store.yield_stored_identifiers())
+
     def test_no_stored_identifiers(self, aggregation_store: AggregationStore) -> None:
         assert not any(aggregation_store.yield_stored_identifiers())
 

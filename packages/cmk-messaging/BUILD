@@ -5,6 +5,7 @@ load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
 
 exports_files([
+    "dev-requirements.in",
     "pyproject.toml",
     "requirements.in",
 ])

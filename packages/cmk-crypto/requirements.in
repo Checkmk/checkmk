@@ -2,5 +2,3 @@ bcrypt
 cryptography
 pyasn1
 python-dateutil
-types-python-dateutil
-time-machine

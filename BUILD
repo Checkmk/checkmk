@@ -78,10 +78,14 @@ compile_requirements_in(
     requirements = [
         "//cmk:requirements.in",
         "//packages:python_requirements",
+        "//packages:dev_python_requirements",
         "//:dev-requirements.in",
     ] + select({
         "@//:gpl_repo": [],
-        "@//:gpl+enterprise_repo": ["//non-free/packages:python_requirements"],
+        "@//:gpl+enterprise_repo": [
+            "//non-free/packages:python_requirements",
+            "//non-free/packages:dev_python_requirements",
+        ],
     }),
 )
 

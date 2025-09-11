@@ -15,3 +15,22 @@ filegroup(
     ],
     visibility = ["//visibility:public"],
 )
+
+filegroup(
+    name = "dev_python_requirements",
+    srcs = [
+        "//packages/cmk-agent-receiver:dev-requirements.in",
+        "//packages/cmk-ccc:dev-requirements.in",
+        "//packages/cmk-crypto:dev-requirements.in",
+        "//packages/cmk-events:dev-requirements.in",
+        "//packages/cmk-livestatus-client:dev-requirements.in",
+        "//packages/cmk-messaging:dev-requirements.in",
+        "//packages/cmk-mkp-tool:dev-requirements.in",
+        "//packages/cmk-plugin-apis:dev-requirements.in",
+        "//packages/cmk-relay-protocols:dev-requirements.in",
+        "//packages/cmk-trace:dev-requirements.in",
+        "//packages/cmk-werks:dev-requirements.in",
+        "//packages/metric-backend:dev-requirements.in",
+    ],
+    visibility = ["//visibility:public"],
+)

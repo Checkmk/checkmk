@@ -38,9 +38,13 @@ IGNORED_LIBS = {
 }  # our stuff
 IGNORED_LIBS |= isort.stdlibs._all.stdlib  # builtin stuff
 IGNORED_LIBS |= {"__future__"}  # other builtin stuff
-
-# currently runtime requirements are stored in multiple files
-DEV_REQ_FILES_LIST = [repo_path() / "dev-requirements.in"]
+DEV_REQ_FILES_LIST = (
+    [
+        repo_path() / "cmk/dev-requirements.in",
+    ]
+    + list((repo_path() / "packages").glob("*/dev-requirements.in"))
+    + list((repo_path() / "non-free" / "packages").glob("*/dev-requirements.in"))
+)
 RUNTIME_REQ_FILES_LIST = (
     [
         repo_path() / "cmk/requirements.in",
@@ -153,6 +157,8 @@ def iter_sourcefiles(basepath: Path) -> Iterable[Path]:
             continue
         if sub_path.name == "node_modules":
             continue
+        if sub_path.name == "tests":
+            continue
         if sub_path.name.startswith("."):
             continue
         if sub_path.is_file() and is_python_file(sub_path):
@@ -169,7 +175,6 @@ def iter_relevant_files(basepath: Path) -> Iterable[Path]:
         basepath / "agents",  # There are so many optional imports...
         basepath / "node_modules",
         basepath / "omd/license_sources",  # update_licenses.py contains imports
-        basepath / "tests",
         basepath / "packages/cmk-shared-typing/utils",  # only build time dependencies
     ]
     if is_enterprise_repo():
@@ -352,11 +357,6 @@ CEE_UNUSED_PACKAGES = [
     "setuptools-scm",
     "snmpsim-lextudio",
     "python-multipart",  # needed by fastapi
-    "pytest-xdist",  # pytest distributed testing
-    # stub packages
-    "types-python-dateutil",
-    "types-markdown",
-    "types-pika-ts",
 ]
 
 KNOWN_UNDECLARED_DEPENDENCIES = {
@@ -371,34 +371,6 @@ KNOWN_UNDECLARED_DEPENDENCIES = {
     ImportName("tests"): {
         Path("buildscripts/scripts/assert_build_artifacts.py"),
         Path("buildscripts/scripts/lib/registry.py"),
-        Path("non-free/packages/cmk-relay-engine/tests/component/conftest.py"),
-        Path(
-            "non-free/packages/cmk-relay-engine/tests/component/test_engine_does_not_mix_host_data.py"
-        ),
-        Path("non-free/packages/cmk-relay-engine/tests/component/test_fetcher_returns_data.py"),
-        Path("non-free/packages/cmk-relay-engine/tests/component/test_fetcher_timeouts.py"),
-        Path("non-free/packages/cmk-relay-engine/tests/component/test_handle_dying_fetchers.py"),
-        Path("non-free/packages/cmk-relay-engine/tests/component/test_lib/engine_helpers.py"),
-        Path(
-            "non-free/packages/cmk-relay-engine/tests/component/test_lib/fake_fetcher/behavior.py"
-        ),
-        Path(
-            "non-free/packages/cmk-relay-engine/tests/component/test_lib/fake_fetcher/fetcher_controller/behavior_controller.py"
-        ),
-        Path(
-            "non-free/packages/cmk-relay-engine/tests/component/test_lib/fake_fetcher/fetcher_controller/controller.py"
-        ),
-        Path("non-free/packages/cmk-relay-engine/tests/component/test_lib/fake_fetcher/main.py"),
-        Path(
-            "non-free/packages/cmk-relay-engine/tests/component/test_lib/fake_fetcher/main_adhoc.py"
-        ),
-        Path("non-free/packages/cmk-relay-engine/tests/component/test_lib/fake_fetcher/worker.py"),
-        Path("non-free/packages/cmk-relay-engine/tests/component/test_lib/test_fake_fetcher.py"),
-        Path("non-free/packages/cmk-relay-engine/tests/component/test_run_engine.py"),
-        Path("non-free/packages/cmk-relay-engine/tests/unit/processors/test_fetcherpool.py"),
-        Path("non-free/packages/cmk-relay-engine/tests/unit/schedulers/test_poll.py"),
-        Path("non-free/packages/cmk-relay-engine/tests/unit/test_cmc_commands.py"),
-        Path("non-free/packages/cmk-relay-engine/tests/unit/test_cmc_messages.py"),
     },
     ImportName("libcst"): {
         Path("doc/treasures/migration_helpers/legacy_ssc_to_v1.py"),

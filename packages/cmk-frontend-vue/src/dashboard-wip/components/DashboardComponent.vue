@@ -12,11 +12,11 @@ import type { DashboardWidgets } from '@/dashboard-wip/composables/useDashboardW
 import type { DashboardConstants, DashboardModel } from '@/dashboard-wip/types/dashboard'
 
 interface DashboardProps {
+  constants: DashboardConstants
   dashboardName: string
   dashboardOwner: string
   baseFilters: DashboardFilters['baseFilters']
   widgetCores: DashboardWidgets['widgetCores']
-  constants: DashboardConstants
   isEditing: boolean
 }
 

@@ -126,7 +126,7 @@ def _runs_cmc(site: Site) -> bool:
     return site.omd("config", "show", "CORE", check=True).stdout.strip() == "cmc"
 
 
-def test_shipped_ps_disocvery(host_services: dict[str, ServiceInfo], site: Site) -> None:
+def test_shipped_ps_discovery(host_services: dict[str, ServiceInfo], site: Site) -> None:
     expected_ps_services = {  # compare cmk.gui.watolib.sample_config
         f"Process {site.id} agent receiver",
         f"Process {site.id} apache",

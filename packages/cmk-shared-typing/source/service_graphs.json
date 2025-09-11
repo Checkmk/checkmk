@@ -18,7 +18,7 @@
             "type": "object",
             "properties": {
                 "timestamp_ms": { "$ref": "#/$defs/timestamp_ms" },
-                "value": { "type": "number" }
+                "value": { "type": ["number", "null"] }
             },
             "required": ["timestamp_ms", "value"]
         },

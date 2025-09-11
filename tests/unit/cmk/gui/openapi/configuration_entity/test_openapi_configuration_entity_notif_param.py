@@ -281,8 +281,34 @@ def test_list_configuration_entities(
     assert resp.json["value"][0]["title"] == "foo"
 
 
+def test_list_configuration_entities_without_permissions(
+    clients: ClientRegistry, registry: NotificationParameterRegistry, with_admin_login: UserId
+) -> None:
+    # GIVEN
+    clients.User.create(
+        username="guest_user1",
+        fullname="guest_user1_alias",
+        auth_option={"auth_type": "password", "password": "supersecretish"},
+        roles=["guest"],
+    )
+    clients.ConfigurationEntity.set_credentials("guest_user1", "supersecretish")
+
+    # WHEN
+    resp = clients.ConfigurationEntity.list_configuration_entities(
+        entity_type=ConfigEntityType.notification_parameter,
+        entity_type_specifier="dummy_params",
+        expect_ok=False,
+    )
+
+    # THEN
+    resp.assert_status_code(401)
+    assert resp.json["title"] == "Unauthorized"
+
+
 @pytest.mark.usefixtures("with_admin_login")
-def test_get_notif_param(clients: ClientRegistry, registry: NotificationParameterRegistry) -> None:
+def test_get_notif_param(
+    clients: ClientRegistry, registry: NotificationParameterRegistry, with_admin_login: UserId
+) -> None:
     # GIVEN
     entity = save_notification_parameter(
         registry,

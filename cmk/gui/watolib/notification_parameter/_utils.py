@@ -101,7 +101,11 @@ def save_notification_parameter(
 
 def get_list_of_notification_parameter(
     parameter_method: NotificationParameterMethod,
+    user: LoggedInUser,
 ) -> Sequence[NotificationParameterDescription]:
+    load_dynamic_permissions()
+    user.need_permission(f"notification_plugin.{parameter_method}")
+
     notification_parameter = NotificationParameterConfigFile().load_for_reading()
     return [
         NotificationParameterDescription(ident=k, description=v["general"]["description"])

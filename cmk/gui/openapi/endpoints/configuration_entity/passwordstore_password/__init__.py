@@ -15,6 +15,7 @@ from typing import Any
 
 from cmk import fields
 from cmk.gui.http import Response
+from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.configuration_entity._common import (
     list_endpoint_decorator,
     serve_configuration_entity_list,
@@ -47,7 +48,9 @@ class PasswordStorePasswordResponseCollection(DomainObjectCollection):
 )
 def _list_passwordstore_passwords(params: Mapping[str, Any]) -> Response:
     """List existing passwordstore passwords"""
-    return serve_configuration_entity_list(ConfigEntityType.passwordstore_password, params)
+    return serve_configuration_entity_list(
+        ConfigEntityType.passwordstore_password, params, user=user
+    )
 
 
 def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:

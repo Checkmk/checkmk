@@ -55,7 +55,7 @@ def _list_notification_parameters(params: Mapping[str, Any]) -> Response:
 @get_endpoint_decorator(ConfigEntityType.notification_parameter)
 def _get_notification_parameter(params: Mapping[str, Any]) -> Response:
     """Get a notification parameter"""
-    return serve_configuration_entity(ConfigEntityType.notification_parameter, params)
+    return serve_configuration_entity(ConfigEntityType.notification_parameter, params, user)
 
 
 def register(endpoint_registry: EndpointRegistry, *, ignore_duplicates: bool) -> None:

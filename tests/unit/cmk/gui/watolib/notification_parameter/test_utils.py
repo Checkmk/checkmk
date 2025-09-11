@@ -6,6 +6,7 @@ from collections.abc import Generator
 
 import pytest
 
+from cmk.ccc.user import UserId
 from cmk.gui.form_specs import FormSpecValidationError, RawFrontendData
 from cmk.gui.form_specs.unstable import DictionaryExtended, not_empty
 from cmk.gui.form_specs.visitors.single_choice import SingleChoiceVisitor
@@ -186,7 +187,9 @@ def test_get_list_of_notification_parameter(registry: NotificationParameterRegis
 
 
 @pytest.mark.usefixtures("request_context")
-def test_get_notification_parameter(registry: NotificationParameterRegistry) -> None:
+def test_get_notification_parameter(
+    registry: NotificationParameterRegistry, with_admin_login: UserId
+) -> None:
     # GIVEN
     NotificationParameterConfigFile().save(
         {
@@ -203,7 +206,7 @@ def test_get_notification_parameter(registry: NotificationParameterRegistry) -> 
     )
 
     # WHEN
-    param = get_notification_parameter(registry, NotificationParameterID("some-id"))
+    param = get_notification_parameter(registry, NotificationParameterID("some-id"), user)
 
     # THEN
     assert param.description == "foo"
@@ -214,14 +217,16 @@ def test_get_notification_parameter(registry: NotificationParameterRegistry) -> 
 
 def test_get_notification_parameter_throws_keyerror(
     registry: NotificationParameterRegistry,
+    with_admin_login: UserId,
 ) -> None:
     with pytest.raises(KeyError):
-        get_notification_parameter(registry, NotificationParameterID("some-id"))
+        get_notification_parameter(registry, NotificationParameterID("some-id"), user)
 
 
 @pytest.mark.usefixtures("request_context")
 def test_get_notification_parameter_doesnt_just_return_from_disk(
     registry: NotificationParameterRegistry,
+    with_admin_login: UserId,
 ) -> None:
     # GIVEN
     NotificationParameterConfigFile().save(
@@ -242,7 +247,7 @@ def test_get_notification_parameter_doesnt_just_return_from_disk(
     )
 
     # WHEN
-    data = get_notification_parameter(registry, NotificationParameterID("some-id")).data
+    data = get_notification_parameter(registry, NotificationParameterID("some-id"), user).data
 
     # THEN
     # Ignore is needed because every plugin model has different keys (and not "select_param")

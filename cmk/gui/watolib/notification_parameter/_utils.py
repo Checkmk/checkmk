@@ -121,6 +121,7 @@ class NotificationParameter(NamedTuple):
 def get_notification_parameter(
     registry: NotificationParameterRegistry,
     parameter_id: NotificationParameterID,
+    user: LoggedInUser,
 ) -> NotificationParameter:
     """Get notification parameter to supply to frontend.
 
@@ -138,6 +139,10 @@ def get_notification_parameter(
     )
     if item is None or method is None:
         raise KeyError(parameter_id)
+
+    load_dynamic_permissions()
+    user.need_permission(f"notification_plugin.{method}")
+
     form_spec = registry.form_spec(method)
     visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
     _, values = visitor.to_vue(RawDiskData(item))

@@ -972,9 +972,10 @@ class TestLinkedViewContent:
 
 
 class TestEmbeddedViewContent:
-    def test_edit(self, clients: ClientRegistry, with_automation_user: tuple[UserId, str]) -> None:
-        # with the way embedded views work right now, there is no way to used them on create
-        # so we have to use edit, and modify the underlying config first to set it up
+    @pytest.fixture(name="setup_embedded_view")
+    def fixture_setup_embedded_view(
+        self, clients: ClientRegistry, with_automation_user: tuple[UserId, str]
+    ) -> tuple[str, str, str]:
         user_id = with_automation_user[0]
         dashboard_id = "test_dashboard"
         clients.DashboardClient.create_relative_grid_dashboard(
@@ -982,11 +983,12 @@ class TestEmbeddedViewContent:
         )
 
         embedded_id = "some-random-id"
+        embedded_view_datasource = "alert_stats"
         dashboards = get_all_dashboards()
         dashboards[(user_id, dashboard_id)]["embedded_views"] = {
             embedded_id: DashboardEmbeddedViewSpec(
                 single_infos=[],
-                datasource="alert_stats",
+                datasource=embedded_view_datasource,
                 layout="table",
                 painters=[
                     ColumnSpec(name="alert_stats_problem"),
@@ -1013,12 +1015,22 @@ class TestEmbeddedViewContent:
                 column_headers="pergroup",
             )
         }
+        return dashboard_id, embedded_id, embedded_view_datasource
+
+    def test_edit(self, clients: ClientRegistry, setup_embedded_view: tuple[str, str, str]) -> None:
+        # with the way embedded views work right now, there is no way to used them on create
+        # so we have to use edit, and modify the underlying config first to set it up
+        dashboard_id, embedded_id, embedded_view_datasource = setup_embedded_view
 
         payload = _create_dashboard_payload(
-            dashboard_id,
+            "",
             {
                 "test_widget": _create_widget(
-                    {"type": "embedded_view", "embedded_id": embedded_id}
+                    {
+                        "type": "embedded_view",
+                        "embedded_id": embedded_id,
+                        "datasource": embedded_view_datasource,
+                    }
                 ),
             },
         )
@@ -1028,6 +1040,56 @@ class TestEmbeddedViewContent:
         assert len(widgets) == 1, f"Expected 1 widget, got {len(widgets)}"
         widget = next(iter(widgets.values()))  # IDs are not consistent
         assert widget["content"]["type"] == "embedded_view"
+
+    def test_mismatching_datasource(
+        self, clients: ClientRegistry, setup_embedded_view: tuple[str, str, str]
+    ) -> None:
+        # with the way embedded views work right now, there is no way to used them on create
+        # so we have to use edit, and modify the underlying config first to set it up
+        dashboard_id, embedded_id, embedded_view_datasource = setup_embedded_view
+
+        payload = _create_dashboard_payload(
+            "",
+            {
+                "test_widget": _create_widget(
+                    {
+                        "type": "embedded_view",
+                        "embedded_id": embedded_id,
+                        "datasource": "hosts",  # does not match the embedded view's datasource
+                    }
+                ),
+            },
+        )
+        del payload["id"]  # remove dashboard ID, as it's now in the URL for the edit
+        resp = clients.DashboardClient.edit_relative_grid_dashboard(
+            dashboard_id, payload, expect_ok=False
+        )
+        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+        assert (
+            resp.json["fields"]["body.widgets.test_widget.content.embedded_view.datasource"]["msg"]
+            == "Datasource does not match the embedded view definition."
+        )
+
+    def test_invalid_datasource(self, clients: ClientRegistry) -> None:
+        payload = _create_dashboard_payload(
+            "test_dashboard",
+            {
+                "test_widget": _create_widget(
+                    {
+                        "type": "embedded_view",
+                        "embedded_id": "some-random-id",
+                        "datasource": "non_existent_datasource",  # expected to not exist
+                    }
+                ),
+            },
+        )
+        resp = clients.DashboardClient.create_relative_grid_dashboard(payload, expect_ok=False)
+        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+        assert resp.json["fields"]["body.widgets.test_widget.content.embedded_view.datasource"][
+            "msg"
+        ].startswith(
+            "Value error, Value 'non_existent_datasource' is not allowed, valid options are:"
+        )
 
 
 @pytest.mark.usefixtures("skip_in_raw_edition")

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import datetime as dt
 from abc import ABC, abstractmethod
-from collections.abc import Container, Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from typing import Annotated, Literal, override, Self
 
 from pydantic import AfterValidator, Discriminator
@@ -341,7 +341,9 @@ class BaseRelativeGridDashboardRequest(BaseDashboardRequest):
         description="All widgets that are part of this dashboard.",
     )
 
-    def validate(self, context: ApiContext, *, embedded_views: Container[str]) -> None:
+    def validate(
+        self, context: ApiContext, *, embedded_views: Mapping[str, DashboardEmbeddedViewSpec]
+    ) -> None:
         """Run additional validation that depends on the API context (or rather the config)."""
         errors = [
             error

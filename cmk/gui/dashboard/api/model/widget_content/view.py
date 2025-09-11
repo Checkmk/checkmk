@@ -2,7 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Container, Iterable
+from collections.abc import Iterable, Mapping
 from typing import Annotated, Literal, override, Self
 
 from pydantic import AfterValidator
@@ -10,8 +10,11 @@ from pydantic_core import ErrorDetails
 
 from cmk.gui.dashboard import LinkedViewDashletConfig
 from cmk.gui.dashboard.dashlet.dashlets.view import EmbeddedViewDashletConfig
+from cmk.gui.data_source import data_source_registry
 from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model
+from cmk.gui.openapi.framework.model.converter import RegistryConverter
+from cmk.gui.type_defs import DashboardEmbeddedViewSpec
 from cmk.gui.views.store import get_permitted_views
 
 from ._base import BaseWidgetContent
@@ -60,6 +63,11 @@ class EmbeddedViewContent(BaseWidgetContent):
             "The internal ID of the view. This must exist in the embedded view definitions."
         ),
     )
+    datasource: Annotated[str, AfterValidator(RegistryConverter(data_source_registry).validate)] = (
+        api_field(
+            description="The datasource of the embedded view. Must match the embedded view.",
+        )
+    )
 
     @classmethod
     @override
@@ -71,6 +79,7 @@ class EmbeddedViewContent(BaseWidgetContent):
         return cls(
             type="embedded_view",
             embedded_id=config["name"],
+            datasource=config["datasource"],
         )
 
     @override
@@ -78,6 +87,7 @@ class EmbeddedViewContent(BaseWidgetContent):
         return EmbeddedViewDashletConfig(
             type=self.internal_type(),
             name=self.embedded_id,
+            datasource=self.datasource,
         )
 
     def iter_validation_errors(
@@ -85,7 +95,7 @@ class EmbeddedViewContent(BaseWidgetContent):
         location: tuple[str | int, ...],
         context: ApiContext,
         *,
-        embedded_views: Container[str],
+        embedded_views: Mapping[str, DashboardEmbeddedViewSpec],
     ) -> Iterable[ErrorDetails]:
         if self.embedded_id not in embedded_views:
             yield ErrorDetails(
@@ -94,3 +104,12 @@ class EmbeddedViewContent(BaseWidgetContent):
                 loc=location + ("embedded_id",),
                 input=self.embedded_id,
             )
+        else:
+            embedded_view = embedded_views[self.embedded_id]
+            if self.datasource != embedded_view["datasource"]:
+                yield ErrorDetails(
+                    type="value_error",
+                    msg="Datasource does not match the embedded view definition.",
+                    loc=location + ("datasource",),
+                    input=self.datasource,
+                )

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from abc import ABC, abstractmethod
-from collections.abc import Container, Iterable
+from collections.abc import Iterable, Mapping
 from typing import Annotated, assert_never, Literal, override, Self
 
 from annotated_types import Ge
@@ -18,7 +18,7 @@ from cmk.gui.dashboard.type_defs import (
 )
 from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
-from cmk.gui.type_defs import VisualContext
+from cmk.gui.type_defs import DashboardEmbeddedViewSpec, VisualContext
 
 from .type_defs import AnnotatedInfoName
 from .widget_content import content_from_internal, WidgetContent
@@ -188,7 +188,7 @@ class BaseWidgetRequest(_BaseWidget, ABC):
         location: tuple[str | int, ...],
         context: ApiContext,
         *,
-        embedded_views: Container[str],
+        embedded_views: Mapping[str, DashboardEmbeddedViewSpec],
     ) -> Iterable[ErrorDetails]:
         """Run additional validations that depends on the config."""
         yield from self.content.iter_validation_errors(

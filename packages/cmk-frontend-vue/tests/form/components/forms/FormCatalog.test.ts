@@ -111,16 +111,13 @@ test('FormCatalog open/close topic', async () => {
   // TODO: we should really change our code to make the following possible:
   // it should be quite easy to use v-show for that...
   // expect(title).not.toBeVisible()
-  expect(img).toHaveClass('open')
-  expect(img).not.toHaveClass('closed')
+  expect(img).toHaveClass('form-catalog__icon--open')
 
   await fireEvent.click(headline)
-  expect(img).not.toHaveClass('open')
-  expect(img).toHaveClass('closed')
+  expect(img).not.toHaveClass('form-catalog__icon--open')
 
   await fireEvent.click(headline)
-  expect(img).toHaveClass('open')
-  expect(img).not.toHaveClass('closed')
+  expect(img).toHaveClass('form-catalog__icon--open')
 })
 
 test.skip('FormCatalog collapse/open all - skipped until the toggle gets a better implementation', async () => {

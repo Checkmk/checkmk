@@ -8,6 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type {
   BooleanChoice,
   CascadingSingleChoice,
+  Catalog,
   CheckboxListChoice,
   CommentTextArea,
   Components,
@@ -99,6 +100,31 @@ function getFloat(name: string, options?: Partial<Omit<Float, 'type'>>): Float {
     label: getLabel(name),
     input_hint: getInputHint(name),
     unit: 'unit',
+    ...options
+  }
+}
+
+function getCatalog(name: string, options?: Partial<Omit<Catalog, 'type'>>): Catalog {
+  return {
+    type: 'catalog',
+    title: `catalog ${name}`,
+    help: `help ${name}`,
+    validators: [],
+    elements: [
+      {
+        name: 'something',
+        title: `Host filters ${name}`,
+        elements: [
+          {
+            type: 'topic_element',
+            name: 'topic_element name',
+            required: false,
+            parameter_form: getString('something'),
+            default_value: 'default_value'
+          }
+        ]
+      }
+    ],
     ...options
   }
 }
@@ -606,6 +632,7 @@ function getTimeSpecific(
 
 const forms: Array<[string, (name: string) => Components, unknown]> = [
   ['BooleanChoice', getBooleanChoice, false],
+  ['Catalog', getCatalog, { something: { 'topic_element name': 'asd' } }],
   ['CascadingSingleChoice', getCascadingSingleChoice, ['one', undefined]],
   ['CheckboxListChoice', getCheckboxListChoice, []],
   ['CommentTextArea', getCommentTextArea, ''],

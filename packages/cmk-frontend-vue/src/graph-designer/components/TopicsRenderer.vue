@@ -7,6 +7,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { ref } from 'vue'
 
+import CmkIcon from '@/components/CmkIcon.vue'
+
 import { type Topic } from '@/graph-designer/type_defs'
 
 const props = defineProps<{
@@ -38,7 +40,12 @@ function getClass(ident: string) {
       <thead>
         <tr class="heading" @click="toggleTopic(topic)">
           <td colspan="2">
-            <img class="vue nform treeangle" :class="getClass(topic.ident)" />
+            <CmkIcon
+              class="gd-topics-renderer__icon"
+              :class="{ 'gd-topics-renderer__icon--open': !hiddenTopics[topic.ident] }"
+              size="xxsmall"
+              name="tree_closed"
+            />
             {{ topic.title }}
           </td>
         </tr>
@@ -65,3 +72,15 @@ function getClass(ident: string) {
     </table>
   </div>
 </template>
+
+<style scoped>
+.gd-topics-renderer__icon {
+  margin-right: 10px;
+  transition: transform 0.2s ease-in-out;
+  transform: rotate(90deg);
+}
+
+.gd-topics-renderer__icon--open {
+  transform: rotate(0deg);
+}
+</style>

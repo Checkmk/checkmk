@@ -11,7 +11,7 @@ import pytest
 import time_machine
 
 import cmk.plugins.proxmox_ve.agent_based.proxmox_ve_vm_info as pvvi
-from cmk.agent_based.v2 import CheckResult, Result, State
+from cmk.agent_based.v2 import CheckResult, Metric, Result, State
 
 VM_DATA = pvvi.parse_proxmox_ve_vm_info(
     [
@@ -30,6 +30,24 @@ VM_DATA = pvvi.parse_proxmox_ve_vm_info(
     ]
 )
 
+VM_DATA_WITH_LOCK = pvvi.parse_proxmox_ve_vm_info(
+    [
+        [
+            json.dumps(
+                {
+                    "name": "aq-test.lan.mathias-kettner.de",
+                    "node": "pve-dc4-001",
+                    "status": "running",
+                    "type": "qemu",
+                    "vmid": "133",
+                    "uptime": 12345,
+                    "lock": "backup",
+                }
+            )
+        ]
+    ]
+)
+
 
 @pytest.mark.parametrize(
     "params,section,expected_results",
@@ -40,10 +58,11 @@ VM_DATA = pvvi.parse_proxmox_ve_vm_info(
             (
                 Result(state=State.OK, summary="VM ID: 133"),
                 Result(state=State.OK, summary="Status: running"),
-                Result(state=State.OK, summary="Type: qemu"),
-                Result(state=State.OK, summary="Host: pve-dc4-001"),
+                Result(state=State.OK, summary="Type: qemu, Host: pve-dc4-001"),
                 Result(state=State.OK, summary="Up since 2025-02-04 12:51:05"),
-                Result(state=State.OK, summary="Uptime: 0 days 3 hours"),
+                Result(state=State.OK, summary="Uptime: 3 hours 25 minutes"),
+                Metric("uptime", 12345.0),
+                Result(state=State.OK, notice="Config lock: none"),
             ),
         ),
         (
@@ -52,22 +71,24 @@ VM_DATA = pvvi.parse_proxmox_ve_vm_info(
             (
                 Result(state=State.OK, summary="VM ID: 133"),
                 Result(state=State.OK, summary="Status: running"),
-                Result(state=State.OK, summary="Type: qemu"),
-                Result(state=State.OK, summary="Host: pve-dc4-001"),
+                Result(state=State.OK, summary="Type: qemu, Host: pve-dc4-001"),
                 Result(state=State.OK, summary="Up since 2025-02-04 12:51:05"),
-                Result(state=State.OK, summary="Uptime: 0 days 3 hours"),
+                Result(state=State.OK, summary="Uptime: 3 hours 25 minutes"),
+                Metric("uptime", 12345.0),
+                Result(state=State.OK, notice="Config lock: none"),
             ),
         ),
         (
             {"required_vm_status": None},
-            VM_DATA,
+            VM_DATA_WITH_LOCK,
             (
                 Result(state=State.OK, summary="VM ID: 133"),
                 Result(state=State.OK, summary="Status: running"),
-                Result(state=State.OK, summary="Type: qemu"),
-                Result(state=State.OK, summary="Host: pve-dc4-001"),
+                Result(state=State.OK, summary="Type: qemu, Host: pve-dc4-001"),
                 Result(state=State.OK, summary="Up since 2025-02-04 12:51:05"),
-                Result(state=State.OK, summary="Uptime: 0 days 3 hours"),
+                Result(state=State.OK, summary="Uptime: 3 hours 25 minutes"),
+                Metric("uptime", 12345.0),
+                Result(state=State.CRIT, notice="Config lock: backup"),
             ),
         ),
         (
@@ -76,16 +97,17 @@ VM_DATA = pvvi.parse_proxmox_ve_vm_info(
             (
                 Result(state=State.OK, summary="VM ID: 133"),
                 Result(state=State.WARN, summary="Status: running (required: idle)"),
-                Result(state=State.OK, summary="Type: qemu"),
-                Result(state=State.OK, summary="Host: pve-dc4-001"),
+                Result(state=State.OK, summary="Type: qemu, Host: pve-dc4-001"),
                 Result(state=State.OK, summary="Up since 2025-02-04 12:51:05"),
-                Result(state=State.OK, summary="Uptime: 0 days 3 hours"),
+                Result(state=State.OK, summary="Uptime: 3 hours 25 minutes"),
+                Metric("uptime", 12345.0),
+                Result(state=State.OK, notice="Config lock: none"),
             ),
         ),
     ],
 )
 def test_check_proxmox_ve_vm_info(
-    params: Mapping[str, object], section: pvvi.Section, expected_results: CheckResult
+    params: Mapping[str, object], section: pvvi.SectionVMInfo, expected_results: CheckResult
 ) -> None:
     with time_machine.travel(datetime.datetime(2025, 2, 4, 16, 16, 50, tzinfo=ZoneInfo("CET"))):
         results = tuple(pvvi.check_proxmox_ve_vm_info(params, section))

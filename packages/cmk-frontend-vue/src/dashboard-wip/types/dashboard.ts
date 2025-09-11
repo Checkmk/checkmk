@@ -36,10 +36,10 @@ export type ContentResponsiveGrid = {
   widgets: components['schemas']['ResponsiveGridDashboardResponse']['widgets']
 }
 
-export type DashboardModel = {
+export type DashboardModel<T = ContentResponsiveGrid | ContentRelativeGrid> = {
   general_settings: DashboardGeneralSettings
   filter_context: DashboardFilterContext
-  content: ContentResponsiveGrid | ContentRelativeGrid
+  content: T
 }
 
 export enum DashboardLayout {

@@ -22,8 +22,8 @@ defineProps<{ screenshotMode: boolean }>()
   <CmkChip size="large" content="1"></CmkChip>
   <CmkChip size="large" content="some long content"></CmkChip>
   <h1>Color and Variant</h1>
-  <div class="matrix-container">
-    <table class="chip-matrix">
+  <div class="demo-cmk-chip__matrix-container">
+    <table class="demo-cmk-chip__chip-matrix">
       <thead>
         <tr>
           <th>Color / Variant</th>
@@ -33,22 +33,22 @@ defineProps<{ screenshotMode: boolean }>()
       </thead>
       <tbody>
         <tr>
-          <td class="color-label">Default</td>
+          <td class="demo-cmk-chip__color-label">Default</td>
           <td><CmkChip color="default" variant="fill" content="Default Fill"></CmkChip></td>
           <td><CmkChip color="default" variant="outline" content="Default Outline"></CmkChip></td>
         </tr>
         <tr>
-          <td class="color-label">Success</td>
+          <td class="demo-cmk-chip__color-label">Success</td>
           <td><CmkChip color="success" variant="fill" content="Success Fill"></CmkChip></td>
           <td><CmkChip color="success" variant="outline" content="Success Outline"></CmkChip></td>
         </tr>
         <tr>
-          <td class="color-label">Warning</td>
+          <td class="demo-cmk-chip__color-label">Warning</td>
           <td><CmkChip color="warning" variant="fill" content="Warning Fill"></CmkChip></td>
           <td><CmkChip color="warning" variant="outline" content="Warning Outline"></CmkChip></td>
         </tr>
         <tr>
-          <td class="color-label">Danger</td>
+          <td class="demo-cmk-chip__color-label">Danger</td>
           <td><CmkChip color="danger" variant="fill" content="Danger Fill"></CmkChip></td>
           <td><CmkChip color="danger" variant="outline" content="Danger Outline"></CmkChip></td>
         </tr>
@@ -74,41 +74,41 @@ h2 {
   margin: 16px 0;
 }
 
-.matrix-container {
+.demo-cmk-chip__matrix-container {
   margin: 20px 0;
 }
 
-.chip-matrix {
+.demo-cmk-chip__chip-matrix {
   border-collapse: collapse;
   width: 100%;
   max-width: 600px;
   margin: 0 auto;
 }
 
-.chip-matrix th,
-.chip-matrix td {
+.demo-cmk-chip__chip-matrix th,
+.demo-cmk-chip__chip-matrix td {
   border: 1px solid var(--ux-theme-1);
   padding: 16px;
   text-align: center;
   vertical-align: middle;
 }
 
-.chip-matrix th {
+.demo-cmk-chip__chip-matrix th {
   background-color: var(--ux-theme-2);
   font-weight: bold;
 }
 
-.color-label {
+.demo-cmk-chip__color-label {
   font-weight: 600;
   background-color: var(--ux-theme-3);
   text-align: left;
 }
 
-.chip-matrix tr:nth-child(even) {
+.demo-cmk-chip__chip-matrix tr:nth-child(even) {
   background-color: var(--ux-theme-4);
 }
 
-.chip-matrix tr:hover {
+.demo-cmk-chip__chip-matrix tr:hover {
   background-color: var(--ux-theme-5);
 }
 </style>

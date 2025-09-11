@@ -88,6 +88,7 @@ defineExpose({
   font-weight: var(--font-weight-default);
   cursor: pointer;
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   &.wide {
     min-width: 10em;
   }
@@ -96,6 +97,7 @@ defineExpose({
     background-color: var(--input-hover-bg-color);
   }
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   &.disabled {
     cursor: auto;
     color: var(--font-color-dimmed);
@@ -105,14 +107,17 @@ defineExpose({
     }
   }
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   &.no_value {
     color: var(--font-color-dimmed);
 
+    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
     > .cmk-dropdown-button_arrow {
       color: var(--font-color);
     }
   }
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   &.no_choices {
     cursor: auto;
 
@@ -120,6 +125,7 @@ defineExpose({
       background-color: var(--default-form-element-bg-color);
     }
 
+    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
     > .cmk-dropdown-button_arrow {
       opacity: 0.4;
     }

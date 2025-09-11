@@ -15,19 +15,19 @@ const emit = defineEmits(['select'])
 </script>
 
 <template>
-  <button class="workflow-list-item" @click="emit('select')">
+  <button class="db-workflow-list-item" @click="emit('select')">
     <IconWithEmblem :icon="icon" :icon_emblem="icon_emblem" />
-    <div class="workflow-list-item__content">
+    <div class="db-workflow-list-item__content">
       <CmkHeading type="h2">
         {{ title }}
       </CmkHeading>
-      <CmkParagraph class="workflow-list-item__subtitle">{{ subtitle }}</CmkParagraph>
+      <CmkParagraph class="db-workflow-list-item__subtitle">{{ subtitle }}</CmkParagraph>
     </div>
   </button>
 </template>
 
 <style scoped>
-.workflow-list-item {
+.db-workflow-list-item {
   display: flex;
   align-items: center;
   gap: var(--dimension-7);
@@ -49,13 +49,13 @@ const emit = defineEmits(['select'])
   }
 }
 
-.workflow-list-item__content {
+.db-workflow-list-item__content {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
 }
 
-.workflow-list-item__subtitle {
+.db-workflow-list-item__subtitle {
   color: var(--font-color-dimmed);
 }
 </style>

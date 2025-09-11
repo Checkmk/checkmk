@@ -65,10 +65,12 @@ const alertClass = computed(() => {
   border-radius: var(--border-radius);
   margin: 12px 0;
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   & > .content {
     margin-left: 7px;
   }
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   &.error {
     color: var(--font-color);
     background-color: var(--error-msg-bg-color);

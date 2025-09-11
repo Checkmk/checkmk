@@ -32,8 +32,10 @@ def test_monitor_searchbar(dashboard_page: MainDashboard) -> None:
 
     dashboard_page.main_menu.global_searchbar.fill("all hosts")
 
-    expect(dashboard_page.locator(".result-list")).to_contain_text("All hosts")
-    expect(dashboard_page.locator(".result-list")).to_contain_text("CPU inventory of all hosts")
+    expect(dashboard_page.locator(".unified-search-result-list")).to_contain_text("All hosts")
+    expect(dashboard_page.locator(".unified-search-result-list")).to_contain_text(
+        "CPU inventory of all hosts"
+    )
 
     dashboard_page.press_keyboard(Keys.ArrowDown)
     dashboard_page.press_keyboard(Keys.ArrowDown)

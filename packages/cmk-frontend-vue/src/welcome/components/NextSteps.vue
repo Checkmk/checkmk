@@ -73,6 +73,7 @@ defineProps<{
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .next-link-card-container {
   margin-bottom: 56px;
 }

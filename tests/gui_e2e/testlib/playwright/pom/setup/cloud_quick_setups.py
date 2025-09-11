@@ -165,7 +165,7 @@ class BaseQuickSetupAddNewConfiguration(QuickSetupPage):
     @property
     def quick_setup_area(self) -> Locator:
         """Get main area of the quick setup."""
-        return self.main_area.locator("ol.quick-setup")
+        return self.main_area.locator("ol.qs-quick-setup")
 
     @property
     def password_type_dropdown(self) -> DropdownHelper[PasswordType]:

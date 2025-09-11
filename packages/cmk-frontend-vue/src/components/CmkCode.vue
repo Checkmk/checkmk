@@ -139,6 +139,7 @@ const toggleExpansion = () => {
   font-weight: 400;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .code_wrapper {
   display: flex;
   align-items: flex-start;
@@ -146,6 +147,7 @@ const toggleExpansion = () => {
   gap: var(--dimension-4);
   max-width: 100%;
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   .code_container {
     position: relative;
     font-family: monospace;
@@ -163,11 +165,13 @@ const toggleExpansion = () => {
 
     --scroll-bar-thickness: 20px;
 
+    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
     .code_scroll_container {
       overflow-x: auto;
       padding-bottom: var(--dimension-3); /* Firefox will place the scrollbar on top of it */
     }
 
+    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
     &.has-toggle:not(.expanded) .code_scroll_container {
       /* Add more space to avoid the scrollbar being hidden behind the fade overlay */
       padding-bottom: var(--scroll-bar-thickness);
@@ -178,6 +182,7 @@ const toggleExpansion = () => {
       width: 100%;
     }
 
+    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
     .fade_overlay {
       position: absolute;
       z-index: var(--z-index-base);
@@ -189,6 +194,7 @@ const toggleExpansion = () => {
       pointer-events: none;
     }
 
+    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
     .toggle_button_container {
       position: absolute;
       left: 50%;
@@ -196,10 +202,12 @@ const toggleExpansion = () => {
       z-index: var(--z-index-base) + 1;
     }
 
+    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
     &:not(.expanded) .toggle_button_container {
       bottom: 28px;
     }
 
+    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
     &.expanded .toggle_button_container {
       position: relative;
       left: auto;
@@ -209,6 +217,7 @@ const toggleExpansion = () => {
       width: 100%;
     }
 
+    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
     .toggle_button {
       font-size: var(--font-size-normal);
       padding: 0 var(--dimension-4);
@@ -219,20 +228,24 @@ const toggleExpansion = () => {
       gap: var(--dimension-3);
     }
 
+    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
     .toggle_icon {
       flex-shrink: 0;
       transition: transform 0.2s ease;
 
+      /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
       &.expanded {
         transform: rotate(-90deg);
       }
 
+      /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
       &:not(.expanded) {
         transform: rotate(90deg);
       }
     }
   }
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   .copy_button {
     display: flex;
     align-items: center;
@@ -245,6 +258,7 @@ const toggleExpansion = () => {
   }
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .tooltip-content {
   display: flex;
   align-items: center;
@@ -257,6 +271,7 @@ const toggleExpansion = () => {
   position: relative;
   z-index: var(--z-index-tooltip);
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   &.error {
     background-color: var(--error-msg-bg-color);
   }

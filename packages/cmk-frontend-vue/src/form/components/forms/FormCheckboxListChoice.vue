@@ -58,6 +58,7 @@ function change(element: MultipleChoiceElement, newValue: boolean) {
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 div.container:not(:last-of-type) {
   padding-bottom: 8px;
 }

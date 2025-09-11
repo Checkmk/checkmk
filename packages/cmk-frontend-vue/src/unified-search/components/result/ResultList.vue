@@ -6,13 +6,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts"></script>
 
 <template>
-  <ul class="result-list">
+  <ul class="unified-search-result-list">
     <slot />
   </ul>
 </template>
 
 <style scoped>
-.result-list {
+.unified-search-result-list {
   padding: 0;
   margin: 0;
   list-style-type: none;

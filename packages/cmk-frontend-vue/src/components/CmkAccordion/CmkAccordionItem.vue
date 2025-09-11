@@ -19,7 +19,7 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
 
 <template>
   <AccordionItem :value="value" :disabled="disabled" class="cmk-accordion-item">
-    <AccordionHeader :as="headerAs" class="cmk-accordion-item-header"
+    <AccordionHeader :as="headerAs" class="cmk-accordion-item__header"
       ><CmkAccordionTrigger :value="value" :disabled="disabled ? true : false">
         <slot name="header" />
       </CmkAccordionTrigger>
@@ -27,11 +27,11 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
     <!-- @vue-ignore aria-labelledby not a property of AccordionContent -->
     <AccordionContent
       :id="'cmk-accordion-content-'.concat(value)"
-      class="cmk-accordion-item-content"
+      class="cmk-accordion-item__content"
       as="section"
       :aria-labelledby="'cmk-accordion-trigger-'.concat(value)"
     >
-      <div class="cmk-accordion-item-content-wrapper">
+      <div class="cmk-accordion-item__content-wrapper">
         <slot name="content" />
       </div>
     </AccordionContent>
@@ -58,11 +58,11 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
   }
 }
 
-.cmk-accordion-item-content-wrapper {
+.cmk-accordion-item__content-wrapper {
   overflow: hidden;
 }
 
-.cmk-accordion-item-header {
+.cmk-accordion-item__header {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -82,7 +82,7 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
   }
 }
 
-.cmk-accordion-item-content {
+.cmk-accordion-item__content {
   margin: 20px 60px 8px;
 
   &:focus-within {
@@ -128,7 +128,7 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
   opacity: 0.7;
   cursor: default;
 
-  .cmk-accordion-item-header[data-disabled]:hover {
+  .cmk-accordion-item__header[data-disabled]:hover {
     background: transparent;
   }
 }

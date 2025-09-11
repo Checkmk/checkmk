@@ -168,6 +168,7 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+/* stylelint-disable checkmk/vue-bem-naming-convention */
 .result-item {
   list-style-type: none;
 

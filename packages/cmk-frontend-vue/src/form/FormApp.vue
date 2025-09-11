@@ -100,6 +100,7 @@ const { ErrorBoundary } = useErrorBoundary()
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .nform {
   margin: 0;
   background: transparent;

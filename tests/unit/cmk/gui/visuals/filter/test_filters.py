@@ -1202,10 +1202,10 @@ def test_filters_filter_table(
         ),
         # Testing base class FilterInvFloat
         FilterTableTest(
-            ident="inv_hardware_cpu_bus_speed",
+            ident="inv_hardware_cpu_bus_speed_canonical",
             request_vars=[
-                ("inv_hardware_cpu_bus_speed_from", "10"),
-                ("inv_hardware_cpu_bus_speed_until", "20"),
+                ("inv_hardware_cpu_bus_speed_canonical_from", "10000000"),
+                ("inv_hardware_cpu_bus_speed_canonical_until", "20000000"),
             ],
             rows=[
                 {"host_inventory": deserialize_tree({"hardware": {"cpu": {"bus_speed": 1000000}}})},

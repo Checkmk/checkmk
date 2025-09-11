@@ -113,9 +113,13 @@ def page_dashboard_app(config: Config) -> None:
             raise MKAuthException(_("You are not allowed to create dashboards."))
         mode = "create"
 
+    name = request.get_ascii_input_mandatory("name", "")
+    if not name:
+        name = _get_default_dashboard_name()
+        request.set_var("name", name)  # TODO: this must be done on the frontend side
+
     loaded_dashboard_properties = None
     if mode == "display":
-        name = _get_default_dashboard_name()
         permitted_dashboards = get_permitted_dashboards()
         board = load_dashboard(permitted_dashboards, name)
         requested_context = requested_context_from_request(["host", "service"])

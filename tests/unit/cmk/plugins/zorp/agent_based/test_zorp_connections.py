@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.collection.agent_based.zorp_connections import (
+from cmk.plugins.zorp.agent_based.zorp_connections import (
     agent_section_zorp_connections,
     check_plugin_zorp_connections,
     Section,

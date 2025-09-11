@@ -4,18 +4,23 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { onBeforeMount, provide, ref } from 'vue'
+import { computed, onBeforeMount, provide, ref } from 'vue'
 
-import usei18n from '@/lib/i18n.ts'
+import CmkIcon from '@/components/CmkIcon.vue'
+import { useErrorBoundary } from '@/components/useErrorBoundary'
 
+import DashboardComponent from '@/dashboard-wip/components/DashboardComponent.vue'
 import type { FilterDefinition } from '@/dashboard-wip/components/filter/types.ts'
+import { useDashboardFilters } from '@/dashboard-wip/composables/useDashboardFilters.ts'
+import { useDashboardWidgets } from '@/dashboard-wip/composables/useDashboardWidgets.ts'
 import { useDashboardsManager } from '@/dashboard-wip/composables/useDashboardsManager.ts'
 import type { DashboardPageProperties } from '@/dashboard-wip/types/page.ts'
 import { dashboardAPI } from '@/dashboard-wip/utils.ts'
 
-const { _t } = usei18n()
+const { ErrorBoundary: errorBoundary } = useErrorBoundary()
 
 const props = defineProps<DashboardPageProperties>()
+const isDashboardEditingMode = ref(false)
 const filterCollection = ref<Record<string, FilterDefinition> | null>(null)
 provide('filterCollection', filterCollection)
 
@@ -33,10 +38,32 @@ onBeforeMount(async () => {
     await dashboardsManager.loadDashboard(props.dashboard.name, props.dashboard.layout_type)
   }
 })
+
+const dashboardFilters = useDashboardFilters(
+  computed(() => dashboardsManager.activeDashboard.value?.filter_context)
+)
+const dashboardWidgets = useDashboardWidgets(
+  computed(() => dashboardsManager.activeDashboard.value?.content.widgets)
+)
 </script>
 
 <template>
-  <div>
-    {{ _t('Empty dashboard app') }}
-  </div>
+  <errorBoundary>
+    <template v-if="dashboardsManager.isInitialized.value">
+      <DashboardComponent
+        v-if="dashboardsManager.isInitialized.value"
+        :key="`${dashboardsManager.activeDashboardName.value}`"
+        v-model:dashboard="dashboardsManager.activeDashboard.value!"
+        :dashboard-name="dashboardsManager.activeDashboardName.value || ''"
+        :dashboard-owner="dashboardsManager.activeDashboard.value?.owner || ''"
+        :base-filters="dashboardFilters.baseFilters"
+        :widget-cores="dashboardWidgets.widgetCores"
+        :constants="dashboardsManager.constants.value!"
+        :is-editing="isDashboardEditingMode"
+      />
+    </template>
+    <template v-else>
+      <CmkIcon name="load-graph" size="xxlarge" />
+    </template>
+  </errorBoundary>
 </template>

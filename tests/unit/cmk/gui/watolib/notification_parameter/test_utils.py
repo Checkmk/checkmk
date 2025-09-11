@@ -151,7 +151,8 @@ def test_validation_on_saving_notification_params(
 
 
 @pytest.mark.usefixtures("request_context")
-def test_get_list_of_notification_parameter() -> None:
+@pytest.mark.usefixtures("with_admin_login")
+def test_get_list_of_notification_parameter(registry: NotificationParameterRegistry) -> None:
     # GIVEN
     NotificationParameterConfigFile().save(
         {
@@ -167,7 +168,7 @@ def test_get_list_of_notification_parameter() -> None:
     )
 
     # WHEN
-    params = get_list_of_notification_parameter("dummy_params")
+    params = get_list_of_notification_parameter("dummy_params", user)
 
     # THEN
     assert len(params) == 1

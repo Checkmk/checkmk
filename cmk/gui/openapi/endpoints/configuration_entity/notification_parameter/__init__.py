@@ -11,6 +11,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from cmk.gui.http import Response
+from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.configuration_entity._common import (
     get_endpoint_decorator,
     list_endpoint_decorator,
@@ -25,7 +26,7 @@ from cmk.shared_typing.configuration_entity import ConfigEntityType
 @list_endpoint_decorator(ConfigEntityType.notification_parameter)
 def _list_notification_parameters(params: Mapping[str, Any]) -> Response:
     """List existing notification parameters"""
-    return serve_configuration_entity_list(ConfigEntityType.notification_parameter, params)
+    return serve_configuration_entity_list(ConfigEntityType.notification_parameter, params, user)
 
 
 @get_endpoint_decorator(ConfigEntityType.notification_parameter)

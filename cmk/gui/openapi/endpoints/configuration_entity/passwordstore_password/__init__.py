@@ -14,6 +14,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from cmk.gui.http import Response
+from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.configuration_entity._common import (
     list_endpoint_decorator,
     serve_configuration_entity_list,
@@ -26,7 +27,9 @@ from cmk.shared_typing.configuration_entity import ConfigEntityType
 @list_endpoint_decorator(ConfigEntityType.passwordstore_password)
 def _list_passwordstore_passwords(params: Mapping[str, Any]) -> Response:
     """List existing passwordstore passwords"""
-    return serve_configuration_entity_list(ConfigEntityType.passwordstore_password, params)
+    return serve_configuration_entity_list(
+        ConfigEntityType.passwordstore_password, params, user=user
+    )
 
 
 def register(endpoint_registry: EndpointRegistry) -> None:

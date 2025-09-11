@@ -201,6 +201,7 @@ def get_list_of_configuration_entities(
                 )
                 for obj in get_list_of_notification_parameter(
                     NotificationParameterMethod(entity_type_specifier),
+                    user,
                 )
             ]
         case ConfigEntityType.folder:

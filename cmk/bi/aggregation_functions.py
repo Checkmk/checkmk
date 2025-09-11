@@ -12,8 +12,8 @@ from marshmallow_oneofschema import OneOfSchema
 
 from cmk.bi.lib import (
     ABCBIAggregationFunction,
-    AggregationFunctionConfig,
-    AggregationKind,
+    AggregationFunctionKind,
+    AggregationFunctionSerialized,
     bi_aggregation_function_registry,
     BIStates,
     ReqConstant,
@@ -51,7 +51,7 @@ def map_states(states: list[int], index: int, restricted_bi_level: int) -> int:
 #   +----------------------------------------------------------------------+
 
 
-class BIAggregationFunctionBestSerialized(AggregationFunctionConfig):
+class BIAggregationFunctionBestSerialized(AggregationFunctionSerialized):
     count: int
     restrict_state: int
 
@@ -60,7 +60,7 @@ class BIAggregationFunctionBestSerialized(AggregationFunctionConfig):
 class BIAggregationFunctionBest(ABCBIAggregationFunction):
     @override
     @classmethod
-    def kind(cls) -> AggregationKind:
+    def kind(cls) -> AggregationFunctionKind:
         return "best"
 
     @override
@@ -117,7 +117,7 @@ class BIAggregationFunctionBestSchema(Schema):
 #   +----------------------------------------------------------------------+
 
 
-class BIAggregationFunctionWorstSerialized(AggregationFunctionConfig):
+class BIAggregationFunctionWorstSerialized(AggregationFunctionSerialized):
     count: int
     restrict_state: int
 
@@ -126,7 +126,7 @@ class BIAggregationFunctionWorstSerialized(AggregationFunctionConfig):
 class BIAggregationFunctionWorst(ABCBIAggregationFunction):
     @override
     @classmethod
-    def kind(cls) -> AggregationKind:
+    def kind(cls) -> AggregationFunctionKind:
         return "worst"
 
     @override
@@ -182,7 +182,7 @@ class BILevelsSerialized(TypedDict):
     value: float
 
 
-class BIAggregationFunctionCountOKSerialized(AggregationFunctionConfig):
+class BIAggregationFunctionCountOKSerialized(AggregationFunctionSerialized):
     levels_ok: BILevelsSerialized
     levels_warn: BILevelsSerialized
 
@@ -191,7 +191,7 @@ class BIAggregationFunctionCountOKSerialized(AggregationFunctionConfig):
 class BIAggregationFunctionCountOK(ABCBIAggregationFunction):
     @override
     @classmethod
-    def kind(cls) -> AggregationKind:
+    def kind(cls) -> AggregationFunctionKind:
         return "count_ok"
 
     @override
@@ -279,6 +279,6 @@ class BIAggregationFunctionSchema(OneOfSchema):
 
     @override
     def get_obj_type(
-        self, obj: ABCBIAggregationFunction | AggregationFunctionConfig
-    ) -> AggregationKind:
+        self, obj: ABCBIAggregationFunction | AggregationFunctionSerialized
+    ) -> AggregationFunctionKind:
         return obj["type"] if isinstance(obj, dict) else obj.kind()

@@ -257,12 +257,14 @@ const { ErrorBoundary: errorBoundary } = useErrorBoundary()
   background-color: var(--color-conference-grey-100);
 }
 
+/* NOTE: third party CSS selector (grid-layout-plus) */
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .vgl-layout {
   --vgl-placeholder-bg: var(--color-corporate-green-50);
   --vgl-placeholder-opacity: 40%;
 }
 
+/* NOTE: third party CSS selector (grid-layout-plus), we have to use :deep for this */
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention,selector-pseudo-class-no-unknown */
 :deep(.vgl-item--placeholder) {
   border-radius: 4px;
@@ -273,6 +275,7 @@ const { ErrorBoundary: errorBoundary } = useErrorBoundary()
   }
 }
 
+/* NOTE: third party CSS selector (grid-layout-plus), we have to use :deep for this */
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown,checkmk/vue-bem-naming-convention */
 :deep(.vgl-item__resizer) {
   z-index: 5;

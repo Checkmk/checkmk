@@ -8,18 +8,23 @@ import { computed } from 'vue'
 
 import { urlEncodeVars } from '@/lib/urls.ts'
 
+import type { EmbeddedViewContent } from '@/dashboard-wip/types/widget'
+
 import DashboardContentIFrame from './DashboardContentIFrame.vue'
 import type { ContentProps } from './types.ts'
 
 const props = defineProps<ContentProps>()
 
 const iframeUrl = computed(() => {
+  const content = props.content as EmbeddedViewContent
   const httpVars = {
-    dashlet_id: props.widget_id,
-    spec: props.content,
+    dashboard: props.dashboardName,
+    widget_id: props.widget_id,
+    // @ts-expect-error: this is correct, we just need to update the openapi schema
+    embedded_id: content.embedded_id,
     context: props.effective_filter_context.filters
   }
-  return `iframe_view.py?${urlEncodeVars(httpVars)}`
+  return `widget_iframe_view.py?${urlEncodeVars(httpVars)}`
 })
 </script>
 

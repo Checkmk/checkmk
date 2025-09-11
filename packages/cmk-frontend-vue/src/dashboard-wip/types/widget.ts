@@ -29,5 +29,6 @@ export interface EffectiveWidgetFilterContext extends WidgetFilterContext {
 }
 
 // Specific widget types
+export type EmbeddedViewContent = components['schemas']['EmbeddedViewContent']
 export type LinkedViewContent = components['schemas']['LinkedViewContent']
 export type StaticTextContent = components['schemas']['StaticTextContent']

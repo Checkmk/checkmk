@@ -76,7 +76,6 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "datadog": agent_datadog,
     "ddn_s2a": None,
     "elasticsearch": agent_elasticsearch,
-    "emcvnx": None,
     "fritzbox": agent_fritzbox,
     "gcp": agent_gcp,
     "gcp_status": agent_gcp_status,

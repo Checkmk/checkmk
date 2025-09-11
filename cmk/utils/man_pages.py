@@ -308,7 +308,6 @@ CATALOG_TITLES: Final = {
 # TODO: Do we need a more generic place for this?
 CHECK_MK_AGENTS: Final = {
     "aix": "AIX",
-    "emcvnx": "EMC VNX",
     "linux": "Linux",
     "mobileiron": "Ivanti Neurons for MDM (formerly MobileIron Cloud)",
     "nutanix": "Nutanix",

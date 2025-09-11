@@ -198,15 +198,6 @@ def test_unixcat(site: Site) -> None:
 
 
 @pytest.mark.medium_test_chain
-def test_navicli(site: Site) -> None:
-    version = "7.33.9.1.84"
-    process = site.run([tool := "naviseccli", "-Help"], check=False)
-    help_text = process.stdout if process.stdout else "<EXPECTED OUTPUT; OBSERVED NO OUTPUT>"
-    # TODO: Sync this with a global version for navicli (like we do it for python)
-    assert f"Revision {version}" in help_text, f"Expected '{tool}' to have version: {version}!"
-
-
-@pytest.mark.medium_test_chain
 def test_nrpe(site: Site) -> None:
     version = "3.2.1"
     process = site.run([tool := "lib/nagios/plugins/check_nrpe", "-V"], check=False)

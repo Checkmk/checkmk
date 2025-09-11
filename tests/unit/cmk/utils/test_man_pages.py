@@ -252,7 +252,6 @@ _ALLOWED_AGENTS = [
     "ddn_s2a",
     "elasticsearch",
     "emc",
-    "emcvnx",
     "freebsd",
     "fritzbox",
     "gcp",

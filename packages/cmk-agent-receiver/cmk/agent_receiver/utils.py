@@ -13,8 +13,8 @@ from cryptography.x509 import load_pem_x509_csr
 from cryptography.x509.oid import NameOID
 from pydantic import UUID4
 
+from .config import get_config
 from .models import ConnectionMode, R4RStatus, RequestForRegistration
-from .site_context import agent_output_dir, internal_secret_path, r4r_dir
 
 
 class NotRegisteredException(Exception): ...
@@ -22,7 +22,8 @@ class NotRegisteredException(Exception): ...
 
 class RegisteredHost:
     def __init__(self, uuid: UUID4) -> None:
-        self.source_path: Final = agent_output_dir() / str(uuid)
+        config = get_config()
+        self.source_path: Final = config.agent_output_dir / str(uuid)
         if not self.source_path.is_symlink():
             raise NotRegisteredException("Source path is not a symlink")
 
@@ -40,8 +41,9 @@ class R4R:
 
     @classmethod
     def read(cls, uuid: UUID4) -> Self:
+        config = get_config()
         for status in R4RStatus:
-            if (path := r4r_dir() / status.name / f"{uuid}.json").exists():
+            if (path := config.r4r_dir / status.name / f"{uuid}.json").exists():
                 with open(path, encoding="utf-8") as file:
                     request = RequestForRegistration.model_validate_json(file.read())
                 # access time is used to determine when to remove registration request file
@@ -51,7 +53,8 @@ class R4R:
         raise FileNotFoundError(f"No request for registration with UUID {uuid} found")
 
     def write(self) -> None:
-        (target_dir := r4r_dir() / self.status.name).mkdir(
+        config = get_config()
+        (target_dir := config.r4r_dir / self.status.name).mkdir(
             mode=0o770,
             parents=True,
             exist_ok=True,
@@ -80,6 +83,7 @@ B64SiteInternalSecret = NewType("B64SiteInternalSecret", str)
 
 
 def internal_credentials() -> B64SiteInternalSecret:
+    config = get_config()
     return B64SiteInternalSecret(
-        base64.b64encode(internal_secret_path().read_bytes()).decode("ascii")
+        base64.b64encode(config.internal_secret_path.read_bytes()).decode("ascii")
     )

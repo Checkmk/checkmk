@@ -41,6 +41,7 @@ from .checkmk_rest_api import (
     post_csr,
     register,
 )
+from .config import get_config
 from .decompression import DecompressionError, Decompressor
 from .log import logger
 from .models import (
@@ -64,7 +65,6 @@ from .models import (
     RenewCertResponse,
     RequestForRegistration,
 )
-from .site_context import site_name
 from .utils import (
     internal_credentials,
     NotRegisteredException,
@@ -166,12 +166,14 @@ async def pairing(
 
 
 def _validate_registration_request(host_config: HostConfiguration) -> None:
-    if host_config.site != site_name():
+    config = get_config()
+    site_name = config.site_name
+    if host_config.site != site_name:
         raise HTTPException(
             status_code=HTTP_403_FORBIDDEN,
             detail=(
                 f"This host is monitored on the site {host_config.site}, "
-                f"but you tried to register it at the site {site_name()}."
+                f"but you tried to register it at the site {site_name}."
             ),
         )
     if host_config.is_cluster:

@@ -3,15 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
-import pathlib
 import uuid
 from http import HTTPStatus
 
-from cmk.agent_receiver.relay.lib.relay_config import RELAY_CONFIG_FILE, RelayConfig
 from cmk.relay_protocols.tasks import TaskType
 
 from .test_lib.agent_receiver import AgentReceiverClient
+from .test_lib.config import create_relay_config
 from .test_lib.site_mock import SiteMock
 from .test_lib.tasks import add_tasks, get_all_tasks
 
@@ -23,7 +21,7 @@ def test_cannot_push_more_tasks_than_allowed(
     We should not be able to push more tasks than maximum allowed.
     """
     task_count = 3
-    configure_max_number_of_tasks(task_count)
+    create_relay_config(max_number_of_tasks=task_count)
 
     relay_id = add_relays(site, 1)[0]
 
@@ -55,7 +53,7 @@ def test_each_relay_has_its_own_limit(agent_receiver: AgentReceiverClient, site:
     Other relays should not be affected when one relay is "full".
     """
     task_count = 5
-    configure_max_number_of_tasks(task_count)
+    create_relay_config(max_number_of_tasks=task_count)
 
     relay_id_A, relay_id_B = add_relays(site, 2)
 
@@ -78,9 +76,3 @@ def add_relays(site: SiteMock, count: int) -> list[str]:
     relay_ids = [str(uuid.uuid4()) for _ in range(count)]
     site.set_scenario(relay_ids)
     return relay_ids
-
-
-def configure_max_number_of_tasks(max_number_of_tasks: int) -> None:
-    config = RelayConfig(max_tasks_per_relay=max_number_of_tasks)
-    file = pathlib.Path(os.environ["OMD_ROOT"]) / RELAY_CONFIG_FILE
-    file.write_text(config.model_dump_json())

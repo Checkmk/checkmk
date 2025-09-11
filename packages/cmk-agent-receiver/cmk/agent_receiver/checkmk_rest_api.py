@@ -14,9 +14,9 @@ from fastapi import HTTPException
 from fastapi.security import HTTPBasicCredentials
 from pydantic import BaseModel, UUID4
 
+from .config import get_config
 from .log import logger
 from .models import ConnectionMode
-from .site_context import site_config_path, site_name
 from .utils import B64SiteInternalSecret
 
 
@@ -40,7 +40,8 @@ class CMKEdition(Enum):
 def _local_apache() -> tuple[str, int]:
     address = "localhost"
     port = 80
-    for site_config_line in site_config_path().read_text().splitlines():
+    config = get_config()
+    for site_config_line in config.site_config_path.read_text().splitlines():
         key, value = site_config_line.split("=")
         if key == "CONFIG_APACHE_TCP_PORT":
             port = int(value.strip("'"))
@@ -51,7 +52,8 @@ def _local_apache() -> tuple[str, int]:
 
 def _local_rest_api_url() -> str:
     address, port = _local_apache()
-    return f"http://{address}:{port}/{site_name()}/check_mk/api/1.0"
+    config = get_config()
+    return f"http://{address}:{port}/{config.site_name}/check_mk/api/1.0"
 
 
 def _credentials_to_rest_api_auth(credentials: HTTPBasicCredentials) -> str:

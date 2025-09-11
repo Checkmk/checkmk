@@ -3,10 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pathlib
 import time
-
-import pytest
 
 from cmk.relay_protocols.relays import RelayRegistrationResponse
 from cmk.relay_protocols.tasks import TaskType
@@ -23,20 +20,6 @@ def register_relay(ar: AgentReceiverClient, name: str) -> str:
     return parsed.relay_id
 
 
-@pytest.fixture
-def relay_config_with_short_ttl(site_name: str, tmp_path: pathlib.Path) -> pathlib.Path:
-    """
-    Create a relay configuration file with a short TTL (1 second) for testing task expiration.
-    Places the config file in the expected site directory structure.
-    """
-    # Create the base directory that matches the test_client fixture structure
-    base_dir = tmp_path / site_name
-    base_dir.mkdir(parents=True, exist_ok=True)
-
-    return _create_relay_config(base_dir, task_ttl=1.0)
-
-
-@pytest.mark.usefixtures("relay_config_with_short_ttl")
 def test_task_expires_in_agent_receiver(
     site: SiteMock, agent_receiver: AgentReceiverClient
 ) -> None:
@@ -49,6 +32,7 @@ def test_task_expires_in_agent_receiver(
     """
     # Configure short expiration time
     expiration_time = 1.0
+    _create_relay_config(task_ttl=1.0)
 
     # Step 1: Register relay
     site.set_scenario([], [("Wonderful_relay", OP.ADD)])
@@ -75,7 +59,6 @@ def test_task_expires_in_agent_receiver(
     assert len(tasks_final.tasks) == 0
 
 
-@pytest.mark.usefixtures("relay_config_with_short_ttl")
 def test_task_expiration_resets_on_update(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,
@@ -92,6 +75,7 @@ def test_task_expiration_resets_on_update(
     """
     # Configure short expiration time
     expiration_time = 1.0
+    _create_relay_config(task_ttl=1.0)
 
     # Register relay
     site.set_scenario([], [("Wonderful_relay", OP.ADD)])
@@ -135,7 +119,6 @@ def test_task_expiration_resets_on_update(
     assert len(tasks_response.tasks) == 0, "Task should have expired and not be present"
 
 
-@pytest.mark.usefixtures("relay_config_with_short_ttl")
 def test_completed_tasks_expiration(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,
@@ -145,6 +128,7 @@ def test_completed_tasks_expiration(
     """
     # Configure short expiration time
     expiration_time = 1.0
+    _create_relay_config(task_ttl=1.0)
 
     # Register relay
     site.set_scenario([], [("Wonderful_relay", OP.ADD)])

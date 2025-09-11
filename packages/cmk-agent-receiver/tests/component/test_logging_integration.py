@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 
-from cmk.agent_receiver.site_context import log_path
+from cmk.agent_receiver.config import get_config
 
 from .test_lib.agent_receiver import AgentReceiverClient
 
@@ -25,7 +25,8 @@ def test_middleware_adds_request_id_to_logs(
     # The log file should exist and contain the request ID
     # Note: The openapi.json endpoint may not generate application logs,
     # but middleware should still bind the request_id to the logging context
-    logfile = log_path()
+    config = get_config()
+    logfile = config.log_path
     if logfile.exists():
         if log_content := logfile.read_text().strip():
             assert trace_id in log_content, (

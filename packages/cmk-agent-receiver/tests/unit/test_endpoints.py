@@ -17,9 +17,9 @@ from fastapi.testclient import TestClient
 from pydantic import UUID4
 from pytest_mock import MockerFixture
 
-from cmk.agent_receiver import site_context
 from cmk.agent_receiver.certs import serialize_to_pem
 from cmk.agent_receiver.checkmk_rest_api import CMKEdition, HostConfiguration, RegisterResponse
+from cmk.agent_receiver.config import get_config
 from cmk.agent_receiver.models import ConnectionMode, R4RStatus, RequestForRegistration
 from cmk.agent_receiver.utils import R4R
 
@@ -38,7 +38,8 @@ def _symlink_push_host(
     tmp_path: Path,
     uuid: UUID4,
 ) -> None:
-    source = site_context.agent_output_dir() / str(uuid)
+    config = get_config()
+    source = config.agent_output_dir / str(uuid)
     (target_dir := tmp_path / "push-agent" / "hostname").mkdir(parents=True)
     source.symlink_to(target_dir)
 
@@ -386,9 +387,10 @@ def test_register_new_folder_missing(
     uuid: UUID4,
     serialized_csr: str,
 ) -> None:
-    assert not (site_context.r4r_dir() / "NEW").exists()
+    config = get_config()
+    assert not (config.r4r_dir / "NEW").exists()
     _test_register_new(mocker, client, uuid, serialized_csr, CMKEdition.cce)
-    assert oct(stat.S_IMODE((site_context.r4r_dir() / "NEW").stat().st_mode)) == "0o770"
+    assert oct(stat.S_IMODE((config.r4r_dir / "NEW").stat().st_mode)) == "0o770"
 
 
 def test_register_new_folder_missing_cse(
@@ -397,9 +399,10 @@ def test_register_new_folder_missing_cse(
     uuid: UUID4,
     serialized_csr: str,
 ) -> None:
-    assert not (site_context.r4r_dir() / "NEW").exists()
+    config = get_config()
+    assert not (config.r4r_dir / "NEW").exists()
     _test_register_new(mocker, client, uuid, serialized_csr, CMKEdition.cse)
-    assert oct(stat.S_IMODE((site_context.r4r_dir() / "NEW").stat().st_mode)) == "0o770"
+    assert oct(stat.S_IMODE((config.r4r_dir / "NEW").stat().st_mode)) == "0o770"
 
 
 def test_register_new_folder_exists(
@@ -408,7 +411,8 @@ def test_register_new_folder_exists(
     uuid: UUID4,
     serialized_csr: str,
 ) -> None:
-    (site_context.r4r_dir() / "NEW").mkdir(parents=True)
+    config = get_config()
+    (config.r4r_dir / "NEW").mkdir(parents=True)
     _test_register_new(mocker, client, uuid, serialized_csr, CMKEdition.cce)
 
 
@@ -610,7 +614,8 @@ def test_agent_data_pull_host(
     agent_data_headers: MutableMapping[str, str],
     compressed_agent_data: io.BytesIO,
 ) -> None:
-    source = site_context.agent_output_dir() / str(uuid)
+    config = get_config()
+    source = config.agent_output_dir / str(uuid)
     source.symlink_to(tmp_path / "hostname")
 
     response = client.post(
@@ -789,7 +794,8 @@ def test_registration_status_pull_host(
     uuid: UUID4,
     registration_status_headers: MutableMapping[str, str],
 ) -> None:
-    source = site_context.agent_output_dir() / str(uuid)
+    config = get_config()
+    source = config.agent_output_dir / str(uuid)
     target_dir = tmp_path / "hostname"
     source.symlink_to(target_dir)
 
@@ -863,7 +869,8 @@ def test_registration_status_v2_pull_host(
     uuid: UUID4,
     registration_status_headers: MutableMapping[str, str],
 ) -> None:
-    source = site_context.agent_output_dir() / str(uuid)
+    config = get_config()
+    source = config.agent_output_dir / str(uuid)
     target_dir = tmp_path / "hostname"
     source.symlink_to(target_dir)
 
@@ -919,7 +926,8 @@ def test_renew_certificate_ok(
     serialized_csr: str,
     registration_status_headers: MutableMapping[str, str],
 ) -> None:
-    source = site_context.agent_output_dir() / str(uuid)
+    config = get_config()
+    source = config.agent_output_dir / str(uuid)
     target_dir = tmp_path / "hostname"
     source.symlink_to(target_dir)
 

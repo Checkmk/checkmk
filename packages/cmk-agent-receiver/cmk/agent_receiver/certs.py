@@ -23,11 +23,12 @@ from cryptography.x509 import (
 from cryptography.x509.oid import NameOID
 from dateutil.relativedelta import relativedelta
 
-from .site_context import agent_ca_path, site_ca_path
+from .config import get_config
 
 
 def site_root_certificate() -> Certificate:
-    return load_pem_x509_certificate(site_ca_path().read_bytes())
+    config = get_config()
+    return load_pem_x509_certificate(config.site_ca_path.read_bytes())
 
 
 def current_time_naive() -> datetime:
@@ -84,7 +85,8 @@ def extract_cn_from_csr(csr: CertificateSigningRequest) -> str:
 
 @cache
 def agent_root_ca() -> tuple[Certificate, RSAPrivateKey]:
-    pem_bytes = agent_ca_path().read_bytes()
+    config = get_config()
+    pem_bytes = config.agent_ca_path.read_bytes()
     key = load_pem_private_key(pem_bytes, None)
     assert isinstance(key, RSAPrivateKey)
     return load_pem_x509_certificate(pem_bytes), key

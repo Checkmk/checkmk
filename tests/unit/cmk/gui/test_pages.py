@@ -144,6 +144,7 @@ def test_registered_pages() -> None:
         "user_webauthn_login_complete",
         "user_webauthn_login_begin",
         "view",
+        "widget_edit_view",
         "widget_figure",
         "widget_graph",
         "widget_iframe_view",

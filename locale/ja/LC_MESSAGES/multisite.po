@@ -5207,6 +5207,9 @@ msgstr "アラーム"
 msgid "Alert"
 msgstr "アラート"
 
+msgid "Alert after being at or above the threshold for"
+msgstr ""
+
 msgid "Alert handler"
 msgstr "アラートハンドラ"
 
@@ -7787,6 +7790,10 @@ msgstr "平均メッセージ数上位レベル"
 msgid "Average number of messages"
 msgstr "メッセージの平均数"
 
+#, fuzzy
+msgid "Average over"
+msgstr "平均値"
+
 msgid "Average pending tasks delta"
 msgstr "保留中のタスクの平均デルタ"
 
@@ -7836,6 +7843,12 @@ msgid ""
 "Average the CPU utilization over the specified time period before levels are "
 "applied."
 msgstr "レベルが適用される前に、指定された期間のCPU使用率を平均します。"
+
+msgid ""
+"Average the instantaneous load over the specified number of minutes. Note: "
+"This does NOT affect \"Levels an extended period of time\" above, which "
+"always checks the instantaneous value."
+msgstr ""
 
 msgid "Average time messages stay on queue"
 msgstr "メッセージがキューにとどまる平均時間"
@@ -8328,6 +8341,10 @@ msgstr "絶対使用メモリ"
 #, fuzzy
 msgid "Azure Redis replication"
 msgstr "Azure データベース接続"
+
+#, fuzzy
+msgid "Azure Redis server load"
+msgstr "Redisサーバー名"
 
 #, fuzzy
 msgid "Azure Redis throughput"
@@ -14337,6 +14354,10 @@ msgstr "接続が切れました"
 msgid "Connection name"
 msgstr "接続名"
 
+#, fuzzy
+msgid "Connection options"
+msgstr "接続時間"
+
 #, python-format
 msgid "Connection representation: %s"
 msgstr "接続表現: %s"
@@ -18168,6 +18189,10 @@ msgstr "OpenHardwareMonitorのデプロイ(ヘッドレス)"
 msgid "Deploy Oracle databases plug-in"
 msgstr "ORACLEデータベースプラグインをデプロイします"
 
+#, fuzzy
+msgid "Deploy Oracle plug-in"
+msgstr "Arcserveプラグインをデプロイする"
+
 msgid "Deploy Podman plug-in"
 msgstr "Podmanプラグインをデプロイする"
 
@@ -19665,6 +19690,10 @@ msgstr "OpenHardwareMonitor (headless)をデプロイしないでください"
 
 msgid "Do not deploy Oracle databases plug-in"
 msgstr "ORACLEデータベースプラグインをデプロイしないでください"
+
+#, fuzzy
+msgid "Do not deploy Oracle plug-in"
+msgstr "iptablesプラグインをデプロイしないでください"
 
 msgid "Do not deploy Robotmk"
 msgstr "Robotmkをデプロイしないでください"
@@ -35755,6 +35784,10 @@ msgstr "バイト単位の使用済み容量のレベル"
 msgid "Levels on write capacity"
 msgstr "書き込み容量のレベル"
 
+#, fuzzy
+msgid "Levels over an extended period of time"
+msgstr "レプリケーションラグに関する長期間のレベル"
+
 msgid "Levels over an extended time period on a single core CPU utilization"
 msgstr "シングルコアCPU使用率の長期間にわたるレベル"
 
@@ -39952,6 +39985,10 @@ msgstr "Android端末の監視"
 
 msgid "Monitor CloudFront WAFs"
 msgstr "CloudFront WAFを監視する"
+
+#, fuzzy
+msgid "Monitor Oracle Databases"
+msgstr "データベースの監視"
 
 msgid "Monitor Route53"
 msgstr "モニターRoute53"
@@ -45056,6 +45093,10 @@ msgstr "Oracle コントロールファイルの小規模書き込み"
 msgid "Oracle count"
 msgstr "Oracle カウント"
 
+#, fuzzy
+msgid "Oracle credentials"
+msgstr "資格情報を使用する"
+
 msgid "Oracle data file backup large read bytes"
 msgstr "Oracle データファイルバックアップの大規模読み取りバイト数"
 
@@ -46809,6 +46850,9 @@ msgstr ""
 "ユーザー証明書へのパス。パスが存在しないか空の場合、ユーザー証明書は使用され"
 "ません。"
 
+msgid "Path to tnsnames.ora or sqlnet.ora file"
+msgstr ""
+
 msgid "Path to unix socket"
 msgstr "unixソケットへのパス"
 
@@ -47787,12 +47831,6 @@ msgid ""
 msgstr ""
 "ライセンスが期限内に延長されるよう、%s の Checkmk 営業チームまでご連絡くださ"
 "い。ライセンスを%sで購入した場合は、そちらに連絡してください。"
-
-msgid ""
-"Please contact your Checkmk administrator to ensure that your license is "
-"extended in time."
-msgstr ""
-"ライセンスの延長が間に合うように、Checkmkの管理者にお問い合わせください。"
 
 msgid "Please contact your administrator."
 msgstr "管理者にお問い合わせください。"
@@ -54560,6 +54598,22 @@ msgstr "サーバー接続"
 msgid "Server latency"
 msgstr "サーバーの待ち時間"
 
+#, fuzzy
+msgid "Server load"
+msgstr "Citrixサーバーの負荷"
+
+#, fuzzy
+msgid "Server load %"
+msgstr "Citrixサーバーの負荷"
+
+#, fuzzy
+msgid "Server load (average)"
+msgstr "サーバーログストレージ"
+
+#, fuzzy
+msgid "Server load levels"
+msgstr "サービスレベル"
+
 msgid "Server log storage"
 msgstr "サーバーログストレージ"
 
@@ -57577,6 +57631,9 @@ msgid ""
 msgstr ""
 "<a href='wato.py?mode=edit_ruleset&varname=filesystem_groups'>Filesystem "
 "grouping patterns</a> 機能がこのファイルシステムを処理する方法を指定します。"
+
+msgid "Specifies the database privilege role used when connecting to Oracle."
+msgstr ""
 
 msgid ""
 "Specifies the default layout to be used when an aggregation has no explicit "
@@ -69624,6 +69681,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure Redis server load "
+"monitoring"
+msgstr ""
+"このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
+"きます"
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure Redis throughput "
 "monitoring"
 msgstr ""
@@ -70572,6 +70637,12 @@ msgid ""
 msgstr ""
 "これにより、エージェントプラグイン<tt> mk_nfsiostat </tt>がデプロイされ、さま"
 "ざまなクライアント側のNFSIO統計がチェックされます。"
+
+#, fuzzy
+msgid ""
+"This will deploy the agent plug-in <tt>mk_oracle</tt> on your target system."
+msgstr ""
+"エージェントプラグイン <tt>zorp</tt>をターゲットシステムにデプロイします。"
 
 msgid ""
 "This will deploy the agent plug-in <tt>mk_oracle</tt> on your target system. "
@@ -74645,6 +74716,9 @@ msgstr "ユニキャストのパケットレート"
 msgid "Unidirectional UDP Traffic"
 msgstr "単方向UDPトラフィック"
 
+msgid "Unified Oracle Plugin (Beta)"
+msgstr ""
+
 msgid ""
 "Uninstall the legacy (pre 1.6) agent after installation of the new Windows "
 "agent"
@@ -76814,6 +76888,10 @@ msgstr "ユーザー"
 msgid "User %s of DCD connection was modified"
 msgstr "DCD接続のユーザー%sが変更されました"
 
+#, fuzzy
+msgid "User & Password"
+msgstr "ユーザーパスワード"
+
 msgid "User / Group Key"
 msgstr "ユーザー/グループキー"
 
@@ -76954,6 +77032,10 @@ msgid "Username"
 msgstr "ユーザー名"
 
 msgid "Username / Password"
+msgstr "ユーザー名/パスワード"
+
+#, fuzzy
+msgid "Username and Password"
 msgstr "ユーザー名/パスワード"
 
 msgid "Username cannot be empty"
@@ -85134,12 +85216,59 @@ msgid "required"
 msgstr "必須"
 
 #, fuzzy
+msgid "No items selected"
+msgstr "選択されていない"
+
+msgid "Placeholder for unknown component type:"
+msgstr ""
+
+#, fuzzy
+msgid "No labels"
+msgstr "ノードラベル"
+
+#, fuzzy
+msgid "not"
+msgstr "no"
+
+#, fuzzy
+msgid "No labels selected"
+msgstr "選択された要素はありません"
+
+#, fuzzy
+msgid "No tag filters configured"
+msgstr "IP範囲が構成されていません"
+
+#, fuzzy
 msgid "Select an option..."
 msgstr "オプション選択"
 
 #, fuzzy
 msgid "Type to search..."
 msgstr "検索するインデックス"
+
+#, fuzzy
+msgid "Operator"
+msgstr "操作"
+
+#, fuzzy
+msgid "Select label..."
+msgstr "ファイルを選択"
+
+#, fuzzy
+msgid "Group Operator"
+msgstr "グループパス"
+
+#, fuzzy
+msgid "Select group..."
+msgstr "オプション選択"
+
+#, fuzzy
+msgid "Select value..."
+msgstr "ビューを選択"
+
+#, fuzzy
+msgid "Remove row"
+msgstr "削除：%r"
 
 #, fuzzy
 msgid "Add widget"
@@ -85916,6 +86045,12 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid ""
+#~ "Please contact your Checkmk administrator to ensure that your license is "
+#~ "extended in time."
+#~ msgstr ""
+#~ "ライセンスの延長が間に合うように、Checkmkの管理者にお問い合わせください。"
 
 #~ msgid "Default State"
 #~ msgstr "デフォルトステータス"

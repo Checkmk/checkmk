@@ -5531,6 +5531,9 @@ msgstr "Alarmas"
 msgid "Alert"
 msgstr "Alerta"
 
+msgid "Alert after being at or above the threshold for"
+msgstr ""
+
 msgid "Alert handler"
 msgstr "Gestor de alertas"
 
@@ -8311,6 +8314,10 @@ msgstr "Niveles superiores del recuento medio de mensajes"
 msgid "Average number of messages"
 msgstr "Número medio de mensajes"
 
+#, fuzzy
+msgid "Average over"
+msgstr "Valor medio"
+
 msgid "Average pending tasks delta"
 msgstr "Promedio de tareas pendientes delta"
 
@@ -8364,6 +8371,12 @@ msgid ""
 msgstr ""
 "Promediar la utilización de la CPU durante el período de tiempo especificado "
 "antes de aplicar los niveles."
+
+msgid ""
+"Average the instantaneous load over the specified number of minutes. Note: "
+"This does NOT affect \"Levels an extended period of time\" above, which "
+"always checks the instantaneous value."
+msgstr ""
 
 msgid "Average time messages stay on queue"
 msgstr "Tiempo medio de permanencia de los mensajes en la cola"
@@ -8986,6 +8999,10 @@ msgstr "Memoria libre absoluta"
 #, fuzzy
 msgid "Azure Redis replication"
 msgstr "Conexiones de bases de datos"
+
+#, fuzzy
+msgid "Azure Redis server load"
+msgstr "Nombre del servidor Redis"
 
 #, fuzzy
 msgid "Azure Redis throughput"
@@ -15386,6 +15403,10 @@ msgstr "Se ha perdido la conexión"
 msgid "Connection name"
 msgstr "Nombre de la conexión"
 
+#, fuzzy
+msgid "Connection options"
+msgstr "Duración de la conexión"
+
 #, fuzzy, python-format
 msgid "Connection representation: %s"
 msgstr "Representación de la regla: %s"
@@ -19408,6 +19429,10 @@ msgid "Deploy Oracle databases plug-in"
 msgstr "Despliegue del plugin de bases de datos ORACLE"
 
 #, fuzzy
+msgid "Deploy Oracle plug-in"
+msgstr "Implementar complemento de Arcserve"
+
+#, fuzzy
 msgid "Deploy Podman plug-in"
 msgstr "Implementar el complemento Mailman"
 
@@ -21078,6 +21103,10 @@ msgstr "No desplegar OpenHardwareMonitor (headless)"
 #, fuzzy
 msgid "Do not deploy Oracle databases plug-in"
 msgstr "No despliegue el plugin de bases de datos ORACLE"
+
+#, fuzzy
+msgid "Do not deploy Oracle plug-in"
+msgstr "No desplegar el plugin de iptables"
 
 #, fuzzy
 msgid "Do not deploy Robotmk"
@@ -38425,6 +38454,12 @@ msgstr "Niveles de capacidad utilizada en bytes"
 msgid "Levels on write capacity"
 msgstr "Niveles de capacidad de escritura"
 
+#, fuzzy
+msgid "Levels over an extended period of time"
+msgstr ""
+"Niveles durante un periodo de tiempo prolongado en el retraso de la "
+"replicación"
+
 msgid "Levels over an extended time period on a single core CPU utilization"
 msgstr ""
 "Niveles durante un periodo de tiempo prolongado en una utilización de la CPU "
@@ -42882,6 +42917,10 @@ msgstr "Supervisar dispositivos Android"
 
 msgid "Monitor CloudFront WAFs"
 msgstr "Supervisar los WAF de CloudFront"
+
+#, fuzzy
+msgid "Monitor Oracle Databases"
+msgstr "Base de datos de eventos"
 
 msgid "Monitor Route53"
 msgstr "Monitorizar la ruta53"
@@ -48454,6 +48493,10 @@ msgid "Oracle count"
 msgstr "Recuento total"
 
 #, fuzzy
+msgid "Oracle credentials"
+msgstr "Utilizar las credenciales"
+
+#, fuzzy
 msgid "Oracle data file backup large read bytes"
 msgstr "ORACLE Total de Bytes de Lectura Grandes"
 
@@ -50425,6 +50468,9 @@ msgid ""
 "certificate will not be used."
 msgstr ""
 
+msgid "Path to tnsnames.ora or sqlnet.ora file"
+msgstr ""
+
 msgid "Path to unix socket"
 msgstr "Ruta al socket unix"
 
@@ -51499,13 +51545,6 @@ msgstr ""
 "Póngase en contacto con el equipo de ventas de Checkmk en %s para asegurarse "
 "de que su licencia se amplía a tiempo. Si adquirió su licencia a través de "
 "%s, póngase en contacto con ellos."
-
-msgid ""
-"Please contact your Checkmk administrator to ensure that your license is "
-"extended in time."
-msgstr ""
-"Póngase en contacto con su administrador de Checkmk para asegurarse de que "
-"su licencia se amplía a tiempo."
 
 msgid "Please contact your administrator."
 msgstr "Póngase en contacto con su administrador."
@@ -58770,6 +58809,22 @@ msgstr "Conexiones al servidor"
 msgid "Server latency"
 msgstr "Latencia del servidor"
 
+#, fuzzy
+msgid "Server load"
+msgstr "Carga del servidor Citrix"
+
+#, fuzzy
+msgid "Server load %"
+msgstr "Carga del servidor Citrix"
+
+#, fuzzy
+msgid "Server load (average)"
+msgstr "Almacenamiento de registros del servidor"
+
+#, fuzzy
+msgid "Server load levels"
+msgstr "Nivel de servicio"
+
 msgid "Server log storage"
 msgstr "Almacenamiento de registros del servidor"
 
@@ -61998,6 +62053,9 @@ msgstr ""
 "Especifica cómo la función <a href='wato.py?"
 "mode=edit_ruleset&varname=filesystem_groups'>Patrones de agrupación del "
 "sistema de archivos</a> procesa este sistema de archivos."
+
+msgid "Specifies the database privilege role used when connecting to Oracle."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -74680,6 +74738,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure Redis server load "
+"monitoring"
+msgstr ""
+"Esta regla permite configurar los niveles de bloat para el tablespace y el "
+"indexspace de una base de datos."
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure Redis throughput "
 "monitoring"
 msgstr ""
@@ -75696,6 +75762,12 @@ msgid ""
 msgstr ""
 "Esto desplegará el plugin del agente <tt>mk_nfsiostat</tt> para comprobar "
 "varias estadísticas de IO de NFS del lado del cliente."
+
+#, fuzzy
+msgid ""
+"This will deploy the agent plug-in <tt>mk_oracle</tt> on your target system."
+msgstr ""
+"Implemente el complemento de agente <tt>zorp</tt> en su sistema de destino."
 
 #, fuzzy
 msgid ""
@@ -80429,6 +80501,9 @@ msgstr "Tasas de paquetes de multidifusión"
 msgid "Unidirectional UDP Traffic"
 msgstr "Tráfico UDP unidireccional"
 
+msgid "Unified Oracle Plugin (Beta)"
+msgstr ""
+
 msgid ""
 "Uninstall the legacy (pre 1.6) agent after installation of the new Windows "
 "agent"
@@ -82782,6 +82857,10 @@ msgstr "Usuario"
 msgid "User %s of DCD connection was modified"
 msgstr "Se ha modificado el usuario %s de la conexión DCD"
 
+#, fuzzy
+msgid "User & Password"
+msgstr "Contraseña del usuario"
+
 msgid "User / Group Key"
 msgstr "Clave de usuario/grupo"
 
@@ -82940,6 +83019,10 @@ msgstr "Nombre de usuario"
 
 #, fuzzy
 msgid "Username / Password"
+msgstr "Nombre de usuario/contraseña"
+
+#, fuzzy
+msgid "Username and Password"
 msgstr "Nombre de usuario/contraseña"
 
 #, fuzzy
@@ -91670,12 +91753,59 @@ msgid "required"
 msgstr "Puerto requerido"
 
 #, fuzzy
+msgid "No items selected"
+msgstr "No seleccionado"
+
+msgid "Placeholder for unknown component type:"
+msgstr ""
+
+#, fuzzy
+msgid "No labels"
+msgstr "Etiquetas de los nodos"
+
+#, fuzzy
+msgid "not"
+msgstr "no"
+
+#, fuzzy
+msgid "No labels selected"
+msgstr "No seleccionado"
+
+#, fuzzy
+msgid "No tag filters configured"
+msgstr "No hay rango de IP configurado"
+
+#, fuzzy
 msgid "Select an option..."
 msgstr "Conexiones rechazadas"
 
 #, fuzzy
 msgid "Type to search..."
 msgstr "Índices de búsqueda"
+
+#, fuzzy
+msgid "Operator"
+msgstr "Operación"
+
+#, fuzzy
+msgid "Select label..."
+msgstr "Seleccione el archivo"
+
+#, fuzzy
+msgid "Group Operator"
+msgstr "Ruta del grupo"
+
+#, fuzzy
+msgid "Select group..."
+msgstr "Conexiones rechazadas"
+
+#, fuzzy
+msgid "Select value..."
+msgstr "Seleccione la vista"
+
+#, fuzzy
+msgid "Remove row"
+msgstr "Eliminado: %s"
 
 #, fuzzy
 msgid "Add widget"
@@ -92460,6 +92590,13 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid ""
+#~ "Please contact your Checkmk administrator to ensure that your license is "
+#~ "extended in time."
+#~ msgstr ""
+#~ "Póngase en contacto con su administrador de Checkmk para asegurarse de "
+#~ "que su licencia se amplía a tiempo."
 
 #, fuzzy
 #~ msgid "Default State"

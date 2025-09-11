@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-09-09 01:39+0000\n"
+"PO-Revision-Date: 2025-09-10 18:39+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -2432,9 +2432,9 @@ msgstr ""
 "erzwingen. Für jeden passenden Service auf den betreffenden Hosts wird ein "
 "Child-Knoten erstellt. "
 
-#, fuzzy, python-format
+#, python-format
 msgid "A relay with alias '%s' already exists"
-msgstr "Ein Regelpaket mit dieser ID existiert bereits."
+msgstr ""
 
 msgid ""
 "A reliable backup ensures that your monitoring environment can be restored "
@@ -5366,6 +5366,9 @@ msgstr "Alarme"
 msgid "Alert"
 msgstr "Alert"
 
+msgid "Alert after being at or above the threshold for"
+msgstr ""
+
 msgid "Alert handler"
 msgstr "Alert Handler"
 
@@ -7072,9 +7075,8 @@ msgstr "Archiviertes Audit Log"
 msgid "Arcserve (German) backups (Windows)"
 msgstr "Arcserve (Deutsch) Sicherungen (Windows)"
 
-#, fuzzy
 msgid "Are you sure you want to delete this relay?"
-msgstr "Sie sind nicht berechtigt, diese %s zu löschen."
+msgstr "Möchten Sie dieses Relais wirklich löschen?"
 
 # Braucht Kontext
 msgid "Area"
@@ -8028,6 +8030,10 @@ msgstr "Obergrenzen für die durchschnittliche Anzahl an Meldungen"
 msgid "Average number of messages"
 msgstr "Durchschnittliche Anzahl an Meldungen"
 
+#, fuzzy
+msgid "Average over"
+msgstr "Durchschnittswert"
+
 msgid "Average pending tasks delta"
 msgstr "Durchschnittliches Delta anstehender Aufgaben"
 
@@ -8079,6 +8085,12 @@ msgid ""
 msgstr ""
 "Durchschnittliche CPU-Auslastung über die angegebene Zeitperiode, bevor die "
 "Levels angewendet werden."
+
+msgid ""
+"Average the instantaneous load over the specified number of minutes. Note: "
+"This does NOT affect \"Levels an extended period of time\" above, which "
+"always checks the instantaneous value."
+msgstr ""
 
 msgid "Average time messages stay on queue"
 msgstr "Durchschnittliche Zeit, die Meldungen in der Warteschlange verbringen"
@@ -8566,6 +8578,10 @@ msgstr "Azure Redis Speicherplatz"
 #, fuzzy
 msgid "Azure Redis replication"
 msgstr "Azure Redis Verbindungen"
+
+#, fuzzy
+msgid "Azure Redis server load"
+msgstr "Redis Servername"
 
 #, fuzzy
 msgid "Azure Redis throughput"
@@ -14785,6 +14801,10 @@ msgstr "Abgebrochene Verbindung ist aufgetreten"
 msgid "Connection name"
 msgstr "Verbindungsname"
 
+#, fuzzy
+msgid "Connection options"
+msgstr "Dauer der Verbindungen"
+
 #, python-format
 msgid "Connection representation: %s"
 msgstr "Darstellung der Verbindung: %s"
@@ -16319,7 +16339,7 @@ msgstr ""
 "ausgeschaltet ist."
 
 msgid "CronJobs"
-msgstr "CronJobs"
+msgstr "Cronjobs"
 
 msgid "Crontab"
 msgstr "Crontab"
@@ -18698,6 +18718,10 @@ msgstr "OpenHardwareMonitor (kopflos) verteilen"
 msgid "Deploy Oracle databases plug-in"
 msgstr "Oracle-Datenbank-Plugin verteilen"
 
+#, fuzzy
+msgid "Deploy Oracle plug-in"
+msgstr "Arcserve-Plugin verteilen"
+
 msgid "Deploy Podman plug-in"
 msgstr "Podman-Plugin verteilen"
 
@@ -20229,6 +20253,10 @@ msgstr "OpenHardwareMonitor (ohne GUI) nicht verteilen"
 
 msgid "Do not deploy Oracle databases plug-in"
 msgstr "Oracle-Datenbank-Plugin nicht verteilen"
+
+#, fuzzy
+msgid "Do not deploy Oracle plug-in"
+msgstr "iptables-Plugin nicht verteilen"
 
 msgid "Do not deploy Robotmk"
 msgstr "Robotmk nicht verteilen"
@@ -32382,7 +32410,7 @@ msgid ""
 "instead of using the IP address of the host as configured in your host "
 "properties."
 msgstr ""
-"Wenn Sie hier einen Hostnamen angeben, wird eine dynamische DNS-Suche "
+"Wenn Sie hier einen Host-Namen angeben, wird eine dynamische DNS-Suche "
 "durchgeführt, anstatt die IP-Adresse des Hosts zu verwenden, wie sie in "
 "Ihren Host-Eigenschaften konfiguriert ist."
 
@@ -35465,7 +35493,7 @@ msgid "Kubernetes Collector Info"
 msgstr "Kubernetes Collector Info"
 
 msgid "Kubernetes CronJob status"
-msgstr "Kubernetes CronJob Status"
+msgstr "Kubernetes Cronjob Status"
 
 msgid "Kubernetes DaemonSet"
 msgstr "Kubernetes DaemonSet"
@@ -36715,6 +36743,10 @@ msgstr "Levels für benutzte Kapazität in Bytes"
 
 msgid "Levels on write capacity"
 msgstr "Levels für die Schreibkapazität"
+
+#, fuzzy
+msgid "Levels over an extended period of time"
+msgstr "Levels über eine längere Zeitperiode bei Replikationsverzögerung"
 
 msgid "Levels over an extended time period on a single core CPU utilization"
 msgstr ""
@@ -40981,6 +41013,10 @@ msgstr "Überwache Android-Geräte"
 msgid "Monitor CloudFront WAFs"
 msgstr "Cloudfront WAFs überwachen"
 
+#, fuzzy
+msgid "Monitor Oracle Databases"
+msgstr "Datenbanken überwachen"
+
 msgid "Monitor Route53"
 msgstr "Route53 überwachen"
 
@@ -43000,9 +43036,8 @@ msgstr "Kein Proxy"
 msgid "No re-executions"
 msgstr "Keine Wiederausführungen"
 
-#, fuzzy
 msgid "No relays configured yet."
-msgstr "Noch keine %s Konfiguration vorhanden"
+msgstr ""
 
 msgid "No replication with this site"
 msgstr "Keine Replikation mit dieser Instanz"
@@ -46186,6 +46221,10 @@ msgstr "Oracle Kontrolldatei Small Writes"
 msgid "Oracle count"
 msgstr "Oracle Zählung"
 
+#, fuzzy
+msgid "Oracle credentials"
+msgstr "Zugangsdaten angeben"
+
 msgid "Oracle data file backup large read bytes"
 msgstr "Oracle Dateisicherung Large Read in Bytes"
 
@@ -47970,6 +48009,9 @@ msgstr ""
 "Pfad zum Benutzerzertifikat. Wenn der Pfad nicht vorhanden oder leer ist, "
 "wird das Benutzerzertifikat nicht verwendet."
 
+msgid "Path to tnsnames.ora or sqlnet.ora file"
+msgstr ""
+
 msgid "Path to unix socket"
 msgstr "Pfad zum Unix-Socket"
 
@@ -48974,13 +49016,6 @@ msgstr ""
 "sicherzustellen, dass Ihre Lizenz rechtzeitig verlängert wird. Wenn Sie Ihre "
 "Lizenz übereinen %s erworben haben, kontaktieren Sie diesen bitte."
 
-msgid ""
-"Please contact your Checkmk administrator to ensure that your license is "
-"extended in time."
-msgstr ""
-"Bitte kontaktieren Sie Ihren Checkmk-Administrator, um sicherzustellen, dass "
-"Ihre Lizenz rechtzeitig verlängert wird."
-
 msgid "Please contact your administrator."
 msgstr "Bitte wenden Sie sich an Ihren Administrator."
 
@@ -49692,7 +49727,7 @@ msgid "Pods"
 msgstr "Pods"
 
 msgid "Pods of CronJobs"
-msgstr "Pods von CronJobs"
+msgstr "Pods von Cronjobs"
 
 msgid "Point-to-site bandwidth"
 msgstr "Point-to-Site Bandbreite"
@@ -51998,9 +52033,8 @@ msgstr "Relativer Pfad zu Test-Suite-Datei oder -Ordner"
 msgid "Relative time of alert"
 msgstr "Relativer Zeitpunkt des Alerts"
 
-#, fuzzy
 msgid "Relay"
-msgstr "Verzögerung:"
+msgstr "Relais"
 
 #, fuzzy
 msgid "Relay ID"
@@ -52025,9 +52059,8 @@ msgstr "Umbenennen"
 msgid "Relay properties"
 msgstr "Regel-Eigenschaften"
 
-#, fuzzy
 msgid "Relays"
-msgstr "Verzögerung:"
+msgstr "Relais"
 
 msgid "Release"
 msgstr "Release"
@@ -55448,13 +55481,13 @@ msgid ""
 "effect if Pods are not monitored"
 msgstr ""
 "Wählen Sie die Kubernetes-Objekte aus, die Sie überwachen möchten. Von "
-"CronJobs gesteuerte Pods werden gesondert behandelt, da sie in der Regel "
+"Cronjobs gesteuerte Pods werden gesondert behandelt, da sie in der Regel "
 "recht kurzlebig sind. Diese Pods werden auf die gleiche Weise überwacht wie "
 "reguläre Pods. Persistente Volume Claims werden nur bei dem zum jeweiligen "
 "Objekt gehörenden Piggyback-Host angezeigt, anstatt bei einem eigenen Host. "
 "Ihre Regel für die dynamische Host-Verwaltung sollte entsprechend "
 "konfiguriert werden, um zu vermeiden, dass die Piggyback-Hosts für beendete "
-"CronJob-Pods zu lange aufbewahrt werden. Die Option 'Pods of CronJobs' hat "
+"Cronjob-Pods zu lange aufbewahrt werden. Die Option 'Pods of Cronjobs' hat "
 "keine Auswirkungen, wenn Pods nicht überwacht werden"
 
 msgid ""
@@ -55874,6 +55907,22 @@ msgstr "Server-Verbindungen"
 
 msgid "Server latency"
 msgstr "Serverlatenz"
+
+#, fuzzy
+msgid "Server load"
+msgstr "Last von Citrix-Servern"
+
+#, fuzzy
+msgid "Server load %"
+msgstr "Last von Citrix-Servern"
+
+#, fuzzy
+msgid "Server load (average)"
+msgstr "Server-Log-Speicher"
+
+#, fuzzy
+msgid "Server load levels"
+msgstr "Service-Ebenen"
 
 msgid "Server log storage"
 msgstr "Server-Log-Speicher"
@@ -58924,9 +58973,8 @@ msgstr "Freie Platten"
 msgid "Special Agent"
 msgstr "Spezialagent"
 
-#, fuzzy
 msgid "Special cases for specific services"
-msgstr "Zeigt den Zustand eines spezifischen Services an."
+msgstr ""
 
 msgid "Specific Mappings"
 msgstr "Spezifisches Mapping"
@@ -58963,6 +59011,9 @@ msgstr ""
 "Legt fest wie das <a href='wato.py?"
 "mode=edit_ruleset&varname=filesystem_groups'>Dateisystem-Gruppierungs-"
 "Patterns</a> Feature dieses Dateisystem verarbeitet."
+
+msgid "Specifies the database privilege role used when connecting to Oracle."
+msgstr ""
 
 msgid ""
 "Specifies the default layout to be used when an aggregation has no explicit "
@@ -59071,12 +59122,11 @@ msgstr ""
 "Namens durchgeführt, wenn die Konfiguration aktiviert ist. Der mitgelieferte "
 "DNS-Cache von Checkmk ist in der globalen Konfiguration standardmäßig "
 "aktiviert, um den Aktivierungsprozess zu beschleunigen. Der Cache wird "
-"normalerweise täglich durch einen Cron-Job aktualisiert. Sie können den "
-"Cache manuell mit dem Befehl <tt>cmk -v --update-dns-cache</tt> "
-"aktualisieren.<br><br><b>Nur für dynamische IP-Adressen:</b><br>Wenn Sie "
-"hier einen DNS-Namen eingeben, wird die DNS-Auflösung jedes Mal "
-"durchgeführt, wenn der Host überprüft wird. Der DNS-Cache von Checkmk wird "
-"<b>NICHT</b> abgefragt."
+"normalerweise täglich durch einen Cronjob aktualisiert. Sie können den Cache "
+"manuell mit dem Befehl <tt>cmk -v --update-dns-cache</tt> aktualisieren."
+"<br><br><b>Nur für dynamische IP-Adressen:</b><br>Wenn Sie hier einen DNS-"
+"Namen eingeben, wird die DNS-Auflösung jedes Mal durchgeführt, wenn der Host "
+"überprüft wird. Der DNS-Cache von Checkmk wird <b>NICHT</b> abgefragt."
 
 msgid ""
 "Specify an explicit IPv6 address or resolvable DNS name here, if the host "
@@ -59092,16 +59142,15 @@ msgid ""
 msgstr ""
 "Geben Sie hier eine explizite IPv6-Adresse oder einen auflösbaren DNS-Namen "
 "an, wenn der Host-Name nicht über <tt>/etc/hosts</tt> oder DNS auflösbar "
-"ist. Wenn Sie dieses Attribut nicht setzen, wird die Auflösung des "
-"Hostnamens durchgeführt, wenn die Konfiguration aktiviert ist. Der "
-"mitgelieferte DNS-Cache von Checkmk ist in der globalen Konfiguration "
-"standardmäßig aktiviert, um den Aktivierungsprozess zu beschleunigen. Der "
-"Cache wird normalerweise täglich durch einen Cron-Job aktualisiert. Sie "
-"können den Cache manuell mit dem Befehl <tt>cmk -v --update-dns-cache</tt> "
-"aktualisieren.<br><br><b>Nur für dynamische IP-Adressen:</b><br>Wenn Sie "
-"hier einen DNS-Namen eingeben, wird die DNS-Auflösung jedes Mal "
-"durchgeführt, wenn der Host überprüft wird. Der DNS-Cache von Checkmk wird "
-"<b>NICHT</b> abgefragt."
+"ist. Wenn Sie dieses Attribut nicht setzen, wird die Auflösung des Host-"
+"Namens durchgeführt, wenn die Konfiguration aktiviert ist. Der mitgelieferte "
+"DNS-Cache von Checkmk ist in der globalen Konfiguration standardmäßig "
+"aktiviert, um den Aktivierungsprozess zu beschleunigen. Der Cache wird "
+"normalerweise täglich durch einen Cronjob aktualisiert. Sie können den Cache "
+"manuell mit dem Befehl <tt>cmk -v --update-dns-cache</tt> aktualisieren."
+"<br><br><b>Nur für dynamische IP-Adressen:</b><br>Wenn Sie hier einen DNS-"
+"Namen eingeben, wird die DNS-Auflösung jedes Mal durchgeführt, wenn der Host "
+"überprüft wird. Der DNS-Cache von Checkmk wird <b>NICHT</b> abgefragt."
 
 msgid ""
 "Specify at which time period a new file for the event history will be "
@@ -62985,8 +63034,8 @@ msgid ""
 "locally, use '127.0.0.1' or '::1'. To listen on all interfaces, use "
 "'0.0.0.0' or '::'."
 msgstr ""
-"Die IP-Adresse oder der Hostname, an dem der Empfänger lauschen soll. Um nur "
-"lokal zu hören, verwenden Sie '127.0.0.1' oder '::1'. Um auf allen "
+"Die IP-Adresse oder der Host-Name, an dem der Empfänger lauschen soll. Um "
+"nur lokal zu hören, verwenden Sie '127.0.0.1' oder '::1'. Um auf allen "
 "Schnittstellen zu lauschen, verwenden Sie '0.0.0.0' oder '::'."
 
 msgid "The Index of the Overcurrent Protector"
@@ -71676,6 +71725,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure Redis server load "
+"monitoring"
+msgstr ""
+"Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring des Azure "
+"Redis Speichers zu konfigurieren"
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure Redis throughput "
 "monitoring"
 msgstr ""
@@ -72692,6 +72749,11 @@ msgid ""
 msgstr ""
 "Hiermit wird das Agenten-Plugin <tt>mk_nfsiostat</tt> verteilt, um "
 "verschiedene clientseitige NFS E/A-Statistiken zu überprüfen."
+
+#, fuzzy
+msgid ""
+"This will deploy the agent plug-in <tt>mk_oracle</tt> on your target system."
+msgstr "Das Agentenplugin <tt>zorp</tt> auf Ihrem Zielsystem verteilen."
 
 msgid ""
 "This will deploy the agent plug-in <tt>mk_oracle</tt> on your target system. "
@@ -76816,6 +76878,9 @@ msgstr "Unicast-Paketraten"
 msgid "Unidirectional UDP Traffic"
 msgstr "Unidirektionaler UDP-Verkehr"
 
+msgid "Unified Oracle Plugin (Beta)"
+msgstr ""
+
 msgid ""
 "Uninstall the legacy (pre 1.6) agent after installation of the new Windows "
 "agent"
@@ -79043,6 +79108,10 @@ msgstr "Benutzer"
 msgid "User %s of DCD connection was modified"
 msgstr "Benutzer %s der DCD Verbindung wurde geändert"
 
+#, fuzzy
+msgid "User & Password"
+msgstr "Benutzerpasswort"
+
 msgid "User / Group Key"
 msgstr "Benutzer-/Gruppenschlüssel"
 
@@ -79185,6 +79254,10 @@ msgstr "Benutzername"
 msgid "Username / Password"
 msgstr "Benutzername / Passwort"
 
+#, fuzzy
+msgid "Username and Password"
+msgstr "Benutzername / Passwort"
+
 msgid "Username cannot be empty"
 msgstr "Benutzername darf nicht leer sein"
 
@@ -79291,9 +79364,9 @@ msgid ""
 "names. Example: 'azr-my-vm-1a2b3c4d'. Enable this option if you have "
 "resources or resource groups with the same name."
 msgstr ""
-"Mit dieser Option erstellt Checkmk sichere Hostnamen für Piggyback-Hosts, um "
-"Konflikte mit Entitätsnamen aus Azure zu vermeiden. Diese Option stellt den "
-"Hostnamen 'azr-' voran und fügt den letzten Teil der Abonnement-ID an. "
+"Mit dieser Option erstellt Checkmk sichere Host-Namen für Piggyback-Hosts, "
+"um Konflikte mit Entitätsnamen aus Azure zu vermeiden. Diese Option stellt "
+"den Host-Namen 'azr-' voran und fügt den letzten Teil der Abonnement-ID an. "
 "Beispiel: 'azr-my-vm-1a2b3c4d'. Aktivieren Sie diese Option, wenn Sie "
 "Ressourcen oder Ressourcengruppen mit demselben Namen haben."
 
@@ -84087,7 +84160,7 @@ msgid ""
 msgstr ""
 "Sie können hier Monitoring-Makros verwenden. Die wichtigsten sind:"
 "<ul><li><tt>$HOSTADDRESS$</tt>: IP-Adresse des Hosts</li><li><tt>$HOSTNAME$</"
-"tt>: Hostname</li><li><tt>$_HOSTTAGS$</tt>: Liste der Host-Merkmale</"
+"tt>: Host-Name</li><li><tt>$_HOSTTAGS$</tt>: Liste der Host-Merkmale</"
 "li><li><tt>$_HOSTADDRESS_4$</tt>: Die IPv4-Adresse des Hosts</"
 "li><li><tt>$_HOSTADDRESS_6$</tt>: Die IPv6-Adresse des Hosts</"
 "li><li><tt>$_HOSTADDRESS_FAMILY$</tt>: Die primäre Adress-Familie des Hosts</"
@@ -87605,9 +87678,8 @@ msgstr "inaktiv"
 msgid "French"
 msgstr ""
 
-#, fuzzy
 msgid "Loading translations..."
-msgstr "%d Übersetzungen"
+msgstr ""
 
 #, fuzzy
 msgid "Translations loaded"
@@ -87621,9 +87693,8 @@ msgstr "Name der Quelle"
 msgid "Number of apples"
 msgstr "Anzahl von Tabellen"
 
-#, fuzzy
 msgid "Hello %{name}!"
-msgstr "Vollständiger Name"
+msgstr "Hallo %{name}!"
 
 msgid "There is %{ n } apple"
 msgid_plural "There are %{ n } apples"
@@ -87695,12 +87766,57 @@ msgid "required"
 msgstr "erforderlich"
 
 #, fuzzy
-msgid "Select an option..."
-msgstr "Ausgewählte Optionen"
+msgid "No items selected"
+msgstr "Nicht ausgewählt"
+
+msgid "Placeholder for unknown component type:"
+msgstr ""
 
 #, fuzzy
+msgid "No labels"
+msgstr "Knoten-Labels"
+
+#, fuzzy
+msgid "not"
+msgstr "nein"
+
+#, fuzzy
+msgid "No labels selected"
+msgstr "Keine Elemente ausgewählt"
+
+#, fuzzy
+msgid "No tag filters configured"
+msgstr "Kein IP-Bereich definiert"
+
+msgid "Select an option..."
+msgstr ""
+
 msgid "Type to search..."
-msgstr "Zu durchsuchende Indizes"
+msgstr ""
+
+#, fuzzy
+msgid "Operator"
+msgstr "Betrieb"
+
+#, fuzzy
+msgid "Select label..."
+msgstr "Datei auswählen"
+
+#, fuzzy
+msgid "Group Operator"
+msgstr "Gruppenpfad"
+
+#, fuzzy
+msgid "Select group..."
+msgstr "Kontaktgruppe auswählen"
+
+#, fuzzy
+msgid "Select value..."
+msgstr "Ansicht auswählen"
+
+#, fuzzy
+msgid "Remove row"
+msgstr "Entfernt: %r"
 
 #, fuzzy
 msgid "Add widget"
@@ -87819,17 +87935,14 @@ msgstr "Änderung(en)"
 msgid "Foreign changes: (%{n})"
 msgstr "Fremde Änderungen rückgängig machen"
 
-#, fuzzy
 msgid "You haven't selected any sites"
-msgstr "Sie müssen mindestens einen Benutzer auswählen."
+msgstr ""
 
-#, fuzzy
 msgid "Changes:"
-msgstr "Änderung(en)"
+msgstr "Änderungen:"
 
-#, fuzzy
 msgid "No changes"
-msgstr " Änderungen"
+msgstr "Keine Änderungen"
 
 #, fuzzy
 msgid "Sites with changes: %{n}"
@@ -87924,9 +88037,8 @@ msgstr "Neue TLS-Verbindungen"
 msgid "Test agent connection"
 msgstr "Test der Verbindung zum Checkmk-Agenten"
 
-#, fuzzy
 msgid "Testing agent connection ..."
-msgstr "Test der Verbindung zum Checkmk-Agenten"
+msgstr ""
 
 #, fuzzy
 msgid "Successfully connected to agent."
@@ -87944,9 +88056,8 @@ msgstr "Prüfe Verbindung"
 msgid "View all agents"
 msgstr "alle Agenten"
 
-#, fuzzy
 msgid "Select the type of system you want to monitor"
-msgstr "Wählen Sie die Subskriptionen aus, die Sie überwachen wollen."
+msgstr ""
 
 #, fuzzy
 msgid "Save host"
@@ -87961,10 +88072,11 @@ msgid ""
 "Could not save host \"${hostName}\". Close the slideout and review your "
 "input."
 msgstr ""
+"Host \"${hostName}\" konnte nicht gespeichert werden. Schließen Sie bitte "
+"das Slideout und überprüfen Sie Ihre Eingabe."
 
-#, fuzzy
 msgid "Host \"${hostName}\" exists"
-msgstr "Host existiert bereits"
+msgstr "Host \"${hostName}\" existiert"
 
 #, fuzzy
 msgid "Close and revise form"
@@ -88111,13 +88223,10 @@ msgstr "Speichern & Service-Erkennung durchführen"
 msgid "No filters can be applied to your current search query."
 msgstr ""
 
-#, fuzzy
 msgid ""
 "Search with regular expressions for menu entries, hosts, services or host "
 "and service groups."
 msgstr ""
-"Suchfeld erlaubt reguläre Ausdrücke und eine Teilsuche auf die Namen von "
-"Host-Gruppen"
 
 msgid "Note that for simplicity '*' will be substituted with '.*'."
 msgstr ""
@@ -88140,9 +88249,8 @@ msgstr "Suche in Setup"
 msgid "Press"
 msgstr "Druck"
 
-#, fuzzy
 msgid "to trigger host/service search"
-msgstr "Keine passenden Hosts/Services gefunden."
+msgstr ""
 
 msgid "Only available for 'Monitoring' and 'All'"
 msgstr ""
@@ -88161,9 +88269,8 @@ msgstr "Suchindex"
 msgid "¯\\_(ツ)_/¯"
 msgstr ""
 
-#, fuzzy
 msgid "No results found for your search"
-msgstr "Keine Logs für diesen Host gefunden."
+msgstr ""
 
 #, fuzzy
 msgid "Reset search"
@@ -88264,9 +88371,8 @@ msgstr "Alle Hosts der Instanz"
 msgid "Continue setup"
 msgstr "Suche verfeinern"
 
-#, fuzzy
 msgid "What's next"
-msgstr "Die nächsten "
+msgstr ""
 
 #, fuzzy
 msgid "Next steps with Checkmk"
@@ -88337,9 +88443,8 @@ msgstr ""
 msgid "In the host table, click on the"
 msgstr "Host-Aktionsmenü öffnen"
 
-#, fuzzy
 msgid "-icon next to the host to open the service discovery."
-msgstr "Speichern & zur Service-Erkennung wechseln"
+msgstr ""
 
 #, fuzzy
 msgid "View host table"
@@ -88395,9 +88500,8 @@ msgstr "Kontaktgruppen abgleichen"
 msgid "On default, there is one contact group available \"Everything\"."
 msgstr ""
 
-#, fuzzy
 msgid "Go to Setup > Users > Contact groups to create or edit contact groups."
-msgstr "Zutreffende Kontaktgruppen (Host- oder Regel-Kontaktgruppen)"
+msgstr ""
 
 #, fuzzy
 msgid "Assign users to a contact group"
@@ -88445,9 +88549,8 @@ msgstr "Zum Dashboard hinzufügen"
 msgid "List of all dashboards"
 msgstr "Links zu allen Dashboards"
 
-#, fuzzy
 msgid "Enable notifications"
-msgstr "Benachrichtigungen aktivieren?"
+msgstr "Benachrichtigungen aktivieren"
 
 msgid ""
 "Notifications help you to stay on top of problems without having to "
@@ -88483,9 +88586,8 @@ msgstr "In Bearbeitung"
 msgid "Steps complete"
 msgstr "vollständig"
 
-#, fuzzy
 msgid "Welcome to Checkmk!"
-msgstr "Willkommen bei Checkmk"
+msgstr "Willkommen bei Checkmk!"
 
 msgid "Get started with Checkmk in 5 easy steps."
 msgstr ""
@@ -88496,6 +88598,13 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid ""
+#~ "Please contact your Checkmk administrator to ensure that your license is "
+#~ "extended in time."
+#~ msgstr ""
+#~ "Bitte kontaktieren Sie Ihren Checkmk-Administrator, um sicherzustellen, "
+#~ "dass Ihre Lizenz rechtzeitig verlängert wird."
 
 #~ msgid "Default State"
 #~ msgstr "Standardzustand"

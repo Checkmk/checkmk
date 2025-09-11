@@ -5508,6 +5508,9 @@ msgstr "Alarme"
 msgid "Alert"
 msgstr "Alertă"
 
+msgid "Alert after being at or above the threshold for"
+msgstr ""
+
 msgid "Alert handler"
 msgstr "Gestionar de alerte"
 
@@ -8241,6 +8244,10 @@ msgstr "Numărul mediu de mesaje niveluri superioare"
 msgid "Average number of messages"
 msgstr "Numărul mediu de mesaje"
 
+#, fuzzy
+msgid "Average over"
+msgstr "Valoarea medie"
+
 msgid "Average pending tasks delta"
 msgstr "Delta medie a sarcinilor în așteptare"
 
@@ -8294,6 +8301,12 @@ msgid ""
 msgstr ""
 "Calculați media utilizării CPU pe perioada de timp specificată înainte de "
 "aplicarea nivelurilor."
+
+msgid ""
+"Average the instantaneous load over the specified number of minutes. Note: "
+"This does NOT affect \"Levels an extended period of time\" above, which "
+"always checks the instantaneous value."
+msgstr ""
 
 msgid "Average time messages stay on queue"
 msgstr "Timpul mediu în care mesajele rămân în coadă"
@@ -8915,6 +8928,10 @@ msgstr "Memorie absolută utilizată"
 #, fuzzy
 msgid "Azure Redis replication"
 msgstr "Conexiuni la baza de date"
+
+#, fuzzy
+msgid "Azure Redis server load"
+msgstr "Numele serverului Redis"
 
 #, fuzzy
 msgid "Azure Redis throughput"
@@ -15284,6 +15301,10 @@ msgstr "A avut loc pierderea conexiunii"
 msgid "Connection name"
 msgstr "Numele conexiunii"
 
+#, fuzzy
+msgid "Connection options"
+msgstr "Duratele de conectare"
+
 #, fuzzy, python-format
 msgid "Connection representation: %s"
 msgstr "Reprezentarea regulilor: %s"
@@ -19297,6 +19318,10 @@ msgid "Deploy Oracle databases plug-in"
 msgstr "Implementarea plugin-ului pentru baze de date ORACLE"
 
 #, fuzzy
+msgid "Deploy Oracle plug-in"
+msgstr "Implementarea plugin-ului Arcserve"
+
+#, fuzzy
 msgid "Deploy Podman plug-in"
 msgstr "Implementați plugin-ul Mailman"
 
@@ -20948,6 +20973,10 @@ msgstr "Nu implementați OpenHardwareMonitor (fără cap)"
 #, fuzzy
 msgid "Do not deploy Oracle databases plug-in"
 msgstr "Nu implementați plugin-ul pentru baze de date ORACLE"
+
+#, fuzzy
+msgid "Do not deploy Oracle plug-in"
+msgstr "Nu implementați plugin-ul iptables"
 
 msgid "Do not deploy Robotmk"
 msgstr "Nu implementați Robotmk"
@@ -38234,6 +38263,10 @@ msgstr "Niveluri privind capacitatea utilizată în octeți"
 msgid "Levels on write capacity"
 msgstr "Niveluri privind capacitatea de scriere"
 
+#, fuzzy
+msgid "Levels over an extended period of time"
+msgstr "Niveluri pe o perioadă de timp extinsă privind decalajul de replicare"
+
 msgid "Levels over an extended time period on a single core CPU utilization"
 msgstr ""
 "Nivelurile pe o perioadă de timp extinsă pe o singură utilizare a nucleului "
@@ -42623,6 +42656,10 @@ msgstr "Monitorizați dispozitivele Android"
 
 msgid "Monitor CloudFront WAFs"
 msgstr "Monitorizarea WAF-urilor CloudFront"
+
+#, fuzzy
+msgid "Monitor Oracle Databases"
+msgstr "Baza de date a evenimentelor"
 
 msgid "Monitor Route53"
 msgstr "Monitorizarea Route53"
@@ -48165,6 +48202,10 @@ msgid "Oracle count"
 msgstr "Număr total"
 
 #, fuzzy
+msgid "Oracle credentials"
+msgstr "Utilizați acreditările"
+
+#, fuzzy
 msgid "Oracle data file backup large read bytes"
 msgstr "ORACLE Total de octeți mari citiți"
 
@@ -50123,6 +50164,9 @@ msgid ""
 "certificate will not be used."
 msgstr ""
 
+msgid "Path to tnsnames.ora or sqlnet.ora file"
+msgstr ""
+
 msgid "Path to unix socket"
 msgstr "Calea către socket-ul unix"
 
@@ -51184,13 +51228,6 @@ msgstr ""
 "Vă rugăm să contactați echipa de vânzări Checkmk la %s pentru a vă asigura "
 "că licența dvs. este prelungită la timp. Dacă v-ați achiziționat licența "
 "prin intermediul unui %s, vă rugăm să îl contactați."
-
-msgid ""
-"Please contact your Checkmk administrator to ensure that your license is "
-"extended in time."
-msgstr ""
-"Vă rugăm să contactați administratorul Checkmk pentru a vă asigura că "
-"licența dvs. este prelungită la timp."
 
 msgid "Please contact your administrator."
 msgstr "Vă rugăm să vă contactați administratorul."
@@ -58403,6 +58440,22 @@ msgstr "Conexiuni de server"
 msgid "Server latency"
 msgstr "Latența serverului"
 
+#, fuzzy
+msgid "Server load"
+msgstr "Încărcarea serverului Citrix"
+
+#, fuzzy
+msgid "Server load %"
+msgstr "Încărcarea serverului Citrix"
+
+#, fuzzy
+msgid "Server load (average)"
+msgstr "Stocarea jurnalului serverului"
+
+#, fuzzy
+msgid "Server load levels"
+msgstr "Nivelul serviciilor"
+
 msgid "Server log storage"
 msgstr "Stocarea jurnalului serverului"
 
@@ -61629,6 +61682,9 @@ msgstr ""
 "Specifică modul în care <a href='wato.py?"
 "mode=edit_ruleset&varname=filesystem_groups'>Modele de grupare a sistemelor "
 "de fișiere</a> caracteristica procesează acest sistem de fișiere."
+
+msgid "Specifies the database privilege role used when connecting to Oracle."
+msgstr ""
 
 msgid ""
 "Specifies the default layout to be used when an aggregation has no explicit "
@@ -74318,6 +74374,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This ruleset allows you to configure levels for Azure Redis server load "
+"monitoring"
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
+#, fuzzy
+msgid ""
 "This ruleset allows you to configure levels for Azure Redis throughput "
 "monitoring"
 msgstr ""
@@ -75342,6 +75406,11 @@ msgid ""
 msgstr ""
 "Aceasta va implementa pluginul agentului <tt>mk_nfsiostat</tt> pentru a "
 "verifica diverse statistici NFS IO pe partea clientului."
+
+#, fuzzy
+msgid ""
+"This will deploy the agent plug-in <tt>mk_oracle</tt> on your target system."
+msgstr "Implementați pluginul agent <tt>zorp</tt> pe sistemul țintă."
 
 #, fuzzy
 msgid ""
@@ -79990,6 +80059,9 @@ msgstr "Ratele pachetelor unicast"
 msgid "Unidirectional UDP Traffic"
 msgstr "Trafic UDP unidirecțional"
 
+msgid "Unified Oracle Plugin (Beta)"
+msgstr ""
+
 msgid ""
 "Uninstall the legacy (pre 1.6) agent after installation of the new Windows "
 "agent"
@@ -82312,6 +82384,10 @@ msgstr "Utilizator"
 msgid "User %s of DCD connection was modified"
 msgstr "Utilizatorul %s a fost modificată conexiunea DCD"
 
+#, fuzzy
+msgid "User & Password"
+msgstr "Parola utilizatorului"
+
 msgid "User / Group Key"
 msgstr "Cheie de utilizator / grup"
 
@@ -82465,6 +82541,10 @@ msgstr "Nume utilizator"
 
 #, fuzzy
 msgid "Username / Password"
+msgstr "Nume de utilizator/parolă"
+
+#, fuzzy
+msgid "Username and Password"
 msgstr "Nume de utilizator/parolă"
 
 #, fuzzy
@@ -91170,12 +91250,59 @@ msgid "required"
 msgstr "Port necesar"
 
 #, fuzzy
+msgid "No items selected"
+msgstr "Nu este selectat"
+
+msgid "Placeholder for unknown component type:"
+msgstr ""
+
+#, fuzzy
+msgid "No labels"
+msgstr "Etichete de noduri"
+
+#, fuzzy
+msgid "not"
+msgstr "nu"
+
+#, fuzzy
+msgid "No labels selected"
+msgstr "Nu este selectat"
+
+#, fuzzy
+msgid "No tag filters configured"
+msgstr "Nu este configurat niciun interval IP"
+
+#, fuzzy
 msgid "Select an option..."
 msgstr "Conexiuni respinse"
 
 #, fuzzy
 msgid "Type to search..."
 msgstr "Indicii de căutare"
+
+#, fuzzy
+msgid "Operator"
+msgstr "Operațiunea"
+
+#, fuzzy
+msgid "Select label..."
+msgstr "Selectați fișierul"
+
+#, fuzzy
+msgid "Group Operator"
+msgstr "Calea grupului"
+
+#, fuzzy
+msgid "Select group..."
+msgstr "Conexiuni respinse"
+
+#, fuzzy
+msgid "Select value..."
+msgstr "Selectați vizualizarea"
+
+#, fuzzy
+msgid "Remove row"
+msgstr "Eliminat: %s"
 
 #, fuzzy
 msgid "Add widget"
@@ -91962,6 +92089,13 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid ""
+#~ "Please contact your Checkmk administrator to ensure that your license is "
+#~ "extended in time."
+#~ msgstr ""
+#~ "Vă rugăm să contactați administratorul Checkmk pentru a vă asigura că "
+#~ "licența dvs. este prelungită la timp."
 
 #, fuzzy
 #~ msgid "Default State"

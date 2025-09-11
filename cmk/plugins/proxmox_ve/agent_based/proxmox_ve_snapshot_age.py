@@ -3,10 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
-import time
+import datetime
 from collections.abc import Mapping, Sequence
 from typing import Any
+
+from pydantic import BaseModel, Field
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -21,33 +22,58 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-Section = Mapping[str, Sequence[int]]
+
+class SectionSnapshots(BaseModel, frozen=True):
+    snaptimes: Sequence[int] = Field(alias="snaptimes", default_factory=list)
 
 
-def parse_proxmox_ve_snapshot_age(string_table: StringTable) -> Section:
-    section = json.loads(string_table[0][0])
-    return section
+def parse_proxmox_ve_snapshot_age(string_table: StringTable) -> SectionSnapshots:
+    return SectionSnapshots.model_validate_json(string_table[0][0])
 
 
-def discover_single(section: Section) -> DiscoveryResult:
+def discover_single(section: SectionSnapshots) -> DiscoveryResult:
     yield Service()
 
 
-def check_proxmox_ve_snapshot_age(params: Mapping[str, Any], section: Section) -> CheckResult:
-    if not section["snaptimes"]:
+def _check_proxmox_ve_snapshot_age_testable(
+    now: float, params: Mapping[str, Any], snaptimes: Sequence[int]
+) -> CheckResult:
+    # timestamps and timezones...
+    oldest_snapshot = max(now - min(snaptimes), 0)
+    newest_snapshot = max(now - max(snaptimes), 0)
+
+    yield from check_levels(
+        oldest_snapshot,
+        label="Oldest",
+        levels_upper=params["oldest_levels"],
+        metric_name="oldest_snapshot_age",
+        render_func=render.timespan,
+        boundaries=params["oldest_levels"][1],
+    )
+
+    yield from check_levels(
+        newest_snapshot,
+        label="Newest",
+        levels_upper=params.get("newest_levels"),
+        boundaries=params.get("newest_levels", (None, None))[1],
+        metric_name="newest_snapshot_age",
+        render_func=render.timespan,
+    )
+
+    yield Result(state=State.OK, summary=f"Snapshots: {len(snaptimes)}")
+
+
+def check_proxmox_ve_snapshot_age(
+    params: Mapping[str, Any], section: SectionSnapshots
+) -> CheckResult:
+    if not section.snaptimes:
         yield Result(state=State.OK, summary="No snapshot found")
         return
 
-    # timestamps and timezones...
-    age = max(time.time() - min(section["snaptimes"]), 0)
-
-    yield from check_levels(
-        age,
-        levels_upper=params["oldest_levels"],
-        metric_name="age",
-        render_func=render.timespan,
-        label="Age",
-        boundaries=params["oldest_levels"][1],
+    yield from _check_proxmox_ve_snapshot_age_testable(
+        datetime.datetime.now(tz=datetime.UTC).timestamp(),
+        params,
+        section.snaptimes,
     )
 
 

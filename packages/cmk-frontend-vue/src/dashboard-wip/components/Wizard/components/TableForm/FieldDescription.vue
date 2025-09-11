@@ -16,6 +16,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .table-form-row {
   flex: 1;
   width: 100%;
@@ -23,6 +24,7 @@ conditions defined in the file COPYING, which is part of this source code packag
   align-items: center;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .field-description {
   flex: 1;
   direction: ltr;
@@ -32,6 +34,7 @@ conditions defined in the file COPYING, which is part of this source code packag
   text-wrap-mode: nowrap;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .field-description__label {
   width: 100%;
   display: block;

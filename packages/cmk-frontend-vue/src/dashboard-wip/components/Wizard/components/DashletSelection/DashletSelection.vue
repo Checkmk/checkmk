@@ -43,6 +43,7 @@ const updateDashletSelection = (graph: string) => {
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .dashlet-selection__container {
   display: flex;
   gap: var(--spacing);

@@ -57,17 +57,20 @@ const displayGroups = computed(() => {
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .readonly-query-builder {
   display: flex;
   flex-direction: column;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .query-groups {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-half);
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .query-group {
   display: flex;
   align-items: flex-start;
@@ -76,11 +79,13 @@ const displayGroups = computed(() => {
   padding-top: var(--dimension-2);
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .query-group__operator {
   width: 40px;
   flex-shrink: 0;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .query-group__content {
   flex: 1;
   min-width: 0;

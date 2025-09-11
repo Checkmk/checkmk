@@ -198,50 +198,61 @@ const getTagAutocompleter = (index: number): ComputedRef<Autocompleter> =>
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .tag-filter-container {
   display: flex;
   flex-direction: column;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .tag-filter-table {
   border-collapse: separate;
   border-spacing: 0 var(--dimension-4);
   width: 100%;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .tag-filter-row {
   display: table-row;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .tag-filter-cell {
   vertical-align: middle;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .tag-filter-cell:first-child {
   padding-left: 0;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .tag-filter-cell:last-child {
   padding-right: 0;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .tag-filter-cell > * {
   width: 40%;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .tag-filter-cell:nth-child(2) > * {
   width: 15%;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .tag-filter-cell:nth-child(3) > * {
   width: 40%;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .tag-filter-cell--clear {
   width: 5%;
   text-align: center;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .tag-filter-clear-button {
   width: var(--dimension-7);
   height: var(--dimension-7);
@@ -254,6 +265,7 @@ const getTagAutocompleter = (index: number): ComputedRef<Autocompleter> =>
   margin: 0 auto;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .tag-filter-clear-spacer {
   width: var(--dimension-7);
   height: var(--dimension-7);

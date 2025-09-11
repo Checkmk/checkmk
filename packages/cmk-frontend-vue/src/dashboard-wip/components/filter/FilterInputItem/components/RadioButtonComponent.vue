@@ -51,12 +51,14 @@ const handleChange = (value: string): void => {
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .radio-group.horizontal {
   display: flex;
   gap: var(--dimension-6);
   align-items: center;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .radio-option {
   display: flex;
   align-items: center;
@@ -64,10 +66,12 @@ const handleChange = (value: string): void => {
   cursor: pointer;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .radio-option input[type='radio'] {
   margin: 0;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .radio-label {
   user-select: none;
 }

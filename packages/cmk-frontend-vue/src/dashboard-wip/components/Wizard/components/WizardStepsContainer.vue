@@ -10,6 +10,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .create-edit-dashlet__steps-container {
   flex: 1;
   background-color: var(--ux-theme-3);

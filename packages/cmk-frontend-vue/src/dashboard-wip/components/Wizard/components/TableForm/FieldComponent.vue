@@ -10,6 +10,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .field-component {
   flex: 2;
 }

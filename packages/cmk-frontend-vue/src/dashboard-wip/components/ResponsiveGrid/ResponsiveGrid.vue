@@ -218,12 +218,14 @@ const { ErrorBoundary: errorBoundary } = useErrorBoundary()
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .db-responsive-grid-layout__container {
   width: 100%;
   height: 100%;
   position: relative;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .db-responsive-grid-layout__layout {
   width: 100%;
   height: 100%;
@@ -233,6 +235,7 @@ const { ErrorBoundary: errorBoundary } = useErrorBoundary()
   z-index: 2;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .db-responsive-grid-layout__edit-columns {
   position: absolute;
   z-index: 1;
@@ -246,6 +249,7 @@ const { ErrorBoundary: errorBoundary } = useErrorBoundary()
   height: 100%;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .db-responsive-grid-layout__edit-column {
   flex-grow: 1;
 
@@ -253,21 +257,23 @@ const { ErrorBoundary: errorBoundary } = useErrorBoundary()
   background-color: var(--color-conference-grey-100);
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .vgl-layout {
   --vgl-placeholder-bg: var(--color-corporate-green-50);
   --vgl-placeholder-opacity: 40%;
 }
 
-/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention,selector-pseudo-class-no-unknown */
 :deep(.vgl-item--placeholder) {
   border-radius: 4px;
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   .vgl-item__resizer {
     display: none;
   }
 }
 
-/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown,checkmk/vue-bem-naming-convention */
 :deep(.vgl-item__resizer) {
   z-index: 5;
 }

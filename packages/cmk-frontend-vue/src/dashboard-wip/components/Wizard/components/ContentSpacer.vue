@@ -26,6 +26,7 @@ const pixelHeight = computed(() => `${props.height}px`)
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .content-spacer {
   flex: 1;
   display: flex;
@@ -33,6 +34,7 @@ const pixelHeight = computed(() => `${props.height}px`)
   min-height: v-bind(pixelHeight);
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .content-spacer__horizontal-line {
   width: 100%;
   border-color: var(--ux-theme-2);

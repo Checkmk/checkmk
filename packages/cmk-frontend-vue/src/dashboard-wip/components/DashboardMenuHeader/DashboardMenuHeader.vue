@@ -165,6 +165,7 @@ const handleAddWidget = () => {
   gap: var(--dimension-6);
   flex: 1;
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   .selection-section {
     display: flex;
     align-items: center;
@@ -189,6 +190,7 @@ const handleAddWidget = () => {
 .dropdown-menu-items {
   width: 100%;
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   .menu-item {
     box-sizing: border-box;
     display: flex;
@@ -207,6 +209,7 @@ const handleAddWidget = () => {
     border-radius: var(--dimension-3);
     transition: background-color 0.2s ease;
 
+    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
     .menu-label {
       color: var(--font-color);
     }

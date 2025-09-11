@@ -116,12 +116,14 @@ if (model.value.length === 0) {
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .query-builder {
   display: flex;
   flex-direction: column;
   gap: var(--spacing);
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .query-group {
   display: flex;
   align-items: flex-start;
@@ -130,11 +132,13 @@ if (model.value.length === 0) {
   padding-top: var(--dimension-2);
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .query-group__operator {
   width: 80px;
   flex-shrink: 0;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .query-group__content {
   flex: 1;
   min-width: 0;

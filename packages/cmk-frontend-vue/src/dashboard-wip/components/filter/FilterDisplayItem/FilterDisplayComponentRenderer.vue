@@ -117,11 +117,13 @@ const props = defineProps<Props>()
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .filter-component {
   flex: 1;
   width: 100%;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .horizontal-group {
   display: flex;
   flex-wrap: wrap;
@@ -129,11 +131,13 @@ const props = defineProps<Props>()
   gap: var(--dimension-4);
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .horizontal-group-item {
   flex: 1;
   min-width: 0;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .checkbox-group-container {
   display: flex;
   flex-wrap: wrap;
@@ -141,6 +145,7 @@ const props = defineProps<Props>()
   margin-top: 4px;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .checkbox-no-selection {
   padding: var(--dimension-3) var(--dimension-4);
   color: #666;

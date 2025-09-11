@@ -38,6 +38,7 @@ const containerStyle = computed(() => {
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .db-relative-grid-frame {
   position: absolute;
   display: flex;

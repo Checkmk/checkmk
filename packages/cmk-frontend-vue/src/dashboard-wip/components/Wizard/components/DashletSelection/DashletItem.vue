@@ -43,6 +43,7 @@ const itemVariant = computed(() => {
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .dashlet_item {
   flex: 1;
 }

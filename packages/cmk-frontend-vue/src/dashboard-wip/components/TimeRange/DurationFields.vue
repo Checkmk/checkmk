@@ -27,6 +27,7 @@ const durationModel = defineModel<Age>({
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .custom-duration-fields {
   display: flex;
   gap: var(--spacing);

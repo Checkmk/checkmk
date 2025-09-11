@@ -12,12 +12,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .create-edit-dashlet__external-container {
   display: flex;
   flex-direction: column;
   height: 100%;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .create-edit-dashlet__main-container {
   display: flex;
   width: 100%;

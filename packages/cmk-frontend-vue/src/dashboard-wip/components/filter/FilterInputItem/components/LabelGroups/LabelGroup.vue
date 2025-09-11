@@ -147,12 +147,14 @@ if (model.value.length === 0) {
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .label-group {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-4);
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .simple-list {
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -160,14 +162,17 @@ if (model.value.length === 0) {
   align-items: center;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .simple-list-item {
   display: contents;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .simple-list-item__content {
   display: contents;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .simple-list-item__remove {
   width: var(--dimension-8);
   height: var(--dimension-8);
@@ -183,15 +188,18 @@ if (model.value.length === 0) {
   line-height: 1;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .simple-list-item__spacer {
   width: var(--dimension-8);
   height: var(--dimension-8);
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .label-group-item {
   display: contents;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .label-group-item__operator {
   width: 70px;
 }

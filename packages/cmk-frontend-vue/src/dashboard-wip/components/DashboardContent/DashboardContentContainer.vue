@@ -32,7 +32,7 @@ if (title && ['hidden', 'without_background'].includes(title.render_mode)) {
     </div>
     <div
       class="db-content-container__content"
-      :class="{ 'db-content-container__content_background': !!props.render_background }"
+      :class="{ 'db-content-container__content-background': !!props.render_background }"
     >
       <slot />
     </div>
@@ -72,7 +72,7 @@ if (title && ['hidden', 'without_background'].includes(title.render_mode)) {
   flex-direction: column;
   overflow: v-bind('contentOverflow');
 
-  &.db-content-container__content_background {
+  &.db-content-container__content-background {
     background-color: var(--db-content-bg-color);
   }
 }

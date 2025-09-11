@@ -39,6 +39,7 @@ defineExpose({
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .cmk-menu-button {
   display: flex;
   align-items: center;

@@ -46,12 +46,14 @@ const handleCheckboxChange = (componentId: string, values: ConfiguredValues): vo
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .checkbox-group {
   border: none;
   padding: 0;
   margin: 0;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .checkbox-group-items {
   display: flex;
   align-items: center;

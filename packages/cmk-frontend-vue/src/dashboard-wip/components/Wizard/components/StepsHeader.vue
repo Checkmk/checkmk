@@ -38,15 +38,18 @@ defineProps<BackButtonProps>()
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .back-button__icon {
   position: relative;
   left: -3px;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .back-button__container {
   display: flex;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .back-button__label {
   padding-left: var(--spacing);
 }

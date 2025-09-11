@@ -3,45 +3,40 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithoutItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersOperatingSystem,
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    Integer,
+    LevelDirection,
+    migrate_to_integer_simple_levels,
+    SimpleLevels,
 )
-from cmk.gui.valuespec import Dictionary, Integer, Tuple
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 
 
 def _parameter_valuespec_zorp_connections():
     return Dictionary(
-        elements=[
-            (
-                "levels",
-                Tuple(
-                    title=_("Levels"),
-                    elements=[
-                        Integer(
-                            title=_("Warning at"),
-                            default_value=15,
-                        ),
-                        Integer(
-                            title=_("Critical at"),
-                            default_value=20,
-                        ),
-                    ],
+        elements={
+            "levels": DictElement(
+                required=True,  # it's the only one.
+                parameter_form=SimpleLevels(
+                    title=Title("Threshold on number of connections"),
+                    migrate=migrate_to_integer_simple_levels,
+                    form_spec_template=Integer(),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=DefaultValue((15, 20)),
                 ),
-            ),
-        ],
-        required_keys=["levels"],  # There is only one value, so its required
+            )
+        }
     )
 
 
-rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
-        check_group_name="zorp_connections",
-        group=RulespecGroupCheckParametersOperatingSystem,
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_zorp_connections,
-        title=lambda: _("Zorp connections"),
-    )
+rule_spec_zorp_connections = CheckParameters(
+    name="zorp_connections",
+    title=Title("Zorp connections"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_valuespec_zorp_connections,
+    condition=HostCondition(),
 )

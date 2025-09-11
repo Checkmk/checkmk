@@ -18,7 +18,7 @@ def _section() -> Section:
                 ["Instance", "scb_ssh:", "walking"],
                 ["zorp.stats.active_connections:", "0"],
                 ["Instance", "scb_rdp:", "walking"],
-                ["zorp.stats.active_connections:", "16"],
+                ["zorp.stats.active_connections:", "15"],
                 ["Instance", "scb_telnet:", "walking"],
                 ["zorp.stats.active_connections:", "None"],
                 ["Instance", "scb_vnc:", "walking"],
@@ -38,13 +38,17 @@ def test_discover_zorp_connections() -> None:
 
 
 def test_check_zorp_connections() -> None:
-    assert list(check_plugin_zorp_connections.check_function({"levels": (16, 25)}, _section())) == [
+    assert list(
+        check_plugin_zorp_connections.check_function(
+            check_plugin_zorp_connections.check_default_parameters, _section()
+        )
+    ) == [
         Result(state=State.OK, summary="scb_ssh: 0"),
-        Result(state=State.OK, summary="scb_rdp: 16"),
+        Result(state=State.OK, summary="scb_rdp: 15"),
         Result(state=State.OK, summary="scb_telnet: 0"),
         Result(state=State.OK, summary="scb_vnc: 0"),
         Result(state=State.OK, summary="scb_ica: 0"),
         Result(state=State.OK, summary="scb_http: 0"),
-        Result(state=State.WARN, summary="Total connections: 16 (warn/crit at 16/25)"),
-        Metric("connections", 16, levels=(16.0, 25.0)),
+        Result(state=State.WARN, summary="Total connections: 15 (warn/crit at 15/20)"),
+        Metric("connections", 15, levels=(15.0, 20.0)),
     ]

@@ -60,7 +60,7 @@ defineProps<{ screenshotMode: boolean }>()
         :id="tab.id"
         :key="tab.id"
         :disabled="tab.disabled"
-        class="demo-cmk-tabs"
+        class="cmk-demo-tabs"
       >
         <CmkIcon :name="tab.icon.name"></CmkIcon>
         {{ tab.title }}
@@ -75,7 +75,7 @@ defineProps<{ screenshotMode: boolean }>()
 </template>
 
 <style scoped>
-.demo-cmk-tabs {
+.cmk-demo-tabs {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -85,7 +85,6 @@ defineProps<{ screenshotMode: boolean }>()
     padding: 0;
   }
 
-  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   > .cmk-icon {
     margin-right: 16px;
   }

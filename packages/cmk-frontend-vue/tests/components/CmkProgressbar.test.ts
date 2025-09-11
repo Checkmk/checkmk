@@ -15,7 +15,7 @@ function getRandomProgressValues(): { max: number; value: number } {
 }
 
 function ensureProgressIndicatorAt(progressbar: HTMLElement, max: number, value: number): void {
-  const progressIndicator = progressbar.querySelector('.cmk-progressbar__indicator')
+  const progressIndicator = progressbar.querySelector('.cmk-progressbar-indicator')
   expect((progressIndicator as HTMLDivElement).style.transform).toBe(
     `translateX(-${100 - (value / max) * 100}%)`
   )
@@ -29,7 +29,7 @@ test('Progressbar renders infinite without label', async () => {
   const progressbar = screen.getByRole('progressbar')
 
   expect(progressbar.title).toBe('unknown progress')
-  expect(progressbar.querySelector('.cmk-progressbar__indicator-infinite')).toBeDefined()
+  expect(progressbar.querySelector('.cmk-progressbar-indicator-infinite')).toBeDefined()
 })
 
 test('Progressbar renders to certain progress', async () => {

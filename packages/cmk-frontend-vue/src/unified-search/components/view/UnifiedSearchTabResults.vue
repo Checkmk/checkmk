@@ -142,8 +142,6 @@ function searchResultNotEmpty(): boolean {
 </template>
 
 <style scoped>
-/* stylelint-disable checkmk/vue-bem-naming-convention */
-
 .result-heading {
   margin-bottom: var(--spacing);
   display: flex;

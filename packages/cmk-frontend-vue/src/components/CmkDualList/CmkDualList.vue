@@ -170,26 +170,22 @@ const elementCounter = computed(() => props.elements.length)
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .cmk-dual-list-container {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .cmk-dual-list-body {
   display: flex;
   gap: 1rem;
   align-items: center;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .cmk-dual-list-single-list {
   flex: 1;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .cmk-dual-list-action-buttons {
   display: flex;
   flex-direction: column;
@@ -200,13 +196,11 @@ const elementCounter = computed(() => props.elements.length)
   max-width: 51px;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .cmk-dual-list-action-button {
   margin: 5px;
   width: 100%;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .cmk-dual-list-action-button button {
   width: 100%;
 }

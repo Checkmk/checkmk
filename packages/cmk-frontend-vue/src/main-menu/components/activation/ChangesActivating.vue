@@ -17,19 +17,19 @@ defineProps<{
 </script>
 
 <template>
-  <div class="mm-changes-activating__container">
-    <span v-if="typeof activatingOnSites === 'string'" class="mm-changes-activating__text"
+  <div class="cmk-changes-activating-container">
+    <span v-if="typeof activatingOnSites === 'string'" class="cmk-changes-activating-text"
       >{{ _t('Activating changes on ') }}
       {{ "'".concat(activatingOnSites as string).concat("'...") }}</span
     >
-    <span v-else class="mm-changes-activating__text">{{ _t('Activating changes... ') }} </span>
+    <span v-else class="cmk-changes-activating-text">{{ _t('Activating changes... ') }} </span>
     <span>{{ _t("You can safely navigate away - we'll keep working in the background") }}</span>
     <CmkProgressbar max="unknown"></CmkProgressbar>
   </div>
 </template>
 
 <style scoped>
-.mm-changes-activating__container {
+.cmk-changes-activating-container {
   display: flex;
   padding: var(--dimension-9) var(--dimension-4);
   flex-direction: column;
@@ -41,7 +41,7 @@ defineProps<{
   border-radius: var(--border-radius);
 }
 
-.mm-changes-activating__text {
+.cmk-changes-activating-text {
   font-weight: var(--font-weight-bold);
 }
 </style>

@@ -20,7 +20,6 @@ import CmkSkeleton from '@/components/CmkSkeleton.vue'
 </template>
 
 <style scoped>
-/* stylelint-disable checkmk/vue-bem-naming-convention */
 .result-item-skeleton {
   list-style-type: none;
   margin-bottom: var(--dimension-1) !important;

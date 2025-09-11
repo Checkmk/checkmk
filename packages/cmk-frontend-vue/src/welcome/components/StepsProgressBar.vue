@@ -46,7 +46,6 @@ const { completedSteps = 1, totalSteps = 5 } = defineProps<StepsProgressBarProps
 </template>
 
 <style scoped>
-/* stylelint-disable checkmk/vue-bem-naming-convention */
 .steps-progress-bar {
   display: flex;
   gap: 4px;

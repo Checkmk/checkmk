@@ -115,7 +115,6 @@ const emit = defineEmits<{
 </template>
 
 <style scoped>
-/* stylelint-disable checkmk/vue-bem-naming-convention */
 .cmk-changes-sites-item-wrapper {
   background: var(--default-bg-color);
   padding: var(--dimension-3);

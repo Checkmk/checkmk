@@ -9,23 +9,23 @@ import { type VariantProps, cva } from 'class-variance-authority'
 const propsCva = cva('', {
   variants: {
     size: {
-      small: 'cmk-badge--small',
-      medium: 'cmk-badge--medium',
-      large: 'cmk-badge--large'
+      small: 'cmk-badge-small',
+      medium: 'cmk-badge-medium',
+      large: 'cmk-badge-large'
     },
     color: {
-      default: 'cmk-badge--default',
-      success: 'cmk-badge--success',
-      warning: 'cmk-badge--warning',
-      danger: 'cmk-badge--danger'
+      default: 'cmk-badge-default',
+      success: 'cmk-badge-success',
+      warning: 'cmk-badge-warning',
+      danger: 'cmk-badge-danger'
     },
     type: {
-      fill: 'cmk-badge--fill',
-      outline: 'cmk-badge--outline'
+      fill: 'cmk-badge-fill',
+      outline: 'cmk-badge-outline'
     },
     shape: {
-      default: 'cmk-badge--default-shape',
-      circle: 'cmk-badge--circle'
+      default: 'cmk-badge-default-shape',
+      circle: 'cmk-badge-circle'
     }
   },
   defaultVariants: {
@@ -71,85 +71,85 @@ defineProps<CmkBadgeProps>()
   padding: 2px;
 }
 
-.cmk-badge--small {
+.cmk-badge-small {
   font-size: 10px;
   min-width: 12px;
   width: auto;
   height: 12px;
 }
 
-.cmk-badge--medium {
+.cmk-badge-medium {
   font-size: 12px;
   min-width: 18px;
   width: auto;
   height: 18px;
 }
 
-.cmk-badge--large {
+.cmk-badge-large {
   font-size: 14px;
   min-width: 24px;
   width: auto;
   height: 24px;
 }
 
-.cmk-badge--default {
+.cmk-badge-default {
   background: var(--custom-scroll-bar-thumb-color);
   border-color: var(--custom-scroll-bar-thumb-color);
   color: var(--white);
 }
 
-.cmk-badge--danger {
+.cmk-badge-danger {
   background: var(--color-danger);
   border-color: var(--color-danger);
   color: var(--white);
 }
 
-.cmk-badge--warning {
+.cmk-badge-warning {
   background: var(--color-warning);
   border-color: var(--color-warning);
   color: var(--black);
 }
 
-.cmk-badge--success {
+.cmk-badge-success {
   background: var(--success);
   border-color: var(--success);
   color: var(--black);
 }
 
-.cmk-badge--outline {
+.cmk-badge-outline {
   background: transparent;
 
-  &.cmk-badge--default {
+  &.cmk-badge-default {
     color: var(--custom-scroll-bar-thumb-color);
   }
 
-  &.cmk-badge--warning {
+  &.cmk-badge-warning {
     color: var(--color-warning);
   }
 
-  &.cmk-badge--danger {
+  &.cmk-badge-danger {
     color: var(--color-danger);
   }
 
-  &.cmk-badge--success {
+  &.cmk-badge-success {
     color: var(--success);
   }
 }
 
-.cmk-badge--fill {
+.cmk-badge-fill {
   border-color: transparent;
 }
 
-.cmk-badge--circle {
-  &.cmk-badge--small {
+.cmk-badge-circle {
+  &.cmk-badge-small {
     max-width: 12px;
   }
 
-  &.cmk-badge--medium {
+  &.cmk-badge-medium {
     max-width: 18px;
   }
 
-  &.cmk-badge--large {
+  &.cmk-badge-large {
     max-width: 24px;
   }
 }

@@ -46,8 +46,8 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="form-dual-list-choice__container">
-    <div v-if="loading" class="form-dual-list-choice__loading">
+  <div class="form-duallist-choice__container">
+    <div v-if="loading" class="form-duallist-choice__loading">
       <CmkIcon name="load-graph" variant="inline" size="xlarge" />
       <span>{{ _t('Loading') }}</span>
     </div>
@@ -62,7 +62,7 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.form-dual-list-choice__loading {
+.form-duallist-choice__loading {
   display: flex;
   align-items: center;
   padding-top: 12px;

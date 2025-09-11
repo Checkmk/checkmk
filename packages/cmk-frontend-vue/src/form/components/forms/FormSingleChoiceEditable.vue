@@ -140,7 +140,7 @@ const { ErrorBoundary, error } = useErrorBoundary()
       :input-hint="untranslated(spec.i18n.no_selection)"
       :no-elements-text="untranslated(spec.i18n.no_objects)"
       :label="untranslated(spec.title)"
-      class="form-single-choice-editable__dropdown"
+      class="fsce__dropdown"
       required
     />
     <template v-if="spec.allow_editing_existing_elements">
@@ -190,7 +190,7 @@ const { ErrorBoundary, error } = useErrorBoundary()
 </template>
 
 <style scoped>
-.form-single-choice-editable__dropdown {
+.fsce__dropdown {
   margin-right: 1em;
 }
 </style>

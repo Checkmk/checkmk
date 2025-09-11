@@ -25,7 +25,7 @@ defineProps<{ screenshotMode: boolean }>()
       <tr>
         <th>Small</th>
         <td>
-          <div class="demo-cmk-badge__container">
+          <div class="flex">
             <CmkBadge type="fill" size="small">1</CmkBadge>
             <CmkBadge type="fill" size="small" color="success">99+</CmkBadge>
             <CmkBadge type="fill" size="small" color="warning">1</CmkBadge>
@@ -33,7 +33,7 @@ defineProps<{ screenshotMode: boolean }>()
           </div>
         </td>
         <td>
-          <div class="demo-cmk-badge__container">
+          <div class="flex">
             <CmkBadge type="outline" size="small">1</CmkBadge>
             <CmkBadge type="outline" size="small" color="success">1</CmkBadge>
             <CmkBadge type="outline" size="small" color="warning">1</CmkBadge>
@@ -41,7 +41,7 @@ defineProps<{ screenshotMode: boolean }>()
           </div>
         </td>
         <td>
-          <div class="demo-cmk-badge__container">
+          <div class="flex">
             <CmkBadge shape="circle" size="small">1</CmkBadge>
             <CmkBadge shape="circle" size="small" color="success">1</CmkBadge>
             <CmkBadge shape="circle" size="small" color="warning">1</CmkBadge>
@@ -52,7 +52,7 @@ defineProps<{ screenshotMode: boolean }>()
       <tr>
         <th>Medium</th>
         <td>
-          <div class="demo-cmk-badge__container">
+          <div class="flex">
             <CmkBadge type="fill">online</CmkBadge>
             <CmkBadge type="fill" color="success">
               <CmkIcon size="large" name="checkmark"></CmkIcon>
@@ -64,7 +64,7 @@ defineProps<{ screenshotMode: boolean }>()
           </div>
         </td>
         <td>
-          <div class="demo-cmk-badge__container">
+          <div class="flex">
             <CmkBadge>1</CmkBadge>
             <CmkBadge type="outline" color="success">Ok</CmkBadge>
             <CmkBadge type="outline" color="warning">a</CmkBadge>
@@ -74,7 +74,7 @@ defineProps<{ screenshotMode: boolean }>()
           </div>
         </td>
         <td>
-          <div class="demo-cmk-badge__container">
+          <div class="flex">
             <CmkBadge>1</CmkBadge>
             <CmkBadge type="fill" shape="circle" color="success"
               ><CmkIcon size="large" name="checkmark"></CmkIcon
@@ -89,7 +89,7 @@ defineProps<{ screenshotMode: boolean }>()
       <tr>
         <th>Large</th>
         <td>
-          <div class="demo-cmk-badge__container">
+          <div class="flex">
             <CmkBadge type="fill" size="large">1</CmkBadge>
             <CmkBadge type="fill" size="large" color="success"
               ><CmkIcon size="xxlarge" name="checkmark"></CmkIcon
@@ -99,7 +99,7 @@ defineProps<{ screenshotMode: boolean }>()
           </div>
         </td>
         <td>
-          <div class="demo-cmk-badge__container">
+          <div class="flex">
             <CmkBadge type="outline" size="large">1</CmkBadge>
             <CmkBadge type="outline" size="large" color="success">yes</CmkBadge>
             <CmkBadge type="outline" size="large" color="warning">2</CmkBadge>
@@ -107,7 +107,7 @@ defineProps<{ screenshotMode: boolean }>()
           </div>
         </td>
         <td>
-          <div class="demo-cmk-badge__container">
+          <div class="flex">
             <CmkBadge shape="circle" size="large">1</CmkBadge>
             <CmkBadge type="fill" shape="circle" size="large" color="success"
               ><CmkIcon size="xxlarge" name="checkmark"></CmkIcon
@@ -127,7 +127,7 @@ table {
   color: var(--color);
 }
 
-.demo-cmk-badge__container {
+.flex {
   display: flex;
   flex-direction: column;
   align-items: center;

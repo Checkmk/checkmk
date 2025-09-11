@@ -100,7 +100,7 @@ immediateWatch(
 </script>
 
 <template>
-  <div v-if="!screenshotMode" class="cmk-vue-app demo-app">
+  <div v-if="!screenshotMode" class="cmk-vue-app demo">
     <nav>
       <fieldset>
         <legend>global styles</legend>
@@ -120,14 +120,14 @@ immediateWatch(
         />
         <CmkButton @click="enableScreenshotMode">screenshot mode</CmkButton>
       </fieldset>
-      <ul class="demo-app__breadcrumbs">
+      <ul class="breadcrumbs">
         <li v-for="crumb in crumbs" :key="crumb.path">
           <RouterLink :to="crumb.path">{{ crumb.meta.name }}/</RouterLink>
         </li>
       </ul>
       <ul>
         <li v-for="route in routes" :key="route.path">
-          <RouterLink :to="route.path" :class="`demo-app__nav-${route.meta.type}`">
+          <RouterLink :to="route.path" :class="route.meta.type">
             <span v-if="route.meta.type === 'folder'">🗀</span>{{ route.meta.name }}
           </RouterLink>
         </li>
@@ -135,7 +135,7 @@ immediateWatch(
     </nav>
     <main>
       <h1>{{ currentRoute.meta.name }}</h1>
-      <div class="demo-app__area">
+      <div class="demo-area">
         <RouterView />
       </div>
     </main>
@@ -144,7 +144,7 @@ immediateWatch(
 </template>
 
 <style scoped>
-.demo-app {
+.demo {
   display: flex;
   color: var(--font-color);
   background-color: var(--default-bg-color);
@@ -158,7 +158,7 @@ immediateWatch(
 
     height: fit-content;
 
-    .demo-app__area {
+    .demo-area {
       padding: 1em;
       border: 2px solid var(--default-form-element-bg-color);
       background-color: var(--default-component-bg-color);
@@ -174,16 +174,11 @@ immediateWatch(
 
       li {
         margin: 0.2em 0;
-
-        /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-        a.demo-app__nav-page.router-link-exact-active {
-          font-weight: bold;
-        }
       }
     }
   }
 
-  ul.demo-app__breadcrumbs {
+  ul.breadcrumbs {
     a {
       color: inherit;
     }
@@ -197,6 +192,10 @@ immediateWatch(
         padding: 0;
         padding-right: 0.3em;
       }
+    }
+
+    a.page.router-link-exact-active {
+      font-weight: bold;
     }
   }
 

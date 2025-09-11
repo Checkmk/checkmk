@@ -44,7 +44,7 @@ const completed = completedSteps === totalSteps
 </script>
 
 <template>
-  <CmkParagraph v-if="completed" class="welcome-snapin__completed">
+  <CmkParagraph v-if="completed" class="welcome-snapin-completed">
     <CmkBadge color="success" type="fill" shape="circle" size="small">
       <CmkIcon name="checkmark" size="large"></CmkIcon>
     </CmkBadge>
@@ -58,34 +58,34 @@ const completed = completedSteps === totalSteps
     :hide-heading="true"
     :flex-column="true"
     size="small"
-    class="welcome-snapin__progress-wrapper"
+    class="welcome-snapin-progress-wrapper"
   />
   <CmkButton
     v-if="!completed"
     variant="secondary"
-    class="welcome-snapin__continue"
+    class="welcome-snapin-continue"
     @click="openSlideIn"
   >
     {{ _t('Continue setup') }}
   </CmkButton>
-  <CmkButton v-else variant="secondary" class="welcome-snapin__continue" @click="openSlideIn">
+  <CmkButton v-else variant="secondary" class="welcome-snapin-continue" @click="openSlideIn">
     {{ _t("What's next") }}
   </CmkButton>
 </template>
 
 <style scoped>
-.welcome-snapin__completed {
+.welcome-snapin-completed {
   display: flex;
   flex-direction: row;
   align-items: center;
 }
 
-.welcome-snapin__progress-wrapper {
+.welcome-snapin-progress-wrapper {
   display: flex;
   flex-direction: column;
 }
 
-.welcome-snapin__continue {
+.welcome-snapin-continue {
   display: flex;
   height: var(--dimension-10);
   background: var(--success);

@@ -106,17 +106,17 @@ const { ErrorBoundary } = useErrorBoundary()
 </script>
 
 <template>
-  <div class="form-single-choice-editable-edit-async__wrapper">
+  <div class="fsce-edit-async__wrapper">
     <ErrorBoundary>
       <CmkDialog
-        class="form-single-choice-editable-edit-async__dialog"
+        class="fsce-edit-async__dialog"
         :message="untranslated(props.i18n.permanent_choice_warning)"
         :dismissal_button="{
           title: untranslated(props.i18n.permanent_choice_warning_dismissal),
           key: DISMISSAL_KEY
         }"
       />
-      <div class="form-single-choice-editable-edit-async__buttons">
+      <div class="fsce-edit-async__buttons">
         <CmkButtonSubmit @click="save">
           {{
             objectId === undefined ? props.i18n.create_button : props.i18n.save_button
@@ -144,17 +144,17 @@ const { ErrorBoundary } = useErrorBoundary()
 </template>
 
 <style scoped>
-.form-single-choice-editable-edit-async__wrapper {
+.fsce-edit-async__wrapper {
   display: flex;
   flex-direction: column;
   height: 100%;
 }
 
-.form-single-choice-editable-edit-async__dialog {
+.fsce-edit-async__dialog {
   margin: 8px 0 24px;
 }
 
-.form-single-choice-editable-edit-async__buttons {
+.fsce-edit-async__buttons {
   margin-bottom: 1em;
 }
 </style>

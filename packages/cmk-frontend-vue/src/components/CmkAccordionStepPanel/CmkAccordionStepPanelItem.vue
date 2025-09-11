@@ -64,18 +64,15 @@ const value = computed(() => 'step-'.concat(props.step.toString()))
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .cmk-step-panel-item-indicator {
   margin: 0 16px 0 0;
   font-weight: 700;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .cmk-accordion-item-state-indicator {
   margin-right: 4px;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .cmk-step-panel-item-info {
   font-weight: normal;
   margin-left: auto;

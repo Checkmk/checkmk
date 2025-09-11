@@ -164,7 +164,7 @@ provide(dispatcherKey, FormEditDispatcher)
 </script>
 
 <template>
-  <div class="demo-form-single-choice-editable">
+  <div class="demo-control">
     <button @click="reloadCount += 1">reload</button>
     <label>TODO: number of elements to return</label>
     <fieldset>
@@ -204,14 +204,14 @@ provide(dispatcherKey, FormEditDispatcher)
 </template>
 
 <style scoped>
-.demo-form-single-choice-editable {
+.demo-control {
   margin-bottom: 1em;
   padding: 1em;
   display: flex;
   flex-direction: column;
 }
 
-.demo-form-single-choice-editable > * {
+.demo-control > * {
   display: flex;
   flex: 1 100%;
   margin-bottom: 0.5em;

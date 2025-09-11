@@ -40,7 +40,6 @@ function setSelectedOption(value: string) {
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .toggle_buttons_container {
   width: max-content;
   margin-bottom: 8px;
@@ -50,7 +49,6 @@ function setSelectedOption(value: string) {
   background-color: transparent;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .toggle_option {
   height: auto;
   min-width: 150px;
@@ -60,12 +58,10 @@ function setSelectedOption(value: string) {
   padding: 3px;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .toggle_option:hover:not(.selected) {
   background-color: rgb(from var(--default-form-element-bg-color) r g b / 60%);
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .selected {
   border: 1px solid var(--default-form-element-border-color);
   background-color: var(--default-form-element-bg-color);

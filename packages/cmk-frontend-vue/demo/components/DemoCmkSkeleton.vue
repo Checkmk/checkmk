@@ -12,7 +12,7 @@ defineProps<{ screenshotMode: boolean }>()
 
 <template>
   <h2>Box (width/height: 100%)</h2>
-  <div class="demo-cmk-skeleton">
+  <div class="skel-box">
     <CmkSkeleton></CmkSkeleton>
   </div>
 
@@ -37,7 +37,7 @@ defineProps<{ screenshotMode: boolean }>()
   </ul>
 
   <h2>Slotted Skeletons</h2>
-  <div class="demo-cmk-skeleton">
+  <div class="skel-box">
     <CmkSkeleton>
       <ul>
         <li><CmkSkeleton type="h1"></CmkSkeleton></li>
@@ -51,7 +51,7 @@ defineProps<{ screenshotMode: boolean }>()
 </template>
 
 <style scoped>
-.demo-cmk-skeleton {
+.skel-box {
   width: 200px;
   height: 100px;
   min-width: 200px;

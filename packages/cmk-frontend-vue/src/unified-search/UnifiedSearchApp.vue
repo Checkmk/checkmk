@@ -142,7 +142,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <DefaultPopup class="unified-search-app">
+  <DefaultPopup class="unified-search-root">
     <UnifiedSearchHeader> </UnifiedSearchHeader>
     <UnifiedSearchStart v-if="!showTabResults()" :history-result="historyResult">
     </UnifiedSearchStart>
@@ -157,7 +157,7 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.unified-search-app {
+.unified-search-root {
   position: absolute;
   display: flex;
   flex-direction: column;

@@ -45,7 +45,6 @@ defineProps<{
   }
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .open {
   &::after {
     transform: rotate(135deg);

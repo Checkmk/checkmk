@@ -67,7 +67,6 @@ li {
       border: 1px solid var(--success);
     }
 
-    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
     &:hover,
     &.active {
       color: var(--success);
@@ -83,7 +82,6 @@ li {
     }
   }
 
-  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   &.provider {
     > button > span:first-of-type {
       width: 85px;

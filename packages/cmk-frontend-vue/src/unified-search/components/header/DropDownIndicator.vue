@@ -14,7 +14,6 @@ defineProps<{
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .cmk-dropdown-indicator {
   width: 16px;
 
@@ -35,7 +34,6 @@ defineProps<{
   }
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .active {
   &::after {
     transform: rotate(-45deg);

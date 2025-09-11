@@ -21,10 +21,10 @@ function onClickGoTo() {
 
 <template>
   <li
-    class="cmk-wizard-step__row"
+    class="cmk-wizard-step-row"
     :class="{
-      'cmk-wizard-step--active': context.isSelected(index) && context.mode() !== 'overview',
-      'cmk-wizard-step--complete': isCompleted() && context.mode() !== 'overview'
+      'wizard-step--active': context.isSelected(index) && context.mode() !== 'overview',
+      'wizard-step--complete': isCompleted() && context.mode() !== 'overview'
     }"
     @click="(_mouse_event) => onClickGoTo"
   >
@@ -39,7 +39,7 @@ function onClickGoTo() {
 </template>
 
 <style scoped>
-.cmk-wizard-step__row {
+.cmk-wizard-step-row {
   position: relative;
   display: flex;
   gap: var(--dimension-6);
@@ -81,13 +81,13 @@ function onClickGoTo() {
     background-color: var(--wizard-progress-bar-background-color);
   }
 
-  &.cmk-wizard-step--active::before,
-  &.cmk-wizard-step--complete::before {
+  &.wizard-step--active::before,
+  &.wizard-step--complete::before {
     background-color: var(--success-dimmed);
     border-color: var(--success-dimmed);
   }
 
-  &.cmk-wizard-step--active::after {
+  &.wizard-step--active::after {
     background: linear-gradient(
       to bottom,
       var(--success-dimmed) 50px,
@@ -95,7 +95,7 @@ function onClickGoTo() {
     );
   }
 
-  &.cmk-wizard-step--complete {
+  &.wizard-step--complete {
     &::before {
       background-image: var(--icon-check);
       background-repeat: no-repeat;

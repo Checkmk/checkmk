@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from typing import Any
+from typing import Any, override
 
 from cmk.bi.lib import (
     ABCBICompiledNode,
@@ -123,6 +123,7 @@ class BIAggregation:
 
 class BIAggregationSchema(Schema):
     @property
+    @override
     def dict_class(self) -> type:
         return OrderedDict
 

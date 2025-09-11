@@ -13,6 +13,7 @@
 #   +----------------------------------------------------------------------+
 
 from collections.abc import Mapping
+from typing import override
 
 from marshmallow_oneofschema import OneOfSchema
 
@@ -97,5 +98,6 @@ class BINodeVisLayoutStyleSchema(OneOfSchema):
         "force": BINodeVisForceStyleSchema,
     }
 
+    @override
     def get_obj_type(self, obj: Mapping[str, str]) -> str:
         return obj["type"]

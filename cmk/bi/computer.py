@@ -5,7 +5,7 @@
 
 import copy
 from collections.abc import Iterator
-from typing import NamedTuple
+from typing import NamedTuple, override
 
 from cmk.bi.data_fetcher import BIStatusFetcher
 from cmk.bi.lib import NodeResultBundle, RequiredBIElement
@@ -32,6 +32,7 @@ class ABCPostprocessComputeResult:
 
 
 class BIComputerPostprocessingRegistry(Registry[ABCPostprocessComputeResult]):
+    @override
     def plugin_name(self, instance: ABCPostprocessComputeResult) -> str:
         return instance.__class__.__name__
 

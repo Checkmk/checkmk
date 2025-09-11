@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from marshmallow import post_dump, post_load, pre_dump, pre_load
 from marshmallow_oneofschema import OneOfSchema
@@ -60,6 +60,7 @@ class BIHostChoice(OneOfSchema):
         "host_alias_regex": BIHostAliasRegexChoiceSchema,
     }
 
+    @override
     def get_obj_type(self, obj: Mapping[str, str]) -> str:
         return obj["type"]
 
@@ -180,17 +181,21 @@ class ServiceConditionsSchema(HostConditionsSchema):
 
 @bi_search_registry.register
 class BIEmptySearch(ABCBISearch):
+    @override
     @classmethod
     def kind(cls) -> SearchKind:
         return "empty"
 
+    @override
     @classmethod
     def schema(cls) -> type[BIEmptySearchSchema]:
         return BIEmptySearchSchema
 
+    @override
     def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> list[dict]:
         return [{}]
 
+    @override
     def serialize(self):
         return {
             "type": self.kind(),
@@ -213,14 +218,17 @@ class BIEmptySearchSchema(Schema):
 
 @bi_search_registry.register
 class BIHostSearch(ABCBISearch):
+    @override
     @classmethod
     def kind(cls) -> SearchKind:
         return "host_search"
 
+    @override
     @classmethod
     def schema(cls) -> type[BIHostSearchSchema]:
         return BIHostSearchSchema
 
+    @override
     def serialize(self):
         return {
             "type": self.kind(),
@@ -233,6 +241,7 @@ class BIHostSearch(ABCBISearch):
         self.conditions = search_config["conditions"]
         self.refer_to = search_config["refer_to"]
 
+    @override
     def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> list[dict]:
         new_conditions = replace_macros(self.conditions, macros)
         search_matches: list[BIHostSearchMatch] = bi_searcher.search_hosts(new_conditions)
@@ -376,6 +385,7 @@ class ReferToSchema(OneOfSchema):
         "child_with": ChildWithSchema,
     }
 
+    @override
     def get_obj_type(self, obj: str | dict[str, Any]) -> str:
         return obj if isinstance(obj, str) else obj["type"]
 
@@ -418,14 +428,17 @@ class BIHostSearchSchema(Schema):
 
 @bi_search_registry.register
 class BIServiceSearch(ABCBISearch):
+    @override
     @classmethod
     def kind(cls) -> SearchKind:
         return "service_search"
 
+    @override
     @classmethod
     def schema(cls) -> type[BIServiceSearchSchema]:
         return BIServiceSearchSchema
 
+    @override
     def serialize(self):
         return {
             "type": self.kind(),
@@ -436,6 +449,7 @@ class BIServiceSearch(ABCBISearch):
         super().__init__(search_config)
         self.conditions = search_config["conditions"]
 
+    @override
     def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> list[dict]:
         new_conditions = replace_macros(self.conditions, macros)
         search_matches: list[BIServiceSearchMatch] = bi_searcher.search_services(new_conditions)
@@ -476,16 +490,19 @@ class BIServiceSearchSchema(Schema):
 
 @bi_search_registry.register
 class BIFixedArgumentsSearch(ABCBISearch):
+    @override
     @classmethod
     def kind(cls) -> SearchKind:
         return "fixed_arguments"
 
+    @override
     def serialize(self):
         return {
             "type": self.kind(),
             "arguments": self.arguments,
         }
 
+    @override
     @classmethod
     def schema(cls) -> type[BIFixedArgumentsSearchSchema]:
         return BIFixedArgumentsSearchSchema
@@ -494,6 +511,7 @@ class BIFixedArgumentsSearch(ABCBISearch):
         super().__init__(search_config)
         self.arguments = search_config["arguments"]
 
+    @override
     def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> list[dict]:
         results: list[dict] = []
         new_vars = replace_macros(self.arguments, macros)
@@ -534,5 +552,6 @@ class BISearchSchema(OneOfSchema):
     type_field_remove = False
     type_schemas = {k: v.schema() for k, v in bi_search_registry.items()}
 
+    @override
     def get_obj_type(self, obj: ABCBISearch | dict) -> str:
         return obj["type"] if isinstance(obj, dict) else obj.kind()

@@ -9,7 +9,17 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, Literal, NamedTuple, NoReturn, overload, Protocol, TypedDict, TypeVar
+from typing import (
+    Any,
+    Literal,
+    NamedTuple,
+    NoReturn,
+    overload,
+    override,
+    Protocol,
+    TypedDict,
+    TypeVar,
+)
 
 from marshmallow import Schema as marshmallow_Schema
 
@@ -250,6 +260,7 @@ class BIAggregationComputationOptions(ABCWithSchema):
         self.escalate_downtimes_as_warn = computation_config["escalate_downtimes_as_warn"]
         self.freeze_aggregations = computation_config.get("freeze_aggregations", False)
 
+    @override
     @classmethod
     def schema(cls) -> type[BIAggregationComputationOptionsSchema]:
         return BIAggregationComputationOptionsSchema
@@ -296,6 +307,7 @@ class BIAggregationGroups(ABCWithSchema):
     def combined_groups(self) -> set[str]:
         return set(self.names + ["/".join(x) for x in self.paths])
 
+    @override
     @classmethod
     def schema(cls) -> type[BIAggregationGroupsSchema]:
         return BIAggregationGroupsSchema
@@ -329,6 +341,7 @@ class BIParams(ABCWithSchema):
         # Note: The BIParams may get additional options
         # Like keywords which are passed down the tree, without being explicit set for a rule
 
+    @override
     @classmethod
     def schema(cls) -> type[BIParamsSchema]:
         return BIParamsSchema
@@ -605,6 +618,7 @@ class ABCBIAction(ABC):
 
 
 class BIActionRegistry(plugin_registry.Registry[type[ABCBIAction]]):
+    @override
     def plugin_name(self, instance: type[ABCBIAction]) -> str:
         return instance.kind()
 
@@ -655,6 +669,7 @@ class ABCBISearch(ABC):
 
 
 class BISearchRegistry(plugin_registry.Registry[type[ABCBISearch]]):
+    @override
     def plugin_name(self, instance: type[ABCBISearch]) -> str:
         return instance.kind()
 
@@ -708,6 +723,7 @@ class ABCBIAggregationFunction(ABC):
 
 
 class BIAggregationFunctionRegistry(plugin_registry.Registry[type[ABCBIAggregationFunction]]):
+    @override
     def plugin_name(self, instance: type[ABCBIAggregationFunction]) -> str:
         return instance.kind()
 

@@ -14,7 +14,7 @@
 
 from collections import OrderedDict
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, override
 
 from cmk import fields
 from cmk.bi.aggregation_functions import BIAggregationFunctionBest, BIAggregationFunctionSchema
@@ -69,18 +69,22 @@ class BIRule(ABCBIRule, ABCWithSchema):
         bi_rule_id_registry.register(self)
 
     @property
+    @override
     def properties(self) -> BIRuleProperties:
         return self._properties
 
     @property
+    @override
     def params(self) -> BIParams:
         return self._params
 
     @property
+    @override
     def title(self) -> str:
         return self.properties.title
 
     @classmethod
+    @override
     def schema(cls) -> type["BIRuleSchema"]:
         return BIRuleSchema
 
@@ -95,6 +99,7 @@ class BIRule(ABCBIRule, ABCWithSchema):
             "computation_options": self.computation_options.serialize(),
         }
 
+    @override
     def clone(self, existing_rule_ids: Sequence[str]) -> "BIRule":
         def get_clone_id(cloned_rule_id: str, existing_rule_ids: Sequence[str]) -> str:
             for index in range(1, len(existing_rule_ids) + 2):
@@ -107,12 +112,15 @@ class BIRule(ABCBIRule, ABCWithSchema):
         rule_config["id"] = get_clone_id(rule_config["id"], existing_rule_ids)
         return BIRule(rule_config)
 
+    @override
     def get_nodes(self) -> Sequence[BINodeGenerator]:
         return self.nodes
 
+    @override
     def num_nodes(self) -> int:
         return len(self.nodes)
 
+    @override
     def compile(
         self, extern_arguments: ActionArgument, bi_searcher: ABCBISearcher
     ) -> list[ABCBICompiledNode]:
@@ -152,6 +160,7 @@ class BIRule(ABCBIRule, ABCWithSchema):
         bi_rule_result.properties.title = replace_macros(bi_rule_result.properties.title, macros)
         return bi_rule_result
 
+    @override
     @classmethod
     def create_tree_from_schema(cls, schema_config: dict[str, Any]) -> BICompiledRule:
         rule_id = schema_config["id"]
@@ -185,6 +194,7 @@ class BIRule(ABCBIRule, ABCWithSchema):
 
 class BIRuleSchema(Schema):
     @property
+    @override
     def dict_class(self) -> type:
         return OrderedDict
 

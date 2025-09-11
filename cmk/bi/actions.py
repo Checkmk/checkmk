@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from marshmallow_oneofschema import OneOfSchema
 
@@ -45,14 +45,17 @@ from cmk.utils.macros import MacroMapping
 
 @bi_action_registry.register
 class BICallARuleAction(ABCBIAction, ABCWithSchema):
+    @override
     @classmethod
     def kind(cls) -> ActionKind:
         return "call_a_rule"
 
+    @override
     @classmethod
     def schema(cls) -> type[BICallARuleActionSchema]:
         return BICallARuleActionSchema
 
+    @override
     def serialize(self):
         return {
             "type": self.kind(),
@@ -65,6 +68,7 @@ class BICallARuleAction(ABCBIAction, ABCWithSchema):
         self.rule_id = action_config["rule_id"]
         self.params = BIParams(action_config["params"])
 
+    @override
     def _generate_action_arguments(
         self, search_results: SearchResults, macros: MacroMapping
     ) -> ActionArguments:
@@ -72,6 +76,7 @@ class BICallARuleAction(ABCBIAction, ABCWithSchema):
             tuple(replace_macros(self.params.arguments, {**macros, **x})) for x in search_results
         ]
 
+    @override
     def execute(
         self, argument: ActionArgument, bi_searcher: ABCBISearcher
     ) -> list[ABCBICompiledNode]:
@@ -109,14 +114,17 @@ class BICallARuleActionSchema(Schema):
 
 @bi_action_registry.register
 class BIStateOfHostAction(ABCBIAction, ABCWithSchema):
+    @override
     @classmethod
     def kind(cls) -> ActionKind:
         return "state_of_host"
 
+    @override
     @classmethod
     def schema(cls) -> type[BIStateOfHostActionSchema]:
         return BIStateOfHostActionSchema
 
+    @override
     def serialize(self):
         return {
             "type": self.kind(),
@@ -127,11 +135,13 @@ class BIStateOfHostAction(ABCBIAction, ABCWithSchema):
         super().__init__(action_config)
         self.host_regex = action_config["host_regex"]
 
+    @override
     def _generate_action_arguments(
         self, search_results: SearchResults, macros: MacroMapping
     ) -> ActionArguments:
         return [(replace_macros(self.host_regex, {**macros, **x}),) for x in search_results]
 
+    @override
     def execute(
         self, argument: ActionArgument, bi_searcher: ABCBISearcher
     ) -> list[ABCBICompiledNode]:
@@ -160,14 +170,17 @@ class BIStateOfHostActionSchema(Schema):
 
 @bi_action_registry.register
 class BIStateOfServiceAction(ABCBIAction, ABCWithSchema):
+    @override
     @classmethod
     def kind(cls) -> ActionKind:
         return "state_of_service"
 
+    @override
     @classmethod
     def schema(cls) -> type[BIStateOfServiceActionSchema]:
         return BIStateOfServiceActionSchema
 
+    @override
     def serialize(self):
         return {
             "type": self.kind(),
@@ -180,6 +193,7 @@ class BIStateOfServiceAction(ABCBIAction, ABCWithSchema):
         self.host_regex = action_config["host_regex"]
         self.service_regex = action_config["service_regex"]
 
+    @override
     def _generate_action_arguments(
         self, search_results: SearchResults, macros: MacroMapping
     ) -> ActionArguments:
@@ -191,6 +205,7 @@ class BIStateOfServiceAction(ABCBIAction, ABCWithSchema):
             for x in search_results
         ]
 
+    @override
     def execute(
         self, argument: ActionArgument, bi_searcher: ABCBISearcher
     ) -> list[ABCBICompiledNode]:
@@ -235,14 +250,17 @@ class BIStateOfServiceActionSchema(Schema):
 
 @bi_action_registry.register
 class BIStateOfRemainingServicesAction(ABCBIAction, ABCWithSchema):
+    @override
     @classmethod
     def kind(cls) -> ActionKind:
         return "state_of_remaining_services"
 
+    @override
     @classmethod
     def schema(cls) -> type[BIStateOfRemainingServicesActionSchema]:
         return BIStateOfRemainingServicesActionSchema
 
+    @override
     def serialize(self):
         return {
             "type": self.kind(),
@@ -253,11 +271,13 @@ class BIStateOfRemainingServicesAction(ABCBIAction, ABCWithSchema):
         super().__init__(action_config)
         self.host_regex = action_config["host_regex"]
 
+    @override
     def _generate_action_arguments(
         self, search_results: SearchResults, macros: MacroMapping
     ) -> ActionArguments:
         return [(replace_macros(self.host_regex, {**macros, **x}),) for x in search_results]
 
+    @override
     def execute(
         self, argument: ActionArgument, bi_searcher: ABCBISearcher
     ) -> list[ABCBICompiledNode]:
@@ -297,5 +317,6 @@ class BIActionSchema(OneOfSchema):
     #    "state_of_remaining_services": BIStateOfRemainingServicesActionSchema,
     # }
 
+    @override
     def get_obj_type(self, obj: ABCBIAction | dict) -> str:
         return obj["type"] if isinstance(obj, dict) else obj.kind()

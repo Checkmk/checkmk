@@ -51,4 +51,6 @@ class SidebarWelcomeSnapin(SidebarSnapin):
 
     @override
     def show(self, config: Config) -> None:
-        html.vue_component("cmk-welcome-snapin", data=asdict(get_welcome_data()))
+        snapin_props = asdict(get_welcome_data())
+        snapin_props.pop("is_start_url", None)
+        html.vue_component("cmk-welcome-snapin", data=snapin_props)

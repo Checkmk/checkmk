@@ -23,6 +23,7 @@ DashletRefreshAction = str | None
 DashletSize = tuple[int, int]
 DashletPosition = tuple[int, int]
 ResponsiveGridLayoutID = NewType("ResponsiveGridLayoutID", str)
+DEFAULT_RESPONSIVE_GRID_LAYOUT_ID = ResponsiveGridLayoutID("default")
 
 # NOTE: this is limited to 5 different breakpoints, as the library only officially supports 5 types
 #       see the frontend implementation for more details

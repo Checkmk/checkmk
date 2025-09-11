@@ -4,11 +4,10 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, inject } from 'vue'
+import { computed } from 'vue'
 
 import type { Filters } from '../composables/useFilters.ts'
-import type { FilterDefinition } from '../types.ts'
-import { parseFilterTypes } from '../utils.ts'
+import { parseFilterTypes, useFilterDefinitions } from '../utils.ts'
 import FilterSelection from './FilterSelection.vue'
 import { CATEGORY_DEFINITIONS } from './utils.ts'
 
@@ -19,12 +18,7 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const filterDefinitions = inject<Record<string, FilterDefinition> | null>('filterDefinitions', null)
-
-if (!filterDefinitions) {
-  throw new Error('Filter definitions are unavailable')
-}
-
+const filterDefinitions = useFilterDefinitions()
 const filterCategories = parseFilterTypes(filterDefinitions, new Set([props.filterCategory]))
 
 const categoryDefinition = computed(() => CATEGORY_DEFINITIONS[props.filterCategory])

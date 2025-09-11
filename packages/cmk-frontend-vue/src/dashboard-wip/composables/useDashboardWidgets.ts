@@ -12,8 +12,7 @@ import type {
   WidgetContent,
   WidgetFilterContext,
   WidgetGeneralSettings,
-  WidgetRelativeGridLayout,
-  WidgetResponsiveGridLayouts
+  WidgetLayout
 } from '@/dashboard-wip/types/widget'
 
 export interface WidgetCore {
@@ -52,7 +51,7 @@ export function useDashboardWidgets(
     content: WidgetContent,
     generalSettings: WidgetGeneralSettings,
     configuredFilters: ConfiguredFilters,
-    layout: WidgetResponsiveGridLayouts | WidgetRelativeGridLayout
+    layout: WidgetLayout
   ) {
     const widgets = widgetsRef.value
     if (!widgets) {

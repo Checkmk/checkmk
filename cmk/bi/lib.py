@@ -27,8 +27,8 @@ from livestatus import LivestatusResponse, Query
 
 from cmk.bi.schema import Schema
 from cmk.bi.type_defs import (
-    ActionConfig,
     ActionKind,
+    ActionSerialized,
     ComputationConfigDict,
     GroupConfigDict,
     HostState,
@@ -574,7 +574,7 @@ class ABCBICompiledNode(ABC):
 
 
 class ABCBIAction(ABC):
-    def __init__(self, action_config: dict[str, Any]) -> None:
+    def __init__(self, action_config: ActionSerialized) -> None:
         super().__init__()
 
     @classmethod
@@ -588,7 +588,7 @@ class ABCBIAction(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def serialize(self) -> dict[str, Any]:
+    def serialize(self) -> ActionSerialized:
         raise NotImplementedError()
 
     def _generate_action_arguments(
@@ -618,7 +618,7 @@ class BIActionRegistry(plugin_registry.Registry[type[ABCBIAction]]):
     def plugin_name(self, instance: type[ABCBIAction]) -> str:
         return instance.kind()
 
-    def instantiate(self, action_config: ActionConfig) -> ABCBIAction:
+    def instantiate(self, action_config: ActionSerialized) -> ABCBIAction:
         return self._entries[action_config["type"]](action_config)
 
 

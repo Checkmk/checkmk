@@ -16,12 +16,13 @@ ActionKind = Literal[
 ]
 
 
-ActionConfig = dict[str, Any]
+class ActionSerialized(TypedDict):
+    type: ActionKind
 
 
 class NodeDict(TypedDict):
     search: SearchConfig
-    action: ActionConfig
+    action: ActionSerialized
 
 
 class GroupConfigDict(TypedDict):

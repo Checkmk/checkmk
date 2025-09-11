@@ -53,6 +53,7 @@ export function useDashboardsManager() {
     }
 
     const dashboard: DashboardModel = {
+      owner: dashboardResp.owner,
       general_settings: dashboardResp.general_settings,
       filter_context: dashboardResp.filter_context,
       content

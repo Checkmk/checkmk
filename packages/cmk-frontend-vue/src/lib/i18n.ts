@@ -11,9 +11,14 @@ import type { TranslatedString } from '@/lib/i18nString'
 import { dummyT, dummyTn, dummyTnp, dummyTp } from './i18nDummy'
 
 const AVAILABLE_LANGUAGES: Record<string, string> = {
-  en: 'English',
   de: 'German',
-  fr: 'French'
+  es: 'Spanish',
+  fr: 'French',
+  it: 'Italian',
+  ja: 'Japanese',
+  nl: 'Dutch',
+  pt_PT: 'Portuguese (Portugal)',
+  ro: 'Romanian'
 }
 
 export type SupportedLanguage = keyof typeof AVAILABLE_LANGUAGES

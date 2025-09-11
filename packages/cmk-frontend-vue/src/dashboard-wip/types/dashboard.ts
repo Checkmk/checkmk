@@ -37,6 +37,7 @@ export type ContentResponsiveGrid = {
 }
 
 export type DashboardModel<T = ContentResponsiveGrid | ContentRelativeGrid> = {
+  owner: string
   general_settings: DashboardGeneralSettings
   filter_context: DashboardFilterContext
   content: T

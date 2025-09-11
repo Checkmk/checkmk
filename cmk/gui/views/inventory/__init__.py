@@ -27,6 +27,7 @@ from cmk.gui.visuals.info import VisualInfo, VisualInfoRegistry
 
 from ._data_sources import ABCDataSourceInventory, RowTableInventory
 from ._display_hints import (
+    find_non_canonical_filters,
     inv_display_hints,
     load_inventory_ui_plugins,
     NodeDisplayHint,
@@ -58,6 +59,7 @@ __all__ = [
     "OrderedColumnDisplayHintsOfView",
     "TableWithView",
     "inv_display_hints",
+    "find_non_canonical_filters",
 ]
 
 

@@ -415,8 +415,9 @@ def _parse_attr_field_from_api(
     node_title: str,
     key: str,
     field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
+    non_canonical_filters: Mapping[str, int],
 ) -> AttributeDisplayHint:
-    name = _make_attr_name(node_ident, key)
+    name = _make_attr_name(node_ident, key, non_canonical_filters)
     title = _make_str(field_from_api.title)
     long_title = _make_long_title(node_title, title)
     return AttributeDisplayHint(
@@ -537,7 +538,9 @@ def _parse_col_field_of_view_from_api(
     )
 
 
-def _parse_node_from_api(node: NodeFromAPI) -> NodeDisplayHint:
+def _parse_node_from_api(
+    node: NodeFromAPI, non_canonical_filters: Mapping[str, int]
+) -> NodeDisplayHint:
     path = tuple(SDNodeName(e) for e in node.path)
     parent_title = inv_display_hints.get_node_hint(path[:-1]).title if path[:-1] else ""
     name = _make_node_name(path)
@@ -575,7 +578,7 @@ def _parse_node_from_api(node: NodeFromAPI) -> NodeDisplayHint:
         long_title=_make_long_title(parent_title, title),
         icon=_find_icon(path),
         attributes={
-            SDKey(k): _parse_attr_field_from_api(path, name, title, k, v)
+            SDKey(k): _parse_attr_field_from_api(path, name, title, k, v, non_canonical_filters)
             for k, v in node.attributes.items()
         },
         table=table,
@@ -671,8 +674,10 @@ def _make_node_name(path: SDPath) -> str:
     return "_".join(["inv"] + list(path))
 
 
-def _make_attr_name(node_name: str, key: SDKey | str) -> str:
-    return f"{node_name}_{key}"
+def _make_attr_name(
+    node_name: str, key: SDKey | str, non_canonical_filters: Mapping[str, int]
+) -> str:
+    return f"{name}_canonical" if (name := f"{node_name}_{key}") in non_canonical_filters else name
 
 
 def _make_col_name(table_view_name: str, key: SDKey | str) -> str:
@@ -703,27 +708,22 @@ def _make_attribute_filter_from_legacy_hint(
                 is_show_more=is_show_more,
             )
         case "bytes" | "bytes_rounded":
-            unit = _("MB")
-            scale = 1024 * 1024
+            unit = _("B")
         case "hz":
-            unit = _("MHz")
-            scale = 1000000
+            unit = _("Hz")
         case "volt":
             unit = _("Volt")
-            scale = 1
         case "timestamp":
             unit = _("secs")
-            scale = 1
         case _:
             unit = ""
-            scale = 1
 
     return FilterInvFloat(
         ident=name,
         title=long_title,
         inventory_path=inventory_path,
         unit=unit,
-        scale=scale,
+        scale=1,
         is_show_more=is_show_more,
     )
 
@@ -744,10 +744,16 @@ class AttributeDisplayHint:
 
 
 def _parse_attribute_hint(
-    *, path: SDPath, node_name: str, node_title: str, key: str, legacy_hint: InventoryHintSpec
+    *,
+    path: SDPath,
+    node_name: str,
+    node_title: str,
+    key: str,
+    legacy_hint: InventoryHintSpec,
+    non_canonical_filters: Mapping[str, int],
 ) -> AttributeDisplayHint:
     data_type, paint_function = _get_paint_function(legacy_hint)
-    name = _make_attr_name(node_name, key)
+    name = _make_attr_name(node_name, key, non_canonical_filters)
     title = _make_title_function(legacy_hint)(key)
     long_title = _make_long_title(node_title, title)
     return AttributeDisplayHint(
@@ -1017,7 +1023,7 @@ class NodeDisplayHint:
 
     def get_attribute_hint(self, key: str) -> AttributeDisplayHint:
         def _default() -> AttributeDisplayHint:
-            name = _make_attr_name(self.name, key)
+            name = _make_attr_name(self.name, key, {})
             title = key.replace("_", " ").title()
             long_title = _make_long_title(self.title if self.path else "", title)
             return AttributeDisplayHint(
@@ -1054,6 +1060,7 @@ class NodeDisplayHint:
 
 def _parse_legacy_display_hints(
     legacy_hints: Mapping[str, InventoryHintSpec],
+    non_canonical_filters: Mapping[str, int],
 ) -> Iterator[NodeDisplayHint]:
     for path, related_legacy_hints in sorted(
         _get_related_legacy_hints(legacy_hints).items(), key=lambda t: len(t[0])
@@ -1131,6 +1138,7 @@ def _parse_legacy_display_hints(
                     node_title=title,
                     key=key,
                     legacy_hint=related_legacy_hints.by_key.get(key, {}),
+                    non_canonical_filters=non_canonical_filters,
                 )
                 for key in _complete_key_order(
                     related_legacy_hints.for_node.get("keyorder", []),
@@ -1200,11 +1208,38 @@ class DisplayHints:
 inv_display_hints = DisplayHints()
 
 
+def find_non_canonical_filters(legacy_hints: Mapping[str, InventoryHintSpec]) -> Mapping[str, int]:
+    filters = {
+        # "bytes"
+        "inv_hardware_cpu_cache_size": 1024 * 1024,
+        # "bytes_rounded"
+        "inv_hardware_memory_total_ram_usable": 1024 * 1024,
+        "inv_hardware_memory_total_swap": 1024 * 1024,
+        "inv_hardware_memory_total_vmalloc": 1024 * 1024,
+        # "hz"
+        "inv_hardware_cpu_bus_speed": 1000 * 1000,
+        "inv_hardware_cpu_max_speed": 1000 * 1000,
+    }
+    for raw_path, legacy_hint in legacy_hints.items():
+        inv_path = inventory.parse_internal_raw_path(raw_path)
+        if inv_path.source != inventory.TreeSource.attributes or not inv_path.key:
+            continue
+        name = "_".join(["inv"] + [str(e) for e in inv_path.path] + [str(inv_path.key)])
+        match legacy_hint.get("paint"):
+            case "bytes" | "bytes_rounded":
+                filters[name] = 1024 * 1024
+            case "hz":
+                filters[name] = 1000 * 1000
+    return filters
+
+
 def register_display_hints(
     plugins: DiscoveredPlugins[NodeFromAPI], legacy_hints: Mapping[str, InventoryHintSpec]
 ) -> None:
-    for node in sorted(plugins.plugins.values(), key=lambda n: len(n.path)):
-        inv_display_hints.add(_parse_node_from_api(node))
+    non_canonical_filters = find_non_canonical_filters(legacy_hints)
 
-    for hint in _parse_legacy_display_hints(legacy_hints):
+    for node in sorted(plugins.plugins.values(), key=lambda n: len(n.path)):
+        inv_display_hints.add(_parse_node_from_api(node, non_canonical_filters))
+
+    for hint in _parse_legacy_display_hints(legacy_hints, non_canonical_filters):
         inv_display_hints.add(hint)

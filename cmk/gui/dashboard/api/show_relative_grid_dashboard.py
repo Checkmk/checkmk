@@ -16,10 +16,10 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import ProblemException
 
+from ..metadata import dashboard_uses_relative_grid
 from ..store import get_permitted_dashboards
 from ._family import DASHBOARD_FAMILY
 from ._utils import (
-    dashboard_uses_relative_grid,
     PERMISSIONS_DASHBOARD,
     serialize_relative_grid_dashboard,
 )

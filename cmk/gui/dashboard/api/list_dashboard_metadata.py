@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Literal
 
-from cmk.ccc.user import UserId
-from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -23,12 +21,10 @@ from cmk.gui.openapi.framework.model.base_models import (
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.type_defs import AnnotatedUserId
 
-from ..breadcrumb import dashboard_topic_breadcrumb
+from ..metadata import DashboardLayoutType, DashboardMetadataObject
 from ..store import get_permitted_dashboards
 from ._family import DASHBOARD_FAMILY
-from ._utils import dashboard_uses_relative_grid, PERMISSIONS_DASHBOARD
-
-type DashboardLayoutType = Literal["relative_grid", "responsive_grid"]
+from ._utils import PERMISSIONS_DASHBOARD
 
 
 @api_model
@@ -72,6 +68,28 @@ class DashboardMetadata:
     )
     display: DashboardDisplay = api_field(description="Display and presentation preferences.")
 
+    @classmethod
+    def from_dashboard_metadata_object(cls, obj: DashboardMetadataObject) -> "DashboardMetadata":
+        return cls(
+            name=obj.name,
+            owner=obj.owner,
+            is_built_in=obj.is_built_in,
+            is_editable=obj.is_editable,
+            layout_type=obj.layout_type,
+            display=DashboardDisplay(
+                title=obj.display.title,
+                topic=Topic(
+                    name=obj.display.topic.name,
+                    breadcrumb=[
+                        BreadcrumbItem(title=item.title, link=item.link)
+                        for item in obj.display.topic.breadcrumb
+                    ],
+                ),
+                hidden=obj.display.hidden,
+                sort_index=obj.display.sort_index,
+            ),
+        )
+
 
 @api_model
 class DashboardMetadataModel(DomainObjectModel):
@@ -98,45 +116,12 @@ def list_dashboard_metadata_v1(api_context: ApiContext) -> DashboardMetadataColl
     dashboards = []
     user_permissions = api_context.config.user_permissions()
     for dashboard_id, dashboard in get_permitted_dashboards().items():
-        # Determine layout type based on dashboard configuration
-        layout_type: DashboardLayoutType = (
-            "relative_grid" if dashboard_uses_relative_grid(dashboard) else "responsive_grid"
-        )
-
-        display = DashboardDisplay(
-            title=str(dashboard["title"]),
-            topic=Topic(
-                name=dashboard["topic"],
-                # LazyString to str conversion to avoid issues with OpenAPI generation
-                breadcrumb=[
-                    BreadcrumbItem(title=str(item.title), link=item.url)
-                    for item in dashboard_topic_breadcrumb(dashboard["topic"], user_permissions)
-                ],
-            ),
-            hidden=dashboard["hidden"],
-            sort_index=dashboard["sort_index"],
-        )
-        is_built_in = dashboard["owner"] == UserId.builtin()
-        # Note: from legacy build page header code it seems that permission edit_foreign_dashboards
-        # are not taken into account to determine if the user is allowed to edit a dashboard.
-        # This could be changed in the future.
-        is_editable = (
-            not is_built_in
-            and user.may("general.edit_dashboards")
-            and dashboard["owner"] == user.id
-        )
-        metadata = DashboardMetadata(
-            name=dashboard["name"],
-            owner=dashboard["owner"] if dashboard["owner"] != UserId.builtin() else None,
-            is_built_in=is_built_in,
-            is_editable=is_editable,
-            layout_type=layout_type,
-            display=display,
-        )
         dashboard_model = DashboardMetadataModel(
             id=dashboard_id,
             domainType="dashboard_metadata",
-            extensions=metadata,
+            extensions=DashboardMetadata.from_dashboard_metadata_object(
+                DashboardMetadataObject.from_dashboard_config(dashboard, user_permissions)
+            ),
             links=[],
         )
 

@@ -806,7 +806,7 @@ dill==0.4.0 \
 diskcache==5.6.3 \
     --hash=sha256:2c3a3fa2743d8535d832ec61c2054a1641f41775aa7c556758a109941e33e4fc \
     --hash=sha256:5e31b2d5fbad117cc363ebaf6b689474db18a1f6438bc82358b024abd4c2ca19
-    # via -r non-free/packages/cmk-relay-engine/requirements.in
+    # via -r non-free/packages/cmk-relay-engine/dev-requirements.in
 distlib==0.4.0 \
     --hash=sha256:9659f7d87e46584a30b5780e43ac7a2143098441670ff0a49d5f9034c54a6c16 \
     --hash=sha256:feec40075be03a04501a973d81f633735b4b69f98b05450592310c0f401a4e0d
@@ -2964,7 +2964,7 @@ psutil==7.0.0 \
     --hash=sha256:ba3fcef7523064a6c9da440fc4d6bd07da93ac726b5733c29027d7dc95b39d99
     # via
     #   -r cmk/requirements.in
-    #   -r non-free/packages/cmk-relay-engine/requirements.in
+    #   -r non-free/packages/cmk-relay-engine/dev-requirements.in
     #   opentelemetry-resourcedetector-process
 psycopg==3.2.10 \
     --hash=sha256:0bce99269d16ed18401683a8569b2c5abd94f72f8364856d56c0389bcd50972a \
@@ -3450,11 +3450,22 @@ pytest==8.3.5 \
     # via
     #   -c constraints.txt
     #   -r dev-requirements.in
-    #   -r non-free/packages/cmk-mknotifyd/requirements.in
-    #   -r non-free/packages/cmk-otel-collector/requirements.in
-    #   -r non-free/packages/cmk-relay-engine/requirements.in
-    #   -r packages/cmk-plugin-apis/requirements.in
-    #   -r packages/cmk-werks/requirements.in
+    #   -r non-free/packages/cmk-mknotifyd/dev-requirements.in
+    #   -r non-free/packages/cmk-otel-collector/dev-requirements.in
+    #   -r non-free/packages/cmk-relay-engine/dev-requirements.in
+    #   -r non-free/packages/cmk-update-agent/dev-requirements.in
+    #   -r packages/cmk-agent-receiver/dev-requirements.in
+    #   -r packages/cmk-ccc/dev-requirements.in
+    #   -r packages/cmk-crypto/dev-requirements.in
+    #   -r packages/cmk-events/dev-requirements.in
+    #   -r packages/cmk-livestatus-client/dev-requirements.in
+    #   -r packages/cmk-messaging/dev-requirements.in
+    #   -r packages/cmk-mkp-tool/dev-requirements.in
+    #   -r packages/cmk-plugin-apis/dev-requirements.in
+    #   -r packages/cmk-relay-protocols/dev-requirements.in
+    #   -r packages/cmk-trace/dev-requirements.in
+    #   -r packages/cmk-werks/dev-requirements.in
+    #   -r packages/metric-backend/dev-requirements.in
     #   meraki
     #   pytest-asyncio
     #   pytest-base-url
@@ -3475,7 +3486,7 @@ pytest-asyncio @ git+https://github.com/pytest-dev/pytest-asyncio@db36483bc47c80
     # via
     #   -c constraints.txt
     #   -r dev-requirements.in
-    #   -r non-free/packages/cmk-relay-engine/requirements.in
+    #   -r non-free/packages/cmk-relay-engine/dev-requirements.in
 pytest-base-url==2.1.0 \
     --hash=sha256:02748589a54f9e63fcbe62301d6b0496da0d10231b753e950c63e03aee745d45 \
     --hash=sha256:3ad15611778764d451927b2a53240c1a7a591b521ea44cebfe45849d2d2812e6
@@ -3505,8 +3516,9 @@ pytest-mock==3.15.0 \
     --hash=sha256:ef2219485fb1bd256b00e7ad7466ce26729b30eadfc7cbcdb4fa9a92ca68db6f
     # via
     #   -r dev-requirements.in
-    #   -r non-free/packages/cmk-mknotifyd/requirements.in
-    #   -r packages/cmk-agent-receiver/requirements.in
+    #   -r non-free/packages/cmk-mknotifyd/dev-requirements.in
+    #   -r non-free/packages/cmk-update-agent/dev-requirements.in
+    #   -r packages/cmk-agent-receiver/dev-requirements.in
 pytest-opentelemetry==1.1.0 \
     --hash=sha256:1fe96eea020bb0cdad3d590c8978908acd75a35d689659cc9b6600740de66812 \
     --hash=sha256:4e6d552ce90e01dfa33c913ea843ca8a01f306219b4ce36cd7b79d070a82f0c4
@@ -3532,7 +3544,8 @@ pytest-xdist==3.8.0 \
     --hash=sha256:7e578125ec9bc6050861aa93f2d59f1d8d085595d6551c2c90b6f4fad8d3a9f1
     # via
     #   -r dev-requirements.in
-    #   -r non-free/packages/cmk-relay-engine/requirements.in
+    #   -r non-free/packages/cmk-relay-engine/dev-requirements.in
+    #   -r packages/cmk-agent-receiver/dev-requirements.in
 python-active-directory==2.0.1 \
     --hash=sha256:023d5d47fa1fc966527d63d73b6c3864a233c236e3e258f9af778e73549230e0 \
     --hash=sha256:119f0acf9d4cba8ee99639602969214757100a12f3fafe6a6083ead56bfc655b \
@@ -4414,7 +4427,7 @@ tenacity==9.1.2 \
     --hash=sha256:f77bf36710d8b73a50b2dd155c97b870017ad21afe6ab300326b0371b3b05138
     # via
     #   -r cmk/requirements.in
-    #   -r non-free/packages/cmk-relay-engine/requirements.in
+    #   -r non-free/packages/cmk-relay-engine/dev-requirements.in
     #   opsgenie-sdk
 text-unidecode==1.3 \
     --hash=sha256:1311f10e8b895935241623731c2ba64f4c455287888b18189350b67134a822e8 \
@@ -4512,8 +4525,11 @@ time-machine==2.19.0 \
     --hash=sha256:fe59909d95a2ef5e01ce3354fdea3908404c2932c2069f00f66dff6f27e9363e
     # via
     #   -r dev-requirements.in
-    #   -r packages/cmk-agent-receiver/requirements.in
-    #   -r packages/cmk-crypto/requirements.in
+    #   -r non-free/packages/cmk-mknotifyd/dev-requirements.in
+    #   -r non-free/packages/cmk-otel-collector/dev-requirements.in
+    #   -r packages/cmk-agent-receiver/dev-requirements.in
+    #   -r packages/cmk-crypto/dev-requirements.in
+    #   -r packages/cmk-events/dev-requirements.in
 tinycss2==1.4.0 \
     --hash=sha256:10c0972f6fc0fbee87c3edb76549357415e94548c1ae10ebccdea16fb404a9b7 \
     --hash=sha256:3a49cf47b7675da0b15d0c6e1df8df4ebd96e9394bb905a5775adb0d884c5289
@@ -4615,7 +4631,7 @@ types-lxml==2025.8.25 \
 types-markdown==3.9.0.20250906 \
     --hash=sha256:afac4297e4e75f00b4043f9b3a989dc5924230d065996a233b9bce894c438cc2 \
     --hash=sha256:f02dc1a2d130b093de4910c64b2d0a811ae7020f03624df41c667818d2fee050
-    # via -r packages/cmk-werks/requirements.in
+    # via -r packages/cmk-werks/dev-requirements.in
 types-mypy-extensions==1.1.0.20250425 \
     --hash=sha256:586e41f7d422a778cc0946355d3ecbd3224fb64d9fdd1a091e3bd0dfb25347a6 \
     --hash=sha256:bcfdf47666a02eb31f4d7212fe9e3b3df7d98016aba1b07b8e1291441241fbaf
@@ -4635,7 +4651,7 @@ types-paramiko==4.0.0.20250822 \
 types-pika-ts==1.3.0.20250822 \
     --hash=sha256:182afd710365d85d861938097199a7c197a6cbf1565f3ed9fdc0bcd8e0240b06 \
     --hash=sha256:5079cf10e4cb456ea642da18fe615295e40ca8a6fe3d33878d1200d3aeb520f8
-    # via -r packages/cmk-messaging/requirements.in
+    # via -r packages/cmk-messaging/dev-requirements.in
 types-pillow==10.2.0.20240822 \
     --hash=sha256:559fb52a2ef991c326e4a0d20accb3bb63a7ba8d40eb493e0ecb0310ba52f0d3 \
     --hash=sha256:d9dab025aba07aeb12fd50a6799d4eac52a9603488eca09d7662543983f16c5d
@@ -4677,7 +4693,7 @@ types-python-dateutil==2.9.0.20250822 \
     --hash=sha256:84c92c34bd8e68b117bff742bc00b692a1e8531262d4507b33afcc9f7716cd53
     # via
     #   -r dev-requirements.in
-    #   -r packages/cmk-crypto/requirements.in
+    #   -r packages/cmk-crypto/dev-requirements.in
     #   arrow
 types-pyyaml==6.0.12.20250822 \
     --hash=sha256:1fe1a5e146aa315483592d292b72a172b65b946a6d98aa6ddd8e4aa838ab7098 \

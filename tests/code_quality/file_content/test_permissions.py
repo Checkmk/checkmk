@@ -62,6 +62,7 @@ _PERMISSIONS = (
             "BUILD",
             "pyproject.toml",
             "ci.json",
+            "dev-requirements.in",
         ),
         (),
     ),

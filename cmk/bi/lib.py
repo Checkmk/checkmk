@@ -673,24 +673,24 @@ bi_search_registry = BISearchRegistry()
 #   |          |___/ |___/                                                 |
 #   +----------------------------------------------------------------------+
 
-AggregationKind = Literal[
+AggregationFunctionKind = Literal[
     "best",
     "count_ok",
     "worst",
 ]
 
 
-class AggregationFunctionConfig(TypedDict):
-    type: AggregationKind
+class AggregationFunctionSerialized(TypedDict):
+    type: AggregationFunctionKind
 
 
 class ABCBIAggregationFunction(ABC):
-    def __init__(self, aggr_function_config: AggregationFunctionConfig) -> None:
+    def __init__(self, aggr_function_config: AggregationFunctionSerialized) -> None:
         super().__init__()
 
     @classmethod
     @abstractmethod
-    def kind(cls) -> AggregationKind:
+    def kind(cls) -> AggregationFunctionKind:
         raise NotImplementedError()
 
     @abstractmethod
@@ -703,7 +703,7 @@ class ABCBIAggregationFunction(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def serialize(self) -> AggregationFunctionConfig:
+    def serialize(self) -> AggregationFunctionSerialized:
         raise NotImplementedError()
 
 
@@ -711,7 +711,9 @@ class BIAggregationFunctionRegistry(plugin_registry.Registry[type[ABCBIAggregati
     def plugin_name(self, instance: type[ABCBIAggregationFunction]) -> str:
         return instance.kind()
 
-    def instantiate(self, aggr_func_config: AggregationFunctionConfig) -> ABCBIAggregationFunction:
+    def instantiate(
+        self, aggr_func_config: AggregationFunctionSerialized
+    ) -> ABCBIAggregationFunction:
         return self._entries[aggr_func_config["type"]](aggr_func_config)
 
 

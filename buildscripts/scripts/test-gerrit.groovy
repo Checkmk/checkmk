@@ -18,6 +18,7 @@ def main() {
     def stage_info = null;
 
     def analyse_mapping = [:];
+    def artifacts_base_dir = "tmp_artifacts";
 
     print(
         """
@@ -28,19 +29,27 @@ def main() {
         |===================================================
         """.stripMargin());
 
-    withCredentials([
-        usernamePassword(
-            credentialsId: 'nexus',
-            passwordVariable: 'DOCKER_PASSPHRASE',
-            usernameVariable: 'DOCKER_USERNAME')]) {
-        sh('echo  "${DOCKER_PASSPHRASE}" | docker login "${DOCKER_REGISTRY}" -u "${DOCKER_USERNAME}" --password-stdin');
+    if (kubernetes_inherit_from == "UNSET") {
+        withCredentials([
+            usernamePassword(
+                credentialsId: 'nexus',
+                passwordVariable: 'DOCKER_PASSPHRASE',
+                usernameVariable: 'DOCKER_USERNAME')]) {
+            sh('echo  "${DOCKER_PASSPHRASE}" | docker login "${DOCKER_REGISTRY}" -u "${DOCKER_USERNAME}" --password-stdin');
+        }
     }
 
     def current_description = currentBuild.description;
 
     stage("Prepare workspace") {
         dir("${checkout_dir}") {
-            sh("rm -rf ${result_dir}; mkdir ${result_dir}");
+            sh("""
+                rm -rf ${result_dir}
+                mkdir ${result_dir}
+
+                rm -rf ${artifacts_base_dir}
+                mkdir ${artifacts_base_dir}
+            """);
         }
     }
 
@@ -90,6 +99,9 @@ def main() {
                 }
                 def independent_command = item.COMMAND.replace("${checkout_dir}", "JOB_SPECIFIC_SPACE_PLACEHOLDER");
                 def relative_job_name = "${branch_base_folder}/cv/test-gerrit-single"
+                if (env.USE_K8S_GERRIT == "1") {
+                    relative_job_name = "${branch_base_folder}/cv/test-gerrit-single-k8s"
+                }
 
                 smart_stage(
                     name: stepName,
@@ -108,7 +120,6 @@ def main() {
                             ];
                             break;
                         default:
-                            relative_job_name = "${branch_base_folder}/cv/test-gerrit-single";
                             build_params << [
                                 CUSTOM_GIT_REF: GERRIT_PATCHSET_REVISION,
                                 CIPARAM_NAME: item.NAME,
@@ -125,6 +136,18 @@ def main() {
                             break;
                     }
 
+                    // use another switch statement to apply k8s specific settings
+                    // to be removed with CMK-25972
+                    switch("${item.NAME}") {
+                        case "Agent Plugin Unit Tests": // docker in docker
+                        case "Groovy Lint":             // npm not shipped with "klausi-standard-weak"
+                        case "Package cmk-frontend":    // npm not shipped with "klausi-standard-weak"
+                            relative_job_name = "${branch_base_folder}/cv/test-gerrit-single";
+                            break;
+                        default:
+                            break;
+                    }
+
                     analyse_mapping["${item.NAME}"] = [
                         stepName: item.NAME,
                         duration: groovy.time.TimeCategory.minus(new Date(), time_stage_started),
@@ -138,12 +161,13 @@ def main() {
                             relative_job_name: relative_job_name,
                             build_params: build_params,
                             build_params_no_check: [
-                                CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
                                 CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
                                 CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
                             ],
                             no_remove_others: true, // do not delete other files in the dest dir
-                            download: false,    // use copyArtifacts to avoid nested directories
+                            download: "${item.RESULT_CHECK_FILE_PATTERN}" != "" ? true : false,
+                            dest: "${artifacts_base_dir}",
+                            no_raise: true,     // do not raise an exception
                             print_html: false,  // do not update Jenkins Job page with infos like upstream build URLs or similar
                         );
                     } finally {
@@ -163,12 +187,12 @@ def main() {
                     condition: run_condition && build_instance && item.RESULT_CHECK_FILE_PATTERN,
                     raiseOnError: false,
                 ) {
-                    copyArtifacts(
-                        projectName: relative_job_name,
-                        selector: specific(build_instance.getId()),
-                        target: "${checkout_dir}",
-                        fingerprintArtifacts: true,
-                    );
+                    // copyArtifacts seems not to work with k8s
+                    sh("""
+                        # needed only because upstream_build() only downloads relative
+                        # to `base-dir` which has to be `checkout_dir`
+                        cp -r ${checkout_dir}/${artifacts_base_dir}/* ${checkout_dir} 2>/dev/null
+                    """);
 
                     analyse_mapping["${item.NAME}"] << [
                         pattern: "${item.RESULT_CHECK_FILE_PATTERN}",

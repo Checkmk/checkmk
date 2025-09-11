@@ -3,20 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 import pathlib
+
+from cmk.agent_receiver.config import Config, get_config
 
 
 def create_relay_config(
-    base_dir: pathlib.Path,
+    *,
     task_ttl: float = 1.0,
+    max_number_of_tasks: int = 5,
 ) -> pathlib.Path:
     """Helper function to create relay configuration files."""
-    config_data = {"task_ttl": task_ttl}
-
-    # Create the config file with the exact name expected by RelayConfig.load()
-    config_file = base_dir / "relay_config.json"
-    with config_file.open("w", encoding="utf-8") as f:
-        json.dump(config_data, f)
+    config = Config(task_ttl=task_ttl, max_tasks_per_relay=max_number_of_tasks)
+    config_file = config.config_file
+    config_file.write_text(config.model_dump_json())
+    get_config.cache_clear()
 
     return config_file

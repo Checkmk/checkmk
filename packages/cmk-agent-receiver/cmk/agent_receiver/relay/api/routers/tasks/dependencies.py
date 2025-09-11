@@ -7,6 +7,7 @@ from typing import Annotated
 
 import fastapi
 
+from cmk.agent_receiver.config import Config, get_config
 from cmk.agent_receiver.relay.api.dependencies.relays_repository import get_relays_repository
 from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
     CreateTaskHandler,
@@ -15,16 +16,11 @@ from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
     UpdateTaskHandler,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import TasksRepository
-from cmk.agent_receiver.relay.lib.relay_config import RelayConfig
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 
 
-def get_relay_config() -> RelayConfig:
-    return RelayConfig.load()
-
-
 def get_tasks_repository(
-    config: Annotated[RelayConfig, fastapi.Depends(get_relay_config)],
+    config: Annotated[Config, fastapi.Depends(get_config)],
 ) -> TasksRepository:
     return TasksRepository(
         ttl_seconds=config.task_ttl,

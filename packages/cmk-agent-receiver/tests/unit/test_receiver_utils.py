@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from pydantic import UUID4
 
-from cmk.agent_receiver import site_context
+from cmk.agent_receiver.config import get_config
 from cmk.agent_receiver.models import ConnectionMode, R4RStatus, RequestForRegistration
 from cmk.agent_receiver.utils import NotRegisteredException, R4R, RegisteredHost
 
@@ -20,7 +20,8 @@ def test_host_not_registered(uuid: UUID4) -> None:
 
 
 def test_pull_host_registered(tmp_path: Path, uuid: UUID4) -> None:
-    source = site_context.agent_output_dir() / str(uuid)
+    config = get_config()
+    source = config.agent_output_dir / str(uuid)
     target_dir = tmp_path / "hostname"
     source.symlink_to(target_dir)
 
@@ -32,7 +33,8 @@ def test_pull_host_registered(tmp_path: Path, uuid: UUID4) -> None:
 
 
 def test_push_host_registered(tmp_path: Path, uuid: UUID4) -> None:
-    source = site_context.agent_output_dir() / str(uuid)
+    config = get_config()
+    source = config.agent_output_dir / str(uuid)
     target_dir = tmp_path / "push-agent" / "hostname"
     source.symlink_to(target_dir)
 
@@ -55,7 +57,8 @@ def test_r4r(uuid: UUID4) -> None:
     )
     r4r.write()
 
-    expected_path = site_context.r4r_dir() / "NEW" / f"{uuid}.json"
+    config = get_config()
+    expected_path = config.r4r_dir / f"NEW/{uuid}.json"
     assert expected_path.is_file()
     access_time_before_read = expected_path.stat().st_atime
 

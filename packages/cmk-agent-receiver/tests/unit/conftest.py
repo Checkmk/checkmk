@@ -13,9 +13,9 @@ from fastapi.testclient import TestClient
 from pydantic import UUID4
 from pytest_mock import MockerFixture
 
-from cmk.agent_receiver import site_context
 from cmk.agent_receiver.apps_and_routers import AGENT_RECEIVER_APP
 from cmk.agent_receiver.checkmk_rest_api import ControllerCertSettings
+from cmk.agent_receiver.config import get_config
 from cmk.agent_receiver.main import main_app
 
 _CA = b"""-----BEGIN PRIVATE KEY-----
@@ -138,12 +138,13 @@ def site_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
 @pytest.fixture(autouse=True)
 def setup_site_context(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     site_env(monkeypatch, tmp_path)
-    site_context.agent_output_dir().mkdir(parents=True)
-    site_context.r4r_dir().mkdir(parents=True)
-    site_context.log_path().parent.mkdir(parents=True)
+    config = get_config()
+    config.agent_output_dir.mkdir(parents=True)
+    config.r4r_dir.mkdir(parents=True)
+    config.log_path.parent.mkdir(parents=True)
     for ca_path in (
-        site_context.site_ca_path(),
-        site_context.agent_ca_path(),
+        config.site_ca_path,
+        config.agent_ca_path,
     ):
         ca_path.parent.mkdir(parents=True, exist_ok=True)
         ca_path.write_bytes(_CA)

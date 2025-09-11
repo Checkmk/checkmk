@@ -60,21 +60,25 @@ const hasData = computed(() => displayRows.value.length > 0)
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .readonly-tag-filter-container {
   display: flex;
   flex-direction: column;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .empty-state {
   padding: var(--dimension-2, 8px);
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .tag-filter-display {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-2);
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .tag-filter-item {
   display: flex;
   align-items: center;

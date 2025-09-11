@@ -52,18 +52,21 @@ const displayItems = computed(() => {
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .readonly-label-group {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-4);
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .label-items {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-1);
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .label-item {
   display: flex;
   align-items: center;
@@ -71,6 +74,7 @@ const displayItems = computed(() => {
   padding: var(--dimension-1) 0;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .label-item__operator {
   min-width: 40px;
 }

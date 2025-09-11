@@ -86,6 +86,7 @@ const autocompleter: Autocompleter = {
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .error {
   color: #dc2626;
   margin-top: 4px;

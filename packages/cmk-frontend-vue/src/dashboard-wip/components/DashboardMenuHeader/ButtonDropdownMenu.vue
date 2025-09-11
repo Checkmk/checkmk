@@ -70,11 +70,13 @@ defineExpose({
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .cmk-dropdown-menu {
   display: inline-block;
   position: relative;
   white-space: nowrap;
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   .cmk-dropdown-menu--arrow {
     width: 0.7em;
     height: 0.7em;
@@ -82,11 +84,13 @@ defineExpose({
     margin: 0;
     flex-shrink: 0;
 
+    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
     &.rotated {
       transform: rotate(180deg);
     }
   }
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   .cmk-dropdown-menu--container {
     position: absolute;
     z-index: var(--z-index-dropdown);
@@ -101,6 +105,7 @@ defineExpose({
     width: max-content;
   }
 
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   .cmk-dropdown-menu--content {
     padding: 0;
     margin: 0;

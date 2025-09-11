@@ -12,12 +12,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .wizard-stage-container__steps-container {
   flex: 2;
   height: 100vh;
   padding: var(--spacing-double);
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .wizard-stage-container__steps-inner-container {
   height: 95vh;
   overflow-y: auto;

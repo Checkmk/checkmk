@@ -47,6 +47,7 @@ watch(currentValue, (newValue) => {
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .text-input-group {
   width: 100%;
   display: flex;

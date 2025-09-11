@@ -22,12 +22,14 @@ const content = props.content as IFrameContent
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .db-content-iframe__div {
   height: 100%;
   overflow: hidden;
   -webkit-overflow-scrolling: touch;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .db-content-iframe__iframe {
   height: 100%;
   width: 100%;

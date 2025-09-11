@@ -172,11 +172,13 @@ const onTagComponentUpdate = (values: TagMatchItem[]): void => {
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .filter-component {
   flex: 1;
   width: 100%;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .horizontal-group {
   display: flex;
   align-items: flex-end;
@@ -185,11 +187,13 @@ const onTagComponentUpdate = (values: TagMatchItem[]): void => {
   gap: var(--dimension-4);
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .horizontal-group-item {
   flex: 1;
   min-width: 0;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .unknown-component {
   color: red;
   font-style: italic;

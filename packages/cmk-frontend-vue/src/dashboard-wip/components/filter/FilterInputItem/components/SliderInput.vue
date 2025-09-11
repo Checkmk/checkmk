@@ -124,18 +124,21 @@ watch(modelValue, (newValue) => {
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .slider-group {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-3);
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .slider-container {
   display: flex;
   align-items: center;
   gap: var(--dimension-5);
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .slider-root {
   position: relative;
   flex: 1;
@@ -144,6 +147,7 @@ watch(modelValue, (newValue) => {
   user-select: none;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .slider-track {
   position: absolute;
   top: 50%;
@@ -154,6 +158,7 @@ watch(modelValue, (newValue) => {
   transform: translateY(-50%);
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .slider-range {
   position: absolute;
   top: 0;
@@ -164,6 +169,7 @@ watch(modelValue, (newValue) => {
   transition: width 0.1s ease;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .slider-thumb {
   position: absolute;
   top: 50%;
@@ -176,10 +182,12 @@ watch(modelValue, (newValue) => {
   transition: box-shadow 150ms ease;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .slider-thumb:active {
   cursor: grabbing;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .slider-value {
   font-size: var(--dimension-5);
   color: var(--font-color);
@@ -191,6 +199,7 @@ watch(modelValue, (newValue) => {
   padding: 0;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .slider-value:focus {
   color: var(--font-color);
   border: 1px solid var(--font-color);

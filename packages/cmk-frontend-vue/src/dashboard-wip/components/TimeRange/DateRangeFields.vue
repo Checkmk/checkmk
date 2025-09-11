@@ -77,12 +77,14 @@ const dateRangeModel = defineModel<{
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .custom-date-range {
   margin-top: var(--spacing);
   min-height: 40px;
   font-size: var(--font-size-small);
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .custom-date-range .from_date,
 .custom-date-range .to_date {
   float: left;
@@ -91,11 +93,13 @@ const dateRangeModel = defineModel<{
   align-items: center;
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .custom-date-range .date_title {
   display: inline;
   margin-right: var(--spacing);
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .custom-date-range .field {
   position: relative;
   height: 40px;

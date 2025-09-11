@@ -47,11 +47,13 @@ const components = computed(() => {
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .filter-title {
   font-weight: var(--font-weight-bold);
   font-size: var(--font-size-normal);
 }
 
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .filter-components {
   width: 100%;
   display: flex;

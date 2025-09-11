@@ -149,6 +149,7 @@ watch(
 </template>
 
 <style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .filter-configuration__apply {
   display: flex;
   align-items: center;

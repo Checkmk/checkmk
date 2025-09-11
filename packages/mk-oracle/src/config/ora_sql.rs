@@ -480,8 +480,8 @@ mod tests {
 
     use super::*;
     use crate::config::authentication::AuthType;
-    use crate::config::options::UseHostClient;
     use crate::config::{section::SectionKind, yaml::test_tools::create_yaml};
+    use crate::types::UseHostClient;
     use crate::types::{MaxConnections, MaxQueries};
     mod data {
         /// copied from tests/files/test-config.yaml

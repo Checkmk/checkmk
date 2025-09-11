@@ -45,6 +45,10 @@ pub struct Args {
     #[arg(long)]
     pub detect_only: bool,
 
+    /// Prepared runtime status, If yes skip setting PATH LD_LIBRARY_PATH, whatever
+    #[arg(long)]
+    pub runtime_ready: bool,
+
     /// Select which sections to execute.
     /// If not specified, all sections are executed.
     /// Use `all` to run all sections.

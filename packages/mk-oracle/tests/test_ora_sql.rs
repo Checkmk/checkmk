@@ -19,10 +19,13 @@ use mk_oracle::ora_sql::instance::generate_data;
 use mk_oracle::ora_sql::sqls;
 use mk_oracle::ora_sql::system;
 use mk_oracle::platform::registry::get_instances;
-use mk_oracle::setup::Env;
-use mk_oracle::types::{Credentials, InstanceName, InstanceNumVersion, InstanceVersion, Tenant};
+use mk_oracle::setup::{detect_host_runtime, detect_runtime, Env};
+use mk_oracle::types::{
+    Credentials, InstanceName, InstanceNumVersion, InstanceVersion, Tenant, UseHostClient,
+};
 use mk_oracle::types::{InstanceAlias, SqlQuery};
 use std::collections::HashSet;
+use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::LazyLock;
 
@@ -1235,4 +1238,138 @@ fn test_detection_registry() {
         assert!(std::path::PathBuf::from(&i.base).is_dir());
         assert!(std::path::PathBuf::from(&i.base).exists());
     }
+}
+
+#[test]
+fn test_detect_host_runtime() {
+    let r = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL);
+    if r.is_err() {
+        assert!(detect_host_runtime().is_none());
+    } else {
+        assert!(detect_host_runtime().is_some());
+    }
+}
+
+fn base_dir() -> std::path::PathBuf {
+    std::path::PathBuf::from(std::env::var("MK_CONFDIR").unwrap_or_else(|_| {
+        let this_file: PathBuf = PathBuf::from(file!());
+        this_file
+            .parent()
+            .unwrap()
+            .parent()
+            .unwrap()
+            .to_owned()
+            .into_os_string()
+            .into_string()
+            .unwrap()
+    }))
+}
+
+#[test]
+fn test_detect_runtime_with_runtime() {
+    // MK_LIBDIR is set so that runtimes exist
+    let good_path = base_dir().join("runtimes");
+    const LIBDIR_VAR: &str = "MK_LIBDIR_TEST1";
+    unsafe {
+        std::env::set_var(LIBDIR_VAR, &good_path);
+    }
+    let lib_dir_var: Option<String> = Some(LIBDIR_VAR.to_string());
+    let local_exists = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL)
+        .ok()
+        .is_some();
+
+    // Never
+    assert!(detect_runtime(&UseHostClient::Never, Some("Hurz".to_string())).is_none()); // env var does not exist
+    eprintln!("good_path = {:?}", lib_dir_var.clone());
+    assert!(detect_runtime(&UseHostClient::Never, lib_dir_var.clone()).is_some()); // detected
+
+    // Always
+    assert_eq!(
+        detect_runtime(&UseHostClient::Always, lib_dir_var.clone()).is_some(),
+        local_exists
+    ); // detected only if local exists(skip factory)
+    if local_exists {
+        assert!(!detect_runtime(&UseHostClient::Always, lib_dir_var.clone())
+            .unwrap()
+            .into_os_string()
+            .into_string()
+            .unwrap()
+            .contains("mk-oracle")); // path is to host
+    }
+
+    // Auto
+    let path = detect_runtime(&UseHostClient::Auto, lib_dir_var.clone())
+        .unwrap()
+        .into_os_string()
+        .into_string()
+        .unwrap();
+    assert!(path.contains("mk-oracle")); // detected factory
+
+    // Path:
+    // path is correct -> expected correct path
+    let correct_path = base_dir()
+        .join("runtimes")
+        .into_os_string()
+        .into_string()
+        .unwrap();
+    let path = to_string(detect_runtime(
+        &UseHostClient::Path(correct_path.clone()),
+        lib_dir_var.clone(),
+    ))
+    .unwrap();
+    assert_eq!(path, correct_path);
+
+    // path is wrong -> expected nothing
+    let wrong_path = correct_path + "something-missing";
+    let path = detect_runtime(&UseHostClient::Path(wrong_path), lib_dir_var.clone());
+    assert!(path.is_none());
+}
+
+fn to_string(p: Option<std::path::PathBuf>) -> Option<String> {
+    p.map(|pb| pb.into_os_string().into_string().unwrap())
+}
+
+#[test]
+fn test_detect_runtime_without_runtime() {
+    // MK_LIBDIR is set so that runtimes is missing
+    let bad_path = base_dir().join("runtimes-wrong");
+    const LIBDIR_VAR: &str = "MK_LIBDIR_TEST2";
+    std::env::set_var(LIBDIR_VAR, &bad_path);
+    let lib_dir_var: Option<String> = Some(LIBDIR_VAR.to_string());
+    let local_exists = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL)
+        .ok()
+        .is_some();
+
+    // Never
+    assert!(detect_runtime(&UseHostClient::Never, lib_dir_var.clone()).is_none());
+
+    // Auto and Always are the same if no runtimes
+    // If local exists -> expected path to local client otherwise nothing
+    for mode in [UseHostClient::Auto, UseHostClient::Always] {
+        let path = to_string(detect_runtime(&mode, lib_dir_var.clone()));
+        if local_exists {
+            assert!(path.unwrap().ends_with("bin"));
+        } else {
+            assert!(path.is_none());
+        }
+    }
+
+    // Path:
+    // path is correct -> expected correct path
+    let correct_path = base_dir()
+        .join("runtimes")
+        .into_os_string()
+        .into_string()
+        .unwrap();
+    let path = to_string(detect_runtime(
+        &UseHostClient::Path(correct_path.clone()),
+        lib_dir_var.clone(),
+    ))
+    .unwrap();
+    assert_eq!(path, correct_path);
+
+    // path is wrong -> expected nothing
+    let wrong_path = correct_path + "something-missing";
+    let path = detect_runtime(&UseHostClient::Path(wrong_path), lib_dir_var.clone());
+    assert!(path.is_none());
 }

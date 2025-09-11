@@ -273,3 +273,11 @@ mod tests {
         assert_eq!(SectionFilter::from("aSync"), SectionFilter::Async);
     }
 }
+
+#[derive(PartialEq, Debug, Clone)]
+pub enum UseHostClient {
+    Always,
+    Never,
+    Auto,
+    Path(String),
+}

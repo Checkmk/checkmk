@@ -14,6 +14,7 @@ import type { FilterDefinition } from '@/dashboard-wip/components/filter/types.t
 import { useDashboardFilters } from '@/dashboard-wip/composables/useDashboardFilters.ts'
 import { useDashboardWidgets } from '@/dashboard-wip/composables/useDashboardWidgets.ts'
 import { useDashboardsManager } from '@/dashboard-wip/composables/useDashboardsManager.ts'
+import type { DashboardLayout } from '@/dashboard-wip/types/dashboard.ts'
 import type { DashboardPageProperties } from '@/dashboard-wip/types/page.ts'
 import { dashboardAPI } from '@/dashboard-wip/utils.ts'
 
@@ -35,7 +36,10 @@ onBeforeMount(async () => {
   filterCollection.value = filterDefsRecord
 
   if (props.dashboard) {
-    await dashboardsManager.loadDashboard(props.dashboard.name, props.dashboard.layout_type)
+    await dashboardsManager.loadDashboard(
+      props.dashboard.name,
+      props.dashboard.metadata.layout_type as DashboardLayout
+    )
   }
 })
 

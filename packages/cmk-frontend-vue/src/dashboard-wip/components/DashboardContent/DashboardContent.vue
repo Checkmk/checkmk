@@ -51,6 +51,5 @@ function contentTypeToComponent(contentType: string): Component {
     :content="content"
     :effective_filter_context="effective_filter_context"
     :dashboard-name="dashboardName"
-    :dashboard-owner="dashboardOwner"
   />
 </template>

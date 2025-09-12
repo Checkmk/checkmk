@@ -16,7 +16,6 @@ export interface ContentProps {
   content: WidgetContent
   effective_filter_context: EffectiveWidgetFilterContext
   dashboardName: string
-  dashboardOwner: string
 }
 export type ContentPropsRecord = Readonly<Record<string, ContentProps>>
 

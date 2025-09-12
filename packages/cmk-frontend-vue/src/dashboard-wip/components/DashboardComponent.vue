@@ -25,7 +25,6 @@ import type { WidgetLayout } from '@/dashboard-wip/types/widget'
 interface DashboardProps {
   constants: DashboardConstants
   dashboardName: string
-  dashboardOwner: string
   baseFilters: DashboardFilters['baseFilters']
   widgetCores: DashboardWidgets['widgetCores']
   isEditing: boolean
@@ -60,8 +59,7 @@ const widgetContentProps = computed<ContentPropsRecord>(() => {
           ...widget.filter_context.filters
         }
       },
-      dashboardName: props.dashboardName,
-      dashboardOwner: props.dashboardOwner
+      dashboardName: props.dashboardName
     }
   }
   return record

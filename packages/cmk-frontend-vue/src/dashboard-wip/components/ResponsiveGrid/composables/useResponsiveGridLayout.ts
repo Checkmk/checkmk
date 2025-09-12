@@ -204,7 +204,7 @@ export function useResponsiveGridLayout(responsiveGridContent: ModelRef<ContentR
         }
 
         const position = findPositionForWidget(arrangement, element.w, element.h)
-        layoutData[layoutName]![breakpoint] = {
+        layoutData[layoutName]![breakpointFromInternal[breakpoint]] = {
           position,
           size: {
             columns: element.w,

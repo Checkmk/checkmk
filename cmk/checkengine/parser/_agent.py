@@ -525,7 +525,7 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
         now = int(time.time())
 
         raw_sections, piggyback_sections = self._parse_host_section(raw_data, selection)
-        section_info = {header.name: header for header, _ in raw_sections}
+        section_info = make_section_info(raw_sections)
 
         def decode_sections(
             sections: ImmutableSection,
@@ -611,6 +611,12 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
         return parser.sections if selection is NO_SELECTION else [
             s for s in parser.sections if s.header.name in selection
         ], parser.piggyback_sections
+
+
+def make_section_info(
+    raw_sections: ImmutableSection,
+) -> Mapping[SectionName, SectionMarker]:
+    return {header.name: header for header, _ in raw_sections}
 
 
 def make_persisting_info(

@@ -526,14 +526,7 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
 
         raw_sections, piggyback_sections = self._parse_host_section(raw_data, selection)
         section_info = make_section_info(raw_sections)
-
-        def decode_sections(
-            sections: ImmutableSection,
-        ) -> MutableMapping[SectionName, list[AgentRawDataSectionElem]]:
-            out: MutableMapping[SectionName, list[AgentRawDataSectionElem]] = {}
-            for header, content in sections:
-                out.setdefault(header.name, []).extend(header.parse_line(line) for line in content)
-            return out
+        sections = make_decoded_sections(raw_sections)
 
         def flatten_piggyback_section(
             sections: ImmutableSection,
@@ -557,8 +550,6 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
                         )
                     ).encode(header.encoding)
                 yield from (bytes(line) for line in content)
-
-        sections = decode_sections(raw_sections)
 
         piggybacked_raw_data = {
             header.hostname: list(
@@ -617,6 +608,15 @@ def make_section_info(
     raw_sections: ImmutableSection,
 ) -> Mapping[SectionName, SectionMarker]:
     return {header.name: header for header, _ in raw_sections}
+
+
+def make_decoded_sections(
+    sections: ImmutableSection,
+) -> Mapping[SectionName, list[AgentRawDataSectionElem]]:
+    out: MutableMapping[SectionName, list[AgentRawDataSectionElem]] = {}
+    for header, content in sections:
+        out.setdefault(header.name, []).extend(header.parse_line(line) for line in content)
+    return out
 
 
 def make_persisting_info(

@@ -14,7 +14,7 @@ const content = props.content as IFrameContent
 </script>
 
 <template>
-  <DashboardContentContainer v-bind="general_settings">
+  <DashboardContentContainer v-bind="generalSettings">
     <div class="db-content-iframe__div">
       <iframe class="db-content-iframe__iframe" allowtransparency="true" :src="content.url" />
     </div>

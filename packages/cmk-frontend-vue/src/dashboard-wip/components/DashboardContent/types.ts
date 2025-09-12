@@ -11,10 +11,10 @@ import type {
 
 // General
 export interface ContentProps {
-  widget_id: string
-  general_settings: WidgetGeneralSettings
+  widgetId: string
+  generalSettings: WidgetGeneralSettings
   content: WidgetContent
-  effective_filter_context: EffectiveWidgetFilterContext
+  effectiveFilterContext: EffectiveWidgetFilterContext
   dashboardName: string
 }
 export type ContentPropsRecord = Readonly<Record<string, ContentProps>>

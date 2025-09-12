@@ -24,7 +24,7 @@ defineEmits<{
 
 <template>
   <div
-    :id="`widget-${spec.widget_id}`"
+    :id="`widget-${spec.widgetId}`"
     class="db-responsive-grid-widget__frame"
     :class="{ 'db-responsive-grid-widget__frame--edit': isEditing }"
   >

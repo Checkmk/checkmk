@@ -81,8 +81,8 @@ function handleResize(newWidth: number, newHeight: number) {
 const httpVars: Ref<FilterHTTPVars> = computed(() => {
   return {
     content: JSON.stringify(props.content),
-    context: JSON.stringify(props.effective_filter_context.filters),
-    single_infos: JSON.stringify(props.effective_filter_context.uses_infos)
+    context: JSON.stringify(props.effectiveFilterContext.filters),
+    single_infos: JSON.stringify(props.effectiveFilterContext.uses_infos)
   }
 })
 
@@ -113,7 +113,7 @@ const updateInterval = 60
 const initializeFigure = () => {
   figure = new FigureBase(
     figureType.value,
-    `#db-content-figure-${props.widget_id}`,
+    `#db-content-figure-${props.widgetId}`,
     ajaxPage,
     new URLSearchParams(httpVars.value).toString(),
     props.content,
@@ -141,12 +141,12 @@ onBeforeUnmount(() => {
 <template>
   <div ref="wrapperDiv" class="db-content-figure__wrapper">
     <div
-      :id="`db-content-figure-${widget_id}`"
+      :id="`db-content-figure-${widgetId}`"
       ref="contentDiv"
       class="db-content-figure"
       :class="{
         'db-content-figure__size-svg': sizeSvg,
-        'db-content-figure__background': !!general_settings.render_background
+        'db-content-figure__background': !!generalSettings.render_background
       }"
     ></div>
   </div>

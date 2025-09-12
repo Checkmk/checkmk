@@ -29,8 +29,11 @@ config_setting(
         "compiled_%s.tar" % module,
     ],
     tags = ["manual"],
-    # Make setuptools available to net-snmp
-    visibility = ["@net-snmp//:__pkg__"],
+    visibility = [
+        "//omd/relay:__pkg__",
+        # Make setuptools available to net-snmp
+        "@net-snmp//:__pkg__",
+    ],
 ) for module in all_requirements]
 
 # TODO: Switch to official release when netapp has fixed their build process
@@ -64,7 +67,7 @@ genrule(
     cmd = """
         mkdir -p python3-modules
         for MODULE in $(SRCS); do
-            tar --strip-components 1 -xf $$MODULE -C python3-modules/
+            tar -xf $$MODULE -C python3-modules/
         done
 
         # For some highly obscure unknown reason some files end up world-writable. Fix that!

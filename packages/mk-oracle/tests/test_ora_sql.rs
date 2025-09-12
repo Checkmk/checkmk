@@ -14,6 +14,7 @@ use crate::common::tools::{
 use mk_oracle::config::authentication::{AuthType, Authentication, Role, SqlDbEndpoint};
 use mk_oracle::config::defines::defaults::SECTION_SEPARATOR;
 use mk_oracle::config::ora_sql::Config;
+use mk_oracle::config::OracleConfig;
 use mk_oracle::ora_sql::backend;
 use mk_oracle::ora_sql::instance::generate_data;
 use mk_oracle::ora_sql::sqls;
@@ -1335,7 +1336,9 @@ fn test_detect_runtime_without_runtime() {
     // MK_LIBDIR is set so that runtimes is missing
     let bad_path = base_dir().join("runtimes-wrong");
     const LIBDIR_VAR: &str = "MK_LIBDIR_TEST2";
-    std::env::set_var(LIBDIR_VAR, &bad_path);
+    unsafe {
+        std::env::set_var(LIBDIR_VAR, &bad_path);
+    }
     let lib_dir_var: Option<String> = Some(LIBDIR_VAR.to_string());
     let local_exists = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL)
         .ok()
@@ -1373,4 +1376,123 @@ fn test_detect_runtime_without_runtime() {
     let wrong_path = correct_path + "something-missing";
     let path = detect_runtime(&UseHostClient::Path(wrong_path), lib_dir_var.clone());
     assert!(path.is_none());
+}
+
+fn make_config_with_use_host(use_host: &str) -> String {
+    format!(
+        r#"
+---
+oracle:
+  main: # mandatory, defines main SQL check to be executed
+    options: # optional
+      use_host_client: {} # optional, default: auto, values: auto, never, always, "path-to-oci-lib"
+    authentication: # mandatory
+      username: "foo" # mandatory if not using wallet, examples: "mydbuser", "c##multitenantuser"
+      password: "bar" # optional
+    connection: # optional
+      hostname: "localhost" # optional, default: "localhost"    "#,
+        use_host
+    )
+}
+
+/// NOT ALL CONDITIONS TESTED
+#[test]
+fn test_add_runtime_to_path() {
+    use mk_oracle::setup::add_runtime_path_to_env;
+    fn exec_add_runtime_to_path(
+        cfg: &OracleConfig,
+        mk_lib: &str,
+        mut_env_var: &str,
+    ) -> Option<std::path::PathBuf> {
+        unsafe {
+            std::env::set_var(mut_env_var, "xxx");
+        }
+        add_runtime_path_to_env(cfg, Some(mk_lib.to_owned()), Some(mut_env_var.to_owned()))
+    }
+    let mk_lib_dir_env_var = "MK_LIB_DIR_TEST_VAR_XXX".to_string();
+    let mut_env_var = "SOME_PATH_TEST_VAR_XXX".to_string();
+    let good_path = base_dir().join("runtimes");
+    let local_exists = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL)
+        .ok()
+        .is_some();
+    let good_path_str = good_path.clone().into_os_string().into_string().unwrap();
+
+    // *** AUTO ***
+    let cfg = OracleConfig::load_str(&make_config_with_use_host("auto")).unwrap();
+    // MK_LIBDIR ABSENT
+    unsafe {
+        std::env::remove_var(&mk_lib_dir_env_var);
+    }
+    // depends on local SQL endpoint, if exist -> found otherwise not
+    let result = exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var);
+    assert_eq!(result.is_some(), local_exists);
+    // MK_LIBDIR is good_path
+    unsafe {
+        std::env::set_var(&mk_lib_dir_env_var, good_path_str.as_str());
+    }
+    exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var);
+    assert!(std::env::var(&mut_env_var)
+        .unwrap()
+        .starts_with(good_path_str.as_str()));
+
+    // *** NEVER ***
+    let cfg = OracleConfig::load_str(&make_config_with_use_host("never")).unwrap();
+    // MK_LIBDIR ABSENT
+    unsafe {
+        std::env::remove_var(&mk_lib_dir_env_var);
+    }
+    assert!(exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var).is_none());
+    assert!(std::env::var(&mut_env_var).unwrap().starts_with("xxx"));
+
+    // MK_LIBDIR is good_path
+    unsafe {
+        std::env::set_var(&mk_lib_dir_env_var, good_path_str.as_str());
+    }
+    exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var);
+    assert!(std::env::var(&mut_env_var)
+        .unwrap()
+        .starts_with(good_path_str.as_str()));
+
+    // *** ALWAYS ***
+    let cfg = OracleConfig::load_str(&make_config_with_use_host("always")).unwrap();
+    unsafe {
+        std::env::remove_var(&mk_lib_dir_env_var);
+    }
+
+    // depends on local SQL endpoint, if exist -> found otherwise not
+    let result = exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var);
+    assert_eq!(result.is_some(), local_exists);
+    assert_eq!(
+        std::env::var(&mut_env_var).unwrap().starts_with("xxx"),
+        !local_exists
+    );
+    unsafe {
+        std::env::set_var(&mk_lib_dir_env_var, good_path_str.as_str());
+    }
+    exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var);
+    // depends on local SQL endpoint, if exist -> found otherwise not
+    assert_eq!(
+        exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var).is_some(),
+        local_exists
+    );
+
+    // SOME PATH
+    let some_path = base_dir().into_os_string().into_string().unwrap();
+    let cfg = OracleConfig::load_str(&make_config_with_use_host(some_path.as_str())).unwrap();
+    unsafe {
+        std::env::remove_var(&mk_lib_dir_env_var);
+    }
+    // depends on local SQL endpoint, if exist -> found otherwise not
+    exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var);
+    assert!(std::env::var(&mut_env_var)
+        .unwrap()
+        .starts_with(some_path.as_str()));
+    unsafe {
+        std::env::set_var(&mk_lib_dir_env_var, good_path_str.as_str());
+    }
+    exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var);
+    // depends on local SQL endpoint, if exist -> found otherwise not
+    assert!(std::env::var(&mut_env_var)
+        .unwrap()
+        .starts_with(some_path.as_str()));
 }

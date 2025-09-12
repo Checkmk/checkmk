@@ -11,9 +11,9 @@ pub const ORA_ENDPOINT_ENV_VAR_EXT: &str = "CI_ORA2_DB_TEST";
 
 #[cfg(windows)]
 pub mod platform {
+    use mk_oracle::setup::RUNTIME_SUB_DIR;
     use std::path::PathBuf;
     use std::sync::OnceLock;
-    pub const RUNTIME_NAME: &str = "oci_light_win_x64.zip";
 
     #[cfg(windows)]
     static RUNTIME_PATH: OnceLock<PathBuf> = OnceLock::new();
@@ -38,7 +38,7 @@ pub mod platform {
             "TNS_ADMIN",
             base_root.join("tests").join("files").join("tns"),
         );
-        base_root.join("runtimes").join(RUNTIME_NAME)
+        base_root.join("runtimes").join(RUNTIME_SUB_DIR)
     }
 
     fn _patch_path() {

@@ -2431,7 +2431,9 @@ playwright==1.49.1 \
     --hash=sha256:753ca90ee31b4b03d165cfd36e477309ebf2b4381953f2a982ff612d85b147d2 \
     --hash=sha256:9f38ed3d0c1f4e0a6d1c92e73dd9a61f8855133249d6f0cec28648d38a7137be \
     --hash=sha256:cd9bc8dab37aa25198a01f555f0a2e2c3813fe200fef018ac34dfe86b34994b9
-    # via -r requirements_dev.txt
+    # via
+    #   -r requirements_dev.txt
+    #   pytest-playwright
 pluggy==1.6.0 \
     --hash=sha256:7dcc130b76258d33b90f61b658791dede3486c3e6bfb003ee5c9bfb396dd22f3 \
     --hash=sha256:e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746
@@ -3095,11 +3097,13 @@ pytest==8.3.4 \
     #   -r requirements_all.txt
     #   -r requirements_dev.txt
     #   pytest-asyncio
+    #   pytest-base-url
     #   pytest-check
     #   pytest-html
     #   pytest-metadata
     #   pytest-mock
     #   pytest-opentelemetry
+    #   pytest-playwright
     #   pytest-random-order
     #   pytest-repeat
     #   pytest-subtests
@@ -3109,6 +3113,10 @@ pytest-asyncio==0.25.3 \
     --hash=sha256:9e89518e0f9bd08928f97a3482fdc4e244df17529460bc038291ccaf8f85c7c3 \
     --hash=sha256:fc1da2cf9f125ada7e710b4ddad05518d4cee187ae9412e9ac9271003497f07a
     # via -r requirements_dev.txt
+pytest-base-url==2.1.0 \
+    --hash=sha256:02748589a54f9e63fcbe62301d6b0496da0d10231b753e950c63e03aee745d45 \
+    --hash=sha256:3ad15611778764d451927b2a53240c1a7a591b521ea44cebfe45849d2d2812e6
+    # via pytest-playwright
 pytest-check==2.5.2 \
     --hash=sha256:131fa57ad2f0e21e39886e05255142bb584e61881a5e4584fd06b14aae63ee5d \
     --hash=sha256:e736cbfce5152ef904adf0e13584123a7813532725b7fc8ceca097fc8b232758
@@ -3130,6 +3138,10 @@ pytest-mock==3.14.0 \
 pytest-opentelemetry==1.0.1 \
     --hash=sha256:2fbedb36ca11b2c5a4ca9692e733cdb4311590bbd64cd67fe75d34bc9cd69ed2 \
     --hash=sha256:38455f3cad047ca46861912a91169c45cf96516cce8c4036e1e0d135d0515316
+    # via -r requirements_dev.txt
+pytest-playwright==0.7.1 \
+    --hash=sha256:94b551b2677ecdc16284fcd6a4f0045eafda47a60e74410f3fe4d8260e12cabf \
+    --hash=sha256:fcc46510fb75f8eba6df3bc8e84e4e902483d92be98075f20b9d160651a36d90
     # via -r requirements_dev.txt
 pytest-random-order==1.1.1 \
     --hash=sha256:4472d7d34f1f1c5f3a359c4ffc5c13ed065232f31eca19c8844c1ab406e79080 \
@@ -3234,6 +3246,10 @@ python-multipart==0.0.19 \
     --hash=sha256:905502ef39050557b7a6af411f454bc19526529ca46ae6831508438890ce12cc \
     --hash=sha256:f8d5b0b9c618575bf9df01c684ded1d94a338839bdd8223838afacfb4bb2082d
     # via -r requirements_all.txt
+python-slugify==8.0.4 \
+    --hash=sha256:276540b79961052b66b7d116620b36518847f52d5fd9e3a70164fc8c50faa6b8 \
+    --hash=sha256:59202371d1d05b54a9e7720c5e038f928f45daaffe41dd10822f3907b937c856
+    # via pytest-playwright
 python-snap7==1.3 \
     --hash=sha256:441d162f9dc08ab6790f1bd4e1940ca2fe8c0d9bdd7dda0ba4a4e7738dab82c8 \
     --hash=sha256:5a7aaff9caceee34cfc3d0867d734990693430c353d56de08f7baaa05e7d0265 \
@@ -3371,6 +3387,7 @@ requests==2.32.4 \
     #   opentelemetry-exporter-otlp-proto-http
     #   pysaml2
     #   pysmi-lextudio
+    #   pytest-base-url
     #   python-jenkins
     #   redfish
     #   requests-ntlm
@@ -3907,6 +3924,10 @@ tenacity==9.0.0 \
     # via
     #   -r requirements_all.txt
     #   opsgenie-sdk
+text-unidecode==1.3 \
+    --hash=sha256:1311f10e8b895935241623731c2ba64f4c455287888b18189350b67134a822e8 \
+    --hash=sha256:bad6603bb14d279193107714b288be206cac565dfa49aa5b105294dd5c4aab93
+    # via python-slugify
 time-machine==2.16.0 \
     --hash=sha256:01bc257e9418980a4922de94775be42a966e1a082fb01a1635917f9afc7b84ca \
     --hash=sha256:09531af59fdfb39bfd24d28bd1e837eff5a5d98318509a31b6cfd57d27801e52 \

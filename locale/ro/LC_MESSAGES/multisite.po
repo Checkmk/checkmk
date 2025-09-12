@@ -17008,9 +17008,6 @@ msgstr "În prezent, dezactivați această agregare"
 msgid "Currently in downtime"
 msgstr "În prezent în timp de nefuncționare"
 
-msgid "Currently indexing, please try again shortly."
-msgstr "În curs de indexare, vă rugăm să încercați din nou în scurt timp."
-
 msgid "Currently open connections"
 msgstr "Conexiuni deschise în prezent"
 
@@ -40245,6 +40242,10 @@ msgstr "Prezentare generală principală"
 msgid "Main dashboard"
 msgstr "Tabloul de bord principal"
 
+#, fuzzy
+msgid "Main dashboard (PEV)"
+msgstr "Tabloul de bord principal"
+
 msgid "Main folder"
 msgstr "Dosarul principal"
 
@@ -43075,11 +43076,6 @@ msgstr "Mai multe opțiuni"
 #, python-format
 msgid "More than %d results"
 msgstr "Mai mult de %d rezultate"
-
-#, python-format
-msgid "More than %d results available, please refine your search."
-msgstr ""
-"Sunt disponibile mai multe rezultate decât %d, vă rugăm să rafinați căutarea."
 
 #, fuzzy
 msgid ""
@@ -52326,6 +52322,9 @@ msgstr "Prezentări"
 msgid "Preserve cache times configured by other rules"
 msgstr "Păstrați timpii de cache configurați de alte reguli"
 
+msgid "Press Ctrl + K to trigger search"
+msgstr ""
+
 msgid "Pressure"
 msgstr "Presiune"
 
@@ -54017,10 +54016,6 @@ msgstr "Redis nu este accesibil, se încheie"
 
 msgid "Redis persistence"
 msgstr "Persistența Redis"
-
-#, fuzzy
-msgid "Redis server is not reachable."
-msgstr "În prezent, acest site nu este accesibil."
 
 msgid "Redis server name"
 msgstr "Numele serverului Redis"
@@ -57437,10 +57432,6 @@ msgstr ""
 "Căutarea regulilor ineficiente (care nu corespund niciunei gazde sau "
 "servicii)"
 
-#, fuzzy
-msgid "Search for menu entries, settings, hosts and rule sets."
-msgstr "Căutați intrări în meniu, setări, gazde și seturi de reguli."
-
 msgid "Search for not deprecated rulesets"
 msgstr "Căutați seturi de reguli care nu sunt depreciate"
 
@@ -57461,12 +57452,6 @@ msgstr "Istoric de căutare"
 
 msgid "Search hosts"
 msgstr "Căutare gazde"
-
-msgid "Search in Monitoring"
-msgstr "Căutare în Monitorizare"
-
-msgid "Search in Setup"
-msgstr "Căutare în configurare"
 
 msgid "Search in body"
 msgstr "Căutare în corp"
@@ -57521,41 +57506,6 @@ msgstr "Grafice de timp de căutare"
 
 msgid "Search whole subtree below the base DN"
 msgstr "Căutarea întregului subarbore sub DN de bază"
-
-#, fuzzy
-msgid ""
-"Search with regular expressions for menu entries, \n"
-"hosts, services or host and service groups.\n"
-"\n"
-"You can use the following filters:\n"
-"h: Host\n"
-"s: Service\n"
-"hg: Host group\n"
-"sg: Service group\n"
-"ad: Address\n"
-"al: Alias\n"
-"tg: Host tag\n"
-"hl: Host label (e.g. hl: cmk/os_family:linux)\n"
-"sl: Service label (e.g. sl: cmk/os_family:linux)\n"
-"st: Service state (e.g. st: crit [ok|warn|crit|unkn|pend])\n"
-"\n"
-"Note that for simplicity '*' will be substituted with '.*'."
-msgstr ""
-"Căutare cu expresii regulate pentru intrările din meniu,\n"
-"gazde, servicii sau grupuri de gazde și servicii.\n"
-"\n"
-"Puteți utiliza următoarele filtre:\n"
-"h: Host\n"
-"s: Serviciu\n"
-"hg: Grup de gazde\n"
-"sg: Grup de servicii\n"
-"ad: Adresă\n"
-"al: Alias\n"
-"tg: Etichetă gazdă\n"
-"hl: eticheta gazdei (de exemplu, hl: cmk/os_familie_os:linux)\n"
-"sl: Etichetă de serviciu (de exemplu, sl: cmk/os_familie_os:linux)\n"
-"\n"
-"Rețineți că, pentru simplificare, '*' va fi înlocuit cu '.*'."
 
 msgid "Search<nobr> </nobr>in"
 msgstr "Căutare<nobr> </nobr>în"
@@ -60025,14 +59975,8 @@ msgstr "Afișați toate gazdele"
 msgid "Show all phases of notifications"
 msgstr "Afișați toate fazele de notificări"
 
-msgid "Show all results"
-msgstr "Afișați toate rezultatele"
-
 msgid "Show all rules"
 msgstr "Afișați toate regulile"
-
-msgid "Show all topics"
-msgstr "Afișați toate subiectele"
 
 msgid "Show bar visualization"
 msgstr "Afișați vizualizarea barei"
@@ -67047,6 +66991,17 @@ msgid ""
 "The customer of the sites connected by the broker connection must be the "
 "same."
 msgstr ""
+
+#, python-format
+msgid "The dashboard '%s' does not contain an embedded view with the ID '%s'."
+msgstr ""
+
+#, fuzzy, python-format
+msgid ""
+"The dashboard '%s' does not exist or you do not have permission to view it."
+msgstr ""
+"%s este vizibil doar pentru dvs. deoarece nu aveți permisiunea de a-l "
+"partaja."
 
 msgid "The dashboard element does not exist."
 msgstr "Elementul de tablou de bord nu există."
@@ -86672,6 +86627,10 @@ msgstr "Nu aveți voie să modificați bara laterală."
 msgid "You are not allowed to change the sidebar."
 msgstr "Nu aveți voie să modificați bara laterală."
 
+#, fuzzy
+msgid "You are not allowed to create dashboards."
+msgstr "Nu aveți voie să editați tablouri de bord."
+
 #, python-format
 msgid "You are not allowed to delete this %s."
 msgstr "Nu aveți voie să ștergeți acest %s."
@@ -91250,6 +91209,54 @@ msgid "required"
 msgstr "Port necesar"
 
 #, fuzzy
+msgid "Settings Menu"
+msgstr "Setari"
+
+#, fuzzy
+msgid "Dashboard settings"
+msgstr "Proprietățile tabloului de bord"
+
+#, fuzzy
+msgid "Clone dashboard"
+msgstr "Clonarea tabloului de bord încorporat"
+
+#, fuzzy
+msgid "Dashboard user guide"
+msgstr "Tabloul de bord al utilizatorului %s"
+
+#, fuzzy
+msgid "Edit widgets"
+msgstr "Adăugați o țintă"
+
+#, fuzzy
+msgid "Add widget"
+msgstr "Adăugați o țintă"
+
+#, fuzzy
+msgid "Select dashboard"
+msgstr "Tablouri de bord conexe"
+
+#, fuzzy
+msgid "Loading Dashboards"
+msgstr "Tabloul de bord principal"
+
+#, fuzzy
+msgid "No dashboards found"
+msgstr "tablouri de bord"
+
+#, fuzzy
+msgid "Custom dashboards"
+msgstr "Personalizați"
+
+#, fuzzy
+msgid "Built-in dashboards"
+msgstr "Clonarea tabloului de bord încorporat"
+
+#, fuzzy
+msgid "Unnamed Dashboard"
+msgstr "Tabloul de bord"
+
+#, fuzzy
 msgid "No items selected"
 msgstr "Nu este selectat"
 
@@ -91305,8 +91312,28 @@ msgid "Remove row"
 msgstr "Eliminat: %s"
 
 #, fuzzy
-msgid "Add widget"
-msgstr "Adăugați o țintă"
+msgid "Search Filter"
+msgstr "Filtru de căutare"
+
+#, fuzzy
+msgid "Clear search"
+msgstr "Căutarea regulilor"
+
+#, fuzzy
+msgid "No filters found matching"
+msgstr "Potrivirea numelui procesului"
+
+#, fuzzy
+msgid "Expand all"
+msgstr "Extindeți"
+
+#, fuzzy
+msgid "Collapse all"
+msgstr "Alegeți toate"
+
+#, fuzzy
+msgid "No filter category available"
+msgstr "Nu există informații disponibile"
 
 #, fuzzy
 msgid "Add Widget"
@@ -91368,10 +91395,6 @@ msgstr "Elemente de bară laterală"
 
 msgid "Display user messages, sidebar elements, text or embed a URL"
 msgstr ""
-
-#, fuzzy
-msgid "Empty dashboard app"
-msgstr "Editarea tablourilor de bord"
 
 #, fuzzy
 msgid "explicit password"
@@ -92089,6 +92112,74 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Currently indexing, please try again shortly."
+#~ msgstr "În curs de indexare, vă rugăm să încercați din nou în scurt timp."
+
+#, python-format
+#~ msgid "More than %d results available, please refine your search."
+#~ msgstr ""
+#~ "Sunt disponibile mai multe rezultate decât %d, vă rugăm să rafinați "
+#~ "căutarea."
+
+#, fuzzy
+#~ msgid "Redis server is not reachable."
+#~ msgstr "În prezent, acest site nu este accesibil."
+
+#, fuzzy
+#~ msgid "Search for menu entries, settings, hosts and rule sets."
+#~ msgstr "Căutați intrări în meniu, setări, gazde și seturi de reguli."
+
+#~ msgid "Search in Monitoring"
+#~ msgstr "Căutare în Monitorizare"
+
+#~ msgid "Search in Setup"
+#~ msgstr "Căutare în configurare"
+
+#, fuzzy
+#~ msgid ""
+#~ "Search with regular expressions for menu entries, \n"
+#~ "hosts, services or host and service groups.\n"
+#~ "\n"
+#~ "You can use the following filters:\n"
+#~ "h: Host\n"
+#~ "s: Service\n"
+#~ "hg: Host group\n"
+#~ "sg: Service group\n"
+#~ "ad: Address\n"
+#~ "al: Alias\n"
+#~ "tg: Host tag\n"
+#~ "hl: Host label (e.g. hl: cmk/os_family:linux)\n"
+#~ "sl: Service label (e.g. sl: cmk/os_family:linux)\n"
+#~ "st: Service state (e.g. st: crit [ok|warn|crit|unkn|pend])\n"
+#~ "\n"
+#~ "Note that for simplicity '*' will be substituted with '.*'."
+#~ msgstr ""
+#~ "Căutare cu expresii regulate pentru intrările din meniu,\n"
+#~ "gazde, servicii sau grupuri de gazde și servicii.\n"
+#~ "\n"
+#~ "Puteți utiliza următoarele filtre:\n"
+#~ "h: Host\n"
+#~ "s: Serviciu\n"
+#~ "hg: Grup de gazde\n"
+#~ "sg: Grup de servicii\n"
+#~ "ad: Adresă\n"
+#~ "al: Alias\n"
+#~ "tg: Etichetă gazdă\n"
+#~ "hl: eticheta gazdei (de exemplu, hl: cmk/os_familie_os:linux)\n"
+#~ "sl: Etichetă de serviciu (de exemplu, sl: cmk/os_familie_os:linux)\n"
+#~ "\n"
+#~ "Rețineți că, pentru simplificare, '*' va fi înlocuit cu '.*'."
+
+#~ msgid "Show all results"
+#~ msgstr "Afișați toate rezultatele"
+
+#~ msgid "Show all topics"
+#~ msgstr "Afișați toate subiectele"
+
+#, fuzzy
+#~ msgid "Empty dashboard app"
+#~ msgstr "Editarea tablourilor de bord"
 
 #~ msgid ""
 #~ "Please contact your Checkmk administrator to ensure that your license is "

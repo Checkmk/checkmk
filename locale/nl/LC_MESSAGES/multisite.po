@@ -16993,9 +16993,6 @@ msgstr "Schakel momenteel deze aggregatie uit"
 msgid "Currently in downtime"
 msgstr "Momenteel in downtime"
 
-msgid "Currently indexing, please try again shortly."
-msgstr "Wordt momenteel geïndexeerd, probeer het binnenkort opnieuw."
-
 msgid "Currently open connections"
 msgstr "Momenteel open verbindingen"
 
@@ -40167,6 +40164,10 @@ msgstr "Hoofd Overzicht"
 msgid "Main dashboard"
 msgstr "Hoofd dashboard"
 
+#, fuzzy
+msgid "Main dashboard (PEV)"
+msgstr "Hoofd dashboard"
+
 msgid "Main folder"
 msgstr "Hoofdmap"
 
@@ -42987,10 +42988,6 @@ msgstr "Montagemogelijkheden"
 #, python-format
 msgid "More than %d results"
 msgstr "Meer dan %d resultaten"
-
-#, python-format
-msgid "More than %d results available, please refine your search."
-msgstr "Meer dan %d resultaten beschikbaar, verfijn uw zoekopdracht."
 
 #, fuzzy
 msgid ""
@@ -52244,6 +52241,9 @@ msgstr "Presentaties"
 msgid "Preserve cache times configured by other rules"
 msgstr "Behoud cache tijden geconfigureerd door andere regels"
 
+msgid "Press Ctrl + K to trigger search"
+msgstr ""
+
 msgid "Pressure"
 msgstr "Druk"
 
@@ -53930,10 +53930,6 @@ msgstr "Redis is niet bereikbaar, beëindiging"
 
 msgid "Redis persistence"
 msgstr "Redis persistentie"
-
-#, fuzzy
-msgid "Redis server is not reachable."
-msgstr "Deze site is momenteel niet bereikbaar."
 
 msgid "Redis server name"
 msgstr "Redis server naam"
@@ -57345,10 +57341,6 @@ msgstr ""
 "Zoeken naar ineffectieve regels (die niet overeenkomen met een host of "
 "service)"
 
-#, fuzzy
-msgid "Search for menu entries, settings, hosts and rule sets."
-msgstr "Zoek naar menu-items, instellingen, hosts en regelsets."
-
 msgid "Search for not deprecated rulesets"
 msgstr "Zoeken naar niet afgeschreven regelsets"
 
@@ -57370,12 +57362,6 @@ msgstr "Zoekgeschiedenis"
 
 msgid "Search hosts"
 msgstr "Zoek hosts"
-
-msgid "Search in Monitoring"
-msgstr "Zoeken in Toezicht"
-
-msgid "Search in Setup"
-msgstr "Zoeken in Setup"
 
 #, fuzzy
 msgid "Search in body"
@@ -57430,41 +57416,6 @@ msgstr "Zoektijd grafieken"
 
 msgid "Search whole subtree below the base DN"
 msgstr "Zoek in de hele subtree onder de DN van de basis"
-
-#, fuzzy
-msgid ""
-"Search with regular expressions for menu entries, \n"
-"hosts, services or host and service groups.\n"
-"\n"
-"You can use the following filters:\n"
-"h: Host\n"
-"s: Service\n"
-"hg: Host group\n"
-"sg: Service group\n"
-"ad: Address\n"
-"al: Alias\n"
-"tg: Host tag\n"
-"hl: Host label (e.g. hl: cmk/os_family:linux)\n"
-"sl: Service label (e.g. sl: cmk/os_family:linux)\n"
-"st: Service state (e.g. st: crit [ok|warn|crit|unkn|pend])\n"
-"\n"
-"Note that for simplicity '*' will be substituted with '.*'."
-msgstr ""
-"Zoeken met reguliere expressies naar menu-items,\n"
-"hosts, services of host- en servicegroepen.\n"
-"\n"
-"U kunt de volgende filters gebruiken:\n"
-"h: Host\n"
-"s: Service\n"
-"hg: Hostgroep\n"
-"sg: Servicegroep\n"
-"ad: Adres\n"
-"al: Alias\n"
-"tg: Host label\n"
-"hl: Hostlabel (bijv. hl: cmk/os_family:linux)\n"
-"sl: Dienstlabel (b.v. sl: cmk/os_family:linux)\n"
-"\n"
-"Merk op dat voor de eenvoud '*' zal worden vervangen door '.*'."
 
 msgid "Search<nobr> </nobr>in"
 msgstr "Zoeken<nobr> </nobr>in"
@@ -59872,14 +59823,8 @@ msgstr "Toon alle gastheren"
 msgid "Show all phases of notifications"
 msgstr "Toon alle fasen van meldingen"
 
-msgid "Show all results"
-msgstr "Toon alle resultaten"
-
 msgid "Show all rules"
 msgstr "Toon alle regels"
-
-msgid "Show all topics"
-msgstr "Toon alle onderwerpen"
 
 #, fuzzy
 msgid "Show bar visualization"
@@ -66876,6 +66821,17 @@ msgid ""
 "The customer of the sites connected by the broker connection must be the "
 "same."
 msgstr ""
+
+#, python-format
+msgid "The dashboard '%s' does not contain an embedded view with the ID '%s'."
+msgstr ""
+
+#, fuzzy, python-format
+msgid ""
+"The dashboard '%s' does not exist or you do not have permission to view it."
+msgstr ""
+"De %s is alleen voor jou zichtbaar omdat je'geen toestemming hebt om hem te "
+"delen."
 
 msgid "The dashboard element does not exist."
 msgstr "Het dashboard element bestaat niet."
@@ -86468,6 +86424,10 @@ msgstr "U mag de zijbalk niet veranderen."
 msgid "You are not allowed to change the sidebar."
 msgstr "U mag de zijbalk niet veranderen."
 
+#, fuzzy
+msgid "You are not allowed to create dashboards."
+msgstr "U mag dashboards niet bewerken."
+
 #, python-format
 msgid "You are not allowed to delete this %s."
 msgstr "U mag deze %s niet verwijderen."
@@ -91028,6 +90988,54 @@ msgid "required"
 msgstr "Vereiste poort"
 
 #, fuzzy
+msgid "Settings Menu"
+msgstr "Instellingen"
+
+#, fuzzy
+msgid "Dashboard settings"
+msgstr "Eigenschappen van het dashboard"
+
+#, fuzzy
+msgid "Clone dashboard"
+msgstr "Kloon ingebouwd dashboard"
+
+#, fuzzy
+msgid "Dashboard user guide"
+msgstr "Dashboard van gebruiker %s"
+
+#, fuzzy
+msgid "Edit widgets"
+msgstr "Doel toevoegen"
+
+#, fuzzy
+msgid "Add widget"
+msgstr "Doel toevoegen"
+
+#, fuzzy
+msgid "Select dashboard"
+msgstr "Gerelateerde dashboards"
+
+#, fuzzy
+msgid "Loading Dashboards"
+msgstr "Hoofd dashboard"
+
+#, fuzzy
+msgid "No dashboards found"
+msgstr "dashboards"
+
+#, fuzzy
+msgid "Custom dashboards"
+msgstr "Aanpassen"
+
+#, fuzzy
+msgid "Built-in dashboards"
+msgstr "Kloon ingebouwd dashboard"
+
+#, fuzzy
+msgid "Unnamed Dashboard"
+msgstr "Dashboard"
+
+#, fuzzy
 msgid "No items selected"
 msgstr "Niet geselecteerd"
 
@@ -91083,8 +91091,28 @@ msgid "Remove row"
 msgstr "Verwijderd: %s"
 
 #, fuzzy
-msgid "Add widget"
-msgstr "Doel toevoegen"
+msgid "Search Filter"
+msgstr "Zoekfilter"
+
+#, fuzzy
+msgid "Clear search"
+msgstr "Regel zoeken"
+
+#, fuzzy
+msgid "No filters found matching"
+msgstr "Procesnaam matching"
+
+#, fuzzy
+msgid "Expand all"
+msgstr "Uitbreiden"
+
+#, fuzzy
+msgid "Collapse all"
+msgstr "Kies alle"
+
+#, fuzzy
+msgid "No filter category available"
+msgstr "Geen informatie beschikbaar"
 
 #, fuzzy
 msgid "Add Widget"
@@ -91145,10 +91173,6 @@ msgstr "Zijbalk elementen"
 
 msgid "Display user messages, sidebar elements, text or embed a URL"
 msgstr ""
-
-#, fuzzy
-msgid "Empty dashboard app"
-msgstr "dashboards bewerken"
 
 #, fuzzy
 msgid "explicit password"
@@ -91863,6 +91887,72 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Currently indexing, please try again shortly."
+#~ msgstr "Wordt momenteel geïndexeerd, probeer het binnenkort opnieuw."
+
+#, python-format
+#~ msgid "More than %d results available, please refine your search."
+#~ msgstr "Meer dan %d resultaten beschikbaar, verfijn uw zoekopdracht."
+
+#, fuzzy
+#~ msgid "Redis server is not reachable."
+#~ msgstr "Deze site is momenteel niet bereikbaar."
+
+#, fuzzy
+#~ msgid "Search for menu entries, settings, hosts and rule sets."
+#~ msgstr "Zoek naar menu-items, instellingen, hosts en regelsets."
+
+#~ msgid "Search in Monitoring"
+#~ msgstr "Zoeken in Toezicht"
+
+#~ msgid "Search in Setup"
+#~ msgstr "Zoeken in Setup"
+
+#, fuzzy
+#~ msgid ""
+#~ "Search with regular expressions for menu entries, \n"
+#~ "hosts, services or host and service groups.\n"
+#~ "\n"
+#~ "You can use the following filters:\n"
+#~ "h: Host\n"
+#~ "s: Service\n"
+#~ "hg: Host group\n"
+#~ "sg: Service group\n"
+#~ "ad: Address\n"
+#~ "al: Alias\n"
+#~ "tg: Host tag\n"
+#~ "hl: Host label (e.g. hl: cmk/os_family:linux)\n"
+#~ "sl: Service label (e.g. sl: cmk/os_family:linux)\n"
+#~ "st: Service state (e.g. st: crit [ok|warn|crit|unkn|pend])\n"
+#~ "\n"
+#~ "Note that for simplicity '*' will be substituted with '.*'."
+#~ msgstr ""
+#~ "Zoeken met reguliere expressies naar menu-items,\n"
+#~ "hosts, services of host- en servicegroepen.\n"
+#~ "\n"
+#~ "U kunt de volgende filters gebruiken:\n"
+#~ "h: Host\n"
+#~ "s: Service\n"
+#~ "hg: Hostgroep\n"
+#~ "sg: Servicegroep\n"
+#~ "ad: Adres\n"
+#~ "al: Alias\n"
+#~ "tg: Host label\n"
+#~ "hl: Hostlabel (bijv. hl: cmk/os_family:linux)\n"
+#~ "sl: Dienstlabel (b.v. sl: cmk/os_family:linux)\n"
+#~ "\n"
+#~ "Merk op dat voor de eenvoud '*' zal worden vervangen door '.*'."
+
+#~ msgid "Show all results"
+#~ msgstr "Toon alle resultaten"
+
+#~ msgid "Show all topics"
+#~ msgstr "Toon alle onderwerpen"
+
+#, fuzzy
+#~ msgid "Empty dashboard app"
+#~ msgstr "dashboards bewerken"
 
 #, fuzzy
 #~ msgid "Default State"

@@ -176,6 +176,31 @@ def test_run_omd_backup_and_omd_restore(site: Site) -> None:
             restored_site.rm()
 
 
+def test_run_omd_create_welcome_message() -> None:
+    """
+    Test the 'omd create' command.
+    This test creates a new site and verifies that the welcome message is displayed.
+
+    """
+    site_factory = SiteFactory(
+        package=CMKPackageInfo(version_from_env(), edition_from_env()),
+        enforce_english_gui=False,
+        prefix="",
+    )
+    try:
+        site = site_factory.get_site("test_create_site", create=False)
+        assert not site.exists()
+        p = site.create()
+        assert site.exists()
+        assert p.returncode == 0
+        assert "The admin user for the web applications is cmkadmin with password: cmk" in p.stdout
+    finally:
+        if site is not None and site.exists():
+            if site.is_running():
+                site.stop()
+            site.rm()
+
+
 # TODO: Add tests for these modes (also check -h of each mode)
 # omd update                      Update site to other version of OMD
 # omd start      [SERVICE]        Start services of one or all sites

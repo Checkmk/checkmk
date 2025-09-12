@@ -12,15 +12,26 @@ import { useErrorBoundary } from '@/components/useErrorBoundary'
 import WizardSelector from '@/dashboard-wip/Wizards/WizardSelector.vue'
 import DashboardComponent from '@/dashboard-wip/components/DashboardComponent.vue'
 import DashboardMenuHeader from '@/dashboard-wip/components/DashboardMenuHeader/DashboardMenuHeader.vue'
+import { createWidgetLayout } from '@/dashboard-wip/components/ResponsiveGrid/composables/useResponsiveGridLayout'
 import AddWidgetDialog from '@/dashboard-wip/components/WidgetWorkflow/StarterDialog/AddWidgetDialog.vue'
 import { dashboardWidgetWorkflows } from '@/dashboard-wip/components/WidgetWorkflow/WidgetWorkflowTypes.ts'
 import type { FilterDefinition } from '@/dashboard-wip/components/filter/types.ts'
 import { useDashboardFilters } from '@/dashboard-wip/composables/useDashboardFilters.ts'
 import { useDashboardWidgets } from '@/dashboard-wip/composables/useDashboardWidgets.ts'
 import { useDashboardsManager } from '@/dashboard-wip/composables/useDashboardsManager.ts'
-import type { DashboardLayout, DashboardMetadata } from '@/dashboard-wip/types/dashboard.ts'
+import type {
+  ContentResponsiveGrid,
+  DashboardLayout,
+  DashboardMetadata,
+  DashboardModel
+} from '@/dashboard-wip/types/dashboard.ts'
 import type { DashboardPageProperties } from '@/dashboard-wip/types/page.ts'
-import type { WidgetLayout } from '@/dashboard-wip/types/widget'
+import type {
+  WidgetContent,
+  WidgetFilterContext,
+  WidgetGeneralSettings,
+  WidgetLayout
+} from '@/dashboard-wip/types/widget'
 import { dashboardAPI } from '@/dashboard-wip/utils.ts'
 
 const { ErrorBoundary: errorBoundary } = useErrorBoundary()
@@ -85,6 +96,31 @@ const handleAddWidget = (widgetIdent: string) => {
   // Logic to add the new widget to the dashboard goes here
   // The structure and composables already exist for this in useWidgets
   // TODO: better handling for cancelling
+}
+
+// @ts-expect-error: TODO: use this
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function addWidget(
+  content: WidgetContent,
+  generalSettings: WidgetGeneralSettings,
+  filterContext: WidgetFilterContext
+) {
+  const activeDashboard = dashboardsManager.activeDashboard.value as DashboardModel
+  if (!activeDashboard) {
+    throw new Error('No active dashboard')
+  }
+  // TODO: generate new ID via dashboard settings & content type so we get a decent prefix
+  const widgetId = crypto.randomUUID()
+  let layout: WidgetLayout
+  if (activeDashboard.content.layout.type === 'responsive_grid') {
+    layout = createWidgetLayout(activeDashboard.content as ContentResponsiveGrid, content.type)
+  } else if (activeDashboard.content.layout.type === 'relative_grid') {
+    // TODO: implement this
+    throw new Error('Adding widgets to relative grid dashboards is not yet implemented')
+  } else {
+    throw new Error(`Unknown dashboard layout type: ${activeDashboard.content.layout}`)
+  }
+  dashboardWidgets.addWidget(widgetId, content, generalSettings, filterContext, layout)
 }
 
 function editWidget(widgetId: string) {

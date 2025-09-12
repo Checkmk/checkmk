@@ -5,7 +5,6 @@
  */
 import { type Ref, computed } from 'vue'
 
-import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types.ts'
 import type {
   RelativeGridWidgets,
   ResponsiveGridWidgets,
@@ -51,7 +50,7 @@ export function useDashboardWidgets(
     id: string,
     content: WidgetContent,
     generalSettings: WidgetGeneralSettings,
-    configuredFilters: ConfiguredFilters,
+    filterContext: WidgetFilterContext,
     layout: WidgetLayout
   ) {
     const widgets = widgetsRef.value
@@ -65,13 +64,9 @@ export function useDashboardWidgets(
     widgets[id] = {
       general_settings: generalSettings,
       content,
-      filter_context: {
-        uses_infos: [],
-        // @ts-expect-error TODO: change configuredFilters to be <string, string> only
-        filters: configuredFilters
-      },
+      filter_context: filterContext,
       layout
-    }
+    } as AnyWidget
   }
 
   function cloneWidget(oldId: string, newId: string, layout: WidgetLayout) {

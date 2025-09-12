@@ -21,12 +21,10 @@ const parentDiv = computed(() => contentDiv.value?.parentElement || null)
 
 const httpVars: Ref<FilterHTTPVars> = computed(() => {
   return {
-    name: props.dashboardName,
-    owner: props.dashboardOwner,
     widget_id: props.widget_id,
     content: JSON.stringify(props.content),
     context: JSON.stringify(props.effective_filter_context.filters),
-    single_infos: JSON.stringify(props.effective_filter_context.restricted_to_single)
+    single_infos: JSON.stringify(props.effective_filter_context.uses_infos)
   }
 })
 const sizeVars: Ref<FilterHTTPVars> = ref({

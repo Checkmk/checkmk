@@ -11,6 +11,8 @@ import { useErrorBoundary } from '@/components/useErrorBoundary'
 
 import DashboardComponent from '@/dashboard-wip/components/DashboardComponent.vue'
 import DashboardMenuHeader from '@/dashboard-wip/components/DashboardMenuHeader/DashboardMenuHeader.vue'
+import AddWidgetDialog from '@/dashboard-wip/components/WidgetWorkflow/StarterDialog/AddWidgetDialog.vue'
+import { dashboardWidgetWorkflows } from '@/dashboard-wip/components/WidgetWorkflow/WidgetWorkflowTypes.ts'
 import type { FilterDefinition } from '@/dashboard-wip/components/filter/types.ts'
 import { useDashboardFilters } from '@/dashboard-wip/composables/useDashboardFilters.ts'
 import { useDashboardWidgets } from '@/dashboard-wip/composables/useDashboardWidgets.ts'
@@ -69,6 +71,16 @@ const selectedDashboard = computed(() => {
     title: dashboardsManager.activeDashboard.value.general_settings.title.text
   }
 })
+
+const handleAddWidget = (_widgetIdent: string) => {
+  openAddWidgetDialog.value = false
+
+  // TODO: should be enabled for handling
+  // selectedWizard.value = widgetIdent
+  // openWizard.value = true
+  // Logic to add the new widget to the dashboard goes here
+  // The structure and composables already exist for this in useWidgets
+}
 </script>
 
 <template>
@@ -83,6 +95,14 @@ const selectedDashboard = computed(() => {
         @enter-edit="isDashboardEditingMode = true"
         @cancel-edit="() => {}"
         @set-dashboard="handleSelectDashboard"
+      />
+    </div>
+    <div>
+      <AddWidgetDialog
+        v-model:open="openAddWidgetDialog"
+        :workflow-items="dashboardWidgetWorkflows"
+        @select="handleAddWidget"
+        @close="openAddWidgetDialog = false"
       />
     </div>
     <template v-if="dashboardsManager.isInitialized.value">

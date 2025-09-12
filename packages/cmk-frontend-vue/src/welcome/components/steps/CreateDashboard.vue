@@ -29,7 +29,7 @@ defineProps<{
     :step="step"
     :disabled="false"
     :accomplished="accomplished"
-    :title="_t('Customize dashboard')"
+    :title="_t('Create a dashboard')"
     :info="_t('5-7 min')"
   >
     <StepParagraph>

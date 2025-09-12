@@ -9,7 +9,7 @@ import type { Component } from 'vue'
 import AddHost from '@/welcome/components/steps/AddHost.vue'
 import AdjustServices from '@/welcome/components/steps/AdjustServices.vue'
 import AssignResponsibilities from '@/welcome/components/steps/AssignResponsibilities.vue'
-import CustomizeDashboard from '@/welcome/components/steps/CustomizeDashboard.vue'
+import CreateDashboard from '@/welcome/components/steps/CreateDashboard.vue'
 import EnableNotifications from '@/welcome/components/steps/EnableNotifications.vue'
 
 export type StepId = StageInformation['finished'][number]
@@ -23,7 +23,7 @@ export const stepComponents: { component: Component; stepNumber: number; stepId:
   },
   { component: AssignResponsibilities, stepNumber: 3, stepId: 'assign_responsibilities' },
   { component: EnableNotifications, stepNumber: 4, stepId: 'enable_notifications' },
-  { component: CustomizeDashboard, stepNumber: 5, stepId: 'customize_dashboard' }
+  { component: CreateDashboard, stepNumber: 5, stepId: 'create_dashboard' }
 ]
 
 export const totalSteps = stepComponents.length

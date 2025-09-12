@@ -92,7 +92,7 @@
                             "adjust_services",
                             "assign_responsibilities",
                             "enable_notifications",
-                            "customize_dashboard"
+                            "create_dashboard"
                         ]
                     }
                 }

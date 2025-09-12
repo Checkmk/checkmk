@@ -114,8 +114,8 @@ file_from_flag(
         "",
     ],
     replace_labels = {
-        "cmk_version": "//bazel/cmk/version",
-        "cmk_edition": "//bazel/cmk/edition",
+        "cmk_version": "@cmk//version",
+        "cmk_edition": "@cmk//edition",
     },
     tags = ["manual"],
 )

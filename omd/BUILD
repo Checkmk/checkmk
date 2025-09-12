@@ -34,8 +34,8 @@ file_from_flag(
         "",
     ],
     replace_labels = {
-        "cmk_version": "//bazel/cmk/version",
-        "cmk_edition": "//bazel/cmk/edition",
+        "cmk_version": "@cmk//version",
+        "cmk_edition": "@cmk//edition",
     },
     tags = ["manual"],
 )
@@ -109,8 +109,8 @@ file_from_flag(
                "//packages/unixcat:unixcat_tar",
                ":license_info",
            ] + select({
-               "//bazel/cmk/distro:almalinux": ["//omd/packages/xinetd"],
-               "//bazel/cmk/distro:sles": [
+               "@cmk//distro:almalinux": ["//omd/packages/xinetd"],
+               "@cmk//distro:sles": [
                    "//omd/packages/libgsf",
                    "//omd/packages/xinetd",
                ],
@@ -219,17 +219,17 @@ editions = {
 [pkg_name_info(
     name = "cmk_pkg_variables_" + edition,
     architecture = "amd64",
-    cmk_version = "//bazel/cmk/version",
+    cmk_version = "@cmk//version",
     package = "check-mk-" + editions[edition],
     tags = ["manual"],
     version = select({
-        "@//bazel/cmk/distro:almalinux-8": "el8-38",
-        "@//bazel/cmk/distro:almalinux-9": "el9-38",
-        "@//bazel/cmk/distro:debian-12": "0.bookworm",
-        "@//bazel/cmk/distro:sles-15sp5": "sles15sp5",
-        "@//bazel/cmk/distro:sles-15sp6": "sles15sp6",
-        "@//bazel/cmk/distro:ubuntu-22.04": "0.jammy",
-        "@//bazel/cmk/distro:ubuntu-24.04": "0.noble",
+        "@cmk//distro:almalinux-8": "el8-38",
+        "@cmk//distro:almalinux-9": "el9-38",
+        "@cmk//distro:debian-12": "0.bookworm",
+        "@cmk//distro:sles-15sp5": "sles15sp5",
+        "@cmk//distro:sles-15sp6": "sles15sp6",
+        "@cmk//distro:ubuntu-22.04": "0.jammy",
+        "@cmk//distro:ubuntu-24.04": "0.noble",
     }),
 ) for edition in [
     "cre",

@@ -1,0 +1,6 @@
+module(
+    name = "cmk",
+    version = "1.0.0",
+)
+
+bazel_dep(name = "bazel_skylib", version = "1.8.1")

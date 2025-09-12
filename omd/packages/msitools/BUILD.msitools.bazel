@@ -26,7 +26,7 @@ configure_make(
         ]),
     } | select(
         {
-            "@//bazel/cmk/distro:sles": {
+            "@cmk//distro:sles": {
                 "GSF_LIBS": "-L$${EXT_BUILD_DEPS}/libgsf/lib -lgsf-1",
                 "GSF_CFLAGS": "-I$${EXT_BUILD_DEPS}/libgsf/include/libgsf-1",
             },
@@ -58,7 +58,7 @@ configure_make(
     visibility = ["//visibility:public"],
     deps = select(
         {
-            "@//bazel/cmk/distro:sles": ["@libgsf"],
+            "@cmk//distro:sles": ["@libgsf"],
             "//conditions:default": [],
         },
     ),

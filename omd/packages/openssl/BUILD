@@ -102,7 +102,7 @@ py_binary(
     reg_ex = r"/(?:home|root)/.*?/openssl\.build_tmpdir/openssl/",
     tags = ["manual"],
     tool = ":binreplace_binary",
-    value = "//bazel/cmk/version",
+    value = "@cmk//version",
 ) for edition in [
     "cre",
     "cce",

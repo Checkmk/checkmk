@@ -31,7 +31,7 @@ common --remote_local_fallback
 common --cycles
 common --local_resources=cpu=HOST_CPUS-2
 common --local_resources=memory=HOST_RAM*.5
-common --@//bazel/cmk/distro="ubuntu-24.04"
+common --@cmk//distro="ubuntu-24.04"
 # Enable Bzlmod for every Bazel command
 common --enable_bzlmod
 # Do not upload artifacts other than from CI, see below, CMK-18656
@@ -42,9 +42,9 @@ common --test_summary=detailed
 ## For specific commands
 # Always require debug info.
 # build --copt="-g"
-build --flag_alias=cmk_version=//bazel/cmk/version
-build --flag_alias=cmk_edition=//bazel/cmk/edition
-build --flag_alias=cmk_distro=//bazel/cmk/distro
+build --flag_alias=cmk_version=@cmk//version
+build --flag_alias=cmk_edition=@cmk//edition
+build --flag_alias=cmk_distro=@cmk//distro
 
 # For some obscure reason, the re2 project made itself valgrind-dirty by default:
 # https://github.com/google/re2/commit/ce6f2884c4b52509fd6c5d12b8f1c40587067784
@@ -72,7 +72,7 @@ common:ci --local_resources=memory=HOST_RAM*.67
 # upload artifacts only from CI, CMK-18656
 common:ci --remote_upload_local_results=true
 
-common:ci --@//bazel/cmk/distro=UNSET
+common:ci --@cmk//distro=UNSET
 
 # For better performance - passes an argument `--skipLibCheck` to *every* spawn of tsc
 common --@aspect_rules_ts//ts:skipLibCheck=always

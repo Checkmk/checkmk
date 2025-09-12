@@ -220,7 +220,7 @@ RUN touch /etc/fstab
 
 COPY ci.bazelrc /etc/
 RUN <<EOF cat >> /etc/ci.bazelrc
-common:ci --@//bazel/cmk/distro="almalinux-8"
+common:ci --@cmk//distro="almalinux-8"
 common:ci --action_env=DISTRO=${DISTRO}
 common:ci --action_env=BRANCH_VERSION=${BRANCH_VERSION}
 # We encountered false cache hits with remote caching due to environment variables

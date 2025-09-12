@@ -175,9 +175,9 @@ azure-common==1.1.28 \
     # via
     #   azure-mgmt-compute
     #   azure-mgmt-resource
-azure-core==1.35.0 \
-    --hash=sha256:8db78c72868a58f3de8991eb4d22c4d368fae226dac1002998d6c50437e7dad1 \
-    --hash=sha256:c0be528489485e9ede59b6971eb63c1eaacf83ef53001bfe3904e475e972be5c
+azure-core==1.35.1 \
+    --hash=sha256:12da0c9e08e48e198f9158b56ddbe33b421477e1dc98c2e1c8f9e254d92c468b \
+    --hash=sha256:435d05d6df0fff2f73fb3c15493bb4721ede14203f1ff1382aa6b6b2bdd7e562
     # via
     #   -r requirements_all.txt
     #   azure-identity
@@ -1214,9 +1214,9 @@ httpcore==1.0.9 \
     # via
     #   -r requirements_all.txt
     #   httpx
-httplib2==0.30.2 \
-    --hash=sha256:050bde6a332824b05a3deef5238f2b0372f71af46f8ca2190c2cb1f66aa376cd \
-    --hash=sha256:62a665905c1f1d1069c34f933787d2a4435c67c0bc2b323645dcfbb64661b5ec
+httplib2==0.31.0 \
+    --hash=sha256:ac7ab497c50975147d4f7b1ade44becc7df2f8954d42b38b3d69c515f531135c \
+    --hash=sha256:b9cd78abea9b4e43a7714c6e0f8b6b8561a6fc1e95d5dbd367f5bf0ef35f5d24
     # via
     #   -r requirements_all.txt
     #   google-api-python-client

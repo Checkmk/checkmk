@@ -9,6 +9,7 @@ import { computed, onBeforeMount, provide, ref } from 'vue'
 import CmkIcon from '@/components/CmkIcon.vue'
 import { useErrorBoundary } from '@/components/useErrorBoundary'
 
+import WizardSelector from '@/dashboard-wip/Wizards/WizardSelector.vue'
 import DashboardComponent from '@/dashboard-wip/components/DashboardComponent.vue'
 import DashboardMenuHeader from '@/dashboard-wip/components/DashboardMenuHeader/DashboardMenuHeader.vue'
 import AddWidgetDialog from '@/dashboard-wip/components/WidgetWorkflow/StarterDialog/AddWidgetDialog.vue'
@@ -28,6 +29,8 @@ const props = defineProps<DashboardPageProperties>()
 const isDashboardEditingMode = ref(false)
 const openDashboardFilterSettings = ref(false)
 const openAddWidgetDialog = ref(false)
+const openWizard = ref(false)
+const selectedWizard = ref('')
 
 const filterCollection = ref<Record<string, FilterDefinition> | null>(null)
 provide('filterCollection', filterCollection)
@@ -72,14 +75,15 @@ const selectedDashboard = computed(() => {
   }
 })
 
-const handleAddWidget = (_widgetIdent: string) => {
+const handleAddWidget = (widgetIdent: string) => {
   openAddWidgetDialog.value = false
+  selectedWizard.value = widgetIdent
+  openWizard.value = true
 
   // TODO: should be enabled for handling
-  // selectedWizard.value = widgetIdent
-  // openWizard.value = true
   // Logic to add the new widget to the dashboard goes here
   // The structure and composables already exist for this in useWidgets
+  // TODO: better handling for cancelling
 }
 </script>
 
@@ -103,6 +107,13 @@ const handleAddWidget = (_widgetIdent: string) => {
         :workflow-items="dashboardWidgetWorkflows"
         @select="handleAddWidget"
         @close="openAddWidgetDialog = false"
+      />
+      <WizardSelector
+        :selected-wizard="selectedWizard"
+        :dashboard-name="dashboardsManager.activeDashboardName.value || ''"
+        :dashboard-owner="dashboardsManager.activeDashboard.value?.owner || ''"
+        :dashboard-constants="dashboardsManager.constants.value!"
+        @back-button="openAddWidgetDialog = true"
       />
     </div>
     <template v-if="dashboardsManager.isInitialized.value">

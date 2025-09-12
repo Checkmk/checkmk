@@ -9,7 +9,12 @@ async fn main() {
     let result = setup::init(std::env::args_os());
     let code = if let Ok((config, environment)) = result {
         if args.contains(&"--runtime-ready".to_string()) {
-            log::info!("runtime ready execution");
+            log::info!("SKIP RUNTIME ADDING");
+            log::info!("Current PATH={}", std::env::var("PATH").unwrap_or_default());
+            log::info!(
+                "Current LD_LIBRARY_PATH={}",
+                std::env::var("LD_LIBRARY_PATH").unwrap_or_default()
+            );
             match config.exec(&environment).await {
                 Ok(output) => {
                     print!("{output}");
@@ -21,7 +26,7 @@ async fn main() {
                     1
                 }
             }
-        } else if let Some(old_path) = setup::add_runtime_path_to_env(&config, None) {
+        } else if let Some(old_path) = setup::add_runtime_path_to_env(&config, None, None) {
             log::info!("Spawn new process");
             spawn_new_process(args, old_path)
         } else {
@@ -49,9 +54,9 @@ fn spawn_new_process(args: Vec<String>, old_path: std::path::PathBuf) -> i32 {
         .status()
         .unwrap_or_else(|e| {
             display_and_log(e);
-            setup::reset_env(&old_path);
+            setup::reset_env(&old_path, None);
             std::process::exit(1);
         });
-    setup::reset_env(&old_path);
+    setup::reset_env(&old_path, None);
     status.code().unwrap_or_default()
 }

@@ -8,3 +8,5 @@ oracle:
       password: $CI_ORA2_DB_TEST
       type: standard
 #      role: sysdba # it may be not enabled by Oracle DBA
+    sections: # optional, if absent will use default as defined below
+      - instance: # special section

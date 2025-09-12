@@ -272,14 +272,7 @@ fn make_log_file_spec(log_dir: &Path) -> FileSpec {
         .basename("mk-sql")
 }
 
-#[cfg(target_os = "windows")]
-const RUNTIME_PATH: &str = "oci_light_win_x64.zip";
-#[cfg(target_os = "linux")]
-const RUNTIME_PATH: &str = "oci_light_lin_x64.zip";
-#[cfg(target_os = "aix")]
-const RUNTIME_PATH: &str = "oci_light_aix_x64.zip";
-#[cfg(target_os = "solaris")]
-const RUNTIME_PATH: &str = "oci_light_sunos_x64.zip";
+pub const RUNTIME_SUB_DIR: &str = "runtime";
 
 pub fn detect_host_runtime() -> Option<PathBuf> {
     match get_local_instances() {
@@ -314,7 +307,7 @@ pub fn detect_host_runtime() -> Option<PathBuf> {
 pub fn detect_factory_runtime(env_var: Option<String>) -> Option<PathBuf> {
     let env_var = env_var.unwrap_or_else(|| "MK_LIBDIR".to_string());
     if let Ok(lib_path) = std::env::var(&env_var) {
-        let runtime_path = PathBuf::from(lib_path).join(RUNTIME_PATH);
+        let runtime_path = PathBuf::from(lib_path).join(RUNTIME_SUB_DIR);
         if runtime_path.is_dir() {
             Some(runtime_path)
         } else {
@@ -350,37 +343,43 @@ pub fn detect_runtime(use_host_client: &UseHostClient, env_var: Option<String>) 
 }
 
 #[cfg(windows)]
-pub fn add_runtime_path_to_env(config: &OracleConfig, env_var: Option<String>) -> Option<PathBuf> {
-    log::info!("runtime to be added");
-    let use_host_client: UseHostClient = config.ora_sql()?.options().use_host_client().clone();
-    let runtime = detect_runtime(&use_host_client, env_var)?.into_os_string();
-    let path = std::env::var("PATH").ok()?;
-    let mut r = runtime.clone();
-    r.push(";");
-    r.push(&path);
-    unsafe {
-        std::env::set_var("PATH", r);
-    }
-    Some(PathBuf::from(path))
-}
-
+const DEFAULT_ENV_VAR: &str = "PATH";
+#[cfg(unix)]
+const DEFAULT_ENV_VAR: &str = "LD_LIBRARY_PATH";
 #[cfg(windows)]
-pub fn reset_env(old_path: &Path) {
+const ENV_VAR_SEP: &str = ";";
+#[cfg(unix)]
+const ENV_VAR_SEP: &str = ":";
+
+/// On Unix/Windows, we modify LD_LIBRARY_PATH/PATH using config and, by default, MK_LIBDIR
+pub fn add_runtime_path_to_env(
+    config: &OracleConfig,
+    mk_lib_dir: Option<String>,
+    mut_env: Option<String>,
+) -> Option<PathBuf> {
+    log::info!("Runtime to be added");
+    let mutable_var = mut_env.unwrap_or(DEFAULT_ENV_VAR.to_string());
+    let mutable_var_content = std::env::var(&mutable_var).ok().unwrap_or_default();
+    log::info!("Current {mutable_var}={mutable_var_content}");
+    let use_host_client: UseHostClient = config.ora_sql()?.options().use_host_client().clone();
+    log::info!("Use host client {:?}", use_host_client);
+    let runtime = detect_runtime(&use_host_client, mk_lib_dir)?.into_os_string();
+    log::info!("Runtime found at {:?}", runtime);
+    let mut additional_path = runtime.clone();
+    additional_path.push(ENV_VAR_SEP);
+    additional_path.push(&mutable_var_content);
     unsafe {
-        std::env::set_var("PATH", old_path);
+        std::env::set_var(&mutable_var, additional_path);
+    }
+    Some(PathBuf::from(mutable_var_content))
+}
+
+pub fn reset_env(old_path: &Path, mut_env: Option<String>) {
+    let mutable_var = mut_env.unwrap_or(DEFAULT_ENV_VAR.to_string());
+    unsafe {
+        std::env::set_var(mutable_var, old_path);
     }
 }
-
-#[cfg(unix)]
-pub fn add_runtime_path_to_env(
-    _config: &OracleConfig,
-    _env_var: Option<String>,
-) -> Option<PathBuf> {
-    None
-}
-
-#[cfg(unix)]
-pub fn reset_env(_old_path: &Path) {}
 
 /// Validate permissions of the given path(see mk-oracle)
 pub fn validate_permissions(_p: &Path) -> bool {

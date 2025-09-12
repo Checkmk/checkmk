@@ -172,7 +172,7 @@ run_test_all() {
             # 2. unzip to runtimes(simulates behavior of Agent/Bakery)
             # ATTENTION! Shell solution below is pure temporary: to be replaced with a pure bazel after consulting by Bazel team
             path_to_zip="$(bazel info bazel-bin)/omd/packages/oci/oci_light_lin_x64.zip"
-            path_to_runtime="${PWD}/runtimes/oci_light_lin_x64.zip"
+            path_to_runtime="${PWD}/runtimes/runtime"
             mkdir -p "${path_to_runtime}"
             unzip -uoq "${path_to_zip}" -d "${path_to_runtime}"
 

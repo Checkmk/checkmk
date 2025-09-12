@@ -91,7 +91,7 @@ pkg_filegroup(
         ":net-snmp_skel",
     ],
     tags = ["manual"],
-    visibility = ["//visibility:public"],
+    visibility = ["//omd:__subpackages__"],
 )
 
 pkg_tar(
@@ -99,5 +99,5 @@ pkg_tar(
     srcs = [":net-snmp_files_pkg"],
     package_file_name = "net-snmp.tar",
     tags = ["manual"],
-    visibility = ["//visibility:public"],
+    visibility = ["//omd:__subpackages__"],
 )

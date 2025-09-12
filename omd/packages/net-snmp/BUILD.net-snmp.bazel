@@ -14,7 +14,7 @@ configure_make(
     args = ["-j4"],
     build_data = [
         "@@//omd/packages/perl-modules:perl-modules.tar",
-        "@@//omd/packages/python3-modules:python3-modules.tar",
+        "@@//omd/packages/python3-modules:compiled_setuptools.tar",
     ],
     configure_in_place = True,
     configure_options = [
@@ -43,9 +43,9 @@ configure_make(
         "RANLIB": "ranlib",
         "LD_LIBRARY_PATH": "$$EXT_BUILD_DEPS/python/lib/",
         "PERL_MODULES_TAR": "$(execpath @@//omd/packages/perl-modules:perl-modules.tar)",
-        "PYTHON_MODULES_TAR": "$(execpath @@//omd/packages/python3-modules:python3-modules.tar)",
+        "SETUPTOOLS_TAR": "$(execpath @@//omd/packages/python3-modules:compiled_setuptools.tar)",
         "PERL_DIR": "$$(dirname $(execpath @@//omd/packages/perl-modules:perl-modules.tar))/perl-modules",
-        "PYTHONPATH": "$$(dirname $(execpath @@//omd/packages/python3-modules:python3-modules.tar))/lib/python%s/site-packages/" % PYTHON_MAJOR_DOT_MINOR,
+        "PYTHONPATH": "$$(dirname $(execpath @@//omd/packages/python3-modules:compiled_setuptools.tar))/lib/python%s/site-packages/" % PYTHON_MAJOR_DOT_MINOR,
     },
     lib_source = ":all_srcs",
     out_binaries = [
@@ -87,7 +87,7 @@ configure_make(
     postfix_script = """
         set -x
         tar xf $${PERL_MODULES_TAR} -C $$(dirname $${PERL_MODULES_TAR});
-        tar xf $${PYTHON_MODULES_TAR} -C $$(dirname $${PYTHON_MODULES_TAR});
+        tar xf $${SETUPTOOLS_TAR} --strip-components 1 -C $$(dirname $${SETUPTOOLS_TAR});
         mkdir -p lib/python
         cd python && \
             CFLAGS="-Wno-incompatible-pointer-types" $${EXT_BUILD_DEPS}/python/bin/python3 setup.py install \

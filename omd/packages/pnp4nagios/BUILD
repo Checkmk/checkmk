@@ -75,8 +75,8 @@ string_replace(
     src = ":lib_filegroup",
     filepattern = ["*.pl"],
     replace_labels = {
-        "cmk_version": "//bazel/cmk/version",
-        "cmk_edition": "//bazel/cmk/edition",
+        "cmk_version": "@cmk//version",
+        "cmk_edition": "@cmk//edition",
     },
     replace_pattern = "__OMD_ROOT__",
     tags = ["manual"],

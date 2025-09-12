@@ -105,11 +105,11 @@ filter_directory(
         "bin/xmlsec1-config",
         "share/aclocal/xmlsec1.m4",
     ] + selects.with_or({
-        "@//bazel/cmk/distro:almalinux-9": [],
+        "@cmk//distro:almalinux-9": [],
         (
-            "@//bazel/cmk/distro:almalinux-8",
-            "@//bazel/cmk/distro:sles-15sp5",
-            "@//bazel/cmk/distro:sles-15sp6",
+            "@cmk//distro:almalinux-8",
+            "@cmk//distro:sles-15sp5",
+            "@cmk//distro:sles-15sp6",
         ): ["lib/libxmlsec1-gcrypt.so.1.3.0"],
         "//conditions:default": [
             "lib/libxmlsec1-gnutls.so.1.3.0",
@@ -157,11 +157,11 @@ pkg_files(
 pkg_files(
     name = "xmlsec1_additional_libs",
     srcs = selects.with_or({
-        "@//bazel/cmk/distro:almalinux-9": [],
+        "@cmk//distro:almalinux-9": [],
         (
-            "@//bazel/cmk/distro:almalinux-8",
-            "@//bazel/cmk/distro:sles-15sp5",
-            "@//bazel/cmk/distro:sles-15sp6",
+            "@cmk//distro:almalinux-8",
+            "@cmk//distro:sles-15sp5",
+            "@cmk//distro:sles-15sp6",
         ): [
             "lib_symlink_gcrypt",
             "lib_symlink_gcrypt1",

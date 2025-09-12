@@ -11,15 +11,15 @@ package(default_visibility = ["//visibility:public"])
 selects.config_setting_group(
     name = "lsb",
     match_any = [
-        "//bazel/cmk/distro:debian",
-        "//bazel/cmk/distro:ubuntu",
+        "//distro:debian",
+        "//distro:ubuntu",
     ],
 )
 
 selects.config_setting_group(
     name = "fhs",
     match_any = [
-        "//bazel/cmk/distro:almalinux",
-        "//bazel/cmk/distro:sles",
+        "//distro:almalinux",
+        "//distro:sles",
     ],
 )

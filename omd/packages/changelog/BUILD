@@ -116,20 +116,20 @@ pkg_tar(
         "changelog_pkg_cre",
         "werks_pkg_cre",
     ] + select({
-        "//bazel/cmk/edition:cre": [],
-        "//bazel/cmk/edition:cee": [
+        "@cmk//edition:cre": [],
+        "@cmk//edition:cee": [
             "changelog_pkg_cee",
             "werks_pkg_cee",
         ],
-        "//bazel/cmk/edition:cce": [
+        "@cmk//edition:cce": [
             "changelog_pkg_cce",
             "werks_pkg_cce",
         ],
-        "//bazel/cmk/edition:cme": [
+        "@cmk//edition:cme": [
             "changelog_pkg_cme",
             "werks_pkg_cme",
         ],
-        "//bazel/cmk/edition:cse": [
+        "@cmk//edition:cse": [
             "changelog_pkg_cse",
             "werks_pkg_cse",
         ],

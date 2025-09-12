@@ -6,7 +6,7 @@ load("//bazel/rules:xcomp/cc.bzl", "cc_library", "cc_test")
 define_from_flag(
     name = "cmk_version_define",
     macro = "VERSION",
-    value = "//bazel/cmk/version",
+    value = "@cmk//version",
 )
 
 # Keep code using VERSION apart to minimize cache invalidation.

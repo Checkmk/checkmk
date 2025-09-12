@@ -83,7 +83,7 @@ RUN update-alternatives --install "/usr/bin/gcc" gcc "/usr/bin/gcc-13" 100
 COPY buildscripts/infrastructure/build-nodes/scripts/ci.bazelrc /etc/
 RUN <<EOF cat >> /etc/ci.bazelrc
 common:ci --//bazel/toolchains/cc/gcc/local:gcc_path=usr_bin
-common:ci --@//bazel/cmk/distro="ubuntu-24.04"
+common:ci --@cmk//distro="ubuntu-24.04"
 common:ci --action_env=DISTRO="ubuntu-24.04-minimal"
 # We encountered false cache hits with remote caching due to environment variables
 # not being propagated to external dependency builds

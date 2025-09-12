@@ -53,6 +53,7 @@ py_library(
         "cmk/bakery/v1/_constants.py",
         "cmk/bakery/v1/_function_types.py",
         "cmk/bakery/v2_alpha/__init__.py",
+        "cmk/bakery/v2_alpha/_artifact_types.py",
         "cmk/bakery/v2_alpha/_config.py",
         "cmk/bakery/v2_alpha/_plugins.py",
     ],

@@ -9,15 +9,17 @@ from dataclasses import dataclass
 from typing import Final, Never
 
 from ..v1._artifact_types import (
-    Plugin,
     PluginConfig,
     Scriptlet,
-    SystemBinary,
     SystemConfig,
     WindowsConfigEntry,
     WindowsConfigItems,
     WindowsGlobalConfigEntry,
     WindowsSystemConfigEntry,
+)
+from ._artifact_types import (
+    Plugin,
+    SystemBinary,
 )
 
 _VALID_CHARACTERS: Final = string.ascii_letters + "_" + string.digits

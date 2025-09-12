@@ -36,6 +36,8 @@ endif
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd
 	install -m 644 $(PACKAGE_DIR)/$(OMD)/init_profile $(DESTDIR)$(OMD_ROOT)/lib/omd/
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/next_free_port $(DESTDIR)$(OMD_ROOT)/lib/omd/
+	install -m 755 $(PACKAGE_DIR)/$(OMD)/restart_site_apache $(DESTDIR)$(OMD_ROOT)/lib/omd/
+	sed -i 's|###OMD_VERSION###|$(OMD_VERSION)|g' $(DESTDIR)$(OMD_ROOT)/lib/omd/restart_site_apache
 	install -m 644 $(PACKAGE_DIR)/$(OMD)/bash_completion $(DESTDIR)$(OMD_ROOT)/lib/omd/
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-create
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-update

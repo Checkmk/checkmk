@@ -5,10 +5,6 @@ load("//omd/packages/asio:asio_http.bzl", "asio_workspace")
 
 asio_workspace()
 
-load("//omd/packages/msitools:msitools_http.bzl", "msitools_workspace")
-
-msitools_workspace()
-
 load("//omd/packages/perl-modules:perl-modules_http.bzl", "perl_modules")
 
 perl_modules()

@@ -1,11 +1,11 @@
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 
 filegroup(
-    name = "all_srcs",
+    name = "srcs",
     srcs = glob(
         ["**/*"],
-        exclude = ["bazel-*"],
     ),
+    tags = ["manual"],
 )
 
 configure_make(
@@ -33,7 +33,8 @@ configure_make(
             "//conditions:default": {},
         },
     ),
-    lib_source = ":all_srcs",
+    lib_name = "msitools",
+    lib_source = ":srcs",
     out_binaries = [
         "msiinfo",
         "msibuild",
@@ -55,32 +56,13 @@ configure_make(
         "msibuild",
         "msiinfo",
     ],
-    visibility = ["//visibility:public"],
     deps = select(
         {
             "@cmk//distro:sles": ["@libgsf"],
             "//conditions:default": [],
         },
     ),
-)
-
-filegroup(
-    name = "gen_dir",
-    srcs = [":msitools"],
-    output_group = "gen_dir",
+    tags = ["manual"],
     visibility = ["//visibility:public"],
 )
 
-filegroup(
-    name = "msibuild",
-    srcs = [":msitools"],
-    output_group = "msibuild",
-    visibility = ["//visibility:public"],
-)
-
-filegroup(
-    name = "msiinfo",
-    srcs = [":msitools"],
-    output_group = "msiinfo",
-    visibility = ["//visibility:public"],
-)

@@ -1,11 +1,11 @@
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 
 filegroup(
-    name = "all_srcs",
+    name = "srcs",
     srcs = glob(
         ["**/*"],
-        exclude = ["bazel-*"],
     ),
+    tags = ["manual"],
 )
 
 configure_make(
@@ -18,7 +18,7 @@ configure_make(
             "/usr/lib/x86_64-linux-gnu/pkgconfig",
         ]),
     },
-    lib_source = ":all_srcs",
+    lib_source = ":srcs",
     out_binaries = [
         "gsf",
         "gsf-office-thumbnailer",
@@ -26,7 +26,10 @@ configure_make(
     ],
     out_data_dirs = [
         "share",
-        "lib/pkgconfig",
+    ],
+    out_data_files = [
+        "lib/libgsf-1.la",
+        "lib/pkgconfig/libgsf-1.pc",
     ],
     out_shared_libs = [
         "libgsf-1.so",
@@ -37,33 +40,7 @@ configure_make(
         "libgsf-1.a",
     ],
     targets = ["install"],
+    tags = ["manual"],
     visibility = ["//visibility:public"],
 )
 
-filegroup(
-    name = "gen_dir",
-    srcs = [":libgsf"],
-    output_group = "gen_dir",
-    visibility = ["//visibility:public"],
-)
-
-filegroup(
-    name = "gsf",
-    srcs = [":libgsf"],
-    output_group = "gsf",
-    visibility = ["//visibility:public"],
-)
-
-filegroup(
-    name = "gsf-office-thumbnailer",
-    srcs = [":libgsf"],
-    output_group = "gsf-office-thumbnailer",
-    visibility = ["//visibility:public"],
-)
-
-filegroup(
-    name = "gsf-vba-dump",
-    srcs = [":libgsf"],
-    output_group = "gsf-vba-dump",
-    visibility = ["//visibility:public"],
-)

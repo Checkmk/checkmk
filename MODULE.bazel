@@ -17,6 +17,8 @@ bazel_dep(name = "bazel_skylib", version = "1.8.1")
 bazel_dep(name = "cmk", version = "0.0.0")
 bazel_dep(name = "gazelle", version = "0.45.0")
 bazel_dep(name = "googletest", version = "1.17.0", repo_name = "gtest")
+bazel_dep(name = "libgsf", version = "1.14.44.cmk.1")
+bazel_dep(name = "msitools", version = "0.94.cmk.1")
 bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "protobuf", version = "31.1")
 bazel_dep(name = "rules_cc", version = "0.1.2")
@@ -564,17 +566,6 @@ http_archive(
     urls = [
         "https://github.com/openSUSE/xinetd/releases/download/2.3.15.4/xinetd-2.3.15.4.tar.xz",
         UPSTREAM_MIRROR_URL + "xinetd-2.3.15.4.tar.xz",
-    ],
-)
-
-http_archive(
-    name = "libgsf",
-    build_file = "//omd/packages/libgsf:BUILD.libgsf.bazel",
-    sha256 = "68bede10037164764992970b4cb57cd6add6986a846d04657af9d5fac774ffde",
-    strip_prefix = "libgsf-1.14.44",
-    urls = [
-        "https://ftp.osuosl.org/pub/blfs/conglomeration/libgsf/libgsf-1.14.44.tar.xz",
-        UPSTREAM_MIRROR_URL + "libgsf-1.14.44.tar.xz",
     ],
 )
 

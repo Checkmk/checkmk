@@ -15981,10 +15981,6 @@ msgstr "現在、この集計を無効にします"
 msgid "Currently in downtime"
 msgstr "現在ダウンタイム中"
 
-msgid "Currently indexing, please try again shortly."
-msgstr ""
-"現在インデックスを作成しています しばらくしてからもう一度お試しください。"
-
 msgid "Currently open connections"
 msgstr "現在開いている接続"
 
@@ -37687,6 +37683,10 @@ msgstr "主な概要"
 msgid "Main dashboard"
 msgstr "メインダッシュボード"
 
+#, fuzzy
+msgid "Main dashboard (PEV)"
+msgstr "メインダッシュボード"
+
 msgid "Main folder"
 msgstr "メインフォルダ"
 
@@ -40363,10 +40363,6 @@ msgstr "その他のオプション"
 #, python-format
 msgid "More than %d results"
 msgstr "%dを超える結果"
-
-#, python-format
-msgid "More than %d results available, please refine your search."
-msgstr "検索結果が %d を超えましたので、検索を絞り込んでください。"
 
 msgid ""
 "Most elements have a hard coded static title and some are aware of their "
@@ -48826,6 +48822,9 @@ msgstr "プレゼンテーション"
 msgid "Preserve cache times configured by other rules"
 msgstr "他のルールで構成されたキャッシュ時間を保持する"
 
+msgid "Press Ctrl + K to trigger search"
+msgstr ""
+
 msgid "Pressure"
 msgstr "圧力"
 
@@ -50411,9 +50410,6 @@ msgstr "Redisにアクセスできません、終了"
 
 msgid "Redis persistence"
 msgstr "Redisの永続性"
-
-msgid "Redis server is not reachable."
-msgstr "Redisサーバーにアクセスできません。"
 
 msgid "Redis server name"
 msgstr "Redisサーバー名"
@@ -53634,9 +53630,6 @@ msgstr "%s 未満のホストを検索"
 msgid "Search for ineffective rules (not matching any host or service)"
 msgstr "効果のないルールを検索する(ホストまたはサービスと一致しない)"
 
-msgid "Search for menu entries, settings, hosts and rule sets."
-msgstr "メニューエントリ、設定、ホスト、およびルールセットを検索します。"
-
 msgid "Search for not deprecated rulesets"
 msgstr "非推奨ではないルールセットを検索する"
 
@@ -53657,12 +53650,6 @@ msgstr "履歴を検索"
 
 msgid "Search hosts"
 msgstr "ホストを検索"
-
-msgid "Search in Monitoring"
-msgstr "モニタリングで検索"
-
-msgid "Search in Setup"
-msgstr "セットアップで検索"
 
 msgid "Search in body"
 msgstr "ボディで検索"
@@ -53715,41 +53702,6 @@ msgstr "時間グラフの検索"
 
 msgid "Search whole subtree below the base DN"
 msgstr "ベースDN以下のサブツリー全体を検索"
-
-msgid ""
-"Search with regular expressions for menu entries, \n"
-"hosts, services or host and service groups.\n"
-"\n"
-"You can use the following filters:\n"
-"h: Host\n"
-"s: Service\n"
-"hg: Host group\n"
-"sg: Service group\n"
-"ad: Address\n"
-"al: Alias\n"
-"tg: Host tag\n"
-"hl: Host label (e.g. hl: cmk/os_family:linux)\n"
-"sl: Service label (e.g. sl: cmk/os_family:linux)\n"
-"st: Service state (e.g. st: crit [ok|warn|crit|unkn|pend])\n"
-"\n"
-"Note that for simplicity '*' will be substituted with '.*'."
-msgstr ""
-"メニューの項目を正規表現で検索します。\n"
-"ホスト、サービス、またホストグループ、サービスグループなど。\n"
-"\n"
-"以下のフィルタが使用できます。：\n"
-"h: ホスト\n"
-"s: サービス\n"
-"hg: ホストグループ\n"
-"sg: サービスグループ\n"
-"ad: アドレス\n"
-"al: エイリアス\n"
-"tg: ホストタグ\n"
-"hl: ホストラベル(例: hl: cmk/os_family:linux)\n"
-"sl: サービスラベル (例: sl: cmk/os_family:linux)\n"
-"st: サービス状態 (例: st: crit [ok|warn|crit|unkn|pend])\n"
-"\n"
-"'*' は '.*'. に置き換えられることに注意してください。"
 
 msgid "Search<nobr> </nobr>in"
 msgstr "<nobr> </nobr>で検索"
@@ -56042,14 +55994,8 @@ msgstr "すべてのホストを表示"
 msgid "Show all phases of notifications"
 msgstr "通知のすべてのフェーズを表示する"
 
-msgid "Show all results"
-msgstr "すべての結果を表示"
-
 msgid "Show all rules"
 msgstr "すべてのルールを表示"
-
-msgid "Show all topics"
-msgstr "全てのトピックを表示"
 
 msgid "Show bar visualization"
 msgstr "バーの表示"
@@ -62674,6 +62620,15 @@ msgid ""
 "The customer of the sites connected by the broker connection must be the "
 "same."
 msgstr "ブローカー接続で接続されたサイトの顧客は同一ある必要があります。"
+
+#, python-format
+msgid "The dashboard '%s' does not contain an embedded view with the ID '%s'."
+msgstr ""
+
+#, fuzzy, python-format
+msgid ""
+"The dashboard '%s' does not exist or you do not have permission to view it."
+msgstr "%sはあなただけに表示されます。共有する権限はありません。"
 
 msgid "The dashboard element does not exist."
 msgstr "ダッシュボード要素が存在しません。"
@@ -80825,6 +80780,10 @@ msgstr "カスタムチェックプラグインのコマンドラインを変更
 msgid "You are not allowed to change the sidebar."
 msgstr "サイドバーを変更することはできません。"
 
+#, fuzzy
+msgid "You are not allowed to create dashboards."
+msgstr "ダッシュボードを編集することは許可されていません。"
+
 #, python-format
 msgid "You are not allowed to delete this %s."
 msgstr "この%sを削除することはできません。"
@@ -85216,6 +85175,54 @@ msgid "required"
 msgstr "必須"
 
 #, fuzzy
+msgid "Settings Menu"
+msgstr "設定"
+
+#, fuzzy
+msgid "Dashboard settings"
+msgstr "ダッシュボードのプロパティ"
+
+#, fuzzy
+msgid "Clone dashboard"
+msgstr "組み込みダッシュボードを複製する"
+
+#, fuzzy
+msgid "Dashboard user guide"
+msgstr "ユーザ―%sのダッシュボード"
+
+#, fuzzy
+msgid "Edit widgets"
+msgstr "ターゲットを追加"
+
+#, fuzzy
+msgid "Add widget"
+msgstr "ターゲットを追加"
+
+#, fuzzy
+msgid "Select dashboard"
+msgstr "関連ダッシュボード"
+
+#, fuzzy
+msgid "Loading Dashboards"
+msgstr "メインダッシュボード"
+
+#, fuzzy
+msgid "No dashboards found"
+msgstr "ダッシュボード"
+
+#, fuzzy
+msgid "Custom dashboards"
+msgstr "カスタマイズユーザー"
+
+#, fuzzy
+msgid "Built-in dashboards"
+msgstr "組み込みダッシュボードを複製する"
+
+#, fuzzy
+msgid "Unnamed Dashboard"
+msgstr "ダッシュボード"
+
+#, fuzzy
 msgid "No items selected"
 msgstr "選択されていない"
 
@@ -85271,8 +85278,28 @@ msgid "Remove row"
 msgstr "削除：%r"
 
 #, fuzzy
-msgid "Add widget"
-msgstr "ターゲットを追加"
+msgid "Search Filter"
+msgstr "検索フィルター"
+
+#, fuzzy
+msgid "Clear search"
+msgstr "ルール検索"
+
+#, fuzzy
+msgid "No filters found matching"
+msgstr "プロセス名照合"
+
+#, fuzzy
+msgid "Expand all"
+msgstr "展開"
+
+#, fuzzy
+msgid "Collapse all"
+msgstr "すべて選択する"
+
+#, fuzzy
+msgid "No filter category available"
+msgstr "利用可能な情報はありません"
 
 #, fuzzy
 msgid "Add Widget"
@@ -85333,10 +85360,6 @@ msgstr "サイドバー要素"
 
 msgid "Display user messages, sidebar elements, text or embed a URL"
 msgstr ""
-
-#, fuzzy
-msgid "Empty dashboard app"
-msgstr "ダッシュボードを編集する"
 
 #, fuzzy
 msgid "explicit password"
@@ -86045,6 +86068,71 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Currently indexing, please try again shortly."
+#~ msgstr ""
+#~ "現在インデックスを作成しています しばらくしてからもう一度お試しください。"
+
+#, python-format
+#~ msgid "More than %d results available, please refine your search."
+#~ msgstr "検索結果が %d を超えましたので、検索を絞り込んでください。"
+
+#~ msgid "Redis server is not reachable."
+#~ msgstr "Redisサーバーにアクセスできません。"
+
+#~ msgid "Search for menu entries, settings, hosts and rule sets."
+#~ msgstr "メニューエントリ、設定、ホスト、およびルールセットを検索します。"
+
+#~ msgid "Search in Monitoring"
+#~ msgstr "モニタリングで検索"
+
+#~ msgid "Search in Setup"
+#~ msgstr "セットアップで検索"
+
+#~ msgid ""
+#~ "Search with regular expressions for menu entries, \n"
+#~ "hosts, services or host and service groups.\n"
+#~ "\n"
+#~ "You can use the following filters:\n"
+#~ "h: Host\n"
+#~ "s: Service\n"
+#~ "hg: Host group\n"
+#~ "sg: Service group\n"
+#~ "ad: Address\n"
+#~ "al: Alias\n"
+#~ "tg: Host tag\n"
+#~ "hl: Host label (e.g. hl: cmk/os_family:linux)\n"
+#~ "sl: Service label (e.g. sl: cmk/os_family:linux)\n"
+#~ "st: Service state (e.g. st: crit [ok|warn|crit|unkn|pend])\n"
+#~ "\n"
+#~ "Note that for simplicity '*' will be substituted with '.*'."
+#~ msgstr ""
+#~ "メニューの項目を正規表現で検索します。\n"
+#~ "ホスト、サービス、またホストグループ、サービスグループなど。\n"
+#~ "\n"
+#~ "以下のフィルタが使用できます。：\n"
+#~ "h: ホスト\n"
+#~ "s: サービス\n"
+#~ "hg: ホストグループ\n"
+#~ "sg: サービスグループ\n"
+#~ "ad: アドレス\n"
+#~ "al: エイリアス\n"
+#~ "tg: ホストタグ\n"
+#~ "hl: ホストラベル(例: hl: cmk/os_family:linux)\n"
+#~ "sl: サービスラベル (例: sl: cmk/os_family:linux)\n"
+#~ "st: サービス状態 (例: st: crit [ok|warn|crit|unkn|pend])\n"
+#~ "\n"
+#~ "'*' は '.*'. に置き換えられることに注意してください。"
+
+#~ msgid "Show all results"
+#~ msgstr "すべての結果を表示"
+
+#~ msgid "Show all topics"
+#~ msgstr "全てのトピックを表示"
+
+#, fuzzy
+#~ msgid "Empty dashboard app"
+#~ msgstr "ダッシュボードを編集する"
 
 #~ msgid ""
 #~ "Please contact your Checkmk administrator to ensure that your license is "

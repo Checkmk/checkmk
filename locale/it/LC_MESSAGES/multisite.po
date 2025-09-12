@@ -16840,9 +16840,6 @@ msgstr "Attualmente disabilita questa aggregazione"
 msgid "Currently in downtime"
 msgstr "Attualmente inattivo"
 
-msgid "Currently indexing, please try again shortly."
-msgstr "Attualmente in fase di indicizzazione, si prega di riprovare a breve."
-
 msgid "Currently open connections"
 msgstr "Connessioni attualmente aperte"
 
@@ -39847,6 +39844,10 @@ msgstr "Panoramica principale"
 msgid "Main dashboard"
 msgstr "Cruscotto principale"
 
+#, fuzzy
+msgid "Main dashboard (PEV)"
+msgstr "Cruscotto principale"
+
 msgid "Main folder"
 msgstr "Cartella principale"
 
@@ -42639,10 +42640,6 @@ msgstr "Altre opzioni"
 #, python-format
 msgid "More than %d results"
 msgstr "Più di %d risultati"
-
-#, python-format
-msgid "More than %d results available, please refine your search."
-msgstr "Sono disponibili più di %d risultati, si prega di affinare la ricerca."
 
 #, fuzzy
 msgid ""
@@ -51819,6 +51816,9 @@ msgstr "Presentazioni"
 msgid "Preserve cache times configured by other rules"
 msgstr "Conserva i tempi di cache configurati da altre regole"
 
+msgid "Press Ctrl + K to trigger search"
+msgstr ""
+
 msgid "Pressure"
 msgstr "Pressione"
 
@@ -53494,10 +53494,6 @@ msgstr "Redis non è raggiungibile, termina"
 
 msgid "Redis persistence"
 msgstr "Persistenza Redis"
-
-#, fuzzy
-msgid "Redis server is not reachable."
-msgstr "Questo sito non è attualmente raggiungibile."
 
 msgid "Redis server name"
 msgstr "Nome del server Redis"
@@ -56897,10 +56893,6 @@ msgid "Search for ineffective rules (not matching any host or service)"
 msgstr ""
 "Ricerca di regole inefficaci (che non corrispondono a nessun host o servizio)"
 
-#, fuzzy
-msgid "Search for menu entries, settings, hosts and rule sets."
-msgstr "Cerca voci di menu, impostazioni, host e ruleset."
-
 msgid "Search for not deprecated rulesets"
 msgstr "Ricerca di set di regole non deprecate"
 
@@ -56921,12 +56913,6 @@ msgstr "Storia della ricerca"
 
 msgid "Search hosts"
 msgstr "Cerca host"
-
-msgid "Search in Monitoring"
-msgstr "Ricerca in Monitoraggio"
-
-msgid "Search in Setup"
-msgstr "Cerca in Setup"
 
 msgid "Search in body"
 msgstr "Ricerca nel corpo"
@@ -56980,41 +56966,6 @@ msgstr "Grafici del tempo di ricerca"
 
 msgid "Search whole subtree below the base DN"
 msgstr "Cerca l'intero sottoalbero sotto il DN di base"
-
-#, fuzzy
-msgid ""
-"Search with regular expressions for menu entries, \n"
-"hosts, services or host and service groups.\n"
-"\n"
-"You can use the following filters:\n"
-"h: Host\n"
-"s: Service\n"
-"hg: Host group\n"
-"sg: Service group\n"
-"ad: Address\n"
-"al: Alias\n"
-"tg: Host tag\n"
-"hl: Host label (e.g. hl: cmk/os_family:linux)\n"
-"sl: Service label (e.g. sl: cmk/os_family:linux)\n"
-"st: Service state (e.g. st: crit [ok|warn|crit|unkn|pend])\n"
-"\n"
-"Note that for simplicity '*' will be substituted with '.*'."
-msgstr ""
-"Ricerca con espressioni regolari per le voci di menu, \n"
-"host, servizi o gruppi di host e servizi.\n"
-"\n"
-"È possibile utilizzare i seguenti filtri:\n"
-"h: Host\n"
-"s: Servizio\n"
-"hg: Gruppo di host\n"
-"sg: Gruppo di servizio\n"
-"ad: Indirizzo\n"
-"al: Alias\n"
-"tg: Etichetta dell'host\n"
-"hl: etichetta dell'host (ad esempio hl: cmk/os_family:linux)\n"
-"sl: etichetta del servizio (ad esempio sl: cmk/os_family:linux)\n"
-"\n"
-"Si noti che per semplicità '*' sarà sostituito da '.*'."
 
 msgid "Search<nobr> </nobr>in"
 msgstr "Ricerca<nobr> </nobr>in"
@@ -59397,14 +59348,8 @@ msgstr "Mostra tutti gli host"
 msgid "Show all phases of notifications"
 msgstr "Mostra tutte le fasi delle notifiche"
 
-msgid "Show all results"
-msgstr "Mostra tutti i risultati"
-
 msgid "Show all rules"
 msgstr "Mostra tutte le regole"
-
-msgid "Show all topics"
-msgstr "Mostra tutti gli argomenti"
 
 msgid "Show bar visualization"
 msgstr "Mostra la visualizzazione delle barre"
@@ -66350,6 +66295,17 @@ msgid ""
 "The customer of the sites connected by the broker connection must be the "
 "same."
 msgstr ""
+
+#, python-format
+msgid "The dashboard '%s' does not contain an embedded view with the ID '%s'."
+msgstr ""
+
+#, fuzzy, python-format
+msgid ""
+"The dashboard '%s' does not exist or you do not have permission to view it."
+msgstr ""
+"L'elemento %s è visibile solo a voi perché non avete il permesso di "
+"condividerlo."
 
 msgid "The dashboard element does not exist."
 msgstr "L'elemento dashboard non esiste."
@@ -85757,6 +85713,10 @@ msgstr "Non ti è permesso cambiare la barra laterale."
 msgid "You are not allowed to change the sidebar."
 msgstr "Non ti è permesso cambiare la barra laterale."
 
+#, fuzzy
+msgid "You are not allowed to create dashboards."
+msgstr "Non ti è permesso di modificare i dashboard."
+
 #, python-format
 msgid "You are not allowed to delete this %s."
 msgstr "Non sei autorizzato a cancellare questo %s."
@@ -90273,6 +90233,54 @@ msgid "required"
 msgstr "Porta richiesta"
 
 #, fuzzy
+msgid "Settings Menu"
+msgstr "Impostazioni"
+
+#, fuzzy
+msgid "Dashboard settings"
+msgstr "Proprietà del cruscotto"
+
+#, fuzzy
+msgid "Clone dashboard"
+msgstr "Clonare il cruscotto integrato"
+
+#, fuzzy
+msgid "Dashboard user guide"
+msgstr "Proprietà del utente: %s"
+
+#, fuzzy
+msgid "Edit widgets"
+msgstr "Aggiungere l'obiettivo"
+
+#, fuzzy
+msgid "Add widget"
+msgstr "Aggiungere l'obiettivo"
+
+#, fuzzy
+msgid "Select dashboard"
+msgstr "Cruscotti correlati"
+
+#, fuzzy
+msgid "Loading Dashboards"
+msgstr "Cruscotto principale"
+
+#, fuzzy
+msgid "No dashboards found"
+msgstr "cruscotti"
+
+#, fuzzy
+msgid "Custom dashboards"
+msgstr "Personalizza"
+
+#, fuzzy
+msgid "Built-in dashboards"
+msgstr "Clonare il cruscotto integrato"
+
+#, fuzzy
+msgid "Unnamed Dashboard"
+msgstr "Dashboard"
+
+#, fuzzy
 msgid "No items selected"
 msgstr "Non selezionato"
 
@@ -90328,8 +90336,28 @@ msgid "Remove row"
 msgstr "Rimosso: %s"
 
 #, fuzzy
-msgid "Add widget"
-msgstr "Aggiungere l'obiettivo"
+msgid "Search Filter"
+msgstr "Filtro di ricerca"
+
+#, fuzzy
+msgid "Clear search"
+msgstr "Ricerca delle regole"
+
+#, fuzzy
+msgid "No filters found matching"
+msgstr "Corrispondenza dei nomi dei processi"
+
+#, fuzzy
+msgid "Expand all"
+msgstr "Espandi"
+
+#, fuzzy
+msgid "Collapse all"
+msgstr "Scegliere tutti"
+
+#, fuzzy
+msgid "No filter category available"
+msgstr "Nessuna informazione disponibile"
 
 #, fuzzy
 msgid "Add Widget"
@@ -90390,10 +90418,6 @@ msgstr "Elementi della barra laterale"
 
 msgid "Display user messages, sidebar elements, text or embed a URL"
 msgstr ""
-
-#, fuzzy
-msgid "Empty dashboard app"
-msgstr "Modifica dei cruscotti"
 
 #, fuzzy
 msgid "explicit password"
@@ -91107,6 +91131,74 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Currently indexing, please try again shortly."
+#~ msgstr ""
+#~ "Attualmente in fase di indicizzazione, si prega di riprovare a breve."
+
+#, python-format
+#~ msgid "More than %d results available, please refine your search."
+#~ msgstr ""
+#~ "Sono disponibili più di %d risultati, si prega di affinare la ricerca."
+
+#, fuzzy
+#~ msgid "Redis server is not reachable."
+#~ msgstr "Questo sito non è attualmente raggiungibile."
+
+#, fuzzy
+#~ msgid "Search for menu entries, settings, hosts and rule sets."
+#~ msgstr "Cerca voci di menu, impostazioni, host e ruleset."
+
+#~ msgid "Search in Monitoring"
+#~ msgstr "Ricerca in Monitoraggio"
+
+#~ msgid "Search in Setup"
+#~ msgstr "Cerca in Setup"
+
+#, fuzzy
+#~ msgid ""
+#~ "Search with regular expressions for menu entries, \n"
+#~ "hosts, services or host and service groups.\n"
+#~ "\n"
+#~ "You can use the following filters:\n"
+#~ "h: Host\n"
+#~ "s: Service\n"
+#~ "hg: Host group\n"
+#~ "sg: Service group\n"
+#~ "ad: Address\n"
+#~ "al: Alias\n"
+#~ "tg: Host tag\n"
+#~ "hl: Host label (e.g. hl: cmk/os_family:linux)\n"
+#~ "sl: Service label (e.g. sl: cmk/os_family:linux)\n"
+#~ "st: Service state (e.g. st: crit [ok|warn|crit|unkn|pend])\n"
+#~ "\n"
+#~ "Note that for simplicity '*' will be substituted with '.*'."
+#~ msgstr ""
+#~ "Ricerca con espressioni regolari per le voci di menu, \n"
+#~ "host, servizi o gruppi di host e servizi.\n"
+#~ "\n"
+#~ "È possibile utilizzare i seguenti filtri:\n"
+#~ "h: Host\n"
+#~ "s: Servizio\n"
+#~ "hg: Gruppo di host\n"
+#~ "sg: Gruppo di servizio\n"
+#~ "ad: Indirizzo\n"
+#~ "al: Alias\n"
+#~ "tg: Etichetta dell'host\n"
+#~ "hl: etichetta dell'host (ad esempio hl: cmk/os_family:linux)\n"
+#~ "sl: etichetta del servizio (ad esempio sl: cmk/os_family:linux)\n"
+#~ "\n"
+#~ "Si noti che per semplicità '*' sarà sostituito da '.*'."
+
+#~ msgid "Show all results"
+#~ msgstr "Mostra tutti i risultati"
+
+#~ msgid "Show all topics"
+#~ msgstr "Mostra tutti gli argomenti"
+
+#, fuzzy
+#~ msgid "Empty dashboard app"
+#~ msgstr "Modifica dei cruscotti"
 
 #, fuzzy
 #~ msgid "Default State"

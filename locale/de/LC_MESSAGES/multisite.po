@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-09-10 18:39+0000\n"
+"PO-Revision-Date: 2025-09-11 21:39+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -267,9 +267,8 @@ msgstr "#%s von unbekanntem Regelsatz %r"
 msgid "#Containers"
 msgstr "#Container"
 
-#, fuzzy
 msgid "#Containers exited"
-msgstr "#Container gestoppt"
+msgstr "#Container verlassen"
 
 msgid "#Containers paused"
 msgstr "#Container pausiert"
@@ -3015,9 +3014,8 @@ msgstr "Absolut"
 msgid "Absolute %s space"
 msgstr "Absoluter %s Speicherplatz"
 
-#, fuzzy
 msgid "Absolute Limit"
-msgstr "Absolut"
+msgstr "Absolute Grenze"
 
 msgid "Absolute archive path"
 msgstr "Absoluter Pfad zum Archiv"
@@ -4305,9 +4303,8 @@ msgstr "Zufällige Hosts hinzufügen"
 msgid "Add recipient"
 msgstr "Empfänger hinzufügen"
 
-#, fuzzy
 msgid "Add relay configuration"
-msgstr "Konfiguration hinzufügen"
+msgstr "Relais-Konfiguration hinzufügen"
 
 msgid "Add remote instance"
 msgstr "Remote-Instanz hinzufügen"
@@ -8030,9 +8027,8 @@ msgstr "Obergrenzen für die durchschnittliche Anzahl an Meldungen"
 msgid "Average number of messages"
 msgstr "Durchschnittliche Anzahl an Meldungen"
 
-#, fuzzy
 msgid "Average over"
-msgstr "Durchschnittswert"
+msgstr ""
 
 msgid "Average pending tasks delta"
 msgstr "Durchschnittliches Delta anstehender Aufgaben"
@@ -8575,17 +8571,14 @@ msgstr "Azure Redis Latenz"
 msgid "Azure Redis memory"
 msgstr "Azure Redis Speicherplatz"
 
-#, fuzzy
 msgid "Azure Redis replication"
-msgstr "Azure Redis Verbindungen"
+msgstr "Azure Redis Replikation"
 
-#, fuzzy
 msgid "Azure Redis server load"
-msgstr "Redis Servername"
+msgstr "Azure Redis Serverauslastung"
 
-#, fuzzy
 msgid "Azure Redis throughput"
-msgstr "Lesedurchsatz"
+msgstr "Azure Redis Durchsatz"
 
 msgid "Azure SQL database CPU usage"
 msgstr "CPU-Auslastung der Azure SQL-Datenbank"
@@ -10903,9 +10896,8 @@ msgstr "Cache Misses"
 msgid "Cache misses per second"
 msgstr "Cache Misses pro Sekunde"
 
-#, fuzzy
 msgid "Cache read throughput (/sec)"
-msgstr "FCP-Lesedurchsatz"
+msgstr "Lesedurchsatz des Cache (/sek)"
 
 msgid "Cache requests"
 msgstr "Cache-Anfragen"
@@ -10919,9 +10911,8 @@ msgstr "Cachegröße"
 msgid "Cache this section"
 msgstr "Diese Sektion zwischenspeichern"
 
-#, fuzzy
 msgid "Cache write throughput (/sec)"
-msgstr "FCP-Schreibdurchsatz"
+msgstr "Schreibdurchsatz des Cache (/sek)"
 
 msgid "Cached"
 msgstr "Zwischengespeichert"
@@ -11845,9 +11836,8 @@ msgstr ""
 msgid "Check IMAP/EWS Mailboxes"
 msgstr "IMAP/EWS-Postfächer prüfen"
 
-#, fuzzy
 msgid "Check Interval"
-msgstr "Speicherintervall"
+msgstr "Check-Intervall"
 
 msgid "Check LDAP service access"
 msgstr "Check Zugriff auf LDAP-Service"
@@ -14752,9 +14742,8 @@ msgstr "Verbundene Clients"
 msgid "Connected clients"
 msgstr "Verbundene Clients"
 
-#, fuzzy
 msgid "Connected relay configurations"
-msgstr "Conda-Konfiguration"
+msgstr "Verbundene Relais-Konfigurationen"
 
 msgid "Connecter and connectee sites must be different."
 msgstr ""
@@ -14801,9 +14790,8 @@ msgstr "Abgebrochene Verbindung ist aufgetreten"
 msgid "Connection name"
 msgstr "Verbindungsname"
 
-#, fuzzy
 msgid "Connection options"
-msgstr "Dauer der Verbindungen"
+msgstr "Verbindungsoptionen"
 
 #, python-format
 msgid "Connection representation: %s"
@@ -14903,9 +14891,8 @@ msgstr "Verbindungen pro Sekunde"
 msgid "Connectivity"
 msgstr "Konnektivität"
 
-#, fuzzy
 msgid "Connectivity lag"
-msgstr "Konnektivität"
+msgstr "Verbindungsverzögerung"
 
 msgid "Connector outlets"
 msgstr "Stromanschlüsse der Verbindungen"
@@ -16467,9 +16454,6 @@ msgstr "Deaktiviere diese Aggregation"
 
 msgid "Currently in downtime"
 msgstr "Zur Zeit in Wartungszeit"
-
-msgid "Currently indexing, please try again shortly."
-msgstr "Wird gerade indiziert, bitte versuchen Sie es in Kürze erneut."
 
 msgid "Currently open connections"
 msgstr "Derzeit offene Verbindungen"
@@ -18271,9 +18255,8 @@ msgstr "Berechtigte Karten löschen"
 msgid "Delete processed messages"
 msgstr "Verarbeitete Meldungen löschen"
 
-#, fuzzy
 msgid "Delete relay"
-msgstr "Relais '%s' gelöscht"
+msgstr "Relais löschen"
 
 #, python-format
 msgid "Delete report schedule entry #%d"
@@ -18429,9 +18412,8 @@ msgstr "Diesen Benachrichtigungsparameter löschen"
 msgid "Delete this notification rule"
 msgstr "Diese Benachrichtigungsregel löschen"
 
-#, fuzzy
 msgid "Delete this relay"
-msgstr "Diesen Schlüssel löschen"
+msgstr "Dieses Relais löschen"
 
 msgid "Delete this role"
 msgstr "Lösche Rolle"
@@ -18718,9 +18700,8 @@ msgstr "OpenHardwareMonitor (kopflos) verteilen"
 msgid "Deploy Oracle databases plug-in"
 msgstr "Oracle-Datenbank-Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy Oracle plug-in"
-msgstr "Arcserve-Plugin verteilen"
+msgstr "Oracle-Plugin verteilen"
 
 msgid "Deploy Podman plug-in"
 msgstr "Podman-Plugin verteilen"
@@ -20254,9 +20235,8 @@ msgstr "OpenHardwareMonitor (ohne GUI) nicht verteilen"
 msgid "Do not deploy Oracle databases plug-in"
 msgstr "Oracle-Datenbank-Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy Oracle plug-in"
-msgstr "iptables-Plugin nicht verteilen"
+msgstr "Oracle-Plugin nicht verteilen"
 
 msgid "Do not deploy Robotmk"
 msgstr "Robotmk nicht verteilen"
@@ -21700,9 +21680,8 @@ msgstr "Eigenschaften dieser Regel bearbeiten"
 msgid "Edit properties of this rule pack"
 msgstr "Eigenschaften dieses Regelpakets bearbeiten"
 
-#, fuzzy
 msgid "Edit relay configuration"
-msgstr "Diese Konfiguration bearbeiten"
+msgstr "Relais-Konfiguration bearbeiten"
 
 msgid "Edit report content"
 msgstr "Berichtsinhalt bearbeiten"
@@ -21825,9 +21804,8 @@ msgstr "Diesen Benachrichtigungsparameter bearbeiten"
 msgid "Edit this notification rule"
 msgstr "Diese Benachrichtigungsregel bearbeiten"
 
-#, fuzzy
 msgid "Edit this relay"
-msgstr "Bearbeite Regel"
+msgstr "Dieses Relais bearbeiten"
 
 msgid "Edit this report"
 msgstr "Diesen Bericht bearbeiten"
@@ -30347,9 +30325,8 @@ msgstr "Hyper-V Server: Zustand von VMs"
 msgid "Hyper-V VM Guest Information (Windows)"
 msgstr "Hyper-V VM Gastinformationen (Windows)"
 
-#, fuzzy
 msgid "Hyper-V VM integration services"
-msgstr "Hyper-V Server: Status von VMs"
+msgstr "Hyper-V VM Integrationsdienste"
 
 msgid "Hyper-V VMs (Windows)"
 msgstr "Hyper-V VMs (Windows)"
@@ -36744,9 +36721,8 @@ msgstr "Levels für benutzte Kapazität in Bytes"
 msgid "Levels on write capacity"
 msgstr "Levels für die Schreibkapazität"
 
-#, fuzzy
 msgid "Levels over an extended period of time"
-msgstr "Levels über eine längere Zeitperiode bei Replikationsverzögerung"
+msgstr "Levels über eine längere Zeitperiode"
 
 msgid "Levels over an extended time period on a single core CPU utilization"
 msgstr ""
@@ -38681,6 +38657,10 @@ msgstr "Hauptübersicht"
 msgid "Main dashboard"
 msgstr "Haupt-Dashboard"
 
+#, fuzzy
+msgid "Main dashboard (PEV)"
+msgstr "Haupt-Dashboard"
+
 msgid "Main folder"
 msgstr "Ordner Main"
 
@@ -39673,9 +39653,8 @@ msgstr "Maximalzahl gleichzeitiger Echtzeitchecks"
 msgid "Maximum connections per second"
 msgstr "Maximale Verbindungen pro Sekunde"
 
-#, fuzzy
 msgid "Maximum connectivity lag"
-msgstr "Instanz Konnektivität"
+msgstr "Maximale Verbindungsverzögerung"
 
 msgid "Maximum count"
 msgstr "Maximale Anzahl"
@@ -40060,13 +40039,11 @@ msgstr "Arbeitsspeicher (RAM)"
 msgid "Memory (RAM)"
 msgstr "Arbeitsspeicher (RAM)"
 
-#, fuzzy
 msgid "Memory Limit"
-msgstr "Speichergröße"
+msgstr "Speichergrenze"
 
-#, fuzzy
 msgid "Memory Limiter"
-msgstr "Speichergröße"
+msgstr "Speicherbegrenzer"
 
 msgid "Memory Modules"
 msgstr "Speichermodule"
@@ -41013,9 +40990,8 @@ msgstr "Überwache Android-Geräte"
 msgid "Monitor CloudFront WAFs"
 msgstr "Cloudfront WAFs überwachen"
 
-#, fuzzy
 msgid "Monitor Oracle Databases"
-msgstr "Datenbanken überwachen"
+msgstr "Oracle-Datenbanken überwachen"
 
 msgid "Monitor Route53"
 msgstr "Route53 überwachen"
@@ -41398,10 +41374,6 @@ msgstr "Mehr Optionen"
 #, python-format
 msgid "More than %d results"
 msgstr "Mehr als %d Ergebnisse"
-
-#, python-format
-msgid "More than %d results available, please refine your search."
-msgstr "Mehr als %d Ergebnisse gefunden, bitte Suche verfeinern."
 
 msgid ""
 "Most elements have a hard coded static title and some are aware of their "
@@ -46221,9 +46193,8 @@ msgstr "Oracle Kontrolldatei Small Writes"
 msgid "Oracle count"
 msgstr "Oracle Zählung"
 
-#, fuzzy
 msgid "Oracle credentials"
-msgstr "Zugangsdaten angeben"
+msgstr "Oracle-Zugangsdaten"
 
 msgid "Oracle data file backup large read bytes"
 msgstr "Oracle Dateisicherung Large Read in Bytes"
@@ -49692,9 +49663,8 @@ msgstr "Pod-Ressourcen: Namespace"
 msgid "Pod resources: StatefulSet"
 msgstr "Pod-Ressourcen: StatefulSet"
 
-#, fuzzy
 msgid "Podman"
-msgstr "Podman Pods"
+msgstr "Podman"
 
 msgid "Podman Container Health"
 msgstr "Gesundheit des Podman-Containers"
@@ -50059,6 +50029,9 @@ msgstr "Präsentationen"
 
 msgid "Preserve cache times configured by other rules"
 msgstr "Behalte, durch andere Regeln konfigurierte, cache Zeiten"
+
+msgid "Press Ctrl + K to trigger search"
+msgstr ""
 
 msgid "Pressure"
 msgstr "Druck"
@@ -51656,9 +51629,6 @@ msgstr "Redis ist nicht erreichbar, wird beendet"
 msgid "Redis persistence"
 msgstr "Redis-Persistenz"
 
-msgid "Redis server is not reachable."
-msgstr "Redis-Server ist nicht erreichbar."
-
 msgid "Redis server name"
 msgstr "Redis Servername"
 
@@ -51999,9 +51969,8 @@ msgstr "Relational Database Service (RDS)"
 msgid "Relative"
 msgstr "Relativ"
 
-#, fuzzy
 msgid "Relative Limit in %"
-msgstr "Relative Luftfeuchtigkeit"
+msgstr "Relative Grenze in %"
 
 msgid "Relative difference"
 msgstr "Relativer Unterschied"
@@ -52036,28 +52005,23 @@ msgstr "Relativer Zeitpunkt des Alerts"
 msgid "Relay"
 msgstr "Relais"
 
-#, fuzzy
 msgid "Relay ID"
-msgstr "Schlüssel-ID"
+msgstr "Relais-ID"
 
-#, fuzzy
 msgid "Relay configurations"
-msgstr "Plan-Konfiguration"
+msgstr "Relais-Konfigurationen"
 
-#, fuzzy
 msgid "Relay display name"
-msgstr "Anzeigename"
+msgstr "Relais-Anzeigename"
 
 msgid "Relay log size"
 msgstr "Relais Log-Größe"
 
-#, fuzzy
 msgid "Relay name"
-msgstr "Umbenennen"
+msgstr "Relais-Name"
 
-#, fuzzy
 msgid "Relay properties"
-msgstr "Regel-Eigenschaften"
+msgstr "Relais-Eigenschaften"
 
 msgid "Relays"
 msgstr "Relais"
@@ -54916,9 +54880,6 @@ msgstr ""
 "Nach nicht wirksamen Regeln suchen (die auf keinen Host oder Service "
 "zutreffen)"
 
-msgid "Search for menu entries, settings, hosts and rule sets."
-msgstr "Suche nach Menüeinträgen, Einstellungen, Hosts und Regelsätzen."
-
 msgid "Search for not deprecated rulesets"
 msgstr "Nicht veraltete Regelsätze suchen"
 
@@ -54939,12 +54900,6 @@ msgstr "Suchhistorie"
 
 msgid "Search hosts"
 msgstr "Suche Hosts"
-
-msgid "Search in Monitoring"
-msgstr "Suche in Überwachen"
-
-msgid "Search in Setup"
-msgstr "Suche in Setup"
 
 msgid "Search in body"
 msgstr "Suche im Body"
@@ -54997,41 +54952,6 @@ msgstr "Suche nach Zeitgraphen"
 
 msgid "Search whole subtree below the base DN"
 msgstr "Gesamten Teilbaum unter Basis DN durchsuchen"
-
-msgid ""
-"Search with regular expressions for menu entries, \n"
-"hosts, services or host and service groups.\n"
-"\n"
-"You can use the following filters:\n"
-"h: Host\n"
-"s: Service\n"
-"hg: Host group\n"
-"sg: Service group\n"
-"ad: Address\n"
-"al: Alias\n"
-"tg: Host tag\n"
-"hl: Host label (e.g. hl: cmk/os_family:linux)\n"
-"sl: Service label (e.g. sl: cmk/os_family:linux)\n"
-"st: Service state (e.g. st: crit [ok|warn|crit|unkn|pend])\n"
-"\n"
-"Note that for simplicity '*' will be substituted with '.*'."
-msgstr ""
-"Suche mit regulären Ausdrücken nach Menüeinträgen,\n"
-"Hosts, Services oder Host- und Service-Gruppen.\n"
-"\n"
-"Sie können die folgenden Filter verwenden:\n"
-"h: Host\n"
-"s: Service\n"
-"hg: Host-Gruppe\n"
-"sg: Service-Gruppe\n"
-"ad: Adresse\n"
-"al: Alias\n"
-"tg: Host-Merkmal\n"
-"hl: Host-Label (z. B. hl: cmk/os_family:linux)\n"
-"sl: Service-Label (z. B. sl: cmk/os_family:linux)\n"
-"st: Service-Status (z. B. st: crit [ok|warn|crit|unkn|pend])\n"
-"\n"
-"Beachten Sie, dass der Einfachheit halber '*' durch '.*' ersetzt wird."
 
 msgid "Search<nobr> </nobr>in"
 msgstr "Suche<nobr> </nobr>in"
@@ -55908,21 +55828,17 @@ msgstr "Server-Verbindungen"
 msgid "Server latency"
 msgstr "Serverlatenz"
 
-#, fuzzy
 msgid "Server load"
-msgstr "Last von Citrix-Servern"
+msgstr "Serverauslastung"
 
-#, fuzzy
 msgid "Server load %"
-msgstr "Last von Citrix-Servern"
+msgstr "Serverauslastung %"
 
-#, fuzzy
 msgid "Server load (average)"
-msgstr "Server-Log-Speicher"
+msgstr "Serverauslastung (Durchschnitt)"
 
-#, fuzzy
 msgid "Server load levels"
-msgstr "Service-Ebenen"
+msgstr "Levels der Serverauslastung"
 
 msgid "Server log storage"
 msgstr "Server-Log-Speicher"
@@ -57387,14 +57303,8 @@ msgstr "Zeige alle Hosts"
 msgid "Show all phases of notifications"
 msgstr "Alle Benachrichtigungsphasen zeigen"
 
-msgid "Show all results"
-msgstr "Alle Ergebnisse anzeigen"
-
 msgid "Show all rules"
 msgstr "Alle Regeln anzeigen"
-
-msgid "Show all topics"
-msgstr "Alle Themen anzeigen"
 
 msgid "Show bar visualization"
 msgstr "Balkenansicht anzeigen"
@@ -64275,6 +64185,17 @@ msgid ""
 msgstr ""
 "Der Kunde der Instanzen, der über die Broker-Verbindung verbunden ist, muss "
 "identisch sein."
+
+#, python-format
+msgid "The dashboard '%s' does not contain an embedded view with the ID '%s'."
+msgstr ""
+
+#, fuzzy, python-format
+msgid ""
+"The dashboard '%s' does not exist or you do not have permission to view it."
+msgstr ""
+"Das %s ist nur für Sie sichtbar, weil Sie nicht die Berechtigung haben, es "
+"zu teilen."
 
 msgid "The dashboard element does not exist."
 msgstr "Das Dashboard-Element ist nicht vorhanden."
@@ -83200,6 +83121,10 @@ msgstr ""
 msgid "You are not allowed to change the sidebar."
 msgstr "Sie sind nicht berechtigt, die Seitenleiste zu verändern."
 
+#, fuzzy
+msgid "You are not allowed to create dashboards."
+msgstr "Sie sind nicht berechtigt, Dashboards zu bearbeiten."
+
 #, python-format
 msgid "You are not allowed to delete this %s."
 msgstr "Sie sind nicht berechtigt, diese %s zu löschen."
@@ -87766,6 +87691,54 @@ msgid "required"
 msgstr "erforderlich"
 
 #, fuzzy
+msgid "Settings Menu"
+msgstr "Einstellungen"
+
+#, fuzzy
+msgid "Dashboard settings"
+msgstr "Dashboard-Eigenschaften"
+
+#, fuzzy
+msgid "Clone dashboard"
+msgstr "Mitgeliefertes Dashboard klonen"
+
+#, fuzzy
+msgid "Dashboard user guide"
+msgstr "Dashboard des Benutzers %s"
+
+#, fuzzy
+msgid "Edit widgets"
+msgstr "Ziel hinzufügen"
+
+#, fuzzy
+msgid "Add widget"
+msgstr "Ziel hinzufügen"
+
+#, fuzzy
+msgid "Select dashboard"
+msgstr "Verwandte Dashboards"
+
+#, fuzzy
+msgid "Loading Dashboards"
+msgstr "Haupt-Dashboard"
+
+#, fuzzy
+msgid "No dashboards found"
+msgstr "Dashboards"
+
+#, fuzzy
+msgid "Custom dashboards"
+msgstr "Benutzer anpassen"
+
+#, fuzzy
+msgid "Built-in dashboards"
+msgstr "Mitgeliefertes Dashboard klonen"
+
+#, fuzzy
+msgid "Unnamed Dashboard"
+msgstr "Dashboard"
+
+#, fuzzy
 msgid "No items selected"
 msgstr "Nicht ausgewählt"
 
@@ -87798,29 +87771,46 @@ msgstr ""
 msgid "Operator"
 msgstr "Betrieb"
 
-#, fuzzy
 msgid "Select label..."
-msgstr "Datei auswählen"
+msgstr "Label auswählen..."
 
 #, fuzzy
 msgid "Group Operator"
 msgstr "Gruppenpfad"
 
-#, fuzzy
 msgid "Select group..."
-msgstr "Kontaktgruppe auswählen"
+msgstr "Gruppe auswählen..."
 
-#, fuzzy
 msgid "Select value..."
-msgstr "Ansicht auswählen"
+msgstr "Wert auswählen..."
 
 #, fuzzy
 msgid "Remove row"
 msgstr "Entfernt: %r"
 
 #, fuzzy
-msgid "Add widget"
-msgstr "Ziel hinzufügen"
+msgid "Search Filter"
+msgstr "Suchfilter"
+
+#, fuzzy
+msgid "Clear search"
+msgstr "Regelsuche"
+
+#, fuzzy
+msgid "No filters found matching"
+msgstr "Abgleich von Prozessnamen"
+
+#, fuzzy
+msgid "Expand all"
+msgstr "Erweitern"
+
+#, fuzzy
+msgid "Collapse all"
+msgstr "Alle auswählen"
+
+#, fuzzy
+msgid "No filter category available"
+msgstr "Keine Informationen vorhanden"
 
 #, fuzzy
 msgid "Add Widget"
@@ -87881,10 +87871,6 @@ msgstr "Seitenleistenelemente"
 
 msgid "Display user messages, sidebar elements, text or embed a URL"
 msgstr ""
-
-#, fuzzy
-msgid "Empty dashboard app"
-msgstr "Dashboards bearbeiten"
 
 #, fuzzy
 msgid "explicit password"
@@ -88598,6 +88584,70 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Currently indexing, please try again shortly."
+#~ msgstr "Wird gerade indiziert, bitte versuchen Sie es in Kürze erneut."
+
+#, python-format
+#~ msgid "More than %d results available, please refine your search."
+#~ msgstr "Mehr als %d Ergebnisse gefunden, bitte Suche verfeinern."
+
+#~ msgid "Redis server is not reachable."
+#~ msgstr "Redis-Server ist nicht erreichbar."
+
+#~ msgid "Search for menu entries, settings, hosts and rule sets."
+#~ msgstr "Suche nach Menüeinträgen, Einstellungen, Hosts und Regelsätzen."
+
+#~ msgid "Search in Monitoring"
+#~ msgstr "Suche in Überwachen"
+
+#~ msgid "Search in Setup"
+#~ msgstr "Suche in Setup"
+
+#~ msgid ""
+#~ "Search with regular expressions for menu entries, \n"
+#~ "hosts, services or host and service groups.\n"
+#~ "\n"
+#~ "You can use the following filters:\n"
+#~ "h: Host\n"
+#~ "s: Service\n"
+#~ "hg: Host group\n"
+#~ "sg: Service group\n"
+#~ "ad: Address\n"
+#~ "al: Alias\n"
+#~ "tg: Host tag\n"
+#~ "hl: Host label (e.g. hl: cmk/os_family:linux)\n"
+#~ "sl: Service label (e.g. sl: cmk/os_family:linux)\n"
+#~ "st: Service state (e.g. st: crit [ok|warn|crit|unkn|pend])\n"
+#~ "\n"
+#~ "Note that for simplicity '*' will be substituted with '.*'."
+#~ msgstr ""
+#~ "Suche mit regulären Ausdrücken nach Menüeinträgen,\n"
+#~ "Hosts, Services oder Host- und Service-Gruppen.\n"
+#~ "\n"
+#~ "Sie können die folgenden Filter verwenden:\n"
+#~ "h: Host\n"
+#~ "s: Service\n"
+#~ "hg: Host-Gruppe\n"
+#~ "sg: Service-Gruppe\n"
+#~ "ad: Adresse\n"
+#~ "al: Alias\n"
+#~ "tg: Host-Merkmal\n"
+#~ "hl: Host-Label (z. B. hl: cmk/os_family:linux)\n"
+#~ "sl: Service-Label (z. B. sl: cmk/os_family:linux)\n"
+#~ "st: Service-Status (z. B. st: crit [ok|warn|crit|unkn|pend])\n"
+#~ "\n"
+#~ "Beachten Sie, dass der Einfachheit halber '*' durch '.*' ersetzt wird."
+
+#~ msgid "Show all results"
+#~ msgstr "Alle Ergebnisse anzeigen"
+
+#~ msgid "Show all topics"
+#~ msgstr "Alle Themen anzeigen"
+
+#, fuzzy
+#~ msgid "Empty dashboard app"
+#~ msgstr "Dashboards bearbeiten"
 
 #~ msgid ""
 #~ "Please contact your Checkmk administrator to ensure that your license is "

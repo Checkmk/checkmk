@@ -90,7 +90,7 @@ configure_make(
         tar xf ${PYTHON_MODULES_TAR} -C $(dirname ${PYTHON_MODULES_TAR});
         mkdir -p lib/python
         cd python && \
-            ${EXT_BUILD_DEPS}/python/bin/python3 setup.py install \
+            CFLAGS="-Wno-incompatible-pointer-types" ${EXT_BUILD_DEPS}/python/bin/python3 setup.py install \
                 --basedir=.. \
                 --root=${INSTALLDIR} \
                 --prefix='' \

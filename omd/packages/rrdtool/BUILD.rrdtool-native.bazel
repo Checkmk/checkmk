@@ -100,6 +100,7 @@ cc_library(
     ],
     copts = [
         "-Wformat-truncation=0",  # false positive in src/rrd_list.c
+        "-Wno-implicit-function-declaration",
         "-O2",  # maybe O3?
     ],
     local_defines = ['NUMVERS="' + NUMVERS + '"'],
@@ -136,9 +137,11 @@ cc_library(
         "-I/usr/include/cairo",
         "-I/usr/include/pango-1.0",
         "-I/usr/include/harfbuzz",
-        "-Wno-implicit-function-declaration",
         "-Wno-format-truncation",
+        "-Wno-implicit-const-int-float-conversion",
+        "-Wno-implicit-function-declaration",
         "-Wno-strict-aliasing",
+        "-Wno-unused-but-set-variable",
         "-O2",
     ],
     linkopts = [
@@ -211,6 +214,8 @@ cc_library(
     ],
     copts = [
         "-Wno-discarded-qualifiers",
+        "-Wno-ignored-qualifiers",
+        "-Wno-incompatible-pointer-types-discards-qualifiers",
         "-O2",
     ],
     deps = [

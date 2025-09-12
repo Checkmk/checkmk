@@ -18,7 +18,10 @@ configure_make(
         "--with-perlcache",
         "--enable-embedded-perl",
     ],
-    copts = ["-Wl,--rpath,$ORIGIN_VAR/../lib"],
+    copts = [
+        "-Wl,--rpath,$ORIGIN_VAR/../lib",
+        "-Wno-implicit-int",
+    ],
     env = {
         "PKG_CONFIG_PATH": ":".join([
             "/usr/lib/pkgconfig",

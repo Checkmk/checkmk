@@ -11,6 +11,9 @@ filegroup(
 configure_make(
     name = "libgsf",
     args = ["-j4"],
+    copts = [
+        "-Wno-incompatible-pointer-types",
+    ],
     env = {
         "PKG_CONFIG_PATH": ":".join([
             "/usr/lib/pkgconfig",

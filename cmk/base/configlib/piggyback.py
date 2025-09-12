@@ -27,11 +27,9 @@ def guess_piggybacked_hosts_time_settings(
 ) -> PiggybackTimeSettings:
     # NOTE: piggyback time settings are configured in rules matching on the source hosts,
     # but applied when dealing with the destination hosts (aka piggybacked hosts) in the
-    # fetcher and the summarizer.
+    # parser and the summarizer.
     # This *guesses* which rulesets are relevant, by matching on the hosts that *currently*
     # provide piggyback data for the given piggybacked host.
-    # For the fetcher, this function is evaluated at config creation time, so this might
-    # well be wrong.
     return make_piggyback_time_settings(
         loaded_config,
         matcher,

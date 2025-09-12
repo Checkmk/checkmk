@@ -224,7 +224,9 @@ class CMKParser:
                 make_parser(
                     self.config,
                     source.hostname,
+                    source.ipaddress,
                     source.fetcher_type,
+                    omd_root=cmk.utils.paths.omd_root,
                     persisted_section_dir=make_persisted_section_dir(
                         source.hostname,
                         ident=source.ident,

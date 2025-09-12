@@ -16,6 +16,7 @@ from ._parser import (
     ParserFunction,
     SectionNameCollection,
 )
+from ._piggyback import PiggybackParser
 from ._sectionstore import SectionStore
 from ._snmp import SNMPParser
 from ._utils import group_by_host
@@ -27,9 +28,10 @@ __all__ = [
     "group_by_host",
     "HostSections",
     "NO_SELECTION",
-    "parse_raw_data",
     "Parser",
+    "parse_raw_data",
     "ParserFunction",
+    "PiggybackParser",
     "SectionNameCollection",
     "SectionStore",
     "SNMPParser",

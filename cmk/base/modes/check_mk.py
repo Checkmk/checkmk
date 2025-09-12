@@ -774,7 +774,9 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
                         label_manager,
                     ),
                     source_info.hostname,
+                    source_info.ipaddress,
                     source_info.fetcher_type,
+                    omd_root=cmk.utils.paths.omd_root,
                     persisted_section_dir=make_persisted_section_dir(
                         source_info.hostname,
                         ident=source_info.ident,

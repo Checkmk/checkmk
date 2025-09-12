@@ -509,9 +509,8 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     ),
     Component("cmk.fetchers"): _allow(
         *PACKAGE_CCC,
-        "cmk.crypto.deprecated",
+        *PACKAGE_CRYPTO,
         "cmk.helper_interface",
-        "cmk.piggyback.backend",
         "cmk.relay_protocols",
         "cmk.snmplib",
     ),

@@ -88,7 +88,22 @@ pkg_zip(
            ] + [":%s" % link_name for link_name in clntsh_symlinks] +
            [":core%s" % link_name for link_name in clntshcore_symlinks] +
            [":occi%s" % link_name for link_name in occi_symlinks],
-    mode = "0755",
+    mode = "0644",
     stamp = 1,
     tags = ["manual"],
+)
+
+pkg_files(
+    name = "oci_light_lin_x64_files",
+    srcs = [":oci_light_lin_x64"],
+    attributes = pkg_attributes(mode = "0644"),
+    renames = {":oci_light_lin_x64": "share/check_mk/agents/linux/oci_light_lin_x64.zip"},
+    tags = ["manual"],
+)
+
+pkg_tar(
+    name = "oci_light_lin_x64.tar",
+    srcs = [":oci_light_lin_x64_files"],
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
 )

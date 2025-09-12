@@ -527,6 +527,7 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
         raw_sections, piggyback_sections = self._parse_host_section(raw_data, selection)
         section_info = make_section_info(raw_sections)
         sections = make_decoded_sections(raw_sections)
+        cache_info = make_cache_info(section_info, now)
 
         def flatten_piggyback_section(
             sections: ImmutableSection,
@@ -561,11 +562,6 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
             )
             for header, content in piggyback_sections.items()
             if header.hostname is not None
-        }
-        cache_info = {
-            header.name: cache_info_tuple
-            for header in section_info.values()
-            if (cache_info_tuple := header.cache_info(now)) is not None
         }
 
         new_sections = self.section_store.update(
@@ -617,6 +613,16 @@ def make_decoded_sections(
     for header, content in sections:
         out.setdefault(header.name, []).extend(header.parse_line(line) for line in content)
     return out
+
+
+def make_cache_info(
+    section_info: Mapping[SectionName, SectionMarker], now: int
+) -> MutableMapping[SectionName, tuple[int, int]]:
+    return {
+        header.name: cache_info_tuple
+        for header in section_info.values()
+        if (cache_info_tuple := header.cache_info(now)) is not None
+    }
 
 
 def make_persisting_info(

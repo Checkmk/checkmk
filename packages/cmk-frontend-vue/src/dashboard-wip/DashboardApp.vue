@@ -171,7 +171,6 @@ function cloneWidget(oldWidgetId: string, newLayout: WidgetLayout) {
         :key="`${dashboardsManager.activeDashboardName.value}`"
         v-model:dashboard="dashboardsManager.activeDashboard.value!"
         :dashboard-name="dashboardsManager.activeDashboardName.value || ''"
-        :dashboard-owner="dashboardsManager.activeDashboard.value?.owner || ''"
         :base-filters="dashboardFilters.baseFilters"
         :widget-cores="dashboardWidgets.widgetCores"
         :constants="dashboardsManager.constants.value!"

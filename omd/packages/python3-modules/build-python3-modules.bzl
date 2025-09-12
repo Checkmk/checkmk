@@ -131,5 +131,5 @@ build_cmd = """
       --prefix="$$HOME/$$MODULE_NAME" \\
       {requirements} 2>&1 | tee "$$HOME/""$$MODULE_NAME""_pip_install.stdout"
 
-    tar cf $@ $$MODULE_NAME
+    tar cf $@ -C $$MODULE_NAME .
 """

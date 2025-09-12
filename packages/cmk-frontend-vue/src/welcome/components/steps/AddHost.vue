@@ -45,7 +45,7 @@ defineProps<{
     </StepParagraph>
 
     <StepHeading>
-      {{ _t('On-premise-hosts') }}
+      {{ _t('On-premises hosts') }}
     </StepHeading>
     <StepCardsRow>
       <CmkLinkCard

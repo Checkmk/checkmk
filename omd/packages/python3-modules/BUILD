@@ -29,6 +29,8 @@ config_setting(
         "compiled_%s.tar" % module,
     ],
     tags = ["manual"],
+    # Make setuptools available to net-snmp
+    visibility = ["@net-snmp//:__pkg__"],
 ) for module in all_requirements]
 
 # TODO: Switch to official release when netapp has fixed their build process
@@ -98,5 +100,5 @@ genrule(
 	tar cf $@ -C python3-modules .
     """.format(pyMajMin = PYTHON_MAJOR_DOT_MINOR),
     tags = ["manual"],
-    visibility = ["//visibility:public"],
+    visibility = ["//omd:__subpackages__"],
 )

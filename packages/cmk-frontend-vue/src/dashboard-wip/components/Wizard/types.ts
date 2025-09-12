@@ -3,6 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { components } from '@/lib/rest-api-client/openapi_internal'
+
 import { type QuickSetupStageActionIcon } from '@/quick-setup/components/quick-setup/quick_setup_types'
 
 export interface LabelValueItem {
@@ -35,3 +37,7 @@ export enum ElementSelection {
   SPECIFIC = 'SINGLE',
   MULTIPLE = 'MULTI'
 }
+
+export type MetricDisplayRangeModel = components['schemas']['MetricDisplayRangeModel']
+export type FixedDataRangeModel = components['schemas']['MetricDisplayRangeFixedModel']
+export type TitleSpec = components['schemas']['WidgetTitle']

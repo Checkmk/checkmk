@@ -28,6 +28,8 @@ from .page_edit_dashboard import page_edit_dashboard
 from .page_edit_dashboard_actions import ajax_dashlet_pos, page_clone_dashlet, page_delete_dashlet
 from .page_edit_dashboards import page_edit_dashboards
 from .page_edit_dashlet import EditDashletPage
+from .page_figure_widget import FigureWidgetPage
+from .page_graph_widget import GraphWidgetPage
 from .page_show_dashboard import (
     ajax_dashlet,
     AjaxInitialDashboardFilters,
@@ -52,6 +54,8 @@ def register(
     permission_section_registry.register(PERMISSION_SECTION_DASHBOARD)
 
     page_registry.register(PageEndpoint("ajax_figure_dashlet_data", FigureDashletPage))
+    page_registry.register(PageEndpoint("widget_figure", FigureWidgetPage))
+    page_registry.register(PageEndpoint("widget_graph", GraphWidgetPage))
     page_registry.register(PageEndpoint("widget_iframe_view", ViewWidgetIFramePage))
     page_registry.register(
         PageEndpoint("ajax_initial_dashboard_filters", AjaxInitialDashboardFilters)

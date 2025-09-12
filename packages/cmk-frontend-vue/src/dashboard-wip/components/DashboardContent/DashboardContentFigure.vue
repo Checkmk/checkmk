@@ -110,7 +110,7 @@ const figureType = computed(() => {
 // We need to style SVGs for some figure types to make them responsive
 const sizeSvg = computed(() => ['host_stats', 'service_stats'].includes(figureType.value))
 
-const ajaxPage: string = 'ajax_figure_widget_data.py'
+const ajaxPage: string = 'widget_figure.py'
 const updateInterval = 60
 
 const initializeFigure = () => {

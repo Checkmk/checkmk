@@ -59,7 +59,6 @@ from cmk.snmplib import (
     SNMPTable,
     SNMPVersion,
 )
-from cmk.utils.paths import omd_root
 
 # TODO(ml): This is way too complicated for a unit test.
 PLUGIN_STORE = SNMPPluginStore(
@@ -312,17 +311,8 @@ class TestIPMIFetcher:
 
 
 class TestPiggybackFetcher:
-    @pytest.fixture
-    def fetcher(self) -> PiggybackFetcher:
-        return PiggybackFetcher(
-            hostname=HostName("host"),
-            address=HostAddress("1.2.3.4"),
-            time_settings=[],
-            omd_root=omd_root,
-        )
-
-    def test_repr(self, fetcher: PiggybackFetcher) -> None:
-        assert isinstance(repr(fetcher), str)
+    def test_repr(self) -> None:
+        assert isinstance(repr(PiggybackFetcher()), str)
 
 
 class TestProgramFetcher:

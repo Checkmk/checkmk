@@ -98,8 +98,6 @@ class FetcherFactory(Protocol):
 
     def make_piggyback_fetcher(
         self,
-        host_name: HostName,
-        ipaddress: HostAddress | None,
     ) -> PiggybackFetcher: ...
 
 
@@ -513,7 +511,7 @@ class PiggybackSource(Source[AgentRawData]):
         )
 
     def fetcher(self) -> PiggybackFetcher:
-        return self.factory.make_piggyback_fetcher(self.host_name, self.ipaddress)
+        return PiggybackFetcher()
 
     def file_cache(
         self, *, simulation: bool, file_cache_options: FileCacheOptions

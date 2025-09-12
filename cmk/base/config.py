@@ -2935,8 +2935,8 @@ class ConfigCache:
         # Users can still configure it to be absent or present manually.
         # In case of false positives (DS created but no data) the dasource will be OK anyway.
 
-        # This duplicates logic and should be kept in sync with what the fetcher does.
-        # Can we somehow instanciate the hypothetical fetcher here, and just let it fetch?
+        # This duplicates logic and should be kept in sync with what the parser does.
+        # Can we somehow instanciate the hypothetical parser here, and just let it parse?
         piggy_config = piggyback_backend.Config(
             piggybacked_host_name,
             make_piggyback_time_settings(
@@ -3676,6 +3676,14 @@ def make_parser_config(
         piggyback_translations=SingleHostRulesetMatcherMerge(
             loaded_config.piggyback_translation, ruleset_matcher, label_manager.labels_of_host
         ),
+        # Note: this is a reproduction of the logic we had before.
+        # I think this can be simplified, fixing CMK-25914
+        piggyback_max_cache_age_callbacks=lambda piggybacked_host_name: piggyback_backend.Config(
+            piggybacked_host_name,
+            guess_piggybacked_hosts_time_settings(
+                loaded_config, ruleset_matcher, label_manager.labels_of_host, piggybacked_host_name
+            ),
+        ).max_cache_age,
     )
 
 
@@ -3860,17 +3868,5 @@ class FetcherFactory:
     def make_special_agent_fetcher(self, *, cmdline: str, stdin: str | None) -> ProgramFetcher:
         return ProgramFetcher(cmdline=cmdline, stdin=stdin, is_cmc=self.is_cmc)
 
-    def make_piggyback_fetcher(
-        self, host_name: HostName, ip_address: HostAddress | None
-    ) -> PiggybackFetcher:
-        return PiggybackFetcher(
-            hostname=host_name,
-            address=ip_address,
-            time_settings=guess_piggybacked_hosts_time_settings(
-                self._config_cache._loaded_config,  # sorry, this is only temporary (TM)
-                self._ruleset_matcher,
-                self._label_manager.labels_of_host,
-                piggybacked_hostname=host_name,
-            ),
-            omd_root=cmk.utils.paths.omd_root,
-        )
+    def make_piggyback_fetcher(self) -> PiggybackFetcher:
+        return PiggybackFetcher()

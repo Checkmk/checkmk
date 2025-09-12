@@ -13,6 +13,7 @@ add_compile_options(
   -Wall
   -Wextra
   -Werror
+  -Wno-deprecated-declarations
   -DHAVE_RE2
   -fPIC
   -gdwarf-4

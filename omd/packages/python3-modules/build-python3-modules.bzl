@@ -100,6 +100,9 @@ build_cmd = """
     export CC="$$(which gcc)"
 
     # install requirements
+    CFLAGS="-Wno-error=incompatible-pointer-types"
+    CFLAGS="$$CFLAGS -Wno-incompatible-pointer-types -Wno-int-conversion -Wno-deprecated-declarations"
+    export CFLAGS
     export CPPFLAGS="-I$$HOME/$$EXT_DEPS_PATH/openssl/openssl/include -I$$HOME/$$EXT_DEPS_PATH/freetds/freetds/include -I$$HOME/$$EXT_DEPS_PATH/python/python/include/python{pyMajMin}/"
     export LDFLAGS="-L$$HOME/$$EXT_DEPS_PATH/openssl/openssl/lib -L$$HOME/$$EXT_DEPS_PATH/freedts/freedts/lib -L$$HOME/$$EXT_DEPS_PATH/python/python/lib -Wl,--strip-debug -Wl,--rpath,/omd/versions/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/lib"
 

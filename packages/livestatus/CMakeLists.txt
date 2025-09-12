@@ -13,6 +13,7 @@ add_compile_options(
   -Wall
   -Wextra
   -Werror
+  -Wno-deprecated-declarations
   -DHAVE_RE2
   -DASIO_DISABLE_CONCEPTS
   -DASIO_NO_DEPRECATED

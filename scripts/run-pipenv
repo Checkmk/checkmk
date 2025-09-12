@@ -13,6 +13,10 @@ REPO_PATH="$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" >/dev/null 2>&1 &&
 : "${PIPENV_CACHE_DIR:="${REPO_PATH}/.cache"}"
 export PIPENV_CACHE_DIR
 
+# Fail the build with gcc-14
+CFLAGS="$CFLAGS -Wno-incompatible-pointer-types -Wno-int-conversion -Wno-deprecated-declarations"
+export CFLAGS
+
 # Avoid a loop when building the virtual environment itself.
 if [ -z "$SKIP_MAKEFILE_CALL" ]; then
     make --silent -C "$REPO_PATH" .venv 1>&2

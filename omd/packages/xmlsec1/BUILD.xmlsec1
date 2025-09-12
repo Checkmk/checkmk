@@ -17,6 +17,13 @@ configure_make(
         "--disable-docs",
     ],
     args=["-j6"],
+    copts = [
+        "-Wno-implicit-function-declaration",
+        "-Wno-int-conversion",
+        "-Wno-strict-prototypes",
+        "-Wl,-rpath",
+        "-Wl,$ORIGIN_VAR/../lib",
+    ],
 
     # This is a nasty workaround for Bazel's inability to escape `$ORIGIN`
     # combined with foreign_cc/configure_make's RPATH agnosticness
@@ -32,7 +39,6 @@ configure_make(
     # prepended, resulting in wrong RPATH components in front of `$ORIGIN/../lib`
     # For that reason we need to manually set RPATH outside Bazel (during `make`)
     env={"ORIGIN_VAR": "\\\\$$\\$$ORIGIN"},
-    copts=["-Wl,--rpath,$ORIGIN_VAR/../lib"],
     deps=["@openssl"],
     out_binaries=["xmlsec1"],
     # Looks like Bazel doesn't know .la files, but we need them.

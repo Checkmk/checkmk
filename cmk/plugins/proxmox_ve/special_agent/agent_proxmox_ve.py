@@ -28,6 +28,7 @@ from collections.abc import Sequence
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+from cmk.plugins.proxmox_ve.lib.node_allocation import SectionNodeAllocation
 from cmk.plugins.proxmox_ve.special_agent.libbackups import fetch_backup_data
 from cmk.plugins.proxmox_ve.special_agent.libproxmox import ProxmoxVeAPI
 from cmk.special_agents.v0_unstable.agent_common import (
@@ -207,6 +208,22 @@ def agent_proxmox_ve_main(args: Args) -> int:
                         },
                     }
                 )
+            with SectionWriter("proxmox_ve_node_allocation") as writer:
+                running_vms = [
+                    vm
+                    for vm in all_vms.values()
+                    if vm["node"] == node["node"] and vm["status"] == "running"
+                ]
+                writer.append_json(
+                    SectionNodeAllocation(
+                        status=node["status"],
+                        node_total_cpu=node["maxcpu"],
+                        allocated_cpu=sum(vm["maxcpu"] for vm in running_vms),
+                        node_total_mem=node["maxmem"],
+                        allocated_mem=sum(vm["maxmem"] for vm in running_vms),
+                    ).model_dump_json()
+                )
+
             if "mem" in node and "maxmem" in node:
                 with SectionWriter("proxmox_ve_mem_usage") as writer:
                     writer.append_json(

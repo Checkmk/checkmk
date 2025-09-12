@@ -529,6 +529,46 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
         sections = make_decoded_sections(raw_sections)
         cache_info = make_cache_info(section_info, now)
 
+        new_sections = self.section_store.update(
+            sections,
+            cache_info,
+            make_persisting_info(section_info),
+            lambda valid_until, now: valid_until < now,
+            now=now,
+            keep_outdated=self.keep_outdated,
+        )
+        return HostSections[AgentRawDataSection](
+            new_sections,
+            cache_info=cache_info,
+            piggybacked_raw_data=self._make_piggybacked_sections(piggyback_sections, now),
+        )
+
+    def _parse_host_section(
+        self,
+        raw_data: AgentRawData,
+        selection: SectionNameCollection,
+    ) -> tuple[ImmutableSection, Mapping[PiggybackMarker, ImmutableSection]]:
+        """Split agent output in chunks, splits lines by whitespaces."""
+        parser: ParserState = NOOPParser(
+            self.hostname,
+            [],
+            {},
+            translation=self.translation,
+            encoding_fallback=self.encoding_fallback,
+            logger=self._logger,
+        )
+        for line in raw_data.split(b"\n"):
+            parser = parser(line.rstrip(b"\r"))
+
+        return parser.sections if selection is NO_SELECTION else [
+            s for s in parser.sections if s.header.name in selection
+        ], parser.piggyback_sections
+
+    def _make_piggybacked_sections(
+        self,
+        piggyback_sections: Mapping[PiggybackMarker, ImmutableSection],
+        now: int,
+    ) -> Mapping[HostName, Sequence[bytes]]:
         def flatten_piggyback_section(
             sections: ImmutableSection,
             *,
@@ -552,7 +592,7 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
                     ).encode(header.encoding)
                 yield from (bytes(line) for line in content)
 
-        piggybacked_raw_data = {
+        return {
             header.hostname: list(
                 flatten_piggyback_section(
                     content,
@@ -563,41 +603,6 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
             for header, content in piggyback_sections.items()
             if header.hostname is not None
         }
-
-        new_sections = self.section_store.update(
-            sections,
-            cache_info,
-            make_persisting_info(section_info),
-            lambda valid_until, now: valid_until < now,
-            now=now,
-            keep_outdated=self.keep_outdated,
-        )
-        return HostSections[AgentRawDataSection](
-            new_sections,
-            cache_info=cache_info,
-            piggybacked_raw_data=piggybacked_raw_data,
-        )
-
-    def _parse_host_section(
-        self,
-        raw_data: AgentRawData,
-        selection: SectionNameCollection,
-    ) -> tuple[ImmutableSection, Mapping[PiggybackMarker, ImmutableSection]]:
-        """Split agent output in chunks, splits lines by whitespaces."""
-        parser: ParserState = NOOPParser(
-            self.hostname,
-            [],
-            {},
-            translation=self.translation,
-            encoding_fallback=self.encoding_fallback,
-            logger=self._logger,
-        )
-        for line in raw_data.split(b"\n"):
-            parser = parser(line.rstrip(b"\r"))
-
-        return parser.sections if selection is NO_SELECTION else [
-            s for s in parser.sections if s.header.name in selection
-        ], parser.piggyback_sections
 
 
 def make_section_info(

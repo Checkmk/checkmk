@@ -577,16 +577,10 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
             if (cache_info_tuple := header.cache_info(now)) is not None
         }
 
-        def lookup_persist(section_name: SectionName) -> tuple[int, int] | None:
-            default = SectionMarker.default(section_name)
-            if (until := section_info.get(section_name, default).persist) is not None:
-                return now, until
-            return None
-
         new_sections = self.section_store.update(
             sections,
             cache_info,
-            lookup_persist,
+            make_persisting_info(section_info),
             lambda valid_until, now: valid_until < now,
             now=now,
             keep_outdated=self.keep_outdated,
@@ -617,3 +611,9 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
         return parser.sections if selection is NO_SELECTION else [
             s for s in parser.sections if s.header.name in selection
         ], parser.piggyback_sections
+
+
+def make_persisting_info(
+    section_info: Mapping[SectionName, SectionMarker],
+) -> Mapping[SectionName, int | None]:
+    return {name: header.persist for name, header in section_info.items()}

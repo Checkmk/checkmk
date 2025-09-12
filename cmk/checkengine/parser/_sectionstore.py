@@ -51,7 +51,7 @@ class SectionStore(Generic[_T]):
         self,
         sections: Mapping[SectionName, _T],
         cache_info: MutableMapping[SectionName, tuple[int, int]],
-        lookup_persist: Callable[[SectionName], tuple[int, int] | None],
+        lookup_persist: Mapping[SectionName, int | None],
         section_outdated: Callable[[int, int], bool],
         now: int,
         keep_outdated: bool,
@@ -72,7 +72,7 @@ class SectionStore(Generic[_T]):
     def _update(
         self,
         sections: Mapping[SectionName, _T],
-        lookup_persist: Callable[[SectionName], tuple[int, int] | None],
+        lookup_persist: Mapping[SectionName, int | None],
         section_outdated: Callable[[int, int], bool],
         *,
         now: int,
@@ -84,9 +84,9 @@ class SectionStore(Generic[_T]):
         persisted_sections = self.load()
 
         new_sections = {
-            section_name: persist_info + (section_content,)
+            section_name: (now, persist_info, section_content)
             for section_name, section_content in sections.items()
-            if (persist_info := lookup_persist(section_name)) is not None
+            if (persist_info := lookup_persist.get(section_name)) is not None
         }
         store_sections = bool(new_sections)
         persisted_sections.update(new_sections)

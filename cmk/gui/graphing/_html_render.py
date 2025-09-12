@@ -1056,6 +1056,7 @@ def host_service_graph_dashlet_cmk(
     user_permissions: UserPermissions,
     *,
     graph_display_id: str = "",
+    time_range: TimerangeValue = None,
 ) -> HTML:
     width_var = request.get_float_input_mandatory("width", 0.0)
     width = int(width_var / html_size_per_ex)
@@ -1070,14 +1071,18 @@ def host_service_graph_dashlet_cmk(
 
     graph_render_config.size = (width, height)
 
-    time_range: TimerangeValue = json.loads(request.get_str_input_mandatory("timerange"))
+    time_range = (
+        json.loads(request.get_str_input_mandatory("timerange"))
+        if time_range is None
+        else time_range
+    )
 
     end_time: float
     start_time: float
     # Age and Range like ["age", 300] and ['date', [1661896800, 1661896800]]
     if isinstance(time_range, list):
         # compute_range needs tuple for computation
-        timerange_tuple: tuple[str, Any] = (time_range[0], time_range[1])
+        timerange_tuple: TimerangeValue = (time_range[0], time_range[1])
         start_time, end_time = Timerange.compute_range(timerange_tuple).range
     # Age like 14400 and y1, d1,...
     else:
@@ -1101,6 +1106,10 @@ def host_service_graph_dashlet_cmk(
                 )
             ),
         )
+    except MKMissingDataError as e:
+        # In case of missing data, the according message is rendered without a traceback. This
+        # specific exception handling is needed for the Vue dashboard rendering.
+        return html.render_message(str(e))
     except Exception as e:
         return render_graph_error_html(title=_("Cannot calculate graph recipes"), msg_or_exc=e)
 

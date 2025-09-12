@@ -43,7 +43,7 @@ const handleRefreshData = (widgetId: string, body: string) => {
 }
 
 const updateGraph = () => {
-  cmkToolkit.ajax.call_ajax('graph_widget.py', {
+  cmkToolkit.ajax.call_ajax('widget_graph.py', {
     post_data: new URLSearchParams({ ...httpVars.value, ...sizeVars.value }).toString(),
     method: 'POST',
     response_handler: handleRefreshData,

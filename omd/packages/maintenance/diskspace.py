@@ -33,7 +33,7 @@ def main() -> None:
     print_config(config)
     infos = load_plugins(omd_root, omd_root / "share/diskspace", omd_root / "local/share/diskspace")
 
-    if config.cleanup_abandoned_host_files is not None:
+    if config.cleanup_abandoned_host_files:
         do_cleanup_abandoned_host_files(
             omd_root,
             get_site_distributed_setup() == SiteDistributedSetup.DISTRIBUTED_REMOTE,

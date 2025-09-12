@@ -131,6 +131,16 @@ const currentStep: Ref<number> = usePersistentRef<number>(`${props.stepId}-curre
           <CmkHeading type="h3">{{ _t('Activate changes') }}</CmkHeading>
         </template>
         <template v-if="currentStep === 3" #content>
+          <StepParagraph>
+            {{
+              _t(
+                `Changes are saved in a temporary environment first,
+                letting you review and adjust them safely.`
+              )
+            }}
+            <br />
+            {{ _t('Activate changes to apply them to live monitoring.') }}
+          </StepParagraph>
           <StepCardsRow>
             <CmkLinkCard
               icon-name="main_changes"

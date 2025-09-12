@@ -6,27 +6,32 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { urlEncodeVars } from '@/lib/urls.ts'
-
-import type { LinkedViewContent } from '@/dashboard-wip/types/widget.ts'
+import type { IFrameContent, LinkedViewContent } from '@/dashboard-wip/types/widget.ts'
 
 import DashboardContentIFrame from './DashboardContentIFrame.vue'
 import type { ContentProps } from './types.ts'
 
 const props = defineProps<ContentProps>()
 
-const iframeUrl = computed(() => {
+const iFrameProps = computed(() => {
   const content = props.content as LinkedViewContent
-  const httpVars = {
+  const urlParams = new URLSearchParams({
     dashboard: props.dashboardName,
     widget_id: props.widget_id,
     view_name: content.view_name,
-    context: props.effective_filter_context.filters
+    context: JSON.stringify(props.effective_filter_context.filters)
+  }).toString()
+  const iFrameContent: IFrameContent = {
+    type: 'url',
+    url: `widget_iframe_view.py?${urlParams}`
   }
-  return `widget_iframe_view.py?${urlEncodeVars(httpVars)}`
+  return {
+    ...props,
+    content: iFrameContent
+  }
 })
 </script>
 
 <template>
-  <DashboardContentIFrame :general-settings="general_settings" :iframe-url="iframeUrl" />
+  <DashboardContentIFrame v-bind="iFrameProps" />
 </template>

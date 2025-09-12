@@ -6,7 +6,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { type Ref, computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
-import { urlEncodeVars } from '@/lib/urls.ts'
 import useTimer from '@/lib/useTimer.ts'
 
 import DashboardContentContainer from './DashboardContentContainer.vue'
@@ -30,9 +29,9 @@ const httpVars: Ref<FilterHTTPVars> = computed(() => {
     single_infos: JSON.stringify(props.effective_filter_context.restricted_to_single)
   }
 })
-const sizeVars: Ref<Record<string, number>> = ref({
-  width: 0,
-  height: 0
+const sizeVars: Ref<FilterHTTPVars> = ref({
+  width: '0',
+  height: '0'
 })
 
 const handleRefreshData = (widgetId: string, body: string) => {
@@ -45,7 +44,7 @@ const handleRefreshData = (widgetId: string, body: string) => {
 
 const updateGraph = () => {
   cmkToolkit.ajax.call_ajax('graph_widget.py', {
-    post_data: urlEncodeVars({ ...httpVars.value, ...sizeVars.value }),
+    post_data: new URLSearchParams({ ...httpVars.value, ...sizeVars.value }).toString(),
     method: 'POST',
     response_handler: handleRefreshData,
     handler_data: props.widget_id
@@ -61,8 +60,8 @@ const resizeObserver = new ResizeObserver((entries) => {
   const entry = entries[0]!
 
   const size = entry.contentBoxSize![0]!
-  sizeVars.value.width = size.inlineSize
-  sizeVars.value.height = size.blockSize
+  sizeVars.value.width = String(size.inlineSize)
+  sizeVars.value.height = String(size.blockSize)
 
   updateGraph()
 })

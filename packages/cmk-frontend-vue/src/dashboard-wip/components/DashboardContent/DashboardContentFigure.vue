@@ -16,8 +16,6 @@ import {
   watch
 } from 'vue'
 
-import { urlEncodeVars } from '@/lib/urls.ts'
-
 import { FigureBase } from './cmk_figures.ts'
 import type { ContentProps, FilterHTTPVars } from './types.ts'
 
@@ -120,7 +118,7 @@ const initializeFigure = () => {
     figureType.value,
     `#db-content-figure-${props.widget_id}`,
     ajaxPage,
-    urlEncodeVars(httpVars.value),
+    new URLSearchParams(httpVars.value).toString(),
     props.content,
     updateInterval
   )
@@ -134,7 +132,7 @@ onMounted(async () => {
 
 watch(httpVars, (newHttpVars) => {
   if (figure) {
-    figure.update(ajaxPage, urlEncodeVars(newHttpVars), props.content)
+    figure.update(ajaxPage, new URLSearchParams(newHttpVars).toString(), props.content)
   }
 })
 

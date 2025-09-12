@@ -505,3 +505,21 @@ def test_denied_build_deps() -> None:
 
     found = ["->".join(_) for _ in traverse(graph)]
     assert not found, f"Found denied build dependencies {found}"
+
+
+def test_no_development_packages_in_runtime_requirements() -> None:
+    """Test that development/testing libraries are not included in runtime requirements"""
+    runtime_requirements = get_requirements_libs(repo_path())
+
+    forbidden_prefixes = ["pytest-", "types-"]
+    offending_packages = []
+
+    for package_name in runtime_requirements.keys():
+        for prefix in forbidden_prefixes:
+            if package_name.startswith(prefix):
+                offending_packages.append(package_name)
+
+    assert not offending_packages, (
+        f"The following development/testing libraries should not be "
+        f"in runtime requirements: {offending_packages}"
+    )

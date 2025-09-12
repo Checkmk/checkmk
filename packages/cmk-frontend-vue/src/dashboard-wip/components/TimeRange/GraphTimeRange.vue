@@ -4,8 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
 import type { Ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 
 import { fetchRestAPI } from '@/lib/cmkFetch.ts'
 import usei18n, { untranslated } from '@/lib/i18n'
@@ -16,6 +16,7 @@ import { type Suggestion } from '@/components/suggestions'
 
 import DateRangeFields from './DateRangeFields.vue'
 import DurationFields from './DurationFields.vue'
+import type { PreDefinedTimeRange } from './types'
 
 const { _t } = usei18n()
 
@@ -27,7 +28,7 @@ export interface GraphTimerange {
     from: string
     to: string
   }
-  predefined: null | string
+  predefined: PreDefinedTimeRange | null
   age: null | Age
 }
 
@@ -38,7 +39,8 @@ export interface Age {
   seconds: number
 }
 
-const predefinedTimeranges: Record<string, TranslatedString> = {
+const predefinedTimeranges: Partial<Record<PreDefinedTimeRange, TranslatedString>> = {
+  last_4_hours: _t('The last 4 hours'),
   today: _t('Today'),
   yesterday: _t('Yesterday'),
   '7_days_ago': _t('7 days back (this day last week)'),
@@ -165,12 +167,12 @@ watch(
         age: null
       }
     } else if (selectedOption in predefinedTimeranges) {
-      const predefinedTitle = predefinedTimeranges[selectedOption]
+      const predefinedTitle = predefinedTimeranges[selectedOption as PreDefinedTimeRange]
       if (predefinedTitle) {
         selectedTimerange.value = {
           type: 'predefined',
           title: predefinedTitle,
-          predefined: selectedOption,
+          predefined: selectedOption as PreDefinedTimeRange,
           duration: null,
           date_range: null,
           age: null

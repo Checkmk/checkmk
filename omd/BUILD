@@ -263,6 +263,7 @@ editions = {
     section = "admin",
     tags = ["manual"],
     templates = "//omd/debian:templates",
+    triggers = "//omd/debian:triggers",
     version_file = "//omd/distros:distro_version_file",
 ) for edition in [
     "cre",

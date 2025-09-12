@@ -11,6 +11,7 @@ debian_files = [
     "postrm",
     "preinst",
     "prerm",
+    "triggers",
 ]
 
 [file_from_flag(

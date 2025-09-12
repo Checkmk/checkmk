@@ -20,7 +20,6 @@ const iframeUrl = computed(() => {
   const httpVars = {
     dashboard: props.dashboardName,
     widget_id: props.widget_id,
-    // @ts-expect-error: this is correct, we just need to update the openapi schema
     embedded_id: content.embedded_id,
     context: props.effective_filter_context.filters
   }

@@ -18,7 +18,7 @@ configure_make(
     copts = [
         "-std=c89",
         "-Wno-newline-eof",
-        "-Wno-unknown-warning-option",
+        "-Wno-unknown-warning",
         "-Wno-unused-command-line-argument",
         "-Wno-strict-prototypes",
         "-Wl,-rpath",

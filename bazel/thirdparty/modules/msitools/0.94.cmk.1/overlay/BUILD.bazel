@@ -15,7 +15,7 @@ configure_make(
         "-Wno-cast-align",
         "-Wno-incompatible-pointer-types-discards-qualifiers",
         "-Wno-sometimes-uninitialized",
-        "-Wno-unknown-warning-option",
+        "-Wno-unknown-warning",
         "-Wno-unused-but-set-variable",
     ],
     env = {

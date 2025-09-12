@@ -215,9 +215,7 @@ class NotationFormatter(abc.ABC):
             return []
 
         atoms = (
-            self._compute_small_y_label_atoms
-            if y_end_pos < 1
-            else self._compute_large_y_label_atoms
+            self._compute_small_y_label_atoms if delta < 1 else self._compute_large_y_label_atoms
         )(delta)
 
         if possible_atoms := [

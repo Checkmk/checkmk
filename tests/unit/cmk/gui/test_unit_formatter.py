@@ -808,7 +808,6 @@ def test_decimal_render_y_labels_with_min_y(
     )
 
 
-@pytest.mark.xfail(reason="Reproduction for CMK-25877")
 def test_render_y_labels_small_range_large_offset() -> None:
     assert TimeFormatter(
         symbol="s",

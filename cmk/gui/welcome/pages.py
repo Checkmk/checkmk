@@ -42,7 +42,7 @@ def _get_finished_stages() -> Generator[FinishedEnum]:
     # Creation of a custom dashboard
     for user_id, _dashboard_name in get_all_dashboards().keys():
         if user_id == user.id:
-            yield FinishedEnum.customize_dashboard
+            yield FinishedEnum.create_dashboard
             break
 
 

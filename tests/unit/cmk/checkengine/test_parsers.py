@@ -655,8 +655,12 @@ class TestAgentParser:
             SectionName("selected"): [["7th", "line"], ["8th", "line"]],
         }
         assert ahs.cache_info == {}
+        # we don't expect the piggybacked sections to get filtered:
         assert ahs.piggybacked_raw_data == {
             "piggyback_header": [
+                b"<<<deselected:cached(1000,0)>>>",
+                b"1st line",
+                b"2nd line",
                 b"<<<selected:cached(1000,0)>>>",
                 b"3rd line",
                 b"4th line",

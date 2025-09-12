@@ -59,7 +59,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(`${props.stepId}-curre
         </template>
         <template v-if="currentStep === 0" #content>
           <StepParagraph>
-            {{ _t('On default, there is one contact group available "Everything".') }}
+            {{ _t('By default, there is one contact group available, called "Everything".') }}
             <br />
             {{ _t('Go to Setup > Users > Contact groups to create or edit contact groups.') }}
           </StepParagraph>
@@ -85,7 +85,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(`${props.stepId}-curre
           <StepParagraph>
             {{
               _t(
-                'Each user can belong to multiple contact groups. You can assign them to contact groups in the "Contact groups" section when editing or creating a user'
+                'Each user can belong to multiple contact groups. You can assign them to contact groups in the "Contact groups" section when editing or creating a user.'
               )
             }}
           </StepParagraph>

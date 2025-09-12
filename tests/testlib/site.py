@@ -971,7 +971,7 @@ class Site:
             )
 
     @tracer.instrument("Site.create")
-    def create(self) -> None:
+    def create(self) -> subprocess.CompletedProcess:
         self.install_cmk()
 
         if not self.reuse and self.exists():
@@ -1023,6 +1023,7 @@ class Site:
         self.set_timezone(os.getenv("TZ", "UTC"))
 
         self._disable_autostart()
+        return completed_process
 
     def _ensure_sample_config_is_present(self) -> None:
         if missing_files := self._missing_but_required_wato_files():
@@ -1883,7 +1884,7 @@ class SiteFactory:
     def edition(self) -> TypeCMKEdition:
         return self._package.edition
 
-    def get_site(self, name: str) -> Site:
+    def get_site(self, name: str, create: bool = True) -> Site:
         site = self._site_obj(name)
 
         if self.edition.is_saas_edition():
@@ -1891,7 +1892,8 @@ class SiteFactory:
             # happens on the SaaS environment, where k8s takes care of creating the config files
             # before the site is created.
             create_cse_initial_config()
-        site.create()
+        if create:
+            site.create()
         return site
 
     def initialize_site(

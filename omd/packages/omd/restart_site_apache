@@ -1,0 +1,24 @@
+#!/bin/bash
+
+TARGET_VERSION="###OMD_VERSION###"
+
+restart_site_apache() {
+    for site in /omd/sites/*; do
+        # Each Checkmk package ships its own triggers.
+        # Thus, only sites matching the package version should be restarted.
+        version_link="${site}/version"
+        [ -L "$version_link" ] || continue
+
+        link_target=$(readlink "$version_link")
+        site_version=$(basename "$link_target")
+        [ "$site_version" == "$TARGET_VERSION" ] || continue
+
+        sitename=$(basename "$site")
+        if omd -V "${TARGET_VERSION}" status "${sitename}" apache >/dev/null 2>&1; then
+            echo "Restarting site Apache of '"${sitename}"' due to Apache update."
+            omd -V "${TARGET_VERSION}" restart "${sitename}" apache
+        fi
+    done
+}
+
+restart_site_apache

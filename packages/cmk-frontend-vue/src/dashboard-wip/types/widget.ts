@@ -5,6 +5,8 @@
  */
 import type { components } from '@/lib/rest-api-client/openapi_internal'
 
+export type ComputedWidgetSpecResponse = components['schemas']['ComputedWidgetSpecResponse']
+
 export type WidgetContent = components['schemas']['WidgetContent']
 export type WidgetSizeValue = components['schemas']['WidgetSizeValue']
 export type WidgetGeneralSettings = components['schemas']['WidgetGeneralSettings']

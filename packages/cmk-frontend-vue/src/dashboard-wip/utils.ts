@@ -5,6 +5,7 @@
  */
 import { fetchRestAPI } from '@/lib/cmkFetch.ts'
 
+import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types.ts'
 import type {
   DashboardConstants,
   DashboardMetadata,
@@ -13,6 +14,11 @@ import type {
   ResponsiveGridDashboardDomainObject
 } from '@/dashboard-wip/types/dashboard.ts'
 import type { FilterCollection } from '@/dashboard-wip/types/filter.ts'
+import type {
+  ComputedWidgetSpecResponse,
+  EffectiveWidgetFilterContext,
+  WidgetContent
+} from '@/dashboard-wip/types/widget.ts'
 
 const API_ROOT = 'api/unstable'
 
@@ -54,5 +60,27 @@ export const dashboardAPI = {
     const response = await fetchRestAPI(url, 'GET')
     await response.raiseForStatus()
     return await response.json()
+  },
+  computeWidgetAttributes: async (
+    widgetContent: WidgetContent
+  ): Promise<ComputedWidgetSpecResponse> => {
+    const url = `${API_ROOT}/domain-types/dashboard/actions/compute-widget-attributes/invoke`
+    const response = await fetchRestAPI(url, 'POST', { content: widgetContent })
+    await response.raiseForStatus()
+    return await response.json()
+  }
+}
+
+export const determineWidgetEffectiveFilterContext = async (
+  widgetContent: WidgetContent,
+  filters: ConfiguredFilters,
+  constants: DashboardConstants
+): Promise<EffectiveWidgetFilterContext> => {
+  const resp = await dashboardAPI.computeWidgetAttributes(widgetContent)
+  return {
+    uses_infos: resp.value.filter_context.uses_infos,
+    // @ts-expect-error TODO: change configuredFilters to be <string, string> only
+    filters: filters,
+    restricted_to_single: constants.widgets[widgetContent.type]!.filter_context.restricted_to_single
   }
 }

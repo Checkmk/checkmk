@@ -10,18 +10,23 @@ import CmkIcon from '@/components/CmkIcon.vue'
 import { useErrorBoundary } from '@/components/useErrorBoundary'
 
 import DashboardComponent from '@/dashboard-wip/components/DashboardComponent.vue'
+import DashboardMenuHeader from '@/dashboard-wip/components/DashboardMenuHeader/DashboardMenuHeader.vue'
 import type { FilterDefinition } from '@/dashboard-wip/components/filter/types.ts'
 import { useDashboardFilters } from '@/dashboard-wip/composables/useDashboardFilters.ts'
 import { useDashboardWidgets } from '@/dashboard-wip/composables/useDashboardWidgets.ts'
 import { useDashboardsManager } from '@/dashboard-wip/composables/useDashboardsManager.ts'
-import type { DashboardLayout } from '@/dashboard-wip/types/dashboard.ts'
+import type { DashboardLayout, DashboardMetadata } from '@/dashboard-wip/types/dashboard.ts'
 import type { DashboardPageProperties } from '@/dashboard-wip/types/page.ts'
 import { dashboardAPI } from '@/dashboard-wip/utils.ts'
 
 const { ErrorBoundary: errorBoundary } = useErrorBoundary()
 
 const props = defineProps<DashboardPageProperties>()
+
 const isDashboardEditingMode = ref(false)
+const openDashboardFilterSettings = ref(false)
+const openAddWidgetDialog = ref(false)
+
 const filterCollection = ref<Record<string, FilterDefinition> | null>(null)
 provide('filterCollection', filterCollection)
 
@@ -49,10 +54,37 @@ const dashboardFilters = useDashboardFilters(
 const dashboardWidgets = useDashboardWidgets(
   computed(() => dashboardsManager.activeDashboard.value?.content.widgets)
 )
+
+const handleSelectDashboard = async (dashboard: DashboardMetadata) => {
+  await dashboardsManager.loadDashboard(dashboard.name, dashboard.layout_type as DashboardLayout)
+}
+
+const selectedDashboard = computed(() => {
+  if (!dashboardsManager.activeDashboard.value) {
+    return null
+  }
+
+  return {
+    name: dashboardsManager.activeDashboardName.value!,
+    title: dashboardsManager.activeDashboard.value.general_settings.title.text
+  }
+})
 </script>
 
 <template>
   <errorBoundary>
+    <div>
+      <DashboardMenuHeader
+        :selected-dashboard="selectedDashboard"
+        @open-filter="openDashboardFilterSettings = true"
+        @open-settings="() => {}"
+        @open-widget-workflow="openAddWidgetDialog = true"
+        @save="() => {}"
+        @enter-edit="isDashboardEditingMode = true"
+        @cancel-edit="() => {}"
+        @set-dashboard="handleSelectDashboard"
+      />
+    </div>
     <template v-if="dashboardsManager.isInitialized.value">
       <DashboardComponent
         v-if="dashboardsManager.isInitialized.value"

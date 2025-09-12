@@ -145,6 +145,11 @@ case "$1" in
     exit 0
     ;;
 
+  triggered)
+    echo "Apache update detected: sites must be restarted"
+    /omd/versions/###OMD_VERSION###/lib/omd/restart_site_apache
+    ;;
+
   *)
     echo "postinst called with unknown argument \`$1'" >&2
     exit 1

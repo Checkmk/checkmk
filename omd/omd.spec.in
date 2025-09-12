@@ -234,3 +234,7 @@ else
     rmdir /opt/omd/sites 2>/dev/null || true
     rmdir /opt/omd 2>/dev/null || true
 fi
+
+%triggerpostun -- @APACHE_NAME@
+echo "Apache update detected: sites must be restarted"
+/omd/versions/%{version}/lib/omd/restart_site_apache

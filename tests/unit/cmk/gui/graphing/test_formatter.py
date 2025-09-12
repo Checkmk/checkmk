@@ -808,6 +808,26 @@ def test_decimal_render_y_labels_with_min_y(
     )
 
 
+@pytest.mark.xfail(reason="Reproduction for CMK-25877")
+def test_render_y_labels_small_range_large_offset() -> None:
+    assert TimeFormatter(
+        symbol="s",
+        precision=AutoPrecision(type="auto", digits=2),
+        use_max_digits_for_labels=True,
+    ).render_y_labels(
+        PositiveYRange(start=1.0011975, end=1.2515224999999999),
+        5.0,
+    ) == [
+        Label(0.9500000000000001, "0.95 s"),
+        Label(1.0, "1 s"),
+        Label(1.05, "1.05 s"),
+        Label(1.1, "1.1 s"),
+        Label(1.1500000000000001, "1.15 s"),
+        Label(1.2000000000000002, "1.2 s"),
+        Label(1.25, "1.25 s"),
+    ]
+
+
 @pytest.mark.parametrize(
     "value, expected",
     [

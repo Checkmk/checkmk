@@ -3,6 +3,8 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 
 package(default_visibility = [":__subpackages__"])
 
+exports_files(["dev-requirements.in"])
+
 py_library(
     name = "testlib",
     testonly = True,

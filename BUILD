@@ -77,9 +77,9 @@ compile_requirements_in(
     ],
     requirements = [
         "//cmk:requirements.in",
+        "//tests:dev-requirements.in",
         "//packages:python_requirements",
         "//packages:dev_python_requirements",
-        "//:dev-requirements.in",
     ] + select({
         "@//:gpl_repo": [],
         "@//:gpl+enterprise_repo": [
@@ -106,8 +106,8 @@ compile_requirements_in(
     ],
     requirements = [
         "//cmk:requirements.in",
+        "//tests:dev-requirements.in",
         "//packages:python_requirements",
-        "//:dev-requirements.in",
     ],
 )
 

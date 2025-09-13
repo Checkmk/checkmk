@@ -34,6 +34,7 @@ from cmk.checkengine.summarize import SummaryConfig
 from cmk.fetchers import Mode
 from cmk.fetchers.filecache import AgentFileCache, FileCacheMode, MaxAge
 from cmk.helper_interface import SourceInfo
+from cmk.piggyback.backend import Config as PiggybackConfig
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from tests.testlib.common.repo import qa_test_data_path
@@ -86,7 +87,7 @@ def summarizer(hostname_: HostName) -> CMKSummarizer:
     def _summary_config(host_name: HostName, source_id: str) -> SummaryConfig:
         return SummaryConfig(
             exit_spec={},
-            time_settings=(),
+            piggyback_config=PiggybackConfig(host_name, ()),
             expect_data=False,
         )
 

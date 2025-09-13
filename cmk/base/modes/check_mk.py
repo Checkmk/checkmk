@@ -787,8 +787,6 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
                 selection=NO_SELECTION,
             )
             source_results = summarize(
-                hostname,
-                ipaddress,
                 host_sections,
                 config_cache.summary_config(hostname, source_info.ident),
                 fetcher_type=source_info.fetcher_type,

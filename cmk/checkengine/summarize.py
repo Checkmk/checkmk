@@ -16,14 +16,13 @@ from cmk.ccc.exceptions import (
     MKIPAddressLookupError,
     MKTimeout,
 )
-from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.parser import AgentRawDataSection, HostSections
 from cmk.checkengine.plugins import SectionName
 from cmk.helper_interface import FetcherError, FetcherType, SourceInfo
 from cmk.piggyback.backend import Config as PiggybackConfig
-from cmk.piggyback.backend import PiggybackMetaData, PiggybackTimeSettings
+from cmk.piggyback.backend import PiggybackMetaData
 
 __all__ = ["summarize", "SummarizerFunction", "SummaryConfig"]
 
@@ -33,7 +32,7 @@ class SummaryConfig:
     """User config for summary."""
 
     exit_spec: ExitSpec
-    time_settings: PiggybackTimeSettings
+    piggyback_config: PiggybackConfig
     expect_data: bool
 
 
@@ -45,8 +44,6 @@ class SummarizerFunction(Protocol):
 
 
 def summarize(
-    hostname: HostName,
-    ipaddress: HostAddress | None,
     host_sections: result.Result[HostSections, Exception],
     config: SummaryConfig,
     *,
@@ -56,9 +53,7 @@ def summarize(
         return host_sections.fold(
             ok=lambda host_sections: summarize_piggyback(
                 host_sections=host_sections,
-                hostname=hostname,
-                ipaddress=ipaddress,
-                time_settings=config.time_settings,
+                config=config.piggyback_config,
                 expect_data=config.expect_data,
             ),
             error=lambda exc: summarize_failure(config.exit_spec, exc),
@@ -94,14 +89,11 @@ def summarize_failure(exit_spec: ExitSpec, exc: Exception) -> Sequence[ActiveChe
 def summarize_piggyback(
     *,
     host_sections: HostSections[AgentRawDataSection],
-    hostname: HostName,
-    ipaddress: HostAddress | None,
-    time_settings: PiggybackTimeSettings,
+    config: PiggybackConfig,
     expect_data: bool,
     now: int | None = None,
 ) -> Sequence[ActiveCheckResult]:
     summary_section = SectionName("piggyback_source_summary")
-    config = PiggybackConfig(hostname, time_settings)
     now = int(time.time()) if now is None else now
     if meta_infos := [
         PiggybackMetaData.deserialize(raw_file_info)

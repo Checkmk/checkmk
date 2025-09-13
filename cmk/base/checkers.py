@@ -288,8 +288,6 @@ def _summarize_host_sections(
             )
             for idx, s in enumerate(
                 summarize(
-                    source.hostname,
-                    source.ipaddress,
                     host_sections,
                     config,
                     fetcher_type=source.fetcher_type,

@@ -1635,7 +1635,9 @@ class ConfigCache:
     def summary_config(self, host_name: HostName, source_id: str) -> SummaryConfig:
         return SummaryConfig(
             exit_spec=self.exit_code_spec(host_name, source_id),
-            time_settings=self.get_piggybacked_hosts_time_settings(piggybacked_hostname=host_name),
+            piggyback_config=piggyback_backend.Config(
+                host_name, self.get_piggybacked_hosts_time_settings(piggybacked_hostname=host_name)
+            ),
             expect_data=self.is_piggyback_host(host_name),
         )
 

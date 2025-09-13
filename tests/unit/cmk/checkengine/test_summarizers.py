@@ -16,6 +16,7 @@ from cmk.checkengine.parser import HostSections
 from cmk.checkengine.plugins import SectionName
 from cmk.checkengine.summarize import summarize_failure, summarize_piggyback, summarize_success
 from cmk.helper_interface import FetcherError
+from cmk.piggyback.backend import Config as PiggybackConfig
 from cmk.piggyback.backend import PiggybackMetaData
 
 
@@ -49,18 +50,14 @@ class TestPiggybackSummarizer:
     def test_summarize_missing_data_without_is_piggyback_option(self) -> None:
         assert summarize_piggyback(
             host_sections=HostSections({}),
-            hostname=HostName("hostname"),
-            ipaddress=HostAddress("1.2.3.4"),
-            time_settings=[(("regular_expression", ""), "", 0)],
+            config=PiggybackConfig(HostName("hostname"), [(("regular_expression", ""), "", 0)]),
             expect_data=False,
         ) == [ActiveCheckResult(state=0, summary="Success (but no data found for this host)")]
 
     def test_summarize_missing_data_with_is_piggyback_option(self) -> None:
         assert summarize_piggyback(
             host_sections=HostSections({}),
-            hostname=HostName("hostname"),
-            ipaddress=HostAddress("1.2.3.4"),
-            time_settings=[(("regular_expression", ""), "", 0)],
+            config=PiggybackConfig(HostName("hostname"), [(("regular_expression", ""), "", 0)]),
             expect_data=True,
         ) == [ActiveCheckResult(state=1, summary="Missing data")]
 
@@ -84,9 +81,7 @@ class TestPiggybackSummarizer:
                     ],
                 }
             ),
-            hostname=HostName("hostname"),
-            ipaddress=HostAddress("1.2.3.4"),
-            time_settings=[(None, "max_cache_age", 10)],
+            config=PiggybackConfig(HostName("hostname"), [(None, "max_cache_age", 10)]),
             expect_data=expect_data,
             now=now,
         ) == [
@@ -115,9 +110,7 @@ class TestPiggybackSummarizer:
                     ],
                 }
             ),
-            hostname=HostName("hostname"),
-            ipaddress=HostAddress("1.2.3.4"),
-            time_settings=[(None, "max_cache_age", 10)],
+            config=PiggybackConfig(HostName("hostname"), [(None, "max_cache_age", 10)]),
             expect_data=expect_data,
             now=now,
         ) == [ActiveCheckResult(state=0, summary="Piggyback data not updated by source 'source'")]
@@ -142,13 +135,14 @@ class TestPiggybackSummarizer:
                     ],
                 }
             ),
-            hostname=HostName("hostname"),
-            ipaddress=HostAddress("1.2.3.4"),
-            time_settings=[
-                (None, "max_cache_age", 10),
-                (None, "validity_period", 30),
-                (None, "validity_state", 2),
-            ],
+            config=PiggybackConfig(
+                HostName("hostname"),
+                [
+                    (None, "max_cache_age", 10),
+                    (None, "validity_period", 30),
+                    (None, "validity_state", 2),
+                ],
+            ),
             expect_data=expect_data,
             now=now,
         ) == [

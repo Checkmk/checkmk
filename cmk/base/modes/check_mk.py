@@ -147,7 +147,6 @@ from cmk.utils.paths import configuration_lockfile
 from cmk.utils.rulesets.ruleset_matcher import (
     BundledHostRulesetMatcher,
     RulesetMatcher,
-    RuleSpec,
 )
 from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist
 from cmk.utils.servicename import ServiceName
@@ -1029,41 +1028,11 @@ modes.register(
 
 def mode_cleanup_piggyback() -> None:
     loaded_config = config.load(discovery_rulesets=()).loaded_config
-    max_age = max(
-        _compute_largest_configured_threshold(loaded_config.piggybacked_host_files),
-        loaded_config.piggyback_max_cachefile_age,
-    )
     piggyback_backend.cleanup_piggyback_files(
-        cut_off_timestamp=time.time() - max_age, omd_root=cmk.utils.paths.omd_root
+        loaded_config.piggyback_max_cachefile_age,
+        (r["value"] for r in loaded_config.piggybacked_host_files),
+        cmk.utils.paths.omd_root,
     )
-
-
-def _compute_largest_configured_threshold(rules: Sequence[RuleSpec[Mapping[str, object]]]) -> int:
-    """Compute the time after which any piggybacked data can definitively be removed
-
-    We don't need to know the hosts currently sending data for this, or perform any
-    ruleset matching. Let's just take the largest value that is configured anywhere.
-    """
-    return max(
-        (v for rule in rules for v in _extract_relevant_values(rule["value"])),
-        default=0,
-    )
-
-
-def _extract_relevant_values(rule_value: Mapping[str, object]) -> Sequence[int]:
-    # We only need to look at max_cache_age s.
-    # They are validated to be larger than validity periods.
-    return [
-        i
-        for i in [
-            rule_value.get("global_max_cache_age"),
-            *(
-                v.get("max_cache_age")  #
-                for v in rule_value.get("per_piggybacked_host", ())  # type: ignore[attr-defined]  # just crash if it's not iterable.
-            ),
-        ]
-        if isinstance(i, int)
-    ]
 
 
 modes.register(

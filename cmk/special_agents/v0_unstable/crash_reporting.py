@@ -10,10 +10,7 @@ import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 from cmk.ccc import crash_reporting
 
-CrashReportStore = crash_reporting.CrashReportStore
 
-
-@crash_reporting.crash_report_registry.register
 class AgentCrashReport(crash_reporting.ABCCrashReport[None]):
     @classmethod
     def type(cls) -> Literal["agent"]:
@@ -28,7 +25,7 @@ def create_agent_crash_dump() -> str:
                 cmk_version.get_general_version_infos(cmk.utils.paths.omd_root), None
             ),
         )
-        CrashReportStore().save(crash)
+        crash_reporting.CrashReportStore().save(crash)
         return f"Agent failed - please submit a crash report! (Crash-ID: {crash.ident_to_text()})"
     except Exception:
         return f"Agent failed - failed to create a crash report: {traceback.format_exc()}"

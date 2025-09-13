@@ -24,7 +24,6 @@ from itertools import islice
 from pathlib import Path
 from typing import Any, Final, NotRequired, TypedDict, TypeVar
 
-import cmk.ccc.plugin_registry
 from cmk.ccc import store
 
 SENSITIVE_KEYWORDS = ["token", "secret", "pass", "key"]
@@ -187,17 +186,6 @@ class ABCCrashReport[TDetails](abc.ABC):
         """
         return _get_generic_crash_info(cls.type(), version_info, details)
 
-    @classmethod
-    def deserialize(
-        cls,
-        *,
-        omd_root: Path,
-        serialized: SerializedCrashReport,
-    ) -> ABCCrashReport[TDetails]:
-        """Deserialize the object"""
-        class_ = crash_report_registry[serialized["crash_info"]["crash_type"]]
-        return class_(omd_root=omd_root, crash_info=serialized["crash_info"])
-
     def _serialize_attributes(self) -> dict[str, CrashInfo[TDetails] | bytes]:
         """Serialize object type specific attributes for transport"""
         return {"crash_info": self.crash_info}
@@ -344,11 +332,3 @@ def _format_var_for_export(val: Any, maxdepth: int = 4, maxsize: int = 1024 * 10
             val = val[:maxsize] + f"... ({(size - maxsize)} bytes stripped)"
 
     return val
-
-
-class CrashReportRegistry(cmk.ccc.plugin_registry.Registry[type[ABCCrashReport]]):
-    def plugin_name(self, instance: type[ABCCrashReport]) -> str:
-        return instance.type()
-
-
-crash_report_registry = CrashReportRegistry()

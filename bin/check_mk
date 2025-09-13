@@ -38,7 +38,6 @@ from cmk.base.modes import modes
 from cmk.ccc.crash_reporting import (
     ABCCrashReport,
     BaseDetails,
-    crash_report_registry,
     CrashReportStore,
     VersionInfo,
 )
@@ -67,8 +66,6 @@ init_span_processor(
 )
 
 
-# We probably don't really need to register that here, do we?
-@crash_report_registry.register
 class CrashReport(ABCCrashReport[BaseDetails]):
     @classmethod
     def type(cls) -> str:

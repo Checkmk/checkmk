@@ -30,7 +30,6 @@ from cmk.ccc import tty
 from cmk.ccc.crash_reporting import (
     ABCCrashReport,
     BaseDetails,
-    crash_report_registry,
     CrashInfo,
     CrashReportStore,
     VersionInfo,
@@ -850,7 +849,6 @@ def _float_or_nan(s: str | None) -> str:
         return "U"
 
 
-@crash_report_registry.register
 class CMKBaseCrashReport(ABCCrashReport[BaseDetails]):
     @classmethod
     def type(cls) -> str:

@@ -10,7 +10,6 @@ import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 from cmk.ccc.crash_reporting import (
     ABCCrashReport,
-    CrashReportRegistry,
     CrashReportStore,
     VersionInfo,
 )
@@ -25,10 +24,6 @@ from cmk.gui.logged_in import user
 from cmk.gui.utils import escaping
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri, requested_file_name
-
-
-def register(crash_report_registry: CrashReportRegistry) -> None:
-    crash_report_registry.register(GUICrashReport)
 
 
 class DashletDetails(TypedDict):

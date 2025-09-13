@@ -8,13 +8,11 @@
 from collections.abc import Callable
 
 import cmk.gui.help
-from cmk.ccc.crash_reporting import CrashReportRegistry
 from cmk.ccc.version import edition
 from cmk.gui import (
     activate_menu,
     agent_registration,
     autocompleters,
-    crash_handler,
     crash_reporting,
     default_permissions,
     deprecations,
@@ -116,7 +114,6 @@ from cmk.utils.licensing.registry import register_cre_licensing_handler
 def register(
     main_menu_registry: MainMenuRegistry,
     job_registry: BackgroundJobRegistry,
-    crash_report_registry: CrashReportRegistry,
     permission_section_registry: PermissionSectionRegistry,
     permission_registry: PermissionRegistry,
     sorter_registry: SorterRegistry,
@@ -179,7 +176,6 @@ def register(
         help_about_checkmk_entries,
     )
     activate_menu.register(main_menu_registry)
-    crash_handler.register(crash_report_registry)
     default_permissions.register(permission_section_registry, permission_registry)
     register_cre_licensing_handler()
     painter_options.register(painter_option_registry)

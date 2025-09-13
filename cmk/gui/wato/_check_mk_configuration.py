@@ -5903,7 +5903,7 @@ def _valuespec_piggybacked_host_files():
                 "<b>Got no information from host</b> resp. <b>vanished services</b> if the piggybacked "
                 "data is missing within a check interval. "
                 "This rule helps you to get more control over the piggybacked host data handling. "
-                "The source host names have to be set in the condition field <i>Explicit hosts</i>."
+                "This rules condition is applied to the <b>source</b> hosts."
             ),
             validate=_validate_max_cache_ages_and_validity_periods,
         ),

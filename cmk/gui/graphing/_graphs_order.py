@@ -197,6 +197,8 @@ GRAPHS_ORDER = [
     "connections",
     "time_offset",
     "last_sync_time",
+    "root_delay",
+    "root_dispersion",
     "firewall_connections",
     "time_to_connect",
     "number_of_total_and_running_sessions",

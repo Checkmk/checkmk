@@ -1,0 +1,20 @@
+title: Windows: Time service (w32time) NTP sync information
+agents: windows
+catalog: os/services
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors and provides insight into the Windows Time Service,
+ also known as "w32time". In particular, information about the current
+ synchronization status is provided, including the offset established
+ during the last sync, time of last successful sync, stratum, root delay,
+ root dispersion, and source.
+
+ The output is obtained from the "w32time" command directly, as Windows provides
+ no public API for obtaining this information.
+
+ Alerting parameters can be set using the ruleset "Windows time service".
+
+discovery:
+ One service is created, assuming that the Windows time service is enabled and
+ active on the monitored host.

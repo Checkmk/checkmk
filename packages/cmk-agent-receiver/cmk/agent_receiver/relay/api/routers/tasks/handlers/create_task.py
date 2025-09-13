@@ -17,6 +17,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, RelayNotFoundError, TaskID
+from cmk.agent_receiver.relay.lib.site_auth import UserAuth
 
 
 @dataclasses.dataclass
@@ -27,7 +28,8 @@ class CreateTaskHandler:
     def process(
         self, relay_id: RelayID, task_type: TaskType, task_payload: str, authorization: SecretStr
     ) -> TaskID:
-        if not self.relays_repository.has_relay(relay_id, authorization):
+        auth = UserAuth(authorization)
+        if not self.relays_repository.has_relay(relay_id, auth):
             raise RelayNotFoundError(relay_id)
         now = datetime.now()
         task = Task(

@@ -46,6 +46,7 @@ py_library(
         "cmk/agent_receiver/relay/api/routers/tasks/serializers.py",
         "cmk/agent_receiver/relay/lib/relays_repository.py",
         "cmk/agent_receiver/relay/lib/shared_types.py",
+        "cmk/agent_receiver/relay/lib/site_auth.py",
         "cmk/agent_receiver/utils.py",
         "cmk/agent_receiver/worker.py",
     ],

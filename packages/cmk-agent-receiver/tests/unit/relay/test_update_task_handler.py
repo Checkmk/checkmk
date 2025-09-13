@@ -21,6 +21,7 @@ from cmk.agent_receiver.relay.lib.shared_types import (
     TaskID,
     TaskNotFoundError,
 )
+from cmk.agent_receiver.relay.lib.site_auth import UserAuth
 
 
 def test_process_update_task(
@@ -74,7 +75,8 @@ def test_process_update_task_non_existent_task(
 ) -> None:
     # arrange
     # register a relay in the repository
-    relay_id = relays_repository.add_relay(test_authorization, alias="test-relay")
+    auth = UserAuth(test_authorization)
+    relay_id = relays_repository.add_relay(auth, alias="test-relay")
 
     task_id = TaskID("non-existent-task-id")
 

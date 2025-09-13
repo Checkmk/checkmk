@@ -359,7 +359,10 @@ check_plugin_azure_redis_server_load = CheckPlugin(
                 sustained_label="Server under high load for",
             ),
         ],
+        check_levels=check_levels_v2,
     ),
     check_ruleset_name="azure_redis_server_load",
-    check_default_parameters={},
+    check_default_parameters={
+        "levels": ("fixed", (85.0, 90.0)),
+    },
 )

@@ -3462,15 +3462,11 @@ class ConfigCache:
 
         raise NotImplementedError(effective_mode)
 
-    def get_piggybacked_hosts_time_settings(  # TODO: None case is obsolete.
-        self, piggybacked_hostname: HostName | None = None
+    def get_piggybacked_hosts_time_settings(
+        self, piggybacked_hostname: HostName
     ) -> piggyback_backend.PiggybackTimeSettings:
-        sources = (
-            piggyback_backend.get_all_current_piggyback_sources(cmk.utils.paths.omd_root)
-            if piggybacked_hostname is None
-            else piggyback_backend.get_current_piggyback_sources_of_host(
-                cmk.utils.paths.omd_root, piggybacked_hostname
-            )
+        sources = piggyback_backend.get_current_piggyback_sources_of_host(
+            cmk.utils.paths.omd_root, piggybacked_hostname
         )
         return [
             *(

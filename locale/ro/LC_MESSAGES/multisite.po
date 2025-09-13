@@ -35816,6 +35816,10 @@ msgstr "Callable așteptat nevalabil pentru %s la idx %d: %r"
 msgid "Invalid extension type, supported types are: %s"
 msgstr "Tip de fișier nevalabil așteptat %s primit '%s'"
 
+#, fuzzy, python-format
+msgid "Invalid figure content: %s"
+msgstr "Conexiune de utilizator invalidă: %s"
+
 msgid "Invalid file name"
 msgstr "Nume de fișier invalid"
 
@@ -35840,6 +35844,10 @@ msgid ""
 "Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
 "Nume de dosar invalid. Sunt permise numai caracterele a-z, A-Z, 0-9, _ și -."
+
+#, fuzzy, python-format
+msgid "Invalid graph content: %s"
+msgstr "Tip de grafic invalid: %s"
 
 #, python-format
 msgid "Invalid graph type '%s'"
@@ -75540,6 +75548,10 @@ msgstr "Praguri"
 msgid "Threshold for slow views"
 msgstr "Pragul pentru vizualizări lente"
 
+#, fuzzy
+msgid "Threshold on number of connections"
+msgstr "Numărul absolut de conexiuni"
+
 msgid "Thresholds"
 msgstr "Praguri"
 
@@ -91209,6 +91221,60 @@ msgid "required"
 msgstr "Port necesar"
 
 #, fuzzy
+msgid "Dashboard filter"
+msgstr "Element de tablou de bord"
+
+#, fuzzy
+msgid "Close filter configuration"
+msgstr "Configurația filtrului Iptables"
+
+#, fuzzy
+msgid "Clear search"
+msgstr "Căutarea regulilor"
+
+msgid "Filters included by dashboard owner"
+msgstr ""
+
+#, fuzzy
+msgid "You can override these by adding a quick filter"
+msgstr "Nu puteți suprascrie grupul de etichete încorporat \"%s\"."
+
+#, fuzzy
+msgid "Host filter"
+msgstr "Fișiere jurnal gazdă"
+
+#, fuzzy
+msgid "Select from list"
+msgstr "Selectați tipul din listă"
+
+# georgem ##############
+#, fuzzy
+msgid "Service filter"
+msgstr "Filtre de service"
+
+#, fuzzy
+msgid "Reset to saved filters"
+msgstr "Eliminați filtrul"
+
+msgid "Runtime filters are required to load data."
+msgstr ""
+
+msgid "Values apply across all widgets."
+msgstr ""
+
+#, fuzzy
+msgid "Remove row"
+msgstr "Eliminat: %s"
+
+#, fuzzy
+msgid "Apply to dashboard"
+msgstr "Adăugați la tabloul de bord"
+
+#, fuzzy
+msgid "Edit required runtime filters"
+msgstr "Filtre de context necesare"
+
+#, fuzzy
 msgid "Settings Menu"
 msgstr "Setari"
 
@@ -91308,16 +91374,8 @@ msgid "Select value..."
 msgstr "Selectați vizualizarea"
 
 #, fuzzy
-msgid "Remove row"
-msgstr "Eliminat: %s"
-
-#, fuzzy
 msgid "Search Filter"
 msgstr "Filtru de căutare"
-
-#, fuzzy
-msgid "Clear search"
-msgstr "Căutarea regulilor"
 
 #, fuzzy
 msgid "No filters found matching"

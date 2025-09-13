@@ -33481,6 +33481,10 @@ msgstr "%s の期待される呼び出し（idx %d） が無効です: %r"
 msgid "Invalid extension type, supported types are: %s"
 msgstr "無効な拡張子タイプです：%s"
 
+#, fuzzy, python-format
+msgid "Invalid figure content: %s"
+msgstr "無効なユーザー接続: %s"
+
 msgid "Invalid file name"
 msgstr "無効なファイル名"
 
@@ -33505,6 +33509,10 @@ msgid ""
 "Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
 "フォルダー名が無効です。文字 a-z, A-Z, 0-9, _ および - のみが許可されます。"
+
+#, fuzzy, python-format
+msgid "Invalid graph content: %s"
+msgstr "無効なグラフタイプ: %s"
 
 #, python-format
 msgid "Invalid graph type '%s'"
@@ -70760,6 +70768,10 @@ msgstr "しきい値"
 msgid "Threshold for slow views"
 msgstr "スロービューのしきい値"
 
+#, fuzzy
+msgid "Threshold on number of connections"
+msgstr "接続の絶対数"
+
 msgid "Thresholds"
 msgstr "しきい値"
 
@@ -85175,6 +85187,59 @@ msgid "required"
 msgstr "必須"
 
 #, fuzzy
+msgid "Dashboard filter"
+msgstr "ダッシュボード要素"
+
+#, fuzzy
+msgid "Close filter configuration"
+msgstr "Iptablesフィルター構成"
+
+#, fuzzy
+msgid "Clear search"
+msgstr "ルール検索"
+
+msgid "Filters included by dashboard owner"
+msgstr ""
+
+#, fuzzy
+msgid "You can override these by adding a quick filter"
+msgstr "組み込まれたタググループ\"%s \"を上書きすることはできません。"
+
+#, fuzzy
+msgid "Host filter"
+msgstr "ホストフィルター"
+
+#, fuzzy
+msgid "Select from list"
+msgstr "リストからタイプを選択"
+
+#, fuzzy
+msgid "Service filter"
+msgstr "サービスフィルター"
+
+#, fuzzy
+msgid "Reset to saved filters"
+msgstr "フィルタを取り外します"
+
+msgid "Runtime filters are required to load data."
+msgstr ""
+
+msgid "Values apply across all widgets."
+msgstr ""
+
+#, fuzzy
+msgid "Remove row"
+msgstr "削除：%r"
+
+#, fuzzy
+msgid "Apply to dashboard"
+msgstr "ダッシュボードに追加"
+
+#, fuzzy
+msgid "Edit required runtime filters"
+msgstr "必要なコンテキストフィルター"
+
+#, fuzzy
 msgid "Settings Menu"
 msgstr "設定"
 
@@ -85274,16 +85339,8 @@ msgid "Select value..."
 msgstr "ビューを選択"
 
 #, fuzzy
-msgid "Remove row"
-msgstr "削除：%r"
-
-#, fuzzy
 msgid "Search Filter"
 msgstr "検索フィルター"
-
-#, fuzzy
-msgid "Clear search"
-msgstr "ルール検索"
 
 #, fuzzy
 msgid "No filters found matching"

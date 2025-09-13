@@ -331,6 +331,18 @@ def resource_fixture_but(**kwargs):
             ],
             id="redis server load (no params)",
         ),
+        pytest.param(
+            resource_fixture_but(maximum_serverLoad=87.0),
+            azure_redis.check_plugin_azure_redis_server_load.check_default_parameters,
+            azure_redis.check_plugin_azure_redis_server_load,
+            [
+                Result(
+                    state=State.WARN, summary="Server load: 87.00% (warn/crit at 85.00%/90.00%)"
+                ),
+                Metric("azure_redis_server_load", 87.0, levels=(85.0, 90.0)),
+            ],
+            id="redis server load (no params, default warn threshold)",
+        ),
     ],
 )
 def test_check_azure_redis_check_functions(

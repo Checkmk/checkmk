@@ -12,10 +12,7 @@ from cmk.ccc.version import get_general_version_infos
 from cmk.piggyback.hub import main
 from cmk.utils.paths import omd_root
 
-CrashReportStore = crash_reporting.CrashReportStore
 
-
-@crash_reporting.crash_report_registry.register
 class PiggybackHubCrashReport(crash_reporting.ABCCrashReport[None]):
     @classmethod
     def type(cls) -> Literal["piggyback-hub"]:
@@ -30,7 +27,7 @@ def create_crash_report_callback() -> str:
                 get_general_version_infos(omd_root), None
             ),
         )
-        CrashReportStore().save(crash)
+        crash_reporting.CrashReportStore().save(crash)
         return f"Please submit a crash report! (Crash-ID: {crash.ident_to_text()})"
     except Exception:
         return f"Failed to create a crash report: {traceback.format_exc()}"

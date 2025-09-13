@@ -5,12 +5,8 @@
 
 from pathlib import Path
 
-from cmk.ccc.crash_reporting import crash_report_registry, VersionInfo
-from cmk.ec.crash_reporting import CrashReportStore, ECCrashReport
-
-
-def test_ec_crash_report_registry() -> None:
-    assert crash_report_registry["ec"] == ECCrashReport
+from cmk.ccc.crash_reporting import CrashReportStore, VersionInfo
+from cmk.ec.crash_reporting import ECCrashReport
 
 
 def test_ec_crash_report_from_exception(tmp_path: Path) -> None:

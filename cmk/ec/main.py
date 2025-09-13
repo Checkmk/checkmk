@@ -39,6 +39,7 @@ from setproctitle import setthreadtitle
 import cmk.ccc.daemon
 import cmk.ccc.profile
 from cmk.ccc import store
+from cmk.ccc.crash_reporting import CrashReportStore
 from cmk.ccc.exceptions import MKException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import omd_site
@@ -59,7 +60,7 @@ from .config import (
     Rule,
 )
 from .core_queries import HostInfo, query_hosts_scheduled_downtime_depth
-from .crash_reporting import CrashReportStore, ECCrashReport
+from .crash_reporting import ECCrashReport
 from .event import create_events_from_syslog_messages, Event, scrub_string
 from .helpers import ECLock, parse_bytes_into_syslog_messages
 from .history import ActiveHistoryPeriod, get_logfile, History, HistoryWhat, quote_tab, TimedHistory

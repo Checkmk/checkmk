@@ -22,8 +22,6 @@ from cmk.piggyback.backend import get_messages_for
 from cmk.snmplib import SNMPBackendEnum
 from cmk.utils.servicename import ServiceName
 
-CrashReportStore = crash_reporting.CrashReportStore
-
 
 def create_section_crash_dump(
     *,
@@ -50,7 +48,7 @@ def create_section_crash_dump(
             snmp_info=_read_snmp_info(host_name),
             agent_output=_read_agent_output(host_name) if rtc_package is None else rtc_package,
         )
-        CrashReportStore().save(crash)
+        crash_reporting.CrashReportStore().save(crash)
         return f"{text} - please submit a crash report! (Crash-ID: {crash.ident_to_text()})"
     except Exception:
         if cmk.ccc.debug.enabled():
@@ -96,7 +94,7 @@ def create_check_crash_dump(
             snmp_info=_read_snmp_info(host_name),
             agent_output=_read_agent_output(host_name) if rtc_package is None else rtc_package,
         )
-        CrashReportStore().save(crash)
+        crash_reporting.CrashReportStore().save(crash)
         text += " (Crash-ID: %s)" % crash.ident_to_text()
         return text
     except Exception:
@@ -138,7 +136,6 @@ class SectionDetails(TypedDict):
     section_content: Sequence[object]
 
 
-@crash_reporting.crash_report_registry.register
 class SectionCrashReport(CrashReportWithAgentOutput[SectionDetails]):
     @staticmethod
     def type() -> Literal["section"]:
@@ -159,7 +156,6 @@ class CheckDetails(TypedDict):
     description: str
 
 
-@crash_reporting.crash_report_registry.register
 class CheckCrashReport(CrashReportWithAgentOutput[CheckDetails]):
     @staticmethod
     def type() -> Literal["check"]:

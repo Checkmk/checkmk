@@ -35998,6 +35998,10 @@ msgstr "Appelable attendu non valide pour %s à idx %d : %r"
 msgid "Invalid extension type, supported types are: %s"
 msgstr "Type de perfomètre non valide : %s"
 
+#, fuzzy, python-format
+msgid "Invalid figure content: %s"
+msgstr "Connexion utilisateur non valide : %s"
+
 msgid "Invalid file name"
 msgstr "Nom de fichier non valide"
 
@@ -36023,6 +36027,10 @@ msgid ""
 msgstr ""
 "Nom de dossier non valide. Seuls les caractères a-z, A-Z, 0-9, _ et - sont "
 "autorisés."
+
+#, fuzzy, python-format
+msgid "Invalid graph content: %s"
+msgstr "Type de graphique non valide : %s"
 
 #, python-format
 msgid "Invalid graph type '%s'"
@@ -75938,6 +75946,10 @@ msgstr "Seuils"
 msgid "Threshold for slow views"
 msgstr "Seuil pour les vues lentes"
 
+#, fuzzy
+msgid "Threshold on number of connections"
+msgstr "Nombre absolu de connexions"
+
 msgid "Thresholds"
 msgstr "Seuils"
 
@@ -91803,6 +91815,59 @@ msgid "required"
 msgstr "Port requis"
 
 #, fuzzy
+msgid "Dashboard filter"
+msgstr "Élément du tableau de bord"
+
+#, fuzzy
+msgid "Close filter configuration"
+msgstr "Configuration du filtre Iptables"
+
+#, fuzzy
+msgid "Clear search"
+msgstr "Recherche de règles"
+
+msgid "Filters included by dashboard owner"
+msgstr ""
+
+#, fuzzy
+msgid "You can override these by adding a quick filter"
+msgstr "Vous ne pouvez pas remplacer le groupe de balises intégré \"%s\" ;."
+
+#, fuzzy
+msgid "Host filter"
+msgstr "Fichiers journaux des hôtes"
+
+#, fuzzy
+msgid "Select from list"
+msgstr "Sélectionner des fichiers individuels dans la liste"
+
+#, fuzzy
+msgid "Service filter"
+msgstr "Filtres de service"
+
+#, fuzzy
+msgid "Reset to saved filters"
+msgstr "Supprimer le filtre"
+
+msgid "Runtime filters are required to load data."
+msgstr ""
+
+msgid "Values apply across all widgets."
+msgstr ""
+
+#, fuzzy
+msgid "Remove row"
+msgstr "Supprimé : %s"
+
+#, fuzzy
+msgid "Apply to dashboard"
+msgstr "Lien vers le tableau de bord"
+
+#, fuzzy
+msgid "Edit required runtime filters"
+msgstr "Filtres contextuels requis"
+
+#, fuzzy
 msgid "Settings Menu"
 msgstr "Paramètres"
 
@@ -91902,16 +91967,8 @@ msgid "Select value..."
 msgstr "Sélectionner la vue"
 
 #, fuzzy
-msgid "Remove row"
-msgstr "Supprimé : %s"
-
-#, fuzzy
 msgid "Search Filter"
 msgstr "Filtre de recherche"
-
-#, fuzzy
-msgid "Clear search"
-msgstr "Recherche de règles"
 
 #, fuzzy
 msgid "No filters found matching"

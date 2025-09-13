@@ -35710,6 +35710,10 @@ msgstr "Ongeldig verwacht callable voor %s op idx %d: %r"
 msgid "Invalid extension type, supported types are: %s"
 msgstr "Ongeldig fixel element type '%s'"
 
+#, fuzzy, python-format
+msgid "Invalid figure content: %s"
+msgstr "Ongeldige gebruikersverbinding: %s"
+
 msgid "Invalid file name"
 msgstr "Ongeldige bestandsnaam"
 
@@ -35735,6 +35739,10 @@ msgid ""
 "Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
 "Ongeldige mapnaam. Alleen de tekens a-z, A-Z, 0-9, _ en - zijn toegestaan."
+
+#, fuzzy, python-format
+msgid "Invalid graph content: %s"
+msgstr "Ongeldig grafiektype: %s"
 
 #, python-format
 msgid "Invalid graph type '%s'"
@@ -75265,6 +75273,10 @@ msgstr "Drempels"
 msgid "Threshold for slow views"
 msgstr "Drempel voor langzame weergave"
 
+#, fuzzy
+msgid "Threshold on number of connections"
+msgstr "Absoluut aantal verbindingen"
+
 msgid "Thresholds"
 msgstr "Drempels"
 
@@ -90988,6 +91000,59 @@ msgid "required"
 msgstr "Vereiste poort"
 
 #, fuzzy
+msgid "Dashboard filter"
+msgstr "Dashboard-element"
+
+#, fuzzy
+msgid "Close filter configuration"
+msgstr "Iptables filter configuratie"
+
+#, fuzzy
+msgid "Clear search"
+msgstr "Regel zoeken"
+
+msgid "Filters included by dashboard owner"
+msgstr ""
+
+#, fuzzy
+msgid "You can override these by adding a quick filter"
+msgstr "U kunt de ingebouwde tag groep \"%s\" niet overschrijven."
+
+#, fuzzy
+msgid "Host filter"
+msgstr "Logbestanden van hosts"
+
+#, fuzzy
+msgid "Select from list"
+msgstr "Selecteer individuele bestanden uit de lijst"
+
+#, fuzzy
+msgid "Service filter"
+msgstr "Service Filters"
+
+#, fuzzy
+msgid "Reset to saved filters"
+msgstr "Verwijder filter"
+
+msgid "Runtime filters are required to load data."
+msgstr ""
+
+msgid "Values apply across all widgets."
+msgstr ""
+
+#, fuzzy
+msgid "Remove row"
+msgstr "Verwijderd: %s"
+
+#, fuzzy
+msgid "Apply to dashboard"
+msgstr "Link naar dashboard"
+
+#, fuzzy
+msgid "Edit required runtime filters"
+msgstr "Vereiste context filters"
+
+#, fuzzy
 msgid "Settings Menu"
 msgstr "Instellingen"
 
@@ -91087,16 +91152,8 @@ msgid "Select value..."
 msgstr "Weergave kiezen"
 
 #, fuzzy
-msgid "Remove row"
-msgstr "Verwijderd: %s"
-
-#, fuzzy
 msgid "Search Filter"
 msgstr "Zoekfilter"
-
-#, fuzzy
-msgid "Clear search"
-msgstr "Regel zoeken"
 
 #, fuzzy
 msgid "No filters found matching"

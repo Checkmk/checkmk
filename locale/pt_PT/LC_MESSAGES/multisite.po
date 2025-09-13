@@ -35703,6 +35703,10 @@ msgstr "Inválido esperado exigível para %s em idx %d: %r"
 msgid "Invalid extension type, supported types are: %s"
 msgstr "Tipo de ficheiro inválido esperado %s recebido '%s'"
 
+#, fuzzy, python-format
+msgid "Invalid figure content: %s"
+msgstr "Conexão de usuário inválida: %s"
+
 msgid "Invalid file name"
 msgstr "Nome de arquivo inválido"
 
@@ -35728,6 +35732,10 @@ msgid ""
 msgstr ""
 "Nome de pasta inválido. Apenas os caracteres a-z, A-Z, 0-9, _ e - são "
 "permitidos."
+
+#, fuzzy, python-format
+msgid "Invalid graph content: %s"
+msgstr "Tipo de gráfico inválido: %s"
 
 #, python-format
 msgid "Invalid graph type '%s'"
@@ -75216,6 +75224,10 @@ msgstr "Limiares"
 msgid "Threshold for slow views"
 msgstr "Limiar para vistas lentas"
 
+#, fuzzy
+msgid "Threshold on number of connections"
+msgstr "Número absoluto de ligações"
+
 msgid "Thresholds"
 msgstr "Limiares"
 
@@ -90876,6 +90888,59 @@ msgid "required"
 msgstr "Porto necessário"
 
 #, fuzzy
+msgid "Dashboard filter"
+msgstr "Elemento de tablier"
+
+#, fuzzy
+msgid "Close filter configuration"
+msgstr "Configuração do filtro Iptables"
+
+#, fuzzy
+msgid "Clear search"
+msgstr "Pesquisa de regras"
+
+msgid "Filters included by dashboard owner"
+msgstr ""
+
+#, fuzzy
+msgid "You can override these by adding a quick filter"
+msgstr "Não é possível substituir o grupo de etiquetas incorporado \"%s\"."
+
+#, fuzzy
+msgid "Host filter"
+msgstr "Arquivos de log do host"
+
+#, fuzzy
+msgid "Select from list"
+msgstr "Selecione arquivos individuais da lista"
+
+#, fuzzy
+msgid "Service filter"
+msgstr "Filtros de serviço"
+
+#, fuzzy
+msgid "Reset to saved filters"
+msgstr "Remover filtro"
+
+msgid "Runtime filters are required to load data."
+msgstr ""
+
+msgid "Values apply across all widgets."
+msgstr ""
+
+#, fuzzy
+msgid "Remove row"
+msgstr "Removido: %s"
+
+#, fuzzy
+msgid "Apply to dashboard"
+msgstr "Ligação ao tablier"
+
+#, fuzzy
+msgid "Edit required runtime filters"
+msgstr "Filtros de contexto requeridos"
+
+#, fuzzy
 msgid "Settings Menu"
 msgstr "Configurações"
 
@@ -90975,16 +91040,8 @@ msgid "Select value..."
 msgstr "Seleccionar vista"
 
 #, fuzzy
-msgid "Remove row"
-msgstr "Removido: %s"
-
-#, fuzzy
 msgid "Search Filter"
 msgstr "Filtro de busca"
-
-#, fuzzy
-msgid "Clear search"
-msgstr "Pesquisa de regras"
 
 #, fuzzy
 msgid "No filters found matching"

@@ -9,6 +9,7 @@ from pydantic import SecretStr
 
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, RelayNotFoundError
+from cmk.agent_receiver.relay.lib.site_auth import UserAuth
 
 
 @dataclasses.dataclass
@@ -16,7 +17,8 @@ class UnregisterRelayHandler:
     relays_repository: RelaysRepository
 
     def process(self, relay_id: RelayID, authorization: SecretStr) -> None:
-        if not self.relays_repository.has_relay(relay_id, authorization):
+        auth = UserAuth(authorization)
+        if not self.relays_repository.has_relay(relay_id, auth):
             raise RelayNotFoundError(relay_id)
 
-        self.relays_repository.remove_relay(relay_id, authorization)
+        self.relays_repository.remove_relay(relay_id, auth)

@@ -15,6 +15,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, RelayNotFoundError
+from cmk.agent_receiver.relay.lib.site_auth import UserAuth
 
 
 def test_process_create_task(
@@ -28,7 +29,8 @@ def test_process_create_task(
     task_payload = '{"url": "http://example.com/data"}'
 
     # Register a relay first
-    relay_id = relays_repository.add_relay(test_authorization, alias="test-relay")
+    auth = UserAuth(test_authorization)
+    relay_id = relays_repository.add_relay(auth, alias="test-relay")
 
     # act
     task_id = create_task_handler.process(

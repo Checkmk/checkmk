@@ -8,9 +8,9 @@ from http import HTTPStatus
 from typing import final
 
 import httpx
-from pydantic import SecretStr
 
 from cmk.agent_receiver.relay.lib.shared_types import RelayID
+from cmk.agent_receiver.relay.lib.site_auth import SiteAuth
 
 
 @final
@@ -41,10 +41,10 @@ class RelaysRepository:
         siteid = os.environ["OMD_SITE"]
         return cls(client, siteid)
 
-    def add_relay(self, authorization: SecretStr, alias: str) -> RelayID:
+    def add_relay(self, auth: SiteAuth, alias: str) -> RelayID:
         resp = self.client.post(
             "/domain-types/relay/collections/all",
-            headers={"Authorization": authorization.get_secret_value()},
+            auth=auth,
             json={"alias": alias, "siteid": self.siteid},
         )
         if resp.status_code != HTTPStatus.OK:
@@ -52,22 +52,8 @@ class RelaysRepository:
             raise CheckmkAPIError(resp.text)
         return resp.json()["id"]
 
-    def list_relays(self, authorization: SecretStr) -> list[RelayID]:
-        resp = self.client.get(
-            "/domain-types/relay/collections/all",
-            headers={"Authorization": authorization.get_secret_value()},
-        )
-        if resp.status_code != HTTPStatus.OK:
-            logger.error("could not list relays %s : %s", resp.status_code, resp.text)
-            raise CheckmkAPIError(resp.text)
-        values = resp.json()["value"]
-        return [v["id"] for v in values]
-
-    def has_relay(self, relay_id: RelayID, authorization: SecretStr) -> bool:
-        resp = self.client.get(
-            url=f"objects/relay/{relay_id}",
-            headers={"Authorization": authorization.get_secret_value()},
-        )
+    def has_relay(self, relay_id: RelayID, auth: SiteAuth) -> bool:
+        resp = self.client.get(url=f"objects/relay/{relay_id}", auth=auth)
         if resp.status_code == HTTPStatus.NOT_FOUND:
             return False
         if resp.status_code == HTTPStatus.OK:
@@ -75,11 +61,8 @@ class RelaysRepository:
         logger.error("could not check if relay exists %s : %s", resp.status_code, resp.text)
         raise CheckmkAPIError(resp.text)
 
-    def remove_relay(self, relay_id: RelayID, authorization: SecretStr) -> None:
-        resp = self.client.delete(
-            url=f"objects/relay/{relay_id}",
-            headers={"Authorization": authorization.get_secret_value()},
-        )
+    def remove_relay(self, relay_id: RelayID, auth: SiteAuth) -> None:
+        resp = self.client.delete(url=f"objects/relay/{relay_id}", auth=auth)
         if resp.status_code != HTTPStatus.NO_CONTENT:
             logger.error("could not delete relay %s : %s", resp.status_code, resp.text)
             raise CheckmkAPIError(resp.text)

@@ -20,6 +20,7 @@ from cmk.agent_receiver.relay.lib.shared_types import (
     RelayNotFoundError,
     TaskID,
 )
+from cmk.agent_receiver.relay.lib.site_auth import UserAuth
 
 
 @dataclasses.dataclass
@@ -35,7 +36,8 @@ class UpdateTaskHandler:
         result_payload: str,
         authorization: SecretStr,
     ) -> Task:
-        if not self.relays_repository.has_relay(relay_id, authorization):
+        auth = UserAuth(authorization)
+        if not self.relays_repository.has_relay(relay_id, auth):
             raise RelayNotFoundError(relay_id)
         return self._update_task(relay_id, task_id, result_type, result_payload)
 

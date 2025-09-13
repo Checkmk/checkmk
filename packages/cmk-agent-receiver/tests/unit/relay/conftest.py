@@ -34,6 +34,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, TaskID
+from cmk.agent_receiver.relay.lib.site_auth import UserAuth
 
 
 def create_relay_mock_transport() -> httpx.MockTransport:
@@ -166,7 +167,8 @@ def populated_repos(
 ) -> tuple[RelayID, Task, RelaysRepository, TasksRepository]:
     # arrange
     # register a relay in the repository
-    relay_id = relays_repository.add_relay(test_authorization, alias="test-relay")
+    auth = UserAuth(test_authorization)
+    relay_id = relays_repository.add_relay(auth, alias="test-relay")
 
     # insert a task in the repository
     now = datetime.now()

@@ -19,6 +19,7 @@ from cmk.agent_receiver.relay.lib.shared_types import (
     RelayNotFoundError,
     TaskID,
 )
+from cmk.agent_receiver.relay.lib.site_auth import UserAuth
 
 
 @dataclasses.dataclass
@@ -29,7 +30,8 @@ class GetRelayTasksHandler:
     def process(
         self, relay_id: RelayID, status: TaskStatus | None, authorization: SecretStr
     ) -> list[Task]:
-        if not self.relay_repository.has_relay(relay_id, authorization):
+        auth = UserAuth(authorization)
+        if not self.relay_repository.has_relay(relay_id, auth):
             raise RelayNotFoundError(relay_id)
         return self._get_tasks(relay_id, status)
 
@@ -48,7 +50,8 @@ class GetRelayTaskHandler:
     relay_repository: RelaysRepository
 
     def process(self, relay_id: RelayID, task_id: TaskID, authorization: SecretStr) -> Task:
-        if not self.relay_repository.has_relay(relay_id, authorization):
+        auth = UserAuth(authorization)
+        if not self.relay_repository.has_relay(relay_id, auth):
             raise RelayNotFoundError(relay_id)
         return self._get_task(relay_id, task_id)
 

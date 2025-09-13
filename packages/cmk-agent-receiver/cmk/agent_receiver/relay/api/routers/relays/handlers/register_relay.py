@@ -8,6 +8,7 @@ from pydantic import SecretStr
 
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.shared_types import RelayID
+from cmk.agent_receiver.relay.lib.site_auth import UserAuth
 
 
 @dataclasses.dataclass
@@ -15,4 +16,5 @@ class RegisterRelayHandler:
     relays_repository: RelaysRepository
 
     def process(self, authorization: SecretStr, alias: str) -> RelayID:
-        return self.relays_repository.add_relay(authorization, alias)
+        auth = UserAuth(authorization)
+        return self.relays_repository.add_relay(auth, alias)

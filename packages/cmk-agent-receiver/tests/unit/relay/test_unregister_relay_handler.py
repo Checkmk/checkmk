@@ -11,6 +11,7 @@ from cmk.agent_receiver.relay.api.routers.relays.handlers.unregister_relay impor
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, RelayNotFoundError
+from cmk.agent_receiver.relay.lib.site_auth import UserAuth
 
 
 def test_process_removes_relay_id_from_registry(
@@ -19,12 +20,13 @@ def test_process_removes_relay_id_from_registry(
     test_authorization: SecretStr,
 ) -> None:
     # First add a relay to remove
-    relay_id = relays_repository.add_relay(test_authorization, alias="test-relay")
-    assert relays_repository.has_relay(relay_id, test_authorization)
+    auth = UserAuth(test_authorization)
+    relay_id = relays_repository.add_relay(auth, alias="test-relay")
+    assert relays_repository.has_relay(relay_id, auth)
 
     # Now unregister it
     unregister_relay_handler.process(relay_id, test_authorization)
-    assert not relays_repository.has_relay(relay_id, test_authorization)
+    assert not relays_repository.has_relay(relay_id, auth)
 
 
 def test_process_removes_non_existent_relay_id(
@@ -33,8 +35,9 @@ def test_process_removes_non_existent_relay_id(
 ) -> None:
     # Try to unregister a non-existent relay
     relay_id = RelayID("non-existent-relay-id")
+    auth = UserAuth(test_authorization)
 
-    assert not unregister_relay_handler.relays_repository.has_relay(relay_id, test_authorization)
+    assert not unregister_relay_handler.relays_repository.has_relay(relay_id, auth)
     with pytest.raises(RelayNotFoundError):
         unregister_relay_handler.process(relay_id, test_authorization)
-    assert not unregister_relay_handler.relays_repository.has_relay(relay_id, test_authorization)
+    assert not unregister_relay_handler.relays_repository.has_relay(relay_id, auth)

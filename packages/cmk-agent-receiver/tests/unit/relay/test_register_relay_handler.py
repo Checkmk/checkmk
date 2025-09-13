@@ -8,6 +8,7 @@ from pydantic import SecretStr
 from cmk.agent_receiver.relay.api.routers.relays.handlers.register_relay import (
     RegisterRelayHandler,
 )
+from cmk.agent_receiver.relay.lib.site_auth import UserAuth
 
 
 def test_process_adds_new_relay_id_to_registry(
@@ -15,7 +16,8 @@ def test_process_adds_new_relay_id_to_registry(
     test_authorization: SecretStr,
 ) -> None:
     relay_id = register_relay_handler.process(test_authorization, alias="test")
-    assert register_relay_handler.relays_repository.has_relay(relay_id, test_authorization)
+    auth = UserAuth(test_authorization)
+    assert register_relay_handler.relays_repository.has_relay(relay_id, auth)
 
 
 def test_process_creates_multiple_relays(
@@ -24,12 +26,13 @@ def test_process_creates_multiple_relays(
 ) -> None:
     aliases = ["relay1", "relay2", "relay3", "relay4", "relay5"]
     relay_ids = []
+    auth = UserAuth(test_authorization)
 
     for alias in aliases:
         relay_id = register_relay_handler.process(test_authorization, alias=alias)
         relay_ids.append(relay_id)
-        assert register_relay_handler.relays_repository.has_relay(relay_id, test_authorization)
+        assert register_relay_handler.relays_repository.has_relay(relay_id, auth)
 
     # Verify all relays are still registered
     for relay_id in relay_ids:
-        assert register_relay_handler.relays_repository.has_relay(relay_id, test_authorization)
+        assert register_relay_handler.relays_repository.has_relay(relay_id, auth)

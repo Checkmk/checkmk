@@ -67,7 +67,7 @@ check_plugin_azure_redis_connections = CheckPlugin(
                 lambda x: f"{x}/s",
             ),
         ],
-        check_levels=check_levels_v2,  # Force v2 so default params work without migration params
+        check_levels=check_levels_v2,
     ),
     check_ruleset_name="azure_redis_connections",
     check_default_parameters={
@@ -142,7 +142,7 @@ check_plugin_azure_redis_cache_effectiveness = CheckPlugin(
                 notice_only=True,
             ),
         ],
-        check_levels=check_levels_v2,  # Force v2 so default params work without migration params
+        check_levels=check_levels_v2,
     ),
     check_ruleset_name="azure_redis_cache_effectiveness",
     check_default_parameters={
@@ -198,7 +198,7 @@ check_plugin_azure_redis_memory = CheckPlugin(
                 str,
             ),
         ],
-        check_levels=check_levels_v2,  # Force v2 so default params work without migration params
+        check_levels=check_levels_v2,
     ),
     check_ruleset_name="azure_redis_memory",
     check_default_parameters={
@@ -234,7 +234,7 @@ check_plugin_azure_redis_latency = CheckPlugin(
                 map_func=lambda us: us / 1000000.0,  # render.timespan wants seconds, not microsec.
             ),
         ],
-        check_levels=check_levels_v2,  # Force v2 so default params work without migration params
+        check_levels=check_levels_v2,
     ),
     check_ruleset_name="azure_redis_latency",
     check_default_parameters={
@@ -325,7 +325,7 @@ check_plugin_azure_redis_throughput = CheckPlugin(
                 upper_levels_param="cache_write_upper",
             ),
         ],
-        check_levels=check_levels_v2,  # Force v2 so default params work without migration params
+        check_levels=check_levels_v2,
     ),
     check_ruleset_name="azure_redis_throughput",
     check_default_parameters={

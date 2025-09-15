@@ -30,21 +30,24 @@ from ._helper_query_automation_helper import AutomationMode, HealthMode
 
 
 def test_config_reloading_without_reloader(site: Site) -> None:
-    with _disable_automation_helper_reloader_and_set_worker_count_to_one(site):
-        with _reload_ensurer(site) as wait_for_reload:
-            with _fake_config_file(site):
-                _query_automation_helper(
-                    site,
-                    AutomationMode(
-                        payload=AutomationPayload(
-                            name="non-existing-automation",  # we just want to trigger a reload
-                            args=[],
-                            stdin="",
-                            log_level=logging.INFO,
-                        )
-                    ).model_dump_json(),
+    with (
+        ensure_cleanup(site, "etc/check_mk/conf.d/aut_helper_reload_trigger.mk") as (file,),
+        _disable_automation_helper_reloader_and_set_worker_count_to_one(site),
+        _reload_ensurer(site) as wait_for_reload,
+    ):
+        site.write_file(file, "")
+        _query_automation_helper(
+            site,
+            AutomationMode(
+                payload=AutomationPayload(
+                    name="non-existing-automation",  # we just want to trigger a reload
+                    args=[],
+                    stdin="",
+                    log_level=logging.INFO,
                 )
-                wait_for_reload(0)
+            ).model_dump_json(),
+        )
+        wait_for_reload(0)
 
 
 def test_config_reloading_with_reloader(site: Site) -> None:
@@ -55,9 +58,12 @@ def test_config_reloading_with_reloader(site: Site) -> None:
     ).reloader_config
     timeout = reloader_configuration.poll_interval + reloader_configuration.cooldown_interval + 2
 
-    with _reload_ensurer(site) as wait_for_reload:
-        with _fake_config_file(site):
-            wait_for_reload(timeout)
+    with (
+        ensure_cleanup(site, "etc/check_mk/conf.d/aut_helper_reload_trigger.mk") as (file,),
+        _reload_ensurer(site) as wait_for_reload,
+    ):
+        site.write_file(file, "")
+        wait_for_reload(timeout)
 
 
 def test_standard_workflow_involving_automations(site: Site) -> None:
@@ -169,12 +175,12 @@ def _set_automation_helper_worker_count_to_one(site: Site) -> Generator[None]:
 
 
 @contextmanager
-def _fake_config_file(site: Site) -> Generator[None]:
-    site.write_file("etc/check_mk/conf.d/aut_helper_reload_trigger.mk", "")
+def ensure_cleanup(site: Site, *files: str) -> Generator[tuple[str, ...]]:
     try:
-        yield
+        yield files
     finally:
-        site.delete_file("etc/check_mk/conf.d/aut_helper_reload_trigger.mk")
+        for filename in files:
+            site.delete_file(filename)
 
 
 def _query_automation_helper(site: Site, serialized_input: str) -> str:

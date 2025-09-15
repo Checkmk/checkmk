@@ -18,6 +18,7 @@ from cmk.discover_plugins import (
 from cmk.gui import main_modules
 from cmk.gui.config import active_config
 from cmk.gui.rulespec import register_plugins
+from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.rule_specs.loader import (
     load_discovered_rule_specs,
     RuleSpec,
@@ -172,7 +173,7 @@ def _discover_load_plugins(modules: set[str]) -> set[str]:
 
 def _load_and_transform_rulesets(discovered_names: set[str]) -> None:
     main_modules.load_plugins()
-    with disable_redis(), gui_context():
+    with disable_redis(), gui_context(), SuperUserContext():
         all_rulesets = AllRulesets.load_all_rulesets()
         discovered_rulesets = {
             ruleset_name: ruleset

@@ -13,4 +13,5 @@ export interface Topic {
   ident: string
   title: string
   elements: Element[]
+  customContent?: boolean
 }

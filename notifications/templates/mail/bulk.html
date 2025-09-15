@@ -29,13 +29,13 @@
                         <td style="padding: 0; vertical-align: middle;">
                             <div class="mobile_event_marker_bulk"
                                  style="{{ macros.event_marker_bulk_style() }};
-                                        {% if service_notification %} {{ state_mapping[entry.PREVIOUSSERVICEHARDSTATE] }} {% else %} {{ state_mapping[entry.PREVIOUSHOSTHARDSTATE] }} {% endif %};
+                                        {% if service_notification %} {{ state_mapping[(entry.PREVIOUSSERVICEHARDSTATE|default("UNKNOWN") )] }} {% else %} {{ state_mapping[(entry.PREVIOUSHOSTHARDSTATE|default("UNKNOWN") )] }} {% endif %};
                                         display: inline-block;
                                         /* Inline block to respect width */">
                                 {% if service_notification %}
-                                    {{ entry.PREVIOUSSERVICEHARDSTATE[:4] }}
+                                    {{ (entry.PREVIOUSSERVICEHARDSTATE|default("UNKNOWN") )[:4] }}
                                 {% else %}
-                                    {{ entry.PREVIOUSHOSTHARDSTATE[:4] }}
+                                    {{ (entry.PREVIOUSHOSTHARDSTATE|default("UNKNOWN") )[:4] }}
                                 {% endif %}
                             </div>
                         </td>

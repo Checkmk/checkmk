@@ -51,12 +51,7 @@ def test_config_reloading_without_reloader(site: Site) -> None:
 
 
 def test_config_reloading_with_reloader(site: Site) -> None:
-    reloader_configuration = default_config(
-        omd_root=Path(),
-        run_directory=Path(),
-        log_directory=Path(),
-    ).reloader_config
-    timeout = reloader_configuration.poll_interval + reloader_configuration.cooldown_interval + 2
+    timeout = _make_default_reload_timeout()
 
     with (
         ensure_cleanup(site, "etc/check_mk/conf.d/aut_helper_reload_trigger.mk") as (file,),
@@ -181,6 +176,21 @@ def ensure_cleanup(site: Site, *files: str) -> Generator[tuple[str, ...]]:
     finally:
         for filename in files:
             site.delete_file(filename)
+
+
+def _make_default_reload_timeout() -> float:
+    reloader_configuration = default_config(
+        omd_root=Path(),
+        run_directory=Path(),
+        log_directory=Path(),
+    ).reloader_config
+    return (
+        # worst case: we wait for this long until we even check if a reload is necessary
+        reloader_configuration.poll_interval
+        + reloader_configuration.cooldown_interval
+        # some time to actually do the reload
+        + 2
+    )
 
 
 def _query_automation_helper(site: Site, serialized_input: str) -> str:

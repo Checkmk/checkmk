@@ -17,9 +17,9 @@ const iFrameProps = computed(() => {
   const content = props.content as EmbeddedViewContent
   const urlParams = new URLSearchParams({
     dashboard: props.dashboardName,
-    widget_id: props.widgetId,
+    widget_id: props.widget_id,
     embedded_id: content.embedded_id,
-    context: JSON.stringify(props.effectiveFilterContext.filters)
+    context: JSON.stringify(props.effective_filter_context.filters)
   }).toString()
   const iFrameContent: IFrameContent = {
     type: 'url',

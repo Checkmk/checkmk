@@ -21,10 +21,10 @@ const parentDiv = computed(() => contentDiv.value?.parentElement || null)
 
 const httpVars: Ref<FilterHTTPVars> = computed(() => {
   return {
-    widget_id: props.widgetId,
+    widget_id: props.widget_id,
     content: JSON.stringify(props.content),
-    context: JSON.stringify(props.effectiveFilterContext.filters),
-    single_infos: JSON.stringify(props.effectiveFilterContext.uses_infos)
+    context: JSON.stringify(props.effective_filter_context.filters),
+    single_infos: JSON.stringify(props.effective_filter_context.uses_infos)
   }
 })
 const sizeVars: Ref<FilterHTTPVars> = ref({
@@ -45,7 +45,7 @@ const updateGraph = () => {
     post_data: new URLSearchParams({ ...httpVars.value, ...sizeVars.value }).toString(),
     method: 'POST',
     response_handler: handleRefreshData,
-    handler_data: props.widgetId
+    handler_data: props.widget_id
   })
 }
 
@@ -78,7 +78,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <DashboardContentContainer v-bind="generalSettings" content-overflow="hidden">
-    <div :id="`db-content-graph-${widgetId}`" ref="contentDiv" class="db-content-graph" />
+  <DashboardContentContainer v-bind="general_settings" content-overflow="hidden">
+    <div :id="`db-content-graph-${widget_id}`" ref="contentDiv" class="db-content-graph" />
   </DashboardContentContainer>
 </template>

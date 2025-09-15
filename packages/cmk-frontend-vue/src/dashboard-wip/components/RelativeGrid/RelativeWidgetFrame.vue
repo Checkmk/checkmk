@@ -29,7 +29,7 @@ const containerStyle = computed(() => {
 
 <template>
   <div
-    :id="`db-relative-grid-frame-${contentProps.widgetId}`"
+    :id="`db-relative-grid-frame-${contentProps.widget_id}`"
     class="db-relative-grid-frame"
     :style="{ ...containerStyle }"
   >

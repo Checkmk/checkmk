@@ -7,6 +7,7 @@ import {
   type GraphOptionExplicitVerticalRangeBoundaries,
   type GraphOptionUnitCustom,
   type GraphOptionUnitCustomNotation,
+  type GraphOptionUnitCustomNotationWithSymbol,
   type GraphOptionUnitCustomPrecision
 } from 'cmk-shared-typing/typescript/graph_designer'
 
@@ -99,5 +100,55 @@ export function convertFromExplicitVerticalRange(
     return 'auto'
   } else {
     return explicitVerticalRangeBoundaries
+  }
+}
+
+export function extractExplicitVerticalRangeBounds(
+  explicitVerticalRange: 'auto' | { lower: number; upper: number }
+): { lower: number | null; upper: number | null } {
+  if (
+    explicitVerticalRange === 'auto' ||
+    explicitVerticalRange === null ||
+    typeof explicitVerticalRange !== 'object'
+  ) {
+    return { lower: null, upper: null }
+  }
+  return {
+    lower: explicitVerticalRange.lower ?? null,
+    upper: explicitVerticalRange.upper ?? null
+  }
+}
+
+export function extractUnitFields(unit: 'first_entry_with_unit' | GraphOptionUnitCustom): {
+  unitType: string
+  notation: GraphOptionUnitCustomNotationWithSymbol['type'] | 'time'
+  symbol: string
+  precisionType: GraphOptionUnitCustomPrecision['type']
+  precisionDigits: number
+} {
+  if (unit === 'first_entry_with_unit') {
+    return {
+      unitType: 'first_entry_with_unit',
+      notation: 'decimal',
+      symbol: '',
+      precisionType: 'auto',
+      precisionDigits: 2
+    }
+  }
+  if (unit.notation === 'time') {
+    return {
+      unitType: 'custom',
+      notation: 'time',
+      symbol: '',
+      precisionType: unit.precision.type,
+      precisionDigits: unit.precision.digits
+    }
+  }
+  return {
+    unitType: 'custom',
+    notation: unit.notation.type,
+    symbol: unit.notation.symbol,
+    precisionType: unit.precision.type,
+    precisionDigits: unit.precision.digits
   }
 }

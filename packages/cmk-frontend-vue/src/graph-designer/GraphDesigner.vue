@@ -25,12 +25,10 @@ import type { Suggestion } from '@/components/suggestions'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
-import { type ValidationMessages } from '@/form'
-import FormEdit from '@/form/components/FormEdit.vue'
-
 import FixedMetricRowRenderer from '@/graph-designer/components/FixedMetricRowRenderer.vue'
 import FormMetricCells, { type Metric } from '@/graph-designer/components/FormMetricCells.vue'
 import FormTitle from '@/graph-designer/components/FormTitle.vue'
+import GraphOptionsEditor from '@/graph-designer/components/GraphOptionsEditor.vue'
 import MetricRowRenderer from '@/graph-designer/components/MetricRowRenderer.vue'
 import TopicsRenderer from '@/graph-designer/components/TopicsRenderer.vue'
 import {
@@ -41,15 +39,6 @@ import {
 } from '@/graph-designer/converters'
 import { fetchMetricColor } from '@/graph-designer/fetch_metric_color'
 import { type GraphRenderer } from '@/graph-designer/graph'
-import {
-  makeBooleanChoice,
-  makeCascadingSingleChoice,
-  makeDictionary,
-  makeFixedValue,
-  makeFloat,
-  makeSingleChoice,
-  makeString
-} from '@/graph-designer/specs'
 
 import type { Topic } from './type_defs'
 
@@ -111,141 +100,12 @@ const formLineTypeSuggestions: Suggestion[] = [
 const dataTransformation: Ref<number> = ref(95)
 
 const dataUnit = ref(convertToUnit(props.graph_options.unit))
-const specUnit = makeCascadingSingleChoice('', [
-  {
-    name: 'first_entry_with_unit',
-    title: props.i18n.unit_first_entry_with_unit,
-    parameter_form: makeFixedValue(),
-    default_value: null
-  },
-  {
-    name: 'custom',
-    title: props.i18n.unit_custom,
-    parameter_form: makeDictionary('', [
-      {
-        name: 'notation',
-        render_only: false,
-        required: true,
-        parameter_form: makeCascadingSingleChoice(props.i18n.unit_custom_notation, [
-          {
-            name: 'decimal',
-            title: props.i18n.unit_custom_notation_decimal,
-            parameter_form: makeString(props.i18n.unit_custom_notation_symbol, 'symbol', null),
-            default_value: ''
-          },
-          {
-            name: 'si',
-            title: props.i18n.unit_custom_notation_si,
-            parameter_form: makeString(props.i18n.unit_custom_notation_symbol, 'symbol', null),
-            default_value: ''
-          },
-          {
-            name: 'iec',
-            title: props.i18n.unit_custom_notation_iec,
-            parameter_form: makeString(props.i18n.unit_custom_notation_symbol, 'symbol', null),
-            default_value: ''
-          },
-          {
-            name: 'standard_scientific',
-            title: props.i18n.unit_custom_notation_standard_scientific,
-            parameter_form: makeString(props.i18n.unit_custom_notation_symbol, 'symbol', null),
-            default_value: ''
-          },
-          {
-            name: 'engineering_scientific',
-            title: props.i18n.unit_custom_notation_engineering_scientific,
-            parameter_form: makeString(props.i18n.unit_custom_notation_symbol, 'symbol', null),
-            default_value: ''
-          },
-          {
-            name: 'time',
-            title: props.i18n.unit_custom_notation_time,
-            parameter_form: makeFixedValue(),
-            default_value: null
-          }
-        ]),
-        default_value: { notation: ['decimal', null] },
-        group: null
-      },
-      {
-        name: 'precision',
-        render_only: false,
-        required: true,
-        parameter_form: makeDictionary(props.i18n.unit_custom_precision, [
-          {
-            name: 'type',
-            render_only: false,
-            required: true,
-            parameter_form: makeSingleChoice(props.i18n.unit_custom_precision_type, [
-              {
-                name: 'auto',
-                title: props.i18n.unit_custom_precision_type_auto
-              },
-              {
-                name: 'strict',
-                title: props.i18n.unit_custom_precision_type_strict
-              }
-            ]),
-            default_value: 'auto',
-            group: null
-          },
-          {
-            name: 'digits',
-            render_only: false,
-            required: true,
-            parameter_form: makeFloat(props.i18n.unit_custom_precision_digits, ''),
-            default_value: 2,
-            group: null
-          }
-        ]),
-        default_value: { type: 'auto', digits: 2 },
-        group: null
-      }
-    ]),
-    default_value: { notation: ['decimal', ''], precision: { type: 'auto', digits: 2 } }
-  }
-])
-const backendValidationUnit: ValidationMessages = []
 
 const dataExplicitVerticalRange = ref(
   convertToExplicitVerticalRange(props.graph_options.explicit_vertical_range)
 )
-const specExplicitVerticalRange = makeCascadingSingleChoice('', [
-  {
-    name: 'auto',
-    title: props.i18n.explicit_vertical_range_auto,
-    parameter_form: makeFixedValue(),
-    default_value: null
-  },
-  {
-    name: 'explicit',
-    title: props.i18n.explicit_vertical_range_explicit,
-    parameter_form: makeDictionary('', [
-      {
-        name: 'lower',
-        render_only: false,
-        required: true,
-        parameter_form: makeFloat(props.i18n.explicit_vertical_range_explicit_lower, ''),
-        default_value: 0.0,
-        group: null
-      },
-      {
-        name: 'upper',
-        render_only: false,
-        required: true,
-        parameter_form: makeFloat(props.i18n.explicit_vertical_range_explicit_upper, ''),
-        default_value: 1.0,
-        group: null
-      }
-    ]),
-    default_value: { lower: 0.0, upper: 1.0 }
-  }
-])
-const backendValidationExplicitVerticalRange: ValidationMessages = []
 
 const dataOmitZeroMetrics = ref(props.graph_options.omit_zero_metrics)
-const specOmitZeroMetrics = makeBooleanChoice()
-const backendValidationOmitZeroMetrics: ValidationMessages = []
 
 const topics: Topic[] = [
   {
@@ -268,14 +128,8 @@ const topics: Topic[] = [
   {
     ident: 'graph_options',
     title: props.i18n.graph_options,
-    elements: [
-      { ident: 'unit', title: props.i18n.unit },
-      { ident: 'explicit_vertical_range', title: props.i18n.explicit_vertical_range },
-      {
-        ident: 'omit_zero_metrics',
-        title: props.i18n.omit_zero_metrics
-      }
-    ]
+    elements: [],
+    customContent: true
   }
 ]
 
@@ -775,6 +629,12 @@ function computeGraphOptions(): GraphOptions {
   }
 }
 
+function updateGraphOptionsState(opts: GraphOptions) {
+  dataUnit.value = convertToUnit(opts.unit)
+  dataExplicitVerticalRange.value = convertToExplicitVerticalRange(opts.explicit_vertical_range)
+  dataOmitZeroMetrics.value = opts.omit_zero_metrics
+}
+
 const graphContainerRef = ref()
 
 onMounted(() => {
@@ -825,7 +685,6 @@ const graphDesignerContentAsJson = computed(() => {
 
 <template>
   <div ref="graphContainerRef"></div>
-
   <table class="data oddeven graph_designer_metrics">
     <thead>
       <tr>
@@ -1103,32 +962,12 @@ const graphDesignerContentAsJson = computed(() => {
       </div>
       <div v-else>{{ props.i18n.no_selected_graph_line }}</div>
     </template>
-    <template #unit>
-      <div>
-        <FormEdit
-          v-model:data="dataUnit"
-          :spec="specUnit"
-          :backend-validation="backendValidationUnit"
-        />
-      </div>
-    </template>
-    <template #explicit_vertical_range>
-      <div>
-        <FormEdit
-          v-model:data="dataExplicitVerticalRange"
-          :spec="specExplicitVerticalRange"
-          :backend-validation="backendValidationExplicitVerticalRange"
-        />
-      </div>
-    </template>
-    <template #omit_zero_metrics>
-      <div>
-        <FormEdit
-          v-model:data="dataOmitZeroMetrics"
-          :spec="specOmitZeroMetrics"
-          :backend-validation="backendValidationOmitZeroMetrics"
-        />
-      </div>
+    <template #graph_options_custom>
+      <GraphOptionsEditor
+        :graph_options="computeGraphOptions()"
+        :i18n="props.i18n"
+        @update:graph-options="updateGraphOptionsState"
+      />
     </template>
   </TopicsRenderer>
 

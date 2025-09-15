@@ -54,17 +54,26 @@ function getClass(ident: string) {
         <tr>
           <td colspan="2" />
         </tr>
-        <tr v-for="element in topic.elements" :key="element.ident">
-          <td class="legend">
-            <div class="title">
-              {{ element.title }}
-              <span class="dots">{{ Array(200).join('.') }}</span>
-            </div>
-          </td>
-          <td class="content">
-            <slot :name="element.ident"></slot>
-          </td>
-        </tr>
+        <template v-if="topic.customContent">
+          <tr>
+            <td colspan="2" class="custom-content">
+              <slot :name="`${topic.ident}_custom`"></slot>
+            </td>
+          </tr>
+        </template>
+        <template v-else>
+          <tr v-for="element in topic.elements" :key="element.ident">
+            <td class="legend">
+              <div class="title">
+                {{ element.title }}
+                <span class="dots">{{ Array(200).join('.') }}</span>
+              </div>
+            </td>
+            <td class="content">
+              <slot :name="element.ident"></slot>
+            </td>
+          </tr>
+        </template>
         <tr class="bottom">
           <td colspan="2"></td>
         </tr>

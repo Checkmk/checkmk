@@ -3,7 +3,7 @@ Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
+<script lang="ts">
 import { type Component } from 'vue'
 
 import DashboardContentEmbeddedView from './DashboardContentEmbeddedView.vue'
@@ -14,6 +14,9 @@ import DashboardContentLinkedView from './DashboardContentLinkedView.vue'
 import DashboardContentStaticText from './DashboardContentStaticText.vue'
 import DashboardContentUserMessages from './DashboardContentUserMessages.vue'
 import { CONTENT_FIGURE_TYPES, GRAPH_TYPES } from './types.ts'
+</script>
+
+<script setup lang="ts">
 import type { ContentProps } from './types.ts'
 
 defineProps<ContentProps>()
@@ -43,10 +46,10 @@ function contentTypeToComponent(contentType: string): Component {
 <template>
   <component
     :is="contentTypeToComponent(content.type)"
-    :widget-id="widgetId"
-    :general-settings="generalSettings"
+    :widget_id="widget_id"
+    :general_settings="general_settings"
     :content="content"
-    :effective-filter-context="effectiveFilterContext"
+    :effective_filter_context="effective_filter_context"
     :dashboard-name="dashboardName"
   />
 </template>

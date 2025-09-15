@@ -45,10 +45,10 @@ const widgetContentProps = computed<ContentPropsRecord>(() => {
   for (const [widgetId, widget] of Object.entries(props.widgetCores.value)) {
     const widgetConstants = props.constants.widgets[widget.content.type]!
     record[widgetId] = {
-      widgetId: widgetId,
-      generalSettings: widget.general_settings,
+      widget_id: widgetId,
+      general_settings: widget.general_settings,
       content: widget.content,
-      effectiveFilterContext: {
+      effective_filter_context: {
         uses_infos: widget.filter_context.uses_infos,
         restricted_to_single: widgetConstants.filter_context.restricted_to_single,
         // @ts-expect-error TODO: filters should be adapted to be <string, string> only

@@ -116,8 +116,12 @@ function addWidget(
   if (activeDashboard.content.layout.type === 'responsive_grid') {
     layout = createWidgetLayout(activeDashboard.content as ContentResponsiveGrid, content.type)
   } else if (activeDashboard.content.layout.type === 'relative_grid') {
-    // TODO: implement this
-    throw new Error('Adding widgets to relative grid dashboards is not yet implemented')
+    const widgetConstants = dashboardsManager.constants.value!.widgets[content.type]!
+    layout = {
+      type: 'relative_grid',
+      position: widgetConstants.layout.relative.initial_position,
+      size: widgetConstants.layout.relative.initial_size
+    }
   } else {
     throw new Error(`Unknown dashboard layout type: ${activeDashboard.content.layout}`)
   }

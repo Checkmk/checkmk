@@ -79,9 +79,7 @@ const fetchDashboards = async () => {
 const handleInputFocus = () => {
   inputValue.value = ''
   showDashboardDropdown.value = true
-  if (dashboards.value.length === 0) {
-    void fetchDashboards()
-  }
+  void fetchDashboards()
 }
 
 const handleInputBlur = () => {

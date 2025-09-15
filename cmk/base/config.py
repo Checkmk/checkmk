@@ -2930,7 +2930,7 @@ class ConfigCache:
                     self._loaded_config,
                     self.ruleset_matcher,
                     self.label_manager.labels_of_host,
-                    source_host_name=piggybacked_host_name,  # I don't think this is right.
+                    source_host_names=[piggybacked_host_name],  # I don't think this is right.
                 ),
                 (None, "max_cache_age", piggyback_max_cachefile_age),
             ],
@@ -3471,15 +3471,11 @@ class ConfigCache:
             cmk.utils.paths.omd_root, piggybacked_hostname
         )
         return [
-            *(
-                setting
-                for source in sorted(sources)
-                for setting in make_piggyback_time_settings(
-                    self._loaded_config,
-                    self.ruleset_matcher,
-                    self.label_manager.labels_of_host,
-                    source_host_name=source,
-                )
+            *make_piggyback_time_settings(
+                self._loaded_config,
+                self.ruleset_matcher,
+                self.label_manager.labels_of_host,
+                source_host_names=sorted(sources),
             ),
             # From global settings
             (None, "max_cache_age", piggyback_max_cachefile_age),

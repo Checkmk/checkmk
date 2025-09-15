@@ -7,6 +7,7 @@
 import { type InjectionKey, inject, provide, ref } from 'vue'
 
 import { KeyShortcutService } from '@/lib/keyShortcuts'
+import { randomId } from '@/lib/randomId'
 import type { UnifiedSearchProviderIdentifier } from '@/lib/unified-search/providers/unified'
 import type { SearchHistoryService } from '@/lib/unified-search/searchHistory'
 import type { UnifiedSearch } from '@/lib/unified-search/unified-search'
@@ -56,7 +57,7 @@ function ensureKey(key: string) {
 
 function pushCallBack(key: string, cb: (...args: any) => void) {
   ensureKey(key)
-  const id = crypto.randomUUID()
+  const id = randomId()
   callbacks[key]?.push({ id, cb })
   return id
 }

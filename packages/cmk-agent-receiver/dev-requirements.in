@@ -1,4 +1,5 @@
 pytest
+pytest-asyncio
 pytest-mock
 pytest-xdist
 time-machine

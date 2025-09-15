@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import asyncio
 import base64
 import os
 from contextlib import suppress
@@ -87,3 +88,15 @@ def internal_credentials() -> B64SiteInternalSecret:
     return B64SiteInternalSecret(
         base64.b64encode(config.internal_secret_path.read_bytes()).decode("ascii")
     )
+
+
+async def async_internal_credentials() -> B64SiteInternalSecret:
+    config = get_config()
+
+    def _read_secret() -> bytes:
+        return config.internal_secret_path.read_bytes()
+
+    # Use asyncio thread pool to avoid blocking the event loop, similar to aiofiles
+    loop = asyncio.get_running_loop()
+    content = await loop.run_in_executor(None, _read_secret)
+    return B64SiteInternalSecret(base64.b64encode(content).decode("ascii"))

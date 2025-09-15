@@ -42,6 +42,8 @@ Available environment variables:
 - `ORACLE_PASSWORD` - default `oracle`
 - `ORACLE_PORT` - default `1521`
 
+Default SID is `FREEPDB1` and it's not configurable.
+
 #### Oracle XE
 
 To start the **Oracle XE** database, run:
@@ -59,6 +61,8 @@ Available environment variables:
 - `ORACLE_PASSWORD` - default `oracle`
 - `ORACLE_PORT` - default `1521`
 
+Default SID is `FREEPDB1` and it's not configurable.
+
 #### Oracle 12c
 
 To start the **Oracle 12c** database, run:
@@ -69,6 +73,20 @@ docker compose -f <path_to_docker_compose_file> up oracle-12c
 Available environment variables:
 - `ORACLE_PASSWORD` - default `oracle`
 - `ORACLE_PORT` - default `1521`
+
+Default SID is `XE` and it's not configurable.
+
+#### Oracle 19c
+
+To start the **Oracle 12c** database, run:
+```bash
+docker compose -f <path_to_docker_compose_file> up oracle-12c
+```
+
+Available environment variables:
+- `ORACLE_PASSWORD` - default `oracle`
+- `ORACLE_PORT` - default `1521`
+- `ORACLE_SID` - default `ORCLCDB`
 
 ## Configuration
 

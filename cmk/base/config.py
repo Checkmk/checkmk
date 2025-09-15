@@ -47,7 +47,10 @@ from cmk.base.configlib.checkengine import CheckingConfig
 from cmk.base.configlib.fetchers import make_tcp_fetcher_config
 from cmk.base.configlib.labels import LabelConfig
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
-from cmk.base.configlib.piggyback import make_piggyback_time_settings
+from cmk.base.configlib.piggyback import (
+    guess_piggybacked_hosts_time_settings,
+    make_piggyback_time_settings,
+)
 from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.base.default_config import *  # noqa: F403
 from cmk.base.parent_scan import ScanConfig as ParentScanConfig
@@ -1637,7 +1640,13 @@ class ConfigCache:
         return SummaryConfig(
             exit_spec=self.exit_code_spec(host_name, source_id),
             piggyback_config=piggyback_backend.Config(
-                host_name, self.get_piggybacked_hosts_time_settings(piggybacked_hostname=host_name)
+                host_name,
+                guess_piggybacked_hosts_time_settings(
+                    self._loaded_config,
+                    self.ruleset_matcher,
+                    self.label_manager.labels_of_host,
+                    piggybacked_hostname=host_name,
+                ),
             ),
             expect_data=self.is_piggyback_host(host_name),
         )
@@ -3467,27 +3476,6 @@ class ConfigCache:
 
         raise NotImplementedError(effective_mode)
 
-    def get_piggybacked_hosts_time_settings(
-        self, piggybacked_hostname: HostName
-    ) -> piggyback_backend.PiggybackTimeSettings:
-        # NOTE: piggyback time settings are configured in rules matching on the source hosts,
-        # but applied when dealing with the destination hosts (aka piggybacked hosts) in the
-        # fetcher and the summarizer.
-        # This *guesses* which rulesets are relevant, by matching on the hosts that *currently*
-        # provide piggyback data for the given piggybacked host.
-        # For the fetcher, this function is evaluated at config creation time, so this might
-        # well be wrong.
-        return make_piggyback_time_settings(
-            self._loaded_config,
-            self.ruleset_matcher,
-            self.label_manager.labels_of_host,
-            source_host_names=sorted(
-                piggyback_backend.get_current_piggyback_sources_of_host(
-                    cmk.utils.paths.omd_root, piggybacked_hostname
-                )
-            ),
-        )
-
     # TODO: Remove old name one day
     @staticmethod
     def service_discovery_name() -> ServiceName:
@@ -3879,8 +3867,11 @@ class FetcherFactory:
         return PiggybackFetcher(
             hostname=host_name,
             address=ip_address,
-            time_settings=self._config_cache.get_piggybacked_hosts_time_settings(
-                piggybacked_hostname=host_name
+            time_settings=guess_piggybacked_hosts_time_settings(
+                self._config_cache._loaded_config,  # sorry, this is only temporary (TM)
+                self._ruleset_matcher,
+                self._label_manager.labels_of_host,
+                piggybacked_hostname=host_name,
             ),
             omd_root=cmk.utils.paths.omd_root,
         )

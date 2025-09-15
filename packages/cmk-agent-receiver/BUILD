@@ -97,6 +97,7 @@ py_test(
         requirement("fastapi"),
         requirement("httpx"),
         requirement("pytest"),
+        requirement("pytest-asyncio"),
         requirement("pytest-mock"),
         requirement("requests"),
         requirement("starlette"),

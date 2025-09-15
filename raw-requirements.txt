@@ -3120,6 +3120,7 @@ pluggy==1.5.0 \
     #   -c constraints.txt
     #   -c requirements.txt
     #   pytest
+    #   pytest-cov
     #   python-lsp-server
 ply==3.11 \
     --hash=sha256:00c7c1aaa88358b9c765b6d3000c6eec0ba42abca5351b095321aef446081da3 \
@@ -3402,11 +3403,10 @@ py-import-cycles==0.3.1 \
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
-pyasn1==0.6.0 \
-    --hash=sha256:3a35ab2c4b5ef98e17dfdec8ab074046fbda76e281c5a706ccd82328cfc8f64c \
-    --hash=sha256:cca4bb0f2df5504f02f6f8a775b6e416ff9b0b3b16f7ee80b5a3153d9b804473
+pyasn1==0.6.1 \
+    --hash=sha256:0d632f46f2ba09143da3a8afe9e33fb6f92fa2320ab7e886e2d0f7672af84629 \
+    --hash=sha256:6f580d2bdd84365380830acf45550f2511469f673cb4a5ae3857a3170128b034
     # via
-    #   -c constraints.txt
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   -r packages/cmk-crypto/requirements.in
@@ -3415,9 +3415,9 @@ pyasn1==0.6.0 \
     #   pysnmp
     #   python-ldap
     #   rsa
-pyasn1-modules==0.4.1 \
-    --hash=sha256:49bfa96b45a292b711e986f222502c1c9a5e1f4e568fc30e2574a6c7d07838fd \
-    --hash=sha256:c28e2dbf9c06ad61c71a075c7e0f9fd0f1b0bb2d2ad4377f240d33ac2ab60a7c
+pyasn1-modules==0.4.2 \
+    --hash=sha256:29253a9207ce32b64c3ac6600edc75368f98473906e8fd1043bd6b5b1de2c14a \
+    --hash=sha256:677091de870a80aae844b1ca6134f54652fa2c8c5a52aa396440ac3106e941e6
     # via
     #   -c requirements.txt
     #   google-auth
@@ -3810,19 +3810,17 @@ pysmb==1.2.11 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-pysmi==1.4.4 \
-    --hash=sha256:4c961e726e83a88f11b24e3f76a77d1396d827682088f09b8f1d5ca0429e31fa \
-    --hash=sha256:7c8e7cae880dc56ffca872452023a3aea4e695c67661d5739eb6d718ec91e1f3
+pysmi==1.6.2 \
+    --hash=sha256:45a3a3b25b9e0465e6a49e47ba70d5eab0424f6f1131ca406ca3f385f027247e \
+    --hash=sha256:abed01673113886d10f0f336426859238fc13b5383c7e28e13dbcd5af0443ba1
     # via
-    #   -c constraints.txt
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   pysnmp
-pysnmp==6.1.3 \
-    --hash=sha256:03d39de2a51e23e055e6822d7a45da97daf54b09d1c17067f3236ee713ec1b3a \
-    --hash=sha256:bc300599d819833bc0c271c37e04120982a531a591079514e64fa29fbaed42b6
+pysnmp==6.2.6 \
+    --hash=sha256:ce86b74d0ce4b74ffe9124993f2778c66111fe7523828ebe9bd1b067f9635c00 \
+    --hash=sha256:d95cc0bc3d1c69eefbf71ab0ecb5d802a2130081b31d67aad5371c3f85ed6465
     # via
-    #   -c constraints.txt
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   snmpsim
@@ -3884,13 +3882,12 @@ pytest-check==2.5.4 \
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
-pytest-cov==4.1.0 \
-    --hash=sha256:3904b13dfbfec47f003b8e77fd5b589cd11904a21ddf1ab38a64f204d6a10ef6 \
-    --hash=sha256:6ba70b9e97e69fcc3fb45bfeab2d0a138fb65c4d0d6a41ef33983ad114be8c3a
+pytest-cov==7.0.0 \
+    --hash=sha256:33c97eda2e049a0c5298e91f519302a1334c26ac65c1a483d6206fd458361af1 \
+    --hash=sha256:3b8e9558b16cc1479da72058bdecf8073661c7f57f7d3c5f22a1c23507f2d861
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
-    #   pysnmp
 pytest-html==4.1.1 \
     --hash=sha256:70a01e8ae5800f4a074b56a4cb1025c8f4f9b038bba5fe31e3c98eb996686f07 \
     --hash=sha256:c8152cea03bd4e9bee6d525573b67bbc6622967b72b9628dda0ea3e2a0b5dd71
@@ -4792,11 +4789,10 @@ sniffio==1.3.1 \
     # via
     #   -c requirements.txt
     #   anyio
-snmpsim==1.1.2 \
-    --hash=sha256:3cbf31b790e3aa6b7ba46fcda8e274fefa790cb86ccf6da2ad6660a54e011a27 \
-    --hash=sha256:8c45b997c6c01e3d16a4f03f59967d6b1c5d2f65d707605ad2f5b96ff33b49be
+snmpsim==1.1.7 \
+    --hash=sha256:22a0d81a2d2b00ae9f3d7eec1bcf4c12e09e637dd88504d896e841a05cb67ea0 \
+    --hash=sha256:c5f9dac3066d7debae3eb6dbf030e35bbb2f6a6c5d11feefd9d0a4b46680c575
     # via
-    #   -c constraints.txt
     #   -c requirements.txt
     #   -r cmk/requirements.in
 snowballstemmer==3.0.1 \

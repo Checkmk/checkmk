@@ -11,6 +11,7 @@ import { useErrorBoundary } from '@/components/useErrorBoundary'
 
 import WizardSelector from '@/dashboard-wip/Wizards/WizardSelector.vue'
 import DashboardComponent from '@/dashboard-wip/components/DashboardComponent.vue'
+import DashboardFilterSettings from '@/dashboard-wip/components/DashboardFilterSettings/DashboardFilterSettings.vue'
 import DashboardMenuHeader from '@/dashboard-wip/components/DashboardMenuHeader/DashboardMenuHeader.vue'
 import { createWidgetLayout } from '@/dashboard-wip/components/ResponsiveGrid/composables/useResponsiveGridLayout'
 import AddWidgetDialog from '@/dashboard-wip/components/WidgetWorkflow/StarterDialog/AddWidgetDialog.vue'
@@ -134,6 +135,10 @@ function cloneWidget(oldWidgetId: string, newLayout: WidgetLayout) {
   const newWidgetId = crypto.randomUUID()
   dashboardWidgets.cloneWidget(oldWidgetId, newWidgetId, newLayout)
 }
+
+function deepClone<T>(obj: T): T {
+  return structuredClone(obj)
+}
 </script>
 
 <template>
@@ -163,6 +168,22 @@ function cloneWidget(oldWidgetId: string, newLayout: WidgetLayout) {
         :dashboard-owner="dashboardsManager.activeDashboard.value?.owner || ''"
         :dashboard-constants="dashboardsManager.constants.value!"
         @back-button="openAddWidgetDialog = true"
+      />
+      <DashboardFilterSettings
+        v-model:open="openDashboardFilterSettings"
+        :configured-dashboard-filters="
+          deepClone(dashboardFilters.configuredDashboardFilters.value || {})
+        "
+        :applied-runtime-filters="deepClone(dashboardFilters.appliedRuntimeFilters.value || {})"
+        :configured-mandatory-runtime-filters="[
+          ...(dashboardFilters.configuredMandatoryRuntimeFilters.value || [])
+        ]"
+        :can-edit="true"
+        starting-tab="dashboard-filter"
+        @save-dashboard-filters="dashboardFilters.handleSaveDashboardFilters"
+        @apply-runtime-filters="dashboardFilters.handleApplyRuntimeFilters"
+        @save-mandatory-runtime-filters="dashboardFilters.handleSaveMandatoryRuntimeFilters"
+        @close="openDashboardFilterSettings = false"
       />
     </div>
     <template v-if="dashboardsManager.isInitialized.value">

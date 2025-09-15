@@ -332,10 +332,11 @@ def parse_freebsd_mem(string_table: StringTable) -> SectionMemUsed | None:
 
     try:
         page_size = raw["vm.stats.vm.v_page_size"]
+        swap_total = raw["vm.swap_total"]
         section = SectionMemUsed(
             MemTotal=raw["vm.kmem_size"],
             MemFree=raw["vm.stats.vm.v_free_count"] * page_size,
-            SwapTotal=(swap_total := raw["vm.swap_total"]),
+            SwapTotal=swap_total,
             SwapFree=swap_total - raw["swap.used"],
         )
     except KeyError:

@@ -192,9 +192,9 @@ class HostState(FormSpec[Literal[0, 1, 2]]):
     **********
     """
 
-    UP: ClassVar = 0
-    DOWN: ClassVar = 1
-    UNREACH: ClassVar = 2
+    UP: ClassVar[Literal[0]] = 0
+    DOWN: ClassVar[Literal[1]] = 1
+    UNREACH: ClassVar[Literal[2]] = 2
 
     prefill: DefaultValue[Literal[0, 1, 2]] = DefaultValue(0)
     """Value to pre-populate the form field with."""
@@ -318,10 +318,10 @@ class ServiceState(FormSpec[Literal[0, 1, 2, 3]]):
     **********
     """
 
-    OK: ClassVar = 0
-    WARN: ClassVar = 1
-    CRIT: ClassVar = 2
-    UNKNOWN: ClassVar = 3
+    OK: ClassVar[Literal[0]] = 0
+    WARN: ClassVar[Literal[1]] = 1
+    CRIT: ClassVar[Literal[2]] = 2
+    UNKNOWN: ClassVar[Literal[3]] = 3
 
     prefill: DefaultValue[Literal[0, 1, 2, 3]] = DefaultValue(0)
     """Value to pre-populate the form field with."""

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Literal
+
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
@@ -12,7 +14,7 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 
-_STATE_MAP = {
+_STATE_MAP: dict[str, tuple[Literal[0, 1, 2, 3], str]] = {
     "state_1": (ServiceState.UNKNOWN, "unknown or unavailable"),
     "state_2": (ServiceState.OK, "OK, good, normally working"),
     "state_3": (ServiceState.WARN, "alarm, warning, marginally working (minor)"),

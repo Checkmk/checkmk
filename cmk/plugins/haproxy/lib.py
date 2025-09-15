@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from enum import Enum
+from typing import Literal
 
 from cmk.rulesets.v1.form_specs import ServiceState
 
@@ -32,11 +33,11 @@ class HAProxyServerStatus(Enum):
     NO_CHECK = "no check"
 
 
-DEFAULT_FRONTEND_STATES = {
+DEFAULT_FRONTEND_STATES: dict[HAProxyFrontendStatus, Literal[0, 1, 2, 3]] = {
     HAProxyFrontendStatus.OPEN: ServiceState.OK,
     HAProxyFrontendStatus.STOP: ServiceState.CRIT,
 }
-DEFAULT_SERVER_STATES = {
+DEFAULT_SERVER_STATES: dict[HAProxyServerStatus, Literal[0, 1, 2, 3]] = {
     HAProxyServerStatus.UP: ServiceState.OK,
     HAProxyServerStatus.DOWN: ServiceState.CRIT,
     HAProxyServerStatus.NOLB: ServiceState.CRIT,

@@ -4,11 +4,13 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import usei18n from '@/lib/i18n.ts'
 
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkButton from '@/components/CmkButton.vue'
+import CmkLabel from '@/components/CmkLabel.vue'
 
 import type { useFilters } from '@/dashboard-wip/components/filter/composables/useFilters.ts'
 import type {
@@ -32,6 +34,8 @@ const emit = defineEmits<{
   'apply-runtime-filters': []
   'set-configuration-target': [target: 'required-filter']
 }>()
+
+const showAppliedConfirmation = ref(false)
 
 const hostRuntimeFilters = computed(() => {
   const filters: string[] = []
@@ -57,6 +61,7 @@ const serviceRuntimeFilters = computed(() => {
 
 const applyRuntimeFilters = () => {
   emit('apply-runtime-filters')
+  showAppliedConfirmation.value = true
 }
 
 const switchToRequiredConfiguration = () => {
@@ -70,6 +75,15 @@ const handleUpdateFilterValues = (filterId: string, values: ConfiguredValues) =>
 const handleRemoveFilter = (filterId: string) => {
   props.runtimeFilters.removeFilter(filterId)
 }
+
+watch(
+  () => JSON.stringify(props.runtimeFilters.getFilters()),
+  (newVal, oldVal) => {
+    if (showAppliedConfirmation.value && newVal !== oldVal) {
+      showAppliedConfirmation.value = false
+    }
+  }
+)
 </script>
 
 <template>
@@ -81,6 +95,13 @@ const handleRemoveFilter = (filterId: string) => {
       <CmkButton variant="secondary" @click="switchToRequiredConfiguration">
         {{ _t('Edit required runtime filters') }}
       </CmkButton>
+    </div>
+    <div v-if="showAppliedConfirmation">
+      <CmkAlertBox variant="success">
+        <CmkLabel>
+          {{ _t('Success! Your runtime filters have been applied') }}
+        </CmkLabel>
+      </CmkAlertBox>
     </div>
     <FilterCollection
       :title="_t('Host filter')"

@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import usei18n from '@/lib/i18n.ts'
 
@@ -50,6 +50,7 @@ const closeWindow = () => {
 const saveDashboardFilters = () => {
   console.log('Sending dashboard filters from menu', dashboardFilters.getFilters())
   emit('save-dashboard-filters', dashboardFilters.getFilters())
+  showSavedDashboardAlert.value = true
 }
 
 const resetDashboardFilters = () => {
@@ -63,6 +64,7 @@ const applyRuntimeFilters = () => {
 
 const filterCategories = parseFilterTypes(filterDefinitions, new Set(['host', 'service']))
 
+const showSavedDashboardAlert = ref(false)
 const dashboardFilters = useFilters(props.configuredDashboardFilters)
 
 const appliedRuntimeFilterIds = Object.keys(props.appliedRuntimeFilters || {})
@@ -156,6 +158,16 @@ const serviceDashboardFilters = computed(() => {
   })
   return filters
 })
+
+watch(
+  () => JSON.stringify(dashboardFilters.getFilters()),
+  (newVal, oldVal) => {
+    // if alert is visible and the filters changed, hide the alert
+    if (showSavedDashboardAlert.value && newVal !== oldVal) {
+      showSavedDashboardAlert.value = false
+    }
+  }
+)
 </script>
 
 <template>
@@ -250,6 +262,13 @@ const serviceDashboardFilters = computed(() => {
                   <CmkButton variant="secondary" @click="resetDashboardFilters">
                     {{ _t('Reset to saved filters') }}
                   </CmkButton>
+                </div>
+                <div v-if="showSavedDashboardAlert">
+                  <CmkAlertBox variant="success">
+                    <CmkLabel>
+                      {{ _t('Success! Your new dashboard filters have been saved') }}
+                    </CmkLabel>
+                  </CmkAlertBox>
                 </div>
 
                 <FilterCollection

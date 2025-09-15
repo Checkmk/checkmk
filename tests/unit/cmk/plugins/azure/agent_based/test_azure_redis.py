@@ -269,6 +269,21 @@ def resource_fixture_but(**kwargs):
             id="redis latency",
         ),
         pytest.param(
+            resource_fixture_but(average_cacheLatency=760403.8),
+            azure_redis.check_plugin_azure_redis_latency.check_default_parameters,
+            azure_redis.check_plugin_azure_redis_latency,
+            [
+                Result(state=State.OK, summary="Server-side: 20 milliseconds"),
+                Metric("azure_redis_latency_serverside", 0.019765),
+                Result(
+                    state=State.WARN,
+                    summary="Cache internode: 760 milliseconds (warn/crit at 500 milliseconds/1 second)",
+                ),
+                Metric("azure_redis_latency_internode", 0.7604038000000001, levels=(0.5, 1.0)),
+            ],
+            id="redis latency, default threshold (warn)",
+        ),
+        pytest.param(
             AZURE_REDIS_WITH_METRICS,
             {
                 "replication_connectivity_lag_upper": ("fixed", (0.3, 1.0)),

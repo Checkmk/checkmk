@@ -18,7 +18,7 @@ info = [
     ],
 ]
 
-discovery = {"": [(None, {})], "sync": [("Standardverzeichnis", {})]}
+discovery = {"": [(None, {})]}
 
 checks = {
     "": [
@@ -27,26 +27,6 @@ checks = {
             {},
             [
                 (0, "2 User Accounts", [("count", 2)]),
-            ],
-        ),
-    ],
-    "sync": [
-        (
-            "Standardverzeichnis",
-            {},
-            [
-                (0, "Time since last synchronization: 45 minutes 0 seconds", []),
-            ],
-        ),
-        (
-            "Standardverzeichnis",
-            {"age": (1800, 3600)},
-            [
-                (
-                    1,
-                    "Time since last synchronization: 45 minutes 0 seconds (warn/crit at 30 minutes 0 seconds/1 hour 0 minutes)",
-                    [],
-                ),
             ],
         ),
     ],

@@ -123,6 +123,7 @@ def check_azure_sync(item, params, parsed):
         return
 
     time_delta = time.time() - sync_time
+
     yield check_levels(
         time_delta,
         None,
@@ -139,4 +140,7 @@ check_info["azure_ad.sync"] = LegacyCheckDefinition(
     discovery_function=discover_sync,
     check_function=check_azure_sync,
     check_ruleset_name="azure_ad",
+    check_default_parameters={
+        "age": (3600, 7200),
+    },
 )

@@ -5,7 +5,7 @@
 
 import logging
 import subprocess
-from collections.abc import Generator, Sequence
+from collections.abc import Callable, Generator, Sequence
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -31,28 +31,20 @@ from ._helper_query_automation_helper import AutomationMode, HealthMode
 
 def test_config_reloading_without_reloader(site: Site) -> None:
     with _disable_automation_helper_reloader_and_set_worker_count_to_one(site):
-        current_last_reload_timestamp = HealthCheckResponse.model_validate_json(
-            _query_automation_helper(site, HealthMode().model_dump_json())
-        ).last_reload_at
-        with _fake_config_file(site):
-            _query_automation_helper(
-                site,
-                AutomationMode(
-                    payload=AutomationPayload(
-                        # it doesn't matter that this automation doesn't exist, we just want to trigger a reload
-                        name="non-existing-automation",
-                        args=[],
-                        stdin="",
-                        log_level=logging.INFO,
-                    )
-                ).model_dump_json(),
-            )
-            assert (
-                HealthCheckResponse.model_validate_json(
-                    _query_automation_helper(site, HealthMode().model_dump_json())
-                ).last_reload_at
-                > current_last_reload_timestamp
-            )
+        with _reload_ensurer(site) as wait_for_reload:
+            with _fake_config_file(site):
+                _query_automation_helper(
+                    site,
+                    AutomationMode(
+                        payload=AutomationPayload(
+                            name="non-existing-automation",  # we just want to trigger a reload
+                            args=[],
+                            stdin="",
+                            log_level=logging.INFO,
+                        )
+                    ).model_dump_json(),
+                )
+                wait_for_reload(0)
 
 
 def test_config_reloading_with_reloader(site: Site) -> None:
@@ -61,21 +53,11 @@ def test_config_reloading_with_reloader(site: Site) -> None:
         run_directory=Path(),
         log_directory=Path(),
     ).reloader_config
-    current_last_reload_timestamp = HealthCheckResponse.model_validate_json(
-        _query_automation_helper(site, HealthMode().model_dump_json())
-    ).last_reload_at
-    with _fake_config_file(site):
-        wait_until(
-            lambda: (
-                HealthCheckResponse.model_validate_json(
-                    _query_automation_helper(site, HealthMode().model_dump_json())
-                ).last_reload_at
-                > current_last_reload_timestamp
-            ),
-            timeout=reloader_configuration.poll_interval
-            + reloader_configuration.cooldown_interval
-            + 2,
-        )
+    timeout = reloader_configuration.poll_interval + reloader_configuration.cooldown_interval + 2
+
+    with _reload_ensurer(site) as wait_for_reload:
+        with _fake_config_file(site):
+            wait_for_reload(timeout)
 
 
 def test_standard_workflow_involving_automations(site: Site) -> None:
@@ -237,3 +219,24 @@ def _restart_automation_helper_and_wait_until_reachable(site: Site) -> None:
         timeout=10,
         interval=0.25,
     )
+
+
+@contextmanager
+def _reload_ensurer(site: Site) -> Generator[Callable[[float], None]]:
+    last_reload_timestamp = HealthCheckResponse.model_validate_json(
+        _query_automation_helper(site, HealthMode().model_dump_json())
+    ).last_reload_at
+
+    def _wait_for_reload(timeout: float) -> None:
+        wait_until(
+            lambda: (
+                HealthCheckResponse.model_validate_json(
+                    _query_automation_helper(site, HealthMode().model_dump_json())
+                ).last_reload_at
+                > last_reload_timestamp
+            ),
+            timeout=timeout,
+            condition_name="Reloaded automation-helper",
+        )
+
+    yield _wait_for_reload

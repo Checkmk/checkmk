@@ -33,7 +33,7 @@
                             <tr>
                                 <td style=" line-height: 45px; padding: 0; ">
                                     <div style="{{ macros.event_marker_style() }};
-                                                {% if service_notification %} {{ state_mapping[data.PREVIOUSSERVICEHARDSTATE] }} {% else %} {{ state_mapping[data.PREVIOUSHOSTHARDSTATE] }} {% endif %};
+                                                {% if service_notification %} {{ state_mapping[(data.PREVIOUSSERVICEHARDSTATE|default('UNKNOWN'))] }} {% else %} {{ state_mapping[(data.PREVIOUSHOSTHARDSTATE|default('UNKNOWN'))] }} {% endif %};
                                                 display: inline-block;
                                                 /* Inline block to respect width */">
                                         {% if service_notification %}

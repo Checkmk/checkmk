@@ -9,7 +9,7 @@ from collections.abc import Iterator
 import pytest
 from fastapi.testclient import TestClient
 
-from cmk.agent_receiver.config import Config
+from cmk.agent_receiver.config import Config, CONFIG_FILE
 from cmk.agent_receiver.main import main_app
 from cmk.agent_receiver.utils import internal_credentials
 
@@ -35,14 +35,15 @@ def site_context(
 
     os.environ["OMD_ROOT"] = str(site_dir)
     os.environ["OMD_SITE"] = site_name
-    os.environ["SITE_URL"] = wiremock.base_url
 
-    site_context = Config()
+    site_context = Config(site_url=wiremock.base_url)
     site_context.internal_secret_path.parent.mkdir(parents=True, exist_ok=True)
     site_context.internal_secret_path.write_text("lol")
 
     site_context.log_path.parent.mkdir(parents=True, exist_ok=True)
     site_context.log_path.touch()
+
+    (site_context.omd_root / CONFIG_FILE).write_text(site_context.model_dump_json())
 
     return site_context
 

@@ -201,6 +201,7 @@ CMK_PACKAGES = [
     "//packages/cmk-ccc:timeout",
     "//packages/cmk-ccc:tty",
     "//packages/cmk-ccc:user",
+    "//packages/cmk-ccc:archive",
     "//packages/cmk-ccc:version",
     "//packages/cmk-check-engine:fetchers",
     "//packages/cmk-check-engine:helper-interface",

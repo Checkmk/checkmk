@@ -48,13 +48,14 @@ import os
 import re
 import subprocess
 import sys
-import tarfile
 from pathlib import Path
 from shutil import rmtree
 from tempfile import mkdtemp
 from typing import NamedTuple
 
 import docker  # type: ignore[import-untyped]
+
+from cmk.ccc.archive import CheckmkTarArchive
 
 sys.path.insert(0, Path(__file__).parent.parent.parent.as_posix())
 from buildscripts.scripts.lib.common import cwd, strtobool
@@ -458,11 +459,10 @@ def build_image(
     LOG.debug("pkg_file: %s", pkg_file)
 
     LOG.info("Unpack source tar to %s", tmp_path)
-    with tarfile.open(
-        name=f"{args.source_path}/check-mk-{args.edition}-{args.version}.tar.gz",
-        mode="r:gz",
-    ) as tar:
-        tar.extractall(tmp_path, filter="data")
+    with CheckmkTarArchive.from_path(
+        Path(f"{args.source_path}/check-mk-{args.edition}-{args.version}.tar.gz")
+    ) as archive:
+        archive.extractall(tmp_path)
 
     LOG.info("Copy debian package ...")
     run_cmd(cmd=["cp", f"{args.source_path}/{pkg_file}", docker_path])

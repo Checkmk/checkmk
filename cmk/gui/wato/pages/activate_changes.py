@@ -15,13 +15,14 @@ import ast
 import enum
 import json
 import os
-import tarfile
 from collections.abc import Collection, Iterator, Sequence
+from pathlib import Path
 from typing import Literal, override
 
 from livestatus import SiteConfiguration, SiteConfigurations
 
 import cmk.gui.watolib.changes as _changes
+from cmk.ccc.archive import CheckmkTarArchive
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition, edition, edition_has_enforced_licensing
@@ -122,18 +123,14 @@ def _show_activation_state_messages(title: str, message: str, state: ActivationS
     html.close_div()  # activation_state_message_container
 
 
-def _extract_from_file(filename: str, elements: dict[str, backup_snapshots.DomainSpec]) -> None:
-    if not isinstance(elements, dict):
+def _extract_snapshot(snapshot_file: str) -> None:
+    filename = Path(backup_snapshots.snapshot_dir + snapshot_file)
+    if not isinstance(backup_snapshots.backup_domains, dict):
         raise NotImplementedError()
-
-    with tarfile.open(filename, "r") as opened_file:
-        backup_snapshots.extract_snapshot(opened_file, elements)
-
-
-def _extract_snapshot(snapshot_file):
-    _extract_from_file(
-        backup_snapshots.snapshot_dir + snapshot_file, backup_snapshots.backup_domains
-    )
+    with CheckmkTarArchive.from_path(
+        filename, streaming=False, compression="*", allow_symlinks=True
+    ) as opened_file:
+        backup_snapshots.extract_snapshot(opened_file, backup_snapshots.backup_domains)
 
 
 def _get_snapshots() -> list[str]:

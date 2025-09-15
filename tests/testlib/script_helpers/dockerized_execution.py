@@ -82,7 +82,7 @@ def execute_tests_in_container(
             # Important to workaround really high default of docker which results
             # in problems when trying to close all FDs in Python 2.
             ulimits=[
-                docker.types.Ulimit(name="nofile", soft=2048, hard=2048),
+                docker.types.Ulimit(name="nofile", soft=8192, hard=8192),
             ],
             binds=_runtime_binds(),
         ),

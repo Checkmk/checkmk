@@ -712,9 +712,9 @@ def _make_attribute_filter_from_legacy_hint(
         case "hz":
             unit = _("Hz")
         case "volt":
-            unit = _("Volt")
+            unit = _("V")
         case "timestamp":
-            unit = _("secs")
+            unit = _("s")
         case _:
             unit = ""
 

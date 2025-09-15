@@ -37,9 +37,9 @@
                                                 display: inline-block;
                                                 /* Inline block to respect width */">
                                         {% if service_notification %}
-                                            {{ data.PREVIOUSSERVICEHARDSTATE[:4] }}
+                                            {{ (data.PREVIOUSSERVICEHARDSTATE|default("NULL"))[:4] }}
                                         {% else %}
-                                            {{ data.PREVIOUSHOSTHARDSHORTSTATE[:4] }}
+                                            {{ (data.PREVIOUSHOSTHARDSHORTSTATE|default("NULL"))[:4] }}
                                         {% endif %}
                                     </div>
                                 </td>

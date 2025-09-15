@@ -41,7 +41,6 @@ from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.helper_interface import SourceType
 from cmk.snmplib import SNMPBackendEnum, SNMPVersion
 from cmk.utils.ip_lookup import IPLookup, IPLookupOptional, IPStackConfig
-from cmk.utils.paths import tmp_dir
 from cmk.utils.tags import ComputedDataSources
 from cmk.utils.timeperiod import timeperiod_active
 
@@ -60,7 +59,7 @@ def dump_source(source: Source) -> str:
         return description
 
     if isinstance(fetcher, PiggybackFetcher):
-        return f"Process piggyback data from {tmp_dir / 'piggyback' / str(fetcher.hostname)}"
+        return "Process piggyback data"
 
     if isinstance(fetcher, ProgramFetcher):
         response = [f"Program: {fetcher.cmdline}"]

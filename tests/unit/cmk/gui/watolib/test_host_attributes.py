@@ -9,7 +9,10 @@ import pytest
 import cmk.gui.watolib.host_attributes as attrs
 from cmk.gui.config import active_config, Config
 from cmk.gui.watolib.host_attributes import all_host_attributes
-from tests.testlib.common.repo import is_cloud_repo, is_enterprise_repo
+from tests.testlib.common.repo import (
+    is_cloud_repo,
+    is_enterprise_repo,
+)
 
 expected_attributes = {
     "additional_ipv4addresses": {
@@ -275,6 +278,24 @@ expected_attributes = {
             "cmk_agent_connection": {
                 "depends_on_roles": [],
                 "depends_on_tags": ["checkmk-agent"],
+                "editable": True,
+                "from_config": False,
+                "show_in_folder": True,
+                "show_in_form": True,
+                "show_in_host_search": True,
+                "show_in_table": False,
+                "show_inherited_value": True,
+                "topic": "Monitoring agents",
+            },
+        }
+        if is_cloud_repo()
+        else {}
+    ),
+    **(
+        {
+            "otel_metrics_association": {
+                "depends_on_roles": [],
+                "depends_on_tags": [],
                 "editable": True,
                 "from_config": False,
                 "show_in_folder": True,
@@ -578,6 +599,7 @@ def test_host_attributes(for_what: str, new: bool) -> None:
             "tag_snmp_ds",
             "snmp_community",
             "tag_piggyback",
+            *(("otel_metrics_association",) if is_cloud_repo() else ()),
         ],
         "management_board": [
             "management_protocol",

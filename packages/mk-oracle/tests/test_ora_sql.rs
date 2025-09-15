@@ -1056,6 +1056,7 @@ fn test_instance_old() {
     }
 }
 
+#[ignore = "due to lack of ASM instances in test environments"]
 #[test]
 fn test_asm_instance_new() {
     add_runtime_to_path();

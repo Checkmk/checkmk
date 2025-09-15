@@ -17,18 +17,10 @@
 SELECT UPPER(i.INSTANCE_NAME)   AS instance_name, -- Oracle instance name
        'sys_time_model'         AS metric_group,  -- Identifies the metric source
        s.STAT_NAME,                               -- 'DB time' or 'DB CPU'
-       ROUND(s.value / 1000000) AS value_seconds, -- Convert microseconds to seconds
-       NULL,
-       NULL,
-       NULL,
-       NULL,
-       NULL,
-       NULL                                       -- Placeholder columns for consistency
+       ROUND(s.value / 1000000) AS value_seconds  -- Convert microseconds to seconds
 FROM v$instance i,
      v$sys_time_model s
-WHERE s.stat_name IN ('DB time', 'DB CPU') -- Key workload metrics
-
-UNION ALL
+WHERE s.stat_name IN ('DB time', 'DB CPU'); -- Key workload metrics
 
 -- === Section 2: Buffer Pool Statistics (Cache Efficiency & Waits) ===
 SELECT UPPER(i.INSTANCE_NAME),
@@ -42,25 +34,15 @@ SELECT UPPER(i.INSTANCE_NAME),
        b.free_buffer_wait,       -- Waits for free buffers
        b.buffer_busy_wait        -- Contention waits for buffer access
 FROM v$instance i,
-     v$buffer_pool_statistics b
-
-UNION ALL
+     v$buffer_pool_statistics b;
 
 -- === Section 3: SGA Memory Information ===
 SELECT UPPER(i.INSTANCE_NAME),
        'SGA_info', -- Metric group identifier
        s.name,     -- Name of the SGA component (Shared pool, Buffer cache, etc.)
-       s.bytes,    -- Size in bytes
-       NULL,
-       NULL,
-       NULL,
-       NULL,
-       NULL,
-       NULL        -- Placeholder columns
+       s.bytes     -- Size in bytes
 FROM v$sgainfo s,
-     v$instance i
-
-UNION ALL
+     v$instance i;
 
 -- === Section 4: Library Cache Efficiency ===
 SELECT UPPER(i.INSTANCE_NAME),
@@ -71,7 +53,6 @@ SELECT UPPER(i.INSTANCE_NAME),
        b.pins,          -- Executions of objects
        b.pinhits,       -- Successful executions from cache
        b.reloads,       -- Library cache reloads (indicates misses)
-       b.invalidations, -- Invalidations of cached objects
-       NULL
+       b.invalidations  -- Invalidations of cached objects
 FROM v$instance i,
-     v$librarycache b
+     v$librarycache b;

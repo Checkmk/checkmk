@@ -14,7 +14,7 @@ SELECT UPPER(
 FROM dba_ts_quotas Q, -- View containing per-user tablespace quotas
      v$database d,    -- Database information
      v$instance i     -- Instance information
-WHERE max_bytes > 0; -- Only users with quotas > 0
+WHERE max_bytes > 0;  -- Only users with quotas > 0
 
 -- Fallback query: If no user quotas exist, still return DB info
 SELECT UPPER(DECODE(NVL(:IGNORE_DB_NAME, 0), 0, d.NAME, i.instance_name)) AS db_or_instance_name,

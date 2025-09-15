@@ -41,9 +41,8 @@ FROM (SELECT UPPER(
                bd2.INCREMENTAL_LEVEL,
                bd2.INCREMENTAL_CHANGE#
       ORDER BY name, bd2.INCREMENTAL_LEVEL
-     )
+     );
 
-UNION ALL
 /*${HINT_RMAN} check_mk rman2 */
 -- === Section 2: Check latest CONTROLFILE backup ===
 SELECT name,
@@ -62,9 +61,8 @@ FROM (SELECT UPPER(DECODE(NVL(:IGNORE_DB_NAME, 0), 0, d.NAME, i.instance_name)) 
                JOIN v$instance i
                     ON 1 = 1
       GROUP BY UPPER(DECODE(NVL(:IGNORE_DB_NAME, 0), 0, d.NAME, i.instance_name))
-     )
+     );
 
-UNION ALL
 /*${HINT_RMAN} check_mk rman3 */
 -- === Section 3: Check latest ARCHIVELOG backup ===
 SELECT name,

@@ -232,6 +232,7 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.plugins.lib.memory",
         "cmk.plugins.lib.cpu_util",
         "cmk.plugins.lib.uptime",
+        "cmk.plugins.lib.df",
         "cmk.utils.paths",
     ),
     "otel": (

@@ -29,6 +29,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from cmk.plugins.proxmox_ve.lib.node_allocation import SectionNodeAllocation
+from cmk.plugins.proxmox_ve.lib.node_filesystems import SectionNodeFilesystems
 from cmk.plugins.proxmox_ve.lib.replication import Replication, SectionReplication
 from cmk.plugins.proxmox_ve.special_agent.libbackups import fetch_backup_data
 from cmk.plugins.proxmox_ve.special_agent.libproxmox import ProxmoxVeAPI
@@ -145,6 +146,11 @@ def agent_proxmox_ve_main(args: Args) -> int:
     replications = {
         node["node"]: [rep for rep in node.get("replication", [])] for node in data["nodes"]
     }
+    all_filesystems = {
+        entry["storage"]: entry
+        for entry in data["cluster"]["resources"]
+        if entry["type"] == "storage"
+    }
 
     for node in data["nodes"]:
         if (timezone := node["time"].get("timezone")) is not None:
@@ -249,6 +255,17 @@ def agent_proxmox_ve_main(args: Args) -> int:
                             for repl in replications.get(node["node"], [])
                         ],
                         cluster_has_replications=True if data["cluster"]["replication"] else False,
+                    ).model_dump_json()
+                )
+            with SectionWriter("proxmox_ve_node_filesystems") as writer:
+                writer.append_json(
+                    SectionNodeFilesystems(
+                        node=node["node"],
+                        filesystems=[
+                            filesystem_data
+                            for filesystem_data in all_filesystems.values()
+                            if filesystem_data.get("node", "") == node["node"]
+                        ],
                     ).model_dump_json()
                 )
             if "mem" in node and "maxmem" in node:

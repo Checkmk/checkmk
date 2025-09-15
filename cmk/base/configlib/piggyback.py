@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 
 from cmk.ccc.hostaddress import HostName
 from cmk.piggyback.backend import parse_flattened_piggyback_time_settings, PiggybackTimeSettings
@@ -18,10 +18,13 @@ def make_piggyback_time_settings(
     loaded_config: LoadedConfigFragment,
     matcher: RulesetMatcher,
     labels_of_host: Callable[[HostName], Labels],
-    source_host_name: HostName,
+    source_host_names: Iterable[HostName],
 ) -> PiggybackTimeSettings:
-    if rules := matcher.get_host_values_all(
-        source_host_name, loaded_config.piggybacked_host_files, labels_of_host
-    ):
-        return parse_flattened_piggyback_time_settings(source_host_name, rules[0])
-    return []
+    return [
+        setting
+        for source_host_name in source_host_names
+        for rule in matcher.get_host_values_all(
+            source_host_name, loaded_config.piggybacked_host_files, labels_of_host
+        )[:1]  # first match rule
+        for setting in parse_flattened_piggyback_time_settings(source_host_name, rule)
+    ]

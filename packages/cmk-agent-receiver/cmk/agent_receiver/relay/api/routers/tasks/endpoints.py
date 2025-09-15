@@ -7,7 +7,6 @@ from typing import Annotated
 from uuid import UUID
 
 import fastapi
-from pydantic import SecretStr
 
 from cmk.agent_receiver.log import bound_contextvars
 from cmk.agent_receiver.relay.api.routers.tasks.dependencies import (
@@ -49,7 +48,6 @@ async def create_task_endpoint(
     relay_id: str,
     request: tasks_protocol.TaskCreateRequest,
     handler: Annotated[CreateTaskHandler, fastapi.Depends(get_create_task_handler)],
-    authorization: Annotated[SecretStr, fastapi.Header()],
 ) -> tasks_protocol.TaskCreateResponse:
     """Create a new Service Fetching Task for a specific relay.
 
@@ -87,7 +85,6 @@ async def create_task_endpoint(
             RelayID(relay_id),
             TaskType(request.type),
             request.payload,
-            authorization,
         )
     except CheckmkAPIError as e:
         raise fastapi.HTTPException(
@@ -109,7 +106,6 @@ async def update_task(
     task_id: str,
     request: tasks_protocol.TaskUpdateRequest,
     handler: Annotated[UpdateTaskHandler, fastapi.Depends(get_update_task_handler)],
-    authorization: Annotated[SecretStr, fastapi.Header()],
 ) -> tasks_protocol.TaskResponse:
     """Update a task with results.
 
@@ -152,7 +148,6 @@ async def update_task(
                 TaskID(task_id),
                 ResultType(request.result_type.value),
                 request.result_payload,
-                authorization,
             )
     except CheckmkAPIError as e:
         raise fastapi.HTTPException(
@@ -166,7 +161,6 @@ async def update_task(
 async def get_tasks_endpoint(
     relay_id: str,
     handler: Annotated[GetRelayTasksHandler, fastapi.Depends(get_relay_tasks_handler)],
-    authorization: Annotated[SecretStr, fastapi.Header()],
     status: tasks_protocol.TaskStatus | None = fastapi.Query(
         None, description="Filter tasks by status"
     ),
@@ -197,9 +191,7 @@ async def get_tasks_endpoint(
     #         instead of having a separate cleanup task
     # - Return filtered task list
     try:
-        tasks = handler.process(
-            RelayID(relay_id), TaskStatus(status.value) if status else None, authorization
-        )
+        tasks = handler.process(RelayID(relay_id), TaskStatus(status.value) if status else None)
     except CheckmkAPIError as e:
         raise fastapi.HTTPException(
             status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
@@ -213,7 +205,6 @@ async def get_task_endpoint(
     relay_id: str,
     task_id: str,
     handler: Annotated[GetRelayTaskHandler, fastapi.Depends(get_relay_task_handler)],
-    authorization: Annotated[SecretStr, fastapi.Header()],
 ) -> tasks_protocol.TaskResponse:
     """
     Get a specific task for a relay
@@ -227,7 +218,7 @@ async def get_task_endpoint(
     """
     try:
         with bound_contextvars(task_id=task_id):
-            task = handler.process(RelayID(relay_id), TaskID(task_id), authorization)
+            task = handler.process(RelayID(relay_id), TaskID(task_id))
     except CheckmkAPIError as e:
         raise fastapi.HTTPException(
             status_code=fastapi.status.HTTP_502_BAD_GATEWAY,

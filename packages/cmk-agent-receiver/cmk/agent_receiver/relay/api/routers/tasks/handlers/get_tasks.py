@@ -6,8 +6,6 @@
 
 import dataclasses
 
-from pydantic import SecretStr
-
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     Task,
     TasksRepository,
@@ -19,7 +17,7 @@ from cmk.agent_receiver.relay.lib.shared_types import (
     RelayNotFoundError,
     TaskID,
 )
-from cmk.agent_receiver.relay.lib.site_auth import UserAuth
+from cmk.agent_receiver.relay.lib.site_auth import InternalAuth
 
 
 @dataclasses.dataclass
@@ -27,10 +25,8 @@ class GetRelayTasksHandler:
     tasks_repository: TasksRepository
     relay_repository: RelaysRepository
 
-    def process(
-        self, relay_id: RelayID, status: TaskStatus | None, authorization: SecretStr
-    ) -> list[Task]:
-        auth = UserAuth(authorization)
+    def process(self, relay_id: RelayID, status: TaskStatus | None) -> list[Task]:
+        auth = InternalAuth()
         if not self.relay_repository.has_relay(relay_id, auth):
             raise RelayNotFoundError(relay_id)
         return self._get_tasks(relay_id, status)
@@ -49,8 +45,8 @@ class GetRelayTaskHandler:
     tasks_repository: TasksRepository
     relay_repository: RelaysRepository
 
-    def process(self, relay_id: RelayID, task_id: TaskID, authorization: SecretStr) -> Task:
-        auth = UserAuth(authorization)
+    def process(self, relay_id: RelayID, task_id: TaskID) -> Task:
+        auth = InternalAuth()
         if not self.relay_repository.has_relay(relay_id, auth):
             raise RelayNotFoundError(relay_id)
         return self._get_task(relay_id, task_id)

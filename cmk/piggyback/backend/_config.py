@@ -24,7 +24,7 @@ PiggybackTimeSettings = Sequence[tuple[_HostCondition, _KeyName, _Value]]
 
 # 'parse_' is a bit much here. We don't parse everything (yet).
 def parse_flattened_piggyback_time_settings(
-    host_name: str, rule: Mapping[str, HopeForTheBest]
+    source_host_name: str, rule: Mapping[str, HopeForTheBest]
 ) -> PiggybackTimeSettings:
     """This rule is a first match rule.
 
@@ -35,6 +35,7 @@ def parse_flattened_piggyback_time_settings(
         (HOST, KEY, VALUE)
     Then piggyback.py:_get_piggyback_processed_file_info can evaluate the
     parameters generically."""
+    # WATCH OUT: this mixes source and piggybacked hostnames in the conditions!
     flat_rule: list[
         tuple[
             tuple[Literal["exact_match"], str] | tuple[Literal["regular_expression"], str],
@@ -45,17 +46,17 @@ def parse_flattened_piggyback_time_settings(
 
     max_cache_age = rule.get("global_max_cache_age")
     if max_cache_age is not None and max_cache_age != "global":
-        flat_rule.append((("exact_match", host_name), "max_cache_age", max_cache_age))
+        flat_rule.append((("exact_match", source_host_name), "max_cache_age", max_cache_age))
 
     global_validity_setting = rule.get("global_validity", {})
 
     period = global_validity_setting.get("period")
     if period is not None:
-        flat_rule.append((("exact_match", host_name), "validity_period", period))
+        flat_rule.append((("exact_match", source_host_name), "validity_period", period))
 
     check_mk_state = global_validity_setting.get("check_mk_state")
     if check_mk_state is not None:
-        flat_rule.append((("exact_match", host_name), "validity_state", check_mk_state))
+        flat_rule.append((("exact_match", source_host_name), "validity_state", check_mk_state))
 
     for setting in rule.get("per_piggybacked_host", []):
         for piggybacked_hostname_cond in setting["piggybacked_hostname_conditions"]:

@@ -21,10 +21,13 @@ def make_piggyback_time_settings(
     source_host_names: Iterable[HostName],
 ) -> PiggybackTimeSettings:
     return [
-        setting
-        for source_host_name in source_host_names
-        for rule in matcher.get_host_values_all(
-            source_host_name, loaded_config.piggybacked_host_files, labels_of_host
-        )[:1]  # first match rule
-        for setting in parse_flattened_piggyback_time_settings(source_host_name, rule)
+        *(
+            setting
+            for source_host_name in source_host_names
+            for rule in matcher.get_host_values_all(
+                source_host_name, loaded_config.piggybacked_host_files, labels_of_host
+            )[:1]  # first match rule
+            for setting in parse_flattened_piggyback_time_settings(source_host_name, rule)
+        ),
+        (None, "max_cache_age", loaded_config.piggyback_max_cachefile_age),
     ]

@@ -9,7 +9,7 @@ pyasn1<0.6.1  # 0.6.1 removed pyasn1.compat.octets, but this is used by pysnmp <
 ply==3.11  # needed by pysmi, python-active-directory
 pysmi-lextudio==1.4.3  # needed by pysnmp
 pysnmp-lextudio==6.1.2  # needed by Event Console
-snmpsim-lextudio==1.1.0  # needed by pysnmp integration tests
+snmpsim-lextudio==1.1.1  # needed by pysnmp integration tests
 urllib3==2.5.0 # needed by requests
 pyopenssl==24.3.0
 pyghmi==1.5.60  # needed by base for IPMI

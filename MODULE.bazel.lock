@@ -1846,7 +1846,7 @@
         "usagesDigest": "jcf+ROaCqHFFmSmqJ4vYsOEVa88JPeszIAfPy+qjIYg=",
         "recordedFileInputs": {
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
-          "@@//requirements_all_lock.txt": "a1b42f5be7a4eacac6dd248cbce4089d1e70405b715f350320c5c0d8d0c024a3",
+          "@@//requirements_all_lock.txt": "4edcaa87cdff646e1d560c1da745ef4faf6fd298e0b5a420dfcf2e6d9f61d0e2",
           "@@rules_mypy~//mypy/private/requirements.txt": "f6c7c90744df0481ca13d433dd2790c62af0b6fef11cdd85ac5424bc87b39fac",
           "@@protobuf~//python/requirements.txt": "983be60d3cec4b319dcab6d48aeb3f5b2f7c3350f26b3a9e97486c37967c73c5"
         },
@@ -7089,7 +7089,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "snmpsim-lextudio==1.1.0     --hash=sha256:0d6fe597652b8c0fd517433f0c92b67ad9febbc8733f6658d2aea3b1e3d35e59     --hash=sha256:24eaeacac89fea434126ec3f9c8cf96ebfb27fa7a81b4d4736137c977391b281"
+              "requirement": "snmpsim-lextudio==1.1.1     --hash=sha256:55d71a27de878b6c4338e363d6f6a989cad0ae7f265ac187d6c617feb7ea840a     --hash=sha256:a5288a59219789c8831aafe3dcb41f79f918215b870a25579ff2c5a713048a2f"
             }
           },
           "cmk_requirements_312_sortedcontainers": {

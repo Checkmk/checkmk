@@ -17,6 +17,7 @@ CONFIG_FILE = "agent_receiver_config.json"
 class Config(BaseModel):
     task_ttl: float = 120.0
     max_tasks_per_relay: int = 10
+    site_url: str = "http://localhost"
 
     @classmethod
     def load(cls, path: Path | None = None) -> Config:

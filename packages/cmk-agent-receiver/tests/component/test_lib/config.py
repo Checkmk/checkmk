@@ -14,7 +14,9 @@ def create_relay_config(
     max_number_of_tasks: int = 5,
 ) -> pathlib.Path:
     """Helper function to create relay configuration files."""
-    config = Config(task_ttl=task_ttl, max_tasks_per_relay=max_number_of_tasks)
+    config = Config.load()
+    config.task_ttl = task_ttl
+    config.max_tasks_per_relay = max_number_of_tasks
     config_file = config.config_file
     config_file.write_text(config.model_dump_json())
     get_config.cache_clear()

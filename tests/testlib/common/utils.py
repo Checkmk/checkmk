@@ -34,13 +34,14 @@ def wait_until(
     """
     condition_name = condition_name or repr(condition)
 
-    start = time.time()
+    start = now = time.time()
     logger.info("Waiting for '%s' to finish for %ds", condition_name, timeout)
-    while time.time() - start < timeout:
+    while now - start <= timeout:
         if condition():
-            logger.info("Wait for '%s' finished after %0.2fs", condition_name, time.time() - start)
-            return  # Success. Stop waiting...
+            logger.info("Wait for '%s' finished after %0.2fs", condition_name, now - start)
+            return
         time.sleep(interval)
+        now = time.time()
 
     error_message = f"Timeout waiting for '{condition_name}' to finish (Timeout: {timeout} sec)"
     logger.error(error_message)

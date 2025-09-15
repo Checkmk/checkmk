@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkHtml from '@/components/CmkHtml.vue'
+import CmkIcon from '@/components/CmkIcon.vue'
 
 defineProps<{
   help: string
@@ -14,7 +15,7 @@ defineProps<{
 <template>
   <div v-if="help" class="help vue_help">
     <div class="info_icon">
-      <img class="icon" />
+      <CmkIcon name="info" size="small" />
     </div>
     <div class="help_text"><CmkHtml :html="help" /></div>
   </div>

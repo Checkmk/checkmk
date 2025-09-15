@@ -2918,9 +2918,15 @@ class ConfigCache:
                 ident="piggyback",
                 section_cache_path=cmk.utils.paths.var_dir,
             ).exists()
+            # ^- Will this ever be removed? If not, everything we do in _host_has_piggyback_data_right_now is pointless,
+            # and it might as well just return `bool(piggyback_backend.get_messages_for(...))`
         )
 
     def _host_has_piggyback_data_right_now(self, piggybacked_host_name: HostAddress) -> bool:
+        # NOTE: This is a best effort guess on whether we should create the piggyback datasource.
+        # Users can still configure it to be absent or present manually.
+        # In case of false positives (DS created but no data) the dasource will be OK anyway.
+
         # This duplicates logic and should be kept in sync with what the fetcher does.
         # Can we somehow instanciate the hypothetical fetcher here, and just let it fetch?
         piggy_config = piggyback_backend.Config(
@@ -3464,14 +3470,22 @@ class ConfigCache:
     def get_piggybacked_hosts_time_settings(
         self, piggybacked_hostname: HostName
     ) -> piggyback_backend.PiggybackTimeSettings:
-        sources = piggyback_backend.get_current_piggyback_sources_of_host(
-            cmk.utils.paths.omd_root, piggybacked_hostname
-        )
+        # NOTE: piggyback time settings are configured in rules matching on the source hosts,
+        # but applied when dealing with the destination hosts (aka piggybacked hosts) in the
+        # fetcher and the summarizer.
+        # This *guesses* which rulesets are relevant, by matching on the hosts that *currently*
+        # provide piggyback data for the given piggybacked host.
+        # For the fetcher, this function is evaluated at config creation time, so this might
+        # well be wrong.
         return make_piggyback_time_settings(
             self._loaded_config,
             self.ruleset_matcher,
             self.label_manager.labels_of_host,
-            source_host_names=sorted(sources),
+            source_host_names=sorted(
+                piggyback_backend.get_current_piggyback_sources_of_host(
+                    cmk.utils.paths.omd_root, piggybacked_hostname
+                )
+            ),
         )
 
     # TODO: Remove old name one day

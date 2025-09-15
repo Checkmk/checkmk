@@ -47,6 +47,7 @@ from cmk.base.configlib.checkengine import CheckingConfig
 from cmk.base.configlib.fetchers import make_tcp_fetcher_config
 from cmk.base.configlib.labels import LabelConfig
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
+from cmk.base.configlib.piggyback import make_piggyback_time_settings
 from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.base.default_config import *  # noqa: F403
 from cmk.base.parent_scan import ScanConfig as ParentScanConfig
@@ -2919,13 +2920,18 @@ class ConfigCache:
             ).exists()
         )
 
-    def _host_has_piggyback_data_right_now(self, host_name: HostAddress) -> bool:
+    def _host_has_piggyback_data_right_now(self, piggybacked_host_name: HostAddress) -> bool:
         # This duplicates logic and should be kept in sync with what the fetcher does.
         # Can we somehow instanciate the hypothetical fetcher here, and just let it fetch?
         piggy_config = piggyback_backend.Config(
-            host_name,
+            piggybacked_host_name,
             [
-                *self._piggybacked_host_files(host_name),
+                *make_piggyback_time_settings(
+                    self._loaded_config,
+                    self.ruleset_matcher,
+                    self.label_manager.labels_of_host,
+                    source_host_name=piggybacked_host_name,  # I don't think this is right.
+                ),
                 (None, "max_cache_age", piggyback_max_cachefile_age),
             ],
         )
@@ -2936,17 +2942,11 @@ class ConfigCache:
             return (now - data.meta.last_update) <= piggy_config.max_cache_age(data.meta.source)
 
         return any(
-            map(_is_usable, piggyback_backend.get_messages_for(host_name, cmk.utils.paths.omd_root))
+            map(
+                _is_usable,
+                piggyback_backend.get_messages_for(piggybacked_host_name, cmk.utils.paths.omd_root),
+            )
         )
-
-    def _piggybacked_host_files(
-        self, host_name: HostName
-    ) -> piggyback_backend.PiggybackTimeSettings:
-        if rules := self.ruleset_matcher.get_host_values_all(
-            host_name, piggybacked_host_files, self.label_manager.labels_of_host
-        ):
-            return piggyback_backend.parse_flattened_piggyback_time_settings(host_name, rules[0])
-        return []
 
     def tags_of_service(
         self, host_name: HostName, service_name: ServiceName, service_labels: Labels
@@ -3474,7 +3474,12 @@ class ConfigCache:
             *(
                 setting
                 for source in sorted(sources)
-                for setting in self._piggybacked_host_files(source)
+                for setting in make_piggyback_time_settings(
+                    self._loaded_config,
+                    self.ruleset_matcher,
+                    self.label_manager.labels_of_host,
+                    source_host_name=source,
+                )
             ),
             # From global settings
             (None, "max_cache_age", piggyback_max_cachefile_age),

@@ -349,7 +349,7 @@ def test_is_piggyback_host_auto(
     ts.add_host(hostname, tags)
     config_cache = ts.apply(monkeypatch)
 
-    config_cache._host_has_piggyback_data_right_now = lambda host_name: with_data  # type: ignore[method-assign]
+    config_cache._host_has_piggyback_data_right_now = lambda piggybacked_host_name: with_data  # type: ignore[method-assign]
     assert config_cache.is_piggyback_host(hostname) == result
 
 

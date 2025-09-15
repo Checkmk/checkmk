@@ -147,7 +147,7 @@ searchUtils.input.onEmptyBackspace(() => {
         :idx="idx"
         :option="opt"
         @click.stop="() => handleFilterSelect(opt)"
-        @keypres.enter.stop="() => handleFilterSelect(opt)"
+        @keydown.enter.stop="() => handleFilterSelect(opt)"
       ></FilterOptionEntry>
     </ul>
     <CmkAlertBox

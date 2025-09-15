@@ -50,15 +50,89 @@ def test_config_reloading_without_reloader(site: Site) -> None:
         wait_for_reload(0)
 
 
-def test_config_reloading_with_reloader(site: Site) -> None:
-    timeout = _make_default_reload_timeout()
-
+@pytest.mark.parametrize("extension", ["mk", "txt"])
+def test_config_reloading_with_reloader(extension: str, site: Site, reload_timeout: float) -> None:
     with (
-        ensure_cleanup(site, "etc/check_mk/conf.d/aut_helper_reload_trigger.mk") as (file,),
+        ensure_cleanup(
+            site,
+            f"etc/check_mk/conf.d/aut_helper_reload_trigger.{extension}",
+        ) as (file,),
         _reload_ensurer(site) as wait_for_reload,
     ):
         site.write_file(file, "")
-        wait_for_reload(timeout)
+        wait_for_reload(reload_timeout)
+
+
+def test_config_reloading_on_move_from_unwatched_to_watched_directory(
+    site: Site, reload_timeout: float
+) -> None:
+    with ensure_cleanup(
+        site,
+        "tmp/file.mk",
+        "etc/check_mk/conf.d/aut_helper_reload_trigger.mk",
+    ) as (
+        unwatched,
+        watched,
+    ):
+        site.write_file(unwatched, "")
+
+        with _reload_ensurer(site) as wait_for_reload:
+            site.move_file(unwatched, watched)
+            wait_for_reload(reload_timeout)
+
+
+def test_config_reloading_on_move_from_watched_to_unwatched_directory(
+    site: Site, reload_timeout: float
+) -> None:
+    with ensure_cleanup(
+        site,
+        "tmp/file.mk",
+        "etc/check_mk/conf.d/aut_helper_reload_trigger.mk",
+    ) as (
+        unwatched,
+        watched,
+    ):
+        site.write_file(watched, "")
+
+        with _reload_ensurer(site) as wait_for_reload:
+            site.move_file(watched, unwatched)
+            wait_for_reload(reload_timeout)
+
+
+def test_config_reloading_on_move_within_watched_directory(
+    site: Site, reload_timeout: float
+) -> None:
+    with ensure_cleanup(
+        site,
+        "etc/check_mk/conf.d/aut_helper_reload_trigger1.mk",
+        "etc/check_mk/conf.d/aut_helper_reload_trigger2.mk",
+    ) as (
+        watched_1,
+        watched_2,
+    ):
+        site.write_file(watched_1, "")
+
+        with _reload_ensurer(site) as wait_for_reload:
+            site.move_file(watched_1, watched_2)
+            wait_for_reload(reload_timeout)
+
+
+def test_config_reloading_on_edit(site: Site, reload_timeout: float) -> None:
+    with ensure_cleanup(site, "etc/check_mk/conf.d/aut_helper_reload_trigger.mk") as (watched,):
+        site.write_file(watched, "")
+
+        with _reload_ensurer(site) as wait_for_reload:
+            site.write_file(watched, "hooray = True\n")
+            wait_for_reload(reload_timeout)
+
+
+def test_config_reloading_on_delete(site: Site, reload_timeout: float) -> None:
+    with ensure_cleanup(site, "etc/check_mk/conf.d/aut_helper_reload_trigger.mk") as (watched,):
+        site.write_file(watched, "")
+
+        with _reload_ensurer(site) as wait_for_reload:
+            site.delete_file(watched)
+            wait_for_reload(reload_timeout)
 
 
 def test_standard_workflow_involving_automations(site: Site) -> None:
@@ -178,7 +252,8 @@ def ensure_cleanup(site: Site, *files: str) -> Generator[tuple[str, ...]]:
             site.delete_file(filename)
 
 
-def _make_default_reload_timeout() -> float:
+@pytest.fixture(scope="module")
+def reload_timeout() -> float:
     reloader_configuration = default_config(
         omd_root=Path(),
         run_directory=Path(),

@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from contextlib import AbstractContextManager as ContextManager
-from pathlib import Path
 from typing import Final
 
 import pytest
@@ -22,11 +20,7 @@ from watchdog.events import (
 )
 
 from cmk.base.automation_helper._cache import Cache
-from cmk.base.automation_helper._config import Schedule, WatcherConfig
-from cmk.base.automation_helper._watcher import (
-    _AutomationWatcherHandler,
-    run,
-)
+from cmk.base.automation_helper._watcher import _AutomationWatcherHandler
 from tests.testlib.common.utils import wait_until
 
 _WATCHED_MK_PATTERN: Final = "*.mk"
@@ -47,150 +41,6 @@ def get_file_watcher_handler(cache: Cache) -> _AutomationWatcherHandler:
 def get_directory_watcher_handler(cache: Cache) -> _AutomationWatcherHandler:
     return _AutomationWatcherHandler(
         cache=cache, patterns=[_WATCHED_DIRECTORY_PATTERN], ignore_directories=False
-    )
-
-
-@pytest.fixture(name="target_directory")
-def get_targed_directory(tmp_path: Path) -> Path:
-    (tmp_path / "watched").mkdir()
-    return tmp_path / "watched"
-
-
-@pytest.fixture(name="target_mk_file")
-def get_mk_target_file(target_directory: Path) -> Path:
-    return target_directory / _MK_FILE
-
-
-@pytest.fixture(name="observer")
-def get_observer(cache: Cache, target_directory: Path) -> ContextManager:
-    return run(
-        WatcherConfig(
-            schedules=[
-                Schedule(
-                    path=target_directory,
-                    ignore_directories=True,
-                    recursive=True,
-                    patterns=[_WATCHED_MK_PATTERN],
-                ),
-                Schedule(
-                    path=target_directory,
-                    ignore_directories=True,
-                    recursive=True,
-                    patterns=[_WATCHED_TXT_FILE],
-                ),
-            ],
-        ),
-        cache,
-    )
-
-
-@pytest.mark.skip(reason="CMK-24752; to be removed / repurposed.")
-def test_observer_handles_move_from_unwatched_to_watched_directory(
-    caplog: pytest.LogCaptureFixture,
-    cache: Cache,
-    observer: ContextManager,
-    tmp_path: Path,
-    target_mk_file: Path,
-) -> None:
-    tmp_file = tmp_path / "file.mk"
-    tmp_file.touch()
-    last_change_reference = cache.get_last_detected_change()
-    with caplog.at_level(logging.INFO), observer:
-        tmp_file.rename(target_mk_file)
-        _wait_for_last_change_timestamp_to_increment(cache, last_change_reference)
-    assert f"Source: n/a, destination: {target_mk_file}, type: moved" in caplog.text
-
-
-@pytest.mark.skip(reason="CMK-24752; to be removed / repurposed.")
-def test_observer_handles_move_from_watched_to_unwatched_directory(
-    caplog: pytest.LogCaptureFixture,
-    cache: Cache,
-    observer: ContextManager,
-    tmp_path: Path,
-    target_mk_file: Path,
-) -> None:
-    target_mk_file.touch()
-    last_change_reference = cache.get_last_detected_change()
-    with caplog.at_level(logging.INFO), observer:
-        target_mk_file.rename(tmp_path / "file.mk")
-        _wait_for_last_change_timestamp_to_increment(cache, last_change_reference)
-    assert f"Source: {target_mk_file}, destination: n/a, type: moved" in caplog.text
-
-
-@pytest.mark.skip(reason="CMK-24752; to be removed / repurposed.")
-def test_observer_handles_move_within_watched_directory(
-    caplog: pytest.LogCaptureFixture,
-    cache: Cache,
-    observer: ContextManager,
-    target_mk_file: Path,
-) -> None:
-    tmp_file = target_mk_file.with_suffix(".tmp")
-    tmp_file.touch()
-    last_change_reference = cache.get_last_detected_change()
-    with caplog.at_level(logging.INFO), observer:
-        tmp_file.rename(target_mk_file)
-        _wait_for_last_change_timestamp_to_increment(cache, last_change_reference)
-    assert f"Source: {tmp_file}, destination: {target_mk_file}, type: moved" in caplog.text
-
-
-@pytest.mark.skip(reason="CMK-24752; to be removed / repurposed.")
-def test_observer_handles_created_mk_file(
-    caplog: pytest.LogCaptureFixture,
-    cache: Cache,
-    observer: ContextManager,
-    target_mk_file: Path,
-) -> None:
-    last_change_reference = cache.get_last_detected_change()
-    with caplog.at_level(logging.INFO), observer:
-        target_mk_file.touch()
-        _wait_for_last_change_timestamp_to_increment(cache, last_change_reference)
-    assert f"Source: {target_mk_file}, destination: n/a, type: created" in caplog.text
-
-
-@pytest.mark.skip(reason="CMK-24752; to be removed / repurposed.")
-def test_observer_handles_modified_mk_file(
-    caplog: pytest.LogCaptureFixture,
-    cache: Cache,
-    observer: ContextManager,
-    target_mk_file: Path,
-) -> None:
-    target_mk_file.touch()
-    last_change_reference = cache.get_last_detected_change()
-    with caplog.at_level(logging.INFO), observer:
-        target_mk_file.write_bytes(b"hello")
-        _wait_for_last_change_timestamp_to_increment(cache, last_change_reference)
-    assert f"Source: {target_mk_file}, destination: n/a, type: modified" in caplog.text
-
-
-@pytest.mark.skip(reason="CMK-24752; to be removed / repurposed.")
-def test_observer_handles_deleted_mk_file(
-    caplog: pytest.LogCaptureFixture,
-    cache: Cache,
-    observer: ContextManager,
-    target_mk_file: Path,
-) -> None:
-    target_mk_file.touch()
-    last_change_reference = cache.get_last_detected_change()
-    with caplog.at_level(logging.INFO), observer:
-        target_mk_file.unlink()
-        _wait_for_last_change_timestamp_to_increment(cache, last_change_reference)
-    assert f"Source: {target_mk_file}, destination: n/a, type: deleted" in caplog.text
-
-
-@pytest.mark.skip(reason="CMK-24752; to be removed / repurposed.")
-def test_observer_also_handles_txt_files(
-    caplog: pytest.LogCaptureFixture,
-    cache: Cache,
-    observer: ContextManager,
-    target_directory: Path,
-) -> None:
-    last_change_reference = cache.get_last_detected_change()
-    with caplog.at_level(logging.INFO), observer:
-        (target_directory / _WATCHED_TXT_FILE).touch()
-        _wait_for_last_change_timestamp_to_increment(cache, last_change_reference)
-    assert (
-        f"Source: {target_directory / _WATCHED_TXT_FILE}, destination: n/a, type: created"
-        in caplog.text
     )
 
 

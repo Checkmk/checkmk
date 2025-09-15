@@ -44,9 +44,8 @@ FROM (SELECT UPPER(DECODE(NVL(:IGNORE_DB_NAME, 0), 0, d.NAME, i.instance_name)) 
                bd2.INCREMENTAL_LEVEL,
                bd2.INCREMENTAL_CHANGE#
       ORDER BY name, bd2.INCREMENTAL_LEVEL
-     )
+     );
 
-UNION ALL
 /*$HINT_RMAN check_mk rman2 */
 -- === Section 2: CONTROLFILE Backups ===
 SELECT name,
@@ -66,9 +65,8 @@ FROM (SELECT UPPER(
                     ON d.RESETLOGS_CHANGE# = bcd.RESETLOGS_CHANGE# -- Ensure correct incarnation
                JOIN v$instance i ON 1 = 1
       GROUP BY UPPER(DECODE(NVL(:IGNORE_DB_NAME, 0), 0, d.NAME, i.instance_name))
-     )
+     );
 
-UNION ALL
 /*$HINT_RMAN check_mk rman3 */
 -- === Section 3: ARCHIVELOG Backups ===
 SELECT name,

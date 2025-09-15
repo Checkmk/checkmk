@@ -17,7 +17,7 @@ services:
         # Provide passwords and other environment variables to the container
         environment:
             ORACLE_PASSWORD: ${ORACLE_PASSWORD:-oracle}
-            ORACLE_SID: ${ORACLE_SID:-ORCLCDB}dco
+            ORACLE_SID: ${ORACLE_SID:-ORCLCDB}
         # Mount oracle data so that data is persistent between restarts
         volumes:
             - oracle-xe-volume:/opt/oracle/oradata

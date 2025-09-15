@@ -234,7 +234,7 @@ def main_parallel() {
             }
         }]
     /// add a dummy step which populates the result table before the first real step has finished
-    } + [first_update: {sleep(2); update_result_table(current_description, analyse_mapping);}]
+    } + ["CV internal: initial result table population": {sleep(2); update_result_table(current_description, analyse_mapping);}]
 
     inside_container_minimal(safe_branch_name: safe_branch_name) {
         def results_of_parallel = parallel(stepsForParallel);

@@ -35,6 +35,7 @@ MAP_TYPES: dict[str, str] = {
 def _msteams_msg(
     context: PluginNotificationContext,
 ) -> dict[str, object]:
+    _set_event_txt(context)
     title, summary, details, subtitle = _get_text_fields(context, notify_what := context["WHAT"])
     actions = []
     if info_url := (
@@ -114,6 +115,41 @@ def _msteams_msg(
             },
         ],
     }
+
+
+def _set_event_txt(context: PluginNotificationContext) -> None:
+    if not context.get("EVENT_TXT"):
+        event_template_txt = _txt_event_template(context["NOTIFICATIONTYPE"])
+
+        context["EVENT_TXT"] = substitute_context(
+            event_template_txt.replace("@", context["WHAT"]), context
+        )
+
+
+def _txt_event_template(notification_type: str) -> str:
+    # Returns an event summary
+    if notification_type in ["PROBLEM", "RECOVERY"]:
+        return "$PREVIOUS@HARDSHORTSTATE$ -> $@SHORTSTATE$"
+    if notification_type == "FLAPPINGSTART":
+        return "Started Flapping"
+    if notification_type == "FLAPPINGSTOP":
+        return "Stopped Flapping ($@SHORTSTATE$)"
+    if notification_type == "FLAPPINGDISABLED":
+        return "Disabled Flapping ($@SHORTSTATE$)"
+    if notification_type == "DOWNTIMESTART":
+        return "Downtime Start ($@SHORTSTATE$)"
+    if notification_type == "DOWNTIMEEND":
+        return "Downtime End ($@SHORTSTATE$)"
+    if notification_type == "DOWNTIMECANCELLED":
+        return "Downtime Cancelled ($@SHORTSTATE$)"
+    if notification_type == "ACKNOWLEDGEMENT":
+        return "Acknowledged ($@SHORTSTATE$)"
+    if notification_type == "CUSTOM":
+        return "Custom Notification ($@SHORTSTATE$)"
+    if notification_type.startswith("ALERTHANDLER"):
+        # The notification_type here is "ALERTHANDLER (exit_code)"
+        return notification_type
+    return notification_type
 
 
 def _get_text_fields(

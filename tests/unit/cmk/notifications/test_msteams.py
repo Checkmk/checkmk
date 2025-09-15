@@ -22,11 +22,11 @@ from cmk.notification_plugins.msteams import _msteams_msg
                 "SERVICEDESC": "Systemd Service Summary",
                 "SERVICESTATE": "CRITICAL",
                 "SERVICESHORTSTATE": "CRIT",
+                "PREVIOUSSERVICEHARDSHORTSTATE": "OK",
                 "SERVICEOUTPUT": "Total: 174, Disabled: 6, Failed: 3, 2 services failed (apache2, omd)(!!), 1 static service failed (apport-autoreport)(!!)",
                 "SERVICEPERFDATA": "Service perfdata",
                 "LONGSERVICEOUTPUT": "Total: 174\\nDisabled: 6\\nFailed: 3\\n2 services failed (apache2, omd)(!!)\\n1 static service failed (apport-autoreport)(!!)",
                 "SERVICEURL": "/view?key=test-service",
-                "EVENT_TXT": "Event text",
                 "NOTIFICATIONAUTHOR": "John Doe",
                 "NOTIFICATIONCOMMENT": "Some comment",
             },
@@ -66,7 +66,7 @@ from cmk.notification_plugins.msteams import _msteams_msg
                                 },
                                 {
                                     "type": "TextBlock",
-                                    "text": "Checkmk: test-host/Systemd Service Summary Event text",
+                                    "text": "Checkmk: test-host/Systemd Service Summary OK -> CRIT",
                                     "wrap": True,
                                 },
                                 {
@@ -103,7 +103,7 @@ from cmk.notification_plugins.msteams import _msteams_msg
                                                 },
                                                 {
                                                     "type": "TextBlock",
-                                                    "text": "__Event__:    Event text",
+                                                    "text": "__Event__:    OK -> CRIT",
                                                     "spacing": "none",
                                                     "wrap": True,
                                                 },
@@ -180,10 +180,10 @@ from cmk.notification_plugins.msteams import _msteams_msg
                 "HOSTNAME": "test-host",
                 "HOSTSTATE": "DOWN",
                 "HOSTSHORTSTATE": "DOWN",
+                "PREVIOUSHOSTHARDSHORTSTATE": "UP",
                 "LONGHOSTOUTPUT": "Host is down, long output",
                 "HOSTPERFDATA": "Host perfdata",
                 "HOSTOUTPUT": "Manually set to Down by cmkadmin",
-                "EVENT_TXT": "Event text",
                 "HOSTADDRESS": "127.0.0.1",
                 "HOSTURL": "/view?key=test-host",
                 "NOTIFICATIONAUTHOR": "",
@@ -217,7 +217,7 @@ from cmk.notification_plugins.msteams import _msteams_msg
                                 },
                                 {
                                     "type": "TextBlock",
-                                    "text": "Checkmk: test-host - Event text",
+                                    "text": "Checkmk: test-host - UP -> DOWN",
                                     "wrap": True,
                                 },
                                 {
@@ -248,7 +248,7 @@ from cmk.notification_plugins.msteams import _msteams_msg
                                                 },
                                                 {
                                                     "type": "TextBlock",
-                                                    "text": "__Event__:    Event text",
+                                                    "text": "__Event__:    UP -> DOWN",
                                                     "spacing": "none",
                                                     "wrap": True,
                                                 },

@@ -2925,15 +2925,12 @@ class ConfigCache:
         # Can we somehow instanciate the hypothetical fetcher here, and just let it fetch?
         piggy_config = piggyback_backend.Config(
             piggybacked_host_name,
-            [
-                *make_piggyback_time_settings(
-                    self._loaded_config,
-                    self.ruleset_matcher,
-                    self.label_manager.labels_of_host,
-                    source_host_names=[piggybacked_host_name],  # I don't think this is right.
-                ),
-                (None, "max_cache_age", piggyback_max_cachefile_age),
-            ],
+            make_piggyback_time_settings(
+                self._loaded_config,
+                self.ruleset_matcher,
+                self.label_manager.labels_of_host,
+                source_host_names=[piggybacked_host_name],  # I don't think this is right.
+            ),
         )
 
         now = time.time()
@@ -3470,16 +3467,12 @@ class ConfigCache:
         sources = piggyback_backend.get_current_piggyback_sources_of_host(
             cmk.utils.paths.omd_root, piggybacked_hostname
         )
-        return [
-            *make_piggyback_time_settings(
-                self._loaded_config,
-                self.ruleset_matcher,
-                self.label_manager.labels_of_host,
-                source_host_names=sorted(sources),
-            ),
-            # From global settings
-            (None, "max_cache_age", piggyback_max_cachefile_age),
-        ]
+        return make_piggyback_time_settings(
+            self._loaded_config,
+            self.ruleset_matcher,
+            self.label_manager.labels_of_host,
+            source_host_names=sorted(sources),
+        )
 
     # TODO: Remove old name one day
     @staticmethod

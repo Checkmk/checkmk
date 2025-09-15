@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 import contextlib
 import datetime
 from collections.abc import Iterator, Sequence
@@ -1586,6 +1585,7 @@ def test_openapi_host_config_effective_attributes_includes_all_host_attributes_r
         "tag_piggyback": "auto-piggyback",
         "tag_snmp_ds": "no-snmp",
         "waiting_for_discovery": False,
+        **({"otel_metrics_association": ["disabled", None]} if is_cloud_repo() else {}),
     }
     assert resp.json["extensions"]["effective_attributes"] == expected, expected
 

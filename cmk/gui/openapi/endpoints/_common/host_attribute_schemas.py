@@ -116,6 +116,12 @@ class BaseHostAttribute(BaseSchema):
     bake_agent_package = gui_fields.bake_agent_field()
     cmk_agent_connection = CONNECTION_MODE_FIELD
     snmp_community = HostAttributeSNMPCommunity().openapi_field()
+    # This field is only a placeholder to make the CI happy. It is implemented properly in the new
+    # Rest API framework.
+    # This only covers the case `("disabled", None)` (JSON-serialized as a list).
+    otel_metrics_association = fields.List(
+        fields.String(allow_none=True),
+    )
 
     labels = HostAttributeLabels().openapi_field()
     waiting_for_discovery = HostAttributeWaitingForDiscovery().openapi_field()

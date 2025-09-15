@@ -738,3 +738,22 @@ HostLabels = dict[
         WithJsonSchema({"type": "string", "description": "The host label value"}),
     ],
 ]
+
+
+@api_model
+class OTelMetricsAssociationFilterModel:
+    attribute_type: Literal["resource", "scope", "data_point"] = api_field(
+        description="Type of the target attribute to filter on (resource, scope or data point)."
+    )
+    attribute_key: str = api_field(description="Target attribute key to filter on.")
+    attribute_value: str = api_field(description="Target attribute value to match.")
+
+
+@api_model
+class OTelMetricsAssociationEnabledModel:
+    attribute_filters: Sequence[OTelMetricsAssociationFilterModel] = api_field(
+        description="A list of filters. All filters must match (logical AND)."
+    )
+
+
+OTelMetricsAssociationModel = Literal["disabled"] | OTelMetricsAssociationEnabledModel

@@ -20,6 +20,9 @@ from cmk.gui.openapi.api_endpoints.models.attributes import (
     MetaDataModel,
     NetworkScanModel,
     NetworkScanResultModel,
+    OTelMetricsAssociationEnabledModel,
+    OTelMetricsAssociationFilterModel,
+    OTelMetricsAssociationModel,
     SNMPCredentialsConverter,
     SNMPCredentialsModel,
 )
@@ -32,7 +35,11 @@ from cmk.gui.openapi.framework.model.converter import (
 )
 from cmk.gui.openapi.framework.model.restrict_editions import RestrictEditions
 from cmk.gui.watolib.builtin_attributes import HostAttributeLabels, HostAttributeWaitingForDiscovery
-from cmk.gui.watolib.host_attributes import HostAttributes
+from cmk.gui.watolib.host_attributes import (
+    HostAttributes,
+    OTelMetricsAssociationEnabled,
+    OTelMetricsAssociationFilter,
+)
 from cmk.utils.agent_registration import HostAgentConnectionMode
 from cmk.utils.tags import TagGroupID
 
@@ -178,6 +185,14 @@ class BaseHostAttributeModel:
         default_factory=ApiOmitted,
     )
 
+    otel_metrics_association: Annotated[
+        OTelMetricsAssociationModel | ApiOmitted,
+        RestrictEditions(supported_editions={Edition.CCE, Edition.CME, Edition.CSE}),
+    ] = api_field(
+        description="Configuration for associating OpenTelemetry metrics with this host.",
+        default_factory=ApiOmitted,
+    )
+
     labels: HostLabels | ApiOmitted = api_field(
         description=f"{HostAttributeLabels().help()} The key is the host label key.",
         default_factory=ApiOmitted,
@@ -297,6 +312,22 @@ class HostViewAttributeModel(
             )
             if "snmp_community" in value
             else ApiOmitted(),
+            otel_metrics_association=(
+                "disabled"
+                if otel_metrics_assoc[0] == "disabled"
+                else OTelMetricsAssociationEnabledModel(
+                    attribute_filters=[
+                        OTelMetricsAssociationFilterModel(
+                            attribute_type=attribute_filter["attribute_type"],
+                            attribute_key=attribute_filter["attribute_key"],
+                            attribute_value=attribute_filter["attribute_value"],
+                        )
+                        for attribute_filter in otel_metrics_assoc[1]["attribute_filters"]
+                    ],
+                )
+            )
+            if (otel_metrics_assoc := value.get("otel_metrics_association"))
+            else ApiOmitted(),
             labels=dict(value["labels"]) if "labels" in value else ApiOmitted(),
             waiting_for_discovery=value.get("waiting_for_discovery", ApiOmitted()),
             network_scan=NetworkScanModel.from_internal(value["network_scan"])
@@ -366,6 +397,24 @@ class HostUpdateAttributeModel(
             attributes["cmk_agent_connection"] = self.cmk_agent_connection
         if not isinstance(self.snmp_community, ApiOmitted):
             attributes["snmp_community"] = self.snmp_community_to_internal(self.snmp_community)
+        if not isinstance(self.otel_metrics_association, ApiOmitted):
+            attributes["otel_metrics_association"] = (
+                ("disabled", None)
+                if self.otel_metrics_association == "disabled"
+                else (
+                    "enabled",
+                    OTelMetricsAssociationEnabled(
+                        attribute_filters=[
+                            OTelMetricsAssociationFilter(
+                                attribute_type=attribute_filter.attribute_type,
+                                attribute_key=attribute_filter.attribute_key,
+                                attribute_value=attribute_filter.attribute_value,
+                            )
+                            for attribute_filter in self.otel_metrics_association.attribute_filters
+                        ],
+                    ),
+                )
+            )
         if not isinstance(self.labels, ApiOmitted):
             attributes["labels"] = self.labels
         if not isinstance(self.waiting_for_discovery, ApiOmitted):

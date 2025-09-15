@@ -15,6 +15,7 @@ from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui import main_modules  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.rulespec import register_plugins  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.session import SuperUserContext  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.utils.rule_specs.loader import (  # pylint: disable=cmk-module-layer-violation
     load_discovered_rule_specs,
     RuleSpec,
@@ -167,7 +168,7 @@ def _discover_load_plugins(modules: set[str]) -> set[str]:
 
 def _load_and_transform_rulesets(discovered_names: set[str]) -> None:
     main_modules.load_plugins()
-    with disable_redis(), gui_context():
+    with disable_redis(), gui_context(), SuperUserContext():
         all_rulesets = AllRulesets.load_all_rulesets()
         discovered_rulesets = {
             ruleset_name: ruleset

@@ -60,8 +60,8 @@ pypdf
 pyprof2calltree
 pysaml2
 pysmb
-pysmi-lextudio
-pysnmp-lextudio
+pysmi
+pysnmp
 python-active-directory
 python-dateutil
 python-ldap
@@ -79,7 +79,7 @@ setproctitle
 setuptools
 setuptools-scm
 simplejson
-snmpsim-lextudio
+snmpsim
 tenacity
 urllib3
 uvicorn

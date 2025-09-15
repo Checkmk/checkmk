@@ -528,9 +528,9 @@ charset-normalizer==3.4.3 \
     # via
     #   reportlab
     #   requests
-checkmk-dev-tools==0.12.0 \
-    --hash=sha256:c803051c7b1606f4bf8574aead02719d2630d2a38a655672ed130c7d13039fcd \
-    --hash=sha256:d059531f45ee37be33a79ad7bf49fb0a82a0cb3c4c9da90b8a5fb3dc571a19fb
+checkmk-dev-tools==0.12.1 \
+    --hash=sha256:9a7d7bee9c3bc920c510fab62bf7745b226ef99f089d73a3cc6b7f75e3e60195 \
+    --hash=sha256:e5bda9afe8e737146390c009ce4a18e1a635599c5cc2aab26d773eb353b8405c
     # via -r tests/dev-requirements.in
 click==8.2.1 \
     --hash=sha256:27c491cc05d968d271d5a1db13e3b5a184636d9d930f148c50b038f0d0646202 \
@@ -1473,7 +1473,7 @@ jinja2==3.1.6 \
     #   datamodel-code-generator
     #   flask
     #   meraki
-    #   pysmi-lextudio
+    #   pysmi
     #   pytest-html
     #   sphinx
     #   sphinx-autoapi
@@ -2794,14 +2794,13 @@ pluggy==1.5.0 \
     # via
     #   -c constraints.txt
     #   pytest
-    #   pytest-cov
     #   python-lsp-server
 ply==3.11 \
     --hash=sha256:00c7c1aaa88358b9c765b6d3000c6eec0ba42abca5351b095321aef446081da3 \
     --hash=sha256:096f9b8350b65ebd2fd1346b12452efe5b9607f7482813ffca50c22722a807ce
     # via
     #   jsonpath-rw
-    #   pysmi-lextudio
+    #   pysmi
     #   python-active-directory
 polyfactory==2.22.2 \
     --hash=sha256:9bea58ac9a80375b4153cd60820f75e558b863e567e058794d28c6a52b84118a \
@@ -3064,7 +3063,7 @@ pyasn1==0.6.0 \
     #   -r packages/cmk-crypto/requirements.in
     #   pyasn1-modules
     #   pysmb
-    #   pysnmp-lextudio
+    #   pysnmp
     #   python-ldap
     #   rsa
 pyasn1-modules==0.4.1 \
@@ -3422,24 +3421,24 @@ pysmb==1.2.11 \
     --hash=sha256:3a33214f737e877a8ead579e63c9944941deff5e12100e1ca65311b230b1786a \
     --hash=sha256:df3299f5ae2e9f9c6dd164480d16894e06c6c8a24255bc526b150bffdb9b62a6
     # via -r cmk/requirements.in
-pysmi-lextudio==1.4.3 \
-    --hash=sha256:7d255fb38669410835acf6c2e8ab41975a6d8e64593b119552e36ecba004054f \
-    --hash=sha256:cb629c6386a30c976f83c29fc71e53b06d60f15094d0c0114cf8d095351b76e5
+pysmi==1.4.4 \
+    --hash=sha256:4c961e726e83a88f11b24e3f76a77d1396d827682088f09b8f1d5ca0429e31fa \
+    --hash=sha256:7c8e7cae880dc56ffca872452023a3aea4e695c67661d5739eb6d718ec91e1f3
     # via
     #   -c constraints.txt
     #   -r cmk/requirements.in
-    #   pysnmp-lextudio
-pysnmp-lextudio==6.1.2 \
-    --hash=sha256:4035677d236f9fb6da5dbcfae2dc9122ee3652f535efeb904a56f54f162f28c9 \
-    --hash=sha256:5a30d289f73fbdd56ca4a6b83e43cef3a1871eee402651748c8ff47f603e5cb2
+    #   pysnmp
+pysnmp==6.1.3 \
+    --hash=sha256:03d39de2a51e23e055e6822d7a45da97daf54b09d1c17067f3236ee713ec1b3a \
+    --hash=sha256:bc300599d819833bc0c271c37e04120982a531a591079514e64fa29fbaed42b6
     # via
     #   -c constraints.txt
     #   -r cmk/requirements.in
-    #   snmpsim-lextudio
+    #   snmpsim
 pysnmpcrypto==0.0.4 \
     --hash=sha256:5889733caa030f45d9e03ea9d6370fb06426a8cb7f839aabbcdde33c6f634679 \
     --hash=sha256:b635fb3b1ec6637b9a0033f50506214e16eb84574b1d25ab027bbde4caa55129
-    # via pysnmp-lextudio
+    # via pysnmp
 pyspnego==0.12.0 \
     --hash=sha256:84cc8dae6ad21e04b37c50c1d3c743f05f193e39498f6010cc68ec1146afd007 \
     --hash=sha256:e1d9cd3520a87a1d6db8d68783b17edc4e1464eae3d51ead411a51c82dbaae67
@@ -3500,10 +3499,12 @@ pytest-check==2.5.4 \
     --hash=sha256:08c5f0ef40717ef8e55ee09d65dd7c919502db6eadb37a09818c12c28a57ad50 \
     --hash=sha256:33d87e28d5e49217f413277e1e0d267cd66c90a85a208944c44312c9c8e4ff74
     # via -r tests/dev-requirements.in
-pytest-cov==7.0.0 \
-    --hash=sha256:33c97eda2e049a0c5298e91f519302a1334c26ac65c1a483d6206fd458361af1 \
-    --hash=sha256:3b8e9558b16cc1479da72058bdecf8073661c7f57f7d3c5f22a1c23507f2d861
-    # via -r tests/dev-requirements.in
+pytest-cov==4.1.0 \
+    --hash=sha256:3904b13dfbfec47f003b8e77fd5b589cd11904a21ddf1ab38a64f204d6a10ef6 \
+    --hash=sha256:6ba70b9e97e69fcc3fb45bfeab2d0a138fb65c4d0d6a41ef33983ad114be8c3a
+    # via
+    #   -r tests/dev-requirements.in
+    #   pysnmp
 pytest-html==4.1.1 \
     --hash=sha256:70a01e8ae5800f4a074b56a4cb1025c8f4f9b038bba5fe31e3c98eb996686f07 \
     --hash=sha256:c8152cea03bd4e9bee6d525573b67bbc6622967b72b9628dda0ea3e2a0b5dd71
@@ -3777,7 +3778,7 @@ requests==2.32.5 \
     #   netapp-ontap
     #   opentelemetry-exporter-otlp-proto-http
     #   pysaml2
-    #   pysmi-lextudio
+    #   pysmi
     #   pytest-base-url
     #   python-jenkins
     #   redfish
@@ -4316,9 +4317,9 @@ sniffio==1.3.1 \
     --hash=sha256:2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2 \
     --hash=sha256:f4324edc670a0f49750a81b895f35c3adb843cca46f0530f79fc1babb23789dc
     # via anyio
-snmpsim-lextudio==1.1.1 \
-    --hash=sha256:55d71a27de878b6c4338e363d6f6a989cad0ae7f265ac187d6c617feb7ea840a \
-    --hash=sha256:a5288a59219789c8831aafe3dcb41f79f918215b870a25579ff2c5a713048a2f
+snmpsim==1.1.2 \
+    --hash=sha256:3cbf31b790e3aa6b7ba46fcda8e274fefa790cb86ccf6da2ad6660a54e011a27 \
+    --hash=sha256:8c45b997c6c01e3d16a4f03f59967d6b1c5d2f65d707605ad2f5b96ff33b49be
     # via
     #   -c constraints.txt
     #   -r cmk/requirements.in

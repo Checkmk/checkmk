@@ -12,6 +12,8 @@ from typing import assert_never, final, NewType
 
 from pydantic import BaseModel, Field
 
+from cmk.agent_receiver.utils import B64SiteInternalSecret
+
 from .wiremock import Request, Response, Wiremock, WMapping
 
 
@@ -63,10 +65,13 @@ class User:
 
 @final
 class SiteMock:
-    def __init__(self, wiremock: Wiremock, site_name: str, user: User) -> None:
+    def __init__(
+        self, wiremock: Wiremock, site_name: str, user: User, internal_secret: B64SiteInternalSecret
+    ) -> None:
         self.wiremock = wiremock
         self.site_name = site_name
         self.user = user
+        self.internal_secret = f"InternalToken {internal_secret}"
         self._scenario_setup = False
 
     @property
@@ -130,7 +135,9 @@ class SiteMock:
                 method="DELETE",
                 url=f"{self.base_route}/objects/relay/{relayid}",
                 headers={
-                    "Authorization": {"matches": self.user.bearer},
+                    "Authorization": {
+                        "matches": f"^(?:{self.user.bearer}|{self.internal_secret})$"
+                    },
                 },
             ),
             response=Response(
@@ -149,7 +156,9 @@ class SiteMock:
                 url=f"{self.base_route}/domain-types/relay/collections/all",
                 headers={
                     "Content-Type": {"matches": "application/json"},
-                    "Authorization": {"matches": self.user.bearer},
+                    "Authorization": {
+                        "matches": f"^(?:{self.user.bearer}|{self.internal_secret})$"
+                    },
                 },
                 bodyPatterns=[
                     {
@@ -175,7 +184,9 @@ class SiteMock:
                 url=f"{self.base_route}/domain-types/relay/collections/all",
                 headers={
                     "Content-Type": {"matches": "application/json"},
-                    "Authorization": {"matches": self.user.bearer},
+                    "Authorization": {
+                        "matches": f"^(?:{self.user.bearer}|{self.internal_secret})$"
+                    },
                 },
             ),
             response=Response(
@@ -199,7 +210,9 @@ class SiteMock:
                     url=f"{self.base_route}/objects/relay/{r}",
                     headers={
                         "Content-Type": {"matches": "application/json"},
-                        "Authorization": {"matches": self.user.bearer},
+                        "Authorization": {
+                            "matches": f"^(?:{self.user.bearer}|{self.internal_secret})$"
+                        },
                     },
                 ),
                 response=Response(

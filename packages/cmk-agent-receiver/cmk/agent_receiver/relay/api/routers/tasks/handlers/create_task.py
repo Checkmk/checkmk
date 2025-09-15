@@ -7,8 +7,6 @@
 import dataclasses
 from datetime import datetime
 
-from pydantic import SecretStr
-
 from cmk.agent_receiver.log import bound_contextvars
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     Task,
@@ -17,7 +15,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, RelayNotFoundError, TaskID
-from cmk.agent_receiver.relay.lib.site_auth import UserAuth
+from cmk.agent_receiver.relay.lib.site_auth import InternalAuth
 
 
 @dataclasses.dataclass
@@ -25,10 +23,8 @@ class CreateTaskHandler:
     tasks_repository: TasksRepository
     relays_repository: RelaysRepository
 
-    def process(
-        self, relay_id: RelayID, task_type: TaskType, task_payload: str, authorization: SecretStr
-    ) -> TaskID:
-        auth = UserAuth(authorization)
+    def process(self, relay_id: RelayID, task_type: TaskType, task_payload: str) -> TaskID:
+        auth = InternalAuth()
         if not self.relays_repository.has_relay(relay_id, auth):
             raise RelayNotFoundError(relay_id)
         now = datetime.now()

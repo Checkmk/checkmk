@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest
-from pydantic import SecretStr
 
 from cmk.agent_receiver.relay.api.routers.tasks.handlers.get_tasks import (
     GetRelayTaskHandler,
@@ -23,36 +22,32 @@ from cmk.agent_receiver.relay.lib.shared_types import (
 )
 
 
+@pytest.mark.usefixtures("site_context")
 def test_get_task_handler(
     get_task_handler: GetRelayTaskHandler,
     populated_repos: tuple[RelayID, Task, RelaysRepository, TasksRepository],
-    test_authorization: SecretStr,
 ) -> None:
     relay_id, task, relays_repository, tasks_repository = populated_repos
 
-    handled_task = get_task_handler.process(
-        relay_id=relay_id, task_id=task.id, authorization=test_authorization
-    )
+    handled_task = get_task_handler.process(relay_id=relay_id, task_id=task.id)
     assert handled_task == task
 
 
+@pytest.mark.usefixtures("site_context")
 def test_get_task_handler_with_unknown_relay(
     get_task_handler: GetRelayTaskHandler,
     populated_repos: tuple[RelayID, Task, RelaysRepository, TasksRepository],
-    test_authorization: SecretStr,
 ) -> None:
     relay_id, task, relays_repository, tasks_repository = populated_repos
 
     with pytest.raises(RelayNotFoundError):
-        get_task_handler.process(
-            relay_id=RelayID("unknown-relay-id"), task_id=task.id, authorization=test_authorization
-        )
+        get_task_handler.process(relay_id=RelayID("unknown-relay-id"), task_id=task.id)
 
 
+@pytest.mark.usefixtures("site_context")
 def test_get_task_handler_with_unknown_task(
     get_task_handler: GetRelayTaskHandler,
     populated_repos: tuple[RelayID, Task, RelaysRepository, TasksRepository],
-    test_authorization: SecretStr,
 ) -> None:
     relay_id, task, relays_repository, tasks_repository = populated_repos
 
@@ -60,41 +55,33 @@ def test_get_task_handler_with_unknown_task(
         get_task_handler.process(
             relay_id=relay_id,
             task_id=TaskID("unknown-task-id"),
-            authorization=test_authorization,
         )
 
 
+@pytest.mark.usefixtures("site_context")
 def test_get_tasks_handler(
     get_tasks_handler: GetRelayTasksHandler,
     populated_repos: tuple[RelayID, Task, RelaysRepository, TasksRepository],
-    test_authorization: SecretStr,
 ) -> None:
     relay_id, task, relays_repository, tasks_repository = populated_repos
 
-    handled_tasks = get_tasks_handler.process(
-        relay_id=relay_id, status=None, authorization=test_authorization
-    )
+    handled_tasks = get_tasks_handler.process(relay_id=relay_id, status=None)
     assert handled_tasks == [task]
 
 
+@pytest.mark.usefixtures("site_context")
 def test_get_tasks_handler_with_filter(
     get_tasks_handler: GetRelayTasksHandler,
     populated_repos: tuple[RelayID, Task, RelaysRepository, TasksRepository],
-    test_authorization: SecretStr,
 ) -> None:
     relay_id, task, relays_repository, tasks_repository = populated_repos
-    handled_tasks = get_tasks_handler.process(
-        relay_id=relay_id, status=TaskStatus.FINISHED, authorization=test_authorization
-    )
+    handled_tasks = get_tasks_handler.process(relay_id=relay_id, status=TaskStatus.FINISHED)
     assert handled_tasks == []
 
 
+@pytest.mark.usefixtures("site_context")
 def test_get_task_handler_raises_error_if_relay_is_unknown(
     get_tasks_handler: GetRelayTasksHandler,
-    populated_repos: tuple[RelayID, Task, RelaysRepository, TasksRepository],  # noqa: ARG001
-    test_authorization: SecretStr,
 ) -> None:
     with pytest.raises(RelayNotFoundError):
-        get_tasks_handler.process(
-            relay_id=RelayID("unknown-relay-id"), status=None, authorization=test_authorization
-        )
+        get_tasks_handler.process(relay_id=RelayID("unknown-relay-id"), status=None)

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from pydantic import SecretStr
 
 from cmk.agent_receiver.relay.api.routers.relays.handlers.unregister_relay import (
     UnregisterRelayHandler,
@@ -17,27 +16,25 @@ from cmk.agent_receiver.relay.lib.site_auth import UserAuth
 def test_process_removes_relay_id_from_registry(
     relays_repository: RelaysRepository,
     unregister_relay_handler: UnregisterRelayHandler,
-    test_authorization: SecretStr,
+    test_user: UserAuth,
 ) -> None:
     # First add a relay to remove
-    auth = UserAuth(test_authorization)
-    relay_id = relays_repository.add_relay(auth, alias="test-relay")
-    assert relays_repository.has_relay(relay_id, auth)
+    relay_id = relays_repository.add_relay(test_user, alias="test-relay")
+    assert relays_repository.has_relay(relay_id, test_user)
 
     # Now unregister it
-    unregister_relay_handler.process(relay_id, test_authorization)
-    assert not relays_repository.has_relay(relay_id, auth)
+    unregister_relay_handler.process(relay_id, test_user.secret)
+    assert not relays_repository.has_relay(relay_id, test_user)
 
 
 def test_process_removes_non_existent_relay_id(
     unregister_relay_handler: UnregisterRelayHandler,
-    test_authorization: SecretStr,
+    test_user: UserAuth,
 ) -> None:
     # Try to unregister a non-existent relay
     relay_id = RelayID("non-existent-relay-id")
-    auth = UserAuth(test_authorization)
 
-    assert not unregister_relay_handler.relays_repository.has_relay(relay_id, auth)
+    assert not unregister_relay_handler.relays_repository.has_relay(relay_id, test_user)
     with pytest.raises(RelayNotFoundError):
-        unregister_relay_handler.process(relay_id, test_authorization)
-    assert not unregister_relay_handler.relays_repository.has_relay(relay_id, auth)
+        unregister_relay_handler.process(relay_id, test_user.secret)
+    assert not unregister_relay_handler.relays_repository.has_relay(relay_id, test_user)

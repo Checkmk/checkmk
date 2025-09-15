@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from pydantic import SecretStr
 
 from cmk.agent_receiver.relay.api.routers.tasks.handlers.update_task import (
     UpdateTaskHandler,
@@ -24,10 +23,10 @@ from cmk.agent_receiver.relay.lib.shared_types import (
 from cmk.agent_receiver.relay.lib.site_auth import UserAuth
 
 
+@pytest.mark.usefixtures("site_context")
 def test_process_update_task(
     update_task_handler: UpdateTaskHandler,
     populated_repos: tuple[RelayID, Task, RelaysRepository, TasksRepository],
-    test_authorization: SecretStr,
 ) -> None:
     relay_id, task, relays_repository, tasks_repository = populated_repos
 
@@ -37,7 +36,6 @@ def test_process_update_task(
         task_id=task.id,
         result_type=ResultType.OK,
         result_payload="Task completed successfully",
-        authorization=test_authorization,
     )
 
     # assert
@@ -51,9 +49,8 @@ def test_process_update_task(
     assert tasks_enqueued[0].result_payload == "Task completed successfully"
 
 
-def test_process_update_task_non_existent_relay(
-    update_task_handler: UpdateTaskHandler, test_authorization: SecretStr
-) -> None:
+@pytest.mark.usefixtures("site_context")
+def test_process_update_task_non_existent_relay(update_task_handler: UpdateTaskHandler) -> None:
     # arrange
     relay_id = RelayID("non-existent-relay-id")
 
@@ -64,19 +61,18 @@ def test_process_update_task_non_existent_relay(
             task_id=TaskID("any-task-id"),
             result_type=ResultType.OK,
             result_payload="any payload",
-            authorization=test_authorization,
         )
 
 
+@pytest.mark.usefixtures("site_context")
 def test_process_update_task_non_existent_task(
     relays_repository: RelaysRepository,
     update_task_handler: UpdateTaskHandler,
-    test_authorization: SecretStr,
+    test_user: UserAuth,
 ) -> None:
     # arrange
     # register a relay in the repository
-    auth = UserAuth(test_authorization)
-    relay_id = relays_repository.add_relay(auth, alias="test-relay")
+    relay_id = relays_repository.add_relay(test_user, alias="test-relay")
 
     task_id = TaskID("non-existent-task-id")
 
@@ -87,5 +83,4 @@ def test_process_update_task_non_existent_task(
             task_id=task_id,
             result_type=ResultType.OK,
             result_payload="any payload",
-            authorization=test_authorization,
         )

@@ -6,8 +6,6 @@
 
 import dataclasses
 
-from pydantic import SecretStr
-
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     ResultType,
     Task,
@@ -20,7 +18,7 @@ from cmk.agent_receiver.relay.lib.shared_types import (
     RelayNotFoundError,
     TaskID,
 )
-from cmk.agent_receiver.relay.lib.site_auth import UserAuth
+from cmk.agent_receiver.relay.lib.site_auth import InternalAuth
 
 
 @dataclasses.dataclass
@@ -34,9 +32,8 @@ class UpdateTaskHandler:
         task_id: TaskID,
         result_type: ResultType,
         result_payload: str,
-        authorization: SecretStr,
     ) -> Task:
-        auth = UserAuth(authorization)
+        auth = InternalAuth()
         if not self.relays_repository.has_relay(relay_id, auth):
             raise RelayNotFoundError(relay_id)
         return self._update_task(relay_id, task_id, result_type, result_payload)

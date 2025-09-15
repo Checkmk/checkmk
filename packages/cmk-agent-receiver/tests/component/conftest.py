@@ -9,7 +9,9 @@ from collections.abc import Iterator
 import pytest
 from fastapi.testclient import TestClient
 
+from cmk.agent_receiver.config import Config
 from cmk.agent_receiver.main import main_app
+from cmk.agent_receiver.utils import internal_credentials
 
 from .test_lib.agent_receiver import AgentReceiverClient
 from .test_lib.container import Container, run_container
@@ -23,21 +25,37 @@ def site_name() -> str:
 
 
 @pytest.fixture()
-def test_client(site_name: str, tmp_path: pathlib.Path, wiremock: Wiremock) -> TestClient:
-    # setting up some checkmk stuff required by the agent receiver
-    base_dir = tmp_path / site_name
-    os.environ["OMD_ROOT"] = str(base_dir)
+def site_context(
+    wiremock: Wiremock,
+    tmp_path: pathlib.Path,
+    site_name: str,
+) -> Config:
+    site_dir = tmp_path / site_name
+    site_dir.mkdir(parents=True, exist_ok=True)
+
+    os.environ["OMD_ROOT"] = str(site_dir)
     os.environ["OMD_SITE"] = site_name
     os.environ["SITE_URL"] = wiremock.base_url
-    log_dir = base_dir / "var" / "log" / "agent-receiver"
-    log_dir.mkdir(parents=True, exist_ok=True)
-    (log_dir / "agent-receiver.log").touch()
 
+    site_context = Config()
+    site_context.internal_secret_path.parent.mkdir(parents=True, exist_ok=True)
+    site_context.internal_secret_path.write_text("lol")
+
+    site_context.log_path.parent.mkdir(parents=True, exist_ok=True)
+    site_context.log_path.touch()
+
+    return site_context
+
+
+@pytest.fixture()
+def test_client(site_context: Config) -> Iterator[TestClient]:
+    # setting up some checkmk stuff required by the agent receiver
     # start the app
     app = main_app()
 
     client = TestClient(app)
-    return client
+    yield client
+    print(site_context.log_path.read_text())
 
 
 @pytest.fixture(scope="session")
@@ -63,14 +81,16 @@ def user() -> User:
 
 
 @pytest.fixture
-def site(wiremock: Wiremock, site_name: str, user: User) -> SiteMock:
+def site(wiremock: Wiremock, user: User, site_context: Config) -> SiteMock:
     """
     Create a site mock instance.
     """
     wiremock.reset()
-    return SiteMock(wiremock, site_name, user)
+    return SiteMock(wiremock, site_context.site_name, user, internal_credentials())
 
 
 @pytest.fixture
-def agent_receiver(test_client: TestClient, site_name: str, user: User) -> AgentReceiverClient:
-    return AgentReceiverClient(test_client, site_name, user)
+def agent_receiver(
+    test_client: TestClient, site_context: Config, user: User
+) -> AgentReceiverClient:
+    return AgentReceiverClient(test_client, site_context.site_name, user)

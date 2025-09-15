@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from pydantic import SecretStr
 
 from cmk.agent_receiver.relay.api.routers.tasks.handlers.create_task import (
     CreateTaskHandler,
@@ -15,29 +14,28 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, RelayNotFoundError
-from cmk.agent_receiver.relay.lib.site_auth import UserAuth
+from cmk.agent_receiver.relay.lib.site_auth import InternalAuth
 
 
+@pytest.mark.usefixtures("site_context")
 def test_process_create_task(
     create_task_handler: CreateTaskHandler,
     relays_repository: RelaysRepository,
     tasks_repository: TasksRepository,
-    test_authorization: SecretStr,
+    test_user: InternalAuth,
 ) -> None:
     # arrange
     task_type = TaskType.FETCH_AD_HOC
     task_payload = '{"url": "http://example.com/data"}'
 
     # Register a relay first
-    auth = UserAuth(test_authorization)
-    relay_id = relays_repository.add_relay(auth, alias="test-relay")
+    relay_id = relays_repository.add_relay(test_user, alias="test-relay")
 
     # act
     task_id = create_task_handler.process(
         relay_id=relay_id,
         task_type=task_type,
         task_payload=task_payload,
-        authorization=test_authorization,
     )
 
     # assert
@@ -48,9 +46,8 @@ def test_process_create_task(
     assert tasks_enqueued[0].payload == task_payload
 
 
-def test_process_create_task_non_existent_relay(
-    create_task_handler: CreateTaskHandler, test_authorization: SecretStr
-) -> None:
+@pytest.mark.usefixtures("site_context")
+def test_process_create_task_non_existent_relay(create_task_handler: CreateTaskHandler) -> None:
     # arrange
     relay_id = RelayID("non-existent-relay-id")
 
@@ -60,7 +57,6 @@ def test_process_create_task_non_existent_relay(
             relay_id=relay_id,
             task_type=TaskType.FETCH_AD_HOC,
             task_payload="any payload",
-            authorization=test_authorization,
         )
 
 

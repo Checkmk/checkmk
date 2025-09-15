@@ -6,11 +6,13 @@ import uuid
 from collections.abc import Iterator
 from datetime import datetime
 from http import HTTPStatus
+from pathlib import Path
 
 import httpx
 import pytest
 from pydantic import SecretStr
 
+from cmk.agent_receiver.config import Config
 from cmk.agent_receiver.relay.api.routers.relays.handlers.register_relay import (
     RegisterRelayHandler,
 )
@@ -81,10 +83,22 @@ def create_test_relays_repository() -> RelaysRepository:
     return RelaysRepository(client, siteid="test-site")
 
 
+@pytest.fixture
+def site_context(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Config:
+    site_id = "NO_SITE"
+    site_dir = tmp_path / site_id
+    site_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setenv("OMD_ROOT", str(site_dir))
+    monkeypatch.setenv("OMD_SITE", site_id)
+    site_context = Config()
+    site_context.internal_secret_path.parent.mkdir(parents=True, exist_ok=True)
+    site_context.internal_secret_path.write_text("lol")
+    return site_context
+
+
 @pytest.fixture()
-def test_authorization() -> SecretStr:
-    """Provides a test authorization token."""
-    return SecretStr("Bearer test-token")
+def test_user() -> UserAuth:
+    return UserAuth(SecretStr("Bearer test-token"))
 
 
 @pytest.fixture()
@@ -163,12 +177,11 @@ def get_tasks_handler(
 def populated_repos(
     relays_repository: RelaysRepository,
     tasks_repository: TasksRepository,
-    test_authorization: SecretStr,
+    test_user: UserAuth,
 ) -> tuple[RelayID, Task, RelaysRepository, TasksRepository]:
     # arrange
     # register a relay in the repository
-    auth = UserAuth(test_authorization)
-    relay_id = relays_repository.add_relay(auth, alias="test-relay")
+    relay_id = relays_repository.add_relay(test_user, alias="test-relay")
 
     # insert a task in the repository
     now = datetime.now()

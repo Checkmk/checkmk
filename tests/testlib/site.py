@@ -799,6 +799,19 @@ class Site:
             excp.add_note(f"Failed to read file '{rel_path}'!")
             raise excp
 
+    def move_file(self, src_rel_path: str | Path, dst_rel_path: str | Path) -> None:
+        """Move a file from one path to another within the site.
+
+        Note - directories mentioned within `dst_rel_path` must exist for successful operation!
+        """
+        try:
+            _ = self.run(
+                ["mv", self.path(src_rel_path).as_posix(), self.path(dst_rel_path).as_posix()]
+            )
+        except subprocess.CalledProcessError as excp:
+            excp.add_note(f"Failed to move file from '{src_rel_path}' to '{dst_rel_path}'!")
+            raise excp
+
     def delete_dir(self, rel_path: str | Path) -> None:
         try:
             _ = self.run(["rm", "-rf", self.path(rel_path).as_posix()])

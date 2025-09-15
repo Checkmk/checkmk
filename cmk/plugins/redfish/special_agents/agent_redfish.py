@@ -26,6 +26,7 @@ from redfish.rest.v1 import (
 
 from cmk.plugins.redfish.lib import REDFISH_SECTIONS
 from cmk.special_agents.v0_unstable.agent_common import (
+    CannotRecover,
     SectionManager,
     SectionWriter,
     special_agent_main,
@@ -112,7 +113,10 @@ class RedfishClient:
         self._client = client
 
     def get(self, url: str, timeout: int | None) -> RestResponse:
-        return self._client.get(url, timeout=timeout)
+        try:
+            return self._client.get(url, timeout=timeout)
+        except RetriesExhaustedError as excp:
+            raise CannotRecover("ERROR: too many retries for connection attempt") from excp
 
     def make_session(self, host_name: str, auth: Literal["session"]) -> None:
         if session := ClientSession.loadf(host_name):
@@ -765,13 +769,9 @@ def get_session(args: Args) -> RedfishData:
         redfishobj.redfish_connection.make_session(redfishobj.hostname, auth="session")
 
     except ServerDownOrUnreachableError as excp:
-        sys.stderr.write(
-            f"ERROR: server not reachable or does not support RedFish. Error Message: {excp}\n"
-        )
-        sys.exit(1)
+        raise CannotRecover("ERROR: server not reachable or does not support RedFish") from excp
     except RetriesExhaustedError as excp:
-        sys.stderr.write(f"ERROR: too many retries for connection attempt: {excp}\n")
-        sys.exit(1)
+        raise CannotRecover("ERROR: too many retries for connection attempt") from excp
 
     return redfishobj
 

@@ -18,6 +18,7 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.watolib.audit_log import log_audit
 
 from ._base import PageHandlers, SidebarSnapin
 from ._helpers import write_snapin_exception
@@ -207,5 +208,17 @@ class MasterControlSnapin(SidebarSnapin):
             % (column, state, column)
         )
         sites.live().set_only_sites()
+
+        log_audit(
+            action="master-control-toggle",
+            message=_("Set '%s' to '%s' on site %s")
+            % (
+                dict(self._core_toggles())[column],
+                _("on") if state == 1 else _("off"),
+                site,
+            ),
+            user_id=user.id,
+            use_git=False,
+        )
 
         self.show(config)

@@ -1077,13 +1077,12 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.podman.images_num": {"title": _l("#Images")},
         ".software.applications.podman.containers:": {
             "title": _l("Containers"),
-            "keyorder": ["id", "creation", "name", "labels", "state", "status", "image"],
+            "keyorder": ["id", "creation", "name", "labels", "status", "image"],
         },
         ".software.applications.podman.containers:*.id": {"title": _l("ID")},
         ".software.applications.podman.containers:*.creation": {"title": _l("Creation"), "paint": "date_and_time"},
         ".software.applications.podman.containers:*.name": {"title": _l("Name")},
         ".software.applications.podman.containers:*.labels": {"title": _l("Labels")},
-        ".software.applications.podman.containers:*.state": {"title": _l("State")},
         ".software.applications.podman.containers:*.status": {"title": _l("Status")},
         ".software.applications.podman.containers:*.image": {"title": _l("Image")},
         ".software.applications.podman.images:": {

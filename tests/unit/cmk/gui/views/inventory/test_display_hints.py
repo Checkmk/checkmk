@@ -957,7 +957,6 @@ _KNOWN_COLUMNS_KEY_ORDERS = {
         "creation",
         "name",
         "labels",
-        "state",
         "status",
         "image",
     ],

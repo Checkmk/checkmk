@@ -355,7 +355,7 @@ def get_undeclared_dependencies() -> Iterable[Import]:
 
 CEE_UNUSED_PACKAGES = [
     "setuptools-scm",
-    "snmpsim-lextudio",
+    "snmpsim",
     "python-multipart",  # needed by fastapi
 ]
 

@@ -112,7 +112,7 @@ function toggleOperatorOptions() {
       :disabled="props.disabled"
       :title="props.disabled ? _t('Only available for \'Monitoring\' and \'All\'') : ''"
       @click.stop="toggleOperatorOptions"
-      @keypres.enter.stop="toggleOperatorOptions"
+      @keydown.enter.stop="toggleOperatorOptions"
     >
       <CmkIcon name="info" size="small" class="unified-search-operator-info-icon"></CmkIcon>
       <span class="unified-search-operator-switch-selected">{{ _t('Search operators') }}</span>
@@ -138,7 +138,7 @@ function toggleOperatorOptions() {
           :idx="idx"
           :option="opt"
           @click.stop="() => handleOperatorSelect(opt)"
-          @keypres.enter.stop="() => handleOperatorSelect(opt)"
+          @keydown.enter.stop="() => handleOperatorSelect(opt)"
         ></SearchOperatorOptionEntry>
       </ul>
     </div>

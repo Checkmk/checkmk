@@ -124,7 +124,7 @@ function searchResultNotEmpty(): boolean {
           :html="searchUtils.highlightQuery(item.title)"
           :breadcrumb="searchUtils.breadcrumb(item.provider, item.topic)"
           :focus="isFocused(idx)"
-          @keypress.enter="
+          @keydown.enter="
             () => {
               handleItemClick(item)
             }

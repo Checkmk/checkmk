@@ -116,7 +116,7 @@ const provideri18n: Record<QueryProvider, string> = {
       ref="unified-search-provider-btn"
       class="unified-search-provider-switch-button"
       @click.stop="toggleProviderOptions"
-      @keypres.enter.stop="toggleProviderOptions"
+      @keydown.enter.stop="toggleProviderOptions"
     >
       <span class="unified-search-provider-switch-selected">{{
         provideri18n[searchUtils.query.provider.value]
@@ -144,7 +144,7 @@ const provideri18n: Record<QueryProvider, string> = {
           :option="opt"
           :active="opt.value === searchUtils.query.provider.value"
           @click.stop="() => handleOptionSelect(opt)"
-          @keypres.enter.stop="() => handleOptionSelect(opt)"
+          @keydown.enter.stop="() => handleOptionSelect(opt)"
         ></ProviderOptionEntry>
       </ul>
     </div>

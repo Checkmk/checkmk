@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { type Providers } from 'cmk-shared-typing/typescript/unified_search'
-import { inject, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 
 import { Api } from '@/lib/api-client'
 import {
@@ -30,7 +30,6 @@ import UnifiedSearchHeader from './components/header/UnifiedSearchHeader.vue'
 import UnifiedSearchStart from './components/view/UnifiedSearchStart.vue'
 import UnifiedSearchTabResults from './components/view/UnifiedSearchTabResults.vue'
 import UnifiedSearchWaitForResults from './components/view/UnifiedSearchWaitForResults.vue'
-import { apiServiceProvider } from './providers/api'
 import { initSearchUtils, provideSearchUtils } from './providers/search-utils'
 import type { UnifiedSearchQueryLike } from './providers/search-utils.types'
 
@@ -39,7 +38,8 @@ declare const cmk: any
 
 const searchId = 'unified-search'
 
-const api = inject(apiServiceProvider, new Api(), true)
+const api = new Api()
+
 const searchHistoryService = new SearchHistoryService(searchId)
 
 const props = defineProps<{

@@ -12,6 +12,7 @@ import omdlib
 from omdlib.global_options import GlobalOptions, parse_global_opts
 from omdlib.site_name import site_name_from_uid
 from omdlib.site_paths import SitePaths
+from omdlib.update_check import OptionName as UpdateOption
 from omdlib.utils import exec_other_omd, site_exists
 from omdlib.version import version_from_site_dir
 
@@ -354,31 +355,31 @@ COMMANDS: Final = [
                 "non-interactive conflict resolution. ARG is install, keepold, abort or ask",
             ),
             Option(
-                "confirm-version",
+                UpdateOption.confirm_version,
                 None,
                 False,
                 "suppress the confirmation dialog, which displays information about the target version",
             ),
             Option(
-                "confirm-edition",
+                UpdateOption.confirm_edition,
                 None,
                 False,
                 "suppress the confirmation dialog, which displays information about the target edition",
             ),
             Option(
-                "ignore-editions-incompatible",
+                UpdateOption.ignore_editions_incompatible,
                 None,
                 False,
                 "force OMD to update despite the target edition being incompatible. These types are of updates are not supported and may leave the site in an irreparable state",
             ),
             Option(
-                "confirm-requires-root",
+                UpdateOption.confirm_requires_root,
                 None,
                 False,
                 "suppress the confirmation dialog, which is shown in case root priviledges are required for the update",
             ),
             Option(
-                "ignore-versions-incompatible",
+                UpdateOption.ignore_versions_incompatible,
                 None,
                 False,
                 "force OMD to update despite the target version being incompatible. These types are of updates are not supported and may leave the site in an irreparable state",

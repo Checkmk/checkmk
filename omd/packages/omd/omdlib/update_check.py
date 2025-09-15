@@ -43,26 +43,34 @@ class IgnoreVersionsIncompatible(enum.StrEnum):
     ABORT = "abort"
 
 
+class OptionName(enum.StrEnum):
+    confirm_version = "confirm-version"
+    confirm_edition = "confirm-edition"
+    confirm_requires_root = "confirm-requires-root"
+    ignore_versions_incompatible = "ignore-versions-incompatible"
+    ignore_editions_incompatible = "ignore-editions-incompatible"
+
+
 class ConflictResolution(BaseModel, frozen=True, extra="forbid"):
     confirm_version: ConfirmVersion = Field(
         ConfirmVersion.ASK,
-        validation_alias="confirm-version",
+        validation_alias=OptionName.confirm_version,
     )
     confirm_edition: ConfirmEdition = Field(
         ConfirmEdition.ASK,
-        validation_alias="confirm-edition",
+        validation_alias=OptionName.confirm_edition,
     )
     ignore_editions_incompatible: IgnoreEditionsIncompatible = Field(
         IgnoreEditionsIncompatible.ABORT,
-        validation_alias="ignore-editions-incompatible",
+        validation_alias=OptionName.ignore_editions_incompatible,
     )
     confirm_requires_root: ConfirmRequiresRoot = Field(
         ConfirmRequiresRoot.ASK,
-        validation_alias="confirm-requires-root",
+        validation_alias=OptionName.confirm_requires_root,
     )
     ignore_versions_incompatible: IgnoreVersionsIncompatible = Field(
         IgnoreVersionsIncompatible.ABORT,
-        validation_alias="ignore-versions-incompatible",
+        validation_alias=OptionName.ignore_versions_incompatible,
     )
 
 
@@ -94,11 +102,11 @@ def _omd_to_check_mk_version(omd_version: str) -> Version:
 def _obtain_force_options(force: bool) -> dict[str, str]:
     if force:
         return {
-            "confirm-version": ConfirmVersion.INSTALL,
-            "confirm-edition": ConfirmEdition.INSTALL,
-            "ignore-editions-incompatible": IgnoreEditionsIncompatible.INSTALL,
-            "confirm-requires-root": ConfirmRequiresRoot.INSTALL,
-            "ignore-versions-incompatible": IgnoreVersionsIncompatible.INSTALL,
+            OptionName.confirm_version: ConfirmVersion.INSTALL,
+            OptionName.confirm_edition: ConfirmEdition.INSTALL,
+            OptionName.ignore_editions_incompatible: IgnoreEditionsIncompatible.INSTALL,
+            OptionName.confirm_requires_root: ConfirmRequiresRoot.INSTALL,
+            OptionName.ignore_versions_incompatible: IgnoreVersionsIncompatible.INSTALL,
         }
     return {}
 
@@ -107,11 +115,11 @@ def prepare_conflict_resolution(options: Mapping[str, object], force: bool) -> C
     set_options = {
         option: set_value
         for option, set_value in [
-            ("confirm-version", ConfirmVersion.INSTALL),
-            ("confirm-edition", ConfirmEdition.INSTALL),
-            ("ignore-editions-incompatible", IgnoreEditionsIncompatible.INSTALL),
-            ("confirm-requires-root", ConfirmRequiresRoot.INSTALL),
-            ("ignore-versions-incompatible", IgnoreVersionsIncompatible.INSTALL),
+            (OptionName.confirm_version, ConfirmVersion.INSTALL),
+            (OptionName.confirm_edition, ConfirmEdition.INSTALL),
+            (OptionName.ignore_editions_incompatible, IgnoreEditionsIncompatible.INSTALL),
+            (OptionName.confirm_requires_root, ConfirmRequiresRoot.INSTALL),
+            (OptionName.ignore_versions_incompatible, IgnoreVersionsIncompatible.INSTALL),
         ]
         if option in options
     }
@@ -169,7 +177,7 @@ def check_update_possible(
             "* Major downgrades are not supported\n"
             "* Major version updates need to be done step by step.\n\n"
             "If you are really sure about what you are doing, you can still do the "
-            "update with '--ignore-versions-incompatible'.\n"
+            f"update with '--{OptionName.ignore_versions_incompatible}'.\n"
             "But you will be on your own from there."
         )
 

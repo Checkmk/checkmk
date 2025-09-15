@@ -191,6 +191,7 @@ class IPMIFetcher(Fetcher[AgentRawData]):
 
         import pyghmi.ipmi.private.session as ipmi_session
 
+        assert ipmi_session.iothread is not None
         ipmi_session.iothread.join()
         ipmi_session.iothread = None
         ipmi_session.iothreadready = False

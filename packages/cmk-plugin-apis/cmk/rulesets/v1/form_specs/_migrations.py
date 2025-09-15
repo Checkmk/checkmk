@@ -121,7 +121,7 @@ def _migrate_to_levels(
         # 2.2. format + format released in 2.3.0b3
         case dict(val_dict) | ("predictive", dict(val_dict)):
             if (
-                pred_levels := _parse_to_predictive_levels(val_dict, scale, ntype, level_dir)  # type: ignore[misc]
+                pred_levels := _parse_to_predictive_levels(val_dict, scale, ntype, level_dir)
             ) is None:
                 return "no_levels", None
             return "cmk_postprocessed", "predictive_levels", pred_levels

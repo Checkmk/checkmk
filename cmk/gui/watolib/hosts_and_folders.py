@@ -2984,13 +2984,13 @@ def validate_host_uniqueness(varname, host_name):
 def _get_cgconf_from_attributes(attributes: HostAttributes) -> HostContactGroupSpec:
     return attributes.get(
         "contactgroups",
-        {
-            "groups": [],
-            "recurse_perms": False,
-            "use": False,
-            "use_for_services": False,
-            "recurse_use": False,
-        },
+        HostContactGroupSpec(
+            groups=[],
+            recurse_perms=False,
+            use=False,
+            use_for_services=False,
+            recurse_use=False,
+        ),
     )
 
 

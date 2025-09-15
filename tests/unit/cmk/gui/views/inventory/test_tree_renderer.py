@@ -66,7 +66,7 @@ from cmk.inventory.structured_data import (
             [
                 [
                     SDItem(
-                        key="sid",
+                        key=SDKey("sid"),
                         title="SID",
                         value="SID 1",
                         retention_interval=None,
@@ -74,7 +74,7 @@ from cmk.inventory.structured_data import (
                         icon_path_svc_problems="",
                     ),
                     SDItem(
-                        key="flashback",
+                        key=SDKey("flashback"),
                         title="Flashback",
                         value="Flashback 1",
                         retention_interval=None,
@@ -82,7 +82,7 @@ from cmk.inventory.structured_data import (
                         icon_path_svc_problems="",
                     ),
                     SDItem(
-                        key="other",
+                        key=SDKey("other"),
                         title="Other",
                         value="Other 1",
                         retention_interval=None,
@@ -92,7 +92,7 @@ from cmk.inventory.structured_data import (
                 ],
                 [
                     SDItem(
-                        key="sid",
+                        key=SDKey("sid"),
                         title="SID",
                         value="SID 2",
                         retention_interval=RetentionInterval(1, 2, 3, "previous"),
@@ -100,7 +100,7 @@ from cmk.inventory.structured_data import (
                         icon_path_svc_problems="",
                     ),
                     SDItem(
-                        key="flashback",
+                        key=SDKey("flashback"),
                         title="Flashback",
                         value="Flashback 2",
                         retention_interval=None,
@@ -108,7 +108,7 @@ from cmk.inventory.structured_data import (
                         icon_path_svc_problems="",
                     ),
                     SDItem(
-                        key="other",
+                        key=SDKey("other"),
                         title="Other",
                         value="Other 2",
                         retention_interval=None,
@@ -216,14 +216,14 @@ def test_sort_table_rows_displayhint(
             [
                 [
                     _SDDeltaItem(
-                        key="sid",
+                        key=SDKey("sid"),
                         title="SID",
                         old="SID 2",
                         new="SID 2",
                         paint_function=inv_paint_generic,
                     ),
                     _SDDeltaItem(
-                        key="flashback",
+                        key=SDKey("flashback"),
                         title="Flashback",
                         old="Flashback 21",
                         new="Flashback 22",

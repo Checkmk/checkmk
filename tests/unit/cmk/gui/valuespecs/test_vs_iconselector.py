@@ -11,14 +11,14 @@ import cmk.gui.valuespec as vs
 
 from .utils import expect_validate_failure, expect_validate_success
 
+# A few types below are plain lies...
 ICON: vs.IconSelectorModel = {"icon": "crash", "emblem": None}
-ICON_WRONG_TYPE: vs.IconSelectorModel = {"icon": 123, "emblem": None}  # type: ignore[typeddict-item]
+ICON_WRONG_TYPE: vs.IconSelectorModel = {"icon": 123, "emblem": None}  # type: ignore[assignment]
 ICON_NOT_EXISTANT: vs.IconSelectorModel = {"icon": "asd", "emblem": None}
 ICON_EMBLEM: vs.IconSelectorModel = {"icon": "graph", "emblem": "add"}
 ICON_EMBLEM_NOT_EXISTANT: vs.IconSelectorModel = {"icon": "graph", "emblem": "xxx123xxx"}
-ICON_EMBLEM_WRONG_TYPE: vs.IconSelectorModel = {"icon": "graph", "emblem": 123}  # type: ignore[typeddict-item]
-# TODO: by type icon may not be None, but code explicitly tests for this...
-ICON_NONE: vs.IconSelectorModel = {"icon": None, "emblem": None}  # type: ignore[typeddict-item]
+ICON_EMBLEM_WRONG_TYPE: vs.IconSelectorModel = {"icon": "graph", "emblem": 123}  # type: ignore[assignment]
+ICON_NONE: vs.IconSelectorModel = {"icon": None, "emblem": None}  # type: ignore[assignment]
 
 
 class TestValueSpecFloat:

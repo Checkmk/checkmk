@@ -656,7 +656,7 @@ def entry_point_prefixes() -> (  # type: ignore[explicit-any]
     check_plugin_... = CheckPlugin(...)
     inventory_plugin_... = InventoryPlugin(...)
     """
-    return {  # type: ignore[misc]  # expression contains Any
+    return {
         SimpleSNMPSection: "snmp_section_",
         SNMPSection: "snmp_section_",
         AgentSection: "agent_section_",

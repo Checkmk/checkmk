@@ -125,13 +125,12 @@ def merge_enforced_services(
             # For consistency we also merge `discovered_{parameters,labels}`.
             # At the time of writing, they are always empty for enforced services.
             discovered_parameters=merge_parameters([e.discovered_parameters for e in entries], {}),
-            discovered_labels=(
-                discovered_labels := merge_parameters([e.discovered_labels for e in entries], {})
-            ),
+            discovered_labels=discovered_labels,
             labels=labels_of_service(entries[0].description, discovered_labels),
             is_enforced=True,
         )
         for sid, entries in entries_by_id.items()
+        for discovered_labels in (merge_parameters([e.discovered_labels for e in entries], {}),)
     ]
 
 

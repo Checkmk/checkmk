@@ -13,3 +13,39 @@ pytest<8.4 # breaking changes with pytest-playwright CMK-24472
 marshmallow<4 # breaking changes CMK-25251
 pytest-asyncio @ git+https://github.com/pytest-dev/pytest-asyncio@db36483bc47c804b74aa6e0baab5d701a9224776 # incompatible dependency names CMK-25423
 azure-mgmt-compute==35.0.0  # CMK-25571
+# temporary pinnings to update *only* mypy
+azure-core==1.35.0  # CMK-99999
+azure-identity==1.24.0  # CMK-99999
+boto3-stubs==1.40.28  # CMK-99999
+botocore-stubs==1.40.28  # CMK-99999
+httplib2==0.30.2  # CMK-99999
+hypothesis==6.138.15  # CMK-99999
+opentelemetry-api==1.36.0  # CMK-99999
+opentelemetry-exporter-otlp==1.36.0  # CMK-99999
+opentelemetry-exporter-otlp-proto-common==1.36.0  # CMK-99999
+opentelemetry-exporter-otlp-proto-grpc==1.36.0  # CMK-99999
+opentelemetry-exporter-otlp-proto-http==1.36.0  # CMK-99999
+opentelemetry-instrumentation==0.57b0  # CMK-99999
+opentelemetry-instrumentation-asgi==0.57b0  # CMK-99999
+opentelemetry-instrumentation-fastapi==0.57b0  # CMK-99999
+opentelemetry-instrumentation-redis==0.57b0  # CMK-99999
+opentelemetry-instrumentation-requests==0.57b0  # CMK-99999
+opentelemetry-instrumentation-wsgi==0.57b0  # CMK-99999
+opentelemetry-proto==1.36.0  # CMK-99999
+opentelemetry-sdk==1.36.0  # CMK-99999
+opentelemetry-semantic-conventions==0.57b0  # CMK-99999
+opentelemetry-util-http==0.57b0  # CMK-99999
+pyenchant==3.2.2  # CMK-99999
+pyopenssl==25.1.0  # CMK-99999
+pyparsing==3.2.3  # CMK-99999
+pytest-check==2.5.3  # CMK-99999
+types-cffi==1.17.0.20250822  # CMK-99999
+types-docutils==0.22.0.20250822  # CMK-99999
+types-pika-ts==1.3.0.20250822  # CMK-99999
+types-protobuf==6.30.2.20250822  # CMK-99999
+types-pyasn1==0.6.0.20250516  # CMK-99999
+types-pymysql==1.1.0.20250909  # CMK-99999
+types-pyyaml==6.0.12.20250822  # CMK-99999
+types-requests==2.32.4.20250809  # CMK-99999
+zope-event==5.1.1  # CMK-99999
+zope-interface==7.2  # CMK-99999

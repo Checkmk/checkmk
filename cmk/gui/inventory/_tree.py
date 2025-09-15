@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from enum import auto, Enum
 from pathlib import Path
@@ -23,7 +23,7 @@ from cmk.gui.exceptions import MKAuthException
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.watolib.groups_io import PermittedPath
+from cmk.gui.watolib.groups_io import NothingOrChoices, PermittedPath
 from cmk.inventory.structured_data import (
     filter_tree,
     HistoryArchivePath,
@@ -107,27 +107,25 @@ def parse_internal_raw_path(raw: str) -> InventoryPath:
 # => Should be unified one day.
 
 
+def _transform_attribute[T](
+    f: Callable[[str], T], x: NothingOrChoices | None
+) -> Literal["nothing", "all"] | Sequence[T]:
+    if x is None:
+        return "all"
+    if x == "nothing":
+        return x
+    return [f(y) for y in x[1]]  # choices
+
+
 def _make_filter_choices_from_permitted_paths(
     permitted_paths: Sequence[PermittedPath],
 ) -> Sequence[SDFilterChoice]:
     return [
         SDFilterChoice(
             path=parse_visible_raw_path(entry["visible_raw_path"]),
-            pairs=(
-                [SDKey(a) for a in attributes[-1]]
-                if isinstance(attributes := entry.get("attributes", "all"), tuple)
-                else attributes
-            ),
-            columns=(
-                [SDKey(c) for c in columns[-1]]
-                if isinstance(columns := entry.get("columns", "all"), tuple)
-                else columns
-            ),
-            nodes=(
-                [SDNodeName(n) for n in nodes[-1]]
-                if isinstance(nodes := entry.get("nodes", "all"), tuple)
-                else nodes
-            ),
+            pairs=_transform_attribute(SDKey, entry.get("attributes")),
+            columns=_transform_attribute(SDKey, entry.get("columns")),
+            nodes=_transform_attribute(SDNodeName, entry.get("nodes")),
         )
         for entry in permitted_paths
         if entry

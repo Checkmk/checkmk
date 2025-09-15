@@ -239,7 +239,7 @@ check_plugin_azure_redis_latency = CheckPlugin(
     check_ruleset_name="azure_redis_latency",
     check_default_parameters={
         "serverside_upper": ("no_levels", None),
-        "internode_upper": ("no_levels", None),
+        "internode_upper": ("fixed", (0.5, 1.0)),
     },
 )
 

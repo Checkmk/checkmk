@@ -373,7 +373,7 @@ def compile_mib(
 ) -> Mapping[str, MibStatus]:
     # Compile the uploaded SNMP MIB but also resolving dependencies and compiling dependents
     return (
-        MibCompiler(  # type: ignore[no-untyped-call]
+        MibCompiler(
             SmiV1CompatParser(),
             PySnmpCodeGen(),  # type: ignore[no-untyped-call]
             PyFileWriter(destination_dir),  # type: ignore[no-untyped-call]

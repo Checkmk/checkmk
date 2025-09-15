@@ -3039,9 +3039,9 @@ sniffio==1.3.1 \
     # via
     #   -c requirements.txt
     #   anyio
-snmpsim-lextudio==1.1.0 \
-    --hash=sha256:0d6fe597652b8c0fd517433f0c92b67ad9febbc8733f6658d2aea3b1e3d35e59 \
-    --hash=sha256:24eaeacac89fea434126ec3f9c8cf96ebfb27fa7a81b4d4736137c977391b281
+snmpsim-lextudio==1.1.1 \
+    --hash=sha256:55d71a27de878b6c4338e363d6f6a989cad0ae7f265ac187d6c617feb7ea840a \
+    --hash=sha256:a5288a59219789c8831aafe3dcb41f79f918215b870a25579ff2c5a713048a2f
     # via
     #   -c constraints.txt
     #   -c requirements.txt

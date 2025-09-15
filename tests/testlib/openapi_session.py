@@ -133,13 +133,13 @@ class CMKOpenApiSession(requests.Session):
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
 
-    def request(  # type: ignore[no-untyped-def]
+    def request(  # type: ignore[override]
         self,
         method: str | bytes,
         url: str | bytes,
-        *args,
+        *args: Any,
         timeout: float | tuple[float, float] | tuple[float, None] | None = 300.0,
-        **kwargs,
+        **kwargs: Any,
     ) -> requests.Response:
         """
         Suggested method to use a base url with a requests.Session

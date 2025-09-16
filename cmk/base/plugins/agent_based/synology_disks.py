@@ -8,6 +8,7 @@ from typing import Any
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_value_store,
+    IgnoreResultsError,
     register,
     Result,
     Service,
@@ -81,8 +82,14 @@ def discover_synology_disks(section: Section) -> DiscoveryResult:
         yield Service(item=item, parameters={})
 
 
+def get_data_or_go_stale(item: str, section: Section) -> Disk:
+    if resource := section.get(item):
+        return resource
+    raise IgnoreResultsError("Data not present at the moment")
+
+
 def check_synology_disks(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    disk = section[item]
+    disk = get_data_or_go_stale(item, section)
     temperature_result = list(
         temperature.check_temperature(
             reading=disk.temperature,

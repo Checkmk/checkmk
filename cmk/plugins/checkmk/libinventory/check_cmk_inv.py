@@ -26,6 +26,7 @@ from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.errorhandling import CheckResultErrorHandler
 from cmk.base.modes.check_mk import execute_active_check_inventory
+from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.cpu_tracking import CPUTracker
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
@@ -44,7 +45,6 @@ from cmk.fetchers import Mode as FetchMode
 from cmk.fetchers import NoSelectedSNMPSections, SNMPFetcherConfig
 from cmk.fetchers.config import make_cached_snmp_sections_dir
 from cmk.fetchers.filecache import FileCacheOptions
-from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.ip_lookup import (
     ConfiguredIPLookup,
     make_lookup_ip_address,

@@ -485,7 +485,6 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.fetchers",
         "cmk.helper_interface",
         "cmk.snmplib",
-        "cmk.utils.config_path",
         "cmk.utils.observer",
         "cmk.utils.paths",
         "cmk.utils.timeout",

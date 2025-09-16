@@ -31,6 +31,16 @@ py_library(
 )
 
 py_library(
+    name = "config-path",
+    srcs = ["cmk/ccc/config_path.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        "store",
+    ],
+)
+
+py_library(
     name = "cpu-tracking",
     srcs = ["cmk/ccc/cpu_tracking.py"],
     imports = ["."],
@@ -168,6 +178,7 @@ py_library(
 
 _ALL = [
     "cleanup",
+    "config-path",
     "cpu-tracking",
     "crash-reporting",
     "daemon",
@@ -288,6 +299,21 @@ py_test(
         "__test__",
         "debug",
         "store",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "config-path-tests",
+    size = "small",
+    srcs = [
+        "__test__.py",
+        "tests/test_config_path.py",
+    ],
+    main = "__test__.py",
+    deps = [
+        "__test__",
+        "config-path",
         requirement("pytest"),
     ],
 )

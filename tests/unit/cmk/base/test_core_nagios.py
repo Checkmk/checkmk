@@ -33,13 +33,13 @@ from cmk.base.core.nagios._precompile_host_checks import (
     HostCheckStore,
     PrecompileMode,
 )
+from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.plugins import AgentBasedPlugins, AutocheckEntry, CheckPlugin, CheckPluginName
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig
 from cmk.server_side_calls_backend import load_active_checks
 from cmk.utils import ip_lookup, paths
-from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.labels import ABCLabelConfig, LabelManager, Labels
 from cmk.utils.servicename import ServiceName
 from tests.testlib.unit.base_configuration_scenario import Scenario

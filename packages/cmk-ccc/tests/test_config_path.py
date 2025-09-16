@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.utils.config_path import VersionedConfigPath
+from cmk.ccc.config_path import VersionedConfigPath
 
 
 class TestVersionedConfigPath:

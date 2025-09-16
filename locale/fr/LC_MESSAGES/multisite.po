@@ -11672,6 +11672,9 @@ msgstr "Impossible de récupérer les données via Livestatus"
 msgid "Cannot find %s with the name %s"
 msgstr "Impossible de trouver %s avec le nom %s"
 
+msgid "Cannot find fallback topic 'Other'"
+msgstr ""
+
 #, python-format
 msgid "Cannot find image \"%s\" in %s"
 msgstr "Impossible de trouver l'image \"%s\" dans %s"
@@ -24689,6 +24692,10 @@ msgid "Expected String"
 msgstr "Chaîne attendue"
 
 #, fuzzy
+msgid "Expected VM Generation"
+msgstr "Situation attendue du chemin"
+
+#, fuzzy
 msgid "Expected active paths"
 msgstr "Nombre attendu de voies actives"
 
@@ -27482,6 +27489,14 @@ msgstr "spécification de la cartouche"
 
 msgid "Generating report..."
 msgstr "Générer des rapports..."
+
+#, fuzzy
+msgid "Generation 1"
+msgstr "Options générales"
+
+#, fuzzy
+msgid "Generation 2"
+msgstr "Options générales"
 
 msgid "Generic UPS Device: Temperature sensor"
 msgstr "Dispositif générique UPS : Capteur de température"
@@ -31846,6 +31861,10 @@ msgstr "Informations sur l'invité de la VM Hyper-V (Windows)"
 #, fuzzy
 msgid "Hyper-V VM integration services"
 msgstr "Serveur Hyper-V : État des VMs"
+
+#, fuzzy
+msgid "Hyper-V VM summary"
+msgstr "VMs Hyper-V (Windows)"
 
 msgid "Hyper-V VMs (Windows)"
 msgstr "VMs Hyper-V (Windows)"
@@ -40475,10 +40494,6 @@ msgstr "Aperçu général"
 msgid "Main dashboard"
 msgstr "Tableau de bord principal"
 
-#, fuzzy
-msgid "Main dashboard (PEV)"
-msgstr "Tableau de bord principal"
-
 msgid "Main folder"
 msgstr "Dossier principal"
 
@@ -45067,11 +45082,6 @@ msgstr "Aucun changement en cours."
 #, python-format
 msgid "No performance data: %s"
 msgstr "Aucune donnée de performance : %s"
-
-#, fuzzy
-msgid ""
-"No permission for fallback topic 'Other'. Please contact your administrator."
-msgstr "Veuillez contacter votre administrateur."
 
 #, fuzzy
 msgid "No previous cycle available"
@@ -52472,6 +52482,10 @@ msgstr "Utilisation de l'énergie"
 msgid "Power consumption draw"
 msgstr "Consommation électrique"
 
+#, fuzzy
+msgid "Power state mapping"
+msgstr "Mappage de l'état des pairs BGP"
+
 msgid "Power state unknown"
 msgstr "État de l'alimentation inconnu"
 
@@ -55508,6 +55522,10 @@ msgstr "Reporting"
 msgid "Reports"
 msgstr "Rapports"
 
+#, fuzzy
+msgid "Repository"
+msgstr "Dépôt/Tag"
+
 msgid "Repository/Tag"
 msgstr "Dépôt/Tag"
 
@@ -57568,6 +57586,10 @@ msgstr "Sauvegardez cet hôte et allez à"
 msgid "Save your progress and go to the Activate Changes page to enable it."
 msgstr ""
 
+#, fuzzy
+msgid "Saved"
+msgstr "Sauver"
+
 #, python-format
 msgid "Saved check configuration of host '%s' with %d services"
 msgstr ""
@@ -59453,6 +59475,10 @@ msgstr "Délai d'attente de la session :"
 
 msgid "Session type"
 msgstr "Type de session"
+
+#, fuzzy, python-format
+msgid "Set '%s' to '%s' on site %s"
+msgstr "Passez de '%s' à '%s'"
 
 msgid "Set IPv4 address"
 msgstr "Définir l'adresse IPv4"
@@ -63324,6 +63350,10 @@ msgstr "État si le nœud n'est pas en état de marche"
 
 #, fuzzy
 msgid "State if not default"
+msgstr "État si aucune entrée ne correspond"
+
+#, fuzzy
+msgid "State if not expected"
 msgstr "État si aucune entrée ne correspond"
 
 msgid "State if probe state not OK"
@@ -83819,6 +83849,10 @@ msgstr "Utilisez la configuration globale"
 msgid "VM"
 msgstr "VMs"
 
+#, fuzzy
+msgid "VM Generation"
+msgstr "Options générales"
+
 msgid "VM distribution"
 msgstr "Distribution de VM"
 
@@ -85010,9 +85044,8 @@ msgid ""
 "<b>Check_MK</b> and <b>Check_MK Discovery</b> services of the piggybacked "
 "hosts report <b>Got no information from host</b> resp. <b>vanished services</"
 "b> if the piggybacked data is missing within a check interval. This rule "
-"helps you to get more control over the piggybacked host data handling. The "
-"source host names have to be set in the condition field <i>Explicit hosts</"
-"i>."
+"helps you to get more control over the piggybacked host data handling. This "
+"rules condition is applied to the <b>source</b> hosts."
 msgstr ""
 "Nous supposons qu'un hôte source envoie des données de ferroutage à chaque "
 "intervalle de vérification par défaut. Si ce n'est pas le cas pour certains "
@@ -91815,6 +91848,10 @@ msgid "required"
 msgstr "Port requis"
 
 #, fuzzy
+msgid "Remove row"
+msgstr "Supprimé : %s"
+
+#, fuzzy
 msgid "Dashboard filter"
 msgstr "Élément du tableau de bord"
 
@@ -91849,15 +91886,15 @@ msgstr "Filtres de service"
 msgid "Reset to saved filters"
 msgstr "Supprimer le filtre"
 
+#, fuzzy
+msgid "Success! Your new dashboard filters have been saved"
+msgstr "Vos modifications ont été enregistrées."
+
 msgid "Runtime filters are required to load data."
 msgstr ""
 
 msgid "Values apply across all widgets."
 msgstr ""
-
-#, fuzzy
-msgid "Remove row"
-msgstr "Supprimé : %s"
 
 #, fuzzy
 msgid "Apply to dashboard"
@@ -91866,6 +91903,9 @@ msgstr "Lien vers le tableau de bord"
 #, fuzzy
 msgid "Edit required runtime filters"
 msgstr "Filtres contextuels requis"
+
+msgid "Success! Your runtime filters have been applied"
+msgstr ""
 
 #, fuzzy
 msgid "Settings Menu"
@@ -92045,6 +92085,10 @@ msgstr "Éléments de la barre latérale"
 
 msgid "Display user messages, sidebar elements, text or embed a URL"
 msgstr ""
+
+#, fuzzy
+msgid "Choose how to display your data"
+msgstr "Ne pas afficher de date"
 
 #, fuzzy
 msgid "explicit password"
@@ -92553,8 +92597,9 @@ msgid ""
 "  monitoring with minimal setup."
 msgstr ""
 
-msgid "On-premise-hosts"
-msgstr ""
+#, fuzzy
+msgid "On-premises hosts"
+msgstr "Niveaux Hôtes"
 
 #, fuzzy
 msgid "Server (Linux, Windows, Solaris, ...)"
@@ -92759,6 +92804,16 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Main dashboard (PEV)"
+#~ msgstr "Tableau de bord principal"
+
+#, fuzzy
+#~ msgid ""
+#~ "No permission for fallback topic 'Other'. Please contact your "
+#~ "administrator."
+#~ msgstr "Veuillez contacter votre administrateur."
 
 #~ msgid "Currently indexing, please try again shortly."
 #~ msgstr "En cours d'indexation, veuillez réessayer sous peu."

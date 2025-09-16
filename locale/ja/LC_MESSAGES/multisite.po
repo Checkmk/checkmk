@@ -10880,6 +10880,9 @@ msgstr "Livestatus経由でデータをフェッチできません"
 msgid "Cannot find %s with the name %s"
 msgstr "%sが見つかりません 名前の%s"
 
+msgid "Cannot find fallback topic 'Other'"
+msgstr ""
+
 #, python-format
 msgid "Cannot find image \"%s\" in %s"
 msgstr "画像 \"%s\" が %s 内に見つかりません"
@@ -23081,6 +23084,10 @@ msgstr "期待されるDNSの回答"
 msgid "Expected String"
 msgstr "期待される文字列"
 
+#, fuzzy
+msgid "Expected VM Generation"
+msgstr "予想される経路の状況"
+
 msgid "Expected active paths"
 msgstr "予想されるアクティブパス"
 
@@ -25717,6 +25724,14 @@ msgstr "REST API仕様の生成"
 
 msgid "Generating report..."
 msgstr "レポートを生成しています..."
+
+#, fuzzy
+msgid "Generation 1"
+msgstr "一般的なオプション"
+
+#, fuzzy
+msgid "Generation 2"
+msgstr "一般的なオプション"
 
 msgid "Generic UPS Device: Temperature sensor"
 msgstr "汎用UPSデバイス: 温度センサー"
@@ -29578,6 +29593,10 @@ msgstr "Hyper-V VMゲスト情報(Windows)"
 #, fuzzy
 msgid "Hyper-V VM integration services"
 msgstr "Hyper-V統合サービスの状態"
+
+#, fuzzy
+msgid "Hyper-V VM summary"
+msgstr "Hyper-V VM (Windows)"
 
 msgid "Hyper-V VMs (Windows)"
 msgstr "Hyper-V VM (Windows)"
@@ -37691,10 +37710,6 @@ msgstr "主な概要"
 msgid "Main dashboard"
 msgstr "メインダッシュボード"
 
-#, fuzzy
-msgid "Main dashboard (PEV)"
-msgstr "メインダッシュボード"
-
 msgid "Main folder"
 msgstr "メインフォルダ"
 
@@ -41966,12 +41981,6 @@ msgstr "保留中の変更はありません。"
 #, python-format
 msgid "No performance data: %s"
 msgstr "パフォーマンスデータなし: %s"
-
-msgid ""
-"No permission for fallback topic 'Other'. Please contact your administrator."
-msgstr ""
-"フォールバックトピック「その他」の権限がありません。管理者に連絡してくださ"
-"い。"
 
 msgid "No previous cycle available"
 msgstr "以前のサイクルは利用できません"
@@ -48666,6 +48675,10 @@ msgstr "電力使用量"
 msgid "Power consumption draw"
 msgstr "消費電力"
 
+#, fuzzy
+msgid "Power state mapping"
+msgstr "BGPピア 状態マッピング"
+
 msgid "Power state unknown"
 msgstr "電源状態不明"
 
@@ -51501,6 +51514,10 @@ msgstr "報告"
 msgid "Reports"
 msgstr "レポート"
 
+#, fuzzy
+msgid "Repository"
+msgstr "リポジトリ/タグ"
+
 msgid "Repository/Tag"
 msgstr "リポジトリ/タグ"
 
@@ -53405,6 +53422,10 @@ msgstr "このホストを保存して、行く"
 msgid "Save your progress and go to the Activate Changes page to enable it."
 msgstr "進捗を保存し、変更を有効化するページに移動して有効化してください。"
 
+#, fuzzy
+msgid "Saved"
+msgstr "保存する"
+
 #, python-format
 msgid "Saved check configuration of host '%s' with %d services"
 msgstr "ホスト '%s'のチェック構成を %d サービスで保存しました"
@@ -55195,6 +55216,10 @@ msgstr "セッションタイムアウト:"
 
 msgid "Session type"
 msgstr "セッションタイプ"
+
+#, fuzzy, python-format
+msgid "Set '%s' to '%s' on site %s"
+msgstr "%s' を '%s' に切り替えます"
 
 msgid "Set IPv4 address"
 msgstr "IPv4アドレスを設定する"
@@ -58819,6 +58844,10 @@ msgstr "ノードが実行中の状態にない場合の状態"
 
 #, fuzzy
 msgid "State if not default"
+msgstr "一致するエントリがない場合の状態"
+
+#, fuzzy
+msgid "State if not expected"
 msgstr "一致するエントリがない場合の状態"
 
 msgid "State if probe state not OK"
@@ -77631,6 +77660,10 @@ msgstr "VLUN：仮想LUNの構成"
 msgid "VM"
 msgstr "VM"
 
+#, fuzzy
+msgid "VM Generation"
+msgstr "一般的なオプション"
+
 msgid "VM distribution"
 msgstr "VMの配布"
 
@@ -78752,15 +78785,15 @@ msgstr ""
 "申し訳ありませんが、この操作の許可がありません。これが気に入らない場合は、管"
 "理者に次の権限を与えるように依頼してください: '<b>%s</b>'。"
 
+#, fuzzy
 msgid ""
 "We assume that a source host is sending piggyback data every check interval "
 "by default. If this is not the case for some source hosts then the "
 "<b>Check_MK</b> and <b>Check_MK Discovery</b> services of the piggybacked "
 "hosts report <b>Got no information from host</b> resp. <b>vanished services</"
 "b> if the piggybacked data is missing within a check interval. This rule "
-"helps you to get more control over the piggybacked host data handling. The "
-"source host names have to be set in the condition field <i>Explicit hosts</"
-"i>."
+"helps you to get more control over the piggybacked host data handling. This "
+"rules condition is applied to the <b>source</b> hosts."
 msgstr ""
 "デフォルトでは、ソースホストがチェック間隔ごとにピギーバックデータを送信して"
 "いると想定しています。一部のソースホストに当てはまらない場合は、ピギーバック"
@@ -85187,6 +85220,10 @@ msgid "required"
 msgstr "必須"
 
 #, fuzzy
+msgid "Remove row"
+msgstr "削除：%r"
+
+#, fuzzy
 msgid "Dashboard filter"
 msgstr "ダッシュボード要素"
 
@@ -85221,15 +85258,15 @@ msgstr "サービスフィルター"
 msgid "Reset to saved filters"
 msgstr "フィルタを取り外します"
 
+#, fuzzy
+msgid "Success! Your new dashboard filters have been saved"
+msgstr "変更は保存されていません。"
+
 msgid "Runtime filters are required to load data."
 msgstr ""
 
 msgid "Values apply across all widgets."
 msgstr ""
-
-#, fuzzy
-msgid "Remove row"
-msgstr "削除：%r"
 
 #, fuzzy
 msgid "Apply to dashboard"
@@ -85238,6 +85275,9 @@ msgstr "ダッシュボードに追加"
 #, fuzzy
 msgid "Edit required runtime filters"
 msgstr "必要なコンテキストフィルター"
+
+msgid "Success! Your runtime filters have been applied"
+msgstr ""
 
 #, fuzzy
 msgid "Settings Menu"
@@ -85417,6 +85457,10 @@ msgstr "サイドバー要素"
 
 msgid "Display user messages, sidebar elements, text or embed a URL"
 msgstr ""
+
+#, fuzzy
+msgid "Choose how to display your data"
+msgstr "日付を表示しない"
 
 #, fuzzy
 msgid "explicit password"
@@ -85919,8 +85963,9 @@ msgid ""
 "  monitoring with minimal setup."
 msgstr ""
 
-msgid "On-premise-hosts"
-msgstr ""
+#, fuzzy
+msgid "On-premises hosts"
+msgstr "レベルホスト"
 
 #, fuzzy
 msgid "Server (Linux, Windows, Solaris, ...)"
@@ -86125,6 +86170,17 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Main dashboard (PEV)"
+#~ msgstr "メインダッシュボード"
+
+#~ msgid ""
+#~ "No permission for fallback topic 'Other'. Please contact your "
+#~ "administrator."
+#~ msgstr ""
+#~ "フォールバックトピック「その他」の権限がありません。管理者に連絡してくださ"
+#~ "い。"
 
 #~ msgid "Currently indexing, please try again shortly."
 #~ msgstr ""

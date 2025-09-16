@@ -38,7 +38,9 @@ export default {
             ignoreFunctions: ['v-bind']
           }
         ],
-        'checkmk/vue-bem-naming-convention': true
+        'checkmk/vue-bem-naming-convention': true,
+        // renaming the error message to make it more clear what happens:
+        'no-empty-source': [true, { message: 'No empty <style> section allowed in vue files.' }]
       }
     }
   ]

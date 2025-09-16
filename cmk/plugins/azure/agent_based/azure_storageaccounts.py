@@ -44,7 +44,16 @@ check_plugin_azure_storageaccounts = CheckPlugin(
     discovery_function=create_discover_by_metrics_function("total_UsedCapacity"),
     check_function=create_check_azure_storage(),
     check_ruleset_name="azure_storageaccounts_usage",
-    check_default_parameters={"used_capacity_levels": ("no_levels", None)},
+    check_default_parameters={
+        "used_capacity_levels": (
+            "fixed",
+            (
+                # B   KiB    MiB    GiB    TiB
+                1.0 * 1024 * 1024 * 1024 * 1024 * 50,  # 50 TiB
+                1.0 * 1024 * 1024 * 1024 * 1024 * 500,  # 500 TiB
+            ),
+        )
+    },
 )
 
 
@@ -79,7 +88,9 @@ check_plugin_azure_storageaccounts_flow = CheckPlugin(
     check_function=create_check_azure_storageaccounts_flow(),
     check_ruleset_name="azure_storageaccounts_flow",
     check_default_parameters={
-        f"{metric_key[6:].lower()}_levels": ("no_levels", None) for metric_key in FLOW_METRICS
+        "ingress_levels": ("no_levels", None),
+        "egress_levels": ("no_levels", None),
+        "transactions_levels": ("fixed", (8.0, 10.0)),
     },
 )
 
@@ -144,6 +155,8 @@ check_plugin_azure_storageaccounts_performance = CheckPlugin(
     check_function=create_check_azure_storageaccounts_performance(),
     check_ruleset_name="azure_storageaccounts_performance",
     check_default_parameters={
-        f"{value[-2] or value[-1]}": ("no_levels", None) for value in PERFORMANCE_METRICS.values()
+        "server_latency_levels": ("fixed", (701.0, 1001.0)),
+        "e2e_latency_levels": ("fixed", (701.0, 1001.0)),
+        "availability_levels": ("fixed", (99.8, 99.0)),
     },
 )

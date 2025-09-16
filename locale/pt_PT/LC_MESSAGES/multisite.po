@@ -11622,6 +11622,9 @@ msgstr "Não é possível ir buscar dados através do Livestatus"
 msgid "Cannot find %s with the name %s"
 msgstr "Não encontro %s com o nome %s"
 
+msgid "Cannot find fallback topic 'Other'"
+msgstr ""
+
 #, python-format
 msgid "Cannot find image \"%s\" in %s"
 msgstr "Não é possível encontrar a imagem \"%s\" em %s"
@@ -24493,6 +24496,10 @@ msgstr "Respostas DNS esperadas"
 msgid "Expected String"
 msgstr "Corda Esperada"
 
+#, fuzzy
+msgid "Expected VM Generation"
+msgstr "Situação do caminho esperado"
+
 msgid "Expected active paths"
 msgstr "Vias activas previstas"
 
@@ -27277,6 +27284,14 @@ msgstr "especificação do cartucho"
 
 msgid "Generating report..."
 msgstr "A gerar relatório..."
+
+#, fuzzy
+msgid "Generation 1"
+msgstr "Opções Gerais"
+
+#, fuzzy
+msgid "Generation 2"
+msgstr "Opções Gerais"
 
 msgid "Generic UPS Device: Temperature sensor"
 msgstr "Dispositivo UPS genérico: Sensor de temperatura"
@@ -31601,6 +31616,10 @@ msgstr "Hyper-V VM Informação ao Convidado (Windows)"
 #, fuzzy
 msgid "Hyper-V VM integration services"
 msgstr "Servidor Hyper-V: Estado das VMs"
+
+#, fuzzy
+msgid "Hyper-V VM summary"
+msgstr "Hyper-V VMs (Windows)"
 
 msgid "Hyper-V VMs (Windows)"
 msgstr "Hyper-V VMs (Windows)"
@@ -40155,10 +40174,6 @@ msgstr "Visão Geral Principal"
 msgid "Main dashboard"
 msgstr "Painel de instrumentos principal"
 
-#, fuzzy
-msgid "Main dashboard (PEV)"
-msgstr "Painel de instrumentos principal"
-
 msgid "Main folder"
 msgstr "Pasta principal"
 
@@ -44717,11 +44732,6 @@ msgstr "Não há alterações pendentes."
 #, python-format
 msgid "No performance data: %s"
 msgstr "Sem dados de desempenho: %s"
-
-#, fuzzy
-msgid ""
-"No permission for fallback topic 'Other'. Please contact your administrator."
-msgstr "Contacte o seu administrador."
 
 #, fuzzy
 msgid "No previous cycle available"
@@ -52034,6 +52044,10 @@ msgstr "Uso de energia"
 msgid "Power consumption draw"
 msgstr "Consumo de energia"
 
+#, fuzzy
+msgid "Power state mapping"
+msgstr "Mapeamento do estado dos pares BGP"
+
 msgid "Power state unknown"
 msgstr "Estado de energia desconhecido"
 
@@ -55053,6 +55067,10 @@ msgstr "Relatório"
 msgid "Reports"
 msgstr "Relatórios"
 
+#, fuzzy
+msgid "Repository"
+msgstr "Repositório/Tag"
+
 msgid "Repository/Tag"
 msgstr "Repositório/Tag"
 
@@ -57086,6 +57104,10 @@ msgstr "Salve este anfitrião e vá para"
 msgid "Save your progress and go to the Activate Changes page to enable it."
 msgstr ""
 
+#, fuzzy
+msgid "Saved"
+msgstr "Salvar"
+
 #, python-format
 msgid "Saved check configuration of host '%s' with %d services"
 msgstr ""
@@ -58957,6 +58979,10 @@ msgstr "Tempo limite da sessão:"
 
 msgid "Session type"
 msgstr "Tipo de sessão"
+
+#, fuzzy, python-format
+msgid "Set '%s' to '%s' on site %s"
+msgstr "Mudar \"%s\" para \"%s\""
 
 msgid "Set IPv4 address"
 msgstr "Definir endereço IPv4"
@@ -62788,6 +62814,10 @@ msgstr "Estado se o nó não estiver em estado de funcionamento"
 
 #, fuzzy
 msgid "State if not default"
+msgstr "Estado se nenhuma entrada corresponder"
+
+#, fuzzy
+msgid "State if not expected"
 msgstr "Estado se nenhuma entrada corresponder"
 
 msgid "State if probe state not OK"
@@ -83014,6 +83044,10 @@ msgstr "Use a configuração global"
 msgid "VM"
 msgstr "VM"
 
+#, fuzzy
+msgid "VM Generation"
+msgstr "Opções Gerais"
+
 msgid "VM distribution"
 msgstr "distribuição de VM"
 
@@ -84188,15 +84222,15 @@ msgstr ""
 "disto, por favor peça ao seu administrador para lhe dar a seguinte "
 "permissão: '<b>%s</b>'."
 
+#, fuzzy
 msgid ""
 "We assume that a source host is sending piggyback data every check interval "
 "by default. If this is not the case for some source hosts then the "
 "<b>Check_MK</b> and <b>Check_MK Discovery</b> services of the piggybacked "
 "hosts report <b>Got no information from host</b> resp. <b>vanished services</"
 "b> if the piggybacked data is missing within a check interval. This rule "
-"helps you to get more control over the piggybacked host data handling. The "
-"source host names have to be set in the condition field <i>Explicit hosts</"
-"i>."
+"helps you to get more control over the piggybacked host data handling. This "
+"rules condition is applied to the <b>source</b> hosts."
 msgstr ""
 "Assumimos que um anfitrião de origem está a enviar dados piggyback a cada "
 "intervalo de verificação por defeito. Se este não for o caso para alguns "
@@ -90888,6 +90922,10 @@ msgid "required"
 msgstr "Porto necessário"
 
 #, fuzzy
+msgid "Remove row"
+msgstr "Removido: %s"
+
+#, fuzzy
 msgid "Dashboard filter"
 msgstr "Elemento de tablier"
 
@@ -90922,15 +90960,15 @@ msgstr "Filtros de serviço"
 msgid "Reset to saved filters"
 msgstr "Remover filtro"
 
+#, fuzzy
+msgid "Success! Your new dashboard filters have been saved"
+msgstr "As suas alterações foram guardadas."
+
 msgid "Runtime filters are required to load data."
 msgstr ""
 
 msgid "Values apply across all widgets."
 msgstr ""
-
-#, fuzzy
-msgid "Remove row"
-msgstr "Removido: %s"
 
 #, fuzzy
 msgid "Apply to dashboard"
@@ -90939,6 +90977,9 @@ msgstr "Ligação ao tablier"
 #, fuzzy
 msgid "Edit required runtime filters"
 msgstr "Filtros de contexto requeridos"
+
+msgid "Success! Your runtime filters have been applied"
+msgstr ""
 
 #, fuzzy
 msgid "Settings Menu"
@@ -91118,6 +91159,10 @@ msgstr "Elementos da barra lateral"
 
 msgid "Display user messages, sidebar elements, text or embed a URL"
 msgstr ""
+
+#, fuzzy
+msgid "Choose how to display your data"
+msgstr "Não mostrar uma data"
 
 #, fuzzy
 msgid "explicit password"
@@ -91625,8 +91670,9 @@ msgid ""
 "  monitoring with minimal setup."
 msgstr ""
 
-msgid "On-premise-hosts"
-msgstr ""
+#, fuzzy
+msgid "On-premises hosts"
+msgstr "Níveis Anfitriões"
 
 #, fuzzy
 msgid "Server (Linux, Windows, Solaris, ...)"
@@ -91832,6 +91878,16 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Main dashboard (PEV)"
+#~ msgstr "Painel de instrumentos principal"
+
+#, fuzzy
+#~ msgid ""
+#~ "No permission for fallback topic 'Other'. Please contact your "
+#~ "administrator."
+#~ msgstr "Contacte o seu administrador."
 
 #~ msgid "Currently indexing, please try again shortly."
 #~ msgstr "Actualmente a indexar, por favor tente novamente em breve."

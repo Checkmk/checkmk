@@ -11194,6 +11194,9 @@ msgstr "Daten nicht via Livestatus erreichbar"
 msgid "Cannot find %s with the name %s"
 msgstr "Kann %s mit dem Namen %s nicht finden"
 
+msgid "Cannot find fallback topic 'Other'"
+msgstr ""
+
 #, python-format
 msgid "Cannot find image \"%s\" in %s"
 msgstr "Kann das Bild \"%s\" in %s nicht finden"
@@ -23709,6 +23712,10 @@ msgstr "Erwartete DNS-Antworten"
 msgid "Expected String"
 msgstr "Erwartete Zeichenkette"
 
+#, fuzzy
+msgid "Expected VM Generation"
+msgstr "Erwarteter Pfadzustand"
+
 msgid "Expected active paths"
 msgstr "Erwartete aktive Pfade"
 
@@ -26399,6 +26406,14 @@ msgstr "REST-API Spezifikation wird erzeugt"
 
 msgid "Generating report..."
 msgstr "Erstelle Bericht..."
+
+#, fuzzy
+msgid "Generation 1"
+msgstr "Generelle Einstellungen"
+
+#, fuzzy
+msgid "Generation 2"
+msgstr "Generelle Einstellungen"
 
 msgid "Generic UPS Device: Temperature sensor"
 msgstr "Generische USV: Temperatursensor"
@@ -30327,6 +30342,10 @@ msgstr "Hyper-V VM Gastinformationen (Windows)"
 
 msgid "Hyper-V VM integration services"
 msgstr "Hyper-V VM Integrationsdienste"
+
+#, fuzzy
+msgid "Hyper-V VM summary"
+msgstr "Hyper-V VMs (Windows)"
 
 msgid "Hyper-V VMs (Windows)"
 msgstr "Hyper-V VMs (Windows)"
@@ -38665,10 +38684,6 @@ msgstr "Hauptübersicht"
 msgid "Main dashboard"
 msgstr "Haupt-Dashboard"
 
-#, fuzzy
-msgid "Main dashboard (PEV)"
-msgstr "Haupt-Dashboard"
-
 msgid "Main folder"
 msgstr "Ordner Main"
 
@@ -43000,12 +43015,6 @@ msgstr "Keine ausstehenden Änderungen."
 #, python-format
 msgid "No performance data: %s"
 msgstr "Keine Metriken: %s"
-
-msgid ""
-"No permission for fallback topic 'Other'. Please contact your administrator."
-msgstr ""
-"Keine Berechtigung für das Fallback-Thema 'Andere'. Bitte kontaktieren Sie "
-"Ihren Administrator."
 
 msgid "No previous cycle available"
 msgstr "Kein vorheriger Zyklus verfügbar"
@@ -49867,6 +49876,10 @@ msgstr "Energie Verbrauch"
 msgid "Power consumption draw"
 msgstr "Stromverbrauch"
 
+#, fuzzy
+msgid "Power state mapping"
+msgstr "BGP Peer State Mapping"
+
 msgid "Power state unknown"
 msgstr "Zustand der Stromversorgung unbekannt"
 
@@ -52728,6 +52741,10 @@ msgstr "Reporting"
 msgid "Reports"
 msgstr "Berichte"
 
+#, fuzzy
+msgid "Repository"
+msgstr "Repository/Tag"
+
 msgid "Repository/Tag"
 msgstr "Repository/Tag"
 
@@ -54650,6 +54667,10 @@ msgstr ""
 "Speichern Sie Ihren Fortschritt und gehen Sie auf die Seite Änderungen "
 "aktivieren, um sie zu aktivieren."
 
+#, fuzzy
+msgid "Saved"
+msgstr "Speichern"
+
 #, python-format
 msgid "Saved check configuration of host '%s' with %d services"
 msgstr "Check-Konfiguration von '%s' mit %d Services gespeichert"
@@ -56470,6 +56491,10 @@ msgstr "Sitzungstimeout:"
 
 msgid "Session type"
 msgstr "Sitzungsart"
+
+#, fuzzy, python-format
+msgid "Set '%s' to '%s' on site %s"
+msgstr "Umschalten von '%s' zu ' %s'"
 
 msgid "Set IPv4 address"
 msgstr "IPv4-Adresse setzen"
@@ -60231,6 +60256,10 @@ msgstr "Zustand, wenn Knoten nicht im Zustand running ist"
 
 #, fuzzy
 msgid "State if not default"
+msgstr "Zustand, wenn kein Eintrag passt"
+
+#, fuzzy
+msgid "State if not expected"
 msgstr "Zustand, wenn kein Eintrag passt"
 
 msgid "State if probe state not OK"
@@ -79837,6 +79866,10 @@ msgstr "VLUNs: Virtuelle LUN-Konfiguration"
 msgid "VM"
 msgstr "VM"
 
+#, fuzzy
+msgid "VM Generation"
+msgstr "Generelle Einstellungen"
+
 msgid "VM distribution"
 msgstr "VM Verteilung"
 
@@ -80972,15 +81005,15 @@ msgstr ""
 "Leider haben Sie nicht die erforderliche Berechtigung. Wenden Sie sich an "
 "den Administrator, um die folgende Berechtigung zu bekommen: '<b>%s</b>'."
 
+#, fuzzy
 msgid ""
 "We assume that a source host is sending piggyback data every check interval "
 "by default. If this is not the case for some source hosts then the "
 "<b>Check_MK</b> and <b>Check_MK Discovery</b> services of the piggybacked "
 "hosts report <b>Got no information from host</b> resp. <b>vanished services</"
 "b> if the piggybacked data is missing within a check interval. This rule "
-"helps you to get more control over the piggybacked host data handling. The "
-"source host names have to be set in the condition field <i>Explicit hosts</"
-"i>."
+"helps you to get more control over the piggybacked host data handling. This "
+"rules condition is applied to the <b>source</b> hosts."
 msgstr ""
 "Wir gehen davon aus, dass ein Quell-Host standardmäßig in jedem "
 "Prüfintervall Piggyback-Daten sendet. Wenn dies bei einigen Quell-Hosts "
@@ -87703,6 +87736,10 @@ msgid "required"
 msgstr "erforderlich"
 
 #, fuzzy
+msgid "Remove row"
+msgstr "Entfernt: %r"
+
+#, fuzzy
 msgid "Dashboard filter"
 msgstr "Dashboard-Element"
 
@@ -87738,15 +87775,15 @@ msgstr "Servicefilter"
 msgid "Reset to saved filters"
 msgstr "Filter entfernen"
 
+#, fuzzy
+msgid "Success! Your new dashboard filters have been saved"
+msgstr "Ihre Änderungen wurden gespeichert."
+
 msgid "Runtime filters are required to load data."
 msgstr ""
 
 msgid "Values apply across all widgets."
 msgstr ""
-
-#, fuzzy
-msgid "Remove row"
-msgstr "Entfernt: %r"
 
 #, fuzzy
 msgid "Apply to dashboard"
@@ -87755,6 +87792,9 @@ msgstr "Zum Dashboard hinzufügen"
 #, fuzzy
 msgid "Edit required runtime filters"
 msgstr "Erforderliche Kontextfilter"
+
+msgid "Success! Your runtime filters have been applied"
+msgstr ""
 
 #, fuzzy
 msgid "Settings Menu"
@@ -87929,6 +87969,10 @@ msgstr "Seitenleistenelemente"
 
 msgid "Display user messages, sidebar elements, text or embed a URL"
 msgstr ""
+
+#, fuzzy
+msgid "Choose how to display your data"
+msgstr "Kein Datum anzeigen"
 
 #, fuzzy
 msgid "explicit password"
@@ -88440,8 +88484,9 @@ msgid ""
 "  monitoring with minimal setup."
 msgstr ""
 
-msgid "On-premise-hosts"
-msgstr ""
+#, fuzzy
+msgid "On-premises hosts"
+msgstr "Levels Hosts"
 
 #, fuzzy
 msgid "Server (Linux, Windows, Solaris, ...)"
@@ -88642,6 +88687,17 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Main dashboard (PEV)"
+#~ msgstr "Haupt-Dashboard"
+
+#~ msgid ""
+#~ "No permission for fallback topic 'Other'. Please contact your "
+#~ "administrator."
+#~ msgstr ""
+#~ "Keine Berechtigung für das Fallback-Thema 'Andere'. Bitte kontaktieren "
+#~ "Sie Ihren Administrator."
 
 #~ msgid "Currently indexing, please try again shortly."
 #~ msgstr "Wird gerade indiziert, bitte versuchen Sie es in Kürze erneut."

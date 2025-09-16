@@ -11616,6 +11616,9 @@ msgstr "Kan geen gegevens ophalen via Livestatus"
 msgid "Cannot find %s with the name %s"
 msgstr "Kan %s met de naam %s niet vinden"
 
+msgid "Cannot find fallback topic 'Other'"
+msgstr ""
+
 #, python-format
 msgid "Cannot find image \"%s\" in %s"
 msgstr "Kan afbeelding \"%s\" niet vinden in %s"
@@ -24502,6 +24505,10 @@ msgid "Expected String"
 msgstr "Verwachte String"
 
 #, fuzzy
+msgid "Expected VM Generation"
+msgstr "Verwachte trajectsituatie"
+
+#, fuzzy
 msgid "Expected active paths"
 msgstr "Verwacht aantal actieve paden"
 
@@ -27277,6 +27284,14 @@ msgstr "cartridge specificatie"
 
 msgid "Generating report..."
 msgstr "Het genereren van rapport..."
+
+#, fuzzy
+msgid "Generation 1"
+msgstr "Algemene opties"
+
+#, fuzzy
+msgid "Generation 2"
+msgstr "Algemene opties"
 
 msgid "Generic UPS Device: Temperature sensor"
 msgstr "Generiek UPS apparaat: Temperatuursensor"
@@ -31599,6 +31614,10 @@ msgstr "Hyper-V VM Gastgegevens (Windows)"
 #, fuzzy
 msgid "Hyper-V VM integration services"
 msgstr "Hyper-V Server: Staat van VM's"
+
+#, fuzzy
+msgid "Hyper-V VM summary"
+msgstr "Hyper-V VM's (Windows)"
 
 msgid "Hyper-V VMs (Windows)"
 msgstr "Hyper-V VM's (Windows)"
@@ -40172,10 +40191,6 @@ msgstr "Hoofd Overzicht"
 msgid "Main dashboard"
 msgstr "Hoofd dashboard"
 
-#, fuzzy
-msgid "Main dashboard (PEV)"
-msgstr "Hoofd dashboard"
-
 msgid "Main folder"
 msgstr "Hoofdmap"
 
@@ -44730,11 +44745,6 @@ msgstr "Geen hangende wijzigingen"
 #, python-format
 msgid "No performance data: %s"
 msgstr "Geen prestatiegegevens: %s"
-
-#, fuzzy
-msgid ""
-"No permission for fallback topic 'Other'. Please contact your administrator."
-msgstr "Neem contact op met uw beheerder."
 
 #, fuzzy
 msgid "No previous cycle available"
@@ -52067,6 +52077,10 @@ msgstr "Stroomverbruik"
 msgid "Power consumption draw"
 msgstr "Stroomverbruik"
 
+#, fuzzy
+msgid "Power state mapping"
+msgstr "BGP Peer State Mapping"
+
 msgid "Power state unknown"
 msgstr "Vermogenstoestand onbekend"
 
@@ -55079,6 +55093,10 @@ msgstr "Melding"
 msgid "Reports"
 msgstr "Verslagen"
 
+#, fuzzy
+msgid "Repository"
+msgstr "Repository/Tag"
+
 msgid "Repository/Tag"
 msgstr "Repository/Tag"
 
@@ -57098,6 +57116,10 @@ msgstr "Sla deze host op en ga naar"
 msgid "Save your progress and go to the Activate Changes page to enable it."
 msgstr ""
 
+#, fuzzy
+msgid "Saved"
+msgstr "Save"
+
 #, python-format
 msgid "Saved check configuration of host '%s' with %d services"
 msgstr "Opgeslagen controleconfiguratie van host '%s' met %d diensten"
@@ -58975,6 +58997,10 @@ msgstr "Sessie timeout:"
 
 msgid "Session type"
 msgstr "Sessie type"
+
+#, fuzzy, python-format
+msgid "Set '%s' to '%s' on site %s"
+msgstr "Verander '%s' naar '%s'"
 
 msgid "Set IPv4 address"
 msgstr "IPv4-adres instellen"
@@ -62797,6 +62823,10 @@ msgstr "Staat indien knooppunt niet in staat is te draaien"
 
 #, fuzzy
 msgid "State if not default"
+msgstr "Staat als geen enkele invoer overeenkomt"
+
+#, fuzzy
+msgid "State if not expected"
 msgstr "Staat als geen enkele invoer overeenkomt"
 
 msgid "State if probe state not OK"
@@ -83080,6 +83110,10 @@ msgstr "Gebruik de globale configuratie"
 msgid "VM"
 msgstr "VM's"
 
+#, fuzzy
+msgid "VM Generation"
+msgstr "Algemene opties"
+
 msgid "VM distribution"
 msgstr "VM distributie"
 
@@ -84269,9 +84303,8 @@ msgid ""
 "<b>Check_MK</b> and <b>Check_MK Discovery</b> services of the piggybacked "
 "hosts report <b>Got no information from host</b> resp. <b>vanished services</"
 "b> if the piggybacked data is missing within a check interval. This rule "
-"helps you to get more control over the piggybacked host data handling. The "
-"source host names have to be set in the condition field <i>Explicit hosts</"
-"i>."
+"helps you to get more control over the piggybacked host data handling. This "
+"rules condition is applied to the <b>source</b> hosts."
 msgstr ""
 "We nemen aan dat een source host standaard iedere check interval piggyback "
 "data verstuurt. Als dit niet het geval is voor sommige source hosts dan "
@@ -91000,6 +91033,10 @@ msgid "required"
 msgstr "Vereiste poort"
 
 #, fuzzy
+msgid "Remove row"
+msgstr "Verwijderd: %s"
+
+#, fuzzy
 msgid "Dashboard filter"
 msgstr "Dashboard-element"
 
@@ -91034,15 +91071,15 @@ msgstr "Service Filters"
 msgid "Reset to saved filters"
 msgstr "Verwijder filter"
 
+#, fuzzy
+msgid "Success! Your new dashboard filters have been saved"
+msgstr "Uw wijzigingen zijn opgeslagen."
+
 msgid "Runtime filters are required to load data."
 msgstr ""
 
 msgid "Values apply across all widgets."
 msgstr ""
-
-#, fuzzy
-msgid "Remove row"
-msgstr "Verwijderd: %s"
 
 #, fuzzy
 msgid "Apply to dashboard"
@@ -91051,6 +91088,9 @@ msgstr "Link naar dashboard"
 #, fuzzy
 msgid "Edit required runtime filters"
 msgstr "Vereiste context filters"
+
+msgid "Success! Your runtime filters have been applied"
+msgstr ""
 
 #, fuzzy
 msgid "Settings Menu"
@@ -91230,6 +91270,10 @@ msgstr "Zijbalk elementen"
 
 msgid "Display user messages, sidebar elements, text or embed a URL"
 msgstr ""
+
+#, fuzzy
+msgid "Choose how to display your data"
+msgstr "Geef geen datum weer"
 
 #, fuzzy
 msgid "explicit password"
@@ -91738,8 +91782,9 @@ msgid ""
 "  monitoring with minimal setup."
 msgstr ""
 
-msgid "On-premise-hosts"
-msgstr ""
+#, fuzzy
+msgid "On-premises hosts"
+msgstr "Niveaus Gastheren"
 
 #, fuzzy
 msgid "Server (Linux, Windows, Solaris, ...)"
@@ -91944,6 +91989,16 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Main dashboard (PEV)"
+#~ msgstr "Hoofd dashboard"
+
+#, fuzzy
+#~ msgid ""
+#~ "No permission for fallback topic 'Other'. Please contact your "
+#~ "administrator."
+#~ msgstr "Neem contact op met uw beheerder."
 
 #~ msgid "Currently indexing, please try again shortly."
 #~ msgstr "Wordt momenteel geïndexeerd, probeer het binnenkort opnieuw."

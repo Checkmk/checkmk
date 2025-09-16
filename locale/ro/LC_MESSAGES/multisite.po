@@ -11643,6 +11643,9 @@ msgstr "Nu se pot prelua date prin Livestatus"
 msgid "Cannot find %s with the name %s"
 msgstr "Nu se poate găsi %s cu numele %s."
 
+msgid "Cannot find fallback topic 'Other'"
+msgstr ""
+
 #, python-format
 msgid "Cannot find image \"%s\" in %s"
 msgstr "Nu se poate găsi imaginea \"%s\" în %s"
@@ -24570,6 +24573,10 @@ msgstr "Răspunsuri DNS așteptate"
 msgid "Expected String"
 msgstr "Șirul așteptat"
 
+#, fuzzy
+msgid "Expected VM Generation"
+msgstr "Situația așteptată a traiectoriei"
+
 msgid "Expected active paths"
 msgstr "Trasee active preconizate"
 
@@ -27340,6 +27347,14 @@ msgstr "Generarea specificației REST API"
 
 msgid "Generating report..."
 msgstr "Generarea de rapoarte..."
+
+#, fuzzy
+msgid "Generation 1"
+msgstr "Opțiuni generale"
+
+#, fuzzy
+msgid "Generation 2"
+msgstr "Opțiuni generale"
 
 msgid "Generic UPS Device: Temperature sensor"
 msgstr "Dispozitiv UPS generic: Senzor de temperatură"
@@ -31652,6 +31667,10 @@ msgstr "Informații despre Hyper-V VM Guest (Windows)"
 #, fuzzy
 msgid "Hyper-V VM integration services"
 msgstr "Server Hyper-V: Starea mașinilor virtuale"
+
+#, fuzzy
+msgid "Hyper-V VM summary"
+msgstr "VM Hyper-V (Windows)"
 
 msgid "Hyper-V VMs (Windows)"
 msgstr "VM Hyper-V (Windows)"
@@ -40250,10 +40269,6 @@ msgstr "Prezentare generală principală"
 msgid "Main dashboard"
 msgstr "Tabloul de bord principal"
 
-#, fuzzy
-msgid "Main dashboard (PEV)"
-msgstr "Tabloul de bord principal"
-
 msgid "Main folder"
 msgstr "Dosarul principal"
 
@@ -44820,11 +44835,6 @@ msgstr "Nu există modificări în așteptare."
 #, python-format
 msgid "No performance data: %s"
 msgstr "Nu există date privind performanța: %s."
-
-#, fuzzy
-msgid ""
-"No permission for fallback topic 'Other'. Please contact your administrator."
-msgstr "Vă rugăm să vă contactați administratorul."
 
 #, fuzzy
 msgid "No previous cycle available"
@@ -52154,6 +52164,10 @@ msgstr "Utilizarea energiei"
 msgid "Power consumption draw"
 msgstr "Consumul de energie electrică"
 
+#, fuzzy
+msgid "Power state mapping"
+msgstr "Cartografierea stării egalului BGP"
+
 msgid "Power state unknown"
 msgstr "Stare de alimentare necunoscută"
 
@@ -55156,6 +55170,10 @@ msgstr "Raportarea"
 msgid "Reports"
 msgstr "Rapoarte"
 
+#, fuzzy
+msgid "Repository"
+msgstr "Depozit/tag"
+
 msgid "Repository/Tag"
 msgstr "Depozit/tag"
 
@@ -57186,6 +57204,10 @@ msgstr "Salvați această gazdă și mergeți la"
 msgid "Save your progress and go to the Activate Changes page to enable it."
 msgstr ""
 
+#, fuzzy
+msgid "Saved"
+msgstr "Salveaza"
+
 #, python-format
 msgid "Saved check configuration of host '%s' with %d services"
 msgstr ""
@@ -59101,6 +59123,10 @@ msgstr "Sesiune timeout:"
 
 msgid "Session type"
 msgstr "Tipul de sesiune"
+
+#, fuzzy, python-format
+msgid "Set '%s' to '%s' on site %s"
+msgstr "Comutați '%s' la '%s'"
 
 msgid "Set IPv4 address"
 msgstr "Setați adresa IPv4"
@@ -62969,6 +62995,10 @@ msgstr "Stare dacă nodul nu este în stare de funcționare"
 
 #, fuzzy
 msgid "State if not default"
+msgstr "Stare dacă nicio intrare nu corespunde"
+
+#, fuzzy
+msgid "State if not expected"
 msgstr "Stare dacă nicio intrare nu corespunde"
 
 msgid "State if probe state not OK"
@@ -83290,6 +83320,10 @@ msgstr "Utilizați configurația globală"
 msgid "VM"
 msgstr "VM"
 
+#, fuzzy
+msgid "VM Generation"
+msgstr "Opțiuni generale"
+
 msgid "VM distribution"
 msgstr "Distribuția VM"
 
@@ -84461,15 +84495,15 @@ msgstr ""
 "convine acest lucru, atunci vă rugăm să cereți administratorului "
 "dumneavoastră să vă ofere următoarea permisiune: '<b>%s</b>'."
 
+#, fuzzy
 msgid ""
 "We assume that a source host is sending piggyback data every check interval "
 "by default. If this is not the case for some source hosts then the "
 "<b>Check_MK</b> and <b>Check_MK Discovery</b> services of the piggybacked "
 "hosts report <b>Got no information from host</b> resp. <b>vanished services</"
 "b> if the piggybacked data is missing within a check interval. This rule "
-"helps you to get more control over the piggybacked host data handling. The "
-"source host names have to be set in the condition field <i>Explicit hosts</"
-"i>."
+"helps you to get more control over the piggybacked host data handling. This "
+"rules condition is applied to the <b>source</b> hosts."
 msgstr ""
 "Presupunem că, în mod implicit, o gazdă sursă trimite date piggyback la "
 "fiecare interval de verificare. Dacă nu este cazul pentru unele gazde sursă, "
@@ -91221,6 +91255,10 @@ msgid "required"
 msgstr "Port necesar"
 
 #, fuzzy
+msgid "Remove row"
+msgstr "Eliminat: %s"
+
+#, fuzzy
 msgid "Dashboard filter"
 msgstr "Element de tablou de bord"
 
@@ -91256,15 +91294,15 @@ msgstr "Filtre de service"
 msgid "Reset to saved filters"
 msgstr "Eliminați filtrul"
 
+#, fuzzy
+msgid "Success! Your new dashboard filters have been saved"
+msgstr "Modificările dvs. au fost salvate."
+
 msgid "Runtime filters are required to load data."
 msgstr ""
 
 msgid "Values apply across all widgets."
 msgstr ""
-
-#, fuzzy
-msgid "Remove row"
-msgstr "Eliminat: %s"
 
 #, fuzzy
 msgid "Apply to dashboard"
@@ -91273,6 +91311,9 @@ msgstr "Adăugați la tabloul de bord"
 #, fuzzy
 msgid "Edit required runtime filters"
 msgstr "Filtre de context necesare"
+
+msgid "Success! Your runtime filters have been applied"
+msgstr ""
 
 #, fuzzy
 msgid "Settings Menu"
@@ -91453,6 +91494,10 @@ msgstr "Elemente de bară laterală"
 
 msgid "Display user messages, sidebar elements, text or embed a URL"
 msgstr ""
+
+#, fuzzy
+msgid "Choose how to display your data"
+msgstr "Nu afișați o dată"
 
 #, fuzzy
 msgid "explicit password"
@@ -91961,8 +92006,9 @@ msgid ""
 "  monitoring with minimal setup."
 msgstr ""
 
-msgid "On-premise-hosts"
-msgstr ""
+#, fuzzy
+msgid "On-premises hosts"
+msgstr "Niveluri Gazde"
 
 #, fuzzy
 msgid "Server (Linux, Windows, Solaris, ...)"
@@ -92170,6 +92216,16 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Main dashboard (PEV)"
+#~ msgstr "Tabloul de bord principal"
+
+#, fuzzy
+#~ msgid ""
+#~ "No permission for fallback topic 'Other'. Please contact your "
+#~ "administrator."
+#~ msgstr "Vă rugăm să vă contactați administratorul."
 
 #~ msgid "Currently indexing, please try again shortly."
 #~ msgstr "În curs de indexare, vă rugăm să încercați din nou în scurt timp."

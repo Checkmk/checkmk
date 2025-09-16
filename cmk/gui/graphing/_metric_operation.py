@@ -21,8 +21,8 @@ from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import SiteId
 from cmk.gui.i18n import _
 from cmk.gui.utils import escaping
-from cmk.utils import pnp_cleanup
 from cmk.utils.metrics import MetricName
+from cmk.utils.misc import pnp_cleanup
 from cmk.utils.servicename import ServiceName
 
 from ._from_api import RegisteredMetric

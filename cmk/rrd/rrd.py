@@ -36,9 +36,10 @@ from cmk.ccc.crash_reporting import (
 )
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import get_general_version_infos
-from cmk.utils import paths, pnp_cleanup
+from cmk.utils import paths
 from cmk.utils.log import console
 from cmk.utils.metrics import MetricName
+from cmk.utils.misc import pnp_cleanup
 
 from .config import RRDConfig, RRDObjectConfig
 from .interface import RRDInterface

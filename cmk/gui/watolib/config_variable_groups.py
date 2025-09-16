@@ -16,6 +16,7 @@ def register(config_variable_group_registry: ConfigVariableGroupRegistry) -> Non
     config_variable_group_registry.register(ConfigVariableGroupSiteManagement)
     config_variable_group_registry.register(ConfigVariableGroupSupport)
     config_variable_group_registry.register(ConfigVariableGroupDeveloperTools)
+    config_variable_group_registry.register(ConfigVariableGroupApplicationMonitoring)
 
 
 class ConfigVariableGroupNotifications(ConfigVariableGroup):
@@ -72,3 +73,11 @@ class ConfigVariableGroupDeveloperTools(ConfigVariableGroup):
             "There is a high risk that using these features will break your Checkmk site. "
             "Any changes here will result in your Checkmk site no longer being officially supported."
         )
+
+
+class ConfigVariableGroupApplicationMonitoring(ConfigVariableGroup):
+    def title(self) -> str:
+        return _("Application Monitoring")
+
+    def sort_index(self) -> int:
+        return 40

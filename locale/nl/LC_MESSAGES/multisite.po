@@ -11520,6 +11520,9 @@ msgstr "Kan geen gegevens ophalen via Livestatus"
 msgid "Cannot find %s with the name %s"
 msgstr "Kan %s met de naam %s niet vinden"
 
+msgid "Cannot find fallback topic 'Other'"
+msgstr ""
+
 #, python-format
 msgid "Cannot find image \"%s\" in %s"
 msgstr "Kan afbeelding \"%s\" niet vinden in %s"
@@ -44111,11 +44114,6 @@ msgstr "Geen hangende wijzigingen"
 #, python-format
 msgid "No performance data: %s"
 msgstr "Geen prestatiegegevens: %s"
-
-#, fuzzy
-msgid ""
-"No permission for fallback topic 'Other'. Please contact your administrator."
-msgstr "Neem contact op met uw beheerder."
 
 #, fuzzy
 msgid "No previous cycle available"
@@ -86853,10 +86851,11 @@ msgstr ""
 "U moet een geldige \"hostname\" opgeven. Alleen letters, cijfers, streepje, "
 "underscore en punt zijn toegestaan."
 
+#, fuzzy
 msgid ""
 "You need to provide a valid API key to be able to send push notifications "
 "using Pushover. Register and login to <a href=\"https://www.pushover.net\" "
-"target=\"_blank\">Pushover</a>, thn create your Checkmk installation as "
+"target=\"_blank\">Pushover</a>, create your Checkmk installation as "
 "application and obtain your API key."
 msgstr ""
 "U moet een geldige API sleutel hebben om push meldingen te kunnen versturen "
@@ -89575,6 +89574,12 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy
+#~ msgid ""
+#~ "No permission for fallback topic 'Other'. Please contact your "
+#~ "administrator."
+#~ msgstr "Neem contact op met uw beheerder."
 
 #, fuzzy
 #~ msgid "GUI extensions (deprecated)"

@@ -10803,6 +10803,9 @@ msgstr "Livestatus経由でデータをフェッチできません"
 msgid "Cannot find %s with the name %s"
 msgstr "%sが見つかりません 名前の%s"
 
+msgid "Cannot find fallback topic 'Other'"
+msgstr ""
+
 #, python-format
 msgid "Cannot find image \"%s\" in %s"
 msgstr "画像 \"%s\" が %s 内に見つかりません"
@@ -41439,12 +41442,6 @@ msgstr "保留中の変更はありません。"
 #, python-format
 msgid "No performance data: %s"
 msgstr "パフォーマンスデータなし: %s"
-
-msgid ""
-"No permission for fallback topic 'Other'. Please contact your administrator."
-msgstr ""
-"フォールバックトピック「その他」の権限がありません。管理者に連絡してくださ"
-"い。"
 
 msgid "No previous cycle available"
 msgstr "以前のサイクルは利用できません"
@@ -81339,10 +81336,11 @@ msgstr ""
 "有効な\"ホスト名\"を入力する必要があります。文字、数字、ダッシュ、アンダース"
 "コア、ドットの5種のみが許可されます。"
 
+#, fuzzy
 msgid ""
 "You need to provide a valid API key to be able to send push notifications "
 "using Pushover. Register and login to <a href=\"https://www.pushover.net\" "
-"target=\"_blank\">Pushover</a>, thn create your Checkmk installation as "
+"target=\"_blank\">Pushover</a>, create your Checkmk installation as "
 "application and obtain your API key."
 msgstr ""
 "Pushoverを使用してプッシュ通知を送信できるようにするには、有効なAPIキーを提供"
@@ -83973,6 +83971,13 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠Robotmk Core MKP がインストールされているため<b>利用できません</b>"
+
+#~ msgid ""
+#~ "No permission for fallback topic 'Other'. Please contact your "
+#~ "administrator."
+#~ msgstr ""
+#~ "フォールバックトピック「その他」の権限がありません。管理者に連絡してくださ"
+#~ "い。"
 
 #~ msgid ""
 #~ "Please contact your Checkmk administrator to ensure that your license is "

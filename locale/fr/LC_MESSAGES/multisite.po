@@ -11598,6 +11598,9 @@ msgstr "Impossible de récupérer les données via Livestatus"
 msgid "Cannot find %s with the name %s"
 msgstr "Impossible de trouver %s avec le nom %s"
 
+msgid "Cannot find fallback topic 'Other'"
+msgstr ""
+
 #, python-format
 msgid "Cannot find image \"%s\" in %s"
 msgstr "Impossible de trouver l'image \"%s\" dans %s"
@@ -44482,11 +44485,6 @@ msgstr "Aucun changement en cours."
 #, python-format
 msgid "No performance data: %s"
 msgstr "Aucune donnée de performance : %s"
-
-#, fuzzy
-msgid ""
-"No permission for fallback topic 'Other'. Please contact your administrator."
-msgstr "Veuillez contacter votre administrateur."
 
 #, fuzzy
 msgid "No previous cycle available"
@@ -87719,10 +87717,11 @@ msgstr ""
 "Vous devez fournir un \"hostname\" ; valide. Seuls les lettres, les "
 "chiffres, le tiret, l'underscore et le point sont autorisés."
 
+#, fuzzy
 msgid ""
 "You need to provide a valid API key to be able to send push notifications "
 "using Pushover. Register and login to <a href=\"https://www.pushover.net\" "
-"target=\"_blank\">Pushover</a>, thn create your Checkmk installation as "
+"target=\"_blank\">Pushover</a>, create your Checkmk installation as "
 "application and obtain your API key."
 msgstr ""
 "Vous devez fournir une clé API valide pour pouvoir envoyer des notifications "
@@ -90447,6 +90446,12 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
+
+#, fuzzy
+#~ msgid ""
+#~ "No permission for fallback topic 'Other'. Please contact your "
+#~ "administrator."
+#~ msgstr "Veuillez contacter votre administrateur."
 
 #, fuzzy
 #~ msgid "GUI extensions (deprecated)"

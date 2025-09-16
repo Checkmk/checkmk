@@ -11545,6 +11545,9 @@ msgstr "Nu se pot prelua date prin Livestatus"
 msgid "Cannot find %s with the name %s"
 msgstr "Nu se poate găsi %s cu numele %s."
 
+msgid "Cannot find fallback topic 'Other'"
+msgstr ""
+
 #, python-format
 msgid "Cannot find image \"%s\" in %s"
 msgstr "Nu se poate găsi imaginea \"%s\" în %s"
@@ -44184,11 +44187,6 @@ msgstr "Nu există modificări în așteptare."
 #, python-format
 msgid "No performance data: %s"
 msgstr "Nu există date privind performanța: %s."
-
-#, fuzzy
-msgid ""
-"No permission for fallback topic 'Other'. Please contact your administrator."
-msgstr "Vă rugăm să vă contactați administratorul."
 
 #, fuzzy
 msgid "No previous cycle available"
@@ -87031,10 +87029,11 @@ msgstr ""
 "Trebuie să furnizați un \"nume de gazdă\" valid. Sunt permise numai litere, "
 "cifre, liniuțe, sublinieri și puncte."
 
+#, fuzzy
 msgid ""
 "You need to provide a valid API key to be able to send push notifications "
 "using Pushover. Register and login to <a href=\"https://www.pushover.net\" "
-"target=\"_blank\">Pushover</a>, thn create your Checkmk installation as "
+"target=\"_blank\">Pushover</a>, create your Checkmk installation as "
 "application and obtain your API key."
 msgstr ""
 "Trebuie să furnizați o cheie API validă pentru a putea trimite notificări "
@@ -89772,6 +89771,12 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, fuzzy
+#~ msgid ""
+#~ "No permission for fallback topic 'Other'. Please contact your "
+#~ "administrator."
+#~ msgstr "Vă rugăm să vă contactați administratorul."
 
 #~ msgid ""
 #~ "Please contact your Checkmk administrator to ensure that your license is "

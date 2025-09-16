@@ -67,6 +67,8 @@ def check_redfish_voltage(item: str, section: RedfishAPIData) -> CheckResult:
             render_func=lambda v: f"{v:.1f} V",
             boundaries=perfdata.boundaries,
         )
+    else:
+        yield Result(state=State(0), summary="No voltage data found")
 
     dev_state, dev_msg = redfish_health_state(voltage.get("Status", {}))
     yield Result(state=State(dev_state), notice=dev_msg)

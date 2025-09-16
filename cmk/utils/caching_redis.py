@@ -17,7 +17,7 @@ import functools
 import hashlib
 import marshal
 import typing
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 
 from redis.exceptions import RedisError
 
@@ -30,7 +30,7 @@ if typing.TYPE_CHECKING:
 P = typing.ParamSpec("P")
 R = typing.TypeVar("R")
 F = typing.TypeVar("F")
-RedisFactory = Callable[[], "redis.Redis[str]"]
+RedisFactory = Callable[[], "redis.Redis"]
 CacheWrapper = Callable[P, R]
 CacheDecorator = Callable[[F], CacheWrapper[P, R]]
 
@@ -71,7 +71,9 @@ def ttl_memoize(ttl: int, connection_factory: RedisFactory) -> CacheDecorator:
 
                     # ensure_bytes:
                     # Not sure why in the tests, sometimes we get a <str> and sometimes we get <bytes>
-                    cached_result = ensure_bytes(conn.get(cache_key))
+                    ck = conn.get(cache_key)
+                    assert not isinstance(ck, Awaitable)
+                    cached_result = ensure_bytes(ck)
                     if cached_result is not None:
                         return decode(cached_result)
                     result = func(*args, **kwargs)

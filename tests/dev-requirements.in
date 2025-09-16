@@ -66,7 +66,6 @@ svglib  # license csv pdf generating
 telnetlib3  # used by Windows Agent tests
 time-machine # used by various unit tests. Substitute for freezegun
 twine # used to upload packages to internal PyPi mirror
-types-beautifulsoup4  # used for type checking
 types-docutils  # used for type checking
 types-jsonschema  # used for type checking
 types-lxml  # used for type checking
@@ -74,18 +73,13 @@ types-mypy-extensions  # used for type checking
 types-oauthlib  # used for type checking
 types-paho-mqtt  # used for type checking
 types-paramiko  # used for type checking
-types-pillow  # used for type checking
 types-protobuf  # used for type checking
 types-psutil  # used for type checking
 types-pyasn1  # used for type checking
-types-pymssql  # used for type checking
 types-pymysql  # used for type checking
-types-pyopenssl  # used for type checking
 types-pysaml2  # used for type checking
 types-python-dateutil  # used for type checking
 types-pyyaml  # used for type checking
-types-redis  # used for type checking
 types-requests  # used for type checking
 types-setuptools  # used for type checking
 types-simplejson  # used for type checking
-types-urllib3  # used for type checking

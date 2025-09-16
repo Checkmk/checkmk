@@ -179,16 +179,17 @@ class CMKWebSession:
     ) -> list:
         urls = []
 
+        # TODO: Typing chaos ahead! Clarify PageElement/Tag/NavigableString
         for element in soup.find_all(tag):
             try:
                 skip = False
                 for attr, val in filters or []:
-                    if element[attr] != val:
+                    if element[attr] != val:  # type: ignore[index]
                         skip = True
                         break
 
                 if not skip:
-                    urls.append(element[attribute])
+                    urls.append(element[attribute])  # type: ignore[index]
             except KeyError:
                 pass
 

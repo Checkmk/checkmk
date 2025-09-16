@@ -118,6 +118,7 @@ def _fetch_certificate_chain_verify_results(
         certificate_store = sock.get_context().get_cert_store()
         certificate_chain = sock.get_peer_cert_chain()
 
+    assert certificate_store is not None  # or return??
     # No chain, no need to verify
     if not certificate_chain:
         return []

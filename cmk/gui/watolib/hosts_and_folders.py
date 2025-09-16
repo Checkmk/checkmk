@@ -15,7 +15,7 @@ import subprocess
 import time
 import uuid
 from collections import defaultdict
-from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Awaitable, Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 from enum import Enum
@@ -319,7 +319,9 @@ class _RedisHelper:
     @property
     def folder_paths(self) -> Sequence[PathWithSlash]:
         if self._folder_paths is None:
-            self._folder_paths = tuple(self._client.smembers("wato:folder_list"))
+            lst = self._client.smembers("wato:folder_list")
+            assert not isinstance(lst, Awaitable)
+            self._folder_paths = tuple(lst)
         return self._folder_paths
 
     def recursive_subfolders_for_path(self, path: PathWithSlash) -> list[PathWithSlash]:
@@ -368,12 +370,15 @@ class _RedisHelper:
         if path_with_slash not in self._folder_metadata:
             results = self._client.hmget(
                 f"wato:folders:{path_with_slash}",
-                "title",
-                "title_path_without_root",
-                "permitted_contact_groups",
+                [
+                    "title",
+                    "title_path_without_root",
+                    "permitted_contact_groups",
+                ],
             )
             if not results:
                 return None
+            assert not isinstance(results, Awaitable)
 
             # Redis hmget typing states that the field can be None
             # It won't happen if the key is found, adding fallbacks anyway.
@@ -497,7 +502,7 @@ class _RedisHelper:
         permitted_contact_groups: set[_ContactgroupName],
     ) -> None:
         folder_key = f"wato:folders:{path}/"
-        mapping: Mapping[str | bytes, str | int] = {
+        mapping = {
             "num_hosts": num_hosts,
             "title": title,
             "title_path_without_root": title_path_without_root,
@@ -667,6 +672,7 @@ class _RedisHelper:
     def _get_last_update_from_redis(self) -> str:
         try:
             if (value := self._client.get("wato:folder_list:last_update")) is not None:
+                assert not isinstance(value, Awaitable)
                 return value
         except ValueError:
             pass

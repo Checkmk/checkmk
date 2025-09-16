@@ -72,37 +72,39 @@ class PiggybackMessage:
 def watch_new_messages(omd_root: Path) -> Iterator[PiggybackMessage]:
     """Yields piggyback messages as they come in."""
 
-    inotify = INotify()
-    watch_for_new_piggybacked_hosts = inotify.add_watch(payload_dir(omd_root), Masks.CREATE)
-    watch_for_deleted_status_files = inotify.add_watch(source_status_dir(omd_root), Masks.DELETE)
-    for folder in _get_piggybacked_host_folders(omd_root):
-        inotify.add_watch(folder, Masks.MOVED_TO)
+    with INotify() as inotify:
+        watch_for_new_piggybacked_hosts = inotify.add_watch(payload_dir(omd_root), Masks.CREATE)
+        watch_for_deleted_status_files = inotify.add_watch(
+            source_status_dir(omd_root), Masks.DELETE
+        )
+        for folder in _get_piggybacked_host_folders(omd_root):
+            inotify.add_watch(folder, Masks.MOVED_TO)
 
-    for event in inotify.read_forever():
-        # check if a new piggybacked host folder was created
-        if event.watchee == watch_for_new_piggybacked_hosts:
-            if event.type & Masks.CREATE:
-                inotify.add_watch(event.watchee.path / event.name, Masks.MOVED_TO)
-                # Handle all files already in the folder (we rather have duplicates than missing files)
-                yield from get_messages_for(HostAddress(event.name), omd_root)
-            continue
-        if event.watchee == watch_for_deleted_status_files:
-            if event.type & Masks.DELETE:
-                source = HostName(event.name)
-                for piggybacked_host in _get_piggybacked_hosts_for_source(omd_root, source):
-                    yield PiggybackMessage(
-                        PiggybackMetaData(
-                            source=source,
-                            piggybacked=piggybacked_host,
-                            last_update=int(time.time()),
-                            last_contact=None,
-                        ),
-                        b"",
-                    )
-            continue
+        for event in inotify.read_forever():
+            # check if a new piggybacked host folder was created
+            if event.watchee == watch_for_new_piggybacked_hosts:
+                if event.type & Masks.CREATE:
+                    inotify.add_watch(event.watchee.path / event.name, Masks.MOVED_TO)
+                    # Handle all files already in the folder (we rather have duplicates than missing files)
+                    yield from get_messages_for(HostAddress(event.name), omd_root)
+                continue
+            if event.watchee == watch_for_deleted_status_files:
+                if event.type & Masks.DELETE:
+                    source = HostName(event.name)
+                    for piggybacked_host in _get_piggybacked_hosts_for_source(omd_root, source):
+                        yield PiggybackMessage(
+                            PiggybackMetaData(
+                                source=source,
+                                piggybacked=piggybacked_host,
+                                last_update=int(time.time()),
+                                last_contact=None,
+                            ),
+                            b"",
+                        )
+                continue
 
-        if message := _make_message_from_event(event, omd_root):
-            yield message
+            if message := _make_message_from_event(event, omd_root):
+                yield message
 
 
 def _make_message_from_event(event: Event, omd_root: Path) -> PiggybackMessage | None:

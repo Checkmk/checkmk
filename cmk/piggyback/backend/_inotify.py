@@ -26,6 +26,7 @@ from pathlib import Path
 from select import poll
 from struct import calcsize, unpack_from
 from termios import FIONREAD
+from typing import Literal, Self
 
 
 class Masks(enum.IntFlag):
@@ -146,9 +147,25 @@ class INotify:
     def __init__(self):
         self._libc = _LibCINotify()
         self._parser = _EventParser()
-        self._fileio = FileIO(self._libc.init1(os.O_CLOEXEC), mode="rb")
+        self.__fileio: FileIO | None = None
         self._poller = poll()
+
+    @property
+    def _fileio(self) -> FileIO:
+        if self.__fileio is None:
+            raise RuntimeError(f"Context not entered: {self!r}")
+        return self.__fileio
+
+    def __enter__(self) -> Self:
+        self.__fileio = FileIO(self._libc.init1(os.O_CLOEXEC), mode="rb")
         self._poller.register(self._fileio.fileno())
+        return self
+
+    def __exit__(self, _exc_type: object, _exc_val: object, _exc_tb: object) -> Literal[False]:
+        """Accepts exception arguments for context manager protocol; currently unused."""
+        if not self._fileio.closed:
+            self._fileio.close()
+        return False  # don't swallow exceptions.
 
     def add_watch(self, path: Path, mask: Masks) -> Watchee:
         watch_descriptor = self._libc.add_watch(self._fileio.fileno(), fsencode(path), mask)

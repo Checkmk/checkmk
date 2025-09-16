@@ -41,6 +41,7 @@ from cmk.base.core.shared import (
     host_check_command,
 )
 from cmk.ccc import store, tty
+from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.checkengine.checkerplugin import ConfiguredService
@@ -53,7 +54,6 @@ from cmk.checkengine.plugins import (
 )
 from cmk.server_side_calls_backend import ActiveServiceData
 from cmk.utils import config_warnings, ip_lookup, password_store
-from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import LabelManager, Labels
 from cmk.utils.licensing.handler import LicensingHandler

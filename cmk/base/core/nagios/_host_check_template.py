@@ -15,13 +15,13 @@ import cmk.utils.log
 from cmk.base import config
 from cmk.base.core.nagios import HostCheckConfig
 from cmk.base.modes.check_mk import run_checking
+from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.plugin_backend import (
     extract_known_discovery_rulesets,
     load_selected_plugins,
 )
 from cmk.discover_plugins import PluginLocation
-from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.password_store import core_password_store_path
 from cmk.utils.paths import omd_root
 

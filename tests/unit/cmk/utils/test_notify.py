@@ -9,8 +9,8 @@ import pytest
 from pytest import MonkeyPatch
 
 import cmk.utils.notify
+from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.hostaddress import HostName
-from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.notify import NotificationHostConfig, read_notify_host_file, write_notify_host_file
 from cmk.utils.paths import omd_root
 from cmk.utils.tags import TagGroupID, TagID

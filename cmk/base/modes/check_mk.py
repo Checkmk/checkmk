@@ -1472,7 +1472,7 @@ modes.register(
 
 def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
     from cmk.base.core.nagios import create_config
-    from cmk.utils.config_path import VersionedConfigPath
+    from cmk.ccc.config_path import VersionedConfigPath
 
     plugins = load_checks()
     loading_result = load_config(plugins)

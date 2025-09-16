@@ -40,6 +40,7 @@ from cmk.base.configlib.servicename import (
     PassiveServiceNameConfig,
 )
 from cmk.base.default_config.base import _PeriodicDiscovery
+from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
@@ -66,7 +67,6 @@ from cmk.discover_plugins import DiscoveredPlugins, PluginLocation
 from cmk.fetchers import Mode, TCPEncryptionHandling
 from cmk.server_side_calls.v1 import ActiveCheckConfig
 from cmk.snmplib import SNMPBackendEnum
-from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import BundledHostRulesetMatcher, RulesetMatcher, RuleSpec

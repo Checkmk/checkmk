@@ -7,36 +7,40 @@
 from cmk.base.check_legacy_includes.elphase import check_elphase
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.ups_modulys import DETECT_UPS_MODULYS
 
 check_info = {}
 
 
-def parse_ups_modulys_inphase(string_table):
+def parse_ups_modulys_inphase(string_table: StringTable) -> dict[str, dict[str, float]] | None:
     if not string_table:
         return None
+
+    first_line = string_table[0]
     parsed = {}
-    parsed["Phase 1"] = {
-        "frequency": int(string_table[0][1]) / 10.0,
-        "voltage": int(string_table[0][2]) / 10.0,
-        "current": int(string_table[0][3]) / 10.0,
-    }
+    if phase_1 := _parse_phase(first_line[1], first_line[2], first_line[3]):
+        parsed["Phase 1"] = phase_1
 
-    if string_table[0][0] == "3":
-        parsed["Phase 2"] = {
-            "frequency": int(string_table[0][4]) / 10.0,
-            "voltage": int(string_table[0][5]) / 10.0,
-            "current": int(string_table[0][6]) / 10.0,
-        }
-
-        parsed["Phase 3"] = {
-            "frequency": int(string_table[0][7]) / 10.0,
-            "voltage": int(string_table[0][8]) / 10.0,
-            "current": int(string_table[0][9]) / 10.0,
-        }
+    if first_line[0] == "3":
+        if phase_2 := _parse_phase(first_line[4], first_line[5], first_line[6]):
+            parsed["Phase 2"] = phase_2
+        if phase_3 := _parse_phase(first_line[7], first_line[8], first_line[9]):
+            parsed["Phase 3"] = phase_3
 
     return parsed
+
+
+def _parse_phase(raw_frequency: str, raw_voltage: str, raw_current: str) -> dict[str, float]:
+    return {
+        key: int(raw_value) / 10.0
+        for (key, raw_value) in (
+            ("frequency", raw_frequency),
+            ("voltage", raw_voltage),
+            ("current", raw_current),
+        )
+        if raw_value.isdigit()
+    }
 
 
 def discover_ups_modulys_inphase(section):

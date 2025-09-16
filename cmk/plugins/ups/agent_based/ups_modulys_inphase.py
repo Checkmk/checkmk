@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.base.check_legacy_includes.elphase import check_elphase
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    DiscoveryResult,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
+from cmk.plugins.lib.elphase import check_elphase
 from cmk.plugins.lib.ups_modulys import DETECT_UPS_MODULYS
-
-check_info = {}
 
 
 def parse_ups_modulys_inphase(string_table: StringTable) -> dict[str, dict[str, float]] | None:
@@ -42,11 +47,7 @@ def _parse_phase(raw_frequency: str, raw_voltage: str, raw_current: str) -> dict
     }
 
 
-def discover_ups_modulys_inphase(section):
-    yield from ((item, {}) for item in section)
-
-
-check_info["ups_modulys_inphase"] = LegacyCheckDefinition(
+snmp_section_ups_modulys_inphase = SimpleSNMPSection(
     name="ups_modulys_inphase",
     detect=DETECT_UPS_MODULYS,
     fetch=SNMPTree(
@@ -54,6 +55,15 @@ check_info["ups_modulys_inphase"] = LegacyCheckDefinition(
         oids=["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
     ),
     parse_function=parse_ups_modulys_inphase,
+)
+
+
+def discover_ups_modulys_inphase(section: Mapping[str, Mapping[str, float]]) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
+
+
+check_plugin_ups_test = CheckPlugin(
+    name="ups_modulys_inphase",
     service_name="Input %s",
     discovery_function=discover_ups_modulys_inphase,
     check_function=check_elphase,

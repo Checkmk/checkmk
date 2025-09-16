@@ -1052,7 +1052,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "ups_in_freq",
         "ups_in_voltage",
         "ups_modulys_alarms",
-        "ups_modulys_inphase",
         "ups_modulys_outphase",
         "ups_out_voltage",
         "ups_socomec_capacity",

@@ -11583,6 +11583,9 @@ msgstr "No se pueden obtener datos a través de Livestatus"
 msgid "Cannot find %s with the name %s"
 msgstr "No se puede encontrar %s con el nombre %s"
 
+msgid "Cannot find fallback topic 'Other'"
+msgstr ""
+
 #, python-format
 msgid "Cannot find image \"%s\" in %s"
 msgstr "No se puede encontrar la imagen \"%s\" en %s"
@@ -44453,11 +44456,6 @@ msgstr "No hay cambios pendientes"
 #, python-format
 msgid "No performance data: %s"
 msgstr "No hay datos de rendimiento: %s"
-
-#, fuzzy
-msgid ""
-"No permission for fallback topic 'Other'. Please contact your administrator."
-msgstr "Póngase en contacto con su administrador."
 
 #, fuzzy
 msgid "No previous cycle available"
@@ -87535,10 +87533,11 @@ msgstr ""
 "Debe proporcionar un \"nombre de host\" válido. Sólo se permiten letras, "
 "dígitos, guiones, guiones bajos y puntos."
 
+#, fuzzy
 msgid ""
 "You need to provide a valid API key to be able to send push notifications "
 "using Pushover. Register and login to <a href=\"https://www.pushover.net\" "
-"target=\"_blank\">Pushover</a>, thn create your Checkmk installation as "
+"target=\"_blank\">Pushover</a>, create your Checkmk installation as "
 "application and obtain your API key."
 msgstr ""
 "Es necesario proporcionar una clave de API válida para poder enviar "
@@ -90286,6 +90285,12 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usar SSL para la conexión."
+
+#, fuzzy
+#~ msgid ""
+#~ "No permission for fallback topic 'Other'. Please contact your "
+#~ "administrator."
+#~ msgstr "Póngase en contacto con su administrador."
 
 #~ msgid ""
 #~ "Please contact your Checkmk administrator to ensure that your license is "

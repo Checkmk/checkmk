@@ -297,7 +297,7 @@ def test_registered_configvars() -> None:
         cmk_version.Edition.CME,
         cmk_version.Edition.CSE,
     }:
-        expected_vars += ["metric_backend_instance"]
+        expected_vars += ["metric_backend_instance", "site_opentelemetry_collector"]
 
     registered = sorted(config_variable_registry.keys())
     assert registered == sorted(expected_vars)
@@ -328,6 +328,7 @@ def test_registered_configvar_groups() -> None:
             "Reporting",
             "Monitoring core",
             "Ntopng (chargeable add-on)",
+            "Application Monitoring",
         ]
 
     registered = sorted(config_variable_group_registry.keys())

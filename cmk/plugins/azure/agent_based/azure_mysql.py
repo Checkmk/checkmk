@@ -31,7 +31,7 @@ check_plugin_azure_mysql_memory = CheckPlugin(
     ),
     check_function=check_memory(),
     check_ruleset_name="memory_utilization",
-    check_default_parameters={},
+    check_default_parameters={"levels": (80.0, 90.0)},
 )
 
 check_plugin_azure_mysql_cpu = CheckPlugin(
@@ -79,7 +79,7 @@ check_plugin_azure_mysql_replication = CheckPlugin(
     ),
     check_function=check_replication(),
     check_ruleset_name="replication_lag",
-    check_default_parameters={},
+    check_default_parameters={"levels": (60, 600)},
 )
 
 check_plugin_azure_mysql_connections = CheckPlugin(

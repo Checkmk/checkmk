@@ -3,9 +3,10 @@
     "type": "object",
     "title": "unified_search_config",
     "properties": {
-        "providers": { "$ref": "#/$defs/providers" }
+        "providers": { "$ref": "#/$defs/providers" },
+        "user_id": { "type": "string" }
     },
-    "required": ["providers"],
+    "required": ["providers", "user_id"],
     "$defs": {
         "providers": {
             "type": "object",

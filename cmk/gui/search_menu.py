@@ -9,6 +9,7 @@ from typing import override
 
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.type_defs import ABCMainMenuSearch, MainMenu, MainMenuData, MainMenuVueApp
 from cmk.gui.wato._snapins import _hide_menu
@@ -25,7 +26,8 @@ def get_unified_search_config(request: Request) -> UnifiedSearchMainMenuData:
             monitoring=Provider(active=True, sort=0),
             customize=Provider(active=True, sort=1),
             setup=Provider(active=not _hide_menu(), sort=2),
-        )
+        ),
+        user_id=str(user.id),
     )
 
 

@@ -14,6 +14,7 @@ from cmk.agent_based.v2 import (
     DiscoveryResult,
     get_value_store,
     render,
+    Result,
     Service,
     StringTable,
 )
@@ -78,11 +79,18 @@ def check_threepar_capacity(
     if disk.failed_capacity == 0.0:
         return
 
-    yield from check_levels_v1(
-        value=disk.failed_capacity / disk.total_capacity * 100,
-        levels_upper=params.get("failed_capacity_levels", (0.0, 0.0)),
-        label=f"{disk.failed_capacity} MB failed",
+    failed_bytes = disk.failed_capacity * 1024**2
+    total_bytes = disk.total_capacity * 1024**2
+
+    result, *_ignore = check_levels_v1(
+        value=failed_bytes * 100.0 / total_bytes,
+        levels_upper=params["failed_capacity_levels"],
+        label="Failed",
         render_func=render.percent,
+    )
+    yield Result(
+        state=result.state,
+        summary=(f"{result.summary} - {render.bytes(failed_bytes)} of {render.bytes(total_bytes)}"),
     )
 
 
@@ -90,7 +98,10 @@ check_plugin_3par_capacity = CheckPlugin(
     name="3par_capacity",
     service_name="Capacity %s",
     check_function=check_threepar_capacity,
-    check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
+    check_default_parameters={
+        **FILESYSTEM_DEFAULT_PARAMS,
+        "failed_capacity_levels": (0.0, 0.0),
+    },
     check_ruleset_name="threepar_capacity",
     discovery_function=discover_threepar_capacity,
 )

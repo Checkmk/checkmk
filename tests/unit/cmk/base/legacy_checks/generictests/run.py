@@ -169,8 +169,30 @@ def optional_freeze_time(dataset):
 
 def run(check_info, dataset):
     """Run all possible tests on 'dataset'"""
-    checklist = checkhandler.get_applicables(dataset.checkname, check_info)
-    assert checklist, f"Found no check plug-in for {dataset.checkname!r}"
+    checklist = set()
+
+    if hasattr(dataset, "checks"):
+        for subcheck_key in dataset.checks:
+            outer_check_name = dataset.checkname
+            subcheck_name = (
+                f"{outer_check_name}_{subcheck_key}" if subcheck_key else outer_check_name
+            )
+            subchecks = checkhandler.get_applicables(subcheck_name, check_info)
+            assert subchecks, f"Found no check plug-in for {subcheck_name!r}"
+            checklist.update(subchecks)
+    else:
+        checklist.update(checkhandler.get_applicables(dataset.checkname, check_info))
+        assert checklist, f"Found no check plug-in for {dataset.checkname!r}"
+
+    if hasattr(dataset, "discovery"):
+        for subcheck_key in dataset.discovery:
+            outer_check_name = dataset.checkname
+            subcheck_name = (
+                f"{outer_check_name}_{subcheck_key}" if subcheck_key else outer_check_name
+            )
+            subchecks = checkhandler.get_applicables(subcheck_name, check_info)
+            assert subchecks, f"Found no check plug-in for {subcheck_name!r}"
+            checklist.update(subchecks)
 
     immu = Immutables()
 
@@ -180,7 +202,9 @@ def run(check_info, dataset):
         # LOOP OVER ALL (SUB)CHECKS
         subcheck: str | None = None
         for sname in checklist:
-            subcheck = (sname + ".").split(".")[1]
+            # HACK: We don't get dotted names from discover_legacy_checks, we get full check names.
+            # Assume the "subchecks" are checkname_subcheckname (if not, we'll have errored above)
+            subcheck = sname[len(dataset.checkname) + 1 :]
             check = Check(sname)
 
             info_arg = get_info_argument(dataset, subcheck, parsed)

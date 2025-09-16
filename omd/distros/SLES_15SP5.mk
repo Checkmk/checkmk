@@ -54,6 +54,5 @@ APACHE_MODULE_DIR = /usr/lib/apache2-prefork
 APACHE_MODULE_DIR_64 = /usr/lib64/apache2-prefork
 HTPASSWD_BIN      = /usr/bin/htpasswd2
 PHP_FCGI_BIN      = /usr/bin/php-cgi
-BECOME_ROOT       = su -c
 MOUNT_OPTIONS     =
 INIT_CMD          = /usr/bin/systemctl %(action)s %(name)s.service

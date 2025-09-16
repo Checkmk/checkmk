@@ -55,7 +55,6 @@ APACHE_MODULE_DIR = /usr/lib/apache2/modules
 APACHE_MODULE_DIR_64 = /usr/lib/apache2/modules
 HTPASSWD_BIN      = /usr/bin/htpasswd
 PHP_FCGI_BIN      = /usr/bin/php5-cgi
-BECOME_ROOT       = su -c
 ARCH              = $(shell dpkg --print-architecture)
 MOUNT_OPTIONS     =
 INIT_CMD          = /etc/init.d/%(name)s %(action)s

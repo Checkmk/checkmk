@@ -13,7 +13,7 @@ import type { ContentPropsRecord } from '@/dashboard-wip/components/DashboardCon
 import type { ContentResponsiveGrid, DashboardConstants } from '@/dashboard-wip/types/dashboard'
 import type { ResponsiveGridWidgetLayouts } from '@/dashboard-wip/types/widget'
 
-import ResponsiveWidgetFrame from './ResponsiveWidgetFrame.vue'
+import ResponsiveGridWidget from './ResponsiveGridWidget.vue'
 import { useInternalBreakpointConfig } from './composables/useInternalBreakpointConfig'
 import { useResponsiveGridLayout } from './composables/useResponsiveGridLayout'
 import type {
@@ -170,17 +170,17 @@ const { ErrorBoundary: errorBoundary } = useErrorBoundary()
 
 <template>
   <errorBoundary>
-    <div class="db-responsive-grid-layout__container">
-      <div v-if="props.isEditing" class="db-responsive-grid-layout__edit-columns">
+    <div class="db-responsive-grid__container">
+      <div v-if="props.isEditing" class="db-responsive-grid__edit-columns">
         <div
           v-for="n in internalBreakpointConfig.columns[currentInternalBreakpoint]"
           :key="n"
-          class="db-responsive-grid-layout__edit-column"
+          class="db-responsive-grid__edit-column"
         />
       </div>
       <GridLayout
         :key="gridKey"
-        class="db-responsive-grid-layout__layout"
+        class="db-responsive-grid__layout"
         :layout="currentInternalArrangement"
         :responsive-layouts="composable.selectedLayout.value"
         :margin="[gridMargin, gridMargin]"
@@ -195,7 +195,7 @@ const { ErrorBoundary: errorBoundary } = useErrorBoundary()
         @layout-updated="onArrangementUpdate"
       >
         <template #item="{ item }">
-          <ResponsiveWidgetFrame
+          <ResponsiveGridWidget
             :spec="props.contentProps[<string>item.i]!"
             :is-editing="props.isEditing"
             @click:edit="$emit('widget:edit', <string>item.i)"
@@ -218,15 +218,13 @@ const { ErrorBoundary: errorBoundary } = useErrorBoundary()
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.db-responsive-grid-layout__container {
+.db-responsive-grid__container {
   width: 100%;
   height: 100%;
   position: relative;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.db-responsive-grid-layout__layout {
+.db-responsive-grid__layout {
   width: 100%;
   height: 100%;
   position: relative;
@@ -235,8 +233,7 @@ const { ErrorBoundary: errorBoundary } = useErrorBoundary()
   z-index: 2;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.db-responsive-grid-layout__edit-columns {
+.db-responsive-grid__edit-columns {
   position: absolute;
   z-index: 1;
   display: flex;
@@ -249,8 +246,7 @@ const { ErrorBoundary: errorBoundary } = useErrorBoundary()
   height: 100%;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.db-responsive-grid-layout__edit-column {
+.db-responsive-grid__edit-column {
   flex-grow: 1;
 
   /* TODO: light theme */

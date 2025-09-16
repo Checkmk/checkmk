@@ -32,7 +32,7 @@ defineEmits<{
       <div class="db-responsive-grid-widget__edit-controls-buttons">
         <!-- TODO: icons are too small, likely need re-export of the SVG and adjustment here -->
         <CmkIconButton
-          class="db-responsive-grid-widget__edit-controls-button"
+          class="db-responsive-widget-frame__edit-controls-button"
           name="widget_delete"
           size="medium"
           @click="$emit('click:delete')"
@@ -56,7 +56,6 @@ defineEmits<{
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .db-responsive-grid-widget__frame {
   height: 100%;
   width: 100%;
@@ -65,7 +64,6 @@ defineEmits<{
   overflow: hidden;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .db-responsive-grid-widget__frame--edit {
   /* disable selecting text while dragging / resizing widgets */
   user-select: none;
@@ -81,7 +79,6 @@ defineEmits<{
   }
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .db-responsive-grid-widget__content,
 .db-responsive-grid-widget__edit-controls {
   position: absolute;
@@ -91,14 +88,12 @@ defineEmits<{
   height: 100%;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .db-responsive-grid-widget__edit-controls {
   /* this must be above the content and placeholder, but below the resizer */
   z-index: 4;
   background-color: color-mix(in srgb, var(--color-midnight-grey-100) 40%, transparent);
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .db-responsive-grid-widget__edit-controls-buttons {
   /* menu bar on top */
   height: 23px;
@@ -113,7 +108,6 @@ defineEmits<{
   gap: 4px;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .db-responsive-grid-widget__edit-controls-button {
   padding: 4px;
 

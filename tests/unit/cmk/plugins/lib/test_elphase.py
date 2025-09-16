@@ -72,8 +72,8 @@ def test_check_elphase() -> None:
                 appower=ReadingWithState(value=78.0),
                 energy=ReadingWithState(value=66.1),
                 frequency=ReadingWithState(value=50.0),
-                differential_current_ac=ReadingWithState(value=20.0),
-                differential_current_dc=ReadingWithState(value=10.0),
+                differential_current_ac=ReadingWithState(value=0.02),
+                differential_current_dc=ReadingWithState(value=0.01),
             ),
         )
     ) == [

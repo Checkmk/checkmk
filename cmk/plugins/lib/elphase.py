@@ -7,7 +7,6 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Any, Self
 
-from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import check_levels, CheckResult, render, Result, State
 
 
@@ -89,9 +88,6 @@ def check_elphase(
     params: Mapping[str, Any],
     elphase: ElPhase,
 ) -> CheckResult:
-    class Bounds:
-        Lower, Upper, Both = range(3)
-
     if elphase.name:
         yield Result(
             state=State.OK,
@@ -198,59 +194,33 @@ def check_elphase(
             render_func=lambda x: f"{x:.1f} Hz",
         )
 
-    readings: Mapping[str, ReadingWithState | None] = {
-        "differential_current_ac": elphase.differential_current_ac,
-        "differential_current_dc": elphase.differential_current_dc,
-    }
-
-    for quantity, title, render_func, bound, factor in [
-        (
-            "differential_current_ac",
-            "Differential current AC",
-            lambda x: f"{(x * 1000):.1f} mA",
-            Bounds.Upper,
-            0.001,
-        ),
-        (
-            "differential_current_dc",
-            "Differential current DC",
-            lambda x: f"{(x * 1000):.1f} mA",
-            Bounds.Upper,
-            0.001,
-        ),
-    ]:
-        if not (reading := readings[quantity]):
-            continue
-
-        levels_upper: tuple[float, float] | None = None
-        levels_lower: tuple[float, float] | None = None
-        if quantity in params:
-            if bound == Bounds.Both:
-                levels = params[quantity]
-                if levels[0] is not None and levels[1] is not None:
-                    levels_upper = (factor * levels[0], factor * levels[1])
-                if levels[2] is not None and levels[3] is not None:
-                    levels_lower = (factor * levels[2], factor * levels[3])
-            elif bound == Bounds.Upper:
-                levels = params[quantity]
-                if levels[0] is not None and levels[1] is not None:
-                    levels_upper = (factor * levels[0], factor * levels[1])
-            else:  # Bounds.Lower
-                levels = params[quantity]
-                if levels[0] is not None and levels[1] is not None:
-                    levels_lower = (factor * levels[0], factor * levels[1])
-
-        yield from check_levels_v1(
-            reading.value * factor,
-            levels_upper=levels_upper,
-            levels_lower=levels_lower,
-            metric_name=quantity,
-            render_func=render_func,
-            label=title,
+    if elphase.differential_current_ac:
+        yield from _check_reading(
+            elphase.differential_current_ac,
+            label="Differential current AC",
+            metric_name="differential_current_ac",
+            lower_levels=None,
+            upper_levels=(
+                (upper_levels[0] * 1e-3, upper_levels[1] * 1e-3)
+                if (upper_levels := params.get("differential_current_ac"))
+                else None
+            ),
+            render_func=lambda x: f"{(x * 1e3):.1f} mA",
         )
 
-        if reading.state:
-            yield Result(state=reading.state.state, summary=reading.state.text)
+    if elphase.differential_current_dc:
+        yield from _check_reading(
+            elphase.differential_current_dc,
+            label="Differential current DC",
+            metric_name="differential_current_dc",
+            lower_levels=None,
+            upper_levels=(
+                (upper_levels[0] * 1e-3, upper_levels[1] * 1e-3)
+                if (upper_levels := params.get("differential_current_dc"))
+                else None
+            ),
+            render_func=lambda x: f"{(x * 1e3):.1f} mA",
+        )
 
 
 def _check_reading(

@@ -281,6 +281,81 @@ PACKAGE_CRYPTO = ("cmk.crypto",)
 
 PACKAGE_TRACE = ("cmk.trace",)
 
+CLEAN_UTILS_MODULES = (
+    "agent_registration",
+    "auto_queue",
+    "azure_constants",
+    "check_utils",
+    "crypto",
+    "datastructures",
+    "deprecation_warnings",
+    "encoding",
+    "everythingtype",
+    "experimental_config",
+    "html",
+    "http_proxy_config",
+    "images",
+    "livestatus_helpers",
+    "macros",
+    "man_pages",
+    "metrics",
+    "mrpe_config",
+    "ms_teams_constants",
+    "object_diff",
+    "parameters",
+    "plugin_loader",
+    "schedule",
+    "sectionname",
+    "semantic_version",
+    "statename",
+    "timeout",
+    "typing_helpers",
+)
+
+# we consider these ""Components"", but we allow them
+# to import each other. Would be nice to narrow this down,
+# but there's a lot going on.
+CROSS_DEPENDING_UTILS_MODULES = (
+    "backup",
+    "caching",
+    "caching_redis",
+    "cce",
+    "cee",
+    "cme",
+    "config_path",
+    "config_warnings",
+    "cse",
+    "dateutils",
+    "diagnostics",
+    "encryption",
+    "escaping",
+    "global_ident_type",
+    "ip_lookup",
+    "jsontype",
+    "labels",
+    "licensing",
+    "local_secrets",
+    "log",
+    "mail",
+    "misc",
+    "msi_engine",
+    "msi_patch",
+    "observer",
+    "password_store",
+    "paths",
+    "redis",
+    "render",
+    "regex",
+    "setup_search_index",
+    "ssh_client",
+    "tags",
+    "timeperiod",
+    "translations",
+    "servicename",
+    "urls",
+    "visuals",
+)
+
 COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     Component("cmk.automations"): _allow(
         *PACKAGE_CCC,
@@ -793,6 +868,35 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.mail",
         "cmk.utils.paths",
     ),
+    Component("cmk.utils.notify_types"): _allow(
+        "cmk.events",
+        "cmk.utils.rulesets",
+        "cmk.utils.tags",
+        "cmk.utils.timeperiod",
+    ),
+    Component("cmk.utils.notify"): _allow(
+        *PACKAGE_CCC,
+        "cmk.utils.notify_types",
+        "cmk.utils.config_path",
+        "cmk.utils.labels",
+        "cmk.utils.servicename",
+        "cmk.utils.tags",
+    ),
+    Component("cmk.utils.host_storage"): _allow(
+        *PACKAGE_CCC,
+        "cmk.utils.labels",
+        "cmk.utils.rulesets",
+        "cmk.utils.tags",
+    ),
+    **{
+        Component(f"cmk.utils.{module}"): _allow(
+            *PACKAGE_CCC,
+            *PACKAGE_CRYPTO,
+            *(f"cmk.utils.{m}" for m in CROSS_DEPENDING_UTILS_MODULES),
+        )
+        for module in CROSS_DEPENDING_UTILS_MODULES
+    },
+    **{Component(f"cmk.utils.{module}"): _allow(*PACKAGE_CCC) for module in CLEAN_UTILS_MODULES},
     Component("cmk.utils"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_CRYPTO,

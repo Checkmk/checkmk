@@ -6,7 +6,7 @@
 from cmk.graphing.v1 import metrics, Title
 
 metric_int_test = metrics.Metric(
-    name="int_test",
+    name="metric_int_test",
     title=Title("Integration test metric"),
     unit=metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(2)),
     color=metrics.Color.LIGHT_BLUE,

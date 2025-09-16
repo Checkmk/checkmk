@@ -9,4 +9,4 @@ from cmk.gui import main_modules
 from cmk.gui.graphing._from_api import metrics_from_api
 
 main_modules.load_plugins()
-sys.stdout.write(f"{'int_test' in metrics_from_api}\n")
+sys.stdout.write(f"{'metric_int_test' in metrics_from_api}\n")

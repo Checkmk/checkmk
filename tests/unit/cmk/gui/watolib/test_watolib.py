@@ -297,6 +297,13 @@ def test_registered_configvars() -> None:
             "ntop_connection",
         ]
 
+    if cmk_version.edition(paths.omd_root) in {
+        cmk_version.Edition.CCE,
+        cmk_version.Edition.CME,
+        cmk_version.Edition.CSE,
+    }:
+        expected_vars += ["site_opentelemetry_collector"]
+
     registered = sorted(config_variable_registry.keys())
     assert registered == sorted(expected_vars)
 
@@ -336,6 +343,7 @@ def test_registered_configvar_groups() -> None:
             "Reporting",
             "Monitoring core",
             "Ntopng (chargeable add-on)",
+            "Application Monitoring",
         ]
 
     registered = sorted(config_variable_group_registry.keys())

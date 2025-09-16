@@ -86,14 +86,14 @@ onBeforeUnmount(() => {
 // Specs
 
 const dataConsolidationType = ref<'average' | 'min' | 'max'>('max')
-const consolidationType: Suggestion[] = [
+const consolidationTypeSuggestions: Suggestion[] = [
   { name: 'average', title: props.i18n.average as TranslatedString },
   { name: 'min', title: props.i18n.minimum as TranslatedString },
   { name: 'max', title: props.i18n.maximum as TranslatedString }
 ]
 
 const dataScalarType = ref<'warn' | 'crit' | 'min' | 'max'>('crit')
-const scalarType: Suggestion[] = [
+const scalarTypeSuggestions: Suggestion[] = [
   { name: 'warn', title: props.i18n.warning as TranslatedString },
   { name: 'crit', title: props.i18n.critical as TranslatedString },
   { name: 'min', title: props.i18n.minimum as TranslatedString },
@@ -102,7 +102,7 @@ const scalarType: Suggestion[] = [
 
 const dataConstant: Ref<number> = ref(1)
 
-const formLineType: Suggestion[] = [
+const formLineTypeSuggestions: Suggestion[] = [
   { name: 'line', title: props.i18n.line as TranslatedString },
   { name: 'area', title: props.i18n.area as TranslatedString },
   { name: 'stack', title: props.i18n.stack as TranslatedString }
@@ -894,7 +894,7 @@ const graphDesignerContentAsJson = computed(() => {
             v-model:selected-option="graphLine.line_type"
             :options="{
               type: 'fixed',
-              suggestions: formLineType
+              suggestions: formLineTypeSuggestions
             }"
             :label="props.i18n.line_style as TranslatedString"
           />
@@ -922,7 +922,7 @@ const graphDesignerContentAsJson = computed(() => {
                   v-model:selected-option="graphLine.consolidation_type"
                   :options="{
                     type: 'fixed',
-                    suggestions: consolidationType
+                    suggestions: consolidationTypeSuggestions
                   }"
                   :label="props.i18n.formula as TranslatedString"
                 />
@@ -949,7 +949,7 @@ const graphDesignerContentAsJson = computed(() => {
                   v-model:selected-option="graphLine.scalar_type"
                   :options="{
                     type: 'fixed',
-                    suggestions: scalarType
+                    suggestions: scalarTypeSuggestions
                   }"
                   :label="props.i18n.scalar as TranslatedString"
                 />
@@ -1015,7 +1015,7 @@ const graphDesignerContentAsJson = computed(() => {
               v-model:selected-option="dataConsolidationType"
               :options="{
                 type: 'fixed',
-                suggestions: consolidationType
+                suggestions: consolidationTypeSuggestions
               }"
               :label="props.i18n.formula as TranslatedString"
             />
@@ -1051,7 +1051,7 @@ const graphDesignerContentAsJson = computed(() => {
               v-model:selected-option="dataScalarType"
               :options="{
                 type: 'fixed',
-                suggestions: scalarType
+                suggestions: scalarTypeSuggestions
               }"
               :label="props.i18n.scalar as TranslatedString"
             />

@@ -109,6 +109,19 @@ function generateWidgetId(widgetContentType: string): string {
   return randomId(16, `${dashboardName}-${widgetContentType}`)
 }
 
+function saveDashboard() {
+  isDashboardEditingMode.value = false
+}
+
+async function cancelEdit() {
+  // we overwrite all changes by reloading the dashboard
+  await dashboardsManager.loadDashboard(
+    dashboardsManager.activeDashboardName.value!,
+    dashboardsManager.activeDashboard.value!.content.layout.type as DashboardLayout
+  )
+  isDashboardEditingMode.value = false
+}
+
 // @ts-expect-error: TODO: use this
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function addWidget(
@@ -164,9 +177,9 @@ function deepClone<T>(obj: T): T {
         @open-filter="openDashboardFilterSettings = true"
         @open-settings="() => {}"
         @open-widget-workflow="openAddWidgetDialog = true"
-        @save="() => {}"
+        @save="saveDashboard"
         @enter-edit="isDashboardEditingMode = true"
-        @cancel-edit="() => {}"
+        @cancel-edit="cancelEdit"
         @set-dashboard="handleSelectDashboard"
       />
     </div>

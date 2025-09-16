@@ -19,11 +19,15 @@ logger = logging.getLogger(__name__)
 #   after update. See CMK-19103.
 # * Ceph dump containing "Systemd Service Summary" changing between 2.3.0 and 2.4.0. SUP-21093.
 # * Proxmox dump containing "Systemd Service Summary" changing between versions. SUP-22010.
+# * TODO - CMK-26035
+# In 'snmp-enviromux-sems-e2d' service 'Check_MK' sometimes turns into not-OK state after update,
+# leading to a flaky behavior.
 SKIPPED_DUMPS = [
     "snmp-sw-arista.demo.checkmk.com_2_2_p12",
     "snmp-f5-bigip-failover-cluster",
     "agent-2.2.0p8-ceph-17.2.6",
     "agent-2.2.0p14-proxmox",
+    "snmp-enviromux-sems-e2d",
 ]
 
 # * The 'Postfix status' service has been renamed into 'Postfix status default'.

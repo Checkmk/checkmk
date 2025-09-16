@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed, onBeforeMount, provide, ref } from 'vue'
 
+import { randomId } from '@/lib/randomId'
+
 import CmkIcon from '@/components/CmkIcon.vue'
 import { useErrorBoundary } from '@/components/useErrorBoundary'
 
@@ -99,6 +101,14 @@ const handleAddWidget = (widgetIdent: string) => {
   // TODO: better handling for cancelling
 }
 
+function generateWidgetId(widgetContentType: string): string {
+  const dashboardName = dashboardsManager.activeDashboardName.value
+  if (!dashboardName) {
+    throw new Error('No active dashboard')
+  }
+  return randomId(16, `${dashboardName}-${widgetContentType}`)
+}
+
 // @ts-expect-error: TODO: use this
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function addWidget(
@@ -110,8 +120,7 @@ function addWidget(
   if (!activeDashboard) {
     throw new Error('No active dashboard')
   }
-  // TODO: generate new ID via dashboard settings & content type so we get a decent prefix
-  const widgetId = crypto.randomUUID()
+  const widgetId = generateWidgetId(content.type)
   let layout: WidgetLayout
   if (activeDashboard.content.layout.type === 'responsive_grid') {
     layout = createWidgetLayout(activeDashboard.content as ContentResponsiveGrid, content.type)
@@ -134,9 +143,11 @@ function editWidget(widgetId: string) {
 }
 
 function cloneWidget(oldWidgetId: string, newLayout: WidgetLayout) {
-  // TODO: generate new ID via dashboard settings & content type so we get a decent prefix
-  // possibly generate IDs within addWidget/cloneWidget
-  const newWidgetId = crypto.randomUUID()
+  const oldWidget = dashboardWidgets.getWidget(oldWidgetId)
+  if (!oldWidget) {
+    throw new Error(`Widget with id ${oldWidgetId} not found`)
+  }
+  const newWidgetId = generateWidgetId(oldWidget.content.type)
   dashboardWidgets.cloneWidget(oldWidgetId, newWidgetId, newLayout)
 }
 

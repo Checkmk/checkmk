@@ -11,6 +11,7 @@ from typing import Literal, TypedDict
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.store import load_object_from_file
 from cmk.utils.config_path import VersionedConfigPath
+from cmk.utils.paths import omd_root
 from cmk.utils.servicename import ServiceName
 
 RRD_CONFIG_FOLDER = "rrd_config"
@@ -46,10 +47,12 @@ class _RRDHostConfig(TypedDict, total=False):
 class RRDConfig:
     def __init__(self, hostname: HostName) -> None:
         self._loaded_config: _RRDHostConfig = load_object_from_file(
-            rrd_config_hosts_dir(VersionedConfigPath.LATEST_CONFIG) / hostname, default={}
+            rrd_config_hosts_dir(VersionedConfigPath.make_latest_path(omd_root)) / hostname,
+            default={},
         )
         self._cmc_log_rrdcreation = load_object_from_file(
-            rrd_config_dir(VersionedConfigPath.LATEST_CONFIG) / CMC_LOG_RRDCREATION, default=None
+            rrd_config_dir(VersionedConfigPath.make_latest_path(omd_root)) / CMC_LOG_RRDCREATION,
+            default=None,
         )
 
     def rrd_config(self) -> RRDObjectConfig | None:
@@ -64,5 +67,6 @@ class RRDConfig:
 
 def read_hostnames() -> Sequence[HostName]:
     return [
-        HostName(p.name) for p in rrd_config_hosts_dir(VersionedConfigPath.LATEST_CONFIG).glob("*")
+        HostName(p.name)
+        for p in rrd_config_hosts_dir(VersionedConfigPath.make_latest_path(omd_root)).glob("*")
     ]

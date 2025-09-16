@@ -23,6 +23,7 @@ from cmk.checkengine.plugin_backend import (
 from cmk.discover_plugins import PluginLocation
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.password_store import core_password_store_path
+from cmk.utils.paths import omd_root
 
 # This will be replaced by the config generation, when the template is instantiated.
 CONFIG = HostCheckConfig(
@@ -89,7 +90,7 @@ def main() -> int:
         plugins = load_selected_plugins(CONFIG.locations, sections, checks, validate=debug)
 
         loading_result = config.load_packed_config(
-            VersionedConfigPath.LATEST_CONFIG,
+            VersionedConfigPath.make_latest_path(omd_root),
             discovery_rulesets=extract_known_discovery_rulesets(plugins),
         )
 

@@ -45,11 +45,14 @@ def password_store_path() -> Path:
     return cmk.utils.paths.var_dir / "stored_passwords"
 
 
-def core_password_store_path(config_path: Path = VersionedConfigPath.LATEST_CONFIG) -> Path:
+def core_password_store_path(config_path: Path | None = None) -> Path:
     """file where the passwords for use by the helpers are stored
 
     This is "frozen" in the state at config generation.
     """
+    if config_path is None:
+        # TODO: Make non-optional
+        config_path = VersionedConfigPath.make_latest_path(cmk.utils.paths.omd_root)
     return config_path / "stored_passwords"
 
 

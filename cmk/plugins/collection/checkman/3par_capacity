@@ -14,9 +14,10 @@ description:
 
  of each the filer and for each type of disk.
 
- You can define thresholds for warning and critical (0 by default).
+ You can define thresholds for warning and critical.
  If there is failed space above a configurable threshold the service goes
  to a {WARN} or {CRIT} state and shows the failed space.
+ The limit for failed space is 0 by default.
 
  This check uses the 3PAR special agent.
 

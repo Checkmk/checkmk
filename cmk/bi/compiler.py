@@ -50,7 +50,7 @@ class BICompiler:
         bi_configuration_file: Path,
         sites_callback: SitesCallback,
         fs: BIFileSystem | None = None,
-        redis_client: Redis[str] | None = None,
+        redis_client: Redis | None = None,
     ) -> None:
         self._sites_callback = sites_callback
         self._fs = fs or get_default_site_filesystem()

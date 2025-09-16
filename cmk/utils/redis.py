@@ -22,7 +22,7 @@ from cmk.utils.paths import omd_root
 QueryData = TypeVar("QueryData")
 
 
-def get_redis_client() -> Redis[str]:
+def get_redis_client() -> Redis:
     """Builds a ready-to-use Redis client instance
 
     Note: Use the returing object as context manager to ensure proper cleanup.
@@ -57,7 +57,7 @@ class DataUnavailableException(Exception):
 
 
 def query_redis(
-    client: Redis[str],
+    client: Redis,
     data_key: str,
     integrity_callback: Callable[[], IntegrityCheckResponse],
     update_callback: Callable[[Pipeline], Any],

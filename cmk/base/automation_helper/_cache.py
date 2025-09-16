@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
+from collections.abc import Awaitable
 from typing import Final, Self
 
 import redis
@@ -28,7 +29,9 @@ class Cache:
 
     def get_last_detected_change(self) -> float:
         try:
-            return float(self._client.get(LAST_DETECTED_CHANGE_TOPIC) or 0.0)
+            last = self._client.get(LAST_DETECTED_CHANGE_TOPIC)
+            assert not isinstance(last, Awaitable)
+            return float(last or 0.0)
         except ConnectionError as err:
             raise CacheError("Failed to retrieve timestamp of last detected change.") from err
 

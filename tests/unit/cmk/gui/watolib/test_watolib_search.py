@@ -181,7 +181,7 @@ def fixture_match_item_generator_registry() -> MatchItemGeneratorRegistry:
 
 
 @pytest.fixture(name="clean_redis_client")
-def fixture_clean_redis_client() -> "Redis[str]":
+def fixture_clean_redis_client() -> "Redis":
     client = FakeRedis(decode_responses=True)
     client.flushall()
     return client
@@ -190,14 +190,14 @@ def fixture_clean_redis_client() -> "Redis[str]":
 @pytest.fixture(name="index_builder")
 def fixture_index_builder(
     match_item_generator_registry: MatchItemGeneratorRegistry,
-    clean_redis_client: "Redis[str]",
+    clean_redis_client: "Redis",
 ) -> IndexBuilder:
     return IndexBuilder(match_item_generator_registry, clean_redis_client)
 
 
 @pytest.fixture(name="index_searcher")
 def fixture_index_searcher(
-    clean_redis_client: "Redis[str]",
+    clean_redis_client: "Redis",
 ) -> IndexSearcher:
     return IndexSearcher(clean_redis_client, PermissionsHandler())
 
@@ -206,7 +206,7 @@ class TestIndexBuilder:
     @pytest.mark.usefixtures("with_admin_login")
     def test_update_only_not_built(
         self,
-        clean_redis_client: "Redis[str]",
+        clean_redis_client: "Redis",
         index_builder: IndexBuilder,
     ) -> None:
         index_builder.build_changed_sub_indices(["something"])
@@ -354,7 +354,7 @@ class TestPermissionHandler:
 
 class TestIndexSearcher:
     @pytest.mark.usefixtures("with_admin_login", "inline_background_jobs")
-    def test_search_no_index(self, clean_redis_client: "Redis[str]", mocker: MockerFixture) -> None:
+    def test_search_no_index(self, clean_redis_client: "Redis", mocker: MockerFixture) -> None:
         get_config = mocker.patch(
             "cmk.gui.wato.pages.global_settings.ABCConfigDomain.get_all_default_globals"
         )
@@ -474,7 +474,7 @@ class TestRealisticSearch:
     )
     def test_real_search_without_exception(
         self,
-        clean_redis_client: "Redis[str]",
+        clean_redis_client: "Redis",
     ) -> None:
         IndexBuilder(real_match_item_generator_registry, clean_redis_client).build_full_index()
         assert IndexBuilder.index_is_built(clean_redis_client)
@@ -505,7 +505,7 @@ class TestRealisticSearch:
     )
     def test_index_is_built_as_super_user(
         self,
-        clean_redis_client: "Redis[str]",
+        clean_redis_client: "Redis",
     ) -> None:
         """
         We test that the index is always built as a super user.
@@ -534,7 +534,7 @@ class TestRealisticSearch:
     def test_dcd_not_found_if_not_super_user(
         self,
         monkeypatch: MonkeyPatch,
-        clean_redis_client: "Redis[str]",
+        clean_redis_client: "Redis",
     ) -> None:
         """
         This test ensures that test_index_is_built_as_super_user makes sense, ie. that if we do not

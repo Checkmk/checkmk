@@ -128,7 +128,7 @@ class MetadataStore:
 
 
 class LookupStore:
-    def __init__(self, redis_client: Redis[str]) -> None:
+    def __init__(self, redis_client: Redis) -> None:
         self._redis_client = redis_client
         self._lookup_key = "bi:aggregation_lookup"
         self._lookup_key_lock = "bi:aggregation_lookup_lock"

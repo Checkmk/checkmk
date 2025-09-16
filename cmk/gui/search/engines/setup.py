@@ -8,7 +8,7 @@ from __future__ import annotations
 import itertools
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
+from collections.abc import Awaitable, Callable, Collection, Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from itertools import chain
 from typing import Final, override
@@ -115,7 +115,7 @@ class IndexBuilder:
     def __init__(
         self,
         registry: MatchItemGeneratorRegistry,
-        redis_client: redis.Redis[str],
+        redis_client: redis.Redis,
     ) -> None:
         self._registry = registry
         self._redis_client = redis_client
@@ -234,7 +234,7 @@ class IndexBuilder:
             redis_pipeline.hset(
                 key_match_texts,
                 key=" ".join(match_item.match_texts),
-                value=idx,
+                value=str(idx),
             )
             redis_pipeline.hset(
                 cls.add_to_prefix(prefix, idx),
@@ -266,7 +266,7 @@ class IndexBuilder:
         )
 
     @classmethod
-    def index_is_built(cls, client: redis.Redis[str]) -> bool:
+    def index_is_built(cls, client: redis.Redis) -> bool:
         return client.exists(cls._KEY_INDEX_BUILT) == 1
 
 
@@ -372,7 +372,7 @@ class PermissionsHandler:
 class IndexSearcher:
     def __init__(
         self,
-        redis_client: redis.Redis[str],
+        redis_client: redis.Redis,
         permissions_handler: PermissionsHandler,
     ) -> None:
         self._redis_client = redis_client
@@ -451,7 +451,9 @@ class IndexSearcher:
         key_prefix_match_items: str,
     ) -> defaultdict[str, list[_SearchResultWithVisibilityCheck]]:
         results = defaultdict(list)
-        for category in self._redis_client.smembers(key_categories):
+        categories = self._redis_client.smembers(key_categories)
+        assert not isinstance(categories, Awaitable)
+        for category in categories:
             if not self._may_see_category(category):
                 continue
 
@@ -468,6 +470,7 @@ class IndexSearcher:
                 match_item_dict = self._redis_client.hgetall(
                     IndexBuilder.add_to_prefix(prefix_category, idx_matched_item)
                 )
+                assert not isinstance(match_item_dict, Awaitable)
 
                 # We translate the topics of our search results. For localization-dependent search
                 # results, such as rulesets, they are already localized anyway. However, for
@@ -569,7 +572,7 @@ def _index_building_in_background_job(
         _build_index(job_interface, redis_client)
 
 
-def _build_index(job_interface: BackgroundProcessInterface, redis_client: redis.Redis[str]) -> None:
+def _build_index(job_interface: BackgroundProcessInterface, redis_client: redis.Redis) -> None:
     job_interface.send_progress_update(_("Building of search index started"))
     IndexBuilder(match_item_generator_registry, redis_client).build_full_index()
     job_interface.send_result_message(_("Search index successfully built"))
@@ -617,7 +620,7 @@ def _process_update_requests_background(
 def _process_update_requests(
     requests: UpdateRequests,
     job_interface: BackgroundProcessInterface,
-    redis_client: redis.Redis[str],
+    redis_client: redis.Redis,
 ) -> None:
     if requests["rebuild"]:
         _build_index(job_interface, redis_client)
@@ -653,7 +656,7 @@ class SetupSearchEngine:
         self,
         config: Config,
         *,
-        redis_client: redis.Redis[str] | None = None,
+        redis_client: redis.Redis | None = None,
         permissions_handler: PermissionsHandler | None = None,
     ) -> None:
         self._config = config

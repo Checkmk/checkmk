@@ -520,15 +520,16 @@ class Crawler:
         self.check_referenced(url, soup, "a", "href")
 
     def check_referenced(self, referer_url: Url, soup: BeautifulSoup, tag: str, attr: str) -> None:
+        # TODO: Typing chaos ahead! Clarify PageElement/Tag/NavigableString
         elements = soup.find_all(tag)
         for element in elements:
-            orig_url = element.get(attr)
+            orig_url = element.get(attr)  # type: ignore[union-attr]
             if orig_url is None:
                 continue  # Skip elements that don't have the attribute in question
-            normalized_orig_url = self.normalize_url(orig_url)
+            normalized_orig_url = self.normalize_url(orig_url)  # type: ignore[arg-type]
             if normalized_orig_url is None:
                 continue
-            url = Url(normalized_orig_url, orig_url=orig_url, referer_url=referer_url.url)
+            url = Url(normalized_orig_url, orig_url=orig_url, referer_url=referer_url.url)  # type: ignore[arg-type]
             try:
                 self.verify_is_valid_url(url.url)
             except InvalidUrl as invalid_url:

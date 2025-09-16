@@ -23,10 +23,11 @@ def read_out_simple_table(text):
     assert isinstance(text, str)
     # Get the contents of the table as a list of lists
     data = []
+    # TODO: Typing chaos ahead! Clarify PageElement/Tag/NavigableString
     for row in bs(text, "lxml").find_all("tr"):
-        columns = row.find_all("th")
+        columns = row.find_all("th")  # type: ignore[union-attr]
         if not columns:
-            columns = row.find_all("td")
+            columns = row.find_all("td")  # type: ignore[union-attr]
         row_data = []
         for cell in columns:
             cell = re.sub(r"\s", "", re.sub(r"<[^<]*>", "", cell.text))

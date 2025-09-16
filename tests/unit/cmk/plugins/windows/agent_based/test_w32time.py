@@ -377,7 +377,6 @@ def test_check_w32time_status_respects_params() -> None:
         Result(state=State.OK, notice="Root delay: 34 milliseconds"),
         Metric("root_delay", 0.0336332),
         Result(state=State.OK, notice="Stratum: 3"),
-        Metric("stratum", 3.0),
         Result(state=State.WARN, notice="Sync status: Stale data received from time provider"),
     ]
 

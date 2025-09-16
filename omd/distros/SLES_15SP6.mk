@@ -54,7 +54,6 @@ APACHE_CONF_DIR   = /etc/apache2/conf.d
 APACHE_INIT_NAME  = apache2
 APACHE_USER       = wwwrun
 APACHE_GROUP      = www
-APACHE_VERSION    = 2.4.58
 APACHE_CTL        = /usr/sbin/apache2ctl
 APACHE_MODULE_DIR = /usr/lib/apache2-prefork
 APACHE_MODULE_DIR_64 = /usr/lib64/apache2-prefork

@@ -53,7 +53,6 @@ APACHE_CONF_DIR   = /etc/httpd/conf.d
 APACHE_INIT_NAME  = httpd
 APACHE_USER       = apache
 APACHE_GROUP      = apache
-APACHE_VERSION    = 2.4.6
 APACHE_CTL        = /usr/sbin/apachectl
 APACHE_MODULE_DIR = /usr/lib/httpd/modules
 APACHE_MODULE_DIR_64 = /usr/lib64/httpd/modules

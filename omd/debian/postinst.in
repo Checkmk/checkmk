@@ -57,7 +57,7 @@ case "$1" in
     # -- looking for group nagios, create it, if not exist
     if ! getent group omd > /dev/null ; then
       echo 'Adding system group omd' 1>&2
-      addgroup --system --force-badname omd > /dev/null
+      groupadd --system omd > /dev/null
     fi
 
     for PROGRAM in $CAP_PROGRAMS; do

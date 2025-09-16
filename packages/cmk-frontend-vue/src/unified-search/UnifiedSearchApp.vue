@@ -36,15 +36,16 @@ import type { UnifiedSearchQueryLike } from './providers/search-utils.types'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const cmk: any
 
-const searchId = 'unified-search'
+const props = defineProps<{
+  providers: Providers
+  user_id: string
+}>()
+
+const searchId = `unified-search-${props.user_id}`
 
 const api = new Api()
 
 const searchHistoryService = new SearchHistoryService(searchId)
-
-const props = defineProps<{
-  providers: Providers
-}>()
 
 const searchProviderIdentifiers: { id: UnifiedSearchProviderIdentifier; sort: number }[] = []
 if (props.providers.setup.active) {

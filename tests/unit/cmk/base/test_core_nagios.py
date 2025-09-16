@@ -372,8 +372,8 @@ def test_create_nagios_host_spec_service_period(monkeypatch: MonkeyPatch) -> Non
 
 
 @pytest.fixture(name="config_path")
-def fixture_config_path() -> Path:
-    return Path(VersionedConfigPath(42))
+def fixture_config_path(tmp_path: Path) -> Path:
+    return Path(VersionedConfigPath(tmp_path, 42))
 
 
 class TestHostCheckStore:

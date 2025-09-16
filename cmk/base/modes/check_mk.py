@@ -1509,7 +1509,7 @@ def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
     service_name_config = config_cache.make_passive_service_name_config(final_service_name_config)
     create_config(
         sys.stdout,
-        Path(VersionedConfigPath.next()),
+        Path(VersionedConfigPath.next(cmk.utils.paths.omd_root)),
         config_cache,
         final_service_name_config,
         service_name_config,

@@ -2803,7 +2803,7 @@ def test_explicit_setting_loading(patch_omd_site: None) -> None:
 
 @pytest.fixture(name="config_path")
 def fixture_config_path() -> Path:
-    return Path(VersionedConfigPath(13))
+    return Path(VersionedConfigPath(cmk.utils.paths.omd_root, 13))
 
 
 def test_save_packed_config(monkeypatch: MonkeyPatch, config_path: Path) -> None:

@@ -128,7 +128,7 @@ def main(
         cmk_version.edition(cmk.utils.paths.omd_root),
         parameters,
         args.hostname,
-        load_plugins_from_index(VersionedConfigPath.LATEST_CONFIG)
+        load_plugins_from_index(VersionedConfigPath.make_latest_path(cmk.utils.paths.omd_root))
         if args.use_indexed_plugins
         else load_checks(),
     )

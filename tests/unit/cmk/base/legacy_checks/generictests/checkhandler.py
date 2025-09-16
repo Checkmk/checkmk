@@ -19,8 +19,8 @@ class CheckHandler:
         """get a list of names of all (sub)checks that apply"""
         if checkname in self.cache:
             return self.cache[checkname]
-        found = [s for s in check_info.keys() if s.split(".")[0] == checkname]
-        return self.cache.setdefault(checkname, found)
+        found = checkname in check_info.keys()
+        return self.cache.setdefault(checkname, [checkname] if found else [])
 
 
 checkhandler = CheckHandler()

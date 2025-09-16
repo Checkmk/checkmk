@@ -18,7 +18,6 @@ info = [
 discovery = {
     "": [("rabbit@my-rabbit", {})],
     "filedesc": [("rabbit@my-rabbit", {})],
-    "proc": [("rabbit@my-rabbit", {})],
     "mem": [("rabbit@my-rabbit", {})],
     "uptime": [("rabbit@my-rabbit", {})],
     "gc": [("rabbit@my-rabbit", {})],

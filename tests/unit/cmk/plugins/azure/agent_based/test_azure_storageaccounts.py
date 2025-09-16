@@ -12,7 +12,7 @@ from cmk.plugins.azure.agent_based.azure_storageaccounts import (
     check_plugin_azure_storageaccounts_flow,
     check_plugin_azure_storageaccounts_performance,
 )
-from cmk.plugins.lib.azure import parse_resources, Section
+from cmk.plugins.lib.azure import AzureMetric, parse_resources, Resource, Section
 
 MiB = 1024**2
 STRING_TABLE = [
@@ -126,6 +126,35 @@ def test_check_azure_storageaccounts(
     assert actual == results_expected
 
 
+def test_check_azure_storageaccounts_defaults():
+    resource = {
+        "st0ragetestaccount": Resource(
+            id="/subscriptions/2fac104f-cb9c-461d-be57-037039662426/resourceGroups/BurningMan/providers/Microsoft.Storage/storageAccounts/st0ragetestaccount",
+            name="st0ragetestaccount",
+            type="Microsoft.Storage/storageAccounts",
+            group="BurningMan",
+            kind="BlobStorage",
+            location="westeurope",
+            tags={"monitoring": "some value"},
+            properties={},
+            specific_info={},
+            metrics={
+                "total_UsedCapacity": AzureMetric(
+                    name="UsedCapacity", aggregation="total", value=62225513949213.0, unit="bytes"
+                ),
+            },
+        )
+    }
+    params = check_plugin_azure_storageaccounts.check_default_parameters
+    result = list(
+        check_plugin_azure_storageaccounts.check_function("st0ragetestaccount", params, resource)
+    )
+    assert result == [
+        Result(state=State.WARN, summary="Used capacity: 56.6 TiB (warn/crit at 50.0 TiB/500 TiB)"),
+        Metric("used_space", 62225513949213.0, levels=(54975581388800.0, 549755813888000.0)),
+    ]
+
+
 @pytest.mark.usefixtures("section_fixture")
 @pytest.mark.parametrize(
     ["item", "params", "results_expected"],
@@ -168,6 +197,47 @@ def test_check_azure_storageaccounts_flow(
         check_plugin_azure_storageaccounts_flow.check_function(item, params, section_fixture)
     )
     assert actual == results_expected
+
+
+def test_check_azure_storageaccounts_flow_defaults():
+    resource = {
+        "st0ragetestaccount": Resource(
+            id="/subscriptions/2fac104f-cb9c-461d-be57-037039662426/resourceGroups/BurningMan/providers/Microsoft.Storage/storageAccounts/st0ragetestaccount",
+            name="st0ragetestaccount",
+            type="Microsoft.Storage/storageAccounts",
+            group="BurningMan",
+            kind="BlobStorage",
+            location="westeurope",
+            tags={"monitoring": "some value"},
+            properties={},
+            specific_info={},
+            metrics={
+                "total_Ingress": AzureMetric(
+                    name="Ingress", aggregation="total", value=31620.0, unit="bytes"
+                ),
+                "total_Egress": AzureMetric(
+                    name="Egress", aggregation="total", value=237007090.0, unit="bytes"
+                ),
+                "total_Transactions": AzureMetric(
+                    name="Transactions", aggregation="total", value=62.0, unit="count"
+                ),
+            },
+        )
+    }
+    params = check_plugin_azure_storageaccounts_flow.check_default_parameters
+    result = list(
+        check_plugin_azure_storageaccounts_flow.check_function(
+            "st0ragetestaccount", params, resource
+        )
+    )
+    assert result == [
+        Result(state=State.OK, summary="Ingress: 30.9 KiB"),
+        Metric("ingress", 31620.0),
+        Result(state=State.OK, summary="Egress: 226 MiB"),
+        Metric("egress", 237007090.0),
+        Result(state=State.CRIT, summary="Transactions: 62 (warn/crit at 8/10)"),
+        Metric("transactions", 62.0, levels=(8.0, 10.0)),
+    ]
 
 
 @pytest.mark.usefixtures("section_fixture")
@@ -215,3 +285,61 @@ def test_check_plugin_azure_storageaccounts_performance(
         check_plugin_azure_storageaccounts_performance.check_function(item, params, section_fixture)
     )
     assert actual == results_expected
+
+
+def test_check_azure_storageaccounts_performance_defaults():
+    resource = {
+        "st0ragetestaccount": Resource(
+            id="/subscriptions/2fac104f-cb9c-461d-be57-037039662426/resourceGroups/BurningMan/providers/Microsoft.Storage/storageAccounts/st0ragetestaccount",
+            name="st0ragetestaccount",
+            type="Microsoft.Storage/storageAccounts",
+            group="BurningMan",
+            kind="BlobStorage",
+            location="westeurope",
+            tags={"monitoring": "some value"},
+            properties={},
+            specific_info={},
+            metrics={
+                "average_SuccessServerLatency": AzureMetric(
+                    name="SuccessServerLatency",
+                    aggregation="average",
+                    value=5624.0,
+                    unit="milli_seconds",
+                ),
+                "average_SuccessE2ELatency": AzureMetric(
+                    name="SuccessE2ELatency",
+                    aggregation="average",
+                    value=802.0,
+                    unit="milli_seconds",
+                ),
+                "average_Availability": AzureMetric(
+                    name="Availability",
+                    aggregation="average",
+                    value=97.98,
+                    unit="percent",
+                ),
+            },
+        ),
+    }
+    params = check_plugin_azure_storageaccounts_performance.check_default_parameters
+    result = list(
+        check_plugin_azure_storageaccounts_performance.check_function(
+            "st0ragetestaccount",
+            params,
+            resource,
+        )
+    )
+    assert result == [
+        Result(
+            state=State.CRIT,
+            summary="Success server latency: 5624 ms (warn/crit at 701 ms/1001 ms)",
+        ),
+        Metric("server_latency", 5624.0, levels=(701.0, 1001.0)),
+        Result(
+            state=State.WARN,
+            summary="End-to-end server latency: 802 ms (warn/crit at 701 ms/1001 ms)",
+        ),
+        Metric("e2e_latency", 802.0, levels=(701.0, 1001.0)),
+        Result(state=State.CRIT, summary="Availability: 97.98% (warn/crit below 99.80%/99.00%)"),
+        Metric("availability", 97.98),
+    ]

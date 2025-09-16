@@ -26,3 +26,22 @@ def test_parse_ups_modulys_inphase() -> None:
             "voltage": 230.7,
         },
     }
+
+
+def test_parse_ups_modulys_inphase_with_nulls() -> None:
+    assert parse_ups_modulys_inphase(
+        [["3", "500", "2360", "NULL", "500", "2360", "NULL", "500", "2378", "NULL"]]
+    ) == {
+        "Phase 1": {
+            "frequency": 50.0,
+            "voltage": 236.0,
+        },
+        "Phase 2": {
+            "frequency": 50.0,
+            "voltage": 236.0,
+        },
+        "Phase 3": {
+            "frequency": 50.0,
+            "voltage": 237.8,
+        },
+    }

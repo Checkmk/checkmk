@@ -11,6 +11,8 @@ import pytest
 from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.azure.agent_based.azure_postgresql import (
     check_plugin_azure_postgresql_connections,
+    check_plugin_azure_postgresql_memory,
+    check_plugin_azure_postgresql_replication,
     check_replication,
 )
 from cmk.plugins.lib.azure import AzureMetric, check_connections, Resource, Section
@@ -76,6 +78,35 @@ from cmk.plugins.lib.azure import AzureMetric, check_connections, Resource, Sect
                 Metric("replication_lag", 6.0, levels=(1.0, 5.0)),
             ],
             id="flexible server",
+        ),
+        pytest.param(
+            {
+                "checkmk-postgres-flexible-server": Resource(
+                    id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforPostgreSQL/flexibleServers/checkmk-postgres-flexible-server",
+                    name="checkmk-postgres-flexible-server",
+                    type="Microsoft.DBforPostgreSQL/flexibleServers",
+                    group="BurningMan",
+                    location="westeurope",
+                    metrics={
+                        "maximum_physical_replication_delay_in_seconds": AzureMetric(
+                            name="maximum_physical_replication_delay_in_seconds",
+                            aggregation="maximum",
+                            value=65.0,
+                            unit="seconds",
+                        ),
+                    },
+                )
+            },
+            "checkmk-postgres-flexible-server",
+            check_plugin_azure_postgresql_replication.check_default_parameters,
+            [
+                Result(
+                    state=State.WARN,
+                    summary="Replication lag: 1 minute 5 seconds (warn/crit at 1 minute 0 seconds/10 minutes 0 seconds)",
+                ),
+                Metric("replication_lag", 65.0, levels=(60, 600)),
+            ],
+            id="default params",
         ),
     ],
 )
@@ -197,3 +228,35 @@ def test_check_connections(
     expected_result: Sequence[Result | Metric],
 ) -> None:
     assert list(check_connections()(item, params, section)) == expected_result
+
+
+def test_check_memory_defaults() -> None:
+    section = {
+        "checkmk-postgres-flexible-server": Resource(
+            id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforPostgreSQL/flexibleServers/checkmk-postgres-flexible-server",
+            name="checkmk-postgres-flexible-server",
+            type="Microsoft.DBforPostgreSQL/flexibleServers",
+            group="BurningMan",
+            location="westeurope",
+            metrics={
+                "average_memory_percent": AzureMetric(
+                    name="memory_percent",
+                    aggregation="average",
+                    value=96.03,
+                    unit="percent",
+                ),
+            },
+        ),
+    }
+    item = "checkmk-postgres-flexible-server"
+    params = check_plugin_azure_postgresql_memory.check_default_parameters
+    expected = [
+        Result(
+            state=State.CRIT,
+            summary="Memory utilization: 96.03% (warn/crit at 80.00%/90.00%)",
+        ),
+        Metric("mem_used_percent", 96.03, levels=(80.0, 90.0)),
+    ]
+    assert (
+        list(check_plugin_azure_postgresql_memory.check_function(item, params, section)) == expected
+    )

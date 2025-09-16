@@ -114,7 +114,10 @@ configure_make(
         "-C mibs DESTDIR='/' mibsinstall",
     ],
     visibility = ["//visibility:public"],
-    deps = ["@python"],
+    deps = [
+        # TODO: missing deps, at least readline, libxml2, libxslt
+        "@python",
+    ],
 )
 
 filegroup(

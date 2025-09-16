@@ -148,6 +148,7 @@ from cmk.utils.ip_lookup import IPLookup, IPLookupOptional, IPStackConfig
 from cmk.utils.labels import LabelManager, Labels, LabelSources
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
+from cmk.utils.misc import key_config_paths
 from cmk.utils.regex import regex
 from cmk.utils.rulesets import ruleset_matcher, RuleSetName, tuple_rulesets
 from cmk.utils.rulesets.ruleset_matcher import (
@@ -880,9 +881,7 @@ def get_config_file_paths(with_conf_d: bool) -> list[Path]:
     list_of_files = [cmk.utils.paths.main_config_file]
     if with_conf_d:
         all_files = cmk.utils.paths.check_mk_config_dir.rglob("*")
-        list_of_files += sorted(
-            [p for p in all_files if p.suffix in {".mk"}], key=cmk.utils.key_config_paths
-        )
+        list_of_files += sorted([p for p in all_files if p.suffix in {".mk"}], key=key_config_paths)
     for path in [cmk.utils.paths.final_config_file, cmk.utils.paths.local_config_file]:
         if path.exists():
             list_of_files.append(path)

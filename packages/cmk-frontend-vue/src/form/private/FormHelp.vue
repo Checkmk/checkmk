@@ -13,10 +13,24 @@ defineProps<{
 </script>
 
 <template>
-  <div v-if="help" class="help vue_help">
+  <div v-if="help" class="help form-help__container">
     <div class="info_icon">
       <CmkIcon name="info" size="small" />
     </div>
     <div class="help_text"><CmkHtml :html="help" /></div>
   </div>
 </template>
+
+<style scoped>
+div.form-help__container {
+  display: none;
+}
+
+/* the old frontend sets a class on the body to hide or show the inline help */
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown, checkmk/vue-bem-naming-convention */
+:global(body.inline_help_as_text) {
+  div.form-help__container {
+    display: flex;
+  }
+}
+</style>

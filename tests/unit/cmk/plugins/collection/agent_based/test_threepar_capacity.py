@@ -160,7 +160,10 @@ def test_discover_threepar_capacity(
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +606 B"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +<0.01%"),
                 Metric("trend", 0.0005776781631514493),
-                Result(state=State.WARN, summary="3.0 MB failed: 3.00% (warn/crit at 2.00%/5.00%)"),
+                Result(
+                    state=State.WARN,
+                    summary="Failed: 3.00% (warn/crit at 2.00%/5.00%) - 3.00 MiB of 100 MiB",
+                ),
             ],
             id="If the failed capacity is above the WARN level, the result is WARN.",
         ),
@@ -178,7 +181,10 @@ def test_discover_threepar_capacity(
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +606 B"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +<0.01%"),
                 Metric("trend", 0.0005776781631514493),
-                Result(state=State.CRIT, summary="6.0 MB failed: 6.00% (warn/crit at 2.00%/5.00%)"),
+                Result(
+                    state=State.CRIT,
+                    summary="Failed: 6.00% (warn/crit at 2.00%/5.00%) - 6.00 MiB of 100 MiB",
+                ),
             ],
             id="If the failed capacity is above the CRIT level, the result is CRIT.",
         ),

@@ -26,8 +26,11 @@ xgettext -w 80 --sort-output --force-po -L python --from-code=utf-8 \
     $(find -L "${TOP_DIR}/packages" -type f -name "*.py" -not -path "*/tests/*" -not -path "*/test/*") \
     $(find -L "${TOP_DIR}/cmk" -type f -name "*.py") 1>/dev/null
 
-bazel build //packages/cmk-frontend-vue:extract_pot_file
-VUE_POT_FILE_RELATIVE=$(bazel cquery --output=files //packages/cmk-frontend-vue:extract_pot_file)
+VUE_POT_FILE_RELATIVE=$(
+    cd "${TOP_DIR}/packages/cmk-frontend-vue"
+    bazel build :extract_pot_file 1>/dev/null
+    bazel cquery --output=files :extract_pot_file
+)
 VUE_POT_FILE="${TOP_DIR}/${VUE_POT_FILE_RELATIVE}"
 
 POT_FILE_CONTENT=$(msgcat "${PYTHON_POT_FILE}" "${VUE_POT_FILE}")

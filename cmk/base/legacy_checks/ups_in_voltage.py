@@ -13,7 +13,10 @@ check_info = {}
 
 
 def discover_ups_in_voltage(info):
-    yield from ((item, {}) for item, value in info if int(value) > 0)
+    try:
+        yield from ((item, {}) for item, value in info if int(value) > 0)
+    except ValueError:
+        pass
 
 
 def parse_ups_in_voltage(string_table: StringTable) -> StringTable:

@@ -29,6 +29,8 @@ def _get_type_of_object_as_string(
         return f"bool:{value}"
     if isinstance(value, int):
         return "int"
+    if isinstance(value, float):
+        return "float"
     if isinstance(value, str):
         return "str"
     if isinstance(value, list):

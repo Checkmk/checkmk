@@ -267,12 +267,24 @@ class MainMenu(LocatorHelper):
         return self._sub_menu(rest_api_text, sub_menu, show_more=False, exact=exact)
 
     @property
+    def active_side_menu_popup(self) -> Locator:
+        """Return the locator of the currently active side menu popup.
+
+        As only one side menu can be interacted with at a time.
+        """
+        loc = self.page.locator("div.popup_trigger.active").locator("div.popup_menu_handler")
+        try:
+            self._unique_web_element(loc)
+        except AssertionError as exc:
+            exc.add_note("None of the side menu popups are open!")
+        return loc
+
+    @property
     def global_searchbar(self) -> Locator:
         self._sub_menu("Search", sub_menu=None).click()
-        _location = self.locator().get_by_role(
-            role="textbox", name="Search across Checkmk – Type '/' for search operators"
+        self._unique_web_element(
+            _location := self.active_side_menu_popup.get_by_placeholder("Search")
         )
-        self._unique_web_element(_location)
         return _location
 
     @property

@@ -17,7 +17,11 @@ logger = logging.getLogger(__name__)
 
 
 class Ruleset(CmkPage):
-    """Represent any page with service ruleset."""
+    """Represent any page with service ruleset.
+
+    TODO: remove `exact_rule`.
+    Present playwright <-> Checkmk UI interaction breaks the usage.
+    """
 
     def __init__(
         self,
@@ -37,16 +41,12 @@ class Ruleset(CmkPage):
         logger.info("Navigate to '%s' page", self.rule_name)
         self.main_menu.global_searchbar.fill(self.rule_name)
 
-        results_root = ".cmk-unified-search-result-tabs"
-        results = self.main_menu.locator(results_root).get_by_role(role="listitem")
-        rule_pattern = re.compile(f"{re.escape(self.rule_name)}$")
-
+        results = self.main_menu.active_side_menu_popup.get_by_role(role="listitem")
         if self.section_name:
-            selection = results.filter(has_text=self.section_name).get_by_role(
-                role="link", name=rule_pattern, exact=self._exact
-            )
-        else:
-            selection = results.get_by_role(role="link", name=rule_pattern)
+            results = results.filter(has_text=self.section_name)
+
+        rule_pattern = re.compile(f"{re.escape(self.rule_name)}$")
+        selection = results.get_by_role(role="link", name=rule_pattern, exact=self._exact)
 
         selection.click()
         self.page.wait_for_url(url=re.compile(quote_plus("mode=edit_ruleset")), wait_until="load")

@@ -3436,12 +3436,19 @@ class DashboardClient(RestApiClient):
 
 class ConstantClient(RestApiClient):
     domain: DomainType = "constant"
-    default_version = APIVersion.UNSTABLE
+    default_version = APIVersion.INTERNAL
 
     def get_dashboard(self, expect_ok: bool = True) -> Response:
         return self.request(
             "get",
             url=f"/objects/{self.domain}/dashboard",
+            expect_ok=expect_ok,
+        )
+
+    def list_data_sources(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/data_source/collections/all",
             expect_ok=expect_ok,
         )
 

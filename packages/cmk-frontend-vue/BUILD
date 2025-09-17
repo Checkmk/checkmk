@@ -172,12 +172,16 @@ vite_bin.vite(
 )
 
 vite_bin.vite(
-    name = "demo-dist",
+    name = "dist-demo-hosted",
     srcs = SRCS,
+    # The --base argument needs to match the hosting web server config
+    # (e.g. http://localhost/frontend-demo/)
     args = [
         "build",
         "--config",
         "vite.config.demo.ts",
+        "--base",
+        "/frontend-demo/",
     ],
     chdir = package_name(),
     out_dirs = ["demo/dist"],

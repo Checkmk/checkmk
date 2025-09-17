@@ -17,6 +17,7 @@ from cmk.gui.visuals.type import VisualTypeRegistry
 
 from . import command, graph, icon, perfometer
 from ._join_service_rows import join_service_row_post_processor
+from ._openapi import register_endpoints
 from ._permissions import PERMISSION_SECTION_VIEWS
 from .builtin_views import builtin_views
 from .command import CommandGroupRegistry, CommandRegistry
@@ -106,3 +107,6 @@ def register(
     )
     graph.register(painter_option_registry, multisite_builtin_views)
     row_post_processor_registry.register(join_service_row_post_processor)
+    register_endpoints(
+        endpoint_family_registry, versioned_endpoint_registry, ignore_duplicates=ignore_duplicates
+    )

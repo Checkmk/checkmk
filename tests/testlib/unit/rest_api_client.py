@@ -3453,6 +3453,18 @@ class ConstantClient(RestApiClient):
         )
 
 
+class ViewClient(RestApiClient):
+    domain: DomainType = "view"
+    default_version = APIVersion.INTERNAL
+
+    def get_all(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
+
 class RelayClient(RestApiClient):
     domain: DomainType = "relay"
 
@@ -3572,6 +3584,7 @@ class ClientRegistry:
     VisualFilterClient: VisualFilterClient
     DashboardClient: DashboardClient
     ConstantClient: ConstantClient
+    ViewClient: ViewClient
     RelayClient: RelayClient
 
 
@@ -3621,5 +3634,6 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         VisualFilterClient=VisualFilterClient(request_handler, url_prefix),
         DashboardClient=DashboardClient(request_handler, url_prefix),
         ConstantClient=ConstantClient(request_handler, url_prefix),
+        ViewClient=ViewClient(request_handler, url_prefix),
         RelayClient=RelayClient(request_handler, url_prefix),
     )

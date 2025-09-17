@@ -27,8 +27,8 @@ def check_elphase(
     params: CheckParams,
     section: Section,
 ) -> CheckResult:
-    if item not in section:
-        return  # Item not found in SNMP data
+    if not (elphase := section.get(item)):
+        return
 
     class Bounds:
         Lower, Upper, Both = range(3)
@@ -36,20 +36,20 @@ def check_elphase(
     if params is None:
         params = {}
 
-    if "name" in section[item]:
+    if "name" in elphase:
         yield Result(
             state=State.OK,
-            summary="Name: %s" % section[item]["name"],
+            summary="Name: %s" % elphase["name"],
         )
 
-    if "type" in section[item]:
+    if "type" in elphase:
         yield Result(
             state=State.OK,
-            summary="Type: %s" % section[item]["type"],
+            summary="Type: %s" % elphase["type"],
         )
 
-    if "device_state" in section[item]:
-        device_state, device_state_readable = section[item]["device_state"]
+    if "device_state" in elphase:
+        device_state, device_state_readable = elphase["device_state"]
         if "map_device_states" in params:
             device_state_params = dict(params["map_device_states"])
             if device_state in device_state_params:
@@ -88,10 +88,10 @@ def check_elphase(
             0.001,
         ),
     ]:
-        if quantity not in section[item]:
+        if quantity not in elphase:
             continue
 
-        entry = section[item][quantity]
+        entry = elphase[quantity]
         if isinstance(entry, tuple):
             value, state_info = entry  # (220.17, (1, "Voltage is too low"))
         else:

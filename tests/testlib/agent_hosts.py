@@ -74,6 +74,8 @@ def _discover_services_of_piggybacked_hosts(
     dcd_max_count: int = 30,
     dcd_interval: int = 5,
     cleanup: bool = True,
+    discovery_max_count: int = 3,
+    discovery_wait_timeout: int = 1,
 ) -> Iterator[None]:
     """Discover the services of piggybacked hosts.
 
@@ -100,8 +102,14 @@ def _discover_services_of_piggybacked_hosts(
             assert not missing_pb_hosts, (
                 f'Piggybacked hosts missing from source host "{host_name}: {missing_pb_hosts}'
             )
-            for piggybacked_host_name in expected_pb_hosts + [host_name]:
-                site.reschedule_services(piggybacked_host_name, 3, strict=False)
+            for _ in range(discovery_max_count):
+                for piggybacked_host_name in expected_pb_hosts + [host_name]:
+                    site.reschedule_services(
+                        piggybacked_host_name,
+                        max_count=1,
+                        strict=False,
+                        wait_timeout=discovery_wait_timeout,
+                    )
 
         yield
 

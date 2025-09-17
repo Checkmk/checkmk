@@ -2,6 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -18,7 +19,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.elphase import check_elphase
+from cmk.plugins.lib.elphase import check_elphase, ElPhase
 from cmk.plugins.lib.humidity import check_humidity
 from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
@@ -335,7 +336,10 @@ def check_bluenet2_powerrail_phases(
     item: str, params: Mapping[str, Any], section: dict
 ) -> CheckResult:
     if phase := section["phases"].get(item):
-        yield from check_elphase(params, phase)
+        yield from check_elphase(
+            params,
+            ElPhase.from_dict(phase),
+        )
 
 
 check_plugin_bluenet2_powerrail = CheckPlugin(
@@ -368,7 +372,10 @@ def check_bluenet2_powerrail_rcm_phases(
     item: str, params: Mapping[str, Any], section: dict
 ) -> CheckResult:
     if rcm_phase := section["rcm_phases"].get(item):
-        yield from check_elphase(params, rcm_phase)
+        yield from check_elphase(
+            params,
+            ElPhase.from_dict(rcm_phase),
+        )
 
 
 check_plugin_bluenet2_powerrail_rcm = CheckPlugin(
@@ -407,7 +414,10 @@ def check_bluenet2_powerrail_sockets(
     item: str, params: Mapping[str, Any], section: dict
 ) -> CheckResult:
     if socket_phase := section["sockets"].get(item):
-        yield from check_elphase(params, socket_phase)
+        yield from check_elphase(
+            params,
+            ElPhase.from_dict(socket_phase),
+        )
 
 
 check_plugin_bluenet2_powerrail_sockets = CheckPlugin(
@@ -442,7 +452,10 @@ def check_bluenet2_powerrail_fuses(
     item: str, params: Mapping[str, Any], section: dict
 ) -> CheckResult:
     if fuse_phase := section["fuses"].get(item):
-        yield from check_elphase(params, fuse_phase)
+        yield from check_elphase(
+            params,
+            ElPhase.from_dict(fuse_phase),
+        )
 
 
 check_plugin_bluenet2_powerrail_fuses = CheckPlugin(
@@ -477,7 +490,10 @@ def check_bluenet2_powerrail_inlet(
     item: str, params: Mapping[str, Any], section: dict
 ) -> CheckResult:
     if inlet_phase := section["inlet"].get(item):
-        yield from check_elphase(params, inlet_phase)
+        yield from check_elphase(
+            params,
+            ElPhase.from_dict(inlet_phase),
+        )
 
 
 check_plugin_bluenet2_powerrail_inlet = CheckPlugin(

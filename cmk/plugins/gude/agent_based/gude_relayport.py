@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 from collections.abc import Mapping
-from dataclasses import asdict, dataclass
 from typing import Any
 
 from cmk.agent_based.v2 import (
@@ -16,9 +14,10 @@ from cmk.agent_based.v2 import (
     SimpleSNMPSection,
     SNMPTree,
     startswith,
+    State,
     StringTable,
 )
-from cmk.plugins.lib.elphase import check_elphase
+from cmk.plugins.lib.elphase import check_elphase, ElPhase, ReadingWithState
 
 # .1.3.6.1.4.1.28507.38.1.3.1.2.1.2.1 TWTA 2 --> GUDEADS-EPC822X-MIB::epc822XPortName.1
 # .1.3.6.1.4.1.28507.38.1.3.1.2.1.3.1 0 --> GUDEADS-EPC822X-MIB::epc822XPortState.1
@@ -29,33 +28,23 @@ from cmk.plugins.lib.elphase import check_elphase
 # .1.3.6.1.4.1.28507.38.1.5.1.2.1.10.1 0 --> GUDEADS-EPC822X-MIB::epc822XspPowerApparent.1
 
 _STATE_MAP = {
-    "0": (2, "off"),
-    "1": (0, "on"),
+    "0": (State.CRIT, "off"),
+    "1": (State.OK, "on"),
 }
 
 
-@dataclass(frozen=True, kw_only=True)
-class RelayPort:
-    device_state: tuple[int, str]
-    power: float | None
-    current: float | None
-    voltage: float | None
-    frequency: float | None
-    appower: float | None
-
-
-Section = Mapping[str, RelayPort]
+Section = Mapping[str, ElPhase]
 
 
 def parse_gude_relayport(string_table: StringTable) -> Section:
     return {
-        portname: RelayPort(
+        portname: ElPhase(
             device_state=_STATE_MAP[state],
-            power=float(power) if power else None,
-            current=float(current) * 0.001 if current else None,
-            voltage=float(voltage) if voltage else None,
-            frequency=float(freq) * 0.01 if freq else None,
-            appower=float(appower) if appower else None,
+            power=ReadingWithState(value=float(power)) if power else None,
+            current=ReadingWithState(value=float(current) * 0.001) if current else None,
+            voltage=ReadingWithState(value=float(voltage)) if voltage else None,
+            frequency=ReadingWithState(value=float(freq) * 0.01) if freq else None,
+            appower=ReadingWithState(value=float(appower)) if appower else None,
         )
         for portname, state, power, current, voltage, freq, appower in string_table
     }
@@ -89,7 +78,8 @@ def discover_gude_relayport(
 def check_gude_relayport(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     if relayport := section.get(item):
         yield from check_elphase(
-            params, {k: v for k, v in asdict(relayport).items() if v is not None}
+            params,
+            relayport,
         )
 
 

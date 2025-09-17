@@ -27,7 +27,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.lib.apc import DETECT
-from cmk.plugins.lib.elphase import check_elphase
+from cmk.plugins.lib.elphase import check_elphase, ElPhase, ReadingWithState
 from cmk.plugins.lib.temperature import check_temperature
 
 # .1.3.6.1.4.1.318.1.1.1.2.1.1.0 2
@@ -81,10 +81,6 @@ class Status(TypedDict):
     time_remain: float | None
     calib: str
     diag_date: str
-
-
-class ElPhase(TypedDict):
-    current: float
 
 
 class ParsedSection(TypedDict, total=False):
@@ -168,7 +164,9 @@ def parse_apc_symmetra(
     }
 
     if battery_current:
-        parsed["elphase"] = {Item("Battery"): ElPhase(current=float(battery_current))}
+        parsed["elphase"] = {
+            Item("Battery"): ElPhase(current=ReadingWithState(value=float(battery_current)))
+        }
 
     return parsed
 
@@ -464,12 +462,16 @@ check_plugin_apc_symmetra_temp = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def discovery_apc_symmetra_elphase(section: Mapping[str, Any]) -> DiscoveryResult:
+def discovery_apc_symmetra_elphase(section: ParsedSection) -> DiscoveryResult:
     for phase in section.get("elphase", {}):
         yield Service(item=phase)
 
 
-def check_apc_symmetra_elphase(item: str, params: Mapping[str, Any], section: Any) -> CheckResult:
+def check_apc_symmetra_elphase(
+    item: str,
+    params: Mapping[str, Any],
+    section: ParsedSection,
+) -> CheckResult:
     if elphase := section.get("elphase", {}).get(Item(item)):
         yield from check_elphase(params, elphase)
 

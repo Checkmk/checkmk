@@ -16,9 +16,7 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.plugins.lib.elphase import (
-    check_elphase,
-)
+from cmk.plugins.lib.elphase import check_elphase, ElPhase, ReadingWithState
 from cmk.plugins.redfish.lib import (
     parse_redfish_multiple,
     redfish_health_state,
@@ -50,14 +48,14 @@ def check_redfish_mains(
 
     yield from check_elphase(
         params,
-        {
-            "voltage": data.get("Voltage", {}).get("Reading", 0),
-            "current": data.get("CurrentAmps", {}).get("Reading", 0),
-            "power": data.get("PowerWatts", {}).get("Reading", 0),
-            "frequency": data.get("FrequencyHz", {}).get("Reading", 0),
-            "appower": data.get("PowerWatts", {}).get("ApparentVA", 0),
-            "energy": data.get("EnergykWh", {}).get("Reading", 0) * 1000,
-        },
+        ElPhase(
+            voltage=ReadingWithState(value=data.get("Voltage", {}).get("Reading", 0)),
+            current=ReadingWithState(value=data.get("CurrentAmps", {}).get("Reading", 0)),
+            power=ReadingWithState(value=data.get("PowerWatts", {}).get("Reading", 0)),
+            frequency=ReadingWithState(value=data.get("FrequencyHz", {}).get("Reading", 0)),
+            appower=ReadingWithState(value=data.get("PowerWatts", {}).get("ApparentVA", 0)),
+            energy=ReadingWithState(value=data.get("EnergykWh", {}).get("Reading", 0) * 1000),
+        ),
     )
 
     dev_state, dev_msg = redfish_health_state(data.get("Status", {}))

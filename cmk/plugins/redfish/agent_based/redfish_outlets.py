@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.plugins.lib.elphase import check_elphase
+from cmk.plugins.lib.elphase import check_elphase, ElPhase, ReadingWithState
 from cmk.plugins.redfish.lib import (
     parse_redfish_multiple,
     redfish_health_state,
@@ -71,15 +71,20 @@ def check_redfish_outlets(
     if data is None:
         return
 
-    socket_data = {
-        "voltage": data.get("Voltage", {}).get("Reading"),
-        "current": data.get("CurrentAmps", {}).get("Reading"),
-        "power": data.get("PowerWatts", {}).get("Reading"),
-        "frequency": data.get("FrequencyHz", {}).get("Reading"),
-    }
-
-    if all(value is not None for value in socket_data.values()):
-        yield from check_elphase(params, socket_data)
+    voltage = data.get("Voltage", {}).get("Reading")
+    current = data.get("CurrentAmps", {}).get("Reading")
+    power = data.get("PowerWatts", {}).get("Reading")
+    frequency = data.get("FrequencyHz", {}).get("Reading")
+    if voltage is not None and current is not None and power is not None and frequency is not None:
+        yield from check_elphase(
+            params,
+            ElPhase(
+                voltage=ReadingWithState(value=voltage),
+                current=ReadingWithState(value=current),
+                power=ReadingWithState(value=power),
+                frequency=ReadingWithState(value=frequency),
+            ),
+        )
 
     if data.get("EnergykWh", {}).get("Reading") is not None:
         energy = data.get("EnergykWh", {}).get("Reading")

@@ -15,7 +15,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.acme.agent_based.lib import ACME_ENVIRONMENT_STATES, DETECT_ACME
-from cmk.plugins.lib.elphase import check_elphase
+from cmk.plugins.lib.elphase import check_elphase, ElPhase, ReadingState, ReadingWithState
 
 Section = dict[str, tuple[str, str]]
 
@@ -73,7 +73,12 @@ def check_acme_voltage(item: str, params: Mapping[str, Any], section: Section) -
     state, readable = ACME_ENVIRONMENT_STATES[rstate]
     yield from check_elphase(
         params,
-        {"voltage": (float(value_str) / 1000.0, (int(state), readable))},
+        ElPhase(
+            voltage=ReadingWithState(
+                value=float(value_str) / 1000.0,
+                state=ReadingState(state=state, text=readable),
+            ),
+        ),
     )
 
 

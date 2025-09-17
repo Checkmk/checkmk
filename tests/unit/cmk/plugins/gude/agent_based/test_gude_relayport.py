@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -16,7 +17,6 @@ from cmk.plugins.gude.agent_based.gude_relayport import (
     discover_gude_relayport,
     parse_gude_relayport,
 )
-from cmk.plugins.lib.elphase import CheckParams
 from tests.unit.cmk.plugins.collection.agent_based.snmp import (
     get_parsed_snmp_section,
 )
@@ -270,7 +270,7 @@ def test_discovery_function() -> None:
 )
 def test_check_function(
     item: str,
-    params: CheckParams,
+    params: Mapping[str, Any],
     expected: CheckResult,
 ) -> None:
     assert list(check_gude_relayport(item, params, parse_gude_relayport(_STRING_TABLE))) == expected

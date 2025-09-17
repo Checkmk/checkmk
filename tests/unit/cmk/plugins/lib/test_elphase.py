@@ -10,7 +10,6 @@ from cmk.plugins.lib.elphase import check_elphase
 def test_check_elphase() -> None:
     assert list(
         check_elphase(
-            "Phase 1",
             {
                 "map_device_states": [("1", 2)],
                 "voltage": (210.0, 200.0),
@@ -19,20 +18,18 @@ def test_check_elphase() -> None:
                 "differential_current_ac": (15.0, 17.0),
             },
             {
-                "Phase 1": {
-                    "name": "Phase 1",
-                    "type": "UPS Inc. model 123",
-                    "device_state": (1, "warning"),
-                    "voltage": 250.2,
-                    "current": (13.1, (1, "High current")),
-                    "output_load": 83.0,
-                    "power": 34.2,
-                    "appower": 78.0,
-                    "energy": 66.1,
-                    "frequency": 50.0,
-                    "differential_current_ac": 20.0,
-                    "differential_current_dc": 10.0,
-                }
+                "name": "Phase 1",
+                "type": "UPS Inc. model 123",
+                "device_state": (1, "warning"),
+                "voltage": 250.2,
+                "current": (13.1, (1, "High current")),
+                "output_load": 83.0,
+                "power": 34.2,
+                "appower": 78.0,
+                "energy": 66.1,
+                "frequency": 50.0,
+                "differential_current_ac": 20.0,
+                "differential_current_dc": 10.0,
             },
         )
     ) == [

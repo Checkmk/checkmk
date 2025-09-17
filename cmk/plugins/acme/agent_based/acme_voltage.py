@@ -72,9 +72,8 @@ def check_acme_voltage(item: str, params: Mapping[str, Any], section: Section) -
     value_str, rstate = section[item]
     state, readable = ACME_ENVIRONMENT_STATES[rstate]
     yield from check_elphase(
-        item,
         params,
-        {item: {"voltage": (float(value_str) / 1000.0, (int(state), readable))}},
+        {"voltage": (float(value_str) / 1000.0, (int(state), readable))},
     )
 
 

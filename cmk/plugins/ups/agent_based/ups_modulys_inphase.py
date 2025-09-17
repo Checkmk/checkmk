@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
+from typing import Any
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
+    CheckResult,
     DiscoveryResult,
     Service,
     SimpleSNMPSection,
@@ -62,11 +64,20 @@ def discover_ups_modulys_inphase(section: Mapping[str, Mapping[str, float]]) -> 
     yield from (Service(item=item) for item in section)
 
 
+def check_ups_modulys_inphase(
+    item: str,
+    params: Mapping[str, Any],
+    section: Mapping[str, Any],
+) -> CheckResult:
+    if inphase := section.get(item):
+        yield from check_elphase(params, inphase)
+
+
 check_plugin_ups_test = CheckPlugin(
     name="ups_modulys_inphase",
     service_name="Input %s",
     discovery_function=discover_ups_modulys_inphase,
-    check_function=check_elphase,
+    check_function=check_ups_modulys_inphase,
     check_ruleset_name="el_inphase",
     check_default_parameters={},
 )

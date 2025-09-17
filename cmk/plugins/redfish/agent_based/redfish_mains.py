@@ -48,18 +48,17 @@ def check_redfish_mains(
     if data is None:
         return
 
-    socket_data = {
-        item: {
+    yield from check_elphase(
+        params,
+        {
             "voltage": data.get("Voltage", {}).get("Reading", 0),
             "current": data.get("CurrentAmps", {}).get("Reading", 0),
             "power": data.get("PowerWatts", {}).get("Reading", 0),
             "frequency": data.get("FrequencyHz", {}).get("Reading", 0),
             "appower": data.get("PowerWatts", {}).get("ApparentVA", 0),
             "energy": data.get("EnergykWh", {}).get("Reading", 0) * 1000,
-        }
-    }
-
-    yield from check_elphase(item, params, socket_data)
+        },
+    )
 
     dev_state, dev_msg = redfish_health_state(data.get("Status", {}))
     yield Result(state=State(dev_state), notice=dev_msg)

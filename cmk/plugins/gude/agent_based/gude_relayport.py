@@ -6,6 +6,7 @@
 
 from collections.abc import Mapping
 from dataclasses import asdict, dataclass
+from typing import Any
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -17,7 +18,7 @@ from cmk.agent_based.v2 import (
     startswith,
     StringTable,
 )
-from cmk.plugins.lib.elphase import check_elphase, CheckParams
+from cmk.plugins.lib.elphase import check_elphase
 
 # .1.3.6.1.4.1.28507.38.1.3.1.2.1.2.1 TWTA 2 --> GUDEADS-EPC822X-MIB::epc822XPortName.1
 # .1.3.6.1.4.1.28507.38.1.3.1.2.1.3.1 0 --> GUDEADS-EPC822X-MIB::epc822XPortState.1
@@ -85,13 +86,11 @@ def discover_gude_relayport(
     yield from (Service(item=relayport) for relayport in section)
 
 
-def check_gude_relayport(item: str, params: CheckParams, section: Section) -> CheckResult:
-    if (relayport := section.get(item)) is None:
-        return
-
-    yield from check_elphase(
-        item, params, {item: {k: v for k, v in asdict(relayport).items() if v is not None}}
-    )
+def check_gude_relayport(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if relayport := section.get(item):
+        yield from check_elphase(
+            params, {k: v for k, v in asdict(relayport).items() if v is not None}
+        )
 
 
 check_plugin_gude_relayport = CheckPlugin(

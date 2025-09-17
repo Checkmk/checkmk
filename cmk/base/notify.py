@@ -417,6 +417,7 @@ def notify_notify(
         ensure_nagios,
         with_dump=logging_level <= 10,
         contacts_needed=True,
+        analyse=analyse,
     )
 
     if not analyse:
@@ -619,10 +620,12 @@ def notification_test(
     global notify_mode
     notify_mode = "test"
     _initialize_logging(logging_level)
-    contacts = events.livestatus_fetch_contacts(
-        HostName(raw_context["HOSTNAME"]), raw_context.get("SERVICEDESC")
-    )
-    raw_context["CONTACTS"] = ",".join(contacts) if contacts else "?"
+
+    contact_list = raw_context["CONTACTS"].split(",")
+    if "check-mk-notify" in contact_list:
+        contact_list.remove("check-mk-notify")
+    raw_context["CONTACTS"] = ",".join(contact_list) if contact_list else "?"
+
     plugin_context = EventContext({})
     plugin_context.update(cast(EventContext, raw_context))
     return notify_notify(

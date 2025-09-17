@@ -43,6 +43,7 @@ def dcd_connector(
     Yields:
         The DCD ID of the created DCD connector.
     """
+    site.omd("restart", "dcd")
     logger.info("Creating a DCD connection for piggyback hosts...")
     host_attributes = host_attributes or {
         "tag_snmp_ds": "no-snmp",

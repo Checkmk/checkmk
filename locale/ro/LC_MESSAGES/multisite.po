@@ -17498,6 +17498,10 @@ msgid "DCD batch history"
 msgstr "Istoric de căutare"
 
 #, fuzzy
+msgid "DCD cycles and batches."
+msgstr "Roluri și stări de discuri DR:BD"
+
+#, fuzzy
 msgid "DCD global settings"
 msgstr "Editarea setării globale"
 
@@ -19918,6 +19922,9 @@ msgstr "Diferența dintre agregarea înghețată și agregarea vie"
 
 msgid "Difference between the first and last operation in the oplog"
 msgstr "Diferența dintre prima și ultima operațiune din oplog"
+
+msgid "Difference in time from provider was too large"
+msgstr ""
 
 msgid "Difference on summed up values lower level"
 msgstr "Diferența privind valorile însumate nivel inferior"
@@ -41022,6 +41029,10 @@ msgstr "Matricea de date privind performanța"
 msgid "Max Cache Age"
 msgstr "Vârsta maximă a cache-ului"
 
+#, fuzzy
+msgid "Max age of the newest snapshot"
+msgstr "Vârsta maximă a celui mai vechi instantaneu"
+
 msgid "Max age of the oldest snapshot"
 msgstr "Vârsta maximă a celui mai vechi instantaneu"
 
@@ -41538,6 +41549,10 @@ msgstr "Durata maximă de funcționare a testului"
 
 msgid "Maximum time since last start of job execution"
 msgstr "Timpul maxim de la ultima pornire a execuției sarcinii"
+
+#, fuzzy
+msgid "Maximum time since the last successful sync"
+msgstr "Timpul de la ultima programare reușită"
 
 #, fuzzy
 msgid "Maximum uptime of the device"
@@ -44296,6 +44311,10 @@ msgstr "Nu instalați niciodată Python cu agentul"
 msgid "Never remove files newer than"
 msgstr "Nu eliminați niciodată fișiere mai noi decât"
 
+#, fuzzy
+msgid "Never synchronized"
+msgstr "sincronizare"
+
 msgid "Never use piggyback data"
 msgstr "Nu folosiți niciodată date piggyback"
 
@@ -44405,6 +44424,10 @@ msgstr "Cea mai nouă vârstă a fișierului de mai jos"
 
 msgid "Newest first"
 msgstr "Cel mai nou mai întâi"
+
+#, fuzzy
+msgid "Newest snapshot age"
+msgstr "Rezerva de instantanee NetApp"
 
 #, fuzzy
 msgid "Next"
@@ -44617,6 +44640,10 @@ msgid "No data available"
 msgstr "Nu există date disponibile"
 
 msgid "No data from any site"
+msgstr "Nu există date din niciun site"
+
+#, fuzzy
+msgid "No data from time provider"
 msgstr "Nu există date din niciun site"
 
 msgid "No data was found with the current parameters of this dashlet."
@@ -46274,6 +46301,10 @@ msgstr "Numărul de gazde care pot fi gestionate în același timp"
 msgid "Number of idle executors"
 msgstr "Numărul de executanți inactivi"
 
+#, fuzzy
+msgid "Number of images"
+msgstr "Număr de articole"
+
 msgid "Number of inactive sessions"
 msgstr "Numărul de sesiuni inactive"
 
@@ -46687,6 +46718,10 @@ msgstr "Numărul de vCPU rezervate pentru VM"
 msgid "Number of vaults"
 msgstr "Numărul de seifuri"
 
+#, fuzzy
+msgid "Number of volumes"
+msgstr "Număr de coloane"
+
 msgid "Number of warnings"
 msgstr "Numărul de avertismente"
 
@@ -47049,6 +47084,10 @@ msgstr "Vârsta celui mai vechi mesaj"
 
 msgid "Oldest replication slot lag size"
 msgstr "Cea mai veche dimensiune a decalajului pentru sloturile de replicare"
+
+#, fuzzy
+msgid "Oldest snapshot age"
+msgstr "Vârsta celui mai vechi mesaj"
 
 msgid "Omit ICMP payload"
 msgstr "Omiterea încărcăturii utile ICMP"
@@ -55934,6 +55973,11 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Returns the current state of DCD cycles and batches. Executes the commands "
+"cmk-dcd -Bv and cmk-dcd -Cv."
+msgstr ""
+
+msgid ""
 "Returns the latest crash dumps of each type as found in var/checkmk/crashes"
 msgstr ""
 "Returnează cele mai recente descărcări de accident de fiecare tip, așa cum "
@@ -56075,6 +56119,14 @@ msgstr "%s Afirmă"
 
 msgid "Root CA"
 msgstr ""
+
+#, fuzzy
+msgid "Root delay"
+msgstr "Întârziere aleatorie"
+
+#, fuzzy
+msgid "Root dispersion"
+msgstr "Persistența Redis"
 
 #, fuzzy
 msgid "Rotate every Monday at 00:00 local time"
@@ -61120,6 +61172,10 @@ msgstr "Monitorizarea fumului"
 msgid "SnapVaults"
 msgstr "Seifuri"
 
+#, fuzzy
+msgid "Snapshot Age"
+msgstr "Instantanee"
+
 msgid "Snapshot build currently in progress"
 msgstr "Construirea instantanee în curs de desfășurare"
 
@@ -62517,6 +62573,9 @@ msgstr ""
 msgid "Stale"
 msgstr "Stale"
 
+msgid "Stale data received from time provider"
+msgstr ""
+
 msgid "Stale hosts"
 msgstr "Gazde învechite"
 
@@ -62779,6 +62838,10 @@ msgstr "Starea și numărul de procese"
 
 msgid "State and count of processes (only SNMP)"
 msgstr "Starea și numărul de procese (numai SNMP)"
+
+#, fuzzy
+msgid "State based on status of last sync attempt"
+msgstr "Starea în cazul unei stări necunoscute din scriptul de replicare"
 
 #, fuzzy
 msgid "State change"
@@ -63843,6 +63906,10 @@ msgstr "Drept"
 
 msgid "StrategyType"
 msgstr "StrategyType"
+
+#, fuzzy
+msgid "Stratum"
+msgstr "Drept"
 
 msgid "Stream rules"
 msgstr "Reguli privind fluxul"
@@ -70074,6 +70141,10 @@ msgstr "Intervalul de timp în care datele statistice sunt salvate pe disc"
 msgid "The time must not be greater than %02d:%02d."
 msgstr "Timpul nu trebuie să fie mai mare decât %02d:%02d."
 
+#, fuzzy
+msgid "The time service was shutting down"
+msgstr "Gazda sau serviciul se afla într-o perioadă de întrerupere programată"
+
 #, python-format
 msgid "The timeout %s is not a valid integer number."
 msgstr "Timeout %s nu este un număr întreg valid."
@@ -71465,6 +71536,13 @@ msgid ""
 msgstr ""
 "Această verificare monitorizează dimensiunea și accesările unei baze de date "
 "PostgreSQL."
+
+#, fuzzy
+msgid ""
+"This check monitors the status of time synchronization for Windows hosts."
+msgstr ""
+"Acest plugin monitorizează starea mașinilor virtuale Hyper-V pe gazdele "
+"Window."
 
 msgid "This check returns CRIT if the connection to the remote site failed."
 msgstr ""
@@ -76028,6 +76106,15 @@ msgstr "Timpul petrecut în așteptarea agentului special"
 
 msgid "Time stamp format"
 msgstr "Formatul ștampilei temporale"
+
+msgid ""
+"Time syncs especially against public NTP servers can fail in various ways "
+"throughout the course of the NTP lifecycle and therefore we do not alert by "
+"default when a sync fails (preferring instead to alert when too much time "
+"has elapsed before a successful sync). However, in some environments, it "
+"might be useful to know right away when a sync fails. The state of various "
+"kinds of failures can therefore be configured here."
+msgstr ""
 
 msgid "Time to alert when PVC status is in pending state"
 msgstr "Timpul de alertă atunci când statutul PVC este în stare de așteptare"
@@ -85292,6 +85379,17 @@ msgstr ""
 "critică numai dacă <b>toate</b> pachetele sunt pierdute."
 
 msgid ""
+"When the reference ID and state machine value are both 0, it usually means "
+"that the service has not synced since starting. The reported state in this "
+"scenario can be configured here."
+msgstr ""
+
+msgid ""
+"When the time offset on the last sync was worse (in either direction) than "
+"the specified parameters, go into WARN or CRIT status."
+msgstr ""
+
+msgid ""
 "When the total size of spooled messages exceeds this number, the oldest "
 "messages of the currently spooled messages is thrown away until the left "
 "messages have the half of the maximum size."
@@ -85879,6 +85977,10 @@ msgstr "Imprimante Windows: numărul de lucrări deschise"
 
 msgid "Windows service discovery"
 msgstr "Descoperirea serviciilor Windows"
+
+#, fuzzy
+msgid "Windows time service"
+msgstr "Servicii Windows"
 
 msgid "Windows, Linux, Solaris, AIX"
 msgstr "Windows, Linux, Solaris, AIX"

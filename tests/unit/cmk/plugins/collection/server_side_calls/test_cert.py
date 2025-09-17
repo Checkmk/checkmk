@@ -40,7 +40,7 @@ def test_generate_cert_services() -> None:
         ActiveCheckCommand(
             service_description="CERT my_service",
             command_arguments=[
-                "--url",
+                "--hostname",
                 "abc.xyz",
                 "--issuer-cn",
                 "issuer",

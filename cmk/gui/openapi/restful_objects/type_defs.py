@@ -96,6 +96,7 @@ CmkEndpointName = Literal[
     "cmk/bulk_discovery",
     "cmk/bulk_update",
     "cmk/compute",
+    "cmk/compute-list",
     "cmk/configure",
     "cmk/create",
     "cmk/create_aux_tag",

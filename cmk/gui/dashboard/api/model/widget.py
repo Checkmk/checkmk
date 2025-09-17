@@ -293,7 +293,22 @@ def determine_widget_filter_used_infos(widget_config: DashletConfig) -> list[Ann
         # setting a dummy context, since the widget might access it
         widget_config = {**widget_config, "context": {}}
     # pretty sure the only thing used here is the (empty) dashboard context...
-    dummy_dashboard = DashboardConfig(
+    dummy_dashboard = default_dashboard(widget_config)
+    dashlet = dashlet_type(
+        str(dummy_dashboard["title"]),
+        dummy_dashboard["owner"],
+        dummy_dashboard,
+        0,
+        widget_config,
+    )
+    return list(dashlet.infos())
+
+
+def default_dashboard(widget_config: DashletConfig) -> DashboardConfig:
+    if "context" not in widget_config:
+        # setting a dummy context, since the widget might access it
+        widget_config = {**widget_config, "context": {}}
+    return DashboardConfig(
         owner=UserId.builtin(),
         name="dummy-dashboard",
         context={},
@@ -316,11 +331,3 @@ def determine_widget_filter_used_infos(widget_config: DashletConfig) -> list[Ann
         show_title=True,
         mandatory_context_filters=[],
     )
-    dashlet = dashlet_type(
-        str(dummy_dashboard["title"]),
-        dummy_dashboard["owner"],
-        dummy_dashboard,
-        0,
-        widget_config,
-    )
-    return list(dashlet.infos())

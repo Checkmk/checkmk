@@ -3452,6 +3452,13 @@ class ConstantClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def list_visual_infos(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/visual_info/collections/all",
+            expect_ok=expect_ok,
+        )
+
 
 class ViewClient(RestApiClient):
     domain: DomainType = "view"

@@ -75,7 +75,6 @@ from cmk.gui.views.layout import LayoutRegistry
 from cmk.gui.views.row_post_processing import RowPostProcessorRegistry
 from cmk.gui.views.sorter import SorterRegistry
 from cmk.gui.views.store import multisite_builtin_views
-from cmk.gui.visuals.filter import api as filter_api
 from cmk.gui.visuals.filter import FilterRegistry
 from cmk.gui.visuals.info import VisualInfoRegistry
 from cmk.gui.visuals.type import VisualTypeRegistry
@@ -332,8 +331,3 @@ def register(
     rulespec.register(rulespec_registry, notification_parameter_registry)
     welcome.register(page_registry, snapin_registry)
     search_registration.register(page_registry)
-    filter_api.register(
-        endpoint_family_registry,
-        versioned_endpoint_registry,
-        ignore_duplicates=ignore_duplicate_endpoints,
-    )

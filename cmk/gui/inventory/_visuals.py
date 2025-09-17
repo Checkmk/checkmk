@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import ValueSpec
+from cmk.gui.visuals.filter.components import FilterComponent
 from cmk.gui.visuals.info import VisualInfo
 
 
@@ -25,4 +26,7 @@ class VisualInfoInventoryHistory(VisualInfo):
 
     @property
     def single_spec(self) -> list[tuple[str, ValueSpec]]:
+        return []
+
+    def single_spec_components(self) -> list[FilterComponent]:
         return []

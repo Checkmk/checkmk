@@ -6,6 +6,7 @@
 import abc
 
 from cmk.gui.valuespec import ValueSpec
+from cmk.gui.visuals.filter.components import FilterComponent
 
 
 class VisualInfo(abc.ABC):
@@ -33,6 +34,11 @@ class VisualInfo(abc.ABC):
     @abc.abstractmethod
     def single_spec(self) -> list[tuple[str, ValueSpec]]:
         """The key / valuespec pairs (choices) to identify a single row"""
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def single_spec_components(self) -> list[FilterComponent]:
+        """The filter components to identify a single row"""
         raise NotImplementedError()
 
     @property

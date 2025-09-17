@@ -211,6 +211,9 @@ def register(edition: Edition, *, ignore_duplicate_endpoints: bool = False) -> N
         autocompleter_registry,
         site_choices,
         default_site_filter_heading_info,
+        endpoint_family_registry,
+        versioned_endpoint_registry,
+        ignore_duplicate_endpoints=ignore_duplicate_endpoints,
     )
     sidebar.register(
         page_registry,

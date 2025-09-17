@@ -5,7 +5,9 @@
 
 
 from cmk.gui.i18n import _
-from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
+from cmk.gui.openapi.framework import VersionedEndpointRegistry
+from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
+from cmk.gui.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
 from cmk.gui.valuespec import (
     Integer,
     MonitoredHostname,
@@ -13,12 +15,21 @@ from cmk.gui.valuespec import (
     TextInput,
     ValueSpec,
 )
+from cmk.gui.visuals.filter import components
+from cmk.gui.visuals.filter.components import DynamicDropdown, FilterComponent
 
 from ._base import VisualInfo
+from ._openapi import register_endpoints
 from ._registry import VisualInfoRegistry
 
 
-def register(visual_info_registry: VisualInfoRegistry) -> None:
+def register(
+    visual_info_registry: VisualInfoRegistry,
+    endpoint_family_registry: EndpointFamilyRegistry,
+    versioned_endpoint_registry: VersionedEndpointRegistry,
+    *,
+    ignore_duplicate_endpoints: bool = False,
+) -> None:
     visual_info_registry.register(VisualInfoHost)
     visual_info_registry.register(VisualInfoService)
     visual_info_registry.register(VisualInfoHostgroup)
@@ -40,6 +51,12 @@ def register(visual_info_registry: VisualInfoRegistry) -> None:
     visual_info_registry.register(VisualInfoKubernetesDeployment)
     visual_info_registry.register(VisualInfoKubernetesStatefulset)
 
+    register_endpoints(
+        endpoint_family_registry,
+        versioned_endpoint_registry,
+        ignore_duplicates=ignore_duplicate_endpoints,
+    )
+
 
 class VisualInfoHost(VisualInfo):
     @property
@@ -57,6 +74,14 @@ class VisualInfoHost(VisualInfo):
     @property
     def single_spec(self) -> list[tuple[str, ValueSpec]]:
         return [("host", MonitoredHostname(title=_("Host name"), strict="True"))]
+
+    def single_spec_components(self) -> list[FilterComponent]:
+        return [
+            DynamicDropdown(
+                id="host",
+                autocompleter=AutocompleterConfig(ident="monitored_hostname", strict=True),
+            )
+        ]
 
     @property
     def multiple_site_filters(self):
@@ -97,6 +122,18 @@ class VisualInfoService(VisualInfo):
             )
         ]
 
+    def single_spec_components(self) -> list[FilterComponent]:
+        return [
+            DynamicDropdown(
+                id="service",
+                autocompleter=ContextAutocompleterConfig(
+                    ident=MonitoredServiceDescription.ident,
+                    strict=True,
+                    show_independent_of_context=True,
+                ),
+            )
+        ]
+
     @property
     def multiple_site_filters(self):
         return ["servicegroup"]
@@ -129,6 +166,9 @@ class VisualInfoHostgroup(VisualInfo):
                 ),
             )
         ]
+
+    def single_spec_components(self) -> list[FilterComponent]:
+        return [components.TextInput(id="hostgroup", label=_("Host group name"))]
 
     @property
     def single_site(self):
@@ -163,6 +203,9 @@ class VisualInfoServicegroup(VisualInfo):
             ),
         ]
 
+    def single_spec_components(self) -> list[FilterComponent]:
+        return [components.TextInput(id="servicegroup", label=_("Service group name"))]
+
     @property
     def single_site(self):
         return False
@@ -187,6 +230,9 @@ class VisualInfoLog(VisualInfo):
 
     @property
     def single_spec(self) -> list[tuple[str, ValueSpec]]:
+        return []
+
+    def single_spec_components(self) -> list[FilterComponent]:
         return []
 
 
@@ -214,6 +260,9 @@ class VisualInfoComment(VisualInfo):
             ),
         ]
 
+    def single_spec_components(self) -> list[FilterComponent]:
+        return [components.TextInput(id="comment_id", label=_("Comment ID"))]
+
 
 class VisualInfoDowntime(VisualInfo):
     @property
@@ -238,6 +287,9 @@ class VisualInfoDowntime(VisualInfo):
                 ),
             ),
         ]
+
+    def single_spec_components(self) -> list[FilterComponent]:
+        return [components.TextInput(id="downtime_id", label=_("Downtime ID"))]
 
 
 class VisualInfoContact(VisualInfo):
@@ -264,6 +316,9 @@ class VisualInfoContact(VisualInfo):
             ),
         ]
 
+    def single_spec_components(self) -> list[FilterComponent]:
+        return [components.TextInput(id="log_contact_name", label=_("Contact Name"))]
+
 
 class VisualInfoCommand(VisualInfo):
     @property
@@ -289,6 +344,9 @@ class VisualInfoCommand(VisualInfo):
             ),
         ]
 
+    def single_spec_components(self) -> list[FilterComponent]:
+        return [components.TextInput(id="command_name", label=_("Command Name"))]
+
 
 class VisualInfoBIAggregation(VisualInfo):
     @property
@@ -313,6 +371,9 @@ class VisualInfoBIAggregation(VisualInfo):
                 ),
             ),
         ]
+
+    def single_spec_components(self) -> list[FilterComponent]:
+        return [components.TextInput(id="aggr_name", label=_("Aggregation Name"))]
 
     @property
     def sort_index(self) -> int:
@@ -343,6 +404,9 @@ class VisualInfoBIAggregationGroup(VisualInfo):
             ),
         ]
 
+    def single_spec_components(self) -> list[FilterComponent]:
+        return [components.TextInput(id="aggr_group", label=_("Aggregation group"))]
+
     @property
     def sort_index(self) -> int:
         return 20
@@ -363,6 +427,9 @@ class VisualInfoDiscovery(VisualInfo):
 
     @property
     def single_spec(self) -> list[tuple[str, ValueSpec]]:
+        return []
+
+    def single_spec_components(self) -> list[FilterComponent]:
         return []
 
 
@@ -389,6 +456,9 @@ class VisualInfoEvent(VisualInfo):
                 ),
             ),
         ]
+
+    def single_spec_components(self) -> list[FilterComponent]:
+        return [components.TextInput(id="event_id", label=_("Event ID"))]
 
 
 class VisualInfoEventHistory(VisualInfo):
@@ -421,6 +491,12 @@ class VisualInfoEventHistory(VisualInfo):
             ),
         ]
 
+    def single_spec_components(self) -> list[FilterComponent]:
+        return [
+            components.TextInput(id="event_id", label=_("Event ID")),
+            components.TextInput(id="history_line", label=_("History Line Number")),
+        ]
+
 
 class VisualInfoCrash(VisualInfo):
     @property
@@ -446,6 +522,9 @@ class VisualInfoCrash(VisualInfo):
             ),
         ]
 
+    def single_spec_components(self) -> list[FilterComponent]:
+        return [components.TextInput(id="crash_id", label=_("Crash ID"))]
+
 
 class VisualInfoKubernetesCluser(VisualInfo):
     @property
@@ -463,6 +542,9 @@ class VisualInfoKubernetesCluser(VisualInfo):
     @property
     def single_spec(self) -> list[tuple[str, ValueSpec]]:
         return [("kubernetes_cluster", TextInput(title=self.title))]
+
+    def single_spec_components(self) -> list[FilterComponent]:
+        return [components.TextInput(id="kubernetes_cluster", label=self.title)]
 
 
 class VisualInfoKubernetesNamespace(VisualInfo):
@@ -482,6 +564,9 @@ class VisualInfoKubernetesNamespace(VisualInfo):
     def single_spec(self) -> list[tuple[str, ValueSpec]]:
         return [("kubernetes_namespace", TextInput(title=self.title))]
 
+    def single_spec_components(self) -> list[FilterComponent]:
+        return [components.TextInput(id="kubernetes_namespace", label=self.title)]
+
 
 class VisualInfoKubernetesDaemonset(VisualInfo):
     @property
@@ -499,6 +584,9 @@ class VisualInfoKubernetesDaemonset(VisualInfo):
     @property
     def single_spec(self) -> list[tuple[str, ValueSpec]]:
         return [("kubernetes_daemonset", TextInput(title=self.title))]
+
+    def single_spec_components(self) -> list[FilterComponent]:
+        return [components.TextInput(id="kubernetes_daemonset", label=self.title)]
 
 
 class VisualInfoKubernetesDeployment(VisualInfo):
@@ -518,6 +606,9 @@ class VisualInfoKubernetesDeployment(VisualInfo):
     def single_spec(self) -> list[tuple[str, ValueSpec]]:
         return [("kubernetes_deployment", TextInput(title=self.title))]
 
+    def single_spec_components(self) -> list[FilterComponent]:
+        return [components.TextInput(id="kubernetes_deployment", label=self.title)]
+
 
 class VisualInfoKubernetesStatefulset(VisualInfo):
     @property
@@ -535,3 +626,6 @@ class VisualInfoKubernetesStatefulset(VisualInfo):
     @property
     def single_spec(self) -> list[tuple[str, ValueSpec]]:
         return [("kubernetes_statefulset", TextInput(title=self.title))]
+
+    def single_spec_components(self) -> list[FilterComponent]:
+        return [components.TextInput(id="kubernetes_statefulset", label=self.title)]

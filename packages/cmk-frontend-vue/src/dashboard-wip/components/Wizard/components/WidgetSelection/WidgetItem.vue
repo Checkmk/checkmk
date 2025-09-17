@@ -8,15 +8,15 @@ import { computed } from 'vue'
 
 import CmkButton from '@/components/CmkButton.vue'
 
-interface DashletItemProps {
+interface WidgetItemProps {
   enabled: boolean
   selected: boolean
   name: string
 }
 
-const props = defineProps<DashletItemProps>()
+const props = defineProps<WidgetItemProps>()
 const emit = defineEmits<{
-  update: [dashletName: string]
+  update: [widgetName: string]
 }>()
 
 const updateSelelection = () => {
@@ -28,23 +28,24 @@ const updateSelelection = () => {
 const itemVariant = computed(() => {
   if (!props.enabled) {
     return 'danger'
-  } else if (props.selected) {
-    return 'primary'
-  } else {
-    return 'secondary'
   }
+
+  if (props.selected) {
+    return 'primary'
+  }
+  return 'secondary'
 })
 </script>
 
 <template>
-  <div class="dashlet-item">
+  <div class="widget-item">
     <CmkButton :variant="itemVariant" @click="updateSelelection">{{ name }}</CmkButton>
   </div>
 </template>
 
 <style scoped>
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.dashlet_item {
+.widget-item {
   flex: 1;
 }
 </style>

@@ -4,14 +4,14 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <template>
-  <div class="create-edit-dashlet__steps-container">
+  <div class="create-edit-widget__steps-container">
     <slot />
   </div>
 </template>
 
 <style scoped>
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.create-edit-dashlet__steps-container {
+.create-edit-widget__steps-container {
   flex: 1;
   background-color: var(--ux-theme-3);
   padding-top: var(--spacing);

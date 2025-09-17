@@ -8,43 +8,43 @@ import usei18n from '@/lib/i18n'
 
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
-import DashletItem from './DashletItem.vue'
+import WidgetItem from './WidgetItem.vue'
 
 const { _t } = usei18n()
 
-interface DashletSelectionProps {
+interface WidgetSelectionProps {
   availableItems: string[]
-  enabledDashlets: string[]
+  enabledWidgets: string[]
 }
 
-const props = defineProps<DashletSelectionProps>()
-const selectedDashlet = defineModel<string | null>('selectedDashlet')
+const props = defineProps<WidgetSelectionProps>()
+const selectedWidget = defineModel<string | null>('selectedWidget')
 const isGraphEnabled = (graphName: string): boolean => {
-  return props.enabledDashlets.includes(graphName)
+  return props.enabledWidgets.includes(graphName)
 }
 
-const updateDashletSelection = (graph: string) => {
-  selectedDashlet.value = graph
+const updateWidgetSelection = (graph: string) => {
+  selectedWidget.value = graph
 }
 </script>
 
 <template>
   <CmkHeading type="h3">{{ _t('Choose how to display your data') }}</CmkHeading>
-  <div class="dashlet-selection__container">
-    <DashletItem
+  <div class="widget-selection__container">
+    <WidgetItem
       v-for="graph in availableItems"
       :key="graph"
       :name="graph"
-      :selected="graph === selectedDashlet"
+      :selected="graph === selectedWidget"
       :enabled="isGraphEnabled(graph)"
-      @update="updateDashletSelection"
+      @update="updateWidgetSelection"
     />
   </div>
 </template>
 
 <style scoped>
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.dashlet-selection__container {
+.widget-selection__container {
   display: flex;
   gap: var(--spacing);
   justify-content: space-around;

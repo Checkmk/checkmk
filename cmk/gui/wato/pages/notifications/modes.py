@@ -1759,8 +1759,11 @@ class ModeTestNotifications(ModeNotifications):
             if context["WHAT"] == "SERVICE":
                 self._add_missing_service_context(context)
 
-            automation_config = make_automation_config(site_configs[SiteId(context["SITEOFHOST"])])
-            if isinstance(automation_config, LocalAutomationConfig):
+            site_id = SiteId(context["SITEOFHOST"])
+            site_config = site_configs[site_id]
+            remote_spooling = site_config.get("globals", {}).get("notification_spooling", False)
+            automation_config = make_automation_config(site_config)
+            if isinstance(automation_config, LocalAutomationConfig) or remote_spooling:
                 return (
                     context,
                     notification_test(
@@ -2107,7 +2110,7 @@ class ModeTestNotifications(ModeNotifications):
             resp = sites.live().query(
                 "GET hosts\n"
                 "Columns: custom_variable_names custom_variable_values groups "
-                "contact_groups labels host_alias host_address\n"
+                "contact_groups labels host_alias host_address contacts\n"
                 f"Filter: host_name = {hostname}\n"
             )
 
@@ -2126,6 +2129,7 @@ class ModeTestNotifications(ModeNotifications):
         self._set_labels(context, resp[0][5], "HOST")
         context["HOSTALIAS"] = resp[0][6]
         context["HOSTADDRESS"] = resp[0][7]
+        context["CONTACTS"] = ",".join(resp[0][8])
 
     def _set_custom_variables(
         self,
@@ -2150,7 +2154,7 @@ class ModeTestNotifications(ModeNotifications):
     def _add_missing_service_context(self, context: NotificationContext) -> None:
         hostname = context["HOSTNAME"]
         resp = sites.live().query(
-            "GET services\nColumns: custom_variable_names custom_variable_values groups contact_groups check_command labels\nFilter: host_name = %s\nFilter: service_description = %s"
+            "GET services\nColumns: custom_variable_names custom_variable_values groups contact_groups check_command labels contacts\nFilter: host_name = %s\nFilter: service_description = %s"
             % (hostname, context["SERVICEDESC"])
         )
         if len(resp) < 1:
@@ -2164,6 +2168,7 @@ class ModeTestNotifications(ModeNotifications):
         context["SERVICECONTACTGROUPNAMES"] = ",".join(resp[0][3])
         context["SERVICECHECKCOMMAND"] = resp[0][4]
         self._set_labels(context, resp[0][5], "SERVICE")
+        context["CONTACTS"] = ",".join(resp[0][6])
 
         context["SERVICEPROBLEMID"] = "notify_test_" + str(int(time.time() * 1000000))
 

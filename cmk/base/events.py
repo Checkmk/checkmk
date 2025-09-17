@@ -287,6 +287,7 @@ def complete_raw_context(
     ensure_nagios: Callable[[str], object],
     with_dump: bool,
     contacts_needed: bool,
+    analyse: bool,
 ) -> EnrichedEventContext:
     """Extend the raw notification context
 
@@ -304,7 +305,8 @@ def complete_raw_context(
         return enriched_context
 
     try:
-        enriched_context["OMD_SITE"] = omd_site()
+        # "SITEOFHOST" is only set in case of test notifications
+        enriched_context["OMD_SITE"] = raw_context["SITEOFHOST"] if analyse else omd_site()  # type: ignore[typeddict-item]
 
         enriched_context["WHAT"] = "SERVICE" if enriched_context.get("SERVICEDESC") else "HOST"
 

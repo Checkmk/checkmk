@@ -5,6 +5,7 @@
 
 from ._base import VisualInfo
 from ._infos import register
+from ._openapi import register_endpoints
 from ._registry import visual_info_registry, VisualInfoRegistry
 
 __all__ = [
@@ -12,4 +13,5 @@ __all__ = [
     "VisualInfoRegistry",
     "visual_info_registry",
     "register",
+    "register_endpoints",
 ]

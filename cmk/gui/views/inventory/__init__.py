@@ -247,6 +247,7 @@ def _register_table_view(
                 "_title_plural": table.long_title,
                 "title_plural": property(lambda self: self._title_plural),
                 "single_spec": property(lambda self: []),
+                "single_spec_components": lambda self: [],
             },
         )
     )

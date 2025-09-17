@@ -8,6 +8,8 @@ from collections.abc import Callable
 from cmk.ccc import store
 from cmk.gui import hooks, utils
 from cmk.gui.config import Config
+from cmk.gui.openapi.framework import VersionedEndpointRegistry
+from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.type_defs import FilterHTTPVariables
 from cmk.gui.valuespec import AutocompleterRegistry
@@ -79,6 +81,7 @@ from ._store import TVisual as TVisual
 from ._title import view_title as view_title
 from ._title import visual_title as visual_title
 from .filter import (
+    api,
     Filter,
     filter_registry,
     FilterOption,
@@ -97,13 +100,22 @@ def register(
     autocompleter_registry: AutocompleterRegistry,
     site_choices: Callable[[Config], list[tuple[str, str]]],
     site_filter_heading_info: Callable[[FilterHTTPVariables], str | None],
+    endpoint_family_registry: EndpointFamilyRegistry,
+    versioned_endpoint_registry: VersionedEndpointRegistry,
+    *,
+    ignore_duplicate_endpoints: bool = False,
 ) -> None:
     page_registry.register(
         PageEndpoint("ajax_visual_filter_list_get_choice", PageAjaxVisualFilterListGetChoice)
     )
     page_registry.register(PageEndpoint("ajax_popup_add_visual", ajax_popup_add))
     page_registry.register(PageEndpoint("ajax_add_visual", ajax_add_visual))
-    info.register(_visual_info_registry)
+    info.register(
+        _visual_info_registry,
+        endpoint_family_registry,
+        versioned_endpoint_registry,
+        ignore_duplicate_endpoints=ignore_duplicate_endpoints,
+    )
     _filters.register(page_registry, filter_registry)
     _site_filters.register(
         filter_registry, autocompleter_registry, site_choices, site_filter_heading_info
@@ -117,6 +129,12 @@ def register(
         "snapshot-pushed", lambda: store.clear_pickled_files_cache(paths.tmp_dir)
     )
     hooks.register_builtin("users-saved", lambda x: invalidate_all_caches())
+
+    api.register(
+        endpoint_family_registry,
+        versioned_endpoint_registry,
+        ignore_duplicates=ignore_duplicate_endpoints,
+    )
 
 
 def load_plugins() -> None:

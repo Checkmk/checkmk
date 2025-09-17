@@ -38,7 +38,7 @@ defineProps<{
       :open-in-new-tab="false"
     />
     <CmkLinkCard
-      :title="_t('Scale your monitoring')"
+      :title="_t('Learn how to scale your monitoring')"
       :subtitle="_t('Add more hosts, sites, or distributed setups as your environment grows.')"
       icon-name="sites"
       :url="urls.scale_monitoring"

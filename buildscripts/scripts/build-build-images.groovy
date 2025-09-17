@@ -197,8 +197,12 @@ def main() {
                     raiseOnError: true,
                 ) {
                     docker.withRegistry(DOCKER_REGISTRY, "nexus") {
-                        image.push();
-                        image.push("latest");
+                        if ("${params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD}" == "") {
+                            image.push();
+                            image.push("latest");
+                        } else {
+                            println("Skipping upload for ${image_name} as there can be no custom version");
+                        }
                     }
                 }
             }]

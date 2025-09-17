@@ -4,13 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import itertools
 import sys
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from logging import DEBUG, Logger
-from typing import Final
-
-import cmk.utils.misc
-from cmk.utils import render
+from typing import Any, Final
 
 __all__ = [
     "ABCResourceObserver",
@@ -121,9 +119,7 @@ class AbstractMemoryObserver(ABCResourceObserver):
     def _print_global_memory_usage(self) -> None:
         storage = dict(globals())  # to be sure that globals will not be changed
 
-        globals_sizes = {
-            varname: cmk.utils.misc.total_size(value) for (varname, value) in storage.items()
-        }
+        globals_sizes = {varname: _total_size(value) for (varname, value) in storage.items()}
         self._dump("APPROXIMATE SIZES: GLOBALS TOP 50", globals_sizes, 50)
         for title, dump_sizes in [
             ("CONFIG CACHE", self._config_cache_dump_sizes),
@@ -133,7 +129,7 @@ class AbstractMemoryObserver(ABCResourceObserver):
     def _dump(self, header: str, sizes: Mapping[str, int], limit: int | None) -> None:
         self._warning("=== %s ====" % header)
         for varname, size_bytes in sorted(sizes.items(), key=lambda x: x[1], reverse=True)[:limit]:
-            self._warning("%10s %s" % (render.fmt_bytes(size_bytes), varname))
+            self._warning("%10s %s" % (_fmt_bytes(size_bytes), varname))
 
 
 class FetcherMemoryObserver(AbstractMemoryObserver):
@@ -167,8 +163,44 @@ class FetcherMemoryObserver(AbstractMemoryObserver):
         self._print_global_memory_usage()
         self._error(
             "memory usage increased from %s to %s, exiting"
-            % (
-                render.fmt_bytes(self.memory_usage()),
-                render.fmt_bytes(self._get_vm_size()),
-            )
+            % (_fmt_bytes(self.memory_usage()), _fmt_bytes(self._get_vm_size()))
         )
+
+
+def _fmt_bytes(v: float) -> str:
+    for prefix in ("B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"):
+        if abs(v) < 1024:
+            return f"{v:.2f} {prefix}"
+        v /= 1024
+    return f"{v:.2f} YiB"
+
+
+def _total_size(o: object) -> int:
+    """Returns the approximate memory footprint an object and all of its contents.
+
+    Automatically finds the contents of the following builtin containers and
+    their subclasses:  tuple, list, dict, set and frozenset.
+    """
+    all_handlers: dict[type[Any], Callable[[Any], Iterator[object]]] = {
+        tuple: iter,
+        list: iter,
+        dict: lambda d: itertools.chain.from_iterable(d.items()),
+        set: iter,
+        frozenset: iter,
+    }
+    seen: set[int] = set()
+    default_size = sys.getsizeof(0)  # estimate sizeof object without __sizeof__
+
+    def sizeof(o: object) -> int:
+        if id(o) in seen:  # do not double count the same object
+            return 0
+        seen.add(id(o))
+        s = sys.getsizeof(o, default_size)
+
+        for typ, handler in all_handlers.items():
+            if isinstance(o, typ):
+                s += sum(map(sizeof, handler(o)))
+                break
+        return s
+
+    return sizeof(o)

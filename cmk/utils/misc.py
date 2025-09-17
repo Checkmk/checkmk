@@ -7,11 +7,7 @@ usable in all components of Check_MK
 
 Please try to find a better place for the things you want to put here."""
 
-import itertools
-import sys
-from collections.abc import Callable, Iterator
 from pathlib import Path
-from typing import Any
 
 
 # TODO: Change to better name like: quote_pnp_string()
@@ -38,45 +34,3 @@ def key_config_paths(a: Path) -> tuple[tuple[str, ...], int, tuple[str, ...]]:
     """
     pa = a.parts
     return pa[:-1], len(pa), pa
-
-
-def total_size(
-    o: Any, handlers: dict[type[Any], Callable[[Any], Iterator[object]]] | None = None
-) -> int:
-    """Returns the approximate memory footprint an object and all of its contents.
-
-    Automatically finds the contents of the following builtin containers and
-    their subclasses:  tuple, list, dict, set and frozenset.
-    To search other containers, add handlers to iterate over their contents:
-
-        handlers = {SomeContainerClass: iter,
-                    OtherContainerClass: OtherContainerClass.get_elements}
-
-    """
-    if handlers is None:
-        handlers = {}
-
-    all_handlers: dict[type[Any], Callable[[Any], Iterator[object]]] = {
-        tuple: iter,
-        list: iter,
-        dict: lambda d: itertools.chain.from_iterable(d.items()),
-        set: iter,
-        frozenset: iter,
-    }
-    all_handlers.update(handlers)  # user handlers take precedence
-    seen: set[int] = set()
-    default_size = sys.getsizeof(0)  # estimate sizeof object without __sizeof__
-
-    def sizeof(o: Any) -> int:
-        if id(o) in seen:  # do not double count the same object
-            return 0
-        seen.add(id(o))
-        s = sys.getsizeof(o, default_size)
-
-        for typ, handler in all_handlers.items():
-            if isinstance(o, typ):
-                s += sum(map(sizeof, handler(o)))
-                break
-        return s
-
-    return sizeof(o)

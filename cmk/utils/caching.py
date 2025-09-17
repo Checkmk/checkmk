@@ -7,11 +7,11 @@
 from __future__ import annotations
 
 import collections
-from collections.abc import Callable
+import itertools
+import sys
+from collections.abc import Callable, Iterator
 from functools import lru_cache, wraps
-from typing import ParamSpec, TypeVar
-
-import cmk.utils.misc
+from typing import Any, ParamSpec, TypeVar
 
 P = ParamSpec("P")
 R = TypeVar("R")
@@ -57,7 +57,38 @@ class CacheManager:
             cache.clear()
 
     def dump_sizes(self) -> dict[str, int]:
-        return {name: cmk.utils.misc.total_size(cache) for name, cache in self._caches.items()}
+        return {name: _total_size(cache) for name, cache in self._caches.items()}
+
+
+def _total_size(o: object) -> int:
+    """Returns the approximate memory footprint an object and all of its contents.
+
+    Automatically finds the contents of the following builtin containers and
+    their subclasses:  tuple, list, dict, set and frozenset.
+    """
+    all_handlers: dict[type[Any], Callable[[Any], Iterator[object]]] = {
+        tuple: iter,
+        list: iter,
+        dict: lambda d: itertools.chain.from_iterable(d.items()),
+        set: iter,
+        frozenset: iter,
+    }
+    seen: set[int] = set()
+    default_size = sys.getsizeof(0)  # estimate sizeof object without __sizeof__
+
+    def sizeof(o: object) -> int:
+        if id(o) in seen:  # do not double count the same object
+            return 0
+        seen.add(id(o))
+        s = sys.getsizeof(o, default_size)
+
+        for typ, handler in all_handlers.items():
+            if isinstance(o, typ):
+                s += sum(map(sizeof, handler(o)))
+                break
+        return s
+
+    return sizeof(o)
 
 
 class DictCache(dict):

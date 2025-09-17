@@ -3,9 +3,9 @@ load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
 pkg_files(
     name = "mk-oracle_pkg",
-    srcs = ["//packages/mk-oracle:mk-oracle-musl"],
+    srcs = ["//packages/mk-oracle"],
     attributes = pkg_attributes(mode = "0755"),
-    renames = {"//packages/mk-oracle:mk-oracle-musl": "share/check_mk/agents/linux/mk-oracle"},
+    renames = {"//packages/mk-oracle:mk-oracle": "share/check_mk/agents/linux/mk-oracle"},
     tags = ["manual"],
 )
 

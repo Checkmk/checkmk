@@ -72,16 +72,14 @@ def check_redfish_outlets(
         return
 
     socket_data = {
-        item: {
-            "voltage": data.get("Voltage", {}).get("Reading"),
-            "current": data.get("CurrentAmps", {}).get("Reading"),
-            "power": data.get("PowerWatts", {}).get("Reading"),
-            "frequency": data.get("FrequencyHz", {}).get("Reading"),
-        }
+        "voltage": data.get("Voltage", {}).get("Reading"),
+        "current": data.get("CurrentAmps", {}).get("Reading"),
+        "power": data.get("PowerWatts", {}).get("Reading"),
+        "frequency": data.get("FrequencyHz", {}).get("Reading"),
     }
 
-    if all(value is not None for value in socket_data[item].values()):
-        yield from check_elphase(item, params, socket_data)
+    if all(value is not None for value in socket_data.values()):
+        yield from check_elphase(params, socket_data)
 
     if data.get("EnergykWh", {}).get("Reading") is not None:
         energy = data.get("EnergykWh", {}).get("Reading")

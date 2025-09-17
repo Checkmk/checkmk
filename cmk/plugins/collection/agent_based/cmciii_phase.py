@@ -20,10 +20,8 @@ def discover_cmciii_phase(params: DiscoveryParams, section: Section) -> Discover
 
 
 def check_cmciii_phase(item: str, params: CheckParams, section: Section) -> CheckResult:
-    sensor = get_sensor(item, params, section["phase"])
-    if not sensor:
-        return
-    yield from check_elphase(item, params, {item: sensor})
+    if sensor := get_sensor(item, params, section["phase"]):
+        yield from check_elphase(params, sensor)
 
 
 check_plugin_cmciii_phase = CheckPlugin(

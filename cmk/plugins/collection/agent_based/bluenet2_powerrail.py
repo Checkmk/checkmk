@@ -334,7 +334,8 @@ def discover_bluenet2_powerrail_phases(section: dict) -> DiscoveryResult:
 def check_bluenet2_powerrail_phases(
     item: str, params: Mapping[str, Any], section: dict
 ) -> CheckResult:
-    yield from check_elphase(item, params, section["phases"])
+    if phase := section["phases"].get(item):
+        yield from check_elphase(params, phase)
 
 
 check_plugin_bluenet2_powerrail = CheckPlugin(
@@ -366,7 +367,8 @@ def discover_bluenet2_powerrail_rcm_phases(section: dict) -> DiscoveryResult:
 def check_bluenet2_powerrail_rcm_phases(
     item: str, params: Mapping[str, Any], section: dict
 ) -> CheckResult:
-    yield from check_elphase(item, params, section["rcm_phases"])
+    if rcm_phase := section["rcm_phases"].get(item):
+        yield from check_elphase(params, rcm_phase)
 
 
 check_plugin_bluenet2_powerrail_rcm = CheckPlugin(
@@ -404,7 +406,8 @@ def discover_bluenet2_powerrail_sockets(section: dict) -> DiscoveryResult:
 def check_bluenet2_powerrail_sockets(
     item: str, params: Mapping[str, Any], section: dict
 ) -> CheckResult:
-    yield from check_elphase(item, params, section["sockets"])
+    if socket_phase := section["sockets"].get(item):
+        yield from check_elphase(params, socket_phase)
 
 
 check_plugin_bluenet2_powerrail_sockets = CheckPlugin(
@@ -438,7 +441,8 @@ def discover_bluenet2_powerrail_fuses(section: dict) -> DiscoveryResult:
 def check_bluenet2_powerrail_fuses(
     item: str, params: Mapping[str, Any], section: dict
 ) -> CheckResult:
-    yield from check_elphase(item, params, section["fuses"])
+    if fuse_phase := section["fuses"].get(item):
+        yield from check_elphase(params, fuse_phase)
 
 
 check_plugin_bluenet2_powerrail_fuses = CheckPlugin(
@@ -472,7 +476,8 @@ def discover_bluenet2_powerrail_inlet(section: dict) -> DiscoveryResult:
 def check_bluenet2_powerrail_inlet(
     item: str, params: Mapping[str, Any], section: dict
 ) -> CheckResult:
-    yield from check_elphase(item, params, section["inlet"])
+    if inlet_phase := section["inlet"].get(item):
+        yield from check_elphase(params, inlet_phase)
 
 
 check_plugin_bluenet2_powerrail_inlet = CheckPlugin(

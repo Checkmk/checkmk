@@ -470,7 +470,8 @@ def discovery_apc_symmetra_elphase(section: Mapping[str, Any]) -> DiscoveryResul
 
 
 def check_apc_symmetra_elphase(item: str, params: Mapping[str, Any], section: Any) -> CheckResult:
-    yield from check_elphase(item, params, section.get("elphase", {}))
+    if elphase := section.get("elphase", {}).get(Item(item)):
+        yield from check_elphase(params, elphase)
 
 
 check_plugin_apc_symmetra_elphase = CheckPlugin(

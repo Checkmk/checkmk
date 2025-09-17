@@ -9,10 +9,6 @@ from typing import Any
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import CheckResult, render, Result, State
 
-CheckParams = Mapping[str, Any] | None
-Sensor = Mapping[str, Any]
-Section = Mapping[str, Sensor]
-
 
 # Parsed has the following form:
 # parsed = {
@@ -23,18 +19,11 @@ Section = Mapping[str, Sensor]
 #     }
 # }
 def check_elphase(
-    item: str,
-    params: CheckParams,
-    section: Section,
+    params: Mapping[str, Any],
+    elphase: Mapping[str, Any],
 ) -> CheckResult:
-    if not (elphase := section.get(item)):
-        return
-
     class Bounds:
         Lower, Upper, Both = range(3)
-
-    if params is None:
-        params = {}
 
     if "name" in elphase:
         yield Result(

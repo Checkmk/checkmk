@@ -15,11 +15,11 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.lib.elphase import check_elphase
+from cmk.plugins.lib.elphase import check_elphase, ElPhase, ReadingWithState
 from cmk.plugins.lib.ups_modulys import DETECT_UPS_MODULYS
 
 
-def parse_ups_modulys_inphase(string_table: StringTable) -> dict[str, dict[str, float]] | None:
+def parse_ups_modulys_inphase(string_table: StringTable) -> dict[str, ElPhase] | None:
     if not string_table:
         return None
 
@@ -37,16 +37,16 @@ def parse_ups_modulys_inphase(string_table: StringTable) -> dict[str, dict[str, 
     return parsed
 
 
-def _parse_phase(raw_frequency: str, raw_voltage: str, raw_current: str) -> dict[str, float]:
-    return {
-        key: int(raw_value) / 10.0
-        for (key, raw_value) in (
-            ("frequency", raw_frequency),
-            ("voltage", raw_voltage),
-            ("current", raw_current),
-        )
-        if raw_value.isdigit()
-    }
+def _parse_phase(raw_frequency: str, raw_voltage: str, raw_current: str) -> ElPhase | None:
+    return ElPhase(
+        frequency=_parse_value(raw_frequency),
+        voltage=_parse_value(raw_voltage),
+        current=_parse_value(raw_current),
+    )
+
+
+def _parse_value(raw_value: str) -> ReadingWithState | None:
+    return ReadingWithState(value=int(raw_value) / 10.0) if raw_value.isdigit() else None
 
 
 snmp_section_ups_modulys_inphase = SimpleSNMPSection(
@@ -67,7 +67,7 @@ def discover_ups_modulys_inphase(section: Mapping[str, Mapping[str, float]]) -> 
 def check_ups_modulys_inphase(
     item: str,
     params: Mapping[str, Any],
-    section: Mapping[str, Any],
+    section: Mapping[str, ElPhase],
 ) -> CheckResult:
     if inphase := section.get(item):
         yield from check_elphase(params, inphase)

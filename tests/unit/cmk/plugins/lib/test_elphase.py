@@ -4,7 +4,48 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Metric, Result, State
-from cmk.plugins.lib.elphase import check_elphase
+from cmk.plugins.lib.elphase import check_elphase, ElPhase, ReadingState, ReadingWithState
+
+
+def test_elphase_from_dict() -> None:
+    assert ElPhase.from_dict(
+        {
+            "name": "Phase 1",
+            "type": "UPS Inc. model 123",
+            "device_state": (0, "all good"),
+            "voltage": 1,
+            "current": 2,
+            "output_load": 3,
+            "power": 4,
+            "appower": 5,
+            "energy": 6,
+            "frequency": 7,
+            "differential_current_ac": 8,
+            "differential_current_dc": (
+                90,
+                (2, "differential current dc issue"),
+            ),
+        }
+    ) == ElPhase(
+        name="Phase 1",
+        type="UPS Inc. model 123",
+        device_state=(State.OK, "all good"),
+        voltage=ReadingWithState(value=1),
+        current=ReadingWithState(value=2),
+        output_load=ReadingWithState(value=3),
+        power=ReadingWithState(value=4),
+        appower=ReadingWithState(value=5),
+        energy=ReadingWithState(value=6),
+        frequency=ReadingWithState(value=7),
+        differential_current_ac=ReadingWithState(value=8),
+        differential_current_dc=ReadingWithState(
+            value=90,
+            state=ReadingState(
+                state=State.CRIT,
+                text="differential current dc issue",
+            ),
+        ),
+    )
 
 
 def test_check_elphase() -> None:
@@ -17,20 +58,23 @@ def test_check_elphase() -> None:
                 "frequency": (45.0, 35.0, 47.0, 55.0),
                 "differential_current_ac": (15.0, 17.0),
             },
-            {
-                "name": "Phase 1",
-                "type": "UPS Inc. model 123",
-                "device_state": (1, "warning"),
-                "voltage": 250.2,
-                "current": (13.1, (1, "High current")),
-                "output_load": 83.0,
-                "power": 34.2,
-                "appower": 78.0,
-                "energy": 66.1,
-                "frequency": 50.0,
-                "differential_current_ac": 20.0,
-                "differential_current_dc": 10.0,
-            },
+            ElPhase(
+                name="Phase 1",
+                type="UPS Inc. model 123",
+                device_state=(State.WARN, "warning"),
+                voltage=ReadingWithState(value=250.2),
+                current=ReadingWithState(
+                    value=13.1,
+                    state=ReadingState(state=State.WARN, text="High current"),
+                ),
+                output_load=ReadingWithState(value=83.0),
+                power=ReadingWithState(value=34.2),
+                appower=ReadingWithState(value=78.0),
+                energy=ReadingWithState(value=66.1),
+                frequency=ReadingWithState(value=50.0),
+                differential_current_ac=ReadingWithState(value=20.0),
+                differential_current_dc=ReadingWithState(value=10.0),
+            ),
         )
     ) == [
         Result(state=State.OK, summary="Name: Phase 1"),

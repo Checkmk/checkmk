@@ -50,7 +50,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(`${props.stepId}-curre
             You can customize these to match your monitoring needs,
             most commonly by setting thresholds for WARN and CRIT states using rules.
             To find the right ruleset for a service,
-            start with the Service Discovery page of a host.`
+            start with the Service discovery page of a host.`
         )
       }}
     </StepParagraph>

@@ -8,7 +8,9 @@ import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.plugins.collection.agent_based.bluenet2_powerrail import (
+    check_bluenet2_powerrail_inlet,
     check_bluenet2_powerrail_phases,
+    check_bluenet2_powerrail_rcm_phases,
     discover_bluenet2_powerrail_phases,
     parse_bluenet2_powerrail,
 )
@@ -260,3 +262,39 @@ def test_check_bluenet2_powerrail_phases(
         )
         == check_result
     )
+
+
+def test_check_bluenet2_powerrail_rcm_phases() -> None:
+    assert list(
+        check_bluenet2_powerrail_rcm_phases(
+            item="1.1 RCM Phase 1",
+            params={
+                "differential_current_ac": (3.5, 30.0),
+                "differential_current_dc": (70.0, 100.0),
+            },
+            section=parse_bluenet2_powerrail(_STRING_TABLE),
+        )
+    ) == [
+        Result(state=State.OK, summary="Name: RCM Phase 1"),
+        Result(state=State.OK, summary="Differential current AC: 1.6 mA"),
+        Metric("differential_current_ac", 0.0016, levels=(0.0035, 0.03)),
+        Result(state=State.OK, summary="OK"),
+        Result(state=State.OK, summary="Differential current DC: 0.0 mA"),
+        Metric("differential_current_dc", 0.0, levels=(0.07, 0.1)),
+        Result(state=State.OK, summary="OK"),
+    ]
+
+
+def test_check_bluenet2_powerrail_inlet() -> None:
+    assert list(
+        check_bluenet2_powerrail_inlet(
+            item="1.1 Neutral Current 256",
+            params={},
+            section=parse_bluenet2_powerrail(_STRING_TABLE),
+        )
+    ) == [
+        Result(state=State.OK, summary="Name: Inlet 1"),
+        Result(state=State.OK, summary="Current: 0.8 A"),
+        Metric("current", 0.75),
+        Result(state=State.OK, summary="OK"),
+    ]

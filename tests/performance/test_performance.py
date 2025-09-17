@@ -273,9 +273,9 @@ class PerformanceTest:
 
 
 @pytest.fixture(name="perftest", scope="session")
-def _perftest(central_site: Site, pytestconfig: pytest.Config) -> Iterator[PerformanceTest]:
+def _perftest(single_site: Site, pytestconfig: pytest.Config) -> Iterator[PerformanceTest]:
     """Single-site performance test"""
-    yield PerformanceTest([central_site], config=pytestconfig)
+    yield PerformanceTest([single_site], config=pytestconfig)
 
 
 @pytest.fixture(name="perftest_dist", scope="session")

@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Literal
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.plugins.lib.ups import DETECT_UPS_CPS
 
 check_info = {}
 
 
-def parse_ups_cps_inphase(string_table: list[str]) -> dict[Literal["1"], dict[str, float]] | None:
+def parse_ups_cps_inphase(string_table: StringTable) -> dict[Literal["1"], dict[str, float]] | None:
     if not string_table:
         return None
 

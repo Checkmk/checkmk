@@ -95,6 +95,8 @@ py_test(
         "--disable-socket",
         "--allow-unix-socket",
         "--durations=5",
+        "-W",
+        "error",
     ],
     main = "__test__.py",
     deps = [

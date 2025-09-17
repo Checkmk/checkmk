@@ -337,7 +337,7 @@ CEE_UNUSED_PACKAGES = [
     "cython",
     "ply",
     "setuptools-scm",
-    "snmpsim-lextudio",
+    "snmpsim",
     "python-multipart",  # needed by fastapi
     # stub packages
     "types-python-dateutil",

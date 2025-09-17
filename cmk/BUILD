@@ -84,8 +84,8 @@ REQUIRED_EXTERNAL_DEPS = [
     "pyprof2calltree",
     "pysaml2",
     "pysmb",
-    "pysmi-lextudio",
-    "pysnmp-lextudio",
+    "pysmi",
+    "pysnmp",
     "python-active-directory",  # missing wheel
     "python-dateutil",
     "python-ldap",  # missing wheel
@@ -101,7 +101,7 @@ REQUIRED_EXTERNAL_DEPS = [
     "roman",
     "setproctitle",
     "setuptools-scm",
-    "snmpsim-lextudio",
+    "snmpsim",
     "urllib3",
     "uvicorn",
     "uvicorn-worker",

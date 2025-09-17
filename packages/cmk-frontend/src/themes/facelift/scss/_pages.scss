@@ -333,7 +333,7 @@ table.data {
     background-color: $odd-tr-bg-color;
     position: sticky;
     top: 0;
-    z-index: 10;
+    z-index: $sticky-table-header-z-index;
 
     &.center {
       text-align: center;
@@ -526,7 +526,7 @@ table.groupheader {
   margin: 0 0 $h3-margin-bottom;
   position: sticky;
   top: 0;
-  z-index: 15;
+  z-index: $sticky-table-header-z-index;
 
   td {
     text-align: left;
@@ -551,7 +551,7 @@ table.data {
   td.groupheader {
     position: sticky;
     top: 0;
-    z-index: 12;
+    z-index: $sticky-table-header-z-index;
     padding: 0;
   }
 

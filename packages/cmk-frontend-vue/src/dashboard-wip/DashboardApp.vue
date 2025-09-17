@@ -109,7 +109,8 @@ function generateWidgetId(widgetContentType: string): string {
   return randomId(16, `${dashboardName}-${widgetContentType}`)
 }
 
-function saveDashboard() {
+async function saveDashboard() {
+  await dashboardsManager.persistDashboard()
   isDashboardEditingMode.value = false
 }
 

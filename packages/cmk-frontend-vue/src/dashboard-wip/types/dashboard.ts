@@ -49,3 +49,10 @@ export enum DashboardLayout {
 }
 
 export type ResponsiveGridBreakpoint = components['schemas']['ResponsiveGridBreakpoint']
+
+export type RelativeGridWidgetRequest = components['schemas']['RelativeGridWidgetRequest']
+export type ResponsiveGridWidgetRequest = components['schemas']['ResponsiveGridWidgetRequest']
+export type EditRelativeDashboardBody = components['schemas']['EditDashboardV1']
+export type EditResponsiveDashboardBody = components['schemas']['EditResponsiveGridDashboardV1']
+
+export type BadRequestBody = components['schemas']['Api400DefaultErrorDDACC62852906524']

@@ -133,16 +133,18 @@ def main() {
         }
     }
 
-    /// NOTE: the images referenced in the next step can only be considered
-    ///       up to date if the same node is being used as for the
-    ///       `build-build-images` job. For some reasons we can't just pull the
-    ///       latest image though, see
-    ///       https://review.lan.tribe29.com/c/check_mk/+/34634
-    ///       Anyway this whole upload/download mayhem hopfully evaporates with
-    ///       bazel..
-    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        distros.each { distro ->
-            docker.image("${distro}:${docker_tag}").pull();
+    stage("Pull current images to node") {
+        /// NOTE: the images referenced in the next step can only be considered
+        ///       up to date if the same node is being used as for the
+        ///       `build-build-images` job. For some reasons we can't just pull the
+        ///       latest image though, see
+        ///       https://review.lan.tribe29.com/c/check_mk/+/34634
+        ///       Anyway this whole upload/download mayhem hopfully evaporates with
+        ///       bazel..
+        docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+            distros.each { distro ->
+                docker.image("${distro}:${docker_tag}").pull();
+            }
         }
     }
 

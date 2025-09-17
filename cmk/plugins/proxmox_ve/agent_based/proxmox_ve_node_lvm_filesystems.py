@@ -20,31 +20,29 @@ from cmk.plugins.proxmox_ve.lib.node_filesystems import (
 )
 
 
-def discover_proxmox_ve_node_directory_filesystem(
+def discover_proxmox_ve_node_lvm_filesystem(
     section: SectionNodeFilesystems,
 ) -> DiscoveryResult:
-    yield from (Service(item=dir_filesystem) for dir_filesystem in section.directory_filesystems)
+    yield from (Service(item=lvm_filesystem) for lvm_filesystem in section.lvm_filesystems)
 
 
-def check_proxmox_ve_node_directory_filesystem(
-    item: str,
-    params: Mapping[str, Any],
-    section: SectionNodeFilesystems,
+def check_proxmox_ve_node_lvm_filesystem(
+    item: str, params: Mapping[str, Any], section: SectionNodeFilesystems
 ) -> CheckResult:
     yield from check_proxmox_ve_node_filesystems(
         item=item,
         params=params,
-        section=section.directory_filesystems,
+        section=section.lvm_filesystems,
         value_store=get_value_store(),
     )
 
 
-check_plugin_proxmox_ve_node_directory_filesystem = CheckPlugin(
-    name="proxmox_ve_node_directory_filesystems",
+check_plugin_proxmox_ve_node_lvm_filesystem = CheckPlugin(
+    name="proxmox_ve_node_lvm_filesystems",
     sections=["proxmox_ve_node_filesystems"],
-    service_name="Filesystem %s",
-    discovery_function=discover_proxmox_ve_node_directory_filesystem,
-    check_function=check_proxmox_ve_node_directory_filesystem,
+    service_name="Filesystem %s-lvm",
+    discovery_function=discover_proxmox_ve_node_lvm_filesystem,
+    check_function=check_proxmox_ve_node_lvm_filesystem,
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

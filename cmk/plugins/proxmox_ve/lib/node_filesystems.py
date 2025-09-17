@@ -3,10 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping, MutableMapping, Sequence
 from enum import StrEnum
+from typing import Any
 
 from pydantic import BaseModel, Field
+
+from cmk.agent_based.v2 import CheckResult, Result, State
+from cmk.plugins.lib.df import df_check_filesystem_single
 
 
 class StorageType(StrEnum):
@@ -54,3 +58,25 @@ class SectionNodeFilesystems(BaseModel, frozen=True):
             for filesystem in self.filesystems
             if filesystem.storage_type in (StorageType.LVM, StorageType.LVMTHIN)
         }
+
+
+def check_proxmox_ve_node_filesystems(
+    item: str,
+    params: Mapping[str, Any],
+    section: Mapping[str, Storage],
+    value_store: MutableMapping[str, Any],
+) -> CheckResult:
+    if (filesystem := section.get(item)) is None:
+        return
+
+    yield from df_check_filesystem_single(
+        value_store=value_store,
+        mountpoint=item,
+        filesystem_size=filesystem.maxdisk / (1024 * 1024),
+        free_space=(filesystem.maxdisk - filesystem.disk) / (1024 * 1024),
+        reserved_space=0.0,
+        inodes_avail=None,
+        inodes_total=None,
+        params=params,
+    )
+    yield Result(state=State.OK, summary=f"Type: {filesystem.storage_type}")

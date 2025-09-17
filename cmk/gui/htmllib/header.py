@@ -42,4 +42,6 @@ def make_header(
                 browser_reload=writer.browser_reload,
                 debug=active_config.debug,
             )
+    writer.vue_component(component_name="cmk-welcome-snapin-slideout", data={})
+
     writer.begin_page_content(enable_scrollbar=enable_main_page_scrollbar)

@@ -8,6 +8,9 @@ import { type Ref, computed, onBeforeMount, ref } from 'vue'
 import {
   type ContentRelativeGrid,
   type ContentResponsiveGrid,
+  type CreateRelativeDashboardBody,
+  type CreateResponsiveDashboardBody,
+  type DashboardGeneralSettings,
   DashboardLayout,
   type DashboardModel,
   type EditRelativeDashboardBody,
@@ -34,7 +37,13 @@ export function useDashboardsManager() {
     return constants.value !== undefined && activeDashboard.value !== undefined
   })
 
-  async function loadDashboard(name: string, layoutType: DashboardLayout) {
+  function setActiveDashboard(name: string, dashboard: DashboardModel): DashboardModel {
+    dashboards.value.set(name, dashboard)
+    activeDashboardName.value = name
+    return dashboard
+  }
+
+  async function loadDashboard(name: string, layoutType: DashboardLayout): Promise<DashboardModel> {
     let content: ContentRelativeGrid | ContentResponsiveGrid
     let dashboardResp
 
@@ -61,8 +70,69 @@ export function useDashboardsManager() {
       content
     }
 
-    dashboards.value.set(name, dashboard)
-    activeDashboardName.value = name
+    return setActiveDashboard(name, dashboard)
+  }
+
+  async function createDashboard(
+    dashboardName: string,
+    generalSettings: DashboardGeneralSettings,
+    layoutType: DashboardLayout
+  ): Promise<DashboardModel> {
+    const filterContext = {
+      restricted_to_single: [],
+      filters: {},
+      mandatory_context_filters: []
+    }
+
+    let dashboardResp
+    let content: ContentRelativeGrid | ContentResponsiveGrid
+
+    if (layoutType === DashboardLayout.RELATIVE_GRID) {
+      const dashboardBody: CreateRelativeDashboardBody = {
+        id: dashboardName,
+        general_settings: generalSettings,
+        filter_context: filterContext,
+        layout: { type: 'relative_grid' },
+        widgets: {}
+      }
+      const resp = await dashboardAPI.createRelativeGridDashboard(dashboardBody)
+      dashboardResp = resp.extensions
+      content = {
+        layout: dashboardResp.layout,
+        widgets: dashboardResp.widgets
+      } as ContentRelativeGrid
+    } else {
+      const dashboardBody: CreateResponsiveDashboardBody = {
+        id: dashboardName,
+        general_settings: generalSettings,
+        filter_context: filterContext,
+        layout: {
+          type: 'responsive_grid',
+          layouts: {
+            default: {
+              title: 'Default layout',
+              breakpoints: ['M', 'XL', 'L', 'S', 'XS']
+            }
+          }
+        },
+        widgets: {}
+      }
+      const resp = await dashboardAPI.createResponsiveGridDashboard(dashboardBody)
+      dashboardResp = resp.extensions
+      content = {
+        layout: dashboardResp.layout,
+        widgets: dashboardResp.widgets
+      } as ContentResponsiveGrid
+    }
+
+    const dashboard: DashboardModel = {
+      owner: dashboardResp.owner,
+      general_settings: dashboardResp.general_settings,
+      filter_context: dashboardResp.filter_context,
+      content
+    }
+
+    return setActiveDashboard(dashboardName, dashboard)
   }
 
   async function persistDashboard() {
@@ -121,6 +191,7 @@ export function useDashboardsManager() {
     activeDashboardName,
     isInitialized,
 
+    createDashboard,
     loadDashboard,
     persistDashboard
   }

@@ -229,7 +229,7 @@ class CMKOpenApiSession(requests.Session):
         redirect_url: str,
     ) -> None:
         response = None
-        for attempt in itertools.count():
+        for attempt in itertools.count(start=1):
             if (running_time := time.time() - start) > timeout:
                 msg = (
                     f"Wait for completion timed out after {running_time}s / {attempt} attempts"

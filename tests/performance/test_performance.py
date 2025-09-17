@@ -209,13 +209,14 @@ class PerformanceTest:
             dcd_max_count=dcd_max_count,
             dcd_interval=dcd_interval,
         ) as piggyback_info:
+            assert len(piggyback_info.piggybacked_hosts) == pb_host_count
             assert (
                 len(
                     self.central_site.openapi.hosts.get_all_names(
                         allow=piggyback_info.piggybacked_hosts
                     )
                 )
-                >= pb_host_count
+                == pb_host_count
             )
 
     def scenario_performance_ui_response(self) -> None:

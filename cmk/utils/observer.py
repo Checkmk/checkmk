@@ -5,14 +5,12 @@
 
 import abc
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from logging import DEBUG, Logger
 from typing import Final
 
 import cmk.utils.misc
 from cmk.utils import render
-from cmk.utils.caching import cache_manager
-from cmk.utils.log import VERBOSE
 
 __all__ = [
     "ABCResourceObserver",
@@ -54,9 +52,6 @@ class ABCResourceObserver(abc.ABC):
     def _error(self, message: str) -> None:
         self._logger.error("%s %s", self._context(), message)
 
-    def _costly_checks_enabled(self) -> bool:
-        return self._logger.isEnabledFor(VERBOSE)
-
     def _verbose_output_enabled(self) -> bool:
         return self._logger.isEnabledFor(DEBUG)
 
@@ -77,10 +72,15 @@ class AbstractMemoryObserver(ABCResourceObserver):
         "_hard_limit_percentage",
         "_steady_cycle_num",
         "_get_vm_size",
+        "_config_cache_dump_sizes",
     ]
 
     def __init__(
-        self, logger: Logger, allowed_growth: int, get_vm_size: Callable[[], int] = vm_size
+        self,
+        logger: Logger,
+        allowed_growth: int,
+        get_vm_size: Callable[[], int],
+        config_cache_dump_sizes: Callable[[], Mapping[str, int]],
     ) -> None:
         """allowed_growth is the permitted increase of the VM size measured in percents.
         get_vm_size is callback returning the RAM size used by the fetcher"""
@@ -88,6 +88,7 @@ class AbstractMemoryObserver(ABCResourceObserver):
         self._hard_limit_percentage: Final = allowed_growth
         self._steady_cycle_num: Final = 5  # checked in test as a business rule
         self._get_vm_size: Final = get_vm_size
+        self._config_cache_dump_sizes = config_cache_dump_sizes
 
         self._memory_usage = 0
 
@@ -124,12 +125,12 @@ class AbstractMemoryObserver(ABCResourceObserver):
             varname: cmk.utils.misc.total_size(value) for (varname, value) in storage.items()
         }
         self._dump("APPROXIMATE SIZES: GLOBALS TOP 50", globals_sizes, 50)
-        for title, module in [
-            ("CONFIG CACHE", cache_manager),
+        for title, dump_sizes in [
+            ("CONFIG CACHE", self._config_cache_dump_sizes),
         ]:
-            self._dump("APPROXIMATE SIZES: %s" % title, module.dump_sizes(), None)
+            self._dump("APPROXIMATE SIZES: %s" % title, dump_sizes(), None)
 
-    def _dump(self, header: str, sizes: dict[str, int], limit: int | None) -> None:
+    def _dump(self, header: str, sizes: Mapping[str, int], limit: int | None) -> None:
         self._warning("=== %s ====" % header)
         for varname, size_bytes in sorted(sizes.items(), key=lambda x: x[1], reverse=True)[:limit]:
             self._warning("%10s %s" % (render.fmt_bytes(size_bytes), varname))
@@ -140,6 +141,16 @@ class FetcherMemoryObserver(AbstractMemoryObserver):
     Call sys.exit(14) if during call of check_resources() memory is overloaded.
     The Micro Core is responsible for restart of Fetcher.
     """
+
+    def __init__(
+        self,
+        *,
+        logger: Logger,
+        allowed_growth: int,
+        get_vm_size: Callable[[], int],
+        config_cache_dump_sizes: Callable[[], Mapping[str, int]],
+    ) -> None:
+        super().__init__(logger, allowed_growth, get_vm_size, config_cache_dump_sizes)
 
     def _context(self) -> str:
         return f'[cycle {self._num_check_cycles}, command "{self._hint}"]'

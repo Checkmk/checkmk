@@ -9,7 +9,9 @@ import {
   type ContentRelativeGrid,
   type ContentResponsiveGrid,
   DashboardLayout,
-  type DashboardModel
+  type DashboardModel,
+  type EditRelativeDashboardBody,
+  type EditResponsiveDashboardBody
 } from '@/dashboard-wip/types/dashboard'
 import type { DashboardConstants } from '@/dashboard-wip/types/dashboard.ts'
 import { dashboardAPI } from '@/dashboard-wip/utils.ts'
@@ -63,6 +65,55 @@ export function useDashboardsManager() {
     activeDashboardName.value = name
   }
 
+  async function persistDashboard() {
+    const dashboard = activeDashboard.value
+    if (!dashboard) {
+      throw new Error('No active dashboard to persist')
+    }
+
+    if (dashboard.content.layout.type === DashboardLayout.RELATIVE_GRID) {
+      const widgets = Object.fromEntries(
+        Object.entries(dashboard.content.widgets).map(
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          ([id, { general_settings, content, filter_context, layout }]) => [
+            id,
+            { general_settings, content, filters: filter_context.filters, layout }
+          ]
+        )
+      )
+      const relativeDashboard: EditRelativeDashboardBody = {
+        general_settings: dashboard.general_settings,
+        filter_context: dashboard.filter_context,
+        layout: dashboard.content.layout,
+        widgets
+      }
+      return await dashboardAPI.editRelativeGridDashboard(
+        activeDashboardName.value!,
+        relativeDashboard
+      )
+    } else {
+      const widgets = Object.fromEntries(
+        Object.entries(dashboard.content.widgets).map(
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          ([id, { general_settings, content, filter_context, layout }]) => [
+            id,
+            { general_settings, content, filters: filter_context.filters, layout }
+          ]
+        )
+      )
+      const responsiveDashboard: EditResponsiveDashboardBody = {
+        general_settings: dashboard.general_settings,
+        filter_context: dashboard.filter_context,
+        layout: dashboard.content.layout,
+        widgets
+      }
+      return await dashboardAPI.editResponsiveGridDashboard(
+        activeDashboardName.value!,
+        responsiveDashboard
+      )
+    }
+  }
+
   return {
     constants,
     dashboards,
@@ -70,7 +121,8 @@ export function useDashboardsManager() {
     activeDashboardName,
     isInitialized,
 
-    loadDashboard
+    loadDashboard,
+    persistDashboard
   }
 }
 

@@ -7,9 +7,12 @@ import { fetchRestAPI } from '@/lib/cmkFetch.ts'
 
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types.ts'
 import type {
+  BadRequestBody,
   DashboardConstants,
   DashboardMetadata,
   DashboardMetadataModel,
+  EditRelativeDashboardBody,
+  EditResponsiveDashboardBody,
   RelativeGridDashboardDomainObject,
   ResponsiveGridDashboardDomainObject
 } from '@/dashboard-wip/types/dashboard.ts'
@@ -19,6 +22,16 @@ import type {
   EffectiveWidgetFilterContext,
   WidgetContent
 } from '@/dashboard-wip/types/widget.ts'
+
+type EditResponsiveGridResult =
+  | { success: true; status: 200; data: ResponsiveGridDashboardDomainObject }
+  | { success: false; status: 400; error: BadRequestBody }
+  | { success: false; status: number; error: unknown }
+
+type EditRelativeGridResult =
+  | { success: true; status: 200; data: RelativeGridDashboardDomainObject }
+  | { success: false; status: 400; error: BadRequestBody }
+  | { success: false; status: number; error: unknown }
 
 const API_ROOT = 'api/unstable'
 
@@ -38,6 +51,47 @@ export const dashboardAPI = {
     const response = await fetchRestAPI(url, 'GET')
     await response.raiseForStatus()
     return await response.json()
+  },
+  editRelativeGridDashboard: async (
+    dashboardName: string,
+    dashboard: EditRelativeDashboardBody
+  ): Promise<EditRelativeGridResult> => {
+    const url = `${API_ROOT}/objects/dashboard_relative_grid/${dashboardName}`
+    const response = await fetchRestAPI(url, 'PUT', dashboard)
+    let payload: unknown
+    try {
+      payload = await response.json()
+    } catch {
+      payload = undefined
+    }
+    if (response.status === 200) {
+      return { success: true, status: 200, data: payload as RelativeGridDashboardDomainObject }
+    }
+    if (response.status === 400) {
+      return { success: false, status: 400, error: payload as BadRequestBody }
+    }
+    return { success: false, status: response.status, error: payload }
+  },
+  editResponsiveGridDashboard: async (
+    dashboardName: string,
+    dashboard: EditResponsiveDashboardBody
+  ): Promise<EditResponsiveGridResult> => {
+    const url = `${API_ROOT}/objects/dashboard_responsive_grid/${dashboardName}`
+    const response = await fetchRestAPI(url, 'PUT', dashboard)
+    let payload: unknown
+    try {
+      payload = await response.json()
+    } catch {
+      payload = undefined
+    }
+
+    if (response.status === 200) {
+      return { success: true, status: 200, data: payload as ResponsiveGridDashboardDomainObject }
+    }
+    if (response.status === 400) {
+      return { success: false, status: 400, error: payload as BadRequestBody }
+    }
+    return { success: false, status: response.status, error: payload }
   },
   getDashboardConstants: async (): Promise<DashboardConstants> => {
     const url = `${API_ROOT}/objects/constant/dashboard`

@@ -89,6 +89,7 @@ def render_form_spec(
     display_mode: DisplayMode = DisplayMode.EDIT,
 ) -> None:
     """Renders the valuespec via vue within a div"""
+    html.enable_help_toggle()
     vue_app_config = serialize_data_for_frontend(
         form_spec, field_id, do_validate, value, display_mode
     )

@@ -792,7 +792,6 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
         self._store.save(entries, pprint_value=pprint_value)
 
     def page(self, config: Config, form_name: str = "edit") -> None:
-        html.enable_help_toggle()
         with html.form_context(form_name, method="POST"):
             self._page_form_quick_setup_warning()
 

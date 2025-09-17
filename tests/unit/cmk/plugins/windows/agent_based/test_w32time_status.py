@@ -13,7 +13,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.windows.agent_based import w32time
+from cmk.plugins.windows.agent_based import w32time_status
 
 EN_GOOD_SYNC = [
     ["Leap Indicator: 0(no warning)"],
@@ -140,7 +140,7 @@ NEVER_SYNCED = [
     [
         (
             EN_GOOD_SYNC,
-            w32time.QueryStatus(
+            w32time_status.QueryStatus(
                 leap_indicator=0,
                 stratum=4,
                 precision=-23,
@@ -161,7 +161,7 @@ NEVER_SYNCED = [
         ),
         (
             EN_UNSYNCED,
-            w32time.QueryStatus(
+            w32time_status.QueryStatus(
                 leap_indicator=3,
                 stratum=0,
                 precision=-23,
@@ -182,7 +182,7 @@ NEVER_SYNCED = [
         ),
         (
             ZH_GOOD_SYNC,
-            w32time.QueryStatus(
+            w32time_status.QueryStatus(
                 leap_indicator=0,
                 stratum=2,
                 precision=-6,
@@ -203,7 +203,7 @@ NEVER_SYNCED = [
         ),
         (
             FR_GOOD_SYNC,
-            w32time.QueryStatus(
+            w32time_status.QueryStatus(
                 leap_indicator=0,
                 stratum=4,
                 precision=-23,
@@ -224,7 +224,7 @@ NEVER_SYNCED = [
         ),
         (
             DE_LINE_WRAP,
-            w32time.QueryStatus(
+            w32time_status.QueryStatus(
                 leap_indicator=0,
                 stratum=3,
                 precision=-23,
@@ -245,7 +245,7 @@ NEVER_SYNCED = [
         ),
         (
             NEVER_SYNCED,
-            w32time.QueryStatus(
+            w32time_status.QueryStatus(
                 leap_indicator=3,
                 stratum=0,
                 precision=-23,
@@ -266,8 +266,10 @@ NEVER_SYNCED = [
         ),
     ],
 )
-def test_parse_w32time_status(string_table: StringTable, expected: w32time.QueryStatus) -> None:
-    assert w32time.parse_w32time_status(string_table) == expected
+def test_parse_w32time_status(
+    string_table: StringTable, expected: w32time_status.QueryStatus
+) -> None:
+    assert w32time_status.parse_w32time_status(string_table) == expected
 
 
 @pytest.mark.parametrize(
@@ -306,13 +308,13 @@ def test_parse_w32time_status(string_table: StringTable, expected: w32time.Query
     ],
 )
 def test_check_w32time_status_respects_sync_error_states(
-    states: w32time.StateParams,
+    states: w32time_status.StateParams,
     last_sync_error: int,
     expected: State,
 ) -> None:
-    params = deepcopy(w32time.DEFAULT_PARAMS)
+    params = deepcopy(w32time_status.DEFAULT_PARAMS)
     params["states"].update(states)
-    qs = w32time.QueryStatus(
+    qs = w32time_status.QueryStatus(
         leap_indicator=0,
         stratum=3,
         precision=-23,
@@ -330,14 +332,14 @@ def test_check_w32time_status_respects_sync_error_states(
         last_sync_error=last_sync_error,
         seconds_since_last_good_sync=4812.7981071,
     )
-    result = list(w32time.check_plugin_w32time_status.check_function(params, qs))
+    result = list(w32time_status.check_plugin_w32time_status.check_function(params, qs))
     assert isinstance(result[-1], Result)  # mypy
 
     assert result[-1].state == expected
 
 
 def test_check_w32time_status_respects_params() -> None:
-    qs = w32time.QueryStatus(
+    qs = w32time_status.QueryStatus(
         leap_indicator=0,
         stratum=3,
         precision=-23,
@@ -380,11 +382,11 @@ def test_check_w32time_status_respects_params() -> None:
         Result(state=State.WARN, notice="Sync status: Stale data received from time provider"),
     ]
 
-    assert list(w32time.check_plugin_w32time_status.check_function(params, qs)) == expected
+    assert list(w32time_status.check_plugin_w32time_status.check_function(params, qs)) == expected
 
 
 def test_check_w32time_status_never_synced() -> None:
-    qs = w32time.parse_w32time_status(NEVER_SYNCED)
+    qs = w32time_status.parse_w32time_status(NEVER_SYNCED)
     params = {
         "states": {"never_synced": State.CRIT},
     }
@@ -394,4 +396,4 @@ def test_check_w32time_status_never_synced() -> None:
             summary="Never synchronized (w32tm reported reference ID and state machine both 0)",
         ),
     ]
-    assert list(w32time.check_plugin_w32time_status.check_function(params, qs)) == expected
+    assert list(w32time_status.check_plugin_w32time_status.check_function(params, qs)) == expected

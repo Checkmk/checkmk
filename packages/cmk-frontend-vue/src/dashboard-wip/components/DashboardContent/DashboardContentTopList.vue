@@ -1,0 +1,268 @@
+<!--
+Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+conditions defined in the file COPYING, which is part of this source code package.
+-->
+<script setup lang="ts">
+import { type Ref, computed, onBeforeMount, ref } from 'vue'
+
+import usei18n from '@/lib/i18n'
+import type { TranslatedString } from '@/lib/i18nString'
+
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
+
+import type {
+  ComputedTopList,
+  TopListContent,
+  TopListEntry,
+  TopListError
+} from '@/dashboard-wip/types/widget.ts'
+import { dashboardAPI } from '@/dashboard-wip/utils.ts'
+
+import DashboardContentContainer from './DashboardContentContainer.vue'
+import type { ContentProps } from './types.ts'
+
+const { _t } = usei18n()
+const props = defineProps<ContentProps>()
+const content = props.content as TopListContent
+const isLoading = ref(false)
+const data = ref<ComputedTopList | undefined>(undefined)
+
+const fetchData = async () => {
+  isLoading.value = true
+  const response = await dashboardAPI.computeTopListData(
+    content,
+    props.effective_filter_context.filters
+  )
+  data.value = response.value
+  isLoading.value = false
+}
+
+onBeforeMount(() => {
+  void fetchData()
+})
+
+const headers: Ref<(string | TranslatedString)[]> = computed(() => {
+  const _headers: (string | TranslatedString)[] = [_t('Host')]
+  if (content.columns.show_service_description === true) {
+    _headers.push(_t('Service'))
+  }
+  if (data.value !== undefined) {
+    _headers.push(data.value.full_metric_name)
+  }
+  return _headers
+})
+
+const errorHeaders: string[] = [_t('Host'), _t('Service'), _t('Check command')]
+const errorMessage: string = _t(
+  `Due to a limitation in how Checkmk handles metrics internally, the results contain conflicting metrics and this top list may be incorrect or incomplete.\n
+    This is caused by the service check commands with an example host and service in the following table.\n
+    You can use these examples to identify hosts and services that must be filtered out in the top list configuration to resolve the problem.`
+)
+
+const hostViewUrl = (entry: TopListEntry | TopListError) => {
+  const urlParams = new URLSearchParams({
+    view_name: 'host',
+    site: entry.site_id,
+    host: entry.host_name
+  }).toString()
+  return `view.py?${urlParams}`
+}
+
+const serviceViewUrl = (entry: TopListEntry | TopListError) => {
+  const urlParams = new URLSearchParams({
+    view_name: 'service',
+    site: entry.site_id,
+    host: entry.host_name,
+    service: entry.service_description
+  }).toString()
+  return `view.py?${urlParams}`
+}
+
+const checkCommandViewUrl = (error: TopListError) => {
+  const urlParams = new URLSearchParams({
+    view_name: 'searchsvc',
+    filled_in: 'filter',
+    _active: 'check_command',
+    check_command: error.check_command
+  }).toString()
+  return `view.py?${urlParams}`
+}
+
+const percentage = (metricValue: number) => {
+  const { min_value: minValue, max_value: maxValue } = data.value!.value_range
+  return Math.round((100 * (metricValue - minValue)) / (maxValue - minValue))
+}
+</script>
+
+<template>
+  <DashboardContentContainer v-bind="general_settings">
+    <div v-if="isLoading" class="db-content-top-list__loading">
+      {{ _t('Loading Top list content') }}...
+    </div>
+    <div v-else>
+      <table v-if="data!.entries.length" class="db-content-top-list__table">
+        <tbody>
+          <tr>
+            <th v-for="(header, index) in headers" :key="index">{{ header }}</th>
+          </tr>
+          <tr v-for="(entry, index) in data!.entries" :key="index">
+            <td>
+              <a :href="hostViewUrl(entry)">
+                {{ entry.host_name }}
+              </a>
+            </td>
+            <td>
+              <a :href="serviceViewUrl(entry)">
+                {{ entry.service_description }}
+              </a>
+            </td>
+            <td v-if="content.columns.show_bar_visualization === false">
+              {{ entry.metric.formatted }}
+            </td>
+            <td v-else class="db-content-top-list__perfometer">
+              <div>
+                <div
+                  class="db-content-top-list__perfometer-bar"
+                  :style="{
+                    width: `${percentage(entry.metric.value)}%`,
+                    'background-color': entry.metric.color
+                  }"
+                />
+                <div class="db-content-top-list__perfometer-value">
+                  {{ entry.metric.formatted }}
+                </div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div v-else class="db-content-top-list__no-entries">
+        {{ _t('No entries') }}
+      </div>
+      <CmkAlertBox v-if="data!.errors!.length" variant="error">
+        <div class="db-content-top-list__error-msg">{{ errorMessage }}</div>
+      </CmkAlertBox>
+      <table v-if="data!.errors!.length" class="db-content-top-list__table">
+        <tbody>
+          <tr>
+            <th v-for="(header, index) in errorHeaders" :key="index">{{ header }}</th>
+          </tr>
+          <tr v-for="(error, index) in data!.errors" :key="index">
+            <td>
+              <a :href="hostViewUrl(error)">
+                {{ error.host_name }}
+              </a>
+            </td>
+            <td>
+              <a :href="serviceViewUrl(error)">
+                {{ error.service_description }}
+              </a>
+            </td>
+            <td>
+              <a :href="checkCommandViewUrl(error)">
+                {{ error.check_command }}
+              </a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </DashboardContentContainer>
+</template>
+
+<style scoped>
+.db-content-top-list__table {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  empty-cells: show;
+
+  tr {
+    overflow: hidden;
+    box-sizing: border-box;
+    transition: all 0.15s ease-in;
+
+    &:nth-child(even) {
+      background-color: var(--even-tr-bg-color);
+    }
+
+    &:nth-child(odd) {
+      background-color: var(--odd-tr-bg-color);
+    }
+
+    th {
+      height: var(--dimension-8);
+      padding: 0 var(--dimension-4);
+      letter-spacing: 1px;
+      text-align: left;
+      vertical-align: middle;
+      color: var(--font-color-dimmed);
+      background-color: var(--odd-tr-bg-color);
+    }
+
+    td {
+      height: 26px;
+      padding: var(--dimension-2) var(--dimension-4);
+      text-overflow: ellipsis;
+      vertical-align: middle;
+
+      a {
+        text-decoration: none;
+
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+}
+
+.db-content-top-list__perfometer {
+  width: 150px;
+
+  > div {
+    position: relative;
+    height: 22px;
+    background-color: var(--perfometer-bg-color);
+    filter: saturate(50%);
+
+    > div {
+      height: 100%;
+    }
+  }
+}
+
+.db-content-top-list__perfometer-bar {
+  padding-left: var(--dimension-1);
+}
+
+.db-content-top-list__perfometer-value {
+  position: absolute;
+  top: var(--dimension-1);
+  z-index: 40;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  font-weight: var(--font-weight-bold);
+  line-height: 22px;
+  color: var(--font-color-light-bg);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.db-content-top-list__no-entries {
+  padding: var(--spacing);
+}
+
+.db-content-top-list__loading {
+  padding: var(--dimension-6);
+  text-align: center;
+}
+
+.db-content-top-list__error-msg {
+  white-space: pre-line;
+  line-height: var(--font-size-normal);
+}
+</style>

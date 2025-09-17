@@ -6,6 +6,10 @@
 import type { components } from '@/lib/rest-api-client/openapi_internal'
 
 export type ComputedWidgetSpecResponse = components['schemas']['ComputedWidgetSpecResponse']
+export type ComputedTopListResponse = components['schemas']['ComputedTopListResponse']
+export type ComputedTopList = components['schemas']['TopList']
+export type TopListEntry = components['schemas']['TopListEntry']
+export type TopListError = components['schemas']['TopListError']
 
 export type WidgetContent = components['schemas']['WidgetContent']
 export type WidgetSizeValue = components['schemas']['WidgetSizeValue']
@@ -39,6 +43,7 @@ export type VisualContext = Record<string, FilterHTTPVars>
 
 // Specific widget types
 export type EmbeddedViewContent = components['schemas']['EmbeddedViewContent']
+export type IFrameContent = components['schemas']['URLContent']
 export type LinkedViewContent = components['schemas']['LinkedViewContent']
 export type StaticTextContent = components['schemas']['StaticTextContent']
-export type IFrameContent = components['schemas']['URLContent']
+export type TopListContent = components['schemas']['TopListContent']

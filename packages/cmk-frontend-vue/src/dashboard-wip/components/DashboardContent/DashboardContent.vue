@@ -12,6 +12,7 @@ import DashboardContentGraph from './DashboardContentGraph.vue'
 import DashboardContentIFrame from './DashboardContentIFrame.vue'
 import DashboardContentLinkedView from './DashboardContentLinkedView.vue'
 import DashboardContentStaticText from './DashboardContentStaticText.vue'
+import DashboardContentTopList from './DashboardContentTopList.vue'
 import DashboardContentUserMessages from './DashboardContentUserMessages.vue'
 import { CONTENT_FIGURE_TYPES, GRAPH_TYPES } from './types.ts'
 </script>
@@ -31,6 +32,8 @@ function contentTypeToComponent(contentType: string): Component {
       return DashboardContentEmbeddedView
     case contentType === 'static_text':
       return DashboardContentStaticText
+    case contentType === 'top_list':
+      return DashboardContentTopList
     case contentType === 'user_messages':
       return DashboardContentUserMessages
     case CONTENT_FIGURE_TYPES.includes(contentType):

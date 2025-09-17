@@ -20,8 +20,11 @@ import type {
 } from '@/dashboard-wip/types/dashboard.ts'
 import type { FilterCollection } from '@/dashboard-wip/types/filter.ts'
 import type {
+  ComputedTopListResponse,
   ComputedWidgetSpecResponse,
   EffectiveWidgetFilterContext,
+  TopListContent,
+  VisualContext,
   WidgetContent
 } from '@/dashboard-wip/types/widget.ts'
 
@@ -138,6 +141,15 @@ export const dashboardAPI = {
   ): Promise<ComputedWidgetSpecResponse> => {
     const url = `${API_ROOT}/domain-types/dashboard/actions/compute-widget-attributes/invoke`
     const response = await fetchRestAPI(url, 'POST', { content: widgetContent })
+    await response.raiseForStatus()
+    return await response.json()
+  },
+  computeTopListData: async (
+    content: TopListContent,
+    context: VisualContext
+  ): Promise<ComputedTopListResponse> => {
+    const url = `${API_ROOT}/domain-types/dashboard/actions/compute-top-list/invoke`
+    const response = await fetchRestAPI(url, 'POST', { content: content, context: context })
     await response.raiseForStatus()
     return await response.json()
   }

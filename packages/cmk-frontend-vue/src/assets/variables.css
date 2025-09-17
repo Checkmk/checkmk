@@ -203,6 +203,7 @@
     /* Fonts */
     --font-color: var(--grey-4);
     --font-color-dimmed: var(--grey-4-dimmed);
+    --font-color-light-bg: var(--font-color);
 
     /* Icons */
     --icon-main-help: url('~cmk-frontend/themes/facelift/images/icon_main_help.svg');
@@ -239,13 +240,16 @@
     --custom-scroll-bar-backgroud-color: var(--ux-theme-0);
     --default-component-bg-color: rgb(240 240 240);
     --help-text-bg-color: var(--ux-theme-5);
-    --help-text-font-color: rgb(51 51 51); /* $grey-4 */
+    --help-text-font-color: var(--grey-4);
     --form-element-required-color: var(--success-dimmed-2);
     --input-hover-bg-color: var(--ux-theme-4);
     --code-background-color: var(--color-daylight-grey-50);
     --wizard-progress-bar-background-color: var(--color-daylight-grey-60);
     --headline-color: var(--ux-theme-4);
     --db-content-bg-color: var(--ux-theme-1);
+    --even-tr-bg-color: var(--ux-theme-2);
+    --odd-tr-bg-color: var(--ux-theme-4);
+    --perfometer-bg-color: var(--color-white-100);
   }
 
   body[data-theme='modern-dark'] {
@@ -273,6 +277,7 @@
     /* Fonts */
     --font-color: var(--white);
     --font-color-dimmed: var(--white-dimmed);
+    --font-color-light-bg: rgb(33 33 33); /* grey-6 */
 
     /* Icons */
     --icon-main-help: url('~cmk-frontend/themes/modern-dark/images/icon_main_help.svg');
@@ -319,6 +324,9 @@
     --wizard-progress-bar-background-color: var(--white);
     --headline-color: var(--ux-theme-3);
     --db-content-bg-color: var(--ux-theme-2);
+    --even-tr-bg-color: var(--ux-theme-3);
+    --odd-tr-bg-color: var(--ux-theme-2);
+    --perfometer-bg-color: var(--color-mist-grey-30);
   }
 }
 

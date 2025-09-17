@@ -3534,6 +3534,7 @@ pytest-random-order==1.2.0 \
     --hash=sha256:78d1d6f346222cdf26a7302c502d2f1cab19454529af960b8b9e1427a99ab277
     # via
     #   -r non-free/packages/cmk-relay-engine/dev-requirements.in
+    #   -r packages/cmk-agent-receiver/dev-requirements.in
     #   -r tests/dev-requirements.in
 pytest-repeat==0.9.4 \
     --hash=sha256:c1738b4e412a6f3b3b9e0b8b29fcd7a423e50f87381ad9307ef6f5a8601139f3 \
@@ -3542,7 +3543,9 @@ pytest-repeat==0.9.4 \
 pytest-socket==0.7.0 \
     --hash=sha256:71ab048cbbcb085c15a4423b73b619a8b35d6a307f46f78ea46be51b1b7e11b3 \
     --hash=sha256:7e0f4642177d55d317bbd58fc68c6bd9048d6eadb2d46a89307fa9221336ce45
-    # via -r non-free/packages/cmk-relay-engine/dev-requirements.in
+    # via
+    #   -r non-free/packages/cmk-relay-engine/dev-requirements.in
+    #   -r packages/cmk-agent-receiver/dev-requirements.in
 pytest-subtests==0.14.2 \
     --hash=sha256:7154a8665fd528ee70a76d00216a44d139dc3c9c83521a0f779f7b0ad4f800de \
     --hash=sha256:8da0787c994ab372a13a0ad7d390533ad2e4385cac167b3ac501258c885d0b66

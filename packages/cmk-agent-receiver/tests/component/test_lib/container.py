@@ -26,7 +26,8 @@ def is_port_in_use(port: int, host: str = "127.0.0.1") -> bool:
 
 def get_open_port(host: str = "127.0.0.1") -> int:
     while True:
-        port = random.randint(10001, 65535)
+        # ensure truly unique numbers on pytest-xdist execution
+        port = random.SystemRandom().randint(10001, 65535)
         if is_port_in_use(port, host):
             continue
         return port

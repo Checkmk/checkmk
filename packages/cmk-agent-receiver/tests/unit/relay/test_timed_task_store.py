@@ -153,7 +153,7 @@ def test_expiration_based_on_update_timestamp(time: Coordinates, store: TimedTas
 def test_logging_during_cleanup(
     caplog: pytest.LogCaptureFixture, time: Coordinates, store: TimedTaskStore
 ) -> None:
-    caplog.set_level(logging.DEBUG)
+    caplog.set_level(logging.DEBUG, logger="agent-receiver")
     task_id = TaskID("test-task")
     store[task_id] = _make_task(task_id)
     time.shift(SHIFT_TO_EXPIRE)

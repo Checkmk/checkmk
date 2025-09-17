@@ -3,3 +3,5 @@ pytest-asyncio
 pytest-mock
 pytest-xdist
 time-machine
+pytest-random-order
+pytest-socket

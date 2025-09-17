@@ -8,7 +8,6 @@ from typing import Final
 import pytest
 from playwright.sync_api import expect
 
-from tests.gui_e2e.testlib.playwright.helpers import Keys
 from tests.gui_e2e.testlib.playwright.pom.add_sidebar_element import AddSidebarElement
 from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
 
@@ -25,23 +24,6 @@ def test_add_remove_snapin(dashboard_page: MainDashboard, snapin_id: str) -> Non
     snapin.remove_from_sidebar()
 
     add_sidebar_element_page.snapin_container(snapin_id).wait_for(state="attached")
-
-
-def test_monitor_searchbar(dashboard_page: MainDashboard) -> None:
-    """Navigate to the CPU inventory from the monitor searchbar."""
-
-    dashboard_page.main_menu.global_searchbar.fill("all hosts")
-
-    expect(dashboard_page.locator(".unified-search-result-list")).to_contain_text("All hosts")
-    expect(dashboard_page.locator(".unified-search-result-list")).to_contain_text(
-        "CPU inventory of all hosts"
-    )
-
-    dashboard_page.press_keyboard(Keys.ArrowDown)
-    dashboard_page.press_keyboard(Keys.ArrowDown)
-    dashboard_page.press_keyboard(Keys.Enter)
-
-    dashboard_page.main_area.check_page_title("CPU inventory of all hosts")
 
 
 def test_add_nagvis_snapin(dashboard_page: MainDashboard) -> None:

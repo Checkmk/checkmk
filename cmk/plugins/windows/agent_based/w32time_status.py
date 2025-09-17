@@ -271,7 +271,7 @@ check_plugin_w32time_status = CheckPlugin(
     name="w32time_status",
     service_name="Windows time service",
     discovery_function=discover_w32time_status,
-    check_ruleset_name="w32time",
+    check_ruleset_name="w32time_status",
     check_default_parameters=DEFAULT_PARAMS,
     check_function=check_w32time_status,
 )

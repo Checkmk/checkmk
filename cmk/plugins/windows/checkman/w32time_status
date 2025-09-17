@@ -1,4 +1,4 @@
-title: Windows: Time service (w32time) NTP sync information
+title: Windows: Time service (w32time) NTP sync status
 agents: windows
 catalog: os/services
 license: GPLv2
@@ -13,7 +13,7 @@ description:
  The output is obtained from the "w32time" command directly, as Windows provides
  no public API for obtaining this information.
 
- Alerting parameters can be set using the ruleset "Windows time service".
+ Alerting parameters can be set using the ruleset "Windows time service status".
 
 discovery:
  One service is created, assuming that the Windows time service is enabled and

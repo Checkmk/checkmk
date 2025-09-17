@@ -58,8 +58,8 @@ where
 #[command(about = "check_cert")]
 struct Args {
     /// URL to check
-    #[arg(short, long)]
-    url: String,
+    #[arg(short = 'H', long)]
+    hostname: String,
 
     /// Port
     #[arg(short, long, default_value_t = 443)]
@@ -195,7 +195,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     info("contact host...");
     let start = Instant::now();
     let chain = match fetcher::fetch_server_cert(
-        &args.url,
+        &args.hostname,
         args.port,
         FetcherConfig::builder()
             .timeout((args.timeout != 0).then_some(StdDuration::new(args.timeout, 0)))

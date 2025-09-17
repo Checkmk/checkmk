@@ -31,7 +31,6 @@ def top_heading(
     browser_reload: float,
     debug: bool,
 ) -> None:
-    writer.vue_component(component_name="cmk-welcome-snapin-slideout", data={})
     _may_show_license_expiry(writer)
 
     writer.open_div(id_="top_heading")

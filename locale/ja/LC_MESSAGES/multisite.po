@@ -16450,6 +16450,10 @@ msgstr "DCDマネージャ：サイト\"%s\"からピギーバックホストを
 msgid "DCD batch history"
 msgstr "DCDバッチ履歴"
 
+#, fuzzy
+msgid "DCD cycles and batches."
+msgstr "DR:BDの役割とディスク状態"
+
 msgid "DCD global settings"
 msgstr "DCDグローバル設定"
 
@@ -18708,6 +18712,9 @@ msgstr "凍結とライブアグリゲーションの違い"
 
 msgid "Difference between the first and last operation in the oplog"
 msgstr "oplogの最初と最後の操作の差異"
+
+msgid "Difference in time from provider was too large"
+msgstr ""
 
 msgid "Difference on summed up values lower level"
 msgstr "合計値の差が下位レベル"
@@ -38423,6 +38430,10 @@ msgstr "パフォーマンスデータのマトリックス"
 msgid "Max Cache Age"
 msgstr "最大キャッシュ経過時間"
 
+#, fuzzy
+msgid "Max age of the newest snapshot"
+msgstr "最も古いスナップショットの最大経過時間"
+
 msgid "Max age of the oldest snapshot"
 msgstr "最も古いスナップショットの最大経過時間"
 
@@ -38916,6 +38927,10 @@ msgstr "最大テスト実行時間"
 
 msgid "Maximum time since last start of job execution"
 msgstr "ssssssssssssssssssssssssssssssssssssssssssssssssssss"
+
+#, fuzzy
+msgid "Maximum time since the last successful sync"
+msgstr "前回成功したスケジュールからの時間"
 
 msgid "Maximum uptime of the device"
 msgstr "デバイスの最大稼働時間"
@@ -41486,6 +41501,10 @@ msgstr "エージェントと一緒にPythonをインストールしないでく
 msgid "Never remove files newer than"
 msgstr "設定期間より新しいファイルは削除しない"
 
+#, fuzzy
+msgid "Never synchronized"
+msgstr "同期する"
+
 msgid "Never use piggyback data"
 msgstr "ピギーバックデータは絶対に使用しないでください"
 
@@ -41588,6 +41607,10 @@ msgstr "以下の最新のファイル経過時間"
 
 msgid "Newest first"
 msgstr "最新のものが最初"
+
+#, fuzzy
+msgid "Newest snapshot age"
+msgstr "NetAppスナップショットリザーブ"
 
 msgid "Next"
 msgstr "次"
@@ -41783,6 +41806,10 @@ msgid "No data available"
 msgstr "データなし"
 
 msgid "No data from any site"
+msgstr "どのサイトからのデータもありません"
+
+#, fuzzy
+msgid "No data from time provider"
 msgstr "どのサイトからのデータもありません"
 
 msgid "No data was found with the current parameters of this dashlet."
@@ -43325,6 +43352,10 @@ msgstr "一度に処理するホストの数"
 msgid "Number of idle executors"
 msgstr "アイドル状態のエグゼキュータの数"
 
+#, fuzzy
+msgid "Number of images"
+msgstr "アイテム数"
+
 msgid "Number of inactive sessions"
 msgstr "非アクティブなセッションの数"
 
@@ -43715,6 +43746,10 @@ msgstr "VM予約済のvCPU数"
 msgid "Number of vaults"
 msgstr "ボールトの数"
 
+#, fuzzy
+msgid "Number of volumes"
+msgstr "列の数"
+
 msgid "Number of warnings"
 msgstr "警告の数"
 
@@ -44059,6 +44094,10 @@ msgstr "最も古いメッセージ経過時間"
 
 msgid "Oldest replication slot lag size"
 msgstr "最も古いレプリケーションスロットラグサイズ"
+
+#, fuzzy
+msgid "Oldest snapshot age"
+msgstr "最も古いメッセージ経過時間"
 
 msgid "Omit ICMP payload"
 msgstr "ICMPペイロードを省略します"
@@ -52252,6 +52291,11 @@ msgstr ""
 "由でリソースを監視する場合のみ、サブスクリプションIDは不要です。"
 
 msgid ""
+"Returns the current state of DCD cycles and batches. Executes the commands "
+"cmk-dcd -Bv and cmk-dcd -Cv."
+msgstr ""
+
+msgid ""
 "Returns the latest crash dumps of each type as found in var/checkmk/crashes"
 msgstr "var/checkmk/crashes にある各タイプの最新のクラッシュダンプを返す"
 
@@ -52374,6 +52418,14 @@ msgstr "ロールオーバーアサート"
 
 msgid "Root CA"
 msgstr "Root CA"
+
+#, fuzzy
+msgid "Root delay"
+msgstr "ランダムな遅延"
+
+#, fuzzy
+msgid "Root dispersion"
+msgstr "Redisの永続性"
 
 msgid "Rotate every Monday at 00:00 local time"
 msgstr "毎週月曜日の現地時間 00:00 にローテーションします"
@@ -57080,6 +57132,10 @@ msgstr "煙の監視"
 msgid "SnapVaults"
 msgstr "SnapVaults"
 
+#, fuzzy
+msgid "Snapshot Age"
+msgstr "スナップショット"
+
 msgid "Snapshot build currently in progress"
 msgstr "現在進行中のスナップショットビルド"
 
@@ -58388,6 +58444,9 @@ msgstr ""
 msgid "Stale"
 msgstr "最新化要"
 
+msgid "Stale data received from time provider"
+msgstr ""
+
 msgid "Stale hosts"
 msgstr "古いホスト"
 
@@ -58634,6 +58693,10 @@ msgstr "プロセスの状態と数"
 
 msgid "State and count of processes (only SNMP)"
 msgstr "プロセスの状態と数(SNMPのみ)"
+
+#, fuzzy
+msgid "State based on status of last sync attempt"
+msgstr "レプリケーションスクリプトからステータスが不明な場合の状態"
 
 msgid "State change"
 msgstr "ステータス変更"
@@ -59633,6 +59696,10 @@ msgstr "まっすぐ"
 
 msgid "StrategyType"
 msgstr "ストラテジータイプ"
+
+#, fuzzy
+msgid "Stratum"
+msgstr "まっすぐ"
 
 msgid "Stream rules"
 msgstr "ストリーム ルール"
@@ -65588,6 +65655,10 @@ msgstr "時間間隔の統計データはディスクに保存されます"
 msgid "The time must not be greater than %02d:%02d."
 msgstr "時間は %02d:%02dを超えてはなりません。"
 
+#, fuzzy
+msgid "The time service was shutting down"
+msgstr "ホストまたはサービスがスケジュールされたダウンタイムにありました"
+
 #, python-format
 msgid "The timeout %s is not a valid integer number."
 msgstr "タイムアウト %s は有効な整数ではありません。"
@@ -66924,6 +66995,11 @@ msgstr ""
 msgid ""
 "This check monitors the size of and the accesses to a PostgreSQL database."
 msgstr "このチェックは、PostgreSQLデータベースのサイズとアクセスを監視します。"
+
+#, fuzzy
+msgid ""
+"This check monitors the status of time synchronization for Windows hosts."
+msgstr "このプラグインは、Windowsホスト上のHyper-V VMの状態を監視します。"
 
 msgid "This check returns CRIT if the connection to the remote site failed."
 msgstr "このチェックは、リモートサイトへの接続が失敗した場合にCRITを返します。"
@@ -71213,6 +71289,15 @@ msgstr "特別なエージェントを待つのに費やした時間"
 
 msgid "Time stamp format"
 msgstr "タイムスタンプ形式"
+
+msgid ""
+"Time syncs especially against public NTP servers can fail in various ways "
+"throughout the course of the NTP lifecycle and therefore we do not alert by "
+"default when a sync fails (preferring instead to alert when too much time "
+"has elapsed before a successful sync). However, in some environments, it "
+"might be useful to know right away when a sync fails. The state of various "
+"kinds of failures can therefore be configured here."
+msgstr ""
 
 msgid "Time to alert when PVC status is in pending state"
 msgstr "PVCが保留状態の時に警告を発報するまでの時間"
@@ -79522,6 +79607,17 @@ msgstr ""
 "が失われた場合のみ、チェックはクリティカルになります。"
 
 msgid ""
+"When the reference ID and state machine value are both 0, it usually means "
+"that the service has not synced since starting. The reported state in this "
+"scenario can be configured here."
+msgstr ""
+
+msgid ""
+"When the time offset on the last sync was worse (in either direction) than "
+"the specified parameters, go into WARN or CRIT status."
+msgstr ""
+
+msgid ""
 "When the total size of spooled messages exceeds this number, the oldest "
 "messages of the currently spooled messages is thrown away until the left "
 "messages have the half of the maximum size."
@@ -80073,6 +80169,10 @@ msgstr "Windowsプリンター: 開いているジョブの数"
 
 msgid "Windows service discovery"
 msgstr "Windowsサービスディスカバリ"
+
+#, fuzzy
+msgid "Windows time service"
+msgstr "Windowsサービス"
 
 msgid "Windows, Linux, Solaris, AIX"
 msgstr "Windows、Linux、Solaris、AIX"

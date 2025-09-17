@@ -17485,6 +17485,10 @@ msgid "DCD batch history"
 msgstr "Histórico de pesquisa"
 
 #, fuzzy
+msgid "DCD cycles and batches."
+msgstr "DR:BD papéis e estados de disco"
+
+#, fuzzy
 msgid "DCD global settings"
 msgstr "Editar cenário global"
 
@@ -19890,6 +19894,9 @@ msgstr "Diferença entre agregação congelada e agregação em directo"
 
 msgid "Difference between the first and last operation in the oplog"
 msgstr "Diferença entre a primeira e a última operação no oplog"
+
+msgid "Difference in time from provider was too large"
+msgstr ""
 
 msgid "Difference on summed up values lower level"
 msgstr "Diferença em valores somados nível inferior"
@@ -40932,6 +40939,10 @@ msgstr "Matriz de Dados de Desempenho"
 msgid "Max Cache Age"
 msgstr "Idade Max Cache"
 
+#, fuzzy
+msgid "Max age of the newest snapshot"
+msgstr "Idade máxima do instantâneo mais antigo"
+
 msgid "Max age of the oldest snapshot"
 msgstr "Idade máxima do instantâneo mais antigo"
 
@@ -41455,6 +41466,10 @@ msgstr "Tempo de execução do teste"
 
 msgid "Maximum time since last start of job execution"
 msgstr "Tempo máximo desde o último início da execução do trabalho"
+
+#, fuzzy
+msgid "Maximum time since the last successful sync"
+msgstr "Tempo decorrido desde o último programa bem sucedido"
 
 #, fuzzy
 msgid "Maximum uptime of the device"
@@ -44194,6 +44209,10 @@ msgstr "Nunca instale o Python com o agente"
 msgid "Never remove files newer than"
 msgstr "Nunca remova arquivos mais novos do que"
 
+#, fuzzy
+msgid "Never synchronized"
+msgstr "sincronizar"
+
 msgid "Never use piggyback data"
 msgstr "Nunca utilize dados piggyback"
 
@@ -44302,6 +44321,10 @@ msgstr "Mais novo arquivo idade abaixo"
 
 msgid "Newest first"
 msgstr "O mais recente primeiro"
+
+#, fuzzy
+msgid "Newest snapshot age"
+msgstr "Reserva de Instantâneos da NetApp"
 
 #, fuzzy
 msgid "Next"
@@ -44516,6 +44539,10 @@ msgid "No data available"
 msgstr "Não há dados disponíveis"
 
 msgid "No data from any site"
+msgstr "Sem dados de nenhum site"
+
+#, fuzzy
+msgid "No data from time provider"
 msgstr "Sem dados de nenhum site"
 
 msgid "No data was found with the current parameters of this dashlet."
@@ -46167,6 +46194,10 @@ msgstr "Número de hospedeiros a tratar ao mesmo tempo"
 msgid "Number of idle executors"
 msgstr "Número de executores ociosos"
 
+#, fuzzy
+msgid "Number of images"
+msgstr "Número de itens"
+
 msgid "Number of inactive sessions"
 msgstr "Número de sessões inactivas"
 
@@ -46582,6 +46613,10 @@ msgstr "Número de vCPUs reservadas para a VM"
 msgid "Number of vaults"
 msgstr "Número de cofres"
 
+#, fuzzy
+msgid "Number of volumes"
+msgstr "Número de Colunas"
+
 msgid "Number of warnings"
 msgstr "Número de avisos"
 
@@ -46942,6 +46977,10 @@ msgstr "idade mais antiga da mensagem"
 #, fuzzy
 msgid "Oldest replication slot lag size"
 msgstr "Tamanho mais antigo da Ranhura de Replicação"
+
+#, fuzzy
+msgid "Oldest snapshot age"
+msgstr "idade mais antiga da mensagem"
 
 msgid "Omit ICMP payload"
 msgstr "Omitir carga útil do ICMP"
@@ -55834,6 +55873,11 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Returns the current state of DCD cycles and batches. Executes the commands "
+"cmk-dcd -Bv and cmk-dcd -Cv."
+msgstr ""
+
+msgid ""
 "Returns the latest crash dumps of each type as found in var/checkmk/crashes"
 msgstr ""
 
@@ -55973,6 +56017,14 @@ msgstr "%s Afirmações"
 
 msgid "Root CA"
 msgstr ""
+
+#, fuzzy
+msgid "Root delay"
+msgstr "Atraso aleatório"
+
+#, fuzzy
+msgid "Root dispersion"
+msgstr "Redis persistência"
 
 #, fuzzy
 msgid "Rotate every Monday at 00:00 local time"
@@ -60951,6 +61003,10 @@ msgstr "Monitorização do fumo"
 msgid "SnapVaults"
 msgstr "Cofres"
 
+#, fuzzy
+msgid "Snapshot Age"
+msgstr "Instantâneos"
+
 msgid "Snapshot build currently in progress"
 msgstr "Construção instantânea actualmente em curso"
 
@@ -62330,6 +62386,9 @@ msgstr ""
 msgid "Stale"
 msgstr "Está datado"
 
+msgid "Stale data received from time provider"
+msgstr ""
+
 msgid "Stale hosts"
 msgstr "Anfitriões antigos"
 
@@ -62595,6 +62654,10 @@ msgstr "Estado e contagem dos processos"
 
 msgid "State and count of processes (only SNMP)"
 msgstr "Estado e contagem dos processos (apenas SNMP)"
+
+#, fuzzy
+msgid "State based on status of last sync attempt"
+msgstr "Estado em caso de status desconhecido do roteiro de replicação"
 
 #, fuzzy
 msgid "State change"
@@ -63649,6 +63712,10 @@ msgstr "Direto"
 
 msgid "StrategyType"
 msgstr "Tipo de estratégia"
+
+#, fuzzy
+msgid "Stratum"
+msgstr "Direto"
 
 msgid "Stream rules"
 msgstr "Regras do fluxo"
@@ -69837,6 +69904,11 @@ msgstr "Os dados estatísticos do intervalo de tempo são gravados em disco"
 msgid "The time must not be greater than %02d:%02d."
 msgstr "O tempo não deve ser maior do que %02d:%02d."
 
+#, fuzzy
+msgid "The time service was shutting down"
+msgstr ""
+"O anfitrião ou o serviço estava em um período de inatividade programado"
+
 #, python-format
 msgid "The timeout %s is not a valid integer number."
 msgstr "O timeout %s não é um número inteiro válido."
@@ -71209,6 +71281,11 @@ msgid ""
 msgstr ""
 "Esta verificação monitoriza o tamanho e os acessos a uma base de dados "
 "PostgreSQL."
+
+#, fuzzy
+msgid ""
+"This check monitors the status of time synchronization for Windows hosts."
+msgstr "Este plugin monitora o estado dos Hyper-V VMs em hosts Window."
 
 msgid "This check returns CRIT if the connection to the remote site failed."
 msgstr "Esta verificação devolve o CRIT se a ligação ao local remoto falhar."
@@ -75708,6 +75785,15 @@ msgstr "Tempo gasto à espera de agente especial"
 
 msgid "Time stamp format"
 msgstr "Formato de carimbo de hora"
+
+msgid ""
+"Time syncs especially against public NTP servers can fail in various ways "
+"throughout the course of the NTP lifecycle and therefore we do not alert by "
+"default when a sync fails (preferring instead to alert when too much time "
+"has elapsed before a successful sync). However, in some environments, it "
+"might be useful to know right away when a sync fails. The state of various "
+"kinds of failures can therefore be configured here."
+msgstr ""
 
 msgid "Time to alert when PVC status is in pending state"
 msgstr "Tempo para alertar quando o estado do PVC está pendente"
@@ -85007,6 +85093,17 @@ msgstr ""
 "perdidos."
 
 msgid ""
+"When the reference ID and state machine value are both 0, it usually means "
+"that the service has not synced since starting. The reported state in this "
+"scenario can be configured here."
+msgstr ""
+
+msgid ""
+"When the time offset on the last sync was worse (in either direction) than "
+"the specified parameters, go into WARN or CRIT status."
+msgstr ""
+
+msgid ""
 "When the total size of spooled messages exceeds this number, the oldest "
 "messages of the currently spooled messages is thrown away until the left "
 "messages have the half of the maximum size."
@@ -85590,6 +85687,10 @@ msgstr "Impressoras Windows: número de trabalhos em aberto"
 
 msgid "Windows service discovery"
 msgstr "descoberta de serviços do Windows"
+
+#, fuzzy
+msgid "Windows time service"
+msgstr "Serviços Windows"
 
 msgid "Windows, Linux, Solaris, AIX"
 msgstr "Windows, Linux, Solaris, AIX"

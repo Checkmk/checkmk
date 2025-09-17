@@ -8,6 +8,8 @@ import { fetchRestAPI } from '@/lib/cmkFetch.ts'
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types.ts'
 import type {
   BadRequestBody,
+  CreateRelativeDashboardBody,
+  CreateResponsiveDashboardBody,
   DashboardConstants,
   DashboardMetadata,
   DashboardMetadataModel,
@@ -92,6 +94,22 @@ export const dashboardAPI = {
       return { success: false, status: 400, error: payload as BadRequestBody }
     }
     return { success: false, status: response.status, error: payload }
+  },
+  createRelativeGridDashboard: async (
+    dashboard: CreateRelativeDashboardBody
+  ): Promise<RelativeGridDashboardDomainObject> => {
+    const url = `${API_ROOT}/domain-types/dashboard_relative_grid/collections/all`
+    const response = await fetchRestAPI(url, 'POST', dashboard)
+    await response.raiseForStatus()
+    return await response.json()
+  },
+  createResponsiveGridDashboard: async (
+    dashboard: CreateResponsiveDashboardBody
+  ): Promise<ResponsiveGridDashboardDomainObject> => {
+    const url = `${API_ROOT}/domain-types/dashboard_responsive_grid/collections/all`
+    const response = await fetchRestAPI(url, 'POST', dashboard)
+    await response.raiseForStatus()
+    return await response.json()
   },
   getDashboardConstants: async (): Promise<DashboardConstants> => {
     const url = `${API_ROOT}/objects/constant/dashboard`

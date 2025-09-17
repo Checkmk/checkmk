@@ -134,7 +134,7 @@ def generate_cert_services(
 
 
 def _command_arguments(endpoint: CertEndpoint, host_config: HostConfig) -> Iterator[str]:
-    yield "--url"
+    yield "--hostname"
     yield endpoint.address
 
     if (port := endpoint.port) is not None:

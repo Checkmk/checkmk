@@ -6,6 +6,8 @@
 from functools import partial
 
 from cmk.gui.data_source import data_source_registry, register_data_sources
+from cmk.gui.openapi.framework import VersionedEndpointRegistry
+from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.painter.v0 import painter_registry, painters
 from cmk.gui.painter_options import painter_option_registry
@@ -40,6 +42,10 @@ def register(
     visual_type_registry: VisualTypeRegistry,
     multisite_builtin_views: dict[ViewName, ViewSpec],
     row_post_processor_registry: RowPostProcessorRegistry,
+    endpoint_family_registry: EndpointFamilyRegistry,
+    versioned_endpoint_registry: VersionedEndpointRegistry,
+    *,
+    ignore_duplicates: bool = False,
 ) -> None:
     multisite_builtin_views.update(builtin_views)
 
@@ -71,7 +77,12 @@ def register(
     command.register(
         command_group_registry, command_registry, permission_section_registry, permission_registry
     )
-    register_data_sources(data_source_registry)
+    register_data_sources(
+        data_source_registry,
+        endpoint_family_registry,
+        versioned_endpoint_registry,
+        ignore_duplicates=ignore_duplicates,
+    )
     perfometer.register(sorter_registry, painter_registry)
     icon.register(
         icon.icon_and_action_registry,

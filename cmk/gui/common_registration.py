@@ -186,6 +186,9 @@ def register(
         visual_type_registry,
         multisite_builtin_views,
         row_post_processor_registry,
+        endpoint_family_registry,
+        versioned_endpoint_registry,
+        ignore_duplicates=ignore_duplicate_endpoints,
     )
     inventory.register(
         config_variable_registry,

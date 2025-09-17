@@ -7,16 +7,25 @@ from collections.abc import Sequence
 from livestatus import LivestatusColumn, OnlySites, Query, QuerySpecification
 
 from cmk.gui.i18n import _
+from cmk.gui.openapi.framework import VersionedEndpointRegistry
+from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.painter.v0 import Cell
 from cmk.gui.type_defs import ColumnName, Rows, SingleInfos, VisualContext
 from cmk.gui.visuals.filter import Filter
 
+from ._openapi import register_endpoints
 from .base import ABCDataSource, RowTable
 from .livestatus import DataSourceLivestatus, query_livestatus, RowTableLivestatus
 from .registry import DataSourceRegistry
 
 
-def register_data_sources(registry: DataSourceRegistry) -> None:
+def register_data_sources(
+    registry: DataSourceRegistry,
+    endpoint_family_registry: EndpointFamilyRegistry,
+    versioned_endpoint_registry: VersionedEndpointRegistry,
+    *,
+    ignore_duplicates: bool = False,
+) -> None:
     registry.register(DataSourceHosts)
     registry.register(DataSourceHostsByGroup)
     registry.register(DataSourceServices)
@@ -33,6 +42,10 @@ def register_data_sources(registry: DataSourceRegistry) -> None:
     registry.register(DataSourceLogHostEvents)
     registry.register(DataSourceLogAlertStatistics)
     registry.register(DataSourceServiceDiscovery)
+
+    register_endpoints(
+        endpoint_family_registry, versioned_endpoint_registry, ignore_duplicates=ignore_duplicates
+    )
 
 
 class DataSourceHosts(DataSourceLivestatus):

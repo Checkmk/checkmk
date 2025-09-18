@@ -31,9 +31,11 @@ from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import DismissableWarning, UserSpec
 from cmk.gui.utils.permission_verification import BasePerm
 from cmk.gui.utils.roles import roles_of_user, UserPermissions
+from cmk.gui.utils.security_log_events import PermissionCheckFailureEvent
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.shared_typing.user_frontend_config import UserFrontendConfig
+from cmk.utils.log.security_event import log_security_event
 
 _logger = logging.getLogger(__name__)
 _ContactgroupName = str
@@ -466,6 +468,7 @@ class LoggedInUser:
         if not self.may(permission):
             perm = permissions.permission_registry.get(permission)
             title = permission if perm is None else perm.title
+            log_security_event(PermissionCheckFailureEvent(permission=title, username=self.id))
             raise MKAuthException(
                 _(
                     "We are sorry, but you lack the permission "

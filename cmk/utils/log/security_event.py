@@ -26,6 +26,7 @@ class SecurityEvent:
             "auth",
             "service",
             "user_management",
+            "user_permissions",
             "cert_management",
         ],
     )

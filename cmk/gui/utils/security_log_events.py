@@ -128,3 +128,20 @@ class TwoFactorEvent(SecurityEvent):
             },
             SecurityEvent.Domain.user_management,
         )
+
+
+@dataclass
+class PermissionCheckFailureEvent(SecurityEvent):
+    """Indicates a failed permission check"""
+
+    def __init__(
+        self,
+        *,
+        permission: str,
+        username: UserId | None,
+    ) -> None:
+        super().__init__(
+            "permission check failed",
+            {"permission": str(permission), "user": username if username else "Unknown user"},
+            SecurityEvent.Domain.user_permissions,
+        )

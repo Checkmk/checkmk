@@ -172,15 +172,23 @@ def check_elphase(
             render_func=lambda x: f"{x:.1f} VA",
         )
 
+    if elphase.energy:
+        yield from _check_reading(
+            elphase.energy,
+            label="Energy",
+            metric_name="energy",
+            lower_levels=None,
+            upper_levels=None,
+            render_func=lambda x: f"{x:.1f} Wh",
+        )
+
     readings: Mapping[str, ReadingWithState | None] = {
-        "energy": elphase.energy,
         "frequency": elphase.frequency,
         "differential_current_ac": elphase.differential_current_ac,
         "differential_current_dc": elphase.differential_current_dc,
     }
 
     for quantity, title, render_func, bound, factor in [
-        ("energy", "Energy", lambda x: f"{x:.1f} Wh", Bounds.Upper, 1),
         ("frequency", "Frequency", lambda x: f"{x:.1f} hz", Bounds.Both, 1),
         (
             "differential_current_ac",

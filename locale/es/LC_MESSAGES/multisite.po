@@ -25662,6 +25662,10 @@ msgstr "Filtrar la selección de %s por servicio: "
 msgid "Filter / Search"
 msgstr "Filtrar / Buscar"
 
+#, fuzzy
+msgid "Filter Azure tags imported as host/service labels"
+msgstr "Mostrar etiquetas de servicios descubiertos"
+
 msgid "Filter aggregations"
 msgstr "Filtrar agregaciones"
 
@@ -25724,10 +25728,6 @@ msgstr "Filtrar la selección de %s por nombre de host: "
 #, fuzzy
 msgid "Filter selection by service:"
 msgstr "Filtrar la selección de %s por servicio: "
-
-#, fuzzy
-msgid "Filter tags imported as host/service labels"
-msgstr "Mostrar etiquetas de servicios descubiertos"
 
 msgid "Filter valid annotations by key pattern"
 msgstr "Filtrar las anotaciones válidas por patrón de clave"

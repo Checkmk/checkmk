@@ -25520,6 +25520,10 @@ msgstr "Filtrați selecția %s în funcție de serviciu: "
 msgid "Filter / Search"
 msgstr "Filtru / Căutare"
 
+#, fuzzy
+msgid "Filter Azure tags imported as host/service labels"
+msgstr "Etichete de serviciu descoperite"
+
 msgid "Filter aggregations"
 msgstr "Agregări de filtre"
 
@@ -25582,10 +25586,6 @@ msgstr "Filtrați selecția %s după numele de gazdă: "
 #, fuzzy
 msgid "Filter selection by service:"
 msgstr "Filtrați selecția %s în funcție de serviciu: "
-
-#, fuzzy
-msgid "Filter tags imported as host/service labels"
-msgstr "Etichete de serviciu descoperite"
 
 msgid "Filter valid annotations by key pattern"
 msgstr "Filtrarea adnotărilor valide după modelul de cheie"

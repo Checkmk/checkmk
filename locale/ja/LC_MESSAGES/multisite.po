@@ -24004,6 +24004,10 @@ msgstr "%sの選択をサービスでフィルタリングします。 "
 msgid "Filter / Search"
 msgstr "フィルタ/検索"
 
+#, fuzzy
+msgid "Filter Azure tags imported as host/service labels"
+msgstr "ホスト/サービスラベルとしてインポートされたタグのフィルタリング"
+
 msgid "Filter aggregations"
 msgstr "集計をフィルタリングする"
 
@@ -24062,9 +24066,6 @@ msgstr "ホスト名でによるフィルター選択:"
 
 msgid "Filter selection by service:"
 msgstr "サービスによるフィルター選択:"
-
-msgid "Filter tags imported as host/service labels"
-msgstr "ホスト/サービスラベルとしてインポートされたタグのフィルタリング"
 
 msgid "Filter valid annotations by key pattern"
 msgstr "キーパターンによる有効なアノテーションのフィルタリング"

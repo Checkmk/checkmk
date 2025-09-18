@@ -104,6 +104,14 @@ py_library(
 )
 
 py_library(
+    name = "observer",
+    srcs = ["cmk/ccc/observer.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = ["_init"],
+)
+
+py_library(
     name = "plugin-registry",
     srcs = ["cmk/ccc/plugin_registry.py"],
     imports = ["."],
@@ -186,6 +194,7 @@ _ALL = [
     "exceptions",
     "hostaddress",
     "i18n",
+    "observer",
     "plugin-registry",
     "profile",
     "resulttype",
@@ -344,6 +353,21 @@ py_test(
     deps = [
         "__test__",
         "user",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "observer-tests",
+    size = "small",
+    srcs = [
+        "__test__.py",
+        "tests/test_observer.py",
+    ],
+    main = "__test__.py",
+    deps = [
+        "__test__",
+        "observer",
         requirement("pytest"),
     ],
 )

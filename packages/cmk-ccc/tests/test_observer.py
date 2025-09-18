@@ -7,7 +7,7 @@ from logging import getLogger
 
 import pytest
 
-from cmk.utils.observer import FetcherMemoryObserver, vm_size
+from cmk.ccc.observer import FetcherMemoryObserver, vm_size
 
 logger = getLogger("cmk.base")
 LOG_MESSAGE = "13;heute;checking;60"
@@ -44,7 +44,7 @@ def test_fetcher_memory_observer_before_steady() -> None:
     assert initial_memory_usage == observer.memory_usage() == 0, (
         "Memory usage is updated ONLY at steady state!"
     )
-    assert observer._num_check_cycles == 2
+    assert observer._num_check_cycles == 2  # noqa: SLF001
 
 
 def test_fetcher_memory_observer_steady_setup() -> None:
@@ -56,7 +56,7 @@ def test_fetcher_memory_observer_steady_setup() -> None:
         config_cache_dump_sizes=lambda: {},
     )
     _change_state(observer, steady=True, log=LOG_MESSAGE)
-    assert observer._context() == f'[cycle {STEADY_CYCLE}, command "{LOG_MESSAGE}"]'
+    assert observer._context() == f'[cycle {STEADY_CYCLE}, command "{LOG_MESSAGE}"]'  # noqa: SLF001
     assert observer.memory_usage() == memory_usage
 
 
@@ -76,7 +76,7 @@ def test_fetcher_memory_observer_overflow() -> None:
     # expected EXIT on overflow AFTER steady achieved
     with pytest.raises(SystemExit) as exit_expected:
         observer.check_resources(None, False)
-    assert observer._num_check_cycles == STEADY_CYCLE + 1
+    assert observer._num_check_cycles == STEADY_CYCLE + 1  # noqa: SLF001
     assert observer.memory_usage() == steady_state_memory_usage, (
         "Memory usage is updated ONLY at steady state!"
     )
@@ -106,7 +106,7 @@ def test_fetcher_memory_observer_no_overflow(delta: int) -> None:
 
 
 @pytest.mark.skip(reason="CMK-24874: migrate as integration test(s).")
-def test_fetcher_memory_obeserver_vm_size():
+def test_fetcher_memory_obeserver_vm_size() -> None:
     mibs_to_bytes = 2**20
     memory_assigned = mibs_to_bytes * 50  # 50 MiBs
     initial_measure = vm_size()

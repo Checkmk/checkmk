@@ -33,8 +33,8 @@ unix_cc_toolchain_config(
     cpu = "k8",
     cxx_builtin_include_directories = [
         # local
-        "/usr/lib/gcc/x86_64-linux-gnu/13/include",
-        "/usr/lib/gcc/x86_64-linux-gnu/13/include-fixed",
+        "/usr/lib/gcc/x86_64-linux-gnu/14/include",
+        "/usr/lib/gcc/x86_64-linux-gnu/14/include-fixed",
         # ci
         "/opt/gcc-13.2.0/lib/gcc/x86_64-pc-linux-gnu/13.2.0/include",
         "/opt/gcc-13.2.0/lib/gcc/x86_64-pc-linux-gnu/13.2.0/include-fixed",
@@ -70,11 +70,11 @@ unix_cc_toolchain_config(
     tool_paths = select(
         {
             "//conditions:default": {
-                "ar": "/usr/bin/gcc-ar-13",
-                "cpp": "/usr/bin/cpp-13",
-                "gcc": "/usr/bin/gcc-13",
+                "ar": "/usr/bin/gcc-ar-14",
+                "cpp": "/usr/bin/cpp-14",
+                "gcc": "/usr/bin/gcc-14",
                 "ld": "/usr/bin/ld",
-                "nm": "/usr/bin/gcc-nm-13",
+                "nm": "/usr/bin/gcc-nm-14",
                 "objdump": "/usr/bin/objdump",
                 "strip": "/usr/bin/strip",
                 "objcopy": "/usr/bin/objcopy",

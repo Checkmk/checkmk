@@ -62,7 +62,7 @@ jobs:
         # gettext: Needed for some "unit tests" (test_i18n.py)
         sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
         sudo apt-get update
-        sudo apt-get install ksh libpango1.0-dev librrd-dev libldap2-dev libsasl2-dev libkrb5-dev libglib2.0-dev gettext g++-13
+        sudo apt-get install ksh libpango1.0-dev librrd-dev libldap2-dev libsasl2-dev libkrb5-dev libglib2.0-dev gettext g++-13 g++14
         make .venv
     - name: Run ${{ matrix.name  }}
       env:

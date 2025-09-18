@@ -1104,3 +1104,25 @@ node_software_applications_podman_images = Node(
         }
     ),
 )
+
+node_software_applications_podman_container = Node(
+    name="software_applications_podman_container",
+    path=["software", "applications", "podman", "container"],
+    title=Title("Container"),
+    attributes={
+        "hostname": TextField(Title("Hostname")),
+        "pod": TextField(Title("Pod")),
+        "labels": TextField(Title("Labels")),
+    },
+)
+
+node_software_applications_podman_network = Node(
+    name="software_applications_podman_network",
+    path=["software", "applications", "podman", "network"],
+    title=Title("Network"),
+    attributes={
+        "ip_address": TextField(Title("IP address")),
+        "gateway": TextField(Title("Gateway")),
+        "mac_address": TextField(Title("MAC address")),
+    },
+)

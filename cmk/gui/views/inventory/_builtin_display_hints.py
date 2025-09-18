@@ -1094,28 +1094,28 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".software.applications.podman.images:*.container_num": {"title": _l("#Containers")},
         # MIGRATED ".software.applications.podman.images:*.repository": {"title": _l("Repository")},
         # MIGRATED ".software.applications.podman.images:*.tag": {"title": _l("Tag")},
-        ".software.applications.podman.container.": {
-            "title": _l("Container"),
-            "keyorder": [
-                "hostname",
-                "pod",
-                "labels",
-            ],
-        },
-        ".software.applications.podman.container.hostname": {"title": _l("Hostname")},
-        ".software.applications.podman.container.pod": {"title": _l("Pod")},
-        ".software.applications.podman.container.labels": {"title": _l("Labels")},
-        ".software.applications.podman.network.": {
-            "title": _l("Network"),
-            "keyorder": [
-                "ip_address",
-                "gateway",
-                "mac_address",
-            ],
-        },
-        ".software.applications.podman.network.ip_address": {"title": _l("IP address")},
-        ".software.applications.podman.network.gateway": {"title": _l("Gateway")},
-        ".software.applications.podman.network.mac_address": {"title": _l("MAC address")},
+        # MIGRATED ".software.applications.podman.container.": {
+        # MIGRATED     "title": _l("Container"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "hostname",
+        # MIGRATED         "pod",
+        # MIGRATED         "labels",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.podman.container.hostname": {"title": _l("Hostname")},
+        # MIGRATED ".software.applications.podman.container.pod": {"title": _l("Pod")},
+        # MIGRATED ".software.applications.podman.container.labels": {"title": _l("Labels")},
+        # MIGRATED ".software.applications.podman.network.": {
+        # MIGRATED     "title": _l("Network"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "ip_address",
+        # MIGRATED         "gateway",
+        # MIGRATED         "mac_address",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.podman.network.ip_address": {"title": _l("IP address")},
+        # MIGRATED ".software.applications.podman.network.gateway": {"title": _l("Gateway")},
+        # MIGRATED ".software.applications.podman.network.mac_address": {"title": _l("MAC address")},
         ".software.applications.synthetic_monitoring.": {"title": _l("Synthetic monitoring")},
         # MIGRATED ".software.applications.synthetic_monitoring.": {"title": _l("Synthetic monitoring")},
         # MIGRATED ".software.applications.synthetic_monitoring.plans:": {

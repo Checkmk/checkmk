@@ -396,6 +396,42 @@ impl TryFrom<&str> for AuthType {
 }
 
 #[derive(PartialEq, Debug, Clone)]
+pub enum Backend {
+    Auto,
+    Tcp,
+    #[cfg(windows)]
+    Odbc,
+}
+
+impl Default for Backend {
+    #[cfg(unix)]
+    fn default() -> Self {
+        Self::Tcp
+    }
+    #[cfg(windows)]
+    fn default() -> Self {
+        Self::Auto
+    }
+}
+
+impl Backend {
+    fn from_string<T>(value: T) -> Option<Self>
+    where
+        T: AsRef<str>,
+    {
+        match value.as_ref() {
+            "auto" => Some(Self::Auto),
+            "tcp" => Some(Self::Tcp),
+            #[cfg(unix)]
+            "odbc" => Some(Self::Auto), // at the moment unix ignores odbc
+            #[cfg(windows)]
+            "odbc" => Some(Self::Odbc),
+            _ => None,
+        }
+    }
+}
+
+#[derive(PartialEq, Debug, Clone)]
 pub struct Connection {
     hostname: HostName,
     fail_over_partner: Option<String>,
@@ -404,6 +440,7 @@ pub struct Connection {
     trust_server_certificate: bool,
     tls: Option<ConnectionTls>,
     timeout: u64,
+    backend: Backend,
 }
 
 impl Connection {
@@ -441,6 +478,16 @@ impl Connection {
                     log::debug!("no timeout specified, using default");
                     defaults::CONNECTION_TIMEOUT
                 }),
+                backend: {
+                    let value: String = conn
+                        .get_string(keys::BACKEND)
+                        .unwrap_or_default()
+                        .to_lowercase();
+                    Backend::from_string(value.as_str()).unwrap_or_else(|| {
+                        log::error!("Unknown backend '{}'", &value);
+                        Backend::default()
+                    })
+                },
             }
             .ensure(auth),
         ))
@@ -469,6 +516,9 @@ impl Connection {
     pub fn timeout(&self) -> Duration {
         Duration::from_secs(self.timeout)
     }
+    pub fn backend(&self) -> &Backend {
+        &self.backend
+    }
 
     fn ensure(mut self, auth: Option<&Authentication>) -> Self {
         match auth {
@@ -492,6 +542,7 @@ impl Default for Connection {
             trust_server_certificate: defaults::TRUST_SERVER_CERTIFICATE,
             tls: None,
             timeout: defaults::CONNECTION_TIMEOUT,
+            backend: Backend::default(),
         }
     }
 }
@@ -769,8 +820,14 @@ impl CustomInstance {
     }
 }
 
+fn is_local_endpoint(auth: &Authentication, conn: &Connection) -> bool {
+    auth.auth_type() == &AuthType::Integrated
+        || conn.hostname() == HostName::from("localhost".to_owned())
+        || conn.hostname() == HostName::from("127.0.0.1".to_owned())
+}
+
 pub fn calc_real_host(auth: &Authentication, conn: &Connection) -> HostName {
-    if is_local_host(auth, conn) {
+    if is_local_endpoint(auth, conn) {
         "localhost".to_string().into()
     } else {
         conn.hostname().clone()
@@ -782,7 +839,10 @@ pub fn is_local_host(auth: &Authentication, _conn: &Connection) -> bool {
 }
 
 pub fn is_use_tcp(name: &InstanceName, auth: &Authentication, conn: &Connection) -> bool {
-    if is_local_host(auth, conn) {
+    if conn.backend() != &Backend::Auto && conn.backend() != &Backend::Tcp {
+        return false;
+    }
+    if is_local_endpoint(auth, conn) {
         get_registry_instance_info(name)
             .map(|i| i.is_tcp())
             .unwrap_or(true)
@@ -827,7 +887,7 @@ mod tests {
     use self::data::TEST_CONFIG;
 
     use super::*;
-    use crate::config::{section::SectionKind, yaml::test_tools::create_yaml};
+    use crate::config::{ms_sql::Backend, section::SectionKind, yaml::test_tools::create_yaml};
     use crate::constants::tests::expected_instances_in_config;
     mod data {
         /// copied from tests/files/test-config.yaml
@@ -840,7 +900,7 @@ mssql:
     authentication: # mandatory
       username: "foo" # mandatory
       password: "bar" # optional
-      type: "sql_server" # optional, default: "integrated", values: sql_server, windows, token and integrated (current windows user) 
+      type: "sql_server" # optional, default: "integrated", values: sql_server, windows, token and integrated (current windows user)
       access_token: "baz" # optional
     connection: # optional
       hostname: "localhost" # optional(default: "localhost")
@@ -884,6 +944,7 @@ mssql:
       - sid: "INST1" # mandatory
         authentication: # optional, same as above
         connection: # optional,  same as above
+          backend: odbc
         alias: "someApplicationName" # optional
         piggyback: # optional
           hostname: "myPiggybackHost" # mandatory
@@ -897,6 +958,7 @@ mssql:
         connection:
           hostname: "local"
           port: 500
+          backend: tcp
   configs:
     - main:
         options:
@@ -1132,6 +1194,38 @@ authentication:
             tls.client_certificate(),
             &r"C:\path\to\file_client".to_owned().into()
         );
+        assert_eq!(c.backend(), &Backend::default());
+    }
+
+    #[test]
+    fn test_connection_backend() {
+        let test: Vec<(&str, Backend)> = vec![
+            ("auto", Backend::Auto),
+            ("tcp", Backend::Tcp),
+            #[cfg(unix)]
+            ("odbc", Backend::Auto),
+            #[cfg(windows)]
+            ("odbc", Backend::Odbc),
+            ("unknown", Backend::default()),
+            ("", Backend::default()),
+        ];
+        for (value, expected) in test {
+            let config_text = create_full_connection_with_backend(value);
+            let c = Connection::from_yaml(&create_yaml(&config_text), None)
+                .unwrap()
+                .unwrap();
+            assert_eq!(c.backend(), &expected);
+        }
+    }
+
+    fn create_full_connection_with_backend(value: &str) -> String {
+        format!(
+            r#"{}
+  backend: {}
+"#,
+            data::CONNECTION_FULL,
+            value
+        )
     }
 
     #[cfg(windows)]
@@ -1439,6 +1533,11 @@ connection:
             "myPiggybackHost"
         );
         assert_eq!(c.instances()[0].name().to_string(), "INST1");
+        let inst1 = &c.instances()[0];
+        #[cfg(unix)]
+        assert_eq!(inst1.conn().backend(), &Backend::Auto);
+        #[cfg(windows)]
+        assert_eq!(inst1.conn().backend(), &Backend::Odbc);
         let inst2 = &c.instances()[1];
 
         assert_eq!(inst2.name().to_string(), "INST2");
@@ -1447,6 +1546,7 @@ connection:
         assert_eq!(inst2.auth().auth_type, AuthType::SqlServer);
         assert_eq!(inst2.conn().hostname, HostName::from("local".to_string()));
         assert_eq!(inst2.conn().port, Port(500));
+        assert_eq!(inst2.conn().backend(), &Backend::Tcp);
         assert_eq!(c.mode(), &Mode::Socket);
         assert_eq!(
             c.discovery().include(),
@@ -1698,5 +1798,64 @@ mssql:
         };
         let c = Connection::default();
         assert!(is_use_tcp(&"MSSQLSERVER".to_string().into(), &a, &c));
+    }
+
+    fn _make_non_local_host_name() -> HostName {
+        "localhost.com".to_string().into()
+    }
+
+    fn _make_non_local_connection(backend: Backend) -> Connection {
+        Connection {
+            hostname: _make_non_local_host_name(),
+            backend,
+            ..Default::default()
+        }
+    }
+    #[test]
+    fn test_is_use_tcp() {
+        let srv_name: InstanceName = "SERVER".to_string().into();
+        let auth_sql = Authentication {
+            auth_type: AuthType::SqlServer,
+            ..Default::default()
+        };
+        let conn_non_local_tcp = _make_non_local_connection(Backend::Tcp);
+        assert!(is_use_tcp(&srv_name, &auth_sql, &conn_non_local_tcp));
+
+        let conn_non_local_auto = _make_non_local_connection(Backend::Auto);
+        assert!(is_use_tcp(&srv_name, &auth_sql, &conn_non_local_auto));
+
+        #[cfg(windows)]
+        {
+            let conn_non_local_odbc = _make_non_local_connection(Backend::Odbc);
+            assert!(!is_use_tcp(&srv_name, &auth_sql, &conn_non_local_odbc));
+        }
+    }
+    #[test]
+    fn test_is_local_endpoint() {
+        let auth_integrated = Authentication {
+            auth_type: AuthType::Integrated,
+            ..Default::default()
+        };
+        let auth_sql = Authentication {
+            auth_type: AuthType::SqlServer,
+            ..Default::default()
+        };
+        let conn_non_local = Connection {
+            hostname: HostName::from("localhost.com".to_string()),
+            ..Default::default()
+        };
+        let conn_local = Connection {
+            hostname: HostName::from("localhost".to_string()),
+            ..Default::default()
+        };
+        let conn_127 = Connection {
+            hostname: HostName::from("127.0.0.1".to_string()),
+            ..Default::default()
+        };
+        assert!(is_local_endpoint(&auth_integrated, &conn_local));
+        assert!(is_local_endpoint(&auth_integrated, &conn_non_local));
+        assert!(is_local_endpoint(&auth_sql, &conn_local));
+        assert!(is_local_endpoint(&auth_sql, &conn_127));
+        assert!(!is_local_endpoint(&auth_sql, &conn_non_local));
     }
 }

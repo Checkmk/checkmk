@@ -1187,12 +1187,25 @@ fn validate_stdout(stdout: &str, label: &str) {
 
     let rtm_count = contains(&lines, "|RTM|Express Edition");
     let sp3_count = contains(&lines, "|SP3|Express Edition");
-    assert_eq!(rtm_count + sp3_count, 2, "{}\n{}", &label, stdout);
+    let sp2_count = contains(&lines, "|SP2|Express Edition");
+    assert_eq!(
+        rtm_count + std::cmp::max(sp3_count, sp2_count),
+        2,
+        "{}\n{}",
+        &label,
+        stdout
+    );
 
     let rtm_count = contains(&lines, "|RTM|Express Edition (64-bit)");
     let sp3_count = contains(&lines, "|SP3|Express Edition (64-bit)");
-    assert_eq!(rtm_count + sp3_count, 1, "{}\n{}", &label, stdout);
-
+    let sp2_count = contains(&lines, "|SP2|Express Edition (64-bit)");
+    assert_eq!(
+        rtm_count + std::cmp::max(sp3_count, sp2_count),
+        1,
+        "{}\n{}",
+        &label,
+        stdout
+    );
     assert_eq!(
         contains(&lines, "|RTM|Standard Edition"),
         1,
@@ -1545,8 +1558,14 @@ fn test_get_instances() {
 #[cfg(windows)]
 #[test]
 fn test_odbc() {
-    let s =
-        odbc::make_connection_string(&InstanceName::from("SQLEXPRESS_NAME"), Some("master"), None);
+    use mk_sql::types::HostName;
+
+    let s = odbc::make_connection_string(
+        Some(&HostName::from("127.0.0.1".to_string())),
+        &InstanceName::from("SQLEXPRESS_NAME"),
+        Some("master"),
+        None,
+    );
     let r = odbc::execute(
         &s,
         sqls::find_known_query(sqls::Id::TableSpaces).unwrap(),
@@ -1571,8 +1590,12 @@ fn test_odbc() {
 #[cfg(windows)]
 #[test]
 fn test_odbc_timeout() {
-    let s =
-        odbc::make_connection_string(&InstanceName::from("SQLEXPRESS_XX"), Some("master"), None);
+    let s = odbc::make_connection_string(
+        None,
+        &InstanceName::from("SQLEXPRESS_XX"),
+        Some("master"),
+        None,
+    );
     let start = std::time::Instant::now();
     let r = odbc::execute(
         &s,
@@ -1588,10 +1611,16 @@ fn test_odbc_timeout() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_odbc_high_level() {
     use mk_sql::ms_sql::instance::SqlInstanceProperties;
+    use mk_sql::types::HostName;
 
     async fn get(name: &str) -> Option<SqlInstanceProperties> {
         let instance_name = InstanceName::from(name);
-        let mut client = create_odbc_client(&instance_name, None).unwrap();
+        let mut client = create_odbc_client(
+            &HostName::from("localhost".to_string()),
+            &instance_name,
+            None,
+        )
+        .unwrap();
         obtain_properties(&mut client, &instance_name).await
     }
 

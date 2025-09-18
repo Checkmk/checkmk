@@ -25,6 +25,7 @@ pub mod keys {
     pub const CA: &str = "ca";
     pub const CLIENT_CERTIFICATE: &str = "client_certificate";
     pub const TRUST_SERVER_CERTIFICATE: &str = "trust_server_certificate";
+    pub const BACKEND: &str = "backend";
 
     pub const SECTIONS: &str = "sections";
     pub const CACHE_AGE: &str = "cache_age";

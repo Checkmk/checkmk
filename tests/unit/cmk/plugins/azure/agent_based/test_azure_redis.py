@@ -408,3 +408,43 @@ def test_check_azure_redis_server_load_sustained(_get_value_store: Mock) -> None
         Result(state=State.OK, summary="Server load: 26.00%"),
         Metric("azure_redis_server_load", 26.0),
     ]
+
+
+@mock.patch(
+    "cmk.plugins.lib.azure.get_value_store",
+    return_value={"util_average": (EPOCH - 300, EPOCH, 99)},
+)
+@time_machine.travel(EPOCH + 300)
+def test_check_azure_redis_cpu_util_average(_get_value_store: Mock) -> None:
+    check_function = azure_redis.check_plugin_azure_redis_cpu_utilization.check_function
+    params = {
+        "average_mins": 5,
+    }
+    assert list(check_function(params, AZURE_REDIS_WITH_METRICS)) == [
+        Metric("util", 25.0),
+        Result(state=State.OK, summary="Total CPU: 62.00%"),
+        Metric("util_average", 62.0),
+    ]
+
+
+@mock.patch(
+    "cmk.plugins.lib.azure.get_value_store",
+    return_value={"util_sustained_threshold": EPOCH - 45.0},
+)
+@time_machine.travel(EPOCH)
+def test_check_azure_redis_cpu_util_sustained(_get_value_store: Mock) -> None:
+    check_function = azure_redis.check_plugin_azure_redis_cpu_utilization.check_function
+    params = {
+        "for_time": {
+            "threshold_for_time": 25,
+            "limit_secs_for_time": ("fixed", (30.0, 60.0)),
+        },
+    }
+    assert list(check_function(params, AZURE_REDIS_WITH_METRICS)) == [
+        Result(
+            state=State.WARN,
+            summary="CPU utilization high for: 45 seconds (warn/crit at 30 seconds/1 minute 0 seconds)",
+        ),
+        Result(state=State.OK, summary="Total CPU: 25.00%"),
+        Metric("util", 25.0),
+    ]

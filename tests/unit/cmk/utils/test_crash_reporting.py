@@ -20,6 +20,7 @@ from cmk.ccc.crash_reporting import (
     ABCCrashReport,
     CrashInfo,
     CrashReportStore,
+    make_crash_report_base_path,
     REDACTED_STRING,
     VersionInfo,
 )
@@ -44,7 +45,7 @@ def crash(tmp_path: Path) -> UnitTestCrashReport:
         raise ValueError("XYZ")
     except ValueError:
         return UnitTestCrashReport(
-            omd_root=tmp_path,
+            crash_report_base_path=make_crash_report_base_path(tmp_path),
             crash_info=UnitTestCrashReport.make_crash_info(
                 VersionInfo(
                     core="test",
@@ -186,7 +187,7 @@ def test_crash_report_store_cleanup(tmp_path: Path, n_crashes: int) -> None:
             raise ValueError("Crash #%d" % num)
         except ValueError:
             crash = UnitTestCrashReport(
-                omd_root=tmp_path,
+                crash_report_base_path=make_crash_report_base_path(tmp_path),
                 crash_info=UnitTestCrashReport.make_crash_info(
                     VersionInfo(
                         core="test",

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.ccc.crash_reporting import VersionInfo
+from cmk.ccc.crash_reporting import make_crash_report_base_path, VersionInfo
 from cmk.gui.crash_handler import GUICrashReport, RequestDetails
 
 
@@ -25,7 +25,7 @@ def test_gui_crash_report_from_exception_without_request_context(tmp_path: Path)
                 time=0.0,
                 os="Foobuntu",
             ),
-            omd_root=tmp_path,
+            crash_report_base_path=make_crash_report_base_path(tmp_path),
         )
         # In this case we currently don't produce unknown request details
         assert report.crash_info["details"] == RequestDetails(
@@ -56,7 +56,7 @@ def test_gui_crash_report_from_exception_with_request_context(tmp_path: Path) ->
                 time=0.0,
                 os="Foobuntu",
             ),
-            omd_root=tmp_path,
+            crash_report_base_path=make_crash_report_base_path(tmp_path),
         )
         details = report.crash_info["details"]
         assert details["page"] == "index.py"

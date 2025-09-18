@@ -156,17 +156,17 @@ class SerializedCrashReport[T](TypedDict):
     crash_info: CrashInfo[T]
 
 
-def crash_dir(omd_root: Path) -> Path:
+def make_crash_report_base_path(omd_root: Path) -> Path:
     return omd_root / "var/check_mk/crashes"
 
 
 class ABCCrashReport[TDetails](abc.ABC):
     """Base class for the component specific crash report types"""
 
-    def __init__(self, *, omd_root: Path, crash_info: CrashInfo[TDetails]) -> None:
+    def __init__(self, *, crash_report_base_path: Path, crash_info: CrashInfo[TDetails]) -> None:
         super().__init__()
-        self.crashdir: Final = crash_dir(omd_root)
-        self.crash_info = crash_info
+        self.crashdir: Final = crash_report_base_path
+        self.crash_info: Final = crash_info
 
     @classmethod
     @abc.abstractmethod

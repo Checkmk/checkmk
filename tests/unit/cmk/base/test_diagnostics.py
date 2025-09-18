@@ -20,7 +20,7 @@ import livestatus
 
 import cmk.utils.paths
 from cmk.base import diagnostics
-from cmk.ccc.crash_reporting import crash_dir
+from cmk.ccc.crash_reporting import make_crash_report_base_path
 from cmk.ccc.hostaddress import HostName
 from cmk.inventory.structured_data import (
     deserialize_tree,
@@ -1005,7 +1005,9 @@ def test_diagnostics_element_crash_dumps():
 def test_diagnostics_element_crash_dumps_content(tmp_path):
     test_uuid = str(uuid.uuid4())
     category = "checks"
-    test_crash_dir = crash_dir(cmk.utils.paths.omd_root).joinpath(category).joinpath(test_uuid)
+    test_crash_dir = (
+        make_crash_report_base_path(cmk.utils.paths.omd_root).joinpath(category).joinpath(test_uuid)
+    )
     test_crash_dir.mkdir(parents=True, exist_ok=True)
     test_crash_filepath = test_crash_dir.joinpath("info.json")
     with test_crash_filepath.open("w", encoding="utf-8") as f:
@@ -1016,7 +1018,9 @@ def test_diagnostics_element_crash_dumps_content(tmp_path):
     tmppath.mkdir(parents=True, exist_ok=True)
     filepath = next(diagnostics_element.add_or_get_files(tmppath))
 
-    relative_path = crash_dir(cmk.utils.paths.omd_root).relative_to(cmk.utils.paths.omd_root)
+    relative_path = make_crash_report_base_path(cmk.utils.paths.omd_root).relative_to(
+        cmk.utils.paths.omd_root
+    )
     test_filename = f"{test_uuid}.tar.gz"
     assert filepath == tmppath.joinpath(relative_path).joinpath(f"{category}/{test_filename}")
 

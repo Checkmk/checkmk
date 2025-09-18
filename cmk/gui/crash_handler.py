@@ -11,6 +11,7 @@ import cmk.utils.paths
 from cmk.ccc.crash_reporting import (
     ABCCrashReport,
     CrashReportStore,
+    make_crash_report_base_path,
     VersionInfo,
 )
 from cmk.ccc.site import omd_site
@@ -60,7 +61,7 @@ class GUICrashReport(ABCCrashReport[GUIDetails]):
         *,
         version_info: VersionInfo,
         details: GUIDetails | None = None,
-        omd_root: Path,
+        crash_report_base_path: Path,
     ) -> Self:
         try:
             # Access any attribute to trigger proxy object lookup
@@ -93,7 +94,7 @@ class GUICrashReport(ABCCrashReport[GUIDetails]):
 
         if details is None:
             return cls(
-                omd_root=omd_root,
+                crash_report_base_path=crash_report_base_path,
                 crash_info=cls.make_crash_info(
                     version_info,
                     GUIDetails(
@@ -110,7 +111,7 @@ class GUICrashReport(ABCCrashReport[GUIDetails]):
                 ),
             )
         return cls(
-            omd_root=omd_root,
+            crash_report_base_path=crash_report_base_path,
             crash_info=cls.make_crash_info(
                 version_info,
                 GUIDetails(**{**details, **request_details}),
@@ -146,7 +147,7 @@ def create_gui_crash_report(
     crash = GUICrashReport.from_exception(
         version_info=cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
         details=details,
-        omd_root=cmk.utils.paths.omd_root,
+        crash_report_base_path=make_crash_report_base_path(cmk.utils.paths.omd_root),
     )
     CrashReportStore().save(crash)
     return crash

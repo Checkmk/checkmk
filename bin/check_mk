@@ -39,6 +39,7 @@ from cmk.ccc.crash_reporting import (
     ABCCrashReport,
     BaseDetails,
     CrashReportStore,
+    make_crash_report_base_path,
     VersionInfo,
 )
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTerminate
@@ -75,11 +76,11 @@ class CrashReport(ABCCrashReport[BaseDetails]):
     def from_exception(
         cls,
         *,
-        omd_root: Path,
+        crash_report_base_path: Path,
         version_info: VersionInfo,
     ) -> Self:
         return cls(
-            omd_root=omd_root,
+            crash_report_base_path=crash_report_base_path,
             crash_info=cls.make_crash_info(
                 version_info,
                 BaseDetails(
@@ -151,7 +152,7 @@ except OSError as e:
         sys.exit(4)
     CrashReportStore().save(
         CrashReport.from_exception(
-            omd_root=cmk.utils.paths.omd_root,
+            crash_report_base_path=make_crash_report_base_path(cmk.utils.paths.omd_root),
             version_info=cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
         )
     )
@@ -160,7 +161,7 @@ except OSError as e:
 except Exception:
     CrashReportStore().save(
         CrashReport.from_exception(
-            omd_root=cmk.utils.paths.omd_root,
+            crash_report_base_path=make_crash_report_base_path(cmk.utils.paths.omd_root),
             version_info=cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
         )
     )

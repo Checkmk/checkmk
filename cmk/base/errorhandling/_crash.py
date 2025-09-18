@@ -13,8 +13,12 @@ import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 import cmk.utils.encoding
 import cmk.utils.paths
-from cmk.ccc import crash_reporting
-from cmk.ccc.crash_reporting import CrashInfo
+from cmk.ccc.crash_reporting import (
+    ABCCrashReport,
+    CrashInfo,
+    CrashReportStore,
+    make_crash_report_base_path,
+)
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.plugins import CheckPluginName, SectionName
 from cmk.helper_interface import AgentRawData
@@ -36,7 +40,7 @@ def create_section_crash_dump(
     text = f"{operation.title()} of section {section_name} failed"
     try:
         crash = SectionCrashReport(
-            omd_root=cmk.utils.paths.omd_root,
+            crash_report_base_path=make_crash_report_base_path(cmk.utils.paths.omd_root),
             crash_info=SectionCrashReport.make_crash_info(
                 cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
                 details={
@@ -48,7 +52,7 @@ def create_section_crash_dump(
             snmp_info=_read_snmp_info(host_name),
             agent_output=_read_agent_output(host_name) if rtc_package is None else rtc_package,
         )
-        crash_reporting.CrashReportStore().save(crash)
+        CrashReportStore().save(crash)
         return f"{text} - please submit a crash report! (Crash-ID: {crash.ident_to_text()})"
     except Exception:
         if cmk.ccc.debug.enabled():
@@ -76,7 +80,7 @@ def create_check_crash_dump(
     text = "check failed - please submit a crash report!"
     try:
         crash = CheckCrashReport(
-            omd_root=cmk.utils.paths.omd_root,
+            crash_report_base_path=make_crash_report_base_path(cmk.utils.paths.omd_root),
             crash_info=CheckCrashReport.make_crash_info(
                 cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
                 CheckDetails(
@@ -94,7 +98,7 @@ def create_check_crash_dump(
             snmp_info=_read_snmp_info(host_name),
             agent_output=_read_agent_output(host_name) if rtc_package is None else rtc_package,
         )
-        crash_reporting.CrashReportStore().save(crash)
+        CrashReportStore().save(crash)
         text += " (Crash-ID: %s)" % crash.ident_to_text()
         return text
     except Exception:
@@ -103,16 +107,16 @@ def create_check_crash_dump(
         return "check failed - failed to create a crash report: %s" % traceback.format_exc()
 
 
-class CrashReportWithAgentOutput[T](crash_reporting.ABCCrashReport[T]):
+class CrashReportWithAgentOutput[T](ABCCrashReport[T]):
     def __init__(
         self,
         *,
-        omd_root: Path,
+        crash_report_base_path: Path,
         crash_info: CrashInfo,
         snmp_info: bytes | None = None,
         agent_output: bytes | None = None,
     ) -> None:
-        super().__init__(omd_root=omd_root, crash_info=crash_info)
+        super().__init__(crash_report_base_path=crash_report_base_path, crash_info=crash_info)
         self.snmp_info = snmp_info
         self.agent_output = agent_output
 

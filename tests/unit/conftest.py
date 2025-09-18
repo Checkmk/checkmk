@@ -27,7 +27,7 @@ import cmk.crypto.password_hashing
 import cmk.utils.caching
 import cmk.utils.paths
 from cmk.ccc import tty
-from cmk.ccc.crash_reporting import crash_dir
+from cmk.ccc.crash_reporting import make_crash_report_base_path
 from cmk.ccc.site import omd_site, SiteId
 from cmk.checkengine.plugins import (  # pylint: disable=cmk-module-layer-violation
     AgentBasedPlugins,
@@ -406,7 +406,7 @@ def cleanup_after_test():
 
 
 def _report_crashes() -> None:
-    for crash_file in crash_dir(cmk.utils.paths.omd_root).glob("**/crash.info"):
+    for crash_file in make_crash_report_base_path(cmk.utils.paths.omd_root).glob("**/crash.info"):
         crash = json.loads(crash_file.read_text())
         pytest.fail(
             f"Crash report detected! {crash.get('exc_type', '')}: {crash.get('exc_value', '')}\n"

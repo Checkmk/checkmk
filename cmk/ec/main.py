@@ -39,7 +39,7 @@ from setproctitle import setthreadtitle
 import cmk.ccc.daemon
 import cmk.ccc.profile
 from cmk.ccc import store
-from cmk.ccc.crash_reporting import CrashReportStore
+from cmk.ccc.crash_reporting import CrashReportStore, make_crash_report_base_path
 from cmk.ccc.exceptions import MKException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import omd_site
@@ -3590,7 +3590,7 @@ def main(omd_root: Path, argv: Sequence[str]) -> None:
 
         CrashReportStore().save(
             ECCrashReport(
-                omd_root=omd_root,
+                crash_report_base_path=make_crash_report_base_path(omd_root),
                 crash_info=ECCrashReport.make_crash_info(version_info, None),
             )
         )

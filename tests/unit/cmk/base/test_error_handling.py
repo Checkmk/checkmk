@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.base.errorhandling import CheckResultErrorHandler
-from cmk.ccc.crash_reporting import crash_dir
+from cmk.ccc.crash_reporting import make_crash_report_base_path
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.checkresults import ActiveCheckResult
@@ -82,5 +82,5 @@ def test_unhandled_exception_returns_3() -> None:
     assert handler.result.as_text().startswith("check failed - please submit a crash report!")
     # "... (Crash-ID: ...)"
     crash_id = handler.result.as_text().rsplit(" ", maxsplit=1)[-1][:-1]
-    crash_file = crash_dir(paths.omd_root) / "check" / crash_id / "crash.info"
+    crash_file = make_crash_report_base_path(paths.omd_root) / "check" / crash_id / "crash.info"
     crash_file.unlink()

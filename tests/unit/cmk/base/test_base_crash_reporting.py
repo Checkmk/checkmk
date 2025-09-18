@@ -6,7 +6,7 @@
 from pathlib import Path
 
 from cmk.base.errorhandling import CheckCrashReport, CheckDetails
-from cmk.ccc.crash_reporting import VersionInfo
+from cmk.ccc.crash_reporting import make_crash_report_base_path, VersionInfo
 from cmk.ccc.hostaddress import HostName
 
 
@@ -39,7 +39,7 @@ def test_check_crash_report_from_exception(tmp_path: Path) -> None:
         raise Exception("DING")
     except Exception:
         crash = CheckCrashReport(
-            omd_root=tmp_path,
+            crash_report_base_path=make_crash_report_base_path(tmp_path),
             crash_info=CheckCrashReport.make_crash_info(
                 VersionInfo(
                     time=0.0,

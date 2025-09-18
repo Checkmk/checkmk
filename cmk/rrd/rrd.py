@@ -32,6 +32,7 @@ from cmk.ccc.crash_reporting import (
     BaseDetails,
     CrashInfo,
     CrashReportStore,
+    make_crash_report_base_path,
     VersionInfo,
 )
 from cmk.ccc.hostaddress import HostName
@@ -832,7 +833,7 @@ class RRDCreator:
 def create_crash_report() -> None:
     CrashReportStore().save(
         CMKBaseCrashReport(
-            omd_root=paths.omd_root,
+            crash_report_base_path=make_crash_report_base_path(paths.omd_root),
             crash_info=CMKBaseCrashReport.make_crash_info(
                 get_general_version_infos(paths.omd_root)
             ),

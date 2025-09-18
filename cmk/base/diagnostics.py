@@ -33,7 +33,7 @@ import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.ccc import site, store, tty
-from cmk.ccc.crash_reporting import crash_dir
+from cmk.ccc.crash_reporting import make_crash_report_base_path
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.i18n import _
 from cmk.ccc.site import omd_site
@@ -1335,7 +1335,7 @@ class CrashDumpsDiagnosticsElement(ABCDiagnosticsElement):
 
     @override
     def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
-        for category in crash_dir(omd_root).glob("*"):
+        for category in make_crash_report_base_path(omd_root).glob("*"):
             tmpdir = tmp_dump_folder.joinpath("var/check_mk/crashes/%s" % category.name)
             tmpdir.mkdir(parents=True, exist_ok=True)
 

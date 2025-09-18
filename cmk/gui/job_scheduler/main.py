@@ -18,6 +18,7 @@ from setproctitle import setproctitle
 import cmk.ccc.version as cmk_version
 from cmk import trace
 from cmk.ccc import crash_reporting
+from cmk.ccc.crash_reporting import make_crash_report_base_path
 from cmk.ccc.daemon import daemonize, pid_file_lock
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import get_omd_config, omd_site, resource_attributes_from_config
@@ -48,7 +49,7 @@ class JobSchedulerCrashReport(crash_reporting.ABCCrashReport[None]):
 
 def default_crash_report_callback(_exc: Exception) -> str:
     crash = JobSchedulerCrashReport(
-        omd_root=paths.omd_root,
+        crash_report_base_path=make_crash_report_base_path(paths.omd_root),
         crash_info=JobSchedulerCrashReport.make_crash_info(
             cmk_version.get_general_version_infos(paths.omd_root), None
         ),

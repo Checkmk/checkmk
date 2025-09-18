@@ -25,7 +25,8 @@ from livestatus import LivestatusTestingError
 
 import cmk.ccc.version as cmk_version
 from cmk import trace
-from cmk.ccc import crash_reporting, store
+from cmk.ccc import store
+from cmk.ccc.crash_reporting import ABCCrashReport, CrashReportStore, make_crash_report_base_path
 from cmk.ccc.exceptions import MKException, MKGeneralException
 from cmk.ccc.site import omd_site, SiteId
 from cmk.crypto import MKCryptoException
@@ -124,12 +125,12 @@ def crash_report_response(exc: Exception) -> WSGIApplication:
     }
 
     crash = APICrashReport(
-        omd_root=paths.omd_root,
+        crash_report_base_path=make_crash_report_base_path(paths.omd_root),
         crash_info=APICrashReport.make_crash_info(
             cmk_version.get_general_version_infos(paths.omd_root), details
         ),
     )
-    crash_reporting.CrashReportStore().save(crash)
+    CrashReportStore().save(crash)
     logger.exception("Unhandled exception (Crash-ID: %s)", crash.ident_to_text())
 
     query_string = urllib.parse.urlencode(
@@ -739,7 +740,7 @@ class RestAPIDetails(TypedDict):
     check_mk_info: dict[str, Any]
 
 
-class APICrashReport(crash_reporting.ABCCrashReport[RestAPIDetails]):
+class APICrashReport(ABCCrashReport[RestAPIDetails]):
     """API specific crash reporting class."""
 
     @classmethod

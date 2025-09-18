@@ -7,7 +7,7 @@
 from typing import override
 
 from cmk.ccc import version
-from cmk.ccc.crash_reporting import ABCCrashReport, CrashReportStore
+from cmk.ccc.crash_reporting import ABCCrashReport, CrashReportStore, make_crash_report_base_path
 from cmk.utils.paths import omd_root
 
 
@@ -20,7 +20,7 @@ class _OMDCrashReport(ABCCrashReport[None]):
 
 def report_crash() -> str:
     crash = _OMDCrashReport(
-        omd_root=omd_root,
+        crash_report_base_path=make_crash_report_base_path(omd_root),
         crash_info=_OMDCrashReport.make_crash_info(
             version.get_general_version_infos(omd_root), None
         ),

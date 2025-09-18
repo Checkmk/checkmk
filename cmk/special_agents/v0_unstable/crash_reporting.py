@@ -8,10 +8,10 @@ from typing import Literal
 
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
-from cmk.ccc import crash_reporting
+from cmk.ccc.crash_reporting import ABCCrashReport, CrashReportStore, make_crash_report_base_path
 
 
-class AgentCrashReport(crash_reporting.ABCCrashReport[None]):
+class AgentCrashReport(ABCCrashReport[None]):
     @classmethod
     def type(cls) -> Literal["agent"]:
         return "agent"
@@ -20,12 +20,12 @@ class AgentCrashReport(crash_reporting.ABCCrashReport[None]):
 def create_agent_crash_dump() -> str:
     try:
         crash = AgentCrashReport(
-            omd_root=cmk.utils.paths.omd_root,
+            crash_report_base_path=make_crash_report_base_path(cmk.utils.paths.omd_root),
             crash_info=AgentCrashReport.make_crash_info(
                 cmk_version.get_general_version_infos(cmk.utils.paths.omd_root), None
             ),
         )
-        crash_reporting.CrashReportStore().save(crash)
+        CrashReportStore().save(crash)
         return f"Agent failed - please submit a crash report! (Crash-ID: {crash.ident_to_text()})"
     except Exception:
         return f"Agent failed - failed to create a crash report: {traceback.format_exc()}"

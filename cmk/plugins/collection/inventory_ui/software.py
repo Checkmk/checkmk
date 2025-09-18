@@ -1056,3 +1056,19 @@ node_software_os_service_packs = Node(
         },
     ),
 )
+
+node_software_applications_podman = Node(
+    name="software_applications_podman",
+    path=["software", "applications", "podman"],
+    title=Title("Podman"),
+    attributes={
+        "mode": TextField(Title("Mode")),
+        "version": TextField(Title("Version")),
+        "registry": TextField(Title("Registry")),
+        "containers_running": NumberField(Title("#Containers running"), render=UNIT_COUNT),
+        "containers_paused": NumberField(Title("#Containers paused"), render=UNIT_COUNT),
+        "containers_stopped": NumberField(Title("#Containers stopped"), render=UNIT_COUNT),
+        "containers_exited": NumberField(Title("#Containers exited"), render=UNIT_COUNT),
+        "images_num": NumberField(Title("#Images"), render=UNIT_COUNT),
+    },
+)

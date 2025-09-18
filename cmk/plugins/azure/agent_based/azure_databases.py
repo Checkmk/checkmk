@@ -142,6 +142,7 @@ def create_check_azure_databases_connections() -> CheckFunction:
                 "Successful connections",
                 lambda x: str(x),
                 upper_levels_param="successful_connections",
+                lower_levels_param="successful_connections_lower",
             ),
             MetricData(
                 "average_connection_failed",
@@ -163,9 +164,7 @@ check_plugin_azure_databases_connections = CheckPlugin(
         "average_connection_successful", "average_connection_failed"
     ),
     check_function=create_check_azure_databases_connections(),
-    # FYI: Using explicitly None as ruleset name in order to use the factory function without
-    # additional modification.
-    check_ruleset_name=None,
+    check_ruleset_name="azure_databases_connections",
     check_default_parameters={"failed_connections": ("fixed", (1, 1))},
 )
 

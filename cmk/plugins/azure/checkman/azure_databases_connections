@@ -4,8 +4,11 @@ catalog: cloud/azure
 license: GPLv2
 distribution: check_mk
 description:
- This check reports the number of successful database copnnections
+ This check reports the number of successful database connections
  as well as the rate of failed connections.
+
+ The levels for this check can be configured using the ruleset
+ "Azure SQL database connections".
 
 item:
  The name of the resource.

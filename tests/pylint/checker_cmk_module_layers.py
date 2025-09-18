@@ -879,6 +879,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.notify_types",
         "cmk.utils.config_path",
         "cmk.utils.labels",
+        "cmk.utils.paths",
         "cmk.utils.servicename",
         "cmk.utils.tags",
     ),

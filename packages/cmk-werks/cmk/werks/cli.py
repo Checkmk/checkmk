@@ -53,10 +53,9 @@ class Stash(BaseModel):
         """
         try:
             return WerkId(sorted(self.ids_by_project[project])[0])
-        except IndexError as e:
+        except (KeyError, IndexError) as e:
             raise RuntimeError(
-                "You have no werk IDS left. "
-                "You can reserve 10 additional Werk IDS with 'werk ids 10'."
+                "You have no Werk IDs. You can reserve 10 additional Werk IDs with 'werk ids 10'."
             ) from e
 
     def free_id(self, werk_id: "WerkId") -> None:

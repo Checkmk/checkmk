@@ -3975,6 +3975,10 @@ msgstr "Adaugp o noua configurație de utilizator"
 msgid "Add Prefix"
 msgstr "Adăugați prefixul"
 
+#, fuzzy
+msgid "Add Relay"
+msgstr "Adăugați cheia"
+
 msgid "Add Rule ID"
 msgstr "Adăugați ID-ul regulii"
 
@@ -13631,6 +13635,11 @@ msgstr ""
 "factori prin intermediul %s."
 
 msgid ""
+"Click the \"Add Relay\" button to start setting up your first Relay "
+"configuration."
+msgstr ""
+
+msgid ""
 "Click the \"Add configuration\" button to start setting up your first "
 "configuration."
 msgstr ""
@@ -15253,12 +15262,12 @@ msgid "Connected Clients"
 msgstr "Conexiuni"
 
 #, fuzzy
-msgid "Connected clients"
-msgstr "Numărul de clienți conectați"
+msgid "Connected Relay configurations"
+msgstr "Configurația RRA"
 
 #, fuzzy
-msgid "Connected relay configurations"
-msgstr "Configurația RRA"
+msgid "Connected clients"
+msgstr "Numărul de clienți conectați"
 
 msgid "Connecter and connectee sites must be different."
 msgstr ""
@@ -25887,6 +25896,10 @@ msgstr "Filtrați selecția %s în funcție de serviciu: "
 msgid "Filter / Search"
 msgstr "Filtru / Căutare"
 
+#, fuzzy
+msgid "Filter Azure tags imported as host/service labels"
+msgstr "Utilizați numele portului ca nume de serviciu"
+
 msgid "Filter aggregations"
 msgstr "Agregări de filtre"
 
@@ -25953,10 +25966,6 @@ msgstr "Filtrați selecția %s în funcție de serviciu: "
 #, fuzzy
 msgid "Filter tags"
 msgstr "Filtre"
-
-#, fuzzy
-msgid "Filter tags imported as host/service labels"
-msgstr "Utilizați numele portului ca nume de serviciu"
 
 msgid "Filter valid annotations by key pattern"
 msgstr "Filtrarea adnotărilor valide după modelul de cheie"
@@ -35827,6 +35836,14 @@ msgstr "Tipul de date invalid al timestamp-ului: trebuie să fie int sau float."
 msgid "Invalid datatype of value: %s"
 msgstr "Sursă de date invalidă: %s"
 
+#, fuzzy
+msgid "Invalid date format"
+msgstr "Format de dată invalid: %s"
+
+#, fuzzy, python-format
+msgid "Invalid date format %s"
+msgstr "Format de dată invalid: %s"
+
 #, python-format
 msgid "Invalid date format: %s"
 msgstr "Format de dată invalid: %s"
@@ -36079,6 +36096,14 @@ msgstr "Test nevalabil."
 #, fuzzy
 msgid "Invalid text"
 msgstr "Test nevalabil."
+
+#, fuzzy
+msgid "Invalid time format"
+msgstr "Formatul de timp invalid: %s"
+
+#, fuzzy, python-format
+msgid "Invalid time format %s"
+msgstr "Formatul de timp invalid: %s"
 
 #, python-format
 msgid "Invalid time format '<tt>%s</tt>', please use <tt>24:00</tt> format."
@@ -44546,6 +44571,10 @@ msgstr "Nu există niveluri"
 #, fuzzy
 msgid "No PNP templates using the deprecated API"
 msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
+
+#, fuzzy
+msgid "No Relay configuration yet"
+msgstr "Configurație gazdă"
 
 msgid "No SNMP"
 msgstr "Nu SNMP"
@@ -91602,6 +91631,171 @@ msgid "Choose how to display your data"
 msgstr "Nu afișați o dată"
 
 #, fuzzy
+msgid "Select option"
+msgstr "Conexiuni respinse"
+
+msgid "% (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "% (Decimal, strict precision, 0 digits)"
+msgstr ""
+
+msgid "% (Decimal, strict precision, 2 digits)"
+msgstr ""
+
+msgid "%/m (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "/s (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "A (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "A (Decimal, strict precision, 3 digits)"
+msgstr ""
+
+msgid "B (IEC, auto precision, 2 digits)"
+msgstr ""
+
+msgid "B (IEC, strict precision, 2 digits)"
+msgstr ""
+
+msgid "B/d (IEC, auto precision, 2 digits)"
+msgstr ""
+
+msgid "B/op (IEC, auto precision, 2 digits)"
+msgstr ""
+
+msgid "B/req (SI, auto precision, 2 digits)"
+msgstr ""
+
+msgid "B/s (IEC, auto precision, 2 digits)"
+msgstr ""
+
+msgid "B/s (SI, auto precision, 2 digits)"
+msgstr ""
+
+msgid "Hz (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "Pa (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "Percent (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "RCU (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "V (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "VA (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "Volt (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "W (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "WCU (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "Watt (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "Wh (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "bar (Decimal, auto precision, 4 digits)"
+msgstr ""
+
+msgid "bits/d (IEC, auto precision, 2 digits)"
+msgstr ""
+
+msgid "bits/s (IEC, auto precision, 2 digits)"
+msgstr ""
+
+msgid "bits/s (SI, auto precision, 2 digits)"
+msgstr ""
+
+msgid "dB (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "dBm (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "dBmV (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "days (Decimal, strict precision, 2 digits)"
+msgstr ""
+
+msgid "l/s (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "no symbol (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "no symbol (Decimal, strict precision, 0 digits)"
+msgstr ""
+
+msgid "no symbol (Decimal, strict precision, 2 digits)"
+msgstr ""
+
+msgid "no symbol (SI, strict precision, 2 digits)"
+msgstr ""
+
+msgid "ppm (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "req/s (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "rpm (Decimal, auto precision, 4 digits)"
+msgstr ""
+
+msgid "s (Time, auto precision, 0 digits)"
+msgstr ""
+
+msgid "s (Time, auto precision, 2 digits)"
+msgstr ""
+
+msgid "s/s (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "tasks (Decimal, strict precision, 0 digits)"
+msgstr ""
+
+msgid "°C (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "€ (Decimal, strict precision, 2 digits)"
+msgstr ""
+
+#, fuzzy
+msgid "Value must be a valid URL"
+msgstr "Valoarea trebuie să fie un șir de caractere"
+
+#, fuzzy
+msgid "Link title to"
+msgstr "Legătura cu titlul"
+
+#, fuzzy
+msgid "Appearance"
+msgstr "Aparatură"
+
+#, fuzzy
+msgid "Show title background"
+msgstr "Afișați titlul fără fundal"
+
+#, fuzzy
+msgid "Show widget background"
+msgstr "Afișați titlul fără fundal"
+
+#, fuzzy
 msgid "explicit password"
 msgstr "Parolă nouă"
 
@@ -91897,6 +92091,21 @@ msgid ""
 "systems state, such as how much storage is used or the CPU load."
 msgstr ""
 
+msgid ""
+"This is a placeholder for the relay setup wizard. The actual implementation "
+"is pending."
+msgstr ""
+
+msgid "Deploy the relay to your environment"
+msgstr ""
+
+msgid "Name the relay and register with your Checkmk site"
+msgstr ""
+
+#, fuzzy
+msgid "Connection check"
+msgstr "Numele conexiunii"
+
 #, fuzzy
 msgid "Already installed the Checkmk agent?"
 msgstr "Instalați întotdeauna Python cu agentul"
@@ -92141,8 +92350,8 @@ msgid ""
 "            You can customize these to match your monitoring needs,\n"
 "            most commonly by setting thresholds for WARN and CRIT states "
 "using rules.\n"
-"            To find the right ruleset for a service, start with the Service "
-"Discovery page."
+"            To find the right ruleset for a service,\n"
+"            start with the Service Discovery page of a host."
 msgstr ""
 
 #, fuzzy
@@ -92191,6 +92400,15 @@ msgid ""
 "You can now define custom parameters like thresholds or other check settings."
 msgstr ""
 
+msgid ""
+"Changes are saved in a temporary environment first,\n"
+"                letting you review and adjust them safely."
+msgstr ""
+
+#, fuzzy
+msgid "Activate changes to apply them to live monitoring."
+msgstr "Activați modificările pentru consola de evenimente"
+
 #, fuzzy
 msgid "Mark as complete"
 msgstr "complet"
@@ -92212,7 +92430,8 @@ msgstr ""
 msgid "Create a contact group"
 msgstr "Potriviți grupurile de contact"
 
-msgid "On default, there is one contact group available \"Everything\"."
+msgid ""
+"By default, there is one contact group available, called \"Everything\"."
 msgstr ""
 
 #, fuzzy
@@ -92228,7 +92447,7 @@ msgstr "Atribuirea serviciilor la grupurile de contact"
 msgid ""
 "Each user can belong to multiple contact groups. You can assign them to "
 "contact groups in the \"Contact groups\" section when editing or creating a "
-"user"
+"user."
 msgstr ""
 
 #, fuzzy
@@ -92247,8 +92466,8 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Customize dashboard"
-msgstr "Personalizați"
+msgid "Create a dashboard"
+msgstr "Tablouri de bord conexe"
 
 msgid ""
 "Tailor your monitoring experience by creating a custom dashboard\n"
@@ -92318,6 +92537,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Customize dashboard"
+#~ msgstr "Personalizați"
 
 #, fuzzy
 #~ msgid "Main dashboard (PEV)"

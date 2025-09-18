@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-09-11 21:39+0000\n"
+"PO-Revision-Date: 2025-09-18 16:38+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -3570,8 +3570,8 @@ msgstr "Lösung mit der folgenden 'resultion transition ID' aktivieren"
 
 msgid "Activate the changes by clicking the Activate on selected sites button."
 msgstr ""
-"Aktivieren Sie die Änderungen, indem Sie auf die Schaltfläche Auf "
-"ausgewählten Instanzen aktivieren klicken."
+"Aktivieren Sie die Änderungen, indem Sie auf den Knopf "
+"\"Auf ausgewählten Instanzen aktivieren\" klicken."
 
 msgid "Activate total bandwidth metric (sum of in and out)"
 msgstr ""
@@ -3886,6 +3886,9 @@ msgstr "Konfiguration des OpenTelemetry-Kollektors hinzufügen"
 
 msgid "Add Prefix"
 msgstr "Präfix hinzufügen"
+
+msgid "Add Relay"
+msgstr "Relais hinzufügen"
 
 msgid "Add Rule ID"
 msgstr "Regel-ID hinzufügen"
@@ -9073,7 +9076,7 @@ msgid "Batch ID"
 msgstr "Batch-ID"
 
 msgid "Batch Requests/sec"
-msgstr "Batchanfragen/sec"
+msgstr "Batch-Anfragen/sek"
 
 msgid "Batches"
 msgstr "Batches"
@@ -13151,10 +13154,17 @@ msgstr ""
 "%s zu aktivieren."
 
 msgid ""
+"Click the \"Add Relay\" button to start setting up your first Relay "
+"configuration."
+msgstr ""
+"Klicken Sie auf den Knopf \"Relais hinzufügen\", um mit dem Einrichten Ihrer "
+"ersten Relais-Konfiguration zu beginnen."
+
+msgid ""
 "Click the \"Add configuration\" button to start setting up your first "
 "configuration."
 msgstr ""
-"Klicken Sie auf die Schaltfläche \"Konfiguration hinzufügen\", um mit dem "
+"Klicken Sie auf den Knopf \"Konfiguration hinzufügen\", um mit dem "
 "Einrichten Ihrer ersten Konfiguration zu beginnen."
 
 msgid "Click to toggle this setting"
@@ -14742,11 +14752,11 @@ msgstr "Verbinden ohne Passwort"
 msgid "Connected Clients"
 msgstr "Verbundene Clients"
 
+msgid "Connected Relay configurations"
+msgstr "Verbundene Relais-Konfigurationen"
+
 msgid "Connected clients"
 msgstr "Verbundene Clients"
-
-msgid "Connected relay configurations"
-msgstr "Verbundene Relais-Konfigurationen"
 
 msgid "Connecter and connectee sites must be different."
 msgstr ""
@@ -16927,9 +16937,8 @@ msgstr "DCD Manager: Holen von Piggyback-Hosts von der Instanz \"%s\""
 msgid "DCD batch history"
 msgstr "DCD Batch Historie"
 
-#, fuzzy
 msgid "DCD cycles and batches."
-msgstr "DR:BD Rollen und Zustände"
+msgstr "DCD Zyklen und Batches."
 
 msgid "DCD global settings"
 msgstr "Globale DCD-Einstellungen"
@@ -23719,9 +23728,8 @@ msgstr "Erwartete DNS-Antworten"
 msgid "Expected String"
 msgstr "Erwartete Zeichenkette"
 
-#, fuzzy
 msgid "Expected VM Generation"
-msgstr "Erwarteter Pfadzustand"
+msgstr "Erwartete VM-Generation"
 
 msgid "Expected active paths"
 msgstr "Erwartete aktive Pfade"
@@ -24969,6 +24977,10 @@ msgstr "Auswahl %s nach Service filtern: "
 msgid "Filter / Search"
 msgstr "Filter/Suche"
 
+#, fuzzy
+msgid "Filter Azure tags imported as host/service labels"
+msgstr "Filter-Merkmale wurden als Host-/Service-Labels importiert"
+
 msgid "Filter aggregations"
 msgstr "Filter Aggregationen"
 
@@ -25030,9 +25042,6 @@ msgstr "Auswahl nach Service filtern:"
 
 msgid "Filter tags"
 msgstr "Merkmale filtern"
-
-msgid "Filter tags imported as host/service labels"
-msgstr "Filter-Merkmale wurden als Host-/Service-Labels importiert"
 
 msgid "Filter valid annotations by key pattern"
 msgstr "Gültige Annotations nach Key Pattern filtern"
@@ -26414,13 +26423,11 @@ msgstr "REST-API Spezifikation wird erzeugt"
 msgid "Generating report..."
 msgstr "Erstelle Bericht..."
 
-#, fuzzy
 msgid "Generation 1"
-msgstr "Generelle Einstellungen"
+msgstr "Generation 1"
 
-#, fuzzy
 msgid "Generation 2"
-msgstr "Generelle Einstellungen"
+msgstr "Generation 2"
 
 msgid "Generic UPS Device: Temperature sensor"
 msgstr "Generische USV: Temperatursensor"
@@ -30350,9 +30357,8 @@ msgstr "Hyper-V VM Gastinformationen (Windows)"
 msgid "Hyper-V VM integration services"
 msgstr "Hyper-V VM Integrationsdienste"
 
-#, fuzzy
 msgid "Hyper-V VM summary"
-msgstr "Hyper-V VMs (Windows)"
+msgstr "Hyper-V VM Zusammenfassung"
 
 msgid "Hyper-V VMs (Windows)"
 msgstr "Hyper-V VMs (Windows)"
@@ -34400,6 +34406,13 @@ msgstr "Ungültiger Datentyp des Zeitstempels (muss int/float sein)."
 msgid "Invalid datatype of value: %s"
 msgstr "Ungültiger Datentyp vom Wert: %s"
 
+msgid "Invalid date format"
+msgstr "Ungültiges Datumsformat"
+
+#, python-format
+msgid "Invalid date format %s"
+msgstr "Ungültiges Datumsformat %s"
+
 #, python-format
 msgid "Invalid date format: %s"
 msgstr "Ungültiges Datenformat: %s"
@@ -34415,9 +34428,9 @@ msgstr "Ungültiges erwartetes Callable für %s am idx %d: %r"
 msgid "Invalid extension type, supported types are: %s"
 msgstr "Ungültiger Erweiterungstyp, unterstützte Typen sind: %s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Invalid figure content: %s"
-msgstr "Ungültige Benutzerverbindung: %s"
+msgstr "Ungültiger Zahleninhalt: %s"
 
 msgid "Invalid file name"
 msgstr "Ungültiger Dateiname"
@@ -34445,9 +34458,9 @@ msgstr ""
 "Ungültiger Ordnername. Erlaubte Zeichen: a-z, A-Z, 0-9, <tt>-</tt> und "
 "<tt>_</tt>."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Invalid graph content: %s"
-msgstr "Ungültiger Graphentyp: '%s'"
+msgstr "Ungültiger Graph-Inhalt: %s"
 
 #, python-format
 msgid "Invalid graph type '%s'"
@@ -34647,6 +34660,13 @@ msgstr "Ungültiger Test."
 
 msgid "Invalid text"
 msgstr "Ungültiger Text"
+
+msgid "Invalid time format"
+msgstr "Ungültiges Zeitformat"
+
+#, python-format
+msgid "Invalid time format %s"
+msgstr "Ungültiges Zeitformat %s"
 
 #, python-format
 msgid "Invalid time format '<tt>%s</tt>', please use <tt>24:00</tt> format."
@@ -39422,9 +39442,8 @@ msgstr "Matrix der Metriken"
 msgid "Max Cache Age"
 msgstr "Maximales Cachealter"
 
-#, fuzzy
 msgid "Max age of the newest snapshot"
-msgstr "Höchstalter des ältesten Snapshot"
+msgstr "Höchstalter des neuesten Snapshots"
 
 msgid "Max age of the oldest snapshot"
 msgstr "Höchstalter des ältesten Snapshot"
@@ -39921,9 +39940,8 @@ msgstr "Maximale Testlaufzeit"
 msgid "Maximum time since last start of job execution"
 msgstr "Maximale Zeit seit der letzten Ausführung des Jobs"
 
-#, fuzzy
 msgid "Maximum time since the last successful sync"
-msgstr "Zeit seit der letzten erfolgreichen Planung"
+msgstr "Maximale Zeit seit der letzten erfolgreichen Synchronisierung"
 
 msgid "Maximum uptime of the device"
 msgstr "Maximale Laufzeit des Geräts"
@@ -42524,9 +42542,8 @@ msgstr "Python niemals mit dem Agenten installieren"
 msgid "Never remove files newer than"
 msgstr "Entferne niemals Dateien neuer als"
 
-#, fuzzy
 msgid "Never synchronized"
-msgstr "synchronisieren"
+msgstr "Nie synchronisiert"
 
 msgid "Never use piggyback data"
 msgstr "Keine Piggyback-Daten verwenden"
@@ -42632,9 +42649,8 @@ msgstr "Alter der neuesten Datei kleiner als"
 msgid "Newest first"
 msgstr "Neuste zuerst"
 
-#, fuzzy
 msgid "Newest snapshot age"
-msgstr "NetApp Snapshot-Reserve"
+msgstr "Neuestes Snapshot-Alter"
 
 msgid "Next"
 msgstr "Nächste/r/s"
@@ -42739,6 +42755,9 @@ msgstr "Keine Levels"
 msgid "No PNP templates using the deprecated API"
 msgstr "Keine PNP-Vorlagen, welche die veraltete API verwenden"
 
+msgid "No Relay configuration yet"
+msgstr "Noch keine Relais-Konfiguration"
+
 msgid "No SNMP"
 msgstr "Kein SNMP"
 
@@ -42831,9 +42850,8 @@ msgstr "keine Daten verfügbar"
 msgid "No data from any site"
 msgstr "Keine Daten von irgendeiner Instanz verfügbar"
 
-#, fuzzy
 msgid "No data from time provider"
-msgstr "Keine Daten von irgendeiner Instanz verfügbar"
+msgstr "Keine Daten vom Zeitlieferanten"
 
 msgid "No data was found with the current parameters of this dashlet."
 msgstr ""
@@ -44421,9 +44439,8 @@ msgstr "Anzahl der auf einmal behandelten Hosts"
 msgid "Number of idle executors"
 msgstr "Anzahl der ungenutzten Executors"
 
-#, fuzzy
 msgid "Number of images"
-msgstr "Anzahl von Items"
+msgstr "Anzahl der Bilder"
 
 msgid "Number of inactive sessions"
 msgstr "Anzahl von inaktiven Sitzungen"
@@ -44820,9 +44837,8 @@ msgstr "Anzahl der für die VM reservierten vCPUs"
 msgid "Number of vaults"
 msgstr "Anzahl der Tresore"
 
-#, fuzzy
 msgid "Number of volumes"
-msgstr "Spaltenanzahl"
+msgstr "Anzahl der Volumen"
 
 msgid "Number of warnings"
 msgstr "Anzahl von Warnings"
@@ -45174,9 +45190,8 @@ msgstr "Alter der ältesten Meldung"
 msgid "Oldest replication slot lag size"
 msgstr "Älteste Replikation Slot Lag Größe"
 
-#, fuzzy
 msgid "Oldest snapshot age"
-msgstr "Alter der ältesten Meldung"
+msgstr "Ältestes Snapshot-Alter"
 
 msgid "Omit ICMP payload"
 msgstr "ICMP-Payload weglassen"
@@ -49915,9 +49930,8 @@ msgstr "Energie Verbrauch"
 msgid "Power consumption draw"
 msgstr "Stromverbrauch"
 
-#, fuzzy
 msgid "Power state mapping"
-msgstr "BGP Peer State Mapping"
+msgstr ""
 
 msgid "Power state unknown"
 msgstr "Zustand der Stromversorgung unbekannt"
@@ -56544,9 +56558,9 @@ msgstr "Sitzungstimeout:"
 msgid "Session type"
 msgstr "Sitzungsart"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Set '%s' to '%s' on site %s"
-msgstr "Umschalten von '%s' zu ' %s'"
+msgstr "Setzen Sie '%s' auf '%s' auf der Instanz %s"
 
 msgid "Set IPv4 address"
 msgstr "IPv4-Adresse setzen"
@@ -79951,9 +79965,8 @@ msgstr "VLUNs: Virtuelle LUN-Konfiguration"
 msgid "VM"
 msgstr "VM"
 
-#, fuzzy
 msgid "VM Generation"
-msgstr "Generelle Einstellungen"
+msgstr "Generation der VM"
 
 msgid "VM distribution"
 msgstr "VM Verteilung"
@@ -81090,7 +81103,6 @@ msgstr ""
 "Leider haben Sie nicht die erforderliche Berechtigung. Wenden Sie sich an "
 "den Administrator, um die folgende Berechtigung zu bekommen: '<b>%s</b>'."
 
-#, fuzzy
 msgid ""
 "We assume that a source host is sending piggyback data every check interval "
 "by default. If this is not the case for some source hosts then the "
@@ -81100,15 +81112,14 @@ msgid ""
 "helps you to get more control over the piggybacked host data handling. This "
 "rules condition is applied to the <b>source</b> hosts."
 msgstr ""
-"Wir gehen davon aus, dass ein Quell-Host standardmäßig in jedem "
-"Prüfintervall Piggyback-Daten sendet. Wenn dies bei einigen Quell-Hosts "
-"nicht der Fall ist, dann melden die Dienste <b>Check_MK</b> und <b>Check_MK "
-"Discovery</b> der Piggyback-Hosts <b>Keine Informationen vom Host erhalten</"
-"b> bzw. <b>verschwundene Dienste</b>, sobald die Piggyback-Host-Daten "
-"innerhalb dieses Prüfintervalls fehlen. Diese Regel hilft Ihnen, mehr "
-"Kontrolle über die Verarbeitung der Piggyback-Host-Daten zu erhalten. Die "
-"Quell-Host-Namen müssen im Bedingungsfeld <i>Explizite Hosts</i> gesetzt "
-"werden."
+"Wir gehen davon aus, dass ein Quell-Host standardmäßig in jedem Check-"
+"Intervall Piggyback-Daten sendet. Wenn dies bei einigen Quell-Hosts nicht "
+"der Fall ist, dann melden die Dienste <b>Check_MK</b> und <b>Check_MK "
+"Discovery</b> der Piggybacked-Hosts <b>Keine Informationen vom Host "
+"erhalten</b> bzw. <b>verschwundene Services</b>, wenn die Piggybacked-Daten "
+"innerhalb eines Check-Intervalls fehlen. Diese Regel hilft Ihnen, mehr "
+"Kontrolle über die Verarbeitung der Piggybacked-Host-Daten zu erhalten. Die "
+"Bedingung dieser Regel wird auf die <b>Quell-</b>Hosts angewendet."
 
 msgid ""
 "We highly recommend solving this issue already in your installation by "
@@ -82482,9 +82493,8 @@ msgstr "Windows-Drucker: Anzahl der offenen Aufträge"
 msgid "Windows service discovery"
 msgstr "Windows-Service-Erkennung"
 
-#, fuzzy
 msgid "Windows time service"
-msgstr "Windows Services"
+msgstr "Windows Zeit-Services"
 
 msgid "Windows, Linux, Solaris, AIX"
 msgstr "Windows, Linux, Solaris, AIX"
@@ -87854,10 +87864,8 @@ msgstr "Regelsuche"
 msgid "Filters included by dashboard owner"
 msgstr ""
 
-#, fuzzy
 msgid "You can override these by adding a quick filter"
-msgstr ""
-"Sie können die eingebaute Merkmal-Gruppe \"%s\" nicht außer Kraft setzen."
+msgstr "Sie können diese durch Hinzufügen eines Schnellfilters überschreiben"
 
 #, fuzzy
 msgid "Host filter"
@@ -87875,9 +87883,8 @@ msgstr "Servicefilter"
 msgid "Reset to saved filters"
 msgstr "Filter entfernen"
 
-#, fuzzy
 msgid "Success! Your new dashboard filters have been saved"
-msgstr "Ihre Änderungen wurden gespeichert."
+msgstr "Erfolg! Ihre neuen Dashboard-Filter wurden gespeichert"
 
 msgid "Runtime filters are required to load data."
 msgstr ""
@@ -88073,6 +88080,171 @@ msgstr ""
 #, fuzzy
 msgid "Choose how to display your data"
 msgstr "Kein Datum anzeigen"
+
+#, fuzzy
+msgid "Select option"
+msgstr "Ausgewählte Optionen"
+
+msgid "% (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "% (Decimal, strict precision, 0 digits)"
+msgstr ""
+
+msgid "% (Decimal, strict precision, 2 digits)"
+msgstr ""
+
+msgid "%/m (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "/s (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "A (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "A (Decimal, strict precision, 3 digits)"
+msgstr ""
+
+msgid "B (IEC, auto precision, 2 digits)"
+msgstr ""
+
+msgid "B (IEC, strict precision, 2 digits)"
+msgstr ""
+
+msgid "B/d (IEC, auto precision, 2 digits)"
+msgstr ""
+
+msgid "B/op (IEC, auto precision, 2 digits)"
+msgstr ""
+
+msgid "B/req (SI, auto precision, 2 digits)"
+msgstr ""
+
+msgid "B/s (IEC, auto precision, 2 digits)"
+msgstr ""
+
+msgid "B/s (SI, auto precision, 2 digits)"
+msgstr ""
+
+msgid "Hz (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "Pa (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "Percent (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "RCU (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "V (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "VA (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "Volt (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "W (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "WCU (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "Watt (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "Wh (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "bar (Decimal, auto precision, 4 digits)"
+msgstr ""
+
+msgid "bits/d (IEC, auto precision, 2 digits)"
+msgstr ""
+
+msgid "bits/s (IEC, auto precision, 2 digits)"
+msgstr ""
+
+msgid "bits/s (SI, auto precision, 2 digits)"
+msgstr ""
+
+msgid "dB (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "dBm (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "dBmV (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "days (Decimal, strict precision, 2 digits)"
+msgstr ""
+
+msgid "l/s (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "no symbol (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "no symbol (Decimal, strict precision, 0 digits)"
+msgstr ""
+
+msgid "no symbol (Decimal, strict precision, 2 digits)"
+msgstr ""
+
+msgid "no symbol (SI, strict precision, 2 digits)"
+msgstr ""
+
+msgid "ppm (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "req/s (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "rpm (Decimal, auto precision, 4 digits)"
+msgstr ""
+
+msgid "s (Time, auto precision, 0 digits)"
+msgstr ""
+
+msgid "s (Time, auto precision, 2 digits)"
+msgstr ""
+
+msgid "s/s (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "tasks (Decimal, strict precision, 0 digits)"
+msgstr ""
+
+msgid "°C (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "€ (Decimal, strict precision, 2 digits)"
+msgstr ""
+
+#, fuzzy
+msgid "Value must be a valid URL"
+msgstr "Wert muss ein String sein"
+
+#, fuzzy
+msgid "Link title to"
+msgstr "Link des Titels"
+
+#, fuzzy
+msgid "Appearance"
+msgstr "Appliance"
+
+#, fuzzy
+msgid "Show title background"
+msgstr "Titel ohne Hintergrund anzeigen"
+
+#, fuzzy
+msgid "Show widget background"
+msgstr "Titel ohne Hintergrund anzeigen"
 
 #, fuzzy
 msgid "explicit password"
@@ -88381,6 +88553,21 @@ msgid ""
 "systems state, such as how much storage is used or the CPU load."
 msgstr ""
 
+msgid ""
+"This is a placeholder for the relay setup wizard. The actual implementation "
+"is pending."
+msgstr ""
+
+msgid "Deploy the relay to your environment"
+msgstr ""
+
+msgid "Name the relay and register with your Checkmk site"
+msgstr ""
+
+#, fuzzy
+msgid "Connection check"
+msgstr "Verbindungsname"
+
 #, fuzzy
 msgid "Already installed the Checkmk agent?"
 msgstr "Ist der Agent bereits installiert?"
@@ -88617,8 +88804,8 @@ msgid ""
 "            You can customize these to match your monitoring needs,\n"
 "            most commonly by setting thresholds for WARN and CRIT states "
 "using rules.\n"
-"            To find the right ruleset for a service, start with the Service "
-"Discovery page."
+"            To find the right ruleset for a service,\n"
+"            start with the Service Discovery page of a host."
 msgstr ""
 
 #, fuzzy
@@ -88666,6 +88853,15 @@ msgid ""
 "You can now define custom parameters like thresholds or other check settings."
 msgstr ""
 
+msgid ""
+"Changes are saved in a temporary environment first,\n"
+"                letting you review and adjust them safely."
+msgstr ""
+
+msgid "Activate changes to apply them to live monitoring."
+msgstr ""
+"Aktivieren Sie die Änderungen, um sie auf das Live-Monitoring anzuwenden."
+
 #, fuzzy
 msgid "Mark as complete"
 msgstr "PGs unvollständig"
@@ -88686,7 +88882,8 @@ msgstr ""
 msgid "Create a contact group"
 msgstr "Kontaktgruppen abgleichen"
 
-msgid "On default, there is one contact group available \"Everything\"."
+msgid ""
+"By default, there is one contact group available, called \"Everything\"."
 msgstr ""
 
 msgid "Go to Setup > Users > Contact groups to create or edit contact groups."
@@ -88699,7 +88896,7 @@ msgstr "Zuweisung von Services zu Kontaktgruppen"
 msgid ""
 "Each user can belong to multiple contact groups. You can assign them to "
 "contact groups in the \"Contact groups\" section when editing or creating a "
-"user"
+"user."
 msgstr ""
 
 #, fuzzy
@@ -88718,8 +88915,8 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Customize dashboard"
-msgstr "Benutzer anpassen"
+msgid "Create a dashboard"
+msgstr "Verwandte Dashboards"
 
 msgid ""
 "Tailor your monitoring experience by creating a custom dashboard\n"
@@ -88787,6 +88984,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Customize dashboard"
+#~ msgstr "Benutzer anpassen"
 
 #, fuzzy
 #~ msgid "Main dashboard (PEV)"

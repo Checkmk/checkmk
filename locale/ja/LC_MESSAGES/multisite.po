@@ -3766,6 +3766,10 @@ msgstr "OpenTelemetryコレクターの設定を追加する"
 msgid "Add Prefix"
 msgstr "プレフィックスを追加"
 
+#, fuzzy
+msgid "Add Relay"
+msgstr "キーを追加"
+
 msgid "Add Rule ID"
 msgstr "ルールIDを追加"
 
@@ -12766,6 +12770,14 @@ msgstr ""
 msgid "Click on 'Register %s' to enable two-factor authentication via %s."
 msgstr "「%sを登録」をクリックし、%sによる2要素認証を有効にする。"
 
+#, fuzzy
+msgid ""
+"Click the \"Add Relay\" button to start setting up your first Relay "
+"configuration."
+msgstr ""
+"\"Add configuration\"ボタンをクリックして、最初のコンフィギュレーションの設定"
+"を開始します。"
+
 msgid ""
 "Click the \"Add configuration\" button to start setting up your first "
 "configuration."
@@ -14308,12 +14320,12 @@ msgid "Connected Clients"
 msgstr "接続"
 
 #, fuzzy
-msgid "Connected clients"
-msgstr "接続されているクライアントの数"
+msgid "Connected Relay configurations"
+msgstr "Conda設定"
 
 #, fuzzy
-msgid "Connected relay configurations"
-msgstr "Conda設定"
+msgid "Connected clients"
+msgstr "接続されているクライアントの数"
 
 msgid "Connecter and connectee sites must be different."
 msgstr "コネクターサイトとコネクティーサイトは異なる必要があります。"
@@ -24323,6 +24335,10 @@ msgstr "%sの選択をサービスでフィルタリングします。 "
 msgid "Filter / Search"
 msgstr "フィルタ/検索"
 
+#, fuzzy
+msgid "Filter Azure tags imported as host/service labels"
+msgstr "ホスト/サービスラベルとしてインポートされたタグのフィルタリング"
+
 msgid "Filter aggregations"
 msgstr "集計をフィルタリングする"
 
@@ -24384,9 +24400,6 @@ msgstr "サービスによるフィルター選択:"
 
 msgid "Filter tags"
 msgstr "フィルタタグ"
-
-msgid "Filter tags imported as host/service labels"
-msgstr "ホスト/サービスラベルとしてインポートされたタグのフィルタリング"
 
 msgid "Filter valid annotations by key pattern"
 msgstr "キーパターンによる有効なアノテーションのフィルタリング"
@@ -33492,6 +33505,14 @@ msgstr ""
 msgid "Invalid datatype of value: %s"
 msgstr "無効な値のデータタイプ: %s"
 
+#, fuzzy
+msgid "Invalid date format"
+msgstr "無効なデータ形式"
+
+#, fuzzy, python-format
+msgid "Invalid date format %s"
+msgstr "無効な日付形式：%s"
+
 #, python-format
 msgid "Invalid date format: %s"
 msgstr "無効な日付形式：%s"
@@ -33733,6 +33754,14 @@ msgstr "無効なテスト。"
 
 msgid "Invalid text"
 msgstr "無効なテキスト"
+
+#, fuzzy
+msgid "Invalid time format"
+msgstr "無効な時間形式：%s"
+
+#, fuzzy, python-format
+msgid "Invalid time format %s"
+msgstr "無効な時間形式：%s"
 
 #, python-format
 msgid "Invalid time format '<tt>%s</tt>', please use <tt>24:00</tt> format."
@@ -41715,6 +41744,10 @@ msgstr "レベルなし"
 
 msgid "No PNP templates using the deprecated API"
 msgstr "非推奨のAPIを使用するPNPテンプレートを使用しないでください"
+
+#, fuzzy
+msgid "No Relay configuration yet"
+msgstr "%sの設定はまだありません"
 
 msgid "No SNMP"
 msgstr "SNMPなし"
@@ -85563,6 +85596,171 @@ msgid "Choose how to display your data"
 msgstr "日付を表示しない"
 
 #, fuzzy
+msgid "Select option"
+msgstr "オプション選択"
+
+msgid "% (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "% (Decimal, strict precision, 0 digits)"
+msgstr ""
+
+msgid "% (Decimal, strict precision, 2 digits)"
+msgstr ""
+
+msgid "%/m (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "/s (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "A (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "A (Decimal, strict precision, 3 digits)"
+msgstr ""
+
+msgid "B (IEC, auto precision, 2 digits)"
+msgstr ""
+
+msgid "B (IEC, strict precision, 2 digits)"
+msgstr ""
+
+msgid "B/d (IEC, auto precision, 2 digits)"
+msgstr ""
+
+msgid "B/op (IEC, auto precision, 2 digits)"
+msgstr ""
+
+msgid "B/req (SI, auto precision, 2 digits)"
+msgstr ""
+
+msgid "B/s (IEC, auto precision, 2 digits)"
+msgstr ""
+
+msgid "B/s (SI, auto precision, 2 digits)"
+msgstr ""
+
+msgid "Hz (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "Pa (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "Percent (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "RCU (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "V (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "VA (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "Volt (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "W (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "WCU (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "Watt (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "Wh (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "bar (Decimal, auto precision, 4 digits)"
+msgstr ""
+
+msgid "bits/d (IEC, auto precision, 2 digits)"
+msgstr ""
+
+msgid "bits/s (IEC, auto precision, 2 digits)"
+msgstr ""
+
+msgid "bits/s (SI, auto precision, 2 digits)"
+msgstr ""
+
+msgid "dB (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "dBm (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "dBmV (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "days (Decimal, strict precision, 2 digits)"
+msgstr ""
+
+msgid "l/s (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "no symbol (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "no symbol (Decimal, strict precision, 0 digits)"
+msgstr ""
+
+msgid "no symbol (Decimal, strict precision, 2 digits)"
+msgstr ""
+
+msgid "no symbol (SI, strict precision, 2 digits)"
+msgstr ""
+
+msgid "ppm (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "req/s (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "rpm (Decimal, auto precision, 4 digits)"
+msgstr ""
+
+msgid "s (Time, auto precision, 0 digits)"
+msgstr ""
+
+msgid "s (Time, auto precision, 2 digits)"
+msgstr ""
+
+msgid "s/s (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "tasks (Decimal, strict precision, 0 digits)"
+msgstr ""
+
+msgid "°C (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "€ (Decimal, strict precision, 2 digits)"
+msgstr ""
+
+#, fuzzy
+msgid "Value must be a valid URL"
+msgstr "値は文字列であること"
+
+#, fuzzy
+msgid "Link title to"
+msgstr "タイトルのリンク"
+
+#, fuzzy
+msgid "Appearance"
+msgstr "アプライアンス"
+
+#, fuzzy
+msgid "Show title background"
+msgstr "背景なしでタイトルを表示"
+
+#, fuzzy
+msgid "Show widget background"
+msgstr "背景なしでタイトルを表示"
+
+#, fuzzy
 msgid "explicit password"
 msgstr "新しいパスワード"
 
@@ -85856,6 +86054,21 @@ msgid ""
 "systems state, such as how much storage is used or the CPU load."
 msgstr ""
 
+msgid ""
+"This is a placeholder for the relay setup wizard. The actual implementation "
+"is pending."
+msgstr ""
+
+msgid "Deploy the relay to your environment"
+msgstr ""
+
+msgid "Name the relay and register with your Checkmk site"
+msgstr ""
+
+#, fuzzy
+msgid "Connection check"
+msgstr "接続名"
+
 #, fuzzy
 msgid "Already installed the Checkmk agent?"
 msgstr "すでにエージェントはインストール済？"
@@ -86096,8 +86309,8 @@ msgid ""
 "            You can customize these to match your monitoring needs,\n"
 "            most commonly by setting thresholds for WARN and CRIT states "
 "using rules.\n"
-"            To find the right ruleset for a service, start with the Service "
-"Discovery page."
+"            To find the right ruleset for a service,\n"
+"            start with the Service Discovery page of a host."
 msgstr ""
 
 #, fuzzy
@@ -86146,6 +86359,15 @@ msgid ""
 "You can now define custom parameters like thresholds or other check settings."
 msgstr ""
 
+msgid ""
+"Changes are saved in a temporary environment first,\n"
+"                letting you review and adjust them safely."
+msgstr ""
+
+#, fuzzy
+msgid "Activate changes to apply them to live monitoring."
+msgstr "イベントコンソールの変更を有効にする"
+
 #, fuzzy
 msgid "Mark as complete"
 msgstr "PGs 未完了"
@@ -86166,7 +86388,8 @@ msgstr ""
 msgid "Create a contact group"
 msgstr "連絡先グループと一致する"
 
-msgid "On default, there is one contact group available \"Everything\"."
+msgid ""
+"By default, there is one contact group available, called \"Everything\"."
 msgstr ""
 
 #, fuzzy
@@ -86180,7 +86403,7 @@ msgstr "連絡先グループへのサービスの割り当て"
 msgid ""
 "Each user can belong to multiple contact groups. You can assign them to "
 "contact groups in the \"Contact groups\" section when editing or creating a "
-"user"
+"user."
 msgstr ""
 
 #, fuzzy
@@ -86199,8 +86422,8 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Customize dashboard"
-msgstr "カスタマイズユーザー"
+msgid "Create a dashboard"
+msgstr "関連ダッシュボード"
 
 msgid ""
 "Tailor your monitoring experience by creating a custom dashboard\n"
@@ -86270,6 +86493,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Customize dashboard"
+#~ msgstr "カスタマイズユーザー"
 
 #, fuzzy
 #~ msgid "Main dashboard (PEV)"

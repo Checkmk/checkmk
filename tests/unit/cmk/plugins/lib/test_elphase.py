@@ -79,7 +79,7 @@ def test_check_elphase() -> None:
     ) == [
         Result(state=State.OK, summary="Name: Phase 1"),
         Result(state=State.OK, summary="Type: UPS Inc. model 123"),
-        Result(state=State.OK, summary="Device status: warning(1)"),
+        Result(state=State.CRIT, summary="Device status: warning(1)"),
         Result(state=State.OK, summary="Voltage: 250.2 V"),
         Metric("voltage", 250.2),
         Result(state=State.WARN, summary="Current: 13.1 A (warn/crit at 10.0 A/20.0 A)"),

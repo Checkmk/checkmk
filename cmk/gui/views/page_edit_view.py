@@ -54,6 +54,7 @@ from cmk.gui.valuespec import (
     Integer,
     ListChoice,
     ListOf,
+    Migrate,
     TextInput,
     TextOrRegExp,
     Transform,
@@ -157,18 +158,29 @@ def view_editor_general_properties(ds_name: str) -> Dictionary:
             ),
             (
                 "column_headers",
-                DropdownChoice(
-                    title=_("Column Headers"),
-                    choices=[
-                        ("off", _("off")),
-                        ("pergroup", _("once per group")),
-                        ("repeat", _("repeat every 20'th row")),
-                    ],
-                    default_value="pergroup",
+                Migrate(
+                    DropdownChoice(
+                        title=_("Column Headers"),
+                        choices=[
+                            ("off", _("off")),
+                            ("pergroup", _("once per group")),
+                        ],
+                        default_value="pergroup",
+                    ),
+                    migrate=_migrate_column_headers_repeat_to_pergroup,
                 ),
             ),
         ],
     )
+
+
+def _migrate_column_headers_repeat_to_pergroup(setting: str) -> str:
+    """In 2.5 we removed the 'repeat' option for column headers
+    because we don't need it now that we have sticky headers.
+    This function ensures previous settings are migrated properly. Can be removed in 2.6."""
+    if setting == "repeat":
+        return "pergroup"
+    return setting
 
 
 def view_inventory_join_macros(

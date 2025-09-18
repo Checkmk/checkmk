@@ -216,7 +216,7 @@ class _ViewDashletConfigMandatory(ABCViewDashletConfig):
     painters: list[ColumnSpec]
     browser_reload: int
     num_columns: int
-    column_headers: Literal["off", "pergroup", "repeat"]
+    column_headers: Literal["off", "pergroup"]
     sorters: Sequence[SorterSpec]
 
 

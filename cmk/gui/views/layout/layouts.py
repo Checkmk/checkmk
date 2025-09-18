@@ -192,8 +192,6 @@ class GroupedBoxesLayout(Layout):
         cells: Sequence[Cell],
         show_checkboxes: bool,
     ) -> None:
-        repeat_heading_every = 20  # in case column_headers is "repeat"
-
         if group_cells:
             self._show_group_header_table(group_cells, rows_with_ids[0][1])
 
@@ -211,9 +209,6 @@ class GroupedBoxesLayout(Layout):
         visible_row_number = 0
         group_hidden, num_grouped_rows = None, 0
         for index, row in rows_with_ids:
-            if view.get("column_headers") == "repeat":
-                if visible_row_number > 0 and visible_row_number % repeat_heading_every == 0:
-                    self._show_header_line(cells, show_checkboxes)
             visible_row_number += 1
 
             odd = "even" if odd == "odd" else "odd"
@@ -655,8 +650,6 @@ class LayoutTable(Layout):
         num_columns: int,
         show_checkboxes: bool,
     ) -> None:
-        repeat_heading_every = 20  # in case column_headers is "repeat"
-
         html.open_table(class_="data table")
         last_group = None
         odd = "odd"
@@ -735,9 +728,6 @@ class LayoutTable(Layout):
 
             # At the beginning of the line? Beginn new line
             if column == 1:
-                if view.get("column_headers") == "repeat":
-                    if visible_row_number > 0 and visible_row_number % repeat_heading_every == 0:
-                        self._show_header_line(cells, num_columns, show_checkboxes)
                 visible_row_number += 1
 
                 # In one-column layout we use the state of the service

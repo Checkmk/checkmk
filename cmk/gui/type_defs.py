@@ -514,7 +514,7 @@ class ViewSpec(Visual):
     painters: Sequence[ColumnSpec]
     browser_reload: int
     num_columns: int
-    column_headers: Literal["off", "pergroup", "repeat"]
+    column_headers: Literal["off", "pergroup"]
     sorters: Sequence[SorterSpec]
     add_headers: NotRequired[str]
     # View editor only adds them in case they are truish. In our built-in specs these flags are also
@@ -539,7 +539,7 @@ class DashboardEmbeddedViewSpec(TypedDict):
     painters: Sequence[ColumnSpec]
     browser_reload: int
     num_columns: int
-    column_headers: Literal["off", "pergroup", "repeat"]
+    column_headers: Literal["off", "pergroup"]
     sorters: Sequence[SorterSpec]
     add_headers: NotRequired[str]
     # View editor only adds them in case they are truish. In our built-in specs these flags are also

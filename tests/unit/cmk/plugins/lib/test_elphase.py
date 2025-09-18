@@ -93,8 +93,8 @@ def test_check_elphase() -> None:
         Metric("appower", 78.0),
         Result(state=State.OK, summary="Energy: 66.1 Wh"),
         Metric("energy", 66.1),
-        Result(state=State.CRIT, summary="Frequency: 50.0 hz (warn/crit at 45.0 hz/35.0 hz)"),
-        Metric("frequency", 50.0, levels=(45.0, 35.0)),
+        Result(state=State.WARN, summary="Frequency: 50.0 Hz (warn/crit at 47.0 Hz/55.0 Hz)"),
+        Metric("frequency", 50.0, levels=(47.0, 55.0)),
         Result(
             state=State.CRIT,
             summary="Differential current AC: 20.0 mA (warn/crit at 15.0 mA/17.0 mA)",

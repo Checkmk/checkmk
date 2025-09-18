@@ -182,14 +182,28 @@ def check_elphase(
             render_func=lambda x: f"{x:.1f} Wh",
         )
 
+    if elphase.frequency:
+        if frequency_levels := params.get("frequency"):
+            lower_frequency_levels = (frequency_levels[0], frequency_levels[1])
+            upper_frequency_levels = (frequency_levels[2], frequency_levels[3])
+        else:
+            lower_frequency_levels = None
+            upper_frequency_levels = None
+        yield from _check_reading(
+            elphase.frequency,
+            label="Frequency",
+            metric_name="frequency",
+            lower_levels=lower_frequency_levels,
+            upper_levels=upper_frequency_levels,
+            render_func=lambda x: f"{x:.1f} Hz",
+        )
+
     readings: Mapping[str, ReadingWithState | None] = {
-        "frequency": elphase.frequency,
         "differential_current_ac": elphase.differential_current_ac,
         "differential_current_dc": elphase.differential_current_dc,
     }
 
     for quantity, title, render_func, bound, factor in [
-        ("frequency", "Frequency", lambda x: f"{x:.1f} hz", Bounds.Both, 1),
         (
             "differential_current_ac",
             "Differential current AC",

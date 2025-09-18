@@ -9,13 +9,12 @@ import {
   type GraphLine,
   type GraphLines,
   type GraphOptions,
-  type I18N,
   type Operation,
   type Transformation
 } from 'cmk-shared-typing/typescript/graph_designer'
 import { type Ref, computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
-import type { TranslatedString } from '@/lib/i18nString'
+import usei18n from '@/lib/i18n'
 import useDragging from '@/lib/useDragging'
 
 import CmkColorPicker from '@/components/CmkColorPicker.vue'
@@ -42,11 +41,12 @@ import { type GraphRenderer } from '@/graph-designer/graph'
 
 import type { Topic } from './type_defs'
 
+const { _t } = usei18n()
+
 const props = defineProps<{
   graph_id: string
   graph_lines: GraphLines
   graph_options: GraphOptions
-  i18n: I18N
   graph_renderer: GraphRenderer
 }>()
 
@@ -76,25 +76,25 @@ onBeforeUnmount(() => {
 
 const dataConsolidationType = ref<'average' | 'min' | 'max'>('max')
 const consolidationTypeSuggestions: Suggestion[] = [
-  { name: 'average', title: props.i18n.average as TranslatedString },
-  { name: 'min', title: props.i18n.minimum as TranslatedString },
-  { name: 'max', title: props.i18n.maximum as TranslatedString }
+  { name: 'average', title: _t('Average') },
+  { name: 'min', title: _t('Minimum') },
+  { name: 'max', title: _t('Maximum') }
 ]
 
 const dataScalarType = ref<'warn' | 'crit' | 'min' | 'max'>('crit')
 const scalarTypeSuggestions: Suggestion[] = [
-  { name: 'warn', title: props.i18n.warning as TranslatedString },
-  { name: 'crit', title: props.i18n.critical as TranslatedString },
-  { name: 'min', title: props.i18n.minimum as TranslatedString },
-  { name: 'max', title: props.i18n.maximum as TranslatedString }
+  { name: 'warn', title: _t('Warning') },
+  { name: 'crit', title: _t('Critical') },
+  { name: 'min', title: _t('Minimum') },
+  { name: 'max', title: _t('Maximum') }
 ]
 
 const dataConstant: Ref<number> = ref(1)
 
 const formLineTypeSuggestions: Suggestion[] = [
-  { name: 'line', title: props.i18n.line as TranslatedString },
-  { name: 'area', title: props.i18n.area as TranslatedString },
-  { name: 'stack', title: props.i18n.stack as TranslatedString }
+  { name: 'line', title: _t('Line') },
+  { name: 'area', title: _t('Area') },
+  { name: 'stack', title: _t('Stack') }
 ]
 
 const dataTransformation: Ref<number> = ref(95)
@@ -110,24 +110,24 @@ const dataOmitZeroMetrics = ref(props.graph_options.omit_zero_metrics)
 const topics: Topic[] = [
   {
     ident: 'graph_lines',
-    title: props.i18n.graph_lines,
+    title: _t('Graph lines'),
     elements: [
-      { ident: 'metric', title: props.i18n.metric },
-      { ident: 'scalar', title: props.i18n.scalar },
-      { ident: 'constant', title: props.i18n.constant }
+      { ident: 'metric', title: _t('Metric') },
+      { ident: 'scalar', title: _t('Scalar') },
+      { ident: 'constant', title: _t('Constant') }
     ]
   },
   {
     ident: 'graph_operations',
-    title: props.i18n.graph_operations,
+    title: _t('Operations on selected graph lines'),
     elements: [
-      { ident: 'operations', title: props.i18n.operations },
-      { ident: 'transformation', title: props.i18n.transformation }
+      { ident: 'operations', title: _t('Operations') },
+      { ident: 'transformation', title: _t('Transformation') }
     ]
   },
   {
     ident: 'graph_options',
-    title: props.i18n.graph_options,
+    title: _t('Graph options'),
     elements: [],
     customContent: true
   }
@@ -142,21 +142,21 @@ function formulaOf(graphLine: GraphLine): string {
     case 'constant':
       return ''
     case 'sum':
-      return `${props.i18n.sum} ${props.i18n.of}`
+      return `${_t('Sum')} ${_t('of')}`
     case 'product':
-      return `${props.i18n.product} ${props.i18n.of}`
+      return `${_t('Product')} ${_t('of')}`
     case 'difference':
-      return `${props.i18n.difference} ${props.i18n.of}`
+      return `${_t('Difference')} ${_t('of')}`
     case 'fraction':
-      return `${props.i18n.fraction} ${props.i18n.of}`
+      return `${_t('Fraction')} ${_t('of')}`
     case 'average':
-      return `${props.i18n.average} ${props.i18n.of}`
+      return `${_t('Average')} ${_t('of')}`
     case 'minimum':
-      return `${props.i18n.minimum} ${props.i18n.of}`
+      return `${_t('Minimum')} ${_t('of')}`
     case 'maximum':
-      return `${props.i18n.maximum} ${props.i18n.of}`
+      return `${_t('Maximum')} ${_t('of')}`
     case 'transformation':
-      return `${props.i18n.percentile} ${props.i18n.of}`
+      return `${_t('Percentile')} ${_t('of')}`
     default:
       return ''
   }
@@ -340,10 +340,10 @@ function updateGraphLineAutoTitle(graphLine: GraphLine) {
       break
     }
     case 'constant':
-      graphLine.auto_title = `${props.i18n.constant} ${graphLine.value}`
+      graphLine.auto_title = `${_t('Constant')} ${graphLine.value}`
       break
     case 'transformation':
-      graphLine.auto_title = `${props.i18n.percentile} ${graphLine.percentile} ${props.i18n.of} ${graphLine.operand.auto_title}`
+      graphLine.auto_title = `${_t('Percentile')} ${graphLine.percentile} ${_t('of')} ${graphLine.operand.auto_title}`
   }
 }
 
@@ -434,7 +434,7 @@ function addConstant() {
     id: nextIndex(),
     type: 'constant',
     color: '#ff0000',
-    auto_title: `${props.i18n.constant} ${dataConstant.value}`,
+    auto_title: `${_t('Constant')} ${dataConstant.value}`,
     custom_title: '',
     visible: true,
     line_type: 'line',
@@ -472,7 +472,7 @@ function applySum() {
       id: nextIndex(),
       type: 'sum',
       color: firstOperand.color,
-      auto_title: `${props.i18n.sum} ${props.i18n.of} ${selectedGraphLines.value.map((l) => l.auto_title).join(', ')}`,
+      auto_title: `${_t('Sum')} ${_t('of')} ${selectedGraphLines.value.map((l) => l.auto_title).join(', ')}`,
       custom_title: '',
       visible: true,
       line_type: 'line',
@@ -489,7 +489,7 @@ function applyProduct() {
       id: nextIndex(),
       type: 'product',
       color: firstOperand.color,
-      auto_title: `${props.i18n.product} ${props.i18n.of} ${selectedGraphLines.value.map((l) => l.auto_title).join(', ')}`,
+      auto_title: `${_t('Product')} ${_t('of')} ${selectedGraphLines.value.map((l) => l.auto_title).join(', ')}`,
       custom_title: '',
       visible: true,
       line_type: 'line',
@@ -506,7 +506,7 @@ function applyDifference() {
       id: nextIndex(),
       type: 'difference',
       color: firstOperand.color,
-      auto_title: `${props.i18n.difference} ${props.i18n.of} ${selectedGraphLines.value.map((l) => l.auto_title).join(', ')}`,
+      auto_title: `${_t('Difference')} ${_t('of')} ${selectedGraphLines.value.map((l) => l.auto_title).join(', ')}`,
       custom_title: '',
       visible: true,
       line_type: 'line',
@@ -523,7 +523,7 @@ function applyFraction() {
       id: nextIndex(),
       type: 'fraction',
       color: firstOperand.color,
-      auto_title: `${props.i18n.fraction} ${props.i18n.of} ${selectedGraphLines.value.map((l) => l.auto_title).join(', ')}`,
+      auto_title: `${_t('Fraction')} ${_t('of')} ${selectedGraphLines.value.map((l) => l.auto_title).join(', ')}`,
       custom_title: '',
       visible: true,
       line_type: 'line',
@@ -540,7 +540,7 @@ function applyAverage() {
       id: nextIndex(),
       type: 'average',
       color: firstOperand.color,
-      auto_title: `${props.i18n.average} ${props.i18n.of} ${selectedGraphLines.value.map((l) => l.auto_title).join(', ')}`,
+      auto_title: `${_t('Average')} ${_t('of')} ${selectedGraphLines.value.map((l) => l.auto_title).join(', ')}`,
       custom_title: '',
       visible: true,
       line_type: 'line',
@@ -557,7 +557,7 @@ function applyMinimum() {
       id: nextIndex(),
       type: 'minimum',
       color: firstOperand.color,
-      auto_title: `${props.i18n.minimum} ${props.i18n.of} ${selectedGraphLines.value.map((l) => l.auto_title).join(', ')}`,
+      auto_title: `${_t('Minimum')} ${_t('of')} ${selectedGraphLines.value.map((l) => l.auto_title).join(', ')}`,
       custom_title: '',
       visible: true,
       line_type: 'line',
@@ -574,7 +574,7 @@ function applyMaximum() {
       id: nextIndex(),
       type: 'maximum',
       color: firstOperand.color,
-      auto_title: `${props.i18n.maximum} ${props.i18n.of} ${selectedGraphLines.value.map((l) => l.auto_title).join(', ')}`,
+      auto_title: `${_t('Maximum')} ${_t('of')} ${selectedGraphLines.value.map((l) => l.auto_title).join(', ')}`,
       custom_title: '',
       visible: true,
       line_type: 'line',
@@ -591,7 +591,7 @@ function applyTransformation() {
       id: nextIndex(),
       type: 'transformation',
       color: firstOperand.color,
-      auto_title: `${props.i18n.percentile} ${dataTransformation.value} ${props.i18n.of} ${firstOperand.auto_title}`,
+      auto_title: `${_t('Percentile')} ${dataTransformation.value} ${_t('of')} ${firstOperand.auto_title}`,
       custom_title: '',
       visible: true,
       line_type: 'line',
@@ -690,14 +690,14 @@ const graphDesignerContentAsJson = computed(() => {
       <tr>
         <th class="header_narrow nowrap">#</th>
         <th class="header_buttons"></th>
-        <th class="header_buttons">{{ props.i18n.actions }}</th>
-        <th class="header_narrow">{{ props.i18n.color }}</th>
-        <th class="header_nobr narrow">{{ props.i18n.auto_title }}</th>
-        <th class="header_nobr narrow">{{ props.i18n.custom_title }}</th>
-        <th class="header_buttons">{{ props.i18n.visible }}</th>
-        <th class="header_narrow">{{ props.i18n.line_style }}</th>
-        <th class="header_buttons">{{ props.i18n.mirrored }}</th>
-        <th>{{ props.i18n.formula }}</th>
+        <th class="header_buttons">{{ _t('Actions') }}</th>
+        <th class="header_narrow">{{ _t('Color') }}</th>
+        <th class="header_nobr narrow">{{ _t('Title') }}</th>
+        <th class="header_nobr narrow">{{ _t('Custom title') }}</th>
+        <th class="header_buttons">{{ _t('Visible') }}</th>
+        <th class="header_narrow">{{ _t('Line style') }}</th>
+        <th class="header_buttons">{{ _t('Mirrored') }}</th>
+        <th>{{ _t('Formula') }}</th>
       </tr>
     </thead>
     <tbody ref="trContainerRef">
@@ -717,19 +717,19 @@ const graphDesignerContentAsJson = computed(() => {
         <td class="buttons">
           <img
             v-if="isDissolvable(graphLine)"
-            :title="props.i18n.dissolve_operation"
+            :title="_t('Dissolve operation')"
             src="themes/facelift/images/icon_dissolve_operation.png"
             class="icon iconbutton png"
             @click="dissolveGraphLine(graphLine)"
           />
           <img
-            :title="props.i18n.clone_this_entry"
+            :title="_t('Clone this entry')"
             src="themes/facelift/images/icon_clone.svg"
             class="icon iconbutton"
             @click="cloneGraphLine(graphLine)"
           />
           <img
-            :title="props.i18n.move_this_entry"
+            :title="_t('Move this entry')"
             src="themes/modern-dark/images/icon_drag.svg"
             class="icon iconbutton"
             @dragstart="dragStart"
@@ -737,7 +737,7 @@ const graphDesignerContentAsJson = computed(() => {
             @dragend="dragEnd"
           />
           <img
-            :title="props.i18n.delete_this_entry"
+            :title="_t('Delete this entry')"
             src="themes/facelift/images/icon_delete.svg"
             class="icon iconbutton"
             @click="deleteGraphLine(graphLine)"
@@ -755,7 +755,7 @@ const graphDesignerContentAsJson = computed(() => {
               type: 'fixed',
               suggestions: formLineTypeSuggestions
             }"
-            :label="props.i18n.line_style as TranslatedString"
+            :label="_t('Line style')"
           />
         </td>
 
@@ -768,9 +768,9 @@ const graphDesignerContentAsJson = computed(() => {
                   v-model:host-name="graphLine.host_name"
                   v-model:service-name="graphLine.service_name"
                   v-model:metric-name="graphLine.metric_name"
-                  :placeholder_host_name="props.i18n.placeholder_host_name"
-                  :placeholder_service_name="props.i18n.placeholder_service_name"
-                  :placeholder_metric_name="props.i18n.placeholder_metric_name"
+                  :placeholder_host_name="_t('Host name')"
+                  :placeholder_service_name="_t('Service name')"
+                  :placeholder_metric_name="_t('Metric name')"
                   @update:host-name="updateGraphLineAutoTitle(graphLine)"
                   @update:service-name="updateGraphLineAutoTitle(graphLine)"
                   @update:metric-name="updateGraphLineAutoTitle(graphLine)"
@@ -783,7 +783,7 @@ const graphDesignerContentAsJson = computed(() => {
                     type: 'fixed',
                     suggestions: consolidationTypeSuggestions
                   }"
-                  :label="props.i18n.formula as TranslatedString"
+                  :label="_t('Formula')"
                 />
               </template>
             </FixedMetricRowRenderer>
@@ -795,9 +795,9 @@ const graphDesignerContentAsJson = computed(() => {
                   v-model:host-name="graphLine.host_name"
                   v-model:service-name="graphLine.service_name"
                   v-model:metric-name="graphLine.metric_name"
-                  :placeholder_host_name="props.i18n.placeholder_host_name"
-                  :placeholder_service_name="props.i18n.placeholder_service_name"
-                  :placeholder_metric_name="props.i18n.placeholder_metric_name"
+                  :placeholder_host_name="_t('Host name')"
+                  :placeholder_service_name="_t('Service name')"
+                  :placeholder_metric_name="_t('Metric name')"
                   @update:host-name="updateGraphLineAutoTitle(graphLine)"
                   @update:service-name="updateGraphLineAutoTitle(graphLine)"
                   @update:metric-name="updateGraphLineAutoTitle(graphLine)"
@@ -810,13 +810,13 @@ const graphDesignerContentAsJson = computed(() => {
                     type: 'fixed',
                     suggestions: scalarTypeSuggestions
                   }"
-                  :label="props.i18n.scalar as TranslatedString"
+                  :label="_t('Scalar')"
                 />
               </template>
             </FixedMetricRowRenderer>
           </div>
           <div v-else-if="graphLine.type === 'constant'">
-            {{ props.i18n.constant }}
+            {{ _t('Constant') }}
             <CmkInput
               v-model="graphLine.value"
               type="number"
@@ -829,7 +829,7 @@ const graphDesignerContentAsJson = computed(() => {
               type="number"
               @update:model-value="updateGraphLineAutoTitle(graphLine)"
             />
-            {{ props.i18n.of }}
+            {{ _t('of') }}
             <br />
             <div
               :style="{
@@ -864,9 +864,9 @@ const graphDesignerContentAsJson = computed(() => {
               v-model:host-name="dataMetric.hostName"
               v-model:service-name="dataMetric.serviceName"
               v-model:metric-name="dataMetric.metricName"
-              :placeholder_host_name="props.i18n.placeholder_host_name"
-              :placeholder_service_name="props.i18n.placeholder_service_name"
-              :placeholder_metric_name="props.i18n.placeholder_metric_name"
+              :placeholder_host_name="_t('Host name')"
+              :placeholder_service_name="_t('Service name')"
+              :placeholder_metric_name="_t('Metric name')"
             />
           </template>
           <template #metric_type>
@@ -876,17 +876,17 @@ const graphDesignerContentAsJson = computed(() => {
                 type: 'fixed',
                 suggestions: consolidationTypeSuggestions
               }"
-              :label="props.i18n.formula as TranslatedString"
+              :label="_t('Formula')"
             />
           </template>
           <template #metric_action>
             <button @click.prevent="addMetric">
               <img
-                :title="props.i18n.add"
+                :title="_t('Add')"
                 src="themes/facelift/images/icon_new.svg"
                 class="icon iconbutton"
               />
-              {{ props.i18n.add }}
+              {{ _t('Add') }}
             </button>
           </template>
         </MetricRowRenderer>
@@ -900,9 +900,9 @@ const graphDesignerContentAsJson = computed(() => {
               v-model:host-name="dataScalar.hostName"
               v-model:service-name="dataScalar.serviceName"
               v-model:metric-name="dataScalar.metricName"
-              :placeholder_host_name="props.i18n.placeholder_host_name"
-              :placeholder_service_name="props.i18n.placeholder_service_name"
-              :placeholder_metric_name="props.i18n.placeholder_metric_name"
+              :placeholder_host_name="_t('Host name')"
+              :placeholder_service_name="_t('Service name')"
+              :placeholder_metric_name="_t('Metric name')"
             />
           </template>
           <template #metric_type>
@@ -912,17 +912,17 @@ const graphDesignerContentAsJson = computed(() => {
                 type: 'fixed',
                 suggestions: scalarTypeSuggestions
               }"
-              :label="props.i18n.scalar as TranslatedString"
+              :label="_t('Scalar')"
             />
           </template>
           <template #metric_action>
             <button @click.prevent="addScalar">
               <img
-                :title="props.i18n.add"
+                :title="_t('Add')"
                 src="themes/facelift/images/icon_new.svg"
                 class="icon iconbutton"
               />
-              {{ props.i18n.add }}
+              {{ _t('Add') }}
             </button>
           </template>
         </MetricRowRenderer>
@@ -933,39 +933,36 @@ const graphDesignerContentAsJson = computed(() => {
         <CmkInput v-model="dataConstant" type="number" />
         <button @click.prevent="addConstant">
           <img
-            :title="props.i18n.add"
+            :title="_t('Add')"
             src="themes/facelift/images/icon_new.svg"
             class="icon iconbutton"
           />
-          {{ props.i18n.add }}
+          {{ _t('Add') }}
         </button>
       </div>
     </template>
     <template #operations>
       <div v-if="operationIsApplicable()">
-        <button @click="applySum">{{ props.i18n.sum }}</button>
-        <button @click="applyProduct">{{ props.i18n.product }}</button>
-        <button @click="applyDifference">
-          {{ props.i18n.difference }} {{ showSelectedIds('-') }}
-        </button>
-        <button @click="applyFraction">{{ props.i18n.fraction }} {{ showSelectedIds('/') }}</button>
-        <button @click="applyAverage">{{ props.i18n.average }}</button>
-        <button @click="applyMinimum">{{ props.i18n.minimum }}</button>
-        <button @click="applyMaximum">{{ props.i18n.maximum }}</button>
+        <button @click="applySum">{{ _t('Sum') }}</button>
+        <button @click="applyProduct">{{ _t('Product') }}</button>
+        <button @click="applyDifference">{{ _t('Difference') }} {{ showSelectedIds('-') }}</button>
+        <button @click="applyFraction">{{ _t('Fraction') }} {{ showSelectedIds('/') }}</button>
+        <button @click="applyAverage">{{ _t('Average') }}</button>
+        <button @click="applyMinimum">{{ _t('Minimum') }}</button>
+        <button @click="applyMaximum">{{ _t('Maximum') }}</button>
       </div>
-      <div v-else>{{ props.i18n.no_selected_graph_lines }}</div>
+      <div v-else>{{ _t('Select at least two graph lines to edit') }}</div>
     </template>
     <template #transformation>
       <div v-if="transformationIsApplicable()">
         <CmkInput v-model="dataTransformation" type="number" />
-        <button @click="applyTransformation">{{ props.i18n.apply }}</button>
+        <button @click="applyTransformation">{{ _t('Apply') }}</button>
       </div>
-      <div v-else>{{ props.i18n.no_selected_graph_line }}</div>
+      <div v-else>{{ _t('Select one graph line to edit') }}</div>
     </template>
     <template #graph_options_custom>
       <GraphOptionsEditor
         :graph_options="computeGraphOptions()"
-        :i18n="props.i18n"
         @update:graph-options="updateGraphOptionsState"
       />
     </template>

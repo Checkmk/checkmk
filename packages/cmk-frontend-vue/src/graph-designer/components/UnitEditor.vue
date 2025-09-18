@@ -9,12 +9,11 @@ import type {
   GraphOptionUnitCustomNotation,
   GraphOptionUnitCustomNotationWithSymbol,
   GraphOptionUnitCustomPrecision,
-  GraphOptions,
-  I18N
+  GraphOptions
 } from 'cmk-shared-typing/typescript/graph_designer'
 import { ref, watch } from 'vue'
 
-import type { TranslatedString } from '@/lib/i18nString'
+import usei18n from '@/lib/i18n'
 
 import CmkDropdown from '@/components/CmkDropdown.vue'
 import CmkIndent from '@/components/CmkIndent.vue'
@@ -26,9 +25,10 @@ import CmkInput from '@/components/user-input/CmkInput.vue'
 
 import { extractUnitFields } from '../converters'
 
+const { _t } = usei18n()
+
 const props = defineProps<{
   graph_options: GraphOptions
-  i18n: I18N
 }>()
 
 const { unitType, notation, symbol, precisionType, precisionDigits } = extractUnitFields(
@@ -37,10 +37,10 @@ const { unitType, notation, symbol, precisionType, precisionDigits } = extractUn
 
 const dataUnitChoice = ref(unitType)
 const unitChoiceSuggestions: Suggestion[] = [
-  { name: 'custom', title: props.i18n.unit_custom as TranslatedString },
+  { name: 'custom', title: _t('Custom') },
   {
     name: 'first_entry_with_unit',
-    title: props.i18n.unit_first_entry_with_unit as TranslatedString
+    title: _t('Use unit of first entry')
   }
 ]
 
@@ -48,25 +48,25 @@ const dataNotation = ref<GraphOptionUnitCustomNotationWithSymbol['type'] | 'time
 const dataNotationSymbol = ref<string>(symbol)
 
 const notationSuggestions: Suggestion[] = [
-  { name: 'decimal', title: props.i18n.unit_custom_notation_decimal as TranslatedString },
-  { name: 'si', title: props.i18n.unit_custom_notation_si as TranslatedString },
-  { name: 'iec', title: props.i18n.unit_custom_notation_iec as TranslatedString },
+  { name: 'decimal', title: _t('Decimal') },
+  { name: 'si', title: _t('SI') },
+  { name: 'iec', title: _t('IEC') },
   {
     name: 'standard_scientific',
-    title: props.i18n.unit_custom_notation_standard_scientific as TranslatedString
+    title: _t('Standard scientific')
   },
   {
     name: 'engineering_scientific',
-    title: props.i18n.unit_custom_notation_engineering_scientific as TranslatedString
+    title: _t('Engineering scientific')
   },
-  { name: 'time', title: props.i18n.unit_custom_notation_time as TranslatedString }
+  { name: 'time', title: _t('Time') }
 ]
 
 const dataPrecisionRoundingMode = ref<GraphOptionUnitCustomPrecision['type']>(precisionType)
 const dataPrecisionDigits = ref<number>(precisionDigits)
 const precisionRoundingModeSuggestions: Suggestion[] = [
-  { name: 'auto', title: props.i18n.unit_custom_precision_type_auto as TranslatedString },
-  { name: 'strict', title: props.i18n.unit_custom_precision_type_strict as TranslatedString }
+  { name: 'auto', title: _t('Auto') },
+  { name: 'strict', title: _t('Strict') }
 ]
 
 const emit = defineEmits<{
@@ -127,7 +127,7 @@ watch(
   <div class="gd-unit-editor__row">
     <div class="gd-unit-editor__legend">
       <CmkParagraph>
-        {{ props.i18n.unit }}
+        {{ _t('Unit') }}
         <span class="dots">{{ Array(200).join('.') }}</span>
       </CmkParagraph>
     </div>
@@ -135,43 +135,43 @@ watch(
       <CmkDropdown
         v-model:selected-option="dataUnitChoice"
         :options="{ type: 'fixed', suggestions: unitChoiceSuggestions }"
-        :label="props.i18n.unit_custom as TranslatedString"
+        :label="_t('Custom')"
       />
 
       <CmkIndent v-if="dataUnitChoice === 'custom'">
         <div>
           <CmkLabel>
-            {{ props.i18n.unit_custom_notation }}
+            {{ _t('Notation') }}
           </CmkLabel>
           <CmkIndent>
             <CmkDropdown
               v-model:selected-option="dataNotation"
               :options="{ type: 'fixed', suggestions: notationSuggestions }"
-              :label="props.i18n.unit_custom_notation as TranslatedString"
+              :label="_t('Notation')"
             />
             <CmkIndent v-if="dataNotation !== 'time'">
               <CmkInput v-model="dataNotationSymbol" placeholder="symbol" type="text" />
             </CmkIndent>
           </CmkIndent>
           <CmkLabel>
-            {{ props.i18n.unit_custom_precision }}
+            {{ _t('Precision') }}
           </CmkLabel>
           <CmkIndent>
             <div>
               <div class="gd-unit-editor__label-element-row">
                 <CmkLabel>
-                  {{ props.i18n.unit_custom_precision_type }}
+                  {{ _t('Rounding mode') }}
                 </CmkLabel>
                 <CmkDropdown
                   v-model:selected-option="dataPrecisionRoundingMode"
                   :options="{ type: 'fixed', suggestions: precisionRoundingModeSuggestions }"
-                  :label="props.i18n.unit_custom as TranslatedString"
+                  :label="_t('Custom')"
                 />
               </div>
               <CmkSpace size="medium" />
               <div class="gd-unit-editor__label-element-row">
                 <CmkLabel>
-                  {{ props.i18n.unit_custom_precision_digits }}
+                  {{ _t('Digits') }}
                 </CmkLabel>
                 <CmkInput v-model="dataPrecisionDigits" type="number" />
               </div>

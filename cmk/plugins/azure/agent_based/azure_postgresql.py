@@ -101,7 +101,7 @@ check_plugin_azure_postgresql_connections = CheckPlugin(
     ),
     check_function=check_connections(),
     check_ruleset_name="database_connections",
-    check_default_parameters={},
+    check_default_parameters={"failed_connections": (1, 1)},
 )
 
 

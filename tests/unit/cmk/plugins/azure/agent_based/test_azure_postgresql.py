@@ -210,12 +210,12 @@ def test_azure_postgresql_connections_active_connections_lower() -> None:
                 )
             },
             "checkmk-postgres-flexible-server",
-            {"active_connections": (5, 10), "failed_connections": (1, 2)},
+            check_plugin_azure_postgresql_connections.check_default_parameters,
             [
                 Result(state=State.OK, summary="Active connections: 4"),
-                Metric("active_connections", 4.0, levels=(5.0, 10.0)),
-                Result(state=State.CRIT, summary="Failed connections: 3 (warn/crit at 1/2)"),
-                Metric("failed_connections", 3.0, levels=(1.0, 2.0)),
+                Metric("active_connections", 4.0),
+                Result(state=State.CRIT, summary="Failed connections: 3 (warn/crit at 1/1)"),
+                Metric("failed_connections", 3.0, levels=(1.0, 1.0)),
             ],
             id="flexible server",
         ),

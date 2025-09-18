@@ -39,9 +39,7 @@ backend_type = SNMPBackendEnum.deserialize(params[1])
 config = SNMPHostConfig.deserialize(params[2])
 cmk.utils.paths.snmpwalks_dir = Path(params[3])
 
-snmp_cache.initialize_single_oid_cache(
-    HostName("abc"), None, cache_dir=cmk.utils.paths.snmp_scan_cache_dir
-)
+snmp_cache.initialize_single_oid_cache(HostName("abc"), None)
 
 backend: Callable[[SNMPHostConfig, logging.Logger], SNMPBackend]
 match backend_type:

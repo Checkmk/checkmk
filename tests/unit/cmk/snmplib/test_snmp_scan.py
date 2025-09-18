@@ -185,11 +185,9 @@ def backend() -> Iterator[SNMPBackend]:
 
 
 @pytest.fixture
-def cache_oids(backend, tmp_path):
+def cache_oids(backend: SNMPBackend) -> Iterator[None]:
     # Cache OIDs to avoid actual SNMP I/O.
-    snmp_cache.initialize_single_oid_cache(
-        backend.config.hostname, backend.config.ipaddress, cache_dir=tmp_path
-    )
+    snmp_cache.initialize_single_oid_cache(backend.config.hostname, backend.config.ipaddress)
     snmp_cache.single_oid_cache()[snmp_scan.OID_SYS_DESCR] = "sys description"
     snmp_cache.single_oid_cache()[snmp_scan.OID_SYS_OBJ] = "sys object"
     yield
@@ -263,7 +261,6 @@ def test_gather_available_raw_section_names_defaults(
         scan_config=snmp_scan.SNMPScanConfig(
             on_error=OnError.RAISE,
             missing_sys_description=False,
-            oid_cache_dir=tmp_path,
         ),
         backend=backend,
     ) == {

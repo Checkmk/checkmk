@@ -397,7 +397,6 @@ class TestSNMPFetcherDeserialization:
             scan_config=SNMPScanConfig(
                 on_error=OnError.RAISE,
                 missing_sys_description=False,
-                oid_cache_dir=tmp_path,
             ),
             do_status_data_inventory=False,
             stored_walk_path=tmp_path,
@@ -438,7 +437,6 @@ def _create_fetcher(
         scan_config=SNMPScanConfig(
             on_error=OnError.RAISE,
             missing_sys_description=False,
-            oid_cache_dir=path,
         ),
         do_status_data_inventory=do_status_data_inventory,
         stored_walk_path=path,
@@ -764,7 +762,6 @@ class TestSNMPFetcherFetchCache:
             scan_config=SNMPScanConfig(
                 on_error=OnError.RAISE,
                 missing_sys_description=False,
-                oid_cache_dir=tmp_path,
             ),
             do_status_data_inventory=False,
             stored_walk_path=tmp_path,

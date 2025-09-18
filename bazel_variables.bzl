@@ -42,6 +42,7 @@ edition_deps = {
         "//omd/packages/jaeger:pkg_tar",
         "//omd/packages/nagvis:pkg_tar",
         "//omd/packages/enterprise",
+        "//omd/packages/metric-backend:pkg_tar",
     ],
     "cee": [
         "//non-free/packages/cmk-mknotifyd:pkg_tar",
@@ -60,6 +61,7 @@ edition_deps = {
         "//omd/packages/jaeger:pkg_tar",
         "//omd/packages/nagvis:pkg_tar",
         "//omd/packages/enterprise",
+        "//omd/packages/metric-backend:pkg_tar",
     ],
     "cse": [
         "//non-free/packages/cmk-mknotifyd:pkg_tar",
@@ -68,6 +70,7 @@ edition_deps = {
         "//non-free/packages/cmk-otel-collector:pkg_tar",
         "//non-free/packages/cmk-update-agent:pkg_tar",
         "//omd/packages/enterprise",
+        "//omd/packages/metric-backend:pkg_tar",
     ],
 }
 

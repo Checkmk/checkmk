@@ -4,10 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+import textwrap
 
 import pytest
 
-from tests.plugins_integration.checks import config, dump_path_site
+from tests.plugins_integration.checks import config, dump_path_site, process_check_output
 from tests.testlib.agent_dumps import (
     get_dump_names,
     read_cmk_dump,
@@ -17,7 +18,7 @@ from tests.testlib.agent_dumps import (
 from tests.testlib.agent_hosts import piggyback_host_from_dump_file
 from tests.testlib.dcd import execute_dcd_cycle
 from tests.testlib.site import Site
-from tests.testlib.utils import get_services_with_status, write_file
+from tests.testlib.utils import write_file
 
 logger = logging.getLogger(__name__)
 
@@ -54,8 +55,13 @@ def _rm_piggyback_host_from_dump(dump: str, host_name: str) -> str:
 def test_plugin_piggyback(
     test_site_piggyback: Site,
     source_host_name: str,
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> None:
     dump_path_repo = config.dump_dir_integration / "piggyback"
+    response_path_repo = config.response_dir_integration / "piggyback"
+    diffs_path = tmp_path_factory.mktemp("diffs")
+    output_path = tmp_path_factory.mktemp("output")
+
     with piggyback_host_from_dump_file(
         test_site_piggyback,
         source_host_name,
@@ -78,14 +84,18 @@ def test_plugin_piggyback(
         )
 
         for hostname in piggyback_hostnames:
-            host_services = test_site_piggyback.get_host_services(hostname)
-            ok_services = get_services_with_status(host_services, 0)
-            not_ok_services = [service for service in host_services if service not in ok_services]
-            err_msg = (
-                f"The following services are not in state 0: {not_ok_services} "
-                f"(Details: {[host_services[s] for s in not_ok_services]})"
+            diffing_checks = process_check_output(
+                site=test_site_piggyback,
+                host_name=hostname,
+                response_path=response_path_repo / f"{hostname}.json",
+                diff_dir=diffs_path,
+                output_dir=output_path,
             )
-            assert len(host_services) == len(ok_services), err_msg
+
+            err_msg = f"Check output mismatch for host {hostname}:\n" + "".join(
+                [textwrap.dedent(f"{check}:\n" + diffing_checks[check]) for check in diffing_checks]
+            )
+            assert not diffing_checks, err_msg
 
         # test removal of piggyback host
         pb_host_to_rm = piggyback_hostnames[0]

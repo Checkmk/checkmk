@@ -45,6 +45,7 @@ def setup_test_environment_fixture(site: Site) -> Generator:
         yield
 
 
+@pytest.mark.skip_if_edition("saas")
 @pytest.mark.parametrize("config", PERIOD_CONFIGS)
 def test_predictive_levels_periods(site: Site, config: TestRuleConfig) -> None:
     """Test different period types for predictive levels."""
@@ -66,6 +67,7 @@ def test_predictive_levels_periods(site: Site, config: TestRuleConfig) -> None:
         logger.info(f"Successfully tested period {config.period}")
 
 
+@pytest.mark.skip_if_edition("saas")
 @pytest.mark.parametrize("config", LEVEL_CONFIGS)
 def test_predictive_levels_types(site: Site, config: LevelConfig) -> None:
     """Test different level types for predictive levels (absolute, relative, stdev)."""
@@ -86,6 +88,7 @@ def test_predictive_levels_types(site: Site, config: LevelConfig) -> None:
         logger.info(f"Successfully tested {config.description}")
 
 
+@pytest.mark.skip_if_edition("saas")
 @pytest.mark.parametrize("config", BOUND_CONFIGS)
 def test_predictive_levels_bounds(site: Site, config: BoundConfig) -> None:
     """Test predictive levels with different bound configurations."""
@@ -106,6 +109,7 @@ def test_predictive_levels_bounds(site: Site, config: BoundConfig) -> None:
         logger.info(f"Successfully tested {config.description}")
 
 
+@pytest.mark.skip_if_edition("saas")
 def test_update_predictive_levels_rule(site: Site) -> None:
     """Test updating predictive levels rules via REST API."""
     logger.info("Testing: Update predictive levels rule")
@@ -178,6 +182,7 @@ def test_update_predictive_levels_rule(site: Site) -> None:
         site.openapi.rules.delete(rule_id)
 
 
+@pytest.mark.skip_if_edition("saas")
 def test_multiple_disk_metrics_predictive_levels(site: Site) -> None:
     """Test predictive levels for multiple disk metrics in one rule."""
     logger.info("Testing: Multiple disk metrics with predictive levels")
@@ -252,6 +257,7 @@ def test_multiple_disk_metrics_predictive_levels(site: Site) -> None:
         logger.info("Successfully tested multiple disk metrics")
 
 
+@pytest.mark.skip_if_edition("saas")
 def test_fixed_to_predictive_conversion(site: Site) -> None:
     """Test converting between fixed levels and predictive levels using RulesAPI::update method."""
     logger.info("Testing: Conversion between fixed and predictive levels")

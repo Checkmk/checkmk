@@ -143,7 +143,7 @@ int main(int argc, char **argv) {
   // SNMP traps
   if (do_snmptrap != 0 && snmptrap_fd > 0) {
     open_socket_as_fd(
-        SOCK_DGRAM, "snmp-trap", snmptrap_fd,
+        SOCK_DGRAM, "snmptrap", snmptrap_fd,
         "Cannot bind UDP socket for snptrap to port "
         "(Is SUID bit set on mkeventd_open514? Is \"nosuid\" not set on the "
         "filesystem?)");

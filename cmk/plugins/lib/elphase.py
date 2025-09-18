@@ -106,19 +106,20 @@ def check_elphase(
 
     if elphase.device_state:
         device_state, device_state_readable = elphase.device_state
+        device_state_str = str(int(device_state))
         if "map_device_states" in params:
             device_state_params = dict(params["map_device_states"])
-            if device_state in device_state_params:
-                state = device_state_params[device_state]
+            if device_state_str in device_state_params:
+                state = device_state_params[device_state_str]
             elif device_state_readable in device_state_params:
                 state = device_state_params[device_state_readable]
             else:
-                state = 0
+                state = State.OK
         else:
             state = device_state
         yield Result(
             state=State(state),
-            summary=f"Device status: {device_state_readable}({int(device_state)})",
+            summary=f"Device status: {device_state_readable}({device_state_str})",
         )
 
     readings: Mapping[str, ReadingWithState | None] = {

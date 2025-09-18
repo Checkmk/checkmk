@@ -1736,6 +1736,23 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/objects/constant/data_source/collections/all': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** List data sources. */
+    get: operations['Data Sources.list_data_sources_v1']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/domain-types/downtime/collections/all': {
     parameters: {
       query?: never
@@ -4741,6 +4758,36 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/domain-types/view/collections/all': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * List views.
+     * @description
+     *
+     *     This endpoint requires the following permissions:
+     *      * All of:
+     *        * Customize views and use them (`general.edit_views`): Allows to create own views, customize built-in views and use them.
+     *        * Optionally:
+     *          * See user views (`general.see_user_views`): Is needed for seeing views that other users have created.
+     *        * Optionally:
+     *          * See packaged views (`general.see_packaged_views`): Is needed for seeing views that are provided via extension packages.
+     *        * Some permissions starting with `view`:
+     *
+     */
+    get: operations['Views.list_views_v1']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/domain-types/visual_filter/collections/all': {
     parameters: {
       query?: never
@@ -4761,6 +4808,23 @@ export interface paths {
      *
      */
     get: operations['Visual Filters.list_filters_v1']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/objects/constant/visual_info/collections/all': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** List infos. */
+    get: operations['Visual Info.list_infos_v1']
     put?: never
     post?: never
     delete?: never
@@ -8278,8 +8342,8 @@ export interface components {
        */
       entries: string[]
     }
-    /** Api406DefaultErrorBA451644CA746AA5 */
-    Api406DefaultErrorBA451644CA746AA5: {
+    /** Api406DefaultError7C7D8087CF0280D4 */
+    Api406DefaultError7C7D8087CF0280D4: {
       /**
        * Status
        * @description The HTTP status code.
@@ -8643,8 +8707,8 @@ export interface components {
       /** @description All the constants data of a dashboard. */
       extensions: components['schemas']['DashboardConstantsResponse']
     }
-    /** Api404DefaultErrorAB2AA48D05FD212E */
-    Api404DefaultErrorAB2AA48D05FD212E: {
+    /** Api404DefaultError6C82AD12CAFE4830 */
+    Api404DefaultError6C82AD12CAFE4830: {
       /**
        * Status
        * @description The HTTP status code.
@@ -10129,8 +10193,8 @@ export interface components {
         [key: string]: components['schemas']['RelativeGridWidgetRequest']
       }
     }
-    /** Api400DefaultErrorDDACC62852906524 */
-    Api400DefaultErrorDDACC62852906524: {
+    /** Api400DefaultError535DA06C4D9B718A */
+    Api400DefaultError535DA06C4D9B718A: {
       /**
        * Status
        * @description The HTTP status code.
@@ -10170,8 +10234,8 @@ export interface components {
         [key: string]: string
       }
     }
-    /** Api415DefaultErrorDC1454384BB8AA8A */
-    Api415DefaultErrorDC1454384BB8AA8A: {
+    /** Api415DefaultError0F3C3F4B91743F25 */
+    Api415DefaultError0F3C3F4B91743F25: {
       /**
        * Status
        * @description The HTTP status code.
@@ -10362,6 +10426,92 @@ export interface components {
        * @example custom_dashboard
        */
       id: string
+    }
+    /** DataSourceExtensions */
+    DataSourceExtensions: {
+      /**
+       * Infos
+       * @description List of infos provided by the data source.
+       */
+      infos: string[]
+    }
+    /** DataSourceModel */
+    DataSourceModel: {
+      /**
+       * Links
+       * @description List of links to other resources.
+       * @example [
+       *       {
+       *         "href": "https://.../api_resource",
+       *         "method": "GET",
+       *         "rel": "self",
+       *         "type": "application/json"
+       *       }
+       *     ]
+       */
+      links: components['schemas']['LinkModel'][]
+      /**
+       * Domaintype
+       * @description The domain type of the object.
+       * @constant
+       */
+      domainType: 'constant'
+      /**
+       * ID
+       * @description The unique identifier for this domain-object type.
+       * @example host1
+       */
+      id?: string
+      /**
+       * Title
+       * @description A human readable title of this object. Can be used for user interfaces.
+       * @example My Host
+       */
+      title?: string
+      /** @description The configuration of this data source. */
+      extensions: components['schemas']['DataSourceExtensions']
+    }
+    /** DataSourceCollectionModel */
+    DataSourceCollectionModel: {
+      /**
+       * Links
+       * @description List of links to other resources.
+       * @example [
+       *       {
+       *         "href": "https://.../api_resource",
+       *         "method": "GET",
+       *         "rel": "self",
+       *         "type": "application/json"
+       *       }
+       *     ]
+       */
+      links: components['schemas']['LinkModel'][]
+      /**
+       * Id
+       * @description The name of this collection.
+       */
+      id: string
+      /**
+       * Domaintype
+       * @description The domain type of the objects in the collection
+       * @constant
+       */
+      domainType: 'constant'
+      /**
+       * Title
+       * @description A human readable title of this object. Can be used for user interfaces.
+       */
+      title?: string
+      /**
+       * Value
+       * @description A list of host objects
+       */
+      value: components['schemas']['DataSourceModel'][]
+      /**
+       * Extensions
+       * @description Additional attributes alongside the collection.
+       */
+      extensions?: Record<string, never>
     }
     FixedDowntimeMode: {
       /**
@@ -11428,13 +11578,13 @@ export interface components {
        * @example cmk-agent
        * @enum {string}
        */
-      tag_agent?: 'all-agents' | 'special-agents' | 'cmk-agent' | 'no-agent'
+      tag_agent?: 'no-agent' | 'all-agents' | 'cmk-agent' | 'special-agents'
       /**
        * @description The SNMP data source of the host.
        * @example snmp-v2
        * @enum {string}
        */
-      tag_snmp_ds?: 'no-snmp' | 'snmp-v1' | 'snmp-v2'
+      tag_snmp_ds?: 'snmp-v2' | 'snmp-v1' | 'no-snmp'
       /**
        * @description Use piggyback data for this host.
        * @example piggyback
@@ -11689,13 +11839,13 @@ export interface components {
        * @example cmk-agent
        * @enum {string}
        */
-      tag_agent?: 'all-agents' | 'special-agents' | 'cmk-agent' | 'no-agent'
+      tag_agent?: 'no-agent' | 'all-agents' | 'cmk-agent' | 'special-agents'
       /**
        * @description The SNMP data source of the host.
        * @example snmp-v2
        * @enum {string}
        */
-      tag_snmp_ds?: 'no-snmp' | 'snmp-v1' | 'snmp-v2'
+      tag_snmp_ds?: 'snmp-v2' | 'snmp-v1' | 'no-snmp'
       /**
        * @description Use piggyback data for this host.
        * @example piggyback
@@ -12480,13 +12630,13 @@ export interface components {
        * @example cmk-agent
        * @enum {string}
        */
-      tag_agent?: 'all-agents' | 'special-agents' | 'cmk-agent' | 'no-agent'
+      tag_agent?: 'no-agent' | 'all-agents' | 'cmk-agent' | 'special-agents'
       /**
        * @description The SNMP data source of the host.
        * @example snmp-v2
        * @enum {string}
        */
-      tag_snmp_ds?: 'no-snmp' | 'snmp-v1' | 'snmp-v2'
+      tag_snmp_ds?: 'snmp-v2' | 'snmp-v1' | 'no-snmp'
       /**
        * @description Use piggyback data for this host.
        * @example piggyback
@@ -12673,13 +12823,13 @@ export interface components {
        * @example cmk-agent
        * @enum {string}
        */
-      tag_agent?: 'all-agents' | 'special-agents' | 'cmk-agent' | 'no-agent'
+      tag_agent?: 'no-agent' | 'all-agents' | 'cmk-agent' | 'special-agents'
       /**
        * @description The SNMP data source of the host.
        * @example snmp-v2
        * @enum {string}
        */
-      tag_snmp_ds?: 'no-snmp' | 'snmp-v1' | 'snmp-v2'
+      tag_snmp_ds?: 'snmp-v2' | 'snmp-v1' | 'no-snmp'
       /**
        * @description Use piggyback data for this host.
        * @example piggyback
@@ -12809,13 +12959,13 @@ export interface components {
        * @example cmk-agent
        * @enum {string}
        */
-      tag_agent?: 'all-agents' | 'special-agents' | 'cmk-agent' | 'no-agent'
+      tag_agent?: 'no-agent' | 'all-agents' | 'cmk-agent' | 'special-agents'
       /**
        * @description The SNMP data source of the host.
        * @example snmp-v2
        * @enum {string}
        */
-      tag_snmp_ds?: 'no-snmp' | 'snmp-v1' | 'snmp-v2'
+      tag_snmp_ds?: 'snmp-v2' | 'snmp-v1' | 'no-snmp'
       /**
        * @description Use piggyback data for this host.
        * @example piggyback
@@ -13498,8 +13648,8 @@ export interface components {
         [key: string]: unknown
       }
     }
-    /** Api403DefaultErrorCED056C5417736D5 */
-    Api403DefaultErrorCED056C5417736D5: {
+    /** Api403DefaultErrorEE402282302F86E3 */
+    Api403DefaultErrorEE402282302F86E3: {
       /**
        * Status
        * @description The HTTP status code.
@@ -14562,13 +14712,13 @@ export interface components {
        * @example cmk-agent
        * @enum {string}
        */
-      tag_agent?: 'all-agents' | 'special-agents' | 'cmk-agent' | 'no-agent'
+      tag_agent?: 'no-agent' | 'all-agents' | 'cmk-agent' | 'special-agents'
       /**
        * @description The SNMP data source of the host.
        * @example snmp-v2
        * @enum {string}
        */
-      tag_snmp_ds?: 'no-snmp' | 'snmp-v1' | 'snmp-v2'
+      tag_snmp_ds?: 'snmp-v2' | 'snmp-v1' | 'no-snmp'
       /**
        * @description Use piggyback data for this host.
        * @example piggyback
@@ -15054,13 +15204,13 @@ export interface components {
        * @example cmk-agent
        * @enum {string}
        */
-      tag_agent?: 'all-agents' | 'special-agents' | 'cmk-agent' | 'no-agent'
+      tag_agent?: 'no-agent' | 'all-agents' | 'cmk-agent' | 'special-agents'
       /**
        * @description The SNMP data source of the host.
        * @example snmp-v2
        * @enum {string}
        */
-      tag_snmp_ds?: 'no-snmp' | 'snmp-v1' | 'snmp-v2'
+      tag_snmp_ds?: 'snmp-v2' | 'snmp-v1' | 'no-snmp'
       /**
        * @description Use piggyback data for this host.
        * @example piggyback
@@ -17782,13 +17932,13 @@ export interface components {
       /**
        * Format: date-time
        * @description The approximate time of the first sample.
-       * @example 2025-09-12 07:03:39.107484
+       * @example 2025-09-18 08:02:10.927422
        */
       start: string
       /**
        * Format: date-time
        * @description The approximate time of the last sample.
-       * @example 2025-09-12 07:18:39.107536
+       * @example 2025-09-18 08:17:10.927465
        */
       end: string
     }
@@ -17796,8 +17946,8 @@ export interface components {
       /**
        * @description The time range from which to source the metrics.
        * @example {
-       *       "start": "2025-09-12 07:03:39.107940",
-       *       "end": "2025-09-12 07:18:39.107948"
+       *       "start": "2025-09-18 08:02:10.927840",
+       *       "end": "2025-09-18 08:17:10.927848"
        *     }
        */
       time_range: components['schemas']['TimeRange']
@@ -17874,8 +18024,8 @@ export interface components {
       /**
        * @description The time range from which to source the metrics.
        * @example {
-       *       "start": "2025-09-12 07:03:39.107940",
-       *       "end": "2025-09-12 07:18:39.107948"
+       *       "start": "2025-09-18 08:02:10.927840",
+       *       "end": "2025-09-18 08:17:10.927848"
        *     }
        */
       time_range: components['schemas']['TimeRange']
@@ -18020,8 +18170,8 @@ export interface components {
       /**
        * @description The time range from which to source the metrics.
        * @example {
-       *       "start": "2025-09-12 07:03:39.107940",
-       *       "end": "2025-09-12 07:18:39.107948"
+       *       "start": "2025-09-18 08:02:10.927840",
+       *       "end": "2025-09-18 08:17:10.927848"
        *     }
        */
       time_range: components['schemas']['TimeRange']
@@ -18062,8 +18212,8 @@ export interface components {
       /**
        * @description The time range from which to source the metrics.
        * @example {
-       *       "start": "2025-09-12 07:03:39.107940",
-       *       "end": "2025-09-12 07:18:39.107948"
+       *       "start": "2025-09-18 08:02:10.927840",
+       *       "end": "2025-09-18 08:17:10.927848"
        *     }
        */
       time_range: components['schemas']['TimeRange']
@@ -21779,8 +21929,8 @@ export interface components {
        */
       customer?: string
     }
-    /** Api412DefaultError2905EF83026CF4EE */
-    Api412DefaultError2905EF83026CF4EE: {
+    /** Api412DefaultError46DF74B4919D7DED */
+    Api412DefaultError46DF74B4919D7DED: {
       /**
        * Status
        * @description The HTTP status code.
@@ -21820,8 +21970,8 @@ export interface components {
         [key: string]: string
       }
     }
-    /** Api428DefaultError9EE11ED07CC121C2 */
-    Api428DefaultError9EE11ED07CC121C2: {
+    /** Api428DefaultErrorDA4352FB1880EC3D */
+    Api428DefaultErrorDA4352FB1880EC3D: {
       /**
        * Status
        * @description The HTTP status code.
@@ -23532,13 +23682,13 @@ export interface components {
       /**
        * Format: date-time
        * @description The start time of the period
-       * @example 2025-09-12 07:17:44.756718
+       * @example 2025-09-18 08:16:13.892278
        */
       start: string
       /**
        * Format: date-time
        * @description The end time of the period
-       * @example 2025-09-12 07:18:44.756820
+       * @example 2025-09-18 08:17:13.892342
        */
       end: string
     }
@@ -26243,6 +26393,92 @@ export interface components {
     } & {
       [key: string]: unknown
     }
+    /** ViewExtensions */
+    ViewExtensions: {
+      /**
+       * Data Source
+       * @description ID of the data source.
+       */
+      data_source: string
+    }
+    /** ViewModel */
+    ViewModel: {
+      /**
+       * Links
+       * @description List of links to other resources.
+       * @example [
+       *       {
+       *         "href": "https://.../api_resource",
+       *         "method": "GET",
+       *         "rel": "self",
+       *         "type": "application/json"
+       *       }
+       *     ]
+       */
+      links: components['schemas']['LinkModel'][]
+      /**
+       * Domaintype
+       * @description The domain type of the object.
+       * @constant
+       */
+      domainType: 'view'
+      /**
+       * ID
+       * @description The unique identifier for this domain-object type.
+       * @example host1
+       */
+      id?: string
+      /**
+       * Title
+       * @description A human readable title of this object. Can be used for user interfaces.
+       * @example My Host
+       */
+      title?: string
+      /** @description Parts of the configuration of this view. */
+      extensions: components['schemas']['ViewExtensions']
+    }
+    /** ViewCollectionModel */
+    ViewCollectionModel: {
+      /**
+       * Links
+       * @description List of links to other resources.
+       * @example [
+       *       {
+       *         "href": "https://.../api_resource",
+       *         "method": "GET",
+       *         "rel": "self",
+       *         "type": "application/json"
+       *       }
+       *     ]
+       */
+      links: components['schemas']['LinkModel'][]
+      /**
+       * Id
+       * @description The name of this collection.
+       */
+      id: string
+      /**
+       * Domaintype
+       * @description The domain type of the objects in the collection
+       * @constant
+       */
+      domainType: 'view'
+      /**
+       * Title
+       * @description A human readable title of this object. Can be used for user interfaces.
+       */
+      title?: string
+      /**
+       * Value
+       * @description A list of views.
+       */
+      value: components['schemas']['ViewModel'][]
+      /**
+       * Extensions
+       * @description Additional attributes alongside the collection.
+       */
+      extensions?: Record<string, never>
+    }
     /** AutocompleterConfigModel */
     AutocompleterConfigModel: {
       /**
@@ -26677,6 +26913,97 @@ export interface components {
        */
       extensions?: Record<string, never>
     }
+    /** VisualInfoExtensions */
+    VisualInfoExtensions: {
+      /**
+       * Sort Index
+       * @description The sort index of this info. Infos are sorted ascending by this index.
+       */
+      sort_index: number
+      /**
+       * Single Filter
+       * @description Filter components to use when filtering for one item.
+       */
+      single_filter: components['schemas']['FilterComponentModel'][]
+    }
+    /** VisualInfoModel */
+    VisualInfoModel: {
+      /**
+       * Links
+       * @description List of links to other resources.
+       * @example [
+       *       {
+       *         "href": "https://.../api_resource",
+       *         "method": "GET",
+       *         "rel": "self",
+       *         "type": "application/json"
+       *       }
+       *     ]
+       */
+      links: components['schemas']['LinkModel'][]
+      /**
+       * Domaintype
+       * @description The domain type of the object.
+       * @constant
+       */
+      domainType: 'constant'
+      /**
+       * ID
+       * @description The unique identifier for this domain-object type.
+       * @example host1
+       */
+      id?: string
+      /**
+       * Title
+       * @description A human readable title of this object. Can be used for user interfaces.
+       * @example My Host
+       */
+      title?: string
+      /** @description The configuration of this info. */
+      extensions: components['schemas']['VisualInfoExtensions']
+    }
+    /** VisualInfoCollectionModel */
+    VisualInfoCollectionModel: {
+      /**
+       * Links
+       * @description List of links to other resources.
+       * @example [
+       *       {
+       *         "href": "https://.../api_resource",
+       *         "method": "GET",
+       *         "rel": "self",
+       *         "type": "application/json"
+       *       }
+       *     ]
+       */
+      links: components['schemas']['LinkModel'][]
+      /**
+       * Id
+       * @description The name of this collection.
+       */
+      id: string
+      /**
+       * Domaintype
+       * @description The domain type of the objects in the collection
+       * @constant
+       */
+      domainType: 'constant'
+      /**
+       * Title
+       * @description A human readable title of this object. Can be used for user interfaces.
+       */
+      title?: string
+      /**
+       * Value
+       * @description A list of info objects
+       */
+      value: components['schemas']['VisualInfoModel'][]
+      /**
+       * Extensions
+       * @description Additional attributes alongside the collection.
+       */
+      extensions?: Record<string, never>
+    }
     /** BasicAuthentication */
     BasicAuthentication: {
       /**
@@ -26988,8 +27315,8 @@ export interface components {
       /**
        * @description The time range from which to source the metrics.
        * @example {
-       *       "start": "2025-09-12 07:03:39.107940",
-       *       "end": "2025-09-12 07:18:39.107948"
+       *       "start": "2025-09-18 08:02:10.927840",
+       *       "end": "2025-09-18 08:17:10.927848"
        *     }
        */
       time_range: components['schemas']['TimeRange']
@@ -31904,7 +32231,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
     }
@@ -31954,7 +32281,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
     }
@@ -32006,7 +32333,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultErrorAB2AA48D05FD212E']
+          'application/problem+json': components['schemas']['Api404DefaultError6C82AD12CAFE4830']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -32015,7 +32342,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
     }
@@ -32073,7 +32400,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorDDACC62852906524']
+          'application/problem+json': components['schemas']['Api400DefaultError535DA06C4D9B718A']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -32082,7 +32409,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultErrorAB2AA48D05FD212E']
+          'application/problem+json': components['schemas']['Api404DefaultError6C82AD12CAFE4830']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -32091,7 +32418,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -32100,7 +32427,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultErrorDC1454384BB8AA8A']
+          'application/problem+json': components['schemas']['Api415DefaultError0F3C3F4B91743F25']
         }
       }
     }
@@ -32152,7 +32479,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultErrorAB2AA48D05FD212E']
+          'application/problem+json': components['schemas']['Api404DefaultError6C82AD12CAFE4830']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -32161,7 +32488,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
     }
@@ -32219,7 +32546,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorDDACC62852906524']
+          'application/problem+json': components['schemas']['Api400DefaultError535DA06C4D9B718A']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -32228,7 +32555,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultErrorAB2AA48D05FD212E']
+          'application/problem+json': components['schemas']['Api404DefaultError6C82AD12CAFE4830']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -32237,7 +32564,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -32246,7 +32573,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultErrorDC1454384BB8AA8A']
+          'application/problem+json': components['schemas']['Api415DefaultError0F3C3F4B91743F25']
         }
       }
     }
@@ -32300,7 +32627,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorDDACC62852906524']
+          'application/problem+json': components['schemas']['Api400DefaultError535DA06C4D9B718A']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -32309,7 +32636,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -32318,7 +32645,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultErrorDC1454384BB8AA8A']
+          'application/problem+json': components['schemas']['Api415DefaultError0F3C3F4B91743F25']
         }
       }
     }
@@ -32372,7 +32699,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorDDACC62852906524']
+          'application/problem+json': components['schemas']['Api400DefaultError535DA06C4D9B718A']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -32381,7 +32708,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -32390,7 +32717,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultErrorDC1454384BB8AA8A']
+          'application/problem+json': components['schemas']['Api415DefaultError0F3C3F4B91743F25']
         }
       }
     }
@@ -32444,7 +32771,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorDDACC62852906524']
+          'application/problem+json': components['schemas']['Api400DefaultError535DA06C4D9B718A']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -32453,7 +32780,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -32462,7 +32789,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultErrorDC1454384BB8AA8A']
+          'application/problem+json': components['schemas']['Api415DefaultError0F3C3F4B91743F25']
         }
       }
     }
@@ -32493,7 +32820,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorDDACC62852906524']
+          'application/problem+json': components['schemas']['Api400DefaultError535DA06C4D9B718A']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -32502,7 +32829,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultErrorAB2AA48D05FD212E']
+          'application/problem+json': components['schemas']['Api404DefaultError6C82AD12CAFE4830']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -32511,7 +32838,57 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
+        }
+      }
+    }
+  }
+  'Data Sources.list_data_sources_v1': {
+    parameters: {
+      query?: never
+      header: {
+        /**
+         * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+         * @example application/json
+         */
+        'Content-Type': string
+      }
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DataSourceCollectionModel']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
     }
@@ -34376,7 +34753,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
     }
@@ -34428,7 +34805,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultErrorAB2AA48D05FD212E']
+          'application/problem+json': components['schemas']['Api404DefaultError6C82AD12CAFE4830']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -34437,7 +34814,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
     }
@@ -34489,7 +34866,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorDDACC62852906524']
+          'application/problem+json': components['schemas']['Api400DefaultError535DA06C4D9B718A']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -34498,7 +34875,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
     }
@@ -35865,7 +36242,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorDDACC62852906524']
+          'application/problem+json': components['schemas']['Api400DefaultError535DA06C4D9B718A']
         }
       }
       /** @description Forbidden: Configuration via Setup is disabled. */
@@ -35874,7 +36251,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultErrorCED056C5417736D5']
+          'application/problem+json': components['schemas']['Api403DefaultErrorEE402282302F86E3']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -35883,7 +36260,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
     }
@@ -35944,7 +36321,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorDDACC62852906524']
+          'application/problem+json': components['schemas']['Api400DefaultError535DA06C4D9B718A']
         }
       }
       /** @description Forbidden: Configuration via Setup is disabled. */
@@ -35953,7 +36330,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultErrorCED056C5417736D5']
+          'application/problem+json': components['schemas']['Api403DefaultErrorEE402282302F86E3']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -35962,7 +36339,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -35971,7 +36348,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultErrorDC1454384BB8AA8A']
+          'application/problem+json': components['schemas']['Api415DefaultError0F3C3F4B91743F25']
         }
       }
     }
@@ -36028,7 +36405,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultErrorCED056C5417736D5']
+          'application/problem+json': components['schemas']['Api403DefaultErrorEE402282302F86E3']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -36037,7 +36414,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultErrorAB2AA48D05FD212E']
+          'application/problem+json': components['schemas']['Api404DefaultError6C82AD12CAFE4830']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -36046,7 +36423,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
     }
@@ -38640,7 +39017,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultErrorCED056C5417736D5']
+          'application/problem+json': components['schemas']['Api403DefaultErrorEE402282302F86E3']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -38649,7 +39026,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
     }
@@ -38708,7 +39085,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorDDACC62852906524']
+          'application/problem+json': components['schemas']['Api400DefaultError535DA06C4D9B718A']
         }
       }
       /** @description Forbidden: Configuration via Setup is disabled. */
@@ -38717,7 +39094,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultErrorCED056C5417736D5']
+          'application/problem+json': components['schemas']['Api403DefaultErrorEE402282302F86E3']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -38726,7 +39103,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -38735,7 +39112,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultErrorDC1454384BB8AA8A']
+          'application/problem+json': components['schemas']['Api415DefaultError0F3C3F4B91743F25']
         }
       }
     }
@@ -38792,7 +39169,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultErrorCED056C5417736D5']
+          'application/problem+json': components['schemas']['Api403DefaultErrorEE402282302F86E3']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -38801,7 +39178,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultErrorAB2AA48D05FD212E']
+          'application/problem+json': components['schemas']['Api404DefaultError6C82AD12CAFE4830']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -38810,7 +39187,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
     }
@@ -38876,7 +39253,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorDDACC62852906524']
+          'application/problem+json': components['schemas']['Api400DefaultError535DA06C4D9B718A']
         }
       }
       /** @description Forbidden: Configuration via Setup is disabled. */
@@ -38885,7 +39262,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultErrorCED056C5417736D5']
+          'application/problem+json': components['schemas']['Api403DefaultErrorEE402282302F86E3']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -38894,7 +39271,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultErrorAB2AA48D05FD212E']
+          'application/problem+json': components['schemas']['Api404DefaultError6C82AD12CAFE4830']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -38903,7 +39280,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
       /** @description Precondition Failed: The value of the If-Match header doesn't match the object's ETag. */
@@ -38912,7 +39289,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api412DefaultError2905EF83026CF4EE']
+          'application/problem+json': components['schemas']['Api412DefaultError46DF74B4919D7DED']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -38921,7 +39298,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultErrorDC1454384BB8AA8A']
+          'application/problem+json': components['schemas']['Api415DefaultError0F3C3F4B91743F25']
         }
       }
       /** @description Precondition Required: The required If-Match header is missing. */
@@ -38930,7 +39307,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api428DefaultError9EE11ED07CC121C2']
+          'application/problem+json': components['schemas']['Api428DefaultErrorDA4352FB1880EC3D']
         }
       }
     }
@@ -38965,7 +39342,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultErrorCED056C5417736D5']
+          'application/problem+json': components['schemas']['Api403DefaultErrorEE402282302F86E3']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -38974,7 +39351,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultErrorAB2AA48D05FD212E']
+          'application/problem+json': components['schemas']['Api404DefaultError6C82AD12CAFE4830']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -38983,7 +39360,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
       /** @description Precondition Failed: The value of the If-Match header doesn't match the object's ETag. */
@@ -38992,7 +39369,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api412DefaultError2905EF83026CF4EE']
+          'application/problem+json': components['schemas']['Api412DefaultError46DF74B4919D7DED']
         }
       }
       /** @description Precondition Required: The required If-Match header is missing. */
@@ -39001,7 +39378,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api428DefaultError9EE11ED07CC121C2']
+          'application/problem+json': components['schemas']['Api428DefaultErrorDA4352FB1880EC3D']
         }
       }
     }
@@ -39594,7 +39971,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
     }
@@ -39653,7 +40030,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorDDACC62852906524']
+          'application/problem+json': components['schemas']['Api400DefaultError535DA06C4D9B718A']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -39662,7 +40039,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -39671,7 +40048,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultErrorDC1454384BB8AA8A']
+          'application/problem+json': components['schemas']['Api415DefaultError0F3C3F4B91743F25']
         }
       }
     }
@@ -39728,7 +40105,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultErrorAB2AA48D05FD212E']
+          'application/problem+json': components['schemas']['Api404DefaultError6C82AD12CAFE4830']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -39737,7 +40114,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
     }
@@ -39803,7 +40180,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorDDACC62852906524']
+          'application/problem+json': components['schemas']['Api400DefaultError535DA06C4D9B718A']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -39812,7 +40189,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultErrorAB2AA48D05FD212E']
+          'application/problem+json': components['schemas']['Api404DefaultError6C82AD12CAFE4830']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -39821,7 +40198,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
       /** @description Precondition Failed: The value of the If-Match header doesn't match the object's ETag. */
@@ -39830,7 +40207,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api412DefaultError2905EF83026CF4EE']
+          'application/problem+json': components['schemas']['Api412DefaultError46DF74B4919D7DED']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -39839,7 +40216,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultErrorDC1454384BB8AA8A']
+          'application/problem+json': components['schemas']['Api415DefaultError0F3C3F4B91743F25']
         }
       }
       /** @description Precondition Required: The required If-Match header is missing. */
@@ -39848,7 +40225,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api428DefaultError9EE11ED07CC121C2']
+          'application/problem+json': components['schemas']['Api428DefaultErrorDA4352FB1880EC3D']
         }
       }
     }
@@ -39883,7 +40260,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultErrorAB2AA48D05FD212E']
+          'application/problem+json': components['schemas']['Api404DefaultError6C82AD12CAFE4830']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -39892,7 +40269,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
       /** @description Precondition Failed: The value of the If-Match header doesn't match the object's ETag. */
@@ -39901,7 +40278,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api412DefaultError2905EF83026CF4EE']
+          'application/problem+json': components['schemas']['Api412DefaultError46DF74B4919D7DED']
         }
       }
       /** @description Precondition Required: The required If-Match header is missing. */
@@ -39910,7 +40287,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api428DefaultError9EE11ED07CC121C2']
+          'application/problem+json': components['schemas']['Api428DefaultErrorDA4352FB1880EC3D']
         }
       }
     }
@@ -42406,7 +42783,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultErrorCED056C5417736D5']
+          'application/problem+json': components['schemas']['Api403DefaultErrorEE402282302F86E3']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -42415,7 +42792,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
     }
@@ -42469,7 +42846,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorDDACC62852906524']
+          'application/problem+json': components['schemas']['Api400DefaultError535DA06C4D9B718A']
         }
       }
       /** @description Forbidden: Configuration via Setup is disabled. */
@@ -42478,7 +42855,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultErrorCED056C5417736D5']
+          'application/problem+json': components['schemas']['Api403DefaultErrorEE402282302F86E3']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -42487,7 +42864,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -42496,7 +42873,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultErrorDC1454384BB8AA8A']
+          'application/problem+json': components['schemas']['Api415DefaultError0F3C3F4B91743F25']
         }
       }
     }
@@ -42548,7 +42925,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultErrorCED056C5417736D5']
+          'application/problem+json': components['schemas']['Api403DefaultErrorEE402282302F86E3']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -42557,7 +42934,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultErrorAB2AA48D05FD212E']
+          'application/problem+json': components['schemas']['Api404DefaultError6C82AD12CAFE4830']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -42566,7 +42943,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
     }
@@ -42622,7 +42999,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorDDACC62852906524']
+          'application/problem+json': components['schemas']['Api400DefaultError535DA06C4D9B718A']
         }
       }
       /** @description Forbidden: Configuration via Setup is disabled. */
@@ -42631,7 +43008,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultErrorCED056C5417736D5']
+          'application/problem+json': components['schemas']['Api403DefaultErrorEE402282302F86E3']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -42640,7 +43017,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultErrorAB2AA48D05FD212E']
+          'application/problem+json': components['schemas']['Api404DefaultError6C82AD12CAFE4830']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -42649,7 +43026,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -42658,7 +43035,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultErrorDC1454384BB8AA8A']
+          'application/problem+json': components['schemas']['Api415DefaultError0F3C3F4B91743F25']
         }
       }
     }
@@ -42687,7 +43064,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorDDACC62852906524']
+          'application/problem+json': components['schemas']['Api400DefaultError535DA06C4D9B718A']
         }
       }
       /** @description Forbidden: Configuration via Setup is disabled. */
@@ -42696,7 +43073,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultErrorCED056C5417736D5']
+          'application/problem+json': components['schemas']['Api403DefaultErrorEE402282302F86E3']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -42705,7 +43082,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultErrorAB2AA48D05FD212E']
+          'application/problem+json': components['schemas']['Api404DefaultError6C82AD12CAFE4830']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -42714,7 +43091,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -42723,7 +43100,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultErrorDC1454384BB8AA8A']
+          'application/problem+json': components['schemas']['Api415DefaultError0F3C3F4B91743F25']
         }
       }
     }
@@ -42756,7 +43133,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorDDACC62852906524']
+          'application/problem+json': components['schemas']['Api400DefaultError535DA06C4D9B718A']
         }
       }
       /** @description Forbidden: Configuration via Setup is disabled. */
@@ -42765,7 +43142,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultErrorCED056C5417736D5']
+          'application/problem+json': components['schemas']['Api403DefaultErrorEE402282302F86E3']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -42774,7 +43151,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultErrorAB2AA48D05FD212E']
+          'application/problem+json': components['schemas']['Api404DefaultError6C82AD12CAFE4830']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -42783,7 +43160,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -42792,7 +43169,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultErrorDC1454384BB8AA8A']
+          'application/problem+json': components['schemas']['Api415DefaultError0F3C3F4B91743F25']
         }
       }
     }
@@ -42821,7 +43198,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorDDACC62852906524']
+          'application/problem+json': components['schemas']['Api400DefaultError535DA06C4D9B718A']
         }
       }
       /** @description Forbidden: Configuration via Setup is disabled. */
@@ -42830,7 +43207,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultErrorCED056C5417736D5']
+          'application/problem+json': components['schemas']['Api403DefaultErrorEE402282302F86E3']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -42839,7 +43216,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultErrorAB2AA48D05FD212E']
+          'application/problem+json': components['schemas']['Api404DefaultError6C82AD12CAFE4830']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -42848,7 +43225,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -42857,7 +43234,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultErrorDC1454384BB8AA8A']
+          'application/problem+json': components['schemas']['Api415DefaultError0F3C3F4B91743F25']
         }
       }
     }
@@ -43336,7 +43713,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultErrorCED056C5417736D5']
+          'application/problem+json': components['schemas']['Api403DefaultErrorEE402282302F86E3']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -43345,7 +43722,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
     }
@@ -43399,7 +43776,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorDDACC62852906524']
+          'application/problem+json': components['schemas']['Api400DefaultError535DA06C4D9B718A']
         }
       }
       /** @description Forbidden: Configuration via Setup is disabled. */
@@ -43408,7 +43785,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultErrorCED056C5417736D5']
+          'application/problem+json': components['schemas']['Api403DefaultErrorEE402282302F86E3']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -43417,7 +43794,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -43426,7 +43803,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultErrorDC1454384BB8AA8A']
+          'application/problem+json': components['schemas']['Api415DefaultError0F3C3F4B91743F25']
         }
       }
     }
@@ -43478,7 +43855,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultErrorCED056C5417736D5']
+          'application/problem+json': components['schemas']['Api403DefaultErrorEE402282302F86E3']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -43487,7 +43864,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultErrorAB2AA48D05FD212E']
+          'application/problem+json': components['schemas']['Api404DefaultError6C82AD12CAFE4830']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -43496,7 +43873,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
     }
@@ -43552,7 +43929,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorDDACC62852906524']
+          'application/problem+json': components['schemas']['Api400DefaultError535DA06C4D9B718A']
         }
       }
       /** @description Forbidden: Configuration via Setup is disabled. */
@@ -43561,7 +43938,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultErrorCED056C5417736D5']
+          'application/problem+json': components['schemas']['Api403DefaultErrorEE402282302F86E3']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -43570,7 +43947,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultErrorAB2AA48D05FD212E']
+          'application/problem+json': components['schemas']['Api404DefaultError6C82AD12CAFE4830']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -43579,7 +43956,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -43588,7 +43965,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultErrorDC1454384BB8AA8A']
+          'application/problem+json': components['schemas']['Api415DefaultError0F3C3F4B91743F25']
         }
       }
     }
@@ -43617,7 +43994,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultErrorCED056C5417736D5']
+          'application/problem+json': components['schemas']['Api403DefaultErrorEE402282302F86E3']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -43626,7 +44003,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultErrorAB2AA48D05FD212E']
+          'application/problem+json': components['schemas']['Api404DefaultError6C82AD12CAFE4830']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -43635,7 +44012,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
     }
@@ -44073,6 +44450,56 @@ export interface operations {
       }
     }
   }
+  'Views.list_views_v1': {
+    parameters: {
+      query?: never
+      header: {
+        /**
+         * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+         * @example application/json
+         */
+        'Content-Type': string
+      }
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ViewCollectionModel']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
+        }
+      }
+    }
+  }
   'Visual Filters.list_filters_v1': {
     parameters: {
       query?: never
@@ -44118,7 +44545,57 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
+        }
+      }
+    }
+  }
+  'Visual Info.list_infos_v1': {
+    parameters: {
+      query?: never
+      header: {
+        /**
+         * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+         * @example application/json
+         */
+        'Content-Type': string
+      }
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK: The operation was done successfully. */
+      200: {
+        headers: {
+          /**
+           * @description A header specifying which type of content is in the request/response body. This is required when sending encoded data in a POST/PUT body. When the request body is empty, this header should not be sent.
+           * @example application/json
+           */
+          'Content-Type': string
+          /**
+           * @description The checkmk edition.
+           * @example cre
+           */
+          'X-Checkmk-Edition': string
+          /**
+           * @description The checkmk version.
+           * @example 2.2.0p10
+           */
+          'X-Checkmk-Version': string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['VisualInfoCollectionModel']
+        }
+      }
+      /** @description Not Acceptable: The requests accept headers can not be satisfied. */
+      406: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
     }
@@ -44168,7 +44645,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultErrorCED056C5417736D5']
+          'application/problem+json': components['schemas']['Api403DefaultErrorEE402282302F86E3']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -44177,7 +44654,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
     }
@@ -44231,7 +44708,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorDDACC62852906524']
+          'application/problem+json': components['schemas']['Api400DefaultError535DA06C4D9B718A']
         }
       }
       /** @description Forbidden: Configuration via Setup is disabled. */
@@ -44240,7 +44717,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultErrorCED056C5417736D5']
+          'application/problem+json': components['schemas']['Api403DefaultErrorEE402282302F86E3']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -44249,7 +44726,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -44258,7 +44735,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultErrorDC1454384BB8AA8A']
+          'application/problem+json': components['schemas']['Api415DefaultError0F3C3F4B91743F25']
         }
       }
     }
@@ -44314,7 +44791,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api400DefaultErrorDDACC62852906524']
+          'application/problem+json': components['schemas']['Api400DefaultError535DA06C4D9B718A']
         }
       }
       /** @description Forbidden: Configuration via Setup is disabled. */
@@ -44323,7 +44800,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultErrorCED056C5417736D5']
+          'application/problem+json': components['schemas']['Api403DefaultErrorEE402282302F86E3']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -44332,7 +44809,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultErrorAB2AA48D05FD212E']
+          'application/problem+json': components['schemas']['Api404DefaultError6C82AD12CAFE4830']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -44341,7 +44818,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
       /** @description Unsupported Media Type: The submitted content-type is not supported. */
@@ -44350,7 +44827,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api415DefaultErrorDC1454384BB8AA8A']
+          'application/problem+json': components['schemas']['Api415DefaultError0F3C3F4B91743F25']
         }
       }
     }
@@ -44379,7 +44856,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api403DefaultErrorCED056C5417736D5']
+          'application/problem+json': components['schemas']['Api403DefaultErrorEE402282302F86E3']
         }
       }
       /** @description Not Found: The requested object has not be found. */
@@ -44388,7 +44865,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api404DefaultErrorAB2AA48D05FD212E']
+          'application/problem+json': components['schemas']['Api404DefaultError6C82AD12CAFE4830']
         }
       }
       /** @description Not Acceptable: The requests accept headers can not be satisfied. */
@@ -44397,7 +44874,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/problem+json': components['schemas']['Api406DefaultErrorBA451644CA746AA5']
+          'application/problem+json': components['schemas']['Api406DefaultError7C7D8087CF0280D4']
         }
       }
     }

@@ -9,6 +9,7 @@ import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.azure.agent_based.azure_databases import (
+    check_plugin_azure_databases_connections,
     create_check_azure_databases_connections,
     create_check_azure_databases_cpu,
     create_check_azure_databases_deadlock,
@@ -362,7 +363,41 @@ def test_check_azure_databases_dtu(
                 RESULT_CONN_FAILED_WARN,
                 METRIC_CONN_FAILED_WARN,
             ],
-            id="Both DB connection metrics about WARN threshold",
+            id="Both DB connection metrics above WARN threshold",
+        ),
+        pytest.param(
+            {
+                "foo": Resource(
+                    id="/subscriptions/1234/resourceGroups/group/foo/bar/foo",
+                    name="foo",
+                    type="foo/bar",
+                    group="group",
+                    location="westeurope",
+                    metrics={
+                        "average_connection_successful": AzureMetric(
+                            name="connection_successful",
+                            aggregation="average",
+                            value=10,
+                            unit="count",
+                        ),
+                        "average_connection_failed": AzureMetric(
+                            name="connection_failed",
+                            aggregation="average",
+                            value=10,
+                            unit="count",
+                        ),
+                    },
+                )
+            },
+            "foo",
+            check_plugin_azure_databases_connections.check_default_parameters,
+            [
+                Result(state=State.OK, summary="Successful connections: 10"),
+                Metric("connections", 10.0),
+                Result(state=State.CRIT, summary="Failed connections: 10 (warn/crit at 1/1)"),
+                Metric("connections_failed_rate", 10.0, levels=(1.0, 1.0)),
+            ],
+            id="Default levels",
         ),
     ],
 )

@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 CLI_ARGUMENT_LOCALE = "--locale"
 CLI_ARGUMENT_LOCAL_RUN = "--local-run"
 CLI_ARGUMENT_GUI_TIMEOUT = "--gui-timeout"
+CLI_ARGUMENT_TRACING = "--tracing"
 
 
 PageGetter: t.TypeAlias = Callable[[BrowserContext], Page]
@@ -141,3 +142,29 @@ def pytest_addoption(parser: pytest.Parser) -> None:
             f" Default is {TIMEOUT_ACTIVATE_CHANGES}."
         ),
     )
+
+
+def pytest_sessionstart(session: pytest.Session) -> None:
+    """Perform operations at the very starting of a testsuite run."""
+
+    def cli_arg_to_attribute(cli_arg: str) -> str:
+        return session.config._opt2dest.get(cli_arg, cli_arg)
+
+    def is_cli_arg_used(cli_arg: str) -> bool:
+        return any(cli_arg in _.split("=") for _ in session.config.invocation_params.args)
+
+    # Override default values of '--gui-timeout' and '--tracing' on '--local-run' usage.
+    if session.config.getoption(CLI_ARGUMENT_LOCAL_RUN):
+        if not is_cli_arg_used(CLI_ARGUMENT_GUI_TIMEOUT):
+            setattr(
+                session.config.option,
+                cli_arg_to_attribute(CLI_ARGUMENT_GUI_TIMEOUT),
+                15,  # seconds
+            )
+
+        if not is_cli_arg_used(CLI_ARGUMENT_TRACING):
+            setattr(
+                session.config.option,
+                cli_arg_to_attribute(CLI_ARGUMENT_TRACING),
+                "retain-on-failure",
+            )

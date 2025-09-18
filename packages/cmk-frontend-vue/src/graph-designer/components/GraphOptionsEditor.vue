@@ -8,10 +8,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type {
   GraphOptionExplicitVerticalRangeBoundaries,
   GraphOptionUnitCustom,
-  GraphOptions,
-  I18N
+  GraphOptions
 } from 'cmk-shared-typing/typescript/graph_designer'
 import { ref, watch } from 'vue'
+
+import usei18n from '@/lib/i18n'
 
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
@@ -19,9 +20,10 @@ import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import ExplicitVerticalRangeEditor from '@/graph-designer/components/ExplicitVerticalRangeEditor.vue'
 import UnitEditor from '@/graph-designer/components/UnitEditor.vue'
 
+const { _t } = usei18n()
+
 const props = defineProps<{
   graph_options: GraphOptions
-  i18n: I18N
 }>()
 
 const emit = defineEmits<{
@@ -66,16 +68,15 @@ watch(dataOmitZeroMetrics, () => {
 </script>
 
 <template>
-  <UnitEditor :graph_options="props.graph_options" :i18n="props.i18n" @update:unit="onUnitChange" />
+  <UnitEditor :graph_options="props.graph_options" @update:unit="onUnitChange" />
   <ExplicitVerticalRangeEditor
     :graph_options="props.graph_options"
-    :i18n="props.i18n"
     @update:explicit-vertical-range="onExplicitVerticalRangeChange"
   />
   <div class="gd-graph-options-editor__row">
     <div class="gd-graph-options-editor__legend">
       <CmkParagraph>
-        {{ props.i18n.omit_zero_metrics }}
+        {{ _t('Graph metrics with all zero values') }}
         <span class="dots">{{ Array(200).join('.') }}</span>
       </CmkParagraph>
     </div>

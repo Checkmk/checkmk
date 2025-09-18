@@ -7,12 +7,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type {
   GraphOptionExplicitVerticalRangeBoundaries,
-  GraphOptions,
-  I18N
+  GraphOptions
 } from 'cmk-shared-typing/typescript/graph_designer'
 import { ref, watch } from 'vue'
 
-import type { TranslatedString } from '@/lib/i18nString'
+import usei18n from '@/lib/i18n'
 
 import CmkDropdown from '@/components/CmkDropdown.vue'
 import CmkIndent from '@/components/CmkIndent.vue'
@@ -24,9 +23,10 @@ import CmkInput from '@/components/user-input/CmkInput.vue'
 
 import { extractExplicitVerticalRangeBounds } from '../converters'
 
+const { _t } = usei18n()
+
 const props = defineProps<{
   graph_options: GraphOptions
-  i18n: I18N
 }>()
 
 const { lower, upper } = extractExplicitVerticalRangeBounds(
@@ -39,8 +39,8 @@ const dataExplicitVerticalRange = ref<string>(
   props.graph_options?.explicit_vertical_range === 'auto' ? 'auto' : 'explicit'
 )
 const explicitVerticalRangeSuggestions: Suggestion[] = [
-  { name: 'auto', title: props.i18n.unit_custom_precision_type_auto as TranslatedString },
-  { name: 'explicit', title: props.i18n.explicit_vertical_range_explicit as TranslatedString }
+  { name: 'auto', title: _t('Auto') },
+  { name: 'explicit', title: _t('Explicit range') }
 ]
 
 const validateLower = (value: number) => {
@@ -77,7 +77,7 @@ watch(
   <div class="gd-explicit-vertical-range-editor__row">
     <div class="gd-explicit-vertical-range-editor__legend">
       <CmkParagraph>
-        {{ props.i18n.explicit_vertical_range }}
+        {{ _t('Explicit range') }}
         <span class="dots">{{ Array(200).join('.') }}</span>
       </CmkParagraph>
     </div>
@@ -85,13 +85,13 @@ watch(
       <CmkDropdown
         v-model:selected-option="dataExplicitVerticalRange"
         :options="{ type: 'fixed', suggestions: explicitVerticalRangeSuggestions }"
-        :label="props.i18n.unit_custom_precision_type_strict as TranslatedString"
+        :label="_t('Strict')"
       />
       <CmkIndent v-if="dataExplicitVerticalRange === 'explicit'">
         <div>
           <div class="gd-explicit-vertical-range-editor__label-element-row">
             <CmkLabel>
-              {{ props.i18n.explicit_vertical_range_explicit_lower }}
+              {{ _t('Lower') }}
             </CmkLabel>
             <CmkInput
               v-model="dataExplicitVerticalRangeLower"
@@ -102,7 +102,7 @@ watch(
           <CmkSpace size="medium" />
           <div class="gd-explicit-vertical-range-editor__label-element-row">
             <CmkLabel>
-              {{ props.i18n.explicit_vertical_range_explicit_upper }}
+              {{ _t('Upper') }}
             </CmkLabel>
             <CmkInput
               v-model="dataExplicitVerticalRangeUpper"

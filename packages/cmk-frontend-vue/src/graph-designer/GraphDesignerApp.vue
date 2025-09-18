@@ -5,11 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import {
-  type GraphLines,
-  type GraphOptions,
-  type I18N
-} from 'cmk-shared-typing/typescript/graph_designer'
+import { type GraphLines, type GraphOptions } from 'cmk-shared-typing/typescript/graph_designer'
 
 import GraphDesigner from '@/graph-designer/GraphDesigner.vue'
 import { graphRenderer } from '@/graph-designer/graph'
@@ -19,7 +15,6 @@ defineProps<{
   graph_lines: GraphLines
   graph_options: GraphOptions
   graph_renderer?: typeof graphRenderer
-  i18n: I18N
 }>()
 </script>
 
@@ -28,7 +23,6 @@ defineProps<{
     :graph_id="graph_id"
     :graph_lines="graph_lines"
     :graph_options="graph_options"
-    :i18n="i18n"
     :graph_renderer="graph_renderer || graphRenderer"
   />
 </template>

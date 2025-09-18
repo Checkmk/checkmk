@@ -173,7 +173,6 @@ from cmk.fetchers import (
     TLSConfig,
 )
 from cmk.fetchers.config import (
-    make_cached_snmp_sections_dir,
     make_persisted_section_dir,
 )
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge, NoCache
@@ -387,9 +386,10 @@ class AutomationDiscovery(DiscoveryAutomation):
                     missing_sys_description=config_cache.missing_sys_description,
                     selected_sections=NoSelectedSNMPSections(),
                     backend_override=None,
-                    stored_walk_path=cmk.utils.paths.snmpwalks_dir,
-                    walk_cache_path=cmk.utils.paths.var_dir / "snmp_cache",
-                    section_cache_path=make_cached_snmp_sections_dir(cmk.utils.paths.var_dir),
+                    base_path=cmk.utils.paths.omd_root,
+                    relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
+                    relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
+                    relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
                     caching_config=make_parsed_snmp_fetch_intervals_config(
                         loaded_config, ruleset_matcher, label_manager.labels_of_host
                     ),
@@ -609,14 +609,15 @@ class AutomationDiscoveryPreview(Automation):
                     missing_sys_description=config_cache.missing_sys_description,
                     selected_sections=NoSelectedSNMPSections(),
                     backend_override=None,
-                    stored_walk_path=cmk.utils.paths.snmpwalks_dir,
-                    walk_cache_path=cmk.utils.paths.var_dir / "snmp_cache",
+                    base_path=cmk.utils.paths.omd_root,
+                    relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
+                    relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
                     caching_config=make_parsed_snmp_fetch_intervals_config(
                         loading_result.loaded_config,
                         config_cache.ruleset_matcher,
                         config_cache.label_manager.labels_of_host,
                     ),
-                    section_cache_path=make_cached_snmp_sections_dir(cmk.utils.paths.var_dir),
+                    relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
                 ),
             ),
             plugins,
@@ -1074,14 +1075,15 @@ def _execute_autodiscovery(
                 missing_sys_description=config_cache.missing_sys_description,
                 selected_sections=NoSelectedSNMPSections(),
                 backend_override=None,
-                stored_walk_path=cmk.utils.paths.snmpwalks_dir,
-                walk_cache_path=cmk.utils.paths.var_dir / "snmp_cache",
+                base_path=cmk.utils.paths.omd_root,
+                relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
+                relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
                 caching_config=make_parsed_snmp_fetch_intervals_config(
                     loading_result.loaded_config,
                     config_cache.ruleset_matcher,
                     config_cache.label_manager.labels_of_host,
                 ),
-                section_cache_path=make_cached_snmp_sections_dir(cmk.utils.paths.var_dir),
+                relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
             ),
         ),
         ab_plugins,
@@ -3356,9 +3358,6 @@ class AutomationDiagHost(Automation):
         ip_lookup_config = config_cache.ip_lookup_config()
         ip_family = ip_lookup_config.default_address_family(host_name)
         check_interval = config_cache.check_mk_check_interval(host_name)
-        walk_cache_path = cmk.utils.paths.var_dir / "snmp_cache"
-        file_cache_path = cmk.utils.paths.data_source_cache_dir
-        tcp_cache_path = cmk.utils.paths.tcp_cache_dir
         tls_config = TLSConfig(
             cas_dir=Path(cmk.utils.paths.agent_cas_dir),
             ca_store=Path(cmk.utils.paths.agent_cert_store),
@@ -3393,14 +3392,15 @@ class AutomationDiagHost(Automation):
                     missing_sys_description=config_cache.missing_sys_description,
                     selected_sections=NoSelectedSNMPSections(),
                     backend_override=None,
-                    stored_walk_path=cmk.utils.paths.snmpwalks_dir,
-                    walk_cache_path=walk_cache_path,
+                    base_path=cmk.utils.paths.omd_root,
+                    relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
+                    relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
                     caching_config=make_parsed_snmp_fetch_intervals_config(
                         loaded_config,
                         config_cache.ruleset_matcher,
                         config_cache.label_manager.labels_of_host,
                     ),
-                    section_cache_path=make_cached_snmp_sections_dir(cmk.utils.paths.var_dir),
+                    relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
                 ),
             ),
             simulation_mode=config.simulation_mode,
@@ -3411,8 +3411,9 @@ class AutomationDiagHost(Automation):
                 inventory=1.5 * check_interval,
             ),
             snmp_backend=config_cache.get_snmp_backend(host_name),
-            file_cache_path=file_cache_path,
-            tcp_cache_path=tcp_cache_path,
+            file_cache_path_base=cmk.utils.paths.omd_root,
+            file_cache_path_relative=cmk.utils.paths.relative_data_source_cache_dir,
+            tcp_cache_path_relative=cmk.utils.paths.relative_tcp_cache_dir,
             tls_config=tls_config,
             computed_datasources=config_cache.computed_datasources(host_name),
             datasource_programs=config_cache.datasource_programs(host_name),
@@ -3909,10 +3910,7 @@ class AutomationGetAgentOutput(Automation):
                 else ip_address_of_bare(hostname, ip_family)
             )
             check_interval = config_cache.check_mk_check_interval(hostname)
-            walk_cache_path = cmk.utils.paths.var_dir / "snmp_cache"
             section_cache_path = var_dir
-            file_cache_path = cmk.utils.paths.data_source_cache_dir
-            tcp_cache_path = cmk.utils.paths.tcp_cache_dir
             tls_config = TLSConfig(
                 cas_dir=Path(cmk.utils.paths.agent_cas_dir),
                 ca_store=Path(cmk.utils.paths.agent_cert_store),
@@ -3950,11 +3948,10 @@ class AutomationGetAgentOutput(Automation):
                             missing_sys_description=config_cache.missing_sys_description,
                             selected_sections=NoSelectedSNMPSections(),
                             backend_override=None,
-                            stored_walk_path=cmk.utils.paths.snmpwalks_dir,
-                            walk_cache_path=walk_cache_path,
-                            section_cache_path=make_cached_snmp_sections_dir(
-                                cmk.utils.paths.var_dir
-                            ),
+                            base_path=cmk.utils.paths.omd_root,
+                            relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
+                            relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
+                            relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
                             caching_config=make_parsed_snmp_fetch_intervals_config(
                                 loaded_config, ruleset_matcher, label_manager.labels_of_host
                             ),
@@ -3968,8 +3965,9 @@ class AutomationGetAgentOutput(Automation):
                         inventory=1.5 * check_interval,
                     ),
                     snmp_backend=config_cache.get_snmp_backend(hostname),
-                    file_cache_path=file_cache_path,
-                    tcp_cache_path=tcp_cache_path,
+                    file_cache_path_base=cmk.utils.paths.omd_root,
+                    file_cache_path_relative=cmk.utils.paths.relative_data_source_cache_dir,
+                    tcp_cache_path_relative=cmk.utils.paths.relative_tcp_cache_dir,
                     tls_config=tls_config,
                     computed_datasources=config_cache.computed_datasources(hostname),
                     datasource_programs=config_cache.datasource_programs(hostname),

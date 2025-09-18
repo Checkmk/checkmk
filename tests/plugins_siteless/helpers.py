@@ -61,7 +61,8 @@ class BasicSubmitter(Submitter):
 
 def get_raw_data(dump_path: Path) -> OK:
     agent_cache = AgentFileCache(
-        path_template=str(dump_path),
+        base_path=Path("/"),
+        relative_path_template=str(dump_path),
         max_age=MaxAge.unlimited(),
         simulation=False,
         use_only_cache=True,

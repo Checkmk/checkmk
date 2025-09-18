@@ -426,8 +426,6 @@ class CMKFetcher:
                 for node in self.config_cache.nodes(host_name)
             ]
 
-        file_cache_path = cmk.utils.paths.data_source_cache_dir
-        tcp_cache_path = cmk.utils.paths.tcp_cache_dir
         tls_config = TLSConfig(
             cas_dir=Path(cmk.utils.paths.agent_cas_dir),
             ca_store=Path(cmk.utils.paths.agent_cert_store),
@@ -453,8 +451,9 @@ class CMKFetcher:
                         self.max_cachefile_age or self.config_cache.max_cachefile_age(host_name)
                     ),
                     snmp_backend=self.config_cache.get_snmp_backend(current_host_name),
-                    file_cache_path=file_cache_path,
-                    tcp_cache_path=tcp_cache_path,
+                    file_cache_path_base=cmk.utils.paths.omd_root,
+                    file_cache_path_relative=cmk.utils.paths.relative_data_source_cache_dir,
+                    tcp_cache_path_relative=cmk.utils.paths.relative_tcp_cache_dir,
                     tls_config=tls_config,
                     computed_datasources=self.config_cache.computed_datasources(current_host_name),
                     datasource_programs=self.config_cache.datasource_programs(current_host_name),

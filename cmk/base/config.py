@@ -3803,11 +3803,12 @@ class FetcherFactory:
             do_status_data_inventory=self._config_cache.hwsw_inventory_parameters(
                 host_name
             ).status_data_inventory,
-            section_cache_path=self._snmp_fetcher_config.section_cache_path,
+            base_path=self._snmp_fetcher_config.base_path,
+            relative_section_cache_path=self._snmp_fetcher_config.relative_section_cache_path,
             snmp_config=snmp_config,
             caching_config=self._snmp_fetcher_config.caching_config(host_name),
-            stored_walk_path=self._snmp_fetcher_config.stored_walk_path,
-            walk_cache_path=self._snmp_fetcher_config.walk_cache_path,
+            relative_stored_walk_path=self._snmp_fetcher_config.relative_stored_walk_path,
+            relative_walk_cache_path=self._snmp_fetcher_config.relative_walk_cache_path,
         )
         return fetcher
 

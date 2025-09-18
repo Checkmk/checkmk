@@ -43,7 +43,6 @@ from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.checkengine.submitters import ServiceState
 from cmk.fetchers import Mode as FetchMode
 from cmk.fetchers import NoSelectedSNMPSections, SNMPFetcherConfig
-from cmk.fetchers.config import make_cached_snmp_sections_dir
 from cmk.fetchers.filecache import FileCacheOptions
 from cmk.utils.ip_lookup import (
     ConfiguredIPLookup,
@@ -181,9 +180,10 @@ def inventory_as_check(
                 missing_sys_description=config_cache.missing_sys_description,
                 selected_sections=NoSelectedSNMPSections(),
                 backend_override=None,
-                stored_walk_path=cmk.utils.paths.snmpwalks_dir,
-                walk_cache_path=cmk.utils.paths.var_dir / "snmp_cache",
-                section_cache_path=make_cached_snmp_sections_dir(cmk.utils.paths.var_dir),
+                base_path=cmk.utils.paths.omd_root,
+                relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
+                relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
+                relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
                 caching_config=make_parsed_snmp_fetch_intervals_config(
                     loaded_config, ruleset_matcher, label_manager.labels_of_host
                 ),

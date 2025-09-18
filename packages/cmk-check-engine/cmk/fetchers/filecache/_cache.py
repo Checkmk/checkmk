@@ -105,14 +105,16 @@ class FileCache(Generic[_TRawData], abc.ABC):
     def __init__(
         self,
         *,
-        path_template: str,
+        base_path: Path,
+        relative_path_template: str,
         max_age: MaxAge,
         simulation: bool,
         use_only_cache: bool,
         file_cache_mode: FileCacheMode | int,
     ) -> None:
         super().__init__()
-        self.path_template: Final = path_template
+        self.base_path: Final = base_path
+        self.relative_path_template: Final = relative_path_template
         self.max_age = max_age
         # TODO(ml): Make sure simulation and use_only_cache are identical
         #           and find a better, more generic name such as "force"
@@ -127,7 +129,8 @@ class FileCache(Generic[_TRawData], abc.ABC):
             f"{type(self).__name__}("
             + ", ".join(
                 (
-                    f"path_template={self.path_template}",
+                    f"base_path={self.base_path}",
+                    f"relative_path_template={self.relative_path_template}",
                     f"max_age={self.max_age}",
                     f"simulation={self.simulation}",
                     f"use_only_cache={self.use_only_cache}",
@@ -142,7 +145,8 @@ class FileCache(Generic[_TRawData], abc.ABC):
             return NotImplemented
         return all(
             (
-                self.path_template == other.path_template,
+                self.base_path == other.base_path,
+                self.relative_path_template == other.relative_path_template,
                 self.max_age == other.max_age,
                 self.simulation == other.simulation,
                 self.use_only_cache == other.use_only_cache,
@@ -195,7 +199,7 @@ class FileCache(Generic[_TRawData], abc.ABC):
         # caller and easy to extend in the future.  If somebody has a
         # better idea to allow a serializable and parametrizable path
         # creation, that's fine with me.
-        return Path(self.path_template.format(mode=mode.name.lower()))
+        return self.base_path / self.relative_path_template.format(mode=mode.name.lower())
 
     def _read(self, mode: Mode) -> _TRawData | None:
         if FileCacheMode.READ not in self.file_cache_mode or not self._do_cache(mode):
@@ -246,7 +250,8 @@ class FileCache(Generic[_TRawData], abc.ABC):
 class NoCache(FileCache[_TRawData]):
     def __init__(self, *_args: object, **_kw: object) -> None:
         super().__init__(
-            path_template=str(os.devnull),
+            base_path=Path(os.devnull),
+            relative_path_template="",
             max_age=MaxAge.zero(),
             simulation=False,
             use_only_cache=False,

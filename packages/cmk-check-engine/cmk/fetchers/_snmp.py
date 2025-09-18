@@ -59,9 +59,10 @@ class SNMPFetcherConfig:
     selected_sections: frozenset[SNMPSectionName] | NoSelectedSNMPSections
     backend_override: SNMPBackendEnum | None
     caching_config: Callable[[HostName], Mapping[SNMPSectionName, int]]
-    stored_walk_path: Path
-    walk_cache_path: Path
-    section_cache_path: Path
+    base_path: Path
+    relative_stored_walk_path: Path
+    relative_walk_cache_path: Path
+    relative_section_cache_path: Path
 
 
 class WalkCache(MutableMapping[tuple[str, str, bool], SNMPRowInfo]):
@@ -240,9 +241,10 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         plugin_store: SNMPPluginStore,
         scan_config: SNMPScanConfig,
         do_status_data_inventory: bool,
-        section_cache_path: Path | str,
-        stored_walk_path: Path | str,
-        walk_cache_path: Path | str,
+        base_path: Path,
+        relative_section_cache_path: Path,
+        relative_stored_walk_path: Path,
+        relative_walk_cache_path: Path,
         caching_config: Mapping[SNMPSectionName, int],
         snmp_config: SNMPHostConfig,
     ) -> None:
@@ -251,9 +253,10 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         self.plugin_store: Final = plugin_store
         self.scan_config: Final = scan_config
         self.do_status_data_inventory: Final = do_status_data_inventory
-        self.stored_walk_path: Final = Path(stored_walk_path)
-        self.walk_cache_path: Final = Path(walk_cache_path)
-        self.section_cache_path: Final = Path(section_cache_path)
+        self.base_path: Final = base_path
+        self.relative_stored_walk_path: Final = relative_stored_walk_path
+        self.relative_walk_cache_path: Final = relative_walk_cache_path
+        self.relative_section_cache_path: Final = relative_section_cache_path
         self.caching_config: Final = caching_config
         self.snmp_config: Final = snmp_config
         self._logger: Final = logging.getLogger("cmk.helper.snmp")
@@ -266,8 +269,11 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             self.sections == other.sections
             and self.scan_config == other.scan_config
             and self.do_status_data_inventory == other.do_status_data_inventory
-            and self.stored_walk_path == other.stored_walk_path
-            and self.walk_cache_path == other.walk_cache_path
+            and self.base_path == other.base_path
+            and self.relative_section_cache_path == other.relative_section_cache_path
+            and self.relative_walk_cache_path == other.relative_walk_cache_path
+            and self.relative_section_cache_path == other.relative_section_cache_path
+            and self.caching_config == other.caching_config
             and self.snmp_config == other.snmp_config
         )
 
@@ -291,9 +297,10 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
                     f"sections={self.sections!r}",
                     f"scan_config={self.scan_config!r}",
                     f"do_status_data_inventory={self.do_status_data_inventory!r}",
-                    f"section_cache_path={self.section_cache_path!r}",
-                    f"stored_walk_path={self.stored_walk_path!r}",
-                    f"walk_cache_path={self.walk_cache_path!r}",
+                    f"base_path={self.base_path!r}",
+                    f"relative_section_cache_path={self.relative_section_cache_path!r}",
+                    f"relative_stored_walk_path={self.relative_stored_walk_path!r}",
+                    f"relative_walk_cache_path={self.relative_walk_cache_path!r}",
                     f"caching_config={self.caching_config!r}",
                     f"snmp_config={self.snmp_config!r}",
                 )
@@ -303,7 +310,9 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
 
     def open(self) -> None:
         self._backend = make_backend(
-            self.snmp_config, self._logger, stored_walk_path=self.stored_walk_path
+            self.snmp_config,
+            self._logger,
+            stored_walk_path=self.base_path / self.relative_stored_walk_path,
         )
 
     def close(self) -> None:
@@ -378,7 +387,9 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
 
         now = time.time()
         sections_cache = ConfiguredFetchIntervallCache(
-            self.section_cache_path / str(self._backend.hostname), self.caching_config, now=now
+            self.base_path / self.relative_section_cache_path / str(self._backend.hostname),
+            self.caching_config,
+            now=now,
         )
         cached_data = sections_cache.load() if mode is Mode.CHECKING else {}
 
@@ -390,7 +401,10 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             # Nothing to discover? That can't be right.
             raise FetcherError("Got no data")
 
-        walk_cache = WalkCache(self.walk_cache_path / str(self._backend.hostname), self._logger)
+        walk_cache = WalkCache(
+            self.base_path / self.relative_walk_cache_path / str(self._backend.hostname),
+            self._logger,
+        )
         if mode is Mode.CHECKING:
             walk_cache_msg = "SNMP walk cache is enabled: Use any locally cached information"
             walk_cache.load()

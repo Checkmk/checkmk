@@ -381,7 +381,6 @@ def _make_attribute_filter(
                 is_show_more=True,
             )
         case NumberFieldFromAPI():
-            # TODO unit/scale?
             return FilterInvFloat(
                 ident=name,
                 title=long_title,
@@ -480,7 +479,6 @@ def _make_column_filter(
                 ],
             )
         case NumberFieldFromAPI():
-            # TODO unit/scale?
             return FilterInvtableIntegerRange(
                 inv_info=table_view_name,
                 ident=name,

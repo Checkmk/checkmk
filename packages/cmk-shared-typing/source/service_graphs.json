@@ -7,9 +7,13 @@
             "type": "array",
             "items": { "$ref": "#/$defs/time_series_values_of_metric" }
         },
+        "horizontal_lines": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/horizontal_line" }
+        },
         "config": { "$ref": "#/$defs/graph_config" }
     },
-    "required": ["values", "config"],
+    "required": ["values", "horizontal_lines", "config"],
     "$defs": {
         "timestamp_ms": { "type": "integer" },
         "metric_name": { "type": "string" },
@@ -32,6 +36,15 @@
                 }
             },
             "required": ["metric_name", "values"]
+        },
+        "horizontal_line": {
+            "type": "object",
+            "properties": {
+                "value": { "type": "number" },
+                "color": { "type": "string" },
+                "title": { "type": "string" }
+            },
+            "required": ["value", "color", "title"]
         },
         "metric_config": {
             "type": "object",

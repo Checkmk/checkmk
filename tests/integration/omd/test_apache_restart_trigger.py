@@ -5,6 +5,8 @@
 
 import os
 
+import pytest
+
 from tests.testlib.site import Site
 from tests.testlib.utils import run
 
@@ -13,10 +15,18 @@ def _reinstall_command(distro: str) -> list[str]:
     if distro.startswith("almalinux"):
         return ["dnf", "reinstall", "httpd", "-y"]
     if distro.startswith("sles"):
-        return ["zypper", "install", "--force", "-y", "apache2"]
+        # It would be nice to run this:
+        # return ["zypper", "install", "--force", "-y", "apache2"]
+        # However, this will install a newer version of apache2, which on `sles-15sp5` is not
+        # compatible with apache2-prefork. It might be possible to work around this, but not worth
+        # it in my opinion.
+        raise NotImplementedError()
     return ["sudo", "apt", "reinstall", "apache2-bin"]
 
 
+@pytest.mark.skipif(
+    os.environ.get("DISTRO", "").startswith("sles"), reason="No reinstall command available on sles"
+)
 def test_apache_restart_trigger(site: Site) -> None:
     assert site.is_running()
     previous_logs = site.read_file("var/log/apache/error_log")

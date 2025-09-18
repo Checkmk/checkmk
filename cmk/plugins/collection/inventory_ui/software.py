@@ -1072,3 +1072,35 @@ node_software_applications_podman = Node(
         "images_num": NumberField(Title("#Images"), render=UNIT_COUNT),
     },
 )
+
+node_software_applications_podman_containers = Node(
+    name="software_applications_podman_containers",
+    path=["software", "applications", "podman", "containers"],
+    title=Title("Containers"),
+    table=Table(
+        columns={
+            "id": TextField(Title("ID")),
+            "creation": TextField(Title("Creation")),
+            "name": TextField(Title("Name")),
+            "labels": TextField(Title("Labels")),
+            "status": TextField(Title("Status")),
+            "image": TextField(Title("Image")),
+        }
+    ),
+)
+
+node_software_applications_podman_images = Node(
+    name="software_applications_podman_images",
+    path=["software", "applications", "podman", "images"],
+    title=Title("Images"),
+    table=Table(
+        columns={
+            "id": TextField(Title("ID")),
+            "creation": TextField(Title("Creation")),
+            "size": TextField(Title("Size")),
+            "container_num": NumberField(Title("#Containers"), render=UNIT_COUNT),
+            "repository": TextField(Title("Repository")),
+            "tag": TextField(Title("Tag")),
+        }
+    ),
+)

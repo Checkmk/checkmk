@@ -63,9 +63,20 @@
         "ticks_config": {
             "type": "object",
             "properties": {
-                "formatter": { "type": "string" }
+                "notation": {
+                    "type": "string",
+                    "enum": [
+                        "decimal",
+                        "si",
+                        "iec",
+                        "standard_scientific",
+                        "engineering_scientific",
+                        "time"
+                    ]
+                },
+                "symbol": { "type": "string" }
             },
-            "required": ["formatter"]
+            "required": ["notation", "symbol"]
         },
         "x_axis_config": {
             "type": "object",

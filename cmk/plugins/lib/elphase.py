@@ -152,8 +152,17 @@ def check_elphase(
             render_func=render.percent,
         )
 
+    if elphase.power:
+        yield from _check_reading(
+            elphase.power,
+            label="Power",
+            metric_name="power",
+            lower_levels=None,
+            upper_levels=params.get("power"),
+            render_func=lambda x: f"{x:.1f} W",
+        )
+
     readings: Mapping[str, ReadingWithState | None] = {
-        "power": elphase.power,
         "appower": elphase.appower,
         "energy": elphase.energy,
         "frequency": elphase.frequency,
@@ -162,7 +171,6 @@ def check_elphase(
     }
 
     for quantity, title, render_func, bound, factor in [
-        ("power", "Power", lambda x: f"{x:.1f} W", Bounds.Upper, 1),
         ("appower", "Apparent Power", lambda x: f"{x:.1f} VA", Bounds.Upper, 1),
         ("energy", "Energy", lambda x: f"{x:.1f} Wh", Bounds.Upper, 1),
         ("frequency", "Frequency", lambda x: f"{x:.1f} hz", Bounds.Both, 1),

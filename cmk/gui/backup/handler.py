@@ -551,7 +551,13 @@ class PageBackup:
 
     def _start_job(self, job: Job) -> None:
         job.start()
-        flash(_("The backup has been started."))
+        flash(
+            _(
+                "Backup process has started. You can safely navigate away from "
+                "this page as the process will continue in the background. "
+                "Refresh this page to check the current status."
+            )
+        )
 
     def _stop_job(self, job: Job) -> None:
         job.stop()

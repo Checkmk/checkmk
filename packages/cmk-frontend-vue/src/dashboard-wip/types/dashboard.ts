@@ -57,4 +57,4 @@ export type EditResponsiveDashboardBody = components['schemas']['EditResponsiveG
 export type CreateResponsiveDashboardBody = components['schemas']['CreateResponsiveGridDashboardV1']
 export type CreateRelativeDashboardBody = components['schemas']['CreateDashboardV1']
 
-export type BadRequestBody = components['schemas']['Api400DefaultErrorDDACC62852906524']
+export type BadRequestBody = components['schemas']['Api400DefaultError']

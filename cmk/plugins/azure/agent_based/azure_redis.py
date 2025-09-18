@@ -92,6 +92,14 @@ check_plugin_azure_redis_cpu_utilization = CheckPlugin(
                 "Total CPU",
                 render.percent,
                 upper_levels_param="cpu_utilization",
+                average_mins_param="average_mins",
+                sustained_threshold_param=(
+                    lambda params: params.get("for_time", {}).get("threshold_for_time")
+                ),
+                sustained_levels_time_param=(
+                    lambda params: params.get("for_time", {}).get("limit_secs_for_time")
+                ),
+                sustained_label="CPU utilization high for",
             ),
         ],
         check_levels=check_levels_v2,

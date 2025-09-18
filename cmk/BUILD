@@ -4,7 +4,10 @@ load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//:bazel_variables.bzl", "edition_python_deps")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 
-exports_files(["requirements.in"])
+exports_files([
+    "requirements.in",
+    "utils/password_store/cli.py",
+])
 
 REQUIRED_EXTERNAL_DEPS = [
     # alphabetical order

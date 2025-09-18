@@ -60,6 +60,17 @@ RUN DISTRO="ubuntu-24.04" /opt/install-docker.sh
 
 RUN rm /opt/*.sh /opt/defines.make /opt/.bazelversion
 
+# Install the compiler.  We need both gcc 13 and 14 for the transition.
+RUN apt-get update && \
+    apt-get install -y software-properties-common && \
+    add-apt-repository -y ppa:ubuntu-toolchain-r/ppa && \
+    apt-get update && \
+    apt-get install -y gcc-13 g\+\+-13 && \
+    apt-get install -y gcc-14 g\+\+-14 && \
+    update-alternatives --install "/usr/bin/gcc" gcc "/usr/bin/gcc-13" 100 && \
+    update-alternatives --install "/usr/bin/g++" g++ "/usr/bin/g++-13" 100 && \
+    rm -rf /var/cache/apt/*
+
 # required to run tests with bazel, requires +577MB
 # libkrb5-dev, libldap2-dev, libsasl2-dev is required to build python-ldap
 # libpq-dev is required to build psycopg2-binary
@@ -68,11 +79,8 @@ RUN rm /opt/*.sh /opt/defines.make /opt/.bazelversion
 # python3-enchant is required to run sw-documentation
 # apache2 is required to run test-unit-omdlib
 RUN apt-get update && \
-    apt-get install -y apache2 gawk g++-13 libglib2.0-dev libkrb5-dev libldap2-dev libpango1.0-dev libpng-dev libpq-dev libsasl2-dev libpcap-dev libxml2-dev python3-enchant && \
+    apt-get install -y apache2 gawk libglib2.0-dev libkrb5-dev libldap2-dev libpango1.0-dev libpng-dev libpq-dev libsasl2-dev libpcap-dev libxml2-dev python3-enchant && \
     rm -rf /var/cache/apt/*
-
-# gcc is not found within bazel actions otherwise
-RUN update-alternatives --install "/usr/bin/gcc" gcc "/usr/bin/gcc-13" 100
 
 # bazel can only be used as user, not as root https://github.com/bazelbuild/rules_python/pull/713
 # USER ubuntu

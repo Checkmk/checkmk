@@ -64,8 +64,6 @@ cc_library(
         "include/neb/nagios.h",
     ],
     copts = [
-        # Warning comes from livestatus.
-        "-Wno-deprecated-declarations",  # CMK-25750
         "-O3",
         "-std=c++20",
     ],

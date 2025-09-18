@@ -3977,6 +3977,10 @@ msgstr "Añadir una nueva configuración de usuario"
 msgid "Add Prefix"
 msgstr "Añadir prefijo"
 
+#, fuzzy
+msgid "Add Relay"
+msgstr "Añadir clave"
+
 msgid "Add Rule ID"
 msgstr "Añadir ID de regla"
 
@@ -13706,6 +13710,11 @@ msgid "Click on 'Register %s' to enable two-factor authentication via %s."
 msgstr "Eliminar la autenticación de dos factores de %s"
 
 msgid ""
+"Click the \"Add Relay\" button to start setting up your first Relay "
+"configuration."
+msgstr ""
+
+msgid ""
 "Click the \"Add configuration\" button to start setting up your first "
 "configuration."
 msgstr ""
@@ -15354,12 +15363,12 @@ msgid "Connected Clients"
 msgstr "Conexiones"
 
 #, fuzzy
-msgid "Connected clients"
-msgstr "Número de clientes conectados"
+msgid "Connected Relay configurations"
+msgstr "Configuración RRA"
 
 #, fuzzy
-msgid "Connected relay configurations"
-msgstr "Configuración RRA"
+msgid "Connected clients"
+msgstr "Número de clientes conectados"
 
 msgid "Connecter and connectee sites must be different."
 msgstr ""
@@ -26018,6 +26027,10 @@ msgstr "Filtrar la selección de %s por servicio: "
 msgid "Filter / Search"
 msgstr "Filtrar / Buscar"
 
+#, fuzzy
+msgid "Filter Azure tags imported as host/service labels"
+msgstr "Utilizar el nombre del puerto como nombre del servicio"
+
 msgid "Filter aggregations"
 msgstr "Filtrar agregaciones"
 
@@ -26084,10 +26097,6 @@ msgstr "Filtrar la selección de %s por servicio: "
 #, fuzzy
 msgid "Filter tags"
 msgstr "Filtros"
-
-#, fuzzy
-msgid "Filter tags imported as host/service labels"
-msgstr "Utilizar el nombre del puerto como nombre del servicio"
 
 msgid "Filter valid annotations by key pattern"
 msgstr "Filtrar las anotaciones válidas por patrón de clave"
@@ -35995,6 +36004,14 @@ msgstr "Tipo de dato inválido de la marca de tiempo: debe ser int o float."
 msgid "Invalid datatype of value: %s"
 msgstr "Fuente de datos no válida: %s"
 
+#, fuzzy
+msgid "Invalid date format"
+msgstr "Fuente de datos no válida: %s"
+
+#, fuzzy, python-format
+msgid "Invalid date format %s"
+msgstr "Fuente de datos no válida: %s"
+
 #, fuzzy, python-format
 msgid "Invalid date format: %s"
 msgstr "Fuente de datos no válida: %s"
@@ -36250,6 +36267,14 @@ msgstr "Prueba inválida."
 #, fuzzy
 msgid "Invalid text"
 msgstr "Prueba inválida."
+
+#, fuzzy
+msgid "Invalid time format"
+msgstr "Identificador inválido: %s"
+
+#, fuzzy, python-format
+msgid "Invalid time format %s"
+msgstr "Identificador inválido: %s"
 
 #, python-format
 msgid "Invalid time format '<tt>%s</tt>', please use <tt>24:00</tt> format."
@@ -44803,6 +44828,10 @@ msgstr "Sin niveles"
 #, fuzzy
 msgid "No PNP templates using the deprecated API"
 msgstr "No comprobar los plugins que utilizan la API obsoleta"
+
+#, fuzzy
+msgid "No Relay configuration yet"
+msgstr "Configuración de host"
 
 msgid "No SNMP"
 msgstr "No SNMP"
@@ -92102,6 +92131,171 @@ msgid "Choose how to display your data"
 msgstr "No mostrar una fecha"
 
 #, fuzzy
+msgid "Select option"
+msgstr "Conexiones rechazadas"
+
+msgid "% (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "% (Decimal, strict precision, 0 digits)"
+msgstr ""
+
+msgid "% (Decimal, strict precision, 2 digits)"
+msgstr ""
+
+msgid "%/m (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "/s (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "A (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "A (Decimal, strict precision, 3 digits)"
+msgstr ""
+
+msgid "B (IEC, auto precision, 2 digits)"
+msgstr ""
+
+msgid "B (IEC, strict precision, 2 digits)"
+msgstr ""
+
+msgid "B/d (IEC, auto precision, 2 digits)"
+msgstr ""
+
+msgid "B/op (IEC, auto precision, 2 digits)"
+msgstr ""
+
+msgid "B/req (SI, auto precision, 2 digits)"
+msgstr ""
+
+msgid "B/s (IEC, auto precision, 2 digits)"
+msgstr ""
+
+msgid "B/s (SI, auto precision, 2 digits)"
+msgstr ""
+
+msgid "Hz (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "Pa (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "Percent (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "RCU (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "V (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "VA (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "Volt (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "W (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "WCU (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "Watt (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "Wh (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "bar (Decimal, auto precision, 4 digits)"
+msgstr ""
+
+msgid "bits/d (IEC, auto precision, 2 digits)"
+msgstr ""
+
+msgid "bits/s (IEC, auto precision, 2 digits)"
+msgstr ""
+
+msgid "bits/s (SI, auto precision, 2 digits)"
+msgstr ""
+
+msgid "dB (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "dBm (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "dBmV (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "days (Decimal, strict precision, 2 digits)"
+msgstr ""
+
+msgid "l/s (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "no symbol (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "no symbol (Decimal, strict precision, 0 digits)"
+msgstr ""
+
+msgid "no symbol (Decimal, strict precision, 2 digits)"
+msgstr ""
+
+msgid "no symbol (SI, strict precision, 2 digits)"
+msgstr ""
+
+msgid "ppm (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "req/s (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "rpm (Decimal, auto precision, 4 digits)"
+msgstr ""
+
+msgid "s (Time, auto precision, 0 digits)"
+msgstr ""
+
+msgid "s (Time, auto precision, 2 digits)"
+msgstr ""
+
+msgid "s/s (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "tasks (Decimal, strict precision, 0 digits)"
+msgstr ""
+
+msgid "°C (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "€ (Decimal, strict precision, 2 digits)"
+msgstr ""
+
+#, fuzzy
+msgid "Value must be a valid URL"
+msgstr "El valor debe ser una cadena"
+
+#, fuzzy
+msgid "Link title to"
+msgstr "Enlace del título"
+
+#, fuzzy
+msgid "Appearance"
+msgstr "Electrodomésticos"
+
+#, fuzzy
+msgid "Show title background"
+msgstr "Mostrar el título sin fondo"
+
+#, fuzzy
+msgid "Show widget background"
+msgstr "Mostrar el título sin fondo"
+
+#, fuzzy
 msgid "explicit password"
 msgstr "Nueva contraseña"
 
@@ -92398,6 +92592,21 @@ msgid ""
 "systems state, such as how much storage is used or the CPU load."
 msgstr ""
 
+msgid ""
+"This is a placeholder for the relay setup wizard. The actual implementation "
+"is pending."
+msgstr ""
+
+msgid "Deploy the relay to your environment"
+msgstr ""
+
+msgid "Name the relay and register with your Checkmk site"
+msgstr ""
+
+#, fuzzy
+msgid "Connection check"
+msgstr "Nombre de la conexión"
+
 #, fuzzy
 msgid "Already installed the Checkmk agent?"
 msgstr "Instalar siempre Python con el agente"
@@ -92642,8 +92851,8 @@ msgid ""
 "            You can customize these to match your monitoring needs,\n"
 "            most commonly by setting thresholds for WARN and CRIT states "
 "using rules.\n"
-"            To find the right ruleset for a service, start with the Service "
-"Discovery page."
+"            To find the right ruleset for a service,\n"
+"            start with the Service Discovery page of a host."
 msgstr ""
 
 #, fuzzy
@@ -92693,6 +92902,15 @@ msgid ""
 "You can now define custom parameters like thresholds or other check settings."
 msgstr ""
 
+msgid ""
+"Changes are saved in a temporary environment first,\n"
+"                letting you review and adjust them safely."
+msgstr ""
+
+#, fuzzy
+msgid "Activate changes to apply them to live monitoring."
+msgstr "Activar cambios para la consola de eventos"
+
 #, fuzzy
 msgid "Mark as complete"
 msgstr "completa"
@@ -92713,7 +92931,8 @@ msgstr ""
 msgid "Create a contact group"
 msgstr "Coincidir con los grupos de contacto"
 
-msgid "On default, there is one contact group available \"Everything\"."
+msgid ""
+"By default, there is one contact group available, called \"Everything\"."
 msgstr ""
 
 #, fuzzy
@@ -92727,7 +92946,7 @@ msgstr "Asignación de servicios a grupos de contactos"
 msgid ""
 "Each user can belong to multiple contact groups. You can assign them to "
 "contact groups in the \"Contact groups\" section when editing or creating a "
-"user"
+"user."
 msgstr ""
 
 #, fuzzy
@@ -92746,8 +92965,8 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Customize dashboard"
-msgstr "Personalizar"
+msgid "Create a dashboard"
+msgstr "Cuadros de mando relacionados"
 
 msgid ""
 "Tailor your monitoring experience by creating a custom dashboard\n"
@@ -92817,6 +93036,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Customize dashboard"
+#~ msgstr "Personalizar"
 
 #, fuzzy
 #~ msgid "Main dashboard (PEV)"

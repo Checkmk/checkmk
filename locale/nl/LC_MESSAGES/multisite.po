@@ -3958,6 +3958,10 @@ msgstr "Nieuwe gebruikersconfiguratie toevoegen"
 msgid "Add Prefix"
 msgstr "Voorvoegsel toevoegen"
 
+#, fuzzy
+msgid "Add Relay"
+msgstr "Sleutel toevoegen"
+
 msgid "Add Rule ID"
 msgstr "Regel ID toevoegen"
 
@@ -13610,6 +13614,11 @@ msgid "Click on 'Register %s' to enable two-factor authentication via %s."
 msgstr "Twee-factor authenticatie verwijderen van %s"
 
 msgid ""
+"Click the \"Add Relay\" button to start setting up your first Relay "
+"configuration."
+msgstr ""
+
+msgid ""
 "Click the \"Add configuration\" button to start setting up your first "
 "configuration."
 msgstr ""
@@ -15240,12 +15249,12 @@ msgid "Connected Clients"
 msgstr "Verbindingen"
 
 #, fuzzy
-msgid "Connected clients"
-msgstr "Aantal aangesloten cliënten"
+msgid "Connected Relay configurations"
+msgstr "RRA-configuratie"
 
 #, fuzzy
-msgid "Connected relay configurations"
-msgstr "RRA-configuratie"
+msgid "Connected clients"
+msgstr "Aantal aangesloten cliënten"
 
 msgid "Connecter and connectee sites must be different."
 msgstr ""
@@ -25815,6 +25824,10 @@ msgstr "Filter %s selectie op dienst: "
 msgid "Filter / Search"
 msgstr "Filteren / Zoeken"
 
+#, fuzzy
+msgid "Filter Azure tags imported as host/service labels"
+msgstr "Gebruik poortnaam als dienstnaam"
+
 msgid "Filter aggregations"
 msgstr "Filter aggregaties"
 
@@ -25881,10 +25894,6 @@ msgstr "Filter %s selectie op dienst: "
 #, fuzzy
 msgid "Filter tags"
 msgstr "Filters"
-
-#, fuzzy
-msgid "Filter tags imported as host/service labels"
-msgstr "Gebruik poortnaam als dienstnaam"
 
 msgid "Filter valid annotations by key pattern"
 msgstr "Geldige annotaties filteren op sleutelpatroon"
@@ -35721,6 +35730,14 @@ msgstr "Ongeldig datatype van timestamp: moet int of float zijn."
 msgid "Invalid datatype of value: %s"
 msgstr "Ongeldige gegevensbron: %s"
 
+#, fuzzy
+msgid "Invalid date format"
+msgstr "Ongeldige gegevensbron: %s"
+
+#, fuzzy, python-format
+msgid "Invalid date format %s"
+msgstr "Ongeldige gegevensbron: %s"
+
 #, fuzzy, python-format
 msgid "Invalid date format: %s"
 msgstr "Ongeldige gegevensbron: %s"
@@ -35974,6 +35991,14 @@ msgstr "Ongeldige test."
 #, fuzzy
 msgid "Invalid text"
 msgstr "Ongeldige test."
+
+#, fuzzy
+msgid "Invalid time format"
+msgstr "Ongeldige ident: %s"
+
+#, fuzzy, python-format
+msgid "Invalid time format %s"
+msgstr "Ongeldige ident: %s"
 
 #, python-format
 msgid "Invalid time format '<tt>%s</tt>', please use <tt>24:00</tt> format."
@@ -44454,6 +44479,10 @@ msgstr "Geen niveaus"
 #, fuzzy
 msgid "No PNP templates using the deprecated API"
 msgstr "Geen controleplugins die de verouderde API gebruiken"
+
+#, fuzzy
+msgid "No Relay configuration yet"
+msgstr "Host configuratie"
 
 msgid "No SNMP"
 msgstr "Geen SNMP"
@@ -91376,6 +91405,171 @@ msgid "Choose how to display your data"
 msgstr "Geef geen datum weer"
 
 #, fuzzy
+msgid "Select option"
+msgstr "Afgewezen verbindingen"
+
+msgid "% (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "% (Decimal, strict precision, 0 digits)"
+msgstr ""
+
+msgid "% (Decimal, strict precision, 2 digits)"
+msgstr ""
+
+msgid "%/m (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "/s (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "A (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "A (Decimal, strict precision, 3 digits)"
+msgstr ""
+
+msgid "B (IEC, auto precision, 2 digits)"
+msgstr ""
+
+msgid "B (IEC, strict precision, 2 digits)"
+msgstr ""
+
+msgid "B/d (IEC, auto precision, 2 digits)"
+msgstr ""
+
+msgid "B/op (IEC, auto precision, 2 digits)"
+msgstr ""
+
+msgid "B/req (SI, auto precision, 2 digits)"
+msgstr ""
+
+msgid "B/s (IEC, auto precision, 2 digits)"
+msgstr ""
+
+msgid "B/s (SI, auto precision, 2 digits)"
+msgstr ""
+
+msgid "Hz (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "Pa (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "Percent (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "RCU (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "V (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "VA (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "Volt (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "W (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "WCU (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "Watt (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "Wh (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "bar (Decimal, auto precision, 4 digits)"
+msgstr ""
+
+msgid "bits/d (IEC, auto precision, 2 digits)"
+msgstr ""
+
+msgid "bits/s (IEC, auto precision, 2 digits)"
+msgstr ""
+
+msgid "bits/s (SI, auto precision, 2 digits)"
+msgstr ""
+
+msgid "dB (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "dBm (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "dBmV (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "days (Decimal, strict precision, 2 digits)"
+msgstr ""
+
+msgid "l/s (Decimal, auto precision, 3 digits)"
+msgstr ""
+
+msgid "no symbol (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "no symbol (Decimal, strict precision, 0 digits)"
+msgstr ""
+
+msgid "no symbol (Decimal, strict precision, 2 digits)"
+msgstr ""
+
+msgid "no symbol (SI, strict precision, 2 digits)"
+msgstr ""
+
+msgid "ppm (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "req/s (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "rpm (Decimal, auto precision, 4 digits)"
+msgstr ""
+
+msgid "s (Time, auto precision, 0 digits)"
+msgstr ""
+
+msgid "s (Time, auto precision, 2 digits)"
+msgstr ""
+
+msgid "s/s (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "tasks (Decimal, strict precision, 0 digits)"
+msgstr ""
+
+msgid "°C (Decimal, auto precision, 2 digits)"
+msgstr ""
+
+msgid "€ (Decimal, strict precision, 2 digits)"
+msgstr ""
+
+#, fuzzy
+msgid "Value must be a valid URL"
+msgstr "De waarde moet een string zijn"
+
+#, fuzzy
+msgid "Link title to"
+msgstr "Link van titel"
+
+#, fuzzy
+msgid "Appearance"
+msgstr "Toestel"
+
+#, fuzzy
+msgid "Show title background"
+msgstr "Titel tonen zonder achtergrond"
+
+#, fuzzy
+msgid "Show widget background"
+msgstr "Titel tonen zonder achtergrond"
+
+#, fuzzy
 msgid "explicit password"
 msgstr "Nieuw wachtwoord"
 
@@ -91671,6 +91865,21 @@ msgid ""
 "systems state, such as how much storage is used or the CPU load."
 msgstr ""
 
+msgid ""
+"This is a placeholder for the relay setup wizard. The actual implementation "
+"is pending."
+msgstr ""
+
+msgid "Deploy the relay to your environment"
+msgstr ""
+
+msgid "Name the relay and register with your Checkmk site"
+msgstr ""
+
+#, fuzzy
+msgid "Connection check"
+msgstr "Naam verbinding"
+
 #, fuzzy
 msgid "Already installed the Checkmk agent?"
 msgstr "Installeer Python altijd met agent"
@@ -91915,8 +92124,8 @@ msgid ""
 "            You can customize these to match your monitoring needs,\n"
 "            most commonly by setting thresholds for WARN and CRIT states "
 "using rules.\n"
-"            To find the right ruleset for a service, start with the Service "
-"Discovery page."
+"            To find the right ruleset for a service,\n"
+"            start with the Service Discovery page of a host."
 msgstr ""
 
 #, fuzzy
@@ -91965,6 +92174,15 @@ msgid ""
 "You can now define custom parameters like thresholds or other check settings."
 msgstr ""
 
+msgid ""
+"Changes are saved in a temporary environment first,\n"
+"                letting you review and adjust them safely."
+msgstr ""
+
+#, fuzzy
+msgid "Activate changes to apply them to live monitoring."
+msgstr "Activeer wijzigingen voor gebeurtenissenconsole"
+
 #, fuzzy
 msgid "Mark as complete"
 msgstr "volledig"
@@ -91985,7 +92203,8 @@ msgstr ""
 msgid "Create a contact group"
 msgstr "Overeenkomen met contactgroepen"
 
-msgid "On default, there is one contact group available \"Everything\"."
+msgid ""
+"By default, there is one contact group available, called \"Everything\"."
 msgstr ""
 
 #, fuzzy
@@ -91999,7 +92218,7 @@ msgstr "Toewijzing van diensten aan contactgroepen"
 msgid ""
 "Each user can belong to multiple contact groups. You can assign them to "
 "contact groups in the \"Contact groups\" section when editing or creating a "
-"user"
+"user."
 msgstr ""
 
 #, fuzzy
@@ -92018,8 +92237,8 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Customize dashboard"
-msgstr "Aanpassen"
+msgid "Create a dashboard"
+msgstr "Gerelateerde dashboards"
 
 msgid ""
 "Tailor your monitoring experience by creating a custom dashboard\n"
@@ -92089,6 +92308,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Customize dashboard"
+#~ msgstr "Aanpassen"
 
 #, fuzzy
 #~ msgid "Main dashboard (PEV)"

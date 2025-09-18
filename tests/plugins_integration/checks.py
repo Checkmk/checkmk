@@ -44,7 +44,6 @@ class CheckConfig:
         data_dir_siteless: Path | None = None,
         dump_dir_siteless: Path | None = None,
         response_dir_siteless: str | None = None,
-        diff_dir: Path | None = None,
         check_names: list[str] | None = None,
         api_services_cols: list[str] | None = None,
     ) -> None:
@@ -65,7 +64,6 @@ class CheckConfig:
         self.dump_dir_siteless = dump_dir_siteless or (self.data_dir_siteless / "agent_data")
         self.response_dir_siteless = response_dir_siteless or (self.data_dir_siteless / "responses")
 
-        self.diff_dir = diff_dir or Path(os.getenv("DIFF_DIR", "/tmp"))
         self.check_names = check_names or [
             _.strip() for _ in str(os.getenv("CHECK_NAMES", "")).split(",") if _.strip()
         ]
@@ -183,6 +181,8 @@ def _verify_check_result(
 def process_check_output(
     site: Site,
     host_name: str,
+    response_path: Path,
+    diff_dir: Path,
     output_dir: Path,
 ) -> dict[str, str]:
     """Process the check output and either dump or compare it."""
@@ -191,7 +191,6 @@ def process_check_output(
 
     logger.info('> Processing agent host "%s"...', host_name)
     diffs = {}
-    response_path = f"{config.response_dir_integration}/{host_name}.json"
 
     if os.path.exists(response_path):
         with open(response_path, encoding="utf-8") as json_file:
@@ -243,9 +242,9 @@ def process_check_output(
         diffs[check_id] = diff
 
     if diffs:
-        os.makedirs(config.diff_dir, exist_ok=True)
+        os.makedirs(diff_dir, exist_ok=True)
         with open(
-            f"{config.diff_dir}/{host_name}.json",
+            f"{diff_dir}/{host_name}.json",
             mode="a",
             encoding="utf-8",
         ) as json_file:

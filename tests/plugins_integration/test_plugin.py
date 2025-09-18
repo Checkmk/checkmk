@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import textwrap
+from pathlib import Path
 
 import pytest
 
@@ -33,10 +34,13 @@ def test_plugin(
             assert disk_dump == cmk_dump != "", "Raw data mismatch!"
 
         # perform assertion over check data
-        tmp_path = tmp_path_factory.mktemp("responses")
-        logger.info(tmp_path)
-
-        diffing_checks = process_check_output(test_site, host_name, tmp_path)
+        diffing_checks = process_check_output(
+            site=test_site,
+            host_name=host_name,
+            response_path=Path(f"{config.response_dir_integration}/{host_name}.json"),
+            diff_dir=tmp_path_factory.mktemp("diffs"),
+            output_dir=tmp_path_factory.mktemp("outputs"),
+        )
         err_msg = f"Check output mismatch for host {host_name}:\n" + "".join(
             [textwrap.dedent(f"{check}:\n" + diffing_checks[check]) for check in diffing_checks]
         )

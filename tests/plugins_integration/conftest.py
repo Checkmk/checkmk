@@ -68,13 +68,6 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         help="Response dir path",
         default=None,
     )
-    parser.addoption(
-        "--diff-dir",
-        action="store",
-        type=Path,
-        help="Diff dir path",
-        default=None,
-    )
 
 
 def pytest_configure(config: pytest.Config) -> None:
@@ -101,7 +94,6 @@ def pytest_configure(config: pytest.Config) -> None:
         response_dir_integration=_response_dir_option
         if isinstance(_response_dir_option := config.getoption(name="--response-dir"), Path)
         else None,
-        diff_dir=_ if isinstance(_ := config.getoption(name="--diff-dir"), Path) else None,
         check_names=_ if isinstance(_ := config.getoption(name="--check-names"), list) else None,
     )
 

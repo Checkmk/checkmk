@@ -1,16 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# fmt: off
-# mypy: disable-error-code=var-annotated
+from cmk.base.legacy_checks import azure_ad
 
-checkname = "azure_ad"
-
-freeze_time = "1970-02-01 03:00:01"
-
-info = [
+STRING_TABLE = [
     ["users_count", "2"],
     [
         "ad_connect",
@@ -18,16 +13,14 @@ info = [
     ],
 ]
 
-discovery = {"": [(None, {})]}
 
-checks = {
-    "": [
-        (
-            None,
-            {},
-            [
-                (0, "2 User Accounts", [("count", 2)]),
-            ],
-        ),
-    ],
-}
+def test_discover_ad_users() -> None:
+    parsed = azure_ad.parse_azure_ad(STRING_TABLE)
+    assert list(azure_ad.discover_ad_users(parsed)) == [(None, {})]
+
+
+def test_check_azure_users() -> None:
+    parsed = azure_ad.parse_azure_ad(STRING_TABLE)
+    assert list(azure_ad.check_azure_users(None, {}, parsed)) == [
+        (0, "2 User Accounts", [("count", 2, None, None)]),
+    ]

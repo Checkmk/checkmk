@@ -323,7 +323,9 @@ def fetch_list_of_elements(
         if section not in data.keys():
             continue
 
-        fetch_result = data[section]
+        fetch_result = data.get(section)
+        if not fetch_result:
+            continue
         if isinstance(fetch_result, Mapping):
             # result = fetch_data(redfishobj, fetch_result.get("@odata.id"), section)
             fetch_entry(redfishobj, fetch_result, section)

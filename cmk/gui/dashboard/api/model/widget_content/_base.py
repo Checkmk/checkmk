@@ -11,8 +11,9 @@ from pydantic_core import ErrorDetails
 
 from cmk.gui.dashboard import dashlet_registry, DashletConfig
 from cmk.gui.openapi.framework import ApiContext
-from cmk.gui.openapi.framework.model import api_model
-from cmk.gui.type_defs import DashboardEmbeddedViewSpec
+from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
+from cmk.gui.type_defs import DashboardEmbeddedViewSpec, VisualLinkSpec, VisualName, VisualTypeName
+from cmk.gui.visuals.type import visual_type_registry
 
 
 @api_model
@@ -55,3 +56,48 @@ class BaseWidgetContent(ABC):
         erroneous data in the `loc` of the `ErrorDetails`.
         """
         return []
+
+
+@api_model
+class ApiVisualLink:
+    type: VisualTypeName = api_field(
+        description="The type of the link, e.g. 'views' for a link to another view."
+    )
+    name: VisualName = api_field(description="The name of the linked entity.")
+
+    def __post_init__(self) -> None:
+        visual = visual_type_registry[self.type]()
+        if self.name not in visual.permitted_visuals:
+            link_type = self.type.title()[:-1]  # remove trailing "s"
+            raise ValueError(
+                f"{link_type} '{self.name}' does not exist or you don't have permission to see it."
+            )
+
+    @classmethod
+    def from_internal(cls, value: VisualLinkSpec | None) -> Self | ApiOmitted:
+        if value is None:
+            return ApiOmitted()
+        return cls(
+            type=value.type_name,
+            name=value.name,
+        )
+
+    @classmethod
+    def from_raw_internal(
+        cls, value: tuple[VisualTypeName, VisualName] | None
+    ) -> Self | ApiOmitted:
+        if value is None:
+            return ApiOmitted()
+        return cls(
+            type=value[0],
+            name=value[1],
+        )
+
+    def to_internal(self) -> VisualLinkSpec:
+        return VisualLinkSpec(
+            type_name=self.type,
+            name=self.name,
+        )
+
+    def to_raw_internal(self) -> tuple[VisualTypeName, VisualName]:
+        return self.type, self.name

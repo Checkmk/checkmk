@@ -44,8 +44,20 @@ def render_link_to_view(
     return content
 
 
-def url_to_visual(row: Row, link_spec: VisualLinkSpec, *, request: Request) -> str | None:
-    if display_options.disabled(display_options.I):
+def url_to_visual(
+    row: Row, link_spec: VisualLinkSpec, *, request: Request, force: bool = False
+) -> str | None:
+    """Compute a URL to a view or dashboard.
+
+    Returns None if the target visual isn't available or the display option for links is disabled.
+
+    Args:
+        row: A livestatus row containing the data to link from
+        link_spec: The specification of the visual to link to
+        request: The current HTTP request
+        force: If True, ignore the display option "I" and always try to compute a URL
+    """
+    if not force and display_options.disabled(display_options.I):
         return None
 
     visual = _get_visual_by_link_spec(link_spec)
@@ -166,7 +178,10 @@ def make_linked_visual_url(
         )
 
     vars_values = get_linked_visual_request_vars(visual, singlecontext_request_vars)
-    http_vars = vars_values + required_vars
+
+    # combine vars, using set to remove duplicates
+    http_vars = list(set(vars_values + required_vars))
+
     # For views and dashboards currently the current filter settings
     return makeuri_contextless(
         request,

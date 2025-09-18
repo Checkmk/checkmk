@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Any, Self
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
-from cmk.agent_based.v2 import CheckResult, render, Result, State
+from cmk.agent_based.v2 import check_levels, CheckResult, render, Result, State
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -122,8 +122,17 @@ def check_elphase(
             summary=f"Device status: {device_state_readable}({device_state_str})",
         )
 
+    if elphase.voltage:
+        yield from _check_reading(
+            elphase.voltage,
+            label="Voltage",
+            metric_name="voltage",
+            lower_levels=params.get("voltage"),
+            upper_levels=None,
+            render_func=lambda x: f"{x:.1f} V",
+        )
+
     readings: Mapping[str, ReadingWithState | None] = {
-        "voltage": elphase.voltage,
         "current": elphase.current,
         "output_load": elphase.output_load,
         "power": elphase.power,
@@ -135,7 +144,6 @@ def check_elphase(
     }
 
     for quantity, title, render_func, bound, factor in [
-        ("voltage", "Voltage", lambda x: f"{x:.1f} V", Bounds.Lower, 1),
         ("current", "Current", lambda x: f"{x:.1f} A", Bounds.Upper, 1),
         ("output_load", "Load", render.percent, Bounds.Upper, 1),
         ("power", "Power", lambda x: f"{x:.1f} W", Bounds.Upper, 1),
@@ -189,3 +197,25 @@ def check_elphase(
 
         if reading.state:
             yield Result(state=reading.state.state, summary=reading.state.text)
+
+
+def _check_reading(
+    reading: ReadingWithState,
+    *,
+    label: str,
+    metric_name: str,
+    lower_levels: tuple[float, float] | None,
+    upper_levels: tuple[float, float] | None,
+    render_func: Callable[[float], str],
+) -> CheckResult:
+    yield from check_levels(
+        reading.value,
+        metric_name=metric_name,
+        levels_lower=("fixed", lower_levels) if lower_levels else None,
+        levels_upper=("fixed", upper_levels) if upper_levels else None,
+        render_func=render_func,
+        label=label,
+    )
+
+    if reading.state:
+        yield Result(state=reading.state.state, summary=reading.state.text)

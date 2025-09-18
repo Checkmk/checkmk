@@ -30,8 +30,7 @@ config_setting(
     ],
     tags = ["manual"],
     visibility = [
-        "//omd/relay:__pkg__",
-        # Make setuptools available to net-snmp
+        "//omd/non-free/relay:__pkg__",
         "@net-snmp//:__pkg__",
     ],
 ) for module in all_requirements]

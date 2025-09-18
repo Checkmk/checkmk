@@ -82,14 +82,10 @@ def otel_enabled_site(otel_site: Site) -> Iterator[Site]:
     """Fixture to enable OpenTelemetry collector"""
     otel_site.stop()
     otel_site.set_config("OPENTELEMETRY_COLLECTOR", "on")
-    otel_site.set_config("MKEVENTD_SYSLOG", "on")
-    otel_site.set_config("MKEVENTD_SYSLOG_TCP", "on")
     otel_site.start()
     yield otel_site
     otel_site.stop()
     otel_site.set_config("OPENTELEMETRY_COLLECTOR", "off")
-    otel_site.set_config("MKEVENTD_SYSLOG", "off")
-    otel_site.set_config("MKEVENTD_SYSLOG_TCP", "off")
     otel_site.start()
 
 

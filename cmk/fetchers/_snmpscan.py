@@ -8,7 +8,6 @@ import re
 from collections.abc import Callable, Collection, Iterable
 from dataclasses import dataclass
 from logging import Logger
-from pathlib import Path
 
 import cmk.fetchers._snmpcache as snmp_cache
 from cmk.ccc import tty
@@ -30,7 +29,6 @@ type SNMPScanSection = tuple[SNMPSectionName, SNMPDetectBaseType]
 class SNMPScanConfig:
     on_error: OnError
     missing_sys_description: bool
-    oid_cache_dir: Path
 
 
 # gather auto_discovered check_plugin_names for this host
@@ -66,9 +64,7 @@ def _snmp_scan(
     scan_config: SNMPScanConfig,
     backend: SNMPBackend,
 ) -> frozenset[SNMPSectionName]:
-    snmp_cache.initialize_single_oid_cache(
-        backend.config.hostname, backend.config.ipaddress, cache_dir=scan_config.oid_cache_dir
-    )
+    snmp_cache.initialize_single_oid_cache(backend.config.hostname, backend.config.ipaddress)
     backend.logger.debug("  SNMP scan:")
 
     if scan_config.missing_sys_description:
@@ -82,9 +78,6 @@ def _snmp_scan(
         backend=backend,
     )
     _output_snmp_check_plugins("SNMP scan found", found_sections, backend.logger)
-    snmp_cache.write_single_oid_cache(
-        backend.config.hostname, backend.config.ipaddress, cache_dir=scan_config.oid_cache_dir
-    )
     return found_sections
 
 

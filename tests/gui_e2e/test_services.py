@@ -40,7 +40,6 @@ def test_reschedule_active_checks(dashboard_page: MainDashboard, created_host: H
     checks. Check that the 'age' of the 'PING' service is updated.
     """
     host_name = created_host.name
-    dashboard_page.main_menu.monitor_menu("Service search").click()
     service_search_page = ServiceSearchPage(dashboard_page.page)
 
     logger.info("Apply filters and wait for the table to load")

@@ -222,7 +222,6 @@ def test_registered_configvars() -> None:
         "load_frontend_vue",
         "site_trace_send",
         "site_trace_receive",
-        "site_opentelemetry_collector",
     ]
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CRE:
@@ -337,7 +336,6 @@ def test_registered_configvar_groups() -> None:
             "Reporting",
             "Monitoring core",
             "Ntopng (chargeable add-on)",
-            "Application Monitoring",
         ]
 
     registered = sorted(config_variable_group_registry.keys())

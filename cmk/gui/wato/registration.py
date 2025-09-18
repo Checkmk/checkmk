@@ -47,7 +47,6 @@ from . import (
     _snapins,
     _tracing,
     filters,
-    otel,
     piggyback_hub,
 )
 from . import pages as wato_pages
@@ -144,4 +143,3 @@ def register(
     _notification_parameter_registration.register(notification_parameter_registry)
     snapin_registry.register(VirtualHostTree)
     piggyback_hub.register(config_variable_registry)
-    otel.register(config_variable_registry)

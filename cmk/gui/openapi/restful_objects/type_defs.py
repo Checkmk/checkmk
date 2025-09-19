@@ -56,6 +56,8 @@ DomainType = Literal[
     "notification_parameter",
     "otel_collector",
     "otel_collector_config",
+    "otel_collector_config_receivers",
+    "otel_collector_config_prom_scrape",
     "password",
     "parent_scan",
     "relay",
@@ -172,6 +174,7 @@ CmkEndpointName = Literal[
     "cmk/quick_setup",
     "cmk/save_quick_setup",
     "cmk/edit_quick_setup",
+    "cmk/delete_prom_scrape",
 ]
 
 RestfulEndpointName = Literal[

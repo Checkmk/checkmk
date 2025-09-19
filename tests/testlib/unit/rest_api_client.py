@@ -3242,11 +3242,32 @@ class BrokerConnectionClient(RestApiClient):
 
 class OtelConfigClient(RestApiClient):
     domain: DomainType = "otel_collector_config"
+    receivers_domain: DomainType = "otel_collector_config_receivers"
+    prom_scrapers_domain: DomainType = "otel_collector_config_prom_scrape"
     default_version = APIVersion.UNSTABLE
 
     def get_all(self, expect_ok: bool = True) -> Response:
         return self.request(
-            "get", url=f"/domain-types/{self.domain}/collections/all", expect_ok=expect_ok
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
+    def get_receivers(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.receivers_domain}/collections/all",
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
+    def get_prom_scrapers(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.prom_scrapers_domain}/collections/all",
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
         )
 
     def create(self, payload: Mapping[str, Any], expect_ok: bool = True) -> Response:
@@ -3255,6 +3276,25 @@ class OtelConfigClient(RestApiClient):
             url=f"/domain-types/{self.domain}/collections/all",
             body=dict(payload),
             expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
+    def create_receivers(self, payload: Mapping[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.receivers_domain}/collections/all",
+            body=dict(payload),
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
+    def create_prom_scrape(self, payload: Mapping[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.prom_scrapers_domain}/collections/all",
+            body=dict(payload),
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
         )
 
     def edit(self, config_id: str, payload: Mapping[str, Any], expect_ok: bool = True) -> Response:
@@ -3263,6 +3303,29 @@ class OtelConfigClient(RestApiClient):
             url=f"/objects/{self.domain}/{config_id}",
             body=dict(payload),
             expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
+    def edit_receivers(
+        self, config_id: str, payload: Mapping[str, Any], expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "put",
+            url=f"/objects/{self.receivers_domain}/{config_id}",
+            body=dict(payload),
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
+    def edit_prom_scrape(
+        self, config_id: str, payload: Mapping[str, Any], expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "put",
+            url=f"/objects/{self.prom_scrapers_domain}/{config_id}",
+            body=dict(payload),
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
         )
 
     def delete(self, config_id: str, expect_ok: bool = True) -> Response:
@@ -3270,6 +3333,23 @@ class OtelConfigClient(RestApiClient):
             "delete",
             url=f"/objects/{self.domain}/{config_id}",
             expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
+    def delete_receivers(self, config_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.receivers_domain}/{config_id}",
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
+    def delete_prom_scrape(self, config_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.prom_scrapers_domain}/{config_id}",
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
         )
 
 

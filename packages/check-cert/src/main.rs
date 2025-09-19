@@ -57,7 +57,7 @@ where
 #[derive(Parser, Debug)]
 #[command(about = "check_cert")]
 struct Args {
-    /// URL to check
+    /// DNS resolvable hostname or IP address to be checked
     #[arg(short = 'H', long)]
     hostname: String,
 

@@ -25,6 +25,9 @@ MAP_TYPES_MEMORY: Final = {
     "16": "DIMM FBD2",
     "17": "FB-DIMM DDR2",
     "18": "FB-DIMM DDR3",
+    "19": "DIMM DDR4",
+    "20": "HPE Specific",
+    "21": "DIMM DDR5",
 }
 
 PRODUCT_NAME_OID = ".1.3.6.1.4.1.232.2.2.4.2.0"

@@ -348,11 +348,10 @@ blinker==1.9.0 \
     # via
     #   -c requirements.txt
     #   flask
-boto3==1.37.24 \
-    --hash=sha256:1d3c6fc63a9efba0af8b531ec6b7f7c6b0ef197bf3dcd875f03c9097ac68b58f \
-    --hash=sha256:2f2b8f82a5d7f89283973bf2cab771b90c09348799e78b2a25c60cd22c443514
+boto3==1.40.34 \
+    --hash=sha256:6770478420b7383657c5f9c0805c6912eefb0dac9f1c54a32198b2a175feaa5c \
+    --hash=sha256:e0e0cc46ba7596a75509caa21c1200a488cf0676a51c1bd9c01428886b43b7b8
     # via
-    #   -c constraints.txt
     #   -c requirements.txt
     #   -r cmk/requirements.in
 boto3-stubs[logs]==1.40.34 \
@@ -361,9 +360,9 @@ boto3-stubs[logs]==1.40.34 \
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
-botocore==1.37.38 \
-    --hash=sha256:23b4097780e156a4dcaadfc1ed156ce25cb95b6087d010c4bb7f7f5d9bc9d219 \
-    --hash=sha256:c3ea386177171f2259b284db6afc971c959ec103fa2115911c4368bea7cbbc5d
+botocore==1.40.34 \
+    --hash=sha256:681b3751c430aa1d70c7117efec4faeeb745acd8646d1657456e282a3a400d3b \
+    --hash=sha256:b46d27550ed7e2ac7d5e2ce0ab7a95b7296076e64bc8a3c496e41ea1fc9abd4b
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -4517,9 +4516,9 @@ ruff==0.12.8 \
     #   -c bazel-requirements-constraints.txt
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
-s3transfer==0.11.5 \
-    --hash=sha256:757af0f2ac150d3c75bc4177a32355c3862a98d20447b69a0161812992fe0bd4 \
-    --hash=sha256:8c8aad92784779ab8688a61aefff3e28e9ebdce43142808eaa3f0b0f402f68b7
+s3transfer==0.14.0 \
+    --hash=sha256:ea3b790c7077558ed1f02a3072fb3cb992bbbd253392f4b6e9e8976941c7d456 \
+    --hash=sha256:eff12264e7c8b4985074ccce27a3b38a485bb7f7422cc8046fee9be4983e4125
     # via
     #   -c requirements.txt
     #   boto3

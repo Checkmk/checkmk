@@ -8,15 +8,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { computed, watch } from 'vue'
 
-import { untranslated } from '@/lib/i18n'
+import usei18n from '@/lib/i18n'
 
 import FormAutocompleter from '@/form/private/FormAutocompleter.vue'
 
-const props = defineProps<{
-  placeholder_host_name: string
-  placeholder_service_name: string
-  placeholder_metric_name: string
-}>()
+const { _t } = usei18n()
 
 export interface Metric {
   hostName: string | null
@@ -91,7 +87,7 @@ watch(
       v-model="hostName"
       :autocompleter="hostNameAutocompleter"
       :size="0"
-      :placeholder="untranslated(props.placeholder_host_name)"
+      :placeholder="_t('Host name')"
     />
   </td>
   <td>
@@ -99,7 +95,7 @@ watch(
       v-model="serviceName"
       :autocompleter="serviceNameAutocompleter"
       :size="0"
-      :placeholder="untranslated(props.placeholder_service_name)"
+      :placeholder="_t('Service name')"
     />
   </td>
   <td>
@@ -107,7 +103,7 @@ watch(
       v-model="metricName"
       :autocompleter="metricNameAutocompleter"
       :size="0"
-      :placeholder="untranslated(props.placeholder_metric_name)"
+      :placeholder="_t('Metric name')"
     />
   </td>
 </template>

@@ -59,13 +59,13 @@ def test_basic_event_observing(tmp_path: Path) -> None:
         Event(
             watchee=Watchee(wd=1, path=tmp_path),
             type=Masks.MOVED_FROM,
-            cookie=ANY,  # type: ignore[arg-type]
+            cookie=ANY,
             name="file",
         ),
         Event(
             watchee=Watchee(wd=1, path=tmp_path),
             type=Masks.MOVED_TO,
-            cookie=ANY,  # type: ignore[arg-type]
+            cookie=ANY,
             name="file2",
         ),
         Event(

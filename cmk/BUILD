@@ -166,6 +166,7 @@ CMK_PACKAGES = [
     "//packages/cmk-ccc:tty",
     "//packages/cmk-ccc:user",
     "//packages/cmk-ccc:version",
+    "//packages/cmk-check-engine:snmplib",
     "//packages/cmk-crypto",
     "//packages/cmk-events",
     "//packages/cmk-livestatus-client",

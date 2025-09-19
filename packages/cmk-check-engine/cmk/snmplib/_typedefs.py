@@ -11,7 +11,7 @@ import enum
 import logging
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Literal, NamedTuple, NewType, Protocol, Self
+from typing import Any, Literal, NamedTuple, NewType, NotRequired, Protocol, Self, TypedDict
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 
@@ -74,7 +74,11 @@ SNMPv3AuthNoPriv = tuple[str, str, str, str]
 SNMPv3AuthPriv = tuple[str, str, str, str, str, str]
 type SNMPCredentials = SNMPCommunity | SNMPv3NoAuthNoPriv | SNMPv3AuthNoPriv | SNMPv3AuthPriv
 # TODO: Cleanup to named tuple
-SNMPTiming = dict
+
+
+class SNMPTiming(TypedDict):
+    timeout: NotRequired[float]
+    retries: NotRequired[int]
 
 
 class SNMPBackendEnum(enum.Enum):
@@ -316,7 +320,7 @@ class BackendSNMPTree(NamedTuple):
     def to_json(self) -> Mapping[str, Any]:
         return {
             "base": self.base,
-            "oids": [oid._serialize() for oid in self.oids],
+            "oids": [oid._serialize() for oid in self.oids],  # noqa: SLF001
         }
 
     @classmethod

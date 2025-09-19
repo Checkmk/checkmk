@@ -4,6 +4,7 @@ filegroup(
     srcs = [
         "//packages/cmk-agent-receiver:requirements.in",
         "//packages/cmk-ccc:requirements.in",
+        "//packages/cmk-check-engine:requirements.in",
         "//packages/cmk-crypto:requirements.in",
         "//packages/cmk-events:requirements.in",
         "//packages/cmk-livestatus-client:requirements.in",
@@ -21,6 +22,7 @@ filegroup(
     srcs = [
         "//packages/cmk-agent-receiver:dev-requirements.in",
         "//packages/cmk-ccc:dev-requirements.in",
+        "//packages/cmk-check-engine:dev-requirements.in",
         "//packages/cmk-crypto:dev-requirements.in",
         "//packages/cmk-events:dev-requirements.in",
         "//packages/cmk-livestatus-client:dev-requirements.in",

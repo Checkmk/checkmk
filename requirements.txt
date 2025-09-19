@@ -3454,6 +3454,7 @@ pytest==8.3.5 \
     #   -r non-free/packages/cmk-update-agent/dev-requirements.in
     #   -r packages/cmk-agent-receiver/dev-requirements.in
     #   -r packages/cmk-ccc/dev-requirements.in
+    #   -r packages/cmk-check-engine/dev-requirements.in
     #   -r packages/cmk-crypto/dev-requirements.in
     #   -r packages/cmk-events/dev-requirements.in
     #   -r packages/cmk-livestatus-client/dev-requirements.in

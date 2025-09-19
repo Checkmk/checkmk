@@ -91,6 +91,7 @@ file_from_flag(
                "//omd/packages/xmlsec1",
                "//packages/cmk-agent-receiver:pkg_tar",
                "//packages/cmk-ccc:pkg_tar",
+               "//packages/cmk-check-engine:pkg_tar",
                "//packages/cmk-crypto:pkg_tar",
                "//packages/cmk-events:pkg_tar",
                "//packages/cmk-frontend",

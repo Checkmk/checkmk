@@ -69,7 +69,7 @@ def _make_sources(
                 backend_override=None,
                 stored_walk_path=tmp_path,
                 walk_cache_path=tmp_path,
-                section_cache_path=lambda host_name: Path("/dev/null"),
+                section_cache_path=Path("/dev/null"),
                 caching_config=lambda host_name: {},
             ),
         ),

@@ -544,7 +544,7 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
                         stored_walk_path=cmk.utils.paths.snmpwalks_dir,
                         walk_cache_path=cmk.utils.paths.var_dir / "snmp_cache",
                         caching_config=lambda host_name: {},
-                        section_cache_path=lambda host_name: Path("/dev/null"),
+                        section_cache_path=Path("/dev/null"),
                     ),
                 ),
                 agent_name=run_settings.agent_name,

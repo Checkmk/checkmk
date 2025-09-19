@@ -58,10 +58,10 @@ class SNMPFetcherConfig:
     missing_sys_description: Callable[[HostName], bool]
     selected_sections: frozenset[SNMPSectionName] | NoSelectedSNMPSections
     backend_override: SNMPBackendEnum | None
+    caching_config: Callable[[HostName], Mapping[SNMPSectionName, int]]
     stored_walk_path: Path
     walk_cache_path: Path
-    caching_config: Callable[[HostName], Mapping[SNMPSectionName, int]]
-    section_cache_path: Callable[[HostName], Path]
+    section_cache_path: Path
 
 
 class WalkCache(MutableMapping[tuple[str, str, bool], SNMPRowInfo]):
@@ -378,7 +378,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
 
         now = time.time()
         sections_cache = ConfiguredFetchIntervallCache(
-            self.section_cache_path, self.caching_config, now=now
+            self.section_cache_path / str(self._backend.hostname), self.caching_config, now=now
         )
         cached_data = sections_cache.load() if mode is Mode.CHECKING else {}
 

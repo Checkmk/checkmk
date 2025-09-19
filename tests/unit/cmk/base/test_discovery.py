@@ -1531,7 +1531,7 @@ def test_commandline_discovery(
                 backend_override=None,
                 stored_walk_path=Path("/dev/null"),
                 walk_cache_path=Path("/dev/null"),
-                section_cache_path=lambda host_name: Path("/dev/null"),
+                section_cache_path=Path("/dev/null"),
                 caching_config=lambda host_name: {},
             ),
         ),

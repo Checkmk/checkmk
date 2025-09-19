@@ -3803,7 +3803,7 @@ class FetcherFactory:
             do_status_data_inventory=self._config_cache.hwsw_inventory_parameters(
                 host_name
             ).status_data_inventory,
-            section_cache_path=self._snmp_fetcher_config.section_cache_path(host_name),
+            section_cache_path=self._snmp_fetcher_config.section_cache_path,
             snmp_config=snmp_config,
             caching_config=self._snmp_fetcher_config.caching_config(host_name),
             stored_walk_path=self._snmp_fetcher_config.stored_walk_path,

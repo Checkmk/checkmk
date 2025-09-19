@@ -901,10 +901,6 @@ def _confirm_activated_changes(
         changes[: len(site_changes_activate_until)] = []
 
 
-def _is_activate_needed(all_site_changes: Sequence[ChangeSpec]) -> bool:
-    return any(c["need_restart"] for c in all_site_changes)
-
-
 def _get_domains_needing_activation(
     site_changes_activate_until: Sequence[ChangeSpec],
 ) -> DomainRequests:

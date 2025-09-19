@@ -65,7 +65,7 @@ def test_discover_sync(
     "params, expected_status, expected_message",
     [
         pytest.param(
-            azure_ad.check_info["azure_ad.sync"].check_default_parameters,
+            {"age": (3600, 7200)},
             2,
             "Time since last synchronization: 2 hours 45 minutes (warn/crit at 1 hour 0 minutes/2 hours 0 minutes)",
             id="default params",

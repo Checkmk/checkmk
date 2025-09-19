@@ -147,6 +147,9 @@ VARIABLES:
     - NAME: CHANGED_CMK_CHECK_ENGINE_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-check-engine/' || true"
 
+    - NAME: CHANGED_CMK_CORE_HELPERS_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^non-free/packages/cmk-core-helpers/' || true"
+
     - NAME: CHANGED_CMK_CRYPTO_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-crypto/' || true"
 
@@ -602,12 +605,20 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/cmk-ccc.txt"
 
     - NAME: "Package cmk-check-engine"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_CCC_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_CCC_FILES,CHANGED_CMK_CHECK_ENGINE_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
       DIR: "packages/cmk-check-engine"
       COMMAND: "./run --all &> ${RESULTS}/cmk-check-engine.txt"
       BAZEL_LOCKS_AMOUNT: 1
       TEXT_ON_SKIP: "No cmk-check-engine files changed"
       RESULT_CHECK_FILE_PATTERN: "results/cmk-check-engine.txt"
+
+    - NAME: "Package cmk-core-helpers"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_CCC_FILES,CHANGED_CMK_CORE_HELPERS_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS
+      DIR: "non-free/packages/cmk-core-helpers"
+      COMMAND: "./run --all &> ${RESULTS}/cmk-core-helpers.txt"
+      BAZEL_LOCKS_AMOUNT: 1
+      TEXT_ON_SKIP: "No cmk-core-helpers files changed"
+      RESULT_CHECK_FILE_PATTERN: "results/cmk-core-helpers.txt"
 
     - NAME: "Package cmk-crypto"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYPROJECT_TOML_FILE,CHANGED_CMK_CRYPTO_FILES,CHANGED_SEMGREP_RULE_FILES,CHANGED_PYTHON_REQUIREMENTS

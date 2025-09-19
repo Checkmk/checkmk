@@ -51,7 +51,7 @@ class _State:
     plugins: AgentBasedPlugins | None
     loading_result: config.LoadingResult | None
 
-    def load_new(self) -> None:
+    def load_new(self, *, continue_on_error: bool) -> None:
         if self.plugins is None:
             self.plugins = config.load_all_pluginX(paths.checks_dir)
 
@@ -62,7 +62,8 @@ class _State:
             self.last_reload_at = time_right_before_reload
         except (Exception, BaseException) as e:
             LOGGER.error("[reloader] Error reloading configuration: %s", e)
-            raise
+            if not continue_on_error:
+                raise
 
 
 @dataclass(frozen=True)
@@ -118,7 +119,8 @@ def make_application(
 async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     dependencies: _ApplicationDependencies = app.state.dependencies
 
-    dependencies.state.load_new()
+    # Continue on error. Either the reloader can fix it, or we will raise in the automation endpoint.
+    dependencies.state.load_new(continue_on_error=True)
 
     tty.reinit()
 
@@ -167,7 +169,9 @@ async def _reloader_task(
                         break
 
                     LOGGER.info("[reloader] Triggering reload")
-                    state.load_new()
+                    # Do not let the reloader fail (and stop).
+                    # We will try again on the next change, and report failure in the automation endpoint.
+                    state.load_new(continue_on_error=True)
                     break
 
             else:
@@ -216,8 +220,15 @@ def _execute_automation_endpoint(
         payload.args,
     )
     if cache.reload_required(state.last_reload_at):
-        state.load_new()
-        LOGGER.warning("[automation] configurations were reloaded due to a stale state.")
+        try:
+            state.load_new(continue_on_error=False)
+            LOGGER.warning("[automation] configurations were reloaded due to a stale state.")
+        except (Exception, SystemExit) as e:
+            return AutomationResponse(
+                serialized_result_or_error_code=AutomationError.UNKNOWN_ERROR,
+                stdout="",
+                stderr=f"Error reloading configuration: {e}",
+            )
 
     buffer_stdout = io.StringIO()
     buffer_stderr = io.StringIO()

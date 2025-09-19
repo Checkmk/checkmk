@@ -77,6 +77,8 @@ API_DOMAIN = Literal[
     "background_job",
     "acknowledge",
     "otel_collector_config",
+    "otel_collector_config_receivers",
+    "otel_collector_config_prom_scrape",
 ]
 
 
@@ -3201,16 +3203,46 @@ class BrokerConnectionClient(RestApiClient):
 
 class OtelConfigClient(RestApiClient):
     domain: API_DOMAIN = "otel_collector_config"
+    receivers_domain: API_DOMAIN = "otel_collector_config_receivers"
+    prom_scrapers_domain: API_DOMAIN = "otel_collector_config_prom_scrape"
 
     def get_all(self, expect_ok: bool = True) -> Response:
         return self.request(
             "get", url=f"/domain-types/{self.domain}/collections/all", expect_ok=expect_ok
         )
 
+    def get_receivers(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get", url=f"/domain-types/{self.receivers_domain}/collections/all", expect_ok=expect_ok
+        )
+
+    def get_prom_scrapers(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.prom_scrapers_domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
     def create(self, payload: Mapping[str, Any], expect_ok: bool = True) -> Response:
         return self.request(
             "post",
             url=f"/domain-types/{self.domain}/collections/all",
+            body=dict(payload),
+            expect_ok=expect_ok,
+        )
+
+    def create_receivers(self, payload: Mapping[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.receivers_domain}/collections/all",
+            body=dict(payload),
+            expect_ok=expect_ok,
+        )
+
+    def create_prom_scrape(self, payload: Mapping[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.prom_scrapers_domain}/collections/all",
             body=dict(payload),
             expect_ok=expect_ok,
         )
@@ -3223,10 +3255,44 @@ class OtelConfigClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def edit_receivers(
+        self, config_id: str, payload: Mapping[str, Any], expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "put",
+            url=f"/objects/{self.receivers_domain}/{config_id}",
+            body=dict(payload),
+            expect_ok=expect_ok,
+        )
+
+    def edit_prom_scrape(
+        self, config_id: str, payload: Mapping[str, Any], expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "put",
+            url=f"/objects/{self.prom_scrapers_domain}/{config_id}",
+            body=dict(payload),
+            expect_ok=expect_ok,
+        )
+
     def delete(self, config_id: str, expect_ok: bool = True) -> Response:
         return self.request(
             "delete",
             url=f"/objects/{self.domain}/{config_id}",
+            expect_ok=expect_ok,
+        )
+
+    def delete_receivers(self, config_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.receivers_domain}/{config_id}",
+            expect_ok=expect_ok,
+        )
+
+    def delete_prom_scrape(self, config_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.prom_scrapers_domain}/{config_id}",
             expect_ok=expect_ok,
         )
 

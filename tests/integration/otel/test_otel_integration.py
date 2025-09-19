@@ -5,6 +5,7 @@
 import logging
 import os
 from collections.abc import Iterator
+from typing import Literal
 
 import pytest
 import yaml
@@ -95,10 +96,14 @@ def delete_created_objects(
     host_name: str | None = None,
     rule_id: str | None = None,
     cleanup_ec: bool = False,
+    collector_type: Literal["receivers", "prom_scrape"] = "receivers",
 ) -> None:
     if os.getenv("CLEANUP", "1") == "1":
         logger.info("Cleaning up created resources")
-        site.openapi.otel_collector.delete(collector_id)
+        if collector_type == "prom_scrape":
+            site.openapi.otel_collector.delete_prom_scrape(collector_id)
+        else:
+            site.openapi.otel_collector.delete_receivers(collector_id)
         if host_name:
             site.openapi.hosts.delete(host_name)
         if rule_id:
@@ -161,12 +166,12 @@ def test_otel_collector_with_receiver_config(
     try:
         if receiver_type == "grpc":
             logger.info("Creating OpenTelemetry collector with GRPC receiver")
-            otel_enabled_site.openapi.otel_collector.create(
+            otel_enabled_site.openapi.otel_collector.create_receivers(
                 collector_id, "Test collector", False, receiver_protocol_grpc=receiver_config
             )
         elif receiver_type == "http":
             logger.info("Creating OpenTelemetry collector with HTTP receiver")
-            otel_enabled_site.openapi.otel_collector.create(
+            otel_enabled_site.openapi.otel_collector.create_receivers(
                 collector_id, "Test collector", False, receiver_protocol_http=receiver_config
             )
         else:
@@ -206,7 +211,9 @@ def test_otel_collector_with_receiver_config(
             assert otel_service_name in services, "OTel service was not found in host services"
             assert services[otel_service_name].state == 0, "OTel service is not in OK or PEND state"
     finally:
-        delete_created_objects(otel_enabled_site, collector_id, host_name, rule_id)
+        delete_created_objects(
+            otel_enabled_site, collector_id, host_name, rule_id, collector_type="receivers"
+        )
 
 
 def test_otel_collector_with_prometheus_scrape_config(otel_enabled_site: Site) -> None:
@@ -234,7 +241,7 @@ def test_otel_collector_with_prometheus_scrape_config(otel_enabled_site: Site) -
 
     try:
         logger.info("Creating OpenTelemetry collector with Prometheus scrape configuration")
-        otel_enabled_site.openapi.otel_collector.create(
+        otel_enabled_site.openapi.otel_collector.create_prom_scrape(
             collector_id,
             "Test collector",
             False,
@@ -278,7 +285,9 @@ def test_otel_collector_with_prometheus_scrape_config(otel_enabled_site: Site) -
                 if service_name.startswith("OTel metric "):
                     assert service.state == 0, f"Service {service_name} is not in OK or PEND state"
     finally:
-        delete_created_objects(otel_enabled_site, collector_id, host_name, rule_id)
+        delete_created_objects(
+            otel_enabled_site, collector_id, host_name, rule_id, collector_type="prom_scrape"
+        )
 
 
 def test_otel_collector_with_prometheus_scrape_config_tls(otel_enabled_site: Site) -> None:
@@ -306,7 +315,7 @@ def test_otel_collector_with_prometheus_scrape_config_tls(otel_enabled_site: Sit
 
     try:
         logger.info("Creating OpenTelemetry collector with Prometheus scrape configuration")
-        otel_enabled_site.openapi.otel_collector.create(
+        otel_enabled_site.openapi.otel_collector.create_prom_scrape(
             collector_id,
             "Test collector",
             False,
@@ -359,7 +368,9 @@ def test_otel_collector_with_prometheus_scrape_config_tls(otel_enabled_site: Sit
                 if service_name.startswith("OTel metric "):
                     assert service.state == 0, f"Service {service_name} is not in OK or PEND state"
     finally:
-        delete_created_objects(otel_enabled_site, collector_id, host_name, rule_id)
+        delete_created_objects(
+            otel_enabled_site, collector_id, host_name, rule_id, collector_type="prom_scrape"
+        )
 
 
 def wait_for_event_console_events(
@@ -395,7 +406,7 @@ def test_otel_logs_received_by_event_console(otel_enabled_site: Site) -> None:
         logger.info(
             "Creating OpenTelemetry collector with 'Send log messages to EC' option enabled"
         )
-        otel_enabled_site.openapi.otel_collector.create(
+        otel_enabled_site.openapi.otel_collector.create_receivers(
             collector_id, "Test collector", False, receiver_protocol_http=receiver_config
         )
         otel_enabled_site.openapi.changes.activate_and_wait_for_completion()
@@ -427,4 +438,6 @@ def test_otel_logs_received_by_event_console(otel_enabled_site: Site) -> None:
                 )
 
     finally:
-        delete_created_objects(otel_enabled_site, collector_id, cleanup_ec=True)
+        delete_created_objects(
+            otel_enabled_site, collector_id, cleanup_ec=True, collector_type="receivers"
+        )

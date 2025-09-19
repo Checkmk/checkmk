@@ -47,6 +47,8 @@ DomainType = Literal[
     "notification_rule",
     "notification_parameter",
     "otel_collector_config",
+    "otel_collector_config_receivers",
+    "otel_collector_config_prom_scrape",
     "password",
     "parent_scan",
     "rule",
@@ -189,6 +191,14 @@ RestfulEndpointName = Literal[
     ".../user",
     ".../value",  # takes params
     ".../version",
+    ".../prom_scrapes",
+    ".../receivers",
+    ".../delete_prom_scrape",  # takes params
+    ".../delete_receiver",  # takes params
+    ".../add-to-receiver",  # takes params
+    ".../add-to-prom-scrape",  # takes params
+    ".../update-receiver",  # takes params
+    ".../update-prom-scrape",  # takes params
 ]  # fmt: off
 
 LinkRelation = CmkEndpointName | RestfulEndpointName

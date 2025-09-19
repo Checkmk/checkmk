@@ -698,8 +698,13 @@ impl SqlInstance {
         query: &str,
         sep: char,
     ) -> String {
-        let tasks = databases.iter().map(move |database| {
-            self.generate_table_spaces_section_database(endpoint, database, query, sep)
+        let tasks = databases.iter().filter_map(move |database| {
+            if endpoint.conn().exclude_databases().contains(database) {
+                log::debug!("Database {} excluded from table spaces", database);
+                None
+            } else {
+                Some(self.generate_table_spaces_section_database(endpoint, database, query, sep))
+            }
         });
 
         let results = stream::iter(tasks)
@@ -800,19 +805,30 @@ impl SqlInstance {
                 .into_iter()
                 .map(|chunk| {
                     s.spawn(|| {
+                        let dbs = chunk
+                            .iter()
+                            .filter_map(|database| {
+                                if endpoint.conn().exclude_databases().contains(database) {
+                                    log::debug!("Database {} excluded", database);
+                                    None
+                                } else {
+                                    Some(database.clone())
+                                }
+                            })
+                            .collect::<Vec<String>>();
                         let rt = tokio::runtime::Runtime::new().unwrap();
                         match section.name() {
                             names::TRANSACTION_LOG => rt.block_on(
-                                self.generate_transaction_logs_section(endpoint, chunk, query, sep),
+                                self.generate_transaction_logs_section(endpoint, &dbs, query, sep),
                             ),
                             names::TABLE_SPACES => rt.block_on(
-                                self.generate_table_spaces_section(endpoint, chunk, query, sep),
+                                self.generate_table_spaces_section(endpoint, &dbs, query, sep),
                             ),
                             names::DATAFILES => rt.block_on(
-                                self.generate_datafiles_section(endpoint, chunk, query, sep),
+                                self.generate_datafiles_section(endpoint, &dbs, query, sep),
                             ),
                             names::CLUSTERS => rt.block_on(
-                                self.generate_clusters_section(endpoint, chunk, query, sep),
+                                self.generate_clusters_section(endpoint, &dbs, query, sep),
                             ),
                             _ => format!("{} not implemented\n", section.name()).to_string(),
                         }

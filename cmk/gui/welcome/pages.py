@@ -150,7 +150,8 @@ def get_welcome_data() -> WelcomePage:
                 addvars=[("mode", "newhost")],
                 filename="wato.py",
             ),
-            network_devices=makeuri(
+            network_devices=make_url_from_registry("relays")
+            or makeuri(
                 request,
                 addvars=[("mode", "newhost"), ("prefill", "snmp")],
                 filename="wato.py",

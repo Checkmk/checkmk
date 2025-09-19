@@ -107,6 +107,10 @@ export default defineConfig(({ command }) => {
         proxy: {
           // dev server proxies whole checkmk to inject js resources and support auto hot reloading
           '^(?!/cmk-frontend-vue-ahr)': 'http://localhost/'
+        },
+        watch: {
+          usePolling: true,
+          interval: 250
         }
       },
       base: '/cmk-frontend-vue-ahr'

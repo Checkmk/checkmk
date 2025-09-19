@@ -199,16 +199,6 @@ http_file(
 )
 
 http_file(
-    name = "shfmt",
-    executable = True,
-    sha256 = "1f57a384d59542f8fac5f503da1f3ea44242f46dff969569e80b524d64b71dbc",
-    urls = [
-        "https://github.com/mvdan/sh/releases/download/v3.10.0/shfmt_v3.10.0_linux_amd64",
-        UPSTREAM_MIRROR_URL + "/shfmt_v3.10.0_linux_amd64",
-    ],
-)
-
-http_file(
     name = "taplo.gz",
     integrity = "sha256-j+GWuJTM+QcvmNThAToYAwbhfSRIMLA5hu5ejqvrYVY=",
     urls = [

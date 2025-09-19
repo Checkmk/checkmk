@@ -59,19 +59,6 @@ sh_binary(
     data = [":shellcheck_binary"],
 )
 
-copy_file(
-    name = "shfmt_binary",
-    src = "@shfmt//file",
-    out = "shfmt",
-)
-
-# Shell wrapper to execute shfmt in the callers working directory
-sh_binary(
-    name = "shfmt_bin",
-    srcs = ["run-shfmt"],
-    data = [":shfmt_binary"],
-)
-
 genrule(
     name = "taplo",
     srcs = ["@taplo.gz//file"],
@@ -110,4 +97,24 @@ alias(
 alias(
     name = "uv",
     actual = "@multitool//tools/uv",
+)
+
+expand_template(
+    name = "shfmt_tp",
+    out = "shfmt.sh",
+    data = ["@multitool//tools/shfmt"],
+    substitutions = {"{shfmt_bin}": "$(execpath @multitool//tools/shfmt)"},
+    template = [
+        "#!/bin/sh",
+        'cd "${BUILD_WORKSPACE_DIRECTORY:=.}" || exit 1',
+        'exec "$BUILD_WORKSPACE_DIRECTORY/{shfmt_bin}" "$@"',
+        "",
+    ],
+)
+
+sh_binary(
+    name = "shfmt",
+    srcs = [":shfmt_tp"],
+    data = ["@multitool//tools/shfmt"],
+    visibility = ["//visibility:public"],
 )

@@ -15,7 +15,7 @@ THREE_TO_TWO := $(UVENV) 3to2
 BANDIT := $(UVENV) bandit
 SEMGREP := $(realpath semgrep)/run-semgrep
 SHELLCHECK := bazel run --ui_event_filters=-info,-stderr //bazel/tools:shellcheck_bin --
-SHFMT := bazel run --ui_event_filters=-info,-stderr //bazel/tools:shfmt_bin --
+SHFMT := bazel run --ui_event_filters=-info,-stderr //bazel/tools:shfmt --
 TAPLO := bazel run --ui_event_filters=-info,-stderr //bazel/tools:taplo_bin --
 ADDITIONAL_MYPY_ARGS := $(JUNIT_XML)
 # Please note: We can currently not include defines.make as it would override

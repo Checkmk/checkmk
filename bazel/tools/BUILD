@@ -21,6 +21,7 @@ format_multirun(
     cc = "@clang-linux-x86_64//:bin/clang-format",
     python = "@aspect_rules_lint//format:ruff",
     rust = "@rules_rust//tools/upstream_wrapper:rustfmt",
+    shell = ":shfmt",
     toml = ":taplo_quiet",
     visibility = ["//visibility:public"],
 )
@@ -107,7 +108,7 @@ expand_template(
     template = [
         "#!/bin/sh",
         'cd "${BUILD_WORKSPACE_DIRECTORY:=.}" || exit 1',
-        'exec "$BUILD_WORKSPACE_DIRECTORY/{shfmt_bin}" "$@"',
+        'exec "$BUILD_WORKSPACE_DIRECTORY/{shfmt_bin}" --indent 4 -ci "$@"',
         "",
     ],
 )

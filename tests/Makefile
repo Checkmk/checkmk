@@ -150,7 +150,8 @@ bandit.ini:
 	( echo exclude: /tests >> bandit.ini )
 
 format-shell:
-	cd .. && $(SHFMT) -w -i 4 -ci $$($(FIND_SHELL_FILES))
+	# The configuration is in `bazel/tools/BUILD` to avoid inconsistencies.
+	cd .. && $(SHFMT) --write $$($(FIND_SHELL_FILES))
 
 agent-plugin-unit/py2/test_%.py: agent-plugin-unit/test_%.py
 	mkdir -p "$(dir $@)"
@@ -242,7 +243,8 @@ test-format-python-format: ../pyproject.toml
 	exit $${PIPESTATUS[1]}
 
 test-format-shell:
-	cd .. && $(SHFMT) -d -i 4 -ci $$($(FIND_SHELL_FILES))
+	# The configuration is in `bazel/tools/BUILD` to avoid inconsistencies.
+	cd .. && $(SHFMT) --diff --apply-ignore $$($(FIND_SHELL_FILES))
 
 format-toml:
 	$(TAPLO) format ../pyproject.toml

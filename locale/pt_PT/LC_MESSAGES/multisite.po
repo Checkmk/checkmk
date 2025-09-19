@@ -7276,9 +7276,6 @@ msgstr "Arcserve (alemão) backups (Windows)"
 msgid "Are you sure you want to delete this relay?"
 msgstr "Não é permitido eliminar esta %s."
 
-msgid "Area"
-msgstr "Área"
-
 #, fuzzy, python-format
 msgid "Argument files (%s)"
 msgstr "Agente para %s (%s)"
@@ -7802,15 +7799,8 @@ msgstr "Autorizações por grupo de segurança do BD"
 msgid "Authorized user"
 msgstr "Sites autorizados"
 
-#, fuzzy
-msgid "Auto"
-msgstr "Automático"
-
 msgid "Auto (DEFAULT)"
 msgstr "Auto (DEFAULT)"
-
-msgid "Auto - adjust to actual values"
-msgstr "Auto - ajustar aos valores reais"
 
 msgid "Auto Restart on Crash"
 msgstr "Reinício Automático no Crash"
@@ -9303,6 +9293,12 @@ msgstr "Trabalho de backup"
 
 msgid "Backup modes"
 msgstr "Modos de backup"
+
+msgid ""
+"Backup process has started. You can safely navigate away from this page as "
+"the process will continue in the background. Refresh this page to check the "
+"current status."
+msgstr ""
 
 msgid "Backup size"
 msgstr "Tamanho do backup"
@@ -13807,10 +13803,6 @@ msgid "Clone this element"
 msgstr "Clonar este elemento"
 
 #, fuzzy
-msgid "Clone this entry"
-msgstr "Clonar esta métrica"
-
-#, fuzzy
 msgid "Clone this managed robot"
 msgstr "Objetos Gerenciados"
 
@@ -15452,10 +15444,6 @@ msgstr "Função de consolidação para a coluna de dados [gráficos#rrds|RRD]"
 msgid "Consolidation functions"
 msgstr "Funções de consolidação"
 
-#, fuzzy
-msgid "Constant"
-msgstr "Instância"
-
 msgid "Consumed capacity"
 msgstr "Capacidade consumida"
 
@@ -17039,10 +17027,6 @@ msgstr "Actualmente, existem %s ainda não activados."
 msgid "Currently, there is one pending change not yet activated."
 msgstr "Actualmente, existe uma alteração pendente que ainda não foi activada."
 
-#, fuzzy
-msgid "Custom"
-msgstr "Cliente"
-
 msgid "Custom Action"
 msgstr "Ação Personalizada"
 
@@ -18196,10 +18180,6 @@ msgid ""
 "aware that the agent installation might remain in an unusable state when the "
 "agent user installation script fails."
 msgstr ""
-
-#, fuzzy
-msgid "Decimal"
-msgstr "Decibel"
 
 #, python-format
 msgid "Decimal with symbol %s"
@@ -19941,9 +19921,6 @@ msgstr "Digest (MD5)"
 msgid "Digests"
 msgstr "Digestores"
 
-msgid "Digits"
-msgstr ""
-
 msgid "Direct I/O"
 msgstr "E/S direta"
 
@@ -20787,9 +20764,6 @@ msgstr "Apresenta o estado de um anfitrião específico."
 
 msgid "Displays the state of a specific service."
 msgstr "Apresenta o estado de um serviço específico."
-
-msgid "Dissolve operation"
-msgstr "Operação de dissolução"
 
 msgid "Dissolve the package, release its files into unpackaged state"
 msgstr ""
@@ -23449,9 +23423,6 @@ msgstr "Utilização da CPU do motor"
 msgid "Engine IDs (only needed for SNMPv3)"
 msgstr "IDs do motor (apenas necessário para SNMPv3)"
 
-msgid "Engineering scientific"
-msgstr ""
-
 msgid "English"
 msgstr "Inglês"
 
@@ -24707,9 +24678,6 @@ msgstr "Conjunto explícito"
 
 msgid "Explicit tablespaces"
 msgstr "Tabelas explícitas"
-
-msgid "Explicit vertical range"
-msgstr "Faixa vertical explícita"
 
 #, fuzzy
 msgid "Explicit, rule set, discovered"
@@ -26593,9 +26561,6 @@ msgstr "Formatar intervalos de tempo"
 msgid "Format time stamps as"
 msgstr "Formatar carimbos de tempo como"
 
-msgid "Formula"
-msgstr "Fórmula"
-
 msgid "FortiGate HighAvailability"
 msgstr "FortiGate HighAvailability"
 
@@ -27598,20 +27563,8 @@ msgstr "O gráfico é visível"
 msgid "Graph layout"
 msgstr "Layout gráfico"
 
-#, fuzzy
-msgid "Graph lines"
-msgstr "Opções Gráficas"
-
-#, fuzzy
-msgid "Graph metrics with all zero values"
-msgstr "Métricas com todos os valores zero"
-
 #, fuzzy, python-format
 msgid "Graph not found '%s'"
-msgstr "Opções Gráficas"
-
-#, fuzzy
-msgid "Graph options"
 msgstr "Opções Gráficas"
 
 msgid "Graph rendering options"
@@ -31806,9 +31759,6 @@ msgstr "ID: %s"
 
 msgid "IDLE"
 msgstr "IDLE"
-
-msgid "IEC"
-msgstr ""
 
 #, python-format
 msgid "IEC with symbol %s"
@@ -42015,10 +41965,6 @@ msgid "Metric levels"
 msgstr "Níveis métricos"
 
 #, fuzzy
-msgid "Metric name"
-msgstr "Etiqueta métrica"
-
-#, fuzzy
 msgid "Metric name (exact match)"
 msgstr "Nome do anfitrião (correspondência exacta)"
 
@@ -42267,10 +42213,6 @@ msgstr "Espelhar o eixo vertical"
 
 msgid "Mirror views"
 msgstr "Vistas de espelho"
-
-#, fuzzy
-msgid "Mirrored"
-msgstr "Área espelhada"
 
 #, fuzzy
 msgid "Mirroring"
@@ -45397,10 +45339,6 @@ msgstr ""
 msgid "Not yet monitored"
 msgstr "Ainda não monitorado"
 
-#, fuzzy
-msgid "Notation"
-msgstr "Notificação"
-
 #, fuzzy, python-format
 msgid "Notation: %s"
 msgstr "Anotação: %s"
@@ -47647,10 +47585,6 @@ msgstr "Operações"
 
 msgid "Operations States"
 msgstr "Estados de operação"
-
-#, fuzzy
-msgid "Operations on selected graph lines"
-msgstr "Operação em métricas selecionadas"
 
 msgid "Operations per second"
 msgstr "Operações por segundo"
@@ -52165,10 +52099,6 @@ msgstr "Precedência"
 msgid "Precedence of contact groups"
 msgstr "Precedência de grupos de contato"
 
-#, fuzzy
-msgid "Precision"
-msgstr "Permissão"
-
 msgid "Precision of float values"
 msgstr "Precisão dos valores de flutuação"
 
@@ -56085,10 +56015,6 @@ msgstr "%sRotagem mínima"
 msgid "Round trip time"
 msgstr "Tempo de viagem de ida e volta"
 
-#, fuzzy
-msgid "Rounding mode"
-msgstr "Cápsulas de corrida"
-
 msgid "Route53"
 msgstr "Rota53"
 
@@ -56715,10 +56641,6 @@ msgstr "SHA-2 (SHA-384)"
 msgid "SHA-2 (SHA-512)"
 msgstr "SHA-2 (SHA-512)"
 
-#, fuzzy
-msgid "SI"
-msgstr "SID"
-
 #, python-format
 msgid "SI with symbol %s"
 msgstr ""
@@ -57201,9 +57123,6 @@ msgid "Saved space"
 msgstr "Espaço guardado"
 
 msgid "Saving the result..."
-msgstr ""
-
-msgid "Scalar"
 msgstr ""
 
 msgid "Scale to width of page"
@@ -57790,10 +57709,6 @@ msgid ""
 msgstr "Serviços do Azure a monitorizar"
 
 #, fuzzy
-msgid "Select at least one graph line to edit"
-msgstr "Por favor, selecione pelo menos um elemento"
-
-#, fuzzy
 msgid "Select contact group"
 msgstr "Grupos de contato de regras"
 
@@ -57803,9 +57718,6 @@ msgstr "Selecione Datasource"
 
 msgid "Select device type"
 msgstr "Selecione o tipo de dispositivo"
-
-msgid "Select exactly one graph line to edit"
-msgstr ""
 
 msgid "Select file"
 msgstr "Selecione o arquivo"
@@ -62390,10 +62302,6 @@ msgstr "Latência Sproc"
 msgid "Sqlnet Send timeout"
 msgstr "Sqlnet Tempo limite de envio"
 
-#, fuzzy
-msgid "Stack"
-msgstr "Pilhas"
-
 msgid "Stacked"
 msgstr "Empilhado"
 
@@ -62446,10 +62354,6 @@ msgstr "Desvio padrão dos tempos de ida e volta em ms"
 
 msgid "Standard deviation of roundtrip times in ms"
 msgstr "Desvio padrão dos tempos de ida e volta em ms"
-
-#, fuzzy
-msgid "Standard scientific"
-msgstr "Tópicos padrão"
 
 msgid ""
 "Standard settings are used for all endpoints unless overwritten by the "
@@ -63764,10 +63668,6 @@ msgstr "Número da rua"
 msgid "Strength:"
 msgstr "Força:"
 
-#, fuzzy
-msgid "Strict"
-msgstr "Métrica"
-
 msgid "Strict - Visible if all members are visible"
 msgstr "Rigoroso - Visível se todos os membros estiverem visíveis"
 
@@ -64185,9 +64085,6 @@ msgstr "Symantec Anti-Vírus (Linux)"
 
 msgid "Symantec Brightmail Queues"
 msgstr "Filas do Symantec Brightmail"
-
-msgid "Symbol"
-msgstr ""
 
 #, fuzzy
 msgid "Symmetric encryption (Linux, Solaris, Windows)"
@@ -66393,9 +66290,6 @@ msgstr ""
 
 msgid "The backup has been deleted."
 msgstr "O backup foi apagado."
-
-msgid "The backup has been started."
-msgstr "O backup já foi iniciado."
 
 msgid "The backup has been stopped."
 msgstr "O backup foi interrompido."
@@ -78989,10 +78883,6 @@ msgstr "Transferência: %d novos ficheiros, %d alterados e %d desaparecidos"
 msgid "Transform status output"
 msgstr "Saída do estado da transformação"
 
-#, fuzzy
-msgid "Transformation"
-msgstr "Informação térmica"
-
 #, python-format
 msgid "Transformed the user tag group \"%s\" to built-in."
 msgstr "Transformou o grupo de etiquetas de utilizador \"%s\" em incorporado."
@@ -82059,10 +81949,6 @@ msgstr ""
 "normalmente precisam de uma quantidade decente de memória e você só deve "
 "configurar tantos processos apache quantos o seu sistema puder lidar em "
 "situações de alta carga."
-
-#, fuzzy
-msgid "Use unit of first entry"
-msgstr "Registo do histórico de eventos"
 
 msgid "Use unverified TLS encryption, fall back to plain text"
 msgstr "Utilizar encriptação TLS não verificada, recuar para texto simples"
@@ -85718,7 +85604,7 @@ msgid "Windows service discovery"
 msgstr "descoberta de serviços do Windows"
 
 #, fuzzy
-msgid "Windows time service"
+msgid "Windows time service status"
 msgstr "Serviços Windows"
 
 msgid "Windows, Linux, Solaris, AIX"
@@ -90115,10 +90001,6 @@ msgstr "Número de processos"
 msgid "objects"
 msgstr "objetos"
 
-#, fuzzy
-msgid "of"
-msgstr "em"
-
 msgid "of Service"
 msgstr "de Serviço"
 
@@ -91227,6 +91109,10 @@ msgid "Collapse all"
 msgstr "Seleccionar tudo"
 
 #, fuzzy
+msgid "of"
+msgstr "em"
+
+#, fuzzy
 msgid "No filter category available"
 msgstr "Não há informação disponível"
 
@@ -91291,12 +91177,40 @@ msgid "Display user messages, sidebar elements, text or embed a URL"
 msgstr ""
 
 #, fuzzy
+msgid "Select graph"
+msgstr "Ligações rejeitadas"
+
+#, fuzzy
+msgid "Filter by host name"
+msgstr "Filtrar %s selecção por nome de mangueira: "
+
+#, fuzzy
+msgid "Select service metric"
+msgstr "Métricas de Serviço"
+
+#, fuzzy
+msgid "Filter by service"
+msgstr "Filtrar %s seleção por serviço: "
+
+#, fuzzy
 msgid "Choose how to display your data"
 msgstr "Não mostrar uma data"
 
 #, fuzzy
 msgid "Select option"
 msgstr "Ligações rejeitadas"
+
+#, fuzzy
+msgid "Inherited"
+msgstr "Herdado de "
+
+#, fuzzy
+msgid "Overriden"
+msgstr "Visão geral"
+
+#, fuzzy
+msgid "Quick filter"
+msgstr "Filtros de serviço"
 
 msgid "% (Decimal, auto precision, 2 digits)"
 msgstr ""
@@ -91440,6 +91354,81 @@ msgid "€ (Decimal, strict precision, 2 digits)"
 msgstr ""
 
 #, fuzzy
+msgid "Specific host"
+msgstr "Locais específicos"
+
+#, fuzzy
+msgid "Multiple hosts"
+msgstr "Vários locais"
+
+#, fuzzy
+msgid "Applied host name filter"
+msgstr "Filtros Aplicados:"
+
+#, fuzzy
+msgid "to be defined"
+msgstr "Nenhuma ligação definida"
+
+#, fuzzy
+msgid "Widget filter"
+msgstr "Adicionar filtro"
+
+#, fuzzy
+msgid "Select host name"
+msgstr "Eliminar o anfitrião"
+
+#, fuzzy
+msgid "No host name filter applied."
+msgstr "Anfitrião Ntop"
+
+msgid ""
+"A host name filter selected as a dashboard or quick filter in the filters "
+"slideout appears here and applies to this widget"
+msgstr ""
+
+#, fuzzy
+msgid "Applied host filters"
+msgstr "Filtros Aplicados:"
+
+#, fuzzy
+msgid "No host filters applied."
+msgstr "Anfitrião Ntop"
+
+msgid ""
+"Dashboard or quick filters selected in the filters slideout appear here and "
+"apply to this widget"
+msgstr ""
+
+#, fuzzy
+msgid "Specific service"
+msgstr "Locais específicos"
+
+#, fuzzy
+msgid "Applied service name filter"
+msgstr "Nome de anfitrião alternativo"
+
+#, fuzzy
+msgid "Select service name"
+msgstr "Eliminar utilizador"
+
+msgid "No service name filter applied."
+msgstr ""
+
+msgid ""
+"A service name filter selected as a dashboard or quick filter in the filters "
+"slideout appears here and applies to this widget"
+msgstr ""
+
+#, fuzzy
+msgid "Applied service filters"
+msgstr "Filtros de serviço"
+
+msgid ""
+"Dashboard or quick filters selected in the filters slideout appears here and "
+"applies to this widget"
+msgstr ""
+
+#, fuzzy
 msgid "Value must be a valid URL"
 msgstr "O valor deve ser uma cadeia de caracteres"
 
@@ -91462,6 +91451,115 @@ msgstr "Mostrar título sem qualquer fundo"
 #, fuzzy
 msgid "explicit password"
 msgstr "Nova Senha"
+
+#, fuzzy
+msgid "Auto"
+msgstr "Automático"
+
+#, fuzzy
+msgid "Strict"
+msgstr "Métrica"
+
+#, fuzzy
+msgid "Graph metrics with all zero values"
+msgstr "Métricas com todos os valores zero"
+
+#, fuzzy
+msgid "Custom"
+msgstr "Cliente"
+
+#, fuzzy
+msgid "Use unit of first entry"
+msgstr "Registo do histórico de eventos"
+
+#, fuzzy
+msgid "Decimal"
+msgstr "Decibel"
+
+#, fuzzy
+msgid "SI"
+msgstr "SID"
+
+msgid "IEC"
+msgstr ""
+
+#, fuzzy
+msgid "Standard scientific"
+msgstr "Tópicos padrão"
+
+msgid "Engineering scientific"
+msgstr ""
+
+#, fuzzy
+msgid "Notation"
+msgstr "Notificação"
+
+#, fuzzy
+msgid "Precision"
+msgstr "Permissão"
+
+#, fuzzy
+msgid "Rounding mode"
+msgstr "Cápsulas de corrida"
+
+msgid "Digits"
+msgstr ""
+
+msgid "Area"
+msgstr "Área"
+
+#, fuzzy
+msgid "Stack"
+msgstr "Pilhas"
+
+#, fuzzy
+msgid "Graph lines"
+msgstr "Opções Gráficas"
+
+msgid "Scalar"
+msgstr ""
+
+#, fuzzy
+msgid "Constant"
+msgstr "Instância"
+
+#, fuzzy
+msgid "Operations on selected graph lines"
+msgstr "Operação em métricas selecionadas"
+
+#, fuzzy
+msgid "Transformation"
+msgstr "Informação térmica"
+
+#, fuzzy
+msgid "Graph options"
+msgstr "Opções Gráficas"
+
+#, fuzzy
+msgid "Mirrored"
+msgstr "Área espelhada"
+
+msgid "Formula"
+msgstr "Fórmula"
+
+msgid "Dissolve operation"
+msgstr "Operação de dissolução"
+
+#, fuzzy
+msgid "Clone this entry"
+msgstr "Clonar esta métrica"
+
+#, fuzzy
+msgid "Metric name"
+msgstr "Etiqueta métrica"
+
+#, fuzzy
+msgid "Select at least two graph lines to edit"
+msgstr "Por favor, selecione pelo menos um elemento"
+
+#, fuzzy
+msgid "Select one graph line to edit"
+msgstr "Por favor, selecione pelo menos um elemento"
 
 #, fuzzy
 msgid "Open full view"
@@ -91895,7 +91993,7 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Scale your monitoring"
+msgid "Learn how to scale your monitoring"
 msgstr "Monitorização do fumo"
 
 msgid "Add more hosts, sites, or distributed setups as your environment grows."
@@ -92014,7 +92112,7 @@ msgid ""
 "            most commonly by setting thresholds for WARN and CRIT states "
 "using rules.\n"
 "            To find the right ruleset for a service,\n"
-"            start with the Service Discovery page of a host."
+"            start with the Service discovery page of a host."
 msgstr ""
 
 #, fuzzy
@@ -92198,6 +92296,15 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Auto - adjust to actual values"
+#~ msgstr "Auto - ajustar aos valores reais"
+
+#~ msgid "Explicit vertical range"
+#~ msgstr "Faixa vertical explícita"
+
+#~ msgid "The backup has been started."
+#~ msgstr "O backup já foi iniciado."
 
 #, fuzzy
 #~ msgid "Customize dashboard"
@@ -94628,9 +94735,6 @@ msgstr ""
 
 #~ msgid "File Size Levels"
 #~ msgstr "Níveis de tamanho de arquivo"
-
-#~ msgid "Applied Filters:"
-#~ msgstr "Filtros Aplicados:"
 
 #~ msgid "Edit metric"
 #~ msgstr "Editar métrica"

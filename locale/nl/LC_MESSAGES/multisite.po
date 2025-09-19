@@ -7270,9 +7270,6 @@ msgstr "Arcserve (Duitse) back-ups (Windows)"
 msgid "Are you sure you want to delete this relay?"
 msgstr "U mag deze %s niet verwijderen."
 
-msgid "Area"
-msgstr "Gebied"
-
 #, fuzzy, python-format
 msgid "Argument files (%s)"
 msgstr "Agent voor %s (%s)"
@@ -7790,15 +7787,8 @@ msgstr "Autorisaties per DB-beveiligingsgroep"
 msgid "Authorized user"
 msgstr "Toegestane sites"
 
-#, fuzzy
-msgid "Auto"
-msgstr "Automatisch"
-
 msgid "Auto (DEFAULT)"
 msgstr "Auto (DEFAULT)"
-
-msgid "Auto - adjust to actual values"
-msgstr "Auto - aanpassen aan werkelijke waarden"
 
 msgid "Auto Restart on Crash"
 msgstr "Automatische herstart bij crash"
@@ -9290,6 +9280,12 @@ msgstr "Back-up opdracht"
 
 msgid "Backup modes"
 msgstr "Back-up modi"
+
+msgid ""
+"Backup process has started. You can safely navigate away from this page as "
+"the process will continue in the background. Refresh this page to check the "
+"current status."
+msgstr ""
 
 msgid "Backup size"
 msgstr "Back-up grootte"
@@ -13805,10 +13801,6 @@ msgid "Clone this element"
 msgstr "Kloon dit element"
 
 #, fuzzy
-msgid "Clone this entry"
-msgstr "Kloon deze metriek"
-
-#, fuzzy
 msgid "Clone this managed robot"
 msgstr "Beheerde objecten"
 
@@ -15456,10 +15448,6 @@ msgstr "Consolidatiefunctie voor de [grafiek#rrds|RRD] gegevenskolom"
 msgid "Consolidation functions"
 msgstr "Consolidatiefuncties"
 
-#, fuzzy
-msgid "Constant"
-msgstr "Instantie"
-
 msgid "Consumed capacity"
 msgstr "Verbruikte capaciteit"
 
@@ -17043,10 +17031,6 @@ msgid "Currently, there is one pending change not yet activated."
 msgstr ""
 "Momenteel is er één wijziging in behandeling die nog niet is geactiveerd."
 
-#, fuzzy
-msgid "Custom"
-msgstr "Klant"
-
 msgid "Custom Action"
 msgstr "Aangepaste actie"
 
@@ -18200,10 +18184,6 @@ msgid ""
 "aware that the agent installation might remain in an unusable state when the "
 "agent user installation script fails."
 msgstr ""
-
-#, fuzzy
-msgid "Decimal"
-msgstr "Decibel"
 
 #, python-format
 msgid "Decimal with symbol %s"
@@ -19946,9 +19926,6 @@ msgstr "Digest (MD5)"
 msgid "Digests"
 msgstr "Digests"
 
-msgid "Digits"
-msgstr ""
-
 msgid "Direct I/O"
 msgstr "Directe I/O"
 
@@ -20785,9 +20762,6 @@ msgstr "Geeft de status van een specifieke host weer."
 
 msgid "Displays the state of a specific service."
 msgstr "Geeft de status van een specifieke dienst weer."
-
-msgid "Dissolve operation"
-msgstr "Oplossen"
 
 msgid "Dissolve the package, release its files into unpackaged state"
 msgstr "Los het pakket op, geef zijn bestanden vrij in onverpakte toestand"
@@ -23459,9 +23433,6 @@ msgstr "Motor CPU-gebruik"
 msgid "Engine IDs (only needed for SNMPv3)"
 msgstr "Engine ID's (alleen nodig voor SNMPv3)"
 
-msgid "Engineering scientific"
-msgstr ""
-
 msgid "English"
 msgstr "Engels"
 
@@ -24716,9 +24687,6 @@ msgstr "Expliciete set"
 
 msgid "Explicit tablespaces"
 msgstr "Expliciete tablespaces"
-
-msgid "Explicit vertical range"
-msgstr "Expliciet verticaal bereik"
 
 #, fuzzy
 msgid "Explicit, rule set, discovered"
@@ -26597,9 +26565,6 @@ msgstr "Formaat tijdbereiken"
 msgid "Format time stamps as"
 msgstr "Formatteer tijdstempels als"
 
-msgid "Formula"
-msgstr "Formule"
-
 msgid "FortiGate HighAvailability"
 msgstr "FortiGate Hoge Beschikbaarheid"
 
@@ -27594,20 +27559,8 @@ msgstr "Grafiek is zichtbaar"
 msgid "Graph layout"
 msgstr "Grafiek lay-out"
 
-#, fuzzy
-msgid "Graph lines"
-msgstr "Grafiek Opties"
-
-#, fuzzy
-msgid "Graph metrics with all zero values"
-msgstr "Metriek met alle nulwaarden"
-
 #, fuzzy, python-format
 msgid "Graph not found '%s'"
-msgstr "Grafiek Opties"
-
-#, fuzzy
-msgid "Graph options"
 msgstr "Grafiek Opties"
 
 msgid "Graph rendering options"
@@ -31804,9 +31757,6 @@ msgstr "ID: %s"
 
 msgid "IDLE"
 msgstr "IDLE"
-
-msgid "IEC"
-msgstr ""
 
 #, python-format
 msgid "IEC with symbol %s"
@@ -42021,10 +41971,6 @@ msgid "Metric levels"
 msgstr "Metrische niveaus"
 
 #, fuzzy
-msgid "Metric name"
-msgstr "Metrisch etiket"
-
-#, fuzzy
 msgid "Metric name (exact match)"
 msgstr "Hostnaam (exacte match)"
 
@@ -42274,10 +42220,6 @@ msgstr "Spiegel de verticale as"
 
 msgid "Mirror views"
 msgstr "Spiegel aanzichten"
-
-#, fuzzy
-msgid "Mirrored"
-msgstr "Gespiegeld gebied"
 
 #, fuzzy
 msgid "Mirroring"
@@ -45412,10 +45354,6 @@ msgstr ""
 msgid "Not yet monitored"
 msgstr "Nog niet gecontroleerd"
 
-#, fuzzy
-msgid "Notation"
-msgstr "Kennisgeving"
-
 #, fuzzy, python-format
 msgid "Notation: %s"
 msgstr "Annotaties: %s"
@@ -47680,10 +47618,6 @@ msgstr "Operaties"
 
 msgid "Operations States"
 msgstr "Operatie Staten"
-
-#, fuzzy
-msgid "Operations on selected graph lines"
-msgstr "Werking op geselecteerde metriek"
 
 msgid "Operations per second"
 msgstr "Bewerkingen per seconde"
@@ -52200,10 +52134,6 @@ msgstr "Voorrang"
 msgid "Precedence of contact groups"
 msgstr "Voorrang van contactgroepen"
 
-#, fuzzy
-msgid "Precision"
-msgstr "Toestemming"
-
 msgid "Precision of float values"
 msgstr "Nauwkeurigheid van zwevende waarden"
 
@@ -56099,10 +56029,6 @@ msgstr "%sRondreis minimum"
 msgid "Round trip time"
 msgstr "Tijd voor rondreis"
 
-#, fuzzy
-msgid "Rounding mode"
-msgstr "Lopende pods"
-
 msgid "Route53"
 msgstr "Route53"
 
@@ -56726,10 +56652,6 @@ msgstr "SHA-2 (SHA-384)"
 msgid "SHA-2 (SHA-512)"
 msgstr "SHA-2 (SHA-512)"
 
-#, fuzzy
-msgid "SI"
-msgstr "SID"
-
 #, python-format
 msgid "SI with symbol %s"
 msgstr ""
@@ -57212,9 +57134,6 @@ msgid "Saved space"
 msgstr "Gereserveerde ruimte"
 
 msgid "Saving the result..."
-msgstr ""
-
-msgid "Scalar"
 msgstr ""
 
 msgid "Scale to width of page"
@@ -57801,10 +57720,6 @@ msgid ""
 msgstr "Te controleren Azure diensten"
 
 #, fuzzy
-msgid "Select at least one graph line to edit"
-msgstr "Selecteer ten minste één element"
-
-#, fuzzy
 msgid "Select contact group"
 msgstr "Regel contactgroepen"
 
@@ -57814,9 +57729,6 @@ msgstr "Selecteer gegevensbron"
 
 msgid "Select device type"
 msgstr "Selecteer type apparaat"
-
-msgid "Select exactly one graph line to edit"
-msgstr ""
 
 msgid "Select file"
 msgstr "Selecteer bestand"
@@ -62399,10 +62311,6 @@ msgstr "Sproc latentie"
 msgid "Sqlnet Send timeout"
 msgstr "Sqlnet Verzend timeout"
 
-#, fuzzy
-msgid "Stack"
-msgstr "Stapels"
-
 msgid "Stacked"
 msgstr "Stacked"
 
@@ -62455,10 +62363,6 @@ msgstr "Standaardafwijking van de rondreistijd in ms"
 
 msgid "Standard deviation of roundtrip times in ms"
 msgstr "Standaardafwijking van de rondreistijd in ms"
-
-#, fuzzy
-msgid "Standard scientific"
-msgstr "Standaard onderwerpen"
 
 msgid ""
 "Standard settings are used for all endpoints unless overwritten by the "
@@ -63770,10 +63674,6 @@ msgstr "Straat nummer"
 msgid "Strength:"
 msgstr "Sterkte:"
 
-#, fuzzy
-msgid "Strict"
-msgstr "Metrisch"
-
 msgid "Strict - Visible if all members are visible"
 msgstr "Strikt - Zichtbaar als alle leden zichtbaar zijn"
 
@@ -64193,9 +64093,6 @@ msgstr "Symantec Anti Virus (Linux)"
 
 msgid "Symantec Brightmail Queues"
 msgstr "Symantec Brightmail wachtrijen"
-
-msgid "Symbol"
-msgstr ""
 
 #, fuzzy
 msgid "Symmetric encryption (Linux, Solaris, Windows)"
@@ -66416,9 +66313,6 @@ msgstr ""
 
 msgid "The backup has been deleted."
 msgstr "De backup is verwijderd."
-
-msgid "The backup has been started."
-msgstr "De back-up is gestart."
 
 msgid "The backup has been stopped."
 msgstr "De back-up is gestopt."
@@ -79040,10 +78934,6 @@ msgstr "Overdracht: %d nieuwe, %d gewijzigde en %d verdwenen bestanden"
 msgid "Transform status output"
 msgstr "Transformeer status uitgang"
 
-#, fuzzy
-msgid "Transformation"
-msgstr "Thermische informatie"
-
 #, fuzzy, python-format
 msgid "Transformed the user tag group \"%s\" to built-in."
 msgstr "Heeft de gebruiker tag groep \"%s\" getransformeerd naar builtin."
@@ -82125,10 +82015,6 @@ msgstr ""
 "processen hebben normaal gesproken een behoorlijke hoeveelheid geheugen "
 "nodig en je zou alleen zoveel apache processen moeten instellen als je "
 "systeem aan kan in situaties met hoge belasting."
-
-#, fuzzy
-msgid "Use unit of first entry"
-msgstr "Invoer voorgeschiedenis"
 
 msgid "Use unverified TLS encryption, fall back to plain text"
 msgstr "Gebruik ongeverifieerde TLS encryptie, val terug op platte tekst"
@@ -85800,7 +85686,7 @@ msgid "Windows service discovery"
 msgstr "Windows service ontdekking"
 
 #, fuzzy
-msgid "Windows time service"
+msgid "Windows time service status"
 msgstr "Windows Diensten"
 
 msgid "Windows, Linux, Solaris, AIX"
@@ -90221,10 +90107,6 @@ msgstr "Aantal processen"
 msgid "objects"
 msgstr "objecten"
 
-#, fuzzy
-msgid "of"
-msgstr "van"
-
 msgid "of Service"
 msgstr "van Dienst"
 
@@ -91337,6 +91219,10 @@ msgid "Collapse all"
 msgstr "Kies alle"
 
 #, fuzzy
+msgid "of"
+msgstr "van"
+
+#, fuzzy
 msgid "No filter category available"
 msgstr "Geen informatie beschikbaar"
 
@@ -91401,12 +91287,40 @@ msgid "Display user messages, sidebar elements, text or embed a URL"
 msgstr ""
 
 #, fuzzy
+msgid "Select graph"
+msgstr "Afgewezen verbindingen"
+
+#, fuzzy
+msgid "Filter by host name"
+msgstr "Filter %s selectie op hostnaam: "
+
+#, fuzzy
+msgid "Select service metric"
+msgstr "Dienst Metriek"
+
+#, fuzzy
+msgid "Filter by service"
+msgstr "Filter %s selectie op dienst: "
+
+#, fuzzy
 msgid "Choose how to display your data"
 msgstr "Geef geen datum weer"
 
 #, fuzzy
 msgid "Select option"
 msgstr "Afgewezen verbindingen"
+
+#, fuzzy
+msgid "Inherited"
+msgstr "Geërfd van "
+
+#, fuzzy
+msgid "Overriden"
+msgstr "Overzicht"
+
+#, fuzzy
+msgid "Quick filter"
+msgstr "Service Filters"
 
 msgid "% (Decimal, auto precision, 2 digits)"
 msgstr ""
@@ -91550,6 +91464,81 @@ msgid "€ (Decimal, strict precision, 2 digits)"
 msgstr ""
 
 #, fuzzy
+msgid "Specific host"
+msgstr "Specifieke sites"
+
+#, fuzzy
+msgid "Multiple hosts"
+msgstr "Meerdere locaties"
+
+#, fuzzy
+msgid "Applied host name filter"
+msgstr "Toegepaste filters:"
+
+#, fuzzy
+msgid "to be defined"
+msgstr "Geen verbindingen gedefinieerd"
+
+#, fuzzy
+msgid "Widget filter"
+msgstr "Filter toevoegen"
+
+#, fuzzy
+msgid "Select host name"
+msgstr "Hosts verwijderen"
+
+#, fuzzy
+msgid "No host name filter applied."
+msgstr "Ntop gastheer"
+
+msgid ""
+"A host name filter selected as a dashboard or quick filter in the filters "
+"slideout appears here and applies to this widget"
+msgstr ""
+
+#, fuzzy
+msgid "Applied host filters"
+msgstr "Toegepaste filters:"
+
+#, fuzzy
+msgid "No host filters applied."
+msgstr "Ntop gastheer"
+
+msgid ""
+"Dashboard or quick filters selected in the filters slideout appear here and "
+"apply to this widget"
+msgstr ""
+
+#, fuzzy
+msgid "Specific service"
+msgstr "Specifieke sites"
+
+#, fuzzy
+msgid "Applied service name filter"
+msgstr "Alternatieve hostnaam"
+
+#, fuzzy
+msgid "Select service name"
+msgstr "Gebruikers verwijderen"
+
+msgid "No service name filter applied."
+msgstr ""
+
+msgid ""
+"A service name filter selected as a dashboard or quick filter in the filters "
+"slideout appears here and applies to this widget"
+msgstr ""
+
+#, fuzzy
+msgid "Applied service filters"
+msgstr "Service Filters"
+
+msgid ""
+"Dashboard or quick filters selected in the filters slideout appears here and "
+"applies to this widget"
+msgstr ""
+
+#, fuzzy
 msgid "Value must be a valid URL"
 msgstr "De waarde moet een string zijn"
 
@@ -91572,6 +91561,115 @@ msgstr "Titel tonen zonder achtergrond"
 #, fuzzy
 msgid "explicit password"
 msgstr "Nieuw wachtwoord"
+
+#, fuzzy
+msgid "Auto"
+msgstr "Automatisch"
+
+#, fuzzy
+msgid "Strict"
+msgstr "Metrisch"
+
+#, fuzzy
+msgid "Graph metrics with all zero values"
+msgstr "Metriek met alle nulwaarden"
+
+#, fuzzy
+msgid "Custom"
+msgstr "Klant"
+
+#, fuzzy
+msgid "Use unit of first entry"
+msgstr "Invoer voorgeschiedenis"
+
+#, fuzzy
+msgid "Decimal"
+msgstr "Decibel"
+
+#, fuzzy
+msgid "SI"
+msgstr "SID"
+
+msgid "IEC"
+msgstr ""
+
+#, fuzzy
+msgid "Standard scientific"
+msgstr "Standaard onderwerpen"
+
+msgid "Engineering scientific"
+msgstr ""
+
+#, fuzzy
+msgid "Notation"
+msgstr "Kennisgeving"
+
+#, fuzzy
+msgid "Precision"
+msgstr "Toestemming"
+
+#, fuzzy
+msgid "Rounding mode"
+msgstr "Lopende pods"
+
+msgid "Digits"
+msgstr ""
+
+msgid "Area"
+msgstr "Gebied"
+
+#, fuzzy
+msgid "Stack"
+msgstr "Stapels"
+
+#, fuzzy
+msgid "Graph lines"
+msgstr "Grafiek Opties"
+
+msgid "Scalar"
+msgstr ""
+
+#, fuzzy
+msgid "Constant"
+msgstr "Instantie"
+
+#, fuzzy
+msgid "Operations on selected graph lines"
+msgstr "Werking op geselecteerde metriek"
+
+#, fuzzy
+msgid "Transformation"
+msgstr "Thermische informatie"
+
+#, fuzzy
+msgid "Graph options"
+msgstr "Grafiek Opties"
+
+#, fuzzy
+msgid "Mirrored"
+msgstr "Gespiegeld gebied"
+
+msgid "Formula"
+msgstr "Formule"
+
+msgid "Dissolve operation"
+msgstr "Oplossen"
+
+#, fuzzy
+msgid "Clone this entry"
+msgstr "Kloon deze metriek"
+
+#, fuzzy
+msgid "Metric name"
+msgstr "Metrisch etiket"
+
+#, fuzzy
+msgid "Select at least two graph lines to edit"
+msgstr "Selecteer ten minste één element"
+
+#, fuzzy
+msgid "Select one graph line to edit"
+msgstr "Selecteer ten minste één element"
 
 #, fuzzy
 msgid "Open full view"
@@ -92006,7 +92104,7 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Scale your monitoring"
+msgid "Learn how to scale your monitoring"
 msgstr "Netwerkbewaking"
 
 msgid "Add more hosts, sites, or distributed setups as your environment grows."
@@ -92125,7 +92223,7 @@ msgid ""
 "            most commonly by setting thresholds for WARN and CRIT states "
 "using rules.\n"
 "            To find the right ruleset for a service,\n"
-"            start with the Service Discovery page of a host."
+"            start with the Service discovery page of a host."
 msgstr ""
 
 #, fuzzy
@@ -92308,6 +92406,15 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Auto - adjust to actual values"
+#~ msgstr "Auto - aanpassen aan werkelijke waarden"
+
+#~ msgid "Explicit vertical range"
+#~ msgstr "Expliciet verticaal bereik"
+
+#~ msgid "The backup has been started."
+#~ msgstr "De back-up is gestart."
 
 #, fuzzy
 #~ msgid "Customize dashboard"
@@ -94713,9 +94820,6 @@ msgstr ""
 
 #~ msgid "File Size Levels"
 #~ msgstr "Niveaus bestandsgrootte"
-
-#~ msgid "Applied Filters:"
-#~ msgstr "Toegepaste filters:"
 
 #~ msgid "Edit metric"
 #~ msgstr "Bewerk metriek"

@@ -6861,9 +6861,6 @@ msgstr "Arcserve(ドイツ語)バックアップ(Windows)"
 msgid "Are you sure you want to delete this relay?"
 msgstr "この%sを削除することはできません。"
 
-msgid "Area"
-msgstr "範囲"
-
 #, python-format
 msgid "Argument files (%s)"
 msgstr "引数ファイル(%s)"
@@ -7361,14 +7358,8 @@ msgstr "DBセキュリティグループごとの承認"
 msgid "Authorized user"
 msgstr "認証ユーザー"
 
-msgid "Auto"
-msgstr "自動"
-
 msgid "Auto (DEFAULT)"
 msgstr "オート（初期設定）"
-
-msgid "Auto - adjust to actual values"
-msgstr "自動 - 実際の値に調整"
 
 msgid "Auto Restart on Crash"
 msgstr "クラッシュ時に自動再起動"
@@ -8670,6 +8661,12 @@ msgstr "バックアップジョブ"
 
 msgid "Backup modes"
 msgstr "バックアップモード"
+
+msgid ""
+"Backup process has started. You can safely navigate away from this page as "
+"the process will continue in the background. Refresh this page to check the "
+"current status."
+msgstr ""
 
 msgid "Backup size"
 msgstr "バックアップサイズ"
@@ -12958,9 +12955,6 @@ msgstr "新しい接続を作成するには、この接続のクローンを作
 msgid "Clone this element"
 msgstr "この要素のクローンを作成します"
 
-msgid "Clone this entry"
-msgstr "このエントリのクローンを作成する"
-
 msgid "Clone this managed robot"
 msgstr "この管理ロボットのクローンを作成する"
 
@@ -14521,9 +14515,6 @@ msgstr "[graphing#rrds|RRD] データカラムの連結機能"
 msgid "Consolidation functions"
 msgstr "統合機能"
 
-msgid "Constant"
-msgstr "コンスタント"
-
 msgid "Consumed capacity"
 msgstr "消費容量"
 
@@ -16030,9 +16021,6 @@ msgstr "現在、アクティブ化されていない%s があります。"
 msgid "Currently, there is one pending change not yet activated."
 msgstr "現在、有効化されていない保留中の変更が1つあります。"
 
-msgid "Custom"
-msgstr "カスタム"
-
 msgid "Custom Action"
 msgstr "カスタムアクション"
 
@@ -17139,9 +17127,6 @@ msgstr ""
 "がって、セキュリティ対策として特にUID/GIDを指定することは可能ですが、エージェ"
 "ントユーザーインストールスクリプトが失敗した場合、エージェントインストールが"
 "使用不能な状態になる可能性がある点にご注意ください。"
-
-msgid "Decimal"
-msgstr "デシマル"
 
 #, python-format
 msgid "Decimal with symbol %s"
@@ -18762,9 +18747,6 @@ msgstr "ダイジェスト(MD5)"
 msgid "Digests"
 msgstr "ダイジェスト"
 
-msgid "Digits"
-msgstr "ディジット"
-
 msgid "Direct I/O"
 msgstr "ダイレクトI/O"
 
@@ -19555,9 +19537,6 @@ msgstr "特定のホストの状態を表示します。"
 
 msgid "Displays the state of a specific service."
 msgstr "特定のサービスの状態を表示します。"
-
-msgid "Dissolve operation"
-msgstr "溶解操作"
 
 msgid "Dissolve the package, release its files into unpackaged state"
 msgstr ""
@@ -22071,9 +22050,6 @@ msgstr "EngineCPU使用率"
 msgid "Engine IDs (only needed for SNMPv3)"
 msgstr "エンジンIDs(SNMPv3にのみ必要)"
 
-msgid "Engineering scientific"
-msgstr "科学的エンジニアリング"
-
 msgid "English"
 msgstr "English"
 
@@ -23285,9 +23261,6 @@ msgstr "明示的なセット"
 
 msgid "Explicit tablespaces"
 msgstr "明示的な表領域"
-
-msgid "Explicit vertical range"
-msgstr "明示的な垂直範囲"
 
 msgid "Explicit, rule set, discovered"
 msgstr "明示的、ルールセット、検出"
@@ -25063,9 +25036,6 @@ msgstr "時間範囲をフォーマットする"
 msgid "Format time stamps as"
 msgstr "タイムスタンプを次のようにフォーマットします"
 
-msgid "Formula"
-msgstr "式"
-
 msgid "FortiGate HighAvailability"
 msgstr "FortiGate 高可用性"
 
@@ -26023,18 +25993,9 @@ msgstr "グラフが表示されます"
 msgid "Graph layout"
 msgstr "グラフレイアウト"
 
-msgid "Graph lines"
-msgstr "グラフライン"
-
-msgid "Graph metrics with all zero values"
-msgstr "すべての値がゼロのグラフメトリクス"
-
 #, python-format
 msgid "Graph not found '%s'"
 msgstr "見つからないグラフ '%s'"
-
-msgid "Graph options"
-msgstr "グラフオプション"
 
 msgid "Graph rendering options"
 msgstr "グラフレンダリングオプション"
@@ -29775,9 +29736,6 @@ msgstr "ID: %s"
 
 msgid "IDLE"
 msgstr "IDLE"
-
-msgid "IEC"
-msgstr "IEC"
 
 #, python-format
 msgid "IEC with symbol %s"
@@ -39449,9 +39407,6 @@ msgstr "メトリックのラベル"
 msgid "Metric levels"
 msgstr "メートリックレベル"
 
-msgid "Metric name"
-msgstr "メトリック名"
-
 msgid "Metric name (exact match)"
 msgstr "メトリック名(完全一致)"
 
@@ -39687,9 +39642,6 @@ msgstr "垂直軸をミラーリングします"
 
 msgid "Mirror views"
 msgstr "ミラービュー"
-
-msgid "Mirrored"
-msgstr "ミラーリングされた"
 
 msgid "Mirroring"
 msgstr "ミラーリング"
@@ -42604,9 +42556,6 @@ msgstr ""
 msgid "Not yet monitored"
 msgstr "まだ監視されていません"
 
-msgid "Notation"
-msgstr "注記"
-
 #, python-format
 msgid "Notation: %s"
 msgstr "注記: %s"
@@ -44737,9 +44686,6 @@ msgstr "オペレーション"
 
 msgid "Operations States"
 msgstr "運用状態"
-
-msgid "Operations on selected graph lines"
-msgstr "選択されたグラフの線に対する操作"
 
 msgid "Operations per second"
 msgstr "1秒あたりの操作数"
@@ -48796,9 +48742,6 @@ msgstr "優先順位"
 msgid "Precedence of contact groups"
 msgstr "連絡先グループの優先順位"
 
-msgid "Precision"
-msgstr "精度"
-
 msgid "Precision of float values"
 msgstr "フロート値の精度"
 
@@ -52487,9 +52430,6 @@ msgstr "ラウンドトリップの最小値"
 msgid "Round trip time"
 msgstr "ラウンドトリップタイム"
 
-msgid "Rounding mode"
-msgstr "丸めモード"
-
 msgid "Route53"
 msgstr "ルート53"
 
@@ -53062,9 +53002,6 @@ msgstr "SHA-2(SHA-384)"
 msgid "SHA-2 (SHA-512)"
 msgstr "SHA-2(SHA-512)"
 
-msgid "SI"
-msgstr "SI"
-
 #, python-format
 msgid "SI with symbol %s"
 msgstr "SIとシンボル%s"
@@ -53523,9 +53460,6 @@ msgstr "保存スペース"
 
 msgid "Saving the result..."
 msgstr "結果を保存中..."
-
-msgid "Scalar"
-msgstr "スカラー"
 
 msgid "Scale to width of page"
 msgstr "ページの幅に合わせて拡大縮小"
@@ -54076,9 +54010,6 @@ msgid ""
 msgstr ""
 "監視対象として選択し、設定するMicrosoft Azureサービスを選択してください"
 
-msgid "Select at least one graph line to edit"
-msgstr "編集するグラフの線を少なくとも１つ選択してください"
-
 msgid "Select contact group"
 msgstr "連絡先グループを選択"
 
@@ -54087,9 +54018,6 @@ msgstr "データソースを選択"
 
 msgid "Select device type"
 msgstr "デバイスタイプを選択します"
-
-msgid "Select exactly one graph line to edit"
-msgstr "編集するグラフの線を選択してください"
 
 msgid "Select file"
 msgstr "ファイルを選択"
@@ -58450,9 +58378,6 @@ msgstr "Sprocレイテンシ"
 msgid "Sqlnet Send timeout"
 msgstr "Sqlnet送信タイムアウト"
 
-msgid "Stack"
-msgstr "スタック"
-
 msgid "Stacked"
 msgstr "積み上げ"
 
@@ -58506,9 +58431,6 @@ msgstr "標準偏差の差"
 
 msgid "Standard deviation of roundtrip times in ms"
 msgstr "往復時間の標準偏差(ミリ秒)"
-
-msgid "Standard scientific"
-msgstr "標準的で科学的な"
 
 msgid ""
 "Standard settings are used for all endpoints unless overwritten by the "
@@ -59752,9 +59674,6 @@ msgstr "ストリート番号"
 msgid "Strength:"
 msgstr "強さ:"
 
-msgid "Strict"
-msgstr "制限"
-
 msgid "Strict - Visible if all members are visible"
 msgstr "Strict - すべてのメンバーが表示されている場合、表示"
 
@@ -60145,9 +60064,6 @@ msgstr "Symantec Anti Virus (Linux)"
 
 msgid "Symantec Brightmail Queues"
 msgstr "Symantec Brightmaiキュー"
-
-msgid "Symbol"
-msgstr "シンボル"
 
 msgid "Symmetric encryption (Linux, Solaris, Windows)"
 msgstr "対称型暗号化(Linux, Solaris, Windows)"
@@ -62233,9 +62149,6 @@ msgstr "ご登録のアカウントに関連するバックアップコードが
 
 msgid "The backup has been deleted."
 msgstr "バックアップが削除されました。"
-
-msgid "The backup has been started."
-msgstr "バックアップが開始されました。"
 
 msgid "The backup has been stopped."
 msgstr "バックアップが停止しました。"
@@ -73951,9 +73864,6 @@ msgstr "転送中:%d新規、%d変更、%d消失ファイル"
 msgid "Transform status output"
 msgstr "変換ステータス出力"
 
-msgid "Transformation"
-msgstr "トランスフォーメーション"
-
 #, python-format
 msgid "Transformed the user tag group \"%s\" to built-in."
 msgstr "ユーザータググループ\"%s\"を変換しました。"
@@ -76841,9 +76751,6 @@ msgstr ""
 "に注意してください。多ければ良いというわけではありません。通常、apache プロセ"
 "スはそれなりの量のメモリを必要とするので、 高負荷の状況ではシステムが扱えるだ"
 "けの数の apache プロセスを考えて設定する必要があります。"
-
-msgid "Use unit of first entry"
-msgstr "最初の入力単位を使用する"
 
 msgid "Use unverified TLS encryption, fall back to plain text"
 msgstr "検証されていないTLS暗号を使用し、プレーンテキストにフォールバックする"
@@ -80204,7 +80111,7 @@ msgid "Windows service discovery"
 msgstr "Windowsサービスディスカバリ"
 
 #, fuzzy
-msgid "Windows time service"
+msgid "Windows time service status"
 msgstr "Windowsサービス"
 
 msgid "Windows, Linux, Solaris, AIX"
@@ -84444,9 +84351,6 @@ msgstr "プロセス数"
 msgid "objects"
 msgstr "オブジェクト"
 
-msgid "of"
-msgstr "の"
-
 msgid "of Service"
 msgstr "サービスの"
 
@@ -85527,6 +85431,9 @@ msgstr "展開"
 msgid "Collapse all"
 msgstr "すべて選択する"
 
+msgid "of"
+msgstr "の"
+
 #, fuzzy
 msgid "No filter category available"
 msgstr "利用可能な情報はありません"
@@ -85592,12 +85499,40 @@ msgid "Display user messages, sidebar elements, text or embed a URL"
 msgstr ""
 
 #, fuzzy
+msgid "Select graph"
+msgstr "オプション選択"
+
+#, fuzzy
+msgid "Filter by host name"
+msgstr "ホスト名でによるフィルター選択:"
+
+#, fuzzy
+msgid "Select service metric"
+msgstr "サービスメトリクス"
+
+#, fuzzy
+msgid "Filter by service"
+msgstr "サービスによるフィルター選択:"
+
+#, fuzzy
 msgid "Choose how to display your data"
 msgstr "日付を表示しない"
 
 #, fuzzy
 msgid "Select option"
 msgstr "オプション選択"
+
+#, fuzzy
+msgid "Inherited"
+msgstr "から継承 "
+
+#, fuzzy
+msgid "Overriden"
+msgstr "概要"
+
+#, fuzzy
+msgid "Quick filter"
+msgstr "サービスフィルター"
 
 msgid "% (Decimal, auto precision, 2 digits)"
 msgstr ""
@@ -85741,6 +85676,81 @@ msgid "€ (Decimal, strict precision, 2 digits)"
 msgstr ""
 
 #, fuzzy
+msgid "Specific host"
+msgstr "特定のサイト"
+
+#, fuzzy
+msgid "Multiple hosts"
+msgstr "複数のサイト"
+
+#, fuzzy
+msgid "Applied host name filter"
+msgstr "適用されたフィルター:"
+
+#, fuzzy
+msgid "to be defined"
+msgstr "名前が定義されていません"
+
+#, fuzzy
+msgid "Widget filter"
+msgstr "フィルタを追加"
+
+#, fuzzy
+msgid "Select host name"
+msgstr "(ホスト選択)"
+
+#, fuzzy
+msgid "No host name filter applied."
+msgstr "Ntopngホストフィルター"
+
+msgid ""
+"A host name filter selected as a dashboard or quick filter in the filters "
+"slideout appears here and applies to this widget"
+msgstr ""
+
+#, fuzzy
+msgid "Applied host filters"
+msgstr "適用されたフィルター:"
+
+#, fuzzy
+msgid "No host filters applied."
+msgstr "Ntopngホストフィルター"
+
+msgid ""
+"Dashboard or quick filters selected in the filters slideout appear here and "
+"apply to this widget"
+msgstr ""
+
+#, fuzzy
+msgid "Specific service"
+msgstr "特定のサイト"
+
+#, fuzzy
+msgid "Applied service name filter"
+msgstr "代替サービス名"
+
+#, fuzzy
+msgid "Select service name"
+msgstr "(サービスを選択)"
+
+msgid "No service name filter applied."
+msgstr ""
+
+msgid ""
+"A service name filter selected as a dashboard or quick filter in the filters "
+"slideout appears here and applies to this widget"
+msgstr ""
+
+#, fuzzy
+msgid "Applied service filters"
+msgstr "サービスフィルター"
+
+msgid ""
+"Dashboard or quick filters selected in the filters slideout appears here and "
+"applies to this widget"
+msgstr ""
+
+#, fuzzy
 msgid "Value must be a valid URL"
 msgstr "値は文字列であること"
 
@@ -85763,6 +85773,95 @@ msgstr "背景なしでタイトルを表示"
 #, fuzzy
 msgid "explicit password"
 msgstr "新しいパスワード"
+
+msgid "Auto"
+msgstr "自動"
+
+msgid "Strict"
+msgstr "制限"
+
+msgid "Graph metrics with all zero values"
+msgstr "すべての値がゼロのグラフメトリクス"
+
+msgid "Custom"
+msgstr "カスタム"
+
+msgid "Use unit of first entry"
+msgstr "最初の入力単位を使用する"
+
+msgid "Decimal"
+msgstr "デシマル"
+
+msgid "SI"
+msgstr "SI"
+
+msgid "IEC"
+msgstr "IEC"
+
+msgid "Standard scientific"
+msgstr "標準的で科学的な"
+
+msgid "Engineering scientific"
+msgstr "科学的エンジニアリング"
+
+msgid "Notation"
+msgstr "注記"
+
+msgid "Precision"
+msgstr "精度"
+
+msgid "Rounding mode"
+msgstr "丸めモード"
+
+msgid "Digits"
+msgstr "ディジット"
+
+msgid "Area"
+msgstr "範囲"
+
+msgid "Stack"
+msgstr "スタック"
+
+msgid "Graph lines"
+msgstr "グラフライン"
+
+msgid "Scalar"
+msgstr "スカラー"
+
+msgid "Constant"
+msgstr "コンスタント"
+
+msgid "Operations on selected graph lines"
+msgstr "選択されたグラフの線に対する操作"
+
+msgid "Transformation"
+msgstr "トランスフォーメーション"
+
+msgid "Graph options"
+msgstr "グラフオプション"
+
+msgid "Mirrored"
+msgstr "ミラーリングされた"
+
+msgid "Formula"
+msgstr "式"
+
+msgid "Dissolve operation"
+msgstr "溶解操作"
+
+msgid "Clone this entry"
+msgstr "このエントリのクローンを作成する"
+
+msgid "Metric name"
+msgstr "メトリック名"
+
+#, fuzzy
+msgid "Select at least two graph lines to edit"
+msgstr "編集するグラフの線を少なくとも１つ選択してください"
+
+#, fuzzy
+msgid "Select one graph line to edit"
+msgstr "編集するグラフの線を選択してください"
 
 #, fuzzy
 msgid "Open full view"
@@ -86191,7 +86290,7 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Scale your monitoring"
+msgid "Learn how to scale your monitoring"
 msgstr "フェイルオーバー監視"
 
 msgid "Add more hosts, sites, or distributed setups as your environment grows."
@@ -86310,7 +86409,7 @@ msgid ""
 "            most commonly by setting thresholds for WARN and CRIT states "
 "using rules.\n"
 "            To find the right ruleset for a service,\n"
-"            start with the Service Discovery page of a host."
+"            start with the Service discovery page of a host."
 msgstr ""
 
 #, fuzzy
@@ -86493,6 +86592,18 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Auto - adjust to actual values"
+#~ msgstr "自動 - 実際の値に調整"
+
+#~ msgid "Explicit vertical range"
+#~ msgstr "明示的な垂直範囲"
+
+#~ msgid "Symbol"
+#~ msgstr "シンボル"
+
+#~ msgid "The backup has been started."
+#~ msgstr "バックアップが開始されました。"
 
 #, fuzzy
 #~ msgid "Customize dashboard"
@@ -88946,9 +89057,6 @@ msgstr ""
 
 #~ msgid "File Size Levels"
 #~ msgstr "ファイルサイズレベル"
-
-#~ msgid "Applied Filters:"
-#~ msgstr "適用されたフィルター:"
 
 #~ msgid "Edit metric"
 #~ msgstr "メトリックを編集する"

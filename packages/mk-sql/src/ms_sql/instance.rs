@@ -756,19 +756,30 @@ impl SqlInstance {
                 .into_iter()
                 .map(|chunk| {
                     s.spawn(|| {
+                        let dbs = chunk
+                            .iter()
+                            .filter_map(|database| {
+                                if endpoint.conn().exclude_databases().contains(database) {
+                                    log::debug!("Database {} excluded", database);
+                                    None
+                                } else {
+                                    Some(database.clone())
+                                }
+                            })
+                            .collect::<Vec<String>>();
                         let rt = tokio::runtime::Runtime::new().unwrap();
                         match section.name() {
                             names::TRANSACTION_LOG => rt.block_on(
-                                self.generate_transaction_logs_section(endpoint, chunk, query, sep),
+                                self.generate_transaction_logs_section(endpoint, &dbs, query, sep),
                             ),
                             names::TABLE_SPACES => rt.block_on(
-                                self.generate_table_spaces_section(endpoint, chunk, query, sep),
+                                self.generate_table_spaces_section(endpoint, &dbs, query, sep),
                             ),
                             names::DATAFILES => rt.block_on(
-                                self.generate_datafiles_section(endpoint, chunk, query, sep),
+                                self.generate_datafiles_section(endpoint, &dbs, query, sep),
                             ),
                             names::CLUSTERS => rt.block_on(
-                                self.generate_clusters_section(endpoint, chunk, query, sep),
+                                self.generate_clusters_section(endpoint, &dbs, query, sep),
                             ),
                             _ => format!("{} not implemented\n", section.name()).to_string(),
                         }
@@ -780,35 +791,6 @@ impl SqlInstance {
                 .collect::<Vec<String>>()
                 .join("")
         })
-    }
-
-    pub async fn generate_database_indexed_section_async(
-        &self,
-        databases: &[String],
-        endpoint: &Endpoint,
-        section: &Section,
-        query: &str,
-        sep: char,
-    ) -> String {
-        match section.name() {
-            names::TRANSACTION_LOG => {
-                self.generate_transaction_logs_section(endpoint, databases, query, sep)
-                    .await
-            }
-            names::TABLE_SPACES => {
-                self.generate_table_spaces_section(endpoint, databases, query, sep)
-                    .await
-            }
-            names::DATAFILES => {
-                self.generate_datafiles_section(endpoint, databases, query, sep)
-                    .await
-            }
-            names::CLUSTERS => {
-                self.generate_clusters_section(endpoint, databases, query, sep)
-                    .await
-            }
-            _ => format!("{} not implemented\n", section.name()).to_string(),
-        }
     }
 
     pub async fn generate_transaction_logs_section(

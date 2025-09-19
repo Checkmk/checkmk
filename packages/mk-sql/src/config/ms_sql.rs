@@ -5,6 +5,7 @@
 use super::defines::{defaults, keys, values};
 use super::section::{Section, SectionKind, Sections};
 use super::yaml::{Get, Yaml};
+use crate::config::defines::keys::EXCLUDE_DATABASES;
 use crate::platform;
 use crate::platform::registry::get_instances;
 use crate::platform::InstanceInfo;
@@ -441,6 +442,7 @@ pub struct Connection {
     tls: Option<ConnectionTls>,
     timeout: u64,
     backend: Backend,
+    exclude_databases: Vec<String>,
 }
 
 impl Connection {
@@ -488,6 +490,7 @@ impl Connection {
                         Backend::default()
                     })
                 },
+                exclude_databases: { conn.get_string_vector(EXCLUDE_DATABASES, &[]) },
             }
             .ensure(auth),
         ))
@@ -519,6 +522,9 @@ impl Connection {
     pub fn backend(&self) -> &Backend {
         &self.backend
     }
+    pub fn exclude_databases(&self) -> &Vec<String> {
+        &self.exclude_databases
+    }
 
     fn ensure(mut self, auth: Option<&Authentication>) -> Self {
         match auth {
@@ -543,6 +549,7 @@ impl Default for Connection {
             tls: None,
             timeout: defaults::CONNECTION_TIMEOUT,
             backend: Backend::default(),
+            exclude_databases: vec![],
         }
     }
 }
@@ -945,6 +952,7 @@ mssql:
         authentication: # optional, same as above
         connection: # optional,  same as above
           backend: odbc
+          exclude_databases: ["model"]
         alias: "someApplicationName" # optional
         piggyback: # optional
           hostname: "myPiggybackHost" # mandatory
@@ -959,6 +967,7 @@ mssql:
           hostname: "local"
           port: 500
           backend: tcp
+          exclude_databases: ["master", "model"]
   configs:
     - main:
         options:
@@ -1195,6 +1204,7 @@ authentication:
             &r"C:\path\to\file_client".to_owned().into()
         );
         assert_eq!(c.backend(), &Backend::default());
+        assert!(c.exclude_databases().is_empty());
     }
 
     #[test]
@@ -1538,6 +1548,7 @@ connection:
         assert_eq!(inst1.conn().backend(), &Backend::Auto);
         #[cfg(windows)]
         assert_eq!(inst1.conn().backend(), &Backend::Odbc);
+        assert_eq!(inst1.conn().exclude_databases(), &vec!["model"]);
         let inst2 = &c.instances()[1];
 
         assert_eq!(inst2.name().to_string(), "INST2");
@@ -1547,6 +1558,7 @@ connection:
         assert_eq!(inst2.conn().hostname, HostName::from("local".to_string()));
         assert_eq!(inst2.conn().port, Port(500));
         assert_eq!(inst2.conn().backend(), &Backend::Tcp);
+        assert_eq!(inst2.conn().exclude_databases(), &vec!["master", "model"]);
         assert_eq!(c.mode(), &Mode::Socket);
         assert_eq!(
             c.discovery().include(),

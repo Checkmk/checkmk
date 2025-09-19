@@ -27,6 +27,16 @@ impl CheckConfig {
         })
     }
 
+    pub fn load_str(data: &str) -> Result<Self> {
+        let data = yaml::load_from_str(data)?;
+        if data.is_empty() {
+            bail!("Not yaml document");
+        }
+        Ok(CheckConfig {
+            ms_sql: ms_sql::Config::from_yaml(&data[0])?,
+        })
+    }
+
     pub fn ms_sql(&self) -> Option<&ms_sql::Config> {
         self.ms_sql.as_ref()
     }

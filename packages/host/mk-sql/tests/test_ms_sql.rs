@@ -1307,6 +1307,47 @@ async fn test_check_config_exec_piggyback_remote() {
     assert!(!output.is_empty());
 }
 
+fn create_exclude_config(endpoint: SqlDbEndpoint, entry: &str) -> String {
+    format!(
+        r#"
+---
+mssql:
+  main:
+    authentication:
+       username: {}
+       password: {}
+       type: "sql_server"
+    connection:
+       hostname: {}
+       exclude_databases: {}
+    sections:
+      - instances:
+      - transactionlogs:
+      - datafiles:
+      - tablespaces:
+      - cluster:
+"#,
+        endpoint.user, endpoint.pwd, endpoint.host, entry
+    )
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_check_exclude() {
+    let with_exclude = create_exclude_config(
+        tools::get_remote_sql_from_env_var().unwrap(),
+        "[ tempdb, model]",
+    );
+    let empty_exclude = create_exclude_config(tools::get_remote_sql_from_env_var().unwrap(), "");
+    let excluded_config = CheckConfig::load_str(&with_exclude).unwrap();
+    let normal_config = CheckConfig::load_str(&empty_exclude).unwrap();
+    let excluded_data = excluded_config.exec(&Env::default()).await.unwrap();
+    let normal_data = normal_config.exec(&Env::default()).await.unwrap();
+    assert!(!excluded_data.contains("|tempdb|"));
+    assert!(!excluded_data.contains("|model|"));
+    assert_eq!(normal_data.matches("|tempdb|").count() as u32, 9);
+    assert_eq!(normal_data.matches("|model|").count() as u32, 6);
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn test_lack_of_sql_db() {
     let dir = tools::create_temp_process_dir();

@@ -98,12 +98,12 @@ def send_push_notification(
 
     if (priority := context.get("PARAMETER_PRIORITY_1")) and priority in PRIORITY_MAP:
         if priority == "emergency":
-            expire = context.get("PARAMETER_PRIORITY_2_1", 0)
-            retry = context.get("PARAMETER_PRIORITY_2_2", 0)
+            retry = context.get("PARAMETER_PRIORITY_2_1", 0)
+            expire = context.get("PARAMETER_PRIORITY_2_2", 0)
             params += [
                 ("priority", PRIORITY_MAP[priority]),
-                ("expire", str(int(float(expire)))),
                 ("retry", str(int(float(retry)))),
+                ("expire", str(int(float(expire)))),
             ]
             if recipient := context.get("PARAMETER_RECIPIENT_KEY"):
                 params.append(("receipts", recipient))

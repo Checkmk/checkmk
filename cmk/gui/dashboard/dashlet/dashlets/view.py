@@ -6,8 +6,8 @@
 import contextlib
 import copy
 import json
-from collections.abc import Callable, Iterator, Sequence
-from typing import cast, Literal, TypeVar
+from collections.abc import Callable, Iterator
+from typing import cast, TypeVar
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
@@ -15,7 +15,14 @@ from cmk.gui import visuals
 from cmk.gui.config import active_config, Config
 from cmk.gui.dashboard.dashlet.base import IFrameDashlet
 from cmk.gui.dashboard.store import get_permitted_dashboards
-from cmk.gui.dashboard.type_defs import DashletConfig, DashletId, DashletSize
+from cmk.gui.dashboard.type_defs import (
+    ABCViewDashletConfig,
+    DashletId,
+    DashletSize,
+    EmbeddedViewDashletConfig,
+    LinkedViewDashletConfig,
+    ViewDashletConfig,
+)
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
@@ -27,12 +34,9 @@ from cmk.gui.pages import Page
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import (
-    ColumnSpec,
     DashboardEmbeddedViewSpec,
     HTTPVariables,
-    InventoryJoinMacrosSpec,
     SingleInfos,
-    SorterSpec,
     ViewSpec,
     VisualContext,
 )
@@ -47,52 +51,7 @@ from cmk.gui.views.store import get_all_views, get_permitted_views
 from cmk.gui.views.view_choices import view_choices
 from cmk.gui.visuals import get_only_sites_from_context
 
-
-class ABCViewDashletConfig(DashletConfig):
-    name: str
-
-
 VT = TypeVar("VT", bound=ABCViewDashletConfig)
-
-
-class LinkedViewDashletConfig(ABCViewDashletConfig): ...
-
-
-class EmbeddedViewDashletConfig(ABCViewDashletConfig):
-    datasource: str
-
-
-class _ViewDashletConfigMandatory(ABCViewDashletConfig):
-    # These fields are redundant between DashletConfig and Visual
-    # name: str
-    # context: VisualContext
-    # single_infos: SingleInfos
-    # title: str | LazyString
-    add_context_to_title: bool
-    sort_index: int
-    is_show_more: bool
-    # From: ViewSpec
-    datasource: str
-    layout: str  # TODO: Replace with literal? See layout_registry.get_choices()
-    group_painters: list[ColumnSpec]
-    painters: list[ColumnSpec]
-    browser_reload: int
-    num_columns: int
-    column_headers: Literal["off", "pergroup", "repeat"]
-    sorters: Sequence[SorterSpec]
-
-
-class ViewDashletConfig(_ViewDashletConfigMandatory, total=False):
-    # From: ViewSpec
-    add_headers: str
-    # View editor only adds them in case they are truish. In our built-in specs these flags are also
-    # partially set in case they are falsy
-    mobile: bool
-    mustsearch: bool
-    force_checkboxes: bool
-    play_sounds: bool
-    user_sortable: bool
-    inventory_join_macros: InventoryJoinMacrosSpec
 
 
 def copy_view_into_dashlet(

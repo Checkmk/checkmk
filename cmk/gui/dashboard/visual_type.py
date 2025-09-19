@@ -17,9 +17,9 @@ from cmk.gui.page_menu import make_javascript_link, PageMenuEntry
 from cmk.gui.type_defs import VisualContext
 from cmk.gui.visuals.type import VisualType
 
-from .dashlet import copy_view_into_dashlet, dashlet_registry, DashletConfig, ViewDashletConfig
+from .dashlet import copy_view_into_dashlet, dashlet_registry, DashletConfig
 from .store import add_dashlet, get_permitted_dashboards, load_dashboard
-from .type_defs import ABCGraphDashletConfig
+from .type_defs import ABCGraphDashletConfig, ViewDashletConfig
 
 
 class VisualTypeDashboards(VisualType):

@@ -14,7 +14,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.config import Config, default_authorized_builtin_role_ids
-from cmk.gui.dashboard import DashletConfig, LinkedViewDashletConfig, ViewDashletConfig
+from cmk.gui.dashboard.type_defs import DashletConfig, LinkedViewDashletConfig, ViewDashletConfig
 from cmk.gui.data_source import ABCDataSource, DataSourceRegistry, row_id, RowTableLivestatus
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html

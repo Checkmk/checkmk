@@ -3,14 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from typing import Any, Literal, NewType, NotRequired, TypedDict
 
 from cmk.gui.type_defs import (
+    ColumnSpec,
     DashboardEmbeddedViewSpec,
     FilterName,
     GraphPresentation,
     GraphRenderOptionsVS,
+    InventoryJoinMacrosSpec,
     SingleInfos,
+    SorterSpec,
     Visual,
     VisualContext,
     VisualName,
@@ -183,6 +187,50 @@ type EventBarChartRenderMode = (
 class EventBarChartDashletConfig(DashletConfig):
     render_mode: EventBarChartRenderMode
     log_target: Literal["both", "host", "service"]
+
+
+class ABCViewDashletConfig(DashletConfig):
+    name: str
+
+
+class LinkedViewDashletConfig(ABCViewDashletConfig): ...
+
+
+class EmbeddedViewDashletConfig(ABCViewDashletConfig):
+    datasource: str
+
+
+class _ViewDashletConfigMandatory(ABCViewDashletConfig):
+    # These fields are redundant between DashletConfig and Visual
+    # name: str
+    # context: VisualContext
+    # single_infos: SingleInfos
+    # title: str | LazyString
+    add_context_to_title: bool
+    sort_index: int
+    is_show_more: bool
+    # From: ViewSpec
+    datasource: str
+    layout: str  # TODO: Replace with literal? See layout_registry.get_choices()
+    group_painters: list[ColumnSpec]
+    painters: list[ColumnSpec]
+    browser_reload: int
+    num_columns: int
+    column_headers: Literal["off", "pergroup", "repeat"]
+    sorters: Sequence[SorterSpec]
+
+
+class ViewDashletConfig(_ViewDashletConfigMandatory, total=False):
+    # From: ViewSpec
+    add_headers: str
+    # View editor only adds them in case they are truish. In our built-in specs these flags are also
+    # partially set in case they are falsy
+    mobile: bool
+    mustsearch: bool
+    force_checkboxes: bool
+    play_sounds: bool
+    user_sortable: bool
+    inventory_join_macros: InventoryJoinMacrosSpec
 
 
 class NtopAlertsDashletConfig(DashletConfig): ...

@@ -8,8 +8,7 @@ from typing import Annotated, Literal, override, Self
 from pydantic import AfterValidator
 from pydantic_core import ErrorDetails
 
-from cmk.gui.dashboard import LinkedViewDashletConfig
-from cmk.gui.dashboard.dashlet.dashlets.view import EmbeddedViewDashletConfig
+from cmk.gui.dashboard.type_defs import EmbeddedViewDashletConfig, LinkedViewDashletConfig
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model

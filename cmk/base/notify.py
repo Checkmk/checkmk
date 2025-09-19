@@ -38,6 +38,7 @@ from cmk.base import events
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.timeout import MKTimeout, Timeout
 from cmk.events.event_context import EnrichedEventContext, EventContext
 from cmk.events.log_to_history import (
     log_to_history,
@@ -76,7 +77,6 @@ from cmk.utils.notify_types import (
     UUIDs,
 )
 from cmk.utils.regex import regex
-from cmk.utils.timeout import MKTimeout, Timeout
 from cmk.utils.timeperiod import (
     is_timeperiod_active,
     timeperiod_active,

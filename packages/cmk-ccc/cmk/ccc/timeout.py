@@ -24,7 +24,7 @@ class Timeout:
     def signaled(self) -> bool:
         return self._signaled
 
-    def _handler(self, signum: int, frame: FrameType | None) -> NoReturn:
+    def _handler(self, _signum: int, _frame: FrameType | None) -> NoReturn:
         self._signaled = True
         raise MKTimeout(self.message)
 

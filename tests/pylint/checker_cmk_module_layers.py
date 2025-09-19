@@ -476,7 +476,6 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.regex",
         "cmk.utils.rulesets",
         "cmk.utils.servicename",
-        "cmk.utils.timeout",
         "cmk.utils.timeperiod",
         "cmk.utils.translations",
     ),
@@ -487,7 +486,6 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.snmplib",
         "cmk.utils.caching",
         "cmk.utils.paths",
-        "cmk.utils.timeout",
     ),
     Component("cmk.cmkcert"): _allow(
         *PACKAGE_CCC,

@@ -17,12 +17,12 @@ from cmk.automations.results import ABCAutomationResult
 from cmk.base import config, profiling
 from cmk.ccc import version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
+from cmk.ccc.timeout import Timeout
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.utils import log, paths
 from cmk.utils.log import console
 from cmk.utils.plugin_loader import import_plugins
 from cmk.utils.rulesets import RuleSetName
-from cmk.utils.timeout import Timeout
 
 tracer = trace.get_tracer()
 

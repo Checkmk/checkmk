@@ -62,7 +62,7 @@ class MKTimeout(MKException):
         automations which have a timeout set.
 
     See also:
-        `cmk.utils.timeout` has a context manager using it.
+        `cmk.ccc.timeout` has a context manager using it.
     """
 
 

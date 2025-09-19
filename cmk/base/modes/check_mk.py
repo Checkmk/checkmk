@@ -60,6 +60,7 @@ from cmk.ccc.cpu_tracking import CPUTracker
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.ccc.store import activation_lock
+from cmk.ccc.timeout import Timeout
 from cmk.checkengine import inventory
 from cmk.checkengine.checking import (
     execute_checkmk_checks,
@@ -151,7 +152,6 @@ from cmk.utils.rulesets.ruleset_matcher import (
 from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist
 from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import TagID
-from cmk.utils.timeout import Timeout
 from cmk.utils.timeperiod import load_timeperiods
 
 from ._localize import do_localize

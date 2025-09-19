@@ -177,6 +177,17 @@ py_library(
 )
 
 py_library(
+    name = "timeout",
+    srcs = ["cmk/ccc/timeout.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        "_init",
+        "exceptions",
+    ],
+)
+
+py_library(
     name = "tty",
     srcs = ["cmk/ccc/tty.py"],
     imports = ["."],
@@ -200,6 +211,7 @@ _ALL = [
     "resulttype",
     "site",
     "store",
+    "timeout",
     "tty",
     "user",
     "version",

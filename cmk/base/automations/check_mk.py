@@ -129,6 +129,7 @@ from cmk.ccc.exceptions import (
     OnError,
 )
 from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
+from cmk.ccc.timeout import Timeout
 from cmk.ccc.version import edition_supports_nagvis
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.checking import compute_check_parameters, ServiceConfigurer
@@ -233,7 +234,6 @@ from cmk.utils.rulesets.ruleset_matcher import (
     RulesetName,
 )
 from cmk.utils.servicename import Item, ServiceName
-from cmk.utils.timeout import Timeout
 from cmk.utils.timeperiod import load_timeperiods, timeperiod_active
 
 HistoryFile = str

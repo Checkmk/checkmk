@@ -5,11 +5,10 @@
 
 import functools
 import re
-from collections.abc import Callable, Collection, Iterable
+from collections.abc import Callable, Collection, Iterable, Mapping
 from dataclasses import dataclass
 from logging import Logger
 
-import cmk.fetchers._snmpcache as snmp_cache
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.ccc.tty import format_warning
@@ -17,6 +16,7 @@ from cmk.helper_interface import FetcherError
 from cmk.snmplib import (
     get_single_oid,
     SNMPBackend,
+    SNMPDecodedString,
     SNMPDetectAtom,
     SNMPDetectBaseType,
     SNMPSectionName,
@@ -64,16 +64,15 @@ def _snmp_scan(
     scan_config: SNMPScanConfig,
     backend: SNMPBackend,
 ) -> frozenset[SNMPSectionName]:
-    snmp_cache.initialize_single_oid_cache(backend.config.hostname, backend.config.ipaddress)
     backend.logger.debug("  SNMP scan:")
-
-    if scan_config.missing_sys_description:
-        _fake_description_object(backend.logger)
-    else:
-        _prefetch_description_object(backend=backend)
 
     found_sections = _find_sections(
         sections,
+        (
+            _fake_description_object(backend.logger)
+            if scan_config.missing_sys_description
+            else _prefetch_description_object(backend=backend)
+        ),
         on_error=scan_config.on_error,
         backend=backend,
     )
@@ -81,38 +80,43 @@ def _snmp_scan(
     return found_sections
 
 
-def _prefetch_description_object(*, backend: SNMPBackend) -> None:
-    for oid, name in (
-        (OID_SYS_DESCR, "system description"),
-        (OID_SYS_OBJ, "system object"),
-    ):
+def _prefetch_description_object(*, backend: SNMPBackend) -> Mapping[str, SNMPDecodedString]:
+    def _fetch_required(oid: str, name: str) -> SNMPDecodedString:
         if (
-            get_single_oid(
+            value := get_single_oid(
                 oid,
-                single_oid_cache=snmp_cache.single_oid_cache(),
+                single_oid_cache={},
                 backend=backend,
                 log=backend.logger.debug,
             )
-            is None
-        ):
+        ) is None:
             raise FetcherError(
                 "Cannot fetch %s OID %s. Please check your SNMP "
                 "configuration. Possible reason might be: Wrong credentials, "
                 "wrong SNMP version, Firewall rules, etc." % (name, oid),
             )
+        return value
+
+    return {
+        oid: _fetch_required(oid, name)
+        for oid, name in (
+            (OID_SYS_DESCR, "system description"),
+            (OID_SYS_OBJ, "system object"),
+        )
+    }
 
 
-def _fake_description_object(logger: Logger) -> None:
+def _fake_description_object(logger: Logger) -> Mapping[str, SNMPDecodedString]:
     """Fake OID values to prevent issues with a lot of scan functions"""
     logger.debug(
         f'       Skipping system description OID (Set {OID_SYS_DESCR} and {OID_SYS_OBJ} to "")'
     )
-    snmp_cache.single_oid_cache()[OID_SYS_DESCR] = ""
-    snmp_cache.single_oid_cache()[OID_SYS_OBJ] = ""
+    return {OID_SYS_DESCR: "", OID_SYS_OBJ: ""}
 
 
 def _find_sections(
     sections: Iterable[SNMPScanSection],
+    initial_system_oids: Mapping[str, SNMPDecodedString],
     *,
     on_error: OnError,
     backend: SNMPBackend,
@@ -122,7 +126,7 @@ def _find_sections(
         oid_value_getter = functools.partial(
             get_single_oid,
             section_name=name,
-            single_oid_cache=snmp_cache.single_oid_cache(),
+            single_oid_cache={**initial_system_oids},
             backend=backend,
             log=backend.logger.debug,
         )

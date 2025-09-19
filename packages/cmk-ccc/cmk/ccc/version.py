@@ -688,6 +688,7 @@ _REQUIRED_PATCH_RELEASES_MAP: Final = {
         (
             Version.from_str("2.4.0p3"),  # copy acknowledged werks from version to site
             Version.from_str("2.4.0p3"),  # inventory tree transformation: repr -> json
+            Version.from_str("2.4.0p13"),  # make sure that rules.mk exists
         ),
     ),
 }

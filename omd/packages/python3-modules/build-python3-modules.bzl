@@ -117,7 +117,7 @@ build_cmd = """
     export CC="$$(which gcc)"
 
     # install requirements
-    export CPPFLAGS="-I$$HOME/$$EXT_DEPS_PATH/{openssl_dir}/openssl/include -I$$HOME/$$EXT_DEPS_PATH/{freetds_dir}/freetds/include -I$$HOME/$$EXT_DEPS_PATH/{python_dir}/python/include/python{pyMajMin}/"
+    export CPPFLAGS="-I$$HOME/$$EXT_DEPS_PATH/{openssl_dir}/openssl/include -I$$HOME/$$EXT_DEPS_PATH/{freetds_dir}/freetds/include -I$$HOME/$$EXT_DEPS_PATH/{python_dir}/python/include/python{pyMajMin}/ -Wno-error=incompatible-pointer-types"
     export LDFLAGS="-L$$HOME/$$EXT_DEPS_PATH/{openssl_dir}/openssl/lib -L$$HOME/$$EXT_DEPS_PATH/{freetds_dir}/freetds/lib -L$$HOME/$$EXT_DEPS_PATH/{python_dir}/python/lib -Wl,--strip-debug"
     {git_ssl_no_verify}\\
     $$PYTHON_EXECUTABLE -m pip install \\

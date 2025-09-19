@@ -65,10 +65,9 @@ RUN apt-get update && \
     apt-get install -y software-properties-common && \
     add-apt-repository -y ppa:ubuntu-toolchain-r/ppa && \
     apt-get update && \
-    apt-get install -y gcc-13 g\+\+-13 && \
     apt-get install -y gcc-14 g\+\+-14 && \
-    update-alternatives --install "/usr/bin/gcc" gcc "/usr/bin/gcc-13" 100 && \
-    update-alternatives --install "/usr/bin/g++" g++ "/usr/bin/g++-13" 100 && \
+    update-alternatives --install "/usr/bin/gcc" gcc "/usr/bin/gcc-14" 100 && \
+    update-alternatives --install "/usr/bin/g++" g++ "/usr/bin/g++-14" 100 && \
     rm -rf /var/cache/apt/*
 
 # required to run tests with bazel, requires +577MB

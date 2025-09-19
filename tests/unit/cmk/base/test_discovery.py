@@ -1527,7 +1527,6 @@ def test_commandline_discovery(
             snmp_fetcher_config=SNMPFetcherConfig(
                 on_error=OnError.RAISE,
                 missing_sys_description=lambda host_name: False,
-                oid_cache_dir=Path("/dev/null"),
                 selected_sections=NoSelectedSNMPSections(),
                 backend_override=None,
                 stored_walk_path=Path("/dev/null"),

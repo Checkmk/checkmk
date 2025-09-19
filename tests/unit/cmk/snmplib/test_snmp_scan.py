@@ -24,7 +24,6 @@ from cmk.snmplib import (
 )
 from cmk.snmplib._table import SNMPDecodedString
 from cmk.utils.log import logger
-from cmk.utils.paths import snmp_scan_cache_dir
 from tests.unit.mocks_and_helpers import FixPluginLegacy
 
 
@@ -171,14 +170,7 @@ class SNMPTestBackend(SNMPBackend):
 
 @pytest.fixture
 def backend() -> Iterator[SNMPBackend]:
-    try:
-        yield SNMPTestBackend(SNMPConfig, logger)
-    finally:
-        cachefile = snmp_scan_cache_dir / f"{SNMPConfig.hostname}.{SNMPConfig.ipaddress}"
-        try:
-            cachefile.unlink()
-        except FileNotFoundError:
-            pass
+    yield SNMPTestBackend(SNMPConfig, logger)
 
 
 @pytest.fixture

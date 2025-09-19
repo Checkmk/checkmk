@@ -56,7 +56,6 @@ class NoSelectedSNMPSections: ...
 class SNMPFetcherConfig:
     on_error: OnError
     missing_sys_description: Callable[[HostName], bool]
-    oid_cache_dir: Path
     selected_sections: frozenset[SNMPSectionName] | NoSelectedSNMPSections
     backend_override: SNMPBackendEnum | None
     stored_walk_path: Path

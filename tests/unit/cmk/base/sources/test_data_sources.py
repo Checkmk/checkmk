@@ -65,7 +65,6 @@ def _make_sources(
             snmp_fetcher_config=SNMPFetcherConfig(
                 on_error=OnError.RAISE,
                 missing_sys_description=lambda host_name: False,
-                oid_cache_dir=tmp_path,
                 selected_sections=NoSelectedSNMPSections(),
                 backend_override=None,
                 stored_walk_path=tmp_path,

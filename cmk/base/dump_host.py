@@ -209,7 +209,6 @@ def dump_host(
         + "\n"
     )
 
-    oid_cache_dir = cmk.utils.paths.snmp_scan_cache_dir
     stored_walk_path = cmk.utils.paths.snmpwalks_dir
     walk_cache_path = cmk.utils.paths.var_dir / "snmp_cache"
     file_cache_path = cmk.utils.paths.data_source_cache_dir
@@ -242,7 +241,6 @@ def dump_host(
                     SNMPFetcherConfig(
                         on_error=OnError.RAISE,
                         missing_sys_description=config_cache.missing_sys_description,
-                        oid_cache_dir=oid_cache_dir,
                         selected_sections=NoSelectedSNMPSections(),
                         backend_override=None,
                         stored_walk_path=stored_walk_path,

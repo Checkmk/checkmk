@@ -385,7 +385,6 @@ class AutomationDiscovery(DiscoveryAutomation):
                 SNMPFetcherConfig(
                     on_error=on_error,
                     missing_sys_description=config_cache.missing_sys_description,
-                    oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
                     selected_sections=NoSelectedSNMPSections(),
                     backend_override=None,
                     stored_walk_path=cmk.utils.paths.snmpwalks_dir,
@@ -540,7 +539,6 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
                     SNMPFetcherConfig(  # unused, obviously
                         on_error=OnError.RAISE,
                         missing_sys_description=config_cache.missing_sys_description,
-                        oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
                         selected_sections=NoSelectedSNMPSections(),
                         backend_override=None,
                         stored_walk_path=cmk.utils.paths.snmpwalks_dir,
@@ -643,7 +641,6 @@ class AutomationDiscoveryPreview(Automation):
                 SNMPFetcherConfig(
                     on_error=on_error,
                     missing_sys_description=config_cache.missing_sys_description,
-                    oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
                     selected_sections=NoSelectedSNMPSections(),
                     backend_override=None,
                     stored_walk_path=cmk.utils.paths.snmpwalks_dir,
@@ -1109,7 +1106,6 @@ def _execute_autodiscovery(
             SNMPFetcherConfig(
                 on_error=OnError.IGNORE,
                 missing_sys_description=config_cache.missing_sys_description,
-                oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
                 selected_sections=NoSelectedSNMPSections(),
                 backend_override=None,
                 stored_walk_path=cmk.utils.paths.snmpwalks_dir,
@@ -3394,7 +3390,6 @@ class AutomationDiagHost(Automation):
         ip_lookup_config = config_cache.ip_lookup_config()
         ip_family = ip_lookup_config.default_address_family(host_name)
         check_interval = config_cache.check_mk_check_interval(host_name)
-        oid_cache_dir = cmk.utils.paths.snmp_scan_cache_dir
         walk_cache_path = cmk.utils.paths.var_dir / "snmp_cache"
         file_cache_path = cmk.utils.paths.data_source_cache_dir
         tcp_cache_path = cmk.utils.paths.tcp_cache_dir
@@ -3430,7 +3425,6 @@ class AutomationDiagHost(Automation):
                 SNMPFetcherConfig(
                     on_error=OnError.RAISE,
                     missing_sys_description=config_cache.missing_sys_description,
-                    oid_cache_dir=oid_cache_dir,
                     selected_sections=NoSelectedSNMPSections(),
                     backend_override=None,
                     stored_walk_path=cmk.utils.paths.snmpwalks_dir,
@@ -3987,7 +3981,6 @@ class AutomationGetAgentOutput(Automation):
                         ),
                         snmp_fetcher_config=SNMPFetcherConfig(
                             on_error=OnError.RAISE,
-                            oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
                             missing_sys_description=config_cache.missing_sys_description,
                             selected_sections=NoSelectedSNMPSections(),
                             backend_override=None,

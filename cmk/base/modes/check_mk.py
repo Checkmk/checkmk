@@ -710,7 +710,6 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
                 SNMPFetcherConfig(
                     on_error=OnError.RAISE,
                     missing_sys_description=config_cache.missing_sys_description,
-                    oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
                     selected_sections=NoSelectedSNMPSections(),
                     backend_override=snmp_backend_override,
                     stored_walk_path=stored_walk_path,
@@ -2180,7 +2179,6 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
             SNMPFetcherConfig(
                 on_error=OnError.RAISE,
                 missing_sys_description=config_cache.missing_sys_description,
-                oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
                 selected_sections=NoSelectedSNMPSections(),
                 backend_override=snmp_backend_override,
                 stored_walk_path=cmk.utils.paths.snmpwalks_dir,
@@ -2539,7 +2537,6 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
             SNMPFetcherConfig(
                 on_error=on_error,
                 missing_sys_description=config_cache.missing_sys_description,
-                oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
                 selected_sections=(
                     NoSelectedSNMPSections()
                     if selected_sections is NO_SELECTION
@@ -2784,7 +2781,6 @@ def run_checking(
             SNMPFetcherConfig(
                 on_error=OnError.RAISE,
                 missing_sys_description=config_cache.missing_sys_description,
-                oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
                 selected_sections=(
                     NoSelectedSNMPSections()
                     if selected_sections is NO_SELECTION
@@ -3062,7 +3058,6 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
             SNMPFetcherConfig(
                 on_error=OnError.RAISE,
                 missing_sys_description=config_cache.missing_sys_description,
-                oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
                 selected_sections=(
                     NoSelectedSNMPSections()
                     if selected_sections is NO_SELECTION
@@ -3367,7 +3362,6 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
             SNMPFetcherConfig(
                 on_error=OnError.RAISE,
                 missing_sys_description=config_cache.missing_sys_description,
-                oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
                 selected_sections=(NoSelectedSNMPSections()),
                 backend_override=snmp_backend_override,
                 stored_walk_path=cmk.utils.paths.snmpwalks_dir,

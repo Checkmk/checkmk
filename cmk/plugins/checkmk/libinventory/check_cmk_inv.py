@@ -179,7 +179,6 @@ def inventory_as_check(
             SNMPFetcherConfig(
                 on_error=OnError.RAISE,
                 missing_sys_description=config_cache.missing_sys_description,
-                oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
                 selected_sections=NoSelectedSNMPSections(),
                 backend_override=None,
                 stored_walk_path=cmk.utils.paths.snmpwalks_dir,

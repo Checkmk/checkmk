@@ -365,9 +365,6 @@ KNOWN_UNDECLARED_DEPENDENCIES = {
         Path("buildscripts/scripts/get_distros.py"),
         Path("buildscripts/scripts/build-cmk-container.py"),
     },
-    ImportName("msrest"): {  # used in publish_cloud_images.py and not in the product
-        Path("buildscripts/scripts/publish_cloud_images.py"),
-    },
     ImportName("tests"): {
         Path("buildscripts/scripts/assert_build_artifacts.py"),
         Path("buildscripts/scripts/lib/registry.py"),

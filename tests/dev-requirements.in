@@ -21,7 +21,6 @@ jira # used by jira_alerter
 jsonschema
 libcst # concrete syntax trees for plugin migration helpers
 matplotlib # used by performance test plotting
-msrest
 multipart  # redfish server mocker for integration tests
 mypy # used by test/Makefile's test-mypy target
 mypy-protobuf # for mypy

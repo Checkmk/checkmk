@@ -12,10 +12,11 @@ import sys
 from typing import Final
 
 import boto3
+from azure.core.polling import LROPoller
 from azure.identity import DefaultAzureCredential
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.compute.models import (
-    GalleryArtifactVersionSource,
+    GalleryArtifactVersionFullSource,
     GalleryImageVersion,
     GalleryImageVersionPublishingProfile,
     GalleryImageVersionStorageProfile,
@@ -23,7 +24,6 @@ from azure.mgmt.compute.models import (
     TargetRegion,
 )
 from azure.mgmt.resource import ResourceManagementClient
-from msrest.polling import LROPoller
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 from cmk.ccc.version import _BaseVersion, ReleaseType, Version
@@ -320,7 +320,7 @@ class AzurePublisher(CloudPublisher):
                         storage_account_type=self.STORAGE_ACCOUNT_TYPE,
                     ),
                     storage_profile=GalleryImageVersionStorageProfile(
-                        source=GalleryArtifactVersionSource(
+                        source=GalleryArtifactVersionFullSource(
                             id=image_id,
                         ),
                         os_disk_image=GalleryOSDiskImage(
@@ -347,7 +347,7 @@ class AzurePublisher(CloudPublisher):
 
         # TODO: Implement step #2
 
-    def update_succesful(self, poller: LROPoller) -> None:
+    def update_succesful(self, poller: LROPoller[GalleryImageVersion]) -> None:
         while True:
             result = poller.result(self.SECONDS_TO_WAIT_FOR_NEXT_STATUS)
             assert isinstance(result, GalleryImageVersion)

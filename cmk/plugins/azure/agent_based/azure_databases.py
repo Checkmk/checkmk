@@ -166,7 +166,7 @@ check_plugin_azure_databases_connections = CheckPlugin(
     # FYI: Using explicitly None as ruleset name in order to use the factory function without
     # additional modification.
     check_ruleset_name=None,
-    check_default_parameters={},
+    check_default_parameters={"failed_connections": ("fixed", (1, 1))},
 )
 
 

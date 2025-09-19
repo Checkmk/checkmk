@@ -14,7 +14,7 @@ pip.parse(
     environment = {
         # Hack for building extensions from source.
         # See also:  https://github.com/bazelbuild/rules_python/issues/1463
-        "CC": "gcc-13",
+        "CC": "gcc-14",
     },
     hub_name = "cmk_requirements",
     python_version = "3.12.11",

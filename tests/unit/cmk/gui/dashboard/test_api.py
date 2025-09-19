@@ -1030,6 +1030,7 @@ class TestEmbeddedViewContent:
                         "type": "embedded_view",
                         "embedded_id": embedded_id,
                         "datasource": embedded_view_datasource,
+                        "restricted_to_single": ["host"],
                     }
                 ),
             },
@@ -1056,6 +1057,7 @@ class TestEmbeddedViewContent:
                         "type": "embedded_view",
                         "embedded_id": embedded_id,
                         "datasource": "hosts",  # does not match the embedded view's datasource
+                        "restricted_to_single": [],
                     }
                 ),
             },
@@ -1079,6 +1081,7 @@ class TestEmbeddedViewContent:
                         "type": "embedded_view",
                         "embedded_id": "some-random-id",
                         "datasource": "non_existent_datasource",  # expected to not exist
+                        "restricted_to_single": [],
                     }
                 ),
             },
@@ -1089,6 +1092,28 @@ class TestEmbeddedViewContent:
             "msg"
         ].startswith(
             "Value error, Value 'non_existent_datasource' is not allowed, valid options are:"
+        )
+
+    def test_invalid_info_names(self, clients: ClientRegistry) -> None:
+        payload = _create_dashboard_payload(
+            "test_dashboard",
+            {
+                "test_widget": _create_widget(
+                    {
+                        "type": "embedded_view",
+                        "embedded_id": "some-random-id",
+                        "datasource": "hosts",
+                        "restricted_to_single": ["non_existent_info"],  # expected to not exist
+                    }
+                ),
+            },
+        )
+        resp = clients.DashboardClient.create_relative_grid_dashboard(payload, expect_ok=False)
+        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
+        assert resp.json["fields"][
+            "body.widgets.test_widget.content.embedded_view.restricted_to_single.0"
+        ]["msg"].startswith(
+            "Value error, Value 'non_existent_info' is not allowed, valid options are:"
         )
 
 

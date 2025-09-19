@@ -26,6 +26,7 @@ from cmk.gui.type_defs import (
     DashboardEmbeddedViewSpec,
     FilterName,
     Icon,
+    SingleInfos,
     VisualContext,
 )
 from cmk.gui.views.icon.registry import all_icons
@@ -278,19 +279,29 @@ class BaseDashboardRequest(_BaseDashboard, ABC):
         """Convert the API model to the internal representation."""
         pass
 
-    def _get_used_embedded_views(self) -> set[str]:
-        """Return a set of all embedded view IDs that are used in this dashboard."""
+    def _get_used_embedded_views(self) -> dict[str, SingleInfos]:
+        """Return all embedded view IDs (and their single infos) that are used in this dashboard."""
         return {
-            widget.content.embedded_id
+            widget.content.embedded_id: widget.content.restricted_to_single
             for widget in self._iter_widgets()
             if isinstance(widget.content, EmbeddedViewContent)
         }
 
     def _to_internal_without_layout(
-        self, owner: UserId, dashboard_id: str, embedded_views: dict[str, DashboardEmbeddedViewSpec]
+        self,
+        owner: UserId,
+        dashboard_id: str,
+        raw_embedded_views: dict[str, DashboardEmbeddedViewSpec],
     ) -> DashboardConfig:
         used_embedded_views = self._get_used_embedded_views()
-        embedded_views = {k: v for k, v in embedded_views.items() if k in used_embedded_views}
+        updated_embedded_views = {}
+        for embedded_id, view in raw_embedded_views.items():
+            if embedded_id not in used_embedded_views:
+                continue  # associated widget was removed, so the view can be removed too
+
+            # update the single infos with what we got from the widgets
+            view["single_infos"] = used_embedded_views[embedded_id]
+            updated_embedded_views[embedded_id] = view
 
         return DashboardConfig(
             owner=owner,
@@ -318,7 +329,7 @@ class BaseDashboardRequest(_BaseDashboard, ABC):
             show_title=self.general_settings.title.render,
             mandatory_context_filters=self.filter_context.mandatory_context_filters,
             dashlets=[widget.to_internal() for widget in self._iter_widgets()],
-            embedded_views=embedded_views,
+            embedded_views=updated_embedded_views,
         )
 
 

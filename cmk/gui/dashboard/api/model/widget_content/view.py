@@ -17,6 +17,7 @@ from cmk.gui.openapi.framework.model.converter import RegistryConverter
 from cmk.gui.type_defs import DashboardEmbeddedViewSpec
 from cmk.gui.views.store import get_permitted_views
 
+from ..type_defs import AnnotatedInfoName
 from ._base import BaseWidgetContent
 
 
@@ -68,6 +69,12 @@ class EmbeddedViewContent(BaseWidgetContent):
             description="The datasource of the embedded view. Must match the embedded view.",
         )
     )
+    restricted_to_single: list[AnnotatedInfoName] = api_field(
+        description=(
+            "A list of single infos that this widget content is restricted to. "
+            "This means that the widget must be filtered to exactly one item for each info name."
+        )
+    )
 
     @classmethod
     @override
@@ -80,6 +87,7 @@ class EmbeddedViewContent(BaseWidgetContent):
             type="embedded_view",
             embedded_id=config["name"],
             datasource=config["datasource"],
+            restricted_to_single=list(config["single_infos"]),
         )
 
     @override
@@ -88,6 +96,7 @@ class EmbeddedViewContent(BaseWidgetContent):
             type=self.internal_type(),
             name=self.embedded_id,
             datasource=self.datasource,
+            single_infos=self.restricted_to_single,
         )
 
     def iter_validation_errors(

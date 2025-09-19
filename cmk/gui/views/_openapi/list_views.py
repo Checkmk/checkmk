@@ -28,6 +28,12 @@ from ._family import VIEW_FAMILY
 class ViewExtensions:
     # NOTE: intentionally sparse, so far this is only used in the dashboards UI
     data_source: str = api_field(description="ID of the data source.")
+    restricted_to_single: list[str] = api_field(
+        description=(
+            "A list of single infos that this view is restricted to. "
+            "This means that the view must be filtered to exactly one item for each info name."
+        )
+    )
 
 
 @api_model
@@ -52,7 +58,10 @@ def list_views_v1() -> ViewCollectionModel:
             id=view_name,
             domainType="view",
             title=str(view_spec.get("title", view_name)),  # convert lazy string
-            extensions=ViewExtensions(data_source=view_spec["datasource"]),
+            extensions=ViewExtensions(
+                data_source=view_spec["datasource"],
+                restricted_to_single=list(view_spec["single_infos"]),
+            ),
             links=[],
         )
         views.append(dashboard_model)

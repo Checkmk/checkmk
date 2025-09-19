@@ -105,6 +105,16 @@ class MetaData(TypedDict):
     updated_at: NotRequired[float]
 
 
+class OTelMetricsAssociationFilter(TypedDict):
+    attribute_type: Literal["resource", "scope", "data_point"]
+    attribute_key: str
+    attribute_value: str
+
+
+class OTelMetricsAssociationEnabled(TypedDict):
+    attribute_filters: Sequence[OTelMetricsAssociationFilter]
+
+
 # Possible improvements for the future:
 # - Might help to differentiate between effective attributes and non effective attributes, since
 #   in effective attributes many more attributes are mandatory
@@ -126,6 +136,9 @@ class BuiltInHostAttributes(TypedDict, total=False):
     additional_ipv4addresses: Sequence[HostAddress]
     additional_ipv6addresses: Sequence[HostAddress]
     snmp_community: SNMPCredentials
+    otel_metrics_association: (
+        tuple[Literal["enabled"], OTelMetricsAssociationEnabled] | tuple[Literal["disabled"], None]
+    )
     parents: Sequence[HostName]
     network_scan: NetworkScanSpec
     network_scan_result: NetworkScanResult

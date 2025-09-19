@@ -47,8 +47,6 @@
 # Last Sync Error: 1 (The computer did not resync because no time data was available.)
 # Time since Last Good Sync Time: 10.0402148s
 
-import itertools
-import re
 from dataclasses import dataclass
 from typing import TypedDict
 
@@ -65,6 +63,8 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+
+from .w32time_lib import before_parens, in_parens, parse_float, parse_hex, parse_int
 
 
 class StateParams(TypedDict):
@@ -114,30 +114,6 @@ class QueryStatus:
     seconds_since_last_good_sync: float
 
 
-def _parse_int(value: str) -> int:
-    value = value.replace("s", "")
-    return int(value)
-
-
-def _parse_float(value: str) -> float:
-    value = value.replace("s", "")
-    return float(value)
-
-
-def _parse_hex(value: str) -> int:
-    value = value.replace("s", "")
-    return int(value, 16)
-
-
-def _before_parens(value: str) -> str:
-    return "".join(itertools.takewhile(lambda c: c != "(", value)).strip()
-
-
-def _in_parens(value: str) -> str:
-    m = re.search(r"\(([^)]*)\)", value)
-    return m.group(1) if m else ""
-
-
 def parse_w32time_status(string_table: StringTable) -> QueryStatus:
     # Hack, in some languages (e.g. German) some lines may run long and wrap
     # If there is no ":" to split on, just drop the lines. In theory this isn't
@@ -150,22 +126,22 @@ def parse_w32time_status(string_table: StringTable) -> QueryStatus:
 
     # Some of these are probably not useful and can go away.
     query_status = QueryStatus(
-        leap_indicator=_parse_int(_before_parens(lines[0])),
-        stratum=_parse_int(_before_parens(lines[1])),
-        precision=_parse_int(_before_parens(lines[2])),
-        root_delay=_parse_float(_before_parens(lines[3])),
-        root_dispersion=_parse_float(_before_parens(lines[4])),
-        reference_id=_parse_hex(_before_parens(lines[5])),
+        leap_indicator=parse_int(before_parens(lines[0])),
+        stratum=parse_int(before_parens(lines[1])),
+        precision=parse_int(before_parens(lines[2])),
+        root_delay=parse_float(before_parens(lines[3])),
+        root_dispersion=parse_float(before_parens(lines[4])),
+        reference_id=parse_hex(before_parens(lines[5])),
         last_successful_sync_time=lines[6],  # Not super useful, i18n
         source=lines[7],
-        poll_interval=_parse_int(_in_parens(lines[8])),
-        phase_offset=_parse_float(lines[9]),
-        clock_rate=_parse_float(lines[10]),
-        state_machine=_parse_int(_before_parens(lines[11])),
-        time_source_flags=_parse_int(_before_parens(lines[12])),
-        server_role=_parse_int(_before_parens(lines[13])),
-        last_sync_error=_parse_int(_before_parens(lines[14])),
-        seconds_since_last_good_sync=_parse_float(lines[15]),
+        poll_interval=parse_int(in_parens(lines[8])),
+        phase_offset=parse_float(lines[9]),
+        clock_rate=parse_float(lines[10]),
+        state_machine=parse_int(before_parens(lines[11])),
+        time_source_flags=parse_int(before_parens(lines[12])),
+        server_role=parse_int(before_parens(lines[13])),
+        last_sync_error=parse_int(before_parens(lines[14])),
+        seconds_since_last_good_sync=parse_float(lines[15]),
     )
     return query_status
 

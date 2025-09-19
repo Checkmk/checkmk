@@ -3799,7 +3799,6 @@ class FetcherFactory:
                 missing_sys_description=self._snmp_fetcher_config.missing_sys_description(
                     host_name
                 ),
-                oid_cache_dir=self._snmp_fetcher_config.oid_cache_dir,
             ),
             do_status_data_inventory=self._config_cache.hwsw_inventory_parameters(
                 host_name

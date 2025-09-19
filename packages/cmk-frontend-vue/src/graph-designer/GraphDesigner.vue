@@ -768,9 +768,6 @@ const graphDesignerContentAsJson = computed(() => {
                   v-model:host-name="graphLine.host_name"
                   v-model:service-name="graphLine.service_name"
                   v-model:metric-name="graphLine.metric_name"
-                  :placeholder_host_name="_t('Host name')"
-                  :placeholder_service_name="_t('Service name')"
-                  :placeholder_metric_name="_t('Metric name')"
                   @update:host-name="updateGraphLineAutoTitle(graphLine)"
                   @update:service-name="updateGraphLineAutoTitle(graphLine)"
                   @update:metric-name="updateGraphLineAutoTitle(graphLine)"
@@ -795,9 +792,6 @@ const graphDesignerContentAsJson = computed(() => {
                   v-model:host-name="graphLine.host_name"
                   v-model:service-name="graphLine.service_name"
                   v-model:metric-name="graphLine.metric_name"
-                  :placeholder_host_name="_t('Host name')"
-                  :placeholder_service_name="_t('Service name')"
-                  :placeholder_metric_name="_t('Metric name')"
                   @update:host-name="updateGraphLineAutoTitle(graphLine)"
                   @update:service-name="updateGraphLineAutoTitle(graphLine)"
                   @update:metric-name="updateGraphLineAutoTitle(graphLine)"
@@ -864,9 +858,6 @@ const graphDesignerContentAsJson = computed(() => {
               v-model:host-name="dataMetric.hostName"
               v-model:service-name="dataMetric.serviceName"
               v-model:metric-name="dataMetric.metricName"
-              :placeholder_host_name="_t('Host name')"
-              :placeholder_service_name="_t('Service name')"
-              :placeholder_metric_name="_t('Metric name')"
             />
           </template>
           <template #metric_type>
@@ -900,9 +891,6 @@ const graphDesignerContentAsJson = computed(() => {
               v-model:host-name="dataScalar.hostName"
               v-model:service-name="dataScalar.serviceName"
               v-model:metric-name="dataScalar.metricName"
-              :placeholder_host_name="_t('Host name')"
-              :placeholder_service_name="_t('Service name')"
-              :placeholder_metric_name="_t('Metric name')"
             />
           </template>
           <template #metric_type>

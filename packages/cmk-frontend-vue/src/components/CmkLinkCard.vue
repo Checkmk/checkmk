@@ -30,7 +30,8 @@ interface CmkLinkCardProps {
   iconName?: string | undefined
   title: TranslatedString
   subtitle?: TranslatedString
-  url: string
+  url?: string
+  callback?: () => void
   openInNewTab: boolean
   disabled?: boolean
   variant?: CmkLinkCardVariants['variant']
@@ -43,7 +44,19 @@ const classes = computed(() => [
 </script>
 
 <template>
-  <a :href="url" :target="openInNewTab ? '_blank' : ''" class="cmk-link-card" :class="classes">
+  <a
+    :href="url || 'javascript:void(0)'"
+    :target="openInNewTab ? '_blank' : ''"
+    class="cmk-link-card"
+    :class="classes"
+    @click="
+      () => {
+        if (props.callback) {
+          props.callback()
+        }
+      }
+    "
+  >
     <CmkIcon v-if="iconName" :name="iconName" size="xxlarge" class="cmk-link-card__icon" />
     <div class="cmk-link-card__text-area">
       <CmkHeading type="h4" class="cmk-link-card__heading">{{ title }}</CmkHeading>

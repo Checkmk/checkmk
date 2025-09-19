@@ -57,8 +57,12 @@ class _State:
 
         # Do not yet set `self.last_reload_at`. We don't know if we succeed.
         time_right_before_reload = time.time()
-        self.loading_result = self.reload_config(self.plugins)
-        self.last_reload_at = time_right_before_reload
+        try:
+            self.loading_result = self.reload_config(self.plugins)
+            self.last_reload_at = time_right_before_reload
+        except (Exception, BaseException) as e:
+            LOGGER.error("[reloader] Error reloading configuration: %s", e)
+            raise
 
 
 @dataclass(frozen=True)

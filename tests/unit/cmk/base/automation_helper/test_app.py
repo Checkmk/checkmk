@@ -254,6 +254,7 @@ async def test_reloader_single_change(mocker: MockerFixture, cache: Cache) -> No
     state = _State(
         last_reload_at=1,
         automation_or_reload_lock=asyncio.Lock(),
+        reload_config=mock_reload_callback,
         plugins=None,
         loading_result=None,
     )
@@ -270,7 +271,6 @@ async def test_reloader_single_change(mocker: MockerFixture, cache: Cache) -> No
                 cooldown_interval=0.0,
             ),
             cache=cache,
-            reload_callback=mock_reload_callback,
             state=state,
             delayer_factory=lambda delay: _mock_delay(mock_delay_state, delay),
         )
@@ -298,6 +298,7 @@ async def test_reloader_two_changes(mocker: MockerFixture, cache: Cache) -> None
         last_reload_at=1,
         automation_or_reload_lock=asyncio.Lock(),
         plugins=None,
+        reload_config=mock_reload_callback,
         loading_result=None,
     )
     mock_delay_state = _MockDelayState(
@@ -313,7 +314,6 @@ async def test_reloader_two_changes(mocker: MockerFixture, cache: Cache) -> None
                 cooldown_interval=5.0,
             ),
             cache=cache,
-            reload_callback=mock_reload_callback,
             state=state,
             delayer_factory=lambda delay: _mock_delay(mock_delay_state, delay),
         )
@@ -349,6 +349,7 @@ async def test_reloader_takes_state_into_account(mocker: MockerFixture, cache: C
         last_reload_at=1,
         automation_or_reload_lock=lock,
         plugins=None,
+        reload_config=mock_reload_callback,
         loading_result=None,
     )
     mock_delay_state = _MockDelayState(
@@ -364,7 +365,6 @@ async def test_reloader_takes_state_into_account(mocker: MockerFixture, cache: C
                 cooldown_interval=0.0,
             ),
             cache=cache,
-            reload_callback=mock_reload_callback,
             state=state,
             delayer_factory=lambda delay: _mock_delay(mock_delay_state, delay),
         )

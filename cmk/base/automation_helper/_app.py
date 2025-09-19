@@ -46,9 +46,19 @@ class AutomationEngine(Protocol):
 @dataclass
 class _State:
     automation_or_reload_lock: asyncio.Lock
+    reload_config: Callable[[AgentBasedPlugins], config.LoadingResult]
     last_reload_at: float
     plugins: AgentBasedPlugins | None
     loading_result: config.LoadingResult | None
+
+    def load_new(self) -> None:
+        if self.plugins is None:
+            self.plugins = config.load_all_pluginX(paths.checks_dir)
+
+        # Do not yet set `self.last_reload_at`. We don't know if we succeed.
+        time_right_before_reload = time.time()
+        self.loading_result = self.reload_config(self.plugins)
+        self.last_reload_at = time_right_before_reload
 
 
 @dataclass(frozen=True)
@@ -56,7 +66,6 @@ class _ApplicationDependencies:
     automation_engine: AutomationEngine
     changes_cache: Cache
     reloader_config: ReloaderConfig
-    reload_config: Callable[[AgentBasedPlugins], config.LoadingResult]
     clear_caches_before_each_call: Callable[[ConfigCache], None]
     state: _State
 
@@ -83,10 +92,10 @@ def make_application(
         automation_engine=engine,
         changes_cache=cache,
         reloader_config=reloader_config,
-        reload_config=reload_config,
         clear_caches_before_each_call=clear_caches_before_each_call,
         state=_State(
             automation_or_reload_lock=asyncio.Lock(),
+            reload_config=reload_config,
             last_reload_at=0,
             plugins=None,
             loading_result=None,
@@ -104,19 +113,15 @@ def make_application(
 @asynccontextmanager
 async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     dependencies: _ApplicationDependencies = app.state.dependencies
-    dependencies.state.last_reload_at = time.time()
 
-    plugins = config.load_all_pluginX(paths.checks_dir)
-    dependencies.state.plugins = plugins
+    dependencies.state.load_new()
 
     tty.reinit()
-    dependencies.state.loading_result = dependencies.reload_config(plugins)
 
     reloader_task = asyncio.create_task(
         _reloader_task(
             config=dependencies.reloader_config,
             cache=dependencies.changes_cache,
-            reload_callback=lambda: dependencies.reload_config(plugins),
             state=dependencies.state,
         )
         if dependencies.reloader_config.active
@@ -131,7 +136,6 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 async def _reloader_task(
     config: ReloaderConfig,
     cache: Cache,
-    reload_callback: Callable[[], config.LoadingResult],
     state: _State,
     delayer_factory: Callable[[float], Awaitable[None]] = asyncio.sleep,
 ) -> None:
@@ -159,8 +163,7 @@ async def _reloader_task(
                         break
 
                     LOGGER.info("[reloader] Triggering reload")
-                    state.last_reload_at = time.time()
-                    state.loading_result = reload_callback()
+                    state.load_new()
                     break
 
             else:
@@ -191,7 +194,6 @@ async def _automation_endpoint(request: Request, payload: AutomationPayload) -> 
             payload,
             dependencies.automation_engine,
             dependencies.changes_cache,
-            dependencies.reload_config,
             dependencies.clear_caches_before_each_call,
             dependencies.state,
         )
@@ -201,7 +203,6 @@ def _execute_automation_endpoint(
     payload: AutomationPayload,
     engine: AutomationEngine,
     cache: Cache,
-    reload_config: Callable[[AgentBasedPlugins], config.LoadingResult],
     clear_caches_before_each_call: Callable[[ConfigCache], None],
     state: _State,
 ) -> AutomationResponse:
@@ -211,16 +212,7 @@ def _execute_automation_endpoint(
         payload.args,
     )
     if cache.reload_required(state.last_reload_at):
-        state.last_reload_at = time.time()
-        if not state.plugins:
-            # This should never happen. AFAICS, we have to make the plugins optional,
-            # because we don't want to load them when the `state` is first instantiated,
-            # but at a later point. This is a bit of a code smell, but I don't see a better
-            # way to do this right now.
-            # We could intialize the `state` with `AgentBasedPlugins.empty()` but that would
-            # bare the risk of accidentally operating with the empty set of plugins.
-            raise RuntimeError("Plugins are not loaded yet")
-        state.loading_result = reload_config(state.plugins)
+        state.load_new()
         LOGGER.warning("[automation] configurations were reloaded due to a stale state.")
 
     buffer_stdout = io.StringIO()

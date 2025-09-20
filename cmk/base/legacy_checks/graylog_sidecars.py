@@ -115,30 +115,34 @@ def check_graylog_sidecars(item, params, parsed):
             yield collector_state, "Collectors: %s" % collector_msg
 
     collector_data = item_data.get("collectors")
-    if collector_data is not None:
-        long_output = []
-        for collector in collector_data:
-            long_output_str = ""
+    if collector_data is None:
+        return
 
-            collector_id = collector.get("collector_id")
-            if collector_id is not None:
-                long_output_str += "ID: %s" % collector_id
+    long_output = []
+    for collector in collector_data:
+        long_output_str = ""
 
-            collector_msg = collector.get("message")
-            if collector_msg is not None:
-                long_output_str += ", Message: %s" % collector_msg
+        collector_id = collector.get("collector_id")
+        if collector_id is not None:
+            long_output_str += "ID: %s" % collector_id
 
-            collector_state = _handle_collector_states(collector.get("status", 3), params)
+        collector_msg = collector.get("message")
+        if collector_msg is not None:
+            long_output_str += ", Message: %s" % collector_msg
 
-            long_output.append((collector_state, long_output_str))
+        collector_state = _handle_collector_states(collector.get("status", 3), params)
 
-    if long_output:
-        max_state = max(state for state, _infotext in long_output)
+        long_output.append((collector_state, long_output_str))
 
-        yield max_state, "see long output for more details"
+    if not long_output:
+        return
 
-        for state, line in long_output:
-            yield state, "\n%s" % line
+    max_state = max(state for state, _infotext in long_output)
+
+    yield max_state, "see long output for more details"
+
+    for state, line in long_output:
+        yield state, "\n%s" % line
 
 
 def _handle_collector_states(collector_state, params):

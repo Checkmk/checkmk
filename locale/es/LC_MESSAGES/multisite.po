@@ -7662,6 +7662,10 @@ msgid "Attribute"
 msgstr "Atributo"
 
 #, fuzzy
+msgid "Attribute key"
+msgstr "Atributo"
+
+#, fuzzy
 msgid "Attribute match value"
 msgstr "Atributo a fijar"
 
@@ -7673,6 +7677,14 @@ msgid "Attribute to search"
 msgstr "Atributo a buscar"
 
 msgid "Attribute to set"
+msgstr "Atributo a fijar"
+
+#, fuzzy
+msgid "Attribute type"
+msgstr "Atributo a fijar"
+
+#, fuzzy
+msgid "Attribute value"
 msgstr "Atributo a fijar"
 
 #, python-brace-format
@@ -9005,6 +9017,10 @@ msgstr "Rendimiento de lectura"
 #, fuzzy
 msgid "Azure SQL database CPU usage"
 msgstr "Bases de datos Azure"
+
+#, fuzzy
+msgid "Azure SQL database connections"
+msgstr "Conexiones de bases de datos"
 
 #, fuzzy
 msgid "Azure SQL database deadlocks"
@@ -11209,6 +11225,10 @@ msgid "CPU used"
 msgstr "CPU utilizada"
 
 msgid "CPU utilization"
+msgstr "Utilización de la CPU"
+
+#, fuzzy
+msgid "CPU utilization %"
 msgstr "Utilización de la CPU"
 
 msgid "CPU utilization & Kernel performance"
@@ -17897,6 +17917,10 @@ msgstr "Datos no encontrados"
 
 msgid "Data path availability lower levels"
 msgstr "Disponibilidad de la ruta de datos niveles inferiores"
+
+#, fuzzy
+msgid "Data point"
+msgstr "Datos enviados"
 
 msgid "Data range"
 msgstr "Rango de datos"
@@ -31833,6 +31857,9 @@ msgstr "VMs Hyper-V (Windows)"
 msgid "Hyperthreads per CPU"
 msgstr "Hiperhilos por CPU"
 
+msgid "Hz"
+msgstr "Hz"
+
 #, fuzzy
 msgid "I/O database reads (attached) average latency"
 msgstr "E/S Lecturas de la base de datos (adjuntas) Latencia media"
@@ -40048,6 +40075,10 @@ msgstr "Niveles más bajos para la utilización de solicitudes"
 msgid "Lower levels for reservation utilization"
 msgstr "Niveles más bajos para la utilización de solicitudes"
 
+#, fuzzy
+msgid "Lower levels for successful connections"
+msgstr "Niveles para conexiones activas"
+
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr ""
 "Niveles inferiores para la velocidad del ventilador de un dispositivo de "
@@ -40153,9 +40184,6 @@ msgstr "MENSAJE"
 
 msgid "MGRs epoch levels and average"
 msgstr "Niveles de época de MGRs y media"
-
-msgid "MHz"
-msgstr "MHz"
 
 msgid "MI"
 msgstr "MI"
@@ -47220,6 +47248,10 @@ msgstr "OSN Atenuación láser"
 #, fuzzy
 msgid "OTLP endpoint"
 msgstr "Puntos finales"
+
+#, fuzzy
+msgid "OTel Metrics"
+msgstr "Métrica"
 
 #, fuzzy
 msgid "OVS bonding"
@@ -55919,6 +55951,10 @@ msgstr "Notas de resolución de casos de servicio"
 
 msgid "Resolved"
 msgstr "Resuelto"
+
+#, fuzzy
+msgid "Resource"
+msgstr "Fuentes"
 
 msgid "Resource Group"
 msgstr "Grupo de recursos"
@@ -74747,6 +74783,14 @@ msgstr ""
 "indexspace de una base de datos."
 
 #, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure SQL database "
+"connections"
+msgstr ""
+"Esta regla permite configurar los niveles de bloat para el tablespace y el "
+"indexspace de una base de datos."
+
+#, fuzzy
 msgid "This ruleset allows you to configure levels for the Storage data flows"
 msgstr ""
 "Esta regla permite configurar los niveles de bloat para el tablespace y el "
@@ -81474,6 +81518,10 @@ msgstr "Niveles superiores para los reinicios"
 msgid "Upper levels for size"
 msgstr "Niveles superiores para el tamaño"
 
+#, fuzzy
+msgid "Upper levels for successful connections"
+msgstr "Niveles para conexiones activas"
+
 msgid "Upper levels for surge queue length"
 msgstr "Niveles superiores para la longitud de la cola de espera"
 
@@ -84481,9 +84529,6 @@ msgstr "Servidor DNS VoIP 1"
 
 msgid "VoIP DNS server 2"
 msgstr "Servidor DNS VoIP 2"
-
-msgid "Volt"
-msgstr "Volt"
 
 msgid "Voltage"
 msgstr "Tensión"
@@ -91953,6 +91998,22 @@ msgid "No filter category available"
 msgstr "No hay información disponible"
 
 #, fuzzy
+msgid "Loading…"
+msgstr "Cargando..."
+
+#, fuzzy
+msgid "Failed to load options"
+msgstr "Operaciones de índice fallidas"
+
+#, fuzzy
+msgid "Visual information"
+msgstr "Recuperar información sobre..."
+
+#, fuzzy
+msgid "Loading options…"
+msgstr "Opciones de etiquetado"
+
+#, fuzzy
 msgid "Add Widget"
 msgstr "Añadir objetivo"
 
@@ -92297,6 +92358,10 @@ msgid "Strict"
 msgstr "Métrica"
 
 #, fuzzy
+msgid "Metric name"
+msgstr "Etiqueta métrica"
+
+#, fuzzy
 msgid "Graph metrics with all zero values"
 msgstr "Métricas con todos los valores cero"
 
@@ -92384,10 +92449,6 @@ msgstr "Operación de disolución"
 #, fuzzy
 msgid "Clone this entry"
 msgstr "Clonar esta métrica"
-
-#, fuzzy
-msgid "Metric name"
-msgstr "Etiqueta métrica"
 
 #, fuzzy
 msgid "Select at least two graph lines to edit"
@@ -93135,6 +93196,12 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "MHz"
+#~ msgstr "MHz"
+
+#~ msgid "Volt"
+#~ msgstr "Volt"
+
 #~ msgid "Auto - adjust to actual values"
 #~ msgstr "Automático: se ajusta a los valores reales"
 
@@ -93875,9 +93942,6 @@ msgstr ""
 #, python-format
 #~ msgid "Host labels: %d total (%d added)"
 #~ msgstr "Etiquetas de host: %d total (%d añadido)"
-
-#~ msgid "Hz"
-#~ msgstr "Hz"
 
 #, python-format
 #~ msgid ""

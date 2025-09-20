@@ -7543,6 +7543,10 @@ msgstr "Porta Atto Fibrebridge FC"
 msgid "Attribute"
 msgstr "Attributo"
 
+#, fuzzy
+msgid "Attribute key"
+msgstr "Attributo"
+
 msgid "Attribute match value"
 msgstr "Valore di corrispondenza dell'attributo"
 
@@ -7554,6 +7558,14 @@ msgstr "Attributo da cercare"
 
 msgid "Attribute to set"
 msgstr "Attributo da impostare"
+
+#, fuzzy
+msgid "Attribute type"
+msgstr "Attributo da impostare"
+
+#, fuzzy
+msgid "Attribute value"
+msgstr "Valore di corrispondenza dell'attributo"
 
 #, python-brace-format
 msgid "Attribute {diff_path} with value {val_t1} removed."
@@ -8870,6 +8882,10 @@ msgstr "Capacità di lettura"
 #, fuzzy
 msgid "Azure SQL database CPU usage"
 msgstr "Basi di dati Azure"
+
+#, fuzzy
+msgid "Azure SQL database connections"
+msgstr "Connessioni al database"
 
 #, fuzzy
 msgid "Azure SQL database deadlocks"
@@ -11039,6 +11055,10 @@ msgid "CPU used"
 msgstr "CPU utilizzata"
 
 msgid "CPU utilization"
+msgstr "Utilizzo della CPU"
+
+#, fuzzy
+msgid "CPU utilization %"
 msgstr "Utilizzo della CPU"
 
 msgid "CPU utilization & Kernel performance"
@@ -17612,6 +17632,10 @@ msgstr "Dati non trovati"
 
 msgid "Data path availability lower levels"
 msgstr "Disponibilità del percorso dati livelli inferiori"
+
+#, fuzzy
+msgid "Data point"
+msgstr "Dati inviati"
 
 msgid "Data range"
 msgstr "Gamma di dati"
@@ -31351,6 +31375,9 @@ msgstr "VM di Hyper-V (Windows)"
 msgid "Hyperthreads per CPU"
 msgstr "Hyperthreads per CPU"
 
+msgid "Hz"
+msgstr "Hz"
+
 #, fuzzy
 msgid "I/O database reads (attached) average latency"
 msgstr "Letture di database I/O (in allegato) Latenza media"
@@ -39430,6 +39457,10 @@ msgstr "Livelli superiori di utilizzo del disco"
 msgid "Lower levels for reservation utilization"
 msgstr "Livelli più bassi per l'utilizzo delle prenotazioni"
 
+#, fuzzy
+msgid "Lower levels for successful connections"
+msgstr "Livelli per le connessioni attive"
+
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr ""
 "Livelli inferiori per la velocità della ventola di un dispositivo hardware"
@@ -39534,9 +39565,6 @@ msgstr "MESSAGGIO"
 
 msgid "MGRs epoch levels and average"
 msgstr "Livelli di epoche MGRs e media"
-
-msgid "MHz"
-msgstr "MHz"
 
 msgid "MI"
 msgstr "MI"
@@ -46460,6 +46488,10 @@ msgstr "Attenuazione laser OSN"
 #, fuzzy
 msgid "OTLP endpoint"
 msgstr "Endpoints"
+
+#, fuzzy
+msgid "OTel Metrics"
+msgstr "Metriche"
 
 #, fuzzy
 msgid "OVS bonding"
@@ -55029,6 +55061,10 @@ msgstr "Note di risoluzione per i casi di servizio"
 
 msgid "Resolved"
 msgstr "Risolto"
+
+#, fuzzy
+msgid "Resource"
+msgstr "Fonti"
 
 msgid "Resource Group"
 msgstr "Gruppo di risorse"
@@ -73558,6 +73594,14 @@ msgstr ""
 "l'indexspace di un database."
 
 #, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure SQL database "
+"connections"
+msgstr ""
+"Questa regola permette di configurare i livelli di bloat per il tablespace e "
+"l'indexspace di un database."
+
+#, fuzzy
 msgid "This ruleset allows you to configure levels for the Storage data flows"
 msgstr ""
 "Questa regola permette di configurare i livelli di bloat per il tablespace e "
@@ -80157,6 +80201,10 @@ msgstr "Livelli superiori per i riavvii"
 msgid "Upper levels for size"
 msgstr "Livelli superiori per le dimensioni"
 
+#, fuzzy
+msgid "Upper levels for successful connections"
+msgstr "Livelli per le connessioni attive"
+
 msgid "Upper levels for surge queue length"
 msgstr "Livelli superiori per la lunghezza della coda"
 
@@ -83114,9 +83162,6 @@ msgstr "Server DNS VoIP 1"
 
 msgid "VoIP DNS server 2"
 msgstr "Server DNS VoIP 2"
-
-msgid "Volt"
-msgstr "Volt"
 
 msgid "Voltage"
 msgstr "Tensione"
@@ -90473,6 +90518,22 @@ msgid "No filter category available"
 msgstr "Nessuna informazione disponibile"
 
 #, fuzzy
+msgid "Loading…"
+msgstr "Caricamento..."
+
+#, fuzzy
+msgid "Failed to load options"
+msgstr "Operazioni di indice non riuscite"
+
+#, fuzzy
+msgid "Visual information"
+msgstr "Recupera informazioni su..."
+
+#, fuzzy
+msgid "Loading options…"
+msgstr "Opzioni di etichettatura"
+
+#, fuzzy
 msgid "Add Widget"
 msgstr "Aggiungere l'obiettivo"
 
@@ -90817,6 +90878,10 @@ msgid "Strict"
 msgstr "Metrico"
 
 #, fuzzy
+msgid "Metric name"
+msgstr "Etichetta metrica"
+
+#, fuzzy
 msgid "Graph metrics with all zero values"
 msgstr "Metriche con tutti i valori zero"
 
@@ -90904,10 +90969,6 @@ msgstr "Sciogliere l'operazione"
 #, fuzzy
 msgid "Clone this entry"
 msgstr "Clona questa metrica"
-
-#, fuzzy
-msgid "Metric name"
-msgstr "Etichetta metrica"
 
 #, fuzzy
 msgid "Select at least two graph lines to edit"
@@ -91652,6 +91713,12 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "MHz"
+#~ msgstr "MHz"
+
+#~ msgid "Volt"
+#~ msgstr "Volt"
+
 #~ msgid "Auto - adjust to actual values"
 #~ msgstr "Auto - si adatta ai valori reali"
 
@@ -92367,9 +92434,6 @@ msgstr ""
 #, python-format
 #~ msgid "Host labels: %d total (%d added)"
 #~ msgstr "Etichette dell'host: %d totale (%d aggiunto)"
-
-#~ msgid "Hz"
-#~ msgstr "Hz"
 
 #, python-format
 #~ msgid ""

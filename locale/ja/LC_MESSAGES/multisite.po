@@ -7182,6 +7182,10 @@ msgstr "Atto Fibrebridge FCポート"
 msgid "Attribute"
 msgstr "属性"
 
+#, fuzzy
+msgid "Attribute key"
+msgstr "属性"
+
 msgid "Attribute match value"
 msgstr "属性一致する値"
 
@@ -7193,6 +7197,14 @@ msgstr "検索する属性"
 
 msgid "Attribute to set"
 msgstr "設定する属性"
+
+#, fuzzy
+msgid "Attribute type"
+msgstr "設定する属性"
+
+#, fuzzy
+msgid "Attribute value"
+msgstr "属性一致する値"
 
 #, python-brace-format
 msgid "Attribute {diff_path} with value {val_t1} removed."
@@ -8347,6 +8359,10 @@ msgstr "読み取りスループット"
 
 msgid "Azure SQL database CPU usage"
 msgstr "AzureSQLデータベースCPU使用量"
+
+#, fuzzy
+msgid "Azure SQL database connections"
+msgstr "Azure データベース接続"
 
 msgid "Azure SQL database deadlocks"
 msgstr "AzureSQLデータベースデッドロック"
@@ -10419,6 +10435,10 @@ msgid "CPU used"
 msgstr "CPU使用率"
 
 msgid "CPU utilization"
+msgstr "CPU使用率"
+
+#, fuzzy
+msgid "CPU utilization %"
 msgstr "CPU使用率"
 
 msgid "CPU utilization & Kernel performance"
@@ -16734,6 +16754,10 @@ msgstr "データが見つかりません"
 
 msgid "Data path availability lower levels"
 msgstr "データパスの可用性下位レベル"
+
+#, fuzzy
+msgid "Data point"
+msgstr "送信データ"
 
 msgid "Data range"
 msgstr "データ範囲"
@@ -29585,6 +29609,9 @@ msgstr "Hyper-V VM (Windows)"
 msgid "Hyperthreads per CPU"
 msgstr "CPUあたりのハイパースレッド"
 
+msgid "Hz"
+msgstr "Hz"
+
 msgid "I/O database reads (attached) average latency"
 msgstr "I/Oデータベースの読み取り(添付)平均レイテンシ"
 
@@ -37298,6 +37325,10 @@ msgstr "リクエスト使用率の下位レベル"
 msgid "Lower levels for reservation utilization"
 msgstr "予約使用率の下位レベル"
 
+#, fuzzy
+msgid "Lower levels for successful connections"
+msgstr "アクティブな接続の下位レベル"
+
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr "ハードウェアデバイスのファン速度の下位レベル"
 
@@ -37389,9 +37420,6 @@ msgstr "メッセージ"
 
 msgid "MGRs epoch levels and average"
 msgstr "MGRのエポックレベルと平均"
-
-msgid "MHz"
-msgstr "MHz"
 
 msgid "MI"
 msgstr "MI"
@@ -43958,6 +43986,10 @@ msgstr "OSNレーザー減衰"
 
 msgid "OTLP endpoint"
 msgstr "OTLPエンドポイント"
+
+#, fuzzy
+msgid "OTel Metrics"
+msgstr "メトリクス"
 
 msgid "OVS bonding"
 msgstr "OVSボンディング"
@@ -51897,6 +51929,10 @@ msgstr "サービスケースの解決メモ"
 
 msgid "Resolved"
 msgstr "解決済み"
+
+#, fuzzy
+msgid "Resource"
+msgstr "ソース"
 
 msgid "Resource Group"
 msgstr "リソースグループ"
@@ -69709,6 +69745,14 @@ msgstr ""
 "このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
 "きます"
 
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure SQL database "
+"connections"
+msgstr ""
+"このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
+"きます"
+
 msgid "This ruleset allows you to configure levels for the Storage data flows"
 msgstr "このルールセットでは、ストレージのデータフローのレベルを設定できます"
 
@@ -75645,6 +75689,10 @@ msgstr "再起動の上位レベル"
 msgid "Upper levels for size"
 msgstr "サイズの上位レベル"
 
+#, fuzzy
+msgid "Upper levels for successful connections"
+msgstr "アクティブな接続の上位レベル"
+
 msgid "Upper levels for surge queue length"
 msgstr "サージキューの長さの上位レベル"
 
@@ -78336,9 +78384,6 @@ msgstr "VoIPのDNSサーバー1"
 
 msgid "VoIP DNS server 2"
 msgstr "VoIPのDNSサーバー2"
-
-msgid "Volt"
-msgstr "ボルト"
 
 msgid "Voltage"
 msgstr "電圧"
@@ -85439,6 +85484,22 @@ msgid "No filter category available"
 msgstr "利用可能な情報はありません"
 
 #, fuzzy
+msgid "Loading…"
+msgstr "読み込んでいます"
+
+#, fuzzy
+msgid "Failed to load options"
+msgstr "失敗したインデックス操作"
+
+#, fuzzy
+msgid "Visual information"
+msgstr "ファイル情報"
+
+#, fuzzy
+msgid "Loading options…"
+msgstr "ラベル付けオプション"
+
+#, fuzzy
 msgid "Add Widget"
 msgstr "ターゲットを追加"
 
@@ -85780,6 +85841,9 @@ msgstr "自動"
 msgid "Strict"
 msgstr "制限"
 
+msgid "Metric name"
+msgstr "メトリック名"
+
 msgid "Graph metrics with all zero values"
 msgstr "すべての値がゼロのグラフメトリクス"
 
@@ -85851,9 +85915,6 @@ msgstr "溶解操作"
 
 msgid "Clone this entry"
 msgstr "このエントリのクローンを作成する"
-
-msgid "Metric name"
-msgstr "メトリック名"
 
 #, fuzzy
 msgid "Select at least two graph lines to edit"
@@ -86592,6 +86653,12 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "MHz"
+#~ msgstr "MHz"
+
+#~ msgid "Volt"
+#~ msgstr "ボルト"
 
 #~ msgid "Auto - adjust to actual values"
 #~ msgstr "自動 - 実際の値に調整"
@@ -87336,9 +87403,6 @@ msgstr ""
 #, python-format
 #~ msgid "Host labels: %d total (%d added)"
 #~ msgstr "ホストラベル:合計%d(%d追加)"
-
-#~ msgid "Hz"
-#~ msgstr "Hz"
 
 #, python-format
 #~ msgid ""

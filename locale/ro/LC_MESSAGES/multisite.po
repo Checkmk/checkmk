@@ -7610,6 +7610,10 @@ msgstr "Portul Atto Fibrebridge FC"
 msgid "Attribute"
 msgstr "Atributul"
 
+#, fuzzy
+msgid "Attribute key"
+msgstr "Atributul"
+
 msgid "Attribute match value"
 msgstr "Valoarea de potrivire a atributului"
 
@@ -7621,6 +7625,14 @@ msgstr "Atributul de căutat"
 
 msgid "Attribute to set"
 msgstr "Atributul de setat"
+
+#, fuzzy
+msgid "Attribute type"
+msgstr "Atributul de setat"
+
+#, fuzzy
+msgid "Attribute value"
+msgstr "Valoarea de potrivire a atributului"
 
 #, python-brace-format
 msgid "Attribute {diff_path} with value {val_t1} removed."
@@ -8934,6 +8946,10 @@ msgstr "Viteză de citire"
 #, fuzzy
 msgid "Azure SQL database CPU usage"
 msgstr "Baze de date Azure"
+
+#, fuzzy
+msgid "Azure SQL database connections"
+msgstr "Conexiuni la baza de date"
 
 #, fuzzy
 msgid "Azure SQL database deadlocks"
@@ -11163,6 +11179,10 @@ msgid "CPU used"
 msgstr "CPU utilizat"
 
 msgid "CPU utilization"
+msgstr "Utilizare CPU"
+
+#, fuzzy
+msgid "CPU utilization %"
 msgstr "Utilizare CPU"
 
 msgid "CPU utilization & Kernel performance"
@@ -17783,6 +17803,10 @@ msgstr "Datele nu au fost găsite"
 
 msgid "Data path availability lower levels"
 msgstr "Disponibilitatea căii de acces a datelor la nivelurile inferioare"
+
+#, fuzzy
+msgid "Data point"
+msgstr "Date trimise"
 
 msgid "Data range"
 msgstr "Intervalul de date"
@@ -31647,6 +31671,9 @@ msgstr "VM Hyper-V (Windows)"
 msgid "Hyperthreads per CPU"
 msgstr "Hyperthread-uri per CPU"
 
+msgid "Hz"
+msgstr "Hz"
+
 #, fuzzy
 msgid "I/O database reads (attached) average latency"
 msgstr "Citiri ale bazei de date I/O (atașate) Latență medie"
@@ -39825,6 +39852,10 @@ msgstr "Niveluri inferioare de utilizare a cererilor"
 msgid "Lower levels for reservation utilization"
 msgstr "Niveluri mai mici de utilizare a rezervărilor"
 
+#, fuzzy
+msgid "Lower levels for successful connections"
+msgstr "Niveluri pentru conexiuni active"
+
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr ""
 "Niveluri inferioare pentru viteza ventilatorului unui dispozitiv hardware"
@@ -39931,9 +39962,6 @@ msgstr "MESAJ"
 
 msgid "MGRs epoch levels and average"
 msgstr "Nivelurile epocii MGRs și media"
-
-msgid "MHz"
-msgstr "MHz"
 
 msgid "MI"
 msgstr "MI"
@@ -46930,6 +46958,10 @@ msgstr "OSN Atenuarea laserului"
 #, fuzzy
 msgid "OTLP endpoint"
 msgstr "Punct final"
+
+#, fuzzy
+msgid "OTel Metrics"
+msgstr "Metrici"
 
 #, fuzzy
 msgid "OVS bonding"
@@ -55548,6 +55580,10 @@ msgstr "Note de rezoluție pentru cazurile de servicii"
 
 msgid "Resolved"
 msgstr "Rezolvat"
+
+#, fuzzy
+msgid "Resource"
+msgstr "Surse"
 
 msgid "Resource Group"
 msgstr "Grupul de resurse"
@@ -74383,6 +74419,14 @@ msgstr ""
 "tablespace și un indexspace al bazei de date."
 
 #, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure SQL database "
+"connections"
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
+#, fuzzy
 msgid "This ruleset allows you to configure levels for the Storage data flows"
 msgstr ""
 "Această regulă vă permite să configurați nivelurile de bloat pentru un "
@@ -81013,6 +81057,10 @@ msgstr "Niveluri superioare pentru reporniri"
 msgid "Upper levels for size"
 msgstr "Niveluri superioare pentru mărime"
 
+#, fuzzy
+msgid "Upper levels for successful connections"
+msgstr "Niveluri pentru conexiuni active"
+
 msgid "Upper levels for surge queue length"
 msgstr ""
 "Niveluri superioare pentru lungimea cozii de așteptare în caz de "
@@ -83998,9 +84046,6 @@ msgstr "Server DNS VoIP 1"
 
 msgid "VoIP DNS server 2"
 msgstr "Server DNS VoIP 2"
-
-msgid "Volt"
-msgstr "Volt"
 
 msgid "Voltage"
 msgstr "Tensiune"
@@ -91452,6 +91497,22 @@ msgid "No filter category available"
 msgstr "Nu există informații disponibile"
 
 #, fuzzy
+msgid "Loading…"
+msgstr "Încărcare..."
+
+#, fuzzy
+msgid "Failed to load options"
+msgstr "Operațiuni de indexare eșuate"
+
+#, fuzzy
+msgid "Visual information"
+msgstr "Obțineți informații despre..."
+
+#, fuzzy
+msgid "Loading options…"
+msgstr "Opțiuni de etichetare"
+
+#, fuzzy
 msgid "Add Widget"
 msgstr "Adăugați o țintă"
 
@@ -91800,6 +91861,10 @@ msgid "Strict"
 msgstr "Metric"
 
 #, fuzzy
+msgid "Metric name"
+msgstr "Etichetă metrică"
+
+#, fuzzy
 msgid "Graph metrics with all zero values"
 msgstr "Metrici cu toate valorile zero"
 
@@ -91887,10 +91952,6 @@ msgstr "Operațiunea de dizolvare"
 #, fuzzy
 msgid "Clone this entry"
 msgstr "Clonați această metrică"
-
-#, fuzzy
-msgid "Metric name"
-msgstr "Etichetă metrică"
 
 #, fuzzy
 msgid "Select at least two graph lines to edit"
@@ -92639,6 +92700,12 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "MHz"
+#~ msgstr "MHz"
+
+#~ msgid "Volt"
+#~ msgstr "Volt"
+
 #~ msgid "Auto - adjust to actual values"
 #~ msgstr "Auto - se ajustează la valorile reale"
 
@@ -93381,9 +93448,6 @@ msgstr ""
 #, python-format
 #~ msgid "Host labels: %d total (%d added)"
 #~ msgstr "Etichete pentru gazde: %d total (%d adăugat)"
-
-#~ msgid "Hz"
-#~ msgstr "Hz"
 
 #, python-format
 #~ msgid ""

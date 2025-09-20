@@ -7414,6 +7414,10 @@ msgstr "Atto Fibrebridge FC Port"
 msgid "Attribute"
 msgstr "Attribut"
 
+#, fuzzy
+msgid "Attribute key"
+msgstr "Attribut"
+
 msgid "Attribute match value"
 msgstr "Attribut-Match-Wert"
 
@@ -7425,6 +7429,14 @@ msgstr "Zu suchende Attribute"
 
 msgid "Attribute to set"
 msgstr "Zu setzende Attribute"
+
+#, fuzzy
+msgid "Attribute type"
+msgstr "Zu setzende Attribute"
+
+#, fuzzy
+msgid "Attribute value"
+msgstr "Attribut-Match-Wert"
 
 #, python-brace-format
 msgid "Attribute {diff_path} with value {val_t1} removed."
@@ -8575,6 +8587,10 @@ msgstr "Azure Redis Durchsatz"
 
 msgid "Azure SQL database CPU usage"
 msgstr "CPU-Auslastung der Azure SQL-Datenbank"
+
+#, fuzzy
+msgid "Azure SQL database connections"
+msgstr "Azure Datenbank-Verbindungen"
 
 msgid "Azure SQL database deadlocks"
 msgstr "Deadlocks der Azure SQL-Datenbank"
@@ -10712,6 +10728,10 @@ msgid "CPU used"
 msgstr "Gebrauchte CPU"
 
 msgid "CPU utilization"
+msgstr "CPU-Auslastung"
+
+#, fuzzy
+msgid "CPU utilization %"
 msgstr "CPU-Auslastung"
 
 msgid "CPU utilization & Kernel performance"
@@ -17209,6 +17229,10 @@ msgstr "Daten nicht gefunden"
 
 msgid "Data path availability lower levels"
 msgstr "Untergrenzen für Datenpfadverfügbarkeit"
+
+#, fuzzy
+msgid "Data point"
+msgstr "Gesendete Daten"
 
 msgid "Data range"
 msgstr "Datenbereich"
@@ -30326,6 +30350,9 @@ msgstr "Hyper-V VMs (Windows)"
 msgid "Hyperthreads per CPU"
 msgstr "Hyperthreads pro CPU"
 
+msgid "Hz"
+msgstr "Hz"
+
 msgid "I/O database reads (attached) average latency"
 msgstr "E/A-Datenbank-Lesezugriffe (Attached), durchschnittliche Latenz"
 
@@ -38258,6 +38285,10 @@ msgstr "Untergrenzen für die Auslastung von Anfragen"
 msgid "Lower levels for reservation utilization"
 msgstr "Untergrenzen für die Reservierungsauslastung"
 
+#, fuzzy
+msgid "Lower levels for successful connections"
+msgstr "Untergrenzen für aktive Verbindungen"
+
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr "Untergrenzen für Lüfterdrehzahl von Hardwaregerät"
 
@@ -38350,9 +38381,6 @@ msgstr "Meldung"
 
 msgid "MGRs epoch levels and average"
 msgstr "Levels und Durchschnitt für Abschnitte bzgl. MGRs"
-
-msgid "MHz"
-msgstr "MHz"
 
 msgid "MI"
 msgstr "MI"
@@ -45017,6 +45045,10 @@ msgstr "OSN Laser Dämpfung"
 
 msgid "OTLP endpoint"
 msgstr "OTLP-Endpunkt"
+
+#, fuzzy
+msgid "OTel Metrics"
+msgstr "Metriken"
 
 msgid "OVS bonding"
 msgstr "OVS-Kopplung"
@@ -53097,6 +53129,10 @@ msgstr "Lösungshinweise für Service-Fälle"
 
 msgid "Resolved"
 msgstr "Gelöst"
+
+#, fuzzy
+msgid "Resource"
+msgstr "Quellen"
 
 msgid "Resource Group"
 msgstr "Ressourcengruppe"
@@ -71699,6 +71735,14 @@ msgstr ""
 "Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring des Azure "
 "Redis Speichers zu konfigurieren"
 
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure SQL database "
+"connections"
+msgstr ""
+"Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring von Azure "
+"Redis Verbindungen zu konfigurieren"
+
 msgid "This ruleset allows you to configure levels for the Storage data flows"
 msgstr ""
 "Dieser Regelsatz ermöglicht es Ihnen, Levels für die Speicherdatenflüsse zu "
@@ -77764,6 +77808,10 @@ msgstr "Obergrenzen für Neustarts"
 msgid "Upper levels for size"
 msgstr "Obergrenzen für die Größe"
 
+#, fuzzy
+msgid "Upper levels for successful connections"
+msgstr "Obergrenzen für aktive Verbindungen"
+
 msgid "Upper levels for surge queue length"
 msgstr "Obergrenzen für die Länge der Überspannungswarteschlange"
 
@@ -80531,9 +80579,6 @@ msgstr "VoIP DNS Server 1"
 
 msgid "VoIP DNS server 2"
 msgstr "VoIP DNS Server 2"
-
-msgid "Volt"
-msgstr "Volt"
 
 msgid "Voltage"
 msgstr "Spannung"
@@ -87925,6 +87970,22 @@ msgid "No filter category available"
 msgstr "Keine Informationen vorhanden"
 
 #, fuzzy
+msgid "Loading…"
+msgstr "Lädt"
+
+#, fuzzy
+msgid "Failed to load options"
+msgstr "Fehlgeschlagene Indexoperationen"
+
+#, fuzzy
+msgid "Visual information"
+msgstr "Datei-Informationen"
+
+#, fuzzy
+msgid "Loading options…"
+msgstr "Beschriftungsoptionen"
+
+#, fuzzy
 msgid "Add Widget"
 msgstr "Ziel hinzufügen"
 
@@ -88266,6 +88327,9 @@ msgstr "Auto"
 msgid "Strict"
 msgstr "Streng"
 
+msgid "Metric name"
+msgstr "Metrik-Name"
+
 msgid "Graph metrics with all zero values"
 msgstr "Graph-Metriken mit allen Null-Werten"
 
@@ -88338,9 +88402,6 @@ msgstr "Operation auflösen"
 
 msgid "Clone this entry"
 msgstr "Diesen Eintrag klonen"
-
-msgid "Metric name"
-msgstr "Metrik-Name"
 
 #, fuzzy
 msgid "Select at least two graph lines to edit"
@@ -89084,6 +89145,12 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "MHz"
+#~ msgstr "MHz"
+
+#~ msgid "Volt"
+#~ msgstr "Volt"
 
 #~ msgid "Auto - adjust to actual values"
 #~ msgstr "Auto - an tatsächliche Werte anpassen"
@@ -89870,9 +89937,6 @@ msgstr ""
 #, python-format
 #~ msgid "Host labels: %d total (%d added)"
 #~ msgstr "Host Lables: %d gesamt (%d hinzugefügt)"
-
-#~ msgid "Hz"
-#~ msgstr "Hz"
 
 #, python-format
 #~ msgid ""

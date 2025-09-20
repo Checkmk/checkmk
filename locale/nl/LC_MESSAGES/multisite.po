@@ -7598,6 +7598,10 @@ msgid "Attribute"
 msgstr "Attribuut"
 
 #, fuzzy
+msgid "Attribute key"
+msgstr "Attribuut"
+
+#, fuzzy
 msgid "Attribute match value"
 msgstr "In te stellen attribuut"
 
@@ -7609,6 +7613,14 @@ msgid "Attribute to search"
 msgstr "Attribuut om te zoeken"
 
 msgid "Attribute to set"
+msgstr "In te stellen attribuut"
+
+#, fuzzy
+msgid "Attribute type"
+msgstr "In te stellen attribuut"
+
+#, fuzzy
+msgid "Attribute value"
 msgstr "In te stellen attribuut"
 
 #, python-brace-format
@@ -8935,6 +8947,10 @@ msgstr "Lees doorvoer"
 #, fuzzy
 msgid "Azure SQL database CPU usage"
 msgstr "Azure Databases"
+
+#, fuzzy
+msgid "Azure SQL database connections"
+msgstr "Databaseverbindingen"
 
 #, fuzzy
 msgid "Azure SQL database deadlocks"
@@ -11136,6 +11152,10 @@ msgid "CPU used"
 msgstr "CPU gebruikt"
 
 msgid "CPU utilization"
+msgstr "CPU-gebruik"
+
+#, fuzzy
+msgid "CPU utilization %"
 msgstr "CPU-gebruik"
 
 msgid "CPU utilization & Kernel performance"
@@ -17773,6 +17793,10 @@ msgstr "Gegevens niet gevonden"
 
 msgid "Data path availability lower levels"
 msgstr "Beschikbaarheid gegevenspad lagere niveaus"
+
+#, fuzzy
+msgid "Data point"
+msgstr "Verzonden gegevens"
 
 msgid "Data range"
 msgstr "Gegevensbereik"
@@ -31594,6 +31618,9 @@ msgstr "Hyper-V VM's (Windows)"
 msgid "Hyperthreads per CPU"
 msgstr "Hyperthreads per CPU"
 
+msgid "Hz"
+msgstr "Hz"
+
 #, fuzzy
 msgid "I/O database reads (attached) average latency"
 msgstr "I/O Databank Leest (Attached) Gemiddelde latentie"
@@ -39749,6 +39776,10 @@ msgstr "Hogere niveaus voor verzoeken gebruik"
 msgid "Lower levels for reservation utilization"
 msgstr "Hogere niveaus voor verzoeken gebruik"
 
+#, fuzzy
+msgid "Lower levels for successful connections"
+msgstr "Niveaus voor actieve verbindingen"
+
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr "Lagere niveaus voor de ventilatorsnelheid van een hardwareapparaat"
 
@@ -39849,9 +39880,6 @@ msgstr "MESSAGE"
 
 msgid "MGRs epoch levels and average"
 msgstr "MGR's epoch-niveaus en gemiddelde"
-
-msgid "MHz"
-msgstr "MHz"
 
 msgid "MI"
 msgstr "MI"
@@ -46852,6 +46880,10 @@ msgstr "OSN Laserdemping"
 #, fuzzy
 msgid "OTLP endpoint"
 msgstr "Eindpunt"
+
+#, fuzzy
+msgid "OTel Metrics"
+msgstr "Metriek"
 
 #, fuzzy
 msgid "OVS bonding"
@@ -55467,6 +55499,10 @@ msgstr "Nota's van oplossingen voor dienstgevallen"
 
 msgid "Resolved"
 msgstr "Opgelost"
+
+#, fuzzy
+msgid "Resource"
+msgstr "Bronnen"
 
 msgid "Resource Group"
 msgstr "Hulpbron Groep"
@@ -74117,6 +74153,14 @@ msgstr ""
 "tablespace en indexspace."
 
 #, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure SQL database "
+"connections"
+msgstr ""
+"Deze regel staat je toe om bloat levels te configureren voor een databases "
+"tablespace en indexspace."
+
+#, fuzzy
 msgid "This ruleset allows you to configure levels for the Storage data flows"
 msgstr ""
 "Deze regel staat je toe om bloat levels te configureren voor een databases "
@@ -80819,6 +80863,10 @@ msgstr "Bovenste niveaus voor herstarten"
 msgid "Upper levels for size"
 msgstr "Bovenste niveaus voor grootte"
 
+#, fuzzy
+msgid "Upper levels for successful connections"
+msgstr "Niveaus voor actieve verbindingen"
+
 msgid "Upper levels for surge queue length"
 msgstr "Bovenste niveaus voor de lengte van de wachtrij"
 
@@ -83793,9 +83841,6 @@ msgstr "VoIP DNS server 1"
 
 msgid "VoIP DNS server 2"
 msgstr "VoIP DNS server 2"
-
-msgid "Volt"
-msgstr "Volt"
 
 msgid "Voltage"
 msgstr "Spanning"
@@ -91227,6 +91272,22 @@ msgid "No filter category available"
 msgstr "Geen informatie beschikbaar"
 
 #, fuzzy
+msgid "Loading…"
+msgstr "Laden..."
+
+#, fuzzy
+msgid "Failed to load options"
+msgstr "Mislukte index operaties"
+
+#, fuzzy
+msgid "Visual information"
+msgstr "Informatie ophalen over..."
+
+#, fuzzy
+msgid "Loading options…"
+msgstr "Etiketteringsopties"
+
+#, fuzzy
 msgid "Add Widget"
 msgstr "Doel toevoegen"
 
@@ -91571,6 +91632,10 @@ msgid "Strict"
 msgstr "Metrisch"
 
 #, fuzzy
+msgid "Metric name"
+msgstr "Metrisch etiket"
+
+#, fuzzy
 msgid "Graph metrics with all zero values"
 msgstr "Metriek met alle nulwaarden"
 
@@ -91658,10 +91723,6 @@ msgstr "Oplossen"
 #, fuzzy
 msgid "Clone this entry"
 msgstr "Kloon deze metriek"
-
-#, fuzzy
-msgid "Metric name"
-msgstr "Metrisch etiket"
 
 #, fuzzy
 msgid "Select at least two graph lines to edit"
@@ -92407,6 +92468,12 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "MHz"
+#~ msgstr "MHz"
+
+#~ msgid "Volt"
+#~ msgstr "Volt"
+
 #~ msgid "Auto - adjust to actual values"
 #~ msgstr "Auto - aanpassen aan werkelijke waarden"
 
@@ -93127,9 +93194,6 @@ msgstr ""
 #, python-format
 #~ msgid "Host labels: %d total (%d added)"
 #~ msgstr "Host labels: %d totaal (%d toegevoegd)"
-
-#~ msgid "Hz"
-#~ msgstr "Hz"
 
 #, python-format
 #~ msgid ""

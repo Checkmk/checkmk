@@ -13,6 +13,7 @@ exports_files([
 py_library(
     name = "_init",
     srcs = ["cmk/ccc/__init__.py"],
+    data = [":py_typed"],
     imports = ["."],
 )
 
@@ -21,6 +22,7 @@ py_library(
     srcs = ["cmk/ccc/cleanup.py"],
     imports = ["."],
     visibility = ["//visibility:public"],
+    deps = ["_init"],
 )
 
 py_library(
@@ -28,6 +30,7 @@ py_library(
     srcs = ["cmk/ccc/resulttype.py"],
     imports = ["."],
     visibility = ["//visibility:public"],
+    deps = ["_init"],
 )
 
 py_library(
@@ -195,7 +198,7 @@ py_library(
     srcs = ["cmk/ccc/tty.py"],
     imports = ["."],
     visibility = ["//visibility:public"],
-    deps = [],
+    deps = ["_init"],
 )
 
 _ALL = [

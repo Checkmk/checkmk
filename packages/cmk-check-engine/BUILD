@@ -34,6 +34,22 @@ py_library(
     ],
 )
 
+py_library(
+    name = "helper-interface",
+    srcs = [
+        "cmk/helper_interface/__init__.py",
+        "cmk/helper_interface/_agentdatatype.py",
+        "cmk/helper_interface/_exceptions.py",
+        "cmk/helper_interface/_source_info.py",
+    ],
+    data = ["cmk/helper_interface/py.typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//packages/cmk-ccc:hostaddress",
+    ],
+)
+
 py_pytest_main(
     name = "__test__",
     deps = [
@@ -66,6 +82,7 @@ py_wheel(
     # Keep in sync with pyproject.toml
     version = "1.0.0",
     deps = [
+        ":helper-interface",
         ":snmplib",
     ],
 )

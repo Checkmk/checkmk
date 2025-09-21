@@ -13,11 +13,13 @@ __version__ = "2.5.0b1"
 
 import enum
 import functools
+import json
 import os
 import re
+import subprocess
 import sys
 import time
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
@@ -710,17 +712,41 @@ def _check_minimum_patch_release(
 #   |      |___/                                                           |
 #   '----------------------------------------------------------------------'
 
-# Collect general infos about CheckMk and OS which are used by crash reports
-# and diagnostics.
+
+def general_version_infos_from_env() -> VersionInfo:
+    """Compute general version infos via subprocess
+
+    The Checkmk site and relay both implement an executable `cmk-general-version-infos`
+    to provide the necessary information.
+    """
+    raw_version_infos = json.loads(subprocess.check_output(["cmk-general-version-infos"]))
+    return VersionInfo(
+        {
+            "core": raw_version_infos["core"],
+            "python_version": raw_version_infos["python_version"],
+            "edition": raw_version_infos["edition"],
+            "python_paths": raw_version_infos["python_paths"],
+            "version": raw_version_infos["version"],
+            "time": raw_version_infos["time"],
+            "os": raw_version_infos["os"],
+        }
+    )
 
 
 def get_general_version_infos(omd_root: Path) -> VersionInfo:
+    """Compute general information about runtime environment (Checkmk site and OS)"""
+    return general_version_infos(
+        edition=lambda: edition(omd_root).short, core=lambda: _current_monitoring_core(omd_root)
+    )
+
+
+def general_version_infos(edition: Callable[[], str], core: Callable[[], str]) -> VersionInfo:
     return {
         "time": time.time(),
         "os": _get_os_info(),
         "version": __version__,
-        "edition": edition(omd_root).short,
-        "core": _current_monitoring_core(omd_root),
+        "edition": edition(),
+        "core": core(),
         "python_version": sys.version,
         "python_paths": sys.path,
     }

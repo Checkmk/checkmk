@@ -166,7 +166,10 @@ py_library(
 
 py_library(
     name = "version",
-    srcs = ["cmk/ccc/version.py"],
+    srcs = [
+        "cmk/ccc/general_version_infos.py",
+        "cmk/ccc/version.py",
+    ],
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [

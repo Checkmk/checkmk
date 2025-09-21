@@ -57,6 +57,7 @@ pkg_files(
         ":cmk-compute-api-spec",
         ":cmk-convert-rrds",
         ":cmk-create-rrd",
+        ":cmk-general-version-infos",
         ":cmk-generate-api-spec",
         ":cmk-migrate-extension-rulesets",
         ":cmk-migrate-http",

@@ -701,7 +701,7 @@ class SnapMirrorModel(BaseModel):
 
     destination_svm: str
     policy_name: str | None = None
-    policy_type: str
+    policy_type: str | None = None
     state: str | None = None
     transfer_state: (
         Literal["aborted", "failed", "hard_aborted", "queued", "success", "transferring"] | None

@@ -1672,7 +1672,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
             text=msg,
             user_id=user.id,
             sites=[self._site_id],
-            domains=[config_variable.domain()],
+            domains=[config_variable.primary_domain()],
             need_restart=config_variable.need_restart(),
             use_git=config.wato_use_git,
         )
@@ -1856,7 +1856,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
             text=_("Added CA with fingerprint %s to trusted certificate authorities")
             % digest_sha256,
             user_id=user.id,
-            domains=[config_variable.domain()],
+            domains=[config_variable.primary_domain()],
             need_restart=config_variable.need_restart(),
             use_git=config.wato_use_git,
         )

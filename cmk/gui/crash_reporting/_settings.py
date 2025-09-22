@@ -12,7 +12,7 @@ from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupSupport
 
 ConfigVariableCrashReportURL = ConfigVariable(
     group=ConfigVariableGroupSupport,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="crash_report_url",
     valuespec=lambda: HTTPUrl(
         title=_("Crash report HTTP URL"),
@@ -23,7 +23,7 @@ ConfigVariableCrashReportURL = ConfigVariable(
 
 ConfigVariableCrashReportTarget = ConfigVariable(
     group=ConfigVariableGroupSupport,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="crash_report_target",
     valuespec=lambda: TextInput(
         title=_("Crash report fallback mail address"),

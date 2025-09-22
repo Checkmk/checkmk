@@ -13,7 +13,7 @@ from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupUserInterf
 
 ConfigVariableGraphTimeranges = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="graph_timeranges",
     valuespec=lambda: ListOf(
         valuespec=Dictionary(

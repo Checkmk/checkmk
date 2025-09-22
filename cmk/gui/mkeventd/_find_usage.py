@@ -22,7 +22,7 @@ def find_usages_of_contact_group_in_mkeventd_notify_contactgroup(
     used_in = []
     if "mkeventd_notify_contactgroup" in config_variable_registry:
         config_variable = config_variable_registry["mkeventd_notify_contactgroup"]
-        domain = config_variable.domain()
+        domain = config_variable.primary_domain()
         configured = global_config.get("mkeventd_notify_contactgroup")
         default_value = domain.default_globals()["mkeventd_notify_contactgroup"]
         if (configured and name == configured) or name == default_value:

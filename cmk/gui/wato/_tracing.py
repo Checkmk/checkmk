@@ -30,7 +30,7 @@ def register(config_variable_registry: ConfigVariableRegistry) -> None:
 
 ConfigVariableSiteTraceSend = ConfigVariable(
     group=ConfigVariableGroupSupport,
-    domain=ConfigDomainOMD,
+    primary_domain=ConfigDomainOMD,
     ident="site_trace_send",
     valuespec=lambda: CascadingDropdown(
         title=_("Send traces from Checkmk"),
@@ -70,7 +70,7 @@ ConfigVariableSiteTraceSend = ConfigVariable(
 
 ConfigVariableSiteTraceReceive = ConfigVariable(
     group=ConfigVariableGroupSupport,
-    domain=ConfigDomainOMD,
+    primary_domain=ConfigDomainOMD,
     ident="site_trace_receive",
     valuespec=lambda: Optional(
         title=_("Receive traces"),

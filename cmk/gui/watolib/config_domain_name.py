@@ -160,7 +160,7 @@ class ABCConfigDomain(abc.ABC):
         return [
             varname
             for (varname, v) in config_variable_registry.items()
-            if v.domain().ident() == self.ident()
+            if v.primary_domain().ident() == self.ident()
         ]
 
     @classmethod
@@ -296,7 +296,7 @@ class ConfigVariable:
         self,
         *,
         group: ConfigVariableGroup,
-        domain: type[ABCConfigDomain],
+        primary_domain: type[ABCConfigDomain],
         ident: str,
         valuespec: Callable[[], ValueSpec],
         need_restart: bool | None = None,
@@ -307,7 +307,7 @@ class ConfigVariable:
         domain_hint: HTML = HTML.empty(),
     ) -> None:
         self._group = group
-        self._domain_ident = domain.ident()
+        self._primary_domain_ident = primary_domain.ident()
         self._ident = ident
         self._valuespec_func = valuespec
         self._need_restart = need_restart
@@ -329,9 +329,9 @@ class ConfigVariable:
         """Returns the valuespec object of this configuration variable"""
         return self._valuespec_func()
 
-    def domain(self) -> ABCConfigDomain:
+    def primary_domain(self) -> ABCConfigDomain:
         """Returns the config domain this configuration variable belongs to"""
-        return config_domain_registry[self._domain_ident]
+        return config_domain_registry[self._primary_domain_ident]
 
     # TODO: This is boolean flag which defaulted to None in case a variable declaration did not
     # provide this attribute.
@@ -418,7 +418,7 @@ def register_configvar(
         ConfigVariable(
             ident=varname,
             group=group,
-            domain=domain,
+            primary_domain=domain,
             valuespec=valuespec,
             need_restart=need_restart,
             allow_reset=allow_reset,

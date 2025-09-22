@@ -4,19 +4,29 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { ConfiguredFilters, FilterDefinition } from '@/dashboard-wip/components/filter/types'
+import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
 
 // TODO: Validar metric selection (single or combined)
 // TODO: Reventar los filtros incompatibles
 
+export const parseContextConfiguredFilters = (
+  contextFilters: ContextFilters
+): ConfiguredFilters => {
+  const configuredFilters: ConfiguredFilters = {}
+  for (const flt in contextFilters) {
+    configuredFilters[flt] = contextFilters[flt]?.configuredValues || {}
+  }
+  return configuredFilters
+}
+
 export const squashFilters = (
-  dashboardFilters: ConfiguredFilters,
-  quickFilters: ConfiguredFilters,
+  contextConfiguredFilters: ConfiguredFilters,
   widgetFilters: ConfiguredFilters
 ): ConfiguredFilters => {
   // Priority: dashboard < quick < widget
   // We want to display first the widget filters, then the quick filters and last the dashboard filters
 
-  const collections: ConfiguredFilters[] = [widgetFilters, quickFilters, dashboardFilters]
+  const collections: ConfiguredFilters[] = [widgetFilters, contextConfiguredFilters]
   const allFilters: ConfiguredFilters = {}
 
   for (const collection of collections) {

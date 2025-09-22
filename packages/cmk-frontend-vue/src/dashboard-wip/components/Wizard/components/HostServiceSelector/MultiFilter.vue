@@ -8,12 +8,12 @@ import usei18n from '@/lib/i18n'
 
 import ActionButton from '@/dashboard-wip/components/Wizard/components/ActionButton.vue'
 import DisplayFilters from '@/dashboard-wip/components/Wizard/components/DisplayFilters/DisplayFilters.vue'
+import AddFilterMessage from '@/dashboard-wip/components/Wizard/components/filter/ObjectTypeFilterConfiguration/AddFilterMessage.vue'
 import FilterInputItem from '@/dashboard-wip/components/filter/FilterInputItem/FilterInputItem.vue'
 import type { Filters } from '@/dashboard-wip/components/filter/composables/useFilters'
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
 
 import type { UseAddFilter } from '../AddFilters/composables/useAddFilters'
-import AddFilterMessage from './AddFilterMessage.vue'
 import GenericFilter from './GenericFilter.vue'
 import type { ComponentLabels, GenericFilterLogic } from './types'
 

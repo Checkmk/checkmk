@@ -21,8 +21,7 @@ import { splitFiltersByCategory, squashFilters } from './utils'
 const { _t } = usei18n()
 
 interface FiltersRecapProps {
-  dashboardFilters?: ConfiguredFilters
-  quickFilters?: ConfiguredFilters
+  contextConfiguredFilters: ConfiguredFilters
   widgetFilters?: ConfiguredFilters
 
   metricType: MetricSelection | null
@@ -31,12 +30,6 @@ interface FiltersRecapProps {
 }
 
 const props = withDefaults(defineProps<FiltersRecapProps>(), {
-  dashboardFilters: () => {
-    return {} as ConfiguredFilters
-  },
-  quickFilters: () => {
-    return {} as ConfiguredFilters
-  },
   widgetFilters: () => {
     return {} as ConfiguredFilters
   }
@@ -45,7 +38,7 @@ const props = withDefaults(defineProps<FiltersRecapProps>(), {
 const filterDefinitions = useFilterDefinitions()
 
 const allFiltersByCategory: Record<string, ConfiguredFilters> = splitFiltersByCategory(
-  squashFilters(props.dashboardFilters, props.quickFilters, props.widgetFilters),
+  squashFilters(props.contextConfiguredFilters, props.widgetFilters),
   filterDefinitions!
 )
 

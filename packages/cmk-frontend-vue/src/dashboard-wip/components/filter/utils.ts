@@ -5,7 +5,7 @@
  */
 import { type Ref, inject } from 'vue'
 
-import type { FilterDefinition, FilterType } from './types.ts'
+import type { FilterDefinition, FilterDefinitions, FilterType } from './types.ts'
 
 export function parseFilterTypes(
   filterDefsRecord: Record<string, FilterDefinition>,
@@ -42,7 +42,7 @@ export function parseFilterTypes(
   return categories
 }
 
-export function useFilterDefinitions(): Record<string, FilterDefinition> {
+export function useFilterDefinitions(): FilterDefinitions {
   const filterCollection = inject<Ref<Record<string, FilterDefinition> | null>>('filterCollection')
   if (!filterCollection) {
     throw new Error('No provider for filterCollection')

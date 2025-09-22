@@ -7,13 +7,14 @@ import { isRef } from 'vue'
 
 import type { Filters } from '@/dashboard-wip/components/filter/composables/useFilters'
 import type { ConfiguredFilters, FilterDefinition } from '@/dashboard-wip/components/filter/types'
+import type { ObjectType } from '@/dashboard-wip/types/shared.ts'
 
 type FiltersDefinition = Record<string, FilterDefinition>
 
 export const parseFilters = (
   filtersHandler: Filters,
   filtersDefinition: FiltersDefinition,
-  filterType: string
+  filterType: ObjectType
 ): ConfiguredFilters => {
   const activeFilters = isRef(filtersHandler.activeFilters)
     ? filtersHandler.activeFilters.value

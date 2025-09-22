@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { inject } from 'vue'
+import { computed } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -14,19 +14,19 @@ import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import ActionBar from '@/dashboard-wip/components/Wizard/components/ActionBar.vue'
 import ActionButton from '@/dashboard-wip/components/Wizard/components/ActionButton.vue'
 import ContentSpacer from '@/dashboard-wip/components/Wizard/components/ContentSpacer.vue'
-import HostFilter from '@/dashboard-wip/components/Wizard/components/HostServiceSelector/HostFilter.vue'
-import ServiceFilter from '@/dashboard-wip/components/Wizard/components/HostServiceSelector/ServiceFilter.vue'
+import SingleMultiWidgetObjectFilterConfiguration from '@/dashboard-wip/components/Wizard/components/filter/SingleMultiWidgetObjectFilterConfiguration.vue'
+import { parseFilters } from '@/dashboard-wip/components/Wizard/components/filter/utils.ts'
 import type { ElementSelection } from '@/dashboard-wip/components/Wizard/types'
 import AvailableGraphs from '@/dashboard-wip/components/Wizard/wizards/metrics/components/AvailableGraphs.vue'
 import {
   MetricSelection,
   useSelectGraphTypes
 } from '@/dashboard-wip/components/Wizard/wizards/metrics/composables/useSelectGraphTypes'
-import type { Filters } from '@/dashboard-wip/components/filter/composables/useFilters'
-import type { ConfiguredFilters, FilterDefinition } from '@/dashboard-wip/components/filter/types'
+import type { ConfiguredFilters, ConfiguredValues } from '@/dashboard-wip/components/filter/types'
+import { useFilterDefinitions } from '@/dashboard-wip/components/filter/utils.ts'
+import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
+import type { ObjectType } from '@/dashboard-wip/types/shared.ts'
 
-import type { UseAddFilter } from '../../../components/AddFilters/composables/useAddFilters'
-import { useFiltersLogic } from '../../../components/HostServiceSelector/composables/useFiltersLogic'
 import MetricSelector from './MetricSelector/MetricSelector.vue'
 import type { UseCombinedMetric } from './MetricSelector/useCombinedMetric'
 import type { UseSingleMetric } from './MetricSelector/useSingleMetric'
@@ -34,16 +34,21 @@ import type { UseSingleMetric } from './MetricSelector/useSingleMetric'
 const { _t } = usei18n()
 
 interface Stage1Props {
-  dashboardFilters: ConfiguredFilters
-  quickFilters: ConfiguredFilters
-  filters: Filters
-  addFilterHandler: UseAddFilter
+  widgetConfiguredFilters: ConfiguredFilters
+  widgetActiveFilters: string[]
+  contextFilters: ContextFilters
+  isInFilterSelectionMenuFocus: (objectType: ObjectType) => boolean
+}
+
+interface Emits {
+  (e: 'set-focus', target: ObjectType): void
+  (e: 'update-filter-values', filterId: string, values: ConfiguredValues): void
+  (e: 'reset-object-type-filters', objectType: ObjectType): void
+  (e: 'goNext'): void
 }
 
 const props = defineProps<Stage1Props>()
-const emit = defineEmits<{
-  goNext: []
-}>()
+const emit = defineEmits<Emits>()
 
 const gotoNextStage = () => {
   /*
@@ -63,8 +68,12 @@ const gotoNextStage = () => {
   }
 }
 
+const hostObjectType = 'host'
+const serviceObjectType = 'service'
+
 const hostFilterType = defineModel<ElementSelection>('hostFilterType', { required: true })
 const serviceFilterType = defineModel<ElementSelection>('serviceFilterType', { required: true })
+
 const metricType = defineModel<MetricSelection>('metricType', { required: true })
 
 const singleMetricHandler = defineModel<UseSingleMetric>('singleMetricHandler', { required: true })
@@ -75,21 +84,14 @@ const combinedMetricHandler = defineModel<UseCombinedMetric>('combinedMetricHand
 const availableGraphs = useSelectGraphTypes(hostFilterType, serviceFilterType, metricType)
 
 // Filters
-const filterDefinitions = inject('filterDefinitions') as Record<string, FilterDefinition>
-const serviceFilterLogic = useFiltersLogic(
-  props.filters,
-  filterDefinitions,
-  serviceFilterType,
-  'service',
-  'service'
-)
-const hostFilterLogic = useFiltersLogic(
-  props.filters,
-  filterDefinitions,
-  hostFilterType,
-  'host',
-  'host',
-  (value: string) => ({ host: value, neg_host: '' })
+const filterDefinitions = useFilterDefinitions()
+const configuredFiltersByObjectType = computed(() =>
+  parseFilters(
+    props.widgetConfiguredFilters,
+    props.widgetActiveFilters,
+    filterDefinitions,
+    new Set(['host', 'service'])
+  )
 )
 </script>
 
@@ -121,13 +123,15 @@ const hostFilterLogic = useFiltersLogic(
   <CmkHeading type="h2">
     {{ _t('Host selection') }}
   </CmkHeading>
-  <HostFilter
-    v-model:host-selection="hostFilterType"
-    v-model:host-filter-logic="hostFilterLogic"
-    :dashboard-filters="dashboardFilters"
-    :quick-filters="quickFilters"
-    :widget-filters="filters"
-    :add-filter-handler="addFilterHandler"
+  <SingleMultiWidgetObjectFilterConfiguration
+    v-model:mode-selection="hostFilterType"
+    :object-type="hostObjectType"
+    :configured-filters-of-object-type="configuredFiltersByObjectType[hostObjectType] || {}"
+    :context-filters="contextFilters"
+    :in-selection-menu-focus="isInFilterSelectionMenuFocus(hostObjectType)"
+    @set-focus="emit('set-focus', $event)"
+    @update-filter-values="(filterId, values) => emit('update-filter-values', filterId, values)"
+    @reset-object-type-filters="emit('reset-object-type-filters', $event)"
   />
 
   <ContentSpacer />
@@ -135,13 +139,15 @@ const hostFilterLogic = useFiltersLogic(
   <CmkHeading type="h2">
     {{ _t('Service selection') }}
   </CmkHeading>
-  <ServiceFilter
-    v-model:service-selection="serviceFilterType"
-    v-model:service-filter-logic="serviceFilterLogic"
-    :dashboard-filters="dashboardFilters"
-    :quick-filters="quickFilters"
-    :widget-filters="filters"
-    :add-filter-handler="addFilterHandler"
+  <SingleMultiWidgetObjectFilterConfiguration
+    v-model:mode-selection="serviceFilterType"
+    :object-type="serviceObjectType"
+    :configured-filters-of-object-type="configuredFiltersByObjectType[serviceObjectType] || {}"
+    :context-filters="contextFilters"
+    :in-selection-menu-focus="isInFilterSelectionMenuFocus(serviceObjectType)"
+    @set-focus="emit('set-focus', $event)"
+    @update-filter-values="(filterId, values) => emit('update-filter-values', filterId, values)"
+    @reset-object-type-filters="emit('reset-object-type-filters', $event)"
   />
 
   <ContentSpacer />

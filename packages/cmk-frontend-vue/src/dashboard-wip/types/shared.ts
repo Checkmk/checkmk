@@ -9,3 +9,5 @@ export enum RestrictedToSingle {
   HOST = 'host',
   CUSTOM = 'custom'
 }
+
+export type ObjectType = string

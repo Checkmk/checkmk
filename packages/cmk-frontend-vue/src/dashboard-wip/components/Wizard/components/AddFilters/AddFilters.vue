@@ -10,15 +10,16 @@ import FilterSelection from '@/dashboard-wip/components/filter/FilterSelection/F
 import { CATEGORY_DEFINITIONS } from '@/dashboard-wip/components/filter/FilterSelection/utils'
 import { type Filters } from '@/dashboard-wip/components/filter/composables/useFilters'
 import { parseFilterTypes, useFilterDefinitions } from '@/dashboard-wip/components/filter/utils'
+import type { ObjectType } from '@/dashboard-wip/types/shared.ts'
 
 import ContentSpacer from '../ContentSpacer.vue'
 import StepsHeader from '../StepsHeader.vue'
-import { type UseAddFilter } from './composables/useAddFilters'
 
 const { _t } = usei18n()
 
 interface AddFiltersProps {
-  handler: UseAddFilter
+  filterSelectionTarget: ObjectType
+  close: () => void
 }
 const props = defineProps<AddFiltersProps>()
 
@@ -26,7 +27,7 @@ const filters = defineModel<Filters>('filters', { required: true })
 
 const filterDefinitions = useFilterDefinitions()
 
-const selectedCategory = props.handler.target.value
+const selectedCategory = props.filterSelectionTarget
 const filterCategories = parseFilterTypes(
   filterDefinitions,
   new Set([selectedCategory as unknown as string])
@@ -34,7 +35,7 @@ const filterCategories = parseFilterTypes(
 </script>
 
 <template>
-  <StepsHeader :title="_t('Add filter')" @back="props.handler.close" />
+  <StepsHeader :title="_t('Add filter')" @back="props.close" />
   <ContentSpacer />
 
   <FilterSelection

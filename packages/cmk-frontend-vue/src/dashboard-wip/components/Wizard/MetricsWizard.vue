@@ -9,6 +9,7 @@ import { ref } from 'vue'
 import CmkSlideIn from '@/components/CmkSlideIn.vue'
 
 import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
+import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
 import type {
   WidgetContent,
   WidgetFilterContext,
@@ -22,6 +23,7 @@ const isOpen = ref(true)
 interface MetricsWizardProps {
   dashboardName: string
   dashboardConstants: DashboardConstants
+  contextFilters: ContextFilters
 }
 
 defineProps<MetricsWizardProps>()
@@ -49,6 +51,7 @@ const addWidget = (
   <CmkSlideIn :open="isOpen">
     <MetricsWizard
       :dashboard-name="dashboardName"
+      :context-filters="contextFilters"
       :dashboard-constants="dashboardConstants"
       @go-back="
         () => {

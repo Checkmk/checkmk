@@ -195,6 +195,7 @@ function deepClone<T>(obj: T): T {
         :selected-wizard="selectedWizard"
         :dashboard-name="dashboardsManager.activeDashboardName.value || ''"
         :dashboard-owner="dashboardsManager.activeDashboard.value?.owner || ''"
+        :context-filters="dashboardFilters.contextFilters.value || {}"
         :dashboard-constants="dashboardsManager.constants.value!"
         @back-button="openAddWidgetDialog = true"
       />

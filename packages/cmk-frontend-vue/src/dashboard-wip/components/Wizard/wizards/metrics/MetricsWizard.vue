@@ -8,10 +8,12 @@ import { computed, h, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import { type Filters, useFilters } from '@/dashboard-wip/components/filter/composables/useFilters'
+import { useWidgetFilterManager } from '@/dashboard-wip/components/Wizard/components/filter/composables/useWidgetFilterManager.ts'
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
+import { useFilterDefinitions } from '@/dashboard-wip/components/filter/utils.ts'
 // Local components
 import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
+import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
 import type {
   WidgetContent,
   WidgetFilterContext,
@@ -25,7 +27,7 @@ import AddFilters from '../../components/AddFilters/AddFilters.vue'
 import { useAddFilter } from '../../components/AddFilters/composables/useAddFilters'
 import ContentSpacer from '../../components/ContentSpacer.vue'
 import FiltersRecap from '../../components/FiltersRecap/FiltersRecap.vue'
-import { squashFilters } from '../../components/FiltersRecap/utils'
+import { parseContextConfiguredFilters, squashFilters } from '../../components/FiltersRecap/utils'
 import StepsHeader from '../../components/StepsHeader.vue'
 import WizardContainer from '../../components/WizardContainer.vue'
 import WizardStageContainer from '../../components/WizardStageContainer.vue'
@@ -41,19 +43,12 @@ const { _t } = usei18n()
 
 interface MetricsWizardProps {
   dashboardName: string
-  dashboardFilters?: ConfiguredFilters
-  quickFilters?: ConfiguredFilters
+  contextFilters: ContextFilters
+  // TODO: widgetFilters?: ConfiguredFilters (during edit mode)
   dashboardConstants: DashboardConstants
 }
 
-const props = withDefaults(defineProps<MetricsWizardProps>(), {
-  dashboardFilters: () => {
-    return {} as ConfiguredFilters
-  },
-  quickFilters: () => {
-    return {} as ConfiguredFilters
-  }
-})
+const props = defineProps<MetricsWizardProps>()
 
 const emit = defineEmits<{
   goBack: []
@@ -64,14 +59,18 @@ const emit = defineEmits<{
   ]
 }>()
 
+const filterDefinitions = useFilterDefinitions()
+
+const widgetFilterManager = useWidgetFilterManager({}, filterDefinitions)
+
 const addFilters = useAddFilter()
 
 // /////////////////////////////////////////////////////////
 // TODO: Fill with saved values if available --v--
 // Stage 1
-const filters: Filters = useFilters()
 const hostFilterType = ref<ElementSelection>(ElementSelection.SPECIFIC)
 const serviceFilterType = ref<ElementSelection>(ElementSelection.SPECIFIC)
+
 const metricType = ref<MetricSelection>(MetricSelection.SINGLE_METRIC)
 const singleMetricHandler = useSingleMetric(null, null, null)
 const combinedMetricHandler = useCombinedMetric(null)
@@ -95,21 +94,27 @@ const wizardStages: QuickSetupStageSpec[] = [
   }
 ]
 
+// TODO: is this necessary? this seems to be getConfiguredFilters
 const _getConfiguredFilters = (): ConfiguredFilters => {
   const configuredActiveFilters: ConfiguredFilters = {}
-  for (const flt of filters.activeFilters.value) {
-    configuredActiveFilters[flt] = filters.getFilterValues(flt) || {}
+  const configuredFilters = widgetFilterManager.getConfiguredFilters()
+  for (const flt of widgetFilterManager.getSelectedFilters()) {
+    configuredActiveFilters[flt] = configuredFilters[flt] || {}
   }
   return configuredActiveFilters
 }
 
+const contextConfiguredFilters = computed((): ConfiguredFilters => {
+  return parseContextConfiguredFilters(props.contextFilters)
+})
+
 const recapAndNext = () => {
+  widgetFilterManager.closeSelectionMenu()
   wizardStages[0]!.recapContent = h(FiltersRecap, {
     metricType: metricType.value,
     singleMetric: singleMetricHandler.singleMetric.value,
     combinedMetric: combinedMetricHandler.combinedMetric.value,
-    dashboardFilters: props.dashboardFilters,
-    quickFilters: props.quickFilters,
+    contextConfiguredFilters: contextConfiguredFilters.value,
     widgetFilters: _getConfiguredFilters()
   })
   addFilters.close()
@@ -117,7 +122,7 @@ const recapAndNext = () => {
 }
 
 const appliedFilters = computed((): ConfiguredFilters => {
-  return squashFilters(props.dashboardFilters, props.quickFilters, _getConfiguredFilters())
+  return squashFilters(contextConfiguredFilters.value, _getConfiguredFilters())
 })
 
 const selectedMetric = computed((): string => {
@@ -127,12 +132,21 @@ const selectedMetric = computed((): string => {
       : combinedMetricHandler.combinedMetric.value) || ''
   )
 })
+
+const handleObjectTypeSwitch = (objectType: string): void => {
+  widgetFilterManager.closeSelectionMenu()
+  widgetFilterManager.resetFilterValuesOfObjectType(objectType)
+}
 </script>
 
 <template>
   <WizardContainer>
-    <WizardStepsContainer v-if="addFilters.isOpen.value">
-      <AddFilters :handler="addFilters" :filters="filters" />
+    <WizardStepsContainer v-if="widgetFilterManager.selectionMenuOpen.value">
+      <AddFilters
+        :filter-selection-target="widgetFilterManager.selectionMenuCurrentTarget.value"
+        :close="widgetFilterManager.closeSelectionMenu"
+        :filters="widgetFilterManager.filterHandler"
+      />
     </WizardStepsContainer>
 
     <WizardStepsContainer v-else>
@@ -162,11 +176,16 @@ const selectedMetric = computed((): string => {
         v-model:metric-type="metricType"
         v-model:single-metric-handler="singleMetricHandler"
         v-model:combined-metric-handler="combinedMetricHandler"
-        :dashboard-filters="props.dashboardFilters"
-        :quick-filters="props.quickFilters"
-        :filters="filters"
-        :add-filter-handler="addFilters"
+        :widget-configured-filters="widgetFilterManager.getConfiguredFilters()"
+        :widget-active-filters="widgetFilterManager.getSelectedFilters()"
+        :context-filters="contextFilters"
+        :is-in-filter-selection-menu-focus="widgetFilterManager.objectTypeIsInFocus"
         @go-next="recapAndNext"
+        @set-focus="widgetFilterManager.openSelectionMenu"
+        @update-filter-values="
+          (filterId, values) => widgetFilterManager.updateFilterValues(filterId, values)
+        "
+        @reset-object-type-filters="handleObjectTypeSwitch"
       />
       <Suspense>
         <Stage2

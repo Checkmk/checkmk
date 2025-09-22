@@ -90,7 +90,7 @@ function checkEmptyBackspace(e: KeyboardEvent) {
 function onInputEnter() {
   if (isMonitoringSearch()) {
     if (searchUtils.query.input.value.length > 0) {
-      const url = 'search_open.py?q='.concat(searchUtils.query.input.value)
+      const url = 'search_open.py?q='.concat(searchUtils.query.input.value.replace(/^\//, ''))
       searchUtils.history?.add(
         new HistoryEntry(searchUtils.query.toQueryLike(), {
           title: searchUtils.query.input.value,

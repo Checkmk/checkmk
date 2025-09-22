@@ -76,6 +76,6 @@ export class UnifiedSearchProvider extends SearchProvider {
 
     const sort = '&sort='.concat(query.sort)
 
-    return { q: query.input.toLowerCase(), provider, sort }
+    return { q: query.input.replace(/^\//, ''), provider, sort }
   }
 }

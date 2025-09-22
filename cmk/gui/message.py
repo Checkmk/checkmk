@@ -24,6 +24,7 @@ from cmk.gui.config import active_config, Config
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.default_permissions import PERMISSION_SECTION_GENERAL
 from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
+from cmk.gui.form_specs import DEFAULT_VALUE, parse_data_from_field_id, render_form_spec
 from cmk.gui.form_specs.generators.cascading_choice_utils import (
     CascadingDataConversion,
     enable_deprecated_cascading_elements,
@@ -32,7 +33,6 @@ from cmk.gui.form_specs.generators.dict_to_catalog import (
     create_flat_catalog_from_dictionary,
 )
 from cmk.gui.form_specs.unstable import LegacyValueSpec, OptionalChoice
-from cmk.gui.form_specs.vue import DEFAULT_VALUE, parse_data_from_field_id, render_form_spec
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html

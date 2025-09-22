@@ -23,7 +23,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Edition, edition
 from cmk.gui import hooks, utils
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.vue import get_visitor, RawDiskData, VisitorOptions
+from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger

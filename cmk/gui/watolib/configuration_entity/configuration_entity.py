@@ -6,7 +6,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import assert_never, NamedTuple, NewType
 
-from cmk.gui.form_specs.vue import DEFAULT_VALUE, get_visitor, RawFrontendData, VisitorOptions
+from cmk.gui.form_specs import DEFAULT_VALUE, get_visitor, RawFrontendData, VisitorOptions
 from cmk.gui.i18n import _
 from cmk.gui.watolib.configuration_entity._folder import (
     get_folder_slidein_schema,

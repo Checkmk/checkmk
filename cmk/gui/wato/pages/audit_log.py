@@ -17,6 +17,15 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
+from cmk.gui.form_specs import (
+    DEFAULT_VALUE,
+    get_visitor,
+    IncomingData,
+    parse_data_from_field_id,
+    RawDiskData,
+    render_form_spec,
+    VisitorOptions,
+)
 from cmk.gui.form_specs.generators.cascading_choice_utils import (
     CascadingDataConversion,
     enable_deprecated_cascading_elements,
@@ -30,15 +39,6 @@ from cmk.gui.form_specs.unstable import (
 )
 from cmk.gui.form_specs.unstable.cascading_single_choice_extended import (
     CascadingSingleChoiceElementExtended,
-)
-from cmk.gui.form_specs.vue import (
-    DEFAULT_VALUE,
-    get_visitor,
-    IncomingData,
-    parse_data_from_field_id,
-    RawDiskData,
-    render_form_spec,
-    VisitorOptions,
 )
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html

@@ -45,7 +45,7 @@ from cmk.gui.cron import CronJobRegistry
 from cmk.gui.dashboard import DashletRegistry
 from cmk.gui.dashboard import registration as dashboard_registration
 from cmk.gui.data_source import DataSourceRegistry
-from cmk.gui.form_specs.vue import registration as vue_registration
+from cmk.gui.form_specs import registration as vue_registration
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.nodevis import nodevis
 from cmk.gui.openapi import registration as openapi_registration

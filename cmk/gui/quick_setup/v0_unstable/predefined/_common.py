@@ -10,7 +10,7 @@ from typing import Any, cast
 from cmk.automations.results import DiagSpecialAgentHostConfig, DiagSpecialAgentInput
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.discovery import CheckPreviewEntry
-from cmk.gui.form_specs.vue import (
+from cmk.gui.form_specs import (
     DiskModel,
     get_visitor,
     RawFrontendData,

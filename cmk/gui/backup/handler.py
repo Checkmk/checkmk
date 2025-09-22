@@ -35,6 +35,13 @@ from cmk.gui import forms, key_mgmt
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKUserError
+from cmk.gui.form_specs import (
+    DisplayMode,
+    parse_data_from_field_id,
+    RawDiskData,
+    read_data_from_frontend,
+    render_form_spec,
+)
 from cmk.gui.form_specs.generators.alternative_utils import enable_deprecated_alternative
 from cmk.gui.form_specs.generators.dict_to_catalog import create_flat_catalog_from_dictionary
 from cmk.gui.form_specs.unstable import (
@@ -47,13 +54,6 @@ from cmk.gui.form_specs.unstable.legacy_converter import (
     SimplePassword,
     TransformDataForLegacyFormatOrRecomposeFunction,
     Tuple,
-)
-from cmk.gui.form_specs.vue import (
-    DisplayMode,
-    parse_data_from_field_id,
-    RawDiskData,
-    read_data_from_frontend,
-    render_form_spec,
 )
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header

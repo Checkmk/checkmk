@@ -14,7 +14,7 @@ from typing import Any
 
 from cmk import fields
 from cmk.gui.config import active_config
-from cmk.gui.form_specs.vue import FormSpecValidationError
+from cmk.gui.form_specs import FormSpecValidationError
 from cmk.gui.http import Response
 from cmk.gui.openapi.endpoints.configuration_entity import folder as folder_endpoints
 from cmk.gui.openapi.endpoints.configuration_entity import (

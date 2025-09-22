@@ -28,7 +28,7 @@ from cmk.gui.background_job import (
 )
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKInternalError, MKUserError
-from cmk.gui.form_specs.vue import get_visitor, RawFrontendData, VisitorOptions
+from cmk.gui.form_specs import get_visitor, RawFrontendData, VisitorOptions
 from cmk.gui.http import Request
 from cmk.gui.i18n import localize
 from cmk.gui.logged_in import user
@@ -88,7 +88,7 @@ class InvalidStageException(MKGeneralException):
 
 
 # TODO: This dataclass is already defined in
-# cmk.gui.form_specs.vue.autogen_type_defs.vue_formspec_components
+# cmk.gui.form_specs.autogen_type_defs.vue_formspec_components
 # but can't be imported here. Once we move this module, we can remove this
 # and use the one from the other module.
 

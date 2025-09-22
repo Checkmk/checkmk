@@ -7,6 +7,7 @@ from enum import Enum
 from typing import Any
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.gui.form_specs import DefaultValue as VueDefaultValue
 from cmk.gui.form_specs.unstable import (
     not_empty,
     SingleChoiceElementExtended,
@@ -17,7 +18,6 @@ from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
     Tuple,
 )
-from cmk.gui.form_specs.vue import DefaultValue as VueDefaultValue
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,

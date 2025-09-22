@@ -1773,7 +1773,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
             ColumnDisplayHintOfView(
                 name="invcmksites_cmc",
                 title="CMC status",
-                short_title="CMC",
+                short_title="CMC status",
                 long_title="Checkmk sites ➤ CMC status",
                 paint_function=inv_paint_service_status,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),

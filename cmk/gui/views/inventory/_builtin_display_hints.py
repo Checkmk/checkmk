@@ -20,7 +20,6 @@ from cmk.gui.inventory.filters import (
     FilterInvtableVersion,
 )
 from cmk.gui.num_split import cmp_version
-from cmk.gui.utils.sort import cmp_natural_sort
 
 from .registry import InventoryHintRegistry
 
@@ -549,128 +548,128 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # ".software.applications.check_mk.versions:*.edition": {"title": _l("Edition")},
         # ".software.applications.check_mk.versions:*.demo": {"title": _l("Demo"), "paint": "bool"},
         # ".software.applications.check_mk.versions:*.num_sites": {"title": _l("#Sites"), "filter": FilterInvtableIntegerRange},
-        ".software.applications.check_mk.sites:": {
-            "title": _l("Checkmk sites"),
-            "keyorder": [
-                "site",
-                "used_version",
-                "num_hosts",
-                "num_services",
-                "check_mk_helper_usage",
-                "fetcher_helper_usage",
-                "checker_helper_usage",
-                "livestatus_usage",
-                "check_helper_usage",
-                "autostart",
-                "apache",
-                "cmc",
-                "crontab",
-                "dcd",
-                "liveproxyd",
-                "mkeventd",
-                "mknotifyd",
-                "rrdcached",
-                "stunnel",
-                "xinetd",
-                "nagios",
-                "npcd",
-            ],
-            "view": "invcmksites",
-        },
-        ".software.applications.check_mk.sites:*.site": {"title": _l("Site")},
-        ".software.applications.check_mk.sites:*.used_version": {"title": _l("Version")},
-        ".software.applications.check_mk.sites:*.num_hosts": {
-            "title": _l("#Hosts"),
-            "sort": cmp_natural_sort,
-        },
-        ".software.applications.check_mk.sites:*.num_services": {
-            "title": _l("#Services"),
-            "sort": cmp_natural_sort,
-        },
-        ".software.applications.check_mk.sites:*.check_mk_helper_usage": {
-            "title": _l("CMK helper usage"),
-            "short": _l("CMK helper")
-        },
-        ".software.applications.check_mk.sites:*.fetcher_helper_usage": {
-            "title": _l("Fetcher helper usage"),
-            "short": _l("Fetcher helper")
-        },
-        ".software.applications.check_mk.sites:*.checker_helper_usage": {
-            "title": _l("Checker helper usage"),
-            "short": _l("Checker helper")
-        },
-        ".software.applications.check_mk.sites:*.livestatus_usage": {
-            "title": _l("Live helper usage"),
-            "short": _l("Live helper")
-        },
-        ".software.applications.check_mk.sites:*.check_helper_usage": {
-            "title": _l("Actual helper usage"),
-            "short": _l("Act. helper")
-        },
-        ".software.applications.check_mk.sites:*.autostart": {
-            "title": _l("Autostart"),
-            "paint": "bool",
-        },
-        ".software.applications.check_mk.sites:*.apache": {
-            "title": _l("Apache status"),
-            "short": _l("Apache"),
-            "paint": "service_status",
-        },
-        ".software.applications.check_mk.sites:*.cmc": {
-            "title": _l("CMC status"),
-            "short": _l("CMC"),
-            "paint": "service_status",
-        },
-        ".software.applications.check_mk.sites:*.crontab": {
-            "title": _l("Crontab status"),
-            "short": _l("Crontab"),
-            "paint": "service_status",
-        },
-        ".software.applications.check_mk.sites:*.dcd": {
-            "title": _l("DCD status"),
-            "short": _l("DCD"),
-            "paint": "service_status",
-        },
-        ".software.applications.check_mk.sites:*.liveproxyd": {
-            "title": _l("Liveproxyd status"),
-            "short": _l("Liveproxyd"),
-            "paint": "service_status",
-        },
-        ".software.applications.check_mk.sites:*.mkeventd": {
-            "title": _l("MKEventd status"),
-            "short": _l("MKEventd"),
-            "paint": "service_status",
-        },
-        ".software.applications.check_mk.sites:*.mknotifyd": {
-            "title": _l("MKNotifyd status"),
-            "short": _l("MKNotifyd"),
-            "paint": "service_status",
-        },
-        ".software.applications.check_mk.sites:*.rrdcached": {
-            "title": _l("RRDCached status"),
-            "short": _l("RRDCached"),
-            "paint": "service_status",
-        },
-        ".software.applications.check_mk.sites:*.stunnel": {
-            "title": _l("STunnel status"),
-            "short": _l("STunnel"),
-            "paint": "service_status",
-        },
-        ".software.applications.check_mk.sites:*.xinetd": {
-            "title": _l("XInetd status"),
-            "short": _l("XInetd"),
-            "paint": "service_status",
-        },
-        ".software.applications.check_mk.sites:*.nagios": {
-            "title": _l("Nagios status"),
-            "short": _l("Nagios"),
-            "paint": "service_status",
-        },
-        ".software.applications.check_mk.sites:*.npcd": {
-            "title": _l("NPCD status"),
-            "short": _l("NPCD"),
-            "paint": "service_status",
-        },
+        # MIGRATED ".software.applications.check_mk.sites:": {
+        # MIGRATED     "title": _l("Checkmk sites"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "site",
+        # MIGRATED         "used_version",
+        # MIGRATED         "num_hosts",
+        # MIGRATED         "num_services",
+        # MIGRATED         "check_mk_helper_usage",
+        # MIGRATED         "fetcher_helper_usage",
+        # MIGRATED         "checker_helper_usage",
+        # MIGRATED         "livestatus_usage",
+        # MIGRATED         "check_helper_usage",
+        # MIGRATED         "autostart",
+        # MIGRATED         "apache",
+        # MIGRATED         "cmc",
+        # MIGRATED         "crontab",
+        # MIGRATED         "dcd",
+        # MIGRATED         "liveproxyd",
+        # MIGRATED         "mkeventd",
+        # MIGRATED         "mknotifyd",
+        # MIGRATED         "rrdcached",
+        # MIGRATED         "stunnel",
+        # MIGRATED         "xinetd",
+        # MIGRATED         "nagios",
+        # MIGRATED         "npcd",
+        # MIGRATED     ],
+        # MIGRATED     "view": "invcmksites",
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.site": {"title": _l("Site")},
+        # MIGRATED ".software.applications.check_mk.sites:*.used_version": {"title": _l("Version")},
+        # MIGRATED ".software.applications.check_mk.sites:*.num_hosts": {
+        # MIGRATED     "title": _l("#Hosts"),
+        # MIGRATED     "sort": cmp_natural_sort,
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.num_services": {
+        # MIGRATED     "title": _l("#Services"),
+        # MIGRATED     "sort": cmp_natural_sort,
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.check_mk_helper_usage": {
+        # MIGRATED     "title": _l("CMK helper usage"),
+        # MIGRATED     "short": _l("CMK helper")
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.fetcher_helper_usage": {
+        # MIGRATED     "title": _l("Fetcher helper usage"),
+        # MIGRATED     "short": _l("Fetcher helper")
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.checker_helper_usage": {
+        # MIGRATED     "title": _l("Checker helper usage"),
+        # MIGRATED     "short": _l("Checker helper")
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.livestatus_usage": {
+        # MIGRATED     "title": _l("Live helper usage"),
+        # MIGRATED     "short": _l("Live helper")
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.check_helper_usage": {
+        # MIGRATED     "title": _l("Actual helper usage"),
+        # MIGRATED     "short": _l("Act. helper")
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.autostart": {
+        # MIGRATED     "title": _l("Autostart"),
+        # MIGRATED     "paint": "bool",
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.apache": {
+        # MIGRATED     "title": _l("Apache status"),
+        # MIGRATED     "short": _l("Apache"),
+        # MIGRATED     "paint": "service_status",
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.cmc": {
+        # MIGRATED     "title": _l("CMC status"),
+        # MIGRATED     "short": _l("CMC"),
+        # MIGRATED     "paint": "service_status",
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.crontab": {
+        # MIGRATED     "title": _l("Crontab status"),
+        # MIGRATED     "short": _l("Crontab"),
+        # MIGRATED     "paint": "service_status",
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.dcd": {
+        # MIGRATED     "title": _l("DCD status"),
+        # MIGRATED     "short": _l("DCD"),
+        # MIGRATED     "paint": "service_status",
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.liveproxyd": {
+        # MIGRATED     "title": _l("Liveproxyd status"),
+        # MIGRATED     "short": _l("Liveproxyd"),
+        # MIGRATED     "paint": "service_status",
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.mkeventd": {
+        # MIGRATED     "title": _l("MKEventd status"),
+        # MIGRATED     "short": _l("MKEventd"),
+        # MIGRATED     "paint": "service_status",
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.mknotifyd": {
+        # MIGRATED     "title": _l("MKNotifyd status"),
+        # MIGRATED     "short": _l("MKNotifyd"),
+        # MIGRATED     "paint": "service_status",
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.rrdcached": {
+        # MIGRATED     "title": _l("RRDCached status"),
+        # MIGRATED     "short": _l("RRDCached"),
+        # MIGRATED     "paint": "service_status",
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.stunnel": {
+        # MIGRATED     "title": _l("STunnel status"),
+        # MIGRATED     "short": _l("STunnel"),
+        # MIGRATED     "paint": "service_status",
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.xinetd": {
+        # MIGRATED     "title": _l("XInetd status"),
+        # MIGRATED     "short": _l("XInetd"),
+        # MIGRATED     "paint": "service_status",
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.nagios": {
+        # MIGRATED     "title": _l("Nagios status"),
+        # MIGRATED     "short": _l("Nagios"),
+        # MIGRATED     "paint": "service_status",
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.npcd": {
+        # MIGRATED     "title": _l("NPCD status"),
+        # MIGRATED     "short": _l("NPCD"),
+        # MIGRATED     "paint": "service_status",
+        # MIGRATED },
         # MIGRATED ".software.applications.check_mk.cluster.": {
         # MIGRATED     "title": _l("Cluster"),
         # MIGRATED     "keyorder": ["is_cluster"],

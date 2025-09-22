@@ -97,6 +97,8 @@ single_version_override(
         "//bazel/patches:rules_lint-clang_tidy-gcc_install_dir.patch",
         "//bazel/patches:rules_lint-clang_tidy-deps.patch",
         "//bazel/patches:rules_lint-clang_tidy-quotation.patch",
+        # https://github.com/aspect-build/rules_lint/pull/622
+        "//bazel/patches:rules_lint-shfmt-handle_shebang.patch",
     ],
 )
 

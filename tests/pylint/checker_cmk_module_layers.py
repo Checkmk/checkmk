@@ -585,7 +585,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     Component("cmk.gui.cce"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_PLUGIN_APIS,
-        "cmk.cce.metric_backend.gui.register",
+        "cmk.cce.metric_backend.gui",
         "cmk.checkengine",
         "cmk.cee.robotmk.gui",
         "cmk.fields",

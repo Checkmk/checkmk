@@ -292,6 +292,13 @@ def test_registered_configvars() -> None:
             "ntop_connection",
         ]
 
+    if cmk_version.edition(paths.omd_root) in {
+        cmk_version.Edition.CCE,
+        cmk_version.Edition.CME,
+        cmk_version.Edition.CSE,
+    }:
+        expected_vars += ["metric_backend_instance"]
+
     registered = sorted(config_variable_registry.keys())
     assert registered == sorted(expected_vars)
 

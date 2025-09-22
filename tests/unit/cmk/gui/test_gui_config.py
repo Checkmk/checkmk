@@ -11,7 +11,12 @@ import pytest
 import cmk.gui.config
 import cmk.utils.paths
 from cmk.gui.config import active_config, Config
-from tests.testlib.common.repo import is_enterprise_repo, is_managed_repo
+from tests.testlib.common.repo import (
+    is_cloud_repo,
+    is_enterprise_repo,
+    is_managed_repo,
+    is_saas_repo,
+)
 
 
 def test_default_config_from_plugins() -> None:
@@ -193,6 +198,9 @@ def test_default_config_from_plugins() -> None:
             "customers",
             "current_customer",
         ]
+
+    if any((is_cloud_repo(), is_managed_repo(), is_saas_repo())):
+        expected += ["metric_backend_instance"]
 
     default_config = cmk.gui.config.get_default_config()
     assert sorted(list(default_config.keys())) == sorted(expected)

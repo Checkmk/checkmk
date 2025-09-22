@@ -40,7 +40,6 @@ from cmk.gui.views import command
 from cmk.gui.views.command import command_group_registry, command_registry
 from cmk.gui.views.command import group as group_module
 from cmk.gui.views.command import registry as registry_module
-from cmk.gui.views.inventory.registry import inventory_displayhints
 from cmk.gui.views.layout import layout_registry
 from cmk.gui.views.page_show_view import get_limit
 from cmk.gui.views.store import multisite_builtin_views
@@ -481,11 +480,6 @@ def test_view_want_checkboxes(view: View) -> None:
     assert view.want_checkboxes is False
     view.want_checkboxes = True
     assert view.want_checkboxes is True
-
-
-def test_get_inventory_display_hint() -> None:
-    hint = inventory_displayhints.get(".software.packages:*.summary")
-    assert isinstance(hint, dict)
 
 
 @pytest.mark.usefixtures("suppress_license_expiry_header", "patch_theme", "suppress_license_banner")

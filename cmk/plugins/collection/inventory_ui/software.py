@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
 import time
 from collections.abc import Iterable
 
@@ -1260,4 +1261,39 @@ node_software_applications_proxmox_ve_cluster = Node(
     attributes={
         "cluster": TextField(Title("Cluster name")),
     },
+)
+
+
+def _sort_key_version(value: str) -> tuple[int | str, ...]:
+    parts: list[int | str] = []
+    for value_part in value.split("."):
+        for part in re.split(r"(\d+)", value_part):
+            try:
+                parts.append(int(part))
+            except ValueError:
+                parts.append(part)
+    return tuple(parts)
+
+
+node_software_packages = Node(
+    name="software_packages",
+    path=["software", "packages"],
+    title=Title("Software packages"),
+    table=Table(
+        view=View(name="invswpac", title=Title("Software packages")),
+        columns={
+            "name": TextField(Title("Name")),
+            "arch": TextField(Title("Architecture")),
+            "package_type": TextField(Title("Type")),
+            "summary": TextField(Title("Description")),
+            # sort_key enables from-to filtering
+            "version": TextField(Title("Version"), sort_key=_sort_key_version),
+            "vendor": TextField(Title("Publisher")),
+            # sort_key enables from-to filtering
+            "package_version": TextField(Title("Package version"), sort_key=_sort_key_version),
+            "install_date": NumberField(Title("Install date"), render=_render_date),
+            "size": NumberField(Title("Size"), render=UNIT_COUNT),
+            "path": TextField(Title("Path")),
+        },
+    ),
 )

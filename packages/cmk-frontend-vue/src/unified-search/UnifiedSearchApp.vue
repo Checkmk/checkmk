@@ -105,7 +105,9 @@ searchUtils.history = searchHistoryService
 provideSearchUtils(searchUtils)
 
 searchUtils.onResetSearch(() => {
-  searchResult.value = undefined
+  setTimeout(() => {
+    searchResult.value = undefined
+  })
 })
 
 searchUtils.onCloseSearch(() => {

@@ -29,9 +29,11 @@ const { _t } = usei18n()
 const searchUtils = getSearchUtils()
 const searchInput = useTemplateRef('unified-search-input')
 searchUtils.onResetSearch(() => {
-  searchUtils.query.filters.value = []
-  searchUtils.query.input.value = ''
-  setFocus()
+  setTimeout(() => {
+    searchUtils.query.filters.value = []
+    searchUtils.query.input.value = ''
+    setFocus()
+  })
 })
 
 searchUtils.input?.onSetFocus(setFocus)

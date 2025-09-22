@@ -6,7 +6,7 @@
 import uuid
 from http import HTTPStatus
 
-from cmk.relay_protocols.tasks import TaskType
+from cmk.relay_protocols.tasks import FetchAdHocTask
 
 from .test_lib.agent_receiver import AgentReceiverClient
 from .test_lib.site_mock import SiteMock
@@ -23,14 +23,13 @@ def test_store_fetching_task(
     push_task(
         agent_receiver=agent_receiver,
         relay_id=relay_id,
-        task_type=TaskType.FETCH_AD_HOC,
-        task_payload="any payload",
+        task=FetchAdHocTask(payload="any payload"),
     )
 
     tasks_1 = get_relay_tasks(agent_receiver, relay_id)
     assert len(tasks_1.tasks) == 1
-    assert tasks_1.tasks[0].type == TaskType.FETCH_AD_HOC
-    assert tasks_1.tasks[0].payload == "any payload"
+    assert isinstance(tasks_1.tasks[0].task, FetchAdHocTask)
+    assert tasks_1.tasks[0].task.payload == "any payload"
 
 
 def test_store_fetching_tasks_does_not_affect_other_relays(
@@ -44,8 +43,7 @@ def test_store_fetching_tasks_does_not_affect_other_relays(
     push_task(
         agent_receiver=agent_receiver,
         relay_id=relay_id_A,
-        task_type=TaskType.FETCH_AD_HOC,
-        task_payload="any payload",
+        task=FetchAdHocTask(payload=".."),
     )
 
     tasks_A = get_relay_tasks(agent_receiver, relay_id_A)
@@ -56,8 +54,7 @@ def test_store_fetching_tasks_does_not_affect_other_relays(
     push_task(
         agent_receiver=agent_receiver,
         relay_id=relay_id_A,
-        task_type=TaskType.FETCH_AD_HOC,
-        task_payload="any payload",
+        task=FetchAdHocTask(payload=".."),
     )
 
     tasks_A = get_relay_tasks(agent_receiver, relay_id_A)
@@ -72,8 +69,7 @@ def test_store_fetching_task_non_existent_relay(agent_receiver: AgentReceiverCli
 
     response = agent_receiver.push_task(
         relay_id=relay_id,
-        task_type=TaskType.FETCH_AD_HOC,
-        task_payload="stuff",
+        task=FetchAdHocTask(payload=".."),
     )
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.json()["detail"] == f"Relay with ID '{relay_id}' not found"

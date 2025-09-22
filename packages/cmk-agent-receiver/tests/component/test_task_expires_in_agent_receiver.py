@@ -6,7 +6,7 @@
 import time
 
 from cmk.relay_protocols.relays import RelayRegistrationResponse
-from cmk.relay_protocols.tasks import TaskType
+from cmk.relay_protocols.tasks import FetchAdHocTask
 
 from .test_lib.agent_receiver import AgentReceiverClient
 from .test_lib.config import create_relay_config as _create_relay_config
@@ -42,8 +42,7 @@ def test_task_expires_in_agent_receiver(
     task_response = push_task(
         agent_receiver=agent_receiver,
         relay_id=relay_id,
-        task_type=TaskType.FETCH_AD_HOC,
-        task_payload="task payload",
+        task=FetchAdHocTask(payload=".."),
     )
 
     # Verify task is present initially
@@ -85,8 +84,7 @@ def test_task_expiration_resets_on_update(
     task_response = push_task(
         agent_receiver=agent_receiver,
         relay_id=relay_id,
-        task_type=TaskType.FETCH_AD_HOC,
-        task_payload="test task payload",
+        task=FetchAdHocTask(payload=".."),
     )
     task_id = task_response.task_id
 
@@ -138,16 +136,14 @@ def test_completed_tasks_expiration(
     task_a_response = push_task(
         agent_receiver=agent_receiver,
         relay_id=relay_id,
-        task_type=TaskType.FETCH_AD_HOC,
-        task_payload="test task A payload",
+        task=FetchAdHocTask(payload="test task A payload"),
     )
     task_a_id = task_a_response.task_id
 
     task_b_response = push_task(
         agent_receiver=agent_receiver,
         relay_id=relay_id,
-        task_type=TaskType.FETCH_AD_HOC,
-        task_payload="test task B payload",
+        task=FetchAdHocTask(payload="test task B payload"),
     )
     task_b_id = task_b_response.task_id
 

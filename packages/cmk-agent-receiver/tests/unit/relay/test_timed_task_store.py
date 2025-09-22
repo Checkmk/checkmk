@@ -4,24 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 from collections.abc import Iterator
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 
 import pytest
 from time_machine import Coordinates, travel
 
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
+    FetchTask,
     Task,
-    TaskType,
     TimedTaskStore,
 )
 from cmk.agent_receiver.relay.lib.shared_types import TaskID
 
 
 def _make_task(task_id: TaskID, now: datetime | None = None) -> Task:
-    now = now or datetime.now()
+    now = now or datetime.now(UTC)
     return Task(
-        type=TaskType.FETCH_AD_HOC,
-        payload="test payload",
+        payload=FetchTask(payload="...", timeout=1),
         creation_timestamp=now,
         update_timestamp=now,
         id=task_id,
@@ -39,7 +38,7 @@ def store() -> TimedTaskStore:
 
 @pytest.fixture
 def time() -> Iterator[Coordinates]:
-    with travel(datetime.now()) as traveler:
+    with travel(datetime.now(UTC)) as traveler:
         yield traveler
 
 
@@ -130,13 +129,12 @@ def test_multiple_expired_tasks_cleanup(time: Coordinates, store: TimedTaskStore
 
 def test_expiration_based_on_update_timestamp(time: Coordinates, store: TimedTaskStore) -> None:
     # Create task with old creation_timestamp but recent update_timestamp
-    old_time = datetime.now() - timedelta(seconds=SHIFT_TO_EXPIRE)
-    recent_time = datetime.now()
+    old_time = datetime.now(UTC) - timedelta(seconds=SHIFT_TO_EXPIRE)
+    recent_time = datetime.now(UTC)
 
     task_id = TaskID("test-task")
     task = Task(
-        type=TaskType.FETCH_AD_HOC,
-        payload="test",
+        payload=FetchTask(payload="...", timeout=1),
         creation_timestamp=old_time,  # Old creation time
         update_timestamp=recent_time,  # Recent update time
         id=task_id,

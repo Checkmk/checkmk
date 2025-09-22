@@ -42,7 +42,7 @@ def test_process_update_task(
     tasks_enqueued = tasks_repository.get_tasks(relay_id)
     assert len(tasks_enqueued) == 1
     assert tasks_enqueued[0].id == task.id
-    assert tasks_enqueued[0].type == task.type
+    assert isinstance(tasks_enqueued[0], type(task))
     assert tasks_enqueued[0].payload == task.payload
     # TODO: assert tasks_enqueued[0].status == TaskStatus.FINISHED or TaskStatus.ERROR
     assert tasks_enqueued[0].result_type == ResultType.OK

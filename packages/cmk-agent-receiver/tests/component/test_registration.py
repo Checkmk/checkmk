@@ -5,7 +5,7 @@
 from http import HTTPStatus
 
 from cmk.relay_protocols.relays import RelayRegistrationResponse
-from cmk.relay_protocols.tasks import TaskType
+from cmk.relay_protocols.tasks import FetchAdHocTask
 
 from .test_lib.agent_receiver import AgentReceiverClient
 from .test_lib.site_mock import OP, SiteMock
@@ -44,8 +44,7 @@ def test_registering_a_relay_does_not_affect_other_relays(
     push_task(
         agent_receiver=agent_receiver,
         relay_id=relay_id_A,
-        task_type=TaskType.FETCH_AD_HOC,
-        task_payload="any payload",
+        task=FetchAdHocTask(payload=".."),
     )
 
     _ = register_relay(agent_receiver, "relay2")

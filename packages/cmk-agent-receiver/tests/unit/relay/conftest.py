@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import uuid
 from collections.abc import Iterator
-from datetime import datetime
+from datetime import datetime, UTC
 from http import HTTPStatus
 from pathlib import Path
 
@@ -30,9 +30,9 @@ from cmk.agent_receiver.relay.api.routers.tasks.handlers.update_task import (
     UpdateTaskHandler,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
+    FetchTask,
     Task,
     TasksRepository,
-    TaskType,
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, TaskID
@@ -184,11 +184,14 @@ def populated_repos(
     relay_id = relays_repository.add_relay(test_user, alias="test-relay")
 
     # insert a task in the repository
-    now = datetime.now()
+    now = datetime.now(UTC)
+    payload = FetchTask(
+        timeout=60,
+        payload='{"url": "http://example.com/data"}',
+    )
     task = Task(
         id=TaskID("test-task-id"),
-        type=TaskType.FETCH_AD_HOC,
-        payload='{"url": "http://example.com/data"}',
+        payload=payload,
         creation_timestamp=now,
         update_timestamp=now,
     )

@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import dataclasses
 import uuid
-from datetime import datetime
+from datetime import datetime, UTC
 from enum import StrEnum
 from typing import final
 
@@ -36,9 +36,22 @@ class ResultType(StrEnum):
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
-class Task:
-    type: TaskType
+class FetchTask:
     payload: str
+    timeout: float
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class RelayConfigTask:
+    serial: int
+
+
+Payload = FetchTask | RelayConfigTask
+
+
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
+class Task:
+    payload: Payload
     creation_timestamp: datetime
     update_timestamp: datetime
     result_type: ResultType | None = None
@@ -113,7 +126,7 @@ class TasksRepository:
             result_type=result_type,
             result_payload=result_payload,
             status=status,
-            update_timestamp=datetime.now(),
+            update_timestamp=datetime.now(UTC),
         )
         GLOBAL_TASKS[relay_id][task_id] = new_task
         return new_task
@@ -129,7 +142,7 @@ class TimedTaskStore:
 
     def _is_expired(self, task: Task) -> bool:
         """Check if a task has expired based on its update_timestamp."""
-        now = datetime.now()
+        now = datetime.now(UTC)
         return (now - task.update_timestamp).total_seconds() > self.ttl_seconds
 
     def _cleanup_expired(self) -> None:

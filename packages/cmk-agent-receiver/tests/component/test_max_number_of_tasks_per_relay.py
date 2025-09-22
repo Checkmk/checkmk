@@ -6,7 +6,7 @@
 import uuid
 from http import HTTPStatus
 
-from cmk.relay_protocols.tasks import TaskType
+from cmk.relay_protocols.tasks import FetchAdHocTask
 
 from .test_lib.agent_receiver import AgentReceiverClient
 from .test_lib.config import create_relay_config
@@ -33,8 +33,7 @@ def test_cannot_push_more_tasks_than_allowed(
 
     response = agent_receiver.push_task(
         relay_id=relay_id,
-        task_type=TaskType.FETCH_AD_HOC,
-        task_payload="payload",
+        task=FetchAdHocTask(payload=".."),
     )
 
     assert response.status_code == HTTPStatus.FORBIDDEN, response.text
@@ -65,8 +64,7 @@ def test_each_relay_has_its_own_limit(agent_receiver: AgentReceiverClient, site:
 
     response = agent_receiver.push_task(
         relay_id=relay_id_B,
-        task_type=TaskType.FETCH_AD_HOC,
-        task_payload="payload",
+        task=FetchAdHocTask(payload=".."),
     )
     assert response.status_code == HTTPStatus.OK, response.text
 

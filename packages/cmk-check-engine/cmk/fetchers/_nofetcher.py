@@ -42,5 +42,5 @@ class NoFetcher(Fetcher[AgentRawData]):
     def close(self) -> None:
         pass
 
-    def _fetch_from_io(self, mode: Mode) -> NoReturn:
+    def _fetch_from_io(self, _mode: Mode) -> NoReturn:
         raise FetcherError(self.canned.value)

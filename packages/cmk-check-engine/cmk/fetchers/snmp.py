@@ -22,7 +22,7 @@ from .snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
 
 inline: ModuleType | None
 try:
-    from .cee.snmp_backend import inline  # type: ignore[import,no-redef,unused-ignore]
+    from cmk.inline_snmp import inline  # type: ignore[import,no-redef,unused-ignore]
 except ImportError:
     inline = None
 

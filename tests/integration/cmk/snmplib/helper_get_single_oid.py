@@ -28,7 +28,7 @@ from cmk.snmplib import (
 )
 
 if edition(cmk.utils.paths.omd_root) is not Edition.CRE:
-    from cmk.fetchers.cee.snmp_backend.inline import (  # type: ignore[import, unused-ignore] # pylint: disable=cmk-module-layer-violation
+    from cmk.inline_snmp.inline import (  # type: ignore[import, unused-ignore] # pylint: disable=cmk-module-layer-violation
         InlineSNMPBackend,
     )
 else:

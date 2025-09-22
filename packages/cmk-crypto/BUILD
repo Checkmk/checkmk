@@ -28,7 +28,10 @@ py_library(
     ],
     data = [":py_typed"],
     imports = ["."],
-    visibility = ["//cmk:__pkg__"],
+    visibility = [
+        "//cmk:__pkg__",
+        "//packages:__subpackages__",
+    ],
     deps = [
         "//packages/cmk-ccc:site",
         requirement("bcrypt"),

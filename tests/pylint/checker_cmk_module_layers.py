@@ -584,6 +584,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     Component("cmk.gui.cce"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_PLUGIN_APIS,
+        "cmk.cce.metric_backend.gui.register",
         "cmk.checkengine",
         "cmk.cee.robotmk.gui",
         "cmk.fields",
@@ -608,6 +609,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_CRYPTO,
         *PACKAGE_MESSAGING,
         "cmk.bi",
+        "cmk.cce.metric_backend.gui.register",
         "cmk.cee.robotmk.gui",
         "cmk.gui",
         "cmk.inventory",
@@ -625,6 +627,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_CCC,
         *PACKAGE_CRYPTO,
         *PACKAGE_TRACE,
+        "cmk.cce.metric_backend.gui.register",
         "cmk.fields",
         "cmk.gui",
         "cmk.utils.agent_registration",
@@ -903,6 +906,9 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_CRYPTO,
         "cmk.events",
         "cmk.otel_collector",
+    ),
+    Component("cmk.cce.metric_backend.gui"): _allow(
+        "cmk.gui",
     ),
     Component("omdlib"): _allow(
         *PACKAGE_CCC,

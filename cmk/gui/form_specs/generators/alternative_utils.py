@@ -5,8 +5,11 @@
 from typing import Any
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction, Tuple
 from cmk.gui.form_specs.private import SingleChoiceExtended
+from cmk.gui.form_specs.private.legacy_converter import (
+    TransformDataForLegacyFormatOrRecomposeFunction,
+    Tuple,
+)
 from cmk.gui.form_specs.vue import DEFAULT_VALUE, get_visitor, VisitorOptions
 from cmk.rulesets.v1.form_specs import CascadingSingleChoice, FormSpec, SingleChoice
 

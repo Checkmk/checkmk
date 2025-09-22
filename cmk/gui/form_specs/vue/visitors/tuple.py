@@ -5,7 +5,7 @@
 from collections.abc import Sequence
 from typing import assert_never, override
 
-from cmk.gui.form_specs.converter import Tuple
+from cmk.gui.form_specs.private.legacy_converter import Tuple
 from cmk.gui.i18n import _
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 

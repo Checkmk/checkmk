@@ -6,11 +6,6 @@
 
 import cmk.gui.form_specs.private.validators as private_form_specs_validators
 import cmk.rulesets.v1.form_specs.validators as formspec_validators
-from cmk.gui.form_specs.converter import (
-    SimplePassword,
-    TransformDataForLegacyFormatOrRecomposeFunction,
-    Tuple,
-)
 from cmk.gui.form_specs.private import (
     CascadingSingleChoiceExtended,
     Catalog,
@@ -32,6 +27,11 @@ from cmk.gui.form_specs.private import (
     TimePicker,
     TimeSpecific,
     UserSelection,
+)
+from cmk.gui.form_specs.private.legacy_converter import (
+    SimplePassword,
+    TransformDataForLegacyFormatOrRecomposeFunction,
+    Tuple,
 )
 from cmk.gui.form_specs.private.two_column_dictionary import TwoColumnDictionary
 from cmk.gui.form_specs.vue.visitors.condition_choices import ConditionChoicesVisitor

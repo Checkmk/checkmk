@@ -6,7 +6,9 @@ import urllib.parse
 from typing import Any, Literal
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
+from cmk.gui.form_specs.private.legacy_converter import (
+    TransformDataForLegacyFormatOrRecomposeFunction,
+)
 from cmk.gui.watolib import config_domains
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (

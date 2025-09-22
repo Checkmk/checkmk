@@ -7,15 +7,15 @@ from enum import Enum
 from typing import Any
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.gui.form_specs.converter import (
-    SimplePassword,
-    TransformDataForLegacyFormatOrRecomposeFunction,
-    Tuple,
-)
 from cmk.gui.form_specs.private import (
     not_empty,
     SingleChoiceElementExtended,
     SingleChoiceExtended,
+)
+from cmk.gui.form_specs.private.legacy_converter import (
+    SimplePassword,
+    TransformDataForLegacyFormatOrRecomposeFunction,
+    Tuple,
 )
 from cmk.gui.form_specs.vue import DefaultValue as VueDefaultValue
 from cmk.rulesets.v1 import Help, Label, Title

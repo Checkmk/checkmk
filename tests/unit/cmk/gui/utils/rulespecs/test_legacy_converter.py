@@ -16,13 +16,13 @@ from cmk.ccc.version import Edition
 from cmk.gui import inventory as legacy_inventory_groups
 from cmk.gui import wato as legacy_wato
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.converter import Tuple
 from cmk.gui.form_specs.private import (
     Autocompleter,
     AutocompleterData,
     AutocompleterParams,
     StringAutocompleter,
 )
+from cmk.gui.form_specs.private.legacy_converter import Tuple
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
 from cmk.gui.utils.rule_specs.legacy_converter import (

@@ -9,8 +9,11 @@ from typing import Any, assert_never
 
 import dateutil.parser
 
-from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction, Tuple
 from cmk.gui.form_specs.private import DatePicker, TimePicker
+from cmk.gui.form_specs.private.legacy_converter import (
+    TransformDataForLegacyFormatOrRecomposeFunction,
+    Tuple,
+)
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import FormSpec
 

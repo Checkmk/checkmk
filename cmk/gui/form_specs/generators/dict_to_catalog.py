@@ -7,8 +7,10 @@ from dataclasses import dataclass
 from typing import Any, Self
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
 from cmk.gui.form_specs.private import Catalog, Topic, TopicElement
+from cmk.gui.form_specs.private.legacy_converter import (
+    TransformDataForLegacyFormatOrRecomposeFunction,
+)
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import DictElement, Dictionary
 

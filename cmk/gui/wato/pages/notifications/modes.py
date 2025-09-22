@@ -30,7 +30,9 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
 from cmk.gui.default_name import unique_clone_increment_suggestion
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
+from cmk.gui.form_specs.private.legacy_converter import (
+    TransformDataForLegacyFormatOrRecomposeFunction,
+)
 from cmk.gui.form_specs.vue import (
     DEFAULT_VALUE,
     parse_data_from_field_id,

@@ -17,7 +17,6 @@ from cmk.gui import fields as gui_fields
 from cmk.gui import hooks, userdb
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
 from cmk.gui.form_specs.generators.host_address import create_host_address
 from cmk.gui.form_specs.generators.setup_site_choice import create_setup_site_choice
 from cmk.gui.form_specs.generators.snmp_credentials import create_snmp_credentials
@@ -27,6 +26,9 @@ from cmk.gui.form_specs.private import (
     OptionalChoice,
     SingleChoiceElementExtended,
     SingleChoiceExtended,
+)
+from cmk.gui.form_specs.private.legacy_converter import (
+    TransformDataForLegacyFormatOrRecomposeFunction,
 )
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _

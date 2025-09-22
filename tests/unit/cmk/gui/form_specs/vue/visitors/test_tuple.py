@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 
-from cmk.gui.form_specs.converter import Tuple
+from cmk.gui.form_specs.private.legacy_converter import Tuple
 from cmk.gui.form_specs.vue import (
     get_visitor,
     IncomingData,

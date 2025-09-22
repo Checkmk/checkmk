@@ -11,10 +11,13 @@ from typing import cast
 from cmk.ccc import store
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
-from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction, Tuple
 from cmk.gui.form_specs.generators.alternative_utils import enable_deprecated_alternative
 from cmk.gui.form_specs.generators.dict_to_catalog import create_flat_catalog_from_dictionary
 from cmk.gui.form_specs.private import LegacyValueSpec, ListExtended, UserSelection
+from cmk.gui.form_specs.private.legacy_converter import (
+    TransformDataForLegacyFormatOrRecomposeFunction,
+    Tuple,
+)
 from cmk.gui.form_specs.vue import (
     parse_data_from_field_id,
     RawDiskData,

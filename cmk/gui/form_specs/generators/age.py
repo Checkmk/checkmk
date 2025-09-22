@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Callable, Sequence
 
-from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
+from cmk.gui.form_specs.private.legacy_converter import (
+    TransformDataForLegacyFormatOrRecomposeFunction,
+)
 from cmk.rulesets.v1 import Label, Title
 from cmk.rulesets.v1.form_specs import TimeMagnitude, TimeSpan
 

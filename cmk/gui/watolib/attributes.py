@@ -7,8 +7,8 @@ from types import NoneType
 from typing import Literal
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.gui.form_specs.converter import SimplePassword
 from cmk.gui.form_specs.private import not_empty
+from cmk.gui.form_specs.private.legacy_converter import SimplePassword
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Alternative,

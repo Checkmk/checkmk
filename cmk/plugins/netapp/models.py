@@ -702,7 +702,7 @@ class SnapMirrorModel(BaseModel):
 
     destination_svm: str
     policy_name: str | None = None
-    policy_type: str
+    policy_type: str | None = None
     state: str | None = None
     source_svm_name: str | None = None
     lag_time: datetime.timedelta | None = None

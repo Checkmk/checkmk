@@ -56,6 +56,7 @@ def test_check_netapp_ontap_snapvault_metrics_ok() -> None:
 
     assert result == [
         Result(state=State.OK, summary="Destination-system: snapmirror_destination"),
+        Result(state=State.OK, summary="Policy not set"),
         Result(state=State.OK, summary="Lag time: 1 day 0 hours"),
     ]
 
@@ -76,5 +77,5 @@ def test_check_netapp_ontap_snapvault_metrics_crit() -> None:
     )
 
     assert result[0] == Result(state=State.OK, summary="Destination-system: snapmirror_destination")
-    assert isinstance(result[1], Result)
-    assert result[1].state == State.CRIT
+    assert isinstance(result[2], Result)
+    assert result[2].state == State.CRIT

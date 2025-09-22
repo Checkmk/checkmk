@@ -85,14 +85,18 @@ public:
     }
 
     bool all_of_labels(
-        const std::function<bool(const Attribute &)> &pred) const override {
+        const std::function<bool(const Label &)> &pred) const override {
         // TODO(sp) Avoid construction of temporary map
         auto labels =
             CustomAttributes(contact_.custom_variables, AttributeKind::labels);
+        auto sources = CustomAttributes(contact_.custom_variables,
+                                        AttributeKind::label_sources);
         return std::ranges::all_of(
-            labels, [&pred](const std::pair<std::string, std::string> &label) {
-                return pred(
-                    Attribute{.name = label.first, .value = label.second});
+            labels, [&pred, &sources](
+                        const std::pair<std::string, std::string> &label) {
+                return pred(Label{.name = label.first,
+                                  .value = label.second,
+                                  .source = sources[label.first]});
             });
     }
 

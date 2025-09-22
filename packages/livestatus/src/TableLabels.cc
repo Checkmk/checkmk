@@ -53,8 +53,9 @@ void TableLabels::answerQuery(Query &query, const User &user,
     // labels, hosts, etc. Building such a collection upfront could slow down
     // the startup and need tons of memory. Or perhaps not. ;-)
     std::unordered_set<row_type> emitted;
-    auto processLabel = [&query, &emitted](const row_type &row) {
-        const auto &[it, insertion_happened] = emitted.insert(row);
+    auto processLabel = [&query, &emitted](const Label &row) {
+        const auto &[it, insertion_happened] =
+            emitted.insert(Attribute{.name = row.name, .value = row.value});
         return !insertion_happened || query.processDataset(Row{&row});
     };
 

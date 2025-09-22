@@ -145,6 +145,12 @@ build:linux --host_action_env=PATH="/usr/bin:/bin"
 build:windows --action_env=PATH="c:\\Windows;c:\\Windows\\system32;C:\\Program Files (x86)\\Windows Kits\\10\\App Certification Kit"
 build:windows --host_action_env=PATH="c:\\Windows;c:\\Windows\\system32;C:\\Program Files (x86)\\Windows Kits\\10\\App Certification Kit"
 
+# Default coverage configuration
+coverage --keep_going
+coverage --build_tests_only
+coverage --combined_report=lcov
+coverage --nocache_test_results
+
 # The remote.bazelrc file contains the secrets for accessing the remote cache and must be added by the corresponding
 # Jenkins job (or a user) in the form of:
 # common --remote_cache=grpcs://${USER}:${PASSWORD}@{URL}
@@ -160,4 +166,3 @@ try-import %workspace%/user.bazelrc
 # Note: unfortunately there is no way to `try-import %home%/user.bazelrc`,
 # in order to set user specific options in a worktree-independent way, but
 # you can create ~/.bazelrc and put your global stuff there.
-

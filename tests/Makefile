@@ -495,6 +495,21 @@ test-unit-all: test-doctest
 	    --test_env=TZ=$(RANDOM_TZ) \
 	    --test_arg="--numprocesses=4"
 
+# Default bazel coverage options are defined in .bazelrc.
+# With BAZEL_COVERAGE_ARGS you can pass additional arguments to bazel coverage command, for example
+# to specify source module to be included in the coverage report with instrumentation_filter option.
+# Example:
+#    BAZEL_COVERAGE_ARGS='--instrumentation_filter="//(cmk|packages|agents)[/:@]"' make -C tests test-unit-all-coverage
+#
+test-unit-all-coverage:
+	cd .. && \
+	    bazel coverage --test_verbose_timeout_warnings //tests/unit:all \
+	    --test_env=TZ=$(RANDOM_TZ) \
+		$(BAZEL_COVERAGE_ARGS) ; \
+		genhtml --title "Checkmk Unit Test Coverage"  \
+			--quiet \
+			--output results/coverage bazel-out/_coverage/_coverage_report.dat
+
 test-unit-testlib:
 	find -name '__pycache__' -exec rm -rf {} \; 2> /dev/null || true
 	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \

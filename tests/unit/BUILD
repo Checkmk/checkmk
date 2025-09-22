@@ -106,6 +106,7 @@ py_test(
     deps = [
         ":__test__",
         requirement("astroid"),
+        requirement("coverage"),
         requirement("fastapi"),
         requirement("httpx"),
         requirement("mypy-boto3-logs"),

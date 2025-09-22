@@ -646,7 +646,10 @@ python.single_version_platform_override(
     ],
 )
 python.defaults(python_version = "3.12.11")
-python.toolchain(python_version = "3.12.11")
+python.toolchain(
+    configure_coverage_tool = True,
+    python_version = "3.12.11",
+)
 
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
 rust.toolchain(

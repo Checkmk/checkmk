@@ -14,7 +14,7 @@ from tests.plugins_integration import checks
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.site import get_site_factory, Site, SiteFactory
 from tests.testlib.utils import is_cleanup_enabled, run
-from tests.testlib.version import CMKEdition, CMKPackageInfo, get_min_version
+from tests.testlib.version import CMKEdition, CMKPackageInfo, CMKVersion
 
 logger = logging.getLogger(__name__)
 
@@ -182,7 +182,7 @@ def _setup_datasource(site: Site) -> Iterator[None]:
 
 @pytest.fixture(name="site_factory_update", scope="session")
 def _get_sf_update():
-    base_package = CMKPackageInfo(get_min_version(), CMKEdition(CMKEdition.CEE))
+    base_package = CMKPackageInfo(CMKVersion("2.4.0p12"), CMKEdition(CMKEdition.CEE))
     return get_site_factory(prefix="update_", package=base_package)
 
 

@@ -32,7 +32,6 @@ PYTHON3_PATHS=(
     notification_plugins
     plugins
     post_rename_site
-    snmplib
     special_agents
     update_config
     utils

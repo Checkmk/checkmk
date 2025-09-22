@@ -238,23 +238,17 @@ function enableShortCuts() {
 
   shortCutEventIds.value.push(shortcuts.on({ key: ['Enter'], ctrl: true }, ctrlEnter))
 
-  shortCutEventIds.value.push(shortcuts.on({ key: ['ArrowDown'], preventDefault: true }, arrowDown))
+  shortCutEventIds.value.push(shortcuts.on({ key: ['ArrowDown'] }, arrowDown))
 
-  shortCutEventIds.value.push(shortcuts.on({ key: ['ArrowUp'], preventDefault: true }, arrowUp))
+  shortCutEventIds.value.push(shortcuts.on({ key: ['ArrowUp'] }, arrowUp))
 
-  shortCutEventIds.value.push(shortcuts.on({ key: ['ArrowLeft'], preventDefault: true }, arrowLeft))
+  shortCutEventIds.value.push(shortcuts.on({ key: ['ArrowLeft'] }, arrowLeft))
 
-  shortCutEventIds.value.push(
-    shortcuts.on({ key: ['ArrowRight'], preventDefault: true }, arrowRight)
-  )
+  shortCutEventIds.value.push(shortcuts.on({ key: ['ArrowRight'] }, arrowRight))
 
-  shortCutEventIds.value.push(
-    shortcuts.on({ key: ['ArrowLeft'], ctrl: true, preventDefault: true }, ctrlArrowLeft)
-  )
+  shortCutEventIds.value.push(shortcuts.on({ key: ['ArrowLeft'], ctrl: true }, ctrlArrowLeft))
 
-  shortCutEventIds.value.push(
-    shortcuts.on({ key: ['ArrowRight'], ctrl: true, preventDefault: true }, ctrlArrowRight)
-  )
+  shortCutEventIds.value.push(shortcuts.on({ key: ['ArrowRight'], ctrl: true }, ctrlArrowRight))
 }
 
 function disableShortCuts() {

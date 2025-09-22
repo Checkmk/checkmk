@@ -90,8 +90,12 @@ def check_netapp_ontap_snapvault(
         yield Result(state=State.OK, summary=f"Destination-system: {snapvault.destination}")
     if snapvault.policy_name:
         yield Result(state=State.OK, summary=f"Policy: {snapvault.policy_name}")
+    else:
+        yield Result(state=State.OK, summary="Policy not set")
+
     if snapvault.transfer_state:
         yield Result(state=State.OK, summary=f"Transfer State: {snapvault.transfer_state}")
+
     if snapvault.state:
         yield Result(state=State.OK, summary=f"State: {snapvault.state}")
 

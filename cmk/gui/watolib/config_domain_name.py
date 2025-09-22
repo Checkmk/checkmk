@@ -8,7 +8,7 @@ from __future__ import annotations
 import abc
 import os
 import pprint
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Generator, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Final, TypedDict
@@ -305,6 +305,7 @@ class ConfigVariable:
         in_global_settings: bool = True,
         hint: Callable[[], HTML] = lambda: HTML.empty(),
         domain_hint: HTML = HTML.empty(),
+        additional_domains_affected_by_change: Sequence[type[ABCConfigDomain]] = (),
     ) -> None:
         self._group = group
         self._primary_domain_ident = primary_domain.ident()
@@ -316,6 +317,9 @@ class ConfigVariable:
         self._in_global_settings = in_global_settings
         self._hint_func = hint
         self._domain_hint = domain_hint
+        self._idents_of_additional_domains_affected_by_change = [
+            domain.ident() for domain in additional_domains_affected_by_change
+        ]
 
     def group(self) -> ConfigVariableGroup:
         """Returns the the configuration variable group this configuration variable belongs to"""
@@ -332,6 +336,13 @@ class ConfigVariable:
     def primary_domain(self) -> ABCConfigDomain:
         """Returns the config domain this configuration variable belongs to"""
         return config_domain_registry[self._primary_domain_ident]
+
+    def all_domains(self) -> Generator[ABCConfigDomain]:
+        yield self.primary_domain()
+        yield from (
+            config_domain_registry[domain_ident]
+            for domain_ident in self._idents_of_additional_domains_affected_by_change
+        )
 
     # TODO: This is boolean flag which defaulted to None in case a variable declaration did not
     # provide this attribute.

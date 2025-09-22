@@ -132,6 +132,7 @@ from cmk.gui.wato.pages.global_settings import (
 from cmk.gui.watolib.attributes import SNMPCredentials
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.config_domain_name import (
+    ABCConfigDomain,
     config_domain_registry,
     config_variable_group_registry,
     config_variable_registry,
@@ -1595,12 +1596,21 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
         )
         return True
 
-    def _add_change(self, action_name: str, text: str, *, use_git: bool) -> None:
+    def _add_change(
+        self,
+        action_name: str,
+        text: str,
+        *,
+        domains: Iterable[ABCConfigDomain] | None = None,
+        use_git: bool,
+    ) -> None:
         _changes.add_change(
             action_name=action_name,
             text=text,
             user_id=user.id,
-            domains=[self._config_domain],
+            domains=[
+                *(domains or [self._config_domain]),
+            ],
             sites=_get_event_console_sync_sites(),
             use_git=use_git,
         )
@@ -3208,6 +3218,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
         self._add_change(
             action_name="edit-configvar",
             text=msg,
+            domains=config_variable.all_domains(),
             use_git=config.wato_use_git,
         )
 

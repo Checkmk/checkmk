@@ -49,6 +49,18 @@ def _style_service_status(value: str) -> Iterable[Alignment | BackgroundColor | 
             yield BackgroundColor.DARK_GRAY
 
 
+def _style_container_ready(
+    value: bool,
+) -> Iterable[Alignment | BackgroundColor | LabelColor]:
+    yield Alignment.CENTER
+    if value:
+        yield LabelColor.BLACK
+        yield BackgroundColor.GREEN
+    else:
+        yield LabelColor.WHITE
+        yield BackgroundColor.DARK_GRAY
+
+
 node_software = Node(
     name="software",
     path=["software"],
@@ -650,6 +662,23 @@ node_software_applications_kube_cluster = Node(
     attributes={
         "version": TextField(Title("Version")),
     },
+)
+
+node_software_applications_kube_containers = Node(
+    name="software_applications_kube_containers",
+    path=["software", "applications", "kube", "containers"],
+    title=Title("Containers"),
+    table=Table(
+        columns={
+            "name": TextField(Title("Name")),
+            "ready": BoolField(Title("Ready"), style=_style_container_ready),
+            "restart_count": TextField(Title("Restart count")),
+            "image": TextField(Title("Image")),
+            "image_pull_policy": TextField(Title("Image pull policy")),
+            "image_id": TextField(Title("Image ID")),
+            "container_id": TextField(Title("Container ID")),
+        },
+    ),
 )
 
 node_software_applications_kube_daemonset = Node(

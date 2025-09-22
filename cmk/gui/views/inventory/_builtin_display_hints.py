@@ -932,18 +932,18 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".networking.kube:*.address_type": {
         # MIGRATED     "title": _l("Type"),
         # MIGRATED },
-        ".software.applications.kube.containers:": {
-            "title": _l("Containers"),
-            "keyorder": [
-                "name",
-                "ready",
-                "restart_count",
-                "image",
-                "image_pull_policy",
-                "image_id",
-                "container_id",
-            ],
-        },
+        # MIGRATED ".software.applications.kube.containers:": {
+        # MIGRATED     "title": _l("Containers"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "name",
+        # MIGRATED         "ready",
+        # MIGRATED         "restart_count",
+        # MIGRATED         "image",
+        # MIGRATED         "image_pull_policy",
+        # MIGRATED         "image_id",
+        # MIGRATED         "container_id",
+        # MIGRATED     ],
+        # MIGRATED },
         # MIGRATED ".software.applications.kube.metadata.": {
         # MIGRATED     "title": _l("Metadata"),
         # MIGRATED     "keyorder": [
@@ -955,18 +955,18 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".software.applications.kube.metadata.object": {"title": _l("Object")},
         # MIGRATED ".software.applications.kube.metadata.name": {"title": _l("Name")},
         # MIGRATED ".software.applications.kube.metadata.namespace": {"title": _l("Namespace")},
-        ".software.applications.kube.containers:*.name": {"title": _l("Name")},
-        ".software.applications.kube.containers:*.image": {"title": _l("Image")},
-        ".software.applications.kube.containers:*.image_pull_policy": {
-            "title": _l("Image pull policy")
-        },
-        ".software.applications.kube.containers:*.image_id": {"title": _l("Image ID")},
-        ".software.applications.kube.containers:*.ready": {
-            "title": _l("Ready"),
-            "paint": "container_ready",
-        },
-        ".software.applications.kube.containers:*.restart_count": {"title": _l("Restart count")},
-        ".software.applications.kube.containers:*.container_id": {"title": _l("Container ID")},
+        # MIGRATED ".software.applications.kube.containers:*.name": {"title": _l("Name")},
+        # MIGRATED ".software.applications.kube.containers:*.image": {"title": _l("Image")},
+        # MIGRATED ".software.applications.kube.containers:*.image_pull_policy": {
+        # MIGRATED     "title": _l("Image pull policy")
+        # MIGRATED },
+        # MIGRATED ".software.applications.kube.containers:*.image_id": {"title": _l("Image ID")},
+        # MIGRATED ".software.applications.kube.containers:*.ready": {
+        # MIGRATED     "title": _l("Ready"),
+        # MIGRATED     "paint": "container_ready",
+        # MIGRATED },
+        # MIGRATED ".software.applications.kube.containers:*.restart_count": {"title": _l("Restart count")},
+        # MIGRATED ".software.applications.kube.containers:*.container_id": {"title": _l("Container ID")},
         # MIGRATED ".software.applications.kube.cluster.": {"title": _l("Cluster"), "keyorder": ["version"]},
         # MIGRATED ".software.applications.kube.cluster.version": {"title": _l("Version")},
         # MIGRATED ".software.applications.kube.deployment.": {

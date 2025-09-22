@@ -16,8 +16,10 @@ import {
   watch
 } from 'vue'
 
+import type { FilterHTTPVars } from '@/dashboard-wip/types/widget.ts'
+
 import { FigureBase } from './cmk_figures.ts'
-import type { ContentProps, FilterHTTPVars } from './types.ts'
+import type { ContentProps } from './types.ts'
 
 const props = defineProps<ContentProps>()
 const emit = defineEmits(['vue:mounted', 'vue:updated'])

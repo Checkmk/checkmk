@@ -34,6 +34,9 @@ export interface EffectiveWidgetFilterContext extends WidgetFilterContext {
   restricted_to_single: AnnotatedInfoName[]
 }
 
+export type FilterHTTPVars = Record<string, string>
+export type VisualContext = Record<string, FilterHTTPVars>
+
 // Specific widget types
 export type EmbeddedViewContent = components['schemas']['EmbeddedViewContent']
 export type LinkedViewContent = components['schemas']['LinkedViewContent']

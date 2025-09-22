@@ -19,8 +19,6 @@ export interface ContentProps {
 }
 export type ContentPropsRecord = Readonly<Record<string, ContentProps>>
 
-export type FilterHTTPVars = Record<string, string>
-
 // Figure
 export const CONTENT_FIGURE_TYPES: string[] = [
   'alert_overview',

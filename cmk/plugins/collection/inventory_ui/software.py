@@ -61,6 +61,18 @@ def _style_container_ready(
         yield BackgroundColor.DARK_GRAY
 
 
+def _style_mssql_is_clustered(
+    value: bool,
+) -> Iterable[Alignment | BackgroundColor | LabelColor]:
+    yield Alignment.CENTER
+    if value:
+        yield LabelColor.BLACK
+        yield BackgroundColor.GREEN
+    else:
+        yield LabelColor.WHITE
+        yield BackgroundColor.DARK_GRAY
+
+
 node_software = Node(
     name="software",
     path=["software"],
@@ -780,6 +792,24 @@ node_software_applications_mssql = Node(
     name="software_applications_mssql",
     path=["software", "applications", "mssql"],
     title=Title("MSSQL"),
+)
+
+node_software_applications_mssql_instances = Node(
+    name="software_applications_mssql_instances",
+    path=["software", "applications", "mssql", "instances"],
+    title=Title("Instances"),
+    table=Table(
+        columns={
+            "name": TextField(Title("Name")),
+            "product": TextField(Title("Product")),
+            "edition": TextField(Title("Edition")),
+            "version": TextField(Title("Version")),
+            "clustered": BoolField(Title("Clustered"), style=_style_mssql_is_clustered),
+            "cluster_name": TextField(Title("Cluster name")),
+            "active_node": TextField(Title("Active node")),
+            "node_names": TextField(Title("Node names")),
+        },
+    ),
 )
 
 node_software_applications_oracle = Node(

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import assert_never, cast, Literal, override
 
-from cmk.gui.form_specs.private.condition_choices import (
+from cmk.gui.form_specs.unstable.condition_choices import (
     Condition,
     ConditionChoices,
     ConditionGroupID,

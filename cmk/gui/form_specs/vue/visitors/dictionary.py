@@ -6,7 +6,7 @@ import ast
 from collections.abc import Mapping, Sequence
 from typing import override
 
-from cmk.gui.form_specs.private.dictionary_extended import DictGroupExtended, DictionaryExtended
+from cmk.gui.form_specs.unstable.dictionary_extended import DictGroupExtended, DictionaryExtended
 from cmk.gui.i18n import _
 from cmk.rulesets.v1.form_specs._composed import NoGroup
 from cmk.shared_typing import vue_formspec_components as shared_type_defs

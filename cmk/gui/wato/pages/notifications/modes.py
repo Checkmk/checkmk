@@ -30,7 +30,7 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
 from cmk.gui.default_name import unique_clone_increment_suggestion
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.private.legacy_converter import (
+from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
 )
 from cmk.gui.form_specs.vue import (

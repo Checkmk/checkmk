@@ -11,7 +11,7 @@ from livestatus import SiteConfiguration
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
-from cmk.gui.form_specs.private import (
+from cmk.gui.form_specs.unstable import (
     CascadingSingleChoiceExtended,
     CommentTextArea,
     ConditionChoices,
@@ -29,15 +29,15 @@ from cmk.gui.form_specs.private import (
     TwoColumnDictionary,
     World,
 )
-from cmk.gui.form_specs.private.cascading_single_choice_extended import (
+from cmk.gui.form_specs.unstable.cascading_single_choice_extended import (
     CascadingSingleChoiceElementExtended,
 )
-from cmk.gui.form_specs.private.legacy_converter import Tuple
-from cmk.gui.form_specs.private.list_unique_selection import (
+from cmk.gui.form_specs.unstable.legacy_converter import Tuple
+from cmk.gui.form_specs.unstable.list_unique_selection import (
     UniqueCascadingSingleChoiceElement,
     UniqueSingleChoiceElement,
 )
-from cmk.gui.form_specs.private.multiple_choice import MultipleChoiceElementExtended
+from cmk.gui.form_specs.unstable.multiple_choice import MultipleChoiceElementExtended
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.mkeventd import service_levels, syslog_facilities, syslog_priorities

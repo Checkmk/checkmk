@@ -5,7 +5,7 @@
 from collections.abc import Callable, Sequence
 from typing import TypeVar
 
-from cmk.gui.form_specs.private import (
+from cmk.gui.form_specs.unstable import (
     StringAutocompleter,
 )
 from cmk.rulesets.v1 import Help, Title

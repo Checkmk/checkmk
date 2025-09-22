@@ -25,8 +25,8 @@ from cmk.ccc.user import UserId
 from cmk.fields import String
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
-from cmk.gui.form_specs.private.legacy_converter import (
+from cmk.gui.form_specs.unstable import SingleChoiceElementExtended, SingleChoiceExtended
+from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
 )
 from cmk.gui.hooks import request_memoize

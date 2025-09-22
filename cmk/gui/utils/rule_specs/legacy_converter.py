@@ -17,7 +17,7 @@ from cmk.ccc.version import Edition
 from cmk.gui import inventory as legacy_inventory_groups
 from cmk.gui import valuespec as legacy_valuespecs
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.private import (
+from cmk.gui.form_specs.unstable import (
     DictionaryExtended,
     LegacyValueSpec,
     ListExtended,
@@ -26,7 +26,7 @@ from cmk.gui.form_specs.private import (
     StringAutocompleter,
     UserSelection,
 )
-from cmk.gui.form_specs.private.legacy_converter import SimplePassword, Tuple
+from cmk.gui.form_specs.unstable.legacy_converter import SimplePassword, Tuple
 from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.userdb._user_selection import UserSelection as LegacyUserSelection
 from cmk.gui.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig

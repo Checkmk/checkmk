@@ -31,7 +31,7 @@ from cmk.gui.form_specs.generators.cascading_choice_utils import (
 from cmk.gui.form_specs.generators.dict_to_catalog import (
     create_flat_catalog_from_dictionary,
 )
-from cmk.gui.form_specs.private import LegacyValueSpec, OptionalChoice
+from cmk.gui.form_specs.unstable import LegacyValueSpec, OptionalChoice
 from cmk.gui.form_specs.vue import DEFAULT_VALUE, parse_data_from_field_id, render_form_spec
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header

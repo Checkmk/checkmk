@@ -20,14 +20,14 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.generators.host_address import create_host_address
 from cmk.gui.form_specs.generators.setup_site_choice import create_setup_site_choice
 from cmk.gui.form_specs.generators.snmp_credentials import create_snmp_credentials
-from cmk.gui.form_specs.private import labels as fs_labels
-from cmk.gui.form_specs.private import ListOfStrings as FSListOfStrings
-from cmk.gui.form_specs.private import (
+from cmk.gui.form_specs.unstable import labels as fs_labels
+from cmk.gui.form_specs.unstable import ListOfStrings as FSListOfStrings
+from cmk.gui.form_specs.unstable import (
     OptionalChoice,
     SingleChoiceElementExtended,
     SingleChoiceExtended,
 )
-from cmk.gui.form_specs.private.legacy_converter import (
+from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
 )
 from cmk.gui.htmllib.generator import HTMLWriter

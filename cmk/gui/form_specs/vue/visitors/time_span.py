@@ -6,7 +6,7 @@ from collections.abc import Callable, Iterator, Sequence
 from typing import cast, override
 
 from cmk.ccc.i18n import _
-from cmk.gui.form_specs.private.validators import IsFloat
+from cmk.gui.form_specs.unstable.validators import IsFloat
 from cmk.rulesets.v1 import Label, Message
 from cmk.rulesets.v1.form_specs import TimeMagnitude, TimeSpan
 from cmk.rulesets.v1.form_specs.validators import NumberInRange

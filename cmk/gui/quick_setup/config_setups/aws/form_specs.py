@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping
 
-from cmk.gui.form_specs.private.validators import HostAddress
+from cmk.gui.form_specs.unstable.validators import HostAddress
 from cmk.gui.quick_setup.config_setups.aws.ruleset_helper import formspec_aws_tags
 from cmk.plugins.aws.lib import aws_region_to_monitor  # pylint: disable=cmk-module-layer-violation
 from cmk.rulesets.v1 import Help, Message, Title

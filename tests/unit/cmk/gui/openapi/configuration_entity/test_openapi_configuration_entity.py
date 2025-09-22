@@ -7,7 +7,7 @@ from unittest import mock
 import pytest
 
 import cmk.gui.watolib.configuration_entity.configuration_entity
-from cmk.gui.form_specs.private import DictionaryExtended, not_empty
+from cmk.gui.form_specs.unstable import DictionaryExtended, not_empty
 from cmk.gui.form_specs.vue import RawFrontendData
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
 from cmk.gui.watolib.notification_parameter import (

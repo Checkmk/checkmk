@@ -5,8 +5,8 @@
 
 import pytest
 
-from cmk.gui.form_specs.private import ListUniqueSelection, SingleChoiceElementExtended
-from cmk.gui.form_specs.private.list_unique_selection import UniqueSingleChoiceElement
+from cmk.gui.form_specs.unstable import ListUniqueSelection, SingleChoiceElementExtended
+from cmk.gui.form_specs.unstable.list_unique_selection import UniqueSingleChoiceElement
 from cmk.gui.form_specs.vue import (
     get_visitor,
     IncomingData,

@@ -43,7 +43,7 @@ from cmk.gui.config import active_config, Config
 from cmk.gui.customer import customer_api, SCOPE_GLOBAL
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.generators.host_address import HostAddressValidator
-from cmk.gui.form_specs.private import (
+from cmk.gui.form_specs.unstable import (
     DictionaryExtended,
     SingleChoiceElementExtended,
     SingleChoiceExtended,

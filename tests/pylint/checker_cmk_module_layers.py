@@ -172,7 +172,7 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.ccc.store",
         "cmk.ccc.version",  # edition detection
         "cmk.ec.export",
-        "cmk.gui.form_specs.private",
+        "cmk.gui.form_specs.unstable",
         "cmk.gui.mkeventd",
         "cmk.utils.http_proxy_config",
         "cmk.utils.paths",  # edition detection
@@ -198,7 +198,7 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.ccc.hostaddress",
         "cmk.ccc.profile",
         "cmk.ccc.version",  # edition detection
-        "cmk.gui.form_specs.private",
+        "cmk.gui.form_specs.unstable",
         "cmk.plugins.lib",
         "cmk.plugins.lib.node_exporter",
         "cmk.utils.http_proxy_config",
@@ -235,7 +235,7 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.utils.paths",
     ),
     "otel": (
-        "cmk.gui.form_specs.private",
+        "cmk.gui.form_specs.unstable",
         "cmk.otel_collector",
         "cmk.shared_typing.vue_formspec_components",
     ),

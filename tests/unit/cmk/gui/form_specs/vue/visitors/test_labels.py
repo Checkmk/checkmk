@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.form_specs.private import Labels, World
+from cmk.gui.form_specs.unstable import Labels, World
 from cmk.gui.form_specs.vue import get_visitor, RawDiskData, RawFrontendData, VisitorOptions
 
 labels = {"cmk/check_mk_server": "yes"}

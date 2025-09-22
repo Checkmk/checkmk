@@ -8,7 +8,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from cmk.ccc.version import Edition, edition
-from cmk.gui.form_specs.private.dictionary_extended import DictGroupExtended, DictionaryExtended
+from cmk.gui.form_specs.unstable.dictionary_extended import DictGroupExtended, DictionaryExtended
 from cmk.gui.http import request
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (

@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from typing import Any, override, TypedDict, TypeGuard
 
 from cmk.gui.form_specs.generators.timeperiod_selection import create_timeperiod_selection
-from cmk.gui.form_specs.private.time_specific import TimeSpecific
+from cmk.gui.form_specs.unstable.time_specific import TimeSpecific
 from cmk.gui.i18n import _
 from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import DictElement, Dictionary, List

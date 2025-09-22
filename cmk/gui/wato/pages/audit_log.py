@@ -22,13 +22,13 @@ from cmk.gui.form_specs.generators.cascading_choice_utils import (
     enable_deprecated_cascading_elements,
 )
 from cmk.gui.form_specs.generators.regex_utils import create_regex
-from cmk.gui.form_specs.private import (
+from cmk.gui.form_specs.unstable import (
     CascadingSingleChoiceExtended,
     LegacyValueSpec,
     SingleChoiceElementExtended,
     SingleChoiceExtended,
 )
-from cmk.gui.form_specs.private.cascading_single_choice_extended import (
+from cmk.gui.form_specs.unstable.cascading_single_choice_extended import (
     CascadingSingleChoiceElementExtended,
 )
 from cmk.gui.form_specs.vue import (

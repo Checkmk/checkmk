@@ -5,8 +5,8 @@
 from collections.abc import Sequence
 from typing import Generic, override, TypeVar
 
-from cmk.gui.form_specs.private import CascadingSingleChoiceExtended, SingleChoiceExtended
-from cmk.gui.form_specs.private.list_unique_selection import (
+from cmk.gui.form_specs.unstable import CascadingSingleChoiceExtended, SingleChoiceExtended
+from cmk.gui.form_specs.unstable.list_unique_selection import (
     ListUniqueSelection,
     UniqueCascadingSingleChoiceElement,
     UniqueSingleChoiceElement,

@@ -6,7 +6,7 @@
 
 from typing import override
 
-from cmk.gui.form_specs.private import CascadingSingleChoiceExtended
+from cmk.gui.form_specs.unstable import CascadingSingleChoiceExtended
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 

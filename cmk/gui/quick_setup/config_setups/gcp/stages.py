@@ -8,7 +8,7 @@ from collections.abc import Callable, Mapping, Sequence
 from livestatus import SiteConfiguration
 
 from cmk.ccc.site import SiteId
-from cmk.gui.form_specs.private.two_column_dictionary import TwoColumnDictionary
+from cmk.gui.form_specs.unstable.two_column_dictionary import TwoColumnDictionary
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.quick_setup.v0_unstable.predefined import (

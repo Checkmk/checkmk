@@ -33,7 +33,7 @@ from numpy.matlib import empty
 _ADDED_IMPORTS = (
     "from collections.abc import Iterable, Mapping",
     "from typing import Any",
-    "from cmk.gui.form_specs.private import LegacyValueSpec, ListExtended",
+    "from cmk.gui.form_specs.unstable import LegacyValueSpec, ListExtended",
     "from cmk.gui.form_specs.generators.cascading_choice_utils import enable_deprecated_cascading_elements, CascadingDataConversion",
     "from cmk.gui.form_specs.generators.alternative_utils import enable_deprecated_alternative",
     "from cmk.gui.form_specs.generators.absolute_date import AbsoluteTimestamp, DateTimeFormat",
@@ -74,7 +74,7 @@ _ADDED_IMPORTS = (
         "from cmk.rulesets.v1.rule_specs import ActiveCheck, Topic, HostAndServiceCondition, HostCondition, "
         "HostAndItemCondition, CheckParameters, EnforcedService, DiscoveryParameters"
     ),
-    ("from cmk.gui.form_specs.private import OptionalChoice, Tuple"),
+    ("from cmk.gui.form_specs.unstable import OptionalChoice, Tuple"),
 )
 
 DEFAULT_TIME_SPAN_ARGS = (

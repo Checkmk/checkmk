@@ -6,11 +6,11 @@
 from collections.abc import Callable, Mapping
 
 from cmk.gui import bi
-from cmk.gui.form_specs.private import (
+from cmk.gui.form_specs.unstable import (
     SingleChoiceElementExtended,
     SingleChoiceExtended,
 )
-from cmk.gui.form_specs.private.user_selection import (
+from cmk.gui.form_specs.unstable.user_selection import (
     UserSelection,
     UserSelectionFilter,
 )

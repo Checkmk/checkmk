@@ -7,7 +7,7 @@ import base64
 import pytest
 
 from cmk.ccc.user import UserId
-from cmk.gui.form_specs.private.legacy_converter import SimplePassword
+from cmk.gui.form_specs.unstable.legacy_converter import SimplePassword
 from cmk.gui.form_specs.vue import get_visitor, RawDiskData, RawFrontendData, VisitorOptions
 from cmk.gui.utils.encrypter import Encrypter
 

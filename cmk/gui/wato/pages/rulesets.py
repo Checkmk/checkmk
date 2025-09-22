@@ -27,7 +27,7 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config, Config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
-from cmk.gui.form_specs.private import LegacyValueSpec
+from cmk.gui.form_specs.unstable import LegacyValueSpec
 from cmk.gui.form_specs.vue import (
     DisplayMode,
     parse_data_from_field_id,

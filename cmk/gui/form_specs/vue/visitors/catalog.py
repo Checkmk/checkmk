@@ -5,7 +5,7 @@
 from collections.abc import Mapping
 from typing import Any, override
 
-from cmk.gui.form_specs.private import Catalog, Topic, TopicElement, TopicGroup
+from cmk.gui.form_specs.unstable import Catalog, Topic, TopicElement, TopicGroup
 from cmk.gui.i18n import _
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 

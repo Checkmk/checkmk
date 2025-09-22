@@ -11,7 +11,7 @@ from cmk.ccc.i18n import _
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.version import edition
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.private import (
+from cmk.gui.form_specs.unstable import (
     Catalog,
     CommentTextArea,
     DictionaryExtended,
@@ -20,8 +20,8 @@ from cmk.gui.form_specs.private import (
     not_empty,
     TopicElement,
 )
-from cmk.gui.form_specs.private import Topic as TopicExtended
-from cmk.gui.form_specs.private.legacy_converter import (
+from cmk.gui.form_specs.unstable import Topic as TopicExtended
+from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
 )
 from cmk.gui.form_specs.vue import DefaultValue

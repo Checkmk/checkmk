@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import override
 
-from cmk.gui.form_specs.private.labels import Labels
+from cmk.gui.form_specs.unstable.labels import Labels
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 

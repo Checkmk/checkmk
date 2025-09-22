@@ -6,8 +6,8 @@ import base64
 from collections.abc import Callable, Sequence
 from typing import Any, override
 
-from cmk.gui.form_specs.private import not_empty
-from cmk.gui.form_specs.private.legacy_converter import SimplePassword
+from cmk.gui.form_specs.unstable import not_empty
+from cmk.gui.form_specs.unstable.legacy_converter import SimplePassword
 from cmk.gui.i18n import _
 from cmk.gui.utils.encrypter import Encrypter
 from cmk.shared_typing import vue_formspec_components as shared_type_defs

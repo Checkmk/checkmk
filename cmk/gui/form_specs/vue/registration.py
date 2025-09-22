@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import cmk.gui.form_specs.private.validators as private_form_specs_validators
+import cmk.gui.form_specs.unstable.validators as private_form_specs_validators
 import cmk.rulesets.v1.form_specs.validators as formspec_validators
-from cmk.gui.form_specs.private import (
+from cmk.gui.form_specs.unstable import (
     CascadingSingleChoiceExtended,
     Catalog,
     CommentTextArea,
@@ -28,12 +28,12 @@ from cmk.gui.form_specs.private import (
     TimeSpecific,
     UserSelection,
 )
-from cmk.gui.form_specs.private.legacy_converter import (
+from cmk.gui.form_specs.unstable.legacy_converter import (
     SimplePassword,
     TransformDataForLegacyFormatOrRecomposeFunction,
     Tuple,
 )
-from cmk.gui.form_specs.private.two_column_dictionary import TwoColumnDictionary
+from cmk.gui.form_specs.unstable.two_column_dictionary import TwoColumnDictionary
 from cmk.gui.form_specs.vue.visitors.condition_choices import ConditionChoicesVisitor
 from cmk.gui.form_specs.vue.visitors.metric import MetricVisitor
 from cmk.gui.form_specs.vue.visitors.recomposers import (

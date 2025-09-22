@@ -7,12 +7,12 @@ from enum import Enum
 from typing import Any
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.gui.form_specs.private import (
+from cmk.gui.form_specs.unstable import (
     not_empty,
     SingleChoiceElementExtended,
     SingleChoiceExtended,
 )
-from cmk.gui.form_specs.private.legacy_converter import (
+from cmk.gui.form_specs.unstable.legacy_converter import (
     SimplePassword,
     TransformDataForLegacyFormatOrRecomposeFunction,
     Tuple,

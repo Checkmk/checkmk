@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from typing import assert_never, override, TypedDict
 
 from cmk.gui.config import active_config
-from cmk.gui.form_specs.private.multiple_choice import (
+from cmk.gui.form_specs.unstable.multiple_choice import (
     MultipleChoiceExtended,
     MultipleChoiceExtendedLayout,
 )

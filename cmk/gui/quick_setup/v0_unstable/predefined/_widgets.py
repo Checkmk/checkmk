@@ -9,7 +9,7 @@ import cmk.utils.regex
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.fields.definitions import HOST_NAME_REGEXP
 from cmk.gui.form_specs.generators.folder import create_full_path_folder_choice
-from cmk.gui.form_specs.private.two_column_dictionary import TwoColumnDictionary
+from cmk.gui.form_specs.unstable.two_column_dictionary import TwoColumnDictionary
 from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.quick_setup.v0_unstable.definitions import (
     QSHostName,

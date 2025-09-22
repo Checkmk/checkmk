@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.gui.form_specs.private import TimePicker
+from cmk.gui.form_specs.unstable import TimePicker
 from cmk.gui.form_specs.vue import (
     get_visitor,
     IncomingData,

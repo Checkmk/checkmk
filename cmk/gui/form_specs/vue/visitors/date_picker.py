@@ -9,7 +9,7 @@ import dateutil
 from cmk.ccc.i18n import _
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
-from ...private import DatePicker
+from ...unstable import DatePicker
 from .._type_defs import DefaultValue, IncomingData, InvalidValue
 from .._utils import (
     get_title_and_help,

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.form_specs.private import TimeSpecific
+from cmk.gui.form_specs.unstable import TimeSpecific
 from cmk.gui.form_specs.vue import DEFAULT_VALUE, get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.form_specs.vue.visitors import (
     SingleChoiceVisitor,

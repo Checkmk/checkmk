@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest
 
-from cmk.gui.form_specs.private import DictionaryExtended, not_empty
+from cmk.gui.form_specs.unstable import DictionaryExtended, not_empty
 from cmk.gui.form_specs.vue import FormSpecValidationError, RawFrontendData
 from cmk.gui.form_specs.vue.visitors import SingleChoiceVisitor
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary

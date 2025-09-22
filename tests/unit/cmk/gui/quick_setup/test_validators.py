@@ -8,7 +8,7 @@ from contextlib import nullcontext as does_not_raise
 
 import pytest
 
-from cmk.gui.form_specs.private.validators import HostAddress
+from cmk.gui.form_specs.unstable.validators import HostAddress
 from cmk.gui.wato.pages.notifications.quick_setup import (
     validate_notification_count_values,
     validate_throttling_values,

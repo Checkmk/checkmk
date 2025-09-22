@@ -13,8 +13,8 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.form_specs.generators.alternative_utils import enable_deprecated_alternative
 from cmk.gui.form_specs.generators.dict_to_catalog import create_flat_catalog_from_dictionary
-from cmk.gui.form_specs.private import LegacyValueSpec, ListExtended, UserSelection
-from cmk.gui.form_specs.private.legacy_converter import (
+from cmk.gui.form_specs.unstable import LegacyValueSpec, ListExtended, UserSelection
+from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
     Tuple,
 )

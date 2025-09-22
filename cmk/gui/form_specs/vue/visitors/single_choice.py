@@ -6,7 +6,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Generic, override, TypeAlias, TypeGuard, TypeVar
 
-from cmk.gui.form_specs import private
+from cmk.gui.form_specs import unstable
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.rulesets.v1 import Message
 from cmk.rulesets.v1.form_specs import InvalidElementMode
@@ -40,19 +40,19 @@ NO_SELECTION = None
 @dataclass
 class _FallbackModel(Generic[T]):
     value: str | None
-    available_elements: Sequence[private.SingleChoiceElementExtended[T]]
+    available_elements: Sequence[unstable.SingleChoiceElementExtended[T]]
 
 
 @dataclass
 class _ToleratedValue(Generic[T]):
     value: object
-    available_elements: Sequence[private.SingleChoiceElementExtended[T]]
+    available_elements: Sequence[unstable.SingleChoiceElementExtended[T]]
 
 
 @dataclass
 class _ValidValue(Generic[T]):
     value: object
-    available_elements: Sequence[private.SingleChoiceElementExtended[T]]
+    available_elements: Sequence[unstable.SingleChoiceElementExtended[T]]
 
 
 _ParsedValueModel: TypeAlias = _ToleratedValue[T] | _ValidValue[T]
@@ -60,11 +60,11 @@ _ParsedValueModel: TypeAlias = _ToleratedValue[T] | _ValidValue[T]
 
 class SingleChoiceVisitor(
     Generic[T],
-    FormSpecVisitor[private.SingleChoiceExtended[T], _ParsedValueModel[T], _FallbackModel[T]],
+    FormSpecVisitor[unstable.SingleChoiceExtended[T], _ParsedValueModel[T], _FallbackModel[T]],
 ):
     @staticmethod
     def _is_valid_choice(
-        value: object, elements: Sequence[private.SingleChoiceElementExtended[T]]
+        value: object, elements: Sequence[unstable.SingleChoiceElementExtended[T]]
     ) -> TypeGuard[T]:
         if isinstance(value, InvalidValue):
             return False
@@ -76,7 +76,7 @@ class SingleChoiceVisitor(
     def option_id(cls, val: object) -> str:
         return option_id(val)
 
-    def _get_elements(self) -> Sequence[private.SingleChoiceElementExtended[T]]:
+    def _get_elements(self) -> Sequence[unstable.SingleChoiceElementExtended[T]]:
         if callable(self.form_spec.elements):
             # Lazy evaluation of elements
             return self.form_spec.elements()

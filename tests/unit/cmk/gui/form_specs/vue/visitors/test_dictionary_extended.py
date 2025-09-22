@@ -2,7 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from cmk.gui.form_specs.private import DictionaryExtended
+from cmk.gui.form_specs.unstable import DictionaryExtended
 from cmk.gui.form_specs.vue import DEFAULT_VALUE, get_visitor, RawDiskData, VisitorOptions
 from cmk.rulesets.v1.form_specs import DefaultValue, DictElement, Dictionary, String
 

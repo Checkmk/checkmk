@@ -6,7 +6,7 @@
 from collections.abc import Callable, Sequence
 from typing import override
 
-from cmk.gui.form_specs.private.single_choice_editable import SingleChoiceEditable
+from cmk.gui.form_specs.unstable.single_choice_editable import SingleChoiceEditable
 from cmk.gui.i18n import _
 from cmk.gui.watolib.configuration_entity.configuration_entity import (
     get_list_of_configuration_entities,

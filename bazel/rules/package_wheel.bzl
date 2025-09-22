@@ -6,15 +6,13 @@ load("@rules_python//python:pip.bzl", "whl_filegroup")
 def package_wheel(
         name,
         whl,
-        visibility = None,
-        additional_files = []):
+        visibility = None):
     """Packages a python wheel into our omd site-packages.
 
     Args:
         name: Name of this target.
         whl: Wheel to be packaged.
         visibility: The visibility attribute on the target.
-        additional_files: List of additional files to be put in the tar.
     """
     whl_filegroup_name = name + "_fg"
     pkg_files_name = name + "_pkg_files"
@@ -30,6 +28,6 @@ def package_wheel(
     )
     pkg_tar(
         name = name,
-        srcs = [pkg_files_name] + additional_files,
+        srcs = [pkg_files_name],
         visibility = visibility,
     )

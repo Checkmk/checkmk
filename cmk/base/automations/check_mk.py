@@ -493,21 +493,11 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
 
         loaded_config = loading_result.loaded_config
         ruleset_matcher = loading_result.config_cache.ruleset_matcher
-        label_manager = loading_result.config_cache.label_manager
-        hosts_config = loading_result.config_cache.hosts_config
         config_cache = loading_result.config_cache
 
         final_service_name_config = make_final_service_name_config(loaded_config, ruleset_matcher)
         service_name_config = config_cache.make_passive_service_name_config(
             final_service_name_config
-        )
-        service_configurer = config_cache.make_service_configurer(
-            plugins.check_plugins, service_name_config
-        )
-        ip_address_of = ip_lookup.ConfiguredIPLookup(
-            ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
-            allow_empty=hosts_config.clusters,
-            error_handler=config.handle_ip_lookup_failure,
         )
         file_cache_options = FileCacheOptions(use_outdated=False, use_only_cache=False)
         password_store_file = Path(cmk.utils.paths.tmp_dir, f"passwords_temp_{uuid.uuid4()}")
@@ -523,33 +513,9 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
             )
             fetcher = SpecialAgentFetcher(
                 PlainFetcherTrigger(),  # no relay support yet
-                config_cache.fetcher_factory(
-                    service_configurer,
-                    ip_address_of,
-                    service_name_config,
-                    config.EnforcedServicesTable(
-                        BundledHostRulesetMatcher(
-                            loaded_config.static_checks,
-                            ruleset_matcher,
-                            label_manager.labels_of_host,
-                        ),
-                        service_name_config,
-                        plugins.check_plugins,
-                    ),
-                    SNMPFetcherConfig(  # unused, obviously
-                        on_error=OnError.RAISE,
-                        missing_sys_description=config_cache.missing_sys_description,
-                        selected_sections=NoSelectedSNMPSections(),
-                        backend_override=None,
-                        stored_walk_path=cmk.utils.paths.snmpwalks_dir,
-                        walk_cache_path=cmk.utils.paths.var_dir / "snmp_cache",
-                        caching_config=lambda host_name: {},
-                        section_cache_path=Path("/dev/null"),
-                    ),
-                ),
                 agent_name=run_settings.agent_name,
                 cmds=cmds,
-                file_cache_options=file_cache_options,
+                is_cmc=loaded_config.monitoring_core == "cmc",
             )
             preview = _get_discovery_preview(
                 run_settings.host_config.host_name,

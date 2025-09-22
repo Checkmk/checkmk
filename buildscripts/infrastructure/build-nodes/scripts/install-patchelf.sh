@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 # shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh
 . "${SCRIPT_DIR}/build_lib.sh"
 
-VERSION="0.14.3"
+VERSION="0.14.5"
 INSTALL_PREFIX=/opt/patchelf-${VERSION}
 
 # temporary directory handling #################################################

@@ -39,11 +39,14 @@ def _style_service_status(value: str) -> Iterable[Alignment | BackgroundColor | 
     yield Alignment.CENTERED
     match value:
         case "running":
+            yield LabelColor.BLACK
             yield BackgroundColor.GREEN
         case "stopped":
-            yield BackgroundColor.RED
+            yield LabelColor.WHITE
+            yield BackgroundColor.DARK_RED
         case _:
-            yield BackgroundColor.GRAY
+            yield LabelColor.WHITE
+            yield BackgroundColor.DARK_GRAY
 
 
 node_software = Node(

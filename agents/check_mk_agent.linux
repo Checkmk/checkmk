@@ -1244,7 +1244,7 @@ section_omd() {
     for sitedir in /omd/sites/*; do
         site_version="$(basename "$(realpath "${sitedir}/version")")"
         site=${sitedir#/omd/sites/}
-        for topic in "broker" "mknotifyd" "apache" "diskusage"; do
+        for topic in "broker" "mknotifyd" "apache" "diskusage" "otel-collector"; do
             script="/omd/versions/${site_version}/bin/cmk-monitor-${topic}"
             [ -x "${script}" ] && sudo_or_su "${site}" "${script}"
         done

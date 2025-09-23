@@ -1,0 +1,47 @@
+Title: Path-Traversal in report scheduler
+Class: security
+Compatible: compat
+Component: reporting
+Date: 1755065480
+Edition: cee
+Level: 1
+Version: 2.2.0p46
+
+Previous to this Werk it was possible that an authenticated user could perform Path-traversal
+attacks against the site's local file directory by use of the report scheduler. This issue was made
+possible due to insufficient escaping of macros which could allow an attacker to make use of a
+generated <code>.mk</code> file to overide existing <code>.mk</code> files.
+
+Performing such an action could allow an attacker to break a site's configurations however as an
+attacker cannot break out of the predefined fields within the generated <code>.mk</code> file, this can only
+be used to DoS / break an affected site.
+
+We thank Lisa Gnedt (SBA Research) for reporting this issue.
+
+<em>Affected Versions</em>:
+
+LI: 2.4.0
+LI: 2.3.0
+LI: 2.2.0
+LI: 2.1.0 (EOL)
+
+<em>Mitigations</em>:
+
+If you cannot update, it is advised that both the following roles <code>Manage Own Scheduled Reports</code>
+which by default is set to <code>yes</code> and the <code>Manage All Scheduled Reports</code> both be set to <code>no</code> for
+non-admin users within the site.
+
+Furthermore, if you believe you may have been affected by this vulnerability that you conduct
+a manual review of all scheduled reports within your site and remove any schedules that contain
+titles with directory information.
+
+<em>Indicators of Compromise</em>:
+
+Checkmk will always generate both an <code>.mk</code> and <code>.pdf</code> file pair for each scheduled report.
+Therefore, any affected path within the site's file system can be identified by existence <code>.pdf</code> /
+<code>.mk</code>  report file pairs.
+
+<em>Vulnerability Management</em>:
+
+We have rated the issue with a CVSS Score of 7.1 High
+(<code>CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:L/VA:H/SC:N/SI:N/SA:N</code>) and assigned <code>CVE-2025-39664</code>.

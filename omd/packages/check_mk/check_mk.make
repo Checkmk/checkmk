@@ -42,7 +42,6 @@ agent_plugins_py2:
 $(CHECK_MK_BUILD):
 	$(MKDIR) $(CHECK_MK_BUILD_DIR)
 	$(REPO_PATH)/locale/compile_mo_files
-	$(MAKE) -C $(REPO_PATH)/doc/plugin-api html
 	$(TOUCH) $@
 
 EDITION_EXCLUDE=
@@ -90,9 +89,6 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) agent
 	    --exclude plugin-api \
 	    --exclude  treasures\
 	    . | tar -x -C $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk/
-	tar -c -C $(REPO_PATH)/doc \
-	    --transform "s/^plugin-api\/build/plugin-api/" \
-	    plugin-api/build/html | tar -x -C $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk/
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/agents
 	tar -c -C $(REPO_PATH)/agents \

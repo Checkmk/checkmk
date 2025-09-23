@@ -264,12 +264,15 @@ py_library(
 )
 
 py_library(
-    # The repo edition is only used for testing.
+    # The repo edition is only used for testing and generating the plugin-api doc with sphinx.
     name = "lib_cmk_repo",
     srcs = glob(["**/*.py"]),
     data = ["gui/wsgi/applications/index.wsgi"],
     imports = [".."],
-    visibility = ["//tests/unit:__pkg__"],
+    visibility = [
+        "//doc/plugin-api:__pkg__",
+        "//tests/unit:__pkg__",
+    ],
     deps = [
         "//agents/plugins:mk_jolokia",
     ] + select({

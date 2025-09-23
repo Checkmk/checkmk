@@ -37,6 +37,14 @@ bazel_dep(name = "rules_rust", version = "0.61.0")
 bazel_dep(name = "rules_uv", version = "0.71.0")
 bazel_dep(name = "toolchains_musl", version = "0.1.20")
 bazel_dep(name = "clickhouse", version = "v25.6.5.41-stable")
+bazel_dep(name = "rules_sphinx", version = "0.2.0")
+
+# rules_sphinx is not yet on BCR
+git_override(
+    module_name = "rules_sphinx",
+    commit = "5df77a3567592ffda069b78297bdd9e5cc01ac3a",
+    remote = "https://github.com/agoessling/rules_sphinx/",
+)
 
 bazel_dep(name = "bazel_iwyu", dev_dependency = True)
 bazel_dep(

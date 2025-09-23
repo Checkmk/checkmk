@@ -53,6 +53,7 @@ file_from_flag(
     deps = [
                "//bin:pkg_tar",
                "//active_checks:pkg_tar",
+               "//doc/plugin-api:pkg_tar",
                #added here instead of above because of disappearing file
                "//omd/packages/Python:python_tar",
                "//omd/packages/changelog",

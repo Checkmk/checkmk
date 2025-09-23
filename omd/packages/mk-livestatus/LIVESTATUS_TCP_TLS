@@ -7,21 +7,21 @@
 #  can configure the communication to be SSL encrypted.
 
 case "$1" in
-default)
-    echo "on"
-    ;;
-choices)
-    echo "on: encrypt"
-    echo "off: clear text"
-    ;;
-set)
-    # Do not patch the xinetd config directly here, because that would lead to
-    # later conflicts during omd cp/mv. The xinetd config points to a link
-    # live-tcp instead which always points to the correct socket. This is
-    # done by "omd", because the hook can not change things in tmp since the
-    # tmpfs may not be available during hook execution.
-    ;;
-depends)
-    [ "$CONFIG_CORE" != none ] && [ "$CONFIG_LIVESTATUS_TCP" = on ]
-    ;;
+    default)
+        echo "on"
+        ;;
+    choices)
+        echo "on: encrypt"
+        echo "off: clear text"
+        ;;
+    set)
+        # Do not patch the xinetd config directly here, because that would lead to
+        # later conflicts during omd cp/mv. The xinetd config points to a link
+        # live-tcp instead which always points to the correct socket. This is
+        # done by "omd", because the hook can not change things in tmp since the
+        # tmpfs may not be available during hook execution.
+        ;;
+    depends)
+        [ "$CONFIG_CORE" != none ] && [ "$CONFIG_LIVESTATUS_TCP" = on ]
+        ;;
 esac

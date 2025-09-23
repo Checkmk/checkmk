@@ -21,30 +21,30 @@ else
 fi
 
 case "$1" in
-default)
-    echo "127.0.0.1"
-    ;;
-choices)
-    echo "@{APACHE_TCP_ADDR}"
-    ;;
-set)
-    APACHE_HOST=$2
-    if [[ "$APACHE_HOST" == \[* ]]; then
-        cat <<EOF >"$OMD_ROOT/etc/apache/listen-port.conf"
+    default)
+        echo "127.0.0.1"
+        ;;
+    choices)
+        echo "@{APACHE_TCP_ADDR}"
+        ;;
+    set)
+        APACHE_HOST=$2
+        if [[ "$APACHE_HOST" == \[* ]]; then
+            cat <<EOF >"$OMD_ROOT/etc/apache/listen-port.conf"
 # This file is managed by 'omd config set APACHE_TCP_PORT' and 'omd config set APACHE_TCP_ADDR'.
 # Better do not edit manually
 Listen $APACHE_HOST:$CONFIG_APACHE_TCP_PORT
 EOF
-    else
-        cat <<EOF >"$OMD_ROOT/etc/apache/listen-port.conf"
+        else
+            cat <<EOF >"$OMD_ROOT/etc/apache/listen-port.conf"
 # This file is managed by 'omd config set APACHE_TCP_PORT' and 'omd config set APACHE_TCP_ADDR'.
 # Better do not edit manually
 Listen $APACHE_HOST:$CONFIG_APACHE_TCP_PORT
 ServerName $APACHE_HOST:$CONFIG_APACHE_TCP_PORT
 EOF
-    fi
-    ;;
-depends)
-    [ "$CONFIG_APACHE_MODE" = own ]
-    ;;
+        fi
+        ;;
+    depends)
+        [ "$CONFIG_APACHE_MODE" = own ]
+        ;;
 esac

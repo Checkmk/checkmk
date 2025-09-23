@@ -18,39 +18,39 @@ else
 fi
 
 case "$1" in
-default)
-    # Scan for a free port number by looking at the
-    # configuration of the other sites...
-    PORT=$($OMD_ROOT/lib/omd/next_free_port APACHE_TCP_PORT 5000)
-    echo "$PORT"
-    ;;
-choices)
-    echo "[1-9][0-9]{0,4}"
-    ;;
-set)
-    PORT=$($OMD_ROOT/lib/omd/next_free_port APACHE_TCP_PORT $2)
+    default)
+        # Scan for a free port number by looking at the
+        # configuration of the other sites...
+        PORT=$($OMD_ROOT/lib/omd/next_free_port APACHE_TCP_PORT 5000)
+        echo "$PORT"
+        ;;
+    choices)
+        echo "[1-9][0-9]{0,4}"
+        ;;
+    set)
+        PORT=$($OMD_ROOT/lib/omd/next_free_port APACHE_TCP_PORT $2)
 
-    # Tell the site apache on where to listen
-    if [[ "$CONFIG_APACHE_TCP_ADDR" == \[* ]]; then
-        cat <<EOF >"$OMD_ROOT/etc/apache/listen-port.conf"
+        # Tell the site apache on where to listen
+        if [[ "$CONFIG_APACHE_TCP_ADDR" == \[* ]]; then
+            cat <<EOF >"$OMD_ROOT/etc/apache/listen-port.conf"
 # This file is created by 'omd config set APACHE_TCP_PORT'.
 # Better do not edit manually
 Listen $CONFIG_APACHE_TCP_ADDR:$PORT
 EOF
-    else
-        cat <<EOF >"$OMD_ROOT/etc/apache/listen-port.conf"
+        else
+            cat <<EOF >"$OMD_ROOT/etc/apache/listen-port.conf"
 # This file is created by 'omd config set APACHE_TCP_PORT'.
 # Better do not edit manually
 ServerName $CONFIG_APACHE_TCP_ADDR:$PORT
 Listen $CONFIG_APACHE_TCP_ADDR:$PORT
 EOF
-    fi
-    if [ "$PORT" != "$2" ]; then
-        echo "Apache port $2 is in use. I've choosen $PORT instead." >&2
-        echo "$PORT"
-    fi
-    ;;
-depends)
-    [ "$CONFIG_APACHE_MODE" = own ]
-    ;;
+        fi
+        if [ "$PORT" != "$2" ]; then
+            echo "Apache port $2 is in use. I've choosen $PORT instead." >&2
+            echo "$PORT"
+        fi
+        ;;
+    depends)
+        [ "$CONFIG_APACHE_MODE" = own ]
+        ;;
 esac

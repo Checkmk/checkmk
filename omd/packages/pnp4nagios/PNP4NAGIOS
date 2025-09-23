@@ -10,52 +10,52 @@
 #  Nagios.
 
 case "$1" in
-default)
-    echo "on"
-    ;;
-choices)
-    echo "on: enable bulk mode with npcdmod and npcd"
-    echo "npcd: enable bulk mode with npcd"
-    echo "gearman: enable gearman worker"
-    echo "off: disable"
-    ;;
-set)
-    if [ "$2" == "on" ]; then
-        if [ -e $OMD_ROOT/etc/nagios/nagios.d ]; then
-            ln -sfn ../../pnp4nagios/nagios_npcdmod.cfg $OMD_ROOT/etc/nagios/nagios.d/pnp4nagios.cfg
+    default)
+        echo "on"
+        ;;
+    choices)
+        echo "on: enable bulk mode with npcdmod and npcd"
+        echo "npcd: enable bulk mode with npcd"
+        echo "gearman: enable gearman worker"
+        echo "off: disable"
+        ;;
+    set)
+        if [ "$2" == "on" ]; then
+            if [ -e $OMD_ROOT/etc/nagios/nagios.d ]; then
+                ln -sfn ../../pnp4nagios/nagios_npcdmod.cfg $OMD_ROOT/etc/nagios/nagios.d/pnp4nagios.cfg
+            fi
+            if [ -s $OMD_ROOT/etc/mod-gearman/perfdata.conf ]; then
+                sed -i -e 's/^perfdata=.*$/perfdata=no/' $OMD_ROOT/etc/mod-gearman/perfdata.conf
+            fi
+            pnp4nagios_enabled="True"
+        elif [ "$2" == "gearman" ]; then
+            if [ -e $OMD_ROOT/etc/nagios/nagios.d ]; then
+                ln -sfn ../../pnp4nagios/nagios_gearman.cfg $OMD_ROOT/etc/nagios/nagios.d/pnp4nagios.cfg
+            fi
+            if [ -s $OMD_ROOT/etc/mod-gearman/perfdata.conf ]; then
+                sed -i -e 's/^perfdata=.*$/perfdata=yes/' $OMD_ROOT/etc/mod-gearman/perfdata.conf
+            fi
+            pnp4nagios_enabled="True"
+        elif [ "$2" == "npcd" ]; then
+            if [ -e $OMD_ROOT/etc/nagios/nagios.d ]; then
+                ln -sfn ../../pnp4nagios/nagios_npcd.cfg $OMD_ROOT/etc/nagios/nagios.d/pnp4nagios.cfg
+            fi
+            pnp4nagios_enabled="True"
+        else
+            rm -f $OMD_ROOT/etc/nagios/nagios.d/pnp4nagios.cfg
+            if [ -s $OMD_ROOT/etc/mod-gearman/perfdata.conf ]; then
+                sed -i -e 's/^perfdata=.*$/perfdata=no/' $OMD_ROOT/etc/mod-gearman/perfdata.conf
+            fi
+            pnp4nagios_enabled="False"
         fi
-        if [ -s $OMD_ROOT/etc/mod-gearman/perfdata.conf ]; then
-            sed -i -e 's/^perfdata=.*$/perfdata=no/' $OMD_ROOT/etc/mod-gearman/perfdata.conf
-        fi
-        pnp4nagios_enabled="True"
-    elif [ "$2" == "gearman" ]; then
-        if [ -e $OMD_ROOT/etc/nagios/nagios.d ]; then
-            ln -sfn ../../pnp4nagios/nagios_gearman.cfg $OMD_ROOT/etc/nagios/nagios.d/pnp4nagios.cfg
-        fi
-        if [ -s $OMD_ROOT/etc/mod-gearman/perfdata.conf ]; then
-            sed -i -e 's/^perfdata=.*$/perfdata=yes/' $OMD_ROOT/etc/mod-gearman/perfdata.conf
-        fi
-        pnp4nagios_enabled="True"
-    elif [ "$2" == "npcd" ]; then
-        if [ -e $OMD_ROOT/etc/nagios/nagios.d ]; then
-            ln -sfn ../../pnp4nagios/nagios_npcd.cfg $OMD_ROOT/etc/nagios/nagios.d/pnp4nagios.cfg
-        fi
-        pnp4nagios_enabled="True"
-    else
-        rm -f $OMD_ROOT/etc/nagios/nagios.d/pnp4nagios.cfg
-        if [ -s $OMD_ROOT/etc/mod-gearman/perfdata.conf ]; then
-            sed -i -e 's/^perfdata=.*$/perfdata=no/' $OMD_ROOT/etc/mod-gearman/perfdata.conf
-        fi
-        pnp4nagios_enabled="False"
-    fi
-    rm -f $OMD_ROOT/etc/apache/conf.d/pnp4nagios.conf
-    cat <<EOF >$OMD_ROOT/etc/check_mk/conf.d/pnp4nagios.mk
+        rm -f $OMD_ROOT/etc/apache/conf.d/pnp4nagios.conf
+        cat <<EOF >$OMD_ROOT/etc/check_mk/conf.d/pnp4nagios.mk
 # Set by OMD hook PNP4NAGIOS, do not change here!
 pnp4nagios_enabled = $pnp4nagios_enabled
 EOF
-    ;;
-depends)
-    [ "$CONFIG_CORE" != cmc -a "$CONFIG_CORE" != none ]
-    ;;
+        ;;
+    depends)
+        [ "$CONFIG_CORE" != cmc -a "$CONFIG_CORE" != none ]
+        ;;
 
 esac

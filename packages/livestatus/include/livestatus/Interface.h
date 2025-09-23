@@ -38,15 +38,15 @@ struct Label {
 
     bool operator==(const Label &other) const {
         return name == other.name && value == other.value &&
-               value == other.source;
+               source == other.source;
     }
     bool operator!=(const Label &other) const { return !(*this == other); }
 };
 
 // Taken from WG21 P0814R2, an epic story about a triviality...
-inline std::size_t hash_combine(std::size_t seed, const std::string &val) {
-    seed ^=
-        std::hash<std::string>{}(val) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+inline std::size_t hash_combine(std::size_t seed, const std::string_view val) {
+    seed ^= std::hash<std::string_view>{}(val) + 0x9e3779b9 + (seed << 6) +
+            (seed >> 2);
     return seed;
 };
 

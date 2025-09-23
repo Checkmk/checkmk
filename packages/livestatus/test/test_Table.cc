@@ -623,10 +623,10 @@ TEST_F(ColumnNamesAndTypesTest, TableHostsByGroup) {
 
 namespace {
 ColumnDefinitions labels_columns() {
-    return {
-        {"name", ColumnType::string},
-        {"value", ColumnType::string},
-    };
+    return {{"name", ColumnType::string},
+            {"value", ColumnType::string},
+            {"source", ColumnType::string},
+            {"type", ColumnType::string}};
 }
 }  // namespace
 

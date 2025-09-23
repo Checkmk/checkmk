@@ -166,6 +166,7 @@ CMK_PACKAGES = [
     "//packages/cmk-ccc:tty",
     "//packages/cmk-ccc:user",
     "//packages/cmk-ccc:version",
+    "//packages/cmk-check-engine:fetchers",
     "//packages/cmk-check-engine:helper-interface",
     "//packages/cmk-check-engine:snmplib",
     "//packages/cmk-crypto",
@@ -185,7 +186,9 @@ CMK_PACKAGES = [
 ] + select({
     "@//:gpl_repo": [],
     "@//:gpl+enterprise_repo": [
-        "//non-free/packages/cmk-core-helpers",
+        "//non-free/packages/cmk-core-helpers:check-helper-protocol",
+        "//non-free/packages/cmk-core-helpers:fetcher-helper",
+        "//non-free/packages/cmk-core-helpers:inline-snmp",
         "//non-free/packages/cmk-mknotifyd",
         "//non-free/packages/cmk-otel-collector",
     ],

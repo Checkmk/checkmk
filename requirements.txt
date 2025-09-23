@@ -3255,7 +3255,9 @@ pyenchant==3.3.0 \
 pyghmi==1.6.5 \
     --hash=sha256:83b40916b78c98ee4d5af166490585ac78cf1e93fa1b2e28df52431d2176a1bf \
     --hash=sha256:aafc7a2245022cdab0aa00e1e7345d4ee8708176014c5f103f2e75dfd88ab264
-    # via -r cmk/requirements.in
+    # via
+    #   -r cmk/requirements.in
+    #   -r packages/cmk-check-engine/requirements.in
 pygments==2.19.2 \
     --hash=sha256:636cb2477cec7f8952536970bc533bc43743542f70392ae026374600add5b887 \
     --hash=sha256:86540386c03d588bb81d44bc3928634ff26449851e99741617ecb9037ee5ec0b

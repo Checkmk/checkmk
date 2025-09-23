@@ -27,7 +27,7 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
     def close(self) -> None:
         pass
 
-    def _fetch_from_io(self, mode: Mode) -> AgentRawData:
+    def _fetch_from_io(self, _mode: Mode) -> AgentRawData:
         # The piggybacked data is fetched from disk by the piggyback parser, not here.
         # We still maintain this fetcher for symmetry and to make sure the fetcher
         # processes are fully in charge of which datasources are expected.

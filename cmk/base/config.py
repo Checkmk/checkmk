@@ -3640,7 +3640,7 @@ def make_fetcher_trigger(
     match edition:
         case cmk_version.Edition.CCE | cmk_version.Edition.CME | cmk_version.Edition.CSE:
             if (relay_id := get_relay_id(host_labels)) is not None:
-                from cmk.fetchers.cce.trigger import (  # type: ignore[import-not-found, unused-ignore]
+                from cmk.relay_fetcher_trigger.trigger import (  # type: ignore[import-not-found, unused-ignore]
                     RelayFetcherTrigger,
                 )
 

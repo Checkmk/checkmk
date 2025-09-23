@@ -1,9 +1,9 @@
-load("@aspect_bazel_lib//lib:expand_template.bzl", "expand_template")
 load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:native_binary.bzl", "native_binary")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_mypy//mypy:mypy.bzl", "mypy_cli")
+load("//bazel/rules:sh_expand_template.bzl", "sh_expand_template")
 
 mypy_cli(
     name = "mypy_cli",
@@ -69,22 +69,16 @@ genrule(
     executable = True,
 )
 
-expand_template(
-    name = "taplo_quiet_tp",
-    out = "taplo_wrapper.sh",
-    data = [":taplo_bin"],
+sh_expand_template(
+    name = "taplo_quiet",
+    src = ":taplo_bin",
     substitutions = {"{taplo_bin}": "$(execpath :taplo_bin)"},
     template = [
         "#!/bin/sh",
         'exec env RUST_LOG=warn "$BUILD_WORKSPACE_DIRECTORY/{taplo_bin}" "$@"',
         "",
     ],
-)
-
-sh_binary(
-    name = "taplo_quiet",
-    srcs = [":taplo_quiet_tp"],
-    data = [":taplo"],
+    visibility = ["//visibility:public"],
 )
 
 # TODO: Should we use buildifier more in the way aspect does?
@@ -101,10 +95,9 @@ alias(
     actual = "@multitool//tools/uv",
 )
 
-expand_template(
-    name = "shfmt_tp",
-    out = "shfmt.sh",
-    data = ["@multitool//tools/shfmt"],
+sh_expand_template(
+    name = "shfmt",
+    src = "@multitool//tools/shfmt",
     substitutions = {"{shfmt_bin}": "$(execpath @multitool//tools/shfmt)"},
     template = [
         "#!/bin/sh",
@@ -112,11 +105,5 @@ expand_template(
         'exec "$BUILD_WORKSPACE_DIRECTORY/{shfmt_bin}" --indent 4 -ci "$@"',
         "",
     ],
-)
-
-sh_binary(
-    name = "shfmt",
-    srcs = [":shfmt_tp"],
-    data = ["@multitool//tools/shfmt"],
     visibility = ["//visibility:public"],
 )

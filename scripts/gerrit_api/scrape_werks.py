@@ -179,10 +179,24 @@ def main() -> None:
     resp.raise_for_status()
 
     # parse changes
+    reverted_changes = []
     for line in parse_gerrit_response(resp.iter_lines()):
         try:
             for change in json.loads(line):
-                print(change["change_id"], change["status"], change["subject"])
+                # do not include changes which revert a Werk.
+                if change.get("revert_of"):
+                    reverted_changes.append(change["revert_of"])
+                    continue
+
+                if (
+                    # ignore abandoned changes.
+                    change["status"].lower() in TWerkStatus
+                    # ignore changes which are reverted.
+                    and change["virtual_id_number"] not in reverted_changes
+                    # ignore changes which are WIP.
+                    and not change.get("work_in_progress", False)
+                ):
+                    print(change["change_id"], change["status"], change["subject"])
         except JSONDecodeError as exc:
             exc.add_note(f"Could not process the response! Reponse text:\n{line}")
             raise exc

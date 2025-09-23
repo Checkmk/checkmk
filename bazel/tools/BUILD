@@ -22,6 +22,7 @@ format_multirun(
     python = "@aspect_rules_lint//format:ruff",
     rust = "@rules_rust//tools/upstream_wrapper:rustfmt",
     shell = ":shfmt",
+    starlark = ":buildifier",
     toml = ":taplo_quiet",
     visibility = ["//visibility:public"],
 )

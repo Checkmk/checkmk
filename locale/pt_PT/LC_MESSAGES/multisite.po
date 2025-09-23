@@ -46047,6 +46047,10 @@ msgid "OTLP endpoint"
 msgstr "Ponto final"
 
 #, fuzzy
+msgid "OTel collector memory usage"
+msgstr "Uso de memória Netscaler"
+
+#, fuzzy
 msgid "OVS bonding"
 msgstr "ligação por troca de chaves"
 

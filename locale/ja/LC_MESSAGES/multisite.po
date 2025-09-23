@@ -43289,6 +43289,10 @@ msgstr "OSNレーザー減衰"
 msgid "OTLP endpoint"
 msgstr "OTLPエンドポイント"
 
+#, fuzzy
+msgid "OTel collector memory usage"
+msgstr "Netscalerのメモリ使用量"
+
 msgid "OVS bonding"
 msgstr "OVSボンディング"
 

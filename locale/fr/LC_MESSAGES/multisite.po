@@ -46458,6 +46458,10 @@ msgid "OTLP endpoint"
 msgstr "Point d'accès"
 
 #, fuzzy
+msgid "OTel collector memory usage"
+msgstr "Utilisation de la mémoire de Netscaler"
+
+#, fuzzy
 msgid "OVS bonding"
 msgstr "Collage de Vswitch"
 

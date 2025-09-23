@@ -3333,9 +3333,6 @@ msgstr "取得されたロック"
 msgid "Act."
 msgstr "Act."
 
-msgid "Act. helper"
-msgstr "Act. ヘルパー"
-
 msgid "Action"
 msgstr "アクション"
 
@@ -6494,9 +6491,6 @@ msgstr ""
 "ここには、任意の有効なTCPポートを入力できます。ホストはこのポートに証明書を提"
 "供する必要があります。さもないと、サービスはCRITとなり、ハンドシェイク・エ"
 "ラーを報告します。"
-
-msgid "Apache"
-msgstr "Apache"
 
 msgid "Apache ActiveMQ Queue lengths"
 msgstr "Apache ActiveMQ Queueの長さ"
@@ -10254,17 +10248,11 @@ msgstr "CLOSE_WAIT"
 msgid "CLOSING"
 msgstr "クロージング"
 
-msgid "CMC"
-msgstr "CMC"
-
 msgid "CMC (Checkmk Micro Core)"
 msgstr "CMC(Checkmkマイクロコア)"
 
 msgid "CMC status"
 msgstr "CMCステータス"
-
-msgid "CMK helper"
-msgstr "CMKヘルパー"
 
 msgid "CMK helper usage"
 msgstr "CMKヘルパーの使用量"
@@ -11844,9 +11832,6 @@ msgstr "チェックボックス選択のライブタイム"
 
 msgid "Checked"
 msgstr "チェック済み"
-
-msgid "Checker helper"
-msgstr "チェッカーヘルパー"
 
 msgid "Checker helper usage"
 msgstr "チェッカーヘルパーの使用量"
@@ -15880,9 +15865,6 @@ msgstr "センサーが電源断を検知したときのサービスのクリテ
 msgid "CronJobs"
 msgstr "CronJobs"
 
-msgid "Crontab"
-msgstr "Crontab"
-
 msgid "Crontab status"
 msgstr "Crontabの状態"
 
@@ -16453,9 +16435,6 @@ msgstr "DB2ログファイルの使用量"
 
 msgid "DB2 memory usage"
 msgstr "DB2メモリー使用量"
-
-msgid "DCD"
-msgstr "DCD"
 
 msgid "DCD Batch"
 msgstr "DCDバッチ"
@@ -20109,6 +20088,10 @@ msgstr ""
 
 msgid "Do you really want to switch the event daemon mode?"
 msgstr "本当にイベントデーモンモードを切り替えますか？"
+
+#, fuzzy
+msgid "Docker"
+msgstr "Dockerノード"
 
 msgid "Docker containers"
 msgstr "Dockerコンテナ"
@@ -24080,9 +24063,6 @@ msgstr "長さでフェッチ"
 
 msgid "Fetch zero length"
 msgstr "長さゼロをフェッチ"
-
-msgid "Fetcher helper"
-msgstr "フェッチャーヘルパー"
 
 msgid "Fetcher helper usage"
 msgstr "フェッチャーヘルパーの使用量"
@@ -36415,12 +36395,6 @@ msgstr ""
 msgid "Literal string"
 msgstr "固定文字列"
 
-msgid "Live helper"
-msgstr "ライブヘルパー"
-
-msgid "Live helper usage"
-msgstr "ライブ・ヘルパーの使用"
-
 msgid "Live monitor of the overall performance of all monitoring servers"
 msgstr "全監視サーバーの全体パフォーマンスをライブで監視"
 
@@ -36437,9 +36411,6 @@ msgstr "ライブサーチアクティブ"
 
 msgid "Liveproxy Daemon"
 msgstr "Liveproxyデーモン"
-
-msgid "Liveproxyd"
-msgstr "Liveproxyd"
 
 msgid "Liveproxyd status"
 msgstr "Liveproxydステータス"
@@ -37455,16 +37426,12 @@ msgstr ""
 "用例としては、ファイアウォール問題、ネットワークの設定ミスおよびテスト目的が"
 "挙げられます"
 
-msgid "MKEventd"
-msgstr "MKEventd"
-
-msgid "MKEventd status"
+#, fuzzy
+msgid "MKEvent status"
 msgstr "MKEventd統計"
 
-msgid "MKNotifyd"
-msgstr "MKNotifyd"
-
-msgid "MKNotifyd status"
+#, fuzzy
+msgid "MKNotify status"
 msgstr "MKNotifydステータス"
 
 #, python-format
@@ -40141,9 +40108,6 @@ msgstr "フォルダ内の特定のファイルを監視する"
 msgid "Monitor temporary tablespace"
 msgstr "一時表領域を監視する"
 
-msgid "Monitor the collector"
-msgstr "コレクターの監視"
-
 msgid ""
 "Monitor the number of issues for given projects and their workflows. This "
 "results in a service for each project with the number of issues per workflow."
@@ -40826,9 +40790,6 @@ msgstr "NGINX Webサーバー(Linux)"
 msgid "NODATA"
 msgstr "データなし"
 
-msgid "NPCD"
-msgstr "NPCD"
-
 msgid "NPCD status"
 msgstr "NPCDステータス"
 
@@ -40888,9 +40849,6 @@ msgstr "NagVis: Sidebar element: Requests"
 
 msgid "NagVis: Sidebar element: Secs"
 msgstr "NagVis: Sidebar element: Secs"
-
-msgid "Nagios"
-msgstr "Nagios"
 
 msgid "Nagios 3"
 msgstr "Nagios 3"
@@ -43990,6 +43948,10 @@ msgstr "OTLPエンドポイント"
 #, fuzzy
 msgid "OTel Metrics"
 msgstr "メトリクス"
+
+#, fuzzy
+msgid "OTel collector memory usage"
+msgstr "Netscalerのメモリ使用量"
 
 msgid "OVS bonding"
 msgstr "OVSボンディング"
@@ -49883,9 +49845,6 @@ msgstr "RRDストレージ形式"
 msgid "RRD updates in journal of RRD Cache"
 msgstr "RRDキャッシュのジャーナルのRRD更新"
 
-msgid "RRDCached"
-msgstr "RRDcached"
-
 msgid "RRDCached status"
 msgstr "RRDcachedステータス"
 
@@ -53381,9 +53340,6 @@ msgstr "STARTTLSが有効になっています。"
 
 msgid "STIME"
 msgstr "STIME"
-
-msgid "STunnel"
-msgstr "STunnel"
 
 msgid "STunnel status"
 msgstr "STunnelの状態"
@@ -80791,9 +80747,6 @@ msgstr "間違ったカスタマー"
 msgid "XDA hitratio"
 msgstr "XDA ヒット率"
 
-msgid "XInetd"
-msgstr "XInetd"
-
 msgid "XInetd status"
 msgstr "XInetdステータス"
 
@@ -85484,6 +85437,13 @@ msgid "No filter category available"
 msgstr "利用可能な情報はありません"
 
 #, fuzzy
+msgid "Loading datasources..."
+msgstr "%d翻訳"
+
+msgid "Choose from available datasources"
+msgstr ""
+
+#, fuzzy
 msgid "Loading…"
 msgstr "読み込んでいます"
 
@@ -85594,6 +85554,10 @@ msgstr "概要"
 #, fuzzy
 msgid "Quick filter"
 msgstr "サービスフィルター"
+
+#, fuzzy
+msgid "See all"
+msgstr "すべて削除する"
 
 msgid "% (Decimal, auto precision, 2 digits)"
 msgstr ""
@@ -85811,6 +85775,13 @@ msgid ""
 "applies to this widget"
 msgstr ""
 
+msgid "Barplot"
+msgstr "棒グラフ"
+
+#, fuzzy
+msgid "Scatterplot"
+msgstr "平均散布図"
+
 #, fuzzy
 msgid "Value must be a valid URL"
 msgstr "値は文字列であること"
@@ -85830,6 +85801,145 @@ msgstr "背景なしでタイトルを表示"
 #, fuzzy
 msgid "Show widget background"
 msgstr "背景なしでタイトルを表示"
+
+#, fuzzy
+msgid "Single graph"
+msgstr "オプション選択"
+
+#, fuzzy
+msgid "Data selection"
+msgstr "サイト選択"
+
+#, fuzzy
+msgid "Define widget"
+msgstr "ターゲットを追加"
+
+#, fuzzy
+msgid "Service metric"
+msgstr "サービスメトリクス"
+
+#, fuzzy
+msgid "Must select an option"
+msgstr "オプション選択"
+
+#, fuzzy
+msgid "Metric (single)"
+msgstr "メトリック名"
+
+#, fuzzy
+msgid "Graph (combined)"
+msgstr "グラフライン"
+
+#, fuzzy
+msgid "Widget data"
+msgstr "フィルタを追加"
+
+#, fuzzy
+msgid "Next step: Visualization"
+msgstr "視覚化"
+
+#, fuzzy
+msgid "Select the data you want to analyze"
+msgstr "監視したいサブスクリプションを選択してください。"
+
+msgid "Dashboard filters apply here and don't have to be selected again"
+msgstr ""
+
+#, fuzzy
+msgid "Host selection"
+msgstr "サイト選択"
+
+#, fuzzy
+msgid "Service selection"
+msgstr "サイト選択"
+
+#, fuzzy
+msgid "Metric selection"
+msgstr "ファイル選択"
+
+#, fuzzy
+msgid "Available visualization types"
+msgstr "利用可能なオプション"
+
+#, fuzzy
+msgid "Data settings"
+msgstr "ダッシュボードのプロパティ"
+
+#, fuzzy
+msgid "Widget visualization"
+msgstr "BIの視覚化"
+
+#, fuzzy
+msgid "Fixed data range"
+msgstr "固定範囲"
+
+msgid "Axis"
+msgstr ""
+
+#, fuzzy
+msgid "Horizontal axis"
+msgstr "水平方向のパディング"
+
+#, fuzzy
+msgid "Vertical axis"
+msgstr "縦軸幅"
+
+#, fuzzy
+msgid "Graph styling"
+msgstr "グラフの調整"
+
+msgid "Date and time stamp (right upper corner)"
+msgstr ""
+
+#, fuzzy
+msgid "Margin round the graph"
+msgstr "グラフの周りにマージンを表示する"
+
+#, fuzzy
+msgid "Graph legend"
+msgstr "凡例を表示"
+
+#, fuzzy
+msgid "Interaction"
+msgstr "終了"
+
+#, fuzzy
+msgid "Click on graph to place pin"
+msgstr "クローン グラフ コレクション"
+
+msgid "Show burger menu for graph options"
+msgstr ""
+
+msgid ""
+"Do not follow timerange changes of other graphs on the current dashboard"
+msgstr ""
+
+#, fuzzy
+msgid "Additional graph options"
+msgstr "追加オプション"
+
+#, fuzzy
+msgid "Additional scatterplot options"
+msgstr "追加オプション"
+
+msgid "Scatterplot styling"
+msgstr ""
+
+#, fuzzy
+msgid "Add & place widget"
+msgstr "ターゲットを追加"
+
+#, fuzzy
+msgid "Value out of range"
+msgstr "値は文字列であること"
+
+#, fuzzy
+msgid "Rankin order"
+msgstr "順位"
+
+#, fuzzy
+msgid "entries (max. %{max_entries})"
+msgstr "エントリー数 (最大50)"
 
 #, fuzzy
 msgid "explicit password"
@@ -86653,6 +86763,63 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Act. helper"
+#~ msgstr "Act. ヘルパー"
+
+#~ msgid "Apache"
+#~ msgstr "Apache"
+
+#~ msgid "CMC"
+#~ msgstr "CMC"
+
+#~ msgid "CMK helper"
+#~ msgstr "CMKヘルパー"
+
+#~ msgid "Checker helper"
+#~ msgstr "チェッカーヘルパー"
+
+#~ msgid "Crontab"
+#~ msgstr "Crontab"
+
+#~ msgid "DCD"
+#~ msgstr "DCD"
+
+#~ msgid "Fetcher helper"
+#~ msgstr "フェッチャーヘルパー"
+
+#~ msgid "Live helper"
+#~ msgstr "ライブヘルパー"
+
+#~ msgid "Live helper usage"
+#~ msgstr "ライブ・ヘルパーの使用"
+
+#~ msgid "Liveproxyd"
+#~ msgstr "Liveproxyd"
+
+#~ msgid "MKEventd"
+#~ msgstr "MKEventd"
+
+#~ msgid "MKNotifyd"
+#~ msgstr "MKNotifyd"
+
+#~ msgid "Monitor the collector"
+#~ msgstr "コレクターの監視"
+
+#~ msgid "NPCD"
+#~ msgstr "NPCD"
+
+#~ msgid "Nagios"
+#~ msgstr "Nagios"
+
+#~ msgid "RRDCached"
+#~ msgstr "RRDcached"
+
+#~ msgid "STunnel"
+#~ msgstr "STunnel"
+
+#~ msgid "XInetd"
+#~ msgstr "XInetd"
 
 #~ msgid "MHz"
 #~ msgstr "MHz"
@@ -89106,9 +89273,6 @@ msgstr ""
 
 #~ msgid "Add Contact Group"
 #~ msgstr "連絡先グループを追加"
-
-#~ msgid "Barplot"
-#~ msgstr "棒グラフ"
 
 #~ msgid "Checkmk: WATO: Bytes"
 #~ msgstr "Checkmk: WATO: Bytes"

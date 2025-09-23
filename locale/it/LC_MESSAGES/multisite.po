@@ -3474,9 +3474,6 @@ msgstr "Serrature esclusive"
 msgid "Act."
 msgstr "Atto."
 
-msgid "Act. helper"
-msgstr "Aiutante d'azione"
-
 msgid "Action"
 msgstr "Azione"
 
@@ -6829,9 +6826,6 @@ msgid ""
 "certificate on this port. Otherwise the service will be CRIT and report a "
 "handshake error."
 msgstr ""
-
-msgid "Apache"
-msgstr "Apache"
 
 msgid "Apache ActiveMQ Queue lengths"
 msgstr "Apache ActiveMQ lunghezze di coda"
@@ -10864,18 +10858,12 @@ msgstr "CHIUDERE"
 msgid "CLOSING"
 msgstr "CHIUSURA"
 
-msgid "CMC"
-msgstr "CMC"
-
 #, fuzzy
 msgid "CMC (Checkmk Micro Core)"
 msgstr "CMC (Checkmk Microcore)"
 
 msgid "CMC status"
 msgstr "Stato del CMC"
-
-msgid "CMK helper"
-msgstr "Aiuto CMK"
 
 msgid "CMK helper usage"
 msgstr "Utilizzo dell'helper CMK"
@@ -12512,9 +12500,6 @@ msgstr "Selezione della casella di controllo in tempo reale"
 
 msgid "Checked"
 msgstr "Controllato"
-
-msgid "Checker helper"
-msgstr "Aiutante di controllo"
 
 msgid "Checker helper usage"
 msgstr "Uso dell'helper checker"
@@ -16726,9 +16711,6 @@ msgstr ""
 msgid "CronJobs"
 msgstr "CronJobs"
 
-msgid "Crontab"
-msgstr "Crontab"
-
 msgid "Crontab status"
 msgstr "Stato di Crontab"
 
@@ -17320,9 +17302,6 @@ msgstr "Utilizzo del file di log di DB2"
 
 msgid "DB2 memory usage"
 msgstr "Utilizzo della memoria DB2"
-
-msgid "DCD"
-msgstr "DCD"
 
 #, fuzzy
 msgid "DCD Batch"
@@ -21255,6 +21234,10 @@ msgstr ""
 
 msgid "Do you really want to switch the event daemon mode?"
 msgstr "Vuoi davvero cambiare la modalità del demone degli eventi?"
+
+#, fuzzy
+msgid "Docker"
+msgstr "Nodo Docker"
 
 msgid "Docker containers"
 msgstr "Contenitori Docker"
@@ -25347,9 +25330,6 @@ msgstr "Fetch con lunghezza"
 
 msgid "Fetch zero length"
 msgstr "Recupera la lunghezza zero"
-
-msgid "Fetcher helper"
-msgstr "Aiuto Fetcher"
 
 msgid "Fetcher helper usage"
 msgstr "Uso dell'helper Fetcher"
@@ -38521,12 +38501,6 @@ msgstr ""
 msgid "Literal string"
 msgstr "Stringa fissa"
 
-msgid "Live helper"
-msgstr "Aiutante dal vivo"
-
-msgid "Live helper usage"
-msgstr "Utilizzo dell'assistente in diretta"
-
 msgid "Live monitor of the overall performance of all monitoring servers"
 msgstr ""
 "Monitoraggio in tempo reale delle prestazioni complessive di tutti i server "
@@ -38547,9 +38521,6 @@ msgstr "Ricerca in tempo reale attiva"
 
 msgid "Liveproxy Daemon"
 msgstr "Demone Liveproxy"
-
-msgid "Liveproxyd"
-msgstr "Liveproxyd"
 
 msgid "Liveproxyd status"
 msgstr "Stato di Liveproxyd"
@@ -39596,16 +39567,12 @@ msgid ""
 "misconfigured network and for testing purposes"
 msgstr ""
 
-msgid "MKEventd"
-msgstr "MKEventd"
-
-msgid "MKEventd status"
+#, fuzzy
+msgid "MKEvent status"
 msgstr "Stato di MKEventd"
 
-msgid "MKNotifyd"
-msgstr "MKNotifyd"
-
-msgid "MKNotifyd status"
+#, fuzzy
+msgid "MKNotify status"
 msgstr "Stato di MKNotifyd"
 
 #, python-format
@@ -42384,10 +42351,6 @@ msgstr "Controlla i file specifici nella cartella"
 msgid "Monitor temporary tablespace"
 msgstr "Monitorare il Tablespace temporaneo"
 
-#, fuzzy
-msgid "Monitor the collector"
-msgstr "Collezionisti fermi"
-
 msgid ""
 "Monitor the number of issues for given projects and their workflows. This "
 "results in a service for each project with the number of issues per workflow."
@@ -43146,9 +43109,6 @@ msgstr "NGINX webservers (Linux)"
 msgid "NODATA"
 msgstr "NODATA"
 
-msgid "NPCD"
-msgstr "PNCD"
-
 msgid "NPCD status"
 msgstr "Stato del PNCD"
 
@@ -43218,9 +43178,6 @@ msgstr "NagVis: Elemento della barra laterale"
 #, fuzzy
 msgid "NagVis: Sidebar element: Secs"
 msgstr "NagVis: Elemento della barra laterale"
-
-msgid "Nagios"
-msgstr "Nagios"
 
 msgid "Nagios 3"
 msgstr "Nagios 3"
@@ -46492,6 +46449,10 @@ msgstr "Endpoints"
 #, fuzzy
 msgid "OTel Metrics"
 msgstr "Metriche"
+
+#, fuzzy
+msgid "OTel collector memory usage"
+msgstr "Utilizzo della memoria di Netscaler"
 
 #, fuzzy
 msgid "OVS bonding"
@@ -52905,9 +52866,6 @@ msgstr "Formato di memorizzazione RRD"
 msgid "RRD updates in journal of RRD Cache"
 msgstr "Aggiornamenti RRD nel giornale di RRD Cache"
 
-msgid "RRDCached"
-msgstr "RRDCached"
-
 msgid "RRDCached status"
 msgstr "Stato di RRDCached"
 
@@ -56606,9 +56564,6 @@ msgstr "STARTTLS abilitato."
 
 msgid "STIME"
 msgstr "STIME"
-
-msgid "STunnel"
-msgstr "STunnel"
 
 msgid "STunnel status"
 msgstr "Stato dello STunnel"
@@ -85696,9 +85651,6 @@ msgstr "Cliente sbagliato"
 msgid "XDA hitratio"
 msgstr "XDA hitratio"
 
-msgid "XInetd"
-msgstr "XInetd"
-
 msgid "XInetd status"
 msgstr "Stato di XInetd"
 
@@ -90518,6 +90470,13 @@ msgid "No filter category available"
 msgstr "Nessuna informazione disponibile"
 
 #, fuzzy
+msgid "Loading datasources..."
+msgstr "%d traduzioni"
+
+msgid "Choose from available datasources"
+msgstr ""
+
+#, fuzzy
 msgid "Loading…"
 msgstr "Caricamento..."
 
@@ -90628,6 +90587,10 @@ msgstr "Panoramica"
 #, fuzzy
 msgid "Quick filter"
 msgstr "Filtri di servizio"
+
+#, fuzzy
+msgid "See all"
+msgstr "Rimuovere tutti"
 
 msgid "% (Decimal, auto precision, 2 digits)"
 msgstr ""
@@ -90845,6 +90808,13 @@ msgid ""
 "applies to this widget"
 msgstr ""
 
+msgid "Barplot"
+msgstr "Barplot"
+
+#, fuzzy
+msgid "Scatterplot"
+msgstr "Grafico di dispersione medio"
+
 #, fuzzy
 msgid "Value must be a valid URL"
 msgstr "Il valore deve essere una stringa"
@@ -90864,6 +90834,144 @@ msgstr "Mostra il titolo senza alcuno sfondo"
 #, fuzzy
 msgid "Show widget background"
 msgstr "Mostra il titolo senza alcuno sfondo"
+
+#, fuzzy
+msgid "Single graph"
+msgstr "Connessioni rifiutate"
+
+#, fuzzy
+msgid "Data selection"
+msgstr "Selezione dei file"
+
+#, fuzzy
+msgid "Define widget"
+msgstr "Aggiungere l'obiettivo"
+
+#, fuzzy
+msgid "Service metric"
+msgstr "Metriche di servizio"
+
+#, fuzzy
+msgid "Must select an option"
+msgstr "Connessioni rifiutate"
+
+#, fuzzy
+msgid "Metric (single)"
+msgstr "Etichetta metrica"
+
+#, fuzzy
+msgid "Graph (combined)"
+msgstr "Opzioni del grafico"
+
+#, fuzzy
+msgid "Widget data"
+msgstr "Aggiungere il filtro"
+
+#, fuzzy
+msgid "Next step: Visualization"
+msgstr "Visualizzazione"
+
+#, fuzzy
+msgid "Select the data you want to analyze"
+msgstr "Seleziona il tipo di elemento di contenuto"
+
+msgid "Dashboard filters apply here and don't have to be selected again"
+msgstr ""
+
+#, fuzzy
+msgid "Host selection"
+msgstr "Selezione dei file"
+
+#, fuzzy
+msgid "Service selection"
+msgstr "Selezione dei file"
+
+#, fuzzy
+msgid "Metric selection"
+msgstr "Selezione dei file"
+
+#, fuzzy
+msgid "Available visualization types"
+msgstr "Opzioni disponibili"
+
+#, fuzzy
+msgid "Data settings"
+msgstr "Proprietà del cruscotto"
+
+#, fuzzy
+msgid "Widget visualization"
+msgstr "Visualizzazione della BI"
+
+#, fuzzy
+msgid "Fixed data range"
+msgstr "Gamma fissa"
+
+msgid "Axis"
+msgstr ""
+
+#, fuzzy
+msgid "Horizontal axis"
+msgstr "Imbottitura orizzontale"
+
+#, fuzzy
+msgid "Vertical axis"
+msgstr "Larghezza dell'asse verticale"
+
+#, fuzzy
+msgid "Graph styling"
+msgstr "Messa a punto del grafico"
+
+msgid "Date and time stamp (right upper corner)"
+msgstr ""
+
+#, fuzzy
+msgid "Margin round the graph"
+msgstr "Mostra il margine intorno al grafico"
+
+#, fuzzy
+msgid "Graph legend"
+msgstr "Mostra la leggenda"
+
+#, fuzzy
+msgid "Interaction"
+msgstr "Intervallo"
+
+#, fuzzy
+msgid "Click on graph to place pin"
+msgstr "Raccolta di grafici clonati"
+
+msgid "Show burger menu for graph options"
+msgstr ""
+
+msgid ""
+"Do not follow timerange changes of other graphs on the current dashboard"
+msgstr ""
+
+#, fuzzy
+msgid "Additional graph options"
+msgstr "Opzioni aggiuntive"
+
+#, fuzzy
+msgid "Additional scatterplot options"
+msgstr "Opzioni aggiuntive"
+
+msgid "Scatterplot styling"
+msgstr ""
+
+#, fuzzy
+msgid "Add & place widget"
+msgstr "Aggiungere l'obiettivo"
+
+#, fuzzy
+msgid "Value out of range"
+msgstr "Il valore deve essere una stringa"
+
+#, fuzzy
+msgid "Rankin order"
+msgstr "Ordine di classifica"
+
+msgid "entries (max. %{max_entries})"
+msgstr ""
 
 #, fuzzy
 msgid "explicit password"
@@ -91712,6 +91820,64 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Act. helper"
+#~ msgstr "Aiutante d'azione"
+
+#~ msgid "Apache"
+#~ msgstr "Apache"
+
+#~ msgid "CMC"
+#~ msgstr "CMC"
+
+#~ msgid "CMK helper"
+#~ msgstr "Aiuto CMK"
+
+#~ msgid "Checker helper"
+#~ msgstr "Aiutante di controllo"
+
+#~ msgid "Crontab"
+#~ msgstr "Crontab"
+
+#~ msgid "DCD"
+#~ msgstr "DCD"
+
+#~ msgid "Fetcher helper"
+#~ msgstr "Aiuto Fetcher"
+
+#~ msgid "Live helper"
+#~ msgstr "Aiutante dal vivo"
+
+#~ msgid "Live helper usage"
+#~ msgstr "Utilizzo dell'assistente in diretta"
+
+#~ msgid "Liveproxyd"
+#~ msgstr "Liveproxyd"
+
+#~ msgid "MKEventd"
+#~ msgstr "MKEventd"
+
+#~ msgid "MKNotifyd"
+#~ msgstr "MKNotifyd"
+
+#, fuzzy
+#~ msgid "Monitor the collector"
+#~ msgstr "Collezionisti fermi"
+
+#~ msgid "NPCD"
+#~ msgstr "PNCD"
+
+#~ msgid "Nagios"
+#~ msgstr "Nagios"
+
+#~ msgid "RRDCached"
+#~ msgstr "RRDCached"
+
+#~ msgid "STunnel"
+#~ msgstr "STunnel"
+
+#~ msgid "XInetd"
+#~ msgstr "XInetd"
 
 #~ msgid "MHz"
 #~ msgstr "MHz"
@@ -94082,9 +94248,6 @@ msgstr ""
 
 #~ msgid "Add Contact Group"
 #~ msgstr "Aggiungi gruppo di contatti"
-
-#~ msgid "Barplot"
-#~ msgstr "Barplot"
 
 #, fuzzy
 #~ msgid "Checkmk: WATO: Bytes"

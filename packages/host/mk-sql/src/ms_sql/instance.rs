@@ -698,13 +698,8 @@ impl SqlInstance {
         query: &str,
         sep: char,
     ) -> String {
-        let tasks = databases.iter().filter_map(move |database| {
-            if endpoint.conn().exclude_databases().contains(database) {
-                log::debug!("Database {} excluded from table spaces", database);
-                None
-            } else {
-                Some(self.generate_table_spaces_section_database(endpoint, database, query, sep))
-            }
+        let tasks = databases.iter().map(move |database| {
+            self.generate_table_spaces_section_database(endpoint, database, query, sep)
         });
 
         let results = stream::iter(tasks)

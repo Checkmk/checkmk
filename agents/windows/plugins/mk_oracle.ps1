@@ -1825,11 +1825,21 @@ Function sql_systemparameter {
 # SQL for sql_instance information
 ################################################################################
 Function sql_instance {
+    if ($DBVERSION -ge 180000) {
+        # Oracle 18c introduced another version column with Release Update information
+        # version       version_full
+        # 18.0.0.0.0    18.5.0.0.0
+        # 19.0.0.0.0    19.5.0.0.0
+        $version_column="version_full"
+    } else {
+        $version_column="version"
+    }
+
      if ($ORACLE_SID.substring(0, 1) -eq "+") {
-          $query_instance = @'
+          $query_instance = @"
           prompt <<<oracle_instance:sep(124)>>>;
           select upper(i.instance_name)
-               || '|' || i.VERSION
+               || '|' || i.${version_column}
                || '|' || i.STATUS
                || '|' || i.LOGINS
                || '|' || i.ARCHIVER
@@ -1840,13 +1850,12 @@ Function sql_instance {
                || '|' || 'NO'
                || '|' || i.instance_name
                || '|' || i.host_name
-          from v$instance i;
-
-'@
+          from v`$instance i;
+"@
      }
      else {
           if ($DBVERSION -gt 121010) {
-               $query_instance = @'
+               $query_instance = @"
                prompt <<<oracle_instance:sep(124)>>>;
                select upper(instance_name)
                     || '|' || version
@@ -1872,32 +1881,32 @@ Function sql_instance {
                     || '|' || pblock_size
                     || '|' || host_name
                from(
-                    select i.instance_name, i.host_name, i.version, i.status, i.logins, i.archiver
+                    select i.instance_name, i.host_name, i.${version_column} version, i.status, i.logins, i.archiver
                          ,i.startup_time, d.dbid, d.log_mode, d.database_role, d.force_logging
                          ,d.name, d.created, p.value, vp.con_id, vp.name pname
                          ,vp.dbid pdbid, vp.open_mode popen_mode, vp.restricted prestricted, vp.total_size ptotal_time
                          ,vp.block_size pblock_size, vp.recovery_status precovery_status
                          ,(cast(systimestamp as date) - cast(open_time as date))  * 24*60*60 popen_time
-                    from v$instance i
-                    join v$database d on 1=1
-                    join v$parameter p on 1=1
-                    join v$pdbs vp on 1=1
+                    from v`$instance i
+                    join v`$database d on 1=1
+                    join v`$parameter p on 1=1
+                    join v`$pdbs vp on 1=1
                     where p.name = 'enable_pluggable_database'
                     union all
                     select
-                         i.instance_name, i.host_name, i.version, i.status, i.logins, i.archiver
+                         i.instance_name, i.host_name, i.${version_column} version, i.status, i.logins, i.archiver
                          ,i.startup_time, d.dbid, d.log_mode, d.database_role, d.force_logging
                          ,d.name, d.created, p.value, 0 con_id, null pname
                          ,0 pdbis, null popen_mode, null prestricted, null ptotal_time
                          ,0 pblock_size, null precovery_status, null popen_time
-                    from v$instance i
-                    join v$database d on 1=1
-                    join v$parameter p on 1=1
+                    from v`$instance i
+                    join v`$database d on 1=1
+                    join v`$parameter p on 1=1
                     where p.name = 'enable_pluggable_database'
                     order by con_id
                );
 
-'@
+"@
           }
           else {
                $query_instance = @'

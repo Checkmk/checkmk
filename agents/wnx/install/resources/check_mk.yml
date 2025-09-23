@@ -73,6 +73,8 @@ global:
         - logwatch
         - openhardwaremonitor
         - agent_plugins
+        - w32time_status
+        - w32time_peers
 
     # sections to be skipped
     disabled_sections: []

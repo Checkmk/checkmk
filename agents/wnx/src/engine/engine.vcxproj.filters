@@ -234,6 +234,12 @@
     <Filter Include="Cma\Cfg\Upgrade">
       <UniqueIdentifier>{7ceb3000-0b8f-4878-826a-221e85f0b525}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Cma\Providers\W32TimeStatus">
+      <UniqueIdentifier>{9463a863-e86c-48a8-8d2e-b3f8c758c9f7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Cma\Providers\W32TimePeers">
+      <UniqueIdentifier>{2e022f27-642d-4562-81fe-82cc16e2bf3f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\providers\system_time.h">
@@ -481,6 +487,12 @@
     </ClInclude>
     <ClInclude Include="..\lwa\SettingsCollector.h">
       <Filter>lwa\SettingsCollector</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\providers\w32time_status.h">
+      <Filter>Cma\Providers\W32TimeStatus</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\providers\w32time_peers.h">
+      <Filter>Cma\Providers\W32TimePeers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -744,6 +756,12 @@
     </ClCompile>
     <ClCompile Include="..\lwa\win_error.cc">
       <Filter>lwa\WinError</Filter>
+    </ClCompile>
+    <ClCompile Include="w32time_status.cpp">
+      <Filter>Cma\Providers\W32TimeStatus</Filter>
+    </ClCompile>
+    <ClCompile Include="w32time_peers.cpp">
+      <Filter>Cma\Providers\W32TimePeers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

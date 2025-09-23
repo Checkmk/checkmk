@@ -43,6 +43,8 @@
 #include "providers/spool.h"
 #include "providers/system_time.h"
 #include "providers/wmi.h"
+#include "providers/w32time_status.h"
+#include "providers/w32time_peers.h"
 #include "read_file.h"
 #include "realtime.h"
 #include "tools/_process.h"
@@ -660,6 +662,10 @@ private:
         provider::kWmiCpuLoad, cma::provider::wmi::kSepChar};
 
     SectionProvider<provider::PerfCpuLoad> perf_cpuload_provider_;
+
+    SectionProvider<provider::W32TimeStatus> w32time_status_provider_;
+
+    SectionProvider<provider::W32TimePeers> w32time_peers_provider_;
 
 #if defined(ENABLE_WHITE_BOX_TESTING)
     friend class ServiceProcessorTest;

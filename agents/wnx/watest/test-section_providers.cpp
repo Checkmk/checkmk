@@ -109,6 +109,28 @@ TEST(SectionProviders, SystemTime) {
     EXPECT_GE(value, seconds_since_epoch);
 }
 
+TEST(SectionProviders, W32TimeStatus) {
+    srv::SectionProvider<W32TimeStatus> w32time_status_provider;
+    auto &engine = w32time_status_provider.getEngine();
+
+    EXPECT_EQ(engine.getUniqName(), section::kW32TimeStatus);
+
+    auto const &content = engine.generateContent(section_name);
+    EXPECT_EQ(content,
+              "<<<w32time_status>>>\nTest output for w32time_status section");
+}
+
+TEST(SectionProviders, W32TimePeers) {
+    srv::SectionProvider<W32TimePeers> w32time_peers_provider;
+    auto &engine = w32time_peers_provider.getEngine();
+
+    EXPECT_EQ(engine.getUniqName(), section::kW32TimePeers);
+
+    auto const &content = engine.generateContent(section_name);
+    EXPECT_EQ(content,
+              "<<<w32time_peers>>>\nTest output for w32time_peers section");
+}
+
 class SectionProviderCheckMkFixture : public ::testing::Test {
 public:
     static constexpr size_t core_lines_ = 23;

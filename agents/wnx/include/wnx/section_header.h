@@ -47,6 +47,8 @@ constexpr std::string_view kUptimeName{"uptime"};
 constexpr std::string_view kDfName{"df"};
 constexpr std::string_view kMemName{"mem"};
 constexpr std::string_view kSystemTime{"systemtime"};
+constexpr std::string_view kW32TimeStatus{"w32time_status"};
+constexpr std::string_view kW32TimePeers{"w32time_peers"};
 constexpr std::string_view kServices{"services"};
 constexpr std::string_view kCheckMk{"check_mk"};
 constexpr std::string_view kCheckMkCtlStatus{"cmk_agent_ctl_status:sep(0)"};

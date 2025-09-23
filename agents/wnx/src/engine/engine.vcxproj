@@ -311,6 +311,8 @@
     <ClInclude Include="..\..\include\providers\skype.h" />
     <ClInclude Include="..\..\include\providers\spool.h" />
     <ClInclude Include="..\..\include\providers\system_time.h" />
+    <ClInclude Include="..\..\include\providers\w32time_peers.h" />
+    <ClInclude Include="..\..\include\providers\w32time_status.h" />
     <ClInclude Include="..\..\include\providers\wmi.h" />
     <ClInclude Include="..\..\include\tools\_kbd.h" />
     <ClInclude Include="..\..\include\tools\_misc.h" />
@@ -599,6 +601,8 @@
       </MultiProcessorCompilation>
     </ClCompile>
     <ClCompile Include="upgrade.cpp" />
+    <ClCompile Include="w32time_peers.cpp" />
+    <ClCompile Include="w32time_status.cpp" />
     <ClCompile Include="windows_service_api.cpp" />
     <ClCompile Include="zip.cpp" />
   </ItemGroup>

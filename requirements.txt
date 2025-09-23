@@ -123,9 +123,9 @@ anyio==4.10.0 \
     # via
     #   httpx
     #   starlette
-apispec==6.8.3 \
-    --hash=sha256:0823235aa171187fc0fb1dfd28211ebcf5fe7768b2a7e1929d06671e162439ae \
-    --hash=sha256:aeb768de47a0eabe59dc522540e22a5381e2a7b803948cb528969155343bd57e
+apispec==6.8.4 \
+    --hash=sha256:18d6cfaf6a9742d4f9a8f364bfabb7e8884983e10b155ad13616e084f47164ef \
+    --hash=sha256:fd0ed14af71a2949d9aeb96b72ce1517cb4a48a5c55667cd0483b7ed33156a2a
     # via
     #   -r cmk/requirements.in
     #   apispec-oneofschema
@@ -164,9 +164,7 @@ attrs==25.3.0 \
 azure-common==1.1.28 \
     --hash=sha256:4ac0cd3214e36b6a1b6a442686722a5d8cc449603aa833f3f0f40bda836704a3 \
     --hash=sha256:5c12d3dcf4ec20599ca6b0d3e09e86e146353d443e7fcc050c9a19c1f9df20ad
-    # via
-    #   azure-mgmt-compute
-    #   azure-mgmt-resource
+    # via azure-mgmt-resource
 azure-core==1.35.1 \
     --hash=sha256:12da0c9e08e48e198f9158b56ddbe33b421477e1dc98c2e1c8f9e254d92c468b \
     --hash=sha256:435d05d6df0fff2f73fb3c15493bb4721ede14203f1ff1382aa6b6b2bdd7e562
@@ -174,13 +172,14 @@ azure-core==1.35.1 \
     #   azure-identity
     #   azure-mgmt-core
     #   azure-storage-blob
+    #   msrest
 azure-identity==1.25.0 \
     --hash=sha256:4177df34d684cddc026e6cf684e1abb57767aa9d84e7f2129b080ec45eee7733 \
     --hash=sha256:becaec086bbdf8d1a6aa4fb080c2772a0f824a97d50c29637ec8cc4933f1e82d
     # via -r cmk/requirements.in
-azure-mgmt-compute==36.0.0 \
-    --hash=sha256:31f27afa8c097ba1f8b37ae258a763e2c7737f6eddc423c22e2beb11255cd526 \
-    --hash=sha256:ee343daa3f5b3494ecaa07a70ac5c4337d23ea006590632919ab2835c32e67a1
+azure-mgmt-compute==37.0.0 \
+    --hash=sha256:6cf26ef8a32707c1dfc45cd4ec4c949c2a637a9caf7e0e59731ab98e532c7c9f \
+    --hash=sha256:cb7f163fedc93a8125490c572947862fe5b65d570edd00e9874a9ff129a8b4b2
     # via -r tests/dev-requirements.in
 azure-mgmt-core==1.6.0 \
     --hash=sha256:0460d11e85c408b71c727ee1981f74432bc641bb25dfcf1bb4e90a49e776dbc4 \
@@ -300,17 +299,17 @@ blinker==1.9.0 \
     --hash=sha256:b4ce2265a7abece45e7cc896e98dbebe6cead56bcf805a3d23136d145f5445bf \
     --hash=sha256:ba0efaa9080b619ff2f3459d1d500c57bddea4a6b424b60a91141db6fd2f08bc
     # via flask
-boto3==1.40.35 \
-    --hash=sha256:d718df3591c829bcca4c498abb7b09d64d1eecc4e5a2b6cef14b476501211b8a \
-    --hash=sha256:f4c1b01dd61e7733b453bca38b004ce030e26ee36e7a3d4a9e45a730b67bc38d
+boto3==1.40.36 \
+    --hash=sha256:bfc1f3d5c4f5d12b8458406b8972f8794ac57e2da1ee441469e143bc0440a5c3 \
+    --hash=sha256:d7c1fe033f491f560cd26022a9dcf28baf877ae854f33bc64fffd0df3b9c98be
     # via -r cmk/requirements.in
-boto3-stubs[logs]==1.40.35 \
-    --hash=sha256:2bb44e6c17831650a28e3e00bf5be0a6ba771fce08724ba978ffcd06a7bca7e3 \
-    --hash=sha256:2d6f2dbe6e9b42deb7b8fbeed051461e7906903f26e99634d00be45cc40db41a
+boto3-stubs[logs]==1.40.36 \
+    --hash=sha256:6e1a18cf38b61cd25dd8ec7e14691313277355df169b35e19bbe29fffcd1986c \
+    --hash=sha256:9d8c53670e1877c16bbc1a1af10707c41bcd2d446d29f215fd9edeb1f9bbfaea
     # via -r tests/dev-requirements.in
-botocore==1.40.35 \
-    --hash=sha256:67e062752ff579c8cc25f30f9c3a84c72d692516a41a9ee1cf17735767ca78be \
-    --hash=sha256:c545de2cbbce161f54ca589fbb677bae14cdbfac7d5f1a27f6a620cb057c26f4
+botocore==1.40.36 \
+    --hash=sha256:93386a8dc54173267ddfc6cd8636c9171e021f7c032aa1df3af7de816e3df616 \
+    --hash=sha256:d6edf75875e4013cb7078875a1d6c289afb4cc6675d99d80700c692d8d8e0b72
     # via
     #   -r cmk/requirements.in
     #   boto3
@@ -344,6 +343,7 @@ certifi==2025.8.3 \
     #   httpx
     #   influxdb-client
     #   kubernetes
+    #   msrest
     #   netapp-ontap
     #   opsgenie-sdk
     #   requests
@@ -885,9 +885,9 @@ faker==37.8.0 \
     --hash=sha256:090bb5abbec2b30949a95ce1ba6b20d1d0ed222883d63483a0d4be4a970d6fb8 \
     --hash=sha256:b08233118824423b5fc239f7dd51f145e7018082b4164f8da6a9994e1f1ae793
     # via polyfactory
-fakeredis[lua]==2.31.1 \
-    --hash=sha256:1c0403dedc42bb0038649f016e1a8b56b4b1c69dfb13cf11f870dc51e5c5b4df \
-    --hash=sha256:bba58475d6ba3846752d242921c5d3f6dc948066e0ddd054f3a448cd9a1aacad
+fakeredis[lua]==2.31.3 \
+    --hash=sha256:12aa54a3fb00984c18b28956addb91683aaf55b2dc2ef4b09d49bd481032e57a \
+    --hash=sha256:76dfb92855f0787a4936a5b4fdb1905c5909ec790e62dff2b8896b412905deb0
     # via -r tests/dev-requirements.in
 fastapi==0.117.1 \
     --hash=sha256:33c51a0d21cab2b9722d4e56dbb9316f3687155be6b276191790d8da03507552 \
@@ -1376,9 +1376,9 @@ httpx==0.28.1 \
     #   -r non-free/packages/cmk-relay-engine/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   schemathesis
-hypothesis==6.140.0 \
-    --hash=sha256:bf6f79f19bb4e262c33849739639d94f8656510261d50a9ab74f539bcec8b782 \
-    --hash=sha256:ff251c41e4ffed6484720ffef68b31f705e62f50e22947f9f7ef1206b715f376
+hypothesis==6.140.2 \
+    --hash=sha256:4524cb84be90961563ef15634e2efe96150bbcce47621a13cff3c1b03a326663 \
+    --hash=sha256:b3b4a162134eeef8a992621de6c43d80e03d44704a3c3bfb5b9d0661b375b0d2
     # via
     #   -r tests/dev-requirements.in
     #   hypothesis-graphql
@@ -1448,10 +1448,10 @@ isodate==0.7.2 \
     --hash=sha256:28009937d8031054830160fce6d409ed342816b543597cece116d966c6d99e15 \
     --hash=sha256:4cd1aa0f43ca76f4a6c6c0292a85f40b35ec2e43e315b59f06e6d32171a953e6
     # via
-    #   azure-mgmt-compute
     #   azure-mgmt-resource
     #   azure-storage-blob
     #   exchangelib
+    #   msrest
 isoduration==20.11.0 \
     --hash=sha256:ac2f9015137935279eac671f94f89eb00584f940f5dc49462a0c4ee692ba1bd9 \
     --hash=sha256:b2904c2a4228c3d44f409c8ae8e2370eb21a26f7ac2ec5446df141dde3452042
@@ -2152,9 +2152,9 @@ more-itertools==10.8.0 \
     #   inflect
     #   jaraco-classes
     #   jaraco-functools
-msal==1.33.0 \
-    --hash=sha256:836ad80faa3e25a7d71015c990ce61f704a87328b1e73bcbb0623a18cbf17510 \
-    --hash=sha256:c0cd41cecf8eaed733ee7e3be9e040291eba53b0f262d3ae9c58f38b04244273
+msal==1.34.0 \
+    --hash=sha256:76ba83b716ea5a6d75b0279c0ac353a0e05b820ca1f6682c0eb7f45190c43c2f \
+    --hash=sha256:f669b1644e4950115da7a176441b0e13ec2975c29528d8b9e81316023676d6e1
     # via
     #   -r cmk/requirements.in
     #   azure-identity
@@ -2163,6 +2163,10 @@ msal-extensions==1.3.1 \
     --hash=sha256:96d3de4d034504e969ac5e85bae8106c8373b5c6568e4c8fa7af2eca9dbe6bca \
     --hash=sha256:c5b0fd10f65ef62b5f1d62f4251d51cbcaf003fcedae8c91b040a488614be1a4
     # via azure-identity
+msrest==0.7.1 \
+    --hash=sha256:21120a810e1233e5e6cc7fe40b474eeb4ec6f757a15d7cf86702c369f9567c32 \
+    --hash=sha256:6e7661f46f3afd88b75667b7187a92829924446c7ea1d169be8c4bb7eeb788b9
+    # via azure-mgmt-compute
 multi-key-dict==2.0.3 \
     --hash=sha256:deebdec17aa30a1c432cb3f437e81f8621e1c0542a0c0617a74f71e232e9939e
     # via python-jenkins
@@ -3830,6 +3834,7 @@ requests==2.32.5 \
     #   kubernetes
     #   meraki
     #   msal
+    #   msrest
     #   netapp-ontap
     #   opentelemetry-exporter-otlp-proto-http
     #   pysaml2
@@ -3859,6 +3864,7 @@ requests-oauthlib==2.0.0 \
     #   exchangelib
     #   jira
     #   kubernetes
+    #   msrest
 requests-toolbelt==1.0.0 \
     --hash=sha256:7681a0a3d047012b5bdc0ee37d7f8f07ebe76ab08caeccfc3921ce23c88d5bc6 \
     --hash=sha256:cccfdd665f0a24fcf4726e690f65639d272bb0637b9b92dfd91a5568ccf6bd06
@@ -4656,9 +4662,9 @@ types-awscrt==0.27.6 \
     --hash=sha256:18aced46da00a57f02eb97637a32e5894dc5aa3dc6a905ba3e5ed85b9f3c526b \
     --hash=sha256:9d3f1865a93b8b2c32f137514ac88cb048b5bc438739945ba19d972698995bfb
     # via botocore-stubs
-types-docutils==0.22.0.20250919 \
-    --hash=sha256:2b4e08d811e08e851f17808afbcf767bbf65f195be7e0080009cf983dc4312f0 \
-    --hash=sha256:67fbc6e25a2ba61d63b639db01172d91debf2beccb8780e83006f97b5cc1c226
+types-docutils==0.22.1.20250923 \
+    --hash=sha256:a01a8036b373dd578ec1a170db04f4159be1282ca92f0a085e50f4afbeb8d0bc \
+    --hash=sha256:f7754c7eeab44144095e287bb3afcb96d6936dc3fa332cff4e5ef5533baa198f
     # via -r tests/dev-requirements.in
 types-html5lib==1.1.11.20250917 \
     --hash=sha256:7b52743377f33f9b4fd7385afbd2d457b8864ee51f90ff2a795ad9e8c053373a \

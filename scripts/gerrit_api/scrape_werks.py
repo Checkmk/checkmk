@@ -13,6 +13,7 @@ from typing import Final
 
 ENV_GERRIT_USER: Final = "GERRIT_USER"
 ENV_GERRIT_HTTP_CREDS: Final = "GERRIT_HTTP_CREDS"
+GERRIT_API_CHANGES: Final = "https://review.lan.tribe29.com/a/changes"
 
 
 class TWerkStatus(StrEnum):
@@ -131,8 +132,32 @@ def parsed_arguments() -> type[TCliArgs]:
     return args
 
 
+def create_search_query(args: type[TCliArgs]) -> str:
+    """Prepare a search query to scrape changes in gerrit for Werks, based on the CLI arguments."""
+    age = "-age"
+    branch = "branch"
+    status = "status"
+
+    query = {
+        "project": "check_mk",
+        "path": r"^.*werks/.*md",
+        status: "",
+        branch: "",
+        age: "",
+    }
+
+    query[age] = f"{args.age}d" if args.age else ""
+    query[branch] = f"release/{args.cmk_version}" if "p" in args.cmk_version else args.cmk_version
+    if query[branch] == "2.5.0":
+        query[branch] = "master"
+    query[status] = "" if args.status == TWerkStatus.ALL else args.status
+    return "+".join([f'{key}:"{query[key]}"' for key in query if query[key]])
+
+
 def main() -> None:
-    parsed_arguments()
+    args = parsed_arguments()
+    query = create_search_query(args)
+    print(f"{GERRIT_API_CHANGES}/?q={query}")
 
 
 if __name__ == "__main__":

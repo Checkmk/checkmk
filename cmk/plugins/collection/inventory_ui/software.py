@@ -36,7 +36,7 @@ def _render_date(value: int | float) -> Label | str:
 
 
 def _style_service_status(value: str) -> Iterable[Alignment | BackgroundColor | LabelColor]:
-    yield Alignment.CENTERED
+    yield Alignment.CENTER
     match value:
         case "running":
             yield LabelColor.BLACK

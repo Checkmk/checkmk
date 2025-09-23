@@ -122,7 +122,7 @@ def _parse_alignment_from_api(alignment: AlignmentFromAPI) -> Literal["left", "c
     match alignment:
         case AlignmentFromAPI.LEFT:
             return "left"
-        case AlignmentFromAPI.CENTERED:
+        case AlignmentFromAPI.CENTER:
             return "center"
         case AlignmentFromAPI.RIGHT:
             return "right"
@@ -281,7 +281,7 @@ class _PaintChoice:
 
     @property
     def default_alignment(self) -> AlignmentFromAPI:
-        return AlignmentFromAPI.CENTERED
+        return AlignmentFromAPI.CENTER
 
     def __call__(self, now: float, value: SDValue) -> PaintResultFromAPI:
         if not isinstance(value, (int | float | str)):

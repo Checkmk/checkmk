@@ -2416,7 +2416,7 @@ def test_render_number(
     expected: str,
 ) -> None:
     number_field = NumberFieldFromAPI(
-        TitleFromAPI("A title"), render=render, style=lambda _: [AlignmentFromAPI.CENTERED]
+        TitleFromAPI("A title"), render=render, style=lambda _: [AlignmentFromAPI.CENTER]
     )
     now = datetime.datetime(2025, 1, 1, 0, 1, 0, tzinfo=datetime.UTC).timestamp()
     assert _PaintNumber(number_field)(now, value) == (

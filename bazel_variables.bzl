@@ -6,7 +6,6 @@ edition_python_deps = {
     "cre": [],
     "cce": [
         "//non-free/packages/cmk-core-helpers",
-        "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger",
         "//non-free/packages/cmk-mknotifyd",
         "//non-free/packages/cmk-otel-collector",
         "//non-free/packages/cmk-update-agent",
@@ -18,14 +17,12 @@ edition_python_deps = {
     ],
     "cme": [
         "//non-free/packages/cmk-core-helpers",
-        "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger",
         "//non-free/packages/cmk-mknotifyd",
         "//non-free/packages/cmk-update-agent",
         "//non-free/packages/cmk-otel-collector",
     ],
     "cse": [
         "//non-free/packages/cmk-core-helpers",
-        "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger",
         "//non-free/packages/cmk-mknotifyd",
         "//non-free/packages/cmk-update-agent",
         "//non-free/packages/cmk-otel-collector",

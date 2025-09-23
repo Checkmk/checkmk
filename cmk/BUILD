@@ -185,9 +185,7 @@ CMK_PACKAGES = [
 ] + select({
     "@//:gpl_repo": [],
     "@//:gpl+enterprise_repo": [
-        "//non-free/packages/cmk-core-helpers:check-helper-protocol",
-        "//non-free/packages/cmk-core-helpers:fetcher-helper",
-        "//non-free/packages/cmk-core-helpers:inline-snmp",
+        "//non-free/packages/cmk-core-helpers",
         "//non-free/packages/cmk-mknotifyd",
         "//non-free/packages/cmk-otel-collector",
     ],

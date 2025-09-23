@@ -179,7 +179,7 @@ class TCPFetcher(Fetcher[AgentRawData]):
         self._socket.close()
         self._socket = None
 
-    def _fetch_from_io(self, _mode: Mode) -> AgentRawData:
+    def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         sock = self._socket
         if sock is None:
             raise OSError(errno.ENOTCONN, os.strerror(errno.ENOTCONN))

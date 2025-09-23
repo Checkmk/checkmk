@@ -105,7 +105,7 @@ class ProgramFetcher(Fetcher[AgentRawData]):
         self._process.stderr.close()
         self._process = None
 
-    def _fetch_from_io(self, _mode: Mode) -> AgentRawData:
+    def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         self._logger.debug("Get data from program")
         if self._process is None:
             raise TypeError("no process")

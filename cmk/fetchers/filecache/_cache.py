@@ -244,7 +244,7 @@ class FileCache(Generic[_TRawData], abc.ABC):
 
 
 class NoCache(FileCache[_TRawData]):
-    def __init__(self, *_args: object, **_kw: object) -> None:
+    def __init__(self, *args: object, **kw: object) -> None:
         super().__init__(
             path_template=str(os.devnull),
             max_age=MaxAge.zero(),
@@ -254,11 +254,11 @@ class NoCache(FileCache[_TRawData]):
         )
 
     @staticmethod
-    def _from_cache_file(_raw_data: object) -> NoReturn:
+    def _from_cache_file(raw_data: object) -> NoReturn:
         raise TypeError("NoCache")
 
     @staticmethod
-    def _to_cache_file(_raw_data: _TRawData) -> NoReturn:
+    def _to_cache_file(raw_data: _TRawData) -> NoReturn:
         raise TypeError("NoCache")
 
 

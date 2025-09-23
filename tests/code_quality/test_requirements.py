@@ -389,7 +389,7 @@ KNOWN_UNDECLARED_DEPENDENCIES = {
     ImportName("tinkerforge"): {Path("cmk/plugins/tinkerforge/special_agent/agent_tinkerforge.py")},
     ImportName("rados"): {Path("cmk/plugins/ceph/agents/mk_ceph.py")},
     ImportName("netsnmp"): {  # We ship it with omd/packages
-        Path("non-free/packages/cmk-core-helpers/cmk/inline_snmp/inline.py")
+        Path("cmk/fetchers/cee/snmp_backend/inline.py")
     },
     ImportName("rrdtool"): {  # is built as part of the project
         Path("bin/cmk-convert-rrds"),

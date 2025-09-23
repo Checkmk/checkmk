@@ -39,9 +39,9 @@ class StoredWalkSNMPBackend(SNMPBackend):
         /,
         oid: OID,
         *,
-        context: object,  # noqa: ARG002
-        section_name: object = None,  # noqa: ARG002
-        table_base_oid: object = None,  # noqa: ARG002
+        context: object,
+        section_name: object = None,
+        table_base_oid: object = None,
     ) -> SNMPRowInfo:
         if oid.startswith("."):
             oid = oid[1:]

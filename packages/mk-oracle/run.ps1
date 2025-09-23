@@ -224,7 +224,7 @@ try {
             Write-Host "Oracle runtime light/win/x64: $oci_light_win_x64_zip with name $packaged" -ForegroundColor Green
             Copy-Item -Path "$root_dir/$oci_light_win_x64_zip" -Destination "$arte_dir/" -Force -ErrorAction Stop
             $source_hash = (Get-FileHash "$arte_dir/$packaged" -Algorithm SHA256).Hash
-            $runtime_path = "runtimes/runtime"
+            $runtime_path = "runtimes/mk-oracle"
             & mkdir "$runtime_path" -ErrorAction SilentlyContinue | Out-Null
             if (!(Test-Path "$runtime_path/.hash") -or
                 ((Get-Content "$runtime_path/.hash" -ErrorAction Stop) -ne $source_hash)) {

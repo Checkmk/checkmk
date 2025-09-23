@@ -272,7 +272,7 @@ fn make_log_file_spec(log_dir: &Path) -> FileSpec {
         .basename("mk-sql")
 }
 
-pub const RUNTIME_SUB_DIR: &str = "runtime";
+pub const RUNTIME_SUB_DIR: &str = "mk-oracle";
 
 pub fn detect_host_runtime() -> Option<PathBuf> {
     match get_local_instances() {

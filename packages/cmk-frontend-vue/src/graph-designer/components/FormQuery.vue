@@ -5,12 +5,21 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import {
+  type QueryAggregationHistogramPercentile,
+  type QueryAggregationSumRate
+} from 'cmk-shared-typing/typescript/graph_designer'
 import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { ref, watch } from 'vue'
 
+import { untranslated } from '@/lib/i18n'
 import usei18n from '@/lib/i18n'
 
+import CmkDropdown from '@/components/CmkDropdown.vue'
 import CmkList from '@/components/CmkList'
+import { type Suggestion } from '@/components/suggestions'
+import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
+import CmkInput from '@/components/user-input/CmkInput.vue'
 import { inputSizes } from '@/components/user-input/sizes'
 
 import FormAutocompleter from '@/form/private/FormAutocompleter.vue'
@@ -22,6 +31,8 @@ export interface Query {
   resourceAttributes: string[]
   scopeAttributes: string[]
   dataPointAttributes: string[]
+  aggregationSum: QueryAggregationSumRate | null
+  aggregationHistogram: QueryAggregationHistogramPercentile | null
 }
 
 const metricName = defineModel<string | null>('metricName', { default: null })
@@ -34,6 +45,15 @@ const scopeAttributes = defineModel<string[]>('scopeAttributes', {
 const dataPointAttributes = defineModel<string[]>('dataPointAttributes', {
   default: []
 })
+const aggregationSum = defineModel<QueryAggregationSumRate | null>('aggregationSum', {
+  default: null
+})
+const aggregationHistogram = defineModel<QueryAggregationHistogramPercentile | null>(
+  'aggregationHistogram',
+  {
+    default: null
+  }
+)
 
 // Clear form fields if one changes
 
@@ -156,6 +176,14 @@ function deleteDataPointAttribute(index: number) {
   dataPointAttributes.value.splice(index, 1)
   return true
 }
+
+// Unit for interval/time frame of aggregation sum rate
+
+const aggregationSumRateUnitSuggestions: Suggestion[] = [
+  { name: 's', title: untranslated('s') },
+  { name: 'min', title: untranslated('min') },
+  { name: 'h', title: untranslated('h') }
+]
 </script>
 
 <template>
@@ -227,6 +255,30 @@ function deleteDataPointAttribute(index: number) {
             :placeholder="_t('Attributes')"
             @update:model-value="addDataPointAttribute"
           />
+        </td>
+      </tr>
+      <tr v-if="aggregationSum !== null && aggregationSum.type === 'rate'">
+        <td>
+          <CmkCheckbox v-model="aggregationSum.enabled" :label="_t('Apply rate (sums)')" />
+        </td>
+        <td>
+          <CmkInput v-model="aggregationSum.value" type="number" />
+          <CmkDropdown
+            v-model:selected-option="aggregationSum.unit"
+            :options="{ type: 'fixed', suggestions: aggregationSumRateUnitSuggestions }"
+            :label="_t('Time range')"
+          />
+        </td>
+      </tr>
+      <tr v-if="aggregationHistogram !== null && aggregationHistogram.type === 'percentile'">
+        <td>
+          <CmkCheckbox
+            v-model="aggregationHistogram.enabled"
+            :label="_t('Apply percentile (histograms)')"
+          />
+        </td>
+        <td>
+          <CmkInput v-model="aggregationHistogram.value" type="number" />
         </td>
       </tr>
     </tbody>

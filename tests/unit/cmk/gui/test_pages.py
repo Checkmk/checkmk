@@ -238,6 +238,7 @@ def test_registered_pages() -> None:
             "download_robotmk_suite_report",
             "ajax_fetch_metric_color",
             "ajax_fetch_ajax_graph",
+            "ajax_fetch_metric_types",
         ]
 
     if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CSE:

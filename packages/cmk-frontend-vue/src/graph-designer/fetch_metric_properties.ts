@@ -14,3 +14,17 @@ export async function fetchMetricColor<OutputType>(
     metric_type: metricType
   })
 }
+
+export async function fetchMetricTypes<OutputType>(
+  metricName: string,
+  resourceAttributes: string[],
+  scopeAttributes: string[],
+  dataPointAttributes: string[]
+): Promise<OutputType> {
+  return cmkAjax('ajax_fetch_metric_types.py', {
+    metric_name: metricName,
+    resource_attributes: resourceAttributes,
+    scope_attributes: scopeAttributes,
+    data_point_attributes: dataPointAttributes
+  })
+}

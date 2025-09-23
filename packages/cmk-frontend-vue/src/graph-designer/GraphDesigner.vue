@@ -10,6 +10,8 @@ import {
   type GraphLines,
   type GraphOptions,
   type Operation,
+  type QueryAggregationHistogramPercentile,
+  type QueryAggregationSumRate,
   type Transformation
 } from 'cmk-shared-typing/typescript/graph_designer'
 import { type Ref, computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -38,7 +40,7 @@ import {
   convertToExplicitVerticalRange,
   convertToUnit
 } from '@/graph-designer/converters'
-import { fetchMetricColor } from '@/graph-designer/fetch_metric_color'
+import { fetchMetricColor, fetchMetricTypes } from '@/graph-designer/fetch_metric_properties'
 import { type GraphRenderer } from '@/graph-designer/graph'
 
 import type { Topic } from './type_defs'
@@ -179,7 +181,9 @@ const dataQuery = ref<Query>({
   metricName: null,
   resourceAttributes: [],
   scopeAttributes: [],
-  dataPointAttributes: []
+  dataPointAttributes: [],
+  aggregationSum: null,
+  aggregationHistogram: null
 })
 const dataMetric = ref<Metric>({
   hostName: null,
@@ -289,7 +293,9 @@ function generateGraphLine(graphLine: GraphLine): GraphLine {
         metric_name: graphLine.metric_name,
         resource_attributes: graphLine.resource_attributes,
         scope_attributes: graphLine.scope_attributes,
-        data_point_attributes: graphLine.data_point_attributes
+        data_point_attributes: graphLine.data_point_attributes,
+        aggregation_sum: graphLine.aggregation_sum,
+        aggregation_histogram: graphLine.aggregation_histogram
       }
     case 'metric':
       return {
@@ -401,6 +407,33 @@ function isOperation(graphLine: GraphLine) {
 
 async function addQuery() {
   if (dataQuery.value.metricName !== '' && dataQuery.value.metricName !== null) {
+    const metricTypes: string[] = await fetchMetricTypes(
+      dataQuery.value.metricName,
+      dataQuery.value.resourceAttributes,
+      dataQuery.value.scopeAttributes,
+      dataQuery.value.dataPointAttributes
+    )
+    let aggregationSum: QueryAggregationSumRate | null
+    if (metricTypes.includes('sum')) {
+      aggregationSum = {
+        type: 'rate',
+        enabled: false,
+        value: 1,
+        unit: 'min'
+      }
+    } else {
+      aggregationSum = null
+    }
+    let aggregationHistogram: QueryAggregationHistogramPercentile | null
+    if (metricTypes.includes('histogram')) {
+      aggregationHistogram = {
+        type: 'percentile',
+        enabled: false,
+        value: 95
+      }
+    } else {
+      aggregationHistogram = null
+    }
     graphLines.value.push({
       id: nextIndex(),
       type: 'query',
@@ -413,13 +446,17 @@ async function addQuery() {
       metric_name: dataQuery.value.metricName,
       resource_attributes: dataQuery.value.resourceAttributes,
       scope_attributes: dataQuery.value.scopeAttributes,
-      data_point_attributes: dataQuery.value.dataPointAttributes
+      data_point_attributes: dataQuery.value.dataPointAttributes,
+      aggregation_sum: aggregationSum,
+      aggregation_histogram: aggregationHistogram
     })
     dataQuery.value = {
       metricName: null,
       resourceAttributes: [],
       scopeAttributes: [],
-      dataPointAttributes: []
+      dataPointAttributes: [],
+      aggregationSum: null,
+      aggregationHistogram: null
     }
   }
 }
@@ -836,6 +873,8 @@ const graphDesignerContentAsJson = computed(() => {
               v-model:resource-attributes="graphLine.resource_attributes"
               v-model:scope-attributes="graphLine.scope_attributes"
               v-model:data-point-attributes="graphLine.data_point_attributes"
+              v-model:aggregation-sum="graphLine.aggregation_sum"
+              v-model:aggregation-histogram="graphLine.aggregation_histogram"
               @update:metric-name="updateGraphLineAutoTitle(graphLine)"
             />
           </div>
@@ -935,6 +974,8 @@ const graphDesignerContentAsJson = computed(() => {
           v-model:resource-attributes="dataQuery.resourceAttributes"
           v-model:scope-attributes="dataQuery.scopeAttributes"
           v-model:data-point-attributes="dataQuery.dataPointAttributes"
+          v-model:aggregation-sum="dataQuery.aggregationSum"
+          v-model:aggregation-histogram="dataQuery.aggregationHistogram"
         />
         <CmkButton @click="addQuery">
           {{ _t('Add') }}

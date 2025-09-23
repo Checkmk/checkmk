@@ -87,7 +87,10 @@ def check_db2_logsizes(item, params, parsed):
         * (int(db["logprimary"][data_offset]) + int(db["logsecond"][data_offset]))
         * 4096
     )
-    free = total - int(db["usedspace"][data_offset])
+    usedspace = db["usedspace"][data_offset]
+    if usedspace == "-":
+        return 3, "Can not read usedspace"
+    free = total - int(usedspace)
 
     return df_check_filesystem_single(
         item, total >> 20, free >> 20, 0, None, None, params, this_time=timestamp

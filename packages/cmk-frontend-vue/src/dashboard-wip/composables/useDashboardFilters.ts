@@ -5,8 +5,13 @@
  */
 import { type Ref, computed, ref } from 'vue'
 
-import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
+import type { ConfiguredFilters, ConfiguredValues } from '@/dashboard-wip/components/filter/types'
 import type { DashboardFilterContext } from '@/dashboard-wip/types/dashboard'
+import {
+  type ContextFilter,
+  type ContextFilters,
+  FilterOrigin
+} from '@/dashboard-wip/types/filter.ts'
 
 export function useDashboardFilters(
   dashboardFilterContextRef: Ref<DashboardFilterContext | undefined>
@@ -24,6 +29,21 @@ export function useDashboardFilters(
   const baseFilters = computed<ConfiguredFilters>(() => ({
     ...configuredDashboardFilters.value,
     ...appliedRuntimeFilters.value
+  }))
+
+  const toContextFilters = (filters: ConfiguredFilters, source: FilterOrigin): ContextFilters => {
+    const entries: [string, ContextFilter][] = Object.entries(filters).map(
+      ([name, configuredValues]) => [
+        name,
+        { configuredValues: configuredValues as ConfiguredValues, source }
+      ]
+    )
+    return Object.fromEntries(entries)
+  }
+
+  const contextFilters = computed<ContextFilters>(() => ({
+    ...toContextFilters(configuredDashboardFilters.value, FilterOrigin.DASHBOARD),
+    ...toContextFilters(appliedRuntimeFilters.value, FilterOrigin.QUICK_FILTER)
   }))
 
   const handleSaveDashboardFilters = (filters: ConfiguredFilters) => {
@@ -56,6 +76,7 @@ export function useDashboardFilters(
     configuredMandatoryRuntimeFilters,
     appliedRuntimeFilters,
     baseFilters,
+    contextFilters,
     handleSaveDashboardFilters,
     handleApplyRuntimeFilters,
     handleSaveMandatoryRuntimeFilters,

@@ -4,16 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Scrape Werks from changes listed in Checkmk repository."""
 
+import json
 import os
 import re
 from argparse import ArgumentParser, Namespace
+from collections.abc import Iterator
 from enum import StrEnum
+from json import JSONDecodeError
 from pathlib import Path
 from typing import Final
+
+import httpx
+from requests.auth import HTTPBasicAuth
 
 ENV_GERRIT_USER: Final = "GERRIT_USER"
 ENV_GERRIT_HTTP_CREDS: Final = "GERRIT_HTTP_CREDS"
 GERRIT_API_CHANGES: Final = "https://review.lan.tribe29.com/a/changes"
+GERRIT_PREFIX: Final = r")]}'"
 
 
 class TWerkStatus(StrEnum):
@@ -154,10 +161,31 @@ def create_search_query(args: type[TCliArgs]) -> str:
     return "+".join([f'{key}:"{query[key]}"' for key in query if query[key]])
 
 
+def parse_gerrit_response(response_lines: Iterator[str]) -> Iterator[str]:
+    """Ignore `GERRIT_PREFIX` from the response and then return the actual details."""
+    for line in response_lines:
+        if line == GERRIT_PREFIX:
+            continue
+        yield line
+
+
 def main() -> None:
     args = parsed_arguments()
+    gerrit_client = httpx.Client(auth=HTTPBasicAuth(args.username, args.http_creds))
+
     query = create_search_query(args)
-    print(f"{GERRIT_API_CHANGES}/?q={query}")
+    url = f"{GERRIT_API_CHANGES}/?q={query}"
+    resp = gerrit_client.get(url)
+    resp.raise_for_status()
+
+    # parse changes
+    for line in parse_gerrit_response(resp.iter_lines()):
+        try:
+            for change in json.loads(line):
+                print(change["change_id"], change["status"], change["subject"])
+        except JSONDecodeError as exc:
+            exc.add_note(f"Could not process the response! Reponse text:\n{line}")
+            raise exc
 
 
 if __name__ == "__main__":

@@ -1,6 +1,20 @@
 # contains endpoints for testing
-# format:
+# Specify either
+# 1. Connection string directly
+# 2. Environment variable environment variable containing connection string, including "$" prefix
+# 3. Environment variable like in 2., but with "CREDENTIALS_ONLY:" prefix. This will use the credentials
+#    part of the connection string for following endpoints, but not consider the connection for testing.
+#
+# Connection string format:
+# <hostname>:<user>:<password>:<port>:<instance>:<role>:<reserved>:<reserved>:<reserved>
+#
+# You can also omit username and password. In this case, the username/password from the previous
+# connection will be reused.
 # <hostname>:::<port>:<instance>:<role>:<reserved>:<reserved>:<reserved>
 #           ^^^ will be replaced with the user and password
-$CI_ORA2_DB_TEST # contains the database connection string including credentials
-oracle-win.dev.checkmk.net:::1521:FREE::_:_:_
+#
+# Notes:
+# * Currently, CI_ORA2_DB_TEST must be provided, since it's configured in CI jobs. This is also checked for in a test case.
+# * In case of specifying a string directly, DO NOT submit to git with credentials.
+#
+$CI_ORA2_DB_TEST # typically "oracle-win.dev.checkmk.net:<user>:<password>:1521:FREE::_:_:_"

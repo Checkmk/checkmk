@@ -107,7 +107,7 @@ oracle:
 }
 
 fn load_endpoints() -> Vec<SqlDbEndpoint> {
-    let mut r = remote_reference_endpoint();
+    let mut reference: Option<SqlDbEndpoint> = None;
     let content = ORA_TEST_ENDPOINTS.to_owned();
     let mut endpoints = content
         .split("\n")
@@ -120,20 +120,41 @@ fn load_endpoints() -> Vec<SqlDbEndpoint> {
             }
         })
         .filter_map(|s| {
-            if let Some(env_var) = s.strip_prefix("$") {
-                r = SqlDbEndpoint::from_env(env_var).unwrap();
-                None
+            if let Some(credentials_env_var) = s.strip_prefix("CREDENTIALS_ONLY:$") {
+                reference = Some(SqlDbEndpoint::from_env(credentials_env_var).unwrap());
+                return None;
+            };
+
+            let mut connection_string = if let Some(env_var) = s.strip_prefix("$") {
+                std::env::var(env_var).unwrap()
             } else {
-                Some(s.replacen(":::", &format!(":{}:{}:", r.user, r.pwd), 1))
+                s.to_string()
+            };
+
+            if connection_string.contains(":::") {
+                let existing_reference = reference
+                    .as_ref()
+                    .expect("Specify at least one endpoint with credentials as reference");
+                connection_string = connection_string.replacen(
+                    ":::",
+                    &format!(":{}:{}:", existing_reference.user, existing_reference.pwd,),
+                    1,
+                );
             }
+
+            let new_connection = SqlDbEndpoint::from_str(&connection_string).unwrap();
+            reference = Some(new_connection.clone());
+
+            Some(new_connection)
         })
-        .map(|s| SqlDbEndpoint::from_str(s.as_str()).unwrap())
         .collect::<Vec<SqlDbEndpoint>>();
+
     if let Ok(local_endpoint) = SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL) {
         endpoints.push(local_endpoint);
     } else {
         eprintln!("No local endpoint found, skipping test_local_connection");
     };
+
     endpoints
 }
 

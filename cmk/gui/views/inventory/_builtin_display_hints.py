@@ -1116,7 +1116,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".software.applications.podman.network.ip_address": {"title": _l("IP address")},
         # MIGRATED ".software.applications.podman.network.gateway": {"title": _l("Gateway")},
         # MIGRATED ".software.applications.podman.network.mac_address": {"title": _l("MAC address")},
-        ".software.applications.synthetic_monitoring.": {"title": _l("Synthetic monitoring")},
+        # MIGRATED ".software.applications.synthetic_monitoring.": {"title": _l("Synthetic monitoring")},
         # MIGRATED ".software.applications.synthetic_monitoring.": {"title": _l("Synthetic monitoring")},
         # MIGRATED ".software.applications.synthetic_monitoring.plans:": {
         # MIGRATED     "title": _l("Plans"),

@@ -70,13 +70,11 @@ alinux03,10.10.10.3
             CSV_WITH_NEWLINES_AND_TITLE,
             True,
             id="csv with blank lines and titles",
-            marks=[pytest.mark.xfail(reason="parse bug")],
         ),
         pytest.param(
             CSV_WITH_NEWLINES_NO_TITLE,
             False,
             id="csv with blank lines and no titles",
-            marks=[pytest.mark.xfail(reason="parse bug")],
         ),
     ],
 )

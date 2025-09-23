@@ -267,6 +267,14 @@ def inline_background_jobs(mocker: MagicMock) -> None:
     mocker.patch("cmk.utils.daemon.closefrom")
 
 
+@pytest.fixture(name="suppress_bake_agents_in_background")
+def fixture_suppress_bake_agents_in_background(mocker: MockerFixture) -> MagicMock:
+    return mocker.patch(
+        "cmk.gui.watolib.bakery.try_bake_agents_for_hosts",
+        side_effect=lambda *args, **kw: None,
+    )
+
+
 # TODO: The list of registries is not complete. It would be better to selectively solve this
 # A good next step would be to prevent modifications of registries during test execution and
 # only allow them selectively with an automatic cleanup after the test finished.

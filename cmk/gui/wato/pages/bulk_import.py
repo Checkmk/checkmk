@@ -230,12 +230,17 @@ class ModeBulkImport(WatoMode):
 
         return csv.reader(csv_file, csv_dialect)
 
+    def _next_until_nonempty(self, csv_reader: CSVReader) -> list[str] | None:
+        for row in csv_reader:
+            if row:
+                return row
+        return None
+
     def _import(self, csv_reader: CSVReader) -> ActionResult:
         def _emit_raw_rows(_reader: CSVReader) -> typing.Generator[dict, None, None]:
             if self._has_title_line:
-                try:
-                    next(_reader)  # skip header
-                except StopIteration:
+                # Read until the first non-empty line, in this case the title line
+                if self._next_until_nonempty(_reader) is None:
                     return
 
             def _check_duplicates(_names: list[str | None]) -> None:
@@ -255,9 +260,7 @@ class ModeBulkImport(WatoMode):
                     _attrs_seen.add(_name)
 
             # Determine the used attributes once. We also check for duplicates only once.
-            try:
-                first_row = next(_reader)
-            except StopIteration:
+            if (first_row := self._next_until_nonempty(_reader)) is None:
                 return
 
             _attr_names = [request.var(f"attribute_{index}") for index in range(len(first_row))]
@@ -514,13 +517,10 @@ class ModeBulkImport(WatoMode):
             # Wenn bei einem Host ein Fehler passiert, dann wird die Fehlermeldung zu dem Host angezeigt, so dass man sehen kann, was man anpassen muss.
             # Die problematischen Zeilen sollen angezeigt werden, so dass man diese als Block in ein neues CSV-File eintragen kann und dann diese Datei
             # erneut importieren kann.
+            headers = []
             if self._has_title_line:
-                try:
-                    headers = list(next(csv_reader))
-                except StopIteration:
-                    headers = []  # nope, there is no header
-            else:
-                headers = []
+                # Read until the first non-empty line, in this case the title line
+                headers = self._next_until_nonempty(csv_reader) or []
 
             rows = list(csv_reader)
 
@@ -533,7 +533,7 @@ class ModeBulkImport(WatoMode):
                 # Render attribute selection fields
                 table.row()
                 for col_num in range(num_columns):
-                    header = headers[col_num] if len(headers) > col_num else None
+                    header = headers[col_num] if len(headers) > col_num else ""
                     table.cell(escape_to_html_permissive(header))
                     attribute_varname = "attribute_%d" % col_num
                     if request.var(attribute_varname):
@@ -551,6 +551,8 @@ class ModeBulkImport(WatoMode):
 
                 # Render sample rows
                 for row in rows:
+                    if not row:
+                        continue  # skip empty lines
                     table.row()
                     for cell in row:
                         table.cell(None, cell)

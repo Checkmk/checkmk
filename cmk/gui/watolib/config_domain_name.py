@@ -305,7 +305,6 @@ class ConfigVariable:
         in_global_settings: bool = True,
         hint: Callable[[], HTML] = lambda: HTML.empty(),
         domain_hint: HTML = HTML.empty(),
-        additional_domains_affected_by_change: Sequence[type[ABCConfigDomain]] = (),
     ) -> None:
         self._group = group
         self._primary_domain_ident = primary_domain.ident()
@@ -317,9 +316,7 @@ class ConfigVariable:
         self._in_global_settings = in_global_settings
         self._hint_func = hint
         self._domain_hint = domain_hint
-        self._idents_of_additional_domains_affected_by_change = [
-            domain.ident() for domain in additional_domains_affected_by_change
-        ]
+        self._idents_of_affected_domains = {self._primary_domain_ident}
 
     def group(self) -> ConfigVariableGroup:
         """Returns the the configuration variable group this configuration variable belongs to"""
@@ -338,10 +335,9 @@ class ConfigVariable:
         return config_domain_registry[self._primary_domain_ident]
 
     def all_domains(self) -> Generator[ABCConfigDomain]:
-        yield self.primary_domain()
         yield from (
             config_domain_registry[domain_ident]
-            for domain_ident in self._idents_of_additional_domains_affected_by_change
+            for domain_ident in self._idents_of_affected_domains
         )
 
     # TODO: This is boolean flag which defaulted to None in case a variable declaration did not
@@ -371,6 +367,12 @@ class ConfigVariable:
 
     def domain_hint(self) -> HTML:
         return self._domain_hint
+
+    def add_config_domain_affected_by_change(
+        self,
+        domain: type[ABCConfigDomain],
+    ) -> None:
+        self._idents_of_affected_domains.add(domain.ident())
 
 
 class ConfigVariableRegistry(cmk.ccc.plugin_registry.Registry[ConfigVariable]):

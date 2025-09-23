@@ -50,6 +50,22 @@ def test_inventory_db2_logsizes(
             [
                 ["[[[db2mpss:ASMPROD]]]"],
                 ["TIMESTAMP", "1474466290"],
+                ["usedspace", "-"],
+                ["logfilsiz", "2000"],
+                ["logprimary", "5"],
+                ["logsecond", "20"],
+            ],
+            (
+                3,
+                "Can not read usedspace",
+            ),
+        ),
+        (
+            "db2mpss:ASMPROD",
+            {"levels": (-20.0, -10.0)},
+            [
+                ["[[[db2mpss:ASMPROD]]]"],
+                ["TIMESTAMP", "1474466290"],
                 ["usedspace", "2204620"],
                 ["logfilsiz", "2000"],
                 ["logprimary", "5"],

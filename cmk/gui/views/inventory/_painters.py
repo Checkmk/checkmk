@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
 from collections.abc import Callable, Mapping, Sequence
 from typing import TypedDict
 
@@ -130,7 +131,7 @@ class PainterInventoryTree(Painter):
         )
 
         with output_funnel.plugged():
-            tree_renderer.show(tree)
+            tree_renderer.show(time.time(), tree)
             code = HTML.without_escaping(output_funnel.drain())
 
         return "invtree", code
@@ -212,7 +213,7 @@ class PainterInvhistDelta(Painter):
         )
 
         with output_funnel.plugged():
-            tree_renderer.show(tree, str(row["invhist_time"]))
+            tree_renderer.show(time.time(), tree, str(row["invhist_time"]))
             code = HTML.without_escaping(output_funnel.drain())
 
         return "invtree", code
@@ -327,15 +328,15 @@ def _paint_host_inventory_attribute(
 ) -> CellSpec:
     if (attributes := _get_attributes(row, path)) is None:
         return "", ""
-    alignment_class, _coloring_class, rendered_value = SDItem(
+    td_spec = SDItem(
         key=key,
         title=hint.title,
         value=attributes.pairs.get(key),
         retention_interval=attributes.retentions.get(key),
         paint_function=hint.paint_function,
         icon_path_svc_problems=theme.detect_icon_path("svc_problems", "icon_"),
-    ).compute_cell_spec()
-    return alignment_class, rendered_value
+    ).compute_td_spec(time.time())
+    return td_spec.css, td_spec.html_value
 
 
 def attribute_painter_from_hint(
@@ -395,15 +396,15 @@ class ColumnPainterFromHint(TypedDict):
 def _paint_host_inventory_column(row: Row, hint: ColumnDisplayHintOfView) -> CellSpec:
     if hint.name not in row:
         return "", ""
-    alignment_class, _coloring_class, rendered_value = SDItem(
+    td_spec = SDItem(
         key=SDKey(hint.name),
         title=hint.title,
         value=row[hint.name],
         retention_interval=row.get("_".join([hint.name, "retention_interval"])),
         paint_function=hint.paint_function,
         icon_path_svc_problems=theme.detect_icon_path("svc_problems", "icon_"),
-    ).compute_cell_spec()
-    return alignment_class, rendered_value
+    ).compute_td_spec(time.time())
+    return td_spec.css, td_spec.html_value
 
 
 def column_painter_from_hint(hint: ColumnDisplayHintOfView) -> ColumnPainterFromHint:
@@ -471,7 +472,7 @@ def _paint_host_inventory_tree(row: Row, path: SDPath, painter_options: PainterO
     )
 
     with output_funnel.plugged():
-        tree_renderer.show(tree)
+        tree_renderer.show(time.time(), tree)
         code = HTML.without_escaping(output_funnel.drain())
 
     return "invtree", code

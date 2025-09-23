@@ -14,6 +14,7 @@ import NotificationParametersOverviewApp from '@/notification/NotificationParame
 import WelcomeSnapinSlideout from '@/welcome/components/snapin/WelcomeSnapinSlideout.vue'
 
 import Dashboard from './dashboard-wip/DashboardApp.vue'
+import LoadingTransition from './loading-transition/LoadingTransition.vue'
 import ChangesApp from './main-menu/ChangesApp.vue'
 import ModeCreateRelayApp from './mode-relay/ModeCreateRelayApp.vue'
 import NotificationOverview from './notification/NotificationOverviewApp.vue'
@@ -37,3 +38,4 @@ defineCmkComponent('cmk-welcome', WelcomeApp)
 defineCmkComponent('cmk-welcome-snapin', WelcomeSnapin)
 defineCmkComponent('cmk-welcome-snapin-slideout', WelcomeSnapinSlideout)
 defineCmkComponent('cmk-main-menu-changes', ChangesApp)
+defineCmkComponent('cmk-loading-transition', LoadingTransition)

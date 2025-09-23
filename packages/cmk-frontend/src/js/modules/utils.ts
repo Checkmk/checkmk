@@ -1031,3 +1031,32 @@ export interface FunctionSpec {
     function: (...args: any[]) => void;
     arguments: any[];
 }
+
+function getContentBody(): HTMLElement {
+    const contentArea = document.getElementById("content_area");
+    return contentArea !== null
+        ? (contentArea.firstElementChild! as unknown as HTMLIFrameElement)
+              .contentWindow!.document.body
+        : document.body;
+}
+
+export function createSkeleton(template: string, delay: number): void {
+    getContentBody().setAttribute("data-prepare-loading-transition", "true");
+    setTimeout(() => {
+        const body = getContentBody();
+        if (!body.hasAttribute("data-prepare-loading-transition")) {
+            return;
+        }
+
+        // Removing attribute is not really needed, since the whole body is going to be replaced
+        body.removeAttribute("data-prepare-loading-transition");
+        const transition = document.createElement("cmk-loading-transition");
+        transition.setAttribute("data", JSON.stringify({template: template}));
+        for (const child of body.children) {
+            if (child.nodeType === Node.ELEMENT_NODE) {
+                (child as HTMLElement).style.display = "none";
+            }
+        }
+        body.appendChild(transition);
+    }, delay || 0);
+}

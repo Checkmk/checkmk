@@ -23,7 +23,7 @@ def main() {
     def disable_cache = DISABLE_CACHE;
     def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
-    def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: false);
+    def branch_base_folder = package_helper.branch_base_folder(false);
     def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, version);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
 

@@ -78,6 +78,11 @@ def check_win_license(_item, params, parsed):
     )
 
 
+DEFAULT_PARAMETERS = {
+    "status": ["Licensed", "Initial grace period"],
+    "expiration_time": (14 * 24 * 60 * 60, 7 * 24 * 60 * 60),
+}
+
 check_info["win_license"] = LegacyCheckDefinition(
     name="win_license",
     parse_function=parse_win_license,
@@ -85,8 +90,5 @@ check_info["win_license"] = LegacyCheckDefinition(
     discovery_function=inventory_win_license,
     check_function=check_win_license,
     check_ruleset_name="win_license",
-    check_default_parameters={
-        "status": ["Licensed", "Initial grace period"],
-        "expiration_time": (14 * 24 * 60 * 60, 7 * 24 * 60 * 60),
-    },
+    check_default_parameters=DEFAULT_PARAMETERS,
 )

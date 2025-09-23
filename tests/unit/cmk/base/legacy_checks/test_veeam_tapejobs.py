@@ -17,7 +17,6 @@ from cmk.base.legacy_checks.veeam_tapejobs import (
     inventory_veeam_tapejobs,
     parse_veeam_tapejobs,
 )
-from tests.unit.cmk.base.legacy_checks.checktestlib import BasicCheckResult
 
 
 @pytest.fixture(name="string_table")
@@ -114,9 +113,10 @@ def test_check_veeam_tapejobs_completed_success(
 
     results = list(check_veeam_tapejobs("Job One", {"levels_upper": (86400, 172800)}, parsed_data))
 
-    assert len(results) == 2
-    assert results[0] == BasicCheckResult(0, "Last backup result: Success")
-    assert results[1] == BasicCheckResult(0, "Last state: Stopped")
+    assert results == [
+        (0, "Last backup result: Success"),
+        (0, "Last state: Stopped"),
+    ]
 
 
 @pytest.mark.usefixtures("initialised_item_state")
@@ -128,9 +128,10 @@ def test_check_veeam_tapejobs_completed_warning(
 
     results = list(check_veeam_tapejobs("Job Two", {"levels_upper": (86400, 172800)}, parsed_data))
 
-    assert len(results) == 2
-    assert results[0] == BasicCheckResult(1, "Last backup result: Warning")
-    assert results[1] == BasicCheckResult(0, "Last state: Stopped")
+    assert results == [
+        (1, "Last backup result: Warning"),
+        (0, "Last state: Stopped"),
+    ]
 
 
 @pytest.mark.usefixtures("initialised_item_state")
@@ -144,9 +145,10 @@ def test_check_veeam_tapejobs_completed_failed(
         check_veeam_tapejobs("Job Three", {"levels_upper": (86400, 172800)}, parsed_data)
     )
 
-    assert len(results) == 2
-    assert results[0] == BasicCheckResult(2, "Last backup result: Failed")
-    assert results[1] == BasicCheckResult(0, "Last state: Stopped")
+    assert results == [
+        (2, "Last backup result: Failed"),
+        (0, "Last state: Stopped"),
+    ]
 
 
 @pytest.mark.usefixtures("initialised_item_state")

@@ -4,14 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
+from typing import Literal
 
 import pytest
 
 from cmk.agent_based.v2 import StringTable
-
-from .checktestlib import assertDiscoveryResultsEqual, Check, DiscoveryResult
-
-pytestmark = pytest.mark.checks
+from cmk.base.legacy_checks.jolokia_generic import discover_type, parse_jolokia_generic
 
 info = [
     ["PingFederate-CUK-CDI", "TotalRequests", "64790", "number"],
@@ -20,21 +18,15 @@ info = [
 
 
 @pytest.mark.parametrize(
-    "check,lines,expected_result",
+    "type,lines,expected_result",
     [
-        ("jolokia_generic", info, [("PingFederate-CUK-CDI MBean TotalRequests", {})]),
-        ("jolokia_generic_rate", info, [("PingFederate-CUK-CDI MBean MaxRequestTime", {})]),
+        ("number", info, [("PingFederate-CUK-CDI MBean TotalRequests", {})]),
+        ("rate", info, [("PingFederate-CUK-CDI MBean MaxRequestTime", {})]),
     ],
 )
 def test_jolokia_generic_discovery(
-    check: str, lines: StringTable, expected_result: Sequence[tuple[str, dict[str, object]]]
+    type: Literal["number", "rate"],
+    lines: StringTable,
+    expected_result: Sequence[tuple[str, dict[str, object]]],
 ) -> None:
-    parsed = Check("jolokia_generic").run_parse(lines)
-
-    check_val = Check(check)
-    discovered = check_val.run_discovery(parsed)
-    assertDiscoveryResultsEqual(
-        check_val,
-        DiscoveryResult(discovered),
-        DiscoveryResult(expected_result),
-    )
+    assert list(discover_type(type)(parse_jolokia_generic(lines))) == expected_result

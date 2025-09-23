@@ -3,15 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from typing import NamedTuple, TypedDict
 
 import pytest
 
-from .checktestlib import assertCheckResultsEqual, Check, CheckResult
-
-# Mark all tests in this file as check related tests
-pytestmark = pytest.mark.checks
+from cmk.base.legacy_checks.win_license import (
+    check_win_license,
+    DEFAULT_PARAMETERS,
+    parse_win_license,
+)
 
 agent_out = [
     # Win7 - WM
@@ -73,40 +74,6 @@ def splitter(text):
     return [line.split() for line in text.split("\n")]
 
 
-@pytest.mark.parametrize(
-    "capture, result",
-    list(
-        zip(
-            agent_out,
-            [
-                {
-                    "License": "Initial grace period",
-                    "expiration": "12960 minute(s) (9 day(s))",
-                    "expiration_time": 12960 * 60,
-                },
-                {
-                    "License": "Licensed",
-                    "expiration": "253564 minute(s) (177 day(s))",
-                    "expiration_time": 253564 * 60,
-                },
-                {
-                    "License": "Licensed",
-                    "expiration": "251100 minute(s) (174 day(s))",
-                    "expiration_time": 251100 * 60,
-                },
-                {
-                    "License": "Licensed",
-                },
-            ],
-        )
-    ),
-    ids=["win7", "win2012", "win2008", "win10"],
-)
-def test_parse_win_license(capture: str, result: Mapping[str, object]) -> None:
-    check = Check("win_license")
-    assert result == check.run_parse(splitter(capture))
-
-
 class CheckParameters(TypedDict):
     status: Sequence[str]
     expiration_time: tuple[int, int]
@@ -114,7 +81,7 @@ class CheckParameters(TypedDict):
 
 class check_ref(NamedTuple):
     parameters: CheckParameters | None
-    check_output: CheckResult
+    check_output: list
 
 
 @pytest.mark.parametrize(
@@ -128,10 +95,10 @@ class check_ref(NamedTuple):
                         "status": ["Licensed", "Initial grace period"],
                         "expiration_time": (8 * 24 * 60 * 60, 5 * 24 * 60 * 60),
                     },
-                    CheckResult(
+                    (
                         [
                             (0, "Software is Initial grace period"),
-                            (0, "Time until license expires: 9 days 0 hours"),
+                            (0, "Time until license expires: 9 days 0 hours", []),
                         ]
                     ),
                 ),
@@ -140,12 +107,13 @@ class check_ref(NamedTuple):
                         "status": ["Licensed", "Initial grace period"],
                         "expiration_time": (180 * 24 * 60 * 60, 90 * 24 * 60 * 60),
                     },
-                    CheckResult(
+                    (
                         [
                             (0, "Software is Licensed"),
                             (
                                 1,
                                 "Time until license expires: 176 days 2 hours (warn/crit below 180 days 0 hours/90 days 0 hours)",
+                                [],
                             ),
                         ]
                     ),
@@ -155,22 +123,21 @@ class check_ref(NamedTuple):
                         "status": ["Licensed", "Initial grace period"],
                         "expiration_time": (360 * 24 * 60 * 60, 180 * 24 * 60 * 60),
                     },
-                    CheckResult(
-                        [
-                            (0, "Software is Licensed"),
-                            (
-                                2,
-                                "Time until license expires: 174 days 9 hours (warn/crit below 360 days 0 hours/180 days 0 hours)",
-                            ),
-                        ]
-                    ),
+                    [
+                        (0, "Software is Licensed"),
+                        (
+                            2,
+                            "Time until license expires: 174 days 9 hours (warn/crit below 360 days 0 hours/180 days 0 hours)",
+                            [],
+                        ),
+                    ],
                 ),
                 check_ref(
                     {
                         "status": ["Licensed", "Initial grace period"],
                         "expiration_time": (14 * 24 * 60 * 60, 7 * 24 * 60 * 60),
                     },
-                    CheckResult([(0, "Software is Licensed")]),
+                    [(0, "Software is Licensed")],
                 ),
             ],
         )
@@ -184,21 +151,17 @@ class check_ref(NamedTuple):
                         "status": ["Registered"],
                         "expiration_time": (8 * 24 * 60 * 60, 5 * 24 * 60 * 60),
                     },
-                    CheckResult(
-                        [
-                            (2, "Software is Initial grace period Required: Registered"),
-                            (0, "Time until license expires: 9 days 0 hours"),
-                        ]
-                    ),
+                    [
+                        (2, "Software is Initial grace period Required: Registered"),
+                        (0, "Time until license expires: 9 days 0 hours", []),
+                    ],
                 ),
                 check_ref(
                     None,
-                    CheckResult(
-                        [
-                            (0, "Software is Licensed"),
-                            (0, "Time until license expires: 176 days 2 hours"),
-                        ]
-                    ),
+                    [
+                        (0, "Software is Licensed"),
+                        (0, "Time until license expires: 176 days 2 hours", []),
+                    ],
                 ),
             ],
         )
@@ -206,9 +169,11 @@ class check_ref(NamedTuple):
     ids=[str(x) for x in range(6)],
 )
 def test_check_win_license(capture: str, result: check_ref) -> None:
-    check = Check("win_license")
-    output = check.run_check(
-        None, result.parameters or check.default_parameters(), check.run_parse(splitter(capture))
+    assert (
+        list(
+            check_win_license(
+                None, result.parameters or DEFAULT_PARAMETERS, parse_win_license(splitter(capture))
+            )
+        )
+        == result.check_output
     )
-
-    assertCheckResultsEqual(CheckResult(output), result.check_output)

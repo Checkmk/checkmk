@@ -7,13 +7,12 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
-
-from .checktestlib import BasicCheckResult, Check
-
-pytestmark = pytest.mark.checks
-
-RA32E_SWITCH = "ra32e_switch"
+from cmk.agent_based.v2 import StringTable
+from cmk.base.legacy_checks.ra32e_switch import (
+    check_ra32e_switch,
+    inventory_ra32e_switch,
+    parse_ra32e_switch,
+)
 
 
 @pytest.mark.parametrize(
@@ -62,35 +61,29 @@ RA32E_SWITCH = "ra32e_switch"
     ],
 )
 def test_ra32e_switch_discovery(info: StringTable, result: Sequence[tuple[str, None]]) -> None:
-    check = Check(RA32E_SWITCH)
-    assert list(check.run_discovery(info)) == result
+    assert list(inventory_ra32e_switch(parse_ra32e_switch(info))) == result
 
 
 def test_ra32e_switch_check_closed_no_rule() -> None:
-    check = Check(RA32E_SWITCH)
-    result = BasicCheckResult(*check.run_check("Sensor 01", {"state": "ignore"}, [["1"]]))
+    state, summary, *_rest = check_ra32e_switch("Sensor 01", {"state": "ignore"}, [["1"]])
 
-    assert result.status == 0
-    assert result.infotext.startswith("closed")
+    assert state == 0
+    assert summary.startswith("closed")
 
 
 def test_ra32e_switch_check_open_expected_close() -> None:
-    check = Check(RA32E_SWITCH)
-    result = BasicCheckResult(
-        *check.run_check(
-            "Sensor 03",
-            {"state": "closed"},
-            [["1", "1", "0", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1"]],
-        )
+    state, summary, *_rest = check_ra32e_switch(
+        "Sensor 03",
+        {"state": "closed"},
+        [["1", "1", "0", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1"]],
     )
 
-    assert result.status == 2
-    assert result.infotext.startswith("open")
-    assert "expected closed" in result.infotext
+    assert state == 2
+    assert summary.startswith("open")
+    assert "expected closed" in summary
 
 
 def test_ra32e_switch_check_no_input() -> None:
-    check = Check(RA32E_SWITCH)
-    result = BasicCheckResult(*check.run_check("Sensor 01", {"state": "ignore"}, [[""]]))
+    state, summary, *_rest = check_ra32e_switch("Sensor 01", {"state": "ignore"}, [[""]])
 
-    assert result.status == 3
+    assert state == 3

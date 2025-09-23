@@ -18,7 +18,7 @@ from cmk.base.check_legacy_includes.temperature import (
 )
 from cmk.plugins.lib.temperature import TempParamDict, TempParamType, TrendComputeDict
 
-from .checktestlib import assertCheckResultsEqual, CheckResult, mock_item_state
+from .checktestlib import mock_item_state
 
 
 @pytest.mark.parametrize(
@@ -201,10 +201,10 @@ from .checktestlib import assertCheckResultsEqual, CheckResult, mock_item_state
 def test_check_temperature(  # type: ignore[no-untyped-def]
     params: tuple[Number, TempParamType, str | None],
     kwargs,
-    expected: Iterable[object] | CheckResult | None,
+    expected: Iterable[object] | None,
 ) -> None:
     result = check_temperature(*params, **kwargs)
-    assertCheckResultsEqual(CheckResult(result), CheckResult(expected))
+    assert result == expected
 
 
 def unix_ts(datetime_obj, epoch=dt.datetime(1970, 1, 1)):
@@ -293,7 +293,7 @@ def test_check_temperature_trend(test_case: Entry) -> None:
                 0,  # crit_lower, don't freeze over
                 "foo",
             )
-            assertCheckResultsEqual(CheckResult(result), CheckResult(test_case.expected))
+            assert result == test_case.expected
 
 
 def test_check_temperature_trend_exception() -> None:
@@ -320,7 +320,7 @@ def test_check_temperature_trend_exception() -> None:
                 0,  # crit_lower, don't freeze over
                 "foo",
             )
-            assertCheckResultsEqual(CheckResult(result), CheckResult(test_case.expected))
+            assert result == test_case.expected
 
 
 @pytest.mark.parametrize(
@@ -354,4 +354,4 @@ def test_check_temperature_called(test_case: Entry) -> None:
                 dev_levels=(100, 100),  # don't boil
                 dev_levels_lower=(0, 0),  # don't freeze over
             )
-            assertCheckResultsEqual(CheckResult(result), CheckResult(test_case.expected))
+            assert result == test_case.expected

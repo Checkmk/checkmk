@@ -1,0 +1,17 @@
+<clickhouse>
+    <logger>
+        <!-- Default level is 'trace'. This is for historical reasons. -->
+        <level>warning</level>
+        <log>###ROOT###/var/log/clickhouse-server/clickhouse-server.log</log>
+        <errorlog>###ROOT###/var/log/clickhouse-server/clickhouse-server.err.log</errorlog>
+        <size>1000M</size>
+        <count>10</count>
+    </logger>
+    <!-- Many more directories exists, such as tmp_path, user_files_path, user_directories,
+        format_schema_path and top_level_domains_paths. Based on the implementation here,
+        https://github.com/ClickHouse/ClickHouse/blob/v25.8.5.17-lts/programs/server/Server.cpp
+        these directories appear to be initialized from path, so we avoid explicit configuration
+        here.
+    -->
+    <path>###ROOT###/var/lib/clickhouse-server/</path>
+</clickhouse>

@@ -6,7 +6,7 @@
 from datetime import datetime
 from enum import StrEnum
 
-from pydantic import BaseModel, Field, UUID4
+from pydantic import BaseModel, Field
 
 
 class TaskType(StrEnum):
@@ -38,7 +38,7 @@ class TaskCreateRequest(BaseModel, frozen=True):
 
 
 class TaskCreateResponse(BaseModel, frozen=True):
-    task_id: UUID4
+    task_id: str
 
 
 class TaskResponse(TaskCreateRequest):
@@ -47,7 +47,7 @@ class TaskResponse(TaskCreateRequest):
     result_payload: str | None
     creation_timestamp: datetime
     update_timestamp: datetime
-    id: UUID4
+    id: str
 
 
 class TaskListResponse(BaseModel, frozen=True):

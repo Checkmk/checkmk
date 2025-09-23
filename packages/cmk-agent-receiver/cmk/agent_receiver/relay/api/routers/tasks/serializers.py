@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from uuid import UUID
-
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import Task
 from cmk.relay_protocols.tasks import (
     ResultType,
@@ -19,7 +17,7 @@ class TaskResponseSerializer:
     @staticmethod
     def serialize(task: Task) -> TaskResponse:
         return TaskResponse(
-            id=UUID(task.id),
+            id=task.id,
             type=TaskType(task.type.value),
             status=TaskStatus(task.status.value),
             result_type=ResultType(task.result_type.value) if task.result_type else None,

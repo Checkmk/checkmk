@@ -88,7 +88,7 @@ def test_task_expiration_resets_on_update(
         task_type=TaskType.FETCH_AD_HOC,
         task_payload="test task payload",
     )
-    task_id = str(task_response.task_id)
+    task_id = task_response.task_id
 
     # Step 3: Wait half of expiration time
     time.sleep((expiration_time / 2) + 0.1)  # Adding a small buffer to ensure we are past half
@@ -141,7 +141,7 @@ def test_completed_tasks_expiration(
         task_type=TaskType.FETCH_AD_HOC,
         task_payload="test task A payload",
     )
-    task_a_id = str(task_a_response.task_id)
+    task_a_id = task_a_response.task_id
 
     task_b_response = push_task(
         agent_receiver=agent_receiver,
@@ -149,7 +149,7 @@ def test_completed_tasks_expiration(
         task_type=TaskType.FETCH_AD_HOC,
         task_payload="test task B payload",
     )
-    task_b_id = str(task_b_response.task_id)
+    task_b_id = task_b_response.task_id
 
     # Step 3: Update the tasks
     agent_receiver.update_task(
@@ -167,8 +167,8 @@ def test_completed_tasks_expiration(
     # Step 4: Verify tasks are present initially
     tasks_response = get_relay_tasks(agent_receiver, relay_id)
     assert len(tasks_response.tasks) == 2, "Both tasks should be present initially"
-    assert str(tasks_response.tasks[0].id) in {task_a_id, task_b_id}
-    assert str(tasks_response.tasks[1].id) in {task_a_id, task_b_id}
+    assert tasks_response.tasks[0].id in {task_a_id, task_b_id}
+    assert tasks_response.tasks[1].id in {task_a_id, task_b_id}
 
     # Step 5: Wait for expiration time
     time.sleep(expiration_time + 0.1)

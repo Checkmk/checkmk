@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Annotated
-from uuid import UUID
 
 import fastapi
 
@@ -91,7 +90,7 @@ async def create_task_endpoint(
             status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
             detail=e.msg,
         )
-    return tasks_protocol.TaskCreateResponse(task_id=UUID(task_id))
+    return tasks_protocol.TaskCreateResponse(task_id=task_id)
 
 
 @router.patch(

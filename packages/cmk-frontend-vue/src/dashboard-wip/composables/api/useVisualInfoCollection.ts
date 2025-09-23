@@ -7,10 +7,9 @@ import { computed } from 'vue'
 
 import { fetchRestAPI } from '@/lib/cmkFetch'
 
-import { useAPILoader } from './useAPILoader'
+import type { VisualInfoCollectionModel, VisualInfoModel } from '@/dashboard-wip/types/api.ts'
 
-export type VisualInfoCollectionModel = { value: VisualInfoModel[] }
-export type VisualInfoModel = { id: string; title?: string; extensions: { sort_index: number } }
+import { useAPILoader } from './useAPILoader'
 
 const API = 'api/internal/objects/constant/visual_info/collections/all'
 
@@ -27,7 +26,7 @@ export function useVisualInfoCollection() {
   const byId = computed<Record<string, VisualInfoModel>>(() => {
     const map: Record<string, VisualInfoModel> = {}
     for (const v of list.value) {
-      map[v.id] = v
+      map[v.id!] = v
     }
     return map
   })

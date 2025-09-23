@@ -5,6 +5,7 @@
  */
 import type { components } from '@/lib/rest-api-client/openapi_internal'
 
+export type VisualInfoModel = components['schemas']['VisualInfoModel']
 export type VisualInfoCollectionModel = components['schemas']['VisualInfoCollectionModel']
 
 export type DataSourceCollectionModel = components['schemas']['DataSourceCollectionModel']

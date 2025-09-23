@@ -15,6 +15,8 @@ import type {
   WidgetSpec
 } from '@/dashboard-wip/types/widget'
 
+import HostsSiteWizard from '../Wizard/HostsSiteWizard.vue'
+
 interface AllWizardsProps {
   selectedWizard: string
   dashboardConstants: DashboardConstants
@@ -53,6 +55,17 @@ const handleGoBack = () => {
       v-if="props.selectedWizard === 'metrics_graphs'"
       :dashboard-name="props.dashboardName"
       :dashboard-constants="props.dashboardConstants"
+      :context-filters="contextFilters"
+      @go-back="handleGoBack"
+      @add-widget="
+        (content, generalSettings, filterContext) =>
+          emit('add-widget', content, generalSettings, filterContext)
+      "
+    />
+    <HostsSiteWizard
+      v-else-if="selectedWizard === 'host_site_overview'"
+      :dashboard-name="dashboardName"
+      :dashboard-constants="dashboardConstants"
       :context-filters="contextFilters"
       @go-back="handleGoBack"
       @add-widget="

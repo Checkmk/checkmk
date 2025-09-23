@@ -70,6 +70,10 @@ export type WidgetContentType =
   | TopListContent
   | ScatterplotContent
   | SingleMetricContent
+  | HostStateContent
+  | HostStateSummaryContent
+  | HostStatisticsContent
+  | SiteOverviewContent
 
 export type MetricDisplayRangeModel = components['schemas']['MetricDisplayRangeModel']
 export type FixedDataRangeModel = components['schemas']['MetricDisplayRangeFixedModel']
@@ -79,7 +83,12 @@ export type GraphContent = components['schemas']['SingleTimeseriesContent']
 export type SingleMetricContent = components['schemas']['SingleMetricContent']
 export type ScatterplotContent = components['schemas']['AverageScatterplotContent']
 export type TopListContent = components['schemas']['TopListContent']
+export type HostStateContent = components['schemas']['HostStateContent']
+export type HostStateSummaryContent = components['schemas']['HostStateSummaryContent']
+export type HostStatisticsContent = components['schemas']['HostStatsContent']
+export type SiteOverviewContent = components['schemas']['SiteOverviewContent']
 
 export type TitleSpec = components['schemas']['WidgetTitle']
 export type DefaultOrColor = components['schemas']['DefaultOrColor']
 export type GraphRenderOptions = components['schemas']['GraphRenderOptions']
+export type HostState = components['schemas']['HostState']

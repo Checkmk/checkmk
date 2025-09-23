@@ -15,7 +15,7 @@ def main() {
     def results_dir = "results";
     def packages_file = "${results_dir}/packages_generated.json";
     def packages = "";
-    def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: false);
+    def branch_base_folder = package_helper.branch_base_folder(false);
     def send_notification_mail = !currentBuild.fullProjectName.contains("/cv/");
 
     stage("Preparation") {

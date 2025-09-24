@@ -3,7 +3,7 @@
     "strip_prefix": "libgsf-1.14.44",
     "url": "https://ftp.osuosl.org/pub/blfs/conglomeration/libgsf/libgsf-1.14.44.tar.xz",
     "overlay": {
-        "BUILD.bazel": "sha256-irSOP6G/F1O3BX6bmqFRuVM9a2PipNS5AX9Ca9Ttw9k=",
-        "MODULE.bazel": "sha256-S66l1qFJcDsp0WUch0MBa2YSasK2csr5zSus6nJfnSY="
+        "BUILD.bazel": "sha256-LIOBcfbK8vsw7VL1JzKgjFl1lDKFMRrjddqh+DtXZ3M=",
+        "MODULE.bazel": "sha256-4ACXluMvN93FDc3lAtnuF9o4jQPIuoSpV6ev5rPnQzM="
     }
 }

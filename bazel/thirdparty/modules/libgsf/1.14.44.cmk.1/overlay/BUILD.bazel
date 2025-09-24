@@ -12,7 +12,7 @@ configure_make(
     name = "libgsf",
     args = ["-j4"],
     copts = [
-        "-Wno-error=incompatible-pointer-types"
+        "-Wno-error=incompatible-pointer-types",
     ],
     env = {
         "PKG_CONFIG_PATH": ":".join([
@@ -42,8 +42,7 @@ configure_make(
     out_static_libs = [
         "libgsf-1.a",
     ],
-    targets = ["install"],
     tags = ["manual"],
+    targets = ["install"],
     visibility = ["//visibility:public"],
 )
-

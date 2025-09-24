@@ -9,7 +9,7 @@ does not offer stable APIs. The code may change at any time."""
 
 from __future__ import annotations
 
-__version__ = "2.4.0p12"
+__version__ = "2.4.0p13"
 
 import enum
 import functools

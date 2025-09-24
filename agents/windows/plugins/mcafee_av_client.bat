@@ -1,5 +1,5 @@
 @echo off
-set CMK_VERSION="2.4.0p12"
+set CMK_VERSION="2.4.0p13"
 rem #  -----------------------------------------------------------------------------
 rem #  Check_MK windows agent plugin to gather information about signature date
 rem #  of Mcafee Virusscan and ENS Anti-Virus software.

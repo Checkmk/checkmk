@@ -30,7 +30,6 @@ from cmk.bi.lib import (
 from cmk.bi.schema import Schema
 from cmk.ccc.hostaddress import HostName
 from cmk.utils.labels import AndOrNotLiteral, LabelGroup
-from cmk.utils.macros import MacroMapping
 
 
 class BIAllHostsChoiceSchema(Schema):
@@ -192,7 +191,7 @@ class BIEmptySearch(ABCBISearch):
         return BIEmptySearchSchema
 
     @override
-    def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> list[dict]:
+    def execute(self, macros: Mapping[str, str], bi_searcher: ABCBISearcher) -> list[dict]:
         return [{}]
 
     @override
@@ -242,7 +241,7 @@ class BIHostSearch(ABCBISearch):
         self.refer_to = search_config["refer_to"]
 
     @override
-    def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> list[dict]:
+    def execute(self, macros: Mapping[str, str], bi_searcher: ABCBISearcher) -> list[dict]:
         new_conditions = replace_macros(self.conditions, macros)
         search_matches: list[BIHostSearchMatch] = bi_searcher.search_hosts(new_conditions)
 
@@ -450,7 +449,7 @@ class BIServiceSearch(ABCBISearch):
         self.conditions = search_config["conditions"]
 
     @override
-    def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> list[dict]:
+    def execute(self, macros: Mapping[str, str], bi_searcher: ABCBISearcher) -> list[dict]:
         new_conditions = replace_macros(self.conditions, macros)
         search_matches: list[BIServiceSearchMatch] = bi_searcher.search_services(new_conditions)
         search_results = []
@@ -512,7 +511,7 @@ class BIFixedArgumentsSearch(ABCBISearch):
         self.arguments = search_config["arguments"]
 
     @override
-    def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> list[dict]:
+    def execute(self, macros: Mapping[str, str], bi_searcher: ABCBISearcher) -> list[dict]:
         results: list[dict] = []
         new_vars = replace_macros(self.arguments, macros)
         for argument in new_vars:

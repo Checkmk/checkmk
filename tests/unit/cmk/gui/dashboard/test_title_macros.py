@@ -4,13 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 
 import pytest
 
 from cmk.gui.dashboard import title_macros
 from cmk.gui.type_defs import SingleInfos, VisualContext
-from cmk.utils.macros import MacroMapping
 
 
 @pytest.mark.parametrize(
@@ -108,7 +107,7 @@ def test_macro_mapping_from_context(
     context: VisualContext,
     single_infos: SingleInfos,
     title: str,
-    result: MacroMapping,
+    result: Mapping[str, str],
     additional_macros: dict[str, str],
 ) -> None:
     monkeypatch.setattr(

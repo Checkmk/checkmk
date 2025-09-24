@@ -28,7 +28,6 @@ from typing import Any, Literal
 
 import livestatus
 
-import cmk.base.core
 import cmk.base.parent_scan
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
@@ -103,6 +102,7 @@ from cmk.base.config import (
     ConfigCache,
     EnforcedServicesTable,
     handle_ip_lookup_failure,
+    load_resource_cfg_macros,
     snmp_default_community,
 )
 from cmk.base.configlib.checkengine import CheckingConfig, DiscoveryConfig
@@ -3763,7 +3763,12 @@ class AutomationActiveCheck(Automation):
             config_cache.label_manager.labels_of_service(hostname, service_desc, discovered_labels),
         )
         macros.update(ConfigCache.get_service_macros_from_attributes(service_attrs))
-        macros.update(config.get_resource_macros())
+        macros.update(
+            load_resource_cfg_macros(
+                cmk.utils.paths.nagios_resource_cfg,
+                None if cmk.ccc.debug.enabled() else lambda x: None,
+            )
+        )
 
         return replace_macros_in_str(commandline, {k: f"{v}" for k, v in macros.items()})
 

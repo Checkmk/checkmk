@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import MutableMapping
-
-MacroMapping = MutableMapping[str, str]
+from collections.abc import Mapping
 
 
-def replace_macros_in_str(string: str, macro_mapping: MacroMapping) -> str:
+def replace_macros_in_str(string: str, macro_mapping: Mapping[str, str]) -> str:
     """
     >>> replace_macros_in_str("abc $MACRO$ 123", {"$MACRO$": "replacement", })
     'abc replacement 123'

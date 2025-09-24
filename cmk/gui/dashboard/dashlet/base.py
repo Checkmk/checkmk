@@ -6,7 +6,7 @@
 import abc
 import json
 import urllib.parse
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Any, Generic, Literal, TypeVar
 
 from cmk.ccc.user import UserId
@@ -19,7 +19,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import DictionaryEntry, ValueSpec, ValueSpecValidateFunc
-from cmk.utils.macros import MacroMapping, replace_macros_in_str
+from cmk.utils.macros import replace_macros_in_str
 
 from ..title_macros import macro_mapping_from_context
 from ..type_defs import (
@@ -221,7 +221,7 @@ class Dashlet(abc.ABC, Generic[T]):
         except KeyError:
             return self.default_display_title()
 
-    def _get_macro_mapping(self, title: str) -> MacroMapping:
+    def _get_macro_mapping(self, title: str) -> Mapping[str, str]:
         return macro_mapping_from_context(
             self.context if self.has_context() else {},
             self.single_infos(),

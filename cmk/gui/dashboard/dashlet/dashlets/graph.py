@@ -58,7 +58,6 @@ from cmk.gui.visuals import (
     get_singlecontext_vars,
     livestatus_query_bare,
 )
-from cmk.utils.macros import MacroMapping
 
 from ...title_macros import macro_mapping_from_context
 from ...type_defs import ABCGraphDashletConfig, DashboardConfig, DashboardName
@@ -327,7 +326,7 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
 
         html.div("", id_="dashlet_graph_%d" % self._dashlet_id)
 
-    def _get_macro_mapping(self, title: str) -> MacroMapping:
+    def _get_macro_mapping(self, title: str) -> Mapping[str, str]:
         macro_mapping = macro_mapping_from_context(
             self.context if self.has_context() else {},
             self.single_infos(),

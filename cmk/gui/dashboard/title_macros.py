@@ -3,14 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from itertools import chain
 
 from cmk.ccc.site import SiteId
 from cmk.gui.i18n import _, _u
 from cmk.gui.sites import get_alias_of_host
 from cmk.gui.type_defs import SingleInfos, VisualContext
-from cmk.utils.macros import MacroMapping, replace_macros_in_str
+from cmk.utils.macros import replace_macros_in_str
 
 
 def macro_mapping_from_context(
@@ -19,7 +19,7 @@ def macro_mapping_from_context(
     title: str,
     default_title: str,
     **additional_macros: str,
-) -> MacroMapping:
+) -> Mapping[str, str]:
     macro_mapping = {"$DEFAULT_TITLE$": default_title}
     macro_mapping.update(
         {

@@ -41,7 +41,7 @@ from cmk.checkengine.submitters import (  # pylint: disable=cmk-module-layer-vio
     ServiceState,
 )
 from cmk.fields import Boolean, Constant, Dict, Integer, List, Nested, String
-from cmk.utils.macros import MacroMapping, replace_macros_in_str
+from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.rulesets.ruleset_matcher import TagCondition
 from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import TagGroupID, TagID
@@ -362,23 +362,23 @@ T = TypeVar("T", str, dict, list)
 
 
 @overload
-def replace_macros(pattern: str, macros: MacroMapping) -> str: ...
+def replace_macros(pattern: str, macros: Mapping[str, str]) -> str: ...
 
 
 @overload
-def replace_macros(pattern: tuple[str, ...], macros: MacroMapping) -> list[str]: ...
+def replace_macros(pattern: tuple[str, ...], macros: Mapping[str, str]) -> list[str]: ...
 
 
 @overload
-def replace_macros(pattern: list[str], macros: MacroMapping) -> list[str]: ...
+def replace_macros(pattern: list[str], macros: Mapping[str, str]) -> list[str]: ...
 
 
 @overload
-def replace_macros(pattern: dict[str, str], macros: MacroMapping) -> dict[str, str]: ...
+def replace_macros(pattern: dict[str, str], macros: Mapping[str, str]) -> dict[str, str]: ...
 
 
 def replace_macros(
-    pattern: str | tuple[str, ...] | list[str] | dict[str, str], macros: MacroMapping
+    pattern: str | tuple[str, ...] | list[str] | dict[str, str], macros: Mapping[str, str]
 ) -> str | tuple[str, ...] | list[str] | dict[str, str]:
     if isinstance(pattern, str):
         return replace_macros_in_str(pattern, macros)
@@ -391,22 +391,24 @@ def replace_macros(
     return NoReturn
 
 
-def replace_macros_in_tuple(elements: tuple[str, ...], macros: MacroMapping) -> tuple[str, ...]:
+def replace_macros_in_tuple(
+    elements: tuple[str, ...], macros: Mapping[str, str]
+) -> tuple[str, ...]:
     return tuple(replace_macros(element, macros) for element in elements)
 
 
-def replace_macros_in_list(elements: list[str], macros: MacroMapping) -> list[str]:
+def replace_macros_in_list(elements: list[str], macros: Mapping[str, str]) -> list[str]:
     return [replace_macros(element, macros) for element in elements]
 
 
-def replace_macros_in_dict(old_dict: dict[str, str], macros: MacroMapping) -> dict[str, str]:
+def replace_macros_in_dict(old_dict: dict[str, str], macros: Mapping[str, str]) -> dict[str, str]:
     return {
         replace_macros(key, macros): replace_macros(value, macros)
         for key, value in old_dict.items()
     }
 
 
-def replace_macros_in_string(pattern: str, macros: MacroMapping) -> str:
+def replace_macros_in_string(pattern: str, macros: Mapping[str, str]) -> str:
     for macro, replacement in macros.items():
         pattern = pattern.replace(macro, replacement)
     return pattern
@@ -596,12 +598,12 @@ class ABCBIAction(ABC):
         raise NotImplementedError()
 
     def _generate_action_arguments(
-        self, search_results: list[dict[str, str]], macros: MacroMapping
+        self, search_results: list[dict[str, str]], macros: Mapping[str, str]
     ) -> ActionArguments:
         raise NotImplementedError()
 
     def execute_search_results(
-        self, search_results: list[dict], macros: MacroMapping, bi_searcher: ABCBISearcher
+        self, search_results: list[dict], macros: Mapping[str, str], bi_searcher: ABCBISearcher
     ) -> Iterable[ABCBICompiledNode]:
         action_arguments = self._generate_action_arguments(search_results, macros)
         for argument in self._deduplicate_action_arguments(action_arguments):
@@ -664,7 +666,7 @@ class ABCBISearch(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> list[dict]:
+    def execute(self, macros: Mapping[str, str], bi_searcher: ABCBISearcher) -> list[dict]:
         raise NotImplementedError()
 
 

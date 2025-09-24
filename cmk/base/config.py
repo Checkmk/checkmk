@@ -1335,19 +1335,44 @@ def _get_ssc_ip_family(
             assert_never(other)
 
 
-def get_resource_macros() -> Mapping[str, str]:
-    macros = {}
+# Should not be here, but can't be moved to cmk.base.core (yet) because of import cycles
+def load_resource_cfg_macros(
+    resource_cfg: Path, error_handler: Callable[[str], None] | None | None
+) -> Mapping[str, str]:
+    """Load user macros from resource.cfg
+
+    Example for resource.cfg:
+
+    ```
+        ############################################
+        # OMD settings, please use them to make your config
+        # portable, but don't change them
+        $USER1$=/omd/sites/prod/lib/nagios/plugins
+        $USER2$=/omd/sites/prod/local/lib/nagios/plugins
+        $USER3$=prod
+        $USER4$=/omd/sites/prod
+        ############################################
+        # set your own macros here:
+        $USER32$=wrdlpfrmpt
+    ```
+    """
+
     try:
-        for line in (cmk.utils.paths.omd_root / "etc/nagios/resource.cfg").open():
-            line = line.strip()
-            if not line or line[0] == "#":
-                continue
-            varname, value = line.split("=", 1)
-            macros[varname] = value
-    except Exception:
-        if cmk.ccc.debug.enabled():
+        raw = resource_cfg.read_text()
+    except FileNotFoundError:
+        return {}
+
+    try:
+        return dict(
+            stripped.split("=", 1)
+            for line in raw.splitlines()
+            if (stripped := line.strip()) and not stripped.startswith("#")
+        )
+    except ValueError as exc:
+        if error_handler is None:
             raise
-    return macros
+        error_handler(f"Cannot read {resource_cfg}: {exc}")
+    return {}
 
 
 def get_ssc_host_config(
@@ -2318,7 +2343,9 @@ class ConfigCache:
             host_name
         )
         host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
-        resource_macros = get_resource_macros()
+        resource_macros = load_resource_cfg_macros(
+            cmk.utils.paths.nagios_resource_cfg, None if cmk.ccc.debug.enabled() else lambda x: None
+        )
         macros = {**host_macros, **resource_macros}
         active_check_config = ActiveCheck(
             load_active_checks(raise_errors=cmk.ccc.debug.enabled()),

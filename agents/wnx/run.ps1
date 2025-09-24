@@ -674,8 +674,6 @@ try {
     }
     Build-Ohm
     Build-Ext
-    Build-MSI
-    Set-Msi-Version
     Start-UnitTests
 
     # SIGNING
@@ -687,6 +685,8 @@ try {
         $env:pin_cert_windows_usb | Out-File -Path .\check-signing-param.txt  -Append
     }
     Start-BinarySigning
+    Build-MSI
+    Set-Msi-Version
     Start-ArtifactUploading
     Start-MsiPatching
     Start-MsiSigning

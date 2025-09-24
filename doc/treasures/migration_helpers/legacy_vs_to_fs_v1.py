@@ -15,18 +15,15 @@ It's a quick and dirty, untested hacky thing.
 """
 
 import argparse
-import pprint
 import subprocess
 import sys
 import traceback
 from collections.abc import Iterable, Mapping, Sequence
 from enum import Enum
 from pathlib import Path
-from typing import Callable
 
 import libcst as cst
-from libcst.metadata import MetadataWrapper, PositionProvider
-from numpy.matlib import empty
+from libcst.metadata import PositionProvider
 
 # Just add whatever we might need, autoflake will remove the unused ones later
 # If you're missing something, add it!
@@ -35,6 +32,7 @@ _ADDED_IMPORTS = (
     "from typing import Any",
     "from cmk.gui.form_specs.unstable import LegacyValueSpec, ListExtended",
     "from cmk.gui.form_specs.generators.cascading_choice_utils import enable_deprecated_cascading_elements, CascadingDataConversion",
+    "from cmk.gui.form_specs.generators.tuple_utils import TupleLevels",
     "from cmk.gui.form_specs.generators.alternative_utils import enable_deprecated_alternative",
     "from cmk.gui.form_specs.generators.absolute_date import AbsoluteTimestamp, DateTimeFormat",
     "from cmk.gui.form_specs.generators.age import Age",
@@ -47,6 +45,8 @@ _ADDED_IMPORTS = (
         "Dictionary, "
         "CascadingSingleChoice, "
         "CascadingSingleChoiceElement, "
+        "HostState, "
+        "ServiceState, "
         "FieldSize, "
         "FixedValue, "
         "Float, "
@@ -55,6 +55,7 @@ _ADDED_IMPORTS = (
         "List, "
         "LevelDirection, "
         "migrate_to_float_simple_levels, "
+        "migrate_to_integer_simple_levels, "
         "migrate_to_password, "
         "MultilineText, "
         "MultipleChoice, "
@@ -94,7 +95,15 @@ DEFAULT_TIME_SPAN_ARGS = (
     ),
 )
 
+CHECK_PARAMETER_GROUP2TOPIC: dict[str, str] = {
+    "RulespecGroupCheckParametersApplications": "APPLICATIONS",
+    "RulespecGroupCheckParametersNetworking": "NETWORKING",
+    "RulespecGroupCheckParametersEnvironment": "ENVIRONMENTAL",
+    "RulespecGroupCheckParametersOperatingSystem": "OPERATING_SYSTEM",
+}
 
+tuple_to_levels = False
+tuple_to_levels_candidate = False
 use_unstable_api = False
 warnings = []
 
@@ -229,6 +238,9 @@ class VSTransformer(cst.CSTTransformer):
             "Tuple",
             "TimeSpan",
             "SimpleLevels",
+            "Integer",
+            "Float",
+            "MonitoringState",
         }
 
     @property
@@ -239,6 +251,8 @@ class VSTransformer(cst.CSTTransformer):
     def _supported_form_specs(self) -> set[str]:
         """Returns a set of known form specs that can be used in the migration."""
         return {
+            "Integer",
+            "Float",
             "Dictionary",
             "List",
             "ListExtended",
@@ -257,6 +271,9 @@ class VSTransformer(cst.CSTTransformer):
             "TimeSpan",
             "SimpleLevels",
             "Tuple",
+            "TupleLevels",
+            "HostState",
+            "ServiceState",
             "enable_deprecated_cascading_elements",
             "enable_deprecated_alternative",
         }
@@ -295,7 +312,15 @@ class VSTransformer(cst.CSTTransformer):
                     if use_unstable_api:
                         convert_call = self._make_tuple(updated_node)
                     else:
-                        convert_call = self._make_dictionary_from_tuple(updated_node)
+                        elements = cst.ensure_type(
+                            _extract("elements", updated_node.args)[0].value, cst.List
+                        ).elements
+                        if tuple_to_levels and len(elements) == 2:
+                            convert_call = self._make_simple_levels_from_tuple(updated_node)
+                        elif tuple_to_levels_candidate and len(elements) == 2:
+                            convert_call = self._make_tuple(updated_node, "TupleLevels")
+                        else:
+                            convert_call = self._make_dictionary_from_tuple(updated_node)
                 case "TimeSpan":
                     convert_call = self._make_time_span(updated_node)
                 case "Age":
@@ -304,6 +329,13 @@ class VSTransformer(cst.CSTTransformer):
                     convert_call = self._make_simple_levels(updated_node)
                 case "AbsoluteDate":
                     convert_call = self._make_absolute_date(updated_node)
+                case "Integer":
+                    convert_call = self._make_integer(updated_node)
+                case "Float":
+                    convert_call = self._make_float(updated_node)
+                case "MonitoringState":
+                    convert_call = self._make_service_state(updated_node)
+
             if convert_call is not None:
                 self._in_valuespec = False
                 return convert_call
@@ -322,14 +354,14 @@ class VSTransformer(cst.CSTTransformer):
 
         return cst.Call(func=cst.Name("MultilineText"), args=new_args)
 
-    def _make_tuple(self, old: cst.Call) -> cst.Call:
+    def _make_tuple(self, old: cst.Call, tuple_classname="Tuple") -> cst.Call:
         args = {k.value: arg.value for arg in old.args if (k := arg.keyword) is not None}
         elements: list[cst.Element] = [
             cst.Element(self._optional_wrap_legacy_valuespec(cst.ensure_type(el.value, cst.Call)))
             for el in cst.ensure_type(args["elements"], cst.List).elements
         ]
         return cst.Call(
-            func=cst.Name("Tuple"),
+            func=cst.Name(tuple_classname),
             args=(
                 *(
                     arg
@@ -339,6 +371,50 @@ class VSTransformer(cst.CSTTransformer):
                 cst.Arg(cst.List(elements), cst.Name("elements")),
             ),
         )
+
+    def _make_simple_levels_from_tuple(self, old: cst.Call) -> cst.Call:
+        # Create a SimpleLevels from a Tuple assuming it's a levels spec
+        # Assumes level direction is UPPER
+        new_args: list[cst.Arg] = []
+
+        template_name: cst.Name | None = None
+        template_args: list[cst.Arg] = []
+        for arg in old.args:
+            assert arg.keyword, "All args should have a keyword"
+            match arg.keyword.value:
+                case "elements":
+                    template_class = cst.ensure_type(
+                        cst.ensure_type(
+                            cst.ensure_type(arg.value, cst.List).elements[0], cst.Element
+                        ).value,
+                        cst.Call,
+                    )
+                    template_name = cst.ensure_type(template_class.func, cst.Name)
+                    for template_arg in template_class.args:
+                        print("handle arg", template_arg)
+                        if template_arg.keyword.value == "unit_symbol":
+                            template_args.append(template_arg)
+                case "help_text":
+                    new_args.append(arg)
+                case "title":
+                    new_args.append(arg)
+                case _:
+                    assert False, f"Unexpected arg for simple levels {arg}"
+
+        assert template_name is not None, "Template class must be set"
+
+        # We assume that the level direction is upper
+        new_args.append(
+            cst.Arg(
+                keyword=cst.Name("level_direction"),
+                value=(cst.Attribute(value=cst.Name("LevelDirection"), attr=cst.Name("UPPER"))),
+            )
+        )
+
+        args = {k.value: arg.value for arg in new_args if (k := arg.keyword) is not None}
+        print("template args", template_args)
+        new_args.extend(self._make_simple_levels_template_args(template_name, args, template_args))
+        return cst.Call(func=cst.Name("SimpleLevels"), args=new_args)
 
     def _make_dictionary_from_tuple(self, old: cst.Call) -> cst.Call:
         args = {k.value: arg.value for arg in old.args if (k := arg.keyword) is not None}
@@ -908,6 +984,56 @@ class VSTransformer(cst.CSTTransformer):
             ),
         )
 
+    def _make_float(self, old: cst.Call) -> cst.Call:
+        old_args = self._replace_allow_empty_args(old.args, "Float field can not be empty")
+        old_args = self._drop_args(old_args, ["size", "allow_int"])
+        new_args: list[cst.Arg] = []
+        for arg in old_args:
+            assert arg.keyword, "All args should have a keyword"
+            match arg.keyword.value:
+                case "unit":
+                    new_args.append(cst.Arg(keyword=cst.Name("unit_symbol"), value=arg.value))
+                case _:
+                    new_args.append(arg)
+
+        return cst.Call(
+            func=cst.Name("Float"),
+            args=new_args,
+        )
+
+    def _make_service_state(self, old: cst.Call) -> cst.Call:
+        old_args = self._replace_allow_empty_args(old.args, "Service State field can not be empty")
+        new_args: list[cst.Arg] = []
+        for arg in old_args:
+            assert arg.keyword, "All args should have a keyword"
+            match arg.keyword.value:
+                case "default_value":
+                    new_args.append(cst.Arg(keyword=cst.Name("default_state"), value=arg.value))
+                case _:
+                    new_args.append(arg)
+
+        return cst.Call(
+            func=cst.Name("ServiceState"),
+            args=new_args,
+        )
+
+    def _make_integer(self, old: cst.Call) -> cst.Call:
+        old_args = self._replace_allow_empty_args(old.args, "Integer field can not be empty")
+        old_args = self._drop_args(old_args, ["size"])
+        new_args: list[cst.Arg] = []
+        for arg in old_args:
+            assert arg.keyword, "All args should have a keyword"
+            match arg.keyword.value:
+                case "unit":
+                    new_args.append(cst.Arg(keyword=cst.Name("unit_symbol"), value=arg.value))
+                case _:
+                    new_args.append(arg)
+
+        return cst.Call(
+            func=cst.Name("Integer"),
+            args=new_args,
+        )
+
     def _make_absolute_date(self, old: cst.Call) -> cst.Call:
         new_args: list[cst.Arg] = []
         format_expression = "DateTimeFormat.DATE"
@@ -947,7 +1073,8 @@ class VSTransformer(cst.CSTTransformer):
                 )
             ]
 
-        new_args = [
+        new_args: list[cst.Arg] = []
+        new_args.append(
             cst.Arg(
                 keyword=cst.Name("level_direction"),
                 value=(
@@ -955,63 +1082,65 @@ class VSTransformer(cst.CSTTransformer):
                     if args.get("direction", "upper") == "upper"
                     else cst.Attribute(value=cst.Name("LevelDirection"), attr=cst.Name("LOWER"))
                 ),
-            ),
-        ]
+            )
+        )
 
-        spec = cst.ensure_type(args["spec"], cst.Name)
-        match spec.value:
-            case "Age":
-                new_args.extend(
-                    [
-                        cst.Arg(
-                            cst.Call(cst.Name("TimeSpan"), args=DEFAULT_TIME_SPAN_ARGS),
-                            cst.Name("form_spec_template"),
-                        ),
-                        cst.Arg(cst.Name("migrate_to_float_simple_levels"), cst.Name("migrate")),
-                        cst.Arg(
-                            self._get_simple_level_prefill(args), cst.Name("prefill_fixed_levels")
-                        ),
-                    ]
-                )
-            case "Integer":
-                new_args.extend(
-                    [
-                        cst.Arg(
-                            cst.Call(cst.Name(spec.value), args=template_args),
-                            cst.Name("form_spec_template"),
-                        ),
-                        cst.Arg(cst.Name("migrate_to_integer_simple_levels"), cst.Name("migrate")),
-                        cst.Arg(
-                            self._get_simple_level_prefill(args, float_type=False),
-                            cst.Name("prefill_fixed_levels"),
-                        ),
-                    ]
-                )
-            case "Float":
-                new_args.extend(
-                    [
-                        cst.Arg(
-                            cst.Call(cst.Name(spec.value), args=template_args),
-                            cst.Name("form_spec_template"),
-                        ),
-                        cst.Arg(cst.Name("migrate_to_float_simple_levels"), cst.Name("migrate")),
-                        cst.Arg(
-                            self._get_simple_level_prefill(args), cst.Name("prefill_fixed_levels")
-                        ),
-                    ]
-                )
-            case "Percentage":
-                new_args.extend(
-                    [
-                        cst.Arg(cst.Call(cst.Name(spec.value)), cst.Name("form_spec_template")),
-                        cst.Arg(cst.Name("migrate_to_float_simple_levels"), cst.Name("migrate")),
-                        cst.Arg(
-                            self._get_simple_level_prefill(args), cst.Name("prefill_fixed_levels")
-                        ),
-                    ]
-                )
+        new_args.extend(
+            self._make_simple_levels_template_args(
+                cst.ensure_type(args["spec"], cst.Name),
+                args,
+                template_args,
+            )
+        )
 
         return cst.Call(func=cst.Name("SimpleLevels"), args=(*kept_args, *new_args))
+
+    def _make_simple_levels_template_args(
+        self,
+        spec: cst.SimpleString | cst.Name,
+        args: Mapping[str, cst.BaseExpression],
+        template_args: list[cst.Arg],
+    ) -> list[cst.Arg]:
+        match spec.value:
+            case "Age":
+                return [
+                    cst.Arg(
+                        cst.Call(cst.Name("TimeSpan"), args=DEFAULT_TIME_SPAN_ARGS),
+                        cst.Name("form_spec_template"),
+                    ),
+                    cst.Arg(cst.Name("migrate_to_float_simple_levels"), cst.Name("migrate")),
+                    cst.Arg(self._get_simple_level_prefill(args), cst.Name("prefill_fixed_levels")),
+                ]
+            case "Integer":
+                return [
+                    cst.Arg(
+                        cst.Call(cst.Name(spec.value), args=template_args),
+                        cst.Name("form_spec_template"),
+                    ),
+                    cst.Arg(cst.Name("migrate_to_integer_simple_levels"), cst.Name("migrate")),
+                    cst.Arg(
+                        self._get_simple_level_prefill(args, float_type=False),
+                        cst.Name("prefill_fixed_levels"),
+                    ),
+                ]
+            case "Float":
+                return [
+                    cst.Arg(
+                        cst.Call(cst.Name(spec.value), args=template_args),
+                        cst.Name("form_spec_template"),
+                    ),
+                    cst.Arg(cst.Name("migrate_to_float_simple_levels"), cst.Name("migrate")),
+                    cst.Arg(self._get_simple_level_prefill(args), cst.Name("prefill_fixed_levels")),
+                ]
+            case "Percentage":
+                return [
+                    cst.Arg(cst.Call(cst.Name(spec.value)), cst.Name("form_spec_template")),
+                    cst.Arg(cst.Name("migrate_to_float_simple_levels"), cst.Name("migrate")),
+                    cst.Arg(self._get_simple_level_prefill(args), cst.Name("prefill_fixed_levels")),
+                ]
+
+            case _:
+                assert False, f"Unknown SimpleLevels spec: {spec.value}"
 
     def _get_simple_level_prefill(
         self, args: Mapping[str, cst.BaseExpression], float_type: bool = True
@@ -1055,13 +1184,26 @@ class RegistrationTransformer(cst.CSTTransformer):
         return self._make_ruleset_plugin(old_ruleset)
 
     def _make_ruleset_plugin(self, old_ruleset: cst.Call) -> cst.SimpleStatementLine:
+        new_args: list[cst.Arg] = []
+        for arg in old_ruleset.args:
+            assert arg.keyword, "All args should have a keyword"
+            # print("handle arg", arg)
+            if arg.keyword.value == "title":
+                # Some complex lambda function. Im not going to try to parse that with a match/case
+                args = cst.ensure_type(cst.ensure_type(arg.value, cst.Lambda).body, cst.Call).args
+                new_args.append(
+                    cst.Arg(cst.Call(func=cst.Name("Title"), args=args), cst.Name("title"))
+                )
+            else:
+                new_args.append(arg)
+
         if (rule_type := cst.ensure_type(old_ruleset.func, cst.Name).value) in {
             "CheckParameterRulespecWithItem",
             "CheckParameterRulespecWithoutItem",
         }:
-            return self._construct_check_parameters(old_ruleset.args)
+            return self._construct_check_parameters(new_args)
 
-        args = {k.value: arg.value for arg in old_ruleset.args if (k := arg.keyword) is not None}
+        args = {k.value: arg.value for arg in new_args.args if (k := arg.keyword) is not None}
         group = (
             name.value
             if isinstance(name := args["name"], cst.SimpleString)
@@ -1069,10 +1211,11 @@ class RegistrationTransformer(cst.CSTTransformer):
                 cst.ensure_type(args["name"], cst.Call).func, cst.Attribute
             ).attr.value
         )
+
         if rule_type == "HostRulespec" and group == "SpecialAgents":
-            return self._construct_special_agent(old_ruleset.args)
+            return self._construct_special_agent(new_args)
         if rule_type == "HostRulespec" and group == "ActiveChecks":
-            return self._construct_active_check(old_ruleset.args)
+            return self._construct_active_check(new_args)
         if rule_type == "HostRulespec":
             # a guess, but most of the time it's a discovery rule
             return self._construct_discovery_parameters(group, old_ruleset.args)
@@ -1091,6 +1234,7 @@ class RegistrationTransformer(cst.CSTTransformer):
         args = {k.value: arg.value for arg in old if (k := arg.keyword) is not None}
         name = self._extract_string(args["check_group_name"])
         form_spec = args["parameter_valuespec"]
+        group_name = cst.ensure_type(args["group"], cst.Name).value
 
         return cst.SimpleStatementLine(
             (
@@ -1101,7 +1245,13 @@ class RegistrationTransformer(cst.CSTTransformer):
                         args=(
                             cst.Arg(cst.SimpleString(f'"{name}"'), cst.Name("name")),
                             *_extract("title", old),
-                            cst.Arg(cst.Name("Topic"), cst.Name("topic")),
+                            cst.Arg(
+                                cst.Attribute(
+                                    cst.Name("Topic"),
+                                    cst.Name(CHECK_PARAMETER_GROUP2TOPIC.get(group_name, "Topic")),
+                                ),
+                                cst.Name("topic"),
+                            ),
                             cst.Arg(form_spec, cst.Name("parameter_form")),
                             cst.Arg(
                                 self._make_condition(args.get("item_spec")),
@@ -1194,8 +1344,12 @@ class RegistrationTransformer(cst.CSTTransformer):
             func=cst.Name("HostAndItemCondition"),
             args=(
                 cst.Arg(
+                    cst.Call(func=cst.Name("Title"), args=[cst.Arg(cst.SimpleString("'Item'"))]),
+                    cst.Name("item_title"),
+                ),
+                cst.Arg(
                     # not quite right, we need to move the title kwarg to the HostAndItemCondition
-                    old_arg.body if isinstance(old_arg, cst.Lambda) else old_arg,
+                    cst.Call(old_arg.body if isinstance(old_arg, cst.Lambda) else old_arg),
                     cst.Name("item_form"),
                 ),
             ),
@@ -1214,6 +1368,21 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         action="store_true",
         help="FOR INTERNAL USE ONLY. Use unstable python API. This includes the Extended versions of FormSpecs "
         "and helper functions which are not part of the public API. Use with care, will break without warning!",
+    )
+
+    parser.add_argument(
+        "-t",
+        "--tuple_to_levels",
+        action="store_true",
+        help="Converts tuples with a length of 2 to SimpleLevels. Most of the tuples with length 2 are used for levels. "
+        "Keep in mind that the consumer of this tuple (checks) need to be updated here, too.",
+    )
+
+    parser.add_argument(
+        "-T",
+        "--tuple_to_levels_candidate",
+        action="store_true",
+        help="Converts tuples with a length of 2 to TupleLevels. These should be converted later on to SimpleLevels. ",
     )
 
     parser.add_argument(
@@ -1259,8 +1428,12 @@ def _try_to_run(*command_items: object) -> None:
 
 def main(argv: Sequence[str]) -> None:
     args = parse_arguments(argv)
+    global tuple_to_levels
+    tuple_to_levels = args.tuple_to_levels
     global use_unstable_api
     use_unstable_api = args.use_unstable
+    global tuple_to_levels_candidate
+    tuple_to_levels_candidate = args.tuple_to_levels_candidate
 
     if args.transformers:
         used_transformers.clear()

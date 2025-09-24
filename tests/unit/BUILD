@@ -88,6 +88,7 @@ py_test(
             "**/*.json",
             "**/*.jsonl",
             "**/*.log",
+            "**/*.yaml",
         ],
         allow_empty = True,
         exclude = ["**/*.py"],

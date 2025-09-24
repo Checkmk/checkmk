@@ -125,17 +125,17 @@ This is invalid because of: """
 
 # Put all site configuration (explicit and defaults) into environment
 # variables beginning with CONFIG_
-def create_config_environment(site: "SiteContext") -> None:
-    for varname, value in site.conf.items():
+def create_config_environment(config: Config) -> None:
+    for varname, value in config.items():
         os.environ["CONFIG_" + varname] = value
 
 
 # TODO: RENAME
-def save_site_conf(site: "SiteContext") -> None:
-    confdir = Path(SitePaths.from_site_name(site.name).home, "etc/omd")
+def save_site_conf(site_home: str, config: Config) -> None:
+    confdir = Path(site_home, "etc/omd")
     confdir.mkdir(exist_ok=True)
     with (confdir / "site.conf").open(mode="w") as f:
-        for hook_name, value in sorted(site.conf.items(), key=lambda x: x[0]):
+        for hook_name, value in sorted(config.items(), key=lambda x: x[0]):
             f.write(f"CONFIG_{hook_name}='{value}'\n")
     (confdir / "site.conf").chmod(0o644)
 

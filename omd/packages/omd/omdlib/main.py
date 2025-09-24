@@ -1470,7 +1470,7 @@ def config_change(
             config_set_value(site, key, value, verbose, save=False)
             changed.append(key)
 
-        save_site_conf(site)
+        save_site_conf(site_home, site.conf)
         return changed
     finally:
         if site_was_stopped:
@@ -1585,7 +1585,7 @@ def config_set_value(
         _update_cmk_core_config(site)
 
     if save:
-        save_site_conf(site)
+        save_site_conf(SitePaths.from_site_name(site.name).home, site.conf)
 
 
 def config_usage() -> None:
@@ -1709,7 +1709,7 @@ def config_configure_hook(
 
     if change:
         config_set_value(site, hook.name, new_value, verbose)
-        save_site_conf(site)
+        save_site_conf(site_home, site.conf)
         config_hooks = load_hook_dependencies(site, config_hooks, verbose)
         yield hook_name
 
@@ -1840,7 +1840,7 @@ def set_environment(site: SiteContext) -> None:
                     value = value.strip("'")
                 putenv(varname, value)
 
-    create_config_environment(site)
+    create_config_environment(site.conf)
 
 
 def hostname() -> str:
@@ -2176,7 +2176,7 @@ def init_site(
     if config_settings:  # add specific settings
         for hook_name, value in config_settings.items():
             site.conf[hook_name] = value
-    create_config_environment(site)
+    create_config_environment(site.conf)
 
     # Change the few files that config save as created as root
     chown_tree(site_home, site.name)
@@ -2280,7 +2280,7 @@ def finalize_site_as_user(
     config_set_all(site, verbose, ignored_hooks)
     initialize_site_ca(site)
     initialize_agent_ca(site)
-    save_site_conf(site)
+    save_site_conf(site_home, site.conf)
     _update_cmk_core_config(site)
 
     if command_type in [CommandType.create, CommandType.copy, CommandType.restore_as_new_site]:
@@ -2840,12 +2840,12 @@ def main_update(
 
             # Let hooks of the new(!) version do their work and update configuration.
             config_set_all(site, global_opts.verbose, ())
-            save_site_conf(site)
+            save_site_conf(site_home, site.conf)
 
             # Before the hooks can be executed the tmpfs needs to be mounted. This requires access to the
             # initialized tmpfs.
             mu.prepare_and_populate_tmpfs(
-                version_info, site, site.replacements(), site.skel_permissions
+                version_info, site.conf, site.replacements(), site.skel_permissions
             )
 
             additional_update_env = {
@@ -3441,7 +3441,7 @@ def postprocess_restore_as_site_user(
     # Keep the apache port the site currently being replaced had before
     # (we can not restart the system apache as site user)
     site.conf["APACHE_TCP_PORT"] = orig_apache_port
-    save_site_conf(site)
+    save_site_conf(SitePaths.from_site_name(site.name).home, site.conf)
 
     finalize_site_as_user(
         version_info,

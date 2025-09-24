@@ -15,11 +15,10 @@ from pathlib import Path
 from types import TracebackType
 from typing import Literal, Self
 
-from omdlib.contexts import SiteContext
 from omdlib.crash_reporting import report_crash
 from omdlib.skel_permissions import Permissions
 from omdlib.tmpfs import prepare_and_populate_tmpfs, unmount_tmpfs_without_save
-from omdlib.type_defs import Replacements
+from omdlib.type_defs import Config, Replacements
 from omdlib.version_info import VersionInfo
 
 from cmk.ccc.crash_reporting import make_crash_report_base_path
@@ -194,12 +193,12 @@ class ManageUpdate:
     def prepare_and_populate_tmpfs(
         self,
         version: VersionInfo,
-        site: SiteContext,
+        config: Config,
         replacements: Replacements,
         skel_permissions: Permissions,
     ) -> None:
         prepare_and_populate_tmpfs(
-            site.conf,
+            config,
             version,
             self.site_name,
             str(self.site_dir),

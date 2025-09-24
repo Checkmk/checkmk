@@ -99,6 +99,7 @@ def main() {
 
         smart_stage(
             name: "Trigger Build package",
+            condition: currentBuild.result == "SUCCESS",
             raiseOnError: true,
         ) {
             smart_build(
@@ -125,6 +126,7 @@ def main() {
 
         smart_stage(
             name: "Trigger Sign package",
+            condition: currentBuild.result == "SUCCESS",
             raiseOnError: true,
         ) {
             smart_build(

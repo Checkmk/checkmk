@@ -2,7 +2,6 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Sequence
 from typing import Annotated
 
 from cmk.gui.logged_in import user
@@ -22,42 +21,16 @@ from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
-from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Host
 
-from ._utils import host_etag, PERMISSIONS_UPDATE, serialize_host
+from ._utils import (
+    host_etag,
+    PERMISSIONS_UPDATE,
+    serialize_host,
+    validate_host_attributes_for_quick_setup,
+)
 from .models.request_models import UpdateHost
 from .models.response_models import HostConfigModel
-
-
-def validate_host_attributes_for_quick_setup(host: Host, body: UpdateHost) -> bool:
-    if not is_locked_by_quick_setup(host.locked_by()):
-        return True
-
-    locked_attributes: Sequence[str] = host.attributes.get("locked_attributes", [])
-    new_attributes: HostAttributes | None = (
-        body.attributes.to_internal() if body.attributes else None
-    )
-    update_attributes: HostAttributes | None = (
-        body.update_attributes.to_internal() if body.update_attributes else None
-    )
-    remove_attributes: Sequence[str] | None = body.remove_attributes or None
-
-    if new_attributes and (
-        new_attributes.get("locked_by") != host.attributes.get("locked_by")
-        or new_attributes.get("locked_attributes") != locked_attributes
-        or any(new_attributes.get(key) != host.attributes.get(key) for key in locked_attributes)
-    ):
-        return False
-
-    if update_attributes and any(
-        key in locked_attributes and host.attributes.get(key) != attr
-        for key, attr in update_attributes.items()
-    ):
-        return False
-
-    return not (remove_attributes and any(key in locked_attributes for key in remove_attributes))
 
 
 def update_host_v1(

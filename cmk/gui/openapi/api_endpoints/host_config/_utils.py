@@ -2,6 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import json
 from collections.abc import Callable, Iterable, Sequence
 from typing import get_type_hints
 
@@ -9,10 +10,14 @@ from cmk.ccc.hostaddress import HostName
 from cmk.gui.openapi.api_endpoints.models.host_attribute_models import HostViewAttributeModel
 from cmk.gui.openapi.endpoints.utils import folder_slug
 from cmk.gui.openapi.framework import ETag
-from cmk.gui.openapi.framework.model import ApiOmitted
+from cmk.gui.openapi.framework.model import (
+    ApiOmitted,
+    json_dump_without_omitted,
+)
 from cmk.gui.openapi.framework.model.base_models import LinkModel
 from cmk.gui.openapi.framework.model.constructors import generate_links
 from cmk.gui.openapi.restful_objects import constructors
+from cmk.gui.openapi.utils import EXT, ProblemException
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.host_attributes import HostAttributes
@@ -163,3 +168,29 @@ def validate_host_attributes_for_quick_setup(host: Host, body: UpdateHost) -> bo
         return False
 
     return not (remove_attributes and any(key in locked_attributes for key in remove_attributes))
+
+
+def bulk_host_action_response(
+    failed_hosts: dict[HostName, str], succeeded_hosts: Iterable[Host]
+) -> HostConfigCollectionModel:
+    host_collection = serialize_host_collection(
+        succeeded_hosts, compute_effective_attributes=False, compute_links=False
+    )
+    if failed_hosts:
+        # we neet to serialize to a (JSON-like) dict, without the omitted fields
+        success_bytes = json_dump_without_omitted(HostConfigCollectionModel, host_collection)
+        success_dict = json.loads(success_bytes)
+        raise ProblemException(
+            status=400,
+            title="Some actions failed",
+            detail=f"Some of the actions were performed but the following were faulty and "
+            f"were skipped: {', '.join(failed_hosts)}.",
+            ext=EXT(
+                {
+                    "succeeded_hosts": success_dict,
+                    "failed_hosts": failed_hosts,
+                }
+            ),
+        )
+
+    return host_collection

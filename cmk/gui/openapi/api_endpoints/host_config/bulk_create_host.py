@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import itertools
-import json
-from collections.abc import Iterable
 from typing import Annotated
 
 from cmk.ccc.hostaddress import HostName
@@ -26,16 +24,14 @@ from cmk.gui.openapi.framework.model import (
     api_field,
     api_model,
     ApiOmitted,
-    json_dump_without_omitted,
 )
 from cmk.gui.openapi.framework.model.restrict_editions import RestrictEditions
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.openapi.shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
-from cmk.gui.openapi.utils import EXT, ProblemException
 from cmk.gui.watolib import bakery
 from cmk.gui.watolib.hosts_and_folders import Folder, Host
 
-from ._utils import PERMISSIONS_CREATE, serialize_host_collection
+from ._utils import bulk_host_action_response, PERMISSIONS_CREATE
 from .create_host import CreateHostModel
 from .models.response_models import BulkHostActionWithFailedHostsModel, HostConfigCollectionModel
 
@@ -57,32 +53,6 @@ class BulkCreateHostModel:
 def _folder_key(host: CreateHostModel) -> Folder:
     """Key function to group hosts by folder."""
     return host.folder
-
-
-def _bulk_host_action_response(
-    failed_hosts: dict[HostName, str], succeeded_hosts: Iterable[Host]
-) -> HostConfigCollectionModel:
-    host_collection = serialize_host_collection(
-        succeeded_hosts, compute_effective_attributes=False, compute_links=False
-    )
-    if failed_hosts:
-        # we neet to serialize to a (JSON-like) dict, without the omitted fields
-        success_bytes = json_dump_without_omitted(HostConfigCollectionModel, host_collection)
-        success_dict = json.loads(success_bytes)
-        raise ProblemException(
-            status=400,
-            title="Some actions failed",
-            detail=f"Some of the actions were performed but the following were faulty and "
-            f"were skipped: {', '.join(failed_hosts)}.",
-            ext=EXT(
-                {
-                    "succeeded_hosts": success_dict,
-                    "failed_hosts": failed_hosts,
-                }
-            ),
-        )
-
-    return host_collection
 
 
 def bulk_create_host_v1(
@@ -136,7 +106,7 @@ def bulk_create_host_v1(
     if bake_agent:
         bakery.try_bake_agents_for_hosts(succeeded_hosts, debug=api_context.config.debug)
 
-    return _bulk_host_action_response(
+    return bulk_host_action_response(
         failed_hosts, [Host.load_host(host_name) for host_name in succeeded_hosts]
     )
 

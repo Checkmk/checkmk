@@ -184,7 +184,9 @@ run_test_all() {
                 echo "libaio absent. Integration testing is not possible"
             fi
 
-            export LD_LIBRARY_PATH=${path_to_runtime}:${LD_LIBRARY_PATH}
+            export LD_LIBRARY_PATH="${path_to_runtime}:${LD_LIBRARY_PATH}"
+            export MK_CONFDIR="${PWD}"
+            export MK_LIBDIR="${PWD}/runtimes"
             bazel test :all
             ;;
     esac
@@ -217,7 +219,6 @@ main() {
     # and we can call this script from everywhere.
     cd -- "${BASH_SOURCE%/*}"
     parse_options "$@"
-    export MK_CONFDIR="${PWD}"
     # TODO: Re-evaluate usage of --all-targets below
     test ${RUN_BUILD} = yes && run_build
     test ${RUN_UNIT_TESTS} = yes && run_test_all

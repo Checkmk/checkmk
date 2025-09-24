@@ -17,6 +17,7 @@ def test_site_context() -> None:
     assert site.real_dir == "/opt/omd/sites/dingeling"
     assert site.tmp_dir == "/omd/sites/dingeling/tmp"
     assert site.version_meta_dir == "/omd/sites/dingeling/.version_meta"
+    assert site.real_tmp_dir == "/opt/omd/sites/dingeling/tmp"
 
 
 def test_site_context_replacements(monkeypatch: pytest.MonkeyPatch) -> None:

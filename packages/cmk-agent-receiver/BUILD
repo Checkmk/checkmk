@@ -89,7 +89,7 @@ py_pytest_main(
 py_test(
     name = "unit",
     size = "small",
-    srcs = glob(["tests/unit/**/*.py"]) + [":__test__.py"],
+    srcs = ["tests/component/test_lib/config_file_system.py"] + glob(["tests/unit/**/*.py"]) + [":__test__.py"],
     args = [
         "--random-order",
         "--random-order-bucket=global",

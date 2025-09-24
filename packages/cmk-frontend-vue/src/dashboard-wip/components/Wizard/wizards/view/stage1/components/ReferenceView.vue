@@ -34,9 +34,20 @@ onMounted(async () => {
 
 watch(
   () => referencedView.value,
-  (id) => {
+  async (id, _prev, onCleanup) => {
+    let cancelled = false
+    onCleanup(() => {
+      cancelled = true
+    })
+
     if (!id) {
       contextInfos.value = []
+      return
+    }
+
+    // Make sure data sources and views are loaded when referencedView is already set (for edit)
+    await Promise.all([ensureDataSourcesLoaded(), ensureViewsLoaded()])
+    if (cancelled) {
       return
     }
 

@@ -18,6 +18,7 @@ from pathlib import Path
 from omdlib.console import ok
 from omdlib.contexts import SiteContext
 from omdlib.site_paths import SitePaths
+from omdlib.type_defs import Config
 from omdlib.utils import (
     chown_tree,
     create_skeleton_files,
@@ -277,9 +278,14 @@ def _restore_tmpfs_dump(site_dir: str, site_tmp_dir: str) -> None:
     tmpfs_dump.unlink()
 
 
-def prepare_and_populate_tmpfs(version_info: VersionInfo, site: SiteContext, skelroot: str) -> None:
+def prepare_and_populate_tmpfs(
+    config: Config,
+    version_info: VersionInfo,
+    site: SiteContext,
+    skelroot: str,
+) -> None:
     site_home = SitePaths.from_site_name(site.name).home
-    prepare_tmpfs(version_info, site.name, site.tmp_dir, site.conf["TMPFS"])
+    prepare_tmpfs(version_info, site.name, site.tmp_dir, config["TMPFS"])
 
     if not os.listdir(site.tmp_dir):
         create_skeleton_files(
@@ -289,13 +295,13 @@ def prepare_and_populate_tmpfs(version_info: VersionInfo, site: SiteContext, ske
         mark_tmpfs_initialized(site)
         _restore_tmpfs_dump(site_home, site.tmp_dir)
 
-    _create_livestatus_tcp_socket_link(site)
+    _create_livestatus_tcp_socket_link(config["LIVESTATUS_TCP_TLS"], site.tmp_dir)
 
 
-def _create_livestatus_tcp_socket_link(site: SiteContext) -> None:
+def _create_livestatus_tcp_socket_link(live_status_tcp_tls: str, site_tmp_dir: str) -> None:
     """Point the xinetd to the livestatus socket inteded by LIVESTATUS_TCP_TLS"""
-    link_path = site.tmp_dir + "/run/live-tcp"
-    target = "live-tls" if site.conf["LIVESTATUS_TCP_TLS"] == "on" else "live"
+    link_path = site_tmp_dir + "/run/live-tcp"
+    target = "live-tls" if live_status_tcp_tls == "on" else "live"
 
     if os.path.lexists(link_path):
         os.unlink(link_path)

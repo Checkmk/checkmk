@@ -244,7 +244,7 @@ class CommandType(Enum):
 
 def start_site(version_info: VersionInfo, site: SiteContext) -> None:
     skelroot = "/omd/versions/%s/skel" % omdlib.__version__
-    prepare_and_populate_tmpfs(version_info, site, skelroot)
+    prepare_and_populate_tmpfs(site.conf, version_info, site, skelroot)
     site_home = SitePaths.from_site_name(site.name).home
     call_init_scripts(site_home, "start")
     if not (instance_id_file_path := get_instance_id_file_path(Path(site_home))).exists():
@@ -1720,7 +1720,7 @@ def init_action(
 
     if command in ["start", "restart"]:
         skelroot = "/omd/versions/%s/skel" % omdlib.__version__
-        prepare_and_populate_tmpfs(version_info, site, skelroot)
+        prepare_and_populate_tmpfs(site.conf, version_info, site, skelroot)
 
     if len(args) > 0:
         # restrict to this daemon
@@ -2244,7 +2244,7 @@ def finalize_site_as_user(
     # users. They could create files below tmp which would be shadowed
     # by the mount.
     skelroot = "/omd/versions/%s/skel" % omdlib.__version__
-    prepare_and_populate_tmpfs(version_info, site, skelroot)
+    prepare_and_populate_tmpfs(site.conf, version_info, site, skelroot)
 
     # Run all hooks in order to setup things according to the
     # configuration settings

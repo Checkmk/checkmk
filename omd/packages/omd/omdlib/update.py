@@ -190,7 +190,7 @@ class ManageUpdate:
         return self
 
     def prepare_and_populate_tmpfs(self, version: VersionInfo, site: SiteContext) -> None:
-        prepare_and_populate_tmpfs(version, site, str(self.new_skel))
+        prepare_and_populate_tmpfs(site.conf, version, site, str(self.new_skel))
         self.populated_tmpfs = True
 
     def __exit__(

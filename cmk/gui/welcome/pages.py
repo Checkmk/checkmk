@@ -17,7 +17,7 @@ from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri, makeuri_contextless
 from cmk.gui.wato.pages.user_profile.main_menu import set_user_attribute
 from cmk.gui.watolib.hosts_and_folders import Host
-from cmk.gui.welcome.registry import welcome_url_registry
+from cmk.gui.welcome.registry import welcome_url_registry, WelcomeCallback
 from cmk.shared_typing.welcome import FinishedEnum, StageInformation, WelcomePage, WelcomeUrls
 from cmk.utils.urls import is_allowed_url
 
@@ -51,10 +51,14 @@ def _get_finished_stages() -> Generator[FinishedEnum]:
             break
 
 
-def make_url_from_registry(identifier: str, permitted: bool = True) -> str | None:
+def make_url_or_callback_from_registry(identifier: str, permitted: bool = True) -> str | None:
     url = welcome_url_registry.get(identifier)
     if url is None or not permitted:
         return None
+
+    if isinstance(url, WelcomeCallback):
+        return url.callback_id
+
     return makeuri(
         request,
         addvars=url.vars,
@@ -160,12 +164,13 @@ def get_welcome_data() -> WelcomePage:
                 addvars=[("mode", "licensing")],
                 filename="wato.py",
             ),
-            add_host=makeuri(
+            add_host=make_url_or_callback_from_registry("add_host")
+            or makeuri(
                 request,
                 addvars=[("mode", "newhost")],
                 filename="wato.py",
             ),
-            network_devices=make_url_from_registry("relays")
+            network_devices=make_url_or_callback_from_registry("relays")
             or makeuri(
                 request,
                 addvars=[("mode", "newhost"), ("prefill", "snmp")],
@@ -195,10 +200,10 @@ def get_welcome_data() -> WelcomePage:
                 ],
                 filename="wato.py",
             ),
-            synthetic_monitoring=make_url_from_registry(
+            synthetic_monitoring=make_url_or_callback_from_registry(
                 "robotmk_managed_robots_overview", user.may("edit_managed_robots")
             ),
-            opentelemetry=make_url_from_registry("otel_collectors"),
+            opentelemetry=make_url_or_callback_from_registry("otel_collectors"),
             activate_changes=makeuri(
                 request,
                 addvars=[("mode", "changelog")],

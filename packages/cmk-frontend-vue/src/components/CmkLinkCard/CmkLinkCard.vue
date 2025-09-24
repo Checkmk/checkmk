@@ -31,7 +31,7 @@ interface CmkLinkCardProps {
   iconName?: SimpleIcons | undefined
   title: TranslatedString
   subtitle?: TranslatedString
-  url?: string
+  url?: string | undefined
   callback?: () => void
   openInNewTab: boolean
   disabled?: boolean

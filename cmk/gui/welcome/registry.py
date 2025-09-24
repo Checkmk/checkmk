@@ -17,9 +17,15 @@ class WelcomeUrl:
     filename: str
 
 
-class WelcomeUrlRegistry(Registry[WelcomeUrl]):
+@dataclass
+class WelcomeCallback:
+    id: str
+    callback_id: str
+
+
+class WelcomeUrlRegistry(Registry[WelcomeUrl | WelcomeCallback]):
     @override
-    def plugin_name(self, instance: WelcomeUrl) -> str:
+    def plugin_name(self, instance: WelcomeUrl | WelcomeCallback) -> str:
         return instance.id
 
 

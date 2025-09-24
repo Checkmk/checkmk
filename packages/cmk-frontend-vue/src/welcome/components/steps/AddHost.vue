@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import type { WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
+import { ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -16,13 +17,23 @@ import StepCardsRow from '@/welcome/components/steps/components/StepCardsRow.vue
 import StepHeading from '@/welcome/components/steps/components/StepHeading.vue'
 import StepParagraph from '@/welcome/components/steps/components/StepParagraph.vue'
 
+import FirstHostSlideout from '../cse/FirstHostSlideout.vue'
+
 const { _t } = usei18n()
 
-defineProps<{
+const cseSlideoutOpen = ref<boolean>(false)
+
+const props = defineProps<{
   step: number
   urls: WelcomeUrls
   accomplished: boolean
 }>()
+
+const useCseSlideout = ref<boolean>(false)
+
+if (props.urls.add_host === 'cse-first-host-slideout') {
+  useCseSlideout.value = true
+}
 </script>
 
 <template>
@@ -50,9 +61,16 @@ defineProps<{
     <StepCardsRow>
       <CmkLinkCard
         icon-name="folder"
+        :url="useCseSlideout ? undefined : urls.add_host"
         :title="_t('Server (Linux, Windows, Solaris, ...)')"
-        :url="urls.add_host"
         :open-in-new-tab="false"
+        :callback="
+          () => {
+            if (useCseSlideout) {
+              cseSlideoutOpen = true
+            }
+          }
+        "
       />
       <CmkLinkCard
         icon-name="networking"
@@ -108,4 +126,6 @@ defineProps<{
       </StepCardsRow>
     </template>
   </CmkAccordionStepPanelItem>
+
+  <FirstHostSlideout v-if="useCseSlideout" v-model="cseSlideoutOpen" />
 </template>

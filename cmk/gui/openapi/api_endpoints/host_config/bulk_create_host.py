@@ -28,7 +28,6 @@ from cmk.gui.openapi.framework.model import (
     ApiOmitted,
     json_dump_without_omitted,
 )
-from cmk.gui.openapi.framework.model.response import ApiErrorDataclass
 from cmk.gui.openapi.framework.model.restrict_editions import RestrictEditions
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.openapi.shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
@@ -38,7 +37,7 @@ from cmk.gui.watolib.hosts_and_folders import Folder, Host
 
 from ._utils import PERMISSIONS_CREATE, serialize_host_collection
 from .create_host import CreateHostModel
-from .models.response_models import HostConfigCollectionModel
+from .models.response_models import BulkHostActionWithFailedHostsModel, HostConfigCollectionModel
 
 
 @api_model
@@ -52,37 +51,6 @@ class BulkCreateHostModel:
                 "attributes": {},
             }
         ],
-    )
-
-
-@api_model
-class FailedHostsModel:
-    succeeded_hosts: HostConfigCollectionModel = api_field(
-        description="Hosts that were successfully created.",
-    )
-    failed_hosts: dict[str, str] = api_field(
-        description="A mapping of host that failed to be created, with the reason for failure.",
-    )
-
-
-@api_model
-class BulkHostActionWithFailedHostsModel(ApiErrorDataclass):
-    status: int = api_field(
-        title="HTTP status code", description="The HTTP status code.", example=400
-    )
-    title: str = api_field(
-        title="Error title",
-        description="A summary of the problem.",
-        example="Some actions failed",
-    )
-    detail: str = api_field(
-        title="Error message",
-        description="Detailed information on what exactly went wrong.",
-        example="Some of the actions were performed but the following were faulty and were skipped: ['host1', 'host2'].",
-    )
-    ext: FailedHostsModel = api_field(
-        title="Error extensions",
-        description="Details for which hosts have failed",
     )
 
 

@@ -418,6 +418,9 @@ def test_dependencies_are_used() -> None:
     known_unused_packages.add("setuptools")  # pinned transitive dependency
     # used for deploying the agent receiver, but in a bash script, so undetectable by this test
     known_unused_packages.add("gunicorn")
+    known_unused_packages.add(
+        "aiohttp"
+    )  # temporary known unused dependency (azure agent deprecation)
 
     if not is_enterprise_repo():
         known_unused_packages.update(("PyPDF", "numpy", "roman"))

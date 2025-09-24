@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import argparse
 import logging
 from collections.abc import Sequence
 
 import pytest
 
 from cmk.plugins.azure.special_agent.agent_azure import (
-    _debug_args,
+    Args,
     AzureResource,
     ExplicitConfig,
     parse_arguments,
@@ -18,10 +17,6 @@ from cmk.plugins.azure.special_agent.agent_azure import (
     TagBasedConfig,
     TagsImportPatternOption,
 )
-
-from .lib import fake_azure_subscription
-
-Args = argparse.Namespace
 
 ARGV = [
     "--authority",
@@ -34,6 +29,8 @@ ARGV = [
     "secret",
     "--subscription",
     "subscription-id",
+    "--piggyback_vms",
+    "grouphost",
     "--services",
     "Microsoft.Compute/virtualMachines",
     "Microsoft.Storage/storageAccounts",
@@ -47,7 +44,6 @@ ARGV = [
     "value2",
     "--cache-id",
     "testhost",
-    "--safe-hostnames",
 ]
 
 ARGS = Args(
@@ -56,12 +52,9 @@ ARGS = Args(
     vcrtrace=False,
     dump_config=False,
     timeout=10,
+    piggyback_vms="grouphost",
     authority="global",
     subscriptions=["subscription-id"],
-    all_subscriptions=False,
-    no_subscriptions=False,
-    subscriptions_require_tag=[],
-    subscriptions_require_tag_value=[],
     client="client-id",
     tenant="tenant-id",
     secret="secret",
@@ -73,7 +66,6 @@ ARGS = Args(
     services=["Microsoft.Compute/virtualMachines", "Microsoft.Storage/storageAccounts"],
     tag_key_pattern=TagsImportPatternOption.import_all,
     connection_test=False,
-    safe_hostnames=True,
 )
 
 
@@ -89,12 +81,8 @@ ARGS = Args(
                 "argparse: vcrtrace = False",
                 "argparse: dump_config = False",
                 "argparse: timeout = 10",
-                "argparse: authority = 'global'",
+                "argparse: piggyback_vms = 'grouphost'",
                 "argparse: subscriptions = ['subscription-id']",
-                "argparse: all_subscriptions = False",
-                "argparse: no_subscriptions = False",
-                "argparse: subscriptions_require_tag = []",
-                "argparse: subscriptions_require_tag_value = []",
                 "argparse: client = 'client-id'",
                 "argparse: tenant = 'tenant-id'",
                 "argparse: secret = '****'",
@@ -104,9 +92,9 @@ ARGS = Args(
                 "argparse: require_tag_value = [['tag2', 'value2']]",
                 "argparse: explicit_config = ['group=test-group', 'resources=Resource1,Resource2']",
                 "argparse: services = ['Microsoft.Compute/virtualMachines', 'Microsoft.Storage/storageAccounts']",
+                "argparse: authority = 'global'",
                 "argparse: tag_key_pattern = <TagsImportPatternOption.import_all: 'IMPORT_ALL'>",
                 "argparse: connection_test = False",
-                "argparse: safe_hostnames = True",
             ],
         ),
     ],
@@ -119,8 +107,6 @@ def test_parse_arguments(
 ) -> None:
     caplog.set_level(logging.DEBUG)
     assert parse_arguments(argv) == args
-    # also test debug_args
-    _debug_args(args)
     assert caplog.messages == expected_log
 
 
@@ -179,7 +165,6 @@ def test_explicit_config(config: Sequence[str], config_string: str) -> None:
                     "group": "my-group",
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
-                subscription=fake_azure_subscription(),
             ),
             False,
             id="resource not in config",
@@ -196,7 +181,6 @@ def test_explicit_config(config: Sequence[str], config_string: str) -> None:
                     "group": "my-group",
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
-                subscription=fake_azure_subscription(),
             ),
             True,
             id="no explicit config",
@@ -213,7 +197,6 @@ def test_explicit_config(config: Sequence[str], config_string: str) -> None:
                     "group": "test-group",
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
-                subscription=fake_azure_subscription(),
             ),
             True,
             id="no resources in explicit config",
@@ -243,7 +226,6 @@ def test_explicit_config_is_configured(
                     "group": "my-group",
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
-                subscription=fake_azure_subscription(),
             ),
             False,
             id="no required tag",
@@ -261,7 +243,6 @@ def test_explicit_config_is_configured(
                     "group": "my-group",
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
-                subscription=fake_azure_subscription(),
             ),
             False,
             id="tag value doesn't match",
@@ -279,14 +260,7 @@ def test_tag_based_config_is_configured(
 
 
 def test_selector() -> None:
-    selector = Selector(
-        Args(
-            require_tag=["tag1"],
-            require_tag_value=[["tag2", "value2"]],
-            explicit_config=["group=test-group", "resources=Resource1,Resource2"],
-            tag_key_pattern=TagsImportPatternOption.import_all,
-        )
-    )
+    selector = Selector(ARGS)
     assert str(selector) == (
         "Explicit configuration:\n"
         "  [test-group]\n"
@@ -302,12 +276,7 @@ def test_selector() -> None:
     "args,resource,is_monitored",
     [
         pytest.param(
-            Args(
-                require_tag=["tag1"],
-                require_tag_value=[["tag2", "value2"]],
-                explicit_config=["group=test-group", "resources=Resource1,Resource2"],
-                tag_key_pattern=TagsImportPatternOption.import_all,
-            ),
+            ARGS,
             AzureResource(
                 {
                     "id": "id1",
@@ -318,18 +287,12 @@ def test_selector() -> None:
                     "group": "test-group",
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
-                subscription=fake_azure_subscription(),
             ),
             True,
             id="both explicit config and tag match",
         ),
         pytest.param(
-            Args(
-                require_tag=["tag1"],
-                require_tag_value=[],
-                explicit_config=[],
-                tag_key_pattern=TagsImportPatternOption.import_all,
-            ),
+            ARGS,
             AzureResource(
                 {
                     "id": "id2",
@@ -340,18 +303,12 @@ def test_selector() -> None:
                     "group": "test-group",
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
-                subscription=fake_azure_subscription(),
             ),
             False,
             id="tag doesn't match",
         ),
         pytest.param(
-            Args(
-                require_tag=["tag1"],
-                require_tag_value=[],
-                explicit_config=["group=test-group", "resources=Resource1,Resource2"],
-                tag_key_pattern=TagsImportPatternOption.import_all,
-            ),
+            ARGS,
             AzureResource(
                 {
                     "id": "id3",
@@ -362,62 +319,12 @@ def test_selector() -> None:
                     "group": "test-group",
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
-                subscription=fake_azure_subscription(),
             ),
             False,
             id="explicit config doesn't match, unknown resource",
         ),
         pytest.param(
-            Args(
-                require_tag=["tag1"],
-                require_tag_value=[],
-                explicit_config=["group=test-group"],
-                tag_key_pattern=TagsImportPatternOption.import_all,
-            ),
-            AzureResource(
-                {
-                    "id": "id3",
-                    "name": "Resource3",
-                    "type": "Microsoft.Compute/virtualMachines",
-                    "location": "westeurope",
-                    "tags": {"tag1": "value1", "tag2": "value2"},
-                    "group": "test-group",
-                },
-                tag_key_pattern=TagsImportPatternOption.import_all,
-                subscription=fake_azure_subscription(),
-            ),
-            True,
-            id="explicit config match for group and tag",
-        ),
-        pytest.param(
-            Args(
-                require_tag=["tag_not_present"],
-                require_tag_value=[],
-                explicit_config=["group=test-group"],
-                tag_key_pattern=TagsImportPatternOption.import_all,
-            ),
-            AzureResource(
-                {
-                    "id": "id3",
-                    "name": "Resource3",
-                    "type": "Microsoft.Compute/virtualMachines",
-                    "location": "westeurope",
-                    "tags": {"tag1": "value1", "tag2": "value2"},
-                    "group": "test-group",
-                },
-                tag_key_pattern=TagsImportPatternOption.import_all,
-                subscription=fake_azure_subscription(),
-            ),
-            False,
-            id="explicit config match for group but not tag",
-        ),
-        pytest.param(
-            Args(
-                require_tag=[],
-                require_tag_value=[],
-                explicit_config=["group=test-group"],
-                tag_key_pattern=TagsImportPatternOption.import_all,
-            ),
+            ARGS,
             AzureResource(
                 {
                     "id": "id1",
@@ -425,13 +332,12 @@ def test_selector() -> None:
                     "type": "Microsoft.Compute/virtualMachines",
                     "location": "westeurope",
                     "tags": {"tag1": "value1", "tag2": "value2", "mytag": "True"},
-                    "group": "test-GROUP",
+                    "group": "test-group",
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
-                subscription=fake_azure_subscription(),
             ),
             True,
-            id="case-insensitive group match",
+            id="group name in different case",
         ),
     ],
 )

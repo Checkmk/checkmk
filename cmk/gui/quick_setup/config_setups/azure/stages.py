@@ -56,6 +56,7 @@ PREV_BUTTON_LABEL = _("Back")
 
 FIRST_LEVEL_DICT_TITLES: dict[str, Title] = {
     "proxy": Title("HTTP proxy"),
+    "piggyback_vms": Title("Map data"),
     "filter_tags": Title("Filter tags"),
 }
 
@@ -129,6 +130,7 @@ def configure_authentication() -> QuickSetupStage:
                     elements=_add_first_level_keys_to_config_dict(
                         azure.configuration_authentication()
                     ),
+                    default_checked=["subscription"],
                 ),
             ),
         ],

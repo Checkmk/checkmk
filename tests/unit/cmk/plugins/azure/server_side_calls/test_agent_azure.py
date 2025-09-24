@@ -20,20 +20,14 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
         pytest.param(
             {
                 "authority": "global_",
-                "subscription": (
-                    "explicit_subscriptions",
-                    ["subscription_1", "$HOST_AZURE_SUBSCRIPTION_ID$"],
-                ),
+                "subscription": "banana",
                 "tenant": "strawberry",
                 "client": "blueberry",
                 "secret": Secret(0),
                 "config": {},
                 "services": ["users_count", "Microsoft_DBforMySQL_slash_servers"],
             },
-            HostConfig(
-                name="testhost",
-                macros={"$HOST_AZURE_SUBSCRIPTION_ID$": "subscription_2"},
-            ),
+            HostConfig(name="testhost"),
             [
                 "--tenant",
                 "strawberry",
@@ -44,9 +38,7 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
                 "--authority",
                 "global",
                 "--subscription",
-                "subscription_1",
-                "--subscription",
-                "subscription_2",
+                "banana",
                 "--services",
                 "users_count",
                 "Microsoft.DBforMySQL/servers",
@@ -58,7 +50,7 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
         pytest.param(
             {
                 "authority": "global_",
-                "subscription": ("all_subscriptions", None),
+                "subscription": "banana",
                 "tenant": "strawberry",
                 "client": "blueberry",
                 "secret": Secret(0),
@@ -78,7 +70,8 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
                 Secret(0).unsafe(),
                 "--authority",
                 "global",
-                "--all-subscriptions",
+                "--subscription",
+                "banana",
                 "--explicit-config",
                 "group=my_res_group",
                 "--require-tag",
@@ -91,7 +84,7 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
         pytest.param(
             {
                 "authority": "global_",
-                "subscription": ("no_subscriptions", None),
+                "subscription": "$HOST_AZURE_SUBSCRIPTION_ID$",
                 "tenant": "strawberry",
                 "client": "blueberry",
                 "secret": Secret(0),
@@ -105,7 +98,10 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
                 "proxy": EnvProxy(),
                 "services": [],
             },
-            HostConfig(name="testhost"),
+            HostConfig(
+                name="testhost",
+                macros={"$HOST_AZURE_SUBSCRIPTION_ID$": "apple"},
+            ),
             [
                 "--tenant",
                 "strawberry",
@@ -115,7 +111,8 @@ from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
                 Secret(0).unsafe(),
                 "--authority",
                 "global",
-                "--no-subscriptions",
+                "--subscription",
+                "apple",
                 "--proxy",
                 "FROM_ENVIRONMENT",
                 "--explicit-config",

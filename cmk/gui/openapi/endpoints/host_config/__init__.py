@@ -821,6 +821,11 @@ def _has_pending_changes(sites: Sequence[SiteId]) -> bool:
         ),
         404: "There is no running renaming job",
     },
+    permissions_required=permissions.AllPerm(
+        [
+            permissions.Perm("wato.rename_hosts"),
+        ]
+    ),
     additional_status_codes=[302, 404],
     output_empty=True,
     family_name=HOST_CONFIG_FAMILY.name,
@@ -830,6 +835,8 @@ def renaming_job_wait_for_completion(params: Mapping[str, Any]) -> Response:
 
     This endpoint will redirect on itself to prevent timeouts.
     """
+    user.need_permission("wato.rename_hosts")
+
     job_exists, job_is_active = RenameHostsBackgroundJob.status_checks()
     if not job_exists:
         return problem(

@@ -1,4 +1,4 @@
-$CMK_VERSION = "2.4.0p13"
+$CMK_VERSION = "2.4.0p14"
 ## Windows Bonding interfaces
 ## you need this agent plugin if you want to monitor bonding interfaces
 ## on windows configured on operating system level

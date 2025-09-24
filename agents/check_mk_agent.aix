@@ -360,7 +360,7 @@ waitmax() {
 
 section_checkmk() {
     echo "<<<check_mk>>>"
-    echo "Version: 2.4.0p13"
+    echo "Version: 2.4.0p14"
     echo "AgentOS: aix"
     echo "Hostname: $(hostname)"
 

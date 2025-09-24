@@ -28,8 +28,9 @@ format_multirun(
     name = "format",
     c = "@clang-linux-x86_64//:bin/clang-format",
     cc = "@clang-linux-x86_64//:bin/clang-format",
-    # we need to format the repo first
-    # javascript = ":prettier",
+    css = ":prettier",
+    html = ":prettier",
+    javascript = ":prettier",
     python = "@aspect_rules_lint//format:ruff",
     rust = "@rules_rust//tools/upstream_wrapper:rustfmt",
     shell = ":shfmt",

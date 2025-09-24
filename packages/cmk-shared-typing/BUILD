@@ -1,5 +1,4 @@
 load("@aspect_rules_js//js:defs.bzl", "js_library")
-load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
@@ -194,9 +193,12 @@ prettier_bin.prettier_binary(
     ],
 )
 
-format_multirun(
+alias(
     name = "format",
-    javascript = ":prettier",
-    python = "@aspect_rules_lint//format:ruff",
-    visibility = ["//:__subpackages__"],
+    actual = "//bazel/tools:format",
+)
+
+alias(
+    name = "format.check",
+    actual = "//bazel/tools:format.check",
 )

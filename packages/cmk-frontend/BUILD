@@ -1,10 +1,8 @@
-load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@aspect_rules_webpack//webpack:defs.bzl", "webpack_bundle")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//:eslint/package_json.bzl", eslint_bin = "bin")
-load("@npm//bazel/tools:prettier/package_json.bzl", prettier_bin = "bin")
 load("@npm//packages/cmk-frontend:webpack-cli/package_json.bzl", webpack_cli_bin = "bin")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
@@ -116,47 +114,14 @@ pkg_tar(
     visibility = ["//omd:__pkg__"],
 )
 
-# This should be done as shown
-# [here](https://github.com/aspect-build/rules_lint/blob/main/example/tools/format/BUILD.bazel)
-# and would shrink the whole check-format and formatting stuff to
-#
-#  alias(name = "format", actual = "//bazel/tools/format")
-#
-# but it then had to be done similarly for all packages
-prettier_bin.prettier_binary(
-    name = "prettier",
-    data = ["//bazel/tools:prettierrc"],
-    # Allow the binary to be run outside bazel
-    env = {"BAZEL_BINDIR": "."},
-    # chdir="\"$$(BUILD_WORKSPACE_DIRECTORY)\"/" + package_name(),
-    fixed_args = [
-        # `require` statements in the config file will be resolved relative to its location
-        # Therefore to make it hermetic, prettier must be pointed at the copy of the config file
-        # in the runfiles folder rather than the one in the source folder.
-        "--config=\"$$JS_BINARY__RUNFILES\"/$(rlocationpath //bazel/tools:prettierrc)",
-        # it looks like .prettierignore from the SOURCE has to be provided in order to make
-        # specified (relative) directories match the actually checked files
-        "--ignore-path=\"$$BUILD_WORKSPACE_DIRECTORY/" + package_name() + "/.prettierignore\"",
-        # default log level is "log" which spams on success
-        # https://prettier.io/docs/en/cli.html#--log-level
-        "--log-level=warn",
-    ],
+alias(
+    name = "format",
+    actual = "//bazel/tools:format",
 )
 
-# This produces a `:format` and a `:format.check` run-target. Both operate on the actual
-# source tree but `:format.check` does not modify any files but returns non-zero if there
-# are files which have to be re-formatted.
-# Also both targets accept (workspace-absolute) files and directories on which is operated.
-# Note that while `:format.check` can be used as some sort of "test" but it's NOT an actual
-# Bazel-test in terms of `bazel test` - this has to be implemented using `format_test()` instead.
-# see https://github.com/aspect-build/rules_lint/blob/main/docs/formatting.md
-format_multirun(
-    name = "format",
-    css = ":prettier",
-    html = ":prettier",
-    # fixme(frans): for some reasons no .js files are found despite there are some on toplevel
-    # javascript = ":prettier",
-    visibility = ["//:__subpackages__"],
+alias(
+    name = "format.check",
+    actual = "//bazel/tools:format.check",
 )
 
 # Note: this is not done via lint_eslint_aspect + lint_test intentionally.

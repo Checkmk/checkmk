@@ -9,7 +9,7 @@ def main() {
     def safe_branch_name = versioning.safe_branch_name();
 
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
-    def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
+    def branch_base_folder = package_helper.branch_base_folder(true);
 
     def job_names = [
         "test-composition-single-f12less",

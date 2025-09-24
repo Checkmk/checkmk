@@ -16,7 +16,8 @@ from cmk.plugins.activemq.special_agent import agent_activemq
 from cmk.plugins.alertmanager.special_agents import agent_alertmanager
 from cmk.plugins.allnet_ip_sensoric.special_agent import agent_allnet_ip_sensoric
 from cmk.plugins.aws.special_agent import agent_aws, agent_aws_status
-from cmk.plugins.azure.special_agent import agent_azure, agent_azure_status
+from cmk.plugins.azure.special_agent import agent_azure
+from cmk.plugins.azure_status.special_agent import agent_azure_status
 from cmk.plugins.bazel.lib import agent as agent_bazel
 from cmk.plugins.checkmk.special_agents import agent_bi
 from cmk.plugins.cisco.special_agent import agent_cisco_prime

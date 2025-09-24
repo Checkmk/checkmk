@@ -141,7 +141,6 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.plugins.lib",  # ?
         "cmk.plugins.lib.azure_app_gateway",  # FIXME
         "cmk.plugins.lib.azure",  # FIXME
-        "cmk.utils.azure_constants",  # FIXME
         "cmk.utils.http_proxy_config",
         "cmk.utils.paths",  # edition detection
     ),
@@ -285,7 +284,6 @@ PACKAGE_TRACE = ("cmk.trace",)
 CLEAN_UTILS_MODULES = (
     "agent_registration",
     "auto_queue",
-    "azure_constants",
     "check_utils",
     "crypto",
     "datastructures",

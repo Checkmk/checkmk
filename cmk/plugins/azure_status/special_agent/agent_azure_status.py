@@ -11,9 +11,9 @@ from feedparser.util import FeedParserDict
 from lxml.html import fromstring, HtmlElement
 from pydantic import BaseModel
 
+from cmk.plugins.azure_status.lib.azure_regions import AZURE_REGIONS
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
-from cmk.utils.azure_constants import AZURE_REGIONS
 
 
 class AzureIssue(BaseModel, frozen=True):
@@ -106,3 +106,7 @@ def write_section(args: Args) -> int:
 
 def main() -> int:
     return special_agent_main(parse_arguments, write_section)
+
+
+if __name__ == "__main__":
+    main()

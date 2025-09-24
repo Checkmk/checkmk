@@ -9,13 +9,13 @@ from unittest.mock import MagicMock
 import pytest
 from feedparser.util import FeedParserDict  # type: ignore[import-untyped]
 
-from cmk.plugins.azure.special_agent.agent_azure_status import (
+from cmk.plugins.azure_status.lib.azure_regions import AZURE_REGIONS
+from cmk.plugins.azure_status.special_agent.agent_azure_status import (
     get_affected_regions,
     main,
     parse_arguments,
     write_section,
 )
-from cmk.utils.azure_constants import AZURE_REGIONS
 
 STATUS_RESPONSE = """
 <?xml version="1.0" encoding="utf-8"?>
@@ -122,7 +122,7 @@ def test_get_affected_regions(entry: FeedParserDict, expected_result: set[str]) 
 
 
 @mock.patch(
-    "cmk.plugins.azure.special_agent.agent_azure_status.requests.get",
+    "cmk.plugins.azure_status.special_agent.agent_azure_status.requests.get",
     mock.Mock(return_value=MockResponse),
 )
 def test_write_section(capsys: pytest.CaptureFixture[str]) -> None:
@@ -147,7 +147,7 @@ def test_write_section(capsys: pytest.CaptureFixture[str]) -> None:
     assert captured.err == ""
 
 
-@mock.patch("cmk.plugins.azure.special_agent.agent_azure_status.special_agent_main")
+@mock.patch("cmk.plugins.azure_status.special_agent.agent_azure_status.special_agent_main")
 def test_main(mock_agent: MagicMock, capsys: pytest.CaptureFixture[str]) -> None:
     main()
 

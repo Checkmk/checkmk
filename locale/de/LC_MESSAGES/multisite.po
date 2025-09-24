@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-09-23 11:13+0000\n"
+"PO-Revision-Date: 2025-09-23 23:39+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -8063,10 +8063,10 @@ msgid "Average roundtrip time in ms"
 msgstr "Durchschnittliche Paketumlaufzeit in Millisekunden"
 
 msgid "Average scatterplot"
-msgstr "Streudiagramm der Durschnitte"
+msgstr ""
 
 msgid "Average size growth"
-msgstr "Durschnittliches Größenwachstum"
+msgstr "Durchschnittliches Größenwachstum"
 
 msgid "Average speed of backup"
 msgstr "Durchschnittliche Geschwindigkeit der Sicherung"
@@ -8088,7 +8088,7 @@ msgid "Average time messages stay on queue"
 msgstr "Durchschnittliche Zeit, die Meldungen in der Warteschlange verbringen"
 
 msgid "Average usage"
-msgstr "Durschnittliche Nutzung"
+msgstr "Durchschnittliche Auslastung"
 
 msgid "Average utilization core 0"
 msgstr "Durchschnittliche Auslastung Kern 0"
@@ -8478,13 +8478,13 @@ msgid "Average utilization of memory on the active supervisor"
 msgstr "Mittlerer Speicherauslastung auf dem aktiven Supervisor"
 
 msgid "Average utilization per core"
-msgstr "Durschschnittliche Auslastung pro Kern"
+msgstr "Durchschnittliche Auslastung pro Kern"
 
 msgid "Average value"
 msgstr "Durchschnittswert"
 
 msgid "Average value of the following numeric field: "
-msgstr "Durschnittswert des folgenden numerischen Feldes: "
+msgstr "Durchschnittswert des folgenden numerischen Feldes: "
 
 msgid "Average values"
 msgstr "Durchschnittswerte"
@@ -8520,10 +8520,10 @@ msgid "Avg. rate of allowed requests"
 msgstr "Durchschnittliche Rate an erlaubten Anfragen"
 
 msgid "Avg. rate of blocked requests"
-msgstr "Durschnittliche Rate an blockierten Anfragen"
+msgstr "Durchschnittliche Rate an blockierten Anfragen"
 
 msgid "Avg. request rate"
-msgstr "Durschnittliche Anfragenrate"
+msgstr "Durchschnittliche Anfragerate"
 
 msgid "Awaiting info"
 msgstr "Warte auf Informationen"
@@ -10587,6 +10587,10 @@ msgstr "CPU-Auslastungslevels"
 
 msgid "CPU Utilization of Clusters"
 msgstr "CPU-Auslastung von Clustern"
+
+#, fuzzy
+msgid "CPU allocation ratio"
+msgstr "Shard Verteilung im Laufe der Zeit"
 
 msgid "CPU architecture"
 msgstr "CPU-Architektur"
@@ -24947,7 +24951,8 @@ msgid "Filter / Search"
 msgstr "Filter/Suche"
 
 msgid "Filter Azure tags imported as host/service labels"
-msgstr "Azure-Merkmale, die als Host-/Service-Labels importiert wurden, filtern"
+msgstr ""
+"Azure-Merkmale, die als Host-/Service-Labels importiert wurden, filtern"
 
 msgid "Filter aggregations"
 msgstr "Filter Aggregationen"
@@ -40069,6 +40074,10 @@ msgstr "Speicherauslastung"
 msgid "Memory allocated to percpu"
 msgstr "Percpu zugewiesener Speicher"
 
+#, fuzzy
+msgid "Memory allocation ratio"
+msgstr "Percpu zugewiesener Speicher"
+
 msgid "Memory and CPU of processes on Windows"
 msgstr "Speicher/CPU-Prozesse auf Windows"
 
@@ -50503,7 +50512,15 @@ msgstr "Proxmox VE"
 msgid "Proxmox VE CPU Utilization"
 msgstr "CPU-Auslastung für Proxmox VE"
 
+#, fuzzy
+msgid "Proxmox VE Node CPU Allocation"
+msgstr "CPU-Auslastung für Proxmox VE"
+
 msgid "Proxmox VE Node Info"
+msgstr "Proxmox VE Knoten-Info"
+
+#, fuzzy
+msgid "Proxmox VE Node Memory Allocation"
 msgstr "Proxmox VE Knoten-Info"
 
 msgid "Proxmox VE VM Backup"
@@ -64900,19 +64917,19 @@ msgstr ""
 "in der Reihenfolge, in der sie aufgelistet sind, aneinandergereiht. Die "
 "erste Regel, die einen nicht leeren Wert ergibt, wird verwendet. Zum "
 "Beispiel:\n"
-"<ol><li>Eine erste Regel, die aus einem Feld "
-"\"Wert des Attributs: service.name\" besteht, setzt \"%s\" auf den Wert "
-"dieses Attributs, wenn es vorhanden ist. Dieses Attribut wird beispielsweise "
-"auf den Namen des Prometheus-Scrape-Jobs gesetzt. </li><li>Eine zweite "
-"Regel, bestehend aus einem Feld \"Wert des Attributs: container.name\", "
-"setzt „%s” auf den Wert dieses Attributs, sofern es vorhanden ist und \"%s\" "
-"nicht durch die vorherige Regel gesetzt wurde. </li><li>Eine dritte Regel, "
-"bestehend aus zwei Feldern \"Ressourcenattributwert: custom_attr\" und "
-"\"Literalstring: some_suffix\", setzt \"%s\" auf \"VALUEsome_suffix\", wenn "
-"das Attribut vorhanden ist und \"%s\" nicht durch die vorherigen Regeln "
-"gesetzt wurde. </li><li>Eine letzte Regel, bestehend aus einem Feld "
-"\"Literal string: fallback_host\", setzt alle \"%s\"-Attribute, die noch "
-"nicht ausgefüllt sind, auf \"fallback_host\".</li></ol>"
+"<ol><li>Eine erste Regel, die aus einem Feld \"Wert des Attributs: "
+"service.name\" besteht, setzt \"%s\" auf den Wert dieses Attributs, wenn es "
+"vorhanden ist. Dieses Attribut wird beispielsweise auf den Namen des "
+"Prometheus-Scrape-Jobs gesetzt. </li><li>Eine zweite Regel, bestehend aus "
+"einem Feld \"Wert des Attributs: container.name\", setzt „%s” auf den Wert "
+"dieses Attributs, sofern es vorhanden ist und \"%s\" nicht durch die "
+"vorherige Regel gesetzt wurde. </li><li>Eine dritte Regel, bestehend aus "
+"zwei Feldern \"Ressourcenattributwert: custom_attr\" und \"Literalstring: "
+"some_suffix\", setzt \"%s\" auf \"VALUEsome_suffix\", wenn das Attribut "
+"vorhanden ist und \"%s\" nicht durch die vorherigen Regeln gesetzt wurde. </"
+"li><li>Eine letzte Regel, bestehend aus einem Feld \"Literal string: "
+"fallback_host\", setzt alle \"%s\"-Attribute, die noch nicht ausgefüllt "
+"sind, auf \"fallback_host\".</li></ol>"
 
 msgid "The host name is missing."
 msgstr "Der Host-Name fehlt."
@@ -87696,19 +87713,31 @@ msgstr ""
 msgid "required"
 msgstr "erforderlich"
 
+msgid ""
+"Due to a limitation in how Checkmk handles metrics internally, the results "
+"contain conflicting metrics and this top list may be incorrect or "
+"incomplete.n\n"
+"    This is caused by the service check commands with an example host and "
+"service in the following table.n\n"
+"    You can use these examples to identify hosts and services that must be "
+"filtered out in the top list configuration to resolve the problem."
+msgstr ""
+
+#, fuzzy
+msgid "Loading Top list content"
+msgstr "Lädt Optionen…"
+
 msgid "Remove row"
 msgstr "Zeile entfernen"
 
 msgid "Dashboard filter"
 msgstr "Dashboard-Filter"
 
-#, fuzzy
 msgid "Close filter configuration"
-msgstr "Iptables Filterkonfiguration"
+msgstr "Schließe Filterkonfiguration"
 
-#, fuzzy
 msgid "Clear search"
-msgstr "Regelsuche"
+msgstr "Suche leeren"
 
 msgid "Filters included by dashboard owner"
 msgstr ""
@@ -87716,21 +87745,17 @@ msgstr ""
 msgid "You can override these by adding a quick filter"
 msgstr "Sie können diese durch Hinzufügen eines Schnellfilters überschreiben"
 
-#, fuzzy
 msgid "Host filter"
 msgstr "Host-Filter"
 
-#, fuzzy
 msgid "Select from list"
-msgstr "Typ aus der Liste auswählen"
+msgstr "Aus der Liste auswählen"
 
-#, fuzzy
 msgid "Service filter"
-msgstr "Servicefilter"
+msgstr "Service-Filter"
 
-#, fuzzy
 msgid "Reset to saved filters"
-msgstr "Filter entfernen"
+msgstr "Auf gespeicherte Filter zurücksetzen"
 
 msgid "Success! Your new dashboard filters have been saved"
 msgstr "Erfolg! Ihre neuen Dashboard-Filter wurden gespeichert"
@@ -87741,24 +87766,20 @@ msgstr ""
 msgid "Values apply across all widgets."
 msgstr ""
 
-#, fuzzy
 msgid "Apply to dashboard"
-msgstr "Zum Dashboard hinzufügen"
+msgstr "Auf das Dashboard anwenden"
 
-#, fuzzy
 msgid "Edit required runtime filters"
-msgstr "Erforderliche Kontextfilter"
+msgstr "Erforderliche Laufzeitfilter bearbeiten"
 
 msgid "Success! Your runtime filters have been applied"
 msgstr ""
 
-#, fuzzy
 msgid "Settings Menu"
-msgstr "Einstellungen"
+msgstr "Einstellungen-Menü"
 
-#, fuzzy
 msgid "Dashboard settings"
-msgstr "Dashboard-Eigenschaften"
+msgstr "Dashboard-Einstellungen"
 
 msgid "Clone dashboard"
 msgstr "Dashboard klonen"
@@ -87766,13 +87787,11 @@ msgstr "Dashboard klonen"
 msgid "Dashboard user guide"
 msgstr "Dashboard-Benutzerhandbuch"
 
-#, fuzzy
 msgid "Edit widgets"
-msgstr "Ziel hinzufügen"
+msgstr "Widgets bearbeiten"
 
-#, fuzzy
 msgid "Add widget"
-msgstr "Ziel hinzufügen"
+msgstr "Widget hinzufügen"
 
 msgid "Select dashboard"
 msgstr "Dashboard auswählen"
@@ -87792,28 +87811,23 @@ msgstr "Mitgelieferte Dashboards"
 msgid "Unnamed Dashboard"
 msgstr "Unbenanntes Dashboard"
 
-#, fuzzy
 msgid "No items selected"
-msgstr "Nicht ausgewählt"
+msgstr "Keine Objekte ausgewählt"
 
 msgid "Placeholder for unknown component type:"
 msgstr ""
 
-#, fuzzy
 msgid "No labels"
-msgstr "Knoten-Labels"
+msgstr "Keine Labels"
 
-#, fuzzy
 msgid "not"
-msgstr "nein"
+msgstr "nicht"
 
-#, fuzzy
 msgid "No labels selected"
-msgstr "Keine Elemente ausgewählt"
+msgstr "Keine Labels ausgewählt"
 
-#, fuzzy
 msgid "No tag filters configured"
-msgstr "Kein IP-Bereich definiert"
+msgstr "Keine Merkmalsfilter konfiguriert"
 
 msgid "Select an option..."
 msgstr ""
@@ -87821,16 +87835,14 @@ msgstr ""
 msgid "Type to search..."
 msgstr ""
 
-#, fuzzy
 msgid "Operator"
-msgstr "Betrieb"
+msgstr "Operator"
 
 msgid "Select label..."
 msgstr "Label auswählen..."
 
-#, fuzzy
 msgid "Group Operator"
-msgstr "Gruppenpfad"
+msgstr "Gruppen-Operator"
 
 msgid "Select group..."
 msgstr "Gruppe auswählen..."
@@ -87838,32 +87850,26 @@ msgstr "Gruppe auswählen..."
 msgid "Select value..."
 msgstr "Wert auswählen..."
 
-#, fuzzy
 msgid "Search Filter"
 msgstr "Suchfilter"
 
-#, fuzzy
 msgid "No filters found matching"
-msgstr "Abgleich von Prozessnamen"
+msgstr "Keine passenden Filter gefunden"
 
-#, fuzzy
 msgid "Expand all"
-msgstr "Erweitern"
+msgstr "Alle erweitern"
 
-#, fuzzy
 msgid "Collapse all"
-msgstr "Alle auswählen"
+msgstr "Alle ausblenden"
 
 msgid "of"
 msgstr "von"
 
-#, fuzzy
 msgid "No filter category available"
-msgstr "Keine Informationen vorhanden"
+msgstr "Keine Filterkategorie verfügbar"
 
-#, fuzzy
 msgid "Loading datasources..."
-msgstr "Karten laden..."
+msgstr "Datenquellen werden geladen..."
 
 msgid "Choose from available datasources"
 msgstr ""
@@ -87871,24 +87877,28 @@ msgstr ""
 msgid "Loading…"
 msgstr "Lädt…"
 
-#, fuzzy
 msgid "Failed to load options"
-msgstr "Fehlgeschlagene Indexoperationen"
+msgstr "Laden der Optionen ist fehlgeschlagen"
 
-#, fuzzy
 msgid "Visual information"
-msgstr "Datei-Informationen"
+msgstr ""
 
 msgid "Loading options…"
 msgstr "Lädt Optionen…"
 
 #, fuzzy
-msgid "Add Widget"
-msgstr "Ziel hinzufügen"
+msgid "Loading views..."
+msgstr "Lädt..."
 
 #, fuzzy
+msgid "Choose from available views"
+msgstr "Keine Benutzer verfügbar"
+
+msgid "Add Widget"
+msgstr "Widget hinzufügen"
+
 msgid "Metrics & graphs"
-msgstr "Servicegraphen"
+msgstr "Metriken & Graphen"
 
 msgid "Visualize key metrics using charts and graphs"
 msgstr ""
@@ -87896,48 +87906,38 @@ msgstr ""
 msgid "Visualize built-in and preconfigured custom graphs"
 msgstr ""
 
-#, fuzzy
 msgid "Embed saved views"
-msgstr "Vorhandene Ansicht einbetten"
+msgstr "Vorhandene Tabellenansicht einbetten"
 
-#, fuzzy
 msgid "Host & site overview"
-msgstr "Hostübersicht"
+msgstr "Host- & Instanz-Übersicht"
 
 msgid "Summarize key system components"
 msgstr ""
 
-#, fuzzy
 msgid "Service overview"
-msgstr "Instanzübersicht"
+msgstr "Service-Übersicht"
 
-#, fuzzy
 msgid "Summarize key services"
-msgstr "Services im Zustand STALE"
+msgstr "Schlüssel-Services zusammenfassen"
 
-#, fuzzy
 msgid "HW/SW inventory"
 msgstr "HW-/SW-Inventur"
 
-#, fuzzy
 msgid "Summarize key hardware and software components"
-msgstr "Das vollständige Hardware- und Softwareinventar eines Hosts"
+msgstr "Schlüssel-Hardware- und Softwarekomponenten zusammenfassen"
 
-#, fuzzy
 msgid "Alerts & notifications"
-msgstr "Benachrichtigungen testen"
+msgstr "Alerts & Benachrichtigungen"
 
-#, fuzzy
 msgid "Summarize alerts and notifications"
-msgstr "Zusammenfassung für Host-Benachrichtigungen"
+msgstr "Alerts und Benachrichtigungen zusammenfassen"
 
-#, fuzzy
 msgid "Summarize events"
-msgstr "Service-Ereignisse"
+msgstr "Ereignisse zusammenfassen"
 
-#, fuzzy
 msgid "Other elements"
-msgstr "Seitenleistenelemente"
+msgstr "Andere Elemente"
 
 msgid "Display user messages, sidebar elements, text or embed a URL"
 msgstr ""
@@ -87948,35 +87948,29 @@ msgstr "Graph auswählen"
 msgid "Filter by host name"
 msgstr "Nach Host-Name filtern"
 
-#, fuzzy
 msgid "Select service metric"
-msgstr "Servicemetriken"
+msgstr "Service-Metrik auswählen"
 
 msgid "Filter by service"
 msgstr "Nach Service filtern"
 
-#, fuzzy
 msgid "Choose how to display your data"
-msgstr "Kein Datum anzeigen"
+msgstr "Wählen Sie, wie Sie Ihre Daten anzeigen wollen"
 
-#, fuzzy
 msgid "Select option"
-msgstr "Ausgewählte Optionen"
+msgstr "Option auswählen"
 
 msgid "Inherited"
 msgstr "Geerbt"
 
-#, fuzzy
 msgid "Overriden"
-msgstr "Überblick"
+msgstr "Überschrieben"
 
-#, fuzzy
 msgid "Quick filter"
-msgstr "Servicefilter"
+msgstr ""
 
-#, fuzzy
 msgid "See all"
-msgstr "Entferne alles"
+msgstr "Alle ansehen"
 
 msgid "% (Decimal, auto precision, 2 digits)"
 msgstr ""
@@ -88119,28 +88113,23 @@ msgstr ""
 msgid "€ (Decimal, strict precision, 2 digits)"
 msgstr ""
 
-#, fuzzy
 msgid "Specific host"
-msgstr "Spezifische Instanzen"
+msgstr "Spezifischer Host"
 
-#, fuzzy
 msgid "Multiple hosts"
-msgstr "Mehrere Instanzen"
+msgstr "Mehrere Hosts"
 
 msgid "Applied host name filter"
 msgstr "Host-Namen-Filter angewendet"
 
-#, fuzzy
 msgid "to be defined"
-msgstr "Keine Namen definiert"
+msgstr "noch zu definieren"
 
-#, fuzzy
 msgid "Widget filter"
-msgstr "Filter hinzufügen"
+msgstr "Widget-Filter"
 
-#, fuzzy
 msgid "Select host name"
-msgstr "(Host auswählen)"
+msgstr "Host-Name auswählen"
 
 msgid "No host name filter applied."
 msgstr "Es wurde kein Host-Namen-Filter angewendet."
@@ -88161,17 +88150,14 @@ msgid ""
 "apply to this widget"
 msgstr ""
 
-#, fuzzy
 msgid "Specific service"
-msgstr "Spezifische Instanzen"
+msgstr "Spezifischer Service"
 
-#, fuzzy
 msgid "Applied service name filter"
-msgstr "Alternativer Service-Name"
+msgstr "Filter für Service-Name wurde angewendet"
 
-#, fuzzy
 msgid "Select service name"
-msgstr "(Service auswählen)"
+msgstr "Service-Name auswählen"
 
 msgid "No service name filter applied."
 msgstr ""
@@ -88181,9 +88167,8 @@ msgid ""
 "slideout appears here and applies to this widget"
 msgstr ""
 
-#, fuzzy
 msgid "Applied service filters"
-msgstr "Servicefilter"
+msgstr "Service-Filter angewendet"
 
 msgid ""
 "Dashboard or quick filters selected in the filters slideout appears here and "
@@ -88193,64 +88178,50 @@ msgstr ""
 msgid "Barplot"
 msgstr "Balkendiagramm"
 
-#, fuzzy
 msgid "Scatterplot"
-msgstr "Streudiagramm der Durschnitte"
+msgstr ""
 
-#, fuzzy
 msgid "Value must be a valid URL"
-msgstr "Wert muss ein String sein"
+msgstr "Wert muss eine gültige URL sein"
 
-#, fuzzy
 msgid "Link title to"
-msgstr "Link des Titels"
+msgstr "Titel verknüpfen mit"
 
-#, fuzzy
 msgid "Appearance"
-msgstr "Appliance"
+msgstr "Aussehen"
 
-#, fuzzy
 msgid "Show title background"
-msgstr "Titel ohne Hintergrund anzeigen"
+msgstr "Titel-Hintergrund anzeigen"
 
-#, fuzzy
 msgid "Show widget background"
-msgstr "Titel ohne Hintergrund anzeigen"
+msgstr "Widget-Hintergrund anzeigen"
 
 msgid "Single graph"
 msgstr "Einzelner Graph"
 
-#, fuzzy
 msgid "Data selection"
-msgstr "Instanzauswahl"
+msgstr "Datenauswahl"
 
-#, fuzzy
 msgid "Define widget"
-msgstr "Ziel hinzufügen"
+msgstr "Widget definieren"
 
-#, fuzzy
 msgid "Service metric"
-msgstr "Servicemetriken"
+msgstr "Service-Metrik"
 
-#, fuzzy
 msgid "Must select an option"
-msgstr "Ausgewählte Optionen"
+msgstr "Sie müssen eine Option auswählen"
 
-#, fuzzy
 msgid "Metric (single)"
-msgstr "Metrik-Name"
+msgstr "Metrik (einfach)"
 
-#, fuzzy
 msgid "Graph (combined)"
-msgstr "Graphlinien"
+msgstr "Graph (kombiniert)"
 
-#, fuzzy
 msgid "Widget data"
-msgstr "Filter hinzufügen"
+msgstr "Widget-Daten"
 
-#, fuzzy
 msgid "Next step: Visualization"
-msgstr "Visualisierung"
+msgstr "Nächster Schritt: Visualisierung"
 
 msgid "Select the data you want to analyze"
 msgstr "Wählen Sie die Daten aus, die Sie analysieren wollen"
@@ -88258,62 +88229,50 @@ msgstr "Wählen Sie die Daten aus, die Sie analysieren wollen"
 msgid "Dashboard filters apply here and don't have to be selected again"
 msgstr ""
 
-#, fuzzy
 msgid "Host selection"
-msgstr "Instanzauswahl"
+msgstr "Host-Auswahl"
 
-#, fuzzy
 msgid "Service selection"
-msgstr "Instanzauswahl"
+msgstr "Service-Auswahl"
 
-#, fuzzy
 msgid "Metric selection"
-msgstr "Dateiauswahl"
+msgstr "Metrik-Auswahl"
 
-#, fuzzy
 msgid "Available visualization types"
-msgstr "Verfügbare Optionen"
+msgstr "Verfügbare Visualisierungstypen"
 
 msgid "Data settings"
 msgstr "Dateneinstellungen"
 
-#, fuzzy
 msgid "Widget visualization"
-msgstr "BI-Visualisierung"
+msgstr "Widget-Visualisierung"
 
-#, fuzzy
 msgid "Fixed data range"
-msgstr "Fester Bereich"
+msgstr "Fester Datenbereich"
 
 msgid "Axis"
 msgstr ""
 
-#, fuzzy
 msgid "Horizontal axis"
-msgstr "Horizontaler Innenabstand"
+msgstr "Horizontale Achse"
 
-#, fuzzy
 msgid "Vertical axis"
-msgstr "Breite der vertikalen Achse"
+msgstr "Vertikale Achse"
 
-#, fuzzy
 msgid "Graph styling"
-msgstr "Graph-Tuning"
+msgstr "Graph-Styling"
 
 msgid "Date and time stamp (right upper corner)"
 msgstr ""
 
-#, fuzzy
 msgid "Margin round the graph"
-msgstr "Zeige Rand um den Graphen"
+msgstr "Rand um den Graphen"
 
-#, fuzzy
 msgid "Graph legend"
-msgstr "Legende anzeigen"
+msgstr "Graph-Legende"
 
-#, fuzzy
 msgid "Interaction"
-msgstr "Wird beendet"
+msgstr "Interaktion"
 
 #, fuzzy
 msgid "Click on graph to place pin"
@@ -88326,36 +88285,45 @@ msgid ""
 "Do not follow timerange changes of other graphs on the current dashboard"
 msgstr ""
 
-#, fuzzy
 msgid "Additional graph options"
-msgstr "Zusätzliche Optionen"
+msgstr "Zusätzliche Graph-Optionen"
 
-#, fuzzy
 msgid "Additional scatterplot options"
-msgstr "Zusätzliche Optionen"
+msgstr ""
 
 msgid "Scatterplot styling"
 msgstr ""
 
-#, fuzzy
 msgid "Add & place widget"
-msgstr "Ziel hinzufügen"
+msgstr "Widget hinzufügen & platzieren"
 
-#, fuzzy
 msgid "Value out of range"
-msgstr "Wert muss ein String sein"
+msgstr "Wert außerhalb des Bereichs"
 
-#, fuzzy
 msgid "Rankin order"
 msgstr "Rangfolge"
 
-#, fuzzy
 msgid "entries (max. %{max_entries})"
-msgstr "Einträge (max. 50)"
+msgstr "Einträge (max. %{max_entries})"
 
 #, fuzzy
+msgid "Specific object type"
+msgstr "Spezifischen Objekttyp auswählen"
+
+#, fuzzy
+msgid "Next step: Data configuration"
+msgstr "Neue Zustandskonfiguration hinzufügen"
+
+#, fuzzy
+msgid "View selection"
+msgstr "Dateiauswahl"
+
+#, fuzzy
+msgid "Copy view"
+msgstr "Tabellenansicht klonen"
+
 msgid "explicit password"
-msgstr "Neues Passwort"
+msgstr "explizites Passwort"
 
 msgid "Auto"
 msgstr "Auto"
@@ -88439,17 +88407,14 @@ msgstr "Operation auflösen"
 msgid "Clone this entry"
 msgstr "Diesen Eintrag klonen"
 
-#, fuzzy
 msgid "Select at least two graph lines to edit"
-msgstr "Wählen Sie mindestens eine Graph-Linie zur Bearbeitung aus"
+msgstr "Wählen Sie mindestens zwei Graph-Linien zur Bearbeitung aus"
 
-#, fuzzy
 msgid "Select one graph line to edit"
-msgstr "Wählen Sie genau eine Graph-Linie zur Bearbeitung aus"
+msgstr "Wählen Sie eine Graph-Linie zur Bearbeitung aus"
 
-#, fuzzy
 msgid "Open full view"
-msgstr "Offenen Dateien"
+msgstr "Vollbild öffnen"
 
 msgid ""
 "Changes are saved in a temporary environment first, letting you review and "
@@ -88460,9 +88425,8 @@ msgstr ""
 msgid "Successfully activated %{numberOfChangesLastActivation} changes"
 msgstr ""
 
-#, fuzzy
 msgid "Everything is up to date"
-msgstr "Sync-Zustand abrufen"
+msgstr "Alles ist aktuell"
 
 msgid "No pending changes"
 msgstr "Keine ausstehende Änderungen"
@@ -88473,24 +88437,20 @@ msgstr ""
 msgid "Some things may not be monitored properly."
 msgstr ""
 
-#, fuzzy
 msgid "Activating changes on "
-msgstr "Änderungen aktivieren: "
+msgstr "Änderungen aktivieren am "
 
-#, fuzzy
 msgid "Activating changes... "
-msgstr "Änderungen aktivieren: "
+msgstr "Änderungen aktivieren... "
 
 msgid "You can safely navigate away - we'll keep working in the background"
 msgstr ""
 
-#, fuzzy
 msgid "Changes: (%{n})"
-msgstr "Änderung(en)"
+msgstr "Änderungen: (%{n})"
 
-#, fuzzy
 msgid "Foreign changes: (%{n})"
-msgstr "Fremde Änderungen rückgängig machen"
+msgstr "Fremde Änderungen: (%{n})"
 
 msgid "You haven't selected any sites"
 msgstr ""
@@ -88501,13 +88461,11 @@ msgstr "Änderungen:"
 msgid "No changes"
 msgstr "Keine Änderungen"
 
-#, fuzzy
 msgid "Sites with changes: %{n}"
-msgstr "Änderungen aktivieren begonnen: %s"
+msgstr "Instanzen mit Änderungen: %{n}"
 
-#, fuzzy
 msgid "Sites with errors: %{n}"
-msgstr "%d Instanzen mit Fehlern: %s"
+msgstr "Instanzen mit Fehlern: %{n}"
 
 msgid "Agent connection test running"
 msgstr "Test der Agentenverbindung läuft"
@@ -88531,25 +88489,20 @@ msgstr ""
 msgid "Test Checkmk agent connection"
 msgstr "Test der Verbindung zum Checkmk-Agenten"
 
-#, fuzzy
 msgid "Register agent"
-msgstr "Registrierte Agenten"
+msgstr "Agent registrieren"
 
-#, fuzzy
 msgid "Install Checkmk agent"
-msgstr "Checkmk-Agent"
+msgstr "Checkmk-Agent installieren"
 
-#, fuzzy
 msgid "Re-test agent connection"
-msgstr "Requests pro Verbindung"
+msgstr "Agenten-Verbindung erneut testen"
 
-#, fuzzy
 msgid "Agent connection failed"
-msgstr "Checkmk-Agentenverbindung fehlgeschlagen"
+msgstr "Agentenverbindung fehlgeschlagen"
 
-#, fuzzy
 msgid "Failed to connect to the Checkmk agent"
-msgstr "TCP Port für die Verbindung zum Checkmk-Agent"
+msgstr "Verbindung zum Checkmk-Agenten fehlgeschlagen"
 
 msgid ""
 "This may be because the agent is not installed or not running on the target "
@@ -88559,23 +88512,20 @@ msgstr ""
 msgid "Download & install agent"
 msgstr "Agent herunterladen & installieren"
 
-#, fuzzy
 msgid "Download Checkmk agent"
-msgstr "Checkmk-Agent Vanilla herunterladen"
+msgstr "Checkmk-Agenten herunterladen"
 
-#, fuzzy
 msgid "Agent not registered"
-msgstr "Unregistriert"
+msgstr "Agent ist nicht registriert"
 
-#, fuzzy
 msgid ""
 "The agent has been installed on the target system but has not yet been "
 "registered."
-msgstr "Der Status dieser Instanz ist noch nicht festgelegt worden."
+msgstr ""
+"Der Agent wurde auf dem Zielsystem installiert, aber noch nicht registriert."
 
-#, fuzzy
 msgid "Register Checkmk agent"
-msgstr "Registrierte Agenten"
+msgstr "Checkmk-Agenten registrieren"
 
 #, fuzzy
 msgid "TLS connection not provided"
@@ -88586,39 +88536,32 @@ msgid ""
 "connection."
 msgstr ""
 
-#, fuzzy
 msgid "Provide TLS connection"
-msgstr "Neue TLS-Verbindungen"
+msgstr "TLS-Verbindung anbieten"
 
-#, fuzzy
 msgid "Test agent connection"
-msgstr "Test der Verbindung zum Checkmk-Agenten"
+msgstr "Agenten-Verbindung testen"
 
 msgid "Testing agent connection ..."
 msgstr ""
 
-#, fuzzy
 msgid "Successfully connected to agent."
-msgstr "Erfolgreich in die Zwischenablage kopiert."
+msgstr "Erfolgreich mit Agent verbunden."
 
-#, fuzzy
 msgid "Close slideout"
-msgstr "Verbindungs-Timeout"
+msgstr ""
 
-#, fuzzy
 msgid "Close & test connection"
-msgstr "Prüfe Verbindung"
+msgstr "Verbindung schließen & testen"
 
-#, fuzzy
 msgid "View all agents"
-msgstr "alle Agenten"
+msgstr "Alle Agenten ansehen"
 
 msgid "Select the type of system you want to monitor"
 msgstr ""
 
-#, fuzzy
 msgid "Save host"
-msgstr "Veraltete Hosts"
+msgstr "Host speichern"
 
 msgid ""
 "Agent registration is only possible for hosts that already exist in Checkmk "
@@ -88635,9 +88578,8 @@ msgstr ""
 msgid "Host \"${hostName}\" exists"
 msgstr "Host \"${hostName}\" existiert"
 
-#, fuzzy
 msgid "Close and revise form"
-msgstr "Modell und Revision"
+msgstr ""
 
 #, fuzzy
 msgid "Close & review"

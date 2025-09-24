@@ -10301,6 +10301,10 @@ msgstr "CPU使用率レベル"
 msgid "CPU Utilization of Clusters"
 msgstr "クラスターのCPU使用率"
 
+#, fuzzy
+msgid "CPU allocation ratio"
+msgstr "時間の経過に伴うシャードの割り当て"
+
 msgid "CPU architecture"
 msgstr "CPUアーキテクチャ"
 
@@ -39097,6 +39101,10 @@ msgstr "メモリ使用率"
 msgid "Memory allocated to percpu"
 msgstr "CPUに割り当てられたメモリ"
 
+#, fuzzy
+msgid "Memory allocation ratio"
+msgstr "CPUに割り当てられたメモリ"
+
 msgid "Memory and CPU of processes on Windows"
 msgstr "Windows上のプロセスのメモリとCPU"
 
@@ -49322,7 +49330,15 @@ msgstr "Proxmox VE"
 msgid "Proxmox VE CPU Utilization"
 msgstr "Proxmox VE CPU 使用率"
 
+#, fuzzy
+msgid "Proxmox VE Node CPU Allocation"
+msgstr "Proxmox VE CPU 使用率"
+
 msgid "Proxmox VE Node Info"
+msgstr "Proxmox VEノード情報"
+
+#, fuzzy
+msgid "Proxmox VE Node Memory Allocation"
 msgstr "Proxmox VEノード情報"
 
 msgid "Proxmox VE VM Backup"
@@ -85254,6 +85270,20 @@ msgstr "このエラーが続く場合は、Checkmkサポートチームまで�
 msgid "required"
 msgstr "必須"
 
+msgid ""
+"Due to a limitation in how Checkmk handles metrics internally, the results "
+"contain conflicting metrics and this top list may be incorrect or "
+"incomplete.n\n"
+"    This is caused by the service check commands with an example host and "
+"service in the following table.n\n"
+"    You can use these examples to identify hosts and services that must be "
+"filtered out in the top list configuration to resolve the problem."
+msgstr ""
+
+#, fuzzy
+msgid "Loading Top list content"
+msgstr "ラベル付けオプション"
+
 #, fuzzy
 msgid "Remove row"
 msgstr "削除：%r"
@@ -85458,6 +85488,14 @@ msgstr "ファイル情報"
 #, fuzzy
 msgid "Loading options…"
 msgstr "ラベル付けオプション"
+
+#, fuzzy
+msgid "Loading views..."
+msgstr "読み込んでいます..."
+
+#, fuzzy
+msgid "Choose from available views"
+msgstr "利用可能なユーザーはいません"
 
 #, fuzzy
 msgid "Add Widget"
@@ -85940,6 +85978,22 @@ msgstr "順位"
 #, fuzzy
 msgid "entries (max. %{max_entries})"
 msgstr "エントリー数 (最大50)"
+
+#, fuzzy
+msgid "Specific object type"
+msgstr "特定のオブジェクトタイプを選択します"
+
+#, fuzzy
+msgid "Next step: Data configuration"
+msgstr "状態構成を追加する"
+
+#, fuzzy
+msgid "View selection"
+msgstr "ファイル選択"
+
+#, fuzzy
+msgid "Copy view"
+msgstr "クローン ビュー"
 
 #, fuzzy
 msgid "explicit password"

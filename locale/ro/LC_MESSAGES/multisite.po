@@ -11039,6 +11039,10 @@ msgid "CPU Utilization of Clusters"
 msgstr "Utilizarea CPU a clusterelor"
 
 #, fuzzy
+msgid "CPU allocation ratio"
+msgstr "Alocarea de sharduri în timp"
+
+#, fuzzy
 msgid "CPU architecture"
 msgstr "Arhitectura CPU"
 
@@ -41716,6 +41720,10 @@ msgstr "Utilizarea memoriei"
 msgid "Memory allocated to percpu"
 msgstr "Utilizarea memoriei în procente"
 
+#, fuzzy
+msgid "Memory allocation ratio"
+msgstr "Utilizarea memoriei în procente"
+
 msgid "Memory and CPU of processes on Windows"
 msgstr "Memoria și CPU ale proceselor pe Windows"
 
@@ -52829,7 +52837,15 @@ msgstr "Proxmox VE"
 msgid "Proxmox VE CPU Utilization"
 msgstr "Utilizare CPU"
 
+#, fuzzy
+msgid "Proxmox VE Node CPU Allocation"
+msgstr "Utilizare CPU"
+
 msgid "Proxmox VE Node Info"
+msgstr "Proxmox VE Node Info"
+
+#, fuzzy
+msgid "Proxmox VE Node Memory Allocation"
 msgstr "Proxmox VE Node Info"
 
 msgid "Proxmox VE VM Backup"
@@ -91264,6 +91280,20 @@ msgstr ""
 msgid "required"
 msgstr "Port necesar"
 
+msgid ""
+"Due to a limitation in how Checkmk handles metrics internally, the results "
+"contain conflicting metrics and this top list may be incorrect or "
+"incomplete.n\n"
+"    This is caused by the service check commands with an example host and "
+"service in the following table.n\n"
+"    You can use these examples to identify hosts and services that must be "
+"filtered out in the top list configuration to resolve the problem."
+msgstr ""
+
+#, fuzzy
+msgid "Loading Top list content"
+msgstr "Opțiuni de etichetare"
+
 #, fuzzy
 msgid "Remove row"
 msgstr "Eliminat: %s"
@@ -91470,6 +91500,14 @@ msgstr "Obțineți informații despre..."
 #, fuzzy
 msgid "Loading options…"
 msgstr "Opțiuni de etichetare"
+
+#, fuzzy
+msgid "Loading views..."
+msgstr "Încărcare..."
+
+#, fuzzy
+msgid "Choose from available views"
+msgstr "Porturi disponibile"
 
 #, fuzzy
 msgid "Add Widget"
@@ -91957,6 +91995,22 @@ msgstr "Ordinea de clasament"
 #, fuzzy
 msgid "entries (max. %{max_entries})"
 msgstr "intrări (max. 50)"
+
+#, fuzzy
+msgid "Specific object type"
+msgstr "Selectați un anumit tip de obiect"
+
+#, fuzzy
+msgid "Next step: Data configuration"
+msgstr "Adăugați configurația de stare"
+
+#, fuzzy
+msgid "View selection"
+msgstr "Selecția fișierelor"
+
+#, fuzzy
+msgid "Copy view"
+msgstr "Vizualizare clonă"
 
 #, fuzzy
 msgid "explicit password"

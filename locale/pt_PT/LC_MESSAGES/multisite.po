@@ -11014,6 +11014,10 @@ msgid "CPU Utilization of Clusters"
 msgstr "Utilização de CPU de Aglomerados"
 
 #, fuzzy
+msgid "CPU allocation ratio"
+msgstr "Alocação das lascas ao longo do tempo"
+
+#, fuzzy
 msgid "CPU architecture"
 msgstr "Arquitetura da CPU"
 
@@ -41637,6 +41641,10 @@ msgstr "Utilização da memória"
 msgid "Memory allocated to percpu"
 msgstr "Utilização de memória em percentagem"
 
+#, fuzzy
+msgid "Memory allocation ratio"
+msgstr "Utilização de memória em percentagem"
+
 msgid "Memory and CPU of processes on Windows"
 msgstr "Memória e CPU de processos no Windows"
 
@@ -52710,7 +52718,15 @@ msgstr "Proxmox VE"
 msgid "Proxmox VE CPU Utilization"
 msgstr "utilização da CPU"
 
+#, fuzzy
+msgid "Proxmox VE Node CPU Allocation"
+msgstr "utilização da CPU"
+
 msgid "Proxmox VE Node Info"
+msgstr "Informação do nó Proxmox VE"
+
+#, fuzzy
+msgid "Proxmox VE Node Memory Allocation"
 msgstr "Informação do nó Proxmox VE"
 
 msgid "Proxmox VE VM Backup"
@@ -90930,6 +90946,20 @@ msgstr ""
 msgid "required"
 msgstr "Porto necessário"
 
+msgid ""
+"Due to a limitation in how Checkmk handles metrics internally, the results "
+"contain conflicting metrics and this top list may be incorrect or "
+"incomplete.n\n"
+"    This is caused by the service check commands with an example host and "
+"service in the following table.n\n"
+"    You can use these examples to identify hosts and services that must be "
+"filtered out in the top list configuration to resolve the problem."
+msgstr ""
+
+#, fuzzy
+msgid "Loading Top list content"
+msgstr "Opções de Rotulagem"
+
 #, fuzzy
 msgid "Remove row"
 msgstr "Removido: %s"
@@ -91135,6 +91165,14 @@ msgstr "Recuperar informação sobre..."
 #, fuzzy
 msgid "Loading options…"
 msgstr "Opções de Rotulagem"
+
+#, fuzzy
+msgid "Loading views..."
+msgstr "A carregar..."
+
+#, fuzzy
+msgid "Choose from available views"
+msgstr "Portos disponíveis"
 
 #, fuzzy
 msgid "Add Widget"
@@ -91616,6 +91654,22 @@ msgstr "Alerta se acabou"
 
 msgid "entries (max. %{max_entries})"
 msgstr ""
+
+#, fuzzy
+msgid "Specific object type"
+msgstr "Selecione o tipo de objeto específico"
+
+#, fuzzy
+msgid "Next step: Data configuration"
+msgstr "Adicionar configuração do estado"
+
+#, fuzzy
+msgid "View selection"
+msgstr "Seleção de Pasta"
+
+#, fuzzy
+msgid "Copy view"
+msgstr "Vista de clonagem"
 
 #, fuzzy
 msgid "explicit password"

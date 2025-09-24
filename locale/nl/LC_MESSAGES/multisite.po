@@ -11011,6 +11011,10 @@ msgid "CPU Utilization of Clusters"
 msgstr "CPU-gebruik van clusters"
 
 #, fuzzy
+msgid "CPU allocation ratio"
+msgstr "Verdeling van de scherven in de tijd"
+
+#, fuzzy
 msgid "CPU architecture"
 msgstr "CPU-Architectuur"
 
@@ -41644,6 +41648,10 @@ msgstr "Geheugengebruik"
 msgid "Memory allocated to percpu"
 msgstr "Geheugengebruik in procenten"
 
+#, fuzzy
+msgid "Memory allocation ratio"
+msgstr "Geheugengebruik in procenten"
+
 msgid "Memory and CPU of processes on Windows"
 msgstr "Geheugen en CPU van processen op Windows"
 
@@ -52744,7 +52752,15 @@ msgstr "Proxmox VE"
 msgid "Proxmox VE CPU Utilization"
 msgstr "CPU-gebruik"
 
+#, fuzzy
+msgid "Proxmox VE Node CPU Allocation"
+msgstr "CPU-gebruik"
+
 msgid "Proxmox VE Node Info"
+msgstr "Proxmox VE Knooppunt Info"
+
+#, fuzzy
+msgid "Proxmox VE Node Memory Allocation"
 msgstr "Proxmox VE Knooppunt Info"
 
 msgid "Proxmox VE VM Backup"
@@ -91040,6 +91056,20 @@ msgstr ""
 msgid "required"
 msgstr "Vereiste poort"
 
+msgid ""
+"Due to a limitation in how Checkmk handles metrics internally, the results "
+"contain conflicting metrics and this top list may be incorrect or "
+"incomplete.n\n"
+"    This is caused by the service check commands with an example host and "
+"service in the following table.n\n"
+"    You can use these examples to identify hosts and services that must be "
+"filtered out in the top list configuration to resolve the problem."
+msgstr ""
+
+#, fuzzy
+msgid "Loading Top list content"
+msgstr "Etiketteringsopties"
+
 #, fuzzy
 msgid "Remove row"
 msgstr "Verwijderd: %s"
@@ -91245,6 +91275,14 @@ msgstr "Informatie ophalen over..."
 #, fuzzy
 msgid "Loading options…"
 msgstr "Etiketteringsopties"
+
+#, fuzzy
+msgid "Loading views..."
+msgstr "Laden..."
+
+#, fuzzy
+msgid "Choose from available views"
+msgstr "Beschikbare poorten"
 
 #, fuzzy
 msgid "Add Widget"
@@ -91726,6 +91764,22 @@ msgstr "Waarschuwing indien meer dan"
 
 msgid "entries (max. %{max_entries})"
 msgstr ""
+
+#, fuzzy
+msgid "Specific object type"
+msgstr "Selecteer specifiek objecttype"
+
+#, fuzzy
+msgid "Next step: Data configuration"
+msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy
+msgid "View selection"
+msgstr "Map Selectie"
+
+#, fuzzy
+msgid "Copy view"
+msgstr "Kloon uitzicht"
 
 #, fuzzy
 msgid "explicit password"

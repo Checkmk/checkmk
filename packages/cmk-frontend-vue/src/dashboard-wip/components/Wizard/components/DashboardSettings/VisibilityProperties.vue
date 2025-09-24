@@ -12,10 +12,10 @@ import HelpText from '@/components/HelpText.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
-import FieldComponent from '../../../components/TableForm/FieldComponent.vue'
-import FieldDescription from '../../../components/TableForm/FieldDescription.vue'
-import TableForm from '../../../components/TableForm/TableForm.vue'
-import TableFormRow from '../../../components/TableForm/TableFormRow.vue'
+import FieldComponent from '../TableForm/FieldComponent.vue'
+import FieldDescription from '../TableForm/FieldDescription.vue'
+import TableForm from '../TableForm/TableForm.vue'
+import TableFormRow from '../TableForm/TableFormRow.vue'
 
 const { _t } = usei18n()
 

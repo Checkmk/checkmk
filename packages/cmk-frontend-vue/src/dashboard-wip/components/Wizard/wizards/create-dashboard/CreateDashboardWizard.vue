@@ -17,13 +17,15 @@ import { type DashboardGeneralSettings, DashboardLayout } from '@/dashboard-wip/
 
 import ActionBar from '../../components/ActionBar.vue'
 import ActionButton from '../../components/ActionButton.vue'
+import BoxedSection from '../../components/BoxedSection.vue'
 import ContentSpacer from '../../components/ContentSpacer.vue'
+import DashboardLayoutSelector from '../../components/DashboardSettings/DashboardLayoutSelector.vue'
+import DashboardScope from '../../components/DashboardSettings/DashboardScope.vue'
+import GeneralProperties from '../../components/DashboardSettings/GeneralProperties.vue'
+import VisibilityProperties from '../../components/DashboardSettings/VisibilityProperties.vue'
+import { isIdInUse, isValidSnakeCase } from '../../components/DashboardSettings/utils'
 import StepsHeader from '../../components/StepsHeader.vue'
-import BoxedSection from './components/BoxedSection.vue'
-import DashboardScope from './components/DashboardScope.vue'
 import DashboardTypeSelector from './components/DashboardTypeSelector.vue'
-import GeneralProperties from './components/GeneralProperties.vue'
-import VisibilityProperties from './components/VisibilityProperties.vue'
 import {
   type DashboardIcon,
   type DashboardMenu,
@@ -31,7 +33,6 @@ import {
   DashboardType,
   type DashboardVisibility
 } from './types'
-import { isIdInUse, isValidSnakeCase } from './utils'
 
 const { _t } = usei18n()
 
@@ -266,12 +267,17 @@ const cancel = () => {
             v-model:name="name"
             v-model:add-filter-suffix="addFilterSuffix"
             v-model:create-unique-id="createUniqueId"
-            v-model:dashboard-layout="dashboardLayout"
             v-model:unique-id="uniqueId"
             v-model:dashboard-icon="dashboardIcon"
             v-model:dashboard-emblem="dashboardEmblem"
             :name-validation-errors="nameErrors"
             :unique-id-validation-errors="uniqueIdErrors"
+          />
+
+          <ContentSpacer />
+
+          <DashboardLayoutSelector
+            v-model:dashboard-layout="dashboardLayout"
             :available-layouts="availableLayouts"
           />
         </template>

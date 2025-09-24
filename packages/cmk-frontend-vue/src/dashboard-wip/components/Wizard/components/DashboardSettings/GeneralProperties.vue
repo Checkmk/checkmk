@@ -13,22 +13,19 @@ import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
 import { useDebounceFn } from '@/dashboard-wip/composables/useDebounce'
-import { DashboardLayout } from '@/dashboard-wip/types/dashboard'
 
-import RadioButton from '../../../components/RadioButton.vue'
-import FieldComponent from '../../../components/TableForm/FieldComponent.vue'
-import FieldDescription from '../../../components/TableForm/FieldDescription.vue'
-import TableForm from '../../../components/TableForm/TableForm.vue'
-import TableFormRow from '../../../components/TableForm/TableFormRow.vue'
-import { generateUniqueId, isIdInUse, toSnakeCase } from '../utils'
-import IconSelector from './IconSelector.vue'
+import IconSelector from '../IconSelector.vue'
+import FieldComponent from '../TableForm/FieldComponent.vue'
+import FieldDescription from '../TableForm/FieldDescription.vue'
+import TableForm from '../TableForm/TableForm.vue'
+import TableFormRow from '../TableForm/TableFormRow.vue'
+import { generateUniqueId, isIdInUse, toSnakeCase } from './utils'
 
 const { _t } = usei18n()
 
 interface GeneralPropertiesProps {
   nameValidationErrors: string[]
   uniqueIdValidationErrors: string[]
-  availableLayouts: DashboardLayout[]
 }
 
 defineProps<GeneralPropertiesProps>()
@@ -45,7 +42,6 @@ const dashboardEmblem = defineModel<string | null>('dashboardEmblem', {
   required: false,
   default: null
 })
-const dashboardLayout = defineModel<DashboardLayout>('dashboardLayout', { required: true })
 
 const _generateUniqueId = async (base: string) => {
   uniqueId.value = (await isIdInUse(base)) ? await generateUniqueId(base) : base
@@ -59,13 +55,6 @@ const _updateDashboardName = (newName?: string) => {
       _debouncedGenerateUniqueId(toSnakeCase(newName.trim()))
     }
   }
-}
-
-const _updateDashboardLayout = (newLayout: string) => {
-  dashboardLayout.value =
-    newLayout === DashboardLayout.RELATIVE_GRID
-      ? DashboardLayout.RELATIVE_GRID
-      : DashboardLayout.RESPONSIVE_GRID
 }
 </script>
 
@@ -143,39 +132,6 @@ const _updateDashboardLayout = (newLayout: string) => {
         <FieldComponent>
           <div class="db-general-properties__item">
             <IconSelector :selected-icon="dashboardIcon" :selected-emblem="dashboardEmblem" />
-          </div>
-        </FieldComponent>
-      </TableFormRow>
-
-      <TableFormRow>
-        <FieldDescription>
-          {{ _t('Dashboard layout') }}
-          <HelpText
-            :help="
-              _t(
-                'You can choose between a fixed layout or a responsive, scrollable grid layout. By default, the responsive grid layout is selected.'
-              )
-            "
-          />
-        </FieldDescription>
-        <FieldComponent>
-          <div class="db-general-properties__item">
-            <RadioButton
-              v-if="availableLayouts.includes(DashboardLayout.RESPONSIVE_GRID)"
-              :model-value="dashboardLayout"
-              :value="DashboardLayout.RESPONSIVE_GRID"
-              :label="_t('Responsive')"
-              @update:model-value="_updateDashboardLayout"
-            />
-          </div>
-          <div class="db-general-properties__item">
-            <RadioButton
-              v-if="availableLayouts.includes(DashboardLayout.RELATIVE_GRID)"
-              :model-value="dashboardLayout"
-              :value="DashboardLayout.RELATIVE_GRID"
-              :label="_t('Responsive')"
-              @update:model-value="_updateDashboardLayout"
-            />
           </div>
         </FieldComponent>
       </TableFormRow>

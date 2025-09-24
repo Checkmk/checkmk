@@ -322,25 +322,26 @@ def _areastack(
     return list(map(fix_swap, zip_longest(base, edge)))
 
 
+def _parse_line_type(
+    mirror_prefix: Literal["", "-"], ts_line_type: LineType | Literal["ref"]
+) -> LineType | Literal["ref"]:
+    match ts_line_type:
+        case "line" | "-line":
+            return "line" if mirror_prefix == "" else "-line"
+        case "area" | "-area":
+            return "area" if mirror_prefix == "" else "-area"
+        case "stack" | "-stack":
+            return "stack" if mirror_prefix == "" else "-stack"
+        case "ref":
+            return "ref"
+    assert_never((mirror_prefix, ts_line_type))
+
+
 def _compute_graph_curves(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
     registered_metrics: Mapping[str, RegisteredMetric],
 ) -> Iterator[Curve]:
-    def _parse_line_type(
-        mirror_prefix: Literal["", "-"], ts_line_type: LineType | Literal["ref"]
-    ) -> LineType | Literal["ref"]:
-        match ts_line_type:
-            case "line" | "-line":
-                return "line" if mirror_prefix == "" else "-line"
-            case "area" | "-area":
-                return "area" if mirror_prefix == "" else "-area"
-            case "stack" | "-stack":
-                return "stack" if mirror_prefix == "" else "-stack"
-            case "ref":
-                return "ref"
-        assert_never((mirror_prefix, ts_line_type))
-
     # Fetch all raw RRD data
     rrd_data = fetch_rrd_data_for_graph(graph_recipe, graph_data_range, registered_metrics)
     for graph_metric in graph_recipe.metrics:

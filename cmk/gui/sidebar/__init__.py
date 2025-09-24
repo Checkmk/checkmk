@@ -302,7 +302,9 @@ class UserSidebarConfig:
         user_config = self._from_config(user_config, user_permissions)
 
         # Remove entries the user is not allowed for
-        user_config["snapins"] = [e for e in user_config["snapins"] if e.snapin_type.may_see()]
+        user_config["snapins"] = [
+            e for e in user_config["snapins"] if e.snapin_type.may_see(user_permissions)
+        ]
 
         return user_config
 
@@ -734,7 +736,9 @@ def ajax_snapin(config: Config) -> None:
     """Renders and returns the contents of the requested sidebar snapin(s) in JSON format"""
     response.set_content_type("application/json")
     user_config = UserSidebarConfig(
-        user, config.sidebar, UserPermissions.from_config(config, permission_registry)
+        user,
+        config.sidebar,
+        (user_permissions := UserPermissions.from_config(config, permission_registry)),
     )
 
     snapin_id = request.var("name")
@@ -749,7 +753,7 @@ def ajax_snapin(config: Config) -> None:
         except KeyError:
             continue  # Skip not existing snapins
 
-        if not snapin_instance.may_see():
+        if not snapin_instance.may_see(user_permissions):
             continue
 
         # When restart snapins are about to be refreshed, only render
@@ -892,7 +896,7 @@ def page_add_snapin(config: Config) -> None:
     for name, snapin_class in sorted(all_snapins(user_permissions).items()):
         if name in used_snapins:
             continue
-        if not snapin_class.may_see():
+        if not snapin_class.may_see(user_permissions):
             continue  # not allowed for this user
 
         html.open_div(

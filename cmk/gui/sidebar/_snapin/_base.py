@@ -9,6 +9,7 @@ from collections.abc import Callable
 from cmk.gui.config import Config, default_authorized_builtin_role_ids
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import PermissionName, RoleName
+from cmk.gui.utils.roles import UserPermissions
 
 PageHandlers = dict[str, Callable[[Config], None]]
 
@@ -62,7 +63,7 @@ class SidebarSnapin(abc.ABC):
         return default_authorized_builtin_role_ids
 
     @classmethod
-    def may_see(cls) -> bool:
+    def may_see(cls, user_permissions: UserPermissions) -> bool:
         return user.may(cls.permission_name())
 
     def styles(self) -> str | None:

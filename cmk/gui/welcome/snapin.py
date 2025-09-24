@@ -11,6 +11,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.sidebar import SidebarSnapin, SnapinRegistry
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.welcome.pages import get_welcome_data, WELCOME_PAGE_PERMISSIONS
 
 
@@ -44,7 +45,7 @@ class SidebarWelcomeSnapin(SidebarSnapin):
 
     @override
     @classmethod
-    def may_see(cls) -> bool:
+    def may_see(cls, user_permissions: UserPermissions) -> bool:
         if not all(user.may(perm) for perm in WELCOME_PAGE_PERMISSIONS):
             return False
         return True

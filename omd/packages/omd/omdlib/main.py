@@ -244,8 +244,17 @@ class CommandType(Enum):
 
 def start_site(version_info: VersionInfo, site: SiteContext) -> None:
     skelroot = "/omd/versions/%s/skel" % omdlib.__version__
-    prepare_and_populate_tmpfs(site.conf, version_info, site, skelroot)
     site_home = SitePaths.from_site_name(site.name).home
+    prepare_and_populate_tmpfs(
+        site.conf,
+        version_info,
+        site.name,
+        site_home,
+        site.tmp_dir,
+        site.replacements(),
+        site.skel_permissions,
+        skelroot,
+    )
     call_init_scripts(site_home, "start")
     if not (instance_id_file_path := get_instance_id_file_path(Path(site_home))).exists():
         # Existing sites may not have an instance ID yet. After an update we create a new one.
@@ -1720,7 +1729,16 @@ def init_action(
 
     if command in ["start", "restart"]:
         skelroot = "/omd/versions/%s/skel" % omdlib.__version__
-        prepare_and_populate_tmpfs(site.conf, version_info, site, skelroot)
+        prepare_and_populate_tmpfs(
+            site.conf,
+            version_info,
+            site.name,
+            site_home,
+            site.tmp_dir,
+            site.replacements(),
+            site.skel_permissions,
+            skelroot,
+        )
 
     if len(args) > 0:
         # restrict to this daemon
@@ -2243,8 +2261,18 @@ def finalize_site_as_user(
     # user. We also could do this at 'omd start', but this might confuse
     # users. They could create files below tmp which would be shadowed
     # by the mount.
+    site_home = SitePaths.from_site_name(site.name).home
     skelroot = "/omd/versions/%s/skel" % omdlib.__version__
-    prepare_and_populate_tmpfs(site.conf, version_info, site, skelroot)
+    prepare_and_populate_tmpfs(
+        site.conf,
+        version_info,
+        site.name,
+        site_home,
+        site.tmp_dir,
+        site.replacements(),
+        site.skel_permissions,
+        skelroot,
+    )
 
     # Run all hooks in order to setup things according to the
     # configuration settings
@@ -2254,7 +2282,6 @@ def finalize_site_as_user(
     save_site_conf(site)
     _update_cmk_core_config(site)
 
-    site_home = SitePaths.from_site_name(site.name).home
     if command_type in [CommandType.create, CommandType.copy, CommandType.restore_as_new_site]:
         save_instance_id(file_path=get_instance_id_file_path(Path(site_home)), instance_id=uuid4())
 
@@ -2288,8 +2315,9 @@ def main_rm(
         else:
             kill_site_user_processes(site.name, global_opts.verbose)
 
+    site_home = SitePaths.from_site_name(site.name).home
     if tmpfs_mounted(site.name):
-        unmount_tmpfs(site, kill=kill)
+        unmount_tmpfs(site.name, site_home, site.tmp_dir, kill=kill)
 
     # Remove include-hook for Apache and tell apache
     # Needs to be cleaned up before removing the site directory. Otherwise a
@@ -2303,13 +2331,12 @@ def main_rm(
     )
 
     if not reuse:
-        remove_from_fstab(site)
+        remove_from_fstab(site.name, site.tmp_dir)
         sys.stdout.write("Deleting user and group %s..." % site.name)
         os.chdir("/")  # Site directory not longer existant after userdel
         userdel(site.name)
         ok()
 
-    site_home = SitePaths.from_site_name(site.name).home
     if os.path.exists(site_home):  # should be done by userdel
         sys.stdout.write("Deleting all data (%s)..." % site_home)
         shutil.rmtree(site_home)
@@ -2348,7 +2375,7 @@ def main_disable(
 
     if not site.is_stopped(global_opts.verbose):
         call_init_scripts(site_home, "stop")
-    unmount_tmpfs(site, kill="kill" in options)
+    unmount_tmpfs(site.name, site_home, site.tmp_dir, kill="kill" in options)
     sys.stdout.write("Disabling Apache configuration for this site...")
     unregister_from_system_apache(
         version_info,
@@ -2462,9 +2489,14 @@ def main_mv_or_cp(
         )
 
     if command_type is CommandType.move:
-        unmount_tmpfs(old_site, kill="kill" in options)
+        unmount_tmpfs(
+            old_site.name,
+            SitePaths.from_site_name(old_site.name).home,
+            old_site.tmp_dir,
+            kill="kill" in options,
+        )
         if not reuse:
-            remove_from_fstab(old_site)
+            remove_from_fstab(old_site.name, old_site.tmp_dir)
 
     sys.stdout.write(
         "{}ing site {} to {}...".format(
@@ -2714,12 +2746,12 @@ def main_update(
     if not site.is_stopped(global_opts.verbose):
         sys.exit("Please completely stop '%s' before updating it." % site.name)
 
+    site_home = SitePaths.from_site_name(site.name).home
     # Unmount tmp. We need to recreate the files and directories
     # from the new version after updating.
-    unmount_tmpfs(site)
+    unmount_tmpfs(site.name, site_home, site.tmp_dir)
 
     # Source version: the version of the site we deal with
-    site_home = SitePaths.from_site_name(site.name).home
     from_version = version_from_site_dir(Path(site_home))
     if from_version is None:
         sys.exit("Failed to determine site version")
@@ -2811,7 +2843,9 @@ def main_update(
 
             # Before the hooks can be executed the tmpfs needs to be mounted. This requires access to the
             # initialized tmpfs.
-            mu.prepare_and_populate_tmpfs(version_info, site)
+            mu.prepare_and_populate_tmpfs(
+                version_info, site, site.replacements(), site.skel_permissions
+            )
 
             additional_update_env = {
                 "OMD_TO_EDITION": to_edition,
@@ -2900,13 +2934,20 @@ def main_umount(
             sys.stdout.write(f"{tty.bold}Unmounting tmpfs of site {site.name}{tty.normal}...")
             sys.stdout.flush()
 
-            if not show_success(unmount_tmpfs(site, False, kill="kill" in options)):
+            if not show_success(
+                unmount_tmpfs(site.name, site_home, site.tmp_dir, False, kill="kill" in options)
+            ):
                 exit_status = 1
     else:
         # Skip the site even when it is partly running
         if not site.is_stopped(global_opts.verbose):
             sys.exit("Cannot unmount tmpfs of site '%s' while it is running." % site.name)
-        unmount_tmpfs(site, kill="kill" in options)
+        unmount_tmpfs(
+            site.name,
+            SitePaths.from_site_name(site.name).home,
+            site.tmp_dir,
+            kill="kill" in options,
+        )
     sys.exit(exit_status)
 
 
@@ -3316,7 +3357,7 @@ def prepare_restore_as_root(
         else:
             with subprocess.Popen(["omd", "stop", site.name]):
                 pass
-        unmount_tmpfs(site, kill="kill" in options)
+        unmount_tmpfs(site.name, site_home, site.tmp_dir, kill="kill" in options)
 
     if not reuse:
         uid = options.get("uid")
@@ -3341,7 +3382,7 @@ def prepare_restore_as_site_user(site: SiteContext, options: CommandOptions, ver
     kill_site_user_processes(site.name, verbose)
     ok()
 
-    unmount_tmpfs(site)
+    unmount_tmpfs(site.name, site_home, site.tmp_dir)
 
     sys.stdout.write("Deleting existing site data...")
     for f in os.listdir(site_home):

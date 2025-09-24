@@ -16,9 +16,8 @@ import time
 from pathlib import Path
 
 from omdlib.console import ok
-from omdlib.contexts import SiteContext
-from omdlib.site_paths import SitePaths
-from omdlib.type_defs import Config
+from omdlib.skel_permissions import Permissions
+from omdlib.type_defs import Config, Replacements
 from omdlib.utils import (
     chown_tree,
     create_skeleton_files,
@@ -100,17 +99,18 @@ def prepare_tmpfs(version_info: VersionInfo, site_name: str, tmp_dir: str, tmpfs
     )
 
 
-def mark_tmpfs_initialized(site: SiteContext) -> None:
+def mark_tmpfs_initialized(site_tmp_dir: str) -> None:
     """Write a simple file marking the time of the tmpfs structure initialization
 
     The st_ctime of the file will be used by Checkmk to know when the tmpfs file
     structure was initialized."""
-    with Path(site.tmp_dir, "initialized").open("w", encoding="utf-8") as f:
+    with Path(site_tmp_dir, "initialized").open("w", encoding="utf-8") as f:
         f.write("")
 
 
-def unmount_tmpfs(site: SiteContext, output: bool = True, kill: bool = False) -> bool:
-    site_home = SitePaths.from_site_name(site.name).home
+def unmount_tmpfs(
+    site_name: str, site_home: str, site_tmp_dir: str, output: bool = True, kill: bool = False
+) -> bool:
     # During omd update TMPFS hook might not be set so assume
     # that the hook is enabled by default.
     # If kill is True, then we do an fuser -k on the tmp
@@ -118,13 +118,13 @@ def unmount_tmpfs(site: SiteContext, output: bool = True, kill: bool = False) ->
 
     # For some files in tmpfs we want the IO performance of the tmpfs and
     # want to keep the files between unmount / mount operations (if possible).
-    if tmpfs_mounted(site.name):
+    if tmpfs_mounted(site_name):
         if output:
             sys.stdout.write("Saving temporary filesystem contents...")
-        save_tmpfs_dump(site_home, site.tmp_dir)
+        save_tmpfs_dump(site_home, site_tmp_dir)
         if output:
             ok()
-    return unmount_tmpfs_without_save(site.name, site.tmp_dir, output, kill)
+    return unmount_tmpfs_without_save(site_name, site_tmp_dir, output, kill)
 
 
 def unmount_tmpfs_without_save(
@@ -225,19 +225,20 @@ def add_to_fstab(
         )
 
 
-def remove_from_fstab(site: SiteContext, fstab_path: Path = Path("/etc/fstab")) -> None:
+def remove_from_fstab(
+    site_name: str, site_tmp_dir: str, fstab_path: Path = Path("/etc/fstab")
+) -> None:
     if not fstab_path.exists():
         return  # Don't do anything in case there is no fstab
 
-    mountpoint = site.tmp_dir
-    sys.stdout.write(f"Removing {mountpoint} from {fstab_path}...")
+    sys.stdout.write(f"Removing {site_tmp_dir} from {fstab_path}...")
 
     with (
         (path_new_fstab := Path(str(fstab_path) + ".new")).open(mode="w") as newtab,
         fstab_path.open() as current_fstab,
     ):
         for line in current_fstab:
-            if "uid=%s," % site.name in line and mountpoint in line:
+            if "uid=%s," % site_name in line and site_tmp_dir in line:
                 continue
             newtab.write(line)
     path_new_fstab.rename(fstab_path)
@@ -281,21 +282,22 @@ def _restore_tmpfs_dump(site_dir: str, site_tmp_dir: str) -> None:
 def prepare_and_populate_tmpfs(
     config: Config,
     version_info: VersionInfo,
-    site: SiteContext,
+    site_name: str,
+    site_home: str,
+    site_tmp_dir: str,
+    replacements: Replacements,
+    skel_permissions: Permissions,
     skelroot: str,
 ) -> None:
-    site_home = SitePaths.from_site_name(site.name).home
-    prepare_tmpfs(version_info, site.name, site.tmp_dir, config["TMPFS"])
+    prepare_tmpfs(version_info, site_name, site_tmp_dir, config["TMPFS"])
 
-    if not os.listdir(site.tmp_dir):
-        create_skeleton_files(
-            site_home, site.replacements(), skelroot, site.skel_permissions, "tmp"
-        )
-        chown_tree(site.tmp_dir, site.name)
-        mark_tmpfs_initialized(site)
-        _restore_tmpfs_dump(site_home, site.tmp_dir)
+    if not os.listdir(site_tmp_dir):
+        create_skeleton_files(site_home, replacements, skelroot, skel_permissions, "tmp")
+        chown_tree(site_tmp_dir, site_name)
+        mark_tmpfs_initialized(site_tmp_dir)
+        _restore_tmpfs_dump(site_home, site_tmp_dir)
 
-    _create_livestatus_tcp_socket_link(config["LIVESTATUS_TCP_TLS"], site.tmp_dir)
+    _create_livestatus_tcp_socket_link(config["LIVESTATUS_TCP_TLS"], site_tmp_dir)
 
 
 def _create_livestatus_tcp_socket_link(live_status_tcp_tls: str, site_tmp_dir: str) -> None:

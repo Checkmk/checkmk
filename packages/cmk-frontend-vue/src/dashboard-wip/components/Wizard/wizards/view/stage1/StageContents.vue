@@ -15,29 +15,18 @@ import ActionButton from '@/dashboard-wip/components/Wizard/components/ActionBut
 import ContentSpacer from '@/dashboard-wip/components/Wizard/components/ContentSpacer.vue'
 import NewView from '@/dashboard-wip/components/Wizard/wizards/view/stage1/components/NewView.vue'
 import ReferenceView from '@/dashboard-wip/components/Wizard/wizards/view/stage1/components/ReferenceView.vue'
-import { ModeSelection } from '@/dashboard-wip/components/Wizard/wizards/view/types.ts'
 import type { Filters } from '@/dashboard-wip/components/filter/composables/useFilters'
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
 
+import { ViewSelectionMode } from '../types'
+import type {
+  CopyExistingViewSelection,
+  LinkExistingViewSelection,
+  NewViewSelection,
+  ViewSelection
+} from '../types'
+
 const { _t } = usei18n()
-
-export interface CreateNewView {
-  type: ModeSelection.NEW
-  datasource: string
-  restrictedToSingleInfos: string[]
-}
-
-export interface CopyExistingView {
-  type: ModeSelection.COPY
-  originalViewName: string
-}
-
-export interface LinkExistingView {
-  type: ModeSelection.LINK
-  viewName: string
-}
-
-type ViewCreationData = CreateNewView | CopyExistingView | LinkExistingView
 
 interface Stage1Props {
   dashboardFilters: ConfiguredFilters
@@ -49,7 +38,7 @@ interface Stage1Props {
 defineProps<Stage1Props>()
 
 const emit = defineEmits<{
-  goNext: [viewData: ViewCreationData]
+  goNext: [selectedView: ViewSelection]
 }>()
 
 const selectedDatasource = defineModel<string | null>('selectedDatasource', { default: '' })
@@ -59,37 +48,37 @@ const originalViewName = defineModel<string | null>('originalViewName', { defaul
 const referencedViewName = defineModel<string | null>('referencedViewName', { default: null })
 
 function goToNextStage() {
-  let viewData: ViewCreationData
-  if (modeSelection.value === ModeSelection.NEW) {
-    viewData = {
-      type: ModeSelection.NEW,
+  let viewSelection: ViewSelection
+  if (modeSelection.value === ViewSelectionMode.NEW) {
+    viewSelection = {
+      type: ViewSelectionMode.NEW,
       datasource: selectedDatasource.value,
-      restrictedToSingleInfos: restrictedToSingleInfos.value
-    } as CreateNewView
-  } else if (modeSelection.value === ModeSelection.COPY) {
+      restrictedToSingle: restrictedToSingleInfos.value
+    } as NewViewSelection
+  } else if (modeSelection.value === ViewSelectionMode.COPY) {
     if (!originalViewName.value) {
       throw new Error('No original view name selected')
     }
-    viewData = {
-      type: ModeSelection.COPY,
-      originalViewName: originalViewName.value
-    } as CopyExistingView
-  } else if (modeSelection.value === ModeSelection.LINK) {
+    viewSelection = {
+      type: ViewSelectionMode.COPY,
+      viewName: originalViewName.value
+    } as CopyExistingViewSelection
+  } else if (modeSelection.value === ViewSelectionMode.LINK) {
     if (!referencedViewName.value) {
       throw new Error('No referenced view name selected')
     }
-    viewData = {
-      type: ModeSelection.LINK,
+    viewSelection = {
+      type: ViewSelectionMode.LINK,
       viewName: referencedViewName.value
-    } as LinkExistingView
+    } as LinkExistingViewSelection
   } else {
     throw new Error('Invalid mode selection')
   }
-  emit('goNext', viewData)
+  emit('goNext', viewSelection)
 }
 
-const modeSelection = defineModel<ModeSelection>('modeSelection', {
-  default: ModeSelection.NEW
+const modeSelection = defineModel<ViewSelectionMode>('modeSelection', {
+  default: ViewSelectionMode.NEW
 })
 </script>
 
@@ -125,31 +114,31 @@ const modeSelection = defineModel<ModeSelection>('modeSelection', {
     <ToggleButtonGroup
       v-model="modeSelection"
       :options="[
-        { label: _t('New view'), value: ModeSelection.NEW },
+        { label: _t('New view'), value: ViewSelectionMode.NEW },
         {
           label: _t('Copy view'),
-          value: ModeSelection.COPY
+          value: ViewSelectionMode.COPY
         },
         {
           label: _t('Link to existing view'),
-          value: ModeSelection.LINK
+          value: ViewSelectionMode.LINK
         }
       ]"
     />
-    <div v-if="modeSelection === ModeSelection.NEW">
+    <div v-if="modeSelection === ViewSelectionMode.NEW">
       <NewView
         v-model:selected-datasource="selectedDatasource"
         v-model:context-infos="contextInfos"
         v-model:restricted-to-single-infos="restrictedToSingleInfos"
       />
     </div>
-    <div v-else-if="modeSelection === ModeSelection.COPY">
+    <div v-else-if="modeSelection === ViewSelectionMode.COPY">
       <ReferenceView
         v-model:referenced-view="originalViewName"
         v-model:context-infos="contextInfos"
       />
     </div>
-    <div v-else-if="modeSelection === ModeSelection.LINK">
+    <div v-else-if="modeSelection === ViewSelectionMode.LINK">
       <ReferenceView
         v-model:referenced-view="referencedViewName"
         v-model:context-infos="contextInfos"

@@ -4,8 +4,31 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-export enum ModeSelection {
+export enum ViewSelectionMode {
   NEW = 'new',
-  LINK = 'link',
-  COPY = 'copy'
+  COPY = 'copy',
+  LINK = 'link'
+}
+
+export interface NewViewSelection {
+  type: ViewSelectionMode.NEW
+  datasource: string
+  restrictedToSingle: string[]
+}
+
+export interface CopyExistingViewSelection {
+  type: ViewSelectionMode.COPY
+  viewName: string
+}
+
+export interface LinkExistingViewSelection {
+  type: ViewSelectionMode.LINK
+  viewName: string
+}
+
+export type ViewSelection = NewViewSelection | CopyExistingViewSelection | LinkExistingViewSelection
+
+export enum DataConfigurationMode {
+  CREATE = 'create',
+  EDIT = 'edit'
 }

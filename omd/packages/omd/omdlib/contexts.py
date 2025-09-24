@@ -44,12 +44,8 @@ class SiteContext:
         return "%s/tmp" % self._paths.home
 
     @property
-    def real_dir(self) -> str:
-        return "/opt/" + self._paths.home.lstrip("/")
-
-    @property
     def real_tmp_dir(self) -> str:
-        return "%s/tmp" % self.real_dir
+        return f"/opt{self._paths.home}/tmp"  # nosec B108 # BNS:7a2427
 
     @property
     def hook_dir(self) -> str | None:

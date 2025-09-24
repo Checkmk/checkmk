@@ -5,6 +5,7 @@
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 
 from .bulk_create_host import ENDPOINT_BULK_CREATE_HOST
+from .bulk_update_host import ENDPOINT_BULK_UPDATE_HOST
 from .create_cluster_host import ENDPOINT_CREATE_CLUSTER_HOST
 from .create_host import ENDPOINT_CREATE_HOST
 from .list_hosts import ENDPOINT_LIST_HOSTS
@@ -29,3 +30,6 @@ def register(
         ENDPOINT_UPDATE_CLUSTER_NODES, ignore_duplicates=ignore_duplicates
     )
     versioned_endpoint_registry.register(ENDPOINT_UPDATE_HOST, ignore_duplicates=ignore_duplicates)
+    versioned_endpoint_registry.register(
+        ENDPOINT_BULK_UPDATE_HOST, ignore_duplicates=ignore_duplicates
+    )

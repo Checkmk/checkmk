@@ -207,6 +207,5 @@ endif
 ifeq ($(EDITION),saas)
 include \
     packages/enterprise/enterprise.make \
-    packages/cloud/cloud.make \
-    packages/saas/saas.make
+    packages/cloud/cloud.make
 endif

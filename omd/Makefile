@@ -46,7 +46,6 @@ endif
 ifeq ($(EDITION),saas)
 PACKAGES += enterprise
 PACKAGES += cloud
-PACKAGES += saas
 endif
 
 BUILD_TARGET_VARS := $(call package_target_prefix,$(PACKAGES))

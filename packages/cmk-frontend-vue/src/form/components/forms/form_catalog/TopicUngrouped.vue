@@ -72,16 +72,20 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 </script>
 
 <template>
-  <tr v-for="element in props.elements" :key="`${componentId}.${element.name}`">
-    <td class="title">
-      <span class="fixed_content_width">
-        <label :class="{ show_pointer: !element.required }">
+  <tr
+    v-for="element in props.elements"
+    :key="`${componentId}.${element.name}`"
+    class="form-topic-ungrouped__root"
+  >
+    <td class="form-topic-ungrouped__title">
+      <span class="form-topic-ungrouped__fixed-content-width">
+        <label :class="{ 'form-topic-ungrouped__show-pointer': !element.required }">
           <CmkCheckbox
             v-if="!element.required"
             v-model="checkedElements[element.name]!"
             @update:model-value="toggleElement(element.name)"
           />
-          <span v-else class="hidden_checkbox_size" />
+          <span v-else class="form-topic-ungrouped__hidden-checkbox-size" />
           {{ element.parameter_form.title
           }}<FormRequired
             v-if="!rendersRequiredLabelItself(element.parameter_form)"
@@ -89,10 +93,10 @@ const { FormEditDispatcher } = useFormEditDispatcher()
             :space="'before'"
           />
         </label>
-        <span class="dots">{{ Array(200).join('.') }}</span>
+        <span class="form-topic-ungrouped__dots">{{ Array(200).join('.') }}</span>
       </span>
     </td>
-    <td class="value">
+    <td class="form-topic-ungrouped__value">
       <FormEditDispatcher
         v-if="element.name in data"
         v-model:data="data[element.name]"
@@ -104,39 +108,48 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-td.title {
+.form-topic-ungrouped__title,
+.form-topic-ungrouped__value {
+  vertical-align: top;
+  font-weight: 400;
+  empty-cells: show;
+  white-space: nowrap;
+}
+
+.form-topic-ungrouped__title {
   width: 240px;
   min-width: 240px;
   max-width: 240px;
-  vertical-align: top;
-
-  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-  span.fixed_content_width {
-    width: 230px;
-    display: inline-block;
-    white-space: nowrap;
-    overflow: hidden;
-  }
-
-  label {
-    /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-    &.show_pointer {
-      cursor: pointer;
-    }
-  }
-
-  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-  span.hidden_checkbox_size {
-    width: 13px;
-    display: inline-block;
-  }
+  padding: 5px 2px;
+  color: #333;
+  display: table-cell;
+  letter-spacing: 1px;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-td.value {
+.form-topic-ungrouped__dots {
+  margin-left: 5px;
+  overflow: hidden;
+  color: rgb(51 51 51 / 80%);
+}
+
+.form-topic-ungrouped__hidden-checkbox-size {
+  width: 13px;
+  display: inline-block;
+}
+
+.form-topic-ungrouped__show-pointer {
+  cursor: pointer;
+}
+
+.form-topic-ungrouped__value {
   width: 100%;
-  vertical-align: top;
-  padding-bottom: 4px;
+  padding: 5px 0 4px;
+}
+
+.form-topic-ungrouped__fixed-content-width {
+  width: 230px;
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
 }
 </style>

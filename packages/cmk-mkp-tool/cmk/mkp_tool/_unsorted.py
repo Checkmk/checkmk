@@ -261,7 +261,7 @@ def edit(  # pylint: disable=too-many-positional-arguments
 def _raise_for_nonexisting_files(manifest: Manifest, path_config: PathConfig) -> None:
     for part, rel_path in manifest.files.items():
         for rp in rel_path:
-            if not (fp := (path_config.get_path(part) / rp).exists()):
+            if not (fp := path_config.get_path(part) / rp).exists():
                 raise PackageError(f"File {fp} does not exist.")
 
 

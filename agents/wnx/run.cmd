@@ -282,33 +282,12 @@ cd ..\..
 if not %errorlevel% == 0 powershell Write-Host "Failed Build of Extensions" -Foreground Red & call :halt 73
 goto :eof
 
-:build_msi
-if not "%arg_msi%" == "1" powershell Write-Host "Skipped MSI Build" -Foreground Yellow & goto :eof
-powershell Write-Host "run:Building MSI..." -Foreground White
-del /Y %build_dir%\install\Release\check_mk_service.msi
-"%msbuild_exe%" wamain.sln /t:install /p:Configuration=Release,Platform=x86
-if not %errorlevel% == 0 powershell Write-Host "Failed Install build" -Foreground Red & call :halt 8
-goto :eof
-
-:: Patch Version Phase: Patch version value direct in the msi file
-:: set version:
-:: remove quotes
-:set_msi_version
-if not "%arg_msi%" == "1" goto :eof
-echo %wnx_version:~1,-1%
-:: info
-powershell Write-Host "run:Setting Version in MSI: %wnx_version%" -Foreground Green
-:: command
-@echo cscript.exe //nologo WiRunSQL.vbs %arte%\check_mk_agent.msi "UPDATE `Property` SET `Property`.`Value`='%wnx_version:~1,-1%' WHERE `Property`.`Property`='ProductVersion'"
-cscript.exe //nologo scripts\WiRunSQL.vbs %build_dir%\install\Release\check_mk_service.msi "UPDATE `Property` SET `Property`.`Value`='%wnx_version:~1,-1%' WHERE `Property`.`Property`='ProductVersion'"
-:: check result
-if not %errorlevel% == 0 powershell Write-Host "Failed version set" -Foreground Red & call :halt 34
-goto :eof
-
 :unit_test
 :: Unit Tests Phase: post processing/build special modules using make
 if not "%arg_test%" == "1" powershell Write-Host "Skipped Unit test" -Foreground Yellow & goto :eof
 powershell Write-Host "run:Unit testing..." -Foreground White
+:: to be sure that all artifacts are up to date
+"%msbuild_exe%" wamain.sln /t:install /p:Configuration=Release,Platform=x86
 net stop WinRing0_1_2_0
 copy %build_dir%\watest\Win32\Release\watest32.exe %arte% /Y
 copy %build_dir%\watest\x64\Release\watest64.exe %arte% /Y
@@ -333,6 +312,29 @@ powershell Write-Host "Signing Executables" -Foreground White
 @call scripts\sign_code.cmd %arte%\mk-sql.exe %hash_file%
 @call scripts\sign_code.cmd %build_dir%\ohm\OpenHardwareMonitorLib.dll %hash_file%
 @call scripts\sign_code.cmd %build_dir%\ohm\OpenHardwareMonitorCLI.exe %hash_file%
+goto :eof
+
+:build_msi
+if not "%arg_msi%" == "1" powershell Write-Host "Skipped MSI Build" -Foreground Yellow & goto :eof
+powershell Write-Host "run:Building MSI..." -Foreground White
+del /Y %build_dir%\install\Release\check_mk_service.msi
+"%msbuild_exe%" wamain.sln /t:install /p:Configuration=Release,Platform=x86
+if not %errorlevel% == 0 powershell Write-Host "Failed Install build" -Foreground Red & call :halt 8
+goto :eof
+
+:: Patch Version Phase: Patch version value direct in the msi file
+:: set version:
+:: remove quotes
+:set_msi_version
+if not "%arg_msi%" == "1" goto :eof
+echo %wnx_version:~1,-1%
+:: info
+powershell Write-Host "run:Setting Version in MSI: %wnx_version%" -Foreground Green
+:: command
+@echo cscript.exe //nologo WiRunSQL.vbs %arte%\check_mk_agent.msi "UPDATE `Property` SET `Property`.`Value`='%wnx_version:~1,-1%' WHERE `Property`.`Property`='ProductVersion'"
+cscript.exe //nologo scripts\WiRunSQL.vbs %build_dir%\install\Release\check_mk_service.msi "UPDATE `Property` SET `Property`.`Value`='%wnx_version:~1,-1%' WHERE `Property`.`Property`='ProductVersion'"
+:: check result
+if not %errorlevel% == 0 powershell Write-Host "Failed version set" -Foreground Red & call :halt 34
 goto :eof
 
 

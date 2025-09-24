@@ -28,15 +28,3 @@ def test_site_context_replacements(monkeypatch: pytest.MonkeyPatch) -> None:
     assert replacements["###ROOT###"] == "/omd/sites/dingeling"
     assert replacements["###EDITION###"] in ("raw", "enterprise", "cloud", "managed")
     assert len(replacements) == 3
-
-
-def test_site_context_is_empty(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(
-        os, "listdir", lambda p: [] if p == "/omd/sites/dingeling" else ["abc", "version"]
-    )
-
-    site = SiteContext("dingeling")
-    assert site.is_empty()
-
-    site = SiteContext("dingelang")
-    assert not site.is_empty()

@@ -68,12 +68,6 @@ class SiteContext:
         self._config = config
         self._config_loaded = True
 
-    def is_empty(self) -> bool:
-        for entry in os.listdir(self._paths.home):
-            if entry not in [".", ".."]:
-                return False
-        return True
-
     def is_stopped(self, verbose: bool) -> bool:
         """Check if site is completely stopped"""
         return check_status(self._paths.home, verbose, display=False) == 1

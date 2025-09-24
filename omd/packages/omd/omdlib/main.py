@@ -2100,13 +2100,15 @@ def main_init(
     _args: object,
     options: CommandOptions,
 ) -> None:
-    if not is_disabled(SitePaths.from_site_name(site.name).apache_conf):
+    site_paths = SitePaths.from_site_name(site.name)
+    site_home, apache_conf = site_paths.home, site_paths.apache_conf
+    if not is_disabled(apache_conf):
         sys.exit(
             "Cannot initialize site that is not disabled.\n"
             "Please call 'omd disable %s' first." % site.name
         )
 
-    if not site.is_empty():
+    if not os.listdir(site_home):
         if not global_opts.force:
             sys.exit(
                 "The site's home directory is not empty. Please add use\n"
@@ -2118,7 +2120,6 @@ def main_init(
         # unlikely, since people using 'omd init' are doing this most times
         # because they are working with clusters and separate filesystems for
         # each site.
-        site_home = SitePaths.from_site_name(site.name).home
         sys.stdout.write("Wiping the contents of %s..." % site_home)
         for entry in os.listdir(site_home):
             if entry not in [".", ".."]:

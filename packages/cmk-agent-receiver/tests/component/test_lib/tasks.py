@@ -7,19 +7,21 @@ from http import HTTPStatus
 from cmk.agent_receiver.relay.lib.shared_types import TaskID
 from cmk.relay_protocols.tasks import (
     FetchAdHocTask,
-    Task,
     TaskCreateResponse,
     TaskListResponse,
     TaskResponse,
+    TaskSpec,
 )
 
 from .agent_receiver import AgentReceiverClient
 
 
-def push_task(agent_receiver: AgentReceiverClient, relay_id: str, task: Task) -> TaskCreateResponse:
+def push_task(
+    agent_receiver: AgentReceiverClient, relay_id: str, spec: TaskSpec
+) -> TaskCreateResponse:
     """helper to push tasks for a relay.
     It abstracts away the reponses and gives you a reasonable type to work with."""
-    response = agent_receiver.push_task(relay_id=relay_id, task=task)
+    response = agent_receiver.push_task(relay_id=relay_id, spec=spec)
     assert response.status_code == HTTPStatus.OK, response.text
     return TaskCreateResponse.model_validate(response.json())
 
@@ -39,7 +41,7 @@ def add_tasks(count: int, agent_receiver: AgentReceiverClient, relay_id: str) ->
         push_task(
             agent_receiver=agent_receiver,
             relay_id=relay_id,
-            task=FetchAdHocTask(payload=f"payload_{i}"),
+            spec=FetchAdHocTask(payload=f"payload_{i}"),
         )
         for i in range(count)
     )

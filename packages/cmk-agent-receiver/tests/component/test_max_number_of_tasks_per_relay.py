@@ -33,7 +33,7 @@ def test_cannot_push_more_tasks_than_allowed(
 
     response = agent_receiver.push_task(
         relay_id=relay_id,
-        task=FetchAdHocTask(payload=".."),
+        spec=FetchAdHocTask(payload=".."),
     )
 
     assert response.status_code == HTTPStatus.FORBIDDEN, response.text
@@ -64,7 +64,7 @@ def test_each_relay_has_its_own_limit(agent_receiver: AgentReceiverClient, site:
 
     response = agent_receiver.push_task(
         relay_id=relay_id_B,
-        task=FetchAdHocTask(payload=".."),
+        spec=FetchAdHocTask(payload=".."),
     )
     assert response.status_code == HTTPStatus.OK, response.text
 

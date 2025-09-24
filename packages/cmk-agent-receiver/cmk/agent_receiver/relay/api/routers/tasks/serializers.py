@@ -6,31 +6,31 @@
 from typing import assert_never
 
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
-    FetchTask,
-    RelayConfigTask,
-    Task,
+    FetchSpec,
+    RelayConfigSpec,
+    RelayTask,
 )
 from cmk.relay_protocols import tasks as tasks_protocol
 
 
 class TaskResponseSerializer:
     @staticmethod
-    def serialize(task: Task) -> tasks_protocol.TaskResponse:
-        task_protocol: tasks_protocol.RelayConfigTask | tasks_protocol.FetchAdHocTask | None = None
-        match task.payload:
-            case RelayConfigTask():
-                task_protocol = tasks_protocol.RelayConfigTask(serial=task.payload.serial)
-            case FetchTask():
-                task_protocol = tasks_protocol.FetchAdHocTask(
-                    payload=task.payload.payload,
-                    timeout=task.payload.timeout,
+    def serialize(task: RelayTask) -> tasks_protocol.TaskResponse:
+        spec: tasks_protocol.RelayConfigTask | tasks_protocol.FetchAdHocTask | None = None
+        match task.spec:
+            case RelayConfigSpec():
+                spec = tasks_protocol.RelayConfigTask(serial=task.spec.serial)
+            case FetchSpec():
+                spec = tasks_protocol.FetchAdHocTask(
+                    payload=task.spec.payload,
+                    timeout=task.spec.timeout,
                 )
             case _:
                 assert_never(task)
 
         return tasks_protocol.TaskResponse(
             id=task.id,
-            task=task_protocol,
+            spec=spec,
             status=tasks_protocol.TaskStatus(task.status.value),
             result_type=tasks_protocol.ResultType(task.result_type.value)
             if task.result_type
@@ -43,7 +43,7 @@ class TaskResponseSerializer:
 
 class TaskListResponseSerializer:
     @staticmethod
-    def serialize(task_list: list[Task]) -> tasks_protocol.TaskListResponse:
+    def serialize(task_list: list[RelayTask]) -> tasks_protocol.TaskListResponse:
         return tasks_protocol.TaskListResponse(
             tasks=[TaskResponseSerializer.serialize(task) for task in task_list]
         )

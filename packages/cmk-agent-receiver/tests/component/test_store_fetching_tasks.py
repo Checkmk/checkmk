@@ -23,13 +23,13 @@ def test_store_fetching_task(
     push_task(
         agent_receiver=agent_receiver,
         relay_id=relay_id,
-        task=FetchAdHocTask(payload="any payload"),
+        spec=FetchAdHocTask(payload="any payload"),
     )
 
     tasks_1 = get_relay_tasks(agent_receiver, relay_id)
     assert len(tasks_1.tasks) == 1
-    assert isinstance(tasks_1.tasks[0].task, FetchAdHocTask)
-    assert tasks_1.tasks[0].task.payload == "any payload"
+    assert isinstance(tasks_1.tasks[0].spec, FetchAdHocTask)
+    assert tasks_1.tasks[0].spec.payload == "any payload"
 
 
 def test_store_fetching_tasks_does_not_affect_other_relays(
@@ -43,7 +43,7 @@ def test_store_fetching_tasks_does_not_affect_other_relays(
     push_task(
         agent_receiver=agent_receiver,
         relay_id=relay_id_A,
-        task=FetchAdHocTask(payload=".."),
+        spec=FetchAdHocTask(payload=".."),
     )
 
     tasks_A = get_relay_tasks(agent_receiver, relay_id_A)
@@ -54,7 +54,7 @@ def test_store_fetching_tasks_does_not_affect_other_relays(
     push_task(
         agent_receiver=agent_receiver,
         relay_id=relay_id_A,
-        task=FetchAdHocTask(payload=".."),
+        spec=FetchAdHocTask(payload=".."),
     )
 
     tasks_A = get_relay_tasks(agent_receiver, relay_id_A)
@@ -69,7 +69,7 @@ def test_store_fetching_task_non_existent_relay(agent_receiver: AgentReceiverCli
 
     response = agent_receiver.push_task(
         relay_id=relay_id,
-        task=FetchAdHocTask(payload=".."),
+        spec=FetchAdHocTask(payload=".."),
     )
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.json()["detail"] == f"Relay with ID '{relay_id}' not found"

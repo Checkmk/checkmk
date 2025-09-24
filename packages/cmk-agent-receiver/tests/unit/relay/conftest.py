@@ -30,8 +30,8 @@ from cmk.agent_receiver.relay.api.routers.tasks.handlers.update_task import (
     UpdateTaskHandler,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
-    FetchTask,
-    Task,
+    FetchSpec,
+    RelayTask,
     TasksRepository,
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
@@ -178,20 +178,20 @@ def populated_repos(
     relays_repository: RelaysRepository,
     tasks_repository: TasksRepository,
     test_user: UserAuth,
-) -> tuple[RelayID, Task, RelaysRepository, TasksRepository]:
+) -> tuple[RelayID, RelayTask, RelaysRepository, TasksRepository]:
     # arrange
     # register a relay in the repository
     relay_id = relays_repository.add_relay(test_user, alias="test-relay")
 
     # insert a task in the repository
     now = datetime.now(UTC)
-    payload = FetchTask(
+    spec = FetchSpec(
         timeout=60,
         payload='{"url": "http://example.com/data"}',
     )
-    task = Task(
+    task = RelayTask(
         id=TaskID("test-task-id"),
-        payload=payload,
+        spec=spec,
         creation_timestamp=now,
         update_timestamp=now,
     )

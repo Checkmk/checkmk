@@ -42,7 +42,7 @@ def test_task_expires_in_agent_receiver(
     task_response = push_task(
         agent_receiver=agent_receiver,
         relay_id=relay_id,
-        task=FetchAdHocTask(payload=".."),
+        spec=FetchAdHocTask(payload=".."),
     )
 
     # Verify task is present initially
@@ -84,7 +84,7 @@ def test_task_expiration_resets_on_update(
     task_response = push_task(
         agent_receiver=agent_receiver,
         relay_id=relay_id,
-        task=FetchAdHocTask(payload=".."),
+        spec=FetchAdHocTask(payload=".."),
     )
     task_id = task_response.task_id
 
@@ -136,14 +136,14 @@ def test_completed_tasks_expiration(
     task_a_response = push_task(
         agent_receiver=agent_receiver,
         relay_id=relay_id,
-        task=FetchAdHocTask(payload="test task A payload"),
+        spec=FetchAdHocTask(payload="test task A payload"),
     )
     task_a_id = task_a_response.task_id
 
     task_b_response = push_task(
         agent_receiver=agent_receiver,
         relay_id=relay_id,
-        task=FetchAdHocTask(payload="test task B payload"),
+        spec=FetchAdHocTask(payload="test task B payload"),
     )
     task_b_id = task_b_response.task_id
 

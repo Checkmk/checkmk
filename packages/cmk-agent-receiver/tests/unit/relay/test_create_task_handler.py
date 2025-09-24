@@ -10,7 +10,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.handlers.create_task import (
     CreateTaskHandler,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
-    FetchTask,
+    FetchSpec,
     TasksRepository,
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
@@ -26,19 +26,19 @@ def test_process_create_task(
     test_user: InternalAuth,
 ) -> None:
     # arrange
-    payload = FetchTask(payload='{"url": "http://example.com/data"}', timeout=60)
+    payload = FetchSpec(payload='{"url": "http://example.com/data"}', timeout=60)
 
     # Register a relay first
     relay_id = relays_repository.add_relay(test_user, alias="test-relay")
 
     # act
-    task_id = create_task_handler.process(relay_id=relay_id, payload=payload)
+    task_id = create_task_handler.process(relay_id=relay_id, spec=payload)
 
     # assert
     tasks_enqueued = tasks_repository.get_tasks(relay_id)
     assert len(tasks_enqueued) == 1
     assert tasks_enqueued[0].id == task_id
-    assert tasks_enqueued[0].payload == payload
+    assert tasks_enqueued[0].spec == payload
 
 
 @pytest.mark.usefixtures("site_context")
@@ -46,11 +46,11 @@ def test_process_create_task_non_existent_relay(create_task_handler: CreateTaskH
     # arrange
     relay_id = RelayID("non-existent-relay-id")
     task_payload = '{"url": "http://example.com/data"}'
-    payload = FetchTask(payload=task_payload, timeout=60)
+    payload = FetchSpec(payload=task_payload, timeout=60)
 
     # act
     with pytest.raises(RelayNotFoundError):
-        create_task_handler.process(relay_id=relay_id, payload=payload)
+        create_task_handler.process(relay_id=relay_id, spec=payload)
 
 
 def test_tasks_repository_ttl_validation() -> None:

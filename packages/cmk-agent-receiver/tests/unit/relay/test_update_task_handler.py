@@ -2,15 +2,14 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 import pytest
 
 from cmk.agent_receiver.relay.api.routers.tasks.handlers.update_task import (
     UpdateTaskHandler,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
+    RelayTask,
     ResultType,
-    Task,
     TasksRepository,
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
@@ -26,7 +25,7 @@ from cmk.agent_receiver.relay.lib.site_auth import UserAuth
 @pytest.mark.usefixtures("site_context")
 def test_process_update_task(
     update_task_handler: UpdateTaskHandler,
-    populated_repos: tuple[RelayID, Task, RelaysRepository, TasksRepository],
+    populated_repos: tuple[RelayID, RelayTask, RelaysRepository, TasksRepository],
 ) -> None:
     relay_id, task, relays_repository, tasks_repository = populated_repos
 
@@ -43,7 +42,7 @@ def test_process_update_task(
     assert len(tasks_enqueued) == 1
     assert tasks_enqueued[0].id == task.id
     assert isinstance(tasks_enqueued[0], type(task))
-    assert tasks_enqueued[0].payload == task.payload
+    assert tasks_enqueued[0].spec == task.spec
     # TODO: assert tasks_enqueued[0].status == TaskStatus.FINISHED or TaskStatus.ERROR
     assert tasks_enqueued[0].result_type == ResultType.OK
     assert tasks_enqueued[0].result_payload == "Task completed successfully"

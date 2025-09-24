@@ -21,8 +21,8 @@ from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
     UpdateTaskHandler,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
-    FetchTask,
-    RelayConfigTask,
+    FetchSpec,
+    RelayConfigSpec,
     ResultType,
     TaskStatus,
 )
@@ -70,23 +70,23 @@ async def create_task_endpoint(
         - Maximum number of stored tasks has limits
     """
 
-    payload: FetchTask | RelayConfigTask | None = None
+    spec: FetchSpec | RelayConfigSpec | None = None
 
-    match request.task:
+    match request.spec:
         case tasks_protocol.FetchAdHocTask():
-            payload = FetchTask(
-                payload=request.task.payload,
-                timeout=request.task.timeout,
+            spec = FetchSpec(
+                payload=request.spec.payload,
+                timeout=request.spec.timeout,
             )
         case tasks_protocol.RelayConfigTask():
-            payload = RelayConfigTask(
-                serial=request.task.serial,
+            spec = RelayConfigSpec(
+                serial=request.spec.serial,
             )
         case _:
-            assert_never(request.task)
+            assert_never(request.spec)
 
     try:
-        task_id = handler.process(RelayID(relay_id), payload)
+        task_id = handler.process(RelayID(relay_id), spec)
     except CheckmkAPIError as e:
         raise fastapi.HTTPException(
             status_code=fastapi.status.HTTP_502_BAD_GATEWAY,

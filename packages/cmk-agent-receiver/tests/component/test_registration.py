@@ -44,7 +44,7 @@ def test_registering_a_relay_does_not_affect_other_relays(
     push_task(
         agent_receiver=agent_receiver,
         relay_id=relay_id_A,
-        task=FetchAdHocTask(payload=".."),
+        spec=FetchAdHocTask(payload=".."),
     )
 
     _ = register_relay(agent_receiver, "relay2")

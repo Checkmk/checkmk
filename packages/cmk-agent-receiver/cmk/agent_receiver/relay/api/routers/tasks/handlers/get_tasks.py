@@ -7,7 +7,7 @@
 import dataclasses
 
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
-    Task,
+    RelayTask,
     TasksRepository,
     TaskStatus,
 )
@@ -25,13 +25,13 @@ class GetRelayTasksHandler:
     tasks_repository: TasksRepository
     relay_repository: RelaysRepository
 
-    def process(self, relay_id: RelayID, status: TaskStatus | None) -> list[Task]:
+    def process(self, relay_id: RelayID, status: TaskStatus | None) -> list[RelayTask]:
         auth = InternalAuth()
         if not self.relay_repository.has_relay(relay_id, auth):
             raise RelayNotFoundError(relay_id)
         return self._get_tasks(relay_id, status)
 
-    def _get_tasks(self, relay_id: RelayID, status: TaskStatus | None) -> list[Task]:
+    def _get_tasks(self, relay_id: RelayID, status: TaskStatus | None) -> list[RelayTask]:
         candidate_tasks = self.tasks_repository.get_tasks(relay_id)
         if not candidate_tasks:
             return []
@@ -45,11 +45,11 @@ class GetRelayTaskHandler:
     tasks_repository: TasksRepository
     relay_repository: RelaysRepository
 
-    def process(self, relay_id: RelayID, task_id: TaskID) -> Task:
+    def process(self, relay_id: RelayID, task_id: TaskID) -> RelayTask:
         auth = InternalAuth()
         if not self.relay_repository.has_relay(relay_id, auth):
             raise RelayNotFoundError(relay_id)
         return self._get_task(relay_id, task_id)
 
-    def _get_task(self, relay_id: RelayID, task_id: TaskID) -> Task:
+    def _get_task(self, relay_id: RelayID, task_id: TaskID) -> RelayTask:
         return self.tasks_repository.get_task(relay_id, task_id)

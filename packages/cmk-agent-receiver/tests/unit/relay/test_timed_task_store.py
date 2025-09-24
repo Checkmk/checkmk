@@ -10,17 +10,17 @@ import pytest
 from time_machine import Coordinates, travel
 
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
-    FetchTask,
-    Task,
+    FetchSpec,
+    RelayTask,
     TimedTaskStore,
 )
 from cmk.agent_receiver.relay.lib.shared_types import TaskID
 
 
-def _make_task(task_id: TaskID, now: datetime | None = None) -> Task:
+def _make_task(task_id: TaskID, now: datetime | None = None) -> RelayTask:
     now = now or datetime.now(UTC)
-    return Task(
-        payload=FetchTask(payload="...", timeout=1),
+    return RelayTask(
+        spec=FetchSpec(payload="...", timeout=1),
         creation_timestamp=now,
         update_timestamp=now,
         id=task_id,
@@ -75,7 +75,7 @@ def test_contains_returns_false_for_nonexistent_task(store: TimedTaskStore) -> N
 
 
 def test_values_returns_all_tasks(store: TimedTaskStore) -> None:
-    tasks: list[Task] = []
+    tasks: list[RelayTask] = []
     for i in range(3):
         task_id = TaskID(f"task-{i}")
         tasks.append(_make_task(task_id))
@@ -133,8 +133,8 @@ def test_expiration_based_on_update_timestamp(time: Coordinates, store: TimedTas
     recent_time = datetime.now(UTC)
 
     task_id = TaskID("test-task")
-    task = Task(
-        payload=FetchTask(payload="...", timeout=1),
+    task = RelayTask(
+        spec=FetchSpec(payload="...", timeout=1),
         creation_timestamp=old_time,  # Old creation time
         update_timestamp=recent_time,  # Recent update time
         id=task_id,

@@ -9,7 +9,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.handlers.get_tasks import (
     GetRelayTasksHandler,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
-    Task,
+    RelayTask,
     TasksRepository,
     TaskStatus,
 )
@@ -25,7 +25,7 @@ from cmk.agent_receiver.relay.lib.shared_types import (
 @pytest.mark.usefixtures("site_context")
 def test_get_task_handler(
     get_task_handler: GetRelayTaskHandler,
-    populated_repos: tuple[RelayID, Task, RelaysRepository, TasksRepository],
+    populated_repos: tuple[RelayID, RelayTask, RelaysRepository, TasksRepository],
 ) -> None:
     relay_id, task, relays_repository, tasks_repository = populated_repos
 
@@ -36,7 +36,7 @@ def test_get_task_handler(
 @pytest.mark.usefixtures("site_context")
 def test_get_task_handler_with_unknown_relay(
     get_task_handler: GetRelayTaskHandler,
-    populated_repos: tuple[RelayID, Task, RelaysRepository, TasksRepository],
+    populated_repos: tuple[RelayID, RelayTask, RelaysRepository, TasksRepository],
 ) -> None:
     relay_id, task, relays_repository, tasks_repository = populated_repos
 
@@ -47,7 +47,7 @@ def test_get_task_handler_with_unknown_relay(
 @pytest.mark.usefixtures("site_context")
 def test_get_task_handler_with_unknown_task(
     get_task_handler: GetRelayTaskHandler,
-    populated_repos: tuple[RelayID, Task, RelaysRepository, TasksRepository],
+    populated_repos: tuple[RelayID, RelayTask, RelaysRepository, TasksRepository],
 ) -> None:
     relay_id, task, relays_repository, tasks_repository = populated_repos
 
@@ -61,7 +61,7 @@ def test_get_task_handler_with_unknown_task(
 @pytest.mark.usefixtures("site_context")
 def test_get_tasks_handler(
     get_tasks_handler: GetRelayTasksHandler,
-    populated_repos: tuple[RelayID, Task, RelaysRepository, TasksRepository],
+    populated_repos: tuple[RelayID, RelayTask, RelaysRepository, TasksRepository],
 ) -> None:
     relay_id, task, relays_repository, tasks_repository = populated_repos
 
@@ -72,7 +72,7 @@ def test_get_tasks_handler(
 @pytest.mark.usefixtures("site_context")
 def test_get_tasks_handler_with_filter(
     get_tasks_handler: GetRelayTasksHandler,
-    populated_repos: tuple[RelayID, Task, RelaysRepository, TasksRepository],
+    populated_repos: tuple[RelayID, RelayTask, RelaysRepository, TasksRepository],
 ) -> None:
     relay_id, task, relays_repository, tasks_repository = populated_repos
     handled_tasks = get_tasks_handler.process(relay_id=relay_id, status=TaskStatus.FINISHED)

@@ -38,8 +38,16 @@ class FetchAdHocTask(BaseModel):
     type: Literal[_TaskType.FETCH_AD_HOC] = _TaskType.FETCH_AD_HOC
 
 
+class RelayConfigTask(BaseModel, frozen=True):
+    serial: int
+    type: Literal[_TaskType.RELAY_CONFIG] = _TaskType.RELAY_CONFIG
+
+
+TaskSpec = FetchAdHocTask | RelayConfigTask
+
+
 class TaskCreateRequest(BaseModel, frozen=True):
-    task: Task = Field(discriminator="type")
+    spec: TaskSpec = Field(discriminator="type")
     version: int = 1
 
 
@@ -63,11 +71,3 @@ class TaskListResponse(BaseModel, frozen=True):
 class TaskUpdateRequest(BaseModel, frozen=True):
     result_type: ResultType
     result_payload: str
-
-
-class RelayConfigTask(BaseModel):
-    serial: int
-    type: Literal[_TaskType.RELAY_CONFIG] = _TaskType.RELAY_CONFIG
-
-
-Task = FetchAdHocTask | RelayConfigTask

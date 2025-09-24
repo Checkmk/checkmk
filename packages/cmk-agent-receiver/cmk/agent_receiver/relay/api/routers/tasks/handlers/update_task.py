@@ -2,13 +2,11 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-
 import dataclasses
 
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
+    RelayTask,
     ResultType,
-    Task,
     TasksRepository,
     TaskStatus,
 )
@@ -32,7 +30,7 @@ class UpdateTaskHandler:
         task_id: TaskID,
         result_type: ResultType,
         result_payload: str,
-    ) -> Task:
+    ) -> RelayTask:
         auth = InternalAuth()
         if not self.relays_repository.has_relay(relay_id, auth):
             raise RelayNotFoundError(relay_id)
@@ -40,7 +38,7 @@ class UpdateTaskHandler:
 
     def _update_task(
         self, relay_id: RelayID, task_id: TaskID, result_type: ResultType, result_payload: str
-    ) -> Task:
+    ) -> RelayTask:
         task = self.tasks_repository.update_task(
             relay_id=relay_id,
             task_id=task_id,

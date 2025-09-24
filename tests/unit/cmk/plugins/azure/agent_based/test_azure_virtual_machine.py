@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.plugins.azure.agent_based.azure_virtual_machine import (
+from cmk.plugins.azure_deprecated.agent_based.azure_virtual_machine import (
     _MAP_STATES,
     check_azure_virtual_machine,
     check_azure_virtual_machine_summary,

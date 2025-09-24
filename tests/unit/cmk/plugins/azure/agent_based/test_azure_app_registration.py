@@ -11,7 +11,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
-from cmk.plugins.azure.agent_based.azure_app_registration import (
+from cmk.plugins.azure_deprecated.agent_based.azure_app_registration import (
     check_app_registration,
     ClientSecret,
     discover_app_registration,

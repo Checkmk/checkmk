@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from cmk.plugins.azure.special_agent.agent_azure import (
+from cmk.plugins.azure_deprecated.special_agent.agent_azure import (
     _AuthorityURLs,
     ApiError,
     Args,
@@ -411,7 +411,7 @@ def test_get_vm_labels_section(
         ),
     ],
 )
-@patch("cmk.plugins.azure.special_agent.agent_azure", return_value=None)
+@patch("cmk.plugins.azure_deprecated.special_agent.agent_azure", return_value=None)
 def test_process_resource(
     mock_gather_metrics: MagicMock,
     mgmt_client: MgmtApiClient,

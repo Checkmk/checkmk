@@ -5,7 +5,11 @@
 
 import pytest
 
-from cmk.plugins.azure.special_agent.agent_azure import _AuthorityURLs, ApiError, MgmtApiClient
+from cmk.plugins.azure_deprecated.special_agent.agent_azure import (
+    _AuthorityURLs,
+    ApiError,
+    MgmtApiClient,
+)
 from cmk.utils.http_proxy_config import EnvironmentProxyConfig, ExplicitProxyConfig
 
 RESOURCE_ID = "/subscriptions/1234/resourceGroups/test/providers/Microsoft.Network/virtualNetworkGateways/vnet_gateway"

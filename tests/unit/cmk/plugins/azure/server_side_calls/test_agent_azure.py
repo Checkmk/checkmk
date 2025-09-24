@@ -7,10 +7,10 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.plugins.azure.server_side_calls.agent_azure import (
+from cmk.plugins.azure_deprecated.server_side_calls.agent_azure import (
     agent_azure_arguments as commands_function,
 )
-from cmk.plugins.azure.server_side_calls.agent_azure import AzureParams
+from cmk.plugins.azure_deprecated.server_side_calls.agent_azure import AzureParams
 from cmk.server_side_calls.v1 import EnvProxy, HostConfig, Secret
 
 

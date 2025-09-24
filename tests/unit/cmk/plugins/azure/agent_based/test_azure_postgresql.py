@@ -9,7 +9,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State
-from cmk.plugins.azure.agent_based.azure_postgresql import (
+from cmk.plugins.azure_deprecated.agent_based.azure_postgresql import (
     check_plugin_azure_postgresql_connections,
     check_replication,
 )

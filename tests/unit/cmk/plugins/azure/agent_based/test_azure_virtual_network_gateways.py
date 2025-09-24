@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.plugins.azure.agent_based.azure_virtual_network_gateways import (
+from cmk.plugins.azure_deprecated.agent_based.azure_virtual_network_gateways import (
     BgpSettings,
     check_azure_virtual_network_gateway,
     check_virtual_network_gateway_bgp,

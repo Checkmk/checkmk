@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.plugins.azure.special_agent.agent_azure import Section
+from cmk.plugins.azure_deprecated.special_agent.agent_azure import Section
 
 
 class TestSection:

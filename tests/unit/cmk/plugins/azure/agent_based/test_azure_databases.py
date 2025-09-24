@@ -8,7 +8,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State
-from cmk.plugins.azure.agent_based.azure_databases import (
+from cmk.plugins.azure_deprecated.agent_based.azure_databases import (
     create_check_azure_databases_connections,
     create_check_azure_databases_cpu,
     create_check_azure_databases_deadlock,

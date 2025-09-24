@@ -134,7 +134,7 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.plugins.lib",  # ?
         "cmk.utils.paths",  # edition detection
     ),
-    "azure": (
+    "azure_deprecated": (
         "cmk.agent_based.v1",  # FIXME
         "cmk.ccc.version",  # edition detection
         "cmk.ccc.hostaddress",  # FormSpec validation

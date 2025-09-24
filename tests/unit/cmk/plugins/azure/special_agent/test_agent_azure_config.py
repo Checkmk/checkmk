@@ -8,7 +8,7 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.plugins.azure.special_agent.agent_azure import (
+from cmk.plugins.azure_deprecated.special_agent.agent_azure import (
     Args,
     AzureResource,
     ExplicitConfig,

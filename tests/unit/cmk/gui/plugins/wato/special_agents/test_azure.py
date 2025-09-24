@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.plugins.azure.rulesets.azure import CCE_AZURE_SERVICES, RAW_AZURE_SERVICES
-from cmk.plugins.azure.special_agent.agent_azure import ALL_METRICS
+from cmk.plugins.azure_deprecated.rulesets.azure import CCE_AZURE_SERVICES, RAW_AZURE_SERVICES
+from cmk.plugins.azure_deprecated.special_agent.agent_azure import ALL_METRICS
 
 
 def test_all_services_present_in_gui():

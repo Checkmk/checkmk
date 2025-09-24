@@ -9,7 +9,10 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, State
-from cmk.plugins.azure.agent_based.azure_traffic_manager import check_probe_state, check_qps
+from cmk.plugins.azure_deprecated.agent_based.azure_traffic_manager import (
+    check_probe_state,
+    check_qps,
+)
 from cmk.plugins.lib.azure import AzureMetric, Resource, Section
 
 

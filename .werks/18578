@@ -5,7 +5,7 @@ Component: notifications
 Date: 1755791096
 Edition: cee
 Level: 1
-Version: 2.2.0p46
+Version: 2.2.0p47
 
 This Werk fixes an issue with Jira notifications due to the removal of legacy
 search APIs in the Jira Cloud version.

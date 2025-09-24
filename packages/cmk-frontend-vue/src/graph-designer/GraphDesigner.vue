@@ -17,6 +17,7 @@ import { type Ref, computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import usei18n from '@/lib/i18n'
 import useDragging from '@/lib/useDragging'
 
+import CmkButton from '@/components/CmkButton.vue'
 import CmkColorPicker from '@/components/CmkColorPicker.vue'
 import CmkDropdown from '@/components/CmkDropdown.vue'
 import CmkSwitch from '@/components/CmkSwitch.vue'
@@ -935,14 +936,9 @@ const graphDesignerContentAsJson = computed(() => {
           v-model:scope-attributes="dataQuery.scopeAttributes"
           v-model:data-point-attributes="dataQuery.dataPointAttributes"
         />
-        <button @click.prevent="addQuery">
-          <img
-            :title="_t('Add')"
-            src="themes/facelift/images/icon_new.svg"
-            class="icon iconbutton"
-          />
+        <CmkButton @click="addQuery">
           {{ _t('Add') }}
-        </button>
+        </CmkButton>
       </div>
     </template>
     <template #metric>
@@ -966,14 +962,9 @@ const graphDesignerContentAsJson = computed(() => {
             />
           </template>
           <template #metric_action>
-            <button @click.prevent="addMetric">
-              <img
-                :title="_t('Add')"
-                src="themes/facelift/images/icon_new.svg"
-                class="icon iconbutton"
-              />
+            <CmkButton @click="addMetric">
               {{ _t('Add') }}
-            </button>
+            </CmkButton>
           </template>
         </MetricRowRenderer>
       </div>
@@ -999,14 +990,9 @@ const graphDesignerContentAsJson = computed(() => {
             />
           </template>
           <template #metric_action>
-            <button @click.prevent="addScalar">
-              <img
-                :title="_t('Add')"
-                src="themes/facelift/images/icon_new.svg"
-                class="icon iconbutton"
-              />
+            <CmkButton @click="addScalar">
               {{ _t('Add') }}
-            </button>
+            </CmkButton>
           </template>
         </MetricRowRenderer>
       </div>
@@ -1014,32 +1000,43 @@ const graphDesignerContentAsJson = computed(() => {
     <template #constant>
       <div>
         <CmkInput v-model="dataConstant" type="number" />
-        <button @click.prevent="addConstant">
-          <img
-            :title="_t('Add')"
-            src="themes/facelift/images/icon_new.svg"
-            class="icon iconbutton"
-          />
+        <CmkButton @click="addConstant">
           {{ _t('Add') }}
-        </button>
+        </CmkButton>
       </div>
     </template>
     <template #operations>
       <div v-if="operationIsApplicable()">
-        <button @click="applySum">{{ _t('Sum') }}</button>
-        <button @click="applyProduct">{{ _t('Product') }}</button>
-        <button @click="applyDifference">{{ _t('Difference') }} {{ showSelectedIds('-') }}</button>
-        <button @click="applyFraction">{{ _t('Fraction') }} {{ showSelectedIds('/') }}</button>
-        <button @click="applyAverage">{{ _t('Average') }}</button>
-        <button @click="applyMinimum">{{ _t('Minimum') }}</button>
-        <button @click="applyMaximum">{{ _t('Maximum') }}</button>
+        <CmkButton @click="applySum">
+          {{ _t('Sum') }}
+        </CmkButton>
+        <CmkButton @click="applyProduct">
+          {{ _t('Product') }}
+        </CmkButton>
+        <CmkButton @click="applyDifference">
+          {{ _t('Difference') }} {{ showSelectedIds('-') }}
+        </CmkButton>
+        <CmkButton @click="applyFraction">
+          {{ _t('Fraction') }} {{ showSelectedIds('-') }}
+        </CmkButton>
+        <CmkButton @click="applyAverage">
+          {{ _t('Average') }}
+        </CmkButton>
+        <CmkButton @click="applyMinimum">
+          {{ _t('Minimum') }}
+        </CmkButton>
+        <CmkButton @click="applyMaximum">
+          {{ _t('Maximum') }}
+        </CmkButton>
       </div>
       <div v-else>{{ _t('Select at least two graph lines to edit') }}</div>
     </template>
     <template #transformation>
       <div v-if="transformationIsApplicable()">
         <CmkInput v-model="dataTransformation" type="number" />
-        <button @click="applyTransformation">{{ _t('Apply') }}</button>
+        <CmkButton @click="applyTransformation">
+          {{ _t('Apply') }}
+        </CmkButton>
       </div>
       <div v-else>{{ _t('Select one graph line to edit') }}</div>
     </template>

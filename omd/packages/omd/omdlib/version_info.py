@@ -11,9 +11,7 @@ import omdlib
 class VersionInfo:
     """Provides OMD version/platform specific infos"""
 
-    def __init__(self, version: str) -> None:
-        self._version = version
-
+    def __init__(self) -> None:
         # Register all relevant vars
         self.USERADD_OPTIONS = ""
         self.APACHE_USER = ""

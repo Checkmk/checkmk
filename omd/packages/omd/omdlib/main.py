@@ -3686,7 +3686,7 @@ def _run_command(
 def main() -> None:
     omdlib.backup.ensure_mkbackup_lock_dir_rights()
 
-    version_info = VersionInfo(omdlib.__version__)
+    version_info = VersionInfo()
     version_info.load()
 
     try:

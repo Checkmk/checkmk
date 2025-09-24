@@ -30,7 +30,10 @@ function onClickGoTo() {
   >
     <div class="cmk-wizard-step__slots">
       <slot name="header"></slot>
-      <slot name="content"></slot>
+      <slot
+        v-if="context.mode() === 'overview' || context.isSelected(props.index)"
+        name="content"
+      ></slot>
       <div v-if="context.isSelected(index)" class="cmk-wizard-step__actions">
         <slot name="actions"></slot>
       </div>

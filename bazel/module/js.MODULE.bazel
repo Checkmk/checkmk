@@ -23,6 +23,12 @@ npm.npm_translate_lock(
     pnpm_lock = "//packages/cmk-frontend:pnpm-lock.yaml",
 )
 use_repo(npm, "npm_cmk_frontend")
+npm.npm_translate_lock(
+    name = "npm_tooling",
+    npmrc = "//:.npmrc",
+    pnpm_lock = "//bazel/tools:pnpm-lock.yaml",
+)
+use_repo(npm, "npm_tooling")
 
 rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext", dev_dependency = True)
 rules_ts_ext.deps()

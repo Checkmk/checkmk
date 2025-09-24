@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "prettier": "3.6.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "prettier"
+    ]
+  }
+}

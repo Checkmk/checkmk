@@ -2,8 +2,16 @@ load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:native_binary.bzl", "native_binary")
 load("@cmk_requirements//:requirements.bzl", "requirement")
+load("@npm_tooling//:defs.bzl", "npm_link_all_packages")
+load("@npm_tooling//bazel/tools:prettier/package_json.bzl", prettier_bin = "bin")
 load("@rules_mypy//mypy:mypy.bzl", "mypy_cli")
 load("//bazel/rules:sh_expand_template.bzl", "sh_expand_template")
+
+exports_files([
+    "pnpm-lock.yaml",
+])
+
+npm_link_all_packages(name = "node_modules")
 
 mypy_cli(
     name = "mypy_cli",
@@ -106,4 +114,12 @@ sh_expand_template(
         "",
     ],
     visibility = ["//visibility:public"],
+)
+
+prettier_bin.prettier_binary(
+    name = "prettier",
+    env = {"BAZEL_BINDIR": "."},
+    fixed_args = [
+        "--log-level=warn",
+    ],
 )

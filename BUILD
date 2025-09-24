@@ -17,6 +17,7 @@ exports_files(
         "pyproject.toml",
         "requirements.txt",
         ".clang-tidy",
+        ".npmrc",
     ],
 )
 

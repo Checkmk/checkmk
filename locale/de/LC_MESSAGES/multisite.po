@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-09-23 11:13+0000\n"
+"PO-Revision-Date: 2025-09-24 00:39+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -8022,10 +8022,10 @@ msgid "Average roundtrip time in ms"
 msgstr "Durchschnittliche Paketumlaufzeit in Millisekunden"
 
 msgid "Average scatterplot"
-msgstr "Streudiagramm der Durschnitte"
+msgstr ""
 
 msgid "Average size growth"
-msgstr "Durschnittliches Größenwachstum"
+msgstr "Durchschnittliches Größenwachstum"
 
 msgid "Average speed of backup"
 msgstr "Durchschnittliche Geschwindigkeit der Sicherung"
@@ -8041,7 +8041,7 @@ msgid "Average time messages stay on queue"
 msgstr "Durchschnittliche Zeit, die Meldungen in der Warteschlange verbringen"
 
 msgid "Average usage"
-msgstr "Durschnittliche Nutzung"
+msgstr "Durchschnittliche Auslastung"
 
 msgid "Average utilization core 0"
 msgstr "Durchschnittliche Auslastung Kern 0"
@@ -8431,13 +8431,13 @@ msgid "Average utilization of memory on the active supervisor"
 msgstr "Mittlerer Speicherauslastung auf dem aktiven Supervisor"
 
 msgid "Average utilization per core"
-msgstr "Durschschnittliche Auslastung pro Kern"
+msgstr "Durchschnittliche Auslastung pro Kern"
 
 msgid "Average value"
 msgstr "Durchschnittswert"
 
 msgid "Average value of the following numeric field: "
-msgstr "Durschnittswert des folgenden numerischen Feldes: "
+msgstr "Durchschnittswert des folgenden numerischen Feldes: "
 
 msgid "Average values"
 msgstr "Durchschnittswerte"
@@ -8473,10 +8473,10 @@ msgid "Avg. rate of allowed requests"
 msgstr "Durchschnittliche Rate an erlaubten Anfragen"
 
 msgid "Avg. rate of blocked requests"
-msgstr "Durschnittliche Rate an blockierten Anfragen"
+msgstr "Durchschnittliche Rate an blockierten Anfragen"
 
 msgid "Avg. request rate"
-msgstr "Durschnittliche Anfragenrate"
+msgstr "Durchschnittliche Anfragerate"
 
 msgid "Awaiting info"
 msgstr "Warte auf Informationen"

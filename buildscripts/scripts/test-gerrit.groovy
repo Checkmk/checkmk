@@ -14,7 +14,7 @@ def main() {
     def time_stage_started = time_job_started;
     def safe_branch_name = versioning.safe_branch_name();
 
-    def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
+    def branch_base_folder = package_helper.branch_base_folder(true);
     def stage_info = null;
 
     def analyse_mapping = [:];

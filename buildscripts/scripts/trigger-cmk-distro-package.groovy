@@ -28,7 +28,7 @@ def main() {
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
 
     def safe_branch_name = versioning.safe_branch_name();
-    def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: false);
+    def branch_base_folder = package_helper.branch_base_folder(false);
 
     def causes = currentBuild.getBuildCauses();
     def triggerd_by = "";

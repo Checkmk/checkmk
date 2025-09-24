@@ -41,7 +41,7 @@ def provide_agent_binaries(Map args) {
             //       Windows for consistency).
             //       As 'soon' as this problem does not exist anymore we could run
             //       relatively from 'builders/..'
-            relative_job_name: "${branch_base_folder(with_testing_prefix=false)}/builders/build-linux-agent-updater",
+            relative_job_name: "${branch_base_folder(false)}/builders/build-linux-agent-updater",
             /// no Linux agent updaters for raw edition..
             condition: true, // edition != "raw",  // FIXME!
             install_cmd: """\
@@ -62,7 +62,7 @@ def provide_agent_binaries(Map args) {
             //       Windows for consistency).
             //       As 'soon' as this problem does not exist anymore we could run
             //       relatively from 'builders/..'
-            relative_job_name: "${branch_base_folder(with_testing_prefix=false)}/winagt-build",
+            relative_job_name: "${branch_base_folder(false)}/winagt-build",
             install_cmd: """\
                 cp \
                     check_mk_agent-64.exe \
@@ -95,7 +95,7 @@ def provide_agent_binaries(Map args) {
             //       Windows for consistency).
             //       As 'soon' as this problem does not exist anymore we could run
             //       relatively from 'builders/..'
-            relative_job_name: "${branch_base_folder(with_testing_prefix=false)}/winagt-build-modules",
+            relative_job_name: "${branch_base_folder(false)}/winagt-build-modules",
             install_cmd: """\
                 cp \
                     ./*.cab \

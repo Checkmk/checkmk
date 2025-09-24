@@ -7,6 +7,7 @@ from unittest import mock
 import pytest
 
 import cmk.gui.watolib.configuration_entity.configuration_entity
+from cmk.ccc.user import UserId
 from cmk.gui.form_specs import RawFrontendData
 from cmk.gui.form_specs.unstable import DictionaryExtended, not_empty
 from cmk.gui.valuespec import Dictionary as ValueSpecDictionary
@@ -79,6 +80,36 @@ def test_save_configuration_entity(clients: ClientRegistry) -> None:
     assert resp.json["title"] == "foo"
 
 
+@pytest.mark.xfail(
+    raises=AssertionError,
+    reason="REST-API calls without sufficient permissions must fail",
+    strict=True,
+)
+def test_save_configuration_entity_non_admin(
+    clients: ClientRegistry, with_automation_user_not_admin: tuple[UserId, str]
+) -> None:
+    # WHEN
+    clients.ConfigurationEntity.request_handler.set_credentials(
+        with_automation_user_not_admin[0], with_automation_user_not_admin[1]
+    )
+    resp = clients.ConfigurationEntity.create_configuration_entity(
+        {
+            "entity_type": ConfigEntityType.notification_parameter.value,
+            "entity_type_specifier": "dummy_params",
+            "data": {
+                "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
+                "parameter_properties": {"method_parameters": {"test_param": "bar"}},
+            },
+        },
+        expect_ok=False,
+    )
+
+    # THEN
+    assert resp.status_code == 401, (
+        f"Expected status code 401 for non-admin user, got {resp.status_code}"
+    )
+
+
 def test_update_configuration_entity(
     clients: ClientRegistry, registry: NotificationParameterRegistry
 ) -> None:
@@ -113,6 +144,53 @@ def test_update_configuration_entity(
     updated_entity = get_notification_parameter(registry, entity.ident).data
     # Ignore is needed because every plugin model has different keys (and not "test_param"
     assert updated_entity["parameter_properties"]["method_parameters"]["test_param"] == "bar"
+
+
+@pytest.mark.xfail(
+    raises=AssertionError,
+    reason="REST-API calls without sufficient permissions must fail",
+    strict=True,
+)
+def test_update_configuration_entity_non_admin(
+    clients: ClientRegistry,
+    registry: NotificationParameterRegistry,
+    with_automation_user_not_admin: tuple[UserId, str],
+) -> None:
+    # GIVEN
+    entity = save_notification_parameter(
+        registry,
+        "dummy_params",
+        RawFrontendData(
+            {
+                "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
+                "parameter_properties": {"method_parameters": {"test_param": "initial_value"}},
+            }
+        ),
+        object_id=None,
+        pprint_value=False,
+    )
+
+    # WHEN
+    clients.ConfigurationEntity.request_handler.set_credentials(
+        with_automation_user_not_admin[0], with_automation_user_not_admin[1]
+    )
+    resp = clients.ConfigurationEntity.update_configuration_entity(
+        {
+            "entity_type": ConfigEntityType.notification_parameter.value,
+            "entity_type_specifier": "dummy_params",
+            "entity_id": entity.ident,
+            "data": {
+                "general": {"description": "foo", "comment": "bar", "docu_url": "baz"},
+                "parameter_properties": {"method_parameters": {"test_param": "bar"}},
+            },
+        },
+        expect_ok=False,
+    )
+
+    # THEN
+    assert resp.status_code == 401, (
+        f"Expected status code 401 for non-admin user, got {resp.status_code}"
+    )
 
 
 @pytest.mark.parametrize(

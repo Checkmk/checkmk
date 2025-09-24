@@ -296,6 +296,12 @@ def with_automation_user(load_config: Config) -> Iterator[tuple[UserId, str]]:
 
 
 @pytest.fixture()
+def with_automation_user_not_admin(load_config: Config) -> Iterator[tuple[UserId, str]]:
+    with create_and_destroy_user(automation=True, role="user", config=load_config) as user:
+        yield user
+
+
+@pytest.fixture()
 def auth_request(with_user: tuple[UserId, str]) -> typing.Generator[http.Request]:
     # NOTE:
     # REMOTE_USER will be omitted by `flask_app.test_client()` if only passed via an

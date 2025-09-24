@@ -20,18 +20,22 @@ from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.unit_formatter import Label, NegativeYRange, NotationFormatter, PositiveYRange
+from cmk.gui.unit_formatter import (
+    Label,
+    NegativeYRange,
+    NotationFormatter,
+    PositiveYRange,
+)
 
 from ._from_api import RegisteredMetric
 from ._graph_specification import (
     FixedVerticalRange,
     GraphDataRange,
-    GraphMetric,
     GraphRecipe,
     HorizontalRule,
     MinimalVerticalRange,
 )
-from ._metric_operation import clean_time_series_point, LineType, RRDData
+from ._metric_operation import clean_time_series_point, LineType
 from ._rrd_fetch import fetch_rrd_data_for_graph
 from ._time_series import TimeSeries, TimeSeriesValue
 from ._unit import user_specific_unit, UserSpecificUnit
@@ -319,8 +323,8 @@ def _areastack(
 
 
 def _compute_graph_curves(
-    graph_metrics: Sequence[GraphMetric],
-    rrd_data: RRDData,
+    graph_recipe: GraphRecipe,
+    graph_data_range: GraphDataRange,
     registered_metrics: Mapping[str, RegisteredMetric],
 ) -> Iterator[Curve]:
     def _parse_line_type(
@@ -337,7 +341,9 @@ def _compute_graph_curves(
                 return "ref"
         assert_never((mirror_prefix, ts_line_type))
 
-    for graph_metric in graph_metrics:
+    # Fetch all raw RRD data
+    rrd_data = fetch_rrd_data_for_graph(graph_recipe, graph_data_range, registered_metrics)
+    for graph_metric in graph_recipe.metrics:
         time_series = graph_metric.operation.compute_time_series(rrd_data, registered_metrics)
         if not time_series:
             continue
@@ -370,14 +376,9 @@ def compute_graph_artwork_curves(
     graph_data_range: GraphDataRange,
     registered_metrics: Mapping[str, RegisteredMetric],
 ) -> list[Curve]:
-    # Fetch all raw RRD data
-    rrd_data = fetch_rrd_data_for_graph(graph_recipe, graph_data_range, registered_metrics)
-
-    curves = list(_compute_graph_curves(graph_recipe.metrics, rrd_data, registered_metrics))
-
+    curves = list(_compute_graph_curves(graph_recipe, graph_data_range, registered_metrics))
     if graph_recipe.omit_zero_metrics:
         curves = [curve for curve in curves if any(curve["rrddata"])]
-
     return curves
 
 

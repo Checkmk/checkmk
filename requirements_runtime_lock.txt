@@ -102,9 +102,9 @@ annotated-types==0.7.0 \
     --hash=sha256:1f02e8b43a8fbbc3f3e0d4f0f4bfc8131bcb4eebe8849b8e5c773f3a1c582a53 \
     --hash=sha256:aff07c09a53a08bc8cfccb9c85b05f1aa9a2a6f23728d790723543408344ce89
     # via pydantic
-anyio==4.10.0 \
-    --hash=sha256:3f3fae35c96039744587aa5b8371e7e8e603c0702999535961dd336026973ba6 \
-    --hash=sha256:60e474ac86736bbfd6f210f7a61218939c318f43f9972497381f1c5e930ed3d1
+anyio==4.11.0 \
+    --hash=sha256:0287e96f4d26d4149305414d4e3bc32f0dcd0862365a4bddea19d7a1ec38c4fc \
+    --hash=sha256:82a8d0b81e318cc5ce71a5f1f8b5c4e63619620b63141ef8c995fa0db95a57c4
     # via
     #   httpx
     #   starlette
@@ -118,9 +118,9 @@ apispec-oneofschema==3.0.1 \
     --hash=sha256:56aeab968abf22b01b3fbcf2d3dc95be09585581f08c62c09bd94f5aa7192fab \
     --hash=sha256:a88b54c99ffc175f39217b38c5850706a78aadc4cf5cea31fe7c20e25c2491ee
     # via -r _requirements_runtime.txt
-asgiref==3.9.1 \
-    --hash=sha256:a5ab6582236218e5ef1648f242fd9f10626cfd4de8dc377db215d5d5098e3142 \
-    --hash=sha256:f3bba7092a48005b5f5bacd747d36ee4a5a61f4a269a6df590b43144355ebd2c
+asgiref==3.9.2 \
+    --hash=sha256:0b61526596219d70396548fc003635056856dba5d0d086f86476f10b33c75960 \
+    --hash=sha256:a0249afacb66688ef258ffe503528360443e2b9a8d8c4581b6ebefa58c841ef1
     # via opentelemetry-instrumentation-asgi
 attrs==25.3.0 \
     --hash=sha256:427318ce031701fea540783410126f03899a97ffc6f61596ad581ac2e40e3bc3 \

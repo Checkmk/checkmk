@@ -1846,7 +1846,7 @@
         "usagesDigest": "jcf+ROaCqHFFmSmqJ4vYsOEVa88JPeszIAfPy+qjIYg=",
         "recordedFileInputs": {
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
-          "@@//requirements_all_lock.txt": "0fa1bb794001449d79aad584a69a93f31e3f1eb40ccef0faddfb68ec1d23e6e5",
+          "@@//requirements_all_lock.txt": "50e4d15e830ed1c49458aa1e59356d8746fde074a83871bb84996f348bbc86a5",
           "@@rules_mypy~//mypy/private/requirements.txt": "f6c7c90744df0481ca13d433dd2790c62af0b6fef11cdd85ac5424bc87b39fac",
           "@@protobuf~//python/requirements.txt": "983be60d3cec4b319dcab6d48aeb3f5b2f7c3350f26b3a9e97486c37967c73c5"
         },
@@ -2397,7 +2397,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "anyio==4.10.0     --hash=sha256:3f3fae35c96039744587aa5b8371e7e8e603c0702999535961dd336026973ba6     --hash=sha256:60e474ac86736bbfd6f210f7a61218939c318f43f9972497381f1c5e930ed3d1"
+              "requirement": "anyio==4.11.0     --hash=sha256:0287e96f4d26d4149305414d4e3bc32f0dcd0862365a4bddea19d7a1ec38c4fc     --hash=sha256:82a8d0b81e318cc5ce71a5f1f8b5c4e63619620b63141ef8c995fa0db95a57c4"
             }
           },
           "cmk_requirements_312_arrow": {
@@ -3383,7 +3383,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "asgiref==3.9.1     --hash=sha256:a5ab6582236218e5ef1648f242fd9f10626cfd4de8dc377db215d5d5098e3142     --hash=sha256:f3bba7092a48005b5f5bacd747d36ee4a5a61f4a269a6df590b43144355ebd2c"
+              "requirement": "asgiref==3.9.2     --hash=sha256:0b61526596219d70396548fc003635056856dba5d0d086f86476f10b33c75960     --hash=sha256:a0249afacb66688ef258ffe503528360443e2b9a8d8c4581b6ebefa58c841ef1"
             }
           },
           "cmk_requirements_312_astroid": {

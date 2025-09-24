@@ -214,7 +214,9 @@ def main() {
     }
 
     stage("Parse cache hits") {
-        container("minimal-ubuntu-checkmk-${safe_branch_name}") {
+        inside_container(
+            image: docker.image("${docker_registry_no_http}/${distro}:${docker_tag}"),
+        ) {
             bazel_logs.try_parse_bazel_execution_log(distro, checkout_dir, bazel_log_prefix);
         }
     }

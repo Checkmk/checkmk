@@ -683,8 +683,6 @@ try {
     }
     Build-Ohm
     Build-Ext
-    Build-MSI
-    Set-Msi-Version
     Start-UnitTests
 
     # SIGNING
@@ -697,6 +695,8 @@ try {
     }
     Start-BinarySigning
     Start-BazelSigning
+    Build-MSI
+    Set-Msi-Version
     Start-ArtifactUploading
     Start-MsiPatching
     Start-MsiSigning

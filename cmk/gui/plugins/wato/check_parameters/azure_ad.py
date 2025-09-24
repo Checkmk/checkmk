@@ -35,7 +35,7 @@ rulespec_registry.register(
         match_type="dict",
         group=RulespecGroupCheckParametersNetworking,
         parameter_valuespec=_parameter_valuespec_azure_ad,
-        title=lambda: _("Azure AD Connect"),
+        title=lambda: _("Azure AD Connect (deprecated)"),
         item_spec=lambda: TextInput(title=_("Accounts display name")),
     )
 )

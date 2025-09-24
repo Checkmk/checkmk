@@ -92,7 +92,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_agent_info,
-        title=lambda: _("Azure Agent Info"),
+        title=lambda: _("Azure Agent Info (deprecated)"),
     )
 )
 
@@ -145,7 +145,7 @@ rulespec_registry.register(
         item_spec=_item_spec_webserver,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_webserver,
-        title=lambda: _("Azure web servers (IIS)"),
+        title=lambda: _("Azure web servers (IIS) (deprecated)"),
     )
 )
 
@@ -373,7 +373,7 @@ rulespec_registry.register(
         item_spec=_item_spec_azure_vms,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_vms,
-        title=lambda: _("Azure virtual machines"),
+        title=lambda: _("Azure virtual machines (deprecated)"),
     )
 )
 
@@ -477,7 +477,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_vms_summary,
-        title=lambda: _("Azure virtual machines summary"),
+        title=lambda: _("Azure virtual machines summary  (deprecated)"),
     )
 )
 
@@ -603,7 +603,7 @@ rulespec_registry.register(
         item_spec=_item_spec_azure_virtualnetworkgateways,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_virtualnetworkgateways,
-        title=lambda: _("Azure VNet Gateway"),
+        title=lambda: _("Azure VNet Gateway  (deprecated)"),
     )
 )
 
@@ -640,7 +640,7 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Service Type")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_usagedetails,
-        title=lambda: _("Azure Usage Details (Costs)"),
+        title=lambda: _("Azure Usage Details (Costs) (deprecated)"),
     )
 )
 
@@ -671,7 +671,7 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Azure DB Storage")),
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_storage,
-        title=lambda: _("Azure DB Storage"),
+        title=lambda: _("Azure DB Storage (deprecated)"),
     )
 )
 
@@ -694,7 +694,7 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Qps")),
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_qps,
-        title=lambda: _("Azure Traffic Manager Qps"),
+        title=lambda: _("Azure Traffic Manager Qps (deprecated)"),
     )
 )
 
@@ -724,7 +724,7 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Probe State")),
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_probe_state,
-        title=lambda: _("Azure Traffic Manager Probe State"),
+        title=lambda: _("Azure Traffic Manager Probe State (deprecated)"),
     )
 )
 
@@ -751,7 +751,7 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Load Balancer Health")),
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_health,
-        title=lambda: _("Azure Load Balancer Health"),
+        title=lambda: _("Azure Load Balancer Health (deprecated)"),
     )
 )
 
@@ -773,7 +773,7 @@ rulespec_registry.register(
         check_group_name="azure_vm_burst_cpu_credits",
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_vm_burst_cpu_credits,
-        title=lambda: _("Azure VM Burst CPU Credits"),
+        title=lambda: _("Azure VM Burst CPU Credits (deprecated)"),
     )
 )
 
@@ -807,6 +807,6 @@ rulespec_registry.register(
         check_group_name="azure_vm_disk",
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_vm_disk,
-        title=lambda: _("Azure VM Disk"),
+        title=lambda: _("Azure VM Disk (deprecated)"),
     )
 )

@@ -37,7 +37,7 @@ def _make_form() -> Dictionary:
 
 rule_spec_azure_databases_storage = CheckParameters(
     name="azure_databases_storage",
-    title=Title("Azure SQL database storage"),
+    title=Title("Azure SQL database storage (deprecated)"),
     topic=Topic.APPLICATIONS,
     parameter_form=_make_form,
     condition=HostAndItemCondition(item_title=Title("Database name")),

@@ -41,6 +41,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Database")),
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_connections,
-        title=lambda: _("Azure database connections"),
+        title=lambda: _("Azure database connections (deprecated)"),
     )
 )

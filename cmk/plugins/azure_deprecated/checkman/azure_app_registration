@@ -4,18 +4,21 @@ catalog: cloud/azure
 license: GPLv2
 distribution: check_mk
 description:
- This check monitors validity of an Microsoft Azure
- app registration secret.
- The state of the service is CRIT if the secret has
- expired.
+  This check and the associated special agent (agent_azure) are deprecated
+  and will be removed in a future version.
 
- The levels for remaining time until expiry can be
- configured in the rule "Credentials Expiration".
+  Please configure the new special agent using the "Microsoft Azure" ruleset.
 
- In order to use this check, you need to configure the Azure special agent.
+  This check monitors validity of an Microsoft Azure
+  app registration secret.
+  The state of the service is CRIT if the secret has
+  expired.
 
-item:
- The app and the secret name.
+  The levels for remaining time until expiry can be
+  configured in the rule "Credentials Expiration".
 
-discovery:
- One service is created for each app registration secret.
+  In order to use this check, you need to configure the Azure special agent.
+
+item: The app and the secret name.
+
+discovery: One service is created for each app registration secret.

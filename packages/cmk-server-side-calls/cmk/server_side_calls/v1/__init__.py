@@ -39,7 +39,7 @@ def entry_point_prefixes() -> (
     active_check_... = ActiveCheckConfig(...)
     special_agent_... = SpecialAgentConfig(...)
     """
-    return {  # type: ignore[misc] # expression contains Any
+    return {
         ActiveCheckConfig: "active_check_",
         SpecialAgentConfig: "special_agent_",
     }

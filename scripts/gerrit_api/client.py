@@ -1,0 +1,80 @@
+#!/usr/bin/env python3
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+"""Abstract code related to Gerrit API calls."""
+
+from enum import StrEnum
+from typing import Final
+
+import httpx
+from pydantic import BaseModel
+from pydantic_core import from_json
+from requests.auth import HTTPBasicAuth
+
+
+class TChangeStatus(StrEnum):
+    ALL = "all"
+    NEW = "NEW"
+    MERGED = "MERGED"
+    ABANDONED = "ABANDONED"
+
+
+class ChangeDetails(BaseModel):
+    id: str
+    change_id: str
+    status: TChangeStatus
+    virtual_id_number: int
+    work_in_progress: bool = False
+    revert_of: int = 0
+
+
+class GerritClient:
+    """httpx client used for perform REST_API calls to Checkmk's gerrit instance."""
+
+    GERRIT_PREFIX: Final = r")]}'"
+    GERRIT_URL: Final = "https://review.lan.tribe29.com/a"
+
+    def __init__(self, user: str, http_creds: str) -> None:
+        super().__init__()
+        self._client = httpx.Client(auth=HTTPBasicAuth(user, http_creds))
+        self._changes_api: Final = ChangesAPI(self)
+
+    @staticmethod
+    def parse_gerrit_response(response: httpx.Response) -> str:
+        """Ignore `GERRIT_PREFIX` from the response and then return the actual details."""
+        for line in response.iter_lines():
+            if line == GerritClient.GERRIT_PREFIX:
+                continue
+            return line
+        raise ValueError(f"No content in the response! Response lines:\n{response.text}")
+
+    @property
+    def changes_api(self) -> "ChangesAPI":
+        """Perform REST-API calls related to gerrit changes."""
+        return self._changes_api
+
+    def get(self, url: str) -> httpx.Response:
+        """Wrap `httpx.get` to raise exceptions when REST-API calls result in 4xx status code."""
+        response = self._client.get(url)
+        response.raise_for_status()
+        return response
+
+
+class ChangesAPI:
+    def __init__(self, client: GerritClient) -> None:
+        super().__init__()
+        self._client = client
+        self._url = f"{GerritClient.GERRIT_URL}/changes"
+
+    def get_changes(self, query: str = "") -> list[ChangeDetails]:
+        """Return a list of changes scraped in gerrit as per the provided query string."""
+        url = f"{GerritClient.GERRIT_URL}/changes"
+        if query:
+            url = f"{url}/?q={query}"
+
+        resp = self._client.get(url)
+        return [
+            ChangeDetails(**change)
+            for change in from_json(GerritClient.parse_gerrit_response(resp), allow_partial=True)
+        ]

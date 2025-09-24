@@ -453,7 +453,7 @@ class ABCNotificationsMode(ABCEventsMode):
 
                 notify_plugin_name, notify_method = rule["notify_plugin"]
 
-                parameter_url = makeuri(
+                parameter_url = makeuri_contextless(
                     request,
                     [
                         ("mode", "notification_parameters"),

@@ -22,7 +22,7 @@ This plugin it will be called by the agent without any arguments.
 
 from __future__ import with_statement
 
-__version__ = "2.3.0p38"
+__version__ = "2.3.0p39"
 
 # NOTE: docker is available for python versions from 2.6 / 3.3
 

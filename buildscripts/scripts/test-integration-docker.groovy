@@ -118,19 +118,8 @@ def main() {
                         CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: setup_values.docker_tag,
                     ],
                     no_remove_others: true, // do not delete other files in the dest dir
-                    download: false,    // use copyArtifacts to avoid nested directories
-                );
-            }
-            smart_stage(
-                name: "Copy artifacts",
-                condition: build_instance,
-                raiseOnError: true,
-            ) {
-                copyArtifacts(
-                    projectName: relative_job_name,
-                    selector: specific(build_instance.getId()),
-                    target: source_dir,
-                    fingerprintArtifacts: true,
+                    download: true,
+                    dest: "${source_dir}",
                 );
             }
         }

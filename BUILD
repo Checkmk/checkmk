@@ -18,6 +18,7 @@ exports_files(
         "requirements.txt",
         ".clang-tidy",
         ".npmrc",
+        ".prettierignore",
     ],
 )
 

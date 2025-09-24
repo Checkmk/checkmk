@@ -9,6 +9,7 @@ load("//bazel/rules:sh_expand_template.bzl", "sh_expand_template")
 
 exports_files([
     "pnpm-lock.yaml",
+    ".prettierrc.json",
 ])
 
 npm_link_all_packages(name = "node_modules")
@@ -27,6 +28,7 @@ format_multirun(
     name = "format",
     c = "@clang-linux-x86_64//:bin/clang-format",
     cc = "@clang-linux-x86_64//:bin/clang-format",
+    javascript = ":prettier",
     python = "@aspect_rules_lint//format:ruff",
     rust = "@rules_rust//tools/upstream_wrapper:rustfmt",
     shell = ":shfmt",
@@ -118,8 +120,14 @@ sh_expand_template(
 
 prettier_bin.prettier_binary(
     name = "prettier",
+    data = [
+        ".prettierrc.json",
+        ":node_modules/@trivago/prettier-plugin-sort-imports",
+    ],
     env = {"BAZEL_BINDIR": "."},
     fixed_args = [
+        "--config=\"$$JS_BINARY__RUNFILES\"/$(rlocationpath :.prettierrc.json)",
+        "--ignore-path=\"$$BUILD_WORKSPACE_DIRECTORY/.prettierignore\"",
         "--log-level=warn",
     ],
 )

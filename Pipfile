@@ -142,7 +142,7 @@ dicttoxml = "==1.7.16"  # needed by GUI (API XML format)
 cython = "==3.0.11"  # needed by numpy & pymssql, change also in omd/packages/python3-modules/build-python3-modules.bzl
 numpy = "==1.26.2"  # needed by GUI (metrics)
 reportlab = "~=3.6.12"  # needed by GUI (reporting)
-pypdf = "==4.3.1"  # needed by GUI (reporting)
+pypdf = "==6.1.0"  # needed by GUI (reporting)
 roman = "==4.0"  # needed by GUI (reporting)
 google-auth = "==2.17.1"  # needed by kubernetes
 websocket-client = "==1.5.1"  # needed by kubernetes

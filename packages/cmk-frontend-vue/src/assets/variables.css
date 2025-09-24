@@ -79,6 +79,9 @@
   --icon-main-setup-active: url('~cmk-frontend/themes/facelift/images/icon_main_setup_active.svg');
   --icon-main-monitoring-active: url('~cmk-frontend/themes/facelift/images/icon_main_monitoring_active.svg');
   --icon-main-customize-active: url('~cmk-frontend/themes/facelift/images/icon_main_customize_active.svg');
+  --icon-redhat: url('~cmk-frontend/themes/facelift/images/icon_linux_rpm.svg');
+  --icon-debian: url('~cmk-frontend/themes/facelift/images/icon_linux_deb.svg');
+  --icon-windows: url('~cmk-frontend/themes/facelift/images/icon_windows_msi.svg');
 
   /* TODO: remove icno-info and replace it with icon-help-new (icon-help later) */
   --icon-info: url('~cmk-frontend/themes/facelift/images/icon_info.svg');

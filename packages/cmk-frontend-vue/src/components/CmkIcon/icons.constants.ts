@@ -138,7 +138,10 @@ export const simpleIcons = [
   'user-interface',
   'widget-edit',
   'widget-clone',
-  'widget-delete'
+  'widget-delete',
+  'debian',
+  'redhat',
+  'windows'
 ] as const
 
 export const oneColorIcons = [

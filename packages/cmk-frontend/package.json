@@ -46,6 +46,7 @@
         "@babel/preset-env": "^7.26.0",
         "@babel/preset-typescript": "^7.26.0",
         "@jest/globals": "^29.7.0",
+        "@trivago/prettier-plugin-sort-imports": "5.2.2",
         "@types/crossfilter": "^0.0.38",
         "@types/d3": "^7.4.3",
         "@types/d3-flextree": "^2.1.4",
@@ -85,7 +86,7 @@
         "pkg-dir": "^8.0.0",
         "postcss": "^8.4.49",
         "postcss-loader": "^8.1.1",
-        "prettier": "^3.4.2",
+        "prettier": "^3.6.2",
         "sass": "^1.82.0",
         "sass-loader": "^16.0.4",
         "script-loader": "^0.7.2",
@@ -93,10 +94,10 @@
         "terser-webpack-plugin": "^5.3.10",
         "ts-jest": "^29.2.5",
         "typescript": "^5.7.2",
+        "vnu-jar": "^24.10.17",
         "webpack": "^5.97.0",
         "webpack-cli": "^5.1.4",
-        "webpack-remove-empty-scripts": "^1.0.4",
-        "vnu-jar": "^24.10.17"
+        "webpack-remove-empty-scripts": "^1.0.4"
     },
     "dependencies": {
         "@yaireo/tagify": "^4.32.1",
@@ -115,5 +116,10 @@
         "select2": "^4.0.13",
         "simplebar": "^6.2.7",
         "sweetalert2": "^11.14.5"
+    },
+    "pnpm": {
+        "onlyBuiltDependencies": [
+            "prettier"
+        ]
     }
 }

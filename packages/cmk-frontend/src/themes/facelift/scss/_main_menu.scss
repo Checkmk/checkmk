@@ -3,7 +3,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-@use "_mixins" as *;
+@use '_mixins' as *;
 
 #main_menu {
   display: flex;
@@ -43,18 +43,18 @@
       border: none;
     }
 
-    input[type="text"] {
+    input[type='text'] {
       flex-grow: 1;
       padding: 6px 0 6px $spacing;
       background: transparent;
       box-shadow: none;
     }
 
-    input[type="button"] {
+    input[type='button'] {
       flex-basis: 35px;
       padding: 2 * $spacing 25px 6px $spacing;
       background-color: transparent;
-      background-image: url("images/icon_quicksearch.png");
+      background-image: url('images/icon_quicksearch.png');
       background-position: center;
       background-repeat: no-repeat;
       background-size: 16px;
@@ -63,7 +63,7 @@
 
       &.clearable {
         cursor: pointer;
-        background-image: url("images/icon_close.svg");
+        background-image: url('images/icon_close.svg');
         background-size: 12px;
       }
     }
@@ -287,7 +287,7 @@
             width: $single-column-main-menu-width;
           }
 
-          input[type="button"] {
+          input[type='button'] {
             cursor: pointer;
 
             &:hover {

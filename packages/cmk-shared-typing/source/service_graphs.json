@@ -1,191 +1,172 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "type": "object",
-    "title": "graph",
-    "properties": {
-        "values": {
-            "type": "array",
-            "items": { "$ref": "#/$defs/time_series_values_of_metric" }
-        },
-        "horizontal_lines": {
-            "type": "array",
-            "items": { "$ref": "#/$defs/horizontal_line" }
-        },
-        "config": { "$ref": "#/$defs/graph_config" }
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "graph",
+  "properties": {
+    "values": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/time_series_values_of_metric" }
     },
-    "required": ["values", "horizontal_lines", "config"],
-    "$defs": {
-        "timestamp_ms": { "type": "integer" },
-        "metric_name": { "type": "string" },
-        "title": { "type": "string" },
-        "time_series_value": {
-            "type": "object",
-            "properties": {
-                "timestamp_ms": { "$ref": "#/$defs/timestamp_ms" },
-                "value": { "type": ["number", "null"] }
+    "horizontal_lines": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/horizontal_line" }
+    },
+    "config": { "$ref": "#/$defs/graph_config" }
+  },
+  "required": ["values", "horizontal_lines", "config"],
+  "$defs": {
+    "timestamp_ms": { "type": "integer" },
+    "metric_name": { "type": "string" },
+    "title": { "type": "string" },
+    "time_series_value": {
+      "type": "object",
+      "properties": {
+        "timestamp_ms": { "$ref": "#/$defs/timestamp_ms" },
+        "value": { "type": ["number", "null"] }
+      },
+      "required": ["timestamp_ms", "value"]
+    },
+    "time_series_values_of_metric": {
+      "type": "object",
+      "properties": {
+        "metric_name": { "$ref": "#/$defs/metric_name" },
+        "values": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/time_series_value" }
+        }
+      },
+      "required": ["metric_name", "values"]
+    },
+    "horizontal_line": {
+      "type": "object",
+      "properties": {
+        "value": { "type": "number" },
+        "color": { "type": "string" },
+        "title": { "type": "string" }
+      },
+      "required": ["value", "color", "title"]
+    },
+    "metric_config": {
+      "type": "object",
+      "properties": {
+        "metric_name": { "$ref": "#/$defs/metric_name" },
+        "title": { "$ref": "#/$defs/title" },
+        "negate": { "type": "boolean" },
+        "color": { "type": "string" },
+        "render_type": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": ["line", "area", "bar"]
             },
-            "required": ["timestamp_ms", "value"]
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": ["metric_name", "title", "negate", "color", "render_type"]
+    },
+    "ticks_config": {
+      "type": "object",
+      "properties": {
+        "notation": {
+          "type": "string",
+          "enum": ["decimal", "si", "iec", "standard_scientific", "engineering_scientific", "time"]
         },
-        "time_series_values_of_metric": {
-            "type": "object",
-            "properties": {
-                "metric_name": { "$ref": "#/$defs/metric_name" },
-                "values": {
-                    "type": "array",
-                    "items": { "$ref": "#/$defs/time_series_value" }
-                }
-            },
-            "required": ["metric_name", "values"]
+        "symbol": { "type": "string" }
+      },
+      "required": ["notation", "symbol"]
+    },
+    "x_axis_config": {
+      "type": "object",
+      "properties": {
+        "ticks": { "$ref": "#/$defs/ticks_config" }
+      },
+      "required": ["ticks"]
+    },
+    "y_axis_config": {
+      "type": "object",
+      "properties": {
+        "metric_configs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/metric_config"
+          }
         },
-        "horizontal_line": {
-            "type": "object",
-            "properties": {
-                "value": { "type": "number" },
-                "color": { "type": "string" },
-                "title": { "type": "string" }
-            },
-            "required": ["value", "color", "title"]
+        "stacked_metric_configs": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/metric_config"
+            }
+          }
         },
-        "metric_config": {
-            "type": "object",
-            "properties": {
-                "metric_name": { "$ref": "#/$defs/metric_name" },
-                "title": { "$ref": "#/$defs/title" },
-                "negate": { "type": "boolean" },
-                "color": { "type": "string" },
-                "render_type": {
-                    "anyOf": [
-                        {
-                            "type": "string",
-                            "enum": ["line", "area", "bar"]
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ]
-                }
-            },
-            "required": [
-                "metric_name",
-                "title",
-                "negate",
-                "color",
-                "render_type"
-            ]
-        },
-        "ticks_config": {
-            "type": "object",
-            "properties": {
-                "notation": {
-                    "type": "string",
-                    "enum": [
-                        "decimal",
-                        "si",
-                        "iec",
-                        "standard_scientific",
-                        "engineering_scientific",
-                        "time"
-                    ]
-                },
-                "symbol": { "type": "string" }
-            },
-            "required": ["notation", "symbol"]
-        },
-        "x_axis_config": {
-            "type": "object",
-            "properties": {
-                "ticks": { "$ref": "#/$defs/ticks_config" }
-            },
-            "required": ["ticks"]
-        },
-        "y_axis_config": {
-            "type": "object",
-            "properties": {
-                "metric_configs": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/$defs/metric_config"
-                    }
-                },
-                "stacked_metric_configs": {
-                    "type": "array",
-                    "items": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/$defs/metric_config"
-                        }
-                    }
-                },
-                "ticks": { "$ref": "#/$defs/ticks_config" }
-            },
-            "required": ["metric_configs", "stacked_metric_configs", "ticks"]
-        },
+        "ticks": { "$ref": "#/$defs/ticks_config" }
+      },
+      "required": ["metric_configs", "stacked_metric_configs", "ticks"]
+    },
+    "host_name": { "type": "string" },
+    "service_name": { "type": "string" },
+    "host_locator": {
+      "type": "object",
+      "properties": {
+        "host_name": { "$ref": "#/$defs/host_name" }
+      },
+      "required": ["host_name"]
+    },
+    "service_locator": {
+      "type": "object",
+      "properties": {
+        "host_name": { "$ref": "#/$defs/host_name" },
+        "service_name": { "$ref": "#/$defs/service_name" }
+      },
+      "required": ["host_name", "service_name"]
+    },
+    "metric_locator": {
+      "type": "object",
+      "properties": {
         "host_name": { "type": "string" },
         "service_name": { "type": "string" },
-        "host_locator": {
-            "type": "object",
-            "properties": {
-                "host_name": { "$ref": "#/$defs/host_name" }
+        "metric_name": { "type": "string" }
+      },
+      "required": ["host_name", "service_name", "metric_name"]
+    },
+    "annotation": {
+      "type": "object",
+      "properties": {
+        "timestamp_ms": { "$ref": "#/$defs/timestamp_ms" },
+        "message": { "type": "string" },
+        "locator": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/host_locator"
             },
-            "required": ["host_name"]
-        },
-        "service_locator": {
-            "type": "object",
-            "properties": {
-                "host_name": { "$ref": "#/$defs/host_name" },
-                "service_name": { "$ref": "#/$defs/service_name" }
+            {
+              "$ref": "#/$defs/service_locator"
             },
-            "required": ["host_name", "service_name"]
-        },
-        "metric_locator": {
-            "type": "object",
-            "properties": {
-                "host_name": { "type": "string" },
-                "service_name": { "type": "string" },
-                "metric_name": { "type": "string" }
-            },
-            "required": ["host_name", "service_name", "metric_name"]
-        },
-        "annotation": {
-            "type": "object",
-            "properties": {
-                "timestamp_ms": { "$ref": "#/$defs/timestamp_ms" },
-                "message": { "type": "string" },
-                "locator": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/$defs/host_locator"
-                        },
-                        {
-                            "$ref": "#/$defs/service_locator"
-                        },
-                        {
-                            "$ref": "#/$defs/metric_locator"
-                        }
-                    ]
-                }
-            },
-            "required": ["timestamp_ms", "message", "locator"]
-        },
-        "graph_config": {
-            "type": "object",
-            "properties": {
-                "title": { "$ref": "#/$defs/title" },
-                "x_axis": { "$ref": "#/$defs/x_axis_config" },
-                "left_y_axis": { "$ref": "#/$defs/y_axis_config" },
-                "right_y_axis": { "$ref": "#/$defs/y_axis_config" },
-                "annotations": {
-                    "type": "array",
-                    "items": { "$ref": "#/$defs/annotation" }
-                }
-            },
-            "required": [
-                "title",
-                "x_axis",
-                "left_y_axis",
-                "right_y_axis",
-                "annotations"
-            ]
+            {
+              "$ref": "#/$defs/metric_locator"
+            }
+          ]
         }
+      },
+      "required": ["timestamp_ms", "message", "locator"]
+    },
+    "graph_config": {
+      "type": "object",
+      "properties": {
+        "title": { "$ref": "#/$defs/title" },
+        "x_axis": { "$ref": "#/$defs/x_axis_config" },
+        "left_y_axis": { "$ref": "#/$defs/y_axis_config" },
+        "right_y_axis": { "$ref": "#/$defs/y_axis_config" },
+        "annotations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/annotation" }
+        }
+      },
+      "required": ["title", "x_axis", "left_y_axis", "right_y_axis", "annotations"]
     }
+  }
 }

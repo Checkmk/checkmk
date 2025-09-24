@@ -122,7 +122,10 @@ pkg_tar(
 # but it then had to be done similarly for all packages
 prettier_bin.prettier_binary(
     name = "prettier",
-    data = [":.prettierrc"],
+    data = [
+        ":.prettierrc.json",
+        ":node_modules/@trivago/prettier-plugin-sort-imports",
+    ],
     # Allow the binary to be run outside bazel
     env = {"BAZEL_BINDIR": "."},
     # chdir="\"$$(BUILD_WORKSPACE_DIRECTORY)\"/" + package_name(),
@@ -130,7 +133,7 @@ prettier_bin.prettier_binary(
         # `require` statements in the config file will be resolved relative to its location
         # Therefore to make it hermetic, prettier must be pointed at the copy of the config file
         # in the runfiles folder rather than the one in the source folder.
-        "--config=\"$$JS_BINARY__RUNFILES\"/$(rlocationpath :.prettierrc)",
+        "--config=\"$$JS_BINARY__RUNFILES\"/$(rlocationpath :.prettierrc.json)",
         # it looks like .prettierignore from the SOURCE has to be provided in order to make
         # specified (relative) directories match the actually checked files
         "--ignore-path=\"$$BUILD_WORKSPACE_DIRECTORY/" + package_name() + "/.prettierignore\"",

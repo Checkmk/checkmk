@@ -451,11 +451,11 @@ table.data td.perfometer {
 }
 
 /* Row coloring in case of the different states */
-tr[class*="odd"] {
+tr[class*='odd'] {
   background-color: $odd-tr-bg-color;
 }
 
-tr[class*="even"] {
+tr[class*='even'] {
   background-color: $even-tr-bg-color;
 }
 

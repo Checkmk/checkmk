@@ -14,7 +14,7 @@
   box-sizing: border-box;
 
   &::before {
-    content: "";
+    content: '';
     position: absolute;
     top: 0;
     left: 0;
@@ -79,8 +79,8 @@
     }
   }
 
-  tr[id*="label_groups_entry"],
-  tr[id*="labels_entry"] {
+  tr[id*='label_groups_entry'],
+  tr[id*='labels_entry'] {
     > td.vlof_buttons a.delete_button img {
       opacity: 0.5;
 
@@ -160,14 +160,14 @@
     }
 
     // Boolean operator dropdowns
-    select[id$="_bool"] {
+    select[id$='_bool'] {
       & + span.select2-container--default {
         width: 6 * $spacing !important;
       }
     }
 
     // Valuespec (label) dropdowns
-    select[id$="_vs"] {
+    select[id$='_vs'] {
       + span.select2-container--default {
         flex-grow: 1;
         margin-left: 4px;

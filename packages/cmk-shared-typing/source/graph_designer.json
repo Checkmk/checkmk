@@ -1,498 +1,479 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "type": "object",
-    "title": "graph_designer_content",
-    "properties": {
-        "graph_id": {
-            "type": "string"
-        },
-        "graph_lines": {
-            "$ref": "#/$defs/graph_lines"
-        },
-        "graph_options": {
-            "$ref": "#/$defs/graph_options"
-        },
-        "metric_backend_available": {
-            "type": "boolean"
-        }
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "graph_designer_content",
+  "properties": {
+    "graph_id": {
+      "type": "string"
     },
-    "required": [
-        "graph_id",
-        "graph_lines",
-        "graph_options",
-        "metric_backend_available"
-    ],
-    "$defs": {
-        "graph_line_id": {
-            "type": "integer"
-        },
-        "graph_line_color": {
-            "type": "string"
-        },
-        "graph_line_auto_title": {
-            "type": "string"
-        },
-        "graph_line_custom_title": {
-            "type": "string"
-        },
-        "graph_line_visible": {
-            "type": "boolean"
-        },
-        "graph_line_line_type": {
-            "type": "string",
-            "enum": ["line", "area", "stack"]
-        },
-        "graph_line_mirrored": {
-            "type": "boolean"
-        },
-        "graph_line_host_name": {
-            "type": "string"
-        },
-        "graph_line_service_name": {
-            "type": "string"
-        },
-        "graph_line_metric_name": {
-            "type": "string"
-        },
-        "graph_line_query_attributes": {
-            "type": "array",
-            "items": {
-                "type": "string"
-            }
-        },
-        "graph_line_query": {
-            "type": "object",
-            "title": "query",
-            "properties": {
-                "id": { "$ref": "#/$defs/graph_line_id" },
-                "type": { "type": "string", "enum": ["query"] },
-                "color": { "$ref": "#/$defs/graph_line_color" },
-                "auto_title": { "$ref": "#/$defs/graph_line_auto_title" },
-                "custom_title": { "$ref": "#/$defs/graph_line_custom_title" },
-                "visible": { "$ref": "#/$defs/graph_line_visible" },
-                "line_type": {
-                    "$ref": "#/$defs/graph_line_line_type"
-                },
-                "mirrored": {
-                    "$ref": "#/$defs/graph_line_mirrored"
-                },
-                "metric_name": {
-                    "$ref": "#/$defs/graph_line_metric_name"
-                },
-                "resource_attributes": {
-                    "$ref": "#/$defs/graph_line_query_attributes"
-                },
-                "scope_attributes": {
-                    "$ref": "#/$defs/graph_line_query_attributes"
-                },
-                "data_point_attributes": {
-                    "$ref": "#/$defs/graph_line_query_attributes"
-                }
-            },
-            "required": [
-                "id",
-                "type",
-                "color",
-                "auto_title",
-                "custom_title",
-                "visible",
-                "line_type",
-                "mirrored",
-                "metric_name",
-                "resource_attributes",
-                "scope_attributes",
-                "data_point_attributes"
-            ]
-        },
-        "graph_line_metric": {
-            "type": "object",
-            "title": "metric",
-            "properties": {
-                "id": {
-                    "$ref": "#/$defs/graph_line_id"
-                },
-                "type": {
-                    "type": "string",
-                    "enum": ["metric"]
-                },
-                "color": {
-                    "$ref": "#/$defs/graph_line_color"
-                },
-                "auto_title": {
-                    "$ref": "#/$defs/graph_line_auto_title"
-                },
-                "custom_title": {
-                    "$ref": "#/$defs/graph_line_custom_title"
-                },
-                "visible": {
-                    "$ref": "#/$defs/graph_line_visible"
-                },
-                "line_type": {
-                    "$ref": "#/$defs/graph_line_line_type"
-                },
-                "mirrored": {
-                    "$ref": "#/$defs/graph_line_mirrored"
-                },
-                "host_name": {
-                    "$ref": "#/$defs/graph_line_host_name"
-                },
-                "service_name": {
-                    "$ref": "#/$defs/graph_line_service_name"
-                },
-                "metric_name": {
-                    "$ref": "#/$defs/graph_line_metric_name"
-                },
-                "consolidation_type": {
-                    "type": "string",
-                    "enum": ["average", "min", "max"]
-                }
-            },
-            "required": [
-                "id",
-                "type",
-                "color",
-                "auto_title",
-                "custom_title",
-                "visible",
-                "line_type",
-                "mirrored",
-                "host_name",
-                "service_name",
-                "metric_name",
-                "consolidation_type"
-            ]
-        },
-        "graph_line_scalar": {
-            "type": "object",
-            "title": "scalar",
-            "properties": {
-                "id": {
-                    "$ref": "#/$defs/graph_line_id"
-                },
-                "type": {
-                    "type": "string",
-                    "enum": ["scalar"]
-                },
-                "color": {
-                    "$ref": "#/$defs/graph_line_color"
-                },
-                "auto_title": {
-                    "$ref": "#/$defs/graph_line_auto_title"
-                },
-                "custom_title": {
-                    "$ref": "#/$defs/graph_line_custom_title"
-                },
-                "visible": {
-                    "$ref": "#/$defs/graph_line_visible"
-                },
-                "line_type": {
-                    "$ref": "#/$defs/graph_line_line_type"
-                },
-                "mirrored": {
-                    "$ref": "#/$defs/graph_line_mirrored"
-                },
-                "host_name": {
-                    "$ref": "#/$defs/graph_line_host_name"
-                },
-                "service_name": {
-                    "$ref": "#/$defs/graph_line_service_name"
-                },
-                "metric_name": {
-                    "$ref": "#/$defs/graph_line_metric_name"
-                },
-                "scalar_type": {
-                    "type": "string",
-                    "enum": ["warn", "crit", "min", "max"]
-                }
-            },
-            "required": [
-                "id",
-                "type",
-                "color",
-                "auto_title",
-                "custom_title",
-                "visible",
-                "line_type",
-                "mirrored",
-                "host_name",
-                "service_name",
-                "metric_name",
-                "scalar_type"
-            ]
-        },
-        "graph_line_constant": {
-            "type": "object",
-            "title": "constant",
-            "properties": {
-                "id": {
-                    "$ref": "#/$defs/graph_line_id"
-                },
-                "type": {
-                    "type": "string",
-                    "enum": ["constant"]
-                },
-                "color": {
-                    "$ref": "#/$defs/graph_line_color"
-                },
-                "auto_title": {
-                    "$ref": "#/$defs/graph_line_auto_title"
-                },
-                "custom_title": {
-                    "$ref": "#/$defs/graph_line_custom_title"
-                },
-                "visible": {
-                    "$ref": "#/$defs/graph_line_visible"
-                },
-                "line_type": {
-                    "$ref": "#/$defs/graph_line_line_type"
-                },
-                "mirrored": {
-                    "$ref": "#/$defs/graph_line_mirrored"
-                },
-                "value": {
-                    "type": "number"
-                }
-            },
-            "required": [
-                "id",
-                "type",
-                "color",
-                "auto_title",
-                "custom_title",
-                "visible",
-                "line_type",
-                "mirrored",
-                "value"
-            ]
-        },
-        "graph_line_operation": {
-            "type": "object",
-            "title": "operation",
-            "properties": {
-                "id": {
-                    "$ref": "#/$defs/graph_line_id"
-                },
-                "type": {
-                    "type": "string",
-                    "enum": [
-                        "sum",
-                        "product",
-                        "difference",
-                        "fraction",
-                        "average",
-                        "minimum",
-                        "maximum"
-                    ]
-                },
-                "color": {
-                    "$ref": "#/$defs/graph_line_color"
-                },
-                "auto_title": {
-                    "$ref": "#/$defs/graph_line_auto_title"
-                },
-                "custom_title": {
-                    "$ref": "#/$defs/graph_line_custom_title"
-                },
-                "visible": {
-                    "$ref": "#/$defs/graph_line_visible"
-                },
-                "line_type": {
-                    "$ref": "#/$defs/graph_line_line_type"
-                },
-                "mirrored": {
-                    "$ref": "#/$defs/graph_line_mirrored"
-                },
-                "operands": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/$defs/graph_line"
-                    }
-                }
-            },
-            "required": [
-                "id",
-                "type",
-                "color",
-                "auto_title",
-                "custom_title",
-                "visible",
-                "line_type",
-                "mirrored",
-                "operands"
-            ]
-        },
-        "graph_line_transformation": {
-            "type": "object",
-            "title": "transformation",
-            "properties": {
-                "id": {
-                    "$ref": "#/$defs/graph_line_id"
-                },
-                "type": {
-                    "type": "string",
-                    "enum": ["transformation"]
-                },
-                "color": {
-                    "$ref": "#/$defs/graph_line_color"
-                },
-                "auto_title": {
-                    "$ref": "#/$defs/graph_line_auto_title"
-                },
-                "custom_title": {
-                    "$ref": "#/$defs/graph_line_custom_title"
-                },
-                "visible": {
-                    "$ref": "#/$defs/graph_line_visible"
-                },
-                "line_type": {
-                    "$ref": "#/$defs/graph_line_line_type"
-                },
-                "mirrored": {
-                    "$ref": "#/$defs/graph_line_mirrored"
-                },
-                "percentile": {
-                    "type": "number"
-                },
-                "operand": {
-                    "$ref": "#/$defs/graph_line"
-                }
-            },
-            "required": [
-                "id",
-                "type",
-                "color",
-                "auto_title",
-                "custom_title",
-                "visible",
-                "line_type",
-                "mirrored",
-                "percentile",
-                "operand"
-            ]
-        },
-        "graph_line": {
-            "anyOf": [
-                { "$ref": "#/$defs/graph_line_query" },
-                {
-                    "$ref": "#/$defs/graph_line_metric"
-                },
-                {
-                    "$ref": "#/$defs/graph_line_scalar"
-                },
-                {
-                    "$ref": "#/$defs/graph_line_constant"
-                },
-                {
-                    "$ref": "#/$defs/graph_line_operation"
-                },
-                {
-                    "$ref": "#/$defs/graph_line_transformation"
-                }
-            ]
-        },
-        "graph_lines": {
-            "type": "array",
-            "items": {
-                "$ref": "#/$defs/graph_line"
-            }
-        },
-        "graph_option_unit_custom_notation_with_symbol": {
-            "type": "object",
-            "properties": {
-                "type": {
-                    "type": "string",
-                    "enum": [
-                        "decimal",
-                        "si",
-                        "iec",
-                        "standard_scientific",
-                        "engineering_scientific"
-                    ]
-                },
-                "symbol": {
-                    "type": "string"
-                }
-            },
-            "required": ["type", "symbol"]
-        },
-        "graph_option_unit_custom_notation": {
-            "anyOf": [
-                {
-                    "$ref": "#/$defs/graph_option_unit_custom_notation_with_symbol"
-                },
-                {
-                    "type": "string",
-                    "enum": ["time"]
-                }
-            ]
-        },
-        "graph_option_unit_custom_precision": {
-            "type": "object",
-            "properties": {
-                "type": {
-                    "type": "string",
-                    "enum": ["auto", "strict"]
-                },
-                "digits": {
-                    "type": "integer"
-                }
-            },
-            "required": ["type", "digits"]
-        },
-        "graph_option_unit_custom": {
-            "type": "object",
-            "properties": {
-                "notation": {
-                    "$ref": "#/$defs/graph_option_unit_custom_notation"
-                },
-                "precision": {
-                    "$ref": "#/$defs/graph_option_unit_custom_precision"
-                }
-            },
-            "required": ["notation", "precision"]
-        },
-        "graph_option_explicit_vertical_range_boundaries": {
-            "type": "object",
-            "properties": {
-                "lower": {
-                    "type": "number"
-                },
-                "upper": {
-                    "type": "number"
-                }
-            },
-            "required": ["lower", "upper"]
-        },
-        "graph_options": {
-            "type": "object",
-            "properties": {
-                "unit": {
-                    "anyOf": [
-                        {
-                            "type": "string",
-                            "enum": ["first_entry_with_unit"]
-                        },
-                        {
-                            "$ref": "#/$defs/graph_option_unit_custom"
-                        }
-                    ]
-                },
-                "explicit_vertical_range": {
-                    "anyOf": [
-                        {
-                            "type": "string",
-                            "enum": ["auto"]
-                        },
-                        {
-                            "$ref": "#/$defs/graph_option_explicit_vertical_range_boundaries"
-                        }
-                    ]
-                },
-                "omit_zero_metrics": {
-                    "type": "boolean"
-                }
-            },
-            "required": ["unit", "explicit_vertical_range", "omit_zero_metrics"]
-        }
+    "graph_lines": {
+      "$ref": "#/$defs/graph_lines"
+    },
+    "graph_options": {
+      "$ref": "#/$defs/graph_options"
+    },
+    "metric_backend_available": {
+      "type": "boolean"
     }
+  },
+  "required": ["graph_id", "graph_lines", "graph_options", "metric_backend_available"],
+  "$defs": {
+    "graph_line_id": {
+      "type": "integer"
+    },
+    "graph_line_color": {
+      "type": "string"
+    },
+    "graph_line_auto_title": {
+      "type": "string"
+    },
+    "graph_line_custom_title": {
+      "type": "string"
+    },
+    "graph_line_visible": {
+      "type": "boolean"
+    },
+    "graph_line_line_type": {
+      "type": "string",
+      "enum": ["line", "area", "stack"]
+    },
+    "graph_line_mirrored": {
+      "type": "boolean"
+    },
+    "graph_line_host_name": {
+      "type": "string"
+    },
+    "graph_line_service_name": {
+      "type": "string"
+    },
+    "graph_line_metric_name": {
+      "type": "string"
+    },
+    "graph_line_query_attributes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "graph_line_query": {
+      "type": "object",
+      "title": "query",
+      "properties": {
+        "id": { "$ref": "#/$defs/graph_line_id" },
+        "type": { "type": "string", "enum": ["query"] },
+        "color": { "$ref": "#/$defs/graph_line_color" },
+        "auto_title": { "$ref": "#/$defs/graph_line_auto_title" },
+        "custom_title": { "$ref": "#/$defs/graph_line_custom_title" },
+        "visible": { "$ref": "#/$defs/graph_line_visible" },
+        "line_type": {
+          "$ref": "#/$defs/graph_line_line_type"
+        },
+        "mirrored": {
+          "$ref": "#/$defs/graph_line_mirrored"
+        },
+        "metric_name": {
+          "$ref": "#/$defs/graph_line_metric_name"
+        },
+        "resource_attributes": {
+          "$ref": "#/$defs/graph_line_query_attributes"
+        },
+        "scope_attributes": {
+          "$ref": "#/$defs/graph_line_query_attributes"
+        },
+        "data_point_attributes": {
+          "$ref": "#/$defs/graph_line_query_attributes"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "color",
+        "auto_title",
+        "custom_title",
+        "visible",
+        "line_type",
+        "mirrored",
+        "metric_name",
+        "resource_attributes",
+        "scope_attributes",
+        "data_point_attributes"
+      ]
+    },
+    "graph_line_metric": {
+      "type": "object",
+      "title": "metric",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/graph_line_id"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["metric"]
+        },
+        "color": {
+          "$ref": "#/$defs/graph_line_color"
+        },
+        "auto_title": {
+          "$ref": "#/$defs/graph_line_auto_title"
+        },
+        "custom_title": {
+          "$ref": "#/$defs/graph_line_custom_title"
+        },
+        "visible": {
+          "$ref": "#/$defs/graph_line_visible"
+        },
+        "line_type": {
+          "$ref": "#/$defs/graph_line_line_type"
+        },
+        "mirrored": {
+          "$ref": "#/$defs/graph_line_mirrored"
+        },
+        "host_name": {
+          "$ref": "#/$defs/graph_line_host_name"
+        },
+        "service_name": {
+          "$ref": "#/$defs/graph_line_service_name"
+        },
+        "metric_name": {
+          "$ref": "#/$defs/graph_line_metric_name"
+        },
+        "consolidation_type": {
+          "type": "string",
+          "enum": ["average", "min", "max"]
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "color",
+        "auto_title",
+        "custom_title",
+        "visible",
+        "line_type",
+        "mirrored",
+        "host_name",
+        "service_name",
+        "metric_name",
+        "consolidation_type"
+      ]
+    },
+    "graph_line_scalar": {
+      "type": "object",
+      "title": "scalar",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/graph_line_id"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["scalar"]
+        },
+        "color": {
+          "$ref": "#/$defs/graph_line_color"
+        },
+        "auto_title": {
+          "$ref": "#/$defs/graph_line_auto_title"
+        },
+        "custom_title": {
+          "$ref": "#/$defs/graph_line_custom_title"
+        },
+        "visible": {
+          "$ref": "#/$defs/graph_line_visible"
+        },
+        "line_type": {
+          "$ref": "#/$defs/graph_line_line_type"
+        },
+        "mirrored": {
+          "$ref": "#/$defs/graph_line_mirrored"
+        },
+        "host_name": {
+          "$ref": "#/$defs/graph_line_host_name"
+        },
+        "service_name": {
+          "$ref": "#/$defs/graph_line_service_name"
+        },
+        "metric_name": {
+          "$ref": "#/$defs/graph_line_metric_name"
+        },
+        "scalar_type": {
+          "type": "string",
+          "enum": ["warn", "crit", "min", "max"]
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "color",
+        "auto_title",
+        "custom_title",
+        "visible",
+        "line_type",
+        "mirrored",
+        "host_name",
+        "service_name",
+        "metric_name",
+        "scalar_type"
+      ]
+    },
+    "graph_line_constant": {
+      "type": "object",
+      "title": "constant",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/graph_line_id"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["constant"]
+        },
+        "color": {
+          "$ref": "#/$defs/graph_line_color"
+        },
+        "auto_title": {
+          "$ref": "#/$defs/graph_line_auto_title"
+        },
+        "custom_title": {
+          "$ref": "#/$defs/graph_line_custom_title"
+        },
+        "visible": {
+          "$ref": "#/$defs/graph_line_visible"
+        },
+        "line_type": {
+          "$ref": "#/$defs/graph_line_line_type"
+        },
+        "mirrored": {
+          "$ref": "#/$defs/graph_line_mirrored"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "color",
+        "auto_title",
+        "custom_title",
+        "visible",
+        "line_type",
+        "mirrored",
+        "value"
+      ]
+    },
+    "graph_line_operation": {
+      "type": "object",
+      "title": "operation",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/graph_line_id"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["sum", "product", "difference", "fraction", "average", "minimum", "maximum"]
+        },
+        "color": {
+          "$ref": "#/$defs/graph_line_color"
+        },
+        "auto_title": {
+          "$ref": "#/$defs/graph_line_auto_title"
+        },
+        "custom_title": {
+          "$ref": "#/$defs/graph_line_custom_title"
+        },
+        "visible": {
+          "$ref": "#/$defs/graph_line_visible"
+        },
+        "line_type": {
+          "$ref": "#/$defs/graph_line_line_type"
+        },
+        "mirrored": {
+          "$ref": "#/$defs/graph_line_mirrored"
+        },
+        "operands": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/graph_line"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "color",
+        "auto_title",
+        "custom_title",
+        "visible",
+        "line_type",
+        "mirrored",
+        "operands"
+      ]
+    },
+    "graph_line_transformation": {
+      "type": "object",
+      "title": "transformation",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/graph_line_id"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["transformation"]
+        },
+        "color": {
+          "$ref": "#/$defs/graph_line_color"
+        },
+        "auto_title": {
+          "$ref": "#/$defs/graph_line_auto_title"
+        },
+        "custom_title": {
+          "$ref": "#/$defs/graph_line_custom_title"
+        },
+        "visible": {
+          "$ref": "#/$defs/graph_line_visible"
+        },
+        "line_type": {
+          "$ref": "#/$defs/graph_line_line_type"
+        },
+        "mirrored": {
+          "$ref": "#/$defs/graph_line_mirrored"
+        },
+        "percentile": {
+          "type": "number"
+        },
+        "operand": {
+          "$ref": "#/$defs/graph_line"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "color",
+        "auto_title",
+        "custom_title",
+        "visible",
+        "line_type",
+        "mirrored",
+        "percentile",
+        "operand"
+      ]
+    },
+    "graph_line": {
+      "anyOf": [
+        { "$ref": "#/$defs/graph_line_query" },
+        {
+          "$ref": "#/$defs/graph_line_metric"
+        },
+        {
+          "$ref": "#/$defs/graph_line_scalar"
+        },
+        {
+          "$ref": "#/$defs/graph_line_constant"
+        },
+        {
+          "$ref": "#/$defs/graph_line_operation"
+        },
+        {
+          "$ref": "#/$defs/graph_line_transformation"
+        }
+      ]
+    },
+    "graph_lines": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/graph_line"
+      }
+    },
+    "graph_option_unit_custom_notation_with_symbol": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["decimal", "si", "iec", "standard_scientific", "engineering_scientific"]
+        },
+        "symbol": {
+          "type": "string"
+        }
+      },
+      "required": ["type", "symbol"]
+    },
+    "graph_option_unit_custom_notation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/graph_option_unit_custom_notation_with_symbol"
+        },
+        {
+          "type": "string",
+          "enum": ["time"]
+        }
+      ]
+    },
+    "graph_option_unit_custom_precision": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["auto", "strict"]
+        },
+        "digits": {
+          "type": "integer"
+        }
+      },
+      "required": ["type", "digits"]
+    },
+    "graph_option_unit_custom": {
+      "type": "object",
+      "properties": {
+        "notation": {
+          "$ref": "#/$defs/graph_option_unit_custom_notation"
+        },
+        "precision": {
+          "$ref": "#/$defs/graph_option_unit_custom_precision"
+        }
+      },
+      "required": ["notation", "precision"]
+    },
+    "graph_option_explicit_vertical_range_boundaries": {
+      "type": "object",
+      "properties": {
+        "lower": {
+          "type": "number"
+        },
+        "upper": {
+          "type": "number"
+        }
+      },
+      "required": ["lower", "upper"]
+    },
+    "graph_options": {
+      "type": "object",
+      "properties": {
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": ["first_entry_with_unit"]
+            },
+            {
+              "$ref": "#/$defs/graph_option_unit_custom"
+            }
+          ]
+        },
+        "explicit_vertical_range": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": ["auto"]
+            },
+            {
+              "$ref": "#/$defs/graph_option_explicit_vertical_range_boundaries"
+            }
+          ]
+        },
+        "omit_zero_metrics": {
+          "type": "boolean"
+        }
+      },
+      "required": ["unit", "explicit_vertical_range", "omit_zero_metrics"]
+    }
+  }
 }

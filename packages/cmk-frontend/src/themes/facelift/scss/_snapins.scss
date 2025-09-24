@@ -1,4 +1,4 @@
-@use "sass:color";
+@use 'sass:color';
 @charset "UTF-8";
 // Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -482,7 +482,7 @@ div.spacertop {
     width: 100%;
     height: $input-field-height;
     color: $font-color;
-    background-image: url("images/icon_quicksearch.png");
+    background-image: url('images/icon_quicksearch.png');
     background-position: right $spacing bottom 4px;
     background-size: 15px;
   }

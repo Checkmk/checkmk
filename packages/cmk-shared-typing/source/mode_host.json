@@ -1,90 +1,84 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "type": "object",
-    "title": "mode_host",
-    "properties": {
-        "form_keys": { "$ref": "#/$defs/mode_host_form_keys" },
-        "sites": {
-            "type": "array",
-            "items": {
-                "$ref": "#/$defs/mode_host_site"
-            }
-        },
-        "agent_connection_modes": {
-            "type": "array",
-            "items": {
-                "$ref": "#/$defs/mode_host_agent_connection_mode"
-            }
-        },
-        "i18n_ping_host": { "$ref": "#/$defs/i18n_ping_host" },
-        "host_name": { "type": "string" },
-        "agent_slideout": { "$ref": "agent_slideout.json" }
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "mode_host",
+  "properties": {
+    "form_keys": { "$ref": "#/$defs/mode_host_form_keys" },
+    "sites": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/mode_host_site"
+      }
     },
-    "required": [
-        "form_keys",
-        "sites",
-        "i18n_ping_host",
-        "agent_slideout",
-        "host_name"
-    ],
-    "$defs": {
-        "i18n_ping_host": {
-            "type": "object",
-            "properties": {
-                "loading": { "type": "string" },
-                "error_host_not_dns_resolvable": { "type": "string" },
-                "success_host_dns_resolvable": { "type": "string" },
-                "error_ip_not_pingable": { "type": "string" },
-                "success_ip_pingable": { "type": "string" }
-            },
-            "required": [
-                "loading",
-                "error_host_not_dns_resolvable",
-                "success_host_dns_resolvable",
-                "error_ip_not_pingable",
-                "success_ip_pingable"
-            ]
-        },
-        "mode_host_form_keys": {
-            "type": "object",
-            "properties": {
-                "form": { "type": "string" },
-                "host_name": { "type": "string" },
-                "ipv4_address": { "type": "string" },
-                "ipv6_address": { "type": "string" },
-                "site": { "type": "string" },
-                "ip_address_family": { "type": "string" },
-                "cmk_agent_connection": { "type": "string" },
-                "tag_agent": { "type": "string" },
-                "cb_change": { "type": "string" }
-            },
-            "required": [
-                "form",
-                "host_name",
-                "ipv4_address",
-                "ipv6_address",
-                "site",
-                "ip_address_family",
-                "cmk_agent_connection",
-                "tag_agent",
-                "cb_change"
-            ]
-        },
-        "mode_host_site": {
-            "type": "object",
-            "properties": {
-                "id_hash": { "type": "string" },
-                "site_id": { "type": "string" }
-            },
-            "required": ["id_hash", "site_id"]
-        },
-        "mode_host_agent_connection_mode": {
-            "type": "object",
-            "properties": {
-                "id_hash": { "type": "string" },
-                "mode": { "type": "string" }
-            },
-            "required": ["id_hash", "mode"]
-        }
+    "agent_connection_modes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/mode_host_agent_connection_mode"
+      }
+    },
+    "i18n_ping_host": { "$ref": "#/$defs/i18n_ping_host" },
+    "host_name": { "type": "string" },
+    "agent_slideout": { "$ref": "agent_slideout.json" }
+  },
+  "required": ["form_keys", "sites", "i18n_ping_host", "agent_slideout", "host_name"],
+  "$defs": {
+    "i18n_ping_host": {
+      "type": "object",
+      "properties": {
+        "loading": { "type": "string" },
+        "error_host_not_dns_resolvable": { "type": "string" },
+        "success_host_dns_resolvable": { "type": "string" },
+        "error_ip_not_pingable": { "type": "string" },
+        "success_ip_pingable": { "type": "string" }
+      },
+      "required": [
+        "loading",
+        "error_host_not_dns_resolvable",
+        "success_host_dns_resolvable",
+        "error_ip_not_pingable",
+        "success_ip_pingable"
+      ]
+    },
+    "mode_host_form_keys": {
+      "type": "object",
+      "properties": {
+        "form": { "type": "string" },
+        "host_name": { "type": "string" },
+        "ipv4_address": { "type": "string" },
+        "ipv6_address": { "type": "string" },
+        "site": { "type": "string" },
+        "ip_address_family": { "type": "string" },
+        "cmk_agent_connection": { "type": "string" },
+        "tag_agent": { "type": "string" },
+        "cb_change": { "type": "string" }
+      },
+      "required": [
+        "form",
+        "host_name",
+        "ipv4_address",
+        "ipv6_address",
+        "site",
+        "ip_address_family",
+        "cmk_agent_connection",
+        "tag_agent",
+        "cb_change"
+      ]
+    },
+    "mode_host_site": {
+      "type": "object",
+      "properties": {
+        "id_hash": { "type": "string" },
+        "site_id": { "type": "string" }
+      },
+      "required": ["id_hash", "site_id"]
+    },
+    "mode_host_agent_connection_mode": {
+      "type": "object",
+      "properties": {
+        "id_hash": { "type": "string" },
+        "mode": { "type": "string" }
+      },
+      "required": ["id_hash", "mode"]
     }
+  }
 }

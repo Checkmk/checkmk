@@ -2961,7 +2961,7 @@ def main_init_action(
     options: CommandOptions,
 ) -> None:
     if isinstance(site, SiteContext):
-        site_home = str(SitePaths.from_site_name(site.name).home)
+        site_home = SitePaths.from_site_name(site.name).home
         exit_status = init_action(version_info, site, global_opts, command, args, options)
 
         # When the whole site is about to be stopped check for remaining

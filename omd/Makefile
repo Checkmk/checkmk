@@ -34,7 +34,6 @@ PACKAGES += enterprise
 endif
 ifeq ($(EDITION),managed)
 PACKAGES += enterprise
-PACKAGES += managed
 PACKAGES += otel-collector
 endif
 ifeq ($(EDITION),cloud)

@@ -194,7 +194,6 @@ endif
 ifeq ($(EDITION),managed)
 include \
     packages/enterprise/enterprise.make \
-    packages/managed/managed.make \
     $(REPO_PATH)/non-free/packages/otel-collector/otel-collector.make
 endif
 ifeq ($(EDITION),cloud)

@@ -35797,6 +35797,10 @@ msgstr "Página do homem inválido: Falha em obter o título"
 msgid "Invalid mime type, supported types are: %s"
 msgstr "Tipo de ficheiro inválido esperado %s recebido '%s'"
 
+#, fuzzy, python-format
+msgid "Invalid mode '%s'."
+msgstr "Ident inválido: %s"
+
 #, fuzzy
 msgid "Invalid number"
 msgstr "Nome de arquivo inválido"
@@ -42229,6 +42233,10 @@ msgstr "Espelhamento do estado crítico da testemunha"
 
 msgid "Miscellaneous"
 msgstr "Diversos"
+
+#, python-format
+msgid "Mismatching owner in `%s` mode."
+msgstr ""
 
 #, fuzzy
 msgid "Misplaced Objects"
@@ -52729,6 +52737,10 @@ msgstr "Informação do nó Proxmox VE"
 msgid "Proxmox VE Node Memory Allocation"
 msgstr "Informação do nó Proxmox VE"
 
+#, fuzzy
+msgid "Proxmox VE Replication"
+msgstr "utilização da CPU"
+
 msgid "Proxmox VE VM Backup"
 msgstr "Proxmox VE VM Backup"
 
@@ -58833,6 +58845,10 @@ msgstr "Serviço de tradução do estado"
 
 msgid "Service state type"
 msgstr "Tipo de estado do serviço"
+
+#, fuzzy
+msgid "Service state when no replication jobs are configured on the cluster"
+msgstr "Estado quando o estado de replicação está ativo"
 
 msgid "Service states"
 msgstr "Estados de serviço"
@@ -66836,6 +66852,12 @@ msgid ""
 msgstr ""
 
 #, python-format
+msgid ""
+"The dashboard '%s' already contains an embedded view with the ID '%s'. "
+"Please choose another ID."
+msgstr ""
+
+#, python-format
 msgid "The dashboard '%s' does not contain an embedded view with the ID '%s'."
 msgstr ""
 
@@ -66864,6 +66886,10 @@ msgstr "O nome da base de dados no Servidor Mailbox."
 
 msgid "The database to authenticate on."
 msgstr "A base de dados para autenticação."
+
+#, fuzzy, python-format
+msgid "The datasource '%s' does not exist."
+msgstr "O \"%s\" anfitrião não existe"
 
 msgid "The datasource of a view cannot be changed."
 msgstr "A fonte de dados de uma visão não pode ser alterada."
@@ -80972,6 +80998,10 @@ msgstr "Níveis superiores na queda de pacotes de entrada do túnel"
 msgid "Upper levels provisioned concurrency utilization"
 msgstr "Utilização da concorrência provisionada nos níveis superiores"
 
+#, fuzzy
+msgid "Upper limit of time since last replication"
+msgstr "Nível de aviso para o tempo desde a última actualização"
+
 msgid "Upper limits in percent"
 msgstr "Limites superiores em percentagem"
 
@@ -90268,9 +90298,6 @@ msgstr ""
 "O terminal remoto desligou-se; o kernel está à espera que a aplicação feche "
 "a tomada"
 
-msgid "repeat every 20'th row"
-msgstr "repetir a cada 20'th row"
-
 msgid "repeat:"
 msgstr "Repete:"
 
@@ -91251,12 +91278,86 @@ msgid "Filter by service"
 msgstr "Filtrar %s seleção por serviço: "
 
 #, fuzzy
-msgid "Choose how to display your data"
-msgstr "Não mostrar uma data"
+msgid "Dashboard layout"
+msgstr "Elemento de tablier"
+
+msgid ""
+"You can choose between a fixed layout or a responsive, scrollable grid "
+"layout. By default, the responsive grid layout is selected."
+msgstr ""
+
+#, fuzzy
+msgid "Responsive"
+msgstr "Tempo de resposta"
+
+msgid "Choose which objects this dashboard applies to"
+msgstr ""
+
+#, fuzzy
+msgid "Enter name"
+msgstr "Digite o nome do usuário"
+
+#, fuzzy
+msgid "Add filter as suffix"
+msgstr "Adicionar filtro"
+
+msgid "Include dashboard filter contents to the dashboard title.."
+msgstr ""
+
+#, fuzzy
+msgid "Automatically create unique ID"
+msgstr "Criar automaticamente agentes de monitoramento"
+
+#, fuzzy
+msgid "Add unique ID"
+msgstr "Adicionar ID da regra"
+
+#, fuzzy
+msgid "Dashboard icon"
+msgstr "Painel de instrumentos"
+
+#, fuzzy
+msgid ""
+"This selection is only relevant if under 'User' -> 'Edit Profile' -> 'Mega "
+"menue icons' you have selected the options 'Per Entry'. You can select the "
+"icon to display next to your dashboard in the Monitoring menu. You can "
+"choose either a single colored icon or one with an additional symbol."
+msgstr ""
+"Esta seleção só é relevante se em 'Usuário' -> 'Editar Perfil' -> 'Ícones "
+"Mega Menue' você tiver selecionado as opções 'Por Entrada'. Se for este o "
+"caso, você seleciona aqui o ícone que será colocado ao lado do nome do seu "
+"Painel de Controle no menu Monitoramento. Você só pode selecionar um ícone "
+"(o ícone colorido) ou um ícone que é complementado por um símbolo adicional."
+
+#, fuzzy
+msgid "Dashboard visibility"
+msgstr "Visibilidade gráfica"
+
+#, fuzzy
+msgid "Show in monitor menu"
+msgstr "Tópico no menu 'Monitorar'"
 
 #, fuzzy
 msgid "Select option"
 msgstr "Ligações rejeitadas"
+
+#, fuzzy
+msgid "To be defined"
+msgstr "Nenhuma ligação definida"
+
+#, fuzzy
+msgid ""
+"You can set the order of the dashboard by changing this number. Lower "
+"numbers will be sorted first. Topics with the same number will be sorted "
+"alphabetically."
+msgstr ""
+"Você pode personalizar a ordem das %s alterando este número. Os números mais "
+"baixos serão ordenados primeiro. Tópicos com o mesmo número serão ordenados "
+"por ordem alfabética."
+
+#, fuzzy
+msgid "Choose how to display your data"
+msgstr "Não mostrar uma data"
 
 #, fuzzy
 msgid "Inherited"
@@ -91518,6 +91619,64 @@ msgid "Show widget background"
 msgstr "Mostrar título sem qualquer fundo"
 
 #, fuzzy
+msgid "Unrestricted"
+msgstr "Não registado"
+
+#, fuzzy
+msgid "Custom"
+msgstr "Cliente"
+
+#, fuzzy
+msgid "Name is required."
+msgstr "é necessário"
+
+#, fuzzy
+msgid "Unique ID is required."
+msgstr "é necessário"
+
+#, fuzzy
+msgid ""
+"Unique ID must only contain lowercase letters, numbers, and underscores, and "
+"must start with a letter."
+msgstr ""
+"Os nomes métricos devem consistir apenas de letras, dígitos e sublinhados e "
+"devem começar com uma letra."
+
+#, fuzzy
+msgid "This Unique ID is already in use. Please choose another one."
+msgstr "Esta identificação já está em uso. Por favor, escolha outro."
+
+#, fuzzy
+msgid "At least one scope must be selected."
+msgstr "Indique quando falta o arquivo"
+
+#, fuzzy
+msgid "Create dashboard"
+msgstr "Painéis de controlo relacionados"
+
+#, fuzzy
+msgid "Create & set dashboard filters"
+msgstr "Painéis de controlo relacionados"
+
+#, fuzzy
+msgid "Create & view list"
+msgstr "Guardar & ver pasta"
+
+#, fuzzy
+msgid "Dashboard type"
+msgstr "Elemento de tablier"
+
+msgid ""
+"Dashboards can display one or multiple entries depending on the selected "
+"datasource. By default, all are included. You can optionally restrict the "
+"configuration to a single host or specific datasources."
+msgstr ""
+
+#, fuzzy
+msgid "Dashboard scope"
+msgstr "Painéis de instrumentos"
+
+#, fuzzy
 msgid "Single graph"
 msgstr "Ligações rejeitadas"
 
@@ -91672,6 +91831,21 @@ msgid "Copy view"
 msgstr "Vista de clonagem"
 
 #, fuzzy
+msgid "Data configuration"
+msgstr "Configuração predefinida"
+
+#, fuzzy
+msgid "Link to view: %{viewName}"
+msgstr "Link para ver"
+
+msgid "New view based on: %{datasource}"
+msgstr ""
+
+#, fuzzy
+msgid "Copy existing view: %{viewName}"
+msgstr "Copiar visão existente"
+
+#, fuzzy
 msgid "explicit password"
 msgstr "Nova Senha"
 
@@ -91688,12 +91862,20 @@ msgid "Metric name"
 msgstr "Etiqueta métrica"
 
 #, fuzzy
-msgid "Graph metrics with all zero values"
-msgstr "Métricas com todos os valores zero"
+msgid "Resource attributes"
+msgstr "Redefinir atributos"
 
 #, fuzzy
-msgid "Custom"
-msgstr "Cliente"
+msgid "Scope attributes"
+msgstr "Atributo de função"
+
+#, fuzzy
+msgid "Data point attributes"
+msgstr "Atributos modificados"
+
+#, fuzzy
+msgid "Graph metrics with all zero values"
+msgstr "Métricas com todos os valores zero"
 
 #, fuzzy
 msgid "Use unit of first entry"
@@ -91740,7 +91922,7 @@ msgid "Stack"
 msgstr "Pilhas"
 
 #, fuzzy
-msgid "Graph lines"
+msgid "Graph lines (Standard)"
 msgstr "Opções Gráficas"
 
 msgid "Scalar"
@@ -91751,16 +91933,15 @@ msgid "Constant"
 msgstr "Instância"
 
 #, fuzzy
-msgid "Operations on selected graph lines"
-msgstr "Operação em métricas selecionadas"
-
-#, fuzzy
 msgid "Transformation"
 msgstr "Informação térmica"
 
 #, fuzzy
 msgid "Graph options"
 msgstr "Opções Gráficas"
+
+msgid "Graph lines (OpenTelemetry)"
+msgstr ""
 
 #, fuzzy
 msgid "Mirrored"
@@ -92520,6 +92701,13 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "repeat every 20'th row"
+#~ msgstr "repetir a cada 20'th row"
+
+#, fuzzy
+#~ msgid "Operations on selected graph lines"
+#~ msgstr "Operação em métricas selecionadas"
+
 #~ msgid "Act. helper"
 #~ msgstr "Ajudante de Ato"
 
@@ -92996,10 +93184,6 @@ msgstr ""
 
 #~ msgid "Subscription ID"
 #~ msgstr "ID da Subscrição"
-
-#, fuzzy
-#~ msgid "At least one selection is missing."
-#~ msgstr "Indique quando falta o arquivo"
 
 #~ msgid "Use the default start URL"
 #~ msgstr "Use a URL de início padrão"

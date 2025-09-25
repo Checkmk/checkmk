@@ -35803,6 +35803,10 @@ msgstr "Ongeldige man pagina: Mislukt om de titel te krijgen"
 msgid "Invalid mime type, supported types are: %s"
 msgstr "Ongeldig fixel element type '%s'"
 
+#, fuzzy, python-format
+msgid "Invalid mode '%s'."
+msgstr "Ongeldige ident: %s"
+
 #, fuzzy
 msgid "Invalid number"
 msgstr "Ongeldige bestandsnaam"
@@ -42236,6 +42240,10 @@ msgstr "Het spiegelen van de kritische toestand van de getuige"
 
 msgid "Miscellaneous"
 msgstr "Diversen"
+
+#, python-format
+msgid "Mismatching owner in `%s` mode."
+msgstr ""
 
 #, fuzzy
 msgid "Misplaced Objects"
@@ -52763,6 +52771,10 @@ msgstr "Proxmox VE Knooppunt Info"
 msgid "Proxmox VE Node Memory Allocation"
 msgstr "Proxmox VE Knooppunt Info"
 
+#, fuzzy
+msgid "Proxmox VE Replication"
+msgstr "CPU-gebruik"
+
 msgid "Proxmox VE VM Backup"
 msgstr "Proxmox VE VM back-up"
 
@@ -58850,6 +58862,10 @@ msgstr "Dienst staat vertaling"
 
 msgid "Service state type"
 msgstr "Type dienststaat"
+
+#, fuzzy
+msgid "Service state when no replication jobs are configured on the cluster"
+msgstr "Staat wanneer replicatietoestand actief is"
 
 msgid "Service states"
 msgstr "Diensten"
@@ -66858,6 +66874,12 @@ msgid ""
 msgstr ""
 
 #, python-format
+msgid ""
+"The dashboard '%s' already contains an embedded view with the ID '%s'. "
+"Please choose another ID."
+msgstr ""
+
+#, python-format
 msgid "The dashboard '%s' does not contain an embedded view with the ID '%s'."
 msgstr ""
 
@@ -66888,6 +66910,10 @@ msgstr "De naam van de database op de Mailbox Server."
 
 msgid "The database to authenticate on."
 msgstr "De database om te authenticeren."
+
+#, fuzzy, python-format
+msgid "The datasource '%s' does not exist."
+msgstr "De host '%s' bestaat niet"
 
 msgid "The datasource of a view cannot be changed."
 msgstr "De databron van een view kan niet worden gewijzigd."
@@ -81031,6 +81057,10 @@ msgstr "Hogere niveaus bij tunnelinvoer pakketdaling"
 msgid "Upper levels provisioned concurrency utilization"
 msgstr "Bovenste niveaus voorziene concurrency gebruik"
 
+#, fuzzy
+msgid "Upper limit of time since last replication"
+msgstr "Waarschuwingsniveau voor tijd sinds laatste bijwerking"
+
 msgid "Upper limits in percent"
 msgstr "Bovengrenzen in procenten"
 
@@ -90376,9 +90406,6 @@ msgstr ""
 "remote endpoint heeft zich afgesloten; de kernel wacht op de toepassing om "
 "de socket te sluiten"
 
-msgid "repeat every 20'th row"
-msgstr "herhaal elke 20ste rij"
-
 msgid "repeat:"
 msgstr "herhalen:"
 
@@ -91361,12 +91388,87 @@ msgid "Filter by service"
 msgstr "Filter %s selectie op dienst: "
 
 #, fuzzy
-msgid "Choose how to display your data"
-msgstr "Geef geen datum weer"
+msgid "Dashboard layout"
+msgstr "Dashboard-element"
+
+msgid ""
+"You can choose between a fixed layout or a responsive, scrollable grid "
+"layout. By default, the responsive grid layout is selected."
+msgstr ""
+
+#, fuzzy
+msgid "Responsive"
+msgstr "Responstijd"
+
+msgid "Choose which objects this dashboard applies to"
+msgstr ""
+
+#, fuzzy
+msgid "Enter name"
+msgstr "Voer gebruikersnaam in"
+
+#, fuzzy
+msgid "Add filter as suffix"
+msgstr "Filter toevoegen"
+
+msgid "Include dashboard filter contents to the dashboard title.."
+msgstr ""
+
+#, fuzzy
+msgid "Automatically create unique ID"
+msgstr "Automatisch aanmaken van bewakingsagenten"
+
+#, fuzzy
+msgid "Add unique ID"
+msgstr "Regel ID toevoegen"
+
+#, fuzzy
+msgid "Dashboard icon"
+msgstr "Dashboard"
+
+#, fuzzy
+msgid ""
+"This selection is only relevant if under 'User' -> 'Edit Profile' -> 'Mega "
+"menue icons' you have selected the options 'Per Entry'. You can select the "
+"icon to display next to your dashboard in the Monitoring menu. You can "
+"choose either a single colored icon or one with an additional symbol."
+msgstr ""
+"Deze selectie is alleen relevant indien u onder 'Gebruiker' -> 'Profiel "
+"bewerken' -> 'Megamenu pictogrammen' de opties 'Per item' heeft "
+"geselecteerd. In dat geval kiest u hier het icoon dat naast de naam van uw "
+"Dashboard komt te staan in het Bewakingsmenu. U kunt slechts één icoon "
+"kiezen (het gekleurde icoon) of één icoon dat wordt aangevuld met een extra "
+"symbool."
+
+#, fuzzy
+msgid "Dashboard visibility"
+msgstr "Grafiek zichtbaarheid"
+
+#, fuzzy
+msgid "Show in monitor menu"
+msgstr "Onderwerp in menu 'Monitor"
 
 #, fuzzy
 msgid "Select option"
 msgstr "Afgewezen verbindingen"
+
+#, fuzzy
+msgid "To be defined"
+msgstr "Geen verbindingen gedefinieerd"
+
+#, fuzzy
+msgid ""
+"You can set the order of the dashboard by changing this number. Lower "
+"numbers will be sorted first. Topics with the same number will be sorted "
+"alphabetically."
+msgstr ""
+"U kunt de volgorde van de %s aanpassen door dit getal te veranderen. Lagere "
+"nummers worden eerst gesorteerd. Onderwerpen met hetzelfde nummer worden "
+"alfabetisch gesorteerd."
+
+#, fuzzy
+msgid "Choose how to display your data"
+msgstr "Geef geen datum weer"
 
 #, fuzzy
 msgid "Inherited"
@@ -91628,6 +91730,64 @@ msgid "Show widget background"
 msgstr "Titel tonen zonder achtergrond"
 
 #, fuzzy
+msgid "Unrestricted"
+msgstr "Niet-geregistreerd"
+
+#, fuzzy
+msgid "Custom"
+msgstr "Klant"
+
+#, fuzzy
+msgid "Name is required."
+msgstr "is vereist"
+
+#, fuzzy
+msgid "Unique ID is required."
+msgstr "is vereist"
+
+#, fuzzy
+msgid ""
+"Unique ID must only contain lowercase letters, numbers, and underscores, and "
+"must start with a letter."
+msgstr ""
+"Metrieknamen mogen alleen uit letters, cijfers en underscores bestaan en "
+"moeten met een letter beginnen."
+
+#, fuzzy
+msgid "This Unique ID is already in use. Please choose another one."
+msgstr "Deze ID is al in gebruik. Gelieve een andere te kiezen."
+
+#, fuzzy
+msgid "At least one scope must be selected."
+msgstr "Staat wanneer bestand ontbreekt"
+
+#, fuzzy
+msgid "Create dashboard"
+msgstr "Gerelateerde dashboards"
+
+#, fuzzy
+msgid "Create & set dashboard filters"
+msgstr "Gerelateerde dashboards"
+
+#, fuzzy
+msgid "Create & view list"
+msgstr "Map opslaan en bekijken"
+
+#, fuzzy
+msgid "Dashboard type"
+msgstr "Dashboard-element"
+
+msgid ""
+"Dashboards can display one or multiple entries depending on the selected "
+"datasource. By default, all are included. You can optionally restrict the "
+"configuration to a single host or specific datasources."
+msgstr ""
+
+#, fuzzy
+msgid "Dashboard scope"
+msgstr "Dashboards"
+
+#, fuzzy
 msgid "Single graph"
 msgstr "Afgewezen verbindingen"
 
@@ -91782,6 +91942,21 @@ msgid "Copy view"
 msgstr "Kloon uitzicht"
 
 #, fuzzy
+msgid "Data configuration"
+msgstr "Standaard configuratie"
+
+#, fuzzy
+msgid "Link to view: %{viewName}"
+msgstr "Link om te bekijken"
+
+msgid "New view based on: %{datasource}"
+msgstr ""
+
+#, fuzzy
+msgid "Copy existing view: %{viewName}"
+msgstr "Bestaand uitzicht kopiëren"
+
+#, fuzzy
 msgid "explicit password"
 msgstr "Nieuw wachtwoord"
 
@@ -91798,12 +91973,20 @@ msgid "Metric name"
 msgstr "Metrisch etiket"
 
 #, fuzzy
-msgid "Graph metrics with all zero values"
-msgstr "Metriek met alle nulwaarden"
+msgid "Resource attributes"
+msgstr "Rolkenmerk"
 
 #, fuzzy
-msgid "Custom"
-msgstr "Klant"
+msgid "Scope attributes"
+msgstr "Rolkenmerk"
+
+#, fuzzy
+msgid "Data point attributes"
+msgstr "Gewijzigde attributen"
+
+#, fuzzy
+msgid "Graph metrics with all zero values"
+msgstr "Metriek met alle nulwaarden"
 
 #, fuzzy
 msgid "Use unit of first entry"
@@ -91850,7 +92033,7 @@ msgid "Stack"
 msgstr "Stapels"
 
 #, fuzzy
-msgid "Graph lines"
+msgid "Graph lines (Standard)"
 msgstr "Grafiek Opties"
 
 msgid "Scalar"
@@ -91861,16 +92044,15 @@ msgid "Constant"
 msgstr "Instantie"
 
 #, fuzzy
-msgid "Operations on selected graph lines"
-msgstr "Werking op geselecteerde metriek"
-
-#, fuzzy
 msgid "Transformation"
 msgstr "Thermische informatie"
 
 #, fuzzy
 msgid "Graph options"
 msgstr "Grafiek Opties"
+
+msgid "Graph lines (OpenTelemetry)"
+msgstr ""
 
 #, fuzzy
 msgid "Mirrored"
@@ -92630,6 +92812,13 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "repeat every 20'th row"
+#~ msgstr "herhaal elke 20ste rij"
+
+#, fuzzy
+#~ msgid "Operations on selected graph lines"
+#~ msgstr "Werking op geselecteerde metriek"
+
 #~ msgid "Act. helper"
 #~ msgstr "Act. helper"
 
@@ -93097,10 +93286,6 @@ msgstr ""
 
 #~ msgid "Subscription ID"
 #~ msgstr "Abonnement ID"
-
-#, fuzzy
-#~ msgid "At least one selection is missing."
-#~ msgstr "Staat wanneer bestand ontbreekt"
 
 #~ msgid "Use the default start URL"
 #~ msgstr "Gebruik de standaard start URL"

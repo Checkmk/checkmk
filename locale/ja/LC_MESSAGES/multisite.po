@@ -33582,6 +33582,10 @@ msgstr "無効なマニュアルページ: タイトルの取得に失敗しま�
 msgid "Invalid mime type, supported types are: %s"
 msgstr "無効な MIME タイプです。サポートされているタイプは:%s"
 
+#, fuzzy, python-format
+msgid "Invalid mode '%s'."
+msgstr "無効なID: %s"
+
 msgid "Invalid number"
 msgstr "無効な数字"
 
@@ -39657,6 +39661,10 @@ msgstr "ミラーリング ウィットネス状態の重要性"
 
 msgid "Miscellaneous"
 msgstr "その他"
+
+#, python-format
+msgid "Mismatching owner in `%s` mode."
+msgstr ""
 
 msgid "Misplaced Objects"
 msgstr "置き忘れたもの"
@@ -49341,6 +49349,10 @@ msgstr "Proxmox VEノード情報"
 msgid "Proxmox VE Node Memory Allocation"
 msgstr "Proxmox VEノード情報"
 
+#, fuzzy
+msgid "Proxmox VE Replication"
+msgstr "Proxmox VE CPU 使用率"
+
 msgid "Proxmox VE VM Backup"
 msgstr "Proxmox VE VMバックアップ"
 
@@ -55100,6 +55112,10 @@ msgstr "サービス状態の変換"
 
 msgid "Service state type"
 msgstr "サービス状態タイプ"
+
+#, fuzzy
+msgid "Service state when no replication jobs are configured on the cluster"
+msgstr "レプリケーション状態がアクティブであるときの状態"
 
 msgid "Service states"
 msgstr "サービスの状態"
@@ -62680,6 +62696,12 @@ msgid ""
 msgstr "ブローカー接続で接続されたサイトの顧客は同一ある必要があります。"
 
 #, python-format
+msgid ""
+"The dashboard '%s' already contains an embedded view with the ID '%s'. "
+"Please choose another ID."
+msgstr ""
+
+#, python-format
 msgid "The dashboard '%s' does not contain an embedded view with the ID '%s'."
 msgstr ""
 
@@ -62704,6 +62726,10 @@ msgstr "メールボックスサーバー上のデータベース名。"
 
 msgid "The database to authenticate on."
 msgstr "認証するデータベースを指定します。"
+
+#, fuzzy, python-format
+msgid "The datasource '%s' does not exist."
+msgstr "ホスト '%s' は存在しません"
 
 msgid "The datasource of a view cannot be changed."
 msgstr "ビューのデータソースは変更できません。"
@@ -75840,6 +75866,10 @@ msgstr "トンネルのイングレスパケットドロップの上位レベル
 msgid "Upper levels provisioned concurrency utilization"
 msgstr "プロビジョン済並列処理利用率の上位レベル"
 
+#, fuzzy
+msgid "Upper limit of time since last replication"
+msgstr "最終更新からの時間のレベル"
+
 msgid "Upper limits in percent"
 msgstr "パーセントでの上限"
 
@@ -84611,9 +84641,6 @@ msgstr ""
 "リモートエンドポイントがシャットダウンしました。カーネルは、アプリケーション"
 "がソケットを閉じるのを待っています"
 
-msgid "repeat every 20'th row"
-msgstr "20行ごとに繰り返す"
-
 msgid "repeat:"
 msgstr "繰り返す:"
 
@@ -85574,12 +85601,85 @@ msgid "Filter by service"
 msgstr "サービスによるフィルター選択:"
 
 #, fuzzy
-msgid "Choose how to display your data"
-msgstr "日付を表示しない"
+msgid "Dashboard layout"
+msgstr "ダッシュボード要素"
+
+msgid ""
+"You can choose between a fixed layout or a responsive, scrollable grid "
+"layout. By default, the responsive grid layout is selected."
+msgstr ""
+
+#, fuzzy
+msgid "Responsive"
+msgstr "反応時間"
+
+msgid "Choose which objects this dashboard applies to"
+msgstr ""
+
+#, fuzzy
+msgid "Enter name"
+msgstr "ユーザーネームを入力してください"
+
+#, fuzzy
+msgid "Add filter as suffix"
+msgstr "フィルタを追加"
+
+msgid "Include dashboard filter contents to the dashboard title.."
+msgstr ""
+
+#, fuzzy
+msgid "Automatically create unique ID"
+msgstr "監視エージェントを自動的に作成する"
+
+#, fuzzy
+msgid "Add unique ID"
+msgstr "ルールIDを追加"
+
+#, fuzzy
+msgid "Dashboard icon"
+msgstr "ダッシュボード"
+
+#, fuzzy
+msgid ""
+"This selection is only relevant if under 'User' -> 'Edit Profile' -> 'Mega "
+"menue icons' you have selected the options 'Per Entry'. You can select the "
+"icon to display next to your dashboard in the Monitoring menu. You can "
+"choose either a single colored icon or one with an additional symbol."
+msgstr ""
+"この選択は、\"ユーザー\"->\"プロファイルの編集\"->\"メガメニューアイコン\"で"
+"\"エントリごと\"オプションを選択した場合にのみ関係します。この場合は、ここ"
+"で、[監視]メニューのダッシュボードの名前の横に配置されるアイコンを選択しま"
+"す。1つのアイコン(色付きのアイコン)または追加の記号で補完された1つのアイコン"
+"のみを選択できます。"
+
+#, fuzzy
+msgid "Dashboard visibility"
+msgstr "グラフの可視性"
+
+#, fuzzy
+msgid "Show in monitor menu"
+msgstr "\"モニター\" メニューのトピック"
 
 #, fuzzy
 msgid "Select option"
 msgstr "オプション選択"
+
+#, fuzzy
+msgid "To be defined"
+msgstr "名前が定義されていません"
+
+#, fuzzy
+msgid ""
+"You can set the order of the dashboard by changing this number. Lower "
+"numbers will be sorted first. Topics with the same number will be sorted "
+"alphabetically."
+msgstr ""
+"この番号を変更することで、 %s の順序をカスタマイズできます。小さい番号が最初"
+"にソートされます。同じ番号のトピックはアルファベット順にソートされます。"
+
+#, fuzzy
+msgid "Choose how to display your data"
+msgstr "日付を表示しない"
 
 #, fuzzy
 msgid "Inherited"
@@ -85841,6 +85941,63 @@ msgid "Show widget background"
 msgstr "背景なしでタイトルを表示"
 
 #, fuzzy
+msgid "Unrestricted"
+msgstr "未登録"
+
+msgid "Custom"
+msgstr "カスタム"
+
+#, fuzzy
+msgid "Name is required."
+msgstr "必須"
+
+#, fuzzy
+msgid "Unique ID is required."
+msgstr "必須"
+
+#, fuzzy
+msgid ""
+"Unique ID must only contain lowercase letters, numbers, and underscores, and "
+"must start with a letter."
+msgstr ""
+"メトリック名は、文字、数字、およびアンダースコアのみで構成され、アルファベッ"
+"ト、または数字で始まる必要があります。"
+
+#, fuzzy
+msgid "This Unique ID is already in use. Please choose another one."
+msgstr "このIDはすでに使用されています。別のものを選択してください。"
+
+#, fuzzy
+msgid "At least one scope must be selected."
+msgstr "少なくとも1つのトリガーイベントを選択する必要があります。"
+
+#, fuzzy
+msgid "Create dashboard"
+msgstr "関連ダッシュボード"
+
+#, fuzzy
+msgid "Create & set dashboard filters"
+msgstr "関連ダッシュボード"
+
+#, fuzzy
+msgid "Create & view list"
+msgstr "保存してフォルダを確認"
+
+#, fuzzy
+msgid "Dashboard type"
+msgstr "ダッシュボード要素"
+
+msgid ""
+"Dashboards can display one or multiple entries depending on the selected "
+"datasource. By default, all are included. You can optionally restrict the "
+"configuration to a single host or specific datasources."
+msgstr ""
+
+#, fuzzy
+msgid "Dashboard scope"
+msgstr "ダッシュボード"
+
+#, fuzzy
 msgid "Single graph"
 msgstr "オプション選択"
 
@@ -85996,6 +86153,21 @@ msgid "Copy view"
 msgstr "クローン ビュー"
 
 #, fuzzy
+msgid "Data configuration"
+msgstr "デフォルト設定"
+
+#, fuzzy
+msgid "Link to view: %{viewName}"
+msgstr "表示するためのリンク"
+
+msgid "New view based on: %{datasource}"
+msgstr ""
+
+#, fuzzy
+msgid "Copy existing view: %{viewName}"
+msgstr "既存のビューをコピーする"
+
+#, fuzzy
 msgid "explicit password"
 msgstr "新しいパスワード"
 
@@ -86008,11 +86180,20 @@ msgstr "制限"
 msgid "Metric name"
 msgstr "メトリック名"
 
+#, fuzzy
+msgid "Resource attributes"
+msgstr "属性をリセット"
+
+#, fuzzy
+msgid "Scope attributes"
+msgstr "役割属性"
+
+#, fuzzy
+msgid "Data point attributes"
+msgstr "ダウンタイム属性:"
+
 msgid "Graph metrics with all zero values"
 msgstr "すべての値がゼロのグラフメトリクス"
-
-msgid "Custom"
-msgstr "カスタム"
 
 msgid "Use unit of first entry"
 msgstr "最初の入力単位を使用する"
@@ -86050,7 +86231,8 @@ msgstr "範囲"
 msgid "Stack"
 msgstr "スタック"
 
-msgid "Graph lines"
+#, fuzzy
+msgid "Graph lines (Standard)"
 msgstr "グラフライン"
 
 msgid "Scalar"
@@ -86059,14 +86241,14 @@ msgstr "スカラー"
 msgid "Constant"
 msgstr "コンスタント"
 
-msgid "Operations on selected graph lines"
-msgstr "選択されたグラフの線に対する操作"
-
 msgid "Transformation"
 msgstr "トランスフォーメーション"
 
 msgid "Graph options"
 msgstr "グラフオプション"
+
+msgid "Graph lines (OpenTelemetry)"
+msgstr ""
 
 msgid "Mirrored"
 msgstr "ミラーリングされた"
@@ -86817,6 +86999,12 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "repeat every 20'th row"
+#~ msgstr "20行ごとに繰り返す"
+
+#~ msgid "Operations on selected graph lines"
+#~ msgstr "選択されたグラフの線に対する操作"
 
 #~ msgid "Act. helper"
 #~ msgstr "Act. ヘルパー"

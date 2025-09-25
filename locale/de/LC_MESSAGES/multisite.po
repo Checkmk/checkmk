@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-09-23 23:39+0000\n"
+"PO-Revision-Date: 2025-09-24 18:39+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -5066,7 +5066,7 @@ msgid "Agent TCP connect timeout"
 msgstr "TCP-Verbindungstimeout des Agenten"
 
 msgid "Agent access rules"
-msgstr "Zugriffsregeln des Agents"
+msgstr "Zugriffsregeln des Agenten"
 
 msgid "Agent baking"
 msgstr "Agentenbäckerei"
@@ -5075,7 +5075,7 @@ msgid "Agent baking and signing"
 msgstr "Agenten backen und signieren"
 
 msgid "Agent baking finished."
-msgstr "Agentenbacken beendet."
+msgstr "Backen der Agenten beendet."
 
 msgid "Agent based plug-ins (outdated, ignored)"
 msgstr "Agenten-basierte Plugins (veraltet, ignoriert)"
@@ -5090,7 +5090,7 @@ msgid "Agent controller auto-registration"
 msgstr "Autoregistrierung von Agent Controllern"
 
 msgid "Agent controller connections"
-msgstr "Agent Controller Verbindungen"
+msgstr "Agent Controller-Verbindungen"
 
 msgid "Agent controller deployment"
 msgstr "Agent Controller-Verteilung"
@@ -5172,7 +5172,7 @@ msgid "Agent registration"
 msgstr "Agentenregistrierung"
 
 msgid "Agent registration user"
-msgstr "Agent Registrierung Benutzer"
+msgstr "Benutzer der Agentenregistrierung"
 
 msgid "Agent rules"
 msgstr "Agentenregeln"
@@ -5187,7 +5187,7 @@ msgid "Agent type"
 msgstr "Agententyp"
 
 msgid "Agent update status"
-msgstr "Status des Agentenupdates"
+msgstr "Status des Agenten-Updates"
 
 msgid "Agent updater (Linux, Windows, Solaris)"
 msgstr "Agent Updater (Linux, Windows, Solaris)"
@@ -8535,7 +8535,7 @@ msgid "Azure AD Connect"
 msgstr "Azure AD Connect"
 
 msgid "Azure Agent Info"
-msgstr "Azure Agent Info"
+msgstr "Azure Agenten-Info"
 
 msgid "Azure Application Gateway"
 msgstr "Azure Application Gateway"
@@ -8955,7 +8955,7 @@ msgid "Bakery rules"
 msgstr "Bakery-Regeln"
 
 msgid "Baking Agents..."
-msgstr "Backe Agenten..."
+msgstr "Agenten backen..."
 
 msgid "Baking successful"
 msgstr "Backen erfolgreich"
@@ -10588,9 +10588,8 @@ msgstr "CPU-Auslastungslevels"
 msgid "CPU Utilization of Clusters"
 msgstr "CPU-Auslastung von Clustern"
 
-#, fuzzy
 msgid "CPU allocation ratio"
-msgstr "Shard Verteilung im Laufe der Zeit"
+msgstr "CPU-Zuordnungsrate"
 
 msgid "CPU architecture"
 msgstr "CPU-Architektur"
@@ -34477,6 +34476,10 @@ msgstr "Ungültige Handbuchseite: Konnte Titel nicht auslesen"
 msgid "Invalid mime type, supported types are: %s"
 msgstr "Ungültiger Mime-Typ, unterstützte Typen sind: %s"
 
+#, fuzzy, python-format
+msgid "Invalid mode '%s'."
+msgstr "Ungültiger Schlüssel: %s"
+
 msgid "Invalid number"
 msgstr "Ungültige Nummer"
 
@@ -40074,9 +40077,8 @@ msgstr "Speicherauslastung"
 msgid "Memory allocated to percpu"
 msgstr "Percpu zugewiesener Speicher"
 
-#, fuzzy
 msgid "Memory allocation ratio"
-msgstr "Percpu zugewiesener Speicher"
+msgstr "Speicher-Zuordnungsrate"
 
 msgid "Memory and CPU of processes on Windows"
 msgstr "Speicher/CPU-Prozesse auf Windows"
@@ -40641,6 +40643,10 @@ msgstr "Kritikalität des Zeugenzustands der Spiegelung"
 
 msgid "Miscellaneous"
 msgstr "Sonstiges"
+
+#, python-format
+msgid "Mismatching owner in `%s` mode."
+msgstr ""
 
 msgid "Misplaced Objects"
 msgstr "Fehlplatzierte Objekte"
@@ -50512,16 +50518,18 @@ msgstr "Proxmox VE"
 msgid "Proxmox VE CPU Utilization"
 msgstr "CPU-Auslastung für Proxmox VE"
 
-#, fuzzy
 msgid "Proxmox VE Node CPU Allocation"
-msgstr "CPU-Auslastung für Proxmox VE"
+msgstr "Proxmox VE Knoten CPU-Zuweisung"
 
 msgid "Proxmox VE Node Info"
 msgstr "Proxmox VE Knoten-Info"
 
-#, fuzzy
 msgid "Proxmox VE Node Memory Allocation"
-msgstr "Proxmox VE Knoten-Info"
+msgstr "Proxmox VE Knoten Speicherzuweisung"
+
+#, fuzzy
+msgid "Proxmox VE Replication"
+msgstr "CPU-Auslastung für Proxmox VE"
 
 msgid "Proxmox VE VM Backup"
 msgstr "Proxmox VE VM Sicherung"
@@ -56337,6 +56345,10 @@ msgstr "Übersetzen von Service-Zuständen"
 
 msgid "Service state type"
 msgstr "Service Zustandstyp"
+
+#, fuzzy
+msgid "Service state when no replication jobs are configured on the cluster"
+msgstr "Zustand, wenn der Replikationszustand active ist"
 
 msgid "Service states"
 msgstr "Service-Zustände"
@@ -64199,6 +64211,14 @@ msgstr ""
 "Der Kunde der Instanzen, der über die Broker-Verbindung verbunden ist, muss "
 "identisch sein."
 
+#, fuzzy, python-format
+msgid ""
+"The dashboard '%s' already contains an embedded view with the ID '%s'. "
+"Please choose another ID."
+msgstr ""
+"Das Dashboard '%s' enthält keine eingebettete Tabellenansicht mit der ID "
+"'%s'."
+
 #, python-format
 msgid "The dashboard '%s' does not contain an embedded view with the ID '%s'."
 msgstr ""
@@ -64232,6 +64252,10 @@ msgstr "Der Datenbankname auf dem Mailbox-Server."
 
 msgid "The database to authenticate on."
 msgstr "Die Datenbank, an der die Authentifizierung erfolgen soll."
+
+#, fuzzy, python-format
+msgid "The datasource '%s' does not exist."
+msgstr "Der Host '%s' existiert nicht"
 
 msgid "The datasource of a view cannot be changed."
 msgstr "Die Datenquelle einer Ansicht kann nicht geändert werden."
@@ -66412,8 +66436,8 @@ msgid ""
 "The problems above might be caused by missing caches. Please trigger a "
 "rescan."
 msgstr ""
-"Die oben genannten Probleme können durch fehlende Caches verursacht werden. "
-"Bitte führen Sie einen Rescan durch."
+"Die oben genannten Probleme können durch fehlende Caches verursacht worden "
+"sein. Bitte führen Sie einen Rescan durch."
 
 msgid ""
 "The provided header key and value need to match exactly with the actual "
@@ -77933,6 +77957,10 @@ msgstr "Obergrenzen beim Tunnel Ingress Packet Drop"
 msgid "Upper levels provisioned concurrency utilization"
 msgstr "Obergrenzen für die bereitgestellte Festplattenauslastung"
 
+#, fuzzy
+msgid "Upper limit of time since last replication"
+msgstr "Levels für die Zeit seit letztem Update"
+
 msgid "Upper limits in percent"
 msgstr "Obergrenzen in Prozent"
 
@@ -87061,9 +87089,6 @@ msgstr ""
 "Remote-Endpunkt wurde heruntergefahren; der Kernel wartet bis die Anwendung "
 "den Socket schließt"
 
-msgid "repeat every 20'th row"
-msgstr "Wiederhole jede 20. Zeile"
-
 msgid "repeat:"
 msgstr "Wiederhole:"
 
@@ -87723,9 +87748,8 @@ msgid ""
 "filtered out in the top list configuration to resolve the problem."
 msgstr ""
 
-#, fuzzy
 msgid "Loading Top list content"
-msgstr "Lädt Optionen…"
+msgstr "Lädt Inhalt der Topliste"
 
 msgid "Remove row"
 msgstr "Zeile entfernen"
@@ -87886,13 +87910,11 @@ msgstr ""
 msgid "Loading options…"
 msgstr "Lädt Optionen…"
 
-#, fuzzy
 msgid "Loading views..."
-msgstr "Lädt..."
+msgstr "Ansichten werden geladen..."
 
-#, fuzzy
 msgid "Choose from available views"
-msgstr "Keine Benutzer verfügbar"
+msgstr "Wählen Sie aus den verfügbaren Ansichten"
 
 msgid "Add Widget"
 msgstr "Widget hinzufügen"
@@ -87954,11 +87976,85 @@ msgstr "Service-Metrik auswählen"
 msgid "Filter by service"
 msgstr "Nach Service filtern"
 
-msgid "Choose how to display your data"
-msgstr "Wählen Sie, wie Sie Ihre Daten anzeigen wollen"
+#, fuzzy
+msgid "Dashboard layout"
+msgstr "Dashboard-Filter"
+
+msgid ""
+"You can choose between a fixed layout or a responsive, scrollable grid "
+"layout. By default, the responsive grid layout is selected."
+msgstr ""
+
+#, fuzzy
+msgid "Responsive"
+msgstr "Antwortzeit"
+
+msgid "Choose which objects this dashboard applies to"
+msgstr ""
+
+#, fuzzy
+msgid "Enter name"
+msgstr "Benutzernamen eingeben"
+
+#, fuzzy
+msgid "Add filter as suffix"
+msgstr "Filter hinzufügen"
+
+msgid "Include dashboard filter contents to the dashboard title.."
+msgstr ""
+
+#, fuzzy
+msgid "Automatically create unique ID"
+msgstr "Monitoring-Agenten automatisch erstellen"
+
+#, fuzzy
+msgid "Add unique ID"
+msgstr "Regel-ID hinzufügen"
+
+#, fuzzy
+msgid "Dashboard icon"
+msgstr "Dashboard"
+
+#, fuzzy
+msgid ""
+"This selection is only relevant if under 'User' -> 'Edit Profile' -> 'Mega "
+"menue icons' you have selected the options 'Per Entry'. You can select the "
+"icon to display next to your dashboard in the Monitoring menu. You can "
+"choose either a single colored icon or one with an additional symbol."
+msgstr ""
+"Diese Auswahl ist nur relevant wenn unter 'Benutzer' -> 'Profil editieren' "
+"-> 'Mega menu Icons' die Option 'Pro Eintrag' ausgewählt ist. In diesem Fall "
+"kannst du hier das Icon neben dem Namen des Dashboard im Monitoring-Menü "
+"festlegen. Man kann nur ein Icon (farbiges Icon) oder ein Icon, dass mit "
+"einem zusätzlichen Symbol ergänzt ist auswählen."
+
+#, fuzzy
+msgid "Dashboard visibility"
+msgstr "Graph-Sichtbarkeit"
+
+#, fuzzy
+msgid "Show in monitor menu"
+msgstr "Thema im 'Monitor' Menu"
 
 msgid "Select option"
 msgstr "Option auswählen"
+
+#, fuzzy
+msgid "To be defined"
+msgstr "noch zu definieren"
+
+#, fuzzy
+msgid ""
+"You can set the order of the dashboard by changing this number. Lower "
+"numbers will be sorted first. Topics with the same number will be sorted "
+"alphabetically."
+msgstr ""
+"Sie können die Reihenfolge der %s anpassen, indem Sie diese Zahl ändern. "
+"Niedrigere Nummern werden zuerst sortiert. Themen mit der gleichen Nummer "
+"werden alphabetisch sortiert."
+
+msgid "Choose how to display your data"
+msgstr "Wählen Sie, wie Sie Ihre Daten anzeigen wollen"
 
 msgid "Inherited"
 msgstr "Geerbt"
@@ -88196,6 +88292,63 @@ msgstr "Titel-Hintergrund anzeigen"
 msgid "Show widget background"
 msgstr "Widget-Hintergrund anzeigen"
 
+#, fuzzy
+msgid "Unrestricted"
+msgstr "Unregistriert"
+
+msgid "Custom"
+msgstr "Benutzerdefiniert"
+
+#, fuzzy
+msgid "Name is required."
+msgstr "ist erforderlich"
+
+#, fuzzy
+msgid "Unique ID is required."
+msgstr "ist erforderlich"
+
+#, fuzzy
+msgid ""
+"Unique ID must only contain lowercase letters, numbers, and underscores, and "
+"must start with a letter."
+msgstr ""
+"Metriknamen dürfen nur Buchstaben, Zahlen und Unterstriche enthalten und "
+"müssen mit einem Buchstaben ode einer Zahl beginnen."
+
+#, fuzzy
+msgid "This Unique ID is already in use. Please choose another one."
+msgstr "Diese ID wird bereits verwendet. Bitte wählen Sie eine andere."
+
+#, fuzzy
+msgid "At least one scope must be selected."
+msgstr "Es muss mindestens ein auslösendes Ereignis ausgewählt werden."
+
+#, fuzzy
+msgid "Create dashboard"
+msgstr "Erstelle ein Dashboard"
+
+#, fuzzy
+msgid "Create & set dashboard filters"
+msgstr "Erstelle ein Dashboard"
+
+#, fuzzy
+msgid "Create & view list"
+msgstr "Liste speichern & ansehen"
+
+#, fuzzy
+msgid "Dashboard type"
+msgstr "Dashboard-Filter"
+
+msgid ""
+"Dashboards can display one or multiple entries depending on the selected "
+"datasource. By default, all are included. You can optionally restrict the "
+"configuration to a single host or specific datasources."
+msgstr ""
+
+#, fuzzy
+msgid "Dashboard scope"
+msgstr "Dashboards"
+
 msgid "Single graph"
 msgstr "Einzelner Graph"
 
@@ -88274,9 +88427,8 @@ msgstr "Graph-Legende"
 msgid "Interaction"
 msgstr "Interaktion"
 
-#, fuzzy
 msgid "Click on graph to place pin"
-msgstr "Graphensammlung klonen"
+msgstr "Klicken Sie auf den Graph, um eine Pinnadel zu platzieren"
 
 msgid "Show burger menu for graph options"
 msgstr ""
@@ -88306,21 +88458,32 @@ msgstr "Rangfolge"
 msgid "entries (max. %{max_entries})"
 msgstr "Einträge (max. %{max_entries})"
 
-#, fuzzy
 msgid "Specific object type"
-msgstr "Spezifischen Objekttyp auswählen"
+msgstr "Spezifischer Objekttyp"
 
-#, fuzzy
 msgid "Next step: Data configuration"
-msgstr "Neue Zustandskonfiguration hinzufügen"
+msgstr "Nächster Schritt: Datenkonfiguration"
 
-#, fuzzy
 msgid "View selection"
-msgstr "Dateiauswahl"
+msgstr "Auswahl ansehen"
+
+msgid "Copy view"
+msgstr "Tabellenansicht kopieren"
 
 #, fuzzy
-msgid "Copy view"
-msgstr "Tabellenansicht klonen"
+msgid "Data configuration"
+msgstr "Standardkonfiguration"
+
+#, fuzzy
+msgid "Link to view: %{viewName}"
+msgstr "Link zur Ansicht"
+
+msgid "New view based on: %{datasource}"
+msgstr ""
+
+#, fuzzy
+msgid "Copy existing view: %{viewName}"
+msgstr "Vorhandene Ansicht kopieren"
 
 msgid "explicit password"
 msgstr "explizites Passwort"
@@ -88334,11 +88497,20 @@ msgstr "Streng"
 msgid "Metric name"
 msgstr "Metrik-Name"
 
+#, fuzzy
+msgid "Resource attributes"
+msgstr "Attribute zurücksetzen"
+
+#, fuzzy
+msgid "Scope attributes"
+msgstr "Rollen-Attribut"
+
+#, fuzzy
+msgid "Data point attributes"
+msgstr "Attribute der Wartungszeit:"
+
 msgid "Graph metrics with all zero values"
 msgstr "Graph-Metriken mit allen Null-Werten"
-
-msgid "Custom"
-msgstr "Benutzerdefiniert"
 
 msgid "Use unit of first entry"
 msgstr "Einheit des ersten Eintrags verwenden"
@@ -88377,7 +88549,8 @@ msgstr "Fläche"
 msgid "Stack"
 msgstr "Stapel"
 
-msgid "Graph lines"
+#, fuzzy
+msgid "Graph lines (Standard)"
 msgstr "Graphlinien"
 
 msgid "Scalar"
@@ -88386,14 +88559,14 @@ msgstr "Skalar"
 msgid "Constant"
 msgstr "Konstant"
 
-msgid "Operations on selected graph lines"
-msgstr "Operationen an den gewählten Graphlinien"
-
 msgid "Transformation"
 msgstr "Transformation"
 
 msgid "Graph options"
 msgstr "Graphoptionen"
+
+msgid "Graph lines (OpenTelemetry)"
+msgstr ""
 
 msgid "Mirrored"
 msgstr "Gespiegelt"
@@ -88527,9 +88700,8 @@ msgstr ""
 msgid "Register Checkmk agent"
 msgstr "Checkmk-Agenten registrieren"
 
-#, fuzzy
 msgid "TLS connection not provided"
-msgstr "Verbindungstimeout festlegen"
+msgstr "TLS-Verbindung nicht bereitgestellt"
 
 msgid ""
 "The agent has been installed on the target system but is not providing a TLS "
@@ -88581,28 +88753,22 @@ msgstr "Host \"${hostName}\" existiert"
 msgid "Close and revise form"
 msgstr ""
 
-#, fuzzy
 msgid "Close & review"
-msgstr "Tabellenansicht klonen"
+msgstr "Schließen & überprüfen"
 
-#, fuzzy
 msgid "Save host & next step"
-msgstr "Speichern & testen"
+msgstr "Host speichern & nächster Schritt"
 
-#, fuzzy
 msgid "Download and install"
-msgstr "Agent herunterladen & installieren"
+msgstr "Herunterladen und installieren"
 
-#, fuzzy
 msgid "Run this command to download and install the Checkmk agent."
 msgstr ""
-"Verbindung fehlgeschlagen, geben Sie einen neuen Host-Namen ein, um erneut "
-"zu prüfen, oder laden Sie den Checkmk-Agenten herunter und installieren Sie "
-"ihn."
+"Diesen Befehl ausführen, um den Checkmk-Agent herunterzuladen und zu "
+"installieren."
 
-#, fuzzy
 msgid "Next step: Register agent"
-msgstr "Nächster Schritt: Empfänger"
+msgstr "Nächster Schritt: Agent registrieren"
 
 msgid ""
 "Agent registration will establish trust between the Agent Controller\n"
@@ -88617,32 +88783,27 @@ msgid ""
 "                  command into the CLI of the target system."
 msgstr ""
 
-#, fuzzy
 msgid "Install the legacy Checkmk agent"
-msgstr "Kontaktiere zusätzlich den Checkmk-Agent"
+msgstr "Den Legacy Checkmk-Agent installieren"
 
-#, fuzzy
 msgid ""
 "Run this command on your Windows host to download and install the Checkmk "
 "agent."
 msgstr ""
-"Verbindung fehlgeschlagen, geben Sie einen neuen Host-Namen ein, um erneut "
-"zu prüfen, oder laden Sie den Checkmk-Agenten herunter und installieren Sie "
-"ihn."
+"Diesen Befehl auf Ihrem Windows-Host ausführen, um den Checkmk-Agent "
+"herunterzuladen und zu installieren."
 
 msgid ""
 "After you have downloaded the agent, run this command on your Windows host "
 "to register the Checkmk agent controller."
 msgstr ""
 
-#, fuzzy
 msgid ""
 "Run this command on your Linux host to download and install the Checkmk "
 "agent."
 msgstr ""
-"Verbindung fehlgeschlagen, geben Sie einen neuen Host-Namen ein, um erneut "
-"zu prüfen, oder laden Sie den Checkmk-Agenten herunter und installieren Sie "
-"ihn."
+"Diesen Befehl auf Ihrem Linux-Host ausführen, um den Checkmk-Agent "
+"herunterzuladen und zu installieren."
 
 msgid ""
 "If you want to install the Checkmk agent on Linux, please read how to "
@@ -88667,13 +88828,11 @@ msgid ""
 "to install the Checkmk agent."
 msgstr ""
 
-#, fuzzy
 msgid ""
 "Run this command on your AIX host to download and install the Checkmk agent."
 msgstr ""
-"Verbindung fehlgeschlagen, geben Sie einen neuen Host-Namen ein, um erneut "
-"zu prüfen, oder laden Sie den Checkmk-Agenten herunter und installieren Sie "
-"ihn."
+"Diesen Befehl auf Ihrem AIX-Host ausführen, um den Checkmk-Agent "
+"herunterzuladen und zu installieren."
 
 msgid ""
 "If you want to install the Checkmk agent on AIX, please read how to install "
@@ -88703,29 +88862,25 @@ msgstr ""
 msgid "Name the relay and register with your Checkmk site"
 msgstr ""
 
-#, fuzzy
 msgid "Connection check"
-msgstr "Verbindungsname"
+msgstr "Verbindungstest"
 
-#, fuzzy
 msgid "Already installed the Checkmk agent?"
-msgstr "Ist der Agent bereits installiert?"
+msgstr "Ist der Checkmk-Agent bereits installiert?"
 
 msgid ""
 "This problem might be caused by a missing agent or the firewall settings."
 msgstr ""
 "Dieses Problem kann durch einen fehlenden Agenten oder die Firewall-"
-"Einstellungen verursacht werden."
+"Einstellungen verursacht worden sein."
 
-#, fuzzy
 msgid "Already registered the Checkmk agent?"
-msgstr "Ist der Agent bereits installiert?"
+msgstr "Ist der Checkmk-Agent bereits registriert?"
 
-#, fuzzy
 msgid "This problem might be caused by a missing agent registration."
 msgstr ""
-"Dieses Problem kann durch einen fehlenden Agenten oder die Firewall-"
-"Einstellungen verursacht werden."
+"Dieses Problem kann durch eine fehlende Agent-Registrierung verursacht "
+"worden sein."
 
 msgid "Read Checkmk user guide"
 msgstr "Lesen Sie das Checkmk-Handbuch"
@@ -89120,6 +89275,12 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "repeat every 20'th row"
+#~ msgstr "Wiederhole jede 20. Zeile"
+
+#~ msgid "Operations on selected graph lines"
+#~ msgstr "Operationen an den gewählten Graphlinien"
 
 #~ msgid "Act. helper"
 #~ msgstr "Aktiver Helper"

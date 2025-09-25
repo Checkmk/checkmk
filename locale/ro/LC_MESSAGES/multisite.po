@@ -35908,6 +35908,10 @@ msgstr "Pagină de manual invalidă: Nu a reușit să obțină titlul"
 msgid "Invalid mime type, supported types are: %s"
 msgstr "Tip de fișier nevalabil așteptat %s primit '%s'"
 
+#, fuzzy, python-format
+msgid "Invalid mode '%s'."
+msgstr "Identificator invalid: %s"
+
 #, fuzzy
 msgid "Invalid number"
 msgstr "Nume de fișier invalid"
@@ -42306,6 +42310,10 @@ msgstr "Criticitatea stării martorilor de oglindire"
 
 msgid "Miscellaneous"
 msgstr "Diverse"
+
+#, python-format
+msgid "Mismatching owner in `%s` mode."
+msgstr ""
 
 #, fuzzy
 msgid "Misplaced Objects"
@@ -52848,6 +52856,10 @@ msgstr "Proxmox VE Node Info"
 msgid "Proxmox VE Node Memory Allocation"
 msgstr "Proxmox VE Node Info"
 
+#, fuzzy
+msgid "Proxmox VE Replication"
+msgstr "Utilizare CPU"
+
 msgid "Proxmox VE VM Backup"
 msgstr "Proxmox VE VM Backup"
 
@@ -58973,6 +58985,10 @@ msgstr "Traducerea stării serviciului"
 
 msgid "Service state type"
 msgstr "Tipul de stare a serviciului"
+
+#, fuzzy
+msgid "Service state when no replication jobs are configured on the cluster"
+msgstr "Stare când starea de replicare este activă"
 
 msgid "Service states"
 msgstr "State de servicii"
@@ -67028,6 +67044,12 @@ msgid ""
 msgstr ""
 
 #, python-format
+msgid ""
+"The dashboard '%s' already contains an embedded view with the ID '%s'. "
+"Please choose another ID."
+msgstr ""
+
+#, python-format
 msgid "The dashboard '%s' does not contain an embedded view with the ID '%s'."
 msgstr ""
 
@@ -67058,6 +67080,10 @@ msgstr "Numele bazei de date de pe serverul de căsuțe poștale."
 
 msgid "The database to authenticate on."
 msgstr "Baza de date în care se face autentificarea."
+
+#, fuzzy, python-format
+msgid "The datasource '%s' does not exist."
+msgstr "Gazda \"%s\" nu există"
 
 msgid "The datasource of a view cannot be changed."
 msgstr "Sursa de date a unei vizualizări nu poate fi modificată."
@@ -81227,6 +81253,10 @@ msgstr "Niveluri superioare la picătura de pachete de intrare în tunel"
 msgid "Upper levels provisioned concurrency utilization"
 msgstr "Niveluri superioare de utilizare a concurenței provizionate"
 
+#, fuzzy
+msgid "Upper limit of time since last replication"
+msgstr "Niveluri pentru timpul scurs de la ultima actualizare"
+
 msgid "Upper limits in percent"
 msgstr "Limite superioare în procente"
 
@@ -90595,9 +90625,6 @@ msgstr ""
 "endpoint-ul de la distanță s-a închis; kernel-ul așteaptă ca aplicația să "
 "închidă socket-ul"
 
-msgid "repeat every 20'th row"
-msgstr "se repetă la fiecare 20'th rând"
-
 msgid "repeat:"
 msgstr "repetați:"
 
@@ -91588,12 +91615,87 @@ msgid "Filter by service"
 msgstr "Filtrați selecția %s în funcție de serviciu: "
 
 #, fuzzy
-msgid "Choose how to display your data"
-msgstr "Nu afișați o dată"
+msgid "Dashboard layout"
+msgstr "Element de tablou de bord"
+
+msgid ""
+"You can choose between a fixed layout or a responsive, scrollable grid "
+"layout. By default, the responsive grid layout is selected."
+msgstr ""
+
+#, fuzzy
+msgid "Responsive"
+msgstr "Timp de răspuns"
+
+msgid "Choose which objects this dashboard applies to"
+msgstr ""
+
+#, fuzzy
+msgid "Enter name"
+msgstr "Introduceți numele de utilizator"
+
+#, fuzzy
+msgid "Add filter as suffix"
+msgstr "Adaugă filtre"
+
+msgid "Include dashboard filter contents to the dashboard title.."
+msgstr ""
+
+#, fuzzy
+msgid "Automatically create unique ID"
+msgstr "Crearea automată a agenților de monitorizare"
+
+#, fuzzy
+msgid "Add unique ID"
+msgstr "Adăugați ID-ul regulii"
+
+#, fuzzy
+msgid "Dashboard icon"
+msgstr "Tabloul de bord"
+
+#, fuzzy
+msgid ""
+"This selection is only relevant if under 'User' -> 'Edit Profile' -> 'Mega "
+"menue icons' you have selected the options 'Per Entry'. You can select the "
+"icon to display next to your dashboard in the Monitoring menu. You can "
+"choose either a single colored icon or one with an additional symbol."
+msgstr ""
+"Această selecție este relevantă numai dacă la 'Utilizator' -> 'Editare "
+"profil' -> 'Icoane mega meniu' ați selectat opțiunile 'Pe intrare'. În acest "
+"caz, selectați aici pictograma care va fi plasată lângă numele tabloului de "
+"bord în meniul de monitorizare. Puteți selecta o singură pictogramă "
+"(pictograma colorată) sau o singură pictogramă care este completată cu un "
+"simbol suplimentar."
+
+#, fuzzy
+msgid "Dashboard visibility"
+msgstr "Vizibilitatea graficului"
+
+#, fuzzy
+msgid "Show in monitor menu"
+msgstr "Subiect în 'Monitor' meniu"
 
 #, fuzzy
 msgid "Select option"
 msgstr "Conexiuni respinse"
+
+#, fuzzy
+msgid "To be defined"
+msgstr "Nu sunt definite conexiuni"
+
+#, fuzzy
+msgid ""
+"You can set the order of the dashboard by changing this number. Lower "
+"numbers will be sorted first. Topics with the same number will be sorted "
+"alphabetically."
+msgstr ""
+"Puteți personaliza ordinea %s prin modificarea acestui număr. Numerele mai "
+"mici vor fi ordonate mai întâi. Subiectele cu același număr vor fi sortate "
+"în ordine alfabetică."
+
+#, fuzzy
+msgid "Choose how to display your data"
+msgstr "Nu afișați o dată"
 
 #, fuzzy
 msgid "Inherited"
@@ -91857,6 +91959,64 @@ msgid "Show widget background"
 msgstr "Afișați titlul fără fundal"
 
 #, fuzzy
+msgid "Unrestricted"
+msgstr "Neînregistrat"
+
+#, fuzzy
+msgid "Custom"
+msgstr "Client"
+
+#, fuzzy
+msgid "Name is required."
+msgstr "este necesară"
+
+#, fuzzy
+msgid "Unique ID is required."
+msgstr "este necesară"
+
+#, fuzzy
+msgid ""
+"Unique ID must only contain lowercase letters, numbers, and underscores, and "
+"must start with a letter."
+msgstr ""
+"Denumirile metrice trebuie să fie formate numai din litere, cifre și "
+"caractere de subliniere și trebuie să înceapă cu o literă."
+
+#, fuzzy
+msgid "This Unique ID is already in use. Please choose another one."
+msgstr "Acest ID este deja utilizat. Vă rugăm să alegeți altul."
+
+#, fuzzy
+msgid "At least one scope must be selected."
+msgstr "Starea când lipsește fișierul"
+
+#, fuzzy
+msgid "Create dashboard"
+msgstr "Tablouri de bord conexe"
+
+#, fuzzy
+msgid "Create & set dashboard filters"
+msgstr "Tablouri de bord conexe"
+
+#, fuzzy
+msgid "Create & view list"
+msgstr "Salvați & vizualizați folderul"
+
+#, fuzzy
+msgid "Dashboard type"
+msgstr "Element de tablou de bord"
+
+msgid ""
+"Dashboards can display one or multiple entries depending on the selected "
+"datasource. By default, all are included. You can optionally restrict the "
+"configuration to a single host or specific datasources."
+msgstr ""
+
+#, fuzzy
+msgid "Dashboard scope"
+msgstr "Tablouri de bord"
+
+#, fuzzy
 msgid "Single graph"
 msgstr "Conexiuni respinse"
 
@@ -92013,6 +92173,21 @@ msgid "Copy view"
 msgstr "Vizualizare clonă"
 
 #, fuzzy
+msgid "Data configuration"
+msgstr "Configurație implicită"
+
+#, fuzzy
+msgid "Link to view: %{viewName}"
+msgstr "Legătură pentru a vizualiza"
+
+msgid "New view based on: %{datasource}"
+msgstr ""
+
+#, fuzzy
+msgid "Copy existing view: %{viewName}"
+msgstr "Copierea vizualizării existente"
+
+#, fuzzy
 msgid "explicit password"
 msgstr "Parolă nouă"
 
@@ -92029,12 +92204,20 @@ msgid "Metric name"
 msgstr "Etichetă metrică"
 
 #, fuzzy
-msgid "Graph metrics with all zero values"
-msgstr "Metrici cu toate valorile zero"
+msgid "Resource attributes"
+msgstr "Resetarea atributelor"
 
 #, fuzzy
-msgid "Custom"
-msgstr "Client"
+msgid "Scope attributes"
+msgstr "Atributul rolului"
+
+#, fuzzy
+msgid "Data point attributes"
+msgstr "Atributele timpilor morți:"
+
+#, fuzzy
+msgid "Graph metrics with all zero values"
+msgstr "Metrici cu toate valorile zero"
 
 #, fuzzy
 msgid "Use unit of first entry"
@@ -92081,7 +92264,7 @@ msgid "Stack"
 msgstr "Stive"
 
 #, fuzzy
-msgid "Graph lines"
+msgid "Graph lines (Standard)"
 msgstr "Opțiuni grafice"
 
 msgid "Scalar"
@@ -92092,16 +92275,15 @@ msgid "Constant"
 msgstr "Instanța"
 
 #, fuzzy
-msgid "Operations on selected graph lines"
-msgstr "Operațiunea privind metricele selectate"
-
-#, fuzzy
 msgid "Transformation"
 msgstr "Informații termice"
 
 #, fuzzy
 msgid "Graph options"
 msgstr "Opțiuni grafice"
+
+msgid "Graph lines (OpenTelemetry)"
+msgstr ""
 
 #, fuzzy
 msgid "Mirrored"
@@ -92864,6 +93046,13 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "repeat every 20'th row"
+#~ msgstr "se repetă la fiecare 20'th rând"
+
+#, fuzzy
+#~ msgid "Operations on selected graph lines"
+#~ msgstr "Operațiunea privind metricele selectate"
+
 #~ msgid "Act. helper"
 #~ msgstr "Ajutător de act."
 
@@ -93336,10 +93525,6 @@ msgstr ""
 
 #~ msgid "Subscription ID"
 #~ msgstr "ID-ul abonamentului"
-
-#, fuzzy
-#~ msgid "At least one selection is missing."
-#~ msgstr "Starea când lipsește fișierul"
 
 #~ msgid "Use the default start URL"
 #~ msgstr "Utilizați URL-ul de pornire implicit"

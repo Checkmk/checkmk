@@ -88,6 +88,7 @@ DEFAULT_CFG_SECTION = {
     "base_url": "unix://var/run/docker.sock",
     "skip_sections": "",
     "container_id": "short",
+    "persist_period_node_disk_usage": "90",  # [s]
 }
 
 LOGGER = logging.getLogger(__name__)
@@ -143,7 +144,6 @@ def get_config(cfg_file):
     if isinstance(skip_sections, str):
         skip_list = skip_sections.split(",")
         conf_dict["skip_sections"] = tuple(n.strip() for n in skip_list)
-
     return conf_dict
 
 
@@ -159,12 +159,13 @@ class Section(list):
 
     # Should we need to parallelize one day, change this to be
     # more like the Section class in agent_azure, for instance
-    def __init__(self, name=None, piggytarget=None):
+    def __init__(self, name=None, piggytarget=None, persist_until=None):
         super().__init__()
         if piggytarget is not None:
             self.append("<<<<%s>>>>" % piggytarget)
         if name is not None:
-            self.append("<<<%s:sep(124)>>>" % name)
+            persist_header = "" if persist_until is None else ":persist(%d)" % persist_until
+            self.append("<<<%s:sep(124)%s>>>" % (name, persist_header))
             version_json = json.dumps(Section.version_info)
             self.append("@docker_version_info|%s" % version_json)
             self.append("<<<%s:sep(0)>>>" % name)
@@ -408,7 +409,7 @@ def is_disabled_section(config, section_name):
 
 
 @time_it
-def section_node_info(client):
+def section_node_info(client, config):
     LOGGER.debug(client.node_info)
     section = Section("docker_node_info")
     section.append(json.dumps(client.node_info))
@@ -416,9 +417,10 @@ def section_node_info(client):
 
 
 @time_it
-def section_node_disk_usage(client):
+def section_node_disk_usage(client, config):
     """docker system df"""
-    section = Section("docker_node_disk_usage")
+    persist_until = int(time.time()) + int(config["persist_period_node_disk_usage"])
+    section = Section("docker_node_disk_usage", persist_until=persist_until)
     try:
         data = client.df()
     except docker.errors.APIError as exc:
@@ -494,7 +496,7 @@ def _robust_inspect(client, docker_object):
 
 
 @time_it
-def section_node_images(client):
+def section_node_images(client, config):
     """in subsections list [[[images]]] and [[[containers]]]"""
     section = Section("docker_node_images")
 
@@ -516,7 +518,7 @@ def section_node_images(client):
 
 
 @time_it
-def section_node_network(client):
+def section_node_network(client, config):
     networks = client.networks.list(filters={"driver": "bridge"})
     section = Section("docker_node_network")
     section += [json.dumps(n.attrs) for n in networks]
@@ -659,7 +661,7 @@ def call_node_sections(client, config):
         if is_disabled_section(config, name):
             continue
         try:
-            section(client)
+            section(client, config)
         except Exception as exc:
             if DEBUG:
                 raise

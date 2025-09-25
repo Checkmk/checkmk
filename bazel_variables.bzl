@@ -5,26 +5,22 @@ RUFF_VERSION = "0.12.8"
 edition_python_deps = {
     "cre": [],
     "cce": [
-        "//non-free/packages/cmk-core-helpers",
         "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger",
         "//non-free/packages/cmk-mknotifyd",
         "//non-free/packages/cmk-otel-collector",
         "//non-free/packages/cmk-update-agent",
     ],
     "cee": [
-        "//non-free/packages/cmk-core-helpers",
         "//non-free/packages/cmk-mknotifyd",
         "//non-free/packages/cmk-update-agent",
     ],
     "cme": [
-        "//non-free/packages/cmk-core-helpers",
         "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger",
         "//non-free/packages/cmk-mknotifyd",
         "//non-free/packages/cmk-update-agent",
         "//non-free/packages/cmk-otel-collector",
     ],
     "cse": [
-        "//non-free/packages/cmk-core-helpers",
         "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger",
         "//non-free/packages/cmk-mknotifyd",
         "//non-free/packages/cmk-update-agent",

@@ -311,7 +311,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 label=_("spec label"),
                 placeholder="myname",
                 help=_(
-                    "help text This field supports the use of macros. The corresponding plug-in replaces the macros with the actual values."
+                    "help text This field supports the use of macros. The corresponding plug-in replaces the macros with the actual values. The most common ones are $HOSTNAME$, $HOSTALIAS$ or $HOSTADDRESS$."
                 ),
                 validate=_legacy_custom_text_validate,
                 allow_empty=False,

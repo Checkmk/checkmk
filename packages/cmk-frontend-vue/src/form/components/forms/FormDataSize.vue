@@ -48,7 +48,7 @@ const magnitudeOptions = computed(() => {
     :id="componentId"
     v-model="value[0]"
     :placeholder="spec.input_hint || ''"
-    class="number no-spinner"
+    class="form-data-size__number form-data-size__no-spinner"
     step="any"
     type="number"
   />
@@ -69,13 +69,12 @@ const magnitudeOptions = computed(() => {
   margin: 0;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-input.number {
+.form-data-size__number {
   width: 5.8ex;
+  text-align: right;
 }
 
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.no-spinner[type='number'] {
+.form-data-size__no-spinner[type='number'] {
   appearance: textfield;
 }
 </style>

@@ -99,13 +99,13 @@ const tooltipOpen = ref(true)
 
 <style scoped>
 .setup-agent-download-dialog__dialog {
-  margin: 0 !important;
+  margin: 20px 0 0 !important;
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .tooltip-close {
   position: absolute;
-  top: 2px;
+  top: 22px;
   right: 4px;
   background: transparent;
   border: none;

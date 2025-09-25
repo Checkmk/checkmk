@@ -242,11 +242,11 @@ class CommandType(Enum):
 #   '----------------------------------------------------------------------'
 
 
-def start_site(version_info: VersionInfo, site: SiteContext) -> None:
+def start_site(version_info: VersionInfo, site: SiteContext, config: Config) -> None:
     skelroot = "/omd/versions/%s/skel" % omdlib.__version__
     site_home = SitePaths.from_site_name(site.name).home
     prepare_and_populate_tmpfs(
-        site.conf,
+        config,
         version_info,
         site.name,
         site_home,
@@ -1448,7 +1448,11 @@ def initialize_agent_ca(site: SiteContext) -> None:
 
 
 def config_change(
-    version_info: VersionInfo, site: SiteContext, config_hooks: ConfigHooks, verbose: bool
+    version_info: VersionInfo,
+    site: SiteContext,
+    config: Config,
+    config_hooks: ConfigHooks,
+    verbose: bool,
 ) -> list[str]:
     # Check whether or not site needs to be stopped. Stop and remember to start again later
     site_was_stopped = False
@@ -1467,14 +1471,14 @@ def config_change(
 
         changed: list[str] = []
         for key, value in settings:
-            config_set_value(site, key, value, verbose, save=False)
+            config_set_value(site, config, key, value, verbose, save=False)
             changed.append(key)
 
-        save_site_conf(site_home, site.conf)
+        save_site_conf(site_home, config)
         return changed
     finally:
         if site_was_stopped:
-            start_site(version_info, site)
+            start_site(version_info, site, config)
 
 
 def read_config_change_commands() -> ConfigChangeCommands:
@@ -1507,7 +1511,7 @@ def validate_config_change_commands(
 
 
 def config_set(
-    site: SiteContext, config_hooks: ConfigHooks, args: Arguments, verbose: bool
+    site: SiteContext, config: Config, config_hooks: ConfigHooks, args: Arguments, verbose: bool
 ) -> list[str]:
     if len(args) != 2:
         sys.stderr.write("Please specify variable name and value\n")
@@ -1530,7 +1534,7 @@ def config_set(
         sys.stderr.write(f"Invalid value for '{value}'. {error_from_config_choice.error}\n")
         return []
 
-    config_set_value(site, hook_name, value, verbose)
+    config_set_value(site, config, hook_name, value, verbose)
     return [hook_name]
 
 
@@ -1550,8 +1554,10 @@ def _error_from_config_choice(choices: ConfigHookChoices, value: str) -> Result[
     return OK(None)
 
 
-def config_set_all(site: SiteContext, verbose: bool, ignored_hooks: Sequence[str]) -> None:
-    for hook_name in sort_hooks(list(site.conf.keys())):
+def config_set_all(
+    site: SiteContext, config: Config, verbose: bool, ignored_hooks: Sequence[str]
+) -> None:
+    for hook_name in sort_hooks(list(config.keys())):
         # Hooks may vanish after and up- or downdate
         if not hook_exists(site, hook_name):
             continue
@@ -1559,33 +1565,33 @@ def config_set_all(site: SiteContext, verbose: bool, ignored_hooks: Sequence[str
         if hook_name in ignored_hooks:
             continue
 
-        _config_set(site, hook_name, verbose)
+        _config_set(site, config, hook_name, verbose)
 
 
-def _config_set(site: SiteContext, hook_name: str, verbose: bool) -> None:
-    value = site.conf[hook_name]
+def _config_set(site: SiteContext, config: Config, hook_name: str, verbose: bool) -> None:
+    value = config[hook_name]
 
     exitcode, output = call_hook(site, hook_name, ["set", value], verbose)
     if exitcode:
         return
 
     if output and output != value:
-        site.conf[hook_name] = output
+        config[hook_name] = output
 
-    putenv("CONFIG_" + hook_name, site.conf[hook_name])
+    putenv("CONFIG_" + hook_name, config[hook_name])
 
 
 def config_set_value(
-    site: SiteContext, hook_name: str, value: str, verbose: bool, save: bool = True
+    site: SiteContext, config: Config, hook_name: str, value: str, verbose: bool, save: bool = True
 ) -> None:
-    site.conf[hook_name] = value
-    _config_set(site, hook_name, verbose)
+    config[hook_name] = value
+    _config_set(site, config, hook_name, verbose)
 
     if hook_name in ["CORE", "MKEVENTD", "PNP4NAGIOS"]:
-        _update_cmk_core_config(site)
+        _update_cmk_core_config(config)
 
     if save:
-        save_site_conf(SitePaths.from_site_name(site.name).home, site.conf)
+        save_site_conf(SitePaths.from_site_name(site.name).home, config)
 
 
 def config_usage() -> None:
@@ -1603,14 +1609,14 @@ omd config change        - change multiple at once. Provide newline separated
     )
 
 
-def config_show(site: SiteContext, config_hooks: ConfigHooks, args: Arguments) -> None:
+def config_show(config: Config, config_hooks: ConfigHooks, args: Arguments) -> None:
     hook: ConfigHook | None
     if len(args) == 0:
         hook_names = sorted(config_hooks.keys())
         for hook_name in hook_names:
             hook = config_hooks[hook_name]
             if hook.unstructured["active"] and not hook.unstructured["deprecated"]:
-                sys.stdout.write(f"{hook_name}: {site.conf[hook_name]}\n")
+                sys.stdout.write(f"{hook_name}: {config[hook_name]}\n")
     else:
         output = []
         for hook_name in args:
@@ -1618,13 +1624,15 @@ def config_show(site: SiteContext, config_hooks: ConfigHooks, args: Arguments) -
             if not hook:
                 sys.stderr.write("No such variable %s\n" % hook_name)
             else:
-                output.append(site.conf[hook_name])
+                output.append(config[hook_name])
 
         sys.stdout.write(" ".join(output))
         sys.stdout.write("\n")
 
 
-def config_configure(site: SiteContext, config_hooks: ConfigHooks, verbose: bool) -> Iterator[str]:
+def config_configure(
+    site: SiteContext, config: Config, config_hooks: ConfigHooks, verbose: bool
+) -> Iterator[str]:
     hook_names = sorted(config_hooks.keys())
     current_hook_name: str | None = ""
     menu_open = False
@@ -1641,7 +1649,7 @@ def config_configure(site: SiteContext, config_hooks: ConfigHooks, verbose: bool
             if hook.unstructured["active"] and not hook.unstructured["deprecated"]:
                 mp = hook.menu
                 entries = menu.get(mp, [])
-                entries.append((hook_name, site.conf[hook_name]))
+                entries.append((hook_name, config[hook_name]))
                 menu[mp] = entries
                 if mp not in menu_choices:
                     menu_choices.append(mp)
@@ -1668,7 +1676,9 @@ def config_configure(site: SiteContext, config_hooks: ConfigHooks, verbose: bool
             )
             if change:
                 try:
-                    yield from config_configure_hook(site, config_hooks, current_hook_name, verbose)
+                    yield from config_configure_hook(
+                        site, config, config_hooks, current_hook_name, verbose
+                    )
                 except MKTerminate:
                     raise
                 except Exception as e:
@@ -1678,7 +1688,7 @@ def config_configure(site: SiteContext, config_hooks: ConfigHooks, verbose: bool
 
 
 def config_configure_hook(
-    site: SiteContext, config_hooks: ConfigHooks, hook_name: str, verbose: bool
+    site: SiteContext, config: Config, config_hooks: ConfigHooks, hook_name: str, verbose: bool
 ) -> Iterator[str]:
     if not site.is_stopped(verbose):
         if not dialog_yesno(
@@ -1693,7 +1703,7 @@ def config_configure_hook(
     hook = config_hooks[hook_name]
     title = hook.alias
     descr = hook.description.replace("\n\n", "\001").replace("\n", " ").replace("\001", "\n\n")
-    value = site.conf[hook_name]
+    value = config[hook_name]
     choices = hook.choices
 
     if isinstance(choices, list):
@@ -1708,8 +1718,8 @@ def config_configure_hook(
         assert_never(choices)
 
     if change:
-        config_set_value(site, hook.name, new_value, verbose)
-        save_site_conf(site_home, site.conf)
+        config_set_value(site, config, hook.name, new_value, verbose)
+        save_site_conf(site_home, config)
         config_hooks = load_hook_dependencies(site, config_hooks, verbose)
         yield hook_name
 
@@ -1717,6 +1727,7 @@ def config_configure_hook(
 def init_action(
     version_info: VersionInfo,
     site: SiteContext,
+    config: Config,
     global_opts: GlobalOptions,
     command: Literal["start", "stop", "reload", "restart", "status"],
     args: Arguments,
@@ -1730,7 +1741,7 @@ def init_action(
     if command in ["start", "restart"]:
         skelroot = "/omd/versions/%s/skel" % omdlib.__version__
         prepare_and_populate_tmpfs(
-            site.conf,
+            config,
             version_info,
             site.name,
             site_home,
@@ -1799,15 +1810,15 @@ def clear_environment() -> None:
             del os.environ[key]
 
 
-def set_environment(site: SiteContext) -> None:
-    site_home = SitePaths.from_site_name(site.name).home
-    putenv("OMD_SITE", site.name)
+def set_environment(site_name: str, config: Config) -> None:
+    site_home = SitePaths.from_site_name(site_name).home
+    putenv("OMD_SITE", site_name)
     putenv("OMD_ROOT", site_home)
     putenv(
         "PATH",
         f"{site_home}/local/bin:{site_home}/bin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin",
     )
-    putenv("USER", site.name)
+    putenv("USER", site_name)
 
     putenv("LD_LIBRARY_PATH", f"{site_home}/local/lib:{site_home}/lib")
     putenv("HOME", site_home)
@@ -1840,7 +1851,7 @@ def set_environment(site: SiteContext) -> None:
                     value = value.strip("'")
                 putenv(varname, value)
 
-    create_config_environment(site.conf)
+    create_config_environment(config)
 
 
 def hostname() -> str:
@@ -2172,17 +2183,17 @@ def init_site(
     # Change ownership of all files and dirs to site user
     chown_tree(site_home, site.name)
 
-    site.set_config(load_config(site, global_opts.verbose))
+    config = load_config(site, global_opts.verbose)
     if config_settings:  # add specific settings
         for hook_name, value in config_settings.items():
-            site.conf[hook_name] = value
-    create_config_environment(site.conf)
+            config[hook_name] = value
+    create_config_environment(config)
 
     # Change the few files that config save as created as root
     chown_tree(site_home, site.name)
 
     outcome = finalize_site(
-        version_info, site, CommandType.create, apache_reload, global_opts.verbose
+        version_info, site, config, CommandType.create, apache_reload, global_opts.verbose
     )
     return outcome, admin_password
 
@@ -2193,6 +2204,7 @@ def init_site(
 def finalize_site(
     version_info: VersionInfo,
     site: SiteContext,
+    config: Config,
     command_type: CommandType,
     apache_reload: bool,
     verbose: bool,
@@ -2213,7 +2225,7 @@ def finalize_site(
             # avoid executing hook 'TMPFS' and cleaning an initialized tmp directory
             # see CMK-3067
             outcome = finalize_site_as_user(
-                version_info, site, command_type, verbose, ignored_hooks=["TMPFS"]
+                version_info, site, config, command_type, verbose, ignored_hooks=["TMPFS"]
             )
             sys.exit(outcome.value)
         except Exception as e:
@@ -2230,15 +2242,15 @@ def finalize_site(
     # The config changes above, made with the site user, have to be also available for
     # the root user, so load the site config again. Otherwise e.g. changed
     # APACHE_TCP_PORT would not be recognized
-    site.set_config(load_config(site, verbose))
+    config = load_config(site, verbose)
     site_home = SitePaths.from_site_name(site.name).home
     register_with_system_apache(
         version_info,
         SitePaths.from_site_name(site.name).apache_conf,
         site.name,
         site_home,
-        site.conf["APACHE_TCP_ADDR"],
-        site.conf["APACHE_TCP_PORT"],
+        config["APACHE_TCP_ADDR"],
+        config["APACHE_TCP_PORT"],
         apache_reload,
         verbose=verbose,
     )
@@ -2254,6 +2266,7 @@ class FinalizeOutcome(enum.Enum):
 def finalize_site_as_user(
     version_info: VersionInfo,
     site: SiteContext,
+    config: Config,
     command_type: CommandType,
     verbose: bool,
     ignored_hooks: Sequence[str],
@@ -2265,7 +2278,7 @@ def finalize_site_as_user(
     site_home = SitePaths.from_site_name(site.name).home
     skelroot = "/omd/versions/%s/skel" % omdlib.__version__
     prepare_and_populate_tmpfs(
-        site.conf,
+        config,
         version_info,
         site.name,
         site_home,
@@ -2277,11 +2290,11 @@ def finalize_site_as_user(
 
     # Run all hooks in order to setup things according to the
     # configuration settings
-    config_set_all(site, verbose, ignored_hooks)
+    config_set_all(site, config, verbose, ignored_hooks)
     initialize_site_ca(site)
     initialize_agent_ca(site)
-    save_site_conf(site_home, site.conf)
-    _update_cmk_core_config(site)
+    save_site_conf(site_home, config)
+    _update_cmk_core_config(config)
 
     if command_type in [CommandType.create, CommandType.copy, CommandType.restore_as_new_site]:
         save_instance_id(file_path=get_instance_id_file_path(Path(site_home)), instance_id=uuid4())
@@ -2393,6 +2406,7 @@ def main_enable(
     _args: object,
     _options: object,
 ) -> None:
+    config = site.conf
     site_paths = SitePaths.from_site_name(site.name)
     site_home = site_paths.home
     if not is_disabled(site_paths.apache_conf):
@@ -2404,8 +2418,8 @@ def main_enable(
         site_paths.apache_conf,
         site.name,
         site_home,
-        site.conf["APACHE_TCP_ADDR"],
-        site.conf["APACHE_TCP_PORT"],
+        config["APACHE_TCP_ADDR"],
+        config["APACHE_TCP_PORT"],
         False,
         verbose=global_opts.verbose,
     )
@@ -2418,17 +2432,17 @@ def main_update_apache_config(
     _args: object,
     _options: object,
 ) -> None:
-    site.set_config(load_config(site, global_opts.verbose))
+    config = load_config(site, global_opts.verbose)
     site_paths = SitePaths.from_site_name(site.name)
     site_home = site_paths.home
-    if _is_apache_enabled(site):
+    if _is_apache_enabled(config):
         register_with_system_apache(
             version_info,
             site_paths.apache_conf,
             site.name,
             site_home,
-            site.conf["APACHE_TCP_ADDR"],
-            site.conf["APACHE_TCP_PORT"],
+            config["APACHE_TCP_ADDR"],
+            config["APACHE_TCP_PORT"],
             True,
             verbose=global_opts.verbose,
         )
@@ -2441,8 +2455,8 @@ def main_update_apache_config(
         )
 
 
-def _is_apache_enabled(site: SiteContext) -> bool:
-    return site.conf["APACHE_MODE"] != "none"
+def _is_apache_enabled(config: Config) -> bool:
+    return config["APACHE_MODE"] != "none"
 
 
 def _get_conflict_mode(options: CommandOptions) -> str:
@@ -2566,8 +2580,8 @@ def main_mv_or_cp(
     sys.stdout.write("OK\n")
 
     # Now switch over to the new site as currently active site
-    new_site.set_config(load_config(new_site, global_opts.verbose))
-    set_environment(new_site)
+    new_config = load_config(new_site, global_opts.verbose)
+    set_environment(new_site.name, new_config)
 
     # Entry for tmps in /etc/fstab
     if not reuse:
@@ -2577,7 +2591,12 @@ def main_mv_or_cp(
     putenv("OLD_OMD_SITE", old_site.name)
 
     outcome = finalize_site(
-        version_info, new_site, command_type, "apache-reload" in options, global_opts.verbose
+        version_info,
+        new_site,
+        new_config,
+        command_type,
+        "apache-reload" in options,
+        global_opts.verbose,
     )
     sys.exit(outcome.value)
 
@@ -2836,16 +2855,16 @@ def main_update(
 
             # Prepare for config_set_all: Refresh the site configuration, because new hooks may introduce
             # new settings and default values.
-            site.set_config(load_config(site, global_opts.verbose))
+            config = load_config(site, global_opts.verbose)
 
             # Let hooks of the new(!) version do their work and update configuration.
-            config_set_all(site, global_opts.verbose, ())
-            save_site_conf(site_home, site.conf)
+            config_set_all(site, config, global_opts.verbose, ())
+            save_site_conf(site_home, config)
 
             # Before the hooks can be executed the tmpfs needs to be mounted. This requires access to the
             # initialized tmpfs.
             mu.prepare_and_populate_tmpfs(
-                version_info, site.conf, site.replacements(), site.skel_permissions
+                version_info, config, site.replacements(), site.skel_permissions
             )
 
             additional_update_env = {
@@ -2894,8 +2913,8 @@ def main_update(
         sys.stdout.write("Finished update.\n\n")
 
 
-def _update_cmk_core_config(site: SiteContext) -> None:
-    if site.conf["CORE"] == "none":
+def _update_cmk_core_config(config: Config) -> None:
+    if config["CORE"] == "none":
         return  # No core config is needed in this case
 
     sys.stdout.write("Updating core configuration...\n")
@@ -2961,8 +2980,9 @@ def main_init_action(
     options: CommandOptions,
 ) -> None:
     if isinstance(site, SiteContext):
+        config = site.conf
         site_home = SitePaths.from_site_name(site.name).home
-        exit_status = init_action(version_info, site, global_opts, command, args, options)
+        exit_status = init_action(version_info, site, config, global_opts, command, args, options)
 
         # When the whole site is about to be stopped check for remaining
         # processes and terminate them
@@ -3009,7 +3029,6 @@ def main_init_action(
             continue
 
         config = load_config(site, global_opts.verbose)
-        site.set_config(config)
 
         # Handle non autostart sites
         if command in ["start", "restart", "reload"] or ("auto" in options and command == "status"):
@@ -3139,17 +3158,18 @@ def main_config(
 
     config_hooks = load_config_hooks(site, global_opts.verbose)
     set_hooks: list[str] = []
+    config = site.conf
     if len(args) == 0:
-        set_hooks = list(config_configure(site, config_hooks, global_opts.verbose))
+        set_hooks = list(config_configure(site, config, config_hooks, global_opts.verbose))
     else:
         command = args[0]
         args = args[1:]
         if command == "show":
-            config_show(site, config_hooks, args)
+            config_show(config, config_hooks, args)
         elif command == "set":
-            set_hooks = config_set(site, config_hooks, args, global_opts.verbose)
+            set_hooks = config_set(site, config, config_hooks, args, global_opts.verbose)
         elif command == "change":
-            set_hooks = config_change(version_info, site, config_hooks, global_opts.verbose)
+            set_hooks = config_change(version_info, site, config, config_hooks, global_opts.verbose)
         else:
             config_usage()
 
@@ -3163,7 +3183,7 @@ def main_config(
         )
 
     if need_start:
-        start_site(version_info, site)
+        start_site(version_info, site, config)
 
 
 def main_su(
@@ -3221,8 +3241,8 @@ def _restore_backup_from_tar(
         sys.stdout.write("Restoring site from %s...\n" % source_descr)
         sys.stdout.flush()
 
-        site.set_config(load_config(site, global_opts.verbose))
-        orig_apache_port = site.conf["APACHE_TCP_PORT"]
+        config = load_config(site, global_opts.verbose)
+        orig_apache_port = config["APACHE_TCP_PORT"]
 
         prepare_restore_as_site_user(site, options, global_opts.verbose)
 
@@ -3252,7 +3272,7 @@ def _restore_backup_from_tar(
 
         tar.extract(tarinfo, path=site_home)
 
-    site.set_config(load_config(site, global_opts.verbose))
+    config = load_config(site, global_opts.verbose)
 
     # give new user all files
     chown_tree(site_home, site.name)
@@ -3277,16 +3297,16 @@ def _restore_backup_from_tar(
 
     # Now switch over to the new site as currently active site
     os.chdir(site_home)
-    set_environment(site)
+    set_environment(site.name, config)
 
     # Needed by the post-rename-site script
     putenv("OLD_OMD_SITE", sitename)
 
     if is_root():
-        postprocess_restore_as_root(version_info, site, options, global_opts.verbose)
+        postprocess_restore_as_root(version_info, site, config, options, global_opts.verbose)
     else:
         postprocess_restore_as_site_user(
-            version_info, site, options, orig_apache_port, global_opts.verbose
+            version_info, site, config, options, orig_apache_port, global_opts.verbose
         )
 
     return site
@@ -3418,7 +3438,11 @@ def verify_directory_write_access(site_home: str) -> None:
 
 
 def postprocess_restore_as_root(
-    version_info: VersionInfo, site: SiteContext, options: CommandOptions, verbose: bool
+    version_info: VersionInfo,
+    site: SiteContext,
+    config: Config,
+    options: CommandOptions,
+    verbose: bool,
 ) -> None:
     # Entry for tmps in /etc/fstab
     if "reuse" in options:
@@ -3427,25 +3451,29 @@ def postprocess_restore_as_root(
         command_type = CommandType.restore_as_new_site
         add_to_fstab(site.name, site.real_tmp_dir, tmpfs_size=options.get("tmpfs-size"))
 
-    outcome = finalize_site(version_info, site, command_type, "apache-reload" in options, verbose)
+    outcome = finalize_site(
+        version_info, site, config, command_type, "apache-reload" in options, verbose
+    )
     sys.exit(outcome.value)
 
 
 def postprocess_restore_as_site_user(
     version_info: VersionInfo,
     site: SiteContext,
+    config: Config,
     options: CommandOptions,
     orig_apache_port: str,
     verbose: bool,
 ) -> None:
     # Keep the apache port the site currently being replaced had before
     # (we can not restart the system apache as site user)
-    site.conf["APACHE_TCP_PORT"] = orig_apache_port
-    save_site_conf(SitePaths.from_site_name(site.name).home, site.conf)
+    config["APACHE_TCP_PORT"] = orig_apache_port
+    save_site_conf(SitePaths.from_site_name(site.name).home, config)
 
     finalize_site_as_user(
         version_info,
         site,
+        config,
         (
             CommandType.restore_existing_site
             if "reuse" in options
@@ -3563,7 +3591,7 @@ def _site_environment(site_name: str, command: Command, verbose: bool) -> SiteCo
 
     # Make sure environment is in a defined state
     clear_environment()
-    set_environment(site)
+    set_environment(site.name, site.conf)
     return site
 
 

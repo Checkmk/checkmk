@@ -36,7 +36,7 @@ def provide_agent_binaries(version, edition, disable_cache, bisect_comment) {
             //       Windows for consistency).
             //       As 'soon' as this problem does not exist anymore we could run
             //       relatively from 'builders/..'
-            relative_job_name: "${branch_base_folder(with_testing_prefix=false)}/builders/build-linux-agent-updater",
+            relative_job_name: "${branch_base_folder(false)}/builders/build-linux-agent-updater",
             /// no Linux agent updaters for raw edition..
             condition: true, // edition != "raw",  // FIXME!
             dependency_paths: [
@@ -61,7 +61,7 @@ def provide_agent_binaries(version, edition, disable_cache, bisect_comment) {
             //       Windows for consistency).
             //       As 'soon' as this problem does not exist anymore we could run
             //       relatively from 'builders/..'
-            relative_job_name: "${branch_base_folder(with_testing_prefix=false)}/winagt-build",
+            relative_job_name: "${branch_base_folder(false)}/winagt-build",
             dependency_paths: [
                 "agents/wnx",
                 "agents/windows",
@@ -98,7 +98,7 @@ def provide_agent_binaries(version, edition, disable_cache, bisect_comment) {
             //       Windows for consistency).
             //       As 'soon' as this problem does not exist anymore we could run
             //       relatively from 'builders/..'
-            relative_job_name: "${branch_base_folder(with_testing_prefix=false)}/winagt-build-modules",
+            relative_job_name: "${branch_base_folder(false)}/winagt-build-modules",
             dependency_paths: [
                 "agents/modules/windows",
             ],

@@ -33,7 +33,7 @@ def main() {
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
 
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
-    def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
+    def branch_base_folder = package_helper.branch_base_folder(true);
 
     // Use the directory also used by tests/testlib/containers.py to have it find
     // the downloaded package.

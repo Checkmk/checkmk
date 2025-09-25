@@ -112,7 +112,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
             :style="{ float: props.spec.layout === 'vertical' ? 'unset' : 'left' }"
             @paste="(event: ClipboardEvent) => onPaste(event, index)"
           >
-            <td class="vlof_content">
+            <td class="form-list-of-strings__vlof-content">
               <FormEditDispatcher
                 v-model:data="backendData[index]"
                 :spec="spec.string_spec"
@@ -130,11 +130,10 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 <style scoped>
 .form-list-of-strings {
   border-spacing: 2px 0;
+}
 
-  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-  > tbody > .listof_element > .vlof_content {
-    vertical-align: top;
-    padding-bottom: 8px;
-  }
+.form-list-of-strings__vlof-content {
+  vertical-align: top;
+  padding-bottom: 8px;
 }
 </style>

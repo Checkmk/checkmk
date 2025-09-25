@@ -55,6 +55,7 @@ class MetricProperties:
 
 def _group_needed_rrd_data_by_service(
     rrd_data_keys: Iterable[RRDDataKey],
+    consolidation_function: GraphConsolidationFunction | None,
 ) -> dict[
     tuple[SiteId, HostName, ServiceName],
     set[MetricProperties],
@@ -67,7 +68,7 @@ def _group_needed_rrd_data_by_service(
         by_service[(key.site_id, key.host_name, key.service_name)].add(
             MetricProperties(
                 metric_name=key.metric_name,
-                consolidation_function=key.consolidation_function,
+                consolidation_function=consolidation_function or key.consolidation_function,
                 scale=key.scale,
             )
         )
@@ -76,14 +77,13 @@ def _group_needed_rrd_data_by_service(
 
 def _rrd_columns(
     metrics: Iterable[MetricProperties],
-    consolidation_function: GraphConsolidationFunction | None,
     data_range: str,
 ) -> Iterator[ColumnName]:
     """RRD data columns for each metric
 
     Include scaling of metric directly in query"""
     for metric_props in metrics:
-        cf = consolidation_function or metric_props.consolidation_function or "max"
+        cf = metric_props.consolidation_function or "max"
         rpn = f"{metric_props.metric_name}.{cf}"
         if metric_props.scale != 1.0:
             rpn += ",%f,*" % metric_props.scale
@@ -106,7 +106,7 @@ def _fetch_rrd_data(
         step = max(1, step)
 
     point_range = ":".join(map(str, (start_time, end_time, step)))
-    lql_columns = list(_rrd_columns(metrics, consolidation_function, point_range))
+    lql_columns = list(_rrd_columns(metrics, point_range))
     query = livestatus_lql([host_name], lql_columns, service_description)
 
     with sites.only_sites(site_id):
@@ -186,10 +186,13 @@ def fetch_rrd_data_for_graph(
 ) -> RRDData:
     conversion = user_specific_unit(graph_recipe.unit_spec, user, active_config).conversion
     by_service = _group_needed_rrd_data_by_service(
-        key
-        for metric in graph_recipe.metrics
-        for key in metric.operation.keys(registered_metrics)
-        if isinstance(key, RRDDataKey)
+        (
+            key
+            for metric in graph_recipe.metrics
+            for key in metric.operation.keys(registered_metrics)
+            if isinstance(key, RRDDataKey)
+        ),
+        graph_recipe.consolidation_function,
     )
     rrd_data: dict[RRDDataKey, TimeSeries] = {}
     for (site_id, host_name, service_description), metrics in by_service.items():
@@ -281,7 +284,7 @@ def all_rrd_columns_potentially_relevant_for_metric(
         (
             MetricProperties(
                 metric_name=metric_name,
-                consolidation_function=None,
+                consolidation_function=consolidation_function,
                 # at this point, we do not yet know if there any potential scalings due to metric
                 # translations
                 scale=1,
@@ -290,7 +293,6 @@ def all_rrd_columns_potentially_relevant_for_metric(
                 metric_name
             )
         ),
-        consolidation_function,
         f"{from_time}:{until_time}:60",
     )
 

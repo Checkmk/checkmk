@@ -160,74 +160,76 @@ function deleteDataPointAttribute(index: number) {
 
 <template>
   <table>
-    <tr>
-      <td>{{ _t('Metric') }}</td>
-      <td>
-        <FormAutocompleter
-          v-model="metricName"
-          :autocompleter="metricNameAutocompleter"
-          :size="inputSizes['MEDIUM'].width"
-          :placeholder="_t('Metric name')"
-        />
-      </td>
-    </tr>
-    <tr>
-      <td>{{ _t('Resource attributes') }}</td>
-      <td>
-        <CmkList
-          :items-props="{ itemData: resourceAttributes }"
-          orientation="horizontal"
-          :try-delete="deleteResourceAttribute"
-        >
-          <template #item-props="{ itemData }">{{ itemData }}</template>
-        </CmkList>
-        <FormAutocompleter
-          v-model="resourceAttribute"
-          :autocompleter="resourceAttributesAutocompleter"
-          :size="inputSizes['MEDIUM'].width"
-          :placeholder="_t('Attributes')"
-          @update:model-value="addResourceAttribute"
-        />
-      </td>
-    </tr>
-    <tr>
-      <td>{{ _t('Scope attributes') }}</td>
-      <td>
-        <CmkList
-          :items-props="{ itemData: scopeAttributes }"
-          orientation="horizontal"
-          :try-delete="deleteScopeAttribute"
-        >
-          <template #item-props="{ itemData }">{{ itemData }}</template>
-        </CmkList>
-        <FormAutocompleter
-          v-model="scopeAttribute"
-          :autocompleter="scopeAttributesAutocompleter"
-          :size="inputSizes['MEDIUM'].width"
-          :placeholder="_t('Attributes')"
-          @update:model-value="addScopeAttribute"
-        />
-      </td>
-    </tr>
-    <tr>
-      <td>{{ _t('Data point attributes') }}</td>
-      <td>
-        <CmkList
-          :items-props="{ itemData: dataPointAttributes }"
-          orientation="horizontal"
-          :try-delete="deleteDataPointAttribute"
-        >
-          <template #item-props="{ itemData }">{{ itemData }}</template>
-        </CmkList>
-        <FormAutocompleter
-          v-model="dataPointAttribute"
-          :autocompleter="dataPointAttributesAutocompleter"
-          :size="inputSizes['MEDIUM'].width"
-          :placeholder="_t('Attributes')"
-          @update:model-value="addDataPointAttribute"
-        />
-      </td>
-    </tr>
+    <tbody>
+      <tr>
+        <td>{{ _t('Metric') }}</td>
+        <td>
+          <FormAutocompleter
+            v-model="metricName"
+            :autocompleter="metricNameAutocompleter"
+            :size="inputSizes['MEDIUM'].width"
+            :placeholder="_t('Metric name')"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>{{ _t('Resource attributes') }}</td>
+        <td>
+          <CmkList
+            :items-props="{ itemData: resourceAttributes }"
+            orientation="horizontal"
+            :try-delete="deleteResourceAttribute"
+          >
+            <template #item-props="{ itemData }">{{ itemData }}</template>
+          </CmkList>
+          <FormAutocompleter
+            v-model="resourceAttribute"
+            :autocompleter="resourceAttributesAutocompleter"
+            :size="inputSizes['MEDIUM'].width"
+            :placeholder="_t('Attributes')"
+            @update:model-value="addResourceAttribute"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>{{ _t('Scope attributes') }}</td>
+        <td>
+          <CmkList
+            :items-props="{ itemData: scopeAttributes }"
+            orientation="horizontal"
+            :try-delete="deleteScopeAttribute"
+          >
+            <template #item-props="{ itemData }">{{ itemData }}</template>
+          </CmkList>
+          <FormAutocompleter
+            v-model="scopeAttribute"
+            :autocompleter="scopeAttributesAutocompleter"
+            :size="inputSizes['MEDIUM'].width"
+            :placeholder="_t('Attributes')"
+            @update:model-value="addScopeAttribute"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>{{ _t('Data point attributes') }}</td>
+        <td>
+          <CmkList
+            :items-props="{ itemData: dataPointAttributes }"
+            orientation="horizontal"
+            :try-delete="deleteDataPointAttribute"
+          >
+            <template #item-props="{ itemData }">{{ itemData }}</template>
+          </CmkList>
+          <FormAutocompleter
+            v-model="dataPointAttribute"
+            :autocompleter="dataPointAttributesAutocompleter"
+            :size="inputSizes['MEDIUM'].width"
+            :placeholder="_t('Attributes')"
+            @update:model-value="addDataPointAttribute"
+          />
+        </td>
+      </tr>
+    </tbody>
   </table>
 </template>
 

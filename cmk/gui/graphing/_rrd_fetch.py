@@ -74,7 +74,7 @@ def _group_needed_rrd_data_by_service(
     return by_service
 
 
-def rrd_columns(
+def _rrd_columns(
     metrics: Iterable[MetricProperties],
     consolidation_function: GraphConsolidationFunction | None,
     data_range: str,
@@ -106,7 +106,7 @@ def _fetch_rrd_data(
         step = max(1, step)
 
     point_range = ":".join(map(str, (start_time, end_time, step)))
-    lql_columns = list(rrd_columns(metrics, consolidation_function, point_range))
+    lql_columns = list(_rrd_columns(metrics, consolidation_function, point_range))
     query = livestatus_lql([host_name], lql_columns, service_description)
 
     with sites.only_sites(site_id):
@@ -277,7 +277,7 @@ def all_rrd_columns_potentially_relevant_for_metric(
     from_time: int,
     until_time: int,
 ) -> Iterator[ColumnName]:
-    yield from rrd_columns(
+    yield from _rrd_columns(
         (
             MetricProperties(
                 metric_name=metric_name,

@@ -61,18 +61,18 @@ function table_init_rowselect(oTable: HTMLElement) {
         else childs[i].checked = false;
 
         childs[i].onchange = function (e) {
-            toggle_box(e, <HTMLInputElement>this);
+            toggle_box(e, this as HTMLInputElement);
         };
 
         iter_cells(childs[i], function (elem: HTMLElement) {
             elem.onmouseover = function () {
-                return highlight_row(<HTMLElement>this, true);
+                return highlight_row(this as HTMLElement, true);
             };
             elem.onmouseout = function () {
-                return highlight_row(<HTMLElement>this, false);
+                return highlight_row(this as HTMLElement, false);
             };
             elem.onclick = function (e: Event) {
-                return toggle_row(e, <HTMLElement>this);
+                return toggle_row(e, this as HTMLElement);
             };
         });
     }

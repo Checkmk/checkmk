@@ -476,7 +476,7 @@ export class TimeseriesFigure<
                 all_disabled.push(d.definition.use_tags[0]);
             });
             this._legend_dimension.filter(d => {
-                return all_disabled.indexOf(<string>d) == -1;
+                return all_disabled.indexOf(d as string) == -1;
             });
             this._compute_stack_values();
             this._subplots.forEach(subplot =>

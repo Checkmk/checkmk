@@ -59,7 +59,7 @@ export class AverageScatterplotFigure extends TimeseriesFigure<AverageScatterplo
         // see: https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/layerY
         // TODO KO: clean up these mouse events for better performance
         if (
-            !["svg", "path"].includes((<HTMLElement>event.target).tagName) ||
+            !["svg", "path"].includes((event.target as HTMLElement).tagName) ||
             //@ts-ignore
             event.layerX < this.margin.left ||
             //@ts-ignore

@@ -101,7 +101,7 @@ const dynamicParamsCallbacks = {
 
         return {
             context: val_or_empty(
-                <HTMLSelectElement | null>document.getElementById(host_id),
+                document.getElementById(host_id) as HTMLSelectElement | null
             ),
             ...autocompleter.params,
         };
@@ -327,8 +327,8 @@ function list_of_strings_add_event_handlers(
 
         if (split_on_paste) {
             input.onpaste = function (event) {
-                if ((<HTMLInputElement>this).value != "") return true; // The field had a value before: Don't do custom stuff
-                return setup_new_entries(<HTMLInputElement>this, event);
+                if ((this as HTMLInputElement).value != "") return true; // The field had a value before: Don't do custom stuff
+                return setup_new_entries(this as HTMLInputElement, event);
             };
         }
     } else {
@@ -340,7 +340,7 @@ function list_of_strings_add_event_handlers(
                 search_field.on("paste", event => {
                     if (search_field.val() != "") return true; // The field had a value before: Don't do custom stuff
                     return setup_new_entries(
-                        <HTMLSelectElement>input,
+                        input as HTMLSelectElement,
                         event.originalEvent!,
                     );
                 });
@@ -817,7 +817,7 @@ export function rule_comment_prefix_date_and_user(
     img: HTMLAnchorElement,
     text: string,
 ) {
-    const container = <HTMLElement>img.parentNode!.parentNode;
+    const container = img.parentNode!.parentNode as HTMLElement;
     const textarea = container.getElementsByTagName("textarea")[0];
 
     if (!textarea) {

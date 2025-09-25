@@ -805,7 +805,7 @@ class NtophostEngagedAlertsTab extends EngagedAlertsTab {
     ) {
         return (
             entity_val.indexOf(
-                (<HostTabs>this_reference._tabs_bar).current_ntophost,
+                (this_reference._tabs_bar as HostTabs).current_ntophost,
             ) == -1
         );
     }
@@ -831,7 +831,7 @@ function _initialize_alerts_tab(instance: ABCAlertsTab) {
     dimension.filter(d => {
         return (
             (d as unknown as Alert).msg.indexOf(
-                (<HostTabs>instance._tabs_bar).current_ntophost,
+                (instance._tabs_bar as HostTabs).current_ntophost,
             ) != -1
         );
     });

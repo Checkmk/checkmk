@@ -165,7 +165,7 @@ function _update_figures_in_selection(
 
                 const new_figure = new figure_class(
                     figure_config["selector"],
-                    (<NtopTalkerData>figure_config)["size"],
+                    (figure_config as NtopTalkerData)["size"],
                 );
                 new_figure.initialize(false);
                 nodes[idx].__figure_instance__ = new_figure;

@@ -62,7 +62,7 @@ function update_timer(seconds_left: number) {
 }
 
 function draw_overlay(seconds: number) {
-    let container = <HTMLAnchorElement>document.getElementById("reload_pause");
+    let container = document.getElementById("reload_pause") as HTMLAnchorElement;
     if (container) {
         // only render once. Just update the counter.
         const existingCounter = document.getElementById(
@@ -73,7 +73,7 @@ function draw_overlay(seconds: number) {
         return;
     }
 
-    container = <HTMLAnchorElement>document.createElement("a");
+    container = document.createElement("a") as HTMLAnchorElement;
     container.setAttribute("id", "reload_pause");
     container.href = "javascript:window.location.reload(false)";
     // FIXME: Localize

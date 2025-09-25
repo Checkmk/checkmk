@@ -493,7 +493,7 @@ function update_graph_load_container(
     content_html: string,
 ) {
     /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
-    (<HTMLElement>container.getElementsByClassName("title")[0]).innerText =
+    (container.getElementsByClassName("title")[0] as HTMLElement).innerText =
         title;
     /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
     container.getElementsByClassName("content")[0].innerHTML = content_html;

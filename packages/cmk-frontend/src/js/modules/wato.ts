@@ -100,9 +100,9 @@ export function fix_visibility() {
             // Prepare current visibility information which is used
             // within the attribut validation in wato
             // Hidden attributes are not validated at all
-            let oAttrDisp = <HTMLInputElement>(
-                document.getElementById("attr_display_" + attrname)
-            );
+            let oAttrDisp = document.getElementById(
+                "attr_display_" + attrname,
+            ) as HTMLInputElement;
             if (!oAttrDisp) {
                 oAttrDisp = document.createElement("input");
                 oAttrDisp.name = "attr_display_" + attrname;

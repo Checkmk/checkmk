@@ -314,7 +314,13 @@ async fn test_absent_remote_custom_instance_connection() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_remote_tns_custom_instance_connection() {
+    let logger = flexi_logger::Logger::try_with_str("info").unwrap();
+    logger.log_to_stderr().start().unwrap();
     add_runtime_to_path();
+    log::warn!(
+        "TNS_ADMIN='{}'",
+        std::env::var("TNS_ADMIN").unwrap_or_default()
+    );
     let endpoint = remote_reference_endpoint();
     let config = make_mini_config_custom_instance(
         &endpoint,

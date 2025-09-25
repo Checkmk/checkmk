@@ -131,12 +131,15 @@ def test_locked_user(
 ) -> None:
     """Test locked user have no access to the site.
 
-    Create a new user and lock it. Check that locked user is automatically logged out and cannot login.
-    Then unlock the user and check that it can login again.
+    Create a new user and lock it. Check that locked user is automatically logged out and cannot
+    login. Then unlock the user and check that it can login again.
     """
 
     user_data = new_user
-    new_user_credentials = CmkCredentials(user_data.user_id, user_data.password)  # type: ignore[arg-type]
+    if not user_data.password:
+        pytest.fail("This test requires a password to be set for the new user.")
+
+    new_user_credentials = CmkCredentials(user_data.user_id, user_data.password)
     _, new_page = new_browser_context_and_page
 
     login_page = LoginPage(new_page, test_site.internal_url)
@@ -148,7 +151,7 @@ def test_locked_user(
     logger.info("As cmkadmin: lock the user '%s'", user_data.user_id)
     edit_user_page = EditUser(dashboard_page.page, user_data.user_id)
     edit_user_page.check_disable_login(True)
-    edit_user_page.save_button.click()
+    edit_user_page.save_changes()
 
     logger.info("As locked user '%s': reload the page and try to login", user_data.user_id)
     problem_dashboard_page.page.reload()
@@ -159,7 +162,7 @@ def test_locked_user(
     logger.info("As cmkadmin: unlock the user '%s'", user_data.user_id)
     edit_user_page.navigate()
     edit_user_page.check_disable_login(False)
-    edit_user_page.save_button.click()
+    edit_user_page.save_changes()
 
     logger.info("As unlocked user '%s': login", user_data.user_id)
     login_page.login(new_user_credentials)

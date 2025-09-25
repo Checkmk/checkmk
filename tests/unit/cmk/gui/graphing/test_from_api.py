@@ -340,6 +340,9 @@ _ALLOWED_DUPLICATES = {
     "Allocated space": {"mem_lnx_vmalloc_used", "allocated_size"},
     "Average consumption": {"aws_dynamodb_consumed_wcu", "aws_dynamodb_consumed_rcu"},
     "Average usage": {"aws_dynamodb_consumed_rcu_perc", "aws_dynamodb_consumed_wcu_perc"},
+    "Cache hit ratio": {"azure_redis_cache_hit_ratio", "cache_hit_ratio"},
+    "Cache hits": {"azure_redis_cache_hits", "varnish_cache_hit_rate"},
+    "Cache misses": {"azure_redis_cache_misses", "varnish_cache_miss_rate"},
     "Cluster utilization": {
         "kube_cpu_cluster_allocatable_utilization",
         "kube_memory_cluster_allocatable_utilization",
@@ -359,6 +362,7 @@ _ALLOWED_DUPLICATES = {
         "aws_dynamodb_maximum_consumed_rcu",
     },
     "Memory used": {"memused_couchbase_bucket", "memory_used"},
+    "Memory utilization": {"azure_redis_memory_utilization", "memory_util"},
     "Minimum single-request consumption": {
         "aws_dynamodb_minimum_consumed_rcu",
         "aws_dynamodb_minimum_consumed_wcu",

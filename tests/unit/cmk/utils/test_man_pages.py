@@ -246,6 +246,7 @@ _ALLOWED_AGENTS = [
     "aws",
     "aws_status",
     "azure",
+    "azure_v2",
     "azure_status",
     "cisco_meraki",
     "datadog",

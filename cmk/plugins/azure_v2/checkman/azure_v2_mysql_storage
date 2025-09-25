@@ -1,0 +1,17 @@
+title: Microsoft Azure MySQL Database: Storage
+agents: azure_v2
+catalog: cloud/azure
+license: GPLv2
+distribution: check_mk
+description:
+ This check reports the percentages of IO consumption, storage
+ used and server log storage used.
+ You can configure levels using the rule "Azure DB Storage".
+
+item:
+ The name of the resource.
+
+discovery:
+ One service is created for each database if any of the required metrics
+ (average_io_consumption_percent, average_storage_percent,
+ average_serverlog_storage_percent) are given.

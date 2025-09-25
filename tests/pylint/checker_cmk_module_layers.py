@@ -144,6 +144,16 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.utils.http_proxy_config",
         "cmk.utils.paths",  # edition detection
     ),
+    "azure_v2": (
+        "cmk.agent_based.v1",  # FIXME
+        "cmk.ccc.version",  # edition detection
+        "cmk.ccc.hostaddress",  # FormSpec validation
+        "cmk.plugins.lib",  # ?
+        "cmk.plugins.lib.azure_app_gateway",  # FIXME
+        "cmk.plugins.lib.azure",  # FIXME
+        "cmk.utils.http_proxy_config",
+        "cmk.utils.paths",  # edition detection
+    ),
     "bazel": (
         "cmk.utils.semantic_version",
         "cmk.utils.paths",

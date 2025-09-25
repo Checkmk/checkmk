@@ -1,0 +1,12 @@
+title: Microsoft Azure Redis Cache - memory
+agents: azure_v2
+catalog: cloud/azure
+license: GPLv2
+distribution: check_mk
+description:
+  This check reports the memory utilization across a Microsoft Cache for
+  Azure cluster.
+
+  The thresholds can be configured using the rule "Azure Redis memory".
+
+discovery: One service is created.

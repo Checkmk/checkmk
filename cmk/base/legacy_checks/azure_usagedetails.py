@@ -70,3 +70,15 @@ check_info["azure_usagedetails"] = LegacyCheckDefinition(
     check_ruleset_name="azure_usagedetails",
     check_default_parameters={},
 )
+
+
+# TODO: migrate and move to new folder struct
+check_info["azure_v2_usagedetails"] = LegacyCheckDefinition(
+    name="azure_v2_usagedetails",
+    parse_function=parse_azure_usagedetails,
+    service_name="Costs %s",
+    discovery_function=discover_azure_usagedetails,
+    check_function=check_azure_usagedetails,
+    check_ruleset_name="azure_v2_usagedetails",
+    check_default_parameters={},
+)

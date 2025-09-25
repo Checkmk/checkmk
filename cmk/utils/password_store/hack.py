@@ -25,6 +25,7 @@ HACK_AGENTS = {
     "aws": False,
     "aws_status": False,  # needs no secret
     "azure": True,
+    "azure_v2": True,
     "azure_status": False,  # needs no secret
     "bazel_cache": True,
     "bi": False,  # needs no secret

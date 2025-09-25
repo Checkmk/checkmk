@@ -44,3 +44,14 @@ rulespec_registry.register(
         title=lambda: _("Azure database connections (deprecated)"),
     )
 )
+
+# TODO: migrate and move to new folder struct
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="azure_v2_database_connections",
+        item_spec=lambda: TextInput(title=_("Database")),
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_connections,
+        title=lambda: _("Azure database connections"),
+    )
+)

@@ -71,6 +71,7 @@ def register(main_module_registry: MainModuleRegistry, mode_registry: ModeRegist
     mode_registry.register(ModeQuickSetupSpecialAgent)
     main_module_registry.register(MainModuleQuickSetupAWS)
     main_module_registry.register(MainModuleQuickSetupAzure)
+    main_module_registry.register(MainModuleQuickSetupAzureV2)
     main_module_registry.register(MainModuleQuickSetupGCP)
 
 
@@ -533,6 +534,46 @@ class MainModuleQuickSetupAzure(ABCMainModuleQuickSetup):
     @override
     def sort_index(self) -> int:
         return 11
+
+    @classmethod
+    @override
+    def main_menu_search_terms(cls) -> Sequence[str]:
+        return ["azure"]
+
+
+class MainModuleQuickSetupAzureV2(ABCMainModuleQuickSetup):
+    @property
+    @override
+    def rule_group_type(self) -> RuleGroupType:
+        return RuleGroupType.SPECIAL_AGENTS
+
+    @property
+    @override
+    def mode_or_url(self) -> str:
+        return mode_url(
+            ModeEditConfigurationBundles.name(),
+            varname=RuleGroup.SpecialAgents("azure_v2"),
+        )
+
+    @property
+    @override
+    def title(self) -> str:
+        return _("Microsoft Azure")
+
+    @property
+    @override
+    def icon(self) -> Icon:
+        return "azure_vms"
+
+    @property
+    @override
+    def description(self) -> str:
+        return _("Configure Microsoft Azure monitoring in Checkmk")
+
+    @property
+    @override
+    def sort_index(self) -> int:
+        return 13
 
     @classmethod
     @override

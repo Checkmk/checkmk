@@ -1033,6 +1033,7 @@ const graphDesignerContentAsJson = computed(() => {
     </template>
     <template #transformation>
       <div v-if="transformationIsApplicable()">
+        {{ _t('Percentile') }}
         <CmkInput v-model="dataTransformation" type="number" />
         <CmkButton @click="applyTransformation">
           {{ _t('Apply') }}

@@ -79,24 +79,24 @@ def _group_needed_rrd_data_by_service(
 
 
 def _rrd_columns(
-    metrics: Iterable[MetricProperties], *, start_time: float, end_time: float, step: int | str
+    metric_props: Iterable[MetricProperties], *, start_time: float, end_time: float, step: int | str
 ) -> Iterator[ColumnName]:
     """RRD data columns for each metric
 
     Include scaling of metric directly in query"""
     data_range = f"{start_time}:{end_time}:{step}"
-    for metric_props in metrics:
-        rpn = f"{metric_props.metric_name}.{metric_props.consolidation_function}"
-        if metric_props.scale != 1.0:
-            rpn += ",%f,*" % metric_props.scale
-        yield f"rrddata:{metric_props.metric_name}:{rpn}:{data_range}"
+    for metric_prop in metric_props:
+        rpn = f"{metric_prop.metric_name}.{metric_prop.consolidation_function}"
+        if metric_prop.scale != 1.0:
+            rpn += ",%f,*" % metric_prop.scale
+        yield f"rrddata:{metric_prop.metric_name}:{rpn}:{data_range}"
 
 
 def _fetch_time_series_of_service(
     site_id: SiteId,
     host_name: HostName,
     service_description: ServiceName,
-    metrics: set[MetricProperties],
+    metric_props: set[MetricProperties],
     consolidation_function: GraphConsolidationFunction | None,
     conversion: Callable[[float], float],
     *,
@@ -112,14 +112,16 @@ def _fetch_time_series_of_service(
         data = sites.live().query_row(
             livestatus_lql(
                 [host_name],
-                list(_rrd_columns(metrics, start_time=start_time, end_time=end_time, step=step)),
+                list(
+                    _rrd_columns(metric_props, start_time=start_time, end_time=end_time, step=step)
+                ),
                 service_description,
             )
         )
 
     return list(
         zip(
-            metrics,
+            metric_props,
             [
                 TimeSeries(
                     start=int(d[0]),

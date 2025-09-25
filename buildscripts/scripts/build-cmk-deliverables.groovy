@@ -212,7 +212,7 @@ def main() {
                     ],
                     no_remove_others: true, // do not delete other files in the dest dir
                     download: true,
-                    dest: "${relative_deliverables_dir}",
+                    dest: deliverables_dir,
                 );
             }
         }]

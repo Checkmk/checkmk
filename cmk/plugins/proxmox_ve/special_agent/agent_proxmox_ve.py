@@ -29,8 +29,10 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from cmk.plugins.proxmox_ve.lib.node_allocation import SectionNodeAllocation
+from cmk.plugins.proxmox_ve.lib.node_attributes import SectionNodeAttributes
 from cmk.plugins.proxmox_ve.lib.node_filesystems import SectionNodeFilesystems
 from cmk.plugins.proxmox_ve.lib.replication import Replication, SectionReplication
+from cmk.plugins.proxmox_ve.lib.vm_info import SectionVMInfo
 from cmk.plugins.proxmox_ve.special_agent.libbackups import fetch_backup_data
 from cmk.plugins.proxmox_ve.special_agent.libproxmox import ProxmoxVeAPI
 from cmk.special_agents.v0_unstable.agent_common import (
@@ -80,6 +82,7 @@ def agent_proxmox_ve_main(args: Args) -> int:
                     "backup": [],
                     "resources": [],
                     "replication": [],
+                    "status": [],
                 },
                 "nodes": [
                     {
@@ -150,6 +153,16 @@ def agent_proxmox_ve_main(args: Args) -> int:
         entry["storage"]: entry
         for entry in data["cluster"]["resources"]
         if entry["type"] == "storage"
+    }
+
+    cluster_name = next(
+        (item["name"] for item in data["cluster"]["status"] if item.get("type") == "cluster"),
+        "",
+    )
+    node_cluster_mapping = {
+        item["name"]: cluster_name
+        for item in data["cluster"]["status"]
+        if item.get("type") == "node" and item.get("name")
     }
 
     for node in data["nodes"]:
@@ -268,6 +281,13 @@ def agent_proxmox_ve_main(args: Args) -> int:
                         ],
                     ).model_dump_json()
                 )
+            with SectionWriter("proxmox_ve_node_attributes") as writer:
+                writer.append_json(
+                    SectionNodeAttributes(
+                        cluster=node_cluster_mapping.get(node["node"], ""),
+                        node_name=node["node"],
+                    ).model_dump_json()
+                )
             if "mem" in node and "maxmem" in node:
                 with SectionWriter("proxmox_ve_mem_usage") as writer:
                     writer.append_json(
@@ -284,15 +304,15 @@ def agent_proxmox_ve_main(args: Args) -> int:
         with ConditionalPiggybackSection(vm["name"]):
             with SectionWriter("proxmox_ve_vm_info") as writer:
                 writer.append_json(
-                    {
-                        "vmid": vmid,
-                        "node": vm["node"],
-                        "type": vm["type"],
-                        "status": vm["status"],
-                        "name": vm["name"],
-                        "uptime": vm["uptime"],
-                        "lock": config_lock_data.get(vmid, {}).get("lock"),
-                    }
+                    SectionVMInfo(
+                        vmid=vmid,
+                        node=vm["node"],
+                        type=vm["type"],
+                        status=vm["status"],
+                        name=vm["name"],
+                        uptime=vm["uptime"],
+                        lock=config_lock_data.get(vmid, {}).get("lock"),
+                    ).model_dump_json()
                 )
             if vm["type"] != "qemu":
                 with SectionWriter("proxmox_ve_disk_usage") as writer:

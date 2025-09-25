@@ -2,11 +2,9 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import json
 from collections.abc import Mapping
-from typing import Any, Literal
-
-from pydantic import BaseModel, Field
+from typing import Any
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -20,20 +18,11 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.lib.uptime import check as check_uptime_seconds
 from cmk.plugins.lib.uptime import Section as UptimeSection
-
-
-class SectionVMInfo(BaseModel, frozen=True):
-    vmid: str
-    node: str
-    status: str
-    type: Literal["qemu", "lxc"]
-    name: str
-    uptime: int = Field(default=0, ge=0)
-    lock: str | None = None
+from cmk.plugins.proxmox_ve.lib.vm_info import SectionVMInfo
 
 
 def parse_proxmox_ve_vm_info(string_table: StringTable) -> SectionVMInfo:
-    return SectionVMInfo.model_validate_json(string_table[0][0])
+    return SectionVMInfo.model_validate_json(json.loads(string_table[0][0]))
 
 
 def discover_single(section: SectionVMInfo) -> DiscoveryResult:

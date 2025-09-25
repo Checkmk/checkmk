@@ -3687,7 +3687,6 @@ def main() -> None:
     omdlib.backup.ensure_mkbackup_lock_dir_rights()
 
     version_info = VersionInfo()
-    version_info.load()
 
     try:
         orig_working_directory = os.getcwd()

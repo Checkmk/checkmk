@@ -11,7 +11,9 @@ import omdlib
 class VersionInfo:
     """Provides OMD version/platform specific infos"""
 
-    def __init__(self) -> None:
+    def __init__(
+        self, info_dir: Path = Path("/omd/versions", omdlib.__version__, "share/omd")
+    ) -> None:
         # Register all relevant vars
         self.USERADD_OPTIONS = ""
         self.APACHE_USER = ""
@@ -24,14 +26,11 @@ class VersionInfo:
         self.APACHE_CONF_DIR = ""
         self.DISTRO_CODE = ""
 
-    def load(self) -> None:
-        """Update vars with real values from info file"""
-        for k, v in self._read_info().items():
+        for k, v in self._read_info(info_dir).items():
             setattr(self, k, v)
 
-    def _read_info(self) -> dict[str, str]:
+    def _read_info(self, info_dir: Path) -> dict[str, str]:
         info: dict[str, str] = {}
-        info_dir = Path("/omd", "versions", omdlib.__version__, "share", "omd")
         for f in info_dir.iterdir():
             if f.suffix == ".info":
                 with f.open() as opened_file:

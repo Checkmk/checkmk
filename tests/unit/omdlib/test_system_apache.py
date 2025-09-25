@@ -23,7 +23,7 @@ from omdlib.version_info import VersionInfo
 
 
 def test_register_with_system_apache(tmp_path: Path, mocker: MockerFixture) -> None:
-    version_info = VersionInfo()
+    version_info = VersionInfo(tmp_path)
     version_info.APACHE_CTL = "/usr/sbin/apachectl"
     reload_apache = mocker.patch("subprocess.call", return_value=0)
     apache_config = tmp_path / "omd/apache/unit.conf"
@@ -46,7 +46,7 @@ def test_register_with_system_apache(tmp_path: Path, mocker: MockerFixture) -> N
 
 
 def test_unregister_from_system_apache(tmp_path: Path, mocker: MockerFixture) -> None:
-    version_info = VersionInfo()
+    version_info = VersionInfo(tmp_path)
     version_info.APACHE_CTL = "/usr/sbin/apachectl"
     reload_apache = mocker.patch("subprocess.call", return_value=0)
     apache_config = tmp_path / "omd/apache/unit.conf"
@@ -63,7 +63,7 @@ def test_unregister_from_system_apache(tmp_path: Path, mocker: MockerFixture) ->
 
 
 def test_delete_apache_hook(tmp_path: Path) -> None:
-    version_info = VersionInfo()
+    version_info = VersionInfo(tmp_path)
     version_info.APACHE_CTL = "/usr/sbin/apachectl"
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)
@@ -77,7 +77,7 @@ def test_delete_apache_hook(tmp_path: Path) -> None:
 
 
 def test_delete_apache_hook_not_existing(tmp_path: Path) -> None:
-    version_info = VersionInfo()
+    version_info = VersionInfo(tmp_path)
     version_info.APACHE_CTL = "/usr/sbin/apachectl"
     apache_config = tmp_path / "omd/apache/unit.conf"
     delete_apache_hook(apache_config)

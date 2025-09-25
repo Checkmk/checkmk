@@ -67,11 +67,12 @@ def format_plugin_output(  # pylint: disable=redefined-outer-name
     output: str,
     *,
     request: Request,
+    must_escape: bool,
     row: Row | None = None,
     shall_escape: bool = True,
     newlineishs_to_brs: bool = False,
 ) -> HTML:
-    shall_escape = _consolidate_escaping_options(row, shall_escape)
+    shall_escape = must_escape or _consolidate_escaping_options(row, shall_escape)
 
     if shall_escape and _render_url_icons(row):
         output = _normalize_check_http_link(output)

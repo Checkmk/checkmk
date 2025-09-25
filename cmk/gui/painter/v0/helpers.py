@@ -89,7 +89,11 @@ def paint_host_list(site: SiteId, hosts: list[HostName], *, request: Request) ->
 
 def format_plugin_output(output: str, *, request: Request, row: Row) -> HTML:
     return cmk.gui.view_utils.format_plugin_output(
-        output, request=request, row=row, shall_escape=active_config.escape_plugin_output
+        output,
+        request=request,
+        row=row,
+        must_escape=not active_config.sites[row["site"]].get("is_trusted", False),
+        shall_escape=active_config.escape_plugin_output,
     )
 
 

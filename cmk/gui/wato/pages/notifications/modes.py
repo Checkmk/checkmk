@@ -919,6 +919,7 @@ class ModeNotifications(ABCNotificationsMode):
             cmk.gui.view_utils.format_plugin_output(
                 output,
                 request=request,
+                must_escape=True,  # Not sure how to determine this here, so let's go with the safe option
                 shall_escape=active_config.escape_plugin_output,
             ),
         )

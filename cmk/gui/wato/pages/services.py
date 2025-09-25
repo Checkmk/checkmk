@@ -641,6 +641,9 @@ class DiscoveryPageRenderer:
                     format_plugin_output(
                         output.split("\n", 1)[0].replace(" ", ": ", 1),
                         request=request,
+                        must_escape=not active_config.sites[self._host.site_id()].get(
+                            "is_trusted", False
+                        ),
                     )
                 )
                 html.close_tr()
@@ -1188,6 +1191,9 @@ class DiscoveryPageRenderer:
                     format_plugin_output(
                         output,
                         request=request,
+                        must_escape=not active_config.sites[self._host.site_id()].get(
+                            "is_trusted", False
+                        ),
                         shall_escape=active_config.escape_plugin_output,
                     )
                 )

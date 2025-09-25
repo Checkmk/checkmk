@@ -391,6 +391,7 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
             output: HTML = cmk.gui.view_utils.format_plugin_output(
                 effective_state["output"],
                 request=request,
+                must_escape=not active_config.sites[self._row["site"]].get("is_trusted", False),
                 shall_escape=active_config.escape_plugin_output,
             )
 

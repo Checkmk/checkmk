@@ -468,6 +468,7 @@ class ConfigurationConnection:
     replicate_event_console: bool = True
     replicate_extensions: bool = True
     message_broker_port: int = DEFAULT_MESSAGE_BROKER_PORT
+    is_trusted: bool = False
 
     @classmethod
     def from_internal(
@@ -488,6 +489,10 @@ class ConfigurationConnection:
             replicate_extensions=internal_config.get("replicate_mkps", False),
             message_broker_port=internal_config.get(
                 "message_broker_port", DEFAULT_MESSAGE_BROKER_PORT
+            ),
+            is_trusted=internal_config.get(
+                "is_trusted",
+                False,
             ),
         )
 
@@ -517,6 +522,7 @@ class ConfigurationConnection:
             "replicate_ec": self.replicate_event_console,
             "replicate_mkps": self.replicate_extensions,
             "message_broker_port": self.message_broker_port,
+            "is_trusted": self.is_trusted,
         }
         return configconnection
 

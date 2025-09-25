@@ -532,6 +532,7 @@ config_cnx_test_data_200: list[ConfigurationConnection] = [
         "replicate_event_console": True,
         "replicate_extensions": True,
         "message_broker_port": 5672,
+        "is_trusted": False,
     },
     {
         "enable_replication": False,
@@ -548,6 +549,7 @@ config_cnx_test_data_200: list[ConfigurationConnection] = [
         "replicate_event_console": True,
         "replicate_extensions": True,
         "message_broker_port": 5672,
+        "is_trusted": False,
     },
 ]
 

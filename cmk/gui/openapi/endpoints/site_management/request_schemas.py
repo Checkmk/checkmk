@@ -375,6 +375,15 @@ class ConfigurationConnectionWithReplicationAttributes(BaseSchema):
         description="The port used by the message broker to exchange messages.",
         example=5672,
     )
+    is_trusted = fields.Boolean(
+        required=False,
+        description=(
+            "When this option is enabled the central site might get compromised by a rogue remote site. "
+            "If you disable this option, some features, such as HTML rendering in service descriptions for the services monitored on this remote site, will no longer work. "
+            "In case the sites are managed by different groups of people, especially when belonging to different organizations, we recommend to disable this setting."
+        ),
+        example=False,
+    )
 
 
 class ConfigurationConnectionAttributes(OneOfSchema):

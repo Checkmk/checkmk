@@ -276,6 +276,15 @@ class ConfigurationConnectionAttributesOutput(BaseSchema):
         example=5672,
     )
 
+    is_trusted = fields.Boolean(
+        required=False,
+        description=(
+            "When this option is enabled the central site might get compromised by a rogue remote site. "
+            "If you disable this option some features like rendering HTML in service descriptions will not work for services monitored on this site."
+        ),
+        example=False,
+    )
+
 
 class SiteConfigAttributes(BaseSchema):
     basic_settings = fields.Nested(

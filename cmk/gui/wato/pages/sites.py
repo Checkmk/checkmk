@@ -571,6 +571,18 @@ class ModeEditSite(WatoMode):
                     ),
                 ),
             ),
+            (
+                "is_trusted",
+                Checkbox(
+                    title=_("Trust this site completely"),
+                    label=_("Trust this site completely"),
+                    help=_(
+                        "When this option is enabled the central site might get compromised by a rogue remote site. "
+                        "If you disable this option, some features, such as HTML rendering in service descriptions for the services monitored on this remote site, will no longer work. "
+                        "In case the sites are managed by different groups of people, especially when belonging to different organizations, we recommend to disable this setting."
+                    ),
+                ),
+            ),
         ]
 
         if ldap_connections_are_configurable():

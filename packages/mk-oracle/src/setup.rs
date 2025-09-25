@@ -216,28 +216,13 @@ fn custom_format(
     )
 }
 
-fn dec_level(level: log::Level) -> log::Level {
-    match level {
-        log::Level::Error => log::Level::Error,
-        log::Level::Warn => log::Level::Error,
-        log::Level::Info => log::Level::Warn,
-        log::Level::Debug => log::Level::Info,
-        log::Level::Trace => log::Level::Debug,
-    }
-}
-
 fn apply_logging_parameters(
     level: log::Level,
     log_dir: Option<&Path>,
     send_to: SendTo,
     logging: Logging,
 ) -> Result<flexi_logger::LoggerHandle> {
-    let spec = LogSpecification::parse(format!(
-        "{}, tiberius={}, odbc={}",
-        level.as_str().to_lowercase(),
-        dec_level(level).as_str().to_lowercase(),
-        dec_level(dec_level(level)).as_str().to_lowercase(),
-    ))?;
+    let spec = LogSpecification::parse(level.as_str().to_lowercase())?;
     let mut logger = flexi_logger::Logger::with(spec);
 
     logger = if let Some(dir) = log_dir {

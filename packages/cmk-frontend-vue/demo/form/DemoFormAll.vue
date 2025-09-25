@@ -113,7 +113,7 @@ function getCatalog(name: string, options?: Partial<Omit<Catalog, 'type'>>): Cat
     elements: [
       {
         name: 'something',
-        title: `Host filters ${name}`,
+        title: `Host filters ${name} (ungrouped)`,
         elements: [
           {
             type: 'topic_element',
@@ -121,6 +121,25 @@ function getCatalog(name: string, options?: Partial<Omit<Catalog, 'type'>>): Cat
             required: false,
             parameter_form: getString('something'),
             default_value: 'default_value'
+          }
+        ]
+      },
+      {
+        name: 'something_grouped',
+        title: `grouped ${name}`,
+        elements: [
+          {
+            type: 'topic_group',
+            title: 'topic group name',
+            elements: [
+              {
+                type: 'topic_element',
+                name: 'topic_grouped_element_name',
+                required: true,
+                parameter_form: getString('something'),
+                default_value: 'default_value'
+              }
+            ]
           }
         ]
       }
@@ -632,7 +651,16 @@ function getTimeSpecific(
 
 const forms: Array<[string, (name: string) => Components, unknown]> = [
   ['BooleanChoice', getBooleanChoice, false],
-  ['Catalog', getCatalog, { something: { 'topic_element name': 'asd' } }],
+  [
+    'Catalog',
+    getCatalog,
+    {
+      something: {
+        'topic_element name': 'asd'
+      },
+      something_grouped: { topic_grouped_element_name: 'aaaaaa' }
+    }
+  ],
   ['CascadingSingleChoice', getCascadingSingleChoice, ['one', undefined]],
   ['CheckboxListChoice', getCheckboxListChoice, []],
   ['CommentTextArea', getCommentTextArea, ''],

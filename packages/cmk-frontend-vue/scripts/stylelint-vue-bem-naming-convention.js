@@ -23,7 +23,8 @@ const ruleName = 'checkmk/vue-bem-naming-convention'
 const messages = ruleMessages(ruleName, {
   start: (selector, selectorPrefix) =>
     `Class selector "${selector}" should start with block name "${selectorPrefix}"`,
-  first: () => `Block name should be followed by either "--" for modifiers or "__" for elements`,
+  first: (blockName) =>
+    `Block name "${blockName}" should be followed by either "--" for modifiers or "__" for elements`,
   modifier: (modifier) =>
     `Modifier should only contain lower case alphanumerical characters and single dashes, got "${modifier}"`,
   element: (element) =>
@@ -148,7 +149,7 @@ const ruleFunction = (primary, secondaryOptions, context) => {
           report({
             result,
             ruleName,
-            message: messages.first(),
+            message: messages.first(expectedSelector),
             node: ruleNode,
             word: selector
           })

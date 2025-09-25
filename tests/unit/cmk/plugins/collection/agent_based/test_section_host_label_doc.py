@@ -72,6 +72,12 @@ CRE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
 CEE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/rmk/node_type",
     "cmk/otel/metrics",  # CCE, actually.
+    "cmk/podman/host",
+    "cmk/podman/node:{node}",
+    "cmk/podman/object:container",
+    "cmk/podman/object:node",
+    "cmk/podman/pod:{pod}",
+    "cmk/podman/user:{user}",
 }
 
 

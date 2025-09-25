@@ -68,7 +68,9 @@ def _group_needed_rrd_data_by_service(
         by_service[(key.site_id, key.host_name, key.service_name)].add(
             MetricProperties(
                 metric_name=key.metric_name,
-                consolidation_function=consolidation_function or key.consolidation_function,
+                consolidation_function=(
+                    consolidation_function or key.consolidation_function or "max"
+                ),
                 scale=key.scale,
             )
         )
@@ -83,8 +85,7 @@ def _rrd_columns(
 
     Include scaling of metric directly in query"""
     for metric_props in metrics:
-        cf = metric_props.consolidation_function or "max"
-        rpn = f"{metric_props.metric_name}.{cf}"
+        rpn = f"{metric_props.metric_name}.{metric_props.consolidation_function}"
         if metric_props.scale != 1.0:
             rpn += ",%f,*" % metric_props.scale
         yield f"rrddata:{metric_props.metric_name}:{rpn}:{data_range}"
@@ -284,7 +285,7 @@ def all_rrd_columns_potentially_relevant_for_metric(
         (
             MetricProperties(
                 metric_name=metric_name,
-                consolidation_function=consolidation_function,
+                consolidation_function=consolidation_function or "max",
                 # at this point, we do not yet know if there any potential scalings due to metric
                 # translations
                 scale=1,

@@ -272,6 +272,7 @@ class ConfigGeneratorLocalSiteConnection(SampleConfigGenerator):
                         "user_sync": "all",
                         "status_host": None,
                         "message_broker_port": 5672,
+                        "is_trusted": True,
                     }
                 )
             }

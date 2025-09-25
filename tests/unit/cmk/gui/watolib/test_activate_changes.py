@@ -341,26 +341,25 @@ def test_get_replication_paths_defaults(
 
 def default_site_config() -> SiteConfiguration:
     return SiteConfiguration(
-        {
-            "id": SiteId("mysite"),
-            "alias": "Site mysite",
-            "socket": ("local", None),
-            "disable_wato": True,
-            "disabled": False,
-            "insecure": False,
-            "url_prefix": "/mysite/",
-            "multisiteurl": "",
-            "persist": False,
-            "replicate_ec": False,
-            "replicate_mkps": False,
-            "replication": "slave",
-            "timeout": 5,
-            "user_login": True,
-            "proxy": None,
-            "user_sync": "all",
-            "status_host": None,
-            "message_broker_port": 5672,
-        }
+        id=SiteId("mysite"),
+        alias="Site mysite",
+        socket=("local", None),
+        disable_wato=True,
+        disabled=False,
+        insecure=False,
+        url_prefix="/mysite/",
+        multisiteurl="",
+        persist=False,
+        replicate_ec=False,
+        replicate_mkps=False,
+        replication="slave",
+        timeout=5,
+        user_login=True,
+        proxy=None,
+        user_sync="all",
+        status_host=None,
+        message_broker_port=5672,
+        is_trusted=False,
     )
 
 
@@ -426,9 +425,9 @@ def test_automation_get_config_sync_state(request_context: None) -> None:
             ),
             "etc/check_mk/multisite.d/sites.mk": (
                 33200,
-                469,
+                489,
                 None,
-                "cd09dfad3023a964a239bfb1e938ccf13954eefff3a90db7db2c15b38601bf0d",
+                "670166ff0481b8da011e7b3bf27750667b3b0851bcd63063cb75843643ae5ece",
             ),
             "etc/check_mk/mkeventd.d/wato/rules.mk": (
                 33200,
@@ -932,6 +931,7 @@ class TestAutomationReceiveConfigSync:
                         ),
                     ),
                     user_sync="all",
+                    is_trusted=False,
                 ),
                 user_attributes=get_user_attributes([]),
             )
@@ -989,6 +989,7 @@ class TestAutomationReceiveConfigSync:
                     proxy=None,
                     socket=("local", None),
                     user_sync="all",
+                    is_trusted=False,
                 )
             }
         )
@@ -1103,6 +1104,7 @@ def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> 
                         ),
                     ),
                     user_sync="all",
+                    is_trusted=False,
                 ),
             },
             {},
@@ -1137,6 +1139,7 @@ def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> 
                         ),
                     ),
                     user_sync="all",
+                    is_trusted=False,
                 ),
             },
             {},
@@ -1171,6 +1174,7 @@ def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> 
                         ),
                     ),
                     user_sync="all",
+                    is_trusted=False,
                 ),
                 "remote_2": SiteConfiguration(
                     id=SiteId("remote_2"),
@@ -1198,6 +1202,7 @@ def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> 
                         ),
                     ),
                     user_sync="all",
+                    is_trusted=False,
                 ),
             },
             BrokerConnections(
@@ -1241,6 +1246,7 @@ def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> 
                         ),
                     ),
                     user_sync="all",
+                    is_trusted=False,
                 ),
                 SiteId("remote_2"): SiteConfiguration(
                     id=SiteId("remote_2"),
@@ -1268,6 +1274,7 @@ def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> 
                         ),
                     ),
                     user_sync="all",
+                    is_trusted=False,
                 ),
             },
             BrokerConnections(

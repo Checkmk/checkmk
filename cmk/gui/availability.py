@@ -2175,6 +2175,7 @@ def layout_timeline(
                         "from_text": from_text,
                         "until_text": until_text,
                         "duration_text": duration_text,
+                        "site": row["site"],
                     }
                 )
                 if "log_output" in row and row["log_output"]:

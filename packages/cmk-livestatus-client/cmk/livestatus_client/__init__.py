@@ -99,6 +99,11 @@ class SiteConfiguration(TypedDict):
     url_prefix: str
     user_login: bool
     user_sync: Literal["all"] | tuple[Literal["list"], list[str]] | None
+    # Should this site be technically be able to XSS the central site or do other harm
+    # In 2.5 this is mandatory, that meant that all creations of a SiteConfiguration need this
+    # attribute. In order to minimize the changes I went for NotRequired. The default should always
+    # be False
+    is_trusted: bool
 
     # Thanks to SingleSiteConnection we need str here. The conversion can
     # probably be moved into the SingleSiteConnection

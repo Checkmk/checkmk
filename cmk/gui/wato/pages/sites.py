@@ -219,35 +219,34 @@ class ModeEditSite(WatoMode):
 
         elif self._new:
             self._site = SiteConfiguration(
-                {
-                    "id": SiteId(""),
-                    "alias": "",
-                    "url_prefix": "",
-                    "disabled": False,
-                    "insecure": False,
-                    "multisiteurl": "",
-                    "persist": False,
-                    "proxy": {},
-                    "message_broker_port": 5672,
-                    "user_sync": "all",
-                    "status_host": None,
-                    "replicate_mkps": True,
-                    "replicate_ec": True,
-                    "socket": (
-                        "tcp",
-                        NetworkSocketDetails(
-                            address=("", 6557),
-                            tls=(
-                                "encrypted",
-                                TLSParams(verify=True),
-                            ),
+                id=SiteId(""),
+                alias="",
+                url_prefix="",
+                disabled=False,
+                insecure=False,
+                multisiteurl="",
+                persist=False,
+                proxy={},
+                message_broker_port=5672,
+                user_sync="all",
+                status_host=None,
+                replicate_mkps=True,
+                replicate_ec=True,
+                socket=(
+                    "tcp",
+                    NetworkSocketDetails(
+                        address=("", 6557),
+                        tls=(
+                            "encrypted",
+                            TLSParams(verify=True),
                         ),
                     ),
-                    "timeout": 5,
-                    "disable_wato": True,
-                    "user_login": True,
-                    "replication": None,
-                }
+                ),
+                timeout=5,
+                disable_wato=True,
+                user_login=True,
+                replication=None,
+                is_trusted=False,
             )
 
         else:
@@ -595,6 +594,18 @@ class ModeEditSite(WatoMode):
                         "related option is changed and users are allowed to login "
                         "to the web GUI of this site."
                         "The access to the Rest API is unaffected by this option though."
+                    ),
+                ),
+            ),
+            (
+                "is_trusted",
+                Checkbox(
+                    title=_("Trust this site completely"),
+                    label=_("Trust this site completely"),
+                    help=_(
+                        "When this option is enabled the central site might get compromised by a rogue remote site. "
+                        "If you disable this option, some features, such as HTML rendering in service descriptions for the services monitored on this remote site, will no longer work. "
+                        "In case the sites are managed by different groups of people, especially when belonging to different organizations, we recommend to disable this setting."
                     ),
                 ),
             ),

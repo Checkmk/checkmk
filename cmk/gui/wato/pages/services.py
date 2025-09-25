@@ -792,7 +792,8 @@ class DiscoveryPageRenderer:
                     format_plugin_output(
                         output.split("\n", 1)[0].replace(" ", ": ", 1),
                         request=request,
-                    ),
+                        must_escape=not active_config.sites[self._host.site_id()]["is_trusted"],
+                    )
                 )
                 if "[agent]" in output and state == 2 and "No cached data available" not in output:
                     html.open_td()
@@ -1359,6 +1360,7 @@ class DiscoveryPageRenderer:
                     format_plugin_output(
                         output,
                         request=request,
+                        must_escape=not active_config.sites[self._host.site_id()]["is_trusted"],
                         shall_escape=escape_plugin_output,
                     )
                 )

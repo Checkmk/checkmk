@@ -595,6 +595,12 @@ class ConnectionWithReplicationModel:
         description="The port used by the message broker to exchange messages.",
         example=5672,
     )
+    is_trusted: bool = api_field(
+        description="When this option is enabled the central site might get compromised by a rogue remote site. "
+        "If you disable this option, some features, such as HTML rendering in service descriptions for the services monitored on this remote site, will no longer work. "
+        "In case the sites are managed by different groups of people, especially when belonging to different organizations, we recommend to disable this setting.",
+        example=False,
+    )
 
 
 @api_model
@@ -637,6 +643,7 @@ class SiteConnectionBaseModel:
             replicate_ec=True,
             replicate_mkps=True,
             message_broker_port=5672,
+            is_trusted=False,
         )
 
         if isinstance(self.status_connection.status_host, StatusHostEnabled):
@@ -665,5 +672,6 @@ class SiteConnectionBaseModel:
             site_configuration["message_broker_port"] = (
                 self.configuration_connection.message_broker_port
             )
+            site_configuration["is_trusted"] = self.configuration_connection.is_trusted
 
         return site_configuration

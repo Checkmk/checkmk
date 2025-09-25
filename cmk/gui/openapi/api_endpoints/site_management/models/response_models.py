@@ -109,6 +109,7 @@ class SiteConnectionExtensionsModel(SiteConnectionBaseModel):
                 replicate_event_console=site_configuration["replicate_ec"],
                 replicate_extensions=site_configuration["replicate_mkps"],
                 message_broker_port=site_configuration["message_broker_port"],
+                is_trusted=site_configuration["is_trusted"],
             )
 
         return cls(

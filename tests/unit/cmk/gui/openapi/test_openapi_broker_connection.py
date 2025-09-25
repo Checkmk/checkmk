@@ -57,26 +57,25 @@ def _create_broker_connection(
 def site_configs(site_ids: list[SiteId]) -> dict[SiteId, SiteConfiguration]:
     return {
         site_id: SiteConfiguration(
-            {
-                "id": site_id,
-                "alias": str(site_id),
-                "socket": ("local", None),
-                "disable_wato": True,
-                "disabled": False,
-                "insecure": False,
-                "url_prefix": f"/{site_id}/",
-                "multisiteurl": "",
-                "persist": False,
-                "replicate_ec": False,
-                "replicate_mkps": False,
-                "replication": None,
-                "timeout": 5,
-                "user_login": True,
-                "proxy": None,
-                "user_sync": "all",
-                "status_host": None,
-                "message_broker_port": 5672,
-            }
+            id=site_id,
+            alias=str(site_id),
+            socket=("local", None),
+            disable_wato=True,
+            disabled=False,
+            insecure=False,
+            url_prefix=f"/{site_id}/",
+            multisiteurl="",
+            persist=False,
+            replicate_ec=False,
+            replicate_mkps=False,
+            replication=None,
+            timeout=5,
+            user_login=True,
+            proxy=None,
+            user_sync="all",
+            status_host=None,
+            message_broker_port=5672,
+            is_trusted=False,
         )
         for site_id in site_ids
     }

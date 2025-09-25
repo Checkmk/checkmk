@@ -76,6 +76,7 @@ class ConfigurationConnection(TypedDict, total=False):
     replicate_event_console: bool
     replicate_extensions: bool
     message_broker_port: int
+    is_trusted: bool
 
 
 class SiteConfig(TypedDict):

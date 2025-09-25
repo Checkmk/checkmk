@@ -547,6 +547,7 @@ config_cnx_test_data_200: list[ConfigurationConnection] = [
         "replicate_event_console": True,
         "replicate_extensions": True,
         "message_broker_port": 5672,
+        "is_trusted": False,
     },
     {
         "enable_replication": False,
@@ -563,6 +564,7 @@ config_cnx_test_data_200: list[ConfigurationConnection] = [
         "replicate_event_console": True,
         "replicate_extensions": True,
         "message_broker_port": 5672,
+        "is_trusted": False,
     },
 ]
 
@@ -771,6 +773,7 @@ def test_validation_layer_min_config(clients: ClientRegistry) -> None:
             "replicate_event_console": True,
             "replicate_extensions": True,
             "message_broker_port": 5672,
+            "is_trusted": False,
         },
     }
     if version.edition(paths.omd_root) is version.Edition.CME:

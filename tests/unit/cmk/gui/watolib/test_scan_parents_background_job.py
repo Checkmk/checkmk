@@ -10,6 +10,8 @@ from unittest.mock import MagicMock
 import pytest
 from pytest_mock import MockerFixture
 
+from livestatus import SiteConfiguration
+
 from cmk.automations.results import Gateway, GatewayResult, ScanParentsResult
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
@@ -72,26 +74,27 @@ def test_scan_parents_job(
         job=ParentScanBackgroundJob(),
         settings=settings,
         site_configs={
-            SiteId("NO_SITE"): {
-                "id": SiteId("NO_SITE"),
-                "alias": "Local site NO_SITE",
-                "socket": ("local", None),
-                "disable_wato": True,
-                "disabled": False,
-                "insecure": False,
-                "url_prefix": "/NO_SITE/",
-                "multisiteurl": "",
-                "persist": False,
-                "replicate_ec": False,
-                "replicate_mkps": False,
-                "replication": None,
-                "timeout": 5,
-                "user_login": True,
-                "proxy": None,
-                "user_sync": "all",
-                "status_host": None,
-                "message_broker_port": 5672,
-            }
+            SiteId("NO_SITE"): SiteConfiguration(
+                id=SiteId("NO_SITE"),
+                alias="Local site NO_SITE",
+                socket=("local", None),
+                disable_wato=True,
+                disabled=False,
+                insecure=False,
+                url_prefix="/NO_SITE/",
+                multisiteurl="",
+                persist=False,
+                replicate_ec=False,
+                replicate_mkps=False,
+                replication=None,
+                timeout=5,
+                user_login=True,
+                proxy=None,
+                user_sync="all",
+                status_host=None,
+                message_broker_port=5672,
+                is_trusted=False,
+            )
         },
         pprint_value=False,
         debug=False,

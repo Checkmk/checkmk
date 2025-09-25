@@ -340,6 +340,7 @@ sites.update(%r)
                         "user_sync": "all",
                         "status_host": None,
                         "message_broker_port": 5672,
+                        "is_trusted": True,
                     }
                 )
             }

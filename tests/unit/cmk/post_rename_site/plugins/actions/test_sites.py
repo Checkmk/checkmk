@@ -59,6 +59,7 @@ def test_update_basic_site_config(site_config_file: Path) -> None:
                     socket=("local", None),
                     status_host=None,
                     user_sync="all",
+                    is_trusted=False,
                 ),
             }
         ),
@@ -100,6 +101,7 @@ def test_update_remote_site_status_host_config(site_config_file: Path) -> None:
                     user_sync="all",
                     replicate_ec=False,
                     replicate_mkps=False,
+                    is_trusted=False,
                 ),
                 SiteId("remote"): SiteConfiguration(
                     id=SiteId("remote"),
@@ -126,6 +128,7 @@ def test_update_remote_site_status_host_config(site_config_file: Path) -> None:
                     replicate_ec=True,
                     replicate_mkps=False,
                     secret="watosecret",
+                    is_trusted=False,
                 ),
             }
         ),

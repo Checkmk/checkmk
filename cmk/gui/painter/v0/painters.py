@@ -615,7 +615,12 @@ class PainterSvcPluginOutput(Painter):
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return paint_stalified(
             row,
-            format_plugin_output(row["service_plugin_output"], request=self.request, row=row),
+            format_plugin_output(
+                row["service_plugin_output"],
+                request=self.request,
+                must_escape=not self.config.sites[row["site"]]["is_trusted"],
+                row=row,
+            ),
             self.config.staleness_threshold,
         )
 
@@ -666,7 +671,11 @@ class PainterSvcLongPluginOutput(Painter):
             long_output = long_output[:max_len] + "..."
 
         content = format_plugin_output(
-            long_output, request=self.request, row=row, newlineishs_to_brs=True
+            long_output,
+            request=self.request,
+            row=row,
+            newlineishs_to_brs=True,
+            must_escape=not self.config.sites[row["site"]]["is_trusted"],
         )
 
         # has to be placed after format_plugin_output() to keep links save from
@@ -2082,7 +2091,12 @@ class PainterHostPluginOutput(Painter):
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         return (
             None,
-            format_plugin_output(row["host_plugin_output"], request=self.request, row=row),
+            format_plugin_output(
+                row["host_plugin_output"],
+                request=self.request,
+                must_escape=not self.config.sites[row["site"]]["is_trusted"],
+                row=row,
+            ),
         )
 
 
@@ -4098,7 +4112,15 @@ class PainterCommentComment(Painter):
         return ["comment_comment"]
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return (None, format_plugin_output(row["comment_comment"], request=self.request, row=row))
+        return (
+            None,
+            format_plugin_output(
+                row["comment_comment"],
+                request=self.request,
+                must_escape=not self.config.sites[row["site"]]["is_trusted"],
+                row=row,
+            ),
+        )
 
 
 class PainterCommentWhat(Painter):
@@ -4290,7 +4312,15 @@ class PainterDowntimeComment(Painter):
         return ["downtime_comment"]
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return (None, format_plugin_output(row["downtime_comment"], request=self.request, row=row))
+        return (
+            None,
+            format_plugin_output(
+                row["downtime_comment"],
+                request=self.request,
+                must_escape=not self.config.sites[row["site"]]["is_trusted"],
+                row=row,
+            ),
+        )
 
 
 class PainterDowntimeFixed(Painter):
@@ -4548,6 +4578,7 @@ class PainterLogDetailsHistory(Painter):
             long_output,
             request=self.request,
             row=row_to_format,
+            must_escape=not self.config.sites[row["site"]]["is_trusted"],
             newlineishs_to_brs=True,
         )
 
@@ -4615,7 +4646,12 @@ class PainterLogPluginOutput(Painter):
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         if output := self._decode_item(row, column="log_plugin_output"):
-            return "", format_plugin_output(output, request=self.request, row=row)
+            return "", format_plugin_output(
+                output,
+                request=self.request,
+                must_escape=not self.config.sites[row["site"]]["is_trusted"],
+                row=row,
+            )
 
         if comment := self._decode_item(row, column="log_comment"):
             return "", comment

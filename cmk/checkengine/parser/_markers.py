@@ -131,7 +131,8 @@ class SectionMarker(NamedTuple):
 
     def cache_info(self, cached_at: int) -> tuple[int, int] | None:
         # If both `persist` and `cached` are present, `cached` has priority
-        # over `persist`.  I do not know whether this is correct.
+        # over `persist`. This is in line with the fact that persisted sections
+        # are often used as a fallback, but live data takes precedence.
         if self.cached:
             return self.cached
         if self.persist is not None:

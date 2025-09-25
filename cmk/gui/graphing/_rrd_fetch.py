@@ -92,7 +92,7 @@ def _rrd_columns(
         yield f"rrddata:{metric_props.metric_name}:{rpn}:{data_range}"
 
 
-def _fetch_rrd_data(
+def _fetch_time_series_of_service(
     site_id: SiteId,
     host_name: HostName,
     service_description: ServiceName,
@@ -198,7 +198,7 @@ def _chop_last_empty_step(end_time: float, rrd_data: RRDData) -> None:
         _chop_end_of_the_curve(rrd_data, step)
 
 
-def _fetch_rrd_data_for_graph(
+def _fetch_time_series(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
     registered_metrics: Mapping[str, RegisteredMetric],
@@ -216,7 +216,7 @@ def _fetch_rrd_data_for_graph(
     rrd_data: dict[RRDDataKey, TimeSeries] = {}
     for (site_id, host_name, service_description), metrics in by_service.items():
         with contextlib.suppress(livestatus.MKLivestatusNotFoundError):
-            for metric_props, time_series in _fetch_rrd_data(
+            for metric_props, time_series in _fetch_time_series_of_service(
                 site_id,
                 host_name,
                 service_description,
@@ -243,14 +243,18 @@ def _fetch_rrd_data_for_graph(
     return rrd_data
 
 
-def compute_time_series(
+def fetch_augmented_time_series(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
     registered_metrics: Mapping[str, RegisteredMetric],
 ) -> Iterator[tuple[GraphMetric, Sequence[AugmentedTimeSeries]]]:
-    rrd_data = _fetch_rrd_data_for_graph(graph_recipe, graph_data_range, registered_metrics)
+    time_series_by_rrd_data_key = _fetch_time_series(
+        graph_recipe, graph_data_range, registered_metrics
+    )
     for graph_metric in graph_recipe.metrics:
-        if time_series := graph_metric.operation.compute_time_series(rrd_data, registered_metrics):
+        if time_series := graph_metric.operation.fetch_augmented_time_series(
+            time_series_by_rrd_data_key, registered_metrics
+        ):
             yield graph_metric, time_series
 
 

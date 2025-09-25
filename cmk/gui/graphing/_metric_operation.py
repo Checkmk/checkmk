@@ -207,7 +207,7 @@ class MetricOperation(BaseModel, ABC, frozen=True):
     ) -> Iterator[TranslationKey | RRDDataKey]: ...
 
     @abstractmethod
-    def compute_time_series(
+    def fetch_augmented_time_series(
         self,
         rrd_data: RRDData,
         registered_metrics: Mapping[str, RegisteredMetric],
@@ -258,7 +258,7 @@ class MetricOpConstant(MetricOperation, frozen=True):
     ) -> Iterator[TranslationKey | RRDDataKey]:
         yield from ()
 
-    def compute_time_series(
+    def fetch_augmented_time_series(
         self,
         rrd_data: RRDData,
         registered_metrics: Mapping[str, RegisteredMetric],
@@ -287,7 +287,7 @@ class MetricOpConstantNA(MetricOperation, frozen=True):
     ) -> Iterator[TranslationKey | RRDDataKey]:
         yield from ()
 
-    def compute_time_series(
+    def fetch_augmented_time_series(
         self,
         rrd_data: RRDData,
         registered_metrics: Mapping[str, RegisteredMetric],
@@ -352,7 +352,7 @@ class MetricOpOperator(MetricOperation, frozen=True):
     ) -> Iterator[TranslationKey | RRDDataKey]:
         yield from (k for o in self.operands for k in o.keys(registered_metrics))
 
-    def compute_time_series(
+    def fetch_augmented_time_series(
         self,
         rrd_data: RRDData,
         registered_metrics: Mapping[str, RegisteredMetric],
@@ -362,7 +362,7 @@ class MetricOpOperator(MetricOperation, frozen=True):
             [
                 operand_evaluated.data
                 for operand_evaluated in chain.from_iterable(
-                    operand.compute_time_series(
+                    operand.fetch_augmented_time_series(
                         rrd_data,
                         registered_metrics,
                     )
@@ -405,7 +405,7 @@ class MetricOpRRDSource(MetricOperation, frozen=True):
             self.scale,
         )
 
-    def compute_time_series(
+    def fetch_augmented_time_series(
         self,
         rrd_data: RRDData,
         registered_metrics: Mapping[str, RegisteredMetric],

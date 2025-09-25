@@ -19,10 +19,14 @@ from cmk.gui.graphing._graph_specification import (
 )
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._legacy import CheckMetricEntry
-from cmk.gui.graphing._metric_operation import MetricOpRRDSource, RRDDataKey
+from cmk.gui.graphing._metric_operation import (
+    AugmentedTimeSeries,
+    MetricOpRRDSource,
+    TimeSeriesMetaData,
+)
 from cmk.gui.graphing._rrd_fetch import (
-    _fetch_rrd_data_for_graph,
     _reverse_translate_into_all_potentially_relevant_metrics,
+    fetch_augmented_time_series,
     translate_and_merge_rrd_columns,
 )
 from cmk.gui.graphing._time_series import TimeSeries, TimeSeriesValues
@@ -100,57 +104,83 @@ _GRAPH_RECIPE = GraphRecipe(
 _GRAPH_DATA_RANGE = GraphDataRange(time_range=(1681985455, 1681999855), step=20)
 
 
-def test_fetch_rrd_data_for_graph(
+def test_fetch_augmented_time_series(
     mock_livestatus: MockLiveStatusConnection,
     request_context: None,
 ) -> None:
     with _setup_livestatus(mock_livestatus):
-        assert _fetch_rrd_data_for_graph(
-            _GRAPH_RECIPE,
-            _GRAPH_DATA_RANGE,
-            {},
-        ) == {
-            RRDDataKey(
-                SiteId("NO_SITE"),
-                HostName("my-host"),
-                "Temperature Zone 6",
-                "temp",
-                "max",
-                1,
-            ): TimeSeries(
-                start=1,
-                end=2,
-                step=3,
-                values=[4, 5, None],
-            )
-        }
+        assert list(fetch_augmented_time_series(_GRAPH_RECIPE, _GRAPH_DATA_RANGE, {})) == [
+            (
+                GraphMetric(
+                    title="Temperature",
+                    line_type="area",
+                    operation=MetricOpRRDSource(
+                        site_id=SiteId("NO_SITE"),
+                        host_name=HostName("my-host"),
+                        service_name="Temperature Zone 6",
+                        metric_name="temp",
+                        consolidation_func_name="max",
+                        scale=1.0,
+                    ),
+                    unit=ConvertibleUnitSpecification(
+                        type="convertible",
+                        notation=DecimalNotation(type="decimal", symbol="°C"),
+                        precision=AutoPrecision(type="auto", digits=2),
+                    ),
+                    color="#ffa000",
+                ),
+                [
+                    AugmentedTimeSeries(
+                        data=TimeSeries(start=1, end=2, step=3, values=[4, 5, None]),
+                        metadata=TimeSeriesMetaData(
+                            title=None,
+                            color=None,
+                            line_type=None,
+                        ),
+                    ),
+                ],
+            ),
+        ]
 
 
-def test_fetch_rrd_data_for_graph_with_conversion(
+def test_fetch_augmented_time_series_with_conversion(
     mock_livestatus: MockLiveStatusConnection,
     request_context: None,
 ) -> None:
     active_config.default_temperature_unit = TemperatureUnit.FAHRENHEIT.value
     with _setup_livestatus(mock_livestatus):
-        assert _fetch_rrd_data_for_graph(
-            _GRAPH_RECIPE,
-            _GRAPH_DATA_RANGE,
-            {},
-        ) == {
-            RRDDataKey(
-                SiteId("NO_SITE"),
-                HostName("my-host"),
-                "Temperature Zone 6",
-                "temp",
-                "max",
-                1,
-            ): TimeSeries(
-                start=1,
-                end=2,
-                step=3,
-                values=[39.2, 41.0, None],
-            )
-        }
+        assert list(fetch_augmented_time_series(_GRAPH_RECIPE, _GRAPH_DATA_RANGE, {})) == [
+            (
+                GraphMetric(
+                    title="Temperature",
+                    line_type="area",
+                    operation=MetricOpRRDSource(
+                        site_id=SiteId("NO_SITE"),
+                        host_name=HostName("my-host"),
+                        service_name="Temperature Zone 6",
+                        metric_name="temp",
+                        consolidation_func_name="max",
+                        scale=1.0,
+                    ),
+                    unit=ConvertibleUnitSpecification(
+                        type="convertible",
+                        notation=DecimalNotation(type="decimal", symbol="°C"),
+                        precision=AutoPrecision(type="auto", digits=2),
+                    ),
+                    color="#ffa000",
+                ),
+                [
+                    AugmentedTimeSeries(
+                        data=TimeSeries(start=1, end=2, step=3, values=[39.2, 41.0, None]),
+                        metadata=TimeSeriesMetaData(
+                            title=None,
+                            color=None,
+                            line_type=None,
+                        ),
+                    ),
+                ],
+            ),
+        ]
 
 
 def test_translate_and_merge_rrd_columns() -> None:

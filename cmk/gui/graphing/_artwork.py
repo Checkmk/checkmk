@@ -36,7 +36,7 @@ from ._graph_specification import (
     MinimalVerticalRange,
 )
 from ._metric_operation import clean_time_series_point, LineType
-from ._rrd_fetch import compute_time_series
+from ._rrd_fetch import fetch_augmented_time_series
 from ._time_series import TimeSeries, TimeSeriesValue
 from ._unit import user_specific_unit, UserSpecificUnit
 from ._utils import SizeEx
@@ -343,7 +343,7 @@ def _compute_graph_curves(
     registered_metrics: Mapping[str, RegisteredMetric],
 ) -> Iterator[Curve]:
     # Fetch all raw RRD data
-    for graph_metric, time_series in compute_time_series(
+    for graph_metric, time_series in fetch_augmented_time_series(
         graph_recipe, graph_data_range, registered_metrics
     ):
         multi = len(time_series) > 1

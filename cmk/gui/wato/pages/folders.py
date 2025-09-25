@@ -1152,7 +1152,8 @@ class ModeFolder(WatoMode):
         return HTMLWriter.render_a(display_name, "wato.py?mode=edit_contact_group&edit=%s" % c)
 
     def _show_host_actions(self, host: Host) -> None:
-        html.icon_button(host.edit_url(), _("Edit the properties of this host"), "edit")
+        if user.may("wato.edit_hosts") and host.permissions.may("write"):
+            html.icon_button(host.edit_url(), _("Edit the properties of this host"), "edit")
         if host.permissions.may("read"):
             if user.may("wato.services"):
                 msg = _("Run service discovery")

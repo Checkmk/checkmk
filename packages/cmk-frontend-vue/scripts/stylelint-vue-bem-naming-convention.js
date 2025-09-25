@@ -84,7 +84,7 @@ const ruleFunction = (primary, secondaryOptions, context) => {
     root.walkRules((ruleNode) => {
       const relativeFilePath = path.relative(projectRoot, ruleNode.source.input.file)
 
-      const [componentNane, prefix] = getPrefix(relativeFilePath)
+      const [componentName, prefix] = getPrefix(relativeFilePath)
 
       const filePathParsed = path.parse(ruleNode.source.input.file)
       if (filePathParsed.ext !== '.vue') {
@@ -93,7 +93,7 @@ const ruleFunction = (primary, secondaryOptions, context) => {
 
       let selectorName = shortPrefix(
         convertCamelToKebabCase(filePathParsed.name),
-        componentNane,
+        componentName,
         prefix
       )
       if (!selectorName.startsWith(prefix)) {

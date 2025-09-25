@@ -8,6 +8,7 @@ import collections
 import contextlib
 import time
 from collections.abc import Callable, Iterable, Iterator, Mapping
+from dataclasses import dataclass
 from functools import lru_cache
 
 import livestatus
@@ -44,7 +45,12 @@ from ._time_series import TimeSeries, TimeSeriesValues
 from ._translated_metrics import find_matching_translation, TranslationSpec
 from ._unit import user_specific_unit
 
-MetricProperties = tuple[str, GraphConsolidationFunction | None, float]
+
+@dataclass(frozen=True, kw_only=True)
+class MetricProperties:
+    metric_name: str
+    consolidation_function: GraphConsolidationFunction | None
+    scale: float
 
 
 def _group_needed_rrd_data_by_service(
@@ -59,7 +65,11 @@ def _group_needed_rrd_data_by_service(
     ] = collections.defaultdict(set)
     for key in rrd_data_keys:
         by_service[(key.site_id, key.host_name, key.service_name)].add(
-            (key.metric_name, key.consolidation_function, key.scale)
+            MetricProperties(
+                metric_name=key.metric_name,
+                consolidation_function=key.consolidation_function,
+                scale=key.scale,
+            )
         )
     return by_service
 
@@ -72,13 +82,12 @@ def rrd_columns(
     """RRD data columns for each metric
 
     Include scaling of metric directly in query"""
-
-    for perfvar, cf, scale in metrics:
-        cf = consolidation_function or cf or "max"
-        rpn = f"{perfvar}.{cf}"
-        if scale != 1.0:
-            rpn += ",%f,*" % scale
-        yield f"rrddata:{perfvar}:{rpn}:{data_range}"
+    for metric_props in metrics:
+        cf = consolidation_function or metric_props.consolidation_function or "max"
+        rpn = f"{metric_props.metric_name}.{cf}"
+        if metric_props.scale != 1.0:
+            rpn += ",%f,*" % metric_props.scale
+        yield f"rrddata:{metric_props.metric_name}:{rpn}:{data_range}"
 
 
 def _fetch_rrd_data(
@@ -185,7 +194,7 @@ def fetch_rrd_data_for_graph(
     rrd_data: dict[RRDDataKey, TimeSeries] = {}
     for (site_id, host_name, service_description), metrics in by_service.items():
         with contextlib.suppress(livestatus.MKLivestatusNotFoundError):
-            for (metric_name, consolidation_function, scale), (
+            for metric_props, (
                 start,
                 end,
                 step,
@@ -203,9 +212,9 @@ def fetch_rrd_data_for_graph(
                         site_id,
                         host_name,
                         service_description,
-                        metric_name,
-                        consolidation_function,
-                        scale,
+                        metric_props.metric_name,
+                        metric_props.consolidation_function,
+                        metric_props.scale,
                     )
                 ] = TimeSeries(
                     start=start,
@@ -270,12 +279,12 @@ def all_rrd_columns_potentially_relevant_for_metric(
 ) -> Iterator[ColumnName]:
     yield from rrd_columns(
         (
-            (
-                metric_name,
-                None,
+            MetricProperties(
+                metric_name=metric_name,
+                consolidation_function=None,
                 # at this point, we do not yet know if there any potential scalings due to metric
                 # translations
-                1,
+                scale=1,
             )
             for metric_name in _reverse_translate_into_all_potentially_relevant_metrics_cached(
                 metric_name

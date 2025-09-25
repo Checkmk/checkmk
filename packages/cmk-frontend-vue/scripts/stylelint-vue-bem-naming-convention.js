@@ -96,7 +96,7 @@ const ruleFunction = (primary, secondaryOptions, context) => {
         componentName,
         prefix
       )
-      if (!selectorName.startsWith(prefix)) {
+      if (!(selectorName.startsWith(`${prefix}-`) | (selectorName === prefix))) {
         selectorName = `${prefix}-${selectorName}`
       }
       const expectedSelector = `.${selectorName}`

@@ -97,11 +97,11 @@ def _fetch_rrd_data(
     service_description: ServiceName,
     metrics: set[MetricProperties],
     consolidation_function: GraphConsolidationFunction | None,
-    graph_data_range: GraphDataRange,
+    *,
+    start_time: float,
+    end_time: float,
+    step: int | str,
 ) -> list[tuple[MetricProperties, tuple[int, int, int, TimeSeriesValues]]]:
-    start_time, end_time = graph_data_range.time_range
-
-    step = graph_data_range.step
     # assumes str step is well formatted, colon separated step length & rrd point count
     if not isinstance(step, str):
         step = max(1, step)
@@ -165,14 +165,14 @@ def _chop_end_of_the_curve(rrd_data: RRDData, step: int) -> None:
 #
 # This makes only sense for graphs which are ending "now". So disable this
 # for the other graphs.
-def _chop_last_empty_step(graph_data_range: GraphDataRange, rrd_data: RRDData) -> None:
+def _chop_last_empty_step(end_time: float, rrd_data: RRDData) -> None:
     if not rrd_data:
         return
 
     sample_data = next(iter(rrd_data.values()))
     step = sample_data.step
     # Disable graph chop for graphs which do not end within the current step
-    if abs(time.time() - graph_data_range.time_range[1]) > step:
+    if abs(time.time() - end_time) > step:
         return
 
     # To avoid a gap when querying:
@@ -211,7 +211,9 @@ def fetch_rrd_data_for_graph(
                 service_description,
                 metrics,
                 graph_recipe.consolidation_function,
-                graph_data_range,
+                start_time=graph_data_range.time_range[0],
+                end_time=graph_data_range.time_range[1],
+                step=graph_data_range.step,
             ):
                 rrd_data[
                     RRDDataKey(
@@ -231,7 +233,7 @@ def fetch_rrd_data_for_graph(
                 )
 
     _align_and_resample_rrds(rrd_data, graph_recipe.consolidation_function)
-    _chop_last_empty_step(graph_data_range, rrd_data)
+    _chop_last_empty_step(graph_data_range.time_range[1], rrd_data)
     return rrd_data
 
 

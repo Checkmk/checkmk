@@ -44,6 +44,131 @@ from ._time_series import TimeSeries, TimeSeriesValues
 from ._translated_metrics import find_matching_translation, TranslationSpec
 from ._unit import user_specific_unit
 
+MetricProperties = tuple[str, GraphConsolidationFunction | None, float]
+
+
+def _group_needed_rrd_data_by_service(
+    rrd_data_keys: Iterable[RRDDataKey],
+) -> dict[
+    tuple[SiteId, HostName, ServiceName],
+    set[MetricProperties],
+]:
+    by_service: dict[
+        tuple[SiteId, HostName, ServiceName],
+        set[MetricProperties],
+    ] = collections.defaultdict(set)
+    for key in rrd_data_keys:
+        by_service[(key.site_id, key.host_name, key.service_name)].add(
+            (key.metric_name, key.consolidation_function, key.scale)
+        )
+    return by_service
+
+
+def rrd_columns(
+    metrics: Iterable[MetricProperties],
+    consolidation_function: GraphConsolidationFunction | None,
+    data_range: str,
+) -> Iterator[ColumnName]:
+    """RRD data columns for each metric
+
+    Include scaling of metric directly in query"""
+
+    for perfvar, cf, scale in metrics:
+        cf = consolidation_function or cf or "max"
+        rpn = f"{perfvar}.{cf}"
+        if scale != 1.0:
+            rpn += ",%f,*" % scale
+        yield f"rrddata:{perfvar}:{rpn}:{data_range}"
+
+
+def _fetch_rrd_data(
+    site_id: SiteId,
+    host_name: HostName,
+    service_description: ServiceName,
+    metrics: set[MetricProperties],
+    consolidation_function: GraphConsolidationFunction | None,
+    graph_data_range: GraphDataRange,
+) -> list[tuple[MetricProperties, tuple[int, int, int, TimeSeriesValues]]]:
+    start_time, end_time = graph_data_range.time_range
+
+    step = graph_data_range.step
+    # assumes str step is well formatted, colon separated step length & rrd point count
+    if not isinstance(step, str):
+        step = max(1, step)
+
+    point_range = ":".join(map(str, (start_time, end_time, step)))
+    lql_columns = list(rrd_columns(metrics, consolidation_function, point_range))
+    query = livestatus_lql([host_name], lql_columns, service_description)
+
+    with sites.only_sites(site_id):
+        data = sites.live().query_row(query)
+
+    return list(zip(metrics, [(int(d[0]), int(d[1]), int(d[2]), d[3:]) for d in data]))
+
+
+def _align_and_resample_rrds(
+    rrd_data: RRDData, consolidation_function: GraphConsolidationFunction | None
+) -> None:
+    """RRDTool aligns start/end/step to its internal precision.
+
+    This is returned as first 3 values in each RRD data row. Using that
+    info resampling and alignment is done in reference to the first metric.
+
+    TimeSeries are mutated in place, argument rrd_data is thus mutated"""
+    time_window = None
+    for key, time_series in rrd_data.items():
+        if not time_series:
+            spec_title = f"{key.host_name}/{key.service_name}/{key.metric_name}"
+            raise MKGeneralException(_("Cannot get RRD data for %s") % spec_title)
+
+        if time_window is None:
+            time_window = (time_series.start, time_series.end, time_series.step)
+        elif time_window != (time_series.start, time_series.end, time_series.step):
+            time_series.values = (
+                time_series.downsample(
+                    start=time_window[0],
+                    end=time_window[1],
+                    step=time_window[2],
+                    cf=key.consolidation_function or consolidation_function,
+                )
+                if time_window[2] >= time_series.step
+                else time_series.forward_fill_resample(
+                    start=time_window[0],
+                    end=time_window[1],
+                    step=time_window[2],
+                )
+            )
+
+
+def _chop_end_of_the_curve(rrd_data: RRDData, step: int) -> None:
+    for data in rrd_data.values():
+        data.values = data.values[:-1]
+        data.end -= step
+
+
+# The idea is to omit the empty last step of graphs which are showing the
+# last data which ends now (at the current time) where there is not yet
+# data available for the current RRD step. Showing an empty space on the
+# right of the graph seems a bit odd, so strip of the last (empty) step.
+#
+# This makes only sense for graphs which are ending "now". So disable this
+# for the other graphs.
+def _chop_last_empty_step(graph_data_range: GraphDataRange, rrd_data: RRDData) -> None:
+    if not rrd_data:
+        return
+
+    sample_data = next(iter(rrd_data.values()))
+    step = sample_data.step
+    # Disable graph chop for graphs which do not end within the current step
+    if abs(time.time() - graph_data_range.time_range[1]) > step:
+        return
+
+    # To avoid a gap when querying:
+    # Chop one step from the end of the graph
+    # `if` that is None for *all* curves(TimeSeries or graphs).
+    if all(len(graph) and graph[-1] is None for graph in rrd_data.values()):
+        _chop_end_of_the_curve(rrd_data, step)
+
 
 def fetch_rrd_data_for_graph(
     graph_recipe: GraphRecipe,
@@ -93,132 +218,6 @@ def fetch_rrd_data_for_graph(
     _chop_last_empty_step(graph_data_range, rrd_data)
 
     return rrd_data
-
-
-def _align_and_resample_rrds(
-    rrd_data: RRDData, consolidation_function: GraphConsolidationFunction | None
-) -> None:
-    """RRDTool aligns start/end/step to its internal precision.
-
-    This is returned as first 3 values in each RRD data row. Using that
-    info resampling and alignment is done in reference to the first metric.
-
-    TimeSeries are mutated in place, argument rrd_data is thus mutated"""
-    time_window = None
-    for key, time_series in rrd_data.items():
-        if not time_series:
-            spec_title = f"{key.host_name}/{key.service_name}/{key.metric_name}"
-            raise MKGeneralException(_("Cannot get RRD data for %s") % spec_title)
-
-        if time_window is None:
-            time_window = (time_series.start, time_series.end, time_series.step)
-        elif time_window != (time_series.start, time_series.end, time_series.step):
-            time_series.values = (
-                time_series.downsample(
-                    start=time_window[0],
-                    end=time_window[1],
-                    step=time_window[2],
-                    cf=key.consolidation_function or consolidation_function,
-                )
-                if time_window[2] >= time_series.step
-                else time_series.forward_fill_resample(
-                    start=time_window[0],
-                    end=time_window[1],
-                    step=time_window[2],
-                )
-            )
-
-
-# The idea is to omit the empty last step of graphs which are showing the
-# last data which ends now (at the current time) where there is not yet
-# data available for the current RRD step. Showing an empty space on the
-# right of the graph seems a bit odd, so strip of the last (empty) step.
-#
-# This makes only sense for graphs which are ending "now". So disable this
-# for the other graphs.
-def _chop_last_empty_step(graph_data_range: GraphDataRange, rrd_data: RRDData) -> None:
-    if not rrd_data:
-        return
-
-    sample_data = next(iter(rrd_data.values()))
-    step = sample_data.step
-    # Disable graph chop for graphs which do not end within the current step
-    if abs(time.time() - graph_data_range.time_range[1]) > step:
-        return
-
-    # To avoid a gap when querying:
-    # Chop one step from the end of the graph
-    # `if` that is None for *all* curves(TimeSeries or graphs).
-    if all(len(graph) and graph[-1] is None for graph in rrd_data.values()):
-        _chop_end_of_the_curve(rrd_data, step)
-
-
-def _chop_end_of_the_curve(rrd_data: RRDData, step: int) -> None:
-    for data in rrd_data.values():
-        data.values = data.values[:-1]
-        data.end -= step
-
-
-MetricProperties = tuple[str, GraphConsolidationFunction | None, float]
-
-
-def _group_needed_rrd_data_by_service(
-    rrd_data_keys: Iterable[RRDDataKey],
-) -> dict[
-    tuple[SiteId, HostName, ServiceName],
-    set[MetricProperties],
-]:
-    by_service: dict[
-        tuple[SiteId, HostName, ServiceName],
-        set[MetricProperties],
-    ] = collections.defaultdict(set)
-    for key in rrd_data_keys:
-        by_service[(key.site_id, key.host_name, key.service_name)].add(
-            (key.metric_name, key.consolidation_function, key.scale)
-        )
-    return by_service
-
-
-def _fetch_rrd_data(
-    site_id: SiteId,
-    host_name: HostName,
-    service_description: ServiceName,
-    metrics: set[MetricProperties],
-    consolidation_function: GraphConsolidationFunction | None,
-    graph_data_range: GraphDataRange,
-) -> list[tuple[MetricProperties, tuple[int, int, int, TimeSeriesValues]]]:
-    start_time, end_time = graph_data_range.time_range
-
-    step = graph_data_range.step
-    # assumes str step is well formatted, colon separated step length & rrd point count
-    if not isinstance(step, str):
-        step = max(1, step)
-
-    point_range = ":".join(map(str, (start_time, end_time, step)))
-    lql_columns = list(rrd_columns(metrics, consolidation_function, point_range))
-    query = livestatus_lql([host_name], lql_columns, service_description)
-
-    with sites.only_sites(site_id):
-        data = sites.live().query_row(query)
-
-    return list(zip(metrics, [(int(d[0]), int(d[1]), int(d[2]), d[3:]) for d in data]))
-
-
-def rrd_columns(
-    metrics: Iterable[MetricProperties],
-    consolidation_function: GraphConsolidationFunction | None,
-    data_range: str,
-) -> Iterator[ColumnName]:
-    """RRD data columns for each metric
-
-    Include scaling of metric directly in query"""
-
-    for perfvar, cf, scale in metrics:
-        cf = consolidation_function or cf or "max"
-        rpn = f"{perfvar}.{cf}"
-        if scale != 1.0:
-            rpn += ",%f,*" % scale
-        yield f"rrddata:{perfvar}:{rpn}:{data_range}"
 
 
 def _reverse_translate_into_all_potentially_relevant_metrics(

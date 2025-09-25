@@ -97,11 +97,12 @@ def _fetch_rrd_data(
     service_description: ServiceName,
     metrics: set[MetricProperties],
     consolidation_function: GraphConsolidationFunction | None,
+    conversion: Callable[[float], float],
     *,
     start_time: float,
     end_time: float,
     step: int | str,
-) -> list[tuple[MetricProperties, tuple[int, int, int, TimeSeriesValues]]]:
+) -> list[tuple[MetricProperties, TimeSeries]]:
     # assumes str step is well formatted, colon separated step length & rrd point count
     if not isinstance(step, str):
         step = max(1, step)
@@ -115,7 +116,21 @@ def _fetch_rrd_data(
             )
         )
 
-    return list(zip(metrics, [(int(d[0]), int(d[1]), int(d[2]), d[3:]) for d in data]))
+    return list(
+        zip(
+            metrics,
+            [
+                TimeSeries(
+                    start=int(d[0]),
+                    end=int(d[1]),
+                    step=int(d[2]),
+                    values=d[3:],
+                    conversion=conversion,
+                )
+                for d in data
+            ],
+        )
+    )
 
 
 def _align_and_resample_rrds(
@@ -200,17 +215,13 @@ def fetch_rrd_data_for_graph(
     rrd_data: dict[RRDDataKey, TimeSeries] = {}
     for (site_id, host_name, service_description), metrics in by_service.items():
         with contextlib.suppress(livestatus.MKLivestatusNotFoundError):
-            for metric_props, (
-                start,
-                end,
-                step,
-                values,
-            ) in _fetch_rrd_data(
+            for metric_props, time_series in _fetch_rrd_data(
                 site_id,
                 host_name,
                 service_description,
                 metrics,
                 graph_recipe.consolidation_function,
+                conversion,
                 start_time=graph_data_range.time_range[0],
                 end_time=graph_data_range.time_range[1],
                 step=graph_data_range.step,
@@ -224,13 +235,7 @@ def fetch_rrd_data_for_graph(
                         metric_props.consolidation_function,
                         metric_props.scale,
                     )
-                ] = TimeSeries(
-                    start=start,
-                    end=end,
-                    step=step,
-                    values=values,
-                    conversion=conversion,
-                )
+                ] = time_series
 
     _align_and_resample_rrds(rrd_data, graph_recipe.consolidation_function)
     _chop_last_empty_step(graph_data_range.time_range[1], rrd_data)

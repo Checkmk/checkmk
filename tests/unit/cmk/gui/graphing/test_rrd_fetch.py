@@ -12,13 +12,17 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config
 from cmk.gui.graphing._from_api import RegisteredMetric
-from cmk.gui.graphing._graph_specification import GraphDataRange, GraphMetric, GraphRecipe
+from cmk.gui.graphing._graph_specification import (
+    GraphDataRange,
+    GraphMetric,
+    GraphRecipe,
+)
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._legacy import CheckMetricEntry
 from cmk.gui.graphing._metric_operation import MetricOpRRDSource, RRDDataKey
 from cmk.gui.graphing._rrd_fetch import (
+    _fetch_rrd_data_for_graph,
     _reverse_translate_into_all_potentially_relevant_metrics,
-    fetch_rrd_data_for_graph,
     translate_and_merge_rrd_columns,
 )
 from cmk.gui.graphing._time_series import TimeSeries, TimeSeriesValues
@@ -101,7 +105,7 @@ def test_fetch_rrd_data_for_graph(
     request_context: None,
 ) -> None:
     with _setup_livestatus(mock_livestatus):
-        assert fetch_rrd_data_for_graph(
+        assert _fetch_rrd_data_for_graph(
             _GRAPH_RECIPE,
             _GRAPH_DATA_RANGE,
             {},
@@ -128,7 +132,7 @@ def test_fetch_rrd_data_for_graph_with_conversion(
 ) -> None:
     active_config.default_temperature_unit = TemperatureUnit.FAHRENHEIT.value
     with _setup_livestatus(mock_livestatus):
-        assert fetch_rrd_data_for_graph(
+        assert _fetch_rrd_data_for_graph(
             _GRAPH_RECIPE,
             _GRAPH_DATA_RANGE,
             {},

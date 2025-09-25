@@ -7,7 +7,7 @@
 import collections
 import contextlib
 import time
-from collections.abc import Callable, Iterable, Iterator, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from functools import lru_cache
 
@@ -28,12 +28,13 @@ from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
 from ._from_api import RegisteredMetric
-from ._graph_specification import GraphDataRange, GraphRecipe
+from ._graph_specification import GraphDataRange, GraphMetric, GraphRecipe
 from ._legacy import (
     check_metrics,
     CheckMetricEntry,
 )
 from ._metric_operation import (
+    AugmentedTimeSeries,
     GraphConsolidationFunction,
     op_func_wrapper,
     RRDData,
@@ -197,7 +198,7 @@ def _chop_last_empty_step(end_time: float, rrd_data: RRDData) -> None:
         _chop_end_of_the_curve(rrd_data, step)
 
 
-def fetch_rrd_data_for_graph(
+def _fetch_rrd_data_for_graph(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
     registered_metrics: Mapping[str, RegisteredMetric],
@@ -240,6 +241,17 @@ def fetch_rrd_data_for_graph(
     _align_and_resample_rrds(rrd_data, graph_recipe.consolidation_function)
     _chop_last_empty_step(graph_data_range.time_range[1], rrd_data)
     return rrd_data
+
+
+def compute_time_series(
+    graph_recipe: GraphRecipe,
+    graph_data_range: GraphDataRange,
+    registered_metrics: Mapping[str, RegisteredMetric],
+) -> Iterator[tuple[GraphMetric, Sequence[AugmentedTimeSeries]]]:
+    rrd_data = _fetch_rrd_data_for_graph(graph_recipe, graph_data_range, registered_metrics)
+    for graph_metric in graph_recipe.metrics:
+        if time_series := graph_metric.operation.compute_time_series(rrd_data, registered_metrics):
+            yield graph_metric, time_series
 
 
 def _reverse_translate_into_all_potentially_relevant_metrics(

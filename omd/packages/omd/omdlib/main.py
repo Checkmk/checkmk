@@ -2208,7 +2208,7 @@ def finalize_site(
     if pid == 0:
         try:
             # From now on we run as normal site user!
-            switch_to_site_user(site)
+            switch_to_site_user(site.name)
 
             # avoid executing hook 'TMPFS' and cleaning an initialized tmp directory
             # see CMK-3067
@@ -3559,7 +3559,7 @@ def _site_environment(site_name: str, command: Command, verbose: bool) -> SiteCo
     # we are sure that new files and processes are created under the
     # site user and never as root.
     if not command.no_suid and is_root() and not command.only_root:
-        switch_to_site_user(site)
+        switch_to_site_user(site.name)
 
     # Make sure environment is in a defined state
     clear_environment()

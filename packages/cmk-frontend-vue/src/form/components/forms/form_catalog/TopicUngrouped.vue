@@ -152,4 +152,8 @@ const { FormEditDispatcher } = useFormEditDispatcher()
   white-space: nowrap;
   overflow: hidden;
 }
+
+.form-topic-ungrouped__root:nth-child(1) > td {
+  padding-top: 5px;
+}
 </style>

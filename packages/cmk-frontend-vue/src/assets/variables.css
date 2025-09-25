@@ -355,6 +355,8 @@
 }
 
 /* stylelint-disable-next-line selector-class-pattern */
+.cmk-vue-app table.form-catalog__dictionary input,
+/* stylelint-disable-next-line selector-class-pattern */
 .cmk-vue-app table.nform input {
   margin: 0;
   vertical-align: baseline;

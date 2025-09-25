@@ -50,13 +50,6 @@ function toggleTopic(topic: Topic) {
   hiddenTopics.value[topic.name] = !hiddenTopics.value[topic.name]
 }
 
-function getClass(name: string) {
-  return {
-    open: !hiddenTopics.value[name],
-    closed: hiddenTopics.value[name]
-  }
-}
-
 function isGroupedTopic(topic: Topic): boolean {
   if (topic.elements.length === 0) {
     return false
@@ -68,10 +61,10 @@ function isGroupedTopic(topic: Topic): boolean {
 <template>
   <span>
     <template v-for="topic in props.spec.elements" :key="topic.name">
-      <table class="dictionary nform">
+      <table class="form-catalog__dictionary">
         <thead>
-          <tr class="heading" @click="toggleTopic(topic)">
-            <td colspan="2">
+          <tr @click="toggleTopic(topic)">
+            <td colspan="2" class="form-catalog__heading">
               <CmkIcon
                 class="form-catalog__icon"
                 :class="{ 'form-catalog__icon--open': !hiddenTopics[topic.name] }"
@@ -83,7 +76,7 @@ function isGroupedTopic(topic: Topic): boolean {
           </tr>
         </thead>
         <CmkSpace v-if="!hiddenTopics[topic.name]" size="small" direction="vertical" />
-        <tbody :class="getClass(topic.name)">
+        <tbody v-show="!hiddenTopics[topic.name]">
           <template v-if="isGroupedTopic(topic)">
             <TopicGrouped
               v-model:data="data[topic.name]!"
@@ -106,6 +99,29 @@ function isGroupedTopic(topic: Topic): boolean {
 </template>
 
 <style scoped>
+.form-catalog__dictionary {
+  width: 100%;
+  padding: 0;
+  margin: 10px 0;
+  background: #f5f5fb;
+  border-radius: 4px;
+  border-collapse: collapse;
+}
+
+.form-catalog__heading {
+  position: relative;
+  height: auto;
+  padding: 4px 10px 3px 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  background-color: #e8e8ee;
+  vertical-align: middle;
+  cursor: pointer;
+  border-radius: 4px 4px 0 0;
+  white-space: nowrap;
+  empty-cells: show;
+}
+
 .form-catalog__icon {
   margin-right: 10px;
   transition: transform 0.2s ease-in-out;

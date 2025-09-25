@@ -103,4 +103,8 @@ const { FormEditDispatcher } = useFormEditDispatcher()
   overflow: hidden;
   color: rgb(51 51 51 / 80%);
 }
+
+.form-topic-grouped:nth-child(1) > td {
+  padding-top: 5px;
+}
 </style>

@@ -299,17 +299,17 @@ blinker==1.9.0 \
     --hash=sha256:b4ce2265a7abece45e7cc896e98dbebe6cead56bcf805a3d23136d145f5445bf \
     --hash=sha256:ba0efaa9080b619ff2f3459d1d500c57bddea4a6b424b60a91141db6fd2f08bc
     # via flask
-boto3==1.40.37 \
-    --hash=sha256:222de1ac6b878c2a2ea75ecfdd876ff3e8bd71930a5f9a3631379dfacc402eda \
-    --hash=sha256:ccc5aa217e41bcc80e243c12e6b4330a010b5752cdda2618d67d0b854cd730d5
+boto3==1.40.38 \
+    --hash=sha256:932ebdd8dbf8ab5694d233df86d5d0950291e0b146c27cb46da8adb4f00f6ca4 \
+    --hash=sha256:fac337b4f0615e4d6ceee44686e662f51d8e57916ed2bc763468e3e8c611a658
     # via -r cmk/requirements.in
-boto3-stubs[logs]==1.40.37 \
-    --hash=sha256:b4a2760e77fae7ddeb664f7deec5c6b9c03919f33f1cf20c42a3d2ab9f91f98c \
-    --hash=sha256:f9f8f1aaf8ac0cf33fe7d4611b7699f179badfe2b0066d59ae928fbf84b0b2b1
+boto3-stubs[logs]==1.40.38 \
+    --hash=sha256:0d178635c7abce8be3922917cfd8274e66c21697101276051bae625903533852 \
+    --hash=sha256:63fb760ac7b649836530f3ed8b39400f392832d4dcff39bbcf020650519c6e3e
     # via -r tests/dev-requirements.in
-botocore==1.40.37 \
-    --hash=sha256:9d2cfc41963a3a8be8ece395292e29afad2e25aa602d02bc0c0c3a598405a318 \
-    --hash=sha256:9d4cee2ae0fe273003c6d1a8c9f7b98c4e40a6f74ba2f37eacba27d97fb7734f
+botocore==1.40.38 \
+    --hash=sha256:18039009e1eca2bff12e576e8dd3c80cd9b312294f1469c831de03169582ad59 \
+    --hash=sha256:7d60a7557db3a58f9394e7ecec1f6b87495ce947eb713f29d53aee83a6e9dc71
     # via
     #   -r cmk/requirements.in
     #   boto3
@@ -522,9 +522,9 @@ charset-normalizer==3.4.3 \
     # via
     #   reportlab
     #   requests
-checkmk-dev-tools==0.13.1 \
-    --hash=sha256:b0d76a8a085af3d3dca7f9275d36afbe63cf8f72a58627c3f0423db7ed8f8f65 \
-    --hash=sha256:bc60391b4d0c0b54a3d4f046a7c2d2652cb2d9dc238cb5dab77ffa1e67515096
+checkmk-dev-tools==0.14.0 \
+    --hash=sha256:344517be1591ab92fc859af8383f1bac57e78a9798fde559c9ae79cfb3b5e574 \
+    --hash=sha256:fb33891e84956d80d7ab5f8d50e6e96c6022fd3fd14290b561b0c367a46ad991
     # via -r tests/dev-requirements.in
 click==8.3.0 \
     --hash=sha256:9b9f285302c6e3064f4330c05f05b81945b2a39544279343e6e7c5f27a9baddc \
@@ -1355,9 +1355,9 @@ h11==0.16.0 \
     #   -r packages/cmk-agent-receiver/requirements.in
     #   httpcore
     #   uvicorn
-harfile==0.3.1 \
-    --hash=sha256:27e63c98cba93b94175ac6407a5717badc2cd993daffd5a5bfdc893ebffb56ac \
-    --hash=sha256:8998fa4410ad17d7b5671bab36ea058adde835bbb27f6a3da4b423019da584da
+harfile==0.4.0 \
+    --hash=sha256:34e2d9ef34101d769566bffab3c420e147776174308bed1a036ed8db600cabde \
+    --hash=sha256:ddb1483cb30f7549ddc67c0b7fdc6424f1feb19373b67e33e429b02f09bf43a8
     # via schemathesis
 httpcore==1.0.9 \
     --hash=sha256:2d400746a40668fc9dec9810239072b40b4484b640a8c38fd654a024c7a1bf55 \

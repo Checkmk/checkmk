@@ -372,9 +372,19 @@ export function register_delayed_graph_listener() {
     // TODO replace content scrollbar with two functions
     // create_content_scrollbar if no parameter is given
     // get_content_scrollbar if it is given
-    content_scrollbar()!
-        .getScrollElement()
-        .addEventListener("scroll", delayed_graph_renderer);
+
+    // if the graph is rendered in a dashlet, we have to use the scrollbar of
+    // the dashlet
+    const dashletElement = document.getElementById("dashlet_content_wrapper");
+
+    const scrollbar = content_scrollbar(
+        dashletElement ? "dashlet_content_wrapper" : "",
+    );
+
+    scrollbar
+        ?.getScrollElement()
+        ?.addEventListener("scroll", delayed_graph_renderer);
+
     add_event_handler("resize", delayed_graph_renderer);
 }
 

@@ -52,12 +52,19 @@ function setValidation(newBackendValidation: ValidationMessages) {
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const { FormEditDispatcher } = useFormEditDispatcher()
+
+const CLASS_LOOKUP: Record<FormSpec.Tuple['layout'], string> = {
+  horizontal_titles_top: 'form-tuple--horizontal-titles-top',
+  horizontal: 'form-tuple--horizontal',
+  vertical: 'form-tuple--vertical',
+  float: 'form-tuple--float'
+}
 </script>
 
 <template>
-  <div class="form-tuple" :class="spec.layout">
-    <div v-for="(element, index) in spec.elements" :key="index" class="form-tuple_item">
-      <div v-if="spec.show_titles" class="form-tuple_label">
+  <div class="form-tuple" :class="CLASS_LOOKUP[spec.layout]">
+    <div v-for="(element, index) in spec.elements" :key="index" class="form-tuple__item">
+      <div v-if="spec.show_titles" class="form-tuple__label">
         <FormLabel v-if="element.title">{{ capitalizeFirstLetter(element.title) }}</FormLabel>
         <CmkSpace
           v-if="spec.show_titles && element.title && spec.layout !== 'horizontal_titles_top'"
@@ -65,7 +72,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
         />
         <br v-if="spec.show_titles && element.title && spec.layout === 'horizontal_titles_top'" />
       </div>
-      <div class="form-tuple_content">
+      <div class="form-tuple__content">
         <FormEditDispatcher
           v-model:data="data[index]"
           :spec="element"
@@ -79,60 +86,59 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 </template>
 
 <style scoped>
-/* stylelint-disable checkmk/vue-bem-naming-convention */
 .form-tuple {
   display: flex;
 }
 
 /* Horizontal layouts */
-.form-tuple.horizontal,
-.form-tuple.horizontal_titles_top {
+.form-tuple.form-tuple--horizontal,
+.form-tuple.form-tuple--horizontal-titles-top {
   flex-wrap: wrap;
 }
 
 /* Horizontal layout - titles beside content */
-.form-tuple.horizontal .form-tuple_item {
+.form-tuple.form-tuple--horizontal .form-tuple__item {
   display: flex;
   align-items: flex-start;
 }
 
-.form-tuple.vertical .form-tuple_item {
+.form-tuple.form-tuple--vertical .form-tuple__item {
   display: flex;
   margin-bottom: var(--spacing-half);
 }
 
-.form-tuple.horizontal .form-tuple_item:not(:first-child),
-.form-tuple.horizontal_titles_top .form-tuple_item:not(:first-child) {
+.form-tuple.form-tuple--horizontal .form-tuple__item:not(:first-child),
+.form-tuple.form-tuple--horizontal-titles-top .form-tuple__item:not(:first-child) {
   margin-left: var(--spacing);
 }
 
-.form-tuple.horizontal .form-tuple_label {
+.form-tuple.form-tuple--horizontal .form-tuple__label {
   flex-shrink: 0;
 }
 
 /* Vertical layout */
-.form-tuple.vertical {
+.form-tuple.form-tuple--vertical {
   flex-direction: column;
 }
 
-.form-tuple.vertical .form-tuple_item:last-child {
+.form-tuple.form-tuple--vertical .form-tuple__item:last-child {
   margin-bottom: 0;
 }
 
-.form-tuple.vertical .form-tuple_label {
+.form-tuple.form-tuple--vertical .form-tuple__label {
   flex-shrink: 0;
 }
 
-.form-tuple.vertical .form-tuple_content {
+.form-tuple.form-tuple--vertical .form-tuple__content {
   flex: 1;
 }
 
 /* Float layout */
-.form-tuple.float {
+.form-tuple.form-tuple--float {
   flex-direction: row;
 }
 
-.form-tuple.float .form-tuple_label {
+.form-tuple.form-tuple--float .form-tuple__label {
   display: none;
 }
 </style>

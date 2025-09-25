@@ -5,21 +5,16 @@
  */
 
 export async function insert_before(
-    elementToMove: HTMLElement,
-    options: {[key: string]: string},
+  elementToMove: HTMLElement,
+  options: { [key: string]: string }
 ) {
-    if (!("targetElementId" in options)) {
-        throw new Error("Missing required option 'targetElementId'");
-    }
-    const targetElementId = options["targetElementId"];
-    const targetElement = document.getElementById(targetElementId);
-    const parentElement = targetElement?.parentNode;
-    if (
-        parentElement &&
-        elementToMove &&
-        targetElement &&
-        elementToMove !== parentElement
-    ) {
-        parentElement.insertBefore(elementToMove, targetElement);
-    }
+  if (!('targetElementId' in options)) {
+    throw new Error("Missing required option 'targetElementId'")
+  }
+  const targetElementId = options['targetElementId']
+  const targetElement = document.getElementById(targetElementId)
+  const parentElement = targetElement?.parentNode
+  if (parentElement && elementToMove && targetElement && elementToMove !== parentElement) {
+    parentElement.insertBefore(elementToMove, targetElement)
+  }
 }

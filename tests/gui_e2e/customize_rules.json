@@ -1,49 +1,49 @@
 {
-    "Check period for hosts": [
-        {
-            "locator": "[role='textbox'][title='Select a time period']",
-            "action": "click"
-        },
-        {
-            "locator": "span:text-is('24X7 - Always')",
-            "action": "click"
-        }
-    ],
-    "Notification period for hosts": [
-        {
-            "locator": "[role='textbox'][title='Select a time period']",
-            "action": "click"
-        },
-        {
-            "locator": "span:text-is('24X7 - Always')",
-            "action": "click"
-        }
-    ],
-    "Service period for hosts": [
-        {
-            "locator": "[role='textbox'][title='Select a time period']",
-            "action": "click"
-        },
-        {
-            "locator": "span:text-is('24X7 - Always')",
-            "action": "click"
-        }
-    ],
-    "Recurring downtimes for hosts": [
-        {
-            "locator": "input[name*='_p_comment']",
-            "action": "fill",
-            "value": "test"
-        }
-    ],
-    "Hosts to be monitored": [
-        {
-            "locator": "form[id='form_rule_editor'] table:has-text('Value') button.cmk-dropdown-button",
-            "action": "click"
-        },
-        {
-            "locator": "ul.cmk-suggestions li[role='option']:has-text('Positive match')",
-            "action": "click"
-        }
-    ]
+  "Check period for hosts": [
+    {
+      "locator": "[role='textbox'][title='Select a time period']",
+      "action": "click"
+    },
+    {
+      "locator": "span:text-is('24X7 - Always')",
+      "action": "click"
+    }
+  ],
+  "Notification period for hosts": [
+    {
+      "locator": "[role='textbox'][title='Select a time period']",
+      "action": "click"
+    },
+    {
+      "locator": "span:text-is('24X7 - Always')",
+      "action": "click"
+    }
+  ],
+  "Service period for hosts": [
+    {
+      "locator": "[role='textbox'][title='Select a time period']",
+      "action": "click"
+    },
+    {
+      "locator": "span:text-is('24X7 - Always')",
+      "action": "click"
+    }
+  ],
+  "Recurring downtimes for hosts": [
+    {
+      "locator": "input[name*='_p_comment']",
+      "action": "fill",
+      "value": "test"
+    }
+  ],
+  "Hosts to be monitored": [
+    {
+      "locator": "form[id='form_rule_editor'] table:has-text('Value') button.cmk-dropdown-button",
+      "action": "click"
+    },
+    {
+      "locator": "ul.cmk-suggestions li[role='option']:has-text('Positive match')",
+      "action": "click"
+    }
+  ]
 }

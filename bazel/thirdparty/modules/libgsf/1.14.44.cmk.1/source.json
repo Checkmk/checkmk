@@ -1,9 +1,9 @@
 {
-    "integrity": "sha256-aL7eEANxZHZJkpcLTLV81q3WmGqEbQRlevnV+sd0/94=",
-    "strip_prefix": "libgsf-1.14.44",
-    "url": "https://ftp.osuosl.org/pub/blfs/conglomeration/libgsf/libgsf-1.14.44.tar.xz",
-    "overlay": {
-        "BUILD.bazel": "sha256-LIOBcfbK8vsw7VL1JzKgjFl1lDKFMRrjddqh+DtXZ3M=",
-        "MODULE.bazel": "sha256-4ACXluMvN93FDc3lAtnuF9o4jQPIuoSpV6ev5rPnQzM="
-    }
+  "integrity": "sha256-aL7eEANxZHZJkpcLTLV81q3WmGqEbQRlevnV+sd0/94=",
+  "strip_prefix": "libgsf-1.14.44",
+  "url": "https://ftp.osuosl.org/pub/blfs/conglomeration/libgsf/libgsf-1.14.44.tar.xz",
+  "overlay": {
+    "BUILD.bazel": "sha256-LIOBcfbK8vsw7VL1JzKgjFl1lDKFMRrjddqh+DtXZ3M=",
+    "MODULE.bazel": "sha256-4ACXluMvN93FDc3lAtnuF9o4jQPIuoSpV6ev5rPnQzM="
+  }
 }

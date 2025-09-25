@@ -11,9 +11,7 @@
       "host_label_groups": [],
       "service_label_groups": [],
       "service_description": {
-        "match_on": [
-          "Check_MK HW/SW Inventory$"
-        ],
+        "match_on": ["Check_MK HW/SW Inventory$"],
         "operator": "one_of"
       }
     }

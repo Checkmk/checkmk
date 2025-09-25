@@ -3,9 +3,9 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import MutationObserver from 'mutation-observer'
 
-import MutationObserver from "mutation-observer";
-global.MutationObserver = MutationObserver;
+global.MutationObserver = MutationObserver
 
 // for indexedDB
-global.structuredClone = v => JSON.parse(JSON.stringify(v));
+global.structuredClone = (v) => JSON.parse(JSON.stringify(v))

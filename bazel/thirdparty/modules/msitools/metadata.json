@@ -1,11 +1,7 @@
 {
-    "homepage": "https://wiki.gnome.org/msitools",
-    "maintainers": [],
-    "repository": [
-        "https://gitlab.gnome.org/GNOME/msitool"
-    ],
-    "version": [
-        "0.94.cmk.1",
-    ],
-    "yanked_versions": {}
+  "homepage": "https://wiki.gnome.org/msitools",
+  "maintainers": [],
+  "repository": ["https://gitlab.gnome.org/GNOME/msitool"],
+  "version": ["0.94.cmk.1"],
+  "yanked_versions": {}
 }

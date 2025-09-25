@@ -11,97 +11,97 @@
 // a way to automatically generate them from one sie to another
 
 export interface SubplotDataData {
-    x?: [Date | undefined, Date | undefined];
-    y?: [number, number | undefined];
-    data: TransformedData[];
+  x?: [Date | undefined, Date | undefined]
+  y?: [number, number | undefined]
+  data: TransformedData[]
 }
 
 //types from: cmk/gui/cee/plugins/dashboard/site_overview.py
 export interface ABCElement {
-    type: string;
-    title: string;
-    tooltip: string;
+  type: string
+  title: string
+  tooltip: string
 }
 
 export interface SiteElement extends ABCElement {
-    type: "site_element";
-    url_add_vars: Record<string, string>;
-    total: Part;
-    parts: Part[];
+  type: 'site_element'
+  url_add_vars: Record<string, string>
+  total: Part
+  parts: Part[]
 }
 
 export interface HostElement extends ABCElement {
-    hexagon_config: {
-        css_class: string;
-        path: string;
-        color?: number;
-        tooltip: string;
-        id: string;
-    }[];
-    x: number;
-    y: number;
-    type: "host_element";
-    link: string;
-    host_css_class: string;
-    service_css_class: string;
-    has_host_problem: boolean;
-    num_services: number;
-    num_problems: number;
+  hexagon_config: {
+    css_class: string
+    path: string
+    color?: number
+    tooltip: string
+    id: string
+  }[]
+  x: number
+  y: number
+  type: 'host_element'
+  link: string
+  host_css_class: string
+  service_css_class: string
+  has_host_problem: boolean
+  num_services: number
+  num_problems: number
 }
 
 export interface IconElement extends ABCElement {
-    type: "icon_element";
-    css_class: string;
+  type: 'icon_element'
+  css_class: string
 }
 
 export interface Part {
-    title: string;
-    css_class: string;
-    count: number;
+  title: string
+  css_class: string
+  count: number
 }
 
 export interface SingleMetricDataData {
-    tag: string;
-    last_value: boolean;
-    timestamp: number;
-    value: number;
-    label: any;
-    url: string;
+  tag: string
+  last_value: boolean
+  timestamp: number
+  value: number
+  label: any
+  url: string
 }
 
 export interface SingleMetricDataPlotDefinitions {
-    label: any;
-    id: string;
-    plot_type: string;
-    style: string;
-    status_display: Record<string, string>;
-    use_tags: string[];
-    color: string;
-    opacity: number;
-    metric: Record<string, Record<string, any>>;
+  label: any
+  id: string
+  plot_type: string
+  style: string
+  status_display: Record<string, string>
+  use_tags: string[]
+  color: string
+  opacity: number
+  metric: Record<string, Record<string, any>>
 }
 
 export interface ElementMargin {
-    top: number;
-    right: number;
-    bottom: number;
-    left: number;
+  top: number
+  right: number
+  bottom: number
+  left: number
 }
 
 export interface FigureData<D = any, P = any> {
-    //TODO: in all figureBase subclasses data is an array of data or it's not used at all like
-    // in case of ntop figures, however, it's in some cases only on element (as type not a single element array)
-    // like in HostStateSummary and ServiceStateSummary. This causes typing confusion and possible errors
-    // so it might be better to change the structure of the above mentioned classes.
-    data: D[] | D;
-    plot_definitions: P[];
+  //TODO: in all figureBase subclasses data is an array of data or it's not used at all like
+  // in case of ntop figures, however, it's in some cases only on element (as type not a single element array)
+  // like in HostStateSummary and ServiceStateSummary. This causes typing confusion and possible errors
+  // so it might be better to change the structure of the above mentioned classes.
+  data: D[] | D
+  plot_definitions: P[]
 }
 
 export interface SingleMetricData
-    extends FigureData<SingleMetricDataData, SingleMetricDataPlotDefinitions> {
-    data: SingleMetricDataData[];
-    title: string;
-    title_url: string;
+  extends FigureData<SingleMetricDataData, SingleMetricDataPlotDefinitions> {
+  data: SingleMetricDataData[]
+  title: string
+  title_url: string
 }
 
 /*
@@ -115,101 +115,97 @@ the python equivalent of FigureBase regarding _dashlet_spec
 */
 
 //types from: cmk/gui/dashboard/type_defs.py
-type DashboardName = string;
-type DashletId = number;
-type DashletRefreshInterval = boolean | number;
-type DashletRefreshAction = string | null;
-type DashletSize = [number, number];
-type DashletPosition = [number, number];
-type InfoName = string;
-type SingleInfos = InfoName[];
-type FilterName = string;
-type FilterHTTPVariables = Record<string, string>;
-type VisualContext = Record<FilterName, FilterHTTPVariables>;
+type DashboardName = string
+type DashletId = number
+type DashletRefreshInterval = boolean | number
+type DashletRefreshAction = string | null
+type DashletSize = [number, number]
+type DashletPosition = [number, number]
+type InfoName = string
+type SingleInfos = InfoName[]
+type FilterName = string
+type FilterHTTPVariables = Record<string, string>
+type VisualContext = Record<FilterName, FilterHTTPVariables>
 
 interface _DashletConfigMandatory {
-    type: string;
+  type: string
 }
 
 //cmk/gui/dashboard/type_defs.py:25
 //This interface is called DashletConfig in Python but I renamed it to
 //FigureBaseDashletSpec to match the naming in Typescript
 export interface FigureBaseDashletSpec extends _DashletConfigMandatory {
-    single_infos: SingleInfos;
-    title: string;
-    title_url: string;
-    context: VisualContext;
-    reload_on_resize: boolean;
-    position: DashletPosition;
-    size: DashletSize;
-    background: boolean;
-    show_title: boolean | "transparent";
+  single_infos: SingleInfos
+  title: string
+  title_url: string
+  context: VisualContext
+  reload_on_resize: boolean
+  position: DashletPosition
+  size: DashletSize
+  background: boolean
+  show_title: boolean | 'transparent'
 }
 
-type DisplayRange = ["fixed", any] | "automatic";
+type DisplayRange = ['fixed', any] | 'automatic'
 
 export interface BarplotDashletConfig extends SingleMetricDashletConfig {
-    display_range: DisplayRange;
+  display_range: DisplayRange
 }
 
 export interface SingleMetricDashletConfig extends FigureBaseDashletSpec {
-    metric: string;
+  metric: string
 }
 
-type TimerangeValue = [null, number, string, [string, any]];
+type TimerangeValue = [null, number, string, [string, any]]
 
 interface TimeRangeParameters {
-    window: TimerangeValue;
-    rrd_consolidation: "average" | "min" | "max";
+  window: TimerangeValue
+  rrd_consolidation: 'average' | 'min' | 'max'
 }
 
-type TimeRange = "current" | ["range", TimeRangeParameters];
-type StatusDisplay =
-    | null
-    | ["text", "all" | "not_ok"]
-    | ["background", "all" | "not_ok"];
+type TimeRange = 'current' | ['range', TimeRangeParameters]
+type StatusDisplay = null | ['text', 'all' | 'not_ok'] | ['background', 'all' | 'not_ok']
 
 //cmk/gui/cee/plugins/dashboard/single_metric.py:471
 export interface SingleGraphDashletConfig extends SingleMetricDashletConfig {
-    time_range: TimeRange;
-    display_range: DisplayRange;
-    toggle_range_display: boolean;
-    status_display: StatusDisplay;
+  time_range: TimeRange
+  display_range: DisplayRange
+  toggle_range_display: boolean
+  status_display: StatusDisplay
 }
 
 //cmk/gui/cee/plugins/dashboard/single_metric.py:392
 export interface GaugeDashletConfig extends SingleMetricDashletConfig {
-    time_range: TimeRange;
-    display_range: DisplayRange;
-    status_display: StatusDisplay;
+  time_range: TimeRange
+  display_range: DisplayRange
+  status_display: StatusDisplay
 }
 
 //cmk.gui.cee.plugins.dashboard.inventory.InventoryDashletConfig
 interface InventoryDashletConfig extends FigureBaseDashletSpec {
-    inventory_path: string;
+  inventory_path: string
 }
 
 interface _AlertOverviewDashletConfigMandatory extends FigureBaseDashletSpec {
-    time_range: TimerangeValue;
+  time_range: TimerangeValue
 }
 
 //cmk/gui/cee/plugins/dashboard/alert_overview.py:225
-interface AlertOverviewDashletConfig
-    extends _AlertOverviewDashletConfigMandatory {
-    limit_objects: number;
+interface AlertOverviewDashletConfig extends _AlertOverviewDashletConfigMandatory {
+  limit_objects: number
 }
 
-type HostStateValue = [0, 1, 2];
+type HostStateValue = [0, 1, 2]
 
 interface HostStateSummaryDashletConfig extends FigureBaseDashletSpec {
-    state: HostStateValue;
+  state: HostStateValue
 }
 
-type MonitoringStateValue = [0, 1, 2, 3];
+type MonitoringStateValue = [0, 1, 2, 3]
 
 //cmk/gui/cee/plugins/dashboard/state_summary.py:338
 interface ServiceStateSummaryDashletConfig extends FigureBaseDashletSpec {
-    state: MonitoringStateValue;
+  state: MonitoringStateValue
 }
 
 interface StatsDashletConfig extends FigureBaseDashletSpec {}
@@ -218,54 +214,54 @@ interface SiteOverviewDashletConfig extends FigureBaseDashletSpec {}
 
 //cmk/gui/cee/plugins/dashboard/status.py:31
 interface StateDashletConfig extends FigureBaseDashletSpec {
-    status_display: StatusDisplay;
-    show_summary: "not_ok" | null;
+  status_display: StatusDisplay
+  show_summary: 'not_ok' | null
 }
 
 //cmk/gui/cee/plugins/dashboard/average_scatterplot_dashlet.py:286
 export interface AverageScatterplotDashletConfig extends FigureBaseDashletSpec {
-    metric: string;
-    time_range: TimerangeValue;
-    metric_color: string | null;
-    avg_color: string | null;
-    median_color: string | null;
+  metric: string
+  time_range: TimerangeValue
+  metric_color: string | null
+  avg_color: string | null
+  median_color: string | null
 }
 
 export interface ElementSize {
-    width: number;
-    height: number;
+  width: number
+  height: number
 }
 
 export type Levels = {
-    from: number;
-    to: number;
-    style: string;
-};
+  from: number
+  to: number
+  style: string
+}
 
 interface _Metric {
-    bounds: Bounds;
-    unit: any;
+  bounds: Bounds
+  unit: any
 }
 
 export interface Bounds {
-    warn?: number;
-    crit?: number;
-    min?: number;
-    max?: number;
+  warn?: number
+  crit?: number
+  min?: number
+  max?: number
 }
 
-export type Domain = [number, number];
+export type Domain = [number, number]
 
 export interface TransformedData {
-    label: any;
-    scaled_y: number;
-    scaled_x: number;
-    value: number;
-    unstacked_value: number;
-    timestamp: number;
-    date: Date;
-    ending_timestamp?: number;
-    url?: string;
-    last_value?: number;
-    tooltip?: string;
+  label: any
+  scaled_y: number
+  scaled_x: number
+  value: number
+  unstacked_value: number
+  timestamp: number
+  date: Date
+  ending_timestamp?: number
+  url?: string
+  last_value?: number
+  tooltip?: string
 }

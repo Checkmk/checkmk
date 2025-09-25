@@ -78,7 +78,7 @@ const { ErrorBoundary } = useErrorBoundary()
 
       <HelpText :help="untranslated(spec.help)" />
       <div v-if="activeMode === 'edit' || activeMode === 'both'">
-        <table class="nform">
+        <table class="form-app__root">
           <tbody>
             <tr>
               <td>
@@ -100,8 +100,7 @@ const { ErrorBoundary } = useErrorBoundary()
 </template>
 
 <style scoped>
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.nform {
+.form-app__root {
   margin: 0;
   background: transparent;
 

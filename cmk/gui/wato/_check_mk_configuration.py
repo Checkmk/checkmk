@@ -3475,7 +3475,7 @@ ServiceGroupsRulespec = ServiceRulespec(
 
 def _valuespec_host_contactgroups():
     return ContactGroupSelection(
-        title=_("Assignment of hosts to contact groups"),
+        title=_("Set host visibility for contact groups"),
     )
 
 
@@ -3489,7 +3489,7 @@ HostContactGroupsRulespec = HostRulespec(
 
 def _valuespec_service_contactgroups():
     return ContactGroupSelection(
-        title=_("Assignment of services to contact groups"),
+        title=_("Set service visibility for contact groups"),
     )
 
 

@@ -106,11 +106,14 @@ def _fetch_rrd_data(
     if not isinstance(step, str):
         step = max(1, step)
 
-    lql_columns = list(_rrd_columns(metrics, start_time=start_time, end_time=end_time, step=step))
-    query = livestatus_lql([host_name], lql_columns, service_description)
-
     with sites.only_sites(site_id):
-        data = sites.live().query_row(query)
+        data = sites.live().query_row(
+            livestatus_lql(
+                [host_name],
+                list(_rrd_columns(metrics, start_time=start_time, end_time=end_time, step=step)),
+                service_description,
+            )
+        )
 
     return list(zip(metrics, [(int(d[0]), int(d[1]), int(d[2]), d[3:]) for d in data]))
 
@@ -226,9 +229,9 @@ def fetch_rrd_data_for_graph(
                     values=values,
                     conversion=conversion,
                 )
+
     _align_and_resample_rrds(rrd_data, graph_recipe.consolidation_function)
     _chop_last_empty_step(graph_data_range, rrd_data)
-
     return rrd_data
 
 

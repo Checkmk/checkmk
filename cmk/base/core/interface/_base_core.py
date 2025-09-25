@@ -52,6 +52,11 @@ class MonitoringCore(abc.ABC):
     def is_cmc() -> bool:
         raise NotImplementedError
 
+    @staticmethod
+    @abc.abstractmethod
+    def objects_file() -> str:
+        raise NotImplementedError
+
     def create_config(
         self,
         config_path: VersionedConfigPath,

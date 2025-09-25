@@ -159,7 +159,10 @@ const getSearchInputPlaceholder = computed(() => {
           @click.stop="searchUtils.resetSearch"
         ></CmkIcon>
 
-        <div v-if="isMonitoringSearch()" class="unified-search-info-item">
+        <div
+          v-if="isMonitoringSearch() && searchUtils.query.input.value.length > 0"
+          class="unified-search-info-item"
+        >
           <span>{{ _t('Press') }}</span>
           <CmkKeyboardKey keyboard-key="enter" size="small"></CmkKeyboardKey>
           <span>{{ _t('to trigger host/service search') }}</span>

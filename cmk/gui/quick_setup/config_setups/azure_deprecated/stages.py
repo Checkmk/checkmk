@@ -347,7 +347,7 @@ def azure_collect_params(
 
 
 quick_setup_azure = QuickSetup(
-    title=_("Microsoft Azure"),
+    title=_("Microsoft Azure (Deprecated)"),
     id=QuickSetupId(RuleGroup.SpecialAgents("azure")),
     stages=[
         configure_authentication,

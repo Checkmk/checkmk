@@ -5,7 +5,7 @@
 
 from ..v0_unstable._registry import QuickSetupRegistry
 from .aws.stages import quick_setup_aws
-from .azure.stages import quick_setup_azure
+from .azure_deprecated.stages import quick_setup_azure
 from .gcp.stages import quick_setup_gcp
 
 

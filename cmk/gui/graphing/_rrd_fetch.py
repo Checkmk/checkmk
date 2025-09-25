@@ -78,12 +78,12 @@ def _group_needed_rrd_data_by_service(
 
 
 def _rrd_columns(
-    metrics: Iterable[MetricProperties],
-    data_range: str,
+    metrics: Iterable[MetricProperties], *, start_time: float, end_time: float, step: int | str
 ) -> Iterator[ColumnName]:
     """RRD data columns for each metric
 
     Include scaling of metric directly in query"""
+    data_range = f"{start_time}:{end_time}:{step}"
     for metric_props in metrics:
         rpn = f"{metric_props.metric_name}.{metric_props.consolidation_function}"
         if metric_props.scale != 1.0:
@@ -106,8 +106,7 @@ def _fetch_rrd_data(
     if not isinstance(step, str):
         step = max(1, step)
 
-    point_range = ":".join(map(str, (start_time, end_time, step)))
-    lql_columns = list(_rrd_columns(metrics, point_range))
+    lql_columns = list(_rrd_columns(metrics, start_time=start_time, end_time=end_time, step=step))
     query = livestatus_lql([host_name], lql_columns, service_description)
 
     with sites.only_sites(site_id):
@@ -278,8 +277,8 @@ def _reverse_translate_into_all_potentially_relevant_metrics_cached(
 def all_rrd_columns_potentially_relevant_for_metric(
     metric_name: MetricName,
     consolidation_function: GraphConsolidationFunction,
-    from_time: int,
-    until_time: int,
+    start_time: int,
+    end_time: int,
 ) -> Iterator[ColumnName]:
     yield from _rrd_columns(
         (
@@ -294,7 +293,9 @@ def all_rrd_columns_potentially_relevant_for_metric(
                 metric_name
             )
         ),
-        f"{from_time}:{until_time}:60",
+        start_time=start_time,
+        end_time=end_time,
+        step=60,
     )
 
 

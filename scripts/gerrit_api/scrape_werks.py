@@ -15,6 +15,8 @@ from scripts.gerrit_api.werks import werk_details
 
 ENV_GERRIT_USER: Final = "GERRIT_USER"
 ENV_GERRIT_HTTP_CREDS: Final = "GERRIT_HTTP_CREDS"
+# TODO: improve detection of master branch's version.
+MASTER_BRANCH: Final = "2.5.0"
 
 
 class TCliArgs(Namespace):
@@ -34,16 +36,16 @@ def parsed_arguments() -> type[TCliArgs]:
 
     def cmk_version(value: str) -> str:
         """Validate Checkmk version provided to the script follows an expected convention."""
-        if not re.findall(r"2\.[\d]+\.0[b\d, p\d]*", value):
+        if not re.findall(r"2\.\d+\.0(?:[bp]\d+)*$", value.strip()):
             raise ValueError
         return value
 
     parser.add_argument(
         "--cmk-version",
         dest="cmk_version",
-        metavar="2.M.0[pN|bN]",
+        metavar="2.M.0[pN,bN]",
         type=cmk_version,
-        help=("List werks corresponding to a certain Checkmk version. M, N are positive integers."),
+        help="List werks corresponding to a certain Checkmk version. M, N are positive integers.",
         required=True,
     )
 
@@ -142,9 +144,11 @@ def create_search_query(args: type[TCliArgs]) -> str:
     }
 
     query[age] = f"{args.age}d" if args.age else ""
-    query[branch] = f"release/{args.cmk_version}" if "p" in args.cmk_version else args.cmk_version
-    if query[branch] == "2.5.0":
-        query[branch] = "master"
+    branch_version = (
+        args.cmk_version.split("p") if "p" in args.cmk_version else args.cmk_version.split("b")
+    )[0]
+
+    query[branch] = "master" if branch_version == MASTER_BRANCH else branch_version
     query[status] = "" if args.status == TChangeStatus.ALL else args.status
     return "+".join([f'{key}:"{query[key]}"' for key in query if query[key]])
 
@@ -174,7 +178,8 @@ def main() -> None:
                 exc.add_note("Skip change...")
                 print(exc)
                 continue
-            print(change.id, werk.IMPACT, werk.ID, werk.SUMMARY)
+            if werk.VERSION == args.cmk_version:
+                print(change.id, werk.IMPACT, werk.ID, werk.SUMMARY)
 
 
 if __name__ == "__main__":

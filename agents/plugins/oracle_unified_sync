@@ -1,0 +1,14 @@
+#!/bin/bash
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# Reason for this no-op: shellcheck disable=... before the first command disables the error for the
+# entire script.
+:
+
+# Disable unused variable error (needed to keep track of version)
+# shellcheck disable=SC2034
+CMK_VERSION="2.5.0b1"
+
+"${MK_LIBDIR}/plugins/packages/mk-oracle/mk-oracle" -c "${MK_CONFDIR}/oracle.yml" --filter sync

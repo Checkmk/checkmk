@@ -30,8 +30,8 @@ const dictionaryVariants = cva('', {
   variants: {
     group_layout: {
       none: '',
-      horizontal: 'horizontal_groups',
-      vertical: 'vertical_groups'
+      horizontal: 'form-dictionary--horizontal-groups',
+      vertical: 'form-dictionary--vertical-groups'
     }
   },
   defaultVariants: {
@@ -97,13 +97,13 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 <template>
   <table
     v-if="props.spec.elements.length > 0"
-    class="dictionary"
+    class="form-dictionary"
     :aria-label="props.spec.title"
     role="group"
   >
     <tbody>
       <tr v-for="group in groups" :key="`${componentId}.${group.groupKey}`">
-        <td class="dictleft">
+        <td class="form-dictionary__dictleft">
           <div v-if="!!group.title" class="form-dictionary__group-title">{{ group?.title }}</div>
           <FormHelp v-if="group.help" :help="group.help" />
           <div
@@ -179,6 +179,11 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 </template>
 
 <style scoped>
+.form-dictionary {
+  border-collapse: collapse;
+  width: 100%;
+}
+
 .form-dictionary__group-title {
   font-weight: bold;
   margin: var(--spacing) 0;
@@ -206,10 +211,9 @@ tr:last-of-type > td > div > .form-dictionary__group_elem:last-of-type {
 .form-dictionary__group-elems {
   flex-direction: row;
   gap: 0.5em;
+}
 
-  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-  &.horizontal_groups {
-    display: flex;
-  }
+.form-dictionary--horizontal-groups {
+  display: flex;
 }
 </style>

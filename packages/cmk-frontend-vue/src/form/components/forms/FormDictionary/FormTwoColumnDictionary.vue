@@ -81,13 +81,13 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 <template>
   <table
     v-if="props.spec.elements.length > 0"
-    class="dictionary"
+    class="form-two-column-dictionary"
     :aria-label="props.spec.title"
     role="group"
   >
     <tbody>
       <tr v-for="group in groups" :key="`${componentId}.${group.groupKey}`">
-        <td class="dictleft">
+        <td class="form-two-column-dictionary__dictleft">
           <div v-if="!!group.title" class="form-dictionary__group-title">{{ group?.title }}</div>
           <FormHelp v-if="group.help" :help="group.help" />
           <div :class="dictionaryVariants({ group_layout: group.layout })">
@@ -145,6 +145,11 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 </template>
 
 <style scoped>
+.form-two-column-dictionary {
+  border-collapse: collapse;
+  width: 100%;
+}
+
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .form-dictionary__group-title {
   font-weight: bold;

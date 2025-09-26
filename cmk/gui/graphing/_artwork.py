@@ -343,12 +343,12 @@ def _compute_graph_curves(
     registered_metrics: Mapping[str, RegisteredMetric],
 ) -> Iterator[Curve]:
     # Fetch all raw RRD data
-    for graph_metric, time_series in fetch_augmented_time_series(
+    for graph_metric, augmented_time_series in fetch_augmented_time_series(
         graph_recipe, graph_data_range, registered_metrics
     ):
-        multi = len(time_series) > 1
+        multi = len(augmented_time_series) > 1
         mirror_prefix: Literal["", "-"] = "-" if graph_metric.line_type.startswith("-") else ""
-        for i, ts in enumerate(time_series):
+        for i, ts in enumerate(augmented_time_series):
             title = graph_metric.title
             if multi and ts.metadata.title:
                 title += " - " + ts.metadata.title

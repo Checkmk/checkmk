@@ -16,10 +16,12 @@ from cmk.relay_protocols import tasks as tasks_protocol
 class TaskResponseSerializer:
     @staticmethod
     def serialize(task: RelayTask) -> tasks_protocol.TaskResponse:
-        spec: tasks_protocol.RelayConfigTask | tasks_protocol.FetchAdHocTask | None = None
+        spec: tasks_protocol.TaskResponseSpec | None = None
         match task.spec:
             case RelayConfigSpec():
-                spec = tasks_protocol.RelayConfigTask(serial=task.spec.serial)
+                spec = tasks_protocol.RelayConfigTask(
+                    serial=task.spec.serial, tar_data=task.spec.tar_data
+                )
             case FetchSpec():
                 spec = tasks_protocol.FetchAdHocTask(
                     payload=task.spec.payload,

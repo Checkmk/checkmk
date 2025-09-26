@@ -183,7 +183,6 @@ class SiteMock:
                 method="GET",
                 url=f"{self.base_route}/domain-types/relay/collections/all",
                 headers={
-                    "Content-Type": {"matches": "application/json"},
                     "Authorization": {
                         "matches": f"^(?:{self.user.bearer}|{self.internal_secret})$"
                     },
@@ -209,7 +208,6 @@ class SiteMock:
                     method="GET",
                     url=f"{self.base_route}/objects/relay/{r}",
                     headers={
-                        "Content-Type": {"matches": "application/json"},
                         "Authorization": {
                             "matches": f"^(?:{self.user.bearer}|{self.internal_secret})$"
                         },

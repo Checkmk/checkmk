@@ -9,7 +9,7 @@ from typing import final
 import httpx
 from fastapi.testclient import TestClient
 
-from cmk.relay_protocols.tasks import TaskCreateRequest, TaskSpec
+from cmk.relay_protocols.tasks import TaskCreateRequest, TaskCreateRequestSpec
 
 from .site_mock import User
 
@@ -44,7 +44,7 @@ class AgentReceiverClient:
             f"/{self.site_name}/agent-receiver/relays/{relay_id}",
         )
 
-    def push_task(self, *, relay_id: str, spec: TaskSpec) -> httpx.Response:
+    def push_task(self, *, relay_id: str, spec: TaskCreateRequestSpec) -> httpx.Response:
         return self.client.post(
             f"/{self.site_name}/agent-receiver/relays/{relay_id}/tasks",
             json=TaskCreateRequest(
@@ -71,3 +71,6 @@ class AgentReceiverClient:
                 "result_payload": result_payload,
             },
         )
+
+    def activate_config(self) -> httpx.Response:
+        return self.client.post(f"/{self.site_name}/agent-receiver/relays/activate-config")

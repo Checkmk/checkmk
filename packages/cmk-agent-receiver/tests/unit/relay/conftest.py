@@ -20,6 +20,7 @@ from cmk.agent_receiver.relay.api.routers.relays.handlers.unregister_relay impor
     UnregisterRelayHandler,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
+    ActivateConfigHandler,
     GetRelayTaskHandler,
     GetRelayTasksHandler,
 )
@@ -58,6 +59,13 @@ def create_relay_mock_transport() -> httpx.MockTransport:
             if relay_id in registered_relays:
                 return httpx.Response(HTTPStatus.OK, json={"id": relay_id})
             return httpx.Response(HTTPStatus.NOT_FOUND, json={"error": "Relay not found"})
+
+        # List relays
+        elif request.method == "GET" and request.url.path.endswith(
+            "/domain-types/relay/collections/all"
+        ):
+            items = [{"id": relay_id} for relay_id in registered_relays]
+            return httpx.Response(HTTPStatus.OK, json={"value": items})
 
         # Delete relay
         elif request.method == "DELETE" and "/objects/relay/" in request.url.path:
@@ -169,6 +177,20 @@ def get_tasks_handler(
 ) -> Iterator[GetRelayTasksHandler]:
     handler = GetRelayTasksHandler(
         tasks_repository=tasks_repository, relay_repository=relays_repository
+    )
+    yield handler
+
+
+@pytest.fixture()
+def activate_config_handler(
+    tasks_repository: TasksRepository, relays_repository: RelaysRepository
+) -> Iterator[ActivateConfigHandler]:
+    from cmk.agent_receiver.relay.api.routers.tasks.handlers.activate_config import (
+        ActivateConfigHandler,
+    )
+
+    handler = ActivateConfigHandler(
+        tasks_repository=tasks_repository, relays_repository=relays_repository
     )
     yield handler
 

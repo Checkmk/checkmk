@@ -7,17 +7,17 @@ from http import HTTPStatus
 from cmk.agent_receiver.relay.lib.shared_types import TaskID
 from cmk.relay_protocols.tasks import (
     FetchAdHocTask,
+    TaskCreateRequestSpec,
     TaskCreateResponse,
     TaskListResponse,
     TaskResponse,
-    TaskSpec,
 )
 
 from .agent_receiver import AgentReceiverClient
 
 
 def push_task(
-    agent_receiver: AgentReceiverClient, relay_id: str, spec: TaskSpec
+    agent_receiver: AgentReceiverClient, relay_id: str, spec: TaskCreateRequestSpec
 ) -> TaskCreateResponse:
     """helper to push tasks for a relay.
     It abstracts away the reponses and gives you a reasonable type to work with."""

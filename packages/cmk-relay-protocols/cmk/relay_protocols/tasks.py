@@ -8,7 +8,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, Base64Str
 
 
 class _TaskType(StrEnum):
@@ -39,15 +39,23 @@ class FetchAdHocTask(BaseModel):
 
 
 class RelayConfigTask(BaseModel, frozen=True):
-    serial: int
+    serial: str
+    tar_data: Base64Str = Field(
+        title="Base64 encoded tar data",
+        description="Base64 encoded tar data containing the configuration files for the relay",
+    )
     type: Literal[_TaskType.RELAY_CONFIG] = _TaskType.RELAY_CONFIG
 
 
-TaskSpec = FetchAdHocTask | RelayConfigTask
+# Only the tasks that can be created via create task API endpoint
+TaskCreateRequestSpec = FetchAdHocTask
+
+# Any task that can be stored in the backend
+TaskResponseSpec = FetchAdHocTask | RelayConfigTask
 
 
 class TaskCreateRequest(BaseModel, frozen=True):
-    spec: TaskSpec = Field(discriminator="type")
+    spec: TaskCreateRequestSpec = Field(discriminator="type")
     version: int = 1
 
 
@@ -55,13 +63,15 @@ class TaskCreateResponse(BaseModel, frozen=True):
     task_id: str
 
 
-class TaskResponse(TaskCreateRequest, frozen=True):
+class TaskResponse(BaseModel, frozen=True):
+    spec: TaskResponseSpec = Field(discriminator="type")
     status: TaskStatus
     result_type: ResultType | None
     result_payload: str | None
     creation_timestamp: datetime
     update_timestamp: datetime
     id: str
+    version: int = 1
 
 
 class TaskListResponse(BaseModel, frozen=True):

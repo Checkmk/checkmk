@@ -3,18 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Annotated, assert_never
+from typing import Annotated
 
 import fastapi
 
 from cmk.agent_receiver.log import bound_contextvars
 from cmk.agent_receiver.relay.api.routers.tasks.dependencies import (
+    get_activate_config_handler,
     get_create_task_handler,
     get_relay_task_handler,
     get_relay_tasks_handler,
     get_update_task_handler,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
+    ActivateConfigHandler,
     CreateTaskHandler,
     GetRelayTaskHandler,
     GetRelayTasksHandler,
@@ -22,7 +24,6 @@ from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
 )
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     FetchSpec,
-    RelayConfigSpec,
     ResultType,
     TaskStatus,
 )
@@ -70,20 +71,12 @@ async def create_task_endpoint(
         - Maximum number of stored tasks has limits
     """
 
-    spec: FetchSpec | RelayConfigSpec | None = None
-
-    match request.spec:
-        case tasks_protocol.FetchAdHocTask():
-            spec = FetchSpec(
-                payload=request.spec.payload,
-                timeout=request.spec.timeout,
-            )
-        case tasks_protocol.RelayConfigTask():
-            spec = RelayConfigSpec(
-                serial=request.spec.serial,
-            )
-        case _:
-            assert_never(request.spec)
+    # In case a new TaskCreateRequestSpec is added in the future, extend this match-case
+    # match request.spec:
+    spec = FetchSpec(
+        payload=request.spec.payload,
+        timeout=request.spec.timeout,
+    )
 
     try:
         task_id = handler.process(RelayID(relay_id), spec)
@@ -210,3 +203,23 @@ async def get_task_endpoint(
         )
 
     return TaskResponseSerializer.serialize(task)
+
+
+@router.post("/activate-config", status_code=fastapi.status.HTTP_200_OK)
+async def create_relay_config_tasks(
+    handler: Annotated[ActivateConfigHandler, fastapi.Depends(get_activate_config_handler)],
+) -> tasks_protocol.TaskListResponse:
+    """
+    Create a relay configuration task for every registered relay.
+
+    The received RelayConfigTask payload is used to create and persist an individual task per relay
+    so that each relay can load its configuration independently.
+
+    Args:
+        payload: RelayConfigTask containing the configuration data template.
+
+    Returns:
+        TaskListResponse containing the list of created tasks.
+    """
+    created_tasks = handler.process()
+    return TaskListResponseSerializer.serialize(created_tasks)

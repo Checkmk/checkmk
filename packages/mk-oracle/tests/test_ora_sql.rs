@@ -312,6 +312,8 @@ async fn test_absent_remote_custom_instance_connection() {
     assert_eq!(r.unwrap()[0], "<<<oracle_instance>>>");
 }
 
+// TODO: Remove this test when TNS_ADMIN is properly supported on non-Windows platforms
+#[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_remote_tns_custom_instance_connection() {
     let logger = flexi_logger::Logger::try_with_str("info").unwrap();

@@ -7,11 +7,12 @@
 import os
 import re
 from argparse import ArgumentParser, Namespace
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
 from scripts.gerrit_api.client import GerritClient, TChangeStatus
-from scripts.gerrit_api.werks import werk_details
+from scripts.gerrit_api.werks import werk_details, WerkImpact
 
 ENV_GERRIT_USER: Final = "GERRIT_USER"
 ENV_GERRIT_HTTP_CREDS: Final = "GERRIT_HTTP_CREDS"
@@ -26,6 +27,15 @@ class TCliArgs(Namespace):
     http_creds: str
     status: str
     username: str
+
+
+@dataclass(frozen=True)
+class CSVEntry:
+    change_id: int
+    change_status: TChangeStatus
+    werk_id: str
+    werk_summary: str
+    werk_impact: WerkImpact
 
 
 def parsed_arguments() -> type[TCliArgs]:
@@ -153,33 +163,54 @@ def create_search_query(args: type[TCliArgs]) -> str:
     return "+".join([f'{key}:"{query[key]}"' for key in query if query[key]])
 
 
+def collect_changes_with_werks(args: type[TCliArgs], client: GerritClient) -> list[CSVEntry]:
+    details = []
+    reverted_changes = []
+    for change in client.changes_api.get_changes(query=create_search_query(args)):
+        # ignore abandoned changes.
+        if change.status is TChangeStatus.ABANDONED:
+            continue
+
+        # do not include changes which revert a Werk.
+        # TODO: improve revert detection mechanism.
+        if change.revert_of != 0:
+            reverted_changes.append(change.revert_of)
+            continue
+
+        if (
+            # ignore changes which are reverted.
+            change.virtual_id_number in reverted_changes
+            # ignore changes which are WIP.
+            or change.work_in_progress
+        ):
+            continue
+
+        try:
+            werk = werk_details(client, change)
+        except FileNotFoundError as exc:
+            exc.add_note("Skip change...")
+            print(exc)
+            continue
+
+        if werk.VERSION == args.cmk_version:
+            details.append(
+                CSVEntry(
+                    change_id=change.virtual_id_number,
+                    change_status=change.status,
+                    werk_id=f"https://checkmk.com/werk/{werk.ID}",
+                    werk_summary=werk.SUMMARY,
+                    werk_impact=werk.IMPACT,
+                )
+            )
+    return details
+
+
 def main() -> None:
     args = parsed_arguments()
     client = GerritClient(args.username, args.http_creds)
 
     # parse changes
-    reverted_changes = []
-    for change in client.changes_api.get_changes(query=create_search_query(args)):
-        # do not include changes which revert a Werk.
-        if change.revert_of != 0:
-            reverted_changes.append(change.revert_of)
-            continue
-        if (
-            # ignore abandoned changes.
-            change.status is not TChangeStatus.ABANDONED
-            # ignore changes which are reverted.
-            and change.virtual_id_number not in reverted_changes
-            # ignore changes which are WIP.
-            and not change.work_in_progress
-        ):
-            try:
-                werk = werk_details(client, change)
-            except FileNotFoundError as exc:
-                exc.add_note("Skip change...")
-                print(exc)
-                continue
-            if werk.VERSION == args.cmk_version:
-                print(change.id, werk.IMPACT, werk.ID, werk.SUMMARY)
+    collect_changes_with_werks(args, client)
 
 
 if __name__ == "__main__":

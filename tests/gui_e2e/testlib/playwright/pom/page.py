@@ -273,10 +273,7 @@ class MainMenu(LocatorHelper):
         As only one side menu can be interacted with at a time.
         """
         loc = self.page.locator("div.popup_trigger.active").locator("div.popup_menu_handler")
-        try:
-            self._unique_web_element(loc)
-        except AssertionError as exc:
-            exc.add_note("None of the side menu popups are open!")
+        expect(loc, message="None of the side menu popups are open!").to_have_count(1)
         return loc
 
     @property

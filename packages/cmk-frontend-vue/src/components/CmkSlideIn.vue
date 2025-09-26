@@ -30,7 +30,8 @@ watch(
 <template>
   <DialogRoot :open="open">
     <DialogPortal>
-      <DialogOverlay class="cmk-slide-in__overlay" />
+      <!-- @vue-ignore @click is not a property of DialogOverlay -->
+      <DialogOverlay class="cmk-slide-in__overlay" @click="emit('close')" />
       <!-- As this element exists outside our vue app hierarchy, we manually apply our global Vue CSS class -->
       <!-- @vue-ignore aria-describedby it not a property of DialogContent -->
       <DialogContent

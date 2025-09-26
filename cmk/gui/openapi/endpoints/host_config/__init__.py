@@ -947,10 +947,17 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
     query_params=[EFFECTIVE_ATTRIBUTES],
     etag="output",
     response_schema=HostConfigSchema,
-    permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
+    permissions_required=permissions.AllPerm(
+        [
+            permissions.Perm("wato.see_all_folders"),
+        ]
+    ),
 )
 def show_host(params: Mapping[str, Any]) -> Response:
     """Show a host"""
+    # wato.see_all_folders permission check is duplicated here because we cannot rely on the
+    # check being performed deeper in the call stack; we need it close to the endpoint declaration
+    user.need_permission("wato.see_all_folders")
     host_name = params["host_name"]
     host: Host = Host.load_host(host_name)
     return _serve_host(

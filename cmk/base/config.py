@@ -676,6 +676,7 @@ def _perform_post_config_loading_actions(
         cmc_log_rrdcreation=cmc_log_rrdcreation,
         cmc_host_rrd_config=cmc_host_rrd_config,
         cmc_statehist_cache=cmc_statehist_cache,
+        cmc_timeperiod_horizon=cmc_timeperiod_horizon,
         host_recurring_downtimes=host_recurring_downtimes,
         cmc_flap_settings=cmc_flap_settings,
         cmc_host_flap_settings=cmc_host_flap_settings,

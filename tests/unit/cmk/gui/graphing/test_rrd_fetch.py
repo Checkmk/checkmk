@@ -109,7 +109,7 @@ def test_fetch_augmented_time_series(
     request_context: None,
 ) -> None:
     with _setup_livestatus(mock_livestatus):
-        assert list(fetch_augmented_time_series(_GRAPH_RECIPE, _GRAPH_DATA_RANGE, {})) == [
+        assert list(fetch_augmented_time_series({}, _GRAPH_RECIPE, _GRAPH_DATA_RANGE)) == [
             (
                 GraphMetric(
                     title="Temperature",
@@ -149,7 +149,7 @@ def test_fetch_augmented_time_series_with_conversion(
 ) -> None:
     active_config.default_temperature_unit = TemperatureUnit.FAHRENHEIT.value
     with _setup_livestatus(mock_livestatus):
-        assert list(fetch_augmented_time_series(_GRAPH_RECIPE, _GRAPH_DATA_RANGE, {})) == [
+        assert list(fetch_augmented_time_series({}, _GRAPH_RECIPE, _GRAPH_DATA_RANGE)) == [
             (
                 GraphMetric(
                     title="Temperature",

@@ -344,7 +344,7 @@ def _compute_graph_curves(
 ) -> Iterator[Curve]:
     # Fetch all raw RRD data
     for graph_metric, augmented_time_series in fetch_augmented_time_series(
-        graph_recipe, graph_data_range, registered_metrics
+        registered_metrics, graph_recipe, graph_data_range
     ):
         multi = len(augmented_time_series) > 1
         mirror_prefix: Literal["", "-"] = "-" if graph_metric.line_type.startswith("-") else ""

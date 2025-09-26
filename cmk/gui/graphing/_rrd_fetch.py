@@ -36,6 +36,7 @@ from ._legacy import (
 from ._metric_operation import (
     AugmentedTimeSeries,
     GraphConsolidationFunction,
+    MetricOperation,
     op_func_wrapper,
     RRDData,
     RRDDataKey,
@@ -196,20 +197,24 @@ def _chop_last_empty_step(end_time: float, rrd_data: RRDData) -> None:
 
 
 def _fetch_time_series(
-    graph_recipe: GraphRecipe,
-    graph_data_range: GraphDataRange,
     registered_metrics: Mapping[str, RegisteredMetric],
+    operations: Sequence[MetricOperation],
+    consolidation_function: GraphConsolidationFunction | None,
+    conversion: Callable[[float], float],
+    *,
+    start_time: float,
+    end_time: float,
+    step: int | str,
 ) -> RRDData:
-    conversion = user_specific_unit(graph_recipe.unit_spec, user, active_config).conversion
     rrd_data: dict[RRDDataKey, TimeSeries] = {}
     for (site_id, host_name, service_description), metrics in _metric_props_by_service(
         (
             key
-            for metric in graph_recipe.metrics
-            for key in metric.operation.keys(registered_metrics)
+            for operation in operations
+            for key in operation.keys(registered_metrics)
             if isinstance(key, RRDDataKey)
         ),
-        graph_recipe.consolidation_function,
+        consolidation_function,
     ).items():
         with contextlib.suppress(livestatus.MKLivestatusNotFoundError):
             for metric_props, time_series in _fetch_time_series_of_service(
@@ -218,9 +223,9 @@ def _fetch_time_series(
                 service_description,
                 metrics,
                 conversion,
-                start_time=graph_data_range.time_range[0],
-                end_time=graph_data_range.time_range[1],
-                step=graph_data_range.step,
+                start_time=start_time,
+                end_time=end_time,
+                step=step,
             ):
                 rrd_data[
                     RRDDataKey(
@@ -233,18 +238,24 @@ def _fetch_time_series(
                     )
                 ] = time_series
 
-    _align_and_resample_rrds(rrd_data, graph_recipe.consolidation_function)
-    _chop_last_empty_step(graph_data_range.time_range[1], rrd_data)
+    _align_and_resample_rrds(rrd_data, consolidation_function)
+    _chop_last_empty_step(end_time, rrd_data)
     return rrd_data
 
 
 def fetch_augmented_time_series(
+    registered_metrics: Mapping[str, RegisteredMetric],
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
-    registered_metrics: Mapping[str, RegisteredMetric],
 ) -> Iterator[tuple[GraphMetric, Sequence[AugmentedTimeSeries]]]:
     time_series_by_rrd_data_key = _fetch_time_series(
-        graph_recipe, graph_data_range, registered_metrics
+        registered_metrics,
+        [gm.operation for gm in graph_recipe.metrics],
+        graph_recipe.consolidation_function,
+        user_specific_unit(graph_recipe.unit_spec, user, active_config).conversion,
+        start_time=graph_data_range.time_range[0],
+        end_time=graph_data_range.time_range[1],
+        step=graph_data_range.step,
     )
     for graph_metric in graph_recipe.metrics:
         if time_series := graph_metric.operation.compute_augmented_time_series(

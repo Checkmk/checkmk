@@ -3223,6 +3223,11 @@ msgstr "Toegang Checkmk Agent via TCP"
 msgid "Access analyze configuration"
 msgstr "Toegang analyseren configuratie"
 
+msgid ""
+"Access is restricted, but no contact groups are assigned in the host's "
+"permissions."
+msgstr ""
+
 msgid "Access key"
 msgstr "Toegangssleutel"
 
@@ -7409,14 +7414,8 @@ msgstr "Toewijzen via reguliere expressies"
 msgid "Assignee"
 msgstr ""
 
-msgid "Assignment of hosts to contact groups"
-msgstr "Toewijzing van hosts aan contactgroepen"
-
 msgid "Assignment of hosts to host groups"
 msgstr "Toewijzing van hosts aan hostgroepen"
-
-msgid "Assignment of services to contact groups"
-msgstr "Toewijzing van diensten aan contactgroepen"
 
 msgid "Assignment of services to service groups"
 msgstr "Toewijzing van diensten aan dienstengroepen"
@@ -17039,6 +17038,10 @@ msgstr ""
 
 msgid "Custom Action"
 msgstr "Aangepaste actie"
+
+#, fuzzy
+msgid "Custom ClickHouse Instance"
+msgstr "Aangepaste sondestatus"
 
 #, python-format
 msgid "Custom GUI design of %s"
@@ -41968,6 +41971,10 @@ msgid "Metric History"
 msgstr "Metrische geschiedenis"
 
 #, fuzzy
+msgid "Metric backend instance"
+msgstr "Oracle gevallen"
+
+#, fuzzy
 msgid "Metric configuration"
 msgstr "Host configuratie"
 
@@ -59121,6 +59128,10 @@ msgstr ""
 msgid "Set height"
 msgstr "Hoogte instellen"
 
+#, fuzzy
+msgid "Set host visibility for contact groups"
+msgstr "Toewijzing van hosts aan contactgroepen"
+
 msgid "Set levels"
 msgstr "Ingestelde niveaus"
 
@@ -59321,6 +59332,10 @@ msgstr ""
 "verdwenen diensten automatisch te verwijderen. Als je zowel dit als "
 "'Verwijder geen overeenkomende verdwenen diensten' instelt, moeten beide "
 "regels van toepassing zijn om een dienst te kunnen verwijderen."
+
+#, fuzzy
+msgid "Set service visibility for contact groups"
+msgstr "Dienstcontactgroepen"
 
 msgid "Set state to"
 msgstr "Stel de toestand in op"
@@ -61356,14 +61371,6 @@ msgstr ""
 
 msgid "Sorry, you have no permission for this host."
 msgstr "Sorry, je hebt geen toestemming voor deze gastheer."
-
-#, python-format
-msgid ""
-"Sorry, you have no permission on the host '<b>%s</b>'. The hosts contact "
-"groups are <b>%s</b>, your contact groups are <b>%s</b>."
-msgstr ""
-"Sorry, u heeft geen toestemming voor de host '<b>%s</b>'. De contactgroepen "
-"van de host zijn <b>%s</b>, uw contactgroepen zijn <b>%s</b>."
 
 #, python-format
 msgid "Sorry, you have no permissions to the folder <b>%s</b>."
@@ -69078,8 +69085,8 @@ msgstr ""
 
 #, python-format
 msgid ""
-"The relay '%s' is used by the following host(s): %s. Only relays that are "
-"not being used by a host can be deleted."
+"The relay '%s' is still assigned to one or more hosts. To delete it, first "
+"remove the relay from all associated hosts it is monitoring."
 msgstr ""
 
 #, fuzzy, python-format
@@ -76154,6 +76161,12 @@ msgid ""
 "might result in crashes or other unexpected behavior."
 msgstr ""
 
+#, python-format
+msgid ""
+"To get access, ensure your user is in a contact group specified in the "
+"host's permissions: <b>%s</b>."
+msgstr ""
+
 msgid ""
 "To make the querying source transparent for the requested web server, the "
 "user agent header field will be used. The default is set to checkmk/"
@@ -81386,6 +81399,9 @@ msgstr "Gebruik vet lettertype"
 msgid "Use credentials"
 msgstr "Gebruik geloofsbrieven"
 
+msgid "Use custom ClickHouse instance"
+msgstr ""
+
 msgid "Use custom connection parameters"
 msgstr "Gebruik aangepaste verbindingsparameters"
 
@@ -81602,6 +81618,9 @@ msgstr "Gebruik site ID"
 
 msgid "Use site ID prefix"
 msgstr "Gebruik site ID prefix"
+
+msgid "Use site-local ClickHouse instance"
+msgstr ""
 
 msgid "Use system wide CAs"
 msgstr "Gebruik systeemwijde CA's"
@@ -87724,6 +87743,10 @@ msgid ""
 msgstr ""
 "U kunt deze hernoeming niet doen omdat de volgende hostnamen zouden botsen:"
 
+#, fuzzy, python-format
+msgid "You cannot edit the configuration for host '<b>%s</b>'. %s"
+msgstr "Kan configuratiebestand \"%s\" niet schrijven: %s"
+
 msgid "You cannot have more than one timing setting per notification method."
 msgstr "U kunt niet meer dan één timinginstelling per meldingsmethode hebben."
 
@@ -92739,6 +92762,9 @@ msgid ""
 "your environment."
 msgstr ""
 
+msgid "Assignment of hosts to contact groups"
+msgstr "Toewijzing van hosts aan contactgroepen"
+
 #, fuzzy
 msgid "Create a dashboard"
 msgstr "Gerelateerde dashboards"
@@ -92811,6 +92837,18 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Assignment of services to contact groups"
+#~ msgstr "Toewijzing van diensten aan contactgroepen"
+
+#, python-format
+#~ msgid ""
+#~ "Sorry, you have no permission on the host '<b>%s</b>'. The hosts contact "
+#~ "groups are <b>%s</b>, your contact groups are <b>%s</b>."
+#~ msgstr ""
+#~ "Sorry, u heeft geen toestemming voor de host '<b>%s</b>'. De "
+#~ "contactgroepen van de host zijn <b>%s</b>, uw contactgroepen zijn <b>%s</"
+#~ "b>."
 
 #~ msgid "repeat every 20'th row"
 #~ msgstr "herhaal elke 20ste rij"

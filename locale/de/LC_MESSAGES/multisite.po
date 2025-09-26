@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-09-24 18:39+0000\n"
+"PO-Revision-Date: 2025-09-25 22:54+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -3198,6 +3198,11 @@ msgstr "Checkmk-Agent via TCP abrufen"
 
 msgid "Access analyze configuration"
 msgstr "Konfigurationsanalyse aufrufen"
+
+msgid ""
+"Access is restricted, but no contact groups are assigned in the host's "
+"permissions."
+msgstr ""
 
 msgid "Access key"
 msgstr "Zugriffsschlüssel"
@@ -7233,14 +7238,8 @@ msgstr "Zuweisung über reguläre Ausdrücke"
 msgid "Assignee"
 msgstr "Adressat"
 
-msgid "Assignment of hosts to contact groups"
-msgstr "Zuweisung von Hosts zu Kontaktgruppen"
-
 msgid "Assignment of hosts to host groups"
 msgstr "Zuweisung von Hosts zu Host-Gruppen"
-
-msgid "Assignment of services to contact groups"
-msgstr "Zuweisung von Services zu Kontaktgruppen"
 
 msgid "Assignment of services to service groups"
 msgstr "Zuweisung von Services zu Service-Gruppen"
@@ -16495,6 +16494,10 @@ msgstr ""
 
 msgid "Custom Action"
 msgstr "Angepasste Aktion"
+
+#, fuzzy
+msgid "Custom ClickHouse Instance"
+msgstr "Individueller Zustand der Messung"
 
 #, python-format
 msgid "Custom GUI design of %s"
@@ -34476,9 +34479,9 @@ msgstr "Ungültige Handbuchseite: Konnte Titel nicht auslesen"
 msgid "Invalid mime type, supported types are: %s"
 msgstr "Ungültiger Mime-Typ, unterstützte Typen sind: %s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Invalid mode '%s'."
-msgstr "Ungültiger Schlüssel: %s"
+msgstr "Ungültiger Modus '%s'."
 
 msgid "Invalid number"
 msgstr "Ungültige Nummer"
@@ -40383,6 +40386,10 @@ msgstr "Metrik-Vorhersage"
 
 msgid "Metric History"
 msgstr "Metrik-Historie"
+
+#, fuzzy
+msgid "Metric backend instance"
+msgstr "Oracle-Instanz"
 
 msgid "Metric configuration"
 msgstr "Metrik-Konfiguration"
@@ -50527,9 +50534,8 @@ msgstr "Proxmox VE Knoten-Info"
 msgid "Proxmox VE Node Memory Allocation"
 msgstr "Proxmox VE Knoten Speicherzuweisung"
 
-#, fuzzy
 msgid "Proxmox VE Replication"
-msgstr "CPU-Auslastung für Proxmox VE"
+msgstr "Proxmox VE Replikation"
 
 msgid "Proxmox VE VM Backup"
 msgstr "Proxmox VE VM Sicherung"
@@ -56346,9 +56352,8 @@ msgstr "Übersetzen von Service-Zuständen"
 msgid "Service state type"
 msgstr "Service Zustandstyp"
 
-#, fuzzy
 msgid "Service state when no replication jobs are configured on the cluster"
-msgstr "Zustand, wenn der Replikationszustand active ist"
+msgstr ""
 
 msgid "Service states"
 msgstr "Service-Zustände"
@@ -56591,6 +56596,10 @@ msgstr ""
 msgid "Set height"
 msgstr "Höhe setzen"
 
+#, fuzzy
+msgid "Set host visibility for contact groups"
+msgstr "Zuweisung von Hosts zu Kontaktgruppen"
+
 msgid "Set levels"
 msgstr "Levels einstellen"
 
@@ -56777,6 +56786,10 @@ msgstr ""
 "ein, um passende verschwundene Services automatisch zu entfernen. Wenn Sie "
 "sowohl dies als auch 'Verschwundene Services nicht entfernen' einstellen, "
 "müssen beide Regeln zutreffen, damit ein Service entfernt wird."
+
+#, fuzzy
+msgid "Set service visibility for contact groups"
+msgstr "Service-Kontaktgruppen"
 
 msgid "Set state to"
 msgstr "Zustand setzen auf"
@@ -58794,14 +58807,6 @@ msgstr ""
 
 msgid "Sorry, you have no permission for this host."
 msgstr "Sie haben keine Berechtigung für diesen Host."
-
-#, python-format
-msgid ""
-"Sorry, you have no permission on the host '<b>%s</b>'. The hosts contact "
-"groups are <b>%s</b>, your contact groups are <b>%s</b>."
-msgstr ""
-"Sie haben keine Berechtigungen für den Host '<b>%s</b>'. Die Kontaktgruppen "
-"der Hosts sind <b>%s</b>, Ihre Kontaktgruppen sind <b>%s</b>."
 
 #, python-format
 msgid "Sorry, you have no permissions to the folder <b>%s</b>."
@@ -64211,13 +64216,13 @@ msgstr ""
 "Der Kunde der Instanzen, der über die Broker-Verbindung verbunden ist, muss "
 "identisch sein."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "The dashboard '%s' already contains an embedded view with the ID '%s'. "
 "Please choose another ID."
 msgstr ""
-"Das Dashboard '%s' enthält keine eingebettete Tabellenansicht mit der ID "
-"'%s'."
+"Das Dashboard '%s' enthält bereits eine eingebettete Tabellenansicht mit der "
+"ID '%s'. Bitte wählen Sie eine andere ID."
 
 #, python-format
 msgid "The dashboard '%s' does not contain an embedded view with the ID '%s'."
@@ -64253,9 +64258,9 @@ msgstr "Der Datenbankname auf dem Mailbox-Server."
 msgid "The database to authenticate on."
 msgstr "Die Datenbank, an der die Authentifizierung erfolgen soll."
 
-#, fuzzy, python-format
+#, python-format
 msgid "The datasource '%s' does not exist."
-msgstr "Der Host '%s' existiert nicht"
+msgstr "Die Datenquelle '%s' existiert nicht."
 
 msgid "The datasource of a view cannot be changed."
 msgstr "Die Datenquelle einer Ansicht kann nicht geändert werden."
@@ -66509,8 +66514,8 @@ msgstr ""
 
 #, python-format
 msgid ""
-"The relay '%s' is used by the following host(s): %s. Only relays that are "
-"not being used by a host can be deleted."
+"The relay '%s' is still assigned to one or more hosts. To delete it, first "
+"remove the relay from all associated hosts it is monitoring."
 msgstr ""
 
 #, python-format
@@ -72045,10 +72050,11 @@ msgid ""
 "one icon that is complemented with an additional symbol."
 msgstr ""
 "Diese Auswahl ist nur relevant wenn unter 'Benutzer' -> 'Profil editieren' "
-"-> 'Mega menu Icons' die Option 'Pro Eintrag' ausgewählt ist. In diesem Fall "
-"kannst du hier das Icon neben dem Namen des Dashboard im Monitoring-Menü "
-"festlegen. Man kann nur ein Icon (farbiges Icon) oder ein Icon, dass mit "
-"einem zusätzlichen Symbol ergänzt ist auswählen."
+"-> 'Megamenü-Symbole' die Option 'Pro Eintrag' ausgewählt ist. In diesem "
+"Fall können Sie hier das Symbol auswählen, das neben dem Namen Ihres "
+"Dashboards im Monitoring-Menü angezeigt wird. Sie können nur ein Symbol (das "
+"farbige Symbol) oder ein Symbol, das mit einem zusätzlichen Symbol ergänzt "
+"ist, auswählen."
 
 msgid "This service is based on cached agent data and cannot be rescheduled."
 msgstr ""
@@ -73675,6 +73681,12 @@ msgstr ""
 "Befehlszeile. Dessen Option `enable` gibt Ihnen die Möglichkeit, alle "
 "Versionsprüfungen zu deaktivieren. Dies kann zu Abstürzen oder anderem "
 "unerwarteten Verhalten führen."
+
+#, python-format
+msgid ""
+"To get access, ensure your user is in a contact group specified in the "
+"host's permissions: <b>%s</b>."
+msgstr ""
 
 msgid ""
 "To make the querying source transparent for the requested web server, the "
@@ -77957,9 +77969,8 @@ msgstr "Obergrenzen beim Tunnel Ingress Packet Drop"
 msgid "Upper levels provisioned concurrency utilization"
 msgstr "Obergrenzen für die bereitgestellte Festplattenauslastung"
 
-#, fuzzy
 msgid "Upper limit of time since last replication"
-msgstr "Levels für die Zeit seit letztem Update"
+msgstr "Obergrenze für die Zeit seit der letzten Replikation"
 
 msgid "Upper limits in percent"
 msgstr "Obergrenzen in Prozent"
@@ -78270,6 +78281,9 @@ msgstr "Fettschritt verwenden"
 msgid "Use credentials"
 msgstr "Zugangsdaten angeben"
 
+msgid "Use custom ClickHouse instance"
+msgstr ""
+
 msgid "Use custom connection parameters"
 msgstr "Individuelle Verbindungsparameter nutzen"
 
@@ -78483,6 +78497,9 @@ msgstr "Instanz-ID verwenden"
 
 msgid "Use site ID prefix"
 msgstr "Präfix für Instanz-ID verwenden"
+
+msgid "Use site-local ClickHouse instance"
+msgstr ""
 
 msgid "Use system wide CAs"
 msgstr "Systemweite CAs nutzen"
@@ -84412,6 +84429,10 @@ msgstr ""
 "Sie können die Umbenennung nicht durchführen, da die folgenden Hosts von "
 "Quick Setup gesperrt sind:"
 
+#, fuzzy, python-format
+msgid "You cannot edit the configuration for host '<b>%s</b>'. %s"
+msgstr "Kann Konfigurationsdatei \"%s\" nicht schreiben: %s"
+
 msgid "You cannot have more than one timing setting per notification method."
 msgstr ""
 "Sie können nicht mehr als eine Einstellung pro Benachrichtigungsmethode "
@@ -87976,72 +87997,61 @@ msgstr "Service-Metrik auswählen"
 msgid "Filter by service"
 msgstr "Nach Service filtern"
 
-#, fuzzy
 msgid "Dashboard layout"
-msgstr "Dashboard-Filter"
+msgstr "Dashboard-Layout"
 
 msgid ""
 "You can choose between a fixed layout or a responsive, scrollable grid "
 "layout. By default, the responsive grid layout is selected."
 msgstr ""
 
-#, fuzzy
 msgid "Responsive"
-msgstr "Antwortzeit"
+msgstr ""
 
 msgid "Choose which objects this dashboard applies to"
 msgstr ""
 
-#, fuzzy
 msgid "Enter name"
-msgstr "Benutzernamen eingeben"
+msgstr "Namen eingeben"
 
-#, fuzzy
 msgid "Add filter as suffix"
-msgstr "Filter hinzufügen"
+msgstr "Filter als Suffix hinzufügen"
 
 msgid "Include dashboard filter contents to the dashboard title.."
 msgstr ""
 
-#, fuzzy
 msgid "Automatically create unique ID"
-msgstr "Monitoring-Agenten automatisch erstellen"
+msgstr "Automatisch eindeutige ID erstellen"
 
-#, fuzzy
 msgid "Add unique ID"
-msgstr "Regel-ID hinzufügen"
+msgstr "Eindeutige ID hinzufügen"
 
-#, fuzzy
 msgid "Dashboard icon"
-msgstr "Dashboard"
+msgstr "Dashboard-Symbol"
 
-#, fuzzy
 msgid ""
 "This selection is only relevant if under 'User' -> 'Edit Profile' -> 'Mega "
 "menue icons' you have selected the options 'Per Entry'. You can select the "
 "icon to display next to your dashboard in the Monitoring menu. You can "
 "choose either a single colored icon or one with an additional symbol."
 msgstr ""
-"Diese Auswahl ist nur relevant wenn unter 'Benutzer' -> 'Profil editieren' "
-"-> 'Mega menu Icons' die Option 'Pro Eintrag' ausgewählt ist. In diesem Fall "
-"kannst du hier das Icon neben dem Namen des Dashboard im Monitoring-Menü "
-"festlegen. Man kann nur ein Icon (farbiges Icon) oder ein Icon, dass mit "
-"einem zusätzlichen Symbol ergänzt ist auswählen."
+"Diese Auswahl ist nur relevant, wenn unter 'Benutzer' -> 'Profil editieren' "
+"-> 'Megamenü-Symbole' die Option 'Pro Eintrag' ausgewählt ist. In diesem "
+"Fall können Sie das Symbol, das neben dem Dashboard im Monitoring-Menü "
+"angezeigt werden soll, auswählen. Sie können entweder ein einfarbiges Symbol "
+"oder ein Symbol mit einem zusätzlichen Symbol auswählen."
 
-#, fuzzy
 msgid "Dashboard visibility"
-msgstr "Graph-Sichtbarkeit"
+msgstr "Dashboard-Sichtbarkeit"
 
-#, fuzzy
 msgid "Show in monitor menu"
-msgstr "Thema im 'Monitor' Menu"
+msgstr "Im Monitor-Menü anzeigen"
 
 msgid "Select option"
 msgstr "Option auswählen"
 
-#, fuzzy
 msgid "To be defined"
-msgstr "noch zu definieren"
+msgstr "Noch zu definieren"
 
 #, fuzzy
 msgid ""
@@ -88299,13 +88309,11 @@ msgstr "Unregistriert"
 msgid "Custom"
 msgstr "Benutzerdefiniert"
 
-#, fuzzy
 msgid "Name is required."
-msgstr "ist erforderlich"
+msgstr "Name ist erforderlich."
 
-#, fuzzy
 msgid "Unique ID is required."
-msgstr "ist erforderlich"
+msgstr "Eindeutige ID ist erforderlich."
 
 #, fuzzy
 msgid ""
@@ -88505,9 +88513,8 @@ msgstr "Attribute zurücksetzen"
 msgid "Scope attributes"
 msgstr "Rollen-Attribut"
 
-#, fuzzy
 msgid "Data point attributes"
-msgstr "Attribute der Wartungszeit:"
+msgstr "Attribute des Datenpunkts"
 
 msgid "Graph metrics with all zero values"
 msgstr "Graph-Metriken mit allen Null-Werten"
@@ -89208,6 +89215,9 @@ msgid ""
 "your environment."
 msgstr ""
 
+msgid "Assignment of hosts to contact groups"
+msgstr "Zuweisung von Hosts zu Kontaktgruppen"
+
 msgid "Create a dashboard"
 msgstr "Erstelle ein Dashboard"
 
@@ -89275,6 +89285,18 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Assignment of services to contact groups"
+#~ msgstr "Zuweisung von Services zu Kontaktgruppen"
+
+#, python-format
+#~ msgid ""
+#~ "Sorry, you have no permission on the host '<b>%s</b>'. The hosts contact "
+#~ "groups are <b>%s</b>, your contact groups are <b>%s</b>."
+#~ msgstr ""
+#~ "Sie haben keine Berechtigungen für den Host '<b>%s</b>'. Die "
+#~ "Kontaktgruppen der Hosts sind <b>%s</b>, Ihre Kontaktgruppen sind <b>%s</"
+#~ "b>."
 
 #~ msgid "repeat every 20'th row"
 #~ msgstr "Wiederhole jede 20. Zeile"

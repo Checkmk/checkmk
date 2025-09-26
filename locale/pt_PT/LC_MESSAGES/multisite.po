@@ -3226,6 +3226,11 @@ msgstr "Aceder ao agente Checkmk via TCP"
 msgid "Access analyze configuration"
 msgstr "Configuração da análise de acesso"
 
+msgid ""
+"Access is restricted, but no contact groups are assigned in the host's "
+"permissions."
+msgstr ""
+
 msgid "Access key"
 msgstr "Chave de acesso"
 
@@ -7422,14 +7427,8 @@ msgstr "Atribuir através de expressões regulares"
 msgid "Assignee"
 msgstr ""
 
-msgid "Assignment of hosts to contact groups"
-msgstr "Designação de anfitriões para grupos de contato"
-
 msgid "Assignment of hosts to host groups"
 msgstr "Atribuição de anfitriões a grupos anfitriões"
-
-msgid "Assignment of services to contact groups"
-msgstr "Atribuição de serviços a grupos de contato"
 
 msgid "Assignment of services to service groups"
 msgstr "Atribuição de serviços a grupos de serviços"
@@ -17035,6 +17034,10 @@ msgstr "Actualmente, existe uma alteração pendente que ainda não foi activada
 
 msgid "Custom Action"
 msgstr "Ação Personalizada"
+
+#, fuzzy
+msgid "Custom ClickHouse Instance"
+msgstr "Estado da sonda personalizada"
 
 #, python-format
 msgid "Custom GUI design of %s"
@@ -41962,6 +41965,10 @@ msgid "Metric History"
 msgstr "História da métrica"
 
 #, fuzzy
+msgid "Metric backend instance"
+msgstr "instâncias Oracle"
+
+#, fuzzy
 msgid "Metric configuration"
 msgstr "Configuração do anfitrião"
 
@@ -59104,6 +59111,10 @@ msgstr ""
 msgid "Set height"
 msgstr "Altura definida"
 
+#, fuzzy
+msgid "Set host visibility for contact groups"
+msgstr "Designação de anfitriões para grupos de contato"
+
 msgid "Set levels"
 msgstr "Níveis definidos"
 
@@ -59301,6 +59312,10 @@ msgstr ""
 "automaticamente os serviços desaparecidos correspondentes. Se você definir "
 "isso e 'Não remover serviços desaparecidos correspondentes', ambas as regras "
 "têm de se aplicar para que um serviço seja removido."
+
+#, fuzzy
+msgid "Set service visibility for contact groups"
+msgstr "Grupos de contato de serviços"
 
 msgid "Set state to"
 msgstr "Definir estado para"
@@ -61347,15 +61362,6 @@ msgstr ""
 
 msgid "Sorry, you have no permission for this host."
 msgstr "Desculpe, não tem autorização para este anfitrião."
-
-#, python-format
-msgid ""
-"Sorry, you have no permission on the host '<b>%s</b>'. The hosts contact "
-"groups are <b>%s</b>, your contact groups are <b>%s</b>."
-msgstr ""
-"Lamentamos, mas não tem permissão no anfitrião '<b>%s</b>'. Os grupos de "
-"contacto do anfitrião são <b>%s</b>, os seus grupos de contacto são <b>%s</"
-"b>."
 
 #, python-format
 msgid "Sorry, you have no permissions to the folder <b>%s</b>."
@@ -69041,8 +69047,8 @@ msgstr ""
 
 #, python-format
 msgid ""
-"The relay '%s' is used by the following host(s): %s. Only relays that are "
-"not being used by a host can be deleted."
+"The relay '%s' is still assigned to one or more hosts. To delete it, first "
+"remove the relay from all associated hosts it is monitoring."
 msgstr ""
 
 #, fuzzy, python-format
@@ -76108,6 +76114,12 @@ msgid ""
 "might result in crashes or other unexpected behavior."
 msgstr ""
 
+#, python-format
+msgid ""
+"To get access, ensure your user is in a contact group specified in the "
+"host's permissions: <b>%s</b>."
+msgstr ""
+
 msgid ""
 "To make the querying source transparent for the requested web server, the "
 "user agent header field will be used. The default is set to checkmk/"
@@ -81326,6 +81338,9 @@ msgstr "Use fonte em negrito"
 msgid "Use credentials"
 msgstr "Use as credenciais"
 
+msgid "Use custom ClickHouse instance"
+msgstr ""
+
 msgid "Use custom connection parameters"
 msgstr "Use parâmetros de conexão personalizados"
 
@@ -81536,6 +81551,9 @@ msgstr "Use o ID do site"
 
 msgid "Use site ID prefix"
 msgstr "Use o prefixo de identificação do local"
+
+msgid "Use site-local ClickHouse instance"
+msgstr ""
 
 msgid "Use system wide CAs"
 msgstr "Usar CAs de todo o sistema"
@@ -87619,6 +87637,10 @@ msgstr ""
 "Você não pode fazer essa renomeação, pois os seguintes nomes de anfitriões "
 "colidiriam:"
 
+#, fuzzy, python-format
+msgid "You cannot edit the configuration for host '<b>%s</b>'. %s"
+msgstr "Não é possível escrever o ficheiro de configuração \"%s\": %s"
+
 msgid "You cannot have more than one timing setting per notification method."
 msgstr ""
 "Não é possível ter mais de uma definição de tempo por método de notificação."
@@ -92628,6 +92650,9 @@ msgid ""
 "your environment."
 msgstr ""
 
+msgid "Assignment of hosts to contact groups"
+msgstr "Designação de anfitriões para grupos de contato"
+
 #, fuzzy
 msgid "Create a dashboard"
 msgstr "Painéis de controlo relacionados"
@@ -92700,6 +92725,18 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Assignment of services to contact groups"
+#~ msgstr "Atribuição de serviços a grupos de contato"
+
+#, python-format
+#~ msgid ""
+#~ "Sorry, you have no permission on the host '<b>%s</b>'. The hosts contact "
+#~ "groups are <b>%s</b>, your contact groups are <b>%s</b>."
+#~ msgstr ""
+#~ "Lamentamos, mas não tem permissão no anfitrião '<b>%s</b>'. Os grupos de "
+#~ "contacto do anfitrião são <b>%s</b>, os seus grupos de contacto são "
+#~ "<b>%s</b>."
 
 #~ msgid "repeat every 20'th row"
 #~ msgstr "repetir a cada 20'th row"

@@ -3091,6 +3091,11 @@ msgstr "TCP経由でCheckmkエージェントにアクセスする"
 msgid "Access analyze configuration"
 msgstr "アクセス解析設定"
 
+msgid ""
+"Access is restricted, but no contact groups are assigned in the host's "
+"permissions."
+msgstr ""
+
 msgid "Access key"
 msgstr "アクセスキー"
 
@@ -7010,14 +7015,8 @@ msgstr "正規表現で割り当てる"
 msgid "Assignee"
 msgstr "受任者"
 
-msgid "Assignment of hosts to contact groups"
-msgstr "連絡先グループへのホストの割り当て"
-
 msgid "Assignment of hosts to host groups"
 msgstr "ホストグループへのホストの割り当て"
-
-msgid "Assignment of services to contact groups"
-msgstr "連絡先グループへのサービスの割り当て"
 
 msgid "Assignment of services to service groups"
 msgstr "サービスグループへのサービスの割り当て"
@@ -16029,6 +16028,10 @@ msgstr "現在、有効化されていない保留中の変更が1つありま�
 
 msgid "Custom Action"
 msgstr "カスタムアクション"
+
+#, fuzzy
+msgid "Custom ClickHouse Instance"
+msgstr "カスタムプローブの状態"
 
 #, python-format
 msgid "Custom GUI design of %s"
@@ -39405,6 +39408,10 @@ msgid "Metric History"
 msgstr "メトリック履歴"
 
 #, fuzzy
+msgid "Metric backend instance"
+msgstr "Oracleインスタンス"
+
+#, fuzzy
 msgid "Metric configuration"
 msgstr "テスト構成"
 
@@ -55357,6 +55364,10 @@ msgstr ""
 msgid "Set height"
 msgstr "高さを設定する"
 
+#, fuzzy
+msgid "Set host visibility for contact groups"
+msgstr "連絡先グループへのホストの割り当て"
+
 msgid "Set levels"
 msgstr "レベルを設定する"
 
@@ -55533,6 +55544,10 @@ msgstr ""
 "ここでサービス名または正規表現パターンを設定して、一致する消失したサービスを"
 "自動的に削除します。これと'一致する消失したサービスを削除しない'の両方を設定"
 "した場合、削除するサービスには両方のルールを適用する必要があります。"
+
+#, fuzzy
+msgid "Set service visibility for contact groups"
+msgstr "サービス連絡先グループ"
 
 msgid "Set state to"
 msgstr "状態をに設定します"
@@ -57499,14 +57514,6 @@ msgstr ""
 
 msgid "Sorry, you have no permission for this host."
 msgstr "申し訳ありませんが、このホストに対する権限がありません。"
-
-#, python-format
-msgid ""
-"Sorry, you have no permission on the host '<b>%s</b>'. The hosts contact "
-"groups are <b>%s</b>, your contact groups are <b>%s</b>."
-msgstr ""
-"申し訳ありませんが、ホスト'<b>%s</b>'に対する権限がありません。ホストの連絡先"
-"グループは<b>%s</b>、連絡先グループは<b>%s</b>です。"
 
 #, python-format
 msgid "Sorry, you have no permissions to the folder <b>%s</b>."
@@ -64836,8 +64843,8 @@ msgstr ""
 
 #, python-format
 msgid ""
-"The relay '%s' is used by the following host(s): %s. Only relays that are "
-"not being used by a host can be deleted."
+"The relay '%s' is still assigned to one or more hosts. To delete it, first "
+"remove the relay from all associated hosts it is monitoring."
 msgstr ""
 
 #, fuzzy, python-format
@@ -71623,6 +71630,12 @@ msgstr ""
 "するフラグがあります。これにより、クラッシュや予期せぬ動作が発生する可能性が"
 "あります。"
 
+#, python-format
+msgid ""
+"To get access, ensure your user is in a contact group specified in the "
+"host's permissions: <b>%s</b>."
+msgstr ""
+
 msgid ""
 "To make the querying source transparent for the requested web server, the "
 "user agent header field will be used. The default is set to checkmk/"
@@ -76176,6 +76189,9 @@ msgstr "太字を使用する"
 msgid "Use credentials"
 msgstr "資格情報を使用する"
 
+msgid "Use custom ClickHouse instance"
+msgstr ""
+
 msgid "Use custom connection parameters"
 msgstr "カスタム接続パラメータを使用する"
 
@@ -76375,6 +76391,9 @@ msgstr "サイトIDを使用する"
 
 msgid "Use site ID prefix"
 msgstr "サイトIDプレフィックスを使用する"
+
+msgid "Use site-local ClickHouse instance"
+msgstr ""
 
 msgid "Use system wide CAs"
 msgstr "システム全体のCAを使用する"
@@ -82033,6 +82052,10 @@ msgstr ""
 "次のホストはクイックセットアップによってロックされているため、リネーム操作は"
 "実行できません："
 
+#, fuzzy, python-format
+msgid "You cannot edit the configuration for host '<b>%s</b>'. %s"
+msgstr "構成ファイル \"%s\"を書き込めません:%s"
+
 msgid "You cannot have more than one timing setting per notification method."
 msgstr "通知方法ごとに複数のタイミング設定を設定することはできません。"
 
@@ -86927,6 +86950,9 @@ msgid ""
 "your environment."
 msgstr ""
 
+msgid "Assignment of hosts to contact groups"
+msgstr "連絡先グループへのホストの割り当て"
+
 #, fuzzy
 msgid "Create a dashboard"
 msgstr "関連ダッシュボード"
@@ -86999,6 +87025,17 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Assignment of services to contact groups"
+#~ msgstr "連絡先グループへのサービスの割り当て"
+
+#, python-format
+#~ msgid ""
+#~ "Sorry, you have no permission on the host '<b>%s</b>'. The hosts contact "
+#~ "groups are <b>%s</b>, your contact groups are <b>%s</b>."
+#~ msgstr ""
+#~ "申し訳ありませんが、ホスト'<b>%s</b>'に対する権限がありません。ホストの連"
+#~ "絡先グループは<b>%s</b>、連絡先グループは<b>%s</b>です。"
 
 #~ msgid "repeat every 20'th row"
 #~ msgstr "20行ごとに繰り返す"

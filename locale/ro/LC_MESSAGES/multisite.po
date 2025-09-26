@@ -3247,6 +3247,11 @@ msgstr "Accesați Checkmk Agent prin TCP"
 msgid "Access analyze configuration"
 msgstr "Accesul analizează configurația"
 
+msgid ""
+"Access is restricted, but no contact groups are assigned in the host's "
+"permissions."
+msgstr ""
+
 msgid "Access key"
 msgstr "Cheie de acces"
 
@@ -7422,14 +7427,8 @@ msgstr "Atribuirea prin expresii regulate"
 msgid "Assignee"
 msgstr ""
 
-msgid "Assignment of hosts to contact groups"
-msgstr "Alocarea gazdelor la grupurile de contact"
-
 msgid "Assignment of hosts to host groups"
 msgstr "Atribuirea de gazde la grupuri de gazde"
-
-msgid "Assignment of services to contact groups"
-msgstr "Atribuirea serviciilor la grupurile de contact"
 
 msgid "Assignment of services to service groups"
 msgstr "Atribuirea serviciilor la grupurile de servicii"
@@ -17053,6 +17052,10 @@ msgstr ""
 
 msgid "Custom Action"
 msgstr "Acțiune personalizată"
+
+#, fuzzy
+msgid "Custom ClickHouse Instance"
+msgstr "Starea sondei personalizate"
 
 #, python-format
 msgid "Custom GUI design of %s"
@@ -42041,6 +42044,10 @@ msgid "Metric History"
 msgstr "Istoria metrică"
 
 #, fuzzy
+msgid "Metric backend instance"
+msgstr "Instanțe Oracle"
+
+#, fuzzy
 msgid "Metric configuration"
 msgstr "Configurație gazdă"
 
@@ -59250,6 +59257,10 @@ msgstr ""
 msgid "Set height"
 msgstr "Setați înălțimea"
 
+#, fuzzy
+msgid "Set host visibility for contact groups"
+msgstr "Alocarea gazdelor la grupurile de contact"
+
 msgid "Set levels"
 msgstr "Setați nivelurile"
 
@@ -59452,6 +59463,10 @@ msgstr ""
 "elimina automat serviciile dispărute corespunzătoare. Dacă setați atât acest "
 "lucru, cât și 'Don'don't remove matching vanished services', ambele reguli "
 "trebuie să se aplice pentru ca un serviciu să fie eliminat."
+
+#, fuzzy
+msgid "Set service visibility for contact groups"
+msgstr "Grupuri de contact pentru servicii"
 
 msgid "Set state to"
 msgstr "Setați starea la"
@@ -61514,14 +61529,6 @@ msgstr ""
 
 msgid "Sorry, you have no permission for this host."
 msgstr "Ne pare rău, nu aveți permisiunea pentru această gazdă."
-
-#, python-format
-msgid ""
-"Sorry, you have no permission on the host '<b>%s</b>'. The hosts contact "
-"groups are <b>%s</b>, your contact groups are <b>%s</b>."
-msgstr ""
-"Ne pare rău, nu aveți permisiune pe gazdă '<b>%s</b>'. Grupurile de contact "
-"ale gazdelor sunt <b>%s</b>, iar grupurile dvs. de contact sunt <b>%s</b>."
 
 #, python-format
 msgid "Sorry, you have no permissions to the folder <b>%s</b>."
@@ -69267,8 +69274,8 @@ msgstr ""
 
 #, python-format
 msgid ""
-"The relay '%s' is used by the following host(s): %s. Only relays that are "
-"not being used by a host can be deleted."
+"The relay '%s' is still assigned to one or more hosts. To delete it, first "
+"remove the relay from all associated hosts it is monitoring."
 msgstr ""
 
 #, fuzzy, python-format
@@ -76438,6 +76445,12 @@ msgid ""
 "might result in crashes or other unexpected behavior."
 msgstr ""
 
+#, python-format
+msgid ""
+"To get access, ensure your user is in a contact group specified in the "
+"host's permissions: <b>%s</b>."
+msgstr ""
+
 msgid ""
 "To make the querying source transparent for the requested web server, the "
 "user agent header field will be used. The default is set to checkmk/"
@@ -81578,6 +81591,9 @@ msgstr "Folosiți fontul bold"
 msgid "Use credentials"
 msgstr "Utilizați acreditările"
 
+msgid "Use custom ClickHouse instance"
+msgstr ""
+
 msgid "Use custom connection parameters"
 msgstr "Utilizați parametri de conectare personalizați"
 
@@ -81794,6 +81810,9 @@ msgstr "Utilizați ID-ul site-ului"
 
 msgid "Use site ID prefix"
 msgstr "Utilizați prefixul ID al site-ului"
+
+msgid "Use site-local ClickHouse instance"
+msgstr ""
 
 msgid "Use system wide CAs"
 msgstr "Utilizați CA-uri la nivel de sistem"
@@ -87923,6 +87942,10 @@ msgstr ""
 "Nu puteți face această redenumire, deoarece următoarele nume de gazdă ar "
 "intra în coliziune:"
 
+#, fuzzy, python-format
+msgid "You cannot edit the configuration for host '<b>%s</b>'. %s"
+msgstr "Nu se poate scrie fișierul de configurare \"%s\": %s."
+
 msgid "You cannot have more than one timing setting per notification method."
 msgstr ""
 "Nu puteți avea mai mult de o setare de temporizare pentru fiecare metodă de "
@@ -92973,6 +92996,9 @@ msgid ""
 "your environment."
 msgstr ""
 
+msgid "Assignment of hosts to contact groups"
+msgstr "Alocarea gazdelor la grupurile de contact"
+
 #, fuzzy
 msgid "Create a dashboard"
 msgstr "Tablouri de bord conexe"
@@ -93045,6 +93071,18 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Assignment of services to contact groups"
+#~ msgstr "Atribuirea serviciilor la grupurile de contact"
+
+#, python-format
+#~ msgid ""
+#~ "Sorry, you have no permission on the host '<b>%s</b>'. The hosts contact "
+#~ "groups are <b>%s</b>, your contact groups are <b>%s</b>."
+#~ msgstr ""
+#~ "Ne pare rău, nu aveți permisiune pe gazdă '<b>%s</b>'. Grupurile de "
+#~ "contact ale gazdelor sunt <b>%s</b>, iar grupurile dvs. de contact sunt "
+#~ "<b>%s</b>."
 
 #~ msgid "repeat every 20'th row"
 #~ msgstr "se repetă la fiecare 20'th rând"

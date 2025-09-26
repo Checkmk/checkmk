@@ -53,6 +53,7 @@ EMPTY_CONFIG = LoadedConfigFragment(
     host_tags={},
     cmc_log_rrdcreation=None,
     cmc_host_rrd_config=[],
+    cmc_statehist_cache={"horizon": 63072000, "max_core_downtime": 30},
     host_recurring_downtimes=[],
     cmc_flap_settings=(3.0, 5.0, 0.1),
     cmc_host_flap_settings=[],

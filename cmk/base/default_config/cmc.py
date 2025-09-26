@@ -107,16 +107,7 @@ cmc_livestatus_logcache_size = 500000
 cmc_livestatus_lines_per_file = 1000000  # maximum allows lines per logfile
 
 
-class _CMCStatehistCacheMandatory(TypedDict):
-    horizon: int  # seconds
-    max_core_downtime: int  # seconds
-
-
-class CMCStatehistCache(_CMCStatehistCacheMandatory, total=False):
-    tarpit: int
-
-
-cmc_statehist_cache: CMCStatehistCache = {"horizon": 63072000, "max_core_downtime": 30}
+cmc_statehist_cache: Mapping[str, object] | None = {"horizon": 63072000, "max_core_downtime": 30}
 cmc_debug_notifications = False
 max_long_output_size: int = 2000
 

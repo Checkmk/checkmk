@@ -83,6 +83,7 @@ class LoadedConfigFragment:
     host_tags: ruleset_matcher.TagsOfHosts
     cmc_log_rrdcreation: Literal["terse", "full"] | None
     cmc_host_rrd_config: Sequence[RuleSpec[Any]]
+    cmc_statehist_cache: Mapping[str, object] | None
     host_recurring_downtimes: Sequence[RuleSpec[Mapping[str, int | str]]]
 
     cmc_flap_settings: tuple[float, float, float]

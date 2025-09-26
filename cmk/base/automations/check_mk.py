@@ -1008,6 +1008,17 @@ def _make_configured_bake_on_restart_callback(
     )
 
 
+def _make_configured_notify_relay() -> Callable[[], None]:
+    try:
+        from cmk.relay_fetcher_trigger.relay_client import (  # type: ignore[import-not-found, unused-ignore]
+            Client,
+        )
+    except ImportError:
+        return lambda: None
+
+    return Client(omd_root=cmk.utils.paths.omd_root).publish_new_config
+
+
 def _execute_autodiscovery(
     edition: cmk_version.Edition,
     ab_plugins: AgentBasedPlugins | None,
@@ -1253,6 +1264,7 @@ def _execute_autodiscovery(
             bake_on_restart = _make_configured_bake_on_restart_callback(
                 loading_result, hosts_config.hosts
             )
+            notify_relay = _make_configured_notify_relay()
 
             # reset these to their original value to create a correct config
             if loaded_config.monitoring_core == "cmc":
@@ -1281,6 +1293,7 @@ def _execute_autodiscovery(
                         ),
                     ),
                     bake_on_restart=bake_on_restart,
+                    notify_relay=notify_relay,
                 )
             else:
                 do_restart(
@@ -1307,6 +1320,7 @@ def _execute_autodiscovery(
                         ),
                     ),
                     bake_on_restart=bake_on_restart,
+                    notify_relay=notify_relay,
                 )
         finally:
             cache_manager.clear_all()
@@ -1570,6 +1584,7 @@ class AutomationRenameHosts(Automation):
                     bake_on_restart=_make_configured_bake_on_restart_callback(
                         loading_result, hosts_config.hosts
                     ),
+                    notify_relay=_make_configured_notify_relay(),
                 )
 
                 for hostname in ip_address_of.error_handler.failed_ip_lookups:
@@ -2627,6 +2642,7 @@ class AutomationRestart(Automation):
             bake_on_restart=_make_configured_bake_on_restart_callback(
                 loading_result, hosts_config.hosts
             ),
+            notify_relay=_make_configured_notify_relay(),
         )
 
     def _check_plugins_have_changed(self, monitoring_core: Literal["nagios", "cmc"]) -> bool:
@@ -2713,6 +2729,7 @@ def _execute_silently(
     hosts_to_update: set[HostName] | None,
     service_depends_on: Callable[[HostName, ServiceName], Sequence[ServiceName]],
     bake_on_restart: Callable[[], None],
+    notify_relay: Callable[[], None],
 ) -> RestartResult:
     with redirect_stdout(open(os.devnull, "w")):
         # The IP lookup used to write to stdout, that is not the case anymore.
@@ -2742,6 +2759,7 @@ def _execute_silently(
                     )
                 ),
                 bake_on_restart=bake_on_restart,
+                notify_relay=notify_relay,
             )
         except (MKBailOut, MKGeneralException) as e:
             raise MKAutomationError(str(e))

@@ -1590,6 +1590,17 @@ def _make_configured_bake_on_restart(
     )
 
 
+def _make_configured_notify_relay() -> Callable[[], None]:
+    try:
+        from cmk.relay_fetcher_trigger.relay_client import (  # type: ignore[import-not-found, unused-ignore]
+            Client,
+        )
+    except ImportError:
+        return lambda: None
+
+    return Client(omd_root=cmk.utils.paths.omd_root).publish_new_config
+
+
 def mode_update() -> None:
     edition = cmk_version.edition(cmk.utils.paths.omd_root)
     plugins = load_checks()
@@ -1658,6 +1669,7 @@ def mode_update() -> None:
                     )
                 ),
                 bake_on_restart=bake_on_restart,
+                notify_relay=_make_configured_notify_relay(),
             )
     except Exception as e:
         console.error(f"Configuration Error: {e}", file=sys.stderr)
@@ -1763,6 +1775,7 @@ def mode_restart(args: Sequence[HostName]) -> None:
             )
         ),
         bake_on_restart=_make_configured_bake_on_restart(loading_result, hosts_config.hosts),
+        notify_relay=_make_configured_notify_relay(),
     )
     for warning in ip_address_of.error_handler.format_errors():
         console.warning(tty.format_warning(f"\n{warning}"))
@@ -1862,6 +1875,7 @@ def mode_reload(args: Sequence[HostName]) -> None:
             ),
         ),
         bake_on_restart=_make_configured_bake_on_restart(loading_result, hosts_config.hosts),
+        notify_relay=_make_configured_notify_relay(),
     )
     for warning in ip_address_of.error_handler.format_errors():
         console.warning(tty.format_warning(f"\n{warning}"))

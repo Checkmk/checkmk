@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
 from dataclasses import dataclass
+from pathlib import Path
 
 from cmk.ccc.version import Edition
 from cmk.discover_plugins import (
@@ -73,16 +74,21 @@ def load_api_v1_rule_specs(
         PluginGroup.RULESETS, entry_point_prefixes(), raise_errors=raise_errors
     )
 
-    if (
-        not_yet_moved_plugins := (
-            # HACK for migrating plugins: also search in certain modules that are not yet moved.
-            # This datastructure should only be filled for one commit in a chain, and be emptied
-            # right away. This is for convenience of the reviewer of a plugin migration only:
-            # This way we can separate migration and moving.
-            # For example:
-            # "cmk.gui.plugins.wato.check_parameters.win_dhcp_pools",
-        )
-    ):
+    # HACK for migrating plugins: also search in certain modules that are not yet moved.
+    # This datastructure should only be filled for one commit in a chain, and be emptied
+    # right away. This is for convenience of the reviewer of a plugin migration only:
+    # This way we can separate migration and moving.
+    # For example:
+    not_yet_moved_plugins = []
+    # What to do here?
+    import cmk.gui.plugins.wato.check_parameters  # pylint: disable=cmk-module-layer-violation
+
+    wato_check_parameters_path = Path(list(cmk.gui.plugins.wato.check_parameters.__path__)[0])
+    for plugin in wato_check_parameters_path.glob("*.py"):
+        if plugin.stem != "__init__":
+            not_yet_moved_plugins.append(f"cmk.gui.plugins.wato.check_parameters.{plugin.stem}")
+
+    if not_yet_moved_plugins:
         more_discovered_plugins = discover_plugins_from_modules(
             entry_point_prefixes(),
             not_yet_moved_plugins,

@@ -17,7 +17,6 @@ from typing import (
     overload,
     override,
     Protocol,
-    TypedDict,
     TypeVar,
 )
 
@@ -29,6 +28,8 @@ from cmk.bi.schema import Schema
 from cmk.bi.type_defs import (
     ActionKind,
     ActionSerialized,
+    AggregationFunctionKind,
+    AggregationFunctionSerialized,
     ComputationConfigDict,
     GroupConfigDict,
     HostState,
@@ -683,16 +684,6 @@ bi_search_registry = BISearchRegistry()
 #   |  /_/   \_\__, |\__, |_|  |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|   |
 #   |          |___/ |___/                                                 |
 #   +----------------------------------------------------------------------+
-
-AggregationFunctionKind = Literal[
-    "best",
-    "count_ok",
-    "worst",
-]
-
-
-class AggregationFunctionSerialized(TypedDict):
-    type: AggregationFunctionKind
 
 
 class ABCBIAggregationFunction(ABC):

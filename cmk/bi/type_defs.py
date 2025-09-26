@@ -25,6 +25,17 @@ class NodeDict(TypedDict):
     action: ActionSerialized
 
 
+AggregationFunctionKind = Literal[
+    "best",
+    "count_ok",
+    "worst",
+]
+
+
+class AggregationFunctionSerialized(TypedDict):
+    type: AggregationFunctionKind
+
+
 class GroupConfigDict(TypedDict):
     names: list[str]
     paths: list[list[str]]

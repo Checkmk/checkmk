@@ -54,17 +54,13 @@ class MetricProperties:
     scale: float
 
 
-def _group_needed_rrd_data_by_service(
+def _metric_props_by_service(
     rrd_data_keys: Iterable[RRDDataKey],
     consolidation_function: GraphConsolidationFunction | None,
-) -> dict[
-    tuple[SiteId, HostName, ServiceName],
-    set[MetricProperties],
-]:
-    by_service: dict[
-        tuple[SiteId, HostName, ServiceName],
-        set[MetricProperties],
-    ] = collections.defaultdict(set)
+) -> Mapping[tuple[SiteId, HostName, ServiceName], set[MetricProperties]]:
+    by_service: dict[tuple[SiteId, HostName, ServiceName], set[MetricProperties]] = (
+        collections.defaultdict(set)
+    )
     for key in rrd_data_keys:
         by_service[(key.site_id, key.host_name, key.service_name)].add(
             MetricProperties(
@@ -205,7 +201,8 @@ def _fetch_time_series(
     registered_metrics: Mapping[str, RegisteredMetric],
 ) -> RRDData:
     conversion = user_specific_unit(graph_recipe.unit_spec, user, active_config).conversion
-    by_service = _group_needed_rrd_data_by_service(
+    rrd_data: dict[RRDDataKey, TimeSeries] = {}
+    for (site_id, host_name, service_description), metrics in _metric_props_by_service(
         (
             key
             for metric in graph_recipe.metrics
@@ -213,9 +210,7 @@ def _fetch_time_series(
             if isinstance(key, RRDDataKey)
         ),
         graph_recipe.consolidation_function,
-    )
-    rrd_data: dict[RRDDataKey, TimeSeries] = {}
-    for (site_id, host_name, service_description), metrics in by_service.items():
+    ).items():
         with contextlib.suppress(livestatus.MKLivestatusNotFoundError):
             for metric_props, time_series in _fetch_time_series_of_service(
                 site_id,

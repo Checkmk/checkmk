@@ -18,6 +18,7 @@ ENV_GERRIT_USER: Final = "GERRIT_USER"
 ENV_GERRIT_HTTP_CREDS: Final = "GERRIT_HTTP_CREDS"
 # TODO: improve detection of master branch's version.
 MASTER_BRANCH: Final = "2.5.0"
+CSV_DELIMITER: Final = ", "
 
 
 class TCliArgs(Namespace):
@@ -36,6 +37,17 @@ class CSVEntry:
     werk_id: str
     werk_summary: str
     werk_impact: WerkImpact
+
+    def __str__(self) -> str:
+        return CSV_DELIMITER.join(
+            [
+                str(self.change_id),
+                self.change_status,
+                self.werk_id,
+                self.werk_summary,
+                self.werk_impact,
+            ]
+        )
 
 
 def parsed_arguments() -> type[TCliArgs]:
@@ -210,7 +222,11 @@ def main() -> None:
     client = GerritClient(args.username, args.http_creds)
 
     # parse changes
-    collect_changes_with_werks(args, client)
+    csv_entries = collect_changes_with_werks(args, client)
+    csv_entries = sorted(csv_entries, key=lambda _: _.werk_id)
+    with open(Path(args.dir_csv) / f"werks_{args.cmk_version}.csv", "w") as file:
+        for entry in csv_entries:
+            print(str(entry), end="\n", file=file)
 
 
 if __name__ == "__main__":

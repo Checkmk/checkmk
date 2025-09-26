@@ -62,11 +62,11 @@ def create_core(
 
             if edition in (Edition.CCE, Edition.CME, Edition.CSE):
                 from cmk.base.configlib.cce.relay import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
-                    make_relay_fetcher_config_writer,
+                    make_relay_config_writers,
                 )
 
-                helper_config_writers.append(
-                    make_relay_fetcher_config_writer(
+                helper_config_writers.extend(
+                    make_relay_config_writers(
                         loaded_config,
                         matcher,
                         config_cache,

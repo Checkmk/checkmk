@@ -257,6 +257,9 @@ function disableShortCuts() {
 }
 
 function highlightQuery(s: string): string {
+  if (!query.input.value) {
+    return s
+  }
   return s.replace(new RegExp(query.input.value, 'ig'), `<span class="highlight-query">$&</span>`)
 }
 

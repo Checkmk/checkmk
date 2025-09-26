@@ -3,56 +3,43 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersNetworking,
-)
-from cmk.gui.valuespec import Dictionary, Float, TextInput, Tuple
+from cmk.gui.form_specs.generators.tuple_utils import TupleLevels
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import DictElement, Dictionary, Float
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 
-def _item_spec_adva_ifs():
-    return TextInput(
-        title=_("Interface"),
-        allow_empty=False,
-    )
-
-
-def _parameter_valuespec_adva_ifs():
+def _parameter_form_spec_adva_ifs():
     return Dictionary(
-        elements=[
-            (
-                "limits_output_power",
-                Tuple(
-                    title=_("Sending Power"),
+        elements={
+            "limits_output_power": DictElement(
+                required=False,
+                parameter_form=TupleLevels(
+                    title=Title("Sending Power"),
                     elements=[
-                        Float(title=_("lower limit"), unit="dBm"),
-                        Float(title=_("upper limit"), unit="dBm"),
+                        Float(title=Title("lower limit"), unit_symbol="dBm"),
+                        Float(title=Title("upper limit"), unit_symbol="dBm"),
                     ],
                 ),
             ),
-            (
-                "limits_input_power",
-                Tuple(
-                    title=_("Received Power"),
+            "limits_input_power": DictElement(
+                required=False,
+                parameter_form=TupleLevels(
+                    title=Title("Received Power"),
                     elements=[
-                        Float(title=_("lower limit"), unit="dBm"),
-                        Float(title=_("upper limit"), unit="dBm"),
+                        Float(title=Title("lower limit"), unit_symbol="dBm"),
+                        Float(title=Title("upper limit"), unit_symbol="dBm"),
                     ],
                 ),
             ),
-        ]
+        }
     )
 
 
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="adva_ifs",
-        group=RulespecGroupCheckParametersNetworking,
-        item_spec=_item_spec_adva_ifs,
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_adva_ifs,
-        title=lambda: _("Adva Optical Transport Laser Power"),
-    )
+rule_spec_adva_ifs = CheckParameters(
+    name="adva_ifs",
+    title=Title("Adva Optical Transport Laser Power"),
+    topic=Topic.NETWORKING,
+    parameter_form=_parameter_form_spec_adva_ifs,
+    condition=HostAndItemCondition(item_title=Title("Interface")),
 )

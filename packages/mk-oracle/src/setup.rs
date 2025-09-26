@@ -289,10 +289,16 @@ pub fn detect_host_runtime() -> Option<PathBuf> {
     }
 }
 
+/// Finds runtime dir using MK_LIBDIR or custom env var
+/// usually at: MK_LIBDIR/plugins/packages/mk-oracle
+/// Returns None if env var is not set or path is not a directory
 pub fn detect_factory_runtime(env_var: Option<String>) -> Option<PathBuf> {
     let env_var = env_var.unwrap_or_else(|| "MK_LIBDIR".to_string());
     if let Ok(lib_path) = std::env::var(&env_var) {
-        let runtime_path = PathBuf::from(lib_path).join(RUNTIME_SUB_DIR);
+        let runtime_path = PathBuf::from(lib_path)
+            .join("plugins")
+            .join("packages")
+            .join(RUNTIME_SUB_DIR);
         if runtime_path.is_dir() {
             Some(runtime_path)
         } else {
@@ -336,7 +342,8 @@ const ENV_VAR_SEP: &str = ";";
 #[cfg(unix)]
 const ENV_VAR_SEP: &str = ":";
 
-/// On Unix/Windows, we modify LD_LIBRARY_PATH/PATH using config and, by default, MK_LIBDIR
+/// On Unix we modify LD_LIBRARY_PATH using config and, by default, MK_LIBDIR
+/// On Windows we modify PATH using config and, by default, MK_LIBDIR
 pub fn add_runtime_path_to_env(
     config: &OracleConfig,
     mk_lib_dir: Option<String>,

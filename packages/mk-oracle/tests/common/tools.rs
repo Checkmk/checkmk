@@ -15,7 +15,6 @@ pub mod platform {
     use std::path::PathBuf;
     use std::sync::OnceLock;
 
-    #[cfg(windows)]
     static RUNTIME_PATH: OnceLock<PathBuf> = OnceLock::new();
     static PATCHED_PATH: OnceLock<()> = OnceLock::new();
     pub fn add_runtime_to_path() {
@@ -23,11 +22,8 @@ pub mod platform {
     }
 
     fn _init_runtime_path() -> PathBuf {
-        if let Ok(path) = std::env::var("MK_LIBDIR") {
-            return PathBuf::from(path);
-        }
-        let _this_file: PathBuf = PathBuf::from(file!());
-        let base_root = _this_file
+        let this_file: PathBuf = PathBuf::from(file!());
+        let base_root = this_file
             .parent()
             .unwrap()
             .parent()
@@ -38,7 +34,13 @@ pub mod platform {
             "TNS_ADMIN",
             base_root.join("tests").join("files").join("tns"),
         );
-        base_root.join("runtimes").join(RUNTIME_SUB_DIR)
+
+        std::env::var("MK_LIBDIR")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| base_root.join("runtimes"))
+            .join("plugins")
+            .join("packages")
+            .join(RUNTIME_SUB_DIR)
     }
 
     fn _patch_path() {

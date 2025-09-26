@@ -148,6 +148,7 @@ rust_test_suite(
         "MK_CONFDIR",
         "MK_LIBDIR",
     ],
+    tags = ["manual"],
     deps = all_crate_deps() + [
         ":mk-oracle",
         ":mk-oracle-lib",

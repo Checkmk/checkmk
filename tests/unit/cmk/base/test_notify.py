@@ -137,8 +137,8 @@ def test_rbn_groups_contacts(user_groups: Mapping[ContactName, list[str]]) -> No
             {
                 "EC_ID": "test1",
             },
-            "Notification has been created by the Event Console.",
-            id="Do not match Event Console alerts, notification from Event Console",
+            None,
+            id="Match all events, notification from Event Console",
         ),
         pytest.param(
             EventRule(
@@ -155,7 +155,7 @@ def test_rbn_groups_contacts(user_groups: Mapping[ContactName, list[str]]) -> No
             {
                 "PARAMETER_FROM_ADDRESS": "from@lala.com",
             },
-            "Notification has not been created by the Event Console.",
+            None,
             id="Match only Event Console alerts, no notification from Event Console",
         ),
         pytest.param(
@@ -172,8 +172,8 @@ def test_rbn_groups_contacts(user_groups: Mapping[ContactName, list[str]]) -> No
             {
                 "EC_ID": "test3",
             },
-            "Notification has been created by the Event Console.",
-            id="No matching on Event Console alerts (option unchecked), notification from Event Console",
+            None,
+            id="Matching all events, notification from Event Console",
         ),
         pytest.param(
             EventRule(
@@ -190,7 +190,7 @@ def test_rbn_groups_contacts(user_groups: Mapping[ContactName, list[str]]) -> No
                 "PARAMETER_FROM_ADDRESS": "from@lala.com",
             },
             None,
-            id="No matching on Event Console alerts (option unchecked), no notification from Event Console",
+            id="Matching on all events, no notification from Event Console",
         ),
         pytest.param(
             EventRule(
@@ -228,7 +228,7 @@ def test_rbn_groups_contacts(user_groups: Mapping[ContactName, list[str]]) -> No
                 "EC_RULE_ID": "test_rule_id_11",
             },
             "EC Event has rule ID 'test_rule_id_11', but '['test_rule_id_6']' is required",
-            id="No match on Event Console rule ID",
+            id="Match on Event console alerts, no match on Event Console rule ID",
         ),
         pytest.param(
             EventRule(
@@ -247,7 +247,7 @@ def test_rbn_groups_contacts(user_groups: Mapping[ContactName, list[str]]) -> No
                 "EC_PRIORITY": "2",
             },
             None,
-            id="Match on Event Console syslog priority",
+            id="Match on Event console alerts, match on Event Console syslog priority",
         ),
         pytest.param(
             EventRule(
@@ -266,7 +266,7 @@ def test_rbn_groups_contacts(user_groups: Mapping[ContactName, list[str]]) -> No
                 "EC_PRIORITY": "5",
             },
             "Event has priority 5, but matched range is 0 .. 4",
-            id="No match on Event Console syslog priority",
+            id="Match on Even Console alerts, no match on Event Console syslog priority",
         ),
         pytest.param(
             EventRule(
@@ -285,7 +285,7 @@ def test_rbn_groups_contacts(user_groups: Mapping[ContactName, list[str]]) -> No
                 "EC_FACILITY": "0",
             },
             None,
-            id="Match on Event Console syslog facility",
+            id="Match on Even Console alerts , match on Event Console syslog facility",
         ),
         pytest.param(
             EventRule(
@@ -343,6 +343,86 @@ def test_rbn_groups_contacts(user_groups: Mapping[ContactName, list[str]]) -> No
             },
             "The event comment 'some other comment' does not match the regular expression 'some test comment'",
             id="No match on Event Console comment",
+        ),
+        pytest.param(
+            EventRule(
+                rule_id=NotificationRuleID("13"),
+                allow_disable=False,
+                contact_all=False,
+                contact_all_with_email=False,
+                contact_object=False,
+                description="Test rule 13",
+                disabled=False,
+                notify_plugin=("mail", None),
+                match_service_event=["?c", "?w", "?r"],
+            ),
+            {
+                "EC_ID": "test13",
+                "EC_COMMENT": "some other comment",
+            },
+            "Notification has been created by the Event Console.",
+            id="No match on Event Console alerts, only on service alerts",
+        ),
+        pytest.param(
+            EventRule(
+                rule_id=NotificationRuleID("14"),
+                allow_disable=False,
+                contact_all=False,
+                contact_all_with_email=False,
+                contact_object=False,
+                description="Test rule 14",
+                disabled=False,
+                notify_plugin=("mail", None),
+                match_host_event=["?d", "?r"],
+            ),
+            {
+                "EC_ID": "test14",
+                "EC_COMMENT": "some other comment",
+            },
+            "Notification has been created by the Event Console.",
+            id="No match on Event Console alerts, only on host alerts",
+        ),
+        pytest.param(
+            EventRule(
+                rule_id=NotificationRuleID("15"),
+                allow_disable=False,
+                contact_all=False,
+                contact_all_with_email=False,
+                contact_object=False,
+                description="Test rule 15",
+                disabled=False,
+                notify_plugin=("mail", None),
+                match_host_event=["?d", "?r"],
+                match_service_event=["?c", "?w", "?r"],
+                match_ec={"match_facility": 3},
+            ),
+            {
+                "EC_ID": "test15",
+                "EC_FACILITY": "3",
+            },
+            None,
+            id="Match on all events (all checked, not via All events), match on Event Console alert",
+        ),
+        pytest.param(
+            EventRule(
+                rule_id=NotificationRuleID("15"),
+                allow_disable=False,
+                contact_all=False,
+                contact_all_with_email=False,
+                contact_object=False,
+                description="Test rule 15",
+                disabled=False,
+                notify_plugin=("mail", None),
+                match_host_event=["?d", "?r"],
+                match_service_event=["?c", "?w", "?r"],
+                match_ec={"match_facility": 3},
+            ),
+            {
+                "EC_ID": "test15",
+                "EC_FACILITY": "0",
+            },
+            "Wrong syslog facility 0, required is 3",
+            id="Match on all events (all checked, not via All events), no match on Event Console alert filter",
         ),
     ],
 )

@@ -1346,6 +1346,8 @@ def rbn_match_host_event(
 ) -> str | None:
     if "match_host_event" in rule:
         if context["WHAT"] != "HOST":
+            if "EC_ID" in context:
+                return None  # handled by rbn_match_event_console
             if "match_service_event" not in rule:
                 return "This is a service notification, but the rule just matches host events"
             return None  # Let this be handled by match_service_event
@@ -1369,6 +1371,9 @@ def rbn_match_service_event(
             if "match_host_event" not in rule:
                 return "This is a host notification, but the rule just matches service events"
             return None  # Let this be handled by match_host_event
+
+        if "EC_ID" in context:
+            return None  # handled by rbn_match_event_console
 
         allowed_events = rule["match_service_event"]
         state = context["SERVICESTATE"]
@@ -1556,17 +1561,23 @@ def rbn_match_event_console(
 ) -> str | None:
     """
     match_ec options:
-    missing -> do not match on Event Console notifications
+    missing, without match_host_event and match_service_event -> match All events
+    missing, with match_host_event and/or match_service_event -> do not match on Event Console notifications
     empty dict -> match on all Event Console notifications
     dict with keys -> match on specific Event Console notifications
     """
     is_ec_notification = "EC_ID" in context
-    if "match_ec" not in rule and is_ec_notification:
+    match_ec = (
+        "match_ec" not in rule
+        and "match_host_event" not in rule
+        and "match_service_event" not in rule
+    ) or "match_ec" in rule
+    if not match_ec and is_ec_notification:
         return "Notification has been created by the Event Console."
 
-    if "match_ec" in rule:
-        match_ec_options = rule["match_ec"]
-        if not is_ec_notification:
+    if match_ec:
+        match_ec_options = rule.get("match_ec")
+        if match_ec_options and not is_ec_notification:
             return "Notification has not been created by the Event Console."
 
         if match_ec_options:

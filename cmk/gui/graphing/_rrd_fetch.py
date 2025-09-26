@@ -247,7 +247,7 @@ def fetch_augmented_time_series(
         graph_recipe, graph_data_range, registered_metrics
     )
     for graph_metric in graph_recipe.metrics:
-        if time_series := graph_metric.operation.fetch_augmented_time_series(
+        if time_series := graph_metric.operation.compute_augmented_time_series(
             time_series_by_rrd_data_key, registered_metrics
         ):
             yield graph_metric, time_series

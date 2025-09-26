@@ -1163,7 +1163,7 @@ void SetupPluginEnvironment() {
     const std::array<std::pair<const std::string_view, const std::wstring>, 11>
         env_pairs{{{envs::kMkLocalDirName, GetLocalDir()},
                    {envs::kMkStateDirName, GetStateDir()},
-                   {envs::kMkLibDirName, GetLibDir()},
+                   {envs::kMkLibDirName, GetUserDir()},
                    {envs::kMkPluginsDirName, GetUserPluginsDir()},
                    {envs::kMkTempDirName, GetTempDir()},
                    {envs::kMkLogDirName, GetLogDir()},
@@ -1194,7 +1194,7 @@ void ProcessPluginEnvironment(
             // of SetEnv and ConvertToUTF8
             {envs::kMkLocalDirName, &GetLocalDir},
             {envs::kMkStateDirName, &GetStateDir},
-            {envs::kMkLibDirName, &GetLibDir},
+            {envs::kMkLibDirName, &GetUserDir},
             {envs::kMkPluginsDirName, &GetUserPluginsDir},
             {envs::kMkTempDirName, &GetTempDir},
             {envs::kMkLogDirName, &GetLogDir},

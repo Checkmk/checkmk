@@ -18,17 +18,21 @@ export const isValidSnakeCase = (string: string): boolean => {
   return snakeCaseRegex.test(string)
 }
 
-export const isIdInUse = async (uniqueId: string): Promise<boolean> => {
+export const isIdInUse = async (uniqueId: string, ignoreId?: string): Promise<boolean> => {
+  if (ignoreId && uniqueId === ignoreId) {
+    return false
+  }
+
   const { listDashboardMetadata } = dashboardAPI
   const result = await listDashboardMetadata()
 
   return result.map((dashboard) => dashboard.name).includes(uniqueId)
 }
 
-export const generateUniqueId = async (baseId: string): Promise<string> => {
+export const generateUniqueId = async (baseId: string, ignoreId?: string): Promise<string> => {
   let uniqueId = baseId
   let counter = 1
-  while (await isIdInUse(uniqueId)) {
+  while (await isIdInUse(uniqueId, ignoreId)) {
     uniqueId = `${baseId}_${counter}`
     counter++
   }

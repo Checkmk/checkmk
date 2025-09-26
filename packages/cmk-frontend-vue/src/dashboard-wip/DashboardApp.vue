@@ -39,12 +39,15 @@ import type {
 } from '@/dashboard-wip/types/widget'
 import { dashboardAPI } from '@/dashboard-wip/utils.ts'
 
+import DashboardSettingsWizard from './components/Wizard/DashboardSettingsWizard.vue'
+
 const { ErrorBoundary: errorBoundary } = useErrorBoundary()
 
 const props = defineProps<DashboardPageProperties>()
 
 const isDashboardEditingMode = ref(false)
 const openDashboardFilterSettings = ref(false)
+const openDashboardSettings = ref(false)
 const openAddWidgetDialog = ref(false)
 const openWizard = ref(false)
 const selectedWizard = ref('')
@@ -198,7 +201,7 @@ function deepClone<T>(obj: T): T {
       <DashboardMenuHeader
         :selected-dashboard="selectedDashboard"
         @open-filter="openDashboardFilterSettings = true"
-        @open-settings="() => {}"
+        @open-settings="openDashboardSettings = true"
         @open-widget-workflow="openAddWidgetDialog = true"
         @save="saveDashboard"
         @enter-edit="isDashboardEditingMode = true"
@@ -237,6 +240,18 @@ function deepClone<T>(obj: T): T {
         @apply-runtime-filters="dashboardFilters.handleApplyRuntimeFilters"
         @save-mandatory-runtime-filters="dashboardFilters.handleSaveMandatoryRuntimeFilters"
         @close="openDashboardFilterSettings = false"
+      />
+      <DashboardSettingsWizard
+        v-if="openDashboardSettings"
+        :dashboard-id="dashboardsManager.activeDashboardName.value!"
+        :dashboard-general-settings="
+          deepClone(dashboardsManager.activeDashboard.value!.general_settings)
+        "
+        :dashboard-restricted-to-single="
+          dashboardsManager.activeDashboard.value!.filter_context.restricted_to_single!
+        "
+        @cancel="openDashboardSettings = false"
+        @save="() => {}"
       />
     </div>
     <template v-if="dashboardsManager.isInitialized.value">

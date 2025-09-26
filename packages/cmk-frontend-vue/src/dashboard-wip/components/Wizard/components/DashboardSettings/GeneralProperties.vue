@@ -28,9 +28,10 @@ const { _t } = usei18n()
 interface GeneralPropertiesProps {
   nameValidationErrors: string[]
   uniqueIdValidationErrors: string[]
+  originalDashboardId?: string
 }
 
-defineProps<GeneralPropertiesProps>()
+const props = defineProps<GeneralPropertiesProps>()
 
 const name = defineModel<string>('name', { required: true })
 const addFilterSuffix = defineModel<boolean>('addFilterSuffix', { required: false })
@@ -46,7 +47,9 @@ const dashboardEmblem = defineModel<string | null>('dashboardEmblem', {
 })
 
 const _generateUniqueId = async (base: string) => {
-  uniqueId.value = (await isIdInUse(base)) ? await generateUniqueId(base) : base
+  uniqueId.value = (await isIdInUse(base, props?.originalDashboardId))
+    ? await generateUniqueId(base, props?.originalDashboardId)
+    : base
 }
 const _debouncedGenerateUniqueId = useDebounceFn(_generateUniqueId, 300)
 
@@ -88,7 +91,7 @@ const displaySuffixInput = computed(() => 'addFilterSuffix' in attrs)
             <CmkCheckbox
               v-model="addFilterSuffix!"
               :label="_t('Add filter as suffix')"
-              :help="_t('Include dashboard filter contents to the dashboard title..')"
+              :help="_t('Include dashboard filter contents to the dashboard title.')"
             />
           </div>
         </FieldComponent>

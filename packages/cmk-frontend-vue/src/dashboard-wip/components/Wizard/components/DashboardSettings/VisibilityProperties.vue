@@ -45,6 +45,9 @@ const sortIndex = defineModel<number>('sortIndex', { required: true })
               @update:selected-option="(value) => (monitorMenu = value || monitorMenu)"
             />
           </CmkIndent>
+          <div>
+            <slot name="extra-visibility-settings" />
+          </div>
         </FieldComponent>
       </TableFormRow>
 

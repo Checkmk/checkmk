@@ -94,7 +94,15 @@ const handleAddWidget = () => {
           </template>
           <template #menu="{ hideMenu }">
             <div class="dropdown-menu-items">
-              <div class="menu-item">
+              <div
+                class="menu-item"
+                @click="
+                  () => {
+                    emit('open-settings')
+                    hideMenu()
+                  }
+                "
+              >
                 <div class="menu-label">{{ _t('Dashboard settings') }}</div>
               </div>
 

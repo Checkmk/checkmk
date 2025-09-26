@@ -38,7 +38,7 @@ export type WidgetContentType = components['schemas']['WidgetContent']['type']
 
 export type ResponsiveGridWidgetLayout = components['schemas']['WidgetResponsiveGridLayout']
 
-type AnnotatedInfoName = components['schemas']['AnnotatedInfoName']
+export type AnnotatedInfoName = components['schemas']['AnnotatedInfoName']
 
 export interface EffectiveWidgetFilterContext extends WidgetFilterContext {
   restricted_to_single: AnnotatedInfoName[]

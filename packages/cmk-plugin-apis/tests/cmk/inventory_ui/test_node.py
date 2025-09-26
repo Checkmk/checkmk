@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-
 from cmk.inventory_ui.v1_alpha import (
     BoolField,
     ChoiceField,
@@ -51,11 +50,6 @@ def test_view_empty_name() -> None:
 def test_view_empty_title() -> None:
     with pytest.raises(ValueError):
         View(name="view_name", title=Title(""))
-
-
-def test_view_empty_group() -> None:
-    with pytest.raises(ValueError):
-        View(name="view_name", title=Title("A title"), group=Title(""))
 
 
 def test_table_empty_column() -> None:

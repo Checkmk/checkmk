@@ -562,10 +562,6 @@ def _parse_node_from_api(
         )
     else:
         table_view_name = _parse_view_name(node.table.view.name)
-        long_title = _make_long_title(parent_title, _make_str(node.table.view.title))
-        if node.table.view.group is not None:
-            # TODO CMK-25037
-            long_title = f"{long_title} (_make_str(node.table.view.group))"
         table = TableWithView(
             columns={
                 SDKey(k): _parse_col_field_of_view_from_api(table_view_name, title, k, v)
@@ -573,7 +569,7 @@ def _parse_node_from_api(
             },
             name=table_view_name,
             path=path,
-            long_title=long_title,
+            long_title=_make_long_title(parent_title, _make_str(node.table.view.title)),
             icon="",
             is_show_more=True,
         )

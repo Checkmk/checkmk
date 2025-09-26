@@ -46,10 +46,10 @@ def create_core(
             )
             from cmk.base.core.cee.cmc import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
                 CmcPb,
-                HelperConfigWriter,
+                ConfigWriterInterface,
             )
 
-            helper_config_writers: list[HelperConfigWriter] = [
+            helper_config_writers: list[ConfigWriterInterface] = [
                 make_fetcher_config_writer(
                     edition,
                     loaded_config,
@@ -62,11 +62,11 @@ def create_core(
 
             if edition in (Edition.CCE, Edition.CME, Edition.CSE):
                 from cmk.base.configlib.cce.relay import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
-                    make_relay_config_writer,
+                    make_relay_fetcher_config_writer,
                 )
 
                 helper_config_writers.append(
-                    make_relay_config_writer(
+                    make_relay_fetcher_config_writer(
                         loaded_config, config_cache, label_manager, plugins, snmp_plugin_store
                     )
                 )

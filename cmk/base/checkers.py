@@ -653,13 +653,19 @@ def _make_rrd_data_getter(
     return get_rrd_data
 
 
-def update_predictive_levels(metric_name: str, levels: tuple) -> tuple:
+def update_predictive_levels(
+    metric_name: str, levels: tuple, direction: Literal["upper", "lower"]
+) -> tuple:
     match levels:
         case ("cmk_postprocessed", "predictive_levels", dict() as lvl):
             return (
                 "cmk_postprocessed",
                 "predictive_levels",
-                {**lvl, "__reference_metric__": metric_name},
+                {
+                    **lvl,
+                    "__reference_metric__": metric_name,
+                    "__direction__": direction,
+                },
             )
         case _:
             return levels
@@ -672,10 +678,10 @@ def _special_processing_hack_for_predictive_otel_metrics(
         case {"metrics": ("multi_metrics", list() as metrics)}:
             for metric in metrics:
                 metric["levels_lower"] = update_predictive_levels(
-                    metric["metric_name"], metric["levels_lower"]
+                    metric["metric_name"], metric["levels_lower"], "lower"
                 )
                 metric["levels_upper"] = update_predictive_levels(
-                    metric["metric_name"], metric["levels_upper"]
+                    metric["metric_name"], metric["levels_upper"], "upper"
                 )
             return {"metrics": ("multi_metrics", metrics)}
         case _:

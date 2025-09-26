@@ -2,11 +2,19 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, NotRequired, TypedDict
+from typing import Any, Literal, NotRequired, TypedDict
 
 import cmk.utils.paths
 
 SearchConfig = dict[str, Any]
+
+ActionKind = Literal[
+    "call_a_rule",
+    "state_of_host",
+    "state_of_remaining_services",
+    "state_of_service",
+]
+
 
 ActionConfig = dict[str, Any]
 

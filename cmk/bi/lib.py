@@ -28,6 +28,7 @@ from livestatus import LivestatusResponse, Query
 from cmk.bi.schema import Schema
 from cmk.bi.type_defs import (
     ActionConfig,
+    ActionKind,
     ComputationConfigDict,
     GroupConfigDict,
     HostState,
@@ -570,13 +571,6 @@ class ABCBICompiledNode(ABC):
 #   |                   /_/   \_\___|\__|_|\___/|_| |_|                    |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-
-ActionKind = Literal[
-    "call_a_rule",
-    "state_of_host",
-    "state_of_remaining_services",
-    "state_of_service",
-]
 
 
 class ABCBIAction(ABC):

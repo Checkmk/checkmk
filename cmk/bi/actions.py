@@ -17,7 +17,6 @@ from cmk.bi.lib import (
     ABCWithSchema,
     ActionArgument,
     ActionArguments,
-    ActionKind,
     bi_action_registry,
     BIHostSearchMatch,
     BIParams,
@@ -32,6 +31,7 @@ from cmk.bi.lib import (
 from cmk.bi.rule_interface import bi_rule_id_registry
 from cmk.bi.schema import Schema
 from cmk.bi.trees import BICompiledLeaf, BIRemainingResult
+from cmk.bi.type_defs import ActionKind
 
 #   .--CallARule-----------------------------------------------------------.
 #   |               ____      _ _    _    ____        _                    |

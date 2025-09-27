@@ -3223,6 +3223,11 @@ msgstr "Accesați Checkmk Agent prin TCP"
 msgid "Access analyze configuration"
 msgstr "Accesul analizează configurația"
 
+msgid ""
+"Access is restricted, but no contact groups are assigned in the host's "
+"permissions."
+msgstr ""
+
 msgid "Access key"
 msgstr "Cheie de acces"
 
@@ -6981,6 +6986,10 @@ msgstr "Certificatele de echilibrare a încărcăturii aplicației"
 msgid "Application Load balancers"
 msgstr "Balansatoare de încărcare a aplicațiilor"
 
+#, fuzzy
+msgid "Application Monitoring"
+msgstr "Numele pool-ului de aplicații"
+
 msgid "Application Pool name"
 msgstr "Numele pool-ului de aplicații"
 
@@ -7399,14 +7408,8 @@ msgstr "Atribuirea prin expresii regulate"
 msgid "Assignee"
 msgstr ""
 
-msgid "Assignment of hosts to contact groups"
-msgstr "Alocarea gazdelor la grupurile de contact"
-
 msgid "Assignment of hosts to host groups"
 msgstr "Atribuirea de gazde la grupuri de gazde"
-
-msgid "Assignment of services to contact groups"
-msgstr "Atribuirea serviciilor la grupurile de contact"
 
 msgid "Assignment of services to service groups"
 msgstr "Atribuirea serviciilor la grupurile de servicii"
@@ -22724,6 +22727,10 @@ msgstr "Activați Caching"
 msgid "Enable Livestatus access via network (TCP)"
 msgstr "Activarea accesului la Livestatus prin rețea (TCP)"
 
+#, fuzzy
+msgid "Enable OpenTelemetry collector (experimental)"
+msgstr "Intervalul de colectare a datelor"
+
 msgid "Enable SMTP AUTH (LOGIN)"
 msgstr "Activați SMTP AUTH (LOGIN)"
 
@@ -36383,6 +36390,10 @@ msgstr ""
 "Nivelurile de memorie liberă nu funcționează cu verificarea fortigate, "
 "deoarece aceasta nu furnizează date despre memoria totală."
 
+#, fuzzy
+msgid "Keep last successful data for"
+msgstr "Timp de la ultima construcție reușită"
+
 msgid "Keep service level from message (if available)"
 msgstr "Păstrați nivelul de serviciu din mesaj (dacă este disponibil)"
 
@@ -49964,6 +49975,9 @@ msgstr "Trasee de inventariere HW/SW permise"
 msgid "Permitted contact groups"
 msgstr "Grupuri de contacte permise"
 
+msgid "Persistence period for node disk usage fallback"
+msgstr ""
+
 msgid "Persistent (long)"
 msgstr "Persistent (lung)"
 
@@ -58304,6 +58318,10 @@ msgstr ""
 msgid "Set height"
 msgstr "Setați înălțimea"
 
+#, fuzzy
+msgid "Set host visibility for contact groups"
+msgstr "Alocarea gazdelor la grupurile de contact"
+
 msgid "Set levels"
 msgstr "Setați nivelurile"
 
@@ -58506,6 +58524,10 @@ msgstr ""
 "elimina automat serviciile dispărute corespunzătoare. Dacă setați atât acest "
 "lucru, cât și 'Don'don't remove matching vanished services', ambele reguli "
 "trebuie să se aplice pentru ca un serviciu să fie eliminat."
+
+#, fuzzy
+msgid "Set service visibility for contact groups"
+msgstr "Grupuri de contact pentru servicii"
 
 msgid "Set state to"
 msgstr "Setați starea la"
@@ -60564,14 +60586,6 @@ msgstr ""
 
 msgid "Sorry, you have no permission for this host."
 msgstr "Ne pare rău, nu aveți permisiunea pentru această gazdă."
-
-#, python-format
-msgid ""
-"Sorry, you have no permission on the host '<b>%s</b>'. The hosts contact "
-"groups are <b>%s</b>, your contact groups are <b>%s</b>."
-msgstr ""
-"Ne pare rău, nu aveți permisiune pe gazdă '<b>%s</b>'. Grupurile de contact "
-"ale gazdelor sunt <b>%s</b>, iar grupurile dvs. de contact sunt <b>%s</b>."
 
 #, python-format
 msgid "Sorry, you have no permissions to the folder <b>%s</b>."
@@ -75109,6 +75123,12 @@ msgstr ""
 "efectiv cu problema de downgrade menționată. Acest lucru nu ar trebui să se "
 "întâmple în cazul actualizărilor automate prin agent updater."
 
+#, python-format
+msgid ""
+"To get access, ensure your user is in a contact group specified in the "
+"host's permissions: <b>%s</b>."
+msgstr ""
+
 msgid ""
 "To make the querying source transparent for the requested web server, the "
 "user agent header field will be used. The default is set to checkmk/"
@@ -86477,6 +86497,10 @@ msgstr ""
 "Nu puteți face această redenumire, deoarece următoarele nume de gazdă ar "
 "intra în coliziune:"
 
+#, fuzzy, python-format
+msgid "You cannot edit the configuration for host '<b>%s</b>'. %s"
+msgstr "Nu se poate scrie fișierul de configurare \"%s\": %s."
+
 msgid "You cannot have more than one timing setting per notification method."
 msgstr ""
 "Nu puteți avea mai mult de o setare de temporizare pentru fiecare metodă de "
@@ -89775,6 +89799,18 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#~ msgid "Assignment of services to contact groups"
+#~ msgstr "Atribuirea serviciilor la grupurile de contact"
+
+#, python-format
+#~ msgid ""
+#~ "Sorry, you have no permission on the host '<b>%s</b>'. The hosts contact "
+#~ "groups are <b>%s</b>, your contact groups are <b>%s</b>."
+#~ msgstr ""
+#~ "Ne pare rău, nu aveți permisiune pe gazdă '<b>%s</b>'. Grupurile de "
+#~ "contact ale gazdelor sunt <b>%s</b>, iar grupurile dvs. de contact sunt "
+#~ "<b>%s</b>."
 
 #, fuzzy
 #~ msgid ""

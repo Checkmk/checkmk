@@ -3074,6 +3074,11 @@ msgstr "TCP経由でCheckmkエージェントにアクセスする"
 msgid "Access analyze configuration"
 msgstr "アクセス解析設定"
 
+msgid ""
+"Access is restricted, but no contact groups are assigned in the host's "
+"permissions."
+msgstr ""
+
 msgid "Access key"
 msgstr "アクセスキー"
 
@@ -6590,6 +6595,10 @@ msgstr "アプリケーションロードバランサー証明書"
 msgid "Application Load balancers"
 msgstr "アプリケーションロードバランサー"
 
+#, fuzzy
+msgid "Application Monitoring"
+msgstr "アプリケーションプール名"
+
 msgid "Application Pool name"
 msgstr "アプリケーションプール名"
 
@@ -6993,14 +7002,8 @@ msgstr "正規表現で割り当てる"
 msgid "Assignee"
 msgstr "受任者"
 
-msgid "Assignment of hosts to contact groups"
-msgstr "連絡先グループへのホストの割り当て"
-
 msgid "Assignment of hosts to host groups"
 msgstr "ホストグループへのホストの割り当て"
-
-msgid "Assignment of services to contact groups"
-msgstr "連絡先グループへのサービスの割り当て"
 
 msgid "Assignment of services to service groups"
 msgstr "サービスグループへのサービスの割り当て"
@@ -21348,6 +21351,10 @@ msgstr "キャッシュを有効にする"
 msgid "Enable Livestatus access via network (TCP)"
 msgstr "ネットワーク(TCP)を介したLivestatusアクセスを有効にする"
 
+#, fuzzy
+msgid "Enable OpenTelemetry collector (experimental)"
+msgstr "OpenTelemetryコレクター（実験的）"
+
 msgid "Enable SMTP AUTH (LOGIN)"
 msgstr "SMTP AUTH(LOGIN)を有効にする"
 
@@ -34039,6 +34046,10 @@ msgstr ""
 "トを受け取るには、120%または1200MBを指定する必要があることに注意してくださ"
 "い。空きメモリレベルは、合計メモリデータを提供しないため、Fortigateチェックで"
 "は機能しません。"
+
+#, fuzzy
+msgid "Keep last successful data for"
+msgstr "最後に成功したビルドからの時間"
 
 msgid "Keep service level from message (if available)"
 msgstr "メッセージからサービスレベルを維持する(利用可能な場合)"
@@ -46780,6 +46791,9 @@ msgstr "許可されたHW/SWインベントリパス"
 msgid "Permitted contact groups"
 msgstr "許可された連絡先グループ"
 
+msgid "Persistence period for node disk usage fallback"
+msgstr ""
+
 msgid "Persistent (long)"
 msgstr "永続的(長い)"
 
@@ -54576,6 +54590,10 @@ msgstr ""
 msgid "Set height"
 msgstr "高さを設定する"
 
+#, fuzzy
+msgid "Set host visibility for contact groups"
+msgstr "連絡先グループへのホストの割り当て"
+
 msgid "Set levels"
 msgstr "レベルを設定する"
 
@@ -54752,6 +54770,10 @@ msgstr ""
 "ここでサービス名または正規表現パターンを設定して、一致する消失したサービスを"
 "自動的に削除します。これと'一致する消失したサービスを削除しない'の両方を設定"
 "した場合、削除するサービスには両方のルールを適用する必要があります。"
+
+#, fuzzy
+msgid "Set service visibility for contact groups"
+msgstr "サービス連絡先グループ"
 
 msgid "Set state to"
 msgstr "状態をに設定します"
@@ -56715,14 +56737,6 @@ msgstr ""
 
 msgid "Sorry, you have no permission for this host."
 msgstr "申し訳ありませんが、このホストに対する権限がありません。"
-
-#, python-format
-msgid ""
-"Sorry, you have no permission on the host '<b>%s</b>'. The hosts contact "
-"groups are <b>%s</b>, your contact groups are <b>%s</b>."
-msgstr ""
-"申し訳ありませんが、ホスト'<b>%s</b>'に対する権限がありません。ホストの連絡先"
-"グループは<b>%s</b>、連絡先グループは<b>%s</b>です。"
 
 #, python-format
 msgid "Sorry, you have no permissions to the folder <b>%s</b>."
@@ -70474,6 +70488,12 @@ msgstr ""
 "の問題が発生した場合にのみ有効にしてください。エージェントアップデータによる"
 "自動アップデートの場合はこの限りではありません。"
 
+#, python-format
+msgid ""
+"To get access, ensure your user is in a contact group specified in the "
+"host's permissions: <b>%s</b>."
+msgstr ""
+
 msgid ""
 "To make the querying source transparent for the requested web server, the "
 "user agent header field will be used. The default is set to checkmk/"
@@ -80794,6 +80814,10 @@ msgstr ""
 "次のホストはクイックセットアップによってロックされているため、リネーム操作は"
 "実行できません："
 
+#, fuzzy, python-format
+msgid "You cannot edit the configuration for host '<b>%s</b>'. %s"
+msgstr "構成ファイル \"%s\"を書き込めません:%s"
+
 msgid "You cannot have more than one timing setting per notification method."
 msgstr "通知方法ごとに複数のタイミング設定を設定することはできません。"
 
@@ -83976,6 +84000,17 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠Robotmk Core MKP がインストールされているため<b>利用できません</b>"
+
+#~ msgid "Assignment of services to contact groups"
+#~ msgstr "連絡先グループへのサービスの割り当て"
+
+#, python-format
+#~ msgid ""
+#~ "Sorry, you have no permission on the host '<b>%s</b>'. The hosts contact "
+#~ "groups are <b>%s</b>, your contact groups are <b>%s</b>."
+#~ msgstr ""
+#~ "申し訳ありませんが、ホスト'<b>%s</b>'に対する権限がありません。ホストの連"
+#~ "絡先グループは<b>%s</b>、連絡先グループは<b>%s</b>です。"
 
 #~ msgid ""
 #~ "No permission for fallback topic 'Other'. Please contact your "

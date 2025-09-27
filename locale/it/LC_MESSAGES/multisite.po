@@ -3185,6 +3185,11 @@ msgstr "Accesso all'agente Checkmk via TCP"
 msgid "Access analyze configuration"
 msgstr "L'accesso analizza la configurazione"
 
+msgid ""
+"Access is restricted, but no contact groups are assigned in the host's "
+"permissions."
+msgstr ""
+
 msgid "Access key"
 msgstr "Chiave di accesso"
 
@@ -6924,6 +6929,10 @@ msgstr "Certificati del bilanciatore di carico dell'applicazione"
 msgid "Application Load balancers"
 msgstr "Bilanciatori di carico delle applicazioni"
 
+#, fuzzy
+msgid "Application Monitoring"
+msgstr "Nome del pool di applicazioni"
+
 msgid "Application Pool name"
 msgstr "Nome del pool di applicazioni"
 
@@ -7334,14 +7343,8 @@ msgstr "Assegnare tramite espressioni regolari"
 msgid "Assignee"
 msgstr ""
 
-msgid "Assignment of hosts to contact groups"
-msgstr "Assegnazione di host a gruppi di contatto"
-
 msgid "Assignment of hosts to host groups"
 msgstr "Assegnazione di host a gruppi di host"
-
-msgid "Assignment of services to contact groups"
-msgstr "Assegnazione di servizi a gruppi di contatto"
 
 msgid "Assignment of services to service groups"
 msgstr "Assegnazione di servizi a gruppi di servizi"
@@ -22495,6 +22498,10 @@ msgstr "Abilita la cache"
 msgid "Enable Livestatus access via network (TCP)"
 msgstr "Abilitare l'accesso a Livestatus via rete (TCP)"
 
+#, fuzzy
+msgid "Enable OpenTelemetry collector (experimental)"
+msgstr "Intervallo per la raccolta dei dati"
+
 msgid "Enable SMTP AUTH (LOGIN)"
 msgstr "Abilitare l'AUTH SMTP (LOGIN)"
 
@@ -36014,6 +36021,10 @@ msgstr ""
 "I livelli di memoria libera non funzionano con il controllo fortigate, "
 "perché non fornisce dati di memoria totale."
 
+#, fuzzy
+msgid "Keep last successful data for"
+msgstr "Tempo trascorso dall'ultima costruzione riuscita"
+
 msgid "Keep service level from message (if available)"
 msgstr "Mantenere il livello di servizio dal messaggio (se disponibile)"
 
@@ -49493,6 +49504,9 @@ msgstr "Percorsi di inventario HW/SW consentiti"
 msgid "Permitted contact groups"
 msgstr "Gruppi di contatto consentiti"
 
+msgid "Persistence period for node disk usage fallback"
+msgstr ""
+
 msgid "Persistent (long)"
 msgstr "Persistente (lungo)"
 
@@ -57717,6 +57731,10 @@ msgstr ""
 msgid "Set height"
 msgstr "Imposta l'altezza"
 
+#, fuzzy
+msgid "Set host visibility for contact groups"
+msgstr "Assegnazione di host a gruppi di contatto"
+
 msgid "Set levels"
 msgstr "Impostare i livelli"
 
@@ -57917,6 +57935,10 @@ msgstr ""
 "rimuovere automaticamente i servizi svaniti corrispondenti. Se imposti sia "
 "questo che \"Non rimuovere i servizi svaniti corrispondenti\", entrambe le "
 "regole devono essere applicate perché un servizio sia rimosso."
+
+#, fuzzy
+msgid "Set service visibility for contact groups"
+msgstr "Gruppi di contatto di servizio"
 
 msgid "Set state to"
 msgstr "Imposta lo stato su"
@@ -59945,14 +59967,6 @@ msgstr ""
 
 msgid "Sorry, you have no permission for this host."
 msgstr "Spiacente, non hai l'autorizzazione per questo host."
-
-#, python-format
-msgid ""
-"Sorry, you have no permission on the host '<b>%s</b>'. The hosts contact "
-"groups are <b>%s</b>, your contact groups are <b>%s</b>."
-msgstr ""
-"Spiacente, non hai i permessi sull'host '<b>%s</b>'. I gruppi di contatto "
-"dell'host sono <b>%s</b>, i tuoi gruppi di contatto sono <b>%s</b>."
 
 #, python-format
 msgid "Sorry, you have no permissions to the folder <b>%s</b>."
@@ -74274,6 +74288,12 @@ msgid ""
 "the case for automatic updates via agent updater."
 msgstr ""
 
+#, python-format
+msgid ""
+"To get access, ensure your user is in a contact group specified in the "
+"host's permissions: <b>%s</b>."
+msgstr ""
+
 msgid ""
 "To make the querying source transparent for the requested web server, the "
 "user agent header field will be used. The default is set to checkmk/"
@@ -85580,6 +85600,10 @@ msgstr ""
 "Non potete fare questa ridenominazione perché i seguenti nomi di host "
 "colliderebbero:"
 
+#, fuzzy, python-format
+msgid "You cannot edit the configuration for host '<b>%s</b>'. %s"
+msgstr "Impossibile scrivere il file di configurazione \"%s\": %s"
+
 msgid "You cannot have more than one timing setting per notification method."
 msgstr ""
 "Non si può avere più di un'impostazione temporale per ogni metodo di "
@@ -88820,6 +88844,17 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usa SSL per la connessione."
+
+#~ msgid "Assignment of services to contact groups"
+#~ msgstr "Assegnazione di servizi a gruppi di contatto"
+
+#, python-format
+#~ msgid ""
+#~ "Sorry, you have no permission on the host '<b>%s</b>'. The hosts contact "
+#~ "groups are <b>%s</b>, your contact groups are <b>%s</b>."
+#~ msgstr ""
+#~ "Spiacente, non hai i permessi sull'host '<b>%s</b>'. I gruppi di contatto "
+#~ "dell'host sono <b>%s</b>, i tuoi gruppi di contatto sono <b>%s</b>."
 
 #, fuzzy
 #~ msgid ""

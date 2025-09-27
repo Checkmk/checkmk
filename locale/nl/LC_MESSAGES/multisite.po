@@ -3199,6 +3199,11 @@ msgstr "Toegang Checkmk Agent via TCP"
 msgid "Access analyze configuration"
 msgstr "Toegang analyseren configuratie"
 
+msgid ""
+"Access is restricted, but no contact groups are assigned in the host's "
+"permissions."
+msgstr ""
+
 msgid "Access key"
 msgstr "Toegangssleutel"
 
@@ -6968,6 +6973,10 @@ msgstr "Application Load Balancer Certificaten"
 msgid "Application Load balancers"
 msgstr "Load balancers voor toepassingen"
 
+#, fuzzy
+msgid "Application Monitoring"
+msgstr "Naam toepassingspool"
+
 msgid "Application Pool name"
 msgstr "Naam toepassingspool"
 
@@ -7386,14 +7395,8 @@ msgstr "Toewijzen via reguliere expressies"
 msgid "Assignee"
 msgstr ""
 
-msgid "Assignment of hosts to contact groups"
-msgstr "Toewijzing van hosts aan contactgroepen"
-
 msgid "Assignment of hosts to host groups"
 msgstr "Toewijzing van hosts aan hostgroepen"
-
-msgid "Assignment of services to contact groups"
-msgstr "Toewijzing van diensten aan contactgroepen"
 
 msgid "Assignment of services to service groups"
 msgstr "Toewijzing van diensten aan dienstengroepen"
@@ -22682,6 +22685,10 @@ msgstr "Caching inschakelen"
 msgid "Enable Livestatus access via network (TCP)"
 msgstr "Inschakelen Livestatus toegang via netwerk (TCP)"
 
+#, fuzzy
+msgid "Enable OpenTelemetry collector (experimental)"
+msgstr "Interval voor het verzamelen van gegevens"
+
 msgid "Enable SMTP AUTH (LOGIN)"
 msgstr "SMTP AUTH (LOGIN) inschakelen"
 
@@ -36297,6 +36304,10 @@ msgstr ""
 "moet specificeren om een waarschuwing te krijgen als er slechts 20% vrij RAM "
 "beschikbaar is. De vrije geheugen niveaus werken niet met de fortigate "
 "check, omdat die geen totale geheugen gegevens geeft."
+
+#, fuzzy
+msgid "Keep last successful data for"
+msgstr "Tijd sinds laatste succesvolle bouw"
 
 msgid "Keep service level from message (if available)"
 msgstr "Service level van bericht behouden (indien beschikbaar)"
@@ -49915,6 +49926,9 @@ msgstr "Toegestane HW/SW inventarisatiepaden"
 msgid "Permitted contact groups"
 msgstr "Toegestane contactgroepen"
 
+msgid "Persistence period for node disk usage fallback"
+msgstr ""
+
 msgid "Persistent (long)"
 msgstr "Persistent (lang)"
 
@@ -58193,6 +58207,10 @@ msgstr ""
 msgid "Set height"
 msgstr "Hoogte instellen"
 
+#, fuzzy
+msgid "Set host visibility for contact groups"
+msgstr "Toewijzing van hosts aan contactgroepen"
+
 msgid "Set levels"
 msgstr "Ingestelde niveaus"
 
@@ -58393,6 +58411,10 @@ msgstr ""
 "verdwenen diensten automatisch te verwijderen. Als je zowel dit als "
 "'Verwijder geen overeenkomende verdwenen diensten' instelt, moeten beide "
 "regels van toepassing zijn om een dienst te kunnen verwijderen."
+
+#, fuzzy
+msgid "Set service visibility for contact groups"
+msgstr "Dienstcontactgroepen"
 
 msgid "Set state to"
 msgstr "Stel de toestand in op"
@@ -60424,14 +60446,6 @@ msgstr ""
 
 msgid "Sorry, you have no permission for this host."
 msgstr "Sorry, je hebt geen toestemming voor deze gastheer."
-
-#, python-format
-msgid ""
-"Sorry, you have no permission on the host '<b>%s</b>'. The hosts contact "
-"groups are <b>%s</b>, your contact groups are <b>%s</b>."
-msgstr ""
-"Sorry, u heeft geen toestemming voor de host '<b>%s</b>'. De contactgroepen "
-"van de host zijn <b>%s</b>, uw contactgroepen zijn <b>%s</b>."
 
 #, python-format
 msgid "Sorry, you have no permissions to the folder <b>%s</b>."
@@ -74850,6 +74864,12 @@ msgid ""
 "the case for automatic updates via agent updater."
 msgstr ""
 
+#, python-format
+msgid ""
+"To get access, ensure your user is in a contact group specified in the "
+"host's permissions: <b>%s</b>."
+msgstr ""
+
 msgid ""
 "To make the querying source transparent for the requested web server, the "
 "user agent header field will be used. The default is set to checkmk/"
@@ -86305,6 +86325,10 @@ msgid ""
 msgstr ""
 "U kunt deze hernoeming niet doen omdat de volgende hostnamen zouden botsen:"
 
+#, fuzzy, python-format
+msgid "You cannot edit the configuration for host '<b>%s</b>'. %s"
+msgstr "Kan configuratiebestand \"%s\" niet schrijven: %s"
+
 msgid "You cannot have more than one timing setting per notification method."
 msgstr "U kunt niet meer dan één timinginstelling per meldingsmethode hebben."
 
@@ -89578,6 +89602,18 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#~ msgid "Assignment of services to contact groups"
+#~ msgstr "Toewijzing van diensten aan contactgroepen"
+
+#, python-format
+#~ msgid ""
+#~ "Sorry, you have no permission on the host '<b>%s</b>'. The hosts contact "
+#~ "groups are <b>%s</b>, your contact groups are <b>%s</b>."
+#~ msgstr ""
+#~ "Sorry, u heeft geen toestemming voor de host '<b>%s</b>'. De "
+#~ "contactgroepen van de host zijn <b>%s</b>, uw contactgroepen zijn <b>%s</"
+#~ "b>."
 
 #, fuzzy
 #~ msgid ""

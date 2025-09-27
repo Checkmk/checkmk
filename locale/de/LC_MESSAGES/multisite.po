@@ -4380,9 +4380,6 @@ msgstr "Neue Zustandskonfiguration hinzufügen"
 msgid "Add stored report"
 msgstr "Gespeicherten Bericht hinzufügen"
 
-msgid "Add subscription tag"
-msgstr "Subskriptionsmerkmal anfügen"
-
 msgid "Add tag"
 msgstr "Merkmal hinzufügen"
 
@@ -4413,22 +4410,6 @@ msgid ""
 msgstr ""
 "Bei der Weiterleitung an die Event Console den Text des Ereignisses "
 "hinzufügen. Zeilenumbrüche werden ersetzt durch '~'."
-
-msgid ""
-"Add the tags you want to use to filter the resources. Only resources with "
-"every tags matching, will be monitored."
-msgstr ""
-"Fügen Sie die Merkmale hinzu, die Sie zum Filtern der Ressourcen verwenden "
-"möchten. Es werden nur Ressourcen überwacht, bei denen alle Merkmale "
-"übereinstimmen."
-
-msgid ""
-"Add the tags you want to use to filter the subscriptions. Only subscriptions "
-"with every tags matching, will be monitored."
-msgstr ""
-"Fügen Sie die Merkmale hinzu, die Sie zum Filtern der Subskriptionen "
-"verwenden möchten. Es werden nur Subskriptionen überwacht, bei denen alle "
-"Merkmale übereinstimmen."
 
 msgid "Add these contact groups to the host"
 msgstr "Diese Kontaktgruppen zum Host hinzufügen"
@@ -5367,9 +5348,6 @@ msgstr "Alarme"
 
 msgid "Alert"
 msgstr "Alert"
-
-msgid "Alert after being at or above the threshold for"
-msgstr ""
 
 msgid "Alert handler"
 msgstr "Alert Handler"
@@ -6828,6 +6806,10 @@ msgstr "Application Load Balancer Zertifikate"
 msgid "Application Load balancers"
 msgstr "Application Load Balancer"
 
+#, fuzzy
+msgid "Application Monitoring"
+msgstr "Symbol im Monitoring"
+
 msgid "Application Pool name"
 msgstr "Name des Anwendungspools"
 
@@ -8022,9 +8004,6 @@ msgstr "Obergrenzen für die durchschnittliche Anzahl an Meldungen"
 msgid "Average number of messages"
 msgstr "Durchschnittliche Anzahl an Meldungen"
 
-msgid "Average over"
-msgstr ""
-
 msgid "Average pending tasks delta"
 msgstr "Durchschnittliches Delta anstehender Aufgaben"
 
@@ -8076,12 +8055,6 @@ msgid ""
 msgstr ""
 "Durchschnittliche CPU-Auslastung über die angegebene Zeitperiode, bevor die "
 "Levels angewendet werden."
-
-msgid ""
-"Average the instantaneous load over the specified number of minutes. Note: "
-"This does NOT affect \"Levels an extended period of time\" above, which "
-"always checks the instantaneous value."
-msgstr ""
 
 msgid "Average time messages stay on queue"
 msgstr "Durchschnittliche Zeit, die Meldungen in der Warteschlange verbringen"
@@ -8551,35 +8524,8 @@ msgstr "Azure Datenbanken"
 msgid "Azure Load Balancer Health"
 msgstr "Azure Load Balancer Zustand"
 
-msgid "Azure Redis CPU utilization"
-msgstr "Azure Redis CPU-Auslastung"
-
-msgid "Azure Redis Cache effectiveness"
-msgstr "Effektivität des Azure Redis Caches"
-
-msgid "Azure Redis connections"
-msgstr "Azure Redis Verbindungen"
-
-msgid "Azure Redis latency"
-msgstr "Azure Redis Latenz"
-
-msgid "Azure Redis memory"
-msgstr "Azure Redis Speicherplatz"
-
-msgid "Azure Redis replication"
-msgstr "Azure Redis Replikation"
-
-msgid "Azure Redis server load"
-msgstr "Azure Redis Serverauslastung"
-
-msgid "Azure Redis throughput"
-msgstr "Azure Redis Durchsatz"
-
 msgid "Azure SQL database CPU usage"
 msgstr "CPU-Auslastung der Azure SQL-Datenbank"
-
-msgid "Azure SQL database connections"
-msgstr "Azure SQL Datenbank-Verbindungen"
 
 msgid "Azure SQL database deadlocks"
 msgstr "Deadlocks der Azure SQL-Datenbank"
@@ -9976,6 +9922,32 @@ msgstr ""
 "einschränken, indem Sie ein Pattern angeben, nach dem Checkmk im Schlüssel "
 "der Annotation sucht."
 
+#, fuzzy, python-brace-format
+msgid ""
+"By default, Checkmk imports all Azure tags as host/service labels. The "
+"imported tags are added as host labels for resource groups and VMs monitored "
+"as hosts and as service labels for resources monitored as services. The "
+"label syntax is 'cmk/azure/tag/{key}:{value}'.<br>Additionally, each host "
+"representing a resource group is given the host label 'cmk/azure/"
+"resource_group:{rg_name}', and VMs monitored as hosts are given the host "
+"label 'cmk/azure/vm:instance', which is done independent of this option."
+"<br>You can further restrict the imported tags by specifying a pattern which "
+"Checkmk searches for in the key of the Azure tag, or you can disable the "
+"import of Azure tags altogether."
+msgstr ""
+"Aktivieren Sie diese Option, um Azure-Merkmale als Host-/Service-Labels zu "
+"importieren. Die importierten Merkmale werden als Host-Label für "
+"Ressourcengruppen und VMs, die als Hosts überwacht werden, und als Service-"
+"Labels für Ressourcen, die als Services überwacht werden, hinzugefügt. Die "
+"Label-Syntax lautet 'cmk/azure/tag/{key}:{value}'.<br>Zusätzlich erhält "
+"jeder Host, der eine Ressourcengruppe repräsentiert, das Host-Label 'cmk/"
+"azure/resource_group:{rg_name}', und VMs, die als Hosts überwacht werden, "
+"erhalten das Host-Label 'cmk/azure/vm:instance', was unabhängig von dieser "
+"Option geschieht.<br>Sie können die importierten Merkmale weiter "
+"einschränken, indem Sie ein Pattern angeben, nach dem Checkmk im Schlüssel "
+"des Azure-Merkmal sucht, oder Sie können den Import von Azure-Merkmalen ganz "
+"deaktivieren."
+
 #, python-brace-format
 msgid ""
 "By default, Checkmk imports the AWS tags for EC2 and ELB instances as host "
@@ -10087,6 +10059,18 @@ msgstr ""
 "Standardmäßig ist die Zertifikatsüberprüfung deaktiviert, da sie in diesem "
 "Stadium nicht sicherheitsrelevant ist, siehe <a href=\"https://checkmk.com/"
 "werk/14715\" target=\"_blank\">Werk #14715</a>."
+
+msgid ""
+"By default, data relating to a VM is sent to the group host corresponding to "
+"the resource group of the VM, the same way as for any other resource. If the "
+"VM is present in your monitoring as a separate host, you can choose to send "
+"the data to the VM itself."
+msgstr ""
+"Standardmäßig werden Daten, die sich auf eine VM beziehen, an den Gruppen-"
+"Host gesendet, welcher der Ressourcegruppe der VM entspricht, wie bei jeder "
+"anderen Ressource. Wenn die VM in Ihrem Monitoring als separater Host "
+"vorhanden ist, können Sie wählen, ob Sie die Daten an die VM selbst senden "
+"möchten."
 
 msgid ""
 "By default, each host has a piggyback data source.<br><br><b>Use piggyback "
@@ -10716,9 +10700,6 @@ msgstr "Gebrauchte CPU"
 msgid "CPU utilization"
 msgstr "CPU-Auslastung"
 
-msgid "CPU utilization %"
-msgstr "CPU-Auslastung %"
-
 msgid "CPU utilization & Kernel performance"
 msgstr "CPU-Auslastung & Kernel-Performance"
 
@@ -10888,9 +10869,6 @@ msgstr "Cache-Treffer"
 msgid "Cache hits for pass"
 msgstr "Durchgelassene Cache-Treffer"
 
-msgid "Cache internode latency"
-msgstr ""
-
 msgid "Cache interval"
 msgstr "Speicherintervall"
 
@@ -10900,12 +10878,6 @@ msgstr "Cache Misses"
 msgid "Cache misses per second"
 msgstr "Cache Misses pro Sekunde"
 
-msgid "Cache read throughput (/sec)"
-msgstr "Lesedurchsatz des Cache (/sek)"
-
-msgid "Cache requests"
-msgstr "Cache-Anfragen"
-
 msgid "Cache several non-status queries"
 msgstr "Etliche statusfreie Anfragen zwischenspeichern"
 
@@ -10914,9 +10886,6 @@ msgstr "Cachegröße"
 
 msgid "Cache this section"
 msgstr "Diese Sektion zwischenspeichern"
-
-msgid "Cache write throughput (/sec)"
-msgstr "Schreibdurchsatz des Cache (/sek)"
 
 msgid "Cached"
 msgstr "Zwischengespeichert"
@@ -14744,14 +14713,8 @@ msgstr "Verbindung über Unix-Socket"
 msgid "Connect without password"
 msgstr "Verbinden ohne Passwort"
 
-msgid "Connected Clients"
-msgstr "Verbundene Clients"
-
 msgid "Connected Relay configurations"
 msgstr "Verbundene Relais-Konfigurationen"
-
-msgid "Connected clients"
-msgstr "Verbundene Clients"
 
 msgid "Connecter and connectee sites must be different."
 msgstr ""
@@ -14869,12 +14832,6 @@ msgstr "Verbindungstyp"
 msgid "Connections"
 msgstr "Verbindungen"
 
-msgid "Connections closed rate"
-msgstr "Rate an geschlossenen Verbindungen"
-
-msgid "Connections created rate"
-msgstr "Rate an erstellten Verbindungen"
-
 msgid "Connections dropped"
 msgstr "Verbindungen fallen gelassen"
 
@@ -14898,9 +14855,6 @@ msgstr "Verbindungen pro Sekunde"
 
 msgid "Connectivity"
 msgstr "Konnektivität"
-
-msgid "Connectivity lag"
-msgstr "Verbindungsverzögerung"
 
 msgid "Connector outlets"
 msgstr "Stromanschlüsse der Verbindungen"
@@ -20539,9 +20493,6 @@ msgstr "Platzhalter-VMs nicht überwachen"
 msgid "Do not monitor service"
 msgstr "Service nicht überwachen"
 
-msgid "Do not monitor subscriptions"
-msgstr "Subskriptionen nicht überwachen"
-
 msgid "Do not offer this action as a command on open events"
 msgstr "Aktion nicht als Befehl für offene Ereignisse anbieten"
 
@@ -22138,6 +22089,10 @@ msgstr "Caching Aktivieren"
 msgid "Enable Livestatus access via network (TCP)"
 msgstr "Livestatus über das Netzwerk (TCP) verfügbar machen"
 
+#, fuzzy
+msgid "Enable OpenTelemetry collector (experimental)"
+msgstr "OpenTelemetry Collector (experimentell)"
+
 msgid "Enable SMTP AUTH (LOGIN)"
 msgstr "SMTP AUTH (LOGIN) ein"
 
@@ -22285,9 +22240,6 @@ msgstr "Replikation von einer Zentralinstanz aktivieren"
 msgid "Enable row shading"
 msgstr "Zeilenschattierung einschalten"
 
-msgid "Enable safe host names"
-msgstr "Sichere Host-Namen aktivieren"
-
 msgid "Enable service notifications"
 msgstr "Service-Benachrichtigungen ein"
 
@@ -22312,31 +22264,6 @@ msgid ""
 msgstr ""
 "Aktivieren Sie diese Option, wenn Sie den Legacy-Agenten deinstallieren "
 "möchten, nachdem der neue Windows-Agent installiert wurde."
-
-#, python-brace-format
-msgid ""
-"Enable this option to import Azure tags as host/service labels. The imported "
-"tags are added as host labels for resource groups and VMs monitored as hosts "
-"and as service labels for resources monitored as services. The label syntax "
-"is 'cmk/azure/tag/{key}:{value}'.<br>Additionally, each host representing a "
-"resource group is given the host label 'cmk/azure/resource_group:{rg_name}', "
-"and VMs monitored as hosts are given the host label 'cmk/azure/vm:instance', "
-"which is done independent of this option.<br>You can further restrict the "
-"imported tags by specifying a pattern which Checkmk searches for in the key "
-"of the Azure tag, or you can disable the import of Azure tags altogether."
-msgstr ""
-"Aktivieren Sie diese Option, um Azure-Merkmale als Host-/Service-Labels zu "
-"importieren. Die importierten Merkmale werden als Host-Label für "
-"Ressourcengruppen und VMs, die als Hosts überwacht werden, und als Service-"
-"Labels für Ressourcen, die als Services überwacht werden, hinzugefügt. Die "
-"Label-Syntax lautet 'cmk/azure/tag/{key}:{value}'.<br>Zusätzlich erhält "
-"jeder Host, der eine Ressourcengruppe repräsentiert, das Host-Label 'cmk/"
-"azure/resource_group:{rg_name}', und VMs, die als Hosts überwacht werden, "
-"erhalten das Host-Label 'cmk/azure/vm:instance', was unabhängig von dieser "
-"Option geschieht.<br>Sie können die importierten Merkmale weiter "
-"einschränken, indem Sie ein Pattern angeben, nach dem Checkmk im Schlüssel "
-"des Azure-Merkmal sucht, oder Sie können den Import von Azure-Merkmalen ganz "
-"deaktivieren."
 
 #, python-brace-format
 msgid ""
@@ -23362,9 +23289,6 @@ msgstr ""
 msgid "Every week on..."
 msgstr "Jede Woche am..."
 
-msgid "Evicted keys"
-msgstr "Entfernte Schlüssel"
-
 msgid "Evictions"
 msgstr "Räumungen"
 
@@ -23806,9 +23730,6 @@ msgstr "Läuft ab am"
 msgid "Expire time"
 msgstr "Ablaufzeit"
 
-msgid "Expired keys"
-msgstr "Abgelaufene Schlüssel"
-
 msgid "Expired objects"
 msgstr "Ausgelaufene Objekte"
 
@@ -23856,9 +23777,6 @@ msgstr "Explizite Labels"
 
 msgid "Explicit list of IP addresses"
 msgstr "Explizite Liste von IP-Adressen"
-
-msgid "Explicit list of subscription IDs"
-msgstr "Explizite Liste der Subskriptions-IDs"
 
 msgid "Explicit mapping of job exit codes to states"
 msgstr "Explizite Zuordnung von Job-Exit-Codes zu Zuständen"
@@ -23914,9 +23832,6 @@ msgstr "Explizit spezifizierte Gruppen"
 
 msgid "Explicitly specify resources"
 msgstr "Ressourcen explizit auflisten"
-
-msgid "Explicitly specify subscription IDs"
-msgstr "Subskriptions-IDs explizit spezifizieren"
 
 msgid "Export"
 msgstr "Exportieren"
@@ -26437,9 +26352,6 @@ msgstr "Gerrit-Verbindung"
 msgid "Gerrit instance to query."
 msgstr "Abzufragende Gerrit-Instanz."
 
-msgid "Get commands"
-msgstr "Befehle erhalten"
-
 msgid "Get file from SFTP server"
 msgstr "Datei von SFTP-Server holen"
 
@@ -28445,9 +28357,6 @@ msgstr "Historie der Benachrichtigungen"
 
 msgid "History of scheduled downtimes"
 msgstr "Historie der Wartungszeiten"
-
-msgid "Hit ratio"
-msgstr "Hit Ratio"
 
 msgid "Hits"
 msgstr "Zugriffe"
@@ -35391,6 +35300,10 @@ msgstr ""
 "Speicher verfügbar sind. Die Levels für den freien Speicher funktionieren "
 "nicht mit dem Fortigate-Check, da diese keine Gesamtspeicherdaten liefert."
 
+#, fuzzy
+msgid "Keep last successful data for"
+msgstr "Zeit seit dem letzten erfolgreichen Build"
+
 msgid "Keep service level from message (if available)"
 msgstr "Service-Ebene der Meldung beibehalten (falls vorhanden)"
 
@@ -36741,9 +36654,6 @@ msgstr "Levels für benutzte Kapazität in Bytes"
 
 msgid "Levels on write capacity"
 msgstr "Levels für die Schreibkapazität"
-
-msgid "Levels over an extended period of time"
-msgstr "Levels über eine längere Zeitperiode"
 
 msgid "Levels over an extended time period on a single core CPU utilization"
 msgstr ""
@@ -38259,9 +38169,6 @@ msgstr "Untergrenzen für die Auslastung von Anfragen"
 msgid "Lower levels for reservation utilization"
 msgstr "Untergrenzen für die Reservierungsauslastung"
 
-msgid "Lower levels for successful connections"
-msgstr "Untergrenzen für erfolgreiche Verbindungen"
-
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr "Untergrenzen für Lüfterdrehzahl von Hardwaregerät"
 
@@ -39075,8 +38982,20 @@ msgstr ""
 "Admin-Zustand entsprechen. Zum Beispiel wäre eine Schnittstelle, die DOWN, "
 "aber Admin UP ist, nicht betroffen."
 
+msgid "Map data"
+msgstr "Daten zuordnen"
+
+msgid "Map data relating to VMs"
+msgstr "Daten von VMs zuordnen"
+
+msgid "Map data to group host"
+msgstr "Daten dem Gruppen-Host zuordnen"
+
 msgid "Map data to specific host (Piggyback)"
 msgstr "Daten einem spezifischen Host zuordnen (Piggyback)"
+
+msgid "Map data to the VM itself"
+msgstr "Daten der VM selbst zuordnen"
 
 msgid "Map device state"
 msgstr "Gerätezustand abbilden"
@@ -39657,9 +39576,6 @@ msgstr "Maximalzahl gleichzeitiger Echtzeitchecks"
 
 msgid "Maximum connections per second"
 msgstr "Maximale Verbindungen pro Sekunde"
-
-msgid "Maximum connectivity lag"
-msgstr "Maximale Verbindungsverzögerung"
 
 msgid "Maximum count"
 msgstr "Maximale Anzahl"
@@ -41020,9 +40936,6 @@ msgstr "Alle gefundenen und manuell hinzugefügten Instanzen überwachen"
 
 msgid "Monitor all instances found"
 msgstr "Alle gefundenen Instanzen überwachen"
-
-msgid "Monitor all subscriptions"
-msgstr "Überwache alle Subskriptionen"
 
 msgid "Monitor and graph the lanes, if the port has multiple"
 msgstr "Überwache die Lanes, wenn ein Port mehrere hat"
@@ -48577,6 +48490,9 @@ msgstr "Erlaubte Pfade der HW-/SW-Inventur"
 msgid "Permitted contact groups"
 msgstr "Berechtigte Kontaktgruppen"
 
+msgid "Persistence period for node disk usage fallback"
+msgstr ""
+
 msgid "Persistent (long)"
 msgstr "Dauerhaft (lang)"
 
@@ -51635,9 +51551,6 @@ msgstr "Physikalische Port-Erkennung für Redfish"
 
 msgid "Redirect URL (has to be https)"
 msgstr "URL für die Umleitung (muss HTTPS verwenden)"
-
-msgid "Redis Caches"
-msgstr "Redis Caches"
 
 msgid "Redis clients"
 msgstr "Redis-Clients"
@@ -55525,9 +55438,6 @@ msgstr ""
 "Wählen Sie die Software auf der das LDAP Verzeichnis basiert. Abhängig von "
 "der Auswahl werden z.B. Attributnamen in LDAP Anfragen geändert."
 
-msgid "Select the subscriptions you want to monitor."
-msgstr "Wählen Sie die Subskriptionen aus, die Sie überwachen wollen."
-
 msgid "Select the type of content element"
 msgstr "Wählen Sie den Typ des Berichtelements"
 
@@ -55855,18 +55765,6 @@ msgstr "Server-Verbindungen"
 msgid "Server latency"
 msgstr "Serverlatenz"
 
-msgid "Server load"
-msgstr "Serverauslastung"
-
-msgid "Server load %"
-msgstr "Serverauslastung %"
-
-msgid "Server load (average)"
-msgstr "Serverauslastung (Durchschnitt)"
-
-msgid "Server load levels"
-msgstr "Levels der Serverauslastung"
-
 msgid "Server log storage"
 msgstr "Server-Log-Speicher"
 
@@ -55875,9 +55773,6 @@ msgstr "Verwendeter Server-Log-Speicher"
 
 msgid "Server performance"
 msgstr "Server-Performance"
-
-msgid "Server side command latency"
-msgstr "Serverseitige Kommandolatenz"
 
 msgid "Server side handling of unencrypted data"
 msgstr "Server-seitige Behandlung unverschlüsselter Daten"
@@ -55888,9 +55783,6 @@ msgstr "Server-Zeit"
 #, python-format
 msgid "Server time (currently: %s)"
 msgstr "Server-Zeit (aktuell: %s)"
-
-msgid "Server-side command latency"
-msgstr "Serverseitige Kommandolatenz"
 
 msgid "Service"
 msgstr "Service"
@@ -56366,9 +56258,6 @@ msgstr "Service-Status"
 
 msgid "Service status grouping"
 msgstr "Service-Status-Gruppierung"
-
-msgid "Service status when geo-replication link is unhealthy"
-msgstr ""
 
 msgid "Service tags"
 msgstr "Service-Merkmale"
@@ -61195,14 +61084,11 @@ msgstr "Subnetz pro DB-Subnetzgruppen"
 msgid "Subscription"
 msgstr "Subskription"
 
+msgid "Subscription ID"
+msgstr "Subskriptions-ID"
+
 msgid "Subscription Status (off: ignore subscription status)"
 msgstr "Subskriptions-Status (aus: Subskriptions-Status ignorieren)"
-
-msgid "Subscriptions matching tag based criteria"
-msgstr "Subskriptionen, die den merkmalsbasierten Kriterien entsprechen"
-
-msgid "Subscriptions to monitor"
-msgstr "Zu überwachende Subskriptionen"
 
 msgid "Substitution"
 msgstr "Substitution"
@@ -61991,9 +61877,6 @@ msgstr "Merkmalsgruppen"
 
 msgid "Tag groups with only one choice must have a tag ID."
 msgstr "Merkmal-Gruppen mit nur einer Auswahl müssen eine Merkmal-ID haben."
-
-msgid "Tag matching subscriptions"
-msgstr "Subskriptionen, auf welche die Merkmale zutreffen"
 
 msgid "Tag usage"
 msgstr "Merkmalnutzung"
@@ -67189,9 +67072,6 @@ msgstr ""
 "Der Unterordner <i>%s</i> hat die explizite Instanz <i>%s</i> gesetzt, "
 "welche dem Kunden <i>%s</i> gehört. Das verletzt die CME Ordner Hierarchie."
 
-msgid "The subscription tag"
-msgstr "Das Subskriptionsmerkmal"
-
 #, python-format
 msgid "The suffix '%s' is already in use by another LDAP connection."
 msgstr ""
@@ -71652,68 +71532,6 @@ msgstr ""
 "Situationen kann dies jedoch trotzdem sinnvoll sein. Eine davon ist, wenn "
 "Sie den Checkmk Micro Core mit Smart Ping verwenden und trotzdem die "
 "Metriken des Ping zu einigen Hosts verfolgen wollen."
-
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis CPU utilization "
-"monitoring"
-msgstr ""
-"Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring der CPU-"
-"Nutzung für Azure Redis zu konfigurieren"
-
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis Cache "
-"effectiveness monitoring"
-msgstr ""
-"Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring der "
-"Effektivität des Azure Redis Caches zu konfigurieren"
-
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis connections "
-"monitoring"
-msgstr ""
-"Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring von Azure "
-"Redis Verbindungen zu konfigurieren"
-
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis latency "
-"monitoring"
-msgstr ""
-"Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring der Azure "
-"Redis Latenz zu konfigurieren"
-
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis memory monitoring"
-msgstr ""
-"Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring des Azure "
-"Redis Speichers zu konfigurieren"
-
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis replication "
-"monitoring"
-msgstr ""
-"Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring von Azure "
-"Redis Replikationen zu konfigurieren"
-
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis server load "
-"monitoring"
-msgstr ""
-"Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring der Azure "
-"Redis Speicherauslastung zu konfigurieren"
-
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis throughput "
-"monitoring"
-msgstr ""
-"Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring des Azure "
-"Redis Durchsatzes zu konfigurieren"
-
-msgid ""
-"This ruleset allows you to configure levels for Azure SQL database "
-"connections"
-msgstr ""
-"Dieser Regelsatz ermöglicht es Ihnen, Levels für Azure SQL-"
-"Datenbankverbindungen zu konfigurieren"
 
 msgid "This ruleset allows you to configure levels for the Storage data flows"
 msgstr ""
@@ -77787,9 +77605,6 @@ msgstr "Obergrenzen für Neustarts"
 msgid "Upper levels for size"
 msgstr "Obergrenzen für die Größe"
 
-msgid "Upper levels for successful connections"
-msgstr "Obergrenzen für erfolgreiche Verbindungen"
-
 msgid "Upper levels for surge queue length"
 msgstr "Obergrenzen für die Länge der Überspannungswarteschlange"
 
@@ -79045,12 +78860,6 @@ msgstr "Verwendete Log-Dateien: Absolute oder relative Obergrenzen"
 msgid "Used logical space"
 msgstr "Verwendeter logischer Platz"
 
-msgid "Used memory"
-msgstr "Verwendeter Speicher"
-
-msgid "Used memory RSS"
-msgstr "Verwendeter RSS-Speicher"
-
 msgid "Used meta data"
 msgstr "Genutzte Metadaten"
 
@@ -79356,19 +79165,6 @@ msgstr ""
 "Einzelheiten finden Sie in unserem Werk 14261). Wir deaktivieren die "
 "Anmeldung über diese Methode standardmäßig. Verwenden Sie diese Eigenschaft, "
 "um die Anmeldung über die GET-Methode für alle Benutzer zu aktivieren."
-
-msgid ""
-"Using this option will let Checkmk create safe host names for piggyback "
-"hosts to avoid conflicts in entity names from Azure. This option will "
-"prepend 'azr-' and append the last part of the subscription ID to host "
-"names. Example: 'azr-my-vm-1a2b3c4d'. Enable this option if you have "
-"resources or resource groups with the same name."
-msgstr ""
-"Mit dieser Option erstellt Checkmk sichere Host-Namen für Piggyback-Hosts, "
-"um Konflikte mit Entitätsnamen aus Azure zu vermeiden. Diese Option stellt "
-"den Host-Namen 'azr-' voran und fügt den letzten Teil der Abonnement-ID an. "
-"Beispiel: 'azr-my-vm-1a2b3c4d'. Aktivieren Sie diese Option, wenn Sie "
-"Ressourcen oder Ressourcengruppen mit demselben Namen haben."
 
 msgid ""
 "Using this option you can define an optional LDAP filter which is used "
@@ -89286,6 +89082,237 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "Add subscription tag"
+#~ msgstr "Subskriptionsmerkmal anfügen"
+
+#~ msgid ""
+#~ "Add the tags you want to use to filter the resources. Only resources with "
+#~ "every tags matching, will be monitored."
+#~ msgstr ""
+#~ "Fügen Sie die Merkmale hinzu, die Sie zum Filtern der Ressourcen "
+#~ "verwenden möchten. Es werden nur Ressourcen überwacht, bei denen alle "
+#~ "Merkmale übereinstimmen."
+
+#~ msgid ""
+#~ "Add the tags you want to use to filter the subscriptions. Only "
+#~ "subscriptions with every tags matching, will be monitored."
+#~ msgstr ""
+#~ "Fügen Sie die Merkmale hinzu, die Sie zum Filtern der Subskriptionen "
+#~ "verwenden möchten. Es werden nur Subskriptionen überwacht, bei denen alle "
+#~ "Merkmale übereinstimmen."
+
+#~ msgid "Azure Redis CPU utilization"
+#~ msgstr "Azure Redis CPU-Auslastung"
+
+#~ msgid "Azure Redis Cache effectiveness"
+#~ msgstr "Effektivität des Azure Redis Caches"
+
+#~ msgid "Azure Redis connections"
+#~ msgstr "Azure Redis Verbindungen"
+
+#~ msgid "Azure Redis latency"
+#~ msgstr "Azure Redis Latenz"
+
+#~ msgid "Azure Redis memory"
+#~ msgstr "Azure Redis Speicherplatz"
+
+#~ msgid "Azure Redis replication"
+#~ msgstr "Azure Redis Replikation"
+
+#~ msgid "Azure Redis server load"
+#~ msgstr "Azure Redis Serverauslastung"
+
+#~ msgid "Azure Redis throughput"
+#~ msgstr "Azure Redis Durchsatz"
+
+#~ msgid "Azure SQL database connections"
+#~ msgstr "Azure SQL Datenbank-Verbindungen"
+
+#~ msgid "CPU utilization %"
+#~ msgstr "CPU-Auslastung %"
+
+#~ msgid "Cache read throughput (/sec)"
+#~ msgstr "Lesedurchsatz des Cache (/sek)"
+
+#~ msgid "Cache requests"
+#~ msgstr "Cache-Anfragen"
+
+#~ msgid "Cache write throughput (/sec)"
+#~ msgstr "Schreibdurchsatz des Cache (/sek)"
+
+#~ msgid "Connected Clients"
+#~ msgstr "Verbundene Clients"
+
+#~ msgid "Connected clients"
+#~ msgstr "Verbundene Clients"
+
+#~ msgid "Connections closed rate"
+#~ msgstr "Rate an geschlossenen Verbindungen"
+
+#~ msgid "Connections created rate"
+#~ msgstr "Rate an erstellten Verbindungen"
+
+#~ msgid "Connectivity lag"
+#~ msgstr "Verbindungsverzögerung"
+
+#~ msgid "Do not monitor subscriptions"
+#~ msgstr "Subskriptionen nicht überwachen"
+
+#~ msgid "Enable safe host names"
+#~ msgstr "Sichere Host-Namen aktivieren"
+
+#~ msgid "Evicted keys"
+#~ msgstr "Entfernte Schlüssel"
+
+#~ msgid "Expired keys"
+#~ msgstr "Abgelaufene Schlüssel"
+
+#~ msgid "Explicit list of subscription IDs"
+#~ msgstr "Explizite Liste der Subskriptions-IDs"
+
+#~ msgid "Explicitly specify subscription IDs"
+#~ msgstr "Subskriptions-IDs explizit spezifizieren"
+
+#~ msgid "Get commands"
+#~ msgstr "Befehle erhalten"
+
+#~ msgid "Hit ratio"
+#~ msgstr "Hit Ratio"
+
+#~ msgid "Levels over an extended period of time"
+#~ msgstr "Levels über eine längere Zeitperiode"
+
+#~ msgid "Lower levels for successful connections"
+#~ msgstr "Untergrenzen für erfolgreiche Verbindungen"
+
+#~ msgid "Maximum connectivity lag"
+#~ msgstr "Maximale Verbindungsverzögerung"
+
+#~ msgid "Monitor all subscriptions"
+#~ msgstr "Überwache alle Subskriptionen"
+
+#~ msgid "Redis Caches"
+#~ msgstr "Redis Caches"
+
+#~ msgid "Select the subscriptions you want to monitor."
+#~ msgstr "Wählen Sie die Subskriptionen aus, die Sie überwachen wollen."
+
+#~ msgid "Server load"
+#~ msgstr "Serverauslastung"
+
+#~ msgid "Server load %"
+#~ msgstr "Serverauslastung %"
+
+#~ msgid "Server load (average)"
+#~ msgstr "Serverauslastung (Durchschnitt)"
+
+#~ msgid "Server load levels"
+#~ msgstr "Levels der Serverauslastung"
+
+#~ msgid "Server side command latency"
+#~ msgstr "Serverseitige Kommandolatenz"
+
+#~ msgid "Server-side command latency"
+#~ msgstr "Serverseitige Kommandolatenz"
+
+#~ msgid "Subscriptions matching tag based criteria"
+#~ msgstr "Subskriptionen, die den merkmalsbasierten Kriterien entsprechen"
+
+#~ msgid "Subscriptions to monitor"
+#~ msgstr "Zu überwachende Subskriptionen"
+
+#~ msgid "Tag matching subscriptions"
+#~ msgstr "Subskriptionen, auf welche die Merkmale zutreffen"
+
+#~ msgid "The subscription tag"
+#~ msgstr "Das Subskriptionsmerkmal"
+
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis CPU "
+#~ "utilization monitoring"
+#~ msgstr ""
+#~ "Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring der CPU-"
+#~ "Nutzung für Azure Redis zu konfigurieren"
+
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis Cache "
+#~ "effectiveness monitoring"
+#~ msgstr ""
+#~ "Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring der "
+#~ "Effektivität des Azure Redis Caches zu konfigurieren"
+
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis connections "
+#~ "monitoring"
+#~ msgstr ""
+#~ "Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring von Azure "
+#~ "Redis Verbindungen zu konfigurieren"
+
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis latency "
+#~ "monitoring"
+#~ msgstr ""
+#~ "Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring der Azure "
+#~ "Redis Latenz zu konfigurieren"
+
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis memory "
+#~ "monitoring"
+#~ msgstr ""
+#~ "Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring des Azure "
+#~ "Redis Speichers zu konfigurieren"
+
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis replication "
+#~ "monitoring"
+#~ msgstr ""
+#~ "Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring von Azure "
+#~ "Redis Replikationen zu konfigurieren"
+
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis server load "
+#~ "monitoring"
+#~ msgstr ""
+#~ "Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring der Azure "
+#~ "Redis Speicherauslastung zu konfigurieren"
+
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis throughput "
+#~ "monitoring"
+#~ msgstr ""
+#~ "Dieser Regelsatz ermöglicht es Ihnen, Levels für das Monitoring des Azure "
+#~ "Redis Durchsatzes zu konfigurieren"
+
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure SQL database "
+#~ "connections"
+#~ msgstr ""
+#~ "Dieser Regelsatz ermöglicht es Ihnen, Levels für Azure SQL-"
+#~ "Datenbankverbindungen zu konfigurieren"
+
+#~ msgid "Upper levels for successful connections"
+#~ msgstr "Obergrenzen für erfolgreiche Verbindungen"
+
+#~ msgid "Used memory"
+#~ msgstr "Verwendeter Speicher"
+
+#~ msgid "Used memory RSS"
+#~ msgstr "Verwendeter RSS-Speicher"
+
+#~ msgid ""
+#~ "Using this option will let Checkmk create safe host names for piggyback "
+#~ "hosts to avoid conflicts in entity names from Azure. This option will "
+#~ "prepend 'azr-' and append the last part of the subscription ID to host "
+#~ "names. Example: 'azr-my-vm-1a2b3c4d'. Enable this option if you have "
+#~ "resources or resource groups with the same name."
+#~ msgstr ""
+#~ "Mit dieser Option erstellt Checkmk sichere Host-Namen für Piggyback-"
+#~ "Hosts, um Konflikte mit Entitätsnamen aus Azure zu vermeiden. Diese "
+#~ "Option stellt den Host-Namen 'azr-' voran und fügt den letzten Teil der "
+#~ "Abonnement-ID an. Beispiel: 'azr-my-vm-1a2b3c4d'. Aktivieren Sie diese "
+#~ "Option, wenn Sie Ressourcen oder Ressourcengruppen mit demselben Namen "
+#~ "haben."
+
 #~ msgid "Assignment of services to contact groups"
 #~ msgstr "Zuweisung von Services zu Kontaktgruppen"
 
@@ -89471,18 +89498,6 @@ msgstr ""
 #~ msgid "Special States"
 #~ msgstr "Besondere Zustände"
 
-#~ msgid ""
-#~ "By default, data relating to a VM is sent to the group host corresponding "
-#~ "to the resource group of the VM, the same way as for any other resource. "
-#~ "If the VM is present in your monitoring as a separate host, you can "
-#~ "choose to send the data to the VM itself."
-#~ msgstr ""
-#~ "Standardmäßig werden Daten, die sich auf eine VM beziehen, an den Gruppen-"
-#~ "Host gesendet, welcher der Ressourcegruppe der VM entspricht, wie bei "
-#~ "jeder anderen Ressource. Wenn die VM in Ihrem Monitoring als separater "
-#~ "Host vorhanden ist, können Sie wählen, ob Sie die Daten an die VM selbst "
-#~ "senden möchten."
-
 #~ msgid "GUI extensions (deprecated)"
 #~ msgstr "GUI-Erweiterungen (veraltet)"
 
@@ -89491,18 +89506,6 @@ msgstr ""
 
 #~ msgid "Legacy check plug-ins (deprecated)"
 #~ msgstr "Legacy-Check-Plugins (veraltet)"
-
-#~ msgid "Map data"
-#~ msgstr "Daten zuordnen"
-
-#~ msgid "Map data relating to VMs"
-#~ msgstr "Daten von VMs zuordnen"
-
-#~ msgid "Map data to group host"
-#~ msgstr "Daten dem Gruppen-Host zuordnen"
-
-#~ msgid "Map data to the VM itself"
-#~ msgstr "Daten der VM selbst zuordnen"
 
 #~ msgid "Name of group2"
 #~ msgstr "Name der Gruppe2"
@@ -89753,9 +89756,6 @@ msgstr ""
 #~ "Der Monitoring-Kern der Zielinstanz '%s' hat die Version '%s'. Diese "
 #~ "unterstützt das Abrufen von Log-Dateiinformationen nicht. Bitte "
 #~ "aktualisieren Sie auf eine neuere Version."
-
-#~ msgid "Subscription ID"
-#~ msgstr "Subskriptions-ID"
 
 #~ msgid "At least one selection is missing."
 #~ msgstr "Mindestens eine Auswahl fehlt."

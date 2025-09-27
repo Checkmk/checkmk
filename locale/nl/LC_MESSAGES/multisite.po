@@ -4475,10 +4475,6 @@ msgstr "Configuratie toestand toevoegen"
 msgid "Add stored report"
 msgstr "Opgeslagen rapport toevoegen"
 
-#, fuzzy
-msgid "Add subscription tag"
-msgstr "Abonnementsstatus"
-
 msgid "Add tag"
 msgstr "Tag toevoegen"
 
@@ -4511,16 +4507,6 @@ msgstr ""
 "Voeg tekst van gebeurtenissen toe aan gegevens die naar de "
 "gebeurtenissenconsole worden doorgestuurd. Tekens met een nieuwe regel "
 "worden vervangen door '~'."
-
-msgid ""
-"Add the tags you want to use to filter the resources. Only resources with "
-"every tags matching, will be monitored."
-msgstr ""
-
-msgid ""
-"Add the tags you want to use to filter the subscriptions. Only subscriptions "
-"with every tags matching, will be monitored."
-msgstr ""
 
 msgid "Add these contact groups to the host"
 msgstr "Voeg deze contactgroepen toe aan de host"
@@ -5505,9 +5491,6 @@ msgstr "Alarmen"
 
 msgid "Alert"
 msgstr "Waarschuwing"
-
-msgid "Alert after being at or above the threshold for"
-msgstr ""
 
 msgid "Alert handler"
 msgstr "Waarschuwings afhandelaar"
@@ -6997,6 +6980,10 @@ msgstr "Application Load Balancer Certificaten"
 msgid "Application Load balancers"
 msgstr "Load balancers voor toepassingen"
 
+#, fuzzy
+msgid "Application Monitoring"
+msgstr "Zoeken in Toezicht"
+
 msgid "Application Pool name"
 msgstr "Naam toepassingspool"
 
@@ -8243,10 +8230,6 @@ msgstr "Gemiddeld aantal berichten bovenste niveaus"
 msgid "Average number of messages"
 msgstr "Gemiddeld aantal berichten"
 
-#, fuzzy
-msgid "Average over"
-msgstr "Gemiddelde waarde"
-
 msgid "Average pending tasks delta"
 msgstr "Gemiddelde delta in afwachting van taken"
 
@@ -8300,12 +8283,6 @@ msgid ""
 msgstr ""
 "Gemiddelde van CPU-gebruik over de gespecificeerde tijdsperiode voordat "
 "niveaus worden toegepast."
-
-msgid ""
-"Average the instantaneous load over the specified number of minutes. Note: "
-"This does NOT affect \"Levels an extended period of time\" above, which "
-"always checks the instantaneous value."
-msgstr ""
 
 msgid "Average time messages stay on queue"
 msgstr "Gemiddelde tijd dat berichten in de wachtrij staan"
@@ -8906,44 +8883,8 @@ msgid "Azure Load Balancer Health"
 msgstr "Gezondheid Azure Load Balancer"
 
 #, fuzzy
-msgid "Azure Redis CPU utilization"
-msgstr "GCP/Redis CPU-gebruik"
-
-#, fuzzy
-msgid "Azure Redis Cache effectiveness"
-msgstr "Databaseverbindingen"
-
-#, fuzzy
-msgid "Azure Redis connections"
-msgstr "Databaseverbindingen"
-
-#, fuzzy
-msgid "Azure Redis latency"
-msgstr "Gemiddelde schijflatentie"
-
-#, fuzzy
-msgid "Azure Redis memory"
-msgstr "Absoluut vrij geheugen"
-
-#, fuzzy
-msgid "Azure Redis replication"
-msgstr "Databaseverbindingen"
-
-#, fuzzy
-msgid "Azure Redis server load"
-msgstr "Redis server naam"
-
-#, fuzzy
-msgid "Azure Redis throughput"
-msgstr "Lees doorvoer"
-
-#, fuzzy
 msgid "Azure SQL database CPU usage"
 msgstr "Azure Databases"
-
-#, fuzzy
-msgid "Azure SQL database connections"
-msgstr "Databaseverbindingen"
 
 #, fuzzy
 msgid "Azure SQL database deadlocks"
@@ -10419,6 +10360,20 @@ msgstr ""
 
 #, python-brace-format
 msgid ""
+"By default, Checkmk imports all Azure tags as host/service labels. The "
+"imported tags are added as host labels for resource groups and VMs monitored "
+"as hosts and as service labels for resources monitored as services. The "
+"label syntax is 'cmk/azure/tag/{key}:{value}'.<br>Additionally, each host "
+"representing a resource group is given the host label 'cmk/azure/"
+"resource_group:{rg_name}', and VMs monitored as hosts are given the host "
+"label 'cmk/azure/vm:instance', which is done independent of this option."
+"<br>You can further restrict the imported tags by specifying a pattern which "
+"Checkmk searches for in the key of the Azure tag, or you can disable the "
+"import of Azure tags altogether."
+msgstr ""
+
+#, python-brace-format
+msgid ""
 "By default, Checkmk imports the AWS tags for EC2 and ELB instances as host "
 "labels for the respective piggyback hosts. The label syntax is 'cmk/aws/tag/"
 "{key}:{value}'.<br>Additionally, the piggyback hosts for EC2 instances are "
@@ -10498,6 +10453,19 @@ msgstr ""
 "Certificaatvalidatie is standaard uitgeschakeld omdat het in dit stadium "
 "niet relevant is voor de veiligheid, zie <a href=\"https://checkmk.com/werk/"
 "14715\" target=\"_blank\">werk #14715</a>."
+
+#, fuzzy
+msgid ""
+"By default, data relating to a VM is sent to the group host corresponding to "
+"the resource group of the VM, the same way as for any other resource. If the "
+"VM is present in your monitoring as a separate host, you can choose to send "
+"the data to the VM itself."
+msgstr ""
+"Standaard worden gegevens met betrekking tot een VM verzonden naar de groep "
+"host die overeenkomt met de resource groep van de VM, op dezelfde manier als "
+"voor elke andere resource. Als de VM als een afzonderlijke host in uw "
+"monitoring aanwezig is, kunt u ervoor kiezen om de gegevens naar de VM zelf "
+"te sturen."
 
 msgid ""
 "By default, each host has a piggyback data source.<br><br><b>Use piggyback "
@@ -11145,10 +11113,6 @@ msgstr "CPU gebruikt"
 msgid "CPU utilization"
 msgstr "CPU-gebruik"
 
-#, fuzzy
-msgid "CPU utilization %"
-msgstr "CPU-gebruik"
-
 msgid "CPU utilization & Kernel performance"
 msgstr "CPU-gebruik en kernelprestaties"
 
@@ -11326,10 +11290,6 @@ msgstr "Cache %s"
 msgid "Cache hits for pass"
 msgstr "hits voor pass"
 
-#, fuzzy
-msgid "Cache internode latency"
-msgstr "Conferentie Latency creëren"
-
 msgid "Cache interval"
 msgstr "Cache-interval"
 
@@ -11339,14 +11299,6 @@ msgstr "Cachegrootte"
 
 msgid "Cache misses per second"
 msgstr "Cache missers per seconde"
-
-#, fuzzy
-msgid "Cache read throughput (/sec)"
-msgstr "Lees doorvoer"
-
-#, fuzzy
-msgid "Cache requests"
-msgstr "Mislukte verzoeken"
 
 msgid "Cache several non-status queries"
 msgstr "Cache verschillende niet-status queries"
@@ -11358,10 +11310,6 @@ msgstr "Cachegrootte"
 #, fuzzy
 msgid "Cache this section"
 msgstr "dit gedeelte uitschakelen"
-
-#, fuzzy
-msgid "Cache write throughput (/sec)"
-msgstr "Schrijf doorvoer"
 
 msgid "Cached"
 msgstr "Cached"
@@ -15245,16 +15193,8 @@ msgid "Connect without password"
 msgstr "Verbinden zonder wachtwoord"
 
 #, fuzzy
-msgid "Connected Clients"
-msgstr "Verbindingen"
-
-#, fuzzy
 msgid "Connected Relay configurations"
 msgstr "RRA-configuratie"
-
-#, fuzzy
-msgid "Connected clients"
-msgstr "Aantal aangesloten cliënten"
 
 msgid "Connecter and connectee sites must be different."
 msgstr ""
@@ -15370,14 +15310,6 @@ msgstr "Type aansluiting"
 msgid "Connections"
 msgstr "Verbindingen"
 
-#, fuzzy
-msgid "Connections closed rate"
-msgstr "Verbinding laat verbroken"
-
-#, fuzzy
-msgid "Connections created rate"
-msgstr "Verbinding laat verbroken"
-
 msgid "Connections dropped"
 msgstr "Verbindingen verbroken"
 
@@ -15400,10 +15332,6 @@ msgid "Connections per second"
 msgstr "Verbindingen per seconde"
 
 msgid "Connectivity"
-msgstr "Connectiviteit"
-
-#, fuzzy
-msgid "Connectivity lag"
 msgstr "Connectiviteit"
 
 msgid "Connector outlets"
@@ -21311,10 +21239,6 @@ msgstr "Geen placeholder VM's monitoren"
 msgid "Do not monitor service"
 msgstr "Controleer niet"
 
-#, fuzzy
-msgid "Do not monitor subscriptions"
-msgstr "Controleer niet"
-
 msgid "Do not offer this action as a command on open events"
 msgstr "Bied deze actie niet aan als een commando bij open gebeurtenissen"
 
@@ -22933,6 +22857,10 @@ msgstr "Caching inschakelen"
 msgid "Enable Livestatus access via network (TCP)"
 msgstr "Inschakelen Livestatus toegang via netwerk (TCP)"
 
+#, fuzzy
+msgid "Enable OpenTelemetry collector (experimental)"
+msgstr "Configuratie toestand toevoegen"
+
 msgid "Enable SMTP AUTH (LOGIN)"
 msgstr "SMTP AUTH (LOGIN) inschakelen"
 
@@ -23086,10 +23014,6 @@ msgstr "Activeer replicatie van een master"
 msgid "Enable row shading"
 msgstr "Rij arcering inschakelen"
 
-#, fuzzy
-msgid "Enable safe host names"
-msgstr "Hostnamen vertalen"
-
 msgid "Enable service notifications"
 msgstr "Inschakelen dienst meldingen"
 
@@ -23116,19 +23040,6 @@ msgid ""
 msgstr ""
 "Activeer deze optie als u de legacy agent wilt verwijderen nadat de nieuwe "
 "Windows agent is geïnstalleerd."
-
-#, python-brace-format
-msgid ""
-"Enable this option to import Azure tags as host/service labels. The imported "
-"tags are added as host labels for resource groups and VMs monitored as hosts "
-"and as service labels for resources monitored as services. The label syntax "
-"is 'cmk/azure/tag/{key}:{value}'.<br>Additionally, each host representing a "
-"resource group is given the host label 'cmk/azure/resource_group:{rg_name}', "
-"and VMs monitored as hosts are given the host label 'cmk/azure/vm:instance', "
-"which is done independent of this option.<br>You can further restrict the "
-"imported tags by specifying a pattern which Checkmk searches for in the key "
-"of the Azure tag, or you can disable the import of Azure tags altogether."
-msgstr ""
 
 #, python-brace-format
 msgid ""
@@ -24149,10 +24060,6 @@ msgstr ""
 msgid "Every week on..."
 msgstr "Elke week op..."
 
-#, fuzzy
-msgid "Evicted keys"
-msgstr "Aantal uitgezette sleutels"
-
 msgid "Evictions"
 msgstr "Uitzettingen"
 
@@ -24607,10 +24514,6 @@ msgstr "Verloopt op"
 msgid "Expire time"
 msgstr "Verlooptijd"
 
-#, fuzzy
-msgid "Expired keys"
-msgstr "Verlopen objecten"
-
 msgid "Expired objects"
 msgstr "Verlopen objecten"
 
@@ -24664,10 +24567,6 @@ msgstr "Expliciete etiketten"
 
 #, fuzzy
 msgid "Explicit list of IP addresses"
-msgstr "Expliciete lijst van IP-adressen"
-
-#, fuzzy
-msgid "Explicit list of subscription IDs"
 msgstr "Expliciete lijst van IP-adressen"
 
 msgid "Explicit mapping of job exit codes to states"
@@ -24727,10 +24626,6 @@ msgid "Explicitly specified groups"
 msgstr "uitdrukkelijk gespecificeerde groepen"
 
 msgid "Explicitly specify resources"
-msgstr "Expliciet middelen specificeren"
-
-#, fuzzy
-msgid "Explicitly specify subscription IDs"
 msgstr "Expliciet middelen specificeren"
 
 msgid "Export"
@@ -27328,10 +27223,6 @@ msgstr "Verbinding bewerken"
 msgid "Gerrit instance to query."
 msgstr "Jenkins instantie om te bevragen."
 
-#, fuzzy
-msgid "Get commands"
-msgstr "geen commando's"
-
 msgid "Get file from SFTP server"
 msgstr "Bestand van SFTP-server halen"
 
@@ -29394,10 +29285,6 @@ msgstr "Geschiedenis van de kennisgevingen"
 
 msgid "History of scheduled downtimes"
 msgstr "Geschiedenis van geplande uitvaltijd"
-
-#, fuzzy
-msgid "Hit ratio"
-msgstr "Init duur"
 
 msgid "Hits"
 msgstr "Hits"
@@ -36782,6 +36669,10 @@ msgstr ""
 "beschikbaar is. De vrije geheugen niveaus werken niet met de fortigate "
 "check, omdat die geen totale geheugen gegevens geeft."
 
+#, fuzzy
+msgid "Keep last successful data for"
+msgstr "Tijd sinds laatste succesvolle bouw"
+
 msgid "Keep service level from message (if available)"
 msgstr "Service level van bericht behouden (indien beschikbaar)"
 
@@ -38200,10 +38091,6 @@ msgstr "Niveaus op gebruikte capaciteit in bytes"
 
 msgid "Levels on write capacity"
 msgstr "Niveaus op schrijfcapaciteit"
-
-#, fuzzy
-msgid "Levels over an extended period of time"
-msgstr "Niveaus over een langere periode op replicatievertraging"
 
 msgid "Levels over an extended time period on a single core CPU utilization"
 msgstr "Niveaus over een langere periode op een enkele kern CPU-gebruik"
@@ -39758,10 +39645,6 @@ msgstr "Hogere niveaus voor verzoeken gebruik"
 msgid "Lower levels for reservation utilization"
 msgstr "Hogere niveaus voor verzoeken gebruik"
 
-#, fuzzy
-msgid "Lower levels for successful connections"
-msgstr "Niveaus voor actieve verbindingen"
-
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr "Lagere niveaus voor de ventilatorsnelheid van een hardwareapparaat"
 
@@ -40601,8 +40484,21 @@ msgstr ""
 "worden."
 
 #, fuzzy
+msgid "Map data"
+msgstr "In kaart gebrachte gegevens"
+
+msgid "Map data relating to VMs"
+msgstr "Kaartgegevens met betrekking tot VM's"
+
+msgid "Map data to group host"
+msgstr "Map gegevens naar groep host"
+
+#, fuzzy
 msgid "Map data to specific host (Piggyback)"
 msgstr "uitdrukkelijk gespecificeerde groepen"
+
+msgid "Map data to the VM itself"
+msgstr "Map gegevens naar de VM zelf"
 
 msgid "Map device state"
 msgstr "Apparaatstatus in kaart brengen"
@@ -41209,10 +41105,6 @@ msgstr "Maximaal aantal gelijktijdige Real-Time controles"
 
 msgid "Maximum connections per second"
 msgstr "Maximale verbindingen per seconde"
-
-#, fuzzy
-msgid "Maximum connectivity lag"
-msgstr "Site connectiviteit"
 
 msgid "Maximum count"
 msgstr "Maximum aantal"
@@ -42628,10 +42520,6 @@ msgstr "Controleer alle gevonden gevallen"
 
 msgid "Monitor all instances found"
 msgstr "Controleer alle gevonden gevallen"
-
-#, fuzzy
-msgid "Monitor all subscriptions"
-msgstr "Abonnementen op evenementen"
 
 msgid "Monitor and graph the lanes, if the port has multiple"
 msgstr "Monitor en maak een grafiek van de lanes, als de poort meerdere"
@@ -50726,6 +50614,9 @@ msgstr "Toegestane HW/SW inventarisatiepaden"
 msgid "Permitted contact groups"
 msgstr "Toegestane contactgroepen"
 
+msgid "Persistence period for node disk usage fallback"
+msgstr ""
+
 msgid "Persistent (long)"
 msgstr "Persistent (lang)"
 
@@ -53956,10 +53847,6 @@ msgstr "Fysieke poort toestanden om te ontdekken"
 
 msgid "Redirect URL (has to be https)"
 msgstr "Redirect URL (moet https zijn)"
-
-#, fuzzy
-msgid "Redis Caches"
-msgstr "Redis cliënten"
 
 msgid "Redis clients"
 msgstr "Redis cliënten"
@@ -57990,9 +57877,6 @@ msgstr ""
 "de selectie worden bijv. de attribuutnamen die in LDAP-query's worden "
 "gebruikt, gewijzigd."
 
-msgid "Select the subscriptions you want to monitor."
-msgstr ""
-
 msgid "Select the type of content element"
 msgstr "Selecteer het type inhoudselement"
 
@@ -58329,22 +58213,6 @@ msgstr "Serververbindingen"
 msgid "Server latency"
 msgstr "Serververtraging"
 
-#, fuzzy
-msgid "Server load"
-msgstr "Belasting Citrix Server"
-
-#, fuzzy
-msgid "Server load %"
-msgstr "Belasting Citrix Server"
-
-#, fuzzy
-msgid "Server load (average)"
-msgstr "Serverlogboekopslag"
-
-#, fuzzy
-msgid "Server load levels"
-msgstr "Dienstverleningsniveau"
-
 msgid "Server log storage"
 msgstr "Serverlogboekopslag"
 
@@ -58353,10 +58221,6 @@ msgstr "Server log opslag gebruikt"
 
 msgid "Server performance"
 msgstr "Serverprestaties"
-
-#, fuzzy
-msgid "Server side command latency"
-msgstr "Serververtraging"
 
 msgid "Server side handling of unencrypted data"
 msgstr "Serverzijde behandeling van niet-gecodeerde gegevens"
@@ -58368,10 +58232,6 @@ msgstr "Server tijd"
 #, python-format
 msgid "Server time (currently: %s)"
 msgstr ""
-
-#, fuzzy
-msgid "Server-side command latency"
-msgstr "Serververtraging"
 
 msgid "Service"
 msgstr "Dienst"
@@ -58886,10 +58746,6 @@ msgstr "Dienstverleningsstatus"
 #, fuzzy
 msgid "Service status grouping"
 msgstr "Groepering van dienstverleningsstatussen"
-
-#, fuzzy
-msgid "Service status when geo-replication link is unhealthy"
-msgstr "Staat wanneer replicatietoestand actief is"
 
 msgid "Service tags"
 msgstr "Dienstmarkeringen"
@@ -63827,17 +63683,12 @@ msgstr "Subnet per DB subnet groepen"
 msgid "Subscription"
 msgstr "Abonnement"
 
+msgid "Subscription ID"
+msgstr "Abonnement ID"
+
 #, fuzzy
 msgid "Subscription Status (off: ignore subscription status)"
 msgstr "Activeer Controle (uit: abonnementsstatus negeren)"
-
-#, fuzzy
-msgid "Subscriptions matching tag based criteria"
-msgstr "bronnen die overeenkomen met op tags gebaseerde criteria"
-
-#, fuzzy
-msgid "Subscriptions to monitor"
-msgstr "Te controleren regio's"
 
 msgid "Substitution"
 msgstr "Substitutie"
@@ -64683,10 +64534,6 @@ msgstr "Tag groepen"
 
 msgid "Tag groups with only one choice must have a tag ID."
 msgstr "Taggroepen met slechts één keuze moeten een tag ID hebben."
-
-#, fuzzy
-msgid "Tag matching subscriptions"
-msgstr "Abonnementen op evenementen"
 
 msgid "Tag usage"
 msgstr "Tag gebruik"
@@ -69737,10 +69584,6 @@ msgstr ""
 "De submap <i>%s</i> heeft de expliciete site <i>%s</i> ingesteld, die "
 "toebehoort aan klant <i>%s</i>. Dit is in strijd met de CME map hiërarchie."
 
-#, fuzzy
-msgid "The subscription tag"
-msgstr "Abonnementen op evenementen"
-
 #, fuzzy, python-format
 msgid "The suffix '%s' is already in use by another LDAP connection."
 msgstr "Deze id wordt al door een andere verbinding gebruikt."
@@ -74092,77 +73935,6 @@ msgstr ""
 "zijn echter enkele situaties waarin dit nuttig kan zijn. Eén daarvan is "
 "wanneer u de Checkmk Micro Core met SMART Ping gebruikt en u toch "
 "prestatiegegevens van de PING naar sommige hosts wilt bijhouden."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis CPU utilization "
-"monitoring"
-msgstr ""
-"Deze regel staat je toe om bloat levels te configureren voor een databases "
-"tablespace en indexspace."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis Cache "
-"effectiveness monitoring"
-msgstr ""
-"Deze regel staat je toe om bloat levels te configureren voor een databases "
-"tablespace en indexspace."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis connections "
-"monitoring"
-msgstr ""
-"Deze regel staat je toe om bloat levels te configureren voor een databases "
-"tablespace en indexspace."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis latency "
-"monitoring"
-msgstr ""
-"Deze regel staat je toe om bloat levels te configureren voor een databases "
-"tablespace en indexspace."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis memory monitoring"
-msgstr ""
-"Deze regel staat je toe om bloat levels te configureren voor een databases "
-"tablespace en indexspace."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis replication "
-"monitoring"
-msgstr ""
-"Deze regel staat je toe om bloat levels te configureren voor een databases "
-"tablespace en indexspace."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis server load "
-"monitoring"
-msgstr ""
-"Deze regel staat je toe om bloat levels te configureren voor een databases "
-"tablespace en indexspace."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis throughput "
-"monitoring"
-msgstr ""
-"Deze regel staat je toe om bloat levels te configureren voor een databases "
-"tablespace en indexspace."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure SQL database "
-"connections"
-msgstr ""
-"Deze regel staat je toe om bloat levels te configureren voor een databases "
-"tablespace en indexspace."
 
 #, fuzzy
 msgid "This ruleset allows you to configure levels for the Storage data flows"
@@ -80873,10 +80645,6 @@ msgstr "Bovenste niveaus voor herstarten"
 msgid "Upper levels for size"
 msgstr "Bovenste niveaus voor grootte"
 
-#, fuzzy
-msgid "Upper levels for successful connections"
-msgstr "Niveaus voor actieve verbindingen"
-
 msgid "Upper levels for surge queue length"
 msgstr "Bovenste niveaus voor de lengte van de wachtrij"
 
@@ -82175,14 +81943,6 @@ msgstr "Gebruikte logbestanden: Absolute of relatieve bovenste niveaus"
 msgid "Used logical space"
 msgstr "Gebruikte logische ruimte"
 
-#, fuzzy
-msgid "Used memory"
-msgstr "Gebruikt CPU-geheugen"
-
-#, fuzzy
-msgid "Used memory RSS"
-msgstr "Gebruikt CPU-geheugen"
-
 msgid "Used meta data"
 msgstr "Gebruikte metagegevens"
 
@@ -82507,14 +82267,6 @@ msgstr ""
 "14261). We schakelen het inloggen via deze methode standaard uit. Gebruik "
 "deze eigenschap om inloggen via de GET-methode voor alle gebruikers in te "
 "schakelen."
-
-msgid ""
-"Using this option will let Checkmk create safe host names for piggyback "
-"hosts to avoid conflicts in entity names from Azure. This option will "
-"prepend 'azr-' and append the last part of the subscription ID to host "
-"names. Example: 'azr-my-vm-1a2b3c4d'. Enable this option if you have "
-"resources or resource groups with the same name."
-msgstr ""
 
 msgid ""
 "Using this option you can define an optional LDAP filter which is used "
@@ -92838,6 +92590,270 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy
+#~ msgid "Add subscription tag"
+#~ msgstr "Abonnementsstatus"
+
+#, fuzzy
+#~ msgid "Average over"
+#~ msgstr "Gemiddelde waarde"
+
+#, fuzzy
+#~ msgid "Azure Redis CPU utilization"
+#~ msgstr "GCP/Redis CPU-gebruik"
+
+#, fuzzy
+#~ msgid "Azure Redis Cache effectiveness"
+#~ msgstr "Databaseverbindingen"
+
+#, fuzzy
+#~ msgid "Azure Redis connections"
+#~ msgstr "Databaseverbindingen"
+
+#, fuzzy
+#~ msgid "Azure Redis latency"
+#~ msgstr "Gemiddelde schijflatentie"
+
+#, fuzzy
+#~ msgid "Azure Redis memory"
+#~ msgstr "Absoluut vrij geheugen"
+
+#, fuzzy
+#~ msgid "Azure Redis replication"
+#~ msgstr "Databaseverbindingen"
+
+#, fuzzy
+#~ msgid "Azure Redis server load"
+#~ msgstr "Redis server naam"
+
+#, fuzzy
+#~ msgid "Azure Redis throughput"
+#~ msgstr "Lees doorvoer"
+
+#, fuzzy
+#~ msgid "Azure SQL database connections"
+#~ msgstr "Databaseverbindingen"
+
+#, fuzzy
+#~ msgid "CPU utilization %"
+#~ msgstr "CPU-gebruik"
+
+#, fuzzy
+#~ msgid "Cache internode latency"
+#~ msgstr "Conferentie Latency creëren"
+
+#, fuzzy
+#~ msgid "Cache read throughput (/sec)"
+#~ msgstr "Lees doorvoer"
+
+#, fuzzy
+#~ msgid "Cache requests"
+#~ msgstr "Mislukte verzoeken"
+
+#, fuzzy
+#~ msgid "Cache write throughput (/sec)"
+#~ msgstr "Schrijf doorvoer"
+
+#, fuzzy
+#~ msgid "Connected Clients"
+#~ msgstr "Verbindingen"
+
+#, fuzzy
+#~ msgid "Connected clients"
+#~ msgstr "Aantal aangesloten cliënten"
+
+#, fuzzy
+#~ msgid "Connections closed rate"
+#~ msgstr "Verbinding laat verbroken"
+
+#, fuzzy
+#~ msgid "Connections created rate"
+#~ msgstr "Verbinding laat verbroken"
+
+#, fuzzy
+#~ msgid "Connectivity lag"
+#~ msgstr "Connectiviteit"
+
+#, fuzzy
+#~ msgid "Do not monitor subscriptions"
+#~ msgstr "Controleer niet"
+
+#, fuzzy
+#~ msgid "Enable safe host names"
+#~ msgstr "Hostnamen vertalen"
+
+#, fuzzy
+#~ msgid "Evicted keys"
+#~ msgstr "Aantal uitgezette sleutels"
+
+#, fuzzy
+#~ msgid "Expired keys"
+#~ msgstr "Verlopen objecten"
+
+#, fuzzy
+#~ msgid "Explicit list of subscription IDs"
+#~ msgstr "Expliciete lijst van IP-adressen"
+
+#, fuzzy
+#~ msgid "Explicitly specify subscription IDs"
+#~ msgstr "Expliciet middelen specificeren"
+
+#, fuzzy
+#~ msgid "Get commands"
+#~ msgstr "geen commando's"
+
+#, fuzzy
+#~ msgid "Hit ratio"
+#~ msgstr "Init duur"
+
+#, fuzzy
+#~ msgid "Levels over an extended period of time"
+#~ msgstr "Niveaus over een langere periode op replicatievertraging"
+
+#, fuzzy
+#~ msgid "Lower levels for successful connections"
+#~ msgstr "Niveaus voor actieve verbindingen"
+
+#, fuzzy
+#~ msgid "Maximum connectivity lag"
+#~ msgstr "Site connectiviteit"
+
+#, fuzzy
+#~ msgid "Monitor all subscriptions"
+#~ msgstr "Abonnementen op evenementen"
+
+#, fuzzy
+#~ msgid "Redis Caches"
+#~ msgstr "Redis cliënten"
+
+#, fuzzy
+#~ msgid "Server load"
+#~ msgstr "Belasting Citrix Server"
+
+#, fuzzy
+#~ msgid "Server load %"
+#~ msgstr "Belasting Citrix Server"
+
+#, fuzzy
+#~ msgid "Server load (average)"
+#~ msgstr "Serverlogboekopslag"
+
+#, fuzzy
+#~ msgid "Server load levels"
+#~ msgstr "Dienstverleningsniveau"
+
+#, fuzzy
+#~ msgid "Server side command latency"
+#~ msgstr "Serververtraging"
+
+#, fuzzy
+#~ msgid "Server-side command latency"
+#~ msgstr "Serververtraging"
+
+#, fuzzy
+#~ msgid "Service status when geo-replication link is unhealthy"
+#~ msgstr "Staat wanneer replicatietoestand actief is"
+
+#, fuzzy
+#~ msgid "Subscriptions matching tag based criteria"
+#~ msgstr "bronnen die overeenkomen met op tags gebaseerde criteria"
+
+#, fuzzy
+#~ msgid "Subscriptions to monitor"
+#~ msgstr "Te controleren regio's"
+
+#, fuzzy
+#~ msgid "Tag matching subscriptions"
+#~ msgstr "Abonnementen op evenementen"
+
+#, fuzzy
+#~ msgid "The subscription tag"
+#~ msgstr "Abonnementen op evenementen"
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis CPU "
+#~ "utilization monitoring"
+#~ msgstr ""
+#~ "Deze regel staat je toe om bloat levels te configureren voor een "
+#~ "databases tablespace en indexspace."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis Cache "
+#~ "effectiveness monitoring"
+#~ msgstr ""
+#~ "Deze regel staat je toe om bloat levels te configureren voor een "
+#~ "databases tablespace en indexspace."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis connections "
+#~ "monitoring"
+#~ msgstr ""
+#~ "Deze regel staat je toe om bloat levels te configureren voor een "
+#~ "databases tablespace en indexspace."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis latency "
+#~ "monitoring"
+#~ msgstr ""
+#~ "Deze regel staat je toe om bloat levels te configureren voor een "
+#~ "databases tablespace en indexspace."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis memory "
+#~ "monitoring"
+#~ msgstr ""
+#~ "Deze regel staat je toe om bloat levels te configureren voor een "
+#~ "databases tablespace en indexspace."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis replication "
+#~ "monitoring"
+#~ msgstr ""
+#~ "Deze regel staat je toe om bloat levels te configureren voor een "
+#~ "databases tablespace en indexspace."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis server load "
+#~ "monitoring"
+#~ msgstr ""
+#~ "Deze regel staat je toe om bloat levels te configureren voor een "
+#~ "databases tablespace en indexspace."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis throughput "
+#~ "monitoring"
+#~ msgstr ""
+#~ "Deze regel staat je toe om bloat levels te configureren voor een "
+#~ "databases tablespace en indexspace."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure SQL database "
+#~ "connections"
+#~ msgstr ""
+#~ "Deze regel staat je toe om bloat levels te configureren voor een "
+#~ "databases tablespace en indexspace."
+
+#, fuzzy
+#~ msgid "Upper levels for successful connections"
+#~ msgstr "Niveaus voor actieve verbindingen"
+
+#, fuzzy
+#~ msgid "Used memory"
+#~ msgstr "Gebruikt CPU-geheugen"
+
+#, fuzzy
+#~ msgid "Used memory RSS"
+#~ msgstr "Gebruikt CPU-geheugen"
+
 #~ msgid "Assignment of services to contact groups"
 #~ msgstr "Toewijzing van diensten aan contactgroepen"
 
@@ -93019,19 +93035,6 @@ msgstr ""
 #~ msgstr "Operationele status"
 
 #, fuzzy
-#~ msgid ""
-#~ "By default, data relating to a VM is sent to the group host corresponding "
-#~ "to the resource group of the VM, the same way as for any other resource. "
-#~ "If the VM is present in your monitoring as a separate host, you can "
-#~ "choose to send the data to the VM itself."
-#~ msgstr ""
-#~ "Standaard worden gegevens met betrekking tot een VM verzonden naar de "
-#~ "groep host die overeenkomt met de resource groep van de VM, op dezelfde "
-#~ "manier als voor elke andere resource. Als de VM als een afzonderlijke "
-#~ "host in uw monitoring aanwezig is, kunt u ervoor kiezen om de gegevens "
-#~ "naar de VM zelf te sturen."
-
-#, fuzzy
 #~ msgid "GUI extensions (deprecated)"
 #~ msgstr "GUI-uitbreidingen"
 
@@ -93042,19 +93045,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Legacy check plug-ins (deprecated)"
 #~ msgstr "Plugins voor oudere controles"
-
-#, fuzzy
-#~ msgid "Map data"
-#~ msgstr "In kaart gebrachte gegevens"
-
-#~ msgid "Map data relating to VMs"
-#~ msgstr "Kaartgegevens met betrekking tot VM's"
-
-#~ msgid "Map data to group host"
-#~ msgstr "Map gegevens naar groep host"
-
-#~ msgid "Map data to the VM itself"
-#~ msgstr "Map gegevens naar de VM zelf"
 
 #, fuzzy
 #~ msgid "Name of group2"
@@ -93321,9 +93311,6 @@ msgstr ""
 #~ "De monitoring core van de doelsite '%s' heeft de versie '%s'. Die "
 #~ "ondersteunt het ophalen van logfile informatie niet. Gelieve te upgraden "
 #~ "naar een nieuwere versie."
-
-#~ msgid "Subscription ID"
-#~ msgstr "Abonnement ID"
 
 #~ msgid "Use the default start URL"
 #~ msgstr "Gebruik de standaard start URL"

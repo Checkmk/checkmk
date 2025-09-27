@@ -4504,10 +4504,6 @@ msgstr "Ajouter une configuration d'état"
 msgid "Add stored report"
 msgstr "Ajouter un rapport stocké"
 
-#, fuzzy
-msgid "Add subscription tag"
-msgstr "État de l'abonnement"
-
 msgid "Add tag"
 msgstr "Ajouter une étiquette"
 
@@ -4539,16 +4535,6 @@ msgid ""
 msgstr ""
 "Ajoute le texte des événements aux données transmises à la console "
 "d'événements. Les caractères de une nouvelle ligne sont remplacés par '~'."
-
-msgid ""
-"Add the tags you want to use to filter the resources. Only resources with "
-"every tags matching, will be monitored."
-msgstr ""
-
-msgid ""
-"Add the tags you want to use to filter the subscriptions. Only subscriptions "
-"with every tags matching, will be monitored."
-msgstr ""
 
 msgid "Add these contact groups to the host"
 msgstr "Ajouter ces groupes de contacts à l'hôte"
@@ -5537,9 +5523,6 @@ msgstr "Alarmes"
 
 msgid "Alert"
 msgstr "Alerte"
-
-msgid "Alert after being at or above the threshold for"
-msgstr ""
 
 msgid "Alert handler"
 msgstr "Gestionnaire d'alerte"
@@ -7040,6 +7023,10 @@ msgstr "Certificats d'équilibreur de charge d'application"
 msgid "Application Load balancers"
 msgstr "Équilibreurs de charge d'applications"
 
+#, fuzzy
+msgid "Application Monitoring"
+msgstr "Recherche dans le monitoring"
+
 msgid "Application Pool name"
 msgstr "Nom du pool d'applications"
 
@@ -8294,10 +8281,6 @@ msgstr "Nombre moyen de messages - niveaux supérieurs"
 msgid "Average number of messages"
 msgstr "Nombre moyen de messages"
 
-#, fuzzy
-msgid "Average over"
-msgstr "Valeur moyenne"
-
 msgid "Average pending tasks delta"
 msgstr "Delta moyen des tâches en attente"
 
@@ -8351,12 +8334,6 @@ msgid ""
 msgstr ""
 "Faire la moyenne de l'utilisation du CPU sur la période spécifiée avant "
 "l'application des niveaux."
-
-msgid ""
-"Average the instantaneous load over the specified number of minutes. Note: "
-"This does NOT affect \"Levels an extended period of time\" above, which "
-"always checks the instantaneous value."
-msgstr ""
 
 msgid "Average time messages stay on queue"
 msgstr "Durée moyenne du séjour des messages dans la file d'attente"
@@ -8957,44 +8934,8 @@ msgid "Azure Load Balancer Health"
 msgstr "Santé de l'équilibreur de charge Azure"
 
 #, fuzzy
-msgid "Azure Redis CPU utilization"
-msgstr "Utilisation de l'unité centrale de GCP/Redis"
-
-#, fuzzy
-msgid "Azure Redis Cache effectiveness"
-msgstr "Connexions à la base de données"
-
-#, fuzzy
-msgid "Azure Redis connections"
-msgstr "Connexions à la base de données"
-
-#, fuzzy
-msgid "Azure Redis latency"
-msgstr "Latence moyenne des disques"
-
-#, fuzzy
-msgid "Azure Redis memory"
-msgstr "Mémoire utilisée absolue"
-
-#, fuzzy
-msgid "Azure Redis replication"
-msgstr "Connexions à la base de données"
-
-#, fuzzy
-msgid "Azure Redis server load"
-msgstr "Nom du serveur Redis"
-
-#, fuzzy
-msgid "Azure Redis throughput"
-msgstr "Débit de lecture"
-
-#, fuzzy
 msgid "Azure SQL database CPU usage"
 msgstr "Bases de données Azure"
-
-#, fuzzy
-msgid "Azure SQL database connections"
-msgstr "Connexions à la base de données"
 
 #, fuzzy
 msgid "Azure SQL database deadlocks"
@@ -10469,6 +10410,20 @@ msgstr ""
 
 #, python-brace-format
 msgid ""
+"By default, Checkmk imports all Azure tags as host/service labels. The "
+"imported tags are added as host labels for resource groups and VMs monitored "
+"as hosts and as service labels for resources monitored as services. The "
+"label syntax is 'cmk/azure/tag/{key}:{value}'.<br>Additionally, each host "
+"representing a resource group is given the host label 'cmk/azure/"
+"resource_group:{rg_name}', and VMs monitored as hosts are given the host "
+"label 'cmk/azure/vm:instance', which is done independent of this option."
+"<br>You can further restrict the imported tags by specifying a pattern which "
+"Checkmk searches for in the key of the Azure tag, or you can disable the "
+"import of Azure tags altogether."
+msgstr ""
+
+#, python-brace-format
+msgid ""
 "By default, Checkmk imports the AWS tags for EC2 and ELB instances as host "
 "labels for the respective piggyback hosts. The label syntax is 'cmk/aws/tag/"
 "{key}:{value}'.<br>Additionally, the piggyback hosts for EC2 instances are "
@@ -10550,6 +10505,18 @@ msgstr ""
 "Par défaut, la validation des certificats est désactivée car elle n'est pas "
 "pertinente pour la sécurité à ce stade, voir <a href=\"https://checkmk.com/"
 "werk/14715\" target=\"_blank\">werk #14715</a>."
+
+#, fuzzy
+msgid ""
+"By default, data relating to a VM is sent to the group host corresponding to "
+"the resource group of the VM, the same way as for any other resource. If the "
+"VM is present in your monitoring as a separate host, you can choose to send "
+"the data to the VM itself."
+msgstr ""
+"Par défaut, les données relatives à une VM sont envoyées à l'hôte de groupe "
+"correspondant au groupe de ressources de la VM, de la même manière que pour "
+"toute autre ressource. Si la VM est présente dans votre monitoring comme un "
+"hôte séparé, vous pouvez choisir d'envoyer les données à la VM elle-même."
 
 msgid ""
 "By default, each host has a piggyback data source.<br><br><b>Use piggyback "
@@ -11202,10 +11169,6 @@ msgstr "Unité centrale utilisée"
 msgid "CPU utilization"
 msgstr "Utilisation du CPU"
 
-#, fuzzy
-msgid "CPU utilization %"
-msgstr "Utilisation du CPU"
-
 msgid "CPU utilization & Kernel performance"
 msgstr "Utilisation du CPU et performance du noyau"
 
@@ -11382,10 +11345,6 @@ msgstr "Cache %s"
 msgid "Cache hits for pass"
 msgstr "frappe pour une passe"
 
-#, fuzzy
-msgid "Cache internode latency"
-msgstr "Créer une latence de conférence"
-
 msgid "Cache interval"
 msgstr "Intervalle de cache"
 
@@ -11395,14 +11354,6 @@ msgstr "Taille du cache"
 
 msgid "Cache misses per second"
 msgstr "Cache manqués par seconde"
-
-#, fuzzy
-msgid "Cache read throughput (/sec)"
-msgstr "Débit de lecture"
-
-#, fuzzy
-msgid "Cache requests"
-msgstr "Demandes rejetées"
 
 msgid "Cache several non-status queries"
 msgstr "Mise en cache de plusieurs requêtes sans statut"
@@ -11414,10 +11365,6 @@ msgstr "Taille du cache"
 #, fuzzy
 msgid "Cache this section"
 msgstr "désactiver cette section"
-
-#, fuzzy
-msgid "Cache write throughput (/sec)"
-msgstr "Débit d'écriture"
 
 msgid "Cached"
 msgstr "En cachette"
@@ -15339,16 +15286,8 @@ msgid "Connect without password"
 msgstr "Se connecter sans mot de passe"
 
 #, fuzzy
-msgid "Connected Clients"
-msgstr "Connexions"
-
-#, fuzzy
 msgid "Connected Relay configurations"
 msgstr "Configuration de l'ARR"
-
-#, fuzzy
-msgid "Connected clients"
-msgstr "Nombre de clients connectés"
 
 msgid "Connecter and connectee sites must be different."
 msgstr ""
@@ -15465,14 +15404,6 @@ msgstr "Type de connexion"
 msgid "Connections"
 msgstr "Connexions"
 
-#, fuzzy
-msgid "Connections closed rate"
-msgstr "La connexion a été interrompue tardivement"
-
-#, fuzzy
-msgid "Connections created rate"
-msgstr "La connexion a été interrompue tardivement"
-
 msgid "Connections dropped"
 msgstr "Connexions abandonnées"
 
@@ -15495,10 +15426,6 @@ msgid "Connections per second"
 msgstr "Connexions par seconde"
 
 msgid "Connectivity"
-msgstr "Connectivité"
-
-#, fuzzy
-msgid "Connectivity lag"
 msgstr "Connectivité"
 
 msgid "Connector outlets"
@@ -21463,10 +21390,6 @@ msgstr "Ne surveillez pas les VMs de type placeholder"
 msgid "Do not monitor service"
 msgstr "Ne pas surveiller"
 
-#, fuzzy
-msgid "Do not monitor subscriptions"
-msgstr "Ne pas surveiller"
-
 msgid "Do not offer this action as a command on open events"
 msgstr ""
 "Ne proposez pas cette action comme une commande sur des événements ouverts"
@@ -23104,6 +23027,10 @@ msgstr "Activer la mise en cache"
 msgid "Enable Livestatus access via network (TCP)"
 msgstr "Activer l'accès au Livestatus via le réseau (TCP)"
 
+#, fuzzy
+msgid "Enable OpenTelemetry collector (experimental)"
+msgstr "Ajouter une configuration d'état"
+
 msgid "Enable SMTP AUTH (LOGIN)"
 msgstr "Activer SMTP AUTH (LOGIN)"
 
@@ -23260,10 +23187,6 @@ msgstr "Activer la réplication à partir d'un maître"
 msgid "Enable row shading"
 msgstr "Activer l'ombrage des rangées"
 
-#, fuzzy
-msgid "Enable safe host names"
-msgstr "Traduire les noms d'hôtes"
-
 msgid "Enable service notifications"
 msgstr "Activer les notifications de service"
 
@@ -23290,19 +23213,6 @@ msgid ""
 msgstr ""
 "Activez cette option si vous souhaitez désinstaller l'ancien agent après "
 "l'installation du nouvel agent Windows."
-
-#, python-brace-format
-msgid ""
-"Enable this option to import Azure tags as host/service labels. The imported "
-"tags are added as host labels for resource groups and VMs monitored as hosts "
-"and as service labels for resources monitored as services. The label syntax "
-"is 'cmk/azure/tag/{key}:{value}'.<br>Additionally, each host representing a "
-"resource group is given the host label 'cmk/azure/resource_group:{rg_name}', "
-"and VMs monitored as hosts are given the host label 'cmk/azure/vm:instance', "
-"which is done independent of this option.<br>You can further restrict the "
-"imported tags by specifying a pattern which Checkmk searches for in the key "
-"of the Azure tag, or you can disable the import of Azure tags altogether."
-msgstr ""
 
 #, python-brace-format
 msgid ""
@@ -24333,10 +24243,6 @@ msgstr ""
 msgid "Every week on..."
 msgstr "Chaque semaine sur..."
 
-#, fuzzy
-msgid "Evicted keys"
-msgstr "Nombre de clés expulsées"
-
 msgid "Evictions"
 msgstr "Expulsions"
 
@@ -24795,10 +24701,6 @@ msgstr "Expiration"
 msgid "Expire time"
 msgstr "Temps d'expiration"
 
-#, fuzzy
-msgid "Expired keys"
-msgstr "Objets périmés"
-
 msgid "Expired objects"
 msgstr "Objets périmés"
 
@@ -24852,10 +24754,6 @@ msgstr "Étiquettes explicites"
 
 #, fuzzy
 msgid "Explicit list of IP addresses"
-msgstr "Liste explicite d'adresses IP"
-
-#, fuzzy
-msgid "Explicit list of subscription IDs"
 msgstr "Liste explicite d'adresses IP"
 
 msgid "Explicit mapping of job exit codes to states"
@@ -24916,10 +24814,6 @@ msgid "Explicitly specified groups"
 msgstr "les groupes explicitement spécifiés"
 
 msgid "Explicitly specify resources"
-msgstr "Spécifier explicitement les ressources"
-
-#, fuzzy
-msgid "Explicitly specify subscription IDs"
 msgstr "Spécifier explicitement les ressources"
 
 msgid "Export"
@@ -27533,10 +27427,6 @@ msgstr "Modifier la connexion"
 msgid "Gerrit instance to query."
 msgstr "Instance Jenkins à interroger."
 
-#, fuzzy
-msgid "Get commands"
-msgstr "aucune commande"
-
 msgid "Get file from SFTP server"
 msgstr "Obtenir un fichier du serveur SFTP"
 
@@ -29639,10 +29529,6 @@ msgstr "Historique des notifications"
 
 msgid "History of scheduled downtimes"
 msgstr "Historique des temps d'arrêt programmés"
-
-#, fuzzy
-msgid "Hit ratio"
-msgstr "Durée d'initialisation"
 
 msgid "Hits"
 msgstr "Hits"
@@ -37076,6 +36962,10 @@ msgstr ""
 "contrôle de fortigate, car il ne fournit pas de données sur la mémoire "
 "totale."
 
+#, fuzzy
+msgid "Keep last successful data for"
+msgstr "Temps écoulé depuis la dernière construction réussie"
+
 msgid "Keep service level from message (if available)"
 msgstr "Conserver le niveau de service du message (si disponible)"
 
@@ -38493,10 +38383,6 @@ msgstr "Niveaux de la capacité utilisée en octets"
 
 msgid "Levels on write capacity"
 msgstr "Niveaux de capacité d'écriture"
-
-#, fuzzy
-msgid "Levels over an extended period of time"
-msgstr "Niveaux sur une longue période de temps sur le décalage de réplication"
 
 msgid "Levels over an extended time period on a single core CPU utilization"
 msgstr ""
@@ -40055,10 +39941,6 @@ msgstr "Niveaux inférieurs pour l'utilisation des demandes"
 msgid "Lower levels for reservation utilization"
 msgstr "Niveaux inférieurs pour l'utilisation des demandes"
 
-#, fuzzy
-msgid "Lower levels for successful connections"
-msgstr "Niveaux pour les connexions actives"
-
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr ""
 "Niveaux inférieurs pour la vitesse du ventilateur d'un périphérique matériel"
@@ -40909,8 +40791,21 @@ msgstr ""
 "mais admin up ne serait pas affectée."
 
 #, fuzzy
+msgid "Map data"
+msgstr "Données cartographiées"
+
+msgid "Map data relating to VMs"
+msgstr "Données cartographiques relatives aux VM"
+
+msgid "Map data to group host"
+msgstr "Données cartographiques sur l'hôte du groupe"
+
+#, fuzzy
 msgid "Map data to specific host (Piggyback)"
 msgstr "les groupes explicitement spécifiés"
+
+msgid "Map data to the VM itself"
+msgstr "Mapper les données sur la VM elle-même"
 
 msgid "Map device state"
 msgstr "Cartographier l'état du dispositif"
@@ -41519,10 +41414,6 @@ msgstr "Nombre maximal de contrôles simultanés en temps réel"
 
 msgid "Maximum connections per second"
 msgstr "Connexions maximales par seconde"
-
-#, fuzzy
-msgid "Maximum connectivity lag"
-msgstr "Connectivité du site"
 
 msgid "Maximum count"
 msgstr "Nombre maximum"
@@ -42950,10 +42841,6 @@ msgstr "Surveiller toutes les instances trouvées"
 
 msgid "Monitor all instances found"
 msgstr "Surveiller toutes les instances trouvées"
-
-#, fuzzy
-msgid "Monitor all subscriptions"
-msgstr "Abonnements aux événements"
 
 msgid "Monitor and graph the lanes, if the port has multiple"
 msgstr ""
@@ -51104,6 +50991,9 @@ msgstr "Chemins d'inventaire HW/SW autorisés"
 msgid "Permitted contact groups"
 msgstr "Groupes de contacts autorisés"
 
+msgid "Persistence period for node disk usage fallback"
+msgstr ""
+
 msgid "Persistent (long)"
 msgstr "Persistant (long)"
 
@@ -54372,10 +54262,6 @@ msgstr "États des ports physiques à découvrir"
 
 msgid "Redirect URL (has to be https)"
 msgstr "URL de redirection (doit être https)"
-
-#, fuzzy
-msgid "Redis Caches"
-msgstr "Clients Redis"
 
 msgid "Redis clients"
 msgstr "Clients Redis"
@@ -58469,9 +58355,6 @@ msgstr ""
 "de cette sélection, les noms des attributs utilisés dans les requêtes LDAP "
 "seront modifiés."
 
-msgid "Select the subscriptions you want to monitor."
-msgstr ""
-
 msgid "Select the type of content element"
 msgstr "Sélectionnez le type d'élément de contenu"
 
@@ -58807,22 +58690,6 @@ msgstr "Connexions au serveur"
 msgid "Server latency"
 msgstr "Latence du serveur"
 
-#, fuzzy
-msgid "Server load"
-msgstr "Charge du serveur Citrix"
-
-#, fuzzy
-msgid "Server load %"
-msgstr "Charge du serveur Citrix"
-
-#, fuzzy
-msgid "Server load (average)"
-msgstr "Stockage du journal du serveur"
-
-#, fuzzy
-msgid "Server load levels"
-msgstr "Niveau de service"
-
 msgid "Server log storage"
 msgstr "Stockage du journal du serveur"
 
@@ -58831,10 +58698,6 @@ msgstr "Stockage du journal du serveur utilisé"
 
 msgid "Server performance"
 msgstr "Performance du serveur"
-
-#, fuzzy
-msgid "Server side command latency"
-msgstr "Latence du serveur"
 
 msgid "Server side handling of unencrypted data"
 msgstr "Traitement des données non cryptées côté serveur"
@@ -58846,10 +58709,6 @@ msgstr "Heure du serveur"
 #, python-format
 msgid "Server time (currently: %s)"
 msgstr ""
-
-#, fuzzy
-msgid "Server-side command latency"
-msgstr "Latence du serveur"
 
 msgid "Service"
 msgstr "Service"
@@ -59364,10 +59223,6 @@ msgstr "État des services"
 #, fuzzy
 msgid "Service status grouping"
 msgstr "Groupement d'états de service"
-
-#, fuzzy
-msgid "Service status when geo-replication link is unhealthy"
-msgstr "État lorsque l'état de réplication est actif"
 
 msgid "Service tags"
 msgstr "Balises de service"
@@ -64361,17 +64216,12 @@ msgstr "Sous-réseau par groupes de sous-réseau DB"
 msgid "Subscription"
 msgstr "Abonnement"
 
+msgid "Subscription ID"
+msgstr "ID de l'abonnement"
+
 #, fuzzy
 msgid "Subscription Status (off: ignore subscription status)"
 msgstr "Activer le contrôle (désactivé : ignorer l'état de l'abonnement)"
-
-#, fuzzy
-msgid "Subscriptions matching tag based criteria"
-msgstr "ressources correspondant aux critères basés sur les étiquettes"
-
-#, fuzzy
-msgid "Subscriptions to monitor"
-msgstr "Régions à surveiller"
 
 msgid "Substitution"
 msgstr "Substitution"
@@ -65225,10 +65075,6 @@ msgstr "Groupes de tags"
 msgid "Tag groups with only one choice must have a tag ID."
 msgstr ""
 "Les groupes d'étiquettes avec un seul choix doivent avoir un ID d'étiquette."
-
-#, fuzzy
-msgid "Tag matching subscriptions"
-msgstr "Abonnements aux événements"
 
 msgid "Tag usage"
 msgstr "Utilisation des balises"
@@ -70325,10 +70171,6 @@ msgstr ""
 "appartient au client <i>%s</i>. Cela constitue une violation de la "
 "hiérarchie des dossiers de l'MEC."
 
-#, fuzzy
-msgid "The subscription tag"
-msgstr "Abonnements aux événements"
-
 #, fuzzy, python-format
 msgid "The suffix '%s' is already in use by another LDAP connection."
 msgstr "Cet identifiant est déjà utilisé par une autre connexion."
@@ -74739,77 +74581,6 @@ msgstr ""
 "situations, cela peut s'avérer utile. L'une d'entre elles est l'utilisation "
 "du Checkmk Micro Core avec SMART Ping et vous souhaitez néanmoins suivre les "
 "données de performance du PING pour certains hôtes."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis CPU utilization "
-"monitoring"
-msgstr ""
-"Cette règle vous permet de configurer les niveaux de bloat pour un "
-"tablespace et un index de bases de données."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis Cache "
-"effectiveness monitoring"
-msgstr ""
-"Cette règle vous permet de configurer les niveaux de bloat pour un "
-"tablespace et un index de bases de données."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis connections "
-"monitoring"
-msgstr ""
-"Cette règle vous permet de configurer les niveaux de bloat pour un "
-"tablespace et un index de bases de données."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis latency "
-"monitoring"
-msgstr ""
-"Cette règle vous permet de configurer les niveaux de bloat pour un "
-"tablespace et un index de bases de données."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis memory monitoring"
-msgstr ""
-"Cette règle vous permet de configurer les niveaux de bloat pour un "
-"tablespace et un index de bases de données."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis replication "
-"monitoring"
-msgstr ""
-"Cette règle vous permet de configurer les niveaux de bloat pour un "
-"tablespace et un index de bases de données."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis server load "
-"monitoring"
-msgstr ""
-"Cette règle vous permet de configurer les niveaux de bloat pour un "
-"tablespace et un index de bases de données."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis throughput "
-"monitoring"
-msgstr ""
-"Cette règle vous permet de configurer les niveaux de bloat pour un "
-"tablespace et un index de bases de données."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure SQL database "
-"connections"
-msgstr ""
-"Cette règle vous permet de configurer les niveaux de bloat pour un "
-"tablespace et un index de bases de données."
 
 #, fuzzy
 msgid "This ruleset allows you to configure levels for the Storage data flows"
@@ -81560,10 +81331,6 @@ msgstr "Niveaux supérieurs pour les redémarrages"
 msgid "Upper levels for size"
 msgstr "Niveaux supérieurs pour la taille"
 
-#, fuzzy
-msgid "Upper levels for successful connections"
-msgstr "Niveaux pour les connexions actives"
-
 msgid "Upper levels for surge queue length"
 msgstr "Niveaux supérieurs pour la longueur des files d'attente"
 
@@ -82897,14 +82664,6 @@ msgstr "Fichiers journaux utilisés : Niveaux supérieurs absolus ou relatifs"
 msgid "Used logical space"
 msgstr "Espace logique utilisé"
 
-#, fuzzy
-msgid "Used memory"
-msgstr "Mémoire CPU utilisée"
-
-#, fuzzy
-msgid "Used memory RSS"
-msgstr "Mémoire CPU utilisée"
-
 msgid "Used meta data"
 msgstr "Méta-données utilisées"
 
@@ -83242,14 +83001,6 @@ msgstr ""
 "désactivons par défaut la connexion via cette méthode. Utilisez cette "
 "propriété pour activer la connexion via la méthode GET pour tous les "
 "utilisateurs."
-
-msgid ""
-"Using this option will let Checkmk create safe host names for piggyback "
-"hosts to avoid conflicts in entity names from Azure. This option will "
-"prepend 'azr-' and append the last part of the subscription ID to host "
-"names. Example: 'azr-my-vm-1a2b3c4d'. Enable this option if you have "
-"resources or resource groups with the same name."
-msgstr ""
 
 msgid ""
 "Using this option you can define an optional LDAP filter which is used "
@@ -93653,6 +93404,271 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy
+#~ msgid "Add subscription tag"
+#~ msgstr "État de l'abonnement"
+
+#, fuzzy
+#~ msgid "Average over"
+#~ msgstr "Valeur moyenne"
+
+#, fuzzy
+#~ msgid "Azure Redis CPU utilization"
+#~ msgstr "Utilisation de l'unité centrale de GCP/Redis"
+
+#, fuzzy
+#~ msgid "Azure Redis Cache effectiveness"
+#~ msgstr "Connexions à la base de données"
+
+#, fuzzy
+#~ msgid "Azure Redis connections"
+#~ msgstr "Connexions à la base de données"
+
+#, fuzzy
+#~ msgid "Azure Redis latency"
+#~ msgstr "Latence moyenne des disques"
+
+#, fuzzy
+#~ msgid "Azure Redis memory"
+#~ msgstr "Mémoire utilisée absolue"
+
+#, fuzzy
+#~ msgid "Azure Redis replication"
+#~ msgstr "Connexions à la base de données"
+
+#, fuzzy
+#~ msgid "Azure Redis server load"
+#~ msgstr "Nom du serveur Redis"
+
+#, fuzzy
+#~ msgid "Azure Redis throughput"
+#~ msgstr "Débit de lecture"
+
+#, fuzzy
+#~ msgid "Azure SQL database connections"
+#~ msgstr "Connexions à la base de données"
+
+#, fuzzy
+#~ msgid "CPU utilization %"
+#~ msgstr "Utilisation du CPU"
+
+#, fuzzy
+#~ msgid "Cache internode latency"
+#~ msgstr "Créer une latence de conférence"
+
+#, fuzzy
+#~ msgid "Cache read throughput (/sec)"
+#~ msgstr "Débit de lecture"
+
+#, fuzzy
+#~ msgid "Cache requests"
+#~ msgstr "Demandes rejetées"
+
+#, fuzzy
+#~ msgid "Cache write throughput (/sec)"
+#~ msgstr "Débit d'écriture"
+
+#, fuzzy
+#~ msgid "Connected Clients"
+#~ msgstr "Connexions"
+
+#, fuzzy
+#~ msgid "Connected clients"
+#~ msgstr "Nombre de clients connectés"
+
+#, fuzzy
+#~ msgid "Connections closed rate"
+#~ msgstr "La connexion a été interrompue tardivement"
+
+#, fuzzy
+#~ msgid "Connections created rate"
+#~ msgstr "La connexion a été interrompue tardivement"
+
+#, fuzzy
+#~ msgid "Connectivity lag"
+#~ msgstr "Connectivité"
+
+#, fuzzy
+#~ msgid "Do not monitor subscriptions"
+#~ msgstr "Ne pas surveiller"
+
+#, fuzzy
+#~ msgid "Enable safe host names"
+#~ msgstr "Traduire les noms d'hôtes"
+
+#, fuzzy
+#~ msgid "Evicted keys"
+#~ msgstr "Nombre de clés expulsées"
+
+#, fuzzy
+#~ msgid "Expired keys"
+#~ msgstr "Objets périmés"
+
+#, fuzzy
+#~ msgid "Explicit list of subscription IDs"
+#~ msgstr "Liste explicite d'adresses IP"
+
+#, fuzzy
+#~ msgid "Explicitly specify subscription IDs"
+#~ msgstr "Spécifier explicitement les ressources"
+
+#, fuzzy
+#~ msgid "Get commands"
+#~ msgstr "aucune commande"
+
+#, fuzzy
+#~ msgid "Hit ratio"
+#~ msgstr "Durée d'initialisation"
+
+#, fuzzy
+#~ msgid "Levels over an extended period of time"
+#~ msgstr ""
+#~ "Niveaux sur une longue période de temps sur le décalage de réplication"
+
+#, fuzzy
+#~ msgid "Lower levels for successful connections"
+#~ msgstr "Niveaux pour les connexions actives"
+
+#, fuzzy
+#~ msgid "Maximum connectivity lag"
+#~ msgstr "Connectivité du site"
+
+#, fuzzy
+#~ msgid "Monitor all subscriptions"
+#~ msgstr "Abonnements aux événements"
+
+#, fuzzy
+#~ msgid "Redis Caches"
+#~ msgstr "Clients Redis"
+
+#, fuzzy
+#~ msgid "Server load"
+#~ msgstr "Charge du serveur Citrix"
+
+#, fuzzy
+#~ msgid "Server load %"
+#~ msgstr "Charge du serveur Citrix"
+
+#, fuzzy
+#~ msgid "Server load (average)"
+#~ msgstr "Stockage du journal du serveur"
+
+#, fuzzy
+#~ msgid "Server load levels"
+#~ msgstr "Niveau de service"
+
+#, fuzzy
+#~ msgid "Server side command latency"
+#~ msgstr "Latence du serveur"
+
+#, fuzzy
+#~ msgid "Server-side command latency"
+#~ msgstr "Latence du serveur"
+
+#, fuzzy
+#~ msgid "Service status when geo-replication link is unhealthy"
+#~ msgstr "État lorsque l'état de réplication est actif"
+
+#, fuzzy
+#~ msgid "Subscriptions matching tag based criteria"
+#~ msgstr "ressources correspondant aux critères basés sur les étiquettes"
+
+#, fuzzy
+#~ msgid "Subscriptions to monitor"
+#~ msgstr "Régions à surveiller"
+
+#, fuzzy
+#~ msgid "Tag matching subscriptions"
+#~ msgstr "Abonnements aux événements"
+
+#, fuzzy
+#~ msgid "The subscription tag"
+#~ msgstr "Abonnements aux événements"
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis CPU "
+#~ "utilization monitoring"
+#~ msgstr ""
+#~ "Cette règle vous permet de configurer les niveaux de bloat pour un "
+#~ "tablespace et un index de bases de données."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis Cache "
+#~ "effectiveness monitoring"
+#~ msgstr ""
+#~ "Cette règle vous permet de configurer les niveaux de bloat pour un "
+#~ "tablespace et un index de bases de données."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis connections "
+#~ "monitoring"
+#~ msgstr ""
+#~ "Cette règle vous permet de configurer les niveaux de bloat pour un "
+#~ "tablespace et un index de bases de données."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis latency "
+#~ "monitoring"
+#~ msgstr ""
+#~ "Cette règle vous permet de configurer les niveaux de bloat pour un "
+#~ "tablespace et un index de bases de données."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis memory "
+#~ "monitoring"
+#~ msgstr ""
+#~ "Cette règle vous permet de configurer les niveaux de bloat pour un "
+#~ "tablespace et un index de bases de données."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis replication "
+#~ "monitoring"
+#~ msgstr ""
+#~ "Cette règle vous permet de configurer les niveaux de bloat pour un "
+#~ "tablespace et un index de bases de données."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis server load "
+#~ "monitoring"
+#~ msgstr ""
+#~ "Cette règle vous permet de configurer les niveaux de bloat pour un "
+#~ "tablespace et un index de bases de données."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis throughput "
+#~ "monitoring"
+#~ msgstr ""
+#~ "Cette règle vous permet de configurer les niveaux de bloat pour un "
+#~ "tablespace et un index de bases de données."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure SQL database "
+#~ "connections"
+#~ msgstr ""
+#~ "Cette règle vous permet de configurer les niveaux de bloat pour un "
+#~ "tablespace et un index de bases de données."
+
+#, fuzzy
+#~ msgid "Upper levels for successful connections"
+#~ msgstr "Niveaux pour les connexions actives"
+
+#, fuzzy
+#~ msgid "Used memory"
+#~ msgstr "Mémoire CPU utilisée"
+
+#, fuzzy
+#~ msgid "Used memory RSS"
+#~ msgstr "Mémoire CPU utilisée"
+
 #~ msgid "Assignment of services to contact groups"
 #~ msgstr "Attribution de services à des groupes de contacts"
 
@@ -93836,38 +93852,12 @@ msgstr ""
 #~ msgstr "Statut opérationnel"
 
 #, fuzzy
-#~ msgid ""
-#~ "By default, data relating to a VM is sent to the group host corresponding "
-#~ "to the resource group of the VM, the same way as for any other resource. "
-#~ "If the VM is present in your monitoring as a separate host, you can "
-#~ "choose to send the data to the VM itself."
-#~ msgstr ""
-#~ "Par défaut, les données relatives à une VM sont envoyées à l'hôte de "
-#~ "groupe correspondant au groupe de ressources de la VM, de la même manière "
-#~ "que pour toute autre ressource. Si la VM est présente dans votre "
-#~ "monitoring comme un hôte séparé, vous pouvez choisir d'envoyer les "
-#~ "données à la VM elle-même."
-
-#, fuzzy
 #~ msgid "GUI extensions (deprecated)"
 #~ msgstr "Extensions de l'interface graphique"
 
 #, fuzzy
 #~ msgid "Legacy check plug-ins (deprecated)"
 #~ msgstr "Plugins de vérification de l'héritage"
-
-#, fuzzy
-#~ msgid "Map data"
-#~ msgstr "Données cartographiées"
-
-#~ msgid "Map data relating to VMs"
-#~ msgstr "Données cartographiques relatives aux VM"
-
-#~ msgid "Map data to group host"
-#~ msgstr "Données cartographiques sur l'hôte du groupe"
-
-#~ msgid "Map data to the VM itself"
-#~ msgstr "Mapper les données sur la VM elle-même"
 
 #, fuzzy
 #~ msgid "Name of group2"
@@ -94131,9 +94121,6 @@ msgstr ""
 #~ "Le noyau de surveillance du site cible '%s' a la version '%s'. Cette "
 #~ "version ne prend pas en charge la récupération des informations du "
 #~ "fichier journal. Veuillez passer à une version plus récente."
-
-#~ msgid "Subscription ID"
-#~ msgstr "ID de l'abonnement"
 
 #~ msgid "Use the default start URL"
 #~ msgstr "Utiliser l'URL de démarrage par défaut"

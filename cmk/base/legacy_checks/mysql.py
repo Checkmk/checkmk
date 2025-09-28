@@ -120,20 +120,14 @@ def check_mysql_sessions(item, params, parsed):
         (running_sessions, "running_sessions", "running", "%d %s%s", ""),
         (connects, "connect_rate", "connections", "%.2f %s%s", "/s"),
     ]:
+        levels = params.get(what)
         infotext = format_str % (value, what, unit)
-        status = 0
-        if what in params:
-            warn, crit = params[what]
-            if value >= crit:
-                status = 2
-                infotext += "(!!)"
-            elif value >= warn:
-                status = 1
-                infotext += "(!)"
-        else:
-            warn, crit = None, None
-
-        yield status, infotext, [(perfvar, value, warn, crit)]
+        yield check_levels(
+            value,
+            perfvar,
+            levels,
+            infoname=infotext,
+        )
 
 
 check_info["mysql.sessions"] = LegacyCheckDefinition(

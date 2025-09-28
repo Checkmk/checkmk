@@ -6,7 +6,7 @@
 
 import time
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, equals, get_rate, get_value_store, OIDEnd, render, SNMPTree
 
 check_info = {}
@@ -86,20 +86,15 @@ def check_docsis_channels_upstream(item, params, parsed):
         mhz, unerroreds, correcteds, uncorrectables, signal_noise = entry[:5]
 
         # Signal Noise
-        noise_db = float(signal_noise) / 10
-        infotext = "Signal/Noise ratio: %.2f dB" % noise_db
         warn, crit = params["signal_noise"]
 
-        state = 0
-        if noise_db < crit:
-            state = 2
-        elif noise_db < warn:
-            state = 1
-
-        if state:
-            infotext += f" (warn/crit below {warn:.1f}/{crit:.1f} dB)"
-
-        yield state, infotext, [("signal_noise", noise_db, warn, crit)]
+        yield check_levels(
+            float(signal_noise) / 10,  # [dB]
+            "signal_noise",
+            (None, None, warn, crit),  # No upper levels, lower levels
+            infoname="Signal/Noise ratio",
+            unit=" dB",
+        )
 
         fields = [("frequency", float(mhz) / 1000000, "Frequency", "%.2f", " MHz")]
         if len(entry) >= 6:

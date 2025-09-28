@@ -10,7 +10,7 @@
 
 # Suggested by customer
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.barracuda import DETECT_BARRACUDA
 
@@ -27,18 +27,13 @@ def check_barracuda_mailqueues(_no_item, params, info):
         ("Active", int(active_queue_str)),
         ("Deferred", int(deferred_queue_str)),
     ]:
-        state = 0
-        infotext = f"{queue_type}: {queue}"
-        warn, crit = params[queue_type.lower()]
-
-        if queue >= crit:
-            state = 2
-        elif queue >= warn:
-            state = 1
-        if state:
-            infotext += " (warn/crit at %d/%d %s mails)" % (warn, crit, queue_type.lower())
-
-        yield state, infotext, [("mail_queue_%s_length" % queue_type.lower(), queue, warn, crit)]
+        yield check_levels(
+            queue,
+            "mail_queue_%s_length" % queue_type.lower(),
+            params[queue_type.lower()],
+            infoname=queue_type,
+            unit=" mails",
+        )
 
     yield 0, "Incoming: %s" % in_queue_str
     if daily_sent:

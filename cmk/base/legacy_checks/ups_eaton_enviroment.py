@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, equals, SNMPTree, StringTable
 
 check_info = {}
@@ -32,37 +32,20 @@ def inventory_ups_eaton_enviroment(info):
 def check_ups_eaton_enviroment(item, params, info):
     wert = list(map(saveint, info[0]))
     i = 0
-    state = 0
-    messages = []
-    perfdata = []
     for sensor, sensor_name, unit_symbol in [
         ("temp", "Temperature", " °C"),
         ("remote_temp", "Remote-Temperature", " °C"),
         ("humidity", "Humidity", "%"),
     ]:
-        warn, crit = params.get(sensor)
-        perfdata.append((sensor, wert[i], warn, crit))
-        text = "%s: %d%s (warn/crit at %d%s/%d%s)" % (
-            sensor_name,
+        levels = params.get(sensor)
+        yield check_levels(
             wert[i],
-            unit_symbol,
-            warn,
-            unit_symbol,
-            crit,
-            unit_symbol,
+            sensor,
+            levels,
+            infoname=sensor_name,
+            unit=unit_symbol.strip(),
         )
-
-        if wert[i] >= crit:
-            state = 2
-            text += "(!!)"
-        elif wert[i] >= warn:
-            state = max(state, 1)
-            text += "(!)"
-
         i += 1
-        messages.append(text)
-
-    return (state, ", ".join(messages), perfdata)
 
 
 def parse_ups_eaton_enviroment(string_table: StringTable) -> StringTable:

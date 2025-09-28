@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError
 from cmk.plugins.db2.agent_based.lib import parse_db2_dbs
 
@@ -29,14 +29,12 @@ def check_db2_connections(item, params, parsed):
 
     data = dict(db)
 
-    warn, crit = params["levels_total"]
-    connections = int(data["connections"])
-    state = 0
-    if connections >= crit:
-        state = 2
-    elif connections >= warn:
-        state = 1
-    yield state, "Connections: %s" % connections, [("connections", connections, warn, crit)]
+    yield check_levels(
+        int(data["connections"]),
+        "connections",
+        params["levels_total"],
+        infoname="Connections",
+    )
 
     yield 0, "Port: %s" % data["port"]
 

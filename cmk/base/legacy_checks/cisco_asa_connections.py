@@ -11,7 +11,7 @@
 
 # mypy: disable-error-code="list-item"
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, contains, SNMPTree, startswith, StringTable
 
 check_info = {}
@@ -24,22 +24,15 @@ def inventory_cisco_asa_connections(info):
 def check_cisco_asa_connections(_no_item, params, info):
     used_conns = int(info[0][0])
     overall_used_conns = info[1][0]
-    infotext = "Currently used: %s" % used_conns
-    state = 0
 
-    if params.get("connections"):
-        warn, crit = params["connections"]
-        perfdata = [("fw_connections_active", used_conns, warn, crit)]
-        if used_conns >= crit:
-            state = 2
-        elif used_conns >= warn:
-            state = 1
-        if state > 0:
-            infotext += f" (warn/crit at {warn}/{crit})"
-    else:
-        perfdata = [("fw_connections_active", used_conns)]
+    yield check_levels(
+        used_conns,
+        "fw_connections_active",
+        params.get("connections"),
+        infoname="Currently used",
+    )
 
-    return state, f"{infotext}, Max. since system startup: {overall_used_conns}", perfdata
+    yield 0, f"Max. since system startup: {overall_used_conns}"
 
 
 def parse_cisco_asa_connections(string_table: StringTable) -> StringTable | None:

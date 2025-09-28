@@ -11,7 +11,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
 
 check_info = {}
@@ -44,17 +44,12 @@ def check_citrix_sessions(_no_item, params, info):
     ]:
         if session.get(key) is None:
             continue
-        state = 0
-        value = session[key]
-        infotext = f"{what.title()}: {value}"
-        warn, crit = params.get(what, (None, None))
-        if crit is not None and value > crit:
-            state = 2
-        elif warn is not None and value > warn:
-            state = 1
-        if state:
-            infotext += f" (warn/crit at {warn}/{crit})"
-        yield state, infotext, [(what, value, warn, crit)]
+        yield check_levels(
+            session[key],
+            what,
+            params.get(what),
+            infoname=what.title(),
+        )
 
 
 def parse_citrix_sessions(string_table: StringTable) -> StringTable:

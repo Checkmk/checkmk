@@ -2,17 +2,20 @@ load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@aspect_rules_webpack//webpack:defs.bzl", "webpack_bundle")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
-load("@npm_cmk_frontend//:defs.bzl", "npm_link_all_packages")
-load("@npm_cmk_frontend//packages/cmk-frontend:eslint/package_json.bzl", eslint_bin = "bin")
-load("@npm_cmk_frontend//packages/cmk-frontend:prettier/package_json.bzl", prettier_bin = "bin")
-load("@npm_cmk_frontend//packages/cmk-frontend:webpack-cli/package_json.bzl", webpack_cli_bin = "bin")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@npm//:eslint/package_json.bzl", eslint_bin = "bin")
+load("@npm//bazel/tools:prettier/package_json.bzl", prettier_bin = "bin")
+load("@npm//packages/cmk-frontend:webpack-cli/package_json.bzl", webpack_cli_bin = "bin")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_python//python:py_test.bzl", "py_test")
 
+exports_files(["package.json"])
+
 npm_link_all_packages(name = "node_modules")
 
 SRCS = glob([
+    # TODO: tsconfig.json is missing
     "src/css/*",  # just for the directory
     "src/images/**/*.*",
     "src/jquery/**/*.js",

@@ -66,7 +66,9 @@ module.exports = {
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src/js/')
+      '@': path.resolve(__dirname, 'src/js/'),
+      // HACK - fix a 'Module not found: Error: ...'
+      jquery: path.resolve(__dirname, 'node_modules/jquery')
     },
     // added this because otherwise it won't find any imported ts files inside of a js file
     extensions: ['.ts', '.js']

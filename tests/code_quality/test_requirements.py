@@ -159,6 +159,8 @@ def iter_sourcefiles(basepath: Path) -> Iterable[Path]:
             continue
         if sub_path.name == "tests":
             continue
+        if "testlib" in sub_path.name:
+            continue
         if sub_path.name.startswith("."):
             continue
         if sub_path.is_file() and is_python_file(sub_path):

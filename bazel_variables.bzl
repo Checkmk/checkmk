@@ -105,6 +105,7 @@ edition_skel_permissions = {
         "//omd/packages/rabbitmq:skel.permissions",
         "//omd/packages/nagvis:skel.permissions",
         "//omd/packages/enterprise:skel.permissions",
+        "//omd/packages/metric-backend:skel.permissions",
     ],
     "cee": [
         "//omd/packages/maintenance:skel.permissions",
@@ -129,6 +130,7 @@ edition_skel_permissions = {
         "//omd/packages/rabbitmq:skel.permissions",
         "//omd/packages/nagvis:skel.permissions",
         "//omd/packages/enterprise:skel.permissions",
+        "//omd/packages/metric-backend:skel.permissions",
     ],
     "cse": [
         "//omd/packages/maintenance:skel.permissions",

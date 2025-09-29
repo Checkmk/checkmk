@@ -1,0 +1,64 @@
+#!/bin/bash
+# Copyright (C) 2025 Checkmk GmbH - License: Checkmk Enterprise License
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+CLICKHOUSE_CONFDIR="$OMD_ROOT/etc/clickhouse-server"
+CLICKHOUSE_PIDDIR="$OMD_ROOT/tmp/run"
+
+[ "${CONFIG_CLICKHOUSE}" = "on" ] || exit 5
+
+clickhouse_start() {
+    # The `clickhouse` binary will abort, because the site user is
+    # not in the sudoers file. So, we bypass calling clickhouse.
+    clickhouse-server \
+        --daemon \
+        --pid-file "${CLICKHOUSE_PIDDIR}/clickhouse-server.pid" \
+        --config-file "${CLICKHOUSE_CONFDIR}/config.xml"
+}
+
+clickhouse_stop() {
+    clickhouse stop --pid-path "${CLICKHOUSE_PIDDIR}" >/dev/null
+}
+
+clickhouse_status() {
+    clickhouse status --pid-path "${CLICKHOUSE_PIDDIR}" >/dev/null 2>&1
+}
+
+exit_successfully() {
+    printf "%s\n" "${1}"
+    exit 0
+}
+
+exit_failure() {
+    printf "%s\n" "${1}"
+    exit 1
+}
+
+case "$1" in
+    start)
+        printf 'Starting clickhouse...'
+        clickhouse_status && exit_successfully 'already running'
+        clickhouse_start && exit_successfully 'OK'
+        exit_failure 'failed'
+        ;;
+    stop)
+        printf 'Stopping clickhouse...'
+        clickhouse_status || exit_successfully 'not running'
+        clickhouse_stop && exit_successfully 'OK'
+        exit_failure 'failed'
+        ;;
+    restart | reload)
+        $0 stop
+        $0 start
+        ;;
+    status)
+        printf "Checking status of clickhouse..."
+        clickhouse_status && exit_successfully "running"
+        exit_failure "not running"
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|reload|status}"
+        exit 2
+        ;;
+esac

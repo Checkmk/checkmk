@@ -28,6 +28,7 @@ from cmk.gui.unit_formatter import (
 )
 
 from ._from_api import RegisteredMetric
+from ._graph_metric_expressions import clean_time_series_point, LineType
 from ._graph_specification import (
     FixedVerticalRange,
     GraphDataRange,
@@ -35,7 +36,6 @@ from ._graph_specification import (
     HorizontalRule,
     MinimalVerticalRange,
 )
-from ._metric_operation import clean_time_series_point, LineType
 from ._rrd_fetch import fetch_augmented_time_series
 from ._time_series import TimeSeries, TimeSeriesValue
 from ._unit import user_specific_unit, UserSpecificUnit

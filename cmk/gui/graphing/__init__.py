@@ -9,15 +9,15 @@ from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
 
 from ._autocompleter import metrics_autocompleter
 from ._explicit_graphs import ExplicitGraphSpecification
-from ._graph_specification import graph_specification_registry
-from ._graph_templates import TemplateGraphSpecification
-from ._metric_operation import (
+from ._graph_metric_expressions import (
     metric_operation_registry,
     MetricOpConstant,
     MetricOpConstantNA,
     MetricOpOperator,
     MetricOpRRDSource,
 )
+from ._graph_specification import graph_specification_registry
+from ._graph_templates import TemplateGraphSpecification
 from ._metrics import registered_metric_ids_and_titles
 from ._perfometer import get_first_matching_perfometer
 from ._settings import ConfigVariableGraphTimeranges

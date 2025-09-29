@@ -10,6 +10,7 @@ from cmk.graphing.v1 import graphs as graphs_api
 from cmk.gui.utils.roles import UserPermissions
 
 from ._from_api import RegisteredMetric
+from ._graph_metric_expressions import GraphConsolidationFunction
 from ._graph_specification import (
     FixedVerticalRange,
     GraphMetric,
@@ -17,7 +18,6 @@ from ._graph_specification import (
     GraphSpecification,
     HorizontalRule,
 )
-from ._metric_operation import GraphConsolidationFunction
 from ._unit import ConvertibleUnitSpecification
 
 

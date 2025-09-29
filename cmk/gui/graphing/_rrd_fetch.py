@@ -28,12 +28,7 @@ from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
 from ._from_api import RegisteredMetric
-from ._graph_specification import GraphDataRange, GraphMetric, GraphRecipe
-from ._legacy import (
-    check_metrics,
-    CheckMetricEntry,
-)
-from ._metric_operation import (
+from ._graph_metric_expressions import (
     AugmentedTimeSeries,
     GraphConsolidationFunction,
     MetricOperation,
@@ -41,6 +36,11 @@ from ._metric_operation import (
     RRDData,
     RRDDataKey,
     time_series_operators,
+)
+from ._graph_specification import GraphDataRange, GraphMetric, GraphRecipe
+from ._legacy import (
+    check_metrics,
+    CheckMetricEntry,
 )
 from ._metrics import get_metric_spec
 from ._time_series import TimeSeries, TimeSeriesValues

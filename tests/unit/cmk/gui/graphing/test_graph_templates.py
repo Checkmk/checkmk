@@ -15,6 +15,7 @@ from cmk.graphing.v1 import Title
 from cmk.gui.config import active_config
 from cmk.gui.graphing import _graph_templates as gt
 from cmk.gui.graphing._from_api import graphs_from_api, RegisteredMetric
+from cmk.gui.graphing._graph_metric_expressions import LineType
 from cmk.gui.graphing._graph_specification import HorizontalRule
 from cmk.gui.graphing._graph_templates import (
     _evaluate_predictive_metrics,
@@ -47,7 +48,6 @@ from cmk.gui.graphing._metric_expression import (
     Sum,
     WarningOf,
 )
-from cmk.gui.graphing._metric_operation import LineType
 from cmk.gui.graphing._translated_metrics import (
     Original,
     parse_perf_data,

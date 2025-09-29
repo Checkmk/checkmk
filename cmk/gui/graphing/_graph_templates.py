@@ -27,6 +27,10 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.utils.servicename import ServiceName
 
 from ._from_api import RegisteredMetric
+from ._graph_metric_expressions import (
+    AnnotatedHostName,
+    GraphConsolidationFunction,
+)
 from ._graph_specification import (
     compute_warn_crit_rules_from_translated_metric,
     FixedVerticalRange,
@@ -52,10 +56,6 @@ from ._metric_expression import (
     parse_base_expression_from_api,
     parse_expression_from_api,
     WarningOf,
-)
-from ._metric_operation import (
-    AnnotatedHostName,
-    GraphConsolidationFunction,
 )
 from ._translated_metrics import translated_metrics_from_row, TranslatedMetric
 from ._unit import ConvertibleUnitSpecification

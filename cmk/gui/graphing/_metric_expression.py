@@ -27,7 +27,7 @@ from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
 from ._from_api import parse_unit_from_api, RegisteredMetric
-from ._metric_operation import (
+from ._graph_metric_expressions import (
     create_metric_operation_from_translated_metric,
     GraphConsolidationFunction,
     line_type_mirror,

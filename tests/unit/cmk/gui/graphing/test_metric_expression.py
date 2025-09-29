@@ -9,11 +9,15 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.gui.graphing._graph_metric_expressions import (
+    LineType,
+    MetricOpOperator,
+    MetricOpRRDSource,
+)
 from cmk.gui.graphing._metric_expression import (
     Metric,
     MetricExpression,
 )
-from cmk.gui.graphing._metric_operation import LineType, MetricOpOperator, MetricOpRRDSource
 from cmk.gui.graphing._translated_metrics import (
     Original,
     TranslatedMetric,

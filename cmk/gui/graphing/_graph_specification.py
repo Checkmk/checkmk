@@ -25,15 +25,19 @@ from cmk.gui.i18n import _
 from cmk.gui.utils.roles import UserPermissions
 
 from ._from_api import RegisteredMetric
-from ._graph_render_config import GraphRenderOptions
-from ._metric_operation import (
+from ._graph_metric_expressions import (
     GraphConsolidationFunction,
     LineType,
     MetricOperation,
     parse_metric_operation,
 )
+from ._graph_render_config import GraphRenderOptions
 from ._translated_metrics import TranslatedMetric
-from ._unit import ConvertibleUnitSpecification, NonConvertibleUnitSpecification, UserSpecificUnit
+from ._unit import (
+    ConvertibleUnitSpecification,
+    NonConvertibleUnitSpecification,
+    UserSpecificUnit,
+)
 
 
 class HorizontalRule(BaseModel, frozen=True):

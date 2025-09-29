@@ -523,7 +523,7 @@ class Crawler:
         # TODO: Typing chaos ahead! Clarify PageElement/Tag/NavigableString
         elements = soup.find_all(tag)
         for element in elements:
-            orig_url = element.get(attr)  # type: ignore[union-attr]
+            orig_url = element.get(attr)
             if orig_url is None:
                 continue  # Skip elements that don't have the attribute in question
             normalized_orig_url = self.normalize_url(orig_url)  # type: ignore[arg-type]

@@ -199,6 +199,7 @@ def setup_document(path_pdf: Path, path_logo: Path) -> tuple[MyDocTemplate, list
     spacer = Spacer(width=0, height=2 * cm)
 
     drawing = svg2rlg(str(path_logo))
+    assert drawing is not None
     sx = sy = 2
     drawing.width, drawing.height = drawing.minWidth() * sx, drawing.height * sy
     drawing.scale(sx, sy)

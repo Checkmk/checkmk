@@ -141,15 +141,8 @@ def exec_other_omd(version: str) -> NoReturn:
     # into the executed omd call. The omd call must import the python version related
     # modules and libraries. This only works when PYTHONPATH and LD_LIBRARY_PATH are
     # not already set when calling omd.
-    try:
-        del os.environ["PYTHONPATH"]
-    except KeyError:
-        pass
-
-    try:
-        del os.environ["LD_LIBRARY_PATH"]
-    except KeyError:
-        pass
+    os.environ.pop("PYTHONPATH", None)
+    os.environ.pop("LD_LIBRARY_PATH", None)
 
     os.execv(omd_path, sys.argv)
     sys.exit("Cannot run bin/omd of version %s." % version)

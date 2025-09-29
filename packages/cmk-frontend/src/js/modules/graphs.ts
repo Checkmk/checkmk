@@ -389,17 +389,13 @@ export function register_delayed_graph_listener() {
 
   // if the graph is rendered in a dashlet, we have to use the scrollbar of
   // the dashlet
-  const dashletElement = document.getElementById("dashlet_content_wrapper");
+  const dashletElement = document.getElementById('dashlet_content_wrapper')
 
-  const scrollbar = content_scrollbar(
-      dashletElement ? "dashlet_content_wrapper" : "",
-  );
+  const scrollbar = content_scrollbar(dashletElement ? 'dashlet_content_wrapper' : '')
 
-  scrollbar
-      ?.getScrollElement()
-      ?.addEventListener("scroll", delayed_graph_renderer);
+  scrollbar?.getScrollElement()?.addEventListener('scroll', delayed_graph_renderer)
 
-  add_event_handler("resize", delayed_graph_renderer);
+  add_event_handler('resize', delayed_graph_renderer)
 }
 
 function do_load_graph_content(

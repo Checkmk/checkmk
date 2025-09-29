@@ -909,7 +909,9 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.otel_collector",
     ),
     Component("cmk.cce.metric_backend.gui"): _allow(
+        *PACKAGE_PLUGIN_APIS,
         "cmk.ccc",
+        "cmk.fields",
         "cmk.gui",
     ),
     Component("omdlib"): _allow(

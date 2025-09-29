@@ -1,3 +1,4 @@
+load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:native_binary.bzl", "native_binary")
@@ -13,6 +14,15 @@ exports_files([
 ])
 
 npm_link_all_packages(name = "node_modules")
+
+js_library(
+    name = "prettierrc",
+    srcs = ["prettier.config.cjs"],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        ":node_modules/@trivago/prettier-plugin-sort-imports",
+    ],
+)
 
 mypy_cli(
     name = "mypy_cli",
@@ -122,13 +132,10 @@ sh_expand_template(
 
 prettier_bin.prettier_binary(
     name = "prettier",
-    data = [
-        ".prettierrc.json",
-        ":node_modules/@trivago/prettier-plugin-sort-imports",
-    ],
+    data = [":prettierrc"],
     env = {"BAZEL_BINDIR": "."},
     fixed_args = [
-        "--config=\"$$JS_BINARY__RUNFILES\"/$(rlocationpath :.prettierrc.json)",
+        "--config=\"$$JS_BINARY__RUNFILES\"/$(rlocationpath :prettierrc)",
         "--ignore-path=\"$$BUILD_WORKSPACE_DIRECTORY/.prettierignore\"",
         "--log-level=warn",
     ],

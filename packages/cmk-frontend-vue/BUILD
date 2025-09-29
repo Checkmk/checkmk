@@ -91,7 +91,6 @@ js_run_binary(
 )
 
 SRCS = [
-    ".prettierrc.json",
     "env.d.ts",
     "weaki18nString.d.ts",
     ".stylelintrc.js",
@@ -231,17 +230,14 @@ vitest_bin.vitest_binary(
 
 prettier_bin.prettier_binary(
     name = "prettier",
-    data = [
-        ":.prettierrc.json",
-        ":node_modules/@trivago/prettier-plugin-sort-imports",
-    ],
+    data = ["//bazel/tools:prettierrc"],
     # Allow the binary to be run outside bazel
     env = {"BAZEL_BINDIR": "."},
     fixed_args = [
         # `require` statements in the config file will be resolved relative to its location
         # Therefore to make it hermetic, prettier must be pointed at the copy of the config file
         # in the runfiles folder rather than the one in the source folder.
-        '--config="$$JS_BINARY__RUNFILES"/$(rlocationpath :.prettierrc.json)',
+        '--config="$$JS_BINARY__RUNFILES"/$(rlocationpath //bazel/tools:prettierrc)',
         # it looks like .prettierignore from the SOURCE has to be provided in order to make
         # specified (relative) directories match the actually checked files
         '--ignore-path="$$BUILD_WORKSPACE_DIRECTORY/' + package_name() + '/.prettierignore"',

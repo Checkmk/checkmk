@@ -148,7 +148,11 @@ test('FormListUniqueSelection local child validation overwrites backend validati
       spec: listCascadingSpec,
       data: [['stringChoice', 'some value']],
       backendValidation: [
-        { location: ['0', '1'], message: 'Backend error message', replacement_value: 'other value' }
+        {
+          location: ['0', '1'],
+          message: 'Backend error message',
+          replacement_value: 'other value'
+        }
       ]
     }
   })

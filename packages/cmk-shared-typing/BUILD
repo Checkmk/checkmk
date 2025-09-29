@@ -184,13 +184,10 @@ package_wheel(
 
 prettier_bin.prettier_binary(
     name = "prettier",
-    data = [
-        ":.prettierrc.json",
-        ":node_modules/@trivago/prettier-plugin-sort-imports",
-    ],
+    data = ["//bazel/tools:prettierrc"],
     env = {"BAZEL_BINDIR": "."},
     fixed_args = [
-        "--config=\"$$JS_BINARY__RUNFILES\"/$(rlocationpath :.prettierrc.json)",
+        "--config=\"$$JS_BINARY__RUNFILES\"/$(rlocationpath //bazel/tools:prettierrc)",
         "--log-level=warn",
     ],
 )

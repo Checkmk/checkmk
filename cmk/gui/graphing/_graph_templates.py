@@ -398,7 +398,7 @@ def _create_graph_recipe_from_template(
         GraphMetric(
             title=evaluated.title,
             line_type=evaluated.line_type,
-            operation=evaluated.base.to_metric_operation(
+            operation=evaluated.base.to_graph_metric_expression(
                 site_id,
                 host_name,
                 service_name,

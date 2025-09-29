@@ -28,7 +28,7 @@ from cmk.utils.servicename import ServiceName
 
 from ._from_api import parse_unit_from_api, RegisteredMetric
 from ._graph_metric_expressions import (
-    create_metric_operation_from_translated_metric,
+    create_graph_metric_expression_from_translated_metric,
     GraphConsolidationFunction,
     GraphMetricConstant,
     GraphMetricConstantNA,
@@ -123,7 +123,7 @@ class BaseMetricExpression(abc.ABC):
     def metric_names(self) -> Iterable[str]: ...
 
     @abc.abstractmethod
-    def to_metric_operation(
+    def to_graph_metric_expression(
         self,
         site_id: SiteId,
         host_name: HostName,
@@ -166,7 +166,7 @@ class Constant(BaseMetricExpression):
         yield from ()
 
     @override
-    def to_metric_operation(
+    def to_graph_metric_expression(
         self,
         site_id: SiteId,
         host_name: HostName,
@@ -210,7 +210,7 @@ class Metric(BaseMetricExpression):
         yield self.name
 
     @override
-    def to_metric_operation(
+    def to_graph_metric_expression(
         self,
         site_id: SiteId,
         host_name: HostName,
@@ -218,7 +218,7 @@ class Metric(BaseMetricExpression):
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
     ) -> GraphMetricRRDSource | GraphMetricOperation:
-        return create_metric_operation_from_translated_metric(
+        return create_graph_metric_expression_from_translated_metric(
             site_id,
             host_name,
             service_name,
@@ -267,7 +267,7 @@ class WarningOf(BaseMetricExpression):
         yield from self.metric.metric_names()
 
     @override
-    def to_metric_operation(
+    def to_graph_metric_expression(
         self,
         site_id: SiteId,
         host_name: HostName,
@@ -322,7 +322,7 @@ class CriticalOf(BaseMetricExpression):
         yield from self.metric.metric_names()
 
     @override
-    def to_metric_operation(
+    def to_graph_metric_expression(
         self,
         site_id: SiteId,
         host_name: HostName,
@@ -377,7 +377,7 @@ class MinimumOf(BaseMetricExpression):
         yield from self.metric.metric_names()
 
     @override
-    def to_metric_operation(
+    def to_graph_metric_expression(
         self,
         site_id: SiteId,
         host_name: HostName,
@@ -432,7 +432,7 @@ class MaximumOf(BaseMetricExpression):
         yield from self.metric.metric_names()
 
     @override
-    def to_metric_operation(
+    def to_graph_metric_expression(
         self,
         site_id: SiteId,
         host_name: HostName,
@@ -488,7 +488,7 @@ class Sum(BaseMetricExpression):
         yield from (n for s in self.summands for n in s.metric_names())
 
     @override
-    def to_metric_operation(
+    def to_graph_metric_expression(
         self,
         site_id: SiteId,
         host_name: HostName,
@@ -499,7 +499,7 @@ class Sum(BaseMetricExpression):
         return GraphMetricOperation(
             operator_name="+",
             operands=[
-                s.to_metric_operation(
+                s.to_graph_metric_expression(
                     site_id,
                     host_name,
                     service_name,
@@ -552,7 +552,7 @@ class Product(BaseMetricExpression):
         yield from (n for f in self.factors for n in f.metric_names())
 
     @override
-    def to_metric_operation(
+    def to_graph_metric_expression(
         self,
         site_id: SiteId,
         host_name: HostName,
@@ -563,7 +563,7 @@ class Product(BaseMetricExpression):
         return GraphMetricOperation(
             operator_name="*",
             operands=[
-                f.to_metric_operation(
+                f.to_graph_metric_expression(
                     site_id,
                     host_name,
                     service_name,
@@ -617,7 +617,7 @@ class Difference(BaseMetricExpression):
         yield from self.subtrahend.metric_names()
 
     @override
-    def to_metric_operation(
+    def to_graph_metric_expression(
         self,
         site_id: SiteId,
         host_name: HostName,
@@ -628,14 +628,14 @@ class Difference(BaseMetricExpression):
         return GraphMetricOperation(
             operator_name="-",
             operands=[
-                self.minuend.to_metric_operation(
+                self.minuend.to_graph_metric_expression(
                     site_id,
                     host_name,
                     service_name,
                     translated_metrics,
                     consolidation_function,
                 ),
-                self.subtrahend.to_metric_operation(
+                self.subtrahend.to_graph_metric_expression(
                     site_id,
                     host_name,
                     service_name,
@@ -688,7 +688,7 @@ class Fraction(BaseMetricExpression):
         yield from self.divisor.metric_names()
 
     @override
-    def to_metric_operation(
+    def to_graph_metric_expression(
         self,
         site_id: SiteId,
         host_name: HostName,
@@ -699,14 +699,14 @@ class Fraction(BaseMetricExpression):
         return GraphMetricOperation(
             operator_name="/",
             operands=[
-                self.dividend.to_metric_operation(
+                self.dividend.to_graph_metric_expression(
                     site_id,
                     host_name,
                     service_name,
                     translated_metrics,
                     consolidation_function,
                 ),
-                self.divisor.to_metric_operation(
+                self.divisor.to_graph_metric_expression(
                     site_id,
                     host_name,
                     service_name,
@@ -754,7 +754,7 @@ class Minimum(BaseMetricExpression):
         yield from (n for o in self.operands for n in o.metric_names())
 
     @override
-    def to_metric_operation(
+    def to_graph_metric_expression(
         self,
         site_id: SiteId,
         host_name: HostName,
@@ -765,7 +765,7 @@ class Minimum(BaseMetricExpression):
         return GraphMetricOperation(
             operator_name="MIN",
             operands=[
-                o.to_metric_operation(
+                o.to_graph_metric_expression(
                     site_id,
                     host_name,
                     service_name,
@@ -814,7 +814,7 @@ class Maximum(BaseMetricExpression):
         yield from (n for o in self.operands for n in o.metric_names())
 
     @override
-    def to_metric_operation(
+    def to_graph_metric_expression(
         self,
         site_id: SiteId,
         host_name: HostName,
@@ -825,7 +825,7 @@ class Maximum(BaseMetricExpression):
         return GraphMetricOperation(
             operator_name="MAX",
             operands=[
-                o.to_metric_operation(
+                o.to_graph_metric_expression(
                     site_id,
                     host_name,
                     service_name,
@@ -876,7 +876,7 @@ class Average(BaseMetricExpression):
         yield from (n for o in self.operands for n in o.metric_names())
 
     @override
-    def to_metric_operation(
+    def to_graph_metric_expression(
         self,
         site_id: SiteId,
         host_name: HostName,
@@ -887,7 +887,7 @@ class Average(BaseMetricExpression):
         return GraphMetricOperation(
             operator_name="AVERAGE",
             operands=[
-                o.to_metric_operation(
+                o.to_graph_metric_expression(
                     site_id,
                     host_name,
                     service_name,
@@ -933,7 +933,7 @@ class Merge(BaseMetricExpression):
         yield from (n for o in self.operands for n in o.metric_names())
 
     @override
-    def to_metric_operation(
+    def to_graph_metric_expression(
         self,
         site_id: SiteId,
         host_name: HostName,
@@ -944,7 +944,7 @@ class Merge(BaseMetricExpression):
         return GraphMetricOperation(
             operator_name="MERGE",
             operands=[
-                o.to_metric_operation(
+                o.to_graph_metric_expression(
                     site_id,
                     host_name,
                     service_name,

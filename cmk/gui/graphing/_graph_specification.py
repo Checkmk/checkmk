@@ -29,7 +29,7 @@ from ._graph_metric_expressions import (
     GraphConsolidationFunction,
     GraphMetricExpression,
     LineType,
-    parse_metric_operation,
+    parse_graph_metric_expression,
 )
 from ._graph_render_config import GraphRenderOptions
 from ._translated_metrics import TranslatedMetric
@@ -77,7 +77,7 @@ class GraphMetric(BaseModel, frozen=True):
     title: str
     line_type: LineType
     operation: Annotated[
-        SerializeAsAny[GraphMetricExpression], PlainValidator(parse_metric_operation)
+        SerializeAsAny[GraphMetricExpression], PlainValidator(parse_graph_metric_expression)
     ]
     unit: ConvertibleUnitSpecification
     color: str

@@ -103,13 +103,13 @@ def test_metric_expression_mirror(line_type: LineType, expected_line_type: LineT
         ),
     ],
 )
-def test_metric_to_metric_operation(
+def test_metric_to_graph_metric_expression(
     orig_names: Sequence[str],
     scales: Sequence[int | float],
     expected_operation: GraphMetricOperation | GraphMetricRRDSource,
 ) -> None:
     assert (
-        Metric("metric-name").to_metric_operation(
+        Metric("metric-name").to_graph_metric_expression(
             SiteId("Site-ID"),
             HostName("HostName"),
             "Service description",

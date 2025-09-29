@@ -33,7 +33,7 @@ GraphConsolidationFunction = Literal["max", "min", "average"]
 LineType = Literal["line", "area", "stack", "-line", "-area", "-stack"]
 
 
-def create_metric_operation_from_translated_metric(
+def create_graph_metric_expression_from_translated_metric(
     site_id: SiteId,
     host_name: HostName,
     service_name: ServiceName,
@@ -234,7 +234,7 @@ class GraphMetricExpressionRegistry(Registry[type[GraphMetricExpression]]):
 graph_metric_expression_registry = GraphMetricExpressionRegistry()
 
 
-def parse_metric_operation(raw: object) -> GraphMetricExpression:
+def parse_graph_metric_expression(raw: object) -> GraphMetricExpression:
     match raw:
         case GraphMetricExpression():
             return raw
@@ -339,7 +339,9 @@ def _time_series_math(
 class GraphMetricOperation(GraphMetricExpression, frozen=True):
     operator_name: Operators
     operands: Sequence[
-        Annotated[SerializeAsAny[GraphMetricExpression], PlainValidator(parse_metric_operation)]
+        Annotated[
+            SerializeAsAny[GraphMetricExpression], PlainValidator(parse_graph_metric_expression)
+        ]
     ] = []
 
     @staticmethod

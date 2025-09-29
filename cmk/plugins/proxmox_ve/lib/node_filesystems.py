@@ -7,7 +7,7 @@ from collections.abc import Mapping, MutableMapping, Sequence
 from enum import StrEnum
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import AliasChoices, BaseModel, Field
 
 from cmk.agent_based.v2 import CheckResult, Result, State
 from cmk.plugins.lib.df import df_check_filesystem_single
@@ -30,13 +30,28 @@ class StorageType(StrEnum):
     ZFSPOOL = "zfspool"
 
 
+class StorageStatus(StrEnum):
+    AVAILABLE = "available"
+    ENABLED = "enabled"
+    DISABLED = "disabled"
+    INACTIVE = "inactive"
+    UNKNOWN = "unknown"
+    OFFLINE = "offline"
+    ERROR = "error"
+    MAINTENANCE = "maintenance"
+    ACTIVE = "active"
+
+
 class Storage(BaseModel, frozen=True):
     node: str
-    disk: float
-    maxdisk: float
-    storage_type: StorageType = Field(alias="plugintype")
-    status: str
-    name: str = Field(alias="storage")
+    disk: float | None = None
+    maxdisk: float | None = None
+    storage_type: StorageType = Field(
+        alias="storage_type",
+        validation_alias=AliasChoices("plugintype", "storage_type"),
+    )
+    status: StorageStatus | None = None
+    name: str = Field(alias="name", validation_alias=AliasChoices("storage", "name"))
 
 
 class SectionNodeFilesystems(BaseModel, frozen=True):
@@ -48,7 +63,7 @@ class SectionNodeFilesystems(BaseModel, frozen=True):
         return {
             filesystem.name: filesystem
             for filesystem in self.filesystems
-            if filesystem.storage_type == StorageType.DIR
+            if filesystem.storage_type in (StorageType.DIR, StorageType.PBS)
         }
 
     @property
@@ -69,11 +84,22 @@ def check_proxmox_ve_node_filesystems(
     if (filesystem := section.get(item)) is None:
         return
 
+    if filesystem.status not in (StorageStatus.AVAILABLE, StorageStatus.ACTIVE):
+        yield Result(
+            state=State.WARN,
+            summary=f"Storage status is {filesystem.status}. Skipping filesystem check.",
+        )
+        return
+
     yield from df_check_filesystem_single(
         value_store=value_store,
         mountpoint=item,
-        filesystem_size=filesystem.maxdisk / (1024 * 1024),
-        free_space=(filesystem.maxdisk - filesystem.disk) / (1024 * 1024),
+        filesystem_size=(filesystem.maxdisk / (1024 * 1024))
+        if filesystem.maxdisk is not None
+        else None,
+        free_space=((filesystem.maxdisk - filesystem.disk) / (1024 * 1024))
+        if filesystem.disk is not None and filesystem.maxdisk is not None
+        else None,
         reserved_space=0.0,
         inodes_avail=None,
         inodes_total=None,

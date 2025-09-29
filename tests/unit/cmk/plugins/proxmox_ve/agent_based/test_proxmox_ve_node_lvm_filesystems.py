@@ -25,8 +25,8 @@ SECTION = SectionNodeFilesystems(
                 "node": "pve-node1",
                 "disk": 17737418240.0,
                 "maxdisk": 21474836480.0,
-                "plugintype": "dir",
-                "status": "active",
+                "plugintype": "lvm",
+                "status": "unknown",
                 "storage": "local",
             }
         ),
@@ -55,13 +55,17 @@ SECTION = SectionNodeFilesystems(
 
 
 def test_discover_proxmox_ve_node_lvm_filesystem() -> None:
-    assert list(discover_proxmox_ve_node_lvm_filesystem(SECTION)) == [Service(item="data")]
+    assert list(discover_proxmox_ve_node_lvm_filesystem(SECTION)) == [
+        Service(item="local"),
+        Service(item="data"),
+    ]
 
 
 @pytest.mark.parametrize(
-    "params,section,expected_results",
+    "item,params,section,expected_results",
     [
         pytest.param(
+            "data",
             {"levels": (95.0, 100.0)},
             SECTION,
             [
@@ -82,9 +86,8 @@ def test_discover_proxmox_ve_node_lvm_filesystem() -> None:
             id="Everything OK",
         ),
         pytest.param(
-            {
-                "levels": (80.0, 90.0),
-            },
+            "data",
+            {"levels": (80.0, 90.0)},
             SECTION,
             [
                 Metric(
@@ -106,9 +109,22 @@ def test_discover_proxmox_ve_node_lvm_filesystem() -> None:
             ],
             id="WARN, with levels",
         ),
+        pytest.param(
+            "local",
+            {"levels": (80.0, 90.0)},
+            SECTION,
+            [
+                Result(
+                    state=State.WARN,
+                    summary="Storage status is unknown. Skipping filesystem check.",
+                )
+            ],
+            id="WARN, because the storage is not active or available",
+        ),
     ],
 )
 def test_check_proxmox_ve_node_info(
+    item: str,
     params: Mapping[str, object],
     section: SectionNodeFilesystems,
     expected_results: CheckResult,
@@ -116,7 +132,7 @@ def test_check_proxmox_ve_node_info(
     assert (
         list(
             check_proxmox_ve_node_filesystems(
-                item="data",
+                item=item,
                 params=params,
                 section=section.lvm_filesystems,
                 value_store={},

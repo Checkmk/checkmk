@@ -41,7 +41,7 @@ def _parameter_valuespec_proxmox_ve_replication():
                     title=Title(
                         "Service state when no replication jobs are configured on the cluster"
                     ),
-                    prefill=DefaultValue(ServiceState.WARN),
+                    prefill=DefaultValue(ServiceState.OK),
                 ),
             ),
         }

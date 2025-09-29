@@ -35,8 +35,8 @@ SECTION = SectionNodeFilesystems(
                 "node": "pve-node1",
                 "disk": 5368709120.0,
                 "maxdisk": 10737418240.0,
-                "plugintype": "lvmthin",
-                "status": "active",
+                "plugintype": "pbs",
+                "status": "unknown",
                 "storage": "data",
             }
         ),
@@ -55,13 +55,17 @@ SECTION = SectionNodeFilesystems(
 
 
 def test_discover_proxmox_ve_node_directory_filesystem() -> None:
-    assert list(discover_proxmox_ve_node_directory_filesystem(SECTION)) == [Service(item="local")]
+    assert list(discover_proxmox_ve_node_directory_filesystem(SECTION)) == [
+        Service(item="local"),
+        Service(item="data"),
+    ]
 
 
 @pytest.mark.parametrize(
-    "params,section,expected_results",
+    "item,params,section,expected_results",
     [
         pytest.param(
+            "local",
             {"levels": (95.0, 100.0)},
             SECTION,
             [
@@ -88,9 +92,8 @@ def test_discover_proxmox_ve_node_directory_filesystem() -> None:
             id="Everything OK",
         ),
         pytest.param(
-            {
-                "levels": (80.0, 90.0),
-            },
+            "local",
+            {"levels": (80.0, 90.0)},
             SECTION,
             [
                 Metric(
@@ -115,9 +118,22 @@ def test_discover_proxmox_ve_node_directory_filesystem() -> None:
             ],
             id="WARN, with levels",
         ),
+        pytest.param(
+            "data",
+            {"levels": (80.0, 90.0)},
+            SECTION,
+            [
+                Result(
+                    state=State.WARN,
+                    summary="Storage status is unknown. Skipping filesystem check.",
+                )
+            ],
+            id="WARN, because the storage is not active or available",
+        ),
     ],
 )
 def test_check_proxmox_ve_node_info(
+    item: str,
     params: Mapping[str, object],
     section: SectionNodeFilesystems,
     expected_results: CheckResult,
@@ -125,7 +141,7 @@ def test_check_proxmox_ve_node_info(
     assert (
         list(
             check_proxmox_ve_node_filesystems(
-                item="local",
+                item=item,
                 params=params,
                 section=section.directory_filesystems,
                 value_store={},

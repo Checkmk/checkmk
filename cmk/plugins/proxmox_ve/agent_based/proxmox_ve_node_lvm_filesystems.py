@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Any
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -27,7 +26,7 @@ def discover_proxmox_ve_node_lvm_filesystem(
 
 
 def check_proxmox_ve_node_lvm_filesystem(
-    item: str, params: Mapping[str, Any], section: SectionNodeFilesystems
+    item: str, params: Mapping[str, object], section: SectionNodeFilesystems
 ) -> CheckResult:
     yield from check_proxmox_ve_node_filesystems(
         item=item,

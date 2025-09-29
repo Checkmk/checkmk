@@ -96,6 +96,6 @@ check_plugin_proxmox_ve_replication = CheckPlugin(
     check_ruleset_name="proxmox_ve_replication",
     check_default_parameters={
         "time_since_last_replication": ("no_levels", None),
-        "no_replications_state": 1,
+        "no_replications_state": 0,
     },
 )

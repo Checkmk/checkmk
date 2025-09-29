@@ -27,8 +27,8 @@ from cmk.gui.utils.roles import UserPermissions
 from ._from_api import RegisteredMetric
 from ._graph_metric_expressions import (
     GraphConsolidationFunction,
+    GraphMetricExpression,
     LineType,
-    MetricOperation,
     parse_metric_operation,
 )
 from ._graph_render_config import GraphRenderOptions
@@ -76,7 +76,9 @@ def compute_warn_crit_rules_from_translated_metric(
 class GraphMetric(BaseModel, frozen=True):
     title: str
     line_type: LineType
-    operation: Annotated[SerializeAsAny[MetricOperation], PlainValidator(parse_metric_operation)]
+    operation: Annotated[
+        SerializeAsAny[GraphMetricExpression], PlainValidator(parse_metric_operation)
+    ]
     unit: ConvertibleUnitSpecification
     color: str
 

@@ -31,7 +31,7 @@ from ._from_api import RegisteredMetric
 from ._graph_metric_expressions import (
     AugmentedTimeSeries,
     GraphConsolidationFunction,
-    MetricOperation,
+    GraphMetricExpression,
     op_func_wrapper,
     RRDData,
     RRDDataKey,
@@ -198,7 +198,7 @@ def _chop_last_empty_step(end_time: float, rrd_data: RRDData) -> None:
 
 def _fetch_time_series(
     registered_metrics: Mapping[str, RegisteredMetric],
-    operations: Sequence[MetricOperation],
+    operations: Sequence[GraphMetricExpression],
     consolidation_function: GraphConsolidationFunction | None,
     conversion: Callable[[float], float],
     *,

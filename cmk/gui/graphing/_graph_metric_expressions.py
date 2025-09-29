@@ -195,7 +195,7 @@ class AugmentedTimeSeries:
     metadata: TimeSeriesMetaData = TimeSeriesMetaData()
 
 
-class MetricOperation(BaseModel, ABC, frozen=True):
+class GraphMetricExpression(BaseModel, ABC, frozen=True):
     @staticmethod
     @abstractmethod
     def operation_name() -> str: ...
@@ -226,26 +226,26 @@ class MetricOperation(BaseModel, ABC, frozen=True):
         return self.operation_name()
 
 
-class MetricOperationRegistry(Registry[type[MetricOperation]]):
-    def plugin_name(self, instance: type[MetricOperation]) -> str:
+class GraphMetricExpressionRegistry(Registry[type[GraphMetricExpression]]):
+    def plugin_name(self, instance: type[GraphMetricExpression]) -> str:
         return instance.operation_name()
 
 
-metric_operation_registry = MetricOperationRegistry()
+graph_metric_expression_registry = GraphMetricExpressionRegistry()
 
 
-def parse_metric_operation(raw: object) -> MetricOperation:
+def parse_metric_operation(raw: object) -> GraphMetricExpression:
     match raw:
-        case MetricOperation():
+        case GraphMetricExpression():
             return raw
         case {"ident": str(ident), **rest}:
-            return metric_operation_registry[ident].model_validate(rest)
+            return graph_metric_expression_registry[ident].model_validate(rest)
         case dict():
             raise ValueError("Missing 'ident' key in metric operation")
     raise TypeError(raw)
 
 
-class MetricOpConstant(MetricOperation, frozen=True):
+class MetricOpConstant(GraphMetricExpression, frozen=True):
     value: float
 
     @staticmethod
@@ -276,7 +276,7 @@ class MetricOpConstant(MetricOperation, frozen=True):
         ]
 
 
-class MetricOpConstantNA(MetricOperation, frozen=True):
+class MetricOpConstantNA(GraphMetricExpression, frozen=True):
     @staticmethod
     def operation_name() -> Literal["constant_na"]:
         return "constant_na"
@@ -336,10 +336,10 @@ def _time_series_math(
     )
 
 
-class MetricOpOperator(MetricOperation, frozen=True):
+class MetricOpOperator(GraphMetricExpression, frozen=True):
     operator_name: Operators
     operands: Sequence[
-        Annotated[SerializeAsAny[MetricOperation], PlainValidator(parse_metric_operation)]
+        Annotated[SerializeAsAny[GraphMetricExpression], PlainValidator(parse_metric_operation)]
     ] = []
 
     @staticmethod
@@ -380,7 +380,7 @@ MetricOpOperator.model_rebuild()
 AnnotatedHostName = Annotated[HostName, PlainValidator(HostName.parse)]
 
 
-class MetricOpRRDSource(MetricOperation, frozen=True):
+class MetricOpRRDSource(GraphMetricExpression, frozen=True):
     site_id: SiteId
     host_name: AnnotatedHostName
     service_name: ServiceName

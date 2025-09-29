@@ -30,11 +30,11 @@ from ._from_api import parse_unit_from_api, RegisteredMetric
 from ._graph_metric_expressions import (
     create_metric_operation_from_translated_metric,
     GraphConsolidationFunction,
+    GraphMetricExpression,
     line_type_mirror,
     LineType,
     MetricOpConstant,
     MetricOpConstantNA,
-    MetricOperation,
     MetricOpOperator,
     MetricOpRRDSource,
 )
@@ -130,7 +130,7 @@ class BaseMetricExpression(abc.ABC):
         service_name: ServiceName,
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
-    ) -> MetricOperation: ...
+    ) -> GraphMetricExpression: ...
 
     @abc.abstractmethod
     def is_scalar(self) -> bool: ...

@@ -10,7 +10,7 @@ from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
 from ._autocompleter import metrics_autocompleter
 from ._explicit_graphs import ExplicitGraphSpecification
 from ._graph_metric_expressions import (
-    metric_operation_registry,
+    graph_metric_expression_registry,
     MetricOpConstant,
     MetricOpConstantNA,
     MetricOpOperator,
@@ -30,10 +30,10 @@ def register(
     autocompleter_registry: AutocompleterRegistry,
 ) -> None:
     page_registry.register(PageEndpoint("ajax_vs_unit_resolver", PageVsAutocomplete))
-    metric_operation_registry.register(MetricOpConstant)
-    metric_operation_registry.register(MetricOpConstantNA)
-    metric_operation_registry.register(MetricOpOperator)
-    metric_operation_registry.register(MetricOpRRDSource)
+    graph_metric_expression_registry.register(MetricOpConstant)
+    graph_metric_expression_registry.register(MetricOpConstantNA)
+    graph_metric_expression_registry.register(MetricOpOperator)
+    graph_metric_expression_registry.register(MetricOpRRDSource)
     graph_specification_registry.register(ExplicitGraphSpecification)
     graph_specification_registry.register(TemplateGraphSpecification)
     config_variable_registry.register(ConfigVariableGraphTimeranges)

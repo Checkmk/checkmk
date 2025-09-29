@@ -2,6 +2,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from io import StringIO
 from pathlib import Path
 
@@ -25,9 +26,39 @@ CSV_MULTI_DELIM = """
 2001:16c2:a123:2345:2ac4:c3e:6794:85ce,server03
 """.strip()
 
+CSV_WITH_TITLE_LINE = "hostname,ipaddr\n" + CSV_NO_TITLE_LINE
+CSV_WITH_TITLE_LINE_BLANK_LINES_BEFORE = ("\n" * 10) + CSV_WITH_TITLE_LINE
+
+CSV_WITH_ONE_LINE_NO_TITLE_LINE = "server01,192.168.1.101"
+
 # An edge-case sample where dialect sniffing doesn't work because the first 2048
 # characters don't have one of the default delimiters in them.
 EDGE_CASE_CSV_CANT_SNIFF = ("\n" * 2048) + CSV_NO_TITLE_LINE
+
+# An edge-case sample with scattered newlines throughout the rows
+EDGE_CASE_CSV_SCATTERED_NEWLINES_WITH_TITLE_LINE = """
+
+
+hostname,ipaddr
+
+server01,192.168.1.101
+
+
+server02,192.168.1.102
+server03,192.168.1.103
+
+"""
+
+EDGE_CASE_CSV_SCATTERED_NEWLINES_NO_TITLE_LINE = """
+
+
+server01,192.168.1.101
+
+
+server02,192.168.1.102
+server03,192.168.1.103
+
+"""
 
 
 @pytest.mark.parametrize(
@@ -84,3 +115,90 @@ def test_get_handle_for_csv() -> None:
         get_handle_for_csv(
             Path("/this/path/does/not/exist/hopefully/otherwise/this/test/will/really/fail.csv")
         )
+
+
+@pytest.mark.parametrize(
+    "sample, expected_first_row, expected_second_row",
+    [
+        pytest.param(
+            CSV_NO_TITLE_LINE,
+            ["server01", "192.168.1.101"],
+            ["server02", "192.168.1.102"],
+            id="CSV file with no title line",
+        ),
+        pytest.param(
+            EDGE_CASE_CSV_SCATTERED_NEWLINES_NO_TITLE_LINE,
+            ["server01", "192.168.1.101"],
+            ["server02", "192.168.1.102"],
+            id="CSV file with scattered newlines",
+        ),
+        pytest.param(
+            CSV_WITH_ONE_LINE_NO_TITLE_LINE,
+            ["server01", "192.168.1.101"],
+            None,
+            id="CSV file with only one line (no title line)",
+        ),
+        pytest.param(
+            "",
+            None,
+            None,
+            id="CSV file no lines",
+        ),
+    ],
+)
+def test_skip_to_and_return_next_row(
+    sample: str,
+    expected_first_row: Sequence[str],
+    expected_second_row: Sequence[str],
+) -> None:
+    handle = StringIO(sample)
+    cbi = CSVBulkImport(handle=handle, has_title_line=False)
+    assert cbi.skip_to_and_return_next_row() == expected_first_row
+    assert cbi.skip_to_and_return_next_row() == expected_second_row
+
+
+@pytest.mark.parametrize(
+    "sample, has_title_line, expected_title_row, expected_next_row",
+    [
+        pytest.param(
+            CSV_NO_TITLE_LINE,
+            False,
+            None,
+            ["server01", "192.168.1.101"],
+            id="CSV file with no title line",
+        ),
+        pytest.param(
+            CSV_WITH_TITLE_LINE,
+            True,
+            ["hostname", "ipaddr"],
+            ["server01", "192.168.1.101"],
+            id="CSV file with title line",
+        ),
+        pytest.param(
+            EDGE_CASE_CSV_SCATTERED_NEWLINES_WITH_TITLE_LINE,
+            True,
+            ["hostname", "ipaddr"],
+            ["server01", "192.168.1.101"],
+            id="CSV file with scattered newlines and title line",
+        ),
+        pytest.param(
+            EDGE_CASE_CSV_SCATTERED_NEWLINES_NO_TITLE_LINE,
+            False,
+            None,
+            ["server01", "192.168.1.101"],
+            id="CSV file with scattered newlines and no title line",
+        ),
+    ],
+)
+def test_title_row(
+    sample: str,
+    has_title_line: bool,
+    expected_title_row: Sequence[str],
+    expected_next_row: Sequence[str],
+) -> None:
+    handle = StringIO(sample)
+    cbi = CSVBulkImport(handle=handle, has_title_line=has_title_line)
+    # We call title_row() twice to ensure the cursor only advances once
+    assert cbi.title_row == expected_title_row
+    assert cbi.title_row == expected_title_row
+    assert cbi.skip_to_and_return_next_row() == expected_next_row

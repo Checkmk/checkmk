@@ -36,6 +36,11 @@ class CSVBulkImport:
         self._dialect = self._determine_dialect(delimiter)
         self._reader = csv.reader(self._handle, self._dialect)
 
+        self._has_title_line = has_title_line
+        self._title_row: list[str] | None = None
+        if self._has_title_line:
+            self._title_row = self.title_row
+
     def _determine_dialect(self, delimiter: str | None) -> type[csv.Dialect]:
         """
         Attempt to return a csv.Dialect that works to parse the file.
@@ -67,3 +72,21 @@ class CSVBulkImport:
             if row:
                 return row
         return None
+
+    @property
+    def title_row(self) -> list[str] | None:
+        """
+        Return the title row, if one exists, taking care to only ever advance the reader
+        cursor once, even if called multiple times.
+        """
+        if not self._has_title_line:
+            # If we aren't expecting a title line and we are called anyway, do not
+            # advance the reader cursor.
+            return None
+
+        if self._title_row is not None:
+            # If we've already established the title row, then just return it.
+            return self._title_row
+
+        # TODO: Consider throwing if there is no next row
+        return self.skip_to_and_return_next_row()

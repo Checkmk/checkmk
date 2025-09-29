@@ -227,11 +227,6 @@ class ModeBulkImport(WatoMode):
         use_git: bool,
     ) -> ActionResult:
         def _emit_raw_rows(csv_bulk_import: CSVBulkImport) -> typing.Generator[dict, None, None]:
-            if self._has_title_line:
-                # Read until the first non-empty line, in this case the title line
-                if csv_bulk_import.skip_to_and_return_next_row() is None:
-                    return
-
             def _check_duplicates(_names: list[str | None]) -> None:
                 _attrs_seen = set()
                 for _name in _names:
@@ -498,14 +493,7 @@ class ModeBulkImport(WatoMode):
                 )
             )
 
-            # Wenn bei einem Host ein Fehler passiert, dann wird die Fehlermeldung zu dem Host angezeigt, so dass man sehen kann, was man anpassen muss.
-            # Die problematischen Zeilen sollen angezeigt werden, so dass man diese als Block in ein neues CSV-File eintragen kann und dann diese Datei
-            # erneut importieren kann.
-            headers: list[str] = []
-            if self._has_title_line:
-                # Read until the first non-empty line, in this case the title line
-                headers = csv_bulk_import.skip_to_and_return_next_row() or []
-
+            headers: list[str] = csv_bulk_import.title_row or []
             rows = list(csv_bulk_import._reader)
 
             # Determine how many columns should be rendered by using the longest column

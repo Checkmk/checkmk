@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-09-09 05:05+0000\n"
+"PO-Revision-Date: 2025-09-29 08:21+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -3077,7 +3077,8 @@ msgstr "アクセス解析設定"
 msgid ""
 "Access is restricted, but no contact groups are assigned in the host's "
 "permissions."
-msgstr ""
+msgstr "アクセスは制限されていますが、ホストの権限には連絡先グループが割り当てられて"
+"いません。"
 
 msgid "Access key"
 msgstr "アクセスキー"
@@ -4038,9 +4039,8 @@ msgstr "アグリゲーションを追加"
 msgid "Add new constant"
 msgstr "新しい定数を追加する"
 
-#, fuzzy
 msgid "Add new credentials"
-msgstr "資格情報を使用する"
+msgstr "新しい資格情報を追加"
 
 msgid "Add new element"
 msgstr "新しい要素を追加する"
@@ -6595,9 +6595,8 @@ msgstr "アプリケーションロードバランサー証明書"
 msgid "Application Load balancers"
 msgstr "アプリケーションロードバランサー"
 
-#, fuzzy
 msgid "Application Monitoring"
-msgstr "アプリケーションプール名"
+msgstr "アプリケーション監視"
 
 msgid "Application Pool name"
 msgstr "アプリケーションプール名"
@@ -8967,7 +8966,7 @@ msgid "Both - Display the information for both pod and container levels"
 msgstr "両方(both)-Podとコンテナの両方のレベルの情報を表示します"
 
 msgid "Both conditions must match (defensive)"
-msgstr ""
+msgstr "両方の条件が一致しなければならない（defensive）"
 
 msgid "Bottom"
 msgstr "ボトム"
@@ -9618,16 +9617,18 @@ msgid ""
 "Checkmk searches for in the key of the Azure tag, or you can disable the "
 "import of Azure tags altogether."
 msgstr ""
-"デフォルトでは、Checkmk はすべての Azure タグをホスト/サービスラベルとしてイ"
-"ンポートします。インポートされたタグは、ホストとして監視されるリソースグルー"
-"プと VM のホストラベルとして追加され、サービスとして監視されるリソースのサー"
-"ビスラベルとして追加されます。ラベルの構文は'cmk/azure/tag/{key}:{value}'で"
-"す。<br>さらに、リソースグループを表す各ホストには 'cmk/azure/resource_group:"
-"{rg_name}'というホストラベルが与えられ、ホストとして監視されるVMには'cmk/"
-"azure/vm:instance'というホストラベルが与えられますが、これはこのオプションと"
-"は無関係に行われます。<br>CheckmkがAzureタグのキーで検索するパターンを指定す"
-"ることで、インポートするタグをさらに制限することも、Azureタグのインポートを完"
-"全に無効にすることもできます。"
+"デフォルトでは、CheckmkはすべてのAzure "
+"タグをホスト/サービスラベルとしてインポートします。インポートされたタグは、ホ"
+"ストとして監視されるリソースグループおよびVMに対してはホストラベルとして、サ"
+"ービスとして監視されるリソースに対してはサービスラベルとして追加されます。ラ"
+"ベルの構文は'cmk/azure/tag/{key}:{value}'です。<br>さらに、"
+"リソースグループを表す各ホストには 'cmk/azure/"
+"resource_group:{rg_name}'というホストラベルが与えられ、ホストとして監視される"
+"VMには'cmk/azure/"
+"vm:instance'というホストラベルが与えられます。これは本オプションとは独立して"
+"無関係に行われます。<br>AzureタグのキーでCheckmkが検索するパターンを指定する"
+"ことで、インポートするタグをさらに制限することも、Azureタグのインポートを完全"
+"に無効にすることもできます。"
 
 msgid ""
 "By default, Python agent plug-ins are written in Python 3. However, since "
@@ -10807,7 +10808,7 @@ msgid "Cannot find %s with the name %s"
 msgstr "%sが見つかりません 名前の%s"
 
 msgid "Cannot find fallback topic 'Other'"
-msgstr ""
+msgstr "フォールバックトピック「その他」が見つかりません"
 
 #, python-format
 msgid "Cannot find image \"%s\" in %s"
@@ -10981,9 +10982,8 @@ msgstr "カーボンキュー使用量"
 msgid "Carbon queue usage rate"
 msgstr "カーボンキュー使用率"
 
-#, fuzzy
 msgid "Cardinality reduction aggregation method"
-msgstr "データ削減率"
+msgstr "カーディナリティ削減集約法"
 
 msgid "Casa module: CPU temperature"
 msgstr "Casaモジュール: CPU温度"
@@ -11930,12 +11930,16 @@ msgid ""
 "report and ensure any additional sensitive data is removed before sharing "
 "the crash report."
 msgstr ""
+"Checkmkはクラッシュレポート内の機密情報を特定し、編集を試みました。このレポー"
+"トの内容を手動で確認し、共有前に追加の機密データが削除されていることを確認す"
+"ることをお勧めします。"
 
 msgid "Checkmk helper usage"
 msgstr "Checkmkヘルパーの使用量"
 
 msgid "Checkmk metrics are created from OTel datapoints. Configure them here."
-msgstr ""
+msgstr "CheckmkメトリクスはOtel(Open "
+"Telemetry)データポイントから作成されます。ここで設定してください。"
 
 msgid "Checkmk partner or reseller"
 msgstr "Checkmkパートナーまたはリセラー"
@@ -12607,9 +12611,8 @@ msgstr "ワーキングディレクトリのクリーンアップ"
 msgid "Cleanup parameters"
 msgstr "デフォルトパラメータ"
 
-#, fuzzy
 msgid "Cleanup strategy"
-msgstr "クリーンアップメッセージ"
+msgstr "クリーンアップストラテジー"
 
 msgid "Cleanup when disk space is below"
 msgstr "ディスク容量が次の値を下回るとクリーンアップ"
@@ -16277,9 +16280,8 @@ msgstr "DCDマネージャ：サイト\"%s\"からピギーバックホストを
 msgid "DCD batch history"
 msgstr "DCDバッチ履歴"
 
-#, fuzzy
 msgid "DCD cycles and batches."
-msgstr "DR:BDの役割とディスク状態"
+msgstr "DCDサイクルとバッチ処理。"
 
 msgid "DCD global settings"
 msgstr "DCDグローバル設定"
@@ -29347,7 +29349,7 @@ msgid "IBM SVC licenses"
 msgstr "IBM SVC ライセンス"
 
 msgid "IBM TSM: number of tapes in scratch pool"
-msgstr ""
+msgstr "IBM TSM: スクラッチプール内のテープの数"
 
 msgid "ICMP"
 msgstr "ICMP"
@@ -30537,7 +30539,8 @@ msgstr ""
 msgid ""
 "If too many metrics are produced by a service, they will be aggregated. "
 "Configure the aggregation method here."
-msgstr ""
+msgstr "サービスによって生成されるメトリクスが多すぎる場合、集計されます。集計方法を"
+"ここで設定してください。"
 
 msgid "If value is a tuple it has to have length of two."
 msgstr "valueがタプルである場合、長さは2である必要があります。"
@@ -43122,7 +43125,7 @@ msgid "Nutanix Host memory usage"
 msgstr "Nutanix ホストのメモリ使用量"
 
 msgid "Nutanix Prism"
-msgstr "ニュータニックスプリズム"
+msgstr "Nutanix Prism"
 
 msgid "Nutanix Prism Alerts"
 msgstr "Nutanixプリズムアラート"
@@ -80814,9 +80817,9 @@ msgstr ""
 "次のホストはクイックセットアップによってロックされているため、リネーム操作は"
 "実行できません："
 
-#, fuzzy, python-format
+#, python-format
 msgid "You cannot edit the configuration for host '<b>%s</b>'. %s"
-msgstr "構成ファイル \"%s\"を書き込めません:%s"
+msgstr "ホストの設定を編集することはできません '<b>%s</b>'. %s"
 
 msgid "You cannot have more than one timing setting per notification method."
 msgstr "通知方法ごとに複数のタイミング設定を設定することはできません。"

@@ -10,10 +10,16 @@ import usei18n from '@/lib/i18n'
 import { randomId } from '@/lib/randomId'
 
 import type { ContentProps } from '@/dashboard-wip/components/DashboardContent/types'
+import AddFilters from '@/dashboard-wip/components/Wizard/components/AddFilters/AddFilters.vue'
+import {
+  parseContextConfiguredFilters,
+  squashFilters
+} from '@/dashboard-wip/components/Wizard/components/FiltersRecap/utils.ts'
 import { useWidgetVisualizationProps } from '@/dashboard-wip/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
-import { type Filters, useFilters } from '@/dashboard-wip/components/filter/composables/useFilters'
-import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
+import { useWidgetFilterManager } from '@/dashboard-wip/components/Wizard/components/filter/composables/useWidgetFilterManager.ts'
+import { useFilterDefinitions } from '@/dashboard-wip/components/filter/utils.ts'
 import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
+import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
 import type {
   EffectiveWidgetFilterContext,
   EmbeddedViewContent,
@@ -43,18 +49,11 @@ interface ViewWizardProps {
   dashboardName: string
   dashboardOwner: string
   dashboardConstants: DashboardConstants
-  dashboardFilters?: ConfiguredFilters
-  quickFilters?: ConfiguredFilters
+  contextFilters: ContextFilters
   editWidget?: ContentProps | null
 }
 
 const props = withDefaults(defineProps<ViewWizardProps>(), {
-  dashboardFilters: () => {
-    return {} as ConfiguredFilters
-  },
-  quickFilters: () => {
-    return {} as ConfiguredFilters
-  },
   editWidget: null
 })
 
@@ -112,7 +111,10 @@ function getDefaultContent(): EmbeddedViewContent | LinkedViewContent | undefine
 const widgetId = ref<string>(getDefaultWidgetId())
 
 // Stage 1
-const filters: Filters = useFilters()
+const filterDefinitions = useFilterDefinitions()
+const initialFilters = props.editWidget ? props.editWidget.effective_filter_context.filters : {}
+const widgetFilterManager = useWidgetFilterManager(initialFilters, filterDefinitions)
+
 const selectedDatasource = ref<string | null>(getDefaultDatasource())
 const contextInfos = ref<string[]>([])
 const restrictedToSingleInfos = ref<string[]>(getDefaultRestrictedToSingle())
@@ -202,26 +204,52 @@ function stage3SaveWidget(generalSettings: WidgetGeneralSettings) {
   if (!content.value) {
     throw new Error('No content defined')
   }
-  // TODO: filter context
   emit('addWidget', content.value, generalSettings, {
-    uses_infos: [],
-    filters: {}
+    uses_infos: contextInfos.value,
+    filters: widgetFilterManager.getConfiguredFilters()
   } as WidgetFilterContext)
 }
 
 const effectiveFilterContext = computed<EffectiveWidgetFilterContext>(() => {
-  // TODO
   return {
-    uses_infos: [],
-    filters: {},
-    restricted_to_single: []
+    uses_infos: contextInfos.value,
+    filters: squashFilters(
+      parseContextConfiguredFilters(props.contextFilters),
+      widgetFilterManager.getConfiguredFilters()
+    ),
+    restricted_to_single:
+      props.dashboardConstants.widgets['embedded_view']!.filter_context.restricted_to_single
   } as EffectiveWidgetFilterContext
 })
+
+const currentFilterSelectionFocus = computed(() => {
+  if (!widgetFilterManager.selectionMenuOpen.value) {
+    return null
+  }
+  return widgetFilterManager.selectionMenuCurrentTarget.value
+})
+
+const handleObjectTypeSwitch = (objectType: string): void => {
+  widgetFilterManager.closeSelectionMenu()
+  widgetFilterManager.resetFilterValuesOfObjectType(objectType)
+}
+
+const handleResetAllFilters = (): void => {
+  widgetFilterManager.closeSelectionMenu()
+  widgetFilterManager.resetFilterValuesOfObjectType()
+}
 </script>
 
 <template>
   <WizardContainer>
-    <WizardStepsContainer>
+    <WizardStepsContainer v-if="widgetFilterManager.selectionMenuOpen.value">
+      <AddFilters
+        :filter-selection-target="widgetFilterManager.selectionMenuCurrentTarget.value"
+        :close="widgetFilterManager.closeSelectionMenu"
+        :filters="widgetFilterManager.filterHandler"
+      />
+    </WizardStepsContainer>
+    <WizardStepsContainer v-else>
       <StepsHeader
         :title="_t('View')"
         :subtitle="_t('Define widget')"
@@ -248,10 +276,17 @@ const effectiveFilterContext = computed<EffectiveWidgetFilterContext>(() => {
         v-model:restricted-to-single-infos="restrictedToSingleInfos"
         v-model:original-view-name="originalViewName"
         v-model:referenced-view-name="referencedViewName"
-        :dashboard-filters="dashboardFilters || {}"
-        :quick-filters="quickFilters || {}"
-        :filters="filters"
+        :widget-configured-filters="widgetFilterManager.getConfiguredFilters()"
+        :widget-active-filters="widgetFilterManager.getSelectedFilters()"
+        :context-filters="contextFilters"
+        :current-filter-selection-menu-focus="currentFilterSelectionFocus"
         @go-next="stage1GoNext"
+        @set-focus="widgetFilterManager.openSelectionMenu"
+        @update-filter-values="
+          (filterId, values) => widgetFilterManager.updateFilterValues(filterId, values)
+        "
+        @reset-all-filters="handleResetAllFilters"
+        @reset-object-type-filters="handleObjectTypeSwitch"
       />
       <Stage2
         v-if="wizardHandler.stage.value === 1"

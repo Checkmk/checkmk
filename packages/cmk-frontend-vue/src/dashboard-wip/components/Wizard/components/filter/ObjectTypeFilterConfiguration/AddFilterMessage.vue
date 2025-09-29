@@ -19,7 +19,7 @@ const { _t } = usei18n()
 <style scoped>
 .db-add-filter-message {
   border: var(--ux-theme-8) 1px dashed;
-  margin: var(--spacing-double);
+  margin: var(--spacing);
   padding: var(--spacing-double);
 }
 </style>

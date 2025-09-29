@@ -4,6 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { computed, onMounted, watch } from 'vue'
+
 import usei18n from '@/lib/i18n'
 
 import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
@@ -13,10 +15,19 @@ import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import ActionBar from '@/dashboard-wip/components/Wizard/components/ActionBar.vue'
 import ActionButton from '@/dashboard-wip/components/Wizard/components/ActionButton.vue'
 import ContentSpacer from '@/dashboard-wip/components/Wizard/components/ContentSpacer.vue'
+import WidgetObjectFilterConfiguration from '@/dashboard-wip/components/Wizard/components/filter/WidgetObjectFilterConfiguration/WidgetObjectFilterConfiguration.vue'
+import { parseFilters } from '@/dashboard-wip/components/Wizard/components/filter/utils.ts'
+import { ElementSelection } from '@/dashboard-wip/components/Wizard/types.ts'
 import NewView from '@/dashboard-wip/components/Wizard/wizards/view/stage1/components/NewView.vue'
 import ReferenceView from '@/dashboard-wip/components/Wizard/wizards/view/stage1/components/ReferenceView.vue'
-import type { Filters } from '@/dashboard-wip/components/filter/composables/useFilters'
-import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
+import type {
+  ConfiguredFilters,
+  ConfiguredValues
+} from '@/dashboard-wip/components/filter/types.ts'
+import { useFilterDefinitions } from '@/dashboard-wip/components/filter/utils.ts'
+import { useVisualInfoCollection } from '@/dashboard-wip/composables/api/useVisualInfoCollection.ts'
+import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
+import type { ObjectType } from '@/dashboard-wip/types/shared.ts'
 
 import { ViewSelectionMode } from '../types'
 import type {
@@ -29,17 +40,25 @@ import type {
 const { _t } = usei18n()
 
 interface Stage1Props {
-  dashboardFilters: ConfiguredFilters
-  quickFilters: ConfiguredFilters
-  filters: Filters
+  widgetConfiguredFilters: ConfiguredFilters
+  widgetActiveFilters: string[]
+  contextFilters: ContextFilters
+  currentFilterSelectionMenuFocus: ObjectType | null
   // TODO: a read only mode is probably required here
 }
 
-defineProps<Stage1Props>()
+const props = defineProps<Stage1Props>()
 
 const emit = defineEmits<{
-  goNext: [selectedView: ViewSelection]
+  (e: 'set-focus', target: ObjectType): void
+  (e: 'update-filter-values', filterId: string, values: ConfiguredValues): void
+  (e: 'reset-object-type-filters', objectType: ObjectType): void
+  (e: 'reset-all-filters'): void
+  (e: 'goNext', selectedView: ViewSelection): void
 }>()
+
+const { byId, ensureLoaded } = useVisualInfoCollection()
+const filterDefinitions = useFilterDefinitions()
 
 const selectedDatasource = defineModel<string | null>('selectedDatasource', { default: '' })
 const contextInfos = defineModel<string[]>('contextInfos', { default: [] })
@@ -79,6 +98,50 @@ function goToNextStage() {
 
 const modeSelection = defineModel<ViewSelectionMode>('modeSelection', {
   default: ViewSelectionMode.NEW
+})
+
+onMounted(async () => {
+  await ensureLoaded()
+})
+
+watch(contextInfos, () => {
+  emit('reset-all-filters')
+})
+
+watch(restrictedToSingleInfos, (newList, oldList) => {
+  const oldSet = new Set(oldList)
+  const newSet = new Set(newList)
+
+  const symmetricDifference = new Set<ObjectType>()
+  for (const v of oldSet) {
+    if (!newSet.has(v)) {
+      symmetricDifference.add(v)
+    }
+  }
+  for (const v of newSet) {
+    if (!oldSet.has(v)) {
+      symmetricDifference.add(v)
+    }
+  }
+
+  if (symmetricDifference) {
+    for (const objectType of symmetricDifference) {
+      emit('reset-object-type-filters', objectType)
+    }
+  }
+})
+
+const getVisual = (objectType: ObjectType) => {
+  return byId.value[objectType]
+}
+
+const configuredFiltersByObjectType = computed(() => {
+  return parseFilters(
+    props.widgetConfiguredFilters,
+    props.widgetActiveFilters,
+    filterDefinitions,
+    new Set(contextInfos.value)
+  )
 })
 </script>
 
@@ -145,5 +208,32 @@ const modeSelection = defineModel<ViewSelectionMode>('modeSelection', {
       />
     </div>
     <ContentSpacer />
+    <div v-for="objectType in contextInfos" :key="objectType">
+      <h2>
+        {{
+          getVisual(objectType)?.title || _t('Unknown object type: %{objectType}', { objectType })
+        }}
+      </h2>
+      <WidgetObjectFilterConfiguration
+        :object-type="objectType"
+        :object-selection-mode="
+          restrictedToSingleInfos.includes(objectType)
+            ? ElementSelection.SPECIFIC
+            : ElementSelection.MULTIPLE
+        "
+        :object-configured-filters="configuredFiltersByObjectType[objectType]!"
+        :in-focus="currentFilterSelectionMenuFocus === objectType"
+        :context-filters="contextFilters"
+        :show-context-filters-section="objectType in ['host', 'service']"
+        @set-focus="emit('set-focus', $event)"
+        @update-filter-values="(filterId, values) => emit('update-filter-values', filterId, values)"
+      />
+      <ContentSpacer :height="10" />
+    </div>
   </div>
 </template>
+<style scoped>
+h2 {
+  font-size: var(--font-size-large);
+}
+</style>

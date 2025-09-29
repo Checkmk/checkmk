@@ -19,15 +19,16 @@ export const parseFilters = (
 ): Record<ObjectType, FilterConfigState> => {
   const grouped: Record<ObjectType, FilterConfigState> = {}
 
+  for (const type of filterTypes) {
+    grouped[type] = {}
+  }
+
   for (const name of activeFilterNames) {
     const objectType = filtersDefinition[name]?.extensions?.info ?? ''
-    if (!filterTypes.has(objectType)) {
+    if (!filterTypes.has(objectType) || !grouped[objectType]) {
       continue
     }
 
-    if (!grouped[objectType]) {
-      grouped[objectType] = {}
-    }
     grouped[objectType][name] = configuredFilters[name] ?? null
   }
 

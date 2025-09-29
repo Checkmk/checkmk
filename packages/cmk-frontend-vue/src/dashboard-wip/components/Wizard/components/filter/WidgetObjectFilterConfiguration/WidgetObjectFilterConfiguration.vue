@@ -28,10 +28,13 @@ interface Props {
   objectSelectionMode: ElementSelection
   objectConfiguredFilters: FilterConfigState
   contextFilters: ContextFilters
+  showContextFiltersSection?: boolean
   inFocus: boolean
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  showContextFiltersSection: true
+})
 
 const filterDefinitions = useFilterDefinitions()
 const toggleContextFiltersSection = ref(false)
@@ -108,22 +111,24 @@ const displayLabels = computed(() => {
 </script>
 
 <template>
-  <CmkCollapsibleTitle
-    :title="displayLabels.contextFilterTitle"
-    :help_text="displayLabels.contextFilterTooltip"
-    :open="toggleContextFiltersSection"
-    @toggle-open="toggleContextFiltersSection = !toggleContextFiltersSection"
-  />
-  <CmkCollapsible :open="toggleContextFiltersSection">
-    <!-- object-configured-filters is not being recognized as a props -->
-    <!-- @vue-ignore -->
-    <DisplayContextFilters
-      :object-configured-filters="objectConfiguredFilters"
-      :context-filters="relevantContextFilters"
-      :empty-filters-title="displayLabels.emptyContextTitle"
-      :empty-filters-message="displayLabels.emptyContextMessage"
+  <div v-if="showContextFiltersSection">
+    <CmkCollapsibleTitle
+      :title="displayLabels.contextFilterTitle"
+      :help_text="displayLabels.contextFilterTooltip"
+      :open="toggleContextFiltersSection"
+      @toggle-open="toggleContextFiltersSection = !toggleContextFiltersSection"
     />
-  </CmkCollapsible>
+    <CmkCollapsible :open="toggleContextFiltersSection">
+      <!-- object-configured-filters is not being recognized as a props -->
+      <!-- @vue-ignore -->
+      <DisplayContextFilters
+        :object-configured-filters="objectConfiguredFilters"
+        :context-filters="relevantContextFilters"
+        :empty-filters-title="displayLabels.emptyContextTitle"
+        :empty-filters-message="displayLabels.emptyContextMessage"
+      />
+    </CmkCollapsible>
+  </div>
   <ObjectTypeFilterConfiguration
     :object-type="objectType"
     :object-selection-mode="objectSelectionMode"

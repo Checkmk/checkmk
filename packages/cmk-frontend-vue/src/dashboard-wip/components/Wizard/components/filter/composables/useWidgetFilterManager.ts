@@ -21,15 +21,15 @@ export const useWidgetFilterManager = (
   const filters = useFilters(structuredClone(initialWidgetConfiguredFilters))
   const menuHandler = useAddFilter()
 
-  const resetFilterValuesOfObjectType = (objectType: ObjectType) => {
+  const resetFilterValuesOfObjectType = (objectType?: ObjectType) => {
     const activeFilters = filters.activeFilters.value
     for (const filterName of activeFilters) {
-      if (filtersDefinition[filterName]!.extensions.info === objectType) {
+      if (!objectType || filtersDefinition[filterName]!.extensions.info === objectType) {
         filters.removeFilter(filterName)
       }
     }
     for (const filterName of Object.keys(initialWidgetConfiguredFilters)) {
-      if (filtersDefinition[filterName]!.extensions.info === objectType) {
+      if (!objectType || filtersDefinition[filterName]!.extensions.info === objectType) {
         filters.addFilter(filterName)
         filters.updateFilterValues(filterName, initialWidgetConfiguredFilters[filterName]!)
       }

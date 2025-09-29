@@ -24,7 +24,6 @@ export const useAddFilter = (): UseAddFilter => {
   const target = ref<ObjectType>('host')
 
   const open = (filterType: ObjectType) => {
-    console.log('Opening filter for', filterType)
     target.value = filterType
     isOpen.value = true
   }

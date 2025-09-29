@@ -31,15 +31,19 @@ const { _t } = usei18n()
 </script>
 
 <template>
-  <FilterInputItem
+  <div
     v-for="(configuredValues, name) in objectConfiguredFilters"
     :key="name as string"
-    :filter-id="name as string"
-    :configured-filter-values="configuredValues"
-    @update-filter-values="
-      (id: string, values: ConfiguredValues) => emit('update-filter-values', id, values)
-    "
-  />
+    class="db-multi-filter__item-container"
+  >
+    <FilterInputItem
+      :filter-id="name as string"
+      :configured-filter-values="configuredValues"
+      @update-filter-values="
+        (id: string, values: ConfiguredValues) => emit('update-filter-values', id, values)
+      "
+    />
+  </div>
   <ActionButton
     v-if="!inFocus"
     :label="_t('Add filter')"
@@ -53,3 +57,10 @@ const { _t } = usei18n()
   />
   <AddFilterMessage v-else />
 </template>
+<style scoped>
+.db-multi-filter__item-container {
+  border: var(--ux-theme-8) 1px dashed;
+  margin: var(--spacing);
+  padding: var(--spacing-double);
+}
+</style>

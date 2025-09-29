@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import MetricsWizard from '@/dashboard-wip/components/Wizard/MetricsWizard.vue'
+import ViewWizard from '@/dashboard-wip/components/Wizard/wizards/view/ViewWizard.vue'
 import type { DashboardConstants } from '@/dashboard-wip/types/dashboard.ts'
 import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
 import type {
@@ -52,6 +53,18 @@ const handleGoBack = () => {
       v-if="props.selectedWizard === 'metrics_graphs'"
       :dashboard-name="props.dashboardName"
       :dashboard-constants="props.dashboardConstants"
+      :context-filters="contextFilters"
+      @go-back="handleGoBack"
+      @add-widget="
+        (content, generalSettings, filterContext) =>
+          emit('add-widget', content, generalSettings, filterContext)
+      "
+    />
+    <ViewWizard
+      v-else-if="selectedWizard === 'views'"
+      :dashboard-name="dashboardName"
+      :dashboard-owner="dashboardOwner"
+      :dashboard-constants="dashboardConstants"
       :context-filters="contextFilters"
       @go-back="handleGoBack"
       @add-widget="

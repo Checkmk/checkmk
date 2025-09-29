@@ -61,7 +61,7 @@ const hideHelpIcon = getUserFrontendConfig()?.hide_contextual_help_icon ?? false
       >
         <CmkIconButton
           ref="triggerRef"
-          :name="open ? 'icon_help_activated' : 'icon_info_circle'"
+          :name="open ? 'help-activated' : 'info-circle'"
           size="medium"
           class="cmk-help-text__icon"
           aria-label="?"

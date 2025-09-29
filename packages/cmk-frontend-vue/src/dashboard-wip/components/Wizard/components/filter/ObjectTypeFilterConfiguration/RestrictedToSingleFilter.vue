@@ -60,7 +60,7 @@ onMounted(async () => {
     <ActionButton
       v-if="!showFilter"
       :label="_t('Add filter')"
-      :icon="{ name: 'icon-plus', side: 'left' }"
+      :icon="{ name: 'plus', side: 'left' }"
       variant="secondary"
       :action="handleShowInputs"
     />

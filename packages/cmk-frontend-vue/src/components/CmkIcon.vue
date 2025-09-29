@@ -8,19 +8,34 @@ import { type VariantProps, cva } from 'class-variance-authority'
 
 function getIconVariable(iconName: string | undefined): string {
   /*
-     Transform from icon file name pattern
-        "icon_<underscored_name>.<file_extension>" or "<underscored_name>.<file_extension>"
-     to CSS variable name pattern, returned as a call to the CSS fct var()
-        "var(--icon-<dashed_name>)"
-
-     E.g. "icon_main_help.svg" -> "var(--icon-main-help)"
+    Transforms a kebab-case icon name to a CSS variable reference.
+    E.g. "main-help" -> "var(--icon-main-help)"
   */
   if (!iconName) {
     return 'none'
   }
 
-  let iconVar: string = `${iconName.startsWith('icon') ? iconName : ['icon', iconName].join('-')}`
-  iconVar = iconVar.replace(/_/g, '-').split('.')[0]!
+  const errors: string[] = []
+  if (iconName.includes('_')) {
+    errors.push(
+      `Icon name "${iconName}" contains an underscore (_). Use kebab-case (dashes) instead.`
+    )
+  }
+  if (iconName.startsWith('icon')) {
+    errors.push(
+      `Icon name "${iconName}" contains "icon". Pass only the base name, e.g. "main-help".`
+    )
+  }
+  if (iconName.includes('.svg')) {
+    errors.push(`Icon name "${iconName}" contains ".svg". Do not include file extensions.`)
+  }
+
+  if (errors.length > 0) {
+    throw new Error(errors.join(' '))
+  }
+
+  const iconVar = `icon-${iconName}`
+
   return `var(--${iconVar})`
 }
 

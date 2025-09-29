@@ -74,12 +74,12 @@ defineProps<{ screenshotMode: boolean }>()
 
     <dt>
       <code
-        >&lt;CmkButton&gt;&lt;CmkIcon name="about_checkmk" variant="inline"
+        >&lt;CmkButton&gt;&lt;CmkIcon name="about-checkmk" variant="inline"
         /&gt;button&lt;/CmkButton&gt;</code
       >
     </dt>
     <dd>
-      <CmkButton><CmkIcon name="about_checkmk" variant="inline" />button</CmkButton>
+      <CmkButton><CmkIcon name="about-checkmk" variant="inline" />button</CmkButton>
     </dd>
   </dl>
 </template>

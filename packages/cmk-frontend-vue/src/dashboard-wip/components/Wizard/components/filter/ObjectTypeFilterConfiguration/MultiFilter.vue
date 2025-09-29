@@ -47,7 +47,7 @@ const { _t } = usei18n()
   <ActionButton
     v-if="!inFocus"
     :label="_t('Add filter')"
-    :icon="{ name: 'icon-plus', side: 'left' }"
+    :icon="{ name: 'plus', side: 'left' }"
     variant="secondary"
     :action="
       () => {

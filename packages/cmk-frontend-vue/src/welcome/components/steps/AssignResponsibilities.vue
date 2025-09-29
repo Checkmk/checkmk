@@ -156,7 +156,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(`${props.stepId}-curre
           </StepParagraph>
           <StepCardsRow>
             <CmkLinkCard
-              icon-name="main_changes"
+              icon-name="main-changes"
               :title="_t('Activate changes')"
               :url="urls.activate_changes"
               :open-in-new-tab="false"

@@ -23,9 +23,9 @@ function getIconName(status: DNSStatus): string {
     case 'ok':
       return 'checkmark'
     case 'warn':
-      return 'alert_warn'
+      return 'alert-warn'
     case 'crit':
-      return 'alert_crit'
+      return 'alert-crit'
   }
 }
 </script>

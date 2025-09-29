@@ -105,7 +105,7 @@ const emit = defineEmits<{
       v-if="hideCheckbox && site.lastActivationStatus?.state === 'error'"
       class="cmk-div-site-activate-error"
     >
-      <CmkIcon variant="inline" name="alert_crit" />
+      <CmkIcon variant="inline" name="alert-crit" />
       <div class="cmk-div-warning-or-error-message">
         <span v-if="site.lastActivationStatus.state === 'error'">{{ _t('Error') }}</span>
         <span class="grey-text">{{ site.lastActivationStatus.status_details }}</span>

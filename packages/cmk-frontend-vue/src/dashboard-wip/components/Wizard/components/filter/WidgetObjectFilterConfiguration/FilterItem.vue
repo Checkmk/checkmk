@@ -35,7 +35,7 @@ withDefaults(defineProps<FilterItemProp>(), {
 <template>
   <div class="db-filter-item__item" :class="overridden ? 'db-filter-item--disabled' : ''">
     <div class="db-filter-item__component">
-      <CmkIcon :name="overridden ? 'icon_disabled' : 'icon_enabled'" size="xsmall" />
+      <CmkIcon :name="overridden ? 'disabled' : 'enabled'" size="xsmall" />
     </div>
 
     <div class="db-filter-item__component">

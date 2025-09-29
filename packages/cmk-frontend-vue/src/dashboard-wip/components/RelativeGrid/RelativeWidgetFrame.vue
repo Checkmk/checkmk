@@ -156,19 +156,19 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
           <div class="db-icon-controls">
             <CmkIconButton
               class="db-centered-edit-controls-button"
-              name="widget_delete"
+              name="widget-delete"
               size="xxlarge"
               @click="emit('click:delete')"
             />
             <CmkIconButton
               class="db-centered-edit-controls-button"
-              name="widget_clone"
+              name="widget-clone"
               size="xxlarge"
               @click="emit('click:clone')"
             />
             <CmkIconButton
               class="db-centered-edit-controls-button"
-              name="widget_edit"
+              name="widget-edit"
               size="xxlarge"
               @click="emit('click:edit')"
             />

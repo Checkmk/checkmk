@@ -36,7 +36,7 @@ export const dashboardWidgetWorkflows: Record<string, WorkflowItem> = {
   host_site_overview: {
     title: _t('Host & site overview'),
     subtitle: _t('Summarize key system components'),
-    icon: 'site_overview'
+    icon: 'site-overview'
   },
   service_overview: {
     title: _t('Service overview'),
@@ -56,12 +56,12 @@ export const dashboardWidgetWorkflows: Record<string, WorkflowItem> = {
   events: {
     title: _t('Events'),
     subtitle: _t('Summarize events'),
-    icon: 'event_console'
+    icon: 'event-console'
   },
   other: {
     title: _t('Other elements'),
     subtitle: _t('Display user messages, sidebar elements, text or embed a URL'),
-    icon: 'static_text'
+    icon: 'static-text'
   }
 }
 

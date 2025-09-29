@@ -62,7 +62,7 @@ const classes = computed(() => [
       <CmkHeading type="h4" class="cmk-link-card__heading">{{ title }}</CmkHeading>
       <CmkParagraph v-if="subtitle" class="cmk-link-card__subtitle">{{ subtitle }}</CmkParagraph>
     </div>
-    <CmkIcon v-if="openInNewTab" name="export_link" class="cmk-link-card__export-icon" />
+    <CmkIcon v-if="openInNewTab" name="export-link" class="cmk-link-card__export-icon" />
   </a>
 </template>
 

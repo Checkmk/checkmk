@@ -2,7 +2,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import csv
+from io import StringIO
 from unittest import mock
 
 import pytest
@@ -11,6 +11,7 @@ from cmk.ccc.hostaddress import HostAddress
 from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.wato.pages.bulk_import import ModeBulkImport
+from cmk.gui.watolib.csv_bulk_import import CSVBulkImport
 from cmk.gui.watolib.host_attributes import all_host_attributes
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 
@@ -87,8 +88,7 @@ def test_bulk_import_csv_parsing(
     csvtext: str,
     has_title_line: bool,
 ) -> None:
-    csv_dialect = csv.Sniffer().sniff(csvtext, delimiters=",;\t:")
-    csv_reader = csv.reader(csvtext.split("\n"), csv_dialect)
+    csv_bulk_import = CSVBulkImport(handle=StringIO(csvtext), has_title_line=has_title_line)
     host_attributes = all_host_attributes(
         active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
     )
@@ -100,7 +100,7 @@ def test_bulk_import_csv_parsing(
     # Mock here is pretty unavoidable because of the use of nested function definitions
     with mock.patch("cmk.gui.wato.pages.bulk_import.ModeBulkImport._delete_csv_file"):
         mode_bulk_import._import(
-            csv_reader, host_attributes, debug=False, pprint_value=False, use_git=False
+            csv_bulk_import, host_attributes, debug=False, pprint_value=False, use_git=False
         )
 
     hosts = folder_tree().root_folder().hosts()

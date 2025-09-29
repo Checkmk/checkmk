@@ -6,7 +6,6 @@
 single Setup folder. The hosts can either be provided by uploading a CSV file or
 by pasting the contents of a CSV file into a textbox."""
 
-import csv
 import itertools
 import operator
 import time
@@ -58,6 +57,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.wato.pages.custom_attributes import ModeCustomHostAttrs
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib import bakery
+from cmk.gui.watolib.csv_bulk_import import CSVBulkImport, get_handle_for_csv
 from cmk.gui.watolib.host_attributes import ABCHostAttribute, all_host_attributes, HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_from_request
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
@@ -147,6 +147,7 @@ class ModeBulkImport(WatoMode):
             if request.has_var("_do_upload"):
                 self._upload_csv_file()
 
+            self._params = self.validate_params()
             csv_reader = self._open_csv_file()
 
             if request.var("_do_import"):
@@ -195,69 +196,40 @@ class ModeBulkImport(WatoMode):
             if mtime < time.time() - 3600:
                 path.unlink()
 
-    def _get_custom_csv_dialect(self, delim: str) -> type[csv.Dialect]:
-        class CustomCSVDialect(csv.excel):
-            delimiter = delim
-
-        return CustomCSVDialect
-
-    def _open_csv_file(self) -> CSVReader:
-        try:
-            csv_file = self._file_path().open(encoding="utf-8")
-        except OSError:
-            raise MKUserError(
-                None, _("Failed to read the previously uploaded CSV file. Please upload it again.")
-            )
+    def validate_params(self) -> dict[str, Any]:
+        vs_parse_params = self._vs_parse_params()
 
         if list(request.itervars(prefix="_preview")):
-            params = self._vs_parse_params().from_html_vars("_preview")
+            params = vs_parse_params.from_html_vars("_preview")
         else:
             params = {
                 "has_title_line": True,
             }
 
-        self._vs_parse_params().validate_value(params, "_preview")
-        self._params = params
+        vs_parse_params.validate_value(params, "_preview")
+        return params
+
+    def _open_csv_file(self) -> CSVBulkImport:
+        # TODO: Nix this instance var entirely
         assert self._params is not None
         self._has_title_line = self._params.get("has_title_line", False)
-
-        # try to detect the CSV format to be parsed
-        if "field_delimiter" in params:
-            csv_dialect = self._get_custom_csv_dialect(params["field_delimiter"])
-        else:
-            try:
-                csv_dialect = csv.Sniffer().sniff(csv_file.read(2048), delimiters=",;\t:")
-                csv_file.seek(0)
-            except csv.Error as e:
-                if "Could not determine delimiter" in str(e):
-                    # Failed to detect the CSV files field delimiter character. Using ";" now. If
-                    # you need another one, please specify it manually.
-                    csv_dialect = self._get_custom_csv_dialect(";")
-                    csv_file.seek(0)
-                else:
-                    raise
-
-        return csv.reader(csv_file, csv_dialect)
-
-    def _next_until_nonempty(self, csv_reader: CSVReader) -> list[str] | None:
-        for row in csv_reader:
-            if row:
-                return row
-        return None
+        delimiter = self._params.get("field_delimiter")
+        handle = get_handle_for_csv(self._file_path())
+        return CSVBulkImport(handle, self._has_title_line, delimiter)
 
     def _import(
         self,
-        csv_reader: CSVReader,
+        csv_bulk_import: CSVBulkImport,
         host_attributes: Mapping[str, ABCHostAttribute],
         *,
         debug: bool,
         pprint_value: bool,
         use_git: bool,
     ) -> ActionResult:
-        def _emit_raw_rows(_reader: CSVReader) -> typing.Generator[dict, None, None]:
+        def _emit_raw_rows(csv_bulk_import: CSVBulkImport) -> typing.Generator[dict, None, None]:
             if self._has_title_line:
                 # Read until the first non-empty line, in this case the title line
-                if self._next_until_nonempty(_reader) is None:
+                if csv_bulk_import.skip_to_and_return_next_row() is None:
                     return
 
             def _check_duplicates(_names: list[str | None]) -> None:
@@ -277,14 +249,14 @@ class ModeBulkImport(WatoMode):
                     _attrs_seen.add(_name)
 
             # Determine the used attributes once. We also check for duplicates only once.
-            if (first_row := self._next_until_nonempty(_reader)) is None:
+            if (first_row := csv_bulk_import.skip_to_and_return_next_row()) is None:
                 return
 
             _attr_names = [request.var(f"attribute_{index}") for index in range(len(first_row))]
             _check_duplicates(_attr_names)
             yield dict(zip(_attr_names, first_row))
 
-            for csv_row in _reader:
+            for csv_row in csv_bulk_import._reader:
                 if not csv_row:
                     continue  # skip empty lines
 
@@ -349,7 +321,7 @@ class ModeBulkImport(WatoMode):
 
                 yield _host_name, typing.cast(HostAttributes, entry), None
 
-        raw_rows = _emit_raw_rows(csv_reader)
+        raw_rows = _emit_raw_rows(csv_bulk_import)
         host_attribute_tuples: typing.Iterator[ImportTuple] = _transform_and_validate_raw_rows(
             raw_rows, host_attributes
         )
@@ -496,9 +468,8 @@ class ModeBulkImport(WatoMode):
             attributes = self._attribute_choices(tag_groups)
 
             # first line could be missing in situation of import error
-            csv_reader = self._open_csv_file()
-            if not csv_reader:
-                return  # don't try to show preview when CSV could not be read
+            self._params = self.validate_params()
+            csv_bulk_import = self._open_csv_file()
 
             html.h2(_("Preview"))
             attribute_list = "<ul>%s</ul>" % "".join(
@@ -530,12 +501,12 @@ class ModeBulkImport(WatoMode):
             # Wenn bei einem Host ein Fehler passiert, dann wird die Fehlermeldung zu dem Host angezeigt, so dass man sehen kann, was man anpassen muss.
             # Die problematischen Zeilen sollen angezeigt werden, so dass man diese als Block in ein neues CSV-File eintragen kann und dann diese Datei
             # erneut importieren kann.
-            headers = []
+            headers: list[str] = []
             if self._has_title_line:
                 # Read until the first non-empty line, in this case the title line
-                headers = self._next_until_nonempty(csv_reader) or []
+                headers = csv_bulk_import.skip_to_and_return_next_row() or []
 
-            rows = list(csv_reader)
+            rows = list(csv_bulk_import._reader)
 
             # Determine how many columns should be rendered by using the longest column
             num_columns = max(len(r) for r in [headers] + rows)

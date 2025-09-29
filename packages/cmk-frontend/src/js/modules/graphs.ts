@@ -266,7 +266,7 @@ export function show_ajax_graph_at_container(ajax_graph: AjaxGraph, container: H
   container.innerHTML = ajax_graph['html']
 
   const embedded_script = document.createElement('script')
-  container.parentNode.appendChild(embedded_script)
+  container.parentNode!.appendChild(embedded_script)
 
   // Now register and paint the graph
   ajax_context['graph_id'] = graph_id

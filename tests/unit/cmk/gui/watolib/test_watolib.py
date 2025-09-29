@@ -38,6 +38,13 @@ def test_registered_config_domains() -> None:
     if cmk_version.edition(paths.omd_root) in [cmk_version.Edition.CCE, cmk_version.Edition.CME]:
         expected_config_domains.append("otel_collector")
 
+    if cmk_version.edition(paths.omd_root) in {
+        cmk_version.Edition.CCE,
+        cmk_version.Edition.CME,
+        cmk_version.Edition.CSE,
+    }:
+        expected_config_domains.append("metric_backend")
+
     registered = sorted(config_domain_registry.keys())
     assert registered == sorted(expected_config_domains)
 

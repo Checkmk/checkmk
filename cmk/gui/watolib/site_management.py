@@ -188,6 +188,7 @@ def add_changes_after_editing_site_connection(
                 "check_mk",
                 "diskspace",
                 "ec",
+                "metric_backend",
                 "omd",
                 "otel_collector",
                 "rrdcached",

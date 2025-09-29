@@ -27,7 +27,12 @@ from cmk.gui.nodevis.utils import topology_dir
 from cmk.gui.watolib import activate_changes, config_sync
 from cmk.gui.watolib.automations import RemoteAutomationConfig
 from cmk.messaging import rabbitmq
-from tests.testlib.common.repo import is_cloud_repo, is_enterprise_repo, is_managed_repo
+from tests.testlib.common.repo import (
+    is_cloud_repo,
+    is_enterprise_repo,
+    is_managed_repo,
+    is_saas_repo,
+)
 
 
 @pytest.fixture(name="mocked_responses")
@@ -463,6 +468,20 @@ def _get_expected_paths(
             "etc/check_mk/otel_collector.d/wato",
             "etc/check_mk/otel_collector.d/wato/otel_collector.mk",
             "etc/check_mk/otel_collector.d/wato/sitespecific.mk",
+        ]
+
+    if any(
+        [
+            (is_cloud_repo() and edition is cmk_version.Edition.CCE),
+            (is_managed_repo() and edition is cmk_version.Edition.CME),
+            (is_saas_repo() and edition is cmk_version.Edition.CSE),
+        ]
+    ):
+        expected_paths += [
+            "etc/check_mk/metric_backend.d",
+            "etc/check_mk/metric_backend.d/wato",
+            "etc/check_mk/metric_backend.d/wato/global.mk",
+            "etc/check_mk/metric_backend.d/wato/sitespecific.mk",
         ]
 
     return expected_paths

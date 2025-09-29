@@ -178,6 +178,11 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
                 ident="otel_collector",
                 site_path="etc/check_mk/otel_collector.d/wato",
             ),
+            ReplicationPath.make(
+                ty=ReplicationPathType.DIR,
+                ident="metric_backend",
+                site_path="etc/check_mk/metric_backend.d/wato",
+            ),
         ]
 
     expected += [
@@ -266,6 +271,11 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
                 ty=ReplicationPathType.DIR,
                 ident="otel_collector",
                 site_path="etc/check_mk/otel_collector.d/wato",
+            ),
+            ReplicationPath.make(
+                ty=ReplicationPathType.DIR,
+                ident="metric_backend",
+                site_path="etc/check_mk/metric_backend.d/wato",
             ),
         ]
 

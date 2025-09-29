@@ -12,8 +12,14 @@ from lxml.html import fromstring, HtmlElement
 from pydantic import BaseModel
 
 from cmk.plugins.azure_status.lib.azure_regions import AZURE_REGIONS
-from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
-from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.agent_common import (
+    SectionWriter,
+    special_agent_main,
+)
+from cmk.special_agents.v0_unstable.argument_parsing import (
+    Args,
+    create_default_argument_parser,
+)
 
 
 class AzureIssue(BaseModel, frozen=True):
@@ -90,7 +96,7 @@ def get_azure_issues(
 
 
 def write_section(args: Args) -> int:
-    response = requests.get("https://status.azure.com/en-us/status/feed/")  # nosec B113 # BNS:0b0eac
+    response = requests.get("https://status.azure.com/en-us/status/feed/", timeout=900)
     feed = feedparser.parse(response.text)
 
     selected_regions = [AZURE_REGIONS[r] for r in args.regions]

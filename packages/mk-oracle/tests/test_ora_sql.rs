@@ -21,14 +21,17 @@ use mk_oracle::ora_sql::sqls;
 use mk_oracle::ora_sql::system;
 use mk_oracle::platform::registry::get_instances;
 use mk_oracle::setup::{detect_host_runtime, detect_runtime, Env};
+use mk_oracle::types::SqlQuery;
 use mk_oracle::types::{
     Credentials, InstanceName, InstanceNumVersion, InstanceVersion, Tenant, UseHostClient,
 };
-use mk_oracle::types::{InstanceAlias, SqlQuery};
 use std::collections::HashSet;
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::LazyLock;
+
+#[cfg(windows)]
+use mk_oracle::types::InstanceAlias;
 
 pub static ORA_TEST_ENDPOINTS: &str = include_str!("files/endpoints.txt");
 

@@ -187,8 +187,7 @@ def test_otel_collector_with_receiver_config(
 
         logger.info("Adding a rule for OpenTelemetry special agent")
         rule_id = otel_enabled_site.openapi.rules.create(
-            ruleset_name="special_agents:otel",
-            value={"include_self_monitoring": False},
+            ruleset_name="special_agents:otel", value={}
         )
         otel_enabled_site.openapi.changes.activate_and_wait_for_completion()
 
@@ -257,8 +256,7 @@ def test_otel_collector_with_prometheus_scrape_config(otel_enabled_site: Site) -
 
         logger.info("Adding a rule for OpenTelemetry special agent")
         rule_id = otel_enabled_site.openapi.rules.create(
-            ruleset_name="special_agents:otel",
-            value={"include_self_monitoring": False},
+            ruleset_name="special_agents:otel", value={}
         )
         otel_enabled_site.openapi.changes.activate_and_wait_for_completion()
 
@@ -330,8 +328,7 @@ def test_otel_collector_with_prometheus_scrape_config_tls(otel_enabled_site: Sit
 
         logger.info("Adding a rule for OpenTelemetry special agent")
         rule_id = otel_enabled_site.openapi.rules.create(
-            ruleset_name="special_agents:otel",
-            value={"include_self_monitoring": False},
+            ruleset_name="special_agents:otel", value={}
         )
         otel_enabled_site.openapi.changes.activate_and_wait_for_completion()
 

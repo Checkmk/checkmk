@@ -2,7 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import logging
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
@@ -10,9 +10,29 @@ from pathlib import Path
 import pytest
 import yaml
 
+from tests.testlib.agent import (
+    agent_controller_daemon,
+    download_and_install_agent_package,
+    register_controller,
+    uninstall_agent_package,
+)
 from tests.testlib.common.repo import repo_path
+from tests.testlib.opentelemetry import wait_for_opentelemetry_data
 from tests.testlib.site import Site
 from tests.testlib.version import version_from_env
+
+from cmk.utils.hostaddress import HostName
+
+try:
+    from cmk.otel_collector.constants import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
+        SELF_MONITORING_FOLDER,
+    )
+
+    SELF_MONITORING_HOST = SELF_MONITORING_FOLDER
+except ImportError:
+    # cmk.otel_collector.constants is not available in non-Cloud/Managed editions
+    # tests are only run in Cloud/Managed editions
+    SELF_MONITORING_HOST = ""
 
 # Apply the skipif marker to all tests in this file for non Managed or Cloud edition
 pytestmark = [
@@ -22,6 +42,22 @@ pytestmark = [
         reason="otel-collector only shipped with Cloud or Managed",
     )
 ]
+
+logger = logging.getLogger(__name__)
+
+
+@pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="function")
+def _installed_agent_ctl_in_unknown_state(
+    site: Site, tmp_path_factory: pytest.TempPathFactory
+) -> Path:
+    return download_and_install_agent_package(site, tmp_path_factory.mktemp("agent"))
+
+
+@pytest.fixture(name="agent_ctl", scope="function")
+def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
+    with agent_controller_daemon(installed_agent_ctl_in_unknown_state):
+        yield installed_agent_ctl_in_unknown_state
+    uninstall_agent_package()
 
 
 def test_otel_collector_exists(otel_site: Site) -> None:
@@ -54,54 +90,40 @@ def test_otel_collector_build_configuration(otel_site: Site) -> None:
 
 
 @contextmanager
-def _modify_test_site(otel_site: Site, hostname: str) -> Iterator[None]:
-    rule_id = ""
+def _modify_test_site(otel_site: Site, hostname: str, agent_ctl: Path) -> Iterator[None]:
     try:
         otel_site.set_config("OPENTELEMETRY_COLLECTOR", "on", with_restart=True)
         otel_site.openapi.hosts.create(
             hostname,
             attributes={
-                "tag_address_family": "no-ip",
-                "tag_agent": "special-agents",
+                "ipaddress": "127.0.0.1",
+                "tag_agent": "cmk-agent",
                 "tag_piggyback": "no-piggyback",
             },
             folder="/",
         )
-        rule_id = otel_site.openapi.rules.create(
-            ruleset_name="special_agents:otel",
-            value={"include_self_monitoring": True},
-            conditions={
-                "host_name": {
-                    "match_on": [hostname],
-                    "operator": "one_of",
-                },
-            },
-            folder="/",
-        )
+        register_controller(agent_ctl, otel_site, HostName(hostname))
         yield
     finally:
-        if rule_id:
-            otel_site.openapi.rules.delete(rule_id)
         otel_site.openapi.hosts.delete(hostname)
         otel_site.set_config("OPENTELEMETRY_COLLECTOR", "off", with_restart=True)
 
 
-def test_otel_collector_self_monitoring(otel_site: Site) -> None:
-    hostname = "otelhost"
-    with _modify_test_site(otel_site, hostname):
+def test_otel_collector_self_monitoring(agent_ctl: Path, otel_site: Site) -> None:
+    hostname = otel_site.id
+
+    with _modify_test_site(otel_site, hostname, agent_ctl):
         otel_site.ensure_running()
+
+        wait_for_opentelemetry_data(otel_site, SELF_MONITORING_HOST)
+
+        logger.info("Running service discovery and activating changes")
         otel_site.openapi.service_discovery.run_discovery_and_wait_for_completion(hostname)
-        result = otel_site.openapi.service_discovery.get_discovery_result(hostname)
-    assert result["extensions"] == {
-        "check_table": {},
-        "host_labels": {
-            "cmk/otel/metrics": {
-                # Means: section is there (special agent otel was executed!) but empty.
-                # First dataset will be generated 60000ms after the start
-                "value": "pending",
-                "plugin_name": "otel_metrics",
-            }
-        },
-        "vanished_labels": {},
-        "changed_labels": {},
-    }
+        otel_site.openapi.changes.activate_and_wait_for_completion()
+
+        expected_service_name = f"OMD {otel_site.id} OTel collector"
+        logger.info("Checking collector monitoring service is created")
+        services = otel_site.get_host_services(hostname)
+        assert (
+            expected_service_name in services
+        ), f"{expected_service_name} was not found in host services"

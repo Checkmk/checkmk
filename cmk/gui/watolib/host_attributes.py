@@ -107,14 +107,14 @@ class MetaData(TypedDict):
     updated_at: NotRequired[float]
 
 
-class OTelMetricsAssociationFilter(TypedDict):
+class MetricsAssociationFilter(TypedDict):
     attribute_type: Literal["resource", "scope", "data_point"]
     attribute_key: str
     attribute_value: str
 
 
-class OTelMetricsAssociationEnabled(TypedDict):
-    attribute_filters: Sequence[OTelMetricsAssociationFilter]
+class MetricsAssociationEnabled(TypedDict):
+    attribute_filters: Sequence[MetricsAssociationFilter]
 
 
 # Possible improvements for the future:
@@ -138,8 +138,8 @@ class BuiltInHostAttributes(TypedDict, total=False):
     additional_ipv4addresses: Sequence[HostAddress]
     additional_ipv6addresses: Sequence[HostAddress]
     snmp_community: SNMPCredentials
-    otel_metrics_association: (
-        tuple[Literal["enabled"], OTelMetricsAssociationEnabled] | tuple[Literal["disabled"], None]
+    metrics_association: (
+        tuple[Literal["enabled"], MetricsAssociationEnabled] | tuple[Literal["disabled"], None]
     )
     parents: Sequence[HostName]
     network_scan: NetworkScanSpec

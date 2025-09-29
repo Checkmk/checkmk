@@ -741,7 +741,7 @@ HostLabels = dict[
 
 
 @api_model
-class OTelMetricsAssociationFilterModel:
+class MetricsAssociationFilterModel:
     attribute_type: Literal["resource", "scope", "data_point"] = api_field(
         description="Type of the target attribute to filter on (resource, scope or data point)."
     )
@@ -750,10 +750,10 @@ class OTelMetricsAssociationFilterModel:
 
 
 @api_model
-class OTelMetricsAssociationEnabledModel:
-    attribute_filters: Sequence[OTelMetricsAssociationFilterModel] = api_field(
+class MetricsAssociationEnabledModel:
+    attribute_filters: Sequence[MetricsAssociationFilterModel] = api_field(
         description="A list of filters. All filters must match (logical AND)."
     )
 
 
-OTelMetricsAssociationModel = Literal["disabled"] | OTelMetricsAssociationEnabledModel
+MetricsAssociationModel = Literal["disabled"] | MetricsAssociationEnabledModel

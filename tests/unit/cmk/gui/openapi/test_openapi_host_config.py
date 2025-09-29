@@ -1585,7 +1585,7 @@ def test_openapi_host_config_effective_attributes_includes_all_host_attributes_r
         "tag_piggyback": "auto-piggyback",
         "tag_snmp_ds": "no-snmp",
         "waiting_for_discovery": False,
-        **({"otel_metrics_association": ["disabled", None]} if is_cloud_repo() else {}),
+        **({"metrics_association": ["disabled", None]} if is_cloud_repo() else {}),
     }
     assert resp.json["extensions"]["effective_attributes"] == expected, expected
 

@@ -31,6 +31,9 @@ const results = ref<UnifiedSearchResultElement[]>([])
 searchUtils.input?.onSetFocus(() => {
   currentlySelected.value = -1
 })
+searchUtils.onResetSearch(() => {
+  currentlySelected.value = -1
+})
 
 const shortcutCallbackIds = ref<string[]>([])
 shortcutCallbackIds.value.push(searchUtils.shortCuts.onArrowDown(toggleDown))

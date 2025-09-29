@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import usei18n from '@/lib/i18n.ts'
+import usei18n from '@/lib/i18n'
 
 import CmkButton from '@/components/CmkButton.vue'
 

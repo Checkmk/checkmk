@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
 
-import usei18n from '@/lib/i18n.ts'
+import usei18n from '@/lib/i18n'
 
 import CmkAccordionStepPanelItem from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
 import CmkLinkCard from '@/components/CmkLinkCard.vue'

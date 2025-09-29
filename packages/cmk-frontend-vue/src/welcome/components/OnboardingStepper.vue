@@ -8,7 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
 import { ref } from 'vue'
 
-import usei18n from '@/lib/i18n.ts'
+import usei18n from '@/lib/i18n'
 
 import CmkAccordionStepPanel from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanel.vue'
 import CmkSpace from '@/components/CmkSpace.vue'

@@ -7,7 +7,7 @@ import '@testing-library/jest-dom/vitest'
 import { vi } from 'vitest'
 import failOnConsole from 'vitest-fail-on-console'
 
-import { dummyT, dummyTn, dummyTnp, dummyTp } from '@/lib/i18nDummy'
+import { dummyT, dummyTn, dummyTnp, dummyTp } from '@/lib/i18n/i18nDummy'
 
 vi.mock('@/lib/i18n', () => ({
   default: () => ({

@@ -65,6 +65,8 @@ CRE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/os_platform",
     "cmk/os_name",
     "cmk/os_version",
+    "cmk/pve/cluster:<cluster_name>",
+    "cmk/pve/entity:node",
     "cmk/vsphere_object",
     "cmk/vsphere_vcenter",
     "cmk/systemd/unit:{name}",

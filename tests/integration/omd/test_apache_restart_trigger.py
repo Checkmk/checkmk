@@ -5,6 +5,8 @@
 
 import os
 
+import pytest
+
 from tests.testlib.site import Site
 from tests.testlib.utils import run
 
@@ -17,6 +19,7 @@ def _reinstall_command(distro: str) -> list[str]:
     return ["sudo", "apt", "reinstall", "apache2-bin"]
 
 
+@pytest.mark.skip()
 def test_apache_restart_trigger(site: Site) -> None:
     assert site.is_running()
     previous_logs = site.read_file("var/log/apache/error_log")

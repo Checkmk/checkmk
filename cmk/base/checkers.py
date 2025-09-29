@@ -108,7 +108,6 @@ from cmk.utils.log import console
 from cmk.utils.prediction import make_updated_predictions, MetricRecord, PredictionStore
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.servicename import ServiceName
-from cmk.utils.timeperiod import timeperiod_active
 
 __all__ = [
     "CheckerPluginMapper",
@@ -136,6 +135,7 @@ class CheckerConfig:
     nodes: Callable[[HostName], Sequence[HostName]]
     effective_host: Callable[[HostName, ServiceName, _Labels], HostName]
     get_snmp_backend: Callable[[HostName], SNMPBackendEnum]
+    timeperiod_active: Callable[[str], bool | None]  # I think None becomes False. Clean this up.
 
 
 def _fetch_all(
@@ -687,7 +687,7 @@ def _compute_final_check_parameters(
     checker_config: CheckerConfig,
     logger: logging.Logger,
 ) -> Parameters:
-    params = service.parameters.evaluate(timeperiod_active)
+    params = service.parameters.evaluate(checker_config.timeperiod_active)
 
     if not _needs_postprocessing(params):
         return Parameters(params)

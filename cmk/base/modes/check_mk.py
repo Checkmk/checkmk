@@ -28,6 +28,7 @@ import cmk.ec.export as ec
 import cmk.fetchers.snmp as snmp_factory
 import cmk.utils.password_store
 import cmk.utils.paths
+import cmk.utils.timeperiod
 from cmk import trace
 from cmk.agent_based.v1.value_store import set_value_store_manager
 from cmk.base import config, profiling, sources
@@ -152,7 +153,6 @@ from cmk.utils.rulesets.ruleset_matcher import (
 from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist
 from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import TagID
-from cmk.utils.timeperiod import load_timeperiods
 
 from ._localize import do_localize
 
@@ -891,6 +891,7 @@ def mode_dump_hosts(hostlist: Iterable[HostName]) -> None:
             ip_address_of=ip_address_of,
             ip_address_of_mgmt=ip_address_of_mgmt,
             simulation_mode=config.simulation_mode,
+            timeperiod_active=cmk.utils.timeperiod.timeperiod_active,
         )
 
 
@@ -2099,7 +2100,8 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
         backlog_size=config.notification_backlog,
         logging_level=ConfigCache.notification_logging_level(),
         keepalive=keepalive,
-        all_timeperiods=load_timeperiods(),
+        all_timeperiods=cmk.utils.timeperiod.load_timeperiods(),
+        timeperiod_active=cmk.utils.timeperiod.timeperiod_active,
     )
 
 
@@ -2845,6 +2847,9 @@ def run_checking(
         nodes=config_cache.nodes,
         effective_host=config_cache.effective_host,
         get_snmp_backend=config_cache.get_snmp_backend,
+        timeperiod_active=lambda timeperiod_name: cmk.utils.timeperiod.timeperiod_active(
+            cmk.utils.timeperiod.TimeperiodName(timeperiod_name)
+        ),
     )
     summarizer = CMKSummarizer(
         hostname,

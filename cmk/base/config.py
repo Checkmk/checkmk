@@ -39,6 +39,7 @@ import cmk.utils
 import cmk.utils.check_utils
 import cmk.utils.paths
 import cmk.utils.tags
+import cmk.utils.timeperiod
 import cmk.utils.translations
 from cmk import trace
 from cmk.agent_based.legacy import discover_legacy_checks, FileLoader, find_plugin_files

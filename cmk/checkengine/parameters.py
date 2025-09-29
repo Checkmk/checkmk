@@ -20,6 +20,7 @@ __all__ = [
     "TimespecificParameters",
     "TimespecificParametersPreview",
     "TimespecificParameterSet",
+    "IsTimeperiodActiveCallback",
 ]
 
 
@@ -43,7 +44,7 @@ class Parameters(ParametersTypeAlias):
         return f"{self.__class__.__name__}({pprint.pformat(self._data)})"
 
 
-_IsTimeperiodActiveCallback = Callable[[TimeperiodName], bool | None]
+type IsTimeperiodActiveCallback = Callable[[TimeperiodName], bool | None]
 
 
 class _InnerTimespecificParametersPreview(TypedDict):
@@ -65,7 +66,7 @@ class TimespecificParameters:
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.entries!r})"
 
-    def evaluate(self, is_active: _IsTimeperiodActiveCallback) -> Mapping[str, object]:
+    def evaluate(self, is_active: IsTimeperiodActiveCallback) -> Mapping[str, object]:
         return merge_parameters(
             [entry.evaluate(is_active) for entry in self.entries],
             {},
@@ -75,7 +76,7 @@ class TimespecificParameters:
         return not any(p.timeperiod_values for p in self.entries)
 
     def preview(
-        self, is_active: _IsTimeperiodActiveCallback
+        self, is_active: IsTimeperiodActiveCallback
     ) -> TimespecificParametersPreview | Mapping[str, object]:
         """Create a serializeable version for preview via automation call"""
         if self.is_constant():
@@ -88,8 +89,6 @@ class TimespecificParameters:
         }
 
 
-# see how much logic of the time period evaluation has to end up here,
-# then decide whether to move this to type defs.
 class TimespecificParameterSet:
     def __init__(
         self,
@@ -121,7 +120,7 @@ class TimespecificParameterSet:
 
     def _active_subsets(
         self,
-        is_active: _IsTimeperiodActiveCallback,
+        is_active: IsTimeperiodActiveCallback,
     ) -> Iterable[Mapping[str, object]]:
         for timeperiod_name, tp_entry in self.timeperiod_values:
             try:
@@ -133,5 +132,5 @@ class TimespecificParameterSet:
                     raise
                 return
 
-    def evaluate(self, is_active: _IsTimeperiodActiveCallback) -> Mapping[str, object]:
+    def evaluate(self, is_active: IsTimeperiodActiveCallback) -> Mapping[str, object]:
         return merge_parameters(list(self._active_subsets(is_active)), self.default)

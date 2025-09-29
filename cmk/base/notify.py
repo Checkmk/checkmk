@@ -78,7 +78,6 @@ from cmk.utils.notify_types import (
 from cmk.utils.regex import regex
 from cmk.utils.timeperiod import (
     is_timeperiod_active,
-    timeperiod_active,
     TimeperiodName,
     TimeperiodSpecs,
 )
@@ -105,6 +104,10 @@ NotificationValue = tuple[bool, NotifyPluginParamsDict, NotifyBulkParameters | N
 Notifications = dict[NotificationKey, NotificationValue]
 
 _FallbackFormat = tuple[NotificationPluginNameStr, NotifyPluginParamsDict]
+
+
+type _CoreTimeperiodActive = Callable[[TimeperiodName], bool | None]
+
 
 #   .--Configuration-------------------------------------------------------.
 #   |    ____             __ _                       _   _                 |
@@ -237,6 +240,7 @@ def do_notify(
     logging_level: int,
     keepalive: bool,
     all_timeperiods: TimeperiodSpecs,
+    timeperiod_active: _CoreTimeperiodActive,
 ) -> int | None:
     global _log_to_stdout, notify_mode
     _log_to_stdout = options.get("log-to-stdout", _log_to_stdout)
@@ -265,7 +269,7 @@ def do_notify(
         # -> mknotifyd deletes this file
         if notify_mode == "spoolfile":
             filename = args[1]
-            return handle_spoolfile(
+            return _handle_spoolfile(
                 filename,
                 host_parameters_cb,
                 get_http_proxy,
@@ -279,6 +283,7 @@ def do_notify(
                 all_timeperiods=all_timeperiods,
                 spooling=spooling,
                 backlog_size=backlog_size,
+                timeperiod_active=timeperiod_active,
             )
 
         if keepalive:
@@ -298,13 +303,14 @@ def do_notify(
                 backlog_size=backlog_size,
                 logging_level=logging_level,
                 all_timeperiods=all_timeperiods,
+                timeperiod_active=timeperiod_active,
             )
         elif notify_mode == "replay":
             try:
                 replay_nr = int(args[1])
             except (IndexError, ValueError):
                 replay_nr = 0
-            notify_notify(
+            _notify_notify(
                 raw_context_from_backlog(replay_nr),
                 host_parameters_cb,
                 get_http_proxy,
@@ -320,10 +326,11 @@ def do_notify(
                 backlog_size=backlog_size,
                 logging_level=logging_level,
                 all_timeperiods=all_timeperiods,
+                timeperiod_active=timeperiod_active,
             )
         elif notify_mode == "test":
             assert isinstance(args[0], dict)
-            notify_notify(
+            _notify_notify(
                 EventContext(args[0]),
                 host_parameters_cb,
                 get_http_proxy,
@@ -339,9 +346,10 @@ def do_notify(
                 backlog_size=backlog_size,
                 logging_level=logging_level,
                 all_timeperiods=all_timeperiods,
+                timeperiod_active=timeperiod_active,
             )
         elif notify_mode == "stdin":
-            notify_notify(
+            _notify_notify(
                 events.raw_context_from_string(sys.stdin.read()),
                 host_parameters_cb,
                 get_http_proxy,
@@ -357,13 +365,17 @@ def do_notify(
                 backlog_size=backlog_size,
                 logging_level=logging_level,
                 all_timeperiods=all_timeperiods,
+                timeperiod_active=timeperiod_active,
             )
         elif notify_mode == "send-bulks":
-            send_ripe_bulks(
-                get_http_proxy, bulk_interval=bulk_interval, plugin_timeout=plugin_timeout
+            _send_ripe_bulks(
+                get_http_proxy,
+                bulk_interval=bulk_interval,
+                plugin_timeout=plugin_timeout,
+                timeperiod_active=timeperiod_active,
             )
         else:
-            notify_notify(
+            _notify_notify(
                 raw_context_from_env(os.environ),
                 host_parameters_cb,
                 get_http_proxy,
@@ -379,6 +391,7 @@ def do_notify(
                 backlog_size=backlog_size,
                 logging_level=logging_level,
                 all_timeperiods=all_timeperiods,
+                timeperiod_active=timeperiod_active,
             )
 
     except Exception:
@@ -392,7 +405,7 @@ def do_notify(
     return None
 
 
-def notify_notify(
+def _notify_notify(
     raw_context: EventContext,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: events.ProxyGetter,
@@ -411,6 +424,7 @@ def notify_notify(
     all_timeperiods: TimeperiodSpecs,
     analyse: bool = False,
     dispatch: str = "",
+    timeperiod_active: _CoreTimeperiodActive,
 ) -> NotifyAnalysisInfo | None:
     """
     This function processes one raw notification and decides wether it should be spooled or not.
@@ -462,7 +476,7 @@ def notify_notify(
         )
 
     if spooling != "remote":
-        return locally_deliver_raw_context(
+        return _locally_deliver_raw_context(
             enriched_context,
             host_parameters_cb,
             get_http_proxy,
@@ -477,11 +491,12 @@ def notify_notify(
             all_timeperiods=all_timeperiods,
             analyse=analyse,
             dispatch=dispatch,
+            timeperiod_active=timeperiod_active,
         )
     return None
 
 
-def locally_deliver_raw_context(
+def _locally_deliver_raw_context(
     enriched_context: EnrichedEventContext,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: events.ProxyGetter,
@@ -497,10 +512,11 @@ def locally_deliver_raw_context(
     all_timeperiods: TimeperiodSpecs,
     analyse: bool = False,
     dispatch: str = "",
+    timeperiod_active: _CoreTimeperiodActive,
 ) -> NotifyAnalysisInfo | None:
     try:
         logger.debug("Preparing rule based notifications")
-        return notify_rulebased(
+        return _notify_rulebased(
             enriched_context,
             host_parameters_cb,
             get_http_proxy,
@@ -515,6 +531,7 @@ def locally_deliver_raw_context(
             all_timeperiods=all_timeperiods,
             analyse=analyse,
             dispatch=dispatch,
+            timeperiod_active=timeperiod_active,
         )
 
     except Exception:
@@ -542,12 +559,13 @@ def notification_replay_backlog(
     backlog_size: int,
     logging_level: int,
     all_timeperiods: TimeperiodSpecs,
+    timeperiod_active: _CoreTimeperiodActive,
 ) -> None:
     global notify_mode
     notify_mode = "replay"
     _initialize_logging(logging_level)
     raw_context = raw_context_from_backlog(nr)
-    notify_notify(
+    _notify_notify(
         raw_context,
         host_parameters_cb,
         get_http_proxy,
@@ -563,6 +581,7 @@ def notification_replay_backlog(
         backlog_size=backlog_size,
         logging_level=logging_level,
         all_timeperiods=all_timeperiods,
+        timeperiod_active=timeperiod_active,
     )
 
 
@@ -583,12 +602,13 @@ def notification_analyse_backlog(
     backlog_size: int,
     logging_level: int,
     all_timeperiods: TimeperiodSpecs,
+    timeperiod_active: _CoreTimeperiodActive,
 ) -> NotifyAnalysisInfo | None:
     global notify_mode
     notify_mode = "replay"
     _initialize_logging(logging_level)
     raw_context = raw_context_from_backlog(nr)
-    return notify_notify(
+    return _notify_notify(
         raw_context,
         host_parameters_cb,
         get_http_proxy,
@@ -605,6 +625,7 @@ def notification_analyse_backlog(
         logging_level=logging_level,
         all_timeperiods=all_timeperiods,
         analyse=True,
+        timeperiod_active=timeperiod_active,
     )
 
 
@@ -626,6 +647,7 @@ def notification_test(
     logging_level: int,
     all_timeperiods: TimeperiodSpecs,
     dispatch: str = "",
+    timeperiod_active: _CoreTimeperiodActive,
 ) -> NotifyAnalysisInfo | None:
     global notify_mode
     notify_mode = "test"
@@ -638,7 +660,7 @@ def notification_test(
 
     plugin_context = EventContext({})
     plugin_context.update(cast(EventContext, raw_context))
-    return notify_notify(
+    return _notify_notify(
         plugin_context,
         host_parameters_cb,
         get_http_proxy,
@@ -656,6 +678,7 @@ def notification_test(
         all_timeperiods=all_timeperiods,
         analyse=True,
         dispatch=dispatch,
+        timeperiod_active=timeperiod_active,
     )
 
 
@@ -691,10 +714,11 @@ def notify_keepalive(
     backlog_size: int,
     logging_level: int,
     all_timeperiods: TimeperiodSpecs,
+    timeperiod_active: _CoreTimeperiodActive,
 ) -> None:
     events.event_keepalive(
         event_function=partial(
-            notify_notify,
+            _notify_notify,
             define_servicegroups=define_servicegroups,
             host_parameters_cb=host_parameters_cb,
             get_http_proxy=get_http_proxy,
@@ -709,9 +733,10 @@ def notify_keepalive(
             backlog_size=backlog_size,
             logging_level=logging_level,
             all_timeperiods=all_timeperiods,
+            timeperiod_active=timeperiod_active,
         ),
         call_every_loop=partial(
-            send_ripe_bulks,
+            _send_ripe_bulks,
             get_http_proxy,
             bulk_interval=bulk_interval,
             plugin_timeout=plugin_timeout,
@@ -733,7 +758,7 @@ def notify_keepalive(
 #   '----------------------------------------------------------------------'
 
 
-def notify_rulebased(
+def _notify_rulebased(
     enriched_context: EnrichedEventContext,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: events.ProxyGetter,
@@ -749,6 +774,7 @@ def notify_rulebased(
     all_timeperiods: TimeperiodSpecs,
     analyse: bool = False,
     dispatch: str = "",
+    timeperiod_active: _CoreTimeperiodActive,
 ) -> NotifyAnalysisInfo:
     # First step: go through all rules and construct our table of
     # notification plugins to call. This is a dict from (users, plugin) to
@@ -796,6 +822,7 @@ def notify_rulebased(
                 config_contacts=config_contacts,
                 fallback_email=fallback_email,
                 rule_nr=nr,
+                timeperiod_active=timeperiod_active,
             )
 
     plugin_info = _process_notifications(
@@ -834,6 +861,7 @@ def _create_notifications(
     config_contacts: ConfigContacts,
     fallback_email: str,
     rule_nr: int,
+    timeperiod_active: _CoreTimeperiodActive,
 ) -> tuple[Notifications, list[NotifyRuleInfo]]:
     contacts = rbn_rule_contacts(
         rule,
@@ -894,7 +922,7 @@ def _create_notifications(
         else:
             logger.info("   - adding notification of %s via %s", contactstxt, plugintxt)
 
-        bulk = rbn_get_bulk_params(rule)
+        bulk = _rbn_get_bulk_params(rule, timeperiod_active)
 
         # TODO CMK-20135 use old format for user notifications for now
         plugin_parameters = (
@@ -1174,7 +1202,9 @@ def rbn_split_plugin_context(plugin_context: NotificationContext) -> list[Notifi
     return contexts
 
 
-def rbn_get_bulk_params(rule: EventRule) -> NotifyBulkParameters | None:
+def _rbn_get_bulk_params(
+    rule: EventRule, timeperiod_active: _CoreTimeperiodActive
+) -> NotifyBulkParameters | None:
     bulk = rule.get("bulk")
 
     if not bulk:
@@ -1884,7 +1914,7 @@ def notification_script_env(plugin_context: NotificationContext) -> PluginNotifi
 # 2. Notifications for async local delivery. Contain key "plugin"
 # 3. Notifications that *were* forwarded (e.g. received from a slave). Contain neither of both.
 # Spool files of type 1 are not handled here!
-def handle_spoolfile(
+def _handle_spoolfile(
     spoolfile: str,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: events.ProxyGetter,
@@ -1898,6 +1928,7 @@ def handle_spoolfile(
     all_timeperiods: TimeperiodSpecs,
     spooling: Literal["local", "remote", "both", "off"],
     backlog_size: int,
+    timeperiod_active: _CoreTimeperiodActive,
 ) -> int:
     notif_uuid = spoolfile.rsplit("/", 1)[-1]
     logger.info("----------------------------------------------------------------------")
@@ -1938,7 +1969,7 @@ def handle_spoolfile(
         )
 
         store_notification_backlog(raw_context, backlog_size=backlog_size)
-        locally_deliver_raw_context(
+        _locally_deliver_raw_context(
             raw_context,
             host_parameters_cb,
             get_http_proxy,
@@ -1951,6 +1982,7 @@ def handle_spoolfile(
             fallback_format=fallback_format,
             spooling=spooling,
             all_timeperiods=all_timeperiods,
+            timeperiod_active=timeperiod_active,
         )
         # TODO: It is a bug that we don't transport result information and monitoring history
         # entries back to the origin site. The intermediate or final results should be sent back to
@@ -2172,7 +2204,12 @@ def remove_if_orphaned(bulk_dir: str, max_age: float, ref_time: float | None = N
             logger.info("    -> Error removing it: %s", e)
 
 
-def find_bulks(only_ripe: bool, *, bulk_interval: int) -> NotifyBulks:
+def find_bulks(
+    only_ripe: bool,
+    *,
+    bulk_interval: int,
+    timeperiod_active: _CoreTimeperiodActive,
+) -> NotifyBulks:
     if not os.path.exists(notification_bulkdir):
         return []
 
@@ -2261,13 +2298,14 @@ def find_bulks(only_ripe: bool, *, bulk_interval: int) -> NotifyBulks:
     return bulks
 
 
-def send_ripe_bulks(
+def _send_ripe_bulks(
     get_http_proxy: events.ProxyGetter,
     *,
     bulk_interval: int,
     plugin_timeout: int,
+    timeperiod_active: _CoreTimeperiodActive,
 ) -> None:
-    ripe = find_bulks(True, bulk_interval=bulk_interval)
+    ripe = find_bulks(True, bulk_interval=bulk_interval, timeperiod_active=timeperiod_active)
     if ripe:
         logger.info("Sending out %d ripe bulk notifications", len(ripe))
         for bulk in ripe:

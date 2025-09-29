@@ -24,7 +24,7 @@ from cmk.ccc import tty
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.checkerplugin import ConfiguredService
-from cmk.checkengine.parameters import TimespecificParameters
+from cmk.checkengine.parameters import IsTimeperiodActiveCallback, TimespecificParameters
 from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
 from cmk.fetchers import (
     IPMIFetcher,
@@ -41,7 +41,6 @@ from cmk.helper_interface import SourceType
 from cmk.snmplib import SNMPBackendEnum, SNMPVersion
 from cmk.utils.ip_lookup import IPLookup, IPLookupOptional, IPStackConfig
 from cmk.utils.tags import ComputedDataSources
-from cmk.utils.timeperiod import timeperiod_active
 
 
 def dump_source(source: Source) -> str:
@@ -132,6 +131,7 @@ def dump_host(
     ip_address_of: IPLookup,
     ip_address_of_mgmt: IPLookupOptional,
     simulation_mode: bool,
+    timeperiod_active: IsTimeperiodActiveCallback,
 ) -> None:
     print_("\n")
     label_manager = config_cache.label_manager
@@ -309,7 +309,7 @@ def dump_host(
             [
                 str(service.check_plugin_name),
                 str(service.item),
-                _evaluate_params(service.parameters),
+                _evaluate_params(service.parameters, timeperiod_active),
                 service.description,
                 ",".join(
                     config_cache.servicegroups_of_service(
@@ -332,7 +332,9 @@ def _complementary_family(
             return socket.AddressFamily.AF_INET
 
 
-def _evaluate_params(params: TimespecificParameters) -> str:
+def _evaluate_params(
+    params: TimespecificParameters, timeperiod_active: IsTimeperiodActiveCallback
+) -> str:
     return (
         repr(params.evaluate(timeperiod_active))
         if params.is_constant()

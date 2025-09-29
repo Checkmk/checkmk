@@ -33,6 +33,7 @@ import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
 import cmk.utils.password_store
 import cmk.utils.paths
+import cmk.utils.timeperiod
 from cmk.agent_based.v1.value_store import set_value_store_manager
 from cmk.automations.results import (
     ActiveCheckResult,
@@ -235,7 +236,6 @@ from cmk.utils.rulesets.ruleset_matcher import (
     RulesetName,
 )
 from cmk.utils.servicename import Item, ServiceName
-from cmk.utils.timeperiod import load_timeperiods, timeperiod_active
 
 HistoryFile = str
 HistoryFilePair = tuple[HistoryFile, HistoryFile]
@@ -872,6 +872,9 @@ def _execute_discovery(
         nodes=config_cache.nodes,
         effective_host=config_cache.effective_host,
         get_snmp_backend=config_cache.get_snmp_backend,
+        timeperiod_active=lambda timeperiod_name: cmk.utils.timeperiod.timeperiod_active(
+            cmk.utils.timeperiod.TimeperiodName(timeperiod_name)
+        ),
     )
     autochecks_config = config.AutochecksConfigurer(
         config_cache, plugins.check_plugins, passive_service_name_config
@@ -949,6 +952,7 @@ def _execute_discovery(
                 )(host_name).items()
             },
             on_error=on_error,
+            timeperiod_active=cmk.utils.timeperiod.timeperiod_active,
         )
     return CheckPreview(
         table={
@@ -2032,6 +2036,7 @@ class AutomationAnalyseServices(Automation):
                         allow_empty=loading_result.config_cache.hosts_config.clusters,
                         error_handler=config.handle_ip_lookup_failure,
                     ),
+                    timeperiod_active=cmk.utils.timeperiod.timeperiod_active,
                 )
             )
             else AnalyseServiceResult(
@@ -2057,6 +2062,7 @@ class AutomationAnalyseServices(Automation):
         host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
         servicedesc: str,
         ip_address_of: ip_lookup.IPLookup,
+        timeperiod_active: Callable[[cmk.utils.timeperiod.TimeperiodName], bool | None],
     ) -> _FoundService | None:
         return next(
             chain(
@@ -2065,6 +2071,7 @@ class AutomationAnalyseServices(Automation):
                 self._search_enforced_checks(
                     enforced_services_table(host_name).values(),
                     servicedesc,
+                    timeperiod_active,
                 ),
                 self._search_discovered_checks(
                     config_cache,
@@ -2073,6 +2080,7 @@ class AutomationAnalyseServices(Automation):
                     host_name,
                     servicedesc,
                     plugins.check_plugins,
+                    timeperiod_active,
                 ),
                 self._search_classical_checks(config_cache, host_name, servicedesc),
                 self._search_active_checks(
@@ -2107,6 +2115,7 @@ class AutomationAnalyseServices(Automation):
     def _search_enforced_checks(
         enforced_services: Iterable[tuple[str, ConfiguredService]],
         servicedesc: str,
+        timeperiod_active: Callable[[cmk.utils.timeperiod.TimeperiodName], bool | None],
     ) -> Iterable[_FoundService]:
         for checkgroup_name, service in enforced_services:
             if service.description == servicedesc:
@@ -2132,6 +2141,7 @@ class AutomationAnalyseServices(Automation):
         host_name: HostName,
         servicedesc: str,
         check_plugins: Mapping[CheckPluginName, CheckPlugin],
+        timeperiod_active: Callable[[cmk.utils.timeperiod.TimeperiodName], bool | None],
     ) -> Iterable[_FoundService]:
         # NOTE: Iterating over the check table would make things easier. But we might end up with
         # different information.
@@ -4142,7 +4152,8 @@ class AutomationNotificationReplay(Automation):
             spooling=ConfigCache.notification_spooling(),
             backlog_size=config.notification_backlog,
             logging_level=ConfigCache.notification_logging_level(),
-            all_timeperiods=load_timeperiods(),
+            all_timeperiods=cmk.utils.timeperiod.load_timeperiods(),
+            timeperiod_active=cmk.utils.timeperiod.timeperiod_active,
         )
         return NotificationReplayResult()
 
@@ -4181,7 +4192,8 @@ class AutomationNotificationAnalyse(Automation):
                 spooling=ConfigCache.notification_spooling(),
                 backlog_size=config.notification_backlog,
                 logging_level=ConfigCache.notification_logging_level(),
-                all_timeperiods=load_timeperiods(),
+                all_timeperiods=cmk.utils.timeperiod.load_timeperiods(),
+                timeperiod_active=cmk.utils.timeperiod.timeperiod_active,
             )
         )
 
@@ -4223,8 +4235,9 @@ class AutomationNotificationTest(Automation):
                 spooling=ConfigCache.notification_spooling(),
                 backlog_size=config.notification_backlog,
                 logging_level=ConfigCache.notification_logging_level(),
-                all_timeperiods=load_timeperiods(),
+                all_timeperiods=cmk.utils.timeperiod.load_timeperiods(),
                 dispatch=dispatch,
+                timeperiod_active=cmk.utils.timeperiod.timeperiod_active,
             )
         )
 
@@ -4243,7 +4256,11 @@ class AutomationGetBulks(Automation):
     ) -> NotificationGetBulksResult:
         only_ripe = args[0] == "1"
         return NotificationGetBulksResult(
-            notify.find_bulks(only_ripe, bulk_interval=config.notification_bulk_interval)
+            notify.find_bulks(
+                only_ripe,
+                bulk_interval=config.notification_bulk_interval,
+                timeperiod_active=cmk.utils.timeperiod.timeperiod_active,
+            )
         )
 
 

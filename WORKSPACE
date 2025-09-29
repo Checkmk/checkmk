@@ -1,9 +1,5 @@
 workspace(name = "omd_packages")
 
-load("//omd/packages/asio:asio_http.bzl", "asio_workspace")
-
-asio_workspace()
-
 load("//omd/packages/perl-modules:perl-modules_http.bzl", "perl_modules")
 
 perl_modules()

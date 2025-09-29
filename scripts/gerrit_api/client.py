@@ -16,10 +16,14 @@ from requests.auth import HTTPBasicAuth
 
 
 class TChangeStatus(StrEnum):
-    ALL = "all"
+    ALL = "ALL"
     NEW = "NEW"
     MERGED = "MERGED"
     ABANDONED = "ABANDONED"
+
+    @staticmethod
+    def cli_args() -> set["TChangeStatus"]:
+        return {TChangeStatus.ALL, TChangeStatus.NEW, TChangeStatus.MERGED}
 
 
 class ChangeDetails(BaseModel):

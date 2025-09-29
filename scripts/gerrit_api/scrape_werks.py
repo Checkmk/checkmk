@@ -6,7 +6,7 @@
 
 import os
 import re
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser, Namespace, RawTextHelpFormatter
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
@@ -52,7 +52,7 @@ class CSVEntry:
 
 def parsed_arguments() -> type[TCliArgs]:
     """Parse arguments from the CLI or the environment variables."""
-    parser = ArgumentParser(description=__doc__)
+    parser = ArgumentParser(description=__doc__, formatter_class=RawTextHelpFormatter)
 
     # required arguments
 
@@ -109,7 +109,7 @@ def parsed_arguments() -> type[TCliArgs]:
         default="",
         help=(
             "Provide the user specific HTTP credentials required to access gerrit API. "
-            f"By default, these are read from the environment variable `{ENV_GERRIT_HTTP_CREDS}`. "
+            f"By default, these are read from the environment variable `{ENV_GERRIT_HTTP_CREDS}`.\n"
             "Set it up using `https://review.lan.tribe29.com/settings/#HTTPCredentials`."
         ),
     )
@@ -127,11 +127,14 @@ def parsed_arguments() -> type[TCliArgs]:
         dest="status",
         action="store",
         type=str,
-        choices=TChangeStatus,
+        choices=TChangeStatus.cli_args(),
         default=TChangeStatus.ALL,
         help=(
-            "List werks based on status of the gerrit change. "
-            "By default, werks corresponding to `all` gerrit changes are listed."
+            "List werks based on status of the gerrit change. Brief summary of the types:\n"
+            "+ NEW - Werks under review or development.\n"
+            "+ MERGED - Werks already released to Checkmk version(s).\n"
+            "+ ALL - Werks with both of the above mentioned status.\n"
+            "By default, werks corresponding to `ALL` gerrit changes are listed."
         ),
     )
 

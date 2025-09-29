@@ -23,9 +23,8 @@ def check_sophos_disk(item, params, parsed):
         parsed,
         "disk_utilization",
         params.get("disk_levels", (None, None)),
-        unit="%",
+        human_readable_func=lambda x: f"{int(x)}%",
         infoname="Disk percentage usage",
-        human_readable_func=lambda x: "%d" % x,
     )
 
 

@@ -22,5 +22,5 @@ def test_discover_ad_users() -> None:
 def test_check_azure_users() -> None:
     parsed = azure_ad.parse_azure_ad(STRING_TABLE)
     assert list(azure_ad.check_azure_users(None, {}, parsed)) == [
-        (0, "2 User Accounts", [("count", 2, None, None)]),
+        (0, "User accounts: 2", [("count", 2, None, None)]),
     ]

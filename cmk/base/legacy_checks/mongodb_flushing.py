@@ -58,7 +58,7 @@ def check_mongodb_flushing(_no_item, params, info):
             avg_ms_compute,
             None,
             (warn, crit),
-            unit="ms",
+            human_readable_func=lambda x: f"{x:.1f} ms",
             infoname="Average flush time over %s minutes" % (avg_interval),
         )
 
@@ -66,7 +66,7 @@ def check_mongodb_flushing(_no_item, params, info):
         (last_ms / 1000.0),
         "flush_time",
         params.get("last_time"),
-        unit="s",
+        human_readable_func=lambda x: f"{x:.2f} s",
         infoname="Last flush time",
     )
 

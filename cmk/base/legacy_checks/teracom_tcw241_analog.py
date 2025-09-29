@@ -83,7 +83,7 @@ def check_tcw241_analog(item, params, parsed):
         sensor.voltage,
         "voltage",
         (sensor.minimum, sensor.maximum),
-        unit="V",
+        human_readable_func=lambda x: f"{x:.2f} V",
         infoname="[%s]" % sensor.description,
     )
 

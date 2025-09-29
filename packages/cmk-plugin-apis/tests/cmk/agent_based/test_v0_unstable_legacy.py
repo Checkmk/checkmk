@@ -45,10 +45,10 @@ def test_boundaries(
     [
         (
             6,
-            "disk",
+            "my_metric",
             (4, 8),
-            {"unit": "years", "infoname": "Disk Age"},
-            (1, "Disk Age: 6.00 years (warn/crit at 4.00 years/8.00 years)", [("disk", 6.0, 4, 8)]),
+            {"infoname": "My metric"},
+            (1, "My metric: 6.00 (warn/crit at 4.00/8.00)", [("my_metric", 6.0, 4, 8)]),
         ),
         (
             5e-7,
@@ -61,21 +61,6 @@ def test_boundaries(
             (
                 1,
                 "Water acidity: pH 6.3 (warn/crit at pH 6.4/pH 6.1)",
-                [("H_concentration", 5e-7, 4e-7, 8e-7)],
-            ),
-        ),
-        (
-            5e-7,
-            "H_concentration",
-            (4e-7, 8e-7, 5e-8, 2e-8),
-            {
-                "human_readable_func": lambda x: "pH %.1f" % -math.log10(x),
-                "unit": "??",
-                "infoname": "Water acidity",
-            },
-            (
-                1,
-                "Water acidity: pH 6.3 ?? (warn/crit at pH 6.4 ??/pH 6.1 ??)",
                 [("H_concentration", 5e-7, 4e-7, 8e-7)],
             ),
         ),

@@ -52,7 +52,12 @@ def check_azure_usagedetails(
     data = get_data_or_go_stale(item, section)
     for currency, amount in list(data.get("costs", {}).items()):
         levels = params.get("levels")
-        yield check_levels(amount, "service_costs_%s" % currency.lower(), levels, currency)
+        yield check_levels(
+            amount,
+            "service_costs_%s" % currency.lower(),
+            levels,
+            human_readable_func=lambda v: f"{v:.2f} {currency}",
+        )
 
     yield 0, "Subscription: %s" % data["subscription_id"]
 

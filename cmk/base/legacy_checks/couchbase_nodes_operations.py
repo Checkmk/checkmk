@@ -40,7 +40,9 @@ def discover_couchbase_buckets_nodes_operations_total(section):
 def check_couchbase_nodes_operations(item, params, parsed):
     if item not in parsed or (not parsed[item] and parsed[item] != 0):
         return None
-    return check_levels(parsed[item], "op_s", params.get("ops"), unit="/s")
+    return check_levels(
+        parsed[item], "op_s", params.get("ops"), human_readable_func=lambda x: f"{x:.2f}/s"
+    )
 
 
 check_info["couchbase_nodes_operations"] = LegacyCheckDefinition(

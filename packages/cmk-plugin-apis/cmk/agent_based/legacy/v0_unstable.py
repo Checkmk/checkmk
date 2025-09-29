@@ -169,7 +169,6 @@ def check_levels(  # type: ignore[explicit-any]
     value: int | float,
     dsname: None | str,
     params: Any,
-    unit: str = "",
     human_readable_func: Callable | None = None,  # type: ignore[type-arg]
     infoname: str | None = None,
     boundaries: tuple[float | None, float | None] | None = None,
@@ -192,13 +191,6 @@ def check_levels(  # type: ignore[explicit-any]
              Dict containing "upper" or "levels_upper_min" as key -> upper level checking.
              Dict containing "lower" and "upper"/"levels_upper_min" as key ->
              lower and upper level checking.
-    unit:    unit to be displayed in the plug-in output.
-             Be aware: if a (builtin) human_readable_func is stated which already
-             provides a unit info, then this unit is not necessary. An additional
-             unit info is useful if a rate is calculated, eg.
-                unit="/s",
-                human_readable_func=get_bytes_human_readable,
-             results in 'X B/s'.
     human_readable_func: Single argument function to present in a human readable fashion
                          the value. Builtin human_readable-functions already provide a unit:
                          - get_percent_human_readable
@@ -211,22 +203,15 @@ def check_levels(  # type: ignore[explicit-any]
     infoname: Perf value name for infotext like a title.
     boundaries: Add minimum and maximum to performance data.
     """
-    if unit.startswith("/"):
-        unit_info: str = unit
-    elif unit:
-        unit_info = " %s" % unit
-    else:
-        unit_info = ""
-
     if human_readable_func is None:
 
         def render_func(x: float) -> str:
-            return f"{x:.2f}{unit_info}"
+            return f"{x:.2f}"
 
     else:
 
         def render_func(x: float) -> str:
-            return f"{human_readable_func(x)}{unit_info}"
+            return f"{human_readable_func(x)}"
 
     if params and isinstance(params, dict):
         if not dsname:

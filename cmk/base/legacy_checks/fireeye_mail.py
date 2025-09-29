@@ -279,7 +279,13 @@ def check_fireeye_mail_received(_no_item, params, info):
     start_timestamp = time.mktime(time.strptime(start, "%m/%d/%y %H:%M:%S"))
     end_timestamp = time.mktime(time.strptime(end, "%m/%d/%y %H:%M:%S"))
     rate = float(received) / (end_timestamp - start_timestamp)
-    yield check_levels(rate, "mail_received_rate", params.get("rate"), unit="/s", infoname="Rate")
+    yield check_levels(
+        rate,
+        "mail_received_rate",
+        params.get("rate"),
+        human_readable_func=lambda x: f"{x:.2f}/s",
+        infoname="Rate",
+    )
 
 
 def discover_fireeye_mail_received(info):

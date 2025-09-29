@@ -38,8 +38,7 @@ def check_mem_vmalloc(_item, params, section):
         used_mb,
         dsname="used",
         params=(total_mb * used_warn_perc / 100, total_mb * used_crit_perc / 100),
-        human_readable_func=lambda v: f"{v:.1f}",
-        unit="MB",
+        human_readable_func=lambda v: f"{v:.1f} MB",
         infoname="Used",
         boundaries=(0, total_mb),
     )
@@ -47,8 +46,7 @@ def check_mem_vmalloc(_item, params, section):
         chunk_mb,
         dsname="chunk",
         params=(None, None) + params["levels_lower_chunk_mb"],
-        human_readable_func=lambda v: f"{v:.1f}",
-        unit="MB",
+        human_readable_func=lambda v: f"{v:.1f} MB",
         infoname="Largest chunk",
         boundaries=(0, total_mb),
     )

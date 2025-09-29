@@ -21,7 +21,9 @@ def inventory_bvip_poe(info):
 
 def check_bvip_poe(_no_item, params, info):
     watt = float(info[0][0]) / 10
-    return check_levels(watt, "power", params.get("levels"), unit="W")
+    return check_levels(
+        watt, "power", params.get("levels"), human_readable_func=lambda x: f"{x:.2f} W"
+    )
 
 
 def parse_bvip_poe(string_table: StringTable) -> StringTable:

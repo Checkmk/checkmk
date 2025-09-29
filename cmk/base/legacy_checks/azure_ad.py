@@ -71,8 +71,8 @@ def check_azure_users(item, _no_params, parsed):
             count,
             "count",
             None,
-            unit="User Accounts",
-            human_readable_func=int,
+            human_readable_func=str,
+            infoname="User accounts",
         )
 
 

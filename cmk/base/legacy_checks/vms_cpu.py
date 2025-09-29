@@ -60,7 +60,11 @@ def check_vms_cpu(_no_item, params, parsed):
     num_cpus = parsed["num_cpus"]
     unit = "CPU" if num_cpus == 1 else "CPUs"
     yield check_levels(
-        num_cpus, "cpu_entitlement", None, unit=unit, infoname="100% corresponding to"
+        num_cpus,
+        "cpu_entitlement",
+        None,
+        human_readable_func=lambda x, u=unit: f"{int(x)} {u}",
+        infoname="100% corresponding to",
     )
 
 

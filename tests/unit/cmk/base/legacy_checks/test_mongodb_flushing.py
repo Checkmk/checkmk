@@ -21,7 +21,7 @@ from cmk.base.legacy_checks.mongodb_flushing import check_mongodb_flushing, pars
         (
             [("average_ms", "1.28893335892"), ("last_ms", "0"), ("flushed", "36479")],
             0,
-            "Average flush time over 60 minutes: 0.00 ms",
+            "Average flush time over 60 minutes: 0.0 ms",
             [],
             0,
             "Last flush time: 0.00 s",
@@ -31,7 +31,7 @@ from cmk.base.legacy_checks.mongodb_flushing import check_mongodb_flushing, pars
         (
             [("average_ms", "5"), ("last_ms", "121"), ("flushed", "10000")],
             2,
-            "Average flush time over 60 minutes: 121.00 ms (warn/crit at 1.00 ms/4.00 ms)",
+            "Average flush time over 60 minutes: 121.0 ms (warn/crit at 1.0 ms/4.0 ms)",
             [],
             1,
             "Last flush time: 0.12 s (warn/crit at 0.10 s/0.20 s)",

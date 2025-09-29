@@ -50,8 +50,8 @@ def check_checkpoint_packets(_no_item, params, parsed):
             get_rate(get_value_store(), key, this_time, value, raise_overflow=True),
             key,
             params.get(key),
+            human_readable_func=lambda x: f"{x:.1f} pkts/s",
             infoname=name,
-            unit=" pkts/s",
         )
 
 

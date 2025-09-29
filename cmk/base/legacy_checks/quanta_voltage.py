@@ -48,7 +48,7 @@ def check_quanta_voltage(item, params, parsed):
         entry.value,
         "voltage",
         params.get("levels", entry.upper_levels) + params.get("levels_lower", entry.lower_levels),
-        unit="V",
+        human_readable_func=lambda x: f"{x:.2f} V",
     )
 
 

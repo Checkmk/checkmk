@@ -51,7 +51,13 @@ def check_kernel(item, params, parsed):
 
     counter, value = item_values[0]
     per_sec = get_rate(get_value_store(), "counter", timestamp, value)
-    return check_levels(per_sec, counter, params["levels"], unit="/s", boundaries=(0, None))
+    return check_levels(
+        per_sec,
+        counter,
+        params["levels"],
+        human_readable_func=lambda x: f"{x:.2f}/s",
+        boundaries=(0, None),
+    )
 
 
 # This check is deprecated. Please have a look at werk #8969.
@@ -112,7 +118,7 @@ def check_kernel_performance(_no_item, params, parsed):
             rate,
             kernel_metrics_names[counter],
             levels,
-            unit="/s",
+            human_readable_func=lambda x: f"{x:.2f}/s",
             infoname=item_name,
             boundaries=(0, None),
         )

@@ -54,15 +54,15 @@ def test_check_ups_eaton_enviroment_with_thresholds(parsed: list[list[str]]) -> 
     assert len(result) == 3
 
     # First result: temp=1, within thresholds (OK)
-    assert result[0] == (0, "Temperature: 1.00 °C", [("temp", 1, 40, 50)])
+    assert result[0] == (0, "Temperature: 1.0 °C", [("temp", 1, 40, 50)])
 
     # Second result: remote_temp=40, hits warn threshold (WARN)
     assert result[1][0] == 1  # WARN state
-    assert "Remote-Temperature: 40.00 °C" in result[1][1]
-    assert "warn/crit at 40.00 °C/50.00 °C" in result[1][1]
+    assert "Remote-Temperature: 40.0 °C" in result[1][1]
+    assert "warn/crit at 40.0 °C/50.0 °C" in result[1][1]
 
     # Third result: humidity=3, within thresholds (OK)
-    assert result[2] == (0, "Humidity: 3.00 %", [("humidity", 3, 65, 80)])
+    assert result[2] == (0, "Humidity: 3.0%", [("humidity", 3, 65, 80)])
 
 
 def test_check_ups_eaton_enviroment_critical_state(parsed: list[list[str]]) -> None:
@@ -81,18 +81,18 @@ def test_check_ups_eaton_enviroment_critical_state(parsed: list[list[str]]) -> N
 
     # First result: temp=1, hits critical threshold (CRIT)
     assert result[0][0] == 2  # CRIT state
-    assert "Temperature: 1.00 °C" in result[0][1]
-    assert "warn/crit at 0.00 °C/1.00 °C" in result[0][1]
+    assert "Temperature: 1.0 °C" in result[0][1]
+    assert "warn/crit at 0.0 °C/1.0 °C" in result[0][1]
 
     # Second result: remote_temp=40, hits critical threshold (CRIT)
     assert result[1][0] == 2  # CRIT state
-    assert "Remote-Temperature: 40.00 °C" in result[1][1]
-    assert "warn/crit at 30.00 °C/35.00 °C" in result[1][1]
+    assert "Remote-Temperature: 40.0 °C" in result[1][1]
+    assert "warn/crit at 30.0 °C/35.0 °C" in result[1][1]
 
     # Third result: humidity=3, hits critical threshold (CRIT)
     assert result[2][0] == 2  # CRIT state
-    assert "Humidity: 3.00 %" in result[2][1]
-    assert "warn/crit at 1.00 %/2.00 %" in result[2][1]
+    assert "Humidity: 3.0%" in result[2][1]
+    assert "warn/crit at 1.0%/2.0%" in result[2][1]
 
 
 def test_check_ups_eaton_enviroment_ok_state() -> None:
@@ -107,9 +107,9 @@ def test_check_ups_eaton_enviroment_ok_state() -> None:
     }
 
     assert list(check_ups_eaton_enviroment(None, params, good_data)) == [
-        (0, "Temperature: 25.00 °C", [("temp", 25, 40, 50)]),
-        (0, "Remote-Temperature: 30.00 °C", [("remote_temp", 30, 40, 50)]),
-        (0, "Humidity: 50.00 %", [("humidity", 50, 65, 80)]),
+        (0, "Temperature: 25.0 °C", [("temp", 25, 40, 50)]),
+        (0, "Remote-Temperature: 30.0 °C", [("remote_temp", 30, 40, 50)]),
+        (0, "Humidity: 50.0%", [("humidity", 50, 65, 80)]),
     ]
 
 

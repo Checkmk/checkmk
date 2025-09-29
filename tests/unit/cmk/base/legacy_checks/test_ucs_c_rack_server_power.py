@@ -72,7 +72,7 @@ def test_discover_ucs_c_rack_server_power(
                 ],
             ],
             [
-                (0, "Power: 88.00 W", [("power", 88.0, 90, 100)]),
+                (0, "Power: 88.0 W", [("power", 88.0, 90, 100)]),
                 (0, "Current: 6.0 A"),
                 (0, "Voltage: 12.1 V"),
             ],
@@ -97,7 +97,7 @@ def test_discover_ucs_c_rack_server_power(
                 ],
             ],
             [
-                (1, "Power: 90.00 W (warn/crit at 90.00 W/100.00 W)", [("power", 90.0, 90, 100)]),
+                (1, "Power: 90.0 W (warn/crit at 90.0 W/100.0 W)", [("power", 90.0, 90, 100)]),
                 (0, "Current: 7.0 A"),
                 (0, "Voltage: 12.1 V"),
             ],

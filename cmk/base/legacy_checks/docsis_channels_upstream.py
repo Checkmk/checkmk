@@ -92,8 +92,8 @@ def check_docsis_channels_upstream(item, params, parsed):
             float(signal_noise) / 10,  # [dB]
             "signal_noise",
             (None, None, warn, crit),  # No upper levels, lower levels
+            human_readable_func=lambda x: f"{x:.1f} dB",
             infoname="Signal/Noise ratio",
-            unit=" dB",
         )
 
         fields = [("frequency", float(mhz) / 1000000, "Frequency", "%.2f", " MHz")]

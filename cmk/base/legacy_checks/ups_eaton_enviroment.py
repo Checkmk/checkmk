@@ -42,8 +42,8 @@ def check_ups_eaton_enviroment(item, params, info):
             wert[i],
             sensor,
             levels,
+            human_readable_func=lambda x: f"{x:.1f}{unit_symbol}",
             infoname=sensor_name,
-            unit=unit_symbol.strip(),
         )
         i += 1
 

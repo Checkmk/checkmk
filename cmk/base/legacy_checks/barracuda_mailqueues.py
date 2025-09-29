@@ -31,13 +31,13 @@ def check_barracuda_mailqueues(_no_item, params, info):
             queue,
             "mail_queue_%s_length" % queue_type.lower(),
             params[queue_type.lower()],
-            infoname=queue_type,
-            unit=" mails",
+            human_readable_func=str,
+            infoname=f"{queue_type} mails",
         )
 
-    yield 0, "Incoming: %s" % in_queue_str
+    yield 0, f"Incoming mails: {in_queue_str}"
     if daily_sent:
-        yield 0, "Daily sent: %s" % daily_sent
+        yield 0, f"Daily sent mails: {daily_sent}"
 
 
 def parse_barracuda_mailqueues(string_table: StringTable) -> StringTable | None:

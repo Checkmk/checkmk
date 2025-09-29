@@ -78,6 +78,12 @@ Operators = Literal["+", "*", "-", "/", "MAX", "MIN", "AVERAGE", "MERGE"]
 
 
 @dataclass(frozen=True)
+class TranslationKey:
+    host_name: HostName
+    service_name: ServiceName
+
+
+@dataclass(frozen=True)
 class RRDDataKey:
     site_id: SiteId
     host_name: HostName
@@ -174,12 +180,6 @@ def time_series_operators() -> dict[
         "AVERAGE": (_("Average"), _time_series_operator_average),
         "MERGE": ("First non None", lambda x: next(iter(clean_time_series_point(x)))),
     }
-
-
-@dataclass(frozen=True)
-class TranslationKey:
-    host_name: HostName
-    service_name: ServiceName
 
 
 @dataclass(frozen=True)

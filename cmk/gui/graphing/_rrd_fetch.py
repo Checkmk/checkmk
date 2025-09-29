@@ -31,7 +31,6 @@ from ._from_api import RegisteredMetric
 from ._graph_metric_expressions import (
     AugmentedTimeSeries,
     GraphConsolidationFunction,
-    GraphMetricExpression,
     op_func_wrapper,
     RRDData,
     RRDDataKey,
@@ -56,13 +55,13 @@ class MetricProperties:
 
 
 def _metric_props_by_service(
-    rrd_data_keys: Iterable[RRDDataKey],
+    keys: Sequence[RRDDataKey],
     consolidation_function: GraphConsolidationFunction | None,
 ) -> Mapping[tuple[SiteId, HostName, ServiceName], set[MetricProperties]]:
     by_service: dict[tuple[SiteId, HostName, ServiceName], set[MetricProperties]] = (
         collections.defaultdict(set)
     )
-    for key in rrd_data_keys:
+    for key in keys:
         by_service[(key.site_id, key.host_name, key.service_name)].add(
             MetricProperties(
                 metric_name=key.metric_name,
@@ -198,7 +197,7 @@ def _chop_last_empty_step(end_time: float, rrd_data: RRDData) -> None:
 
 def _fetch_time_series(
     registered_metrics: Mapping[str, RegisteredMetric],
-    operations: Sequence[GraphMetricExpression],
+    keys: Sequence[RRDDataKey],
     consolidation_function: GraphConsolidationFunction | None,
     conversion: Callable[[float], float],
     *,
@@ -208,13 +207,7 @@ def _fetch_time_series(
 ) -> RRDData:
     rrd_data: dict[RRDDataKey, TimeSeries] = {}
     for (site_id, host_name, service_description), metrics in _metric_props_by_service(
-        (
-            key
-            for operation in operations
-            for key in operation.keys(registered_metrics)
-            if isinstance(key, RRDDataKey)
-        ),
-        consolidation_function,
+        keys, consolidation_function
     ).items():
         with contextlib.suppress(livestatus.MKLivestatusNotFoundError):
             for metric_props, time_series in _fetch_time_series_of_service(
@@ -250,7 +243,12 @@ def fetch_augmented_time_series(
 ) -> Iterator[tuple[GraphMetric, Sequence[AugmentedTimeSeries]]]:
     time_series_by_rrd_data_key = _fetch_time_series(
         registered_metrics,
-        [gm.operation for gm in graph_recipe.metrics],
+        [
+            k
+            for gm in graph_recipe.metrics
+            for k in gm.operation.keys(registered_metrics)
+            if isinstance(k, RRDDataKey)
+        ],
         graph_recipe.consolidation_function,
         user_specific_unit(graph_recipe.unit_spec, user, active_config).conversion,
         start_time=graph_data_range.time_range[0],

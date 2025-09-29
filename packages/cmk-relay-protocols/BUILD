@@ -14,6 +14,7 @@ py_library(
     name = "cmk-relay-protocols",
     srcs = [
         "cmk/relay_protocols/__init__.py",
+        "cmk/relay_protocols/configuration.py",
         "cmk/relay_protocols/monitoring_data.py",
         "cmk/relay_protocols/relays.py",
         "cmk/relay_protocols/tasks.py",

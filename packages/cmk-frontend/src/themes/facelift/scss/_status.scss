@@ -20,10 +20,10 @@
  * TODO: Get rid of important styles throughout this style sheet
  */
 
-.stale .state {
+.stale.state {
   text-shadow: none !important;
   background-image: none !important;
-  filter: saturate(50%) brightness(105%);
+  filter: saturate(10%) brightness(105%);
 }
 
 td.state {

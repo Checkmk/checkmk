@@ -198,7 +198,7 @@ class AugmentedTimeSeries:
 class GraphMetricExpression(BaseModel, ABC, frozen=True):
     @staticmethod
     @abstractmethod
-    def operation_name() -> str: ...
+    def expression_name() -> str: ...
 
     @abstractmethod
     def keys(
@@ -223,12 +223,12 @@ class GraphMetricExpression(BaseModel, ABC, frozen=True):
     @property
     @final
     def ident(self) -> str:
-        return self.operation_name()
+        return self.expression_name()
 
 
 class GraphMetricExpressionRegistry(Registry[type[GraphMetricExpression]]):
     def plugin_name(self, instance: type[GraphMetricExpression]) -> str:
-        return instance.operation_name()
+        return instance.expression_name()
 
 
 graph_metric_expression_registry = GraphMetricExpressionRegistry()
@@ -249,7 +249,7 @@ class GraphMetricConstant(GraphMetricExpression, frozen=True):
     value: float
 
     @staticmethod
-    def operation_name() -> Literal["constant"]:
+    def expression_name() -> Literal["constant"]:
         return "constant"
 
     def keys(
@@ -278,7 +278,7 @@ class GraphMetricConstant(GraphMetricExpression, frozen=True):
 
 class GraphMetricConstantNA(GraphMetricExpression, frozen=True):
     @staticmethod
-    def operation_name() -> Literal["constant_na"]:
+    def expression_name() -> Literal["constant_na"]:
         return "constant_na"
 
     def keys(
@@ -345,7 +345,7 @@ class GraphMetricOperation(GraphMetricExpression, frozen=True):
     ] = []
 
     @staticmethod
-    def operation_name() -> Literal["operator"]:
+    def expression_name() -> Literal["operator"]:
         return "operator"
 
     def keys(
@@ -391,7 +391,7 @@ class GraphMetricRRDSource(GraphMetricExpression, frozen=True):
     scale: float
 
     @staticmethod
-    def operation_name() -> Literal["rrd"]:
+    def expression_name() -> Literal["rrd"]:
         return "rrd"
 
     def keys(

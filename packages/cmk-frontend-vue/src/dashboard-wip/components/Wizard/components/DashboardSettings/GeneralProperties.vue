@@ -4,6 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { computed, useAttrs } from 'vue'
+
 import usei18n from '@/lib/i18n'
 
 import CmkIndent from '@/components/CmkIndent.vue'
@@ -31,7 +33,7 @@ interface GeneralPropertiesProps {
 defineProps<GeneralPropertiesProps>()
 
 const name = defineModel<string>('name', { required: true })
-const addFilterSuffix = defineModel<boolean>('addFilterSuffix', { required: true })
+const addFilterSuffix = defineModel<boolean>('addFilterSuffix', { required: false })
 const createUniqueId = defineModel<boolean>('createUniqueId', { required: true })
 const uniqueId = defineModel<string>('uniqueId', { required: true })
 const dashboardIcon = defineModel<string | null>('dashboardIcon', {
@@ -56,6 +58,9 @@ const _updateDashboardName = (newName?: string) => {
     }
   }
 }
+
+const attrs = useAttrs()
+const displaySuffixInput = computed(() => 'addFilterSuffix' in attrs)
 </script>
 
 <template>
@@ -79,9 +84,9 @@ const _updateDashboardName = (newName?: string) => {
               @update:model-value="_updateDashboardName"
             />
           </div>
-          <div class="db-general-properties__item">
+          <div v-if="displaySuffixInput" class="db-general-properties__item">
             <CmkCheckbox
-              v-model="addFilterSuffix"
+              v-model="addFilterSuffix!"
               :label="_t('Add filter as suffix')"
               :help="_t('Include dashboard filter contents to the dashboard title..')"
             />

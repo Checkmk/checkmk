@@ -62,7 +62,7 @@ const _updateDashboardLayout = (newLayout: string) => {
             v-if="availableLayouts.includes(DashboardLayout.RELATIVE_GRID)"
             :model-value="dashboardLayout"
             :value="DashboardLayout.RELATIVE_GRID"
-            :label="_t('Responsive')"
+            :label="_t('Legacy')"
             @update:model-value="_updateDashboardLayout"
           />
         </div>

@@ -57,7 +57,6 @@ const dashboardType = ref<DashboardType>(DashboardType.UNRESTRICTED)
 const name = ref<string>('')
 const nameErrors = ref<string[]>([])
 
-const addFilterSuffix = ref<boolean>(true)
 const createUniqueId = ref<boolean>(true)
 const uniqueId = ref<string>('')
 const uniqueIdErrors = ref<string[]>([])
@@ -131,7 +130,7 @@ const _createDashboard = async () => {
   const dashboardTitle: DashboardTitle = {
     text: name.value.trim(),
     render: true,
-    include_context: addFilterSuffix.value
+    include_context: false
   }
 
   const dashboardMenu: DashboardMenu = {
@@ -265,7 +264,6 @@ const cancel = () => {
         <template #content>
           <GeneralProperties
             v-model:name="name"
-            v-model:add-filter-suffix="addFilterSuffix"
             v-model:create-unique-id="createUniqueId"
             v-model:unique-id="uniqueId"
             v-model:dashboard-icon="dashboardIcon"

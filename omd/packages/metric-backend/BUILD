@@ -15,6 +15,7 @@ pkg_files(
     name = "skel",
     srcs = [
         "skel/etc/clickhouse-server/config.xml",
+        "skel/etc/clickhouse-server/users.xml",
     ],
     strip_prefix = strip_prefix.from_pkg(""),
     tags = ["manual"],

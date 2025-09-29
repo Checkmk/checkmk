@@ -22,7 +22,7 @@ from cmk.base.checkers import (
     HostLabelPluginMapper,
     SectionPluginMapper,
 )
-from cmk.base.config import ConfigCache
+from cmk.base.config import ConfigCache, get_metric_backend_fetcher
 from cmk.base.configlib.checkengine import DiscoveryConfig
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.ccc.exceptions import OnError
@@ -1547,6 +1547,11 @@ def test_commandline_discovery(
         mode=Mode.DISCOVERY,
         simulation_mode=True,
         password_store_file=Path("/pw/store"),
+        metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
+            hn,
+            config_cache.explicit_host_attributes,
+            config_cache._loaded_config.monitoring_core == "cmc",
+        ),
     )
 
     commandline_discovery(

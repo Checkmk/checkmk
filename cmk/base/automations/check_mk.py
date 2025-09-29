@@ -103,6 +103,7 @@ from cmk.base.checkers import (
 from cmk.base.config import (
     ConfigCache,
     EnforcedServicesTable,
+    get_metric_backend_fetcher,
     handle_ip_lookup_failure,
     load_resource_cfg_macros,
     snmp_default_community,
@@ -408,6 +409,11 @@ class AutomationDiscovery(DiscoveryAutomation):
             mode=Mode.DISCOVERY,
             simulation_mode=config.simulation_mode,
             password_store_file=cmk.utils.password_store.pending_password_store_path(),
+            metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
+                hn,
+                config_cache.explicit_host_attributes,
+                loaded_config.monitoring_core == "cmc",
+            ),
         )
         # sort clusters last, to have them operate with the new nodes host labels.
         for is_cluster, hostname in sorted((h in hosts_config.clusters, h) for h in hostnames):
@@ -639,6 +645,11 @@ class AutomationDiscoveryPreview(Automation):
             # avoid using cache unless prevent_fetching is set (-> fetch new data for rescan
             # and tabula rasa)
             max_cachefile_age=MaxAge.zero(),
+            metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
+                hn,
+                config_cache.explicit_host_attributes,
+                loaded_config.monitoring_core == "cmc",
+            ),
         )
         hosts_config = config.make_hosts_config(loaded_config)
         ip_family = ip_lookup_config.default_address_family(host_name)
@@ -1125,6 +1136,11 @@ def _execute_autodiscovery(
         mode=Mode.DISCOVERY,
         simulation_mode=config.simulation_mode,
         password_store_file=cmk.utils.password_store.core_password_store_path(),
+        metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
+            hn,
+            config_cache.explicit_host_attributes,
+            loaded_config.monitoring_core == "cmc",
+        ),
     )
     section_plugins = SectionPluginMapper({**ab_plugins.agent_sections, **ab_plugins.snmp_sections})
     host_label_plugins = HostLabelPluginMapper(
@@ -3479,6 +3495,11 @@ class AutomationDiagHost(Automation):
             ),
             agent_connection_mode=config_cache.agent_connection_mode(host_name),
             check_mk_check_interval=config_cache.check_mk_check_interval(host_name),
+            metric_backend_fetcher=get_metric_backend_fetcher(
+                host_name,
+                config_cache.explicit_host_attributes,
+                loaded_config.monitoring_core == "cmc",
+            ),
         ):
             source_info = source.source_info()
             if source_info.fetcher_type is FetcherType.SNMP:
@@ -4038,6 +4059,11 @@ class AutomationGetAgentOutput(Automation):
                     ),
                     agent_connection_mode=config_cache.agent_connection_mode(hostname),
                     check_mk_check_interval=config_cache.check_mk_check_interval(hostname),
+                    metric_backend_fetcher=get_metric_backend_fetcher(
+                        hostname,
+                        config_cache.explicit_host_attributes,
+                        loaded_config.monitoring_core == "cmc",
+                    ),
                 ):
                     source_info = source.source_info()
                     if source_info.fetcher_type is FetcherType.SNMP:

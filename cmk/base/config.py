@@ -47,7 +47,7 @@ from cmk import trace
 from cmk.agent_based.legacy import discover_legacy_checks, FileLoader, find_plugin_files
 from cmk.base import default_config
 from cmk.base.configlib.checkengine import CheckingConfig
-from cmk.base.configlib.fetchers import make_tcp_fetcher_config
+from cmk.base.configlib.fetchers import make_metric_backend_fetcher_config, make_tcp_fetcher_config
 from cmk.base.configlib.labels import LabelConfig
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.base.configlib.piggyback import (
@@ -98,6 +98,7 @@ from cmk.fetchers import (
     FetcherTrigger,
     IPMICredentials,
     IPMIFetcher,
+    MetricBackendFetcherConfig,
     NoSelectedSNMPSections,
     PiggybackFetcher,
     PlainFetcherTrigger,
@@ -3872,3 +3873,34 @@ class FetcherFactory:
 
 def _parse[T](raw: object, type_: Callable[..., T], /) -> T:
     return type_(raw)
+
+
+def get_metric_backend_fetcher(
+    host_name: HostAddress,
+    explicit_host_attributes: Callable[[HostAddress], ObjectAttributes],
+    is_cmc: bool,
+) -> ProgramFetcher | None:
+    if (
+        metrics_association := explicit_host_attributes(host_name).get("metrics_association")
+    ) is not None:
+        return make_metric_backend_fetcher(
+            host_name, make_metric_backend_fetcher_config(metrics_association), is_cmc
+        )
+    return None
+
+
+def make_metric_backend_fetcher(
+    host_name: HostName, metric_backend_fetcher_config: MetricBackendFetcherConfig, is_cmc: bool
+) -> ProgramFetcher:
+    from cmk.plugins.otel.special_agents.cce import agent_otel
+
+    # metrics_association = json.loads(metric_backend_fetcher_config.metrics_association)
+    # host_name_resource_attribute_key = metrics_association["host_name_resource_attribute_key"]
+    # attribute_filters = metrics_association["attribute_filters"]
+    # TODO: use cmdline=f"{metric_backend_agent} {metric_backend_data_selection}" in the future
+    # when special agent can query metric backend
+    return ProgramFetcher(
+        cmdline=f"python3 -m {agent_otel.__spec__.name} {host_name}",
+        stdin=None,
+        is_cmc=is_cmc,
+    )

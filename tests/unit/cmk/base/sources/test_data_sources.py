@@ -10,7 +10,7 @@ from typing import Literal
 
 import pytest
 
-from cmk.base.config import ConfigCache
+from cmk.base.config import ConfigCache, get_metric_backend_fetcher
 from cmk.base.sources import make_sources, Source
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -101,6 +101,11 @@ def _make_sources(
         ),
         agent_connection_mode=config_cache.agent_connection_mode(hostname),
         check_mk_check_interval=config_cache.check_mk_check_interval(hostname),
+        metric_backend_fetcher=get_metric_backend_fetcher(
+            hostname,
+            config_cache.explicit_host_attributes,
+            config_cache._loaded_config.monitoring_core == "cmc",
+        ),
     )
 
 

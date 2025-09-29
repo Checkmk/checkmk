@@ -356,6 +356,7 @@ class CMKFetcher:
         mode: Mode,
         password_store_file: Path,
         simulation_mode: bool,
+        metric_backend_fetcher_factory: Callable[[HostAddress], ProgramFetcher | None],
         max_cachefile_age: MaxAge | None = None,
     ) -> None:
         self.config_cache: Final = config_cache
@@ -373,6 +374,7 @@ class CMKFetcher:
         self.password_store_file: Final = password_store_file
         self.simulation_mode: Final = simulation_mode
         self.max_cachefile_age: Final = max_cachefile_age
+        self.metric_backend_fetcher_factory: Final = metric_backend_fetcher_factory
 
     def __call__(
         self, host_name: HostName, *, ip_address: HostAddress | None
@@ -469,6 +471,7 @@ class CMKFetcher:
                     check_mk_check_interval=self.config_cache.check_mk_check_interval(
                         current_host_name
                     ),
+                    metric_backend_fetcher=self.metric_backend_fetcher_factory(current_host_name),
                 )
                 for current_host_name, current_ip_family, current_ip_stack_config, current_ip_address in hosts
             ),

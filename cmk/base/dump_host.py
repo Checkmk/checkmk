@@ -15,7 +15,7 @@ import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.render
 from cmk.base import sources
-from cmk.base.config import ConfigCache
+from cmk.base.config import ConfigCache, get_metric_backend_fetcher
 from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.base.configlib.servicename import PassiveServiceNameConfig
@@ -272,6 +272,11 @@ def dump_host(
                 ),
                 agent_connection_mode=config_cache.agent_connection_mode(hostname),
                 check_mk_check_interval=config_cache.check_mk_check_interval(hostname),
+                metric_backend_fetcher=get_metric_backend_fetcher(
+                    hostname,
+                    config_cache.explicit_host_attributes,
+                    loaded_config.monitoring_core == "cmc",
+                ),
             )
         ]
     )

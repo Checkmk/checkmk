@@ -44,6 +44,7 @@ from cmk.base.checkers import (
 )
 from cmk.base.config import (
     ConfigCache,
+    get_metric_backend_fetcher,
     handle_ip_lookup_failure,
 )
 from cmk.base.configlib.checkengine import DiscoveryConfig
@@ -750,6 +751,11 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
             ),
             agent_connection_mode=config_cache.agent_connection_mode(hostname),
             check_mk_check_interval=config_cache.check_mk_check_interval(hostname),
+            metric_backend_fetcher=get_metric_backend_fetcher(
+                hostname,
+                config_cache.explicit_host_attributes,
+                loaded_config.monitoring_core == "cmc",
+            ),
         ):
             source_info = source.source_info()
             if source_info.fetcher_type is FetcherType.SNMP:
@@ -2229,6 +2235,11 @@ def mode_check_discovery(options: Mapping[str, object], hostname: HostName) -> i
             inventory=1.5 * check_interval,
         ),
         password_store_file=cmk.utils.password_store.core_password_store_path(),
+        metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
+            hn,
+            config_cache.explicit_host_attributes,
+            loaded_config.monitoring_core == "cmc",
+        ),
     )
     parser = CMKParser(
         config.make_parser_config(
@@ -2591,6 +2602,11 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         ),
         simulation_mode=config.simulation_mode,
         password_store_file=cmk.utils.password_store.pending_password_store_path(),
+        metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
+            hn,
+            config_cache.explicit_host_attributes,
+            loaded_config.monitoring_core == "cmc",
+        ),
     )
     for hostname in sorted(
         _preprocess_hostnames(
@@ -2836,6 +2852,11 @@ def run_checking(
         ),
         simulation_mode=config.simulation_mode,
         password_store_file=password_store_file,
+        metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
+            hn,
+            config_cache.explicit_host_attributes,
+            loaded_config.monitoring_core == "cmc",
+        ),
     )
     parser = CMKParser(
         config.make_parser_config(
@@ -3126,6 +3147,11 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         ),
         simulation_mode=config.simulation_mode,
         password_store_file=cmk.utils.password_store.pending_password_store_path(),
+        metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
+            hn,
+            config_cache.explicit_host_attributes,
+            loaded_config.monitoring_core == "cmc",
+        ),
     )
     parser = CMKParser(
         config.make_parser_config(loaded_config, ruleset_matcher, label_manager),
@@ -3423,6 +3449,11 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
         mode=FetchMode.INVENTORY,
         simulation_mode=config.simulation_mode,
         password_store_file=cmk.utils.password_store.core_password_store_path(),
+        metric_backend_fetcher_factory=lambda hn: get_metric_backend_fetcher(
+            hn,
+            config_cache.explicit_host_attributes,
+            loaded_config.monitoring_core == "cmc",
+        ),
     )
 
     def summarizer(host_name: HostName) -> CMKSummarizer:

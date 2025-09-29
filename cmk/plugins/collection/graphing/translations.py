@@ -1596,7 +1596,7 @@ translation_statgrab_mem_hr_mem_solaris_mem_docker_container_mem_emc_ecs_mem_aix
                 1048576,
             ),
             "memusedavg": translations.RenameToAndScaleBy(
-                "memory_avg",
+                "mem_used_avg",
                 1048576,
             ),
             "pagetables": translations.RenameToAndScaleBy(

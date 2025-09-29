@@ -532,8 +532,8 @@ class HTMLWriter:
     def render_li(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("li", content, **kwargs)
 
-    def open_html(self, **kwargs: HTMLTagAttributeValue) -> None:
-        self.write_html(render_start_tag("html", close_tag=False, **kwargs))
+    def open_html(self, lang: str, **kwargs: HTMLTagAttributeValue) -> None:
+        self.write_html(render_start_tag("html", close_tag=False, lang=lang, **kwargs))
 
     def close_html(self) -> None:
         self.write_html(render_end_tag("html"))

@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { type Plugin, type Ref, computed, getCurrentInstance, ref } from 'vue'
+import { type Ref, computed, getCurrentInstance, ref } from 'vue'
 import { type Translations, createGettext } from 'vue3-gettext'
 
 import type { TranslatedString } from '@/lib/i18nString'
@@ -34,17 +34,17 @@ type GettextInstance = ReturnType<typeof createGettext>
 
 interface I18nState {
   translationLoading: Ref<boolean>
-  currentLanguage: Ref<SupportedLanguage>
+  currentLanguage: Ref<SupportedLanguage | null>
   instance: GettextInstance | null
 }
 
 const globalState: I18nState = {
   translationLoading: ref<boolean>(false),
-  currentLanguage: ref<SupportedLanguage>('en'),
+  currentLanguage: ref<SupportedLanguage | null>(null),
   instance: null
 }
 
-async function switchLanguage(language: SupportedLanguage): Promise<void> {
+async function loadLanguage(language: string): Promise<void> {
   if (!globalState.instance) {
     throw new Error('Gettext instance is not initialized. Call createi18n() first.')
   }
@@ -72,7 +72,16 @@ async function switchLanguage(language: SupportedLanguage): Promise<void> {
     globalState.instance.current = language
     globalState.currentLanguage.value = language
   } catch (error) {
-    throw new Error(`Failed to load translations for ${language}: ${error}`)
+    if (language === 'en') {
+      // We should never fail to load English, rethrow
+      throw error
+    }
+    console.error(
+      `Failed to load translations for language "${language}", defaulting to English`,
+      language,
+      error
+    )
+    void loadLanguage('en')
   } finally {
     globalState.translationLoading.value = false
   }
@@ -227,11 +236,8 @@ interface I18nFunctions {
  * Callsites must not be renamed, they are parsed in the build process to extract all strings to be translated.
  */
 export default function usei18n() {
-  if (!globalState.instance) {
-    globalState.instance = _createI18n()
-  }
+  const { $gettext, $ngettext, $npgettext, $pgettext } = createi18n()
 
-  const { $gettext, $ngettext, $npgettext, $pgettext } = globalState.instance
   const showEnglish = computed(() => globalState.currentLanguage.value === 'en')
 
   function _t(msg: string, interpolation?: InterpolationValues): string {
@@ -293,22 +299,21 @@ export default function usei18n() {
     _tn: (isInSetupContext ? _tn : wrapInComputed(_tn)) as I18nFunctions['_tn'],
     _tp: (isInSetupContext ? _tp : wrapInComputed(_tp)) as I18nFunctions['_tp'],
     _tnp: (isInSetupContext ? _tnp : wrapInComputed(_tnp)) as I18nFunctions['_tnp'],
-    switchLanguage,
-    translationLoading: globalState.translationLoading
+    switchLanguage: loadLanguage,
+    translationLoading: globalState.translationLoading,
+    currentLanguage: globalState.currentLanguage
   }
 }
 
-function _createI18n(): GettextInstance {
-  return createGettext({
-    availableLanguages: AVAILABLE_LANGUAGES,
-    defaultLanguage: 'en',
-    translations: {}
-  })
-}
-
-export function createi18n(): Plugin {
+export function createi18n(): GettextInstance {
   if (!globalState.instance) {
-    globalState.instance = _createI18n()
+    globalState.instance = createGettext({
+      availableLanguages: AVAILABLE_LANGUAGES,
+      defaultLanguage: document.documentElement.lang,
+      translations: {}
+    })
+
+    void loadLanguage(document.documentElement.lang)
   }
 
   return globalState.instance

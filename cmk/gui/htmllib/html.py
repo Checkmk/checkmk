@@ -355,7 +355,7 @@ class HTMLGenerator(HTMLWriter):
         javascript_files = [main_javascript]
         if force or not self._header_sent:
             self.write_html(HTML.without_escaping("<!DOCTYPE HTML>\n"))
-            self.open_html()
+            self.open_html(lang=user.language)
             self._head(title, javascript_files)
             self._header_sent = True
 

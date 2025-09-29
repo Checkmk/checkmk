@@ -5,11 +5,9 @@
  */
 import { type Component, defineCustomElement, h } from 'vue'
 
-import { createi18n } from './i18n'
+import CmkApp from './CmkApp.vue'
 
 let appCount = 0
-
-const i18n = createi18n()
 
 export default function defineCmkComponent(componentName: string, component: Component) {
   if (componentName.startsWith('cmk-') === false) {
@@ -27,14 +25,13 @@ export default function defineCmkComponent(componentName: string, component: Com
         return { appData }
       },
       render() {
-        return h('div', { class: 'cmk-vue-app' }, h(component, this.appData))
+        return h(CmkApp, () => h(component, this.appData))
       }
     },
     {
       shadowRoot: false,
       configureApp: (app) => {
         app.config.idPrefix = `cmk-vue-app-${appCount++}`
-        app.use(i18n)
       }
     }
   )

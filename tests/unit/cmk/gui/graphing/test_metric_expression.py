@@ -10,9 +10,9 @@ import pytest
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.graphing._graph_metric_expressions import (
+    GraphMetricOperation,
+    GraphMetricRRDSource,
     LineType,
-    MetricOpOperator,
-    MetricOpRRDSource,
 )
 from cmk.gui.graphing._metric_expression import (
     Metric,
@@ -65,7 +65,7 @@ def test_metric_expression_mirror(line_type: LineType, expected_line_type: LineT
         pytest.param(
             ["metric-name"],
             [1.0],
-            MetricOpRRDSource(
+            GraphMetricRRDSource(
                 site_id=SiteId("Site-ID"),
                 host_name=HostName("HostName"),
                 service_name="Service description",
@@ -78,10 +78,10 @@ def test_metric_expression_mirror(line_type: LineType, expected_line_type: LineT
         pytest.param(
             ["metric-name", "old-metric-name"],
             [1.0, 2.0],
-            MetricOpOperator(
+            GraphMetricOperation(
                 operator_name="MERGE",
                 operands=[
-                    MetricOpRRDSource(
+                    GraphMetricRRDSource(
                         site_id=SiteId("Site-ID"),
                         host_name=HostName("HostName"),
                         service_name="Service description",
@@ -89,7 +89,7 @@ def test_metric_expression_mirror(line_type: LineType, expected_line_type: LineT
                         consolidation_func_name=None,
                         scale=1.0,
                     ),
-                    MetricOpRRDSource(
+                    GraphMetricRRDSource(
                         site_id=SiteId("Site-ID"),
                         host_name=HostName("HostName"),
                         service_name="Service description",
@@ -106,7 +106,7 @@ def test_metric_expression_mirror(line_type: LineType, expected_line_type: LineT
 def test_metric_to_metric_operation(
     orig_names: Sequence[str],
     scales: Sequence[int | float],
-    expected_operation: MetricOpOperator | MetricOpRRDSource,
+    expected_operation: GraphMetricOperation | GraphMetricRRDSource,
 ) -> None:
     assert (
         Metric("metric-name").to_metric_operation(

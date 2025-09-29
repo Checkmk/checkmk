@@ -30,13 +30,13 @@ from ._from_api import parse_unit_from_api, RegisteredMetric
 from ._graph_metric_expressions import (
     create_metric_operation_from_translated_metric,
     GraphConsolidationFunction,
+    GraphMetricConstant,
+    GraphMetricConstantNA,
     GraphMetricExpression,
+    GraphMetricOperation,
+    GraphMetricRRDSource,
     line_type_mirror,
     LineType,
-    MetricOpConstant,
-    MetricOpConstantNA,
-    MetricOpOperator,
-    MetricOpRRDSource,
 )
 from ._metrics import get_metric_spec
 from ._translated_metrics import TranslatedMetric
@@ -173,8 +173,8 @@ class Constant(BaseMetricExpression):
         service_name: ServiceName,
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
-    ) -> MetricOpConstant:
-        return MetricOpConstant(value=float(self.value))
+    ) -> GraphMetricConstant:
+        return GraphMetricConstant(value=float(self.value))
 
     @override
     def is_scalar(self) -> bool:
@@ -217,7 +217,7 @@ class Metric(BaseMetricExpression):
         service_name: ServiceName,
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
-    ) -> MetricOpRRDSource | MetricOpOperator:
+    ) -> GraphMetricRRDSource | GraphMetricOperation:
         return create_metric_operation_from_translated_metric(
             site_id,
             host_name,
@@ -274,11 +274,11 @@ class WarningOf(BaseMetricExpression):
         service_name: ServiceName,
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
-    ) -> MetricOpConstant | MetricOpConstantNA:
+    ) -> GraphMetricConstant | GraphMetricConstantNA:
         return (
-            MetricOpConstant(value=evaluatation_result.ok.value)
+            GraphMetricConstant(value=evaluatation_result.ok.value)
             if (evaluatation_result := self.evaluate(translated_metrics)).is_ok()
-            else MetricOpConstantNA()
+            else GraphMetricConstantNA()
         )
 
     @override
@@ -329,11 +329,11 @@ class CriticalOf(BaseMetricExpression):
         service_name: ServiceName,
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
-    ) -> MetricOpConstant | MetricOpConstantNA:
+    ) -> GraphMetricConstant | GraphMetricConstantNA:
         return (
-            MetricOpConstant(value=evaluatation_result.ok.value)
+            GraphMetricConstant(value=evaluatation_result.ok.value)
             if (evaluatation_result := self.evaluate(translated_metrics)).is_ok()
-            else MetricOpConstantNA()
+            else GraphMetricConstantNA()
         )
 
     @override
@@ -384,11 +384,11 @@ class MinimumOf(BaseMetricExpression):
         service_name: ServiceName,
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
-    ) -> MetricOpConstant | MetricOpConstantNA:
+    ) -> GraphMetricConstant | GraphMetricConstantNA:
         return (
-            MetricOpConstant(value=evaluatation_result.ok.value)
+            GraphMetricConstant(value=evaluatation_result.ok.value)
             if (evaluatation_result := self.evaluate(translated_metrics)).is_ok()
-            else MetricOpConstantNA()
+            else GraphMetricConstantNA()
         )
 
     @override
@@ -439,11 +439,11 @@ class MaximumOf(BaseMetricExpression):
         service_name: ServiceName,
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
-    ) -> MetricOpConstant | MetricOpConstantNA:
+    ) -> GraphMetricConstant | GraphMetricConstantNA:
         return (
-            MetricOpConstant(value=evaluatation_result.ok.value)
+            GraphMetricConstant(value=evaluatation_result.ok.value)
             if (evaluatation_result := self.evaluate(translated_metrics)).is_ok()
-            else MetricOpConstantNA()
+            else GraphMetricConstantNA()
         )
 
     @override
@@ -495,8 +495,8 @@ class Sum(BaseMetricExpression):
         service_name: ServiceName,
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
-    ) -> MetricOpOperator:
-        return MetricOpOperator(
+    ) -> GraphMetricOperation:
+        return GraphMetricOperation(
             operator_name="+",
             operands=[
                 s.to_metric_operation(
@@ -559,8 +559,8 @@ class Product(BaseMetricExpression):
         service_name: ServiceName,
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
-    ) -> MetricOpOperator:
-        return MetricOpOperator(
+    ) -> GraphMetricOperation:
+        return GraphMetricOperation(
             operator_name="*",
             operands=[
                 f.to_metric_operation(
@@ -624,8 +624,8 @@ class Difference(BaseMetricExpression):
         service_name: ServiceName,
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
-    ) -> MetricOpOperator:
-        return MetricOpOperator(
+    ) -> GraphMetricOperation:
+        return GraphMetricOperation(
             operator_name="-",
             operands=[
                 self.minuend.to_metric_operation(
@@ -695,8 +695,8 @@ class Fraction(BaseMetricExpression):
         service_name: ServiceName,
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
-    ) -> MetricOpOperator:
-        return MetricOpOperator(
+    ) -> GraphMetricOperation:
+        return GraphMetricOperation(
             operator_name="/",
             operands=[
                 self.dividend.to_metric_operation(
@@ -761,8 +761,8 @@ class Minimum(BaseMetricExpression):
         service_name: ServiceName,
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
-    ) -> MetricOpOperator:
-        return MetricOpOperator(
+    ) -> GraphMetricOperation:
+        return GraphMetricOperation(
             operator_name="MIN",
             operands=[
                 o.to_metric_operation(
@@ -821,8 +821,8 @@ class Maximum(BaseMetricExpression):
         service_name: ServiceName,
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
-    ) -> MetricOpOperator:
-        return MetricOpOperator(
+    ) -> GraphMetricOperation:
+        return GraphMetricOperation(
             operator_name="MAX",
             operands=[
                 o.to_metric_operation(
@@ -883,8 +883,8 @@ class Average(BaseMetricExpression):
         service_name: ServiceName,
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
-    ) -> MetricOpOperator:
-        return MetricOpOperator(
+    ) -> GraphMetricOperation:
+        return GraphMetricOperation(
             operator_name="AVERAGE",
             operands=[
                 o.to_metric_operation(
@@ -940,8 +940,8 @@ class Merge(BaseMetricExpression):
         service_name: ServiceName,
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
-    ) -> MetricOpOperator:
-        return MetricOpOperator(
+    ) -> GraphMetricOperation:
+        return GraphMetricOperation(
             operator_name="MERGE",
             operands=[
                 o.to_metric_operation(

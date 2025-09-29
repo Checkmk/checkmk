@@ -14,7 +14,7 @@ from cmk.gui.config import active_config
 from cmk.gui.graphing._from_api import RegisteredMetric
 from cmk.gui.graphing._graph_metric_expressions import (
     AugmentedTimeSeries,
-    MetricOpRRDSource,
+    GraphMetricRRDSource,
     TimeSeriesMetaData,
 )
 from cmk.gui.graphing._graph_specification import (
@@ -70,7 +70,7 @@ _GRAPH_RECIPE = GraphRecipe(
         GraphMetric(
             title="Temperature",
             line_type="area",
-            operation=MetricOpRRDSource(
+            operation=GraphMetricRRDSource(
                 site_id=SiteId("NO_SITE"),
                 host_name=HostName("my-host"),
                 service_name="Temperature Zone 6",
@@ -114,7 +114,7 @@ def test_fetch_augmented_time_series(
                 GraphMetric(
                     title="Temperature",
                     line_type="area",
-                    operation=MetricOpRRDSource(
+                    operation=GraphMetricRRDSource(
                         site_id=SiteId("NO_SITE"),
                         host_name=HostName("my-host"),
                         service_name="Temperature Zone 6",
@@ -154,7 +154,7 @@ def test_fetch_augmented_time_series_with_conversion(
                 GraphMetric(
                     title="Temperature",
                     line_type="area",
-                    operation=MetricOpRRDSource(
+                    operation=GraphMetricRRDSource(
                         site_id=SiteId("NO_SITE"),
                         host_name=HostName("my-host"),
                         service_name="Temperature Zone 6",

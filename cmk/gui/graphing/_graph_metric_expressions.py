@@ -39,9 +39,9 @@ def create_metric_operation_from_translated_metric(
     service_name: ServiceName,
     translated_metric: TranslatedMetric,
     consolidation_function: GraphConsolidationFunction | None,
-) -> MetricOpRRDSource | MetricOpOperator:
+) -> GraphMetricRRDSource | GraphMetricOperation:
     metrics = [
-        MetricOpRRDSource(
+        GraphMetricRRDSource(
             site_id=site_id,
             host_name=host_name,
             service_name=service_name,
@@ -52,7 +52,7 @@ def create_metric_operation_from_translated_metric(
         for o in translated_metric.originals
     ]
     if len(metrics) > 1:
-        return MetricOpOperator(operator_name="MERGE", operands=metrics)
+        return GraphMetricOperation(operator_name="MERGE", operands=metrics)
     return metrics[0]
 
 
@@ -245,7 +245,7 @@ def parse_metric_operation(raw: object) -> GraphMetricExpression:
     raise TypeError(raw)
 
 
-class MetricOpConstant(GraphMetricExpression, frozen=True):
+class GraphMetricConstant(GraphMetricExpression, frozen=True):
     value: float
 
     @staticmethod
@@ -276,7 +276,7 @@ class MetricOpConstant(GraphMetricExpression, frozen=True):
         ]
 
 
-class MetricOpConstantNA(GraphMetricExpression, frozen=True):
+class GraphMetricConstantNA(GraphMetricExpression, frozen=True):
     @staticmethod
     def operation_name() -> Literal["constant_na"]:
         return "constant_na"
@@ -336,7 +336,7 @@ def _time_series_math(
     )
 
 
-class MetricOpOperator(GraphMetricExpression, frozen=True):
+class GraphMetricOperation(GraphMetricExpression, frozen=True):
     operator_name: Operators
     operands: Sequence[
         Annotated[SerializeAsAny[GraphMetricExpression], PlainValidator(parse_metric_operation)]
@@ -374,13 +374,13 @@ class MetricOpOperator(GraphMetricExpression, frozen=True):
         return []
 
 
-MetricOpOperator.model_rebuild()
+GraphMetricOperation.model_rebuild()
 
 
 AnnotatedHostName = Annotated[HostName, PlainValidator(HostName.parse)]
 
 
-class MetricOpRRDSource(GraphMetricExpression, frozen=True):
+class GraphMetricRRDSource(GraphMetricExpression, frozen=True):
     site_id: SiteId
     host_name: AnnotatedHostName
     service_name: ServiceName

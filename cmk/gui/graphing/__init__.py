@@ -11,10 +11,10 @@ from ._autocompleter import metrics_autocompleter
 from ._explicit_graphs import ExplicitGraphSpecification
 from ._graph_metric_expressions import (
     graph_metric_expression_registry,
-    MetricOpConstant,
-    MetricOpConstantNA,
-    MetricOpOperator,
-    MetricOpRRDSource,
+    GraphMetricConstant,
+    GraphMetricConstantNA,
+    GraphMetricOperation,
+    GraphMetricRRDSource,
 )
 from ._graph_specification import graph_specification_registry
 from ._graph_templates import TemplateGraphSpecification
@@ -30,10 +30,10 @@ def register(
     autocompleter_registry: AutocompleterRegistry,
 ) -> None:
     page_registry.register(PageEndpoint("ajax_vs_unit_resolver", PageVsAutocomplete))
-    graph_metric_expression_registry.register(MetricOpConstant)
-    graph_metric_expression_registry.register(MetricOpConstantNA)
-    graph_metric_expression_registry.register(MetricOpOperator)
-    graph_metric_expression_registry.register(MetricOpRRDSource)
+    graph_metric_expression_registry.register(GraphMetricConstant)
+    graph_metric_expression_registry.register(GraphMetricConstantNA)
+    graph_metric_expression_registry.register(GraphMetricOperation)
+    graph_metric_expression_registry.register(GraphMetricRRDSource)
     graph_specification_registry.register(ExplicitGraphSpecification)
     graph_specification_registry.register(TemplateGraphSpecification)
     config_variable_registry.register(ConfigVariableGraphTimeranges)

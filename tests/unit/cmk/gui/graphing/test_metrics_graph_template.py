@@ -7,7 +7,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import graphs, metrics, Title
 from cmk.gui.graphing._from_api import RegisteredMetric
-from cmk.gui.graphing._graph_metric_expressions import MetricOpRRDSource
+from cmk.gui.graphing._graph_metric_expressions import GraphMetricRRDSource
 from cmk.gui.graphing._graph_specification import (
     GraphMetric,
     GraphRecipe,
@@ -115,7 +115,7 @@ def test_template_recipes() -> None:
                 GraphMetric(
                     title="Used space",
                     line_type="stack",
-                    operation=MetricOpRRDSource(
+                    operation=GraphMetricRRDSource(
                         site_id=SiteId("site_id"),
                         host_name=HostName("host_name"),
                         service_name="Service name",
@@ -132,7 +132,7 @@ def test_template_recipes() -> None:
                 GraphMetric(
                     title="Free space",
                     line_type="stack",
-                    operation=MetricOpRRDSource(
+                    operation=GraphMetricRRDSource(
                         site_id=SiteId("site_id"),
                         host_name=HostName("host_name"),
                         service_name="Service name",
@@ -149,7 +149,7 @@ def test_template_recipes() -> None:
                 GraphMetric(
                     title="Total size",
                     line_type="line",
-                    operation=MetricOpRRDSource(
+                    operation=GraphMetricRRDSource(
                         site_id=SiteId("site_id"),
                         host_name=HostName("host_name"),
                         service_name="Service name",
@@ -190,7 +190,7 @@ def test_template_recipes() -> None:
                 GraphMetric(
                     title="Growth",
                     line_type="area",
-                    operation=MetricOpRRDSource(
+                    operation=GraphMetricRRDSource(
                         site_id=SiteId("site_id"),
                         host_name=HostName("host_name"),
                         service_name="Service name",

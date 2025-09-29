@@ -15,7 +15,7 @@ import time
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final, Literal, Protocol
+from typing import Final, Literal
 
 import livestatus
 
@@ -125,24 +125,17 @@ __all__ = [
 type _Labels = Mapping[str, str]
 
 
-class CheckerConfig(Protocol):  # protocol for now.
-    def only_from(self, host_name: HostName) -> None | str | list[str]: ...
-
-    def effective_service_level(
-        self, host_name: HostName, service_name: ServiceName, labels: _Labels
-    ) -> int: ...
-
-    def get_clustered_service_configuration(
-        self, host_name: HostName, service_name: ServiceName, labels: _Labels
-    ) -> tuple[cluster_mode.ClusterMode, Mapping[str, object]]: ...
-
-    def nodes(self, host_name: HostName) -> Sequence[HostName]: ...
-
-    def effective_host(
-        self, host_name: HostName, service_name: ServiceName, labels: _Labels
-    ) -> HostName: ...
-
-    def get_snmp_backend(self, host_name: HostName) -> SNMPBackendEnum: ...
+@dataclass(frozen=True)
+class CheckerConfig:
+    only_from: Callable[[HostName], None | str | list[str]]
+    effective_service_level: Callable[[HostName, ServiceName, _Labels], int]
+    get_clustered_service_configuration: Callable[
+        [HostName, ServiceName, _Labels],
+        tuple[cluster_mode.ClusterMode, Mapping[str, object]],
+    ]
+    nodes: Callable[[HostName], Sequence[HostName]]
+    effective_host: Callable[[HostName, ServiceName, _Labels], HostName]
+    get_snmp_backend: Callable[[HostName], SNMPBackendEnum]
 
 
 def _fetch_all(

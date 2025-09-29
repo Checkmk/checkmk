@@ -32,6 +32,7 @@ from cmk import trace
 from cmk.agent_based.v1.value_store import set_value_store_manager
 from cmk.base import config, profiling, sources
 from cmk.base.checkers import (
+    CheckerConfig,
     CheckerPluginMapper,
     CMKFetcher,
     CMKParser,
@@ -2850,7 +2851,14 @@ def run_checking(
         console.debug(f"Checkmk version {cmk_version.__version__}")
         fetched = fetcher(hostname, ip_address=ipaddress)
         check_plugins = CheckerPluginMapper(
-            config_cache,
+            CheckerConfig(
+                only_from=config_cache.only_from,
+                effective_service_level=config_cache.effective_service_level,
+                get_clustered_service_configuration=config_cache.get_clustered_service_configuration,
+                nodes=config_cache.nodes,
+                effective_host=config_cache.effective_host,
+                get_snmp_backend=config_cache.get_snmp_backend,
+            ),
             plugins.check_plugins,
             value_store_manager,
             logger=logger,

@@ -14,6 +14,7 @@ import pytest
 from cmk.agent_based.v1.value_store import set_value_store_manager
 from cmk.base import config
 from cmk.base.checkers import (
+    CheckerConfig,
     CheckerPluginMapper,
     SectionPluginMapper,
 )
@@ -103,7 +104,14 @@ def test_checks_executor(
         ) as value_store_manager,
     ):
         check_plugins = CheckerPluginMapper(
-            config_cache,
+            CheckerConfig(
+                only_from=config_cache.only_from,
+                effective_service_level=config_cache.effective_service_level,
+                get_clustered_service_configuration=config_cache.get_clustered_service_configuration,
+                nodes=config_cache.nodes,
+                effective_host=config_cache.effective_host,
+                get_snmp_backend=config_cache.get_snmp_backend,
+            ),
             agent_based_plugins.check_plugins,
             value_store_manager,
             logger=LOGGER,

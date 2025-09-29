@@ -89,6 +89,7 @@ from cmk.base.automations import (
     MKAutomationError,
 )
 from cmk.base.checkers import (
+    CheckerConfig,
     CheckerPluginMapper,
     CMKFetcher,
     CMKParser,
@@ -878,7 +879,14 @@ def _execute_discovery(
     ):
         is_cluster = host_name in hosts_config.clusters
         check_plugins = CheckerPluginMapper(
-            config_cache,
+            CheckerConfig(
+                only_from=config_cache.only_from,
+                effective_service_level=config_cache.effective_service_level,
+                get_clustered_service_configuration=config_cache.get_clustered_service_configuration,
+                nodes=config_cache.nodes,
+                effective_host=config_cache.effective_host,
+                get_snmp_backend=config_cache.get_snmp_backend,
+            ),
             plugins.check_plugins,
             value_store_manager,
             logger=logger,

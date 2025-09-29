@@ -60,7 +60,7 @@ def test_metric_expression_mirror(line_type: LineType, expected_line_type: LineT
 
 
 @pytest.mark.parametrize(
-    ("orig_names", "scales", "expected_operation"),
+    ("orig_names", "scales", "expected"),
     [
         pytest.param(
             ["metric-name"],
@@ -106,7 +106,7 @@ def test_metric_expression_mirror(line_type: LineType, expected_line_type: LineT
 def test_metric_to_graph_metric_expression(
     orig_names: Sequence[str],
     scales: Sequence[int | float],
-    expected_operation: GraphMetricOperation | GraphMetricRRDSource,
+    expected: GraphMetricOperation | GraphMetricRRDSource,
 ) -> None:
     assert (
         Metric("metric-name").to_graph_metric_expression(
@@ -129,5 +129,5 @@ def test_metric_to_graph_metric_expression(
             },
             None,
         )
-        == expected_operation
+        == expected
     )

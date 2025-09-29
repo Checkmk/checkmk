@@ -144,14 +144,15 @@ def timeperiod_active(timeperiod: TimeperiodName) -> bool | None:
 def update_timeperiods_cache() -> None:
     # { "last_update": 1498820128, "timeperiods": [{"24x7": True}] }
     # The value is store within the config cache since we need a fresh start on reload
-    tp_cache = cache_manager.obtain_cache("timeperiods_cache")
+    tp_cache: dict[TimeperiodName, bool] = cache_manager.obtain_cache("timeperiods_cache")
 
     if not tp_cache:
-        connection = livestatus.LocalConnection()
-        connection.set_timeout(2)
-        response = connection.query("GET timeperiods\nColumns: name in")
-        for tp_name, tp_active in response:
-            tp_cache[tp_name] = bool(tp_active)
+        tp_cache.update(
+            {
+                TimeperiodName(k): v
+                for k, v in livestatus.get_timeperiods_active_map(timeout=2).items()
+            }
+        )
 
 
 def cleanup_timeperiod_caches() -> None:

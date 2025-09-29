@@ -26,6 +26,7 @@ pkg_mkdirs(
     dirs = [
         "skel/var/log/clickhouse-server",
         "skel/var/lib/clickhouse-server",
+        "skel/etc/clickhouse-server/conf.d",
     ],
     tags = ["manual"],
 )

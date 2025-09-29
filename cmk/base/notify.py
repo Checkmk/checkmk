@@ -1558,7 +1558,7 @@ def rbn_match_event_console(
 
     if "match_ec" in rule:
         match_ec_options = rule["match_ec"]
-        if match_ec_options and not is_ec_notification:
+        if not is_ec_notification:
             return "Notification has not been created by the Event Console."
 
         if match_ec_options:

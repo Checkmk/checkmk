@@ -168,7 +168,7 @@ def test_rbn_groups_contacts(user_groups: Mapping[ContactName, list[str]]) -> No
             {
                 "PARAMETER_FROM_ADDRESS": "from@lala.com",
             },
-            None,
+            "Notification has not been created by the Event Console.",
             id="Match only Event Console alerts, no notification from Event Console",
         ),
         pytest.param(

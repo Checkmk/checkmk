@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Generator
 from dataclasses import asdict
+from typing import override
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
@@ -12,7 +13,7 @@ from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
-from cmk.gui.pages import PageEndpoint, PageRegistry
+from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri, makeuri_contextless
 from cmk.gui.wato.pages.user_profile.main_menu import set_user_attribute
 from cmk.gui.watolib.hosts_and_folders import Host
@@ -24,6 +25,9 @@ from cmk.utils.urls import is_allowed_url
 def register(page_registry: PageRegistry) -> None:
     page_registry.register(PageEndpoint("welcome", _welcome_page))
     page_registry.register(PageEndpoint("ajax_mark_step_as_complete", _ajax_mark_step_as_complete))
+    page_registry.register(
+        PageEndpoint("ajax_get_welcome_page_stage_information", PageWelcomePageStageInformation)
+    )
 
 
 def _get_finished_stages() -> Generator[FinishedEnum]:
@@ -87,6 +91,12 @@ def _ajax_mark_step_as_complete(config: Config) -> None:
             completed_steps = user.welcome_completed_steps
             completed_steps.add(completed_step_name)
             user.welcome_completed_steps = completed_steps
+
+
+class PageWelcomePageStageInformation(AjaxPage):
+    @override
+    def page(self, config: Config) -> PageResult:
+        return asdict(get_welcome_data().stage_information)
 
 
 def _welcome_page(config: Config) -> None:
@@ -246,6 +256,11 @@ def get_welcome_data() -> WelcomePage:
                 request,
                 addvars=[],
                 filename="ajax_mark_step_as_complete.py",
+            ),
+            get_stage_information=makeuri(
+                request,
+                addvars=[],
+                filename="ajax_get_welcome_page_stage_information.py",
             ),
         ),
         is_start_url=user.start_url == "welcome.py",

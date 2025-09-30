@@ -48,7 +48,8 @@
         "test_notifications": { "type": "string" },
         "add_custom_dashboard": { "type": "string" },
         "all_dashboards": { "type": "string" },
-        "mark_step_completed": { "type": "string" }
+        "mark_step_completed": { "type": "string" },
+        "get_stage_information": { "type": "string" }
       },
       "required": [
         "checkmk_ai",
@@ -77,7 +78,8 @@
         "test_notifications",
         "add_custom_dashboard",
         "all_dashboards",
-        "mark_step_completed"
+        "mark_step_completed",
+        "get_stage_information"
       ]
     },
     "stage_information": {

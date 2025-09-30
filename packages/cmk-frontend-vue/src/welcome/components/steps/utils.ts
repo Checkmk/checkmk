@@ -23,3 +23,16 @@ export async function markStepAsComplete(
     })
     .catch(() => {})
 }
+
+export async function getWelcomeStageInformation(
+  getStageInformationUrl: string
+): Promise<StageInformation | null> {
+  return await axios
+    .get(getStageInformationUrl)
+    .then((response) => {
+      return response.data.result as StageInformation
+    })
+    .catch(() => {
+      return null
+    })
+}

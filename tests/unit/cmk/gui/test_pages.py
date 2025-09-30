@@ -65,6 +65,7 @@ def test_registered_pages() -> None:
         "ajax_sidebar_get_sites_and_changes",
         "ajax_unified_search",
         "ajax_mark_step_as_complete",
+        "ajax_get_welcome_page_stage_information",
         "automation_login",
         "bi_map",
         "bi_render_tree",

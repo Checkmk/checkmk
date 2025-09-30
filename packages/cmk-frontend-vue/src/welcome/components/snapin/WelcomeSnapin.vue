@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import type { StageInformation, WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
+import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -13,6 +14,8 @@ import CmkBadge from '@/components/CmkBadge.vue'
 import CmkButton from '@/components/CmkButton.vue'
 import CmkIcon from '@/components/CmkIcon.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
+
+import { getWelcomeStageInformation } from '@/welcome/components/steps/utils.ts'
 
 import StepsProgressBar from '../StepsProgressBar.vue'
 import { totalSteps } from '../steps/stepComponents'
@@ -28,19 +31,21 @@ interface CmkWindow extends Window {
   main: Window
 }
 
-const completedSteps = props.stage_information.finished.length
+const currentStageInformation = ref(props.stage_information)
+const completedSteps = computed(() => currentStageInformation.value.finished.length)
+const completed = computed(() => completedSteps.value === totalSteps)
 
-function openSlideIn() {
+async function openSlideIn() {
+  currentStageInformation.value =
+    (await getWelcomeStageInformation(props.urls.get_stage_information)) || props.stage_information
   const event = new CustomEvent('open-welcome-slide-in', {
     detail: {
       urls: props.urls,
-      stage_information: props.stage_information
+      stage_information: currentStageInformation.value
     }
   })
   ;(top!.frames as CmkWindow).main.dispatchEvent(event)
 }
-
-const completed = completedSteps === totalSteps
 </script>
 
 <template>

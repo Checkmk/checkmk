@@ -3,65 +3,58 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersEnvironment,
+from cmk.gui.form_specs.generators.tuple_utils import TupleLevels
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    Percentage,
 )
-from cmk.gui.valuespec import Dictionary, Float, Migrate, TextInput, Tuple
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 
-def _item_spec_airflow_deviation():
-    return TextInput(
-        title=_("Detector ID"),
-        help=_("The identifier of the detector."),
-    )
-
-
-def _parameter_valuespec_airflow_deviation():
-    return Migrate(
-        valuespec=Dictionary(
-            title=_("Airflow Deviation measured at airflow sensors"),
-            elements=[
-                (
-                    "levels_upper",
-                    Tuple(
-                        title=_("Upper levels"),
-                        elements=[
-                            Float(title=_("warning at"), unit="%", default_value=20),
-                            Float(title=_("critical at"), unit="%", default_value=20),
-                        ],
-                    ),
+def _parameter_form_spec_airflow_deviation() -> Dictionary:
+    return Dictionary(
+        title=Title("Airflow Deviation measured at airflow sensors"),
+        elements={
+            "levels_upper": DictElement(
+                required=False,
+                parameter_form=TupleLevels(
+                    title=Title("Upper levels"),
+                    elements=[
+                        Percentage(title=Title("warning at"), prefill=DefaultValue(20)),
+                        Percentage(
+                            title=Title("critical at"),
+                            prefill=DefaultValue(20),
+                        ),
+                    ],
                 ),
-                (
-                    "levels_lower",
-                    Tuple(
-                        help=_("Lower levels"),
-                        elements=[
-                            Float(
-                                title=_("critical if below or equal"), unit="%", default_value=-20
-                            ),
-                            Float(
-                                title=_("warning if below or equal"), unit="%", default_value=-20
-                            ),
-                        ],
-                    ),
+            ),
+            "levels_lower": DictElement(
+                required=False,
+                parameter_form=TupleLevels(
+                    title=Title("Lower levels"),
+                    elements=[
+                        Percentage(
+                            title=Title("critical if below or equal"),
+                            prefill=DefaultValue(-20),
+                        ),
+                        Percentage(
+                            title=Title("warning if below or equal"),
+                            prefill=DefaultValue(-20),
+                        ),
+                    ],
                 ),
-            ],
-        ),
-        migrate=lambda p: (
-            p if isinstance(p, dict) else {"levels_upper": p[2:], "levels_lower": p[:2]}
-        ),
+            ),
+        },
     )
 
 
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="airflow_deviation",
-        group=RulespecGroupCheckParametersEnvironment,
-        item_spec=_item_spec_airflow_deviation,
-        parameter_valuespec=_parameter_valuespec_airflow_deviation,
-        title=lambda: _("Airflow Deviation in Percent"),
-    )
+rule_spec_airflow_deviation = CheckParameters(
+    name="airflow_deviation",
+    title=Title("Airflow Deviation in Percent"),
+    topic=Topic.ENVIRONMENTAL,
+    parameter_form=_parameter_form_spec_airflow_deviation,
+    condition=HostAndItemCondition(item_title=Title("Detector ID")),
 )

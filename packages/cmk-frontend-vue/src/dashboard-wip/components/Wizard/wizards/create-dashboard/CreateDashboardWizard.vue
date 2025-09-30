@@ -12,7 +12,6 @@ import CmkSpace from '@/components/CmkSpace.vue'
 import HelpText from '@/components/HelpText.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
-import { useDashboardsManager } from '@/dashboard-wip/composables/useDashboardsManager'
 import { type DashboardGeneralSettings, DashboardLayout } from '@/dashboard-wip/types/dashboard'
 
 import ActionBar from '../../components/ActionBar.vue'
@@ -43,17 +42,20 @@ interface CreateDashboardWizardProps {
 const props = defineProps<CreateDashboardWizardProps>()
 
 const emit = defineEmits<{
-  goToSetFilters: [dashboardId: string]
-  goToViewList: [dashboardId: string]
-  cancel: []
+  'create-dashboard': [
+    dashboardId: string,
+    settings: DashboardGeneralSettings,
+    layout: DashboardLayout,
+    scopeIds: string[],
+    nextStep: 'setFilters' | 'viewList'
+  ]
+  'cancel-creation': []
 }>()
 
-const dashboardManager = useDashboardsManager()
-
-//Type
+// Type
 const dashboardType = ref<DashboardType>(DashboardType.UNRESTRICTED)
 
-//General
+// General
 const name = ref<string>('')
 const nameErrors = ref<string[]>([])
 
@@ -68,12 +70,12 @@ const dashboardLayout = ref<DashboardLayout>(
     : DashboardLayout.RELATIVE_GRID
 )
 
-//Visibility
+// Visibility
 const showInMonitorMenu = ref<boolean>(false)
 const monitorMenu = ref<string>('dashboards')
 const sortIndex = ref<number>(99)
 
-//Dashboard scope
+// Dashboard scope
 const dashboardScopeIds = ref<string[]>([])
 const scopeErrors = ref<string[]>([])
 
@@ -126,7 +128,7 @@ const _selectSingleInfo = () => {
   }
 }
 
-const _createDashboard = async () => {
+const _buildSettings = (): DashboardGeneralSettings => {
   const dashboardTitle: DashboardTitle = {
     text: name.value.trim(),
     render: true,
@@ -163,32 +165,39 @@ const _createDashboard = async () => {
     visibility: dashboardVisibility
   }
 
-  await dashboardManager.createDashboard(
-    uniqueId.value.trim(),
-    settings,
-    dashboardLayout.value,
-    dashboardScopeIds.value
-  )
+  return settings
 }
 
 const createAndSetFilters = async () => {
   if (await validate()) {
     _selectSingleInfo()
-    await _createDashboard()
-    emit('goToSetFilters', uniqueId.value.trim())
+    emit(
+      'create-dashboard',
+      uniqueId.value.trim(),
+      _buildSettings(),
+      dashboardLayout.value,
+      dashboardScopeIds.value,
+      'setFilters'
+    )
   }
 }
 
 const createAndViewList = async () => {
   if (await validate()) {
     _selectSingleInfo()
-    await _createDashboard()
-    emit('goToViewList', uniqueId.value.trim())
+    emit(
+      'create-dashboard',
+      uniqueId.value.trim(),
+      _buildSettings(),
+      dashboardLayout.value,
+      dashboardScopeIds.value,
+      'viewList'
+    )
   }
 }
 
 const cancel = () => {
-  emit('cancel')
+  emit('cancel-creation')
 }
 </script>
 

@@ -46,7 +46,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.permissions import permission_registry
-from cmk.gui.type_defs import InfoName, VisualContext
+from cmk.gui.type_defs import InfoName, VisualContext, VisualTypeName
 from cmk.gui.utils.filter import check_if_non_default_filter_in_request
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import is_ntop_configured
@@ -149,8 +149,8 @@ def page_dashboard_app(config: Config) -> None:
             },
         }
     else:
-        visual_name = "dashboard"
-        title = _("Create %s") % visual_name
+        visual_name: VisualTypeName = "dashboards"
+        title = _("Create dashboard")
         breadcrumb = visual_page_breadcrumb(visual_name, title, "create")
 
     html.body_start()

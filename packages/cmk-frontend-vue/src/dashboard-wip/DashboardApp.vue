@@ -17,6 +17,7 @@ import DashboardMenuHeader from '@/dashboard-wip/components/DashboardMenuHeader/
 import { createWidgetLayout } from '@/dashboard-wip/components/ResponsiveGrid/composables/useResponsiveGridLayout'
 import AddWidgetDialog from '@/dashboard-wip/components/WidgetWorkflow/StarterDialog/AddWidgetDialog.vue'
 import { dashboardWidgetWorkflows } from '@/dashboard-wip/components/WidgetWorkflow/WidgetWorkflowTypes.ts'
+import CreateDashboardWizard from '@/dashboard-wip/components/Wizard/CreateDashboardWizard.vue'
 import WizardSelector from '@/dashboard-wip/components/WizardSelector/WizardSelector.vue'
 import { widgetTypeToSelectorMatcher } from '@/dashboard-wip/components/WizardSelector/utils.ts'
 import type { FilterDefinition } from '@/dashboard-wip/components/filter/types.ts'
@@ -25,6 +26,7 @@ import { useDashboardWidgets } from '@/dashboard-wip/composables/useDashboardWid
 import { useDashboardsManager } from '@/dashboard-wip/composables/useDashboardsManager.ts'
 import type {
   ContentResponsiveGrid,
+  DashboardGeneralSettings,
   DashboardLayout,
   DashboardMetadata,
   DashboardModel
@@ -49,6 +51,7 @@ const isDashboardEditingMode = ref(false)
 const openDashboardFilterSettings = ref(false)
 const openDashboardSettings = ref(false)
 const openAddWidgetDialog = ref(false)
+const openDashboardCreationDialog = ref(props.mode === 'create')
 const openWizard = ref(false)
 const selectedWizard = ref('')
 const widgetToEdit = ref<string | null>(null)
@@ -190,6 +193,27 @@ function getWidgetSpecToEdit(widgetId: string | null): WidgetSpec | null {
   }
 }
 
+const createDashboard = async (
+  dashboardId: string,
+  settings: DashboardGeneralSettings,
+  layout: DashboardLayout,
+  scopeIds: string[],
+  nextStep: 'setFilters' | 'viewList'
+) => {
+  openDashboardCreationDialog.value = false
+  await dashboardsManager.createDashboard(dashboardId, settings, layout, scopeIds)
+  isDashboardEditingMode.value = true
+
+  if (nextStep === 'setFilters') {
+    openDashboardFilterSettings.value = true
+  } else if (nextStep === 'viewList') {
+    // TODO
+    console.log('return to list review')
+  } else {
+    throw new Error(`Unknown next step: ${nextStep}`)
+  }
+}
+
 function deepClone<T>(obj: T): T {
   return structuredClone(obj)
 }
@@ -210,6 +234,10 @@ function deepClone<T>(obj: T): T {
       />
     </div>
     <div>
+      <CreateDashboardWizard
+        v-model:open="openDashboardCreationDialog"
+        @create-dashboard="(...args) => createDashboard(...args)"
+      />
       <AddWidgetDialog
         v-model:open="openAddWidgetDialog"
         :workflow-items="dashboardWidgetWorkflows"

@@ -818,6 +818,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     ),
     Component("cmk.cee.dcd"): _allow(
         *PACKAGE_CCC,
+        "cmk.cce.metric_backend.dcd.register",
         "cmk.otel_collector",
         "cmk.piggyback",
         "cmk.utils",
@@ -917,6 +918,11 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_CRYPTO,
         "cmk.events",
         "cmk.otel_collector",
+    ),
+    Component("cmk.cce.metric_backend.dcd"): _allow(
+        "cmk.ccc",
+        "cmk.cee.dcd",
+        "cmk.utils",
     ),
     Component("cmk.cce.metric_backend.gui"): _allow(
         *PACKAGE_PLUGIN_APIS,

@@ -499,6 +499,7 @@ class MainModuleQuickSetupAWS(ABCMainModuleQuickSetup):
         return ["aws"]
 
 
+# Deprecated, will be removed in future releases
 class MainModuleQuickSetupAzure(ABCMainModuleQuickSetup):
     @property
     @override
@@ -516,7 +517,7 @@ class MainModuleQuickSetupAzure(ABCMainModuleQuickSetup):
     @property
     @override
     def title(self) -> str:
-        return _("Microsoft Azure")
+        return _("Microsoft Azure (deprecated)")
 
     @property
     @override
@@ -526,7 +527,7 @@ class MainModuleQuickSetupAzure(ABCMainModuleQuickSetup):
     @property
     @override
     def description(self) -> str:
-        return _("Configure Microsoft Azure monitoring in Checkmk")
+        return _("Configure Microsoft Azure (deprecated) monitoring in Checkmk")
 
     @property
     @override

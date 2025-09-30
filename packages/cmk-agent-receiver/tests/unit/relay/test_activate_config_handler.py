@@ -17,8 +17,11 @@ def test_process_activate_config(
     relays_repository: RelaysRepository,
     tasks_repository: TasksRepository,
     test_user: InternalAuth,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # arrange
+    # let's mock _get_config_serial to avoid filesystem dependency
+    monkeypatch.setattr(activate_config_handler, "_get_config_serial", lambda: "FAKE_SERIAL_1")
 
     # Register two relays
     relay_id_1 = relays_repository.add_relay(test_user, alias="test-relay-1")
@@ -33,8 +36,8 @@ def test_process_activate_config(
 
     assert len(tasks_relay_1_enqueued) == 1
     assert isinstance(tasks_relay_1_enqueued[0].spec, RelayConfigSpec)
-    assert tasks_relay_1_enqueued[0].spec.tar_data == ""
+    assert tasks_relay_1_enqueued[0].spec.serial == "FAKE_SERIAL_1"
 
     assert len(tasks_relay_2_enqueued) == 1
     assert isinstance(tasks_relay_2_enqueued[0].spec, RelayConfigSpec)
-    assert tasks_relay_2_enqueued[0].spec.tar_data == ""
+    assert tasks_relay_2_enqueued[0].spec.serial == "FAKE_SERIAL_1"

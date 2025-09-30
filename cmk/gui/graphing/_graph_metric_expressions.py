@@ -93,7 +93,29 @@ class RRDDataKey:
     scale: float
 
 
-RRDData = Mapping[RRDDataKey, TimeSeries]
+@dataclass(frozen=True)
+class QueryAggregationSumRate:
+    value: float
+    unit: Literal["s", "min", "h"]
+
+
+@dataclass(frozen=True)
+class QueryAggregationHistogramPercentile:
+    value: float
+
+
+@dataclass(frozen=True)
+class QueryDataKey:
+    metric_name: MetricName
+    resource_attributes: Sequence[str]
+    scope_attributes: Sequence[str]
+    data_point_attributes: Sequence[str]
+    aggregation_sum: QueryAggregationSumRate | None
+    aggregation_histogram: QueryAggregationHistogramPercentile | None
+
+
+type RRDData = Mapping[RRDDataKey, TimeSeries]
+type QueryData = Mapping[QueryDataKey, TimeSeries]
 
 
 def _derive_num_points(rrd_data: RRDData) -> tuple[int, int, int, int]:
@@ -201,13 +223,14 @@ class GraphMetricExpression(BaseModel, ABC, frozen=True):
     def keys(
         self,
         registered_metrics: Mapping[str, RegisteredMetric],
-    ) -> Iterator[TranslationKey | RRDDataKey]: ...
+    ) -> Iterator[TranslationKey | RRDDataKey | QueryDataKey]: ...
 
     @abstractmethod
     def compute_augmented_time_series(
         self,
-        rrd_data: RRDData,
         registered_metrics: Mapping[str, RegisteredMetric],
+        rrd_data: RRDData,
+        query_data: QueryData,
     ) -> Sequence[AugmentedTimeSeries]: ...
 
     def fade_odd_color(self) -> bool:
@@ -252,13 +275,14 @@ class GraphMetricConstant(GraphMetricExpression, frozen=True):
     def keys(
         self,
         registered_metrics: Mapping[str, RegisteredMetric],
-    ) -> Iterator[TranslationKey | RRDDataKey]:
+    ) -> Iterator[TranslationKey | RRDDataKey | QueryDataKey]:
         yield from ()
 
     def compute_augmented_time_series(
         self,
-        rrd_data: RRDData,
         registered_metrics: Mapping[str, RegisteredMetric],
+        rrd_data: RRDData,
+        query_data: QueryData,
     ) -> Sequence[AugmentedTimeSeries]:
         num_points, start, end, step = _derive_num_points(rrd_data)
         return [
@@ -281,13 +305,14 @@ class GraphMetricConstantNA(GraphMetricExpression, frozen=True):
     def keys(
         self,
         registered_metrics: Mapping[str, RegisteredMetric],
-    ) -> Iterator[TranslationKey | RRDDataKey]:
+    ) -> Iterator[TranslationKey | RRDDataKey | QueryDataKey]:
         yield from ()
 
     def compute_augmented_time_series(
         self,
-        rrd_data: RRDData,
         registered_metrics: Mapping[str, RegisteredMetric],
+        rrd_data: RRDData,
+        query_data: QueryData,
     ) -> Sequence[AugmentedTimeSeries]:
         num_points, start, end, step = _derive_num_points(rrd_data)
         return [
@@ -348,23 +373,21 @@ class GraphMetricOperation(GraphMetricExpression, frozen=True):
     def keys(
         self,
         registered_metrics: Mapping[str, RegisteredMetric],
-    ) -> Iterator[TranslationKey | RRDDataKey]:
+    ) -> Iterator[TranslationKey | RRDDataKey | QueryDataKey]:
         yield from (k for o in self.operands for k in o.keys(registered_metrics))
 
     def compute_augmented_time_series(
         self,
-        rrd_data: RRDData,
         registered_metrics: Mapping[str, RegisteredMetric],
+        rrd_data: RRDData,
+        query_data: QueryData,
     ) -> Sequence[AugmentedTimeSeries]:
         if result := _time_series_math(
             self.operator_name,
             [
                 operand_evaluated.data
                 for operand_evaluated in chain.from_iterable(
-                    operand.compute_augmented_time_series(
-                        rrd_data,
-                        registered_metrics,
-                    )
+                    operand.compute_augmented_time_series(registered_metrics, rrd_data, query_data)
                     for operand in self.operands
                 )
             ],
@@ -394,7 +417,7 @@ class GraphMetricRRDSource(GraphMetricExpression, frozen=True):
     def keys(
         self,
         registered_metrics: Mapping[str, RegisteredMetric],
-    ) -> Iterator[TranslationKey | RRDDataKey]:
+    ) -> Iterator[TranslationKey | RRDDataKey | QueryDataKey]:
         yield RRDDataKey(
             self.site_id,
             self.host_name,
@@ -406,8 +429,9 @@ class GraphMetricRRDSource(GraphMetricExpression, frozen=True):
 
     def compute_augmented_time_series(
         self,
-        rrd_data: RRDData,
         registered_metrics: Mapping[str, RegisteredMetric],
+        rrd_data: RRDData,
+        query_data: QueryData,
     ) -> Sequence[AugmentedTimeSeries]:
         if (
             key := RRDDataKey(

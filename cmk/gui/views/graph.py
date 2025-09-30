@@ -10,8 +10,13 @@ from typing import Literal
 from uuid import uuid4
 
 from cmk.ccc.user import UserId
+from cmk.ccc.version import edition
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.gui.config import active_config
+from cmk.gui.graphing import (
+    FetchTimeSeries,
+    metric_backend_registry,
+)
 from cmk.gui.graphing._from_api import (
     graphs_from_api,
     metrics_from_api,
@@ -67,6 +72,7 @@ from cmk.gui.view_utils import (
     JSONExportError,
     PythonExportError,
 )
+from cmk.utils import paths
 
 
 def register(
@@ -183,6 +189,7 @@ def _paint_time_graph_cmk(
     debug: bool,
     graph_timeranges: Sequence[GraphTimerange],
     temperature_unit: TemperatureUnit,
+    fetch_time_series: FetchTimeSeries,
     user: LoggedInUser,
     request: Request,
     response: Response,
@@ -269,6 +276,7 @@ def _paint_time_graph_cmk(
         debug=debug,
         graph_timeranges=graph_timeranges,
         temperature_unit=temperature_unit,
+        fetch_time_series=fetch_time_series,
         # Ideally, we would use 2-dim. coordinates: (row_idx, col_idx).
         # Unfortunately, we have no access to this information here. Regarding the rows, we could
         # use (site, host, service) as identifier, but for the columns, there does not seem to be
@@ -362,6 +370,7 @@ class PainterServiceGraphs(Painter):
             debug=self.config.debug,
             graph_timeranges=self.config.graph_timeranges,
             temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
+            fetch_time_series=metric_backend_registry[str(edition(paths.omd_root))].client,
             show_time_range_previews=True,
         )
 
@@ -413,6 +422,7 @@ class PainterHostGraphs(Painter):
             debug=self.config.debug,
             graph_timeranges=self.config.graph_timeranges,
             temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
+            fetch_time_series=metric_backend_registry[str(edition(paths.omd_root))].client,
             show_time_range_previews=True,
             # for PainterHostGraphs used to paint service graphs (view "Service graphs of host"),
             # also render the graphs if there are no historic metrics available (but perf data is)
@@ -490,6 +500,7 @@ class PainterSvcPnpgraph(Painter):
             debug=self.config.debug,
             graph_timeranges=self.config.graph_timeranges,
             temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
+            fetch_time_series=metric_backend_registry[str(edition(paths.omd_root))].client,
         )
 
     def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
@@ -543,6 +554,7 @@ class PainterHostPnpgraph(Painter):
             debug=self.config.debug,
             graph_timeranges=self.config.graph_timeranges,
             temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
+            fetch_time_series=metric_backend_registry[str(edition(paths.omd_root))].client,
         )
 
     def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:

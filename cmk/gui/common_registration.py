@@ -306,7 +306,12 @@ def register(
     )
     vue_registration.register()
     gui_background_job.register(permission_section_registry, permission_registry)
-    graphing.register(page_registry, config_variable_registry, autocompleter_registry)
+    graphing.register(
+        edition(paths.omd_root),
+        page_registry,
+        config_variable_registry,
+        autocompleter_registry,
+    )
     agent_registration.register(permission_section_registry)
     weblib.register(page_registry)
     openapi_registration.register(

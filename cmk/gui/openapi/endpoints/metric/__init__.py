@@ -8,9 +8,10 @@ Metrics visible in the Checkmk user interface can also be retrieved via the
 REST-API.
 """
 
-from cmk.ccc.version import Edition
+from cmk.ccc.version import Edition, edition
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.graphing import metric_backend_registry
 from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api
 from cmk.gui.graphing._graph_images import graph_spec_from_request
 from cmk.gui.graphing._unit import get_temperature_unit
@@ -26,6 +27,7 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
+from cmk.utils import paths
 
 
 # This is the only endpoint that is available in the raw edition
@@ -64,6 +66,7 @@ def get_graph(params):
             UserPermissions.from_config(active_config, permission_registry),
             debug=active_config.debug,
             temperature_unit=get_temperature_unit(user, active_config.default_temperature_unit),
+            fetch_time_series=metric_backend_registry[str(edition(paths.omd_root))].client,
         )
 
     except MKUserError as e:

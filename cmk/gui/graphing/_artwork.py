@@ -36,6 +36,7 @@ from ._graph_specification import (
     HorizontalRule,
     MinimalVerticalRange,
 )
+from ._metric_backend_registry import FetchTimeSeries
 from ._time_series import TimeSeries, TimeSeriesValue
 from ._time_series_fetcher import fetch_augmented_time_series
 from ._unit import user_specific_unit, UserSpecificUnit
@@ -151,6 +152,7 @@ def compute_graph_artwork(
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
     temperature_unit: TemperatureUnit,
+    fetch_time_series: FetchTimeSeries,
     graph_display_id: str = "",
 ) -> GraphArtwork:
     unit_spec = user_specific_unit(graph_recipe.unit_spec, temperature_unit)
@@ -161,6 +163,7 @@ def compute_graph_artwork(
             graph_data_range,
             registered_metrics,
             temperature_unit=temperature_unit,
+            fetch_time_series=fetch_time_series,
         )
     )
 
@@ -347,6 +350,7 @@ def _compute_graph_curves(
     graph_data_range: GraphDataRange,
     *,
     temperature_unit: TemperatureUnit,
+    fetch_time_series: FetchTimeSeries,
 ) -> Iterator[Curve]:
     # Fetch all raw RRD data
     for spec in fetch_augmented_time_series(
@@ -354,6 +358,7 @@ def _compute_graph_curves(
         graph_recipe,
         graph_data_range,
         temperature_unit=temperature_unit,
+        fetch_time_series=fetch_time_series,
     ):
         multi = len(spec.augmented_time_series) > 1
         mirror_prefix: Literal["", "-"] = "-" if spec.line_type.startswith("-") else ""
@@ -385,6 +390,7 @@ def compute_graph_artwork_curves(
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
     temperature_unit: TemperatureUnit,
+    fetch_time_series: FetchTimeSeries,
 ) -> list[Curve]:
     curves = list(
         _compute_graph_curves(
@@ -392,6 +398,7 @@ def compute_graph_artwork_curves(
             graph_recipe,
             graph_data_range,
             temperature_unit=temperature_unit,
+            fetch_time_series=fetch_time_series,
         )
     )
     if graph_recipe.omit_zero_metrics:

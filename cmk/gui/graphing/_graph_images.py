@@ -18,6 +18,7 @@ import livestatus
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.ccc.version import edition
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.gui import pdf
 from cmk.gui.config import Config
@@ -36,6 +37,7 @@ from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import SizePT
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperate_unit import TemperatureUnit
+from cmk.utils import paths
 
 from ._artwork import compute_graph_artwork, compute_graph_artwork_curves, GraphArtwork
 from ._from_api import graphs_from_api, metrics_from_api, RegisteredMetric
@@ -56,6 +58,10 @@ from ._graph_specification import (
     parse_raw_graph_specification,
 )
 from ._html_render import GraphDestinations
+from ._metric_backend_registry import (
+    FetchTimeSeries,
+    metric_backend_registry,
+)
 from ._utils import get_graph_data_from_livestatus
 
 
@@ -81,6 +87,7 @@ class AjaxGraphImagesForNotifications(Page):
             UserPermissions.from_config(config, permission_registry),
             debug=config.debug,
             temperature_unit=get_temperature_unit(user, config.default_temperature_unit),
+            fetch_time_series=metric_backend_registry[str(edition(paths.omd_root))].client,
         )
 
 
@@ -91,6 +98,7 @@ def _answer_graph_image_request(
     *,
     debug: bool,
     temperature_unit: TemperatureUnit,
+    fetch_time_series: FetchTimeSeries,
 ) -> None:
     try:
         host_name = request.get_validated_type_input_mandatory(HostName, "host")
@@ -150,6 +158,7 @@ def _answer_graph_image_request(
                 graph_render_config.size,
                 registered_metrics,
                 temperature_unit=temperature_unit,
+                fetch_time_series=fetch_time_series,
             )
             graph_png = render_graph_image(graph_artwork, graph_render_config)
 
@@ -303,6 +312,7 @@ def graph_spec_from_request(
     *,
     debug: bool,
     temperature_unit: TemperatureUnit,
+    fetch_time_series: FetchTimeSeries,
 ) -> dict[str, Any]:
     try:
         graph_data_range, graph_recipes = graph_recipes_for_api_request(
@@ -329,6 +339,7 @@ def graph_spec_from_request(
         graph_data_range,
         registered_metrics,
         temperature_unit=temperature_unit,
+        fetch_time_series=fetch_time_series,
     )
 
     api_curves = []

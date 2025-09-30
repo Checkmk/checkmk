@@ -6,6 +6,7 @@ edition_python_deps = {
     "cre": [],
     "cce": [
         "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger",
+        "//non-free/packages/cmk-metric-backend",
         "//non-free/packages/cmk-mknotifyd",
         "//non-free/packages/cmk-otel-collector",
         "//non-free/packages/cmk-update-agent",
@@ -16,12 +17,14 @@ edition_python_deps = {
     ],
     "cme": [
         "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger",
+        "//non-free/packages/cmk-metric-backend",
         "//non-free/packages/cmk-mknotifyd",
         "//non-free/packages/cmk-update-agent",
         "//non-free/packages/cmk-otel-collector",
     ],
     "cse": [
         "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger",
+        "//non-free/packages/cmk-metric-backend",
         "//non-free/packages/cmk-mknotifyd",
         "//non-free/packages/cmk-update-agent",
         "//non-free/packages/cmk-otel-collector",
@@ -39,6 +42,7 @@ edition_deps = {
     "cce": [
         "//non-free/packages/cmk-core-helpers:pkg_tar",
         "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger-pkg_tar",
+        "//non-free/packages/cmk-metric-backend:pkg_tar",
         "//non-free/packages/cmk-mknotifyd:pkg_tar",
         "//non-free/packages/cmc-protocols:pkg_tar",
         "//non-free/packages/cmk-otel-collector:pkg_tar",
@@ -62,6 +66,7 @@ edition_deps = {
     "cme": [
         "//non-free/packages/cmk-core-helpers:pkg_tar",
         "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger-pkg_tar",
+        "//non-free/packages/cmk-metric-backend:pkg_tar",
         "//non-free/packages/cmk-mknotifyd:pkg_tar",
         "//non-free/packages/cmc-protocols:pkg_tar",
         "//non-free/packages/cmk-otel-collector:pkg_tar",
@@ -76,6 +81,7 @@ edition_deps = {
     "cse": [
         "//non-free/packages/cmk-core-helpers:pkg_tar",
         "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger-pkg_tar",
+        "//non-free/packages/cmk-metric-backend:pkg_tar",
         "//non-free/packages/cmk-mknotifyd:pkg_tar",
         "//non-free/packages/cmc-protocols:pkg_tar",
         "//non-free/packages/cmk-relay-engine:pkg_tar",

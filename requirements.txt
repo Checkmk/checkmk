@@ -3564,6 +3564,7 @@ pytest==8.3.5 \
     # via
     #   -c constraints.txt
     #   -r non-free/packages/cmk-core-helpers/dev-requirements.in
+    #   -r non-free/packages/cmk-metric-backend/dev-requirements.in
     #   -r non-free/packages/cmk-mknotifyd/dev-requirements.in
     #   -r non-free/packages/cmk-otel-collector/dev-requirements.in
     #   -r non-free/packages/cmk-relay-engine/dev-requirements.in
@@ -3580,7 +3581,6 @@ pytest==8.3.5 \
     #   -r packages/cmk-relay-protocols/dev-requirements.in
     #   -r packages/cmk-trace/dev-requirements.in
     #   -r packages/cmk-werks/dev-requirements.in
-    #   -r packages/metric-backend/dev-requirements.in
     #   -r tests/dev-requirements.in
     #   meraki
     #   pytest-asyncio

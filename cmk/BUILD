@@ -192,6 +192,7 @@ CMK_PACKAGES = [
         "//non-free/packages/cmk-core-helpers:check-helper-protocol",
         "//non-free/packages/cmk-core-helpers:fetcher-helper",
         "//non-free/packages/cmk-core-helpers:inline-snmp",
+        "//non-free/packages/cmk-metric-backend",
         "//non-free/packages/cmk-mknotifyd",
         "//non-free/packages/cmk-otel-collector",
     ],

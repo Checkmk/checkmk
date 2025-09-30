@@ -8,7 +8,9 @@ import os
 import sys
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from enum import StrEnum
 from pathlib import Path
+from typing import Literal, TypedDict
 
 # mypy: disable-error-code="no-any-return"
 
@@ -17,11 +19,26 @@ DEFAULT_CFG_PATH = Path(os.getenv("MK_CONFDIR", "")) / "mk_podman_cfg.json"
 DEFAULT_SOCKET_PATH = "/run/podman/podman.sock"
 
 
-def load_cfg(cfg_file_path: Path = DEFAULT_CFG_PATH) -> Mapping[str, str]:
+class AutomaticSocketDetectionMethod(StrEnum):
+    AUTO = "auto"
+    ONLY_ROOT_SOCKET = "only_root_socket"
+    ONLY_USER_SOCKETS = "only_user_sockets"
+
+
+class PodmanConfig(TypedDict):
+    socket_detection: AutomaticSocketDetectionMethod | tuple[Literal["manual"], Sequence[str]]
+
+
+def load_cfg(cfg_file_path: Path = DEFAULT_CFG_PATH) -> PodmanConfig | None:
     if not cfg_file_path.is_file():
-        return {}
+        return None
     try:
-        return json.loads(cfg_file_path.read_text())
+        data = json.loads(cfg_file_path.read_text())
+        return PodmanConfig(
+            socket_detection=tuple(data["socket_detection"])
+            if isinstance(data["socket_detection"], list)
+            else data["socket_detection"],
+        )
     except Exception as e:
         write_section(
             Error(
@@ -29,7 +46,7 @@ def load_cfg(cfg_file_path: Path = DEFAULT_CFG_PATH) -> Mapping[str, str]:
                 f"Failed to load config file {cfg_file_path}: {e}. Using 'auto' method as default.",
             )
         )
-        return {}
+        return None
 
 
 def find_user_sockets() -> Sequence[str]:
@@ -45,23 +62,22 @@ def find_user_sockets() -> Sequence[str]:
     ]
 
 
-def get_socket_paths(config: Mapping[str, str]) -> Sequence[str]:
-    method = config.get("method", "auto")
-    if method == "auto":
+def get_socket_paths(config: PodmanConfig | None) -> Sequence[str]:
+    if (
+        config is None
+        or (socket_detection := config["socket_detection"]) is AutomaticSocketDetectionMethod.AUTO
+    ):
         socket_paths = [DEFAULT_SOCKET_PATH]
         socket_paths.extend(find_user_sockets())
         return socket_paths
 
-    elif method == "only_root_socket":
+    if socket_detection is AutomaticSocketDetectionMethod.ONLY_ROOT_SOCKET:
         return [DEFAULT_SOCKET_PATH]
 
-    elif method == "only_user_sockets":
+    if socket_detection is AutomaticSocketDetectionMethod.ONLY_USER_SOCKETS:
         return find_user_sockets()
 
-    elif method == "manual":
-        return config.get("value", [])
-
-    return []
+    return socket_detection[1]
 
 
 @dataclass(frozen=True)
@@ -188,7 +204,8 @@ def query_raw_stats(
             build_url_callable(socket_path, endpoint), params={"stream": "false", "all": "true"}
         )
         response.raise_for_status()
-        return response.json()
+        result: Mapping[str, object] = response.json()
+        return result
     except Exception as e:
         return Error(build_url_human_readable(socket_path, endpoint), str(e))
 
@@ -201,7 +218,7 @@ def extract_container_stats(stats_data: Mapping[str, object]) -> Mapping[str, ob
 
 def get_container_name(names: object) -> str:
     if isinstance(names, list) and names:
-        return names[0].lstrip("/")
+        return str(names[0]).lstrip("/")
     return "unnamed"
 
 

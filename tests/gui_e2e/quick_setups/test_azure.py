@@ -81,6 +81,7 @@ def fixture_azure_qs_config_page(
         list_hosts_page.activate_changes(test_site)
 
 
+@pytest.mark.skip("CMK-26319: Deprecated agent. Test will be fixed when new one is available")
 def test_minimal_configuration(
     azure_qs_config_page: AzureAddNewConfiguration, test_site: Site
 ) -> None:

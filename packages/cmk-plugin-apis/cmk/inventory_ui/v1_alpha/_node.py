@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from dataclasses import KW_ONLY, dataclass, field
+from dataclasses import dataclass, field, KW_ONLY
 from typing import Generic, TypeVar
 
 from ._localize import Label, Title

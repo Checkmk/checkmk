@@ -94,4 +94,5 @@ def site(wiremock: Wiremock, user: User, site_context: Config) -> SiteMock:
 def agent_receiver(
     test_client: TestClient, site_context: Config, user: User
 ) -> AgentReceiverClient:
-    return AgentReceiverClient(test_client, site_context.site_name, user)
+    serial = "teststuff"
+    return AgentReceiverClient(test_client, site_context.site_name, user, serial)

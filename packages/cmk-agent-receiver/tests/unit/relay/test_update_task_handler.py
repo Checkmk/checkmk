@@ -16,10 +16,14 @@ from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.shared_types import (
     RelayID,
     RelayNotFoundError,
+    Serial,
     TaskID,
     TaskNotFoundError,
 )
 from cmk.agent_receiver.relay.lib.site_auth import UserAuth
+
+# TODO use non-empty serial
+SERIAL = Serial("")
 
 
 @pytest.mark.usefixtures("site_context")
@@ -35,6 +39,7 @@ def test_process_update_task(
         task_id=task.id,
         result_type=ResultType.OK,
         result_payload="Task completed successfully",
+        relay_serial=SERIAL,
     )
 
     # assert
@@ -60,6 +65,7 @@ def test_process_update_task_non_existent_relay(update_task_handler: UpdateTaskH
             task_id=TaskID("any-task-id"),
             result_type=ResultType.OK,
             result_payload="any payload",
+            relay_serial=SERIAL,
         )
 
 
@@ -82,4 +88,5 @@ def test_process_update_task_non_existent_task(
             task_id=task_id,
             result_type=ResultType.OK,
             result_payload="any payload",
+            relay_serial=SERIAL,
         )

@@ -32,8 +32,10 @@ from cmk.agent_receiver.relay.api.routers.tasks.serializers import (
     TaskResponseSerializer,
 )
 from cmk.agent_receiver.relay.lib.relays_repository import CheckmkAPIError
-from cmk.agent_receiver.relay.lib.shared_types import RelayID, TaskID
+from cmk.agent_receiver.relay.lib.shared_types import RelayID, Serial, TaskID
 from cmk.relay_protocols import tasks as tasks_protocol
+
+SERIAL_HEADER = "X-CMK-SERIAL"
 
 router = fastapi.APIRouter()
 
@@ -100,6 +102,7 @@ async def update_task(
     task_id: str,
     request: tasks_protocol.TaskUpdateRequest,
     handler: Annotated[UpdateTaskHandler, fastapi.Depends(get_update_task_handler)],
+    relay_serial: Annotated[str, fastapi.Header(alias=SERIAL_HEADER)],
 ) -> tasks_protocol.TaskResponse:
     """Update a task with results.
 
@@ -127,10 +130,11 @@ async def update_task(
     try:
         with bound_contextvars(task_id=task_id):
             updated_task = handler.process(
-                RelayID(relay_id),
-                TaskID(task_id),
-                ResultType(request.result_type.value),
-                request.result_payload,
+                relay_id=RelayID(relay_id),
+                task_id=TaskID(task_id),
+                result_type=ResultType(request.result_type.value),
+                result_payload=request.result_payload,
+                relay_serial=Serial(relay_serial),
             )
     except CheckmkAPIError as e:
         raise fastapi.HTTPException(

@@ -2,3 +2,4 @@ distro/
 python/
 tmp/
 .idea/
+*.xz

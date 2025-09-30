@@ -22,10 +22,12 @@ powershell Write-Host 'Delivering cached python...' -foreground Cyan
 if not exist "%artefact_dir%" powershell Write-Host 'Creating directory...' -foreground Cyan && mkdir "%artefact_dir%"
 
 :: Determine expected python version using target in Makefile
+make python_version_dump
 set tmpFile=python_version_%RANDOM%.tmp
 make python_version > %tmpFile%
 set /p python_version= < %tmpFile%
 del %tmpFile%
+powershell Write-Host "python_version=" %python_version% -foreground white
 @if NOT "%3"=="" (
   call build_the_cached.cmd "%artefact_dir%" %2 %3 %python_version% || powershell Write-Host "Failed python" -foreground red && exit /b 12
   powershell Write-Host "Builds are successfull" -foreground green

@@ -14,7 +14,7 @@ idna = "==3.6"          # jolokia
 requests = {extras = ["socks"], version = "2.32.4"}   # jolokia, cmk_update_agent
 urllib3 = "==2.5.0"     # jolokia
 pyopenssl = "~=24.0"    # cmk_update_agent
-pywin32 = "==306"       # logwatch
+pywin32 = "==311"       # logwatch
 
 [requires]
 python_version = "3.12"

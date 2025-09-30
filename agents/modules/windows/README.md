@@ -1,10 +1,10 @@
 # Windows Modules to deploy with Windows Agent 2.0 and later
 
-## Python 3.12
+## Python 3.13
 
 ### Source
 
-Python 3.12, provided as source tarball by standard Checkmk development process
+Python 3.13, provided as source tarball by standard Checkmk development process
 
 ### Changing or updating Python
 
@@ -47,7 +47,7 @@ This procedure may be quite annoying, you have to check next points:
 
    Usually it is `agents/modules/windows/tests/integration/conftest.py` and `agents/modules/windows/Makefile`.
 
-- Check `build_the_module.cmd` for 3.12 and et cetera
+- Check `build_the_module.cmd` for 3.13 and et cetera
 - Check the Windows node builds artifacts succesfully
 
 ### Process
@@ -57,7 +57,7 @@ This procedure may be quite annoying, you have to check next points:
 ##### Building
 
 ```
-make build PY_VER=3.12 PY_SUBVER=0
+make build PY_VER=3.13 PY_SUBVER=7
 ```
 
 ##### Testing
@@ -79,7 +79,7 @@ In one turn the script makes two calls:
 
 ```bat
 :: build_the_cached.cmd <ARTEFACT_DIR> <CREDENTIALS> <CACHE_URL> <PYTHON_VERSION> <PYTHON_SUBVERSION>
-build_the_cached.cmd artefact_dir credentials url 3.12 9
+build_the_cached.cmd artefact_dir credentials url 3.13 7
 ```
 
 #### Caching
@@ -92,11 +92,11 @@ This means that you didn't get a new build till you increase value in the file `
 Just a commit is not enough, because some builds can't get data about current git hash.
 In latter case the `git_hash` is replaced by `latest`.
 
-#### Steps 3.12 and newer
+#### Steps 3.13 and newer
 
 1. Deploy package from the `omd/packages`
 2. Build and copy results to the `out` folder
-3. Uninstall from backuped `python-3.12.exe` in `uninstall`
+3. Uninstall from backuped `python-3.13.exe` in `uninstall`
 4. Install Python to the `to_install` folder
 5. Upgrade pip
 6. Install pipenv
@@ -117,7 +117,7 @@ In latter case the `git_hash` is replaced by `latest`.
 |
 |-- tmp/
 |    |
-|    +-- 3.12/
+|    +-- 3.13/
 |           |   python-3.cab    * resulting module file
 |           |
 |           |-- to_save/		* to produce module *
@@ -142,11 +142,11 @@ In latter case the `git_hash` is replaced by `latest`.
 |
 |-- python/
      |
-     +-- 3.12/
+     +-- 3.13/
              |
-             |-- python-3.12.timestamp
+             |-- python-3.13.timestamp
              |
-             +-- python-3.12/
+             +-- python-3.13/
 ```
 
 ## Login

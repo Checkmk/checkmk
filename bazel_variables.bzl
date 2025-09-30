@@ -80,7 +80,6 @@ edition_deps = {
         "//non-free/packages/cmk-otel-collector:pkg_tar",
         "//non-free/packages/cmk-update-agent:pkg_tar",
         "//omd/packages/enterprise",
-        "//omd/packages/metric-backend:pkg_tar",
     ],
 }
 

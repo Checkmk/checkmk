@@ -130,6 +130,8 @@ class ImportsTransformer(cst.CSTTransformer):
 
     def _drop_import(self, imp_fr: cst.ImportFrom) -> bool:
         code = cst.Module([]).code_for_node(imp_fr)
+        if "cmk.gui.plugins.wato.utils.simple_levels" in code:
+            return True
         return "cmk.gui.valuespec" in code
 
     def leave_SimpleStatementLine(

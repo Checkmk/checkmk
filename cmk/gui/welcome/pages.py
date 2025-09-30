@@ -23,6 +23,7 @@ from cmk.utils.urls import is_allowed_url
 
 def register(page_registry: PageRegistry) -> None:
     page_registry.register(PageEndpoint("welcome", _welcome_page))
+    page_registry.register(PageEndpoint("ajax_mark_step_as_complete", _ajax_mark_step_as_complete))
 
 
 def _get_finished_stages() -> Generator[FinishedEnum]:
@@ -79,6 +80,15 @@ WELCOME_PAGE_PERMISSIONS = {
 }
 
 
+def _ajax_mark_step_as_complete(config: Config) -> None:
+    # Handle step completion if completed-step parameter is provided
+    if completed_step_name := request.get_ascii_input("_completed_step"):
+        if completed_step_name in FinishedEnum:
+            completed_steps = user.welcome_completed_steps
+            completed_steps.add(completed_step_name)
+            user.welcome_completed_steps = completed_steps
+
+
 def _welcome_page(config: Config) -> None:
     make_header(
         html,
@@ -101,13 +111,6 @@ def _welcome_page(config: Config) -> None:
             ),
         )
         return
-
-    # Handle step completion if completed-step parameter is provided
-    if completed_step_name := request.get_ascii_input("_completed_step"):
-        if completed_step_name in FinishedEnum:
-            completed_steps = user.welcome_completed_steps
-            completed_steps.add(completed_step_name)
-            user.welcome_completed_steps = completed_steps
 
     html.vue_component(component_name="cmk-welcome", data=asdict(get_welcome_data()))
 
@@ -241,8 +244,8 @@ def get_welcome_data() -> WelcomePage:
             ),
             mark_step_completed=makeuri(
                 request,
-                addvars=[("_completed_step", "PLACEHOLDER")],
-                filename="welcome.py",
+                addvars=[],
+                filename="ajax_mark_step_as_complete.py",
             ),
         ),
         is_start_url=user.start_url == "welcome.py",

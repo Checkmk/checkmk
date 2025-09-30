@@ -3,10 +3,23 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import axios from 'axios'
 import type { StageInformation } from 'cmk-shared-typing/typescript/welcome'
 
 export type StepId = StageInformation['finished'][number]
 
-export function markStepAsComplete(markStepCompletedUrl: string, stepId: StepId): void {
-  window.open(markStepCompletedUrl.replace('PLACEHOLDER', stepId), 'main')
+export async function markStepAsComplete(
+  markStepCompletedUrl: string,
+  stepId: StepId
+): Promise<void> {
+  await axios
+    .post(markStepCompletedUrl, null, {
+      params: {
+        _completed_step: stepId
+      }
+    })
+    .then(() => {
+      location.reload()
+    })
+    .catch(() => {})
 }

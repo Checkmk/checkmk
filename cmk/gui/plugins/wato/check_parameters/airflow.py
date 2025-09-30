@@ -3,65 +3,60 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithoutItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersEnvironment,
+from cmk.gui.form_specs.generators.tuple_utils import TupleLevels
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    Float,
 )
-from cmk.gui.valuespec import Dictionary, Float, Tuple
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 
 
-def _parameter_valuespec_airflow():
+def _parameter_form_spec_airflow() -> Dictionary:
     return Dictionary(
-        elements=[
-            (
-                "level_low",
-                Tuple(
-                    title=_("Lower levels"),
+        elements={
+            "level_low": DictElement(
+                required=False,
+                parameter_form=TupleLevels(
+                    title=Title("Lower levels"),
                     elements=[
                         Float(
-                            title=_("Warning if below"),
-                            unit=_("l/s"),
-                            default_value=5.0,
-                            allow_int=True,
+                            title=Title("Warning if below l/s"),
+                            prefill=DefaultValue(5.0),
                         ),
                         Float(
-                            title=_("Critical if below"),
-                            unit=_("l/s"),
-                            default_value=2.0,
-                            allow_int=True,
+                            title=Title("Critical if below l/s"),
+                            prefill=DefaultValue(2.0),
                         ),
                     ],
                 ),
             ),
-            (
-                "level_high",
-                Tuple(
-                    title=_("Upper levels"),
+            "level_high": DictElement(
+                required=False,
+                parameter_form=TupleLevels(
+                    title=Title("Upper levels"),
                     elements=[
                         Float(
-                            title=_("Warning at"), unit=_("l/s"), default_value=10.0, allow_int=True
+                            title=Title("Warning at l/s"),
+                            prefill=DefaultValue(10.0),
                         ),
                         Float(
-                            title=_("Critical at"),
-                            unit=_("l/s"),
-                            default_value=11.0,
-                            allow_int=True,
+                            title=Title("Critical at l/s"),
+                            prefill=DefaultValue(11.0),
                         ),
                     ],
                 ),
             ),
-        ],
+        }
     )
 
 
-rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
-        check_group_name="airflow",
-        group=RulespecGroupCheckParametersEnvironment,
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_airflow,
-        title=lambda: _("Airflow levels"),
-    )
+rule_spec_airflow = CheckParameters(
+    name="airflow",
+    title=Title("Airflow levels"),
+    topic=Topic.ENVIRONMENTAL,
+    parameter_form=_parameter_form_spec_airflow,
+    condition=HostCondition(),
 )

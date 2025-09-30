@@ -20,8 +20,9 @@ use mk_oracle::ora_sql::instance::generate_data;
 use mk_oracle::ora_sql::sqls;
 use mk_oracle::ora_sql::system;
 use mk_oracle::platform::registry::get_instances;
-use mk_oracle::setup::{detect_host_runtime, detect_runtime, Env};
+use mk_oracle::setup::{create_plugin, detect_host_runtime, detect_runtime, Env};
 use mk_oracle::types::SqlQuery;
+
 use mk_oracle::types::{
     Credentials, InstanceName, InstanceNumVersion, InstanceVersion, Tenant, UseHostClient,
 };
@@ -1527,4 +1528,80 @@ fn test_add_runtime_to_path() {
     assert!(std::env::var(&mut_env_var)
         .unwrap()
         .starts_with(some_path.as_str()));
+}
+
+#[cfg(unix)]
+fn validate_permissions(file: &std::path::Path, mode: u32) {
+    use std::os::unix::fs::PermissionsExt;
+    let permissions = std::fs::metadata(file).unwrap().permissions();
+    assert_eq!(permissions.mode() & 0o777, mode); // is executable
+}
+
+#[cfg(windows)]
+fn validate_permissions(_file: &std::path::Path, _mode: u32) {}
+
+#[test]
+fn test_create_plugin_sync() {
+    let plugin = tempfile::tempdir().unwrap();
+    let plugin_dir = plugin.path();
+    let ret = create_plugin("a", plugin_dir, None);
+    assert!(plugin_dir.join("a").is_file());
+    validate_permissions(&plugin_dir.join("a"), 0o755);
+    let content = std::fs::read_to_string(plugin_dir.join("a")).unwrap();
+    assert!(content.ends_with(" --filter sync\n"));
+    assert!(ret);
+}
+
+#[cfg(unix)]
+#[test]
+fn test_create_plugin_async() {
+    let lib_dir = tempfile::tempdir().unwrap();
+    let plugin_dir = lib_dir.path().join("plugins").to_owned();
+    let ret = create_plugin("a", &plugin_dir, Some(100));
+    assert!(!ret); // no plugins, no creation
+    std::fs::create_dir_all(&plugin_dir).unwrap();
+    let ret = create_plugin("a", &plugin_dir, Some(100));
+    assert!(ret);
+
+    let async_plugin_dir_100 = plugin_dir.join("100");
+    let plugin_100_path = async_plugin_dir_100.join("a");
+    assert!(plugin_100_path.is_file());
+    let content = std::fs::read_to_string(async_plugin_dir_100.join("a")).unwrap();
+    assert!(content.ends_with(" --filter async\n"));
+    validate_permissions(&plugin_100_path, 0o755);
+
+    let ret = create_plugin("a", &plugin_dir, Some(200));
+    assert!(ret);
+
+    let async_plugin_dir_200 = plugin_dir.join("200");
+    assert!(async_plugin_dir_200.join("a").is_file());
+    let content = std::fs::read_to_string(async_plugin_dir_200.join("a")).unwrap();
+    assert!(content.ends_with(" --filter async\n"));
+    assert!(!async_plugin_dir_100.join("a").exists()); // file must be deleted
+}
+
+#[cfg(windows)]
+#[test]
+fn test_create_plugin_async() {
+    let lib_dir = tempfile::tempdir().unwrap();
+    let plugin_dir = lib_dir.path().join("plugins").to_owned();
+    let ret = create_plugin("a", &plugin_dir, Some(100));
+    assert!(!ret); // no plugins dir no success
+
+    std::fs::create_dir_all(&plugin_dir).unwrap();
+    let ret = create_plugin("a", &plugin_dir, Some(100));
+    assert!(!ret); // no bakery dir no success
+
+    let bakery_dir = lib_dir.path().join("bakery").to_owned();
+    std::fs::create_dir_all(&bakery_dir).unwrap();
+    let ret = create_plugin("a", &plugin_dir, Some(100));
+    assert!(ret);
+
+    assert!(plugin_dir.join("a").is_file());
+    let plugin_content = std::fs::read_to_string(plugin_dir.join("a")).unwrap();
+    assert!(plugin_content.ends_with(" --filter async\n"));
+
+    let bakery_content = std::fs::read_to_string(bakery_dir.join("check_mk.bakery.yml")).unwrap();
+    assert!(bakery_content.contains("    cache: 100"));
+    assert!(bakery_content.contains("  - pattern: $CUSTOM_PLUGINS_PATH$\\a"));
 }

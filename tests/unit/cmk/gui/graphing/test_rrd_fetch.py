@@ -29,7 +29,10 @@ from cmk.gui.graphing._rrd_fetch import (
     translate_and_merge_rrd_columns,
 )
 from cmk.gui.graphing._time_series import TimeSeries, TimeSeriesValues
-from cmk.gui.graphing._time_series_fetcher import fetch_augmented_time_series
+from cmk.gui.graphing._time_series_fetcher import (
+    AugmentedTimeSeriesSpec,
+    fetch_augmented_time_series,
+)
 from cmk.gui.graphing._translated_metrics import TranslationSpec
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.unit_formatter import AutoPrecision
@@ -110,26 +113,12 @@ def test_fetch_augmented_time_series(
 ) -> None:
     with _setup_livestatus(mock_livestatus):
         assert list(fetch_augmented_time_series({}, _GRAPH_RECIPE, _GRAPH_DATA_RANGE)) == [
-            (
-                GraphMetric(
-                    title="Temperature",
-                    line_type="area",
-                    operation=GraphMetricRRDSource(
-                        site_id=SiteId("NO_SITE"),
-                        host_name=HostName("my-host"),
-                        service_name="Temperature Zone 6",
-                        metric_name="temp",
-                        consolidation_func_name="max",
-                        scale=1.0,
-                    ),
-                    unit=ConvertibleUnitSpecification(
-                        type="convertible",
-                        notation=DecimalNotation(type="decimal", symbol="°C"),
-                        precision=AutoPrecision(type="auto", digits=2),
-                    ),
-                    color="#ffa000",
-                ),
-                [
+            AugmentedTimeSeriesSpec(
+                title="Temperature",
+                line_type="area",
+                color="#ffa000",
+                fade_odd_color=True,
+                augmented_time_series=[
                     AugmentedTimeSeries(
                         data=TimeSeries(start=1, end=2, step=3, values=[4, 5, None]),
                         metadata=TimeSeriesMetaData(
@@ -150,26 +139,12 @@ def test_fetch_augmented_time_series_with_conversion(
     active_config.default_temperature_unit = TemperatureUnit.FAHRENHEIT.value
     with _setup_livestatus(mock_livestatus):
         assert list(fetch_augmented_time_series({}, _GRAPH_RECIPE, _GRAPH_DATA_RANGE)) == [
-            (
-                GraphMetric(
-                    title="Temperature",
-                    line_type="area",
-                    operation=GraphMetricRRDSource(
-                        site_id=SiteId("NO_SITE"),
-                        host_name=HostName("my-host"),
-                        service_name="Temperature Zone 6",
-                        metric_name="temp",
-                        consolidation_func_name="max",
-                        scale=1.0,
-                    ),
-                    unit=ConvertibleUnitSpecification(
-                        type="convertible",
-                        notation=DecimalNotation(type="decimal", symbol="°C"),
-                        precision=AutoPrecision(type="auto", digits=2),
-                    ),
-                    color="#ffa000",
-                ),
-                [
+            AugmentedTimeSeriesSpec(
+                title="Temperature",
+                line_type="area",
+                color="#ffa000",
+                fade_odd_color=True,
+                augmented_time_series=[
                     AugmentedTimeSeries(
                         data=TimeSeries(start=1, end=2, step=3, values=[39.2, 41.0, None]),
                         metadata=TimeSeriesMetaData(

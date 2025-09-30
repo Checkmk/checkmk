@@ -4,25 +4,32 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterator, Mapping, Sequence
+from dataclasses import dataclass
 
 from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
 
 from ._from_api import RegisteredMetric
-from ._graph_metric_expressions import (
-    AugmentedTimeSeries,
-    RRDDataKey,
-)
-from ._graph_specification import GraphDataRange, GraphMetric, GraphRecipe
+from ._graph_metric_expressions import AugmentedTimeSeries, LineType, RRDDataKey
+from ._graph_specification import GraphDataRange, GraphRecipe
 from ._rrd_fetch import fetch_time_series_rrd
 from ._unit import user_specific_unit
+
+
+@dataclass(frozen=True, kw_only=True)
+class AugmentedTimeSeriesSpec:
+    title: str
+    line_type: LineType
+    color: str
+    fade_odd_color: bool
+    augmented_time_series: Sequence[AugmentedTimeSeries]
 
 
 def fetch_augmented_time_series(
     registered_metrics: Mapping[str, RegisteredMetric],
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
-) -> Iterator[tuple[GraphMetric, Sequence[AugmentedTimeSeries]]]:
+) -> Iterator[AugmentedTimeSeriesSpec]:
     rrd_data = fetch_time_series_rrd(
         registered_metrics,
         [
@@ -38,7 +45,13 @@ def fetch_augmented_time_series(
         step=graph_data_range.step,
     )
     for graph_metric in graph_recipe.metrics:
-        if time_series := graph_metric.operation.compute_augmented_time_series(
+        if augmented_time_series := graph_metric.operation.compute_augmented_time_series(
             rrd_data, registered_metrics
         ):
-            yield graph_metric, time_series
+            yield AugmentedTimeSeriesSpec(
+                title=graph_metric.title,
+                line_type=graph_metric.line_type,
+                color=graph_metric.color,
+                fade_odd_color=graph_metric.operation.fade_odd_color(),
+                augmented_time_series=augmented_time_series,
+            )

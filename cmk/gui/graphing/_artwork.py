@@ -343,25 +343,23 @@ def _compute_graph_curves(
     graph_data_range: GraphDataRange,
 ) -> Iterator[Curve]:
     # Fetch all raw RRD data
-    for graph_metric, augmented_time_series in fetch_augmented_time_series(
-        registered_metrics, graph_recipe, graph_data_range
-    ):
-        multi = len(augmented_time_series) > 1
-        mirror_prefix: Literal["", "-"] = "-" if graph_metric.line_type.startswith("-") else ""
-        for i, ts in enumerate(augmented_time_series):
-            title = graph_metric.title
+    for spec in fetch_augmented_time_series(registered_metrics, graph_recipe, graph_data_range):
+        multi = len(spec.augmented_time_series) > 1
+        mirror_prefix: Literal["", "-"] = "-" if spec.line_type.startswith("-") else ""
+        for i, ts in enumerate(spec.augmented_time_series):
+            title = spec.title
             if multi and ts.metadata.title:
                 title += " - " + ts.metadata.title
 
-            color = ts.metadata.color or graph_metric.color
-            if i % 2 == 1 and graph_metric.operation.fade_odd_color():
+            color = ts.metadata.color or spec.color
+            if i % 2 == 1 and spec.fade_odd_color:
                 color = render_color(fade_color(parse_color(color), 0.3))
 
             yield Curve(
                 line_type=(
                     _parse_line_type(mirror_prefix, ts.metadata.line_type)
                     if multi and ts.metadata.line_type
-                    else graph_metric.line_type
+                    else spec.line_type
                 ),
                 color=color,
                 title=title,

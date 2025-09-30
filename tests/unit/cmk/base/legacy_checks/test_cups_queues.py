@@ -147,8 +147,14 @@ def test_inventory_cups_queues(
                     0,
                     "now printing lpr2-3. enabled since Tue Jun 29 09:22:04 2010 (Wiederherstellbar: Der Netzwerk-Host lpr2 ist beschaeftigt, erneuter Versuch in 30 Sekunden)",
                 ),
-                (0, "Jobs: 3", [("jobs", 3, 5, 10, 0)]),
-                (2, "Oldest job is from Mon Jun 28 09:05:56 2010"),
+                (0, "Jobs: 3", [("jobs", 3, 5, 10)]),
+                (0, "Oldest job is from 2010-06-28 09:05:56"),
+                (
+                    2,
+                    "Age of oldest job: 12 years 39 days (warn/crit at 6 minutes 0 "
+                    "seconds/12 minutes 0 seconds)",
+                    [],
+                ),
             ],
         ),
         (
@@ -220,4 +226,5 @@ def test_check_cups_queues(
     with time_machine.travel(datetime.datetime.fromtimestamp(1659514516, tz=ZoneInfo("CET"))):
         parsed = parse_cups_queues(string_table)
         result = list(check_cups_queues(item, params, parsed))
+
     assert result == expected_results

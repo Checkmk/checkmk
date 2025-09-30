@@ -145,27 +145,25 @@ def test_check_cups_queues_pm_active_printer() -> None:
         "now_printing": 0,
     }
 
-    result = list(check_cups_queues("lpr2", params, parsed))
+    with time_machine.travel(datetime.datetime.fromtimestamp(1659514516, tz=ZoneInfo("CET"))):
+        result = list(check_cups_queues("lpr2", params, parsed))
 
-    # Should return multiple results
-    assert len(result) == 3
-
-    # First result: printer status
-    assert result[0][0] == 0  # OK state
-    assert "now printing lpr2-3" in result[0][1]
-    assert "enabled since" in result[0][1]
-
-    # Second result: job count
-    assert result[1][0] == 0  # OK state
-    assert "Jobs: 3" in result[1][1]
-    # Should have performance data for jobs
-    assert len(result[1][2]) == 1
-    assert result[1][2][0][0] == "jobs"
-    assert result[1][2][0][1] == 3
-
-    # Third result: oldest job age (should be critical due to old job)
-    assert result[2][0] == 2  # Critical state
-    assert "Oldest job is from" in result[2][1]
+    assert result == [
+        (
+            0,
+            "now printing lpr2-3. enabled since Tue Jun 29 09:22:04 2010 "
+            "(Wiederherstellbar: Der Netzwerk-Host lpr2 ist beschaeftigt, erneuter "
+            "Versuch in 30 Sekunden)",
+        ),
+        (0, "Jobs: 3", [("jobs", 3, 5, 10)]),
+        (0, "Oldest job is from 2010-06-28 14:02:35"),
+        (
+            2,
+            "Age of oldest job: 12 years 38 days (warn/crit at 6 minutes 0 "
+            "seconds/12 minutes 0 seconds)",
+            [],
+        ),
+    ]
 
 
 @time_machine.travel(datetime.datetime.fromtimestamp(1659514516, tz=ZoneInfo("CET")))

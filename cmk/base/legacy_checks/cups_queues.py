@@ -30,7 +30,8 @@ import time
 from collections.abc import Mapping
 from typing import TypedDict
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
+from cmk.agent_based.v2 import render
 
 check_info = {}
 
@@ -105,23 +106,20 @@ def check_cups_queues(item, params, parsed):
         now = time.time()
         jobs_count = len(data["jobs"])
         if jobs_count > 0:
-            warn_num, crit_num = params["job_count"]
-            yield 0, "Jobs: %d" % jobs_count, [("jobs", jobs_count, warn_num, crit_num, 0)]
+            yield check_levels(
+                jobs_count, "jobs", params["job_count"], human_readable_func=str, infoname="Jobs"
+            )
 
-            warn_age, crit_age = params["job_age"]
-            now = time.time()
             oldest = min(data["jobs"])
-            oldest_readable = time.strftime("%c", time.localtime(oldest))
+            yield 0, f"Oldest job is from {render.datetime(oldest)}"
 
-            if oldest < now - crit_age or jobs_count > crit_num:
-                state = 2
-            elif oldest < now - warn_age or jobs_count > warn_num:
-                state = 1
-            else:
-                state = 0
-
-            if state:
-                yield state, "Oldest job is from %s" % oldest_readable
+            yield check_levels(
+                now - oldest,
+                None,
+                params["job_age"],
+                human_readable_func=render.timespan,
+                infoname="Age of oldest job",
+            )
     else:
         yield 3, "Queue not found"
 

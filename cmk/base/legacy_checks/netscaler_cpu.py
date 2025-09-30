@@ -11,8 +11,8 @@
 # .1.3.6.1.4.1.5951.4.1.1.41.6.1.2.12.80.97.99.107.101.116.32.67.80.85.32.48  0
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
+from cmk.agent_based.v2 import render, SNMPTree, StringTable
 from cmk.plugins.netscaler.agent_based.lib import SNMP_DETECT
 
 check_info = {}
@@ -24,23 +24,17 @@ def inventory_netscaler_cpu(info):
 
 
 def check_netscaler_cpu(item, params, info):
-    warn, crit = params.get("levels")
     for cpu_name, cpu_usage in info:
         if cpu_name == item:
             cpu_usage = int(cpu_usage)
 
-            infotext = "%d%%" % cpu_usage
-            perfdata = [("load", cpu_usage, warn, crit, 0)]
-
-            state = 0
-            if cpu_usage >= crit:
-                state = 2
-            elif cpu_usage >= warn:
-                state = 1
-            if state > 0:
-                infotext += " (warn/crit at %d/%d)" % (warn, crit)
-
-            return state, infotext, perfdata
+            return check_levels(
+                cpu_usage,
+                "load",
+                params["levels"],
+                human_readable_func=render.percent,
+                infoname="CPU",
+            )
     return None
 
 

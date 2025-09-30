@@ -15,8 +15,8 @@
 # 9376        0        817805
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
+from cmk.agent_based.v2 import render, StringTable
 
 check_info = {}
 
@@ -27,19 +27,19 @@ def inventory_filehandler(info):
 
 def check_filehandler(_no_item, params, info):
     allocated, _used_or_unused, maximum = info[0]
-    state = 0
     perc = float(allocated) / float(maximum) * 100.0
-    infotext = f"{perc:.1f}% used ({allocated} of {maximum} file handles)"
-    warn, crit = params["levels"]
 
-    if perc >= crit:
-        state = 2
-    elif perc >= warn:
-        state = 1
-    if state > 0:
-        infotext += f" (warn/crit at {warn:.1f}%/{crit:.1f}%)"
+    # Add informational text about absolute values
+    yield 0, f"({allocated} of {maximum} file handles)", []
 
-    return state, infotext, [("filehandler_perc", perc, warn, crit)]
+    # Check levels on percentage
+    yield check_levels(
+        perc,
+        "filehandler_perc",
+        params["levels"],
+        human_readable_func=render.percent,
+        infoname="File handlers",
+    )
 
 
 def parse_filehandler(string_table: StringTable) -> StringTable:

@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import render
 
 check_info = {}
@@ -54,40 +54,38 @@ def check_informix_logusage(item, params, parsed):
             size += int(entry["size"]) * pagesize
             used += int(entry["used"]) * pagesize
 
-        infotext = f"Files: {logfiles}, Size: {render.bytes(size)}, Used: {render.bytes(used)}"
-        state = 0
-        if "levels" in params:
-            warn, crit = params["levels"]
-            if size >= crit:
-                state = 2
-            elif size >= warn:
-                state = 1
-            if state:
-                infotext += f" (warn/crit at {render.bytes(warn)}/{render.bytes(crit)})"
-
-        yield (
-            state,
-            infotext,
-            [
-                ("file_count", logfiles),
-                ("log_files_total", size),
-                ("log_files_used", used),
-            ],
+        yield check_levels(
+            logfiles,
+            "file_count",
+            None,
+            infoname="Files",
+            human_readable_func=str,
+        )
+        yield check_levels(
+            size,
+            "log_files_total",
+            params.get("levels"),
+            infoname="Size",
+            human_readable_func=render.bytes,
+        )
+        yield check_levels(
+            used,
+            "log_files_used",
+            None,
+            infoname="Used",
+            human_readable_func=render.bytes,
         )
 
-        if size:
-            used_perc = used * 100.0 / size
-            infotext = "%.2f%%" % used_perc
-            warn_perc, crit_perc = params["levels_perc"]
-            state = 0
-            if used_perc >= crit_perc:
-                state = 2
-            elif used_perc >= warn_perc:
-                state = 1
-            if state:
-                infotext += f" (warn/crit at {warn_perc:.2f}%/{crit_perc:.2f}%)"
+        if not size:
+            return
 
-            yield state, infotext
+        yield check_levels(
+            used * 100.0 / size,
+            "log_files_used_perc",
+            params["levels_perc"],
+            infoname="Usage",
+            human_readable_func=render.percent,
+        )
 
 
 check_info["informix_logusage"] = LegacyCheckDefinition(

@@ -12,7 +12,7 @@
 # currentQueue writers 5
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import StringTable
 
 check_info = {}
@@ -27,19 +27,15 @@ def check_mongodb_locks(_no_item, params, info):
         what, name, count = line
         count = int(count)
         param_name = "clients" if what.startswith("active") else "queue"
-        warn, crit = None, None
-        state = 0
-        if f"{param_name}_{name}_locks" in params:
-            warn, crit = params[f"{param_name}_{name}_locks"]
-            if count >= crit:
-                state = 2
-            elif count >= warn:
-                state = 1
-        yield (
-            state,
-            f"{param_name.title()}-{name.title()}: {count}",
-            [(f"{param_name}_{name}_locks", count, warn, crit)],
-        )
+        metric_name = f"{param_name}_{name}_locks"
+
+        if metric_name in params:
+            warn, crit = params[metric_name]
+            yield check_levels(
+                count, metric_name, (warn, crit), infoname=f"{param_name.title()}-{name.title()}"
+            )
+        else:
+            yield 0, f"{param_name.title()}-{name.title()}: {count}", [(metric_name, count)]
 
 
 def parse_mongodb_locks(string_table: StringTable) -> StringTable:

@@ -8,7 +8,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 
 check_info = {}
 
@@ -49,19 +49,17 @@ def check_informix_tabextents(item, params, parsed):
             )
 
         warn, crit = params["levels"]
-        state = 0
-        infotext = "Maximal extents: %s" % max_extents
-        if max_extents >= crit:
-            state = 2
-        elif max_extents >= warn:
-            state = 1
-        if state:
-            infotext += f" (warn/crit at {warn}/{crit})"
-        return (
-            state,
-            "{}\n{}".format(infotext, "\n".join(long_output)),
-            [("max_extents", max_extents)],
+
+        long_output_str = "\n".join(long_output)
+        state, infotext, perfdata = check_levels(
+            max_extents,
+            "max_extents",
+            (warn, crit),
+            infoname="Maximal extents",
+            human_readable_func=str,
         )
+
+        return state, f"{infotext}\n{long_output_str}", perfdata
     return None
 
 

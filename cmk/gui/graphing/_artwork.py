@@ -338,9 +338,9 @@ def _parse_line_type(
 
 
 def _compute_graph_curves(
+    registered_metrics: Mapping[str, RegisteredMetric],
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
-    registered_metrics: Mapping[str, RegisteredMetric],
 ) -> Iterator[Curve]:
     # Fetch all raw RRD data
     for graph_metric, augmented_time_series in fetch_augmented_time_series(
@@ -374,7 +374,7 @@ def compute_graph_artwork_curves(
     graph_data_range: GraphDataRange,
     registered_metrics: Mapping[str, RegisteredMetric],
 ) -> list[Curve]:
-    curves = list(_compute_graph_curves(graph_recipe, graph_data_range, registered_metrics))
+    curves = list(_compute_graph_curves(registered_metrics, graph_recipe, graph_data_range))
     if graph_recipe.omit_zero_metrics:
         curves = [curve for curve in curves if any(curve["rrddata"])]
     return curves

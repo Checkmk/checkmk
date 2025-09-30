@@ -1690,13 +1690,13 @@ def config_configure(
 def config_configure_hook(
     site: SiteContext, config: Config, config_hooks: ConfigHooks, hook_name: str, verbose: bool
 ) -> Iterator[str]:
+    site_home = SitePaths.from_site_name(site.name).home
     if not site.is_stopped(verbose):
         if not dialog_yesno(
             "You cannot change configuration value while the "
             "site is running. Do you want me to stop the site now?"
         ):
             return
-        site_home = SitePaths.from_site_name(site.name).home
         call_init_scripts(site_home, "stop")
         dialog_message("The site has been stopped.")
 

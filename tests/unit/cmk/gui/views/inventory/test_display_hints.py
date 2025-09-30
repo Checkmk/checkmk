@@ -193,9 +193,6 @@ def test_paths() -> None:
             ("software", "applications", "podman", "network"),
             ("software", "applications", "podman", "containers"),
             ("software", "applications", "podman", "images"),
-            ("software", "applications", "proxmox_ve"),
-            ("software", "applications", "proxmox_ve", "cluster"),
-            ("software", "applications", "proxmox_ve", "metadata"),
             ("software", "applications", "synthetic_monitoring"),
             ("software", "applications", "synthetic_monitoring", "plans"),
             ("software", "applications", "synthetic_monitoring", "tests"),
@@ -385,8 +382,6 @@ _KNOWN_ATTRIBUTES_KEY_ORDERS = {
         "gateway",
         "mac_address",
     ],
-    ("software", "applications", "proxmox_ve", "metadata"): ["object", "provider", "name"],
-    ("software", "applications", "proxmox_ve", "cluster"): ["cluster"],
     ("software", "applications", "mobileiron"): ["partition_name", "registration_state"],
     ("software", "applications", "citrix", "controller"): ["controller_version"],
     ("software", "applications", "citrix", "vm"): [

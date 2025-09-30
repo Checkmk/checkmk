@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import datetime
+import json
 from collections.abc import Mapping
 from zoneinfo import ZoneInfo
 
@@ -11,25 +12,40 @@ import time_machine
 
 import cmk.plugins.proxmox_ve.agent_based.proxmox_ve_vm_info as pvvi
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State
-from cmk.plugins.proxmox_ve.lib.vm_info import SectionVMInfo
 
-VM_DATA = SectionVMInfo(
-    vmid="133",
-    node="pve-dc4-001",
-    status="running",
-    type="qemu",
-    name="aq-test.lan.mathias-kettner.de",
-    uptime=12345,
+VM_DATA = pvvi.parse_proxmox_ve_vm_info(
+    [
+        [
+            json.dumps(
+                {
+                    "name": "aq-test.lan.mathias-kettner.de",
+                    "node": "pve-dc4-001",
+                    "status": "running",
+                    "type": "qemu",
+                    "vmid": "133",
+                    "uptime": 12345,
+                }
+            )
+        ]
+    ]
 )
 
-VM_DATA_WITH_LOCK = SectionVMInfo(
-    vmid="133",
-    node="pve-dc4-001",
-    status="running",
-    type="qemu",
-    name="aq-test.lan.mathias-kettner.de",
-    uptime=12345,
-    lock="backup",
+VM_DATA_WITH_LOCK = pvvi.parse_proxmox_ve_vm_info(
+    [
+        [
+            json.dumps(
+                {
+                    "name": "aq-test.lan.mathias-kettner.de",
+                    "node": "pve-dc4-001",
+                    "status": "running",
+                    "type": "qemu",
+                    "vmid": "133",
+                    "uptime": 12345,
+                    "lock": "backup",
+                }
+            )
+        ]
+    ]
 )
 
 
@@ -91,7 +107,7 @@ VM_DATA_WITH_LOCK = SectionVMInfo(
     ],
 )
 def test_check_proxmox_ve_vm_info(
-    params: Mapping[str, object], section: SectionVMInfo, expected_results: CheckResult
+    params: Mapping[str, object], section: pvvi.SectionVMInfo, expected_results: CheckResult
 ) -> None:
     with time_machine.travel(datetime.datetime(2025, 2, 4, 16, 16, 50, tzinfo=ZoneInfo("CET"))):
         results = tuple(pvvi.check_proxmox_ve_vm_info(params, section))

@@ -3,49 +3,45 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithoutItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersOperatingSystem,
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    ServiceState,
 )
-from cmk.gui.valuespec import Dictionary, MonitoringState
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 
 
-def _parameter_valuespec_apt():
+def _parameter_form_spec_apt() -> Dictionary:
     return Dictionary(
-        elements=[
-            (
-                "normal",
-                MonitoringState(
-                    title=_("State when normal updates are pending"),
-                    default_value=1,
+        elements={
+            "normal": DictElement(
+                required=False,
+                parameter_form=ServiceState(
+                    title=Title("State when normal updates are pending"), prefill=DefaultValue(1)
                 ),
             ),
-            (
-                "security",
-                MonitoringState(
-                    title=_("State when security updates are pending"),
-                    default_value=2,
+            "security": DictElement(
+                required=False,
+                parameter_form=ServiceState(
+                    title=Title("State when security updates are pending"), prefill=DefaultValue(2)
                 ),
             ),
-            (
-                "removals",
-                MonitoringState(
-                    title=_("State when removals are pending"),
-                    default_value=1,
+            "removals": DictElement(
+                required=False,
+                parameter_form=ServiceState(
+                    title=Title("State when removals are pending"), prefill=DefaultValue(1)
                 ),
             ),
-        ],
+        }
     )
 
 
-rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
-        check_group_name="apt",
-        group=RulespecGroupCheckParametersOperatingSystem,
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_apt,
-        title=lambda: _("APT Updates"),
-    )
+rule_spec_apt = CheckParameters(
+    name="apt",
+    title=Title("APT Updates"),
+    topic=Topic.OPERATING_SYSTEM,
+    parameter_form=_parameter_form_spec_apt,
+    condition=HostCondition(),
 )

@@ -52,9 +52,9 @@ const content = defineModel<ContentRelativeGrid>('content', {
 })
 
 defineEmits<{
-  'widget:edit': [string]
-  'widget:delete': [string]
-  'widget:clone': [string, WidgetLayout]
+  'widget:edit': [widgetId: string]
+  'widget:delete': [widgetId: string]
+  'widget:clone': [widgetId: string, newLayout: WidgetLayout]
 }>()
 
 const dashboard = ref<HTMLElement | null>(null)
@@ -184,6 +184,8 @@ function handleResizeForWidget(widgetId: string) {
           @update:anchor-position="
             (anchorPosition: ANCHOR_POSITION) => selectAnchor(spec.widget_id, anchorPosition)
           "
+          @click:edit="$emit('widget:edit', spec.widget_id)"
+          @click:delete="$emit('widget:delete', spec.widget_id)"
         />
       </div>
     </div>

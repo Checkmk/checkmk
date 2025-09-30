@@ -95,6 +95,7 @@ const { ErrorBoundary: errorBoundary } = useErrorBoundary()
       :content-props="widgetContentProps"
       :is-editing="isEditing"
       :dashboard-constants="constants"
+      @widget:edit="$emit('widget:edit', $event)"
     />
   </errorBoundary>
 </template>

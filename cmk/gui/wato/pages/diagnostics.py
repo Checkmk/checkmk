@@ -892,6 +892,8 @@ class PageDownloadDiagnosticsDump(Page):
         site_id = SiteId(request.get_ascii_input_mandatory("site"))
         tarfile_name = request.get_ascii_input_mandatory("tarfile_name")
         timeout = request.get_integer_input_mandatory("timeout")
+        _validate_diagnostics_dump_tarfile_name(tarfile_name)
+
         file_content = _get_diagnostics_dump_file(
             make_automation_config(config.sites[site_id]),
             tarfile_name,
@@ -946,6 +948,15 @@ def _get_local_diagnostics_dump_file(tarfile_name: str) -> bytes:
 
 
 def _validate_diagnostics_dump_tarfile_name(tarfile_name: str) -> None:
-    # Prevent downloading files like 'tarfile_name=../../../../../../../../../../etc/passwd'
+    """security validation
+
+    Prevent downloading files like 'tarfile_name=../../../../../../../../../../etc/passwd'
+    >>> _validate_diagnostics_dump_tarfile_name("foo")
+    >>> _validate_diagnostics_dump_tarfile_name("../bar/foo")
+    Traceback (most recent call last):
+        ...
+    cmk.gui.exceptions.MKUserError: Invalid file name for tarfile_name given.
+    """
+
     if Path(tarfile_name).parent != Path("."):
         raise MKUserError("_diagnostics_dump_file", _("Invalid file name for tarfile_name given."))

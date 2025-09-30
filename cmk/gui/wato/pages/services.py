@@ -50,6 +50,7 @@ from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
+from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.view_utils import format_plugin_output, LabelRenderType, render_labels
@@ -232,6 +233,7 @@ class ModeDiscovery(WatoMode):
 class _AutomationServiceDiscoveryRequest(NamedTuple):
     host_name: HostName
     action: DiscoveryAction
+    user_permission_config: UserPermissionSerializableConfig
     raise_errors: bool
     debug: bool
 
@@ -271,6 +273,7 @@ class AutomationServiceDiscoveryJob(AutomationCommand[_AutomationServiceDiscover
         return _AutomationServiceDiscoveryRequest(
             host_name=host_name,
             action=action,
+            user_permission_config=UserPermissionSerializableConfig.from_global_config(config),
             raise_errors=raise_errors,
             # Default value can be removed in 2.6
             debug=options.get("debug", False),
@@ -297,6 +300,7 @@ class AutomationServiceDiscoveryJob(AutomationCommand[_AutomationServiceDiscover
         return execute_discovery_job(
             api_request.host_name,
             api_request.action,
+            user_permission_config=api_request.user_permission_config,
             raise_errors=api_request.raise_errors,
             debug=api_request.debug,
         ).serialize(central_version)
@@ -335,19 +339,21 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             api_request.discovery_options.action, api_request.update_target
         ):
             discovery_options = api_request.discovery_options._replace(action=DiscoveryAction.NONE)
+        user_permission_config = UserPermissionSerializableConfig.from_global_config(config)
 
         discovery_result = self._perform_discovery_action(
             action=api_request.discovery_options.action,
             host=host,
             previous_discovery_result=previous_discovery_result,
             update_source=api_request.update_source,
-            update_target=None
-            if api_request.update_target is None
-            else api_request.update_target.value,
+            update_target=(
+                None if api_request.update_target is None else api_request.update_target.value
+            ),
             selected_services=self._resolve_selected_services(
                 api_request.update_services, api_request.discovery_options.show_checkboxes
             ),
             automation_config=make_automation_config(config.sites[host.site_id()]),
+            user_permission_config=user_permission_config,
             raise_errors=not api_request.discovery_options.ignore_errors,
             pprint_value=config.wato_pprint_config,
             debug=config.debug,
@@ -431,6 +437,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         selected_services: Container[tuple[str, Item]],
         *,
         automation_config: LocalAutomationConfig | RemoteAutomationConfig,
+        user_permission_config: UserPermissionSerializableConfig,
         raise_errors: bool,
         pprint_value: bool,
         debug: bool,
@@ -442,6 +449,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 host,
                 previous_discovery_result,
                 automation_config=automation_config,
+                user_permission_config=user_permission_config,
                 raise_errors=raise_errors,
                 debug=debug,
                 use_git=use_git,
@@ -456,6 +464,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 host,
                 action,
                 automation_config=automation_config,
+                user_permission_config=user_permission_config,
                 raise_errors=raise_errors,
                 debug=debug,
                 use_git=use_git,
@@ -466,6 +475,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             host,
             previous_discovery_result,
             automation_config=automation_config,
+            user_permission_config=user_permission_config,
             raise_errors=raise_errors,
             debug=debug,
             use_git=use_git,
@@ -478,6 +488,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     host=host,
                     raise_errors=raise_errors,
                     automation_config=automation_config,
+                    user_permission_config=user_permission_config,
                     pprint_value=pprint_value,
                     debug=debug,
                     use_git=use_git,
@@ -489,6 +500,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     host=host,
                     raise_errors=raise_errors,
                     automation_config=automation_config,
+                    user_permission_config=user_permission_config,
                     pprint_value=pprint_value,
                     debug=debug,
                     use_git=use_git,
@@ -510,6 +522,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     selected_services=selected_services,
                     raise_errors=raise_errors,
                     automation_config=automation_config,
+                    user_permission_config=user_permission_config,
                     pprint_value=pprint_value,
                     debug=debug,
                     use_git=use_git,
@@ -524,6 +537,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     selected_services=selected_services,
                     raise_errors=raise_errors,
                     automation_config=automation_config,
+                    user_permission_config=user_permission_config,
                     pprint_value=pprint_value,
                     debug=debug,
                     use_git=use_git,

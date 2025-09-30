@@ -12,6 +12,8 @@ from pytest_mock import MockerFixture
 from cmk.ccc.user import UserId
 from cmk.gui import login
 from cmk.gui.config import Config
+from cmk.gui.permissions import permission_registry
+from cmk.gui.utils.roles import UserPermissions
 from tests.unit.cmk.gui.common_fixtures import (
     create_flask_app,
     create_wsgi_app,
@@ -64,9 +66,11 @@ def with_admin(load_config: Config) -> Iterator[tuple[UserId, str]]:
 
 
 @pytest.fixture()
-def with_admin_login(with_admin: tuple[UserId, str]) -> Iterator[UserId]:
+def with_admin_login(load_config: Config, with_admin: tuple[UserId, str]) -> Iterator[UserId]:
     user_id = with_admin[0]
-    with login.TransactionIdContext(user_id):
+    with login.TransactionIdContext(
+        user_id, UserPermissions(load_config.roles, permission_registry, {user_id: ["admin"]}, [])
+    ):
         yield user_id
 
 

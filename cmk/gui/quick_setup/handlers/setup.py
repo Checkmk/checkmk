@@ -22,6 +22,7 @@ from cmk.gui.background_job import (
 from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.logged_in import user
+from cmk.gui.permissions import permission_registry
 from cmk.gui.quick_setup.config_setups import register as register_config_setups
 from cmk.gui.quick_setup.handlers.stage import (
     NextStageStructure,
@@ -64,6 +65,7 @@ from cmk.gui.quick_setup.v0_unstable.type_defs import (
     RawFormData,
     StageIndex,
 )
+from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 
 
 @dataclass
@@ -351,10 +353,17 @@ class QuickSetupActionBackgroundJob(BackgroundJob):
         super().__init__(job_id=self.job_prefix)
 
     def run_quick_setup_stage(
-        self, job_interface: BackgroundProcessInterface, *, use_git: bool, pprint_value: bool
+        self,
+        job_interface: BackgroundProcessInterface,
+        user_permission_config: UserPermissionSerializableConfig,
+        *,
+        use_git: bool,
+        pprint_value: bool,
     ) -> None:
         job_interface.get_logger().debug("Running Quick setup action finally")
-        with job_interface.gui_context():
+        with job_interface.gui_context(
+            UserPermissions.from_serialized_config(user_permission_config, permission_registry)
+        ):
             try:
                 self._run_quick_setup_stage(
                     job_interface, use_git=use_git, pprint_value=pprint_value
@@ -402,6 +411,7 @@ def start_quick_setup_job(
     mode: QuickSetupActionMode,
     user_input_stages: Sequence[dict],
     object_id: str | None,
+    user_permission_config: UserPermissionSerializableConfig,
     *,
     use_git: bool,
     pprint_value: bool,
@@ -423,6 +433,7 @@ def start_quick_setup_job(
                 user_input_stages=user_input_stages,
                 mode=mode,
                 object_id=object_id,
+                user_permission_config=user_permission_config,
                 use_git=use_git,
                 pprint_value=pprint_value,
             ),
@@ -446,6 +457,7 @@ class QuickSetupActionJobArgs(BaseModel, frozen=True):
     user_input_stages: Sequence[dict]
     mode: QuickSetupActionMode
     object_id: str | None
+    user_permission_config: UserPermissionSerializableConfig
     use_git: bool
     pprint_value: bool
 
@@ -459,4 +471,9 @@ def quick_setup_action_job_entry_point(
         user_input_stages=args.user_input_stages,
         mode=args.mode,
         object_id=args.object_id,
-    ).run_quick_setup_stage(job_interface, use_git=args.use_git, pprint_value=args.pprint_value)
+    ).run_quick_setup_stage(
+        job_interface,
+        args.user_permission_config,
+        use_git=args.use_git,
+        pprint_value=args.pprint_value,
+    )

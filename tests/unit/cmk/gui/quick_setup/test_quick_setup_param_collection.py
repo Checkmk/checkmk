@@ -22,6 +22,7 @@ from cmk.gui.quick_setup.v0_unstable.predefined import (
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
 from cmk.gui.session import UserContext
+from cmk.gui.utils.roles import UserPermissions
 from cmk.server_side_calls_backend import load_special_agents
 from cmk.utils import paths
 
@@ -145,7 +146,7 @@ def test_quick_setup_collect_params_with_defaults_from_form_data(
     with_user: tuple[UserId, str], patch_theme: None
 ) -> None:
     load_special_agents(raise_errors=True)  # why?
-    with UserContext(with_user[0]):
+    with UserContext(with_user[0], UserPermissions({}, {}, {}, [])):
         assert (
             collect_params_with_defaults_from_form_data(
                 ALL_FORM_SPEC_DATA, quick_setup_aws_form_spec()

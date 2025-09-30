@@ -23,10 +23,12 @@ from cmk.gui.config import (
     default_unauthorized_builtin_role_ids,
 )
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, LoggedInUser
+from cmk.gui.logged_in import LoggedInNobody, LoggedInRemoteSite, LoggedInSuperUser, LoggedInUser
 from cmk.gui.logged_in import user as global_user
+from cmk.gui.permissions import permission_registry
 from cmk.gui.role_types import CustomUserRole
 from cmk.gui.session import SuperUserContext, UserContext
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.rulesets import may_edit_ruleset
 from cmk.utils.rulesets.definition import RuleGroup
 from tests.unit.cmk.gui.users import create_and_destroy_user
@@ -35,7 +37,7 @@ from tests.unit.cmk.gui.users import create_and_destroy_user
 def test_user_context(with_user: tuple[UserId, str]) -> None:
     user_id = with_user[0]
     assert global_user.id is None
-    with UserContext(user_id):
+    with UserContext(user_id, UserPermissions({}, {}, {}, [])):
         assert global_user.id == user_id
     assert global_user.id is None
 
@@ -52,7 +54,7 @@ def test_user_context_with_exception(with_user: tuple[UserId, str]) -> None:
     user_id = with_user[0]
     assert global_user.id is None
     with pytest.raises(MKAuthException):
-        with UserContext(user_id):
+        with UserContext(user_id, UserPermissions({}, {}, {}, [])):
             assert global_user.id == user_id
             raise MKAuthException()
 
@@ -64,10 +66,10 @@ def test_user_context_nested(with_user: tuple[UserId, str], with_admin: tuple[Us
     second_user_id = with_admin[0]
 
     assert global_user.id is None
-    with UserContext(first_user_id):
+    with UserContext(first_user_id, UserPermissions({}, {}, {}, [])):
         assert global_user.id == first_user_id
 
-        with UserContext(second_user_id):
+        with UserContext(second_user_id, UserPermissions({}, {}, {}, [])):
             assert global_user.id == second_user_id
 
         assert global_user.id == first_user_id
@@ -79,6 +81,7 @@ def test_user_context_explicit_permissions(with_user: tuple[UserId, str]) -> Non
     assert not global_user.may("some_permission")
     with UserContext(
         with_user[0],
+        UserPermissions({}, {}, {}, []),
         explicit_permissions={"some_permission", "some_other_permission"},
     ):
         assert global_user.may("some_permission")
@@ -248,6 +251,13 @@ def test_logged_in_super_user_permissions() -> None:
     user.need_permission("eat_other_peoples_cake")
 
 
+def test_logged_in_remote_site_permissions() -> None:
+    user = LoggedInRemoteSite(site_name="site_id")
+    assert user.may("any_permission") is False
+    with pytest.raises(MKAuthException):
+        user.need_permission("any_permission")
+
+
 MONITORING_USER_CACHED_PROFILE = {
     "alias": "Test user",
     "authorized_sites": ["heute", "heute_slave_1"],
@@ -295,7 +305,7 @@ def fixture_monitoring_user() -> Iterator[LoggedInUser]:
     assert builtin_role_ids == ["user", "admin", "guest", "agent_registration", "no_permissions"]
 
     with create_and_destroy_user(username="test", config=active_config) as user:
-        yield LoggedInUser(user[0])
+        yield LoggedInUser(user[0], UserPermissions.from_config(active_config, permission_registry))
 
 
 def test_monitoring_user(request_context: None, monitoring_user: LoggedInUser) -> None:
@@ -456,7 +466,7 @@ def test_user_context_calls_permission_checked(with_user: tuple[UserId, str]) ->
     user_id = with_user[0]
     hooks.register("permission-checked", lambda x: checked.setdefault(x, True))
 
-    with UserContext(user_id):
+    with UserContext(user_id, UserPermissions({}, {}, {}, [])):
         assert global_user.id == user_id
         global_user.may("any_permission")
 

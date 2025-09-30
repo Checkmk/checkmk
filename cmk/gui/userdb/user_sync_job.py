@@ -24,6 +24,7 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.logged_in import user
+from cmk.gui.permissions import permission_registry
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import (
     CustomUserAttrSpec,
@@ -31,6 +32,7 @@ from cmk.gui.type_defs import (
     UserSpec,
 )
 from cmk.gui.user_connection_config_types import UserConnectionConfig
+from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.utils.urls import makeuri_contextless
 
 from ._connections import active_connections
@@ -61,6 +63,9 @@ def execute_userdb_job(config: Config) -> None:
                     enforce_sync=False,
                     custom_user_attributes=config.wato_user_attrs,
                     default_user_profile=config.default_user_profile,
+                    user_permission_config=UserPermissionSerializableConfig.from_global_config(
+                        config
+                    ),
                 ),
             ),
             InitialStatusArgs(
@@ -78,6 +83,7 @@ class UserSyncArgs(BaseModel, frozen=True):
     enforce_sync: bool
     custom_user_attributes: Sequence[CustomUserAttrSpec]
     default_user_profile: UserSpec
+    user_permission_config: UserPermissionSerializableConfig
 
 
 def sync_entry_point(job_interface: BackgroundProcessInterface, args: UserSyncArgs) -> None:
@@ -113,6 +119,9 @@ def ajax_sync(config: Config) -> None:
                         enforce_sync=True,
                         custom_user_attributes=config.wato_user_attrs,
                         default_user_profile=config.default_user_profile,
+                        user_permission_config=UserPermissionSerializableConfig.from_global_config(
+                            config
+                        ),
                     ),
                 ),
                 InitialStatusArgs(
@@ -169,7 +178,9 @@ class UserSyncBackgroundJob(BackgroundJob):
         ],
     ) -> None:
         logger = job_interface.get_logger()
-        with job_interface.gui_context():
+        with job_interface.gui_context(
+            UserPermissions.from_serialized_config(args.user_permission_config, permission_registry)
+        ):
             logger.info(_("Synchronization started..."))
             if self._execute_sync_action(
                 logger,

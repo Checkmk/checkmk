@@ -24,11 +24,14 @@ from cmk.gui.background_job import (
     InitialStatusArgs,
     JobTarget,
 )
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.job_scheduler_client import StartupError
 from cmk.gui.logged_in import user
+from cmk.gui.permissions import permission_registry
+from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.watolib import bakery
 from cmk.gui.watolib.automations import (
     AnnotatedHostName,
@@ -95,12 +98,15 @@ class ParentScanBackgroundJob(BackgroundJob):
         settings: ParentScanSettings,
         tasks: Sequence[ParentScanTask],
         job_interface: BackgroundProcessInterface,
+        user_permission_config: UserPermissionSerializableConfig,
         *,
         pprint_value: bool,
         debug: bool,
         use_git: bool,
     ) -> None:
-        with job_interface.gui_context():
+        with job_interface.gui_context(
+            UserPermissions.from_serialized_config(user_permission_config, permission_registry)
+        ):
             self._initialize_statistics()
             self._logger.info("Parent scan started...")
 
@@ -408,6 +414,9 @@ def start_parent_scan(
                     for host in hosts
                 ],
                 settings=settings,
+                user_permission_config=UserPermissionSerializableConfig.from_global_config(
+                    active_config
+                ),
                 pprint_value=pprint_value,
                 debug=debug,
                 use_git=use_git,
@@ -425,6 +434,7 @@ def start_parent_scan(
 class ParentScanJobArgs(BaseModel, frozen=True):
     tasks: Sequence[ParentScanTask]
     settings: ParentScanSettings
+    user_permission_config: UserPermissionSerializableConfig
     pprint_value: bool
     debug: bool
     use_git: bool
@@ -437,6 +447,7 @@ def parent_scan_job_entry_point(
         args.settings,
         args.tasks,
         job_interface,
+        user_permission_config=args.user_permission_config,
         pprint_value=args.pprint_value,
         debug=args.debug,
         use_git=args.use_git,

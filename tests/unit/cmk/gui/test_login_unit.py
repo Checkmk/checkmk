@@ -22,6 +22,7 @@ from cmk.gui.logged_in import LoggedInNobody, LoggedInUser, user
 from cmk.gui.session import session
 from cmk.gui.type_defs import UserSpec, WebAuthnCredential
 from cmk.gui.userdb.session import auth_cookie_name, auth_cookie_value, generate_auth_hash
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.script_helpers import application_and_request_context
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from tests.unit.cmk.gui.users import create_and_destroy_user
@@ -162,7 +163,7 @@ def test_authenticate_success(flask_app: flask.Flask, user_id: UserId) -> None:
         environ_overrides={"REMOTE_USER": user_id},
     ):
         flask_app.preprocess_request()
-        with login.authenticate() as authenticated:
+        with login.authenticate(UserPermissions({}, {}, {}, [])) as authenticated:
             assert authenticated is True
             assert user.id == user_id
 
@@ -173,7 +174,7 @@ def test_authenticate_fails(flask_app: flask.Flask, with_user: UserId) -> None:
     assert user.id is None
 
     with flask_app.test_request_context():
-        with login.authenticate() as authenticated:
+        with login.authenticate(UserPermissions({}, {}, {}, [])) as authenticated:
             assert authenticated is False
             assert user.id is None
 
@@ -259,7 +260,7 @@ def test_web_server_auth_session(flask_app: flask.Flask, user_id: UserId) -> Non
 
         with flask_app.request_context(environ):
             flask_app.preprocess_request()
-            with login.authenticate() as authenticated:
+            with login.authenticate(UserPermissions({}, {}, {}, [])) as authenticated:
                 assert authenticated is True
                 assert user.id == user_id
                 assert session.user.id == user.id

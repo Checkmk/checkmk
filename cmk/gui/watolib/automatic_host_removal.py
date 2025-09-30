@@ -23,6 +23,7 @@ from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.session import SuperUserContext
 from cmk.gui.site_config import is_distributed_setup_remote_site, wato_site_ids
+from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.watolib.activate_changes import ActivateChangesManager
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import (
@@ -100,6 +101,7 @@ def execute_host_removal_job(config: Config) -> None:
         _LOGGER.info("Hosts removed, starting activation of changes")
         _activate_changes(
             config.sites,
+            UserPermissionSerializableConfig.from_global_config(config),
             hosts_to_be_removed,
             max_snapshots=config.wato_max_snapshots,
             use_git=config.wato_use_git,
@@ -252,6 +254,7 @@ def _should_delete_host(
 
 def _activate_changes(
     all_site_configs: SiteConfigurations,
+    user_permission_config: UserPermissionSerializableConfig,
     sites: Collection[SiteId],
     *,
     max_snapshots: int,
@@ -269,6 +272,7 @@ def _activate_changes(
             sites=list(sites),
             source="INTERNAL",
             all_site_configs=all_site_configs,
+            user_permission_config=user_permission_config,
             max_snapshots=max_snapshots,
             activate_foreign=True,
             use_git=use_git,

@@ -49,6 +49,7 @@ from cmk.gui.type_defs import ActionResult, PermissionName, ReadOnlySpec
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
@@ -1074,6 +1075,7 @@ class PageAjaxStartActivation(AjaxPage):
             activate_until=activate_until,
             comment=comment,
             activate_foreign=activate_foreign,
+            user_permission_config=UserPermissionSerializableConfig.from_global_config(config),
             source="GUI",
             max_snapshots=config.wato_max_snapshots,
             use_git=config.wato_use_git,

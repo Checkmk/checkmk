@@ -15,6 +15,7 @@ from cmk.gui.form_specs.visitors.file_upload import (
 )
 from cmk.gui.http import request
 from cmk.gui.session import UserContext
+from cmk.gui.utils.roles import UserPermissions
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
     FileUpload,
@@ -30,7 +31,7 @@ def test_file_upload_content_encryption(
     spec: FileUpload,
     with_user: tuple[UserId, str],
 ) -> None:
-    with UserContext(with_user[0]):
+    with UserContext(with_user[0], UserPermissions({}, {}, {}, [])):
         # Data from disk (unencrypted)
         visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
         vue_value = visitor.to_vue(RawDiskData(("my_file", "text/ascii", b"FOO")))[1]
@@ -58,7 +59,7 @@ def test_file_upload_invalid_data(
     with_user: tuple[UserId, str],
 ) -> None:
     invalid_value = RawDiskData({"BROKEN": True})
-    with UserContext(with_user[0]):
+    with UserContext(with_user[0], UserPermissions({}, {}, {}, [])):
         visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
         vue_value = visitor.to_vue(invalid_value)[1]
         assert isinstance(vue_value, FileUploadModel)
@@ -71,7 +72,10 @@ def test_file_upload_new_file_from_frontend(
     with_user: tuple[UserId, str],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    with UserContext(with_user[0]), monkeypatch.context() as m:
+    with (
+        UserContext(with_user[0], UserPermissions({}, {}, {}, [])),
+        monkeypatch.context() as m,
+    ):
         m.setattr(
             request,
             "files",

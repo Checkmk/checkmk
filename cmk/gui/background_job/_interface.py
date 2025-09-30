@@ -16,6 +16,7 @@ from typing import IO, NamedTuple
 
 from pydantic import BaseModel, field_serializer, field_validator
 
+from cmk.gui.utils.roles import UserPermissions
 from cmk.trace import SpanContext, TraceFlags, TraceState
 from cmk.utils import render
 
@@ -29,7 +30,7 @@ class BackgroundProcessInterface:
         job_id: str,
         logger: Logger,
         stop_event: threading.Event,
-        gui_context: Callable[[], ContextManager[None]],
+        gui_context: Callable[[UserPermissions], ContextManager[None]],
         progress_update: IO[str],
     ) -> None:
         self._work_dir = work_dir

@@ -48,6 +48,7 @@ from cmk.gui.userdb.store import (
     save_users,
 )
 from cmk.gui.utils.htpasswd import Htpasswd
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import Dictionary
 from tests.testlib.common.repo import is_managed_repo
 
@@ -340,7 +341,9 @@ def test_update_unknown_session(single_auth_request: SingleRequest) -> None:
 
 def test_logout_on_idle_timeout(single_auth_request: SingleRequest, set_config: SetConfig) -> None:
     user_id, session_info = single_auth_request()
-    session.initialize(user_id, auth_type="web_server")
+    session.initialize(
+        user_id, auth_type="web_server", user_permissions=UserPermissions({}, {}, {}, [])
+    )
     now = datetime.now()
     session.session_info = session_info
     session.session_info.last_activity = int(datetime.now().timestamp()) - 5401
@@ -349,7 +352,9 @@ def test_logout_on_idle_timeout(single_auth_request: SingleRequest, set_config: 
 
 def test_logout_on_maximum_session_reached(single_auth_request: SingleRequest) -> None:
     user_id, session_info = single_auth_request()
-    session.initialize(user_id, auth_type="web_server")
+    session.initialize(
+        user_id, auth_type="web_server", user_permissions=UserPermissions({}, {}, {}, [])
+    )
     now = datetime.now()
     session.session_info = session_info
     session.session_info.started_at = int(datetime.now().timestamp()) - 86401
@@ -414,7 +419,9 @@ def test_ensure_user_can_init_with_previous_session_timeout(user_id: UserId) -> 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
 def test_ensure_user_can_init_with_previous_invalidated_session(user_id: UserId) -> None:
-    session.initialize(user_id, auth_type="web_server")
+    session.initialize(
+        user_id, auth_type="web_server", user_permissions=UserPermissions({}, {}, {}, [])
+    )
     session.invalidate()
     userdb.session.save_session_infos(
         user_id, {session.session_info.session_id: session.session_info}

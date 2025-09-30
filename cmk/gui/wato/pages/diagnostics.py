@@ -37,10 +37,12 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import Page, PageEndpoint, PageRegistry
+from cmk.gui.permissions import permission_registry
 from cmk.gui.theme import make_theme
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.user_sites import get_activation_site_choices
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri, makeuri_contextless
 from cmk.gui.valuespec import (
@@ -195,6 +197,9 @@ class ModeDiagnostics(WatoMode):
                     args=DiagnosticsDumpArgs(
                         params=params,
                         automation_config=make_automation_config(config.sites[params["site"]]),
+                        user_permission_config=UserPermissionSerializableConfig.from_global_config(
+                            config
+                        ),
                         debug=config.debug,
                     ),
                 ),
@@ -688,6 +693,7 @@ class ModeDiagnostics(WatoMode):
 class DiagnosticsDumpArgs(BaseModel, frozen=True):
     params: DiagnosticsParameters
     automation_config: LocalAutomationConfig | RemoteAutomationConfig
+    user_permission_config: UserPermissionSerializableConfig
     debug: bool
 
 
@@ -695,7 +701,11 @@ def diagnostics_dump_entry_point(
     job_interface: BackgroundProcessInterface, args: DiagnosticsDumpArgs
 ) -> None:
     DiagnosticsDumpBackgroundJob().do_execute(
-        args.params, job_interface, automation_config=args.automation_config, debug=args.debug
+        args.params,
+        job_interface,
+        automation_config=args.automation_config,
+        user_permission_config=args.user_permission_config,
+        debug=args.debug,
     )
 
 
@@ -716,11 +726,14 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
         self,
         diagnostics_parameters: DiagnosticsParameters,
         job_interface: BackgroundProcessInterface,
+        user_permission_config: UserPermissionSerializableConfig,
         *,
         automation_config: LocalAutomationConfig | RemoteAutomationConfig,
         debug: bool,
     ) -> None:
-        with job_interface.gui_context():
+        with job_interface.gui_context(
+            UserPermissions.from_serialized_config(user_permission_config, permission_registry)
+        ):
             self._do_execute(
                 diagnostics_parameters,
                 job_interface,

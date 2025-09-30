@@ -33,7 +33,7 @@ from cmk.gui.quick_setup.v0_unstable.predefined._utils import (
 from cmk.gui.quick_setup.v0_unstable.setups import ProgressLogger, StepStatus
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData
 from cmk.gui.site_config import is_replication_enabled, site_is_local
-from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.automations import (
     fetch_service_discovery_background_job_status,
@@ -357,6 +357,7 @@ def _create_and_save_special_agent_bundle(
                 host_name,
                 site_id,
                 automation_config=make_automation_config(active_config.sites[site_id]),
+                user_permission_config=user_permissions.to_serializable_config(),
                 pprint_value=active_config.wato_pprint_config,
                 debug=active_config.debug,
                 use_git=active_config.wato_use_git,
@@ -424,6 +425,7 @@ def _run_service_discovery(
     site_id: SiteId,
     *,
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
+    user_permission_config: UserPermissionSerializableConfig,
     pprint_value: bool,
     debug: bool,
     use_git: bool,
@@ -435,6 +437,7 @@ def _run_service_discovery(
             host,
             DiscoveryAction.REFRESH,
             automation_config=automation_config,
+            user_permission_config=user_permission_config,
             raise_errors=False,
             debug=debug,
             use_git=use_git,
@@ -457,6 +460,7 @@ def _run_service_discovery(
         host,
         DiscoveryAction.FIX_ALL,
         automation_config=automation_config,
+        user_permission_config=user_permission_config,
         raise_errors=False,
         debug=debug,
         use_git=use_git,
@@ -466,6 +470,7 @@ def _run_service_discovery(
         host=host,
         raise_errors=False,
         automation_config=LocalAutomationConfig(),
+        user_permission_config=user_permission_config,
         pprint_value=pprint_value,
         debug=debug,
         use_git=use_git,

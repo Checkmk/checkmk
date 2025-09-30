@@ -733,7 +733,6 @@ def view_editor_sorter_specs(
         datasource: ABCDataSource = data_source_registry[ds_name]()
         unsupported_columns: list[ColumnName] = datasource.unsupported_columns
         registered_painters = all_painters(active_config.tags.tag_groups)
-        user_permissions = UserPermissions.from_config(active_config, permission_registry)
 
         for name, p in sorters_of_datasource(ds_name, user_permissions).items():
             if any(column in p.columns for column in unsupported_columns):

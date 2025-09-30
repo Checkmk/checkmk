@@ -22,15 +22,14 @@ from cmk.ccc import store
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import __version__, Edition, edition, Version
-from cmk.gui import hooks, permissions
+from cmk.gui import hooks
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import session_attr
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.i18n import _
-from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import DismissableWarning, UserSpec
 from cmk.gui.utils.permission_verification import BasePerm
-from cmk.gui.utils.roles import roles_of_user, UserPermissions
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.security_log_events import PermissionCheckFailureEvent
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import TransactionManager
@@ -99,11 +98,13 @@ class LoggedInUser:
     def __init__(
         self,
         user_id: UserId | None,
+        user_permissions: UserPermissions,
         *,
         explicitly_given_permissions: Container[str] = frozenset(),
     ) -> None:
         self.id = user_id
         self.transactions = TransactionManager(user_id, self.transids, self.save_transids)
+        self._user_permissions = user_permissions
 
         self.confdir = _confdir_for_user_id(self.id)
         self.role_ids = self._gather_roles(self.id)
@@ -135,7 +136,7 @@ class LoggedInUser:
         return self.id
 
     def _gather_roles(self, user_id: UserId | None) -> list[str]:
-        return roles_of_user(user_id)
+        return self._user_permissions.roles_of_user(user_id)
 
     def _load_attributes(self, user_id: UserId | None, role_ids: list[str]) -> UserSpec:
         if user_id is None:
@@ -450,13 +451,11 @@ class LoggedInUser:
             }
         )
 
-    def may(self, pname: str) -> bool:
-        # TODO: Needs to be pulled up!
-        user_permissions = UserPermissions.from_config(active_config, permission_registry)
-        they_may = (pname in self.explicitly_given_permissions) or user_permissions.may_with_roles(
-            self.role_ids, pname
-        )
-        hooks.call("permission-checked", pname)
+    def may(self, permission_name: str) -> bool:
+        they_may = (
+            permission_name in self.explicitly_given_permissions
+        ) or self._user_permissions.may_with_roles(self.role_ids, permission_name)
+        hooks.call("permission-checked", permission_name)
         return they_may
 
     def need_permission(self, permission: str | BasePerm) -> None:
@@ -466,7 +465,7 @@ class LoggedInUser:
             return
 
         if not self.may(permission):
-            perm = permissions.permission_registry.get(permission)
+            perm = self._user_permissions._permissions.get(permission)
             title = permission if perm is None else perm.title
             log_security_event(PermissionCheckFailureEvent(permission=title, username=self.id))
             raise MKAuthException(
@@ -526,7 +525,7 @@ class LoggedInUser:
 # TODO: Can we somehow get rid of this?
 class LoggedInSuperUser(LoggedInUser):
     def __init__(self) -> None:
-        super().__init__(None)
+        super().__init__(None, UserPermissions({}, {}, {}, []))
         self.alias = "Superuser for internal use"
         self.email = "admin"
 
@@ -546,7 +545,7 @@ class LoggedInSuperUser(LoggedInUser):
 
 class LoggedInRemoteSite(LoggedInUser):
     def __init__(self, *, site_name: str) -> None:
-        super().__init__(None)
+        super().__init__(None, UserPermissions({}, {}, {}, []))
         self.alias = f"Remote site {site_name}"
         self.email = "?"
         self.site_name = site_name
@@ -559,10 +558,15 @@ class LoggedInRemoteSite(LoggedInUser):
     def save_file(self, name: str, content: Any) -> None:
         raise TypeError("The profiles of LoggedInRemoteSite cannot be saved")
 
+    @override
+    def may(self, permission_name: str) -> bool:
+        hooks.call("permission-checked", permission_name)
+        return False
+
 
 class LoggedInNobody(LoggedInUser):
     def __init__(self) -> None:
-        super().__init__(None)
+        super().__init__(None, UserPermissions({}, {}, {}, []))
         self.alias = "Unauthenticated user"
         self.email = "nobody"
 

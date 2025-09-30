@@ -16,7 +16,7 @@ from cmk.gui.graphing._unit import (
     TimeNotation,
     user_specific_unit,
 )
-from cmk.gui.logged_in import LoggedInUser
+from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.unit_formatter import (
     AutoPrecision,
     DecimalFormatter,
@@ -71,7 +71,7 @@ def test_user_specific_unit(
 ) -> None:
     unit = user_specific_unit(
         unit_specification,
-        LoggedInUser(None),
+        LoggedInNobody(),
         Config(),
         source_symbol_to_conversion_computer={},
     )
@@ -89,7 +89,7 @@ def test_user_specific_unit_convertible() -> None:
             notation=DecimalNotation(symbol="X"),
             precision=AutoPrecision(digits=2),
         ),
-        LoggedInUser(None),
+        LoggedInNobody(),
         Config(),
         source_symbol_to_conversion_computer={
             "X": lambda *_: _Conversion(
@@ -112,7 +112,7 @@ def test_user_specific_unit_non_convertible() -> None:
             notation=EngineeringScientificNotation(symbol="X"),
             precision=AutoPrecision(digits=2),
         ),
-        LoggedInUser(None),
+        LoggedInNobody(),
         Config(),
         source_symbol_to_conversion_computer={
             "X": lambda *_: _Conversion(
@@ -185,7 +185,7 @@ def test_user_specific_unit_celsius_to_fahrenheit(
     source_value: float,
     expected_value: float,
 ) -> None:
-    user = LoggedInUser(None)
+    user = LoggedInNobody()
     if user_temperature_unit:
         user._set_attribute("temperature_unit", user_temperature_unit.value)
     config = Config(default_temperature_unit=default_temperature_unit.value)

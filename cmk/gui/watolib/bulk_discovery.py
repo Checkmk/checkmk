@@ -36,8 +36,10 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.job_scheduler_client import StartupError
 from cmk.gui.logged_in import user
+from cmk.gui.permissions import permission_registry
 from cmk.gui.utils import gen_id
 from cmk.gui.utils.request_context import copy_request_context
+from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Checkbox,
@@ -263,13 +265,19 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         ignore_errors: IgnoreErrors,
         tasks: Sequence[DiscoveryTask],
         job_interface: BackgroundProcessInterface,
+        user_permission_config: UserPermissionSerializableConfig,
         *,
         pprint_value: bool,
         debug: bool,
         use_git: bool,
     ) -> None:
         job_interface.send_progress_update(_("Waiting to acquire lock"))
-        with job_interface.gui_context(), store.locked(self.lock_file):
+        with (
+            job_interface.gui_context(
+                UserPermissions.from_serialized_config(user_permission_config, permission_registry)
+            ),
+            store.locked(self.lock_file),
+        ):
             job_interface.send_progress_update(_("Acquired lock"))
             self._do_execute(
                 mode,
@@ -570,6 +578,7 @@ def start_bulk_discovery(
     do_full_scan: DoFullScan,
     ignore_errors: IgnoreErrors,
     bulk_size: BulkSize,
+    user_permission_config: UserPermissionSerializableConfig,
     *,
     pprint_value: bool,
     debug: bool,
@@ -610,6 +619,7 @@ def start_bulk_discovery(
                 do_full_scan=do_full_scan,
                 ignore_errors=ignore_errors,
                 tasks=tasks,
+                user_permission_config=user_permission_config,
                 pprint_value=pprint_value,
                 debug=debug,
                 use_git=use_git,
@@ -629,6 +639,7 @@ class BulkDiscoveryJobArgs(BaseModel, frozen=True):
     do_full_scan: DoFullScan
     ignore_errors: IgnoreErrors
     tasks: Sequence[DiscoveryTask]
+    user_permission_config: UserPermissionSerializableConfig
     pprint_value: bool
     debug: bool
     use_git: bool
@@ -643,6 +654,7 @@ def bulk_discovery_job_entry_point(
         args.ignore_errors,
         args.tasks,
         job_interface,
+        user_permission_config=args.user_permission_config,
         pprint_value=args.pprint_value,
         debug=args.debug,
         use_git=args.use_git,

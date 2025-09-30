@@ -59,7 +59,7 @@ from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import get_ntop_connection_mandatory, is_ntop_available
-from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
@@ -313,6 +313,9 @@ class ModeUsers(WatoMode):
                                 enforce_sync=True,
                                 custom_user_attributes=config.wato_user_attrs,
                                 default_user_profile=config.default_user_profile,
+                                user_permission_config=UserPermissionSerializableConfig.from_global_config(
+                                    config
+                                ),
                             ),
                         ),
                         background_job.InitialStatusArgs(

@@ -10,6 +10,7 @@ from __future__ import annotations
 import ast
 import uuid
 from collections.abc import Callable, Iterable, Mapping
+from dataclasses import dataclass
 from pathlib import Path
 
 from pydantic import BaseModel
@@ -28,6 +29,8 @@ from cmk.gui.config import Config
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.permissions import permission_registry
+from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import (
     check_mk_local_automation_serialized,
@@ -53,29 +56,45 @@ def register(
     automation_command_registry.register(AutomationCheckmkAutomationStart)
 
 
-class AutomationCheckmkAutomationStart(AutomationCommand[CheckmkAutomationRequest]):
+@dataclass(frozen=True)
+class AutomationCheckmkAutomationStartRequest:
+    api_request: CheckmkAutomationRequest
+    user_permission_config: UserPermissionSerializableConfig
+
+
+class AutomationCheckmkAutomationStart(AutomationCommand[AutomationCheckmkAutomationStartRequest]):
     """Called by do_remote_automation_in_background_job to execute the background job on a remote site"""
 
     def command_name(self) -> str:
         return "checkmk-remote-automation-start"
 
-    def get_request(self, config: Config, request: Request) -> CheckmkAutomationRequest:
-        return CheckmkAutomationRequest(
-            *ast.literal_eval(request.get_ascii_input_mandatory("request"))
+    def get_request(
+        self, config: Config, request: Request
+    ) -> AutomationCheckmkAutomationStartRequest:
+        return AutomationCheckmkAutomationStartRequest(
+            api_request=CheckmkAutomationRequest(
+                *ast.literal_eval(request.get_ascii_input_mandatory("request"))
+            ),
+            user_permission_config=UserPermissionSerializableConfig.from_global_config(config),
         )
 
-    def execute(self, api_request: CheckmkAutomationRequest) -> str:
+    def execute(self, request: AutomationCheckmkAutomationStartRequest) -> str:
         automation_id = str(uuid.uuid4())
-        job_id = f"{CheckmkAutomationBackgroundJob.job_prefix}{api_request.command}-{automation_id}"
+        job_id = f"{CheckmkAutomationBackgroundJob.job_prefix}{request.api_request.command}-{automation_id}"
         job = CheckmkAutomationBackgroundJob(job_id)
         if (
             result := job.start(
                 JobTarget(
                     callable=checkmk_automation_job_entry_point,
-                    args=CheckmkAutomationJobArgs(job_id=job_id, api_request=api_request),
+                    args=CheckmkAutomationJobArgs(
+                        job_id=job_id,
+                        api_request=request.api_request,
+                        user_permission_config=request.user_permission_config,
+                    ),
                 ),
                 InitialStatusArgs(
-                    title=_("Checkmk automation %s %s") % (api_request.command, automation_id),
+                    title=_("Checkmk automation %s %s")
+                    % (request.api_request.command, automation_id),
                     user=str(user.id) if user.id else None,
                 ),
             )
@@ -88,6 +107,7 @@ class AutomationCheckmkAutomationStart(AutomationCommand[CheckmkAutomationReques
 class CheckmkAutomationJobArgs(BaseModel, frozen=True):
     job_id: str
     api_request: CheckmkAutomationRequest
+    user_permission_config: UserPermissionSerializableConfig
 
 
 def checkmk_automation_job_entry_point(
@@ -95,7 +115,9 @@ def checkmk_automation_job_entry_point(
     args: CheckmkAutomationJobArgs,
 ) -> None:
     job = CheckmkAutomationBackgroundJob(args.job_id)
-    job.execute_automation(job_interface, args.api_request, collect_all_hosts)
+    job.execute_automation(
+        job_interface, args.api_request, args.user_permission_config, collect_all_hosts
+    )
 
 
 class AutomationCheckmkAutomationGetStatus(AutomationCommand[str]):
@@ -161,9 +183,12 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
         self,
         job_interface: BackgroundProcessInterface,
         api_request: CheckmkAutomationRequest,
+        user_permission_config: UserPermissionSerializableConfig,
         collect_all_hosts: Callable[[], Mapping[HostName, CollectedHostAttributes]],
     ) -> None:
-        with job_interface.gui_context():
+        with job_interface.gui_context(
+            UserPermissions.from_serialized_config(user_permission_config, permission_registry)
+        ):
             self._execute_automation(job_interface, api_request, collect_all_hosts)
 
     def _execute_automation(

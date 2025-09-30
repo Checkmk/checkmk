@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path
 from typing import cast, Final, get_args, Literal
 
@@ -13,6 +14,23 @@ from cmk.gui.config import active_config, Config
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.role_types import BuiltInUserRole, BuiltInUserRoleID, CustomUserRole
 from cmk.utils import paths
+
+
+@dataclass(frozen=True)
+class UserPermissionSerializableConfig:
+    """Used for hand over of configs to background jobs"""
+
+    roles: Mapping[str, BuiltInUserRole | CustomUserRole]
+    user_roles: Mapping[str, Sequence[str]]
+    default_user_profile_roles: Sequence[str]
+
+    @classmethod
+    def from_global_config(cls, config: Config) -> "UserPermissionSerializableConfig":
+        return cls(
+            roles=config.roles,
+            user_roles={user_id: user["roles"] for user_id, user in config.multisite_users.items()},
+            default_user_profile_roles=config.default_user_profile["roles"],
+        )
 
 
 class UserPermissions:
@@ -41,6 +59,21 @@ class UserPermissions:
                 UserId(user_id): user["roles"] for user_id, user in config.multisite_users.items()
             },
             default_user_profile_roles=config.default_user_profile["roles"],
+        )
+
+    @classmethod
+    def from_serialized_config(
+        cls,
+        serializable_config: UserPermissionSerializableConfig,
+        permissions: Mapping[str, Permission],
+    ) -> "UserPermissions":
+        return cls(
+            roles=serializable_config.roles,
+            permissions=permissions,
+            user_roles={
+                UserId(user_id): roles for user_id, roles in serializable_config.user_roles.items()
+            },
+            default_user_profile_roles=serializable_config.default_user_profile_roles,
         )
 
     def __init__(
@@ -124,6 +157,13 @@ class UserPermissions:
                 if self.may_with_roles([role_id], perm.name):
                     role_permissions[role_id].append(perm.name)
         return role_permissions
+
+    def to_serializable_config(self) -> UserPermissionSerializableConfig:
+        return UserPermissionSerializableConfig(
+            roles=self._roles,
+            user_roles={str(user_id): roles for user_id, roles in self._user_roles.items()},
+            default_user_profile_roles=self._default_user_profile_roles,
+        )
 
 
 def builtin_role_id_from_str(role_id: str) -> BuiltInUserRoleID:

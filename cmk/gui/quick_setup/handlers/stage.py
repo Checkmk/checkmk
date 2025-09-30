@@ -32,6 +32,7 @@ from cmk.gui.form_specs import get_visitor, RawFrontendData, VisitorOptions
 from cmk.gui.http import Request
 from cmk.gui.i18n import localize
 from cmk.gui.logged_in import user
+from cmk.gui.permissions import permission_registry
 from cmk.gui.quick_setup.config_setups import register as register_config_setups
 from cmk.gui.quick_setup.handlers.utils import (
     Action,
@@ -74,6 +75,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     FormSpecId,
     Widget,
 )
+from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import (
     do_remote_automation,
@@ -340,9 +342,15 @@ class QuickSetupStageActionBackgroundJob(BackgroundJob):
         self._language = language
         super().__init__(job_id=self.create_job_id(quick_setup_id, stage_index, job_uuid))
 
-    def run_quick_setup_stage_action(self, job_interface: BackgroundProcessInterface) -> None:
+    def run_quick_setup_stage_action(
+        self,
+        job_interface: BackgroundProcessInterface,
+        user_permission_config: UserPermissionSerializableConfig,
+    ) -> None:
         job_interface.get_logger().debug("Running Quick setup stage action finally")
-        with job_interface.gui_context():
+        with job_interface.gui_context(
+            UserPermissions.from_serialized_config(user_permission_config, permission_registry)
+        ):
             localize(self._language)
             try:
                 self._run_quick_setup_stage_action(
@@ -400,7 +408,8 @@ def start_quick_setup_stage_job(
     stage_index: StageIndex,
     user_input_stages: Sequence[dict],
     language: str,
-    job_uuid: str | None = None,
+    user_permission_config: UserPermissionSerializableConfig,
+    job_uuid: str | None,
 ) -> str:
     if job_uuid is None:
         job_uuid = str(uuid.uuid4())
@@ -423,6 +432,7 @@ def start_quick_setup_stage_job(
                 stage_index=stage_index,
                 user_input_stages=user_input_stages,
                 language=language,
+                user_permission_config=user_permission_config,
             ),
         ),
         InitialStatusArgs(
@@ -444,6 +454,7 @@ class QuickSetupStageActionJobArgs(BaseModel, frozen=True):
     stage_index: StageIndex
     user_input_stages: Sequence[dict]
     language: str
+    user_permission_config: UserPermissionSerializableConfig
 
 
 def quick_setup_stage_action_job_entry_point(
@@ -456,7 +467,9 @@ def quick_setup_stage_action_job_entry_point(
         stage_index=args.stage_index,
         user_input_stages=args.user_input_stages,
         language=args.language,
-    ).run_quick_setup_stage_action(job_interface)
+    ).run_quick_setup_stage_action(
+        job_interface, user_permission_config=args.user_permission_config
+    )
 
 
 @dataclass
@@ -495,6 +508,7 @@ def get_stage_structure(
 def start_quick_setup_stage_action_job_on_remote(
     site_id: SiteId,
     automation_config: RemoteAutomationConfig,
+    user_permission_config: UserPermissionSerializableConfig,
     quick_setup_id: QuickSetupId,
     action_id: ActionId,
     stage_index: StageIndex,
@@ -511,6 +525,7 @@ def start_quick_setup_stage_action_job_on_remote(
         stage_index=stage_index,
         user_input_stages=user_input_stages,
         language=language,
+        user_permission_config=user_permission_config,
     )
     try:
         job_id = str(
@@ -541,6 +556,11 @@ class AutomationQuickSetupStageAction(AutomationCommand[QuickSetupStageActionJob
     @override
     def get_request(self, config: Config, request: Request) -> QuickSetupStageActionJobArgs:
         api_request = request.get_request()
+        # When called from a 2.4 central site, the field is missing. Use the local config.
+        if "user_permission_config" not in api_request:
+            api_request["user_permission_config"] = (
+                UserPermissionSerializableConfig.from_global_config(config)
+            )
         return QuickSetupStageActionJobArgs.model_validate_json(api_request["args"])
 
     @override
@@ -552,6 +572,7 @@ class AutomationQuickSetupStageAction(AutomationCommand[QuickSetupStageActionJob
             user_input_stages=api_request.user_input_stages,
             job_uuid=api_request.job_uuid,
             language=api_request.language,
+            user_permission_config=api_request.user_permission_config,
         )
 
 

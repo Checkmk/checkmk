@@ -5,33 +5,31 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Annotated, NamedTuple
+from typing import Annotated, NamedTuple, NewType
 
 from pydantic import BaseModel, Field, HttpUrl
 
+Timestamp = NewType("Timestamp", float)
+Seconds = NewType("Seconds", float)
+
 
 class CheckPeriod(NamedTuple):
-    start: int
-    end: int
+    start: Timestamp
+    end: Timestamp
 
 
 class Schedule(BaseModel):
     check_periods: Annotated[
         list[CheckPeriod], Field(description="Periods during which to schedule checks")
     ]
-    check_interval: Annotated[int, Field(description="Check interval in seconds", gt=0)]
-    retry_interval: Annotated[int, Field(description="Retry interval in seconds", gt=0)]
+    check_interval: Annotated[Seconds, Field(description="Check interval in seconds", gt=0)]
+    retry_interval: Annotated[Seconds, Field(description="Retry interval in seconds", gt=0)]
     max_attempts: Annotated[int, Field(description="Maximum number of attempts", gt=0)]
 
 
 class Host(BaseModel):
     id: Annotated[str, Field(description="Host ID")]
-    check_cycle: Annotated[
-        float, Field(description="check cycle in seconds [DEPRECATED]", gt=0, default=60)
-    ] = 60
-    schedule: Annotated[
-        Schedule | None, Field(description="Host scheduling configuration", default=None)
-    ] = None
+    schedule: Annotated[Schedule, Field(description="Host scheduling configuration")]
 
 
 class HistoryConfig(BaseModel):

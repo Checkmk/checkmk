@@ -11,7 +11,7 @@ host_crates.from_cargo(
         "//packages/mk-sql:Cargo.toml",
         "//packages/mk-oracle:Cargo.toml",
     ],
-    supported_platform_triples = ["x86_64-unknown-linux-gnu"],
+    supported_platform_triples = ["x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu"],
 )
 
 use_repo(host_crates, "host_crates")

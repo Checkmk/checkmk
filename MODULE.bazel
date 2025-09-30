@@ -674,6 +674,15 @@ rust.repository_set(
     ],
     target_triple = "x86_64-unknown-linux-musl",
 )
+rust.repository_set(
+    name = "rust_linux_x86_64",
+    target_compatible_with = [
+        "//bazel/platforms:musl",
+        "@platforms//cpu:arm64",
+        "@platforms//os:linux",
+    ],
+    target_triple = "aarch64-unknown-linux-musl",
+)
 use_repo(rust, "rust_toolchains")
 
 crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")

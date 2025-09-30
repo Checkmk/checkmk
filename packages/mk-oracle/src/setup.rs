@@ -56,7 +56,7 @@ impl Env {
             disable_caching: args.no_spool,
             detect_only: args.detect_only,
             execution: args.filter.clone().unwrap_or_default(),
-            generate_plugins: None, // will be provided by: args.generate_plugins.clone(),
+            generate_plugins: args.generate_plugins.clone(),
         }
     }
 
@@ -449,7 +449,7 @@ fn delete_file_in_sub_dirs(folder: &Path, name: &str) -> std::io::Result<()> {
     Ok(())
 }
 
-fn add_yml_config_async_entry(lib_dir: &Path, name: &str, cache_age: i32) -> bool {
+fn add_yml_config_async_entry(lib_dir: &Path, name: &str, cache_age: u32) -> bool {
     if !lib_dir.is_dir() {
         log::error!("Lib dir {:?} doesn't exist", lib_dir);
         return false;
@@ -493,7 +493,7 @@ fn set_file_permissions(_path: &Path, _mode: u32) -> std::io::Result<()> {
     Ok(())
 }
 
-pub fn create_plugin(name: &str, dir: &Path, cache_age: Option<i32>) -> bool {
+pub fn create_plugin(name: &str, dir: &Path, cache_age: Option<u32>) -> bool {
     if !dir.is_dir() {
         log::info!("Plugin dir {:?} doesn't exist", dir);
         return false;
@@ -547,7 +547,7 @@ pub fn create_plugin(name: &str, dir: &Path, cache_age: Option<i32>) -> bool {
     }
 }
 
-fn make_cached_subdir(dir: &Path, cache_age: i32) -> Option<PathBuf> {
+fn make_cached_subdir(dir: &Path, cache_age: u32) -> Option<PathBuf> {
     let joined_path = dir.join(cache_age.to_string());
     fs::create_dir_all(&joined_path)
         .map(|_| Some(joined_path))

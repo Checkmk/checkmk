@@ -8,6 +8,26 @@ async fn main() {
     let args: Vec<String> = std::env::args().collect();
     let result = setup::init(std::env::args_os());
     let code = if let Ok((config, environment)) = result {
+        if let Some(p) = environment.generate_plugins() {
+            log::info!("PLUGINS GENERATED for path {p:?}");
+            let cache_age = config.ora_sql().unwrap().cache_age();
+            if cfg!(windows) {
+                setup::create_plugin("oracle_unified_sync.ps1", p, None);
+                setup::create_plugin("oracle_unified_async.ps1", p, Some(cache_age));
+            } else {
+                setup::create_plugin("oracle_unified_sync", p, None);
+                setup::create_plugin("oracle_unified_async", p, Some(cache_age));
+            }
+
+            if p.is_dir() {
+                log::info!("PLUGINS DIR={}", p.display());
+            } else {
+                log::info!("{} is not a directory", p.display());
+                std::process::exit(1);
+            }
+            std::process::exit(0);
+        };
+
         if args.contains(&"--runtime-ready".to_string()) {
             log::info!("SKIP RUNTIME ADDING");
             log::info!("Current PATH={}", std::env::var("PATH").unwrap_or_default());

@@ -3,58 +3,61 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersApplications,
+from cmk.gui.form_specs.generators.tuple_utils import TupleLevels
+from cmk.rulesets.v1 import Help, Label, Title
+from cmk.rulesets.v1.form_specs import (
+    DictElement,
+    Dictionary,
+    Integer,
+    String,
 )
-from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
+from cmk.rulesets.v1.form_specs.validators import LengthInRange
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 
 def _item_spec_apache_status():
-    return TextInput(
-        title=_("Apache Server"),
-        help=_("A string-combination of servername and port, e.g. 127.0.0.1:5000."),
+    return String(
+        title=Title("Apache Server"),
+        help_text=Help("A string-combination of servername and port, e.g. 127.0.0.1:5000."),
+        custom_validate=[LengthInRange(min_value=1)],
     )
 
 
-def _parameter_valuespec_apache_status():
+def _parameter_form_spec_apache_status() -> Dictionary:
     return Dictionary(
-        elements=[
-            (
-                "OpenSlots",
-                Tuple(
-                    title=_("Remaining Open Slots"),
-                    help=_("Here you can set the number of remaining open slots"),
+        elements={
+            "OpenSlots": DictElement(
+                required=False,
+                parameter_form=TupleLevels(
+                    title=Title("Remaining Open Slots"),
+                    help_text=Help("Here you can set the number of remaining open slots"),
                     elements=[
-                        Integer(title=_("Warning below"), label=_("slots")),
-                        Integer(title=_("Critical below"), label=_("slots")),
+                        Integer(title=Title("Warning below"), label=Label("slots")),
+                        Integer(title=Title("Critical below"), label=Label("slots")),
                     ],
                 ),
             ),
-            (
-                "BusyWorkers",
-                Tuple(
-                    title=_("Busy workers"),
-                    help=_("Here you can set upper levels of busy workers"),
+            "BusyWorkers": DictElement(
+                required=False,
+                parameter_form=TupleLevels(
+                    title=Title("Busy workers"),
+                    help_text=Help("Here you can set upper levels of busy workers"),
                     elements=[
-                        Integer(title=_("Warning at"), label=_("busy workers")),
-                        Integer(title=_("Critical at"), label=_("busy workers")),
+                        Integer(title=Title("Warning at"), label=Label("busy workers")),
+                        Integer(title=Title("Critical at"), label=Label("busy workers")),
                     ],
                 ),
             ),
-        ],
+        }
     )
 
 
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="apache_status",
-        group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_apache_status,
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_apache_status,
-        title=lambda: _("Apache Status"),
-    )
+rule_spec_apache_status = CheckParameters(
+    name="apache_status",
+    title=Title("Apache Status"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_apache_status,
+    condition=HostAndItemCondition(
+        item_title=Title("Apache Server"), item_form=_item_spec_apache_status()
+    ),
 )

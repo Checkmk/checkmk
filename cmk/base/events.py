@@ -124,9 +124,6 @@ def event_keepalive(
                 # Signal that we are ready for the next event
                 _send_reply_ready()
 
-        # Fix vor Python 2.4:
-        except SystemExit as e:
-            sys.exit(e.code)
         except Exception:
             if cmk.ccc.debug.enabled():
                 raise

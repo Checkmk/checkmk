@@ -358,7 +358,7 @@ class AddNotificationRule(BaseNotificationPage):
 
     @property
     def si_description(self) -> Locator:
-        return self.editor_slide_in.locator("td.value").first.locator("input")
+        return self.editor_slide_in.get_by_role("textbox", name="Description")
 
     @property
     def si_custom_sender_checkbox(self) -> Locator:

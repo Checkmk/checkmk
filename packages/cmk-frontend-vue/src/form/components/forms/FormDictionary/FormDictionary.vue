@@ -114,6 +114,8 @@ const { FormEditDispatcher } = useFormEditDispatcher()
               v-for="dict_element in group.elems"
               :key="`${componentId}.${dict_element.dict_config.name}`"
               class="form-dictionary__group_elem"
+              role="group"
+              :aria-label="dict_element.dict_config.parameter_form.title"
             >
               <span
                 v-if="titleRequired(dict_element.dict_config)"

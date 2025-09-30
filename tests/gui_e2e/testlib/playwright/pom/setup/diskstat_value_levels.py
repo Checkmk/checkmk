@@ -30,17 +30,15 @@ class DiskstatValueLevels:
 
     @property
     def _value_section(self) -> Locator:
-        return self.page.main_area.locator(
-            f"td.dictleft:has(label.cmk-checkbox span:has-text('{self.checkbox_label}'))"
+        return self.page.main_area.locator().get_by_role(
+            "group", name=self.checkbox_label, exact=True
         )
 
     # === Main Level Control ===
     @property
     def enable_levels_checkbox(self) -> Locator:
         """Main checkbox to enable/disable levels."""
-        return self._value_section.locator(
-            f"label.cmk-checkbox:has-text('{self.checkbox_label}') button[role='checkbox']"
-        )
+        return self._value_section.get_by_role("checkbox", name=self.checkbox_label)
 
     @property
     def level_type_dropdown(self) -> Locator:

@@ -25,6 +25,7 @@ class AgentReceiverClient:
         self.client = client
         self.site_name = site_name
         self.user = user
+        self.client.headers["Authorization"] = self.user.bearer
 
     def register_relay(self, name: str) -> httpx.Response:
         return self.client.post(
@@ -33,13 +34,11 @@ class AgentReceiverClient:
                 "relay_name": name,
                 "csr": "CSR for Relay A",
             },
-            headers={"Authorization": self.user.bearer},
         )
 
     def unregister_relay(self, relay_id: str) -> httpx.Response:
         return self.client.delete(
             f"/{self.site_name}/agent-receiver/relays/{relay_id}",
-            headers={"Authorization": self.user.bearer},
         )
 
     def push_task(self, *, relay_id: str, spec: TaskSpec) -> httpx.Response:
@@ -48,7 +47,6 @@ class AgentReceiverClient:
             json=TaskCreateRequest(
                 spec=spec,
             ).model_dump(),
-            headers={"Authorization": self.user.bearer},
         )
 
     def get_relay_tasks(self, relay_id: str, status: str | None = None) -> httpx.Response:
@@ -58,7 +56,6 @@ class AgentReceiverClient:
         return self.client.get(
             f"/{self.site_name}/agent-receiver/relays/{relay_id}/tasks",
             params=params,
-            headers={"Authorization": self.user.bearer},
         )
 
     def update_task(
@@ -70,5 +67,4 @@ class AgentReceiverClient:
                 "result_type": result_type,
                 "result_payload": result_payload,
             },
-            headers={"Authorization": self.user.bearer},
         )

@@ -135,7 +135,7 @@ class CheckerConfig:
     nodes: Callable[[HostName], Sequence[HostName]]
     effective_host: Callable[[HostName, ServiceName, _Labels], HostName]
     get_snmp_backend: Callable[[HostName], SNMPBackendEnum]
-    timeperiod_active: Callable[[str], bool | None]  # I think None becomes False. Clean this up.
+    timeperiods_active: Mapping[str, bool]
 
 
 def _fetch_all(
@@ -687,7 +687,7 @@ def _compute_final_check_parameters(
     checker_config: CheckerConfig,
     logger: logging.Logger,
 ) -> Parameters:
-    params = service.parameters.evaluate(checker_config.timeperiod_active)
+    params = service.parameters.evaluate(checker_config.timeperiods_active.get)
 
     if not _needs_postprocessing(params):
         return Parameters(params)

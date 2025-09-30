@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from datetime import datetime
 from typing import NewType, NotRequired, TypeAlias, TypedDict, TypeGuard
 
@@ -127,6 +127,45 @@ def check_timeperiod(timeperiod: TimeperiodName) -> bool:
     # Note: This also returns True when the time period is unknown
     #       The following function time period_active handles this differently
     return cache_manager.obtain_cache("timeperiods_cache").get(timeperiod, True)
+
+
+type _Logger = Callable[[str], object]
+
+
+class TimeperiodActiveCoreLookup(Mapping[str, bool]):
+    """A mapping that queries livestatus for timeperiod states on first access.
+
+    The response of the livestatus query is cached for the lifetime of this object.
+    """
+
+    def __init__(
+        self,
+        livestatus_access: Callable[[_Logger], Mapping[str, bool] | None],
+        log: _Logger,
+    ) -> None:
+        self._livestatus_access = livestatus_access
+        self._log = log
+        self.__core_response: Mapping[str, bool] | None = None
+
+    @property
+    def _core_response(self) -> Mapping[str, bool]:
+        if self.__core_response is not None:
+            return self.__core_response
+
+        if (response := self._livestatus_access(self._log)) is None:
+            return {}
+
+        self.__core_response = response
+        return self.__core_response
+
+    def __getitem__(self, key: str) -> bool:
+        return self._core_response.__getitem__(key)
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._core_response)
+
+    def __len__(self) -> int:
+        return len(self._core_response)
 
 
 def timeperiod_active(timeperiod: TimeperiodName) -> bool | None:

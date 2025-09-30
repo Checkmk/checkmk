@@ -20,7 +20,6 @@ from cmk.checkengine.checkresults import (
 )
 from cmk.checkengine.fetcher import FetcherFunction, HostKey
 from cmk.checkengine.parameters import (
-    IsTimeperiodActiveCallback,
     TimespecificParameters,
     TimespecificParametersPreview,
 )
@@ -101,7 +100,7 @@ def get_check_preview(
     compute_check_parameters: Callable[[HostName, AutocheckEntry], TimespecificParameters],
     enforced_services: Mapping[ServiceID, ConfiguredService],
     on_error: OnError,
-    timeperiod_active: IsTimeperiodActiveCallback,
+    timeperiods_active: Mapping[str, bool],
 ) -> CheckPreview:
     """Get the list of service of a host or cluster and guess the current state of
     all services if possible. Those are for example (only?) displayed in the UI discovery page
@@ -194,7 +193,7 @@ def get_check_preview(
                 check_source=check_source,
                 providers=providers,
                 found_on_nodes=found_on_nodes,
-                timeperiod_active=timeperiod_active,
+                timeperiods_active=timeperiods_active,
             )
             for check_source, services_with_nodes in entries.items()
             for entry, found_on_nodes in services_with_nodes
@@ -209,7 +208,7 @@ def get_check_preview(
                 check_source="manual",  # "enforced" would be nicer
                 providers=providers,
                 found_on_nodes=[h],
-                timeperiod_active=timeperiod_active,
+                timeperiods_active=timeperiods_active,
             )
             for service in enforced_services.values()
         ]
@@ -235,7 +234,7 @@ def _check_preview_table_row(
     check_source: _Transition | Literal["manual"],
     providers: Mapping[HostKey, Provider],
     found_on_nodes: Sequence[HostName],
-    timeperiod_active: IsTimeperiodActiveCallback,
+    timeperiods_active: Mapping[str, bool],
 ) -> CheckPreviewEntry:
     check_plugin = check_plugins.get(service.check_plugin_name)
     ruleset_name = (
@@ -267,7 +266,7 @@ def _check_preview_table_row(
         item=service.item,
         old_discovered_parameters=service.discovered_parameters,
         new_discovered_parameters=new_discovered_parameters,
-        effective_parameters=service.parameters.preview(timeperiod_active),
+        effective_parameters=service.parameters.preview(timeperiods_active.get),
         description=service.description,
         state=result.state,
         output=make_output(),

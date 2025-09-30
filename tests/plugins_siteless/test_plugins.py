@@ -11,7 +11,6 @@ from pathlib import Path
 
 import pytest
 
-import cmk.utils.timeperiod
 from cmk.agent_based.v1.value_store import set_value_store_manager
 from cmk.base import config
 from cmk.base.checkers import (
@@ -112,9 +111,7 @@ def test_checks_executor(
                 nodes=config_cache.nodes,
                 effective_host=config_cache.effective_host,
                 get_snmp_backend=config_cache.get_snmp_backend,
-                timeperiod_active=lambda timeperiod_name: cmk.utils.timeperiod.timeperiod_active(
-                    cmk.utils.timeperiod.TimeperiodName(timeperiod_name)
-                ),
+                timeperiods_active={},
             ),
             agent_based_plugins.check_plugins,
             value_store_manager,
@@ -143,6 +140,7 @@ def test_checks_executor(
             get_check_period=lambda *_a, **_kw: None,
             submitter=submitter,
             exit_spec=ExitSpec(),
+            timeperiods_active={},
         )
         checks_result = submitter.results
         assert checks_result

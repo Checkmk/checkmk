@@ -872,8 +872,8 @@ def _execute_discovery(
         nodes=config_cache.nodes,
         effective_host=config_cache.effective_host,
         get_snmp_backend=config_cache.get_snmp_backend,
-        timeperiod_active=lambda timeperiod_name: cmk.utils.timeperiod.timeperiod_active(
-            cmk.utils.timeperiod.TimeperiodName(timeperiod_name)
+        timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
+            livestatus.get_optional_timeperiods_active_map, logger.warning
         ),
     )
     autochecks_config = config.AutochecksConfigurer(
@@ -952,7 +952,7 @@ def _execute_discovery(
                 )(host_name).items()
             },
             on_error=on_error,
-            timeperiod_active=cmk.utils.timeperiod.timeperiod_active,
+            timeperiods_active=checker_config.timeperiods_active,
         )
     return CheckPreview(
         table={
@@ -1979,6 +1979,7 @@ class AutomationAnalyseServices(Automation):
     ) -> AnalyseServiceResult:
         host_name = HostName(args[0])
         servicedesc = args[1]
+        logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
 
         if plugins is None:
             plugins = load_plugins()
@@ -2036,7 +2037,9 @@ class AutomationAnalyseServices(Automation):
                         allow_empty=loading_result.config_cache.hosts_config.clusters,
                         error_handler=config.handle_ip_lookup_failure,
                     ),
-                    timeperiod_active=cmk.utils.timeperiod.timeperiod_active,
+                    timeperiod_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
+                        livestatus.get_optional_timeperiods_active_map, log=logger.warning
+                    ).get,
                 )
             )
             else AnalyseServiceResult(

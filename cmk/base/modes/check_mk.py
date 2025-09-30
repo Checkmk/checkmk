@@ -836,6 +836,7 @@ modes.register(
 
 
 def mode_dump_hosts(hostlist: Iterable[HostName]) -> None:
+    logger = logging.getLogger("cmk.base.modes")  # this might go nowhere.
     plugins = load_checks()
     loading_result = load_config(plugins)
     loaded_config = loading_result.loaded_config
@@ -891,7 +892,9 @@ def mode_dump_hosts(hostlist: Iterable[HostName]) -> None:
             ip_address_of=ip_address_of,
             ip_address_of_mgmt=ip_address_of_mgmt,
             simulation_mode=config.simulation_mode,
-            timeperiod_active=cmk.utils.timeperiod.timeperiod_active,
+            timeperiod_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
+                livestatus.get_optional_timeperiods_active_map, log=logger.warning
+            ).get,
         )
 
 
@@ -2847,8 +2850,8 @@ def run_checking(
         nodes=config_cache.nodes,
         effective_host=config_cache.effective_host,
         get_snmp_backend=config_cache.get_snmp_backend,
-        timeperiod_active=lambda timeperiod_name: cmk.utils.timeperiod.timeperiod_active(
-            cmk.utils.timeperiod.TimeperiodName(timeperiod_name)
+        timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
+            livestatus.get_optional_timeperiods_active_map, logger.warning
         ),
     )
     summarizer = CMKSummarizer(
@@ -2929,6 +2932,7 @@ def run_checking(
                     show_perfdata=options.get("perfdata", False),
                 ),
                 exit_spec=config_cache.exit_code_spec(hostname),
+                timeperiods_active=checker_config.timeperiods_active,
             )
 
         checks_result = [

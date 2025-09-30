@@ -12,16 +12,11 @@ export async function markStepAsComplete(
   markStepCompletedUrl: string,
   stepId: StepId
 ): Promise<void> {
-  await axios
-    .post(markStepCompletedUrl, null, {
-      params: {
-        _completed_step: stepId
-      }
-    })
-    .then(() => {
-      location.reload()
-    })
-    .catch(() => {})
+  return axios.post(markStepCompletedUrl, null, {
+    params: {
+      _completed_step: stepId
+    }
+  })
 }
 
 export async function getWelcomeStageInformation(

@@ -21,7 +21,7 @@ import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import StepCardsRow from '@/welcome/components/steps/components/StepCardsRow.vue'
 import StepParagraph from '@/welcome/components/steps/components/StepParagraph.vue'
-import { type StepId, markStepAsComplete } from '@/welcome/components/steps/utils.ts'
+import { type StepId } from '@/welcome/components/steps/utils.ts'
 
 const { _t } = usei18n()
 
@@ -31,6 +31,7 @@ const props = defineProps<{
   urls: WelcomeUrls
   accomplished: boolean
 }>()
+const emit = defineEmits(['step-completed'])
 
 const currentStep: Ref<number> = usePersistentRef<number>(`${props.stepId}-currentStep`, 0, 'local')
 </script>
@@ -155,7 +156,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(`${props.stepId}-curre
             v-if="!accomplished && stepId"
             type="finish"
             :override-label="_t('Mark as complete')"
-            @click="markStepAsComplete(urls.mark_step_completed, stepId)"
+            @click="emit('step-completed', stepId)"
           />
           <CmkWizardButton type="previous" />
         </template>

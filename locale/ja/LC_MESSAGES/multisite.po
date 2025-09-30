@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2025-09-29 08:21+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/dev/"
@@ -3090,7 +3090,8 @@ msgstr "アクセス解析設定"
 msgid ""
 "Access is restricted, but no contact groups are assigned in the host's "
 "permissions."
-msgstr "アクセスは制限されていますが、ホストの権限には連絡先グループが割り当てられて"
+msgstr ""
+"アクセスは制限されていますが、ホストの権限には連絡先グループが割り当てられて"
 "いません。"
 
 msgid "Access key"
@@ -6157,9 +6158,6 @@ msgstr "イベントがキャンセルされるときは常に"
 msgid "Amazon S3 Glacier (Glacier)"
 msgstr "Amazon S3 Glacier (Glacier)"
 
-msgid "Amazon Web Service (AWS)"
-msgstr "Amazon Web Services (AWS)"
-
 msgid "Amazon Web Services (AWS)"
 msgstr "Amazon Web Services (AWS)"
 
@@ -8256,13 +8254,16 @@ msgstr "情報待ち"
 msgid "Azure"
 msgstr "Azure"
 
-msgid "Azure AD Connect"
+#, fuzzy
+msgid "Azure AD Connect (deprecated)"
 msgstr "Azure AD Connect"
 
-msgid "Azure Agent Info"
+#, fuzzy
+msgid "Azure Agent Info (deprecated)"
 msgstr "Azureエージェント情報"
 
-msgid "Azure Application Gateway"
+#, fuzzy
+msgid "Azure Application Gateway (deprecated)"
 msgstr "Azureアプリケーションゲートウェイ"
 
 msgid "Azure Blob Storage"
@@ -8271,58 +8272,77 @@ msgstr "Azure Blobストレージ"
 msgid "Azure DB Storage"
 msgstr "Azure DB ストレージ"
 
+#, fuzzy
+msgid "Azure DB Storage (deprecated)"
+msgstr "Azure DB ストレージ"
+
 msgid "Azure Databases"
 msgstr "Azureデータベース"
 
-msgid "Azure Load Balancer Health"
+#, fuzzy
+msgid "Azure Load Balancer Health (deprecated)"
 msgstr "Azureロードバランサーヘルス"
 
-msgid "Azure SQL database CPU usage"
+#, fuzzy
+msgid "Azure SQL database CPU usage (deprecated)"
 msgstr "AzureSQLデータベースCPU使用量"
 
-msgid "Azure SQL database deadlocks"
+#, fuzzy
+msgid "Azure SQL database deadlocks (deprecated)"
 msgstr "AzureSQLデータベースデッドロック"
 
-msgid "Azure SQL database storage"
+#, fuzzy
+msgid "Azure SQL database storage (deprecated)"
 msgstr "Azure SQLデータベースストレージ"
 
-msgid "Azure SQL database throughput"
+#, fuzzy
+msgid "Azure SQL database throughput (deprecated)"
 msgstr "Azure SQLデータベーススループット"
 
 msgid "Azure Storage"
 msgstr "Azureストレージ"
 
-msgid "Azure Storage Data Flow"
+#, fuzzy
+msgid "Azure Storage Data Flow (deprecated)"
 msgstr "Azureストレージ データフロー"
 
-msgid "Azure Storage Performance"
+#, fuzzy
+msgid "Azure Storage Performance (deprecated)"
 msgstr "Azureストレージ パフォーマンス"
 
-msgid "Azure Storage Usage"
+#, fuzzy
+msgid "Azure Storage Usage (deprecated)"
 msgstr "Azureストレージ使用量"
 
-msgid "Azure Traffic Manager Probe State"
+#, fuzzy
+msgid "Azure Traffic Manager Probe State (deprecated)"
 msgstr "Azure Traffic Managerプローブの状態"
 
-msgid "Azure Traffic Manager Qps"
+#, fuzzy
+msgid "Azure Traffic Manager Qps (deprecated)"
 msgstr "AzureトラフィックマネージャーQps"
 
-msgid "Azure Usage Details (Costs)"
+#, fuzzy
+msgid "Azure Usage Details (Costs) (deprecated)"
 msgstr "Azureの使用量の詳細(コスト)"
 
-msgid "Azure VM Burst CPU Credits"
+#, fuzzy
+msgid "Azure VM Burst CPU Credits (deprecated)"
 msgstr "Azure VM バーストCPUクレジット"
 
-msgid "Azure VM Disk"
+#, fuzzy
+msgid "Azure VM Disk (deprecated)"
 msgstr "Azure VMディスク"
 
 msgid "Azure VM instances"
 msgstr "Azure VMインスタンス"
 
-msgid "Azure VNet Gateway"
+#, fuzzy
+msgid "Azure VNet Gateway  (deprecated)"
 msgstr "AzureVNetゲートウェイ"
 
-msgid "Azure database connections"
+#, fuzzy
+msgid "Azure database connections (deprecated)"
 msgstr "Azure データベース接続"
 
 msgid "Azure services found!"
@@ -8334,13 +8354,16 @@ msgstr "監視するAzureサービス"
 msgid "Azure storage accounts"
 msgstr "Azureストレージアカウント"
 
-msgid "Azure virtual machines"
+#, fuzzy
+msgid "Azure virtual machines (deprecated)"
 msgstr "Azure仮想マシン"
 
-msgid "Azure virtual machines summary"
+#, fuzzy
+msgid "Azure virtual machines summary  (deprecated)"
 msgstr "Azure仮想マシンの概要"
 
-msgid "Azure web servers (IIS)"
+#, fuzzy
+msgid "Azure web servers (IIS) (deprecated)"
 msgstr "Azure Webサーバー(IIS)"
 
 msgid "B"
@@ -9648,18 +9671,16 @@ msgid ""
 "Checkmk searches for in the key of the Azure tag, or you can disable the "
 "import of Azure tags altogether."
 msgstr ""
-"デフォルトでは、CheckmkはすべてのAzure "
-"タグをホスト/サービスラベルとしてインポートします。インポートされたタグは、ホ"
-"ストとして監視されるリソースグループおよびVMに対してはホストラベルとして、サ"
-"ービスとして監視されるリソースに対してはサービスラベルとして追加されます。ラ"
-"ベルの構文は'cmk/azure/tag/{key}:{value}'です。<br>さらに、"
-"リソースグループを表す各ホストには 'cmk/azure/"
+"デフォルトでは、CheckmkはすべてのAzure タグをホスト/サービスラベルとしてイン"
+"ポートします。インポートされたタグは、ホストとして監視されるリソースグループ"
+"およびVMに対してはホストラベルとして、サービスとして監視されるリソースに対し"
+"てはサービスラベルとして追加されます。ラベルの構文は'cmk/azure/tag/{key}:"
+"{value}'です。<br>さらに、リソースグループを表す各ホストには 'cmk/azure/"
 "resource_group:{rg_name}'というホストラベルが与えられ、ホストとして監視される"
-"VMには'cmk/azure/"
-"vm:instance'というホストラベルが与えられます。これは本オプションとは独立して"
-"無関係に行われます。<br>AzureタグのキーでCheckmkが検索するパターンを指定する"
-"ことで、インポートするタグをさらに制限することも、Azureタグのインポートを完全"
-"に無効にすることもできます。"
+"VMには'cmk/azure/vm:instance'というホストラベルが与えられます。これは本オプ"
+"ションとは独立して無関係に行われます。<br>AzureタグのキーでCheckmkが検索する"
+"パターンを指定することで、インポートするタグをさらに制限することも、Azureタグ"
+"のインポートを完全に無効にすることもできます。"
 
 #, python-brace-format
 msgid ""
@@ -10878,9 +10899,9 @@ msgstr ""
 msgid ""
 "Cannot load HW/SW Inventory of %s. Please remove corrupted inventory or "
 "status data tree files."
-msgstr "%sのHW/"
-"SWインベントリを読み込めません。破損したインベントリまたはステータスデータツ"
-"リーファイルを削除してください。"
+msgstr ""
+"%sのHW/SWインベントリを読み込めません。破損したインベントリまたはステータス"
+"データツリーファイルを削除してください。"
 
 #, python-format
 msgid ""
@@ -11979,8 +12000,9 @@ msgid "Checkmk helper usage"
 msgstr "Checkmkヘルパーの使用量"
 
 msgid "Checkmk metrics are created from OTel datapoints. Configure them here."
-msgstr "CheckmkメトリクスはOtel(Open "
-"Telemetry)データポイントから作成されます。ここで設定してください。"
+msgstr ""
+"CheckmkメトリクスはOtel(Open Telemetry)データポイントから作成されます。ここで"
+"設定してください。"
 
 msgid "Checkmk partner or reseller"
 msgstr "Checkmkパートナーまたはリセラー"
@@ -13692,7 +13714,8 @@ msgstr "構成"
 msgid "Configure"
 msgstr "設定"
 
-msgid "Configure Amazon Web Service (AWS) monitoring in Checkmk"
+#, fuzzy
+msgid "Configure Amazon Web Services (AWS) monitoring in Checkmk"
 msgstr "CheckmkでAmazon Web Services (AWS)監視を設定する"
 
 msgid "Configure Google Cloud Platform (GCP) monitoring in Checkmk"
@@ -14443,9 +14466,6 @@ msgstr "[graphing#rrds|RRD] データカラムの連結機能"
 
 msgid "Consolidation functions"
 msgstr "統合機能"
-
-msgid "Consumed capacity"
-msgstr "消費容量"
 
 msgid "Consumed host memory"
 msgstr "消費されたホストメモリ"
@@ -16649,9 +16669,6 @@ msgstr "データイングレス(ingress)"
 msgid "Data is outdated and will be removed with the next check execution"
 msgstr "データが古く、次回のチェック実行時に削除される"
 
-msgid "Data movement completed"
-msgstr "データ移動が完了しました"
-
 msgid "Data nodes"
 msgstr "データノード"
 
@@ -16686,26 +16703,8 @@ msgstr "送信データ"
 msgid "Data size"
 msgstr "データサイズ"
 
-msgid "Data targeted for higher tier"
-msgstr "上位Tierを対象としたデータ"
-
-msgid "Data targeted for lower tier"
-msgstr "下位層を対象としたデータ"
-
-msgid "Data targeted for within tier"
-msgstr "階層内を対象としたデータ"
-
 msgid "Data to collect (Sections)"
 msgstr "収集データ（セレクション）"
-
-msgid "Data to move down"
-msgstr "下に移動するデータ"
-
-msgid "Data to move up"
-msgstr "上に移動するデータ"
-
-msgid "Data to move within"
-msgstr "移動するデータ"
 
 msgid ""
 "Data to send via HTTP POST method. Please make sure that the data is URL-"
@@ -17087,20 +17086,8 @@ msgstr "SNMPv3 パスワードの復号化に失敗しました。"
 msgid "Dedicated white-/blacklists for new and vanished services"
 msgstr "新規および消滅したサービス専用のホワイト/ブラックリスト"
 
-msgid "Deduplication efficiency savings"
-msgstr "重複排除効率の節約"
-
-msgid "Deduplication percent completed"
-msgstr "重複排除の完了率"
-
 msgid "Deduplication rate"
 msgstr "重複排除率"
-
-msgid "Deduplication remaining size"
-msgstr "重複排除の残量"
-
-msgid "Deduplication shared capacity"
-msgstr "重複排除の共有容量"
 
 msgid "Default"
 msgstr "デフォルト"
@@ -18165,9 +18152,6 @@ msgstr "Windowsプリンターキュープラグインをデプロイする"
 msgid "Deploy Windows Updates plug-in"
 msgstr "WindowsUpdateプラグインをデプロイする"
 
-msgid "Deploy Zorp plug-in"
-msgstr "Zorpプラグインをデプロイする"
-
 msgid "Deploy agents"
 msgstr "エージェントを展開する"
 
@@ -18333,6 +18317,14 @@ msgstr "netstatプラグインをデプロイする"
 
 msgid "Deploy the nvidia_smi agent plug-in"
 msgstr "nvidia_smi エージェントプラグインをデプロイする"
+
+#, fuzzy
+msgid "Deploy the plug-in and run it asynchronously"
+msgstr "TSMプラグインをデプロイし非同期実行する"
+
+#, fuzzy
+msgid "Deploy the plug-in and run it synchronously"
+msgstr "TSMプラグインをデプロイし、同期実行する"
 
 msgid "Deploy without authentication."
 msgstr "パスワード認証を許可する。"
@@ -19667,9 +19659,6 @@ msgstr "ログインしたユーザーのプラグインをデプロイしない
 msgid "Do not deploy mk_mongodb.py plug-in"
 msgstr "mk_mongodb.pyプラグインをデプロイしないでください"
 
-msgid "Do not deploy plug-in"
-msgstr "プラグインをデプロイしないでください"
-
 msgid "Do not deploy plug-in for Citrix XenApp"
 msgstr "Citrix XenAppのプラグインをデプロイしないでください"
 
@@ -19814,6 +19803,10 @@ msgstr "netstatプラグインをデプロイしないでください"
 
 msgid "Do not deploy the nvidia_smi agent plug-in"
 msgstr "nvidia_smiエージェントプラグインをデプロイしない"
+
+#, fuzzy
+msgid "Do not deploy the plug-in"
+msgstr "%s プラグインをデプロイしないでください"
 
 msgid "Do not deploy."
 msgstr "デプロイしないでください。"
@@ -20574,33 +20567,6 @@ msgstr "EMC Data Domain MTreeの状態"
 
 msgid "EMC ScaleIO"
 msgstr "EMC ScaleIO"
-
-msgid "EMC VNX Enclosures"
-msgstr "EMC VNXエンクロージャ"
-
-msgid "EMC VNX admin user name"
-msgstr "EMC VNX管理者ユーザー名"
-
-msgid "EMC VNX admin user password"
-msgstr "EMC VNX管理者ユーザーのパスワード"
-
-msgid "EMC VNX storage pools"
-msgstr "EMC VNXストレージプール"
-
-msgid "EMC VNX storage pools capacity"
-msgstr "EMC VNXストレージプールの容量"
-
-msgid "EMC VNX storage pools movement"
-msgstr "EMC VNXストレージプールの動き"
-
-msgid "EMC VNX storage pools targeted tiers"
-msgstr "EMC VNXストレージプールの対象層"
-
-msgid "EMC VNX storage pools tiering"
-msgstr "EMC VNXストレージプールの階層化"
-
-msgid "EMC VNX storage systems"
-msgstr "EMC VNXストレージシステム"
 
 msgid "ERROR"
 msgstr "エラー"
@@ -21804,9 +21770,6 @@ msgstr "Enc-Outフレームレート"
 msgid "Enc-Outs"
 msgstr "Enc-Outs"
 
-msgid "Enclosure ID"
-msgstr "エンクロージャーID"
-
 msgid "Enclosure Stats"
 msgstr "エンクロージャー統計"
 
@@ -22350,9 +22313,6 @@ msgstr "新しいプロセスの推定RAM"
 
 msgid "Estimated remaining health of the disk based on other readings."
 msgstr "他の読み取り値から推定されるディスクの残量。"
-
-msgid "Estimated time to complete"
-msgstr "完了するまでの推定時間"
 
 msgid "Etherbox / MessPC: Sensor Temperature"
 msgstr "Etherbox/MessPC: センサーの温度"
@@ -26522,9 +26482,6 @@ msgstr "ハードウェアが破損したメモリ"
 
 msgid "Hardware information of the Checkmk Server"
 msgstr "Checkmkサーバーのハードウェア情報"
-
-msgid "Hardware status"
-msgstr "ハードウェアステータス"
 
 msgid "Hardware, BIOS"
 msgstr "ハードウェア、BIOS"
@@ -30797,7 +30754,8 @@ msgstr ""
 msgid ""
 "If too many metrics are produced by a service, they will be aggregated. "
 "Configure the aggregation method here."
-msgstr "サービスによって生成されるメトリクスが多すぎる場合、集計されます。集計方法を"
+msgstr ""
+"サービスによって生成されるメトリクスが多すぎる場合、集計されます。集計方法を"
 "ここで設定してください。"
 
 msgid "If value is a tuple it has to have length of two."
@@ -31079,24 +31037,6 @@ msgstr ""
 "                ENDED PRE-EMPTIVELY: WARN<br>\n"
 "                STATUS NOT AVAILABLE: OK<br>\n"
 "             "
-
-msgid ""
-"If you don't configure the user name and password, the special agent tries "
-"to authenticate against the EMC VNX device by Security Files. These need to "
-"be created manually before using. Therefor run as instance user (if using "
-"OMD) or Nagios user (if not using OMD) a command like <tt>naviseccli "
-"-AddUserSecurity -scope 0 -password PASSWORD -user USER</tt>. This creates "
-"<tt>SecuredCLISecurityFile.xml</tt> and <tt>SecuredCLIXMLEncrypted.key</tt> "
-"in the home directory of the user and these files are used then."
-msgstr ""
-"ユーザー名とパスワードを空のままにすると、スペシャルエージェントはセキュリ"
-"ティファイルによってEMC VNXデバイスに対して認証を試みます。これらは、使用する"
-"前に手動で作成する必要があります。そのため、インスタンスユーザー(OMDを使用し"
-"ている場合)またはNagiosユーザー(OMDを使用していない場合)として<tt>naviseccli "
-"-AddUserSecurity -scope 0 -password PASSWORD -user USER</tt>のようなコマンド"
-"を実行します。これにより、ユーザーのホームディレクトリに"
-"<tt>SecuredCLISecurityFile.xml</tt> と <tt>SecuredCLIXMLEncrypted.key</tt>が"
-"作成され、その後これらのファイルが使用されます。"
 
 msgid ""
 "If you enable a wait time then this number of PINGs will always be sent in "
@@ -39343,6 +39283,14 @@ msgstr "MiB"
 msgid "Microsoft Azure"
 msgstr "Microsoft Azure"
 
+#, fuzzy
+msgid "Microsoft Azure (Deprecated)"
+msgstr "Microsoft SQL サーバー(非推奨)"
+
+#, fuzzy
+msgid "Microsoft Azure (deprecated)"
+msgstr "Microsoft SQL サーバー(非推奨)"
+
 msgid "Microsoft Azure Status"
 msgstr "Microsoft Azureの状態"
 
@@ -39440,9 +39388,6 @@ msgstr "グループサービスを作成するためのグループ内のアラ
 msgid "Minimum connections per second"
 msgstr "1秒あたりの最小接続数"
 
-msgid "Minimum error count"
-msgstr "最小エラー数"
-
 msgid "Minimum levels for current"
 msgstr "電流の最小レベル"
 
@@ -39530,9 +39475,6 @@ msgstr "ミラーマージン"
 
 msgid "Mirror the vertical axis"
 msgstr "垂直軸をミラーリングします"
-
-msgid "Mirror views"
-msgstr "ミラービュー"
 
 msgid "Mirroring"
 msgstr "ミラーリング"
@@ -39709,9 +39651,6 @@ msgstr "モード：オフライン認証"
 
 msgid "Model"
 msgstr "モデル"
-
-msgid "Model and revsion"
-msgstr "モデルと改訂"
 
 msgid "Model name"
 msgstr "モデル名"
@@ -45855,9 +45794,6 @@ msgstr "センサーのオーバーライドユニット"
 msgid "Overriding by users"
 msgstr "ユーザーによるオーバーライド"
 
-msgid "Oversubscribed"
-msgstr "オーバーサブスクライブ"
-
 msgid "Overview"
 msgstr "概要"
 
@@ -46974,14 +46910,8 @@ msgstr "トピックごと"
 msgid "Percent and time"
 msgstr "パーセントと時間"
 
-msgid "Percent full"
-msgstr "使用率"
-
 msgid "Percent of OK-nodes"
 msgstr "OKノードの割合"
-
-msgid "Percent subscribed"
-msgstr "サブスクライブ率"
 
 msgid "Percent time spent in garbage collection"
 msgstr "ガベージコレクションに費やされた時間の割合"
@@ -49182,6 +49112,10 @@ msgstr ""
 "docker API エンジン呼び出しのベース URL を提供します。デフォルトでは、%sの"
 "unixソケット経由で接続しようとしています。"
 
+#, fuzzy
+msgid "Provider"
+msgstr "レベルを提供する"
+
 msgid "Provisioned IOPS SSD (io1) IO operations per second"
 msgstr "1秒ごとのプロビジョニングIOPS SSD(io1) IO動作"
 
@@ -49214,6 +49148,10 @@ msgstr "プロビジョニングレベル"
 
 msgid "Provisioning levels"
 msgstr "プロビジョニングレベル"
+
+#, fuzzy
+msgid "Proxmox"
+msgstr "Proxmox VE"
 
 msgid "Proxmox VE"
 msgstr "Proxmox VE"
@@ -49591,9 +49529,6 @@ msgstr "RA"
 
 msgid "RAID Arrays"
 msgstr "RAIDアレイ"
-
-msgid "RAID groups"
-msgstr "RAIDグループ"
 
 msgid "RAID: overall state"
 msgstr "RAID: 全体的な状態"
@@ -57769,9 +57704,6 @@ msgstr "絶対値でレベルを指定する"
 msgid "Specify levels in percentage of CPU usage"
 msgstr "CPU使用量のパーセンテージでレベル指定する"
 
-msgid "Specify levels in percentage of storage processor usage"
-msgstr "ストレージプロセッサの使用率でレベルを指定します"
-
 msgid "Specify levels in percentage of total RAM"
 msgstr "合計RAMのパーセンテージでレベルを指定します"
 
@@ -58905,12 +58837,6 @@ msgstr "サービスの状態"
 msgid "State of the event (0/1/2/3)"
 msgstr "イベントの状態 (0/1/2/3)"
 
-msgid "State on hard read error"
-msgstr "ハードリードエラーの状態"
-
-msgid "State on hard write error"
-msgstr "ハードライトエラーの状態"
-
 msgid "State retention interval"
 msgstr "状態保持間隔"
 
@@ -59104,9 +59030,6 @@ msgstr "ストリームの1つが無効状態にあるときの状態"
 
 msgid "State when packages are locked"
 msgstr "パッケージがロックされた状態"
-
-msgid "State when rebuildung enclosure"
-msgstr "エンクロージャーを再構築するときの状態"
 
 msgid "State when recommended updates are pending"
 msgstr "推奨されるアップデートが保留中の状態"
@@ -59452,12 +59375,6 @@ msgstr "ストレージIO"
 msgid "Storage IO consumption"
 msgstr "ストレージIO消費量"
 
-msgid "Storage Processor Utilization"
-msgstr "ストレージプロセッサの使用率"
-
-msgid "Storage Processor utilization"
-msgstr "ストレージプロセッサの使用率"
-
 msgid "Storage Size"
 msgstr "ストレージサイズ"
 
@@ -59466,12 +59383,6 @@ msgstr "ストレージアカウント名"
 
 msgid "Storage account shared key"
 msgstr "ストレージアカウント共有キー"
-
-msgid "Storage pools"
-msgstr "ストレージプール"
-
-msgid "Storage processor utilization"
-msgstr "ストレージプロセッサの使用率"
 
 msgid "Storage space used"
 msgstr "使用したストレージスペース"
@@ -69282,17 +69193,6 @@ msgstr ""
 "Checkmkエージェントではなく、Ruckus Spotエージェントを選択します"
 
 msgid ""
-"This rule selects the EMC VNX agent instead of the normal Checkmk Agent and "
-"allows monitoring of EMC VNX storage systems by calling naviseccli "
-"commandline tool locally on the monitoring system. Make sure it is installed "
-"and working. You can configure your connection settings here."
-msgstr ""
-"このルールは、通常のCheckmkKエージェントの代わりにEMC VNXエージェントを選択"
-"し、監視システムでローカルにnaviseccliコマンドラインツールを呼び出すことによ"
-"り、EMCVNXストレージシステムの監視を可能にします。インストールされ、機能して"
-"いることを確認してください。ここで接続設定を構成できます。"
-
-msgid ""
 "This rule selects the Fritz!Box agent, which uses UPNP to gather information "
 "about configuration and connection status information."
 msgstr ""
@@ -73587,9 +73487,6 @@ msgstr "総容量 上位レベル"
 msgid "Total slots"
 msgstr "合計スロット"
 
-msgid "Total subscribed capacity"
-msgstr "総加入容量"
-
 msgid "Total swap space"
 msgstr "合計スワップスペース"
 
@@ -75359,9 +75256,6 @@ msgstr "発生した警告の上位レベル"
 msgid "Upper levels for errors"
 msgstr "エラーの上位レベル"
 
-msgid "Upper levels for estimated time to complete"
-msgstr "完了するまでの推定時間の上位レベル"
-
 msgid "Upper levels for first output item"
 msgstr "最初の出力項目の上位レベル"
 
@@ -75427,9 +75321,6 @@ msgstr "オープンネットワークソケットの上位レベル"
 
 msgid "Upper levels for pending activations"
 msgstr "保留中のアクティベーションの上位レベル"
-
-msgid "Upper levels for physical capacity in percent"
-msgstr "物理容量の上位レベル パーセント"
 
 msgid ""
 "Upper levels for provisioned concurrency spillover invocations per second"
@@ -78625,12 +78516,12 @@ msgid ""
 "rules condition is applied to the <b>source</b> hosts."
 msgstr ""
 "デフォルトでは、ソースホストはチェック間隔ごとにピギーバックデータを送信する"
-"と想定しています。一部のソースホストでこれが当てはまらない場合、"
-"ピギーバックホストの<b> Check_MK </b>および<b> Check_MK Disovery "
-"</b>サービスは、チェック間隔内にピギーバックデータが欠落すると、それぞれ<b>ホ"
-"ストから情報を取できませんでした</b>または<b>消滅したサービス</b>と報告します"
-"。このルールは、ピギーバックされたホストデータの処理をより細かく制御するのに"
-"役立ちます。このルールの条件<b>ソース</b>ホストに適用されます。"
+"と想定しています。一部のソースホストでこれが当てはまらない場合、ピギーバック"
+"ホストの<b> Check_MK </b>および<b> Check_MK Disovery </b>サービスは、チェック"
+"間隔内にピギーバックデータが欠落すると、それぞれ<b>ホストから情報を取できませ"
+"んでした</b>または<b>消滅したサービス</b>と報告します。このルールは、ピギー"
+"バックされたホストデータの処理をより細かく制御するのに役立ちます。このルール"
+"の条件<b>ソース</b>ホストに適用されます。"
 
 msgid ""
 "We highly recommend solving this issue already in your installation by "
@@ -80420,9 +80311,6 @@ msgstr "1秒あたりの書き込みブロック"
 
 msgid "Write bytes per operation"
 msgstr "操作ごとにバイトを書き込む"
-
-msgid "Write cache state"
-msgstr "キャッシュ状態の書き込み"
 
 msgid "Write cache usage"
 msgstr "書き込みキャッシュの使用量"
@@ -83626,9 +83514,6 @@ msgstr ""
 msgid "iSCSI"
 msgstr "iSCSI"
 
-msgid "iSCSI HBAs"
-msgstr "iSCSI HBA"
-
 msgid "iSCSI latency"
 msgstr "iSCSIレイテンシ"
 
@@ -85245,6 +85130,16 @@ msgstr "の"
 msgid "No filter category available"
 msgstr "利用可能な情報はありません"
 
+msgid "Anchor"
+msgstr ""
+
+#, fuzzy
+msgid "Toggle sizing for width"
+msgstr " 待ち "
+
+msgid "Toggle sizing for height"
+msgstr ""
+
 msgid "Loading datasources..."
 msgstr "データソースを読み込み中..."
 
@@ -85440,6 +85335,63 @@ msgstr "概要"
 #, fuzzy
 msgid "Quick filter"
 msgstr "サービスフィルター"
+
+#, fuzzy
+msgid "Single %{n}"
+msgstr "シングル"
+
+#, fuzzy
+msgid "Multiple %{n}"
+msgstr "複数のサイト"
+
+#, fuzzy
+msgid "Runtime filter"
+msgstr "フィルタを取り外します"
+
+#, fuzzy
+msgid "Applied %{n} targeted filter"
+msgstr "適用されたフィルター:"
+
+msgid ""
+"Relevant %{n} targeted filter set on dashboard level via dashboard or "
+"runtime filters."
+msgstr ""
+
+#, fuzzy
+msgid "No %{n} targeted filter applied"
+msgstr "ホスト名フィルターは適用されていません。"
+
+msgid ""
+"A %{n} targeted filter selected as dashboard or runtime filter appears here "
+"and applies to this widget. You can override the value by setting a widget "
+"specific filter."
+msgstr ""
+
+#, fuzzy
+msgid "Applied %{n} filters"
+msgstr "適用されたフィルター:"
+
+msgid ""
+"Relevant %{n} filters set on dashboard level via dashboard or runtime "
+"filters."
+msgstr ""
+
+#, fuzzy
+msgid "No %{n} filters applied"
+msgstr "ホスト名フィルターは適用されません。"
+
+msgid ""
+"Dashboard or runtime %{n} filters selected on dashboard level appear and "
+"apply to this widget. You can override the values by setting widget specific "
+"filters. "
+msgstr ""
+
+#, fuzzy
+msgid "Widget filters"
+msgstr "フィルタを追加"
+
+msgid "Widget configured filters override dashboard and runtime filters"
+msgstr ""
 
 #, fuzzy
 msgid "See all"
@@ -85935,6 +85887,13 @@ msgstr "役割属性"
 msgid "Data point attributes"
 msgstr "ダウンタイム属性:"
 
+#, fuzzy
+msgid "Apply rate (sums)"
+msgstr "レイテンシーの適用"
+
+msgid "Apply percentile (histograms)"
+msgstr ""
+
 msgid "Graph metrics with all zero values"
 msgstr "すべての値がゼロのグラフメトリクス"
 
@@ -86346,7 +86305,8 @@ msgstr ""
 msgid ""
 "Search with regular expressions for menu entries, hosts, services or host "
 "and service groups."
-msgstr "メニュー項目、ホスト、サービス、またはホストとサービスのグループを正規表現で"
+msgstr ""
+"メニュー項目、ホスト、サービス、またはホストとサービスのグループを正規表現で"
 "検索します。"
 
 msgid "Note that for simplicity '*' will be substituted with '.*'."
@@ -86632,8 +86592,9 @@ msgid ""
 msgstr ""
 
 msgid "Go to Setup > Users > Contact groups to create or edit contact groups."
-msgstr "設定 ＞ ユーザー ＞ 連絡先グループ "
-"に移動し、連絡先グループを作成または編集します。"
+msgstr ""
+"設定 ＞ ユーザー ＞ 連絡先グループ に移動し、連絡先グループを作成または編集し"
+"ます。"
 
 #, fuzzy
 msgid "Assign users to a contact group"
@@ -86733,6 +86694,177 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Amazon Web Service (AWS)"
+#~ msgstr "Amazon Web Services (AWS)"
+
+#~ msgid "Consumed capacity"
+#~ msgstr "消費容量"
+
+#~ msgid "Data movement completed"
+#~ msgstr "データ移動が完了しました"
+
+#~ msgid "Data targeted for higher tier"
+#~ msgstr "上位Tierを対象としたデータ"
+
+#~ msgid "Data targeted for lower tier"
+#~ msgstr "下位層を対象としたデータ"
+
+#~ msgid "Data targeted for within tier"
+#~ msgstr "階層内を対象としたデータ"
+
+#~ msgid "Data to move down"
+#~ msgstr "下に移動するデータ"
+
+#~ msgid "Data to move up"
+#~ msgstr "上に移動するデータ"
+
+#~ msgid "Data to move within"
+#~ msgstr "移動するデータ"
+
+#~ msgid "Deduplication efficiency savings"
+#~ msgstr "重複排除効率の節約"
+
+#~ msgid "Deduplication percent completed"
+#~ msgstr "重複排除の完了率"
+
+#~ msgid "Deduplication remaining size"
+#~ msgstr "重複排除の残量"
+
+#~ msgid "Deduplication shared capacity"
+#~ msgstr "重複排除の共有容量"
+
+#~ msgid "Deploy Zorp plug-in"
+#~ msgstr "Zorpプラグインをデプロイする"
+
+#~ msgid "Do not deploy plug-in"
+#~ msgstr "プラグインをデプロイしないでください"
+
+#~ msgid "EMC VNX Enclosures"
+#~ msgstr "EMC VNXエンクロージャ"
+
+#~ msgid "EMC VNX admin user name"
+#~ msgstr "EMC VNX管理者ユーザー名"
+
+#~ msgid "EMC VNX admin user password"
+#~ msgstr "EMC VNX管理者ユーザーのパスワード"
+
+#~ msgid "EMC VNX storage pools"
+#~ msgstr "EMC VNXストレージプール"
+
+#~ msgid "EMC VNX storage pools capacity"
+#~ msgstr "EMC VNXストレージプールの容量"
+
+#~ msgid "EMC VNX storage pools movement"
+#~ msgstr "EMC VNXストレージプールの動き"
+
+#~ msgid "EMC VNX storage pools targeted tiers"
+#~ msgstr "EMC VNXストレージプールの対象層"
+
+#~ msgid "EMC VNX storage pools tiering"
+#~ msgstr "EMC VNXストレージプールの階層化"
+
+#~ msgid "EMC VNX storage systems"
+#~ msgstr "EMC VNXストレージシステム"
+
+#~ msgid "Enclosure ID"
+#~ msgstr "エンクロージャーID"
+
+#~ msgid "Estimated time to complete"
+#~ msgstr "完了するまでの推定時間"
+
+#~ msgid "Hardware status"
+#~ msgstr "ハードウェアステータス"
+
+#~ msgid ""
+#~ "If you don't configure the user name and password, the special agent "
+#~ "tries to authenticate against the EMC VNX device by Security Files. These "
+#~ "need to be created manually before using. Therefor run as instance user "
+#~ "(if using OMD) or Nagios user (if not using OMD) a command like "
+#~ "<tt>naviseccli -AddUserSecurity -scope 0 -password PASSWORD -user USER</"
+#~ "tt>. This creates <tt>SecuredCLISecurityFile.xml</tt> and "
+#~ "<tt>SecuredCLIXMLEncrypted.key</tt> in the home directory of the user and "
+#~ "these files are used then."
+#~ msgstr ""
+#~ "ユーザー名とパスワードを空のままにすると、スペシャルエージェントはセキュリ"
+#~ "ティファイルによってEMC VNXデバイスに対して認証を試みます。これらは、使用"
+#~ "する前に手動で作成する必要があります。そのため、インスタンスユーザー(OMDを"
+#~ "使用している場合)またはNagiosユーザー(OMDを使用していない場合)として"
+#~ "<tt>naviseccli -AddUserSecurity -scope 0 -password PASSWORD -user USER</"
+#~ "tt>のようなコマンドを実行します。これにより、ユーザーのホームディレクトリ"
+#~ "に<tt>SecuredCLISecurityFile.xml</tt> と <tt>SecuredCLIXMLEncrypted.key</"
+#~ "tt>が作成され、その後これらのファイルが使用されます。"
+
+#~ msgid "Minimum error count"
+#~ msgstr "最小エラー数"
+
+#~ msgid "Mirror views"
+#~ msgstr "ミラービュー"
+
+#~ msgid "Model and revsion"
+#~ msgstr "モデルと改訂"
+
+#~ msgid "Oversubscribed"
+#~ msgstr "オーバーサブスクライブ"
+
+#~ msgid "Percent full"
+#~ msgstr "使用率"
+
+#~ msgid "Percent subscribed"
+#~ msgstr "サブスクライブ率"
+
+#~ msgid "RAID groups"
+#~ msgstr "RAIDグループ"
+
+#~ msgid "Specify levels in percentage of storage processor usage"
+#~ msgstr "ストレージプロセッサの使用率でレベルを指定します"
+
+#~ msgid "State on hard read error"
+#~ msgstr "ハードリードエラーの状態"
+
+#~ msgid "State on hard write error"
+#~ msgstr "ハードライトエラーの状態"
+
+#~ msgid "State when rebuildung enclosure"
+#~ msgstr "エンクロージャーを再構築するときの状態"
+
+#~ msgid "Storage Processor Utilization"
+#~ msgstr "ストレージプロセッサの使用率"
+
+#~ msgid "Storage Processor utilization"
+#~ msgstr "ストレージプロセッサの使用率"
+
+#~ msgid "Storage pools"
+#~ msgstr "ストレージプール"
+
+#~ msgid "Storage processor utilization"
+#~ msgstr "ストレージプロセッサの使用率"
+
+#~ msgid ""
+#~ "This rule selects the EMC VNX agent instead of the normal Checkmk Agent "
+#~ "and allows monitoring of EMC VNX storage systems by calling naviseccli "
+#~ "commandline tool locally on the monitoring system. Make sure it is "
+#~ "installed and working. You can configure your connection settings here."
+#~ msgstr ""
+#~ "このルールは、通常のCheckmkKエージェントの代わりにEMC VNXエージェントを選"
+#~ "択し、監視システムでローカルにnaviseccliコマンドラインツールを呼び出すこと"
+#~ "により、EMCVNXストレージシステムの監視を可能にします。インストールされ、機"
+#~ "能していることを確認してください。ここで接続設定を構成できます。"
+
+#~ msgid "Total subscribed capacity"
+#~ msgstr "総加入容量"
+
+#~ msgid "Upper levels for estimated time to complete"
+#~ msgstr "完了するまでの推定時間の上位レベル"
+
+#~ msgid "Upper levels for physical capacity in percent"
+#~ msgstr "物理容量の上位レベル パーセント"
+
+#~ msgid "Write cache state"
+#~ msgstr "キャッシュ状態の書き込み"
+
+#~ msgid "iSCSI HBAs"
+#~ msgstr "iSCSI HBA"
 
 #, fuzzy
 #~ msgid "Add subscription tag"

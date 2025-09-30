@@ -6536,10 +6536,6 @@ msgstr "Întotdeauna când un eveniment este anulat"
 msgid "Amazon S3 Glacier (Glacier)"
 msgstr "Amazon S3 Glacier (Glacier)"
 
-#, fuzzy
-msgid "Amazon Web Service (AWS)"
-msgstr "Servicii Web Amazon (AWS)"
-
 msgid "Amazon Web Services (AWS)"
 msgstr "Servicii Web Amazon (AWS)"
 
@@ -8860,13 +8856,16 @@ msgstr "În așteptare de informații"
 msgid "Azure"
 msgstr "Azure"
 
-msgid "Azure AD Connect"
+#, fuzzy
+msgid "Azure AD Connect (deprecated)"
 msgstr "Azure AD Connect"
 
-msgid "Azure Agent Info"
+#, fuzzy
+msgid "Azure Agent Info (deprecated)"
 msgstr "Informații despre Azure Agent"
 
-msgid "Azure Application Gateway"
+#, fuzzy
+msgid "Azure Application Gateway (deprecated)"
 msgstr "Azure Application Gateway"
 
 msgid "Azure Blob Storage"
@@ -8875,66 +8874,77 @@ msgstr "Azure Blob Storage"
 msgid "Azure DB Storage"
 msgstr "Azure DB Storage"
 
+#, fuzzy
+msgid "Azure DB Storage (deprecated)"
+msgstr "Azure DB Storage"
+
 msgid "Azure Databases"
 msgstr "Baze de date Azure"
 
-msgid "Azure Load Balancer Health"
+#, fuzzy
+msgid "Azure Load Balancer Health (deprecated)"
 msgstr "Sănătatea Azure Load Balancer"
 
 #, fuzzy
-msgid "Azure SQL database CPU usage"
+msgid "Azure SQL database CPU usage (deprecated)"
 msgstr "Baze de date Azure"
 
 #, fuzzy
-msgid "Azure SQL database deadlocks"
+msgid "Azure SQL database deadlocks (deprecated)"
 msgstr "Conexiuni la baza de date"
 
 #, fuzzy
-msgid "Azure SQL database storage"
+msgid "Azure SQL database storage (deprecated)"
 msgstr "Baze de date Azure"
 
 #, fuzzy
-msgid "Azure SQL database throughput"
+msgid "Azure SQL database throughput (deprecated)"
 msgstr "Unitatea de debit a bazei de date"
 
 msgid "Azure Storage"
 msgstr "Azure Storage"
 
 #, fuzzy
-msgid "Azure Storage Data Flow"
+msgid "Azure Storage Data Flow (deprecated)"
 msgstr "Azure Storage"
 
 #, fuzzy
-msgid "Azure Storage Performance"
+msgid "Azure Storage Performance (deprecated)"
 msgstr "Azure Storage"
 
 #, fuzzy
-msgid "Azure Storage Usage"
+msgid "Azure Storage Usage (deprecated)"
 msgstr "Azure Storage"
 
-msgid "Azure Traffic Manager Probe State"
+#, fuzzy
+msgid "Azure Traffic Manager Probe State (deprecated)"
 msgstr "Azure Traffic Manager Probe State"
 
-msgid "Azure Traffic Manager Qps"
+#, fuzzy
+msgid "Azure Traffic Manager Qps (deprecated)"
 msgstr "Azure Traffic Manager Qps"
 
-msgid "Azure Usage Details (Costs)"
+#, fuzzy
+msgid "Azure Usage Details (Costs) (deprecated)"
 msgstr "Detalii privind utilizarea Azure (costuri)"
 
-msgid "Azure VM Burst CPU Credits"
+#, fuzzy
+msgid "Azure VM Burst CPU Credits (deprecated)"
 msgstr "Credite CPU Azure VM Burst"
 
-msgid "Azure VM Disk"
+#, fuzzy
+msgid "Azure VM Disk (deprecated)"
 msgstr "Azure VM Disk"
 
 msgid "Azure VM instances"
 msgstr "Instanțe Azure VM"
 
-msgid "Azure VNet Gateway"
+#, fuzzy
+msgid "Azure VNet Gateway  (deprecated)"
 msgstr "Azure VNet Gateway"
 
 #, fuzzy
-msgid "Azure database connections"
+msgid "Azure database connections (deprecated)"
 msgstr "Conexiuni la baza de date"
 
 #, fuzzy
@@ -8948,14 +8958,15 @@ msgid "Azure storage accounts"
 msgstr "Conturi de stocare Azure"
 
 #, fuzzy
-msgid "Azure virtual machines"
+msgid "Azure virtual machines (deprecated)"
 msgstr "Mașini virtuale Azure"
 
 #, fuzzy
-msgid "Azure virtual machines summary"
+msgid "Azure virtual machines summary  (deprecated)"
 msgstr "Rezumat al mașinilor virtuale Azure"
 
-msgid "Azure web servers (IIS)"
+#, fuzzy
+msgid "Azure web servers (IIS) (deprecated)"
 msgstr "Servere web Azure (IIS)"
 
 msgid "B"
@@ -14604,7 +14615,7 @@ msgid "Configure"
 msgstr "Configurați"
 
 #, fuzzy
-msgid "Configure Amazon Web Service (AWS) monitoring in Checkmk"
+msgid "Configure Amazon Web Services (AWS) monitoring in Checkmk"
 msgstr "Monitorizarea serviciilor web Amazon (AWS)"
 
 #, fuzzy
@@ -15405,9 +15416,6 @@ msgstr "Funcție de consolidare pentru coloana de date [graphing#rrds|RRD]."
 
 msgid "Consolidation functions"
 msgstr "Funcții de consolidare"
-
-msgid "Consumed capacity"
-msgstr "Capacitate consumată"
 
 msgid "Consumed host memory"
 msgstr "Memorie gazdă consumată"
@@ -17717,9 +17725,6 @@ msgstr ""
 "Datele sunt depășite și vor fi eliminate la următoarea execuție a "
 "verificării."
 
-msgid "Data movement completed"
-msgstr "Mișcarea datelor a fost finalizată"
-
 msgid "Data nodes"
 msgstr "Noduri de date"
 
@@ -17754,26 +17759,8 @@ msgstr "Date trimise"
 msgid "Data size"
 msgstr "Dimensiunea datelor"
 
-msgid "Data targeted for higher tier"
-msgstr "Date destinate unui nivel superior"
-
-msgid "Data targeted for lower tier"
-msgstr "Date destinate nivelului inferior"
-
-msgid "Data targeted for within tier"
-msgstr "Date vizate în cadrul unui nivel"
-
 msgid "Data to collect (Sections)"
 msgstr "Date de colectat (secțiuni)"
-
-msgid "Data to move down"
-msgstr "Date pentru a se deplasa în jos"
-
-msgid "Data to move up"
-msgstr "Date pentru a avansa"
-
-msgid "Data to move within"
-msgstr "Date pentru a se deplasa în cadrul"
 
 #, fuzzy
 msgid ""
@@ -18173,20 +18160,8 @@ msgstr "Decriptarea parolei SNMPv3 a eșuat."
 msgid "Dedicated white-/blacklists for new and vanished services"
 msgstr "Liste albe/negre dedicate pentru servicii noi și dispărute"
 
-msgid "Deduplication efficiency savings"
-msgstr "Economii de eficiență a deduplicării"
-
-msgid "Deduplication percent completed"
-msgstr "Procentul de deduplicare finalizat"
-
 msgid "Deduplication rate"
 msgstr "Rata de deduplicare"
-
-msgid "Deduplication remaining size"
-msgstr "Dimensiunea rămasă a deduplicării"
-
-msgid "Deduplication shared capacity"
-msgstr "Deduplicarea capacității partajate"
 
 msgid "Default"
 msgstr "Implicit"
@@ -19319,10 +19294,6 @@ msgstr "Implementarea pluginului Windows Printer Queue"
 msgid "Deploy Windows Updates plug-in"
 msgstr "Implementarea pluginului Windows Updates"
 
-#, fuzzy
-msgid "Deploy Zorp plug-in"
-msgstr "Implementați plugin-ul Zorp"
-
 msgid "Deploy agents"
 msgstr "Desfășurarea agenților"
 
@@ -19538,6 +19509,14 @@ msgstr "Implementați plugin-ul netstat"
 #, fuzzy
 msgid "Deploy the nvidia_smi agent plug-in"
 msgstr "Implementați plugin-ul agentului nvidia_smi"
+
+#, fuzzy
+msgid "Deploy the plug-in and run it asynchronously"
+msgstr "Implementarea pluginului MTR în mod asincron"
+
+#, fuzzy
+msgid "Deploy the plug-in and run it synchronously"
+msgstr "Implementarea pluginului MTR în mod asincron"
 
 msgid "Deploy without authentication."
 msgstr "Implementați fără autentificare."
@@ -20977,10 +20956,6 @@ msgid "Do not deploy mk_mongodb.py plug-in"
 msgstr "Nu implementați pluginul mk_mongodb.py"
 
 #, fuzzy
-msgid "Do not deploy plug-in"
-msgstr "Nu implementați plugin-ul"
-
-#, fuzzy
 msgid "Do not deploy plug-in for Citrix XenApp"
 msgstr "Nu implementați pluginul pentru Citrix XenApp"
 
@@ -21172,6 +21147,10 @@ msgstr "Nu implementați plugin-ul netstat"
 #, fuzzy
 msgid "Do not deploy the nvidia_smi agent plug-in"
 msgstr "Nu implementați plugin-ul agentului nvidia_smi"
+
+#, fuzzy
+msgid "Do not deploy the plug-in"
+msgstr "Nu implementați plugin-ul %s."
 
 msgid "Do not deploy."
 msgstr "Nu desfășurați."
@@ -21958,33 +21937,6 @@ msgstr "Starea EMC Data Domain MTree"
 
 msgid "EMC ScaleIO"
 msgstr "EMC ScaleIO"
-
-msgid "EMC VNX Enclosures"
-msgstr "Carcase EMC VNX"
-
-msgid "EMC VNX admin user name"
-msgstr "Nume de utilizator administrator EMC VNX"
-
-msgid "EMC VNX admin user password"
-msgstr "Parola utilizatorului administrator EMC VNX"
-
-msgid "EMC VNX storage pools"
-msgstr "Grupuri de stocare EMC VNX"
-
-msgid "EMC VNX storage pools capacity"
-msgstr "Capacitatea grupurilor de stocare EMC VNX"
-
-msgid "EMC VNX storage pools movement"
-msgstr "Mișcarea grupurilor de stocare EMC VNX"
-
-msgid "EMC VNX storage pools targeted tiers"
-msgstr "Grupuri de stocare EMC VNX cu niveluri vizate"
-
-msgid "EMC VNX storage pools tiering"
-msgstr "Grupuri de stocare EMC VNX Storage pools tiering"
-
-msgid "EMC VNX storage systems"
-msgstr "Sisteme de stocare EMC VNX"
 
 msgid "ERROR"
 msgstr "ERROR"
@@ -23251,9 +23203,6 @@ msgstr "Rata cadrelor Enc-Out"
 msgid "Enc-Outs"
 msgstr "Încărcări"
 
-msgid "Enclosure ID"
-msgstr "ID-ul incintei"
-
 msgid "Enclosure Stats"
 msgstr "Statisticile de închidere"
 
@@ -23829,9 +23778,6 @@ msgstr "RAM estimat pentru noile procese"
 
 msgid "Estimated remaining health of the disk based on other readings."
 msgstr "Estimarea stării de sănătate rămase a discului pe baza altor citiri."
-
-msgid "Estimated time to complete"
-msgstr "Timpul estimat de finalizare"
 
 msgid "Etherbox / MessPC: Sensor Temperature"
 msgstr "Etherbox / MessPC: Temperatura senzorului"
@@ -28196,9 +28142,6 @@ msgstr "Memorie coruptă din punct de vedere hardware"
 
 msgid "Hardware information of the Checkmk Server"
 msgstr "Informații hardware ale serverului Checkmk"
-
-msgid "Hardware status"
-msgstr "Starea hardware"
 
 msgid "Hardware, BIOS"
 msgstr "Hardware, BIOS"
@@ -33262,26 +33205,6 @@ msgstr ""
 "                ÎNCHEIAT PRE-EMPTIV: AVERTISMENT<br>\n"
 "                STATUTUL NU ESTE DISPONIBIL: OK<br>\n"
 "             "
-
-#, fuzzy
-msgid ""
-"If you don't configure the user name and password, the special agent tries "
-"to authenticate against the EMC VNX device by Security Files. These need to "
-"be created manually before using. Therefor run as instance user (if using "
-"OMD) or Nagios user (if not using OMD) a command like <tt>naviseccli "
-"-AddUserSecurity -scope 0 -password PASSWORD -user USER</tt>. This creates "
-"<tt>SecuredCLISecurityFile.xml</tt> and <tt>SecuredCLIXMLEncrypted.key</tt> "
-"in the home directory of the user and these files are used then."
-msgstr ""
-"Dacă lăsați numele de utilizator și parola goale, agentul special încearcă "
-"să se autentifice față de dispozitivul EMC VNX prin fișierele de securitate. "
-"Acestea trebuie create manual înainte de utilizare. De aceea, rulați ca "
-"utilizator de instanță (dacă utilizați OMD) sau ca utilizator Nagios (dacă "
-"nu utilizați OMD) o comandă precum <tt>naviseccli -AddUserSecurity -scope 0 "
-"-password PASSWORD -user USER</tt> Aceasta creează "
-"<tt>SecuredCLISecurityFile.xml</tt> și <tt>SecuredCLIXMLEncrypted.key</tt> "
-"în directorul personal al utilizatorului și aceste fișiere sunt utilizate "
-"apoi."
 
 msgid ""
 "If you enable a wait time then this number of PINGs will always be sent in "
@@ -41997,6 +41920,14 @@ msgstr "MiB"
 msgid "Microsoft Azure"
 msgstr "Microsoft Azure"
 
+#, fuzzy
+msgid "Microsoft Azure (Deprecated)"
+msgstr "Microsoft SQL Server (Windows)"
+
+#, fuzzy
+msgid "Microsoft Azure (deprecated)"
+msgstr "Microsoft SQL Server (Windows)"
+
 msgid "Microsoft Azure Status"
 msgstr "Starea Microsoft Azure"
 
@@ -42100,9 +42031,6 @@ msgstr ""
 msgid "Minimum connections per second"
 msgstr "Conexiuni minime pe secundă"
 
-msgid "Minimum error count"
-msgstr "Număr minim de erori"
-
 #, fuzzy
 msgid "Minimum levels for current"
 msgstr "Niveluri minime de tensiune"
@@ -42194,9 +42122,6 @@ msgstr "Marginile oglinzii"
 
 msgid "Mirror the vertical axis"
 msgstr "Oglindirea axei verticale"
-
-msgid "Mirror views"
-msgstr "Vederi în oglindă"
 
 msgid "Mirroring"
 msgstr "Oglindirea"
@@ -42374,9 +42299,6 @@ msgstr "Mod: Verificare offline"
 
 msgid "Model"
 msgstr "Model"
-
-msgid "Model and revsion"
-msgstr "Model și revizionare"
 
 #, fuzzy
 msgid "Model name"
@@ -49144,9 +49066,6 @@ msgstr "Unitatea de suprascriere a senzorului"
 msgid "Overriding by users"
 msgstr "Suprascrierea de către utilizatori"
 
-msgid "Oversubscribed"
-msgstr "Suprasubscris"
-
 msgid "Overview"
 msgstr "Prezentare generală"
 
@@ -50298,14 +50217,8 @@ msgstr "Pe subiect"
 msgid "Percent and time"
 msgstr "Procent și timp"
 
-msgid "Percent full"
-msgstr "Procent de umplere"
-
 msgid "Percent of OK-nodes"
 msgstr "Procentul de noduri OK"
-
-msgid "Percent subscribed"
-msgstr "Procentul de subscriere"
 
 msgid "Percent time spent in garbage collection"
 msgstr "Procentul de timp petrecut în colectarea gunoiului"
@@ -52702,6 +52615,10 @@ msgstr ""
 "Furnizați URL-ul de bază pentru apelurile motorului API docker. În mod "
 "implicit, încercăm să ne conectăm prin intermediul socket-ului unix la %s."
 
+#, fuzzy
+msgid "Provider"
+msgstr "Furnizarea de niveluri"
+
 msgid "Provisioned IOPS SSD (io1) IO operations per second"
 msgstr "IOPS provizionate SSD (io1) Operațiuni IO pe secundă"
 
@@ -52735,6 +52652,10 @@ msgstr "Niveluri de provizionare"
 #, fuzzy
 msgid "Provisioning levels"
 msgstr "Niveluri de provizionare"
+
+#, fuzzy
+msgid "Proxmox"
+msgstr "Proxmox VE"
 
 msgid "Proxmox VE"
 msgstr "Proxmox VE"
@@ -53131,9 +53052,6 @@ msgstr "RA"
 
 msgid "RAID Arrays"
 msgstr "Matrici RAID"
-
-msgid "RAID groups"
-msgstr "Grupuri RAID"
 
 msgid "RAID: overall state"
 msgstr "RAID: starea sistemului"
@@ -61828,10 +61746,6 @@ msgstr "Specificați nivelurile în valori absolute"
 msgid "Specify levels in percentage of CPU usage"
 msgstr "Specificați nivelurile în procente de utilizare a CPU"
 
-msgid "Specify levels in percentage of storage processor usage"
-msgstr ""
-"Specificați nivelurile în procente de utilizare a procesorului de stocare"
-
 msgid "Specify levels in percentage of total RAM"
 msgstr "Specificați nivelurile în procente din totalul RAM"
 
@@ -63071,12 +62985,6 @@ msgstr "Statul de serviciu"
 msgid "State of the event (0/1/2/3)"
 msgstr "Starea evenimentului (0/1/2/3)"
 
-msgid "State on hard read error"
-msgstr "Stare la eroarea de citire dură"
-
-msgid "State on hard write error"
-msgstr "Stare la o eroare de scriere dură"
-
 msgid "State retention interval"
 msgstr "Intervalul de reținere a stării"
 
@@ -63288,9 +63196,6 @@ msgstr "Stare atunci când unul dintre fluxuri este în stare dezactivată"
 
 msgid "State when packages are locked"
 msgstr "Starea când pachetele sunt blocate"
-
-msgid "State when rebuildung enclosure"
-msgstr "Stare la reconstrucția incintei"
 
 msgid "State when recommended updates are pending"
 msgstr "Starea în care se așteaptă actualizările recomandate"
@@ -63647,12 +63552,6 @@ msgstr "Stocare IO"
 msgid "Storage IO consumption"
 msgstr "Consumul de stocare IO"
 
-msgid "Storage Processor Utilization"
-msgstr "Utilizare procesor de stocare"
-
-msgid "Storage Processor utilization"
-msgstr "Stocare Utilizare procesor"
-
 msgid "Storage Size"
 msgstr "Dimensiunea de stocare"
 
@@ -63661,12 +63560,6 @@ msgstr "Numele contului de stocare"
 
 msgid "Storage account shared key"
 msgstr "Cheia partajată a contului de stocare"
-
-msgid "Storage pools"
-msgstr "Grupuri de stocare"
-
-msgid "Storage processor utilization"
-msgstr "Utilizarea procesorului de stocare"
 
 msgid "Storage space used"
 msgstr "Spațiul de stocare utilizat"
@@ -73952,18 +73845,6 @@ msgstr ""
 "Checkmk normal care colectează datele prin interfața web Ruckus Spot."
 
 msgid ""
-"This rule selects the EMC VNX agent instead of the normal Checkmk Agent and "
-"allows monitoring of EMC VNX storage systems by calling naviseccli "
-"commandline tool locally on the monitoring system. Make sure it is installed "
-"and working. You can configure your connection settings here."
-msgstr ""
-"Această regulă selectează agentul EMC VNX în locul agentului Checkmk normal "
-"și permite monitorizarea sistemelor de stocare EMC VNX prin apelarea "
-"instrumentului de linie de comandă naviseccli la nivel local pe sistemul de "
-"monitorizare. Asigurați-vă că acesta este instalat și funcționează. Puteți "
-"configura setările de conectare aici."
-
-msgid ""
 "This rule selects the Fritz!Box agent, which uses UPNP to gather information "
 "about configuration and connection status information."
 msgstr ""
@@ -78864,9 +78745,6 @@ msgstr "Containere niveluri superioare"
 msgid "Total slots"
 msgstr "Total sloturi"
 
-msgid "Total subscribed capacity"
-msgstr "Capacitatea totală subscrisă"
-
 msgid "Total swap space"
 msgstr "Spațiu swap total"
 
@@ -80730,9 +80608,6 @@ msgstr "Nivelurile superioare pentru avertismentele întâlnite"
 msgid "Upper levels for errors"
 msgstr "Niveluri superioare pentru erori"
 
-msgid "Upper levels for estimated time to complete"
-msgstr "Niveluri superioare pentru timpul estimat de finalizare"
-
 msgid "Upper levels for first output item"
 msgstr "Nivelurile superioare pentru primul element de ieșire"
 
@@ -80805,9 +80680,6 @@ msgstr "Niveluri superioare pentru prize de rețea deschise"
 
 msgid "Upper levels for pending activations"
 msgstr "Niveluri superioare pentru activările în așteptare"
-
-msgid "Upper levels for physical capacity in percent"
-msgstr "Niveluri superioare pentru capacitatea fizică în procente"
 
 msgid ""
 "Upper levels for provisioned concurrency spillover invocations per second"
@@ -86235,9 +86107,6 @@ msgstr "Blocuri de scriere pe secundă"
 msgid "Write bytes per operation"
 msgstr "Scrieți octeți pe operațiune"
 
-msgid "Write cache state"
-msgstr "Starea cache-ului de scriere"
-
 msgid "Write cache usage"
 msgstr "Utilizarea cache-ului de scriere"
 
@@ -89595,9 +89464,6 @@ msgstr ""
 msgid "iSCSI"
 msgstr "iSCSI"
 
-msgid "iSCSI HBAs"
-msgstr "HBA-uri iSCSI"
-
 #, fuzzy
 msgid "iSCSI latency"
 msgstr "Latență IO"
@@ -91280,6 +91146,16 @@ msgstr "off"
 msgid "No filter category available"
 msgstr "Nu există informații disponibile"
 
+msgid "Anchor"
+msgstr ""
+
+#, fuzzy
+msgid "Toggle sizing for width"
+msgstr "Un titlu pentru view"
+
+msgid "Toggle sizing for height"
+msgstr ""
+
 #, fuzzy
 msgid "Loading datasources..."
 msgstr "%d traduceri"
@@ -91484,6 +91360,63 @@ msgstr "Prezentare generală"
 #, fuzzy
 msgid "Quick filter"
 msgstr "Filtre de service"
+
+#, fuzzy
+msgid "Single %{n}"
+msgstr "Single"
+
+#, fuzzy
+msgid "Multiple %{n}"
+msgstr "Mai multe site-uri"
+
+#, fuzzy
+msgid "Runtime filter"
+msgstr "Eliminați filtrul"
+
+#, fuzzy
+msgid "Applied %{n} targeted filter"
+msgstr "Filtre aplicate:"
+
+msgid ""
+"Relevant %{n} targeted filter set on dashboard level via dashboard or "
+"runtime filters."
+msgstr ""
+
+#, fuzzy
+msgid "No %{n} targeted filter applied"
+msgstr "Gazda Ntopng"
+
+msgid ""
+"A %{n} targeted filter selected as dashboard or runtime filter appears here "
+"and applies to this widget. You can override the value by setting a widget "
+"specific filter."
+msgstr ""
+
+#, fuzzy
+msgid "Applied %{n} filters"
+msgstr "Filtre aplicate:"
+
+msgid ""
+"Relevant %{n} filters set on dashboard level via dashboard or runtime "
+"filters."
+msgstr ""
+
+#, fuzzy
+msgid "No %{n} filters applied"
+msgstr "Gazda Ntopng"
+
+msgid ""
+"Dashboard or runtime %{n} filters selected on dashboard level appear and "
+"apply to this widget. You can override the values by setting widget specific "
+"filters. "
+msgstr ""
+
+#, fuzzy
+msgid "Widget filters"
+msgstr "Adaugă filtre"
+
+msgid "Widget configured filters override dashboard and runtime filters"
+msgstr ""
 
 #, fuzzy
 msgid "See all"
@@ -91989,6 +91922,13 @@ msgstr "Atributul rolului"
 #, fuzzy
 msgid "Data point attributes"
 msgstr "Atributele timpilor morți:"
+
+#, fuzzy
+msgid "Apply rate (sums)"
+msgstr "Latență"
+
+msgid "Apply percentile (histograms)"
+msgstr ""
 
 #, fuzzy
 msgid "Graph metrics with all zero values"
@@ -92823,6 +92763,184 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Amazon Web Service (AWS)"
+#~ msgstr "Servicii Web Amazon (AWS)"
+
+#~ msgid "Consumed capacity"
+#~ msgstr "Capacitate consumată"
+
+#~ msgid "Data movement completed"
+#~ msgstr "Mișcarea datelor a fost finalizată"
+
+#~ msgid "Data targeted for higher tier"
+#~ msgstr "Date destinate unui nivel superior"
+
+#~ msgid "Data targeted for lower tier"
+#~ msgstr "Date destinate nivelului inferior"
+
+#~ msgid "Data targeted for within tier"
+#~ msgstr "Date vizate în cadrul unui nivel"
+
+#~ msgid "Data to move down"
+#~ msgstr "Date pentru a se deplasa în jos"
+
+#~ msgid "Data to move up"
+#~ msgstr "Date pentru a avansa"
+
+#~ msgid "Data to move within"
+#~ msgstr "Date pentru a se deplasa în cadrul"
+
+#~ msgid "Deduplication efficiency savings"
+#~ msgstr "Economii de eficiență a deduplicării"
+
+#~ msgid "Deduplication percent completed"
+#~ msgstr "Procentul de deduplicare finalizat"
+
+#~ msgid "Deduplication remaining size"
+#~ msgstr "Dimensiunea rămasă a deduplicării"
+
+#~ msgid "Deduplication shared capacity"
+#~ msgstr "Deduplicarea capacității partajate"
+
+#, fuzzy
+#~ msgid "Deploy Zorp plug-in"
+#~ msgstr "Implementați plugin-ul Zorp"
+
+#, fuzzy
+#~ msgid "Do not deploy plug-in"
+#~ msgstr "Nu implementați plugin-ul"
+
+#~ msgid "EMC VNX Enclosures"
+#~ msgstr "Carcase EMC VNX"
+
+#~ msgid "EMC VNX admin user name"
+#~ msgstr "Nume de utilizator administrator EMC VNX"
+
+#~ msgid "EMC VNX admin user password"
+#~ msgstr "Parola utilizatorului administrator EMC VNX"
+
+#~ msgid "EMC VNX storage pools"
+#~ msgstr "Grupuri de stocare EMC VNX"
+
+#~ msgid "EMC VNX storage pools capacity"
+#~ msgstr "Capacitatea grupurilor de stocare EMC VNX"
+
+#~ msgid "EMC VNX storage pools movement"
+#~ msgstr "Mișcarea grupurilor de stocare EMC VNX"
+
+#~ msgid "EMC VNX storage pools targeted tiers"
+#~ msgstr "Grupuri de stocare EMC VNX cu niveluri vizate"
+
+#~ msgid "EMC VNX storage pools tiering"
+#~ msgstr "Grupuri de stocare EMC VNX Storage pools tiering"
+
+#~ msgid "EMC VNX storage systems"
+#~ msgstr "Sisteme de stocare EMC VNX"
+
+#~ msgid "Enclosure ID"
+#~ msgstr "ID-ul incintei"
+
+#~ msgid "Estimated time to complete"
+#~ msgstr "Timpul estimat de finalizare"
+
+#~ msgid "Hardware status"
+#~ msgstr "Starea hardware"
+
+#, fuzzy
+#~ msgid ""
+#~ "If you don't configure the user name and password, the special agent "
+#~ "tries to authenticate against the EMC VNX device by Security Files. These "
+#~ "need to be created manually before using. Therefor run as instance user "
+#~ "(if using OMD) or Nagios user (if not using OMD) a command like "
+#~ "<tt>naviseccli -AddUserSecurity -scope 0 -password PASSWORD -user USER</"
+#~ "tt>. This creates <tt>SecuredCLISecurityFile.xml</tt> and "
+#~ "<tt>SecuredCLIXMLEncrypted.key</tt> in the home directory of the user and "
+#~ "these files are used then."
+#~ msgstr ""
+#~ "Dacă lăsați numele de utilizator și parola goale, agentul special "
+#~ "încearcă să se autentifice față de dispozitivul EMC VNX prin fișierele de "
+#~ "securitate. Acestea trebuie create manual înainte de utilizare. De aceea, "
+#~ "rulați ca utilizator de instanță (dacă utilizați OMD) sau ca utilizator "
+#~ "Nagios (dacă nu utilizați OMD) o comandă precum <tt>naviseccli "
+#~ "-AddUserSecurity -scope 0 -password PASSWORD -user USER</tt> Aceasta "
+#~ "creează <tt>SecuredCLISecurityFile.xml</tt> și "
+#~ "<tt>SecuredCLIXMLEncrypted.key</tt> în directorul personal al "
+#~ "utilizatorului și aceste fișiere sunt utilizate apoi."
+
+#~ msgid "Minimum error count"
+#~ msgstr "Număr minim de erori"
+
+#~ msgid "Mirror views"
+#~ msgstr "Vederi în oglindă"
+
+#~ msgid "Model and revsion"
+#~ msgstr "Model și revizionare"
+
+#~ msgid "Oversubscribed"
+#~ msgstr "Suprasubscris"
+
+#~ msgid "Percent full"
+#~ msgstr "Procent de umplere"
+
+#~ msgid "Percent subscribed"
+#~ msgstr "Procentul de subscriere"
+
+#~ msgid "RAID groups"
+#~ msgstr "Grupuri RAID"
+
+#~ msgid "Specify levels in percentage of storage processor usage"
+#~ msgstr ""
+#~ "Specificați nivelurile în procente de utilizare a procesorului de stocare"
+
+#~ msgid "State on hard read error"
+#~ msgstr "Stare la eroarea de citire dură"
+
+#~ msgid "State on hard write error"
+#~ msgstr "Stare la o eroare de scriere dură"
+
+#~ msgid "State when rebuildung enclosure"
+#~ msgstr "Stare la reconstrucția incintei"
+
+#~ msgid "Storage Processor Utilization"
+#~ msgstr "Utilizare procesor de stocare"
+
+#~ msgid "Storage Processor utilization"
+#~ msgstr "Stocare Utilizare procesor"
+
+#~ msgid "Storage pools"
+#~ msgstr "Grupuri de stocare"
+
+#~ msgid "Storage processor utilization"
+#~ msgstr "Utilizarea procesorului de stocare"
+
+#~ msgid ""
+#~ "This rule selects the EMC VNX agent instead of the normal Checkmk Agent "
+#~ "and allows monitoring of EMC VNX storage systems by calling naviseccli "
+#~ "commandline tool locally on the monitoring system. Make sure it is "
+#~ "installed and working. You can configure your connection settings here."
+#~ msgstr ""
+#~ "Această regulă selectează agentul EMC VNX în locul agentului Checkmk "
+#~ "normal și permite monitorizarea sistemelor de stocare EMC VNX prin "
+#~ "apelarea instrumentului de linie de comandă naviseccli la nivel local pe "
+#~ "sistemul de monitorizare. Asigurați-vă că acesta este instalat și "
+#~ "funcționează. Puteți configura setările de conectare aici."
+
+#~ msgid "Total subscribed capacity"
+#~ msgstr "Capacitatea totală subscrisă"
+
+#~ msgid "Upper levels for estimated time to complete"
+#~ msgstr "Niveluri superioare pentru timpul estimat de finalizare"
+
+#~ msgid "Upper levels for physical capacity in percent"
+#~ msgstr "Niveluri superioare pentru capacitatea fizică în procente"
+
+#~ msgid "Write cache state"
+#~ msgstr "Starea cache-ului de scriere"
+
+#~ msgid "iSCSI HBAs"
+#~ msgstr "HBA-uri iSCSI"
 
 #, fuzzy
 #~ msgid "Add subscription tag"

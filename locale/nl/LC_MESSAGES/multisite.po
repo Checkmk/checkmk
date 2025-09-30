@@ -6526,10 +6526,6 @@ msgstr "Altijd als een evenement wordt geannuleerd"
 msgid "Amazon S3 Glacier (Glacier)"
 msgstr "Amazon S3 Glacier (Glacier)"
 
-#, fuzzy
-msgid "Amazon Web Service (AWS)"
-msgstr "Amazon Web Services (AWS)"
-
 msgid "Amazon Web Services (AWS)"
 msgstr "Amazon Web Services (AWS)"
 
@@ -8861,13 +8857,16 @@ msgstr "In afwachting van info"
 msgid "Azure"
 msgstr "Azure"
 
-msgid "Azure AD Connect"
+#, fuzzy
+msgid "Azure AD Connect (deprecated)"
 msgstr "Azure AD Connect"
 
-msgid "Azure Agent Info"
+#, fuzzy
+msgid "Azure Agent Info (deprecated)"
 msgstr "Azure Agent Info"
 
-msgid "Azure Application Gateway"
+#, fuzzy
+msgid "Azure Application Gateway (deprecated)"
 msgstr "Azure Application Gateway"
 
 msgid "Azure Blob Storage"
@@ -8876,66 +8875,77 @@ msgstr "Azure Blob Storage"
 msgid "Azure DB Storage"
 msgstr "Azure DB opslag"
 
+#, fuzzy
+msgid "Azure DB Storage (deprecated)"
+msgstr "Azure DB opslag"
+
 msgid "Azure Databases"
 msgstr "Azure Databases"
 
-msgid "Azure Load Balancer Health"
+#, fuzzy
+msgid "Azure Load Balancer Health (deprecated)"
 msgstr "Gezondheid Azure Load Balancer"
 
 #, fuzzy
-msgid "Azure SQL database CPU usage"
+msgid "Azure SQL database CPU usage (deprecated)"
 msgstr "Azure Databases"
 
 #, fuzzy
-msgid "Azure SQL database deadlocks"
+msgid "Azure SQL database deadlocks (deprecated)"
 msgstr "Databaseverbindingen"
 
 #, fuzzy
-msgid "Azure SQL database storage"
+msgid "Azure SQL database storage (deprecated)"
 msgstr "Azure Databases"
 
 #, fuzzy
-msgid "Azure SQL database throughput"
+msgid "Azure SQL database throughput (deprecated)"
 msgstr "Database doorvoer eenheid"
 
 msgid "Azure Storage"
 msgstr "Azure Opslag"
 
 #, fuzzy
-msgid "Azure Storage Data Flow"
+msgid "Azure Storage Data Flow (deprecated)"
 msgstr "Azure Opslag"
 
 #, fuzzy
-msgid "Azure Storage Performance"
+msgid "Azure Storage Performance (deprecated)"
 msgstr "Azure Opslag"
 
 #, fuzzy
-msgid "Azure Storage Usage"
+msgid "Azure Storage Usage (deprecated)"
 msgstr "Azure Opslag"
 
-msgid "Azure Traffic Manager Probe State"
+#, fuzzy
+msgid "Azure Traffic Manager Probe State (deprecated)"
 msgstr "Azure Traffic Manager Probe State"
 
-msgid "Azure Traffic Manager Qps"
+#, fuzzy
+msgid "Azure Traffic Manager Qps (deprecated)"
 msgstr "Azure Traffic Manager Qps"
 
-msgid "Azure Usage Details (Costs)"
+#, fuzzy
+msgid "Azure Usage Details (Costs) (deprecated)"
 msgstr "Details Azure-gebruik (kosten)"
 
-msgid "Azure VM Burst CPU Credits"
+#, fuzzy
+msgid "Azure VM Burst CPU Credits (deprecated)"
 msgstr "Azure VM Burst CPU Kredieten"
 
-msgid "Azure VM Disk"
+#, fuzzy
+msgid "Azure VM Disk (deprecated)"
 msgstr "Azure VM-Disk"
 
 msgid "Azure VM instances"
 msgstr "Azure VM-instanties"
 
-msgid "Azure VNet Gateway"
+#, fuzzy
+msgid "Azure VNet Gateway  (deprecated)"
 msgstr "Azure VNet Gateway"
 
 #, fuzzy
-msgid "Azure database connections"
+msgid "Azure database connections (deprecated)"
 msgstr "Databaseverbindingen"
 
 #, fuzzy
@@ -8949,14 +8959,15 @@ msgid "Azure storage accounts"
 msgstr "Azure opslagaccounts"
 
 #, fuzzy
-msgid "Azure virtual machines"
+msgid "Azure virtual machines (deprecated)"
 msgstr "Azure virtuele machines"
 
 #, fuzzy
-msgid "Azure virtual machines summary"
+msgid "Azure virtual machines summary  (deprecated)"
 msgstr "Samenvatting Azure virtuele machines"
 
-msgid "Azure web servers (IIS)"
+#, fuzzy
+msgid "Azure web servers (IIS) (deprecated)"
 msgstr "Azure webservers (IIS)"
 
 msgid "B"
@@ -14579,7 +14590,7 @@ msgid "Configure"
 msgstr "Configureer"
 
 #, fuzzy
-msgid "Configure Amazon Web Service (AWS) monitoring in Checkmk"
+msgid "Configure Amazon Web Services (AWS) monitoring in Checkmk"
 msgstr "Toezicht op Amazon Web Services (AWS)"
 
 #, fuzzy
@@ -15383,9 +15394,6 @@ msgstr "Consolidatiefunctie voor de [grafiek#rrds|RRD] gegevenskolom"
 
 msgid "Consolidation functions"
 msgstr "Consolidatiefuncties"
-
-msgid "Consumed capacity"
-msgstr "Verbruikte capaciteit"
 
 msgid "Consumed host memory"
 msgstr "Verbruikt hostgeheugen"
@@ -17696,9 +17704,6 @@ msgstr "Gegevensinvoer"
 msgid "Data is outdated and will be removed with the next check execution"
 msgstr ""
 
-msgid "Data movement completed"
-msgstr "Verplaatsen van gegevens voltooid"
-
 msgid "Data nodes"
 msgstr "Gegevens knooppunten"
 
@@ -17735,27 +17740,9 @@ msgstr "Verzonden gegevens"
 msgid "Data size"
 msgstr "Gegevensgrootte"
 
-msgid "Data targeted for higher tier"
-msgstr "Gegevens gericht op hoger niveau"
-
-msgid "Data targeted for lower tier"
-msgstr "Gegevens gericht op lager niveau"
-
-msgid "Data targeted for within tier"
-msgstr "Gegevens gericht op binnen niveau"
-
 #, fuzzy
 msgid "Data to collect (Sections)"
 msgstr "Vuilnisophaaldiensten"
-
-msgid "Data to move down"
-msgstr "Gegevens om naar beneden te gaan"
-
-msgid "Data to move up"
-msgstr "Gegevens om omhoog te gaan"
-
-msgid "Data to move within"
-msgstr "Gegevens om binnen te bewegen"
 
 #, fuzzy
 msgid ""
@@ -18153,20 +18140,8 @@ msgstr ""
 msgid "Dedicated white-/blacklists for new and vanished services"
 msgstr "Speciale witte/blacklists voor nieuwe en verdwenen diensten"
 
-msgid "Deduplication efficiency savings"
-msgstr "Deduplicatie-efficiëntiebesparingen"
-
-msgid "Deduplication percent completed"
-msgstr "Deduplicatie percentage voltooid"
-
 msgid "Deduplication rate"
 msgstr "Ontdubbelingspercentage"
-
-msgid "Deduplication remaining size"
-msgstr "Deduplicatie resterende grootte"
-
-msgid "Deduplication shared capacity"
-msgstr "Deduplicatie gedeelde capaciteit"
 
 msgid "Default"
 msgstr "Standaard"
@@ -19285,10 +19260,6 @@ msgstr "Windows Printer Queue plugin implementeren"
 msgid "Deploy Windows Updates plug-in"
 msgstr "Windows Updates plugin implementeren"
 
-#, fuzzy
-msgid "Deploy Zorp plug-in"
-msgstr "Zet Zorp plugin in"
-
 msgid "Deploy agents"
 msgstr "Agenten inzetten"
 
@@ -19500,6 +19471,14 @@ msgstr "Implementeer de netstat plugin"
 #, fuzzy
 msgid "Deploy the nvidia_smi agent plug-in"
 msgstr "De nvidia_smi agent-plugin implementeren"
+
+#, fuzzy
+msgid "Deploy the plug-in and run it asynchronously"
+msgstr "MTR plugin asynchroon implementeren"
+
+#, fuzzy
+msgid "Deploy the plug-in and run it synchronously"
+msgstr "MTR plugin asynchroon implementeren"
 
 msgid "Deploy without authentication."
 msgstr "Implementeer zonder authenticatie."
@@ -20929,10 +20908,6 @@ msgid "Do not deploy mk_mongodb.py plug-in"
 msgstr "Zet de mk_mongodb.py plugin niet in"
 
 #, fuzzy
-msgid "Do not deploy plug-in"
-msgstr "Plugin niet implementeren"
-
-#, fuzzy
 msgid "Do not deploy plug-in for Citrix XenApp"
 msgstr "Invoegtoepassing niet implementeren voor Citrix XenApp"
 
@@ -21123,6 +21098,10 @@ msgstr "Gebruik de netstat plugin niet"
 #, fuzzy
 msgid "Do not deploy the nvidia_smi agent plug-in"
 msgstr "De nvidia_smi agent plugin niet implementeren"
+
+#, fuzzy
+msgid "Do not deploy the plug-in"
+msgstr "Implementeer de %s plugin niet"
 
 msgid "Do not deploy."
 msgstr "Niet inzetten."
@@ -21917,33 +21896,6 @@ msgstr "EMC Data Domain MTree staat"
 
 msgid "EMC ScaleIO"
 msgstr "EMC ScaleIO"
-
-msgid "EMC VNX Enclosures"
-msgstr "EMC VNX Behuizingen"
-
-msgid "EMC VNX admin user name"
-msgstr "EMC VNX admin gebruikersnaam"
-
-msgid "EMC VNX admin user password"
-msgstr "EMC VNX admin gebruikerswachtwoord"
-
-msgid "EMC VNX storage pools"
-msgstr "EMC VNX opslagpools"
-
-msgid "EMC VNX storage pools capacity"
-msgstr "Capaciteit EMC VNX opslagpools"
-
-msgid "EMC VNX storage pools movement"
-msgstr "EMC VNX storage pools beweging"
-
-msgid "EMC VNX storage pools targeted tiers"
-msgstr "EMC VNX opslagpools gerichte tiers"
-
-msgid "EMC VNX storage pools tiering"
-msgstr "EMC VNX opslagpools tiering"
-
-msgid "EMC VNX storage systems"
-msgstr "EMC VNX opslagsystemen"
 
 msgid "ERROR"
 msgstr "ERROR"
@@ -23190,9 +23142,6 @@ msgstr "Enc-Out framesnelheid"
 msgid "Enc-Outs"
 msgstr "Enc-Outs"
 
-msgid "Enclosure ID"
-msgstr "Behuizing ID"
-
 msgid "Enclosure Stats"
 msgstr "Gegevens behuizing"
 
@@ -23763,9 +23712,6 @@ msgstr "Geschatte RAM voor nieuwe processen"
 msgid "Estimated remaining health of the disk based on other readings."
 msgstr ""
 "Geschatte resterende gezondheid van de schijf gebaseerd op andere metingen."
-
-msgid "Estimated time to complete"
-msgstr "Geschatte tijd om te voltooien"
 
 msgid "Etherbox / MessPC: Sensor Temperature"
 msgstr "Etherbox / MessPC: Temperatuur sensor"
@@ -28146,9 +28092,6 @@ msgstr "Hardware beschadigd geheugen"
 
 msgid "Hardware information of the Checkmk Server"
 msgstr "Hardware-informatie van de Checkmk Server"
-
-msgid "Hardware status"
-msgstr "Hardware status"
 
 msgid "Hardware, BIOS"
 msgstr "Hardware, BIOS"
@@ -33201,26 +33144,6 @@ msgstr ""
 "                PRE-EMPTIVELY BEËINDIGD: WARN<br>\n"
 "                STATUS NIET BESCHIKBAAR: OK<br>\n"
 "             "
-
-#, fuzzy
-msgid ""
-"If you don't configure the user name and password, the special agent tries "
-"to authenticate against the EMC VNX device by Security Files. These need to "
-"be created manually before using. Therefor run as instance user (if using "
-"OMD) or Nagios user (if not using OMD) a command like <tt>naviseccli "
-"-AddUserSecurity -scope 0 -password PASSWORD -user USER</tt>. This creates "
-"<tt>SecuredCLISecurityFile.xml</tt> and <tt>SecuredCLIXMLEncrypted.key</tt> "
-"in the home directory of the user and these files are used then."
-msgstr ""
-"Als u gebruikersnaam en wachtwoord leeg laat, probeert de special agent zich "
-"te authenticeren tegen het EMC VNX apparaat door middel van Security Files. "
-"Deze moeten voor gebruik handmatig worden aangemaakt. Voer daarom als "
-"instance gebruiker (als OMD wordt gebruikt) of Nagios gebruiker (als OMD "
-"niet wordt gebruikt) een commando uit als <tt>naviseccli -AddUserSecurity "
-"-scope 0 -password PASSWORD -user USER</tt> Hierdoor worden "
-"<tt>SecuredCLISecurityFile.xml</tt> en <tt>SecuredCLIXMLEncrypted.key</tt> "
-"aangemaakt in de home directory van de gebruiker en deze bestanden worden "
-"dan gebruikt."
 
 msgid ""
 "If you enable a wait time then this number of PINGs will always be sent in "
@@ -41924,6 +41847,14 @@ msgstr "MiB"
 msgid "Microsoft Azure"
 msgstr "Microsoft Azure"
 
+#, fuzzy
+msgid "Microsoft Azure (Deprecated)"
+msgstr "Microsoft SQL Server (Windows)"
+
+#, fuzzy
+msgid "Microsoft Azure (deprecated)"
+msgstr "Microsoft SQL Server (Windows)"
+
 msgid "Microsoft Azure Status"
 msgstr "Microsoft Azure Status"
 
@@ -42028,9 +41959,6 @@ msgstr ""
 msgid "Minimum connections per second"
 msgstr "Minimale verbindingen per seconde"
 
-msgid "Minimum error count"
-msgstr "Minimaal aantal fouten"
-
 #, fuzzy
 msgid "Minimum levels for current"
 msgstr "Minimum Spanningsniveaus"
@@ -42123,9 +42051,6 @@ msgstr "Spiegel marges"
 
 msgid "Mirror the vertical axis"
 msgstr "Spiegel de verticale as"
-
-msgid "Mirror views"
-msgstr "Spiegel aanzichten"
 
 #, fuzzy
 msgid "Mirroring"
@@ -42304,9 +42229,6 @@ msgstr "Modus: Offline verificatie"
 
 msgid "Model"
 msgstr "Model"
-
-msgid "Model and revsion"
-msgstr "Model en revsion"
 
 #, fuzzy
 msgid "Model name"
@@ -49061,9 +48983,6 @@ msgstr "Overbruggingseenheid van sensor"
 msgid "Overriding by users"
 msgstr "Overschrijven door gebruikers"
 
-msgid "Oversubscribed"
-msgstr "Overschreven"
-
 msgid "Overview"
 msgstr "Overzicht"
 
@@ -50218,14 +50137,8 @@ msgstr "Per onderwerp"
 msgid "Percent and time"
 msgstr "Percentage en tijd"
 
-msgid "Percent full"
-msgstr "Percentage vol"
-
 msgid "Percent of OK-nodes"
 msgstr "Percentage OK-knooppunten"
-
-msgid "Percent subscribed"
-msgstr "Percentage ingeschrevenen"
 
 msgid "Percent time spent in garbage collection"
 msgstr "Percentage tijd besteed aan vuilnisophaling"
@@ -52617,6 +52530,10 @@ msgstr ""
 "Geef de basis URL voor docker API engine aanroepen. Standaard proberen we te "
 "verbinden via de unix socket op %s."
 
+#, fuzzy
+msgid "Provider"
+msgstr "Zorg voor niveaus"
+
 msgid "Provisioned IOPS SSD (io1) IO operations per second"
 msgstr "Voorziene IOPS SSD (io1) IO-operaties per seconde"
 
@@ -52650,6 +52567,10 @@ msgstr "Provisioning Niveaus"
 #, fuzzy
 msgid "Provisioning levels"
 msgstr "Provisioning Niveaus"
+
+#, fuzzy
+msgid "Proxmox"
+msgstr "Proxmox VE"
 
 msgid "Proxmox VE"
 msgstr "Proxmox VE"
@@ -53041,9 +52962,6 @@ msgstr "RA"
 
 msgid "RAID Arrays"
 msgstr "RAID-arrays"
-
-msgid "RAID groups"
-msgstr "RAID-groepen"
 
 msgid "RAID: overall state"
 msgstr "RAID: algemene toestand"
@@ -61660,9 +61578,6 @@ msgstr "Niveaus opgeven in absolute waarden"
 msgid "Specify levels in percentage of CPU usage"
 msgstr "Niveaus opgeven in percentage van de totale ruimte"
 
-msgid "Specify levels in percentage of storage processor usage"
-msgstr "Geef niveaus aan in percentage van het gebruik van de opslagprocessor"
-
 msgid "Specify levels in percentage of total RAM"
 msgstr "Geef niveaus aan in percentage van het totale RAM"
 
@@ -62889,12 +62804,6 @@ msgstr "Staat van dienst"
 msgid "State of the event (0/1/2/3)"
 msgstr "Toestand van de gebeurtenis (0/1/2/3)"
 
-msgid "State on hard read error"
-msgstr "Staat bij hard-lezen fout"
-
-msgid "State on hard write error"
-msgstr "Toestand bij hardeschrijffout"
-
 msgid "State retention interval"
 msgstr "Bewaarinterval van de staat"
 
@@ -63101,9 +63010,6 @@ msgstr "Toestand wanneer een van de stromen in de status uitgeschakeld is"
 #, fuzzy
 msgid "State when packages are locked"
 msgstr "Toestand wanneer hardwarewijzigingen worden gedetecteerd"
-
-msgid "State when rebuildung enclosure"
-msgstr "Staat bij heropbouw behuizing"
 
 #, fuzzy
 msgid "State when recommended updates are pending"
@@ -63462,12 +63368,6 @@ msgstr "Opslag IO"
 msgid "Storage IO consumption"
 msgstr "Opslag IO verbruik"
 
-msgid "Storage Processor Utilization"
-msgstr "Opslag Processor Gebruik"
-
-msgid "Storage Processor utilization"
-msgstr "Opslag Processorgebruik"
-
 msgid "Storage Size"
 msgstr "Opslagruimte"
 
@@ -63476,12 +63376,6 @@ msgstr "Naam opslagrekening"
 
 msgid "Storage account shared key"
 msgstr "Gedeelde sleutel van opslagaccount"
-
-msgid "Storage pools"
-msgstr "Opslagbassins"
-
-msgid "Storage processor utilization"
-msgstr "Opslag processor gebruik"
 
 msgid "Storage space used"
 msgstr "Gebruikte opslagruimte"
@@ -73688,18 +73582,6 @@ msgstr ""
 "Agent die de gegevens verzamelt via de Ruckus Spot web interface"
 
 msgid ""
-"This rule selects the EMC VNX agent instead of the normal Checkmk Agent and "
-"allows monitoring of EMC VNX storage systems by calling naviseccli "
-"commandline tool locally on the monitoring system. Make sure it is installed "
-"and working. You can configure your connection settings here."
-msgstr ""
-"Deze regel selecteert de EMC VNX agent in plaats van de normale Checkmk "
-"Agent en maakt monitoring van EMC VNX opslagsystemen mogelijk door lokaal op "
-"het monitoring systeem de naviseccli commandline tool aan te roepen. Zorg "
-"ervoor dat het geïnstalleerd is en werkt. U kunt uw verbindingsinstellingen "
-"hier configureren."
-
-msgid ""
 "This rule selects the Fritz!Box agent, which uses UPNP to gather information "
 "about configuration and connection status information."
 msgstr ""
@@ -78662,9 +78544,6 @@ msgstr "Containers bovenste niveaus"
 msgid "Total slots"
 msgstr "Totaal aantal slots"
 
-msgid "Total subscribed capacity"
-msgstr "Totaal onderschreven capaciteit"
-
 msgid "Total swap space"
 msgstr "Totale swap ruimte"
 
@@ -80538,9 +80417,6 @@ msgstr "Bovenste niveaus voor aangetroffen waarschuwingen"
 msgid "Upper levels for errors"
 msgstr "Bovenste niveaus voor fouten"
 
-msgid "Upper levels for estimated time to complete"
-msgstr "Bovenste niveaus voor geschatte tijd om te voltooien"
-
 msgid "Upper levels for first output item"
 msgstr "Bovenste niveaus voor eerste uitgangsitem"
 
@@ -80612,9 +80488,6 @@ msgstr "Bovenste niveaus voor open netwerk sockets"
 
 msgid "Upper levels for pending activations"
 msgstr "Bovenste niveaus voor hangende activeringen"
-
-msgid "Upper levels for physical capacity in percent"
-msgstr "Bovengrenzen voor fysieke capaciteit in procenten"
 
 msgid ""
 "Upper levels for provisioned concurrency spillover invocations per second"
@@ -86022,9 +85895,6 @@ msgstr "Schrijfblokken per seconde"
 msgid "Write bytes per operation"
 msgstr "Schrijf bytes per operatie"
 
-msgid "Write cache state"
-msgstr "Schrijf cache status"
-
 msgid "Write cache usage"
 msgstr "Schrijf cache gebruik"
 
@@ -89376,9 +89246,6 @@ msgstr ""
 msgid "iSCSI"
 msgstr "iSCSI"
 
-msgid "iSCSI HBAs"
-msgstr "iSCSI HBA's"
-
 #, fuzzy
 msgid "iSCSI latency"
 msgstr "IO latentie"
@@ -91055,6 +90922,16 @@ msgstr "van"
 msgid "No filter category available"
 msgstr "Geen informatie beschikbaar"
 
+msgid "Anchor"
+msgstr ""
+
+#, fuzzy
+msgid "Toggle sizing for width"
+msgstr "Een rubriek voor het uitzicht"
+
+msgid "Toggle sizing for height"
+msgstr ""
+
 #, fuzzy
 msgid "Loading datasources..."
 msgstr "%d vertalingen"
@@ -91256,6 +91133,63 @@ msgstr "Overzicht"
 #, fuzzy
 msgid "Quick filter"
 msgstr "Service Filters"
+
+#, fuzzy
+msgid "Single %{n}"
+msgstr "Single"
+
+#, fuzzy
+msgid "Multiple %{n}"
+msgstr "Meerdere locaties"
+
+#, fuzzy
+msgid "Runtime filter"
+msgstr "Verwijder filter"
+
+#, fuzzy
+msgid "Applied %{n} targeted filter"
+msgstr "Toegepaste filters:"
+
+msgid ""
+"Relevant %{n} targeted filter set on dashboard level via dashboard or "
+"runtime filters."
+msgstr ""
+
+#, fuzzy
+msgid "No %{n} targeted filter applied"
+msgstr "Ntop gastheer"
+
+msgid ""
+"A %{n} targeted filter selected as dashboard or runtime filter appears here "
+"and applies to this widget. You can override the value by setting a widget "
+"specific filter."
+msgstr ""
+
+#, fuzzy
+msgid "Applied %{n} filters"
+msgstr "Toegepaste filters:"
+
+msgid ""
+"Relevant %{n} filters set on dashboard level via dashboard or runtime "
+"filters."
+msgstr ""
+
+#, fuzzy
+msgid "No %{n} filters applied"
+msgstr "Ntop gastheer"
+
+msgid ""
+"Dashboard or runtime %{n} filters selected on dashboard level appear and "
+"apply to this widget. You can override the values by setting widget specific "
+"filters. "
+msgstr ""
+
+#, fuzzy
+msgid "Widget filters"
+msgstr "Filter toevoegen"
+
+msgid "Widget configured filters override dashboard and runtime filters"
+msgstr ""
 
 #, fuzzy
 msgid "See all"
@@ -91758,6 +91692,13 @@ msgstr "Rolkenmerk"
 #, fuzzy
 msgid "Data point attributes"
 msgstr "Gewijzigde attributen"
+
+#, fuzzy
+msgid "Apply rate (sums)"
+msgstr "Latency"
+
+msgid "Apply percentile (histograms)"
+msgstr ""
 
 #, fuzzy
 msgid "Graph metrics with all zero values"
@@ -92589,6 +92530,184 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Amazon Web Service (AWS)"
+#~ msgstr "Amazon Web Services (AWS)"
+
+#~ msgid "Consumed capacity"
+#~ msgstr "Verbruikte capaciteit"
+
+#~ msgid "Data movement completed"
+#~ msgstr "Verplaatsen van gegevens voltooid"
+
+#~ msgid "Data targeted for higher tier"
+#~ msgstr "Gegevens gericht op hoger niveau"
+
+#~ msgid "Data targeted for lower tier"
+#~ msgstr "Gegevens gericht op lager niveau"
+
+#~ msgid "Data targeted for within tier"
+#~ msgstr "Gegevens gericht op binnen niveau"
+
+#~ msgid "Data to move down"
+#~ msgstr "Gegevens om naar beneden te gaan"
+
+#~ msgid "Data to move up"
+#~ msgstr "Gegevens om omhoog te gaan"
+
+#~ msgid "Data to move within"
+#~ msgstr "Gegevens om binnen te bewegen"
+
+#~ msgid "Deduplication efficiency savings"
+#~ msgstr "Deduplicatie-efficiëntiebesparingen"
+
+#~ msgid "Deduplication percent completed"
+#~ msgstr "Deduplicatie percentage voltooid"
+
+#~ msgid "Deduplication remaining size"
+#~ msgstr "Deduplicatie resterende grootte"
+
+#~ msgid "Deduplication shared capacity"
+#~ msgstr "Deduplicatie gedeelde capaciteit"
+
+#, fuzzy
+#~ msgid "Deploy Zorp plug-in"
+#~ msgstr "Zet Zorp plugin in"
+
+#, fuzzy
+#~ msgid "Do not deploy plug-in"
+#~ msgstr "Plugin niet implementeren"
+
+#~ msgid "EMC VNX Enclosures"
+#~ msgstr "EMC VNX Behuizingen"
+
+#~ msgid "EMC VNX admin user name"
+#~ msgstr "EMC VNX admin gebruikersnaam"
+
+#~ msgid "EMC VNX admin user password"
+#~ msgstr "EMC VNX admin gebruikerswachtwoord"
+
+#~ msgid "EMC VNX storage pools"
+#~ msgstr "EMC VNX opslagpools"
+
+#~ msgid "EMC VNX storage pools capacity"
+#~ msgstr "Capaciteit EMC VNX opslagpools"
+
+#~ msgid "EMC VNX storage pools movement"
+#~ msgstr "EMC VNX storage pools beweging"
+
+#~ msgid "EMC VNX storage pools targeted tiers"
+#~ msgstr "EMC VNX opslagpools gerichte tiers"
+
+#~ msgid "EMC VNX storage pools tiering"
+#~ msgstr "EMC VNX opslagpools tiering"
+
+#~ msgid "EMC VNX storage systems"
+#~ msgstr "EMC VNX opslagsystemen"
+
+#~ msgid "Enclosure ID"
+#~ msgstr "Behuizing ID"
+
+#~ msgid "Estimated time to complete"
+#~ msgstr "Geschatte tijd om te voltooien"
+
+#~ msgid "Hardware status"
+#~ msgstr "Hardware status"
+
+#, fuzzy
+#~ msgid ""
+#~ "If you don't configure the user name and password, the special agent "
+#~ "tries to authenticate against the EMC VNX device by Security Files. These "
+#~ "need to be created manually before using. Therefor run as instance user "
+#~ "(if using OMD) or Nagios user (if not using OMD) a command like "
+#~ "<tt>naviseccli -AddUserSecurity -scope 0 -password PASSWORD -user USER</"
+#~ "tt>. This creates <tt>SecuredCLISecurityFile.xml</tt> and "
+#~ "<tt>SecuredCLIXMLEncrypted.key</tt> in the home directory of the user and "
+#~ "these files are used then."
+#~ msgstr ""
+#~ "Als u gebruikersnaam en wachtwoord leeg laat, probeert de special agent "
+#~ "zich te authenticeren tegen het EMC VNX apparaat door middel van Security "
+#~ "Files. Deze moeten voor gebruik handmatig worden aangemaakt. Voer daarom "
+#~ "als instance gebruiker (als OMD wordt gebruikt) of Nagios gebruiker (als "
+#~ "OMD niet wordt gebruikt) een commando uit als <tt>naviseccli "
+#~ "-AddUserSecurity -scope 0 -password PASSWORD -user USER</tt> Hierdoor "
+#~ "worden <tt>SecuredCLISecurityFile.xml</tt> en "
+#~ "<tt>SecuredCLIXMLEncrypted.key</tt> aangemaakt in de home directory van "
+#~ "de gebruiker en deze bestanden worden dan gebruikt."
+
+#~ msgid "Minimum error count"
+#~ msgstr "Minimaal aantal fouten"
+
+#~ msgid "Mirror views"
+#~ msgstr "Spiegel aanzichten"
+
+#~ msgid "Model and revsion"
+#~ msgstr "Model en revsion"
+
+#~ msgid "Oversubscribed"
+#~ msgstr "Overschreven"
+
+#~ msgid "Percent full"
+#~ msgstr "Percentage vol"
+
+#~ msgid "Percent subscribed"
+#~ msgstr "Percentage ingeschrevenen"
+
+#~ msgid "RAID groups"
+#~ msgstr "RAID-groepen"
+
+#~ msgid "Specify levels in percentage of storage processor usage"
+#~ msgstr ""
+#~ "Geef niveaus aan in percentage van het gebruik van de opslagprocessor"
+
+#~ msgid "State on hard read error"
+#~ msgstr "Staat bij hard-lezen fout"
+
+#~ msgid "State on hard write error"
+#~ msgstr "Toestand bij hardeschrijffout"
+
+#~ msgid "State when rebuildung enclosure"
+#~ msgstr "Staat bij heropbouw behuizing"
+
+#~ msgid "Storage Processor Utilization"
+#~ msgstr "Opslag Processor Gebruik"
+
+#~ msgid "Storage Processor utilization"
+#~ msgstr "Opslag Processorgebruik"
+
+#~ msgid "Storage pools"
+#~ msgstr "Opslagbassins"
+
+#~ msgid "Storage processor utilization"
+#~ msgstr "Opslag processor gebruik"
+
+#~ msgid ""
+#~ "This rule selects the EMC VNX agent instead of the normal Checkmk Agent "
+#~ "and allows monitoring of EMC VNX storage systems by calling naviseccli "
+#~ "commandline tool locally on the monitoring system. Make sure it is "
+#~ "installed and working. You can configure your connection settings here."
+#~ msgstr ""
+#~ "Deze regel selecteert de EMC VNX agent in plaats van de normale Checkmk "
+#~ "Agent en maakt monitoring van EMC VNX opslagsystemen mogelijk door lokaal "
+#~ "op het monitoring systeem de naviseccli commandline tool aan te roepen. "
+#~ "Zorg ervoor dat het geïnstalleerd is en werkt. U kunt uw "
+#~ "verbindingsinstellingen hier configureren."
+
+#~ msgid "Total subscribed capacity"
+#~ msgstr "Totaal onderschreven capaciteit"
+
+#~ msgid "Upper levels for estimated time to complete"
+#~ msgstr "Bovenste niveaus voor geschatte tijd om te voltooien"
+
+#~ msgid "Upper levels for physical capacity in percent"
+#~ msgstr "Bovengrenzen voor fysieke capaciteit in procenten"
+
+#~ msgid "Write cache state"
+#~ msgstr "Schrijf cache status"
+
+#~ msgid "iSCSI HBAs"
+#~ msgstr "iSCSI HBA's"
 
 #, fuzzy
 #~ msgid "Add subscription tag"

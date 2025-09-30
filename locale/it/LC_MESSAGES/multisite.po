@@ -6483,10 +6483,6 @@ msgstr "Sempre quando un evento viene cancellato"
 msgid "Amazon S3 Glacier (Glacier)"
 msgstr "Amazon S3 Glacier (Ghiacciaio)"
 
-#, fuzzy
-msgid "Amazon Web Service (AWS)"
-msgstr "Servizi Web Amazon (AWS)"
-
 msgid "Amazon Web Services (AWS)"
 msgstr "Servizi Web Amazon (AWS)"
 
@@ -8796,13 +8792,16 @@ msgstr "In attesa di informazioni"
 msgid "Azure"
 msgstr "Azzurro"
 
-msgid "Azure AD Connect"
+#, fuzzy
+msgid "Azure AD Connect (deprecated)"
 msgstr "Azure AD Connect"
 
-msgid "Azure Agent Info"
+#, fuzzy
+msgid "Azure Agent Info (deprecated)"
 msgstr "Informazioni sull'agente Azure"
 
-msgid "Azure Application Gateway"
+#, fuzzy
+msgid "Azure Application Gateway (deprecated)"
 msgstr "Azure Application Gateway"
 
 msgid "Azure Blob Storage"
@@ -8811,66 +8810,77 @@ msgstr "Archiviazione Blob di Azure"
 msgid "Azure DB Storage"
 msgstr "Archiviazione DB di Azure"
 
+#, fuzzy
+msgid "Azure DB Storage (deprecated)"
+msgstr "Archiviazione DB di Azure"
+
 msgid "Azure Databases"
 msgstr "Basi di dati Azure"
 
-msgid "Azure Load Balancer Health"
+#, fuzzy
+msgid "Azure Load Balancer Health (deprecated)"
 msgstr "Stato del bilanciatore di carico di Azure"
 
 #, fuzzy
-msgid "Azure SQL database CPU usage"
+msgid "Azure SQL database CPU usage (deprecated)"
 msgstr "Basi di dati Azure"
 
 #, fuzzy
-msgid "Azure SQL database deadlocks"
+msgid "Azure SQL database deadlocks (deprecated)"
 msgstr "Connessioni al database"
 
 #, fuzzy
-msgid "Azure SQL database storage"
+msgid "Azure SQL database storage (deprecated)"
 msgstr "Basi di dati Azure"
 
 #, fuzzy
-msgid "Azure SQL database throughput"
+msgid "Azure SQL database throughput (deprecated)"
 msgstr "Unità di flusso del database"
 
 msgid "Azure Storage"
 msgstr "Archiviazione Azure"
 
 #, fuzzy
-msgid "Azure Storage Data Flow"
+msgid "Azure Storage Data Flow (deprecated)"
 msgstr "Archiviazione Azure"
 
 #, fuzzy
-msgid "Azure Storage Performance"
+msgid "Azure Storage Performance (deprecated)"
 msgstr "Archiviazione Azure"
 
 #, fuzzy
-msgid "Azure Storage Usage"
+msgid "Azure Storage Usage (deprecated)"
 msgstr "Archiviazione Azure"
 
-msgid "Azure Traffic Manager Probe State"
+#, fuzzy
+msgid "Azure Traffic Manager Probe State (deprecated)"
 msgstr "Stato della sonda di Azure Traffic Manager"
 
-msgid "Azure Traffic Manager Qps"
+#, fuzzy
+msgid "Azure Traffic Manager Qps (deprecated)"
 msgstr "Azure Traffic Manager Qps"
 
-msgid "Azure Usage Details (Costs)"
+#, fuzzy
+msgid "Azure Usage Details (Costs) (deprecated)"
 msgstr "Dettagli di utilizzo di Azure (costi)"
 
-msgid "Azure VM Burst CPU Credits"
+#, fuzzy
+msgid "Azure VM Burst CPU Credits (deprecated)"
 msgstr "Crediti CPU Azure VM Burst"
 
-msgid "Azure VM Disk"
+#, fuzzy
+msgid "Azure VM Disk (deprecated)"
 msgstr "Disco macchina virtuale di Azure"
 
 msgid "Azure VM instances"
 msgstr "Istanze VM di Azure"
 
-msgid "Azure VNet Gateway"
+#, fuzzy
+msgid "Azure VNet Gateway  (deprecated)"
 msgstr "Azure VNet Gateway"
 
 #, fuzzy
-msgid "Azure database connections"
+msgid "Azure database connections (deprecated)"
 msgstr "Connessioni al database"
 
 #, fuzzy
@@ -8884,14 +8894,15 @@ msgid "Azure storage accounts"
 msgstr "Account di archiviazione Azure"
 
 #, fuzzy
-msgid "Azure virtual machines"
+msgid "Azure virtual machines (deprecated)"
 msgstr "Macchine virtuali Azure"
 
 #, fuzzy
-msgid "Azure virtual machines summary"
+msgid "Azure virtual machines summary  (deprecated)"
 msgstr "Riassunto delle macchine virtuali Azure"
 
-msgid "Azure web servers (IIS)"
+#, fuzzy
+msgid "Azure web servers (IIS) (deprecated)"
 msgstr "Azure web server (IIS)"
 
 msgid "B"
@@ -14447,7 +14458,7 @@ msgid "Configure"
 msgstr "Configurare"
 
 #, fuzzy
-msgid "Configure Amazon Web Service (AWS) monitoring in Checkmk"
+msgid "Configure Amazon Web Services (AWS) monitoring in Checkmk"
 msgstr "Monitoraggio dei servizi Amazon Web (AWS)"
 
 #, fuzzy
@@ -15247,9 +15258,6 @@ msgstr "Funzione di consolidamento per la colonna di dati [graphing#rrds|RRD]"
 
 msgid "Consolidation functions"
 msgstr "Funzioni di consolidamento"
-
-msgid "Consumed capacity"
-msgstr "Capacità consumata"
 
 msgid "Consumed host memory"
 msgstr "Memoria host consumata"
@@ -17534,9 +17542,6 @@ msgstr "Ingresso dei dati"
 msgid "Data is outdated and will be removed with the next check execution"
 msgstr ""
 
-msgid "Data movement completed"
-msgstr "Movimento dei dati completato"
-
 msgid "Data nodes"
 msgstr "Nodi di dati"
 
@@ -17571,26 +17576,8 @@ msgstr "Dati inviati"
 msgid "Data size"
 msgstr "Dimensione dei dati"
 
-msgid "Data targeted for higher tier"
-msgstr "Dati mirati per un livello superiore"
-
-msgid "Data targeted for lower tier"
-msgstr "Dati mirati per il livello inferiore"
-
-msgid "Data targeted for within tier"
-msgstr "Dati mirati all'interno del livello"
-
 msgid "Data to collect (Sections)"
 msgstr "Dati da raccogliere (Sezioni)"
-
-msgid "Data to move down"
-msgstr "Dati da spostare verso il basso"
-
-msgid "Data to move up"
-msgstr "Dati per salire"
-
-msgid "Data to move within"
-msgstr "Dati da spostare all'interno"
 
 #, fuzzy
 msgid ""
@@ -17981,20 +17968,8 @@ msgstr ""
 msgid "Dedicated white-/blacklists for new and vanished services"
 msgstr "White-/blacklists dedicate per servizi nuovi e scomparsi"
 
-msgid "Deduplication efficiency savings"
-msgstr "Risparmi sull'efficienza della deduplicazione"
-
-msgid "Deduplication percent completed"
-msgstr "Percentuale di deduplicazione completata"
-
 msgid "Deduplication rate"
 msgstr "Tasso di deduplicazione"
-
-msgid "Deduplication remaining size"
-msgstr "Dimensione residua della deduplicazione"
-
-msgid "Deduplication shared capacity"
-msgstr "Capacità condivisa di deduplicazione"
 
 msgid "Default"
 msgstr "Default"
@@ -19107,10 +19082,6 @@ msgstr "Distribuire il plugin Windows Printer Queue"
 msgid "Deploy Windows Updates plug-in"
 msgstr "Distribuire il plugin Aggiornamenti di Windows"
 
-#, fuzzy
-msgid "Deploy Zorp plug-in"
-msgstr "Distribuire il plugin Zorp"
-
 msgid "Deploy agents"
 msgstr "Distribuire agenti"
 
@@ -19325,6 +19296,14 @@ msgstr "Distribuire il plugin netstat"
 #, fuzzy
 msgid "Deploy the nvidia_smi agent plug-in"
 msgstr "Distribuire il plugin dell'agente nvidia_smi"
+
+#, fuzzy
+msgid "Deploy the plug-in and run it asynchronously"
+msgstr "Distribuire il plugin MTR in modo asincrono"
+
+#, fuzzy
+msgid "Deploy the plug-in and run it synchronously"
+msgstr "Distribuire il plugin MTR in modo asincrono"
 
 msgid "Deploy without authentication."
 msgstr "Distribuire senza autenticazione."
@@ -20757,10 +20736,6 @@ msgid "Do not deploy mk_mongodb.py plug-in"
 msgstr "Non distribuire il plugin mk_mongodb.py"
 
 #, fuzzy
-msgid "Do not deploy plug-in"
-msgstr "Non distribuire il plugin"
-
-#, fuzzy
 msgid "Do not deploy plug-in for Citrix XenApp"
 msgstr "Non distribuire il plugin per Citrix XenApp"
 
@@ -20952,6 +20927,10 @@ msgstr "Non distribuire il plugin netstat"
 #, fuzzy
 msgid "Do not deploy the nvidia_smi agent plug-in"
 msgstr "Non distribuire il plugin dell'agente nvidia_smi"
+
+#, fuzzy
+msgid "Do not deploy the plug-in"
+msgstr "Non distribuire il plugin %s"
 
 msgid "Do not deploy."
 msgstr "Non distribuire."
@@ -21738,33 +21717,6 @@ msgstr "EMC Data Domain MTree stato"
 
 msgid "EMC ScaleIO"
 msgstr "EMC ScaleIO"
-
-msgid "EMC VNX Enclosures"
-msgstr "Armadi EMC VNX"
-
-msgid "EMC VNX admin user name"
-msgstr "Nome utente amministratore EMC VNX"
-
-msgid "EMC VNX admin user password"
-msgstr "Password dell'utente admin di EMC VNX"
-
-msgid "EMC VNX storage pools"
-msgstr "Pool di storage EMC VNX"
-
-msgid "EMC VNX storage pools capacity"
-msgstr "Capacità dei pool di storage EMC VNX"
-
-msgid "EMC VNX storage pools movement"
-msgstr "Movimento dei pool di stoccaggio EMC VNX"
-
-msgid "EMC VNX storage pools targeted tiers"
-msgstr "Pool di storage EMC VNX mirati ai livelli"
-
-msgid "EMC VNX storage pools tiering"
-msgstr "Tiering dei pool di storage EMC VNX"
-
-msgid "EMC VNX storage systems"
-msgstr "Sistemi di stoccaggio EMC VNX"
 
 msgid "ERROR"
 msgstr "ERRORE"
@@ -22999,9 +22951,6 @@ msgstr "Frequenza dei fotogrammi Enc-Out"
 msgid "Enc-Outs"
 msgstr "Enc-Outs"
 
-msgid "Enclosure ID"
-msgstr "ID del contenitore"
-
 msgid "Enclosure Stats"
 msgstr "Statistiche di chiusura"
 
@@ -23565,9 +23514,6 @@ msgstr "Stima della RAM per i nuovi processi"
 
 msgid "Estimated remaining health of the disk based on other readings."
 msgstr "Stima della salute residua del disco basata su altre letture."
-
-msgid "Estimated time to complete"
-msgstr "Tempo stimato per il completamento"
 
 msgid "Etherbox / MessPC: Sensor Temperature"
 msgstr "Etherbox / MessPC: temperatura del sensore"
@@ -27913,9 +27859,6 @@ msgstr "Memoria danneggiata dall'hardware"
 
 msgid "Hardware information of the Checkmk Server"
 msgstr "Informazioni sull'hardware del server Checkmk"
-
-msgid "Hardware status"
-msgstr "Stato dell'hardware"
 
 msgid "Hardware, BIOS"
 msgstr "Hardware, BIOS"
@@ -32939,25 +32882,6 @@ msgstr ""
 "                FINE PRE-EMPTIVAMENTE: WARN<br>\n"
 "                STATO NON DISPONIBILE: OK<br>\n"
 "             "
-
-#, fuzzy
-msgid ""
-"If you don't configure the user name and password, the special agent tries "
-"to authenticate against the EMC VNX device by Security Files. These need to "
-"be created manually before using. Therefor run as instance user (if using "
-"OMD) or Nagios user (if not using OMD) a command like <tt>naviseccli "
-"-AddUserSecurity -scope 0 -password PASSWORD -user USER</tt>. This creates "
-"<tt>SecuredCLISecurityFile.xml</tt> and <tt>SecuredCLIXMLEncrypted.key</tt> "
-"in the home directory of the user and these files are used then."
-msgstr ""
-"Se si lascia vuoto il nome utente e la password, l'agente speciale cerca di "
-"autenticarsi con il dispositivo EMC VNX tramite i file di sicurezza. Questi "
-"devono essere creati manualmente prima dell'uso. Perciò eseguite come utente "
-"dell'istanza (se usate OMD) o come utente Nagios (se non usate OMD) un "
-"comando come <tt>naviseccli -AddUserSecurity -scope 0 -password PASSWORD "
-"-user USER</tt> Questo crea <tt>SecuredCLISecurityFile.xml</tt> e "
-"<tt>SecuredCLIXMLEncrypted.key</tt> nella home directory dell'utente e "
-"questi file vengono poi utilizzati."
 
 msgid ""
 "If you enable a wait time then this number of PINGs will always be sent in "
@@ -41580,6 +41504,14 @@ msgstr "MiB"
 msgid "Microsoft Azure"
 msgstr "Microsoft Azure"
 
+#, fuzzy
+msgid "Microsoft Azure (Deprecated)"
+msgstr "Microsoft SQL Server (Windows)"
+
+#, fuzzy
+msgid "Microsoft Azure (deprecated)"
+msgstr "Microsoft SQL Server (Windows)"
+
 msgid "Microsoft Azure Status"
 msgstr "Stato di Microsoft Azure"
 
@@ -41683,9 +41615,6 @@ msgstr ""
 msgid "Minimum connections per second"
 msgstr "Connessioni minime al secondo"
 
-msgid "Minimum error count"
-msgstr "Conteggio minimo degli errori"
-
 #, fuzzy
 msgid "Minimum levels for current"
 msgstr "Livelli minimi di tensione"
@@ -41777,9 +41706,6 @@ msgstr "Margini dello specchio"
 
 msgid "Mirror the vertical axis"
 msgstr "Specchio dell'asse verticale"
-
-msgid "Mirror views"
-msgstr "Viste allo specchio"
 
 msgid "Mirroring"
 msgstr "Specchiatura"
@@ -41955,9 +41881,6 @@ msgstr "Modalità: Verifica offline"
 
 msgid "Model"
 msgstr "Modello"
-
-msgid "Model and revsion"
-msgstr "Modello e revsione"
 
 #, fuzzy
 msgid "Model name"
@@ -48653,9 +48576,6 @@ msgstr "Unità di override del sensore"
 msgid "Overriding by users"
 msgstr "Sovrascrittura da parte degli utenti"
 
-msgid "Oversubscribed"
-msgstr "Sovrabbondanza di iscrizioni"
-
 msgid "Overview"
 msgstr "Panoramica"
 
@@ -49806,14 +49726,8 @@ msgstr "Per argomento"
 msgid "Percent and time"
 msgstr "Percentuale e tempo"
 
-msgid "Percent full"
-msgstr "Percentuale piena"
-
 msgid "Percent of OK-nodes"
 msgstr "Percentuale di nodi OK"
-
-msgid "Percent subscribed"
-msgstr "Percentuale sottoscritta"
 
 msgid "Percent time spent in garbage collection"
 msgstr "Percentuale di tempo speso nella garbage collection"
@@ -52194,6 +52108,10 @@ msgstr ""
 "impostazione predefinita stiamo cercando di connetterci tramite il socket "
 "unix a %s."
 
+#, fuzzy
+msgid "Provider"
+msgstr "Fornire i livelli"
+
 msgid "Provisioned IOPS SSD (io1) IO operations per second"
 msgstr "IOPS SSD (io1) operazioni IO al secondo"
 
@@ -52227,6 +52145,10 @@ msgstr "Livelli di approvvigionamento"
 #, fuzzy
 msgid "Provisioning levels"
 msgstr "Livelli di approvvigionamento"
+
+#, fuzzy
+msgid "Proxmox"
+msgstr "Proxmox VE"
 
 msgid "Proxmox VE"
 msgstr "Proxmox VE"
@@ -52614,9 +52536,6 @@ msgstr "RA"
 
 msgid "RAID Arrays"
 msgstr "Array RAID"
-
-msgid "RAID groups"
-msgstr "Gruppi RAID"
 
 msgid "RAID: overall state"
 msgstr "RAID: stato generale"
@@ -61185,10 +61104,6 @@ msgstr "Specificare i livelli in valori assoluti"
 msgid "Specify levels in percentage of CPU usage"
 msgstr "Specificare i livelli in percentuale di utilizzo della CPU"
 
-msgid "Specify levels in percentage of storage processor usage"
-msgstr ""
-"Specificare i livelli in percentuale dell'uso del processore di archiviazione"
-
 msgid "Specify levels in percentage of total RAM"
 msgstr "Specificare i livelli in percentuale della RAM totale"
 
@@ -62399,12 +62314,6 @@ msgstr "Stato di un servizio"
 msgid "State of the event (0/1/2/3)"
 msgstr "Stato dell'evento (0/1/2/3)"
 
-msgid "State on hard read error"
-msgstr "Stato in caso di errore di lettura"
-
-msgid "State on hard write error"
-msgstr "Stato in caso di errore di scrittura hard"
-
 msgid "State retention interval"
 msgstr "Intervallo di conservazione dello stato"
 
@@ -62612,9 +62521,6 @@ msgstr "Stato quando uno dei flussi è in stato disabilitato"
 
 msgid "State when packages are locked"
 msgstr "Stato in cui i pacchetti sono bloccati"
-
-msgid "State when rebuildung enclosure"
-msgstr "Stato quando si ricostruisce l'involucro"
 
 msgid "State when recommended updates are pending"
 msgstr "Stato in cui gli aggiornamenti raccomandati sono in attesa"
@@ -62968,12 +62874,6 @@ msgstr "Storage IO"
 msgid "Storage IO consumption"
 msgstr "Consumo IO dello storage"
 
-msgid "Storage Processor Utilization"
-msgstr "Utilizzo del processore di archiviazione"
-
-msgid "Storage Processor utilization"
-msgstr "Storage Utilizzo del processore"
-
 msgid "Storage Size"
 msgstr "Dimensione dello stoccaggio"
 
@@ -62982,12 +62882,6 @@ msgstr "Nome dell'account di archiviazione"
 
 msgid "Storage account shared key"
 msgstr "Chiave condivisa dell'account di archiviazione"
-
-msgid "Storage pools"
-msgstr "Piscine di stoccaggio"
-
-msgid "Storage processor utilization"
-msgstr "Utilizzo del processore di archiviazione"
 
 msgid "Storage space used"
 msgstr "Spazio di archiviazione utilizzato"
@@ -73128,18 +73022,6 @@ msgstr ""
 "Checkmk che raccoglie i dati attraverso l'interfaccia web di Ruckus Spot"
 
 msgid ""
-"This rule selects the EMC VNX agent instead of the normal Checkmk Agent and "
-"allows monitoring of EMC VNX storage systems by calling naviseccli "
-"commandline tool locally on the monitoring system. Make sure it is installed "
-"and working. You can configure your connection settings here."
-msgstr ""
-"Questa regola seleziona l'agente EMC VNX invece del normale agente Checkmk e "
-"consente il monitoraggio dei sistemi di storage EMC VNX richiamando lo "
-"strumento da riga di comando naviseccli localmente sul sistema di "
-"monitoraggio. Assicurarsi che sia installato e funzionante. È possibile "
-"configurare le impostazioni di connessione qui."
-
-msgid ""
 "This rule selects the Fritz!Box agent, which uses UPNP to gather information "
 "about configuration and connection status information."
 msgstr ""
@@ -78010,9 +77892,6 @@ msgstr "Contenitori livelli superiori"
 msgid "Total slots"
 msgstr "Slot totali"
 
-msgid "Total subscribed capacity"
-msgstr "Capacità totale sottoscritta"
-
 msgid "Total swap space"
 msgstr "Spazio totale di swap"
 
@@ -79877,9 +79756,6 @@ msgstr "Livelli superiori per gli avvisi incontrati"
 msgid "Upper levels for errors"
 msgstr "Livelli superiori per gli errori"
 
-msgid "Upper levels for estimated time to complete"
-msgstr "Livelli superiori per il tempo stimato di completamento"
-
 msgid "Upper levels for first output item"
 msgstr "Livelli superiori per il primo elemento di uscita"
 
@@ -79949,9 +79825,6 @@ msgstr "Livelli superiori per le prese di rete aperte"
 
 msgid "Upper levels for pending activations"
 msgstr "Livelli superiori per le attivazioni in sospeso"
-
-msgid "Upper levels for physical capacity in percent"
-msgstr "Livelli superiori per la capacità fisica in percentuale"
 
 msgid ""
 "Upper levels for provisioned concurrency spillover invocations per second"
@@ -85320,9 +85193,6 @@ msgstr "Scrittura di blocchi al secondo"
 msgid "Write bytes per operation"
 msgstr "Scrivere byte per operazione"
 
-msgid "Write cache state"
-msgstr "Stato della cache in scrittura"
-
 msgid "Write cache usage"
 msgstr "Utilizzo della cache in scrittura"
 
@@ -88642,9 +88512,6 @@ msgstr ""
 msgid "iSCSI"
 msgstr "iSCSI"
 
-msgid "iSCSI HBAs"
-msgstr "HBA iSCSI"
-
 #, fuzzy
 msgid "iSCSI latency"
 msgstr "Latenza IO"
@@ -90300,6 +90167,16 @@ msgstr "off"
 msgid "No filter category available"
 msgstr "Nessuna informazione disponibile"
 
+msgid "Anchor"
+msgstr ""
+
+#, fuzzy
+msgid "Toggle sizing for width"
+msgstr "Una voce per la vista"
+
+msgid "Toggle sizing for height"
+msgstr ""
+
 #, fuzzy
 msgid "Loading datasources..."
 msgstr "%d traduzioni"
@@ -90500,6 +90377,63 @@ msgstr "Panoramica"
 #, fuzzy
 msgid "Quick filter"
 msgstr "Filtri di servizio"
+
+#, fuzzy
+msgid "Single %{n}"
+msgstr "Singolo"
+
+#, fuzzy
+msgid "Multiple %{n}"
+msgstr "Siti multipli"
+
+#, fuzzy
+msgid "Runtime filter"
+msgstr "Rimuovi filtro"
+
+#, fuzzy
+msgid "Applied %{n} targeted filter"
+msgstr "Filtri applicati:"
+
+msgid ""
+"Relevant %{n} targeted filter set on dashboard level via dashboard or "
+"runtime filters."
+msgstr ""
+
+#, fuzzy
+msgid "No %{n} targeted filter applied"
+msgstr "Host Ntopng"
+
+msgid ""
+"A %{n} targeted filter selected as dashboard or runtime filter appears here "
+"and applies to this widget. You can override the value by setting a widget "
+"specific filter."
+msgstr ""
+
+#, fuzzy
+msgid "Applied %{n} filters"
+msgstr "Filtri applicati:"
+
+msgid ""
+"Relevant %{n} filters set on dashboard level via dashboard or runtime "
+"filters."
+msgstr ""
+
+#, fuzzy
+msgid "No %{n} filters applied"
+msgstr "Host Ntopng"
+
+msgid ""
+"Dashboard or runtime %{n} filters selected on dashboard level appear and "
+"apply to this widget. You can override the values by setting widget specific "
+"filters. "
+msgstr ""
+
+#, fuzzy
+msgid "Widget filters"
+msgstr "Aggiungere il filtro"
+
+msgid "Widget configured filters override dashboard and runtime filters"
+msgstr ""
 
 #, fuzzy
 msgid "See all"
@@ -91002,6 +90936,13 @@ msgstr "Attributo del ruolo"
 #, fuzzy
 msgid "Data point attributes"
 msgstr "Attributi di inattività:"
+
+#, fuzzy
+msgid "Apply rate (sums)"
+msgstr "Latenza"
+
+msgid "Apply percentile (histograms)"
+msgstr ""
 
 #, fuzzy
 msgid "Graph metrics with all zero values"
@@ -91832,6 +91773,184 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Amazon Web Service (AWS)"
+#~ msgstr "Servizi Web Amazon (AWS)"
+
+#~ msgid "Consumed capacity"
+#~ msgstr "Capacità consumata"
+
+#~ msgid "Data movement completed"
+#~ msgstr "Movimento dei dati completato"
+
+#~ msgid "Data targeted for higher tier"
+#~ msgstr "Dati mirati per un livello superiore"
+
+#~ msgid "Data targeted for lower tier"
+#~ msgstr "Dati mirati per il livello inferiore"
+
+#~ msgid "Data targeted for within tier"
+#~ msgstr "Dati mirati all'interno del livello"
+
+#~ msgid "Data to move down"
+#~ msgstr "Dati da spostare verso il basso"
+
+#~ msgid "Data to move up"
+#~ msgstr "Dati per salire"
+
+#~ msgid "Data to move within"
+#~ msgstr "Dati da spostare all'interno"
+
+#~ msgid "Deduplication efficiency savings"
+#~ msgstr "Risparmi sull'efficienza della deduplicazione"
+
+#~ msgid "Deduplication percent completed"
+#~ msgstr "Percentuale di deduplicazione completata"
+
+#~ msgid "Deduplication remaining size"
+#~ msgstr "Dimensione residua della deduplicazione"
+
+#~ msgid "Deduplication shared capacity"
+#~ msgstr "Capacità condivisa di deduplicazione"
+
+#, fuzzy
+#~ msgid "Deploy Zorp plug-in"
+#~ msgstr "Distribuire il plugin Zorp"
+
+#, fuzzy
+#~ msgid "Do not deploy plug-in"
+#~ msgstr "Non distribuire il plugin"
+
+#~ msgid "EMC VNX Enclosures"
+#~ msgstr "Armadi EMC VNX"
+
+#~ msgid "EMC VNX admin user name"
+#~ msgstr "Nome utente amministratore EMC VNX"
+
+#~ msgid "EMC VNX admin user password"
+#~ msgstr "Password dell'utente admin di EMC VNX"
+
+#~ msgid "EMC VNX storage pools"
+#~ msgstr "Pool di storage EMC VNX"
+
+#~ msgid "EMC VNX storage pools capacity"
+#~ msgstr "Capacità dei pool di storage EMC VNX"
+
+#~ msgid "EMC VNX storage pools movement"
+#~ msgstr "Movimento dei pool di stoccaggio EMC VNX"
+
+#~ msgid "EMC VNX storage pools targeted tiers"
+#~ msgstr "Pool di storage EMC VNX mirati ai livelli"
+
+#~ msgid "EMC VNX storage pools tiering"
+#~ msgstr "Tiering dei pool di storage EMC VNX"
+
+#~ msgid "EMC VNX storage systems"
+#~ msgstr "Sistemi di stoccaggio EMC VNX"
+
+#~ msgid "Enclosure ID"
+#~ msgstr "ID del contenitore"
+
+#~ msgid "Estimated time to complete"
+#~ msgstr "Tempo stimato per il completamento"
+
+#~ msgid "Hardware status"
+#~ msgstr "Stato dell'hardware"
+
+#, fuzzy
+#~ msgid ""
+#~ "If you don't configure the user name and password, the special agent "
+#~ "tries to authenticate against the EMC VNX device by Security Files. These "
+#~ "need to be created manually before using. Therefor run as instance user "
+#~ "(if using OMD) or Nagios user (if not using OMD) a command like "
+#~ "<tt>naviseccli -AddUserSecurity -scope 0 -password PASSWORD -user USER</"
+#~ "tt>. This creates <tt>SecuredCLISecurityFile.xml</tt> and "
+#~ "<tt>SecuredCLIXMLEncrypted.key</tt> in the home directory of the user and "
+#~ "these files are used then."
+#~ msgstr ""
+#~ "Se si lascia vuoto il nome utente e la password, l'agente speciale cerca "
+#~ "di autenticarsi con il dispositivo EMC VNX tramite i file di sicurezza. "
+#~ "Questi devono essere creati manualmente prima dell'uso. Perciò eseguite "
+#~ "come utente dell'istanza (se usate OMD) o come utente Nagios (se non "
+#~ "usate OMD) un comando come <tt>naviseccli -AddUserSecurity -scope 0 "
+#~ "-password PASSWORD -user USER</tt> Questo crea "
+#~ "<tt>SecuredCLISecurityFile.xml</tt> e <tt>SecuredCLIXMLEncrypted.key</tt> "
+#~ "nella home directory dell'utente e questi file vengono poi utilizzati."
+
+#~ msgid "Minimum error count"
+#~ msgstr "Conteggio minimo degli errori"
+
+#~ msgid "Mirror views"
+#~ msgstr "Viste allo specchio"
+
+#~ msgid "Model and revsion"
+#~ msgstr "Modello e revsione"
+
+#~ msgid "Oversubscribed"
+#~ msgstr "Sovrabbondanza di iscrizioni"
+
+#~ msgid "Percent full"
+#~ msgstr "Percentuale piena"
+
+#~ msgid "Percent subscribed"
+#~ msgstr "Percentuale sottoscritta"
+
+#~ msgid "RAID groups"
+#~ msgstr "Gruppi RAID"
+
+#~ msgid "Specify levels in percentage of storage processor usage"
+#~ msgstr ""
+#~ "Specificare i livelli in percentuale dell'uso del processore di "
+#~ "archiviazione"
+
+#~ msgid "State on hard read error"
+#~ msgstr "Stato in caso di errore di lettura"
+
+#~ msgid "State on hard write error"
+#~ msgstr "Stato in caso di errore di scrittura hard"
+
+#~ msgid "State when rebuildung enclosure"
+#~ msgstr "Stato quando si ricostruisce l'involucro"
+
+#~ msgid "Storage Processor Utilization"
+#~ msgstr "Utilizzo del processore di archiviazione"
+
+#~ msgid "Storage Processor utilization"
+#~ msgstr "Storage Utilizzo del processore"
+
+#~ msgid "Storage pools"
+#~ msgstr "Piscine di stoccaggio"
+
+#~ msgid "Storage processor utilization"
+#~ msgstr "Utilizzo del processore di archiviazione"
+
+#~ msgid ""
+#~ "This rule selects the EMC VNX agent instead of the normal Checkmk Agent "
+#~ "and allows monitoring of EMC VNX storage systems by calling naviseccli "
+#~ "commandline tool locally on the monitoring system. Make sure it is "
+#~ "installed and working. You can configure your connection settings here."
+#~ msgstr ""
+#~ "Questa regola seleziona l'agente EMC VNX invece del normale agente "
+#~ "Checkmk e consente il monitoraggio dei sistemi di storage EMC VNX "
+#~ "richiamando lo strumento da riga di comando naviseccli localmente sul "
+#~ "sistema di monitoraggio. Assicurarsi che sia installato e funzionante. È "
+#~ "possibile configurare le impostazioni di connessione qui."
+
+#~ msgid "Total subscribed capacity"
+#~ msgstr "Capacità totale sottoscritta"
+
+#~ msgid "Upper levels for estimated time to complete"
+#~ msgstr "Livelli superiori per il tempo stimato di completamento"
+
+#~ msgid "Upper levels for physical capacity in percent"
+#~ msgstr "Livelli superiori per la capacità fisica in percentuale"
+
+#~ msgid "Write cache state"
+#~ msgstr "Stato della cache in scrittura"
+
+#~ msgid "iSCSI HBAs"
+#~ msgstr "HBA iSCSI"
 
 #, fuzzy
 #~ msgid "Add subscription tag"

@@ -26,10 +26,10 @@ from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._legacy import CheckMetricEntry
 from cmk.gui.graphing._rrd_fetch import (
     _reverse_translate_into_all_potentially_relevant_metrics,
-    fetch_augmented_time_series,
     translate_and_merge_rrd_columns,
 )
 from cmk.gui.graphing._time_series import TimeSeries, TimeSeriesValues
+from cmk.gui.graphing._time_series_fetcher import fetch_augmented_time_series
 from cmk.gui.graphing._translated_metrics import TranslationSpec
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.unit_formatter import AutoPrecision

@@ -29,14 +29,12 @@ from cmk.utils.servicename import ServiceName
 
 from ._from_api import RegisteredMetric
 from ._graph_metric_expressions import (
-    AugmentedTimeSeries,
     GraphConsolidationFunction,
     op_func_wrapper,
     RRDData,
     RRDDataKey,
     time_series_operators,
 )
-from ._graph_specification import GraphDataRange, GraphMetric, GraphRecipe
 from ._legacy import (
     check_metrics,
     CheckMetricEntry,
@@ -195,7 +193,7 @@ def _chop_last_empty_step(end_time: float, rrd_data: RRDData) -> None:
         _chop_end_of_the_curve(rrd_data, step)
 
 
-def _fetch_time_series(
+def fetch_time_series_rrd(
     registered_metrics: Mapping[str, RegisteredMetric],
     keys: Sequence[RRDDataKey],
     consolidation_function: GraphConsolidationFunction | None,
@@ -234,32 +232,6 @@ def _fetch_time_series(
     _align_and_resample_rrds(rrd_data, consolidation_function)
     _chop_last_empty_step(end_time, rrd_data)
     return rrd_data
-
-
-def fetch_augmented_time_series(
-    registered_metrics: Mapping[str, RegisteredMetric],
-    graph_recipe: GraphRecipe,
-    graph_data_range: GraphDataRange,
-) -> Iterator[tuple[GraphMetric, Sequence[AugmentedTimeSeries]]]:
-    time_series_by_rrd_data_key = _fetch_time_series(
-        registered_metrics,
-        [
-            k
-            for gm in graph_recipe.metrics
-            for k in gm.operation.keys(registered_metrics)
-            if isinstance(k, RRDDataKey)
-        ],
-        graph_recipe.consolidation_function,
-        user_specific_unit(graph_recipe.unit_spec, user, active_config).conversion,
-        start_time=graph_data_range.time_range[0],
-        end_time=graph_data_range.time_range[1],
-        step=graph_data_range.step,
-    )
-    for graph_metric in graph_recipe.metrics:
-        if time_series := graph_metric.operation.compute_augmented_time_series(
-            time_series_by_rrd_data_key, registered_metrics
-        ):
-            yield graph_metric, time_series
 
 
 def _reverse_translate_into_all_potentially_relevant_metrics(

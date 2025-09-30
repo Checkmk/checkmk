@@ -36,8 +36,8 @@ from ._graph_specification import (
     HorizontalRule,
     MinimalVerticalRange,
 )
-from ._rrd_fetch import fetch_augmented_time_series
 from ._time_series import TimeSeries, TimeSeriesValue
+from ._time_series_fetcher import fetch_augmented_time_series
 from ._unit import user_specific_unit, UserSpecificUnit
 from ._utils import SizeEx
 

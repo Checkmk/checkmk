@@ -64,3 +64,5 @@ export const dashboardWidgetWorkflows: Record<string, WorkflowItem> = {
     icon: 'static_text'
   }
 }
+
+export type DashboardWidgetWorkflowKey = keyof typeof dashboardWidgetWorkflows

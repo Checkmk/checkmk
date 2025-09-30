@@ -4,11 +4,15 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import MetricsWizard from '@/dashboard-wip/components/Wizard/MetricsWizard.vue'
+import type { DashboardConstants } from '@/dashboard-wip/types/dashboard.ts'
 import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
-
-import MetricsWizard from '../components/Wizard/MetricsWizard.vue'
-import type { DashboardConstants } from '../types/dashboard'
-import type { WidgetContent, WidgetFilterContext, WidgetGeneralSettings } from '../types/widget'
+import type {
+  WidgetContent,
+  WidgetFilterContext,
+  WidgetGeneralSettings,
+  WidgetSpec
+} from '@/dashboard-wip/types/widget'
 
 interface AllWizardsProps {
   selectedWizard: string
@@ -16,11 +20,18 @@ interface AllWizardsProps {
   dashboardName: string
   dashboardOwner: string
   contextFilters: ContextFilters
+  editWidgetSpec: WidgetSpec | null
 }
 
 const emit = defineEmits<{
   'back-button': []
   'add-widget': [
+    content: WidgetContent,
+    generalSettings: WidgetGeneralSettings,
+    filterContext: WidgetFilterContext
+  ]
+  'edit-widget': [
+    widgetId: string,
     content: WidgetContent,
     generalSettings: WidgetGeneralSettings,
     filterContext: WidgetFilterContext

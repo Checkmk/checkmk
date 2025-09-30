@@ -29,6 +29,12 @@ export type RelativeGridWidgetLayout = components['schemas']['WidgetRelativeGrid
 export type ResponsiveGridWidgetLayouts = components['schemas']['WidgetResponsiveGridLayouts']
 
 export type WidgetLayout = RelativeGridWidgetLayout | ResponsiveGridWidgetLayouts
+export interface WidgetSpec {
+  content: WidgetContent
+  filter_context: WidgetFilterContext
+  general_settings: WidgetGeneralSettings
+}
+export type WidgetContentType = components['schemas']['WidgetContent']['type']
 
 export type ResponsiveGridWidgetLayout = components['schemas']['WidgetResponsiveGridLayout']
 

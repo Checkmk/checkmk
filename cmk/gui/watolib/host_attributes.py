@@ -115,6 +115,7 @@ class MetricsAssociationFilter(TypedDict):
 
 class MetricsAssociationEnabled(TypedDict):
     attribute_filters: Sequence[MetricsAssociationFilter]
+    host_name_resource_attribute_key: str
 
 
 # Possible improvements for the future:

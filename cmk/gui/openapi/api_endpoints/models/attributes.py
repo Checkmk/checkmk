@@ -754,6 +754,9 @@ class MetricsAssociationEnabledModel:
     attribute_filters: Sequence[MetricsAssociationFilterModel] = api_field(
         description="A list of filters. All filters must match (logical AND)."
     )
+    host_name_resource_attribute_key: str = api_field(
+        description="The resource attribute used to compute the host name.",
+    )
 
 
 MetricsAssociationModel = Literal["disabled"] | MetricsAssociationEnabledModel

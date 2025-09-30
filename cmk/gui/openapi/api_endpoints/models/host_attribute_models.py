@@ -324,6 +324,9 @@ class HostViewAttributeModel(
                         )
                         for attribute_filter in metrics_assoc[1]["attribute_filters"]
                     ],
+                    host_name_resource_attribute_key=metrics_assoc[1][
+                        "host_name_resource_attribute_key"
+                    ],
                 )
             )
             if (metrics_assoc := value.get("metrics_association"))
@@ -412,6 +415,7 @@ class HostUpdateAttributeModel(
                             )
                             for attribute_filter in self.metrics_association.attribute_filters
                         ],
+                        host_name_resource_attribute_key=self.metrics_association.host_name_resource_attribute_key,
                     ),
                 )
             )

@@ -181,15 +181,15 @@ def time_series_operators() -> dict[
 
 @dataclass(frozen=True)
 class TimeSeriesMetaData:
-    title: str | None = None
-    color: str | None = None
-    line_type: LineType | Literal["ref"] | None = None
+    title: str
+    line_type: LineType | Literal["ref"]
+    color: str
 
 
 @dataclass(frozen=True)
 class AugmentedTimeSeries:
     data: TimeSeries
-    metadata: TimeSeriesMetaData = TimeSeriesMetaData()
+    metadata: TimeSeriesMetaData | None = None
 
 
 class GraphMetricExpression(BaseModel, ABC, frozen=True):

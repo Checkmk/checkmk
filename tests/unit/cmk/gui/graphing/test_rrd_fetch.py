@@ -15,7 +15,6 @@ from cmk.gui.graphing._from_api import RegisteredMetric
 from cmk.gui.graphing._graph_metric_expressions import (
     AugmentedTimeSeries,
     GraphMetricRRDSource,
-    TimeSeriesMetaData,
 )
 from cmk.gui.graphing._graph_specification import (
     GraphDataRange,
@@ -121,11 +120,6 @@ def test_fetch_augmented_time_series(
                 augmented_time_series=[
                     AugmentedTimeSeries(
                         data=TimeSeries(start=1, end=2, step=3, values=[4, 5, None]),
-                        metadata=TimeSeriesMetaData(
-                            title=None,
-                            color=None,
-                            line_type=None,
-                        ),
                     ),
                 ],
             ),
@@ -147,11 +141,6 @@ def test_fetch_augmented_time_series_with_conversion(
                 augmented_time_series=[
                     AugmentedTimeSeries(
                         data=TimeSeries(start=1, end=2, step=3, values=[39.2, 41.0, None]),
-                        metadata=TimeSeriesMetaData(
-                            title=None,
-                            color=None,
-                            line_type=None,
-                        ),
                     ),
                 ],
             ),

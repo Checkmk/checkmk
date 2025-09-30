@@ -348,19 +348,20 @@ def _compute_graph_curves(
         mirror_prefix: Literal["", "-"] = "-" if spec.line_type.startswith("-") else ""
         for i, ts in enumerate(spec.augmented_time_series):
             title = spec.title
-            if multi and ts.metadata.title:
-                title += " - " + ts.metadata.title
+            line_type: LineType | Literal["ref"] = spec.line_type
+            color = spec.color
+            if ts.metadata:
+                if multi:
+                    title = f"{spec.title} - {ts.metadata.title}"
+                    line_type = _parse_line_type(mirror_prefix, ts.metadata.line_type)
+                if ts.metadata.color:
+                    color = ts.metadata.color
 
-            color = ts.metadata.color or spec.color
             if i % 2 == 1 and spec.fade_odd_color:
                 color = render_color(fade_color(parse_color(color), 0.3))
 
             yield Curve(
-                line_type=(
-                    _parse_line_type(mirror_prefix, ts.metadata.line_type)
-                    if multi and ts.metadata.line_type
-                    else spec.line_type
-                ),
+                line_type=line_type,
                 color=color,
                 title=title,
                 rrddata=ts.data,

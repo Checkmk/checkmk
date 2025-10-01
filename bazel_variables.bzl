@@ -1,5 +1,5 @@
 UPSTREAM_MIRROR_URL = "https://artifacts.lan.tribe29.com/repository/upstream-archives/"
-RUFF_VERSION = "0.12.8"
+RUFF_VERSION = "0.12.8"  # keep in sync with the multitool hub
 
 # TODO: Re-work this with edition_deps + check for duplicate in cmk/BUILD
 edition_python_deps = {

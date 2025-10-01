@@ -36,7 +36,7 @@ format_multirun(
     css = ":prettier",
     html = ":prettier",
     javascript = ":prettier",
-    python = "@aspect_rules_lint//format:ruff",
+    python = "@multitool_hub//tools/ruff",
     rust = "@rules_rust//tools/upstream_wrapper:rustfmt",
     shell = ":shfmt",
     starlark = ":buildifier",

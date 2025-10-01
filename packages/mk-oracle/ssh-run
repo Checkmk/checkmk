@@ -1,0 +1,108 @@
+#!/bin/bash
+set -e
+
+REMOTE_OS="${1}"
+shift
+RUN_CMD="$*"
+
+test_for_existance() {
+    [ -n "${!1}" ] || {
+        echo "Missing $1 environment variable"
+        return 1
+    }
+}
+
+cd -- "${BASH_SOURCE%/*}"
+. ./ssh-run.conf
+
+test_for_existance REMOTE_USER
+test_for_existance CI_ORA2_DB_TEST >/dev/null 2>&1 ||
+    {
+        test_for_existance ORACLEDB_HOST
+        test_for_existance ORACLEDB_PORT
+        test_for_existance ORACLEDB_USER
+        test_for_existance ORACLEDB_PASSWORD
+    }
+
+: "${CI_ORA2_DB_TEST="127.0.0.1:${ORACLEDB_USER}:${ORACLEDB_PASSWORD}:${ORACLEDB_PORT}:FREE::_:_:_"}"
+: "${GIT_USER:="${REMOTE_USER}"}"
+
+case "${REMOTE_OS}" in
+    'AIX')
+        test_for_existance REMOTE_HOST_AIX
+        REMOTE_HOST=${REMOTE_HOST_AIX}
+        test_for_existance REMOTE_HOME_AIX
+        REMOTE_HOME=${REMOTE_HOME_AIX}
+        test_for_existance GIT_TUNNEL_PORT_AIX
+        GIT_TUNNEL_PORT=${GIT_TUNNEL_PORT_AIX}
+        ADD_TO_PATH="${ADD_TO_PATH_AIX}"
+        ;;
+    'Solaris')
+        test_for_existance REMOTE_HOST_SOLARIS
+        REMOTE_HOST=${REMOTE_HOST_SOLARIS}
+        test_for_existance REMOTE_HOME_SOLARIS
+        REMOTE_HOME=${REMOTE_HOME_SOLARIS}
+        test_for_existance GIT_TUNNEL_PORT_SOLARIS
+        GIT_TUNNEL_PORT=${GIT_TUNNEL_PORT_SOLARIS}
+        ADD_TO_PATH="${ADD_TO_PATH_SOLARIS}"
+        ;;
+    *) failure "unknown remote OS: ${REMOTE_OS}" ;;
+esac
+
+# Determine the local currently tracked upstream branch name, fallback to master if detached
+[ -z "${GIT_BRANCH}" ] && {
+    GIT_BRANCH="$(git rev-parse --abbrev-ref --symbolic-full-name "@{u}" 2>/dev/null | cut -d/ -f2- || true)"
+    if [ -z "${GIT_BRANCH}" ] || [ "${GIT_BRANCH}" = "HEAD" ]; then
+        GIT_BRANCH="master"
+    fi
+}
+
+ssh -N -o ExitOnForwardFailure=yes -R "${GIT_TUNNEL_PORT}:review.lan.tribe29.com:29418" "${REMOTE_USER}@${REMOTE_HOST}" &
+GIT_TUNNEL=$!
+ssh -N -o ExitOnForwardFailure=yes -R "${ORACLEDB_PORT}:${ORACLEDB_HOST}:${ORACLEDB_PORT}" "${REMOTE_USER}@${REMOTE_HOST}" &
+ORACLEDB_TUNNEL=$!
+
+# Ensure tunnels are cleaned up even on error / interrupt
+cleanup() {
+    ([ -n "${GIT_TUNNEL}" ] && kill "${GIT_TUNNEL}" 2>/dev/null) || true
+    ([ -n "${ORACLEDB_TUNNEL}" ] && kill "${ORACLEDB_TUNNEL}" 2>/dev/null) || true
+}
+trap cleanup EXIT INT TERM HUP
+
+git_path="${REMOTE_HOME}/${REMOTE_USER}/git"
+checkmk_path="${git_path}/check_mk"
+
+# shellcheck disable=SC2087 # We want variable expansion here and not on remote host
+ssh -A "${REMOTE_USER}@${REMOTE_HOST}" <<EOF
+    set -e
+    export CI_ORA2_DB_TEST="${CI_ORA2_DB_TEST}"
+
+    # This is one possibility to avoid the host key prompt on first connection
+    # Other options could include
+    # - pre-populating the known_hosts-file with the public key read from our own machine
+    # - using the option StrictHostKeyChecking=no (insecure)
+    # - using a dedicated known_hosts file with -o UserKnownHostsFile=/path/to/special/known_hosts
+    export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=accept-new"
+
+    [ -n "${ADD_TO_PATH}" ] && {
+        PATH="${ADD_TO_PATH}:\${PATH}"
+        export PATH
+    }
+
+    if [ ! -e "${checkmk_path}" ]; then
+        mkdir -p "${git_path}"
+        cd "${git_path}"
+        git clone "ssh://${GIT_USER}@127.0.0.1:${GIT_TUNNEL_PORT}/check_mk"
+        cd "${checkmk_path}"
+    else
+        cd "${checkmk_path}"
+        git remote set-url origin "ssh://${GIT_USER}@127.0.0.1:${GIT_TUNNEL_PORT}/check_mk"
+    fi
+
+    # Very simple handling of GIT_HASH.
+    # Remote git workspace has to be clean for this to work properly.
+    # Consider a more robust solution if this is not the case.
+    [ -n "${GIT_HASH}" ] && git fetch origin "${GIT_BRANCH}" && git checkout "${GIT_HASH}"
+
+    "${checkmk_path}/packages/mk-oracle/run" "${RUN_CMD}"
+EOF

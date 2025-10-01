@@ -310,7 +310,8 @@ export function createi18n(): GettextInstance {
     globalState.instance = createGettext({
       availableLanguages: AVAILABLE_LANGUAGES,
       defaultLanguage: document.documentElement.lang,
-      translations: {}
+      translations: {},
+      silent: true
     })
 
     void loadLanguage(document.documentElement.lang)

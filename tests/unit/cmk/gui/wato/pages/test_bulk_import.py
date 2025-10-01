@@ -2,6 +2,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from io import StringIO
 from unittest import mock
 
@@ -9,8 +10,9 @@ import pytest
 
 from cmk.ccc.hostaddress import HostAddress
 from cmk.gui.config import active_config
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
-from cmk.gui.wato.pages.bulk_import import ModeBulkImport
+from cmk.gui.wato.pages.bulk_import import _prevent_reused_attr_names, ModeBulkImport
 from cmk.gui.watolib.csv_bulk_import import CSVBulkImport
 from cmk.gui.watolib.host_attributes import all_host_attributes
 from cmk.gui.watolib.hosts_and_folders import folder_tree
@@ -108,3 +110,27 @@ def test_bulk_import_csv_parsing(
     assert hosts[HostAddress("alinux01")].attributes["ipaddress"] == "10.10.10.1"
     assert hosts[HostAddress("alinux02")].attributes["ipaddress"] == "10.10.10.2"
     assert hosts[HostAddress("alinux03")].attributes["ipaddress"] == "10.10.10.3"
+
+
+@pytest.mark.parametrize(
+    "attributes",
+    [
+        ["hostname", "ipaddress", "hostname"],
+        ["hostname", "ipaddress", "-", "-", "-", "ipaddress"],
+    ],
+)
+def test_prevent_reused_attr_names_with_reuses(attributes: Sequence[str]) -> None:
+    with pytest.raises(MKUserError):
+        _prevent_reused_attr_names(attributes)
+
+
+@pytest.mark.parametrize(
+    "attributes",
+    [
+        ["hostname", "ipaddress"],
+        ["hostname", "ipaddress", "-", "tag_agent"],
+        ["hostname", "ipaddress", "-", "-", "-"],
+    ],
+)
+def test_prevent_reused_attr_names_no_reuses(attributes: Sequence[str]) -> None:
+    assert _prevent_reused_attr_names(attributes) is None  # type: ignore[func-returns-value]

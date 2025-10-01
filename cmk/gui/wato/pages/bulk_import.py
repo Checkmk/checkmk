@@ -73,6 +73,29 @@ def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeBulkImport)
 
 
+def _prevent_reused_attr_names(attr_names: Sequence[str | None]) -> None:
+    """
+    A user might try to assign two different columns to be the same attribute
+    e.g. "host name", which doesn't make sense. Prevent that here by checking
+    the list of attribute names selected by the user and ensuring they are
+    all unique, throwing an exception if not.
+    """
+    attrs_seen = set()
+    for name in attr_names:
+        # "-" is the value set for "Don't import"
+        if name != "-" and name in attrs_seen:
+            raise MKUserError(
+                None,
+                _(
+                    'The attribute "%s" is assigned to multiple columns. '
+                    "You can not populate one attribute from multiple columns. "
+                    "The column-to-attribute associations need to be unique."
+                )
+                % name,
+            )
+        attrs_seen.add(name)
+
+
 class ModeBulkImport(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -227,28 +250,12 @@ class ModeBulkImport(WatoMode):
         use_git: bool,
     ) -> ActionResult:
         def _emit_raw_rows(csv_bulk_import: CSVBulkImport) -> typing.Generator[dict, None, None]:
-            def _check_duplicates(_names: list[str | None]) -> None:
-                _attrs_seen = set()
-                for _name in _names:
-                    # "-" is the value set for "Don't import"
-                    if _name != "-" and _name in _attrs_seen:
-                        raise MKUserError(
-                            None,
-                            _(
-                                'The attribute "%s" is assigned to multiple columns. '
-                                "You can not populate one attribute from multiple columns. "
-                                "The column to attribute associations need to be unique."
-                            )
-                            % _name,
-                        )
-                    _attrs_seen.add(_name)
-
             # Determine the used attributes once. We also check for duplicates only once.
             if (first_row := csv_bulk_import.skip_to_and_return_next_row()) is None:
                 return
 
             _attr_names = [request.var(f"attribute_{index}") for index in range(len(first_row))]
-            _check_duplicates(_attr_names)
+            _prevent_reused_attr_names(_attr_names)
             yield dict(zip(_attr_names, first_row))
 
             for csv_row in csv_bulk_import._reader:

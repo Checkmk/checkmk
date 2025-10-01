@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 
-import usei18n from '@/lib/i18n/i18n.ts'
+import usei18n from '@/lib/i18n'
 
 import ActionButton from '@/dashboard-wip/components/Wizard/components/ActionButton.vue'
 import FilterInputComponentRenderer from '@/dashboard-wip/components/filter/FilterInputItem/components/FilterInputComponent.vue'

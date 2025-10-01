@@ -431,7 +431,7 @@ sap_hana_replication_status() {
     local sid="$1"
     local instance="$2"
     local instance_user="$3"
-    result="$(su - "${instance_user}" -c "python /usr/sap/${sid}/HDB${instance}/exe/python_support/systemReplicationStatus.py")"
+    result="$(timeout 30 su - "${instance_user}" -c "python /usr/sap/${sid}/HDB${instance}/exe/python_support/systemReplicationStatus.py")"
     echo "systemReplicationStatus: $?"
     echo "$result"
 }
@@ -821,7 +821,7 @@ if [ -n "$DBS" ]; then
             INSTANCE_USER=$(get_instance_user "$SID" "$INSTANCE")
             set_sap_hana_version "$INSTANCE_USER"
 
-            SAP_LANDSCAPE=$(su - "${INSTANCE_USER}" -c "python /usr/sap/${SID}/HDB${INSTANCE}/exe/python_support/landscapeHostConfiguration.py")
+            SAP_LANDSCAPE=$(timeout 30 su - "${INSTANCE_USER}" -c "python /usr/sap/${SID}/HDB${INSTANCE}/exe/python_support/landscapeHostConfiguration.py")
             HOSTNAME=$(sap_hana_host_from_landscape "$SAP_LANDSCAPE")
             SSLOPTION=$(get_ssl_option "$SID" "$HOSTNAME")
 
@@ -872,7 +872,7 @@ else
             continue
         fi
 
-        SAP_LANDSCAPE=$(su - "${INSTANCE_USER}" -c "python /usr/sap/${SID}/HDB${INSTANCE}/exe/python_support/landscapeHostConfiguration.py")
+        SAP_LANDSCAPE=$(timeout 30 su - "${INSTANCE_USER}" -c "python /usr/sap/${SID}/HDB${INSTANCE}/exe/python_support/landscapeHostConfiguration.py")
         HOSTNAME=$(sap_hana_host_from_landscape "$SAP_LANDSCAPE")
         SSLOPTION=$(get_ssl_option "$SID" "$HOSTNAME")
 

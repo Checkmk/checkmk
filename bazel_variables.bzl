@@ -48,6 +48,7 @@ edition_deps = {
         "//omd/packages/nagvis:pkg_tar",
         "//omd/packages/enterprise",
         "//omd/packages/metric-backend:pkg_tar",
+        "//omd/packages/cloud",
     ],
     "cee": [
         "//non-free/packages/cmk-core-helpers:pkg_tar",
@@ -70,6 +71,7 @@ edition_deps = {
         "//omd/packages/nagvis:pkg_tar",
         "//omd/packages/enterprise",
         "//omd/packages/metric-backend:pkg_tar",
+        "//omd/packages/cloud",
     ],
     "cse": [
         "//non-free/packages/cmk-core-helpers:pkg_tar",
@@ -80,6 +82,7 @@ edition_deps = {
         "//non-free/packages/cmk-otel-collector:pkg_tar",
         "//non-free/packages/cmk-update-agent:pkg_tar",
         "//omd/packages/enterprise",
+        "//omd/packages/cloud",
     ],
 }
 

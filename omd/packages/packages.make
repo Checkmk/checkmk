@@ -194,18 +194,15 @@ endif
 ifeq ($(EDITION),managed)
 include \
     packages/enterprise/enterprise.make \
-    packages/cloud/cloud.make \
     packages/managed/managed.make \
     $(REPO_PATH)/non-free/packages/otel-collector/otel-collector.make
 endif
 ifeq ($(EDITION),cloud)
 include \
     packages/enterprise/enterprise.make \
-    packages/cloud/cloud.make \
     $(REPO_PATH)/non-free/packages/otel-collector/otel-collector.make
 endif
 ifeq ($(EDITION),saas)
 include \
-    packages/enterprise/enterprise.make \
-    packages/cloud/cloud.make
+    packages/enterprise/enterprise.make
 endif

@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from typing import Literal, TypedDict
 
 import cmk.utils.regex
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import active_config
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Perfdata, PerfDataTuple, Row
@@ -92,7 +92,7 @@ def _parse_check_command(check_command: str) -> str:
 
 
 def parse_perf_data(
-    perf_data_string: str, check_command: str | None = None, *, config: Config
+    perf_data_string: str, check_command: str | None = None, *, debug: bool
 ) -> tuple[Perfdata, str]:
     """Convert perf_data_string into perf_data, extract check_command"""
     # Strip away arguments like in "check_http!-H checkmk.com"
@@ -137,7 +137,7 @@ def parse_perf_data(
             )
         except Exception as exc:
             logger.exception("Failed to parse perfdata '%s'", perf_data_string)
-            if config.debug:
+            if debug:
                 raise exc
 
     return perf_data, check_command
@@ -289,14 +289,14 @@ def available_metrics_translated(
     check_command: str,
     registered_metrics: Mapping[str, RegisteredMetric],
     explicit_color: str = "",
+    *,
+    debug: bool,
 ) -> Mapping[str, TranslatedMetric]:
     # If we have no RRD files then we cannot paint any graph :-(
     if not rrd_metrics:
         return {}
 
-    perf_data, check_command = parse_perf_data(
-        perf_data_string, check_command, config=active_config
-    )
+    perf_data, check_command = parse_perf_data(perf_data_string, check_command, debug=debug)
     rrd_perf_data, check_command = parse_perf_data(
         " ".join(
             f'"{m}"=1' if " " in m else f"{m}=1"
@@ -308,7 +308,7 @@ def available_metrics_translated(
             if "," not in m
         ),
         check_command,
-        config=active_config,
+        debug=debug,
     )
     current_variables = [p.metric_name for p in perf_data]
     for p in rrd_perf_data:
@@ -321,11 +321,18 @@ def translated_metrics_from_row(
     row: Row,
     registered_metrics: Mapping[str, RegisteredMetric],
     explicit_color: str = "",
+    *,
+    debug: bool,
 ) -> Mapping[str, TranslatedMetric]:
     what = "service" if "service_check_command" in row else "host"
     perf_data_string = row[what + "_perf_data"]
     rrd_metrics = row[what + "_metrics"]
     check_command = row[what + "_check_command"]
     return available_metrics_translated(
-        perf_data_string, rrd_metrics, check_command, registered_metrics, explicit_color
+        perf_data_string,
+        rrd_metrics,
+        check_command,
+        registered_metrics,
+        explicit_color,
+        debug=debug,
     )

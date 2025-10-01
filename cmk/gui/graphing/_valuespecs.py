@@ -16,7 +16,12 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageResult
 from cmk.gui.type_defs import Choice, Choices, GraphTitleFormatVS, VisualContext
-from cmk.gui.unit_formatter import AutoPrecision, NotationFormatter, StrictPrecision, TimeFormatter
+from cmk.gui.unit_formatter import (
+    AutoPrecision,
+    NotationFormatter,
+    StrictPrecision,
+    TimeFormatter,
+)
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.valuespec import (
     Age,
@@ -527,7 +532,7 @@ def metrics_of_query(
     row = {}
     for row in livestatus_query_bare("service", context, columns):
         perf_data, check_command = parse_perf_data(
-            row["service_perf_data"], row["service_check_command"], config=active_config
+            row["service_perf_data"], row["service_check_command"], debug=active_config.debug
         )
         known_metrics = set([p.metric_name for p in perf_data] + row["service_metrics"])
         yield from _metric_choices(

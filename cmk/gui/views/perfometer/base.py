@@ -48,7 +48,7 @@ class Perfometer:
             return
 
         self._perf_data, self._check_command = parse_perf_data(
-            perf_data_string, self._row["service_check_command"], config=active_config
+            perf_data_string, self._row["service_check_command"], debug=active_config.debug
         )
 
         self._translated_metrics = translate_metrics(

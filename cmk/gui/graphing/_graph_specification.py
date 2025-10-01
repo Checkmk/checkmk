@@ -94,6 +94,8 @@ class GraphSpecification(BaseModel, ABC, frozen=True):
         registered_metrics: Mapping[str, RegisteredMetric],
         registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
         user_permissions: UserPermissions,
+        *,
+        debug: bool,
     ) -> Sequence[GraphRecipe]: ...
 
     # mypy does not support other decorators on top of @property:

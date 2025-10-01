@@ -60,6 +60,7 @@ def get_graph(params):
             metrics_from_api,
             graphs_from_api,
             UserPermissions.from_config(active_config, permission_registry),
+            debug=active_config.debug,
         )
 
     except MKUserError as e:

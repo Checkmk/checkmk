@@ -43,8 +43,16 @@ from ._graph_pdf import (
     graph_legend_height,
     render_graph_pdf,
 )
-from ._graph_render_config import GraphRenderConfigImage, GraphRenderOptions, GraphTitleFormat
-from ._graph_specification import GraphDataRange, GraphRecipe, parse_raw_graph_specification
+from ._graph_render_config import (
+    GraphRenderConfigImage,
+    GraphRenderOptions,
+    GraphTitleFormat,
+)
+from ._graph_specification import (
+    GraphDataRange,
+    GraphRecipe,
+    parse_raw_graph_specification,
+)
 from ._html_render import GraphDestinations
 from ._utils import get_graph_data_from_livestatus
 
@@ -69,7 +77,7 @@ class AjaxGraphImagesForNotifications(Page):
             metrics_from_api,
             graphs_from_api,
             UserPermissions.from_config(config, permission_registry),
-            config.debug,
+            debug=config.debug,
         )
 
 
@@ -77,6 +85,7 @@ def _answer_graph_image_request(
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     user_permissions: UserPermissions,
+    *,
     debug: bool,
 ) -> None:
     try:
@@ -124,6 +133,7 @@ def _answer_graph_image_request(
             registered_metrics,
             registered_graphs,
             user_permissions,
+            debug=debug,
         )
         num_graphs = request.get_integer_input("num_graphs") or len(graph_recipes)
 
@@ -222,6 +232,8 @@ def graph_recipes_for_api_request(
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     user_permissions: UserPermissions,
+    *,
+    debug: bool,
 ) -> tuple[GraphDataRange, Sequence[GraphRecipe]]:
     # Get and validate the specification
     if not (raw_graph_spec := api_request.get("specification")):
@@ -254,7 +266,10 @@ def graph_recipes_for_api_request(
 
     try:
         graph_recipes = graph_specification.recipes(
-            registered_metrics, registered_graphs, user_permissions
+            registered_metrics,
+            registered_graphs,
+            user_permissions,
+            debug=debug,
         )
 
     except MKGraphNotFound:
@@ -277,6 +292,8 @@ def graph_spec_from_request(
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     user_permissions: UserPermissions,
+    *,
+    debug: bool,
 ) -> dict[str, Any]:
     try:
         graph_data_range, graph_recipes = graph_recipes_for_api_request(
@@ -284,6 +301,7 @@ def graph_spec_from_request(
             registered_metrics,
             registered_graphs,
             user_permissions,
+            debug=debug,
         )
         graph_recipe = graph_recipes[0]
 

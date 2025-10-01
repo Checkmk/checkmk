@@ -185,6 +185,7 @@ class PageHostServiceGraphPopup(cmk.gui.pages.Page):
             metrics_from_api,
             graphs_from_api,
             UserPermissions.from_config(config, permission_registry),
+            debug=config.debug,
         )
         return None  # for mypy
 
@@ -199,6 +200,7 @@ class PageGraphDashlet(cmk.gui.pages.Page):
                 metrics_from_api,
                 graphs_from_api,
                 UserPermissions.from_config(config, permission_registry),
+                debug=config.debug,
                 graph_display_id=request.get_str_input_mandatory("id"),
             )
         )

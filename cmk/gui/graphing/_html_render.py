@@ -32,7 +32,12 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
-from cmk.gui.logged_in import load_user_file, save_user_file, user, UserGraphDataRangeFileName
+from cmk.gui.logged_in import (
+    load_user_file,
+    save_user_file,
+    user,
+    UserGraphDataRangeFileName,
+)
 from cmk.gui.pages import AjaxPage, PageResult
 from cmk.gui.sites import get_alias_of_host
 from cmk.gui.theme.current_theme import theme
@@ -105,6 +110,8 @@ def host_service_graph_popup_cmk(
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     user_permissions: UserPermissions,
+    *,
+    debug: bool,
 ) -> None:
     graph_render_config = GraphRenderConfig.from_user_context_and_options(
         user,
@@ -137,6 +144,7 @@ def host_service_graph_popup_cmk(
             registered_metrics,
             registered_graphs,
             user_permissions,
+            debug=debug,
             render_async=False,
         )
     )
@@ -697,12 +705,16 @@ def render_graphs_from_specification_html(
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     user_permissions: UserPermissions,
     *,
+    debug: bool,
     render_async: bool = True,
     graph_display_id: str = "",
 ) -> HTML:
     try:
         graph_recipes = graph_specification.recipes(
-            registered_metrics, registered_graphs, user_permissions
+            registered_metrics,
+            registered_graphs,
+            user_permissions,
+            debug=debug,
         )
     except MKLivestatusNotFoundError:
         return render_graph_error_html(
@@ -1055,6 +1067,7 @@ def host_service_graph_dashlet_cmk(
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     user_permissions: UserPermissions,
     *,
+    debug: bool,
     graph_display_id: str = "",
     time_range: TimerangeValue = None,
 ) -> HTML:
@@ -1092,7 +1105,10 @@ def host_service_graph_dashlet_cmk(
 
     try:
         graph_recipes = graph_specification.recipes(
-            registered_metrics, registered_graphs, user_permissions
+            registered_metrics,
+            registered_graphs,
+            user_permissions,
+            debug=debug,
         )
     except MKLivestatusNotFoundError:
         return render_graph_error_html(

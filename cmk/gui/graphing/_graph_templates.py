@@ -722,9 +722,11 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         registered_metrics: Mapping[str, RegisteredMetric],
         registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
         user_permissions: UserPermissions,
+        *,
+        debug: bool,
     ) -> list[GraphRecipe]:
         row = self._get_graph_data_from_livestatus()
-        translated_metrics = translated_metrics_from_row(row, registered_metrics)
+        translated_metrics = translated_metrics_from_row(row, registered_metrics, debug=debug)
         return [
             recipe
             for index, graph_template in _matching_graph_templates(

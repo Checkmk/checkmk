@@ -730,7 +730,7 @@ class PainterSvcMetrics(Painter):
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         perf_data, check_command = parse_perf_data(
-            row["service_perf_data"], row["service_check_command"], config=self.config
+            row["service_perf_data"], row["service_check_command"], debug=self.config.debug
         )
         translated_metrics = translate_metrics(
             perf_data,
@@ -5487,7 +5487,7 @@ class AbstractColumnSpecificMetric(Painter):
         show_metric = parameters["metric"]
 
         perf_data, check_command = parse_perf_data(
-            perf_data_entries, check_command, config=self.config
+            perf_data_entries, check_command, debug=self.config.debug
         )
         translated_metrics = translate_metrics(
             perf_data,

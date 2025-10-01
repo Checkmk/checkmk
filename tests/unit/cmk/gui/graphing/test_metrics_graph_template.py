@@ -100,6 +100,7 @@ def test_template_recipes() -> None:
             ),
         },
         UserPermissions({}, {}, {}, []),
+        debug=False,
     ) == [
         GraphRecipe(
             title="Size and used space",

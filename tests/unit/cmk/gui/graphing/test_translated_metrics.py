@@ -24,10 +24,8 @@ from cmk.gui.type_defs import Perfdata, PerfDataTuple
 from cmk.gui.unit_formatter import AutoPrecision
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.utils.metrics import MetricName
-from tests.unit.cmk.web_test_app import SetConfig
 
 
-@pytest.mark.usefixtures("request_context")
 @pytest.mark.parametrize(
     "perf_str, check_command, result",
     [
@@ -133,12 +131,12 @@ def test_parse_perf_data(
     check_command: str | None,
     result: tuple[Perfdata, str],
 ) -> None:
-    assert parse_perf_data(perf_str, check_command, config=active_config) == result
+    assert parse_perf_data(perf_str, check_command, debug=False) == result
 
 
-def test_parse_perf_data2(request_context: None, set_config: SetConfig) -> None:
-    with pytest.raises(ValueError), set_config(debug=True):
-        parse_perf_data("hi ho", None, config=active_config)
+def test_parse_perf_data2() -> None:
+    with pytest.raises(ValueError):
+        parse_perf_data("hi ho", None, debug=True)
 
 
 @pytest.mark.parametrize(

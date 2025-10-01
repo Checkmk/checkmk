@@ -12,7 +12,6 @@ import pytest
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import Title
-from cmk.gui.config import active_config
 from cmk.gui.graphing import _graph_templates as gt
 from cmk.gui.graphing._from_api import graphs_from_api, RegisteredMetric
 from cmk.gui.graphing._graph_metric_expressions import LineType
@@ -913,7 +912,7 @@ def test_horizontal_rules_from_thresholds(
     metric_expressions: Sequence[MetricExpression],
     result: Sequence[HorizontalRule],
 ) -> None:
-    perf_data, check_command = parse_perf_data(perf_data_string, None, config=active_config)
+    perf_data, check_command = parse_perf_data(perf_data_string, None, debug=False)
     translated_metrics = translate_metrics(
         perf_data,
         check_command,

@@ -19,7 +19,11 @@ from cmk.gui import sites
 from cmk.gui.config import active_config, Config
 from cmk.gui.dashboard.type_defs import DashletId, DashletSize
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
-from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api, RegisteredMetric
+from cmk.gui.graphing._from_api import (
+    graphs_from_api,
+    metrics_from_api,
+    RegisteredMetric,
+)
 from cmk.gui.graphing._graph_render_config import (
     GraphRenderConfig,
     GraphRenderOptions,
@@ -42,7 +46,13 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import Choices, GraphRenderOptionsVS, SingleInfos, SizePT, VisualContext
+from cmk.gui.type_defs import (
+    Choices,
+    GraphRenderOptionsVS,
+    SingleInfos,
+    SizePT,
+    VisualContext,
+)
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import (
@@ -274,6 +284,7 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
                 metrics_from_api,
                 graphs_from_api,
                 UserPermissions.from_config(active_config, permission_registry),
+                debug=active_config.debug,
             )
         except MKMissingDataError:
             raise
@@ -459,7 +470,7 @@ def graph_templates_autocompleter(
 
 def _graph_templates_autocompleter_testable(
     *,
-    config: object,
+    config: Config,
     value_entered_by_user: str,
     params: Mapping[str, Any],
     registered_metrics: Mapping[str, RegisteredMetric],
@@ -476,6 +487,7 @@ def _graph_templates_autocompleter_testable(
             params["context"],
             registered_metrics,
             registered_graphs,
+            debug=config.debug,
         )
     )
 
@@ -492,6 +504,8 @@ def _graph_and_single_metric_templates_choices_for_context(
     context: VisualContext,
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
+    *,
+    debug: bool,
 ) -> tuple[list[GraphTemplateChoice], list[GraphTemplateChoice]]:
     graph_template_choices: list[GraphTemplateChoice] = []
     single_metric_template_choices: list[GraphTemplateChoice] = []
@@ -503,10 +517,7 @@ def _graph_and_single_metric_templates_choices_for_context(
     ):
         graph_template_choices_for_row, single_metric_template_choices_for_row = (
             graph_and_single_metric_template_choices_for_metrics(
-                translated_metrics_from_row(
-                    row,
-                    registered_metrics,
-                ),
+                translated_metrics_from_row(row, registered_metrics, debug=debug),
                 registered_metrics,
                 registered_graphs,
             )

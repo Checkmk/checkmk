@@ -40,6 +40,8 @@ class ExplicitGraphSpecification(GraphSpecification, frozen=True):
         registered_metrics: Mapping[str, RegisteredMetric],
         registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
         user_permissions: UserPermissions,
+        *,
+        debug: bool,
     ) -> list[GraphRecipe]:
         return [
             GraphRecipe(

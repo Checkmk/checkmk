@@ -18,7 +18,10 @@ from cmk.gui.dashboard.api.model.widget_content.graph import (
     ProblemGraphContent,
     SingleTimeseriesContent,
 )
-from cmk.gui.dashboard.dashlet.dashlets.graph import ABCGraphDashlet, TemplateGraphDashletConfig
+from cmk.gui.dashboard.dashlet.dashlets.graph import (
+    ABCGraphDashlet,
+    TemplateGraphDashletConfig,
+)
 from cmk.gui.dashboard.dashlet.registry import dashlet_registry
 from cmk.gui.dashboard.type_defs import (
     CombinedGraphDashletConfig,
@@ -135,6 +138,7 @@ class GraphWidgetPage(cmk.gui.pages.Page):
                     metrics_from_api,
                     graphs_from_api,
                     UserPermissions.from_config(config, permission_registry),
+                    debug=config.debug,
                     graph_display_id=widget_id,
                     time_range=graph_config["timerange"],
                 )

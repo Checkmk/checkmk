@@ -2,9 +2,7 @@ from unittest.mock import patch
 
 import pytest
 
-from cmk.agent_receiver.relay.api.routers.tasks.handlers.activate_config import (
-    ActivateConfigHandler,
-)
+from cmk.agent_receiver.relay.api.routers.tasks.libs.config_task_factory import ConfigTaskFactory
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     RelayConfigSpec,
     TasksRepository,
@@ -15,7 +13,7 @@ from cmk.agent_receiver.relay.lib.site_auth import InternalAuth
 
 @pytest.mark.usefixtures("site_context")
 def test_process_activate_config(
-    activate_config_handler: ActivateConfigHandler,
+    config_task_factory: ConfigTaskFactory,
     relays_repository: RelaysRepository,
     tasks_repository: TasksRepository,
     test_user: InternalAuth,
@@ -28,10 +26,10 @@ def test_process_activate_config(
 
     # act
     with patch(
-        "cmk.agent_receiver.relay.api.routers.tasks.handlers.activate_config.retrieve_config_serial",
+        "cmk.agent_receiver.relay.api.routers.tasks.libs.config_task_factory.retrieve_config_serial",
         return_value="FAKE_SERIAL_1",
     ):
-        activate_config_handler.process()
+        config_task_factory.process()
 
     # assert
     tasks_relay_1_enqueued = tasks_repository.get_tasks(relay_id_1)

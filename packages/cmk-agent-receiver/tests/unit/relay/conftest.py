@@ -20,7 +20,6 @@ from cmk.agent_receiver.relay.api.routers.relays.handlers.unregister_relay impor
     UnregisterRelayHandler,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
-    ActivateConfigHandler,
     GetRelayTaskHandler,
     GetRelayTasksHandler,
 )
@@ -30,6 +29,7 @@ from cmk.agent_receiver.relay.api.routers.tasks.handlers.create_task import (
 from cmk.agent_receiver.relay.api.routers.tasks.handlers.update_task import (
     UpdateTaskHandler,
 )
+from cmk.agent_receiver.relay.api.routers.tasks.libs.config_task_factory import ConfigTaskFactory
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     FetchSpec,
     RelayTask,
@@ -182,17 +182,10 @@ def get_tasks_handler(
 
 
 @pytest.fixture()
-def activate_config_handler(
+def config_task_factory(
     tasks_repository: TasksRepository, relays_repository: RelaysRepository
-) -> Iterator[ActivateConfigHandler]:
-    from cmk.agent_receiver.relay.api.routers.tasks.handlers.activate_config import (
-        ActivateConfigHandler,
-    )
-
-    handler = ActivateConfigHandler(
-        tasks_repository=tasks_repository, relays_repository=relays_repository
-    )
-    yield handler
+) -> Iterator[ConfigTaskFactory]:
+    yield ConfigTaskFactory(tasks_repository=tasks_repository, relays_repository=relays_repository)
 
 
 @pytest.fixture

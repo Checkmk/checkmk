@@ -16,7 +16,7 @@ import sys
 import time
 import traceback
 from collections.abc import Callable, Iterable, Mapping
-from typing import Any, cast, Literal
+from typing import Any, cast, Literal, Protocol
 from urllib.parse import quote, urlencode
 
 import livestatus
@@ -34,7 +34,10 @@ from cmk.utils.rulesets.ruleset_matcher import matches_host_tags
 from cmk.utils.rulesets.tuple_rulesets import in_extraconf_servicelist
 from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import TagGroupID, TagID
-from cmk.utils.timeperiod import check_timeperiod, cleanup_timeperiod_caches, TimeperiodSpecs
+from cmk.utils.timeperiod import (
+    TimeperiodActiveCoreLookup,
+    TimeperiodSpecs,
+)
 
 ContactList = list  # TODO Improve this
 
@@ -49,6 +52,8 @@ type _RulesetProxySpec = tuple[
 ]
 type ProxyGetter = Callable[[tuple[str, str | None] | _RulesetProxySpec], HTTPProxyConfig]
 
+type CoreTimeperiodsActive = Mapping[str, bool]
+
 logger = logging.getLogger("cmk.base.events")
 
 
@@ -57,9 +62,19 @@ def _send_reply_ready() -> None:
     sys.stdout.flush()
 
 
+class _EventFunction(Protocol):
+    def __call__(
+        self, context: EventContext, timeperiods_active: CoreTimeperiodsActive
+    ) -> object: ...
+
+
+class _LoopIntervalFunction(Protocol):
+    def __call__(self, timeperiods_active: CoreTimeperiodsActive) -> object: ...
+
+
 def event_keepalive(
-    event_function: Callable[[EventContext], object],
-    call_every_loop: Callable[[], object] | None = None,
+    event_function: _EventFunction,
+    call_every_loop: _LoopIntervalFunction | None = None,
     loop_interval: int | None = None,
     shutdown_function: Callable[[], object] | None = None,
 ) -> None:
@@ -75,8 +90,9 @@ def event_keepalive(
 
     while True:
         try:
-            # Invalidate timeperiod caches
-            cleanup_timeperiod_caches()
+            timeperiods_active = TimeperiodActiveCoreLookup(
+                livestatus.get_optional_timeperiods_active_map, logger.warning
+            )
 
             # If the configuration has changed, we do a restart. But we do
             # this check just before the next event arrives. We must
@@ -124,7 +140,7 @@ def event_keepalive(
 
                 try:
                     context = raw_context_from_string(data.rstrip(b"\n").decode("utf-8"))
-                    event_function(context)
+                    event_function(context, timeperiods_active)
                 except Exception:
                     if cmk.ccc.debug.enabled():
                         raise
@@ -140,7 +156,7 @@ def event_keepalive(
 
         if call_every_loop:
             try:
-                call_every_loop()
+                call_every_loop(timeperiods_active)
             except Exception:
                 if cmk.ccc.debug.enabled():
                     raise
@@ -504,7 +520,8 @@ def event_match_rule(
     context: EventContext,
     define_servicegroups: Mapping[str, str],
     all_timeperiods: TimeperiodSpecs,
-    analyse: bool = False,
+    analyse: bool,
+    timeperiods_active: CoreTimeperiodsActive,
 ) -> str | None:
     return apply_matchers(
         [
@@ -546,7 +563,9 @@ def event_match_rule(
             event_match_exclude_services,
             event_match_plugin_output,
             event_match_checktype,
-            lambda rule, context, analyse, all_timeperiods: event_match_timeperiod(rule, analyse),
+            lambda rule, context, analyse, all_timeperiods: event_match_timeperiod(
+                rule, analyse, timeperiods_active
+            ),
             event_match_servicelevel,
             event_match_hostlabels,
             event_match_servicelabels,
@@ -980,6 +999,7 @@ def event_match_checktype(
 def event_match_timeperiod(
     rule: EventRule,
     analyse: bool,
+    timeperiods_active: CoreTimeperiodsActive,
 ) -> str | None:
     # don't test on notification tests, in that case this is done within
     # notify.rbn_match_timeperiod
@@ -993,7 +1013,7 @@ def event_match_timeperiod(
     if timeperiod == "24X7":
         return None
 
-    if check_timeperiod(timeperiod):
+    if timeperiods_active.get(timeperiod, True):
         return None
 
     return "The timeperiod '%s' is currently not active." % timeperiod

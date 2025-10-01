@@ -4136,6 +4136,7 @@ class AutomationNotificationReplay(Automation):
     ) -> NotificationReplayResult:
         plugins = plugins or load_plugins()  # do we really still need this?
         loading_result = loading_result or load_config(discovery_rulesets=())
+        logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
 
         nr = args[0]
         notify.notification_replay_backlog(
@@ -4156,7 +4157,9 @@ class AutomationNotificationReplay(Automation):
             backlog_size=config.notification_backlog,
             logging_level=ConfigCache.notification_logging_level(),
             all_timeperiods=cmk.utils.timeperiod.load_timeperiods(),
-            timeperiod_active=cmk.utils.timeperiod.timeperiod_active,
+            timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
+                livestatus.get_optional_timeperiods_active_map, log=logger.warning
+            ),
         )
         return NotificationReplayResult()
 
@@ -4175,6 +4178,7 @@ class AutomationNotificationAnalyse(Automation):
     ) -> NotificationAnalyseResult:
         plugins = plugins or load_plugins()  # do we really still need this?
         loading_result = loading_result or load_config(discovery_rulesets=())
+        logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
 
         nr = args[0]
         return NotificationAnalyseResult(
@@ -4196,7 +4200,9 @@ class AutomationNotificationAnalyse(Automation):
                 backlog_size=config.notification_backlog,
                 logging_level=ConfigCache.notification_logging_level(),
                 all_timeperiods=cmk.utils.timeperiod.load_timeperiods(),
-                timeperiod_active=cmk.utils.timeperiod.timeperiod_active,
+                timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
+                    livestatus.get_optional_timeperiods_active_map, log=logger.warning
+                ),
             )
         )
 
@@ -4219,6 +4225,7 @@ class AutomationNotificationTest(Automation):
         plugins = plugins or load_plugins()  # do we really still need this?
         loading_result = loading_result or load_config(discovery_rulesets=())
         ensure_nagios = notify.make_ensure_nagios(loading_result.loaded_config.monitoring_core)
+        logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
 
         return NotificationTestResult(
             notify.notification_test(
@@ -4240,7 +4247,9 @@ class AutomationNotificationTest(Automation):
                 logging_level=ConfigCache.notification_logging_level(),
                 all_timeperiods=cmk.utils.timeperiod.load_timeperiods(),
                 dispatch=dispatch,
-                timeperiod_active=cmk.utils.timeperiod.timeperiod_active,
+                timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
+                    livestatus.get_optional_timeperiods_active_map, log=logger.warning
+                ),
             )
         )
 
@@ -4258,11 +4267,14 @@ class AutomationGetBulks(Automation):
         loading_result: config.LoadingResult | None,
     ) -> NotificationGetBulksResult:
         only_ripe = args[0] == "1"
+        logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
         return NotificationGetBulksResult(
             notify.find_bulks(
                 only_ripe,
                 bulk_interval=config.notification_bulk_interval,
-                timeperiod_active=cmk.utils.timeperiod.timeperiod_active,
+                timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
+                    livestatus.get_optional_timeperiods_active_map, log=logger.warning
+                ),
             )
         )
 

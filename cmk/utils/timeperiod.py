@@ -9,14 +9,8 @@ from typing import NewType, NotRequired, TypeAlias, TypedDict, TypeGuard
 
 from dateutil.tz import tzlocal
 
-import livestatus
-
-import cmk.ccc.cleanup
-import cmk.ccc.debug
-from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.i18n import _
 from cmk.ccc.store import load_from_mk_file
-from cmk.utils.caching import cache_manager
 from cmk.utils.dateutils import Weekday, weekday_ids
 from cmk.utils.paths import check_mk_config_dir
 
@@ -107,28 +101,6 @@ def timeperiod_spec_alias(timeperiod_spec: TimeperiodSpec, default: str = "") ->
     raise Exception(f"invalid timeperiod alias {alias!r}")
 
 
-def check_timeperiod(timeperiod: TimeperiodName) -> bool:
-    """Check if a time period is currently active. We have no other way than
-    doing a Livestatus query. This is not really nice, but if you have a better
-    idea, please tell me..."""
-    # Let exceptions happen, they will be handled upstream.
-    try:
-        update_timeperiods_cache()
-    except MKTimeout:
-        raise
-
-    except Exception:
-        if cmk.ccc.debug.enabled():
-            raise
-
-        # If the query is not successful better skip this check then fail
-        return True
-
-    # Note: This also returns True when the time period is unknown
-    #       The following function time period_active handles this differently
-    return cache_manager.obtain_cache("timeperiods_cache").get(timeperiod, True)
-
-
 type _Logger = Callable[[str], object]
 
 
@@ -166,39 +138,6 @@ class TimeperiodActiveCoreLookup(Mapping[str, bool]):
 
     def __len__(self) -> int:
         return len(self._core_response)
-
-
-def timeperiod_active(timeperiod: TimeperiodName) -> bool | None:
-    """Returns
-    True : active
-    False: inactive
-    None : unknown timeperiod
-
-    Raises an exception if e.g. a timeout or connection error appears.
-    This way errors can be handled upstream."""
-    update_timeperiods_cache()
-    return cache_manager.obtain_cache("timeperiods_cache").get(timeperiod)
-
-
-def update_timeperiods_cache() -> None:
-    # { "last_update": 1498820128, "timeperiods": [{"24x7": True}] }
-    # The value is store within the config cache since we need a fresh start on reload
-    tp_cache: dict[TimeperiodName, bool] = cache_manager.obtain_cache("timeperiods_cache")
-
-    if not tp_cache:
-        tp_cache.update(
-            {
-                TimeperiodName(k): v
-                for k, v in livestatus.get_timeperiods_active_map(timeout=2).items()
-            }
-        )
-
-
-def cleanup_timeperiod_caches() -> None:
-    cache_manager.obtain_cache("timeperiods_cache").clear()
-
-
-cmk.ccc.cleanup.register_cleanup(cleanup_timeperiod_caches)
 
 
 def _is_time_in_timeperiod(

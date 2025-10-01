@@ -2104,7 +2104,9 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
         logging_level=ConfigCache.notification_logging_level(),
         keepalive=keepalive,
         all_timeperiods=cmk.utils.timeperiod.load_timeperiods(),
-        timeperiod_active=cmk.utils.timeperiod.timeperiod_active,
+        timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
+            livestatus.get_optional_timeperiods_active_map, notify.logger.warning
+        ),
     )
 
 

@@ -16,7 +16,6 @@ from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 from cmk.gui.watolib.utils import wato_root_dir
 from cmk.utils.timeperiod import (
     add_builtin_timeperiods,
-    cleanup_timeperiod_caches,
     is_builtin_timeperiod,
     remove_builtin_timeperiods,
     timeperiod_spec_alias,
@@ -68,7 +67,6 @@ def save_timeperiods(timeperiods: TimeperiodSpecs, pprint_value: bool) -> None:
     TimePeriodsConfigFile().save_timeperiod_specs(
         remove_builtin_timeperiods(timeperiods), pprint_value
     )
-    cleanup_timeperiod_caches()
     load_timeperiods.cache_clear()  # type: ignore[attr-defined]
 
 

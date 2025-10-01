@@ -8,7 +8,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel, Field, Base64Str
+from pydantic import Base64Str, BaseModel, Field
 
 
 class _TaskType(StrEnum):

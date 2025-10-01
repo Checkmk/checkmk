@@ -1,11 +1,13 @@
 load("@aspect_rules_js//js:defs.bzl", "js_run_binary", "js_run_devserver")
 load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
+load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//:eslint/package_json.bzl", eslint_bin = "bin")
 load("@npm//:stylelint/package_json.bzl", stylelint_bin = "bin")
 load("@npm//:vitest/package_json.bzl", vitest_bin = "bin")
 load("@npm//:vue-tsc/package_json.bzl", vue_tsc_bin = "bin")
 load("@npm//:vue3-gettext/package_json.bzl", vue_gettext_bin = "bin")
+load("@npm//bazel/tools:prettier/package_json.bzl", prettier_bin = "bin")
 load("@npm//packages/cmk-frontend-vue:vite/package_json.bzl", vite_bin = "bin")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
@@ -132,6 +134,7 @@ SRCS = [
     "demo/index.html",
     ":compile_i18n",
     ":node_modules/@testing-library",
+    ":node_modules/@trivago/prettier-plugin-sort-imports",
     ":node_modules/@tsconfig",
     ":node_modules/@vitejs",
     ":node_modules/@types",
@@ -141,6 +144,7 @@ SRCS = [
     ":node_modules/grid-layout-plus",
     ":node_modules/lucide-vue-next",
     ":node_modules/msw",
+    ":node_modules/prettier",
     ":node_modules/radix-vue",
     ":node_modules/rollup",
     ":node_modules/sanitize-html",
@@ -229,14 +233,47 @@ vitest_bin.vitest_binary(
     data = TOOLING + SRCS_AND_TESTS,
 )
 
-alias(
-    name = "format",
-    actual = "//bazel/tools:format",
+# This should be done as shown
+# [here](https://github.com/aspect-build/rules_lint/blob/main/example/tools/format/BUILD.bazel)
+# and would shrink the whole check-format and formatting stuff to
+#
+#  alias(name = "format", actual = "//bazel/tools/format")
+#
+# but it then had to be done similarly for all packages
+
+prettier_bin.prettier_binary(
+    name = "prettier",
+    data = ["//bazel/tools:prettierrc"],
+    # Allow the binary to be run outside bazel
+    env = {"BAZEL_BINDIR": "."},
+    fixed_args = [
+        # `require` statements in the config file will be resolved relative to its location
+        # Therefore to make it hermetic, prettier must be pointed at the copy of the config file
+        # in the runfiles folder rather than the one in the source folder.
+        '--config="$$JS_BINARY__RUNFILES"/$(rlocationpath //bazel/tools:prettierrc)',
+        # it looks like .prettierignore from the SOURCE has to be provided in order to make
+        # specified (relative) directories match the actually checked files
+        '--ignore-path="$$BUILD_WORKSPACE_DIRECTORY/' + package_name() + '/.prettierignore"',
+        # default log level is "log" which spams on success
+        # https://prettier.io/docs/en/cli.html#--log-level
+        "--log-level=warn",
+    ],
 )
 
-alias(
-    name = "format.check",
-    actual = "//bazel/tools:format.check",
+# This produces a `:format` and a `:format.check` run-target. Both operate on the actual
+# source tree but `:format.check` does not modify any files but returns non-zero if there
+# are files which have to be re-formatted.
+# Also both targets accept (workspace-absolute) files and directories on which is operated.
+# Note that while `:format.check` can be used as some sort of "test" but it's NOT an actual
+# Bazel-test in terms of `bazel test` - this has to be implemented using `format_test()` instead.
+# see https://github.com/aspect-build/rules_lint/blob/main/docs/formatting.md
+format_multirun(
+    name = "format",
+    css = ":prettier",
+    html = ":prettier",
+    javascript = ":prettier",
+    python = "@aspect_rules_lint//format:ruff",
+    visibility = ["//:__subpackages__"],
 )
 
 # Note: this is not done via lint_eslint_aspect + lint_test intentionally.

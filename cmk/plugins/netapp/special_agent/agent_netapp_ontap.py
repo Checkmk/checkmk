@@ -327,7 +327,12 @@ def fetch_aggr(connection: HostConnection, args: Args) -> Iterable[models.Aggreg
     aggregates = _aggregates_ids(connection, args)
     for aggr_uuid in aggregates:
         resource = NetAppResource.Aggregate(uuid=aggr_uuid)
-        resource.get(fields=",".join(field_query))
+        try:
+            resource.get(fields=",".join(field_query))
+        except NetAppRestError:
+            # Aggregates data could not be retrieved
+            # this can happen when the aggregate is on a defective machine
+            continue
         yield models.AggregateModel.model_validate(resource.to_dict())
 
 

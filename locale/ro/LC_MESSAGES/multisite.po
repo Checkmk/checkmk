@@ -2302,6 +2302,15 @@ msgstr "Un titlu pentru grafice"
 msgid "A heading for the view"
 msgstr "Un titlu pentru view"
 
+msgid ""
+"A host filter requires an attribute key. Please choose one (e.g., host.name)"
+msgstr ""
+
+msgid ""
+"A host filter requires an attribute value. Please choose one (e.g., "
+"example.com)"
+msgstr ""
+
 #, fuzzy, python-format
 msgid ""
 "A host with the name %s already exists in the folder %s. Please choose a "
@@ -15376,6 +15385,10 @@ msgid "Connector type"
 msgstr "Tipul de conector"
 
 msgid "Connector: Adding host changes to queue"
+msgstr ""
+
+#, python-format
+msgid "Connector: Collecting OpenTelemetry hosts on site  \"%s\""
 msgstr ""
 
 #, python-format
@@ -41852,6 +41865,11 @@ msgstr "Metoda de sondare"
 msgid "Metric"
 msgstr "Metric"
 
+# georgem ##############
+#, fuzzy
+msgid "Metric Filters"
+msgstr "Filtre de service"
+
 msgid "Metric Forecast"
 msgstr "Prognoză metrică"
 
@@ -42152,6 +42170,11 @@ msgstr "Replici neprogramate"
 msgid "Missing Residual current on the PDUs"
 msgstr ""
 
+msgid ""
+"Missing attribute filter configuration. Please configure at least one "
+"attribute filter"
+msgstr ""
+
 #, python-format
 msgid "Missing config file for agent %s%s"
 msgstr "Lipsește fișierul de configurare pentru agent %s%s"
@@ -42170,6 +42193,11 @@ msgstr ""
 
 msgid "Missing host name"
 msgstr "Nume gazdă lipsă"
+
+msgid ""
+"Missing hostname attribute. Please configure a resource attribute (e.g., "
+"host.name) so the system can determine the hostname"
+msgstr ""
 
 msgid "Missing identity provider information in metadata"
 msgstr "Informații lipsă despre furnizorul de identitate în metadate"
@@ -47471,6 +47499,10 @@ msgstr "Configurația stilului selectat"
 
 #, fuzzy
 msgid "OpenTelemetry collector configurations"
+msgstr "Configurația stilului selectat"
+
+#, fuzzy
+msgid "OpenTelemetry data - Metric backend"
 msgstr "Configurația stilului selectat"
 
 #, fuzzy
@@ -55388,6 +55420,10 @@ msgstr "Grupul de resurse"
 
 msgid "Resource Name"
 msgstr "Numele resursei"
+
+#, fuzzy
+msgid "Resource attribute for hostname computation"
+msgstr "Calcularea numelui de gazdă"
 
 #, fuzzy
 msgid "Resource consumption of Windows processes"
@@ -71359,6 +71395,14 @@ msgstr "Această conexiune nu este utilizată în prezent pentru sincronizare."
 msgid ""
 "This connector can be used to automatically create hosts based on "
 "Opentelemetry collector data."
+msgstr ""
+"Acest conector poate fi utilizat pentru a crea automat gazde pe baza datelor "
+"mele."
+
+#, fuzzy
+msgid ""
+"This connector can be used to automatically create hosts based on data in "
+"the OpenTelemetry metrics backend."
 msgstr ""
 "Acest conector poate fi utilizat pentru a crea automat gazde pe baza datelor "
 "mele."
@@ -91277,6 +91321,10 @@ msgstr ""
 #, fuzzy
 msgid "Responsive"
 msgstr "Timp de răspuns"
+
+#, fuzzy
+msgid "Legacy"
+msgstr "execuție moștenită"
 
 msgid "Choose which objects this dashboard applies to"
 msgstr ""

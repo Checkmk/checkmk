@@ -2277,6 +2277,15 @@ msgstr "Um título para os gráficos"
 msgid "A heading for the view"
 msgstr "Um título para a vista"
 
+msgid ""
+"A host filter requires an attribute key. Please choose one (e.g., host.name)"
+msgstr ""
+
+msgid ""
+"A host filter requires an attribute value. Please choose one (e.g., "
+"example.com)"
+msgstr ""
+
 #, fuzzy, python-format
 msgid ""
 "A host with the name %s already exists in the folder %s. Please choose a "
@@ -15349,6 +15358,10 @@ msgid "Connector type"
 msgstr "Tipo de conector"
 
 msgid "Connector: Adding host changes to queue"
+msgstr ""
+
+#, python-format
+msgid "Connector: Collecting OpenTelemetry hosts on site  \"%s\""
 msgstr ""
 
 #, python-format
@@ -41772,6 +41785,10 @@ msgstr "Método de sondagem"
 msgid "Metric"
 msgstr "Métrica"
 
+#, fuzzy
+msgid "Metric Filters"
+msgstr "Filtros de serviço"
+
 msgid "Metric Forecast"
 msgstr "Previsão Métrica"
 
@@ -42074,6 +42091,11 @@ msgstr "Réplicas não programadas"
 msgid "Missing Residual current on the PDUs"
 msgstr ""
 
+msgid ""
+"Missing attribute filter configuration. Please configure at least one "
+"attribute filter"
+msgstr ""
+
 #, python-format
 msgid "Missing config file for agent %s%s"
 msgstr "Ficheiro de configuração em falta para o agente %s%s"
@@ -42092,6 +42114,11 @@ msgstr ""
 
 msgid "Missing host name"
 msgstr "Nome do anfitrião em falta"
+
+msgid ""
+"Missing hostname attribute. Please configure a resource attribute (e.g., "
+"host.name) so the system can determine the hostname"
+msgstr ""
 
 msgid "Missing identity provider information in metadata"
 msgstr "Falta de informação sobre o fornecedor de identidade nos metadados"
@@ -47348,6 +47375,10 @@ msgstr "Adicionar configuração do estado"
 
 #, fuzzy
 msgid "OpenTelemetry collector configurations"
+msgstr "Adicionar configuração do estado"
+
+#, fuzzy
+msgid "OpenTelemetry data - Metric backend"
 msgstr "Adicionar configuração do estado"
 
 #, fuzzy
@@ -55292,6 +55323,10 @@ msgstr "Grupo de Recursos"
 
 msgid "Resource Name"
 msgstr "Nome do recurso"
+
+#, fuzzy
+msgid "Resource attribute for hostname computation"
+msgstr "Cálculo do nome de anfitrião"
 
 #, fuzzy
 msgid "Resource consumption of Windows processes"
@@ -71097,6 +71132,14 @@ msgstr "Esta conexão não está sendo usada atualmente para sincronização."
 msgid ""
 "This connector can be used to automatically create hosts based on "
 "Opentelemetry collector data."
+msgstr ""
+"Este conector pode ser usado para criar automaticamente hosts com base nos "
+"meus dados."
+
+#, fuzzy
+msgid ""
+"This connector can be used to automatically create hosts based on data in "
+"the OpenTelemetry metrics backend."
 msgstr ""
 "Este conector pode ser usado para criar automaticamente hosts com base nos "
 "meus dados."
@@ -90937,6 +90980,10 @@ msgstr ""
 #, fuzzy
 msgid "Responsive"
 msgstr "Tempo de resposta"
+
+#, fuzzy
+msgid "Legacy"
+msgstr "série histórica"
 
 msgid "Choose which objects this dashboard applies to"
 msgstr ""

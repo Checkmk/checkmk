@@ -2194,6 +2194,15 @@ msgstr "グラフの見出し"
 msgid "A heading for the view"
 msgstr "ビューの見出し"
 
+msgid ""
+"A host filter requires an attribute key. Please choose one (e.g., host.name)"
+msgstr ""
+
+msgid ""
+"A host filter requires an attribute value. Please choose one (e.g., "
+"example.com)"
+msgstr ""
+
 #, python-format
 msgid ""
 "A host with the name %s already exists in the folder %s. Please choose a "
@@ -14428,6 +14437,10 @@ msgstr "コネクタタイプ"
 
 msgid "Connector: Adding host changes to queue"
 msgstr "コネクター：ホストの変更をキューに追加する"
+
+#, fuzzy, python-format
+msgid "Connector: Collecting OpenTelemetry hosts on site  \"%s\""
+msgstr "コネクター：サイト \"%s\"で開いているtelemetry ホストを収集しています"
 
 #, python-format
 msgid "Connector: Collecting open telemetry hosts on site  \"%s\""
@@ -39218,6 +39231,10 @@ msgstr "プロービングの方法"
 msgid "Metric"
 msgstr "メトリック"
 
+#, fuzzy
+msgid "Metric Filters"
+msgstr "サービスフィルター"
+
 msgid "Metric Forecast"
 msgstr "メトリック予測"
 
@@ -39504,6 +39521,11 @@ msgstr "間違ってスケジュールされたレプリカ"
 msgid "Missing Residual current on the PDUs"
 msgstr "PDUにおける残留電流の欠落"
 
+msgid ""
+"Missing attribute filter configuration. Please configure at least one "
+"attribute filter"
+msgstr ""
+
 #, python-format
 msgid "Missing config file for agent %s%s"
 msgstr "エージェント %s%s の構成ファイルがありません"
@@ -39522,6 +39544,11 @@ msgstr ""
 
 msgid "Missing host name"
 msgstr "ホスト名がありません"
+
+msgid ""
+"Missing hostname attribute. Please configure a resource attribute (e.g., "
+"host.name) so the system can determine the hostname"
+msgstr ""
 
 msgid "Missing identity provider information in metadata"
 msgstr "メタデータにIDプロバイダ情報がありません"
@@ -44458,6 +44485,10 @@ msgstr "OpenTelemetryコレクター（実験的）"
 
 msgid "OpenTelemetry collector configurations"
 msgstr "Open Telemetryコレクターの構成"
+
+#, fuzzy
+msgid "OpenTelemetry data - Metric backend"
+msgstr "OpenTelemetryメトリック名"
 
 msgid "OpenTelemetry metric name"
 msgstr "OpenTelemetryメトリック名"
@@ -51740,6 +51771,10 @@ msgstr "リソースグループ"
 
 msgid "Resource Name"
 msgstr "リソース名"
+
+#, fuzzy
+msgid "Resource attribute for hostname computation"
+msgstr "カスタムホスト名算出"
 
 msgid "Resource consumption of Windows processes"
 msgstr "Windowsプロセスのリソース消費"
@@ -66839,6 +66874,14 @@ msgstr "この接続は現在、同期に使用されていません。"
 msgid ""
 "This connector can be used to automatically create hosts based on "
 "Opentelemetry collector data."
+msgstr ""
+"このコネクターはOpentelemetry コレクターのデータに基づいてホストを自動作成す"
+"るために使用します。"
+
+#, fuzzy
+msgid ""
+"This connector can be used to automatically create hosts based on data in "
+"the OpenTelemetry metrics backend."
 msgstr ""
 "このコネクターはOpentelemetry コレクターのデータに基づいてホストを自動作成す"
 "るために使用します。"
@@ -85256,6 +85299,10 @@ msgstr ""
 #, fuzzy
 msgid "Responsive"
 msgstr "反応時間"
+
+#, fuzzy
+msgid "Legacy"
+msgstr "レガシー"
 
 msgid "Choose which objects this dashboard applies to"
 msgstr ""

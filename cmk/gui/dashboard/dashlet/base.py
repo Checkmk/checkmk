@@ -17,6 +17,7 @@ from cmk.gui.http import request
 from cmk.gui.type_defs import HTTPVariables, RoleName, SingleInfos, VisualContext
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import DictionaryEntry, ValueSpec, ValueSpecValidateFunc
 from cmk.utils.macros import replace_macros_in_str
@@ -269,7 +270,7 @@ class Dashlet(abc.ABC, Generic[T]):
         """Returns either Javascript code to execute when a the dashlet should be refreshed or None"""
         return None
 
-    def update(self, config: Config) -> None:
+    def update(self, config: Config, user_permissions: UserPermissions) -> None:
         """Called by the ajax call to update dashlet contents
 
         This is normally equivalent to the .show() method. Differs only for
@@ -414,5 +415,5 @@ class IFrameDashlet(Dashlet[T], abc.ABC):
         return self._add_context_vars_to_url(self._get_refresh_url())
 
     @abc.abstractmethod
-    def update(self, config: Config) -> None:
+    def update(self, config: Config, user_permissions: UserPermissions) -> None:
         raise NotImplementedError()

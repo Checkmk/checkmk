@@ -277,6 +277,7 @@ def _draw_dashboard(
     for dashlet in dashlets:
         dashlet_title, content = _render_dashlet(
             config,
+            user_permissions,
             board,
             dashlet,
             is_update=False,
@@ -393,7 +394,12 @@ def dashlet_container(dashlet: Dashlet) -> Iterator[None]:
 
 
 def _render_dashlet(
-    config: Config, board: DashboardConfig, dashlet: Dashlet, is_update: bool, mtime: int
+    config: Config,
+    user_permissions: UserPermissions,
+    board: DashboardConfig,
+    dashlet: Dashlet,
+    is_update: bool,
+    mtime: int,
 ) -> tuple[HTML | str, HTML | str]:
     content: HTML | str = ""
     title: HTML | str = ""
@@ -417,7 +423,7 @@ def _render_dashlet(
 
         title = dashlet.render_title_html()
         content = _render_dashlet_content(
-            config, board, dashlet, is_update=is_update, mtime=board["mtime"]
+            config, user_permissions, board, dashlet, is_update=is_update, mtime=board["mtime"]
         )
 
     except Exception as e:
@@ -427,11 +433,16 @@ def _render_dashlet(
 
 
 def _render_dashlet_content(
-    config: Config, board: DashboardConfig, dashlet: Dashlet, is_update: bool, mtime: int
+    config: Config,
+    user_permissions: UserPermissions,
+    board: DashboardConfig,
+    dashlet: Dashlet,
+    is_update: bool,
+    mtime: int,
 ) -> HTML:
     with output_funnel.plugged():
         if is_update:
-            dashlet.update(config)
+            dashlet.update(config, user_permissions)
         else:
             dashlet.show(config)
 
@@ -1265,7 +1276,14 @@ def ajax_dashlet(config: Config) -> None:
     try:
         dashlet_type = get_dashlet_type(dashlet_spec)
         dashlet = dashlet_type(name, owner, board, ident, dashlet_spec)
-        _title, content = _render_dashlet(config, board, dashlet, is_update=True, mtime=mtime)
+        _title, content = _render_dashlet(
+            config,
+            UserPermissions.from_config(config, permission_registry),
+            board,
+            dashlet,
+            is_update=True,
+            mtime=mtime,
+        )
     except Exception as e:
         if dashlet is None:
             dashlet = _fallback_dashlet(name, owner, board, dashlet_spec, ident)

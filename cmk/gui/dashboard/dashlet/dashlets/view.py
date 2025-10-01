@@ -252,7 +252,7 @@ class EmbeddedViewDashlet(ABCViewDashlet[EmbeddedViewDashletConfig]):
     def description(cls) -> str:
         return _("Copies a view to a dashboard element")
 
-    def update(self, config: Config) -> None:
+    def update(self, config: Config, user_permissions: UserPermissions) -> None:
         raise NotImplementedError()
 
 
@@ -326,10 +326,10 @@ class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):
             "is_show_more": False,
         }
 
-    def update(self, config: Config) -> None:
+    def update(self, config: Config, user_permissions: UserPermissions) -> None:
         self._show_view_as_dashlet(
             self._dashlet_spec,
-            UserPermissions.from_config(config, permission_registry),
+            user_permissions,
             soft_query_limit=config.soft_query_limit,
             hard_query_limit=config.hard_query_limit,
             debug=config.debug,
@@ -455,10 +455,10 @@ class LinkedViewDashlet(ABCViewDashlet[LinkedViewDashletConfig]):
         request_vars += self._dashlet_context_vars()
         return makeuri_contextless(request, request_vars, filename="view.py")
 
-    def update(self, config: Config) -> None:
+    def update(self, config: Config, user_permissions: UserPermissions) -> None:
         self._show_view_as_dashlet(
             self._get_view_spec(),
-            UserPermissions.from_config(config, permission_registry),
+            user_permissions,
             soft_query_limit=config.soft_query_limit,
             hard_query_limit=config.hard_query_limit,
             debug=config.debug,

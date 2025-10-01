@@ -78,11 +78,9 @@ class SnapinDashlet(IFrameDashlet[SnapinDashletConfig]):
             UserPermissions.from_config(active_config, permission_registry),
         )[self._dashlet_spec["snapin"]].title()
 
-    def update(self, config: Config) -> None:
+    def update(self, config: Config, user_permissions: UserPermissions) -> None:
         dashlet = self._dashlet_spec
-        snapin = all_snapins(UserPermissions.from_config(config, permission_registry)).get(
-            self._dashlet_spec["snapin"]
-        )
+        snapin = all_snapins(user_permissions).get(self._dashlet_spec["snapin"])
         if not snapin:
             raise MKUserError(None, _("The configured element does not exist."))
         snapin_instance = snapin()

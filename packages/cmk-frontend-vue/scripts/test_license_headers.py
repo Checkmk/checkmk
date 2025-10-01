@@ -38,7 +38,7 @@ FILES_IGNORED = {
     Path(".gitignore"),
     Path(".gitattributes"),
     Path(".prettierignore"),
-    Path(".prettierrc.json"),
+    Path("prettier.config.cjs"),
     Path(".stylelintrc.js"),
     Path(".npmrc"),
     Path("README.md"),

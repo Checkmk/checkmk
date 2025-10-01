@@ -5,53 +5,38 @@
 
 # mypy: disable-error-code="no-untyped-def"
 
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.check_parameters.filesystem_utils import vs_filesystem
-from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersApplications,
+from cmk.gui.plugins.wato.check_parameters.filesystem_utils_form_spec import fs_filesystem
+from cmk.rulesets.v1 import Help, Label, Title
+from cmk.rulesets.v1.form_specs import (
+    BooleanChoice,
+    DictElement,
+    Dictionary,
 )
-from cmk.gui.valuespec import DropdownChoice, TextInput
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 
-def _item_spec_asm_diskgroup():
-    return TextInput(
-        title=_("ASM Disk Group"),
-        help=_("Specify the name of the ASM Disk Group "),
-        allow_empty=False,
-    )
-
-
-def _parameter_valuespec_asm_diskgroup():
-    return vs_filesystem(
-        extra_elements=[
-            (
-                "req_mir_free",
-                DropdownChoice(
-                    title=_("Handling for required mirror space"),
-                    choices=[
-                        (False, _("Do not regard required mirror space as free space")),
-                        (True, _("Regard required mirror space as free space")),
-                    ],
-                    help=_(
+def _parameter_form_spec_asm_diskgroup() -> Dictionary:
+    return fs_filesystem(
+        extra_elements={
+            "req_mir_free": DictElement(
+                parameter_form=BooleanChoice(
+                    title=Title("Handling for required mirror space"),
+                    label=Label("Regard required mirror space as free space"),
+                    help_text=Help(
                         "ASM calculates the free space depending on free_mb or required mirror "
                         "free space. Enable this option to set the check against required "
                         "mirror free space. This only works for normal or high redundancy Disk Groups."
                     ),
                 ),
             ),
-        ]
+        }
     )
 
 
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="asm_diskgroup",
-        group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_asm_diskgroup,
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_asm_diskgroup,
-        title=lambda: _("ASM Disk Group (used space and growth)"),
-    )
+rule_spec_asm_diskgroup = CheckParameters(
+    name="asm_diskgroup",
+    title=Title("ASM Disk Group (used space and growth)"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_asm_diskgroup,
+    condition=HostAndItemCondition(item_title=Title("ASM Disk Group")),
 )

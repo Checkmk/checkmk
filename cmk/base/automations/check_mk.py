@@ -848,6 +848,7 @@ def _execute_discovery(
     config_cache: config.ConfigCache,
     plugins: AgentBasedPlugins,
 ) -> CheckPreview:
+    logger = logging.getLogger("cmk.base.discovery")
     hosts_config = config.make_hosts_config(loaded_config)
     discovery_config = DiscoveryConfig(
         ruleset_matcher,
@@ -860,10 +861,17 @@ def _execute_discovery(
         loaded_config.checkgroup_parameters,
         loaded_config.service_rule_groups,
     )
+    checker_config = CheckerConfig(
+        only_from=config_cache.only_from,
+        effective_service_level=config_cache.effective_service_level,
+        get_clustered_service_configuration=config_cache.get_clustered_service_configuration,
+        nodes=config_cache.nodes,
+        effective_host=config_cache.effective_host,
+        get_snmp_backend=config_cache.get_snmp_backend,
+    )
     autochecks_config = config.AutochecksConfigurer(
         config_cache, plugins.check_plugins, passive_service_name_config
     )
-    logger = logging.getLogger("cmk.base.discovery")
     parser = CMKParser(
         config.make_parser_config(loaded_config, ruleset_matcher, label_manager),
         selected_sections=NO_SELECTION,
@@ -879,14 +887,7 @@ def _execute_discovery(
     ):
         is_cluster = host_name in hosts_config.clusters
         check_plugins = CheckerPluginMapper(
-            CheckerConfig(
-                only_from=config_cache.only_from,
-                effective_service_level=config_cache.effective_service_level,
-                get_clustered_service_configuration=config_cache.get_clustered_service_configuration,
-                nodes=config_cache.nodes,
-                effective_host=config_cache.effective_host,
-                get_snmp_backend=config_cache.get_snmp_backend,
-            ),
+            checker_config,
             plugins.check_plugins,
             value_store_manager,
             logger=logger,

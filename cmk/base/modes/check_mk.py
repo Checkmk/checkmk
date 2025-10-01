@@ -2822,6 +2822,14 @@ def run_checking(
         keep_outdated=file_cache_options.keep_outdated,
         logger=logger,
     )
+    checker_config = CheckerConfig(
+        only_from=config_cache.only_from,
+        effective_service_level=config_cache.effective_service_level,
+        get_clustered_service_configuration=config_cache.get_clustered_service_configuration,
+        nodes=config_cache.nodes,
+        effective_host=config_cache.effective_host,
+        get_snmp_backend=config_cache.get_snmp_backend,
+    )
     summarizer = CMKSummarizer(
         hostname,
         config_cache.summary_config,
@@ -2851,14 +2859,7 @@ def run_checking(
         console.debug(f"Checkmk version {cmk_version.__version__}")
         fetched = fetcher(hostname, ip_address=ipaddress)
         check_plugins = CheckerPluginMapper(
-            CheckerConfig(
-                only_from=config_cache.only_from,
-                effective_service_level=config_cache.effective_service_level,
-                get_clustered_service_configuration=config_cache.get_clustered_service_configuration,
-                nodes=config_cache.nodes,
-                effective_host=config_cache.effective_host,
-                get_snmp_backend=config_cache.get_snmp_backend,
-            ),
+            checker_config,
             plugins.check_plugins,
             value_store_manager,
             logger=logger,

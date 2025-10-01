@@ -97,6 +97,7 @@ setversion:
 
 build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE) $(AGENT_CTL)  $(MK_SQL)
 
+.PHONY: $(AGENT_CTL)
 $(AGENT_CTL):
 	bazel build //packages/cmk-agent-ctl:cmk-agent-ctl-musl --cmk_version=$(NEW_VERSION)
 	mkdir -p linux

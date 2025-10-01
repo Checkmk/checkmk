@@ -347,10 +347,7 @@ def translate_and_merge_rrd_columns(
         step=timeseries.step,
         values=single_value_series,
         conversion=user_specific_unit(
-            get_metric_spec(
-                metric_name,
-                registered_metrics,
-            ).unit_spec,
+            get_metric_spec(metric_name, registered_metrics).unit_spec,
             user,
             active_config,
         ).conversion,

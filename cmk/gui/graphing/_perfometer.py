@@ -625,11 +625,7 @@ class MetricometerRendererPerfometer(MetricometerRenderer):
 
     def get_label(self) -> str:
         first_segment = _evaluate_quantity(self.perfometer.segments[0], self.translated_metrics)
-        return user_specific_unit(
-            first_segment.unit_spec,
-            user,
-            active_config,
-        ).formatter.render(
+        return user_specific_unit(first_segment.unit_spec, user, active_config).formatter.render(
             first_segment.value
             + sum(
                 _evaluate_quantity(s, self.translated_metrics).value

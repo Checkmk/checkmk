@@ -152,11 +152,7 @@ def compute_graph_artwork(
     *,
     graph_display_id: str = "",
 ) -> GraphArtwork:
-    unit_spec = user_specific_unit(
-        graph_recipe.unit_spec,
-        user,
-        active_config,
-    )
+    unit_spec = user_specific_unit(graph_recipe.unit_spec, user, active_config)
 
     curves = list(compute_graph_artwork_curves(graph_recipe, graph_data_range, registered_metrics))
 

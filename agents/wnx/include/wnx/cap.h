@@ -93,6 +93,10 @@ bool StoreFile(const std::wstring &name, const std::vector<char> &data);
 ///
 bool CheckAllFilesWritable(const std::string &directory);
 
+std::optional<std::wstring> BuildUnzipCommand(std::wstring_view full_path);
+bool TryUnzip(std::wstring_view full_path);
+bool TryCleanZip(std::wstring_view full_path);
+
 // tgt,src
 using PairOfPath = std::pair<std::filesystem::path, std::filesystem::path>;
 PairOfPath GetExampleYmlNames();

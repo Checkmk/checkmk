@@ -310,6 +310,12 @@ pub fn detect_factory_runtime(env_var: Option<String>) -> Option<PathBuf> {
             .join("plugins")
             .join("packages")
             .join(RUNTIME_SUB_DIR);
+
+        let runtime_path = if cfg!(windows) && runtime_path.join("runtime").is_dir() {
+            runtime_path.join("runtime")
+        } else {
+            runtime_path
+        };
         if runtime_path.is_dir() {
             Some(runtime_path)
         } else {

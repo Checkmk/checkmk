@@ -602,4 +602,24 @@ TEST(CapTest, ReInstallRestoreComponent) {
     }
 }
 
+TEST(CapTest, UnzipBuild) {
+    auto res = BuildUnzipCommand(L"./x.zip");
+    EXPECT_EQ(
+        res.value(),
+        L"powershell.exe -Command \"Expand-Archive -Path './x.zip' -DestinationPath '.\\x' -Force\"");
+}
+
+TEST(CapTest, UnzipRun_Component) {
+    auto temp_dir = tst::GetTempDir();
+    auto target_file = temp_dir / "x.zip";
+    auto target_dir = temp_dir / "x";
+    fs::copy(tst::MakePathToCapTestFiles() / "test_zip.zip",
+             temp_dir / "x.zip");
+    EXPECT_TRUE(TryUnzip(target_file.wstring()));
+    EXPECT_TRUE(fs::is_regular_file(target_dir / "readme.txt"));
+    EXPECT_TRUE(fs::is_regular_file(target_dir / "lwa_enable.cmd"));
+    EXPECT_TRUE(TryCleanZip(target_file.wstring()));
+    EXPECT_FALSE(fs::exists(target_dir));
+}
+
 }  // namespace cma::cfg::cap

@@ -348,7 +348,6 @@ bool Process(const std::string &cap_name, ProcMode mode,
         XLOG::l.crit("Unable to open Check_MK-Agent package {} ", cap_name);
         return false;
     }
-
     while (!ifs.eof()) {
         auto [name, data, eof] = ExtractFile(ifs);
         if (eof) {
@@ -377,6 +376,7 @@ bool Process(const std::string &cap_name, ProcMode mode,
             std::error_code ec;
             if (fs::exists(full_path, ec)) {
                 files_left_on_disk.push_back(full_path);
+                TryUnzip(full_path);
             }
         } else if (mode == ProcMode::remove) {
             std::error_code ec;
@@ -387,6 +387,7 @@ bool Process(const std::string &cap_name, ProcMode mode,
                 XLOG::l("Cannot remove '{}' error {}",
                         wtools::ToUtf8(full_path), ec.value());
             }
+            TryCleanZip(full_path);
         } else if (mode == ProcMode::list) {
             files_left_on_disk.push_back(full_path);
         }
@@ -394,6 +395,48 @@ bool Process(const std::string &cap_name, ProcMode mode,
 
     XLOG::l("CAP file {} looks as bad with unexpected eof", cap_name);
     return false;
+}
+
+/// Unzips file in sibling directory without extension
+/// Returns true when unzip attepmted
+bool TryUnzip(std::wstring_view full_path) {
+    auto to_unzip = BuildUnzipCommand(full_path);
+    if (to_unzip.has_value()) {
+        XLOG::d.i("Unzipping content of '{}'", wtools::ToUtf8(full_path));
+        wtools::RunCommand(to_unzip.value());
+        return true;
+    }
+
+    return false;
+}
+
+/// Kills sibling zip file directory
+/// Returns true when something was done
+bool TryCleanZip(std::wstring_view full_path) {
+    if (!full_path.ends_with(L".zip")) {
+        return false;
+    }
+
+    fs::path zip_file{full_path};
+    auto dir = zip_file.parent_path() / zip_file.filename().replace_extension();
+    if (fs::is_directory(dir)) {
+        std::error_code ec;
+        fs::remove_all(dir, ec);
+        return true;
+    }
+    return false;
+}
+
+std::optional<std::wstring> BuildUnzipCommand(std::wstring_view full_path) {
+    if (!full_path.ends_with(L".zip")) {
+        return {};
+    }
+
+    fs::path zip_file{full_path};
+    return {wtools::ConvertToUtf16(fmt::format(
+        "powershell.exe -Command \"Expand-Archive -Path '{}' -DestinationPath '{}' -Force\"",
+        zip_file,
+        zip_file.parent_path() / zip_file.filename().replace_extension()))};
 }
 
 bool NeedReinstall(const fs::path &target, const fs::path &source) {

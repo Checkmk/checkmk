@@ -932,4 +932,399 @@ TEST(Wtools, Adapter) {
     EXPECT_FALSE(store.empty());
 }
 
+static void ExpectEq(std::string const &in, std::string_view sep,
+                     std::string const &expected) {
+    EXPECT_EQ(ReplaceBlankLineWithSeparator(in, sep), expected)
+        << "Input: [" << in << "] Separator: [" << sep << "]";
+}
+
+TEST(ReplaceBlankLineWithSeparator, EmptyInput) { ExpectEq("", "---", ""); }
+
+TEST(ReplaceBlankLineWithSeparator, OnlyNewlineSingleBlankLine) {
+    // One blank line with trailing newline -> separator + newline
+    ExpectEq("\n", "---", "---\n");
+}
+
+TEST(ReplaceBlankLineWithSeparator, OnlySpacesNoTrailingNewline) {
+    // No trailing newline -> output must not end with newline
+    ExpectEq("   ", "---", "---");
+}
+
+TEST(ReplaceBlankLineWithSeparator, SpacesAndTabBlankLine) {
+    ExpectEq(" \t  \n", "...", "...\n");
+}
+
+TEST(ReplaceBlankLineWithSeparator, VerticalTabAndFormFeedAreBlank) {
+    // \v and \f are classified as space by isspace()
+    ExpectEq("\v\f\n", "***", "***\n");
+}
+
+TEST(ReplaceBlankLineWithSeparator, CarriageReturnOnlyBeforeSplit) {
+    // Line containing only '\r' (from a CRLF normalization scenario) is blank
+    ExpectEq("\r\nX\n", "---", "---\nX\n");
+}
+
+TEST(ReplaceBlankLineWithSeparator, MixedContentNoBlankLines) {
+    ExpectEq("a\nb\nc", "---", "a\nb\nc");
+}
+
+TEST(ReplaceBlankLineWithSeparator, MixedWithInternalBlankLines) {
+    ExpectEq("a\n \n\t\nb\n", "---", "a\n---\n---\nb\n");
+}
+
+TEST(ReplaceBlankLineWithSeparator, NoTrailingNewlinePreserved) {
+    ExpectEq("a\n\nb", "---", "a\n---\nb");
+}
+
+TEST(ReplaceBlankLineWithSeparator, TrailingBlankLinePreserved) {
+    ExpectEq("a\n\n", "---", "a\n---\n");
+}
+
+TEST(ReplaceBlankLineWithSeparator, MultipleConsecutiveBlankLines) {
+    ExpectEq("a\n\n\nb\n", "---", "a\n---\n---\nb\n");
+}
+
+TEST(ReplaceBlankLineWithSeparator, SeparatorCustomMultiChar) {
+    ExpectEq("X\n \nY\n", "<<<BLANK>>>", "X\n<<<BLANK>>>\nY\n");
+}
+
+TEST(ReplaceBlankLineWithSeparator, EmptySeparatorRemovesMarker) {
+    // Behavior: blank lines become empty lines (just newline retained)
+    ExpectEq("A\n \n\nB", "", "A\n\n\nB");
+}
+
+TEST(ReplaceBlankLineWithSeparator, AllBlankLinesInput) {
+    ExpectEq("\n \n\t\n", "---", "---\n---\n---\n");
+}
+
+TEST(ReplaceBlankLineWithSeparator, LastLineNonBlankNoFinalNewline) {
+    ExpectEq("A\n \nB", "---", "A\n---\nB");
+}
+
+TEST(ReplaceBlankLineWithSeparator, LastLineBlankNoFinalNewlineInInput) {
+    // Input ends with blank line without newline -> newline stripped at end
+    ExpectEq("A\n  ", "---", "A\n---");
+}
+
+TEST(ReplaceBlankLineWithSeparator, MultiPeerBlankLinesAreReplaced) {
+    const std::string input = R"(#Peers: 10
+
+Peer: time.facebook.com
+State: Active
+Time Remaining: 26301.0890449s
+Mode: 3 (Client)
+Stratum: 1 (primary reference - syncd by radio clock)
+PeerPoll Interval: 15 (32768s)
+HostPoll Interval: 15 (32768s)
+Last Successful Sync Time: 9/30/2025 10:17:07 PM
+LastSyncError: 0x00000000 (Succeeded)
+LastSyncErrorMsgId: 0x00000000 (Succeeded)
+AuthTypeMsgId: 0x0000005A (NoAuth )
+Resolve Attempts: 0
+ValidDataCounter: 8
+Reachability: 255
+
+Peer: time.google.com
+State: Active
+Time Remaining: 26301.2923728s
+Mode: 3 (Client)
+Stratum: 1 (primary reference - syncd by radio clock)
+PeerPoll Interval: 15 (32768s)
+HostPoll Interval: 15 (32768s)
+Last Successful Sync Time: 9/30/2025 10:17:07 PM
+LastSyncError: 0x00000000 (Succeeded)
+LastSyncErrorMsgId: 0x00000000 (Succeeded)
+AuthTypeMsgId: 0x0000005A (NoAuth )
+Resolve Attempts: 0
+ValidDataCounter: 8
+Reachability: 255
+
+Peer: de.pool.ntp.org
+State: Active
+Time Remaining: 21063.2289556s
+Mode: 3 (Client)
+Stratum: 2 (secondary reference - syncd by (S)NTP)
+PeerPoll Interval: 15 (32768s)
+HostPoll Interval: 15 (32768s)
+Last Successful Sync Time: 9/30/2025 8:49:49 PM
+LastSyncError: 0x00000000 (Succeeded)
+LastSyncErrorMsgId: 0x00000000 (Succeeded)
+AuthTypeMsgId: 0x0000005A (NoAuth )
+Resolve Attempts: 0
+ValidDataCounter: 8
+Reachability: 255
+
+Peer: time.cloudflare.com
+State: Active
+Time Remaining: 25164.9380930s
+Mode: 3 (Client)
+Stratum: 3 (secondary reference - syncd by (S)NTP)
+PeerPoll Interval: 15 (32768s)
+HostPoll Interval: 15 (32768s)
+Last Successful Sync Time: 9/30/2025 9:58:11 PM
+LastSyncError: 0x00000000 (Succeeded)
+LastSyncErrorMsgId: 0x00000000 (Succeeded)
+AuthTypeMsgId: 0x0000005A (NoAuth )
+Resolve Attempts: 0
+ValidDataCounter: 8
+Reachability: 255
+
+Peer: example.com
+State: Active
+Time Remaining: 31328.6701628s
+Mode: 3 (Client)
+Stratum: 0 (unspecified)
+PeerPoll Interval: 0 (unspecified)
+HostPoll Interval: 15 (32768s)
+Last Successful Sync Time: (null)
+LastSyncError: 0x800705B4 (This operation returned because the timeout period expired. )
+LastSyncErrorMsgId: 0x00000000 (Succeeded)
+AuthTypeMsgId: 0x0000005A (NoAuth )
+Resolve Attempts: 7
+ValidDataCounter: 1
+Reachability: 2
+
+Peer: example.com
+State: Active
+Time Remaining: 31328.7829018s
+Mode: 3 (Client)
+Stratum: 0 (unspecified)
+PeerPoll Interval: 0 (unspecified)
+HostPoll Interval: 15 (32768s)
+Last Successful Sync Time: (null)
+LastSyncError: 0x800705B4 (This operation returned because the timeout period expired. )
+LastSyncErrorMsgId: 0x00000000 (Succeeded)
+AuthTypeMsgId: 0x0000005A (NoAuth )
+Resolve Attempts: 7
+ValidDataCounter: 1
+Reachability: 2
+
+Peer: example.com
+State: Active
+Time Remaining: 31328.9080142s
+Mode: 3 (Client)
+Stratum: 0 (unspecified)
+PeerPoll Interval: 0 (unspecified)
+HostPoll Interval: 15 (32768s)
+Last Successful Sync Time: (null)
+LastSyncError: 0x800705B4 (This operation returned because the timeout period expired. )
+LastSyncErrorMsgId: 0x00000000 (Succeeded)
+AuthTypeMsgId: 0x0000005A (NoAuth )
+Resolve Attempts: 7
+ValidDataCounter: 1
+Reachability: 2
+
+Peer: example.com
+State: Active
+Time Remaining: 31329.0328789s
+Mode: 3 (Client)
+Stratum: 0 (unspecified)
+PeerPoll Interval: 0 (unspecified)
+HostPoll Interval: 15 (32768s)
+Last Successful Sync Time: (null)
+LastSyncError: 0x800705B4 (This operation returned because the timeout period expired. )
+LastSyncErrorMsgId: 0x00000000 (Succeeded)
+AuthTypeMsgId: 0x0000005A (NoAuth )
+Resolve Attempts: 7
+ValidDataCounter: 1
+Reachability: 2
+
+Peer: example.com
+State: Active
+Time Remaining: 31329.1577069s
+Mode: 3 (Client)
+Stratum: 0 (unspecified)
+PeerPoll Interval: 0 (unspecified)
+HostPoll Interval: 15 (32768s)
+Last Successful Sync Time: (null)
+LastSyncError: 0x800705B4 (This operation returned because the timeout period expired. )
+LastSyncErrorMsgId: 0x00000000 (Succeeded)
+AuthTypeMsgId: 0x0000005A (NoAuth )
+Resolve Attempts: 7
+ValidDataCounter: 1
+Reachability: 2
+
+Peer: example.com
+State: Active
+Time Remaining: 31329.2822485s
+Mode: 3 (Client)
+Stratum: 0 (unspecified)
+PeerPoll Interval: 0 (unspecified)
+HostPoll Interval: 15 (32768s)
+Last Successful Sync Time: (null)
+LastSyncError: 0x800705B4 (This operation returned because the timeout period expired. )
+LastSyncErrorMsgId: 0x00000000 (Succeeded)
+AuthTypeMsgId: 0x0000005A (NoAuth )
+Resolve Attempts: 7
+ValidDataCounter: 1
+Reachability: 2)";
+
+    // Expected: each blank line replaced by '---'
+    const std::string expected = R"(#Peers: 10
+---
+Peer: time.facebook.com
+State: Active
+Time Remaining: 26301.0890449s
+Mode: 3 (Client)
+Stratum: 1 (primary reference - syncd by radio clock)
+PeerPoll Interval: 15 (32768s)
+HostPoll Interval: 15 (32768s)
+Last Successful Sync Time: 9/30/2025 10:17:07 PM
+LastSyncError: 0x00000000 (Succeeded)
+LastSyncErrorMsgId: 0x00000000 (Succeeded)
+AuthTypeMsgId: 0x0000005A (NoAuth )
+Resolve Attempts: 0
+ValidDataCounter: 8
+Reachability: 255
+---
+Peer: time.google.com
+State: Active
+Time Remaining: 26301.2923728s
+Mode: 3 (Client)
+Stratum: 1 (primary reference - syncd by radio clock)
+PeerPoll Interval: 15 (32768s)
+HostPoll Interval: 15 (32768s)
+Last Successful Sync Time: 9/30/2025 10:17:07 PM
+LastSyncError: 0x00000000 (Succeeded)
+LastSyncErrorMsgId: 0x00000000 (Succeeded)
+AuthTypeMsgId: 0x0000005A (NoAuth )
+Resolve Attempts: 0
+ValidDataCounter: 8
+Reachability: 255
+---
+Peer: de.pool.ntp.org
+State: Active
+Time Remaining: 21063.2289556s
+Mode: 3 (Client)
+Stratum: 2 (secondary reference - syncd by (S)NTP)
+PeerPoll Interval: 15 (32768s)
+HostPoll Interval: 15 (32768s)
+Last Successful Sync Time: 9/30/2025 8:49:49 PM
+LastSyncError: 0x00000000 (Succeeded)
+LastSyncErrorMsgId: 0x00000000 (Succeeded)
+AuthTypeMsgId: 0x0000005A (NoAuth )
+Resolve Attempts: 0
+ValidDataCounter: 8
+Reachability: 255
+---
+Peer: time.cloudflare.com
+State: Active
+Time Remaining: 25164.9380930s
+Mode: 3 (Client)
+Stratum: 3 (secondary reference - syncd by (S)NTP)
+PeerPoll Interval: 15 (32768s)
+HostPoll Interval: 15 (32768s)
+Last Successful Sync Time: 9/30/2025 9:58:11 PM
+LastSyncError: 0x00000000 (Succeeded)
+LastSyncErrorMsgId: 0x00000000 (Succeeded)
+AuthTypeMsgId: 0x0000005A (NoAuth )
+Resolve Attempts: 0
+ValidDataCounter: 8
+Reachability: 255
+---
+Peer: example.com
+State: Active
+Time Remaining: 31328.6701628s
+Mode: 3 (Client)
+Stratum: 0 (unspecified)
+PeerPoll Interval: 0 (unspecified)
+HostPoll Interval: 15 (32768s)
+Last Successful Sync Time: (null)
+LastSyncError: 0x800705B4 (This operation returned because the timeout period expired. )
+LastSyncErrorMsgId: 0x00000000 (Succeeded)
+AuthTypeMsgId: 0x0000005A (NoAuth )
+Resolve Attempts: 7
+ValidDataCounter: 1
+Reachability: 2
+---
+Peer: example.com
+State: Active
+Time Remaining: 31328.7829018s
+Mode: 3 (Client)
+Stratum: 0 (unspecified)
+PeerPoll Interval: 0 (unspecified)
+HostPoll Interval: 15 (32768s)
+Last Successful Sync Time: (null)
+LastSyncError: 0x800705B4 (This operation returned because the timeout period expired. )
+LastSyncErrorMsgId: 0x00000000 (Succeeded)
+AuthTypeMsgId: 0x0000005A (NoAuth )
+Resolve Attempts: 7
+ValidDataCounter: 1
+Reachability: 2
+---
+Peer: example.com
+State: Active
+Time Remaining: 31328.9080142s
+Mode: 3 (Client)
+Stratum: 0 (unspecified)
+PeerPoll Interval: 0 (unspecified)
+HostPoll Interval: 15 (32768s)
+Last Successful Sync Time: (null)
+LastSyncError: 0x800705B4 (This operation returned because the timeout period expired. )
+LastSyncErrorMsgId: 0x00000000 (Succeeded)
+AuthTypeMsgId: 0x0000005A (NoAuth )
+Resolve Attempts: 7
+ValidDataCounter: 1
+Reachability: 2
+---
+Peer: example.com
+State: Active
+Time Remaining: 31329.0328789s
+Mode: 3 (Client)
+Stratum: 0 (unspecified)
+PeerPoll Interval: 0 (unspecified)
+HostPoll Interval: 15 (32768s)
+Last Successful Sync Time: (null)
+LastSyncError: 0x800705B4 (This operation returned because the timeout period expired. )
+LastSyncErrorMsgId: 0x00000000 (Succeeded)
+AuthTypeMsgId: 0x0000005A (NoAuth )
+Resolve Attempts: 7
+ValidDataCounter: 1
+Reachability: 2
+---
+Peer: example.com
+State: Active
+Time Remaining: 31329.1577069s
+Mode: 3 (Client)
+Stratum: 0 (unspecified)
+PeerPoll Interval: 0 (unspecified)
+HostPoll Interval: 15 (32768s)
+Last Successful Sync Time: (null)
+LastSyncError: 0x800705B4 (This operation returned because the timeout period expired. )
+LastSyncErrorMsgId: 0x00000000 (Succeeded)
+AuthTypeMsgId: 0x0000005A (NoAuth )
+Resolve Attempts: 7
+ValidDataCounter: 1
+Reachability: 2
+---
+Peer: example.com
+State: Active
+Time Remaining: 31329.2822485s
+Mode: 3 (Client)
+Stratum: 0 (unspecified)
+PeerPoll Interval: 0 (unspecified)
+HostPoll Interval: 15 (32768s)
+Last Successful Sync Time: (null)
+LastSyncError: 0x800705B4 (This operation returned because the timeout period expired. )
+LastSyncErrorMsgId: 0x00000000 (Succeeded)
+AuthTypeMsgId: 0x0000005A (NoAuth )
+Resolve Attempts: 7
+ValidDataCounter: 1
+Reachability: 2)";
+
+    auto output = ReplaceBlankLineWithSeparator(input, "---");
+
+    EXPECT_EQ(output, expected);
+
+    // 10 separators expected (one for each peer block)
+    size_t count = 0;
+    for (size_t pos = output.find("---"); pos != std::string::npos;
+         pos = output.find("---", pos + 3)) {
+        ++count;
+    }
+    EXPECT_EQ(count, 10u);
+
+    EXPECT_EQ(output.find("\n\n"), std::string::npos);
+}
+
 }  // namespace wtools

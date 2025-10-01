@@ -1128,6 +1128,13 @@ AdapterInfoStore GetAdapterInfoStore();
 /// https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.performancecounter.instancename?view=dotnet-plat-ext-8.0
 std::wstring MangleNameForPerfCounter(std::wstring_view name) noexcept;
 
+////
+//// Helper functions for service providers
+////
+
+std::string ReplaceBlankLineWithSeparator(std::string const &raw,
+                                          std::string_view separator);
+
 struct OsInfo {
     std::wstring name;
     std::wstring version;

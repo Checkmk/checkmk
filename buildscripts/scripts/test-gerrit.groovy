@@ -143,6 +143,7 @@ def main() {
                         case "Groovy Lint":                 // npm not shipped with "klausi-standard-weak"
                         case "Package cmk-frontend":        // npm not shipped with "klausi-standard-weak"
                         case "Package cmk-agent-receiver":  // Tries to start docker containers
+                        case "Package cmk-relay-engine":    // Tries to start docker containers
                             relative_job_name = "${branch_base_folder}/cv/test-gerrit-single";
                             break;
                         default:

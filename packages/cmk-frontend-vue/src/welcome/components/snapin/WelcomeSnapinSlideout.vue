@@ -11,7 +11,7 @@ import { computed, onMounted, ref } from 'vue'
 import usei18n from '@/lib/i18n'
 
 import CmkButton from '@/components/CmkButton.vue'
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
 import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 
 import NextSteps from '@/welcome/components/NextSteps.vue'

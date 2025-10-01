@@ -7,14 +7,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
-import CmkIcon, { type CmkIconVariants } from '@/components/CmkIcon.vue'
+import CmkIcon, { type CmkIconVariants } from '@/components/CmkIcon'
+import type { SimpleIcons } from '@/components/CmkIcon'
 import { getWizardContext } from '@/components/CmkWizard/utils.ts'
 
 import CmkButton, { type ButtonVariants } from '../CmkButton.vue'
 
 export interface CmkWizardButtonProps {
   type: 'next' | 'previous' | 'finish' | 'other'
-  iconName?: string
+  iconName?: SimpleIcons | undefined
   iconRotate?: number
   overrideLabel?: TranslatedString
 }
@@ -52,14 +53,17 @@ function getLabel() {
 
 function getButtonConfig(
   variant: 'next' | 'previous' | 'finish' | unknown,
-  iconName: string = '',
+  iconName: SimpleIcons | undefined,
   iconRotate: number = 0
 ): {
   variant?: ButtonVariants['variant']
-  icon: { name: string; rotate: number }
+  icon: { name: SimpleIcons; rotate: number }
   iconSize?: CmkIconVariants['size']
 } {
-  let icon = { name: '', rotate: 0 }
+  let icon: { name: SimpleIcons; rotate: number } = {
+    name: 'continue',
+    rotate: 0
+  }
 
   if (iconName) {
     icon = { name: iconName, rotate: iconRotate }
@@ -86,9 +90,8 @@ function getButtonConfig(
         icon: { name: 'check', rotate: 0 },
         iconSize: 'small'
       }
-  }
-  return {
-    icon
+    default:
+      throw new Error(`Unknown button variant: ${variant}`)
   }
 }
 

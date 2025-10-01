@@ -4,9 +4,10 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
+import type { SimpleIcons } from '@/components/CmkIcon'
 
-defineProps<{ icon: string; icon_emblem?: string | undefined }>()
+defineProps<{ icon: SimpleIcons; icon_emblem?: SimpleIcons | undefined }>()
 </script>
 
 <template>

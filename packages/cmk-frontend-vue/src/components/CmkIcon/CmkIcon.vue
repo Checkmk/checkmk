@@ -4,9 +4,10 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type VariantProps, cva } from 'class-variance-authority'
+import { cmkIconVariants } from './icons.constants.ts'
+import type { CmkIconProps, SimpleIcons } from './types.ts'
 
-function getIconVariable(iconName: string | undefined): string {
+function getIconVariable(iconName: SimpleIcons): string {
   /*
     Transforms a kebab-case icon name to a CSS variable reference.
     E.g. "main-help" -> "var(--icon-main-help)"
@@ -37,55 +38,6 @@ function getIconVariable(iconName: string | undefined): string {
   const iconVar = `icon-${iconName}`
 
   return `var(--${iconVar})`
-}
-
-const cmkIconVariants = cva('', {
-  variants: {
-    variant: {
-      plain: '',
-      inline: 'cmk-icon--inline'
-    },
-    size: {
-      xxsmall: '8px',
-      xsmall: '10px',
-      small: '12px',
-      medium: '15px',
-      large: '18px',
-      xlarge: '20px',
-      xxlarge: '32px',
-      xxxlarge: '77px'
-    },
-    colored: {
-      true: '',
-      false: 'cmk-icon--colorless'
-    }
-  },
-  defaultVariants: {
-    variant: 'plain',
-    size: 'medium',
-    colored: true
-  }
-})
-export type CmkIconVariants = VariantProps<typeof cmkIconVariants>
-
-export interface CmkIconProps {
-  /** @property {string} name - Name of the icon */
-  name: string
-
-  /** @property {undefined | CmkIconVariants['variant']} variant - Styling variant of the icon */
-  variant?: CmkIconVariants['variant'] | undefined
-
-  /** @property {undefined | CmkIconVariants['size']} size - Width and height of the icon */
-  size?: CmkIconVariants['size'] | undefined
-
-  /** @property {undefined | CmkIconVariants['colored']} colored - Whether the icon is colored or black and white */
-  colored?: CmkIconVariants['colored'] | undefined
-
-  /** @property {undefined | number} rotate - Transform rotate value in degrees */
-  rotate?: number | undefined
-
-  /** @property {undefined | string} title - Title to be displayed on hover */
-  title?: string | undefined
 }
 
 const props = defineProps<CmkIconProps>()

@@ -10,7 +10,7 @@ import usei18n from '@/lib/i18n'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkButton from '@/components/CmkButton.vue'
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
 import CmkLabel from '@/components/CmkLabel.vue'
 import CmkTab from '@/components/CmkTabs/CmkTab.vue'
 import CmkTabContent from '@/components/CmkTabs/CmkTabContent.vue'

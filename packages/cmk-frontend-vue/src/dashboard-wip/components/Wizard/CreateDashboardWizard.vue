@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
 import CmkSlideIn from '@/components/CmkSlideIn.vue'
 
 import { type DashboardGeneralSettings, DashboardLayout } from '@/dashboard-wip/types/dashboard'

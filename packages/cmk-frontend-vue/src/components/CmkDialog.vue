@@ -12,7 +12,7 @@ import usePersistentRef from '@/lib/usePersistentRef'
 import { isWarningDismissed } from '@/lib/userConfig'
 
 import CmkButton, { type ButtonVariants } from '@/components/CmkButton.vue'
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
 import CmkSpace from '@/components/CmkSpace.vue'
 
 const props = defineProps<{

@@ -7,6 +7,8 @@ import type { Ref } from 'vue'
 
 import type { components } from '@/lib/rest-api-client/openapi_internal'
 
+import type { SimpleIcons } from '@/components/CmkIcon'
+
 import type {
   EffectiveWidgetFilterContext,
   WidgetGeneralSettings
@@ -23,7 +25,7 @@ export interface FilterItem extends LabelValueItem {
 }
 
 export interface ActionButtonIcon extends QuickSetupStageActionIcon {
-  name: string
+  name: SimpleIcons
   side: 'left' | 'right'
   rotate?: number | undefined
 }

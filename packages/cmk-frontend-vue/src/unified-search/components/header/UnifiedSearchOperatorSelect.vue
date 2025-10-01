@@ -9,7 +9,7 @@ import { ref, useTemplateRef } from 'vue'
 import usei18n from '@/lib/i18n'
 import useClickOutside from '@/lib/useClickOutside'
 
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
 
 import type { FilterOption } from '@/unified-search/providers/search-utils.types'
 

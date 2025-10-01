@@ -8,7 +8,7 @@ import { DialogClose, DialogTitle } from 'radix-vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
 import CmkSlideIn from '@/components/CmkSlideIn.vue'
 
 import CmkScrollContainer from './CmkScrollContainer.vue'

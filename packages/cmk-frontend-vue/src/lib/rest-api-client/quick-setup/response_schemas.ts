@@ -3,6 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { SimpleIcons } from '@/components/CmkIcon'
+
 import type { ValidationMessages } from '@/form'
 
 import { type ComponentSpec } from '@/quick-setup/components/quick-setup/widgets/widget_types'
@@ -22,7 +24,7 @@ export interface Errors extends StageErrors {
 }
 
 export interface QuickSetupButtonIcon {
-  name: string
+  name: SimpleIcons
   rotate: number
 }
 

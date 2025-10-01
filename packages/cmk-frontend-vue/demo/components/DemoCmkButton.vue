@@ -8,7 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkButton from '@/components/CmkButton.vue'
 import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
 import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
 
 defineProps<{ screenshotMode: boolean }>()
 </script>

@@ -4,7 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
+import type { SimpleIcons } from '@/components/CmkIcon'
 import CmkLoading from '@/components/CmkLoading.vue'
 
 import type { LogStep, LogStepStatus } from './useBackgroundJobLog'
@@ -18,7 +19,7 @@ interface BackgroundJobLogDisplayProps {
 const props = defineProps<BackgroundJobLogDisplayProps>()
 
 const getIcon = (step: LogStep) => {
-  const icons: Record<LogStepStatus, string> = {
+  const icons: Record<LogStepStatus, SimpleIcons> = {
     completed: 'checkmark',
     active: 'load-graph',
     pending: 'pending-task',
@@ -30,7 +31,7 @@ const getIcon = (step: LogStep) => {
 <template>
   <ul class="qs-background-job-log-display__list">
     <li v-for="(item, idx) in props.steps" :key="idx">
-      <CmkIcon :name="getIcon(item)" variant="inline" size="medium" /> {{ item.title }}
+      <CmkIcon :name="getIcon(item)" variant="inline" size="medium" />{{ item.title }}
     </li>
     <li v-if="!!props.displayLoading">
       <CmkLoading class="qs-background-job-log-display__loading-dots" />

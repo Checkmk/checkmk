@@ -10,7 +10,7 @@ import usei18n, { untranslated } from '@/lib/i18n'
 
 import CmkCollapsible from '@/components/CmkCollapsible.vue'
 import CmkCollapsibleTitle from '@/components/CmkCollapsibleTitle.vue'
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
 import CmkLabel from '@/components/CmkLabel.vue'
 
 import type { Filters } from '../composables/useFilters.ts'

@@ -8,7 +8,7 @@ import { computed, onBeforeMount, provide, ref } from 'vue'
 
 import { randomId } from '@/lib/randomId'
 
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
 import { useErrorBoundary } from '@/components/useErrorBoundary'
 
 import DashboardComponent from '@/dashboard-wip/components/DashboardComponent.vue'

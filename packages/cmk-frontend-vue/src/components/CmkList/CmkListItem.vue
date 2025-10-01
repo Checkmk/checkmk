@@ -8,7 +8,7 @@ import { type VariantProps, cva } from 'class-variance-authority'
 
 import usei18n from '@/lib/i18n'
 
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
 import CmkIconButton from '@/components/CmkIconButton.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 

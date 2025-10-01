@@ -12,7 +12,8 @@ import type { TranslatedString } from '@/lib/i18nString'
 import CmkButton from '@/components/CmkButton.vue'
 import CmkCode from '@/components/CmkCode.vue'
 import CmkDialog from '@/components/CmkDialog.vue'
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
+import type { SimpleIcons } from '@/components/CmkIcon'
 import CmkLinkCard from '@/components/CmkLinkCard.vue'
 import CmkTab from '@/components/CmkTabs/CmkTab.vue'
 import CmkTabContent from '@/components/CmkTabs/CmkTabContent.vue'
@@ -44,7 +45,7 @@ export interface InstallUrl {
   title: TranslatedString
   url: string
   msg: TranslatedString
-  icon?: string
+  icon?: SimpleIcons
 }
 
 const props = defineProps<{

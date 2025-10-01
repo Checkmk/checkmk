@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { onBeforeMount, onUnmounted } from 'vue'
 
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
 import { useErrorBoundary } from '@/components/useErrorBoundary'
 
 import QuickSetupAsync from './QuickSetupAsync.vue'

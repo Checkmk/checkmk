@@ -9,7 +9,8 @@ import { computed } from 'vue'
 
 import type { TranslatedString } from '@/lib/i18nString'
 
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
+import type { SimpleIcons } from '@/components/CmkIcon'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
@@ -27,7 +28,7 @@ const cmkLinkCardVariants = cva('', {
 
 export type CmkLinkCardVariants = VariantProps<typeof cmkLinkCardVariants>
 interface CmkLinkCardProps {
-  iconName?: string | undefined
+  iconName?: SimpleIcons | undefined
   title: TranslatedString
   subtitle?: TranslatedString
   url?: string

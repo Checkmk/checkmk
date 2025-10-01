@@ -12,7 +12,7 @@ import usei18n from '@/lib/i18n'
 import usePersistentRef from '@/lib/usePersistentRef.ts'
 
 import CmkAccordionStepPanelItem from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
 import CmkLinkCard from '@/components/CmkLinkCard.vue'
 import CmkWizard from '@/components/CmkWizard/CmkWizard.vue'
 import CmkWizardButton from '@/components/CmkWizard/CmkWizardButton.vue'

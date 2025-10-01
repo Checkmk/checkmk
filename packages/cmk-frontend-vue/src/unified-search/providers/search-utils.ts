@@ -12,7 +12,7 @@ import type { UnifiedSearchProviderIdentifier } from '@/lib/unified-search/provi
 import type { SearchHistoryService } from '@/lib/unified-search/searchHistory'
 import type { UnifiedSearch } from '@/lib/unified-search/unified-search'
 
-import type { CmkIconProps } from '@/components/CmkIcon.vue'
+import type { CmkIconProps } from '@/components/CmkIcon'
 
 import type {
   FilterOption,
@@ -47,7 +47,9 @@ const query = {
 }
 const shortcuts = new KeyShortcutService(window)
 const shortCutEventIds = ref<string[]>([])
-const callbacks: { [key: string]: { id: string; cb: (...args: any) => void }[] } = {}
+const callbacks: {
+  [key: string]: { id: string; cb: (...args: any) => void }[]
+} = {}
 
 function ensureKey(key: string) {
   if (!callbacks[key]) {
@@ -277,14 +279,9 @@ function mapIcon(topic: string, provider: SearchProviderKeys): CmkIconProps {
     .replace(/ /g, '_')
     .replace(/[^a-zA-Z0-9_]+/g, '')
 
-  let name = topicIconMapping[provider][topic]
+  const name = topicIconMapping[provider][topic]
   if (!name) {
-    if (name !== null) {
-      console.error('topic', topic, 'not found for provider', provider) // keep in to easily find unmapped icons
-    }
-    name = `main-${provider}-active`
-  } else {
-    name = 'topic-'.concat(name)
+    throw new Error(`Icon for topic "${topic}" not found for provider "${provider}"`)
   }
 
   return {

@@ -7,6 +7,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
+import type { SimpleIcons } from '@/components/CmkIcon'
+
 import WidgetButton from '@/dashboard-wip/components/Wizard/components/WidgetButton.vue'
 
 import { Graph } from '../composables/useSelectGraphTypes'
@@ -16,7 +18,7 @@ const { _t } = usei18n()
 type GraphEntry = {
   id: Graph
   label: TranslatedString
-  icon: string
+  icon: SimpleIcons
 }
 
 type GraphDirectory = GraphEntry[]

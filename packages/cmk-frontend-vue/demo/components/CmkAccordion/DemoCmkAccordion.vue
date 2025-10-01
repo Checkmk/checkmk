@@ -12,8 +12,8 @@ import CmkAccordionItem from '@/components/CmkAccordion/CmkAccordionItem.vue'
 import CmkAccordionItemStateIndicator from '@/components/CmkAccordion/CmkAccordionItemStateIndicator.vue'
 import CmkButton from '@/components/CmkButton.vue'
 import CmkDropdown from '@/components/CmkDropdown.vue'
-import type { CmkIconProps } from '@/components/CmkIcon.vue'
-import CmkIcon from '@/components/CmkIcon.vue'
+import type { CmkIconProps } from '@/components/CmkIcon'
+import CmkIcon from '@/components/CmkIcon'
 
 defineProps<{ screenshotMode: boolean }>()
 

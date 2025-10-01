@@ -11,7 +11,7 @@ import { CmkError } from '@/lib/error'
 import usei18n from '@/lib/i18n'
 
 import CmkHtml from '@/components/CmkHtml.vue'
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
 import CmkIconButton from '@/components/CmkIconButton.vue'
 
 import DashboardContentContainer from './DashboardContentContainer.vue'

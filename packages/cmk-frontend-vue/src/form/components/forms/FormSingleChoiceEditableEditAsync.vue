@@ -17,7 +17,7 @@ import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
 import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
 import CmkDialog from '@/components/CmkDialog.vue'
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
 import CmkSpace from '@/components/CmkSpace.vue'
 import { useErrorBoundary } from '@/components/useErrorBoundary'
 

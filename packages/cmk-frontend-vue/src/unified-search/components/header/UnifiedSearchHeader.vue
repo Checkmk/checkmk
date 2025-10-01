@@ -10,7 +10,7 @@ import usei18n from '@/lib/i18n'
 import { staticAssertNever } from '@/lib/typeUtils'
 import { HistoryEntry } from '@/lib/unified-search/searchHistory'
 
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
 import CmkKeyboardKey from '@/components/CmkKeyboardKey.vue'
 
 import type { FilterOption } from '@/unified-search/providers/search-utils.types'

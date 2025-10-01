@@ -14,7 +14,7 @@ import { ref } from 'vue'
 
 import { immediateWatch } from '@/lib/watch'
 
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
 import CmkSpace from '@/components/CmkSpace.vue'
 
 import TopicGrouped from '@/form/components/forms/form_catalog/TopicGrouped.vue'

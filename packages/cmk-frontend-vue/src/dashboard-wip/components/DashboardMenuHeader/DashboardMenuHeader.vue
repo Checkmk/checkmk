@@ -8,7 +8,7 @@ import { ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
 import CmkLabel from '@/components/CmkLabel.vue'
 
 import type { DashboardMetadata } from '@/dashboard-wip/types/dashboard.ts'

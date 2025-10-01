@@ -7,7 +7,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { computed, ref } from 'vue'
 
 import CmkButton from '@/components/CmkButton.vue'
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
+import type { SimpleIcons } from '@/components/CmkIcon'
 
 import QuickSetupStageContentError from './QuickSetupStageContentError.vue'
 import type { QuickSetupStageContent } from './quick_setup_types'
@@ -30,10 +31,10 @@ const filteredActions = computed(() => {
 
 function getButtonConfig(
   variant: 'next' | 'prev' | 'save' | unknown,
-  iconName: string = '',
+  iconName: SimpleIcons | undefined,
   iconRotate: number = 0
 ): {
-  icon: { name: string; rotate: number }
+  icon: { name: SimpleIcons; rotate: number }
 } {
   if (iconName) {
     return { icon: { name: iconName, rotate: iconRotate } }
@@ -51,8 +52,9 @@ function getButtonConfig(
       return {
         icon: { name: 'checkmark', rotate: 0 }
       }
+    default:
+      throw new Error(`Unknown button variant: ${variant}`)
   }
-  return { icon: { name: '', rotate: 0 } }
 }
 
 const invokeAction = (waitLabel: string, action: () => void) => {

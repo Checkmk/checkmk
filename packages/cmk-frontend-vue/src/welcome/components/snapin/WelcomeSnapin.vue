@@ -12,7 +12,7 @@ import usei18n from '@/lib/i18n'
 
 import CmkBadge from '@/components/CmkBadge.vue'
 import CmkButton from '@/components/CmkButton.vue'
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 import { getWelcomeStageInformation } from '@/welcome/components/steps/utils.ts'

@@ -10,7 +10,7 @@ import { type ComputedRef, computed } from 'vue'
 import usei18n, { untranslated } from '@/lib/i18n'
 
 import CmkDropdown from '@/components/CmkDropdown.vue'
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
 
 import FormAutocompleter from '@/form/private/FormAutocompleter.vue'
 

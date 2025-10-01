@@ -6,14 +6,16 @@
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
+import type { SimpleIcons } from '@/components/CmkIcon'
+
 const { _t } = usei18n()
 
 export interface WorkflowItem {
   title: TranslatedString
   subtitle: TranslatedString
 
-  icon: string
-  icon_emblem?: string | undefined
+  icon: SimpleIcons
+  icon_emblem?: SimpleIcons | undefined
 }
 
 export const dashboardWidgetWorkflows: Record<string, WorkflowItem> = {

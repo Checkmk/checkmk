@@ -6,11 +6,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { TranslatedString } from '@/lib/i18nString'
 
-import CmkIcon from '@/components/CmkIcon.vue'
+import CmkIcon from '@/components/CmkIcon'
+import type { SimpleIcons } from '@/components/CmkIcon'
 import CmkLabel from '@/components/CmkLabel.vue'
 
 interface WidgetButtonProps {
-  icon: string
+  icon: SimpleIcons
   label: TranslatedString
   disabled?: boolean
   selected?: boolean

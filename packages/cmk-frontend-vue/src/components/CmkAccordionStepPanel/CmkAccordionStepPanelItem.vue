@@ -12,7 +12,7 @@ import CmkAccordionItem from '../CmkAccordion/CmkAccordionItem.vue'
 import CmkAccordionItemStateIndicator from '../CmkAccordion/CmkAccordionItemStateIndicator.vue'
 import CmkBadge from '../CmkBadge.vue'
 import CmkChip from '../CmkChip.vue'
-import CmkIcon from '../CmkIcon.vue'
+import CmkIcon from '../CmkIcon'
 import CmkHeading from '../typography/CmkHeading.vue'
 
 export interface CmkAccordionStepPanelItemProps {

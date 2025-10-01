@@ -39621,9 +39621,6 @@ msgstr "フォルダ内の特定のファイルを監視する"
 msgid "Monitor temporary tablespace"
 msgstr "一時表領域を監視する"
 
-msgid "Monitor the collector"
-msgstr "コレクターの監視"
-
 msgid ""
 "Monitor the number of issues for given projects and their workflows. This "
 "results in a service for each project with the number of issues per workflow."
@@ -84004,6 +84001,9 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠Robotmk Core MKP がインストールされているため<b>利用できません</b>"
+
+#~ msgid "Monitor the collector"
+#~ msgstr "コレクターの監視"
 
 #~ msgid "Assignment of services to contact groups"
 #~ msgstr "連絡先グループへのサービスの割り当て"

@@ -40667,9 +40667,6 @@ msgstr "Spezifische Dateien im Verzeichnis überwachen"
 msgid "Monitor temporary tablespace"
 msgstr "Temporären Tablespace überwachen"
 
-msgid "Monitor the collector"
-msgstr "Den Kollektor überwachen"
-
 msgid ""
 "Monitor the number of issues for given projects and their workflows. This "
 "results in a service for each project with the number of issues per workflow."
@@ -86581,6 +86578,9 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b>, da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid "Monitor the collector"
+#~ msgstr "Den Kollektor überwachen"
 
 #~ msgid "Assignment of services to contact groups"
 #~ msgstr "Zuweisung von Services zu Kontaktgruppen"

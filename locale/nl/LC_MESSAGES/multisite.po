@@ -42142,10 +42142,6 @@ msgstr "Bewaak specifieke bestanden in map"
 msgid "Monitor temporary tablespace"
 msgstr "Bewaak tijdelijke Tafelspace"
 
-#, fuzzy
-msgid "Monitor the collector"
-msgstr "Gestopte verzamelaars"
-
 msgid ""
 "Monitor the number of issues for given projects and their workflows. This "
 "results in a service for each project with the number of issues per workflow."
@@ -89602,6 +89598,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy
+#~ msgid "Monitor the collector"
+#~ msgstr "Gestopte verzamelaars"
 
 #~ msgid "Assignment of services to contact groups"
 #~ msgstr "Toewijzing van diensten aan contactgroepen"

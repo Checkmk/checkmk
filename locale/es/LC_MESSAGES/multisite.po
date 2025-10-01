@@ -42472,10 +42472,6 @@ msgstr "Supervisar archivos específicos en la carpeta"
 msgid "Monitor temporary tablespace"
 msgstr "Supervisar el espacio de tablas temporal"
 
-#, fuzzy
-msgid "Monitor the collector"
-msgstr "Colectores detenidos"
-
 msgid ""
 "Monitor the number of issues for given projects and their workflows. This "
 "results in a service for each project with the number of issues per workflow."
@@ -90313,6 +90309,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Usar SSL para la conexión."
+
+#, fuzzy
+#~ msgid "Monitor the collector"
+#~ msgstr "Colectores detenidos"
 
 #~ msgid "Assignment of services to contact groups"
 #~ msgstr "Asignación de servicios a grupos de contactos"

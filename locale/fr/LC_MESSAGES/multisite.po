@@ -42502,10 +42502,6 @@ msgstr "Surveiller des fichiers spécifiques dans un dossier"
 msgid "Monitor temporary tablespace"
 msgstr "Surveiller l'espace de table temporaire"
 
-#, fuzzy
-msgid "Monitor the collector"
-msgstr "Collecteurs stoppés"
-
 msgid ""
 "Monitor the number of issues for given projects and their workflows. This "
 "results in a service for each project with the number of issues per workflow."
@@ -90474,6 +90470,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
+
+#, fuzzy
+#~ msgid "Monitor the collector"
+#~ msgstr "Collecteurs stoppés"
 
 #~ msgid "Assignment of services to contact groups"
 #~ msgstr "Attribution de services à des groupes de contacts"

@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 
 from cmk.agent_receiver.relay.api.routers.tasks.handlers.activate_config import (
@@ -17,18 +19,19 @@ def test_process_activate_config(
     relays_repository: RelaysRepository,
     tasks_repository: TasksRepository,
     test_user: InternalAuth,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # arrange
-    # let's mock _get_config_serial to avoid filesystem dependency
-    monkeypatch.setattr(activate_config_handler, "_get_config_serial", lambda: "FAKE_SERIAL_1")
 
     # Register two relays
     relay_id_1 = relays_repository.add_relay(test_user, alias="test-relay-1")
     relay_id_2 = relays_repository.add_relay(test_user, alias="test-relay-2")
 
     # act
-    activate_config_handler.process()
+    with patch(
+        "cmk.agent_receiver.relay.api.routers.tasks.handlers.activate_config.retrieve_config_serial",
+        return_value="FAKE_SERIAL_1",
+    ):
+        activate_config_handler.process()
 
     # assert
     tasks_relay_1_enqueued = tasks_repository.get_tasks(relay_id_1)

@@ -241,6 +241,7 @@ class VSTransformer(cst.CSTTransformer):
             "TimeSpan",
             "SimpleLevels",
             "Integer",
+            "Percentage",
             "Float",
             "MonitoringState",
         }
@@ -267,7 +268,7 @@ class VSTransformer(cst.CSTTransformer):
             "String",
             "BooleanChoice",
             "FixedValue",
-            "Password",
+            "Percentage",
             "Password",
             "Dictionary",
             "TimeSpan",
@@ -333,6 +334,8 @@ class VSTransformer(cst.CSTTransformer):
                     convert_call = self._make_absolute_date(updated_node)
                 case "Integer":
                     convert_call = self._make_integer(updated_node)
+                case "Percentage":
+                    convert_call = self._make_percentage(updated_node)
                 case "Float":
                     convert_call = self._make_float(updated_node)
                 case "MonitoringState":
@@ -348,7 +351,7 @@ class VSTransformer(cst.CSTTransformer):
         return updated_node
 
     def _make_multiline_text(self, old: cst.Call) -> cst.Call:
-        args = self._replace_allow_empty_args(old.args, "Text area can not be empty")
+        args = self._add_custom_validators(old.args, "Text area can not be empty")
         # Unable not migrate the size of the TextArea
         new_args = [
             arg for arg in args if arg.keyword and arg.keyword.value not in ("cols", "rows")
@@ -554,7 +557,7 @@ class VSTransformer(cst.CSTTransformer):
         return cst.Call(func=cst.Name(class_name), args=old.args)
 
     def _make_list(self, old: cst.Call) -> cst.Call:
-        old_args = self._replace_allow_empty_args(old.args, "Select at least one element")
+        old_args = self._add_custom_validators(old.args, "Select at least one element")
         new_args: list[cst.Arg] = []
         for arg in old_args:
             assert arg.keyword, "All args should have a keyword"
@@ -606,12 +609,13 @@ class VSTransformer(cst.CSTTransformer):
         """Checks if the args contain a keyword argument with the specified key."""
         return any(cst.ensure_type(arg.keyword, cst.Name).value == key for arg in args)
 
-    def _replace_allow_empty_args(
+    def _add_custom_validators(
         self, old_args: Sequence[cst.Arg], fallback_text: str = ""
     ) -> list[cst.Arg]:
         new_args: list[cst.Arg] = []
         allow_empty = True
         empty_text_arg: list[cst.Arg] = []
+        minvalue, maxvalue = None, None
         for arg in old_args:
             assert arg.keyword, "All args should have a keyword"
             if arg.keyword.value == "allow_empty":
@@ -621,24 +625,52 @@ class VSTransformer(cst.CSTTransformer):
                 allow_empty = False
                 empty_text_arg = [arg]
                 continue
+            if arg.keyword.value == "minvalue":
+                minvalue = arg.value
+                continue
+            if arg.keyword.value == "maxvalue":
+                maxvalue = arg.value
+                continue
             new_args.append(arg)
 
+        custom_validators = []
+
         if not allow_empty:
-            expression = f"[validators.LengthInRange(min_value=1%s)]" % (
-                f", error_msg=Message('{fallback_text}')"
-                if not empty_text_arg
-                else f", error_msg={cst.Module([]).code_for_node(empty_text_arg[0].value)}"
+            custom_validators.append(
+                "validators.LengthInRange(min_value=1%s)"
+                % (
+                    f", error_msg=Message('{fallback_text}')"
+                    if not empty_text_arg
+                    else f", error_msg={cst.Module([]).code_for_node(empty_text_arg[0].value)}"
+                )
             )
+
+        if minvalue is not None or maxvalue is not None:
+            custom_validators.append(
+                "validators.NumberInRange(%s%s%s%s)"
+                % (
+                    f"min_value={cst.Module([]).code_for_node(minvalue)}"
+                    if minvalue is not None
+                    else "",
+                    ", " if minvalue is not None and maxvalue is not None else "",
+                    f"max_value={cst.Module([]).code_for_node(maxvalue)}"
+                    if maxvalue is not None
+                    else "",
+                    f", error_msg=Message('{fallback_text}')" if fallback_text else "",
+                )
+            )
+
+        if custom_validators:
             new_args.append(
                 cst.Arg(
-                    cst.parse_expression(expression),
+                    cst.parse_expression(f"[{', '.join(custom_validators)}]"),
                     cst.Name("custom_validate"),
                 )
             )
         return new_args
 
     def _make_list_choice(self, old: cst.Call) -> cst.Call:
-        new_args = self._replace_allow_empty_args(old.args)
+        new_args = self._add_custom_validators(old.args)
         for arg in old.args:
             assert arg.keyword, "All args should have a keyword"
             if arg.keyword.value == "choices":
@@ -669,37 +701,65 @@ class VSTransformer(cst.CSTTransformer):
 
     def _extract_title_from_formspec(self, form_spec: cst.Call) -> cst.Call:
         """Extract the title from the formspec, if it exists."""
-        for arg in form_spec.args:
-            assert arg.keyword, "All args should have a keyword"
-            if arg.keyword.value == "title":
-                return cst.ensure_type(arg.value, cst.Call)
-        raise ValueError("FormSpec has no title")
+        try:
+            for arg in form_spec.args:
+                if not arg.keyword:
+                    raise ValueError(f"arg has no keyword {arg}")
+                if arg.keyword.value == "title":
+                    return cst.ensure_type(arg.value, cst.Call)
+            raise ValueError("FormSpec has no title")
+        except ValueError:
+            pass
+        return cst.Call(func=cst.Name("Title"), args=[cst.Arg(cst.SimpleString("'MISSING TITLE'"))])
 
     def _make_cascading_single_choice_from_alternative(self, old: cst.Call) -> cst.Call:
         if not use_unstable_api:
             warnings.append(
                 f"Unstable/unofficial API required for: CascadingSingleChoice from Alternative in {cst.Module([]).code_for_node(old)}"
             )
+
+        old_args = self._drop_args(old.args, ("show_alternative_title"))
         new_args: list[cst.Arg] = []
-        for arg in old.args:
+        for arg in old_args:
             assert arg.keyword, "All args should have a keyword"
             if arg.keyword.value == "elements":
                 new_elements: list[cst.Element] = []
-                if isinstance(arg.value, cst.Call):
-                    warnings.append("'elements' field in Alternative is a callable")
+                if isinstance(arg.value, (cst.Call, cst.Name, cst.BinaryOperation)):
+                    warnings.append(
+                        f"'elements' field in Alternative is unconvertable {cst.Module([]).code_for_node(arg)}. type of arg.value {type(arg.value)}"
+                    )
                     new_args.append(arg)
                     continue
 
+                failed_conversion = False
                 for idx, el in enumerate(cst.ensure_type(arg.value, cst.List).elements):
-                    parameter_form = cst.ensure_type(el.value, cst.Call)
-                    new_elements.append(
-                        self._make_cascading_single_choice_element(
-                            cst.SimpleString(f"alternative_{idx}"),
-                            self._extract_title_from_formspec(parameter_form).args,
-                            parameter_form,
+                    if not isinstance(el.value, cst.Call):
+                        warnings.append(
+                            f"one element field in Alternative is unconvertable {cst.Module([]).code_for_node(arg)}. type of arg.value {type(el.value)}"
                         )
-                    )
-                new_args.append(cst.Arg(cst.List(new_elements), cst.Name("elements")))
+                        failed_conversion = True
+                        break
+                    parameter_form = cst.ensure_type(el.value, cst.Call)
+                    try:
+                        new_elements.append(
+                            self._make_cascading_single_choice_element(
+                                cst.SimpleString(f"'alternative_{idx}'"),
+                                self._extract_title_from_formspec(parameter_form).args,
+                                parameter_form,
+                            )
+                        )
+                    except (cst.CSTValidationError, TypeError) as e:
+                        import traceback
+
+                        traceback.print_exc()
+                        warnings.append(
+                            f"one element field in Alternative is unconvertable {cst.Module([]).code_for_node(el)}. Error: {e}"
+                        )
+                        failed_conversion = True
+                        break
+
+                if not failed_conversion:
+                    new_args.append(cst.Arg(cst.List(new_elements), cst.Name("elements")))
             else:
                 new_args.append(arg)
 
@@ -899,7 +959,7 @@ class VSTransformer(cst.CSTTransformer):
         return cst.Call(func=cst.Name("SingleChoice"), args=new_args)
 
     def _make_string(self, old: cst.Call) -> cst.Call:
-        args = self._replace_allow_empty_args(old.args, "Text field can not be empty")
+        args = self._add_custom_validators(old.args, "Text field can not be empty")
         args = self._drop_args(args, ["size"])
         return cst.Call(func=cst.Name("String"), args=args)
 
@@ -976,7 +1036,7 @@ class VSTransformer(cst.CSTTransformer):
         return cst.Call(func=cst.Name("Age"), args=new_args)
 
     def _make_password(self, old: cst.Call) -> cst.Call:
-        old_args = self._replace_allow_empty_args(old.args, "Password field can not be empty")
+        old_args = self._add_custom_validators(old.args, "Password field can not be empty")
         old_args = self._drop_args(old_args, ["size"])
         return cst.Call(
             func=cst.Name("Password"),
@@ -987,7 +1047,7 @@ class VSTransformer(cst.CSTTransformer):
         )
 
     def _make_float(self, old: cst.Call) -> cst.Call:
-        old_args = self._replace_allow_empty_args(old.args, "Float field can not be empty")
+        old_args = self._add_custom_validators(old.args, "Float field can not be empty")
         old_args = self._drop_args(old_args, ["size", "allow_int"])
         new_args: list[cst.Arg] = []
         for arg in old_args:
@@ -1003,8 +1063,18 @@ class VSTransformer(cst.CSTTransformer):
             args=new_args,
         )
 
+    def _try_strip_i18n(self, old: cst.BaseExpression) -> cst.SimpleString:
+        if isinstance(old, cst.SimpleString):
+            return old
+        if isinstance(old, cst.Call):
+            return cst.ensure_type(old.args[0].value, cst.SimpleString)
+        raise ValueError(f"Unexpected type for i18n stripping {self._format_code(old)}")
+
+    def _format_code(self, node: cst.CSTNode) -> str:
+        return cst.Module([]).code_for_node(node)
+
     def _make_service_state(self, old: cst.Call) -> cst.Call:
-        old_args = self._replace_allow_empty_args(old.args, "Service State field can not be empty")
+        old_args = self._add_custom_validators(old.args, "Service State field can not be empty")
         new_args: list[cst.Arg] = []
         for arg in old_args:
             assert arg.keyword, "All args should have a keyword"
@@ -1019,15 +1089,34 @@ class VSTransformer(cst.CSTTransformer):
             args=new_args,
         )
 
+    def _make_percentage(self, old: cst.Call) -> cst.Call:
+        old_args = self._add_custom_validators(old.args, "Percentage field can not be empty")
+        old_args = self._drop_args(old_args, ["size", "unit"])
+        new_args: list[cst.Arg] = []
+        for arg in old_args:
+            assert arg.keyword, "All args should have a keyword"
+            match arg.keyword.value:
+                case _:
+                    new_args.append(arg)
+
+        return cst.Call(
+            func=cst.Name("Percentage"),
+            args=new_args,
+        )
+
     def _make_integer(self, old: cst.Call) -> cst.Call:
-        old_args = self._replace_allow_empty_args(old.args, "Integer field can not be empty")
+        old_args = self._add_custom_validators(old.args, "Integer field can not be empty")
         old_args = self._drop_args(old_args, ["size"])
         new_args: list[cst.Arg] = []
         for arg in old_args:
             assert arg.keyword, "All args should have a keyword"
             match arg.keyword.value:
                 case "unit":
-                    new_args.append(cst.Arg(keyword=cst.Name("unit_symbol"), value=arg.value))
+                    new_args.append(
+                        cst.Arg(
+                            keyword=cst.Name("unit_symbol"), value=self._try_strip_i18n(arg.value)
+                        )
+                    )
                 case _:
                     new_args.append(arg)
 

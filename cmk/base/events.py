@@ -528,8 +528,6 @@ def event_match_rule(
                 rule,
                 context,
                 define_servicegroups=define_servicegroups,
-                _all_timeperiods=all_timeperiods,
-                _analyse=analyse,
             ),
             event_match_contacts,
             event_match_contactgroups,
@@ -539,7 +537,7 @@ def event_match_rule(
             event_match_exclude_services,
             event_match_plugin_output,
             event_match_checktype,
-            event_match_timeperiod,
+            lambda rule, context, analyse, all_timeperiods: event_match_timeperiod(rule, analyse),
             event_match_servicelevel,
             event_match_hostlabels,
             event_match_servicelabels,
@@ -730,8 +728,6 @@ def event_match_exclude_servicegroups_regex(
     rule: EventRule,
     context: EventContext,
     define_servicegroups: Mapping[str, str],
-    _all_timeperiods: TimeperiodSpecs,
-    _analyse: bool,
 ) -> str | None:
     return _event_match_exclude_servicegroups(
         rule, context, define_servicegroups=define_servicegroups, is_regex=True
@@ -974,20 +970,24 @@ def event_match_checktype(
 
 def event_match_timeperiod(
     rule: EventRule,
-    _context: EventContext,
     analyse: bool,
-    _all_timeperiods: TimeperiodSpecs,
 ) -> str | None:
     # don't test on notification tests, in that case this is done within
     # notify.rbn_match_timeperiod
     if analyse:
         return None
 
-    if "match_timeperiod" in rule:
-        timeperiod = rule["match_timeperiod"]
-        if timeperiod != "24X7" and not check_timeperiod(timeperiod):
-            return "The timeperiod '%s' is currently not active." % timeperiod
-    return None
+    if "match_timeperiod" not in rule:
+        return None
+
+    timeperiod = rule["match_timeperiod"]
+    if timeperiod == "24X7":
+        return None
+
+    if check_timeperiod(timeperiod):
+        return None
+
+    return "The timeperiod '%s' is currently not active." % timeperiod
 
 
 def event_match_servicelevel(

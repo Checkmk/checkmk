@@ -668,6 +668,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.inventory",
         "cmk.inventory_ui",
         "cmk.livestatus_client",
+        "cmk.metric_backend",
         "cmk.piggyback",
         "cmk.server_side_calls_backend",
         "cmk.shared_typing",
@@ -922,6 +923,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     Component("cmk.cce.metric_backend.dcd"): _allow(
         "cmk.ccc",
         "cmk.cee.dcd",
+        "cmk.metric_backend",
         "cmk.utils",
     ),
     Component("cmk.cce.metric_backend.gui"): _allow(
@@ -929,6 +931,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.ccc",
         "cmk.fields",
         "cmk.gui",
+        "cmk.metric_backend",
     ),
     Component("omdlib"): _allow(
         *PACKAGE_CCC,

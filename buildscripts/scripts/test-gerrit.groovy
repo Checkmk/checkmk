@@ -139,9 +139,10 @@ def main() {
                     // use another switch statement to apply k8s specific settings
                     // to be removed with CMK-25972
                     switch("${item.NAME}") {
-                        case "Agent Plugin Unit Tests": // docker in docker
-                        case "Groovy Lint":             // npm not shipped with "klausi-standard-weak"
-                        case "Package cmk-frontend":    // npm not shipped with "klausi-standard-weak"
+                        case "Agent Plugin Unit Tests":     // docker in docker
+                        case "Groovy Lint":                 // npm not shipped with "klausi-standard-weak"
+                        case "Package cmk-frontend":        // npm not shipped with "klausi-standard-weak"
+                        case "Package cmk-agent-receiver":  // Tries to start docker containers
                             relative_job_name = "${branch_base_folder}/cv/test-gerrit-single";
                             break;
                         default:

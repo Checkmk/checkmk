@@ -1,0 +1,26 @@
+rules:
+    -   id: tarfile-open-read
+        message: "tarfile.open() or TarFile.open() in read mode should not be directly used. Use CheckmkTarArchive.from_(bytes|buffer|path) mehod instead"
+        severity: ERROR
+        languages: [ python ]
+        patterns:
+            - patterns:
+                -   pattern-either:
+                        -   pattern: $TF.open($FILENAME)
+                        -   pattern: $TF.open(fileobj=$FILEOBJ)
+                        -   patterns:
+                            -   pattern-inside: $TF.open(...)
+                            -   pattern-regex: (mode=)?["']r([:|](gz|bz2|xz|\*))?["']
+            -   metavariable-regex:
+                    metavariable: $TF
+                    regex: (tarfile|TarFile|tf)$
+        metadata:
+            category: security
+            technology: [ python, tarfile ]
+        paths:
+            exclude:
+                - "mkp_tool"
+                - "packages/**/tests"
+                - "**/tests"
+                - "**/testlib"
+                - "tests"

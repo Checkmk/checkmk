@@ -181,6 +181,19 @@ class ArchiveSettings(TypedDict, total=False):
 
 
 class CheckmkTarArchive:
+    """Safely read, validate, and extract tar.gz archives with strict security limits.
+
+    Prevents path traversal, symlink attacks, and oversized archives.
+    Supports streaming (`r|gz`) and indexed (`r:gz`) modes for flexible performance.
+    Use context-managed helpers (`from_bytes`, `from_buffer`, `from_path`) for safe access.
+    Raises NotAValidArchive, UnpackedArchiveTooLargeError, or SecurityViolation on failure.
+
+    Prefer streaming mode over indexed mode.
+    Caution: in streaming mode there is a cursor. when cursor reaches EOF - archive must be reopened
+    ro reset cursor to the beginning of the archive.
+    Indexed mode - loads the archive fully into the RAM.
+    """
+
     RAW_MAX_SIZE_LIMIT_BYTES: Final[int] = 1024**3  # 1024 MB
     ARCHIVE_MAX_SIZE_LIMIT_BYTES: Final[int] = 1024**3  # 1024 MB
     ARCHIVE_MAX_SIZE_LIMIT_BYTES_PER_FILE: Final[int] = 1024**2 * 128  # 128 MB

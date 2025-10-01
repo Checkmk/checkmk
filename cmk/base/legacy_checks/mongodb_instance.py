@@ -10,31 +10,42 @@
 # address 10.1.2.4
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-check_info = {}
+
+def inventory_mongodb_instance(section: StringTable) -> DiscoveryResult:
+    yield Service()
 
 
-def inventory_mongodb_instance(info):
-    return [(None, None)]
-
-
-def check_mongodb_instance(_no_item, _no_params, info):
-    for status, messg in info:
+def check_mongodb_instance(section: StringTable) -> CheckResult:
+    for status, messg in section:
         if status == "error":
-            yield 2, messg
+            yield Result(state=State.CRIT, summary=messg)
         else:
-            yield 0, f"{status.title()}: {messg}"
+            yield Result(state=State.OK, summary=f"{status.title()}: {messg}")
 
 
 def parse_mongodb_instance(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["mongodb_instance"] = LegacyCheckDefinition(
+agent_section_mongodb_instance = AgentSection(
     name="mongodb_instance",
     parse_function=parse_mongodb_instance,
+)
+
+
+check_plugin_mongodb_instance = CheckPlugin(
+    name="mongodb_instance",
     service_name="MongoDB Instance",
     discovery_function=inventory_mongodb_instance,
     check_function=check_mongodb_instance,

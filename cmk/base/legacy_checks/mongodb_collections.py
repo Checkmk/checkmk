@@ -10,39 +10,43 @@
 # json
 
 
-# mypy: disable-error-code="var-annotated"
-
 import json
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import render
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 from cmk.plugins.lib.mongodb import parse_date
 
-check_info = {}
+type Section = Mapping[str, Any]
 
 
-def parse_mongodb_collections(string_table):
+def parse_mongodb_collections(string_table: StringTable) -> Section:
     if string_table:
-        return json.loads(str(string_table[0][0]))
+        return dict(json.loads(str(string_table[0][0])))
     return {}
 
 
-def inventory_mongodb_collections(databases_dict):
-    """
-    one service per collection
-    :param databases_dict:
-    :return:
-    """
-    db_coll_list = []
-    for db_name in databases_dict:
-        db_coll_list += [
-            (f"{db_name}.{coll_name}", {})
-            for coll_name in databases_dict.get(db_name).get("collstats", [])
-        ]
-    return db_coll_list
+def inventory_mongodb_collections(section: Section) -> DiscoveryResult:
+    for db_name, db in section.items():
+        yield from (Service(item=f"{db_name}.{coll_name}") for coll_name in db.get("collstats", []))
 
 
-def check_mongodb_collections(item, params, databases_dict):
+def check_mongodb_collections(
+    item: str,
+    params: Mapping[str, Any],
+    section: Section,
+) -> CheckResult:
     """
 
     :param item:
@@ -51,9 +55,7 @@ def check_mongodb_collections(item, params, databases_dict):
     :return:
     """
     database_name, collection_name = _mongodb_collections_split_namespace(item)
-    collection_stats = (
-        databases_dict.get(database_name, {}).get("collstats", {}).get(collection_name, {})
-    )
+    collection_stats = section.get(database_name, {}).get("collstats", {}).get(collection_name, {})
 
     for key, label in (
         ("size", "Uncompressed size in memory"),
@@ -76,23 +78,26 @@ def check_mongodb_collections(item, params, databases_dict):
             levels = (levels[0] * 1024, levels[1] * 1024)  # KByte to bytes
 
         perfdata = _mongodb_collections_get_perfdata_key(key)
-        yield check_levels(
-            value, perfdata, levels, human_readable_func=render.bytes, infoname=label
+        yield from check_levels(
+            value,
+            metric_name=perfdata,
+            levels_upper=levels,
+            render_func=render.bytes,
+            label=label,
         )
 
     # check number of indexes per collection (max is 64 indexes)
     try:
-        yield check_levels(
+        yield from check_levels(
             int(collection_stats.get("nindexes")),
-            None,
-            (62, 65),
-            human_readable_func=lambda v: "%d" % v,
-            infoname="Number of indexes",
+            levels_upper=(62, 65),
+            render_func=str,
+            label="Number of indexes",
         )
     except (TypeError, ValueError):
         pass
 
-    yield 0, _mongodb_collections_long_output(collection_stats)
+    yield Result(state=State.OK, notice=_mongodb_collections_long_output(collection_stats))
 
 
 def _mongodb_collections_split_namespace(namespace):
@@ -170,7 +175,7 @@ def _mongodb_collections_long_output(data):
             f"-- Index '{index[0]}' used {index[1]} times since {timestamp_for_humans}"
         )
 
-    return "\n" + "\n".join(long_output)
+    return "\n".join(long_output)
 
 
 def _mongodb_collections_get_indexes_as_list(data):
@@ -218,9 +223,14 @@ def _mongodb_collections_get_as_int(data, key):
         return "n/a"
 
 
-check_info["mongodb_collections"] = LegacyCheckDefinition(
+agent_section_mongodb_collections = AgentSection(
     name="mongodb_collections",
     parse_function=parse_mongodb_collections,
+)
+
+
+check_plugin_mongodb_collections = CheckPlugin(
+    name="mongodb_collections",
     service_name="MongoDB Collection: %s",
     discovery_function=inventory_mongodb_collections,
     check_function=check_mongodb_collections,

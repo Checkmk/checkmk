@@ -14,41 +14,53 @@
 # currentQueue writers 5
 
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import StringTable
+from collections.abc import Mapping
+from typing import Any
 
-check_info = {}
+from cmk.agent_based.v1 import check_levels  # we can only use v2 after migrating the ruleset!
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    StringTable,
+)
 
 
-def inventory_mongodb_locks(info):
-    return [(None, {})]
+def inventory_mongodb_locks(section: StringTable) -> DiscoveryResult:
+    yield Service()
 
 
-def check_mongodb_locks(_no_item, params, info):
-    for line in info:
+def check_mongodb_locks(params: Mapping[str, Any], section: StringTable) -> CheckResult:
+    for line in section:
         what, name, count = line
-        count = int(count)
         param_name = "clients" if what.startswith("active") else "queue"
         metric_name = f"{param_name}_{name}_locks"
 
-        if metric_name in params:
-            warn, crit = params[metric_name]
-            yield check_levels(
-                count, metric_name, (warn, crit), infoname=f"{param_name.title()}-{name.title()}"
-            )
-        else:
-            yield 0, f"{param_name.title()}-{name.title()}: {count}", [(metric_name, count)]
+        yield from check_levels(
+            int(count),
+            metric_name=metric_name,
+            levels_upper=params[metric_name] if metric_name in params else None,
+            label=f"{param_name.title()}-{name.title()}",
+        )
 
 
 def parse_mongodb_locks(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["mongodb_locks"] = LegacyCheckDefinition(
+agent_section_mongodb_locks = AgentSection(
     name="mongodb_locks",
     parse_function=parse_mongodb_locks,
+)
+
+
+check_plugin_mongodb_locks = CheckPlugin(
+    name="mongodb_locks",
     service_name="MongoDB Locks",
     discovery_function=inventory_mongodb_locks,
     check_function=check_mongodb_locks,
     check_ruleset_name="mongodb_locks",
+    check_default_parameters={},
 )

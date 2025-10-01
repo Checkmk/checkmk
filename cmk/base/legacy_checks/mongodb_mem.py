@@ -18,17 +18,26 @@
 # heap_usage_bytes 65501032
 
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import render
-
-check_info = {}
+from cmk.agent_based.v1 import check_levels  # we can only use v2 after migrating the ruleset!
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 Section = Mapping[str, str | int]
 
 
-def parse_mongodb_mem(string_table):
+def parse_mongodb_mem(string_table: StringTable) -> Section:
     parsed: dict[str, str | int] = {}
     for line in string_table:
         key, value = line[0], " ".join(line[1:])
@@ -39,38 +48,43 @@ def parse_mongodb_mem(string_table):
     return parsed
 
 
-def discover_mongodb_mem(section: Section) -> Iterable[tuple[None, dict]]:
+def discover_mongodb_mem(section: Section) -> DiscoveryResult:
     if section:
-        yield None, {}
+        yield Service()
 
 
-def check_mongodb_mem(_no_item, params, parsed):
+def check_mongodb_mem(params: Mapping[str, Any], section: Any) -> CheckResult:
     for key in ("resident", "virtual", "mapped"):
-        if key in parsed:  # 'mapped' only for the MMAPv1 storage engine, deprecated with 4x
-            value_bytes = parsed[key] * 1024**2
-            levels = params.get("%s_levels" % key, (None, None))
-            yield check_levels(
+        if key in section:  # 'mapped' only for the MMAPv1 storage engine, deprecated with 4x
+            value_bytes = section[key] * 1024**2
+            yield from check_levels(
                 value_bytes,
-                "process_%s_size" % key,
-                levels,
-                human_readable_func=render.bytes,
-                infoname="%s usage" % key.title(),
+                metric_name="process_%s_size" % key,
+                levels_upper=params.get("%s_levels" % key),
+                render_func=render.bytes,
+                label="%s usage" % key.title(),
             )
 
     # MongoDB doc: If virtual value is significantly larger than mapped (e.g. 3 or more times),
     #              this may indicate a memory leak.
-    if parsed.get("mapped"):  # present, non-zero
-        virt_mapped_factor = parsed["virtual"] / float(parsed["mapped"])
+    if section.get("mapped"):  # present, non-zero
+        virt_mapped_factor = section["virtual"] / float(section["mapped"])
         if virt_mapped_factor >= 3:
             textfmt = "Virtual size is %.1f times the mapped size (possible memory leak)"
-            yield 1, textfmt % virt_mapped_factor
+            yield Result(state=State.WARN, summary=textfmt % virt_mapped_factor)
 
 
-check_info["mongodb_mem"] = LegacyCheckDefinition(
+agent_section_mongodb_mem = AgentSection(
     name="mongodb_mem",
     parse_function=parse_mongodb_mem,
+)
+
+
+check_plugin_mongodb_mem = CheckPlugin(
+    name="mongodb_mem",
     service_name="Memory used MongoDB",
     discovery_function=discover_mongodb_mem,
     check_function=check_mongodb_mem,
     check_ruleset_name="mongodb_mem",
+    check_default_parameters={},
 )

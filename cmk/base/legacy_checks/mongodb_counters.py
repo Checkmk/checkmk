@@ -7,33 +7,43 @@
 
 
 import time
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import get_rate, get_value_store
+from cmk.agent_based.v2 import (
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_rate,
+    get_value_store,
+    Service,
+)
 
-check_info = {}
+
+def inventory_mongodb_counters(section: Any) -> DiscoveryResult:
+    yield Service(item="Operations")
+    if "opcountersRepl" in section:
+        yield Service(item="Replica Operations")
 
 
-def inventory_mongodb_counters(parsed):
-    yield "Operations", None
-    if "opcountersRepl" in parsed:
-        yield "Replica Operations", None
-
-
-def check_mongodb_counters(item, _no_params, parsed):
+def check_mongodb_counters(item: str, section: Any) -> CheckResult:
     item_map = {"Operations": "opcounters", "Replica Operations": "opcountersRepl"}
     real_item_name = item_map.get(item)
-    data = parsed.get(real_item_name)
-    if not data:
+
+    if (data := section.get(real_item_name)) is None:
         return
 
     now = time.time()
     for what, value in data.items():
-        what_rate = get_rate(get_value_store(), what, now, value, raise_overflow=True)
-        yield 0, f"{what.title()}: {what_rate:.2f}/s", [("%s_ops" % what, what_rate)]
+        yield from check_levels(
+            get_rate(get_value_store(), what, now, value, raise_overflow=True),
+            metric_name=f"{what}_ops",
+            render_func=lambda x: f"{x:.2f}/s",
+            label=what.title(),
+        )
 
 
-check_info["mongodb_counters"] = LegacyCheckDefinition(
+check_plugin_mongodb_counters = CheckPlugin(
     name="mongodb_counters",
     service_name="MongoDB Counters %s",
     discovery_function=inventory_mongodb_counters,

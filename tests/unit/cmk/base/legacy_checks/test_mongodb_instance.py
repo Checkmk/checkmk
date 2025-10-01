@@ -11,6 +11,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import Result, Service, State
 from cmk.base.legacy_checks.mongodb_instance import (
     check_mongodb_instance,
     inventory_mongodb_instance,
@@ -28,17 +29,16 @@ from cmk.base.legacy_checks.mongodb_instance import (
                 ["version", "3.0.4"],
                 ["pid", "1999"],
             ],
-            [(None, None)],
+            [Service()],
         ),
     ],
 )
 def test_inventory_mongodb_instance(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
     """Test discovery function for mongodb_instance check."""
     parsed = parse_mongodb_instance(string_table)
-    result = list(inventory_mongodb_instance(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert list(inventory_mongodb_instance(parsed)) == expected_discoveries
 
 
 @pytest.mark.parametrize(
@@ -54,10 +54,10 @@ def test_inventory_mongodb_instance(
                 ["pid", "1999"],
             ],
             [
-                (0, "Mode: Primary"),
-                (0, "Address: idbv0068.ww-intern.de:27017"),
-                (0, "Version: 3.0.4"),
-                (0, "Pid: 1999"),
+                Result(state=State.OK, summary="Mode: Primary"),
+                Result(state=State.OK, summary="Address: idbv0068.ww-intern.de:27017"),
+                Result(state=State.OK, summary="Version: 3.0.4"),
+                Result(state=State.OK, summary="Pid: 1999"),
             ],
         ),
     ],
@@ -67,5 +67,5 @@ def test_check_mongodb_instance(
 ) -> None:
     """Test check function for mongodb_instance check."""
     parsed = parse_mongodb_instance(string_table)
-    result = list(check_mongodb_instance(item, params, parsed))
+    result = list(check_mongodb_instance(parsed))
     assert result == expected_results

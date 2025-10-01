@@ -15,7 +15,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.base.legacy_checks.mongodb_mem import (
     check_mongodb_mem,
     discover_mongodb_mem,
@@ -38,7 +38,7 @@ from cmk.base.legacy_checks.mongodb_mem import (
                 ["page_faults", "86"],
                 ["heap_usage_bytes", "65501032"],
             ],
-            [(None, {})],
+            [Service()],
         ),
         (
             [],
@@ -47,12 +47,11 @@ from cmk.base.legacy_checks.mongodb_mem import (
     ],
 )
 def test_discover_mongodb_mem_1_regression(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str | None, Mapping[str, Any]]]
+    string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
     """Test discovery function for mongodb_mem regression test."""
     parsed = parse_mongodb_mem(string_table)
-    result = list(discover_mongodb_mem(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert list(discover_mongodb_mem(parsed)) == expected_discoveries
 
 
 @pytest.mark.parametrize(
@@ -73,21 +72,12 @@ def test_discover_mongodb_mem_1_regression(
                 ["heap_usage_bytes", "65501032"],
             ],
             [
-                (
-                    0,
-                    "Resident usage: 856 MiB",
-                    [("process_resident_size", 897581056, None, None)],
-                ),
-                (
-                    0,
-                    "Virtual usage: 5.96 GiB",
-                    [("process_virtual_size", 6396313600, None, None)],
-                ),
-                (
-                    0,
-                    "Mapped usage: 2.62 GiB",
-                    [("process_mapped_size", 2817523712, None, None)],
-                ),
+                Result(state=State.OK, summary="Resident usage: 856 MiB"),
+                Metric("process_resident_size", 897581056.0),
+                Result(state=State.OK, summary="Virtual usage: 5.96 GiB"),
+                Metric("process_virtual_size", 6396313600.0),
+                Result(state=State.OK, summary="Mapped usage: 2.62 GiB"),
+                Metric("process_mapped_size", 2817523712.0),
             ],
         ),
     ],
@@ -100,5 +90,4 @@ def test_check_mongodb_mem_1_regression(
 ) -> None:
     """Test check function for mongodb_mem regression test."""
     parsed = parse_mongodb_mem(string_table)
-    result = list(check_mongodb_mem(item, params, parsed))
-    assert result == expected_results
+    assert list(check_mongodb_mem(params, parsed)) == expected_results

@@ -69,7 +69,17 @@ def test_check_mongodb_collections(
             Result(state=State.OK, summary="Number of indexes: 2"),
             Result(
                 state=State.OK,
-                summary="10 additional details available",
-                details="Collection\n- Document Count: 66209 (Number of documents in collection)\n- Object Size: 99 B (Average object size)\n- Collection Size: 6.25 MiB (Uncompressed size in memory)\n- Storage Size: 4.21 MiB (Allocated for document storage)\nIndexes:\n- Total Index Size: 11.9 MiB (Total size of all indexes)\n- Number of Indexes: 2\n-- Index 'lsidTTLIndex' used 0 times since 2022-08-01 01:20:08\n-- Index '_id_' used 0 times since 2022-08-01 01:20:08",
+                notice=(
+                    "Collection\n"
+                    "- Document Count: 66209 (Number of documents in collection)\n"
+                    "- Object Size: 99 B (Average object size)\n"
+                    "- Collection Size: 6.25 MiB (Uncompressed size in memory)\n"
+                    "- Storage Size: 4.21 MiB (Allocated for document storage)\n\n"
+                    "Indexes:\n"
+                    "- Total Index Size: 11.9 MiB (Total size of all indexes)\n"
+                    "- Number of Indexes: 2\n"
+                    "-- Index 'lsidTTLIndex' used 0 times since 2022-08-01 01:20:08\n"
+                    "-- Index '_id_' used 0 times since 2022-08-01 01:20:08"
+                ),
             ),
         ]

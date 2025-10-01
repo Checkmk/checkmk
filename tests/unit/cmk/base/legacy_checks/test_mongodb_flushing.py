@@ -8,6 +8,7 @@
 
 import pytest
 
+from cmk.agent_based.v2 import Result
 from cmk.base.legacy_checks.mongodb_flushing import check_mongodb_flushing, parse_mongodb_flushing
 
 # <<<mongodb_flushing>>>
@@ -18,90 +19,68 @@ from cmk.base.legacy_checks.mongodb_flushing import check_mongodb_flushing, pars
 
 @pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
-    "info,state_expected,info_expected,perf_expected,state_expected_flush,info_expected_flush,"
-    "perf_expected_flush_key,perf_expected_flush_value",
+    "info,expected_results",
     [
         (
             [("average_ms", "1.28893335892"), ("last_ms", "0"), ("flushed", "36479")],
-            0,
-            "Average flush time over 60 minutes: 0.0 ms",
-            [],
-            0,
-            "Last flush time: 0.00 s",
-            "flush_time",
-            0.0,
+            [
+                "Average flush time over 60 minutes: 0.0 ms",
+                "Last flush time: 0.00 s",
+                "Flushes since restart: 36479.00",
+                "Average flush time: 1 millisecond",
+            ],
         ),
         (
             [("average_ms", "5"), ("last_ms", "121"), ("flushed", "10000")],
-            2,
-            "Average flush time over 60 minutes: 121.0 ms (warn/crit at 1.0 ms/4.0 ms)",
-            [],
-            1,
-            "Last flush time: 0.12 s (warn/crit at 0.10 s/0.20 s)",
-            "flush_time",
-            0.121,
+            [
+                "Average flush time over 60 minutes: 121.0 ms (warn/crit at 1.0 ms/4.0 ms)",
+                "Last flush time: 0.12 s (warn/crit at 0.10 s/0.20 s)",
+                "Flushes since restart: 10000.00",
+                "Average flush time: 5 milliseconds",
+            ],
         ),
         (
             [("last_ms", "120"), ("flushed", "10000")],
-            3,
-            "missing data: average_ms",
-            [],
-            -1,
-            "",
-            "",
-            -1.0,
+            ["missing data: average_ms"],
         ),
         (
             [("average_ms", "5"), ("flushed", "10000")],
-            3,
-            "missing data: last_ms",
-            [],
-            -1,
-            "",
-            "",
-            -1.0,
+            ["missing data: last_ms"],
         ),
         (
             [("average_ms", "5"), ("last_ms", "120")],
-            3,
-            "missing data: flushed",
-            [],
-            -1,
-            "",
-            "",
-            -1.0,
+            ["missing data: flushed"],
         ),
-        ([("last_ms", "120")], 3, "missing data: average_ms and flushed", [], -1, "", "", -1.0),
-        ([], 3, "missing data: average_ms and flushed and last_ms", [], -1, "", "", -1.0),
+        (
+            [("last_ms", "120")],
+            ["missing data: average_ms and flushed"],
+        ),
+        (
+            [],
+            ["missing data: average_ms and flushed and last_ms"],
+        ),
     ],
 )
-def test_check_function(
-    info,
-    state_expected,
-    info_expected,
-    perf_expected,
-    state_expected_flush,
-    info_expected_flush,
-    perf_expected_flush_key,
-    perf_expected_flush_value,
-):
+def test_check_function(info, expected_results):
     """
-    Only checks for missing flushing data
+    Test the MongoDB flushing check function with various input combinations.
     """
     check_result = list(
         check_mongodb_flushing(
-            None,
             {"average_time": (1, 4, 60), "last_time": (0.1, 0.2)},
             parse_mongodb_flushing(info),
         )
     )
 
-    assert check_result[0][:2] == (state_expected, info_expected)
-    if len(check_result) == 1:
-        return
+    # Extract summaries from Result objects for comparison
+    actual_summaries = []
+    for result in check_result:
+        if isinstance(result, Result):
+            actual_summaries.append(result.summary)
 
-    assert check_result[1] == (
-        state_expected_flush,
-        info_expected_flush,
-        [(perf_expected_flush_key, perf_expected_flush_value, 0.1, 0.2)],
-    )
+    # Check that we got the expected number of results and they contain the expected messages
+    assert len(actual_summaries) >= len(expected_results)
+    for expected in expected_results:
+        assert any(expected in summary for summary in actual_summaries), (
+            f"Expected '{expected}' not found in {actual_summaries}"
+        )

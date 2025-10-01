@@ -13,26 +13,38 @@
 
 
 import time
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import get_average, get_value_store, render, StringTable
+from cmk.agent_based.v2 import (
+    AgentSection,
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_average,
+    get_value_store,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-check_info = {}
 
-
-def inventory_mongodb_flushing(info):
+def inventory_mongodb_flushing(section: StringTable) -> DiscoveryResult:
     # This check has no default parameters
     # The average/last flush time highly depends on the size of the mongodb setup
-    return [(None, {})]
+    yield Service()
 
 
-def check_mongodb_flushing(_no_item, params, info):
-    info_dict = dict(info)
+def check_mongodb_flushing(params: Mapping[str, Any], section: StringTable) -> CheckResult:
+    info_dict = dict(section)
 
     if not {"last_ms", "average_ms", "flushed"} <= set(info_dict):  # check if keys in dict
-        yield (
-            3,
-            "missing data: %s"
+        yield Result(
+            state=State.UNKNOWN,
+            summary="missing data: %s"
             % (_get_missing_keys(["last_ms", "average_ms", "flushed"], info_dict)),
         )
         return
@@ -42,9 +54,9 @@ def check_mongodb_flushing(_no_item, params, info):
         avg_flush_time = float(info_dict["average_ms"]) / 1000.0
         flushed = int(info_dict["flushed"])
     except (ValueError, TypeError):
-        yield (
-            3,
-            "Invalid data: last_ms: {}, average_ms: {}, flushed:{}".format(
+        yield Result(
+            state=State.UNKNOWN,
+            summary="Invalid data: last_ms: {}, average_ms: {}, flushed:{}".format(
                 info_dict["last_ms"],
                 info_dict["average_ms"],
                 info_dict["flushed"],
@@ -57,27 +69,29 @@ def check_mongodb_flushing(_no_item, params, info):
         avg_ms_compute = get_average(
             get_value_store(), "flushes", time.time(), last_ms, avg_interval
         )
-        yield check_levels(
+        yield from check_levels(
             avg_ms_compute,
-            None,
-            (warn, crit),
-            human_readable_func=lambda x: f"{x:.1f} ms",
-            infoname="Average flush time over %s minutes" % (avg_interval),
+            levels_upper=("fixed", (warn, crit)),
+            render_func=lambda x: f"{x:.1f} ms",
+            label=f"Average flush time over {avg_interval} minutes",
         )
 
-    yield check_levels(
+    yield from check_levels(
         (last_ms / 1000.0),
-        "flush_time",
-        params.get("last_time"),
-        human_readable_func=lambda x: f"{x:.2f} s",
-        infoname="Last flush time",
+        metric_name="flush_time",
+        levels_upper=(
+            ("fixed", levels) if (levels := params.get("last_time")) else ("no_levels", None)
+        ),
+        render_func=lambda x: f"{x:.2f} s",
+        label="Last flush time",
     )
 
-    yield 0, "Flushes since restart: %s" % flushed, [("flushed", flushed)]
-    yield (
-        0,
-        "Average flush time since restart: %s" % render.timespan(avg_flush_time),
-        [("avg_flush_time", avg_flush_time)],
+    yield from check_levels(flushed, metric_name="flushed", label="Flushes since restart")
+    yield from check_levels(
+        avg_flush_time,
+        metric_name="avg_flush_time",
+        label="Average flush time",
+        render_func=render.timespan,
     )
 
 
@@ -93,11 +107,17 @@ def parse_mongodb_flushing(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["mongodb_flushing"] = LegacyCheckDefinition(
+agent_section_mongodb_flushing = AgentSection(
     name="mongodb_flushing",
     parse_function=parse_mongodb_flushing,
+)
+
+
+check_plugin_mongodb_flushing = CheckPlugin(
+    name="mongodb_flushing",
     service_name="MongoDB Flushing",
     discovery_function=inventory_mongodb_flushing,
     check_function=check_mongodb_flushing,
     check_ruleset_name="mongodb_flushing",
+    check_default_parameters={},
 )

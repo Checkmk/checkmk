@@ -140,6 +140,9 @@ def expected_items() -> dict[str, list[str]]:
             {
                 "exporter": ["influxdb_connections"],
                 "synthetic_monitoring": ["robotmk_managed_robots_overview"],
+                "application_monitoring": [
+                    "otel_overview",
+                ],
             }
         )
 

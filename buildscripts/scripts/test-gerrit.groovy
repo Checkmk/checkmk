@@ -144,6 +144,7 @@ def main() {
                         case "Package cmk-frontend":        // npm not shipped with "klausi-standard-weak"
                         case "Package cmk-agent-receiver":  // Tries to start docker containers
                         case "Package cmk-relay-engine":    // Tries to start docker containers
+                        case "Package cmk-ccc":             // Seems to require non-root permissions, see CMK-24586
                             relative_job_name = "${branch_base_folder}/cv/test-gerrit-single";
                             break;
                         default:

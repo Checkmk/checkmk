@@ -2891,7 +2891,7 @@ def main_update(
 
         call_scripts(
             site,
-            "update-pre-hooks",
+            "post-update",
             open_pty=is_tty,
             add_env=additional_update_env,
         )

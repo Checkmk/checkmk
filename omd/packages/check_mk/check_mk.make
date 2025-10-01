@@ -203,9 +203,9 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) agent
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/post-create/02_cmk-compute-api-spec $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-create/
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/post-create/03_message-broker-certs  $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-create/
 
-	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/update-pre-hooks
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/update-pre-hooks/01_mkp-disable-outdated $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/update-pre-hooks/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/update-pre-hooks/02_cmk-update-config $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/update-pre-hooks/
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-update
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/post-update/01_mkp-disable-outdated $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-update/
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/post-update/02_cmk-update-config $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-update/
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-mv
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/post-mv/01_cmk-post-rename-site $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-mv/
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-cp

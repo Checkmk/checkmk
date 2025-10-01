@@ -6,8 +6,9 @@
 from __future__ import annotations
 
 import gettext as gettext_module
+from collections.abc import Callable
 from pathlib import Path
-from typing import NamedTuple
+from typing import NamedTuple, Protocol
 
 import cmk.utils.paths
 from cmk.gui.ctx_stack import global_var, request_local_attr, set_global_var
@@ -215,3 +216,13 @@ def _u(text: str) -> str:
 def set_user_localizations(localizations: dict[str, dict[str, str]]) -> None:
     _user_localizations.clear()
     _user_localizations.update(localizations)
+
+
+class SupportsLocalize(Protocol):
+    def localize(self, localizer: Callable[[str], str]) -> str: ...
+
+
+def localize_or_none(
+    localizable: SupportsLocalize | None, localizer: Callable[[str], str]
+) -> str | None:
+    return None if localizable is None else localizable.localize(localizer)

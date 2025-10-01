@@ -38,7 +38,7 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import mandatory_parameter, request
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, localize_or_none, translate_to_current_language
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     make_confirmed_form_submit_link,
@@ -928,8 +928,6 @@ class ModeEditRuleset(WatoMode):
         if not visible_ruleset(self._rulespec.name):
             raise MKUserError("varname", _('The ruleset "%s" does not exist.') % self._name)
 
-        self._valuespec = self._rulespec.valuespec
-
         if not self._item:
             self._item = None
             if request.has_var("item"):
@@ -1574,12 +1572,13 @@ class ModeEditRuleset(WatoMode):
         table.cell(_("Value"), css=["value"])
 
         def _show_rule_backend():
+            valuespec = self._rulespec.valuespec
             try:
-                value_html = self._valuespec.value_to_html(value)
+                value_html = valuespec.value_to_html(value)
             except Exception as e:
                 try:
                     reason = str(e)
-                    self._valuespec.validate_datatype(value, "")
+                    valuespec.validate_datatype(value, "")
                 except Exception as e2:
                     reason = str(e2)
 
@@ -1606,11 +1605,6 @@ class ModeEditRuleset(WatoMode):
             case RenderMode.FRONTEND:
                 assert form_spec is not None
                 _show_rule_frontend(form_spec)
-            case RenderMode.FRONTEND | RenderMode.BACKEND_AND_FRONTEND:
-                assert form_spec is not None
-                _show_rule_frontend(form_spec)
-                # html.write_html("<hr>")
-                # _show_rule_backend()
 
         # Comment
         table.cell(_("Description"), css=["description"])
@@ -1972,16 +1966,25 @@ def render_hidden_if_locked(vs: ValueSpec, varprefix: str, value: object, locked
 
 
 def _get_render_mode(rulespec: Rulespec) -> tuple[RenderMode, FormSpec | None]:
+    """Determines how the ruleset should be rendered. It follows the RenderMode setting,
+    but some rulesets only provide a form spec (not a valuespec) and must always be rendered
+    in the frontend."""
+
     configured_mode = _get_rule_render_mode()
     if configured_mode == RenderMode.BACKEND:
-        return configured_mode, None
+        if not rulespec.has_valuespec:
+            # Unable to render in the backend, because there is no valuespec available
+            assert rulespec.has_form_spec
+            return RenderMode.FRONTEND, rulespec.form_spec
+        return RenderMode.BACKEND, None
 
-    try:
-        return configured_mode, rulespec.form_spec
-    except FormSpecNotImplementedError:
-        pass
+    # FRONTEND rendering
+    if not rulespec.has_form_spec and rulespec.has_valuespec:
+        # Rendered legacy valuespec in the frontend
+        return RenderMode.FRONTEND, LegacyValueSpec(valuespec=rulespec.valuespec)
 
-    return configured_mode, LegacyValueSpec(valuespec=rulespec.valuespec)
+    # FRONTEND rendering of form_spec
+    return RenderMode.FRONTEND, rulespec.form_spec
 
 
 class ABCEditRuleMode(WatoMode):
@@ -2229,7 +2232,7 @@ class ABCEditRuleMode(WatoMode):
         render_mode, registered_form_spec = _get_render_mode(self._ruleset.rulespec)
         self._do_validate_on_render = True
         match render_mode:
-            case RenderMode.FRONTEND | RenderMode.BACKEND_AND_FRONTEND:
+            case RenderMode.FRONTEND:
                 assert registered_form_spec is not None
                 value = parse_data_from_field_id(
                     registered_form_spec,
@@ -2342,20 +2345,28 @@ class ABCEditRuleMode(WatoMode):
         self._vs_rule_options(self._rule).render_input("options", asdict(self._rule.rule_options))
 
         # Value
-        valuespec = self._ruleset.valuespec()
-        forms.header(
-            valuespec.title() or _("Value"),
-            show_more_toggle=valuespec.has_show_more(),
-        )
+        try:
+            title: str | None = localize_or_none(
+                self._ruleset.rulespec.form_spec.title, translate_to_current_language
+            )
+            has_show_more: bool = False
+        except FormSpecNotImplementedError:
+            valuespec = self._ruleset.valuespec()
+            title = valuespec.title()
+            has_show_more = valuespec.has_show_more()
+
+        forms.header(title=title or _("Value"), show_more_toggle=has_show_more)
         forms.section()
         html.form_has_submit_button = True
         html.prevent_password_auto_completion()
+        render_mode, registered_form_spec = _get_render_mode(self._ruleset.rulespec)
         try:
-            render_mode, registered_form_spec = _get_render_mode(self._ruleset.rulespec)
             match render_mode:
                 case RenderMode.BACKEND:
+                    valuespec = self._ruleset.valuespec()
                     valuespec.validate_datatype(self._rule.value, "ve")
                     valuespec.render_input("ve", self._rule.value)
+                    valuespec.set_focus("ve")
                 case RenderMode.FRONTEND:
                     assert registered_form_spec is not None
                     value = self._get_rule_value()
@@ -2365,19 +2376,6 @@ class ABCEditRuleMode(WatoMode):
                         value,
                         self._should_validate_on_render(),
                     )
-                case RenderMode.BACKEND_AND_FRONTEND:
-                    forms.section("Current setting as VUE")
-                    assert registered_form_spec is not None
-                    value = self._get_rule_value()
-                    render_form_spec(
-                        registered_form_spec,
-                        self._vue_field_id(),
-                        value,
-                        self._should_validate_on_render(),
-                    )
-                    forms.section("Backend rendered (read only)")
-                    valuespec.validate_datatype(self._rule.value, "ve")
-                    valuespec.render_input("ve", self._rule.value)
         except Exception as e:
             if debug:
                 raise
@@ -2389,14 +2387,18 @@ class ABCEditRuleMode(WatoMode):
                 )
                 % e
             )
-
-            # In case of validation problems render the input with default values
-            valuespec.render_input("ve", valuespec.default_value())
-
-        valuespec.set_focus("ve")
+            match render_mode:
+                case RenderMode.BACKEND:
+                    valuespec = self._ruleset.valuespec()
+                    valuespec.render_input("ve", valuespec.default_value())
+                    valuespec.set_focus("ve")
+                case RenderMode.FRONTEND:
+                    assert registered_form_spec is not None
+                    render_form_spec(
+                        registered_form_spec, self._vue_field_id(), DEFAULT_VALUE, False
+                    )
 
         self._show_conditions()
-
         forms.end()
 
         html.hidden_fields()
@@ -3371,10 +3373,8 @@ def _get_rule_render_mode() -> RenderMode:
             return RenderMode.BACKEND
         case RenderMode.FRONTEND.value:
             return RenderMode.FRONTEND
-        case RenderMode.BACKEND_AND_FRONTEND.value:
-            return RenderMode.BACKEND_AND_FRONTEND
         case _:
-            raise MKGeneralException(_("Unknown rendering mode %s") % rendering_mode)
+            raise MKGeneralException(_("Unknown render mode %s") % rendering_mode)
 
 
 class MatchItemGeneratorUnknownRuleSets(ABCMatchItemGenerator):

@@ -838,7 +838,6 @@ class VirtualHostTreeSpec(TypedDict):
 class RenderMode(Enum):
     BACKEND = "backend"
     FRONTEND = "frontend"
-    BACKEND_AND_FRONTEND = "backend_and_frontend"
 
 
 class ReadOnlySpec(TypedDict):

@@ -715,7 +715,6 @@ ConfigVariableExperimentalFeatures = ConfigVariable(
                     choices=[
                         ("frontend", "Frontend (vue rendering)"),
                         ("backend", "Backend (legacy rendering)"),
-                        ("backend_and_frontend", "Backend and Frontend"),
                     ],
                 ),
             ),

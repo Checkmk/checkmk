@@ -409,6 +409,16 @@ class Rulespec(abc.ABC):
         return self._valuespec()
 
     @property
+    def has_valuespec(self) -> bool:
+        # Right now, a Valuespec is always present
+        # Will be refactored later on
+        return True
+
+    @property
+    def has_form_spec(self) -> bool:
+        return self._form_spec_definition is not None
+
+    @property
     def form_spec(self) -> FormSpec:
         if self._form_spec_definition is None:
             raise FormSpecNotImplementedError()

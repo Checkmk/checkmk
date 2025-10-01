@@ -679,7 +679,7 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
     def _update_entry_from_vars(self) -> None:
         render_mode, form_spec = self._get_render_mode()
         match render_mode:
-            case RenderMode.FRONTEND | RenderMode.BACKEND_AND_FRONTEND:
+            case RenderMode.FRONTEND:
                 assert form_spec is not None
                 self._update_entry_from_vars_form_spec(form_spec)
             case RenderMode.BACKEND:

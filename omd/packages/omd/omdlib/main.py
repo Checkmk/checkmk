@@ -2896,8 +2896,6 @@ def main_update(
             add_env=additional_update_env,
         )
 
-        call_scripts(site, "post-update", open_pty=is_tty)
-
         if from_edition != to_edition and edition_has_enforced_licensing(
             to_ed := Edition.from_long_edition(to_edition)
         ):

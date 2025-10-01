@@ -27,7 +27,6 @@ gzip <omd.8 >"$ROOT/share/man/man8/omd.8.gz"
 )
 
 mkdir -p "${ROOT}/lib/omd/scripts/post-create"
-mkdir -p "${ROOT}/lib/omd/scripts/post-update"
 
 cp -v omd.service "${ROOT}/share/omd"
 cp -v omd.bin "${ROOT}/bin/omd"

@@ -38,7 +38,10 @@ class TestAPIDaemonSets:
         assert metadata.name == "node-collector-container-metrics"
         assert isinstance(metadata.creation_timestamp, float)
         assert metadata.labels
-        assert metadata.annotations == {"deprecated.daemonset.template.generation": "1"}
+        assert metadata.annotations == {
+            "deprecated.daemonset.template.generation": "1",
+            "seccomp.security.alpha.kubernetes.io/pod": "runtime/default",
+        }
 
     def test_parse_metadata_missing_annotations_and_labels(
         self, apps_client: client.AppsV1Api, dummy_host: str

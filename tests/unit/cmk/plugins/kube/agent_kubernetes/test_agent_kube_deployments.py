@@ -40,7 +40,10 @@ class TestAPIDeployments:
         assert metadata.labels == {
             "app": api.Label(name=api.LabelName("app"), value=api.LabelValue("cluster-collector"))
         }
-        assert metadata.annotations == {"deployment.kubernetes.io/revision": "2"}
+        assert metadata.annotations == {
+            "deployment.kubernetes.io/revision": "2",
+            "seccomp.security.alpha.kubernetes.io/pod": "runtime/default",
+        }
 
     def test_parse_metadata_missing_annotations_and_labels(
         self, apps_client: client.AppsV1Api, dummy_host: str

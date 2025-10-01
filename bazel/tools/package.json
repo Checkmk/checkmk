@@ -3,5 +3,10 @@
     "@trivago/prettier-plugin-sort-imports": "5.2.2",
     "@vue/compiler-sfc": "^3.5.22",
     "prettier": "3.6.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "prettier"
+    ]
   }
 }

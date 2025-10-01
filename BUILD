@@ -2,7 +2,6 @@ load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@gazelle//:def.bzl", "gazelle")
 load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile_commands")
-load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@protobuf//:protobuf_version.bzl", "PROTOBUF_PYTHON_VERSION")
 load("@repo_license//:license.bzl", "REPO_LICENSE")
 load("@rules_multirun//:defs.bzl", "multirun")
@@ -22,8 +21,6 @@ exports_files(
         ".prettierignore",
     ],
 )
-
-npm_link_all_packages(name = "node_modules")
 
 copy_to_directory(
     name = "werks_group",

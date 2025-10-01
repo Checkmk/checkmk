@@ -1,18 +1,16 @@
 load("@aspect_rules_js//js:defs.bzl", "js_run_binary", "js_run_devserver")
 load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
 load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
-load("@npm//:defs.bzl", "npm_link_all_packages")
-load("@npm//:eslint/package_json.bzl", eslint_bin = "bin")
-load("@npm//:stylelint/package_json.bzl", stylelint_bin = "bin")
-load("@npm//:vitest/package_json.bzl", vitest_bin = "bin")
-load("@npm//:vue-tsc/package_json.bzl", vue_tsc_bin = "bin")
-load("@npm//:vue3-gettext/package_json.bzl", vue_gettext_bin = "bin")
-load("@npm//bazel/tools:prettier/package_json.bzl", prettier_bin = "bin")
-load("@npm//packages/cmk-frontend-vue:vite/package_json.bzl", vite_bin = "bin")
+load("@npm_cmk_frontend_vue//:defs.bzl", "npm_link_all_packages")
+load("@npm_cmk_frontend_vue//packages/cmk-frontend-vue:eslint/package_json.bzl", eslint_bin = "bin")
+load("@npm_cmk_frontend_vue//packages/cmk-frontend-vue:prettier/package_json.bzl", prettier_bin = "bin")
+load("@npm_cmk_frontend_vue//packages/cmk-frontend-vue:stylelint/package_json.bzl", stylelint_bin = "bin")
+load("@npm_cmk_frontend_vue//packages/cmk-frontend-vue:vite/package_json.bzl", vite_bin = "bin")
+load("@npm_cmk_frontend_vue//packages/cmk-frontend-vue:vitest/package_json.bzl", vitest_bin = "bin")
+load("@npm_cmk_frontend_vue//packages/cmk-frontend-vue:vue-tsc/package_json.bzl", vue_tsc_bin = "bin")
+load("@npm_cmk_frontend_vue//packages/cmk-frontend-vue:vue3-gettext/package_json.bzl", vue_gettext_bin = "bin")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-
-exports_files(["package.json"])
 
 npm_link_all_packages(name = "node_modules")
 
@@ -62,7 +60,6 @@ js_run_binary(
     outs = ["locale/messages.pot"],
     tool = ":gettext-extract",
     visibility = ["//locale:__pkg__"],
-    # TODO: depends on non-hermetic gettext
 )
 
 genrule(
@@ -93,30 +90,7 @@ js_run_binary(
     visibility = ["//visibility:private"],
 )
 
-TOOLING = [
-    "//:node_modules/@eslint/js",
-    "//:node_modules/@typescript-eslint/parser",
-    "//:node_modules/@vue/compiler-dom",
-    "//:node_modules/@vue/eslint-config-prettier",
-    "//:node_modules/@vue/eslint-config-typescript",
-    "//:node_modules/@vue/server-renderer",
-    "//:node_modules/@vue/test-utils",
-    "//:node_modules/eslint",
-    "//:node_modules/eslint-plugin-vue",
-    "//:node_modules/jsdom",
-    "//:node_modules/postcss-html",
-    "//:node_modules/stylelint",
-    "//:node_modules/stylelint-config-standard",
-    "//:node_modules/typescript-eslint",
-    "//:node_modules/vitest",
-    "//:node_modules/vitest-fail-on-console",
-    "//:node_modules/vue",
-    "//:node_modules/vue-tsc",
-    "//:node_modules/vue3-gettext",
-]
-
 SRCS = [
-    "//packages/cmk-frontend:dist",
     "env.d.ts",
     "weaki18nString.d.ts",
     ".stylelintrc.js",
@@ -132,15 +106,23 @@ SRCS = [
     "vite.config.demo.ts",
     "vite.config.ts",
     "demo/index.html",
+    "//packages/cmk-frontend:dist",
     ":compile_i18n",
+    ":node_modules/stylelint",
+    ":node_modules/postcss-html",
+    ":node_modules/stylelint-config-standard",
+    ":node_modules/@eslint",
     ":node_modules/@testing-library",
     ":node_modules/@trivago/prettier-plugin-sort-imports",
     ":node_modules/@tsconfig",
+    ":node_modules/@typescript-eslint",
     ":node_modules/@vitejs",
+    ":node_modules/@vue",
     ":node_modules/@types",
     ":node_modules/axios",
     ":node_modules/class-variance-authority",
     ":node_modules/cmk-shared-typing-bzl",
+    ":node_modules/eslint-plugin-vue",
     ":node_modules/grid-layout-plus",
     ":node_modules/lucide-vue-next",
     ":node_modules/msw",
@@ -148,10 +130,15 @@ SRCS = [
     ":node_modules/radix-vue",
     ":node_modules/rollup",
     ":node_modules/sanitize-html",
+    ":node_modules/typescript-eslint",
     ":node_modules/vite",
     ":node_modules/vite-plugin-vue-devtools",
+    ":node_modules/vitest",
+    ":node_modules/vitest-fail-on-console",
+    ":node_modules/vue",
     ":node_modules/vue-component-type-helpers",
     ":node_modules/vue-router",
+    ":node_modules/vue3-gettext",
 ] + LOCALE_OUTS + glob([
     "src/**/*.ts",
     "src/**/*.vue",
@@ -177,7 +164,7 @@ npm_link_package(
 
 vite_bin.vite(
     name = "dist",
-    srcs = TOOLING + SRCS,
+    srcs = SRCS,
     args = ["build"],
     chdir = package_name(),
     out_dirs = ["dist"],
@@ -185,7 +172,7 @@ vite_bin.vite(
 
 vite_bin.vite(
     name = "dist-demo-hosted",
-    srcs = TOOLING + SRCS,
+    srcs = SRCS,
     # The --base argument needs to match the hosting web server config
     # (e.g. http://localhost/frontend-demo/)
     args = [
@@ -203,7 +190,7 @@ vitest_bin.vitest_test(
     name = "unit-test",
     args = ["run"],
     chdir = package_name(),
-    data = TOOLING + SRCS_AND_TESTS,
+    data = SRCS_AND_TESTS,
 )
 
 vue_tsc_bin.vue_tsc_test(
@@ -213,7 +200,7 @@ vue_tsc_bin.vue_tsc_test(
         "--force",
     ],
     chdir = package_name(),
-    data = TOOLING + SRCS_AND_TESTS,
+    data = SRCS_AND_TESTS,
     include_types = True,
 )
 
@@ -222,7 +209,7 @@ vite_bin.vite_binary(name = "vite_server")
 js_run_devserver(
     name = "vite",
     chdir = package_name(),
-    data = TOOLING + SRCS,
+    data = SRCS,
     tool = ":vite_server",
 )
 
@@ -230,7 +217,7 @@ js_run_devserver(
 vitest_bin.vitest_binary(
     name = "vitest",
     chdir = package_name(),
-    data = TOOLING + SRCS_AND_TESTS,
+    data = SRCS_AND_TESTS,
 )
 
 # This should be done as shown
@@ -287,7 +274,7 @@ eslint_bin.eslint_test(
         ".",
     ],
     chdir = package_name(),
-    data = TOOLING + SRCS_AND_TESTS,
+    data = SRCS_AND_TESTS,
 )
 
 stylelint_bin.stylelint_test(
@@ -296,7 +283,7 @@ stylelint_bin.stylelint_test(
         "**/*.{vue,css}",
     ],
     chdir = package_name(),
-    data = TOOLING + SRCS,
+    data = SRCS,
 )
 
 pkg_files(

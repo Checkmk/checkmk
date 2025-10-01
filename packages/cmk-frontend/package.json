@@ -65,6 +65,7 @@
     "caniuse-lite": "^1.0.30001686",
     "css-loader": "^7.1.2",
     "cssnano": "^7.0.6",
+    "eslint": "^9.16.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^3.7.0",
     "eslint-plugin-compat": "^6.0.1",
@@ -81,7 +82,7 @@
     "jest-environment-jsdom": "^29.7.0",
     "mini-css-extract-plugin": "^2.9.2",
     "mutation-observer": "^1.0.3",
-    "npm-groovy-lint": "^14.6.0",
+    "npm-groovy-lint": "<15.0.0",
     "pkg-dir": "^8.0.0",
     "postcss": "^8.4.49",
     "postcss-loader": "^8.1.1",
@@ -94,7 +95,7 @@
     "ts-jest": "^29.2.5",
     "typescript": "^5.7.2",
     "vnu-jar": "^24.10.17",
-    "webpack": "^5.102.0",
+    "webpack": "^5.97.0",
     "webpack-cli": "^5.1.4",
     "webpack-remove-empty-scripts": "^1.0.4"
   },
@@ -115,5 +116,10 @@
     "select2": "^4.0.13",
     "simplebar": "^6.2.7",
     "sweetalert2": "^11.14.5"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "prettier"
+    ]
   }
 }

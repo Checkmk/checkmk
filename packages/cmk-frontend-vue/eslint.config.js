@@ -36,13 +36,8 @@ export default [
   {
     languageOptions: {
       parserOptions: {
-        project: [
-          './tsconfig.test.json',
-          './tsconfig.demo.json',
-          './tsconfig.app.json',
-          './prettier.config.cjs'
-        ],
-        tsconfigRootDir: import.meta.dirname,
+        project: ['tsconfig.test.json', 'tsconfig.demo.json', 'tsconfig.app.json'],
+        tsconfigRootDir: '.',
         parser: '@typescript-eslint/parser',
         ecmaVersion: 'latest'
       }

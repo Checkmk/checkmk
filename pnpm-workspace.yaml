@@ -1,5 +1,0 @@
-packages:
-    - 'bazel/tools'
-    - 'packages/cmk-frontend'
-    - 'packages/cmk-frontend-vue'
-    - 'packages/cmk-shared-typing'

@@ -34,6 +34,7 @@ from cmk.utils.local_secrets import AuthenticationSecret
 from ._two_factor import is_two_factor_login_enabled
 
 auth_logger = gui_logger.getChild("auth")
+_DELIMITER = ":"
 
 
 def auth_cookie_name() -> str:
@@ -41,14 +42,14 @@ def auth_cookie_name() -> str:
 
 
 def auth_cookie_value(username: UserId, session_id: str) -> str:
-    return ":".join([username, session_id, generate_auth_hash(username, session_id)])
+    return _DELIMITER.join([username, session_id, generate_auth_hash(username, session_id)])
 
 
 def generate_auth_hash(username: UserId, session_id: str) -> str:
     """Generates a hash to be added into the cookie value"""
     return (
         AuthenticationSecret()
-        .secret.hmac(f"{username}{session_id}{_load_serial(username)}".encode())
+        .secret.hmac(_DELIMITER.join([username, session_id, str(_load_serial(username))]).encode())
         .hex()
     )
 

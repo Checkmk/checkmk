@@ -25,7 +25,7 @@ from cmk.gui.utils.json import CustomObjectJSONEncoder
 PageResult = object
 
 
-class PageHandlerFunc(Protocol):
+class PageHandler(Protocol):
     def __call__(self, config: Config) -> None: ...
 
 
@@ -112,7 +112,7 @@ class AjaxPage(Page, abc.ABC):
 @dataclass(frozen=True)
 class PageEndpoint:
     ident: str
-    handler: PageHandlerFunc | type[Page]
+    handler: PageHandler | type[Page]
 
 
 class PageRegistry(cmk.ccc.plugin_registry.Registry[PageEndpoint]):
@@ -124,9 +124,7 @@ class PageRegistry(cmk.ccc.plugin_registry.Registry[PageEndpoint]):
 page_registry = PageRegistry()
 
 
-def get_page_handler(
-    name: str, dflt: PageHandlerFunc | None = None
-) -> PageHandlerFunc | type[Page] | None:
+def get_page_handler(name: str, dflt: PageHandler | None = None) -> PageHandler | type[Page] | None:
     """Returns either the page handler registered for the given name or None
 
     In case dflt is given it returns dflt instead of None when there is no

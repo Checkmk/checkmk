@@ -55,7 +55,7 @@ class AbstractWSGIApp(abc.ABC):
 
 
 def ensure_authentication(
-    handler: type[pages.Page] | pages.PageHandlerFunc,
+    handler: type[pages.Page] | pages.PageHandler,
 ) -> Callable[[Config], Response]:
     # Ensure the user is authenticated. This call is wrapping all the different
     # authentication modes the Checkmk GUI supports and initializes the logged-in

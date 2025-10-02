@@ -65,7 +65,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.pages import Page, page_registry, PageEndpoint, PageHandlerFunc
+from cmk.gui.pages import Page, page_registry, PageEndpoint, PageHandler
 from cmk.gui.permissions import (
     declare_dynamic_permissions,
     declare_permission_section,
@@ -298,7 +298,7 @@ class Base(abc.ABC, Generic[_T_BaseConfig]):
     # PageTypes in plugins/pages. It is simply sufficient to register a PageType and
     # all page handlers will exist :-)
     @classmethod
-    def page_handlers(cls) -> dict[str, PageHandlerFunc]:
+    def page_handlers(cls) -> dict[str, PageHandler]:
         return {}
 
     # Object methods that *can* be overridden - for cases where
@@ -517,7 +517,7 @@ class Overridable(Base[_T_OverridableConfig]):
 
     @override
     @classmethod
-    def page_handlers(cls) -> dict[str, PageHandlerFunc]:
+    def page_handlers(cls) -> dict[str, PageHandler]:
         handlers = super().page_handlers()
         handlers.update(
             {
@@ -1716,7 +1716,7 @@ class OverridableContainer(Overridable[_T_OverridableContainerConfig]):
 
     @override
     @classmethod
-    def page_handlers(cls) -> dict[str, PageHandlerFunc]:
+    def page_handlers(cls) -> dict[str, PageHandler]:
         handlers = super().page_handlers()
         handlers.update(
             {
@@ -1905,7 +1905,7 @@ class PageRenderer(OverridableContainer[_T_PageRendererConfig]):
 
     @override
     @classmethod
-    def page_handlers(cls) -> dict[str, PageHandlerFunc]:
+    def page_handlers(cls) -> dict[str, PageHandler]:
         handlers = super().page_handlers()
         handlers.update(
             {

@@ -7,11 +7,11 @@ import abc
 
 from cmk.gui.config import Config, default_authorized_builtin_role_ids
 from cmk.gui.logged_in import user
-from cmk.gui.pages import PageHandlerFunc
+from cmk.gui.pages import PageHandler
 from cmk.gui.type_defs import PermissionName, RoleName
 from cmk.gui.utils.roles import UserPermissions
 
-PageHandlers = dict[str, PageHandlerFunc]
+PageHandlers = dict[str, PageHandler]
 
 
 # TODO: Transform methods to class methods

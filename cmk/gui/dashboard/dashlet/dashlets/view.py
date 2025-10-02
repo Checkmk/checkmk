@@ -14,7 +14,7 @@ from typing import cast, get_args, Literal, TypeVar
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
 from cmk.gui import visuals
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.dashboard.dashlet.base import IFrameDashlet
 from cmk.gui.dashboard.store import (
     get_all_dashboards,
@@ -154,6 +154,8 @@ class ABCViewDashlet(IFrameDashlet[VT]):
         view_spec: ViewSpec | ViewDashletConfig,
         user_permissions: UserPermissions,
         *,
+        soft_query_limit: int,
+        hard_query_limit: int,
         debug: bool,
     ) -> None:
         html.add_body_css_class("view")
@@ -210,9 +212,9 @@ class ABCViewDashlet(IFrameDashlet[VT]):
         )
         view.row_limit = get_limit(
             request_limit_mode=request.get_ascii_input_mandatory("limit", "soft"),
-            soft_query_limit=active_config.soft_query_limit,
+            soft_query_limit=soft_query_limit,
             may_ignore_soft_limit=user.may("general.ignore_soft_limit"),
-            hard_query_limit=active_config.hard_query_limit,
+            hard_query_limit=hard_query_limit,
             may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
         )
         view.only_sites = get_only_sites_from_context(context)
@@ -250,7 +252,7 @@ class EmbeddedViewDashlet(ABCViewDashlet[EmbeddedViewDashletConfig]):
     def description(cls) -> str:
         return _("Copies a view to a dashboard element")
 
-    def update(self) -> None:
+    def update(self, config: Config) -> None:
         raise NotImplementedError()
 
 
@@ -324,11 +326,13 @@ class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):
             "is_show_more": False,
         }
 
-    def update(self) -> None:
+    def update(self, config: Config) -> None:
         self._show_view_as_dashlet(
             self._dashlet_spec,
-            UserPermissions.from_config(active_config, permission_registry),
-            debug=active_config.debug,
+            UserPermissions.from_config(config, permission_registry),
+            soft_query_limit=config.soft_query_limit,
+            hard_query_limit=config.hard_query_limit,
+            debug=config.debug,
         )
         html.javascript('cmk.utils.add_simplebar_scrollbar("dashlet_content_wrapper");')
 
@@ -451,11 +455,13 @@ class LinkedViewDashlet(ABCViewDashlet[LinkedViewDashletConfig]):
         request_vars += self._dashlet_context_vars()
         return makeuri_contextless(request, request_vars, filename="view.py")
 
-    def update(self) -> None:
+    def update(self, config: Config) -> None:
         self._show_view_as_dashlet(
             self._get_view_spec(),
-            UserPermissions.from_config(active_config, permission_registry),
-            debug=active_config.debug,
+            UserPermissions.from_config(config, permission_registry),
+            soft_query_limit=config.soft_query_limit,
+            hard_query_limit=config.hard_query_limit,
+            debug=config.debug,
         )
         html.javascript('cmk.utils.add_simplebar_scrollbar("dashlet_content_wrapper");')
 

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.config import Config
 from cmk.gui.dashboard.dashlet.base import Dashlet
 from cmk.gui.dashboard.type_defs import DashletConfig
 from cmk.gui.htmllib.html import html
@@ -36,7 +37,7 @@ class MKLogoDashlet(Dashlet[MKLogoDashletConfig]):
     def is_selectable(cls) -> bool:
         return False  # can not be selected using the dashboard editor
 
-    def show(self):
+    def show(self, config: Config) -> None:
         html.open_a(href="https://checkmk.com/", target="_blank")
         html.img(theme.url("images/check_mk.trans.120.png"), style="margin-right: 30px;")
         html.close_a()

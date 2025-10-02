@@ -11,7 +11,7 @@ from typing import Any, Generic, Literal, TypeVar
 
 from cmk.ccc.user import UserId
 from cmk.gui import visuals
-from cmk.gui.config import active_config, default_authorized_builtin_role_ids
+from cmk.gui.config import Config, default_authorized_builtin_role_ids
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.type_defs import HTTPVariables, RoleName, SingleInfos, VisualContext
@@ -269,16 +269,16 @@ class Dashlet(abc.ABC, Generic[T]):
         """Returns either Javascript code to execute when a the dashlet should be refreshed or None"""
         return None
 
-    def update(self) -> None:
+    def update(self, config: Config) -> None:
         """Called by the ajax call to update dashlet contents
 
         This is normally equivalent to the .show() method. Differs only for
         iframe and single metric dashlets.
         """
-        self.show()
+        self.show(config)
 
     @abc.abstractmethod
-    def show(self) -> None:
+    def show(self, config: Config) -> None:
         """Produces the HTML code of the dashlet content."""
         raise NotImplementedError()
 
@@ -331,7 +331,7 @@ class Dashlet(abc.ABC, Generic[T]):
     def refresh_interval(self) -> DashletRefreshInterval:
         return self.initial_refresh_interval()
 
-    def get_refresh_action(self) -> DashletRefreshAction:
+    def get_refresh_action(self, *, debug: bool) -> DashletRefreshAction:
         if not self.refresh_interval():
             return None
 
@@ -343,7 +343,7 @@ class Dashlet(abc.ABC, Generic[T]):
         except Exception:
             # Ignore the exceptions in non debug mode, assuming the exception also occurs
             # while dashlet rendering, which is then shown in the dashlet itselfs.
-            if active_config.debug:
+            if debug:
                 raise
 
         return None
@@ -374,7 +374,7 @@ class IFrameDashlet(Dashlet[T], abc.ABC):
         """Whether or not the dashlet is rendered in an iframe"""
         return True
 
-    def show(self) -> None:
+    def show(self, config: Config) -> None:
         self._show_initial_iframe_container()
 
     def reload_on_resize(self) -> bool:
@@ -414,5 +414,5 @@ class IFrameDashlet(Dashlet[T], abc.ABC):
         return self._add_context_vars_to_url(self._get_refresh_url())
 
     @abc.abstractmethod
-    def update(self) -> None:
+    def update(self, config: Config) -> None:
         raise NotImplementedError()

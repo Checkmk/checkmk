@@ -331,7 +331,7 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
             json.dumps(self._dashlet_spec["timerange"]),
         )
 
-    def show(self) -> None:
+    def show(self, config: Config) -> None:
         if self._init_exception:
             raise self._init_exception
 

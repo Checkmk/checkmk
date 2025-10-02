@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.config import Config
 from cmk.gui.dashboard.dashlet.base import Dashlet
 from cmk.gui.dashboard.type_defs import DashletConfig
 from cmk.gui.htmllib.html import html
@@ -54,7 +55,7 @@ class StaticTextDashlet(Dashlet[StaticTextDashletConfig]):
             ),
         ]
 
-    def show(self):
+    def show(self, config: Config) -> None:
         html.open_div(class_="nodata")
         html.open_div(class_="msg")
         html.write_text_permissive(self._dashlet_spec.get("text", ""))

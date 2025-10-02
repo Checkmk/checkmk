@@ -73,7 +73,7 @@ CLANG_VERSION      := 19
 PLANTUML_JAR_PATH  := $(REPO_PATH)/third_party/plantuml
 
 # In our CI we use this compiler, but we are not restricted to this exact version
-GCC_VERSION_MAJOR      := 13
+GCC_VERSION_MAJOR      := 14
 GCC_VERSION_MINOR      := 2
 GCC_VERSION_PATCHLEVEL := 0
 GCC_VERSION	       := ${GCC_VERSION_MAJOR}.${GCC_VERSION_MINOR}.${GCC_VERSION_PATCHLEVEL}

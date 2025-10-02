@@ -76,22 +76,22 @@ linux_gcc14_cxx_builtin_include_directories = [
 ]
 
 ci_tool_paths = {
-    "ar": "/opt/gcc-13.2.0/bin/gcc-ar-13",
-    "cpp": "/opt/gcc-13.2.0/bin/cpp-13",
-    "gcc": "/opt/gcc-13.2.0/bin/gcc-13",
-    "gcov": "/opt/gcc-13.2.0/bin/gcov-13",
-    "ld": "/opt/gcc-13.2.0/bin/ld",
-    "nm": "/opt/gcc-13.2.0/bin/gcc-nm-13",
-    "objdump": "/opt/gcc-13.2.0/bin/objdump",
-    "strip": "/opt/gcc-13.2.0/bin/strip",
+    "ar": "/opt/gcc-14.2.0/bin/gcc-ar-14",
+    "cpp": "/opt/gcc-14.2.0/bin/cpp-14",
+    "gcc": "/opt/gcc-14.2.0/bin/gcc-14",
+    "gcov": "/opt/gcc-14.2.0/bin/gcov-14",
+    "ld": "/opt/gcc-14.2.0/bin/ld",
+    "nm": "/opt/gcc-14.2.0/bin/gcc-nm-14",
+    "objdump": "/opt/gcc-14.2.0/bin/objdump",
+    "strip": "/opt/gcc-14.2.0/bin/strip",
     "llvm-cov": "/bin/false",  # Optional on master.
-    "objcopy": "/opt/gcc-13.2.0/bin/objcopy",
+    "objcopy": "/opt/gcc-14.2.0/bin/objcopy",
 }
 
 ci_cxx_builtin_include_directories = [
-    "/opt/gcc-13.2.0/lib/gcc/x86_64-pc-linux-gnu/13.2.0/include",
-    "/opt/gcc-13.2.0/lib/gcc/x86_64-pc-linux-gnu/13.2.0/include-fixed",
-    "/opt/gcc-13.2.0/include",
+    "/opt/gcc-14.2.0/lib/gcc/x86_64-pc-linux-gnu/14.2.0/include",
+    "/opt/gcc-14.2.0/lib/gcc/x86_64-pc-linux-gnu/14.2.0/include-fixed",
+    "/opt/gcc-14.2.0/include",
     "/usr/include",
     "/usr/lib64/",
 ]

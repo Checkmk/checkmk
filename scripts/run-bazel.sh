@@ -42,7 +42,7 @@ BUILD_ENVIRONMENT="$(
         "pathhash:/usr/lib/x86_64-linux-gnu/libc.so" \
         "pathhash:/lib64/libc.so.6" \
         "pathhash:/usr/lib64/libc.so" \
-        "pathhash:/opt/gcc-13.2.0"
+        "pathhash:/opt/gcc-14.2.0"
 )"
 
 eval "${BUILD_ENVIRONMENT}"

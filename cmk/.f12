@@ -27,7 +27,6 @@ PYTHON3_PATHS=(
     cce
     checkengine
     ec
-    fetchers
     fields
     gui
     notification_plugins

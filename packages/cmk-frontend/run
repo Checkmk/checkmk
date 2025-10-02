@@ -127,7 +127,7 @@ run_build() {
 }
 
 run_check_format() {
-    bazel run :format.check "$(pwd)"
+    bazel run :format.check "$PWD"
 }
 
 run_tsc() {
@@ -139,7 +139,7 @@ run_eslint() {
 }
 
 run_format() {
-    bazel run :format "$(pwd)"
+    bazel run :format "$PWD"
 }
 
 run_tests() {

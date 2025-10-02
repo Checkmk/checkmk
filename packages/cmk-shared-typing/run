@@ -79,11 +79,11 @@ run_build() {
 }
 
 run_check_format() {
-    bazel run :format.check "$(pwd)/source" "$(pwd)/utils"
+    bazel run //:format.check "$PWD"
 }
 
 run_format() {
-    bazel run :format "$(pwd)/source" "$(pwd)/utils"
+    bazel run //:format "$PWD"
 }
 
 main() {

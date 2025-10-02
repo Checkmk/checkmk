@@ -132,6 +132,7 @@ export const simpleIcons = [
   'top-list',
   'gauge',
   'add',
+  'user-interface',
   'widget-edit',
   'widget-clone',
   'widget-delete'
@@ -142,7 +143,7 @@ export const oneColorIcons = [
   'show-more',
   'show-less',
   'search',
-  'monitor',
+  'monitoring',
   'customize',
   'setup',
   'changes'
@@ -189,7 +190,8 @@ export const cmkMultitoneIconVariants = cva('', {
       customization: 'pink',
       others: 'grey',
       users: 'purple',
-      specialAgents: 'cyan'
+      specialAgents: 'cyan',
+      font: 'font'
     },
     size: {
       xxsmall: '8px',

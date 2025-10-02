@@ -276,6 +276,7 @@
     --color-skeleton-shimmer-2: rgb(255 255 255 / 6%);
     --color-warning: rgb(255 215 3);
     --color-danger: rgb(180 45 45);
+    --ux-nav-bg-color: rgb(17 24 29);
 
     /* ATTENTION: No explicit rgb color definitions beyond this point. Reuse variables above */
 

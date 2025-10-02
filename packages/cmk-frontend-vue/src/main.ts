@@ -15,6 +15,7 @@ import WelcomeSnapinSlideout from '@/welcome/components/snapin/WelcomeSnapinSlid
 
 import Dashboard from './dashboard-wip/DashboardApp.vue'
 import LoadingTransition from './loading-transition/LoadingTransition.vue'
+import MainMenuApp from './main-menu/MainMenuApp.vue'
 import ChangesApp from './main-menu/changes/ChangesApp.vue'
 import ModeCreateOTelConfApp from './mode-otel/ModeCreateOTelConfApp.vue'
 import ModeCreateRelayApp from './mode-relay/ModeCreateRelayApp.vue'
@@ -39,5 +40,6 @@ defineCmkComponent('cmk-unified-search', UnifiedSearchApp)
 defineCmkComponent('cmk-welcome', WelcomeApp)
 defineCmkComponent('cmk-welcome-snapin', WelcomeSnapin)
 defineCmkComponent('cmk-welcome-snapin-slideout', WelcomeSnapinSlideout)
+defineCmkComponent('cmk-main-menu', MainMenuApp)
 defineCmkComponent('cmk-main-menu-changes', ChangesApp)
 defineCmkComponent('cmk-loading-transition', LoadingTransition)

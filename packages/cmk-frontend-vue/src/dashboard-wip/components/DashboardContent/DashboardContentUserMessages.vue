@@ -17,6 +17,9 @@ import CmkIconButton from '@/components/CmkIconButton.vue'
 import DashboardContentContainer from './DashboardContentContainer.vue'
 import type { ContentProps } from './types.ts'
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
+declare let global_csrf_token: string
+
 const { _t } = usei18n()
 
 const headers: string[] = [_t('Actions'), _t('Message'), _t('Sent on'), _t('Expires on')]
@@ -66,7 +69,6 @@ class AjaxResponseError extends CmkError {
 }
 
 async function postUserMessageAction(actionType: string, msg: UserMessage): Promise<void> {
-  // @ts-expect-error Expected: "Cannot find name 'global_csrf_token'."
   const csrfToken = global_csrf_token
   const response = await cmkFetch(`ajax_user_message_action.py`, {
     method: 'POST',

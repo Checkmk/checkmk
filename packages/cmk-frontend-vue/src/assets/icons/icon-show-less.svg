@@ -1,0 +1,11 @@
+<svg width="15px" height="15px" viewBox="0 0 15 15" version="1.1" xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink">
+    <g id="more" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <circle id="Oval" class="icon-primary-color-stroke" cx="7.5" cy="7.5" r="7"></circle>
+        <g id="dots" transform="translate(3.500000, 6.500000)" class="icon-primary-color">
+            <circle id="Oval" cx="1" cy="1" r="1"></circle>
+            <circle id="Oval" cx="7" cy="1" r="1"></circle>
+            <circle id="Oval" cx="4" cy="1" r="1"></circle>
+        </g>
+    </g>
+</svg>

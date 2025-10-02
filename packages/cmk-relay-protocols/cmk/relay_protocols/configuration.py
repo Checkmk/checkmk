@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Annotated, NamedTuple, NewType
+from typing import Annotated, NamedTuple, NewType, Self
 
 from pydantic import BaseModel, Field, HttpUrl
 
@@ -54,10 +54,8 @@ class SiteConfig(BaseModel):
     relay_id: str
 
     @classmethod
-    def load(cls, path: Path) -> SiteConfig:
-        with path.open() as fin:
-            raw_config = fin.read()
-        return cls.model_validate_json(raw_config)
+    def load(cls, path: Path) -> Self:
+        return cls.model_validate_json(path.read_text())
 
 
 class EngineConfig(BaseModel):
@@ -74,7 +72,5 @@ class EngineConfig(BaseModel):
     third_party_log_level: str = "CRITICAL"
 
     @classmethod
-    def load(cls, path: Path) -> EngineConfig:
-        with path.open() as fin:
-            raw_config = fin.read()
-        return cls.model_validate_json(raw_config)
+    def load(cls, path: Path) -> Self:
+        return cls.model_validate_json(path.read_text())

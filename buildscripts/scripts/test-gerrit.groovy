@@ -146,6 +146,7 @@ def main() {
                         case "Package cmk-relay-engine":    // Tries to start docker containers
                         case "Package cmk-ccc":             // Seems to require non-root permissions, see CMK-24586
                         case "Package cmk-update-agent":    // Failing tests in k8s, detailed analysis outstanding
+                        case "Package mk-oracle":           // Runs integration tests in CV, wants to install libaio
                             relative_job_name = "${branch_base_folder}/cv/test-gerrit-single";
                             break;
                         default:

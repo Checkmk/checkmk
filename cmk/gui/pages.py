@@ -9,7 +9,7 @@ import http.client as http_client
 import json
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, override
+from typing import Any, override, Protocol
 
 import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKException, MKGeneralException
@@ -22,8 +22,11 @@ from cmk.gui.http import request, response
 from cmk.gui.log import logger
 from cmk.gui.utils.json import CustomObjectJSONEncoder
 
-PageHandlerFunc = Callable[[Config], None]
 PageResult = object
+
+
+class PageHandlerFunc(Protocol):
+    def __call__(self, config: Config) -> None: ...
 
 
 # At the moment pages are simply callables that somehow render content for the HTTP response

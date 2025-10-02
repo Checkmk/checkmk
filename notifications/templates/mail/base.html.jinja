@@ -11,7 +11,7 @@
         </style>
     </head>
     <body>
-        {% import 'macros.html' as macros %}
+        {% import 'macros.html.jinja' as macros %}
         {% set service_notification = data.WHAT == 'SERVICE' %}
         {% if service_notification %}
             {% set href = data.LINKEDSERVICEDESC.split('"')[1] %}
@@ -88,7 +88,7 @@
                                     </table>
                                 {% endif %}
                                 {% if bulk_summary %}
-                                    {% include 'bulk.html' %}
+                                    {% include 'bulk.html.jinja' %}
                                 {% endif %}
                                 {% if insert %}
                                     <table align="center"
@@ -106,32 +106,32 @@
                                     </table>
                                 {% endif %}
                                 {% if data.NOTIFICATIONTYPE in ["PROBLEM", "RECOVERY"] %}
-                                    {% include 'summary.html' %}
+                                    {% include 'summary.html.jinja' %}
                                 {% else %}
-                                    {% include 'summary_commands.html' %}
+                                    {% include 'summary_commands.html.jinja' %}
                                 {% endif %}
-                                {% include 'event_overview.html' %}
+                                {% include 'event_overview.html.jinja' %}
                                 {% if graphs and 'graph' in elements %}
-                                    {% include 'graph.html' %}
+                                    {% include 'graph.html.jinja' %}
                                 {% endif %}
                                 {% if elements_without_graph %}
-                                    {% include 'additional.html' %}
+                                    {% include 'additional.html.jinja' %}
                                 {% endif %}
                                 {% if data.PARAMETER_CONTACT_GROUPS and data.HOSTCONTACTGROUPNAMES|default(false) %}
-                                    {% include 'contact_groups.html' %}
+                                    {% include 'contact_groups.html.jinja' %}
                                 {% endif %}
                                 {% if service_notification and data.PARAMETER_SVC_LABELS %}
-                                    {% include 'service_labels.html' %}
+                                    {% include 'service_labels.html.jinja' %}
                                 {% endif %}
                                 {% if data.PARAMETER_HOST_LABELS %}
-                                    {% include 'host_labels.html' %}
+                                    {% include 'host_labels.html.jinja' %}
                                 {% endif %}
                                 {% if data.PARAMETER_HOST_TAGS %}
-                                    {% include 'host_tags.html' %}
+                                    {% include 'host_tags.html.jinja' %}
                                 {% endif %}
                                 {% if href %}{{ macros.view_issue_button(href) }}{% endif %}
                                 {% if data.PARAMETER_NOTIFICATION_RULE %}
-                                    {% include 'matching_rule.html' %}
+                                    {% include 'matching_rule.html.jinja' %}
                                 {% endif %}
                                 <td>
                                 </tr>

@@ -472,7 +472,7 @@ def construct_content(
 
     content_html = utils.substitute_context(
         TemplateRenderer().render_template(
-            "base.html",
+            "base.html.ninja",
             {
                 "data": context,
                 "graphs": file_names,

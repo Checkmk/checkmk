@@ -930,6 +930,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.ccc",
         "cmk.fields",
         "cmk.gui",
+        "cmk.metric_backend",
         "cmk.utils",
     ),
     Component("omdlib"): _allow(

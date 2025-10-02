@@ -2,7 +2,7 @@
 
 load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 load("@cmk_requirements//:requirements.bzl", "requirement")
-load("@npm_cmk_shared_typing//packages/cmk-shared-typing:json-schema-to-typescript/package_json.bzl", json2ts = "bin")
+load("@npm//packages/cmk-shared-typing:json-schema-to-typescript/package_json.bzl", json2ts = "bin")
 load("@omd_packages//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
 load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
 

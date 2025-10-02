@@ -6,29 +6,20 @@ use_repo(pnpm, "pnpm")
 
 npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm", dev_dependency = True)
 npm.npm_translate_lock(
-    name = "npm_cmk_shared_typing",
-    npmrc = "//packages/cmk-shared-typing:.npmrc",
-    pnpm_lock = "//packages/cmk-shared-typing:pnpm-lock.yaml",
-)
-use_repo(npm, "npm_cmk_shared_typing")
-npm.npm_translate_lock(
-    name = "npm_cmk_frontend_vue",
-    npmrc = "//packages/cmk-frontend-vue:.npmrc",
-    pnpm_lock = "//packages/cmk-frontend-vue:pnpm-lock.yaml",
-)
-use_repo(npm, "npm_cmk_frontend_vue")
-npm.npm_translate_lock(
-    name = "npm_cmk_frontend",
-    npmrc = "//packages/cmk-frontend:.npmrc",
-    pnpm_lock = "//packages/cmk-frontend:pnpm-lock.yaml",
-)
-use_repo(npm, "npm_cmk_frontend")
-npm.npm_translate_lock(
-    name = "npm_tooling",
+    name = "npm",
     npmrc = "//:.npmrc",
-    pnpm_lock = "//bazel/tools:pnpm-lock.yaml",
+    pnpm_lock = ":pnpm-lock.yaml",
+    data = [
+        "//:package.json",
+        "//:pnpm-workspace.yaml",
+        "//bazel/tools/package.json",
+        "//packages/cmk-frontend/package.json",
+        "//packages/cmk-frontend-vue/package.json",
+        "//packages/cmk-shared-typing/package.json",
+    ],
+    verify_node_modules_ignored = "//:.bazelignore",
 )
-use_repo(npm, "npm_tooling")
+use_repo(npm, "npm")
 
 rules_ts_ext = use_extension("@aspect_rules_ts//ts:extensions.bzl", "ext", dev_dependency = True)
 rules_ts_ext.deps()

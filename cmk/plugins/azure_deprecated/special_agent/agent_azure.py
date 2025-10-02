@@ -1471,9 +1471,11 @@ class MetricCache(DataCache):
         # For 1-min metrics, the start time should be at least 4 minutes before because of the
         # ingestion time of Azure metrics (we had to change from 3 minutes to 5 minutes because we
         # were missing some metrics with 3 minutes).
+        # For some 1-hour metrics, the ingestion time can be up to 6 hours (i.e. the SuccessServerLatency),
+        # that's the reason why we use 'ref_time - 6' here.
         # More info on Azure Monitor Ingestion time:
         # https://docs.microsoft.com/en-us/azure/azure-monitor/logs/data-ingestion-time
-        self.start_time = (ref_time - 5 * self.timedelta).strftime("%Y-%m-%dT%H:%M:%SZ")
+        self.start_time = (ref_time - 6 * self.timedelta).strftime("%Y-%m-%dT%H:%M:%SZ")
         self.end_time = ref_time.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     @staticmethod

@@ -325,10 +325,7 @@ def _try_page(file_name: str, config: Config) -> None:
         return
 
     with output_funnel.plugged():
-        if isinstance(handler, type):
-            handler().handle_page(config)
-        else:
-            handler(config)
+        handler(config)
         output_funnel.drain()
 
 

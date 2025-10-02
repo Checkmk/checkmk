@@ -53,7 +53,7 @@ tracer = trace.get_tracer()
 #  * derive all exceptions from werkzeug's http exceptions.
 
 
-def _noauth(handler: pages.PageHandler | type[pages.Page]) -> Callable[[Config], Response]:
+def _noauth(handler: pages.PageHandler) -> Callable[[Config], Response]:
     #
     # We don't have to set up anything because we assume this is only used for special calls. We
     # however have to make sure all errors get written out in plaintext, without HTML.
@@ -65,10 +65,7 @@ def _noauth(handler: pages.PageHandler | type[pages.Page]) -> Callable[[Config],
     @functools.wraps(handler)
     def _call_noauth(config: Config) -> Response:
         try:
-            if isinstance(handler, type):
-                handler().handle_page(config)
-            else:
-                handler(config)
+            handler(config)
         except HTTPRedirect:
             raise
         except Exception as e:

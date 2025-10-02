@@ -124,11 +124,20 @@ class PageRegistry(cmk.ccc.plugin_registry.Registry[PageEndpoint]):
 page_registry = PageRegistry()
 
 
-def get_page_handler(name: str, dflt: PageHandler | None = None) -> PageHandler | type[Page] | None:
+def get_page_handler(name: str, dflt: PageHandler | None = None) -> PageHandler | None:
     """Returns either the page handler registered for the given name or None
 
     In case dflt is given it returns dflt instead of None when there is no
     page handler for the requested name."""
     if endpoint := page_registry.get(name):
+        if isinstance(endpoint.handler, type):
+            return _wrap_page_as_handler(endpoint.handler)
         return endpoint.handler
     return dflt
+
+
+def _wrap_page_as_handler(page: type[Page]) -> PageHandler:
+    def wrapper(config: Config) -> None:
+        return page().handle_page(config)
+
+    return wrapper

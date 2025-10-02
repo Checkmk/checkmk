@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Annotated, NamedTuple, NewType, Self
 
@@ -37,11 +38,6 @@ class HistoryConfig(BaseModel):
     maxlen: int = 100
 
 
-class FetcherPoolConfig(BaseModel):
-    fetcher_binary: Path
-    nr_fetchers: int
-
-
 class SiteConfig(BaseModel):
     """
     Configuration which site we are connecting to, and additional information for the connection.
@@ -58,12 +54,19 @@ class SiteConfig(BaseModel):
         return cls.model_validate_json(path.read_text())
 
 
-class EngineConfig(BaseModel):
-    """configuration for relay engine expecting to exist"""
+class UserEngineConfig(BaseModel):
+    """configuration for relay engine as provided by user config during activation"""
 
-    fetcher_pool: FetcherPoolConfig
-    adhoc_fetcher_pool: FetcherPoolConfig
-    hosts: list[Host] = Field(default_factory=list)
+    num_fetchers: int
+    hosts: Sequence[Host]
+
+
+class EngineConfig(UserEngineConfig):
+    """extended configuration for relay engine"""
+
+    bin_fetcher: Path = Path("/opt/check-mk-relay/bin/fetcher")
+    bin_adhoc_fetcher: Path = Path("/opt/check-mk-relay/bin/fetch-ad-hoc")
+    num_adhoc_fetchers: int = 4
     daemon_sleep: float = 0.5
     poll_sleep: float = 0.5
     host_scheduler_sleep: float = 0.5

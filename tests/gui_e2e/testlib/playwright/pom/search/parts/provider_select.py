@@ -22,9 +22,10 @@ class ProviderSelect:
     def button(self) -> Locator:
         return self.locator.get_by_role("button")
 
+    @property
+    def button_text(self) -> str:
+        return self.button.inner_text()
+
     def select(self, provider_name: Literal["All", "Monitoring", "Customize", "Setup"]) -> None:
         self.button.click()
         self.locator.get_by_role("option", name=provider_name).click()
-
-    def value(self) -> str:
-        return self.button.inner_text()

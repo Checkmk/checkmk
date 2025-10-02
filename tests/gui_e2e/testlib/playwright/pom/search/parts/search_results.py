@@ -18,7 +18,7 @@ class SearchResults:
         self.locator = locator
 
     @property
-    def get_results(self) -> Locator:
+    def result_items(self) -> Locator:
         self.locator.wait_for(state="visible")
         return self.locator.get_by_role("listitem")
 

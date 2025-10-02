@@ -105,7 +105,6 @@ def update_tag_config(tag_config: TagConfig, pprint_value: bool) -> None:
     user.need_permission("wato.hosttags")
     TagConfigFile().save(tag_config.get_dict_format(), pprint_value)
     _update_tag_dependencies(tag_config, pprint_value=pprint_value)
-    hooks.call("tags-changed")
 
 
 def load_tag_group(ident: TagGroupID) -> TagGroup | None:

@@ -291,13 +291,6 @@ def fixture_suppress_bake_agents_in_background(mocker: MockerFixture) -> MagicMo
     )
 
 
-@pytest.fixture(name="suppress_spec_generation_in_background")
-def suppress_spec_generation_in_background(mocker: MockerFixture) -> MagicMock:
-    return mocker.patch(
-        "cmk.gui.openapi.spec.spec_generator_job.trigger_spec_generation_in_background",
-    )
-
-
 @pytest.fixture()
 def with_automation_user(load_config: Config) -> Iterator[tuple[UserId, str]]:
     with create_and_destroy_user(automation=True, role="admin", config=load_config) as user:

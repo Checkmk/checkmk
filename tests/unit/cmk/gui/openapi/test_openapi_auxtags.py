@@ -30,7 +30,6 @@ def test_create_auxtag_invalid_data(clients: ClientRegistry) -> None:
     clients.AuxTag.create(tag_data=test_data, expect_ok=False).assert_status_code(400)
 
 
-@pytest.mark.usefixtures("suppress_spec_generation_in_background")
 def test_update_auxtag_invalid_data(clients: ClientRegistry) -> None:
     test_data: dict[str, Any] = {
         "aux_tag_id": "aux_tag_id_1",
@@ -90,7 +89,6 @@ def test_get_builtin_auxtags(clients: ClientRegistry) -> None:
     }
 
 
-@pytest.mark.usefixtures("suppress_spec_generation_in_background")
 def test_get_builtin_and_custom_auxtags(clients: ClientRegistry) -> None:
     test_data: dict[str, Any] = {
         "aux_tag_id": "aux_tag_id_1",
@@ -111,7 +109,6 @@ def test_get_builtin_and_custom_auxtags(clients: ClientRegistry) -> None:
     }
 
 
-@pytest.mark.usefixtures("suppress_spec_generation_in_background")
 def test_update_custom_aux_tag_title(clients: ClientRegistry) -> None:
     test_data: dict[str, Any] = {
         "aux_tag_id": "aux_tag_id_1",
@@ -133,7 +130,6 @@ def test_update_custom_aux_tag_title(clients: ClientRegistry) -> None:
     )
 
 
-@pytest.mark.usefixtures("suppress_spec_generation_in_background")
 def test_update_custom_aux_tag_topic_and_help(clients: ClientRegistry) -> None:
     test_data: dict[str, Any] = {
         "aux_tag_id": "aux_tag_id_1",
@@ -152,7 +148,6 @@ def test_update_custom_aux_tag_topic_and_help(clients: ClientRegistry) -> None:
     assert resp.json["extensions"]["help"] == "edited_help"
 
 
-@pytest.mark.usefixtures("suppress_spec_generation_in_background")
 def test_delete_custom_aux_tag(clients: ClientRegistry) -> None:
     test_data: dict[str, Any] = {
         "aux_tag_id": "aux_tag_id_1",
@@ -177,7 +172,6 @@ def test_edit_non_existing_aux_tag(clients: ClientRegistry) -> None:
     ).assert_status_code(404)
 
 
-@pytest.mark.usefixtures("suppress_spec_generation_in_background")
 def test_delete_tag_that_belongs_to_a_tag_group(clients: ClientRegistry) -> None:
     test_data: dict[str, Any] = {
         "aux_tag_id": "aux_tag_id_1",
@@ -260,7 +254,6 @@ def test_create_host_tag_with_newline_in_the_id(
     )
 
 
-@pytest.mark.usefixtures("suppress_spec_generation_in_background")
 def test_id_already_in_use_by_custom_tag_group(clients: ClientRegistry) -> None:
     custom_tag_group = "criticality"
     clients.HostTagGroup.create(
@@ -288,7 +281,6 @@ def test_id_already_in_use_by_custom_tag_group(clients: ClientRegistry) -> None:
     )
 
 
-@pytest.mark.usefixtures("suppress_spec_generation_in_background")
 def test_id_already_in_use_by_builtin_tag_group(clients: ClientRegistry) -> None:
     builtin_tag_group = "agent"
     builtin_tag_group_resp = clients.AuxTag.create(
@@ -306,7 +298,6 @@ def test_id_already_in_use_by_builtin_tag_group(clients: ClientRegistry) -> None
     )
 
 
-@pytest.mark.usefixtures("suppress_spec_generation_in_background")
 def test_id_already_in_use_by_custom_aux_tag(clients: ClientRegistry) -> None:
     custom_aux_tag = "interface"
 

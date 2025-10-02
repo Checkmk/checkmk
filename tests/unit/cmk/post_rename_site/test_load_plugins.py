@@ -22,7 +22,6 @@ def fixture_expected_plugins() -> list[str]:
         "warn_remote_site",
         "warn_about_network_ports",
         "warn_about_configs_to_review",
-        "compute_api_spec",
     ]
 
     # ATTENTION. The edition related code below is confusing and incorrect. The reason we need it

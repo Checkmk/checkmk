@@ -2068,7 +2068,6 @@ def setup_host_tags_on_site(clients: ClientRegistry) -> None:
     clients.AuxTag.create(tag_data=test_data)
 
 
-@pytest.mark.usefixtures("suppress_spec_generation_in_background")
 def test_match_host_tags(clients: ClientRegistry) -> None:
     setup_host_tags_on_site(clients)
     config = notification_rule_request_example()

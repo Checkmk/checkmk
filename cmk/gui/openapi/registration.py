@@ -46,7 +46,6 @@ from .api_endpoints.user_role import registration as api_user_role
 from .framework.registry import VersionedEndpointRegistry
 from .restful_objects.endpoint_family import EndpointFamilyRegistry
 from .shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
-from .spec import spec_generator_job
 
 
 def register(
@@ -90,7 +89,6 @@ def register(
     time_periods.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     user_config.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     version.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
-    spec_generator_job.register(job_registry)
     quick_setup.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
     broker_connection.register(endpoint_registry, ignore_duplicates=ignore_duplicate_endpoints)
 

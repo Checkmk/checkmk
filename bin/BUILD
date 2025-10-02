@@ -54,7 +54,6 @@ pkg_files(
         ":cmk-automation-helper",
         ":cmk-broker-test",
         ":cmk-cert",
-        ":cmk-compute-api-spec",
         ":cmk-convert-rrds",
         ":cmk-create-rrd",
         ":cmk-general-version-infos",

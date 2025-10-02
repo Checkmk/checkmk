@@ -102,27 +102,23 @@ build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE) $(AGENT_CTL) $(AGENT_CTL_AAR
 
 .PHONY: $(AGENT_CTL)
 $(AGENT_CTL):
-	bazel build //packages/cmk-agent-ctl:cmk-agent-ctl-musl --cmk_version=$(NEW_VERSION)
+	bazel build //packages/cmk-agent-ctl:cmk-agent-ctl-musl --compilation_mode=opt --cmk_version=$(NEW_VERSION)
 	mkdir -p linux
 	install -m 755 $(REPO_PATH)/bazel-bin/packages/cmk-agent-ctl/cmk-agent-ctl-musl $(AGENT_CTL)
-	strip $(AGENT_CTL)
 
 $(AGENT_CTL_GZ): $(AGENT_CTL)
 	gzip --best --keep --force $(AGENT_CTL)
 
 .PHONY: $(AGENT_CTL_AARCH64)
 $(AGENT_CTL_AARCH64):
-	bazel build //packages/cmk-agent-ctl:cmk-agent-ctl-musl-aarch64 --cmk_version=$(NEW_VERSION)
+	bazel build //packages/cmk-agent-ctl:cmk-agent-ctl-musl-aarch64 --compilation_mode=opt --cmk_version=$(NEW_VERSION)
 	mkdir -p linux
 	install -m 755 $(REPO_PATH)/bazel-bin/packages/cmk-agent-ctl/cmk-agent-ctl-musl-aarch64 $(AGENT_CTL_AARCH64)
-	# TODO: strip the aarch64 binary via the aarch64 strip from the musl toolchain
-	# strip $(AGENT_CTL_AARCH64)
 
 $(MK_SQL):
-	bazel build //packages/mk-sql:mk-sql-musl --cmk_version=$(NEW_VERSION)
+	bazel build //packages/mk-sql:mk-sql-musl --compilation_mode=opt --cmk_version=$(NEW_VERSION)
 	mkdir -p linux
 	install -m 755 $(REPO_PATH)/bazel-bin/packages/mk-sql/mk-sql-musl $(MK_SQL)
-	strip $(MK_SQL)
 
 packages: $(DEB_PACKAGE) $(RPM_PACKAGE)
 deb: $(DEB_PACKAGE)

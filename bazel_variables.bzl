@@ -48,10 +48,10 @@ edition_deps = {
         "//non-free/packages/cmk-otel-collector:pkg_tar",
         "//non-free/packages/cmk-update-agent:pkg_tar",
         "//non-free/packages/cmk-relay-engine:pkg_tar",
+        "//omd/non-free/packages/metric-backend:pkg_tar",
         "//omd/packages/jaeger:pkg_tar",
         "//omd/packages/nagvis:pkg_tar",
         "//omd/packages/enterprise",
-        "//omd/packages/metric-backend:pkg_tar",
         "//omd/packages/cloud",
     ],
     "cee": [
@@ -72,10 +72,10 @@ edition_deps = {
         "//non-free/packages/cmk-otel-collector:pkg_tar",
         "//non-free/packages/cmk-update-agent:pkg_tar",
         "//non-free/packages/cmk-relay-engine:pkg_tar",
+        "//omd/non-free/packages/metric-backend:pkg_tar",
         "//omd/packages/jaeger:pkg_tar",
         "//omd/packages/nagvis:pkg_tar",
         "//omd/packages/enterprise",
-        "//omd/packages/metric-backend:pkg_tar",
         "//omd/packages/cloud",
     ],
     "cse": [
@@ -114,7 +114,7 @@ edition_skel_permissions = {
         "//omd/packages/rabbitmq:skel.permissions",
         "//omd/packages/nagvis:skel.permissions",
         "//omd/packages/enterprise:skel.permissions",
-        "//omd/packages/metric-backend:skel.permissions",
+        "//omd/non-free/packages/metric-backend:skel.permissions",
     ],
     "cee": [
         "//omd/packages/maintenance:skel.permissions",
@@ -139,7 +139,7 @@ edition_skel_permissions = {
         "//omd/packages/rabbitmq:skel.permissions",
         "//omd/packages/nagvis:skel.permissions",
         "//omd/packages/enterprise:skel.permissions",
-        "//omd/packages/metric-backend:skel.permissions",
+        "//omd/non-free/packages/metric-backend:skel.permissions",
     ],
     "cse": [
         "//omd/packages/maintenance:skel.permissions",

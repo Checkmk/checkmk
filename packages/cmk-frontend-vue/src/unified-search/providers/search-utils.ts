@@ -273,7 +273,7 @@ function breadcrumb(provider: UnifiedSearchProviderIdentifier, topic: string): s
   return breadcrumb
 }
 
-function mapIcon(topic: string, provider: SearchProviderKeys): CmkIconProps {
+export function mapIcon(topic: string, provider: SearchProviderKeys): CmkIconProps {
   topic = topic
     .toLowerCase()
     .replace(/ /g, '_')

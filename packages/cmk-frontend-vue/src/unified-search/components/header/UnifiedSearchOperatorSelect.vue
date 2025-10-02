@@ -217,6 +217,7 @@ function toggleOperatorOptions() {
   opacity: 0.5;
   font-weight: var(--font-weight-bold);
   padding: var(--dimension-2) var(--dimension-3) !important;
+  list-style-type: none;
 }
 
 .unified-search-operator-option-list {

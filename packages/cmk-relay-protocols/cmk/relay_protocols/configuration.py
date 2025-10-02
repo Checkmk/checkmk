@@ -66,8 +66,9 @@ class EngineConfig(BaseModel):
     fetcher_pool: FetcherPoolConfig
     adhoc_fetcher_pool: FetcherPoolConfig
     hosts: list[Host] = Field(default_factory=list)
-    main_sleep: float = 0.5
+    daemon_sleep: float = 0.5
     poll_sleep: float = 0.5
+    host_scheduler_sleep: float = 0.5
     poll_history: HistoryConfig = HistoryConfig()
     log_level: str = "INFO"
     third_party_log_level: str = "CRITICAL"

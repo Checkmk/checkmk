@@ -4,16 +4,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Scrape Werks from changes listed in Checkmk repository."""
 
+import json
 import os
 import re
 from argparse import ArgumentParser, Namespace
+from collections.abc import Iterator
+from enum import StrEnum
+from json import JSONDecodeError
 from pathlib import Path
 from typing import Final
 
-from scripts.gerrit_api.client import GerritClient, TChangeStatus
+import httpx
+from requests.auth import HTTPBasicAuth
 
 ENV_GERRIT_USER: Final = "GERRIT_USER"
 ENV_GERRIT_HTTP_CREDS: Final = "GERRIT_HTTP_CREDS"
+GERRIT_API_CHANGES: Final = "https://review.lan.tribe29.com/a/changes"
+GERRIT_PREFIX: Final = r")]}'"
+
+
+class TWerkStatus(StrEnum):
+    ALL = "all"
+    NEW = "new"
+    MERGED = "merged"
 
 
 class TCliArgs(Namespace):
@@ -102,8 +115,8 @@ def parsed_arguments() -> type[TCliArgs]:
         dest="status",
         action="store",
         type=str,
-        choices=TChangeStatus,
-        default=TChangeStatus.ALL,
+        choices=TWerkStatus,
+        default=TWerkStatus.ALL,
         help=(
             "List werks based on status of the gerrit change. "
             "By default, werks corresponding to `all` gerrit changes are listed."
@@ -144,30 +157,49 @@ def create_search_query(args: type[TCliArgs]) -> str:
     query[branch] = f"release/{args.cmk_version}" if "p" in args.cmk_version else args.cmk_version
     if query[branch] == "2.5.0":
         query[branch] = "master"
-    query[status] = "" if args.status == TChangeStatus.ALL else args.status
+    query[status] = "" if args.status == TWerkStatus.ALL else args.status
     return "+".join([f'{key}:"{query[key]}"' for key in query if query[key]])
+
+
+def parse_gerrit_response(response_lines: Iterator[str]) -> Iterator[str]:
+    """Ignore `GERRIT_PREFIX` from the response and then return the actual details."""
+    for line in response_lines:
+        if line == GERRIT_PREFIX:
+            continue
+        yield line
 
 
 def main() -> None:
     args = parsed_arguments()
-    client = GerritClient(args.username, args.http_creds)
+    gerrit_client = httpx.Client(auth=HTTPBasicAuth(args.username, args.http_creds))
+
+    query = create_search_query(args)
+    url = f"{GERRIT_API_CHANGES}/?q={query}"
+    resp = gerrit_client.get(url)
+    resp.raise_for_status()
 
     # parse changes
     reverted_changes = []
-    for change in client.changes_api.get_changes(query=create_search_query(args)):
-        # do not include changes which revert a Werk.
-        if change.revert_of != 0:
-            reverted_changes.append(change.revert_of)
-            continue
-        if (
-            # ignore abandoned changes.
-            change.status is not TChangeStatus.ABANDONED
-            # ignore changes which are reverted.
-            and change.virtual_id_number not in reverted_changes
-            # ignore changes which are WIP.
-            and not change.work_in_progress
-        ):
-            print(change)
+    for line in parse_gerrit_response(resp.iter_lines()):
+        try:
+            for change in json.loads(line):
+                # do not include changes which revert a Werk.
+                if change.get("revert_of"):
+                    reverted_changes.append(change["revert_of"])
+                    continue
+
+                if (
+                    # ignore abandoned changes.
+                    change["status"].lower() in TWerkStatus
+                    # ignore changes which are reverted.
+                    and change["virtual_id_number"] not in reverted_changes
+                    # ignore changes which are WIP.
+                    and not change.get("work_in_progress", False)
+                ):
+                    print(change["change_id"], change["status"], change["subject"])
+        except JSONDecodeError as exc:
+            exc.add_note(f"Could not process the response! Reponse text:\n{line}")
+            raise exc
 
 
 if __name__ == "__main__":

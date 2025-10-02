@@ -139,6 +139,7 @@ class GraphWidgetPage(cmk.gui.pages.Page):
                     graphs_from_api,
                     UserPermissions.from_config(config, permission_registry),
                     debug=config.debug,
+                    graph_timeranges=config.graph_timeranges,
                     graph_display_id=widget_id,
                     time_range=graph_config["timerange"],
                 )

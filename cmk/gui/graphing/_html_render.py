@@ -20,7 +20,7 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.gui.color import render_color_icon
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.graphing._graph_templates import (
     get_template_graph_specification,
@@ -41,7 +41,7 @@ from cmk.gui.logged_in import (
 from cmk.gui.pages import AjaxPage, PageResult
 from cmk.gui.sites import get_alias_of_host
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import SizePT
+from cmk.gui.type_defs import GraphTimerange, SizePT
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
@@ -112,6 +112,7 @@ def host_service_graph_popup_cmk(
     user_permissions: UserPermissions,
     *,
     debug: bool,
+    graph_timeranges: Sequence[GraphTimerange],
 ) -> None:
     graph_render_config = GraphRenderConfig.from_user_context_and_options(
         user,
@@ -145,17 +146,18 @@ def host_service_graph_popup_cmk(
             registered_graphs,
             user_permissions,
             debug=debug,
+            graph_timeranges=graph_timeranges,
             render_async=False,
         )
     )
 
 
-def render_graph_error_html(*, title: str, msg_or_exc: Exception | str) -> HTML:
-    if isinstance(msg_or_exc, MKGeneralException) and not active_config.debug:
+def render_graph_error_html(*, title: str, msg_or_exc: Exception | str, debug: bool) -> HTML:
+    if isinstance(msg_or_exc, MKGeneralException) and not debug:
         msg = "%s" % msg_or_exc
 
     elif isinstance(msg_or_exc, Exception):
-        if active_config.debug:
+        if debug:
             raise msg_or_exc
         msg = traceback.format_exc()
     else:
@@ -706,6 +708,7 @@ def render_graphs_from_specification_html(
     user_permissions: UserPermissions,
     *,
     debug: bool,
+    graph_timeranges: Sequence[GraphTimerange],
     render_async: bool = True,
     graph_display_id: str = "",
 ) -> HTML:
@@ -727,15 +730,22 @@ def render_graphs_from_specification_html(
                     graph_specification,
                 )
             ),
+            debug=debug,
         )
     except Exception as e:
-        return render_graph_error_html(title=_("Cannot calculate graph recipes"), msg_or_exc=e)
+        return render_graph_error_html(
+            title=_("Cannot calculate graph recipes"),
+            msg_or_exc=e,
+            debug=debug,
+        )
 
     return _render_graphs_from_definitions(
         graph_recipes,
         graph_data_range,
         graph_render_config,
         registered_metrics,
+        debug=debug,
+        graph_timeranges=graph_timeranges,
         render_async=render_async,
         graph_display_id=graph_display_id,
     )
@@ -747,6 +757,8 @@ def _render_graphs_from_definitions(
     graph_render_config: GraphRenderConfig,
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
+    debug: bool,
+    graph_timeranges: Sequence[GraphTimerange],
     render_async: bool = True,
     graph_display_id: str = "",
 ) -> HTML:
@@ -772,6 +784,8 @@ def _render_graphs_from_definitions(
                 recipe_specific_data_range,
                 recipe_specific_render_config,
                 registered_metrics,
+                debug=debug,
+                graph_timeranges=graph_timeranges,
                 graph_display_id=graph_display_id,
             )
     return output
@@ -826,6 +840,8 @@ class AjaxRenderGraphContent(AjaxPage):
             GraphDataRange.model_validate(api_request["graph_data_range"]),
             GraphRenderConfig.model_validate(api_request["graph_render_config"]),
             metrics_from_api,
+            debug=config.debug,
+            graph_timeranges=config.graph_timeranges,
             graph_display_id=api_request["graph_display_id"],
         )
 
@@ -836,6 +852,8 @@ def _render_graph_content_html(
     graph_render_config: GraphRenderConfig,
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
+    debug: bool,
+    graph_timeranges: Sequence[GraphTimerange],
     graph_display_id: str = "",
 ) -> HTML:
     try:
@@ -855,6 +873,7 @@ def _render_graph_content_html(
                     graph_recipe,
                     graph_render_config,
                     registered_metrics,
+                    graph_timeranges=graph_timeranges,
                     graph_display_id=graph_display_id,
                 ),
                 class_="graph_with_timeranges",
@@ -865,13 +884,18 @@ def _render_graph_content_html(
         return render_graph_error_html(
             title=_("Cannot create graph"),
             msg_or_exc=_("Cannot fetch data via Livestatus"),
+            debug=debug,
         )
 
     except MKMissingDataError as e:
         return html.render_message(str(e))
 
     except Exception as e:
-        return render_graph_error_html(title=_("Cannot create graph"), msg_or_exc=e)
+        return render_graph_error_html(
+            title=_("Cannot create graph"),
+            msg_or_exc=e,
+            debug=debug,
+        )
 
 
 def _render_time_range_selection(
@@ -879,12 +903,13 @@ def _render_time_range_selection(
     graph_render_config: GraphRenderConfig,
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
+    graph_timeranges: Sequence[GraphTimerange],
     graph_display_id: str,
 ) -> HTML:
     now = int(time.time())
     graph_render_config = copy.deepcopy(graph_render_config)
     rows = []
-    for timerange_attrs in active_config.graph_timeranges:
+    for timerange_attrs in graph_timeranges:
         duration = timerange_attrs["duration"]
         assert isinstance(duration, int)
 
@@ -1068,6 +1093,7 @@ def host_service_graph_dashlet_cmk(
     user_permissions: UserPermissions,
     *,
     debug: bool,
+    graph_timeranges: Sequence[GraphTimerange],
     graph_display_id: str = "",
     time_range: TimerangeValue = None,
 ) -> HTML:
@@ -1121,13 +1147,18 @@ def host_service_graph_dashlet_cmk(
                     graph_specification,
                 )
             ),
+            debug=debug,
         )
     except MKMissingDataError as e:
         # In case of missing data, the according message is rendered without a traceback. This
         # specific exception handling is needed for the Vue dashboard rendering.
         return html.render_message(str(e))
     except Exception as e:
-        return render_graph_error_html(title=_("Cannot calculate graph recipes"), msg_or_exc=e)
+        return render_graph_error_html(
+            title=_("Cannot calculate graph recipes"),
+            msg_or_exc=e,
+            debug=debug,
+        )
 
     if graph_recipes:
         graph_recipe = graph_recipes[0]
@@ -1135,6 +1166,7 @@ def host_service_graph_dashlet_cmk(
         return render_graph_error_html(
             title=_("No graph recipe found"),
             msg_or_exc=_("Failed to calculate a graph recipe."),
+            debug=debug,
         )
 
     # When the legend is enabled, we need to reduce the height by the height of the legend to
@@ -1156,6 +1188,7 @@ def host_service_graph_dashlet_cmk(
                 return render_graph_error_html(
                     title=_("Dashlet too short to render graph"),
                     msg_or_exc=_("Either increase the dashlet height or disable the graph legend."),
+                    debug=debug,
                 )
             graph_render_config.size = (width, graph_height)
 
@@ -1164,6 +1197,8 @@ def host_service_graph_dashlet_cmk(
         graph_data_range,
         graph_render_config,
         registered_metrics,
+        debug=debug,
+        graph_timeranges=graph_timeranges,
         render_async=False,
         graph_display_id=graph_display_id,
     )

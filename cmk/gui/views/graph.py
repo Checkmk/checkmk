@@ -41,6 +41,7 @@ from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
+    GraphTimerange,
     PainterParameters,
     Row,
     ViewName,
@@ -176,8 +177,9 @@ def _paint_time_graph_cmk(
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     user_permissions: UserPermissions,
-    debug: bool,
     *,
+    debug: bool,
+    graph_timeranges: Sequence[GraphTimerange],
     user: LoggedInUser,
     request: Request,
     response: Response,
@@ -262,6 +264,7 @@ def _paint_time_graph_cmk(
         registered_graphs,
         user_permissions,
         debug=debug,
+        graph_timeranges=graph_timeranges,
         # Ideally, we would use 2-dim. coordinates: (row_idx, col_idx).
         # Unfortunately, we have no access to this information here. Regarding the rows, we could
         # use (site, host, service) as identifier, but for the columns, there does not seem to be
@@ -353,6 +356,7 @@ class PainterServiceGraphs(Painter):
             painter_options=self._painter_options,
             user_permissions=self._user_permissions,
             debug=self.config.debug,
+            graph_timeranges=self.config.graph_timeranges,
             show_time_range_previews=True,
         )
 
@@ -402,6 +406,7 @@ class PainterHostGraphs(Painter):
             painter_options=self._painter_options,
             user_permissions=self._user_permissions,
             debug=self.config.debug,
+            graph_timeranges=self.config.graph_timeranges,
             show_time_range_previews=True,
             # for PainterHostGraphs used to paint service graphs (view "Service graphs of host"),
             # also render the graphs if there are no historic metrics available (but perf data is)
@@ -477,6 +482,7 @@ class PainterSvcPnpgraph(Painter):
             painter_options=self._painter_options,
             user_permissions=self._user_permissions,
             debug=self.config.debug,
+            graph_timeranges=self.config.graph_timeranges,
         )
 
     def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
@@ -528,6 +534,7 @@ class PainterHostPnpgraph(Painter):
             painter_options=self._painter_options,
             user_permissions=self._user_permissions,
             debug=self.config.debug,
+            graph_timeranges=self.config.graph_timeranges,
         )
 
     def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:

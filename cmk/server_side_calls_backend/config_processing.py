@@ -5,7 +5,7 @@
 
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Generic, Literal, Self, TypeVar
+from typing import Generic, Literal, TypeVar
 
 from cmk.server_side_calls.v1 import EnvProxy, NoProxy, Secret, URLProxy
 from cmk.utils import config_warnings
@@ -13,47 +13,36 @@ from cmk.utils import config_warnings
 CheckCommandArguments = Iterable[int | float | str | tuple[str, str, str]]
 
 
-@dataclass(frozen=True, kw_only=True)
-class PreprocessingResult:
-    processed_rules: Sequence[tuple[str, Sequence[Mapping[str, object]]]]
-    ad_hoc_secrets: Mapping[str, str]
+def extract_all_adhoc_secrets(
+    rules_by_name: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
+) -> Mapping[str, str]:
+    """
+    >>> extract_all_adhoc_secrets(
+    ...     [
+    ...         (
+    ...             'pure_storage_fa',
+    ...             [
+    ...                 {
+    ...                     'api_token': ('cmk_postprocessed','explicit_password', (':uuid:1234', 'knubblwubbl')),
+    ...                     'timeout': 5.0,
+    ...                 },
+    ...             ],
+    ...         ),
+    ...     ],
+    ... )
+    {':uuid:1234': 'knubblwubbl'}
+    """
+    preprocessing_results = [
+        (name, [process_configuration_to_parameters(rule) for rule in rules])
+        for name, rules in rules_by_name
+    ]
 
-    @classmethod
-    def from_config(
-        cls, rules_by_name: Sequence[tuple[str, Sequence[Mapping[str, object]]]]
-    ) -> Self:
-        """
-        >>> PreprocessingResult.from_config(
-        ...     [
-        ...         (
-        ...             'pure_storage_fa',
-        ...             [
-        ...                 {
-        ...                     'api_token': ('cmk_postprocessed','explicit_password', (':uuid:1234', 'knubblwubbl')),
-        ...                     'timeout': 5.0,
-        ...                 },
-        ...             ],
-        ...         ),
-        ...     ],
-        ... )
-        PreprocessingResult(processed_rules=[('pure_storage_fa', [{'api_token': Secret(...), 'timeout': 5.0}])], ad_hoc_secrets={':uuid:1234': 'knubblwubbl'})
-        """
-        preprocessing_results = [
-            (name, [process_configuration_to_parameters(rule) for rule in rules])
-            for name, rules in rules_by_name
-        ]
-
-        return cls(
-            processed_rules=[
-                (name, [res.value for res in prep]) for name, prep in preprocessing_results
-            ],
-            ad_hoc_secrets={
-                k: v
-                for name, prep in preprocessing_results
-                for res in prep
-                for k, v in res.found_secrets.items()
-            },
-        )
+    return {
+        k: v
+        for name, prep in preprocessing_results
+        for res in prep
+        for k, v in res.found_secrets.items()
+    }
 
 
 _RuleSetType_co = TypeVar("_RuleSetType_co", covariant=True)

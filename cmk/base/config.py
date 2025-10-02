@@ -123,7 +123,9 @@ from cmk.server_side_calls_backend import (
     SpecialAgentCommandLine,
     SSCRules,
 )
-from cmk.server_side_calls_backend.config_processing import PreprocessingResult
+from cmk.server_side_calls_backend.config_processing import (
+    extract_all_adhoc_secrets,
+)
 from cmk.snmplib import (  # some of these are required in the modules' namespace to load the configuration!
     parse_oid_range_config,
     SNMPBackendEnum,
@@ -2510,12 +2512,8 @@ class ConfigCache:
 
         return {
             **password_store.load(password_store.password_store_path()),
-            **PreprocessingResult.from_config(
-                _compose_filtered_ssc_rules(active_checks.items())
-            ).ad_hoc_secrets,
-            **PreprocessingResult.from_config(
-                _compose_filtered_ssc_rules(special_agents.items())
-            ).ad_hoc_secrets,
+            **extract_all_adhoc_secrets(_compose_filtered_ssc_rules(active_checks.items())),
+            **extract_all_adhoc_secrets(_compose_filtered_ssc_rules(special_agents.items())),
         }
 
     def hostgroups(self, host_name: HostName) -> Sequence[str]:

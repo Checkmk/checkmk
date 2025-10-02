@@ -13,8 +13,16 @@ from cmk.utils import config_warnings
 CheckCommandArguments = Iterable[int | float | str | tuple[str, str, str]]
 
 
+@dataclass(frozen=True)
+class ProxyConfig:
+    host_name: str
+    global_proxies: Mapping[str, Mapping[str, str]]
+
+
 def extract_all_adhoc_secrets(
     rules_by_name: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
+    # TODO: we will have to pass proxy config here as well if global proxies can contain explicit secrets
+    proxy_config: ProxyConfig | None = None,
 ) -> Mapping[str, str]:
     """
     >>> extract_all_adhoc_secrets(
@@ -32,8 +40,12 @@ def extract_all_adhoc_secrets(
     ... )
     {':uuid:1234': 'knubblwubbl'}
     """
+    use_alpha = True  # whatever is more comprehensive in extracting secrets
     preprocessing_results = [
-        (name, [process_configuration_to_parameters(rule) for rule in rules])
+        (
+            name,
+            [process_configuration_to_parameters(rule, proxy_config, use_alpha) for rule in rules],
+        )
         for name, rules in rules_by_name
     ]
 
@@ -49,12 +61,6 @@ _RuleSetType_co = TypeVar("_RuleSetType_co", covariant=True)
 
 
 @dataclass(frozen=True)
-class ProxyConfig:
-    host_name: str
-    global_proxies: Mapping[str, Mapping[str, str]]
-
-
-@dataclass(frozen=True)
 class ReplacementResult(Generic[_RuleSetType_co]):
     value: _RuleSetType_co
     found_secrets: Mapping[str, str]
@@ -63,9 +69,10 @@ class ReplacementResult(Generic[_RuleSetType_co]):
 
 def process_configuration_to_parameters(
     params: Mapping[str, object],
-    proxy_config: ProxyConfig | None = None,
+    proxy_config: ProxyConfig | None,
+    is_alpha: bool,
 ) -> ReplacementResult[Mapping[str, object]]:
-    d_results = [(k, _processed_config_value(v, proxy_config)) for k, v in params.items()]
+    d_results = [(k, _processed_config_value(v, proxy_config, is_alpha)) for k, v in params.items()]
     return ReplacementResult(
         value={k: res.value for k, res in d_results},
         found_secrets={k: v for _, res in d_results for k, v in res.found_secrets.items()},
@@ -76,10 +83,11 @@ def process_configuration_to_parameters(
 def _processed_config_value(
     params: object,
     proxy_config: ProxyConfig | None,
+    is_alpha: bool,
 ) -> ReplacementResult[object]:
     match params:
         case list():
-            results = [_processed_config_value(v, proxy_config) for v in params]
+            results = [_processed_config_value(v, proxy_config, is_alpha) for v in params]
             return ReplacementResult(
                 value=[res.value for res in results],
                 found_secrets={k: v for res in results for k, v in res.found_secrets.items()},
@@ -103,14 +111,14 @@ def _processed_config_value(
                             surrogates={},
                         )
 
-            results = [_processed_config_value(v, proxy_config) for v in params]
+            results = [_processed_config_value(v, proxy_config, is_alpha) for v in params]
             return ReplacementResult(
                 value=tuple(res.value for res in results),
                 found_secrets={k: v for res in results for k, v in res.found_secrets.items()},
                 surrogates={k: v for res in results for k, v in res.surrogates.items()},
             )
         case dict():
-            return process_configuration_to_parameters(params, proxy_config)
+            return process_configuration_to_parameters(params, proxy_config, is_alpha)
     return ReplacementResult(value=params, found_secrets={}, surrogates={})
 
 

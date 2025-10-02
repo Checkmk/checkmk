@@ -95,7 +95,8 @@ def test_quick_setup_aws_transform_to_valuespec() -> None:
 def test_quick_setup_aws_to_ssc() -> None:
     # GIVEN
     qs_params = aws_transform_to_disk(QUICK_SETUP_PARAMS)
-    params = process_configuration_to_parameters(qs_params)
+    # this is an implementation detail of the backend and should be removed from this test.
+    params = process_configuration_to_parameters(qs_params, proxy_config=None, is_alpha=False)
 
     # WHEN
     special_agent_calls = list(special_agent_aws(params.value, HostConfig(name="foo")))

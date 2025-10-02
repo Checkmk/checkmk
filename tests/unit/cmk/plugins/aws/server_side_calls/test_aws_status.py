@@ -4,16 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.plugins.aws.server_side_calls.aws_status_agent_call import special_agent_aws_status
 from cmk.server_side_calls.v1 import HostConfig
-from cmk.server_side_calls_backend.config_processing import process_configuration_to_parameters
 
 
 def test_aws_status_fs_values_to_args() -> None:
     # GIVEN
-    value = {"regions_to_monitor": ["ap_northeast_2", "ca_central_1"]}
-    params = process_configuration_to_parameters(value)
+    params = {"regions_to_monitor": ["ap_northeast_2", "ca_central_1"]}
 
     # WHEN
-    special_agent_calls = list(special_agent_aws_status(params.value, HostConfig(name="foo")))
+    special_agent_calls = list(special_agent_aws_status(params, HostConfig(name="foo")))
 
     # THEN
     assert len(special_agent_calls) == 1

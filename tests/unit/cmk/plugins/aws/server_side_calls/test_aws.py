@@ -347,7 +347,7 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
 )
 def test_values_to_args(value: Mapping[str, Any], expected_args: Sequence[Any]) -> None:
     # GIVEN
-    params = process_configuration_to_parameters(value)
+    params = process_configuration_to_parameters(value, proxy_config=None, is_alpha=False)
 
     # WHEN
     special_agent_calls = list(special_agent_aws(params.value, HostConfig(name="foo")))

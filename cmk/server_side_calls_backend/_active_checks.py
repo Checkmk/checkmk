@@ -9,7 +9,7 @@ from pathlib import Path
 
 from cmk.ccc.hostaddress import HostName
 from cmk.discover_plugins import PluginLocation
-from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, HostConfig
+from cmk.server_side_calls import alpha, v1
 from cmk.utils import config_warnings, password_store
 from cmk.utils.servicename import ServiceName
 
@@ -32,9 +32,9 @@ class ActiveServiceData:
 class ActiveCheck:
     def __init__(
         self,
-        plugins: Mapping[PluginLocation, ActiveCheckConfig],
+        plugins: Mapping[PluginLocation, alpha.ActiveCheckConfig | v1.ActiveCheckConfig],
         host_name: HostName,
-        host_config: HostConfig,
+        host_config: v1.HostConfig,
         http_proxies: Mapping[str, Mapping[str, str]],
         service_name_finalizer: Callable[[ServiceName], ServiceName],
         stored_passwords: Mapping[str, str],
@@ -74,6 +74,7 @@ class ActiveCheck:
                 process_configuration_to_parameters(
                     config_set,
                     proxy_config,
+                    is_alpha=isinstance(active_check, alpha.ActiveCheckConfig),
                 ),
             )
             for config_set in plugin_params
@@ -87,8 +88,8 @@ class ActiveCheck:
 
     def _make_service(
         self,
-        active_check: ActiveCheckConfig,
-        service: ActiveCheckCommand,
+        active_check: v1.ActiveCheckConfig | alpha.ActiveCheckConfig,
+        service: v1.ActiveCheckCommand,
         conf_dict: Mapping[str, object],
         surrogates: Mapping[int, str],
     ) -> ActiveServiceData:

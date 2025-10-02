@@ -9,7 +9,7 @@ from pathlib import Path
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.discover_plugins import PluginLocation
-from cmk.server_side_calls.v1 import HostConfig, SpecialAgentConfig
+from cmk.server_side_calls import alpha, v1
 from cmk.utils import password_store
 
 from ._commons import ExecutableFinderProtocol, replace_passwords
@@ -28,10 +28,10 @@ class SpecialAgentCommandLine:
 class SpecialAgent:
     def __init__(
         self,
-        plugins: Mapping[PluginLocation, SpecialAgentConfig],
+        plugins: Mapping[PluginLocation, v1.SpecialAgentConfig | alpha.SpecialAgentConfig],
         host_name: HostName,
         host_address: HostAddress | None,
-        host_config: HostConfig,
+        host_config: v1.HostConfig,
         host_attrs: Mapping[str, str],
         http_proxies: Mapping[str, Mapping[str, str]],
         stored_passwords: Mapping[str, str],
@@ -53,10 +53,14 @@ class SpecialAgent:
         return self._finder(f"agent_{agent_name}", self._modules.get(agent_name))
 
     def _iter_commands(
-        self, special_agent: SpecialAgentConfig, conf_dict: Mapping[str, object]
+        self,
+        special_agent: v1.SpecialAgentConfig | alpha.SpecialAgentConfig,
+        conf_dict: Mapping[str, object],
     ) -> Iterator[SpecialAgentCommandLine]:
         proxy_config = ProxyConfig(self.host_name, self._http_proxies)
-        processed = process_configuration_to_parameters(conf_dict, proxy_config)
+        processed = process_configuration_to_parameters(
+            conf_dict, proxy_config, is_alpha=isinstance(special_agent, alpha.SpecialAgentConfig)
+        )
 
         for command in special_agent(processed.value, self.host_config):
             args = " ".join(

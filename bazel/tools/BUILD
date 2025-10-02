@@ -7,6 +7,7 @@ load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//bazel/tools:prettier/package_json.bzl", prettier_bin = "bin")
 load("@rules_mypy//mypy:mypy.bzl", "mypy_cli")
 load("@rules_python//python:defs.bzl", "py_binary")
+load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
 load("//bazel/rules:sh_expand_template.bzl", "sh_expand_template")
 
 npm_link_all_packages(name = "node_modules")
@@ -18,6 +19,12 @@ js_library(
     deps = [
         ":node_modules/@trivago/prettier-plugin-sort-imports",
     ],
+)
+
+py_console_script_binary(
+    name = "djlint",
+    data = ["//:pyproject.toml"],
+    pkg = "@cmk_requirements//djlint:pkg",
 )
 
 mypy_cli(
@@ -48,6 +55,7 @@ format_multirun(
     cc = "@clang-linux-x86_64//:bin/clang-format",
     css = ":prettier",
     html = ":prettier",
+    html_jinja = ":djlint",
     javascript = ":prettier",
     python = "@multitool_hub//tools/ruff",
     rust = "@rules_rust//tools/upstream_wrapper:rustfmt",

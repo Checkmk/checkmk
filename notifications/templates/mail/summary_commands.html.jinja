@@ -27,14 +27,14 @@
                                     <div style=" display: flex; align-items: center; ">
                                         {{ data.NOTIFICATIONTYPE.title() }} (while
                                         <span height="18"
-                                           width="42"
-                                           style="align-content: center;
-                                                  text-align: center;
-                                                  margin-left: 3px;
-                                                  font-weight: 600;
-                                                  border-radius: 8px;
-                                                  padding: 0 10px 0 10px;
-                                                  {% if service_notification %} {{ state_mapping[data.SERVICESTATE] }} {% else %} {{ state_mapping[data.HOSTSTATE] }} {% endif %}">
+                                              width="42"
+                                              style="align-content: center;
+                                                     text-align: center;
+                                                     margin-left: 3px;
+                                                     font-weight: 600;
+                                                     border-radius: 8px;
+                                                     padding: 0 10px 0 10px;
+                                                     {% if service_notification %} {{ state_mapping[data.SERVICESTATE] }} {% else %} {{ state_mapping[data.HOSTSTATE] }} {% endif %}">
                                             {% if service_notification %}
                                                 {{ data.SERVICESTATE[:4] }}
                                             {% else %}

@@ -7,9 +7,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { type Ref, ref } from 'vue'
 
-import CmkIcon from '@/components/CmkIcon'
 import type { SimpleIcons } from '@/components/CmkIcon'
 import { type CmkIconVariants } from '@/components/CmkIcon'
+import CmkUnifiedIcon from '@/components/CmkIcon/CmkUnifeidIcon.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -28,7 +28,7 @@ const rotate = ref(90)
       <ul>
         <li v-for="size in sizes" :key="size || 'dflt'" class="demo-cmk-icon__element-entry">
           size "{{ size }}":
-          <CmkIcon name="main-help" :variant="variant" :size="size" :title="title" />
+          <CmkUnifiedIcon name="main-help" :variant="variant" :size="size" :title="title" />
         </li>
       </ul>
     </li>
@@ -39,7 +39,7 @@ const rotate = ref(90)
     <div>icon name: <input v-model="iconName" /></div>
     <div>size: <input v-model="sizeRef" /> ({{ sizes }})</div>
     <div>rotate (in degrees): <input v-model="rotate" /></div>
-    <div>icon: <CmkIcon :name="iconName" :size="sizeRef" :rotate="rotate" /></div>
+    <div>icon: <CmkUnifiedIcon :name="iconName" :size="sizeRef" :rotate="rotate" /></div>
   </div>
 </template>
 

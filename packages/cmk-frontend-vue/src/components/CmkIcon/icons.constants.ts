@@ -137,6 +137,18 @@ export const simpleIcons = [
   'widget-delete'
 ] as const
 
+export const oneColorIcons = [
+  'services',
+  'show-more',
+  'show-less',
+  'search',
+  'monitor',
+  'customize',
+  'setup',
+  'changes'
+] as const
+export const twoColorIcons = ['aggr'] as const
+
 export const cmkIconVariants = cva('', {
   variants: {
     variant: {
@@ -162,5 +174,35 @@ export const cmkIconVariants = cva('', {
     variant: 'plain',
     size: 'medium',
     colored: true
+  }
+})
+
+export const cmkMultitoneIconVariants = cva('', {
+  variants: {
+    color: {
+      success: 'green',
+      hosts: 'blue',
+      info: 'blue',
+      warning: 'yellow',
+      services: 'yellow',
+      danger: 'red',
+      customization: 'pink',
+      others: 'grey',
+      users: 'purple',
+      specialAgents: 'cyan'
+    },
+    size: {
+      xxsmall: '8px',
+      xsmall: '10px',
+      small: '12px',
+      medium: '15px',
+      large: '18px',
+      xlarge: '20px',
+      xxlarge: '32px',
+      xxxlarge: '77px'
+    }
+  },
+  defaultVariants: {
+    size: 'medium'
   }
 })

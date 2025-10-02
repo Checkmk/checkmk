@@ -8,12 +8,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { ref } from 'vue'
 
 import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkUnifiedIcon from '@/components/CmkIcon/CmkUnifeidIcon.vue'
 import type {
   CmkIconSize,
   CmkMultitoneIconColor,
   CmkMultitoneIconNames
-} from '@/components/CmkMultitoneIcon.vue'
-import CmkMultitoneIcon from '@/components/CmkMultitoneIcon.vue'
+} from '@/components/CmkIcon/types.ts'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -104,12 +104,12 @@ const toneSuggestions = [
   </div>
 
   <div class="demo-cmk-multitone-icon">
-    <CmkMultitoneIcon
+    <CmkUnifiedIcon
       :name="icon"
       :primary-color="primaryTone"
       :secondary-color="secondaryTone"
       :size="size"
-    ></CmkMultitoneIcon>
+    ></CmkUnifiedIcon>
   </div>
 </template>
 

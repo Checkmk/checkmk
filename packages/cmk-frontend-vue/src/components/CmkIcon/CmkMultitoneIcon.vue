@@ -4,79 +4,18 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type VariantProps, cva } from 'class-variance-authority'
 import { ref } from 'vue'
 
 import { immediateWatch } from '@/lib/watch'
 
-const _oneColorIcons = [
-  'services',
-  'show-more',
-  'show-less',
-  'search',
-  'monitor',
-  'customize',
-  'setup',
-  'changes'
-] as const
-const _twoColorIcons = ['aggr'] as const
-
-export type OneColorIcons = (typeof _oneColorIcons)[number]
-export type TwoColorIcons = (typeof _twoColorIcons)[number]
-export type CmkMultitoneIconNames = OneColorIcons | TwoColorIcons
-
-export type CmkMultitoneIconProps = OneColorIconProps | TwoColorIconProps
-
-export interface OneColorIconProps {
-  name: OneColorIcons
-  primaryColor: CmkMultitoneIconColor
-  size?: CmkIconSize | undefined
-  title?: string | undefined
-  rotate?: number | undefined
-}
-
-export interface TwoColorIconProps {
-  name: TwoColorIcons
-  primaryColor: CmkMultitoneIconColor
-  secondaryColor: CmkMultitoneIconColor
-  size?: CmkIconSize | undefined
-  title?: string | undefined
-  rotate?: number | undefined
-}
-
-export type CmkIconVariants = VariantProps<typeof cmkIconVariants>
-const cmkIconVariants = cva('', {
-  variants: {
-    color: {
-      success: 'green',
-      hosts: 'blue',
-      info: 'blue',
-      warning: 'yellow',
-      services: 'yellow',
-      danger: 'red',
-      customization: 'pink',
-      others: 'grey',
-      users: 'purple',
-      specialAgents: 'cyan',
-      font: 'font'
-    },
-    size: {
-      xsmall: '10px',
-      small: '12px',
-      medium: '15px',
-      large: '18px',
-      xlarge: '20px',
-      xxlarge: '32px',
-      xxxlarge: '77px'
-    }
-  },
-  defaultVariants: {
-    size: 'medium'
-  }
-})
-
-export type CmkIconSize = VariantProps<typeof cmkIconVariants>['size']
-export type CmkMultitoneIconColor = VariantProps<typeof cmkIconVariants>['color']
+import { cmkMultitoneIconVariants, oneColorIcons, twoColorIcons } from './icons.constants.ts'
+import type {
+  CmkMultitoneIconColor,
+  CmkMultitoneIconNames,
+  CmkMultitoneIconProps,
+  OneColorIcons,
+  TwoColorIcons
+} from './types.ts'
 
 const props = defineProps<CmkMultitoneIconProps>()
 
@@ -85,21 +24,21 @@ function getTransformRotate(): string {
 }
 
 function getSize(): string {
-  return cmkIconVariants({ size: props.size })
+  return cmkMultitoneIconVariants({ size: props.size })
 }
 
 function getColorClass(color: CmkMultitoneIconColor, prefix: string): string {
   if (!color) {
     return ''
   }
-  return `${prefix}-${cmkIconVariants({ color: color || null })}`
+  return `${prefix}-${cmkMultitoneIconVariants({ color: color || null })}`
 }
 
 function getColorClasses(name: OneColorIcons | TwoColorIcons): string[] {
-  if (_oneColorIcons.includes(name as OneColorIcons)) {
+  if (oneColorIcons.includes(name as OneColorIcons)) {
     return [getColorClass(props.primaryColor, 'color')].filter(Boolean)
   }
-  if (_twoColorIcons.includes(name as TwoColorIcons)) {
+  if (twoColorIcons.includes(name as TwoColorIcons)) {
     return [
       getColorClass(props.primaryColor, 'color'),
       'secondaryColor' in props &&

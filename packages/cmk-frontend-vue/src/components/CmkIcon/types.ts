@@ -5,12 +5,20 @@
  */
 import type { VariantProps } from 'class-variance-authority'
 
-import type { simpleIcons } from './icons.constants'
-import type { cmkIconVariants } from './icons.constants'
+import type { oneColorIcons, simpleIcons, twoColorIcons } from './icons.constants'
+import type { cmkIconVariants, cmkMultitoneIconVariants } from './icons.constants'
 
 export type SimpleIcons = (typeof simpleIcons)[number]
+export type OneColorIcons = (typeof oneColorIcons)[number]
+export type TwoColorIcons = (typeof twoColorIcons)[number]
 
+export type CmkMultitoneIconNames = OneColorIcons | TwoColorIcons
+export type CmkMultitoneIconProps = OneColorIconProps | TwoColorIconProps
+export type CmkAllIconProps = CmkMultitoneIconProps | CmkIconProps
 export type CmkIconVariants = VariantProps<typeof cmkIconVariants>
+
+export type CmkIconSize = VariantProps<typeof cmkIconVariants>['size']
+export type CmkMultitoneIconColor = VariantProps<typeof cmkMultitoneIconVariants>['color']
 
 export interface CmkIconProps {
   /** @property {SimpleIcons} name - Name of the icon */
@@ -30,4 +38,21 @@ export interface CmkIconProps {
 
   /** @property {undefined | string} title - Title to be displayed on hover */
   title?: string | undefined
+}
+
+export interface OneColorIconProps {
+  name: OneColorIcons
+  primaryColor: CmkMultitoneIconColor
+  size?: CmkIconSize | undefined
+  title?: string | undefined
+  rotate?: number | undefined
+}
+
+export interface TwoColorIconProps {
+  name: TwoColorIcons
+  primaryColor: CmkMultitoneIconColor
+  secondaryColor: CmkMultitoneIconColor
+  size?: CmkIconSize | undefined
+  title?: string | undefined
+  rotate?: number | undefined
 }

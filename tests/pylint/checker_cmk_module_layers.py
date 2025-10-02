@@ -277,6 +277,7 @@ PACKAGE_PLUGIN_APIS = (
     "cmk.inventory_ui.v1_alpha",
     "cmk.rulesets.v1",
     "cmk.server_side_calls.v1",
+    "cmk.server_side_calls.alpha",
 )
 
 PACKAGE_CCC = ("cmk.ccc",)

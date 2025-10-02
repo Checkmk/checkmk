@@ -862,6 +862,55 @@ TEST(Wtools, OsInfo) {
     EXPECT_GE(std::stoi(num_strings[2]), 20);
 }
 
+TEST(Wtools, GetTimeAsTmBasic) {
+    const auto now = std::chrono::system_clock::now();
+    const auto result = GetTimeAsTm(now);
+
+    ASSERT_TRUE(result.has_value());
+    const auto &tm = result.value();
+
+    // Basic validation - year should be reasonable
+    EXPECT_GE(tm.tm_year, 124);  // 2024 = 124 (years since 1900)
+    EXPECT_LT(tm.tm_year, 200);  // Should be less than 2100
+
+    // Month should be in valid range (0-11)
+    EXPECT_GE(tm.tm_mon, 0);
+    EXPECT_LE(tm.tm_mon, 11);
+
+    // Day should be in valid range (1-31)
+    EXPECT_GE(tm.tm_mday, 1);
+    EXPECT_LE(tm.tm_mday, 31);
+
+    // Hour should be in valid range (0-23)
+    EXPECT_GE(tm.tm_hour, 0);
+    EXPECT_LE(tm.tm_hour, 23);
+
+    // Minute should be in valid range (0-59)
+    EXPECT_GE(tm.tm_min, 0);
+    EXPECT_LE(tm.tm_min, 59);
+
+    // Second should be in valid range (0-60, allowing for leap seconds)
+    EXPECT_GE(tm.tm_sec, 0);
+    EXPECT_LE(tm.tm_sec, 60);
+}
+
+TEST(Wtools, GetTimeAsTmEpoch) {
+    // Test with Unix epoch (January 1, 1970 00:00:00 UTC)
+    const auto epoch = std::chrono::system_clock::time_point{};
+    const auto result = GetTimeAsTm(epoch);
+
+    ASSERT_TRUE(result.has_value());
+    const auto &tm = result.value();
+
+    // Should be 1970 in local time (accounting for timezone)
+    EXPECT_EQ(tm.tm_year, 70);  // 1970 = 70 (years since 1900)
+    EXPECT_EQ(tm.tm_mon, 0);    // January = 0
+    EXPECT_EQ(tm.tm_mday, 1);   // 1st day of month
+
+    EXPECT_GE(tm.tm_hour, 0);
+    EXPECT_LE(tm.tm_hour, 23);
+}
+
 TEST(Wtools, Adapter) {
     auto store = GetAdapterInfoStore();
     for (const auto &entry : store) {

@@ -18,20 +18,15 @@ using namespace std::chrono_literals;
 namespace cma::provider {
 
 namespace {
-tm GetTimeAsTm(std::chrono::system_clock::time_point time_point) {
-    const auto in_time_t = std::chrono::system_clock::to_time_t(time_point);
-    tm buf{};
-    errno = 0;
-    if (localtime_s(&buf, &in_time_t) != 0) {
-        XLOG::d.e("GetTimeAsTm: localtime_s failed with errno {}", errno);
-    }
-    return buf;
-}
-
 std::string TimeToString(std::chrono::system_clock::time_point time_point) {
     std::stringstream sss;
-    const auto time_value = GetTimeAsTm(time_point);
-    sss << std::put_time(&time_value, "%Y-%m-%d %T");
+    const auto time_opt = wtools::GetTimeAsTm(time_point);
+    if (!time_opt.has_value()) {
+        XLOG::l.crit(
+            "TimeToString: cannot convert time to tm struct, returning zero value");
+        return "0000-00-00 00:00:00";
+    }
+    sss << std::put_time(&time_opt.value(), "%Y-%m-%d %T");
     return sss.str();
 }
 

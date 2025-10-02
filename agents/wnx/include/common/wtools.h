@@ -1134,6 +1134,10 @@ struct OsInfo {
 };
 
 std::optional<OsInfo> GetOsInfo();
+
+std::optional<std::tm> GetTimeAsTm(
+    std::chrono::system_clock::time_point time_point);
+
 }  // namespace wtools
 
 #endif  // WTOOLS_H

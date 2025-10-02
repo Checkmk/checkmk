@@ -3835,6 +3835,19 @@ std::optional<OsInfo> GetOsInfo() {
     return OsInfo{.name = os_info[0], .version = os_info[1]};
 }
 
+std::optional<std::tm> GetTimeAsTm(
+    std::chrono::system_clock::time_point time_point) {
+    const auto in_time_t = std::chrono::system_clock::to_time_t(time_point);
+    std::tm buf{};
+
+    if (const auto result = ::localtime_s(&buf, &in_time_t); result != 0) {
+        XLOG::d.e("GetTimeAsTm: localtime_s failed with result {}", result);
+        return std::nullopt;
+    }
+
+    return buf;
+}
+
 }  // namespace wtools
 
 // verified code from the legacy client

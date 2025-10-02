@@ -15,7 +15,7 @@ import CmkTab from '@/components/CmkTabs/CmkTab.vue'
 import CmkTabContent from '@/components/CmkTabs/CmkTabContent.vue'
 import CmkTabs from '@/components/CmkTabs/CmkTabs.vue'
 
-import { useSiteStatus } from '@/main-menu/useSiteStatus'
+import { useSiteStatus } from '@/main-menu/changes/useSiteStatus'
 
 import type { Site } from '../../ChangesInterfaces'
 import SiteStatusItem from './SiteStatusItem.vue'

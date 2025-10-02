@@ -15,7 +15,7 @@ import WelcomeSnapinSlideout from '@/welcome/components/snapin/WelcomeSnapinSlid
 
 import Dashboard from './dashboard-wip/DashboardApp.vue'
 import LoadingTransition from './loading-transition/LoadingTransition.vue'
-import ChangesApp from './main-menu/ChangesApp.vue'
+import ChangesApp from './main-menu/changes/ChangesApp.vue'
 import ModeCreateOTelConfApp from './mode-otel/ModeCreateOTelConfApp.vue'
 import ModeCreateRelayApp from './mode-relay/ModeCreateRelayApp.vue'
 import NotificationOverview from './notification/NotificationOverviewApp.vue'

@@ -5,7 +5,7 @@
  */
 import { type Ref, computed } from 'vue'
 
-import type { Site } from '@/main-menu/ChangesInterfaces'
+import type { Site } from '@/main-menu/changes/ChangesInterfaces'
 
 export function useSiteStatus(sites: Ref<Site[]>) {
   function siteHasChanges(site: Site): boolean {

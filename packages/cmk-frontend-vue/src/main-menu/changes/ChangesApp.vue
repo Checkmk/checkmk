@@ -16,7 +16,7 @@ import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
 import CmkDialog from '@/components/CmkDialog.vue'
 import CmkIcon from '@/components/CmkIcon'
 
-import { useSiteStatus } from '@/main-menu/useSiteStatus'
+import { useSiteStatus } from '@/main-menu/changes/useSiteStatus'
 
 import type {
   ActivatePendingChangesResponse,
@@ -25,7 +25,7 @@ import type {
   Site,
   SitesAndChanges
 } from './ChangesInterfaces'
-import DefaultPopup from './DefaultPopup.vue'
+import DefaultPopup from './components/DefaultPopup.vue'
 import ChangesActivating from './components/activation/ChangesActivating.vue'
 import ChangesActivationResult from './components/activation/ChangesActivationResult.vue'
 import PendingChangesList from './components/pending-changes/PendingChangesList.vue'

@@ -4,74 +4,86 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    OIDEnd,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.lib.ups_modulys import DETECT_UPS_MODULYS
 
-check_info = {}
+
+def inventory_ups_modulys_alarms(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
 
 
-def inventory_ups_modulys_alarms(info):
-    if info:
-        return [(None, None)]
-    return []
-
-
-def check_ups_modulys_alarms(_no_item, _no_params, info):
+def check_ups_modulys_alarms(section: StringTable) -> CheckResult:
     oiddef = {
-        "1": (2, "Disconnect"),
-        "2": (2, "Input power failure"),
-        "3": (2, "Low batteries"),
-        "4": (1, "High load"),
-        "5": (2, "Severley high load"),
-        "6": (2, "On bypass"),
-        "7": (2, "General failure"),
-        "8": (2, "Battery ground fault"),
-        "9": (0, "UPS test in progress"),
-        "10": (2, "UPS test failure"),
-        "11": (2, "Fuse failure"),
-        "12": (2, "Output overload"),
-        "13": (2, "Output overcurrent"),
-        "14": (2, "Inverter abnormal"),
-        "15": (2, "Rectifier abnormal"),
-        "16": (2, "Reserve abnormal"),
-        "17": (1, "On reserve"),
-        "18": (2, "Overheating"),
-        "19": (2, "Output abnormal"),
-        "20": (2, "Bypass bad"),
-        "21": (0, "In standby mode"),
-        "22": (2, "Charger failure"),
-        "23": (2, "Fan failure"),
-        "24": (0, "In economic mode"),
-        "25": (1, "Output turned off"),
-        "26": (1, "Smart shutdown in progress"),
-        "27": (2, "Emergency power off"),
-        "28": (1, "Shutdown"),
-        "29": (2, "Output breaker open"),
+        "1": Result(state=State.CRIT, summary="Disconnect"),
+        "2": Result(state=State.CRIT, summary="Input power failure"),
+        "3": Result(state=State.CRIT, summary="Low batteries"),
+        "4": Result(state=State.WARN, summary="High load"),
+        "5": Result(state=State.CRIT, summary="Severley high load"),
+        "6": Result(state=State.CRIT, summary="On bypass"),
+        "7": Result(state=State.CRIT, summary="General failure"),
+        "8": Result(state=State.CRIT, summary="Battery ground fault"),
+        "9": Result(state=State.OK, summary="UPS test in progress"),
+        "10": Result(state=State.CRIT, summary="UPS test failure"),
+        "11": Result(state=State.CRIT, summary="Fuse failure"),
+        "12": Result(state=State.CRIT, summary="Output overload"),
+        "13": Result(state=State.CRIT, summary="Output overcurrent"),
+        "14": Result(state=State.CRIT, summary="Inverter abnormal"),
+        "15": Result(state=State.CRIT, summary="Rectifier abnormal"),
+        "16": Result(state=State.CRIT, summary="Reserve abnormal"),
+        "17": Result(state=State.WARN, summary="On reserve"),
+        "18": Result(state=State.CRIT, summary="Overheating"),
+        "19": Result(state=State.CRIT, summary="Output abnormal"),
+        "20": Result(state=State.CRIT, summary="Bypass bad"),
+        "21": Result(state=State.OK, summary="In standby mode"),
+        "22": Result(state=State.CRIT, summary="Charger failure"),
+        "23": Result(state=State.CRIT, summary="Fan failure"),
+        "24": Result(state=State.OK, summary="In economic mode"),
+        "25": Result(state=State.WARN, summary="Output turned off"),
+        "26": Result(state=State.WARN, summary="Smart shutdown in progress"),
+        "27": Result(state=State.CRIT, summary="Emergency power off"),
+        "28": Result(state=State.WARN, summary="Shutdown"),
+        "29": Result(state=State.CRIT, summary="Output breaker open"),
     }
 
     result = False
-    for oidend, flag in info:
+    for oidend, flag in section:
         if flag and flag != "NULL" and int(flag):
             result = True
             yield oiddef[oidend]
 
     if not result:
-        yield 0, "No alarms"
+        yield Result(state=State.OK, summary="No alarms")
 
 
 def parse_ups_modulys_alarms(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["ups_modulys_alarms"] = LegacyCheckDefinition(
+snmp_section_ups_modulys_alarms = SimpleSNMPSection(
     name="ups_modulys_alarms",
-    parse_function=parse_ups_modulys_alarms,
     detect=DETECT_UPS_MODULYS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2254.2.4",
         oids=[OIDEnd(), "9"],
     ),
+    parse_function=parse_ups_modulys_alarms,
+)
+
+
+check_plugin_ups_modulys_alarms = CheckPlugin(
+    name="ups_modulys_alarms",
     service_name="UPS Alarms",
     discovery_function=inventory_ups_modulys_alarms,
     check_function=check_ups_modulys_alarms,

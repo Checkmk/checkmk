@@ -15,6 +15,7 @@ npm_link_all_packages(name = "node_modules")
 
 SOURCES_COMMON = [
     "configuration_entity.json",
+    "main_menu.json",
     "mode_host.json",
     "notifications.json",
     "setup.json",

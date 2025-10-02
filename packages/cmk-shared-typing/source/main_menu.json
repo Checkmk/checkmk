@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "main_menu_config",
+  "properties": {
+    "start": { "$ref": "#/$defs/start_item" },
+    "main": { "$ref": "#/$defs/nav_items" },
+    "user": { "$ref": "#/$defs/nav_items" }
+  },
+  "required": ["start", "main", "user"],
+  "$defs": {
+    "start_item": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "url": { "type": "string" },
+        "icon": { "type": "string" }
+      },
+      "required": ["title", "url"]
+    },
+    "nav_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "#/$defs/nav_item"
+      }
+    },
+    "nav_item": {
+      "type": "object",
+      "properties": {
+        "id": { "$ref": "#/$defs/nav_item_id_enum" },
+        "title": { "type": "string" },
+        "topics": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/nav_item_topic" }
+        },
+        "sort": { "type": "number" },
+        "set_focus_on_element_by_id": { "type": "string" },
+        "vue_app": { "$ref": "#/$defs/nav_item_vue_app" },
+        "header": { "$ref": "#/$defs/nav_item_header" },
+        "shortcut": { "$ref": "#/$defs/nav_item_shortcut" },
+        "show_more": { "$ref": "#/$defs/nav_item_show_more" },
+        "popup_small": { "type": "boolean" }
+      },
+      "required": ["id", "title", "sort", "shortcut_hint"]
+    },
+    "nav_item_topic": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "icon": { "type": "string" },
+        "show_more_mode": { "type": "boolean" },
+        "entries": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/nav_item_topic_entry" }
+        }
+      },
+      "required": ["title", "icon", "entries"]
+    },
+    "nav_item_topic_entry": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "url": { "type": "string" },
+        "target": { "type": "string" },
+        "show_more_mode": { "type": "boolean" },
+        "icon": { "type": "string" },
+        "toggle": { "$ref": "#/$defs/nav_item_topic_entry_toggle" },
+        "chip": { "$ref": "#/$defs/nav_item_topic_entry_chip" }
+      },
+      "required": ["title"]
+    },
+    "nav_item_vue_app": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "data": { "type": "object", "additionalProperties": true }
+      },
+      "required": ["id", "data"]
+    },
+    "nav_item_header": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "info": { "type": "string" },
+        "show_more": { "type": "boolean" },
+        "trigger_button": {
+          "$ref": "#/$defs/nav_item_header_trigger_button"
+        }
+      },
+      "required": ["id", "data"]
+    },
+    "nav_item_header_trigger_button": {
+      "type": "object",
+      "properties": {
+        "mode": { "$ref": "#/$defs/header_trigger_mode_enum" },
+        "color": { "$ref": "#/$defs/color_enum" },
+        "url": { "type": "string" }
+      },
+      "required": ["mode", "url"]
+    },
+    "nav_item_shortcut": {
+      "type": "object",
+      "properties": {
+        "key": { "type": "string" },
+        "alt": { "type": "boolean" },
+        "ctrl": { "type": "boolean" },
+        "shift": { "type": "boolean" }
+      },
+      "required": ["key"]
+    },
+    "nav_item_show_more": {
+      "type": "object",
+      "properties": {
+        "active": { "type": "boolean" }
+      },
+      "required": ["active"]
+    },
+    "nav_item_topic_entry_toggle": {
+      "type": "object",
+      "properties": {
+        "value": { "type": "string" },
+        "color": { "$ref": "#/$defs/color_enum" },
+        "mode": { "type": "string" },
+        "reload": { "type": "boolean" }
+      },
+      "required": ["value", "mode"]
+    },
+    "nav_item_topic_entry_chip": {
+      "type": "object",
+      "properties": {
+        "mode": { "$ref": "#/$defs/chip_mode_enum" },
+        "color": { "$ref": "#/$defs/color_enum" }
+      },
+      "required": ["mode"]
+    },
+    "nav_item_id_enum": {
+      "enum": ["search", "monitoring", "customize", "setup", "changes", "help", "user"]
+    },
+    "color_enum": {
+      "enum": ["default", "success", "warning", "danger"]
+    },
+    "chip_mode_enum": {
+      "enum": ["user-messages-hint"]
+    },
+    "header_trigger_mode_enum": {
+      "enum": ["unack-incomp-werks"]
+    }
+  }
+}

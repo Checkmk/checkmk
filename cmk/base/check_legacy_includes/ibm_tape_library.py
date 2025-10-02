@@ -3,13 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.agent_based.v2 import CheckResult, Result, State
 
-def ibm_tape_library_parse_device_name(name):
+
+def ibm_tape_library_parse_device_name(name: str) -> str:
     # strange name format:IBM     ULT3580-TD6     00078B5F0F
     return " ".join([part for part in name.split() if part])
 
 
-def ibm_tape_library_get_device_state(avail, status):
+def ibm_tape_library_get_device_state(avail: str, status: str) -> CheckResult:
     # check states suggested by customer
     mapping = {
         "avail": {
@@ -61,4 +63,4 @@ def ibm_tape_library_get_device_state(avail, status):
     }
     for what, val, text in [("avail", avail, "Availability"), ("status", status, "Status")]:
         state, state_readable = mapping[what][val]
-        yield state, f"{text}: {state_readable}"
+        yield Result(state=State(state), summary=f"{text}: {state_readable}")

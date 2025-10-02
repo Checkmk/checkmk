@@ -3,12 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+from dataclasses import dataclass
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import any_of, SNMPTree, startswith, StringTable
+from cmk.agent_based.v2 import (
+    any_of,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    startswith,
+    StringTable,
+)
 from cmk.base.check_legacy_includes.ibm_tape_library import ibm_tape_library_get_device_state
-
-check_info = {}
 
 # .1.3.6.1.4.1.14851.3.1.11.2.1.4.1 Logical_Library: 1 --> SNIA-SML-MIB::changerDevice-ElementName.1
 # .1.3.6.1.4.1.14851.3.1.11.2.1.4.2 Logical_Library: LTO6 --> SNIA-SML-MIB::changerDevice-ElementName.2
@@ -18,24 +27,37 @@ check_info = {}
 # .1.3.6.1.4.1.14851.3.1.11.2.1.9.2 2 --> SNIA-SML-MIB::changerDevice-OperationalStatus.2
 
 
-def inventory_ibm_tl_changer_devices(info):
-    return [(name.replace("Logical_Library:", "").strip(), None) for name, _avail, _status in info]
+@dataclass(frozen=True)
+class Device:
+    avail: str
+    status: str
 
 
-def check_ibm_tl_changer_devices(item, params, info):
-    for name, avail, status in info:
-        if item == name.replace("Logical_Library:", "").strip():
-            return ibm_tape_library_get_device_state(avail, status)
-    return None
+type Section = Mapping[str, Device]
 
 
-def parse_ibm_tl_changer_devices(string_table: StringTable) -> StringTable:
-    return string_table
+def _make_item(name: str) -> str:
+    return name.replace("Logical_Library:", "").strip()
 
 
-check_info["ibm_tl_changer_devices"] = LegacyCheckDefinition(
+def parse_ibm_tl_changer_devices(string_table: StringTable) -> Section:
+    return {
+        _make_item(name): Device(avail=avail, status=status) for name, avail, status in string_table
+    }
+
+
+def inventory_ibm_tl_changer_devices(section: Section) -> DiscoveryResult:
+    yield from (Service(item=name) for name in section)
+
+
+def check_ibm_tl_changer_devices(item: str, section: Section) -> CheckResult:
+    if (device := section.get(item)) is None:
+        return
+    yield from ibm_tape_library_get_device_state(device.avail, device.status)
+
+
+snmp_section_ibm_tl_changer_devices = SimpleSNMPSection(
     name="ibm_tl_changer_devices",
-    parse_function=parse_ibm_tl_changer_devices,
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.32925.1"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2.6.254"),
@@ -44,6 +66,12 @@ check_info["ibm_tl_changer_devices"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.14851.3.1.11.2.1",
         oids=["4", "8", "9"],
     ),
+    parse_function=parse_ibm_tl_changer_devices,
+)
+
+
+check_plugin_ibm_tl_changer_devices = CheckPlugin(
+    name="ibm_tl_changer_devices",
     service_name="Changer device %s",
     discovery_function=inventory_ibm_tl_changer_devices,
     check_function=check_ibm_tl_changer_devices,

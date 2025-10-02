@@ -614,8 +614,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "ibm_svc_portfc",
         "ibm_svc_portsas",
         "ibm_svc_system",
-        "ibm_tl_changer_devices",
-        "ibm_tl_media_access_devices",
         "ibm_xraid_pdisks",
         "icom_repeater_ps_volt",
         "icom_repeater_pll_volt",

@@ -99,14 +99,18 @@ def _processed_config_value(
                     return _replace_password(value[0], None)
                 case ("cmk_postprocessed", "explicit_password", value):
                     return _replace_password(*value)
+                case ("cmk_postprocessed", "no_proxy", str()):
+                    return ReplacementResult(NoProxy(), {}, {})
+                case ("cmk_postprocessed", "environment_proxy", str()):
+                    return ReplacementResult(EnvProxy(), {}, {})
                 case (
                     "cmk_postprocessed",
-                    "stored_proxy" | "environment_proxy" | "explicit_proxy" | "no_proxy",
-                    str(),
+                    "stored_proxy" | "explicit_proxy" as proxy_type,
+                    str(proxy_spec),
                 ):
                     if proxy_config is not None:
                         return ReplacementResult(
-                            value=_replace_proxies(params, proxy_config),
+                            value=_replace_url_proxies(proxy_type, proxy_spec, proxy_config),
                             found_secrets={},
                             surrogates={},
                         )
@@ -135,30 +139,21 @@ def _replace_password(
     )
 
 
-def _replace_proxies(
-    proxy_params: tuple[
-        Literal["cmk_postprocessed"],
-        Literal["environment_proxy", "no_proxy", "stored_proxy", "explicit_proxy"],
-        str,
-    ],
+def _replace_url_proxies(
+    proxy_type: Literal["stored_proxy", "explicit_proxy"],
+    proxy_spec: str,
     proxy_config: ProxyConfig,
-) -> URLProxy | NoProxy | EnvProxy:
-    match proxy_params:
-        case ("cmk_postprocessed", "stored_proxy", str(proxy_id)):
-            try:
-                global_proxy = proxy_config.global_proxies[proxy_id]
-                return URLProxy(url=global_proxy["proxy_url"])
-            except KeyError:
-                config_warnings.warn(
-                    f'The global proxy "{proxy_id}" used by host "{proxy_config.host_name}"'
-                    " does not exist."
-                )
-                return EnvProxy()
-        case ("cmk_postprocessed", "environment_proxy", str()):
-            return EnvProxy()
-        case ("cmk_postprocessed", "explicit_proxy", str(url)):
-            return URLProxy(url=url)
-        case ("cmk_postprocessed", "no_proxy", str()):
-            return NoProxy()
-        case _:
-            raise ValueError(f"Invalid proxy configuration: {proxy_config}")
+) -> ReplacementResult:
+    if proxy_type == "explicit_proxy":
+        return ReplacementResult(URLProxy(url=proxy_spec), {}, {})
+
+    try:
+        global_proxy = proxy_config.global_proxies[proxy_spec]
+    except KeyError:
+        config_warnings.warn(
+            f'The global proxy "{proxy_spec}" used by host "{proxy_config.host_name}"'
+            " does not exist."
+        )
+        return ReplacementResult(EnvProxy(), {}, {})
+
+    return ReplacementResult(URLProxy(url=global_proxy["proxy_url"]), {}, {})

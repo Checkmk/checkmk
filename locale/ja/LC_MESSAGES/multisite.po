@@ -4258,6 +4258,10 @@ msgstr "状態構成を追加する"
 msgid "Add stored report"
 msgstr "保存レポートの追加"
 
+#, fuzzy
+msgid "Add subscription tag"
+msgstr "サブスクリプションステータス"
+
 msgid "Add tag"
 msgstr "タグ付けする"
 
@@ -4288,6 +4292,20 @@ msgid ""
 msgstr ""
 "イベントコンソールに転送されるデータに、イベントのテキストを追加します。改行"
 "文字は'~'に置き換わります。"
+
+msgid ""
+"Add the tags you want to use to filter the resources. Only resources with "
+"every tags matching, will be monitored."
+msgstr ""
+"リソースをフィルタリングするために使用するタグを追加してください。すべてのタ"
+"グが一致するリソースのみが監視対象となります。"
+
+msgid ""
+"Add the tags you want to use to filter the subscriptions. Only subscriptions "
+"with every tags matching, will be monitored."
+msgstr ""
+"サブスクリプションをフィルタリングするために使用するタグを追加してください。"
+"すべてのタグが一致するサブスクリプションのみが監視対象となります。"
 
 msgid "Add these contact groups to the host"
 msgstr "これらの連絡先グループをホストに追加します"
@@ -5197,6 +5215,9 @@ msgstr "アラーム"
 
 msgid "Alert"
 msgstr "アラート"
+
+msgid "Alert after being at or above the threshold for"
+msgstr ""
 
 msgid "Alert handler"
 msgstr "アラートハンドラ"
@@ -7155,6 +7176,10 @@ msgstr "Atto Fibrebridge FCポート"
 msgid "Attribute"
 msgstr "属性"
 
+#, fuzzy
+msgid "Attribute filters"
+msgstr "属性タイプ"
+
 msgid "Attribute key"
 msgstr "属性キー"
 
@@ -7470,6 +7495,10 @@ msgstr "利用可能なデータに自動的に調整"
 msgid "Automatically create monitoring agents"
 msgstr "監視エージェントを自動的に作成する"
 
+#, fuzzy
+msgid "Automatically delete hosts without OpenTelemetry data"
+msgstr "OpenTelemetryデータなしでホストを自動的に削除します"
+
 msgid "Automatically delete hosts without open telemetry data"
 msgstr "OpenTelemetryデータなしでホストを自動的に削除します"
 
@@ -7766,6 +7795,10 @@ msgstr "平均メッセージ数上位レベル"
 msgid "Average number of messages"
 msgstr "メッセージの平均数"
 
+#, fuzzy
+msgid "Average over"
+msgstr "平均値"
+
 msgid "Average pending tasks delta"
 msgstr "保留中のタスクの平均デルタ"
 
@@ -7815,6 +7848,12 @@ msgid ""
 "Average the CPU utilization over the specified time period before levels are "
 "applied."
 msgstr "レベルが適用される前に、指定された期間のCPU使用率を平均します。"
+
+msgid ""
+"Average the instantaneous load over the specified number of minutes. Note: "
+"This does NOT affect \"Levels an extended period of time\" above, which "
+"always checks the instantaneous value."
+msgstr ""
 
 msgid "Average time messages stay on queue"
 msgstr "メッセージがキューにとどまる平均時間"
@@ -8264,12 +8303,24 @@ msgid "Azure"
 msgstr "Azure"
 
 #, fuzzy
+msgid "Azure AD Connect"
+msgstr "Azure AD Connect"
+
+#, fuzzy
 msgid "Azure AD Connect (deprecated)"
 msgstr "Azure AD Connect"
 
 #, fuzzy
+msgid "Azure Agent Info"
+msgstr "Azureエージェント情報"
+
+#, fuzzy
 msgid "Azure Agent Info (deprecated)"
 msgstr "Azureエージェント情報"
+
+#, fuzzy
+msgid "Azure Application Gateway"
+msgstr "アプリケーションゲートウェイ"
 
 #, fuzzy
 msgid "Azure Application Gateway (deprecated)"
@@ -8289,20 +8340,76 @@ msgid "Azure Databases"
 msgstr "Azureデータベース"
 
 #, fuzzy
+msgid "Azure Load Balancer Health"
+msgstr "ロードバランサーヘルス"
+
+#, fuzzy
 msgid "Azure Load Balancer Health (deprecated)"
 msgstr "Azureロードバランサーヘルス"
+
+#, fuzzy
+msgid "Azure Redis CPU utilization"
+msgstr "GCP/Redis CPU使用率"
+
+#, fuzzy
+msgid "Azure Redis Cache effectiveness"
+msgstr "Azure データベース接続"
+
+#, fuzzy
+msgid "Azure Redis connections"
+msgstr "Azure データベース接続"
+
+#, fuzzy
+msgid "Azure Redis latency"
+msgstr "平均ディスク遅延"
+
+#, fuzzy
+msgid "Azure Redis memory"
+msgstr "絶対使用メモリ"
+
+#, fuzzy
+msgid "Azure Redis replication"
+msgstr "Azure データベース接続"
+
+#, fuzzy
+msgid "Azure Redis server load"
+msgstr "Redisサーバー名"
+
+#, fuzzy
+msgid "Azure Redis throughput"
+msgstr "読み取りスループット"
+
+#, fuzzy
+msgid "Azure SQL database CPU usage"
+msgstr "AzureSQLデータベースCPU使用量"
 
 #, fuzzy
 msgid "Azure SQL database CPU usage (deprecated)"
 msgstr "AzureSQLデータベースCPU使用量"
 
 #, fuzzy
+msgid "Azure SQL database connections"
+msgstr "Azure データベース接続"
+
+#, fuzzy
+msgid "Azure SQL database deadlocks"
+msgstr "AzureSQLデータベースデッドロック"
+
+#, fuzzy
 msgid "Azure SQL database deadlocks (deprecated)"
 msgstr "AzureSQLデータベースデッドロック"
 
 #, fuzzy
+msgid "Azure SQL database storage"
+msgstr "Azure SQLデータベースストレージ"
+
+#, fuzzy
 msgid "Azure SQL database storage (deprecated)"
 msgstr "Azure SQLデータベースストレージ"
+
+#, fuzzy
+msgid "Azure SQL database throughput"
+msgstr "Azure SQLデータベーススループット"
 
 #, fuzzy
 msgid "Azure SQL database throughput (deprecated)"
@@ -8312,32 +8419,64 @@ msgid "Azure Storage"
 msgstr "Azureストレージ"
 
 #, fuzzy
+msgid "Azure Storage Data Flow"
+msgstr "Azureストレージ データフロー"
+
+#, fuzzy
 msgid "Azure Storage Data Flow (deprecated)"
 msgstr "Azureストレージ データフロー"
+
+#, fuzzy
+msgid "Azure Storage Performance"
+msgstr "Azureストレージ パフォーマンス"
 
 #, fuzzy
 msgid "Azure Storage Performance (deprecated)"
 msgstr "Azureストレージ パフォーマンス"
 
 #, fuzzy
+msgid "Azure Storage Usage"
+msgstr "Azureストレージ"
+
+#, fuzzy
 msgid "Azure Storage Usage (deprecated)"
 msgstr "Azureストレージ使用量"
+
+#, fuzzy
+msgid "Azure Traffic Manager Probe State"
+msgstr "Azure Traffic Managerプローブの状態"
 
 #, fuzzy
 msgid "Azure Traffic Manager Probe State (deprecated)"
 msgstr "Azure Traffic Managerプローブの状態"
 
 #, fuzzy
+msgid "Azure Traffic Manager Qps"
+msgstr "AzureトラフィックマネージャーQps"
+
+#, fuzzy
 msgid "Azure Traffic Manager Qps (deprecated)"
 msgstr "AzureトラフィックマネージャーQps"
+
+#, fuzzy
+msgid "Azure Usage Details (Costs)"
+msgstr "Azureの使用量の詳細(コスト)"
 
 #, fuzzy
 msgid "Azure Usage Details (Costs) (deprecated)"
 msgstr "Azureの使用量の詳細(コスト)"
 
 #, fuzzy
+msgid "Azure VM Burst CPU Credits"
+msgstr "Azure VM バーストCPUクレジット"
+
+#, fuzzy
 msgid "Azure VM Burst CPU Credits (deprecated)"
 msgstr "Azure VM バーストCPUクレジット"
+
+#, fuzzy
+msgid "Azure VM Disk"
+msgstr "Azure VMインスタンス"
 
 #, fuzzy
 msgid "Azure VM Disk (deprecated)"
@@ -8347,8 +8486,16 @@ msgid "Azure VM instances"
 msgstr "Azure VMインスタンス"
 
 #, fuzzy
+msgid "Azure VNet Gateway"
+msgstr "vNet ゲートウェイ"
+
+#, fuzzy
 msgid "Azure VNet Gateway  (deprecated)"
 msgstr "AzureVNetゲートウェイ"
+
+#, fuzzy
+msgid "Azure database connections"
+msgstr "Azure データベース接続"
 
 #, fuzzy
 msgid "Azure database connections (deprecated)"
@@ -8364,12 +8511,24 @@ msgid "Azure storage accounts"
 msgstr "Azureストレージアカウント"
 
 #, fuzzy
+msgid "Azure virtual machines"
+msgstr "仮想マシン"
+
+#, fuzzy
 msgid "Azure virtual machines (deprecated)"
 msgstr "Azure仮想マシン"
 
 #, fuzzy
+msgid "Azure virtual machines summary"
+msgstr "Azure仮想マシンの概要"
+
+#, fuzzy
 msgid "Azure virtual machines summary  (deprecated)"
 msgstr "Azure仮想マシンの概要"
+
+#, fuzzy
+msgid "Azure web servers (IIS)"
+msgstr "Azure Webサーバー(IIS)"
 
 #, fuzzy
 msgid "Azure web servers (IIS) (deprecated)"
@@ -10419,6 +10578,10 @@ msgstr "CPU使用率"
 msgid "CPU utilization"
 msgstr "CPU使用率"
 
+#, fuzzy
+msgid "CPU utilization %"
+msgstr "CPU使用率"
+
 msgid "CPU utilization & Kernel performance"
 msgstr "CPU使用率とカーネルパフォーマンス"
 
@@ -10585,6 +10748,10 @@ msgstr "キャッシュ ヒット"
 msgid "Cache hits for pass"
 msgstr "パスへのキャッシュヒット"
 
+#, fuzzy
+msgid "Cache internode latency"
+msgstr "会議の遅延を作成する"
+
 msgid "Cache interval"
 msgstr "キャッシュ間隔"
 
@@ -10594,6 +10761,14 @@ msgstr "キャッシュミス"
 msgid "Cache misses per second"
 msgstr "1秒あたりのキャッシュミス"
 
+#, fuzzy
+msgid "Cache read throughput (/sec)"
+msgstr "FCP 読み取りスループット"
+
+#, fuzzy
+msgid "Cache requests"
+msgstr "失敗したリクエスト"
+
 msgid "Cache several non-status queries"
 msgstr "いくつかの非ステータスクエリをキャッシュする"
 
@@ -10602,6 +10777,10 @@ msgstr "キャッシュサイズ"
 
 msgid "Cache this section"
 msgstr "このセクションのキャッシュ"
+
+#, fuzzy
+msgid "Cache write throughput (/sec)"
+msgstr "FCP 書き込みスループット"
 
 msgid "Cached"
 msgstr "キャッシュされた"
@@ -13730,6 +13909,10 @@ msgstr "CheckmkでAmazon Web Services (AWS)監視を設定する"
 msgid "Configure Google Cloud Platform (GCP) monitoring in Checkmk"
 msgstr "CheckmkでGoogle Cloud Platform (GCP)監視を設定する"
 
+#, fuzzy
+msgid "Configure Microsoft Azure (deprecated) monitoring in Checkmk"
+msgstr "CheckmkでMicrosoft Azure監視を構成する"
+
 msgid "Configure Microsoft Azure monitoring in Checkmk"
 msgstr "CheckmkでMicrosoft Azure監視を構成する"
 
@@ -13784,6 +13967,12 @@ msgstr "単一インターフェースの検出を構成します"
 
 msgid "Configure enforced checks without using service discovery"
 msgstr "サービスディスカバリを使用せずに強制チェックを構成する"
+
+msgid ""
+"Configure expected states for Hyper-V VM network interfaces. You can set "
+"expected connection state, MAC configuration, and expected virtual switch "
+"assignment."
+msgstr ""
 
 msgid "Configure fallback email address"
 msgstr "フォールバックメールアドレスの設定"
@@ -14291,8 +14480,20 @@ msgid "Connect without password"
 msgstr "パスワードなしで接続する"
 
 #, fuzzy
+msgid "Connected"
+msgstr "接続する"
+
+#, fuzzy
+msgid "Connected Clients"
+msgstr "接続"
+
+#, fuzzy
 msgid "Connected Relay configurations"
 msgstr "Conda設定"
+
+#, fuzzy
+msgid "Connected clients"
+msgstr "接続されているクライアントの数"
 
 msgid "Connecter and connectee sites must be different."
 msgstr "コネクターサイトとコネクティーサイトは異なる必要があります。"
@@ -14346,6 +14547,10 @@ msgstr "接続表現: %s"
 
 msgid "Connection settings"
 msgstr "接続設定"
+
+#, fuzzy
+msgid "Connection state configuration"
+msgstr "構成を有効化する"
 
 msgid ""
 "Connection state of customers' sites and button for enabling or disabling "
@@ -14405,6 +14610,14 @@ msgstr "接続タイプ"
 msgid "Connections"
 msgstr "接続"
 
+#, fuzzy
+msgid "Connections closed rate"
+msgstr "接続が遅れて切断されました"
+
+#, fuzzy
+msgid "Connections created rate"
+msgstr "接続が遅れて切断されました"
+
 msgid "Connections dropped"
 msgstr "接続が切断されました"
 
@@ -14429,6 +14642,10 @@ msgstr "1秒あたりの接続数"
 msgid "Connectivity"
 msgstr "接続性"
 
+#, fuzzy
+msgid "Connectivity lag"
+msgstr "接続性"
+
 msgid "Connector outlets"
 msgstr "コネクタアウトレット"
 
@@ -14439,8 +14656,8 @@ msgid "Connector: Adding host changes to queue"
 msgstr "コネクター：ホストの変更をキューに追加する"
 
 #, fuzzy, python-format
-msgid "Connector: Collecting OpenTelemetry hosts on site  \"%s\""
-msgstr "コネクター：サイト \"%s\"で開いているtelemetry ホストを収集しています"
+msgid "Connector: Collecting metric backend hosts on site  \"%s\""
+msgstr "コネクター：サイト \"%s\"でピギーバックホストを習得しています"
 
 #, python-format
 msgid "Connector: Collecting open telemetry hosts on site  \"%s\""
@@ -17753,6 +17970,14 @@ msgstr "タググループを削除"
 msgid "Delete target #%d"
 msgstr "ターゲット#%dを削除"
 
+#, fuzzy
+msgid ""
+"Delete the hosts created by this connection whose OpenTelemetry data is no "
+"longer present."
+msgstr ""
+"この接続によって作成されたホストのうち、Open Telemetryのデータが存在しないホ"
+"ストを削除します。"
+
 msgid ""
 "Delete the hosts created by this connection whose open telemetry data is no "
 "longer present."
@@ -18946,6 +19171,10 @@ msgstr ""
 msgid "Discarded pending changes (restored %s)"
 msgstr "保留中の変更を破棄しました (%s をリストア)"
 
+#, fuzzy
+msgid "Disconnected"
+msgstr "切断されました"
+
 msgid "Discontinue counting after time has elapsed"
 msgstr "時間が経過したらカウントを中止する"
 
@@ -19927,6 +20156,9 @@ msgstr "プレースホルダーVMsを監視しない"
 msgid "Do not monitor service"
 msgstr "サービスを監視しない"
 
+msgid "Do not monitor subscriptions"
+msgstr "サブスクリプションを監視しない"
+
 msgid "Do not offer this action as a command on open events"
 msgstr "オープンイベントのコマンドとしてこのアクションを提供しないでください"
 
@@ -20538,6 +20770,10 @@ msgstr "期間中"
 
 msgid "Dw"
 msgstr "Dw"
+
+#, fuzzy
+msgid "Dynamic MAC enabled"
+msgstr "同期無効"
 
 msgid "Dynamic Token Bucket"
 msgstr "動的トークンバケット"
@@ -21609,6 +21845,10 @@ msgstr "マスターからのレプリケーションを有効にする"
 msgid "Enable row shading"
 msgstr "行のシェーディングを有効にする"
 
+#, fuzzy
+msgid "Enable safe host names"
+msgstr "ホスト名を翻訳する"
+
 msgid "Enable service notifications"
 msgstr "サービス通知を有効にする"
 
@@ -21632,6 +21872,29 @@ msgid ""
 msgstr ""
 "新しいWindowsエージェントのインストール後にレガシーエージェントをアンインス"
 "トールする場合は、このオプションを有効にします。"
+
+#, fuzzy, python-brace-format
+msgid ""
+"Enable this option to import Azure tags as host/service labels. The imported "
+"tags are added as host labels for resource groups and VMs monitored as hosts "
+"and as service labels for resources monitored as services. The label syntax "
+"is 'cmk/azure/tag/{key}:{value}'.<br>Additionally, each host representing a "
+"resource group is given the host label 'cmk/azure/resource_group:{rg_name}', "
+"and VMs monitored as hosts are given the host label 'cmk/azure/vm:instance', "
+"which is done independent of this option.<br>You can further restrict the "
+"imported tags by specifying a pattern which Checkmk searches for in the key "
+"of the Azure tag, or you can disable the import of Azure tags altogether."
+msgstr ""
+"デフォルトでは、CheckmkはすべてのAzure タグをホスト/サービスラベルとしてイン"
+"ポートします。インポートされたタグは、ホストとして監視されるリソースグループ"
+"およびVMに対してはホストラベルとして、サービスとして監視されるリソースに対し"
+"てはサービスラベルとして追加されます。ラベルの構文は'cmk/azure/tag/{key}:"
+"{value}'です。<br>さらに、リソースグループを表す各ホストには 'cmk/azure/"
+"resource_group:{rg_name}'というホストラベルが与えられ、ホストとして監視される"
+"VMには'cmk/azure/vm:instance'というホストラベルが与えられます。これは本オプ"
+"ションとは独立して無関係に行われます。<br>AzureタグのキーでCheckmkが検索する"
+"パターンを指定することで、インポートするタグをさらに制限することも、Azureタグ"
+"のインポートを完全に無効にすることもできます。"
 
 #, python-brace-format
 msgid ""
@@ -22613,6 +22876,10 @@ msgstr ""
 msgid "Every week on..."
 msgstr "毎週..."
 
+#, fuzzy
+msgid "Evicted keys"
+msgstr "退去キー数"
+
 msgid "Evictions"
 msgstr "エビクション"
 
@@ -22969,6 +23236,10 @@ msgstr "予想される自動拡張設定"
 msgid "Expected cluster type."
 msgstr "予想されるクラスタータイプ。"
 
+#, fuzzy
+msgid "Expected connection state"
+msgstr "受け入れられた接続"
+
 msgid "Expected cpu usage"
 msgstr "予想されるCPU使用量"
 
@@ -23036,6 +23307,14 @@ msgstr "期待される状態"
 msgid "Expected update interval"
 msgstr "予想される更新間隔"
 
+#, fuzzy
+msgid "Expected virtual switch"
+msgstr "期待される状態"
+
+#, fuzzy
+msgid "Expected virtual switch name"
+msgstr "予想されるフラグの状態"
+
 msgid "Expiration date"
 msgstr "有効期限なし"
 
@@ -23053,6 +23332,10 @@ msgstr "有効期限"
 
 msgid "Expire time"
 msgstr "有効期限"
+
+#, fuzzy
+msgid "Expired keys"
+msgstr "期限切れのオブジェクト"
 
 msgid "Expired objects"
 msgstr "期限切れのオブジェクト"
@@ -23101,6 +23384,9 @@ msgstr "明示的なラベル"
 
 msgid "Explicit list of IP addresses"
 msgstr "IPアドレスの明示的なリスト"
+
+msgid "Explicit list of subscription IDs"
+msgstr "明示的なIPアドレスのリスト"
 
 msgid "Explicit mapping of job exit codes to states"
 msgstr "ジョブ終了コードの状態への明示的なマッピング"
@@ -23156,6 +23442,9 @@ msgstr "明示的に指定されたグループ"
 
 msgid "Explicitly specify resources"
 msgstr "リソースを明示的に指定する"
+
+msgid "Explicitly specify subscription IDs"
+msgstr "サブスクリプションIDを明示的に指定する"
 
 msgid "Export"
 msgstr "エクスポート"
@@ -23801,6 +24090,9 @@ msgstr "フォールバック・テンプレート (%s):不明な ID %s"
 
 msgid "Falling"
 msgstr "落下"
+
+msgid "False"
+msgstr ""
 
 msgid "Fan Name"
 msgstr "ファン名"
@@ -25622,6 +25914,10 @@ msgstr "Gerrit 接続"
 
 msgid "Gerrit instance to query."
 msgstr "クエリするGerritインスタンス。"
+
+#, fuzzy
+msgid "Get commands"
+msgstr "コマンドなし"
 
 msgid "Get file from SFTP server"
 msgstr "SFTPサーバーからファイルを取得する"
@@ -27567,6 +27863,10 @@ msgstr "通知の履歴"
 msgid "History of scheduled downtimes"
 msgstr "スケジュールされたダウンタイムの履歴"
 
+#, fuzzy
+msgid "Hit ratio"
+msgstr "初期所要時間"
+
 msgid "Hits"
 msgstr "ヒット"
 
@@ -28860,6 +29160,10 @@ msgstr "ホスト名またはアドレス"
 msgid "Host name or alias (regex)"
 msgstr "ホスト名またはエイリアス(正規表現)"
 
+#, fuzzy
+msgid "Host name resource attribute"
+msgstr "属性をリセット"
+
 msgid "Host name rules"
 msgstr "ホスト名ルール"
 
@@ -29423,6 +29727,10 @@ msgstr "Hyper-Vサーバー:VMの状態"
 
 msgid "Hyper-V VM Guest Information (Windows)"
 msgstr "Hyper-V VMゲスト情報(Windows)"
+
+#, fuzzy
+msgid "Hyper-V VM Network Adapter"
+msgstr "ネットワークアダプタ"
 
 #, fuzzy
 msgid "Hyper-V VM integration services"
@@ -35649,6 +35957,10 @@ msgstr "バイト単位の使用済み容量のレベル"
 msgid "Levels on write capacity"
 msgstr "書き込み容量のレベル"
 
+#, fuzzy
+msgid "Levels over an extended period of time"
+msgstr "レプリケーションラグに関する長期間のレベル"
+
 msgid "Levels over an extended time period on a single core CPU utilization"
 msgstr "シングルコアCPU使用率の長期間にわたるレベル"
 
@@ -37133,6 +37445,10 @@ msgstr "リクエスト使用率の下位レベル"
 msgid "Lower levels for reservation utilization"
 msgstr "予約使用率の下位レベル"
 
+#, fuzzy
+msgid "Lower levels for successful connections"
+msgstr "アクティブな接続の下位レベル"
+
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr "ハードウェアデバイスのファン速度の下位レベル"
 
@@ -37200,6 +37516,10 @@ msgstr "最低: 通知なし、バッジ番号を更新"
 
 msgid "MAC address"
 msgstr "Macアドレス"
+
+#, fuzzy
+msgid "MAC configuration"
+msgstr "設定の追加"
 
 msgid "MB"
 msgstr "MB"
@@ -38520,6 +38840,10 @@ msgstr "最大同時リアルタイムチェック"
 
 msgid "Maximum connections per second"
 msgstr "1秒あたりの最大接続数"
+
+#, fuzzy
+msgid "Maximum connectivity lag"
+msgstr "サイト接続性"
 
 msgid "Maximum count"
 msgstr "最大数"
@@ -39885,6 +40209,9 @@ msgstr "検出され、手動で追加されたすべてのインスタンスを
 msgid "Monitor all instances found"
 msgstr "見つかったすべてのインスタンスを監視する"
 
+msgid "Monitor all subscriptions"
+msgstr "すべてのサブスクリプションを監視"
+
 msgid "Monitor and graph the lanes, if the port has multiple"
 msgstr "ポートが複数ある場合は、レーンを監視してグラフ化します"
 
@@ -41184,6 +41511,10 @@ msgstr "Netscalerのメモリ使用量"
 
 msgid "Network"
 msgstr "ネットワーク"
+
+#, fuzzy
+msgid "Network Adapter"
+msgstr "ネットワークアダプタ"
 
 msgid "Network Cards"
 msgstr "ネットワークカード"
@@ -44489,6 +44820,10 @@ msgstr "Open Telemetryコレクターの構成"
 #, fuzzy
 msgid "OpenTelemetry data - Metric backend"
 msgstr "OpenTelemetryメトリック名"
+
+#, fuzzy
+msgid "OpenTelemetry hosts creation options"
+msgstr "Open telemetryホスト作成オプション"
 
 msgid "OpenTelemetry metric name"
 msgstr "OpenTelemetryメトリック名"
@@ -48143,6 +48478,10 @@ msgstr "少なくとも1つのアドレスを指定してください"
 msgid "Please specify at least one \"Open telemetry hosts creation option\""
 msgstr "\"Open telemetry ホストの作成オプション\"を1つ以上指定してください"
 
+#, fuzzy
+msgid "Please specify at least one \"OpenTelemetry hosts creation option\""
+msgstr "\"Open telemetry ホストの作成オプション\"を1つ以上指定してください"
+
 msgid "Please specify at least one \"Piggyback creation option\""
 msgstr "\"ピギーバック作成オプション\"を1つ以上指定してください"
 
@@ -50295,6 +50634,10 @@ msgstr "Redfish 物理ポート検出"
 
 msgid "Redirect URL (has to be https)"
 msgstr "リダイレクトURL(httpsである必要があります)"
+
+#, fuzzy
+msgid "Redis Caches"
+msgstr "Redisクライアント"
 
 msgid "Redis clients"
 msgstr "Redisクライアント"
@@ -54140,6 +54483,9 @@ msgstr ""
 "LDAPディレクトリのベースとなるソフトウェアを選択します。選択内容に応じて、"
 "LDAPクエリで使用される属性名などが変更されます。"
 
+msgid "Select the subscriptions you want to monitor."
+msgstr "監視したいサブスクリプションを選択してください。"
+
 msgid "Select the type of content element"
 msgstr "コンテンツ要素のタイプを選択します"
 
@@ -54458,6 +54804,22 @@ msgstr "サーバー接続"
 msgid "Server latency"
 msgstr "サーバーの待ち時間"
 
+#, fuzzy
+msgid "Server load"
+msgstr "Citrixサーバーの負荷"
+
+#, fuzzy
+msgid "Server load %"
+msgstr "Citrixサーバーの負荷"
+
+#, fuzzy
+msgid "Server load (average)"
+msgstr "サーバーログストレージ"
+
+#, fuzzy
+msgid "Server load levels"
+msgstr "サービスレベル"
+
 msgid "Server log storage"
 msgstr "サーバーログストレージ"
 
@@ -54466,6 +54828,10 @@ msgstr "使用したサーバーのログストレージ"
 
 msgid "Server performance"
 msgstr "サーバーのパフォーマンス"
+
+#, fuzzy
+msgid "Server side command latency"
+msgstr "サーバーの待ち時間"
 
 msgid "Server side handling of unencrypted data"
 msgstr "サーバー側の未暗号化データのハンドリング"
@@ -54476,6 +54842,10 @@ msgstr "サーバー時間"
 #, python-format
 msgid "Server time (currently: %s)"
 msgstr "サーバ時間 (現在: %s)"
+
+#, fuzzy
+msgid "Server-side command latency"
+msgstr "サーバーの待ち時間"
 
 msgid "Service"
 msgstr "サービス"
@@ -54950,6 +55320,10 @@ msgstr "サービスステータス"
 
 msgid "Service status grouping"
 msgstr "サービスステータスのグループ化"
+
+#, fuzzy
+msgid "Service status when geo-replication link is unhealthy"
+msgstr "レプリケーション状態がアクティブであるときの状態"
 
 msgid "Service tags"
 msgstr "サービスタグ"
@@ -59611,6 +59985,13 @@ msgid "Subscription Status (off: ignore subscription status)"
 msgstr ""
 "サブスクリプションステータス（オフ：サブスクリプションステータスを無視）"
 
+#, fuzzy
+msgid "Subscriptions matching tag based criteria"
+msgstr "タグベースの基準に一致するリソース"
+
+msgid "Subscriptions to monitor"
+msgstr "監視のサブスクリプション"
+
 msgid "Substitution"
 msgstr "置換"
 
@@ -60390,6 +60771,10 @@ msgstr "タググループ"
 
 msgid "Tag groups with only one choice must have a tag ID."
 msgstr "選択肢が1つしかないタググループには、タグIDが必要です。"
+
+#, fuzzy
+msgid "Tag matching subscriptions"
+msgstr "イベントサブスクリプション"
 
 msgid "Tag usage"
 msgstr "タグの使用法"
@@ -63310,6 +63695,14 @@ msgstr ""
 "インスタンス名、データベース名、テーブルスペース名の組み合わせは以下のように"
 "なります。 db2wps8:WPSCOMT8.USERSPACE1"
 
+#, fuzzy
+msgid ""
+"The interval the connection will be executed to check the available "
+"OpenTelemetry data and update the configuration."
+msgstr ""
+"使用可能なOpen telemetryデータを確認し、構成を更新するために接続が実行される"
+"間隔。"
+
 msgid ""
 "The interval the connection will be executed to check the available open "
 "telemetry data and update the configuration."
@@ -65254,6 +65647,10 @@ msgid ""
 msgstr ""
 "サブフォルダ <i>%s</i> には明示的なサイト <i>%s</i> が設定されていて、これは"
 "カスタマー <i>%s</i>に属します。これは、CMEフォルダー階層に違反します。"
+
+#, fuzzy
+msgid "The subscription tag"
+msgstr "イベントサブスクリプション"
 
 #, python-format
 msgid "The suffix '%s' is already in use by another LDAP connection."
@@ -69460,6 +69857,76 @@ msgstr ""
 "用していて、それでも一部のホストへのPINGのパフォーマンスデータを追跡したい場"
 "合です。"
 
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis CPU utilization "
+"monitoring"
+msgstr ""
+"このルールでは、データベースのCPU使用率のレベルを設定することができます"
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis Cache "
+"effectiveness monitoring"
+msgstr ""
+"このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
+"きます"
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis connections "
+"monitoring"
+msgstr ""
+"このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
+"きます"
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis latency "
+"monitoring"
+msgstr ""
+"このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
+"きます"
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis memory monitoring"
+msgstr ""
+"このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
+"きます"
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis replication "
+"monitoring"
+msgstr ""
+"このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
+"きます"
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis server load "
+"monitoring"
+msgstr ""
+"このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
+"きます"
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis throughput "
+"monitoring"
+msgstr ""
+"このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
+"きます"
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure SQL database "
+"connections"
+msgstr ""
+"このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定で"
+"きます"
+
 msgid "This ruleset allows you to configure levels for the Storage data flows"
 msgstr "このルールセットでは、ストレージのデータフローのレベルを設定できます"
 
@@ -70842,6 +71309,11 @@ msgstr "時間範囲の同期"
 
 msgid "Time range to consider"
 msgstr "考慮すべき時間範囲"
+
+#, fuzzy
+msgid ""
+"Time range to continue to consider outdated OpenTelemetry data as valid."
+msgstr "古いオープンテレメトリデータを有効なデータとして継続して扱う期間。"
 
 msgid ""
 "Time range to continue to consider outdated open telemetry data as valid."
@@ -73744,6 +74216,9 @@ msgstr "トリガーとなるイベント"
 msgid "Troubleshooting/testing settings"
 msgstr "トラブルシューティング/テスト設定"
 
+msgid "True"
+msgstr ""
+
 msgid ""
 "Truncate content at this amount of characters.A zero value mean not to "
 "truncate"
@@ -75393,6 +75868,10 @@ msgstr "再起動の上位レベル"
 msgid "Upper levels for size"
 msgstr "サイズの上位レベル"
 
+#, fuzzy
+msgid "Upper levels for successful connections"
+msgstr "アクティブな接続の上位レベル"
+
 msgid "Upper levels for surge queue length"
 msgstr "サージキューの長さの上位レベル"
 
@@ -76600,6 +77079,14 @@ msgstr "使用されたログファイル:絶対または相対的な上位レ�
 msgid "Used logical space"
 msgstr "使用済み論理スペース"
 
+#, fuzzy
+msgid "Used memory"
+msgstr "使用済みCPUメモリ"
+
+#, fuzzy
+msgid "Used memory RSS"
+msgstr "使用済みCPUメモリ"
+
 msgid "Used meta data"
 msgstr "使用したメタデータ"
 
@@ -76900,6 +77387,14 @@ msgstr ""
 "認証情報が漏れます(詳細はWerk 14261を参照してください)。デフォルトでは、この"
 "メソッドによるログインを無効にしています。すべてのユーザーに対してGETメソッド"
 "によるログインを有効にするには、このプロパティを使用します。"
+
+msgid ""
+"Using this option will let Checkmk create safe host names for piggyback "
+"hosts to avoid conflicts in entity names from Azure. This option will "
+"prepend 'azr-' and append the last part of the subscription ID to host "
+"names. Example: 'azr-my-vm-1a2b3c4d'. Enable this option if you have "
+"resources or resource groups with the same name."
+msgstr ""
 
 msgid ""
 "Using this option you can define an optional LDAP filter which is used "
@@ -78030,6 +78525,10 @@ msgstr "仮想サイズ"
 
 msgid "Virtual size (average)"
 msgstr "仮想サイズ（平均）"
+
+#, fuzzy
+msgid "Virtual switch name"
+msgstr "仮想サイズ"
 
 msgid "VirtualBox Guests"
 msgstr "VirtualBoxゲスト"
@@ -85315,7 +85814,7 @@ msgstr "ユーザーネームを入力してください"
 msgid "Add filter as suffix"
 msgstr "フィルタを追加"
 
-msgid "Include dashboard filter contents to the dashboard title.."
+msgid "Include dashboard filter contents to the dashboard title."
 msgstr ""
 
 #, fuzzy
@@ -85372,17 +85871,6 @@ msgstr ""
 msgid "Choose how to display your data"
 msgstr "日付を表示しない"
 
-msgid "Inherited"
-msgstr "継承された"
-
-#, fuzzy
-msgid "Overriden"
-msgstr "概要"
-
-#, fuzzy
-msgid "Quick filter"
-msgstr "サービスフィルター"
-
 #, fuzzy
 msgid "Single %{n}"
 msgstr "シングル"
@@ -85390,6 +85878,13 @@ msgstr "シングル"
 #, fuzzy
 msgid "Multiple %{n}"
 msgstr "複数のサイト"
+
+msgid "Inherited"
+msgstr "継承された"
+
+#, fuzzy
+msgid "Overriden"
+msgstr "概要"
 
 #, fuzzy
 msgid "Runtime filter"
@@ -85585,79 +86080,6 @@ msgstr ""
 msgid "€ (Decimal, strict precision, 2 digits)"
 msgstr ""
 
-#, fuzzy
-msgid "Specific host"
-msgstr "特定のサイト"
-
-#, fuzzy
-msgid "Multiple hosts"
-msgstr "複数のサイト"
-
-#, fuzzy
-msgid "Applied host name filter"
-msgstr "適用されたフィルター:"
-
-#, fuzzy
-msgid "to be defined"
-msgstr "名前が定義されていません"
-
-#, fuzzy
-msgid "Widget filter"
-msgstr "フィルタを追加"
-
-#, fuzzy
-msgid "Select host name"
-msgstr "(ホスト選択)"
-
-msgid "No host name filter applied."
-msgstr "ホスト名フィルターは適用されていません。"
-
-msgid ""
-"A host name filter selected as a dashboard or quick filter in the filters "
-"slideout appears here and applies to this widget"
-msgstr ""
-
-#, fuzzy
-msgid "Applied host filters"
-msgstr "適用されたフィルター:"
-
-msgid "No host filters applied."
-msgstr "ホスト名フィルターは適用されません。"
-
-msgid ""
-"Dashboard or quick filters selected in the filters slideout appear here and "
-"apply to this widget"
-msgstr ""
-
-#, fuzzy
-msgid "Specific service"
-msgstr "特定のサイト"
-
-#, fuzzy
-msgid "Applied service name filter"
-msgstr "代替サービス名"
-
-#, fuzzy
-msgid "Select service name"
-msgstr "(サービスを選択)"
-
-msgid "No service name filter applied."
-msgstr ""
-
-msgid ""
-"A service name filter selected as a dashboard or quick filter in the filters "
-"slideout appears here and applies to this widget"
-msgstr ""
-
-#, fuzzy
-msgid "Applied service filters"
-msgstr "サービスフィルター"
-
-msgid ""
-"Dashboard or quick filters selected in the filters slideout appears here and "
-"applies to this widget"
-msgstr ""
-
 msgid "Barplot"
 msgstr "棒グラフ"
 
@@ -85688,6 +86110,10 @@ msgstr "背景なしでタイトルを表示"
 #, fuzzy
 msgid "Unrestricted"
 msgstr "未登録"
+
+#, fuzzy
+msgid "Specific host"
+msgstr "特定のサイト"
 
 msgid "Custom"
 msgstr "カスタム"
@@ -85739,6 +86165,29 @@ msgstr ""
 #, fuzzy
 msgid "Dashboard scope"
 msgstr "ダッシュボード"
+
+msgid "Only me (private)"
+msgstr ""
+
+#, fuzzy
+msgid "Users of site"
+msgstr "サイトのサービス"
+
+#, fuzzy
+msgid "Enter description"
+msgstr "説明を使用する"
+
+#, fuzzy
+msgid "Only show when \"Show more\" is enabled"
+msgstr "show moreがアクティブな場合にのみ %s を表示します"
+
+#, fuzzy
+msgid "Show in dropdown menus"
+msgstr "ドロップダウンメニューでこの %sを非表示にする"
+
+#, fuzzy
+msgid "Dashboard settings of %{name}"
+msgstr "ダッシュボードのプロパティ"
 
 #, fuzzy
 msgid "Single graph"
@@ -85893,6 +86342,10 @@ msgstr "ファイル選択"
 #, fuzzy
 msgid "Copy view"
 msgstr "クローン ビュー"
+
+#, fuzzy
+msgid "Unknown object type: %{objectType}"
+msgstr "不明なターゲットタイプ: %s 。使用可能なタイプ: %s 。"
 
 #, fuzzy
 msgid "Data configuration"
@@ -86742,6 +87195,61 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy, python-format
+#~ msgid "Connector: Collecting OpenTelemetry hosts on site  \"%s\""
+#~ msgstr ""
+#~ "コネクター：サイト \"%s\"で開いているtelemetry ホストを収集しています"
+
+#, fuzzy
+#~ msgid "Quick filter"
+#~ msgstr "サービスフィルター"
+
+#, fuzzy
+#~ msgid "Multiple hosts"
+#~ msgstr "複数のサイト"
+
+#, fuzzy
+#~ msgid "Applied host name filter"
+#~ msgstr "適用されたフィルター:"
+
+#, fuzzy
+#~ msgid "to be defined"
+#~ msgstr "名前が定義されていません"
+
+#, fuzzy
+#~ msgid "Widget filter"
+#~ msgstr "フィルタを追加"
+
+#, fuzzy
+#~ msgid "Select host name"
+#~ msgstr "(ホスト選択)"
+
+#~ msgid "No host name filter applied."
+#~ msgstr "ホスト名フィルターは適用されていません。"
+
+#, fuzzy
+#~ msgid "Applied host filters"
+#~ msgstr "適用されたフィルター:"
+
+#~ msgid "No host filters applied."
+#~ msgstr "ホスト名フィルターは適用されません。"
+
+#, fuzzy
+#~ msgid "Specific service"
+#~ msgstr "特定のサイト"
+
+#, fuzzy
+#~ msgid "Applied service name filter"
+#~ msgstr "代替サービス名"
+
+#, fuzzy
+#~ msgid "Select service name"
+#~ msgstr "(サービスを選択)"
+
+#, fuzzy
+#~ msgid "Applied service filters"
+#~ msgstr "サービスフィルター"
+
 #~ msgid "Amazon Web Service (AWS)"
 #~ msgstr "Amazon Web Services (AWS)"
 
@@ -86912,281 +87420,6 @@ msgstr ""
 
 #~ msgid "iSCSI HBAs"
 #~ msgstr "iSCSI HBA"
-
-#, fuzzy
-#~ msgid "Add subscription tag"
-#~ msgstr "サブスクリプションステータス"
-
-#~ msgid ""
-#~ "Add the tags you want to use to filter the resources. Only resources with "
-#~ "every tags matching, will be monitored."
-#~ msgstr ""
-#~ "リソースをフィルタリングするために使用するタグを追加してください。すべての"
-#~ "タグが一致するリソースのみが監視対象となります。"
-
-#~ msgid ""
-#~ "Add the tags you want to use to filter the subscriptions. Only "
-#~ "subscriptions with every tags matching, will be monitored."
-#~ msgstr ""
-#~ "サブスクリプションをフィルタリングするために使用するタグを追加してくださ"
-#~ "い。すべてのタグが一致するサブスクリプションのみが監視対象となります。"
-
-#, fuzzy
-#~ msgid "Average over"
-#~ msgstr "平均値"
-
-#, fuzzy
-#~ msgid "Azure Redis CPU utilization"
-#~ msgstr "GCP/Redis CPU使用率"
-
-#, fuzzy
-#~ msgid "Azure Redis Cache effectiveness"
-#~ msgstr "Azure データベース接続"
-
-#, fuzzy
-#~ msgid "Azure Redis connections"
-#~ msgstr "Azure データベース接続"
-
-#, fuzzy
-#~ msgid "Azure Redis latency"
-#~ msgstr "平均ディスク遅延"
-
-#, fuzzy
-#~ msgid "Azure Redis memory"
-#~ msgstr "絶対使用メモリ"
-
-#, fuzzy
-#~ msgid "Azure Redis replication"
-#~ msgstr "Azure データベース接続"
-
-#, fuzzy
-#~ msgid "Azure Redis server load"
-#~ msgstr "Redisサーバー名"
-
-#, fuzzy
-#~ msgid "Azure Redis throughput"
-#~ msgstr "読み取りスループット"
-
-#, fuzzy
-#~ msgid "Azure SQL database connections"
-#~ msgstr "Azure データベース接続"
-
-#, fuzzy
-#~ msgid "CPU utilization %"
-#~ msgstr "CPU使用率"
-
-#, fuzzy
-#~ msgid "Cache internode latency"
-#~ msgstr "会議の遅延を作成する"
-
-#, fuzzy
-#~ msgid "Cache read throughput (/sec)"
-#~ msgstr "FCP 読み取りスループット"
-
-#, fuzzy
-#~ msgid "Cache requests"
-#~ msgstr "失敗したリクエスト"
-
-#, fuzzy
-#~ msgid "Cache write throughput (/sec)"
-#~ msgstr "FCP 書き込みスループット"
-
-#, fuzzy
-#~ msgid "Connected Clients"
-#~ msgstr "接続"
-
-#, fuzzy
-#~ msgid "Connected clients"
-#~ msgstr "接続されているクライアントの数"
-
-#, fuzzy
-#~ msgid "Connections closed rate"
-#~ msgstr "接続が遅れて切断されました"
-
-#, fuzzy
-#~ msgid "Connections created rate"
-#~ msgstr "接続が遅れて切断されました"
-
-#, fuzzy
-#~ msgid "Connectivity lag"
-#~ msgstr "接続性"
-
-#~ msgid "Do not monitor subscriptions"
-#~ msgstr "サブスクリプションを監視しない"
-
-#, fuzzy
-#~ msgid "Enable safe host names"
-#~ msgstr "ホスト名を翻訳する"
-
-#, fuzzy
-#~ msgid "Evicted keys"
-#~ msgstr "退去キー数"
-
-#, fuzzy
-#~ msgid "Expired keys"
-#~ msgstr "期限切れのオブジェクト"
-
-#~ msgid "Explicit list of subscription IDs"
-#~ msgstr "明示的なIPアドレスのリスト"
-
-#~ msgid "Explicitly specify subscription IDs"
-#~ msgstr "サブスクリプションIDを明示的に指定する"
-
-#, fuzzy
-#~ msgid "Get commands"
-#~ msgstr "コマンドなし"
-
-#, fuzzy
-#~ msgid "Hit ratio"
-#~ msgstr "初期所要時間"
-
-#, fuzzy
-#~ msgid "Levels over an extended period of time"
-#~ msgstr "レプリケーションラグに関する長期間のレベル"
-
-#, fuzzy
-#~ msgid "Lower levels for successful connections"
-#~ msgstr "アクティブな接続の下位レベル"
-
-#, fuzzy
-#~ msgid "Maximum connectivity lag"
-#~ msgstr "サイト接続性"
-
-#~ msgid "Monitor all subscriptions"
-#~ msgstr "すべてのサブスクリプションを監視"
-
-#, fuzzy
-#~ msgid "Redis Caches"
-#~ msgstr "Redisクライアント"
-
-#~ msgid "Select the subscriptions you want to monitor."
-#~ msgstr "監視したいサブスクリプションを選択してください。"
-
-#, fuzzy
-#~ msgid "Server load"
-#~ msgstr "Citrixサーバーの負荷"
-
-#, fuzzy
-#~ msgid "Server load %"
-#~ msgstr "Citrixサーバーの負荷"
-
-#, fuzzy
-#~ msgid "Server load (average)"
-#~ msgstr "サーバーログストレージ"
-
-#, fuzzy
-#~ msgid "Server load levels"
-#~ msgstr "サービスレベル"
-
-#, fuzzy
-#~ msgid "Server side command latency"
-#~ msgstr "サーバーの待ち時間"
-
-#, fuzzy
-#~ msgid "Server-side command latency"
-#~ msgstr "サーバーの待ち時間"
-
-#, fuzzy
-#~ msgid "Service status when geo-replication link is unhealthy"
-#~ msgstr "レプリケーション状態がアクティブであるときの状態"
-
-#, fuzzy
-#~ msgid "Subscriptions matching tag based criteria"
-#~ msgstr "タグベースの基準に一致するリソース"
-
-#~ msgid "Subscriptions to monitor"
-#~ msgstr "監視のサブスクリプション"
-
-#, fuzzy
-#~ msgid "Tag matching subscriptions"
-#~ msgstr "イベントサブスクリプション"
-
-#, fuzzy
-#~ msgid "The subscription tag"
-#~ msgstr "イベントサブスクリプション"
-
-#, fuzzy
-#~ msgid ""
-#~ "This ruleset allows you to configure levels for Azure Redis CPU "
-#~ "utilization monitoring"
-#~ msgstr ""
-#~ "このルールでは、データベースのCPU使用率のレベルを設定することができます"
-
-#, fuzzy
-#~ msgid ""
-#~ "This ruleset allows you to configure levels for Azure Redis Cache "
-#~ "effectiveness monitoring"
-#~ msgstr ""
-#~ "このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定"
-#~ "できます"
-
-#, fuzzy
-#~ msgid ""
-#~ "This ruleset allows you to configure levels for Azure Redis connections "
-#~ "monitoring"
-#~ msgstr ""
-#~ "このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定"
-#~ "できます"
-
-#, fuzzy
-#~ msgid ""
-#~ "This ruleset allows you to configure levels for Azure Redis latency "
-#~ "monitoring"
-#~ msgstr ""
-#~ "このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定"
-#~ "できます"
-
-#, fuzzy
-#~ msgid ""
-#~ "This ruleset allows you to configure levels for Azure Redis memory "
-#~ "monitoring"
-#~ msgstr ""
-#~ "このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定"
-#~ "できます"
-
-#, fuzzy
-#~ msgid ""
-#~ "This ruleset allows you to configure levels for Azure Redis replication "
-#~ "monitoring"
-#~ msgstr ""
-#~ "このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定"
-#~ "できます"
-
-#, fuzzy
-#~ msgid ""
-#~ "This ruleset allows you to configure levels for Azure Redis server load "
-#~ "monitoring"
-#~ msgstr ""
-#~ "このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定"
-#~ "できます"
-
-#, fuzzy
-#~ msgid ""
-#~ "This ruleset allows you to configure levels for Azure Redis throughput "
-#~ "monitoring"
-#~ msgstr ""
-#~ "このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定"
-#~ "できます"
-
-#, fuzzy
-#~ msgid ""
-#~ "This ruleset allows you to configure levels for Azure SQL database "
-#~ "connections"
-#~ msgstr ""
-#~ "このルールセットでは、使用済みストレージ容量のレベルをパーセント単位で設定"
-#~ "できます"
-
-#, fuzzy
-#~ msgid "Upper levels for successful connections"
-#~ msgstr "アクティブな接続の上位レベル"
-
-#, fuzzy
-#~ msgid "Used memory"
-#~ msgstr "使用済みCPUメモリ"
-
-#, fuzzy
-#~ msgid "Used memory RSS"
-#~ msgstr "使用済みCPUメモリ"
 
 #~ msgid "Assignment of services to contact groups"
 #~ msgstr "連絡先グループへのサービスの割り当て"
@@ -88214,10 +88447,6 @@ msgstr ""
 #, python-brace-format
 #~ msgid "Automatic rediscovery parameter {param} not implemented"
 #~ msgstr "自動再発見パラメータ{param}が実装されていない"
-
-#, fuzzy
-#~ msgid "Connectee"
-#~ msgstr "接続する"
 
 #, fuzzy
 #~ msgid "Connecter"

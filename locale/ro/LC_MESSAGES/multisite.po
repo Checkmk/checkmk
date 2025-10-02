@@ -4496,6 +4496,10 @@ msgstr "Adăugați configurația de stare"
 msgid "Add stored report"
 msgstr "Adăugați un raport stocat"
 
+#, fuzzy
+msgid "Add subscription tag"
+msgstr "Starea abonamentului"
+
 msgid "Add tag"
 msgstr "Adăugați eticheta"
 
@@ -4527,6 +4531,16 @@ msgid ""
 msgstr ""
 "Adăugați textul evenimentelor la datele transmise către Consola de "
 "evenimente. Caracterele Newline sunt înlocuite cu '~'."
+
+msgid ""
+"Add the tags you want to use to filter the resources. Only resources with "
+"every tags matching, will be monitored."
+msgstr ""
+
+msgid ""
+"Add the tags you want to use to filter the subscriptions. Only subscriptions "
+"with every tags matching, will be monitored."
+msgstr ""
 
 msgid "Add these contact groups to the host"
 msgstr "Adăugați aceste grupuri de contacte la gazdă"
@@ -5508,6 +5522,9 @@ msgstr "Alarme"
 
 msgid "Alert"
 msgstr "Alertă"
+
+msgid "Alert after being at or above the threshold for"
+msgstr ""
 
 msgid "Alert handler"
 msgstr "Gestionar de alerte"
@@ -7596,6 +7613,10 @@ msgid "Attribute"
 msgstr "Atributul"
 
 #, fuzzy
+msgid "Attribute filters"
+msgstr "Atributul de setat"
+
+#, fuzzy
 msgid "Attribute key"
 msgstr "Atributul"
 
@@ -7918,6 +7939,10 @@ msgid "Automatically create monitoring agents"
 msgstr "Crearea automată a agenților de monitorizare"
 
 #, fuzzy
+msgid "Automatically delete hosts without OpenTelemetry data"
+msgstr "Ștergeți automat gazdele fără date piggyback"
+
+#, fuzzy
 msgid "Automatically delete hosts without open telemetry data"
 msgstr "Ștergeți automat gazdele fără date piggyback"
 
@@ -8235,6 +8260,10 @@ msgstr "Numărul mediu de mesaje niveluri superioare"
 msgid "Average number of messages"
 msgstr "Numărul mediu de mesaje"
 
+#, fuzzy
+msgid "Average over"
+msgstr "Valoarea medie"
+
 msgid "Average pending tasks delta"
 msgstr "Delta medie a sarcinilor în așteptare"
 
@@ -8288,6 +8317,12 @@ msgid ""
 msgstr ""
 "Calculați media utilizării CPU pe perioada de timp specificată înainte de "
 "aplicarea nivelurilor."
+
+msgid ""
+"Average the instantaneous load over the specified number of minutes. Note: "
+"This does NOT affect \"Levels an extended period of time\" above, which "
+"always checks the instantaneous value."
+msgstr ""
 
 msgid "Average time messages stay on queue"
 msgstr "Timpul mediu în care mesajele rămân în coadă"
@@ -8866,12 +8901,24 @@ msgid "Azure"
 msgstr "Azure"
 
 #, fuzzy
+msgid "Azure AD Connect"
+msgstr "Azure AD Connect"
+
+#, fuzzy
 msgid "Azure AD Connect (deprecated)"
 msgstr "Azure AD Connect"
 
 #, fuzzy
+msgid "Azure Agent Info"
+msgstr "Informații despre Azure Agent"
+
+#, fuzzy
 msgid "Azure Agent Info (deprecated)"
 msgstr "Informații despre Azure Agent"
+
+#, fuzzy
+msgid "Azure Application Gateway"
+msgstr "Poarta de aplicații"
 
 #, fuzzy
 msgid "Azure Application Gateway (deprecated)"
@@ -8891,20 +8938,76 @@ msgid "Azure Databases"
 msgstr "Baze de date Azure"
 
 #, fuzzy
+msgid "Azure Load Balancer Health"
+msgstr "Sănătatea echilibrului de încărcare"
+
+#, fuzzy
 msgid "Azure Load Balancer Health (deprecated)"
 msgstr "Sănătatea Azure Load Balancer"
+
+#, fuzzy
+msgid "Azure Redis CPU utilization"
+msgstr "GCP/Redis Utilizare CPU"
+
+#, fuzzy
+msgid "Azure Redis Cache effectiveness"
+msgstr "Conexiuni la baza de date"
+
+#, fuzzy
+msgid "Azure Redis connections"
+msgstr "Conexiuni la baza de date"
+
+#, fuzzy
+msgid "Azure Redis latency"
+msgstr "Latența medie a discului"
+
+#, fuzzy
+msgid "Azure Redis memory"
+msgstr "Memorie absolută utilizată"
+
+#, fuzzy
+msgid "Azure Redis replication"
+msgstr "Conexiuni la baza de date"
+
+#, fuzzy
+msgid "Azure Redis server load"
+msgstr "Numele serverului Redis"
+
+#, fuzzy
+msgid "Azure Redis throughput"
+msgstr "Viteză de citire"
+
+#, fuzzy
+msgid "Azure SQL database CPU usage"
+msgstr "Baze de date Azure"
 
 #, fuzzy
 msgid "Azure SQL database CPU usage (deprecated)"
 msgstr "Baze de date Azure"
 
 #, fuzzy
+msgid "Azure SQL database connections"
+msgstr "Conexiuni la baza de date"
+
+#, fuzzy
+msgid "Azure SQL database deadlocks"
+msgstr "Conexiuni la baza de date"
+
+#, fuzzy
 msgid "Azure SQL database deadlocks (deprecated)"
 msgstr "Conexiuni la baza de date"
 
 #, fuzzy
+msgid "Azure SQL database storage"
+msgstr "Baze de date Azure"
+
+#, fuzzy
 msgid "Azure SQL database storage (deprecated)"
 msgstr "Baze de date Azure"
+
+#, fuzzy
+msgid "Azure SQL database throughput"
+msgstr "Unitatea de debit a bazei de date"
 
 #, fuzzy
 msgid "Azure SQL database throughput (deprecated)"
@@ -8914,7 +9017,15 @@ msgid "Azure Storage"
 msgstr "Azure Storage"
 
 #, fuzzy
+msgid "Azure Storage Data Flow"
+msgstr "Azure Storage"
+
+#, fuzzy
 msgid "Azure Storage Data Flow (deprecated)"
+msgstr "Azure Storage"
+
+#, fuzzy
+msgid "Azure Storage Performance"
 msgstr "Azure Storage"
 
 #, fuzzy
@@ -8922,24 +9033,48 @@ msgid "Azure Storage Performance (deprecated)"
 msgstr "Azure Storage"
 
 #, fuzzy
+msgid "Azure Storage Usage"
+msgstr "Azure Storage"
+
+#, fuzzy
 msgid "Azure Storage Usage (deprecated)"
 msgstr "Azure Storage"
+
+#, fuzzy
+msgid "Azure Traffic Manager Probe State"
+msgstr "Azure Traffic Manager Probe State"
 
 #, fuzzy
 msgid "Azure Traffic Manager Probe State (deprecated)"
 msgstr "Azure Traffic Manager Probe State"
 
 #, fuzzy
+msgid "Azure Traffic Manager Qps"
+msgstr "Azure Traffic Manager Qps"
+
+#, fuzzy
 msgid "Azure Traffic Manager Qps (deprecated)"
 msgstr "Azure Traffic Manager Qps"
+
+#, fuzzy
+msgid "Azure Usage Details (Costs)"
+msgstr "Detalii privind utilizarea Azure (costuri)"
 
 #, fuzzy
 msgid "Azure Usage Details (Costs) (deprecated)"
 msgstr "Detalii privind utilizarea Azure (costuri)"
 
 #, fuzzy
+msgid "Azure VM Burst CPU Credits"
+msgstr "Credite CPU Azure VM Burst"
+
+#, fuzzy
 msgid "Azure VM Burst CPU Credits (deprecated)"
 msgstr "Credite CPU Azure VM Burst"
+
+#, fuzzy
+msgid "Azure VM Disk"
+msgstr "Instanțe Azure VM"
 
 #, fuzzy
 msgid "Azure VM Disk (deprecated)"
@@ -8949,8 +9084,16 @@ msgid "Azure VM instances"
 msgstr "Instanțe Azure VM"
 
 #, fuzzy
+msgid "Azure VNet Gateway"
+msgstr "Gateway vNet"
+
+#, fuzzy
 msgid "Azure VNet Gateway  (deprecated)"
 msgstr "Azure VNet Gateway"
+
+#, fuzzy
+msgid "Azure database connections"
+msgstr "Conexiuni la baza de date"
 
 #, fuzzy
 msgid "Azure database connections (deprecated)"
@@ -8967,12 +9110,24 @@ msgid "Azure storage accounts"
 msgstr "Conturi de stocare Azure"
 
 #, fuzzy
+msgid "Azure virtual machines"
+msgstr "Mașina virtuală"
+
+#, fuzzy
 msgid "Azure virtual machines (deprecated)"
 msgstr "Mașini virtuale Azure"
 
 #, fuzzy
+msgid "Azure virtual machines summary"
+msgstr "Rezumat al mașinilor virtuale Azure"
+
+#, fuzzy
 msgid "Azure virtual machines summary  (deprecated)"
 msgstr "Rezumat al mașinilor virtuale Azure"
+
+#, fuzzy
+msgid "Azure web servers (IIS)"
+msgstr "Servere web Azure (IIS)"
 
 #, fuzzy
 msgid "Azure web servers (IIS) (deprecated)"
@@ -11171,6 +11326,10 @@ msgstr "CPU utilizat"
 msgid "CPU utilization"
 msgstr "Utilizare CPU"
 
+#, fuzzy
+msgid "CPU utilization %"
+msgstr "Utilizare CPU"
+
 msgid "CPU utilization & Kernel performance"
 msgstr "Utilizarea procesorului și performanța nucleului"
 
@@ -11350,6 +11509,10 @@ msgstr "Cache %s"
 msgid "Cache hits for pass"
 msgstr "lovituri pentru trecere"
 
+#, fuzzy
+msgid "Cache internode latency"
+msgstr "Creați o latență de conferință"
+
 msgid "Cache interval"
 msgstr "Intervalul de cache"
 
@@ -11359,6 +11522,14 @@ msgstr "Dimensiunea cache-ului"
 
 msgid "Cache misses per second"
 msgstr "Ratarea memoriei cache pe secundă"
+
+#, fuzzy
+msgid "Cache read throughput (/sec)"
+msgstr "Viteză de citire"
+
+#, fuzzy
+msgid "Cache requests"
+msgstr "Solicitări eșuate"
 
 msgid "Cache several non-status queries"
 msgstr "Memorarea în memoria cache a mai multor interogări fără statut"
@@ -11370,6 +11541,10 @@ msgstr "Dimensiunea cache-ului"
 #, fuzzy
 msgid "Cache this section"
 msgstr "dezactivați această secțiune"
+
+#, fuzzy
+msgid "Cache write throughput (/sec)"
+msgstr "Viteza de scriere"
 
 msgid "Cached"
 msgstr "În cache"
@@ -14632,6 +14807,10 @@ msgid "Configure Google Cloud Platform (GCP) monitoring in Checkmk"
 msgstr "Monitorizarea serviciilor web Amazon (AWS)"
 
 #, fuzzy
+msgid "Configure Microsoft Azure (deprecated) monitoring in Checkmk"
+msgstr "Monitorizarea serviciilor web Amazon (AWS)"
+
+#, fuzzy
 msgid "Configure Microsoft Azure monitoring in Checkmk"
 msgstr "Monitorizarea serviciilor web Amazon (AWS)"
 
@@ -14694,6 +14873,12 @@ msgstr "Configurați descoperirea interfețelor unice"
 msgid "Configure enforced checks without using service discovery"
 msgstr ""
 "Configurați verificările impuse fără a utiliza descoperirea serviciilor"
+
+msgid ""
+"Configure expected states for Hyper-V VM network interfaces. You can set "
+"expected connection state, MAC configuration, and expected virtual switch "
+"assignment."
+msgstr ""
 
 #, fuzzy
 msgid "Configure fallback email address"
@@ -15237,8 +15422,20 @@ msgid "Connect without password"
 msgstr "Conectare fără parolă"
 
 #, fuzzy
+msgid "Connected"
+msgstr "Conectați-vă"
+
+#, fuzzy
+msgid "Connected Clients"
+msgstr "Conexiuni"
+
+#, fuzzy
 msgid "Connected Relay configurations"
 msgstr "Configurația RRA"
+
+#, fuzzy
+msgid "Connected clients"
+msgstr "Numărul de clienți conectați"
 
 msgid "Connecter and connectee sites must be different."
 msgstr ""
@@ -15294,6 +15491,10 @@ msgstr "Reprezentarea regulilor: %s"
 
 msgid "Connection settings"
 msgstr "Setări de conectare"
+
+#, fuzzy
+msgid "Connection state configuration"
+msgstr "Activați configurația"
 
 msgid ""
 "Connection state of customers' sites and button for enabling or disabling "
@@ -15354,6 +15555,14 @@ msgstr "Tipul de conexiune"
 msgid "Connections"
 msgstr "Conexiuni"
 
+#, fuzzy
+msgid "Connections closed rate"
+msgstr "Conexiune întreruptă târziu"
+
+#, fuzzy
+msgid "Connections created rate"
+msgstr "Conexiune întreruptă târziu"
+
 msgid "Connections dropped"
 msgstr "Conexiuni abandonate"
 
@@ -15378,6 +15587,10 @@ msgstr "Conexiuni pe secundă"
 msgid "Connectivity"
 msgstr "Conectivitate"
 
+#, fuzzy
+msgid "Connectivity lag"
+msgstr "Conectivitate"
+
 msgid "Connector outlets"
 msgstr "Prizele de conectare"
 
@@ -15387,9 +15600,9 @@ msgstr "Tipul de conector"
 msgid "Connector: Adding host changes to queue"
 msgstr ""
 
-#, python-format
-msgid "Connector: Collecting OpenTelemetry hosts on site  \"%s\""
-msgstr ""
+#, fuzzy, python-format
+msgid "Connector: Collecting metric backend hosts on site  \"%s\""
+msgstr "Faza 1.1: Preluarea de pe site-ul \"%s\""
 
 #, python-format
 msgid "Connector: Collecting open telemetry hosts on site  \"%s\""
@@ -18861,6 +19074,14 @@ msgstr "Ștergeți ținta #%d"
 
 #, fuzzy
 msgid ""
+"Delete the hosts created by this connection whose OpenTelemetry data is no "
+"longer present."
+msgstr ""
+"Șterge gazdele create de această conexiune ale căror date de piggyback nu "
+"mai sunt prezente."
+
+#, fuzzy
+msgid ""
 "Delete the hosts created by this connection whose open telemetry data is no "
 "longer present."
 msgstr ""
@@ -20171,6 +20392,10 @@ msgstr ""
 msgid "Discarded pending changes (restored %s)"
 msgstr "Modificări în așteptare respinse (Restabilit %s)"
 
+#, fuzzy
+msgid "Disconnected"
+msgstr "deconectat"
+
 msgid "Discontinue counting after time has elapsed"
 msgstr "Întrerupeți numărarea după ce timpul s-a scurs"
 
@@ -21281,6 +21506,10 @@ msgstr "Nu monitorizați mașinile virtuale de tip placeholder"
 msgid "Do not monitor service"
 msgstr "Nu monitorizați"
 
+#, fuzzy
+msgid "Do not monitor subscriptions"
+msgstr "Nu monitorizați"
+
 msgid "Do not offer this action as a command on open events"
 msgstr "Nu oferiți această acțiune ca o comandă pentru evenimentele deschise."
 
@@ -21907,6 +22136,10 @@ msgstr "Volumul în timpul perioadei de timp"
 
 msgid "Dw"
 msgstr "Dw"
+
+#, fuzzy
+msgid "Dynamic MAC enabled"
+msgstr "Sincronizare activată"
 
 msgid "Dynamic Token Bucket"
 msgstr "Bucket dinamic de jetoane"
@@ -23031,6 +23264,10 @@ msgstr "Activați replicarea de la un master"
 msgid "Enable row shading"
 msgstr "Activați umbrirea rândurilor"
 
+#, fuzzy
+msgid "Enable safe host names"
+msgstr "Traducere nume de gazde"
+
 msgid "Enable service notifications"
 msgstr "Activați notificările de serviciu"
 
@@ -23057,6 +23294,30 @@ msgid ""
 msgstr ""
 "Activați această opțiune dacă doriți să dezinstalați agentul moștenit după "
 "ce noul agent Windows a fost instalat."
+
+#, fuzzy, python-brace-format
+msgid ""
+"Enable this option to import Azure tags as host/service labels. The imported "
+"tags are added as host labels for resource groups and VMs monitored as hosts "
+"and as service labels for resources monitored as services. The label syntax "
+"is 'cmk/azure/tag/{key}:{value}'.<br>Additionally, each host representing a "
+"resource group is given the host label 'cmk/azure/resource_group:{rg_name}', "
+"and VMs monitored as hosts are given the host label 'cmk/azure/vm:instance', "
+"which is done independent of this option.<br>You can further restrict the "
+"imported tags by specifying a pattern which Checkmk searches for in the key "
+"of the Azure tag, or you can disable the import of Azure tags altogether."
+msgstr ""
+"În mod implicit, Checkmk importă toate etichetele Azure ca etichete de gazdă/"
+"serviciu. Etichetele importate sunt adăugate ca etichete de gazdă pentru "
+"grupurile de resurse și VM monitorizate ca gazde și ca etichete de serviciu "
+"pentru resursele monitorizate ca servicii. Sintaxa etichetei este 'cmk/azure/"
+"tag/{key}:{value}'.<br>În plus, fiecare gazdă care reprezintă un grup de "
+"resurse primește eticheta de gazdă 'cmk/azure/resource_group:{rg_name}', iar "
+"VM monitorizate ca gazde primesc eticheta de gazdă 'cmk/azure/vm:instance', "
+"care se face independent de această opțiune.<br>Puteți restricționa și mai "
+"mult etichetele importate prin specificarea unui model pe care Checkmk îl "
+"caută în cheia etichetei Azure sau puteți dezactiva complet importul de "
+"etichete Azure."
 
 #, fuzzy, python-brace-format
 msgid ""
@@ -24085,6 +24346,10 @@ msgstr ""
 msgid "Every week on..."
 msgstr "În fiecare săptămână, la..."
 
+#, fuzzy
+msgid "Evicted keys"
+msgstr "Numărul de chei evacuate"
+
 msgid "Evictions"
 msgstr "Evacuări"
 
@@ -24453,6 +24718,10 @@ msgstr "Setarea de extindere automată preconizată"
 msgid "Expected cluster type."
 msgstr "Tipul de cluster așteptat."
 
+#, fuzzy
+msgid "Expected connection state"
+msgstr "Conexiuni respinse"
+
 msgid "Expected cpu usage"
 msgstr "Utilizarea preconizată a cpu"
 
@@ -24522,6 +24791,14 @@ msgid "Expected update interval"
 msgstr "Intervalul de actualizare preconizat"
 
 #, fuzzy
+msgid "Expected virtual switch"
+msgstr "Starea așteptată"
+
+#, fuzzy
+msgid "Expected virtual switch name"
+msgstr "Starea așteptată a steagului"
+
+#, fuzzy
 msgid "Expiration date"
 msgstr "Fără dată de expirare"
 
@@ -24539,6 +24816,10 @@ msgstr "Expiră la"
 
 msgid "Expire time"
 msgstr "Timp de expirare"
+
+#, fuzzy
+msgid "Expired keys"
+msgstr "Obiecte expirate"
 
 msgid "Expired objects"
 msgstr "Obiecte expirate"
@@ -24593,6 +24874,10 @@ msgstr "Etichete explicite"
 
 #, fuzzy
 msgid "Explicit list of IP addresses"
+msgstr "Lista explicită de adrese IP"
+
+#, fuzzy
+msgid "Explicit list of subscription IDs"
 msgstr "Lista explicită de adrese IP"
 
 msgid "Explicit mapping of job exit codes to states"
@@ -24653,6 +24938,10 @@ msgid "Explicitly specified groups"
 msgstr "grupuri specificate în mod explicit"
 
 msgid "Explicitly specify resources"
+msgstr "Specificarea explicită a resurselor"
+
+#, fuzzy
+msgid "Explicitly specify subscription IDs"
 msgstr "Specificarea explicită a resurselor"
 
 msgid "Export"
@@ -25339,6 +25628,9 @@ msgstr "Șablon de rezervă (%s): ID necunoscut %s"
 
 msgid "Falling"
 msgstr "Cădere"
+
+msgid "False"
+msgstr ""
 
 msgid "Fan Name"
 msgstr "Numele ventilatorului"
@@ -27244,6 +27536,10 @@ msgstr "Editați conexiunea"
 #, fuzzy
 msgid "Gerrit instance to query."
 msgstr "Instanța Jenkins de interogat."
+
+#, fuzzy
+msgid "Get commands"
+msgstr "fără comenzi"
 
 msgid "Get file from SFTP server"
 msgstr "Obțineți fișierul de pe serverul SFTP"
@@ -29302,6 +29598,10 @@ msgstr "Istoricul notificărilor"
 msgid "History of scheduled downtimes"
 msgstr "Istoricul întreruperilor programate"
 
+#, fuzzy
+msgid "Hit ratio"
+msgstr "Durata de init"
+
 msgid "Hits"
 msgstr "Lovituri"
 
@@ -30890,6 +31190,10 @@ msgid "Host name or alias (regex)"
 msgstr "Numele de gazdă sau alias (regex)"
 
 #, fuzzy
+msgid "Host name resource attribute"
+msgstr "Resetarea atributelor"
+
+#, fuzzy
 msgid "Host name rules"
 msgstr "Numele gazdei: %s"
 
@@ -31486,6 +31790,10 @@ msgstr "Server Hyper-V: Starea mașinilor virtuale"
 
 msgid "Hyper-V VM Guest Information (Windows)"
 msgstr "Informații despre Hyper-V VM Guest (Windows)"
+
+#, fuzzy
+msgid "Hyper-V VM Network Adapter"
+msgstr "Adaptoare de rețea"
 
 #, fuzzy
 msgid "Hyper-V VM integration services"
@@ -38114,6 +38422,10 @@ msgstr "Niveluri privind capacitatea utilizată în octeți"
 msgid "Levels on write capacity"
 msgstr "Niveluri privind capacitatea de scriere"
 
+#, fuzzy
+msgid "Levels over an extended period of time"
+msgstr "Niveluri pe o perioadă de timp extinsă privind decalajul de replicare"
+
 msgid "Levels over an extended time period on a single core CPU utilization"
 msgstr ""
 "Nivelurile pe o perioadă de timp extinsă pe o singură utilizare a nucleului "
@@ -39657,6 +39969,10 @@ msgstr "Niveluri inferioare de utilizare a cererilor"
 msgid "Lower levels for reservation utilization"
 msgstr "Niveluri mai mici de utilizare a rezervărilor"
 
+#, fuzzy
+msgid "Lower levels for successful connections"
+msgstr "Niveluri pentru conexiuni active"
+
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr ""
 "Niveluri inferioare pentru viteza ventilatorului unui dispozitiv hardware"
@@ -39739,6 +40055,10 @@ msgstr "Cel mai mic: Nici o notificare, actualizarea numărului de legitimație"
 
 msgid "MAC address"
 msgstr "Adresa MAC"
+
+#, fuzzy
+msgid "MAC configuration"
+msgstr "Configurația RRA"
 
 msgid "MB"
 msgstr "MB"
@@ -41115,6 +41435,10 @@ msgstr "Număr maxim de verificări simultane în timp real"
 
 msgid "Maximum connections per second"
 msgstr "Conexiuni maxime pe secundă"
+
+#, fuzzy
+msgid "Maximum connectivity lag"
+msgstr "Conectivitatea site-ului"
 
 msgid "Maximum count"
 msgstr "Numarul maxim"
@@ -42543,6 +42867,10 @@ msgstr "Monitorizarea tuturor instanțelor detectate și adăugate manual"
 msgid "Monitor all instances found"
 msgstr "Monitorizarea tuturor instanțelor găsite"
 
+#, fuzzy
+msgid "Monitor all subscriptions"
+msgstr "Abonamente la evenimente"
+
 msgid "Monitor and graph the lanes, if the port has multiple"
 msgstr ""
 "Monitorizați și reprezentați grafic benzile, dacă portul are mai multe benzi"
@@ -43962,6 +44290,10 @@ msgstr "Utilizarea memoriei Netscaler"
 
 msgid "Network"
 msgstr "Rețea"
+
+#, fuzzy
+msgid "Network Adapter"
+msgstr "Adaptoare de rețea"
 
 #, fuzzy
 msgid "Network Cards"
@@ -47504,6 +47836,10 @@ msgstr "Configurația stilului selectat"
 #, fuzzy
 msgid "OpenTelemetry data - Metric backend"
 msgstr "Configurația stilului selectat"
+
+#, fuzzy
+msgid "OpenTelemetry hosts creation options"
+msgstr "Opțiuni de creare Piggyback"
 
 #, fuzzy
 msgid "OpenTelemetry metric name"
@@ -51575,6 +51911,10 @@ msgstr "Vă rugăm să specificați cel puțin o adresă"
 msgid "Please specify at least one \"Open telemetry hosts creation option\""
 msgstr "Vă rugăm să specificați cel puțin o \"opțiune de creare Piggyback\""
 
+#, fuzzy
+msgid "Please specify at least one \"OpenTelemetry hosts creation option\""
+msgstr "Vă rugăm să specificați cel puțin o \"opțiune de creare Piggyback\""
+
 msgid "Please specify at least one \"Piggyback creation option\""
 msgstr "Vă rugăm să specificați cel puțin o \"opțiune de creare Piggyback\""
 
@@ -53883,6 +54223,10 @@ msgstr "Stări de port fizic de descoperit"
 
 msgid "Redirect URL (has to be https)"
 msgstr "URL de redirecționare (trebuie să fie https)"
+
+#, fuzzy
+msgid "Redis Caches"
+msgstr "Clienți Redis"
 
 msgid "Redis clients"
 msgstr "Clienți Redis"
@@ -57941,6 +58285,10 @@ msgstr ""
 "selecție, de exemplu, numele atributelor utilizate în interogările LDAP vor "
 "fi modificate."
 
+#, fuzzy
+msgid "Select the subscriptions you want to monitor."
+msgstr "Selectați tipul de element de conținut"
+
 msgid "Select the type of content element"
 msgstr "Selectați tipul de element de conținut"
 
@@ -58277,6 +58625,22 @@ msgstr "Conexiuni de server"
 msgid "Server latency"
 msgstr "Latența serverului"
 
+#, fuzzy
+msgid "Server load"
+msgstr "Încărcarea serverului Citrix"
+
+#, fuzzy
+msgid "Server load %"
+msgstr "Încărcarea serverului Citrix"
+
+#, fuzzy
+msgid "Server load (average)"
+msgstr "Stocarea jurnalului serverului"
+
+#, fuzzy
+msgid "Server load levels"
+msgstr "Nivelul serviciilor"
+
 msgid "Server log storage"
 msgstr "Stocarea jurnalului serverului"
 
@@ -58285,6 +58649,10 @@ msgstr "Stocarea jurnalului de server utilizată"
 
 msgid "Server performance"
 msgstr "Performanța serverului"
+
+#, fuzzy
+msgid "Server side command latency"
+msgstr "Latența serverului"
 
 msgid "Server side handling of unencrypted data"
 msgstr "Manipularea pe server a datelor necriptate"
@@ -58295,6 +58663,10 @@ msgstr "Ora serverului"
 #, python-format
 msgid "Server time (currently: %s)"
 msgstr "Ora serverului (în prezent: %s)"
+
+#, fuzzy
+msgid "Server-side command latency"
+msgstr "Latența serverului"
 
 msgid "Service"
 msgstr "Serviciul"
@@ -58823,6 +59195,10 @@ msgstr "Starea serviciului"
 #, fuzzy
 msgid "Service status grouping"
 msgstr "Gruparea stării serviciului"
+
+#, fuzzy
+msgid "Service status when geo-replication link is unhealthy"
+msgstr "Stare când starea de replicare este activă"
 
 # georgem ##############
 msgid "Service tags"
@@ -63807,6 +64183,14 @@ msgstr "ID-ul abonamentului"
 msgid "Subscription Status (off: ignore subscription status)"
 msgstr "Activare verificare (dezactivat: ignoră starea abonamentului)"
 
+#, fuzzy
+msgid "Subscriptions matching tag based criteria"
+msgstr "resurse care corespund criteriilor bazate pe etichete"
+
+#, fuzzy
+msgid "Subscriptions to monitor"
+msgstr "Regiuni de monitorizat"
+
 msgid "Substitution"
 msgstr "Substituție"
 
@@ -64635,6 +65019,10 @@ msgstr "Grupuri de etichete"
 msgid "Tag groups with only one choice must have a tag ID."
 msgstr ""
 "Grupurile de etichete cu o singură alegere trebuie să aibă un ID de etichetă."
+
+#, fuzzy
+msgid "Tag matching subscriptions"
+msgstr "Abonamente la evenimente"
 
 msgid "Tag usage"
 msgstr "Utilizarea etichetelor"
@@ -67684,6 +68072,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"The interval the connection will be executed to check the available "
+"OpenTelemetry data and update the configuration."
+msgstr ""
+"Intervalul la care va fi executată conexiunea pentru a verifica piggyback-ul "
+"disponibil și pentru a actualiza configurația."
+
+#, fuzzy
+msgid ""
 "The interval the connection will be executed to check the available open "
 "telemetry data and update the configuration."
 msgstr ""
@@ -69708,6 +70104,10 @@ msgid ""
 msgstr ""
 "Subfolderul <i>%s</i> are setul explicit de site-uri <i>%s</i>, care "
 "aparține clientului <i>%s</i>. Acest lucru încalcă ierarhia dosarelor CME."
+
+#, fuzzy
+msgid "The subscription tag"
+msgstr "Abonamente la evenimente"
 
 #, fuzzy, python-format
 msgid "The suffix '%s' is already in use by another LDAP connection."
@@ -74128,6 +74528,77 @@ msgstr ""
 "datele de performanță ale PING-ului către anumite gazde."
 
 #, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis CPU utilization "
+"monitoring"
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis Cache "
+"effectiveness monitoring"
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis connections "
+"monitoring"
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis latency "
+"monitoring"
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis memory monitoring"
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis replication "
+"monitoring"
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis server load "
+"monitoring"
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis throughput "
+"monitoring"
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure SQL database "
+"connections"
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
+#, fuzzy
 msgid "This ruleset allows you to configure levels for the Storage data flows"
 msgstr ""
 "Această regulă vă permite să configurați nivelurile de bloat pentru un "
@@ -75616,6 +76087,13 @@ msgstr "Sincronizarea intervalului de timp"
 
 msgid "Time range to consider"
 msgstr "Intervalul de timp de luat în considerare"
+
+#, fuzzy
+msgid ""
+"Time range to continue to consider outdated OpenTelemetry data as valid."
+msgstr ""
+"Intervalul de timp pentru a continua să se considere valabile datele de "
+"piggyback învechite."
 
 #, fuzzy
 msgid ""
@@ -79023,6 +79501,9 @@ msgstr "Arhiva evenimentelor"
 msgid "Troubleshooting/testing settings"
 msgstr ""
 
+msgid "True"
+msgstr ""
+
 msgid ""
 "Truncate content at this amount of characters.A zero value mean not to "
 "truncate"
@@ -80755,6 +81236,10 @@ msgstr "Niveluri superioare pentru reporniri"
 msgid "Upper levels for size"
 msgstr "Niveluri superioare pentru mărime"
 
+#, fuzzy
+msgid "Upper levels for successful connections"
+msgstr "Niveluri pentru conexiuni active"
+
 msgid "Upper levels for surge queue length"
 msgstr ""
 "Niveluri superioare pentru lungimea cozii de așteptare în caz de "
@@ -82065,6 +82550,14 @@ msgstr "Fișiere jurnal utilizate: Niveluri superioare absolute sau relative"
 msgid "Used logical space"
 msgstr "Spațiu logic utilizat"
 
+#, fuzzy
+msgid "Used memory"
+msgstr "Memorie CPU utilizată"
+
+#, fuzzy
+msgid "Used memory RSS"
+msgstr "Memorie CPU utilizată"
+
 msgid "Used meta data"
 msgstr "Metadate utilizate"
 
@@ -82392,6 +82885,14 @@ msgstr ""
 "14261). Dezactivăm în mod implicit autentificarea prin această metodă. "
 "Utilizați această proprietate pentru a activa autentificarea prin metoda GET "
 "pentru toți utilizatorii."
+
+msgid ""
+"Using this option will let Checkmk create safe host names for piggyback "
+"hosts to avoid conflicts in entity names from Azure. This option will "
+"prepend 'azr-' and append the last part of the subscription ID to host "
+"names. Example: 'azr-my-vm-1a2b3c4d'. Enable this option if you have "
+"resources or resource groups with the same name."
+msgstr ""
 
 msgid ""
 "Using this option you can define an optional LDAP filter which is used "
@@ -83684,6 +84185,10 @@ msgstr "Dimensiunea virtuală"
 
 #, fuzzy
 msgid "Virtual size (average)"
+msgstr "Dimensiunea virtuală"
+
+#, fuzzy
+msgid "Virtual switch name"
 msgstr "Dimensiunea virtuală"
 
 msgid "VirtualBox Guests"
@@ -91337,7 +91842,7 @@ msgstr "Introduceți numele de utilizator"
 msgid "Add filter as suffix"
 msgstr "Adaugă filtre"
 
-msgid "Include dashboard filter contents to the dashboard title.."
+msgid "Include dashboard filter contents to the dashboard title."
 msgstr ""
 
 #, fuzzy
@@ -91397,25 +91902,20 @@ msgid "Choose how to display your data"
 msgstr "Nu afișați o dată"
 
 #, fuzzy
-msgid "Inherited"
-msgstr "Moștenit din "
-
-#, fuzzy
-msgid "Overriden"
-msgstr "Prezentare generală"
-
-# georgem ##############
-#, fuzzy
-msgid "Quick filter"
-msgstr "Filtre de service"
-
-#, fuzzy
 msgid "Single %{n}"
 msgstr "Single"
 
 #, fuzzy
 msgid "Multiple %{n}"
 msgstr "Mai multe site-uri"
+
+#, fuzzy
+msgid "Inherited"
+msgstr "Moștenit din "
+
+#, fuzzy
+msgid "Overriden"
+msgstr "Prezentare generală"
 
 #, fuzzy
 msgid "Runtime filter"
@@ -91611,82 +92111,6 @@ msgstr ""
 msgid "€ (Decimal, strict precision, 2 digits)"
 msgstr ""
 
-#, fuzzy
-msgid "Specific host"
-msgstr "Situri specifice"
-
-#, fuzzy
-msgid "Multiple hosts"
-msgstr "Mai multe site-uri"
-
-#, fuzzy
-msgid "Applied host name filter"
-msgstr "Filtre aplicate:"
-
-#, fuzzy
-msgid "to be defined"
-msgstr "Nu sunt definite conexiuni"
-
-#, fuzzy
-msgid "Widget filter"
-msgstr "Adaugă filtre"
-
-#, fuzzy
-msgid "Select host name"
-msgstr "Ștergeți gazda"
-
-#, fuzzy
-msgid "No host name filter applied."
-msgstr "Gazda Ntopng"
-
-msgid ""
-"A host name filter selected as a dashboard or quick filter in the filters "
-"slideout appears here and applies to this widget"
-msgstr ""
-
-#, fuzzy
-msgid "Applied host filters"
-msgstr "Filtre aplicate:"
-
-#, fuzzy
-msgid "No host filters applied."
-msgstr "Gazda Ntopng"
-
-msgid ""
-"Dashboard or quick filters selected in the filters slideout appear here and "
-"apply to this widget"
-msgstr ""
-
-#, fuzzy
-msgid "Specific service"
-msgstr "Situri specifice"
-
-#, fuzzy
-msgid "Applied service name filter"
-msgstr "Nume gazdă alternativ"
-
-#, fuzzy
-msgid "Select service name"
-msgstr "Ștergeți utilizatorul"
-
-msgid "No service name filter applied."
-msgstr ""
-
-msgid ""
-"A service name filter selected as a dashboard or quick filter in the filters "
-"slideout appears here and applies to this widget"
-msgstr ""
-
-# georgem ##############
-#, fuzzy
-msgid "Applied service filters"
-msgstr "Filtre de service"
-
-msgid ""
-"Dashboard or quick filters selected in the filters slideout appears here and "
-"applies to this widget"
-msgstr ""
-
 msgid "Barplot"
 msgstr "Barplot"
 
@@ -91717,6 +92141,10 @@ msgstr "Afișați titlul fără fundal"
 #, fuzzy
 msgid "Unrestricted"
 msgstr "Neînregistrat"
+
+#, fuzzy
+msgid "Specific host"
+msgstr "Situri specifice"
 
 #, fuzzy
 msgid "Custom"
@@ -91771,6 +92199,30 @@ msgstr ""
 #, fuzzy
 msgid "Dashboard scope"
 msgstr "Tablouri de bord"
+
+msgid "Only me (private)"
+msgstr ""
+
+# georgem ##############
+#, fuzzy
+msgid "Users of site"
+msgstr "Serviciile site-ului"
+
+#, fuzzy
+msgid "Enter description"
+msgstr "Descrierea utilizării"
+
+#, fuzzy
+msgid "Only show when \"Show more\" is enabled"
+msgstr "Afișează %s numai dacă este activată opțiunea \"Show more\"."
+
+#, fuzzy
+msgid "Show in dropdown menus"
+msgstr "Ascundeți acest %s în meniurile derulante"
+
+#, fuzzy
+msgid "Dashboard settings of %{name}"
+msgstr "Proprietățile tabloului de bord"
 
 #, fuzzy
 msgid "Single graph"
@@ -91927,6 +92379,10 @@ msgstr "Selecția fișierelor"
 #, fuzzy
 msgid "Copy view"
 msgstr "Vizualizare clonă"
+
+#, fuzzy
+msgid "Unknown object type: %{objectType}"
+msgstr "Tip țintă necunoscut: %s. Tipuri disponibile: %s."
 
 #, fuzzy
 msgid "Data configuration"
@@ -92812,6 +93268,60 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+# georgem ##############
+#, fuzzy
+#~ msgid "Quick filter"
+#~ msgstr "Filtre de service"
+
+#, fuzzy
+#~ msgid "Multiple hosts"
+#~ msgstr "Mai multe site-uri"
+
+#, fuzzy
+#~ msgid "Applied host name filter"
+#~ msgstr "Filtre aplicate:"
+
+#, fuzzy
+#~ msgid "to be defined"
+#~ msgstr "Nu sunt definite conexiuni"
+
+#, fuzzy
+#~ msgid "Widget filter"
+#~ msgstr "Adaugă filtre"
+
+#, fuzzy
+#~ msgid "Select host name"
+#~ msgstr "Ștergeți gazda"
+
+#, fuzzy
+#~ msgid "No host name filter applied."
+#~ msgstr "Gazda Ntopng"
+
+#, fuzzy
+#~ msgid "Applied host filters"
+#~ msgstr "Filtre aplicate:"
+
+#, fuzzy
+#~ msgid "No host filters applied."
+#~ msgstr "Gazda Ntopng"
+
+#, fuzzy
+#~ msgid "Specific service"
+#~ msgstr "Situri specifice"
+
+#, fuzzy
+#~ msgid "Applied service name filter"
+#~ msgstr "Nume gazdă alternativ"
+
+#, fuzzy
+#~ msgid "Select service name"
+#~ msgstr "Ștergeți utilizatorul"
+
+# georgem ##############
+#, fuzzy
+#~ msgid "Applied service filters"
+#~ msgstr "Filtre de service"
+
 #, fuzzy
 #~ msgid "Amazon Web Service (AWS)"
 #~ msgstr "Servicii Web Amazon (AWS)"
@@ -92989,271 +93499,6 @@ msgstr ""
 
 #~ msgid "iSCSI HBAs"
 #~ msgstr "HBA-uri iSCSI"
-
-#, fuzzy
-#~ msgid "Add subscription tag"
-#~ msgstr "Starea abonamentului"
-
-#, fuzzy
-#~ msgid "Average over"
-#~ msgstr "Valoarea medie"
-
-#, fuzzy
-#~ msgid "Azure Redis CPU utilization"
-#~ msgstr "GCP/Redis Utilizare CPU"
-
-#, fuzzy
-#~ msgid "Azure Redis Cache effectiveness"
-#~ msgstr "Conexiuni la baza de date"
-
-#, fuzzy
-#~ msgid "Azure Redis connections"
-#~ msgstr "Conexiuni la baza de date"
-
-#, fuzzy
-#~ msgid "Azure Redis latency"
-#~ msgstr "Latența medie a discului"
-
-#, fuzzy
-#~ msgid "Azure Redis memory"
-#~ msgstr "Memorie absolută utilizată"
-
-#, fuzzy
-#~ msgid "Azure Redis replication"
-#~ msgstr "Conexiuni la baza de date"
-
-#, fuzzy
-#~ msgid "Azure Redis server load"
-#~ msgstr "Numele serverului Redis"
-
-#, fuzzy
-#~ msgid "Azure Redis throughput"
-#~ msgstr "Viteză de citire"
-
-#, fuzzy
-#~ msgid "Azure SQL database connections"
-#~ msgstr "Conexiuni la baza de date"
-
-#, fuzzy
-#~ msgid "CPU utilization %"
-#~ msgstr "Utilizare CPU"
-
-#, fuzzy
-#~ msgid "Cache internode latency"
-#~ msgstr "Creați o latență de conferință"
-
-#, fuzzy
-#~ msgid "Cache read throughput (/sec)"
-#~ msgstr "Viteză de citire"
-
-#, fuzzy
-#~ msgid "Cache requests"
-#~ msgstr "Solicitări eșuate"
-
-#, fuzzy
-#~ msgid "Cache write throughput (/sec)"
-#~ msgstr "Viteza de scriere"
-
-#, fuzzy
-#~ msgid "Connected Clients"
-#~ msgstr "Conexiuni"
-
-#, fuzzy
-#~ msgid "Connected clients"
-#~ msgstr "Numărul de clienți conectați"
-
-#, fuzzy
-#~ msgid "Connections closed rate"
-#~ msgstr "Conexiune întreruptă târziu"
-
-#, fuzzy
-#~ msgid "Connections created rate"
-#~ msgstr "Conexiune întreruptă târziu"
-
-#, fuzzy
-#~ msgid "Connectivity lag"
-#~ msgstr "Conectivitate"
-
-#, fuzzy
-#~ msgid "Do not monitor subscriptions"
-#~ msgstr "Nu monitorizați"
-
-#, fuzzy
-#~ msgid "Enable safe host names"
-#~ msgstr "Traducere nume de gazde"
-
-#, fuzzy
-#~ msgid "Evicted keys"
-#~ msgstr "Numărul de chei evacuate"
-
-#, fuzzy
-#~ msgid "Expired keys"
-#~ msgstr "Obiecte expirate"
-
-#, fuzzy
-#~ msgid "Explicit list of subscription IDs"
-#~ msgstr "Lista explicită de adrese IP"
-
-#, fuzzy
-#~ msgid "Explicitly specify subscription IDs"
-#~ msgstr "Specificarea explicită a resurselor"
-
-#, fuzzy
-#~ msgid "Get commands"
-#~ msgstr "fără comenzi"
-
-#, fuzzy
-#~ msgid "Hit ratio"
-#~ msgstr "Durata de init"
-
-#, fuzzy
-#~ msgid "Levels over an extended period of time"
-#~ msgstr ""
-#~ "Niveluri pe o perioadă de timp extinsă privind decalajul de replicare"
-
-#, fuzzy
-#~ msgid "Lower levels for successful connections"
-#~ msgstr "Niveluri pentru conexiuni active"
-
-#, fuzzy
-#~ msgid "Maximum connectivity lag"
-#~ msgstr "Conectivitatea site-ului"
-
-#, fuzzy
-#~ msgid "Monitor all subscriptions"
-#~ msgstr "Abonamente la evenimente"
-
-#, fuzzy
-#~ msgid "Redis Caches"
-#~ msgstr "Clienți Redis"
-
-#, fuzzy
-#~ msgid "Server load"
-#~ msgstr "Încărcarea serverului Citrix"
-
-#, fuzzy
-#~ msgid "Server load %"
-#~ msgstr "Încărcarea serverului Citrix"
-
-#, fuzzy
-#~ msgid "Server load (average)"
-#~ msgstr "Stocarea jurnalului serverului"
-
-#, fuzzy
-#~ msgid "Server load levels"
-#~ msgstr "Nivelul serviciilor"
-
-#, fuzzy
-#~ msgid "Server side command latency"
-#~ msgstr "Latența serverului"
-
-#, fuzzy
-#~ msgid "Server-side command latency"
-#~ msgstr "Latența serverului"
-
-#, fuzzy
-#~ msgid "Service status when geo-replication link is unhealthy"
-#~ msgstr "Stare când starea de replicare este activă"
-
-#, fuzzy
-#~ msgid "Subscriptions matching tag based criteria"
-#~ msgstr "resurse care corespund criteriilor bazate pe etichete"
-
-#, fuzzy
-#~ msgid "Subscriptions to monitor"
-#~ msgstr "Regiuni de monitorizat"
-
-#, fuzzy
-#~ msgid "Tag matching subscriptions"
-#~ msgstr "Abonamente la evenimente"
-
-#, fuzzy
-#~ msgid "The subscription tag"
-#~ msgstr "Abonamente la evenimente"
-
-#, fuzzy
-#~ msgid ""
-#~ "This ruleset allows you to configure levels for Azure Redis CPU "
-#~ "utilization monitoring"
-#~ msgstr ""
-#~ "Această regulă vă permite să configurați nivelurile de bloat pentru un "
-#~ "tablespace și un indexspace al bazei de date."
-
-#, fuzzy
-#~ msgid ""
-#~ "This ruleset allows you to configure levels for Azure Redis Cache "
-#~ "effectiveness monitoring"
-#~ msgstr ""
-#~ "Această regulă vă permite să configurați nivelurile de bloat pentru un "
-#~ "tablespace și un indexspace al bazei de date."
-
-#, fuzzy
-#~ msgid ""
-#~ "This ruleset allows you to configure levels for Azure Redis connections "
-#~ "monitoring"
-#~ msgstr ""
-#~ "Această regulă vă permite să configurați nivelurile de bloat pentru un "
-#~ "tablespace și un indexspace al bazei de date."
-
-#, fuzzy
-#~ msgid ""
-#~ "This ruleset allows you to configure levels for Azure Redis latency "
-#~ "monitoring"
-#~ msgstr ""
-#~ "Această regulă vă permite să configurați nivelurile de bloat pentru un "
-#~ "tablespace și un indexspace al bazei de date."
-
-#, fuzzy
-#~ msgid ""
-#~ "This ruleset allows you to configure levels for Azure Redis memory "
-#~ "monitoring"
-#~ msgstr ""
-#~ "Această regulă vă permite să configurați nivelurile de bloat pentru un "
-#~ "tablespace și un indexspace al bazei de date."
-
-#, fuzzy
-#~ msgid ""
-#~ "This ruleset allows you to configure levels for Azure Redis replication "
-#~ "monitoring"
-#~ msgstr ""
-#~ "Această regulă vă permite să configurați nivelurile de bloat pentru un "
-#~ "tablespace și un indexspace al bazei de date."
-
-#, fuzzy
-#~ msgid ""
-#~ "This ruleset allows you to configure levels for Azure Redis server load "
-#~ "monitoring"
-#~ msgstr ""
-#~ "Această regulă vă permite să configurați nivelurile de bloat pentru un "
-#~ "tablespace și un indexspace al bazei de date."
-
-#, fuzzy
-#~ msgid ""
-#~ "This ruleset allows you to configure levels for Azure Redis throughput "
-#~ "monitoring"
-#~ msgstr ""
-#~ "Această regulă vă permite să configurați nivelurile de bloat pentru un "
-#~ "tablespace și un indexspace al bazei de date."
-
-#, fuzzy
-#~ msgid ""
-#~ "This ruleset allows you to configure levels for Azure SQL database "
-#~ "connections"
-#~ msgstr ""
-#~ "Această regulă vă permite să configurați nivelurile de bloat pentru un "
-#~ "tablespace și un indexspace al bazei de date."
-
-#, fuzzy
-#~ msgid "Upper levels for successful connections"
-#~ msgstr "Niveluri pentru conexiuni active"
-
-#, fuzzy
-#~ msgid "Used memory"
-#~ msgstr "Memorie CPU utilizată"
-
-#, fuzzy
-#~ msgid "Used memory RSS"
-#~ msgstr "Memorie CPU utilizată"
 
 #~ msgid "Assignment of services to contact groups"
 #~ msgstr "Atribuirea serviciilor la grupurile de contact"
@@ -94282,10 +94527,6 @@ msgstr ""
 #, python-brace-format
 #~ msgid "Automatic rediscovery parameter {param} not implemented"
 #~ msgstr "Parametrul de redescoperire automată {param} nu este implementat"
-
-#, fuzzy
-#~ msgid "Connectee"
-#~ msgstr "Conectați-vă"
 
 #, fuzzy
 #~ msgid "Connecter"

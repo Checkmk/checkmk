@@ -4484,6 +4484,10 @@ msgstr "Configuratie toestand toevoegen"
 msgid "Add stored report"
 msgstr "Opgeslagen rapport toevoegen"
 
+#, fuzzy
+msgid "Add subscription tag"
+msgstr "Abonnementsstatus"
+
 msgid "Add tag"
 msgstr "Tag toevoegen"
 
@@ -4516,6 +4520,16 @@ msgstr ""
 "Voeg tekst van gebeurtenissen toe aan gegevens die naar de "
 "gebeurtenissenconsole worden doorgestuurd. Tekens met een nieuwe regel "
 "worden vervangen door '~'."
+
+msgid ""
+"Add the tags you want to use to filter the resources. Only resources with "
+"every tags matching, will be monitored."
+msgstr ""
+
+msgid ""
+"Add the tags you want to use to filter the subscriptions. Only subscriptions "
+"with every tags matching, will be monitored."
+msgstr ""
 
 msgid "Add these contact groups to the host"
 msgstr "Voeg deze contactgroepen toe aan de host"
@@ -5500,6 +5514,9 @@ msgstr "Alarmen"
 
 msgid "Alert"
 msgstr "Waarschuwing"
+
+msgid "Alert after being at or above the threshold for"
+msgstr ""
 
 msgid "Alert handler"
 msgstr "Waarschuwings afhandelaar"
@@ -7583,6 +7600,10 @@ msgid "Attribute"
 msgstr "Attribuut"
 
 #, fuzzy
+msgid "Attribute filters"
+msgstr "In te stellen attribuut"
+
+#, fuzzy
 msgid "Attribute key"
 msgstr "Attribuut"
 
@@ -7918,6 +7939,10 @@ msgid "Automatically create monitoring agents"
 msgstr "Automatisch aanmaken van bewakingsagenten"
 
 #, fuzzy
+msgid "Automatically delete hosts without OpenTelemetry data"
+msgstr "Automatisch hosts verwijderen zonder piggyback data"
+
+#, fuzzy
 msgid "Automatically delete hosts without open telemetry data"
 msgstr "Automatisch hosts verwijderen zonder piggyback data"
 
@@ -8235,6 +8260,10 @@ msgstr "Gemiddeld aantal berichten bovenste niveaus"
 msgid "Average number of messages"
 msgstr "Gemiddeld aantal berichten"
 
+#, fuzzy
+msgid "Average over"
+msgstr "Gemiddelde waarde"
+
 msgid "Average pending tasks delta"
 msgstr "Gemiddelde delta in afwachting van taken"
 
@@ -8288,6 +8317,12 @@ msgid ""
 msgstr ""
 "Gemiddelde van CPU-gebruik over de gespecificeerde tijdsperiode voordat "
 "niveaus worden toegepast."
+
+msgid ""
+"Average the instantaneous load over the specified number of minutes. Note: "
+"This does NOT affect \"Levels an extended period of time\" above, which "
+"always checks the instantaneous value."
+msgstr ""
 
 msgid "Average time messages stay on queue"
 msgstr "Gemiddelde tijd dat berichten in de wachtrij staan"
@@ -8867,12 +8902,24 @@ msgid "Azure"
 msgstr "Azure"
 
 #, fuzzy
+msgid "Azure AD Connect"
+msgstr "Azure AD Connect"
+
+#, fuzzy
 msgid "Azure AD Connect (deprecated)"
 msgstr "Azure AD Connect"
 
 #, fuzzy
+msgid "Azure Agent Info"
+msgstr "Azure Agent Info"
+
+#, fuzzy
 msgid "Azure Agent Info (deprecated)"
 msgstr "Azure Agent Info"
+
+#, fuzzy
+msgid "Azure Application Gateway"
+msgstr "Toepassing Gateway"
 
 #, fuzzy
 msgid "Azure Application Gateway (deprecated)"
@@ -8892,20 +8939,76 @@ msgid "Azure Databases"
 msgstr "Azure Databases"
 
 #, fuzzy
+msgid "Azure Load Balancer Health"
+msgstr "Gezondheid van de loadbalancer"
+
+#, fuzzy
 msgid "Azure Load Balancer Health (deprecated)"
 msgstr "Gezondheid Azure Load Balancer"
+
+#, fuzzy
+msgid "Azure Redis CPU utilization"
+msgstr "GCP/Redis CPU-gebruik"
+
+#, fuzzy
+msgid "Azure Redis Cache effectiveness"
+msgstr "Databaseverbindingen"
+
+#, fuzzy
+msgid "Azure Redis connections"
+msgstr "Databaseverbindingen"
+
+#, fuzzy
+msgid "Azure Redis latency"
+msgstr "Gemiddelde schijflatentie"
+
+#, fuzzy
+msgid "Azure Redis memory"
+msgstr "Absoluut vrij geheugen"
+
+#, fuzzy
+msgid "Azure Redis replication"
+msgstr "Databaseverbindingen"
+
+#, fuzzy
+msgid "Azure Redis server load"
+msgstr "Redis server naam"
+
+#, fuzzy
+msgid "Azure Redis throughput"
+msgstr "Lees doorvoer"
+
+#, fuzzy
+msgid "Azure SQL database CPU usage"
+msgstr "Azure Databases"
 
 #, fuzzy
 msgid "Azure SQL database CPU usage (deprecated)"
 msgstr "Azure Databases"
 
 #, fuzzy
+msgid "Azure SQL database connections"
+msgstr "Databaseverbindingen"
+
+#, fuzzy
+msgid "Azure SQL database deadlocks"
+msgstr "Databaseverbindingen"
+
+#, fuzzy
 msgid "Azure SQL database deadlocks (deprecated)"
 msgstr "Databaseverbindingen"
 
 #, fuzzy
+msgid "Azure SQL database storage"
+msgstr "Azure Databases"
+
+#, fuzzy
 msgid "Azure SQL database storage (deprecated)"
 msgstr "Azure Databases"
+
+#, fuzzy
+msgid "Azure SQL database throughput"
+msgstr "Database doorvoer eenheid"
 
 #, fuzzy
 msgid "Azure SQL database throughput (deprecated)"
@@ -8915,7 +9018,15 @@ msgid "Azure Storage"
 msgstr "Azure Opslag"
 
 #, fuzzy
+msgid "Azure Storage Data Flow"
+msgstr "Azure Opslag"
+
+#, fuzzy
 msgid "Azure Storage Data Flow (deprecated)"
+msgstr "Azure Opslag"
+
+#, fuzzy
+msgid "Azure Storage Performance"
 msgstr "Azure Opslag"
 
 #, fuzzy
@@ -8923,24 +9034,48 @@ msgid "Azure Storage Performance (deprecated)"
 msgstr "Azure Opslag"
 
 #, fuzzy
+msgid "Azure Storage Usage"
+msgstr "Azure Opslag"
+
+#, fuzzy
 msgid "Azure Storage Usage (deprecated)"
 msgstr "Azure Opslag"
+
+#, fuzzy
+msgid "Azure Traffic Manager Probe State"
+msgstr "Azure Traffic Manager Probe State"
 
 #, fuzzy
 msgid "Azure Traffic Manager Probe State (deprecated)"
 msgstr "Azure Traffic Manager Probe State"
 
 #, fuzzy
+msgid "Azure Traffic Manager Qps"
+msgstr "Azure Traffic Manager Qps"
+
+#, fuzzy
 msgid "Azure Traffic Manager Qps (deprecated)"
 msgstr "Azure Traffic Manager Qps"
+
+#, fuzzy
+msgid "Azure Usage Details (Costs)"
+msgstr "Details Azure-gebruik (kosten)"
 
 #, fuzzy
 msgid "Azure Usage Details (Costs) (deprecated)"
 msgstr "Details Azure-gebruik (kosten)"
 
 #, fuzzy
+msgid "Azure VM Burst CPU Credits"
+msgstr "Azure VM Burst CPU Kredieten"
+
+#, fuzzy
 msgid "Azure VM Burst CPU Credits (deprecated)"
 msgstr "Azure VM Burst CPU Kredieten"
+
+#, fuzzy
+msgid "Azure VM Disk"
+msgstr "Azure VM-instanties"
 
 #, fuzzy
 msgid "Azure VM Disk (deprecated)"
@@ -8950,8 +9085,16 @@ msgid "Azure VM instances"
 msgstr "Azure VM-instanties"
 
 #, fuzzy
+msgid "Azure VNet Gateway"
+msgstr "vNet Gateway"
+
+#, fuzzy
 msgid "Azure VNet Gateway  (deprecated)"
 msgstr "Azure VNet Gateway"
+
+#, fuzzy
+msgid "Azure database connections"
+msgstr "Databaseverbindingen"
 
 #, fuzzy
 msgid "Azure database connections (deprecated)"
@@ -8968,12 +9111,24 @@ msgid "Azure storage accounts"
 msgstr "Azure opslagaccounts"
 
 #, fuzzy
+msgid "Azure virtual machines"
+msgstr "De virtuele machine"
+
+#, fuzzy
 msgid "Azure virtual machines (deprecated)"
 msgstr "Azure virtuele machines"
 
 #, fuzzy
+msgid "Azure virtual machines summary"
+msgstr "Samenvatting Azure virtuele machines"
+
+#, fuzzy
 msgid "Azure virtual machines summary  (deprecated)"
 msgstr "Samenvatting Azure virtuele machines"
+
+#, fuzzy
+msgid "Azure web servers (IIS)"
+msgstr "Azure webservers (IIS)"
 
 #, fuzzy
 msgid "Azure web servers (IIS) (deprecated)"
@@ -11133,6 +11288,10 @@ msgstr "CPU gebruikt"
 msgid "CPU utilization"
 msgstr "CPU-gebruik"
 
+#, fuzzy
+msgid "CPU utilization %"
+msgstr "CPU-gebruik"
+
 msgid "CPU utilization & Kernel performance"
 msgstr "CPU-gebruik en kernelprestaties"
 
@@ -11310,6 +11469,10 @@ msgstr "Cache %s"
 msgid "Cache hits for pass"
 msgstr "hits voor pass"
 
+#, fuzzy
+msgid "Cache internode latency"
+msgstr "Conferentie Latency creëren"
+
 msgid "Cache interval"
 msgstr "Cache-interval"
 
@@ -11319,6 +11482,14 @@ msgstr "Cachegrootte"
 
 msgid "Cache misses per second"
 msgstr "Cache missers per seconde"
+
+#, fuzzy
+msgid "Cache read throughput (/sec)"
+msgstr "Lees doorvoer"
+
+#, fuzzy
+msgid "Cache requests"
+msgstr "Mislukte verzoeken"
 
 msgid "Cache several non-status queries"
 msgstr "Cache verschillende niet-status queries"
@@ -11330,6 +11501,10 @@ msgstr "Cachegrootte"
 #, fuzzy
 msgid "Cache this section"
 msgstr "dit gedeelte uitschakelen"
+
+#, fuzzy
+msgid "Cache write throughput (/sec)"
+msgstr "Schrijf doorvoer"
 
 msgid "Cached"
 msgstr "Cached"
@@ -14607,6 +14782,10 @@ msgid "Configure Google Cloud Platform (GCP) monitoring in Checkmk"
 msgstr "Toezicht op Amazon Web Services (AWS)"
 
 #, fuzzy
+msgid "Configure Microsoft Azure (deprecated) monitoring in Checkmk"
+msgstr "Toezicht op Amazon Web Services (AWS)"
+
+#, fuzzy
 msgid "Configure Microsoft Azure monitoring in Checkmk"
 msgstr "Toezicht op Amazon Web Services (AWS)"
 
@@ -14669,6 +14848,12 @@ msgstr "Configureer detectie van afzonderlijke interfaces"
 msgid "Configure enforced checks without using service discovery"
 msgstr ""
 "Configureer opgelegde controles zonder gebruik te maken van service discovery"
+
+msgid ""
+"Configure expected states for Hyper-V VM network interfaces. You can set "
+"expected connection state, MAC configuration, and expected virtual switch "
+"assignment."
+msgstr ""
 
 #, fuzzy
 msgid "Configure fallback email address"
@@ -15213,8 +15398,20 @@ msgid "Connect without password"
 msgstr "Verbinden zonder wachtwoord"
 
 #, fuzzy
+msgid "Connected"
+msgstr "Connect"
+
+#, fuzzy
+msgid "Connected Clients"
+msgstr "Verbindingen"
+
+#, fuzzy
 msgid "Connected Relay configurations"
 msgstr "RRA-configuratie"
+
+#, fuzzy
+msgid "Connected clients"
+msgstr "Aantal aangesloten cliënten"
 
 msgid "Connecter and connectee sites must be different."
 msgstr ""
@@ -15270,6 +15467,10 @@ msgstr "Weergave van de regel: %s"
 
 msgid "Connection settings"
 msgstr "Instellingen verbinding"
+
+#, fuzzy
+msgid "Connection state configuration"
+msgstr "Configuratie activeren"
 
 msgid ""
 "Connection state of customers' sites and button for enabling or disabling "
@@ -15330,6 +15531,14 @@ msgstr "Type aansluiting"
 msgid "Connections"
 msgstr "Verbindingen"
 
+#, fuzzy
+msgid "Connections closed rate"
+msgstr "Verbinding laat verbroken"
+
+#, fuzzy
+msgid "Connections created rate"
+msgstr "Verbinding laat verbroken"
+
 msgid "Connections dropped"
 msgstr "Verbindingen verbroken"
 
@@ -15354,6 +15563,10 @@ msgstr "Verbindingen per seconde"
 msgid "Connectivity"
 msgstr "Connectiviteit"
 
+#, fuzzy
+msgid "Connectivity lag"
+msgstr "Connectiviteit"
+
 msgid "Connector outlets"
 msgstr "Connector uitgangen"
 
@@ -15363,9 +15576,9 @@ msgstr "Type aansluiting"
 msgid "Connector: Adding host changes to queue"
 msgstr ""
 
-#, python-format
-msgid "Connector: Collecting OpenTelemetry hosts on site  \"%s\""
-msgstr ""
+#, fuzzy, python-format
+msgid "Connector: Collecting metric backend hosts on site  \"%s\""
+msgstr "Fase 1.1: Afhalen van site \"%s\""
 
 #, python-format
 msgid "Connector: Collecting open telemetry hosts on site  \"%s\""
@@ -18832,6 +19045,14 @@ msgstr "Doel verwijderen #%d"
 
 #, fuzzy
 msgid ""
+"Delete the hosts created by this connection whose OpenTelemetry data is no "
+"longer present."
+msgstr ""
+"Verwijder de door deze verbinding aangemaakte hosts waarvan de piggyback-"
+"gegevens niet langer aanwezig zijn."
+
+#, fuzzy
+msgid ""
 "Delete the hosts created by this connection whose open telemetry data is no "
 "longer present."
 msgstr ""
@@ -20142,6 +20363,10 @@ msgstr ""
 msgid "Discarded pending changes (restored %s)"
 msgstr "In behandeling zijnde wijzigingen verwijderd (Hersteld %s)"
 
+#, fuzzy
+msgid "Disconnected"
+msgstr "losgekoppeld"
+
 msgid "Discontinue counting after time has elapsed"
 msgstr "Stop met tellen nadat de tijd is verstreken"
 
@@ -21231,6 +21456,10 @@ msgstr "Geen placeholder VM's monitoren"
 msgid "Do not monitor service"
 msgstr "Controleer niet"
 
+#, fuzzy
+msgid "Do not monitor subscriptions"
+msgstr "Controleer niet"
+
 msgid "Do not offer this action as a command on open events"
 msgstr "Bied deze actie niet aan als een commando bij open gebeurtenissen"
 
@@ -21867,6 +22096,10 @@ msgstr "Bulk gedurende de periode"
 
 msgid "Dw"
 msgstr "Dw"
+
+#, fuzzy
+msgid "Dynamic MAC enabled"
+msgstr "inschakelen"
 
 msgid "Dynamic Token Bucket"
 msgstr "Dynamische Token Emmer"
@@ -22979,6 +23212,10 @@ msgstr "Activeer replicatie van een master"
 msgid "Enable row shading"
 msgstr "Rij arcering inschakelen"
 
+#, fuzzy
+msgid "Enable safe host names"
+msgstr "Hostnamen vertalen"
+
 msgid "Enable service notifications"
 msgstr "Inschakelen dienst meldingen"
 
@@ -23005,6 +23242,19 @@ msgid ""
 msgstr ""
 "Activeer deze optie als u de legacy agent wilt verwijderen nadat de nieuwe "
 "Windows agent is geïnstalleerd."
+
+#, python-brace-format
+msgid ""
+"Enable this option to import Azure tags as host/service labels. The imported "
+"tags are added as host labels for resource groups and VMs monitored as hosts "
+"and as service labels for resources monitored as services. The label syntax "
+"is 'cmk/azure/tag/{key}:{value}'.<br>Additionally, each host representing a "
+"resource group is given the host label 'cmk/azure/resource_group:{rg_name}', "
+"and VMs monitored as hosts are given the host label 'cmk/azure/vm:instance', "
+"which is done independent of this option.<br>You can further restrict the "
+"imported tags by specifying a pattern which Checkmk searches for in the key "
+"of the Azure tag, or you can disable the import of Azure tags altogether."
+msgstr ""
 
 #, python-brace-format
 msgid ""
@@ -24019,6 +24269,10 @@ msgstr ""
 msgid "Every week on..."
 msgstr "Elke week op..."
 
+#, fuzzy
+msgid "Evicted keys"
+msgstr "Aantal uitgezette sleutels"
+
 msgid "Evictions"
 msgstr "Uitzettingen"
 
@@ -24385,6 +24639,10 @@ msgstr "Verwachte autoextend instelling"
 msgid "Expected cluster type."
 msgstr "Verwacht clustertype."
 
+#, fuzzy
+msgid "Expected connection state"
+msgstr "Afgewezen verbindingen"
+
 msgid "Expected cpu usage"
 msgstr "Verwacht cpu-gebruik"
 
@@ -24454,6 +24712,14 @@ msgid "Expected update interval"
 msgstr "Verwacht update-interval"
 
 #, fuzzy
+msgid "Expected virtual switch"
+msgstr "Verwachte toestand"
+
+#, fuzzy
+msgid "Expected virtual switch name"
+msgstr "Verwachte vlaggenstaat"
+
+#, fuzzy
 msgid "Expiration date"
 msgstr "Registratie Staat"
 
@@ -24472,6 +24738,10 @@ msgstr "Verloopt op"
 
 msgid "Expire time"
 msgstr "Verlooptijd"
+
+#, fuzzy
+msgid "Expired keys"
+msgstr "Verlopen objecten"
 
 msgid "Expired objects"
 msgstr "Verlopen objecten"
@@ -24526,6 +24796,10 @@ msgstr "Expliciete etiketten"
 
 #, fuzzy
 msgid "Explicit list of IP addresses"
+msgstr "Expliciete lijst van IP-adressen"
+
+#, fuzzy
+msgid "Explicit list of subscription IDs"
 msgstr "Expliciete lijst van IP-adressen"
 
 msgid "Explicit mapping of job exit codes to states"
@@ -24585,6 +24859,10 @@ msgid "Explicitly specified groups"
 msgstr "uitdrukkelijk gespecificeerde groepen"
 
 msgid "Explicitly specify resources"
+msgstr "Expliciet middelen specificeren"
+
+#, fuzzy
+msgid "Explicitly specify subscription IDs"
 msgstr "Expliciet middelen specificeren"
 
 msgid "Export"
@@ -25267,6 +25545,9 @@ msgstr "Terugvalsjabloon (%s): Onbekende ID %s"
 
 msgid "Falling"
 msgstr "Falling"
+
+msgid "False"
+msgstr ""
 
 msgid "Fan Name"
 msgstr "Naam ventilator"
@@ -27181,6 +27462,10 @@ msgstr "Verbinding bewerken"
 #, fuzzy
 msgid "Gerrit instance to query."
 msgstr "Jenkins instantie om te bevragen."
+
+#, fuzzy
+msgid "Get commands"
+msgstr "geen commando's"
 
 msgid "Get file from SFTP server"
 msgstr "Bestand van SFTP-server halen"
@@ -29242,6 +29527,10 @@ msgstr "Geschiedenis van de kennisgevingen"
 msgid "History of scheduled downtimes"
 msgstr "Geschiedenis van geplande uitvaltijd"
 
+#, fuzzy
+msgid "Hit ratio"
+msgstr "Init duur"
+
 msgid "Hits"
 msgstr "Hits"
 
@@ -30837,6 +31126,10 @@ msgid "Host name or alias (regex)"
 msgstr "Hostnaam of alias"
 
 #, fuzzy
+msgid "Host name resource attribute"
+msgstr "Rolkenmerk"
+
+#, fuzzy
 msgid "Host name rules"
 msgstr "Hostnaam: %s"
 
@@ -31433,6 +31726,10 @@ msgstr "Hyper-V Server: Staat van VM's"
 
 msgid "Hyper-V VM Guest Information (Windows)"
 msgstr "Hyper-V VM Gastgegevens (Windows)"
+
+#, fuzzy
+msgid "Hyper-V VM Network Adapter"
+msgstr "Netwerk Adapters"
 
 #, fuzzy
 msgid "Hyper-V VM integration services"
@@ -38028,6 +38325,10 @@ msgstr "Niveaus op gebruikte capaciteit in bytes"
 msgid "Levels on write capacity"
 msgstr "Niveaus op schrijfcapaciteit"
 
+#, fuzzy
+msgid "Levels over an extended period of time"
+msgstr "Niveaus over een langere periode op replicatievertraging"
+
 msgid "Levels over an extended time period on a single core CPU utilization"
 msgstr "Niveaus over een langere periode op een enkele kern CPU-gebruik"
 
@@ -39581,6 +39882,10 @@ msgstr "Hogere niveaus voor verzoeken gebruik"
 msgid "Lower levels for reservation utilization"
 msgstr "Hogere niveaus voor verzoeken gebruik"
 
+#, fuzzy
+msgid "Lower levels for successful connections"
+msgstr "Niveaus voor actieve verbindingen"
+
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr "Lagere niveaus voor de ventilatorsnelheid van een hardwareapparaat"
 
@@ -39657,6 +39962,10 @@ msgstr "Laagste: Geen kennisgeving, update badge nummer"
 
 msgid "MAC address"
 msgstr "MAC-adres"
+
+#, fuzzy
+msgid "MAC configuration"
+msgstr "RRA-configuratie"
 
 msgid "MB"
 msgstr "MB"
@@ -41041,6 +41350,10 @@ msgstr "Maximaal aantal gelijktijdige Real-Time controles"
 
 msgid "Maximum connections per second"
 msgstr "Maximale verbindingen per seconde"
+
+#, fuzzy
+msgid "Maximum connectivity lag"
+msgstr "Site connectiviteit"
 
 msgid "Maximum count"
 msgstr "Maximum aantal"
@@ -42470,6 +42783,10 @@ msgstr "Controleer alle gevonden gevallen"
 msgid "Monitor all instances found"
 msgstr "Controleer alle gevonden gevallen"
 
+#, fuzzy
+msgid "Monitor all subscriptions"
+msgstr "Abonnementen op evenementen"
+
 msgid "Monitor and graph the lanes, if the port has multiple"
 msgstr "Monitor en maak een grafiek van de lanes, als de poort meerdere"
 
@@ -43866,6 +44183,10 @@ msgstr "Netscaler Geheugen Gebruik"
 
 msgid "Network"
 msgstr "Netwerk"
+
+#, fuzzy
+msgid "Network Adapter"
+msgstr "Netwerk Adapters"
 
 #, fuzzy
 msgid "Network Cards"
@@ -47414,6 +47735,10 @@ msgstr "Configuratie toestand toevoegen"
 #, fuzzy
 msgid "OpenTelemetry data - Metric backend"
 msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy
+msgid "OpenTelemetry hosts creation options"
+msgstr "Piggyback creatie opties"
 
 #, fuzzy
 msgid "OpenTelemetry metric name"
@@ -51487,6 +51812,10 @@ msgstr "Gelieve ten minste één adres te vermelden"
 msgid "Please specify at least one \"Open telemetry hosts creation option\""
 msgstr "Gelieve minstens één \"Piggyback creatie optie\" op te geven"
 
+#, fuzzy
+msgid "Please specify at least one \"OpenTelemetry hosts creation option\""
+msgstr "Gelieve minstens één \"Piggyback creatie optie\" op te geven"
+
 msgid "Please specify at least one \"Piggyback creation option\""
 msgstr "Gelieve minstens één \"Piggyback creatie optie\" op te geven"
 
@@ -53796,6 +54125,10 @@ msgstr "Fysieke poort toestanden om te ontdekken"
 
 msgid "Redirect URL (has to be https)"
 msgstr "Redirect URL (moet https zijn)"
+
+#, fuzzy
+msgid "Redis Caches"
+msgstr "Redis cliënten"
 
 msgid "Redis clients"
 msgstr "Redis cliënten"
@@ -57830,6 +58163,10 @@ msgstr ""
 "de selectie worden bijv. de attribuutnamen die in LDAP-query's worden "
 "gebruikt, gewijzigd."
 
+#, fuzzy
+msgid "Select the subscriptions you want to monitor."
+msgstr "Selecteer het type inhoudselement"
+
 msgid "Select the type of content element"
 msgstr "Selecteer het type inhoudselement"
 
@@ -58166,6 +58503,22 @@ msgstr "Serververbindingen"
 msgid "Server latency"
 msgstr "Serververtraging"
 
+#, fuzzy
+msgid "Server load"
+msgstr "Belasting Citrix Server"
+
+#, fuzzy
+msgid "Server load %"
+msgstr "Belasting Citrix Server"
+
+#, fuzzy
+msgid "Server load (average)"
+msgstr "Serverlogboekopslag"
+
+#, fuzzy
+msgid "Server load levels"
+msgstr "Dienstverleningsniveau"
+
 msgid "Server log storage"
 msgstr "Serverlogboekopslag"
 
@@ -58174,6 +58527,10 @@ msgstr "Server log opslag gebruikt"
 
 msgid "Server performance"
 msgstr "Serverprestaties"
+
+#, fuzzy
+msgid "Server side command latency"
+msgstr "Serververtraging"
 
 msgid "Server side handling of unencrypted data"
 msgstr "Serverzijde behandeling van niet-gecodeerde gegevens"
@@ -58185,6 +58542,10 @@ msgstr "Server tijd"
 #, python-format
 msgid "Server time (currently: %s)"
 msgstr ""
+
+#, fuzzy
+msgid "Server-side command latency"
+msgstr "Serververtraging"
 
 msgid "Service"
 msgstr "Dienst"
@@ -58699,6 +59060,10 @@ msgstr "Dienstverleningsstatus"
 #, fuzzy
 msgid "Service status grouping"
 msgstr "Groepering van dienstverleningsstatussen"
+
+#, fuzzy
+msgid "Service status when geo-replication link is unhealthy"
+msgstr "Staat wanneer replicatietoestand actief is"
 
 msgid "Service tags"
 msgstr "Dienstmarkeringen"
@@ -63619,6 +63984,14 @@ msgstr "Abonnement ID"
 msgid "Subscription Status (off: ignore subscription status)"
 msgstr "Activeer Controle (uit: abonnementsstatus negeren)"
 
+#, fuzzy
+msgid "Subscriptions matching tag based criteria"
+msgstr "bronnen die overeenkomen met op tags gebaseerde criteria"
+
+#, fuzzy
+msgid "Subscriptions to monitor"
+msgstr "Te controleren regio's"
+
 msgid "Substitution"
 msgstr "Substitutie"
 
@@ -64463,6 +64836,10 @@ msgstr "Tag groepen"
 
 msgid "Tag groups with only one choice must have a tag ID."
 msgstr "Taggroepen met slechts één keuze moeten een tag ID hebben."
+
+#, fuzzy
+msgid "Tag matching subscriptions"
+msgstr "Abonnementen op evenementen"
 
 msgid "Tag usage"
 msgstr "Tag gebruik"
@@ -67512,6 +67889,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"The interval the connection will be executed to check the available "
+"OpenTelemetry data and update the configuration."
+msgstr ""
+"Het interval dat de verbinding zal worden uitgevoerd om de beschikbare "
+"piggyback te controleren en de configuratie bij te werken."
+
+#, fuzzy
+msgid ""
 "The interval the connection will be executed to check the available open "
 "telemetry data and update the configuration."
 msgstr ""
@@ -69512,6 +69897,10 @@ msgid ""
 msgstr ""
 "De submap <i>%s</i> heeft de expliciete site <i>%s</i> ingesteld, die "
 "toebehoort aan klant <i>%s</i>. Dit is in strijd met de CME map hiërarchie."
+
+#, fuzzy
+msgid "The subscription tag"
+msgstr "Abonnementen op evenementen"
 
 #, fuzzy, python-format
 msgid "The suffix '%s' is already in use by another LDAP connection."
@@ -73862,6 +74251,77 @@ msgstr ""
 "prestatiegegevens van de PING naar sommige hosts wilt bijhouden."
 
 #, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis CPU utilization "
+"monitoring"
+msgstr ""
+"Deze regel staat je toe om bloat levels te configureren voor een databases "
+"tablespace en indexspace."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis Cache "
+"effectiveness monitoring"
+msgstr ""
+"Deze regel staat je toe om bloat levels te configureren voor een databases "
+"tablespace en indexspace."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis connections "
+"monitoring"
+msgstr ""
+"Deze regel staat je toe om bloat levels te configureren voor een databases "
+"tablespace en indexspace."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis latency "
+"monitoring"
+msgstr ""
+"Deze regel staat je toe om bloat levels te configureren voor een databases "
+"tablespace en indexspace."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis memory monitoring"
+msgstr ""
+"Deze regel staat je toe om bloat levels te configureren voor een databases "
+"tablespace en indexspace."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis replication "
+"monitoring"
+msgstr ""
+"Deze regel staat je toe om bloat levels te configureren voor een databases "
+"tablespace en indexspace."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis server load "
+"monitoring"
+msgstr ""
+"Deze regel staat je toe om bloat levels te configureren voor een databases "
+"tablespace en indexspace."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure Redis throughput "
+"monitoring"
+msgstr ""
+"Deze regel staat je toe om bloat levels te configureren voor een databases "
+"tablespace en indexspace."
+
+#, fuzzy
+msgid ""
+"This ruleset allows you to configure levels for Azure SQL database "
+"connections"
+msgstr ""
+"Deze regel staat je toe om bloat levels te configureren voor een databases "
+"tablespace en indexspace."
+
+#, fuzzy
 msgid "This ruleset allows you to configure levels for the Storage data flows"
 msgstr ""
 "Deze regel staat je toe om bloat levels te configureren voor een databases "
@@ -75349,6 +75809,13 @@ msgstr "Timer synchronisatie"
 
 msgid "Time range to consider"
 msgstr "Te overwegen tijdspanne"
+
+#, fuzzy
+msgid ""
+"Time range to continue to consider outdated OpenTelemetry data as valid."
+msgstr ""
+"Tijdsspanne om verouderde piggyback-gegevens als geldig te blijven "
+"beschouwen."
 
 #, fuzzy
 msgid ""
@@ -78823,6 +79290,9 @@ msgstr "Archief gebeurtenissen"
 msgid "Troubleshooting/testing settings"
 msgstr ""
 
+msgid "True"
+msgstr ""
+
 msgid ""
 "Truncate content at this amount of characters.A zero value mean not to "
 "truncate"
@@ -80561,6 +81031,10 @@ msgstr "Bovenste niveaus voor herstarten"
 msgid "Upper levels for size"
 msgstr "Bovenste niveaus voor grootte"
 
+#, fuzzy
+msgid "Upper levels for successful connections"
+msgstr "Niveaus voor actieve verbindingen"
+
 msgid "Upper levels for surge queue length"
 msgstr "Bovenste niveaus voor de lengte van de wachtrij"
 
@@ -81859,6 +82333,14 @@ msgstr "Gebruikte logbestanden: Absolute of relatieve bovenste niveaus"
 msgid "Used logical space"
 msgstr "Gebruikte logische ruimte"
 
+#, fuzzy
+msgid "Used memory"
+msgstr "Gebruikt CPU-geheugen"
+
+#, fuzzy
+msgid "Used memory RSS"
+msgstr "Gebruikt CPU-geheugen"
+
 msgid "Used meta data"
 msgstr "Gebruikte metagegevens"
 
@@ -82183,6 +82665,14 @@ msgstr ""
 "14261). We schakelen het inloggen via deze methode standaard uit. Gebruik "
 "deze eigenschap om inloggen via de GET-methode voor alle gebruikers in te "
 "schakelen."
+
+msgid ""
+"Using this option will let Checkmk create safe host names for piggyback "
+"hosts to avoid conflicts in entity names from Azure. This option will "
+"prepend 'azr-' and append the last part of the subscription ID to host "
+"names. Example: 'azr-my-vm-1a2b3c4d'. Enable this option if you have "
+"resources or resource groups with the same name."
+msgstr ""
 
 msgid ""
 "Using this option you can define an optional LDAP filter which is used "
@@ -83479,6 +83969,10 @@ msgstr "Virtuele grootte"
 
 #, fuzzy
 msgid "Virtual size (average)"
+msgstr "Virtuele grootte"
+
+#, fuzzy
+msgid "Virtual switch name"
 msgstr "Virtuele grootte"
 
 msgid "VirtualBox Guests"
@@ -91110,7 +91604,7 @@ msgstr "Voer gebruikersnaam in"
 msgid "Add filter as suffix"
 msgstr "Filter toevoegen"
 
-msgid "Include dashboard filter contents to the dashboard title.."
+msgid "Include dashboard filter contents to the dashboard title."
 msgstr ""
 
 #, fuzzy
@@ -91170,24 +91664,20 @@ msgid "Choose how to display your data"
 msgstr "Geef geen datum weer"
 
 #, fuzzy
-msgid "Inherited"
-msgstr "Geërfd van "
-
-#, fuzzy
-msgid "Overriden"
-msgstr "Overzicht"
-
-#, fuzzy
-msgid "Quick filter"
-msgstr "Service Filters"
-
-#, fuzzy
 msgid "Single %{n}"
 msgstr "Single"
 
 #, fuzzy
 msgid "Multiple %{n}"
 msgstr "Meerdere locaties"
+
+#, fuzzy
+msgid "Inherited"
+msgstr "Geërfd van "
+
+#, fuzzy
+msgid "Overriden"
+msgstr "Overzicht"
 
 #, fuzzy
 msgid "Runtime filter"
@@ -91383,81 +91873,6 @@ msgstr ""
 msgid "€ (Decimal, strict precision, 2 digits)"
 msgstr ""
 
-#, fuzzy
-msgid "Specific host"
-msgstr "Specifieke sites"
-
-#, fuzzy
-msgid "Multiple hosts"
-msgstr "Meerdere locaties"
-
-#, fuzzy
-msgid "Applied host name filter"
-msgstr "Toegepaste filters:"
-
-#, fuzzy
-msgid "to be defined"
-msgstr "Geen verbindingen gedefinieerd"
-
-#, fuzzy
-msgid "Widget filter"
-msgstr "Filter toevoegen"
-
-#, fuzzy
-msgid "Select host name"
-msgstr "Hosts verwijderen"
-
-#, fuzzy
-msgid "No host name filter applied."
-msgstr "Ntop gastheer"
-
-msgid ""
-"A host name filter selected as a dashboard or quick filter in the filters "
-"slideout appears here and applies to this widget"
-msgstr ""
-
-#, fuzzy
-msgid "Applied host filters"
-msgstr "Toegepaste filters:"
-
-#, fuzzy
-msgid "No host filters applied."
-msgstr "Ntop gastheer"
-
-msgid ""
-"Dashboard or quick filters selected in the filters slideout appear here and "
-"apply to this widget"
-msgstr ""
-
-#, fuzzy
-msgid "Specific service"
-msgstr "Specifieke sites"
-
-#, fuzzy
-msgid "Applied service name filter"
-msgstr "Alternatieve hostnaam"
-
-#, fuzzy
-msgid "Select service name"
-msgstr "Gebruikers verwijderen"
-
-msgid "No service name filter applied."
-msgstr ""
-
-msgid ""
-"A service name filter selected as a dashboard or quick filter in the filters "
-"slideout appears here and applies to this widget"
-msgstr ""
-
-#, fuzzy
-msgid "Applied service filters"
-msgstr "Service Filters"
-
-msgid ""
-"Dashboard or quick filters selected in the filters slideout appears here and "
-"applies to this widget"
-msgstr ""
-
 msgid "Barplot"
 msgstr "Barplot"
 
@@ -91488,6 +91903,10 @@ msgstr "Titel tonen zonder achtergrond"
 #, fuzzy
 msgid "Unrestricted"
 msgstr "Niet-geregistreerd"
+
+#, fuzzy
+msgid "Specific host"
+msgstr "Specifieke sites"
 
 #, fuzzy
 msgid "Custom"
@@ -91542,6 +91961,29 @@ msgstr ""
 #, fuzzy
 msgid "Dashboard scope"
 msgstr "Dashboards"
+
+msgid "Only me (private)"
+msgstr ""
+
+#, fuzzy
+msgid "Users of site"
+msgstr "Diensten van Site"
+
+#, fuzzy
+msgid "Enter description"
+msgstr "Beschrijving van het gebruik"
+
+#, fuzzy
+msgid "Only show when \"Show more\" is enabled"
+msgstr "Laat de %s alleen zien als show more actief is"
+
+#, fuzzy
+msgid "Show in dropdown menus"
+msgstr "Verberg deze %s in vervolgkeuzemenu's"
+
+#, fuzzy
+msgid "Dashboard settings of %{name}"
+msgstr "Eigenschappen van het dashboard"
 
 #, fuzzy
 msgid "Single graph"
@@ -91696,6 +92138,10 @@ msgstr "Map Selectie"
 #, fuzzy
 msgid "Copy view"
 msgstr "Kloon uitzicht"
+
+#, fuzzy
+msgid "Unknown object type: %{objectType}"
+msgstr "Onbekend doeltype: %s. Beschikbare types: %s."
 
 #, fuzzy
 msgid "Data configuration"
@@ -92579,6 +93025,58 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "Quick filter"
+#~ msgstr "Service Filters"
+
+#, fuzzy
+#~ msgid "Multiple hosts"
+#~ msgstr "Meerdere locaties"
+
+#, fuzzy
+#~ msgid "Applied host name filter"
+#~ msgstr "Toegepaste filters:"
+
+#, fuzzy
+#~ msgid "to be defined"
+#~ msgstr "Geen verbindingen gedefinieerd"
+
+#, fuzzy
+#~ msgid "Widget filter"
+#~ msgstr "Filter toevoegen"
+
+#, fuzzy
+#~ msgid "Select host name"
+#~ msgstr "Hosts verwijderen"
+
+#, fuzzy
+#~ msgid "No host name filter applied."
+#~ msgstr "Ntop gastheer"
+
+#, fuzzy
+#~ msgid "Applied host filters"
+#~ msgstr "Toegepaste filters:"
+
+#, fuzzy
+#~ msgid "No host filters applied."
+#~ msgstr "Ntop gastheer"
+
+#, fuzzy
+#~ msgid "Specific service"
+#~ msgstr "Specifieke sites"
+
+#, fuzzy
+#~ msgid "Applied service name filter"
+#~ msgstr "Alternatieve hostnaam"
+
+#, fuzzy
+#~ msgid "Select service name"
+#~ msgstr "Gebruikers verwijderen"
+
+#, fuzzy
+#~ msgid "Applied service filters"
+#~ msgstr "Service Filters"
+
+#, fuzzy
 #~ msgid "Amazon Web Service (AWS)"
 #~ msgstr "Amazon Web Services (AWS)"
 
@@ -92755,270 +93253,6 @@ msgstr ""
 
 #~ msgid "iSCSI HBAs"
 #~ msgstr "iSCSI HBA's"
-
-#, fuzzy
-#~ msgid "Add subscription tag"
-#~ msgstr "Abonnementsstatus"
-
-#, fuzzy
-#~ msgid "Average over"
-#~ msgstr "Gemiddelde waarde"
-
-#, fuzzy
-#~ msgid "Azure Redis CPU utilization"
-#~ msgstr "GCP/Redis CPU-gebruik"
-
-#, fuzzy
-#~ msgid "Azure Redis Cache effectiveness"
-#~ msgstr "Databaseverbindingen"
-
-#, fuzzy
-#~ msgid "Azure Redis connections"
-#~ msgstr "Databaseverbindingen"
-
-#, fuzzy
-#~ msgid "Azure Redis latency"
-#~ msgstr "Gemiddelde schijflatentie"
-
-#, fuzzy
-#~ msgid "Azure Redis memory"
-#~ msgstr "Absoluut vrij geheugen"
-
-#, fuzzy
-#~ msgid "Azure Redis replication"
-#~ msgstr "Databaseverbindingen"
-
-#, fuzzy
-#~ msgid "Azure Redis server load"
-#~ msgstr "Redis server naam"
-
-#, fuzzy
-#~ msgid "Azure Redis throughput"
-#~ msgstr "Lees doorvoer"
-
-#, fuzzy
-#~ msgid "Azure SQL database connections"
-#~ msgstr "Databaseverbindingen"
-
-#, fuzzy
-#~ msgid "CPU utilization %"
-#~ msgstr "CPU-gebruik"
-
-#, fuzzy
-#~ msgid "Cache internode latency"
-#~ msgstr "Conferentie Latency creëren"
-
-#, fuzzy
-#~ msgid "Cache read throughput (/sec)"
-#~ msgstr "Lees doorvoer"
-
-#, fuzzy
-#~ msgid "Cache requests"
-#~ msgstr "Mislukte verzoeken"
-
-#, fuzzy
-#~ msgid "Cache write throughput (/sec)"
-#~ msgstr "Schrijf doorvoer"
-
-#, fuzzy
-#~ msgid "Connected Clients"
-#~ msgstr "Verbindingen"
-
-#, fuzzy
-#~ msgid "Connected clients"
-#~ msgstr "Aantal aangesloten cliënten"
-
-#, fuzzy
-#~ msgid "Connections closed rate"
-#~ msgstr "Verbinding laat verbroken"
-
-#, fuzzy
-#~ msgid "Connections created rate"
-#~ msgstr "Verbinding laat verbroken"
-
-#, fuzzy
-#~ msgid "Connectivity lag"
-#~ msgstr "Connectiviteit"
-
-#, fuzzy
-#~ msgid "Do not monitor subscriptions"
-#~ msgstr "Controleer niet"
-
-#, fuzzy
-#~ msgid "Enable safe host names"
-#~ msgstr "Hostnamen vertalen"
-
-#, fuzzy
-#~ msgid "Evicted keys"
-#~ msgstr "Aantal uitgezette sleutels"
-
-#, fuzzy
-#~ msgid "Expired keys"
-#~ msgstr "Verlopen objecten"
-
-#, fuzzy
-#~ msgid "Explicit list of subscription IDs"
-#~ msgstr "Expliciete lijst van IP-adressen"
-
-#, fuzzy
-#~ msgid "Explicitly specify subscription IDs"
-#~ msgstr "Expliciet middelen specificeren"
-
-#, fuzzy
-#~ msgid "Get commands"
-#~ msgstr "geen commando's"
-
-#, fuzzy
-#~ msgid "Hit ratio"
-#~ msgstr "Init duur"
-
-#, fuzzy
-#~ msgid "Levels over an extended period of time"
-#~ msgstr "Niveaus over een langere periode op replicatievertraging"
-
-#, fuzzy
-#~ msgid "Lower levels for successful connections"
-#~ msgstr "Niveaus voor actieve verbindingen"
-
-#, fuzzy
-#~ msgid "Maximum connectivity lag"
-#~ msgstr "Site connectiviteit"
-
-#, fuzzy
-#~ msgid "Monitor all subscriptions"
-#~ msgstr "Abonnementen op evenementen"
-
-#, fuzzy
-#~ msgid "Redis Caches"
-#~ msgstr "Redis cliënten"
-
-#, fuzzy
-#~ msgid "Server load"
-#~ msgstr "Belasting Citrix Server"
-
-#, fuzzy
-#~ msgid "Server load %"
-#~ msgstr "Belasting Citrix Server"
-
-#, fuzzy
-#~ msgid "Server load (average)"
-#~ msgstr "Serverlogboekopslag"
-
-#, fuzzy
-#~ msgid "Server load levels"
-#~ msgstr "Dienstverleningsniveau"
-
-#, fuzzy
-#~ msgid "Server side command latency"
-#~ msgstr "Serververtraging"
-
-#, fuzzy
-#~ msgid "Server-side command latency"
-#~ msgstr "Serververtraging"
-
-#, fuzzy
-#~ msgid "Service status when geo-replication link is unhealthy"
-#~ msgstr "Staat wanneer replicatietoestand actief is"
-
-#, fuzzy
-#~ msgid "Subscriptions matching tag based criteria"
-#~ msgstr "bronnen die overeenkomen met op tags gebaseerde criteria"
-
-#, fuzzy
-#~ msgid "Subscriptions to monitor"
-#~ msgstr "Te controleren regio's"
-
-#, fuzzy
-#~ msgid "Tag matching subscriptions"
-#~ msgstr "Abonnementen op evenementen"
-
-#, fuzzy
-#~ msgid "The subscription tag"
-#~ msgstr "Abonnementen op evenementen"
-
-#, fuzzy
-#~ msgid ""
-#~ "This ruleset allows you to configure levels for Azure Redis CPU "
-#~ "utilization monitoring"
-#~ msgstr ""
-#~ "Deze regel staat je toe om bloat levels te configureren voor een "
-#~ "databases tablespace en indexspace."
-
-#, fuzzy
-#~ msgid ""
-#~ "This ruleset allows you to configure levels for Azure Redis Cache "
-#~ "effectiveness monitoring"
-#~ msgstr ""
-#~ "Deze regel staat je toe om bloat levels te configureren voor een "
-#~ "databases tablespace en indexspace."
-
-#, fuzzy
-#~ msgid ""
-#~ "This ruleset allows you to configure levels for Azure Redis connections "
-#~ "monitoring"
-#~ msgstr ""
-#~ "Deze regel staat je toe om bloat levels te configureren voor een "
-#~ "databases tablespace en indexspace."
-
-#, fuzzy
-#~ msgid ""
-#~ "This ruleset allows you to configure levels for Azure Redis latency "
-#~ "monitoring"
-#~ msgstr ""
-#~ "Deze regel staat je toe om bloat levels te configureren voor een "
-#~ "databases tablespace en indexspace."
-
-#, fuzzy
-#~ msgid ""
-#~ "This ruleset allows you to configure levels for Azure Redis memory "
-#~ "monitoring"
-#~ msgstr ""
-#~ "Deze regel staat je toe om bloat levels te configureren voor een "
-#~ "databases tablespace en indexspace."
-
-#, fuzzy
-#~ msgid ""
-#~ "This ruleset allows you to configure levels for Azure Redis replication "
-#~ "monitoring"
-#~ msgstr ""
-#~ "Deze regel staat je toe om bloat levels te configureren voor een "
-#~ "databases tablespace en indexspace."
-
-#, fuzzy
-#~ msgid ""
-#~ "This ruleset allows you to configure levels for Azure Redis server load "
-#~ "monitoring"
-#~ msgstr ""
-#~ "Deze regel staat je toe om bloat levels te configureren voor een "
-#~ "databases tablespace en indexspace."
-
-#, fuzzy
-#~ msgid ""
-#~ "This ruleset allows you to configure levels for Azure Redis throughput "
-#~ "monitoring"
-#~ msgstr ""
-#~ "Deze regel staat je toe om bloat levels te configureren voor een "
-#~ "databases tablespace en indexspace."
-
-#, fuzzy
-#~ msgid ""
-#~ "This ruleset allows you to configure levels for Azure SQL database "
-#~ "connections"
-#~ msgstr ""
-#~ "Deze regel staat je toe om bloat levels te configureren voor een "
-#~ "databases tablespace en indexspace."
-
-#, fuzzy
-#~ msgid "Upper levels for successful connections"
-#~ msgstr "Niveaus voor actieve verbindingen"
-
-#, fuzzy
-#~ msgid "Used memory"
-#~ msgstr "Gebruikt CPU-geheugen"
-
-#, fuzzy
-#~ msgid "Used memory RSS"
-#~ msgstr "Gebruikt CPU-geheugen"
 
 #~ msgid "Assignment of services to contact groups"
 #~ msgstr "Toewijzing van diensten aan contactgroepen"
@@ -94022,10 +94256,6 @@ msgstr ""
 
 #~ msgid "VMs"
 #~ msgstr "VM's"
-
-#, fuzzy
-#~ msgid "Connectee"
-#~ msgstr "Connect"
 
 #, fuzzy
 #~ msgid "Connecter"

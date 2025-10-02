@@ -157,7 +157,8 @@ TEST(WinPerf, InvalidCounter) {
 }
 
 bool IsMacLike(const std::string &s) {
-    return tools::SplitString(s, ":").size() == 8;
+    return tools::SplitString(s, ":").size() == 6 ||
+           tools::SplitString(s, ":").size() == 8;
 }
 
 TEST(WinPerf, IfCounter) {

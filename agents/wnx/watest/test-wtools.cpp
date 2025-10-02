@@ -862,4 +862,25 @@ TEST(Wtools, OsInfo) {
     EXPECT_GE(std::stoi(num_strings[2]), 20);
 }
 
+TEST(Wtools, Adapter) {
+    auto store = GetAdapterInfoStore();
+    for (const auto &entry : store) {
+        XLOG::l.i("{}: \t{}", wtools::ToUtf8(entry.first),
+                  entry.second.mac_address);
+        auto arr = cma::tools::SplitString(entry.second.mac_address, ":");
+        if (arr.size() == 8) {
+            EXPECT_TRUE(
+                rs::any_of(arr, [](const auto &e) { return e == "00"; }))
+                << entry.first << "mac is wrong" << entry.second.mac_address;
+        } else if (arr.size() == 6) {
+            EXPECT_TRUE(
+                rs::any_of(arr, [](const auto &e) { return e != "0)"; }))
+                << entry.first << "mac is wrong" << entry.second.mac_address;
+        } else {
+            FAIL() << entry.first << "mac is wrong" << entry.second.mac_address;
+        }
+    }
+    EXPECT_FALSE(store.empty());
+}
+
 }  // namespace wtools

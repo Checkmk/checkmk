@@ -84,6 +84,7 @@ def create_core(
                         label_manager,
                         plugins,
                         snmp_plugin_store,
+                        timeperiods,
                     )
                 )
 

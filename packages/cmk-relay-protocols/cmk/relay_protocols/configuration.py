@@ -22,7 +22,7 @@ class CheckPeriod(NamedTuple):
 
 class Schedule(BaseModel):
     check_periods: Annotated[
-        list[CheckPeriod], Field(description="Periods during which to schedule checks")
+        Sequence[CheckPeriod], Field(description="Periods during which to schedule checks")
     ]
     check_interval: Annotated[Seconds, Field(description="Check interval in seconds", gt=0)]
     retry_interval: Annotated[Seconds, Field(description="Retry interval in seconds", gt=0)]

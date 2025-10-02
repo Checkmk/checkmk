@@ -296,6 +296,8 @@ PACKAGE_TRACE = ("cmk.trace",)
 
 PACKAGE_METRIC_BACKEND = ("cmk.metric_backend",)
 
+PACKAGE_RELAY_PROTOCOLS = ("cmk.relay_protocols",)
+
 CLEAN_UTILS_MODULES = (
     "agent_registration",
     "auto_queue",
@@ -444,6 +446,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     ),
     Component("cmk.base.core.cee"): _allow(
         *PACKAGE_CCC,
+        *PACKAGE_RELAY_PROTOCOLS,
         "cmk.base.cee",
         "cmk.base.config",
         "cmk.base.core",
@@ -552,8 +555,8 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     Component("cmk.fetchers"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_CRYPTO,
+        *PACKAGE_RELAY_PROTOCOLS,
         "cmk.helper_interface",
-        "cmk.relay_protocols",
         "cmk.snmplib",
     ),
     Component("cmk.fields"): _allow(*PACKAGE_CCC),
@@ -1045,7 +1048,10 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_CCC,
         "cmk.otel_collector.constants",
     ),
-    Component("tests.integration.relay"): _allow("cmk.agent_receiver.certs", "cmk.relay_protocols"),
+    Component("tests.integration.relay"): _allow(
+        *PACKAGE_RELAY_PROTOCOLS,
+        "cmk.agent_receiver.certs",
+    ),
     Component("tests.integration"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_MKP_TOOL,
@@ -1068,22 +1074,23 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     ),
     Component("tests.unit.cmk.fetchers"): _allow(
         *PACKAGE_CCC,
+        *PACKAGE_RELAY_PROTOCOLS,
         "cmk.agent_based",
         "cmk.checkengine",
         "cmk.fetchers",
         "cmk.inline_snmp",
         "cmk.helper_interface",
-        "cmk.relay_protocols",
         "cmk.relay_fetcher_trigger",
         "cmk.snmplib",
         "cmk.utils",
     ),
     Component("tests.unit.cmk"): _allow(
         *PACKAGE_CCC,
-        *PACKAGE_PLUGIN_APIS,
         *PACKAGE_CRYPTO,
         *PACKAGE_MESSAGING,
         *PACKAGE_MKP_TOOL,
+        *PACKAGE_PLUGIN_APIS,
+        *PACKAGE_RELAY_PROTOCOLS,
         *PACKAGE_TRACE,
         *PACKAGE_WERKS,
         "cmk.automations",

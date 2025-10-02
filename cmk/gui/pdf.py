@@ -154,7 +154,7 @@ class Document:
         pagebreak_arguments: tuple | None = None,
     ) -> None:
         # Static paper settings for this document
-        self._pagesize = from_mm(pagesize)
+        self._pagesize = (from_mm(pagesize[0]), from_mm(pagesize[1]))
         self._margins = from_mm(margins)
         self._mirror_margins = mirror_margins
         self._pagebreak_function = pagebreak_function

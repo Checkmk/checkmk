@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.plugins.lib.elphase import ElPhase, ReadingWithState
-from cmk.plugins.ups.agent_based.ups_modulys_inphase import parse_ups_modulys_inphase
+from cmk.plugins.ups_modulys.agent_based.ups_modulys_inphase import parse_ups_modulys_inphase
 
 
 def test_parse_ups_modulys_inphase() -> None:

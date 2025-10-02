@@ -22,7 +22,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.lib.temperature import check_temperature, TempParamType
-from cmk.plugins.lib.ups_modulys import DETECT_UPS_MODULYS
+from cmk.plugins.ups_modulys.lib.ups_modulys import DETECT_UPS_MODULYS
 
 
 class UPSBattery(NamedTuple):

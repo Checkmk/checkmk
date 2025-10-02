@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.lib.elphase import check_elphase, ElPhase, ReadingWithState
-from cmk.plugins.lib.ups_modulys import DETECT_UPS_MODULYS
+from cmk.plugins.ups_modulys.lib.ups_modulys import DETECT_UPS_MODULYS
 
 
 def parse_ups_modulys_outphase(string_table: StringTable) -> dict[str, ElPhase] | None:

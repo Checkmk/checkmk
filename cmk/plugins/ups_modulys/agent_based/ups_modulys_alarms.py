@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.ups_modulys import DETECT_UPS_MODULYS
+from cmk.plugins.ups_modulys.lib.ups_modulys import DETECT_UPS_MODULYS
 
 
 def inventory_ups_modulys_alarms(section: StringTable) -> DiscoveryResult:

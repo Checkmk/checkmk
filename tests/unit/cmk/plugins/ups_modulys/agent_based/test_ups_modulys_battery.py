@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.collection.agent_based.ups_modulys_battery import (
+from cmk.plugins.ups_modulys.agent_based.ups_modulys_battery import (
     check_ups_modulys_battery,
     check_ups_modulys_battery_temp,
     discover_ups_modulys_battery,

@@ -4,10 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Abstract code related to Gerrit API calls."""
 
-import base64
 from enum import StrEnum
 from typing import Final
-from urllib.parse import quote_plus
 
 import httpx
 from pydantic import BaseModel
@@ -24,7 +22,6 @@ class TChangeStatus(StrEnum):
 
 class ChangeDetails(BaseModel):
     id: str
-    subject: str
     change_id: str
     status: TChangeStatus
     virtual_id_number: int
@@ -81,31 +78,3 @@ class ChangesAPI:
             ChangeDetails(**change)
             for change in from_json(GerritClient.parse_gerrit_response(resp), allow_partial=True)
         ]
-
-    def get_files(self, change: ChangeDetails) -> list[str]:
-        """Return list of files corresponding to the latest patchset in a change."""
-        url = f"{self._url}/{change.id}/revisions/current/files/"
-        resp = self._client.get(url)
-        return [file_path for file_path in from_json(GerritClient.parse_gerrit_response(resp))]
-
-    def get_content_from_file(self, change: ChangeDetails, file_path: str) -> str:
-        """Return the contents of a file corresponding to a change.
-
-        Args:
-            change (ChangeDetails): details corresponding to a change.
-            file_path (str): Path of the file present in the change;
-                path is relative to the root directory of the repository.
-
-        Raises:
-            FileNotFoundError: the content is missing as the file is not found within the change.
-        """
-        fpath = quote_plus(file_path)
-        url = f"{self._url}/{change.id}/revisions/current/files/{fpath}/content"
-        try:
-            resp = self._client.get(url)
-        except httpx.HTTPStatusError as exc:
-            raise FileNotFoundError(
-                "Content not found! "
-                f"File '{file_path}' was deleted in change '{change.id}: {change.subject}'!"
-            ) from exc
-        return base64.b64decode(GerritClient.parse_gerrit_response(resp)).decode("utf-8")

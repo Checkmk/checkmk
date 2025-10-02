@@ -12,10 +12,42 @@ from cmk.ccc.hostaddress import HostAddress
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
-from cmk.gui.wato.pages.bulk_import import _prevent_reused_attr_names, ModeBulkImport
+from cmk.gui.type_defs import Choices, CustomHostAttrSpec
+from cmk.gui.wato.pages.bulk_import import (
+    _attribute_choices,
+    _detect_attribute,
+    _prevent_reused_attr_names,
+    ModeBulkImport,
+)
 from cmk.gui.watolib.csv_bulk_import import CSVBulkImport
 from cmk.gui.watolib.host_attributes import all_host_attributes
 from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.utils.tags import TagGroup
+
+
+def attr_choices_with_tag_groups_and_host_attrs(tag_groups: Sequence[TagGroup]) -> Choices:
+    host_attrs = [
+        CustomHostAttrSpec(
+            add_custom_macro=False,
+            help="What rack the machine is in",
+            name="rack",
+            show_in_table=False,
+            title="Rack",
+            topic="custom_attributes",
+            type="TextAscii",
+        ),
+        CustomHostAttrSpec(
+            add_custom_macro=False,
+            help="What rack unit the machine is at",
+            name="rack_u",
+            show_in_table=False,
+            title="Rack U",
+            topic="custom_attributes",
+            type="TextAscii",
+        ),
+    ]
+    return _attribute_choices(tag_groups, host_attrs)
+
 
 CSV_NORMAL_WITH_TITLE = """
 thehostname,the_v4_ip_address
@@ -134,3 +166,43 @@ def test_prevent_reused_attr_names_with_reuses(attributes: Sequence[str]) -> Non
 )
 def test_prevent_reused_attr_names_no_reuses(attributes: Sequence[str]) -> None:
     assert _prevent_reused_attr_names(attributes) is None  # type: ignore[func-returns-value]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_attribute_choices() -> None:
+    attr_choices_dict = dict(_attribute_choices([], []))
+    assert "-" in attr_choices_dict
+    assert None in attr_choices_dict
+    assert "host_name" in attr_choices_dict
+    assert "tag_agent" not in attr_choices_dict
+
+    tag_groups = active_config.tags.tag_groups
+    attr_choices_dict = dict(attr_choices_with_tag_groups_and_host_attrs(tag_groups))
+    assert "-" in attr_choices_dict
+    assert None in attr_choices_dict
+    assert "host_name" in attr_choices_dict
+    assert "tag_agent" in attr_choices_dict
+    assert "rack" in attr_choices_dict
+    assert "rack_u" in attr_choices_dict
+
+
+@pytest.mark.parametrize(
+    "header, expected",
+    [
+        ("host_name", "host_name"),
+        ("host name", "host_name"),
+        ("Host Name", "host_name"),
+        ("IP Address", "ipaddress"),
+        ("Nothing", ""),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_detect_attribute(
+    header: str,
+    expected: str,
+) -> None:
+    tag_groups = active_config.tags.tag_groups
+    assert (
+        _detect_attribute(attr_choices_with_tag_groups_and_host_attrs(tag_groups), header)
+        == expected
+    )

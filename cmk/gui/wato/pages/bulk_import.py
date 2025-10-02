@@ -39,6 +39,7 @@ from cmk.gui.table import table_element
 from cmk.gui.type_defs import (
     ActionResult,
     Choices,
+    CustomHostAttrSpec,
     PermissionName,
 )
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -94,6 +95,58 @@ def _prevent_reused_attr_names(attr_names: Sequence[str | None]) -> None:
                 % name,
             )
         attrs_seen.add(name)
+
+
+def _attribute_choices(
+    tag_groups: Sequence[TagGroup],
+    custom_host_attrs: Sequence[CustomHostAttrSpec],
+) -> Choices:
+    attributes = [
+        (None, _("(please select)")),
+        ("-", _("Don't import")),
+        ("host_name", _("Host name")),
+        ("alias", _("Alias")),
+        ("site", _("Monitored on site")),
+        ("ipaddress", _("IPv4 address")),
+        ("ipv6address", _("IPv6 address")),
+        ("snmp_community", _("SNMP community")),
+    ]
+
+    # Add tag groups
+    for tag_group in tag_groups:
+        attributes.append(("tag_" + tag_group.id, _("Tag: %s") % tag_group.title))
+
+    # Add custom attributes
+    for entry in custom_host_attrs:
+        name = entry["name"]
+        attributes.append((name, _("Custom variable: %s") % name))
+
+    return attributes
+
+
+def _detect_attribute(attributes: Choices, header: str) -> str:
+    """
+    Given a 'Choices' of possible host attributes, and assuming there is a
+    title line in the CSV, try to match the given title (for a particular
+    column) with the attribute key most likely related to it.
+    """
+
+    if not header:
+        return ""
+
+    highscore = 0.0
+    best_key = ""
+    for key, title in attributes:
+        if key is not None:
+            key_match_score = SequenceMatcher(None, key, header).ratio()
+            title_match_score = SequenceMatcher(None, title, header).ratio()
+            score = key_match_score if key_match_score > title_match_score else title_match_score
+
+            if score > 0.6 and score > highscore:
+                best_key = key
+                highscore = score
+
+    return best_key
 
 
 class ModeBulkImport(WatoMode):
@@ -467,7 +520,8 @@ class ModeBulkImport(WatoMode):
         with html.form_context("preview", method="POST"):
             self._preview_form()
 
-            attributes = self._attribute_choices(tag_groups)
+            custom_host_attrs = ModeCustomHostAttrs().get_attributes()
+            attributes = _attribute_choices(tag_groups, custom_host_attrs)
 
             # first line could be missing in situation of import error
             self._params = self.validate_params()
@@ -518,7 +572,7 @@ class ModeBulkImport(WatoMode):
                     if request.var(attribute_varname):
                         attribute_method = request.get_ascii_input_mandatory(attribute_varname)
                     else:
-                        attribute_method = self._try_detect_default_attribute(attributes, header)
+                        attribute_method = _detect_attribute(attributes, header)
                         request.del_var(attribute_varname)
 
                     html.dropdown(
@@ -569,51 +623,3 @@ class ModeBulkImport(WatoMode):
             title=_("File Parsing Settings"),
             default_keys=["has_title_line"],
         )
-
-    def _attribute_choices(self, tag_groups: Sequence[TagGroup]) -> Choices:
-        attributes = [
-            (None, _("(please select)")),
-            ("-", _("Don't import")),
-            ("host_name", _("Host name")),
-            ("alias", _("Alias")),
-            ("site", _("Monitored on site")),
-            ("ipaddress", _("IPv4 address")),
-            ("ipv6address", _("IPv6 address")),
-            ("snmp_community", _("SNMP community")),
-        ]
-
-        # Add tag groups
-        for tag_group in tag_groups:
-            attributes.append(("tag_" + tag_group.id, _("Tag: %s") % tag_group.title))
-
-        # Add custom attributes
-        for entry in ModeCustomHostAttrs().get_attributes():
-            name = entry["name"]
-            attributes.append((name, _("Custom variable: %s") % name))
-
-        return attributes
-
-    # Try to detect the host attribute to choose for this column based on the header
-    # of this column (if there is some).
-    def _try_detect_default_attribute(self, attributes, header):
-        if header is None:
-            return ""
-
-        def similarity(a, b):
-            return SequenceMatcher(None, a, b).ratio()
-
-        highscore = 0.0
-        best_key = ""
-        for key, title in attributes:
-            if key is not None:
-                key_match_score = similarity(key, header)
-                title_match_score = similarity(title, header)
-                score = (
-                    key_match_score if key_match_score > title_match_score else title_match_score
-                )
-
-                if score > 0.6 and score > highscore:
-                    best_key = key
-                    highscore = score
-
-        return best_key

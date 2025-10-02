@@ -66,6 +66,13 @@ platform_transition_binary(
     visibility = ["//visibility:public"],
 )
 
+platform_transition_binary(
+    name = "mk-sql-musl-aarch64",
+    binary = ":mk-sql",
+    platform = "//bazel/platforms:aarch64-linux-musl",
+    visibility = ["//visibility:public"],
+)
+
 rust_test(
     name = "mk-sql-lib-test-internal",
     compile_data = [

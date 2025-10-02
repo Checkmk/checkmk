@@ -2,7 +2,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from io import StringIO
 from pathlib import Path
 
@@ -202,3 +202,57 @@ def test_title_row(
     assert cbi.title_row == expected_title_row
     assert cbi.title_row == expected_title_row
     assert cbi.skip_to_and_return_next_row() == expected_next_row
+
+
+@pytest.mark.parametrize(
+    "sample, has_title_line, attr_names, expected_result",
+    [
+        pytest.param(
+            CSV_NO_TITLE_LINE,
+            False,
+            ["host_name", "ipaddress"],
+            [
+                {"host_name": "server01", "ipaddress": "192.168.1.101"},
+                {"host_name": "server02", "ipaddress": "192.168.1.102"},
+                {"host_name": "server03", "ipaddress": "192.168.1.103"},
+            ],
+            id="CSV, no title line, green path",
+        ),
+        pytest.param(
+            CSV_WITH_TITLE_LINE,
+            True,
+            ["host_name", "ipaddress"],
+            [
+                {"host_name": "server01", "ipaddress": "192.168.1.101"},
+                {"host_name": "server02", "ipaddress": "192.168.1.102"},
+                {"host_name": "server03", "ipaddress": "192.168.1.103"},
+            ],
+            id="CSV with title line, green path",
+        ),
+    ],
+)
+def test_next_row_as_dict(
+    sample: str,
+    has_title_line: bool,
+    attr_names: Sequence[str],
+    expected_result: Sequence[Mapping[str, str]],
+) -> None:
+    handle = StringIO(sample)
+    cbi = CSVBulkImport(handle=handle, has_title_line=has_title_line)
+    rows = list(cbi.rows_as_dict(attr_names))
+    assert rows == expected_result
+
+
+def test_next_row_as_dict_throws_len_mismatch() -> None:
+    """
+    rows_as_dict should raise ValueError if attr_names isn't exactly the row
+    length (2 in our sample).
+    """
+    handle = StringIO(CSV_NO_TITLE_LINE)
+    cbi = CSVBulkImport(handle=handle, has_title_line=False)
+
+    with pytest.raises(ValueError):
+        next(cbi.rows_as_dict(["host_name"]))
+
+    with pytest.raises(ValueError):
+        next(cbi.rows_as_dict(["host_name", "ipaddress", "alias"]))

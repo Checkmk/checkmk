@@ -302,21 +302,6 @@ class ModeBulkImport(WatoMode):
         pprint_value: bool,
         use_git: bool,
     ) -> ActionResult:
-        def _emit_raw_rows(csv_bulk_import: CSVBulkImport) -> typing.Generator[dict, None, None]:
-            # Determine the used attributes once. We also check for duplicates only once.
-            if (first_row := csv_bulk_import.skip_to_and_return_next_row()) is None:
-                return
-
-            _attr_names = [request.var(f"attribute_{index}") for index in range(len(first_row))]
-            _prevent_reused_attr_names(_attr_names)
-            yield dict(zip(_attr_names, first_row))
-
-            for csv_row in csv_bulk_import._reader:
-                if not csv_row:
-                    continue  # skip empty lines
-
-                yield dict(zip(_attr_names, csv_row))
-
         def _transform_and_validate_raw_rows(
             iterator: typing.Iterator[dict[str, str]],
             host_attributes: Mapping[str, ABCHostAttribute],
@@ -376,7 +361,12 @@ class ModeBulkImport(WatoMode):
 
                 yield _host_name, typing.cast(HostAttributes, entry), None
 
-        raw_rows = _emit_raw_rows(csv_bulk_import)
+        attr_names: list[str] = [
+            name
+            for index in range(csv_bulk_import.row_length)
+            if (name := request.var(f"attribute_{index}")) is not None
+        ]
+        raw_rows = csv_bulk_import.rows_as_dict(attr_names)
         host_attribute_tuples: typing.Iterator[ImportTuple] = _transform_and_validate_raw_rows(
             raw_rows, host_attributes
         )

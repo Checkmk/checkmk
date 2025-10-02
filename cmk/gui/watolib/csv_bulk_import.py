@@ -3,6 +3,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import csv
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 from typing import TextIO
 
@@ -41,6 +42,11 @@ class CSVBulkImport:
         if self._has_title_line:
             self._title_row = self.title_row
 
+        # If we have a title row, this gets set as we read it. Otherwise, we'll read ahead one line
+        # to compute this, then seek back to where we were.
+        self._num_fields: int | None = None
+        self._num_fields = self.row_length
+
     def _determine_dialect(self, delimiter: str | None) -> type[csv.Dialect]:
         """
         Attempt to return a csv.Dialect that works to parse the file.
@@ -74,6 +80,19 @@ class CSVBulkImport:
         return None
 
     @property
+    def row_length(self) -> int:
+        if self._num_fields is not None:
+            return self._num_fields
+
+        if self._title_row is not None:
+            return len(self._title_row)
+
+        current_pos = self._handle.tell()
+        next_row = self.skip_to_and_return_next_row() or []
+        self._handle.seek(current_pos)
+        return len(next_row)
+
+    @property
     def title_row(self) -> list[str] | None:
         """
         Return the title row, if one exists, taking care to only ever advance the reader
@@ -90,3 +109,27 @@ class CSVBulkImport:
 
         # TODO: Consider throwing if there is no next row
         return self.skip_to_and_return_next_row()
+
+    def rows_as_dict(self, attr_names: Sequence[str]) -> Iterator[dict[str, str]]:
+        """
+        Yield each row rendered as a dictionary with keys being the names given in attr_names
+        and values being the fields from the CSV.
+
+        In other words:
+        Given attr_names=["host_name", "ipaddress"]
+
+        ..and a row like:
+        "server01,192.168.100.1"
+
+        ...we would yield:
+        {"host_name": "server01", "ipaddress": "192.168.100.1"}.
+
+        Raises an exception if the number of attr_names differs from the number of fields.
+        """
+        if len(attr_names) != self.row_length:
+            raise ValueError(
+                f"Got {len(attr_names)} attribute names, but row length is {self.row_length}"
+            )
+
+        while (row := self.skip_to_and_return_next_row()) is not None:
+            yield dict(zip(attr_names, row))

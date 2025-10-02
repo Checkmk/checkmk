@@ -22,12 +22,15 @@ logger = logging.getLogger(__name__)
 # * TODO - CMK-26035
 # In 'snmp-enviromux-sems-e2d' service 'Check_MK' sometimes turns into not-OK state after update,
 # leading to a flaky behavior.
+# * Due to Werk #18688 the site crashes using the new NetApp agent dump.
+# TODO: un-skip this dump once the base version is updated to 2.3.0p39 or higher.
 SKIPPED_DUMPS = [
     "snmp-sw-arista.demo.checkmk.com_2_2_p12",
     "snmp-f5-bigip-failover-cluster",
     "agent-2.2.0p8-ceph-17.2.6",
     "agent-2.2.0p14-proxmox",
     "snmp-enviromux-sems-e2d",
+    "agent-2.3.0p12-netapp-ontap",
 ]
 
 # * The 'Postfix status' service has been renamed into 'Postfix status default'.

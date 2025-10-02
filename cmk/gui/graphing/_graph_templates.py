@@ -19,10 +19,10 @@ from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.gui.graphing._unit import user_specific_unit
 from cmk.gui.i18n import _, translate_to_current_language
-from cmk.gui.logged_in import user
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.utils.servicename import ServiceName
 
 from ._from_api import RegisteredMetric
@@ -518,7 +518,7 @@ def _evaluate_scalars(
     metric_expressions: Sequence[MetricExpression],
     translated_metrics: Mapping[str, TranslatedMetric],
     *,
-    temperature_unit: str,
+    temperature_unit: TemperatureUnit,
 ) -> Sequence[HorizontalRule]:
     results = []
     for metric_expression in metric_expressions:
@@ -532,9 +532,7 @@ def _evaluate_scalars(
             HorizontalRule(
                 value=result.ok.value * (-1 if result.ok.line_type.startswith("-") else 1),
                 rendered_value=user_specific_unit(
-                    result.ok.unit_spec,
-                    user,
-                    temperature_unit,
+                    result.ok.unit_spec, temperature_unit
                 ).formatter.render(result.ok.value),
                 color=result.ok.color,
                 title=result.ok.title,
@@ -558,7 +556,7 @@ def _create_evaluated_graph_template_from_name(
     name: str,
     translated_metrics: Mapping[str, TranslatedMetric],
     *,
-    temperature_unit: str,
+    temperature_unit: TemperatureUnit,
 ) -> EvaluatedGraphTemplate:
     if name.startswith("METRIC_"):
         name = name[7:]
@@ -578,7 +576,7 @@ def _create_evaluated_graph_template_from_name(
                 )
             ],
             horizontal_rules=compute_warn_crit_rules_from_translated_metric(
-                user_specific_unit(translated_metric.unit_spec, user, temperature_unit),
+                user_specific_unit(translated_metric.unit_spec, temperature_unit),
                 translated_metric,
             ),
             consolidation_function="max",
@@ -602,7 +600,7 @@ def _get_evaluated_graph_templates(
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     *,
-    temperature_unit: str,
+    temperature_unit: TemperatureUnit,
 ) -> Iterator[EvaluatedGraphTemplate]:
     if not translated_metrics:
         yield from ()
@@ -654,7 +652,7 @@ def _matching_graph_templates(
     translated_metrics: Mapping[str, TranslatedMetric],
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
-    temperature_unit: str,
+    temperature_unit: TemperatureUnit,
 ) -> Iterable[tuple[int, EvaluatedGraphTemplate]]:
     # Performance graph dashlets already use graph_id, but for example in reports, we still use
     # graph_index. Therefore, this function needs to support both. We should switch to graph_id
@@ -744,7 +742,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         user_permissions: UserPermissions,
         *,
         debug: bool,
-        temperature_unit: str,
+        temperature_unit: TemperatureUnit,
     ) -> list[GraphRecipe]:
         row = self._get_graph_data_from_livestatus()
         translated_metrics = translated_metrics_from_row(

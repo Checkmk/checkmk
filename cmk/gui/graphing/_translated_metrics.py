@@ -13,8 +13,8 @@ from typing import Literal, TypedDict
 
 import cmk.utils.regex
 from cmk.gui.log import logger
-from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Perfdata, PerfDataTuple, Row
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.utils.metrics import MetricName
 from cmk.utils.misc import pnp_cleanup
 
@@ -236,7 +236,7 @@ def translate_metrics(
     registered_metrics: Mapping[str, RegisteredMetric],
     explicit_color: str = "",
     *,
-    temperature_unit: str,
+    temperature_unit: TemperatureUnit,
 ) -> Mapping[str, TranslatedMetric]:
     """Convert Ascii-based performance data as output from a check plug-in
     into floating point numbers, do scaling if necessary.
@@ -262,7 +262,7 @@ def translate_metrics(
 
         originals = [Original(perf_data_tuple.metric_name, translation_spec.scale)]
         mi = get_metric_spec_with_color(metric_name, color_counter, registered_metrics)
-        conversion = user_specific_unit(mi.unit_spec, user, temperature_unit).conversion
+        conversion = user_specific_unit(mi.unit_spec, temperature_unit).conversion
         translated_metrics[metric_name] = TranslatedMetric(
             originals=(
                 list(translated_metrics[metric_name].originals) + originals
@@ -292,7 +292,7 @@ def available_metrics_translated(
     explicit_color: str = "",
     *,
     debug: bool,
-    temperature_unit: str,
+    temperature_unit: TemperatureUnit,
 ) -> Mapping[str, TranslatedMetric]:
     # If we have no RRD files then we cannot paint any graph :-(
     if not rrd_metrics:
@@ -331,7 +331,7 @@ def translated_metrics_from_row(
     explicit_color: str = "",
     *,
     debug: bool,
-    temperature_unit: str,
+    temperature_unit: TemperatureUnit,
 ) -> Mapping[str, TranslatedMetric]:
     what = "service" if "service_check_command" in row else "host"
     perf_data_string = row[what + "_perf_data"]

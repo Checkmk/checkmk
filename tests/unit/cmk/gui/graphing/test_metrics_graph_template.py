@@ -102,7 +102,7 @@ def test_template_recipes() -> None:
         },
         UserPermissions({}, {}, {}, []),
         debug=False,
-        temperature_unit=TemperatureUnit.CELSIUS.value,
+        temperature_unit=TemperatureUnit.CELSIUS,
     ) == [
         GraphRecipe(
             title="Size and used space",

@@ -26,6 +26,7 @@ from cmk.gui.graphing._html_render import (
     make_graph_data_range,
     render_graphs_from_specification_html,
 )
+from cmk.gui.graphing._unit import get_temperature_unit
 from cmk.gui.graphing._valuespecs import vs_graph_render_options
 from cmk.gui.http import Request, Response, response
 from cmk.gui.i18n import _, _l
@@ -51,6 +52,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
     Dictionary,
@@ -180,7 +182,7 @@ def _paint_time_graph_cmk(
     *,
     debug: bool,
     graph_timeranges: Sequence[GraphTimerange],
-    temperature_unit: str,
+    temperature_unit: TemperatureUnit,
     user: LoggedInUser,
     request: Request,
     response: Response,
@@ -359,7 +361,7 @@ class PainterServiceGraphs(Painter):
             user_permissions=self._user_permissions,
             debug=self.config.debug,
             graph_timeranges=self.config.graph_timeranges,
-            temperature_unit=self.config.default_temperature_unit,
+            temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
             show_time_range_previews=True,
         )
 
@@ -410,7 +412,7 @@ class PainterHostGraphs(Painter):
             user_permissions=self._user_permissions,
             debug=self.config.debug,
             graph_timeranges=self.config.graph_timeranges,
-            temperature_unit=self.config.default_temperature_unit,
+            temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
             show_time_range_previews=True,
             # for PainterHostGraphs used to paint service graphs (view "Service graphs of host"),
             # also render the graphs if there are no historic metrics available (but perf data is)
@@ -487,7 +489,7 @@ class PainterSvcPnpgraph(Painter):
             user_permissions=self._user_permissions,
             debug=self.config.debug,
             graph_timeranges=self.config.graph_timeranges,
-            temperature_unit=self.config.default_temperature_unit,
+            temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
         )
 
     def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
@@ -540,7 +542,7 @@ class PainterHostPnpgraph(Painter):
             user_permissions=self._user_permissions,
             debug=self.config.debug,
             graph_timeranges=self.config.graph_timeranges,
-            temperature_unit=self.config.default_temperature_unit,
+            temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
         )
 
     def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:

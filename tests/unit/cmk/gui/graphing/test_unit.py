@@ -15,7 +15,6 @@ from cmk.gui.graphing._unit import (
     TimeNotation,
     user_specific_unit,
 )
-from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.unit_formatter import (
     AutoPrecision,
     DecimalFormatter,
@@ -63,22 +62,19 @@ from cmk.gui.utils.temperate_unit import TemperatureUnit
         ),
     ],
 )
-@pytest.mark.usefixtures("request_context")
 def test_user_specific_unit(
     unit_specification: ConvertibleUnitSpecification,
     expected_formatter: NotationFormatter,
 ) -> None:
     unit = user_specific_unit(
         unit_specification,
-        LoggedInNobody(),
-        TemperatureUnit.CELSIUS.value,
+        TemperatureUnit.CELSIUS,
         source_symbol_to_conversion_computer={},
     )
     assert unit.formatter == expected_formatter
     assert unit.conversion(1) == 1
 
 
-@pytest.mark.usefixtures("request_context")
 def test_user_specific_unit_convertible() -> None:
     def converter(v: float) -> float:
         return 2 * v
@@ -88,8 +84,7 @@ def test_user_specific_unit_convertible() -> None:
             notation=DecimalNotation(symbol="X"),
             precision=AutoPrecision(digits=2),
         ),
-        LoggedInNobody(),
-        TemperatureUnit.CELSIUS.value,
+        TemperatureUnit.CELSIUS,
         source_symbol_to_conversion_computer={
             "X": lambda *_: _Conversion(
                 symbol="Y",
@@ -104,15 +99,13 @@ def test_user_specific_unit_convertible() -> None:
     assert unit.conversion is converter
 
 
-@pytest.mark.usefixtures("request_context")
 def test_user_specific_unit_non_convertible() -> None:
     unit = user_specific_unit(
         NonConvertibleUnitSpecification(
             notation=EngineeringScientificNotation(symbol="X"),
             precision=AutoPrecision(digits=2),
         ),
-        LoggedInNobody(),
-        TemperatureUnit.CELSIUS.value,
+        TemperatureUnit.CELSIUS,
         source_symbol_to_conversion_computer={
             "X": lambda *_: _Conversion(
                 symbol="Y",
@@ -130,7 +123,6 @@ def test_user_specific_unit_non_convertible() -> None:
 @pytest.mark.parametrize(
     [
         "user_temperature_unit",
-        "default_temperature_unit",
         "source_symbol",
         "expected_symbol",
         "source_value",
@@ -138,17 +130,7 @@ def test_user_specific_unit_non_convertible() -> None:
     ],
     [
         pytest.param(
-            None,
-            TemperatureUnit.CELSIUS,
-            "°C",
-            "°C",
-            1,
-            1,
-            id="celsius to celsius",
-        ),
-        pytest.param(
             TemperatureUnit.FAHRENHEIT,
-            TemperatureUnit.CELSIUS,
             "°C",
             "°F",
             2,
@@ -157,43 +139,27 @@ def test_user_specific_unit_non_convertible() -> None:
         ),
         pytest.param(
             TemperatureUnit.FAHRENHEIT,
-            TemperatureUnit.CELSIUS,
             "°F",
             "°F",
             3,
             3,
             id="fahrenheit to fahrenheit",
         ),
-        pytest.param(
-            None,
-            TemperatureUnit.CELSIUS,
-            "°F",
-            "°C",
-            4,
-            (4 - 32) / 1.8,
-            id="fahrenheit to celsius",
-        ),
     ],
 )
-@pytest.mark.usefixtures("request_context")
 def test_user_specific_unit_celsius_to_fahrenheit(
-    user_temperature_unit: TemperatureUnit | None,
-    default_temperature_unit: TemperatureUnit,
+    user_temperature_unit: TemperatureUnit,
     source_symbol: str,
     expected_symbol: str,
     source_value: float,
     expected_value: float,
 ) -> None:
-    user = LoggedInNobody()
-    if user_temperature_unit:
-        user._set_attribute("temperature_unit", user_temperature_unit.value)
     unit = user_specific_unit(
         ConvertibleUnitSpecification(
             notation=DecimalNotation(symbol=source_symbol),
             precision=AutoPrecision(digits=2),
         ),
-        user,
-        default_temperature_unit.value,
+        user_temperature_unit,
     )
     assert unit.formatter.symbol == expected_symbol
     assert unit.conversion(source_value) == expected_value

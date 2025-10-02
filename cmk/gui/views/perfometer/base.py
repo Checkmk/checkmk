@@ -7,6 +7,7 @@ from collections.abc import Mapping, Sequence
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.graphing.v1 import perfometers as perfometers_api
+from cmk.gui.config import active_config
 from cmk.gui.graphing import get_first_matching_perfometer
 from cmk.gui.graphing._from_api import RegisteredMetric
 from cmk.gui.graphing._translated_metrics import (
@@ -14,12 +15,12 @@ from cmk.gui.graphing._translated_metrics import (
     translate_metrics,
     TranslatedMetric,
 )
+from cmk.gui.graphing._unit import get_temperature_unit
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Perfdata, Row
 from cmk.gui.utils.html import HTML
-
-from ...config import active_config
 
 
 class Perfometer:
@@ -32,6 +33,7 @@ class Perfometer:
             perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked,
         ],
     ) -> None:
+        self.temperature_unit = get_temperature_unit(user, active_config.default_temperature_unit)
         self._row = row
 
         self._perf_data: Perfdata = []
@@ -55,7 +57,7 @@ class Perfometer:
             self._perf_data,
             self._check_command,
             self._registered_metrics,
-            temperature_unit=active_config.default_temperature_unit,
+            temperature_unit=self.temperature_unit,
         )
 
     def render(self) -> tuple[str | None, HTML | None]:
@@ -84,8 +86,8 @@ class Perfometer:
         ):
             return None, None
         return (
-            renderer.get_label(active_config.default_temperature_unit),
-            _render_metricometer(renderer.get_stack(active_config.default_temperature_unit)),
+            renderer.get_label(self.temperature_unit),
+            _render_metricometer(renderer.get_stack(self.temperature_unit)),
         )
 
     def sort_value(self) -> tuple[int | None, float | None]:

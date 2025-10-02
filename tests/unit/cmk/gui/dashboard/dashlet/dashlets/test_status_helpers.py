@@ -58,6 +58,6 @@ def test_purge_unit_spec_for_js(
     unit_spec: ConvertibleUnitSpecification, expected_result: Mapping[str, object]
 ) -> None:
     assert (
-        _purge_unit_spec_for_js(unit_spec, temperature_unit=TemperatureUnit.CELSIUS.value)
+        _purge_unit_spec_for_js(unit_spec, temperature_unit=TemperatureUnit.CELSIUS)
         == expected_result
     )

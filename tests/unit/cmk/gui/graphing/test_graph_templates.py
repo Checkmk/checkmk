@@ -752,7 +752,7 @@ def test__matching_graph_templates(
                 translated_metrics=translated_metrics,
                 registered_metrics={},
                 registered_graphs=registered_graphs,
-                temperature_unit=TemperatureUnit.CELSIUS.value,
+                temperature_unit=TemperatureUnit.CELSIUS,
             )
         )
         == expected_result
@@ -767,7 +767,7 @@ def test_evaluate_title_ok() -> None:
                 [PerfDataTuple("load1", "load1", 1, "", 120, 240, 0, 25)],
                 "check_mk-cpu_loads",
                 {},
-                temperature_unit=TemperatureUnit.CELSIUS.value,
+                temperature_unit=TemperatureUnit.CELSIUS,
             ),
         )
         == "CPU Load - 25 CPU Cores"
@@ -782,7 +782,7 @@ def test_evaluate_title_missing_scalar() -> None:
                 [PerfDataTuple("load1", "load1", 1, "", None, None, None, None)],
                 "check_mk-cpu_loads",
                 {},
-                temperature_unit=TemperatureUnit.CELSIUS.value,
+                temperature_unit=TemperatureUnit.CELSIUS,
             ),
         )
         == "CPU Load"
@@ -921,13 +921,13 @@ def test_horizontal_rules_from_thresholds(
         perf_data,
         check_command,
         registered_metrics,
-        temperature_unit=TemperatureUnit.CELSIUS.value,
+        temperature_unit=TemperatureUnit.CELSIUS,
     )
     assert (
         _evaluate_scalars(
             metric_expressions,
             translated_metrics,
-            temperature_unit=TemperatureUnit.CELSIUS.value,
+            temperature_unit=TemperatureUnit.CELSIUS,
         )
         == result
     )
@@ -1806,7 +1806,7 @@ def test__get_evaluated_graph_templates_1(
         perfdata,
         check_command,
         {},
-        temperature_unit=TemperatureUnit.CELSIUS.value,
+        temperature_unit=TemperatureUnit.CELSIUS,
     )
     assert sorted(
         [
@@ -1815,7 +1815,7 @@ def test__get_evaluated_graph_templates_1(
                 translated_metrics,
                 {},
                 registered_graphs,
-                temperature_unit=TemperatureUnit.CELSIUS.value,
+                temperature_unit=TemperatureUnit.CELSIUS,
             )
         ]
     ) == sorted(graph_ids)
@@ -1846,7 +1846,7 @@ def test__get_evaluated_graph_templates_2(
         perfdata,
         check_command,
         {},
-        temperature_unit=TemperatureUnit.CELSIUS.value,
+        temperature_unit=TemperatureUnit.CELSIUS,
     )
     assert sorted(
         [
@@ -1855,7 +1855,7 @@ def test__get_evaluated_graph_templates_2(
                 translated_metrics,
                 {},
                 registered_graphs,
-                temperature_unit=TemperatureUnit.CELSIUS.value,
+                temperature_unit=TemperatureUnit.CELSIUS,
             )
         ]
     ) == sorted(graph_ids)
@@ -2362,7 +2362,7 @@ def test__get_evaluated_graph_templates_with_predictive_metrics(
         perfdata,
         check_command,
         registered_metrics,
-        temperature_unit=TemperatureUnit.CELSIUS.value,
+        temperature_unit=TemperatureUnit.CELSIUS,
     )
     assert (
         list(
@@ -2370,7 +2370,7 @@ def test__get_evaluated_graph_templates_with_predictive_metrics(
                 translated_metrics,
                 registered_metrics,
                 registered_graphs,
-                temperature_unit=TemperatureUnit.CELSIUS.value,
+                temperature_unit=TemperatureUnit.CELSIUS,
             )
         )
         == graph_templates
@@ -2897,7 +2897,7 @@ def test_conflicting_metrics(
         perfdata,
         "check_command",
         {},
-        temperature_unit=TemperatureUnit.CELSIUS.value,
+        temperature_unit=TemperatureUnit.CELSIUS,
     )
     assert sorted(
         [
@@ -2906,7 +2906,7 @@ def test_conflicting_metrics(
                 translated_metrics,
                 {},
                 registered_graphs,
-                temperature_unit=TemperatureUnit.CELSIUS.value,
+                temperature_unit=TemperatureUnit.CELSIUS,
             )
         ]
     ) == sorted(graph_ids)

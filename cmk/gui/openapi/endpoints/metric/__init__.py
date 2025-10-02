@@ -13,6 +13,8 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api
 from cmk.gui.graphing._graph_images import graph_spec_from_request
+from cmk.gui.graphing._unit import get_temperature_unit
+from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.metric import request_schemas, response_schemas
 from cmk.gui.openapi.endpoints.metric.common import (
     graph_id_from_request,
@@ -61,7 +63,7 @@ def get_graph(params):
             graphs_from_api,
             UserPermissions.from_config(active_config, permission_registry),
             debug=active_config.debug,
-            temperature_unit=active_config.default_temperature_unit,
+            temperature_unit=get_temperature_unit(user, active_config.default_temperature_unit),
         )
 
     except MKUserError as e:

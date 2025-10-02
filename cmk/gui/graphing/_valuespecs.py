@@ -11,6 +11,7 @@ from typing import Any, assert_never, Literal, TypedDict
 
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.graphing._unit import get_temperature_unit
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -23,6 +24,7 @@ from cmk.gui.unit_formatter import (
     TimeFormatter,
 )
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.valuespec import (
     Age,
     CascadingDropdown,
@@ -273,6 +275,7 @@ class ValuesWithUnits(CascadingDropdown):
         validate_value_elements: ValueSpecValidateFunc[tuple[Any, ...]] | None = None,
         help: ValueSpecHelp | None = None,
     ):
+        temperature_unit = get_temperature_unit(user, active_config.default_temperature_unit)
         super().__init__(
             choices=[
                 (
@@ -287,7 +290,7 @@ class ValuesWithUnits(CascadingDropdown):
                 )
                 for choice in _sorted_unit_choices(
                     metrics_from_api,
-                    temperature_unit=active_config.default_temperature_unit,
+                    temperature_unit=temperature_unit,
                 )
             ],
             help=help,
@@ -343,7 +346,7 @@ _FALLBACK_UNIT_SPEC = ConvertibleUnitSpecification(
 def _sorted_unit_choices(
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
-    temperature_unit: str,
+    temperature_unit: TemperatureUnit,
 ) -> list[_UnitChoice]:
     return sorted(
         {
@@ -358,9 +361,9 @@ def _sorted_unit_choices(
 def _unit_choice_from_unit_spec(
     unit_spec: ConvertibleUnitSpecification,
     *,
-    temperature_unit: str,
+    temperature_unit: TemperatureUnit,
 ) -> _UnitChoice:
-    unit_for_current_user = user_specific_unit(unit_spec, user, temperature_unit)
+    unit_for_current_user = user_specific_unit(unit_spec, temperature_unit)
     return _UnitChoice(
         id=id_from_unit_spec(unit_spec),
         title=_title_from_formatter(unit_for_current_user.formatter),
@@ -423,22 +426,23 @@ def _vs_type_from_formatter(
 
 class PageVsAutocomplete(AjaxPage):
     def page(self, config: Config) -> PageResult:
+        temperature_unit = get_temperature_unit(user, config.default_temperature_unit)
         if metric_name := self.webapi_request()["metric"]:
             metric_spec = get_metric_spec(metric_name, metrics_from_api)
             unit_choice_for_metric = _unit_choice_from_unit_spec(
                 metric_spec.unit_spec,
-                temperature_unit=config.default_temperature_unit,
+                temperature_unit=temperature_unit,
             )
         else:
             unit_choice_for_metric = _unit_choice_from_unit_spec(
                 _FALLBACK_UNIT_SPEC,
-                temperature_unit=config.default_temperature_unit,
+                temperature_unit=temperature_unit,
             )
 
         for idx, choice in enumerate(
             _sorted_unit_choices(
                 metrics_from_api,
-                temperature_unit=config.default_temperature_unit,
+                temperature_unit=temperature_unit,
             )
         ):
             if choice == unit_choice_for_metric:
@@ -448,12 +452,12 @@ class PageVsAutocomplete(AjaxPage):
 
         fallback_choice = _unit_choice_from_unit_spec(
             _FALLBACK_UNIT_SPEC,
-            temperature_unit=config.default_temperature_unit,
+            temperature_unit=temperature_unit,
         )
         for idx, choice in enumerate(
             _sorted_unit_choices(
                 metrics_from_api,
-                temperature_unit=config.default_temperature_unit,
+                temperature_unit=temperature_unit,
             )
         ):
             if choice == fallback_choice:

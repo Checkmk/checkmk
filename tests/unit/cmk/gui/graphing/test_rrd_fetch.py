@@ -114,7 +114,7 @@ def test_fetch_augmented_time_series(
                 {},
                 _GRAPH_RECIPE,
                 _GRAPH_DATA_RANGE,
-                temperature_unit=TemperatureUnit.CELSIUS.value,
+                temperature_unit=TemperatureUnit.CELSIUS,
             )
         ) == [
             AugmentedTimeSeriesSpec(
@@ -140,7 +140,7 @@ def test_fetch_augmented_time_series_with_conversion(
                 {},
                 _GRAPH_RECIPE,
                 _GRAPH_DATA_RANGE,
-                temperature_unit=TemperatureUnit.FAHRENHEIT.value,
+                temperature_unit=TemperatureUnit.FAHRENHEIT,
             )
         ) == [
             AugmentedTimeSeriesSpec(
@@ -168,7 +168,7 @@ def test_translate_and_merge_rrd_columns() -> None:
         ],
         {},
         {},
-        temperature_unit=TemperatureUnit.CELSIUS.value,
+        temperature_unit=TemperatureUnit.CELSIUS,
     ) == TimeSeries(
         start=1682324400,
         end=1682497800,
@@ -199,7 +199,7 @@ def test_translate_and_merge_rrd_columns_with_translation() -> None:
             )
         },
         {},
-        temperature_unit=TemperatureUnit.CELSIUS.value,
+        temperature_unit=TemperatureUnit.CELSIUS,
     ) == TimeSeries(
         start=1682324400,
         end=1682497800,
@@ -208,7 +208,6 @@ def test_translate_and_merge_rrd_columns_with_translation() -> None:
     )
 
 
-@pytest.mark.usefixtures("request_context")
 @pytest.mark.parametrize(
     [
         "default_temperature_unit",
@@ -328,7 +327,7 @@ def test_translate_and_merge_rrd_columns_unit_conversion(
                 color="",
             )
         },
-        temperature_unit=default_temperature_unit.value,
+        temperature_unit=default_temperature_unit,
     ) == TimeSeries(
         start=1682324400,
         end=1682497800,

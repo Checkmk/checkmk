@@ -40,9 +40,11 @@ from cmk.gui.graphing._html_render import (
     host_service_graph_dashlet_cmk,
     host_service_graph_popup_cmk,
 )
+from cmk.gui.graphing._unit import get_temperature_unit
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.log import logger
+from cmk.gui.logged_in import user
 from cmk.gui.pages import PageResult
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
@@ -187,7 +189,7 @@ class PageHostServiceGraphPopup(cmk.gui.pages.Page):
             UserPermissions.from_config(config, permission_registry),
             debug=config.debug,
             graph_timeranges=config.graph_timeranges,
-            temperature_unit=config.default_temperature_unit,
+            temperature_unit=get_temperature_unit(user, config.default_temperature_unit),
         )
         return None  # for mypy
 
@@ -204,7 +206,7 @@ class PageGraphDashlet(cmk.gui.pages.Page):
                 UserPermissions.from_config(config, permission_registry),
                 debug=config.debug,
                 graph_timeranges=config.graph_timeranges,
-                temperature_unit=config.default_temperature_unit,
+                temperature_unit=get_temperature_unit(user, config.default_temperature_unit),
                 graph_display_id=request.get_str_input_mandatory("id"),
             )
         )

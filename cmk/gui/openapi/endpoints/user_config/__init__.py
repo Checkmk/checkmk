@@ -21,7 +21,10 @@ from cmk.gui.openapi.endpoints.user_config.request_schemas import (
     UpdateUser,
     UserDismissWarning,
 )
-from cmk.gui.openapi.endpoints.user_config.response_schemas import UserCollection, UserObject
+from cmk.gui.openapi.endpoints.user_config.response_schemas import (
+    UserCollection,
+    UserObject,
+)
 from cmk.gui.openapi.endpoints.utils import complement_customer, update_customer_info
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
@@ -321,10 +324,7 @@ def _api_to_internal_format(internal_attrs, api_configurations, password_policy,
     attrs = _update_idle_options(attrs, api_configurations.get("idle_timeout"))
 
     if temperature_unit := api_configurations.get("temperature_unit"):
-        attrs = _api_temperature_format_to_internal_format(
-            attrs,
-            temperature_unit,
-        )
+        attrs = _api_temperature_format_to_internal_format(attrs, temperature_unit)
 
     match start_url := api_configurations.get("start_url"):
         case "welcome_page":

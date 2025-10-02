@@ -313,7 +313,7 @@ def test_translate_metrics_with_predictive_metrics(
                 color="",
             )
         },
-        temperature_unit=TemperatureUnit.CELSIUS.value,
+        temperature_unit=TemperatureUnit.CELSIUS,
     )
     assert translated_metrics[predictive_metric_name].title == expected_title
     assert (
@@ -337,13 +337,12 @@ def test_translate_metrics_with_multiple_predictive_metrics() -> None:
         perfdata,
         "my-check-plugin",
         {},
-        temperature_unit=TemperatureUnit.CELSIUS.value,
+        temperature_unit=TemperatureUnit.CELSIUS,
     )
     assert translated_metrics["predict_messages_outbound"].color == "#4b4b4b"
     assert translated_metrics["predict_lower_messages_outbound"].color == "#5a5a5a"
 
 
-@pytest.mark.usefixtures("request_context")
 @pytest.mark.parametrize(
     ["default_temperature_unit", "expected_value", "expected_scalars"],
     [
@@ -380,7 +379,7 @@ def test_translate_metrics(
                 color="",
             )
         },
-        temperature_unit=default_temperature_unit.value,
+        temperature_unit=default_temperature_unit,
     )["temp"]
     assert translated_metric.value == expected_value
     assert translated_metric.scalar == expected_scalars

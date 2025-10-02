@@ -25,6 +25,7 @@ from cmk.gui.unit_formatter import (
     NotationFormatter,
     PositiveYRange,
 )
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 from ._from_api import RegisteredMetric
 from ._graph_metric_expressions import clean_time_series_point, LineType
@@ -149,10 +150,10 @@ def compute_graph_artwork(
     size: tuple[int, int],
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
-    temperature_unit: str,
+    temperature_unit: TemperatureUnit,
     graph_display_id: str = "",
 ) -> GraphArtwork:
-    unit_spec = user_specific_unit(graph_recipe.unit_spec, user, temperature_unit)
+    unit_spec = user_specific_unit(graph_recipe.unit_spec, temperature_unit)
 
     curves = list(
         compute_graph_artwork_curves(
@@ -345,7 +346,7 @@ def _compute_graph_curves(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
     *,
-    temperature_unit: str,
+    temperature_unit: TemperatureUnit,
 ) -> Iterator[Curve]:
     # Fetch all raw RRD data
     for spec in fetch_augmented_time_series(
@@ -383,7 +384,7 @@ def compute_graph_artwork_curves(
     graph_data_range: GraphDataRange,
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
-    temperature_unit: str,
+    temperature_unit: TemperatureUnit,
 ) -> list[Curve]:
     curves = list(
         _compute_graph_curves(

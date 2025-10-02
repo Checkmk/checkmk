@@ -16,6 +16,7 @@ from cmk.gui.graphing._metrics import MetricSpec
 from cmk.gui.graphing._translated_metrics import TranslatedMetric
 from cmk.gui.graphing._unit import (
     ConvertibleUnitSpecification,
+    get_temperature_unit,
     user_specific_unit,
     UserSpecificUnit,
 )
@@ -24,6 +25,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import ColumnName, VisualContext
 from cmk.gui.unit_formatter import AutoPrecision, IECFormatter, StrictPrecision
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.utils.urls import makeuri_contextless
 
 
@@ -88,24 +90,24 @@ def create_service_view_url(context):
 def purge_metric_spec_for_js(metric_spec: MetricSpec) -> dict[str, object]:
     return {"bounds": {}} | _purge_unit_spec_for_js(
         metric_spec.unit_spec,
-        temperature_unit=active_config.default_temperature_unit,
+        temperature_unit=get_temperature_unit(user, active_config.default_temperature_unit),
     )
 
 
 def purge_translated_metric_for_js(translated_metric: TranslatedMetric) -> dict[str, object]:
     return {"bounds": translated_metric.scalar} | _purge_unit_spec_for_js(
         translated_metric.unit_spec,
-        temperature_unit=active_config.default_temperature_unit,
+        temperature_unit=get_temperature_unit(user, active_config.default_temperature_unit),
     )
 
 
 def _purge_unit_spec_for_js(
     unit_spec: ConvertibleUnitSpecification,
-    temperature_unit: str,
+    temperature_unit: TemperatureUnit,
 ) -> dict[str, object]:
     return {
         "unit": _transform_user_specific_unit_for_js(
-            user_specific_unit(unit_spec, user, temperature_unit)
+            user_specific_unit(unit_spec, temperature_unit)
         )
     }
 

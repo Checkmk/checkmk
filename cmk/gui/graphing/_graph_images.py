@@ -26,6 +26,7 @@ from cmk.gui.graphing._graph_templates import (
     get_template_graph_specification,
     MKGraphNotFound,
 )
+from cmk.gui.graphing._unit import get_temperature_unit
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -34,6 +35,7 @@ from cmk.gui.pages import Page
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import SizePT
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 from ._artwork import compute_graph_artwork, compute_graph_artwork_curves, GraphArtwork
 from ._from_api import graphs_from_api, metrics_from_api, RegisteredMetric
@@ -78,7 +80,7 @@ class AjaxGraphImagesForNotifications(Page):
             graphs_from_api,
             UserPermissions.from_config(config, permission_registry),
             debug=config.debug,
-            temperature_unit=config.default_temperature_unit,
+            temperature_unit=get_temperature_unit(user, config.default_temperature_unit),
         )
 
 
@@ -88,7 +90,7 @@ def _answer_graph_image_request(
     user_permissions: UserPermissions,
     *,
     debug: bool,
-    temperature_unit: str,
+    temperature_unit: TemperatureUnit,
 ) -> None:
     try:
         host_name = request.get_validated_type_input_mandatory(HostName, "host")
@@ -238,7 +240,7 @@ def graph_recipes_for_api_request(
     user_permissions: UserPermissions,
     *,
     debug: bool,
-    temperature_unit: str,
+    temperature_unit: TemperatureUnit,
 ) -> tuple[GraphDataRange, Sequence[GraphRecipe]]:
     # Get and validate the specification
     if not (raw_graph_spec := api_request.get("specification")):
@@ -300,7 +302,7 @@ def graph_spec_from_request(
     user_permissions: UserPermissions,
     *,
     debug: bool,
-    temperature_unit: str,
+    temperature_unit: TemperatureUnit,
 ) -> dict[str, Any]:
     try:
         graph_data_range, graph_recipes = graph_recipes_for_api_request(

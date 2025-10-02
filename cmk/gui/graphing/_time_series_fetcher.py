@@ -6,7 +6,7 @@
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 
-from cmk.gui.logged_in import user
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 from ._from_api import RegisteredMetric
 from ._graph_metric_expressions import AugmentedTimeSeries, LineType, RRDDataKey
@@ -29,7 +29,7 @@ def fetch_augmented_time_series(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
     *,
-    temperature_unit: str,
+    temperature_unit: TemperatureUnit,
 ) -> Iterator[AugmentedTimeSeriesSpec]:
     rrd_data = fetch_time_series_rrd(
         registered_metrics,
@@ -40,7 +40,7 @@ def fetch_augmented_time_series(
             if isinstance(k, RRDDataKey)
         ],
         graph_recipe.consolidation_function,
-        user_specific_unit(graph_recipe.unit_spec, user, temperature_unit).conversion,
+        user_specific_unit(graph_recipe.unit_spec, temperature_unit).conversion,
         start_time=graph_data_range.time_range[0],
         end_time=graph_data_range.time_range[1],
         step=graph_data_range.step,

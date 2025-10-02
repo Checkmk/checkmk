@@ -12,7 +12,7 @@ from typing import Literal, NamedTuple
 # workaround - can be removed when CMK-25281 is resolved
 os.environ["SSL_CERT_FILE"] = str(Path(os.getenv("OMD_ROOT", "")) / "var/ssl/ca-certificates.crt")
 
-import aiohttp  # type: ignore[import-not-found]  # type: ignore[import-not-found]
+import aiohttp
 import msal
 
 from cmk.utils.http_proxy_config import HTTPProxyConfig

@@ -14,7 +14,7 @@ from enum import auto, Enum
 from pathlib import Path
 from typing import Final, TypedDict
 
-import meraki  # type: ignore[import-untyped]
+import meraki  # type: ignore[import-untyped,unused-ignore,import-not-found]
 
 from cmk.special_agents.v0_unstable.agent_common import (
     ConditionalPiggybackSection,

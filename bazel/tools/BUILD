@@ -6,6 +6,7 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//bazel/tools:prettier/package_json.bzl", prettier_bin = "bin")
 load("@rules_mypy//mypy:mypy.bzl", "mypy_cli")
+load("@rules_python//python:defs.bzl", "py_binary")
 load("//bazel/rules:sh_expand_template.bzl", "sh_expand_template")
 
 npm_link_all_packages(name = "node_modules")
@@ -20,10 +21,22 @@ js_library(
 )
 
 mypy_cli(
-    name = "mypy_cli",
+    name = "mypy_cli_original",
     mypy_requirement = requirement("mypy"),
     deps = [
         # for `plugins = ["pydantic.mypy"]`
+        requirement("pydantic"),
+    ],
+)
+
+# Custom mypy wrapper that filters problematic MYPYPATH entries
+py_binary(
+    name = "mypy_cli",
+    srcs = ["mypy_wrapper.py"],
+    data = [":mypy_cli_original"],
+    main = "mypy_wrapper.py",
+    deps = [
+        requirement("mypy"),
         requirement("pydantic"),
     ],
 )

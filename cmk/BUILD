@@ -255,24 +255,6 @@ py_library(
 ]]
 
 py_library(
-    # HACK to avoid Source file found twice under different module names: "meraki" and "meraki.__init__"
-    name = "lib_cmk_repo_no_meraki",
-    srcs = glob(
-        include = ["**/*.py"],
-        exclude = ["plugins/cisco_meraki/special_agent/agent_cisco_meraki.py"],
-    ),
-    data = ["gui/wsgi/applications/index.wsgi"],
-    imports = [".."],
-    visibility = ["//tests/unit:__pkg__"],
-    deps = [
-        "//agents/plugins:mk_jolokia",
-    ] + select({
-        "@//:gpl_repo": [],
-        "@//:gpl+enterprise_repo": CMC_PROTO_DEPS,
-    }) + CMK_PACKAGES + [requirement(dep) for dep in REQUIRED_EXTERNAL_DEPS if dep != "meraki"],
-)
-
-py_library(
     # The repo edition is only used for testing and generating the plugin-api doc with sphinx.
     name = "lib_cmk_repo",
     srcs = glob(["**/*.py"]),

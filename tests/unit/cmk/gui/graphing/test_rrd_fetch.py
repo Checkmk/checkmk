@@ -10,7 +10,6 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.gui.config import active_config
 from cmk.gui.graphing._from_api import RegisteredMetric
 from cmk.gui.graphing._graph_metric_expressions import (
     AugmentedTimeSeries,
@@ -107,11 +106,17 @@ _GRAPH_DATA_RANGE = GraphDataRange(time_range=(1681985455, 1681999855), step=20)
 
 
 def test_fetch_augmented_time_series(
-    mock_livestatus: MockLiveStatusConnection,
-    request_context: None,
+    mock_livestatus: MockLiveStatusConnection, request_context: None
 ) -> None:
     with _setup_livestatus(mock_livestatus):
-        assert list(fetch_augmented_time_series({}, _GRAPH_RECIPE, _GRAPH_DATA_RANGE)) == [
+        assert list(
+            fetch_augmented_time_series(
+                {},
+                _GRAPH_RECIPE,
+                _GRAPH_DATA_RANGE,
+                temperature_unit=TemperatureUnit.CELSIUS.value,
+            )
+        ) == [
             AugmentedTimeSeriesSpec(
                 title="Temperature",
                 line_type="area",
@@ -127,12 +132,17 @@ def test_fetch_augmented_time_series(
 
 
 def test_fetch_augmented_time_series_with_conversion(
-    mock_livestatus: MockLiveStatusConnection,
-    request_context: None,
+    mock_livestatus: MockLiveStatusConnection, request_context: None
 ) -> None:
-    active_config.default_temperature_unit = TemperatureUnit.FAHRENHEIT.value
     with _setup_livestatus(mock_livestatus):
-        assert list(fetch_augmented_time_series({}, _GRAPH_RECIPE, _GRAPH_DATA_RANGE)) == [
+        assert list(
+            fetch_augmented_time_series(
+                {},
+                _GRAPH_RECIPE,
+                _GRAPH_DATA_RANGE,
+                temperature_unit=TemperatureUnit.FAHRENHEIT.value,
+            )
+        ) == [
             AugmentedTimeSeriesSpec(
                 title="Temperature",
                 line_type="area",
@@ -158,6 +168,7 @@ def test_translate_and_merge_rrd_columns() -> None:
         ],
         {},
         {},
+        temperature_unit=TemperatureUnit.CELSIUS.value,
     ) == TimeSeries(
         start=1682324400,
         end=1682497800,
@@ -188,6 +199,7 @@ def test_translate_and_merge_rrd_columns_with_translation() -> None:
             )
         },
         {},
+        temperature_unit=TemperatureUnit.CELSIUS.value,
     ) == TimeSeries(
         start=1682324400,
         end=1682497800,
@@ -196,6 +208,7 @@ def test_translate_and_merge_rrd_columns_with_translation() -> None:
     )
 
 
+@pytest.mark.usefixtures("request_context")
 @pytest.mark.parametrize(
     [
         "default_temperature_unit",
@@ -249,9 +262,7 @@ def test_translate_and_merge_rrd_columns_with_translation() -> None:
 def test_translate_and_merge_rrd_columns_unit_conversion(
     default_temperature_unit: TemperatureUnit,
     expected_data_points: TimeSeriesValues,
-    request_context: None,
 ) -> None:
-    active_config.default_temperature_unit = default_temperature_unit.value
     assert translate_and_merge_rrd_columns(
         MetricName("temp"),
         [
@@ -317,6 +328,7 @@ def test_translate_and_merge_rrd_columns_unit_conversion(
                 color="",
             )
         },
+        temperature_unit=default_temperature_unit.value,
     ) == TimeSeries(
         start=1682324400,
         end=1682497800,

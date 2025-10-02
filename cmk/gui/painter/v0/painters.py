@@ -15,7 +15,7 @@ import cmk.utils.paths
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.gui import sites
 from cmk.gui.color import render_color_icon
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.graphing._from_api import metrics_from_api, RegisteredMetric
 from cmk.gui.graphing._metrics import get_metric_spec, registered_metric_ids_and_titles
 from cmk.gui.graphing._translated_metrics import (
@@ -736,6 +736,7 @@ class PainterSvcMetrics(Painter):
             perf_data,
             check_command,
             metrics_from_api,
+            temperature_unit=self.config.default_temperature_unit,
         )
 
         if row["service_perf_data"] and not translated_metrics:
@@ -774,7 +775,7 @@ class PainterSvcMetrics(Painter):
                 user_specific_unit(
                     translated_metric.unit_spec,
                     user,
-                    active_config,
+                    self.config.default_temperature_unit,
                 ).formatter.render(translated_metric.value),
                 class_="value",
             )
@@ -5493,6 +5494,7 @@ class AbstractColumnSpecificMetric(Painter):
             perf_data,
             check_command,
             metrics_from_api,
+            temperature_unit=self.config.default_temperature_unit,
         )
 
         if show_metric not in translated_metrics:
@@ -5505,7 +5507,7 @@ class AbstractColumnSpecificMetric(Painter):
             user_specific_unit(
                 translated_metric.unit_spec,
                 user,
-                active_config,
+                self.config.default_temperature_unit,
             ).formatter.render(translated_metric.value),
         )
 

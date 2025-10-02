@@ -5,7 +5,6 @@
 
 import pytest
 
-from cmk.gui.config import Config
 from cmk.gui.graphing._unit import (
     _Conversion,
     ConvertibleUnitSpecification,
@@ -72,7 +71,7 @@ def test_user_specific_unit(
     unit = user_specific_unit(
         unit_specification,
         LoggedInNobody(),
-        Config(),
+        TemperatureUnit.CELSIUS.value,
         source_symbol_to_conversion_computer={},
     )
     assert unit.formatter == expected_formatter
@@ -90,7 +89,7 @@ def test_user_specific_unit_convertible() -> None:
             precision=AutoPrecision(digits=2),
         ),
         LoggedInNobody(),
-        Config(),
+        TemperatureUnit.CELSIUS.value,
         source_symbol_to_conversion_computer={
             "X": lambda *_: _Conversion(
                 symbol="Y",
@@ -113,7 +112,7 @@ def test_user_specific_unit_non_convertible() -> None:
             precision=AutoPrecision(digits=2),
         ),
         LoggedInNobody(),
-        Config(),
+        TemperatureUnit.CELSIUS.value,
         source_symbol_to_conversion_computer={
             "X": lambda *_: _Conversion(
                 symbol="Y",
@@ -188,15 +187,13 @@ def test_user_specific_unit_celsius_to_fahrenheit(
     user = LoggedInNobody()
     if user_temperature_unit:
         user._set_attribute("temperature_unit", user_temperature_unit.value)
-    config = Config(default_temperature_unit=default_temperature_unit.value)
-
     unit = user_specific_unit(
         ConvertibleUnitSpecification(
             notation=DecimalNotation(symbol=source_symbol),
             precision=AutoPrecision(digits=2),
         ),
         user,
-        config,
+        default_temperature_unit.value,
     )
     assert unit.formatter.symbol == expected_symbol
     assert unit.conversion(source_value) == expected_value

@@ -8,7 +8,6 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.gui.config import active_config
 from cmk.gui.graphing._from_api import RegisteredMetric
 from cmk.gui.graphing._legacy import check_metrics, CheckMetricEntry
 from cmk.gui.graphing._translated_metrics import (
@@ -314,6 +313,7 @@ def test_translate_metrics_with_predictive_metrics(
                 color="",
             )
         },
+        temperature_unit=TemperatureUnit.CELSIUS.value,
     )
     assert translated_metrics[predictive_metric_name].title == expected_title
     assert (
@@ -333,11 +333,17 @@ def test_translate_metrics_with_multiple_predictive_metrics() -> None:
             "predict_lower_messages_outbound", "messages_outbound", 0, "", None, None, None, None
         ),
     ]
-    translated_metrics = translate_metrics(perfdata, "my-check-plugin", {})
+    translated_metrics = translate_metrics(
+        perfdata,
+        "my-check-plugin",
+        {},
+        temperature_unit=TemperatureUnit.CELSIUS.value,
+    )
     assert translated_metrics["predict_messages_outbound"].color == "#4b4b4b"
     assert translated_metrics["predict_lower_messages_outbound"].color == "#5a5a5a"
 
 
+@pytest.mark.usefixtures("request_context")
 @pytest.mark.parametrize(
     ["default_temperature_unit", "expected_value", "expected_scalars"],
     [
@@ -359,9 +365,7 @@ def test_translate_metrics(
     default_temperature_unit: TemperatureUnit,
     expected_value: float,
     expected_scalars: Mapping[str, float],
-    request_context: None,
 ) -> None:
-    active_config.default_temperature_unit = default_temperature_unit.value
     translated_metric = translate_metrics(
         [PerfDataTuple("temp", "temp", 59.05, "", 85.05, 85.05, None, None)],
         "check_mk-lnx_thermal",
@@ -376,6 +380,7 @@ def test_translate_metrics(
                 color="",
             )
         },
+        temperature_unit=default_temperature_unit.value,
     )["temp"]
     assert translated_metric.value == expected_value
     assert translated_metric.scalar == expected_scalars

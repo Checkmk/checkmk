@@ -8,8 +8,13 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.gui.dashboard.dashlet.dashlets.status_helpers import _purge_unit_spec_for_js
-from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation, IECNotation
+from cmk.gui.graphing._unit import (
+    ConvertibleUnitSpecification,
+    DecimalNotation,
+    IECNotation,
+)
 from cmk.gui.unit_formatter import AutoPrecision, StrictPrecision
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 
 @pytest.mark.parametrize(
@@ -52,4 +57,7 @@ from cmk.gui.unit_formatter import AutoPrecision, StrictPrecision
 def test_purge_unit_spec_for_js(
     unit_spec: ConvertibleUnitSpecification, expected_result: Mapping[str, object]
 ) -> None:
-    assert _purge_unit_spec_for_js(unit_spec) == expected_result
+    assert (
+        _purge_unit_spec_for_js(unit_spec, temperature_unit=TemperatureUnit.CELSIUS.value)
+        == expected_result
+    )

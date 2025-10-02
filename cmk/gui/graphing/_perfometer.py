@@ -13,7 +13,6 @@ from typing import assert_never, Self
 from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
 from cmk.gui.color import parse_color_from_api
-from cmk.gui.config import active_config
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
@@ -379,6 +378,8 @@ def _make_projection(
     projection_parameters: _ProjectionParameters,
     translated_metrics: Mapping[str, TranslatedMetric],
     perfometer_name: str,
+    *,
+    temperature_unit: str,
 ) -> _ProjectionFromMetricValueToPerfFillLevel:
     # TODO At the moment we have a unit conversion only for temperature metrics and we want to have
     # the orig value at the same place as the converted value, eg.:
@@ -388,7 +389,7 @@ def _make_projection(
     # Generalize the following...
     conversion = (
         user_specific_unit(
-            list(translated_metrics.values())[0].unit_spec, user, active_config
+            list(translated_metrics.values())[0].unit_spec, user, temperature_unit
         ).conversion
         if len(translated_metrics) == 1
         else lambda v: v
@@ -555,7 +556,7 @@ class MetricometerRenderer(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_stack(self) -> MetricRendererStack:
+    def get_stack(self, temperature_unit: str) -> MetricRendererStack:
         """Return a list of perfometer elements
 
         Each element is represented by a 2 element tuple where the first element is
@@ -564,7 +565,7 @@ class MetricometerRenderer(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_label(self) -> str:
+    def get_label(self, temperature_unit: str) -> str:
         """Returns the label to be shown on top of the rendered stack
 
         When the perfometer type definition has a "label" element, this will be used.
@@ -578,8 +579,10 @@ class MetricometerRenderer(abc.ABC):
         raise NotImplementedError()
 
     @staticmethod
-    def _render_value(unit_spec: ConvertibleUnitSpecification, value: float) -> str:
-        return user_specific_unit(unit_spec, user, active_config).formatter.render(value)
+    def _render_value(
+        unit_spec: ConvertibleUnitSpecification, value: float, *, temperature_unit: str
+    ) -> str:
+        return user_specific_unit(unit_spec, user, temperature_unit).formatter.render(value)
 
 
 class MetricometerRendererPerfometer(MetricometerRenderer):
@@ -605,13 +608,14 @@ class MetricometerRendererPerfometer(MetricometerRenderer):
     def type_name(cls) -> str:
         return "perfometer"
 
-    def get_stack(self) -> MetricRendererStack:
+    def get_stack(self, temperature_unit: str) -> MetricRendererStack:
         if projections := _project_segments(
             _make_projection(
                 self.perfometer.focus_range,
                 self._PROJECTION_PARAMETERS,
                 self.translated_metrics,
                 self.perfometer.name,
+                temperature_unit=temperature_unit,
             ),
             _evaluate_segments(
                 self.perfometer.segments,
@@ -623,9 +627,9 @@ class MetricometerRendererPerfometer(MetricometerRenderer):
             return [projections]
         return []
 
-    def get_label(self) -> str:
+    def get_label(self, temperature_unit: str) -> str:
         first_segment = _evaluate_quantity(self.perfometer.segments[0], self.translated_metrics)
-        return user_specific_unit(first_segment.unit_spec, user, active_config).formatter.render(
+        return user_specific_unit(first_segment.unit_spec, user, temperature_unit).formatter.render(
             first_segment.value
             + sum(
                 _evaluate_quantity(s, self.translated_metrics).value
@@ -662,7 +666,7 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
     def type_name(cls) -> str:
         return "bidirectional"
 
-    def get_stack(self) -> MetricRendererStack:
+    def get_stack(self, temperature_unit: str) -> MetricRendererStack:
         projections = []
 
         if left_projections := _project_segments(
@@ -674,6 +678,7 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
                 self._PROJECTION_PARAMETERS,
                 self.translated_metrics,
                 self.perfometer.name,
+                temperature_unit=temperature_unit,
             ),
             _evaluate_segments(
                 self.perfometer.left.segments,
@@ -693,6 +698,7 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
                 self._PROJECTION_PARAMETERS,
                 self.translated_metrics,
                 self.perfometer.name,
+                temperature_unit=temperature_unit,
             ),
             _evaluate_segments(
                 self.perfometer.right.segments,
@@ -705,13 +711,17 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
 
         return [projections] if projections else []
 
-    def get_label(self) -> str:
+    def get_label(self, temperature_unit: str) -> str:
         labels = []
 
-        if left_label := _get_renderer(self.perfometer.left, self.translated_metrics).get_label():
+        if left_label := _get_renderer(self.perfometer.left, self.translated_metrics).get_label(
+            temperature_unit
+        ):
             labels.append(left_label)
 
-        if right_label := _get_renderer(self.perfometer.right, self.translated_metrics).get_label():
+        if right_label := _get_renderer(self.perfometer.right, self.translated_metrics).get_label(
+            temperature_unit
+        ):
             labels.append(right_label)
 
         return " / ".join(labels)
@@ -739,28 +749,32 @@ class MetricometerRendererStacked(MetricometerRenderer):
     def type_name(cls) -> str:
         return "stacked"
 
-    def get_stack(self) -> MetricRendererStack:
+    def get_stack(self, temperature_unit: str) -> MetricRendererStack:
         projections: list[Sequence[tuple[float, str]]] = []
 
         if upper_projections := _get_renderer(
             self.perfometer.upper, self.translated_metrics
-        ).get_stack():
+        ).get_stack(temperature_unit):
             projections.append(upper_projections[0])
 
         if lower_projections := _get_renderer(
             self.perfometer.lower, self.translated_metrics
-        ).get_stack():
+        ).get_stack(temperature_unit):
             projections.append(lower_projections[0])
 
         return projections if projections else []
 
-    def get_label(self) -> str:
+    def get_label(self, temperature_unit: str) -> str:
         labels = []
 
-        if upper_label := _get_renderer(self.perfometer.upper, self.translated_metrics).get_label():
+        if upper_label := _get_renderer(self.perfometer.upper, self.translated_metrics).get_label(
+            temperature_unit
+        ):
             labels.append(upper_label)
 
-        if lower_label := _get_renderer(self.perfometer.lower, self.translated_metrics).get_label():
+        if lower_label := _get_renderer(self.perfometer.lower, self.translated_metrics).get_label(
+            temperature_unit
+        ):
             labels.append(lower_label)
 
         return " / ".join(labels)

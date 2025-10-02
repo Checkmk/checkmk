@@ -180,6 +180,7 @@ def _paint_time_graph_cmk(
     *,
     debug: bool,
     graph_timeranges: Sequence[GraphTimerange],
+    temperature_unit: str,
     user: LoggedInUser,
     request: Request,
     response: Response,
@@ -265,6 +266,7 @@ def _paint_time_graph_cmk(
         user_permissions,
         debug=debug,
         graph_timeranges=graph_timeranges,
+        temperature_unit=temperature_unit,
         # Ideally, we would use 2-dim. coordinates: (row_idx, col_idx).
         # Unfortunately, we have no access to this information here. Regarding the rows, we could
         # use (site, host, service) as identifier, but for the columns, there does not seem to be
@@ -357,6 +359,7 @@ class PainterServiceGraphs(Painter):
             user_permissions=self._user_permissions,
             debug=self.config.debug,
             graph_timeranges=self.config.graph_timeranges,
+            temperature_unit=self.config.default_temperature_unit,
             show_time_range_previews=True,
         )
 
@@ -407,6 +410,7 @@ class PainterHostGraphs(Painter):
             user_permissions=self._user_permissions,
             debug=self.config.debug,
             graph_timeranges=self.config.graph_timeranges,
+            temperature_unit=self.config.default_temperature_unit,
             show_time_range_previews=True,
             # for PainterHostGraphs used to paint service graphs (view "Service graphs of host"),
             # also render the graphs if there are no historic metrics available (but perf data is)
@@ -483,6 +487,7 @@ class PainterSvcPnpgraph(Painter):
             user_permissions=self._user_permissions,
             debug=self.config.debug,
             graph_timeranges=self.config.graph_timeranges,
+            temperature_unit=self.config.default_temperature_unit,
         )
 
     def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
@@ -535,6 +540,7 @@ class PainterHostPnpgraph(Painter):
             user_permissions=self._user_permissions,
             debug=self.config.debug,
             graph_timeranges=self.config.graph_timeranges,
+            temperature_unit=self.config.default_temperature_unit,
         )
 
     def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:

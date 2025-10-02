@@ -140,6 +140,7 @@ class GraphWidgetPage(cmk.gui.pages.Page):
                     UserPermissions.from_config(config, permission_registry),
                     debug=config.debug,
                     graph_timeranges=config.graph_timeranges,
+                    temperature_unit=config.default_temperature_unit,
                     graph_display_id=widget_id,
                     time_range=graph_config["timerange"],
                 )

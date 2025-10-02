@@ -96,6 +96,7 @@ class GraphSpecification(BaseModel, ABC, frozen=True):
         user_permissions: UserPermissions,
         *,
         debug: bool,
+        temperature_unit: str,
     ) -> Sequence[GraphRecipe]: ...
 
     # mypy does not support other decorators on top of @property:

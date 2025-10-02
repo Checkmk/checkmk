@@ -285,6 +285,7 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
                 graphs_from_api,
                 UserPermissions.from_config(active_config, permission_registry),
                 debug=active_config.debug,
+                temperature_unit=active_config.default_temperature_unit,
             )
         except MKMissingDataError:
             raise
@@ -488,6 +489,7 @@ def _graph_templates_autocompleter_testable(
             registered_metrics,
             registered_graphs,
             debug=config.debug,
+            temperature_unit=config.default_temperature_unit,
         )
     )
 
@@ -506,6 +508,7 @@ def _graph_and_single_metric_templates_choices_for_context(
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     *,
     debug: bool,
+    temperature_unit: str,
 ) -> tuple[list[GraphTemplateChoice], list[GraphTemplateChoice]]:
     graph_template_choices: list[GraphTemplateChoice] = []
     single_metric_template_choices: list[GraphTemplateChoice] = []
@@ -517,7 +520,12 @@ def _graph_and_single_metric_templates_choices_for_context(
     ):
         graph_template_choices_for_row, single_metric_template_choices_for_row = (
             graph_and_single_metric_template_choices_for_metrics(
-                translated_metrics_from_row(row, registered_metrics, debug=debug),
+                translated_metrics_from_row(
+                    row,
+                    registered_metrics,
+                    debug=debug,
+                    temperature_unit=temperature_unit,
+                ),
                 registered_metrics,
                 registered_graphs,
             )

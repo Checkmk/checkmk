@@ -187,6 +187,7 @@ class PageHostServiceGraphPopup(cmk.gui.pages.Page):
             UserPermissions.from_config(config, permission_registry),
             debug=config.debug,
             graph_timeranges=config.graph_timeranges,
+            temperature_unit=config.default_temperature_unit,
         )
         return None  # for mypy
 
@@ -203,6 +204,7 @@ class PageGraphDashlet(cmk.gui.pages.Page):
                 UserPermissions.from_config(config, permission_registry),
                 debug=config.debug,
                 graph_timeranges=config.graph_timeranges,
+                temperature_unit=config.default_temperature_unit,
                 graph_display_id=request.get_str_input_mandatory("id"),
             )
         )

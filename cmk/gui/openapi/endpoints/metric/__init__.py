@@ -61,6 +61,7 @@ def get_graph(params):
             graphs_from_api,
             UserPermissions.from_config(active_config, permission_registry),
             debug=active_config.debug,
+            temperature_unit=active_config.default_temperature_unit,
         )
 
     except MKUserError as e:

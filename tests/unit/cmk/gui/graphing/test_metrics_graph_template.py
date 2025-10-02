@@ -18,6 +18,7 @@ from cmk.gui.graphing._unit import ConvertibleUnitSpecification, IECNotation
 from cmk.gui.type_defs import Row
 from cmk.gui.unit_formatter import AutoPrecision
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 
 class FakeTemplateGraphSpecification(TemplateGraphSpecification):
@@ -101,6 +102,7 @@ def test_template_recipes() -> None:
         },
         UserPermissions({}, {}, {}, []),
         debug=False,
+        temperature_unit=TemperatureUnit.CELSIUS.value,
     ) == [
         GraphRecipe(
             title="Size and used space",

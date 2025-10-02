@@ -55,6 +55,7 @@ class Perfometer:
             self._perf_data,
             self._check_command,
             self._registered_metrics,
+            temperature_unit=active_config.default_temperature_unit,
         )
 
     def render(self) -> tuple[str | None, HTML | None]:
@@ -82,7 +83,10 @@ class Perfometer:
             )
         ):
             return None, None
-        return renderer.get_label(), _render_metricometer(renderer.get_stack())
+        return (
+            renderer.get_label(active_config.default_temperature_unit),
+            _render_metricometer(renderer.get_stack(active_config.default_temperature_unit)),
+        )
 
     def sort_value(self) -> tuple[int | None, float | None]:
         """Calculates a value that is used for sorting perfometers

@@ -113,6 +113,7 @@ def host_service_graph_popup_cmk(
     *,
     debug: bool,
     graph_timeranges: Sequence[GraphTimerange],
+    temperature_unit: str,
 ) -> None:
     graph_render_config = GraphRenderConfig.from_user_context_and_options(
         user,
@@ -147,6 +148,7 @@ def host_service_graph_popup_cmk(
             user_permissions,
             debug=debug,
             graph_timeranges=graph_timeranges,
+            temperature_unit=temperature_unit,
             render_async=False,
         )
     )
@@ -571,7 +573,11 @@ class AjaxGraph(cmk.gui.pages.Page):
         try:
             context_var = request.get_str_input_mandatory("context")
             context = json.loads(context_var)
-            response_data = render_ajax_graph(context, metrics_from_api)
+            response_data = render_ajax_graph(
+                context,
+                metrics_from_api,
+                temperature_unit=config.default_temperature_unit,
+            )
             response.set_data(json.dumps(response_data))
         except Exception as e:
             logger.error("Ajax call ajax_graph.py failed: %s\n%s", e, traceback.format_exc())
@@ -584,6 +590,8 @@ class AjaxGraph(cmk.gui.pages.Page):
 def render_ajax_graph(
     context: Mapping[str, Any],
     registered_metrics: Mapping[str, RegisteredMetric],
+    *,
+    temperature_unit: str,
 ) -> JsonSerializable:
     graph_data_range = GraphDataRange.model_validate(context["data_range"])
     graph_render_config = GraphRenderConfig.model_validate(context["render_config"])
@@ -644,6 +652,7 @@ def render_ajax_graph(
         graph_data_range,
         graph_render_config.size,
         registered_metrics,
+        temperature_unit=temperature_unit,
     )
 
     with output_funnel.plugged():
@@ -709,6 +718,7 @@ def render_graphs_from_specification_html(
     *,
     debug: bool,
     graph_timeranges: Sequence[GraphTimerange],
+    temperature_unit: str,
     render_async: bool = True,
     graph_display_id: str = "",
 ) -> HTML:
@@ -718,6 +728,7 @@ def render_graphs_from_specification_html(
             registered_graphs,
             user_permissions,
             debug=debug,
+            temperature_unit=temperature_unit,
         )
     except MKLivestatusNotFoundError:
         return render_graph_error_html(
@@ -746,6 +757,7 @@ def render_graphs_from_specification_html(
         registered_metrics,
         debug=debug,
         graph_timeranges=graph_timeranges,
+        temperature_unit=temperature_unit,
         render_async=render_async,
         graph_display_id=graph_display_id,
     )
@@ -759,6 +771,7 @@ def _render_graphs_from_definitions(
     *,
     debug: bool,
     graph_timeranges: Sequence[GraphTimerange],
+    temperature_unit: str,
     render_async: bool = True,
     graph_display_id: str = "",
 ) -> HTML:
@@ -786,6 +799,7 @@ def _render_graphs_from_definitions(
                 registered_metrics,
                 debug=debug,
                 graph_timeranges=graph_timeranges,
+                temperature_unit=temperature_unit,
                 graph_display_id=graph_display_id,
             )
     return output
@@ -842,6 +856,7 @@ class AjaxRenderGraphContent(AjaxPage):
             metrics_from_api,
             debug=config.debug,
             graph_timeranges=config.graph_timeranges,
+            temperature_unit=config.default_temperature_unit,
             graph_display_id=api_request["graph_display_id"],
         )
 
@@ -854,6 +869,7 @@ def _render_graph_content_html(
     *,
     debug: bool,
     graph_timeranges: Sequence[GraphTimerange],
+    temperature_unit: str,
     graph_display_id: str = "",
 ) -> HTML:
     try:
@@ -862,6 +878,7 @@ def _render_graph_content_html(
             graph_data_range,
             graph_render_config.size,
             registered_metrics,
+            temperature_unit=temperature_unit,
             graph_display_id=graph_display_id,
         )
         main_graph_html = _render_graph_html(graph_artwork, graph_data_range, graph_render_config)
@@ -874,6 +891,7 @@ def _render_graph_content_html(
                     graph_render_config,
                     registered_metrics,
                     graph_timeranges=graph_timeranges,
+                    temperature_unit=temperature_unit,
                     graph_display_id=graph_display_id,
                 ),
                 class_="graph_with_timeranges",
@@ -904,6 +922,7 @@ def _render_time_range_selection(
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
     graph_timeranges: Sequence[GraphTimerange],
+    temperature_unit: str,
     graph_display_id: str,
 ) -> HTML:
     now = int(time.time())
@@ -937,6 +956,7 @@ def _render_time_range_selection(
             graph_data_range,
             graph_render_config.size,
             registered_metrics,
+            temperature_unit=temperature_unit,
             graph_display_id=graph_display_id,
         )
         rows.append(
@@ -996,7 +1016,12 @@ class AjaxGraphHover(cmk.gui.pages.Page):
             context_var = request.get_str_input_mandatory("context")
             context = json.loads(context_var)
             hover_time = request.get_integer_input_mandatory("hover_time")
-            response_data = _render_ajax_graph_hover(config, context, hover_time, metrics_from_api)
+            response_data = _render_ajax_graph_hover(
+                context,
+                hover_time,
+                metrics_from_api,
+                temperature_unit=config.default_temperature_unit,
+            )
             response.set_data(json.dumps(response_data))
         except Exception as e:
             logger.error("Ajax call ajax_graph_hover.py failed: %s\n%s", e, traceback.format_exc())
@@ -1007,10 +1032,11 @@ class AjaxGraphHover(cmk.gui.pages.Page):
 
 
 def _render_ajax_graph_hover(
-    config: Config,
     context: Mapping[str, Any],
     hover_time: int,
     registered_metrics: Mapping[str, RegisteredMetric],
+    *,
+    temperature_unit: str,
 ) -> dict[str, object]:
     graph_data_range = GraphDataRange.model_validate(context["data_range"])
     graph_recipe = GraphRecipe.model_validate(context["definition"])
@@ -1019,6 +1045,7 @@ def _render_ajax_graph_hover(
         graph_recipe,
         graph_data_range,
         registered_metrics,
+        temperature_unit=temperature_unit,
     )
 
     return {
@@ -1026,11 +1053,7 @@ def _render_ajax_graph_hover(
         "curve_values": list(
             compute_curve_values_at_timestamp(
                 order_graph_curves_for_legend_and_mouse_hover(curves),
-                user_specific_unit(
-                    graph_recipe.unit_spec,
-                    user,
-                    config,
-                ).formatter.render,
+                user_specific_unit(graph_recipe.unit_spec, user, temperature_unit).formatter.render,
                 hover_time,
             )
         ),
@@ -1094,6 +1117,7 @@ def host_service_graph_dashlet_cmk(
     *,
     debug: bool,
     graph_timeranges: Sequence[GraphTimerange],
+    temperature_unit: str,
     graph_display_id: str = "",
     time_range: TimerangeValue = None,
 ) -> HTML:
@@ -1135,6 +1159,7 @@ def host_service_graph_dashlet_cmk(
             registered_graphs,
             user_permissions,
             debug=debug,
+            temperature_unit=temperature_unit,
         )
     except MKLivestatusNotFoundError:
         return render_graph_error_html(
@@ -1178,6 +1203,7 @@ def host_service_graph_dashlet_cmk(
             graph_data_range,
             graph_render_config.size,
             registered_metrics,
+            temperature_unit=temperature_unit,
         )
         if graph_artwork.curves:
             legend_height = _graph_legend_height_ex(
@@ -1199,6 +1225,7 @@ def host_service_graph_dashlet_cmk(
         registered_metrics,
         debug=debug,
         graph_timeranges=graph_timeranges,
+        temperature_unit=temperature_unit,
         render_async=False,
         graph_display_id=graph_display_id,
     )

@@ -42,6 +42,7 @@ class ExplicitGraphSpecification(GraphSpecification, frozen=True):
         user_permissions: UserPermissions,
         *,
         debug: bool,
+        temperature_unit: str,
     ) -> list[GraphRecipe]:
         return [
             GraphRecipe(

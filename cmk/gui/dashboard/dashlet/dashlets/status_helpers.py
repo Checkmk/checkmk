@@ -86,25 +86,26 @@ def create_service_view_url(context):
 
 
 def purge_metric_spec_for_js(metric_spec: MetricSpec) -> dict[str, object]:
-    return {"bounds": {}} | _purge_unit_spec_for_js(metric_spec.unit_spec)
+    return {"bounds": {}} | _purge_unit_spec_for_js(
+        metric_spec.unit_spec,
+        temperature_unit=active_config.default_temperature_unit,
+    )
 
 
 def purge_translated_metric_for_js(translated_metric: TranslatedMetric) -> dict[str, object]:
     return {"bounds": translated_metric.scalar} | _purge_unit_spec_for_js(
-        translated_metric.unit_spec
+        translated_metric.unit_spec,
+        temperature_unit=active_config.default_temperature_unit,
     )
 
 
 def _purge_unit_spec_for_js(
     unit_spec: ConvertibleUnitSpecification,
+    temperature_unit: str,
 ) -> dict[str, object]:
     return {
         "unit": _transform_user_specific_unit_for_js(
-            user_specific_unit(
-                unit_spec,
-                user,
-                active_config,
-            )
+            user_specific_unit(unit_spec, user, temperature_unit)
         )
     }
 

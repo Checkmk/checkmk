@@ -9,7 +9,6 @@ from typing import assert_never, Literal
 
 from pydantic import BaseModel, Field
 
-from cmk.gui.config import Config
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.unit_formatter import (
     AutoPrecision,
@@ -108,9 +107,9 @@ class _Conversion:
 def user_specific_unit(
     unit_specification: ConvertibleUnitSpecification | NonConvertibleUnitSpecification,
     user: LoggedInUser,
-    config: Config,
+    temperature_unit: str,
     source_symbol_to_conversion_computer: (
-        Mapping[str, Callable[[LoggedInUser, Config], _Conversion]] | None
+        Mapping[str, Callable[[LoggedInUser, str], _Conversion]] | None
     ) = None,
 ) -> UserSpecificUnit:
     noop_conversion = _Conversion(
@@ -121,7 +120,7 @@ def user_specific_unit(
         (source_symbol_to_conversion_computer or _TEMPERATURE_CONVERSION_COMPUTER).get(
             unit_specification.notation.symbol,
             lambda *_: noop_conversion,
-        )(user, config)
+        )(user, temperature_unit)
         if isinstance(unit_specification, ConvertibleUnitSpecification)
         else noop_conversion
     )
@@ -166,9 +165,9 @@ def user_specific_unit(
     )
 
 
-def _degree_celsius_conversion(user: LoggedInUser, config: Config) -> _Conversion:
+def _degree_celsius_conversion(user: LoggedInUser, temperature_unit: str) -> _Conversion:
     match configured_temp_unit := TemperatureUnit(
-        user.get_attribute("temperature_unit") or config.default_temperature_unit
+        user.get_attribute("temperature_unit") or temperature_unit
     ):
         case TemperatureUnit.CELSIUS:
             return _Conversion(symbol="°C", converter=lambda c: c)
@@ -178,9 +177,9 @@ def _degree_celsius_conversion(user: LoggedInUser, config: Config) -> _Conversio
             assert_never(configured_temp_unit)
 
 
-def _degree_fahrenheit_conversion(user: LoggedInUser, config: Config) -> _Conversion:
+def _degree_fahrenheit_conversion(user: LoggedInUser, temperature_unit: str) -> _Conversion:
     match configured_temp_unit := TemperatureUnit(
-        user.get_attribute("temperature_unit") or config.default_temperature_unit
+        user.get_attribute("temperature_unit") or temperature_unit
     ):
         case TemperatureUnit.CELSIUS:
             return _Conversion(symbol="°C", converter=lambda f: (f - 32) / 1.8)
@@ -190,7 +189,7 @@ def _degree_fahrenheit_conversion(user: LoggedInUser, config: Config) -> _Conver
             assert_never(configured_temp_unit)
 
 
-_TEMPERATURE_CONVERSION_COMPUTER: Mapping[str, Callable[[LoggedInUser, Config], _Conversion]] = {
+_TEMPERATURE_CONVERSION_COMPUTER: Mapping[str, Callable[[LoggedInUser, str], _Conversion]] = {
     "°C": _degree_celsius_conversion,
     "°F": _degree_fahrenheit_conversion,
 }

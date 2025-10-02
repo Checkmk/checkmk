@@ -20,7 +20,6 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import parse_check_mk_version
 from cmk.gui import sites
-from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import ColumnName
@@ -306,6 +305,8 @@ def translate_and_merge_rrd_columns(
     rrd_columms: Iterable[tuple[str, TimeSeriesValues]],
     translations: Mapping[MetricName, TranslationSpec],
     registered_metrics: Mapping[str, RegisteredMetric],
+    *,
+    temperature_unit: str,
 ) -> TimeSeries:
     def scaler(scale: float) -> Callable[[float], float]:
         return lambda v: v * scale
@@ -349,6 +350,6 @@ def translate_and_merge_rrd_columns(
         conversion=user_specific_unit(
             get_metric_spec(metric_name, registered_metrics).unit_spec,
             user,
-            active_config,
+            temperature_unit,
         ).conversion,
     )

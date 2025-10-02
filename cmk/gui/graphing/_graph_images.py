@@ -78,6 +78,7 @@ class AjaxGraphImagesForNotifications(Page):
             graphs_from_api,
             UserPermissions.from_config(config, permission_registry),
             debug=config.debug,
+            temperature_unit=config.default_temperature_unit,
         )
 
 
@@ -87,6 +88,7 @@ def _answer_graph_image_request(
     user_permissions: UserPermissions,
     *,
     debug: bool,
+    temperature_unit: str,
 ) -> None:
     try:
         host_name = request.get_validated_type_input_mandatory(HostName, "host")
@@ -134,6 +136,7 @@ def _answer_graph_image_request(
             registered_graphs,
             user_permissions,
             debug=debug,
+            temperature_unit=temperature_unit,
         )
         num_graphs = request.get_integer_input("num_graphs") or len(graph_recipes)
 
@@ -144,6 +147,7 @@ def _answer_graph_image_request(
                 graph_data_range,
                 graph_render_config.size,
                 registered_metrics,
+                temperature_unit=temperature_unit,
             )
             graph_png = render_graph_image(graph_artwork, graph_render_config)
 
@@ -234,6 +238,7 @@ def graph_recipes_for_api_request(
     user_permissions: UserPermissions,
     *,
     debug: bool,
+    temperature_unit: str,
 ) -> tuple[GraphDataRange, Sequence[GraphRecipe]]:
     # Get and validate the specification
     if not (raw_graph_spec := api_request.get("specification")):
@@ -270,6 +275,7 @@ def graph_recipes_for_api_request(
             registered_graphs,
             user_permissions,
             debug=debug,
+            temperature_unit=temperature_unit,
         )
 
     except MKGraphNotFound:
@@ -294,6 +300,7 @@ def graph_spec_from_request(
     user_permissions: UserPermissions,
     *,
     debug: bool,
+    temperature_unit: str,
 ) -> dict[str, Any]:
     try:
         graph_data_range, graph_recipes = graph_recipes_for_api_request(
@@ -302,6 +309,7 @@ def graph_spec_from_request(
             registered_graphs,
             user_permissions,
             debug=debug,
+            temperature_unit=temperature_unit,
         )
         graph_recipe = graph_recipes[0]
 
@@ -314,7 +322,12 @@ def graph_spec_from_request(
     except IndexError:
         raise MKUserError(None, _("The requested graph does not exist"))
 
-    curves = compute_graph_artwork_curves(graph_recipe, graph_data_range, registered_metrics)
+    curves = compute_graph_artwork_curves(
+        graph_recipe,
+        graph_data_range,
+        registered_metrics,
+        temperature_unit=temperature_unit,
+    )
 
     api_curves = []
     (start, end), step = graph_data_range.time_range, 60  # empty graph

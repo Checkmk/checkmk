@@ -20,7 +20,7 @@ def netsnmp_workspace():
             "//omd/packages/net-snmp/patches:0005-Fixed-__snprint_value-s-return-value.dif",
             "//omd/packages/net-snmp/patches:0006-Added-missing-initialization-of-Version-attribute.dif",
             "//omd/packages/net-snmp/patches:0007-Fixed-reference-counting-for-netsnmp-module.dif",
-            "//omd/packages/net-snmp/patches:0008-Fixed-segfaults-in-netsnmp_-walk-getbulk-when-a-varbin.dif",
+            "//omd/packages/net-snmp/patches:0008-Fixed-segfaults-in-netsnmp_-walk-getbulk-when-a-varbin.dif",  # submitted as https://github.com/net-snmp/net-snmp/pull/1027
             "//omd/packages/net-snmp/patches:0009-Added-workaround-for-duplicate-engine-IDs.dif",
             "//omd/packages/net-snmp/patches:0010-Emulate-Cc-behavior-in-netsnmp_walk.dif",
             "//omd/packages/net-snmp/patches:0011-Handle-responses-with-invalid-variables-differently.dif",
@@ -31,6 +31,7 @@ def netsnmp_workspace():
             "//omd/packages/net-snmp/patches:0016-Python-Fix-snmpwalk-with-UseNumeric-1.dif",
             "//omd/packages/net-snmp/patches:0017-no-fallthrough.dif",
             "//omd/packages/net-snmp/patches:0018-update-user-information-for-python.dif",
+            "//omd/packages/net-snmp/patches:0019-Fix-NULL-varbind-in-get-getnext.dif",  # submitted as https://github.com/net-snmp/net-snmp/pull/1027
         ],
         patch_args = ["-p1"],
         patch_tool = "patch",

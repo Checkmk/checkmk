@@ -1142,6 +1142,14 @@ section_heartbeat() {
     fi
 }
 
+section_corosync_latency() {
+    if inpath corosync-cmapctl; then
+        echo '<<<corosync_latency>>>'
+        corosync-cmapctl -m stats 2>/dev/null | grep -E 'latency|connected' || true
+        corosync-cmapctl -C knet 2>/dev/null || true
+    fi
+}
+
 ## Postfix mailqueue monitoring
 ## Determine the number of mails and their size in several postfix mail queues
 read_postfix_queue_dirs() {
@@ -2080,6 +2088,8 @@ run_purely_synchronous_sections() {
     # Different handling for heartbeat clusters with and without CRM
     # for the resource state
     [ -z "${MK_SKIP_HEARTBEAT}" ] && _log_section_time section_heartbeat
+
+    [ -z "${MK_SKIP_COROSYNC_LATENCY}" ] && _log_section_time section_corosync_latency
 
     [ -z "${MK_SKIP_MAILQUEUE}" ] && _log_section_time section_mailqueue
 

@@ -19,7 +19,8 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.base.check_legacy_includes.ibm_tape_library import (
+
+from .lib import (
     ibm_tape_library_get_device_state,
     ibm_tape_library_parse_device_name,
 )

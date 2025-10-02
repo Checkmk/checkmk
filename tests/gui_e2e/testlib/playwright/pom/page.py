@@ -595,8 +595,8 @@ class FilterSidebar(LocatorHelper):
     def filters_list(self) -> Locator:
         return self.locator("div#_popup_filter_list")
 
-    def filter_button(self, filter_name: str) -> Locator:
-        return self.filters_list.get_by_role("link", name=filter_name)
+    def filter_button(self, filter_name: str, exact: bool = False) -> Locator:
+        return self.filters_list.get_by_role("link", name=filter_name, exact=exact)
 
     @property
     def select_service_field(self) -> Locator:
@@ -668,12 +668,14 @@ class FilterSidebar(LocatorHelper):
         # TODO: remove 'first' after fixing CMK-19975
         self.dropdown_option(host_filter, exact=True).first.click()
 
-    def apply_filter_by_name(self, filter_name: str, filter_value: str) -> None:
+    def apply_filter_by_name(
+        self, filter_name: str, filter_value: str, exact: bool = False
+    ) -> None:
         filter_combobox = self.filter_combobox(filter_name, check=False)
 
         if filter_combobox.count() == 0:
             self.add_filter_button.click()
-            self.filter_button(filter_name).click()
+            self.filter_button(filter_name, exact=exact).click()
 
         filter_combobox.click()
         self.search_text_field.fill(filter_value)

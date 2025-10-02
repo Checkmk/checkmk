@@ -11,13 +11,10 @@ of main menu.
 """
 
 import logging
-from collections.abc import Iterator
 
 import pytest
-from faker import Faker
 from playwright.sync_api import expect
 
-from tests.gui_e2e.testlib.api_helpers import LOCALHOST_IPV4
 from tests.gui_e2e.testlib.host_details import AddressFamily, AgentAndApiIntegration, HostDetails
 from tests.gui_e2e.testlib.playwright.pom.changes.activate_changes import ActivateChangesSlideout
 from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
@@ -25,49 +22,6 @@ from tests.gui_e2e.testlib.playwright.pom.setup.hosts import AddHost, HostProper
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
-
-
-def _create_bulk_hosts(site: Site, num_hosts: int, test_site: Site) -> Iterator:
-    """Helper function to create hosts in bulk on the specified site.
-    Args:
-        site: The test site where hosts will be created. Could be central or remote.
-        num_hosts: Number of hosts to create.
-        test_site: The fixture for central test site.
-    """
-    faker = Faker()
-
-    hosts_list = [faker.unique.hostname() for _ in range(num_hosts)]
-    entries = [
-        {
-            "host_name": host,
-            "folder": "/",
-            "attributes": {"ipaddress": LOCALHOST_IPV4, "site": site.id},
-        }
-        for host in hosts_list
-    ]
-
-    created_hosts = test_site.openapi.hosts.bulk_create(entries=entries, bake_agent=False)
-
-    yield created_hosts
-
-    test_site.openapi.hosts.bulk_delete([host["id"] for host in created_hosts])
-    test_site.openapi.changes.activate_and_wait_for_completion()
-
-
-@pytest.fixture(name="bulk_create_hosts_central_site")
-def _bulk_create_hosts_central_site(request: pytest.FixtureRequest, test_site: Site) -> Iterator:
-    """Create hosts in bulk on test_site, parametrized by number."""
-    num_hosts = int(request.param)
-    yield from _create_bulk_hosts(test_site, num_hosts, test_site)
-
-
-@pytest.fixture(name="bulk_create_hosts_remote_site")
-def _bulk_create_hosts_remote_site(
-    request: pytest.FixtureRequest, remote_site: Site, test_site: Site
-) -> Iterator:
-    """Create hosts in bulk on remote_site, parametrized by number."""
-    num_hosts = int(request.param)
-    yield from _create_bulk_hosts(remote_site, num_hosts, test_site)
 
 
 def test_activate_changes_slideout_one_change(
@@ -83,14 +37,13 @@ def test_activate_changes_slideout_one_change(
     expect(slideout.info_text, "The info banner is not visible!").to_be_visible()
     slideout.info_close_btn.click()
     slideout.close()
-
+    host_details = HostDetails(
+        name="delete_me",
+        agent_and_api_integration=AgentAndApiIntegration.no_agent,
+        address_family=AddressFamily.ip_v4_only,
+    )
     try:
         logger.info("Create a change with new host")
-        host_details = HostDetails(
-            name="delete_me",
-            agent_and_api_integration=AgentAndApiIntegration.no_agent,
-            address_family=AddressFamily.ip_v4_only,
-        )
         add_host_page = AddHost(dashboard_page.page)
         add_host_page.create_host(host_details, test_site, activate_changes=False)
 

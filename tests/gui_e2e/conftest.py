@@ -12,7 +12,7 @@ import logging
 import os
 from collections import defaultdict
 from collections.abc import Iterator
-from typing import TypeVar
+from typing import Any, TypeVar
 
 import pytest
 from faker import Faker
@@ -277,3 +277,69 @@ def _email_manager() -> Iterator[EmailManager]:
     """
     with EmailManager() as email_manager:
         yield email_manager
+
+
+def _create_bulk_hosts(
+    site: Site, num_hosts: int, test_site: Site, activate: bool = False
+) -> Iterator[list[dict[str, Any]]]:
+    """Helper function to create hosts in bulk on the specified site.
+
+    Args:
+        site: The test site where hosts will be created. Could be central or remote.
+        num_hosts: Number of hosts to create.
+        test_site: The fixture for central test site.
+        activate: Whether to activate changes after host creation.
+
+    Yields:
+        List of the hosts that been created.
+    """
+    faker = Faker()
+
+    hosts_list = [faker.unique.hostname() for _ in range(num_hosts)]
+    entries = [
+        {
+            "host_name": host,
+            "folder": "/",
+            "attributes": {
+                "ipaddress": LOCALHOST_IPV4,
+                "site": site.id,
+                "tag_agent": "no-agent",
+            },
+        }
+        for host in hosts_list
+    ]
+
+    created_hosts = test_site.openapi.hosts.bulk_create(entries=entries, bake_agent=False)
+    if activate:
+        test_site.openapi.changes.activate_and_wait_for_completion()
+
+    yield created_hosts
+
+    test_site.openapi.hosts.bulk_delete([host["id"] for host in created_hosts])
+    test_site.openapi.changes.activate_and_wait_for_completion()
+
+
+@pytest.fixture(name="bulk_create_hosts_central_site")
+def fixture_bulk_create_hosts_central_site(
+    request: pytest.FixtureRequest, test_site: Site
+) -> Iterator[list[dict[str, Any]]]:
+    """Create hosts in bulk on test_site, parametrized by number."""
+    if isinstance(request.param, tuple):
+        num_hosts, activate = request.param
+    else:
+        num_hosts = int(request.param)
+        activate = False
+    yield from _create_bulk_hosts(test_site, num_hosts, test_site, activate)
+
+
+@pytest.fixture(name="bulk_create_hosts_remote_site")
+def fixture_bulk_create_hosts_remote_site(
+    request: pytest.FixtureRequest, remote_site: Site, test_site: Site
+) -> Iterator[list[dict[str, Any]]]:
+    """Create hosts in bulk on remote_site, parametrized by number."""
+    if isinstance(request.param, tuple):
+        num_hosts, activate = request.param
+    else:
+        num_hosts = int(request.param)
+        activate = False
+    yield from _create_bulk_hosts(remote_site, num_hosts, test_site, activate)

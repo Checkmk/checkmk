@@ -1847,6 +1847,43 @@ class Site:
                 self.write_file(rel_path=file, content=content)
             self.openapi.changes.activate_and_wait_for_completion()
 
+    def get_host_and_service_count(self) -> tuple[int, int]:
+        """Helper function to get the count of hosts and services on a site.
+        In case if connected remote site(s) exist(s), the hosts and services from it are also
+        included into counts on central site.
+        """
+        host_names, services = self._get_existing_hosts_and_services()
+        logger.debug(f"Found {len(host_names)} hosts on {self.id} site: {host_names}")
+        logger.debug(f"Found {len(services)} services on {self.id} site: {services}")
+        return len(host_names), len(services)
+
+    def _get_existing_hosts_and_services(self) -> tuple[list[str], list[dict[str, Any]]]:
+        """Helper function to get the existing hosts and services on a site.
+        In case if connected remote site(s) exist(s), the hosts and services from it are also
+        included into result lists on central site.
+        """
+        logger.info("Check for existing hosts on a site")
+        host_names = self.openapi.hosts.get_all_names()
+        total_services = []
+        if host_names:
+            logger.info("Found %d existing hosts on a site: %s", len(host_names), host_names)
+            logger.info("Check how many services are configured on the existing hosts")
+            for host_name in host_names:
+                services = self.openapi.services.get_host_services(host_name)
+                service_count = len(services)
+                total_services += services
+                logger.info("Host '%s' has %d services configured", host_name, service_count)
+        else:
+            logger.info(f"No existing hosts found on {self.id} site")
+            host_names = []
+        if not total_services:
+            logger.info(f"No existing services found on {self.id} site")
+        else:
+            logger.info(
+                f"Found a total of {len(total_services)} existing services on {self.id} site"
+            )
+        return host_names, total_services
+
 
 @dataclass(frozen=True)
 class GlobalSettingsUpdate:

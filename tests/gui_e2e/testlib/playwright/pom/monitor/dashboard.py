@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import re
+from enum import StrEnum
 from re import Pattern
 from typing import override
 from urllib.parse import quote_plus
@@ -14,6 +15,13 @@ from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID
 from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
 
 logger = logging.getLogger(__name__)
+
+
+class SummaryDashletType(StrEnum):
+    """Types of summary dashlets."""
+
+    HOST = "Host state summary"
+    SERVICE = "Service state summary"
 
 
 class BaseDashboard(CmkPage):
@@ -139,11 +147,18 @@ class BaseDashboard(CmkPage):
             self.dashlet(dashlet_title), f"Dashlet '{dashlet_title}' is not presented on the page"
         ).to_be_visible()
 
+    def wait_for_dashlet_to_load(self, dashlet_title: str) -> None:
+        logger.info("Wait for dashlet to be fully loaded and visible.")
+        self.check_dashlet_is_present(dashlet_title)
+        count_link = self.dashlet(dashlet_title).get_by_role("link").first
+        count_link.wait_for(state="visible")
+
     def apply_filter_to_the_dashboard(
         self,
         filter_name: str,
         filter_value: str,
         open_filters_popup: bool = True,
+        exact: bool = False,
     ) -> None:
         """Apply a filter to the dashboard on the filters popup.
 
@@ -156,20 +171,55 @@ class BaseDashboard(CmkPage):
             self.main_area.click_item_in_dropdown_list("Display", "Filter")
 
         self.filter_sidebar.expect_to_be_visible()
-        self.filter_sidebar.apply_filter_by_name(filter_name, filter_value)
+        self.filter_sidebar.apply_filter_by_name(filter_name, filter_value, exact=exact)
         self.filter_sidebar.apply_filters_button.click()
         self.filter_sidebar.expect_to_be_hidden()
 
         self.validate_page()
 
     def add_top_list_dashlet(self, metric_name: str) -> None:
-        """Add a new dashlet to the dashboard."""
+        """Add a new 'Top list' dashlet to the dashboard."""
         self.main_area.click_item_in_dropdown_list("Add", "Top list")
         self.main_area.locator("span#select2-type_p_metric-container").click()
         self.main_area.locator("ul#select2-type_p_metric-results").get_by_text(
             metric_name, exact=True
         ).click()
         self.main_area.get_suggestion("Save").click()
+
+    def add_dashlet(self, dashlet_name: str) -> None:
+        """Add a new dashlet to the dashboard.
+        Should be used only for dashlets without additional configuration.
+        """
+        self.main_area.click_item_in_dropdown_list("Add", dashlet_name)
+        self.main_area.get_suggestion("Save").click()
+
+    def _get_summary_dashlet_numbers(self, dashlet_title: str) -> tuple[int, int]:
+        logger.info(f"Get summary numbers from '{dashlet_title}' dashlet.")
+        dashlet = self.dashlet(dashlet_title)
+        count_link = dashlet.get_by_role("link").first
+        text = count_link.text_content()
+        match_result = re.search(r"(\d+)\/(\d+)", text or "")
+        if match_result:
+            return int(match_result.group(1)), int(match_result.group(2))
+        else:
+            return 0, 0
+
+    def verify_summary_dashlet_shows_site_related_data(
+        self,
+        dashlet_title: str,
+        expected_count: int,
+        context: str,
+    ) -> None:
+        self.wait_for_dashlet_to_load(dashlet_title)
+        self.check_dashlet_is_present(dashlet_title)
+        count1, count2 = self._get_summary_dashlet_numbers(dashlet_title)
+        logger.info(
+            f"Verify dashlet {dashlet_title} displays expected summary numbers: {context}",
+        )
+        assert expected_count in (count1, count2), (
+            f"Expected {expected_count} to be present in '{dashlet_title}' dashlet summary,"
+            " got {count1} and {count2}"
+        )
 
 
 class MainDashboard(BaseDashboard):

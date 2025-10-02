@@ -14,7 +14,10 @@ from tests.gui_e2e.testlib.playwright.pom.customize.dashboard_properties import 
     EditDashboard,
 )
 from tests.gui_e2e.testlib.playwright.pom.monitor.custom_dashboard import CustomDashboard
-from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
+from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import (
+    MainDashboard,
+    SummaryDashletType,
+)
 from tests.gui_e2e.testlib.playwright.pom.monitor.edit_element_top_list import (
     AddElementTopList,
     EditElementTopList,
@@ -23,6 +26,8 @@ from tests.gui_e2e.testlib.playwright.pom.monitor.hosts_dashboard import (
     LinuxHostsDashboard,
     WindowsHostsDashboard,
 )
+from tests.gui_e2e.testlib.playwright.pom.tactical_overview_snapin import TacticalOverviewSnapin
+from tests.testlib.site import Site
 from tests.testlib.utils import is_cleanup_enabled
 
 logger = logging.getLogger(__name__)
@@ -71,9 +76,11 @@ def test_dashboard_sanity_check(dashboard_page: MainDashboard) -> None:
     expect(dashboard_page.dashlet_svg("Service statistics")).to_be_visible()
 
 
-def test_builtin_dashboard_filter(dashboard_page: MainDashboard, linux_hosts: list[str]) -> None:
+def test_builtin_dashboard_filter_by_host(
+    dashboard_page: MainDashboard, linux_hosts: list[str]
+) -> None:
     """
-    Test the built-in dashboard filter functionality.
+    Test the built-in dashboard filter functionality with filtering by a host.
 
     This test checks that the dashboard filter works correctly by applying a filter
     for a specific host and verifying the displayed results.
@@ -488,3 +495,128 @@ def test_create_new_dashboard(dashboard_page: MainDashboard, linux_hosts: list[s
     finally:
         if is_cleanup_enabled():
             custom_dashboard.delete()
+
+
+@pytest.mark.skip(reason="CMK-26831: UI got stuck on adding 'Host state summary' dashlet")
+@pytest.mark.parametrize(
+    "bulk_create_hosts_remote_site, dashlet_to_add, dashlet_title",
+    [
+        pytest.param(
+            (3, True),
+            SummaryDashletType.HOST,
+            "Hosts : UP",
+            id="host_state_summary_dashlet",
+        ),
+        pytest.param(
+            (3, True),
+            SummaryDashletType.SERVICE,
+            "Services : OK",
+            id="service_state_summary_dashlet",
+        ),
+    ],
+    indirect=["bulk_create_hosts_remote_site"],
+)
+def test_builtin_dashboard_filter_by_site(
+    dashboard_page: MainDashboard,
+    test_site: Site,
+    remote_site: Site,
+    bulk_create_hosts_remote_site: list[dict[str, object]],
+    dashlet_to_add: SummaryDashletType,
+    dashlet_title: str,
+    windows_hosts: list[str],
+    linux_hosts: list[str],
+) -> None:
+    """
+    Test filtering of 'Host state summary' and 'Service state summary' dashlets by site.
+
+    The fixtures 'windows_hosts' and 'linux_hosts' are mentioned in parameters to ease
+    understanding of how hosts and services are created on the central site.
+
+    Steps:
+        1. Creating hosts on remote site via bulk_create_hosts_remote_site fixture.
+        2. Waiting for data replication between central and remote sites to be in sync.
+        3. Adding a single parametrized dashlet, either 'Host state summary' or
+           'Service state summary'.
+        4. Applying site-specific filters.
+        5. Verifying that only data from the selected site is displayed.
+    """
+    dashboard_page.page.reload()
+    # Wait for tactical overview snapin to show hosts and services, ensuring data replication
+    # between sites is synced before making API assertions below.
+    overview_snapin = TacticalOverviewSnapin(
+        dashboard_page.sidebar.locator("#snapin_container_tactical_overview")
+    )
+    overview_snapin.hosts_number.wait_for(state="visible")
+    overview_snapin.services_number.wait_for(state="visible")
+    non_zero_number = re.compile(r"^[1-9]\d*$")
+    expect(overview_snapin.hosts_number, "Overview snapin shows zero number of hosts").to_have_text(
+        non_zero_number
+    )
+    expect(
+        overview_snapin.services_number, "Overview snapin shows zero number of services"
+    ).to_have_text(non_zero_number)
+
+    # Get number of hosts and services on central site via openapi call. Those numbers also include
+    # hosts and services created on remote_site.
+    exp_central_hosts_count, exp_central_services_count = test_site.get_host_and_service_count()
+    # Get number of hosts and services on remote site created by the fixture.
+    exp_remote_hosts_count = exp_remote_services_count = len(bulk_create_hosts_remote_site)
+
+    # Adjust expected service count on central site
+    exp_central_hosts_count -= exp_remote_hosts_count
+    exp_central_services_count -= exp_remote_services_count
+    logger.info(
+        "Expecting %d hosts and %d services on central site",
+        exp_central_hosts_count,
+        exp_central_services_count,
+    )
+    logger.info(
+        "Expecting %d hosts and %d services on remote site",
+        exp_remote_hosts_count,
+        exp_remote_services_count,
+    )
+
+    create_dashboard = CreateDashboard(dashboard_page.page)
+    custom_dashboard = create_dashboard.create_custom_dashboard(dashlet_to_add)
+
+    try:
+        custom_dashboard.add_dashlet(dashlet_to_add)
+        custom_dashboard.leave_layout_mode()
+
+        custom_dashboard.check_dashlet_is_present(dashlet_title)
+
+        logger.info("Without site filter")
+        custom_dashboard.verify_summary_dashlet_shows_site_related_data(
+            dashlet_title,
+            exp_central_hosts_count + exp_remote_hosts_count
+            if dashlet_to_add == SummaryDashletType.HOST
+            else exp_central_services_count + exp_remote_services_count,
+            "No filter: central and remote sites combined",
+        )
+
+        logger.info("Filter by remote site")
+        custom_dashboard.apply_filter_to_the_dashboard("Site", "Remote Testsite", exact=True)
+        custom_dashboard.leave_layout_mode()
+        custom_dashboard.verify_summary_dashlet_shows_site_related_data(
+            dashlet_title,
+            exp_remote_hosts_count
+            if dashlet_to_add == SummaryDashletType.HOST
+            else exp_remote_services_count,
+            f"Filter: remote site {remote_site.id} only",
+        )
+
+        logger.info("Filter by central site")
+        custom_dashboard.apply_filter_to_the_dashboard(
+            "Site", f"Local site {test_site.id}", exact=True
+        )
+        custom_dashboard.leave_layout_mode()
+        custom_dashboard.verify_summary_dashlet_shows_site_related_data(
+            dashlet_title,
+            exp_central_hosts_count
+            if dashlet_to_add == SummaryDashletType.HOST
+            else exp_central_services_count,
+            f"Filter: central site {test_site.id} only",
+        )
+
+    finally:
+        custom_dashboard.delete()

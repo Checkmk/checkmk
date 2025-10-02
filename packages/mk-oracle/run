@@ -191,6 +191,7 @@ run_test_all() {
                 ln -sf "${libaio}" "${path_to_runtime}/libaio.so.1"
             else
                 echo "libaio absent. Integration testing is not possible"
+                exit 1
             fi
 
             export LD_LIBRARY_PATH="${path_to_runtime}:${LD_LIBRARY_PATH}"

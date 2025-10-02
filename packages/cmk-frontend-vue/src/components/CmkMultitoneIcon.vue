@@ -9,19 +9,44 @@ import { ref } from 'vue'
 
 import { immediateWatch } from '@/lib/watch'
 
+const _oneColorIcons = [
+  'services',
+  'show-more',
+  'show-less',
+  'search',
+  'monitor',
+  'customize',
+  'setup',
+  'changes'
+] as const
+const _twoColorIcons = ['aggr'] as const
+
+export type OneColorIcons = (typeof _oneColorIcons)[number]
+export type TwoColorIcons = (typeof _twoColorIcons)[number]
+export type CmkMultitoneIconNames = OneColorIcons | TwoColorIcons
+
+export type CmkMultitoneIconProps = OneColorIconProps | TwoColorIconProps
+
+export interface OneColorIconProps {
+  name: OneColorIcons
+  primaryColor: CmkMultitoneIconColor
+  size?: CmkIconSize | undefined
+  title?: string | undefined
+  rotate?: number | undefined
+}
+
+export interface TwoColorIconProps {
+  name: TwoColorIcons
+  primaryColor: CmkMultitoneIconColor
+  secondaryColor: CmkMultitoneIconColor
+  size?: CmkIconSize | undefined
+  title?: string | undefined
+  rotate?: number | undefined
+}
+
+export type CmkIconVariants = VariantProps<typeof cmkIconVariants>
 const cmkIconVariants = cva('', {
   variants: {
-    name: {
-      'show-more': 'icon-show-more',
-      'show-less': 'icon-show-less',
-      search: 'icon-search',
-      monitoring: 'icon-monitor',
-      customize: 'icon-customize',
-      setup: 'icon-setup',
-      changes: 'icon-changes',
-      aggr: 'icon-aggr',
-      services: 'icon-services'
-    },
     color: {
       success: 'green',
       hosts: 'blue',
@@ -51,7 +76,6 @@ const cmkIconVariants = cva('', {
 })
 
 export type CmkIconSize = VariantProps<typeof cmkIconVariants>['size']
-export type CmkMultitoneIconName = VariantProps<typeof cmkIconVariants>['name']
 export type CmkMultitoneIconColor = VariantProps<typeof cmkIconVariants>['color']
 
 const props = defineProps<CmkMultitoneIconProps>()
@@ -61,42 +85,37 @@ function getTransformRotate(): string {
 }
 
 function getSize(): string {
-  return cmkIconVariants({ color: null, size: props.size, name: null })
+  return cmkIconVariants({ size: props.size })
 }
 
 function getColorClass(color: CmkMultitoneIconColor, prefix: string): string {
   if (!color) {
     return ''
   }
-  return `${prefix}-${cmkIconVariants({ color: color || null, size: null, name: null })}`
+  return `${prefix}-${cmkIconVariants({ color: color || null })}`
 }
 
-function getColorClasses(): string[] {
-  return [
-    getColorClass(props.primaryColor, 'color'),
-    getColorClass(props.secondaryColor, 'color-secondary'),
-    getColorClass(props.tertiaryColor, 'color-tertiary')
-  ].filter((c) => c !== '')
+function getColorClasses(name: OneColorIcons | TwoColorIcons): string[] {
+  if (_oneColorIcons.includes(name as OneColorIcons)) {
+    return [getColorClass(props.primaryColor, 'color')].filter(Boolean)
+  }
+  if (_twoColorIcons.includes(name as TwoColorIcons)) {
+    return [
+      getColorClass(props.primaryColor, 'color'),
+      'secondaryColor' in props &&
+        props.secondaryColor &&
+        getColorClass(props.secondaryColor, 'color-secondary')
+    ].filter(Boolean) as string[]
+  }
+  return []
 }
-
-interface CmkMultitoneIconProps {
-  name: CmkMultitoneIconName
-  size?: CmkIconSize
-  primaryColor: CmkMultitoneIconColor
-  secondaryColor?: CmkMultitoneIconColor
-  tertiaryColor?: CmkMultitoneIconColor
-  title?: string | undefined
-  rotate?: number | undefined
+function getIconFileName(iconName: CmkMultitoneIconNames): string {
+  return `icon-${iconName}`
 }
-
 const svg = ref<string | null>(null)
 
 async function loadSvg() {
-  svg.value = (
-    await import(
-      `@/assets/icons/${cmkIconVariants({ name: props.name, size: null, color: null })}.svg?raw`
-    )
-  ).default
+  svg.value = (await import(`@/assets/icons/${getIconFileName(props.name)}.svg?raw`)).default
 }
 
 immediateWatch(
@@ -112,8 +131,8 @@ immediateWatch(
   <div
     v-if="svg"
     class="cmk-multitone-icon"
-    :class="getColorClasses()"
-    :title="props.title || cmkIconVariants({ name: props.name, size: null, color: null })"
+    :class="getColorClasses(props.name)"
+    :title="props.title || getIconFileName(props.name)"
     v-html="svg"
   ></div>
 </template>

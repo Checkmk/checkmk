@@ -11,13 +11,13 @@ import CmkDropdown from '@/components/CmkDropdown.vue'
 import type {
   CmkIconSize,
   CmkMultitoneIconColor,
-  CmkMultitoneIconName
+  CmkMultitoneIconNames
 } from '@/components/CmkMultitoneIcon.vue'
 import CmkMultitoneIcon from '@/components/CmkMultitoneIcon.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const icon = ref<CmkMultitoneIconName>('services')
+const icon = ref<CmkMultitoneIconNames>('services')
 const iconSuggestions = [
   { name: 'services', title: 'services' },
   { name: 'aggr', title: 'aggr' }

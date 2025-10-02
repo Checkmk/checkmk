@@ -5,7 +5,7 @@
 
 from pathlib import Path
 
-from tests.component.test_lib.config_file_system import create_config_folder
+from cmk.testlib.agent_receiver.config_file_system import create_config_folder
 
 
 def test_latest_config_sets_symlink(tmpdir: Path) -> None:

@@ -7,10 +7,9 @@ import uuid
 from http import HTTPStatus
 
 from cmk.relay_protocols.tasks import FetchAdHocTask
-
-from .test_lib.agent_receiver import AgentReceiverClient
-from .test_lib.site_mock import SiteMock
-from .test_lib.tasks import get_relay_tasks, push_task
+from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
+from cmk.testlib.agent_receiver.site_mock import SiteMock
+from cmk.testlib.agent_receiver.tasks import get_relay_tasks, push_task
 
 
 def test_store_fetching_task(

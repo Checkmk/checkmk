@@ -19,6 +19,7 @@ usage() {
     echo
     echo "  -u, --unit-tests        run unit tests"
     echo "  -c, --component-tests   run component tests"
+    echo "  -t, --testlib-tests     run testlib tests"
     echo "  -F, --check-format      check for correct formatting"
     echo "  -l L,..., --lint=L,...  run linters, 'all' means '${ALL_LINTERS}'"
     echo "  -a, --all               shortcut for -u -F -l all"
@@ -32,6 +33,7 @@ parse_options() {
     # Yes, all those option variables are global.
     RUN_UNIT_TESTS=no
     RUN_COMPONENT_TESTS=no
+    RUN_TESTLIB_TESTS=no
     RUN_CHECK_FORMAT=no
     RUN_MYPY=no
     RUN_RUFF=no
@@ -40,7 +42,7 @@ parse_options() {
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
 
-    if ! OPTIONS=$(getopt --options 'ucFl:afDj:h' --long 'unit-tests,component-tests,check-format,lint:,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'uctFl:afDj:h' --long 'unit-tests,component-tests,testlib-tests,check-format,lint:,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -55,6 +57,10 @@ parse_options() {
                 ;;
             '-c' | '--component-tests')
                 RUN_COMPONENT_TESTS=yes
+                shift
+                ;;
+            '-t' | '--testlib-tests')
+                RUN_TESTLIB_TESTS=yes
                 shift
                 ;;
             '-F' | '--check-format')
@@ -77,6 +83,7 @@ parse_options() {
             '-a' | '--all')
                 RUN_UNIT_TESTS=yes
                 RUN_COMPONENT_TESTS=yes
+                RUN_TESTLIB_TESTS=yes
                 RUN_CHECK_FORMAT=yes
                 RUN_MYPY=yes
                 RUN_RUFF=yes
@@ -109,7 +116,7 @@ parse_options() {
         esac
     done
 
-    readonly RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_MYPY RUN_RUFF RUN_BANDIT RUN_SEMGREP RUN_FORMAT RUN_DOCUMENTATION JOBS RUN_COMPONENT_TESTS
+    readonly RUN_UNIT_TESTS RUN_CHECK_FORMAT RUN_MYPY RUN_RUFF RUN_BANDIT RUN_SEMGREP RUN_FORMAT RUN_DOCUMENTATION JOBS RUN_COMPONENT_TESTS RUN_TESTLIB_TESTS
 }
 
 setup_venv() {
@@ -128,6 +135,10 @@ run_unit_tests() {
 
 run_component_tests() {
     bazel test :component
+}
+
+run_testlib_tests() {
+    bazel test :unit_testlib
 }
 
 run_check_format() {
@@ -180,6 +191,7 @@ main() {
     cd -- "${BASH_SOURCE%/*}"
     parse_options "$@"
     test ${RUN_UNIT_TESTS} = yes && run_unit_tests
+    test ${RUN_TESTLIB_TESTS} = yes && run_testlib_tests
     test ${RUN_COMPONENT_TESTS} = yes && run_component_tests
     test ${RUN_CHECK_FORMAT} = yes && run_check_format
     test ${RUN_MYPY} = yes && run_mypy

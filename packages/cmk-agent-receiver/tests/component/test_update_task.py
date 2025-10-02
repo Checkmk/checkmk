@@ -13,10 +13,9 @@ from cmk.relay_protocols.tasks import (
     TaskResponse,
     TaskStatus,
 )
-
-from .test_lib.agent_receiver import AgentReceiverClient
-from .test_lib.site_mock import SiteMock
-from .test_lib.tasks import add_tasks, get_all_tasks, get_relay_tasks
+from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
+from cmk.testlib.agent_receiver.site_mock import SiteMock
+from cmk.testlib.agent_receiver.tasks import add_tasks, get_all_tasks, get_relay_tasks
 
 RESPONSE_PAYLOAD = "some response payload"
 TASKS_COUNT = 5

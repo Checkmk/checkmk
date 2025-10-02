@@ -12,11 +12,10 @@ from fastapi.testclient import TestClient
 from cmk.agent_receiver.config import Config, CONFIG_FILE
 from cmk.agent_receiver.main import main_app
 from cmk.agent_receiver.utils import internal_credentials
-
-from .test_lib.agent_receiver import AgentReceiverClient
-from .test_lib.container import Container, run_container
-from .test_lib.site_mock import SiteMock, User
-from .test_lib.wiremock import Wiremock
+from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
+from cmk.testlib.agent_receiver.container import Container, run_container
+from cmk.testlib.agent_receiver.site_mock import SiteMock, User
+from cmk.testlib.agent_receiver.wiremock import Wiremock
 
 
 @pytest.fixture()

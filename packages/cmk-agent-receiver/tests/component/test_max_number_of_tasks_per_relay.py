@@ -7,11 +7,10 @@ import uuid
 from http import HTTPStatus
 
 from cmk.relay_protocols.tasks import FetchAdHocTask
-
-from .test_lib.agent_receiver import AgentReceiverClient
-from .test_lib.config import create_relay_config
-from .test_lib.site_mock import SiteMock
-from .test_lib.tasks import add_tasks, get_all_tasks
+from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
+from cmk.testlib.agent_receiver.config import create_relay_config
+from cmk.testlib.agent_receiver.site_mock import SiteMock
+from cmk.testlib.agent_receiver.tasks import add_tasks, get_all_tasks
 
 
 def test_cannot_push_more_tasks_than_allowed(

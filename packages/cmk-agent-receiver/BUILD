@@ -74,6 +74,17 @@ py_library(
     ],
 )
 
+py_library(
+    name = "testlib",
+    srcs = glob(["cmk/testlib/agent_receiver/**/*.py"]),
+    imports = ["."],
+    deps = [
+        ":cmk-agent-receiver",
+        requirement("fastapi"),
+        requirement("httpx"),
+    ],
+)
+
 py_doc_test(
     name = "doctest",
     size = "small",
@@ -91,7 +102,7 @@ py_pytest_main(
 py_test(
     name = "unit",
     size = "small",
-    srcs = ["tests/component/test_lib/config_file_system.py"] + glob(["tests/unit/**/*.py"]) + [":__test__.py"],
+    srcs = glob(["tests/unit/agent_receiver/**/*.py"]) + [":__test__.py"],
     args = [
         "--random-order",
         "--random-order-bucket=global",
@@ -105,6 +116,7 @@ py_test(
     deps = [
         ":__test__",
         ":cmk-agent-receiver",
+        ":testlib",
         requirement("cryptography"),
         requirement("fastapi"),
         requirement("pytest"),
@@ -116,6 +128,32 @@ py_test(
         requirement("requests"),
         requirement("starlette"),
         requirement("time-machine"),
+    ],
+)
+
+py_pytest_main(
+    name = "__testlib_test__",
+    deps = [
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "unit_testlib",
+    size = "medium",
+    srcs = glob(["tests/unit/testlib/**/*.py"]) + [":__testlib_test__.py"],
+    args = [
+        "--random-order",
+        "--random-order-bucket=global",
+        "--durations=5",
+    ],
+    main = "__testlib_test__.py",
+    deps = [
+        ":__testlib_test__",
+        ":testlib",
+        requirement("pytest"),
+        requirement("httpx"),
+        requirement("pytest-random-order"),
     ],
 )
 
@@ -140,6 +178,7 @@ py_test(
     deps = [
         ":__component_test__",
         ":cmk-agent-receiver",
+        ":testlib",
         requirement("pytest"),
         requirement("pytest-socket"),
         requirement("pytest-random-order"),

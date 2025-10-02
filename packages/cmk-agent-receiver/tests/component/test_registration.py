@@ -6,10 +6,9 @@ from http import HTTPStatus
 
 from cmk.relay_protocols.relays import RelayRegistrationResponse
 from cmk.relay_protocols.tasks import FetchAdHocTask
-
-from .test_lib.agent_receiver import AgentReceiverClient
-from .test_lib.site_mock import OP, SiteMock
-from .test_lib.tasks import get_relay_tasks, push_task
+from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
+from cmk.testlib.agent_receiver.site_mock import OP, SiteMock
+from cmk.testlib.agent_receiver.tasks import get_relay_tasks, push_task
 
 
 def register_relay(ar: AgentReceiverClient, name: str) -> str:

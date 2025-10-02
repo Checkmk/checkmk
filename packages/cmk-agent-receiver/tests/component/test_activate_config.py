@@ -9,11 +9,10 @@ from http import HTTPStatus
 
 from cmk.agent_receiver.config import Config
 from cmk.relay_protocols.tasks import RelayConfigTask, TaskStatus
-
-from .test_lib.agent_receiver import AgentReceiverClient
-from .test_lib.config_file_system import create_config_folder
-from .test_lib.site_mock import SiteMock
-from .test_lib.tasks import get_relay_tasks
+from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
+from cmk.testlib.agent_receiver.config_file_system import create_config_folder
+from cmk.testlib.agent_receiver.site_mock import SiteMock
+from cmk.testlib.agent_receiver.tasks import get_relay_tasks
 
 
 def test_activation_performed_by_user_creates_config_tasks_for_each_relay(

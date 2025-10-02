@@ -36,7 +36,6 @@ from cmk.gui.i18n import _, _u
 from cmk.gui.type_defs import Choices, CustomHostAttrSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Checkbox, DropdownChoice, TextInput, Transform, ValueSpec
-from cmk.metric_backend.metrics_association_host_attribute import MetricsAssociation
 from cmk.rulesets.v1 import Label, Title
 from cmk.rulesets.v1.form_specs import BooleanChoice, DefaultValue, FormSpec
 from cmk.snmplib import SNMPCredentials  # pylint: disable=cmk-module-layer-violation
@@ -108,6 +107,17 @@ class MetaData(TypedDict):
     updated_at: NotRequired[float]
 
 
+class MetricsAssociationFilter(TypedDict):
+    attribute_type: Literal["resource", "scope", "data_point"]
+    attribute_key: str
+    attribute_value: str
+
+
+class MetricsAssociationEnabled(TypedDict):
+    attribute_filters: Sequence[MetricsAssociationFilter]
+    host_name_resource_attribute_key: str
+
+
 # Possible improvements for the future:
 # - Might help to differentiate between effective attributes and non effective attributes, since
 #   in effective attributes many more attributes are mandatory
@@ -129,7 +139,9 @@ class BuiltInHostAttributes(TypedDict, total=False):
     additional_ipv4addresses: Sequence[HostAddress]
     additional_ipv6addresses: Sequence[HostAddress]
     snmp_community: SNMPCredentials
-    metrics_association: MetricsAssociation
+    metrics_association: (
+        tuple[Literal["enabled"], MetricsAssociationEnabled] | tuple[Literal["disabled"], None]
+    )
     parents: Sequence[HostName]
     network_scan: NetworkScanSpec
     network_scan_result: NetworkScanResult

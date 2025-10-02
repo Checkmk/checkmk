@@ -35,11 +35,8 @@ from cmk.gui.openapi.framework.model.converter import (
 )
 from cmk.gui.openapi.framework.model.restrict_editions import RestrictEditions
 from cmk.gui.watolib.builtin_attributes import HostAttributeLabels, HostAttributeWaitingForDiscovery
-from cmk.gui.watolib.host_attributes import HostAttributes
-from cmk.metric_backend.metrics_association_host_attribute import (
-    ATTRIBUTE_NAME as METRICS_ASSOCIATION_ATTRIBUTE_NAME,
-)
-from cmk.metric_backend.metrics_association_host_attribute import (
+from cmk.gui.watolib.host_attributes import (
+    HostAttributes,
     MetricsAssociationEnabled,
     MetricsAssociationFilter,
 )
@@ -332,7 +329,7 @@ class HostViewAttributeModel(
                     ],
                 )
             )
-            if (metrics_assoc := value.get(METRICS_ASSOCIATION_ATTRIBUTE_NAME)) is not None
+            if (metrics_assoc := value.get("metrics_association"))
             else ApiOmitted(),
             labels=dict(value["labels"]) if "labels" in value else ApiOmitted(),
             waiting_for_discovery=value.get("waiting_for_discovery", ApiOmitted()),
@@ -404,7 +401,7 @@ class HostUpdateAttributeModel(
         if not isinstance(self.snmp_community, ApiOmitted):
             attributes["snmp_community"] = self.snmp_community_to_internal(self.snmp_community)
         if not isinstance(self.metrics_association, ApiOmitted):
-            attributes[METRICS_ASSOCIATION_ATTRIBUTE_NAME] = (
+            attributes["metrics_association"] = (
                 ("disabled", None)
                 if self.metrics_association == "disabled"
                 else (

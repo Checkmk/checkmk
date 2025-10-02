@@ -147,6 +147,7 @@ def main() {
                         case "Package cmk-ccc":             // Seems to require non-root permissions, see CMK-24586
                         case "Package cmk-update-agent":    // Failing tests in k8s, detailed analysis outstanding
                         case "Package mk-oracle":           // Runs integration tests in CV, wants to install libaio
+                        case "Python Werks Test":           // Get's OOM killed, see CMK-26379
                             relative_job_name = "${branch_base_folder}/cv/test-gerrit-single";
                             break;
                         default:

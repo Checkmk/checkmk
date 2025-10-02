@@ -96,6 +96,26 @@ py_library(
     }),
 )
 
+py_test(
+    name = "fetchers-tests",
+    size = "small",
+    srcs = [
+        "__test__.py",
+        "tests/cmk/fetchers/snmp_backend/test_classic_snmp.py",
+        "tests/cmk/fetchers/snmp_backend/test_stored_walk.py",
+        "tests/cmk/fetchers/test_agentprtcl.py",
+        "tests/cmk/fetchers/test_snmp.py",
+        "tests/cmk/fetchers/test_snmpscan.py",
+    ],
+    main = "__test__.py",
+    deps = [
+        "__test__",
+        requirement("pytest"),
+        ":fetchers",
+        "//packages/cmk-plugin-apis:agent_based",
+    ],
+)
+
 py_pytest_main(
     name = "__test__",
     deps = [

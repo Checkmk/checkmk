@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import logging
 from collections.abc import Sequence
 from typing import NamedTuple
 
@@ -14,7 +15,8 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.fetchers.snmp_backend import ClassicSNMPBackend
 from cmk.snmplib import SNMPBackendEnum, SNMPHostConfig, SNMPVersion
-from cmk.utils.log import logger
+
+logger = logging.getLogger(__name__)
 
 
 @pytest.mark.parametrize(
@@ -40,7 +42,7 @@ def test_snmp_port_spec(port: int, expected: str) -> None:
         character_encoding=None,
         snmp_backend=SNMPBackendEnum.CLASSIC,
     )
-    assert ClassicSNMPBackend(snmp_config, logger)._snmp_port_spec() == expected
+    assert ClassicSNMPBackend(snmp_config, logger)._snmp_port_spec() == expected  # noqa: SLF001
 
 
 @pytest.mark.usefixtures("monkeypatch")
@@ -67,7 +69,7 @@ def test_snmp_proto_spec(is_ipv6: bool, expected: str) -> None:
         character_encoding=None,
         snmp_backend=SNMPBackendEnum.CLASSIC,
     )
-    assert ClassicSNMPBackend(snmp_config, logger)._snmp_proto_spec() == expected
+    assert ClassicSNMPBackend(snmp_config, logger)._snmp_proto_spec() == expected  # noqa: SLF001
 
 
 class SNMPSettings(NamedTuple):
@@ -278,7 +280,7 @@ class SNMPSettings(NamedTuple):
 )
 def test_snmp_walk_command(settings: SNMPSettings, expected: Sequence[str]) -> None:
     backend = ClassicSNMPBackend(settings.snmp_config, logger)
-    assert backend._snmp_base_command("snmpwalk", settings.context_name) == expected
+    assert backend._snmp_base_command("snmpwalk", settings.context_name) == expected  # noqa: SLF001
 
 
 @pytest.mark.parametrize(
@@ -293,12 +295,12 @@ def test_snmp_walk_command(settings: SNMPSettings, expected: Sequence[str]) -> N
     ],
 )
 def test_auth_proto(proto: str, result: str) -> None:
-    assert classic_snmp._auth_proto_for(proto) == result
+    assert classic_snmp._auth_proto_for(proto) == result  # noqa: SLF001
 
 
 def test_auth_proto_unknown() -> None:
     with pytest.raises(MKGeneralException):
-        classic_snmp._auth_proto_for("unknown")
+        classic_snmp._auth_proto_for("unknown")  # noqa: SLF001
 
 
 @pytest.mark.parametrize(
@@ -311,7 +313,7 @@ def test_auth_proto_unknown() -> None:
     ],
 )
 def test_priv_proto(proto: str, result: str) -> None:
-    assert classic_snmp._priv_proto_for(proto) == result
+    assert classic_snmp._priv_proto_for(proto) == result  # noqa: SLF001
 
 
 @pytest.mark.parametrize(
@@ -326,4 +328,4 @@ def test_priv_proto(proto: str, result: str) -> None:
 )
 def test_priv_proto_unknown(proto: str) -> None:
     with pytest.raises(MKGeneralException):
-        classic_snmp._priv_proto_for(proto)
+        classic_snmp._priv_proto_for(proto)  # noqa: SLF001

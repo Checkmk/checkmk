@@ -30,8 +30,8 @@ class MockWalkCache(WalkCache):
 class TestWalkCache:
     def test_oid2name_roundtrip(self) -> None:
         fetchoid, context_hash = ".3.1.4.1.5.9.2.6.5.3.5", "12c3d4a"
-        assert (fetchoid, context_hash) == WalkCache._name2oid(
-            WalkCache._oid2name(fetchoid, context_hash)
+        assert (fetchoid, context_hash) == WalkCache._name2oid(  # noqa: SLF001
+            WalkCache._oid2name(fetchoid, context_hash)  # noqa: SLF001
         )
 
     def test_cache_keeps_stored_data(self, tmp_path: Path) -> None:

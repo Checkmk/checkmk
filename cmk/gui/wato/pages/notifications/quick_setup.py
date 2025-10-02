@@ -276,12 +276,14 @@ def _event_choices(
 
 
 def _validate_at_least_one_event(trigger_events: Mapping[str, object]) -> None:
-    if (
-        not trigger_events["host_events"]
-        and not trigger_events["service_events"]
-        and not trigger_events.get("ec_alerts", False)
-    ):
+    if not trigger_events:
         raise ValidationError(Message("At least one triggering event must be selected."))
+
+    if "host_events" in trigger_events and not trigger_events["host_events"]:
+        raise ValidationError(Message("At least one host event must be selected."))
+
+    if "service_events" in trigger_events and not trigger_events["service_events"]:
+        raise ValidationError(Message("At least one service event must be selected."))
 
 
 def triggering_events() -> QuickSetupStage:

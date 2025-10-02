@@ -26,7 +26,7 @@ LINK_FLAGS = [
     "-pass-exit-codes",
 ]
 
-linux_gcc13_link_flags = ["-B/usr/bin"]
+linux_gcc14_link_flags = ["-B/usr/bin"]
 
 ci_link_flags = ["-B/opt/bin"]
 
@@ -54,22 +54,22 @@ UNFILTERED_COMPILE_FLAGS = [
     "-D__TIME__=\"redacted\"",
 ]
 
-linux_gcc13_tool_paths = {
-    "ar": "/usr/bin/gcc-ar-13",
-    "cpp": "/usr/bin/cpp-13",
-    "gcc": "/usr/bin/gcc-13",
-    "gcov": "/usr/bin/gcov-13",
+linux_gcc14_tool_paths = {
+    "ar": "/usr/bin/gcc-ar-14",
+    "cpp": "/usr/bin/cpp-14",
+    "gcc": "/usr/bin/gcc-14",
+    "gcov": "/usr/bin/gcov-14",
     "ld": "/usr/bin/ld",
-    "nm": "/usr/bin/gcc-nm-13",
+    "nm": "/usr/bin/gcc-nm-14",
     "objdump": "/usr/bin/objdump",
     "strip": "/usr/bin/strip",
     "llvm-cov": "/bin/false",  # Optional on master.
     "objcopy": "/usr/bin/objcopy",
 }
 
-linux_gcc13_cxx_builtin_include_directories = [
-    "/usr/lib/gcc/x86_64-linux-gnu/13/include",
-    "/usr/lib/gcc/x86_64-linux-gnu/13/include-fixed",
+linux_gcc14_cxx_builtin_include_directories = [
+    "/usr/lib/gcc/x86_64-linux-gnu/14/include",
+    "/usr/lib/gcc/x86_64-linux-gnu/14/include-fixed",
     "/include",
     "/usr/include",
     "/usr/lib64/",
@@ -97,10 +97,10 @@ ci_cxx_builtin_include_directories = [
 ]
 
 TOOLCHAINS = {
-    "linux_gcc13": (
-        linux_gcc13_cxx_builtin_include_directories,
-        linux_gcc13_tool_paths,
-        linux_gcc13_link_flags,
+    "linux_gcc14": (
+        linux_gcc14_cxx_builtin_include_directories,
+        linux_gcc14_tool_paths,
+        linux_gcc14_link_flags,
     ),
     "ci": (
         ci_cxx_builtin_include_directories,
@@ -115,7 +115,7 @@ TOOLCHAINS = {
         abi_libc_version = "local",
         abi_version = "local",
         compile_flags = COMPILE_FLAGS,
-        compiler = "gcc-13",
+        compiler = "gcc",
         cpu = "k8",
         cxx_builtin_include_directories = cxx_builtin_include_directories,
         cxx_flags = CXX_FLAGS,

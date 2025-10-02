@@ -107,7 +107,7 @@ single_version_override(
 
 bazel_dep(name = "rules_proto_grpc", version = "5.0.1")
 
-register_toolchains("//bazel/toolchains/cc:linux_gcc13")
+register_toolchains("//bazel/toolchains/cc:linux_gcc14")
 
 # bazel_skylib: Required for setting up rules_foreign_cc
 bazel_dep(name = "bazel_skylib", version = "1.7.1")

@@ -1,0 +1,33 @@
+@charset "UTF-8";
+// Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
+
+#main-container {
+  display: flex;
+  height: 100%;
+
+  #main-navigation {
+    width: 64px;
+    z-index: +2;
+  }
+
+  #sidebar {
+    width: 280px;
+  }
+
+  #main-content {
+    margin-left: 10px;
+    width: calc(100% - 64px);
+  }
+
+  &:has(> #sidebar) {
+    #main-content {
+      width: calc(100% - 64px - 280px);
+    }
+  }
+}
+
+body.main:has(#main-container) {
+  padding: 0;
+}

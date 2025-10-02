@@ -619,6 +619,18 @@ def _get_parameters_for_rule_with_id(
     return (notify_plugin_name, parameters_for_method[params_id]["parameter_properties"])
 
 
+def make_parameter_hashable(obj: object) -> object:
+    """Used for notification parameters where there are no other unhashable
+    types expected.  e.g. sets, bytearrays or custom objects"""
+
+    if isinstance(obj, dict):
+        return tuple(sorted((k, make_parameter_hashable(v)) for k, v in obj.items()))
+    elif isinstance(obj, list):
+        return tuple(make_parameter_hashable(x) for x in sorted(obj))
+    else:
+        return obj
+
+
 def _create_parameters_for_rule(notify_plugin: PluginNameWithParameters) -> NotifyPlugin:
     if notify_plugin[1] is None:
         return (notify_plugin[0], None)
@@ -627,7 +639,7 @@ def _create_parameters_for_rule(notify_plugin: PluginNameWithParameters) -> Noti
     new_params_id = NotificationParameterID(str(uuid.uuid4()))
     new_notification_parameter_item = NotificationParameterItem(
         general=NotificationParameterGeneralInfos(
-            description="",
+            description="Auto-generated during rule creation via the REST API",
             comment="",
             docu_url="",
         ),
@@ -637,6 +649,13 @@ def _create_parameters_for_rule(notify_plugin: PluginNameWithParameters) -> Noti
     if notify_plugin[0] not in notification_parameters:
         notification_parameters[notify_plugin[0]] = {new_params_id: new_notification_parameter_item}
     else:
+        # If the same parameter configuration already exists, reuse it
+        for params_id, params in notification_parameters[notify_plugin[0]].items():
+            if hash(make_parameter_hashable(params["parameter_properties"])) == hash(
+                make_parameter_hashable(notify_plugin[1])
+            ):
+                return (notify_plugin[0], params_id)
+
         notification_parameters[notify_plugin[0]].update(
             {new_params_id: new_notification_parameter_item}
         )

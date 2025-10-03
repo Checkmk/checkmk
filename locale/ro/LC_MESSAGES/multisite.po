@@ -4102,6 +4102,10 @@ msgstr "Adăugați informații de context la titlu"
 msgid "Add customer"
 msgstr "Adăugați clientul"
 
+#, fuzzy
+msgid "Add dashboard (prototype)"
+msgstr "Element de tablou de bord"
+
 msgid "Add destination address"
 msgstr "Adăugați adresa de destinație"
 
@@ -16554,6 +16558,10 @@ msgstr "Creați un cluster"
 
 msgid "Create custom graph"
 msgstr "Creați un grafic personalizat"
+
+#, fuzzy
+msgid "Create dashboard"
+msgstr "Tablouri de bord conexe"
 
 msgid "Create element"
 msgstr "Creați elementul"
@@ -92173,10 +92181,6 @@ msgstr "Acest ID este deja utilizat. Vă rugăm să alegeți altul."
 #, fuzzy
 msgid "At least one scope must be selected."
 msgstr "Starea când lipsește fișierul"
-
-#, fuzzy
-msgid "Create dashboard"
-msgstr "Tablouri de bord conexe"
 
 #, fuzzy
 msgid "Create & set dashboard filters"

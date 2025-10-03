@@ -4086,6 +4086,10 @@ msgstr "Voeg contextinformatie toe aan titel"
 msgid "Add customer"
 msgstr "Klant toevoegen"
 
+#, fuzzy
+msgid "Add dashboard (prototype)"
+msgstr "Dashboard-element"
+
 msgid "Add destination address"
 msgstr "Adres van bestemming toevoegen"
 
@@ -16534,6 +16538,10 @@ msgstr "Cluster maken"
 
 msgid "Create custom graph"
 msgstr "Maak aangepaste grafiek"
+
+#, fuzzy
+msgid "Create dashboard"
+msgstr "Gerelateerde dashboards"
 
 msgid "Create element"
 msgstr "Creëer element"
@@ -91935,10 +91943,6 @@ msgstr "Deze ID is al in gebruik. Gelieve een andere te kiezen."
 #, fuzzy
 msgid "At least one scope must be selected."
 msgstr "Staat wanneer bestand ontbreekt"
-
-#, fuzzy
-msgid "Create dashboard"
-msgstr "Gerelateerde dashboards"
 
 #, fuzzy
 msgid "Create & set dashboard filters"

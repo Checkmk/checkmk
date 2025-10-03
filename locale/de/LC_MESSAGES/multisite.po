@@ -4013,6 +4013,10 @@ msgstr "Kontaktinformation zu Titel ergänzen"
 msgid "Add customer"
 msgstr "Kunde hinzufügen"
 
+#, fuzzy
+msgid "Add dashboard (prototype)"
+msgstr "Dashboard-Filter"
+
 msgid "Add destination address"
 msgstr "Zieladresse hinzufügen"
 
@@ -16037,6 +16041,10 @@ msgstr "Cluster erstellen"
 
 msgid "Create custom graph"
 msgstr "Benutzerdefinierten Graph erstellen"
+
+#, fuzzy
+msgid "Create dashboard"
+msgstr "Erstelle ein Dashboard"
 
 msgid "Create element"
 msgstr "Element erstellen"
@@ -88524,10 +88532,6 @@ msgstr "Diese ID wird bereits verwendet. Bitte wählen Sie eine andere."
 #, fuzzy
 msgid "At least one scope must be selected."
 msgstr "Es muss mindestens ein auslösendes Ereignis ausgewählt werden."
-
-#, fuzzy
-msgid "Create dashboard"
-msgstr "Erstelle ein Dashboard"
 
 #, fuzzy
 msgid "Create & set dashboard filters"

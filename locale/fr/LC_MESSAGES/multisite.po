@@ -4114,6 +4114,10 @@ msgstr "Ajouter des informations contextuelles au titre"
 msgid "Add customer"
 msgstr "Ajouter un client"
 
+#, fuzzy
+msgid "Add dashboard (prototype)"
+msgstr "Élément du tableau de bord"
+
 msgid "Add destination address"
 msgstr "Ajouter l'adresse de destination"
 
@@ -16638,6 +16642,10 @@ msgstr "Créer un cluster"
 
 msgid "Create custom graph"
 msgstr "Créer un graphique personnalisé"
+
+#, fuzzy
+msgid "Create dashboard"
+msgstr "Tableaux de bord connexes"
 
 msgid "Create element"
 msgstr "Créer un élément"
@@ -92748,10 +92756,6 @@ msgstr "Cet identifiant est déjà utilisé. Veuillez en choisir un autre."
 #, fuzzy
 msgid "At least one scope must be selected."
 msgstr "Il manque au moins une sélection."
-
-#, fuzzy
-msgid "Create dashboard"
-msgstr "Tableaux de bord connexes"
 
 #, fuzzy
 msgid "Create & set dashboard filters"

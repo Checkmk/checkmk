@@ -3885,6 +3885,10 @@ msgstr "タイトルにコンテキスト情報を追加する"
 msgid "Add customer"
 msgstr "カスタマーを追加する"
 
+#, fuzzy
+msgid "Add dashboard (prototype)"
+msgstr "ダッシュボード要素"
+
 msgid "Add destination address"
 msgstr "宛先アドレスを追加します"
 
@@ -15567,6 +15571,10 @@ msgstr "クラスタ作成"
 
 msgid "Create custom graph"
 msgstr "カスタムグラフを作成する"
+
+#, fuzzy
+msgid "Create dashboard"
+msgstr "関連ダッシュボード"
 
 msgid "Create element"
 msgstr "要素を作成する"
@@ -86139,10 +86147,6 @@ msgstr "このIDはすでに使用されています。別のものを選択し�
 #, fuzzy
 msgid "At least one scope must be selected."
 msgstr "少なくとも1つのトリガーイベントを選択する必要があります。"
-
-#, fuzzy
-msgid "Create dashboard"
-msgstr "関連ダッシュボード"
 
 #, fuzzy
 msgid "Create & set dashboard filters"

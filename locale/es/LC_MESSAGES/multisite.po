@@ -4106,6 +4106,10 @@ msgstr "Añadir información de contexto al título"
 msgid "Add customer"
 msgstr "Añadir cliente"
 
+#, fuzzy
+msgid "Add dashboard (prototype)"
+msgstr "Elemento del cuadro de mandos"
+
 msgid "Add destination address"
 msgstr "Añadir dirección de destino"
 
@@ -16647,6 +16651,10 @@ msgstr "Crear un clúster"
 
 msgid "Create custom graph"
 msgstr "Crear un gráfico personalizado"
+
+#, fuzzy
+msgid "Create dashboard"
+msgstr "Cuadros de mando relacionados"
 
 msgid "Create element"
 msgstr "Crear elemento"
@@ -92661,10 +92669,6 @@ msgstr "Este ID ya está en uso. Por favor, elija otro."
 #, fuzzy
 msgid "At least one scope must be selected."
 msgstr "Estado cuando falta el archivo"
-
-#, fuzzy
-msgid "Create dashboard"
-msgstr "Cuadros de mando relacionados"
 
 #, fuzzy
 msgid "Create & set dashboard filters"

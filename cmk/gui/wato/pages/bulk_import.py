@@ -149,6 +149,63 @@ def _detect_attribute(attributes: Choices, header: str) -> str:
     return best_key
 
 
+def _host_rows_to_bulk(
+    iterator: typing.Iterator[dict[str, str]],
+    host_attributes: Mapping[str, ABCHostAttribute],
+) -> typing.Generator[ImportTuple, None, None]:
+    """Here we transform each row into a tuple of HostName and HostAttributes and None.
+
+    This format is directly compatible with Folder().create_hosts(...)
+
+    Each attribute will be validated against its corresponding ValueSpec.
+
+    Example:
+        Before:
+            [{'alias': 'foo', 'host_name': 'foo_server', 'dummy_attr': '5'}]
+
+        After:
+            [('foo_server', {'alias': 'foo', 'dummy_attr': '5'}, None)]
+
+    """
+    hostname_valuespec = Hostname()
+
+    for row_num, entry in enumerate(iterator):
+        entry = entry.copy()  # Don't operate on the original
+        _host_name: HostName | None = None
+        # keys are ordered in insert-first order, so we can derive col_num from the ordering
+        for col_num, (attr_name, attr_value) in enumerate(list(entry.items())):  # iterate on copy
+            if attr_name == "host_name":
+                hostname_valuespec.validate_value(attr_value, "host")
+                # Remove host_name from attributes
+                del entry["host_name"]
+                _host_name = HostName(attr_value)
+            elif attr_name in ("-", ""):
+                # Don't import / No select
+                del entry[attr_name]
+            elif attr_name != "alias":
+                host_attribute_inst = host_attributes[attr_name]
+
+                if not attr_value.isascii():
+                    raise MKUserError(
+                        None,
+                        _('Non-ASCII characters are not allowed in the attribute "%s".')
+                        % attr_name,
+                    )
+                try:
+                    host_attribute_inst.validate_input(attr_value, "")
+                except MKUserError as exc:
+                    raise MKUserError(
+                        None,
+                        _("Invalid value in column %d (%s) of row %d: %s")
+                        % (col_num, attr_name, row_num, exc),
+                    ) from exc
+
+        if _host_name is None:
+            raise MKUserError(None, _("The host name attribute needs to be assigned to a column."))
+
+        yield _host_name, typing.cast(HostAttributes, entry), None
+
+
 class ModeBulkImport(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -302,72 +359,17 @@ class ModeBulkImport(WatoMode):
         pprint_value: bool,
         use_git: bool,
     ) -> ActionResult:
-        def _transform_and_validate_raw_rows(
-            iterator: typing.Iterator[dict[str, str]],
-            host_attributes: Mapping[str, ABCHostAttribute],
-        ) -> typing.Generator[ImportTuple, None, None]:
-            """Here we transform each row into a tuple of HostName and HostAttributes and None.
-
-            This format is directly compatible with Folder().create_hosts(...)
-
-            Each attribute will be validated against it's corresponding ValueSpec.
-
-            Example:
-                Before:
-                    [{'alias': 'foo', 'host_name': 'foo_server', 'dummy_attr': '5'}]
-
-                After:
-                    [('foo_server', {'alias': 'foo', 'dummy_attr': '5'}, None)]
-
-            """
-            hostname_valuespec = Hostname()
-
-            for row_num, entry in enumerate(iterator):
-                _host_name: HostName | None = None
-                # keys are ordered in insert-first order, so we can derive col_num from the ordering
-                for col_num, (attr_name, attr_value) in enumerate(
-                    list(entry.items())
-                ):  # iterate on copy
-                    if attr_name == "host_name":
-                        hostname_valuespec.validate_value(attr_value, "host")
-                        # Remove host_name from attributes
-                        del entry["host_name"]
-                        _host_name = HostName(attr_value)
-                    elif attr_name in ("-", ""):
-                        # Don't import / No select
-                        del entry[attr_name]
-                    elif attr_name != "alias":
-                        host_attribute_inst = host_attributes[attr_name]
-
-                        if not attr_value.isascii():
-                            raise MKUserError(
-                                None,
-                                _('Non-ASCII characters are not allowed in the attribute "%s".')
-                                % attr_name,
-                            )
-                        try:
-                            host_attribute_inst.validate_input(attr_value, "")
-                        except MKUserError as exc:
-                            raise MKUserError(
-                                None,
-                                _("Invalid value in column %d (%s) of row %d: %s")
-                                % (col_num, attr_name, row_num, exc),
-                            ) from exc
-
-                if _host_name is None:
-                    raise MKUserError(
-                        None, _("The host name attribute needs to be assigned to a column.")
-                    )
-
-                yield _host_name, typing.cast(HostAttributes, entry), None
-
+        # The attribute names will come as request variables stored at attribute_0...attribute_n
+        # where n is, in theory, the row length - 1. And, in theory, they should always exist, even
+        # if they are the empty string. 'None' would be weird, likely the user manually modified
+        # the form and deleted the field. In that case, rows_as_dict() would raise ValueError.
         attr_names: list[str] = [
             name
             for index in range(csv_bulk_import.row_length)
             if (name := request.var(f"attribute_{index}")) is not None
         ]
         raw_rows = csv_bulk_import.rows_as_dict(attr_names)
-        host_attribute_tuples: typing.Iterator[ImportTuple] = _transform_and_validate_raw_rows(
+        host_attribute_tuples: typing.Iterator[ImportTuple] = _host_rows_to_bulk(
             raw_rows, host_attributes
         )
 

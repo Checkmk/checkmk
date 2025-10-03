@@ -16,7 +16,9 @@ from cmk.gui.type_defs import Choices, CustomHostAttrSpec
 from cmk.gui.wato.pages.bulk_import import (
     _attribute_choices,
     _detect_attribute,
+    _host_rows_to_bulk,
     _prevent_reused_attr_names,
+    ImportTuple,
     ModeBulkImport,
 )
 from cmk.gui.watolib.csv_bulk_import import CSVBulkImport
@@ -85,6 +87,27 @@ alinux02,10.10.10.2
 alinux03,10.10.10.3
 
 """
+
+CSV_WITH_NON_ASCII_CHAR_IN_FIELD = """
+thehostname,the_v4_ip_address
+alinux01,10.10.10.1
+alinux02-weird,1ö.1ö.1ö.2
+alinux03,10.10.10.3
+""".strip()
+
+CSV_WITH_NON_ASCII_CHAR_IN_ALIAS = """
+thehostname,the_v4_ip_address,alias
+alinux01,10.10.10.1,Läufer01
+alinux02-weird,10.10.10.2,Läufer02
+alinux03,10.10.10.3,Läufer03
+""".strip()
+
+CSV_WITH_IP_VALIDATION_ERROR = """
+thehostname,the_v4_ip_address
+alinux01,10.10.10.1
+alinux02-weird,ten...ten....ten....two
+alinux03,10.10.10.3
+""".strip()
 
 
 @pytest.mark.parametrize(
@@ -194,6 +217,7 @@ def test_attribute_choices() -> None:
         ("Host Name", "host_name"),
         ("IP Address", "ipaddress"),
         ("Nothing", ""),
+        ("", ""),
     ],
 )
 @pytest.mark.usefixtures("request_context")
@@ -206,3 +230,93 @@ def test_detect_attribute(
         _detect_attribute(attr_choices_with_tag_groups_and_host_attrs(tag_groups), header)
         == expected
     )
+
+
+@pytest.mark.parametrize(
+    "sample,headers,expected",
+    [
+        pytest.param(
+            CSV_NORMAL_WITH_TITLE,
+            ["host_name", "ipaddress"],
+            [
+                ("alinux01", {"ipaddress": "10.10.10.1"}, None),
+                ("alinux02", {"ipaddress": "10.10.10.2"}, None),
+                ("alinux03", {"ipaddress": "10.10.10.3"}, None),
+            ],
+            id="green path with two attributes",
+        ),
+        pytest.param(
+            CSV_NORMAL_WITH_TITLE,
+            ["host_name", "-"],
+            [
+                ("alinux01", {}, None),
+                ("alinux02", {}, None),
+                ("alinux03", {}, None),
+            ],
+            id="green path with one field unassigned",
+        ),
+        pytest.param(
+            CSV_WITH_NON_ASCII_CHAR_IN_ALIAS,
+            ["host_name", "ipaddress", "alias"],
+            [
+                ("alinux01", {"ipaddress": "10.10.10.1", "alias": "Läufer01"}, None),
+                ("alinux02-weird", {"ipaddress": "10.10.10.2", "alias": "Läufer02"}, None),
+                ("alinux03", {"ipaddress": "10.10.10.3", "alias": "Läufer03"}, None),
+            ],
+            id="alias may have non-ascii",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_host_rows_to_bulk(
+    sample: str, headers: Sequence[str], expected: Sequence[ImportTuple]
+) -> None:
+    """
+    Green path tests for _host_rows_to_bulk().
+    """
+    csv_bulk_import = CSVBulkImport(handle=StringIO(sample), has_title_line=True)
+    raw_rows = csv_bulk_import.rows_as_dict(headers)
+    host_attributes = all_host_attributes(
+        active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
+    )
+    host_attribute_tuples = _host_rows_to_bulk(raw_rows, host_attributes)
+    assert list(host_attribute_tuples) == expected
+
+
+@pytest.mark.parametrize(
+    "sample,headers,exc_matches",
+    [
+        pytest.param(
+            CSV_WITH_NON_ASCII_CHAR_IN_FIELD,
+            ["host_name", "ipaddress"],
+            "Non-ASCII",
+            id="non-ascii in field",
+        ),
+        pytest.param(
+            CSV_WITH_IP_VALIDATION_ERROR,
+            ["host_name", "ipaddress"],
+            "Invalid host address",
+            id="field does not pass validation",
+        ),
+        pytest.param(
+            CSV_NORMAL_WITH_TITLE,
+            ["-", "ipaddress"],
+            "host name attribute",
+            id="host_name not assigned",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_host_rows_to_bulk_exceptions(
+    sample: str, headers: Sequence[str], exc_matches: str
+) -> None:
+    """
+    Cases where _host_rows_to_bulk() is expected to raise an exception on bad input.
+    """
+    csv_bulk_import = CSVBulkImport(handle=StringIO(sample), has_title_line=True)
+    raw_rows = csv_bulk_import.rows_as_dict(headers)
+    host_attributes = all_host_attributes(
+        active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
+    )
+    with pytest.raises(MKUserError, match=exc_matches):
+        list(_host_rows_to_bulk(raw_rows, host_attributes))

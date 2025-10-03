@@ -17,8 +17,10 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     RelayConfigSpec,
     RelayTask,
     TasksRepository,
+    TaskStatus,
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
+from cmk.agent_receiver.relay.lib.shared_types import RelayID
 from cmk.agent_receiver.relay.lib.site_auth import InternalAuth
 
 
@@ -34,6 +36,8 @@ class ConfigTaskFactory:
         serial = retrieve_config_serial()
         relay_config_spec = self._generate_relay_config_spec(serial)
         for relay_id in self.relays_repository.get_all_relay_ids(auth):
+            if self._pending_configuration_task_exists(relay_id, serial):
+                continue  # Skip creating duplicate pending tasks
             task = RelayTask(spec=relay_config_spec, creation_timestamp=now, update_timestamp=now)
             with bound_contextvars(task_id=task.id):
                 self.tasks_repository.store_task(relay_id, task)
@@ -44,6 +48,19 @@ class ConfigTaskFactory:
         # TODO: Read filesystem and create tar data
         tar_data = ""
         return RelayConfigSpec(serial=serial, tar_data=tar_data)
+
+    def _pending_configuration_task_exists(
+        self,
+        relay_id: RelayID,
+        serial: str,
+    ) -> bool:
+        tasks = self.tasks_repository.get_tasks(relay_id)
+        return any(
+            task.status == TaskStatus.PENDING
+            and isinstance(task.spec, RelayConfigSpec)
+            and task.spec.serial == serial
+            for task in tasks
+        )
 
 
 def create_tar_with_structure_as_base64(file_paths: list[Path], common_parent: Path) -> str:

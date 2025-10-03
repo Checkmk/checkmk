@@ -68,19 +68,29 @@ class ActiveCheck:
             return ()
 
         proxy_config = ProxyConfig(self.host_name, self._http_proxies)
+        original_and_processed_configs = (
+            (
+                config_set,
+                process_configuration_to_parameters(
+                    config_set,
+                    proxy_config,
+                ),
+            )
+            for config_set in plugin_params
+        )
+
         return [
-            self._make_service(active_check, service, proxy_config, configuration_set)
-            for configuration_set in plugin_params
-            for processed in [process_configuration_to_parameters(configuration_set, proxy_config)]
-            for service in active_check(processed.value, self.host_config)
+            self._make_service(active_check, service, config_set, params.surrogates)
+            for config_set, params in original_and_processed_configs
+            for service in active_check(params.value, self.host_config)
         ]
 
     def _make_service(
         self,
         active_check: ActiveCheckConfig,
         service: ActiveCheckCommand,
-        proxy_config: ProxyConfig,
         conf_dict: Mapping[str, object],
+        surrogates: Mapping[int, str],
     ) -> ActiveServiceData:
         if self._ip_lookup_failed:
             executable = "check_always_crit"
@@ -89,13 +99,12 @@ class ActiveCheck:
             )
         else:
             executable = f"check_{active_check.name}"
-            processed = process_configuration_to_parameters(conf_dict, proxy_config)
             arguments = replace_passwords(
                 self.host_name,
                 service.command_arguments,
                 self.stored_passwords,
                 self.password_store_file,
-                processed.surrogates,
+                surrogates,
                 apply_password_store_hack=password_store.hack.HACK_CHECKS.get(
                     active_check.name, False
                 ),

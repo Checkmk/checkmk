@@ -11,11 +11,10 @@ from fastapi.testclient import TestClient
 from cmk.agent_receiver.config import Config
 from cmk.agent_receiver.main import main_app
 from cmk.relay_protocols.tasks import RelayConfigTask, TaskStatus
-
-from .test_lib.agent_receiver import AgentReceiverClient
-from .test_lib.config_file_system import create_config_folder
-from .test_lib.site_mock import SiteMock
-from .test_lib.tasks import get_relay_tasks
+from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
+from cmk.testlib.agent_receiver.config_file_system import create_config_folder
+from cmk.testlib.agent_receiver.site_mock import SiteMock
+from cmk.testlib.agent_receiver.tasks import get_relay_tasks
 
 
 def test_startup_creates_config_tasks_for_existing_relays(

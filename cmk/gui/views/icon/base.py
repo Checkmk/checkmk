@@ -34,7 +34,8 @@ class Icon:
             | tuple[IconSpec, str]
             | tuple[IconSpec, str, str]
             | tuple[IconSpec, str, str | None]
-            | tuple[IconSpec, str, tuple[str, str]],
+            | tuple[IconSpec, str, tuple[str, str]]
+            | tuple[str, str | None, tuple[str, str] | None],
         ],
         columns: Sequence[ColumnName] = (),
         host_columns: Sequence[ColumnName] = (),
@@ -96,6 +97,7 @@ class Icon:
         | tuple[IconSpec, str, str]
         | tuple[IconSpec, str, str | None]
         | tuple[IconSpec, str, tuple[str, str]]
+        | tuple[str, str | None, tuple[str, str] | None]
     ):
         return self._render_func(what, row, tags, custom_vars)
 

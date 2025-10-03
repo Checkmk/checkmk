@@ -589,7 +589,14 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.caching",
         "cmk.utils.paths",
     ),
-    Component("cmk.cmkcert"): _allow(
+    Component("cmk.gui.cmkcert"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_MESSAGING,
+        "cmk.gui",
+        "cmk.utils",
+        "cmk.crypto.certificate",
+    ),
+    Component("cmk.message_broker_certs"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_MESSAGING,
         "cmk.utils",
@@ -1197,7 +1204,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.nonfree.pro.liveproxy",
         "cmk.nonfree.pro.robotmk",
         "cmk.checkengine",
-        "cmk.cmkcert",
+        "cmk.message_broker_certs",
         "cmk.cmkpasswd",
         "cmk.discover_plugins",
         "cmk.diskspace",
@@ -1242,7 +1249,8 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
 _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("bin/check_mk"): Component("cmk.base"),
     ModulePath("bin/cmk-automation-helper"): Component("cmk.base"),
-    ModulePath("bin/cmk-cert"): Component("cmk.cmkcert"),
+    ModulePath("bin/cmk-cert"): Component("cmk.gui.cmkcert"),
+    ModulePath("bin/message-broker-certs"): Component("cmk.message_broker_certs"),
     ModulePath("bin/cmk-convert-rrds"): Component("cmk.rrd"),
     ModulePath("bin/cmk-create-rrd"): Component("cmk.rrd"),
     ModulePath("bin/cmk-migrate-extension-rulesets"): Component("cmk.update_config"),

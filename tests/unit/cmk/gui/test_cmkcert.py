@@ -8,10 +8,18 @@
 # mypy: disable-error-code="no-untyped-def"
 
 from pathlib import Path
+from unittest.mock import Mock, patch
 
 import pytest
 
-from cmk.cmkcert import _run_cmkcert, CertificateType
+from livestatus import SiteConfigurations
+
+from cmk.ccc.site import SiteId
+from cmk.gui.cmkcert import (
+    _run_cmkcert,
+    CertificateType,
+)
+from cmk.gui.config import Config
 
 
 @pytest.fixture(name="certificate_directory")
@@ -60,66 +68,9 @@ VXzJSdPU5tH3gi42
 -----END PRIVATE KEY-----"""
 
 
-@pytest.fixture(name="dummy_broker_ca_certificate")
-def fixture_dummy_broker_ca_certificate() -> str:
-    return _dummy_certificate()
-
-
-@pytest.fixture(name="dummy_broker_ca_key")
-def fixture_dummy_broker_ca_key() -> str:
-    return _dummy_key()
-
-
 @pytest.fixture(name="dummy_site_ca")
 def fixture_dummy_site_ca() -> str:
     return f"{_dummy_key()}\n{_dummy_certificate()}"
-
-
-@pytest.mark.parametrize(
-    "target_certificate, target_cert_paths",
-    [
-        ("site-ca", [Path("etc/ssl/ca.pem")]),
-        ("site", [Path(f"etc/ssl/sites/{_site_id()}.pem")]),
-        ("agent-ca", [Path("etc/ssl/agents/ca.pem")]),
-        (
-            "broker-ca",
-            [
-                Path("etc/rabbitmq/ssl/ca_cert.pem"),
-                Path("etc/rabbitmq/ssl/ca_key.pem"),
-                Path("etc/rabbitmq/ssl/trusted_cas.pem"),
-            ],
-        ),
-        (
-            "broker",
-            [
-                Path("etc/rabbitmq/ssl/cert.pem"),
-                Path("etc/rabbitmq/ssl/key.pem"),
-            ],
-        ),
-    ],
-)
-def test_replace_option_required(
-    tmp_path: Path,
-    target_certificate: CertificateType,
-    target_cert_paths: list[Path],
-) -> None:
-    for target_cert_path in target_cert_paths:
-        target_cert_path = tmp_path / target_cert_path
-        target_cert_path.parent.mkdir(parents=True, exist_ok=True)
-        target_cert_path.write_text("DUMMY CONTENT")
-
-        with pytest.raises(ValueError, match="certificate already exists"):
-            _run_cmkcert(
-                omd_root=tmp_path,
-                site_id=_site_id(),
-                target_certificate=target_certificate,
-                expiry=90,
-                replace=False,
-            )
-
-        assert "DUMMY CONTENT" in target_cert_path.read_text(), (
-            "Certificate content should not be modified"
-        )
 
 
 def test_site_ca_doesnt_exist(tmp_path: Path) -> None:
@@ -129,18 +80,7 @@ def test_site_ca_doesnt_exist(tmp_path: Path) -> None:
             site_id=_site_id(),
             target_certificate="site",
             expiry=90,
-            replace=True,
-        )
-
-
-def test_broker_ca_doesnt_exist(tmp_path: Path) -> None:
-    with pytest.raises(FileNotFoundError):
-        _run_cmkcert(
-            omd_root=tmp_path,
-            site_id=_site_id(),
-            target_certificate="broker",
-            expiry=90,
-            replace=True,
+            finalize=True,
         )
 
 
@@ -150,38 +90,78 @@ def test_broker_ca_doesnt_exist(tmp_path: Path) -> None:
         ("site-ca", Path("etc/ssl/ca.pem")),
         ("site", Path(f"etc/ssl/sites/{_site_id()}.pem")),
         ("agent-ca", Path("etc/ssl/agents/ca.pem")),
-        ("broker-ca", Path("etc/rabbitmq/ssl/ca_cert.pem")),
-        ("broker", Path("etc/rabbitmq/ssl/cert.pem")),
     ],
 )
-def test_replace(
+@patch("cmk.gui.cmkcert.load_config")
+@patch("cmk.gui.cmkcert.load_configuration_settings")
+@patch("cmk.gui.cmkcert.save_global_settings")
+@patch("cmk.gui.cmkcert._changes")
+def test_replace(  # type: ignore[misc]
+    mock__changes: Mock,
+    mock_save_global_settings: Mock,
+    mock_load_configuration_settings: Mock,
+    mock_load_config: Mock,
     tmp_path: Path,
     target_certificate: CertificateType,
     target_cert_path: str,
     dummy_site_ca: str,
-    dummy_broker_ca_certificate: str,
-    dummy_broker_ca_key: str,
 ) -> None:
-    if target_certificate == "site":
+    mock_load_configuration_settings.return_value = {
+        "trusted_certificate_authorities": {"trusted_cas": [], "use_system_wide_cas": False}
+    }
+    mock_load_config.return_value = Config(
+        sites=SiteConfigurations(
+            {
+                SiteId("test_site"): {
+                    "alias": "Local site test_site",
+                    "disable_wato": True,
+                    "disabled": False,
+                    "id": SiteId("test_site"),
+                    "insecure": False,
+                    "message_broker_port": 5672,
+                    "multisiteurl": "",
+                    "persist": False,
+                    "proxy": None,
+                    "replicate_ec": False,
+                    "replicate_mkps": False,
+                    "replication": None,
+                    "socket": ("local", None),
+                    "status_host": None,
+                    "timeout": 5,
+                    "url_prefix": "/test_site/",
+                    "user_login": True,
+                    "user_sync": "all",
+                    "is_trusted": True,
+                }
+            }
+        )
+    )
+
+    if target_certificate in ["site", "site-ca"]:
         site_ca_path = tmp_path / Path("etc/ssl/ca.pem")
         site_ca_path.parent.mkdir(parents=True, exist_ok=True)
         site_ca_path.write_text(dummy_site_ca)
-
-    elif target_certificate == "broker":
-        broker_ca_path = tmp_path / Path("etc/rabbitmq/ssl/ca_cert.pem")
-        broker_ca_path.parent.mkdir(parents=True, exist_ok=True)
-        broker_ca_path.write_text(dummy_broker_ca_certificate)
-
-        broker_key_path = tmp_path / Path("etc/rabbitmq/ssl/ca_key.pem")
-        broker_key_path.parent.mkdir(parents=True, exist_ok=True)
-        broker_key_path.write_text(dummy_broker_ca_key)
 
     _run_cmkcert(
         omd_root=tmp_path,
         site_id=_site_id(),
         target_certificate=target_certificate,
         expiry=90,
-        replace=True,
+        finalize=False,
     )
+
+    if target_certificate == "site-ca":
+        mock_save_global_settings.assert_called_once()
+        mock__changes.add_change.assert_called_once()
+
+    # site-ca rotation requires a second call with finalize=True to complete the rotation
+    if target_certificate == "site-ca":
+        _run_cmkcert(
+            omd_root=tmp_path,
+            site_id=_site_id(),
+            target_certificate=target_certificate,
+            expiry=90,
+            finalize=True,
+        )
 
     assert "BEGIN CERTIFICATE" in (tmp_path / target_cert_path).read_text()

@@ -40,8 +40,9 @@ def test_initialize_site_ca(
     assert ca_pem.exists()
     ca_cert = load_pem_x509_certificate(ca_pem.read_bytes())
     assert (
-        ca_cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].rfc4514_string()
-        == f"CN=Site '{site_id}' local CA"
+        ca_cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0]
+        .rfc4514_string()
+        .startswith(f"CN=Site '{site_id}' local CA")
     )
 
     assert site_pem.exists()

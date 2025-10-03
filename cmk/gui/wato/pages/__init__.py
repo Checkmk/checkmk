@@ -24,6 +24,7 @@ from . import (
     bulk_edit,
     bulk_import,
     certificate_overview,
+    certificate_rotation,
     check_catalog,
     custom_attributes,
     diagnostics,
@@ -117,3 +118,4 @@ def register(
     user_profile.register(page_registry, main_menu_registry, user_menu_topics)
     users.register(mode_registry)
     certificate_overview.register(mode_registry)
+    certificate_rotation.register(automation_command_registry)

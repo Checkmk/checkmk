@@ -80,6 +80,7 @@ pkg_files(
         ":cmk-validate-plugins",
         ":init-redis",
         ":livedump",
+        ":message-broker-certs",
         ":mkbackup",
         ":mkevent",
         ":mkeventd",

@@ -3501,6 +3501,13 @@ class ConstantClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def list_widget_available_inventory(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/widget_available_inventory/collections/all",
+            expect_ok=expect_ok,
+        )
+
 
 class ViewClient(RestApiClient):
     domain: DomainType = "view"

@@ -119,6 +119,7 @@ CmkEndpointName = Literal[
     "cmk/fetch",
     "cmk/fetch_phase_one",
     "cmk/list",
+    "cmk/list_widget_inventory",
     "cmk/move",
     "cmk/permalink",
     "cmk/rename",

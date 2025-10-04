@@ -15,7 +15,6 @@ CheckCommandArguments = Iterable[int | float | str | tuple[str, str, str]]
 
 @dataclass(frozen=True)
 class ProxyConfig:
-    host_name: str
     global_proxies: Mapping[str, Mapping[str, str]]
 
 
@@ -44,7 +43,12 @@ def extract_all_adhoc_secrets(
     preprocessing_results = [
         (
             name,
-            [process_configuration_to_parameters(rule, proxy_config, use_alpha) for rule in rules],
+            [
+                process_configuration_to_parameters(
+                    rule, proxy_config, f"ruleset: {name}", use_alpha
+                )
+                for rule in rules
+            ],
         )
         for name, rules in rules_by_name
     ]
@@ -70,9 +74,13 @@ class ReplacementResult(Generic[_RuleSetType_co]):
 def process_configuration_to_parameters(
     params: Mapping[str, object],
     proxy_config: ProxyConfig | None,
+    usage_hint: str,
     is_alpha: bool,
 ) -> ReplacementResult[Mapping[str, object]]:
-    d_results = [(k, _processed_config_value(v, proxy_config, is_alpha)) for k, v in params.items()]
+    d_results = [
+        (k, _processed_config_value(v, proxy_config, usage_hint, is_alpha))
+        for k, v in params.items()
+    ]
     return ReplacementResult(
         value={k: res.value for k, res in d_results},
         found_secrets={k: v for _, res in d_results for k, v in res.found_secrets.items()},
@@ -83,11 +91,14 @@ def process_configuration_to_parameters(
 def _processed_config_value(
     params: object,
     proxy_config: ProxyConfig | None,
+    usage_hint: str,
     is_alpha: bool,
 ) -> ReplacementResult[object]:
     match params:
         case list():
-            results = [_processed_config_value(v, proxy_config, is_alpha) for v in params]
+            results = [
+                _processed_config_value(v, proxy_config, usage_hint, is_alpha) for v in params
+            ]
             return ReplacementResult(
                 value=[res.value for res in results],
                 found_secrets={k: v for res in results for k, v in res.found_secrets.items()},
@@ -110,19 +121,23 @@ def _processed_config_value(
                 ):
                     if proxy_config is not None:
                         return ReplacementResult(
-                            value=_replace_url_proxies(proxy_type, proxy_spec, proxy_config),
+                            value=_replace_url_proxies(
+                                proxy_type, proxy_spec, proxy_config, usage_hint
+                            ),
                             found_secrets={},
                             surrogates={},
                         )
 
-            results = [_processed_config_value(v, proxy_config, is_alpha) for v in params]
+            results = [
+                _processed_config_value(v, proxy_config, usage_hint, is_alpha) for v in params
+            ]
             return ReplacementResult(
                 value=tuple(res.value for res in results),
                 found_secrets={k: v for res in results for k, v in res.found_secrets.items()},
                 surrogates={k: v for res in results for k, v in res.surrogates.items()},
             )
         case dict():
-            return process_configuration_to_parameters(params, proxy_config, is_alpha)
+            return process_configuration_to_parameters(params, proxy_config, usage_hint, is_alpha)
     return ReplacementResult(value=params, found_secrets={}, surrogates={})
 
 
@@ -143,6 +158,7 @@ def _replace_url_proxies(
     proxy_type: Literal["stored_proxy", "explicit_proxy"],
     proxy_spec: str,
     proxy_config: ProxyConfig,
+    usage_hint: str,
 ) -> ReplacementResult:
     if proxy_type == "explicit_proxy":
         return ReplacementResult(URLProxy(url=proxy_spec), {}, {})
@@ -150,10 +166,7 @@ def _replace_url_proxies(
     try:
         global_proxy = proxy_config.global_proxies[proxy_spec]
     except KeyError:
-        config_warnings.warn(
-            f'The global proxy "{proxy_spec}" used by host "{proxy_config.host_name}"'
-            " does not exist."
-        )
+        config_warnings.warn(f'The global proxy "{proxy_spec}" ({usage_hint}) does not exist.')
         return ReplacementResult(EnvProxy(), {}, {})
 
     return ReplacementResult(URLProxy(url=global_proxy["proxy_url"]), {}, {})

@@ -57,9 +57,12 @@ class SpecialAgent:
         special_agent: v1.SpecialAgentConfig | alpha.SpecialAgentConfig,
         conf_dict: Mapping[str, object],
     ) -> Iterator[SpecialAgentCommandLine]:
-        proxy_config = ProxyConfig(self.host_name, self._http_proxies)
+        proxy_config = ProxyConfig(self._http_proxies)
         processed = process_configuration_to_parameters(
-            conf_dict, proxy_config, is_alpha=isinstance(special_agent, alpha.SpecialAgentConfig)
+            conf_dict,
+            proxy_config,
+            usage_hint=f"special agent: {special_agent.name}",
+            is_alpha=isinstance(special_agent, alpha.SpecialAgentConfig),
         )
 
         for command in special_agent(processed.value, self.host_config):

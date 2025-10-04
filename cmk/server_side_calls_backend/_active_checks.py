@@ -67,13 +67,14 @@ class ActiveCheck:
         if (active_check := self._plugins.get(plugin_name)) is None:
             return ()
 
-        proxy_config = ProxyConfig(self.host_name, self._http_proxies)
+        proxy_config = ProxyConfig(self._http_proxies)
         original_and_processed_configs = (
             (
                 config_set,
                 process_configuration_to_parameters(
                     config_set,
                     proxy_config,
+                    usage_hint=f"plugin: {plugin_name}",
                     is_alpha=isinstance(active_check, alpha.ActiveCheckConfig),
                 ),
             )

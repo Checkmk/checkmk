@@ -6,7 +6,6 @@
 import pytest
 
 from cmk.gui.graphing._unit import (
-    _Conversion,
     ConvertibleUnitSpecification,
     DecimalNotation,
     EngineeringScientificNotation,
@@ -105,100 +104,142 @@ def test_user_specific_unit_formatter(
     unit_specification: ConvertibleUnitSpecification,
     expected_formatter: NotationFormatter,
 ) -> None:
-    unit = user_specific_unit(
-        unit_specification,
-        TemperatureUnit.CELSIUS,
-        source_symbol_to_conversion_computer={},
-    )
+    unit = user_specific_unit(unit_specification, TemperatureUnit.CELSIUS)
     assert unit.formatter == expected_formatter
     assert unit.conversion(1) == 1
 
 
-def test_user_specific_unit_convertible() -> None:
-    def converter(v: float) -> float:
-        return 2 * v
-
-    unit = user_specific_unit(
-        ConvertibleUnitSpecification(
-            notation=DecimalNotation(symbol="X"),
-            precision=AutoPrecision(digits=2),
-        ),
-        TemperatureUnit.CELSIUS,
-        source_symbol_to_conversion_computer={
-            "X": lambda *_: _Conversion(
-                symbol="Y",
-                converter=converter,
-            )
-        },
-    )
-    assert unit.formatter == DecimalFormatter(
-        symbol="Y",
-        precision=AutoPrecision(digits=2),
-    )
-    assert unit.conversion is converter
-
-
-def test_user_specific_unit_non_convertible() -> None:
-    unit = user_specific_unit(
-        NonConvertibleUnitSpecification(
-            notation=EngineeringScientificNotation(symbol="X"),
-            precision=AutoPrecision(digits=2),
-        ),
-        TemperatureUnit.CELSIUS,
-        source_symbol_to_conversion_computer={
-            "X": lambda *_: _Conversion(
-                symbol="Y",
-                converter=lambda v: 2 * v,
-            )
-        },
-    )
-    assert unit.formatter == EngineeringScientificFormatter(
-        symbol="X",
-        precision=AutoPrecision(digits=2),
-    )
-    assert unit.conversion(1) == 1
-
-
 @pytest.mark.parametrize(
-    [
-        "user_temperature_unit",
-        "source_symbol",
-        "expected_symbol",
-        "source_value",
-        "expected_value",
-    ],
+    ["unit_specification", "temperature_unit", "expected_formatter", "value", "expected_value"],
     [
         pytest.param(
-            TemperatureUnit.FAHRENHEIT,
-            "°C",
-            "°F",
-            2,
-            2 * 1.8 + 32,
-            id="celsius to fahrenheit",
+            ConvertibleUnitSpecification(
+                notation=DecimalNotation(symbol="°C"),
+                precision=AutoPrecision(digits=2),
+            ),
+            TemperatureUnit.CELSIUS,
+            DecimalFormatter(
+                symbol="°C",
+                precision=AutoPrecision(digits=2),
+            ),
+            10,
+            10,
+            id="celsius-celsius",
         ),
         pytest.param(
+            ConvertibleUnitSpecification(
+                notation=DecimalNotation(symbol="°C"),
+                precision=AutoPrecision(digits=2),
+            ),
             TemperatureUnit.FAHRENHEIT,
-            "°F",
-            "°F",
-            3,
-            3,
-            id="fahrenheit to fahrenheit",
+            DecimalFormatter(
+                symbol="°F",
+                precision=AutoPrecision(digits=2),
+            ),
+            10,
+            50,
+            id="celsius-fahrenheit",
+        ),
+        pytest.param(
+            ConvertibleUnitSpecification(
+                notation=DecimalNotation(symbol="°F"),
+                precision=AutoPrecision(digits=2),
+            ),
+            TemperatureUnit.CELSIUS,
+            DecimalFormatter(
+                symbol="°C",
+                precision=AutoPrecision(digits=2),
+            ),
+            50,
+            10,
+            id="fahrenheit-celsius",
+        ),
+        pytest.param(
+            ConvertibleUnitSpecification(
+                notation=DecimalNotation(symbol="°F"),
+                precision=AutoPrecision(digits=2),
+            ),
+            TemperatureUnit.FAHRENHEIT,
+            DecimalFormatter(
+                symbol="°F",
+                precision=AutoPrecision(digits=2),
+            ),
+            50,
+            50,
+            id="fahrenheit-fahrenheit",
         ),
     ],
 )
-def test_user_specific_unit_celsius_to_fahrenheit(
-    user_temperature_unit: TemperatureUnit,
-    source_symbol: str,
-    expected_symbol: str,
-    source_value: float,
+def test_user_specific_unit_convertible(
+    unit_specification: ConvertibleUnitSpecification,
+    temperature_unit: TemperatureUnit,
+    expected_formatter: NotationFormatter,
+    value: float,
     expected_value: float,
 ) -> None:
-    unit = user_specific_unit(
-        ConvertibleUnitSpecification(
-            notation=DecimalNotation(symbol=source_symbol),
-            precision=AutoPrecision(digits=2),
+    unit = user_specific_unit(unit_specification, temperature_unit)
+    assert unit.formatter.symbol == expected_formatter.symbol
+    assert unit.conversion(value) == expected_value
+
+
+@pytest.mark.parametrize(
+    ["unit_specification", "temperature_unit", "expected_formatter"],
+    [
+        pytest.param(
+            NonConvertibleUnitSpecification(
+                notation=DecimalNotation(symbol="°C"),
+                precision=AutoPrecision(digits=2),
+            ),
+            TemperatureUnit.CELSIUS,
+            DecimalFormatter(
+                symbol="°C",
+                precision=AutoPrecision(digits=2),
+            ),
+            id="celsius-celsius",
         ),
-        user_temperature_unit,
-    )
-    assert unit.formatter.symbol == expected_symbol
-    assert unit.conversion(source_value) == expected_value
+        pytest.param(
+            NonConvertibleUnitSpecification(
+                notation=DecimalNotation(symbol="°C"),
+                precision=AutoPrecision(digits=2),
+            ),
+            TemperatureUnit.FAHRENHEIT,
+            DecimalFormatter(
+                symbol="°C",
+                precision=AutoPrecision(digits=2),
+            ),
+            id="celsius-fahrenheit",
+        ),
+        pytest.param(
+            NonConvertibleUnitSpecification(
+                notation=DecimalNotation(symbol="°F"),
+                precision=AutoPrecision(digits=2),
+            ),
+            TemperatureUnit.CELSIUS,
+            DecimalFormatter(
+                symbol="°F",
+                precision=AutoPrecision(digits=2),
+            ),
+            id="fahrenheit-celsius",
+        ),
+        pytest.param(
+            NonConvertibleUnitSpecification(
+                notation=DecimalNotation(symbol="°F"),
+                precision=AutoPrecision(digits=2),
+            ),
+            TemperatureUnit.FAHRENHEIT,
+            DecimalFormatter(
+                symbol="°F",
+                precision=AutoPrecision(digits=2),
+            ),
+            id="fahrenheit-fahrenheit",
+        ),
+    ],
+)
+def test_user_specific_unit_not_convertible(
+    unit_specification: NonConvertibleUnitSpecification,
+    temperature_unit: TemperatureUnit,
+    expected_formatter: NotationFormatter,
+) -> None:
+    unit = user_specific_unit(unit_specification, temperature_unit)
+    assert unit.formatter.symbol == expected_formatter.symbol
+    assert unit.conversion(123.456) == 123.456

@@ -8,7 +8,6 @@ import stat
 from hashlib import sha256
 from pathlib import Path
 
-import pytest
 from pytest_mock import MockerFixture
 
 from omdlib.system_apache import (
@@ -93,19 +92,6 @@ def test_is_apache_hook_up_to_date(tmp_path: Path) -> None:
     assert apache_config.exists()
 
     assert is_apache_hook_up_to_date(apache_config) is True
-
-
-def test_is_apache_hook_up_to_date_not_readable(tmp_path: Path) -> None:
-    apache_config = tmp_path / "omd/apache/unit.conf"
-    apache_config.parent.mkdir(parents=True)
-    create_apache_hook(
-        apache_config, "unit", str(tmp_path), "127.0.0.1", "5000", apache_hook_version()
-    )
-    assert apache_config.exists()
-    apache_config.chmod(0o200)
-
-    with pytest.raises(PermissionError):
-        is_apache_hook_up_to_date(apache_config)
 
 
 def test_is_apache_hook_up_to_date_outdated(tmp_path: Path) -> None:

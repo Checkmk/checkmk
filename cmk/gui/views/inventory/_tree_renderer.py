@@ -80,6 +80,20 @@ class TDSpec:
         return "; ".join(parts)
 
 
+def compute_cell_spec(td_spec: TDSpec) -> tuple[str, HTML]:
+    css_classes = list(td_spec.css_classes)
+    if td_spec.background_color:
+        css_classes.append("inv_cell_no_padding")
+    return (
+        " ".join(css_classes),
+        (
+            HTMLWriter.render_div(td_spec.html_value, style=td_style)
+            if (td_style := td_spec.style)
+            else td_spec.html_value
+        ),
+    )
+
+
 @dataclass(frozen=True, kw_only=True)
 class SDItem:
     key: SDKey
@@ -98,7 +112,7 @@ class SDItem:
             or self.retention_interval.source == "current"
         ):
             return TDSpec(
-                css_classes=[td_styles.css_class],
+                css_classes=[td_styles.css_class] if td_styles.css_class else [],
                 text_align=td_styles.text_align,
                 background_color=td_styles.background_color,
                 color=td_styles.color,
@@ -109,7 +123,11 @@ class SDItem:
         keep_until = valid_until + self.retention_interval.retention_interval
         if now > keep_until:
             return TDSpec(
-                css_classes=[td_styles.css_class, "inactive_cell"],
+                css_classes=(
+                    [td_styles.css_class, "inactive_cell"]
+                    if td_styles.css_class
+                    else ["inactive_cell"]
+                ),
                 text_align=td_styles.text_align,
                 background_color=td_styles.background_color,
                 color=td_styles.color,
@@ -124,7 +142,11 @@ class SDItem:
 
         if now > valid_until:
             return TDSpec(
-                css_classes=[td_styles.css_class, "inactive_cell"],
+                css_classes=(
+                    [td_styles.css_class, "inactive_cell"]
+                    if td_styles.css_class
+                    else ["inactive_cell"]
+                ),
                 text_align=td_styles.text_align,
                 background_color=td_styles.background_color,
                 color=td_styles.color,
@@ -140,7 +162,7 @@ class SDItem:
             )
 
         return TDSpec(
-            css_classes=[td_styles.css_class],
+            css_classes=[td_styles.css_class] if td_styles.css_class else [],
             text_align=td_styles.text_align,
             background_color=td_styles.background_color,
             color=td_styles.color,
@@ -160,7 +182,7 @@ class _SDDeltaItem:
         if self.old is None and self.new is not None:
             td_styles, rendered_value = self.paint_function(now, self.new)
             return TDSpec(
-                css_classes=[td_styles.css_class],
+                css_classes=[td_styles.css_class] if td_styles.css_class else [],
                 text_align="",
                 background_color="",
                 color="",
@@ -170,7 +192,7 @@ class _SDDeltaItem:
         if self.old is not None and self.new is None:
             td_styles, rendered_value = self.paint_function(now, self.old)
             return TDSpec(
-                css_classes=[td_styles.css_class],
+                css_classes=[td_styles.css_class] if td_styles.css_class else [],
                 text_align="",
                 background_color="",
                 color="",
@@ -180,7 +202,7 @@ class _SDDeltaItem:
         if self.old == self.new:
             td_styles, rendered_value = self.paint_function(now, self.old)
             return TDSpec(
-                css_classes=[td_styles.css_class],
+                css_classes=[td_styles.css_class] if td_styles.css_class else [],
                 text_align="",
                 background_color="",
                 color="",
@@ -191,7 +213,7 @@ class _SDDeltaItem:
             _td_styles, rendered_old_value = self.paint_function(now, self.old)
             td_styles, rendered_new_value = self.paint_function(now, self.new)
             return TDSpec(
-                css_classes=[td_styles.css_class],
+                css_classes=[td_styles.css_class] if td_styles.css_class else [],
                 text_align="",
                 background_color="",
                 color="",
@@ -476,9 +498,12 @@ class TreeRenderer:
         for item in sorted_pairs:
             html.open_tr()
             html.th(self._get_header(item.title, item.key))
-            td_spec = item.compute_td_spec(now)
-            html.open_td(class_=td_spec.css, style=td_spec.style)
-            html.write_html(td_spec.html_value)
+            css_class, html_value = compute_cell_spec(item.compute_td_spec(now))
+            if css_class:
+                html.open_td(class_=css_class)
+            else:
+                html.open_td()
+            html.write_html(html_value)
             html.close_td()
             html.close_tr()
         html.close_table()
@@ -520,9 +545,12 @@ class TreeRenderer:
         for row in sorted_rows:
             html.open_tr(class_="even0")
             for item in row:
-                td_spec = item.compute_td_spec(now)
-                html.open_td(class_=td_spec.css, style=td_spec.style)
-                html.write_html(td_spec.html_value)
+                css_class, html_value = compute_cell_spec(item.compute_td_spec(now))
+                if css_class:
+                    html.open_td(class_=css_class)
+                else:
+                    html.open_td()
+                html.write_html(html_value)
                 html.close_td()
             html.close_tr()
         html.close_table()

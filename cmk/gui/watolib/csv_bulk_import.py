@@ -37,15 +37,13 @@ class CSVBulkImport:
         self._dialect = self._determine_dialect(delimiter)
         self._reader = csv.reader(self._handle, self._dialect)
 
+        self._num_fields: int | None = None
+        self._num_fields = self.row_length
+
         self._has_title_line = has_title_line
         self._title_row: list[str] | None = None
         if self._has_title_line:
             self._title_row = self.title_row
-
-        # If we have a title row, this gets set as we read it. Otherwise, we'll read ahead one line
-        # to compute this, then seek back to where we were.
-        self._num_fields: int | None = None
-        self._num_fields = self.row_length
 
     def _determine_dialect(self, delimiter: str | None) -> type[csv.Dialect]:
         """
@@ -76,16 +74,33 @@ class CSVBulkImport:
         """
         for row in self._reader:
             if row:
+                # This very function is called to determine the row length.
+                # In that case, self._num_fields won't be set yet.
+                if self._num_fields is not None and len(row) != self.row_length:
+                    raise MKUserError(
+                        None,
+                        _(
+                            "All rows in the CSV file must have the same number of columns. "
+                            "The following row had a different number of columns than the first "
+                            "row (or the title row, if one is present): %s"
+                        )
+                        % repr(row),
+                    )
                 return row
         return None
+
+    def rows(self) -> Iterator[list[str]]:
+        while (next_row := self.skip_to_and_return_next_row()) is not None:
+            yield next_row
+        return
+
+    def __iter__(self) -> Iterator[list[str]]:
+        yield from self.rows()
 
     @property
     def row_length(self) -> int:
         if self._num_fields is not None:
             return self._num_fields
-
-        if self._title_row is not None:
-            return len(self._title_row)
 
         current_pos = self._handle.tell()
         next_row = self.skip_to_and_return_next_row() or []

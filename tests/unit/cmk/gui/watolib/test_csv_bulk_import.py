@@ -60,6 +60,12 @@ server03,192.168.1.103
 
 """
 
+EDGE_CASE_CSV_MALFORMED = """
+host_name,ipaddress
+server01;127.0.0.1
+server02;127.0.0.2
+"""
+
 
 @pytest.mark.parametrize(
     "sample, delimiter, expected_delimeter",
@@ -256,3 +262,25 @@ def test_next_row_as_dict_throws_len_mismatch() -> None:
 
     with pytest.raises(ValueError):
         next(cbi.rows_as_dict(["host_name", "ipaddress", "alias"]))
+
+
+def test_skip_to_and_return_next_row_throws_len_mismatch() -> None:
+    """
+    skip_to_and_return_next_row should report to the user if they have lines
+    that aren't the same length as the first line (or header line) and bail out.
+    """
+    handle = StringIO(EDGE_CASE_CSV_MALFORMED)
+    cbi = CSVBulkImport(handle=handle, has_title_line=True)
+
+    with pytest.raises(MKUserError, match=r"^All rows"):
+        cbi.skip_to_and_return_next_row()
+
+
+def test_iter() -> None:
+    handle = StringIO(CSV_WITH_TITLE_LINE)
+    cbi = CSVBulkImport(handle=handle, has_title_line=True)
+    assert list(cbi) == [
+        ["server01", "192.168.1.101"],
+        ["server02", "192.168.1.102"],
+        ["server03", "192.168.1.103"],
+    ]

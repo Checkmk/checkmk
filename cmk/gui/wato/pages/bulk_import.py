@@ -64,9 +64,6 @@ from cmk.gui.watolib.hosts_and_folders import Folder, folder_from_request
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.utils.tags import TagGroup
 
-# Was not able to get determine the type of csv._reader / _csv.reader
-CSVReader = Any
-
 ImportTuple = tuple[HostName, HostAttributes, None]
 
 
@@ -550,7 +547,6 @@ class ModeBulkImport(WatoMode):
             )
 
             headers: list[str] = csv_bulk_import.title_row or []
-            rows = list(csv_bulk_import._reader)
 
             # 2.5+: We explicitly assume a well-formed CSV with consistent column lengths
             # and CSVBulkImport will raise if ever asked to produce a row (e.g. from rows_as_dict())
@@ -582,9 +578,7 @@ class ModeBulkImport(WatoMode):
                     )
 
                 # Render sample rows
-                for row in rows:
-                    if not row:
-                        continue  # skip empty lines
+                for row in csv_bulk_import:
                     table.row()
                     for cell in row:
                         table.cell(None, cell)

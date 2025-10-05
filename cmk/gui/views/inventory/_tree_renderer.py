@@ -476,7 +476,6 @@ class TreeRenderer:
         for item in sorted_pairs:
             html.open_tr()
             html.th(self._get_header(item.title, item.key))
-            # TODO separate css_class and coloring_class from rendered value
             td_spec = item.compute_td_spec(now)
             html.open_td(class_=td_spec.css, style=td_spec.style)
             html.write_html(td_spec.html_value)
@@ -521,7 +520,6 @@ class TreeRenderer:
         for row in sorted_rows:
             html.open_tr(class_="even0")
             for item in row:
-                # TODO separate css_class and coloring_class from rendered value
                 td_spec = item.compute_td_spec(now)
                 html.open_td(class_=td_spec.css, style=td_spec.style)
                 html.write_html(td_spec.html_value)

@@ -110,6 +110,10 @@ class CSVBulkImport:
         # TODO: Consider throwing if there is no next row
         return self.skip_to_and_return_next_row()
 
+    @property
+    def has_title_line(self) -> bool:
+        return self._has_title_line
+
     def rows_as_dict(self, attr_names: Sequence[str]) -> Iterator[dict[str, str]]:
         """
         Yield each row rendered as a dictionary with keys being the names given in attr_names

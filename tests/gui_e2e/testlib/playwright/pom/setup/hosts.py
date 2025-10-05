@@ -139,8 +139,13 @@ class SetupHost(CmkPage):
             message=f"Host '{host_name}' is still present in the list after deletion.",
         ).not_to_be_visible()
 
+    def check_host_present(self, host_name: str) -> None:
+        """Check that a host is present in the list of hosts."""
+        logger.info("Check that host '%s' is present", host_name)
+        expect(self._host_row(host_name)).to_be_visible()
+
     def delete_host(self, host_name: str) -> None:
-        host_link = self.main_area.locator("a", has_text="localhost")
+        host_link = self.main_area.locator("a", has_text=host_name)
         host_row = self.main_area.locator("table.data tr", has=host_link)
         host_row.get_by_role("link", name="Delete").click()
         self.main_area.get_confirmation_popup_button("Yes, delete host").click()
@@ -358,3 +363,147 @@ class HostProperties(CmkPage):
         if activate:
             self.activate_changes(test_site)
             self._exists = False
+
+
+class ImportHostsViaCSVFilePreview(CmkPage):
+    """
+    Represents the second step of
+    `setup -> Hosts -> Hosts dropdown -> Import hosts via CSV file`.
+
+    This is primarily meant to be used by/in conjunction with ImportHostsViaCSVFileUpload
+    (which is the first step of the process).
+    """
+
+    page_title = "Bulk host import"
+
+    @override
+    def navigate(self) -> None:
+        # We primarily get sent here by ImportHostsViaCSVFileUpload; just make sure we are
+        # on the right page.
+        self.validate_page()
+
+    @override
+    def validate_page(self) -> None:
+        logger.info("Validate that current page is the 'Bulk host import' page")
+        self.main_area.check_page_title(self.page_title)
+        expect(self.main_area.get_text(text="File Parsing Settings")).to_be_visible()
+
+    @override
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        mapping = DropdownListNameToID()
+        setattr(mapping, "Actions", "menu_actions")
+        return mapping
+
+    @property
+    def update_preview_button(self) -> Locator:
+        return self.main_area.get_suggestion("Update preview")
+
+    def update_preview(self) -> None:
+        self.update_preview_button.click()
+
+    @property
+    def import_button(self) -> Locator:
+        return self.main_area.get_suggestion("Import")
+
+    def do_import(self) -> None:
+        self.import_button.click()
+
+    def get_form_field(self, label: str, locator: str) -> Locator:
+        return self.main_area.locator().get_by_role("cell", name=label).locator(locator)
+
+    def set_field_delimiter(self, delimiter: str | None) -> None:
+        """
+        Set the field delimeter setting. If 'delimiter' is None, uncheck the form box.
+        """
+        # Playwright considers the checkbox itself to be non-visible, so we can't call set_checked()
+        # and similar on it directly, we have to click() on the "label".
+        checkbox = self.get_form_field("Set field delimiter", locator="input")
+        label = self.get_form_field("Set field delimiter", locator="label")
+        if delimiter is None:
+            if checkbox.is_checked():
+                label.click()
+            return
+        if not checkbox.is_checked():
+            label.click()
+        # There's not really a better way to get this, it's not in the same
+        # "cell" as the checkbox and label.
+        input_field = self.main_area.locator("input[name=_preview_p_field_delimiter]")
+        input_field.fill(delimiter)
+
+    def set_has_title_line(self, has_title_line: bool) -> None:
+        """Set the title line checkbox."""
+        checkbox = self.get_form_field("Has title line", locator="input")
+        label = self.get_form_field("Has title line", locator="label")
+        if checkbox.is_checked():
+            if not has_title_line:
+                label.click()
+        elif has_title_line:
+            label.click()
+
+
+class ImportHostsViaCSVFileUpload(CmkPage):
+    """Represents page `setup -> Hosts -> Hosts dropdown -> Import hosts via CSV file`."""
+
+    page_title = "Bulk host import"
+
+    textarea_name = "Content of CSV File"
+
+    upload_button_name = "Upload CSV File"
+
+    @override
+    def navigate(self) -> None:
+        """Instructions to navigate to
+        `setup -> Hosts -> Hosts dropdown -> Import hosts via CSV file` page.
+        """
+        logger.info("Navigate to 'Import hosts via CSV file' page")
+        setup_host = SetupHost(self.page)
+        setup_host.main_area.click_item_in_dropdown_list("Hosts", "Import hosts via CSV file")
+        _url_pattern = quote_plus("wato.py?folder=&mode=bulk_import")
+        self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
+        self.validate_page()
+
+    @override
+    def validate_page(self) -> None:
+        logger.info("Validate that current page is the 'Bulk host import' page")
+        self.main_area.check_page_title(self.page_title)
+        expect(self.main_area.get_text(text=self.textarea_name)).to_be_visible()
+        expect(self.main_area.get_text(text=self.upload_button_name)).not_to_be_visible()
+
+    @override
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        mapping = DropdownListNameToID()
+        setattr(mapping, "Hosts", "menu_actions")
+        return mapping
+
+    @property
+    def csv_textarea(self) -> Locator:
+        return self.main_area.locator("textarea")
+
+    @property
+    def csv_browse_button(self) -> Locator:
+        return self.main_area.locator().get_by_role("button", name="Choose File")
+
+    @property
+    def upload_button(self) -> Locator:
+        return self.main_area.get_suggestion("Upload")
+
+    def switch_to_textarea(self) -> None:
+        logger.info("Switch to textarea CSV upload")
+        self.main_area.locator().get_by_role("combobox").click()
+        self.main_area.locator().get_by_role("option", name=self.textarea_name).click()
+        expect(self.csv_textarea).to_be_visible()
+        expect(self.csv_browse_button).not_to_be_visible()
+
+    def switch_to_upload(self) -> None:
+        logger.info("Switch to file CSV upload")
+        self.main_area.locator().get_by_role("combobox").click()
+        self.main_area.locator().get_by_role("option", name=self.upload_button_name).click()
+        expect(self.csv_textarea).not_to_be_visible()
+        expect(self.csv_browse_button).to_be_visible()
+
+    def fill_and_upload_csv(self, csv_text: str) -> ImportHostsViaCSVFilePreview:
+        self.switch_to_textarea()
+        logger.info("Fill in CSV")
+        self.csv_textarea.fill(csv_text)
+        self.upload_button.click()
+        return ImportHostsViaCSVFilePreview(self.page)

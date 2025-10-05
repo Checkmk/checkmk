@@ -222,7 +222,6 @@ class ModeBulkImport(WatoMode):
     def __init__(self) -> None:
         super().__init__()
         self._params: dict[str, Any] | None = None
-        self._has_title_line = True
 
     @property
     def _upload_tmp_path(self) -> Path:
@@ -280,12 +279,13 @@ class ModeBulkImport(WatoMode):
             if request.has_var("_do_upload"):
                 self._upload_csv_file()
 
-            self._params = self.validate_params()
-            csv_reader = self._open_csv_file()
+            has_title_line = self.params.get("has_title_line", False)
+            delimiter = self.params.get("field_delimiter")
+            csv_bulk_import = self._open_csv_file(has_title_line, delimiter)
 
             if request.var("_do_import"):
                 return self._import(
-                    csv_reader,
+                    csv_bulk_import,
                     host_attributes=all_host_attributes(
                         config.wato_host_attrs, config.tags.get_tag_groups_by_topic()
                     ),
@@ -329,26 +329,28 @@ class ModeBulkImport(WatoMode):
             if mtime < time.time() - 3600:
                 path.unlink()
 
+    @property
+    def params(self) -> dict[str, Any]:
+        if self._params is None:
+            self._params = self.validate_params()
+        return self._params
+
     def validate_params(self) -> dict[str, Any]:
         vs_parse_params = self._vs_parse_params()
 
-        if list(request.itervars(prefix="_preview")):
+        # If the request has any _preview* vars at all, populate the ValueSpec instance with them.
+        # Otherwise, use the defaults from the ValueSpec itself.
+        if any(True for _ in request.itervars(prefix="_preview")):
             params = vs_parse_params.from_html_vars("_preview")
         else:
-            params = {
-                "has_title_line": True,
-            }
+            params = self._vs_parse_params().default_value()
 
         vs_parse_params.validate_value(params, "_preview")
         return params
 
-    def _open_csv_file(self) -> CSVBulkImport:
-        # TODO: Nix this instance var entirely
-        assert self._params is not None
-        self._has_title_line = self._params.get("has_title_line", False)
-        delimiter = self._params.get("field_delimiter")
+    def _open_csv_file(self, has_title_line: bool, delimiter: str | None) -> CSVBulkImport:
         handle = get_handle_for_csv(self._file_path())
-        return CSVBulkImport(handle, self._has_title_line, delimiter)
+        return CSVBulkImport(handle, has_title_line, delimiter)
 
     def _import(
         self,
@@ -516,8 +518,9 @@ class ModeBulkImport(WatoMode):
             attributes = _attribute_choices(tag_groups, custom_host_attrs)
 
             # first line could be missing in situation of import error
-            self._params = self.validate_params()
-            csv_bulk_import = self._open_csv_file()
+            has_title_line = self.params.get("has_title_line", False)
+            delimiter = self.params.get("field_delimiter")
+            csv_bulk_import = self._open_csv_file(has_title_line, delimiter)
 
             html.h2(_("Preview"))
             attribute_list = "<ul>%s</ul>" % "".join(
@@ -549,11 +552,15 @@ class ModeBulkImport(WatoMode):
             headers: list[str] = csv_bulk_import.title_row or []
             rows = list(csv_bulk_import._reader)
 
-            # Determine how many columns should be rendered by using the longest column
-            num_columns = max(len(r) for r in [headers] + rows)
+            # 2.5+: We explicitly assume a well-formed CSV with consistent column lengths
+            # and CSVBulkImport will raise if ever asked to produce a row (e.g. from rows_as_dict())
+            # with a number of columns different from the first row (or title row if it exists).
+            #
+            # In <2.5, we would silently drop extra columns on import.
+            num_columns = csv_bulk_import.row_length
 
             with table_element(
-                sortable=False, searchable=False, omit_headers=not self._has_title_line
+                sortable=False, searchable=False, omit_headers=not csv_bulk_import.has_title_line
             ) as table:
                 # Render attribute selection fields
                 table.row()
@@ -583,11 +590,7 @@ class ModeBulkImport(WatoMode):
                         table.cell(None, cell)
 
     def _preview_form(self) -> None:
-        if self._params is not None:
-            params = self._params
-        else:
-            params = self._vs_parse_params().default_value()
-        self._vs_parse_params().render_input("_preview", params)
+        self._vs_parse_params().render_input("_preview", self.params)
         html.hidden_fields()
 
     def _vs_parse_params(self) -> Dictionary:

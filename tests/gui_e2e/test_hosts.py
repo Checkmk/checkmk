@@ -16,7 +16,12 @@ from tests.gui_e2e.testlib.host_details import AddressFamily, AgentAndApiIntegra
 from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.gui_e2e.testlib.playwright.pom.monitor.host_search import HostSearch
 from tests.gui_e2e.testlib.playwright.pom.monitor.host_status import HostStatus
-from tests.gui_e2e.testlib.playwright.pom.setup.hosts import AddHost, HostProperties, SetupHost
+from tests.gui_e2e.testlib.playwright.pom.setup.hosts import (
+    AddHost,
+    HostProperties,
+    ImportHostsViaCSVFileUpload,
+    SetupHost,
+)
 from tests.testlib.site import Site
 from tests.testlib.utils import is_cleanup_enabled
 
@@ -291,3 +296,50 @@ def test_ping_host(dashboard_page: MainDashboard) -> None:
     add_host.ipv4_address_text_field.fill("127.0.0.1")
     expect(status_loading).to_be_visible()
     expect(status_valid).to_be_visible()
+
+
+def test_bulk_csv_upload_form(dashboard_page: MainDashboard) -> None:
+    """Test adding a number of hosts via the bulk CSV upload form."""
+    csv_upload_page = ImportHostsViaCSVFileUpload(dashboard_page.page)
+
+    # Make sure we can switch between upload and textarea and the right form fields show
+    csv_upload_page.switch_to_textarea()
+    csv_upload_page.switch_to_upload()
+    csv_upload_page.switch_to_textarea()
+
+    csv = """
+host_name#ipaddress
+server01#127.0.0.1
+server02#127.0.0.2
+"""
+    preview_page = csv_upload_page.fill_and_upload_csv(csv)
+
+    # With initial settings, parsing won't work correctly. Confirm that:
+    first_row = preview_page.main_area.locator("table.data").locator("tr").nth(0)
+    expect(first_row.locator("th")).to_have_count(1)
+
+    # Change the settings and try again
+    preview_page.set_field_delimiter("#")
+    preview_page.set_has_title_line(True)
+    preview_page.update_preview()
+
+    # Now we should have two proper columns.
+    first_row = preview_page.main_area.locator("table.data").locator("tr").nth(0)
+    expect(first_row.locator("th")).to_have_count(2)
+    expect(first_row.locator("th").nth(0)).to_have_text("host_name")
+    expect(first_row.locator("th").nth(1)).to_have_text("ipaddress")
+
+    # Everything above has been non-destructive, we didn't change anything except for
+    # creating a file on disk when the CSV was uploaded. Here we actually do an import
+    # and create hosts. We want to undo that at the end.
+    try:
+        preview_page.do_import()
+
+        # Let's make sure it actually imported the hosts
+        setup_host = SetupHost(preview_page.page)
+        setup_host.check_host_present("server01")
+        setup_host.check_host_present("server02")
+    finally:
+        if is_cleanup_enabled():
+            SetupHost(preview_page.page).delete_host("server01")
+            SetupHost(preview_page.page).delete_host("server02")

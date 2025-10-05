@@ -153,7 +153,7 @@ def _wrap_paint_function(paint_function: PaintFunction) -> PaintFunctionFromAPI:
     return _wrap
 
 
-def _compute_td_style(
+def _compute_td_styles(
     styles: Iterable[AlignmentFromAPI | BackgroundColorFromAPI | LabelColorFromAPI],
     default_alignment: AlignmentFromAPI,
 ) -> TDStyles:
@@ -190,7 +190,7 @@ class _PaintBool:
             # TODO CMK-25119
             return _wrap_paint_function(inv_paint_generic)(now, value)
         return (
-            _compute_td_style(self._field.style(value), self.default_alignment),
+            _compute_td_styles(self._field.style(value), self.default_alignment),
             _make_str(self._field.render_true if value else self._field.render_false),
         )
 
@@ -252,7 +252,7 @@ class _PaintNumber:
                 assert_never(self._field.render)
 
         return (
-            _compute_td_style(self._field.style(value), self.default_alignment),
+            _compute_td_styles(self._field.style(value), self.default_alignment),
             rendered_value,
         )
 
@@ -270,7 +270,7 @@ class _PaintText:
             # TODO CMK-25119
             return _wrap_paint_function(inv_paint_generic)(now, value)
         return (
-            _compute_td_style(self._field.style(value), self.default_alignment),
+            _compute_td_styles(self._field.style(value), self.default_alignment),
             _make_str(_make_str(self._field.render(value))),
         )
 
@@ -288,7 +288,7 @@ class _PaintChoice:
             # TODO CMK-25119
             return _wrap_paint_function(inv_paint_generic)(now, value)
         return (
-            _compute_td_style(self._field.style(value), self.default_alignment),
+            _compute_td_styles(self._field.style(value), self.default_alignment),
             (
                 f"<{value}> (%s)" % _("No such value")
                 if (rendered := self._field.mapping.get(value)) is None

@@ -14,6 +14,7 @@ export const simpleIcons = [
   'services',
   'external-link',
   'dashboard-grid',
+  'developer-resources',
   'drag',
   'frameurl',
   'info-circle',
@@ -59,8 +60,10 @@ export const simpleIcons = [
   'assign',
   'backup',
   'contactgroups',
-  'licensing',
+  'learning-checkmk',
   'learning-guide',
+  'licensing',
+  'lightbulb',
   'check-parameters',
   'sites',
   'folder',
@@ -146,7 +149,9 @@ export const oneColorIcons = [
   'monitoring',
   'customize',
   'setup',
-  'changes'
+  'changes',
+  'user',
+  'help'
 ] as const
 export const twoColorIcons = ['aggr'] as const
 

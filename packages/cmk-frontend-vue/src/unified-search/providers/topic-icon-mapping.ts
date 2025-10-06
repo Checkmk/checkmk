@@ -64,5 +64,16 @@ export const topicIconMapping: ProviderTopicIconMapping = {
     synthetic_monitoring: 'topic-synthetic-monitoring',
     users: 'topic-users',
     vm_cloud_container: 'topic-agents'
+  },
+  help: {
+    learning_checkmk: 'learning-checkmk',
+    developer_resources: 'developer-resources',
+    ideas_portal: 'lightbulb',
+    about_checkmk: 'about-checkmk'
+  },
+  user: {
+    user_interface: 'topic-user-interface',
+    user_messages: 'topic-events',
+    user_profile: 'topic-profile'
   }
 }

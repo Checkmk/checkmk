@@ -34,4 +34,6 @@ export interface ProviderTopicIconMapping {
   monitoring: TopicIconMapping
   customize: TopicIconMapping
   setup: TopicIconMapping
+  help: TopicIconMapping
+  user: TopicIconMapping
 }

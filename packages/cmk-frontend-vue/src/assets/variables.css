@@ -137,6 +137,11 @@
   --icon-topic-inventory: url('~cmk-frontend/themes/facelift/images/icon_topic_inventory.png');
   --icon-topic-maintenance: url('~cmk-frontend/themes/facelift/images/icon_topic_maintenance.png');
   --icon-topic-monitoring: url('~cmk-frontend/themes/facelift/images/icon_topic_monitoring.svg');
+  --icon-topic-user-interface: url('~cmk-frontend/themes/facelift/images/icon_topic_user_interface.svg');
+  --icon-topic-learning-checkmk: url('~cmk-frontend/themes/facelift/images/icon_learning_checkmk.svg');
+  --icon-topic-about-checkmk: url('~cmk-frontend/themes/facelift/images/icon_about_checkmk.svg');
+  --icon-topic-developer-resources: url('~cmk-frontend/themes/facelift/images/icon_developer_resources.svg');
+  --icon-topic-ideas-portal: url('~cmk-frontend/themes/facelift/images/icon_lightbulb.svg');
   /* stylelint-disable-next-line custom-property-pattern */
   --icon-topic-my_workplace: url('~cmk-frontend/themes/facelift/images/icon_topic_my_workplace.svg');
   --icon-topic-network: url('~cmk-frontend/themes/facelift/images/icon_topic_network.svg');
@@ -150,7 +155,6 @@
   --icon-topic-site: url('~cmk-frontend/themes/facelift/images/icon_topic_site.png');
   --icon-topic-system: url('~cmk-frontend/themes/facelift/images/icon_topic_system.svg');
   --icon-topic-two-factor: url('~cmk-frontend/themes/facelift/images/icon_topic_two_factor.png');
-  --icon-topic-user-interface: url('~cmk-frontend/themes/facelift/images/icon_topic_user_interface.svg');
   --icon-topic-users: url('~cmk-frontend/themes/facelift/images/icon_topic_users.png');
   --icon-topic-visualization: url('~cmk-frontend/themes/facelift/images/icon_topic_visualization.png');
   --icon-topic-synthetic-monitoring: url('~cmk-frontend/themes/facelift/images/icon_synthetic_monitoring_topic.svg');

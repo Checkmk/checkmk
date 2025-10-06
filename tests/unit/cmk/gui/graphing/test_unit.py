@@ -12,6 +12,8 @@ from cmk.gui.graphing._unit import (
     EngineeringScientificNotation,
     IECNotation,
     NonConvertibleUnitSpecification,
+    SINotation,
+    StandardScientificNotation,
     TimeNotation,
     user_specific_unit,
 )
@@ -21,7 +23,8 @@ from cmk.gui.unit_formatter import (
     EngineeringScientificFormatter,
     IECFormatter,
     NotationFormatter,
-    StrictPrecision,
+    SIFormatter,
+    StandardScientificFormatter,
     TimeFormatter,
 )
 from cmk.gui.utils.temperate_unit import TemperatureUnit
@@ -30,39 +33,75 @@ from cmk.gui.utils.temperate_unit import TemperatureUnit
 @pytest.mark.parametrize(
     ["unit_specification", "expected_formatter"],
     [
-        (
+        pytest.param(
             ConvertibleUnitSpecification(
-                notation=DecimalNotation(symbol="X"),
+                notation=DecimalNotation(symbol="U"),
                 precision=AutoPrecision(digits=2),
             ),
             DecimalFormatter(
-                symbol="X",
+                symbol="U",
                 precision=AutoPrecision(digits=2),
             ),
+            id="decimal",
         ),
-        (
+        pytest.param(
             ConvertibleUnitSpecification(
-                notation=IECNotation(symbol="Y"),
-                precision=StrictPrecision(digits=0),
+                notation=SINotation(symbol="U"),
+                precision=AutoPrecision(digits=2),
+            ),
+            SIFormatter(
+                symbol="U",
+                precision=AutoPrecision(digits=2),
+            ),
+            id="si",
+        ),
+        pytest.param(
+            ConvertibleUnitSpecification(
+                notation=IECNotation(symbol="U"),
+                precision=AutoPrecision(digits=2),
             ),
             IECFormatter(
-                symbol="Y",
-                precision=StrictPrecision(digits=0),
+                symbol="U",
+                precision=AutoPrecision(digits=2),
             ),
+            id="iec",
         ),
-        (
+        pytest.param(
+            ConvertibleUnitSpecification(
+                notation=StandardScientificNotation(symbol="U"),
+                precision=AutoPrecision(digits=2),
+            ),
+            StandardScientificFormatter(
+                symbol="U",
+                precision=AutoPrecision(digits=2),
+            ),
+            id="standard-scientific",
+        ),
+        pytest.param(
+            ConvertibleUnitSpecification(
+                notation=EngineeringScientificNotation(symbol="U"),
+                precision=AutoPrecision(digits=2),
+            ),
+            EngineeringScientificFormatter(
+                symbol="U",
+                precision=AutoPrecision(digits=2),
+            ),
+            id="standard-scientific",
+        ),
+        pytest.param(
             ConvertibleUnitSpecification(
                 notation=TimeNotation(symbol="s"),
-                precision=StrictPrecision(digits=3),
+                precision=AutoPrecision(digits=2),
             ),
             TimeFormatter(
                 symbol="s",
-                precision=StrictPrecision(digits=3),
+                precision=AutoPrecision(digits=2),
             ),
+            id="time",
         ),
     ],
 )
-def test_user_specific_unit(
+def test_user_specific_unit_formatter(
     unit_specification: ConvertibleUnitSpecification,
     expected_formatter: NotationFormatter,
 ) -> None:

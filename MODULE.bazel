@@ -19,6 +19,8 @@ bazel_dep(name = "gazelle", version = "0.45.0")
 bazel_dep(name = "googletest", version = "1.17.0", repo_name = "gtest")
 bazel_dep(name = "libgsf", version = "1.14.44.cmk.1")
 bazel_dep(name = "msitools", version = "0.94.cmk.1")
+bazel_dep(name = "openssl", version = "3.0.16.cmk.1")
+bazel_dep(name = "openssl_static", version = "3.0.16.cmk.1")
 bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "protobuf", version = "31.1")
 bazel_dep(name = "rules_cc", version = "0.1.2")
@@ -320,17 +322,6 @@ filegroup(
     urls = [
         "https://download.oracle.com/otn_software/linux/instantclient/2118000/instantclient-basiclite-linux.x64-21.18.0.0.0dbru.zip",
         UPSTREAM_MIRROR_URL + "/instantclient-basiclite-linux.x64-21.18.0.0.0dbru.zip",
-    ],
-)
-
-http_archive(
-    name = "openssl",
-    build_file = "//omd/packages/openssl:BUILD.openssl.bazel",
-    sha256 = "57e03c50feab5d31b152af2b764f10379aecd8ee92f16c985983ce4a99f7ef86",
-    strip_prefix = "openssl-3.0.16",
-    urls = [
-        "https://github.com/openssl/openssl/releases/download/openssl-3.0.16/openssl-3.0.16.tar.gz",
-        UPSTREAM_MIRROR_URL + "openssl-3.0.16.tar.gz",
     ],
 )
 
@@ -699,6 +690,8 @@ use_repo(rust, "rust_toolchains")
 crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
 
 inject_repo(crate, "openssl")
+
+inject_repo(crate, "openssl_static")
 
 toolchains_musl = use_extension("@toolchains_musl//:toolchains_musl.bzl", "toolchains_musl")
 toolchains_musl.config(

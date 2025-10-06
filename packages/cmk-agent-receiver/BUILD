@@ -59,6 +59,7 @@ py_library(
     imports = ["."],
     visibility = ["//cmk:__pkg__"],
     deps = [
+        "//packages/cmk-ccc:version",
         "//packages/cmk-relay-protocols",
         requirement("cryptography"),
         requirement("fastapi"),
@@ -68,6 +69,7 @@ py_library(
         requirement("python-dateutil"),
         requirement("python-multipart"),
         requirement("requests"),
+        requirement("tenacity"),
         requirement("starlette"),
         requirement("uvicorn"),
         requirement("uvicorn-worker"),

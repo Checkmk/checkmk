@@ -98,6 +98,10 @@ def edition_supports_nagvis(ed: Edition, /) -> bool:
     return ed is not Edition.CSE
 
 
+def edition_supports_relay(ed: Edition, /) -> bool:
+    return ed in (Edition.CME, Edition.CCE, Edition.CSE)
+
+
 def mark_edition_only(feature_to_mark: str, exclusive_to: Sequence[Edition]) -> str:
     """
     >>> mark_edition_only("Feature", [Edition.CRE])

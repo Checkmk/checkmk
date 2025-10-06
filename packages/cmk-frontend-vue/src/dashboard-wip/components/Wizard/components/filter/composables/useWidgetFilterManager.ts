@@ -60,3 +60,5 @@ export const useWidgetFilterManager = (
     updateFilterValues
   }
 }
+
+export type WidgetFilterManager = ReturnType<typeof useWidgetFilterManager>

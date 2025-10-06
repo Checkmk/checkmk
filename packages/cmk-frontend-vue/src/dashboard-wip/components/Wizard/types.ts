@@ -76,6 +76,9 @@ export type WidgetContentType =
   | HostStateSummaryContent
   | HostStatisticsContent
   | SiteOverviewContent
+  | ServiceStateContent
+  | ServiceStateSummaryContent
+  | ServiceStatisticsContent
 
 export type MetricDisplayRangeModel = components['schemas']['MetricDisplayRangeModel']
 export type FixedDataRangeModel = components['schemas']['MetricDisplayRangeFixedModel']
@@ -89,6 +92,10 @@ export type HostStateContent = components['schemas']['HostStateContent']
 export type HostStateSummaryContent = components['schemas']['HostStateSummaryContent']
 export type HostStatisticsContent = components['schemas']['HostStatsContent']
 export type SiteOverviewContent = components['schemas']['SiteOverviewContent']
+export type ServiceStateContent = components['schemas']['ServiceStateContent']
+export type ServiceStateSummaryContent = components['schemas']['ServiceStateSummaryContent']
+export type ServiceState = components['schemas']['MonitoringState']
+export type ServiceStatisticsContent = components['schemas']['ServiceStatsContent']
 
 export type TitleSpec = components['schemas']['WidgetTitle']
 export type DefaultOrColor = components['schemas']['DefaultOrColor']

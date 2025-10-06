@@ -16,6 +16,7 @@ import type {
 } from '@/dashboard-wip/types/widget'
 
 import HostsSiteWizard from '../Wizard/HostsSiteWizard.vue'
+import ServicesOverviewWizard from '../Wizard/ServicesOverviewWizard.vue'
 
 interface AllWizardsProps {
   selectedWizard: string
@@ -64,6 +65,17 @@ const handleGoBack = () => {
     />
     <HostsSiteWizard
       v-else-if="selectedWizard === 'host_site_overview'"
+      :dashboard-name="dashboardName"
+      :dashboard-constants="dashboardConstants"
+      :context-filters="contextFilters"
+      @go-back="handleGoBack"
+      @add-widget="
+        (content, generalSettings, filterContext) =>
+          emit('add-widget', content, generalSettings, filterContext)
+      "
+    />
+    <ServicesOverviewWizard
+      v-else-if="selectedWizard === 'service_overview'"
       :dashboard-name="dashboardName"
       :dashboard-constants="dashboardConstants"
       :context-filters="contextFilters"

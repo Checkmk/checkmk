@@ -22,9 +22,10 @@ class FetchTimeSeries(Protocol):
     ) -> QueryData: ...
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MetricBackend:
     edition: Edition
+    is_available: bool
     client: FetchTimeSeries
 
 

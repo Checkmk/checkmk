@@ -49,6 +49,7 @@ def register(
     metric_backend_registry.register(
         MetricBackend(
             edition=edition,
+            is_available=False,
             client=lambda *args, **kwargs: {},
         )
     )

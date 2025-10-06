@@ -129,6 +129,10 @@ server01;127.0.0.1
 server02;127.0.0.2
 """
 
+EDGE_CASE_CSV_LINE_WITH_SPACES = """
+server01;192.168.1.101
+""" + (" " * 10)  # Do it this way because some editors try to trim trailing spaces
+
 
 @pytest.mark.parametrize(
     "csvtext, has_title_line",
@@ -422,6 +426,12 @@ def test_get_handle_for_csv() -> None:
             ["server01", "192.168.1.101"],
             None,
             id="CSV file with only one line (no title line)",
+        ),
+        pytest.param(
+            EDGE_CASE_CSV_LINE_WITH_SPACES,
+            ["server01", "192.168.1.101"],
+            None,
+            id="CSV file with a line containing only spaces at the end (line should be ignored)",
         ),
         pytest.param(
             "",

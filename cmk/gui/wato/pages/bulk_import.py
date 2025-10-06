@@ -266,6 +266,10 @@ class CSVBulkImport:
         """
         for row in self._reader:
             if row:
+                # If there are *only* spaces on the line, skip it
+                if len(row) == 1 and row[0].strip() == "":
+                    continue
+
                 # This very function is called to determine the row length.
                 # In that case, self._num_fields won't be set yet.
                 if self._num_fields is not None and len(row) != self.row_length:

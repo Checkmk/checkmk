@@ -422,7 +422,7 @@ def test_otel_logs_received_by_event_console(otel_enabled_site: Site) -> None:
 
             for i, event in enumerate(events):
                 expected_log_level, expected_state = expected_log_levels[i]
-                expected_log_text = HTTP_LOG_TEXT % (expected_log_level, 0)
+                expected_log_text = HTTP_LOG_TEXT.replace("\n", "") % (expected_log_level, 0)
                 assert event["extensions"]["text"] == expected_log_text, (
                     f"Unexpected log text for event #{i}: {event['extensions']['text']}. "
                     f"Expected: {expected_log_text}"

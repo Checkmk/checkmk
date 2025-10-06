@@ -49,7 +49,6 @@ __all__ = [
     "LegacyDiscoveryResult",
     "LegacyResult",
     "LegacyService",
-    "passwordstore_get_cmdline",
     "STATE_MARKERS",
 ]
 
@@ -249,15 +248,3 @@ def check_levels(
 
     state, levelstext = _do_check_levels(value, levels, render_func)
     return state, infotext + levelstext, _build_perfdata(dsname, value, levels, boundaries)
-
-
-def passwordstore_get_cmdline(fmt: str, pw: tuple | str) -> str | tuple[str, str, str]:
-    """Use this to prepare a command line argument for using a password from the
-    Check_MK password store or an explicitly configured password."""
-    if not isinstance(pw, tuple):
-        pw = ("password", pw)
-
-    if pw[0] == "password":
-        return str(fmt % pw[1])
-
-    return ("store", pw[1], fmt)

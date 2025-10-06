@@ -12,6 +12,7 @@ from pytest import MonkeyPatch
 
 from cmk.base import notify
 from cmk.events.event_context import EnrichedEventContext, EventContext
+from cmk.utils.http_proxy_config import EnvironmentProxyConfig
 from cmk.utils.notify_types import (
     Contact,
     ContactName,
@@ -21,19 +22,7 @@ from cmk.utils.notify_types import (
     NotifyPluginParamsDict,
 )
 
-
-class HTTPPRoxyConfig:
-    def to_requests_proxies(self) -> None:
-        return None
-
-    def serialize(self) -> str:
-        return ""
-
-    def __eq__(self, o: object) -> bool:
-        return NotImplemented
-
-
-HTTP_PROXY: Final = HTTPPRoxyConfig()
+HTTP_PROXY: Final = EnvironmentProxyConfig()
 
 
 def test_os_environment_does_not_override_notification_script_env(monkeypatch: MonkeyPatch) -> None:

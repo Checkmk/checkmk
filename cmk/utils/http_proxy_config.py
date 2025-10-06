@@ -3,17 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, MutableMapping
-from typing import Literal, Protocol
-
-
-class HTTPProxyConfig(Protocol):
-    def to_requests_proxies(self) -> MutableMapping[str, str] | None: ...
-
-    def serialize(self) -> str: ...
-
-    # For unit tests
-    def __eq__(self, o: object) -> bool: ...
+from collections.abc import Mapping
+from typing import Literal
 
 
 class EnvironmentProxyConfig:
@@ -60,6 +51,9 @@ class ExplicitProxyConfig:
 
     def __eq__(self, o: object) -> bool:
         return isinstance(o, ExplicitProxyConfig) and self._url == o._url
+
+
+type HTTPProxyConfig = EnvironmentProxyConfig | NoProxyConfig | ExplicitProxyConfig
 
 
 def deserialize_http_proxy_config(serialized_config: str | None) -> HTTPProxyConfig:

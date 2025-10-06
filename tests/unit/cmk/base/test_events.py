@@ -18,6 +18,7 @@ from cmk.base.events import (
     raw_context_from_string,
 )
 from cmk.events.event_context import EnrichedEventContext, EventContext
+from cmk.utils.http_proxy_config import EnvironmentProxyConfig
 from cmk.utils.notify import NotificationHostConfig
 from cmk.utils.notify_types import (
     EventRule,
@@ -28,19 +29,7 @@ from cmk.utils.notify_types import (
 from cmk.utils.rulesets.ruleset_matcher import TagConditionNE
 from cmk.utils.tags import TagGroupID, TagID
 
-
-class HTTPPRoxyConfig:
-    def to_requests_proxies(self) -> None:
-        return None
-
-    def serialize(self) -> str:
-        return ""
-
-    def __eq__(self, o: object) -> bool:
-        return NotImplemented
-
-
-HTTP_PROXY: Final = HTTPPRoxyConfig()
+HTTP_PROXY: Final = EnvironmentProxyConfig()
 
 
 @pytest.mark.parametrize(

@@ -41,7 +41,7 @@ ENCODED_CREDENTIALS = base64.b64encode(f"{USERNAME}:{PASSWORD}".encode()).decode
 AUTH_HEADERS = {"Authorization": f"Basic {ENCODED_CREDENTIALS}"}
 # OpenTelemetry logs configuration
 HTTP_LOG_LEVELS = ["info", "warning", "error"]
-HTTP_LOG_TEXT = "Test log level %s #%d"
+HTTP_LOG_TEXT = "Test \nlog \nlevel \n%s #%d"  # enable_octet_counting should handle new lines.
 
 RESOURCE = Resource.create({"service.name": SERVICE_NAME})
 

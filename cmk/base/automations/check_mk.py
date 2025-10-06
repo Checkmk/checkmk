@@ -1016,7 +1016,7 @@ def _make_configured_notify_relay() -> Callable[[], None]:
     except ImportError:
         return lambda: None
 
-    return Client(omd_root=cmk.utils.paths.omd_root).publish_new_config
+    return Client.from_omd_config(omd_root=cmk.utils.paths.omd_root).publish_new_config
 
 
 def _execute_autodiscovery(

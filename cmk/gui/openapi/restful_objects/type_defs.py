@@ -65,6 +65,7 @@ DomainType = Literal[
     "service_discovery_run",
     "servicegroup",
     "service_group_config",
+    "sidebar_element",
     "sign_key",
     "site_connection",
     "sla",

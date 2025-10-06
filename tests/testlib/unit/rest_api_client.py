@@ -1181,6 +1181,18 @@ class GraphTimerangeClient(RestApiClient):
         )
 
 
+class SidebarElementClient(RestApiClient):
+    domain: DomainType = "sidebar_element"
+    default_version = APIVersion.UNSTABLE
+
+    def get_all(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
+
 class TimePeriodClient(RestApiClient):
     domain: DomainType = "time_period"
 
@@ -3612,6 +3624,7 @@ class ClientRegistry:
     ServiceDiscovery: ServiceDiscoveryClient
     LdapConnection: LDAPConnectionClient
     SamlConnection: SAMLConnectionClient
+    SidebarElement: SidebarElementClient
     ParentScan: ParentScanClient
     QuickSetup: QuickSetupClient
     ManagedRobots: ManagedRobotsClient
@@ -3675,4 +3688,5 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         ConstantClient=ConstantClient(request_handler, url_prefix),
         ViewClient=ViewClient(request_handler, url_prefix),
         RelayClient=RelayClient(request_handler, url_prefix),
+        SidebarElement=SidebarElementClient(request_handler, url_prefix),
     )

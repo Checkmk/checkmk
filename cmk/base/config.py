@@ -145,7 +145,6 @@ from cmk.utils.host_storage import (
     apply_hosts_file_to_object,
     get_host_storage_loaders,
 )
-from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
 from cmk.utils.ip_lookup import IPLookup, IPLookupOptional, IPStackConfig
 from cmk.utils.labels import LabelManager, Labels, LabelSources
 from cmk.utils.log import console
@@ -1184,30 +1183,6 @@ class ServiceDependsOn:
                         except (IndexError, TypeError):
                             deps.append(depname)
         return deps
-
-
-# .
-#   .--Misc Helpers--------------------------------------------------------.
-#   |        __  __ _            _   _      _                              |
-#   |       |  \/  (_)___  ___  | | | | ___| |_ __   ___ _ __ ___          |
-#   |       | |\/| | / __|/ __| | |_| |/ _ \ | '_ \ / _ \ '__/ __|         |
-#   |       | |  | | \__ \ (__  |  _  |  __/ | |_) |  __/ |  \__ \         |
-#   |       |_|  |_|_|___/\___| |_| |_|\___|_| .__/ \___|_|  |___/         |
-#   |                                        |_|                           |
-#   +----------------------------------------------------------------------+
-#   | Different helper functions                                           |
-#   '----------------------------------------------------------------------'
-
-
-def get_http_proxy(http_proxy: tuple[str, str]) -> HTTPProxyConfig:
-    """Returns a proxy config object to be used for HTTP requests
-
-    Intended to receive a value configured by the user using the HTTPProxyReference valuespec.
-    """
-    return http_proxy_config_from_user_setting(
-        http_proxy,
-        http_proxies,
-    )
 
 
 # .

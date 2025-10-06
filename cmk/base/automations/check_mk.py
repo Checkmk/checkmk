@@ -198,7 +198,7 @@ from cmk.snmplib import (
     SNMPVersion,
     walk_for_export,
 )
-from cmk.utils import config_warnings, ip_lookup, log, man_pages
+from cmk.utils import config_warnings, http_proxy_config, ip_lookup, log, man_pages
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.caching import cache_manager
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
@@ -4122,7 +4122,7 @@ class AutomationNotificationReplay(Automation):
             lambda hostname, plugin: loading_result.config_cache.notification_plugin_parameters(
                 hostname, plugin
             ),
-            config.get_http_proxy,
+            http_proxy_config.make_http_proxy_getter(config.http_proxies),
             notify.make_ensure_nagios(loading_result.loaded_config.monitoring_core),
             int(nr),
             rules=config.notification_rules,
@@ -4161,7 +4161,7 @@ class AutomationNotificationAnalyse(Automation):
                 lambda hostname, plugin: loading_result.config_cache.notification_plugin_parameters(
                     hostname, plugin
                 ),
-                config.get_http_proxy,
+                http_proxy_config.make_http_proxy_getter(config.http_proxies),
                 notify.make_ensure_nagios(loading_result.loaded_config.monitoring_core),
                 int(nr),
                 rules=config.notification_rules,
@@ -4204,7 +4204,7 @@ class AutomationNotificationTest(Automation):
                 lambda hostname, plugin: loading_result.config_cache.notification_plugin_parameters(
                     hostname, plugin
                 ),
-                config.get_http_proxy,
+                http_proxy_config.make_http_proxy_getter(config.http_proxies),
                 ensure_nagios,
                 rules=config.notification_rules,
                 parameters=config.notification_parameter,

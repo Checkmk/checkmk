@@ -3,8 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from typing import Literal
+
+type _RulesetProxySpec = tuple[
+    Literal["cmk_postprocessed"],
+    Literal["environment_proxy", "no_proxy", "stored_proxy", "explicit_proxy"],
+    str,
+]
 
 
 class EnvironmentProxyConfig:
@@ -73,6 +79,24 @@ def deserialize_http_proxy_config(serialized_config: str | None) -> HTTPProxyCon
         case str() as url:
             return ExplicitProxyConfig(url)
     raise ValueError(f"Invalid serialized proxy config: {serialized_config!r}")
+
+
+def make_http_proxy_getter(
+    http_proxies: Mapping[str, Mapping[str, str]],
+) -> Callable[[tuple[str, str | None] | _RulesetProxySpec], HTTPProxyConfig]:
+    def get_http_proxy(
+        http_proxy: tuple[str, str | None] | _RulesetProxySpec,
+    ) -> HTTPProxyConfig:
+        """Returns a proxy config object to be used for HTTP requests
+
+        Intended to receive a value configured by the user using the HTTPProxyReference valuespec.
+        """
+        return http_proxy_config_from_user_setting(
+            http_proxy,
+            http_proxies,
+        )
+
+    return get_http_proxy
 
 
 def http_proxy_config_from_user_setting(

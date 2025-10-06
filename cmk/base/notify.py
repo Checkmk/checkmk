@@ -52,7 +52,6 @@ from cmk.events.notification_spool_file import (
     NotificationViaPlugin,
 )
 from cmk.utils import log
-from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.notify import find_wato_folder
@@ -225,7 +224,7 @@ def do_notify(
     rules: Iterable[EventRule],
     parameters: NotificationParameterSpecs,
     define_servicegroups: Mapping[str, str],
-    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
+    get_http_proxy: events.ProxyGetter,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     ensure_nagios: Callable[[str], object],
     config_contacts: ConfigContacts,
@@ -396,7 +395,7 @@ def do_notify(
 def notify_notify(
     raw_context: EventContext,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
-    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
+    get_http_proxy: events.ProxyGetter,
     ensure_nagios: Callable[[str], object],
     *,
     rules: Iterable[EventRule],
@@ -485,7 +484,7 @@ def notify_notify(
 def locally_deliver_raw_context(
     enriched_context: EnrichedEventContext,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
-    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
+    get_http_proxy: events.ProxyGetter,
     *,
     rules: Iterable[EventRule],
     parameters: NotificationParameterSpecs,
@@ -528,7 +527,7 @@ def locally_deliver_raw_context(
 
 def notification_replay_backlog(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
-    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
+    get_http_proxy: events.ProxyGetter,
     ensure_nagios: Callable[[str], object],
     nr: int,
     *,
@@ -569,7 +568,7 @@ def notification_replay_backlog(
 
 def notification_analyse_backlog(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
-    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
+    get_http_proxy: events.ProxyGetter,
     ensure_nagios: Callable[[str], object],
     nr: int,
     *,
@@ -612,7 +611,7 @@ def notification_analyse_backlog(
 def notification_test(
     raw_context: NotificationContext,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
-    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
+    get_http_proxy: events.ProxyGetter,
     ensure_nagios: Callable[[str], object],
     *,
     rules: Iterable[EventRule],
@@ -677,7 +676,7 @@ def notification_test(
 # TODO: Make use of the generic do_keepalive() mechanism?
 def notify_keepalive(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
-    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
+    get_http_proxy: events.ProxyGetter,
     ensure_nagios: Callable[[str], object],
     *,
     rules: Iterable[EventRule],
@@ -737,7 +736,7 @@ def notify_keepalive(
 def notify_rulebased(
     enriched_context: EnrichedEventContext,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
-    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
+    get_http_proxy: events.ProxyGetter,
     *,
     rules: Iterable[EventRule],
     parameters: NotificationParameterSpecs,
@@ -924,7 +923,7 @@ def _process_notifications(
     parameters: NotificationParameterSpecs,
     num_rule_matches: int,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
-    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
+    get_http_proxy: events.ProxyGetter,
     *,
     config_contacts: ConfigContacts,
     fallback_email: str,
@@ -1701,13 +1700,10 @@ def rbn_emails_contacts(emails: list[str]) -> list[str]:
 def create_plugin_context(
     enriched_context: EnrichedEventContext,
     params: NotifyPluginParamsDict,
-    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
+    get_http_proxy: events.ProxyGetter,
 ) -> NotificationContext:
     plugin_context = NotificationContext({})
     plugin_context.update(cast(Mapping[str, str], enriched_context))  # Make a real copy
-
-    if "proxy_url" in params:
-        params = events.convert_proxy_params(params)
 
     events.add_to_event_context(plugin_context, "PARAMETER", params, get_http_proxy)
     return plugin_context
@@ -1715,7 +1711,7 @@ def create_plugin_context(
 
 def create_bulk_parameter_context(
     params: NotifyPluginParamsDict,
-    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
+    get_http_proxy: events.ProxyGetter,
 ) -> list[str]:
     dict_context = create_plugin_context({}, params, get_http_proxy)
     return [
@@ -1880,7 +1876,7 @@ def notification_script_env(plugin_context: NotificationContext) -> PluginNotifi
 def handle_spoolfile(
     spoolfile: str,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
-    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
+    get_http_proxy: events.ProxyGetter,
     rules: Iterable[EventRule],
     parameters: NotificationParameterSpecs,
     define_servicegroups: Mapping[str, str],
@@ -2255,7 +2251,7 @@ def find_bulks(only_ripe: bool, *, bulk_interval: int) -> NotifyBulks:
 
 
 def send_ripe_bulks(
-    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
+    get_http_proxy: events.ProxyGetter,
     *,
     bulk_interval: int,
     plugin_timeout: int,
@@ -2275,7 +2271,7 @@ def send_ripe_bulks(
 def notify_bulk(
     dirname: str,
     uuids: UUIDs,
-    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
+    get_http_proxy: events.ProxyGetter,
     *,
     plugin_timeout: int,
 ) -> None:

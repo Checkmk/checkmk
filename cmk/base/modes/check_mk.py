@@ -127,7 +127,7 @@ from cmk.snmplib import (
     SNMPSectionName,
     walk_for_export,
 )
-from cmk.utils import config_warnings, ip_lookup, log
+from cmk.utils import config_warnings, http_proxy_config, ip_lookup, log
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.diagnostics import (
@@ -2086,7 +2086,7 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
         plugin: loading_result.config_cache.notification_plugin_parameters(hostname, plugin),
         rules=config.notification_rules,
         parameters=config.notification_parameter,
-        get_http_proxy=config.get_http_proxy,
+        get_http_proxy=http_proxy_config.make_http_proxy_getter(config.http_proxies),
         ensure_nagios=notify.make_ensure_nagios(loading_result.loaded_config.monitoring_core),
         bulk_interval=config.notification_bulk_interval,
         plugin_timeout=config.notification_plugin_timeout,

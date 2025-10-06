@@ -11,7 +11,7 @@ from http import HTTPStatus
 from cmk.agent_receiver.config import Config
 from cmk.relay_protocols.tasks import RelayConfigTask, TaskStatus
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
-from cmk.testlib.agent_receiver.config_file_system import create_config_folder
+from cmk.testlib.agent_receiver.config_file_system import ConfigFolder, create_config_folder
 from cmk.testlib.agent_receiver.site_mock import SiteMock
 from cmk.testlib.agent_receiver.tasks import get_relay_tasks
 
@@ -33,8 +33,12 @@ def test_activation_performed_by_user_creates_config_tasks_for_each_relay(
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Assert each relay has exactly one pending config task with correct serial
-    _assert_single_pending_config_task(agent_receiver, relay_id_a, serial_folder.serial)
-    _assert_single_pending_config_task(agent_receiver, relay_id_b, serial_folder.serial)
+    _assert_single_pending_config_task(
+        agent_receiver, serial_folder, relay_id_a, serial_folder.serial
+    )
+    _assert_single_pending_config_task(
+        agent_receiver, serial_folder, relay_id_b, serial_folder.serial
+    )
 
 
 def test_activation_performed_twice_with_same_config(
@@ -54,16 +58,24 @@ def test_activation_performed_twice_with_same_config(
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Assert each relay has exactly one pending config task with correct serial
-    _assert_single_pending_config_task(agent_receiver, relay_id_a, serial_folder.serial)
-    _assert_single_pending_config_task(agent_receiver, relay_id_b, serial_folder.serial)
+    _assert_single_pending_config_task(
+        agent_receiver, serial_folder, relay_id_a, serial_folder.serial
+    )
+    _assert_single_pending_config_task(
+        agent_receiver, serial_folder, relay_id_b, serial_folder.serial
+    )
 
     # Simulate second user activation.
     resp = agent_receiver.activate_config()
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Assert each relay has exactly one pending config task with correct serial
-    _assert_single_pending_config_task(agent_receiver, relay_id_a, serial_folder.serial)
-    _assert_single_pending_config_task(agent_receiver, relay_id_b, serial_folder.serial)
+    _assert_single_pending_config_task(
+        agent_receiver, serial_folder, relay_id_a, serial_folder.serial
+    )
+    _assert_single_pending_config_task(
+        agent_receiver, serial_folder, relay_id_b, serial_folder.serial
+    )
 
 
 def test_activation_with_no_relays(
@@ -103,8 +115,12 @@ def test_activation_with_mixed_relay_task_states(
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Verify both relays have pending tasks
-    _assert_single_pending_config_task(agent_receiver, relay_id_a, serial_folder.serial)
-    _assert_single_pending_config_task(agent_receiver, relay_id_b, serial_folder.serial)
+    _assert_single_pending_config_task(
+        agent_receiver, serial_folder, relay_id_a, serial_folder.serial
+    )
+    _assert_single_pending_config_task(
+        agent_receiver, serial_folder, relay_id_b, serial_folder.serial
+    )
 
     # Simulate that relay_a's task completed (this would normally happen via relay processing)
     # For this test, we'll assume the task status changed externally
@@ -116,7 +132,9 @@ def test_activation_with_mixed_relay_task_states(
         result_type="OK",
         result_payload="Config update successful message",
     )
-    _assert_single_pending_config_task(agent_receiver, relay_id_b, serial_folder.serial)
+    _assert_single_pending_config_task(
+        agent_receiver, serial_folder, relay_id_b, serial_folder.serial
+    )
     tasks = get_relay_tasks(agent_receiver, relay_id_a)
     assert len(tasks.tasks) == 1
     assert tasks.tasks[0].status == TaskStatus.FINISHED
@@ -125,7 +143,9 @@ def test_activation_with_mixed_relay_task_states(
     resp = agent_receiver.activate_config()
     assert resp.status_code == HTTPStatus.OK, resp.text
 
-    _assert_single_pending_config_task(agent_receiver, relay_id_b, serial_folder.serial)
+    _assert_single_pending_config_task(
+        agent_receiver, serial_folder, relay_id_b, serial_folder.serial
+    )
 
     tasks_a = get_relay_tasks(agent_receiver, relay_id_a)
     assert len(tasks_a.tasks) == 2
@@ -140,6 +160,7 @@ def test_activation_with_mixed_relay_task_states(
 
 def _assert_single_pending_config_task(
     agent_receiver: AgentReceiverClient,
+    serial_folder: ConfigFolder,
     relay_id: str,
     expected_serial: str,
 ) -> None:
@@ -147,6 +168,6 @@ def _assert_single_pending_config_task(
     assert len(tasks.tasks) == 1, tasks
     task = tasks.tasks[0]
     assert isinstance(task.spec, RelayConfigTask)
-    assert task.spec.tar_data == ""
     assert task.spec.serial == expected_serial
     assert task.status == TaskStatus.PENDING
+    serial_folder.assert_tar_content(relay_id, task.spec.tar_data)

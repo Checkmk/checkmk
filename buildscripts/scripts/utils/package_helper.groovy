@@ -25,6 +25,12 @@ def branch_base_folder(with_testing_prefix) {
     return project_name_components[checkmk_index..checkmk_index + 1].join('/');
 }
 
+def directory_sha256sum(directories) {
+    return directories.collectEntries({ path ->
+        ["${path}": cmd_output("sha256sum <(find ${path} -type f -exec sha256sum {} \\; | sort) | cut -d' ' -f1")]
+    });
+}
+
 def provide_agent_binaries(Map args) {
     // always download and move artifacts unless specified differently
     def move_artifacts = args.move_artifacts == null ? true : args.move_artifacts.asBoolean();
@@ -44,6 +50,11 @@ def provide_agent_binaries(Map args) {
             relative_job_name: "${branch_base_folder(false)}/builders/build-linux-agent-updater",
             /// no Linux agent updaters for raw edition..
             condition: true, // edition != "raw",  // FIXME!
+            dependency_paths: [
+                "defines.make",
+                "agents",
+                "non-free/packages/cmk-update-agent",
+            ],
             install_cmd: """\
                 # check-mk-agent-*.{deb,rpm}
                 cp *.deb *.rpm ${checkout_dir}/agents/
@@ -63,6 +74,18 @@ def provide_agent_binaries(Map args) {
             //       As 'soon' as this problem does not exist anymore we could run
             //       relatively from 'builders/..'
             relative_job_name: "${branch_base_folder(false)}/winagt-build",
+            dependency_paths: [
+                "defines.make",
+                "agents",
+                "packages/cmk-agent-ctl",
+                "packages/mk-sql",
+                "third_party/asio",
+                "third_party/fmt",
+                "third_party/googletest",
+                "third_party/openhardwaremonitor",
+                "third_party/simpleini",
+                "third_party/yaml-cpp",
+            ],
             install_cmd: """\
                 cp \
                     check_mk_agent-64.exe \
@@ -96,6 +119,10 @@ def provide_agent_binaries(Map args) {
             //       As 'soon' as this problem does not exist anymore we could run
             //       relatively from 'builders/..'
             relative_job_name: "${branch_base_folder(false)}/winagt-build-modules",
+            dependency_paths: [
+                "defines.make",
+                "agents/modules/windows",
+            ],
             install_cmd: """\
                 cp \
                     ./*.cab \
@@ -121,17 +148,43 @@ def provide_agent_binaries(Map args) {
                 def this_parameters = [
                     use_upstream_build: true,
                     relative_job_name: details.relative_job_name,
-                    build_params: [
-                        CUSTOM_GIT_REF: effective_git_ref,
-                        VERSION: args.version,
-                        DISABLE_CACHE: args.disable_cache,
-                    ],
-                    build_params_no_check: [
-                        CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
-                        CIPARAM_BISECT_COMMENT: args.bisect_comment,
-                    ],
                     download: false,
                 ];
+
+                if (details.dependency_paths) {
+                    // if dependency_paths are specified these will be used as unique identifier
+                    // CUSTOM_GIT_REF is handed over as well, but not activly checked by ci-artifacts
+                    def all_directory_hash = "";
+                    dir("${checkout_dir}") {
+                        def all_directory_hash_map = directory_sha256sum(details.dependency_paths);
+                        all_directory_hash = all_directory_hash_map.collect { k, v -> "${k}=${v}" }.join('-');
+                    }
+                    this_parameters += [
+                        build_params: [
+                            CIPARAM_PATH_HASH: all_directory_hash,
+                            VERSION: args.version,
+                            DISABLE_CACHE: args.disable_cache,
+                        ],
+                        build_params_no_check: [
+                            CUSTOM_GIT_REF: effective_git_ref,
+                            CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
+                            CIPARAM_BISECT_COMMENT: args.bisect_comment,
+                        ],
+                    ]
+                } else {
+                    this_parameters += [
+                        build_params: [
+                            CUSTOM_GIT_REF: effective_git_ref,
+                            VERSION: args.version,
+                            DISABLE_CACHE: args.disable_cache,
+                        ],
+                        build_params_no_check: [
+                            CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
+                            CIPARAM_BISECT_COMMENT: args.bisect_comment,
+                        ],
+                    ]
+                }
+
                 if (move_artifacts) {
                     // specify to download artifacts to desired destination
                     this_parameters += [

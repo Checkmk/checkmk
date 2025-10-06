@@ -1,0 +1,174 @@
+#!/usr/bin/env python3
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+
+from cmk.server_side_calls import alpha, v1
+from cmk.server_side_calls_backend.config_processing import (
+    process_configuration_to_parameters,
+    ProxyConfig,
+    ReplacementResult,
+)
+
+
+def test_process_configuration_to_parameter_password_stored() -> None:
+    assert process_configuration_to_parameters(
+        params={"password": ("cmk_postprocessed", "stored_password", ("my_secret_id", ""))},
+        proxy_config=ProxyConfig({}),
+        usage_hint="test",
+        is_alpha=False,
+    ) == ReplacementResult(
+        value={"password": v1.Secret(id("my_secret_id"))},
+        found_secrets={},
+        surrogates={id("my_secret_id"): "my_secret_id"},
+    )
+
+
+def test_process_configuration_to_parameter_password_explicit() -> None:
+    assert process_configuration_to_parameters(
+        params={
+            "password": ("cmk_postprocessed", "explicit_password", (":uuid:1234", "actual_secret"))
+        },
+        proxy_config=ProxyConfig({}),
+        usage_hint="test",
+        is_alpha=False,
+    ) == ReplacementResult(
+        value={"password": v1.Secret(id(":uuid:1234"))},
+        found_secrets={":uuid:1234": "actual_secret"},
+        surrogates={id(":uuid:1234"): ":uuid:1234"},
+    )
+
+
+def test_process_configuration_to_parameter_no_proxy_v1() -> None:
+    assert process_configuration_to_parameters(
+        params={"proxy": ("cmk_postprocessed", "no_proxy", "")},
+        proxy_config=ProxyConfig({}),
+        usage_hint="test",
+        is_alpha=False,
+    ) == ReplacementResult(
+        value={"proxy": v1.NoProxy()},
+        found_secrets={},
+        surrogates={},
+    )
+
+
+def test_process_configuration_to_parameter_env_proxy_v1() -> None:
+    assert process_configuration_to_parameters(
+        params={"proxy": ("cmk_postprocessed", "environment_proxy", "")},
+        proxy_config=ProxyConfig({}),
+        usage_hint="test",
+        is_alpha=False,
+    ) == ReplacementResult(
+        value={"proxy": v1.EnvProxy()},
+        found_secrets={},
+        surrogates={},
+    )
+
+
+def test_process_configuration_to_parameter_explicit_proxy_v1() -> None:
+    assert process_configuration_to_parameters(
+        params={"proxy": ("cmk_postprocessed", "explicit_proxy", "hurray.com")},
+        proxy_config=ProxyConfig({}),
+        usage_hint="test",
+        is_alpha=False,
+    ) == ReplacementResult(
+        value={"proxy": v1.URLProxy("url_proxy", "hurray.com")},
+        found_secrets={},
+        surrogates={},
+    )
+
+
+def test_process_configuration_to_parameter_global_proxy_ok_v1() -> None:
+    assert process_configuration_to_parameters(
+        params={"proxy": ("cmk_postprocessed", "stored_proxy", "my_global_proxy")},
+        proxy_config=ProxyConfig(
+            {"my_global_proxy": {"proxy_url": "http://proxy.example.com:3128"}}
+        ),
+        usage_hint="test",
+        is_alpha=False,
+    ) == ReplacementResult(
+        value={"proxy": v1.URLProxy("url_proxy", "http://proxy.example.com:3128")},
+        found_secrets={},
+        surrogates={},
+    )
+
+
+def test_process_configuration_to_parameter_global_proxy_missing_v1() -> None:
+    assert process_configuration_to_parameters(
+        params={"proxy": ("cmk_postprocessed", "stored_proxy", "my_global_proxy")},
+        proxy_config=ProxyConfig({}),
+        usage_hint="test",
+        is_alpha=False,
+    ) == ReplacementResult(
+        value={"proxy": v1.EnvProxy()},
+        found_secrets={},
+        surrogates={},
+    )
+
+
+def test_process_configuration_to_parameter_no_proxy_alpha() -> None:
+    assert process_configuration_to_parameters(
+        params={"proxy": ("cmk_postprocessed", "no_proxy", "")},
+        proxy_config=ProxyConfig({}),
+        usage_hint="test",
+        is_alpha=False,
+    ) == ReplacementResult(
+        value={"proxy": alpha.NoProxy()},
+        found_secrets={},
+        surrogates={},
+    )
+
+
+def test_process_configuration_to_parameter_env_proxy_alpha() -> None:
+    assert process_configuration_to_parameters(
+        params={"proxy": ("cmk_postprocessed", "environment_proxy", "")},
+        proxy_config=ProxyConfig({}),
+        usage_hint="test",
+        is_alpha=False,
+    ) == ReplacementResult(
+        value={"proxy": alpha.EnvProxy()},
+        found_secrets={},
+        surrogates={},
+    )
+
+
+def test_process_configuration_to_parameter_explicit_proxy_alpha() -> None:
+    assert process_configuration_to_parameters(
+        params={"proxy": ("cmk_postprocessed", "explicit_proxy", "hurray.com")},
+        proxy_config=ProxyConfig({}),
+        usage_hint="test",
+        is_alpha=False,
+    ) == ReplacementResult(
+        value={"proxy": alpha.URLProxy("url_proxy", "hurray.com")},
+        found_secrets={},
+        surrogates={},
+    )
+
+
+def test_process_configuration_to_parameter_global_proxy_ok_alpha() -> None:
+    assert process_configuration_to_parameters(
+        params={"proxy": ("cmk_postprocessed", "stored_proxy", "my_global_proxy")},
+        proxy_config=ProxyConfig(
+            {"my_global_proxy": {"proxy_url": "http://proxy.example.com:3128"}}
+        ),
+        usage_hint="test",
+        is_alpha=False,
+    ) == ReplacementResult(
+        value={"proxy": alpha.URLProxy("url_proxy", "http://proxy.example.com:3128")},
+        found_secrets={},
+        surrogates={},
+    )
+
+
+def test_process_configuration_to_parameter_global_proxy_missing_alpha() -> None:
+    assert process_configuration_to_parameters(
+        params={"proxy": ("cmk_postprocessed", "stored_proxy", "my_global_proxy")},
+        proxy_config=ProxyConfig({}),
+        usage_hint="test",
+        is_alpha=False,
+    ) == ReplacementResult(
+        value={"proxy": alpha.EnvProxy()},
+        found_secrets={},
+        surrogates={},
+    )

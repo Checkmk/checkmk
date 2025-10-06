@@ -120,12 +120,8 @@ def _processed_config_value(
                     str(proxy_spec),
                 ):
                     if proxy_config is not None:
-                        return ReplacementResult(
-                            value=_replace_url_proxies(
-                                proxy_type, proxy_spec, proxy_config, usage_hint
-                            ),
-                            found_secrets={},
-                            surrogates={},
+                        return _replace_url_proxies(
+                            proxy_type, proxy_spec, proxy_config, usage_hint
                         )
 
             results = [

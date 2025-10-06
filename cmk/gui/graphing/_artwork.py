@@ -27,6 +27,7 @@ from cmk.gui.unit_formatter import (
 )
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
+from ._fetch_time_series import fetch_augmented_time_series
 from ._from_api import RegisteredMetric
 from ._graph_metric_expressions import clean_time_series_point, LineType
 from ._graph_specification import (
@@ -38,7 +39,6 @@ from ._graph_specification import (
 )
 from ._metric_backend_registry import FetchTimeSeries
 from ._time_series import TimeSeries, TimeSeriesValue
-from ._time_series_fetcher import fetch_augmented_time_series
 from ._unit import user_specific_unit, UserSpecificUnit
 from ._utils import SizeEx
 

@@ -10,6 +10,10 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.gui.graphing._fetch_time_series import (
+    AugmentedTimeSeriesSpec,
+    fetch_augmented_time_series,
+)
 from cmk.gui.graphing._from_api import RegisteredMetric
 from cmk.gui.graphing._graph_metric_expressions import (
     AugmentedTimeSeries,
@@ -27,10 +31,6 @@ from cmk.gui.graphing._rrd_fetch import (
     translate_and_merge_rrd_columns,
 )
 from cmk.gui.graphing._time_series import TimeSeries, TimeSeriesValues
-from cmk.gui.graphing._time_series_fetcher import (
-    AugmentedTimeSeriesSpec,
-    fetch_augmented_time_series,
-)
 from cmk.gui.graphing._translated_metrics import TranslationSpec
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.unit_formatter import AutoPrecision

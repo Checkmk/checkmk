@@ -837,6 +837,7 @@ def test_matches_search_with_rules_negate_is_ineffective_finds_matching(
     assert ruleset.matches_search_with_rules({"rule_ineffective": False}, debug=False) is True
 
 
+@pytest.mark.skip_on_code_coverage
 @pytest.mark.usefixtures("inline_analyze_host_rule_effectiveness_automation")
 def test_matches_search_with_rules_is_ineffective_finds_matching(with_admin_login: UserId) -> None:
     (ruleset := _ruleset("host_contactgroups")).append_rule(

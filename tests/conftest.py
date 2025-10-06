@@ -357,6 +357,10 @@ def pytest_configure(config: pytest.Config) -> None:
         "markers",
         "medium_test_chain: marks tests as part of the medium-test-chain CI job",
     )
+    config.addinivalue_line(
+        "markers",
+        "skip_on_code_coverage: skip the tests when code-coverage measurement is active",
+    )
 
 
 def pytest_collection_modifyitems(items: list[pytest.Function], config: pytest.Config) -> None:

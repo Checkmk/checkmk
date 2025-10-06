@@ -498,6 +498,7 @@ test-unit-all-coverage:
 	cd .. && \
 	    bazel coverage --test_verbose_timeout_warnings //tests/unit:all \
 	    --test_env=TZ=$(RANDOM_TZ) \
+	    --test_arg="-m" --test_arg="not skip_on_code_coverage" \
 		$(BAZEL_COVERAGE_ARGS) ; \
 		genhtml --title "Checkmk Unit Test Coverage"  \
 			--quiet \

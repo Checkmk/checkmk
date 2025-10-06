@@ -177,6 +177,7 @@ def test_all_configured_hosts(monkeypatch: MonkeyPatch) -> None:
     }
 
 
+@pytest.mark.skip_on_code_coverage
 def test_all_active_hosts(monkeypatch: MonkeyPatch) -> None:
     ts = Scenario(site_id="site1")
     ts.add_host(HostName("real1"), tags={TagGroupID("site"): TagID("site1")})

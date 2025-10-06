@@ -107,5 +107,8 @@ pkg_tar(
 pkg_files(
     name = "cmk-passwordstore",
     srcs = ["//cmk:utils/password_store/cli.py"],
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
     renames = {"//cmk:utils/password_store/cli.py": "bin/cmk-passwordstore"},
 )

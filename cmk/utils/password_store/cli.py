@@ -36,3 +36,7 @@ def main(args: Sequence[str]) -> int:
         return 1
     sys.stdout.write(password)
     return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

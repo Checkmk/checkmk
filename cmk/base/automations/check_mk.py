@@ -4122,7 +4122,7 @@ class AutomationNotificationReplay(Automation):
             lambda hostname, plugin: loading_result.config_cache.notification_plugin_parameters(
                 hostname, plugin
             ),
-            http_proxy_config.make_http_proxy_getter(config.http_proxies),
+            http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
             notify.make_ensure_nagios(loading_result.loaded_config.monitoring_core),
             int(nr),
             rules=config.notification_rules,
@@ -4161,7 +4161,7 @@ class AutomationNotificationAnalyse(Automation):
                 lambda hostname, plugin: loading_result.config_cache.notification_plugin_parameters(
                     hostname, plugin
                 ),
-                http_proxy_config.make_http_proxy_getter(config.http_proxies),
+                http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
                 notify.make_ensure_nagios(loading_result.loaded_config.monitoring_core),
                 int(nr),
                 rules=config.notification_rules,
@@ -4204,7 +4204,7 @@ class AutomationNotificationTest(Automation):
                 lambda hostname, plugin: loading_result.config_cache.notification_plugin_parameters(
                     hostname, plugin
                 ),
-                http_proxy_config.make_http_proxy_getter(config.http_proxies),
+                http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
                 ensure_nagios,
                 rules=config.notification_rules,
                 parameters=config.notification_parameter,

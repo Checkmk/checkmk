@@ -1632,10 +1632,6 @@ def test_snmp_check_interval(
     assert ts.apply(monkeypatch).snmp_fetch_intervals(hostname) == result
 
 
-def test_http_proxies() -> None:
-    assert not config.http_proxies
-
-
 @pytest.fixture(name="service_list")
 def _service_list() -> list[ConfiguredService]:
     return [

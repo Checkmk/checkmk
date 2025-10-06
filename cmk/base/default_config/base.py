@@ -74,6 +74,7 @@ stored_passwords: dict[str, Password] = {}
 # in this config domain but not used by the base code. The WATO logic for writing out
 # rule.mk files is resolving the predefined conditions.
 predefined_conditions: dict = {}
+
 # Global setting for managing HTTP proxy configs
 http_proxies: dict[str, dict[str, str]] = {}
 

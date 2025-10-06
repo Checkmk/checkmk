@@ -2086,7 +2086,9 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
         plugin: loading_result.config_cache.notification_plugin_parameters(hostname, plugin),
         rules=config.notification_rules,
         parameters=config.notification_parameter,
-        get_http_proxy=http_proxy_config.make_http_proxy_getter(config.http_proxies),
+        get_http_proxy=http_proxy_config.make_http_proxy_getter(
+            loading_result.loaded_config.http_proxies
+        ),
         ensure_nagios=notify.make_ensure_nagios(loading_result.loaded_config.monitoring_core),
         bulk_interval=config.notification_bulk_interval,
         plugin_timeout=config.notification_plugin_timeout,

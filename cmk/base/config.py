@@ -696,6 +696,7 @@ def _perform_post_config_loading_actions(
         cmc_influxdb_service_metrics=cmc_influxdb_service_metrics,
         cmc_log_levels=cmc_log_levels,
         cluster_max_cachefile_age=cluster_max_cachefile_age,
+        http_proxies=http_proxies,
     )
 
     config_cache = ConfigCache(loaded_config).initialize()
@@ -2339,7 +2340,7 @@ class ConfigCache:
                 macros,
                 ip_address_of,
             ),
-            http_proxies,
+            self._loaded_config.http_proxies,
             lambda x: final_service_name_config(host_name, x, self.label_manager.labels_of_host),
             passwords,
             password_store_file,
@@ -2455,7 +2456,7 @@ class ConfigCache:
                 ip_address_of,
             ),
             host_attrs,
-            http_proxies,
+            self._loaded_config.http_proxies,
             passwords,
             password_store_file,
             ExecutableFinder(

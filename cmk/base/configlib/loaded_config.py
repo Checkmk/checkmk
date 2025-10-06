@@ -103,3 +103,4 @@ class LoadedConfigFragment:
     cmc_influxdb_service_metrics: Sequence[RuleSpec[Mapping[str, object]]]
     cmc_log_levels: Mapping[str, int]
     cluster_max_cachefile_age: int
+    http_proxies: Mapping[str, Mapping[str, str]]

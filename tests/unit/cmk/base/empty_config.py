@@ -84,6 +84,7 @@ EMPTY_CONFIG = LoadedConfigFragment(
         "cmk.smartping": 5,
     },
     cluster_max_cachefile_age=90,
+    http_proxies={},
 )
 
 

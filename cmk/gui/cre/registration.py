@@ -24,6 +24,7 @@ from cmk.gui.dashboard import (
 )
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.features import Features, features_registry
+from cmk.gui.graphing import cre as graphing_cre
 from cmk.gui.graphing_main import PageGraphDashlet, PageHostServiceGraphPopup
 from cmk.gui.help_menu import (
     default_about_checkmk_entries,
@@ -35,7 +36,11 @@ from cmk.gui.ldap.register import register as ldap_registration
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.mkeventd import registration as mkeventd_registration
 from cmk.gui.mkeventd.helpers import save_active_config
-from cmk.gui.openapi import endpoint_family_registry, endpoint_registry, versioned_endpoint_registry
+from cmk.gui.openapi import (
+    endpoint_family_registry,
+    endpoint_registry,
+    versioned_endpoint_registry,
+)
 from cmk.gui.openapi.endpoints import autocomplete
 from cmk.gui.openapi.endpoints import metric as metric_endpoint
 from cmk.gui.pages import page_registry, PageEndpoint
@@ -49,7 +54,9 @@ from cmk.gui.sites import site_choices
 from cmk.gui.userdb import user_attribute_registry, user_connector_registry
 from cmk.gui.utils import agent_commands
 from cmk.gui.utils.agent_commands import agent_commands_registry
-from cmk.gui.utils.rule_specs.legacy_converter import convert_dictionary_formspec_to_valuespec
+from cmk.gui.utils.rule_specs.legacy_converter import (
+    convert_dictionary_formspec_to_valuespec,
+)
 from cmk.gui.valuespec import autocompleter_registry
 from cmk.gui.views import graph
 from cmk.gui.views.builtin_views import (
@@ -89,7 +96,10 @@ from cmk.gui.watolib.config_domain_name import (
 )
 from cmk.gui.watolib.config_sync import replication_path_registry
 from cmk.gui.watolib.groups import contact_group_usage_finder_registry
-from cmk.gui.watolib.host_attributes import host_attribute_registry, host_attribute_topic_registry
+from cmk.gui.watolib.host_attributes import (
+    host_attribute_registry,
+    host_attribute_topic_registry,
+)
 from cmk.gui.watolib.host_rename import rename_host_hook_registry
 from cmk.gui.watolib.hosts_and_folders import folder_validators_registry
 from cmk.gui.watolib.main_menu import main_module_registry, main_module_topic_registry
@@ -322,6 +332,12 @@ def register(edition: Edition, *, ignore_duplicate_endpoints: bool = False) -> N
         BuiltinViewExtender(edition.short, noop_builtin_view_extender)
     )
     agent_commands.register(agent_commands_registry)
+    graphing_cre.register(
+        edition,
+        page_registry,
+        config_variable_registry,
+        autocompleter_registry,
+    )
 
 
 def _openapi_registration(*, ignore_duplicates: bool) -> None:

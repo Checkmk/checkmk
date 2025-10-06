@@ -116,6 +116,7 @@ from cmk.server_side_calls import v1 as server_side_calls_api
 from cmk.server_side_calls_backend import (
     ActiveCheck,
     ActiveServiceData,
+    config_processing,
     ExecutableFinder,
     load_active_checks,
     load_special_agents,
@@ -2340,7 +2341,10 @@ class ConfigCache:
                 macros,
                 ip_address_of,
             ),
-            self._loaded_config.http_proxies,
+            {
+                name: config_processing.ProxyConfig(url=raw["proxy_url"])
+                for name, raw in self._loaded_config.http_proxies.items()
+            },
             lambda x: final_service_name_config(host_name, x, self.label_manager.labels_of_host),
             passwords,
             password_store_file,
@@ -2456,7 +2460,10 @@ class ConfigCache:
                 ip_address_of,
             ),
             host_attrs,
-            self._loaded_config.http_proxies,
+            {
+                name: config_processing.ProxyConfig(url=raw["proxy_url"])
+                for name, raw in self._loaded_config.http_proxies.items()
+            },
             passwords,
             password_store_file,
             ExecutableFinder(

@@ -468,7 +468,7 @@ class RulesetCollection:
         # check if this contains a password. If so, the password file must be updated
         return any(
             process_configuration_to_parameters(
-                rule.value, proxy_config=None, usage_hint=f"ruleset: {name}", is_alpha=True
+                rule.value, global_proxies={}, usage_hint=f"ruleset: {name}", is_alpha=True
             ).found_secrets
             for name, rules in rulesets.items()
             if RuleGroup.is_active_checks_rule(name) or RuleGroup.is_special_agents_rule(name)

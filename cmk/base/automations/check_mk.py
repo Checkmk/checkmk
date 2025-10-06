@@ -183,6 +183,7 @@ from cmk.inventory import structured_data
 from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.piggyback.backend import move_for_host_rename as move_piggyback_for_host_rename
 from cmk.server_side_calls_backend import (
+    config_processing,
     ExecutableFinder,
     load_special_agents,
     SpecialAgent,
@@ -510,7 +511,10 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
                 run_settings.params,
                 password_store_file,
                 run_settings.passwords,
-                run_settings.http_proxies,
+                {
+                    name: config_processing.ProxyConfig(url=raw["proxy_url"])
+                    for name, raw in run_settings.http_proxies.items()
+                },
             )
             fetcher = SpecialAgentFetcher(
                 PlainFetcherTrigger(),  # no relay support yet
@@ -2972,7 +2976,7 @@ def get_special_agent_commandline(
     params: Mapping[str, object],
     password_store_file: Path,
     passwords: Mapping[str, str],
-    http_proxies: Mapping[str, Mapping[str, str]],
+    global_proxies: config_processing.GlobalProxies,
 ) -> Iterator[SpecialAgentCommandLine]:
     special_agent = SpecialAgent(
         load_special_agents(raise_errors=cmk.ccc.debug.enabled()),
@@ -2989,7 +2993,7 @@ def get_special_agent_commandline(
             _disabled_ip_lookup,
         ),
         host_config.host_attrs,
-        http_proxies,
+        global_proxies,
         passwords,
         password_store_file,
         ExecutableFinder(
@@ -3037,7 +3041,10 @@ class AutomationDiagSpecialAgent(Automation):
                 diag_special_agent_input.params,
                 password_store_file,
                 diag_special_agent_input.passwords,
-                diag_special_agent_input.http_proxies,
+                {
+                    name: config_processing.ProxyConfig(url=raw["proxy_url"])
+                    for name, raw in diag_special_agent_input.http_proxies.items()
+                },
             )
             for cmd in cmds:
                 fetcher = ProgramFetcher(

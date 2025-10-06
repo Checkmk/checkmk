@@ -144,10 +144,12 @@ def site_ca_fixture(central_site: Site, tmp_path_factory: pytest.TempPathFactory
     return path
 
 
-UNSUPPORTED_VERSIONS = (ssl.TLSVersion.SSLv3,)
-SUPPORTED_VERSIONS = (
+UNSUPPORTED_VERSIONS = (
+    ssl.TLSVersion.SSLv3,
     ssl.TLSVersion.TLSv1,
     ssl.TLSVersion.TLSv1_1,
+)
+SUPPORTED_VERSIONS = (
     ssl.TLSVersion.TLSv1_2,
     ssl.TLSVersion.TLSv1_3,
 )

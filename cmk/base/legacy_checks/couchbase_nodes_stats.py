@@ -62,13 +62,12 @@ def check_couchbase_nodes_mem(item, params, parsed):
         return
 
     warn_ram, crit_ram = params.get("levels", (None, None))
-    mode_ram = "abs_used" if isinstance(warn_ram, int) else "perc_used"
 
     yield check_memory_element(
         "RAM",
         mem_total - mem_free,
         mem_total,
-        (mode_ram, (warn_ram, crit_ram)),
+        ("abs_used" if isinstance(warn_ram, int) else "perc_used", (warn_ram, crit_ram)),
         metric_name="mem_used",
     )
 

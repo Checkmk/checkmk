@@ -5,7 +5,7 @@
 
 # mypy: disable-error-code="no-untyped-def"
 
-from typing import Literal
+from collections.abc import Mapping
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
@@ -15,7 +15,9 @@ from cmk.plugins.lib.ups import DETECT_UPS_CPS
 check_info = {}
 
 
-def parse_ups_cps_inphase(string_table: StringTable) -> dict[Literal["1"], dict[str, float]] | None:
+def parse_ups_cps_inphase(
+    string_table: StringTable,
+) -> Mapping[str, Mapping[str, float]] | None:
     if not string_table:
         return None
 

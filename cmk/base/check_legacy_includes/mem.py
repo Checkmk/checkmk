@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
-import collections
+from collections.abc import Mapping
+from typing import Any, Literal
 
 from cmk.agent_based.v2 import render
 from cmk.plugins.lib.memory import compute_state
@@ -19,7 +18,7 @@ MEMORY_DEFAULT_LEVELS = {
 }
 
 
-def _compute_state(value, warn, crit):
+def _compute_state(value: float, warn: float | None, crit: float | None) -> int:
     return int(compute_state(value, warn, crit))
 
 
@@ -27,15 +26,18 @@ def _compute_state(value, warn, crit):
 #    This function is already migrated and available in utils/memory.py !   #
 #############################################################################
 def check_memory_element(
-    label,
-    used,
-    total,
-    levels,
-    label_total="",
-    show_free=False,
-    metric_name=None,
-    create_percent_metric=False,
-):
+    label: str,
+    used: float,
+    total: float,
+    levels: tuple[Literal["abs_used", "abs_free", "perc_used", "perc_free"], tuple[float, float]]
+    | None,
+    label_total: str = "",
+    show_free: bool = False,
+    metric_name: str | None = None,
+    create_percent_metric: bool = False,
+) -> tuple[
+    int, str, list[tuple[str, float, float | None, float | None, float | None, float | None]]
+]:
     """Return a check result for one memory element"""
     if show_free:
         show_value = total - used
@@ -54,7 +56,7 @@ def check_memory_element(
     )
 
     try:
-        mode, (warn, crit) = levels
+        mode, (warn, crit) = levels  # type: ignore[misc]
     except (ValueError, TypeError):  # handle None, "ignore"
         mode, (warn, crit) = "ignore", (None, None)
 
@@ -63,7 +65,7 @@ def check_memory_element(
     if state and levels_text:
         infotext = f"{infotext} ({levels_text})"
 
-    perf = []
+    perf: list[tuple[str, float, float | None, float | None, float | None, float | None]] = []
     if metric_name:
         perf.append((metric_name, used, warn, crit, 0, total))
     if create_percent_metric:
@@ -82,13 +84,20 @@ def check_memory_element(
     return state, infotext, perf
 
 
-def check_memory_dict(meminfo, params):
+def check_memory_dict(
+    meminfo: Mapping[str, Any], params: Mapping[str, Any]
+) -> Mapping[
+    str,
+    tuple[
+        int, str, list[tuple[str, float, float | None, float | None, float | None, float | None]]
+    ],
+]:
     """Check a dictionary of Memory entries against levels.
 
     Only keys of meminfo that are checked below explicitly are considered.
     All other keys are ignored.
     """
-    results = collections.OrderedDict()
+    results = {}  # dict[str, LegacyResult]()
 
     # RAM
     if "MemUsed" in meminfo and "MemTotal" in meminfo:

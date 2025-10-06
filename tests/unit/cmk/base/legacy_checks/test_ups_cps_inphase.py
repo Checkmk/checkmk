@@ -42,5 +42,6 @@ def test_check_ups_cps_inphase(
 ) -> None:
     """Test check function for ups_cps_inphase check."""
     parsed = parse_ups_cps_inphase(string_table)
+    assert parsed
     result = list(check_ups_cps_inphase(item, params, parsed))
     assert result == expected_results

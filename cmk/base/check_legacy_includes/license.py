@@ -3,22 +3,28 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+
+from collections.abc import Sequence
 
 
-def license_check_levels(total, in_use, params):
+def license_check_levels(
+    total: int, in_use: int, params: bool | Sequence[int | float] | None
+) -> tuple[int, str, list[tuple[str, int, float | None, float | None, int, int]]]:
     if params is False:
         warn: float | None = None
         crit: float | None = None
     elif not params:
         warn = total
         crit = total
-    elif isinstance(params[0], int):
+    elif isinstance(params, Sequence) and isinstance(params[0], int):
         warn = max(0, total - params[0])
         crit = max(0, total - params[1])
-    else:
+    elif isinstance(params, Sequence):
         warn = total * (1 - params[0] / 100.0)
         crit = total * (1 - params[1] / 100.0)
+    else:
+        warn = None
+        crit = None
 
     perfdata = [("licenses", in_use, warn, crit, 0, total)]
     if in_use <= total:

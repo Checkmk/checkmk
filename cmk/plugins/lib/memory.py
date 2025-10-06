@@ -9,8 +9,8 @@ from typing import Literal, TypedDict
 
 from cmk.agent_based.v2 import CheckResult, Metric, render, Result, State
 
-_LevelsMode = Literal["abs_used", "abs_free", "perc_used", "perc_free"]
-MemoryLevels = tuple[_LevelsMode, tuple[float | None, float | None]]
+type LevelsMode = Literal["abs_used", "abs_free", "perc_used", "perc_free"]
+MemoryLevels = tuple[LevelsMode, tuple[float | None, float | None]]
 
 SectionMem = Mapping[str, int]
 
@@ -48,7 +48,7 @@ def is_linux_section(section: SectionMem) -> bool:
     } <= section.keys()
 
 
-def get_levels_mode_from_value(warn: float | None) -> _LevelsMode:
+def get_levels_mode_from_value(warn: float | None) -> LevelsMode:
     """get levels mode by looking at the value
 
     Levels may be given either as
@@ -70,7 +70,7 @@ def get_levels_mode_from_value(warn: float | None) -> _LevelsMode:
 
 
 def normalize_levels(
-    mode: _LevelsMode,
+    mode: LevelsMode,
     warn: float | None,
     crit: float | None,
     total: float,

@@ -52,6 +52,7 @@ def test_apc_rackpdu_power_1() -> None:
     result = device_result[0]
     assert result[0] == 0  # OK state
     assert "Power: 0.0 W" in result[1]
+    assert len(result) >= 3
     assert result[2][0][0] == "power"  # Metric name
     assert result[2][0][1] == 0.0  # Metric value
 
@@ -64,6 +65,7 @@ def test_apc_rackpdu_power_1() -> None:
 
     assert current_result[0] == 0  # OK state
     assert "Current: 0.0 A" in current_result[1]
+    assert len(current_result) >= 3
     assert current_result[2][0][0] == "current"  # Metric name
     assert current_result[2][0][1] == 0.0  # Metric value
 

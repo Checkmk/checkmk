@@ -3,10 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+
+from collections.abc import Sequence
+from typing import Any
 
 
-def check_infoblox_statistics(ty, stats):
+def check_infoblox_statistics(
+    ty: str, stats: Sequence[tuple[Any, int, str, str]]
+) -> tuple[int, str, Sequence[tuple[str, int]]]:
     texts: dict[str, list[str]] = {}
     perfdata = []
     for what, what_val, what_textfield, what_info in stats:

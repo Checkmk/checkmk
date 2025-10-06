@@ -27,9 +27,8 @@ def check_hwg_humidity(item, params, parsed):
     if not (data := parsed.get(item)):
         return
 
-    status, infotext, perfdata = check_humidity(data["humidity"], params)
-    infotext += " (Description: {}, Status: {})".format(data["descr"], data["dev_status_name"])
-    yield status, infotext, perfdata
+    yield check_humidity(data["humidity"], params)
+    yield 0, "Description: {}, Status: {}".format(data["descr"], data["dev_status_name"])
 
 
 check_info["hwg_humidity"] = LegacyCheckDefinition(

@@ -3,20 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyResult
 
 
 # migrated to cmk.plugins.lib/fan.py
-def check_fan(rpm, params):
-    if isinstance(params, tuple):
-        params = {"lower": params}
+def check_fan(rpm: float, params: Mapping[str, Any] | tuple[float, float]) -> LegacyResult:
+    if isinstance(params, Mapping):
+        param_dict = params
+    else:
+        param_dict = {"lower": params}
 
-    levels = params.get("upper", (None, None)) + params.get("lower", (None, None))
+    levels = param_dict.get("upper", (None, None)) + param_dict.get("lower", (None, None))
     return check_levels(
         rpm,
-        "fan" if params.get("output_metrics") else None,
+        "fan" if param_dict.get("output_metrics") else None,
         levels,
         human_readable_func=lambda x: f"{int(x)} RPM",
         infoname="Speed",

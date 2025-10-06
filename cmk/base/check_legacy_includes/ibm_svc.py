@@ -3,17 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
+
+from collections.abc import Mapping, Sequence
 
 
-def parse_ibm_svc_with_header(info, dflt_header):
-    parsed: dict = {}
+def parse_ibm_svc_with_header(
+    info: Sequence[Sequence[str]], dflt_header: Sequence[str]
+) -> Mapping[str, Sequence[Mapping[str, str]]]:
+    parsed: dict[str, list[dict[str, str]]] = {}
     header = dflt_header
     for line in info:
         if " command not found" in line:
             continue
-        elif line[0] in ["id", "node_id", "mdisk_id", "enclosure_id"]:
+        if line[0] in ["id", "node_id", "mdisk_id", "enclosure_id"]:
             # newer agent output provides a header line
             header = line
         else:

@@ -233,13 +233,14 @@ def check_rabbitmq_nodes_mem(item, params, parsed):
         return
 
     levels = params.get("levels")
-    mode = "abs_used" if isinstance(levels, tuple) and isinstance(levels[0], int) else "perc_used"
-
     yield check_memory_element(
         "Memory used",
         mem_used,
         mem_mark,
-        (mode, levels),
+        (
+            "abs_used" if isinstance(levels, tuple) and isinstance(levels[0], int) else "perc_used",
+            levels,
+        ),
         label_total="High watermark",
         metric_name="mem_used",
     )

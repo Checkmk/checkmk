@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Callable, Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckResult
 from cmk.agent_based.v2 import render
 
 _RENDER_FUNCTION: Mapping[str, Callable[[float], str]] = {
@@ -30,7 +30,9 @@ _RENDER_FUNCTION: Mapping[str, Callable[[float], str]] = {
 # IT. INSTEAD, MODIFY THE MIGRATED VERSION.
 # ==================================================================================================
 # ==================================================================================================
-def check_elphase(item, params, parsed):
+def check_elphase(
+    item: str, params: Mapping[str, Any] | None, parsed: Mapping[str, Mapping[str, Any]]
+) -> LegacyCheckResult:
     if item not in parsed:
         return  # Item not found in SNMP data
 

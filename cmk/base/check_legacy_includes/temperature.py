@@ -276,7 +276,7 @@ def check_temperature(
     dev_levels_lower: TwoLevelsType | None = None,
     dev_status: StatusType | None = None,
     dev_status_name: str | None = None,
-) -> CheckType:
+) -> tuple[int, str, list[tuple[str, float, OptFloat, OptFloat, OptFloat, OptFloat]]]:
     """Check temperature levels and trends.
 
     The function will check the supplied data and supplied user configuration against the
@@ -444,7 +444,7 @@ def check_temperature(
         if trend_infotext:
             infotext += ", " + trend_infotext
 
-    return status, infotext, perfdata  # type: ignore[return-value]
+    return status, infotext, perfdata
 
 
 # Wraps around check_temperature to check a list of sensors.

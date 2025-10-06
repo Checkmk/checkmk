@@ -3,16 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
+from typing import Any
 
 
-def get_conn_rate_params(params):
+def get_conn_rate_params(
+    params: Mapping[str, Any],
+) -> tuple[float | None, float | None, float | None, float | None] | Mapping[str, Any]:
     # upper_bound is dict, tuple or None
     upper_bound = params.get("connections_rate", (None, None))
     # lower_bound is tuple or None
     lower_bound = params.get("connections_rate_lower", (None, None))
     if isinstance(upper_bound, tuple):
-        return upper_bound + lower_bound
+        return (upper_bound[0], upper_bound[1], lower_bound[0], lower_bound[1])
 
     # Lower bound was not configured, all good
     if isinstance(upper_bound, dict) and lower_bound == (None, None):

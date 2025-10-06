@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.v2 import DiscoveryResult, Service
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckResult, LegacyResult
+from cmk.agent_based.v2 import DiscoveryResult, Service, StringTable
 
 from .elphase import check_elphase
 from .humidity import check_humidity
@@ -19,7 +18,7 @@ from .temperature import check_temperature
 # elements (not excatly sensors!) can be:
 # temperature, analog voltage, usb-cam, reader, GSM modem, magnet,
 # smoke, unknown, induct relay, pushbutton, timer
-def parse_didactum_sensors(info):
+def parse_didactum_sensors(info: StringTable) -> Mapping[str, Mapping[str, Mapping[str, Any]]]:
     map_states = {
         "alarm": 2,
         "high alarm": 2,
@@ -33,7 +32,7 @@ def parse_didactum_sensors(info):
         "off": 3,
     }
 
-    parsed: dict = {}
+    parsed: dict[str, dict[str, dict[str, Any]]] = {}
     for line in info:
         ty, name, status = line[:3]
         if status in map_states:
@@ -55,7 +54,7 @@ def parse_didactum_sensors(info):
         if len(line) >= 4:
             value_str = line[3]
             if value_str.isdigit():
-                value: float = int(value_str)
+                value: float | str = int(value_str)
             else:
                 try:
                     value = float(value_str)
@@ -85,7 +84,9 @@ def discover_didactum_sensors(
     )
 
 
-def check_didactum_sensors_temp(item, params, parsed):
+def check_didactum_sensors_temp(
+    item: str, params: Any, parsed: Mapping[str, Mapping[str, Mapping[str, Any]]]
+) -> LegacyResult | None:
     if item in parsed["temperature"]:
         data = parsed["temperature"][item]
         return check_temperature(
@@ -100,18 +101,21 @@ def check_didactum_sensors_temp(item, params, parsed):
     return None
 
 
-def check_didactum_sensors_humidity(item, params, parsed):
+def check_didactum_sensors_humidity(
+    item: str, params: Mapping[str, Any], parsed: Mapping[str, Mapping[str, Mapping[str, Any]]]
+) -> LegacyResult | None:
     if item in parsed["humidity"]:
         return check_humidity(parsed["humidity"][item]["value"], params)
     return None
 
 
-def check_didactum_sensors_voltage(item, params, parsed):
+def check_didactum_sensors_voltage(
+    item: str, params: Any, parsed: Mapping[str, Mapping[str, Mapping[str, Any]]]
+) -> LegacyCheckResult:
     if item in parsed["voltage"]:
         data = parsed["voltage"][item]
-        return check_elphase(
+        yield from check_elphase(
             item,
             params,
             {item: {"voltage": (data["value"], (data["state"], data["state_readable"]))}},
         )
-    return None

@@ -39,41 +39,36 @@ def test_ups_socomec_in_voltage_discovery_zero_voltage():
 def test_ups_socomec_in_voltage_check_ok():
     """Test voltage check with normal levels."""
     params = {"levels_lower": (210, 180)}
-    state, summary, metrics = check_socomec_ups_in_voltage("1", params, parsed())
+    ((state, summary, metrics),) = list(check_socomec_ups_in_voltage("1", params, parsed()))
     assert state == 0
-    assert "in voltage: 230V" in summary
-    assert "(warn/crit at 210V/180V)" in summary
-    assert metrics == [("in_voltage", 230, 210, 180, 150)]
+    assert "In voltage: 230V" in summary
+    assert metrics == [("in_voltage", 230, None, None, 150, None)]
 
 
 def test_ups_socomec_in_voltage_check_warning():
     """Test voltage check with warning level triggered."""
     params = {"levels_lower": (240, 200)}
-    state, summary, metrics = check_socomec_ups_in_voltage("1", params, parsed())
+    ((state, summary, metrics),) = list(check_socomec_ups_in_voltage("1", params, parsed()))
     assert state == 1
-    assert "in voltage: 230V" in summary
-    assert "(warn/crit at 240V/200V)" in summary
-    assert metrics == [("in_voltage", 230, 240, 200, 150)]
+    assert "In voltage: 230V" in summary
+    assert "(warn/crit below 240V/200V)" in summary
+    assert metrics == [("in_voltage", 230, None, None, 150, None)]
 
 
 def test_ups_socomec_in_voltage_check_critical():
     """Test voltage check with critical level triggered."""
     params = {"levels_lower": (250, 240)}
-    state, summary, metrics = check_socomec_ups_in_voltage("1", params, parsed())
+    ((state, summary, metrics),) = list(check_socomec_ups_in_voltage("1", params, parsed()))
     assert state == 2
-    assert "in voltage: 230V" in summary
-    assert "(warn/crit at 250V/240V)" in summary
-    assert metrics == [("in_voltage", 230, 250, 240, 150)]
+    assert "In voltage: 230V" in summary
+    assert "(warn/crit below 250V/240V)" in summary
+    assert metrics == [("in_voltage", 230, None, None, 150, None)]
 
 
 def test_ups_socomec_in_voltage_check_missing_item():
     """Test voltage check with missing item returns unknown."""
     params = {"levels_lower": (210, 180)}
-    result = check_socomec_ups_in_voltage("2", params, parsed())
-    assert len(result) == 2  # Only state and summary, no metrics
-    state, summary = result
-    assert state == 3
-    assert "Phase 2 not found in SNMP output" in summary
+    assert not list(check_socomec_ups_in_voltage("2", params, parsed()))
 
 
 def test_ups_socomec_in_voltage_parse_function():

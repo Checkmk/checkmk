@@ -9,7 +9,7 @@
 from collections.abc import Iterable, Mapping
 from itertools import chain
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyResult
 from cmk.agent_based.v2 import (
     any_of,
     DiscoveryResult,
@@ -41,9 +41,7 @@ def discover_gude_humidity(section: Section) -> DiscoveryResult:
     yield from (Service(item=name) for name, reading in section.items() if reading != -999.9)
 
 
-def check_gude_humidity(
-    item: str, params: tuple, section: Section
-) -> Iterable[tuple[int, str, list]]:
+def check_gude_humidity(item: str, params: tuple, section: Section) -> Iterable[LegacyResult]:
     if (reading := section.get(item)) is None:
         return
     yield check_humidity(reading, params)

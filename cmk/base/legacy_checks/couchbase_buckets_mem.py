@@ -36,7 +36,7 @@ def check_couchbase_bucket_mem(item, params, parsed):
             "Usage",
             data["mem_total"] - data["mem_free"],
             data["mem_total"],
-            (mode, levels),
+            (mode, levels),  # type: ignore[arg-type]
             metric_name="memused_couchbase_bucket",
         )
     except (KeyError, TypeError):

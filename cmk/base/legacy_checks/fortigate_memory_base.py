@@ -11,7 +11,7 @@ from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.plugins.lib.fortinet import DETECT_FORTIGATE
-from cmk.plugins.lib.memory import get_levels_mode_from_value
+from cmk.plugins.lib.memory import get_levels_mode_from_value, LevelsMode
 
 check_info = {}
 
@@ -32,7 +32,7 @@ def inventory_fortigate_memory_base(parsed):
 
 def check_fortigate_memory_base(_item, params, parsed):
     if isinstance(params, tuple):
-        levels = ("perc_used", params)
+        levels: tuple[LevelsMode, tuple[float, float]] = ("perc_used", params)
     else:
         warn, crit = params["levels"]
         mode = get_levels_mode_from_value(warn)

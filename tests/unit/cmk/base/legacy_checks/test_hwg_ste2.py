@@ -137,15 +137,16 @@ def test_hwg_ste2_humidity_check() -> None:
     }
     params = {"levels": (60, 70)}
 
-    result = list(check_hwg_humidity("2", params, parsed))
+    result1, result2 = list(check_hwg_humidity("2", params, parsed))
 
-    assert len(result) == 1
-    state, summary, metrics = result[0]
+    state, summary, metrics = result1
     assert state == 0  # OK
     assert "34.60%" in summary
+    assert metrics == [("humidity", 34.6, 60.0, 70.0, 0.0, 100.0)]
+
+    state, summary = result2
     assert "Description: Sensor 216" in summary
     assert "Status: normal" in summary
-    assert metrics == [("humidity", 34.6, 60.0, 70.0, 0.0, 100.0)]
 
 
 def test_hwg_ste2_temperature_missing_item() -> None:
@@ -155,7 +156,7 @@ def test_hwg_ste2_temperature_missing_item() -> None:
 
     result = list(check_hwg_temp("999", params, parsed))
 
-    assert result == []
+    assert not result
 
 
 def test_hwg_ste2_humidity_missing_item() -> None:

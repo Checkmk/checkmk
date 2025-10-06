@@ -8,7 +8,7 @@
 # mypy: disable-error-code="type-arg"
 
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.filerdisks import (
@@ -65,7 +65,7 @@ def parse_ibm_svc_disks(string_table):
         "auto_manage",
         "drive_class_id",
     ]
-    parsed = []
+    parsed = list[Mapping[str, str]]()
     for rows in parse_ibm_svc_with_header(string_table, dflt_header).values():
         parsed.extend(rows)
     return parsed

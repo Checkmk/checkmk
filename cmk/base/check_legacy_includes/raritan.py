@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
+from collections.abc import Iterable, Mapping, Sequence
+from typing import Any
 
-
+from cmk.agent_based.legacy.v0_unstable import LegacyResult
 from cmk.base.check_legacy_includes.temperature import check_temperature
+from cmk.plugins.lib.temperature import TempParamDict
 
 # For raritan devices which support the PDU2-, EMD-, or LHX-MIB
 
@@ -133,7 +134,7 @@ raritan_pdu_plug_state = {
 # "X.Y.Z",  # UpperWarningThreshold
 
 
-def parse_raritan_sensors(info):
+def parse_raritan_sensors(info: Sequence[Sequence[str]]) -> Mapping[str, Mapping[str, Any]]:
     parsed = {}
     for (
         availability,
@@ -193,25 +194,25 @@ def parse_raritan_sensors(info):
     return parsed
 
 
-def inventory_raritan_sensors(parsed, sensor_type):
-    inventory = []
+def inventory_raritan_sensors(
+    parsed: Mapping[str, Mapping[str, Any]], sensor_type: str
+) -> Iterable[tuple[str, None]]:
     for key, values in parsed.items():
         if values["availability"] == "1" and values["sensor_type"] == sensor_type:
-            inventory.append((key, None))
-
-    return inventory
+            yield key, None
 
 
-def inventory_raritan_sensors_temp(parsed, sensor_type):
-    inventory: list = []
+def inventory_raritan_sensors_temp(
+    parsed: Mapping[str, Mapping[str, Any]], sensor_type: str
+) -> Iterable[tuple[str, Mapping[str, Any]]]:
     for key, values in parsed.items():
         if values["availability"] == "1" and values["sensor_type"] == sensor_type:
-            inventory.append((key, {}))
-
-    return inventory
+            yield key, {}
 
 
-def check_raritan_sensors(item, _no_params, parsed):
+def check_raritan_sensors(
+    item: str, _no_params: Any, parsed: Mapping[str, Mapping[str, Any]]
+) -> LegacyResult | None:
     if item in parsed:
         state, state_readable = parsed[item]["state"]
         unit = parsed[item]["sensor_unit"]
@@ -227,14 +228,18 @@ def check_raritan_sensors(item, _no_params, parsed):
     return None
 
 
-def check_raritan_sensors_binary(item, _no_params, parsed):
+def check_raritan_sensors_binary(
+    item: str, _no_params: Any, parsed: Mapping[str, Mapping[str, Any]]
+) -> LegacyResult | None:
     if item in parsed:
         state, state_readable = parsed[item]["state"]
         return state, "Status: %s" % state_readable
     return None
 
 
-def check_raritan_sensors_temp(item, params, parsed):
+def check_raritan_sensors_temp(
+    item: str, params: TempParamDict, parsed: Mapping[str, Mapping[str, Any]]
+) -> LegacyResult | None:
     if item in parsed:
         state, state_readable = parsed[item]["state"]
         reading, crit_lower, warn_lower, crit, warn = parsed[item]["sensor_data"]

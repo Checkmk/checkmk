@@ -3,12 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import time
+from collections.abc import Mapping
 from datetime import timedelta
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyResult
 
 # Example for params:
 # {
@@ -20,7 +21,7 @@ from cmk.agent_based.legacy.v0_unstable import check_levels
 ################################################################################################
 #  NOTE: This function has already been migrated to cmk.plugins.collection.agent_based.snmp_uptime   #
 ################################################################################################
-def check_uptime_seconds(params, uptime_sec):
+def check_uptime_seconds(params: Mapping[str, Any] | None, uptime_sec: float) -> LegacyResult:
     if params is None:  # legacy: support older versions of parameters
         params = {}
 

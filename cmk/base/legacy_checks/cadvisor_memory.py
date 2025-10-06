@@ -63,7 +63,7 @@ def check_cadvisor_memory(_item, _params, parsed):
             memory_total = parsed["memory_machine"]
             infotext_extra = " (Available Machine Memory)"
     status, infotext, perfdata = check_memory_element(
-        "Usage", memory_used, memory_total, (None, None), metric_name="mem_used"
+        "Usage", memory_used, memory_total, None, metric_name="mem_used"
     )
     infotext += infotext_extra
     yield status, infotext, perfdata

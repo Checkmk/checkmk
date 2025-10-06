@@ -44,9 +44,13 @@ def test_inventory_hwg_humidity(
             [
                 (
                     0,
-                    "34.60% (Description: Sensor 216, Status: normal)",
+                    "34.60%",
                     [("humidity", 34.6, 60.0, 70.0, 0.0, 100.0)],
-                )
+                ),
+                (
+                    0,
+                    "Description: Sensor 216, Status: normal",
+                ),
             ],
         ),
     ],

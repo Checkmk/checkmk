@@ -56,7 +56,7 @@ def check_mem_linux(_no_item, params, section):
         + section.get("WritebackTmp", 0)
     )
 
-    results = check_memory_dict(section, params)
+    results = {**check_memory_dict(section, params)}
 
     # show this always:
     yield results.pop("virtual", (0, ""))

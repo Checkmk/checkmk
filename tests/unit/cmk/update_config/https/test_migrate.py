@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 
 import pytest
 
@@ -14,7 +14,6 @@ from cmk.plugins.collection.server_side_calls.httpv2 import (
     Document,
     DocumentBodyOption,
     HeaderSpec,
-    HttpEndpoint,
     HttpMethod,
     LevelsType,
     MatchType,
@@ -28,7 +27,7 @@ from cmk.plugins.collection.server_side_calls.httpv2 import (
     ServicePrefix,
     TlsVersion,
 )
-from cmk.server_side_calls_backend.config_processing import process_configuration_to_parameters
+from cmk.server_side_calls.v1 import Secret
 from cmk.update_config.https.conflict_options import (
     AdditionalHeaders,
     CantConstructURL,
@@ -302,11 +301,7 @@ EXAMPLE_36: Mapping[str, object] = {
         {
             "auth": {
                 "user": "user",
-                "password": (
-                    "cmk_postprocessed",
-                    "explicit_password",
-                    ("uuid60fd36ba-5de6-4aee-8d92-6cc6fb13bb05", "cmk"),
-                ),
+                "password": Secret(1),
             }
         },
     ),
@@ -838,12 +833,6 @@ EXAMPLE_99: Mapping[str, object] = {
 }
 
 
-def _parse_http_params(rule_value: Mapping[str, object]) -> Sequence[HttpEndpoint]:
-    return parse_http_params(
-        process_configuration_to_parameters(rule_value, proxy_config=None, is_alpha=False).value
-    )
-
-
 @pytest.mark.parametrize(
     "rule_value, conflict",
     [
@@ -1069,7 +1058,7 @@ def test_nothing_to_assert_rules(rule_value: Mapping[str, object], config: Confi
     assert not isinstance(for_migration, Conflict)
     # Act
     migrated = migrate(for_migration)
-    _ = _parse_http_params(migrated)
+    _ = parse_http_params(migrated)
 
 
 @pytest.mark.parametrize(
@@ -1114,7 +1103,7 @@ def test_migrate_url(
     # Act
     migrated = migrate(for_migration)
     # Assemble
-    ssc_value = _parse_http_params(migrated)
+    ssc_value = parse_http_params(migrated)
     # Assert
     assert ssc_value[0].url == url
     assert ssc_value[0].settings.server == server
@@ -1179,7 +1168,7 @@ def test_migrate_document(
     # Act
     migrated = migrate(for_migration)
     # Assemble
-    ssc_value = _parse_http_params(migrated)
+    ssc_value = parse_http_params(migrated)
     # Assert
     assert ssc_value[0].settings.document == expected
 
@@ -1358,7 +1347,7 @@ def test_migrate_method(rule_value: Mapping[str, object], config: Config, expect
     # Act
     migrated = migrate(for_migration)
     # Assemble
-    ssc_value = _parse_http_params(migrated)
+    ssc_value = parse_http_params(migrated)
     # Assert
     assert ssc_value[0].settings.connection is not None
     assert ssc_value[0].settings.connection.method == expected
@@ -1402,7 +1391,7 @@ def test_migrate_expect_regex(
     # Act
     migrated = migrate(for_migration)
     # Assemble
-    ssc_value = _parse_http_params(migrated)
+    ssc_value = parse_http_params(migrated)
     # Assert
     assert ssc_value[0].settings.content is not None
     assert ssc_value[0].settings.content.body == expected
@@ -1432,7 +1421,7 @@ def test_migrate_content_is_none(rule_value: Mapping[str, object], config: Confi
     # Act
     migrated = migrate(for_migration)
     # Assemble
-    ssc_value = _parse_http_params(migrated)
+    ssc_value = parse_http_params(migrated)
     # Assert
     assert ssc_value[0].settings.content is None
 
@@ -1488,9 +1477,7 @@ def test_migrate_ssl(rule_value: Mapping[str, object], config: Config, expected:
     # Act
     migrated = migrate(for_migration)
     # Assemble
-    ssc_value = parse_http_params(
-        process_configuration_to_parameters(migrated, proxy_config=None, is_alpha=False).value
-    )
+    ssc_value = parse_http_params(migrated)
     # Assert
     assert ssc_value[0].settings.connection is not None
     assert ssc_value[0].settings.connection.model_dump().get("tls_versions") == expected
@@ -1515,7 +1502,7 @@ def test_migrate_response_time(
     # Act
     migrated = migrate(for_migration)
     # Assemble
-    ssc_value = _parse_http_params(migrated)
+    ssc_value = parse_http_params(migrated)
     # Assert
     assert ssc_value[0].settings.response_time == expected
 
@@ -1540,7 +1527,7 @@ def test_migrate_expect_string(
     # Act
     migrated = migrate(for_migration)
     # Assemble
-    ssc_value = _parse_http_params(migrated)
+    ssc_value = parse_http_params(migrated)
     # Assert
     assert ssc_value[0].settings.content is not None
     assert ssc_value[0].settings.content.body == expected
@@ -1563,7 +1550,7 @@ def test_migrate_timeout(
     # Act
     migrated = migrate(for_migration)
     # Assemble
-    ssc_value = _parse_http_params(migrated)
+    ssc_value = parse_http_params(migrated)
     # Assert
     assert ssc_value[0].settings.connection is not None
     assert ssc_value[0].settings.connection.model_dump()["timeout"] == expected
@@ -1585,7 +1572,7 @@ def test_migrate_user_agent(
     # Act
     migrated = migrate(for_migration)
     # Assemble
-    ssc_value = _parse_http_params(migrated)
+    ssc_value = parse_http_params(migrated)
     # Assert
     assert ssc_value[0].settings.connection is not None
     assert ssc_value[0].settings.connection.model_dump()["user_agent"] == expected
@@ -1644,7 +1631,7 @@ def test_migrate_add_headers(
     # Act
     migrated = migrate(for_migration)
     # Assemble
-    ssc_value = _parse_http_params(migrated)
+    ssc_value = parse_http_params(migrated)
     # Assert
     assert ssc_value[0].settings.connection is not None
     assert ssc_value[0].settings.connection.model_dump()["add_headers"] == expected
@@ -1657,7 +1644,7 @@ def test_migrate_auth_user() -> None:
     # Act
     migrated = migrate(for_migration)
     # Assemble
-    ssc_value = _parse_http_params(migrated)
+    ssc_value = parse_http_params(migrated)
     # Assert
     assert ssc_value[0].settings.connection is not None
     assert ssc_value[0].settings.connection.auth is not None
@@ -1671,7 +1658,7 @@ def test_migrate_auth_no_auth() -> None:
     # Act
     migrated = migrate(for_migration)
     # Assemble
-    ssc_value = _parse_http_params(migrated)
+    ssc_value = parse_http_params(migrated)
     # Assert
     assert ssc_value[0].settings.connection is not None
     assert ssc_value[0].settings.connection.auth is None
@@ -1744,7 +1731,7 @@ def test_migrate_redirect(
     # Act
     migrated = migrate(for_migration)
     # Assemble
-    ssc_value = _parse_http_params(migrated)
+    ssc_value = parse_http_params(migrated)
     # Assert
     assert ssc_value[0].settings.connection is not None
     assert ssc_value[0].settings.connection.model_dump()["redirects"] == redirects
@@ -1778,7 +1765,7 @@ def test_migrate_expect_response(
     # Act
     migrated = migrate(for_migration)
     # Assemble
-    ssc_value = _parse_http_params(migrated)
+    ssc_value = parse_http_params(migrated)
     # Assert
     assert ssc_value[0].settings.server_response == expected
 
@@ -1810,7 +1797,7 @@ def test_migrate_cert(rule_value: Mapping[str, object], config: Config, expected
     # Act
     migrated = migrate(for_migration)
     # Assemble
-    ssc_value = _parse_http_params(migrated)
+    ssc_value = parse_http_params(migrated)
     # Assert
     assert ssc_value[0].settings.cert == expected
 
@@ -1839,7 +1826,7 @@ def test_migrate_expect_response_header(
     # Act
     migrated = migrate(for_migration)
     # Assemble
-    ssc_value = _parse_http_params(migrated)
+    ssc_value = parse_http_params(migrated)
     # Assert
     assert ssc_value[0].settings.content is not None
     assert ssc_value[0].settings.content.header == expected
@@ -1877,9 +1864,7 @@ def test_migrate_name(rule_value: Mapping[str, object], config: Config, expected
     # Act
     migrated = migrate(for_migration)
     # Assemble
-    ssc_value = parse_http_params(
-        process_configuration_to_parameters(migrated, proxy_config=None, is_alpha=False).value
-    )
+    ssc_value = parse_http_params(migrated)
     # Assert
     assert ssc_value[0].service_name == expected
 
@@ -1903,9 +1888,7 @@ def test_migrate_address_family(
     # Act
     migrated = migrate(for_migration)
     # Assemble
-    ssc_value = parse_http_params(
-        process_configuration_to_parameters(migrated, proxy_config=None, is_alpha=False).value
-    )
+    ssc_value = parse_http_params(migrated)
     # Assert
     assert ssc_value[0].settings.connection is not None
     assert ssc_value[0].settings.connection.address_family == expected
@@ -1918,9 +1901,7 @@ def test_preserve_http_version() -> None:
     # Act
     migrated = migrate(for_migration)
     # Assemble
-    ssc_value = parse_http_params(
-        process_configuration_to_parameters(migrated, proxy_config=None, is_alpha=False).value
-    )
+    ssc_value = parse_http_params(migrated)
     # Assert
     assert ssc_value[0].settings.connection is not None
     assert ssc_value[0].settings.connection.http_versions is None
@@ -1945,7 +1926,7 @@ def test_migrate_http_1_0(
     # Act
     migrated = migrate(for_migration)
     # Assemble
-    ssc_value = _parse_http_params(migrated)
+    ssc_value = parse_http_params(migrated)
     # Assert
     assert ssc_value[0].url == expected
 

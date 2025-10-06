@@ -26,7 +26,7 @@ from cmk.gui.graphing._graph_specification import (
 )
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._legacy import CheckMetricEntry
-from cmk.gui.graphing._rrd_fetch import (
+from cmk.gui.graphing._rrd import (
     _reverse_translate_into_all_potentially_relevant_metrics,
     translate_and_merge_rrd_columns,
 )

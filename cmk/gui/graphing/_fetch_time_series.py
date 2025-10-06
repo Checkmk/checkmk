@@ -17,7 +17,7 @@ from ._graph_metric_expressions import (
 )
 from ._graph_specification import GraphDataRange, GraphRecipe
 from ._metric_backend_registry import FetchTimeSeries
-from ._rrd_fetch import fetch_time_series_rrd
+from ._rrd import fetch_time_series_rrd
 from ._unit import user_specific_unit
 
 

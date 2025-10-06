@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import socket
 import ssl
 import uuid
-import warnings
 from http import HTTPStatus
 from pathlib import Path
 from typing import NamedTuple
@@ -31,6 +29,7 @@ from cmk.agent_receiver.certs import (  # pylint: disable=cmk-module-layer-viola
     sign_agent_csr,
 )
 from tests.testlib.site import Site
+from tests.testlib.tls import CMKTLSError, tls_connect
 
 
 # Copied from tests/unit/agent_receiver/certs.py to make cmk-agent-receiver/tests self contained
@@ -250,18 +249,8 @@ def test_unsupported_tls_versions(
 ) -> None:
     """Test that the receiver rejects old TLS versions."""
 
-    context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-    context.check_hostname = False
-    context.load_verify_locations(site_ca)
-
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=DeprecationWarning)
-        context.maximum_version = tls_version
-
-    with pytest.raises(ssl.SSLError, match=".*no protocols available.*"):
-        with socket.create_connection((site.http_address, agent_receiver_port)) as sock:
-            with context.wrap_socket(sock) as ssock:
-                print(ssock.version())
+    with pytest.raises(CMKTLSError):
+        tls_connect(site.http_address, agent_receiver_port, site_ca, tls_version)
 
 
 @pytest.mark.medium_test_chain
@@ -270,16 +259,7 @@ def test_supported_tls_versions(
     site: Site, agent_receiver_port: int, site_ca: Path, tls_version: ssl.TLSVersion
 ) -> None:
     """Test that the receiver accepts supported TLS versions."""
-
-    context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-    context.check_hostname = False
-    context.load_verify_locations(site_ca)
-
-    context.maximum_version = tls_version
-
-    with socket.create_connection((site.http_address, agent_receiver_port)) as sock:
-        with context.wrap_socket(sock) as ssock:
-            assert ssock.version() == str(tls_version.name).replace("_", ".")
+    tls_connect(site.http_address, agent_receiver_port, site_ca, tls_version)
 
 
 @pytest.mark.medium_test_chain

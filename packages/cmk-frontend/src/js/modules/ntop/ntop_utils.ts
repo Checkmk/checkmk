@@ -8,6 +8,7 @@ import type { BaseType, Selection } from 'd3'
 import { select as d3select, selectAll } from 'd3'
 import $ from 'jquery'
 
+import { FigureBase } from '@/modules/figures/cmk_figures'
 import { TableFigure } from '@/modules/figures/cmk_table'
 
 import type { NtopColumn } from './ntop_flows'
@@ -31,6 +32,15 @@ export class interface_table extends TableFigure {
   set_ifid(ifid: string) {
     this._ifid = ifid
   }
+
+  override initialize(debug?: boolean) {
+    FigureBase.prototype.initialize.call(this, debug)
+    this._table = this._div_selection
+      .selectAll('.interface_table')
+      .data([null])
+      .join((enter) => enter.append('table').classed('interface_table', true))
+  }
+
   override update_gui() {
     super.update_gui()
     const select = $('div.ntop').find(

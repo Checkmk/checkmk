@@ -30,4 +30,5 @@ export interface DashboardPageProperties {
   dashboard: LoadedDashboardProperties | null
   mode: 'display' | 'create'
   can_edit_dashboards: boolean
+  url_params: Record<string, string>
 }

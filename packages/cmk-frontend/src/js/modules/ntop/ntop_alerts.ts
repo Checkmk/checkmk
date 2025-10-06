@@ -46,6 +46,10 @@ export class NtopAlertsTabBar extends TabsBar {
   _show_error_info(error_info: string) {
     console.log('data fetch error ' + error_info)
   }
+
+  get_tabs_list() {
+    return this._tabs_list
+  }
 }
 
 type ABCAlertsFilteredChoices = FlowDashletDataChoice
@@ -692,6 +696,10 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
   override update_gui() {}
 
   abstract _get_columns(): NtopColumn[]
+
+  get_multi_data_fetcher() {
+    return self._multi_data_fetcher
+  }
 }
 
 // Base class for all alert tabs
@@ -719,6 +727,10 @@ export abstract class ABCAlertsTab<Page extends ABCAlertsPage = ABCAlertsPage> e
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   deactivate() {}
+
+  get_page() {
+    return self._alerts_page
+  }
 }
 
 //   .-Engaged------------------------------------------------------------.

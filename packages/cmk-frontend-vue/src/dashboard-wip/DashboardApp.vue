@@ -60,6 +60,9 @@ const widgetToEdit = ref<string | null>(null)
 const filterCollection = ref<Record<string, FilterDefinition> | null>(null)
 provide('filterCollection', filterCollection)
 
+// So far, this is only needed and used by the DashboardContentNtop component
+provide('urlParams', props.url_params)
+
 const dashboardsManager = useDashboardsManager()
 
 onBeforeMount(async () => {

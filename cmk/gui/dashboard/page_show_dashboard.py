@@ -167,6 +167,7 @@ def page_dashboard_app(config: Config) -> None:
         "mode": mode,
         # required for edit, clone and new dashboard creation
         "can_edit_dashboards": user.may("general.edit_dashboards"),
+        "url_params": {"ifid": request.get_ascii_input("ifid")},
     }
     html.vue_component("cmk-dashboard", data=page_properties)
 

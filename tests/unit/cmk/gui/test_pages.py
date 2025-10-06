@@ -231,6 +231,7 @@ def test_registered_pages() -> None:
             "ajax_ntop_engaged_alerts",
             "ajax_ntop_past_alerts",
             "ajax_ntop_flow_alerts",
+            "ajax_ntop_ifid",
             "licensing_download_verification_request",
             "noauth:saml_acs",
             "noauth:saml_metadata",

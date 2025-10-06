@@ -50,7 +50,7 @@ from tests.testlib.cse.utils import (  # type: ignore[import-untyped, unused-ign
     create_cse_initial_config,
     cse_openid_oauth_provider,
 )
-from tests.testlib.openapi_session import CMKOpenApiSession
+from tests.testlib.openapi_session import AgentReceiverApiSession, CMKOpenApiSession
 from tests.testlib.utils import (
     check_output,
     execute,
@@ -144,6 +144,9 @@ class Site:
             password=self.admin_password,
             site=self.id,
             site_version=self._package.version,
+        )
+        self.openapi_agent_receiver = AgentReceiverApiSession(
+            openapi_session=self.openapi,
         )
 
         self.result_dir.mkdir(parents=True, exist_ok=True)

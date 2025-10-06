@@ -34,6 +34,7 @@ import time
 import urllib.parse
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
+from functools import cached_property
 from typing import Any, NamedTuple
 
 import requests
@@ -41,6 +42,7 @@ import requests
 from cmk import trace
 from cmk.gui.http import HTTPMethod
 from cmk.gui.watolib.broker_connections import BrokerConnectionInfo
+from cmk.relay_protocols.tasks import TaskListResponse, TaskResponse
 from tests.testlib.version import CMKVersion
 
 logger = logging.getLogger("rest-session")
@@ -88,6 +90,12 @@ class User(NamedTuple):
     title: str
 
 
+class Relay(NamedTuple):
+    id: str
+    alias: str
+    site_id: str
+
+
 class CMKOpenApiSession(requests.Session):
     def __init__(
         self,
@@ -129,6 +137,7 @@ class CMKOpenApiSession(requests.Session):
         self.otel_collector = OtelCollectorAPI(self)
         self.event_console = EventConsoleAPI(self)
         self.saml2 = Saml2API(self)
+        self.relays = RelayAPI(self)
 
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
@@ -244,8 +253,38 @@ class CMKOpenApiSession(requests.Session):
             time.sleep(0.5)
 
 
+class AgentReceiverApiSession(requests.Session):
+    def __init__(self, openapi_session: CMKOpenApiSession):
+        super().__init__()
+        self._openapi_session = openapi_session
+        self._port: int | None = None
+        self.headers["Authorization"] = self._openapi_session.headers["Authorization"]
+        self.relays = AgentReceiverRelayAPI(self)
+        self.verify = False
+
+    @property
+    def port(self) -> int:
+        if self._port is None:
+            self._port = int(
+                self._openapi_session.get(
+                    url="domain-types/internal/actions/discover-receiver/invoke",
+                ).text
+            )
+
+        return self._port
+
+    @property
+    def base_url(self) -> str:
+        return f"https://{self._openapi_session.host}:{self.port}/{self._openapi_session.site}/agent-receiver/"
+
+
 class BaseAPI:
     def __init__(self, session: CMKOpenApiSession) -> None:
+        self.session = session
+
+
+class ARBaseAPI:
+    def __init__(self, session: AgentReceiverApiSession) -> None:
         self.session = session
 
 
@@ -1464,3 +1503,90 @@ class Saml2API(BaseAPI):
 
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
+
+
+class RelayAPI(BaseAPI):
+    _domain_url = "/domain-types/relay/collections/all"
+    _headers = {"Content-Type": "application/json"}
+
+    @staticmethod
+    def _object_url(relay_id: str) -> str:
+        return f"/objects/relay/{relay_id}"
+
+    @cached_property
+    def agent_receiver_base_url(self) -> str:
+        response = self.session.get("/domain-types/internal/actions/discover-receiver/invoke")
+        port = int(response.text)
+
+        return f"https://{self.session.host}:{port}/{self.session.site}/agent-receiver/relays/"
+
+    def create(self, alias: str, site_id: str) -> None:
+        response = self.session.post(
+            url=self._domain_url,
+            headers=self._headers,
+            json={"alias": alias, "siteid": site_id},
+        )
+
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+    def get(self, relay_id: str) -> tuple[Relay, str]:
+        response = self.session.get(url=self._object_url(relay_id))
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        response_json = response.json()
+        return Relay(
+            id=relay_id,
+            alias=response_json["extensions"]["alias"],
+            site_id=response_json["extensions"]["siteid"],
+        ), response.headers["Etag"]
+
+    def get_all(self) -> list[Relay]:
+        response = self.session.get(url=self._domain_url)
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return [
+            Relay(
+                id=relay_dict["id"],
+                alias=relay_dict["extensions"]["alias"],
+                site_id=relay_dict["extensions"]["siteid"],
+            )
+            for relay_dict in response.json()["value"]
+        ]
+
+    def edit(self) -> None: ...
+
+    def delete(self, relay_id: str, etag: str) -> None:
+        response = self.session.delete(
+            url=self._object_url(relay_id),
+            headers={"If-Match": etag},
+        )
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
+
+class AgentReceiverRelayAPI(ARBaseAPI):
+    def register(self, alias: str, csr: str) -> str:
+        response = self.session.post(
+            url=urllib.parse.urljoin(self.session.base_url, "relays/"),
+            json={"relay_name": alias, "csr": csr},
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+        return str(response.json()["relay_id"])
+
+    def unregister(self, relay_id: str) -> None:
+        response = self.session.delete(
+            url=urllib.parse.urljoin(self.session.base_url, f"relays/{relay_id}")
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+    def get_tasks(self, relay_id: str) -> list[TaskResponse]:
+        response = self.session.get(
+            url=urllib.parse.urljoin(self.session.base_url, f"relays/{relay_id}/tasks")
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return TaskListResponse.model_validate(response.json()).tasks

@@ -65,13 +65,14 @@ def deserialize_http_proxy_config(serialized_config: str | None) -> HTTPProxyCon
     >>> deserialize_http_proxy_config("abc123") == ExplicitProxyConfig("abc123")
     True
     """
-    if serialized_config is None:
-        return EnvironmentProxyConfig()
-    if serialized_config == EnvironmentProxyConfig.SERIALIZED:
-        return EnvironmentProxyConfig()
-    if serialized_config == NoProxyConfig.SERIALIZED:
-        return NoProxyConfig()
-    return ExplicitProxyConfig(serialized_config)
+    match serialized_config:
+        case None | EnvironmentProxyConfig.SERIALIZED:
+            return EnvironmentProxyConfig()
+        case NoProxyConfig.SERIALIZED:
+            return NoProxyConfig()
+        case str() as url:
+            return ExplicitProxyConfig(url)
+    raise ValueError(f"Invalid serialized proxy config: {serialized_config!r}")
 
 
 def http_proxy_config_from_user_setting(

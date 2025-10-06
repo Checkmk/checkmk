@@ -126,6 +126,7 @@ def _render_network_topology_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
 ) -> tuple[str, str, str] | None:
     # Only show this icon if topology data is available
     files = glob.glob("data_*.json", root_dir=topology_data_dir / "default")

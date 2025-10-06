@@ -8,11 +8,9 @@ from typing import Literal
 
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
-from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
-from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import Row, VisualLinkSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.icon import Icon
@@ -31,6 +29,7 @@ def _render_inventory_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
 ) -> None | tuple[str, str, str]:
     if (
         what == "host"
@@ -42,7 +41,7 @@ def _render_inventory_icon(
         v = url_to_visual(
             row,
             VisualLinkSpec("views", "inv_host"),
-            UserPermissions.from_config(active_config, permission_registry),
+            user_permissions,
             request=request,
             force=False,
         )
@@ -82,6 +81,7 @@ def _render_inventory_history_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
 ) -> None | tuple[str, str, str]:
     if (
         what == "host"
@@ -93,7 +93,7 @@ def _render_inventory_history_icon(
         v = url_to_visual(
             row,
             VisualLinkSpec("views", "inv_host_history"),
-            UserPermissions.from_config(active_config, permission_registry),
+            user_permissions,
             request=request,
             force=False,
         )

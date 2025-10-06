@@ -8,10 +8,10 @@ from typing import Any
 import pytest
 
 import cmk.ccc.version as cmk_version
-import cmk.gui.permissions
 import cmk.gui.views
 from cmk.gui.config import active_config
 from cmk.gui.type_defs import BuiltinIconVisibility, IconSpec
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.icon import (
     Icon,
     icon_and_action_registry,
@@ -76,7 +76,7 @@ def test_legacy_icon_plugin(monkeypatch: pytest.MonkeyPatch) -> None:
         "columns": ["column"],
         "host_columns": ["hcol"],
         "service_columns": ["scol"],
-        "paint": lambda what, row, tags, custom_vars: "bla",
+        "paint": lambda what, row, tags, custom_vars, user_permissions: "bla",
         "sort_index": 10,
         "toplevel": True,
     }
@@ -85,12 +85,15 @@ def test_legacy_icon_plugin(monkeypatch: pytest.MonkeyPatch) -> None:
     )
     monkeypatch.setitem(cmk.gui.views.multisite_icons_and_actions, "legacy", icon)
     cmk.gui.views.register_legacy_icons()
+    user_permissions = UserPermissions({}, {}, {}, [])
 
     registered_icon = registry["legacy"]
     assert registered_icon.columns == icon["columns"]
     assert registered_icon.host_columns == icon["host_columns"]
     assert registered_icon.service_columns == icon["service_columns"]
-    assert registered_icon.render("host", {}, [], {}) == icon["paint"]("host", {}, [], {})
+    assert registered_icon.render("host", {}, [], {}, user_permissions) == icon["paint"](
+        "host", {}, [], {}, user_permissions
+    )
     assert registered_icon.toplevel is True
     assert registered_icon.sort_index == 10
 
@@ -114,7 +117,7 @@ def test_legacy_icon_plugin_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_register_icon_plugin_with_default_registry_works(monkeypatch: pytest.MonkeyPatch) -> None:
-    def render(what, row, tags, custom_vars):
+    def render(what, row, tags, custom_vars, user_permissions):
         return "agents", "Title", "url"
 
     TestIcon = Icon(
@@ -160,7 +163,7 @@ def test_config_override_builtin_icons(monkeypatch: pytest.MonkeyPatch) -> None:
         icon_registry, "icon_and_action_registry", registry := icon_registry.IconRegistry()
     )
 
-    def render(what, row, tags, custom_vars):
+    def render(what, row, tags, custom_vars, user_permissions):
         return "agents", "Title", "url"
 
     TestIcon = Icon(ident="test_icon", title="Test icon", sort_index=50, render=render)

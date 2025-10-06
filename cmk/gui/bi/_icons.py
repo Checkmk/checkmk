@@ -13,6 +13,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Icon as IconSpec
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.views.icon import Icon, IconRegistry
 from cmk.utils.tags import TagID
@@ -32,6 +33,7 @@ def _render_aggregations_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
 ) -> None | IconSpec | HTML | tuple[IconSpec, str] | tuple[IconSpec, str, str]:
     # Link to aggregations of the host/service
     # When precompile on demand is enabled, this icon is displayed for all hosts/services
@@ -71,6 +73,7 @@ def _render_aggregation_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
 ) -> None | IconSpec | HTML | tuple[IconSpec, str] | tuple[IconSpec, str, str]:
     # service_check_command looks like:
     # u"check_mk_active-bi_aggr!... '-b' 'http://localhost/$HOSTNAME$' ... '-a' 'Host foobar' ..."

@@ -13,6 +13,7 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import HTTPVariables, Row
 from cmk.gui.utils.mobile import is_mobile
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.views.icon import Icon
 from cmk.utils.tags import TagID
@@ -23,6 +24,7 @@ def _render_wato_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
 ) -> tuple[str, str, str] | None:
     def may_see_hosts() -> bool:
         return user.may("wato.use") and (user.may("wato.seeall") or user.may("wato.hosts"))
@@ -80,6 +82,7 @@ def _render_download_agent_output_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
 ) -> tuple[str, str, str] | None:
     return _paint_download_host_info(what, row, tags, custom_vars, ty="agent")
 
@@ -98,6 +101,7 @@ def _render_download_snmp_walk_icon(
     row: Row,
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
+    user_permissions: UserPermissions,
 ) -> tuple[str, str, str] | None:
     return _paint_download_host_info(what, row, tags, custom_vars, ty="walk")
 

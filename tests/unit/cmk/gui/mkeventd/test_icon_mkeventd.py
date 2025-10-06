@@ -10,6 +10,7 @@ import pytest
 
 import cmk.gui.mkeventd.icon as mkeventd_icon
 from cmk.gui.type_defs import Row
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.icon import icon_and_action_registry
 from cmk.utils.tags import TagID
 
@@ -269,4 +270,9 @@ def test_icon_options(
         _get_dummy_hostname,
     )
 
-    assert icon.render(args.what, args.row, args.tags, args.custom_vars) == result
+    assert (
+        icon.render(
+            args.what, args.row, args.tags, args.custom_vars, UserPermissions({}, {}, {}, [])
+        )
+        == result
+    )

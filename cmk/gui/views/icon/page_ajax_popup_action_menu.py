@@ -16,7 +16,9 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.painter.v0.helpers import replace_action_url_macros, transform_action_url
+from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import Row
+from cmk.gui.utils.roles import UserPermissions
 from cmk.utils.servicename import ServiceName
 
 from .painter import get_icons, IconEntry, IconObjectType, iconpainter_columns, LegacyIconEntry
@@ -31,7 +33,9 @@ def ajax_popup_action_menu(config: Config) -> None:
     display_options.load_from_html(request, html)
 
     row = _query_action_data(what, host, site, svcdesc)
-    icons = get_icons(what, row, toplevel=False)
+    icons = get_icons(
+        what, row, UserPermissions.from_config(config, permission_registry), toplevel=False
+    )
 
     html.open_ul()
     for icon in icons:

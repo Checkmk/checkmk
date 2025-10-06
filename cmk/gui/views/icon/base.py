@@ -11,6 +11,7 @@ from typing import Literal
 from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.type_defs import Icon as IconSpec
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.speaklater import LazyString
 from cmk.utils.tags import TagID
 
@@ -27,6 +28,7 @@ class Icon:
                 Row,
                 Sequence[TagID],
                 Mapping[str, str],
+                UserPermissions,
             ],
             None
             | IconSpec
@@ -89,6 +91,7 @@ class Icon:
         row: Row,
         tags: Sequence[TagID],
         custom_vars: Mapping[str, str],
+        user_permissions: UserPermissions,
     ) -> (
         None
         | IconSpec
@@ -99,7 +102,7 @@ class Icon:
         | tuple[IconSpec, str, tuple[str, str]]
         | tuple[str, str | None, tuple[str, str] | None]
     ):
-        return self._render_func(what, row, tags, custom_vars)
+        return self._render_func(what, row, tags, custom_vars, user_permissions)
 
     @property
     def toplevel(self) -> bool:

@@ -85,6 +85,13 @@ class CmkPage(LocatorHelper):
         _loc = _loc.filter(**kwargs) if kwargs else _loc
         return _loc
 
+    @property
+    def session_warning_message(self) -> Locator:
+        """Warning message for maximum session duration almost reached."""
+        return self.main_area.locator(
+            "div.warning.flashed", has_text="Maximum session duration almost reached"
+        )
+
     def _activate_selected(self) -> None:
         logger.info("Click 'Activate on selected sites' button")
         self.main_area.locator("#menu_suggestion_activate_selected").click()

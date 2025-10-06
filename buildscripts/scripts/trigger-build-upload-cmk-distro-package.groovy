@@ -104,7 +104,7 @@ def main() {
 
     smart_stage(
         name: "Trigger trigger-post-submit-test-cascade-heavy",
-        condition: trigger_post_submit_heavy_chain,
+        condition: trigger_post_submit_heavy_chain && currentBuild.result == "SUCCESS",
     ) {
         build(
             job: "${branch_base_folder}/trigger-post-submit-test-cascade-heavy",

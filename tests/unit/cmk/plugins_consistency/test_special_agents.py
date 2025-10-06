@@ -49,8 +49,12 @@ from cmk.plugins.storeonce4x.special_agent import agent_storeonce4x
 from cmk.server_side_calls_backend import load_special_agents
 from cmk.utils import password_store
 
+agent_metric_backend_custom_query: ModuleType | None = None
 agent_otel: ModuleType | None = None
 try:
+    from cmk.plugins.metric_backend.special_agents.cce import (  # type: ignore[import-untyped,no-redef,unused-ignore]
+        agent_metric_backend_custom_query,
+    )
     from cmk.plugins.otel.special_agents.cce import (  # type: ignore[import-untyped,no-redef,unused-ignore]
         agent_otel,
     )
@@ -95,6 +99,11 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "mobileiron": agent_mobileiron,
     "mqtt": agent_mqtt,
     "netapp_ontap": agent_netapp_ontap,
+    **(
+        {}
+        if agent_metric_backend_custom_query is None
+        else {"metric_backend_custom_query": agent_metric_backend_custom_query}
+    ),
     **({} if agent_otel is None else {"otel": agent_otel}),
     "prism": None,
     "proxmox_ve": agent_proxmox_ve,
@@ -247,6 +256,7 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
     "pure_storage_fa": ["--api-token", "API-TOKEN", "SERVER"],
     "bazel_cache": ["--host", "SERVER"],
     "otel": ["HOSTNAME"],
+    "metric_backend_custom_query": ["HOSTNAME"],
 }
 
 

@@ -80,6 +80,7 @@ HACK_AGENTS = {
     "ruckus_spot": True,
     "kube": True,
     "otel": False,  # needs no secret
+    "metric_backend_custom_query": False,  # needs no secret
 }
 
 

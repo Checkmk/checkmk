@@ -8,6 +8,7 @@ from collections.abc import Iterator
 
 from cmk.gui.page_menu import PageMenuEntry
 from cmk.gui.type_defs import Choices, HTTPVariables, Rows, SingleInfos, Visual, VisualContext
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view_utils import get_labels
 
 
@@ -71,15 +72,13 @@ class VisualType(abc.ABC):
         """Load all visuals of this type"""
         raise NotImplementedError()
 
-    @property
     @abc.abstractmethod
-    def permitted_visuals(self) -> dict:
+    def permitted_visuals(self, user_permissions: UserPermissions) -> dict:
         """Get the permitted visuals of this type"""
         raise NotImplementedError()
 
-    @property
-    def choices(self) -> Choices:
-        return [(k, v["title"]) for k, v in self.permitted_visuals.items()]
+    def choices(self, user_permissions: UserPermissions) -> Choices:
+        return [(k, v["title"]) for k, v in self.permitted_visuals(user_permissions).items()]
 
     def link_from(
         self,

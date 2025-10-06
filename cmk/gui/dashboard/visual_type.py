@@ -15,11 +15,12 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_javascript_link, PageMenuEntry
 from cmk.gui.type_defs import VisualContext
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visuals.type import VisualType
 
 from .dashlet import copy_view_into_dashlet, dashlet_registry, DashletConfig
 from .store import add_dashlet, get_permitted_dashboards, load_dashboard
-from .type_defs import ABCGraphDashletConfig, ViewDashletConfig
+from .type_defs import ABCGraphDashletConfig, DashboardConfig, DashboardName, ViewDashletConfig
 
 
 class VisualTypeDashboards(VisualType):
@@ -139,8 +140,9 @@ class VisualTypeDashboards(VisualType):
     def load_handler(self):
         pass
 
-    @property
-    def permitted_visuals(self):
+    def permitted_visuals(
+        self, user_permissions: UserPermissions
+    ) -> dict[DashboardName, DashboardConfig]:
         return get_permitted_dashboards()
 
     def _handle_add_graph(

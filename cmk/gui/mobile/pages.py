@@ -386,7 +386,13 @@ class MobileViewRenderer(ABCViewRenderer):
 
         # Should we show a page with context links?
         context_links = list(
-            collect_context_links(self.view, rows, mobile=True, visual_types=["views"])
+            collect_context_links(
+                self.view,
+                rows,
+                mobile=True,
+                visual_types=["views"],
+                user_permissions=user_permissions,
+            )
         )
 
         if context_links:
@@ -438,6 +444,7 @@ class MobileViewRenderer(ABCViewRenderer):
                         self.view.row_cells,
                         num_columns,
                         show_checkboxes and not html.do_actions(),
+                        user_permissions,
                     )
                 except Exception as e:
                     logger.exception("error rendering mobile view")

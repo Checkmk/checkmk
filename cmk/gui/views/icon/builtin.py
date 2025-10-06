@@ -20,11 +20,13 @@ from cmk.gui.logged_in import user
 from cmk.gui.painter.v0.helpers import render_cache_info
 from cmk.gui.painter.v1.helpers import is_stale
 from cmk.gui.painter_options import paint_age, PainterOptions
+from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import Icon as IconSpec
 from cmk.gui.type_defs import Row, VisualLinkSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.popups import MethodAjax
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.visual_link import url_to_visual
 from cmk.utils.tags import TagID
@@ -621,7 +623,13 @@ def _render_downtimes_icon(
         return (
             icon,
             title,
-            url_to_visual(row, VisualLinkSpec("views", "downtimes_of_" + what), request=request),
+            url_to_visual(
+                row,
+                VisualLinkSpec("views", "downtimes_of_" + what),
+                UserPermissions.from_config(active_config, permission_registry),
+                request=request,
+                force=False,
+            ),
         )
 
     if what == "service" and row["host_scheduled_downtime_depth"] > 0:
@@ -631,7 +639,13 @@ def _render_downtimes_icon(
         return (
             {"icon": "folder", "emblem": "downtime"},
             title,
-            url_to_visual(row, VisualLinkSpec("views", "downtimes_of_host"), request=request),
+            url_to_visual(
+                row,
+                VisualLinkSpec("views", "downtimes_of_host"),
+                UserPermissions.from_config(active_config, permission_registry),
+                request=request,
+                force=False,
+            ),
         )
     return None
 
@@ -686,7 +700,13 @@ def _render_comments_icon(
         return (
             "comment",
             text,
-            url_to_visual(row, VisualLinkSpec("views", "comments_of_" + what), request=request),
+            url_to_visual(
+                row,
+                VisualLinkSpec("views", "comments_of_" + what),
+                UserPermissions.from_config(active_config, permission_registry),
+                request=request,
+                force=False,
+            ),
         )
     return None
 

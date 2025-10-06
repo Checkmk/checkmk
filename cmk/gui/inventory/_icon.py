@@ -8,10 +8,13 @@ from typing import Literal
 
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
+from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
+from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import Row, VisualLinkSpec
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.icon import Icon
 from cmk.gui.visual_link import url_to_visual
 from cmk.inventory.paths import Paths as InventoryPaths
@@ -36,7 +39,13 @@ def _render_inventory_icon(
         if not user.may("view.inv_host"):
             return None
 
-        v = url_to_visual(row, VisualLinkSpec("views", "inv_host"), request=request)
+        v = url_to_visual(
+            row,
+            VisualLinkSpec("views", "inv_host"),
+            UserPermissions.from_config(active_config, permission_registry),
+            request=request,
+            force=False,
+        )
         assert v is not None
         return (
             "inventory",
@@ -81,7 +90,13 @@ def _render_inventory_history_icon(
         if not user.may("view.inv_host"):
             return None
 
-        v = url_to_visual(row, VisualLinkSpec("views", "inv_host_history"), request=request)
+        v = url_to_visual(
+            row,
+            VisualLinkSpec("views", "inv_host_history"),
+            UserPermissions.from_config(active_config, permission_registry),
+            request=request,
+            force=False,
+        )
         assert v is not None
         return (
             "inventory",

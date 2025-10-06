@@ -503,7 +503,7 @@ def _get_vs_link_or_tooltip_elements(
             "link_spec",
             CascadingDropdown(
                 title=_("Link"),
-                choices=_column_link_choices(),
+                choices=_column_link_choices(user_permissions),
                 orientation="horizontal",
             ),
         ),
@@ -703,7 +703,7 @@ def _view_editor_spec(
     )
 
 
-def _column_link_choices() -> list[CascadingDropdownChoice]:
+def _column_link_choices(user_permissions: UserPermissions) -> list[CascadingDropdownChoice]:
     return [
         (
             "views",
@@ -717,7 +717,7 @@ def _column_link_choices() -> list[CascadingDropdownChoice]:
             "dashboards",
             _("Link to dashboard") + ":",
             DropdownChoice(
-                choices=visual_type_registry["dashboards"]().choices,
+                choices=visual_type_registry["dashboards"]().choices(user_permissions),
                 sorted=True,
             ),
         ),

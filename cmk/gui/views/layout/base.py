@@ -8,6 +8,7 @@ from collections.abc import Sequence
 
 from cmk.gui.painter.v0 import Cell
 from cmk.gui.type_defs import Rows, ViewSpec
+from cmk.gui.utils.roles import UserPermissions
 
 
 class Layout(abc.ABC):
@@ -32,6 +33,7 @@ class Layout(abc.ABC):
         cells: Sequence[Cell],
         num_columns: int,
         show_checkboxes: bool,
+        user_permissions: UserPermissions,
     ) -> None:
         """Render the given data in this layout"""
         raise NotImplementedError()

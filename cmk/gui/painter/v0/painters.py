@@ -4208,7 +4208,11 @@ class PainterCommentEntryType(Painter):
         code: str | HTML = html.render_icon(icon, help_txt, theme=self.theme)
         if linkview:
             code = render_link_to_view(
-                code, row, VisualLinkSpec("views", linkview), request=self.request
+                code,
+                row,
+                VisualLinkSpec("views", linkview),
+                self._user_permissions,
+                request=self.request,
             )
         return "icons", code
 

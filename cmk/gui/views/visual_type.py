@@ -23,6 +23,7 @@ from cmk.gui.type_defs import (
     Visual,
     VisualContext,
 )
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import Hostname
 from cmk.gui.views.store import get_permitted_views
 from cmk.gui.visuals.type import VisualType
@@ -76,8 +77,7 @@ class VisualTypeViews(VisualType):
     def load_handler(self) -> None:
         pass
 
-    @property
-    def permitted_visuals(self) -> PermittedViewSpecs:
+    def permitted_visuals(self, user_permissions: UserPermissions) -> PermittedViewSpecs:
         return get_permitted_views()
 
     def link_from(

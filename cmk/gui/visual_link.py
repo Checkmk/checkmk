@@ -27,25 +27,36 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry, VisualType
 
 
 def render_link_to_view(
-    content: str | HTML, row: Row, link_spec: VisualLinkSpec, *, request: Request
+    content: str | HTML,
+    row: Row,
+    link_spec: VisualLinkSpec,
+    user_permissions: UserPermissions,
+    *,
+    request: Request,
 ) -> str | HTML:
     if display_options.disabled(display_options.I):
         return content
 
-    url = url_to_visual(row, link_spec, request=request)
+    url = url_to_visual(row, link_spec, user_permissions, request=request, force=False)
     if url:
         return HTMLWriter.render_a(content, href=url)
     return content
 
 
 def url_to_visual(
-    row: Row, link_spec: VisualLinkSpec, *, request: Request, force: bool = False
+    row: Row,
+    link_spec: VisualLinkSpec,
+    user_permissions: UserPermissions,
+    *,
+    request: Request,
+    force: bool,
 ) -> str | None:
     """Compute a URL to a view or dashboard.
 
@@ -60,7 +71,7 @@ def url_to_visual(
     if not force and display_options.disabled(display_options.I):
         return None
 
-    visual = _get_visual_by_link_spec(link_spec)
+    visual = _get_visual_by_link_spec(link_spec, user_permissions)
     if not visual:
         return None
 
@@ -88,13 +99,15 @@ def url_to_visual(
     )
 
 
-def _get_visual_by_link_spec(link_spec: VisualLinkSpec | None) -> Visual | None:
+def _get_visual_by_link_spec(
+    link_spec: VisualLinkSpec | None, user_permissions: UserPermissions
+) -> Visual | None:
     if link_spec is None:
         return None
 
     visual_type = visual_type_registry[link_spec.type_name]()
     visual_type.load_handler()
-    available_visuals = visual_type.permitted_visuals
+    available_visuals = visual_type.permitted_visuals(user_permissions)
 
     with suppress(KeyError):
         return available_visuals[link_spec.name]  # type: ignore[no-any-return]

@@ -66,6 +66,7 @@ def get_context_page_menu_dropdowns(
             view,
             rows,
             singlecontext_request_vars,
+            user_permissions,
             mobile=False,
             visual_types=["views", "dashboards"],
         )
@@ -187,7 +188,11 @@ def _get_relevant_infos(view: View) -> list[tuple[InfoName, bool]]:
 
 
 def collect_context_links(
-    view: View, rows: Rows, mobile: bool, visual_types: SingleInfos
+    view: View,
+    rows: Rows,
+    mobile: bool,
+    visual_types: SingleInfos,
+    user_permissions: UserPermissions,
 ) -> Iterator[PageMenuEntry]:
     """Collect all visuals that share a context with visual. For example
     if a visual has a host context, get all relevant visuals."""
@@ -197,7 +202,7 @@ def collect_context_links(
     )
 
     for visual_type, visual in _collect_linked_visuals(
-        view, rows, singlecontext_request_vars, mobile, visual_types
+        view, rows, singlecontext_request_vars, user_permissions, mobile, visual_types
     ):
         yield _make_page_menu_entry_for_visual(
             visual_type,
@@ -212,22 +217,28 @@ def _collect_linked_visuals(
     view: View,
     rows: Rows,
     singlecontext_request_vars: dict[str, str],
+    user_permissions: UserPermissions,
     mobile: bool,
     visual_types: SingleInfos,
 ) -> Iterator[tuple[VisualType, Visual]]:
     for type_name in visual_type_registry.keys():
         if type_name in visual_types:
             yield from _collect_linked_visuals_of_type(
-                type_name, view, rows, singlecontext_request_vars, mobile
+                type_name, view, rows, singlecontext_request_vars, user_permissions, mobile
             )
 
 
 def _collect_linked_visuals_of_type(
-    type_name: str, view: View, rows: Rows, singlecontext_request_vars: dict[str, str], mobile: bool
+    type_name: str,
+    view: View,
+    rows: Rows,
+    singlecontext_request_vars: dict[str, str],
+    user_permissions: UserPermissions,
+    mobile: bool,
 ) -> Iterator[tuple[VisualType, Visual]]:
     visual_type = visual_type_registry[type_name]()
     visual_type.load_handler()
-    available_visuals = visual_type.permitted_visuals
+    available_visuals = visual_type.permitted_visuals(user_permissions)
 
     for visual in sorted(available_visuals.values(), key=lambda x: x.get("name") or ""):
         if visual == view.spec:

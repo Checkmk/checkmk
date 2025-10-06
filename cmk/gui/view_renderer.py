@@ -280,6 +280,7 @@ class GUIViewRenderer(ABCViewRenderer):
                 self.view.row_cells,
                 num_columns,
                 show_checkboxes and not html.do_actions(),
+                user_permissions,
             )
             row_info = "%d %s" % (row_count, _("row") if row_count == 1 else _("rows"))
             if show_checkboxes:
@@ -367,7 +368,9 @@ class GUIViewRenderer(ABCViewRenderer):
                     ),
                     PageMenuTopic(
                         title=_("Reports"),
-                        entries=list(self._page_menu_entries_export_reporting(rows)),
+                        entries=list(
+                            self._page_menu_entries_export_reporting(rows, user_permissions)
+                        ),
                     ),
                 ],
             ),
@@ -482,7 +485,9 @@ class GUIViewRenderer(ABCViewRenderer):
             ),
         )
 
-    def _page_menu_entries_export_reporting(self, rows: Rows) -> Iterator[PageMenuEntry]:
+    def _page_menu_entries_export_reporting(
+        self, rows: Rows, user_permissions: UserPermissions
+    ) -> Iterator[PageMenuEntry]:
         if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.CRE:
             return
 
@@ -504,7 +509,13 @@ class GUIViewRenderer(ABCViewRenderer):
         )
 
         # Link related reports
-        yield from collect_context_links(self.view, rows, mobile=False, visual_types=["reports"])
+        yield from collect_context_links(
+            self.view,
+            rows,
+            mobile=False,
+            visual_types=["reports"],
+            user_permissions=user_permissions,
+        )
 
     def _extend_display_dropdown(self, menu: PageMenu, show_filters: list[Filter]) -> None:
         display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())

@@ -964,12 +964,16 @@ def _test_painter(painter_ident: str, live: MockLiveStatusConnection) -> None:
             "main_menu_search_terms": [],
         },
         context={},
-        user_permissions=UserPermissions({}, {}, {}, []),
+        user_permissions=(user_permissions := UserPermissions({}, {}, {}, [])),
     )
 
     row = _service_row()
     for cell in view.row_cells:
-        _tdclass, content = cell.render(row, partial(render_link_to_view, request=request), user)
+        _tdclass, content = cell.render(
+            row,
+            partial(render_link_to_view, request=request, user_permissions=user_permissions),
+            user,
+        )
         assert isinstance(content, str | HTML)
 
         if isinstance(content, str) and "<" in content:

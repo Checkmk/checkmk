@@ -221,16 +221,17 @@ def add_to_dashboard_choices_autocompleter(config: Config, value: str, params: d
     return get_visual_choices(
         visual_type="dashboards",
         value=value,
+        user_permissions=UserPermissions.from_config(config, permission_registry),
     )
 
 
-def get_visual_choices(visual_type: str, value: str) -> Choices:
+def get_visual_choices(visual_type: str, value: str, user_permissions: UserPermissions) -> Choices:
     validate_regex(value, varname=None)
     match_pattern = re.compile(value, re.IGNORECASE)
     matching_visuals = []
-    for name, content in sorted(visual_type_registry[f"{visual_type}"]().permitted_visuals.items()):
-        if match_pattern.search(content["title"]) is not None:
-            matching_visuals.append((name, f"{content['title']} ({name})"))
+    for name, title in sorted(visual_type_registry[f"{visual_type}"]().choices(user_permissions)):
+        if match_pattern.search(title) is not None:
+            matching_visuals.append((name, f"{title} ({name})"))
     return matching_visuals
 
 

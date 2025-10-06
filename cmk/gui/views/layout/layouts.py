@@ -24,6 +24,7 @@ from cmk.gui.painter_options import PainterOptions
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import GroupSpec, Row, Rows, ViewSpec
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visual_link import render_link_to_view
 
 from .base import Layout
@@ -94,8 +95,11 @@ class LayoutSingleDataset(Layout):
         cells: Sequence[Cell],
         num_columns: int,
         show_checkboxes: bool,
+        user_permissions: UserPermissions,
     ) -> None:
-        link_renderer = partial(render_link_to_view, request=request)
+        link_renderer = partial(
+            render_link_to_view, request=request, user_permissions=user_permissions
+        )
         html.open_table(class_="data single")
         rownum = 0
         odd = "odd"
@@ -140,6 +144,7 @@ class GroupedBoxesLayout(Layout):
         cells: Sequence[Cell],
         num_columns: int,
         show_checkboxes: bool,
+        user_permissions: UserPermissions,
     ) -> None:
         # N columns. Each should contain approx the same number of entries
         groups: list[tuple[Hashable, list[tuple[str, Row]]]] = []
@@ -504,10 +509,13 @@ class LayoutTiled(Layout):
         cells: Sequence[Cell],
         num_columns: int,
         show_checkboxes: bool,
+        user_permissions: UserPermissions,
     ) -> None:
         html.open_table(class_="data tiled")
 
-        link_renderer = partial(render_link_to_view, request=request)
+        link_renderer = partial(
+            render_link_to_view, request=request, user_permissions=user_permissions
+        )
         last_group = None
         group_open = False
         for row in rows:
@@ -649,6 +657,7 @@ class LayoutTable(Layout):
         cells: Sequence[Cell],
         num_columns: int,
         show_checkboxes: bool,
+        user_permissions: UserPermissions,
     ) -> None:
         html.open_table(class_="data table")
         last_group = None
@@ -667,7 +676,9 @@ class LayoutTable(Layout):
             rows_with_ids, row_group_cells=group_cells
         )
 
-        link_renderer = partial(render_link_to_view, request=request)
+        link_renderer = partial(
+            render_link_to_view, request=request, user_permissions=user_permissions
+        )
         visible_row_number = 0
         group_hidden, num_grouped_rows = None, 0
         for index, row in rows_with_ids:
@@ -902,12 +913,15 @@ class LayoutMatrix(Layout):
         cells: Sequence[Cell],
         num_columns: int,
         show_checkboxes: bool,
+        user_permissions: UserPermissions,
     ) -> None:
         header_majorities = self._matrix_find_majorities_for_header(rows, group_cells)
         value_counts, row_majorities = self._matrix_find_majorities(rows, cells)
 
         painter_options = PainterOptions.get_instance()
-        link_renderer = partial(render_link_to_view, request=request)
+        link_renderer = partial(
+            render_link_to_view, request=request, user_permissions=user_permissions
+        )
         for groups, unique_row_ids, matrix_cells in create_matrices(
             rows, group_cells, cells, num_columns
         ):

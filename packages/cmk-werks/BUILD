@@ -1,5 +1,7 @@
+load("@aspect_rules_js//js:defs.bzl", "js_binary")
 load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
+load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
@@ -8,7 +10,17 @@ exports_files([
     "dev-requirements.in",
     "pyproject.toml",
     "requirements.in",
+    "package.json",
 ])
+
+npm_link_all_packages(name = "node_modules")
+
+js_binary(
+    name = "vnu",
+    data = [":node_modules/vnu-jar"],
+    entry_point = "js/vnu.js",
+    tags = ["manual"],
+)
 
 py_library(
     name = "cmk-werks",

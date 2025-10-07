@@ -294,9 +294,6 @@ importers:
       typescript:
         specifier: ^5.7.2
         version: 5.9.2
-      vnu-jar:
-        specifier: ^24.10.17
-        version: 24.10.17
       webpack:
         specifier: ^5.102.0
         version: 5.102.0(webpack-cli@5.1.4)
@@ -418,6 +415,12 @@ importers:
       openapi-typescript:
         specifier: ^7.9.1
         version: 7.9.1(typescript@5.9.2)
+
+  packages/cmk-werks:
+    devDependencies:
+      vnu-jar:
+        specifier: ^24.10.17
+        version: 24.10.17
 
 packages:
 

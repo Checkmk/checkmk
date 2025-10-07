@@ -7,3 +7,4 @@ bazel/tools/node_modules
 packages/cmk-frontend/node_modules
 packages/cmk-frontend-vue/node_modules
 packages/cmk-shared-typing/node_modules
+packages/cmk-werks/node_modules

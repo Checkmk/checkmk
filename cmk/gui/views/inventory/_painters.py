@@ -42,7 +42,7 @@ from ._display_hints import (
     inv_display_hints,
     NodeDisplayHint,
 )
-from ._tree_renderer import SDItem, TreeRenderer
+from ._tree_renderer import compute_cell_spec, SDItem, TreeRenderer
 
 
 @request_memoize()
@@ -328,15 +328,16 @@ def _paint_host_inventory_attribute(
 ) -> CellSpec:
     if (attributes := _get_attributes(row, path)) is None:
         return "", ""
-    td_spec = SDItem(
-        key=key,
-        title=hint.title,
-        value=attributes.pairs.get(key),
-        retention_interval=attributes.retentions.get(key),
-        paint_function=hint.paint_function,
-        icon_path_svc_problems=theme.detect_icon_path("svc_problems", "icon_"),
-    ).compute_td_spec(time.time())
-    return td_spec.css, td_spec.html_value
+    return compute_cell_spec(
+        SDItem(
+            key=key,
+            title=hint.title,
+            value=attributes.pairs.get(key),
+            retention_interval=attributes.retentions.get(key),
+            paint_function=hint.paint_function,
+            icon_path_svc_problems=theme.detect_icon_path("svc_problems", "icon_"),
+        ).compute_td_spec(time.time())
+    )
 
 
 def attribute_painter_from_hint(
@@ -396,15 +397,16 @@ class ColumnPainterFromHint(TypedDict):
 def _paint_host_inventory_column(row: Row, hint: ColumnDisplayHintOfView) -> CellSpec:
     if hint.name not in row:
         return "", ""
-    td_spec = SDItem(
-        key=SDKey(hint.name),
-        title=hint.title,
-        value=row[hint.name],
-        retention_interval=row.get("_".join([hint.name, "retention_interval"])),
-        paint_function=hint.paint_function,
-        icon_path_svc_problems=theme.detect_icon_path("svc_problems", "icon_"),
-    ).compute_td_spec(time.time())
-    return td_spec.css, td_spec.html_value
+    return compute_cell_spec(
+        SDItem(
+            key=SDKey(hint.name),
+            title=hint.title,
+            value=row[hint.name],
+            retention_interval=row.get("_".join([hint.name, "retention_interval"])),
+            paint_function=hint.paint_function,
+            icon_path_svc_problems=theme.detect_icon_path("svc_problems", "icon_"),
+        ).compute_td_spec(time.time())
+    )
 
 
 def column_painter_from_hint(hint: ColumnDisplayHintOfView) -> ColumnPainterFromHint:

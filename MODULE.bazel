@@ -109,6 +109,9 @@ single_version_override(
         # https://github.com/aspect-build/rules_lint/pull/622
         "//bazel/patches:rules_lint-shfmt-handle_shebang.patch",
         "//bazel/patches:rules_lint-add_djlint_formatter.patch",
+        # quickfix non-erroneous return code on linting with ruff
+        # https://github.com/aspect-build/rules_lint/issues/495
+        "//bazel/patches:rules_lint-ruff_quickfix.patch",
     ],
 )
 

@@ -10,31 +10,28 @@ import pytest
 
 from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, State
 from cmk.plugins.azure_v2.agent_based.azure_traffic_manager import check_probe_state, check_qps
-from cmk.plugins.azure_v2.agent_based.lib import AzureMetric, Resource, Section
+from cmk.plugins.azure_v2.agent_based.lib import AzureMetric, Resource
 
 
 @pytest.mark.parametrize(
-    "section, item, params, expected_result",
+    "section, params, expected_result",
     [
         (
-            {
-                "traffic-manager-1": Resource(
-                    id="/subscriptions/c17d121d-dd5c-4156-875f-1df9862eef93/resourceGroups/Group1/providers/Microsoft.Network/trafficmanagerprofiles/traffic-manager-1",
-                    name="traffic-manager-1",
-                    type="Microsoft.Network/trafficmanagerprofiles",
-                    group="BurningMan",
-                    location="westeurope",
-                    metrics={
-                        "total_QpsByEndpoint": AzureMetric(
-                            name="QpsByEndpoint",
-                            aggregation="total",
-                            value=6000.0,
-                            unit="count",
-                        ),
-                    },
-                )
-            },
-            "traffic-manager-1",
+            Resource(
+                id="/subscriptions/c17d121d-dd5c-4156-875f-1df9862eef93/resourceGroups/Group1/providers/Microsoft.Network/trafficmanagerprofiles/traffic-manager-1",
+                name="traffic-manager-1",
+                type="Microsoft.Network/trafficmanagerprofiles",
+                group="BurningMan",
+                location="westeurope",
+                metrics={
+                    "total_QpsByEndpoint": AzureMetric(
+                        name="QpsByEndpoint",
+                        aggregation="total",
+                        value=6000.0,
+                        unit="count",
+                    ),
+                },
+            ),
             {"levels": (10, 50)},
             [
                 Result(state=State.CRIT, summary="Queries per second: 100 (warn/crit at 10/50)"),
@@ -44,103 +41,73 @@ from cmk.plugins.azure_v2.agent_based.lib import AzureMetric, Resource, Section
     ],
 )
 def test_check_qps(
-    section: Section,
-    item: str,
+    section: Resource,
     params: Mapping[str, Any],
     expected_result: Sequence[Result | Metric],
 ) -> None:
-    assert list(check_qps(item, params, section)) == expected_result
+    assert list(check_qps(params, section)) == expected_result
 
 
 @pytest.mark.parametrize(
-    "section, item",
+    "section",
     [
         (
-            {
-                "traffic-manager-1": Resource(
-                    id="/subscriptions/c17d121d-dd5c-4156-875f-1df9862eef93/resourceGroups/Group1/providers/Microsoft.Network/trafficmanagerprofiles/traffic-manager-1",
-                    name="traffic-manager-1",
-                    type="Microsoft.Network/trafficmanagerprofiles",
-                    group="BurningMan",
-                    location="westeurope",
-                    metrics={
-                        "total_QpsByEndpoint": AzureMetric(
-                            name="QpsByEndpoint",
-                            aggregation="total",
-                            value=6000.0,
-                            unit="count",
-                        ),
-                    },
-                )
-            },
-            "traffic-manager-2",
-        ),
-        (
-            {
-                "traffic-manager-1": Resource(
-                    id="/subscriptions/c17d121d-dd5c-4156-875f-1df9862eef93/resourceGroups/Group1/providers/Microsoft.Network/trafficmanagerprofiles/traffic-manager-1",
-                    name="traffic-manager-1",
-                    type="Microsoft.Network/trafficmanagerprofiles",
-                    group="BurningMan",
-                    location="westeurope",
-                    metrics={},
-                )
-            },
-            "traffic-manager-1",
+            Resource(
+                id="/subscriptions/c17d121d-dd5c-4156-875f-1df9862eef93/resourceGroups/Group1/providers/Microsoft.Network/trafficmanagerprofiles/traffic-manager-1",
+                name="traffic-manager-1",
+                type="Microsoft.Network/trafficmanagerprofiles",
+                group="BurningMan",
+                location="westeurope",
+                metrics={},
+            )
         ),
     ],
 )
-def test_check_qps_stale(section: Section, item: str) -> None:
+def test_check_qps_stale(section: Resource) -> None:
     with pytest.raises(IgnoreResultsError, match="Data not present at the moment"):
-        list(check_qps(item, {}, section))
+        list(check_qps({}, section))
 
 
 @pytest.mark.parametrize(
-    "section, item, params, expected_result",
+    "section, params, expected_result",
     [
         (
-            {
-                "traffic-manager-1": Resource(
-                    id="/subscriptions/c17d121d-dd5c-4156-875f-1df9862eef93/resourceGroups/Group1/providers/Microsoft.Network/trafficmanagerprofiles/traffic-manager-1",
-                    name="traffic-manager-1",
-                    type="Microsoft.Network/trafficmanagerprofiles",
-                    group="BurningMan",
-                    location="westeurope",
-                    metrics={
-                        "maximum_ProbeAgentCurrentEndpointStateByProfileResourceId": AzureMetric(
-                            name="ProbeAgentCurrentEndpointStateByProfileResourceId",
-                            aggregation="maximum",
-                            value=0.0,
-                            unit="count",
-                        ),
-                    },
-                )
-            },
-            "traffic-manager-1",
+            Resource(
+                id="/subscriptions/c17d121d-dd5c-4156-875f-1df9862eef93/resourceGroups/Group1/providers/Microsoft.Network/trafficmanagerprofiles/traffic-manager-1",
+                name="traffic-manager-1",
+                type="Microsoft.Network/trafficmanagerprofiles",
+                group="BurningMan",
+                location="westeurope",
+                metrics={
+                    "maximum_ProbeAgentCurrentEndpointStateByProfileResourceId": AzureMetric(
+                        name="ProbeAgentCurrentEndpointStateByProfileResourceId",
+                        aggregation="maximum",
+                        value=0.0,
+                        unit="count",
+                    ),
+                },
+            ),
             {"custom_state": 1},
             [
                 Result(state=State.WARN, summary="Probe state: not OK"),
             ],
         ),
         (
-            {
-                "traffic-manager-1": Resource(
-                    id="/subscriptions/c17d121d-dd5c-4156-875f-1df9862eef93/resourceGroups/Group1/providers/Microsoft.Network/trafficmanagerprofiles/traffic-manager-1",
-                    name="traffic-manager-1",
-                    type="Microsoft.Network/trafficmanagerprofiles",
-                    group="BurningMan",
-                    location="westeurope",
-                    metrics={
-                        "maximum_ProbeAgentCurrentEndpointStateByProfileResourceId": AzureMetric(
-                            name="ProbeAgentCurrentEndpointStateByProfileResourceId",
-                            aggregation="maximum",
-                            value=1.0,
-                            unit="count",
-                        ),
-                    },
-                )
-            },
-            "traffic-manager-1",
+            Resource(
+                id="/subscriptions/c17d121d-dd5c-4156-875f-1df9862eef93/resourceGroups/Group1/providers/Microsoft.Network/trafficmanagerprofiles/traffic-manager-1",
+                name="traffic-manager-1",
+                type="Microsoft.Network/trafficmanagerprofiles",
+                group="BurningMan",
+                location="westeurope",
+                metrics={
+                    "maximum_ProbeAgentCurrentEndpointStateByProfileResourceId": AzureMetric(
+                        name="ProbeAgentCurrentEndpointStateByProfileResourceId",
+                        aggregation="maximum",
+                        value=1.0,
+                        unit="count",
+                    ),
+                },
+            ),
             {"custom_state": 1},
             [
                 Result(state=State.OK, summary="Probe state: OK"),
@@ -149,36 +116,28 @@ def test_check_qps_stale(section: Section, item: str) -> None:
     ],
 )
 def test_check_probe_state(
-    section: Section,
-    item: str,
+    section: Resource,
     params: Mapping[str, Any],
     expected_result: Sequence[Result | Metric],
 ) -> None:
-    assert list(check_probe_state(item, params, section)) == expected_result
+    assert list(check_probe_state(params, section)) == expected_result
 
 
 @pytest.mark.parametrize(
-    "section, item",
+    "section",
     [
         (
-            {},
-            "traffic-manager-2",
-        ),
-        (
-            {
-                "traffic-manager-1": Resource(
-                    id="/subscriptions/c17d121d-dd5c-4156-875f-1df9862eef93/resourceGroups/Group1/providers/Microsoft.Network/trafficmanagerprofiles/traffic-manager-1",
-                    name="traffic-manager-1",
-                    type="Microsoft.Network/trafficmanagerprofiles",
-                    group="BurningMan",
-                    location="westeurope",
-                    metrics={},
-                )
-            },
-            "traffic-manager-1",
+            Resource(
+                id="/subscriptions/c17d121d-dd5c-4156-875f-1df9862eef93/resourceGroups/Group1/providers/Microsoft.Network/trafficmanagerprofiles/traffic-manager-1",
+                name="traffic-manager-1",
+                type="Microsoft.Network/trafficmanagerprofiles",
+                group="BurningMan",
+                location="westeurope",
+                metrics={},
+            )
         ),
     ],
 )
-def test_check_probe_state_stale(section: Section, item: str) -> None:
+def test_check_probe_state_stale(section: Resource) -> None:
     with pytest.raises(IgnoreResultsError, match="Data not present at the moment"):
-        list(check_probe_state(item, {}, section))
+        list(check_probe_state({}, section))

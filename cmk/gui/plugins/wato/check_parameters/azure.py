@@ -771,9 +771,8 @@ rulespec_registry.register(
 
 # TODO: migrate and move to new folder structure
 rulespec_registry.register(
-    CheckParameterRulespecWithItem(
+    CheckParameterRulespecWithoutItem(
         check_group_name="azure_v2_traffic_manager_qps",
-        item_spec=lambda: TextInput(title=_("Qps")),
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_qps,
         title=lambda: _("Azure Traffic Manager Qps"),
@@ -812,9 +811,8 @@ rulespec_registry.register(
 
 # TODO: migrate and move to new folder structure
 rulespec_registry.register(
-    CheckParameterRulespecWithItem(
+    CheckParameterRulespecWithoutItem(
         check_group_name="azure_v2_traffic_manager_probe_state",
-        item_spec=lambda: TextInput(title=_("Probe State")),
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_probe_state,
         title=lambda: _("Azure Traffic Manager Probe State"),

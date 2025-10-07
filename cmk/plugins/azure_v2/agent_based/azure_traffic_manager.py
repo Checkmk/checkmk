@@ -16,23 +16,19 @@ from cmk.agent_based.v2 import (
     State,
 )
 from cmk.plugins.azure_v2.agent_based.lib import (
-    create_discover_by_metrics_function,
-    parse_resources,
-    Section,
+    create_discover_by_metrics_function_single,
+    parse_resource,
+    Resource,
 )
 
 agent_section_azure_trafficmanagerprofiles = AgentSection(
     name="azure_v2_trafficmanagerprofiles",
-    parse_function=parse_resources,
+    parse_function=parse_resource,
 )
 
 
-def check_qps(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    resource = section.get(item)
-    if resource is None:
-        raise IgnoreResultsError("Data not present at the moment")
-
-    metric = resource.metrics.get("total_QpsByEndpoint")
+def check_qps(params: Mapping[str, Any], section: Resource) -> CheckResult:
+    metric = section.metrics.get("total_QpsByEndpoint")
     if metric is None:
         raise IgnoreResultsError("Data not present at the moment")
 
@@ -50,20 +46,16 @@ def check_qps(item: str, params: Mapping[str, Any], section: Section) -> CheckRe
 check_plugin_azure_traffic_manager_qps = CheckPlugin(
     name="azure_v2_traffic_manager_qps",
     sections=["azure_v2_trafficmanagerprofiles"],
-    service_name="Azure/Traffic Mgr. %s Qps",
-    discovery_function=create_discover_by_metrics_function("total_QpsByEndpoint"),
+    service_name="Azure/Traffic Mgr. Qps",
+    discovery_function=create_discover_by_metrics_function_single("total_QpsByEndpoint"),
     check_function=check_qps,
     check_ruleset_name="azure_v2_traffic_manager_qps",
     check_default_parameters={},
 )
 
 
-def check_probe_state(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    resource = section.get(item)
-    if resource is None:
-        raise IgnoreResultsError("Data not present at the moment")
-
-    metric = resource.metrics.get("maximum_ProbeAgentCurrentEndpointStateByProfileResourceId")
+def check_probe_state(params: Mapping[str, Any], section: Resource) -> CheckResult:
+    metric = section.metrics.get("maximum_ProbeAgentCurrentEndpointStateByProfileResourceId")
     if metric is None:
         raise IgnoreResultsError("Data not present at the moment")
 
@@ -78,8 +70,8 @@ def check_probe_state(item: str, params: Mapping[str, Any], section: Section) ->
 check_plugin_azure_traffic_manager_probe_state = CheckPlugin(
     name="azure_v2_traffic_manager_probe_state",
     sections=["azure_v2_trafficmanagerprofiles"],
-    service_name="Azure/Traffic Mgr. %s Probe State",
-    discovery_function=create_discover_by_metrics_function(
+    service_name="Azure/Traffic Mgr. Probe State",
+    discovery_function=create_discover_by_metrics_function_single(
         "maximum_ProbeAgentCurrentEndpointStateByProfileResourceId"
     ),
     check_function=check_probe_state,

@@ -7,7 +7,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Generic, Literal, TypeVar
 
-from cmk.server_side_calls.v1 import EnvProxy, NoProxy, Secret, URLProxy
+from cmk.server_side_calls import alpha, v1
 from cmk.utils import config_warnings
 
 CheckCommandArguments = Iterable[int | float | str | tuple[str, str, str]]
@@ -111,19 +111,29 @@ def _processed_config_value(
         case tuple():
             match params:
                 case ("cmk_postprocessed", "stored_password", value):
-                    return _replace_password(value[0], None)
+                    return _replace_password(value[0], None, is_alpha=is_alpha)
                 case ("cmk_postprocessed", "explicit_password", value):
-                    return _replace_password(*value)
+                    return _replace_password(value[0], value[1], is_alpha=is_alpha)
                 case ("cmk_postprocessed", "no_proxy", str()):
-                    return ReplacementResult(NoProxy(), {}, {})
+                    return ReplacementResult(alpha.NoProxy() if is_alpha else v1.NoProxy(), {}, {})
                 case ("cmk_postprocessed", "environment_proxy", str()):
-                    return ReplacementResult(EnvProxy(), {}, {})
+                    return ReplacementResult(
+                        alpha.EnvProxy() if is_alpha else v1.EnvProxy(), {}, {}
+                    )
                 case (
                     "cmk_postprocessed",
                     "stored_proxy" | "explicit_proxy" as proxy_type,
                     str(proxy_spec),
                 ):
-                    return _replace_url_proxies(proxy_type, proxy_spec, global_proxies, usage_hint)
+                    return (
+                        _replace_alpha_url_proxies(
+                            proxy_type, proxy_spec, global_proxies, usage_hint
+                        )
+                        if is_alpha
+                        else _replace_v1_url_proxies(
+                            proxy_type, proxy_spec, global_proxies, usage_hint
+                        )
+                    )
 
             results = [
                 _processed_config_value(v, global_proxies, usage_hint, is_alpha) for v in params
@@ -141,29 +151,48 @@ def _processed_config_value(
 def _replace_password(
     name: str,
     value: str | None,
+    is_alpha: bool,
 ) -> ReplacementResult:
     # We need some injective function.
     surrogate = id(name)
     return ReplacementResult(
-        value=Secret(surrogate),
+        value=(alpha.Secret if is_alpha else v1.Secret)(surrogate),
         found_secrets={} if value is None else {name: value},
         surrogates={surrogate: name},
     )
 
 
-def _replace_url_proxies(
+def _replace_v1_url_proxies(
     proxy_type: Literal["stored_proxy", "explicit_proxy"],
     proxy_spec: str,
     global_proxies: GlobalProxies,
     usage_hint: str,
-) -> ReplacementResult[EnvProxy | URLProxy]:
+) -> ReplacementResult[v1.EnvProxy | v1.URLProxy]:
     if proxy_type == "explicit_proxy":
-        return ReplacementResult(URLProxy(url=proxy_spec), {}, {})
+        return ReplacementResult(v1.URLProxy(url=proxy_spec), {}, {})
 
     try:
         global_proxy = global_proxies[proxy_spec]
     except KeyError:
         config_warnings.warn(f'The global proxy "{proxy_spec}" ({usage_hint}) does not exist.')
-        return ReplacementResult(EnvProxy(), {}, {})
+        return ReplacementResult(v1.EnvProxy(), {}, {})
 
-    return ReplacementResult(URLProxy(url=global_proxy.url), {}, {})
+    return ReplacementResult(v1.URLProxy(url=global_proxy.url), {}, {})
+
+
+def _replace_alpha_url_proxies(
+    proxy_type: Literal["stored_proxy", "explicit_proxy"],
+    proxy_spec: str,
+    global_proxies: GlobalProxies,
+    usage_hint: str,
+) -> ReplacementResult[alpha.EnvProxy | alpha.URLProxy]:
+    if proxy_type == "explicit_proxy":
+        return ReplacementResult(alpha.URLProxy(url=proxy_spec), {}, {})
+
+    try:
+        global_proxy = global_proxies[proxy_spec]
+    except KeyError:
+        config_warnings.warn(f'The global proxy "{proxy_spec}" ({usage_hint}) does not exist.')
+        return ReplacementResult(alpha.EnvProxy(), {}, {})
+
+    return ReplacementResult(alpha.URLProxy(url=global_proxy.url), {}, {})

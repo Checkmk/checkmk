@@ -40,7 +40,7 @@ import { computed, ref } from 'vue'
 
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
-import FormEdit from '@/form/components/FormEdit.vue'
+import FormApp from '@/form/FormApp.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -758,5 +758,5 @@ const data = ref<Record<string, string>>({})
     <CmkCheckbox v-model="showInputHint" label="show input hint" />
   </div>
   <hr />
-  <FormEdit v-model:data="data" :spec="spec" :backend-validation="validation" />
+  <FormApp id="asdasd" :data="data" :spec="spec" display_mode="edit" :validation="validation" />
 </template>

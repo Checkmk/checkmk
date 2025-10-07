@@ -24,7 +24,7 @@ from cmk.gui.dashboard import (
 )
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.features import Features, features_registry
-from cmk.gui.graphing import cre as graphing_cre
+from cmk.gui.graphing.cre import registration as graphing_registration
 from cmk.gui.graphing_main import PageGraphDashlet, PageHostServiceGraphPopup
 from cmk.gui.help_menu import (
     default_about_checkmk_entries,
@@ -332,7 +332,7 @@ def register(edition: Edition, *, ignore_duplicate_endpoints: bool = False) -> N
         BuiltinViewExtender(edition.short, noop_builtin_view_extender)
     )
     agent_commands.register(agent_commands_registry)
-    graphing_cre.register(
+    graphing_registration.register(
         edition,
         page_registry,
         config_variable_registry,

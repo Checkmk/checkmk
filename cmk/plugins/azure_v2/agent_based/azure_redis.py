@@ -11,7 +11,6 @@ from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
-    IgnoreResultsError,
     InventoryPlugin,
     render,
     Result,
@@ -24,11 +23,11 @@ from cmk.plugins.azure_v2.agent_based.lib import (
     create_discover_by_metrics_function_single,
     inventory_common_azure,
     MetricData,
-    parse_resources,
-    Section,
+    parse_resource,
+    Resource,
 )
 
-agent_section_azure_redis = AgentSection(name="azure_v2_redis", parse_function=parse_resources)
+agent_section_azure_redis = AgentSection(name="azure_v2_redis", parse_function=parse_resource)
 
 inventory_plugin_azure_redis = InventoryPlugin(
     name="azure_v2_redis",
@@ -252,7 +251,7 @@ check_plugin_azure_redis_latency = CheckPlugin(
 )
 
 
-def check_azure_redis_replication(params: Mapping[str, Any], section: Section) -> CheckResult:
+def check_azure_redis_replication(params: Mapping[str, Any], section: Resource) -> CheckResult:
     """
     Check function for Azure Redis replication.
 
@@ -264,11 +263,7 @@ def check_azure_redis_replication(params: Mapping[str, Any], section: Section) -
     For "GeoReplicationConnectivityLag" we can use the normal
     check_resource_metrics, since it's just in seconds.
     """
-    if len(section) != 1:
-        raise IgnoreResultsError("Only one resource expected")
-
-    resource = list(section.values())[0]
-    health_metric = resource.metrics.get("minimum_GeoReplicationHealthy")
+    health_metric = section.metrics.get("minimum_GeoReplicationHealthy")
     if health_metric is not None:
         is_healthy = health_metric.value == 1
         if is_healthy:
@@ -277,7 +272,7 @@ def check_azure_redis_replication(params: Mapping[str, Any], section: Section) -
             yield Result(state=State(params["replication_unhealthy_status"]), summary="Unhealthy")
 
     yield from check_resource_metrics(
-        resource,
+        section,
         params,
         [
             MetricData(

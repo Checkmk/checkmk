@@ -17,141 +17,139 @@ import time_machine
 
 from cmk.agent_based.v2 import CheckPlugin, Metric, Result, State
 from cmk.plugins.azure_v2.agent_based import azure_redis
-from cmk.plugins.azure_v2.agent_based.lib import AzureMetric, Resource, Section
+from cmk.plugins.azure_v2.agent_based.lib import AzureMetric, Resource
 
-AZURE_REDIS_WITH_METRICS = {
-    "az-redis-test": Resource(
-        id=(
-            "/subscriptions/ba9f74ff-6a4c-41e0-ab55-15c7fe79632f/resourceGroups/test-rg/"
-            "providers/Microsoft.Cache/Redis/az-redis-test"
-        ),
-        name="az-redis-test",
-        type="Microsoft.Cache/Redis",
-        group="test-rg",
-        kind=None,
-        location="germanywestcentral",
-        tags={},
-        properties={},
-        specific_info={},
-        metrics={
-            "maximum_allconnectedclients": AzureMetric(
-                name="allconnectedclients",
-                aggregation="maximum",
-                value=3,
-                unit="count",
-            ),
-            "maximum_allConnectionsCreatedPerSecond": AzureMetric(
-                name="allConnectionsCreatedPerSecond",
-                aggregation="maximum",
-                value=2,
-                unit="countpersecond",
-            ),
-            "maximum_allConnectionsClosedPerSecond": AzureMetric(
-                name="allConnectionsClosedPerSecond",
-                aggregation="maximum",
-                value=2,
-                unit="countpersecond",
-            ),
-            "maximum_allpercentprocessortime": AzureMetric(
-                name="allpercentprocessortime",
-                aggregation="maximum",
-                value=25,
-                unit="percent",
-            ),
-            "total_allcachehits": AzureMetric(
-                name="allcachehits",
-                aggregation="total",
-                value=385,
-                unit="count",
-            ),
-            "total_allcachemisses": AzureMetric(
-                name="allcachemisses",
-                aggregation="total",
-                value=99,
-                unit="count",
-            ),
-            "total_cachemissrate": AzureMetric(
-                name="cachemissrate",
-                aggregation="total",
-                value=20.454545454545457,
-                unit="percent",
-            ),
-            "total_allgetcommands": AzureMetric(
-                name="allgetcommands",
-                aggregation="total",
-                value=484,
-                unit="count",
-            ),
-            "total_allusedmemorypercentage": AzureMetric(
-                name="allusedmemorypercentage",
-                aggregation="total",
-                value=29,
-                unit="percent",
-            ),
-            "total_allusedmemoryRss": AzureMetric(
-                name="allusedmemoryRss",
-                aggregation="total",
-                value=60170240,
-                unit="bytes",
-            ),
-            "total_allevictedkeys": AzureMetric(
-                name="allevictedkeys",
-                aggregation="total",
-                value=42,
-                unit="count",
-            ),
-            "total_allexpiredkeys": AzureMetric(
-                name="allexpiredkeys",
-                aggregation="total",
-                value=140,
-                unit="count",
-            ),
-            "average_LatencyP99": AzureMetric(
-                name="LatencyP99",
-                aggregation="average",
-                value=19765,
-                unit="count",
-            ),
-            "average_cacheLatency": AzureMetric(
-                name="cacheLatency",
-                aggregation="average",
-                value=11469.8,
-                unit="count",
-            ),
-            "minimum_GeoReplicationHealthy": AzureMetric(
-                name="GeoReplicationHealthy",
-                aggregation="minimum",
-                value=1,
-                unit="count",
-            ),
-            "average_GeoReplicationConnectivityLag": AzureMetric(
-                name="GeoReplicationConnectivityLag",
-                aggregation="average",
-                value=2.5,
-                unit="seconds",
-            ),
-            "maximum_allcacheRead": AzureMetric(
-                name="allcacheRead",
-                aggregation="maximum",
-                value=40706,
-                unit="bytespersecond",
-            ),
-            "maximum_allcacheWrite": AzureMetric(
-                name="allcacheWrite",
-                aggregation="maximum",
-                value=31375,
-                unit="bytespersecond",
-            ),
-            "maximum_serverLoad": AzureMetric(
-                name="serverLoad",
-                aggregation="maximum",
-                value=26,
-                unit="percent",
-            ),
-        },
-        subscription="ba9f74ff-6a4c-41e0-ab55-15c7fe79632f",
+AZURE_REDIS_WITH_METRICS = Resource(
+    id=(
+        "/subscriptions/ba9f74ff-6a4c-41e0-ab55-15c7fe79632f/resourceGroups/test-rg/"
+        "providers/Microsoft.Cache/Redis/az-redis-test"
     ),
-}
+    name="az-redis-test",
+    type="Microsoft.Cache/Redis",
+    group="test-rg",
+    kind=None,
+    location="germanywestcentral",
+    tags={},
+    properties={},
+    specific_info={},
+    metrics={
+        "maximum_allconnectedclients": AzureMetric(
+            name="allconnectedclients",
+            aggregation="maximum",
+            value=3,
+            unit="count",
+        ),
+        "maximum_allConnectionsCreatedPerSecond": AzureMetric(
+            name="allConnectionsCreatedPerSecond",
+            aggregation="maximum",
+            value=2,
+            unit="countpersecond",
+        ),
+        "maximum_allConnectionsClosedPerSecond": AzureMetric(
+            name="allConnectionsClosedPerSecond",
+            aggregation="maximum",
+            value=2,
+            unit="countpersecond",
+        ),
+        "maximum_allpercentprocessortime": AzureMetric(
+            name="allpercentprocessortime",
+            aggregation="maximum",
+            value=25,
+            unit="percent",
+        ),
+        "total_allcachehits": AzureMetric(
+            name="allcachehits",
+            aggregation="total",
+            value=385,
+            unit="count",
+        ),
+        "total_allcachemisses": AzureMetric(
+            name="allcachemisses",
+            aggregation="total",
+            value=99,
+            unit="count",
+        ),
+        "total_cachemissrate": AzureMetric(
+            name="cachemissrate",
+            aggregation="total",
+            value=20.454545454545457,
+            unit="percent",
+        ),
+        "total_allgetcommands": AzureMetric(
+            name="allgetcommands",
+            aggregation="total",
+            value=484,
+            unit="count",
+        ),
+        "total_allusedmemorypercentage": AzureMetric(
+            name="allusedmemorypercentage",
+            aggregation="total",
+            value=29,
+            unit="percent",
+        ),
+        "total_allusedmemoryRss": AzureMetric(
+            name="allusedmemoryRss",
+            aggregation="total",
+            value=60170240,
+            unit="bytes",
+        ),
+        "total_allevictedkeys": AzureMetric(
+            name="allevictedkeys",
+            aggregation="total",
+            value=42,
+            unit="count",
+        ),
+        "total_allexpiredkeys": AzureMetric(
+            name="allexpiredkeys",
+            aggregation="total",
+            value=140,
+            unit="count",
+        ),
+        "average_LatencyP99": AzureMetric(
+            name="LatencyP99",
+            aggregation="average",
+            value=19765,
+            unit="count",
+        ),
+        "average_cacheLatency": AzureMetric(
+            name="cacheLatency",
+            aggregation="average",
+            value=11469.8,
+            unit="count",
+        ),
+        "minimum_GeoReplicationHealthy": AzureMetric(
+            name="GeoReplicationHealthy",
+            aggregation="minimum",
+            value=1,
+            unit="count",
+        ),
+        "average_GeoReplicationConnectivityLag": AzureMetric(
+            name="GeoReplicationConnectivityLag",
+            aggregation="average",
+            value=2.5,
+            unit="seconds",
+        ),
+        "maximum_allcacheRead": AzureMetric(
+            name="allcacheRead",
+            aggregation="maximum",
+            value=40706,
+            unit="bytespersecond",
+        ),
+        "maximum_allcacheWrite": AzureMetric(
+            name="allcacheWrite",
+            aggregation="maximum",
+            value=31375,
+            unit="bytespersecond",
+        ),
+        "maximum_serverLoad": AzureMetric(
+            name="serverLoad",
+            aggregation="maximum",
+            value=26,
+            unit="percent",
+        ),
+    },
+    subscription="ba9f74ff-6a4c-41e0-ab55-15c7fe79632f",
+)
 
 EPOCH = 1757328437.8742359
 
@@ -161,12 +159,12 @@ def resource_fixture_but(**kwargs):
     Return a copy of AZURE_REDIS_WITH_METRICS, but with some metric values
     overridden.
     """
-    resources = deepcopy(AZURE_REDIS_WITH_METRICS)
+    resource = deepcopy(AZURE_REDIS_WITH_METRICS)
     for k, v in kwargs.items():
-        metric = resources["az-redis-test"].metrics[k]
-        assert isinstance(resources["az-redis-test"].metrics, dict)  # Hack, mypy
-        resources["az-redis-test"].metrics[k] = metric._replace(value=v)
-    return resources
+        metric = resource.metrics[k]
+        assert isinstance(resource.metrics, dict)  # Hack, mypy
+        resource.metrics[k] = metric._replace(value=v)
+    return resource
 
 
 @pytest.mark.parametrize(
@@ -364,7 +362,7 @@ def resource_fixture_but(**kwargs):
     ],
 )
 def test_check_azure_redis_check_functions(
-    section: Section,
+    section: Resource,
     check_plugin: CheckPlugin,
     params: Mapping[str, Any],
     expected_result: Sequence[Result | Metric],

@@ -405,10 +405,9 @@ rulespec_registry.register(
 
 # TODO: migrate and move to new folder structure
 rulespec_registry.register(
-    CheckParameterRulespecWithItem(
+    CheckParameterRulespecWithoutItem(
         check_group_name="azure_v2_vms",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_azure_vms,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_vms,
         title=lambda: _("Azure virtual machines"),
@@ -516,17 +515,6 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_vms_summary,
         title=lambda: _("Azure virtual machines summary  (deprecated)"),
-    )
-)
-
-# TODO: migrate and move to new folder structure
-rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
-        check_group_name="azure_v2_vms_summary",
-        group=RulespecGroupCheckParametersApplications,
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_azure_vms_summary,
-        title=lambda: _("Azure virtual machines summary"),
     )
 )
 

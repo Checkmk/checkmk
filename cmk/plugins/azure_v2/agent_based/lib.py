@@ -262,21 +262,17 @@ def create_discover_by_metrics_function(
 def create_discover_by_metrics_function_single(
     *desired_metrics: str,
     resource_types: Sequence[str] | None = None,
-) -> Callable[[Section], DiscoveryResult]:
+) -> Callable[[Resource], DiscoveryResult]:
     """
     Return a discovery function, that will discover if any of the metrics are found
     only if there is one resource in the section; doesn't return an item
     """
 
-    def discovery_function(section: Section) -> DiscoveryResult:
-        if len(section) != 1:
-            return
-
-        resource = list(section.values())[0]
-        if (resource_types is None or any(rtype == resource.type for rtype in resource_types)) and (
-            set(desired_metrics) & set(resource.metrics)
+    def discovery_function(section: Resource) -> DiscoveryResult:
+        if (resource_types is None or any(rtype == section.type for rtype in resource_types)) and (
+            set(desired_metrics) & set(section.metrics)
         ):
-            yield Service(labels=get_service_labels_from_resource_tags(resource.tags))
+            yield Service(labels=get_service_labels_from_resource_tags(section.tags))
 
     return discovery_function
 
@@ -400,16 +396,10 @@ def create_check_metrics_function_single(
     metrics_data: Sequence[MetricData],
     suppress_error: bool = False,
     check_levels: Callable[..., Iterable[Result | Metric]] = check_levels_v1,
-) -> Callable[[Mapping[str, Any], Section], CheckResult]:
-    def check_metric(params: Mapping[str, Any], section: Section) -> CheckResult:
-        if len(section) != 1:
-            if suppress_error:
-                return
-            raise IgnoreResultsError("Only one resource expected")
-
-        resource = list(section.values())[0]
+) -> Callable[[Mapping[str, Any], Resource], CheckResult]:
+    def check_metric(params: Mapping[str, Any], section: Resource) -> CheckResult:
         yield from check_resource_metrics(
-            resource, params, metrics_data, suppress_error, check_levels
+            section, params, metrics_data, suppress_error, check_levels
         )
 
     return check_metric
@@ -522,8 +512,7 @@ def check_storage() -> CheckFunction:
     )
 
 
-def inventory_common_azure(section: Section) -> InventoryResult:
-    resource = list(section.values())[0]
+def inventory_common_azure(section: Resource) -> InventoryResult:
     path = ["software", "applications", "azure"]
 
     # Table label -> resource dict key
@@ -544,7 +533,7 @@ def inventory_common_azure(section: Section) -> InventoryResult:
 
     for label, value in mapping.items() | hardcoded_values.items():
         if label in mapping:
-            row_value = getattr(resource, value, None)
+            row_value = getattr(section, value, None)
         else:
             row_value = value
 
@@ -555,7 +544,7 @@ def inventory_common_azure(section: Section) -> InventoryResult:
                 inventory_columns={"value": row_value},
             )
 
-    for tag_key, tag_value in (resource.tags or {}).items():
+    for tag_key, tag_value in (section.tags or {}).items():
         yield TableRow(
             path=path + ["tags"],
             key_columns={"name": tag_key},
@@ -621,3 +610,9 @@ def _threshold_hit_for_time[NumberT: (int, float)](
                 label=label,
                 notice_only=True,
             )
+
+
+def parse_resource(string_table: StringTable) -> Resource | None:
+    if not (resources := parse_resources(string_table)):
+        return None
+    return list(resources.values())[0]

@@ -63,6 +63,10 @@ if [ -e /etc/redhat-release ]; then
             echo "ALMALINUX${SEP}9"
             exit 0
         fi
+        if [[ "${VERSION:0:22}" =~ "AlmaLinux release 10."(0|1) ]]; then
+            echo "ALMALINUX${SEP}10"
+            exit 0
+        fi
     fi
 fi
 

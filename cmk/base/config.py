@@ -692,6 +692,7 @@ def _perform_post_config_loading_actions(
         cmc_log_levels=cmc_log_levels,
         cluster_max_cachefile_age=cluster_max_cachefile_age,
         http_proxies=http_proxies,
+        extra_service_conf=extra_service_conf,
     )
 
     config_cache = ConfigCache(loaded_config).initialize()
@@ -2974,7 +2975,7 @@ class ConfigCache:
         attrs = dict[str, object](
             check_interval=SERVICE_CHECK_INTERVAL,
         )
-        for key, ruleset in extra_service_conf.items():
+        for key, ruleset in self._loaded_config.extra_service_conf.items():
             values = self.ruleset_matcher.get_service_values_all(
                 host_name, service_name, service_labels, ruleset, self.label_manager.labels_of_host
             )
@@ -3647,7 +3648,7 @@ def make_parser_config(
     label_manager: LabelManager,
 ) -> ParserConfig:
     check_interval_config = SingleServiceRulesetMatcherFirst(
-        extra_service_conf.get("check_interval", ()),
+        loaded_config.extra_service_conf.get("check_interval", ()),
         SERVICE_CHECK_INTERVAL,
         ruleset_matcher,
         label_manager.labels_of_host,

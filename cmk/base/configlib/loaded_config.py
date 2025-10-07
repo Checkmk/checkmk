@@ -104,3 +104,4 @@ class LoadedConfigFragment:
     cmc_log_levels: Mapping[str, int]
     cluster_max_cachefile_age: int
     http_proxies: Mapping[str, Mapping[str, str]]
+    extra_service_conf: Mapping[str, Sequence[RuleSpec[object]]]

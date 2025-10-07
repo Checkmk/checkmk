@@ -6,7 +6,7 @@
 from collections.abc import Sequence
 
 from cmk.gui.display_options import display_options
-from cmk.gui.graphing._from_api import metrics_from_api, perfometers_from_api
+from cmk.gui.graphing import metrics_from_api, perfometers_from_api
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import response
 from cmk.gui.i18n import _

@@ -32,11 +32,14 @@ from cmk.gui.dashboard.type_defs import (
     SingleTimeseriesDashletConfig,
 )
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.graphing import metric_backend_registry
-from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api
-from cmk.gui.graphing._graph_render_config import GraphRenderConfig
-from cmk.gui.graphing._html_render import host_service_graph_dashlet_cmk
-from cmk.gui.graphing._unit import get_temperature_unit
+from cmk.gui.graphing import (
+    get_temperature_unit,
+    GraphRenderConfig,
+    graphs_from_api,
+    host_service_graph_dashlet_cmk,
+    metric_backend_registry,
+    metrics_from_api,
+)
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _

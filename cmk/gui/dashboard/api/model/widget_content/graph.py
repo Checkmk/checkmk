@@ -20,9 +20,12 @@ from cmk.gui.dashboard.type_defs import (
     ProblemsGraphDashletConfig,
     SingleTimeseriesDashletConfig,
 )
-from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api
+from cmk.gui.graphing import graphs_from_api, metrics_from_api
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
-from cmk.gui.openapi.framework.model.common_fields import timerange_from_internal, TimerangeModel
+from cmk.gui.openapi.framework.model.common_fields import (
+    timerange_from_internal,
+    TimerangeModel,
+)
 from cmk.gui.openapi.framework.model.converter import RegistryConverter
 from cmk.gui.type_defs import GraphPresentation, GraphRenderOptionsVS, SizePT
 

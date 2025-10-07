@@ -15,24 +15,18 @@ from cmk.graphing.v1 import graphs as graphs_api
 from cmk.gui.config import active_config
 from cmk.gui.graphing import (
     FetchTimeSeries,
-    metric_backend_registry,
-)
-from cmk.gui.graphing._from_api import (
-    graphs_from_api,
-    metrics_from_api,
-    RegisteredMetric,
-)
-from cmk.gui.graphing._graph_render_config import (
+    get_temperature_unit,
+    get_template_graph_specification,
     GraphRenderConfig,
     GraphRenderOptions,
-)
-from cmk.gui.graphing._graph_templates import get_template_graph_specification
-from cmk.gui.graphing._html_render import (
+    graphs_from_api,
     make_graph_data_range,
+    metric_backend_registry,
+    metrics_from_api,
+    RegisteredMetric,
     render_graphs_from_specification_html,
+    vs_graph_render_options,
 )
-from cmk.gui.graphing._unit import get_temperature_unit
-from cmk.gui.graphing._valuespecs import vs_graph_render_options
 from cmk.gui.http import Request, Response, response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import LoggedInUser

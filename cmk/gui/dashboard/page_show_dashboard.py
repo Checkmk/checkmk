@@ -24,7 +24,7 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.crash_handler import GUIDetails
 from cmk.gui.exceptions import MKAuthException, MKMissingDataError, MKUserError
-from cmk.gui.graphing._utils import MKCombinedGraphLimitExceededError
+from cmk.gui.graphing import MKCombinedGraphLimitExceededError
 from cmk.gui.hooks import call as call_hooks
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header

@@ -11,7 +11,6 @@ from dataclasses import dataclass
 from functools import partial
 from typing import Any, assert_never, cast, Literal, Self, TypeVar
 
-import cmk.gui.graphing._valuespecs as legacy_graphing_valuespecs
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import inventory as legacy_inventory_groups
@@ -27,9 +26,13 @@ from cmk.gui.form_specs.unstable import (
     UserSelection,
 )
 from cmk.gui.form_specs.unstable.legacy_converter import SimplePassword, Tuple
+from cmk.gui.graphing import MetricName
 from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.userdb._user_selection import UserSelection as LegacyUserSelection
-from cmk.gui.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
+from cmk.gui.utils.autocompleter_config import (
+    AutocompleterConfig,
+    ContextAutocompleterConfig,
+)
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import AjaxDropdownChoice, Transform
@@ -2262,7 +2265,7 @@ def _convert_to_legacy_file_upload(
 
 def _convert_to_legacy_metric_name(
     to_convert: ruleset_api_v1.form_specs.Metric, localizer: Callable[[str], str]
-) -> legacy_graphing_valuespecs.MetricName:
+) -> MetricName:
     converted_kwargs = {}
     if (help_text := _localize_optional(to_convert.help_text, localizer)) is None:
         help_text = ruleset_api_v1.Help("Select from a list of metrics known to Checkmk").localize(
@@ -2271,7 +2274,7 @@ def _convert_to_legacy_metric_name(
     converted_kwargs["help"] = help_text
     if (title := _localize_optional(to_convert.title, localizer)) is not None:
         converted_kwargs["title"] = title
-    return legacy_graphing_valuespecs.MetricName(**converted_kwargs)
+    return MetricName(**converted_kwargs)
 
 
 def _convert_to_legacy_monitored_host_name(

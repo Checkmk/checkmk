@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 
 from cmk.gui.config import Config
-from cmk.gui.graphing._from_api import metrics_from_api, perfometers_from_api
+from cmk.gui.graphing import metrics_from_api, perfometers_from_api
 from cmk.gui.http import Request
 from cmk.gui.i18n import _l
 from cmk.gui.log import logger

@@ -20,10 +20,12 @@ from cmk.gui.dashboard.type_defs import (
     TopListColumnConfig,
     TopListDashletConfig,
 )
-from cmk.gui.graphing._from_api import metrics_from_api
-from cmk.gui.graphing._valuespecs import id_from_unit_spec
+from cmk.gui.graphing import id_from_unit_spec, metrics_from_api
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
-from cmk.gui.openapi.framework.model.common_fields import timerange_from_internal, TimerangeModel
+from cmk.gui.openapi.framework.model.common_fields import (
+    timerange_from_internal,
+    TimerangeModel,
+)
 from cmk.gui.openapi.framework.model.converter import RegistryConverter
 
 from ..type_defs import ColorHex

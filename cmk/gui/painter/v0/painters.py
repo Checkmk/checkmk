@@ -16,14 +16,17 @@ from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.gui import sites
 from cmk.gui.color import render_color_icon
 from cmk.gui.config import Config
-from cmk.gui.graphing._from_api import metrics_from_api, RegisteredMetric
-from cmk.gui.graphing._metrics import get_metric_spec, registered_metric_ids_and_titles
-from cmk.gui.graphing._translated_metrics import (
+from cmk.gui.graphing import (
+    get_metric_spec,
+    get_temperature_unit,
+    metrics_from_api,
     parse_perf_data,
+    registered_metric_ids_and_titles,
+    RegisteredMetric,
     translate_metrics,
     TranslatedMetric,
+    user_specific_unit,
 )
-from cmk.gui.graphing._unit import get_temperature_unit, user_specific_unit
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html

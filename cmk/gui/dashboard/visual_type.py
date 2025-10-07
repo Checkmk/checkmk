@@ -9,8 +9,11 @@ from typing import cast
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
-from cmk.gui.graphing._graph_specification import GraphSpecification, parse_raw_graph_specification
-from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
+from cmk.gui.graphing import (
+    GraphSpecification,
+    parse_raw_graph_specification,
+    TemplateGraphSpecification,
+)
 from cmk.gui.http import response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -20,8 +23,18 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visuals.type import VisualType
 
 from .dashlet import copy_view_into_dashlet, dashlet_registry, DashletConfig
-from .store import add_dashlet, get_all_dashboards, get_permitted_dashboards, load_dashboard
-from .type_defs import ABCGraphDashletConfig, DashboardConfig, DashboardName, ViewDashletConfig
+from .store import (
+    add_dashlet,
+    get_all_dashboards,
+    get_permitted_dashboards,
+    load_dashboard,
+)
+from .type_defs import (
+    ABCGraphDashletConfig,
+    DashboardConfig,
+    DashboardName,
+    ViewDashletConfig,
+)
 
 
 class VisualTypeDashboards(VisualType):

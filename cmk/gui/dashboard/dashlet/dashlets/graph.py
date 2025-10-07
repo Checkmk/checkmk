@@ -19,29 +19,25 @@ from cmk.gui import sites
 from cmk.gui.config import active_config, Config
 from cmk.gui.dashboard.type_defs import DashletId, DashletSize
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
-from cmk.gui.graphing._from_api import (
-    graphs_from_api,
-    metrics_from_api,
-    RegisteredMetric,
-)
-from cmk.gui.graphing._graph_render_config import (
-    GraphRenderConfig,
-    GraphRenderOptions,
-)
-from cmk.gui.graphing._graph_specification import GraphSpecification
-from cmk.gui.graphing._graph_templates import (
+from cmk.gui.graphing import (
     get_graph_template_choices,
+    get_metric_spec,
+    get_temperature_unit,
     get_template_graph_specification,
     graph_and_single_metric_template_choices_for_metrics,
+    GraphDestinations,
+    GraphRenderConfig,
+    GraphRenderOptions,
+    graphs_from_api,
+    GraphSpecification,
     GraphTemplateChoice,
+    metrics_from_api,
+    MKCombinedGraphLimitExceededError,
+    RegisteredMetric,
     TemplateGraphSpecification,
+    translated_metrics_from_row,
+    vs_graph_render_options,
 )
-from cmk.gui.graphing._html_render import GraphDestinations
-from cmk.gui.graphing._metrics import get_metric_spec
-from cmk.gui.graphing._translated_metrics import translated_metrics_from_row
-from cmk.gui.graphing._unit import get_temperature_unit
-from cmk.gui.graphing._utils import MKCombinedGraphLimitExceededError
-from cmk.gui.graphing._valuespecs import vs_graph_render_options
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user

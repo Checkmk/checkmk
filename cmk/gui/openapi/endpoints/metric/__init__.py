@@ -11,10 +11,13 @@ REST-API.
 from cmk.ccc.version import Edition, edition
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.graphing import metric_backend_registry
-from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api
-from cmk.gui.graphing._graph_images import graph_spec_from_request
-from cmk.gui.graphing._unit import get_temperature_unit
+from cmk.gui.graphing import (
+    get_temperature_unit,
+    graph_spec_from_request,
+    graphs_from_api,
+    metric_backend_registry,
+    metrics_from_api,
+)
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.metric import request_schemas, response_schemas
 from cmk.gui.openapi.endpoints.metric.common import (

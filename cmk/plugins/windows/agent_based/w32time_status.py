@@ -7,7 +7,7 @@
 # (W32TIME_STATUS_INFO docs... provides some technical insight into what `w32tm` is showing.)
 
 # Example output from agent (but note all strings and numbers are localized):
-# <<<w32time_status:sep(0)>>>
+# <<<w32time_status>>>
 # Leap Indicator: 0(no warning)
 # Stratum: 4 (secondary reference - syncd by (S)NTP)
 # Precision: -23 (119.209ns per tick)
@@ -28,7 +28,7 @@
 
 
 # Example with service started but not yet synced
-# <<<w32time_status:sep(0)>>>
+# <<<w32time_status>>>
 # Leap Indicator: 3(not synchronized)
 # Stratum: 0 (unspecified)
 # Precision: -23 (119.209ns per tick)
@@ -115,14 +115,21 @@ class QueryStatus:
 
 
 def parse_w32time_status(string_table: StringTable) -> QueryStatus:
-    # Hack, in some languages (e.g. German) some lines may run long and wrap
-    # If there is no ":" to split on, just drop the lines. In theory this isn't
-    # really enough, because a partial line could probably have a ":" in it. In
-    # practice and testing, it has been fine.
-    string_table = [s for s in string_table if ":" in s[0]]
+    lines = []
 
-    # Important that we split on ":" and not ": " as some languages have some lines without a space.
-    lines = [s[0].split(":", 1)[1].strip() for s in string_table]
+    for row in string_table:
+        line = " ".join(row)
+
+        # Hack, in some languages (e.g. German) some lines may run long and wrap
+        # If there is no ":" to split on, just drop the lines. In theory this isn't
+        # really enough, because a partial line could probably have a ":" in it. In
+        # practice and testing, it has been fine.
+        if ":" not in line:
+            continue
+
+        # Important that we split on ":" and not ": " as some languages have some lines without a space.
+        value = line.split(":", 1)[1].strip()
+        lines.append(value)
 
     # Some of these are probably not useful and can go away.
     query_status = QueryStatus(

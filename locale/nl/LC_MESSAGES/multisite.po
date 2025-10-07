@@ -3966,6 +3966,10 @@ msgstr "OID-beschrijvingen toevoegen"
 msgid "Add OpenTelemetry collector configuration"
 msgstr "Nieuwe gebruikersconfiguratie toevoegen"
 
+#, fuzzy
+msgid "Add OpenTelemetry configuration"
+msgstr "Nieuwe gebruikersconfiguratie toevoegen"
+
 msgid "Add Prefix"
 msgstr "Voorvoegsel toevoegen"
 
@@ -7047,6 +7051,10 @@ msgstr "Application Load Balancer Doelgroepen"
 #, fuzzy
 msgid "Application load balancers"
 msgstr "Load balancers voor toepassingen"
+
+#, fuzzy
+msgid "Application monitoring"
+msgstr "Zoeken in Toezicht"
 
 msgid "Application name"
 msgstr "Naam van de toepassing"
@@ -13765,6 +13773,11 @@ msgid "Click on 'Register %s' to enable two-factor authentication via %s."
 msgstr "Twee-factor authenticatie verwijderen van %s"
 
 msgid ""
+"Click the \"Add OpenTelemetry configuration\" button to start setting up "
+"your first OpenTelemetry configuration."
+msgstr ""
+
+msgid ""
 "Click the \"Add Relay\" button to start setting up your first Relay "
 "configuration."
 msgstr ""
@@ -16941,6 +16954,14 @@ msgstr "Kritisch op een gebruik van"
 msgid "Critical at a utilization of"
 msgstr "Kritisch bij een gebruik van"
 
+#, fuzzy
+msgid "Critical at failure count"
+msgstr "Kritisch op een gebruik van"
+
+#, fuzzy
+msgid "Critical at l/s"
+msgstr "Kritisch op"
+
 msgid "Critical at or above"
 msgstr "Kritisch op of boven"
 
@@ -16974,6 +16995,10 @@ msgid "Critical if at"
 msgstr "Kritisch als op"
 
 msgid "Critical if below"
+msgstr "Kritisch indien onder"
+
+#, fuzzy
+msgid "Critical if below l/s"
 msgstr "Kritisch indien onder"
 
 #, fuzzy
@@ -17208,10 +17233,6 @@ msgstr ""
 
 msgid "Custom Action"
 msgstr "Aangepaste actie"
-
-#, fuzzy
-msgid "Custom ClickHouse Instance"
-msgstr "Aangepaste sondestatus"
 
 #, python-format
 msgid "Custom GUI design of %s"
@@ -28208,6 +28229,10 @@ msgstr "GCP-diensten voor toezicht"
 #, fuzzy
 msgid "HTTP(S) load balancer"
 msgstr "Load balancers"
+
+#, fuzzy
+msgid "HTTP(S) port"
+msgstr "TCP-poort"
 
 #, fuzzy
 msgid "HTTP, TCP, email, ..."
@@ -42113,10 +42138,6 @@ msgstr "Methode van sonderen"
 msgid "Metric"
 msgstr "Metrisch"
 
-#, fuzzy
-msgid "Metric Filters"
-msgstr "Service Filters"
-
 msgid "Metric Forecast"
 msgstr "Metrische prognose"
 
@@ -42130,6 +42151,10 @@ msgstr "Oracle gevallen"
 #, fuzzy
 msgid "Metric configuration"
 msgstr "Host configuratie"
+
+#, fuzzy
+msgid "Metric filters"
+msgstr "Service Filters"
 
 msgid "Metric label"
 msgstr "Metrisch etiket"
@@ -44593,6 +44618,10 @@ msgid "No Levels"
 msgstr "Geen niveaus"
 
 #, fuzzy
+msgid "No OpenTelemetry configuration yet"
+msgstr "Host configuratie"
+
+#, fuzzy
 msgid "No PNP templates using the deprecated API"
 msgstr "Geen controleplugins die de verouderde API gebruiken"
 
@@ -47028,12 +47057,12 @@ msgid "OTLP endpoint"
 msgstr "Eindpunt"
 
 #, fuzzy
-msgid "OTel Metrics"
-msgstr "Metriek"
-
-#, fuzzy
 msgid "OTel collector memory usage"
 msgstr "Netscaler Geheugen Gebruik"
+
+#, fuzzy
+msgid "OTel metrics"
+msgstr "Metriek"
 
 #, fuzzy
 msgid "OVS bonding"
@@ -47727,6 +47756,10 @@ msgstr "OpenHardwareMonitor S.M.A.R.T."
 
 msgid "OpenLDAP"
 msgstr "OpenLDAP"
+
+#, fuzzy
+msgid "OpenTelemetry"
+msgstr "Configuratie toestand toevoegen"
 
 #, fuzzy
 msgid "OpenTelemetry (experimental)"
@@ -49443,6 +49476,10 @@ msgstr ""
 
 #, fuzzy
 msgid "PGs Active + Clean + Inconsistent"
+msgstr "Primair - Inconsistent"
+
+#, fuzzy
+msgid "PGs Active + Clean + Laggy"
 msgstr "Primair - Inconsistent"
 
 msgid "PGs Active + Clean + Remapped"
@@ -67824,9 +67861,6 @@ msgstr ""
 msgid "The identifier of the chassis."
 msgstr "De identificator van het chassis."
 
-msgid "The identifier of the detector."
-msgstr "De identificator van de detector."
-
 msgid "The identifier of the fan."
 msgstr "De identificator van de ventilator."
 
@@ -84402,6 +84436,14 @@ msgstr "Waarschuwing bij een gebruik van"
 msgid "Warning at a utilization of"
 msgstr "Waarschuwing bij een gebruik van"
 
+#, fuzzy
+msgid "Warning at failure count"
+msgstr "Waarschuwing bij een gebruik van"
+
+#, fuzzy
+msgid "Warning at l/s"
+msgstr "Waarschuwing bij"
+
 msgid "Warning at or above"
 msgstr "Waarschuwing op of boven"
 
@@ -84432,6 +84474,10 @@ msgid "Warning if at"
 msgstr "Waarschuwing indien bij"
 
 msgid "Warning if below"
+msgstr "Waarschuwing indien onder"
+
+#, fuzzy
+msgid "Warning if below l/s"
 msgstr "Waarschuwing indien onder"
 
 #, fuzzy
@@ -89547,9 +89593,6 @@ msgstr "verwachten alle"
 msgid "explicit host labels"
 msgstr "expliciete host labels"
 
-msgid "failures"
-msgstr "mislukkingen"
-
 msgid "fault"
 msgstr "fout"
 
@@ -89967,9 +90010,6 @@ msgstr "kW"
 
 msgid "kernel counter"
 msgstr "kernelteller"
-
-msgid "l/s"
-msgstr "l/s"
 
 #, fuzzy
 msgid "lan - IPMI v1.5 LAN Interface"
@@ -91990,32 +92030,12 @@ msgid "Dashboard settings of %{name}"
 msgstr "Eigenschappen van het dashboard"
 
 #, fuzzy
-msgid "Single graph"
-msgstr "Afgewezen verbindingen"
-
-#, fuzzy
 msgid "Data selection"
 msgstr "Map Selectie"
 
 #, fuzzy
 msgid "Define widget"
 msgstr "Doel toevoegen"
-
-#, fuzzy
-msgid "Service metric"
-msgstr "Dienst Metriek"
-
-#, fuzzy
-msgid "Must select an option"
-msgstr "Afgewezen verbindingen"
-
-#, fuzzy
-msgid "Metric (single)"
-msgstr "Metrisch etiket"
-
-#, fuzzy
-msgid "Graph (combined)"
-msgstr "Grafiek Opties"
 
 #, fuzzy
 msgid "Widget data"
@@ -92037,14 +92057,6 @@ msgid "Host selection"
 msgstr "Map Selectie"
 
 #, fuzzy
-msgid "Service selection"
-msgstr "Map Selectie"
-
-#, fuzzy
-msgid "Metric selection"
-msgstr "Map Selectie"
-
-#, fuzzy
 msgid "Available visualization types"
 msgstr "Beschikbare opties"
 
@@ -92053,8 +92065,66 @@ msgid "Data settings"
 msgstr "Eigenschappen van het dashboard"
 
 #, fuzzy
+msgid "Show background in status color and label"
+msgstr "Achtergrond in statuskleur en label"
+
+#, fuzzy
+msgid "Colorize all states"
+msgstr "alle staten"
+
+#, fuzzy
+msgid "Colorize not UP states"
+msgstr "niet %s staten"
+
+#, fuzzy
+msgid "Show summary for not UP states"
+msgstr "Toon samenvatting voor niet %s staten"
+
+#, fuzzy
 msgid "Widget visualization"
 msgstr "BI-visualisatie"
+
+msgid "Host or sites, depending on context"
+msgstr ""
+
+#, fuzzy
+msgid "Hexagon size"
+msgstr "Maximale grootte"
+
+msgid "Small"
+msgstr ""
+
+#, fuzzy
+msgid "Add & place widget"
+msgstr "Doel toevoegen"
+
+#, fuzzy
+msgid "Single graph"
+msgstr "Afgewezen verbindingen"
+
+#, fuzzy
+msgid "Service metric"
+msgstr "Dienst Metriek"
+
+#, fuzzy
+msgid "Must select an option"
+msgstr "Afgewezen verbindingen"
+
+#, fuzzy
+msgid "Metric (single)"
+msgstr "Metrisch etiket"
+
+#, fuzzy
+msgid "Graph (combined)"
+msgstr "Grafiek Opties"
+
+#, fuzzy
+msgid "Service selection"
+msgstr "Map Selectie"
+
+#, fuzzy
+msgid "Metric selection"
+msgstr "Map Selectie"
 
 #, fuzzy
 msgid "Fixed data range"
@@ -92111,10 +92181,6 @@ msgstr "Extra opties"
 
 msgid "Scatterplot styling"
 msgstr ""
-
-#, fuzzy
-msgid "Add & place widget"
-msgstr "Doel toevoegen"
 
 #, fuzzy
 msgid "Value out of range"
@@ -92581,6 +92647,38 @@ msgid ""
 "systems state, such as how much storage is used or the CPU load."
 msgstr ""
 
+#, fuzzy
+msgid "Configure title and site"
+msgstr "Geen niveaus op inodes"
+
+#, fuzzy
+msgid "Configure OpenTelemetry collector"
+msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy
+msgid "Configure host folder"
+msgstr "Configureer"
+
+#, fuzzy
+msgid "Save & Go to Activate Changes"
+msgstr "Veranderingen niet activeren"
+
+#, fuzzy
+msgid "Select the site where the OpenTelemetry collector will run."
+msgstr ""
+"Specificeer één, meerdere of alle sites waarop deze verbinding moet lopen."
+
+msgid ""
+"Provide a title for the configuration and select the site where the "
+"OpenTelemetry collector will run."
+msgstr ""
+
+#, fuzzy
+msgid "Select the folder your host(s) will be created in."
+msgstr ""
+"Geef aan op welk tijdstip een nieuw bestand voor de voorvalgeschiedenis "
+"wordt aangemaakt."
+
 msgid ""
 "This is a placeholder for the relay setup wizard. The actual implementation "
 "is pending."
@@ -92820,10 +92918,6 @@ msgid "Network devices and SNMP"
 msgstr "Netwerk scan"
 
 #, fuzzy
-msgid "Application monitoring"
-msgstr "Zoeken in Toezicht"
-
-#, fuzzy
 msgid "OpenTelemetry (Beta)"
 msgstr "Configuratie toestand toevoegen"
 
@@ -93027,6 +93121,19 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Custom ClickHouse Instance"
+#~ msgstr "Aangepaste sondestatus"
+
+#~ msgid "The identifier of the detector."
+#~ msgstr "De identificator van de detector."
+
+#~ msgid "failures"
+#~ msgstr "mislukkingen"
+
+#~ msgid "l/s"
+#~ msgstr "l/s"
 
 #, fuzzy
 #~ msgid "Quick filter"

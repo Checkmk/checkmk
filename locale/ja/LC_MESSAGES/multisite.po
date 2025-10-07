@@ -3771,6 +3771,10 @@ msgstr "OIDの説明を追加する"
 msgid "Add OpenTelemetry collector configuration"
 msgstr "OpenTelemetryコレクターの設定を追加する"
 
+#, fuzzy
+msgid "Add OpenTelemetry configuration"
+msgstr "OpenTelemetryコレクターの設定を追加する"
+
 msgid "Add Prefix"
 msgstr "プレフィックスを追加"
 
@@ -6649,6 +6653,10 @@ msgstr "アプリケーションロードバランサーのターゲットグル
 
 msgid "Application load balancers"
 msgstr "アプリケーションロードバランサー"
+
+#, fuzzy
+msgid "Application monitoring"
+msgstr "監視アイコン"
 
 msgid "Application name"
 msgstr "アプリケーション名"
@@ -12932,6 +12940,14 @@ msgstr "「%sを登録」をクリックし、%sによる2要素認証を有効�
 
 #, fuzzy
 msgid ""
+"Click the \"Add OpenTelemetry configuration\" button to start setting up "
+"your first OpenTelemetry configuration."
+msgstr ""
+"\"Add configuration\"ボタンをクリックして、最初のコンフィギュレーションの設定"
+"を開始します。"
+
+#, fuzzy
+msgid ""
 "Click the \"Add Relay\" button to start setting up your first Relay "
 "configuration."
 msgstr ""
@@ -15958,6 +15974,14 @@ msgstr "の使用量でクリティカル"
 msgid "Critical at a utilization of"
 msgstr "の利用で重要"
 
+#, fuzzy
+msgid "Critical at failure count"
+msgstr "の使用量でクリティカル"
+
+#, fuzzy
+msgid "Critical at l/s"
+msgstr "でクリティカル"
+
 msgid "Critical at or above"
 msgstr "以上でクリティカル"
 
@@ -15990,6 +16014,10 @@ msgid "Critical if at"
 msgstr "クリティカル"
 
 msgid "Critical if below"
+msgstr "下回る場合はクリティカル"
+
+#, fuzzy
+msgid "Critical if below l/s"
 msgstr "下回る場合はクリティカル"
 
 msgid "Critical if below or equal"
@@ -16207,10 +16235,6 @@ msgstr "現在、有効化されていない保留中の変更が1つありま�
 
 msgid "Custom Action"
 msgstr "カスタムアクション"
-
-#, fuzzy
-msgid "Custom ClickHouse Instance"
-msgstr "カスタムプローブの状態"
 
 #, python-format
 msgid "Custom GUI design of %s"
@@ -26621,6 +26645,10 @@ msgstr "監視するHTTPウェブサービスのエンドポイント"
 
 msgid "HTTP(S) load balancer"
 msgstr "HTTP(S)ロードバランサー"
+
+#, fuzzy
+msgid "HTTP(S) port"
+msgstr "TCPポート"
 
 msgid "HTTP, TCP, email, ..."
 msgstr "HTTP, TCP, Eメール, ..."
@@ -39563,10 +39591,6 @@ msgstr "プロービングの方法"
 msgid "Metric"
 msgstr "メトリック"
 
-#, fuzzy
-msgid "Metric Filters"
-msgstr "サービスフィルター"
-
 msgid "Metric Forecast"
 msgstr "メトリック予測"
 
@@ -39580,6 +39604,10 @@ msgstr "Oracleインスタンス"
 #, fuzzy
 msgid "Metric configuration"
 msgstr "テスト構成"
+
+#, fuzzy
+msgid "Metric filters"
+msgstr "サービスフィルター"
 
 msgid "Metric label"
 msgstr "メトリックのラベル"
@@ -41882,6 +41910,10 @@ msgstr "IP範囲が構成されていません"
 msgid "No Levels"
 msgstr "レベルなし"
 
+#, fuzzy
+msgid "No OpenTelemetry configuration yet"
+msgstr "%sの設定はまだありません"
+
 msgid "No PNP templates using the deprecated API"
 msgstr "非推奨のAPIを使用するPNPテンプレートを使用しないでください"
 
@@ -44147,12 +44179,12 @@ msgid "OTLP endpoint"
 msgstr "OTLPエンドポイント"
 
 #, fuzzy
-msgid "OTel Metrics"
-msgstr "メトリクス"
-
-#, fuzzy
 msgid "OTel collector memory usage"
 msgstr "Netscalerのメモリ使用量"
+
+#, fuzzy
+msgid "OTel metrics"
+msgstr "メトリクス"
 
 msgid "OVS bonding"
 msgstr "OVSボンディング"
@@ -44815,6 +44847,10 @@ msgstr "OpenHardwareMonitor S.M.A.R.T."
 
 msgid "OpenLDAP"
 msgstr "OpenLDAP"
+
+#, fuzzy
+msgid "OpenTelemetry"
+msgstr "OpenTelemetry（実験的）"
 
 msgid "OpenTelemetry (experimental)"
 msgstr "OpenTelemetry（実験的）"
@@ -46262,6 +46298,10 @@ msgstr "PGs Active + Clean"
 
 msgid "PGs Active + Clean + Inconsistent"
 msgstr "PGs Active + Clean + Inconsistent"
+
+#, fuzzy
+msgid "PGs Active + Clean + Laggy"
+msgstr "PGs Active + Clean + Wait"
 
 msgid "PGs Active + Clean + Remapped"
 msgstr "PGs Active + Clean + Remapped"
@@ -63637,9 +63677,6 @@ msgstr "消費電力が関連する機器部品の識別子。"
 msgid "The identifier of the chassis."
 msgstr "シャーシの識別子。"
 
-msgid "The identifier of the detector."
-msgstr "検出器の識別子。"
-
 msgid "The identifier of the fan."
 msgstr "ファンの識別子。"
 
@@ -78936,6 +78973,14 @@ msgstr "使用量に関する警告"
 msgid "Warning at a utilization of"
 msgstr "使用率に関する警告"
 
+#, fuzzy
+msgid "Warning at failure count"
+msgstr "使用量に関する警告"
+
+#, fuzzy
+msgid "Warning at l/s"
+msgstr "警告"
+
 msgid "Warning at or above"
 msgstr "以上での警告"
 
@@ -78965,6 +79010,10 @@ msgid "Warning if at"
 msgstr "この場合の警告"
 
 msgid "Warning if below"
+msgstr "以下の場合の警告"
+
+#, fuzzy
+msgid "Warning if below l/s"
 msgstr "以下の場合の警告"
 
 msgid "Warning if below or equal"
@@ -83832,9 +83881,6 @@ msgstr "すべてを期待する"
 msgid "explicit host labels"
 msgstr "明示的なホストラベル"
 
-msgid "failures"
-msgstr "失敗"
-
 msgid "fault"
 msgstr "障害"
 
@@ -84233,9 +84279,6 @@ msgstr "kW"
 
 msgid "kernel counter"
 msgstr "カーネルカウンター"
-
-msgid "l/s"
-msgstr "l/s"
 
 msgid "lan - IPMI v1.5 LAN Interface"
 msgstr "lan - IPMI v1.5 LANインターフェース"
@@ -86194,32 +86237,12 @@ msgid "Dashboard settings of %{name}"
 msgstr "ダッシュボードのプロパティ"
 
 #, fuzzy
-msgid "Single graph"
-msgstr "オプション選択"
-
-#, fuzzy
 msgid "Data selection"
 msgstr "サイト選択"
 
 #, fuzzy
 msgid "Define widget"
 msgstr "ターゲットを追加"
-
-#, fuzzy
-msgid "Service metric"
-msgstr "サービスメトリクス"
-
-#, fuzzy
-msgid "Must select an option"
-msgstr "オプション選択"
-
-#, fuzzy
-msgid "Metric (single)"
-msgstr "メトリック名"
-
-#, fuzzy
-msgid "Graph (combined)"
-msgstr "グラフライン"
 
 #, fuzzy
 msgid "Widget data"
@@ -86240,14 +86263,6 @@ msgid "Host selection"
 msgstr "サイト選択"
 
 #, fuzzy
-msgid "Service selection"
-msgstr "サイト選択"
-
-#, fuzzy
-msgid "Metric selection"
-msgstr "ファイル選択"
-
-#, fuzzy
 msgid "Available visualization types"
 msgstr "利用可能なオプション"
 
@@ -86256,8 +86271,67 @@ msgid "Data settings"
 msgstr "ダッシュボードのプロパティ"
 
 #, fuzzy
+msgid "Show background in status color and label"
+msgstr "ステータスの色とラベルの背景"
+
+#, fuzzy
+msgid "Colorize all states"
+msgstr "すべての状態"
+
+#, fuzzy
+msgid "Colorize not UP states"
+msgstr "%s以外の状態"
+
+#, fuzzy
+msgid "Show summary for not UP states"
+msgstr "%s状態以外の概要の表示"
+
+#, fuzzy
 msgid "Widget visualization"
 msgstr "BIの視覚化"
+
+#, fuzzy
+msgid "Host or sites, depending on context"
+msgstr "ホストかサイトか、文脈によって異なる"
+
+#, fuzzy
+msgid "Hexagon size"
+msgstr "最大hexagonサイズ"
+
+msgid "Small"
+msgstr ""
+
+#, fuzzy
+msgid "Add & place widget"
+msgstr "ターゲットを追加"
+
+#, fuzzy
+msgid "Single graph"
+msgstr "オプション選択"
+
+#, fuzzy
+msgid "Service metric"
+msgstr "サービスメトリクス"
+
+#, fuzzy
+msgid "Must select an option"
+msgstr "オプション選択"
+
+#, fuzzy
+msgid "Metric (single)"
+msgstr "メトリック名"
+
+#, fuzzy
+msgid "Graph (combined)"
+msgstr "グラフライン"
+
+#, fuzzy
+msgid "Service selection"
+msgstr "サイト選択"
+
+#, fuzzy
+msgid "Metric selection"
+msgstr "ファイル選択"
 
 #, fuzzy
 msgid "Fixed data range"
@@ -86314,10 +86388,6 @@ msgstr "追加オプション"
 
 msgid "Scatterplot styling"
 msgstr ""
-
-#, fuzzy
-msgid "Add & place widget"
-msgstr "ターゲットを追加"
 
 #, fuzzy
 msgid "Value out of range"
@@ -86761,6 +86831,36 @@ msgid ""
 "systems state, such as how much storage is used or the CPU load."
 msgstr ""
 
+#, fuzzy
+msgid "Configure title and site"
+msgstr "煙のレベルを設定する"
+
+#, fuzzy
+msgid "Configure OpenTelemetry collector"
+msgstr "Opentelemetry コレクターデータ"
+
+#, fuzzy
+msgid "Configure host folder"
+msgstr "ホスト設定"
+
+#, fuzzy
+msgid "Save & Go to Activate Changes"
+msgstr "保存し変更のアクティブ化へ"
+
+#, fuzzy
+msgid "Select the site where the OpenTelemetry collector will run."
+msgstr "OpenTelemetry コレクターを実行するサイトを指定します。"
+
+#, fuzzy
+msgid ""
+"Provide a title for the configuration and select the site where the "
+"OpenTelemetry collector will run."
+msgstr "統合 OpenTelemetry コレクタのすべての関連構成。"
+
+#, fuzzy
+msgid "Select the folder your host(s) will be created in."
+msgstr "ホストが作成される場所を指定してください。"
+
 msgid ""
 "This is a placeholder for the relay setup wizard. The actual implementation "
 "is pending."
@@ -86994,10 +87094,6 @@ msgid "Network devices and SNMP"
 msgstr "ネットワークスキャン"
 
 #, fuzzy
-msgid "Application monitoring"
-msgstr "監視アイコン"
-
-#, fuzzy
 msgid "OpenTelemetry (Beta)"
 msgstr "OpenTelemetry（実験的）"
 
@@ -87198,6 +87294,19 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Custom ClickHouse Instance"
+#~ msgstr "カスタムプローブの状態"
+
+#~ msgid "The identifier of the detector."
+#~ msgstr "検出器の識別子。"
+
+#~ msgid "failures"
+#~ msgstr "失敗"
+
+#~ msgid "l/s"
+#~ msgstr "l/s"
 
 #, fuzzy, python-format
 #~ msgid "Connector: Collecting OpenTelemetry hosts on site  \"%s\""

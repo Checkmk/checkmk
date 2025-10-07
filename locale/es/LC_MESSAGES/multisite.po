@@ -3985,6 +3985,10 @@ msgstr "Añadir descripciones de OID"
 msgid "Add OpenTelemetry collector configuration"
 msgstr "Añadir una nueva configuración de usuario"
 
+#, fuzzy
+msgid "Add OpenTelemetry configuration"
+msgstr "Añadir una nueva configuración de usuario"
+
 msgid "Add Prefix"
 msgstr "Añadir prefijo"
 
@@ -7104,6 +7108,10 @@ msgstr "Grupos de destino del Application Load Balancer"
 #, fuzzy
 msgid "Application load balancers"
 msgstr "Equilibradores de carga de aplicaciones"
+
+#, fuzzy
+msgid "Application monitoring"
+msgstr "Buscar en la supervisión"
 
 msgid "Application name"
 msgstr "Nombre de la aplicación"
@@ -13860,6 +13868,11 @@ msgid "Click on 'Register %s' to enable two-factor authentication via %s."
 msgstr "Eliminar la autenticación de dos factores de %s"
 
 msgid ""
+"Click the \"Add OpenTelemetry configuration\" button to start setting up "
+"your first OpenTelemetry configuration."
+msgstr ""
+
+msgid ""
 "Click the \"Add Relay\" button to start setting up your first Relay "
 "configuration."
 msgstr ""
@@ -17058,6 +17071,14 @@ msgstr "Crítico en un uso de"
 msgid "Critical at a utilization of"
 msgstr "Crítico en una utilización de"
 
+#, fuzzy
+msgid "Critical at failure count"
+msgstr "Crítico en un uso de"
+
+#, fuzzy
+msgid "Critical at l/s"
+msgstr "Crítico en"
+
 msgid "Critical at or above"
 msgstr "Crítico en o por encima de"
 
@@ -17091,6 +17112,10 @@ msgid "Critical if at"
 msgstr "Crítico si en"
 
 msgid "Critical if below"
+msgstr "Crítico si está por debajo de"
+
+#, fuzzy
+msgid "Critical if below l/s"
 msgstr "Crítico si está por debajo de"
 
 #, fuzzy
@@ -17324,10 +17349,6 @@ msgstr "Actualmente, hay un cambio pendiente que aún no se ha activado."
 
 msgid "Custom Action"
 msgstr "Acción personalizada"
-
-#, fuzzy
-msgid "Custom ClickHouse Instance"
-msgstr "Estado de la sonda personalizada"
 
 #, python-format
 msgid "Custom GUI design of %s"
@@ -28428,6 +28449,10 @@ msgstr "Servicios globales para controlar"
 #, fuzzy
 msgid "HTTP(S) load balancer"
 msgstr "Balanceadores de carga"
+
+#, fuzzy
+msgid "HTTP(S) port"
+msgstr "Puerto TCP"
 
 #, fuzzy
 msgid "HTTP, TCP, email, ..."
@@ -42442,10 +42467,6 @@ msgstr "Método de sondeo"
 msgid "Metric"
 msgstr "Métrica"
 
-#, fuzzy
-msgid "Metric Filters"
-msgstr "Filtros de servicio"
-
 msgid "Metric Forecast"
 msgstr "Previsión de la métrica"
 
@@ -42459,6 +42480,10 @@ msgstr "Instancias de Oracle"
 #, fuzzy
 msgid "Metric configuration"
 msgstr "Configuración de host"
+
+#, fuzzy
+msgid "Metric filters"
+msgstr "Filtros de servicio"
 
 msgid "Metric label"
 msgstr "Etiqueta métrica"
@@ -44942,6 +44967,10 @@ msgid "No Levels"
 msgstr "Sin niveles"
 
 #, fuzzy
+msgid "No OpenTelemetry configuration yet"
+msgstr "Configuración de host"
+
+#, fuzzy
 msgid "No PNP templates using the deprecated API"
 msgstr "No comprobar los plugins que utilizan la API obsoleta"
 
@@ -47396,12 +47425,12 @@ msgid "OTLP endpoint"
 msgstr "Puntos finales"
 
 #, fuzzy
-msgid "OTel Metrics"
-msgstr "Métrica"
-
-#, fuzzy
 msgid "OTel collector memory usage"
 msgstr "Uso de la memoria de Netscaler"
+
+#, fuzzy
+msgid "OTel metrics"
+msgstr "Métrica"
 
 #, fuzzy
 msgid "OVS bonding"
@@ -48105,6 +48134,10 @@ msgstr "OpenHardwareMonitor S.M.A.R.T."
 
 msgid "OpenLDAP"
 msgstr "OpenLDAP"
+
+#, fuzzy
+msgid "OpenTelemetry"
+msgstr "Añadir configuración de estado"
 
 #, fuzzy
 msgid "OpenTelemetry (experimental)"
@@ -49824,6 +49857,10 @@ msgstr ""
 
 #, fuzzy
 msgid "PGs Active + Clean + Inconsistent"
+msgstr "Primario - Inconsistente"
+
+#, fuzzy
+msgid "PGs Active + Clean + Laggy"
 msgstr "Primario - Inconsistente"
 
 msgid "PGs Active + Clean + Remapped"
@@ -68395,9 +68432,6 @@ msgstr ""
 msgid "The identifier of the chassis."
 msgstr "El identificador del chasis."
 
-msgid "The identifier of the detector."
-msgstr "El identificador del detector."
-
 msgid "The identifier of the fan."
 msgstr "El identificador del ventilador."
 
@@ -85094,6 +85128,14 @@ msgstr "Advertencia en un uso de"
 msgid "Warning at a utilization of"
 msgstr "Advertencia en una utilización de"
 
+#, fuzzy
+msgid "Warning at failure count"
+msgstr "Advertencia en un uso de"
+
+#, fuzzy
+msgid "Warning at l/s"
+msgstr "Advertencia en"
+
 msgid "Warning at or above"
 msgstr "Advertencia en o por encima de"
 
@@ -85124,6 +85166,10 @@ msgid "Warning if at"
 msgstr "Advertencia si en"
 
 msgid "Warning if below"
+msgstr "Advertencia si está por debajo de"
+
+#, fuzzy
+msgid "Warning if below l/s"
 msgstr "Advertencia si está por debajo de"
 
 #, fuzzy
@@ -90264,9 +90310,6 @@ msgstr "esperar todo"
 msgid "explicit host labels"
 msgstr "etiquetas explícitas de host"
 
-msgid "failures"
-msgstr "fallos"
-
 msgid "fault"
 msgstr "fallo"
 
@@ -90686,9 +90729,6 @@ msgstr "kW"
 
 msgid "kernel counter"
 msgstr "contador del núcleo"
-
-msgid "l/s"
-msgstr "l/s"
 
 #, fuzzy
 msgid "lan - IPMI v1.5 LAN Interface"
@@ -92716,32 +92756,12 @@ msgid "Dashboard settings of %{name}"
 msgstr "Propiedades del cuadro de mandos"
 
 #, fuzzy
-msgid "Single graph"
-msgstr "Conexiones rechazadas"
-
-#, fuzzy
 msgid "Data selection"
 msgstr "Selección de carpetas"
 
 #, fuzzy
 msgid "Define widget"
 msgstr "Añadir objetivo"
-
-#, fuzzy
-msgid "Service metric"
-msgstr "Métricas de servicio"
-
-#, fuzzy
-msgid "Must select an option"
-msgstr "Conexiones rechazadas"
-
-#, fuzzy
-msgid "Metric (single)"
-msgstr "Etiqueta métrica"
-
-#, fuzzy
-msgid "Graph (combined)"
-msgstr "Opciones de gráficos"
 
 #, fuzzy
 msgid "Widget data"
@@ -92763,14 +92783,6 @@ msgid "Host selection"
 msgstr "Selección de carpetas"
 
 #, fuzzy
-msgid "Service selection"
-msgstr "Selección de carpetas"
-
-#, fuzzy
-msgid "Metric selection"
-msgstr "Selección de carpetas"
-
-#, fuzzy
 msgid "Available visualization types"
 msgstr "Opciones disponibles"
 
@@ -92779,8 +92791,67 @@ msgid "Data settings"
 msgstr "Propiedades del cuadro de mandos"
 
 #, fuzzy
+msgid "Show background in status color and label"
+msgstr "Fondo en color de estado y etiqueta"
+
+#, fuzzy
+msgid "Colorize all states"
+msgstr "todos los estados"
+
+#, fuzzy
+msgid "Colorize not UP states"
+msgstr "estados no %s"
+
+#, fuzzy
+msgid "Show summary for not UP states"
+msgstr "Mostrar resumen para estados no %s"
+
+#, fuzzy
 msgid "Widget visualization"
 msgstr "Visualización de BI"
+
+#, fuzzy
+msgid "Host or sites, depending on context"
+msgstr "Hosts o sites, según el contexto"
+
+#, fuzzy
+msgid "Hexagon size"
+msgstr "Tamaño máximo"
+
+msgid "Small"
+msgstr ""
+
+#, fuzzy
+msgid "Add & place widget"
+msgstr "Añadir objetivo"
+
+#, fuzzy
+msgid "Single graph"
+msgstr "Conexiones rechazadas"
+
+#, fuzzy
+msgid "Service metric"
+msgstr "Métricas de servicio"
+
+#, fuzzy
+msgid "Must select an option"
+msgstr "Conexiones rechazadas"
+
+#, fuzzy
+msgid "Metric (single)"
+msgstr "Etiqueta métrica"
+
+#, fuzzy
+msgid "Graph (combined)"
+msgstr "Opciones de gráficos"
+
+#, fuzzy
+msgid "Service selection"
+msgstr "Selección de carpetas"
+
+#, fuzzy
+msgid "Metric selection"
+msgstr "Selección de carpetas"
 
 #, fuzzy
 msgid "Fixed data range"
@@ -92837,10 +92908,6 @@ msgstr "Opciones adicionales"
 
 msgid "Scatterplot styling"
 msgstr ""
-
-#, fuzzy
-msgid "Add & place widget"
-msgstr "Añadir objetivo"
 
 #, fuzzy
 msgid "Value out of range"
@@ -93309,6 +93376,39 @@ msgid ""
 "systems state, such as how much storage is used or the CPU load."
 msgstr ""
 
+#, fuzzy
+msgid "Configure title and site"
+msgstr "Sin niveles en los inodos"
+
+#, fuzzy
+msgid "Configure OpenTelemetry collector"
+msgstr "Añadir configuración de estado"
+
+#, fuzzy
+msgid "Configure host folder"
+msgstr "Configurar"
+
+#, fuzzy
+msgid "Save & Go to Activate Changes"
+msgstr "No activar los cambios"
+
+#, fuzzy
+msgid "Select the site where the OpenTelemetry collector will run."
+msgstr ""
+"Especifique uno, varios o todos los sitios en los que debe ejecutarse esta "
+"conexión."
+
+msgid ""
+"Provide a title for the configuration and select the site where the "
+"OpenTelemetry collector will run."
+msgstr ""
+
+#, fuzzy
+msgid "Select the folder your host(s) will be created in."
+msgstr ""
+"Especifica en qué periodo de tiempo se creará un nuevo archivo para el "
+"historial de eventos."
+
 msgid ""
 "This is a placeholder for the relay setup wizard. The actual implementation "
 "is pending."
@@ -93548,10 +93648,6 @@ msgid "Network devices and SNMP"
 msgstr "Exploración de la red"
 
 #, fuzzy
-msgid "Application monitoring"
-msgstr "Buscar en la supervisión"
-
-#, fuzzy
 msgid "OpenTelemetry (Beta)"
 msgstr "Añadir configuración de estado"
 
@@ -93756,6 +93852,19 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Custom ClickHouse Instance"
+#~ msgstr "Estado de la sonda personalizada"
+
+#~ msgid "The identifier of the detector."
+#~ msgstr "El identificador del detector."
+
+#~ msgid "failures"
+#~ msgstr "fallos"
+
+#~ msgid "l/s"
+#~ msgstr "l/s"
 
 #, fuzzy
 #~ msgid "Quick filter"

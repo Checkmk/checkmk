@@ -3983,6 +3983,10 @@ msgstr "Adăugați descrieri OID"
 msgid "Add OpenTelemetry collector configuration"
 msgstr "Adaugp o noua configurație de utilizator"
 
+#, fuzzy
+msgid "Add OpenTelemetry configuration"
+msgstr "Adaugp o noua configurație de utilizator"
+
 msgid "Add Prefix"
 msgstr "Adăugați prefixul"
 
@@ -7055,6 +7059,10 @@ msgstr "Grupuri țintă de echilibrare a încărcăturii aplicației"
 
 msgid "Application load balancers"
 msgstr "Balansatoare de încărcare a aplicațiilor"
+
+#, fuzzy
+msgid "Application monitoring"
+msgstr "Căutare în Monitorizare"
 
 msgid "Application name"
 msgstr "Numele aplicației"
@@ -13797,6 +13805,11 @@ msgstr ""
 "factori prin intermediul %s."
 
 msgid ""
+"Click the \"Add OpenTelemetry configuration\" button to start setting up "
+"your first OpenTelemetry configuration."
+msgstr ""
+
+msgid ""
 "Click the \"Add Relay\" button to start setting up your first Relay "
 "configuration."
 msgstr ""
@@ -16969,6 +16982,14 @@ msgstr "Critic la o utilizare de"
 msgid "Critical at a utilization of"
 msgstr "Critic la o utilizare a"
 
+#, fuzzy
+msgid "Critical at failure count"
+msgstr "Critic la o utilizare de"
+
+#, fuzzy
+msgid "Critical at l/s"
+msgstr "Critic la"
+
 msgid "Critical at or above"
 msgstr "Critic la sau peste"
 
@@ -17001,6 +17022,10 @@ msgid "Critical if at"
 msgstr "Critic dacă la"
 
 msgid "Critical if below"
+msgstr "Critic dacă este sub"
+
+#, fuzzy
+msgid "Critical if below l/s"
 msgstr "Critic dacă este sub"
 
 msgid "Critical if below or equal"
@@ -17233,10 +17258,6 @@ msgstr ""
 
 msgid "Custom Action"
 msgstr "Acțiune personalizată"
-
-#, fuzzy
-msgid "Custom ClickHouse Instance"
-msgstr "Starea sondei personalizate"
 
 #, python-format
 msgid "Custom GUI design of %s"
@@ -28270,6 +28291,10 @@ msgstr "Punctele finale ale serviciului web HTTP pentru monitorizare"
 #, fuzzy
 msgid "HTTP(S) load balancer"
 msgstr "Solicitări GCP/HTTP(S) load balancer"
+
+#, fuzzy
+msgid "HTTP(S) port"
+msgstr "Port TCP"
 
 #, fuzzy
 msgid "HTTP, TCP, email, ..."
@@ -42197,11 +42222,6 @@ msgstr "Metoda de sondare"
 msgid "Metric"
 msgstr "Metric"
 
-# georgem ##############
-#, fuzzy
-msgid "Metric Filters"
-msgstr "Filtre de service"
-
 msgid "Metric Forecast"
 msgstr "Prognoză metrică"
 
@@ -42215,6 +42235,11 @@ msgstr "Instanțe Oracle"
 #, fuzzy
 msgid "Metric configuration"
 msgstr "Configurație gazdă"
+
+# georgem ##############
+#, fuzzy
+msgid "Metric filters"
+msgstr "Filtre de service"
 
 msgid "Metric label"
 msgstr "Etichetă metrică"
@@ -44697,6 +44722,10 @@ msgid "No Levels"
 msgstr "Nu există niveluri"
 
 #, fuzzy
+msgid "No OpenTelemetry configuration yet"
+msgstr "Configurație gazdă"
+
+#, fuzzy
 msgid "No PNP templates using the deprecated API"
 msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
 
@@ -47118,12 +47147,12 @@ msgid "OTLP endpoint"
 msgstr "Punct final"
 
 #, fuzzy
-msgid "OTel Metrics"
-msgstr "Metrici"
-
-#, fuzzy
 msgid "OTel collector memory usage"
 msgstr "Utilizarea memoriei Netscaler"
+
+#, fuzzy
+msgid "OTel metrics"
+msgstr "Metrici"
 
 #, fuzzy
 msgid "OVS bonding"
@@ -47828,6 +47857,10 @@ msgstr "OpenHardwareMonitor S.M.A.R.T."
 
 msgid "OpenLDAP"
 msgstr "OpenLDAP"
+
+#, fuzzy
+msgid "OpenTelemetry"
+msgstr "Configurația stilului selectat"
 
 #, fuzzy
 msgid "OpenTelemetry (experimental)"
@@ -49537,6 +49570,10 @@ msgstr ""
 
 #, fuzzy
 msgid "PGs Active + Clean + Inconsistent"
+msgstr "Primar - Inconsistent"
+
+#, fuzzy
+msgid "PGs Active + Clean + Laggy"
 msgstr "Primar - Inconsistent"
 
 msgid "PGs Active + Clean + Remapped"
@@ -68005,9 +68042,6 @@ msgstr ""
 msgid "The identifier of the chassis."
 msgstr "Identificatorul șasiului."
 
-msgid "The identifier of the detector."
-msgstr "Identificatorul detectorului."
-
 msgid "The identifier of the fan."
 msgstr "Identificatorul ventilatorului."
 
@@ -84617,6 +84651,14 @@ msgstr "Avertisment la o utilizare de"
 msgid "Warning at a utilization of"
 msgstr "Avertisment la o utilizare de"
 
+#, fuzzy
+msgid "Warning at failure count"
+msgstr "Avertisment la o utilizare de"
+
+#, fuzzy
+msgid "Warning at l/s"
+msgstr "Avertisment la"
+
 msgid "Warning at or above"
 msgstr "Avertisment la sau peste"
 
@@ -84646,6 +84688,10 @@ msgid "Warning if at"
 msgstr "Avertisment dacă la"
 
 msgid "Warning if below"
+msgstr "Avertisment dacă este sub"
+
+#, fuzzy
+msgid "Warning if below l/s"
 msgstr "Avertisment dacă este sub"
 
 msgid "Warning if below or equal"
@@ -89776,9 +89822,6 @@ msgstr "se așteaptă ca toți"
 msgid "explicit host labels"
 msgstr "etichete gazdă explicite"
 
-msgid "failures"
-msgstr "eșecuri"
-
 msgid "fault"
 msgstr "defect"
 
@@ -90195,9 +90238,6 @@ msgstr "kW"
 
 msgid "kernel counter"
 msgstr "contor kernel"
-
-msgid "l/s"
-msgstr "l/s"
 
 #, fuzzy
 msgid "lan - IPMI v1.5 LAN Interface"
@@ -92229,33 +92269,12 @@ msgid "Dashboard settings of %{name}"
 msgstr "Proprietățile tabloului de bord"
 
 #, fuzzy
-msgid "Single graph"
-msgstr "Conexiuni respinse"
-
-#, fuzzy
 msgid "Data selection"
 msgstr "Selecția fișierelor"
 
 #, fuzzy
 msgid "Define widget"
 msgstr "Adăugați o țintă"
-
-# georgem ##############
-#, fuzzy
-msgid "Service metric"
-msgstr "Metrici de servicii"
-
-#, fuzzy
-msgid "Must select an option"
-msgstr "Conexiuni respinse"
-
-#, fuzzy
-msgid "Metric (single)"
-msgstr "Etichetă metrică"
-
-#, fuzzy
-msgid "Graph (combined)"
-msgstr "Opțiuni grafice"
 
 #, fuzzy
 msgid "Widget data"
@@ -92277,14 +92296,6 @@ msgid "Host selection"
 msgstr "Selecția fișierelor"
 
 #, fuzzy
-msgid "Service selection"
-msgstr "Selecția fișierelor"
-
-#, fuzzy
-msgid "Metric selection"
-msgstr "Selecția fișierelor"
-
-#, fuzzy
 msgid "Available visualization types"
 msgstr "Opțiuni disponibile"
 
@@ -92293,8 +92304,68 @@ msgid "Data settings"
 msgstr "Proprietățile tabloului de bord"
 
 #, fuzzy
+msgid "Show background in status color and label"
+msgstr "Fundalul în culoarea de stare și eticheta"
+
+#, fuzzy
+msgid "Colorize all states"
+msgstr "toate statele"
+
+#, fuzzy
+msgid "Colorize not UP states"
+msgstr "nu %s state"
+
+#, fuzzy
+msgid "Show summary for not UP states"
+msgstr "Afișați rezumatul pentru statele care nu sunt %s"
+
+#, fuzzy
 msgid "Widget visualization"
 msgstr "Vizualizare BI"
+
+#, fuzzy
+msgid "Host or sites, depending on context"
+msgstr "Gazde sau site-uri, în funcție de context"
+
+#, fuzzy
+msgid "Hexagon size"
+msgstr "Dimensiunea maximă"
+
+msgid "Small"
+msgstr ""
+
+#, fuzzy
+msgid "Add & place widget"
+msgstr "Adăugați o țintă"
+
+#, fuzzy
+msgid "Single graph"
+msgstr "Conexiuni respinse"
+
+# georgem ##############
+#, fuzzy
+msgid "Service metric"
+msgstr "Metrici de servicii"
+
+#, fuzzy
+msgid "Must select an option"
+msgstr "Conexiuni respinse"
+
+#, fuzzy
+msgid "Metric (single)"
+msgstr "Etichetă metrică"
+
+#, fuzzy
+msgid "Graph (combined)"
+msgstr "Opțiuni grafice"
+
+#, fuzzy
+msgid "Service selection"
+msgstr "Selecția fișierelor"
+
+#, fuzzy
+msgid "Metric selection"
+msgstr "Selecția fișierelor"
 
 #, fuzzy
 msgid "Fixed data range"
@@ -92351,10 +92422,6 @@ msgstr "Opțiuni adiționale"
 
 msgid "Scatterplot styling"
 msgstr ""
-
-#, fuzzy
-msgid "Add & place widget"
-msgstr "Adăugați o țintă"
 
 #, fuzzy
 msgid "Value out of range"
@@ -92822,6 +92889,39 @@ msgid ""
 "systems state, such as how much storage is used or the CPU load."
 msgstr ""
 
+#, fuzzy
+msgid "Configure title and site"
+msgstr "Configurați nivelurile de fum"
+
+#, fuzzy
+msgid "Configure OpenTelemetry collector"
+msgstr "Configurația stilului selectat"
+
+#, fuzzy
+msgid "Configure host folder"
+msgstr "Configurați"
+
+#, fuzzy
+msgid "Save & Go to Activate Changes"
+msgstr "Nu activați modificările"
+
+#, fuzzy
+msgid "Select the site where the OpenTelemetry collector will run."
+msgstr ""
+"Precizați unul, mai multe sau toate site-urile pe care trebuie să "
+"funcționeze această conexiune."
+
+msgid ""
+"Provide a title for the configuration and select the site where the "
+"OpenTelemetry collector will run."
+msgstr ""
+
+#, fuzzy
+msgid "Select the folder your host(s) will be created in."
+msgstr ""
+"Specificați la ce perioadă de timp va fi creat un nou fișier pentru "
+"istoricul evenimentelor."
+
 msgid ""
 "This is a placeholder for the relay setup wizard. The actual implementation "
 "is pending."
@@ -93061,10 +93161,6 @@ msgid "Network devices and SNMP"
 msgstr "Scanarea rețelei"
 
 #, fuzzy
-msgid "Application monitoring"
-msgstr "Căutare în Monitorizare"
-
-#, fuzzy
 msgid "OpenTelemetry (Beta)"
 msgstr "Configurația stilului selectat"
 
@@ -93271,6 +93367,19 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Custom ClickHouse Instance"
+#~ msgstr "Starea sondei personalizate"
+
+#~ msgid "The identifier of the detector."
+#~ msgstr "Identificatorul detectorului."
+
+#~ msgid "failures"
+#~ msgstr "eșecuri"
+
+#~ msgid "l/s"
+#~ msgstr "l/s"
 
 # georgem ##############
 #, fuzzy

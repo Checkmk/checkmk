@@ -28,6 +28,15 @@ from cmk.gui.wato._notification_parameter._pushover import _migrate_to_priority
             ("emergency", (0.0, 0.0, "ergerahtrehrthrthrhrhaergherhtgrsth")),
             id="Emergency",
         ),
+        pytest.param(
+            {
+                "priority": "2",
+                "retry": 0,
+                "expire": 0,
+            },
+            ("emergency", (0.0, 0.0)),
+            id="Emergency (without receipts)",
+        ),
     ],
 )
 def test__migrate_to_priority(

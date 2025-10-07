@@ -112,8 +112,10 @@ def form_spec() -> Dictionary:
                                         ),
                                         custom_validate=[
                                             MatchRegex(
-                                                regex="^[a-zA-Z0-9]{30,40}$",
-                                                error_msg=Message("Invalid receipt"),
+                                                regex="^(?:[a-zA-Z0-9]{30})?$",
+                                                error_msg=Message(
+                                                    "Minimum length is 30 characters."
+                                                ),
                                             ),
                                         ],
                                     ),
@@ -262,7 +264,9 @@ def _migrate_to_priority(value):
     if isinstance(value, dict):
         assert isinstance(value["retry"], int)
         assert isinstance(value["expire"], int)
-        assert value["receipts"] is not None and isinstance(value["receipts"], str)
+        if "receipts" not in value:
+            return ("emergency", (float(value["retry"]), float(value["expire"])))
+        assert isinstance(value["receipts"], str)
         return ("emergency", (float(value["retry"]), float(value["expire"]), value["receipts"]))
 
     if value == "0":

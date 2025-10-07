@@ -4,26 +4,27 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.ccc.version import Edition
-from cmk.gui.graphing._autocompleter import metrics_autocompleter
-from cmk.gui.graphing._explicit_graphs import ExplicitGraphSpecification
-from cmk.gui.graphing._graph_metric_expressions import (
+from cmk.gui.pages import PageEndpoint, PageRegistry
+from cmk.gui.valuespec import AutocompleterRegistry
+from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
+
+from .._autocompleter import metrics_autocompleter
+from .._explicit_graphs import ExplicitGraphSpecification
+from .._graph_metric_expressions import (
     graph_metric_expression_registry,
     GraphMetricConstant,
     GraphMetricConstantNA,
     GraphMetricOperation,
     GraphMetricRRDSource,
 )
-from cmk.gui.graphing._graph_specification import graph_specification_registry
-from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
-from cmk.gui.graphing._metric_backend_registry import (
+from .._graph_specification import graph_specification_registry
+from .._graph_templates import TemplateGraphSpecification
+from .._metric_backend_registry import (
     metric_backend_registry,
     MetricBackend,
 )
-from cmk.gui.graphing._settings import ConfigVariableGraphTimeranges
-from cmk.gui.graphing._valuespecs import PageVsAutocomplete
-from cmk.gui.pages import PageEndpoint, PageRegistry
-from cmk.gui.valuespec import AutocompleterRegistry
-from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
+from .._settings import ConfigVariableGraphTimeranges
+from .._valuespecs import PageVsAutocomplete
 
 
 def register(

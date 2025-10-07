@@ -23,11 +23,6 @@ from cmk.graphing.v1 import graphs as graphs_api
 from cmk.gui import pdf
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKNotFound, MKUnauthenticatedException, MKUserError
-from cmk.gui.graphing._graph_templates import (
-    get_template_graph_specification,
-    MKGraphNotFound,
-)
-from cmk.gui.graphing._unit import get_temperature_unit
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -57,11 +52,16 @@ from ._graph_specification import (
     GraphRecipe,
     parse_raw_graph_specification,
 )
+from ._graph_templates import (
+    get_template_graph_specification,
+    MKGraphNotFound,
+)
 from ._html_render import GraphDestinations
 from ._metric_backend_registry import (
     FetchTimeSeries,
     metric_backend_registry,
 )
+from ._unit import get_temperature_unit
 from ._utils import get_graph_data_from_livestatus
 
 

@@ -17,7 +17,6 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import graphs as graphs_api
-from cmk.gui.graphing._unit import user_specific_unit
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import Row
@@ -57,7 +56,7 @@ from ._metric_expression import (
     WarningOf,
 )
 from ._translated_metrics import translated_metrics_from_row, TranslatedMetric
-from ._unit import ConvertibleUnitSpecification
+from ._unit import ConvertibleUnitSpecification, user_specific_unit
 from ._utils import get_graph_data_from_livestatus
 
 

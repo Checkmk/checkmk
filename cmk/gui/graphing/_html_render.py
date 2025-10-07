@@ -23,11 +23,6 @@ from cmk.graphing.v1 import graphs as graphs_api
 from cmk.gui.color import render_color_icon
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKMissingDataError
-from cmk.gui.graphing._graph_templates import (
-    get_template_graph_specification,
-    TemplateGraphSpecification,
-)
-from cmk.gui.graphing._unit import get_temperature_unit, user_specific_unit
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
@@ -73,10 +68,15 @@ from ._graph_render_config import (
     GraphTitleFormat,
 )
 from ._graph_specification import GraphDataRange, GraphRecipe, GraphSpecification
+from ._graph_templates import (
+    get_template_graph_specification,
+    TemplateGraphSpecification,
+)
 from ._metric_backend_registry import (
     FetchTimeSeries,
     metric_backend_registry,
 )
+from ._unit import get_temperature_unit, user_specific_unit
 from ._utils import SizeEx
 
 RenderOutput = HTML | str

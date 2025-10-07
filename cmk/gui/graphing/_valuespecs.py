@@ -11,7 +11,6 @@ from typing import Any, assert_never, Literal, TypedDict
 
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.graphing._unit import get_temperature_unit
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -60,6 +59,7 @@ from ._unit import (
     ConvertibleUnitSpecification,
     DecimalNotation,
     EngineeringScientificNotation,
+    get_temperature_unit,
     IECNotation,
     SINotation,
     StandardScientificNotation,

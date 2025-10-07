@@ -9,7 +9,8 @@ from typing import Protocol
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.version import Edition
-from cmk.gui.graphing._graph_metric_expressions import QueryData, QueryDataKey
+
+from ._graph_metric_expressions import QueryData, QueryDataKey
 
 
 class FetchTimeSeries(Protocol):

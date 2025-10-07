@@ -73,6 +73,7 @@ def create_config_folder(root: Path, relays: list[RelayId]) -> ConfigFolder:
             relay_files[filename] = content
         config_files[relay_id] = relay_files
 
+    # Update "latest" symlink to point to the new serial folder
     symlink_path = root / _SUBPATH / "latest"
     if symlink_path.is_symlink():
         symlink_path.unlink()

@@ -5,7 +5,7 @@
 
 from .base import Layout
 from .helpers import group_value
-from .layouts import register_layouts
+from .layouts import make_link_renderer, register_layouts
 from .registry import layout_registry, LayoutRegistry
 
 __all__ = [
@@ -14,4 +14,5 @@ __all__ = [
     "layout_registry",
     "LayoutRegistry",
     "register_layouts",
+    "make_link_renderer",
 ]

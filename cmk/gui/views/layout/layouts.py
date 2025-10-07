@@ -5,8 +5,7 @@
 
 import abc
 import re
-from collections.abc import Hashable, Iterator, Sequence
-from functools import partial
+from collections.abc import Callable, Hashable, Iterator, Sequence
 from typing import Any, override
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -15,7 +14,7 @@ from cmk.gui.config import active_config
 from cmk.gui.data_source import row_id
 from cmk.gui.exporter import output_csv_headers
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0 import Cell, EmptyCell
@@ -23,7 +22,8 @@ from cmk.gui.painter.v1.helpers import is_stale
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import GroupSpec, Row, Rows, ViewSpec
+from cmk.gui.type_defs import GroupSpec, Row, Rows, ViewSpec, VisualLinkSpec
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visual_link import render_link_to_view
 
@@ -97,9 +97,8 @@ class LayoutSingleDataset(Layout):
         show_checkboxes: bool,
         user_permissions: UserPermissions,
     ) -> None:
-        link_renderer = partial(
-            render_link_to_view, request=request, user_permissions=user_permissions
-        )
+        link_renderer = make_link_renderer(request, user_permissions)
+
         html.open_table(class_="data single")
         rownum = 0
         odd = "odd"
@@ -214,6 +213,7 @@ class GroupedBoxesLayout(Layout):
             rows_with_ids, row_group_cells=None
         )
 
+        link_renderer = make_link_renderer(request, user_permissions)
         visible_row_number = 0
         group_hidden, num_grouped_rows = None, 0
         for index, row in rows_with_ids:
@@ -260,9 +260,6 @@ class GroupedBoxesLayout(Layout):
             if show_checkboxes:
                 render_checkbox_td(view, row, num_cells)
 
-            link_renderer = partial(
-                render_link_to_view, request=request, user_permissions=user_permissions
-            )
             for cell in cells:
                 cell.paint(row, link_renderer, user=user)
 
@@ -283,9 +280,9 @@ class GroupedBoxesLayout(Layout):
         html.open_table(class_="groupheader", cellspacing="0", cellpadding="0", border="0")
         html.open_tr(class_="groupheader")
         painted = False
-        link_renderer = partial(
-            render_link_to_view, request=request, user_permissions=user_permissions
-        )
+
+        link_renderer = make_link_renderer(request, user_permissions)
+
         for cell in group_cells:
             if painted:
                 html.td(",&nbsp;")
@@ -522,9 +519,8 @@ class LayoutTiled(Layout):
     ) -> None:
         html.open_table(class_="data tiled")
 
-        link_renderer = partial(
-            render_link_to_view, request=request, user_permissions=user_permissions
-        )
+        link_renderer = make_link_renderer(request, user_permissions)
+
         last_group = None
         group_open = False
         for row in rows:
@@ -685,9 +681,7 @@ class LayoutTable(Layout):
             rows_with_ids, row_group_cells=group_cells
         )
 
-        link_renderer = partial(
-            render_link_to_view, request=request, user_permissions=user_permissions
-        )
+        link_renderer = make_link_renderer(request, user_permissions)
         visible_row_number = 0
         group_hidden, num_grouped_rows = None, 0
         for index, row in rows_with_ids:
@@ -882,10 +876,8 @@ class LayoutMatrix(Layout):
         value_counts, _row_majorities = self._matrix_find_majorities(rows, cells)
 
         painter_options = PainterOptions.get_instance()
+        link_renderer = make_link_renderer(request, user_permissions)
         with table_element(output_format="csv") as table:
-            link_renderer = partial(
-                render_link_to_view, request=request, user_permissions=user_permissions
-            )
             for cell_nr, cell in enumerate(group_cells):
                 table.row()
                 table.cell("", cell.title(use_short=False))
@@ -935,9 +927,7 @@ class LayoutMatrix(Layout):
         value_counts, row_majorities = self._matrix_find_majorities(rows, cells)
 
         painter_options = PainterOptions.get_instance()
-        link_renderer = partial(
-            render_link_to_view, request=request, user_permissions=user_permissions
-        )
+        link_renderer = make_link_renderer(request, user_permissions)
         for groups, unique_row_ids, matrix_cells in create_matrices(
             rows, group_cells, cells, num_columns
         ):
@@ -1117,3 +1107,14 @@ def create_matrices(
 
     if col_num:
         yield (groups, unique_row_ids, matrix_cells)
+
+
+def make_link_renderer(
+    request: Request, user_permissions: UserPermissions
+) -> Callable[[str | HTML, Row, VisualLinkSpec], str | HTML]:
+    def link_renderer(content: str | HTML, row: Row, link_spec: VisualLinkSpec) -> str | HTML:
+        return render_link_to_view(
+            content, row, link_spec, request=request, user_permissions=user_permissions
+        )
+
+    return link_renderer

@@ -163,7 +163,6 @@ export const determineWidgetEffectiveFilterContext = async (
   const resp = await dashboardAPI.computeWidgetAttributes(widgetContent)
   return {
     uses_infos: resp.value.filter_context.uses_infos,
-    // @ts-expect-error TODO: change configuredFilters to be <string, string> only
     filters: filters,
     restricted_to_single: constants.widgets[widgetContent.type]!.filter_context.restricted_to_single
   }

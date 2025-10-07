@@ -59,7 +59,6 @@ const widgetContentProps = computed<ContentPropsRecord>(() => {
       effective_filter_context: {
         uses_infos: widget.filter_context.uses_infos,
         restricted_to_single: widgetConstants.filter_context.restricted_to_single,
-        // @ts-expect-error TODO: filters should be adapted to be <string, string> only
         filters: {
           // TODO: might have to be adjusted where widget filter overwrites completely everything if available
           // to be discussed

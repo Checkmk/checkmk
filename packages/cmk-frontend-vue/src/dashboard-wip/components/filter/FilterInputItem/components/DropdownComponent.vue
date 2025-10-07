@@ -19,7 +19,7 @@ const { _t } = usei18n()
 const props = defineProps<FilterComponentProps<DropdownConfig>>()
 const emit = defineEmits<ComponentEmits>()
 
-const getInitialValue = (): string | null => {
+const getInitialValue = (): string => {
   const storedValue = props.configuredValues?.[props.component.id]
   if (storedValue !== undefined) {
     return storedValue
@@ -50,7 +50,12 @@ const dropdownOptions = computed((): Suggestions => {
 })
 
 const handleValueUpdate = (value: string | null): void => {
-  currentValue.value = value
+  if (value === null) {
+    currentValue.value =
+      props.component.default_value !== undefined ? props.component.default_value : ''
+  } else {
+    currentValue.value = value
+  }
 }
 </script>
 

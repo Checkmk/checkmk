@@ -51,7 +51,6 @@ export function useDashboardFilters(
     if (!ctx) {
       throw new Error('Cannot save dashboard filters: dashboardFilterContext is undefined')
     }
-    // @ts-expect-error TODO: filter configuration value should be adjusted
     ctx.filters = structuredClone(filters)
   }
 

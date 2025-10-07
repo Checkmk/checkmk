@@ -5,7 +5,7 @@
  */
 import type { components } from '@/lib/rest-api-client/openapi_internal'
 
-export type ConfiguredValues = Record<string, string | null>
+export type ConfiguredValues = Record<string, string>
 export type ConfiguredFilters = Record<string, ConfiguredValues>
 
 export type FilterDefinition = components['schemas']['FilterDomainObject']

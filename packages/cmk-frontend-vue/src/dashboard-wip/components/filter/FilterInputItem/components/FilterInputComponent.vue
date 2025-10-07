@@ -38,7 +38,7 @@ interface Props {
 const props = defineProps<Props>()
 const emit = defineEmits<ComponentEmits>()
 
-const handleUpdate = (componentId: string, values: Record<string, string | null>): void => {
+const handleUpdate = (componentId: string, values: Record<string, string>): void => {
   emit('update-component-values', componentId, values)
 }
 
@@ -46,6 +46,7 @@ const onLabelComponentUpdate = (query: QueryItem[]): void => {
   if (props.component.component_type === 'label_group') {
     const converted = convertToFilterStructure(query, props.component.id)
     handleUpdate(props.component.id, converted)
+    return
   }
   throw new Error('Component is not of type label_group')
 }
@@ -53,8 +54,9 @@ const onLabelComponentUpdate = (query: QueryItem[]): void => {
 const onTagComponentUpdate = (values: TagMatchItem[]): void => {
   if (props.component.component_type === 'tag_filter') {
     handleUpdate('tag_filter', tagMatchItemsToDict(values, props.component.variable_prefix))
+    return
   }
-  throw new Error('Component is not of type tag_filter')
+  throw new Error(`Component is not of type tag_filter: ${props.component.component_type}`)
 }
 </script>
 

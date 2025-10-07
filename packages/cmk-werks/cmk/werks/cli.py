@@ -5,8 +5,6 @@
 """Checkmk development script to manage werks"""
 
 import argparse
-import ast
-import datetime
 import errno
 import os
 import shlex
@@ -17,9 +15,7 @@ import traceback
 from collections.abc import Iterator, Sequence
 from functools import cache
 from pathlib import Path
-from typing import ClassVar, Literal, NamedTuple, override, TypeVar
-
-from pydantic import BaseModel, Field
+from typing import Literal, NamedTuple
 
 from . import load_werk as cmk_werks_load_werk
 from . import parse_werk
@@ -41,6 +37,7 @@ from .in_out_elements import (
     TTY_RED,
 )
 from .meisterwerk import (
+    build_meisterwerk_payload,
     Choice,
     display_evaluation,
     display_rewritten_werk,
@@ -49,16 +46,14 @@ from .meisterwerk import (
     propose_rewriting,
     rewrite_werk,
     user_understanding_of_werk,
-    build_meisterwerk_payload,
 )
-from .parse import WerkV2ParseResult, parse_werk_v2
+from .parse import WerkV2ParseResult
 from .schemas.requests import Werk as WerkRequest
 from .schemas.werk import (
-    WerkId,
-    Werk,
     Stash,
+    Werk,
+    WerkId,
 )
-
 
 WerkVersion = Literal["v1", "v2"]
 

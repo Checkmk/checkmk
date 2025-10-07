@@ -1,13 +1,13 @@
-from pydantic import BaseModel, Field
-from typing import ClassVar, Literal, NamedTuple, TypeVar, override
 import ast
-from pathlib import Path
 import datetime
 import sys
+from pathlib import Path
+from typing import ClassVar, Literal, NamedTuple, override, TypeVar
+
+from pydantic import BaseModel, Field
+
+from ..in_out_elements import TTY_NORMAL, TTY_RED
 from ..parse import WerkV2ParseResult
-
-from ..in_out_elements import TTY_RED, TTY_NORMAL
-
 
 T = TypeVar("T", bound="Stash")
 

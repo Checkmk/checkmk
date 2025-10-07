@@ -16,7 +16,8 @@ import DashboardFilterSettings from '@/dashboard-wip/components/DashboardFilterS
 import DashboardMenuHeader from '@/dashboard-wip/components/DashboardMenuHeader/DashboardMenuHeader.vue'
 import { createWidgetLayout } from '@/dashboard-wip/components/ResponsiveGrid/composables/useResponsiveGridLayout'
 import AddWidgetDialog from '@/dashboard-wip/components/WidgetWorkflow/StarterDialog/AddWidgetDialog.vue'
-import { dashboardWidgetWorkflows } from '@/dashboard-wip/components/WidgetWorkflow/WidgetWorkflowTypes.ts'
+import AddWidgetPage from '@/dashboard-wip/components/WidgetWorkflow/StarterPage/AddWidgetPage.vue'
+import { dashboardWidgetWorkflows } from '@/dashboard-wip/components/WidgetWorkflow/WidgetWorkflowTypes'
 import CreateDashboardWizard from '@/dashboard-wip/components/Wizard/CreateDashboardWizard.vue'
 import WizardSelector from '@/dashboard-wip/components/WizardSelector/WizardSelector.vue'
 import { widgetTypeToSelectorMatcher } from '@/dashboard-wip/components/WizardSelector/utils.ts'
@@ -295,6 +296,11 @@ function deepClone<T>(obj: T): T {
         @widget:edit="editWidget($event)"
         @widget:delete="dashboardWidgets.deleteWidget($event)"
         @widget:clone="(oldWidgetId, newLayout) => cloneWidget(oldWidgetId, newLayout)"
+      />
+      <AddWidgetPage
+        v-if="Object.entries(dashboardWidgets.widgetCores.value).length === 0"
+        :workflow-items="dashboardWidgetWorkflows"
+        @select="handleAddWidget"
       />
     </template>
     <template v-else>

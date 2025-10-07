@@ -93,7 +93,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
                     "'b'], 'ignore_alert_groups': []}}",
                     "--disable-cert-verification",
                     "auth_token",
-                    "--token",
+                    "--token-reference",
                     Secret(0),
                 ]
             ),

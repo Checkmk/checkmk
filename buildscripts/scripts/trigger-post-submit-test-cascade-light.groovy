@@ -15,6 +15,7 @@ def main() {
         "test-agent-plugin-unit",
         "test-bazel-format",
         "test-bazel-lint",
+        "test-format",
         "test-github-actions",
         "test-groovy-lint",
         "test-python3-bandit",

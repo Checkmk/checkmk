@@ -219,17 +219,20 @@ def page_menu_topic_add_to(visual_type: str, name: str, source_type: str) -> lis
 
 def add_to_dashboard_choices_autocompleter(config: Config, value: str, params: dict) -> Choices:
     return get_visual_choices(
-        visual_type="dashboards",
+        visual_type_name="dashboards",
         value=value,
         user_permissions=UserPermissions.from_config(config, permission_registry),
     )
 
 
-def get_visual_choices(visual_type: str, value: str, user_permissions: UserPermissions) -> Choices:
+def get_visual_choices(
+    visual_type_name: str, value: str, user_permissions: UserPermissions
+) -> Choices:
     validate_regex(value, varname=None)
     match_pattern = re.compile(value, re.IGNORECASE)
     matching_visuals = []
-    for name, title in sorted(visual_type_registry[f"{visual_type}"]().choices(user_permissions)):
+    visual_type = visual_type_registry[visual_type_name]()
+    for name, title in sorted(visual_type.choices(visual_type.visuals(), user_permissions)):
         if match_pattern.search(title) is not None:
             matching_visuals.append((name, f"{title} ({name})"))
     return matching_visuals

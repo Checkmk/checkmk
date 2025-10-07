@@ -16,6 +16,7 @@ from cmk.gui.i18n import _
 from cmk.gui.inventory import get_raw_status_data_via_livestatus, load_latest_delta_tree, load_tree
 from cmk.gui.page_menu import PageMenuEntry
 from cmk.gui.type_defs import (
+    AllViewSpecs,
     HTTPVariables,
     PermittedViewSpecs,
     Rows,
@@ -25,7 +26,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import Hostname
-from cmk.gui.views.store import get_permitted_views
+from cmk.gui.views.store import get_all_views, get_permitted_views
 from cmk.gui.visuals.type import VisualType
 from cmk.inventory.structured_data import (
     HistoryStore,
@@ -74,7 +75,12 @@ class VisualTypeViews(VisualType):
     ) -> None:
         return None
 
-    def permitted_visuals(self, user_permissions: UserPermissions) -> PermittedViewSpecs:
+    def visuals(self) -> AllViewSpecs:
+        return get_all_views()
+
+    def permitted_visuals(
+        self, visuals: AllViewSpecs, user_permissions: UserPermissions
+    ) -> PermittedViewSpecs:
         return get_permitted_views()
 
     def link_from(

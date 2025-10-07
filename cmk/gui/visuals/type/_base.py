@@ -68,12 +68,19 @@ class VisualType(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def permitted_visuals(self, user_permissions: UserPermissions) -> dict:
+    def visuals(self) -> dict:
+        """Get all visuals of this type"""
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def permitted_visuals(self, visuals: dict, user_permissions: UserPermissions) -> dict:
         """Get the permitted visuals of this type"""
         raise NotImplementedError()
 
-    def choices(self, user_permissions: UserPermissions) -> Choices:
-        return [(k, v["title"]) for k, v in self.permitted_visuals(user_permissions).items()]
+    def choices(self, visuals: dict, user_permissions: UserPermissions) -> Choices:
+        return [
+            (k, v["title"]) for k, v in self.permitted_visuals(visuals, user_permissions).items()
+        ]
 
     def link_from(
         self,

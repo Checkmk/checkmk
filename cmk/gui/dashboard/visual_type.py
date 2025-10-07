@@ -8,6 +8,7 @@ from collections.abc import Iterator
 from typing import cast
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.user import UserId
 from cmk.gui.graphing._graph_specification import GraphSpecification, parse_raw_graph_specification
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.http import response
@@ -19,7 +20,7 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visuals.type import VisualType
 
 from .dashlet import copy_view_into_dashlet, dashlet_registry, DashletConfig
-from .store import add_dashlet, get_permitted_dashboards, load_dashboard
+from .store import add_dashlet, get_all_dashboards, get_permitted_dashboards, load_dashboard
 from .type_defs import ABCGraphDashletConfig, DashboardConfig, DashboardName, ViewDashletConfig
 
 
@@ -137,8 +138,13 @@ class VisualTypeDashboards(VisualType):
         # to the AJAX request
         response.set_data("OK dashboard.py?name=" + target_visual_name + "&edit=1")
 
+    def visuals(self) -> dict[tuple[UserId, DashboardName], DashboardConfig]:
+        return get_all_dashboards()
+
     def permitted_visuals(
-        self, user_permissions: UserPermissions
+        self,
+        visuals: dict[tuple[UserId, DashboardName], DashboardConfig],
+        user_permissions: UserPermissions,
     ) -> dict[DashboardName, DashboardConfig]:
         return get_permitted_dashboards()
 

@@ -237,7 +237,7 @@ def _collect_linked_visuals_of_type(
     mobile: bool,
 ) -> Iterator[tuple[VisualType, Visual]]:
     visual_type = visual_type_registry[type_name]()
-    available_visuals = visual_type.permitted_visuals(user_permissions)
+    available_visuals = visual_type.permitted_visuals(visual_type.visuals(), user_permissions)
 
     for visual in sorted(available_visuals.values(), key=lambda x: x.get("name") or ""):
         if visual == view.spec:

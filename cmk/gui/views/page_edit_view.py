@@ -704,6 +704,7 @@ def _view_editor_spec(
 
 
 def _column_link_choices(user_permissions: UserPermissions) -> list[CascadingDropdownChoice]:
+    visual_type = visual_type_registry["dashboards"]()
     return [
         (
             "views",
@@ -717,7 +718,7 @@ def _column_link_choices(user_permissions: UserPermissions) -> list[CascadingDro
             "dashboards",
             _("Link to dashboard") + ":",
             DropdownChoice(
-                choices=visual_type_registry["dashboards"]().choices(user_permissions),
+                choices=visual_type.choices(visual_type.visuals(), user_permissions),
                 sorted=True,
             ),
         ),

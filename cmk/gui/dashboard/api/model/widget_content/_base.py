@@ -71,7 +71,7 @@ class ApiVisualLink:
     def __post_init__(self) -> None:
         visual = visual_type_registry[self.type]()
         if self.name not in visual.permitted_visuals(
-            UserPermissions.from_config(active_config, permission_registry)
+            visual.visuals(), UserPermissions.from_config(active_config, permission_registry)
         ):
             link_type = self.type.title()[:-1]  # remove trailing "s"
             raise ValueError(

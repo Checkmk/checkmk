@@ -9,7 +9,6 @@
 """some fixtures related to e2e tests and playwright"""
 
 import logging
-import os
 from collections import defaultdict
 from collections.abc import Iterator
 from typing import Any, TypeVar
@@ -31,11 +30,9 @@ from tests.testlib.emails import EmailManager
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.site import (
     ADMIN_USER,
-    connection,
     get_site_factory,
     Site,
     SiteFactory,
-    tracing_config_from_env,
 )
 from tests.testlib.utils import is_cleanup_enabled, run
 
@@ -63,30 +60,18 @@ def fixture_test_site(request: pytest.FixtureRequest, site_factory: SiteFactory)
         yield from site_factory.get_test_site(name="central")
 
 
-def _make_connected_remote_site(
-    site_factory: SiteFactory,
-    central_site: Site,
-    site_description: str,
-) -> Iterator[Site]:
-    with site_factory.get_test_site_ctx(
-        "remote",
-        description=site_description,
-        auto_restart_httpd=True,
-        tracing_config=tracing_config_from_env(os.environ),
-    ) as remote_site:
-        with connection(central_site=central_site, remote_site=remote_site):
-            yield remote_site
-
-
 @pytest.fixture(name="remote_site", scope="module")
 def fixture_remote_site(
-    site_factory: SiteFactory, test_site: Site, request: pytest.FixtureRequest
+    test_site: Site, request: pytest.FixtureRequest, site_factory: SiteFactory
 ) -> Iterator[Site]:
     """Return a second Checkmk site object for a distributed setup."""
     with exit_pytest_on_exceptions(
         exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
     ):
-        yield from _make_connected_remote_site(site_factory, test_site, request.node.name)
+        with site_factory.connected_remote_site(
+            "remote", test_site, request.node.name
+        ) as remote_site:
+            yield remote_site
 
 
 @pytest.fixture(name="credentials", scope="session")

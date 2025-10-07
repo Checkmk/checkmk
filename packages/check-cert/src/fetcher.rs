@@ -8,8 +8,7 @@ use std::net::{SocketAddr, TcpStream, ToSocketAddrs};
 use std::time::Duration;
 use typed_builder::TypedBuilder;
 
-use crate::starttls::smtp::perform as perform_smtp_starttls;
-use crate::starttls::smtp::send_ehlo as send_smtp_ehlo;
+use crate::starttls;
 
 #[derive(Debug, Clone, clap::ValueEnum)]
 pub enum ConnectionType {
@@ -17,6 +16,8 @@ pub enum ConnectionType {
     Tls,
     #[value(name = "smtp_starttls")]
     SmtpStarttls,
+    #[value(name = "postgres_starttls")]
+    PostgresStarttls,
 }
 
 #[derive(Debug, TypedBuilder)]
@@ -40,7 +41,8 @@ pub fn fetch_server_cert(server: &str, port: u16, config: Config) -> Result<Vec<
 
     match config.connection_type {
         ConnectionType::Tls => (),
-        ConnectionType::SmtpStarttls => perform_smtp_starttls(&mut stream, server)?,
+        ConnectionType::SmtpStarttls => starttls::smtp::perform(&mut stream, server)?,
+        ConnectionType::PostgresStarttls => starttls::postgres::perform(&mut stream)?,
     };
 
     let mut connector_builder = SslConnector::builder(SslMethod::tls())?;
@@ -53,7 +55,7 @@ pub fn fetch_server_cert(server: &str, port: u16, config: Config) -> Result<Vec<
 
     // Send EHLO again for SMTP STARTTLS to comply with RFC 3207
     if let ConnectionType::SmtpStarttls = config.connection_type {
-        send_smtp_ehlo(&mut stream, server)?;
+        starttls::smtp::send_ehlo(&mut stream, server)?;
     }
 
     let chain = stream

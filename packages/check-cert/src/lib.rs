@@ -11,6 +11,7 @@ pub mod checker {
 }
 pub mod fetcher;
 pub mod starttls {
+    pub mod postgres;
     pub mod smtp;
     pub mod stream_io;
 }

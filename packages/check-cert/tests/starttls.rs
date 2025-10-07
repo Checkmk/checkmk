@@ -3,5 +3,6 @@
 // conditions defined in the file copying, which is part of this source code package.
 
 mod starttls {
+    mod postgres;
     mod smtp;
 }

@@ -17,7 +17,34 @@ pub fn read<T: Read>(stream: &mut T) -> Result<String> {
     Ok(response)
 }
 
+pub fn read_bytes<T: Read>(stream: &mut T, size: usize) -> Result<Vec<u8>> {
+    if size > MAX_RESPONSE_SIZE {
+        return Err(anyhow!("Requested read size too large"));
+    }
+    let mut buf = vec![0u8; size];
+    let mut nbytes = 0;
+
+    while nbytes < size {
+        let bytes_read = stream.read(&mut buf[nbytes..])?;
+        if bytes_read == 0 {
+            return Err(anyhow!(
+                "Unexpected end of stream: expected {} bytes, but only got {} bytes",
+                size,
+                nbytes
+            ));
+        }
+        nbytes += bytes_read;
+    }
+
+    Ok(buf)
+}
+
 pub fn write<T: Write>(stream: &mut T, data: &str) -> Result<()> {
     stream.write_all(data.as_bytes())?;
+    Ok(())
+}
+
+pub fn write_bytes<T: Write>(stream: &mut T, data: &[u8]) -> Result<()> {
+    stream.write_all(data)?;
     Ok(())
 }

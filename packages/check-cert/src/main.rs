@@ -83,7 +83,7 @@ struct Args {
     #[arg(short, long, default_value_t = 443)]
     port: u16,
 
-    /// Connection type: tls, smtp_starttls
+    /// Connection type: tls, smtp_starttls, postgres_starttls
     #[arg(long, default_value = "tls")]
     connection_type: fetcher::ConnectionType,
 

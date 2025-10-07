@@ -84,7 +84,9 @@ def branch_name() {
 }
 
 def safe_branch_name() {
-    return branch_name().replaceAll("/", "-");
+    // "+" can't be part of a docker tag, therefore we remove this.
+    // We remove the complete "+security" to only have a regular version as part of our image tag
+    return branch_name().replaceAll("/", "-").replaceAll("\\+security", "");
 }
 
 /* groovylint-disable DuplicateListLiteral */

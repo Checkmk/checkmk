@@ -197,7 +197,7 @@ def time_series_operators() -> dict[
         "MAX": (_("Maximum"), _time_series_operator_maximum),
         "MIN": (_("Minimum"), _time_series_operator_minimum),
         "AVERAGE": (_("Average"), _time_series_operator_average),
-        "MERGE": ("First non None", lambda x: next(iter(clean_time_series_point(x)))),
+        "MERGE": ("First not None", lambda x: next(iter(clean_time_series_point(x)))),
     }
 
 

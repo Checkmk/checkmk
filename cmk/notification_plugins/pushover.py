@@ -105,7 +105,7 @@ def send_push_notification(
                 ("retry", str(int(float(retry)))),
                 ("expire", str(int(float(expire)))),
             ]
-            if recipient := context.get("PARAMETER_RECIPIENT_KEY"):
+            if recipient := context.get("PARAMETER_PRIORITY_2_3"):
                 params.append(("receipts", recipient))
         else:
             params += [("priority", PRIORITY_MAP[priority])]

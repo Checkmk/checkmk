@@ -646,10 +646,9 @@ rulespec_registry.register(
 
 # TODO: migrate and move to new folder structure
 rulespec_registry.register(
-    CheckParameterRulespecWithItem(
+    CheckParameterRulespecWithoutItem(
         check_group_name="azure_v2_virtualnetworkgateways",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_azure_virtualnetworkgateways,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_virtualnetworkgateways,
         title=lambda: _("Azure VNet Gateway"),

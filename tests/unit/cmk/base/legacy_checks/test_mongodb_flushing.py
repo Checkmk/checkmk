@@ -5,9 +5,7 @@
 
 import pytest
 
-from .checktestlib import Check, CheckResult
-
-pytestmark = pytest.mark.checks
+from cmk.base.legacy_checks.mongodb_flushing import check_mongodb_flushing, parse_mongodb_flushing
 
 # <<<mongodb_flushing>>>
 # average_ms 1.28893335892
@@ -23,7 +21,7 @@ pytestmark = pytest.mark.checks
         (
             [("average_ms", "1.28893335892"), ("last_ms", "0"), ("flushed", "36479")],
             0,
-            "Average flush time over 60 minutes: 0.00 ms",
+            "Average flush time over 60 minutes: 0.0 ms",
             [],
             0,
             "Last flush time: 0.00 s",
@@ -33,7 +31,7 @@ pytestmark = pytest.mark.checks
         (
             [("average_ms", "5"), ("last_ms", "121"), ("flushed", "10000")],
             2,
-            "Average flush time over 60 minutes: 121.00 ms (warn/crit at 1.00 ms/4.00 ms)",
+            "Average flush time over 60 minutes: 121.0 ms (warn/crit at 1.0 ms/4.0 ms)",
             [],
             1,
             "Last flush time: 0.12 s (warn/crit at 0.10 s/0.20 s)",
@@ -87,42 +85,20 @@ def test_check_function(
     """
     Only checks for missing flushing data
     """
-    check = Check("mongodb_flushing")
-    check_result = CheckResult(
-        check.run_check(None, {"average_time": (1, 4, 60), "last_time": (0.1, 0.2)}, info)
+    check_result = list(
+        check_mongodb_flushing(
+            None,
+            {"average_time": (1, 4, 60), "last_time": (0.1, 0.2)},
+            parse_mongodb_flushing(info),
+        )
     )
 
-    if len(check_result.subresults) == 1:
-        check_result_3(check_result.subresults[0], state_expected, info_expected)
-    elif len(check_result.subresults) == 4:
-        check_result_average(check_result.subresults[0], state_expected, info_expected)
-        check_result_flush_time(
-            check_result.subresults[1],
-            state_expected_flush,
-            info_expected_flush,
-            perf_expected_flush_key,
-            perf_expected_flush_value,
-        )
+    assert check_result[0][:2] == (state_expected, info_expected)
+    if len(check_result) == 1:
+        return
 
-
-def check_result_3(result, state_expected, info_expected):
-    assert result.status == state_expected
-    assert result.infotext == info_expected
-
-
-def check_result_average(result, state_expected, info_expected):
-    assert result.status == state_expected
-    assert result.infotext == info_expected
-
-
-def check_result_flush_time(
-    result,
-    state_expected_flush,
-    info_expected_flush,
-    perf_expected_flush_key,
-    perf_expected_flush_value,
-):
-    assert result.status == state_expected_flush
-    assert result.infotext == info_expected_flush
-    assert result.perfdata[0].key == perf_expected_flush_key
-    assert result.perfdata[0].value == perf_expected_flush_value
+    assert check_result[1] == (
+        state_expected_flush,
+        info_expected_flush,
+        [(perf_expected_flush_key, perf_expected_flush_value, 0.1, 0.2)],
+    )

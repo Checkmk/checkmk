@@ -44,12 +44,8 @@ class SiteContext:
         return "%s/tmp" % self._paths.home
 
     @property
-    def real_dir(self) -> str:
-        return "/opt/" + self._paths.home.lstrip("/")
-
-    @property
     def real_tmp_dir(self) -> str:
-        return "%s/tmp" % self.real_dir
+        return f"/opt{self._paths.home}/tmp"  # nosec B108 # BNS:7a2427
 
     @property
     def hook_dir(self) -> str | None:
@@ -71,12 +67,6 @@ class SiteContext:
     def set_config(self, config: Config) -> None:
         self._config = config
         self._config_loaded = True
-
-    def is_empty(self) -> bool:
-        for entry in os.listdir(self._paths.home):
-            if entry not in [".", ".."]:
-                return False
-        return True
 
     def is_stopped(self, verbose: bool) -> bool:
         """Check if site is completely stopped"""

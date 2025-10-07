@@ -81,9 +81,7 @@ def page_show_view(
         datasource = data_source_registry[view_spec["datasource"]]()
         context = visuals.active_context_from_request(datasource.infos, view_spec["context"])
 
-        view = View(
-            view_name, view_spec, context, UserPermissions.from_config(config, permission_registry)
-        )
+        view = View(view_name, view_spec, context, user_permissions)
         view.row_limit = get_limit(
             request_limit_mode=request.get_ascii_input_mandatory("limit", "soft"),
             soft_query_limit=config.soft_query_limit,

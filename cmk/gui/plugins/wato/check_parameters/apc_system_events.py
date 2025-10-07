@@ -3,36 +3,34 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithoutItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersEnvironment,
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    ServiceState,
 )
-from cmk.gui.valuespec import Dictionary, MonitoringState
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 
 
-def _parameter_valuespec_apc_system_events():
+def _parameter_form_spec_apc_system_events() -> Dictionary:
     return Dictionary(
-        title=_("System Events on APX Inrow Devices"),
-        elements=[
-            (
-                "state",
-                MonitoringState(
-                    title=_("State during active system events"),
-                    default_value=2,
+        title=Title("System Events on APX Inrow Devices"),
+        elements={
+            "state": DictElement(
+                required=False,
+                parameter_form=ServiceState(
+                    title=Title("State during active system events"), prefill=DefaultValue(2)
                 ),
-            ),
-        ],
+            )
+        },
     )
 
 
-rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
-        check_group_name="apc_system_events",
-        group=RulespecGroupCheckParametersEnvironment,
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_apc_system_events,
-        title=lambda: _("APC Inrow System Events"),
-    )
+rule_spec_apc_system_events = CheckParameters(
+    name="apc_system_events",
+    title=Title("APC Inrow System Events"),
+    topic=Topic.ENVIRONMENTAL,
+    parameter_form=_parameter_form_spec_apc_system_events,
+    condition=HostCondition(),
 )

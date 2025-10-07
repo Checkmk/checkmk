@@ -16,24 +16,29 @@ from pydantic import BaseModel
 
 import cmk.utils.render
 from cmk.gui.color import fade_color, parse_color, render_color
-from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.unit_formatter import Label, NegativeYRange, NotationFormatter, PositiveYRange
+from cmk.gui.unit_formatter import (
+    Label,
+    NegativeYRange,
+    NotationFormatter,
+    PositiveYRange,
+)
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 from ._from_api import RegisteredMetric
+from ._graph_metric_expressions import clean_time_series_point, LineType
 from ._graph_specification import (
     FixedVerticalRange,
     GraphDataRange,
-    GraphMetric,
     GraphRecipe,
     HorizontalRule,
     MinimalVerticalRange,
 )
-from ._metric_operation import clean_time_series_point, LineType, RRDData
-from ._rrd_fetch import fetch_rrd_data_for_graph
+from ._metric_backend_registry import FetchTimeSeries
 from ._time_series import TimeSeries, TimeSeriesValue
+from ._time_series_fetcher import fetch_augmented_time_series
 from ._unit import user_specific_unit, UserSpecificUnit
 from ._utils import SizeEx
 
@@ -146,15 +151,21 @@ def compute_graph_artwork(
     size: tuple[int, int],
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
+    temperature_unit: TemperatureUnit,
+    fetch_time_series: FetchTimeSeries,
     graph_display_id: str = "",
 ) -> GraphArtwork:
-    unit_spec = user_specific_unit(
-        graph_recipe.unit_spec,
-        user,
-        active_config,
-    )
+    unit_spec = user_specific_unit(graph_recipe.unit_spec, temperature_unit)
 
-    curves = list(compute_graph_artwork_curves(graph_recipe, graph_data_range, registered_metrics))
+    curves = list(
+        compute_graph_artwork_curves(
+            graph_recipe,
+            graph_data_range,
+            registered_metrics,
+            temperature_unit=temperature_unit,
+            fetch_time_series=fetch_time_series,
+        )
+    )
 
     pin_time = _load_graph_pin()
     _compute_scalars(unit_spec.formatter.render, curves, pin_time)
@@ -318,47 +329,55 @@ def _areastack(
     return list(map(fix_swap, zip_longest(base, edge)))
 
 
+def _parse_line_type(
+    mirror_prefix: Literal["", "-"], ts_line_type: LineType | Literal["ref"]
+) -> LineType | Literal["ref"]:
+    match ts_line_type:
+        case "line" | "-line":
+            return "line" if mirror_prefix == "" else "-line"
+        case "area" | "-area":
+            return "area" if mirror_prefix == "" else "-area"
+        case "stack" | "-stack":
+            return "stack" if mirror_prefix == "" else "-stack"
+        case "ref":
+            return "ref"
+    assert_never((mirror_prefix, ts_line_type))
+
+
 def _compute_graph_curves(
-    graph_metrics: Sequence[GraphMetric],
-    rrd_data: RRDData,
     registered_metrics: Mapping[str, RegisteredMetric],
+    graph_recipe: GraphRecipe,
+    graph_data_range: GraphDataRange,
+    *,
+    temperature_unit: TemperatureUnit,
+    fetch_time_series: FetchTimeSeries,
 ) -> Iterator[Curve]:
-    def _parse_line_type(
-        mirror_prefix: Literal["", "-"], ts_line_type: LineType | Literal["ref"]
-    ) -> LineType | Literal["ref"]:
-        match ts_line_type:
-            case "line" | "-line":
-                return "line" if mirror_prefix == "" else "-line"
-            case "area" | "-area":
-                return "area" if mirror_prefix == "" else "-area"
-            case "stack" | "-stack":
-                return "stack" if mirror_prefix == "" else "-stack"
-            case "ref":
-                return "ref"
-        assert_never((mirror_prefix, ts_line_type))
+    # Fetch all raw RRD data
+    for spec in fetch_augmented_time_series(
+        registered_metrics,
+        graph_recipe,
+        graph_data_range,
+        temperature_unit=temperature_unit,
+        fetch_time_series=fetch_time_series,
+    ):
+        multi = len(spec.augmented_time_series) > 1
+        mirror_prefix: Literal["", "-"] = "-" if spec.line_type.startswith("-") else ""
+        for i, ts in enumerate(spec.augmented_time_series):
+            title = spec.title
+            line_type: LineType | Literal["ref"] = spec.line_type
+            color = spec.color
+            if ts.metadata:
+                if multi:
+                    title = f"{spec.title} - {ts.metadata.title}"
+                    line_type = _parse_line_type(mirror_prefix, ts.metadata.line_type)
+                if ts.metadata.color:
+                    color = ts.metadata.color
 
-    for graph_metric in graph_metrics:
-        time_series = graph_metric.operation.compute_time_series(rrd_data, registered_metrics)
-        if not time_series:
-            continue
-
-        multi = len(time_series) > 1
-        mirror_prefix: Literal["", "-"] = "-" if graph_metric.line_type.startswith("-") else ""
-        for i, ts in enumerate(time_series):
-            title = graph_metric.title
-            if multi and ts.metadata.title:
-                title += " - " + ts.metadata.title
-
-            color = ts.metadata.color or graph_metric.color
-            if i % 2 == 1 and graph_metric.operation.fade_odd_color():
+            if i % 2 == 1 and spec.fade_odd_color:
                 color = render_color(fade_color(parse_color(color), 0.3))
 
             yield Curve(
-                line_type=(
-                    _parse_line_type(mirror_prefix, ts.metadata.line_type)
-                    if multi and ts.metadata.line_type
-                    else graph_metric.line_type
-                ),
+                line_type=line_type,
                 color=color,
                 title=title,
                 rrddata=ts.data,
@@ -369,15 +388,21 @@ def compute_graph_artwork_curves(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
     registered_metrics: Mapping[str, RegisteredMetric],
+    *,
+    temperature_unit: TemperatureUnit,
+    fetch_time_series: FetchTimeSeries,
 ) -> list[Curve]:
-    # Fetch all raw RRD data
-    rrd_data = fetch_rrd_data_for_graph(graph_recipe, graph_data_range, registered_metrics)
-
-    curves = list(_compute_graph_curves(graph_recipe.metrics, rrd_data, registered_metrics))
-
+    curves = list(
+        _compute_graph_curves(
+            registered_metrics,
+            graph_recipe,
+            graph_data_range,
+            temperature_unit=temperature_unit,
+            fetch_time_series=fetch_time_series,
+        )
+    )
     if graph_recipe.omit_zero_metrics:
         curves = [curve for curve in curves if any(curve["rrddata"])]
-
     return curves
 
 

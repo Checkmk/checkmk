@@ -111,9 +111,7 @@ class TimeSeries:
         )
 
     def __repr__(self) -> str:
-        return (
-            f"TimeSeries(start={self.start}, end={self.end}, step{self.step}, values={self.values})"
-        )
+        return f"TimeSeries(start={self.start}, end={self.end}, step={self.step}, values={self.values})"
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, TimeSeries):

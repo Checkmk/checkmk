@@ -84,7 +84,7 @@ def check_rabbitmq_vhosts(item, params, parsed):
 
         unit = ""
         if "rate" in msg_key:
-            unit = "1/s"
+            unit = "/s"
 
         msg_levels_upper = params.get("%s_upper" % param_key, (None, None))
         msg_levels_lower = params.get("%s_lower" % param_key, (None, None))
@@ -93,8 +93,7 @@ def check_rabbitmq_vhosts(item, params, parsed):
             msg_value,
             msg_key,
             msg_levels_upper + msg_levels_lower,
-            human_readable_func=hr_func,
-            unit=unit,
+            human_readable_func=lambda x, hr=hr_func, u=unit: f"{hr(x)}{u}",
             infoname=msg_infotext,
         )
 

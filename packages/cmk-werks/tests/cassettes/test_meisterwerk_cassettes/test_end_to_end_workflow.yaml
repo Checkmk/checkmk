@@ -1,0 +1,196 @@
+interactions:
+- request:
+    body: '{"werk": {"title": "Feature that need improvement", "date": "2024-01-01T00:00:00Z",
+      "level": "2", "versions": ["1.0.0"], "werk_class": "feature", "component": "core",
+      "compatible": true, "werk_text": "This feature was implemented for users. It
+      have some benefits and provide experience. The feature work good but could be
+      describe better for user understanding."}}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '348'
+      content-type:
+      - application/json
+      host:
+      - meisterwerk.lan.checkmk.net
+      user-agent:
+      - python-httpx/0.28.1
+      user-id:
+      - cli_user
+      x-request-id:
+      - b44a2886-21e5-4fc6-b82a-aec48feb83fc
+    method: POST
+    uri: http://meisterwerk.lan.checkmk.net/werks/evaluate/werk
+  response:
+    body:
+      string: '{"user_id":"python-httpx/0.28.1","request_id":"b44a2886-21e5-4fc6-b82a-aec48feb83fc","response_datetime":"2025-09-18T13:42:57.106284Z","evaluation":{"aggregated_scores":{"grammar_score":1,"user_impact_clarity_score":1,"paragraph_division_score":1,"non_compatible_werk_score":null,"english_style_score":1},"aggregated_suggestions":{"grammar_suggestions_to_improve_text":"Correct
+        subject-verb agreement errors by changing ''It have'' to ''It has'', ''provide''
+        to ''provides'', ''work'' to ''works'', and ''describe'' to ''described''.
+        Add the definite article ''the'' before ''user understanding''. Rephrase sentences
+        for clarity, for example: ''This feature was implemented for users. It has
+        some benefits and provides a better experience. The feature works well but
+        could be described better for the user understanding.''","user_impact_clarity_suggestions_to_improve_text":"Clearly
+        describe what the new feature does and how it benefits the user in practical
+        terms. Specify any changes users will notice, whether they need to take action
+        to use or enable the feature, and how it improves their experience. Avoid
+        vague phrases like ''provide experience'' and instead specify the user impact
+        concretely.","paragraph_division_suggestions_to_improve_text":"Divide the
+        text into four paragraphs: first, introduce the feature implementation; second,
+        describe the benefits it provides; third, comment on its performance; and
+        fourth, mention the need for better description to aid user understanding.","non_compatible_werk_suggestions_to_improve_text":null,"english_style_suggestions_to_improve_text":"Begin
+        with the feature or component name, use a strong verb to describe what was
+        done, and clearly state the benefit or effect for users. Remove vague phrases
+        and filler words. Rewrite as: ''[Feature name] improves user experience by
+        [specific benefit].'' Avoid passive constructions and ensure the description
+        is concise and informative."}}}'
+    headers:
+      Content-Length:
+      - '1911'
+      Content-Type:
+      - text/html; charset=utf-8
+      - application/json
+      Date:
+      - Mon, 22 Sep 2025 12:02:42 GMT
+      Server:
+      - uvicorn
+      Via:
+      - 1.1 Caddy
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"werk": {"title": "Feature that need improvement", "date": "2024-01-01T00:00:00Z",
+      "level": "2", "versions": ["1.0.0"], "werk_class": "feature", "component": "core",
+      "compatible": true, "werk_text": "This feature was implemented for users. It
+      have some benefits and provide experience. The feature work good but could be
+      describe better for user understanding."}}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '348'
+      content-type:
+      - application/json
+      host:
+      - meisterwerk.lan.checkmk.net
+      user-agent:
+      - python-httpx/0.28.1
+      user-id:
+      - cli_user
+      x-request-id:
+      - ae49a5d4-9f04-4b54-a6ba-e7f2d1e72846
+    method: POST
+    uri: http://meisterwerk.lan.checkmk.net/werks/generate/user_comprehension
+  response:
+    body:
+      string: "{\"user_id\":\"python-httpx/0.28.1\",\"request_id\":\"ae49a5d4-9f04-4b54-a6ba-e7f2d1e72846\",\"response_datetime\":\"2025-09-18T13:42:57.107182Z\",\"user_understanding\":\"The
+        recent update introduced a new feature aimed at improving user experience,
+        which generally functions well and offers some benefits. However, the description
+        of this feature is currently vague and could be clearer to help users fully
+        understand its purpose and usage. For our monitoring setup, this means we
+        should verify if the new feature affects any monitored services or alert conditions,
+        although no direct impact is explicitly mentioned. We need to schedule a review
+        to clarify the feature\u2019s functionality and update any related documentation
+        or training materials to ensure all teams and users comprehend the change.
+        Additionally, it would be prudent to communicate with the development team
+        to obtain a more detailed explanation, as the phrase \u201Ccould be describe
+        better for user understanding\u201D is ambiguous and does not specify what
+        aspects are unclear or how it might affect monitoring or alerting workflows.\"}"
+    headers:
+      Content-Length:
+      - '1085'
+      Content-Type:
+      - text/html; charset=utf-8
+      - application/json
+      Date:
+      - Mon, 22 Sep 2025 12:03:17 GMT
+      Server:
+      - uvicorn
+      Via:
+      - 1.1 Caddy
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"werk": {"title": "Feature that need improvement", "date": "2024-01-01T00:00:00Z",
+      "level": "2", "versions": ["1.0.0"], "werk_class": "feature", "component": "core",
+      "compatible": true, "werk_text": "This feature was implemented for users. It
+      have some benefits and provide experience. The feature work good but could be
+      describe better for user understanding."}, "evaluation": {"aggregated_scores":
+      {"grammar_score": 1, "user_impact_clarity_score": 1, "paragraph_division_score":
+      1, "non_compatible_werk_score": null, "english_style_score": 1}, "aggregated_suggestions":
+      {"grammar_suggestions_to_improve_text": "Correct subject-verb agreement errors
+      by changing ''It have'' to ''It has'', ''provide'' to ''provides'', ''work''
+      to ''works'', and ''describe'' to ''described''. Add the definite article ''the''
+      before ''user understanding''. Rephrase sentences for clarity, for example:
+      ''This feature was implemented for users. It has some benefits and provides
+      a better experience. The feature works well but could be described better for
+      the user understanding.''", "user_impact_clarity_suggestions_to_improve_text":
+      "Clearly describe what the new feature does and how it benefits the user in
+      practical terms. Specify any changes users will notice, whether they need to
+      take action to use or enable the feature, and how it improves their experience.
+      Avoid vague phrases like ''provide experience'' and instead specify the user
+      impact concretely.", "paragraph_division_suggestions_to_improve_text": "Divide
+      the text into four paragraphs: first, introduce the feature implementation;
+      second, describe the benefits it provides; third, comment on its performance;
+      and fourth, mention the need for better description to aid user understanding.",
+      "non_compatible_werk_suggestions_to_improve_text": null, "english_style_suggestions_to_improve_text":
+      "Begin with the feature or component name, use a strong verb to describe what
+      was done, and clearly state the benefit or effect for users. Remove vague phrases
+      and filler words. Rewrite as: ''[Feature name] improves user experience by [specific
+      benefit].'' Avoid passive constructions and ensure the description is concise
+      and informative."}}}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '2124'
+      content-type:
+      - application/json
+      host:
+      - meisterwerk.lan.checkmk.net
+      user-agent:
+      - werk-tool-v1.0.0
+      user-id:
+      - cli_user
+      x-request-id:
+      - f4dc8c48-6928-4beb-a513-51110c878969
+    method: POST
+    uri: http://meisterwerk.lan.checkmk.net/werks/generate/rewrite
+  response:
+    body:
+      string: '{"user_id":"werk-tool-v1.0.0","request_id":"f4dc8c48-6928-4beb-a513-51110c878969","response_datetime":"2025-09-18T13:42:57.106799Z","rewritten_text":"This
+        feature has been implemented to enhance the user experience.\n\nIt provides
+        several benefits, including improved functionality and ease of use.\n\nThe
+        feature works reliably and performs well in various scenarios.\n\nHowever,
+        its description could be improved to help users better understand its purpose
+        and how to utilize it effectively."}'
+    headers:
+      Content-Length:
+      - '495'
+      Content-Type:
+      - text/html; charset=utf-8
+      - application/json
+      Date:
+      - Mon, 22 Sep 2025 12:03:17 GMT
+      Server:
+      - uvicorn
+      Via:
+      - 1.1 Caddy
+    status:
+      code: 200
+      message: OK
+version: 1

@@ -114,7 +114,8 @@ class SNMPSource(Source[SNMPRawData]):
         ipaddress: HostAddress,
         *,
         max_age: MaxAge,
-        file_cache_path: Path,
+        file_cache_path_base: Path,
+        file_cache_path_relative: Path,
     ) -> None:
         super().__init__()
         self.factory: Final = factory
@@ -123,7 +124,8 @@ class SNMPSource(Source[SNMPRawData]):
         self.host_ip_family: Final = host_ip_family
         self.ipaddress: Final = ipaddress
         self._max_age: Final = max_age
-        self._file_cache_path: Final = file_cache_path
+        self._file_cache_path_base: Final = file_cache_path_base
+        self._file_cache_path_relative: Final = file_cache_path_relative
 
     def source_info(self) -> SourceInfo:
         return SourceInfo(
@@ -147,8 +149,12 @@ class SNMPSource(Source[SNMPRawData]):
         self, *, simulation: bool, file_cache_options: FileCacheOptions
     ) -> FileCache[SNMPRawData]:
         return SNMPFileCache(
-            path_template=os.path.join(
-                self._file_cache_path, self.source_info().ident, "{mode}", str(self.host_name)
+            base_path=self._file_cache_path_base,
+            relative_path_template=os.path.join(
+                self._file_cache_path_relative,
+                self.source_info().ident,
+                "{mode}",
+                str(self.host_name),
             ),
             max_age=self._max_age,
             simulation=simulation,
@@ -170,7 +176,8 @@ class MgmtSNMPSource(Source[SNMPRawData]):
         ipaddress: HostAddress,
         *,
         max_age: MaxAge,
-        file_cache_path: Path,
+        file_cache_path_base: Path,
+        file_cache_path_relative: Path,
     ) -> None:
         super().__init__()
         self.factory: Final = factory
@@ -179,7 +186,8 @@ class MgmtSNMPSource(Source[SNMPRawData]):
         self.host_ip_family: Final = host_ip_family
         self.ipaddress: Final = ipaddress
         self._max_age: Final = max_age
-        self._file_cache_path: Final = file_cache_path
+        self._file_cache_path_base: Final = file_cache_path_base
+        self._file_cache_path_relative: Final = file_cache_path_relative
 
     def source_info(self) -> SourceInfo:
         return SourceInfo(
@@ -203,8 +211,12 @@ class MgmtSNMPSource(Source[SNMPRawData]):
         self, *, simulation: bool, file_cache_options: FileCacheOptions
     ) -> FileCache[SNMPRawData]:
         return SNMPFileCache(
-            path_template=os.path.join(
-                self._file_cache_path, self.source_info().ident, "{mode}", str(self.host_name)
+            base_path=self._file_cache_path_base,
+            relative_path_template=os.path.join(
+                self._file_cache_path_relative,
+                self.source_info().ident,
+                "{mode}",
+                str(self.host_name),
             ),
             max_age=self._max_age,
             simulation=simulation,
@@ -224,14 +236,16 @@ class IPMISource(Source[AgentRawData]):
         ipaddress: HostAddress,
         *,
         max_age: MaxAge,
-        file_cache_path: Path,
+        file_cache_path_base: Path,
+        file_cache_path_relative: Path,
     ) -> None:
         super().__init__()
         self.factory: Final = factory
         self.host_name: Final = host_name
         self.ipaddress: Final = ipaddress
         self._max_age: Final = max_age
-        self._file_cache_path: Final = file_cache_path
+        self._file_cache_path_base: Final = file_cache_path_base
+        self._file_cache_path_relative: Final = file_cache_path_relative
 
     def source_info(self) -> SourceInfo:
         return SourceInfo(
@@ -249,8 +263,9 @@ class IPMISource(Source[AgentRawData]):
         self, *, simulation: bool, file_cache_options: FileCacheOptions
     ) -> FileCache[AgentRawData]:
         return AgentFileCache(
-            path_template=os.path.join(
-                self._file_cache_path, self.source_info().ident, str(self.host_name)
+            base_path=self._file_cache_path_base,
+            relative_path_template=os.path.join(
+                self._file_cache_path_relative, self.source_info().ident, str(self.host_name)
             ),
             max_age=self._max_age,
             simulation=simulation,
@@ -272,7 +287,8 @@ class ProgramSource(Source[AgentRawData]):
         *,
         program: str,
         max_age: MaxAge,
-        file_cache_path: Path,
+        file_cache_path_base: Path,
+        file_cache_path_relative: Path,
     ) -> None:
         super().__init__()
         self.factory: Final = factory
@@ -281,7 +297,8 @@ class ProgramSource(Source[AgentRawData]):
         self.ipaddress: Final = ipaddress
         self.program: Final = program
         self._max_age: Final = max_age
-        self._file_cache_path: Final = file_cache_path
+        self._file_cache_path_base: Final = file_cache_path_base
+        self._file_cache_path_relative: Final = file_cache_path_relative
 
     def source_info(self) -> SourceInfo:
         return SourceInfo(
@@ -301,7 +318,8 @@ class ProgramSource(Source[AgentRawData]):
         self, *, simulation: bool, file_cache_options: FileCacheOptions
     ) -> FileCache[AgentRawData]:
         return AgentFileCache(
-            path_template=str(self._file_cache_path / self.host_name),
+            base_path=self._file_cache_path_base,
+            relative_path_template=os.path.join(self._file_cache_path_relative, self.host_name),
             max_age=self._max_age,
             simulation=simulation,
             use_only_cache=file_cache_options.use_only_cache,
@@ -319,13 +337,15 @@ class PushAgentSource(Source[AgentRawData]):
         ipaddress: HostAddress | None,
         *,
         max_age: MaxAge,
-        file_cache_path: Path,
+        file_cache_path_base: Path,
+        file_cache_path_relative: Path,
     ) -> None:
         super().__init__()
         self.host_name: Final = host_name
         self.ipaddress: Final = ipaddress
         self._max_age: Final = max_age
-        self._file_cache_path: Final = file_cache_path
+        self._file_cache_path_base: Final = file_cache_path_base
+        self._file_cache_path_relative: Final = file_cache_path_relative
 
     def source_info(self) -> SourceInfo:
         return SourceInfo(
@@ -343,8 +363,12 @@ class PushAgentSource(Source[AgentRawData]):
         self, *, simulation: bool, file_cache_options: FileCacheOptions
     ) -> FileCache[AgentRawData]:
         return AgentFileCache(
-            path_template=os.path.join(
-                self._file_cache_path, self.source_info().ident, str(self.host_name), "agent_output"
+            base_path=self._file_cache_path_base,
+            relative_path_template=os.path.join(
+                self._file_cache_path_relative,
+                self.source_info().ident,
+                str(self.host_name),
+                "agent_output",
             ),
             max_age=(
                 MaxAge.unlimited()
@@ -372,7 +396,8 @@ class TCPSource(Source[AgentRawData]):
         ipaddress: HostAddress,
         *,
         max_age: MaxAge,
-        file_cache_path: Path,
+        file_cache_path_base: Path,
+        file_cache_path_relative: Path,
         tls_config: TLSConfig,
     ) -> None:
         super().__init__()
@@ -381,7 +406,8 @@ class TCPSource(Source[AgentRawData]):
         self.host_ip_family: Final = host_ip_family
         self.ipaddress: Final = ipaddress
         self._max_age: Final = max_age
-        self._file_cache_path: Final = file_cache_path
+        self._file_cache_path_base: Final = file_cache_path_base
+        self._file_cache_path_relative: Final = file_cache_path_relative
         self._tls_config: Final = tls_config
 
     def source_info(self) -> SourceInfo:
@@ -405,7 +431,8 @@ class TCPSource(Source[AgentRawData]):
         self, *, simulation: bool, file_cache_options: FileCacheOptions
     ) -> FileCache[AgentRawData]:
         return AgentFileCache(
-            path_template=str(self._file_cache_path / self.host_name),
+            base_path=self._file_cache_path_base,
+            relative_path_template=os.path.join(self._file_cache_path_relative, self.host_name),
             max_age=self._max_age,
             simulation=simulation,
             use_only_cache=(
@@ -429,7 +456,8 @@ class SpecialAgentSource(Source[AgentRawData]):
         agent_name: str,
         stdin: str | None,
         cmdline: str,
-        file_cache_path: Path,
+        file_cache_path_base: Path,
+        file_cache_path_relative: Path,
     ) -> None:
         super().__init__()
         self.factory: Final = factory
@@ -439,7 +467,8 @@ class SpecialAgentSource(Source[AgentRawData]):
         self._agent_name: Final = agent_name
         self._stdin: Final = stdin
         self._cmdline: Final = cmdline
-        self._file_cache_path: Final = file_cache_path
+        self._file_cache_path_base: Final = file_cache_path_base
+        self._file_cache_path_relative: Final = file_cache_path_relative
 
     def source_info(self) -> SourceInfo:
         return SourceInfo(
@@ -461,8 +490,9 @@ class SpecialAgentSource(Source[AgentRawData]):
     ) -> FileCache[AgentRawData]:
         if self._agent_name != "otel":
             return AgentFileCache(
-                path_template=os.path.join(
-                    self._file_cache_path, self.source_info().ident, str(self.host_name)
+                base_path=self._file_cache_path_base,
+                relative_path_template=os.path.join(
+                    self._file_cache_path_relative, self.source_info().ident, str(self.host_name)
                 ),
                 max_age=self._max_age,
                 simulation=simulation,
@@ -476,8 +506,9 @@ class SpecialAgentSource(Source[AgentRawData]):
         # temp fix until a metrics backend becomes available, we didn't go for a cleaner
         # approach.
         return AgentFileCache(
-            path_template=os.path.join(
-                self._file_cache_path, self.source_info().ident, str(self.host_name)
+            base_path=self._file_cache_path_base,
+            relative_path_template=os.path.join(
+                self._file_cache_path_relative, "special_otel", str(self.host_name)
             ),
             max_age=self._max_age,
             simulation=simulation,

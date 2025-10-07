@@ -16,6 +16,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
 from cmk.gui import visuals
 from cmk.gui.config import active_config, Config
+from cmk.gui.dashboard.type_defs import ViewDashletConfig
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKInternalError, MKUserError
@@ -53,6 +54,7 @@ from cmk.gui.valuespec import (
     Integer,
     ListChoice,
     ListOf,
+    Migrate,
     TextInput,
     TextOrRegExp,
     Transform,
@@ -156,18 +158,29 @@ def view_editor_general_properties(ds_name: str) -> Dictionary:
             ),
             (
                 "column_headers",
-                DropdownChoice(
-                    title=_("Column Headers"),
-                    choices=[
-                        ("off", _("off")),
-                        ("pergroup", _("once per group")),
-                        ("repeat", _("repeat every 20'th row")),
-                    ],
-                    default_value="pergroup",
+                Migrate(
+                    DropdownChoice(
+                        title=_("Column Headers"),
+                        choices=[
+                            ("off", _("off")),
+                            ("pergroup", _("once per group")),
+                        ],
+                        default_value="pergroup",
+                    ),
+                    migrate=_migrate_column_headers_repeat_to_pergroup,
                 ),
             ),
         ],
     )
+
+
+def _migrate_column_headers_repeat_to_pergroup(setting: str) -> str:
+    """In 2.5 we removed the 'repeat' option for column headers
+    because we don't need it now that we have sticky headers.
+    This function ensures previous settings are migrated properly. Can be removed in 2.6."""
+    if setting == "repeat":
+        return "pergroup"
+    return setting
 
 
 def view_inventory_join_macros(
@@ -720,7 +733,6 @@ def view_editor_sorter_specs(
         datasource: ABCDataSource = data_source_registry[ds_name]()
         unsupported_columns: list[ColumnName] = datasource.unsupported_columns
         registered_painters = all_painters(active_config.tags.tag_groups)
-        user_permissions = UserPermissions.from_config(active_config, permission_registry)
 
         for name, p in sorters_of_datasource(ds_name, user_permissions).items():
             if any(column in p.columns for column in unsupported_columns):
@@ -901,11 +913,11 @@ def _transform_valuespec_value_to_view(ident, attrs):
 #
 # old_view is the old view dict which might be loaded from storage.
 # view is the new dict object to be updated.
-def create_view_from_valuespec(old_view, view):
-    ds_name = old_view.get("datasource", request.var("datasource"))
+def create_view_from_valuespec[T: (ViewSpec, ViewDashletConfig)](old_view: T, view: T) -> T:
+    ds_name = old_view.get("datasource") or request.get_ascii_input_mandatory("datasource")
     view["datasource"] = ds_name
 
-    def update_view(ident, vs):
+    def update_view(ident: str, vs: Dictionary) -> None:
         attrs = vs.from_html_vars(ident)
         vs.validate_value(attrs, ident)
         view.update(_transform_valuespec_value_to_view(ident, attrs))

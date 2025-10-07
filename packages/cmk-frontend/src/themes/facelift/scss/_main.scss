@@ -3,7 +3,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-@use "_mixins" as *;
+@use '_mixins' as *;
 
 /* Global style used by all HTML pages, even by sidebar and
    mobile interface */
@@ -60,7 +60,7 @@ textarea {
 /* consistent dropdown field styling for all browsers */
 select:not([multiple]) {
   padding-right: 2.5em;
-  background-image: url("images/select_arrow.png");
+  background-image: url('images/select_arrow.png');
   background-position: right 50%;
   background-repeat: no-repeat;
   background-size: 20px 11px;
@@ -69,7 +69,7 @@ select:not([multiple]) {
 }
 
 div.popup_menu select:not([multiple]) {
-  background: $popup-menu-select-bg-color url("images/select_arrow.png") right 10% / 20px 11px
+  background: $popup-menu-select-bg-color url('images/select_arrow.png') right 10% / 20px 11px
     no-repeat;
 }
 
@@ -77,20 +77,20 @@ select::-ms-expand {
   display: none;
 }
 
-input[type="file"] {
+input[type='file'] {
   color: $font-color-black;
 }
 
 form {
   margin: 0;
 
-  label + input:not([type="checkbox"]) {
+  label + input:not([type='checkbox']) {
     margin-left: $spacing;
   }
 
   label.required::after {
     color: $font-color-green;
-    content: " (required)";
+    content: ' (required)';
   }
 
   div.submit_button_container {
@@ -101,7 +101,7 @@ form {
       pointer-events: none;
     }
 
-    input[type="submit"] {
+    input[type='submit'] {
       margin-right: 0;
       pointer-events: auto;
 
@@ -113,16 +113,16 @@ form {
   }
 }
 
-input[type="checkbox"]:hover + label::before {
+input[type='checkbox']:hover + label::before {
   background-color: $input-hover-bg-color;
 }
 
-td.checkbox input[type="checkbox"] + label::before {
+td.checkbox input[type='checkbox'] + label::before {
   margin: 0;
 }
 
 /* checkbox styling */
-input[type="checkbox"] {
+input[type='checkbox'] {
   display: none;
 
   &.vue_checkbox {
@@ -138,13 +138,13 @@ input[type="checkbox"] {
     vertical-align: middle;
     background-color: $input-background-color;
     border: 1px $input-background-color solid;
-    content: "\00a0";
+    content: '\00a0';
   }
 
   &:checked {
     + label::before {
       text-align: center;
-      content: "\2716";
+      content: '\2716';
     }
   }
 }
@@ -190,9 +190,9 @@ table.vs_duallist a.control,
 
 button,
 input.button,
-input.button:not([type="text"]),
-input.button:not([type="password"]) {
-  &[disabled="disabled"],
+input.button:not([type='text']),
+input.button:not([type='password']) {
+  &[disabled='disabled'],
   &:disabled {
     &,
     &:hover,
@@ -243,12 +243,12 @@ a.toggle_switch {
 
   &.required::before {
     color: $font-color-green;
-    content: "(required) ";
+    content: '(required) ';
   }
 }
 
 /*for IE8 */
-input[type="submit"]:focus {
+input[type='submit']:focus {
   outline: none;
 }
 
@@ -355,7 +355,7 @@ div.foldable_wrapper {
   div.foldable_header {
     position: sticky;
     top: 0;
-    z-index: 15;
+    z-index: $sticky-table-header-z-index;
     background-color: $headline-color;
 
     &[onclick] {
@@ -497,11 +497,11 @@ div.error {
 }
 
 .success.flashed {
-  @include flashed-mixin($success, url("images/icon_checkmark.svg"));
+  @include flashed-mixin($success, url('images/icon_checkmark.svg'));
 }
 
 .warning.flashed {
-  @include flashed-mixin($yellow, url("images/icon_problem.svg"));
+  @include flashed-mixin($yellow, url('images/icon_problem.svg'));
 }
 
 // TODO: what is using this? can we remove it?
@@ -610,7 +610,7 @@ table.dictionary {
 }
 
 td.dictleft {
-  &.horizontal div.dictelement[id*="DictGroup"] {
+  &.horizontal div.dictelement[id*='DictGroup'] {
     margin-bottom: 0;
   }
   div.dictelement {
@@ -624,7 +624,7 @@ td.dictleft {
     }
 
     &.indent {
-      &:not(div[id*="DictGroup"]) {
+      &:not(div[id*='DictGroup']) {
         padding-left: 10px;
         margin-left: 6px;
         border-left: 2px solid $line-color;
@@ -836,7 +836,7 @@ table.listchoice {
       height: $input-field-height;
     }
 
-    input[type="checkbox"] {
+    input[type='checkbox'] {
       height: 12px;
       margin: 0;
     }
@@ -1139,7 +1139,7 @@ table.modifydowntimes > tbody > tr {
     @include ellipsis-text-overflow;
   }
 
-  .select2-results__option[aria-selected="true"] {
+  .select2-results__option[aria-selected='true'] {
     background-color: $input-background-color;
   }
 

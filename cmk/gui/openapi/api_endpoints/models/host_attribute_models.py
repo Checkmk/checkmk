@@ -18,11 +18,11 @@ from cmk.gui.openapi.api_endpoints.models.attributes import (
     IPMIParametersModel,
     LockedByModel,
     MetaDataModel,
+    MetricsAssociationEnabledModel,
+    MetricsAssociationFilterModel,
+    MetricsAssociationModel,
     NetworkScanModel,
     NetworkScanResultModel,
-    OTelMetricsAssociationEnabledModel,
-    OTelMetricsAssociationFilterModel,
-    OTelMetricsAssociationModel,
     SNMPCredentialsConverter,
     SNMPCredentialsModel,
 )
@@ -37,8 +37,8 @@ from cmk.gui.openapi.framework.model.restrict_editions import RestrictEditions
 from cmk.gui.watolib.builtin_attributes import HostAttributeLabels, HostAttributeWaitingForDiscovery
 from cmk.gui.watolib.host_attributes import (
     HostAttributes,
-    OTelMetricsAssociationEnabled,
-    OTelMetricsAssociationFilter,
+    MetricsAssociationEnabled,
+    MetricsAssociationFilter,
 )
 from cmk.utils.agent_registration import HostAgentConnectionMode
 from cmk.utils.tags import TagGroupID
@@ -185,8 +185,8 @@ class BaseHostAttributeModel:
         default_factory=ApiOmitted,
     )
 
-    otel_metrics_association: Annotated[
-        OTelMetricsAssociationModel | ApiOmitted,
+    metrics_association: Annotated[
+        MetricsAssociationModel | ApiOmitted,
         RestrictEditions(supported_editions={Edition.CCE, Edition.CME, Edition.CSE}),
     ] = api_field(
         description="Configuration for associating OpenTelemetry metrics with this host.",
@@ -312,21 +312,24 @@ class HostViewAttributeModel(
             )
             if "snmp_community" in value
             else ApiOmitted(),
-            otel_metrics_association=(
+            metrics_association=(
                 "disabled"
-                if otel_metrics_assoc[0] == "disabled"
-                else OTelMetricsAssociationEnabledModel(
+                if metrics_assoc[0] == "disabled"
+                else MetricsAssociationEnabledModel(
                     attribute_filters=[
-                        OTelMetricsAssociationFilterModel(
+                        MetricsAssociationFilterModel(
                             attribute_type=attribute_filter["attribute_type"],
                             attribute_key=attribute_filter["attribute_key"],
                             attribute_value=attribute_filter["attribute_value"],
                         )
-                        for attribute_filter in otel_metrics_assoc[1]["attribute_filters"]
+                        for attribute_filter in metrics_assoc[1]["attribute_filters"]
+                    ],
+                    host_name_resource_attribute_key=metrics_assoc[1][
+                        "host_name_resource_attribute_key"
                     ],
                 )
             )
-            if (otel_metrics_assoc := value.get("otel_metrics_association"))
+            if (metrics_assoc := value.get("metrics_association"))
             else ApiOmitted(),
             labels=dict(value["labels"]) if "labels" in value else ApiOmitted(),
             waiting_for_discovery=value.get("waiting_for_discovery", ApiOmitted()),
@@ -397,21 +400,22 @@ class HostUpdateAttributeModel(
             attributes["cmk_agent_connection"] = self.cmk_agent_connection
         if not isinstance(self.snmp_community, ApiOmitted):
             attributes["snmp_community"] = self.snmp_community_to_internal(self.snmp_community)
-        if not isinstance(self.otel_metrics_association, ApiOmitted):
-            attributes["otel_metrics_association"] = (
+        if not isinstance(self.metrics_association, ApiOmitted):
+            attributes["metrics_association"] = (
                 ("disabled", None)
-                if self.otel_metrics_association == "disabled"
+                if self.metrics_association == "disabled"
                 else (
                     "enabled",
-                    OTelMetricsAssociationEnabled(
+                    MetricsAssociationEnabled(
                         attribute_filters=[
-                            OTelMetricsAssociationFilter(
+                            MetricsAssociationFilter(
                                 attribute_type=attribute_filter.attribute_type,
                                 attribute_key=attribute_filter.attribute_key,
                                 attribute_value=attribute_filter.attribute_value,
                             )
-                            for attribute_filter in self.otel_metrics_association.attribute_filters
+                            for attribute_filter in self.metrics_association.attribute_filters
                         ],
+                        host_name_resource_attribute_key=self.metrics_association.host_name_resource_attribute_key,
                     ),
                 )
             )

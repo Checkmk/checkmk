@@ -1,4 +1,4 @@
-@use "sass:color";
+@use 'sass:color';
 @charset "UTF-8";
 // Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,7 +7,7 @@
 // Note: Some of the colors defined here are also used in cmk/gui/plugins/metrics/utils.py, do not
 // change one without the other.
 
-@import "../../facelift/colors.scss";
+@import '../../facelift/colors.scss';
 // -----------------------------------------------------------------------------
 // Colors
 // -----------------------------------------------------------------------------

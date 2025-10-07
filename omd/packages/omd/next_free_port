@@ -4,8 +4,7 @@
 #
 # usage: $OMD_ROOT/lib/omd/next_free_port APACHE_TCP_PORT 5000
 
-
-port_is_used () {
+port_is_used() {
     local KEY="${1}"
     local PORT="${2}"
     for S in $(ls /omd/sites); do
@@ -29,7 +28,7 @@ port_is_used () {
                 continue
             fi
 
-            if [ $(grep -v ^#  < "${site_conf}" | grep "='${PORT}'" | wc -l) -gt 0 ]; then
+            if [ $(grep -v ^# <"${site_conf}" | grep "='${PORT}'" | wc -l) -gt 0 ]; then
                 return 0
             fi
         fi

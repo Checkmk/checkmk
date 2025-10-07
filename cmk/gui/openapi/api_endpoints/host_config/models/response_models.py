@@ -19,6 +19,7 @@ from cmk.gui.openapi.framework.model.base_models import (
 )
 from cmk.gui.openapi.framework.model.common_fields import AnnotatedFolder
 from cmk.gui.openapi.framework.model.converter import HostConverter
+from cmk.gui.openapi.framework.model.response import ApiErrorDataclass
 
 
 @api_model
@@ -99,3 +100,34 @@ class HostConfigCollectionModel(DomainObjectCollectionModel):
     )
     # TODO: add proper example
     value: list[HostConfigModel] = api_field(description="A list of host objects", example="")
+
+
+@api_model
+class FailedHostsModel:
+    succeeded_hosts: HostConfigCollectionModel = api_field(
+        description="Hosts that were successfully created.",
+    )
+    failed_hosts: dict[str, str] = api_field(
+        description="A mapping of host that failed to be created, with the reason for failure.",
+    )
+
+
+@api_model
+class BulkHostActionWithFailedHostsModel(ApiErrorDataclass):
+    status: int = api_field(
+        title="HTTP status code", description="The HTTP status code.", example=400
+    )
+    title: str = api_field(
+        title="Error title",
+        description="A summary of the problem.",
+        example="Some actions failed",
+    )
+    detail: str = api_field(
+        title="Error message",
+        description="Detailed information on what exactly went wrong.",
+        example="Some of the actions were performed but the following were faulty and were skipped: ['host1', 'host2'].",
+    )
+    ext: FailedHostsModel = api_field(
+        title="Error extensions",
+        description="Details for which hosts have failed",
+    )

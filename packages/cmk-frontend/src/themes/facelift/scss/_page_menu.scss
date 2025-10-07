@@ -1,4 +1,4 @@
-@use "sass:color";
+@use 'sass:color';
 
 @charset "UTF-8";
 // Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
@@ -180,7 +180,7 @@ div#top_heading {
     span,
     a {
       &:last-child:after {
-        content: "";
+        content: '';
       }
 
       color: $font-color-dimmed;
@@ -193,7 +193,7 @@ div#top_heading {
 
     > :after {
       text-decoration: none;
-      content: " > ";
+      content: ' > ';
     }
   }
 
@@ -430,7 +430,7 @@ div#top_heading {
         box-sizing: border-box;
       }
 
-      input[type="text"] {
+      input[type='text'] {
         width: 180px !important;
         height: 18px;
       }
@@ -449,7 +449,7 @@ div#top_heading {
       input#inpage_search_form_reset {
         width: 8px;
         height: 8px;
-        background-image: url("images/icon_close.svg");
+        background-image: url('images/icon_close.svg');
         background-size: 8px 8px;
         border-radius: 0;
       }
@@ -458,7 +458,7 @@ div#top_heading {
         width: 18px;
         height: 18px;
         background-color: $success-dimmed;
-        background-image: url("images/icon_search_action_button.svg");
+        background-image: url('images/icon_search_action_button.svg');
         background-size: 14px 14px;
         background-position: center;
         filter: none;
@@ -670,7 +670,7 @@ div#page_menu_popups {
       margin-left: -3px;
 
       &:before {
-        content: "";
+        content: '';
         display: block;
         margin-top: 5px;
       }
@@ -753,8 +753,8 @@ div.page_menu_popup {
       }
     }
 
-    input[type="date"],
-    input[type="time"],
+    input[type='date'],
+    input[type='time'],
     select#_down_recurring + span .select2-selection.select2-selection--single,
     .server_time {
       margin-left: 10px;
@@ -856,8 +856,8 @@ div.page_menu_popup {
           display: inline-block;
           margin-top: 0;
 
-          input[type="date"]:not(.active),
-          input[type="time"]:not(.active) {
+          input[type='date']:not(.active),
+          input[type='time']:not(.active) {
             color: $font-color-dimmed;
           }
         }
@@ -952,7 +952,7 @@ div#page_menu_popups div.side_popup {
       border-radius: 0;
       box-shadow: none;
 
-      input.neg[type="text"] {
+      input.neg[type='text'] {
         width: 74%;
       }
 
@@ -1149,13 +1149,13 @@ div#page_menu_popups div.side_popup {
   }
 }
 
-div#page_menu_popups div[id^="popup_add_to_"] > div.content > span {
+div#page_menu_popups div[id^='popup_add_to_'] > div.content > span {
   // valuespec has 250px hard coded
   width: 400px !important;
 }
 
 .inline_radio_group {
-  input[type="radio"] {
+  input[type='radio'] {
     position: relative;
     top: -2px;
   }
@@ -1234,10 +1234,10 @@ div#page_menu_popups div[id^="popup_add_to_"] > div.content > span {
       width: 134px;
       min-width: 134px;
 
-      div[title^="Host"]::after,
-      div[title^="Service"]::after {
+      div[title^='Host']::after,
+      div[title^='Service']::after {
         color: $font-color-green;
-        content: " (required)";
+        content: ' (required)';
       }
     }
 
@@ -1262,7 +1262,7 @@ div#page_menu_popups div[id^="popup_add_to_"] > div.content > span {
       margin-right: $spacing;
     }
 
-    span[id^="notify_plugin_p_notify_plugin_"] {
+    span[id^='notify_plugin_p_notify_plugin_'] {
       margin-left: $spacing;
     }
   }

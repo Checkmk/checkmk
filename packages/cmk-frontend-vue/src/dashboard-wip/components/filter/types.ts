@@ -9,6 +9,7 @@ export type ConfiguredValues = Record<string, string | null>
 export type ConfiguredFilters = Record<string, ConfiguredValues>
 
 export type FilterDefinition = components['schemas']['FilterDomainObject']
+export type FilterDefinitions = Record<string, FilterDefinition>
 export interface FilterType {
   type: 'filter'
   id: string

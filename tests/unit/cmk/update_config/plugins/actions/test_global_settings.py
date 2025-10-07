@@ -30,7 +30,7 @@ def test_update_global_config_transform_values(
 
     ConfigVariableKey = ConfigVariable(
         group=ConfigVariableGroupUserInterface,
-        domain=ConfigDomainGUI,
+        primary_domain=ConfigDomainGUI,
         ident="key",
         valuespec=lambda: Transform(TextInput(), forth=lambda x: "new" if x == "old" else x),
     )

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<table width="100%"
+       height="124"
+       style="border-collapse: collapse;
+              mso-table-lspace: 0pt;
+              mso-table-rspace: 0pt;
+              min-width: 220px;
+              max-width: 536px;
+              font-size: 14px"
+       align="center"
+       cellspacing="0"
+       cellpadding="0"
+       border="0">
+    <tr align="left"
+        style="background-color: #F1F1F1;
+               height: 35px;
+               width: 100%">
+        <th align="left"
+            style="border: 1px solid #DFDFDF;
+                   padding-left: 2%;
+                   font-size: 16px">Event summary</th>
+    </tr>
+    {% for entry in bulk_summary %}
+        {% set bulk_service_notification = entry.WHAT == 'SERVICE' %}
+        <tr style="border: 1px solid #DFDFDF; height: 35px">
+            <td style="border: 1px solid #DFDFDF; padding: 0% 2% 0 2%; width: 15%;">
+                <table style="border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 0; vertical-align: middle;">
+                            <div class="mobile_event_marker_bulk"
+                                 style="{{ macros.event_marker_bulk_style() }};
+                                        {% if service_notification %} {{ state_mapping[(entry.PREVIOUSSERVICEHARDSTATE|default('UNKNOWN'))] }} {% else %} {{ state_mapping[(entry.PREVIOUSHOSTHARDSTATE|default('UNKNOWN'))] }} {% endif %};
+                                        display: inline-block;
+                                        /* Inline block to respect width */">
+                                {% if service_notification %}
+                                    {{ (entry.PREVIOUSSERVICEHARDSTATE|default("NULL"))[:4] }}
+                                {% else %}
+                                    {{ (entry.PREVIOUSHOSTHARDSTATE|default("NULL"))[:4] }}
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td style="padding: 0 5px;
+                                   vertical-align: middle;
+                                   text-align: center;
+                                   line-height: 1;
+                                   height: 33px">
+                            <!--[if mso]>
+                            <div style="font-size: 14px; font-weight: 600; line-height: 1.5; display: inline-block; white-space: nowrap; margin-top: 5px;">
+                              &rarr;
+                            </div>
+                          <![endif]-->
+                            <!--[if !mso]><!-- -->
+                            <div style="font-size: 14px;
+                                        font-weight: 600;
+                                        line-height: 1.5;
+                                        display: inline-block">&#8211;&#8250;</div>
+                            <!--<![endif]-->
+                        </td>
+                        <td style="padding: 0; vertical-align: middle;">
+                            <div class="mobile_event_marker_bulk"
+                                 style="{{ macros.event_marker_bulk_style() }};
+                                        {% if service_notification %} {{ state_mapping[entry.SERVICESTATE] }} {% else %} {{ state_mapping[entry.HOSTSTATE] }} {% endif %};
+                                        display: inline-block;
+                                        /* Inline block to respect width */">
+                                {% if service_notification %}
+                                    {{ entry.SERVICESTATE[:4] }}
+                                {% else %}
+                                    {{ entry.HOSTSTATE[:4] }}
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td align="right" width="100%" style="padding: 0; vertical-align: middle">{{ entry.SHORTDATETIME }}</td>
+                    </tr>
+                </table>
+                <table>
+                    {% if bulk_service_notification %}
+                        <tr>
+                            <td width="75px" style="padding: 0; font-weight: 600;">Service:</td>
+                            <td width="calc(100% - 75px)"
+                                style="padding: 0;
+                                       word-break: break-word;
+                                       overflow-wrap: break-word">{{ entry.LINKEDSERVICEDESC | safe }}</td>
+                        </tr>
+                    {% endif %}
+                    <tr>
+                        <td width="75px" style="padding: 0; font-weight: 600;">Host:</td>
+                        <td width="calc(100% - 75px)"
+                            style="padding: 0;
+                                   word-break: break-word;
+                                   overflow-wrap: break-word">{{ entry.HOSTNAME_AND_ALIAS_HTML | safe }}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    {% endfor %}
+</table>
+<table width="100%"
+       align="center"
+       style="min-width: 220px;
+              max-width: 536px">
+    <tr>
+        <td>
+            <a href="{{ data.EVENTHISTORYURL }}"
+               class="view_graph"
+               style="color: black;
+                      display: block;
+                      height: 16px;
+                      font-size: 14px;
+                      color: #2c3843;
+                      line-height: 24px">View event history</a>
+        </td>
+    </tr>
+    <tr>
+        <td style="height: 20px;
+                   line-height: 20px;
+                   font-size: 0;
+                   mso-line-height-rule: exactly">&nbsp;</td>
+    </tr>
+</table>

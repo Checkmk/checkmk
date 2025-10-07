@@ -6,9 +6,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type PropType, defineComponent, h } from 'vue'
 
+type HtmlString = string
+
 export default defineComponent({
   props: {
-    title: { type: Object as PropType<string>, required: true }
+    title: { type: String as PropType<HtmlString>, required: true }
   },
   render() {
     return h('span', { innerHTML: this.title })

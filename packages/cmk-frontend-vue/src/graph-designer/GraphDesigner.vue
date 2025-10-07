@@ -10,6 +10,8 @@ import {
   type GraphLines,
   type GraphOptions,
   type Operation,
+  type QueryAggregationHistogramPercentile,
+  type QueryAggregationSumRate,
   type Transformation
 } from 'cmk-shared-typing/typescript/graph_designer'
 import { type Ref, computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -17,6 +19,7 @@ import { type Ref, computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import usei18n from '@/lib/i18n'
 import useDragging from '@/lib/useDragging'
 
+import CmkButton from '@/components/CmkButton.vue'
 import CmkColorPicker from '@/components/CmkColorPicker.vue'
 import CmkDropdown from '@/components/CmkDropdown.vue'
 import CmkSwitch from '@/components/CmkSwitch.vue'
@@ -26,6 +29,7 @@ import CmkInput from '@/components/user-input/CmkInput.vue'
 
 import FixedMetricRowRenderer from '@/graph-designer/components/FixedMetricRowRenderer.vue'
 import FormMetricCells, { type Metric } from '@/graph-designer/components/FormMetricCells.vue'
+import FormQuery, { type Query } from '@/graph-designer/components/FormQuery.vue'
 import FormTitle from '@/graph-designer/components/FormTitle.vue'
 import GraphOptionsEditor from '@/graph-designer/components/GraphOptionsEditor.vue'
 import MetricRowRenderer from '@/graph-designer/components/MetricRowRenderer.vue'
@@ -36,7 +40,7 @@ import {
   convertToExplicitVerticalRange,
   convertToUnit
 } from '@/graph-designer/converters'
-import { fetchMetricColor } from '@/graph-designer/fetch_metric_color'
+import { fetchMetricColor, fetchMetricTypes } from '@/graph-designer/fetch_metric_properties'
 import { type GraphRenderer } from '@/graph-designer/graph'
 
 import type { Topic } from './type_defs'
@@ -48,6 +52,7 @@ const props = defineProps<{
   graph_lines: GraphLines
   graph_options: GraphOptions
   graph_renderer: GraphRenderer
+  metric_backend_available: boolean
 }>()
 
 const preventLeaving = ref(false)
@@ -107,20 +112,16 @@ const dataExplicitVerticalRange = ref(
 
 const dataOmitZeroMetrics = ref(props.graph_options.omit_zero_metrics)
 
-const topics: Topic[] = [
+// Topics
+
+const commonTopics: Topic[] = [
   {
-    ident: 'graph_lines',
-    title: _t('Graph lines'),
+    ident: 'graph_lines_standard',
+    title: _t('Graph lines (Standard)'),
     elements: [
       { ident: 'metric', title: _t('Metric') },
       { ident: 'scalar', title: _t('Scalar') },
-      { ident: 'constant', title: _t('Constant') }
-    ]
-  },
-  {
-    ident: 'graph_operations',
-    title: _t('Operations on selected graph lines'),
-    elements: [
+      { ident: 'constant', title: _t('Constant') },
       { ident: 'operations', title: _t('Operations') },
       { ident: 'transformation', title: _t('Transformation') }
     ]
@@ -132,11 +133,25 @@ const topics: Topic[] = [
     customContent: true
   }
 ]
+let topics: Topic[]
+if (props.metric_backend_available) {
+  topics = [
+    {
+      ident: 'graph_lines_queries',
+      title: _t('Graph lines (OpenTelemetry)'),
+      elements: [{ ident: 'query', title: _t('Query') }]
+    },
+    ...commonTopics
+  ]
+} else {
+  topics = commonTopics
+}
 
 // Graph lines
 
 function formulaOf(graphLine: GraphLine): string {
   switch (graphLine.type) {
+    case 'query':
     case 'metric':
     case 'scalar':
     case 'constant':
@@ -162,6 +177,14 @@ function formulaOf(graphLine: GraphLine): string {
   }
 }
 
+const dataQuery = ref<Query>({
+  metricName: null,
+  resourceAttributes: [],
+  scopeAttributes: [],
+  dataPointAttributes: [],
+  aggregationSum: null,
+  aggregationHistogram: null
+})
 const dataMetric = ref<Metric>({
   hostName: null,
   serviceName: null,
@@ -257,6 +280,23 @@ function generateOperation(graphLine: Operation): Operation {
 
 function generateGraphLine(graphLine: GraphLine): GraphLine {
   switch (graphLine.type) {
+    case 'query':
+      return {
+        id: nextIndex(),
+        type: graphLine.type,
+        color: graphLine.color,
+        auto_title: graphLine.auto_title,
+        custom_title: graphLine.custom_title,
+        visible: graphLine.visible,
+        line_type: graphLine.line_type,
+        mirrored: graphLine.mirrored,
+        metric_name: graphLine.metric_name,
+        resource_attributes: graphLine.resource_attributes,
+        scope_attributes: graphLine.scope_attributes,
+        data_point_attributes: graphLine.data_point_attributes,
+        aggregation_sum: graphLine.aggregation_sum,
+        aggregation_histogram: graphLine.aggregation_histogram
+      }
     case 'metric':
       return {
         id: nextIndex(),
@@ -333,6 +373,9 @@ function deleteGraphLine(graphLine: GraphLine) {
 
 function updateGraphLineAutoTitle(graphLine: GraphLine) {
   switch (graphLine.type) {
+    case 'query':
+      graphLine.auto_title = `${_t('Query')} '${graphLine.metric_name}'`
+      break
     case 'metric':
     case 'scalar': {
       const autoTitleParts = [graphLine.host_name, graphLine.service_name, graphLine.metric_name]
@@ -359,6 +402,62 @@ function isOperation(graphLine: GraphLine) {
       return true
     default:
       return false
+  }
+}
+
+async function addQuery() {
+  if (dataQuery.value.metricName !== '' && dataQuery.value.metricName !== null) {
+    const metricTypes: string[] = await fetchMetricTypes(
+      dataQuery.value.metricName,
+      dataQuery.value.resourceAttributes,
+      dataQuery.value.scopeAttributes,
+      dataQuery.value.dataPointAttributes
+    )
+    let aggregationSum: QueryAggregationSumRate | null
+    if (metricTypes.includes('sum')) {
+      aggregationSum = {
+        type: 'rate',
+        enabled: false,
+        value: 1,
+        unit: 'min'
+      }
+    } else {
+      aggregationSum = null
+    }
+    let aggregationHistogram: QueryAggregationHistogramPercentile | null
+    if (metricTypes.includes('histogram')) {
+      aggregationHistogram = {
+        type: 'percentile',
+        enabled: false,
+        value: 95
+      }
+    } else {
+      aggregationHistogram = null
+    }
+    graphLines.value.push({
+      id: nextIndex(),
+      type: 'query',
+      color: '#ff0000',
+      auto_title: `${_t('Query')} '${dataQuery.value.metricName}'`,
+      custom_title: '',
+      visible: true,
+      line_type: 'line',
+      mirrored: false,
+      metric_name: dataQuery.value.metricName,
+      resource_attributes: dataQuery.value.resourceAttributes,
+      scope_attributes: dataQuery.value.scopeAttributes,
+      data_point_attributes: dataQuery.value.dataPointAttributes,
+      aggregation_sum: aggregationSum,
+      aggregation_histogram: aggregationHistogram
+    })
+    dataQuery.value = {
+      metricName: null,
+      resourceAttributes: [],
+      scopeAttributes: [],
+      dataPointAttributes: [],
+      aggregationSum: null,
+      aggregationHistogram: null
+    }
   }
 }
 
@@ -446,8 +545,12 @@ function addConstant() {
 
 // Operations on selected graph lines
 
+function hasGraphQuery() {
+  return selectedGraphLines.value.some((gl) => gl.type === 'query')
+}
+
 function operationIsApplicable() {
-  return Object.keys(selectedGraphLines.value).length >= 2
+  return Object.keys(selectedGraphLines.value).length >= 2 && !hasGraphQuery()
 }
 
 function showSelectedIds(operator: '-' | '/') {
@@ -455,7 +558,7 @@ function showSelectedIds(operator: '-' | '/') {
 }
 
 function transformationIsApplicable() {
-  return Object.keys(selectedGraphLines.value).length === 1
+  return Object.keys(selectedGraphLines.value).length === 1 && !hasGraphQuery()
 }
 
 function addGraphLineWithSelection(graphLine: GraphLine) {
@@ -709,10 +812,12 @@ const graphDesignerContentAsJson = computed(() => {
       >
         <td class="narrow nowrap">{{ graphLine.id }}</td>
         <td class="buttons">
-          <CmkCheckbox
-            :model-value="selectedGraphLines.map((v) => v.id).includes(graphLine.id)"
-            @update:model-value="(newValue) => changeSelection(graphLine, newValue)"
-          />
+          <div v-if="graphLine.type !== 'query'">
+            <CmkCheckbox
+              :model-value="selectedGraphLines.map((v) => v.id).includes(graphLine.id)"
+              @update:model-value="(newValue) => changeSelection(graphLine, newValue)"
+            />
+          </div>
         </td>
         <td class="buttons">
           <img
@@ -761,7 +866,19 @@ const graphDesignerContentAsJson = computed(() => {
 
         <td class="buttons"><CmkSwitch v-model:data="graphLine.mirrored" /></td>
         <td>
-          <div v-if="graphLine.type === 'metric'">
+          <div v-if="graphLine.type === 'query'">
+            {{ _t('Query') }}:
+            <FormQuery
+              v-model:metric-name="graphLine.metric_name"
+              v-model:resource-attributes="graphLine.resource_attributes"
+              v-model:scope-attributes="graphLine.scope_attributes"
+              v-model:data-point-attributes="graphLine.data_point_attributes"
+              v-model:aggregation-sum="graphLine.aggregation_sum"
+              v-model:aggregation-histogram="graphLine.aggregation_histogram"
+              @update:metric-name="updateGraphLineAutoTitle(graphLine)"
+            />
+          </div>
+          <div v-else-if="graphLine.type === 'metric'">
             <FixedMetricRowRenderer>
               <template #metric_cells>
                 <FormMetricCells
@@ -850,6 +967,21 @@ const graphDesignerContentAsJson = computed(() => {
   </table>
 
   <TopicsRenderer :topics="topics">
+    <template #query>
+      <div>
+        <FormQuery
+          v-model:metric-name="dataQuery.metricName"
+          v-model:resource-attributes="dataQuery.resourceAttributes"
+          v-model:scope-attributes="dataQuery.scopeAttributes"
+          v-model:data-point-attributes="dataQuery.dataPointAttributes"
+          v-model:aggregation-sum="dataQuery.aggregationSum"
+          v-model:aggregation-histogram="dataQuery.aggregationHistogram"
+        />
+        <CmkButton @click="addQuery">
+          {{ _t('Add') }}
+        </CmkButton>
+      </div>
+    </template>
     <template #metric>
       <div>
         <MetricRowRenderer>
@@ -871,14 +1003,9 @@ const graphDesignerContentAsJson = computed(() => {
             />
           </template>
           <template #metric_action>
-            <button @click.prevent="addMetric">
-              <img
-                :title="_t('Add')"
-                src="themes/facelift/images/icon_new.svg"
-                class="icon iconbutton"
-              />
+            <CmkButton @click="addMetric">
               {{ _t('Add') }}
-            </button>
+            </CmkButton>
           </template>
         </MetricRowRenderer>
       </div>
@@ -904,14 +1031,9 @@ const graphDesignerContentAsJson = computed(() => {
             />
           </template>
           <template #metric_action>
-            <button @click.prevent="addScalar">
-              <img
-                :title="_t('Add')"
-                src="themes/facelift/images/icon_new.svg"
-                class="icon iconbutton"
-              />
+            <CmkButton @click="addScalar">
               {{ _t('Add') }}
-            </button>
+            </CmkButton>
           </template>
         </MetricRowRenderer>
       </div>
@@ -919,32 +1041,44 @@ const graphDesignerContentAsJson = computed(() => {
     <template #constant>
       <div>
         <CmkInput v-model="dataConstant" type="number" />
-        <button @click.prevent="addConstant">
-          <img
-            :title="_t('Add')"
-            src="themes/facelift/images/icon_new.svg"
-            class="icon iconbutton"
-          />
+        <CmkButton @click="addConstant">
           {{ _t('Add') }}
-        </button>
+        </CmkButton>
       </div>
     </template>
     <template #operations>
       <div v-if="operationIsApplicable()">
-        <button @click="applySum">{{ _t('Sum') }}</button>
-        <button @click="applyProduct">{{ _t('Product') }}</button>
-        <button @click="applyDifference">{{ _t('Difference') }} {{ showSelectedIds('-') }}</button>
-        <button @click="applyFraction">{{ _t('Fraction') }} {{ showSelectedIds('/') }}</button>
-        <button @click="applyAverage">{{ _t('Average') }}</button>
-        <button @click="applyMinimum">{{ _t('Minimum') }}</button>
-        <button @click="applyMaximum">{{ _t('Maximum') }}</button>
+        <CmkButton @click="applySum">
+          {{ _t('Sum') }}
+        </CmkButton>
+        <CmkButton @click="applyProduct">
+          {{ _t('Product') }}
+        </CmkButton>
+        <CmkButton @click="applyDifference">
+          {{ _t('Difference') }} {{ showSelectedIds('-') }}
+        </CmkButton>
+        <CmkButton @click="applyFraction">
+          {{ _t('Fraction') }} {{ showSelectedIds('-') }}
+        </CmkButton>
+        <CmkButton @click="applyAverage">
+          {{ _t('Average') }}
+        </CmkButton>
+        <CmkButton @click="applyMinimum">
+          {{ _t('Minimum') }}
+        </CmkButton>
+        <CmkButton @click="applyMaximum">
+          {{ _t('Maximum') }}
+        </CmkButton>
       </div>
       <div v-else>{{ _t('Select at least two graph lines to edit') }}</div>
     </template>
     <template #transformation>
       <div v-if="transformationIsApplicable()">
+        {{ _t('Percentile') }}
         <CmkInput v-model="dataTransformation" type="number" />
-        <button @click="applyTransformation">{{ _t('Apply') }}</button>
+        <CmkButton @click="applyTransformation">
+          {{ _t('Apply') }}
+        </CmkButton>
       </div>
       <div v-else>{{ _t('Select one graph line to edit') }}</div>
     </template>

@@ -18,6 +18,8 @@ from cmk.gui.config import Config
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
+from cmk.gui.permissions import permission_registry
+from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.changes import add_service_change
 from cmk.gui.watolib.check_mk_automations import autodiscovery
@@ -128,6 +130,9 @@ def execute_autodiscovery(config: Config) -> None:
             JobTarget(
                 callable=autodiscovery_job_entry_point,
                 args=AutoDiscoveryJobArgs(
+                    user_permission_config=UserPermissionSerializableConfig.from_global_config(
+                        config
+                    ),
                     debug=config.debug,
                     use_git=config.wato_use_git,
                 ),
@@ -144,6 +149,7 @@ def execute_autodiscovery(config: Config) -> None:
 
 
 class AutoDiscoveryJobArgs(BaseModel, frozen=True):
+    user_permission_config: UserPermissionSerializableConfig
     debug: bool
     use_git: bool
 
@@ -151,7 +157,9 @@ class AutoDiscoveryJobArgs(BaseModel, frozen=True):
 def autodiscovery_job_entry_point(
     job_interface: BackgroundProcessInterface, args: AutoDiscoveryJobArgs
 ) -> None:
-    with job_interface.gui_context():
+    with job_interface.gui_context(
+        UserPermissions.from_serialized_config(args.user_permission_config, permission_registry)
+    ):
         AutodiscoveryBackgroundJob().execute(
             job_interface,
             debug=args.debug,

@@ -18,32 +18,40 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
+from cmk.ccc.version import edition
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.gui.color import render_color_icon
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.graphing._graph_templates import (
     get_template_graph_specification,
     TemplateGraphSpecification,
 )
-from cmk.gui.graphing._unit import user_specific_unit
+from cmk.gui.graphing._unit import get_temperature_unit, user_specific_unit
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
-from cmk.gui.logged_in import load_user_file, save_user_file, user, UserGraphDataRangeFileName
+from cmk.gui.logged_in import (
+    load_user_file,
+    save_user_file,
+    user,
+    UserGraphDataRangeFileName,
+)
 from cmk.gui.pages import AjaxPage, PageResult
 from cmk.gui.sites import get_alias_of_host
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import SizePT
+from cmk.gui.type_defs import GraphTimerange, SizePT
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import Timerange, TimerangeValue
+from cmk.utils import paths
 from cmk.utils.jsontype import JsonSerializable
 from cmk.utils.paths import profile_dir
 from cmk.utils.servicename import ServiceName
@@ -65,6 +73,10 @@ from ._graph_render_config import (
     GraphTitleFormat,
 )
 from ._graph_specification import GraphDataRange, GraphRecipe, GraphSpecification
+from ._metric_backend_registry import (
+    FetchTimeSeries,
+    metric_backend_registry,
+)
 from ._utils import SizeEx
 
 RenderOutput = HTML | str
@@ -105,6 +117,11 @@ def host_service_graph_popup_cmk(
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     user_permissions: UserPermissions,
+    *,
+    debug: bool,
+    graph_timeranges: Sequence[GraphTimerange],
+    temperature_unit: TemperatureUnit,
+    fetch_time_series: FetchTimeSeries,
 ) -> None:
     graph_render_config = GraphRenderConfig.from_user_context_and_options(
         user,
@@ -137,17 +154,21 @@ def host_service_graph_popup_cmk(
             registered_metrics,
             registered_graphs,
             user_permissions,
+            debug=debug,
+            graph_timeranges=graph_timeranges,
+            temperature_unit=temperature_unit,
+            fetch_time_series=fetch_time_series,
             render_async=False,
         )
     )
 
 
-def render_graph_error_html(*, title: str, msg_or_exc: Exception | str) -> HTML:
-    if isinstance(msg_or_exc, MKGeneralException) and not active_config.debug:
+def render_graph_error_html(*, title: str, msg_or_exc: Exception | str, debug: bool) -> HTML:
+    if isinstance(msg_or_exc, MKGeneralException) and not debug:
         msg = "%s" % msg_or_exc
 
     elif isinstance(msg_or_exc, Exception):
-        if active_config.debug:
+        if debug:
             raise msg_or_exc
         msg = traceback.format_exc()
     else:
@@ -561,7 +582,12 @@ class AjaxGraph(cmk.gui.pages.Page):
         try:
             context_var = request.get_str_input_mandatory("context")
             context = json.loads(context_var)
-            response_data = render_ajax_graph(context, metrics_from_api)
+            response_data = render_ajax_graph(
+                context,
+                metrics_from_api,
+                temperature_unit=get_temperature_unit(user, config.default_temperature_unit),
+                fetch_time_series=metric_backend_registry[str(edition(paths.omd_root))].client,
+            )
             response.set_data(json.dumps(response_data))
         except Exception as e:
             logger.error("Ajax call ajax_graph.py failed: %s\n%s", e, traceback.format_exc())
@@ -574,6 +600,9 @@ class AjaxGraph(cmk.gui.pages.Page):
 def render_ajax_graph(
     context: Mapping[str, Any],
     registered_metrics: Mapping[str, RegisteredMetric],
+    *,
+    temperature_unit: TemperatureUnit,
+    fetch_time_series: FetchTimeSeries,
 ) -> JsonSerializable:
     graph_data_range = GraphDataRange.model_validate(context["data_range"])
     graph_render_config = GraphRenderConfig.model_validate(context["render_config"])
@@ -634,6 +663,8 @@ def render_ajax_graph(
         graph_data_range,
         graph_render_config.size,
         registered_metrics,
+        temperature_unit=temperature_unit,
+        fetch_time_series=fetch_time_series,
     )
 
     with output_funnel.plugged():
@@ -697,12 +728,20 @@ def render_graphs_from_specification_html(
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     user_permissions: UserPermissions,
     *,
+    debug: bool,
+    graph_timeranges: Sequence[GraphTimerange],
+    temperature_unit: TemperatureUnit,
+    fetch_time_series: FetchTimeSeries,
     render_async: bool = True,
     graph_display_id: str = "",
 ) -> HTML:
     try:
         graph_recipes = graph_specification.recipes(
-            registered_metrics, registered_graphs, user_permissions
+            registered_metrics,
+            registered_graphs,
+            user_permissions,
+            debug=debug,
+            temperature_unit=temperature_unit,
         )
     except MKLivestatusNotFoundError:
         return render_graph_error_html(
@@ -715,15 +754,24 @@ def render_graphs_from_specification_html(
                     graph_specification,
                 )
             ),
+            debug=debug,
         )
     except Exception as e:
-        return render_graph_error_html(title=_("Cannot calculate graph recipes"), msg_or_exc=e)
+        return render_graph_error_html(
+            title=_("Cannot calculate graph recipes"),
+            msg_or_exc=e,
+            debug=debug,
+        )
 
     return _render_graphs_from_definitions(
         graph_recipes,
         graph_data_range,
         graph_render_config,
         registered_metrics,
+        debug=debug,
+        graph_timeranges=graph_timeranges,
+        temperature_unit=temperature_unit,
+        fetch_time_series=fetch_time_series,
         render_async=render_async,
         graph_display_id=graph_display_id,
     )
@@ -735,6 +783,10 @@ def _render_graphs_from_definitions(
     graph_render_config: GraphRenderConfig,
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
+    debug: bool,
+    graph_timeranges: Sequence[GraphTimerange],
+    temperature_unit: TemperatureUnit,
+    fetch_time_series: FetchTimeSeries,
     render_async: bool = True,
     graph_display_id: str = "",
 ) -> HTML:
@@ -760,6 +812,10 @@ def _render_graphs_from_definitions(
                 recipe_specific_data_range,
                 recipe_specific_render_config,
                 registered_metrics,
+                debug=debug,
+                graph_timeranges=graph_timeranges,
+                temperature_unit=temperature_unit,
+                fetch_time_series=fetch_time_series,
                 graph_display_id=graph_display_id,
             )
     return output
@@ -814,6 +870,10 @@ class AjaxRenderGraphContent(AjaxPage):
             GraphDataRange.model_validate(api_request["graph_data_range"]),
             GraphRenderConfig.model_validate(api_request["graph_render_config"]),
             metrics_from_api,
+            debug=config.debug,
+            graph_timeranges=config.graph_timeranges,
+            temperature_unit=get_temperature_unit(user, config.default_temperature_unit),
+            fetch_time_series=metric_backend_registry[str(edition(paths.omd_root))].client,
             graph_display_id=api_request["graph_display_id"],
         )
 
@@ -824,6 +884,10 @@ def _render_graph_content_html(
     graph_render_config: GraphRenderConfig,
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
+    debug: bool,
+    graph_timeranges: Sequence[GraphTimerange],
+    temperature_unit: TemperatureUnit,
+    fetch_time_series: FetchTimeSeries,
     graph_display_id: str = "",
 ) -> HTML:
     try:
@@ -832,6 +896,8 @@ def _render_graph_content_html(
             graph_data_range,
             graph_render_config.size,
             registered_metrics,
+            temperature_unit=temperature_unit,
+            fetch_time_series=fetch_time_series,
             graph_display_id=graph_display_id,
         )
         main_graph_html = _render_graph_html(graph_artwork, graph_data_range, graph_render_config)
@@ -843,6 +909,9 @@ def _render_graph_content_html(
                     graph_recipe,
                     graph_render_config,
                     registered_metrics,
+                    graph_timeranges=graph_timeranges,
+                    temperature_unit=temperature_unit,
+                    fetch_time_series=fetch_time_series,
                     graph_display_id=graph_display_id,
                 ),
                 class_="graph_with_timeranges",
@@ -853,13 +922,18 @@ def _render_graph_content_html(
         return render_graph_error_html(
             title=_("Cannot create graph"),
             msg_or_exc=_("Cannot fetch data via Livestatus"),
+            debug=debug,
         )
 
     except MKMissingDataError as e:
         return html.render_message(str(e))
 
     except Exception as e:
-        return render_graph_error_html(title=_("Cannot create graph"), msg_or_exc=e)
+        return render_graph_error_html(
+            title=_("Cannot create graph"),
+            msg_or_exc=e,
+            debug=debug,
+        )
 
 
 def _render_time_range_selection(
@@ -867,12 +941,15 @@ def _render_time_range_selection(
     graph_render_config: GraphRenderConfig,
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
+    graph_timeranges: Sequence[GraphTimerange],
+    temperature_unit: TemperatureUnit,
+    fetch_time_series: FetchTimeSeries,
     graph_display_id: str,
 ) -> HTML:
     now = int(time.time())
     graph_render_config = copy.deepcopy(graph_render_config)
     rows = []
-    for timerange_attrs in active_config.graph_timeranges:
+    for timerange_attrs in graph_timeranges:
         duration = timerange_attrs["duration"]
         assert isinstance(duration, int)
 
@@ -900,6 +977,8 @@ def _render_time_range_selection(
             graph_data_range,
             graph_render_config.size,
             registered_metrics,
+            temperature_unit=temperature_unit,
+            fetch_time_series=fetch_time_series,
             graph_display_id=graph_display_id,
         )
         rows.append(
@@ -959,7 +1038,13 @@ class AjaxGraphHover(cmk.gui.pages.Page):
             context_var = request.get_str_input_mandatory("context")
             context = json.loads(context_var)
             hover_time = request.get_integer_input_mandatory("hover_time")
-            response_data = _render_ajax_graph_hover(config, context, hover_time, metrics_from_api)
+            response_data = _render_ajax_graph_hover(
+                context,
+                hover_time,
+                metrics_from_api,
+                temperature_unit=get_temperature_unit(user, config.default_temperature_unit),
+                fetch_time_series=metric_backend_registry[str(edition(paths.omd_root))].client,
+            )
             response.set_data(json.dumps(response_data))
         except Exception as e:
             logger.error("Ajax call ajax_graph_hover.py failed: %s\n%s", e, traceback.format_exc())
@@ -970,10 +1055,12 @@ class AjaxGraphHover(cmk.gui.pages.Page):
 
 
 def _render_ajax_graph_hover(
-    config: Config,
     context: Mapping[str, Any],
     hover_time: int,
     registered_metrics: Mapping[str, RegisteredMetric],
+    *,
+    temperature_unit: TemperatureUnit,
+    fetch_time_series: FetchTimeSeries,
 ) -> dict[str, object]:
     graph_data_range = GraphDataRange.model_validate(context["data_range"])
     graph_recipe = GraphRecipe.model_validate(context["definition"])
@@ -982,6 +1069,8 @@ def _render_ajax_graph_hover(
         graph_recipe,
         graph_data_range,
         registered_metrics,
+        temperature_unit=temperature_unit,
+        fetch_time_series=fetch_time_series,
     )
 
     return {
@@ -989,11 +1078,7 @@ def _render_ajax_graph_hover(
         "curve_values": list(
             compute_curve_values_at_timestamp(
                 order_graph_curves_for_legend_and_mouse_hover(curves),
-                user_specific_unit(
-                    graph_recipe.unit_spec,
-                    user,
-                    config,
-                ).formatter.render,
+                user_specific_unit(graph_recipe.unit_spec, temperature_unit).formatter.render,
                 hover_time,
             )
         ),
@@ -1055,6 +1140,10 @@ def host_service_graph_dashlet_cmk(
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     user_permissions: UserPermissions,
     *,
+    debug: bool,
+    graph_timeranges: Sequence[GraphTimerange],
+    temperature_unit: TemperatureUnit,
+    fetch_time_series: FetchTimeSeries,
     graph_display_id: str = "",
     time_range: TimerangeValue = None,
 ) -> HTML:
@@ -1092,7 +1181,11 @@ def host_service_graph_dashlet_cmk(
 
     try:
         graph_recipes = graph_specification.recipes(
-            registered_metrics, registered_graphs, user_permissions
+            registered_metrics,
+            registered_graphs,
+            user_permissions,
+            debug=debug,
+            temperature_unit=temperature_unit,
         )
     except MKLivestatusNotFoundError:
         return render_graph_error_html(
@@ -1105,13 +1198,18 @@ def host_service_graph_dashlet_cmk(
                     graph_specification,
                 )
             ),
+            debug=debug,
         )
     except MKMissingDataError as e:
         # In case of missing data, the according message is rendered without a traceback. This
         # specific exception handling is needed for the Vue dashboard rendering.
         return html.render_message(str(e))
     except Exception as e:
-        return render_graph_error_html(title=_("Cannot calculate graph recipes"), msg_or_exc=e)
+        return render_graph_error_html(
+            title=_("Cannot calculate graph recipes"),
+            msg_or_exc=e,
+            debug=debug,
+        )
 
     if graph_recipes:
         graph_recipe = graph_recipes[0]
@@ -1119,6 +1217,7 @@ def host_service_graph_dashlet_cmk(
         return render_graph_error_html(
             title=_("No graph recipe found"),
             msg_or_exc=_("Failed to calculate a graph recipe."),
+            debug=debug,
         )
 
     # When the legend is enabled, we need to reduce the height by the height of the legend to
@@ -1130,6 +1229,8 @@ def host_service_graph_dashlet_cmk(
             graph_data_range,
             graph_render_config.size,
             registered_metrics,
+            temperature_unit=temperature_unit,
+            fetch_time_series=fetch_time_series,
         )
         if graph_artwork.curves:
             legend_height = _graph_legend_height_ex(
@@ -1140,6 +1241,7 @@ def host_service_graph_dashlet_cmk(
                 return render_graph_error_html(
                     title=_("Dashlet too short to render graph"),
                     msg_or_exc=_("Either increase the dashlet height or disable the graph legend."),
+                    debug=debug,
                 )
             graph_render_config.size = (width, graph_height)
 
@@ -1148,6 +1250,10 @@ def host_service_graph_dashlet_cmk(
         graph_data_range,
         graph_render_config,
         registered_metrics,
+        debug=debug,
+        graph_timeranges=graph_timeranges,
+        temperature_unit=temperature_unit,
+        fetch_time_series=fetch_time_series,
         render_async=False,
         graph_display_id=graph_display_id,
     )

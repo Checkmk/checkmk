@@ -40,6 +40,8 @@ from cmk.gui.background_job import (
 )
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.permissions import permission_registry
+from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.watolib.activate_changes import sync_changes_before_remote_automation
 from cmk.gui.watolib.automations import (
     AnnotatedHostName,
@@ -607,6 +609,7 @@ def perform_fix_all(
     host: Host,
     raise_errors: bool,
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
+    user_permission_config: UserPermissionSerializableConfig,
     pprint_value: bool,
     debug: bool,
     use_git: bool,
@@ -640,6 +643,7 @@ def perform_fix_all(
             host,
             DiscoveryAction.FIX_ALL,
             automation_config=automation_config,
+            user_permission_config=user_permission_config,
             raise_errors=raise_errors,
             debug=debug,
             use_git=use_git,
@@ -654,6 +658,7 @@ def perform_host_label_discovery(
     host: Host,
     raise_errors: bool,
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
+    user_permission_config: UserPermissionSerializableConfig,
     pprint_value: bool,
     debug: bool,
     use_git: bool,
@@ -670,6 +675,7 @@ def perform_host_label_discovery(
             host,
             action,
             automation_config=automation_config,
+            user_permission_config=user_permission_config,
             raise_errors=raise_errors,
             debug=debug,
             use_git=use_git,
@@ -687,6 +693,7 @@ def perform_service_discovery(
     selected_services: Container[tuple[str, Item]],
     raise_errors: bool,
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
+    user_permission_config: UserPermissionSerializableConfig,
     pprint_value: bool,
     debug: bool,
     use_git: bool,
@@ -714,6 +721,7 @@ def perform_service_discovery(
             host,
             action,
             automation_config=automation_config,
+            user_permission_config=user_permission_config,
             raise_errors=raise_errors,
             debug=debug,
             use_git=use_git,
@@ -791,6 +799,7 @@ def initial_discovery_result(
     previous_discovery_result: DiscoveryResult | None,
     *,
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
+    user_permission_config: UserPermissionSerializableConfig,
     raise_errors: bool,
     debug: bool,
     use_git: bool,
@@ -800,6 +809,7 @@ def initial_discovery_result(
             host,
             action,
             automation_config=automation_config,
+            user_permission_config=user_permission_config,
             raise_errors=raise_errors,
             debug=debug,
             use_git=use_git,
@@ -1097,6 +1107,7 @@ def get_check_table(
     action: DiscoveryAction,
     *,
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
+    user_permission_config: UserPermissionSerializableConfig,
     raise_errors: bool,
     debug: bool,
     use_git: bool,
@@ -1139,6 +1150,7 @@ def get_check_table(
         return execute_discovery_job(
             host.name(),
             action,
+            user_permission_config=user_permission_config,
             raise_errors=raise_errors,
             debug=debug,
         )
@@ -1170,6 +1182,7 @@ def get_check_table(
 
 
 class ServiceDiscoveryJobArgs(BaseModel, frozen=True):
+    user_permission_config: UserPermissionSerializableConfig
     host_name: AnnotatedHostName
     action: DiscoveryAction
     raise_errors: bool
@@ -1181,7 +1194,9 @@ def discovery_job_entry_point(
     args: ServiceDiscoveryJobArgs,
 ) -> None:
     job = ServiceDiscoveryBackgroundJob(args.host_name)
-    with job_interface.gui_context():
+    with job_interface.gui_context(
+        UserPermissions.from_serialized_config(args.user_permission_config, permission_registry)
+    ):
         job.discover(args.action, raise_errors=args.raise_errors, debug=args.debug)
 
 
@@ -1189,6 +1204,7 @@ def execute_discovery_job(
     host_name: HostName,
     action: DiscoveryAction,
     *,
+    user_permission_config: UserPermissionSerializableConfig,
     raise_errors: bool,
     debug: bool,
 ) -> DiscoveryResult:
@@ -1207,6 +1223,7 @@ def execute_discovery_job(
                     args=ServiceDiscoveryJobArgs(
                         host_name=host_name,
                         action=action,
+                        user_permission_config=user_permission_config,
                         raise_errors=raise_errors,
                         debug=debug,
                     ),

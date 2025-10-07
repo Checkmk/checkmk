@@ -107,7 +107,7 @@ def _vs_choices() -> CascadingDropdown:
 
 ConfigVariableInventoryCleanup = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="inventory_cleanup",
     valuespec=lambda: Dictionary(
         title=_("HW/SW Inventory cleanup"),

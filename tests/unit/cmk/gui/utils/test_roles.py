@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import ast
+from dataclasses import asdict
 from typing import get_args
 
 import pytest
@@ -12,7 +14,11 @@ from cmk.gui.config import Config
 from cmk.gui.permissions import Permission, PermissionSection
 from cmk.gui.role_types import BuiltInUserRole, BuiltInUserRoleID, CustomUserRole
 from cmk.gui.type_defs import UserSpec
-from cmk.gui.utils.roles import builtin_role_id_from_str, UserPermissions
+from cmk.gui.utils.roles import (
+    builtin_role_id_from_str,
+    UserPermissions,
+    UserPermissionSerializableConfig,
+)
 
 
 def create_sample_roles() -> dict[str, BuiltInUserRole | CustomUserRole]:
@@ -140,6 +146,40 @@ def test_user_permissions_from_config() -> None:
         UserId(user_id): user_spec["roles"] for user_id, user_spec in config.multisite_users.items()
     }
     assert user_permissions._user_roles == expected_user_roles
+
+
+def test_user_permissions_from_serializable_config() -> None:
+    roles = create_sample_roles()
+    permissions = create_sample_permissions()
+    users = create_sample_users()
+    config = create_config(roles=roles, users=users)
+
+    serializable = UserPermissionSerializableConfig.from_global_config(config)
+    serialized = repr(asdict(serializable))
+
+    user_permissions = UserPermissions.from_serialized_config(
+        UserPermissionSerializableConfig(**ast.literal_eval(serialized)), permissions
+    )
+
+    assert user_permissions._roles == config.roles
+    assert user_permissions._permissions is permissions
+    expected_user_roles = {
+        UserId(user_id): user_spec["roles"] for user_id, user_spec in config.multisite_users.items()
+    }
+    assert user_permissions._user_roles == expected_user_roles
+
+
+def test_user_permissions_to_serializable_config() -> None:
+    roles = create_sample_roles()
+    permissions = create_sample_permissions()
+    users = create_sample_users()
+    config = create_config(roles=roles, users=users)
+
+    user_permissions = UserPermissions.from_config(config, permissions)
+    assert (
+        user_permissions.to_serializable_config()
+        == UserPermissionSerializableConfig.from_global_config(config)
+    )
 
 
 def test_may_with_roles_admin_default_permissions() -> None:

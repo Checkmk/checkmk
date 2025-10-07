@@ -12,6 +12,7 @@
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
+from collections.abc import Mapping
 from typing import override
 
 from cmk.bi.actions import BIActionSchema, BICallARuleAction, BIStateOfHostActionSchema
@@ -19,7 +20,6 @@ from cmk.bi.lib import ABCBICompiledNode, ABCBISearcher, create_nested_schema
 from cmk.bi.node_generator_interface import ABCBINodeGenerator
 from cmk.bi.schema import Schema
 from cmk.bi.search import BIEmptySearchSchema, BISearchSchema
-from cmk.utils.macros import MacroMapping
 
 
 class BINodeGenerator(ABCBINodeGenerator):
@@ -29,7 +29,9 @@ class BINodeGenerator(ABCBINodeGenerator):
         return BINodeGeneratorSchema
 
     @override
-    def compile(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> list[ABCBICompiledNode]:
+    def compile(
+        self, macros: Mapping[str, str], bi_searcher: ABCBISearcher
+    ) -> list[ABCBICompiledNode]:
         search_results = self.search.execute(macros, bi_searcher)
 
         # Note: This feature is currently unused

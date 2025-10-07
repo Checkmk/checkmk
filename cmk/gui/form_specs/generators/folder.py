@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Callable, Sequence
 
-from cmk.gui.form_specs.private import (
+from cmk.gui.form_specs.unstable import (
     SingleChoiceEditable,
     SingleChoiceElementExtended,
     SingleChoiceExtended,

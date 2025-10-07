@@ -8,7 +8,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
 import { ref } from 'vue'
 
-import usei18n from '@/lib/i18n.ts'
+import usei18n from '@/lib/i18n'
+import { immediateWatch } from '@/lib/watch.ts'
 
 import CmkAccordionStepPanel from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanel.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
@@ -24,6 +25,7 @@ const props = defineProps<{
   showHeading: boolean
 }>()
 
+const emit = defineEmits(['step-completed'])
 const buildStepId = (step: number): string => `step-${step}`
 const getFirstNotFinishedStep = (finishedStages: string[]): string[] => {
   const steps = stepComponents.map(({ stepId }) => stepId)
@@ -37,6 +39,13 @@ const getFirstNotFinishedStep = (finishedStages: string[]): string[] => {
     : []
 }
 const openedItems = ref<string[]>(getFirstNotFinishedStep(props.finishedSteps))
+
+immediateWatch(
+  () => props.finishedSteps,
+  (newFinishedSteps) => {
+    openedItems.value = getFirstNotFinishedStep(newFinishedSteps)
+  }
+)
 </script>
 
 <template>
@@ -53,6 +62,7 @@ const openedItems = ref<string[]>(getFirstNotFinishedStep(props.finishedSteps))
       :step-id="stepId"
       :urls="urls"
       :accomplished="finishedSteps.includes(stepId)"
+      @step-completed="emit('step-completed', $event)"
     />
   </CmkAccordionStepPanel>
 </template>

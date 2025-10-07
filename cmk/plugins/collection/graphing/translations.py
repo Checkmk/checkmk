@@ -372,8 +372,8 @@ translation_dell_powerconnect_temp = translations.Translation(
     translations={"temperature": translations.RenameTo("temp")},
 )
 
-translation_df_db2_logsizes_esx_vsphere_datastores_netapp_ontap_aggr_vms_df_vms_diskstat_df_disk_df_netapp_df_netapp32_zfsget_hr_fs_oracle_asm_diskgroup_esx_vsphere_counters_ramdisk_hitachi_hnas_span_hitachi_hnas_volume_hitachi_hnas_volume_virtual_emcvnx_raidgroups_capacity_emcvnx_raidgroups_capacity_contiguous_ibm_svc_mdiskgrp_fast_lta_silent_cubes_capacity_fast_lta_volumes_libelle_business_shadow_archive_dir_netapp_ontap_luns_netapp_ontap_qtree_quota_emc_datadomain_fs_emc_isilon_quota_emc_isilon_ifs_3par_cpgs_usage_3par_capacity_3par_volumes_storeonce_clusterinfo_space_storeonce_servicesets_capacity_storeonce4x_appliances_storage_storeonce4x_cat_stores_numble_volumes_zpool_vnx_quotas_sap_hana_diskusage_fjdarye200_pools_dell_compellent_folder_nimble_volumes_ceph_df_kube_pvc_lvm_vgs_df_netscaler_prism_host_usage_prism_containers_prism_storage_pools_ucd_disk_hp_msa_volume_df = translations.Translation(
-    name="df_db2_logsizes_esx_vsphere_datastores_netapp_ontap_aggr_vms_df_vms_diskstat_df_disk_df_netapp_df_netapp32_zfsget_hr_fs_oracle_asm_diskgroup_esx_vsphere_counters_ramdisk_hitachi_hnas_span_hitachi_hnas_volume_hitachi_hnas_volume_virtual_emcvnx_raidgroups_capacity_emcvnx_raidgroups_capacity_contiguous_ibm_svc_mdiskgrp_fast_lta_silent_cubes_capacity_fast_lta_volumes_libelle_business_shadow_archive_dir_netapp_ontap_luns_netapp_ontap_qtree_quota_emc_datadomain_fs_emc_isilon_quota_emc_isilon_ifs_3par_cpgs_usage_3par_capacity_3par_volumes_storeonce_clusterinfo_space_storeonce_servicesets_capacity_storeonce4x_appliances_storage_storeonce4x_cat_stores_numble_volumes_zpool_vnx_quotas_sap_hana_diskusage_fjdarye200_pools_dell_compellent_folder_nimble_volumes_ceph_df_kube_pvc_lvm_vgs_df_netscaler_prism_host_usage_prism_containers_prism_storage_pools_ucd_disk_hp_msa_volume_df",
+translation_df_db2_logsizes_esx_vsphere_datastores_netapp_ontap_aggr_vms_df_vms_diskstat_df_disk_df_netapp_df_netapp32_zfsget_hr_fs_oracle_asm_diskgroup_esx_vsphere_counters_ramdisk_hitachi_hnas_span_hitachi_hnas_volume_hitachi_hnas_volume_virtual_ibm_svc_mdiskgrp_fast_lta_silent_cubes_capacity_fast_lta_volumes_libelle_business_shadow_archive_dir_netapp_ontap_luns_netapp_ontap_qtree_quota_emc_datadomain_fs_emc_isilon_quota_emc_isilon_ifs_3par_cpgs_usage_3par_capacity_3par_volumes_storeonce_clusterinfo_space_storeonce_servicesets_capacity_storeonce4x_appliances_storage_storeonce4x_cat_stores_numble_volumes_zpool_vnx_quotas_sap_hana_diskusage_fjdarye200_pools_dell_compellent_folder_nimble_volumes_ceph_df_kube_pvc_lvm_vgs_df_netscaler_prism_host_usage_prism_containers_prism_storage_pools_ucd_disk_hp_msa_volume_df = translations.Translation(
+    name="df_db2_logsizes_esx_vsphere_datastores_netapp_ontap_aggr_vms_df_vms_diskstat_df_disk_df_netapp_df_netapp32_zfsget_hr_fs_oracle_asm_diskgroup_esx_vsphere_counters_ramdisk_hitachi_hnas_span_hitachi_hnas_volume_hitachi_hnas_volume_virtual_ibm_svc_mdiskgrp_fast_lta_silent_cubes_capacity_fast_lta_volumes_libelle_business_shadow_archive_dir_netapp_ontap_luns_netapp_ontap_qtree_quota_emc_datadomain_fs_emc_isilon_quota_emc_isilon_ifs_3par_cpgs_usage_3par_capacity_3par_volumes_storeonce_clusterinfo_space_storeonce_servicesets_capacity_storeonce4x_appliances_storage_storeonce4x_cat_stores_numble_volumes_zpool_vnx_quotas_sap_hana_diskusage_fjdarye200_pools_dell_compellent_folder_nimble_volumes_ceph_df_kube_pvc_lvm_vgs_df_netscaler_prism_host_usage_prism_containers_prism_storage_pools_ucd_disk_hp_msa_volume_df",
     check_commands=[
         translations.PassiveCheck("df"),
         translations.PassiveCheck("db2_logsizes"),
@@ -391,8 +391,6 @@ translation_df_db2_logsizes_esx_vsphere_datastores_netapp_ontap_aggr_vms_df_vms_
         translations.PassiveCheck("hitachi_hnas_span"),
         translations.PassiveCheck("hitachi_hnas_volume"),
         translations.PassiveCheck("hitachi_hnas_volume_virtual"),
-        translations.PassiveCheck("emcvnx_raidgroups_capacity"),
-        translations.PassiveCheck("emcvnx_raidgroups_capacity_contiguous"),
         translations.PassiveCheck("ibm_svc_mdiskgrp"),
         translations.PassiveCheck("fast_lta_silent_cubes_capacity"),
         translations.PassiveCheck("fast_lta_volumes"),
@@ -1543,14 +1541,13 @@ translation_smart_stats = translations.Translation(
     },
 )
 
-translation_statgrab_disk_ibm_svc_systemstats_diskio_ibm_svc_nodestats_diskio_mysql_innodb_io_emcvnx_disks_netapp_fcpio = translations.Translation(
-    name="statgrab_disk_ibm_svc_systemstats_diskio_ibm_svc_nodestats_diskio_mysql_innodb_io_emcvnx_disks_netapp_fcpio",
+translation_statgrab_disk_ibm_svc_systemstats_diskio_ibm_svc_nodestats_diskio_mysql_innodb_io_netapp_fcpio = translations.Translation(
+    name="statgrab_disk_ibm_svc_systemstats_diskio_ibm_svc_nodestats_diskio_mysql_innodb_io_netapp_fcpio",
     check_commands=[
         translations.PassiveCheck("statgrab_disk"),
         translations.PassiveCheck("ibm_svc_systemstats_diskio"),
         translations.PassiveCheck("ibm_svc_nodestats_diskio"),
         translations.PassiveCheck("mysql_innodb_io"),
-        translations.PassiveCheck("emcvnx_disks"),
         translations.PassiveCheck("netapp_fcpio"),
     ],
     translations={
@@ -1585,7 +1582,7 @@ translation_statgrab_mem_hr_mem_solaris_mem_docker_container_mem_emc_ecs_mem_aix
                 1048576,
             ),
             "memusedavg": translations.RenameToAndScaleBy(
-                "memory_avg",
+                "mem_used_avg",
                 1048576,
             ),
             "pagetables": translations.RenameToAndScaleBy(

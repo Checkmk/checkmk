@@ -7375,7 +7375,7 @@ class Labels(ValueSpec[LabelsModel]):
     def help(self) -> str | HTML | None:
         h = super().help()
         return escaping.escape_to_html_permissive(
-            ("" if h is None else str(h)) + label_help_text(), escape_links=False
+            ("" if h is None else f"{h!s} ") + label_help_text(), escape_links=False
         )
 
     def canonical_value(self) -> LabelsModel:

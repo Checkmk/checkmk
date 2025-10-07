@@ -6,7 +6,9 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
+from cmk.gui.form_specs.unstable.legacy_converter import (
+    TransformDataForLegacyFormatOrRecomposeFunction,
+)
 from cmk.rulesets.v1.form_specs import CascadingSingleChoice
 
 CascadingElementSelectionTypes = str | int | None | bool

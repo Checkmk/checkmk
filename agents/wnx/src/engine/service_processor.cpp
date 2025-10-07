@@ -487,6 +487,8 @@ int ServiceProcessor::startProviders(AnswerId answer_id,
     tryToKick(spool_provider_, answer_id, ip_addr);
     tryToKick(ohm_provider_, answer_id, ip_addr);
     tryToKick(agent_plugins_, answer_id, ip_addr);
+    tryToKick(w32time_status_provider_, answer_id, ip_addr);
+    tryToKick(w32time_peers_provider_, answer_id, ip_addr);
 
     checkMaxWaitTime();
 

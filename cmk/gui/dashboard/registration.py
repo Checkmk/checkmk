@@ -17,7 +17,7 @@ from .api import register_endpoints
 from .builtin_dashboards import builtin_dashboards
 from .cre_dashboards import register_builtin_dashboards
 from .dashlet import DashletRegistry, FigureDashletPage, register_dashlets
-from .dashlet.dashlets.view import ViewWidgetIFramePage
+from .dashlet.dashlets.view import ViewWidgetEditPage, ViewWidgetIFramePage
 from .page_create_dashboard import page_create_dashboard
 from .page_create_view_dashlet import (
     page_create_link_view_dashlet,
@@ -57,6 +57,7 @@ def register(
     page_registry.register(PageEndpoint("widget_figure", FigureWidgetPage))
     page_registry.register(PageEndpoint("widget_graph", GraphWidgetPage))
     page_registry.register(PageEndpoint("widget_iframe_view", ViewWidgetIFramePage))
+    page_registry.register(PageEndpoint("widget_edit_view", ViewWidgetEditPage))
     page_registry.register(
         PageEndpoint("ajax_initial_dashboard_filters", AjaxInitialDashboardFilters)
     )

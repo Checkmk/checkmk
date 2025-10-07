@@ -106,7 +106,7 @@ function getInitStep() {
 
 <template>
   <CmkButton :title="closeButtonTitle" class="close_and_test" @click="close">
-    <CmkIcon name="connection_tests" />
+    <CmkIcon name="connection-tests" />
     {{ closeButtonTitle }}
   </CmkButton>
   <CmkButton
@@ -281,7 +281,7 @@ function getInitStep() {
                 v-if="!isPushMode"
                 type="finish"
                 :override-label="closeButtonTitle"
-                icon-name="connection_tests"
+                icon-name="connection-tests"
                 @click="close"
               />
               <CmkWizardButton v-else type="next" />

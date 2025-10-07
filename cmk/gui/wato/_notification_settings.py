@@ -40,7 +40,7 @@ def register(config_variable_registry: ConfigVariableRegistry) -> None:
 
 ConfigVariableNotificationFallbackEmail = ConfigVariable(
     group=ConfigVariableGroupNotifications,
-    domain=ConfigDomainCore,
+    primary_domain=ConfigDomainCore,
     ident="notification_fallback_email",
     valuespec=lambda: EmailAddress(
         title=_("Fallback email address for notifications"),
@@ -68,7 +68,7 @@ def _get_valuespec(plugin_name: str) -> ValueSpec:
 
 ConfigVariableNotificationFallbackFormat = ConfigVariable(
     group=ConfigVariableGroupNotifications,
-    domain=ConfigDomainCore,
+    primary_domain=ConfigDomainCore,
     ident="notification_fallback_format",
     valuespec=lambda: CascadingDropdown(
         title=_("Fallback notification email format"),
@@ -89,7 +89,7 @@ ConfigVariableNotificationFallbackFormat = ConfigVariable(
 
 ConfigVariableNotificationBacklog = ConfigVariable(
     group=ConfigVariableGroupNotifications,
-    domain=ConfigDomainCore,
+    primary_domain=ConfigDomainCore,
     ident="notification_backlog",
     valuespec=lambda: Integer(
         title=_("Store notifications for rule analysis"),
@@ -107,7 +107,7 @@ ConfigVariableNotificationBacklog = ConfigVariable(
 
 ConfigVariableNotificationBulkInterval = ConfigVariable(
     group=ConfigVariableGroupNotifications,
-    domain=ConfigDomainCore,
+    primary_domain=ConfigDomainCore,
     ident="notification_bulk_interval",
     valuespec=lambda: Age(
         title=_("Interval for checking for ripe bulk notifications"),
@@ -124,7 +124,7 @@ ConfigVariableNotificationBulkInterval = ConfigVariable(
 
 ConfigVariableNotificationPluginTimeout = ConfigVariable(
     group=ConfigVariableGroupNotifications,
-    domain=ConfigDomainCore,
+    primary_domain=ConfigDomainCore,
     ident="notification_plugin_timeout",
     valuespec=lambda: Age(
         title=_("Notification plug-in timeout"),
@@ -135,7 +135,7 @@ ConfigVariableNotificationPluginTimeout = ConfigVariable(
 
 ConfigVariableNotificationLogging = ConfigVariable(
     group=ConfigVariableGroupNotifications,
-    domain=ConfigDomainCore,
+    primary_domain=ConfigDomainCore,
     ident="notification_logging",
     valuespec=lambda: DropdownChoice(
         title=_("Notification log level"),
@@ -155,7 +155,7 @@ ConfigVariableNotificationLogging = ConfigVariable(
 
 ConfigVariableFailedNotificationHorizon = ConfigVariable(
     group=ConfigVariableGroupNotifications,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="failed_notification_horizon",
     valuespec=lambda: Age(
         title=_("Failed notification horizon"),

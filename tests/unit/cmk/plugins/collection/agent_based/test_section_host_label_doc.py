@@ -26,7 +26,8 @@ CRE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/azure/resource_group",
     "cmk/azure/subscription_id",
     "cmk/azure/subscription_name",
-    "cmk/azure/tag/{key}:{value}",
+    "cmk/azure/tag/{key}:{value}",  # deprecated azure plugin
+    "cmk/azure/tag/{label}:{value}",
     "cmk/azure/entity:resource_group",
     "cmk/azure/entity:<entity_type>",
     "cmk/azure/entity:subscription",
@@ -64,6 +65,10 @@ CRE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/os_platform",
     "cmk/os_name",
     "cmk/os_version",
+    "cmk/pve/cluster:<cluster_name>",
+    "cmk/pve/entity:node",
+    "cmk/pve/entity:<entity_type>",
+    "cmk/pve/node:<node_name>",
     "cmk/vsphere_object",
     "cmk/vsphere_vcenter",
     "cmk/systemd/unit:{name}",
@@ -72,6 +77,12 @@ CRE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
 CEE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/rmk/node_type",
     "cmk/otel/metrics",  # CCE, actually.
+    "cmk/podman/host",
+    "cmk/podman/node:{node}",
+    "cmk/podman/object:container",
+    "cmk/podman/object:node",
+    "cmk/podman/pod:{pod}",
+    "cmk/podman/user:{user}",
 }
 
 

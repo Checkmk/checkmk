@@ -8,7 +8,7 @@ from __future__ import annotations
 import abc
 import os
 import pprint
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Generator, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Final, TypedDict
@@ -135,18 +135,21 @@ class ABCConfigDomain(abc.ABC):
         filename = self.config_file(site_specific)
         if custom_site_path:
             filename = Path(custom_site_path) / os.path.relpath(filename, cmk.utils.paths.omd_root)
-
-        output = wato_fileheader()
-        for varname, value in settings.items():
-            output += f"{varname} = {pprint.pformat(value)}\n"
-
-        filename.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
-        store.save_text_to_file(filename, output)
+        self._serialize_and_write_settings(settings, filename)
 
     def save_site_globals(
         self, settings: GlobalSettings, custom_site_path: str | None = None
     ) -> None:
         self.save(settings, site_specific=True, custom_site_path=custom_site_path)
+
+    @staticmethod
+    def _serialize_and_write_settings(settings: GlobalSettings, path: Path) -> None:
+        output = wato_fileheader()
+        for varname, value in settings.items():
+            output += f"{varname} = {pprint.pformat(value)}\n"
+
+        path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
+        store.save_text_to_file(path, output)
 
     @abc.abstractmethod
     def default_globals(self) -> GlobalSettings:
@@ -160,7 +163,7 @@ class ABCConfigDomain(abc.ABC):
         return [
             varname
             for (varname, v) in config_variable_registry.items()
-            if v.domain().ident() == self.ident()
+            if v.primary_domain().ident() == self.ident()
         ]
 
     @classmethod
@@ -296,7 +299,7 @@ class ConfigVariable:
         self,
         *,
         group: ConfigVariableGroup,
-        domain: type[ABCConfigDomain],
+        primary_domain: type[ABCConfigDomain],
         ident: str,
         valuespec: Callable[[], ValueSpec],
         need_restart: bool | None = None,
@@ -307,7 +310,7 @@ class ConfigVariable:
         domain_hint: HTML = HTML.empty(),
     ) -> None:
         self._group = group
-        self._domain_ident = domain.ident()
+        self._primary_domain_ident = primary_domain.ident()
         self._ident = ident
         self._valuespec_func = valuespec
         self._need_restart = need_restart
@@ -316,6 +319,7 @@ class ConfigVariable:
         self._in_global_settings = in_global_settings
         self._hint_func = hint
         self._domain_hint = domain_hint
+        self._idents_of_affected_domains = {self._primary_domain_ident}
 
     def group(self) -> ConfigVariableGroup:
         """Returns the the configuration variable group this configuration variable belongs to"""
@@ -329,9 +333,15 @@ class ConfigVariable:
         """Returns the valuespec object of this configuration variable"""
         return self._valuespec_func()
 
-    def domain(self) -> ABCConfigDomain:
+    def primary_domain(self) -> ABCConfigDomain:
         """Returns the config domain this configuration variable belongs to"""
-        return config_domain_registry[self._domain_ident]
+        return config_domain_registry[self._primary_domain_ident]
+
+    def all_domains(self) -> Generator[ABCConfigDomain]:
+        yield from (
+            config_domain_registry[domain_ident]
+            for domain_ident in self._idents_of_affected_domains
+        )
 
     # TODO: This is boolean flag which defaulted to None in case a variable declaration did not
     # provide this attribute.
@@ -360,6 +370,12 @@ class ConfigVariable:
 
     def domain_hint(self) -> HTML:
         return self._domain_hint
+
+    def add_config_domain_affected_by_change(
+        self,
+        domain: type[ABCConfigDomain],
+    ) -> None:
+        self._idents_of_affected_domains.add(domain.ident())
 
 
 class ConfigVariableRegistry(cmk.ccc.plugin_registry.Registry[ConfigVariable]):
@@ -418,7 +434,7 @@ def register_configvar(
         ConfigVariable(
             ident=varname,
             group=group,
-            domain=domain,
+            primary_domain=domain,
             valuespec=valuespec,
             need_restart=need_restart,
             allow_reset=allow_reset,

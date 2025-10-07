@@ -18,6 +18,7 @@ from pathlib import Path
 from socket import AddressFamily
 from typing import Any, assert_never, Final, IO, Literal
 
+import cmk.utils.paths
 from cmk.base import config
 from cmk.base.config import (
     ConfigCache,
@@ -89,6 +90,10 @@ class NagiosCore(MonitoringCore):
     @staticmethod
     def is_cmc() -> Literal[False]:
         return False
+
+    @staticmethod
+    def objects_file() -> str:
+        return str(cmk.utils.paths.nagios_objects_file)
 
     def _run_command(self, action: CoreAction) -> subprocess.CompletedProcess[bytes]:
         os.putenv("CORE_NOVERIFY", "yes")

@@ -76,10 +76,11 @@ export function useDashboardsManager() {
   async function createDashboard(
     dashboardName: string,
     generalSettings: DashboardGeneralSettings,
-    layoutType: DashboardLayout
+    layoutType: DashboardLayout,
+    restrictedToSingle: string[] = []
   ): Promise<DashboardModel> {
     const filterContext = {
-      restricted_to_single: [],
+      restricted_to_single: restrictedToSingle,
       filters: {},
       mandatory_context_filters: []
     }

@@ -113,7 +113,7 @@ class ABCGlobalSettingsMode(WatoMode):
             for config_variable in group.config_variables():
                 if not show_all and (
                     not config_variable.in_global_settings()
-                    or not config_variable.domain().in_global_settings
+                    or not config_variable.primary_domain().in_global_settings
                 ):
                     continue  # do not edit via global settings
 
@@ -135,7 +135,7 @@ class ABCGlobalSettingsMode(WatoMode):
     def _should_show_config_variable(self, config_variable: ConfigVariable, *, debug: bool) -> bool:
         varname = config_variable.ident()
 
-        if not (domain := config_variable.domain()).enabled():
+        if not (domain := config_variable.primary_domain()).enabled():
             return False
 
         if isinstance(domain, ConfigDomainCore) and varname not in self._default_values:
@@ -216,7 +216,7 @@ class ABCGlobalSettingsMode(WatoMode):
                 if (
                     search
                     and search not in group.title().lower()
-                    and search not in config_variable.domain().ident().lower()
+                    and search not in config_variable.primary_domain().ident().lower()
                     and search not in varname
                     and search not in help_text.lower()
                     and search not in title_text.lower()
@@ -408,11 +408,12 @@ class ABCEditGlobalSettingMode(WatoMode):
             text=msg,
             user_id=user.id,
             sites=self._affected_sites(),
-            domains=[(domain := self._config_variable.domain())],
+            domains=list(self._config_variable.all_domains()),
             need_restart=self._config_variable.need_restart(),
             need_apache_reload=self._config_variable.need_apache_reload(),
             domain_settings={
                 domain.ident(): {"need_apache_reload": self._config_variable.need_apache_reload()}
+                for domain in self._config_variable.all_domains()
             },
             use_git=config.wato_use_git,
         )
@@ -607,11 +608,12 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
             action_name="edit-configvar",
             text=msg,
             user_id=user.id,
-            domains=[(domain := config_variable.domain())],
+            domains=list(config_variable.all_domains()),
             need_restart=config_variable.need_restart(),
             need_apache_reload=config_variable.need_apache_reload(),
             domain_settings={
                 domain.ident(): {"need_apache_reload": config_variable.need_apache_reload()}
+                for domain in config_variable.all_domains()
             },
             use_git=config.wato_use_git,
         )

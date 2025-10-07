@@ -15,7 +15,7 @@ import time
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final, Literal, Protocol
+from typing import Final, Literal
 
 import livestatus
 
@@ -38,7 +38,6 @@ from cmk.base.sources import (
     make_sources,
     ParserConfig,
     Source,
-    SpecialAgentSource,
 )
 from cmk.ccc import tty
 from cmk.ccc.cpu_tracking import CPUTracker, Snapshot
@@ -90,11 +89,12 @@ from cmk.fetchers import (
     Fetcher,
     FetcherTrigger,
     Mode,
+    ProgramFetcher,
     TLSConfig,
 )
 from cmk.fetchers.config import make_persisted_section_dir
-from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
-from cmk.helper_interface import AgentRawData, SourceInfo, SourceType
+from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge, NoCache
+from cmk.helper_interface import AgentRawData, FetcherType, SourceInfo, SourceType
 from cmk.server_side_calls_backend import SpecialAgentCommandLine
 from cmk.snmplib import SNMPBackendEnum, SNMPRawData
 from cmk.utils import password_store
@@ -125,24 +125,17 @@ __all__ = [
 type _Labels = Mapping[str, str]
 
 
-class CheckerConfig(Protocol):  # protocol for now.
-    def only_from(self, host_name: HostName) -> None | str | list[str]: ...
-
-    def effective_service_level(
-        self, host_name: HostName, service_name: ServiceName, labels: _Labels
-    ) -> int: ...
-
-    def get_clustered_service_configuration(
-        self, host_name: HostName, service_name: ServiceName, labels: _Labels
-    ) -> tuple[cluster_mode.ClusterMode, Mapping[str, object]]: ...
-
-    def nodes(self, host_name: HostName) -> Sequence[HostName]: ...
-
-    def effective_host(
-        self, host_name: HostName, service_name: ServiceName, labels: _Labels
-    ) -> HostName: ...
-
-    def get_snmp_backend(self, host_name: HostName) -> SNMPBackendEnum: ...
+@dataclass(frozen=True)
+class CheckerConfig:
+    only_from: Callable[[HostName], None | str | list[str]]
+    effective_service_level: Callable[[HostName, ServiceName, _Labels], int]
+    get_clustered_service_configuration: Callable[
+        [HostName, ServiceName, _Labels],
+        tuple[cluster_mode.ClusterMode, Mapping[str, object]],
+    ]
+    nodes: Callable[[HostName], Sequence[HostName]]
+    effective_host: Callable[[HostName, ServiceName, _Labels], HostName]
+    get_snmp_backend: Callable[[HostName], SNMPBackendEnum]
 
 
 def _fetch_all(
@@ -303,18 +296,16 @@ class SpecialAgentFetcher:
     def __init__(
         self,
         trigger: FetcherTrigger,
-        factory: FetcherFactory,
         *,
         # alphabetically sorted
         agent_name: str,
         cmds: Iterator[SpecialAgentCommandLine],
-        file_cache_options: FileCacheOptions,
+        is_cmc: bool,
     ) -> None:
         self.trigger: Final = trigger
-        self.factory: Final = factory
         self.agent_name: Final = agent_name
         self.cmds: Final = cmds
-        self.file_cache_options: Final = file_cache_options
+        self.is_cmc: Final = is_cmc
 
     def __call__(
         self, host_name: HostName, *, ip_address: HostAddress | None
@@ -325,28 +316,23 @@ class SpecialAgentFetcher:
             Snapshot,
         ]
     ]:
-        max_age = MaxAge.zero()
-        file_cache_path = cmk.utils.paths.data_source_cache_dir
-
-        return _fetch_all(
-            self.trigger,
-            [
-                SpecialAgentSource(
-                    self.factory,
-                    host_name,
-                    ip_address,
-                    agent_name=self.agent_name,
-                    stdin=cmd.stdin,
-                    cmdline=cmd.cmdline,
-                    max_age=max_age,
-                    file_cache_path=file_cache_path,
-                )
-                for cmd in self.cmds
-            ],
-            simulation=False,
-            file_cache_options=self.file_cache_options,
-            mode=Mode.DISCOVERY,
+        source_info = SourceInfo(
+            hostname=host_name,
+            ipaddress=ip_address,
+            ident=f"special_{self.agent_name}",
+            fetcher_type=FetcherType.SPECIAL_AGENT,
+            source_type=SourceType.HOST,
         )
+        return [
+            _do_fetch(
+                self.trigger,
+                source_info,
+                NoCache(),
+                ProgramFetcher(cmdline=cmd.cmdline, stdin=cmd.stdin, is_cmc=self.is_cmc),
+                mode=Mode.DISCOVERY,
+            )
+            for cmd in self.cmds
+        ]
 
 
 class CMKFetcher:
@@ -433,8 +419,6 @@ class CMKFetcher:
                 for node in self.config_cache.nodes(host_name)
             ]
 
-        file_cache_path = cmk.utils.paths.data_source_cache_dir
-        tcp_cache_path = cmk.utils.paths.tcp_cache_dir
         tls_config = TLSConfig(
             cas_dir=Path(cmk.utils.paths.agent_cas_dir),
             ca_store=Path(cmk.utils.paths.agent_cert_store),
@@ -460,8 +444,9 @@ class CMKFetcher:
                         self.max_cachefile_age or self.config_cache.max_cachefile_age(host_name)
                     ),
                     snmp_backend=self.config_cache.get_snmp_backend(current_host_name),
-                    file_cache_path=file_cache_path,
-                    tcp_cache_path=tcp_cache_path,
+                    file_cache_path_base=cmk.utils.paths.omd_root,
+                    file_cache_path_relative=cmk.utils.paths.relative_data_source_cache_dir,
+                    tcp_cache_path_relative=cmk.utils.paths.relative_tcp_cache_dir,
                     tls_config=tls_config,
                     computed_datasources=self.config_cache.computed_datasources(current_host_name),
                     datasource_programs=self.config_cache.datasource_programs(current_host_name),
@@ -661,13 +646,19 @@ def _make_rrd_data_getter(
     return get_rrd_data
 
 
-def update_predictive_levels(metric_name: str, levels: tuple) -> tuple:
+def update_predictive_levels(
+    metric_name: str, levels: tuple, direction: Literal["upper", "lower"]
+) -> tuple:
     match levels:
         case ("cmk_postprocessed", "predictive_levels", dict() as lvl):
             return (
                 "cmk_postprocessed",
                 "predictive_levels",
-                {**lvl, "__reference_metric__": metric_name},
+                {
+                    **lvl,
+                    "__reference_metric__": metric_name,
+                    "__direction__": direction,
+                },
             )
         case _:
             return levels
@@ -680,10 +671,10 @@ def _special_processing_hack_for_predictive_otel_metrics(
         case {"metrics": ("multi_metrics", list() as metrics)}:
             for metric in metrics:
                 metric["levels_lower"] = update_predictive_levels(
-                    metric["metric_name"], metric["levels_lower"]
+                    metric["metric_name"], metric["levels_lower"], "lower"
                 )
                 metric["levels_upper"] = update_predictive_levels(
-                    metric["metric_name"], metric["levels_upper"]
+                    metric["metric_name"], metric["levels_upper"], "upper"
                 )
             return {"metrics": ("multi_metrics", metrics)}
         case _:

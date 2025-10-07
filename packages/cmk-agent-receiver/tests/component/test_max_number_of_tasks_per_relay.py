@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
-# Copyright (C) 2025 Checkmk GmbH - License: Checkmk Enterprise License
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import uuid
 from http import HTTPStatus
 
-from cmk.relay_protocols.tasks import TaskType
-
-from .test_lib.agent_receiver import AgentReceiverClient
-from .test_lib.config import create_relay_config
-from .test_lib.site_mock import SiteMock
-from .test_lib.tasks import add_tasks, get_all_tasks
+from cmk.relay_protocols.tasks import FetchAdHocTask
+from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
+from cmk.testlib.agent_receiver.config import create_relay_config
+from cmk.testlib.agent_receiver.site_mock import SiteMock
+from cmk.testlib.agent_receiver.tasks import add_tasks, get_all_tasks
 
 
 def test_cannot_push_more_tasks_than_allowed(
@@ -33,8 +32,7 @@ def test_cannot_push_more_tasks_than_allowed(
 
     response = agent_receiver.push_task(
         relay_id=relay_id,
-        task_type=TaskType.FETCH_AD_HOC,
-        task_payload="payload",
+        spec=FetchAdHocTask(payload=".."),
     )
 
     assert response.status_code == HTTPStatus.FORBIDDEN, response.text
@@ -65,8 +63,7 @@ def test_each_relay_has_its_own_limit(agent_receiver: AgentReceiverClient, site:
 
     response = agent_receiver.push_task(
         relay_id=relay_id_B,
-        task_type=TaskType.FETCH_AD_HOC,
-        task_payload="payload",
+        spec=FetchAdHocTask(payload=".."),
     )
     assert response.status_code == HTTPStatus.OK, response.text
 

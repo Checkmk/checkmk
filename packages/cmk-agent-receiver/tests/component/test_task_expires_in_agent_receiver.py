@@ -6,12 +6,11 @@
 import time
 
 from cmk.relay_protocols.relays import RelayRegistrationResponse
-from cmk.relay_protocols.tasks import TaskType
-
-from .test_lib.agent_receiver import AgentReceiverClient
-from .test_lib.config import create_relay_config as _create_relay_config
-from .test_lib.site_mock import OP, SiteMock
-from .test_lib.tasks import get_relay_tasks, push_task
+from cmk.relay_protocols.tasks import FetchAdHocTask
+from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
+from cmk.testlib.agent_receiver.config import create_relay_config as _create_relay_config
+from cmk.testlib.agent_receiver.site_mock import OP, SiteMock
+from cmk.testlib.agent_receiver.tasks import get_relay_tasks, push_task
 
 
 def register_relay(ar: AgentReceiverClient, name: str) -> str:
@@ -42,8 +41,7 @@ def test_task_expires_in_agent_receiver(
     task_response = push_task(
         agent_receiver=agent_receiver,
         relay_id=relay_id,
-        task_type=TaskType.FETCH_AD_HOC,
-        task_payload="task payload",
+        spec=FetchAdHocTask(payload=".."),
     )
 
     # Verify task is present initially
@@ -85,10 +83,9 @@ def test_task_expiration_resets_on_update(
     task_response = push_task(
         agent_receiver=agent_receiver,
         relay_id=relay_id,
-        task_type=TaskType.FETCH_AD_HOC,
-        task_payload="test task payload",
+        spec=FetchAdHocTask(payload=".."),
     )
-    task_id = str(task_response.task_id)
+    task_id = task_response.task_id
 
     # Step 3: Wait half of expiration time
     time.sleep((expiration_time / 2) + 0.1)  # Adding a small buffer to ensure we are past half
@@ -138,18 +135,16 @@ def test_completed_tasks_expiration(
     task_a_response = push_task(
         agent_receiver=agent_receiver,
         relay_id=relay_id,
-        task_type=TaskType.FETCH_AD_HOC,
-        task_payload="test task A payload",
+        spec=FetchAdHocTask(payload="test task A payload"),
     )
-    task_a_id = str(task_a_response.task_id)
+    task_a_id = task_a_response.task_id
 
     task_b_response = push_task(
         agent_receiver=agent_receiver,
         relay_id=relay_id,
-        task_type=TaskType.FETCH_AD_HOC,
-        task_payload="test task B payload",
+        spec=FetchAdHocTask(payload="test task B payload"),
     )
-    task_b_id = str(task_b_response.task_id)
+    task_b_id = task_b_response.task_id
 
     # Step 3: Update the tasks
     agent_receiver.update_task(
@@ -167,8 +162,8 @@ def test_completed_tasks_expiration(
     # Step 4: Verify tasks are present initially
     tasks_response = get_relay_tasks(agent_receiver, relay_id)
     assert len(tasks_response.tasks) == 2, "Both tasks should be present initially"
-    assert str(tasks_response.tasks[0].id) in {task_a_id, task_b_id}
-    assert str(tasks_response.tasks[1].id) in {task_a_id, task_b_id}
+    assert tasks_response.tasks[0].id in {task_a_id, task_b_id}
+    assert tasks_response.tasks[1].id in {task_a_id, task_b_id}
 
     # Step 5: Wait for expiration time
     time.sleep(expiration_time + 0.1)

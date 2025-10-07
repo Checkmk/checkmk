@@ -10,8 +10,8 @@ from cmk.gui.type_defs import ColumnSpec, SorterSpec, VisualLinkSpec
 from cmk.utils import paths
 
 from .builtin_dashboards import GROW, MAX
-from .dashlet import LinkedViewDashletConfig, StatsDashletConfig, ViewDashletConfig
-from .type_defs import DashboardConfig, DashboardName
+from .dashlet import StatsDashletConfig
+from .type_defs import DashboardConfig, DashboardName, LinkedViewDashletConfig, ViewDashletConfig
 
 
 def register_builtin_dashboards(builtin: dict[DashboardName, DashboardConfig]) -> None:

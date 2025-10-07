@@ -37,7 +37,7 @@ def check_couchbase_buckets_operations(item, params, parsed):
             ops,
             "op_s",
             params.get("ops"),
-            unit="/s",
+            human_readable_func=lambda x: f"{x:.2f}/s",
             infoname="Total (per server)",
         )
 
@@ -47,7 +47,7 @@ def check_couchbase_buckets_operations(item, params, parsed):
             cmd_get,
             None,
             None,
-            unit="/s",
+            human_readable_func=lambda x: f"{x:.2f}/s",
             infoname="Gets",
         )
 
@@ -57,7 +57,7 @@ def check_couchbase_buckets_operations(item, params, parsed):
             cmd_set,
             None,
             None,
-            unit="/s",
+            human_readable_func=lambda x: f"{x:.2f}/s",
             infoname="Sets",
         )
 
@@ -67,7 +67,7 @@ def check_couchbase_buckets_operations(item, params, parsed):
             creates,
             None,
             None,
-            unit="/s",
+            human_readable_func=lambda x: f"{x:.2f}/s",
             infoname="Creates",
         )
 
@@ -77,7 +77,7 @@ def check_couchbase_buckets_operations(item, params, parsed):
             updates,
             None,
             None,
-            unit="/s",
+            human_readable_func=lambda x: f"{x:.2f}/s",
             infoname="Updates",
         )
 
@@ -87,7 +87,7 @@ def check_couchbase_buckets_operations(item, params, parsed):
             deletes,
             None,
             None,
-            unit="/s",
+            human_readable_func=lambda x: f"{x:.2f}/s",
             infoname="Deletes",
         )
 

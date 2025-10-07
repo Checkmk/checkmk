@@ -42,7 +42,6 @@ agent_plugins_py2:
 $(CHECK_MK_BUILD):
 	$(MKDIR) $(CHECK_MK_BUILD_DIR)
 	$(REPO_PATH)/locale/compile_mo_files
-	$(MAKE) -C $(REPO_PATH)/doc/plugin-api html
 	$(TOUCH) $@
 
 EDITION_EXCLUDE=
@@ -90,9 +89,6 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) agent
 	    --exclude plugin-api \
 	    --exclude  treasures\
 	    . | tar -x -C $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk/
-	tar -c -C $(REPO_PATH)/doc \
-	    --transform "s/^plugin-api\/build/plugin-api/" \
-	    plugin-api/build/html | tar -x -C $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk/
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/agents
 	tar -c -C $(REPO_PATH)/agents \
@@ -207,9 +203,9 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) agent
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/post-create/02_cmk-compute-api-spec $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-create/
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/post-create/03_message-broker-certs  $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-create/
 
-	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/update-pre-hooks
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/update-pre-hooks/01_mkp-disable-outdated $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/update-pre-hooks/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/update-pre-hooks/02_cmk-update-config $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/update-pre-hooks/
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-update
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/post-update/01_mkp-disable-outdated $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-update/
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/post-update/02_cmk-update-config $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-update/
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-mv
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/post-mv/01_cmk-post-rename-site $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-mv/
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-cp

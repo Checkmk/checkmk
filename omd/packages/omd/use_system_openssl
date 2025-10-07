@@ -5,10 +5,10 @@
 exec_to_be_replaced="${BASH_SOURCE[0]}"
 exec_name="$(basename "${exec_to_be_replaced}")"
 for exec in $(type -ap "${exec_name}"); do
-        if [ "$exec" != "${exec_to_be_replaced}" ]; then
-                unset LD_LIBRARY_PATH
-                exec "$exec" "$@"
-        fi
+    if [ "$exec" != "${exec_to_be_replaced}" ]; then
+        unset LD_LIBRARY_PATH
+        exec "$exec" "$@"
+    fi
 done
 
 echo "No executable other than ${BASH_SOURCE[0]} found, aborting" 1>&2

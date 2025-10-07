@@ -12,10 +12,12 @@ import type {
   ContentProps,
   ContentPropsRecord
 } from '@/dashboard-wip/components/DashboardContent/types'
+import RelativeGrid from '@/dashboard-wip/components/RelativeGrid/RelativeGrid.vue'
 import ResponsiveGrid from '@/dashboard-wip/components/ResponsiveGrid/ResponsiveGrid.vue'
 import type { DashboardFilters } from '@/dashboard-wip/composables/useDashboardFilters'
 import type { DashboardWidgets } from '@/dashboard-wip/composables/useDashboardWidgets.ts'
 import type {
+  ContentRelativeGrid,
   ContentResponsiveGrid,
   DashboardConstants,
   DashboardModel
@@ -44,6 +46,12 @@ const widgetContentProps = computed<ContentPropsRecord>(() => {
   const record: Record<string, ContentProps> = {}
   for (const [widgetId, widget] of Object.entries(props.widgetCores.value)) {
     const widgetConstants = props.constants.widgets[widget.content.type]!
+    if (!widgetConstants) {
+      // TODO: until we have not migrated to the new format for dashboards
+      // the old view widget will throw an error
+      console.error(`Widget type ${widget.content.type} not found in constants`)
+      continue
+    }
     record[widgetId] = {
       widget_id: widgetId,
       general_settings: widget.general_settings,
@@ -80,6 +88,14 @@ const { ErrorBoundary: errorBoundary } = useErrorBoundary()
       @widget:edit="$emit('widget:edit', $event)"
       @widget:delete="$emit('widget:delete', $event)"
       @widget:clone="(oldWidgetId, newLayout) => $emit('widget:clone', oldWidgetId, newLayout)"
+    />
+    <RelativeGrid
+      v-else-if="dashboard.content.layout.type === 'relative_grid'"
+      v-model:content="dashboard.content as ContentRelativeGrid"
+      :content-props="widgetContentProps"
+      :is-editing="isEditing"
+      :dashboard-constants="constants"
+      @widget:edit="$emit('widget:edit', $event)"
     />
   </errorBoundary>
 </template>

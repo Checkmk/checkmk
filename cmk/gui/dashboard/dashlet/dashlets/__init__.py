@@ -22,18 +22,14 @@ from .view import (
     copy_view_into_dashlet,
     EmbeddedViewDashlet,
     LinkedViewDashlet,
-    LinkedViewDashletConfig,
     ViewDashlet,
-    ViewDashletConfig,
 )
 
 __all__ = [
     "register_dashlets",
     "StaticTextDashletConfig",
     "StaticTextDashlet",
-    "ViewDashletConfig",
     "StatsDashletConfig",
-    "LinkedViewDashletConfig",
     "copy_view_into_dashlet",
     "default_dashlet_graph_render_options",
 ]

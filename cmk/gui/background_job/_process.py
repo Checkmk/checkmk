@@ -23,7 +23,7 @@ from typing import IO, override
 from setproctitle import setthreadtitle
 
 from cmk.ccc import store
-from cmk.ccc.exceptions import MKTerminate, MKTimeout
+from cmk.ccc.exceptions import MKTerminate
 from cmk.ccc.user import UserId
 from cmk.ccc.version import edition
 from cmk.gui import log
@@ -32,6 +32,7 @@ from cmk.gui.features import features_registry
 from cmk.gui.i18n import _
 from cmk.gui.session import SuperUserContext, UserContext
 from cmk.gui.single_global_setting import load_gui_log_levels
+from cmk.gui.utils.roles import UserPermissions
 from cmk.trace import (
     get_tracer,
     get_tracer_provider,
@@ -50,6 +51,9 @@ from ._status import JobStatusStates
 from ._store import JobStatusSpecUpdate, JobStatusStore
 
 tracer = get_tracer()
+
+
+class BackgroundJobTimedOut(Exception): ...
 
 
 def run_process(job_parameters: JobParameters) -> None:
@@ -134,7 +138,7 @@ def run_process(job_parameters: JobParameters) -> None:
     except MKTerminate:
         logger.warning("Job was stopped")
         final_status_update = {"state": JobStatusStates.STOPPED}
-    except MKTimeout:
+    except BackgroundJobTimedOut:
         logger.warning("Job stopped due to timeout")
         final_status_update = {"state": JobStatusStates.STOPPED}
     except Exception:
@@ -161,9 +165,9 @@ def run_process(job_parameters: JobParameters) -> None:
         store.release_all_locks()
 
 
-def gui_job_context_manager(user: str | None) -> Callable[[], ContextManager[None]]:
+def gui_job_context_manager(user: str | None) -> Callable[[UserPermissions], ContextManager[None]]:
     @contextmanager
-    def gui_job_context() -> Iterator[None]:
+    def gui_job_context(user_permissions: UserPermissions) -> Iterator[None]:
         try:
             features = features_registry[str(edition(paths.omd_root))]
         except KeyError:
@@ -171,7 +175,7 @@ def gui_job_context_manager(user: str | None) -> Callable[[], ContextManager[Non
 
         with (
             BackgroundJobFlaskApp(features).test_request_context("/"),
-            SuperUserContext() if user is None else UserContext(UserId(user)),
+            SuperUserContext() if user is None else UserContext(UserId(user), user_permissions),
         ):
             yield None
 
@@ -183,11 +187,13 @@ def _execute_function(
     target: JobTarget,
     job_interface: BackgroundProcessInterface,
 ) -> None:
+    """Wrapper to handle exceptions from the target callable, as opposed to the outer handler,
+    which handles exceptions from the contexts enter and exits."""
     try:
         target.callable(job_interface, target.args)
     except MKTerminate:
         raise
-    except MKTimeout:
+    except BackgroundJobTimedOut:
         raise
     except Exception as e:
         crash = create_gui_crash_report()

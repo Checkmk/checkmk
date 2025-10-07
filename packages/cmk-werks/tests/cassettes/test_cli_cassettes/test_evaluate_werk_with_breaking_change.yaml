@@ -1,0 +1,67 @@
+interactions:
+- request:
+    body: '{"werk": {"title": "Breaking Database Schema Change", "date": "2024-01-01T00:00:00Z",
+      "level": "1", "versions": ["3.0.0"], "werk_class": "breaking", "component":
+      "database", "compatible": false, "werk_text": "We have changed the database
+      schema for performance improvements.\nThis requires manual migration steps from
+      administrators.\nPlease run the migration script before upgrading.\n\nMigration
+      steps:\n1. Stop the service\n2. Run migration-script.sql\n3. Restart the service\n"}}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '467'
+      content-type:
+      - application/json
+      host:
+      - meisterwerk.lan.checkmk.net
+      user-agent:
+      - python-httpx/0.28.1
+      user-id:
+      - cli_user
+      x-request-id:
+      - 7136c4e5-0b05-4282-ae3c-b4d3230871fe
+    method: POST
+    uri: http://meisterwerk.lan.checkmk.net/werks/evaluate/werk
+  response:
+    body:
+      string: '{"user_id":"python-httpx/0.28.1","request_id":"7136c4e5-0b05-4282-ae3c-b4d3230871fe","response_datetime":"2025-09-18T13:42:57.106284Z","evaluation":{"aggregated_scores":{"grammar_score":3,"user_impact_clarity_score":2,"paragraph_division_score":2,"non_compatible_werk_score":2,"english_style_score":2},"aggregated_suggestions":{"grammar_suggestions_to_improve_text":"No
+        grammar improvements necessary.","user_impact_clarity_suggestions_to_improve_text":"Explain
+        that the migration is necessary to ensure the system functions correctly and
+        to avoid potential issues. Clarify that the service will be unavailable during
+        the migration and specify the expected downtime. Provide instructions on how
+        to verify the migration''s success and any required post-migration checks
+        or actions.","paragraph_division_suggestions_to_improve_text":"Insert a paragraph
+        break after \"Please run the migration script before upgrading.\" to separate
+        the explanation from the migration steps, improving readability.","non_compatible_werk_suggestions_to_improve_text":"Rephrase
+        the first sentence to explicitly state the affected users, e.g., \"If you
+        are upgrading from a version before [version number], you must perform manual
+        database migration steps before upgrading.\" Provide clear, step-by-step instructions
+        including the exact command to run the migration script. Clarify the timing
+        by stating: \"Before starting the upgrade, stop the service, run migration-script.sql
+        using your database client, then restart the service.\"","english_style_suggestions_to_improve_text":"Start
+        with the component name, e.g., \"Database schema,\" followed by a strong verb
+        like \"changed.\" Use active voice and combine instructions for conciseness.
+        For example: \"Database schema changed to improve performance. Administrators
+        must run the migration script before upgrading. To migrate, stop the service,
+        run migration-script.sql, then restart the service.\""}}}'
+    headers:
+      Content-Length:
+      - '1930'
+      Content-Type:
+      - text/html; charset=utf-8
+      - application/json
+      Date:
+      - Mon, 22 Sep 2025 12:04:49 GMT
+      Server:
+      - uvicorn
+      Via:
+      - 1.1 Caddy
+    status:
+      code: 200
+      message: OK
+version: 1

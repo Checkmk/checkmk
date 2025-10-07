@@ -1,0 +1,21 @@
+title: Microsoft Azure Storage Accounts: Location
+agents: azure
+catalog: cloud/azure
+license: GPLv2
+distribution: check_mk
+description:
+ This check and the associated special agent (agent_azure) are deprecated
+ and will be removed in a future version.
+
+ Please configure the new special agent using the "Microsoft Azure" ruleset.
+
+ This check reports the kind and location of an Azure storage account.
+ Additionally the tags are displayed and the used capacity in bytes.
+ You can configure levels for used capacity using the rule "Azure Storage".
+ In order to use this check, you need to configure the Azure special agent.
+
+item:
+ The name of the resource.
+
+discovery:
+ One service is created for each storage account.

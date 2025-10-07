@@ -327,7 +327,12 @@ def fetch_aggr(connection: HostConnection, args: Args) -> Iterable[models.Aggreg
     aggregates = _aggregates_ids(connection, args)
     for aggr_uuid in aggregates:
         resource = NetAppResource.Aggregate(uuid=aggr_uuid)
-        resource.get(fields=",".join(field_query))
+        try:
+            resource.get(fields=",".join(field_query))
+        except NetAppRestError:
+            # Aggregates data could not be retrieved
+            # this can happen when the aggregate is on a defective machine
+            continue
         yield models.AggregateModel.model_validate(resource.to_dict())
 
 
@@ -426,29 +431,41 @@ def fetch_interfaces_counters(
         "sent_errors",
     )
 
-    for interface in interfaces:
-        interface_id = (f"{interface.node_name}:{interface.name}:*",)
+    # Create a lookup set of interface identifiers for filtering
+    # Format: {node_name}:{interface_name}
+    interface_lookup = {f"{interface.node_name}:{interface.name}" for interface in interfaces}
 
-        for element in NetAppResource.CounterRow.get_collection(
-            "lif",
-            id=interface_id,
-            connection=connection,
-            fields="counters",
-            max_records=None,  # type: ignore[arg-type]
-            **{"counters.name": "|".join(interfaces_counters_field_query)},
-        ):
-            element_data = element.to_dict()
-            counters = {el["name"]: el["value"] for el in element_data["counters"]}
+    # Use bulk query with wildcard to fetch all LIF counters in a single API call
+    for element in NetAppResource.CounterRow.get_collection(
+        "lif",
+        id="*",
+        connection=connection,
+        fields="counters",
+        max_records=None,  # type: ignore[arg-type]
+        **{"counters.name": "|".join(interfaces_counters_field_query)},
+    ):
+        element_data = element.to_dict()
+        element_id = element_data["id"]
 
-            yield models.InterfaceCounters(
-                id=element_data["id"],
-                recv_data=counters["received_data"],
-                recv_packet=counters["received_packets"],
-                recv_errors=counters["received_errors"],
-                send_data=counters["sent_data"],
-                send_packet=counters["sent_packets"],
-                send_errors=counters["sent_errors"],
-            )
+        # Extract node_name:interface_name from the full ID
+        # Full ID format: node_name:interface_name:unique_id
+        id_parts = element_id.split(":", 2)
+        if len(id_parts) >= 2:
+            node_interface_key = f"{id_parts[0]}:{id_parts[1]}"
+
+            # Only yield data for interfaces we're monitoring
+            if node_interface_key in interface_lookup:
+                counters = {el["name"]: el["value"] for el in element_data["counters"]}
+
+                yield models.InterfaceCounters(
+                    id=element_id,
+                    recv_data=counters["received_data"],
+                    recv_packet=counters["received_packets"],
+                    recv_errors=counters["received_errors"],
+                    send_data=counters["sent_data"],
+                    send_packet=counters["sent_packets"],
+                    send_errors=counters["sent_errors"],
+                )
 
 
 def fetch_nodes(connection: HostConnection) -> Iterable[models.NodeModel]:
@@ -462,8 +479,8 @@ def fetch_nodes(connection: HostConnection) -> Iterable[models.NodeModel]:
         "serial_number",
         "system_id",
         "controller.cpu.processor",
-        "statistics.processor_utilization_raw",
-        "statistics.processor_utilization_base",
+        "metric.processor_utilization",
+        "metric.timestamp",
     )
 
     for element in NetAppResource.Node.get_collection(
@@ -482,8 +499,8 @@ def fetch_nodes(connection: HostConnection) -> Iterable[models.NodeModel]:
             serial_number=element_data["serial_number"],
             system_id=element_data["system_id"],
             cpu_processor=element_data.get("controller", {}).get("cpu", {}).get("processor"),
-            processor_utilization_raw=element_data["statistics"]["processor_utilization_raw"],
-            processor_utilization_base=element_data["statistics"]["processor_utilization_base"],
+            processor_utilization=element_data["metric"]["processor_utilization"],
+            processor_utilization_timestamp=element_data["metric"]["timestamp"],
         )
 
 
@@ -812,8 +829,8 @@ def fetch_snapmirror(
 
         yield models.SnapMirrorModel(
             destination_svm=element_data["destination"]["svm"]["name"],
-            policy_name=element_data["policy"]["name"],
-            policy_type=element_data["policy"]["type"],
+            policy_name=element_data.get("policy", {}).get("name"),
+            policy_type=element_data.get("policy", {}).get("type"),
             state=element_data.get("state"),
             transfer_state=element_data.get("transfer", {}).get("state"),
             source_svm_name=element_data["source"]["svm"]["name"],

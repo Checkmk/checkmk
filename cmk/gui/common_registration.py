@@ -45,7 +45,7 @@ from cmk.gui.cron import CronJobRegistry
 from cmk.gui.dashboard import DashletRegistry
 from cmk.gui.dashboard import registration as dashboard_registration
 from cmk.gui.data_source import DataSourceRegistry
-from cmk.gui.form_specs.vue import registration as vue_registration
+from cmk.gui.form_specs import registration as vue_registration
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.nodevis import nodevis
 from cmk.gui.openapi import registration as openapi_registration
@@ -280,7 +280,7 @@ def register(
     )
     nodevis.register(page_registry, filter_registry, icon_and_action_registry, cron_job_registry)
     notifications.register(page_registry, permission_section_registry)
-    user_message.register(page_registry)
+    user_message.register(page_registry, versioned_endpoint_registry, endpoint_family_registry)
     valuespec.register(page_registry)
     autocompleters.register(page_registry, autocompleter_registry)
     werks.register(page_registry)
@@ -306,7 +306,12 @@ def register(
     )
     vue_registration.register()
     gui_background_job.register(permission_section_registry, permission_registry)
-    graphing.register(page_registry, config_variable_registry, autocompleter_registry)
+    graphing.register(
+        edition(paths.omd_root),
+        page_registry,
+        config_variable_registry,
+        autocompleter_registry,
+    )
     agent_registration.register(permission_section_registry)
     weblib.register(page_registry)
     openapi_registration.register(

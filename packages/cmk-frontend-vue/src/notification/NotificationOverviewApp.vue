@@ -54,7 +54,7 @@ function toggleContent() {
     class="notification-overview__fallback-warning"
   ></NotificationFallbackWarning>
   <h3 class="notification-overview__header" @click.prevent="toggleContent()">
-    <CmkIconButton name="tree_closed" size="xsmall" :rotate="isContentVisible ? 90 : 0" />
+    <CmkIconButton name="tree-closed" size="xsmall" :rotate="isContentVisible ? 90 : 0" />
     {{ overview_title_i18n }}
   </h3>
   <div v-if="isContentVisible" class="notification-overview__container">

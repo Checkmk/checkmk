@@ -27,16 +27,16 @@ from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
 from ._from_api import parse_unit_from_api, RegisteredMetric
-from ._metric_operation import (
-    create_metric_operation_from_translated_metric,
+from ._graph_metric_expressions import (
+    create_graph_metric_expression_from_translated_metric,
     GraphConsolidationFunction,
+    GraphMetricConstant,
+    GraphMetricConstantNA,
+    GraphMetricExpression,
+    GraphMetricOperation,
+    GraphMetricRRDSource,
     line_type_mirror,
     LineType,
-    MetricOpConstant,
-    MetricOpConstantNA,
-    MetricOperation,
-    MetricOpOperator,
-    MetricOpRRDSource,
 )
 from ._metrics import get_metric_spec
 from ._translated_metrics import TranslatedMetric
@@ -123,14 +123,14 @@ class BaseMetricExpression(abc.ABC):
     def metric_names(self) -> Iterable[str]: ...
 
     @abc.abstractmethod
-    def to_metric_operation(
+    def to_graph_metric_expression(
         self,
         site_id: SiteId,
         host_name: HostName,
         service_name: ServiceName,
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
-    ) -> MetricOperation: ...
+    ) -> GraphMetricExpression: ...
 
     @abc.abstractmethod
     def is_scalar(self) -> bool: ...
@@ -166,15 +166,15 @@ class Constant(BaseMetricExpression):
         yield from ()
 
     @override
-    def to_metric_operation(
+    def to_graph_metric_expression(
         self,
         site_id: SiteId,
         host_name: HostName,
         service_name: ServiceName,
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
-    ) -> MetricOpConstant:
-        return MetricOpConstant(value=float(self.value))
+    ) -> GraphMetricConstant:
+        return GraphMetricConstant(value=float(self.value))
 
     @override
     def is_scalar(self) -> bool:
@@ -210,15 +210,15 @@ class Metric(BaseMetricExpression):
         yield self.name
 
     @override
-    def to_metric_operation(
+    def to_graph_metric_expression(
         self,
         site_id: SiteId,
         host_name: HostName,
         service_name: ServiceName,
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
-    ) -> MetricOpRRDSource | MetricOpOperator:
-        return create_metric_operation_from_translated_metric(
+    ) -> GraphMetricRRDSource | GraphMetricOperation:
+        return create_graph_metric_expression_from_translated_metric(
             site_id,
             host_name,
             service_name,
@@ -267,18 +267,18 @@ class WarningOf(BaseMetricExpression):
         yield from self.metric.metric_names()
 
     @override
-    def to_metric_operation(
+    def to_graph_metric_expression(
         self,
         site_id: SiteId,
         host_name: HostName,
         service_name: ServiceName,
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
-    ) -> MetricOpConstant | MetricOpConstantNA:
+    ) -> GraphMetricConstant | GraphMetricConstantNA:
         return (
-            MetricOpConstant(value=evaluatation_result.ok.value)
+            GraphMetricConstant(value=evaluatation_result.ok.value)
             if (evaluatation_result := self.evaluate(translated_metrics)).is_ok()
-            else MetricOpConstantNA()
+            else GraphMetricConstantNA()
         )
 
     @override
@@ -322,18 +322,18 @@ class CriticalOf(BaseMetricExpression):
         yield from self.metric.metric_names()
 
     @override
-    def to_metric_operation(
+    def to_graph_metric_expression(
         self,
         site_id: SiteId,
         host_name: HostName,
         service_name: ServiceName,
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
-    ) -> MetricOpConstant | MetricOpConstantNA:
+    ) -> GraphMetricConstant | GraphMetricConstantNA:
         return (
-            MetricOpConstant(value=evaluatation_result.ok.value)
+            GraphMetricConstant(value=evaluatation_result.ok.value)
             if (evaluatation_result := self.evaluate(translated_metrics)).is_ok()
-            else MetricOpConstantNA()
+            else GraphMetricConstantNA()
         )
 
     @override
@@ -377,18 +377,18 @@ class MinimumOf(BaseMetricExpression):
         yield from self.metric.metric_names()
 
     @override
-    def to_metric_operation(
+    def to_graph_metric_expression(
         self,
         site_id: SiteId,
         host_name: HostName,
         service_name: ServiceName,
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
-    ) -> MetricOpConstant | MetricOpConstantNA:
+    ) -> GraphMetricConstant | GraphMetricConstantNA:
         return (
-            MetricOpConstant(value=evaluatation_result.ok.value)
+            GraphMetricConstant(value=evaluatation_result.ok.value)
             if (evaluatation_result := self.evaluate(translated_metrics)).is_ok()
-            else MetricOpConstantNA()
+            else GraphMetricConstantNA()
         )
 
     @override
@@ -432,18 +432,18 @@ class MaximumOf(BaseMetricExpression):
         yield from self.metric.metric_names()
 
     @override
-    def to_metric_operation(
+    def to_graph_metric_expression(
         self,
         site_id: SiteId,
         host_name: HostName,
         service_name: ServiceName,
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
-    ) -> MetricOpConstant | MetricOpConstantNA:
+    ) -> GraphMetricConstant | GraphMetricConstantNA:
         return (
-            MetricOpConstant(value=evaluatation_result.ok.value)
+            GraphMetricConstant(value=evaluatation_result.ok.value)
             if (evaluatation_result := self.evaluate(translated_metrics)).is_ok()
-            else MetricOpConstantNA()
+            else GraphMetricConstantNA()
         )
 
     @override
@@ -488,18 +488,18 @@ class Sum(BaseMetricExpression):
         yield from (n for s in self.summands for n in s.metric_names())
 
     @override
-    def to_metric_operation(
+    def to_graph_metric_expression(
         self,
         site_id: SiteId,
         host_name: HostName,
         service_name: ServiceName,
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
-    ) -> MetricOpOperator:
-        return MetricOpOperator(
+    ) -> GraphMetricOperation:
+        return GraphMetricOperation(
             operator_name="+",
             operands=[
-                s.to_metric_operation(
+                s.to_graph_metric_expression(
                     site_id,
                     host_name,
                     service_name,
@@ -552,18 +552,18 @@ class Product(BaseMetricExpression):
         yield from (n for f in self.factors for n in f.metric_names())
 
     @override
-    def to_metric_operation(
+    def to_graph_metric_expression(
         self,
         site_id: SiteId,
         host_name: HostName,
         service_name: ServiceName,
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
-    ) -> MetricOpOperator:
-        return MetricOpOperator(
+    ) -> GraphMetricOperation:
+        return GraphMetricOperation(
             operator_name="*",
             operands=[
-                f.to_metric_operation(
+                f.to_graph_metric_expression(
                     site_id,
                     host_name,
                     service_name,
@@ -617,25 +617,25 @@ class Difference(BaseMetricExpression):
         yield from self.subtrahend.metric_names()
 
     @override
-    def to_metric_operation(
+    def to_graph_metric_expression(
         self,
         site_id: SiteId,
         host_name: HostName,
         service_name: ServiceName,
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
-    ) -> MetricOpOperator:
-        return MetricOpOperator(
+    ) -> GraphMetricOperation:
+        return GraphMetricOperation(
             operator_name="-",
             operands=[
-                self.minuend.to_metric_operation(
+                self.minuend.to_graph_metric_expression(
                     site_id,
                     host_name,
                     service_name,
                     translated_metrics,
                     consolidation_function,
                 ),
-                self.subtrahend.to_metric_operation(
+                self.subtrahend.to_graph_metric_expression(
                     site_id,
                     host_name,
                     service_name,
@@ -688,25 +688,25 @@ class Fraction(BaseMetricExpression):
         yield from self.divisor.metric_names()
 
     @override
-    def to_metric_operation(
+    def to_graph_metric_expression(
         self,
         site_id: SiteId,
         host_name: HostName,
         service_name: ServiceName,
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
-    ) -> MetricOpOperator:
-        return MetricOpOperator(
+    ) -> GraphMetricOperation:
+        return GraphMetricOperation(
             operator_name="/",
             operands=[
-                self.dividend.to_metric_operation(
+                self.dividend.to_graph_metric_expression(
                     site_id,
                     host_name,
                     service_name,
                     translated_metrics,
                     consolidation_function,
                 ),
-                self.divisor.to_metric_operation(
+                self.divisor.to_graph_metric_expression(
                     site_id,
                     host_name,
                     service_name,
@@ -754,18 +754,18 @@ class Minimum(BaseMetricExpression):
         yield from (n for o in self.operands for n in o.metric_names())
 
     @override
-    def to_metric_operation(
+    def to_graph_metric_expression(
         self,
         site_id: SiteId,
         host_name: HostName,
         service_name: ServiceName,
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
-    ) -> MetricOpOperator:
-        return MetricOpOperator(
+    ) -> GraphMetricOperation:
+        return GraphMetricOperation(
             operator_name="MIN",
             operands=[
-                o.to_metric_operation(
+                o.to_graph_metric_expression(
                     site_id,
                     host_name,
                     service_name,
@@ -814,18 +814,18 @@ class Maximum(BaseMetricExpression):
         yield from (n for o in self.operands for n in o.metric_names())
 
     @override
-    def to_metric_operation(
+    def to_graph_metric_expression(
         self,
         site_id: SiteId,
         host_name: HostName,
         service_name: ServiceName,
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
-    ) -> MetricOpOperator:
-        return MetricOpOperator(
+    ) -> GraphMetricOperation:
+        return GraphMetricOperation(
             operator_name="MAX",
             operands=[
-                o.to_metric_operation(
+                o.to_graph_metric_expression(
                     site_id,
                     host_name,
                     service_name,
@@ -876,18 +876,18 @@ class Average(BaseMetricExpression):
         yield from (n for o in self.operands for n in o.metric_names())
 
     @override
-    def to_metric_operation(
+    def to_graph_metric_expression(
         self,
         site_id: SiteId,
         host_name: HostName,
         service_name: ServiceName,
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
-    ) -> MetricOpOperator:
-        return MetricOpOperator(
+    ) -> GraphMetricOperation:
+        return GraphMetricOperation(
             operator_name="AVERAGE",
             operands=[
-                o.to_metric_operation(
+                o.to_graph_metric_expression(
                     site_id,
                     host_name,
                     service_name,
@@ -933,18 +933,18 @@ class Merge(BaseMetricExpression):
         yield from (n for o in self.operands for n in o.metric_names())
 
     @override
-    def to_metric_operation(
+    def to_graph_metric_expression(
         self,
         site_id: SiteId,
         host_name: HostName,
         service_name: ServiceName,
         translated_metrics: Mapping[str, TranslatedMetric],
         consolidation_function: GraphConsolidationFunction | None,
-    ) -> MetricOpOperator:
-        return MetricOpOperator(
+    ) -> GraphMetricOperation:
+        return GraphMetricOperation(
             operator_name="MERGE",
             operands=[
-                o.to_metric_operation(
+                o.to_graph_metric_expression(
                     site_id,
                     host_name,
                     service_name,

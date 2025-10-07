@@ -92,6 +92,17 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_agent_info,
+        title=lambda: _("Azure Agent Info (deprecated)"),
+    )
+)
+
+# TODO: migrate and move to new folder struct
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="azure_v2_agent_info",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_azure_agent_info,
         title=lambda: _("Azure Agent Info"),
     )
 )
@@ -141,6 +152,18 @@ def _parameter_valuespec_webserver():
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="webserver",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_webserver,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_webserver,
+        title=lambda: _("Azure web servers (IIS) (deprecated)"),
+    )
+)
+
+# TODO: migrate and move to new folder struct
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="azure_v2_webserver",
         group=RulespecGroupCheckParametersApplications,
         item_spec=_item_spec_webserver,
         match_type="dict",
@@ -373,6 +396,18 @@ rulespec_registry.register(
         item_spec=_item_spec_azure_vms,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_vms,
+        title=lambda: _("Azure virtual machines (deprecated)"),
+    )
+)
+
+# TODO: migrate and move to new folder structure
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="azure_v2_vms",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_azure_vms,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_azure_vms,
         title=lambda: _("Azure virtual machines"),
     )
 )
@@ -474,6 +509,17 @@ def _parameter_valuespec_azure_vms_summary() -> Dictionary:
 rulespec_registry.register(
     CheckParameterRulespecWithoutItem(
         check_group_name="azure_vms_summary",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_azure_vms_summary,
+        title=lambda: _("Azure virtual machines summary  (deprecated)"),
+    )
+)
+
+# TODO: migrate and move to new folder structure
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="azure_v2_vms_summary",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_vms_summary,
@@ -603,6 +649,18 @@ rulespec_registry.register(
         item_spec=_item_spec_azure_virtualnetworkgateways,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_virtualnetworkgateways,
+        title=lambda: _("Azure VNet Gateway  (deprecated)"),
+    )
+)
+
+# TODO: migrate and move to new folder structure
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="azure_v2_virtualnetworkgateways",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_azure_virtualnetworkgateways,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_azure_virtualnetworkgateways,
         title=lambda: _("Azure VNet Gateway"),
     )
 )
@@ -640,6 +698,18 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Service Type")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_usagedetails,
+        title=lambda: _("Azure Usage Details (Costs) (deprecated)"),
+    )
+)
+
+# TODO: migrate and move to new folder structure
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="azure_v2_usagedetails",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=lambda: TextInput(title=_("Service Type")),
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_azure_usagedetails,
         title=lambda: _("Azure Usage Details (Costs)"),
     )
 )
@@ -671,6 +741,17 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Azure DB Storage")),
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_storage,
+        title=lambda: _("Azure DB Storage (deprecated)"),
+    )
+)
+
+# TODO: migrate and move to new folder structure
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="azure_v2_db_storage",
+        item_spec=lambda: TextInput(title=_("Azure DB Storage")),
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_storage,
         title=lambda: _("Azure DB Storage"),
     )
 )
@@ -691,6 +772,17 @@ def _parameter_valuespec_qps():
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="azure_traffic_manager_qps",
+        item_spec=lambda: TextInput(title=_("Qps")),
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_qps,
+        title=lambda: _("Azure Traffic Manager Qps (deprecated)"),
+    )
+)
+
+# TODO: migrate and move to new folder structure
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="azure_v2_traffic_manager_qps",
         item_spec=lambda: TextInput(title=_("Qps")),
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_qps,
@@ -724,6 +816,17 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Probe State")),
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_probe_state,
+        title=lambda: _("Azure Traffic Manager Probe State (deprecated)"),
+    )
+)
+
+# TODO: migrate and move to new folder structure
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="azure_v2_traffic_manager_probe_state",
+        item_spec=lambda: TextInput(title=_("Probe State")),
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_probe_state,
         title=lambda: _("Azure Traffic Manager Probe State"),
     )
 )
@@ -751,6 +854,17 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Load Balancer Health")),
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_health,
+        title=lambda: _("Azure Load Balancer Health (deprecated)"),
+    )
+)
+
+# TODO: migrate and move to new folder structure
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="azure_v2_load_balancer_health",
+        item_spec=lambda: TextInput(title=_("Load Balancer Health")),
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_health,
         title=lambda: _("Azure Load Balancer Health"),
     )
 )
@@ -771,6 +885,16 @@ def _parameter_valuespec_vm_burst_cpu_credits() -> Dictionary:
 rulespec_registry.register(
     CheckParameterRulespecWithoutItem(
         check_group_name="azure_vm_burst_cpu_credits",
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_vm_burst_cpu_credits,
+        title=lambda: _("Azure VM Burst CPU Credits (deprecated)"),
+    )
+)
+
+# TODO: migrate and move to new folder structure
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="azure_v2_vm_burst_cpu_credits",
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_vm_burst_cpu_credits,
         title=lambda: _("Azure VM Burst CPU Credits"),
@@ -805,6 +929,16 @@ def _parameter_valuespec_vm_disk() -> Dictionary:
 rulespec_registry.register(
     CheckParameterRulespecWithoutItem(
         check_group_name="azure_vm_disk",
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_vm_disk,
+        title=lambda: _("Azure VM Disk (deprecated)"),
+    )
+)
+
+# TODO: migrate and move to new folder structure
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="azure_v2_vm_disk",
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_vm_disk,
         title=lambda: _("Azure VM Disk"),

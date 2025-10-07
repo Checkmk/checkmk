@@ -36,7 +36,7 @@ def main() {
 
     def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
-    def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: false);
+    def branch_base_folder = package_helper.branch_base_folder(false);
 
     // FIXME
     def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, version);
@@ -87,7 +87,7 @@ def main() {
     }
 
     stage("Prepare workspace") {
-        container("minimal-ubuntu-checkmk-master") {
+        container("minimal-container") {
             dir("${checkout_dir}") {
                 sh("""
                     make buildclean
@@ -213,32 +213,10 @@ def main() {
         }
     }
 
-    container("deb-package-signer") {
-        // Install "dpkg-sig" manually, not part of default Ubuntu 22.04 image, see CMK-24094
-        sh("""
-            apt-get update
-            apt-get install -y dpkg-sig msitools
-        """);
-        println("Installed dpkg-sig manually, not part of default Ubuntu 22.04 image");
-        stage("Sign package") {
-            package_helper.sign_package(
-                checkout_dir,
-                "${checkout_dir}/${package_name}"
-            );
-        }
-
-        stage("Test package") {
-            package_helper.test_package(
-                "${checkout_dir}/${package_name}",
-                distro, WORKSPACE,
-                checkout_dir,
-                cmk_version
-            );
-        }
-    }
-
     stage("Parse cache hits") {
-        container("minimal-ubuntu-checkmk-${safe_branch_name}") {
+        inside_container(
+            image: docker.image("${docker_registry_no_http}/${distro}:${docker_tag}"),
+        ) {
             bazel_logs.try_parse_bazel_execution_log(distro, checkout_dir, bazel_log_prefix);
         }
     }

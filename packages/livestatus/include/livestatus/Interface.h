@@ -31,18 +31,39 @@ struct Attribute {
     bool operator!=(const Attribute &other) const { return !(*this == other); }
 };
 
+struct Label {
+    const std::string &name;
+    const std::string &value;
+    const std::string &source;
+
+    bool operator==(const Label &other) const {
+        return name == other.name && value == other.value &&
+               source == other.source;
+    }
+    bool operator!=(const Label &other) const { return !(*this == other); }
+};
+
+// Taken from WG21 P0814R2, an epic story about a triviality...
+inline std::size_t hash_combine(std::size_t seed, const std::string_view val) {
+    seed ^= std::hash<std::string_view>{}(val) + 0x9e3779b9 + (seed << 6) +
+            (seed >> 2);
+    return seed;
+};
+
 template <>
 struct std::hash<Attribute> {
     std::size_t operator()(const Attribute &a) const {
-        std::size_t seed{0};
-        // Taken from WG21 P0814R2, an epic story about a triviality...
-        auto hash_combine = [&seed](const std::string &val) {
-            seed ^= std::hash<std::string>{}(val) + 0x9e3779b9 + (seed << 6) +
-                    (seed >> 2);
-        };
-        hash_combine(a.name);
-        hash_combine(a.value);
-        return seed;
+        std::size_t seed = hash_combine(0, a.name);
+        return hash_combine(seed, a.value);
+    }
+};
+
+template <>
+struct std::hash<Label> {
+    std::size_t operator()(const Label &a) const {
+        std::size_t seed = hash_combine(0, a.name);
+        seed = hash_combine(seed, a.value);
+        return hash_combine(seed, a.source);
     }
 };
 
@@ -69,7 +90,7 @@ public:
     [[nodiscard]] virtual Attributes labelSources() const = 0;
     [[nodiscard]] virtual uint32_t modifiedAttributes() const = 0;
     virtual bool all_of_labels(
-        const std::function<bool(const Attribute &)> &pred) const = 0;
+        const std::function<bool(const Label &)> &pred) const = 0;
 };
 
 class IContactGroup {
@@ -189,7 +210,7 @@ public:
     virtual bool all_of_services(
         std::function<bool(const IService &)> pred) const = 0;
     virtual bool all_of_labels(
-        const std::function<bool(const Attribute &)> &pred) const = 0;
+        const std::function<bool(const Label &)> &pred) const = 0;
     virtual bool all_of_parents(
         std::function<bool(const IHost &)> pred) const = 0;
     virtual bool all_of_children(
@@ -313,7 +334,7 @@ public:
     [[nodiscard]] virtual bool check_flapping_recovery_notification() const = 0;
 
     virtual bool all_of_labels(
-        const std::function<bool(const Attribute &)> &pred) const = 0;
+        const std::function<bool(const Label &)> &pred) const = 0;
 };
 
 class IHostGroup {

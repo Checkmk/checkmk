@@ -9,7 +9,7 @@ def main() {
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
 
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
-    def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
+    def branch_base_folder = package_helper.branch_base_folder(true);
 
     def all_editions = versioning.get_editions();
     def editions_to_test = all_editions;

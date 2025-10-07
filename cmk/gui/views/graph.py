@@ -10,9 +10,18 @@ from typing import Literal
 from uuid import uuid4
 
 from cmk.ccc.user import UserId
+from cmk.ccc.version import edition
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.gui.config import active_config
-from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api, RegisteredMetric
+from cmk.gui.graphing import (
+    FetchTimeSeries,
+    metric_backend_registry,
+)
+from cmk.gui.graphing._from_api import (
+    graphs_from_api,
+    metrics_from_api,
+    RegisteredMetric,
+)
 from cmk.gui.graphing._graph_render_config import (
     GraphRenderConfig,
     GraphRenderOptions,
@@ -22,6 +31,7 @@ from cmk.gui.graphing._html_render import (
     make_graph_data_range,
     render_graphs_from_specification_html,
 )
+from cmk.gui.graphing._unit import get_temperature_unit
 from cmk.gui.graphing._valuespecs import vs_graph_render_options
 from cmk.gui.http import Request, Response, response
 from cmk.gui.i18n import _, _l
@@ -37,6 +47,7 @@ from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
+    GraphTimerange,
     PainterParameters,
     Row,
     ViewName,
@@ -46,6 +57,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
     Dictionary,
@@ -54,7 +66,13 @@ from cmk.gui.valuespec import (
     Timerange,
     Transform,
 )
-from cmk.gui.view_utils import CellSpec, CSVExportError, JSONExportError, PythonExportError
+from cmk.gui.view_utils import (
+    CellSpec,
+    CSVExportError,
+    JSONExportError,
+    PythonExportError,
+)
+from cmk.utils import paths
 
 
 def register(
@@ -161,13 +179,17 @@ _GRAPH_VIEWS = {
 }
 
 
-def paint_time_graph_cmk(
+def _paint_time_graph_cmk(
     row: Row,
     cell: Cell,
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     user_permissions: UserPermissions,
     *,
+    debug: bool,
+    graph_timeranges: Sequence[GraphTimerange],
+    temperature_unit: TemperatureUnit,
+    fetch_time_series: FetchTimeSeries,
     user: LoggedInUser,
     request: Request,
     response: Response,
@@ -251,6 +273,10 @@ def paint_time_graph_cmk(
         registered_metrics,
         registered_graphs,
         user_permissions,
+        debug=debug,
+        graph_timeranges=graph_timeranges,
+        temperature_unit=temperature_unit,
+        fetch_time_series=fetch_time_series,
         # Ideally, we would use 2-dim. coordinates: (row_idx, col_idx).
         # Unfortunately, we have no access to this information here. Regarding the rows, we could
         # use (site, host, service) as identifier, but for the columns, there does not seem to be
@@ -331,7 +357,7 @@ class PainterServiceGraphs(Painter):
         return cmk_time_graph_params()
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return paint_time_graph_cmk(
+        return _paint_time_graph_cmk(
             row,
             cell,
             metrics_from_api,
@@ -341,6 +367,10 @@ class PainterServiceGraphs(Painter):
             response=response,
             painter_options=self._painter_options,
             user_permissions=self._user_permissions,
+            debug=self.config.debug,
+            graph_timeranges=self.config.graph_timeranges,
+            temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
+            fetch_time_series=metric_backend_registry[str(edition(paths.omd_root))].client,
             show_time_range_previews=True,
         )
 
@@ -379,7 +409,7 @@ class PainterHostGraphs(Painter):
         return cmk_time_graph_params()
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return paint_time_graph_cmk(
+        return _paint_time_graph_cmk(
             row,
             cell,
             metrics_from_api,
@@ -389,6 +419,10 @@ class PainterHostGraphs(Painter):
             response=response,
             painter_options=self._painter_options,
             user_permissions=self._user_permissions,
+            debug=self.config.debug,
+            graph_timeranges=self.config.graph_timeranges,
+            temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
+            fetch_time_series=metric_backend_registry[str(edition(paths.omd_root))].client,
             show_time_range_previews=True,
             # for PainterHostGraphs used to paint service graphs (view "Service graphs of host"),
             # also render the graphs if there are no historic metrics available (but perf data is)
@@ -453,7 +487,7 @@ class PainterSvcPnpgraph(Painter):
         return cmk_time_graph_params()
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return paint_time_graph_cmk(
+        return _paint_time_graph_cmk(
             row,
             cell,
             metrics_from_api,
@@ -463,6 +497,10 @@ class PainterSvcPnpgraph(Painter):
             response=response,
             painter_options=self._painter_options,
             user_permissions=self._user_permissions,
+            debug=self.config.debug,
+            graph_timeranges=self.config.graph_timeranges,
+            temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
+            fetch_time_series=metric_backend_registry[str(edition(paths.omd_root))].client,
         )
 
     def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:
@@ -503,7 +541,7 @@ class PainterHostPnpgraph(Painter):
         return cmk_time_graph_params()
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return paint_time_graph_cmk(
+        return _paint_time_graph_cmk(
             row,
             cell,
             metrics_from_api,
@@ -513,6 +551,10 @@ class PainterHostPnpgraph(Painter):
             response=response,
             painter_options=self._painter_options,
             user_permissions=self._user_permissions,
+            debug=self.config.debug,
+            graph_timeranges=self.config.graph_timeranges,
+            temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
+            fetch_time_series=metric_backend_registry[str(edition(paths.omd_root))].client,
         )
 
     def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> object:

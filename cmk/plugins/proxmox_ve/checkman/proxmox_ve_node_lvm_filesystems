@@ -1,0 +1,13 @@
+title: Proxmox VE: Node LVM Filesystems
+agents: proxmox_ve
+catalog: os/storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the filesystem usage of LVM-based storage on Proxmox VE nodes.
+ It reports disk space usage, free space, and utilization percentages for each LVM
+ filesystem configured as storage in Proxmox VE.
+ LVM filesystems are storage backends of type "lvm" or "lvm-thin".
+
+discovery:
+ One service per LVM filesystem is created.

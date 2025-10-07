@@ -3,11 +3,10 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-
-import {SiteOverview} from "./cmk_site_overview";
+import { SiteOverview } from './cmk_site_overview'
 
 export class AlertOverview extends SiteOverview {
-    override ident() {
-        return "alert_overview";
-    }
+  override ident() {
+    return 'alert_overview'
+  }
 }

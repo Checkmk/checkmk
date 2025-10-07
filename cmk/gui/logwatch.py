@@ -45,6 +45,7 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
 from cmk.gui.view_breadcrumbs import make_host_breadcrumb
+from cmk.livestatus_client.commands import MKLogwatchAcknowledge
 
 #   .--HTML Output---------------------------------------------------------.
 #   |     _   _ _____ __  __ _        ___        _               _         |
@@ -624,8 +625,13 @@ def acknowledge_logfile(
     if not may_see(site, host_name):
         raise MKAuthException(_("Permission denied."))
 
-    command = f"MK_LOGWATCH_ACKNOWLEDGE;{host_name};{int_filename}"
-    sites.live().command("[%d] %s" % (int(time.time()), command), site)
+    sites.live().command_obj(
+        MKLogwatchAcknowledge(
+            host_name=host_name,
+            filename=int_filename,
+        ),
+        site,
+    )
 
 
 # .

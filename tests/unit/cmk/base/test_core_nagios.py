@@ -603,7 +603,7 @@ def test_create_nagios_servicedefs_active_check(
     monkeypatch: MonkeyPatch,
 ) -> None:
     _patch_plugin_loading(monkeypatch, loaded_active_checks)
-    monkeypatch.setattr(config, "get_resource_macros", lambda: {})
+    monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a: {})
 
     hostname = HostName("my_host")
     config_cache = config.ConfigCache(EMPTY_CONFIG)
@@ -783,7 +783,7 @@ def test_create_nagios_servicedefs_with_warnings(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     _patch_plugin_loading(monkeypatch, loaded_active_checks)
-    monkeypatch.setattr(config, "get_resource_macros", lambda: {})
+    monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a: {})
 
     config_cache = config.ConfigCache(EMPTY_CONFIG)
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
@@ -860,7 +860,7 @@ def test_create_nagios_servicedefs_omit_service(
     monkeypatch: MonkeyPatch,
 ) -> None:
     _patch_plugin_loading(monkeypatch, loaded_active_checks)
-    monkeypatch.setattr(config, "get_resource_macros", lambda: {})
+    monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a: {})
 
     config_cache = config.ConfigCache(EMPTY_CONFIG)
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
@@ -1025,7 +1025,7 @@ def test_create_nagios_config_commands(
             ),
         },
     )
-    monkeypatch.setattr(config, "get_resource_macros", lambda: {})
+    monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a: {})
 
     config_cache = config.ConfigCache(EMPTY_CONFIG)
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)

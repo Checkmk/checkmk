@@ -12,6 +12,13 @@ import { immediateWatch } from '@/lib/watch'
 const cmkIconVariants = cva('', {
   variants: {
     name: {
+      'show-more': 'icon-show-more',
+      'show-less': 'icon-show-less',
+      search: 'icon-search',
+      monitoring: 'icon-monitor',
+      customize: 'icon-customize',
+      setup: 'icon-setup',
+      changes: 'icon-changes',
       aggr: 'icon-aggr',
       services: 'icon-services'
     },
@@ -25,7 +32,8 @@ const cmkIconVariants = cva('', {
       customization: 'pink',
       others: 'grey',
       users: 'purple',
-      specialAgents: 'cyan'
+      specialAgents: 'cyan',
+      font: 'font'
     },
     size: {
       xsmall: '10px',
@@ -130,7 +138,7 @@ immediateWatch(
   }
 
   /* Primary icon colors */
-  &.primary-color-green {
+  &.color-green {
     --icon-primary-color: var(--color-corporate-green-60);
   }
 
@@ -168,6 +176,10 @@ immediateWatch(
 
   &.color-brown {
     --icon-primary-color: var(--color-brown-60);
+  }
+
+  &.color-font {
+    --icon-primary-color: var(--font-color);
   }
 
   /* Secondary icon colors */
@@ -211,6 +223,10 @@ immediateWatch(
     --icon-secondary-color: var(--color-brown-60);
   }
 
+  &.color-secondary-font {
+    --icon-secondary-color: var(--font-color);
+  }
+
   /* Secondary icon colors */
   &.color-tertiary-green {
     --icon-tertiary-color: var(--color-corporate-green-60);
@@ -251,6 +267,10 @@ immediateWatch(
   &.color-tertiary-brown {
     --icon-tertiary-color: var(--color-brown-60);
   }
+
+  &.color-tertiary-font {
+    --icon-tertiary-color: var(--font-color);
+  }
 }
 
 /* Set svg multitone fill */
@@ -264,5 +284,17 @@ svg .icon-secondary-color {
 
 svg .icon-tertiary-color {
   fill: var(--icon-tertiary-color);
+}
+
+svg .icon-primary-color-stroke {
+  stroke: var(--icon-primary-color);
+}
+
+svg .icon-secondary-color-stroke {
+  stroke: var(--icon-secondary-color);
+}
+
+svg .icon-tertiary-color-stroke {
+  stroke: var(--icon-tertiary-color);
 }
 </style>

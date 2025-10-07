@@ -310,7 +310,7 @@ def register(
 
 ConfigVariableUITheme = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="ui_theme",
     valuespec=lambda: DropdownChoice(
         title=_("User interface theme"),
@@ -321,7 +321,7 @@ ConfigVariableUITheme = ConfigVariable(
 
 ConfigVariableDefaultLanguage = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="default_language",
     valuespec=lambda: DropdownChoice(title=_("Default language"), choices=get_languages()),
     in_global_settings=False,
@@ -329,7 +329,7 @@ ConfigVariableDefaultLanguage = ConfigVariable(
 
 ConfigVariableShowMoreMode = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="show_mode",
     valuespec=lambda: DropdownChoice(
         title=_("Show more / Show less"),
@@ -347,7 +347,7 @@ ConfigVariableShowMoreMode = ConfigVariable(
 
 ConfigVariableBulkDiscoveryDefaultSettings = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="bulk_discovery_default_settings",
     valuespec=lambda: vs_bulk_discovery(),
 )
@@ -377,7 +377,7 @@ def _add_job_scheduler_log_level(params: dict[str, int]) -> dict[str, int]:
 
 ConfigVariableLogLevels = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="log_levels",
     valuespec=lambda: Migrate(
         valuespec=Dictionary(
@@ -494,7 +494,7 @@ def _web_log_level_elements():
 
 ConfigVariableSlowViewsDurationThreshold = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="slow_views_duration_threshold",
     valuespec=lambda: Integer(
         title=_("Threshold for slow views"),
@@ -508,7 +508,7 @@ ConfigVariableSlowViewsDurationThreshold = ConfigVariable(
 
 ConfigVariableDebug = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="debug",
     valuespec=lambda: Checkbox(
         title=_("Debug mode"),
@@ -523,7 +523,7 @@ ConfigVariableDebug = ConfigVariable(
 
 ConfigVariableGUIProfile = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="profile",
     valuespec=lambda: DropdownChoice(
         title=_("Profile requests"),
@@ -547,7 +547,7 @@ ConfigVariableGUIProfile = ConfigVariable(
 
 ConfigVariableDebugLivestatusQueries = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="debug_livestatus_queries",
     valuespec=lambda: Checkbox(
         title=_("Debug livestatus queries"),
@@ -561,7 +561,7 @@ ConfigVariableDebugLivestatusQueries = ConfigVariable(
 
 ConfigVariableSelectionLivetime = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="selection_livetime",
     valuespec=lambda: Integer(
         title=_("Checkbox selection livetime"),
@@ -577,7 +577,7 @@ ConfigVariableSelectionLivetime = ConfigVariable(
 
 ConfigVariableShowLivestatusErrors = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="show_livestatus_errors",
     valuespec=lambda: Checkbox(
         title=_("Show MK Livestatus error messages"),
@@ -592,7 +592,7 @@ ConfigVariableShowLivestatusErrors = ConfigVariable(
 
 ConfigVariableEnableSounds = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="enable_sounds",
     valuespec=lambda: Checkbox(
         title=_("Sounds in views"),
@@ -608,7 +608,7 @@ ConfigVariableEnableSounds = ConfigVariable(
 
 ConfigVariableSoftQueryLimit = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="soft_query_limit",
     valuespec=lambda: Integer(
         title=_("Soft query limit"),
@@ -623,7 +623,7 @@ ConfigVariableSoftQueryLimit = ConfigVariable(
 
 ConfigVariableHardQueryLimit = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="hard_query_limit",
     valuespec=lambda: Integer(
         title=_("Hard query limit"),
@@ -639,7 +639,7 @@ ConfigVariableHardQueryLimit = ConfigVariable(
 
 ConfigVariableQuicksearchDropdownLimit = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="quicksearch_dropdown_limit",
     valuespec=lambda: Integer(
         title=_("Number of elements to show in Quicksearch"),
@@ -655,7 +655,7 @@ ConfigVariableQuicksearchDropdownLimit = ConfigVariable(
 
 ConfigVariableQuicksearchSearchOrder = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="quicksearch_search_order",
     valuespec=lambda: ListOf(
         valuespec=Tuple(
@@ -697,7 +697,7 @@ ConfigVariableQuicksearchSearchOrder = ConfigVariable(
 
 ConfigVariableExperimentalFeatures = ConfigVariable(
     group=ConfigVariableGroupDeveloperTools,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="vue_experimental_features",
     valuespec=lambda: Dictionary(
         title=_("Vue experimental features"),
@@ -726,7 +726,7 @@ ConfigVariableExperimentalFeatures = ConfigVariable(
 
 ConfigVariableInjectJsProfiling = ConfigVariable(
     group=ConfigVariableGroupDeveloperTools,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="inject_js_profiling_code",
     valuespec=lambda: Checkbox(
         title=_("Inject JavaScript profiling code"),
@@ -736,7 +736,7 @@ ConfigVariableInjectJsProfiling = ConfigVariable(
 
 ConfigVariableLoadFrontendVue = ConfigVariable(
     group=ConfigVariableGroupDeveloperTools,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="load_frontend_vue",
     valuespec=lambda: DropdownChoice(
         title=_("Inject frontend_vue files via vite client"),
@@ -753,7 +753,7 @@ ConfigVariableLoadFrontendVue = ConfigVariable(
 
 ConfigVariableTableRowLimit = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="table_row_limit",
     valuespec=lambda: Integer(
         title=_("Limit the number of rows shown in tables"),
@@ -769,7 +769,7 @@ ConfigVariableTableRowLimit = ConfigVariable(
 
 ConfigVariableStartURL = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="start_url",
     valuespec=lambda: TextInput(
         title=_("Start URL to display in main frame"),
@@ -786,7 +786,7 @@ ConfigVariableStartURL = ConfigVariable(
 
 ConfigVariablePageHeading = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="page_heading",
     valuespec=lambda: TextInput(
         title=_("Page title"),
@@ -800,7 +800,7 @@ ConfigVariablePageHeading = ConfigVariable(
 
 ConfigVariableBIDefaultLayout = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="default_bi_layout",
     valuespec=lambda: Dictionary(
         title=_("Default BI visualization settings"),
@@ -844,7 +844,7 @@ def _get_line_style_choices():
 
 ConfigVariablePagetitleDateFormat = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="pagetitle_date_format",
     valuespec=lambda: DropdownChoice(
         title=_("Date format for page titles"),
@@ -861,7 +861,7 @@ ConfigVariablePagetitleDateFormat = ConfigVariable(
 
 ConfigVariableEscapePluginOutput = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="escape_plugin_output",
     valuespec=lambda: Checkbox(
         title=_("Escape HTML in service output (Dangerous to deactivate - read help)"),
@@ -885,7 +885,7 @@ ConfigVariableEscapePluginOutput = ConfigVariable(
 
 ConfigVariableDrawRuleIcon = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="multisite_draw_ruleicon",
     valuespec=lambda: Checkbox(
         title=_("Show icon linking to Setup parameter editor for services"),
@@ -900,7 +900,7 @@ ConfigVariableDrawRuleIcon = ConfigVariable(
 
 ConfigVariableVirtualHostTrees = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="virtual_host_trees",
     valuespec=lambda: ListOf(
         valuespec=Dictionary(
@@ -1015,7 +1015,7 @@ def _validate_virtual_host_trees(value, varprefix):
 
 ConfigVariableRescheduleTimeout = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="reschedule_timeout",
     valuespec=lambda: Float(
         title=_("Timeout for rescheduling checks in Multisite"),
@@ -1033,7 +1033,7 @@ ConfigVariableRescheduleTimeout = ConfigVariable(
 
 ConfigVariableSidebarUpdateInterval = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="sidebar_update_interval",
     valuespec=lambda: Float(
         title=_("Interval of sidebar status updates"),
@@ -1051,7 +1051,7 @@ ConfigVariableSidebarUpdateInterval = ConfigVariable(
 
 ConfigVariableSidebarNotifyInterval = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="sidebar_notify_interval",
     valuespec=lambda: Optional(
         valuespec=Float(
@@ -1070,7 +1070,7 @@ ConfigVariableSidebarNotifyInterval = ConfigVariable(
 
 ConfigVariableiAdHocDowntime = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="adhoc_downtime",
     valuespec=lambda: Optional(
         valuespec=Dictionary(
@@ -1109,7 +1109,7 @@ ConfigVariableiAdHocDowntime = ConfigVariable(
 
 ConfigVariableAuthByHTTPHeader = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="auth_by_http_header",
     valuespec=lambda: Migrate(
         Optional(
@@ -1150,7 +1150,7 @@ ConfigVariableAuthByHTTPHeader = ConfigVariable(
 
 EnableLoginViaGet = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="enable_login_via_get",
     valuespec=lambda: Checkbox(
         title=_("Login via GET requests"),
@@ -1166,7 +1166,7 @@ EnableLoginViaGet = ConfigVariable(
 EnableDeprecatedAutomationuserAuthentication = ConfigVariable(
     # See Werk #16223
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="enable_deprecated_automation_user_authentication",
     valuespec=lambda: Checkbox(
         title=_("Automation user authentication via HTTP parameters"),
@@ -1183,7 +1183,7 @@ EnableDeprecatedAutomationuserAuthentication = ConfigVariable(
 
 ConfigVariableStalenessThreshold = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="staleness_threshold",
     valuespec=lambda: Float(
         title=_("Staleness value to mark hosts / services stale"),
@@ -1199,7 +1199,7 @@ ConfigVariableStalenessThreshold = ConfigVariable(
 
 ConfigVariableLoginScreen = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="login_screen",
     valuespec=lambda: Dictionary(
         title=_("Customize login screen"),
@@ -1255,7 +1255,7 @@ ConfigVariableLoginScreen = ConfigVariable(
 
 ConfigVariableUserLocalizations = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="user_localizations",
     valuespec=lambda: Transform(
         valuespec=ListOf(
@@ -1282,7 +1282,7 @@ ConfigVariableUserLocalizations = ConfigVariable(
 
 ConfigVariableUserIconsAndActions = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="user_icons_and_actions",
     valuespec=lambda: Transform(
         valuespec=ListOf(
@@ -1395,7 +1395,7 @@ ConfigVariableUserIconsAndActions = ConfigVariable(
 
 ConfigVariableCustomServiceAttributes = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="custom_service_attributes",
     valuespec=lambda: Transform(
         valuespec=ListOf(
@@ -1532,7 +1532,7 @@ def _service_tag_rules_tag_group_choices():
 
 ConfigVariableUserDowntimeTimeranges = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="user_downtime_timeranges",
     valuespec=lambda: ListOf(
         valuespec=Dictionary(
@@ -1577,7 +1577,7 @@ ConfigVariableUserDowntimeTimeranges = ConfigVariable(
 
 ConfigVariableBuiltinIconVisibility = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="builtin_icon_visibility",
     valuespec=lambda: Transform(
         valuespec=ListOf(
@@ -1644,7 +1644,7 @@ def _get_builtin_icons() -> list[tuple[str, str]]:
 
 ConfigVariableServiceViewGrouping = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="service_view_grouping",
     valuespec=lambda: ListOf(
         valuespec=Dictionary(
@@ -1698,7 +1698,7 @@ ConfigVariableServiceViewGrouping = ConfigVariable(
 
 ConfigVariableAcknowledgeProblems = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="acknowledge_problems",
     valuespec=lambda: Dictionary(
         title=_("Acknowledge problems"),
@@ -1745,7 +1745,7 @@ ConfigVariableAcknowledgeProblems = ConfigVariable(
 
 ConfigVariableDefaultTemperatureUnit = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="default_temperature_unit",
     valuespec=lambda: DropdownChoice(
         title=_("Default temperature unit"),
@@ -1759,7 +1759,7 @@ ConfigVariableDefaultTemperatureUnit = ConfigVariable(
 
 ConfigVariableTrustedCertificateAuthorities = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
-    domain=ConfigDomainCACertificates,
+    primary_domain=ConfigDomainCACertificates,
     ident="trusted_certificate_authorities",
     valuespec=lambda: Dictionary(
         title=_("Trusted certificate authorities for SSL"),
@@ -1803,7 +1803,7 @@ ConfigVariableTrustedCertificateAuthorities = ConfigVariable(
 
 ConfigVariableAgentControllerCertificates = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="agent_controller_certificates",
     valuespec=lambda: Dictionary(
         title=_("Agent certificates"),
@@ -1839,7 +1839,7 @@ ConfigVariableAgentControllerCertificates = ConfigVariable(
 
 RestAPIETagLocking = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="rest_api_etag_locking",
     valuespec=lambda: Checkbox(
         title=_("REST API: Use HTTP ETags for optimistic locking"),
@@ -1870,7 +1870,7 @@ RestAPIETagLocking = ConfigVariable(
 
 ConfigVariableWATOMaxSnapshots = ConfigVariable(
     group=ConfigVariableGroupWATO,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="wato_max_snapshots",
     valuespec=lambda: Integer(
         title=_("Number of configuration snapshots to keep"),
@@ -1885,7 +1885,7 @@ ConfigVariableWATOMaxSnapshots = ConfigVariable(
 
 ConfigVariableWATOActivateChangesCommentMode = ConfigVariable(
     group=ConfigVariableGroupWATO,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="wato_activate_changes_comment_mode",
     valuespec=lambda: DropdownChoice(
         title=_("Comment for activation of changes"),
@@ -1903,7 +1903,7 @@ ConfigVariableWATOActivateChangesCommentMode = ConfigVariable(
 
 ConfigVariableWATOActivationMethod = ConfigVariable(
     group=ConfigVariableGroupWATO,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="wato_activation_method",
     valuespec=lambda: DropdownChoice(
         title=_("Restart mode for Nagios"),
@@ -1917,7 +1917,7 @@ ConfigVariableWATOActivationMethod = ConfigVariable(
 
 ConfigVariableWATOHideFilenames = ConfigVariable(
     group=ConfigVariableGroupWATO,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="wato_hide_filenames",
     valuespec=lambda: Checkbox(
         title=_("Hide internal folder names in Setup"),
@@ -1933,7 +1933,7 @@ ConfigVariableWATOHideFilenames = ConfigVariable(
 
 ConfigVariableWATOHideHosttags = ConfigVariable(
     group=ConfigVariableGroupWATO,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="wato_hide_hosttags",
     valuespec=lambda: Checkbox(
         title=_("Hide hosttags in Setup folder view"),
@@ -1944,7 +1944,7 @@ ConfigVariableWATOHideHosttags = ConfigVariable(
 
 ConfigVariableWATOHideVarnames = ConfigVariable(
     group=ConfigVariableGroupWATO,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="wato_hide_varnames",
     valuespec=lambda: Checkbox(
         title=_("Hide names of configuration variables"),
@@ -1958,7 +1958,7 @@ ConfigVariableWATOHideVarnames = ConfigVariable(
 
 ConfigVariableWATOUseGit = ConfigVariable(
     group=ConfigVariableGroupWATO,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="wato_use_git",
     valuespec=lambda: Checkbox(
         title=_("Use GIT version control for Setup"),
@@ -1976,7 +1976,7 @@ ConfigVariableWATOUseGit = ConfigVariable(
 
 ConfigVariableWATOPrettyPrintConfig = ConfigVariable(
     group=ConfigVariableGroupWATO,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="wato_pprint_config",
     valuespec=lambda: Checkbox(
         title=_("Pretty-Print configuration files"),
@@ -1991,7 +1991,7 @@ ConfigVariableWATOPrettyPrintConfig = ConfigVariable(
 
 ConfigVariableWATOHideFoldersWithoutReadPermissions = ConfigVariable(
     group=ConfigVariableGroupWATO,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="wato_hide_folders_without_read_permissions",
     valuespec=lambda: Checkbox(
         title=_("Hide folders without read permissions"),
@@ -2006,7 +2006,7 @@ ConfigVariableWATOHideFoldersWithoutReadPermissions = ConfigVariable(
 
 ConfigVariableWATOIconCategories = ConfigVariable(
     group=ConfigVariableGroupWATO,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="wato_icon_categories",
     valuespec=lambda: ListOf(
         valuespec=Tuple(
@@ -2050,7 +2050,7 @@ ConfigVariableGroupUserManagement = ConfigVariableGroup(
 
 ConfigVariableDefaultDynamicVisualsPermission = ConfigVariable(
     group=ConfigVariableGroupUserManagement,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="default_dynamic_visual_permission",
     valuespec=lambda: DropdownChoice(
         title=_("Default dynamic visuals permission"),
@@ -2072,7 +2072,7 @@ ConfigVariableDefaultDynamicVisualsPermission = ConfigVariable(
 
 ConfigVariableLogLogonFailures = ConfigVariable(
     group=ConfigVariableGroupUserManagement,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="log_logon_failures",
     valuespec=lambda: Checkbox(
         title=_("Logging of logon failures"),
@@ -2087,7 +2087,7 @@ ConfigVariableLogLogonFailures = ConfigVariable(
 
 ConfigVariableRequireTwoFactorAllUsers = ConfigVariable(
     group=ConfigVariableGroupUserManagement,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="require_two_factor_all_users",
     valuespec=lambda: Checkbox(
         title=_("Enforce two factor authentication"),
@@ -2101,7 +2101,7 @@ ConfigVariableRequireTwoFactorAllUsers = ConfigVariable(
 
 ConfigVariableLockOnLogonFailures = ConfigVariable(
     group=ConfigVariableGroupUserManagement,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="lock_on_logon_failures",
     valuespec=lambda: Optional(
         valuespec=Integer(
@@ -2124,7 +2124,7 @@ ConfigVariableLockOnLogonFailures = ConfigVariable(
 
 ConfigVariablePasswordPolicy = ConfigVariable(
     group=ConfigVariableGroupUserManagement,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="password_policy",
     valuespec=lambda: Dictionary(
         title=_("Password policy for local accounts"),
@@ -2176,7 +2176,7 @@ ConfigVariablePasswordPolicy = ConfigVariable(
 
 ConfigVariableSessionManagement = ConfigVariable(
     group=ConfigVariableGroupUserManagement,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="session_mgmt",
     valuespec=lambda: Dictionary(
         title=_("Session management"),
@@ -2242,7 +2242,7 @@ def _validate_max_duration(d: dict, varprefix: str) -> None:
 
 ConfigVariableSingleUserSession = ConfigVariable(
     group=ConfigVariableGroupUserManagement,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="single_user_session",
     valuespec=lambda: Optional(
         valuespec=Age(
@@ -2266,7 +2266,7 @@ ConfigVariableSingleUserSession = ConfigVariable(
 
 ConfigVariableUserSecurityNotifications = ConfigVariable(
     group=ConfigVariableGroupUserManagement,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="user_security_notification_duration",
     valuespec=lambda: Dictionary(
         title=_("User security notification duration"),
@@ -2311,7 +2311,7 @@ def _validate_min(value, varprefix):
 
 ConfigVariableDefaultUserProfile = ConfigVariable(
     group=ConfigVariableGroupUserManagement,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="default_user_profile",
     valuespec=lambda: Dictionary(
         title=_("Default user profile"),
@@ -2370,7 +2370,7 @@ def find_usages_of_contact_group_in_default_user_profile(
 ) -> list[tuple[str, str]]:
     """Used in default_user_profile?"""
     used_in = []
-    domain = ConfigVariableDefaultUserProfile.domain()
+    domain = ConfigVariableDefaultUserProfile.primary_domain()
     configured = global_config.get("default_user_profile", {})
     default_value = domain.default_globals()["default_user_profile"]
     if (configured and name in configured["contactgroups"]) or name in default_value[
@@ -2408,7 +2408,7 @@ ConfigVariableGroupCheckExecution = ConfigVariableGroup(
 
 ConfigVariableUseNewDescriptionsFor = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
-    domain=ConfigDomainCore,
+    primary_domain=ConfigDomainCore,
     ident="use_new_descriptions_for",
     valuespec=lambda: ListChoice(
         title=_("Use new service names"),
@@ -2552,7 +2552,7 @@ ConfigVariableUseNewDescriptionsFor = ConfigVariable(
 
 ConfigVariableTCPConnectTimeout = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
-    domain=ConfigDomainCore,
+    primary_domain=ConfigDomainCore,
     ident="tcp_connect_timeout",
     valuespec=lambda: Float(
         title=_("Agent TCP connect timeout"),
@@ -2569,7 +2569,7 @@ ConfigVariableTCPConnectTimeout = ConfigVariable(
 
 ConfigVariableSimulationMode = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
-    domain=ConfigDomainCore,
+    primary_domain=ConfigDomainCore,
     ident="simulation_mode",
     valuespec=lambda: Checkbox(
         title=_("Simulation mode"),
@@ -2585,7 +2585,7 @@ ConfigVariableSimulationMode = ConfigVariable(
 
 ConfigVariableRestartLocking = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
-    domain=ConfigDomainCore,
+    primary_domain=ConfigDomainCore,
     ident="restart_locking",
     valuespec=lambda: DropdownChoice(
         title=_("Simultaneous activation of changes"),
@@ -2605,7 +2605,7 @@ ConfigVariableRestartLocking = ConfigVariable(
 
 ConfigVariableDelayPrecompile = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
-    domain=ConfigDomainCore,
+    primary_domain=ConfigDomainCore,
     ident="delay_precompile",
     valuespec=lambda: Checkbox(
         title=_("Delay precompiling of host checks"),
@@ -2623,7 +2623,7 @@ ConfigVariableDelayPrecompile = ConfigVariable(
 
 ConfigVariableClusterMaxCachefileAge = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
-    domain=ConfigDomainCore,
+    primary_domain=ConfigDomainCore,
     ident="cluster_max_cachefile_age",
     valuespec=lambda: Integer(
         title=_("Maximum cache file age for clusters"),
@@ -2640,7 +2640,7 @@ ConfigVariableClusterMaxCachefileAge = ConfigVariable(
 
 ConfigVariablePiggybackMaxCachefileAge = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
-    domain=ConfigDomainCore,
+    primary_domain=ConfigDomainCore,
     ident="piggyback_max_cachefile_age",
     valuespec=lambda: Age(
         title=_("Maximum age for piggyback files"),
@@ -2654,7 +2654,7 @@ ConfigVariablePiggybackMaxCachefileAge = ConfigVariable(
 
 ConfigVariableCheckMKPerfdataWithTimes = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
-    domain=ConfigDomainCore,
+    primary_domain=ConfigDomainCore,
     ident="check_mk_perfdata_with_times",
     valuespec=lambda: Checkbox(
         title=_("Checkmk with times performance data"),
@@ -2670,7 +2670,7 @@ ConfigVariableCheckMKPerfdataWithTimes = ConfigVariable(
 
 ConfigVariableUseDNSCache = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
-    domain=ConfigDomainCore,
+    primary_domain=ConfigDomainCore,
     ident="use_dns_cache",
     valuespec=lambda: Checkbox(
         title=_("Use DNS lookup cache"),
@@ -2703,7 +2703,7 @@ def _transform_snmp_backend_from_valuespec(
 
 ConfigVariableChooseSNMPBackend = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
-    domain=ConfigDomainCore,
+    primary_domain=ConfigDomainCore,
     ident="snmp_backend_default",
     valuespec=lambda: Transform(
         valuespec=DropdownChoice(
@@ -2731,7 +2731,7 @@ ConfigVariableChooseSNMPBackend = ConfigVariable(
 
 ConfigVariableSNMPwalkDownloadTimeout = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
-    domain=ConfigDomainGUI,
+    primary_domain=ConfigDomainGUI,
     ident="snmp_walk_download_timeout",
     valuespec=lambda: Age(
         title=_("SNMP walk download timeout"),
@@ -2745,7 +2745,7 @@ ConfigVariableSNMPwalkDownloadTimeout = ConfigVariable(
 
 ConfigVariableHTTPProxies = ConfigVariable(
     group=ConfigVariableGroupCheckExecution,
-    domain=ConfigDomainCore,
+    primary_domain=ConfigDomainCore,
     ident="http_proxies",
     valuespec=lambda: Transform(
         valuespec=ListOf(
@@ -2818,7 +2818,7 @@ ConfigVariableGroupServiceDiscovery = ConfigVariableGroup(
 
 ConfigVariableInventoryCheckInterval = ConfigVariable(
     group=ConfigVariableGroupServiceDiscovery,
-    domain=ConfigDomainCore,
+    primary_domain=ConfigDomainCore,
     ident="inventory_check_interval",
     valuespec=lambda: Optional(
         valuespec=Integer(
@@ -2843,7 +2843,7 @@ ConfigVariableInventoryCheckInterval = ConfigVariable(
 
 ConfigVariableInventoryCheckSeverity = ConfigVariable(
     group=ConfigVariableGroupServiceDiscovery,
-    domain=ConfigDomainCore,
+    primary_domain=ConfigDomainCore,
     ident="inventory_check_severity",
     valuespec=lambda: DropdownChoice(
         title=_("Severity of failed service discovery check"),
@@ -2862,7 +2862,7 @@ ConfigVariableInventoryCheckSeverity = ConfigVariable(
 
 ConfigVariableInventoryCheckAutotrigger = ConfigVariable(
     group=ConfigVariableGroupServiceDiscovery,
-    domain=ConfigDomainCore,
+    primary_domain=ConfigDomainCore,
     ident="inventory_check_autotrigger",
     valuespec=lambda: Checkbox(
         title=_("Service discovery triggers service discovery check"),
@@ -2927,7 +2927,7 @@ ServiceGroupsRulespec = ServiceRulespec(
 
 def _valuespec_host_contactgroups():
     return ContactGroupSelection(
-        title=_("Assignment of hosts to contact groups"),
+        title=_("Set host visibility for contact groups"),
     )
 
 
@@ -2941,7 +2941,7 @@ HostContactGroupsRulespec = HostRulespec(
 
 def _valuespec_service_contactgroups():
     return ContactGroupSelection(
-        title=_("Assignment of services to contact groups"),
+        title=_("Set service visibility for contact groups"),
     )
 
 

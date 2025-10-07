@@ -16,6 +16,7 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.permissions import permission_registry
+from cmk.gui.type_defs import ColumnSpec, DashboardEmbeddedViewSpec, SorterSpec
 from cmk.gui.user_async_replication import user_profile_async_replication_page
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.store import internal_view_to_runtime_view
@@ -84,7 +85,23 @@ def _internal_dashboard_to_runtime_dashboard(raw_dashboard: dict[str, Any]) -> D
             )
             for dashlet_spec in raw_dashboard["dashlets"]
         ],
+        "embedded_views": {
+            embedded_id: _internal_embedded_view_to_runtime_embedded_view(embedded_view)
+            for embedded_id, embedded_view in raw_dashboard.get("embedded_views", {}).items()
+        },
     }
+
+
+def _internal_embedded_view_to_runtime_embedded_view(
+    raw_embedded_view: dict[str, Any],
+) -> DashboardEmbeddedViewSpec:
+    spec = DashboardEmbeddedViewSpec(**raw_embedded_view)  # type: ignore[typeddict-item]
+    spec["painters"] = [ColumnSpec.from_raw(x) for x in raw_embedded_view.get("painters", [])]
+    spec["group_painters"] = [
+        ColumnSpec.from_raw(x) for x in raw_embedded_view.get("group_painters", [])
+    ]
+    spec["sorters"] = [SorterSpec(*x) for x in raw_embedded_view.get("sorters", [])]
+    return spec
 
 
 def save_all_dashboards() -> None:

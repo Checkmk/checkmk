@@ -5,21 +5,25 @@
  */
 import { type Ref, ref } from 'vue'
 
+import type { ObjectType } from '@/dashboard-wip/types/shared.ts'
+
+// TODO: remove with other components
 export type FilterType = 'host' | 'service'
 
 export interface UseAddFilter {
   isOpen: Readonly<Ref<boolean>>
-  target: Ref<FilterType>
+  target: Ref<ObjectType>
 
-  open: (filterType: FilterType) => void
+  open: (filterType: ObjectType) => void
   close: () => void
+  inFocus: (objectType: ObjectType) => boolean
 }
 
 export const useAddFilter = (): UseAddFilter => {
   const isOpen = ref<boolean>(false)
-  const target = ref<FilterType>('host')
+  const target = ref<ObjectType>('host')
 
-  const open = (filterType: FilterType) => {
+  const open = (filterType: ObjectType) => {
     target.value = filterType
     isOpen.value = true
   }
@@ -28,11 +32,16 @@ export const useAddFilter = (): UseAddFilter => {
     isOpen.value = false
   }
 
+  const inFocus = (objectType: ObjectType) => {
+    return target.value === objectType && isOpen.value
+  }
+
   return {
     isOpen,
     target,
 
     open,
-    close
+    close,
+    inFocus
   }
 }

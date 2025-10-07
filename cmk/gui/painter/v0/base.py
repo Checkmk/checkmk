@@ -47,9 +47,18 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.valuespec import ValueSpec
-from cmk.gui.view_utils import CellSpec, CSVExportError, JSONExportError, PythonExportError
+from cmk.gui.view_utils import (
+    CellSpec,
+    CSVExportError,
+    JSONExportError,
+    PythonExportError,
+)
 
-from ..v1.painter_lib import experimental_painter_registry, Formatters, PainterConfiguration
+from ..v1.painter_lib import (
+    experimental_painter_registry,
+    Formatters,
+    PainterConfiguration,
+)
 from ..v1.painter_lib import Painter as V1Painter
 from .helpers import RenderLink
 

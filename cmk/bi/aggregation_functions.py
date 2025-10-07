@@ -12,8 +12,6 @@ from marshmallow_oneofschema import OneOfSchema
 
 from cmk.bi.lib import (
     ABCBIAggregationFunction,
-    AggregationFunctionKind,
-    AggregationFunctionSerialized,
     bi_aggregation_function_registry,
     BIStates,
     ReqConstant,
@@ -22,6 +20,7 @@ from cmk.bi.lib import (
     ReqString,
 )
 from cmk.bi.schema import Schema
+from cmk.bi.type_defs import AggregationFunctionKind, AggregationFunctionSerialized
 
 _bi_criticality_level: dict[int, int] = {
     BIStates.OK: 0,

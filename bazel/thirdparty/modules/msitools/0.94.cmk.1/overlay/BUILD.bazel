@@ -51,18 +51,17 @@ configure_make(
         patchelf --set-rpath "\\$$ORIGIN/../lib" $${INSTALLDIR}/bin/msiinfo $${INSTALLDIR}/bin/msibuild
         install -m 755 $${BUILD_TMPDIR}/libmsi/.libs/libmsi.so* $${INSTALLDIR}/lib
     """,
+    tags = ["manual"],
     targets = [
         "-C libmsi",
         "msibuild",
         "msiinfo",
     ],
+    visibility = ["//visibility:public"],
     deps = select(
         {
             "@cmk//distro:sles": ["@libgsf"],
             "//conditions:default": [],
         },
     ),
-    tags = ["manual"],
-    visibility = ["//visibility:public"],
 )
-

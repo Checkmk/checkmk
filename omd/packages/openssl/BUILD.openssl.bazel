@@ -20,10 +20,16 @@ configure_make(
         "no-tests",
         "no-weak-ssl-ciphers",
         "-fPIC",
-    ],
+    ] + select({
+        "@platforms//cpu:aarch64": ["linux-aarch64"],
+        "//conditions:default": [],
+    }),
     lib_name = "openssl",
     lib_source = ":all_srcs",
-    out_lib_dir = "lib64",
+    out_lib_dir = select({
+        "@platforms//cpu:aarch64": "lib",
+        "//conditions:default": "lib64",
+    }),
     out_static_libs = [
         "libssl.a",
         "libcrypto.a",

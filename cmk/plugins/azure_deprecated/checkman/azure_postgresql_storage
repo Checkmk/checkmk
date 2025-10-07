@@ -1,0 +1,22 @@
+title: Microsoft Azure PostgreSQL Database: Storage
+agents: azure
+catalog: cloud/azure
+license: GPLv2
+distribution: check_mk
+description:
+ This check and the associated special agent (agent_azure) are deprecated
+ and will be removed in a future version.
+
+ Please configure the new special agent using the "Microsoft Azure" ruleset.
+
+ This check reports the percentages of IO consumption, storage
+ used and server log storage used.
+ You can configure levels using the rule "Azure DB Storage".
+
+item:
+ The name of the resource.
+
+discovery:
+ One service is created for each database if any of the required metrics
+ (average_io_consumption_percent, average_disk_iops_consumed_percentage,
+ average_storage_percent, average_serverlog_storage_percent) are given.

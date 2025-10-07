@@ -6,8 +6,8 @@
 from collections.abc import Sequence
 from typing import Any
 
-from cmk.gui.form_specs.private import CascadingSingleChoiceExtended
-from cmk.gui.form_specs.private.cascading_single_choice_extended import (
+from cmk.gui.form_specs.unstable import CascadingSingleChoiceExtended
+from cmk.gui.form_specs.unstable.cascading_single_choice_extended import (
     CascadingSingleChoiceElementExtended,
 )
 from cmk.rulesets.v1 import Help, Label, Message, Title

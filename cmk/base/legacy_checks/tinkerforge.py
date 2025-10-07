@@ -96,7 +96,11 @@ def check_tinkerforge_ambient(item, params, parsed):
     if "ambient" in parsed and item in parsed["ambient"]:
         reading = float(parsed["ambient"][item][0]) / 100.0
         return check_levels(
-            reading, "brightness", params["levels"], unit="lx", infoname="Brightness"
+            reading,
+            "brightness",
+            params["levels"],
+            human_readable_func=lambda x: f"{x:.1f} lx",
+            infoname="Brightness",
         )
     return None
 

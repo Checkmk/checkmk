@@ -3,20 +3,26 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { type Ref, ref, watch } from 'vue'
+import { type Ref, onUnmounted, ref, watch } from 'vue'
 
 export function useDebounceRef<T>(value: Ref<T>, delay = 300, immediate: boolean = false): Ref<T> {
   const debounced = ref(value.value) as Ref<T>
-  let timeout: ReturnType<typeof setTimeout> | null = null
+  const timeout = ref<ReturnType<typeof setTimeout> | null>(null)
+
+  onUnmounted(() => {
+    if (timeout.value) {
+      clearTimeout(timeout.value)
+    }
+  })
 
   watch(
     value,
     (newValue) => {
-      if (timeout) {
-        clearTimeout(timeout)
+      if (timeout.value) {
+        clearTimeout(timeout.value)
       }
 
-      timeout = setTimeout(() => {
+      timeout.value = setTimeout(() => {
         debounced.value = newValue
       }, delay)
     },
@@ -26,20 +32,30 @@ export function useDebounceRef<T>(value: Ref<T>, delay = 300, immediate: boolean
   return debounced
 }
 
-export function useDebounceFn(fn: CallableFunction, delay = 300, immediate: boolean = false) {
+type DebouncedFunction<T extends (...args: unknown[]) => void> = (...args: Parameters<T>) => void
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function useDebounceFn<T extends (...args: any[]) => void>(
+  fn: T,
+  delay: number = 300
+): DebouncedFunction<T> {
   const timeout = ref<ReturnType<typeof setTimeout> | null>(null)
 
-  if (immediate) {
-    fn()
-  }
-
-  return function () {
+  const debouncedFn = (...args: Parameters<T>) => {
     if (timeout.value) {
       clearTimeout(timeout.value)
     }
 
     timeout.value = setTimeout(() => {
-      fn()
+      fn(...args)
     }, delay)
   }
+
+  onUnmounted(() => {
+    if (timeout.value) {
+      clearTimeout(timeout.value)
+    }
+  })
+
+  return debouncedFn
 }

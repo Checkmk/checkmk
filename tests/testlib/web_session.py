@@ -184,12 +184,12 @@ class CMKWebSession:
             try:
                 skip = False
                 for attr, val in filters or []:
-                    if element[attr] != val:  # type: ignore[index]
+                    if element[attr] != val:
                         skip = True
                         break
 
                 if not skip:
-                    urls.append(element[attribute])  # type: ignore[index]
+                    urls.append(element[attribute])
             except KeyError:
                 pass
 

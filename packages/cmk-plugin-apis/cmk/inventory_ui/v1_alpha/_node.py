@@ -128,20 +128,16 @@ class View:
     Args:
         name: A unique name
         title: A title
-        group: Groups several views below this title
     """
 
     name: str
     title: Title
-    group: Title | None = None
 
     def __post_init__(self) -> None:
         if not self.name:
             raise ValueError(self.name)
         if not self.title.localize(lambda v: v):
             raise ValueError(self.title)
-        if self.group is not None and not self.group.localize(lambda v: v):
-            raise ValueError(self.group)
 
 
 @dataclass(frozen=True)

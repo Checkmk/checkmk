@@ -338,7 +338,6 @@ _ALLOWED_DUPLICATES = {
     },
     "Allocatable": {"kube_memory_allocatable", "kube_pod_allocatable", "kube_cpu_allocatable"},
     "Allocated space": {"mem_lnx_vmalloc_used", "allocated_size"},
-    "Available capacity": {"emcvnx_avail_capacity", "capacity_perc"},
     "Average consumption": {"aws_dynamodb_consumed_wcu", "aws_dynamodb_consumed_rcu"},
     "Average usage": {"aws_dynamodb_consumed_rcu_perc", "aws_dynamodb_consumed_wcu_perc"},
     "Cache hit ratio": {"azure_redis_cache_hit_ratio", "cache_hit_ratio"},

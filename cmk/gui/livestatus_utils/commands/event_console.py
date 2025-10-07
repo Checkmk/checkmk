@@ -191,7 +191,7 @@ def update_and_acknowledge(
     new_phase: Literal["ack", "open"],
     site_id: SiteId | None,
 ) -> Mapping[str, list[str]]:
-    ack = 1 if new_phase == "ack" else 0
+    ack = new_phase == "ack"
     sites_with_ids = map_sites_to_ids_from_query(connection, query, site_id)
     for site, event_ids in sites_with_ids.items():
         ids = list(map(int, event_ids))

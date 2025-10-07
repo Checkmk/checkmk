@@ -82,7 +82,13 @@ def test_user_connector_verify_password(
                     "disabled": False,
                 }
             )
-        ).check_credentials(uid, password, [], [cfg], default_user_profile={})
+        ).check_credentials(
+            uid,
+            password,
+            [],
+            [cfg],
+            default_user_profile={},
+        )
         == expect
     )
 
@@ -107,4 +113,10 @@ def test_user_connector_verify_password_locked_users(
                     "disabled": False,
                 }
             )
-        ).check_credentials(uid, password, [], [cfg], default_user_profile={})
+        ).check_credentials(
+            uid,
+            password,
+            [],
+            [cfg],
+            default_user_profile={},
+        )

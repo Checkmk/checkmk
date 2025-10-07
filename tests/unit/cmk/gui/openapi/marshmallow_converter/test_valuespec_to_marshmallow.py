@@ -10,7 +10,8 @@ import cmk.utils.paths
 from cmk.gui.config import active_config
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.openapi.marshmallow_converter.valuespec_to_marshmallow import valuespec_to_marshmallow
-from cmk.gui.session import UserContext
+from cmk.gui.session import _UserContext
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.config_domain_name import config_variable_registry
 from tests.unit.cmk.gui.users import create_and_destroy_user
@@ -22,7 +23,7 @@ def fixture_fake_user() -> Iterator[LoggedInUser]:
     user_dir.mkdir(parents=True)
 
     with create_and_destroy_user(username="fake_user", config=active_config) as user:
-        yield LoggedInUser(user[0])
+        yield LoggedInUser(user[0], UserPermissions({}, {}, {}, []))
 
 
 @pytest.mark.usefixtures("request_context")
@@ -32,6 +33,6 @@ def test_valuespec_to_marshmallow_all_global_settings(fake_user: LoggedInUser) -
     This does not cover the correctness of the generated schemas.
     """
     if fake_user.id:
-        with gui_context(), UserContext(fake_user.id):
+        with gui_context(), _UserContext(fake_user):
             for name, config_variable in config_variable_registry.items():
                 valuespec_to_marshmallow(config_variable.valuespec(), name=name)

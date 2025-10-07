@@ -17,7 +17,7 @@ const SQL_DB_ENDPOINT_ROLE: usize = 5;
 // See ticket CMK-23904 for details on the format of this environment variable.
 // CI_ORA1_DB_TEST=ora1.lan.tribe29.net:system:ABcd#1234:1521:XE:sysdba:_:_:_
 #[allow(dead_code)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct SqlDbEndpoint {
     pub host: String,
     pub user: String,

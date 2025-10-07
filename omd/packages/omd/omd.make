@@ -40,7 +40,6 @@ endif
 	sed -i 's|###OMD_VERSION###|$(OMD_VERSION)|g' $(DESTDIR)$(OMD_ROOT)/lib/omd/restart_site_apache
 	install -m 644 $(PACKAGE_DIR)/$(OMD)/bash_completion $(DESTDIR)$(OMD_ROOT)/lib/omd/
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-create
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-update
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/hooks/* $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	$(MKDIR) $(SKEL)/etc/bash_completion.d

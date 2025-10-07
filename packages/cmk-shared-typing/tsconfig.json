@@ -1,8 +1,8 @@
 {
-    "compilerOptions": {
-      "emitDeclarationOnly": true,
-      "declaration": true,
-      "declarationMap": true,
-      "sourceMap": true
-    }
+  "compilerOptions": {
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true
+  }
 }

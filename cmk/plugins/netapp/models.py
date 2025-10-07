@@ -15,13 +15,10 @@ Docs:
 """
 
 import datetime
-import re
-from collections.abc import MutableMapping, Sequence
+from collections.abc import Sequence
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
-
-from cmk.agent_based.v2 import get_rate
 
 MEGA = 1024.0 * 1024.0
 
@@ -426,14 +423,14 @@ class NodeModel(BaseModel):
     see https://library.netapp.com/ecmdocs/ECMLP2885799/html/index.html#/cluster/node_get
 
     api: /api/cluster/nodes
-    doc: https://docs.netapp.com/us-en/ontap-restmap-9131//system.html#system-get-node-info-iter
+    doc: https://docs.netapp.com/us-en/ontap-restapi/get-cluster-nodes-.html#definitions
 
     STATUS PLUGIN:
     ============
     OLD -> NEW:
     ============
     "node" -> name
-    "cpu-busytime": "cpu_busy" -> statistics processor_utilization_base + processor_utilization_raw
+    "cpu-busytime": "cpu_busy" -> metric.processor_utilization
     "nvram-battery-status" -> nvram.battery_state
     "number-of-processors": "num_processors" -> controller.cpu.count
     ============
@@ -455,8 +452,6 @@ class NodeModel(BaseModel):
     cpu-processor-type -> controller.cpu.processor
     ============
 
-    cpu_utilization is calculated as explained here:
-    https://docs.netapp.com/us-en/ontap-restapi//ontap/get-cluster-nodes-.html#definitions
     """
 
     name: str
@@ -470,35 +465,9 @@ class NodeModel(BaseModel):
     serial_number: str
     system_id: str
     cpu_processor: str | None = None  # default None inherited from old NetApp API logic
-    processor_utilization_raw: int
-    processor_utilization_base: int
 
-    def cpu_utilization(self, value_store: MutableMapping[str, Any]) -> float:
-        def calculation_method_changed(version: Version) -> bool:
-            """Check if the version is affected by the calculation method change described in
-            CONTAP-377586 (see SUP-22760 and SUP-23825). Fixed in 9.16.1P3 and 9.15.1P10 according
-            to CONTAP-377586"""
-
-            match = re.search(r"\d+\.\d+\.\d+P(\d+)", version.full)
-            if not match:
-                return False  # no patch version found, assume version is not affected
-            patch = int(match.group(1))
-            return version.generation == 9 and (
-                (version.major == 15 and version.minor == 1 and patch < 10)
-                or (version.major == 16 and version.minor == 1 and patch < 3)
-            )
-
-        if calculation_method_changed(self.version):
-            return (
-                get_rate(
-                    value_store,
-                    "netapp_cpu_util",
-                    self.processor_utilization_base,
-                    self.processor_utilization_raw,
-                )
-                * 100
-            )
-        return (self.processor_utilization_raw / self.processor_utilization_base) * 100
+    processor_utilization: float
+    processor_utilization_timestamp: datetime.datetime  # provided in ISO 8601 format
 
 
 class ShelfObjectModel(BaseModel):
@@ -706,7 +675,7 @@ class SnapMirrorModel(BaseModel):
 
     destination_svm: str
     policy_name: str | None = None
-    policy_type: str
+    policy_type: str | None = None
     state: str | None = None
     transfer_state: (
         Literal["aborted", "failed", "hard_aborted", "queued", "success", "transferring"] | None

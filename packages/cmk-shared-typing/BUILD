@@ -1,14 +1,15 @@
 load("@aspect_rules_js//js:defs.bzl", "js_library")
-load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
-load("@npm_cmk_frontend//packages/cmk-frontend:prettier/package_json.bzl", prettier_bin = "bin")
-load("@npm_cmk_shared_typing//:defs.bzl", "npm_link_all_packages")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@npm//bazel/tools:prettier/package_json.bzl", prettier_bin = "bin")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
 load("//bazel/rules:shared_typing_generators.bzl", "json2python", "json2typescript")
+
+exports_files(["package.json"])
 
 npm_link_all_packages(name = "node_modules")
 
@@ -184,15 +185,20 @@ package_wheel(
 
 prettier_bin.prettier_binary(
     name = "prettier",
+    data = ["//bazel/tools:prettierrc"],
     env = {"BAZEL_BINDIR": "."},
     fixed_args = [
+        "--config=\"$$JS_BINARY__RUNFILES\"/$(rlocationpath //bazel/tools:prettierrc)",
         "--log-level=warn",
     ],
 )
 
-format_multirun(
+alias(
     name = "format",
-    javascript = ":prettier",
-    python = "@aspect_rules_lint//format:ruff",
-    visibility = ["//:__subpackages__"],
+    actual = "//bazel/tools:format",
+)
+
+alias(
+    name = "format.check",
+    actual = "//bazel/tools:format.check",
 )

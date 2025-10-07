@@ -152,17 +152,28 @@ run_check_format() {
 }
 
 run_test_all() {
+    path_to_runtime="${PWD}/runtimes/plugins/packages/mk-oracle"
+    mkdir -p "${path_to_runtime}"
+    INSTANTCLIENT_ARCHIVE="${PWD}/runtimes/downloads/instantclient_19_28.tar.gz"
+    export INSTANTCLIENT_ARCHIVE
+    MK_CONFDIR="${PWD}"
+    export MK_CONFDIR
+    MK_LIBDIR="${PWD}/runtimes"
+    export MK_LIBDIR
+
     case "$(uname)" in
         'SunOS')
-            gmake -C runtimes solaris_libs
-            LD_LIBRARY_PATH="$(pwd)/runtimes/solaris_x86-64/instantclient_19_28:${LD_LIBRARY_PATH}"
+            ORACLE_PLATFORM=SunOS gmake -C runtimes libs
+            (cd "${path_to_runtime}" && tar xzf "${INSTANTCLIENT_ARCHIVE}")
+            LD_LIBRARY_PATH="${path_to_runtime}:${LD_LIBRARY_PATH}"
             export LD_LIBRARY_PATH
             cargo test
             ;;
         'AIX')
-            /opt/freeware/bin/make -C runtimes aix_libs
-            LIB_PATH="$(pwd)/runtimes/solaris_x86-64/instantclient_19_28:${LIB_PATH}"
-            export LIB_PATH
+            ORACLE_PLATFORM=AIX /opt/freeware/bin/make -C runtimes libs
+            (cd "${path_to_runtime}" && tar xzf "${INSTANTCLIENT_ARCHIVE}")
+            LIBPATH="${path_to_runtime}:${LIBPATH}"
+            export LIBPATH
             cargo test
             ;;
         *)
@@ -172,8 +183,6 @@ run_test_all() {
             # 2. unzip to runtimes(simulates behavior of Agent/Bakery)
             # ATTENTION! Shell solution below is pure temporary: to be replaced with a pure bazel after consulting by Bazel team
             path_to_zip="$(bazel info bazel-bin)/omd/packages/oci/oci_light_lin_x64.zip"
-            path_to_runtime="${PWD}/runtimes/runtime"
-            mkdir -p "${path_to_runtime}"
             unzip -uoq "${path_to_zip}" -d "${path_to_runtime}"
 
             # 3. relink libaio
@@ -182,9 +191,10 @@ run_test_all() {
                 ln -sf "${libaio}" "${path_to_runtime}/libaio.so.1"
             else
                 echo "libaio absent. Integration testing is not possible"
+                exit 1
             fi
 
-            export LD_LIBRARY_PATH=${path_to_runtime}:${LD_LIBRARY_PATH}
+            export LD_LIBRARY_PATH="${path_to_runtime}:${LD_LIBRARY_PATH}"
             bazel test :all
             ;;
     esac
@@ -217,7 +227,6 @@ main() {
     # and we can call this script from everywhere.
     cd -- "${BASH_SOURCE%/*}"
     parse_options "$@"
-    export MK_CONFDIR="${PWD}"
     # TODO: Re-evaluate usage of --all-targets below
     test ${RUN_BUILD} = yes && run_build
     test ${RUN_UNIT_TESTS} = yes && run_test_all

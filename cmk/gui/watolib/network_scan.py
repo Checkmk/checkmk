@@ -24,8 +24,10 @@ from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.permissions import permission_registry
 from cmk.gui.session import UserContext
 from cmk.gui.site_config import is_distributed_setup_remote_site, site_is_local
+from cmk.gui.utils.roles import UserPermissions
 from cmk.utils.paths import configuration_lockfile
 from cmk.utils.translations import translate_hostname, TranslationOptions
 
@@ -66,7 +68,7 @@ def execute_network_scan_job(config: Config) -> None:
             % (run_as, folder.title())
         )
 
-    with UserContext(run_as):
+    with UserContext(run_as, UserPermissions.from_config(config, permission_registry)):
         result: NetworkScanResult = {
             "start": time.time(),
             "end": True,  # means currently running

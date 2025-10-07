@@ -220,7 +220,7 @@ def test_automation_active_check(
     _patch_plugin_loading(monkeypatch, loaded_active_checks)
     monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda *a, **kw: host_attrs)
     monkeypatch.setattr(check_mk, "get_service_attributes", lambda *a, **kw: service_attrs)
-    monkeypatch.setattr(config, "get_resource_macros", lambda *a, **kw: {})
+    monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a, **kw: {})
 
     config_cache = config.ConfigCache(EMPTY_CONFIG)
     monkeypatch.setattr(config_cache, "active_checks", lambda *a, **kw: active_checks)
@@ -285,7 +285,7 @@ def test_automation_active_check_invalid_args(
 ) -> None:
     _patch_plugin_loading(monkeypatch, loaded_active_checks)
     monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda *a, **kw: host_attrs)
-    monkeypatch.setattr(config, "get_resource_macros", lambda *a, **kw: {})
+    monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a, **kw: {})
 
     loaded_config = replace(
         EMPTY_CONFIG, ipaddresses={HostName("my_host"): HostAddress("127.0.0.1")}

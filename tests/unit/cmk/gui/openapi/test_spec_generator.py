@@ -24,6 +24,7 @@ def test_redoc_spec_tag_group_completness() -> None:
     assert spec_tag_groups == set(get_args(TagGroup))
 
 
+@pytest.mark.skip(reason="CMK-26220")
 @pytest.mark.parametrize("version", APIVersion)
 def test_generate_openapi_spec(version: APIVersion) -> None:
     """Test that the openapi spec can be generated without errors."""

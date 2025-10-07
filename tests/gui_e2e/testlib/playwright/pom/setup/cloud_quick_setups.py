@@ -49,7 +49,7 @@ class BaseQuickSetupConfigurationList(CmkPage):
     @override
     def navigate(self) -> None:
         logger.info("Navigate to '%s' page", self.page_title)
-        self.main_menu.setup_menu(self.setup_entry).click()
+        self.main_menu.setup_menu(self.setup_entry, exact=True).click()
         _url_pattern: str = quote_plus(
             "wato.py?mode=edit_configuration_bundles&varname=special_agents"
         )
@@ -276,7 +276,7 @@ class AWSConfigurationList(BaseQuickSetupConfigurationList):
 
     suffix = "aws"
     page_title = "Amazon Web Services (AWS)"
-    setup_entry = "Amazon Web Service (AWS)"
+    setup_entry = "Amazon Web Services (AWS)"
 
 
 class AWSAddNewConfiguration(BaseQuickSetupAddNewConfiguration):
@@ -437,7 +437,7 @@ class AzureConfigurationList(BaseQuickSetupConfigurationList):
     Setup > Quick Setup > Microsoft Azure
     """
 
-    suffix = "azure"
+    suffix = "azure_v2"
     page_title = "Microsoft Azure"
 
 
@@ -465,7 +465,7 @@ class AzureAddNewConfiguration(BaseQuickSetupAddNewConfiguration):
         > Add Microsoft Azure configuration
     """
 
-    suffix = "azure"
+    suffix = "azure_v2"
     page_title = "Add Microsoft Azure configuration"
     _go_to_next_stage_buttons_text = {
         1: "Configure host and authority",

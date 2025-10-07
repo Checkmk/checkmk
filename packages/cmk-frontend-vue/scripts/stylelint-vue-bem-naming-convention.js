@@ -23,7 +23,8 @@ const ruleName = 'checkmk/vue-bem-naming-convention'
 const messages = ruleMessages(ruleName, {
   start: (selector, selectorPrefix) =>
     `Class selector "${selector}" should start with block name "${selectorPrefix}"`,
-  first: () => `Block name should be followed by either "--" for modifiers or "__" for elements`,
+  first: (blockName) =>
+    `Block name "${blockName}" should be followed by either "--" for modifiers or "__" for elements`,
   modifier: (modifier) =>
     `Modifier should only contain lower case alphanumerical characters and single dashes, got "${modifier}"`,
   element: (element) =>
@@ -83,7 +84,7 @@ const ruleFunction = (primary, secondaryOptions, context) => {
     root.walkRules((ruleNode) => {
       const relativeFilePath = path.relative(projectRoot, ruleNode.source.input.file)
 
-      const [componentNane, prefix] = getPrefix(relativeFilePath)
+      const [componentName, prefix] = getPrefix(relativeFilePath)
 
       const filePathParsed = path.parse(ruleNode.source.input.file)
       if (filePathParsed.ext !== '.vue') {
@@ -92,10 +93,10 @@ const ruleFunction = (primary, secondaryOptions, context) => {
 
       let selectorName = shortPrefix(
         convertCamelToKebabCase(filePathParsed.name),
-        componentNane,
+        componentName,
         prefix
       )
-      if (!selectorName.startsWith(prefix)) {
+      if (!(selectorName.startsWith(`${prefix}-`) | (selectorName === prefix))) {
         selectorName = `${prefix}-${selectorName}`
       }
       const expectedSelector = `.${selectorName}`
@@ -148,7 +149,7 @@ const ruleFunction = (primary, secondaryOptions, context) => {
           report({
             result,
             ruleName,
-            message: messages.first(),
+            message: messages.first(expectedSelector),
             node: ruleNode,
             word: selector
           })

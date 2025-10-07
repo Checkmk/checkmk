@@ -88,6 +88,7 @@ py_test(
             "**/*.json",
             "**/*.jsonl",
             "**/*.log",
+            "**/*.yaml",
         ],
         allow_empty = True,
         exclude = ["**/*.py"],
@@ -105,6 +106,7 @@ py_test(
     deps = [
         ":__test__",
         requirement("astroid"),
+        requirement("coverage"),
         requirement("fastapi"),
         requirement("httpx"),
         requirement("mypy-boto3-logs"),

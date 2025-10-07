@@ -11,19 +11,22 @@ import { randomId } from '@/lib/randomId'
 import CmkIcon from '@/components/CmkIcon.vue'
 import { useErrorBoundary } from '@/components/useErrorBoundary'
 
-import WizardSelector from '@/dashboard-wip/Wizards/WizardSelector.vue'
 import DashboardComponent from '@/dashboard-wip/components/DashboardComponent.vue'
 import DashboardFilterSettings from '@/dashboard-wip/components/DashboardFilterSettings/DashboardFilterSettings.vue'
 import DashboardMenuHeader from '@/dashboard-wip/components/DashboardMenuHeader/DashboardMenuHeader.vue'
 import { createWidgetLayout } from '@/dashboard-wip/components/ResponsiveGrid/composables/useResponsiveGridLayout'
 import AddWidgetDialog from '@/dashboard-wip/components/WidgetWorkflow/StarterDialog/AddWidgetDialog.vue'
 import { dashboardWidgetWorkflows } from '@/dashboard-wip/components/WidgetWorkflow/WidgetWorkflowTypes.ts'
+import CreateDashboardWizard from '@/dashboard-wip/components/Wizard/CreateDashboardWizard.vue'
+import WizardSelector from '@/dashboard-wip/components/WizardSelector/WizardSelector.vue'
+import { widgetTypeToSelectorMatcher } from '@/dashboard-wip/components/WizardSelector/utils.ts'
 import type { FilterDefinition } from '@/dashboard-wip/components/filter/types.ts'
 import { useDashboardFilters } from '@/dashboard-wip/composables/useDashboardFilters.ts'
 import { useDashboardWidgets } from '@/dashboard-wip/composables/useDashboardWidgets.ts'
 import { useDashboardsManager } from '@/dashboard-wip/composables/useDashboardsManager.ts'
 import type {
   ContentResponsiveGrid,
+  DashboardGeneralSettings,
   DashboardLayout,
   DashboardMetadata,
   DashboardModel
@@ -33,9 +36,12 @@ import type {
   WidgetContent,
   WidgetFilterContext,
   WidgetGeneralSettings,
-  WidgetLayout
+  WidgetLayout,
+  WidgetSpec
 } from '@/dashboard-wip/types/widget'
 import { dashboardAPI } from '@/dashboard-wip/utils.ts'
+
+import DashboardSettingsWizard from './components/Wizard/DashboardSettingsWizard.vue'
 
 const { ErrorBoundary: errorBoundary } = useErrorBoundary()
 
@@ -43,9 +49,12 @@ const props = defineProps<DashboardPageProperties>()
 
 const isDashboardEditingMode = ref(false)
 const openDashboardFilterSettings = ref(false)
+const openDashboardSettings = ref(false)
 const openAddWidgetDialog = ref(false)
+const openDashboardCreationDialog = ref(props.mode === 'create')
 const openWizard = ref(false)
 const selectedWizard = ref('')
+const widgetToEdit = ref<string | null>(null)
 
 const filterCollection = ref<Record<string, FilterDefinition> | null>(null)
 provide('filterCollection', filterCollection)
@@ -152,8 +161,12 @@ function addWidget(
 }
 
 function editWidget(widgetId: string) {
-  // TODO: implement this
-  console.log('edit widget', widgetId)
+  widgetToEdit.value = widgetId
+  const widgetSpec = dashboardsManager.activeDashboard.value!.content.widgets[widgetId]
+  if (!widgetSpec) {
+    throw new Error(`Widget with id ${widgetId} not found`)
+  }
+  selectedWizard.value = widgetTypeToSelectorMatcher(widgetSpec.content.type)
 }
 
 function cloneWidget(oldWidgetId: string, newLayout: WidgetLayout) {
@@ -163,6 +176,42 @@ function cloneWidget(oldWidgetId: string, newLayout: WidgetLayout) {
   }
   const newWidgetId = generateWidgetId(oldWidget.content.type)
   dashboardWidgets.cloneWidget(oldWidgetId, newWidgetId, newLayout)
+}
+
+function getWidgetSpecToEdit(widgetId: string | null): WidgetSpec | null {
+  if (!widgetId) {
+    return null
+  }
+  const widget = dashboardsManager.activeDashboard.value!.content.widgets[widgetId]
+  if (!widget) {
+    throw new Error(`Widget with id ${widgetId} not found`)
+  }
+  return {
+    content: widget.content,
+    general_settings: widget.general_settings,
+    filter_context: widget.filter_context
+  }
+}
+
+const createDashboard = async (
+  dashboardId: string,
+  settings: DashboardGeneralSettings,
+  layout: DashboardLayout,
+  scopeIds: string[],
+  nextStep: 'setFilters' | 'viewList'
+) => {
+  openDashboardCreationDialog.value = false
+  await dashboardsManager.createDashboard(dashboardId, settings, layout, scopeIds)
+  isDashboardEditingMode.value = true
+
+  if (nextStep === 'setFilters') {
+    openDashboardFilterSettings.value = true
+  } else if (nextStep === 'viewList') {
+    // TODO
+    console.log('return to list review')
+  } else {
+    throw new Error(`Unknown next step: ${nextStep}`)
+  }
 }
 
 function deepClone<T>(obj: T): T {
@@ -176,7 +225,7 @@ function deepClone<T>(obj: T): T {
       <DashboardMenuHeader
         :selected-dashboard="selectedDashboard"
         @open-filter="openDashboardFilterSettings = true"
-        @open-settings="() => {}"
+        @open-settings="openDashboardSettings = true"
         @open-widget-workflow="openAddWidgetDialog = true"
         @save="saveDashboard"
         @enter-edit="isDashboardEditingMode = true"
@@ -185,6 +234,10 @@ function deepClone<T>(obj: T): T {
       />
     </div>
     <div>
+      <CreateDashboardWizard
+        v-model:open="openDashboardCreationDialog"
+        @create-dashboard="(...args) => createDashboard(...args)"
+      />
       <AddWidgetDialog
         v-model:open="openAddWidgetDialog"
         :workflow-items="dashboardWidgetWorkflows"
@@ -195,7 +248,9 @@ function deepClone<T>(obj: T): T {
         :selected-wizard="selectedWizard"
         :dashboard-name="dashboardsManager.activeDashboardName.value || ''"
         :dashboard-owner="dashboardsManager.activeDashboard.value?.owner || ''"
+        :context-filters="dashboardFilters.contextFilters.value || {}"
         :dashboard-constants="dashboardsManager.constants.value!"
+        :edit-widget-spec="getWidgetSpecToEdit(widgetToEdit)"
         @back-button="openAddWidgetDialog = true"
       />
       <DashboardFilterSettings
@@ -213,6 +268,18 @@ function deepClone<T>(obj: T): T {
         @apply-runtime-filters="dashboardFilters.handleApplyRuntimeFilters"
         @save-mandatory-runtime-filters="dashboardFilters.handleSaveMandatoryRuntimeFilters"
         @close="openDashboardFilterSettings = false"
+      />
+      <DashboardSettingsWizard
+        v-if="openDashboardSettings"
+        :dashboard-id="dashboardsManager.activeDashboardName.value!"
+        :dashboard-general-settings="
+          deepClone(dashboardsManager.activeDashboard.value!.general_settings)
+        "
+        :dashboard-restricted-to-single="
+          dashboardsManager.activeDashboard.value!.filter_context.restricted_to_single!
+        "
+        @cancel="openDashboardSettings = false"
+        @save="() => {}"
       />
     </div>
     <template v-if="dashboardsManager.isInitialized.value">

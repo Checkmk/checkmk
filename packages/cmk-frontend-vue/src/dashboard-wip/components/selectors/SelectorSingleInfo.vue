@@ -1,73 +1,58 @@
 <!--
-Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 
-import { fetchRestAPI } from '@/lib/cmkFetch.ts'
 import usei18n from '@/lib/i18n'
 
-import CmkButton from '@/components/CmkButton.vue'
 import type { DualListElement } from '@/components/CmkDualList'
 import CmkDualList from '@/components/CmkDualList/CmkDualList.vue'
 
-import type { VisualInfoCollectionModel } from '@/dashboard-wip/types/api.ts'
+import { useVisualInfoCollection } from '@/dashboard-wip/composables/api/useVisualInfoCollection'
 
-const API_ROOT = 'api/internal'
+const props = defineProps<{
+  onlyIds?: string[] | null
+}>()
 
 const selectedIds = defineModel<string[]>('selectedIds', { required: true })
 
-const allElements = ref<DualListElement[]>([])
-const loading = ref<boolean>(false)
-const loadError = ref<string | null>(null)
-
 const { _t } = usei18n()
+const { ensureLoaded, list, isLoading, error } = useVisualInfoCollection()
 
-async function loadCollections() {
-  loading.value = true
-  loadError.value = null
-  try {
-    const url = `${API_ROOT}/objects/constant/visual_info/collections/all`
-    const resp = await fetchRestAPI(url, 'GET')
-    const collection: VisualInfoCollectionModel = await resp.json()
+onMounted(async () => {
+  await ensureLoaded()
+})
 
-    const list: (DualListElement & { sortIndex: number })[] = []
-
-    for (const vi of collection?.value ?? []) {
-      const id = vi.id?.trim()
-      if (!id) {
-        continue
-      }
-      const title = vi.title?.trim() || id
-      const sortIndex = Number(vi.extensions?.sort_index ?? Number.MAX_SAFE_INTEGER)
-      list.push({ name: id, title, sortIndex })
-    }
-
-    list.sort(
-      (a, b) => (a.sortIndex ?? Number.MAX_SAFE_INTEGER) - (b.sortIndex ?? Number.MAX_SAFE_INTEGER)
-    )
-
-    allElements.value = list.map(({ name, title }) => ({
-      name,
-      title: `Show information of a single ${title}`
-    }))
-  } catch (err) {
-    loadError.value = String(err)
-    allElements.value = []
-  } finally {
-    loading.value = false
+const allElements = computed<DualListElement[]>(() => {
+  const els: DualListElement[] = []
+  for (const visualInfo of list.value) {
+    els.push({ name: visualInfo.id!, title: `Show information of a single ${visualInfo.title!}` })
   }
-}
+  return els
+})
 
-onMounted(loadCollections)
+const allowedIds = computed<Set<string> | null>(() => {
+  return props.onlyIds?.length ? new Set(props.onlyIds) : null
+})
+
+const filteredElements = computed<DualListElement[]>(() => {
+  if (!allowedIds.value) {
+    return allElements.value
+  }
+  return allElements.value.filter((e) => allowedIds.value!.has(e.name))
+})
 
 const dataElements = computed<DualListElement[]>({
   get() {
-    return (selectedIds.value || []).map((id) => {
-      const found = allElements.value.find((e) => e.name === id)
-      const baseTitle = found?.title?.trim() || id
+    const ids = selectedIds.value || []
+    const effective = allowedIds.value ? ids.filter((id) => allowedIds.value!.has(id)) : ids
+
+    return effective.map((id) => {
+      const found = filteredElements.value.find((e) => e.name === id)
+      const baseTitle = found!.title!
       return { name: id, title: `Show information of a single ${baseTitle}` }
     })
   },
@@ -75,22 +60,28 @@ const dataElements = computed<DualListElement[]>({
     selectedIds.value = newEls.map((e) => e.name)
   }
 })
+
+watch(allowedIds, () => {
+  if (!allowedIds.value) {
+    return
+  }
+  selectedIds.value = (selectedIds.value || []).filter((id) => allowedIds.value!.has(id))
+})
 </script>
 
 <template>
   <div class="vi-selector">
     <div class="vi-selector__meta">
-      <span v-if="loading">{{ _t('Loading…') }}</span>
-      <span v-else-if="loadError" class="error">
-        {{ _t('Failed to load options') }} — {{ loadError }}
+      <span v-if="isLoading">{{ _t('Loading…') }}</span>
+      <span v-else-if="error" class="error">
+        {{ _t('Failed to load options') }} — {{ error }}
       </span>
-      <CmkButton v-else @click="loadCollections">{{ _t('Refresh') }}</CmkButton>
     </div>
 
     <CmkDualList
-      v-if="!loading"
+      v-if="!isLoading"
       v-model:data="dataElements"
-      :elements="allElements"
+      :elements="filteredElements"
       :title="_t('Visual information')"
       :validators="[]"
       :backend-validation="[]"

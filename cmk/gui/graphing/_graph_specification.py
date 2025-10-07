@@ -23,17 +23,22 @@ from cmk.graphing.v1 import graphs as graphs_api
 from cmk.gui.color import scalar_colors
 from cmk.gui.i18n import _
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 from ._from_api import RegisteredMetric
-from ._graph_render_config import GraphRenderOptions
-from ._metric_operation import (
+from ._graph_metric_expressions import (
     GraphConsolidationFunction,
+    GraphMetricExpression,
     LineType,
-    MetricOperation,
-    parse_metric_operation,
+    parse_graph_metric_expression,
 )
+from ._graph_render_config import GraphRenderOptions
 from ._translated_metrics import TranslatedMetric
-from ._unit import ConvertibleUnitSpecification, NonConvertibleUnitSpecification, UserSpecificUnit
+from ._unit import (
+    ConvertibleUnitSpecification,
+    NonConvertibleUnitSpecification,
+    UserSpecificUnit,
+)
 
 
 class HorizontalRule(BaseModel, frozen=True):
@@ -72,7 +77,9 @@ def compute_warn_crit_rules_from_translated_metric(
 class GraphMetric(BaseModel, frozen=True):
     title: str
     line_type: LineType
-    operation: Annotated[SerializeAsAny[MetricOperation], PlainValidator(parse_metric_operation)]
+    operation: Annotated[
+        SerializeAsAny[GraphMetricExpression], PlainValidator(parse_graph_metric_expression)
+    ]
     unit: ConvertibleUnitSpecification
     color: str
 
@@ -88,6 +95,9 @@ class GraphSpecification(BaseModel, ABC, frozen=True):
         registered_metrics: Mapping[str, RegisteredMetric],
         registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
         user_permissions: UserPermissions,
+        *,
+        debug: bool,
+        temperature_unit: TemperatureUnit,
     ) -> Sequence[GraphRecipe]: ...
 
     # mypy does not support other decorators on top of @property:

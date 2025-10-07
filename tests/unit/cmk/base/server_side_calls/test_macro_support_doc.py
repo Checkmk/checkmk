@@ -10,13 +10,14 @@ in active check and special agent SSC plugins.
 
 import socket
 from collections.abc import Iterable, Iterator, Sequence
+from pathlib import Path
 
 import pytest
 
 import cmk.base.config as base_config
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
-from cmk.base.config import ConfigCache
+from cmk.base.config import ConfigCache, load_resource_cfg_macros
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.utils.ip_lookup import IPStackConfig
 from tests.testlib.unit.base_configuration_scenario import Scenario
@@ -123,8 +124,8 @@ def fixture_core_scenario(monkeypatch):
 
 
 @pytest.fixture(name="resource_cfg_file")
-def fixture_resource_cfg_file():
-    file_path = cmk.utils.paths.omd_root / "etc/nagios/resource.cfg"
+def fixture_resource_cfg_file() -> Iterator[Path]:
+    file_path = cmk.utils.paths.nagios_resource_cfg
     file_path.parent.mkdir(parents=True, exist_ok=True)
     file_path.write_text(
         "############################################\n"
@@ -138,6 +139,10 @@ def fixture_resource_cfg_file():
         "# set your own macros here:\n"
         "$CUSTOM_MACRO$=wrdlpfrmpt\n"
     )
+    try:
+        yield file_path
+    finally:
+        file_path.unlink(missing_ok=True)
 
 
 def _iter_macros(documented_macros: Sequence[str], resources: Iterable[str]) -> Iterator[str]:
@@ -146,7 +151,7 @@ def _iter_macros(documented_macros: Sequence[str], resources: Iterable[str]) -> 
             yield macro_template.replace("{name}", resource)
 
 
-def test_active_checks_macros(config_cache: ConfigCache, resource_cfg_file: None) -> None:
+def test_active_checks_macros(config_cache: ConfigCache, resource_cfg_file: Path) -> None:
     host_name = HostName("test-host")
     ip_address_of = lambda *a: HostAddress("")
     host_attrs = config_cache.get_host_attributes(
@@ -154,7 +159,7 @@ def test_active_checks_macros(config_cache: ConfigCache, resource_cfg_file: None
     )
 
     host_macros = base_config.ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
-    resource_macros = base_config.get_resource_macros()
+    resource_macros = load_resource_cfg_macros(resource_cfg_file, None)
     macros = {**host_macros, **resource_macros}
 
     additional_addresses_ipv4, additional_addresses_ipv6 = config_cache.additional_ipaddresses(

@@ -35,6 +35,20 @@ else:
         pass
 
 
+if cmk_version.edition(paths.omd_root) in {
+    cmk_version.Edition.CCE,
+    cmk_version.Edition.CME,
+    cmk_version.Edition.CSE,
+}:
+    from cmk.gui.cce.config import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
+        CCEConfig,
+    )
+else:
+    # Stub needed for non-cloud editions
+    class CCEConfig:  # type: ignore[no-redef]
+        pass
+
+
 if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME:
     from cmk.gui.cme.config import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # pylint: disable=cmk-module-layer-violation
         CMEConfig,
@@ -71,7 +85,7 @@ builtin_role_ids: Final[list[RoleName]] = [
 
 
 @dataclass
-class Config(CREConfig, CEEConfig, CMEConfig):  # type: ignore[misc, unused-ignore]
+class Config(CREConfig, CEEConfig, CCEConfig, CMEConfig):  # type: ignore[misc, unused-ignore]
     """Holds the loaded configuration during GUI processing
 
     The loaded configuration is then accessible through `from cmk.gui.globals import config`.

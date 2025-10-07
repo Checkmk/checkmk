@@ -53,7 +53,7 @@ def test_check() -> None:
         ),
         (
             1,
-            "Time spent collecting garbage: 23.00 % (warn/crit at 22.00 %/24.00 %)",
+            "Time spent collecting garbage: 23.0% (warn/crit at 22.0%/24.0%)",
             [("jvm_garbage_collection_time", 23.0, 22.0, 24.0)],
         ),
     ]

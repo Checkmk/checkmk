@@ -43,11 +43,22 @@ log_dir = _omd_path("var/log")
 precompiled_checks_dir = _omd_path("var/check_mk/precompiled_checks")
 autochecks_dir = _omd_path("var/check_mk/autochecks")
 precompiled_hostchecks_dir = _omd_path("var/check_mk/precompiled")
-snmpwalks_dir = _omd_path("var/check_mk/snmpwalks")
+
+relative_snmpwalks_dir = Path("var/check_mk/snmpwalks")
+snmpwalks_dir = omd_root / relative_snmpwalks_dir
+
+relative_walk_cache_dir = Path("var/check_mk/snmp_cache")
+
+relative_snmp_section_cache_dir = Path("var/check_mk/snmp_cached_sections")
+
 counters_dir = _omd_path("tmp/check_mk/counters")
-tcp_cache_dir = _omd_path("tmp/check_mk/cache")
-data_source_cache_dir = _omd_path("tmp/check_mk/data_source_cache")
-snmp_scan_cache_dir = _omd_path("tmp/check_mk/snmp_scan_cache")
+
+relative_tcp_cache_dir = Path("tmp/check_mk/cache")
+tcp_cache_dir = omd_root / relative_tcp_cache_dir
+
+relative_data_source_cache_dir = Path("tmp/check_mk/data_source_cache")
+data_source_cache_dir = omd_root / relative_data_source_cache_dir
+
 include_cache_dir = _omd_path("tmp/check_mk/check_includes")
 tmp_dir = _omd_path("tmp/check_mk")
 tmp_run_dir = _omd_path("tmp/run")
@@ -59,6 +70,7 @@ nagios_conf_dir = _omd_path("etc/nagios/conf.d")
 nagios_config_file = _omd_path("tmp/nagios/nagios.cfg")
 nagios_startscript = _omd_path("etc/init.d/core")
 nagios_binary = _omd_path("bin/nagios")
+nagios_resource_cfg = _omd_path("etc/nagios/resource.cfg")
 htpasswd_file = _omd_path("etc/htpasswd")
 livestatus_unix_socket = _omd_path("tmp/run/live")
 raw_data_socket = _omd_path("tmp/run/raw-data")

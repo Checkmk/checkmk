@@ -10,6 +10,7 @@ from pydantic import Discriminator, TypeAdapter, ValidationError
 
 import cmk.gui.pages
 from cmk.ccc.user import UserId
+from cmk.ccc.version import edition
 from cmk.gui.config import Config
 from cmk.gui.dashboard.api.model.widget_content.graph import (
     CombinedGraphContent,
@@ -18,7 +19,10 @@ from cmk.gui.dashboard.api.model.widget_content.graph import (
     ProblemGraphContent,
     SingleTimeseriesContent,
 )
-from cmk.gui.dashboard.dashlet.dashlets.graph import ABCGraphDashlet, TemplateGraphDashletConfig
+from cmk.gui.dashboard.dashlet.dashlets.graph import (
+    ABCGraphDashlet,
+    TemplateGraphDashletConfig,
+)
 from cmk.gui.dashboard.dashlet.registry import dashlet_registry
 from cmk.gui.dashboard.type_defs import (
     CombinedGraphDashletConfig,
@@ -28,16 +32,20 @@ from cmk.gui.dashboard.type_defs import (
     SingleTimeseriesDashletConfig,
 )
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.graphing import metric_backend_registry
 from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api
 from cmk.gui.graphing._graph_render_config import GraphRenderConfig
 from cmk.gui.graphing._html_render import host_service_graph_dashlet_cmk
+from cmk.gui.graphing._unit import get_temperature_unit
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import SingleInfos, VisualContext
 from cmk.gui.utils.roles import UserPermissions
+from cmk.utils import paths
 
 __all__ = ["GraphWidgetPage"]
 
@@ -135,6 +143,10 @@ class GraphWidgetPage(cmk.gui.pages.Page):
                     metrics_from_api,
                     graphs_from_api,
                     UserPermissions.from_config(config, permission_registry),
+                    debug=config.debug,
+                    graph_timeranges=config.graph_timeranges,
+                    temperature_unit=get_temperature_unit(user, config.default_temperature_unit),
+                    fetch_time_series=metric_backend_registry[str(edition(paths.omd_root))].client,
                     graph_display_id=widget_id,
                     time_range=graph_config["timerange"],
                 )

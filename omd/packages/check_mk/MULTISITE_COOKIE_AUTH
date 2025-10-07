@@ -10,18 +10,18 @@
 #  using this option.
 
 case "$1" in
-   default)
-       echo "on"
-   ;;
-   choices)
-       echo "on: use cookie authentication"
-       echo "off: use basic authentication"
-   ;;
-   set)
-       APACHE_CFG=${OMD_ROOT}/etc/apache/conf.d/cookie_auth.conf
-       NAGVIS_CFG=${OMD_ROOT}/etc/nagvis/conf.d/cookie_auth.ini.php
-       if [ "$2" == "on" ]; then
-           cat > $APACHE_CFG <<EOF
+    default)
+        echo "on"
+        ;;
+    choices)
+        echo "on: use cookie authentication"
+        echo "off: use basic authentication"
+        ;;
+    set)
+        APACHE_CFG=${OMD_ROOT}/etc/apache/conf.d/cookie_auth.conf
+        NAGVIS_CFG=${OMD_ROOT}/etc/nagvis/conf.d/cookie_auth.ini.php
+        if [ "$2" == "on" ]; then
+            cat >$APACHE_CFG <<EOF
 <LocationMatch ^/${OMD_SITE}/(nagvis|check_mk)>
     Order allow,deny
     Allow from all
@@ -29,8 +29,8 @@ case "$1" in
 </LocationMatch>
 EOF
 
-          if [ -d ${NAGVIS_CFG%/*} ]; then
-              cat > $NAGVIS_CFG <<EOF
+            if [ -d ${NAGVIS_CFG%/*} ]; then
+                cat >$NAGVIS_CFG <<EOF
 [global]
 logonmodule="LogonMultisite"
 logon_multisite_htpasswd="/omd/sites/$OMD_SITE/etc/htpasswd"
@@ -38,12 +38,12 @@ logon_multisite_secret="/omd/sites/$OMD_SITE/etc/auth.secret"
 logon_multisite_serials="/omd/sites/$OMD_SITE/etc/auth.serials"
 logon_multisite_cookie_version=1
 EOF
-          fi
+            fi
 
-       else
-          [ -f $APACHE_CFG ] && rm $APACHE_CFG
-          [ -f $NAGVIS_CFG ] && rm $NAGVIS_CFG
-       fi
-       true
-   ;;
+        else
+            [ -f $APACHE_CFG ] && rm $APACHE_CFG
+            [ -f $NAGVIS_CFG ] && rm $NAGVIS_CFG
+        fi
+        true
+        ;;
 esac

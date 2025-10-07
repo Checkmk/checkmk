@@ -57,7 +57,7 @@ def test_inventory_db2_connections(
                 ["latency", "0:1,03"],
             ],
             [
-                (0, "Connections: 40", [("connections", 40, 150, 200)]),
+                (0, "Connections: 40.00", [("connections", 40, 150, 200)]),
                 (0, "Port: 50214"),
                 (0, "Latency: 1003.00 ms", [("latency", 1003)]),
             ],
@@ -76,7 +76,7 @@ def test_inventory_db2_connections(
                 ["latency", "0:1,03"],
             ],
             [
-                (0, "Connections: 42", [("connections", 42, 150, 200)]),
+                (0, "Connections: 42.00", [("connections", 42, 150, 200)]),
                 (0, "Port: 50213"),
                 (0, "Latency: 1003.00 ms", [("latency", 1003)]),
             ],

@@ -28,7 +28,6 @@ from typing import Any, Literal
 
 import livestatus
 
-import cmk.base.core
 import cmk.base.parent_scan
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
@@ -90,6 +89,7 @@ from cmk.base.automations import (
     MKAutomationError,
 )
 from cmk.base.checkers import (
+    CheckerConfig,
     CheckerPluginMapper,
     CMKFetcher,
     CMKParser,
@@ -103,6 +103,7 @@ from cmk.base.config import (
     ConfigCache,
     EnforcedServicesTable,
     handle_ip_lookup_failure,
+    load_resource_cfg_macros,
     snmp_default_community,
 )
 from cmk.base.configlib.checkengine import CheckingConfig, DiscoveryConfig
@@ -173,7 +174,6 @@ from cmk.fetchers import (
     TLSConfig,
 )
 from cmk.fetchers.config import (
-    make_cached_snmp_sections_dir,
     make_persisted_section_dir,
 )
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge, NoCache
@@ -385,12 +385,12 @@ class AutomationDiscovery(DiscoveryAutomation):
                 SNMPFetcherConfig(
                     on_error=on_error,
                     missing_sys_description=config_cache.missing_sys_description,
-                    oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
                     selected_sections=NoSelectedSNMPSections(),
                     backend_override=None,
-                    stored_walk_path=cmk.utils.paths.snmpwalks_dir,
-                    walk_cache_path=cmk.utils.paths.var_dir / "snmp_cache",
-                    section_cache_path=make_cached_snmp_sections_dir(cmk.utils.paths.var_dir),
+                    base_path=cmk.utils.paths.omd_root,
+                    relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
+                    relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
+                    relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
                     caching_config=make_parsed_snmp_fetch_intervals_config(
                         loaded_config, ruleset_matcher, label_manager.labels_of_host
                     ),
@@ -494,21 +494,11 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
 
         loaded_config = loading_result.loaded_config
         ruleset_matcher = loading_result.config_cache.ruleset_matcher
-        label_manager = loading_result.config_cache.label_manager
-        hosts_config = loading_result.config_cache.hosts_config
         config_cache = loading_result.config_cache
 
         final_service_name_config = make_final_service_name_config(loaded_config, ruleset_matcher)
         service_name_config = config_cache.make_passive_service_name_config(
             final_service_name_config
-        )
-        service_configurer = config_cache.make_service_configurer(
-            plugins.check_plugins, service_name_config
-        )
-        ip_address_of = ip_lookup.ConfiguredIPLookup(
-            ip_lookup.make_lookup_ip_address(config_cache.ip_lookup_config()),
-            allow_empty=hosts_config.clusters,
-            error_handler=config.handle_ip_lookup_failure,
         )
         file_cache_options = FileCacheOptions(use_outdated=False, use_only_cache=False)
         password_store_file = Path(cmk.utils.paths.tmp_dir, f"passwords_temp_{uuid.uuid4()}")
@@ -524,34 +514,9 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
             )
             fetcher = SpecialAgentFetcher(
                 PlainFetcherTrigger(),  # no relay support yet
-                config_cache.fetcher_factory(
-                    service_configurer,
-                    ip_address_of,
-                    service_name_config,
-                    config.EnforcedServicesTable(
-                        BundledHostRulesetMatcher(
-                            loaded_config.static_checks,
-                            ruleset_matcher,
-                            label_manager.labels_of_host,
-                        ),
-                        service_name_config,
-                        plugins.check_plugins,
-                    ),
-                    SNMPFetcherConfig(  # unused, obviously
-                        on_error=OnError.RAISE,
-                        missing_sys_description=config_cache.missing_sys_description,
-                        oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
-                        selected_sections=NoSelectedSNMPSections(),
-                        backend_override=None,
-                        stored_walk_path=cmk.utils.paths.snmpwalks_dir,
-                        walk_cache_path=cmk.utils.paths.var_dir / "snmp_cache",
-                        caching_config=lambda host_name: {},
-                        section_cache_path=lambda host_name: Path("/dev/null"),
-                    ),
-                ),
                 agent_name=run_settings.agent_name,
                 cmds=cmds,
-                file_cache_options=file_cache_options,
+                is_cmc=loaded_config.monitoring_core == "cmc",
             )
             preview = _get_discovery_preview(
                 run_settings.host_config.host_name,
@@ -643,17 +608,17 @@ class AutomationDiscoveryPreview(Automation):
                 SNMPFetcherConfig(
                     on_error=on_error,
                     missing_sys_description=config_cache.missing_sys_description,
-                    oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
                     selected_sections=NoSelectedSNMPSections(),
                     backend_override=None,
-                    stored_walk_path=cmk.utils.paths.snmpwalks_dir,
-                    walk_cache_path=cmk.utils.paths.var_dir / "snmp_cache",
+                    base_path=cmk.utils.paths.omd_root,
+                    relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
+                    relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
                     caching_config=make_parsed_snmp_fetch_intervals_config(
                         loading_result.loaded_config,
                         config_cache.ruleset_matcher,
                         config_cache.label_manager.labels_of_host,
                     ),
-                    section_cache_path=make_cached_snmp_sections_dir(cmk.utils.paths.var_dir),
+                    relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
                 ),
             ),
             plugins,
@@ -883,6 +848,7 @@ def _execute_discovery(
     config_cache: config.ConfigCache,
     plugins: AgentBasedPlugins,
 ) -> CheckPreview:
+    logger = logging.getLogger("cmk.base.discovery")
     hosts_config = config.make_hosts_config(loaded_config)
     discovery_config = DiscoveryConfig(
         ruleset_matcher,
@@ -895,10 +861,17 @@ def _execute_discovery(
         loaded_config.checkgroup_parameters,
         loaded_config.service_rule_groups,
     )
+    checker_config = CheckerConfig(
+        only_from=config_cache.only_from,
+        effective_service_level=config_cache.effective_service_level,
+        get_clustered_service_configuration=config_cache.get_clustered_service_configuration,
+        nodes=config_cache.nodes,
+        effective_host=config_cache.effective_host,
+        get_snmp_backend=config_cache.get_snmp_backend,
+    )
     autochecks_config = config.AutochecksConfigurer(
         config_cache, plugins.check_plugins, passive_service_name_config
     )
-    logger = logging.getLogger("cmk.base.discovery")
     parser = CMKParser(
         config.make_parser_config(loaded_config, ruleset_matcher, label_manager),
         selected_sections=NO_SELECTION,
@@ -914,7 +887,7 @@ def _execute_discovery(
     ):
         is_cluster = host_name in hosts_config.clusters
         check_plugins = CheckerPluginMapper(
-            config_cache,
+            checker_config,
             plugins.check_plugins,
             value_store_manager,
             logger=logger,
@@ -1035,6 +1008,17 @@ def _make_configured_bake_on_restart_callback(
     )
 
 
+def _make_configured_notify_relay() -> Callable[[], None]:
+    try:
+        from cmk.relay_fetcher_trigger.relay_client import (  # type: ignore[import-not-found, unused-ignore]
+            Client,
+        )
+    except ImportError:
+        return lambda: None
+
+    return Client.from_omd_config(omd_root=cmk.utils.paths.omd_root).publish_new_config
+
+
 def _execute_autodiscovery(
     edition: cmk_version.Edition,
     ab_plugins: AgentBasedPlugins | None,
@@ -1109,17 +1093,17 @@ def _execute_autodiscovery(
             SNMPFetcherConfig(
                 on_error=OnError.IGNORE,
                 missing_sys_description=config_cache.missing_sys_description,
-                oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
                 selected_sections=NoSelectedSNMPSections(),
                 backend_override=None,
-                stored_walk_path=cmk.utils.paths.snmpwalks_dir,
-                walk_cache_path=cmk.utils.paths.var_dir / "snmp_cache",
+                base_path=cmk.utils.paths.omd_root,
+                relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
+                relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
                 caching_config=make_parsed_snmp_fetch_intervals_config(
                     loading_result.loaded_config,
                     config_cache.ruleset_matcher,
                     config_cache.label_manager.labels_of_host,
                 ),
-                section_cache_path=make_cached_snmp_sections_dir(cmk.utils.paths.var_dir),
+                relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
             ),
         ),
         ab_plugins,
@@ -1280,6 +1264,7 @@ def _execute_autodiscovery(
             bake_on_restart = _make_configured_bake_on_restart_callback(
                 loading_result, hosts_config.hosts
             )
+            notify_relay = _make_configured_notify_relay()
 
             # reset these to their original value to create a correct config
             if loaded_config.monitoring_core == "cmc":
@@ -1308,6 +1293,7 @@ def _execute_autodiscovery(
                         ),
                     ),
                     bake_on_restart=bake_on_restart,
+                    notify_relay=notify_relay,
                 )
             else:
                 do_restart(
@@ -1334,6 +1320,7 @@ def _execute_autodiscovery(
                         ),
                     ),
                     bake_on_restart=bake_on_restart,
+                    notify_relay=notify_relay,
                 )
         finally:
             cache_manager.clear_all()
@@ -1597,6 +1584,7 @@ class AutomationRenameHosts(Automation):
                     bake_on_restart=_make_configured_bake_on_restart_callback(
                         loading_result, hosts_config.hosts
                     ),
+                    notify_relay=_make_configured_notify_relay(),
                 )
 
                 for hostname in ip_address_of.error_handler.failed_ip_lookups:
@@ -2654,6 +2642,7 @@ class AutomationRestart(Automation):
             bake_on_restart=_make_configured_bake_on_restart_callback(
                 loading_result, hosts_config.hosts
             ),
+            notify_relay=_make_configured_notify_relay(),
         )
 
     def _check_plugins_have_changed(self, monitoring_core: Literal["nagios", "cmc"]) -> bool:
@@ -2740,6 +2729,7 @@ def _execute_silently(
     hosts_to_update: set[HostName] | None,
     service_depends_on: Callable[[HostName, ServiceName], Sequence[ServiceName]],
     bake_on_restart: Callable[[], None],
+    notify_relay: Callable[[], None],
 ) -> RestartResult:
     with redirect_stdout(open(os.devnull, "w")):
         # The IP lookup used to write to stdout, that is not the case anymore.
@@ -2769,6 +2759,7 @@ def _execute_silently(
                     )
                 ),
                 bake_on_restart=bake_on_restart,
+                notify_relay=notify_relay,
             )
         except (MKBailOut, MKGeneralException) as e:
             raise MKAutomationError(str(e))
@@ -3394,10 +3385,6 @@ class AutomationDiagHost(Automation):
         ip_lookup_config = config_cache.ip_lookup_config()
         ip_family = ip_lookup_config.default_address_family(host_name)
         check_interval = config_cache.check_mk_check_interval(host_name)
-        oid_cache_dir = cmk.utils.paths.snmp_scan_cache_dir
-        walk_cache_path = cmk.utils.paths.var_dir / "snmp_cache"
-        file_cache_path = cmk.utils.paths.data_source_cache_dir
-        tcp_cache_path = cmk.utils.paths.tcp_cache_dir
         tls_config = TLSConfig(
             cas_dir=Path(cmk.utils.paths.agent_cas_dir),
             ca_store=Path(cmk.utils.paths.agent_cert_store),
@@ -3430,17 +3417,17 @@ class AutomationDiagHost(Automation):
                 SNMPFetcherConfig(
                     on_error=OnError.RAISE,
                     missing_sys_description=config_cache.missing_sys_description,
-                    oid_cache_dir=oid_cache_dir,
                     selected_sections=NoSelectedSNMPSections(),
                     backend_override=None,
-                    stored_walk_path=cmk.utils.paths.snmpwalks_dir,
-                    walk_cache_path=walk_cache_path,
+                    base_path=cmk.utils.paths.omd_root,
+                    relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
+                    relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
                     caching_config=make_parsed_snmp_fetch_intervals_config(
                         loaded_config,
                         config_cache.ruleset_matcher,
                         config_cache.label_manager.labels_of_host,
                     ),
-                    section_cache_path=make_cached_snmp_sections_dir(cmk.utils.paths.var_dir),
+                    relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
                 ),
             ),
             simulation_mode=config.simulation_mode,
@@ -3451,8 +3438,9 @@ class AutomationDiagHost(Automation):
                 inventory=1.5 * check_interval,
             ),
             snmp_backend=config_cache.get_snmp_backend(host_name),
-            file_cache_path=file_cache_path,
-            tcp_cache_path=tcp_cache_path,
+            file_cache_path_base=cmk.utils.paths.omd_root,
+            file_cache_path_relative=cmk.utils.paths.relative_data_source_cache_dir,
+            tcp_cache_path_relative=cmk.utils.paths.relative_tcp_cache_dir,
             tls_config=tls_config,
             computed_datasources=config_cache.computed_datasources(host_name),
             datasource_programs=config_cache.datasource_programs(host_name),
@@ -3802,7 +3790,12 @@ class AutomationActiveCheck(Automation):
             config_cache.label_manager.labels_of_service(hostname, service_desc, discovered_labels),
         )
         macros.update(ConfigCache.get_service_macros_from_attributes(service_attrs))
-        macros.update(config.get_resource_macros())
+        macros.update(
+            load_resource_cfg_macros(
+                cmk.utils.paths.nagios_resource_cfg,
+                None if cmk.ccc.debug.enabled() else lambda x: None,
+            )
+        )
 
         return replace_macros_in_str(commandline, {k: f"{v}" for k, v in macros.items()})
 
@@ -3949,10 +3942,7 @@ class AutomationGetAgentOutput(Automation):
                 else ip_address_of_bare(hostname, ip_family)
             )
             check_interval = config_cache.check_mk_check_interval(hostname)
-            walk_cache_path = cmk.utils.paths.var_dir / "snmp_cache"
             section_cache_path = var_dir
-            file_cache_path = cmk.utils.paths.data_source_cache_dir
-            tcp_cache_path = cmk.utils.paths.tcp_cache_dir
             tls_config = TLSConfig(
                 cas_dir=Path(cmk.utils.paths.agent_cas_dir),
                 ca_store=Path(cmk.utils.paths.agent_cert_store),
@@ -3987,15 +3977,13 @@ class AutomationGetAgentOutput(Automation):
                         ),
                         snmp_fetcher_config=SNMPFetcherConfig(
                             on_error=OnError.RAISE,
-                            oid_cache_dir=cmk.utils.paths.snmp_scan_cache_dir,
                             missing_sys_description=config_cache.missing_sys_description,
                             selected_sections=NoSelectedSNMPSections(),
                             backend_override=None,
-                            stored_walk_path=cmk.utils.paths.snmpwalks_dir,
-                            walk_cache_path=walk_cache_path,
-                            section_cache_path=make_cached_snmp_sections_dir(
-                                cmk.utils.paths.var_dir
-                            ),
+                            base_path=cmk.utils.paths.omd_root,
+                            relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
+                            relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
+                            relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
                             caching_config=make_parsed_snmp_fetch_intervals_config(
                                 loaded_config, ruleset_matcher, label_manager.labels_of_host
                             ),
@@ -4009,8 +3997,9 @@ class AutomationGetAgentOutput(Automation):
                         inventory=1.5 * check_interval,
                     ),
                     snmp_backend=config_cache.get_snmp_backend(hostname),
-                    file_cache_path=file_cache_path,
-                    tcp_cache_path=tcp_cache_path,
+                    file_cache_path_base=cmk.utils.paths.omd_root,
+                    file_cache_path_relative=cmk.utils.paths.relative_data_source_cache_dir,
+                    tcp_cache_path_relative=cmk.utils.paths.relative_tcp_cache_dir,
                     tls_config=tls_config,
                     computed_datasources=config_cache.computed_datasources(hostname),
                     datasource_programs=config_cache.datasource_programs(hostname),

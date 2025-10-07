@@ -8,8 +8,10 @@ import { type Ref, computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import useTimer from '@/lib/useTimer.ts'
 
+import type { FilterHTTPVars } from '@/dashboard-wip/types/widget.ts'
+
 import DashboardContentContainer from './DashboardContentContainer.vue'
-import type { ContentProps, FilterHTTPVars } from './types.ts'
+import type { ContentProps } from './types.ts'
 
 const props = defineProps<ContentProps>()
 

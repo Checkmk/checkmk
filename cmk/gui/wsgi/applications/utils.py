@@ -26,9 +26,11 @@ from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUnauthenticatedE
 from cmk.gui.http import request, Response, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInRemoteSite, LoggedInSuperUser, user
+from cmk.gui.permissions import permission_registry
 from cmk.gui.session import session
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.utils.language_cookie import set_language_cookie
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
 from cmk.gui.utils.user_frontend_settings_cookie import set_user_frontend_config_cookie
 from cmk.gui.wsgi.type_defs import WSGIResponse
@@ -60,7 +62,8 @@ def ensure_authentication(
     # user objects.
     @functools.wraps(handler)
     def _call_auth(config: Config) -> Response:
-        with login.authenticate() as authenticated:
+        user_permissions = UserPermissions.from_config(config, permission_registry)
+        with login.authenticate(user_permissions) as authenticated:
             if not authenticated:
                 return _handle_not_authenticated(config)
 

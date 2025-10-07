@@ -1,0 +1,62 @@
+interactions:
+- request:
+    body: '{"werk": {"title": "Database Schema Migration", "date": "2024-05-15T00:00:00Z",
+      "level": "1", "versions": ["3.0.0"], "werk_class": "breaking", "component":
+      "database", "compatible": false, "werk_text": "Changed database schema for improved
+      performance. This requires manual migration. Please backup your database before
+      upgrading and run the migration script. The process may take several hours for
+      large databases."}}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '402'
+      content-type:
+      - application/json
+      host:
+      - meisterwerk.lan.checkmk.net
+      user-agent:
+      - python-httpx/0.28.1
+      user-id:
+      - cli_user
+      x-request-id:
+      - f7b0347b-9dcf-4045-9f57-e6ab3704917e
+    method: POST
+    uri: http://meisterwerk.lan.checkmk.net/werks/generate/user_comprehension
+  response:
+    body:
+      string: '{"user_id":"python-httpx/0.28.1","request_id":"f7b0347b-9dcf-4045-9f57-e6ab3704917e","response_datetime":"2025-09-18T13:42:57.107182Z","user_understanding":"The
+        recent update involves modifying the database schema to enhance performance,
+        but this change is not automatic and requires a manual migration step. Before
+        applying the upgrade, it is essential to back up the current database to prevent
+        data loss. The migration process itself could be time-consuming, potentially
+        taking several hours if the database is large. For our monitoring setup, this
+        means we need to plan a maintenance window that accommodates this extended
+        downtime to avoid false alerts or data inconsistencies during the migration.
+        We should also communicate this planned downtime to all relevant stakeholders
+        and prepare rollback procedures in case the migration encounters issues. Additionally,
+        after the migration, we must validate that all monitoring functions and reports
+        are operating correctly with the new schema. The werk is clear overall, but
+        it does not specify the exact migration script location or detailed steps,
+        so we will need to consult the official documentation or vendor support to
+        ensure the migration is executed properly."}'
+    headers:
+      Content-Length:
+      - '1219'
+      Content-Type:
+      - text/html; charset=utf-8
+      - application/json
+      Date:
+      - Mon, 22 Sep 2025 12:01:43 GMT
+      Server:
+      - uvicorn
+      Via:
+      - 1.1 Caddy
+    status:
+      code: 200
+      message: OK
+version: 1

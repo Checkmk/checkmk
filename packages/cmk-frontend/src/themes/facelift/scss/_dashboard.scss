@@ -3,7 +3,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-@use "_mixins" as *;
+@use '_mixins' as *;
 
 /* Styles used by the dashboard only */
 body.dashboard {
@@ -192,7 +192,7 @@ body.main.dashlet {
     overflow: hidden;
     background-color: $dashlet-inner-bg-color;
 
-    div#dashlet_content_wrapper[data-simplebar="init"] {
+    div#dashlet_content_wrapper[data-simplebar='init'] {
       height: 100%;
       overflow: auto;
 
@@ -215,16 +215,16 @@ body.main.dashlet {
   }
 }
 
-div[id^="dashlet"] div.dashlet_inner > div {
+div[id^='dashlet'] div.dashlet_inner > div {
   box-sizing: border-box;
   transition: 0.15s ease-in-out;
 }
 
-div[id^="dashlet"] div.title + div.dashlet_inner > div {
+div[id^='dashlet'] div.title + div.dashlet_inner > div {
   border-radius: 0;
 }
 
-iframe[id^="dashlet_iframe"] {
+iframe[id^='dashlet_iframe'] {
   background: $bg-color-secondary;
   transition: 0.15s ease-in-out;
 }
@@ -275,15 +275,15 @@ div.dashlet.edit {
       }
 
       &.edit {
-        background-image: url("images/dashlet_edit.svg");
+        background-image: url('images/dashlet_edit.svg');
       }
 
       &.clone {
-        background-image: url("images/dashlet_clone.svg");
+        background-image: url('images/dashlet_clone.svg');
       }
 
       &.del {
-        background-image: url("images/dashlet_delete.svg");
+        background-image: url('images/dashlet_delete.svg');
       }
     }
   }
@@ -312,7 +312,7 @@ div.dashlet.edit {
         width: 15px;
         height: 15px;
         padding: 0;
-        background-image: url("images/dashlet_anchor.svg");
+        background-image: url('images/dashlet_anchor.svg');
         background-repeat: no-repeat;
       }
     }
@@ -454,7 +454,7 @@ div.dashlet.edit {
 }
 
 div#dashboard.grid {
-  background-image: url("images/dashboard_grid.png");
+  background-image: url('images/dashboard_grid.png');
 }
 
 .sizer {
@@ -499,7 +499,7 @@ div#dashboard.grid {
     width: 10px;
     height: 10px;
     margin: auto;
-    background-image: url("images/dashlet_resize.svg");
+    background-image: url('images/dashlet_resize.svg');
     background-repeat: no-repeat;
   }
 }

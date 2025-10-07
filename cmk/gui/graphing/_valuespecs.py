@@ -11,13 +11,20 @@ from typing import Any, assert_never, Literal, TypedDict
 
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.graphing._unit import get_temperature_unit
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageResult
 from cmk.gui.type_defs import Choice, Choices, GraphTitleFormatVS, VisualContext
-from cmk.gui.unit_formatter import AutoPrecision, NotationFormatter, StrictPrecision, TimeFormatter
+from cmk.gui.unit_formatter import (
+    AutoPrecision,
+    NotationFormatter,
+    StrictPrecision,
+    TimeFormatter,
+)
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.valuespec import (
     Age,
     CascadingDropdown,
@@ -268,6 +275,7 @@ class ValuesWithUnits(CascadingDropdown):
         validate_value_elements: ValueSpecValidateFunc[tuple[Any, ...]] | None = None,
         help: ValueSpecHelp | None = None,
     ):
+        temperature_unit = get_temperature_unit(user, active_config.default_temperature_unit)
         super().__init__(
             choices=[
                 (
@@ -280,7 +288,10 @@ class ValuesWithUnits(CascadingDropdown):
                         validate_value_elements,
                     ),
                 )
-                for choice in _sorted_unit_choices(active_config, metrics_from_api)
+                for choice in _sorted_unit_choices(
+                    metrics_from_api,
+                    temperature_unit=temperature_unit,
+                )
             ],
             help=help,
             sorted=False,
@@ -333,27 +344,26 @@ _FALLBACK_UNIT_SPEC = ConvertibleUnitSpecification(
 
 
 def _sorted_unit_choices(
-    config: Config, registered_metrics: Mapping[str, RegisteredMetric]
+    registered_metrics: Mapping[str, RegisteredMetric],
+    *,
+    temperature_unit: TemperatureUnit,
 ) -> list[_UnitChoice]:
     return sorted(
         {
-            _unit_choice_from_unit_spec(config, metric.unit_spec)
+            _unit_choice_from_unit_spec(metric.unit_spec, temperature_unit=temperature_unit)
             for metric in registered_metrics.values()
         }
-        | {_unit_choice_from_unit_spec(config, _FALLBACK_UNIT_SPEC)},
+        | {_unit_choice_from_unit_spec(_FALLBACK_UNIT_SPEC, temperature_unit=temperature_unit)},
         key=lambda choice: choice.title,
     )
 
 
 def _unit_choice_from_unit_spec(
-    config: Config,
     unit_spec: ConvertibleUnitSpecification,
+    *,
+    temperature_unit: TemperatureUnit,
 ) -> _UnitChoice:
-    unit_for_current_user = user_specific_unit(
-        unit_spec,
-        user,
-        config,
-    )
+    unit_for_current_user = user_specific_unit(unit_spec, temperature_unit)
     return _UnitChoice(
         id=id_from_unit_spec(unit_spec),
         title=_title_from_formatter(unit_for_current_user.formatter),
@@ -416,20 +426,40 @@ def _vs_type_from_formatter(
 
 class PageVsAutocomplete(AjaxPage):
     def page(self, config: Config) -> PageResult:
+        temperature_unit = get_temperature_unit(user, config.default_temperature_unit)
         if metric_name := self.webapi_request()["metric"]:
             metric_spec = get_metric_spec(metric_name, metrics_from_api)
-            unit_choice_for_metric = _unit_choice_from_unit_spec(config, metric_spec.unit_spec)
+            unit_choice_for_metric = _unit_choice_from_unit_spec(
+                metric_spec.unit_spec,
+                temperature_unit=temperature_unit,
+            )
         else:
-            unit_choice_for_metric = _unit_choice_from_unit_spec(config, _FALLBACK_UNIT_SPEC)
+            unit_choice_for_metric = _unit_choice_from_unit_spec(
+                _FALLBACK_UNIT_SPEC,
+                temperature_unit=temperature_unit,
+            )
 
-        for idx, choice in enumerate(_sorted_unit_choices(config, metrics_from_api)):
+        for idx, choice in enumerate(
+            _sorted_unit_choices(
+                metrics_from_api,
+                temperature_unit=temperature_unit,
+            )
+        ):
             if choice == unit_choice_for_metric:
                 return {
                     "unit_choice_index": idx,
                 }
 
-        fallback_choice = _unit_choice_from_unit_spec(config, _FALLBACK_UNIT_SPEC)
-        for idx, choice in enumerate(_sorted_unit_choices(config, metrics_from_api)):
+        fallback_choice = _unit_choice_from_unit_spec(
+            _FALLBACK_UNIT_SPEC,
+            temperature_unit=temperature_unit,
+        )
+        for idx, choice in enumerate(
+            _sorted_unit_choices(
+                metrics_from_api,
+                temperature_unit=temperature_unit,
+            )
+        ):
             if choice == fallback_choice:
                 return {
                     "unit_choice_index": idx,
@@ -527,7 +557,7 @@ def metrics_of_query(
     row = {}
     for row in livestatus_query_bare("service", context, columns):
         perf_data, check_command = parse_perf_data(
-            row["service_perf_data"], row["service_check_command"], config=active_config
+            row["service_perf_data"], row["service_check_command"], debug=active_config.debug
         )
         known_metrics = set([p.metric_name for p in perf_data] + row["service_metrics"])
         yield from _metric_choices(

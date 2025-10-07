@@ -19,6 +19,7 @@
 .syntastic
 .testmondata
 .venv.lock
+.vscode
 /.venv/
 /container_shadow_workspace*/
 /shared_cargo_folder/

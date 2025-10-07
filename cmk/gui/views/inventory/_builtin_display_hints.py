@@ -20,7 +20,6 @@ from cmk.gui.inventory.filters import (
     FilterInvtableVersion,
 )
 from cmk.gui.num_split import cmp_version
-from cmk.gui.utils.sort import cmp_natural_sort
 
 from .registry import InventoryHintRegistry
 
@@ -539,138 +538,138 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED     "title": _l("#Services"),
         # MIGRATED     "sort": cmp_natural_sort,
         # MIGRATED },
-        # ".software.applications.check_mk.versions:": {
-        #     "title": _l("Checkmk versions"),
-        #     "keyorder": ["version", "number", "edition", "demo", "num_sites"],
-        #     "view": "invcmkversions",
-        # },
-        # ".software.applications.check_mk.versions:*.version": {"title": _l("Version")},
-        # ".software.applications.check_mk.versions:*.number": {"title": _l("Number")},
-        # ".software.applications.check_mk.versions:*.edition": {"title": _l("Edition")},
-        # ".software.applications.check_mk.versions:*.demo": {"title": _l("Demo"), "paint": "bool"},
-        # ".software.applications.check_mk.versions:*.num_sites": {"title": _l("#Sites"), "filter": FilterInvtableIntegerRange},
-        ".software.applications.check_mk.sites:": {
-            "title": _l("Checkmk sites"),
-            "keyorder": [
-                "site",
-                "used_version",
-                "num_hosts",
-                "num_services",
-                "check_mk_helper_usage",
-                "fetcher_helper_usage",
-                "checker_helper_usage",
-                "livestatus_usage",
-                "check_helper_usage",
-                "autostart",
-                "apache",
-                "cmc",
-                "crontab",
-                "dcd",
-                "liveproxyd",
-                "mkeventd",
-                "mknotifyd",
-                "rrdcached",
-                "stunnel",
-                "xinetd",
-                "nagios",
-                "npcd",
-            ],
-            "view": "invcmksites",
-        },
-        ".software.applications.check_mk.sites:*.site": {"title": _l("Site")},
-        ".software.applications.check_mk.sites:*.used_version": {"title": _l("Version")},
-        ".software.applications.check_mk.sites:*.num_hosts": {
-            "title": _l("#Hosts"),
-            "sort": cmp_natural_sort,
-        },
-        ".software.applications.check_mk.sites:*.num_services": {
-            "title": _l("#Services"),
-            "sort": cmp_natural_sort,
-        },
-        ".software.applications.check_mk.sites:*.check_mk_helper_usage": {
-            "title": _l("CMK helper usage"),
-            "short": _l("CMK helper")
-        },
-        ".software.applications.check_mk.sites:*.fetcher_helper_usage": {
-            "title": _l("Fetcher helper usage"),
-            "short": _l("Fetcher helper")
-        },
-        ".software.applications.check_mk.sites:*.checker_helper_usage": {
-            "title": _l("Checker helper usage"),
-            "short": _l("Checker helper")
-        },
-        ".software.applications.check_mk.sites:*.livestatus_usage": {
-            "title": _l("Live helper usage"),
-            "short": _l("Live helper")
-        },
-        ".software.applications.check_mk.sites:*.check_helper_usage": {
-            "title": _l("Actual helper usage"),
-            "short": _l("Act. helper")
-        },
-        ".software.applications.check_mk.sites:*.autostart": {
-            "title": _l("Autostart"),
-            "paint": "bool",
-        },
-        ".software.applications.check_mk.sites:*.apache": {
-            "title": _l("Apache status"),
-            "short": _l("Apache"),
-            "paint": "service_status",
-        },
-        ".software.applications.check_mk.sites:*.cmc": {
-            "title": _l("CMC status"),
-            "short": _l("CMC"),
-            "paint": "service_status",
-        },
-        ".software.applications.check_mk.sites:*.crontab": {
-            "title": _l("Crontab status"),
-            "short": _l("Crontab"),
-            "paint": "service_status",
-        },
-        ".software.applications.check_mk.sites:*.dcd": {
-            "title": _l("DCD status"),
-            "short": _l("DCD"),
-            "paint": "service_status",
-        },
-        ".software.applications.check_mk.sites:*.liveproxyd": {
-            "title": _l("Liveproxyd status"),
-            "short": _l("Liveproxyd"),
-            "paint": "service_status",
-        },
-        ".software.applications.check_mk.sites:*.mkeventd": {
-            "title": _l("MKEventd status"),
-            "short": _l("MKEventd"),
-            "paint": "service_status",
-        },
-        ".software.applications.check_mk.sites:*.mknotifyd": {
-            "title": _l("MKNotifyd status"),
-            "short": _l("MKNotifyd"),
-            "paint": "service_status",
-        },
-        ".software.applications.check_mk.sites:*.rrdcached": {
-            "title": _l("RRDCached status"),
-            "short": _l("RRDCached"),
-            "paint": "service_status",
-        },
-        ".software.applications.check_mk.sites:*.stunnel": {
-            "title": _l("STunnel status"),
-            "short": _l("STunnel"),
-            "paint": "service_status",
-        },
-        ".software.applications.check_mk.sites:*.xinetd": {
-            "title": _l("XInetd status"),
-            "short": _l("XInetd"),
-            "paint": "service_status",
-        },
-        ".software.applications.check_mk.sites:*.nagios": {
-            "title": _l("Nagios status"),
-            "short": _l("Nagios"),
-            "paint": "service_status",
-        },
-        ".software.applications.check_mk.sites:*.npcd": {
-            "title": _l("NPCD status"),
-            "short": _l("NPCD"),
-            "paint": "service_status",
-        },
+        # MIGRATED ".software.applications.check_mk.versions:": {
+        # MIGRATED     "title": _l("Checkmk versions"),
+        # MIGRATED     "keyorder": ["version", "number", "edition", "demo", "num_sites"],
+        # MIGRATED     "view": "invcmkversions",
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.versions:*.version": {"title": _l("Version")},
+        # MIGRATED ".software.applications.check_mk.versions:*.number": {"title": _l("Number")},
+        # MIGRATED ".software.applications.check_mk.versions:*.edition": {"title": _l("Edition")},
+        # MIGRATED ".software.applications.check_mk.versions:*.demo": {"title": _l("Demo"), "paint": "bool"},
+        # MIGRATED ".software.applications.check_mk.versions:*.num_sites": {"title": _l("#Sites"), "filter": FilterInvtableIntegerRange},
+        # MIGRATED ".software.applications.check_mk.sites:": {
+        # MIGRATED     "title": _l("Checkmk sites"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "site",
+        # MIGRATED         "used_version",
+        # MIGRATED         "num_hosts",
+        # MIGRATED         "num_services",
+        # MIGRATED         "check_mk_helper_usage",
+        # MIGRATED         "fetcher_helper_usage",
+        # MIGRATED         "checker_helper_usage",
+        # MIGRATED         "livestatus_usage",
+        # MIGRATED         "check_helper_usage",
+        # MIGRATED         "autostart",
+        # MIGRATED         "apache",
+        # MIGRATED         "cmc",
+        # MIGRATED         "crontab",
+        # MIGRATED         "dcd",
+        # MIGRATED         "liveproxyd",
+        # MIGRATED         "mkeventd",
+        # MIGRATED         "mknotifyd",
+        # MIGRATED         "rrdcached",
+        # MIGRATED         "stunnel",
+        # MIGRATED         "xinetd",
+        # MIGRATED         "nagios",
+        # MIGRATED         "npcd",
+        # MIGRATED     ],
+        # MIGRATED     "view": "invcmksites",
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.site": {"title": _l("Site")},
+        # MIGRATED ".software.applications.check_mk.sites:*.used_version": {"title": _l("Version")},
+        # MIGRATED ".software.applications.check_mk.sites:*.num_hosts": {
+        # MIGRATED     "title": _l("#Hosts"),
+        # MIGRATED     "sort": cmp_natural_sort,
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.num_services": {
+        # MIGRATED     "title": _l("#Services"),
+        # MIGRATED     "sort": cmp_natural_sort,
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.check_mk_helper_usage": {
+        # MIGRATED     "title": _l("CMK helper usage"),
+        # MIGRATED     "short": _l("CMK helper")
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.fetcher_helper_usage": {
+        # MIGRATED     "title": _l("Fetcher helper usage"),
+        # MIGRATED     "short": _l("Fetcher helper")
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.checker_helper_usage": {
+        # MIGRATED     "title": _l("Checker helper usage"),
+        # MIGRATED     "short": _l("Checker helper")
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.livestatus_usage": {
+        # MIGRATED     "title": _l("Live helper usage"),
+        # MIGRATED     "short": _l("Live helper")
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.check_helper_usage": {
+        # MIGRATED     "title": _l("Actual helper usage"),
+        # MIGRATED     "short": _l("Act. helper")
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.autostart": {
+        # MIGRATED     "title": _l("Autostart"),
+        # MIGRATED     "paint": "bool",
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.apache": {
+        # MIGRATED     "title": _l("Apache status"),
+        # MIGRATED     "short": _l("Apache"),
+        # MIGRATED     "paint": "service_status",
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.cmc": {
+        # MIGRATED     "title": _l("CMC status"),
+        # MIGRATED     "short": _l("CMC"),
+        # MIGRATED     "paint": "service_status",
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.crontab": {
+        # MIGRATED     "title": _l("Crontab status"),
+        # MIGRATED     "short": _l("Crontab"),
+        # MIGRATED     "paint": "service_status",
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.dcd": {
+        # MIGRATED     "title": _l("DCD status"),
+        # MIGRATED     "short": _l("DCD"),
+        # MIGRATED     "paint": "service_status",
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.liveproxyd": {
+        # MIGRATED     "title": _l("Liveproxyd status"),
+        # MIGRATED     "short": _l("Liveproxyd"),
+        # MIGRATED     "paint": "service_status",
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.mkeventd": {
+        # MIGRATED     "title": _l("MKEventd status"),
+        # MIGRATED     "short": _l("MKEventd"),
+        # MIGRATED     "paint": "service_status",
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.mknotifyd": {
+        # MIGRATED     "title": _l("MKNotifyd status"),
+        # MIGRATED     "short": _l("MKNotifyd"),
+        # MIGRATED     "paint": "service_status",
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.rrdcached": {
+        # MIGRATED     "title": _l("RRDCached status"),
+        # MIGRATED     "short": _l("RRDCached"),
+        # MIGRATED     "paint": "service_status",
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.stunnel": {
+        # MIGRATED     "title": _l("STunnel status"),
+        # MIGRATED     "short": _l("STunnel"),
+        # MIGRATED     "paint": "service_status",
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.xinetd": {
+        # MIGRATED     "title": _l("XInetd status"),
+        # MIGRATED     "short": _l("XInetd"),
+        # MIGRATED     "paint": "service_status",
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.nagios": {
+        # MIGRATED     "title": _l("Nagios status"),
+        # MIGRATED     "short": _l("Nagios"),
+        # MIGRATED     "paint": "service_status",
+        # MIGRATED },
+        # MIGRATED ".software.applications.check_mk.sites:*.npcd": {
+        # MIGRATED     "title": _l("NPCD status"),
+        # MIGRATED     "short": _l("NPCD"),
+        # MIGRATED     "paint": "service_status",
+        # MIGRATED },
         # MIGRATED ".software.applications.check_mk.cluster.": {
         # MIGRATED     "title": _l("Cluster"),
         # MIGRATED     "keyorder": ["is_cluster"],
@@ -703,15 +702,15 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".software.applications.checkmk-agent.pluginsdirectory": {"title": _l("Plug-ins directory")},
         # MIGRATED ".software.applications.checkmk-agent.localdirectory": {"title": _l("Local directory")},
         # MIGRATED ".software.applications.checkmk-agent.agentcontroller": {"title": _l("Agent controller")},
-        ".software.applications.checkmk-agent.plugins:": {
-            "title": _l("Agent plug-ins"),
-            "keyorder": ["name", "version", "cache_interval"],
-        },
-        ".software.applications.checkmk-agent.plugins:*.name": {"title": _l("Name")},
-        ".software.applications.checkmk-agent.plugins:*.version": {"title": _l("Version")},
-        ".software.applications.checkmk-agent.plugins:*.cache_interval": {
-            "title": _l("Cache interval")
-        },
+        # MIGRATED ".software.applications.checkmk-agent.plugins:": {
+        # MIGRATED     "title": _l("Agent plug-ins"),
+        # MIGRATED     "keyorder": ["name", "version", "cache_interval"],
+        # MIGRATED },
+        # MIGRATED ".software.applications.checkmk-agent.plugins:*.name": {"title": _l("Name")},
+        # MIGRATED ".software.applications.checkmk-agent.plugins:*.version": {"title": _l("Version")},
+        # MIGRATED ".software.applications.checkmk-agent.plugins:*.cache_interval": {
+        # MIGRATED     "title": _l("Cache interval")
+        # MIGRATED },
         # MIGRATED ".software.applications.checkmk-agent.local_checks:": {
         # MIGRATED     "title": _l("Local checks"),
         # MIGRATED     "keyorder": ["name", "version", "cache_interval"],
@@ -721,45 +720,45 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".software.applications.checkmk-agent.local_checks:*.cache_interval": {
         # MIGRATED     "title": _l("Cache interval")
         # MIGRATED },
-        ".software.applications.docker.": {
-            "icon": "docker",
-            "title": "Docker",
-            "keyorder": [
-                "version",
-                "registry",
-                "swarm_state",
-                "swarm_node_id",
-                "num_containers_total",
-                "num_containers_running",
-                "num_containers_stopped",
-                "num_containers_paused",
-                "num_images",
-            ],
-        },
-        ".software.applications.docker.version": {"title": _l("Version")},
-        ".software.applications.docker.registry": {"title": _l("Registry")},
-        ".software.applications.docker.swarm_state": {"title": _l("Swarm state")},
-        ".software.applications.docker.swarm_node_id": {"title": _l("Swarm node ID")},
-        ".software.applications.docker.num_containers_total": {"title": _l("#Containers")},
-        ".software.applications.docker.num_containers_running": {
-            "title": _l("#Containers running")
-        },
-        ".software.applications.docker.num_containers_stopped": {
-            "title": _l("#Containers stopped")
-        },
-        ".software.applications.docker.num_containers_paused": {"title": _l("#Containers paused")},
-        ".software.applications.docker.num_images": {"title": _l("#Images")},
-        ".software.applications.docker.node_labels:": {
-            "title": _l("Node labels"),
-            "keyorder": ["label"],
-        },
-        ".software.applications.docker.node_labels:*.label": {"title": _l("Label")},
-        ".software.applications.docker.swarm_manager:": {
-            "title": _l("Swarm managers"),
-            "keyorder": ["NodeID", "Addr"],
-        },
-        ".software.applications.docker.swarm_manager:*.NodeID": {"title": _l("Node ID")},
-        ".software.applications.docker.swarm_manager:*.Addr": {"title": _l("Address")},
+        # MIGRATED ".software.applications.docker.": {
+        # MIGRATED     "icon": "docker",
+        # MIGRATED     "title": "Docker",
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "version",
+        # MIGRATED         "registry",
+        # MIGRATED         "swarm_state",
+        # MIGRATED         "swarm_node_id",
+        # MIGRATED         "num_containers_total",
+        # MIGRATED         "num_containers_running",
+        # MIGRATED         "num_containers_stopped",
+        # MIGRATED         "num_containers_paused",
+        # MIGRATED         "num_images",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.version": {"title": _l("Version")},
+        # MIGRATED ".software.applications.docker.registry": {"title": _l("Registry")},
+        # MIGRATED ".software.applications.docker.swarm_state": {"title": _l("Swarm state")},
+        # MIGRATED ".software.applications.docker.swarm_node_id": {"title": _l("Swarm node ID")},
+        # MIGRATED ".software.applications.docker.num_containers_total": {"title": _l("#Containers")},
+        # MIGRATED ".software.applications.docker.num_containers_running": {
+        # MIGRATED     "title": _l("#Containers running")
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.num_containers_stopped": {
+        # MIGRATED     "title": _l("#Containers stopped")
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.num_containers_paused": {"title": _l("#Containers paused")},
+        # MIGRATED ".software.applications.docker.num_images": {"title": _l("#Images")},
+        # MIGRATED ".software.applications.docker.node_labels:": {
+        # MIGRATED     "title": _l("Node labels"),
+        # MIGRATED     "keyorder": ["label"],
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.node_labels:*.label": {"title": _l("Label")},
+        # MIGRATED ".software.applications.docker.swarm_manager:": {
+        # MIGRATED     "title": _l("Swarm managers"),
+        # MIGRATED     "keyorder": ["NodeID", "Addr"],
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.swarm_manager:*.NodeID": {"title": _l("Node ID")},
+        # MIGRATED ".software.applications.docker.swarm_manager:*.Addr": {"title": _l("Address")},
         ".software.applications.docker.images:": {
             "title": _l("Docker images"),
             "keyorder": [
@@ -824,105 +823,105 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
             "title": "Labels",
             "paint": "csv_labels",
         },
-        ".software.applications.docker.container.": {
-            "title": _l("Container"),
-            "keyorder": ["node_name"],
-        },
-        ".software.applications.docker.container.node_name": {"title": _l("Node name")},
-        ".software.applications.docker.container.ports:": {
-            "title": _l("Ports"),
-            "keyorder": ["port", "protocol", "host_addresses"],
-        },
-        ".software.applications.docker.container.ports:*.port": {"title": _l("Port")},
-        ".software.applications.docker.container.ports:*.protocol": {"title": _l("Protocol")},
-        ".software.applications.docker.container.ports:*.host_addresses": {
-            "title": _l("Host addresses")
-        },
-        ".software.applications.docker.container.networks:": {
-            "title": _l("Networks"),
-            "keyorder": [
-                "name",
-                "ip_address",
-                "ip_prefixlen",
-                "gateway",
-                "mac_address",
-                "network_id",
-            ],
-        },
-        ".software.applications.docker.container.networks:*.name": {"title": _l("Name")},
-        ".software.applications.docker.container.networks:*.ip_address": {
-            "title": _l("IP address")
-        },
-        ".software.applications.docker.container.networks:*.ip_prefixlen": {
-            "title": _l("IP prefix")
-        },
-        ".software.applications.docker.container.networks:*.gateway": {"title": _l("Gateway")},
-        ".software.applications.docker.container.networks:*.mac_address": {
-            "title": _l("MAC address")
-        },
-        ".software.applications.docker.container.networks:*.network_id": {
-            "title": _l("Network ID")
-        },
-        ".software.applications.docker.networks.containers:": {
-            "title": _l("Network containers"),
-            "keyorder": ["network_id", "id", "name", "ipv4_address", "ipv6_address", "mac_address"],
-        },
-        ".software.applications.docker.networks.containers:*.network_id": {"title": _l("Network ID")},
-        ".software.applications.docker.networks.containers:*.id": {"title": _l("Container ID")},
-        ".software.applications.docker.networks.containers:*.name": {"title": _l("Name")},
-        ".software.applications.docker.networks.containers:*.ipv4_address": {
-            "title": _l("IPv4 address"),
-        },
-        ".software.applications.docker.networks.containers:*.ipv6_address": {
-            "title": _l("IPv6 address"),
-        },
-        ".software.applications.docker.networks.containers:*.mac_address": {
-            "title": _l("MAC address"),
-        },
-        ".software.applications.fortinet.": {"title": _l("Fortinet")},
-        ".software.applications.fortinet.fortisandbox:": {
-            "title": _l("FortiSandbox software"),
-            "keyorder": ["name", "version"],
-        },
-        ".software.applications.fortinet.fortisandbox:*.name": {"title": _l("Name")},
-        ".software.applications.fortinet.fortisandbox:*.version": {"title": _l("Version")},
-        ".software.applications.fortinet.fortigate_high_availability.": {
-            "title": _l("FortiGate HighAvailability"),
-        },
-        ".software.applications.fritz.": {
-            "title": _l("Fritz"),
-            "keyorder": [
-                "link_type",
-                "wan_access_type",
-                "auto_disconnect_time",
-                "dns_server_1",
-                "dns_server_2",
-                "voip_dns_server_1",
-                "voip_dns_server_2",
-                "upnp_config_enabled",
-            ],
-        },
-        ".software.applications.fritz.link_type": {"title": _l("Link type")},
-        ".software.applications.fritz.wan_access_type": {"title": _l("WAN access type")},
-        ".software.applications.fritz.auto_disconnect_time": {"title": _l("Auto-disconnect time")},
-        ".software.applications.fritz.dns_server_1": {"title": _l("DNS server 1")},
-        ".software.applications.fritz.dns_server_2": {"title": _l("DNS server 2")},
-        ".software.applications.fritz.voip_dns_server_1": {"title": _l("VoIP DNS server 1")},
-        ".software.applications.fritz.voip_dns_server_2": {"title": _l("VoIP DNS server 2")},
-        ".software.applications.fritz.upnp_config_enabled": {
-            "title": _l("uPnP configuration enabled")
-        },
-        ".software.applications.kube.": {"title": _l("Kubernetes")},
-        ".software.applications.kube.labels:": {
-            "title": _l("Labels"),
-            "keyorder": ["label_name", "label_value"],
-        },
-        ".software.applications.kube.labels:*.label_name": {
-            "title": _l("Name"),
-        },
-        ".software.applications.kube.labels:*.label_value": {
-            "title": _l("Value"),
-        },
+        # MIGRATED ".software.applications.docker.container.": {
+        # MIGRATED     "title": _l("Container"),
+        # MIGRATED     "keyorder": ["node_name"],
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.container.node_name": {"title": _l("Node name")},
+        # MIGRATED ".software.applications.docker.container.ports:": {
+        # MIGRATED     "title": _l("Ports"),
+        # MIGRATED     "keyorder": ["port", "protocol", "host_addresses"],
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.container.ports:*.port": {"title": _l("Port")},
+        # MIGRATED ".software.applications.docker.container.ports:*.protocol": {"title": _l("Protocol")},
+        # MIGRATED ".software.applications.docker.container.ports:*.host_addresses": {
+        # MIGRATED     "title": _l("Host addresses")
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.container.networks:": {
+        # MIGRATED     "title": _l("Networks"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "name",
+        # MIGRATED         "ip_address",
+        # MIGRATED         "ip_prefixlen",
+        # MIGRATED         "gateway",
+        # MIGRATED         "mac_address",
+        # MIGRATED         "network_id",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.container.networks:*.name": {"title": _l("Name")},
+        # MIGRATED ".software.applications.docker.container.networks:*.ip_address": {
+        # MIGRATED     "title": _l("IP address")
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.container.networks:*.ip_prefixlen": {
+        # MIGRATED     "title": _l("IP prefix")
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.container.networks:*.gateway": {"title": _l("Gateway")},
+        # MIGRATED ".software.applications.docker.container.networks:*.mac_address": {
+        # MIGRATED     "title": _l("MAC address")
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.container.networks:*.network_id": {
+        # MIGRATED     "title": _l("Network ID")
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.networks.containers:": {
+        # MIGRATED     "title": _l("Network containers"),
+        # MIGRATED     "keyorder": ["network_id", "id", "name", "ipv4_address", "ipv6_address", "mac_address"],
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.networks.containers:*.network_id": {"title": _l("Network ID")},
+        # MIGRATED ".software.applications.docker.networks.containers:*.id": {"title": _l("Container ID")},
+        # MIGRATED ".software.applications.docker.networks.containers:*.name": {"title": _l("Name")},
+        # MIGRATED ".software.applications.docker.networks.containers:*.ipv4_address": {
+        # MIGRATED     "title": _l("IPv4 address"),
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.networks.containers:*.ipv6_address": {
+        # MIGRATED     "title": _l("IPv6 address"),
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.networks.containers:*.mac_address": {
+        # MIGRATED     "title": _l("MAC address"),
+        # MIGRATED },
+        # MIGRATED ".software.applications.fortinet.": {"title": _l("Fortinet")},
+        # MIGRATED ".software.applications.fortinet.fortisandbox:": {
+        # MIGRATED     "title": _l("FortiSandbox software"),
+        # MIGRATED     "keyorder": ["name", "version"],
+        # MIGRATED },
+        # MIGRATED ".software.applications.fortinet.fortisandbox:*.name": {"title": _l("Name")},
+        # MIGRATED ".software.applications.fortinet.fortisandbox:*.version": {"title": _l("Version")},
+        # MIGRATED ".software.applications.fortinet.fortigate_high_availability.": {
+        # MIGRATED     "title": _l("FortiGate HighAvailability"),
+        # MIGRATED },
+        # MIGRATED ".software.applications.fritz.": {
+        # MIGRATED     "title": _l("Fritz"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "link_type",
+        # MIGRATED         "wan_access_type",
+        # MIGRATED         "auto_disconnect_time",
+        # MIGRATED         "dns_server_1",
+        # MIGRATED         "dns_server_2",
+        # MIGRATED         "voip_dns_server_1",
+        # MIGRATED         "voip_dns_server_2",
+        # MIGRATED         "upnp_config_enabled",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.fritz.link_type": {"title": _l("Link type")},
+        # MIGRATED ".software.applications.fritz.wan_access_type": {"title": _l("WAN access type")},
+        # MIGRATED ".software.applications.fritz.auto_disconnect_time": {"title": _l("Auto-disconnect time")},
+        # MIGRATED ".software.applications.fritz.dns_server_1": {"title": _l("DNS server 1")},
+        # MIGRATED ".software.applications.fritz.dns_server_2": {"title": _l("DNS server 2")},
+        # MIGRATED ".software.applications.fritz.voip_dns_server_1": {"title": _l("VoIP DNS server 1")},
+        # MIGRATED ".software.applications.fritz.voip_dns_server_2": {"title": _l("VoIP DNS server 2")},
+        # MIGRATED ".software.applications.fritz.upnp_config_enabled": {
+        # MIGRATED     "title": _l("uPnP configuration enabled")
+        # MIGRATED },
+        # MIGRATED ".software.applications.kube.": {"title": _l("Kubernetes")},
+        # MIGRATED ".software.applications.kube.labels:": {
+        # MIGRATED     "title": _l("Labels"),
+        # MIGRATED     "keyorder": ["label_name", "label_value"],
+        # MIGRATED },
+        # MIGRATED ".software.applications.kube.labels:*.label_name": {
+        # MIGRATED     "title": _l("Name"),
+        # MIGRATED },
+        # MIGRATED ".software.applications.kube.labels:*.label_value": {
+        # MIGRATED     "title": _l("Value"),
+        # MIGRATED },
         # MIGRATED ".networking.kube:": {
         # MIGRATED     "title": _l("Kubernetes"),
         # MIGRATED     "keyorder": ["ip", "address_type"],
@@ -945,17 +944,17 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
                 "container_id",
             ],
         },
-        ".software.applications.kube.metadata.": {
-            "title": _l("Metadata"),
-            "keyorder": [
-                "object",
-                "name",
-                "namespace",
-            ],
-        },
-        ".software.applications.kube.metadata.object": {"title": _l("Object")},
-        ".software.applications.kube.metadata.name": {"title": _l("Name")},
-        ".software.applications.kube.metadata.namespace": {"title": _l("Namespace")},
+        # MIGRATED ".software.applications.kube.metadata.": {
+        # MIGRATED     "title": _l("Metadata"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "object",
+        # MIGRATED         "name",
+        # MIGRATED         "namespace",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.kube.metadata.object": {"title": _l("Object")},
+        # MIGRATED ".software.applications.kube.metadata.name": {"title": _l("Name")},
+        # MIGRATED ".software.applications.kube.metadata.namespace": {"title": _l("Namespace")},
         ".software.applications.kube.containers:*.name": {"title": _l("Name")},
         ".software.applications.kube.containers:*.image": {"title": _l("Image")},
         ".software.applications.kube.containers:*.image_pull_policy": {
@@ -968,479 +967,480 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         },
         ".software.applications.kube.containers:*.restart_count": {"title": _l("Restart count")},
         ".software.applications.kube.containers:*.container_id": {"title": _l("Container ID")},
-        ".software.applications.kube.cluster.": {"title": _l("Cluster"), "keyorder": ["version"]},
-        ".software.applications.kube.cluster.version": {"title": _l("Version")},
-        ".software.applications.kube.deployment.": {
-            "title": _l("Deployment"),
-            "keyorder": [
-                "strategy",
-                "match_labels",
-                "match_expressions",
-            ],
-        },
-        ".software.applications.kube.deployment.strategy": {
-            "title": _l("StrategyType"),
-            "keyorder": [
-                "strategy",
-                "match_labels",
-                "match_expressions",
-            ],
-        },
-        ".software.applications.kube.deployment.match_labels": {"title": _l("matchLabels")},
-        ".software.applications.kube.deployment.match_expressions": {
-            "title": _l("matchExpressions")
-        },
-        ".software.applications.kube.daemonset.": {
-            "title": _l("DaemonSet"),
-            "keyorder": [
-                "strategy",
-                "match_labels",
-                "match_expressions",
-            ],
-        },
-        ".software.applications.kube.daemonset.strategy": {"title": _l("StrategyType")},
-        ".software.applications.kube.daemonset.match_labels": {"title": _l("matchLabels")},
-        ".software.applications.kube.daemonset.match_expressions": {
-            "title": _l("matchExpressions")
-        },
-        ".software.applications.kube.statefulset.": {
-            "title": _l("StatefulSet"),
-            "keyorder": [
-                "strategy",
-                "match_labels",
-                "match_expressions",
-            ],
-        },
-        ".software.applications.kube.statefulset.strategy": {"title": _l("StrategyType")},
-        ".software.applications.kube.statefulset.match_labels": {"title": _l("matchLabels")},
-        ".software.applications.kube.statefulset.match_expressions": {
-            "title": _l("matchExpressions")
-        },
-        ".software.applications.kube.node.": {
-            "title": _l("Node"),
-            "keyorder": [
-                "operating_system",
-                "os_image",
-                "kernel_version",
-                "architecture",
-                "container_runtime_version",
-                "kubelet_version",
-                "kube_proxy_version",
-            ],
-        },
-        ".software.applications.kube.node.operating_system": {"title": _l("Operating system")},
-        ".software.applications.kube.node.os_image": {"title": _l("OS image")},
-        ".software.applications.kube.node.kernel_version": {"title": _l("Kernel version")},
-        ".software.applications.kube.node.architecture": {"title": _l("Architecture")},
-        ".software.applications.kube.node.container_runtime_version": {
-            "title": _l("Container runtime version")
-        },
-        ".software.applications.kube.node.kubelet_version": {"title": _l("Kubelet version")},
-        ".software.applications.kube.node.kube_proxy_version": {"title": _l("Kube-proxy version")},
-        ".software.applications.kube.pod.": {
-            "title": _l("Pod"),
-            "keyorder": [
-                "dns_policy",
-                "host_ip",
-                "host_network",
-                "node",
-                "pod_ip",
-                "qos_class",
-            ],
-        },
-        ".software.applications.kube.pod.dns_policy": {"title": _l("DNS policy")},
-        ".software.applications.kube.pod.host_ip": {"title": _l("Host IP")},
-        ".software.applications.kube.pod.host_network": {"title": _l("Host network")},
-        ".software.applications.kube.pod.node": {"title": _l("Node")},
-        ".software.applications.kube.pod.pod_ip": {"title": _l("Pod IP")},
-        ".software.applications.kube.pod.qos_class": {"title": _l("QoS class")},
-        ".software.applications.podman.": {
-            "title": _l("Podman"),
-            "keyorder": [
-                "mode",
-                "version",
-                "registry",
-                "containers_running",
-                "containers_paused",
-                "containers_stopped",
-                "containers_exited",
-                "images_num",
-            ],
-        },
-        ".software.applications.podman.mode": {"title": _l("Mode")},
-        ".software.applications.podman.version": {"title": _l("Version")},
-        ".software.applications.podman.registry": {"title": _l("Registry")},
-        ".software.applications.podman.containers_running": {"title": _l("#Containers running")},
-        ".software.applications.podman.containers_paused": {"title": _l("#Containers paused")},
-        ".software.applications.podman.containers_stopped": {"title": _l("#Containers stopped")},
-        ".software.applications.podman.containers_exited": {"title": _l("#Containers exited")},
-        ".software.applications.podman.images_num": {"title": _l("#Images")},
-        ".software.applications.podman.containers:": {
-            "title": _l("Containers"),
-            "keyorder": ["id", "creation", "name", "labels", "status", "image"],
-        },
-        ".software.applications.podman.containers:*.id": {"title": _l("ID")},
-        ".software.applications.podman.containers:*.creation": {"title": _l("Creation"), "paint": "date_and_time"},
-        ".software.applications.podman.containers:*.name": {"title": _l("Name")},
-        ".software.applications.podman.containers:*.labels": {"title": _l("Labels")},
-        ".software.applications.podman.containers:*.status": {"title": _l("Status")},
-        ".software.applications.podman.containers:*.image": {"title": _l("Image")},
-        ".software.applications.podman.images:": {
-            "title": _l("Images"),
-            "keyorder": ["id", "creation", "size", "container_num", "repository", "tag"],
-        },
-        ".software.applications.podman.images:*.id": {"title": _l("ID")},
-        ".software.applications.podman.images:*.creation": {"title": _l("Creation"), "paint": "date_and_time"},
-        ".software.applications.podman.images:*.size": {"title": _l("Size"), "paint": "size"},
-        ".software.applications.podman.images:*.container_num": {"title": _l("#Containers")},
-        ".software.applications.podman.images:*.repository": {"title": _l("Repository")},
-        ".software.applications.podman.images:*.tag": {"title": _l("Tag")},
-        ".software.applications.podman.container.": {
-            "title": _l("Container"),
-            "keyorder": [
-                "hostname",
-                "pod",
-                "labels",
-            ],
-        },
-        ".software.applications.podman.container.hostname": {"title": _l("Hostname")},
-        ".software.applications.podman.container.pod": {"title": _l("Pod")},
-        ".software.applications.podman.container.labels": {"title": _l("Labels")},
-        ".software.applications.podman.network.": {
-            "title": _l("Network"),
-            "keyorder": [
-                "ip_address",
-                "gateway",
-                "mac_address",
-            ],
-        },
-        ".software.applications.podman.network.ip_address": {"title": _l("IP address")},
-        ".software.applications.podman.network.gateway": {"title": _l("Gateway")},
-        ".software.applications.podman.network.mac_address": {"title": _l("MAC address")},
-        ".software.applications.synthetic_monitoring.": {"title": _l("Synthetic monitoring")},
-        ".software.applications.synthetic_monitoring.plans:": {
-            "title": _l("Plans"),
-            "keyorder": [
-                "application",
-                "suite_name",
-                "variant",
-                "plan_id",
-            ],
-            "view": "invsyntheticmonitoringplans",
-        },
-        ".software.applications.synthetic_monitoring.plans:*.application": {"title": _l("Application")},
-        ".software.applications.synthetic_monitoring.plans:*.suite_name": {"title": _l("Suite name")},
-        ".software.applications.synthetic_monitoring.plans:*.variant": {"title": _l("Variant")},
-        ".software.applications.synthetic_monitoring.plans:*.plan_id": {"title": _l("Plan ID")},
-        ".software.applications.synthetic_monitoring.tests:": {
-            "title": _l("Tests"),
-            "keyorder": [
-                "application",
-                "suite_name",
-                "variant",
-                "top_level_suite_name",
-                "bottom_level_suite_name",
-                "test_name",
-                "plan_id",
-                "test_item",
-            ],
-            "view": "invsyntheticmonitoringtests",
-        },
-        ".software.applications.synthetic_monitoring.tests:*.application": {"title": _l("Application")},
-        ".software.applications.synthetic_monitoring.tests:*.suite_name": {"title": _l("Suite name")},
-        ".software.applications.synthetic_monitoring.tests:*.variant": {"title": _l("Variant")},
-        ".software.applications.synthetic_monitoring.tests:*.top_level_suite_name": {"title": _l("Top level suite")},
-        ".software.applications.synthetic_monitoring.tests:*.bottom_level_suite_name": {"title": _l("Bottom level suite")},
-        ".software.applications.synthetic_monitoring.tests:*.test_name": {"title": _l("Test")},
-        ".software.applications.synthetic_monitoring.tests:*.plan_id": {"title": _l("Plan ID")},
-        ".software.applications.synthetic_monitoring.tests:*.test_item": {"title": _l("Item")},
-        ".software.applications.mobileiron.": {
-            "title": _l("Mobileiron"),
-            "keyorder": [
-                "partition_name",
-                "registration_state",
-            ],
-        },
-        ".software.applications.mobileiron.partition_name": {"title": _l("Partition name")},
-        ".software.applications.mobileiron.registration_state": {"title": _l("Registration state")},
-        ".software.applications.citrix.": {"title": _l("Citrix")},
-        ".software.applications.citrix.controller.": {
-            "title": _l("Controller"),
-            "keyorder": ["controller_version"],
-        },
-        ".software.applications.citrix.controller.controller_version": {
-            "title": _l("Controller version"),
-        },
-        ".software.applications.citrix.vm.": {
-            "title": _l("Virtual machine"),
-            "keyorder": [
-                "desktop_group_name",
-                "catalog",
-                "agent_version",
-            ],
-        },
-        ".software.applications.citrix.vm.desktop_group_name": {"title": _l("Desktop group name")},
-        ".software.applications.citrix.vm.catalog": {"title": _l("Catalog")},
-        ".software.applications.citrix.vm.agent_version": {"title": _l("Agent version")},
-        ".software.applications.oracle.": {"title": _l("Oracle DB")},
-        ".software.applications.oracle.systemparameter:": {
-            "title": _l("Oracle system parameters"),
-            "keyorder": [
-                "sid",
-                "name",
-                "value",
-                "isdefault",
-            ],
-            "view": "invorasystemparameter",
-        },
-        ".software.applications.oracle.systemparameter:*.sid": {"title": _l("SID")},
-        ".software.applications.oracle.systemparameter:*.name": {"title": _l("Name")},
-        ".software.applications.oracle.systemparameter:*.value": {"title": _l("Value")},
-        ".software.applications.oracle.systemparameter:*.isdefault": {"title": _l("Is default")},
-        ".software.applications.oracle.instance:": {
-            "title": _l("Oracle instances"),
-            "keyorder": [
-                "sid",
-                "pname",
-                "version",
-                "openmode",
-                "logmode",
-                "logins",
-                "db_uptime",
-                "db_creation_time",
-            ],
-            "view": "invorainstance",
-        },
-        ".software.applications.oracle.instance:*.sid": {"title": _l("SID")},
-        ".software.applications.oracle.instance:*.pname": {"title": _l("Process name")},
-        ".software.applications.oracle.instance:*.version": {"title": _l("Version")},
-        ".software.applications.oracle.instance:*.openmode": {"title": _l("Open mode")},
-        ".software.applications.oracle.instance:*.logmode": {"title": _l("Log mode")},
-        ".software.applications.oracle.instance:*.logins": {"title": _l("Logins")},
-        ".software.applications.oracle.instance:*.db_uptime": {
-            "title": _l("Uptime"),
-            "paint": "age",
-        },
-        ".software.applications.oracle.instance:*.db_creation_time": {
-            "title": _l("Creation time"),
-        },
-        ".software.applications.oracle.dataguard_stats:": {
-            "title": _l("Oracle dataguard statistics"),
-            "keyorder": ["sid", "db_unique", "role", "switchover"],
-            "view": "invoradataguardstats",
-        },
-        ".software.applications.oracle.dataguard_stats:*.sid": {"title": _l("SID")},
-        ".software.applications.oracle.dataguard_stats:*.db_unique": {"title": _l("Name")},
-        ".software.applications.oracle.dataguard_stats:*.role": {"title": _l("Role")},
-        ".software.applications.oracle.dataguard_stats:*.switchover": {"title": _l("Switchover")},
-        ".software.applications.oracle.recovery_area:": {
-            "title": _l("Oracle recovery areas"),
-            "keyorder": ["sid", "flashback"],
-            "view": "invorarecoveryarea",
-        },
-        ".software.applications.oracle.recovery_area:*.sid": {"title": _l("SID")},
-        ".software.applications.oracle.recovery_area:*.flashback": {"title": _l("Flashback")},
-        ".software.applications.oracle.sga:": {
-            "title": _l("Oracle SGA info"),
-            "keyorder": [
-                "sid",
-                "fixed_size",
-                "redo_buffer",
-                "buf_cache_size",
-                "in_mem_area_size",
-                "shared_pool_size",
-                "large_pool_size",
-                "java_pool_size",
-                "streams_pool_size",
-                "shared_io_pool_size",
-                "data_trans_cache_size",
-                "granule_size",
-                "max_size",
-                "start_oh_shared_pool",
-                "free_mem_avail",
-            ],
-            "view": "invorasga",
-        },
-        ".software.applications.oracle.sga:*.sid": {"title": _l("SID")},
-        ".software.applications.oracle.sga:*.fixed_size": {
-            "title": _l("Fixed size"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.sga:*.max_size": {
-            "title": _l("Maximum size"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.sga:*.redo_buffer": {
-            "title": _l("Redo buffers"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.sga:*.buf_cache_size": {
-            "title": _l("Buffer cache size"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.sga:*.in_mem_area_size": {
-            "title": _l("In-memory area"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.sga:*.shared_pool_size": {
-            "title": _l("Shared pool size"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.sga:*.large_pool_size": {
-            "title": _l("Large pool size"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.sga:*.java_pool_size": {
-            "title": _l("Java pool size"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.sga:*.streams_pool_size": {
-            "title": _l("Streams pool size"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.sga:*.shared_io_pool_size": {
-            "title": _l("Shared pool size"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.sga:*.data_trans_cache_size": {
-            "title": _l("Data transfer cache size"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.sga:*.granule_size": {
-            "title": _l("Granule size"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.sga:*.start_oh_shared_pool": {
-            "title": _l("Startup overhead in shared pool"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.sga:*.free_mem_avail": {
-            "title": _l("Free SGA memory available"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.pga:": {
-            "title": _l("Oracle PGA info"),
-            "keyorder": [
-                "sid",
-                "aggregate_pga_auto_target",
-                "aggregate_pga_target_parameter",
-                "bytes_processed",
-                "extra_bytes_read_written",
-                "global_memory_bound",
-                "maximum_pga_allocated",
-                "maximum_pga_used_for_auto_workareas",
-                "maximum_pga_used_for_manual_workareas",
-                "total_pga_allocated",
-                "total_pga_inuse",
-                "total_pga_used_for_auto_workareas",
-                "total_pga_used_for_manual_workareas",
-                "total_freeable_pga_memory",
-            ],
-            "view": "invorapga",
-        },
-        ".software.applications.oracle.pga:*.sid": {"title": _l("SID")},
-        ".software.applications.oracle.pga:*.aggregate_pga_auto_target": {
-            "title": _l("Aggregate PGA auto target"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.pga:*.aggregate_pga_target_parameter": {
-            "title": _l("Aggregate PGA target parameter"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.pga:*.bytes_processed": {
-            "title": _l("Bytes processed"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.pga:*.extra_bytes_read_written": {
-            "title": _l("Extra bytes read/written"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.pga:*.global_memory_bound": {
-            "title": _l("Global memory bound"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.pga:*.maximum_pga_allocated": {
-            "title": _l("Maximum PGA allocated"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.pga:*.maximum_pga_used_for_auto_workareas": {
-            "title": _l("Maximum PGA used for auto workareas"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.pga:*.maximum_pga_used_for_manual_workareas": {
-            "title": _l("Maximum PGA used for manual workareas"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.pga:*.total_pga_allocated": {
-            "title": _l("Total PGA allocated"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.pga:*.total_pga_inuse": {
-            "title": _l("Total PGA inuse"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.pga:*.total_pga_used_for_auto_workareas": {
-            "title": _l("Total PGA used for auto workareas"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.pga:*.total_pga_used_for_manual_workareas": {
-            "title": _l("Total PGA used for manual workareas"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.pga:*.total_freeable_pga_memory": {
-            "title": _l("Total freeable PGA memory"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.tablespaces:": {
-            "title": _l("Oracle tablespaces"),
-            "keyorder": [
-                "sid",
-                "name",
-                "version",
-                "type",
-                "autoextensible",
-                "current_size",
-                "max_size",
-                "used_size",
-                "num_increments",
-                "increment_size",
-                "free_space",
-            ],
-            "view": "invoratablespace",
-        },
-        ".software.applications.oracle.tablespaces:*.sid": {"title": _l("SID")},
-        ".software.applications.oracle.tablespaces:*.name": {"title": _l("Name")},
-        ".software.applications.oracle.tablespaces:*.version": {"title": _l("Version")},
-        ".software.applications.oracle.tablespaces:*.type": {"title": _l("Type")},
-        ".software.applications.oracle.tablespaces:*.autoextensible": {
-            "title": _l("Autoextensible")
-        },
-        ".software.applications.oracle.tablespaces:*.current_size": {
-            "title": _l("Current size"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.tablespaces:*.max_size": {
-            "title": _l("Max. size"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.tablespaces:*.used_size": {
-            "title": _l("Used size"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.tablespaces:*.num_increments": {
-            "title": _l("#Increments"),
-        },
-        ".software.applications.oracle.tablespaces:*.increment_size": {
-            "title": _l("Increment size"),
-            "paint": "size",
-        },
-        ".software.applications.oracle.tablespaces:*.free_space": {
-            "title": _l("Free space"),
-            "paint": "size",
-        },
-        ".software.applications.vmwareesx:": {"title": _l("VMware ESX")},
-        ".software.applications.vmwareesx:*.clusters": {"title": _l("Clusters")},
-        ".software.applications.mssql.": {"title": _l("MSSQL")},
+        # MIGRATED ".software.applications.kube.cluster.": {"title": _l("Cluster"), "keyorder": ["version"]},
+        # MIGRATED ".software.applications.kube.cluster.version": {"title": _l("Version")},
+        # MIGRATED ".software.applications.kube.deployment.": {
+        # MIGRATED     "title": _l("Deployment"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "strategy",
+        # MIGRATED         "match_labels",
+        # MIGRATED         "match_expressions",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.kube.deployment.strategy": {
+        # MIGRATED     "title": _l("StrategyType"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "strategy",
+        # MIGRATED         "match_labels",
+        # MIGRATED         "match_expressions",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.kube.deployment.match_labels": {"title": _l("matchLabels")},
+        # MIGRATED ".software.applications.kube.deployment.match_expressions": {
+        # MIGRATED     "title": _l("matchExpressions")
+        # MIGRATED },
+        # MIGRATED ".software.applications.kube.daemonset.": {
+        # MIGRATED     "title": _l("DaemonSet"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "strategy",
+        # MIGRATED         "match_labels",
+        # MIGRATED         "match_expressions",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.kube.daemonset.strategy": {"title": _l("StrategyType")},
+        # MIGRATED ".software.applications.kube.daemonset.match_labels": {"title": _l("matchLabels")},
+        # MIGRATED ".software.applications.kube.daemonset.match_expressions": {
+        # MIGRATED     "title": _l("matchExpressions")
+        # MIGRATED },
+        # MIGRATED ".software.applications.kube.statefulset.": {
+        # MIGRATED     "title": _l("StatefulSet"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "strategy",
+        # MIGRATED         "match_labels",
+        # MIGRATED         "match_expressions",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.kube.statefulset.strategy": {"title": _l("StrategyType")},
+        # MIGRATED ".software.applications.kube.statefulset.match_labels": {"title": _l("matchLabels")},
+        # MIGRATED ".software.applications.kube.statefulset.match_expressions": {
+        # MIGRATED     "title": _l("matchExpressions")
+        # MIGRATED },
+        # MIGRATED ".software.applications.kube.node.": {
+        # MIGRATED     "title": _l("Node"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "operating_system",
+        # MIGRATED         "os_image",
+        # MIGRATED         "kernel_version",
+        # MIGRATED         "architecture",
+        # MIGRATED         "container_runtime_version",
+        # MIGRATED         "kubelet_version",
+        # MIGRATED         "kube_proxy_version",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.kube.node.operating_system": {"title": _l("Operating system")},
+        # MIGRATED ".software.applications.kube.node.os_image": {"title": _l("OS image")},
+        # MIGRATED ".software.applications.kube.node.kernel_version": {"title": _l("Kernel version")},
+        # MIGRATED ".software.applications.kube.node.architecture": {"title": _l("Architecture")},
+        # MIGRATED ".software.applications.kube.node.container_runtime_version": {
+        # MIGRATED     "title": _l("Container runtime version")
+        # MIGRATED },
+        # MIGRATED ".software.applications.kube.node.kubelet_version": {"title": _l("Kubelet version")},
+        # MIGRATED ".software.applications.kube.node.kube_proxy_version": {"title": _l("Kube-proxy version")},
+        # MIGRATED ".software.applications.kube.pod.": {
+        # MIGRATED     "title": _l("Pod"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "dns_policy",
+        # MIGRATED         "host_ip",
+        # MIGRATED         "host_network",
+        # MIGRATED         "node",
+        # MIGRATED         "pod_ip",
+        # MIGRATED         "qos_class",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.kube.pod.dns_policy": {"title": _l("DNS policy")},
+        # MIGRATED ".software.applications.kube.pod.host_ip": {"title": _l("Host IP")},
+        # MIGRATED ".software.applications.kube.pod.host_network": {"title": _l("Host network")},
+        # MIGRATED ".software.applications.kube.pod.node": {"title": _l("Node")},
+        # MIGRATED ".software.applications.kube.pod.pod_ip": {"title": _l("Pod IP")},
+        # MIGRATED ".software.applications.kube.pod.qos_class": {"title": _l("QoS class")},
+        # MIGRATED ".software.applications.podman.": {
+        # MIGRATED     "title": _l("Podman"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "mode",
+        # MIGRATED         "version",
+        # MIGRATED         "registry",
+        # MIGRATED         "containers_running",
+        # MIGRATED         "containers_paused",
+        # MIGRATED         "containers_stopped",
+        # MIGRATED         "containers_exited",
+        # MIGRATED         "images_num",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.podman.mode": {"title": _l("Mode")},
+        # MIGRATED ".software.applications.podman.version": {"title": _l("Version")},
+        # MIGRATED ".software.applications.podman.registry": {"title": _l("Registry")},
+        # MIGRATED ".software.applications.podman.containers_running": {"title": _l("#Containers running")},
+        # MIGRATED ".software.applications.podman.containers_paused": {"title": _l("#Containers paused")},
+        # MIGRATED ".software.applications.podman.containers_stopped": {"title": _l("#Containers stopped")},
+        # MIGRATED ".software.applications.podman.containers_exited": {"title": _l("#Containers exited")},
+        # MIGRATED ".software.applications.podman.images_num": {"title": _l("#Images")},
+        # MIGRATED ".software.applications.podman.containers:": {
+        # MIGRATED     "title": _l("Containers"),
+        # MIGRATED     "keyorder": ["id", "creation", "name", "labels", "status", "image"],
+        # MIGRATED },
+        # MIGRATED ".software.applications.podman.containers:*.id": {"title": _l("ID")},
+        # MIGRATED ".software.applications.podman.containers:*.creation": {"title": _l("Creation"), "paint": "date_and_time"},
+        # MIGRATED ".software.applications.podman.containers:*.name": {"title": _l("Name")},
+        # MIGRATED ".software.applications.podman.containers:*.labels": {"title": _l("Labels")},
+        # MIGRATED ".software.applications.podman.containers:*.status": {"title": _l("Status")},
+        # MIGRATED ".software.applications.podman.containers:*.image": {"title": _l("Image")},
+        # MIGRATED ".software.applications.podman.images:": {
+        # MIGRATED     "title": _l("Images"),
+        # MIGRATED     "keyorder": ["id", "creation", "size", "container_num", "repository", "tag"],
+        # MIGRATED },
+        # MIGRATED ".software.applications.podman.images:*.id": {"title": _l("ID")},
+        # MIGRATED ".software.applications.podman.images:*.creation": {"title": _l("Creation"), "paint": "date_and_time"},
+        # MIGRATED ".software.applications.podman.images:*.size": {"title": _l("Size"), "paint": "size"},
+        # MIGRATED ".software.applications.podman.images:*.container_num": {"title": _l("#Containers")},
+        # MIGRATED ".software.applications.podman.images:*.repository": {"title": _l("Repository")},
+        # MIGRATED ".software.applications.podman.images:*.tag": {"title": _l("Tag")},
+        # MIGRATED ".software.applications.podman.container.": {
+        # MIGRATED     "title": _l("Container"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "hostname",
+        # MIGRATED         "pod",
+        # MIGRATED         "labels",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.podman.container.hostname": {"title": _l("Hostname")},
+        # MIGRATED ".software.applications.podman.container.pod": {"title": _l("Pod")},
+        # MIGRATED ".software.applications.podman.container.labels": {"title": _l("Labels")},
+        # MIGRATED ".software.applications.podman.network.": {
+        # MIGRATED     "title": _l("Network"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "ip_address",
+        # MIGRATED         "gateway",
+        # MIGRATED         "mac_address",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.podman.network.ip_address": {"title": _l("IP address")},
+        # MIGRATED ".software.applications.podman.network.gateway": {"title": _l("Gateway")},
+        # MIGRATED ".software.applications.podman.network.mac_address": {"title": _l("MAC address")},
+        # MIGRATED ".software.applications.synthetic_monitoring.": {"title": _l("Synthetic monitoring")},
+        # MIGRATED ".software.applications.synthetic_monitoring.": {"title": _l("Synthetic monitoring")},
+        # MIGRATED ".software.applications.synthetic_monitoring.plans:": {
+        # MIGRATED     "title": _l("Plans"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "application",
+        # MIGRATED         "suite_name",
+        # MIGRATED         "variant",
+        # MIGRATED         "plan_id",
+        # MIGRATED     ],
+        # MIGRATED     "view": "invsyntheticmonitoringplans",
+        # MIGRATED },
+        # MIGRATED ".software.applications.synthetic_monitoring.plans:*.application": {"title": _l("Application")},
+        # MIGRATED ".software.applications.synthetic_monitoring.plans:*.suite_name": {"title": _l("Suite name")},
+        # MIGRATED ".software.applications.synthetic_monitoring.plans:*.variant": {"title": _l("Variant")},
+        # MIGRATED ".software.applications.synthetic_monitoring.plans:*.plan_id": {"title": _l("Plan ID")},
+        # MIGRATED ".software.applications.synthetic_monitoring.tests:": {
+        # MIGRATED     "title": _l("Tests"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "application",
+        # MIGRATED         "suite_name",
+        # MIGRATED         "variant",
+        # MIGRATED         "top_level_suite_name",
+        # MIGRATED         "bottom_level_suite_name",
+        # MIGRATED         "test_name",
+        # MIGRATED         "plan_id",
+        # MIGRATED         "test_item",
+        # MIGRATED     ],
+        # MIGRATED     "view": "invsyntheticmonitoringtests",
+        # MIGRATED },
+        # MIGRATED ".software.applications.synthetic_monitoring.tests:*.application": {"title": _l("Application")},
+        # MIGRATED ".software.applications.synthetic_monitoring.tests:*.suite_name": {"title": _l("Suite name")},
+        # MIGRATED ".software.applications.synthetic_monitoring.tests:*.variant": {"title": _l("Variant")},
+        # MIGRATED ".software.applications.synthetic_monitoring.tests:*.top_level_suite_name": {"title": _l("Top level suite")},
+        # MIGRATED ".software.applications.synthetic_monitoring.tests:*.bottom_level_suite_name": {"title": _l("Bottom level suite")},
+        # MIGRATED ".software.applications.synthetic_monitoring.tests:*.test_name": {"title": _l("Test")},
+        # MIGRATED ".software.applications.synthetic_monitoring.tests:*.plan_id": {"title": _l("Plan ID")},
+        # MIGRATED ".software.applications.synthetic_monitoring.tests:*.test_item": {"title": _l("Item")},
+        # MIGRATED ".software.applications.mobileiron.": {
+        # MIGRATED     "title": _l("Mobileiron"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "partition_name",
+        # MIGRATED         "registration_state",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.mobileiron.partition_name": {"title": _l("Partition name")},
+        # MIGRATED ".software.applications.mobileiron.registration_state": {"title": _l("Registration state")},
+        # MIGRATED ".software.applications.citrix.": {"title": _l("Citrix")},
+        # MIGRATED ".software.applications.citrix.controller.": {
+        # MIGRATED     "title": _l("Controller"),
+        # MIGRATED     "keyorder": ["controller_version"],
+        # MIGRATED },
+        # MIGRATED ".software.applications.citrix.controller.controller_version": {
+        # MIGRATED     "title": _l("Controller version"),
+        # MIGRATED },
+        # MIGRATED ".software.applications.citrix.vm.": {
+        # MIGRATED     "title": _l("Virtual machine"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "desktop_group_name",
+        # MIGRATED         "catalog",
+        # MIGRATED         "agent_version",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.citrix.vm.desktop_group_name": {"title": _l("Desktop group name")},
+        # MIGRATED ".software.applications.citrix.vm.catalog": {"title": _l("Catalog")},
+        # MIGRATED ".software.applications.citrix.vm.agent_version": {"title": _l("Agent version")},
+        # MIGRATED ".software.applications.oracle.": {"title": _l("Oracle DB")},
+        # MIGRATED ".software.applications.oracle.systemparameter:": {
+        # MIGRATED     "title": _l("Oracle system parameters"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "sid",
+        # MIGRATED         "name",
+        # MIGRATED         "value",
+        # MIGRATED         "isdefault",
+        # MIGRATED     ],
+        # MIGRATED     "view": "invorasystemparameter",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.systemparameter:*.sid": {"title": _l("SID")},
+        # MIGRATED ".software.applications.oracle.systemparameter:*.name": {"title": _l("Name")},
+        # MIGRATED ".software.applications.oracle.systemparameter:*.value": {"title": _l("Value")},
+        # MIGRATED ".software.applications.oracle.systemparameter:*.isdefault": {"title": _l("Is default")},
+        # MIGRATED ".software.applications.oracle.instance:": {
+        # MIGRATED     "title": _l("Oracle instances"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "sid",
+        # MIGRATED         "pname",
+        # MIGRATED         "version",
+        # MIGRATED         "openmode",
+        # MIGRATED         "logmode",
+        # MIGRATED         "logins",
+        # MIGRATED         "db_uptime",
+        # MIGRATED         "db_creation_time",
+        # MIGRATED     ],
+        # MIGRATED     "view": "invorainstance",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.instance:*.sid": {"title": _l("SID")},
+        # MIGRATED ".software.applications.oracle.instance:*.pname": {"title": _l("Process name")},
+        # MIGRATED ".software.applications.oracle.instance:*.version": {"title": _l("Version")},
+        # MIGRATED ".software.applications.oracle.instance:*.openmode": {"title": _l("Open mode")},
+        # MIGRATED ".software.applications.oracle.instance:*.logmode": {"title": _l("Log mode")},
+        # MIGRATED ".software.applications.oracle.instance:*.logins": {"title": _l("Logins")},
+        # MIGRATED ".software.applications.oracle.instance:*.db_uptime": {
+        # MIGRATED     "title": _l("Uptime"),
+        # MIGRATED     "paint": "age",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.instance:*.db_creation_time": {
+        # MIGRATED     "title": _l("Creation time"),
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.dataguard_stats:": {
+        # MIGRATED     "title": _l("Oracle dataguard statistics"),
+        # MIGRATED     "keyorder": ["sid", "db_unique", "role", "switchover"],
+        # MIGRATED     "view": "invoradataguardstats",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.dataguard_stats:*.sid": {"title": _l("SID")},
+        # MIGRATED ".software.applications.oracle.dataguard_stats:*.db_unique": {"title": _l("Name")},
+        # MIGRATED ".software.applications.oracle.dataguard_stats:*.role": {"title": _l("Role")},
+        # MIGRATED ".software.applications.oracle.dataguard_stats:*.switchover": {"title": _l("Switchover")},
+        # MIGRATED ".software.applications.oracle.recovery_area:": {
+        # MIGRATED     "title": _l("Oracle recovery areas"),
+        # MIGRATED     "keyorder": ["sid", "flashback"],
+        # MIGRATED     "view": "invorarecoveryarea",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.recovery_area:*.sid": {"title": _l("SID")},
+        # MIGRATED ".software.applications.oracle.recovery_area:*.flashback": {"title": _l("Flashback")},
+        # MIGRATED ".software.applications.oracle.sga:": {
+        # MIGRATED     "title": _l("Oracle SGA info"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "sid",
+        # MIGRATED         "fixed_size",
+        # MIGRATED         "redo_buffer",
+        # MIGRATED         "buf_cache_size",
+        # MIGRATED         "in_mem_area_size",
+        # MIGRATED         "shared_pool_size",
+        # MIGRATED         "large_pool_size",
+        # MIGRATED         "java_pool_size",
+        # MIGRATED         "streams_pool_size",
+        # MIGRATED         "shared_io_pool_size",
+        # MIGRATED         "data_trans_cache_size",
+        # MIGRATED         "granule_size",
+        # MIGRATED         "max_size",
+        # MIGRATED         "start_oh_shared_pool",
+        # MIGRATED         "free_mem_avail",
+        # MIGRATED     ],
+        # MIGRATED     "view": "invorasga",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.sga:*.sid": {"title": _l("SID")},
+        # MIGRATED ".software.applications.oracle.sga:*.fixed_size": {
+        # MIGRATED     "title": _l("Fixed size"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.sga:*.max_size": {
+        # MIGRATED     "title": _l("Maximum size"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.sga:*.redo_buffer": {
+        # MIGRATED     "title": _l("Redo buffers"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.sga:*.buf_cache_size": {
+        # MIGRATED     "title": _l("Buffer cache size"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.sga:*.in_mem_area_size": {
+        # MIGRATED     "title": _l("In-memory area"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.sga:*.shared_pool_size": {
+        # MIGRATED     "title": _l("Shared pool size"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.sga:*.large_pool_size": {
+        # MIGRATED     "title": _l("Large pool size"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.sga:*.java_pool_size": {
+        # MIGRATED     "title": _l("Java pool size"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.sga:*.streams_pool_size": {
+        # MIGRATED     "title": _l("Streams pool size"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.sga:*.shared_io_pool_size": {
+        # MIGRATED     "title": _l("Shared pool size"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.sga:*.data_trans_cache_size": {
+        # MIGRATED     "title": _l("Data transfer cache size"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.sga:*.granule_size": {
+        # MIGRATED     "title": _l("Granule size"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.sga:*.start_oh_shared_pool": {
+        # MIGRATED     "title": _l("Startup overhead in shared pool"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.sga:*.free_mem_avail": {
+        # MIGRATED     "title": _l("Free SGA memory available"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.pga:": {
+        # MIGRATED     "title": _l("Oracle PGA info"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "sid",
+        # MIGRATED         "aggregate_pga_auto_target",
+        # MIGRATED         "aggregate_pga_target_parameter",
+        # MIGRATED         "bytes_processed",
+        # MIGRATED         "extra_bytes_read_written",
+        # MIGRATED         "global_memory_bound",
+        # MIGRATED         "maximum_pga_allocated",
+        # MIGRATED         "maximum_pga_used_for_auto_workareas",
+        # MIGRATED         "maximum_pga_used_for_manual_workareas",
+        # MIGRATED         "total_pga_allocated",
+        # MIGRATED         "total_pga_inuse",
+        # MIGRATED         "total_pga_used_for_auto_workareas",
+        # MIGRATED         "total_pga_used_for_manual_workareas",
+        # MIGRATED         "total_freeable_pga_memory",
+        # MIGRATED     ],
+        # MIGRATED     "view": "invorapga",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.pga:*.sid": {"title": _l("SID")},
+        # MIGRATED ".software.applications.oracle.pga:*.aggregate_pga_auto_target": {
+        # MIGRATED     "title": _l("Aggregate PGA auto target"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.pga:*.aggregate_pga_target_parameter": {
+        # MIGRATED     "title": _l("Aggregate PGA target parameter"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.pga:*.bytes_processed": {
+        # MIGRATED     "title": _l("Bytes processed"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.pga:*.extra_bytes_read_written": {
+        # MIGRATED     "title": _l("Extra bytes read/written"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.pga:*.global_memory_bound": {
+        # MIGRATED     "title": _l("Global memory bound"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.pga:*.maximum_pga_allocated": {
+        # MIGRATED     "title": _l("Maximum PGA allocated"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.pga:*.maximum_pga_used_for_auto_workareas": {
+        # MIGRATED     "title": _l("Maximum PGA used for auto workareas"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.pga:*.maximum_pga_used_for_manual_workareas": {
+        # MIGRATED     "title": _l("Maximum PGA used for manual workareas"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.pga:*.total_pga_allocated": {
+        # MIGRATED     "title": _l("Total PGA allocated"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.pga:*.total_pga_inuse": {
+        # MIGRATED     "title": _l("Total PGA inuse"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.pga:*.total_pga_used_for_auto_workareas": {
+        # MIGRATED     "title": _l("Total PGA used for auto workareas"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.pga:*.total_pga_used_for_manual_workareas": {
+        # MIGRATED     "title": _l("Total PGA used for manual workareas"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.pga:*.total_freeable_pga_memory": {
+        # MIGRATED     "title": _l("Total freeable PGA memory"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.tablespaces:": {
+        # MIGRATED     "title": _l("Oracle tablespaces"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "sid",
+        # MIGRATED         "name",
+        # MIGRATED         "version",
+        # MIGRATED         "type",
+        # MIGRATED         "autoextensible",
+        # MIGRATED         "current_size",
+        # MIGRATED         "max_size",
+        # MIGRATED         "used_size",
+        # MIGRATED         "num_increments",
+        # MIGRATED         "increment_size",
+        # MIGRATED         "free_space",
+        # MIGRATED     ],
+        # MIGRATED     "view": "invoratablespace",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.tablespaces:*.sid": {"title": _l("SID")},
+        # MIGRATED ".software.applications.oracle.tablespaces:*.name": {"title": _l("Name")},
+        # MIGRATED ".software.applications.oracle.tablespaces:*.version": {"title": _l("Version")},
+        # MIGRATED ".software.applications.oracle.tablespaces:*.type": {"title": _l("Type")},
+        # MIGRATED ".software.applications.oracle.tablespaces:*.autoextensible": {
+        # MIGRATED     "title": _l("Autoextensible")
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.tablespaces:*.current_size": {
+        # MIGRATED     "title": _l("Current size"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.tablespaces:*.max_size": {
+        # MIGRATED     "title": _l("Max. size"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.tablespaces:*.used_size": {
+        # MIGRATED     "title": _l("Used size"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.tablespaces:*.num_increments": {
+        # MIGRATED     "title": _l("#Increments"),
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.tablespaces:*.increment_size": {
+        # MIGRATED     "title": _l("Increment size"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.oracle.tablespaces:*.free_space": {
+        # MIGRATED     "title": _l("Free space"),
+        # MIGRATED     "paint": "size",
+        # MIGRATED },
+        # MIGRATED ".software.applications.vmwareesx:": {"title": _l("VMware ESX")},
+        # MIGRATED ".software.applications.vmwareesx:*.clusters": {"title": _l("Clusters")},
+        # MIGRATED ".software.applications.mssql.": {"title": _l("MSSQL")},
         ".software.applications.mssql.instances:": {
             "title": _l("Instances"),
             "keyorder": [
@@ -1465,46 +1465,46 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.mssql.instances:*.cluster_name": {"title": _l("Cluster name")},
         ".software.applications.mssql.instances:*.active_node": {"title": _l("Active node")},
         ".software.applications.mssql.instances:*.node_names": {"title": _l("Node names")},
-        ".software.applications.ibm_mq.": {
-            "title": _l("IBM MQ"),
-            "keyorder": ["managers", "channels", "queues"],
-        },
-        ".software.applications.ibm_mq.managers": {"title": _l("Managers")},
-        ".software.applications.ibm_mq.channels": {"title": _l("Channels")},
-        ".software.applications.ibm_mq.queues": {"title": _l("Queues")},
-        ".software.applications.ibm_mq.managers:": {
-            "title": _l("IBM MQ managers"),
-            "keyorder": ["name", "instver", "instname", "status", "standby", "ha"],
-            "view": "invibmmqmanagers",
-        },
-        ".software.applications.ibm_mq.managers:*.name": {"title": _l("Queue manager name")},
-        ".software.applications.ibm_mq.managers:*.instver": {"title": _l("Version")},
-        ".software.applications.ibm_mq.managers:*.instname": {"title": _l("Installation")},
-        ".software.applications.ibm_mq.managers:*.status": {"title": _l("Status")},
-        ".software.applications.ibm_mq.managers:*.standby": {"title": _l("Standby")},
-        ".software.applications.ibm_mq.managers:*.ha": {"title": _l("HA")},
-        ".software.applications.ibm_mq.channels:": {
-            "title": _l("IBM MQ channels"),
-            "keyorder": ["qmgr", "name", "type", "status", "monchl"],
-            "view": "invibmmqchannels",
-        },
-        ".software.applications.ibm_mq.channels:*.qmgr": {"title": _l("Queue manager name")},
-        ".software.applications.ibm_mq.channels:*.name": {"title": _l("Channel")},
-        ".software.applications.ibm_mq.channels:*.type": {"title": _l("Type")},
-        ".software.applications.ibm_mq.channels:*.status": {"title": _l("Status")},
-        ".software.applications.ibm_mq.channels:*.monchl": {"title": _l("Monitoring")},
-        ".software.applications.ibm_mq.queues:": {
-            "title": _l("IBM MQ queues"),
-            "keyorder": ["qmgr", "name", "maxdepth", "maxmsgl", "created", "altered", "monq"],
-            "view": "invibmmqqueues",
-        },
-        ".software.applications.ibm_mq.queues:*.qmgr": {"title": _l("Queue manager name")},
-        ".software.applications.ibm_mq.queues:*.name": {"title": _l("Queue")},
-        ".software.applications.ibm_mq.queues:*.maxdepth": {"title": _l("Max depth")},
-        ".software.applications.ibm_mq.queues:*.maxmsgl": {"title": _l("Max length")},
-        ".software.applications.ibm_mq.queues:*.created": {"title": _l("Created")},
-        ".software.applications.ibm_mq.queues:*.altered": {"title": _l("Altered")},
-        ".software.applications.ibm_mq.queues:*.monq": {"title": _l("Monitoring")},
+        # MIGRATED ".software.applications.ibm_mq.": {
+        # MIGRATED     "title": _l("IBM MQ"),
+        # MIGRATED     "keyorder": ["managers", "channels", "queues"],
+        # MIGRATED },
+        # MIGRATED ".software.applications.ibm_mq.managers": {"title": _l("Managers")},
+        # MIGRATED ".software.applications.ibm_mq.channels": {"title": _l("Channels")},
+        # MIGRATED ".software.applications.ibm_mq.queues": {"title": _l("Queues")},
+        # MIGRATED ".software.applications.ibm_mq.managers:": {
+        # MIGRATED     "title": _l("IBM MQ managers"),
+        # MIGRATED     "keyorder": ["name", "instver", "instname", "status", "standby", "ha"],
+        # MIGRATED     "view": "invibmmqmanagers",
+        # MIGRATED },
+        # MIGRATED ".software.applications.ibm_mq.managers:*.name": {"title": _l("Queue manager name")},
+        # MIGRATED ".software.applications.ibm_mq.managers:*.instver": {"title": _l("Version")},
+        # MIGRATED ".software.applications.ibm_mq.managers:*.instname": {"title": _l("Installation")},
+        # MIGRATED ".software.applications.ibm_mq.managers:*.status": {"title": _l("Status")},
+        # MIGRATED ".software.applications.ibm_mq.managers:*.standby": {"title": _l("Standby")},
+        # MIGRATED ".software.applications.ibm_mq.managers:*.ha": {"title": _l("HA")},
+        # MIGRATED ".software.applications.ibm_mq.channels:": {
+        # MIGRATED     "title": _l("IBM MQ channels"),
+        # MIGRATED     "keyorder": ["qmgr", "name", "type", "status", "monchl"],
+        # MIGRATED     "view": "invibmmqchannels",
+        # MIGRATED },
+        # MIGRATED ".software.applications.ibm_mq.channels:*.qmgr": {"title": _l("Queue manager name")},
+        # MIGRATED ".software.applications.ibm_mq.channels:*.name": {"title": _l("Channel")},
+        # MIGRATED ".software.applications.ibm_mq.channels:*.type": {"title": _l("Type")},
+        # MIGRATED ".software.applications.ibm_mq.channels:*.status": {"title": _l("Status")},
+        # MIGRATED ".software.applications.ibm_mq.channels:*.monchl": {"title": _l("Monitoring")},
+        # MIGRATED ".software.applications.ibm_mq.queues:": {
+        # MIGRATED     "title": _l("IBM MQ queues"),
+        # MIGRATED     "keyorder": ["qmgr", "name", "maxdepth", "maxmsgl", "created", "altered", "monq"],
+        # MIGRATED     "view": "invibmmqqueues",
+        # MIGRATED },
+        # MIGRATED ".software.applications.ibm_mq.queues:*.qmgr": {"title": _l("Queue manager name")},
+        # MIGRATED ".software.applications.ibm_mq.queues:*.name": {"title": _l("Queue")},
+        # MIGRATED ".software.applications.ibm_mq.queues:*.maxdepth": {"title": _l("Max depth")},
+        # MIGRATED ".software.applications.ibm_mq.queues:*.maxmsgl": {"title": _l("Max length")},
+        # MIGRATED ".software.applications.ibm_mq.queues:*.created": {"title": _l("Created")},
+        # MIGRATED ".software.applications.ibm_mq.queues:*.altered": {"title": _l("Altered")},
+        # MIGRATED ".software.applications.ibm_mq.queues:*.monq": {"title": _l("Monitoring")},
         # MIGRATED ".software.applications.azure.": {"title": _l("Azure")},
         # MIGRATED ".software.applications.azure.application_gateways.": {"title": _l("Application gateways")},
         # MIGRATED ".software.applications.azure.application_gateways.rules.": {"title": _l("Rules")},
@@ -1680,88 +1680,88 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".software.applications.azure.load_balancers.outbound_rules.backend_pools.addresses:*.ip_address": {"title": _l("IP address")},
         # MIGRATED ".software.applications.azure.load_balancers.outbound_rules.backend_pools.addresses:*.ip_allocation_method": {"title": _l("Allocation method")},
         # MIGRATED ".software.applications.azure.load_balancers.outbound_rules.backend_pools.addresses:*.primary": {"title": _l("Primary")},
-        ".software.bios.": {
-            "title": _l("BIOS"),
-            "keyorder": [
-                "vendor",
-                "version",
-                "date",
-            ],
-        },
-        ".software.bios.vendor": {"title": _l("Vendor")},
-        ".software.bios.version": {"title": _l("Version")},
-        ".software.bios.date": {"title": _l("Date"), "paint": "date"},
-        ".software.configuration.": {"title": _l("Configuration")},
-        ".software.configuration.snmp_info.": {
-            "title": _l("SNMP Information"),
-            "keyorder": [
-                "contact",
-                "location",
-                "name",
-            ],
-        },
-        ".software.configuration.snmp_info.contact": {"title": _l("Contact")},
-        ".software.configuration.snmp_info.location": {
-            "title": _l("Location"),
-            "is_show_more": False,
-        },
-        ".software.configuration.snmp_info.name": {"title": _l("System name")},
-        ".software.configuration.organisation.": {
-            "title": _l("Organisation"),
-            "keyorder": [
-                "organisation_id",
-                "organisation_name",
-                "network_id",
-                "address",
-            ],
-        },
-        ".software.configuration.organisation.organisation_id": {"title": _l("Organisation ID")},
-        ".software.configuration.organisation.organisation_name": {"title": _l("Organisation name")},
-        ".software.configuration.organisation.network_id": {"title": _l("Network ID")},
-        ".software.configuration.organisation.address": {"title": _l("Address")},
-        ".software.firmware.": {
-            "title": _l("Firmware"),
-            "keyorder": [
-                "vendor",
-                "version",
-                "platform_level",
-            ],
-        },
-        ".software.firmware.vendor": {"title": _l("Vendor")},
-        ".software.firmware.version": {"title": _l("Version")},
-        ".software.firmware.platform_level": {"title": _l("Platform firmware level")},
-        ".software.kernel_config:": {
-            "title": _l("Kernel configuration (sysctl)"),
-            "keyorder": ["name", "value"],
-            "view": "invkernelconfig",
-        },
-        ".software.kernel_config:*.name": {"title": _l("Parameter name")},
-        ".software.kernel_config:*.value": {"title": _l("Value")},
-        ".software.os.": {
-            "title": _l("Operating system"),
-            "keyorder": [
-                "name",
-                "version",
-                "vendor",
-                "type",
-                "install_date",
-                "kernel_version",
-                "arch",
-                "service_pack",
-                "build",
-            ],
-        },
-        ".software.os.name": {"title": _l("Operating system"), "is_show_more": False},
-        ".software.os.version": {"title": _l("Version")},
-        ".software.os.vendor": {"title": _l("Vendor")},
-        ".software.os.type": {"title": _l("Type"), "is_show_more": False},  # e.g. "linux"
-        ".software.os.install_date": {"title": _l("Install date"), "paint": "date"},
-        ".software.os.kernel_version": {"title": _l("Kernel version")},
-        ".software.os.arch": {"title": _l("Kernel Architecture")},
-        ".software.os.service_pack": {"title": _l("Latest service pack")},
-        ".software.os.build": {"title": _l("Build")},
-        ".software.os.service_packs:": {"title": _l("Service packs"), "keyorder": ["name"]},
-        ".software.os.service_packs:*.name": {"title": _l("Name")},
+        # MIGRATED ".software.bios.": {
+        # MIGRATED     "title": _l("BIOS"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "vendor",
+        # MIGRATED         "version",
+        # MIGRATED         "date",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.bios.vendor": {"title": _l("Vendor")},
+        # MIGRATED ".software.bios.version": {"title": _l("Version")},
+        # MIGRATED ".software.bios.date": {"title": _l("Date"), "paint": "date"},
+        # MIGRATED ".software.configuration.": {"title": _l("Configuration")},
+        # MIGRATED ".software.configuration.snmp_info.": {
+        # MIGRATED     "title": _l("SNMP Information"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "contact",
+        # MIGRATED         "location",
+        # MIGRATED         "name",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.configuration.snmp_info.contact": {"title": _l("Contact")},
+        # MIGRATED ".software.configuration.snmp_info.location": {
+        # MIGRATED     "title": _l("Location"),
+        # MIGRATED     "is_show_more": False,
+        # MIGRATED },
+        # MIGRATED ".software.configuration.snmp_info.name": {"title": _l("System name")},
+        # MIGRATED ".software.configuration.organisation.": {
+        # MIGRATED     "title": _l("Organisation"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "organisation_id",
+        # MIGRATED         "organisation_name",
+        # MIGRATED         "network_id",
+        # MIGRATED         "address",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.configuration.organisation.organisation_id": {"title": _l("Organisation ID")},
+        # MIGRATED ".software.configuration.organisation.organisation_name": {"title": _l("Organisation name")},
+        # MIGRATED ".software.configuration.organisation.network_id": {"title": _l("Network ID")},
+        # MIGRATED ".software.configuration.organisation.address": {"title": _l("Address")},
+        # MIGRATED ".software.firmware.": {
+        # MIGRATED     "title": _l("Firmware"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "vendor",
+        # MIGRATED         "version",
+        # MIGRATED         "platform_level",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.firmware.vendor": {"title": _l("Vendor")},
+        # MIGRATED ".software.firmware.version": {"title": _l("Version")},
+        # MIGRATED ".software.firmware.platform_level": {"title": _l("Platform firmware level")},
+        # MIGRATED ".software.kernel_config:": {
+        # MIGRATED     "title": _l("Kernel configuration (sysctl)"),
+        # MIGRATED     "keyorder": ["name", "value"],
+        # MIGRATED     "view": "invkernelconfig",
+        # MIGRATED },
+        # MIGRATED ".software.kernel_config:*.name": {"title": _l("Parameter name")},
+        # MIGRATED ".software.kernel_config:*.value": {"title": _l("Value")},
+        # MIGRATED ".software.os.": {
+        # MIGRATED     "title": _l("Operating system"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "name",
+        # MIGRATED         "version",
+        # MIGRATED         "vendor",
+        # MIGRATED         "type",
+        # MIGRATED         "install_date",
+        # MIGRATED         "kernel_version",
+        # MIGRATED         "arch",
+        # MIGRATED         "service_pack",
+        # MIGRATED         "build",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.os.name": {"title": _l("Operating system"), "is_show_more": False},
+        # MIGRATED ".software.os.version": {"title": _l("Version")},
+        # MIGRATED ".software.os.vendor": {"title": _l("Vendor")},
+        # MIGRATED ".software.os.type": {"title": _l("Type"), "is_show_more": False},  # e.g. "linux"
+        # MIGRATED ".software.os.install_date": {"title": _l("Install date"), "paint": "date"},
+        # MIGRATED ".software.os.kernel_version": {"title": _l("Kernel version")},
+        # MIGRATED ".software.os.arch": {"title": _l("Kernel Architecture")},
+        # MIGRATED ".software.os.service_pack": {"title": _l("Latest service pack")},
+        # MIGRATED ".software.os.build": {"title": _l("Build")},
+        # MIGRATED ".software.os.service_packs:": {"title": _l("Service packs"), "keyorder": ["name"]},
+        # MIGRATED ".software.os.service_packs:*.name": {"title": _l("Name")},
         ".software.packages:": {
             "title": _l("Software packages"),
             "icon": "packages",

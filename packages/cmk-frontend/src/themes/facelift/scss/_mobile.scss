@@ -239,7 +239,7 @@ body.mobile {
     border-radius: $spacing;
   }
 
-  input[type="checkbox"] {
+  input[type='checkbox'] {
     &,
     &:checked {
       + label::before {

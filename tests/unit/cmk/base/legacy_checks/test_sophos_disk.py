@@ -18,7 +18,7 @@ from .checktestlib import Check
             [[51]],
             (
                 1,
-                "Disk percentage usage: 51 % (warn/crit at 40 %/60 %)",
+                "Disk percentage usage: 51% (warn/crit at 40%/60%)",
                 [("disk_utilization", 51, 40.0, 60.0)],
             ),
         )

@@ -11,14 +11,14 @@
 case "$1" in
     default)
         echo "0.0.0.0 ::/0"
-    ;;
+        ;;
     choices)
         echo "@{IP_ADDRESS_LIST}"
-    ;;
+        ;;
     set)
         sed -ri "s@#?([[:space:]]*only_from[[:space:]]*=[[:space:]]*)(.*)@\1$2@" $OMD_ROOT/etc/mk-livestatus/xinetd.conf
-    ;;
+        ;;
     depends)
         [ "$CONFIG_CORE" != none -a "$CONFIG_LIVESTATUS_TCP" = on ]
-    ;;
+        ;;
 esac

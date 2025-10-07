@@ -4,10 +4,6 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-export interface ButtonProps {
-  variant?: ButtonVariants['variant']
-}
-
 const buttonVariants = cva('', {
   variants: {
     variant: {
@@ -18,19 +14,29 @@ const buttonVariants = cva('', {
       warning: 'cmk-button--variant-warning',
       danger: 'cmk-button--variant-danger',
       info: 'cmk-button--variant-info' // used only within info dialog
+    },
+    disabled: {
+      true: 'cmk-button--disabled',
+      false: ''
     }
   },
   defaultVariants: {
-    variant: 'optional'
+    variant: 'optional',
+    disabled: false
   }
 })
 
 export type ButtonVariants = VariantProps<typeof buttonVariants>
+
+export interface ButtonProps {
+  variant?: ButtonVariants['variant']
+  disabled?: boolean | string | undefined
+}
 </script>
 
 <script setup lang="ts">
 import { type VariantProps, cva } from 'class-variance-authority'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 const buttonRef = ref<HTMLButtonElement | null>(null)
 
@@ -41,7 +47,9 @@ defineExpose({
   }
 })
 
-defineProps<ButtonProps>()
+const props = defineProps<ButtonProps>()
+
+const isDisabled = computed(() => props.disabled === true || props.disabled === 'true')
 
 defineEmits(['click'])
 </script>
@@ -50,7 +58,8 @@ defineEmits(['click'])
   <button
     ref="buttonRef"
     class="cmk-button"
-    :class="buttonVariants({ variant })"
+    :class="buttonVariants({ variant: props.variant, disabled: isDisabled })"
+    :disabled="isDisabled"
     @click.prevent="
       (e) => {
         $emit('click', e)
@@ -64,23 +73,34 @@ defineEmits(['click'])
 <style scoped>
 .cmk-button {
   display: inline-flex;
-  height: 30px;
+  height: var(--dimension-10);
   margin: 0;
   padding: 0 8px;
   align-items: center;
   justify-content: center;
   letter-spacing: unset;
-}
-
-.cmk-button--variant-primary,
-.cmk-button--variant-success {
-  color: var(--black);
-  background-color: var(--success-dimmed);
+  border-radius: var(--dimension-3);
 }
 
 .cmk-button--variant-primary,
 .cmk-button--variant-secondary {
   border: 1px solid var(--default-submit-button-border-color);
+}
+
+.cmk-button--variant-primary,
+button.cmk-button--variant-success {
+  color: var(--black);
+  background-color: var(--color-corporate-green-50, #15d1a0);
+
+  &:hover:not(.cmk-button--disabled) {
+    background:
+      linear-gradient(
+        0deg,
+        var(--color-white-30, rgb(255 255 255 / 30%)) 0%,
+        var(--color-white-30, rgb(255 255 255 / 30%)) 100%
+      ),
+      var(--color-corporate-green-50, #15d1a0);
+  }
 }
 
 .cmk-button--variant-warning {
@@ -92,12 +112,25 @@ defineEmits(['click'])
   color: var(--white);
 }
 
-.cmk-button--variant-info {
+button.cmk-button--variant-info {
   background-color: var(--default-help-icon-bg-color);
   color: var(--white);
 
-  &:hover {
+  &:hover:not(.cmk-button--disabled) {
     background-color: var(--default-help-icon-bg-color-hover);
   }
+}
+
+button.cmk-button--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+
+  /* Reset global style from old framework */
+  filter: none;
+}
+
+button.cmk-button--disabled:active {
+  /* Reset global style from old framework */
+  box-shadow: none;
 }
 </style>

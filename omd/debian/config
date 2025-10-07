@@ -1,4 +1,4 @@
-#!/bin/sh 
+#!/bin/sh
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -13,7 +13,7 @@ db_title "OMD - Open Monitoring Distribution"
 
 db_get omd/nagios-plugins-suid
 if [ -z "$RET" ]; then
-  db_set omd/nagios-plugins-suid true
+    db_set omd/nagios-plugins-suid true
 fi
 # db_fset omd/nagios-plugins-suid seen false
 db_input medium omd/nagios-plugins-suid || true

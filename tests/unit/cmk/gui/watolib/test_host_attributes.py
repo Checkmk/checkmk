@@ -293,7 +293,7 @@ expected_attributes = {
     ),
     **(
         {
-            "otel_metrics_association": {
+            "metrics_association": {
                 "depends_on_roles": [],
                 "depends_on_tags": [],
                 "editable": True,
@@ -599,7 +599,7 @@ def test_host_attributes(for_what: str, new: bool) -> None:
             "tag_snmp_ds",
             "snmp_community",
             "tag_piggyback",
-            *(("otel_metrics_association",) if is_cloud_repo() else ()),
+            *(("metrics_association",) if is_cloud_repo() else ()),
         ],
         "management_board": [
             "management_protocol",

@@ -30,12 +30,10 @@ from .dashlet import (
     copy_view_into_dashlet,
     dashlet_registry,
     DashletConfig,
-    LinkedViewDashletConfig,
-    ViewDashletConfig,
 )
 from .page_edit_dashlet import dashlet_editor_breadcrumb
 from .store import add_dashlet, get_permitted_dashboards
-from .type_defs import DashboardName, DashletId
+from .type_defs import DashboardName, DashletId, LinkedViewDashletConfig, ViewDashletConfig
 
 __all__ = ["page_create_link_view_dashlet", "page_create_view_dashlet"]
 

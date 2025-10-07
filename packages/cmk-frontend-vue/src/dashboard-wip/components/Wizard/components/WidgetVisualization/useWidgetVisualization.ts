@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { type Ref, ref } from 'vue'
+import { type Ref, ref, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -12,19 +12,18 @@ import { isUrl } from '../../utils'
 
 const { _t } = usei18n()
 
-export interface UseWidgetVisualizationProps {
+export interface UseWidgetVisualizationOptions {
   title: Ref<string>
   showTitle: Ref<boolean>
   showTitleBackground: Ref<boolean>
   showWidgetBackground: Ref<boolean>
   titleUrlEnabled: Ref<boolean>
   titleUrl: Ref<string>
-
-  toggleTitleUrl: (value: boolean) => void
-
   titleUrlValidationErrors: Ref<string[]>
-  validate: () => boolean
+}
 
+export interface UseWidgetVisualizationProps extends UseWidgetVisualizationOptions {
+  validate: () => boolean
   generateTitleSpec: () => TitleSpec
 }
 
@@ -38,10 +37,9 @@ export const useWidgetVisualizationProps = (metric: string): UseWidgetVisualizat
   const titleUrl = ref<string>('')
   const titleUrlValidationErrors = ref<string[]>([])
 
-  const toggleTitleUrl = (value: boolean) => {
+  watch(titleUrlEnabled, () => {
     titleUrl.value = ''
-    titleUrlEnabled.value = value
-  }
+  })
 
   const validate = () => {
     titleUrlValidationErrors.value = []
@@ -78,7 +76,6 @@ export const useWidgetVisualizationProps = (metric: string): UseWidgetVisualizat
     showWidgetBackground,
     titleUrlEnabled,
     titleUrl,
-    toggleTitleUrl,
 
     titleUrlValidationErrors,
     validate,

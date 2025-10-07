@@ -10,10 +10,10 @@ case "$1" in
     default)
         PORT=$($OMD_ROOT/lib/omd/next_free_port LIVESTATUS_TCP_PORT 6557)
         echo "$PORT"
-    ;;
+        ;;
     choices)
         echo "[0-9]{1,5}"
-    ;;
+        ;;
     set)
         PORT=$($OMD_ROOT/lib/omd/next_free_port LIVESTATUS_TCP_PORT $2)
 
@@ -23,9 +23,8 @@ case "$1" in
         fi
 
         sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'$PORT'/' $OMD_ROOT/etc/mk-livestatus/xinetd.conf
-    ;;
+        ;;
     depends)
         [ "$CONFIG_CORE" != none -a "$CONFIG_LIVESTATUS_TCP" = on ]
-    ;;
+        ;;
 esac
-

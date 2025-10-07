@@ -27,8 +27,7 @@ def check_couchbase_buckets_cache(item, params, parsed):
             miss_rate,
             "cache_misses_rate",
             params.get("cache_misses"),
-            human_readable_func=str,
-            unit="/s",
+            human_readable_func=lambda x: f"{x}/s",
             infoname="Cache misses",
         )
 

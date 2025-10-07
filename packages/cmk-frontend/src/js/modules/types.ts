@@ -5,47 +5,47 @@
  */
 
 export interface CMKAjaxReponse<Result> {
-    result_code: 0 | 1;
-    result: Result;
-    severity: "success" | "error";
+  result_code: 0 | 1
+  result: Result
+  severity: 'success' | 'error'
 }
 
 export type PartialK<T, K extends PropertyKey = PropertyKey> = Partial<
-    Pick<T, Extract<keyof T, K>>
+  Pick<T, Extract<keyof T, K>>
 > &
-    Omit<T, K> extends infer O
-    ? {[P in keyof O]: O[P]}
-    : never;
+  Omit<T, K> extends infer O
+  ? { [P in keyof O]: O[P] }
+  : never
 
 export interface PlotDefinition {
-    id: string;
-    color: string;
-    plot_type: string;
-    label: string;
-    use_tags: string[];
-    hidden: boolean;
-    is_scalar: boolean;
-    metric?: {
-        bounds: Record<string, number>;
-        unit: Record<string, string>;
-    };
+  id: string
+  color: string
+  plot_type: string
+  label: string
+  use_tags: string[]
+  hidden: boolean
+  is_scalar: boolean
+  metric?: {
+    bounds: Record<string, number>
+    unit: Record<string, string>
+  }
 }
 
 export interface RequireConfirmation {
-    html: string;
-    confirmButtonText: string;
-    cancelButtonText: string;
-    customClass: {
-        confirmButton: "confirm_question";
-        icon: "confirm_icon confirm_question";
-    };
+  html: string
+  confirmButtonText: string
+  cancelButtonText: string
+  customClass: {
+    confirmButton: 'confirm_question'
+    icon: 'confirm_icon confirm_question'
+  }
 }
 
 declare global {
-    interface JQueryStatic {
-        //This is introduced for mobile.ts since it uses JQuery Mobile
-        //However, Typescript doesn't recognize any mobile attribute in JQueryStatic
-        //that's why I added it.
-        mobile: any;
-    }
+  interface JQueryStatic {
+    //This is introduced for mobile.ts since it uses JQuery Mobile
+    //However, Typescript doesn't recognize any mobile attribute in JQueryStatic
+    //that's why I added it.
+    mobile: any
+  }
 }

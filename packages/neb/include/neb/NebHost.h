@@ -361,7 +361,7 @@ public:
         std::function<bool(const IService &)> pred) const override;
 
     bool all_of_labels(
-        const std::function<bool(const Attribute &)> &pred) const override;
+        const std::function<bool(const Label &)> &pred) const override;
 
 private:
     const ::host &host_;

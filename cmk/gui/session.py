@@ -29,6 +29,7 @@ from cmk.gui.exceptions import MKAuthException
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInNobody, LoggedInRemoteSite, LoggedInSuperUser, LoggedInUser
 from cmk.gui.logged_in import user as logged_in_user
+from cmk.gui.permissions import permission_registry
 from cmk.gui.pseudo_users import PseudoUserId, RemoteSitePseudoUser, SiteInternalPseudoUser
 from cmk.gui.type_defs import AuthType, SessionId, SessionInfo
 from cmk.gui.userdb.session import auth_cookie_value
@@ -87,11 +88,12 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         self,
         user_name: UserId | None,
         auth_type: AuthType | None,
+        user_permissions: UserPermissions,
     ) -> None:
         now = datetime.now()
         if user_name is not None:
             userdb.session.ensure_user_can_init_session(user_name, datetime.now())
-            self.user = LoggedInUser(user_name)
+            self.user = LoggedInUser(user_name, user_permissions)
         else:
             self.user = LoggedInNobody()
 
@@ -104,13 +106,15 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         )
 
     @classmethod
-    def create_empty_session(cls, exc: MKException | None = None) -> CheckmkFileBasedSession:
+    def create_empty_session(
+        cls, exc: MKException | None, user_permissions: UserPermissions
+    ) -> CheckmkFileBasedSession:
         """Create a new and empty and logged-out session.
 
         This will lead to the session cookie being deleted.
         """
         sess = cls()
-        sess.initialize(None, None)
+        sess.initialize(None, None, user_permissions)
         sess.exc = exc
         return sess
 
@@ -120,11 +124,13 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         user_name: UserId,
         auth_type: AuthType,
         secure_flag: bool,
+        user_permissions: UserPermissions,
     ) -> CheckmkFileBasedSession:
         sess = cls()
         sess.initialize(
             user_name,
             auth_type,
+            user_permissions,
         )
         sess.is_secure = secure_flag
         return sess
@@ -150,14 +156,9 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         cls,
         user_name: UserId,
         session_id: SessionId,
+        user_permissions: UserPermissions,
     ) -> CheckmkFileBasedSession:
         """Load the session data from disk.
-
-        Args:
-            user_name:
-            session_id:
-
-        Returns:
 
         Raises:
             KeyError: when session_id is not in user's session.
@@ -175,7 +176,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
             raise MKAuthException("You have been logged out.")
 
         sess = cls()
-        sess.user = LoggedInUser(user_name)
+        sess.user = LoggedInUser(user_name, user_permissions)
         sess.session_info = info
         # NOTE: This is only called from a "cookie" auth location. If you add more, refactor.
         sess.session_info.auth_type = "cookie"
@@ -313,7 +314,9 @@ class FileBasedSession(SessionInterface):
         # the tests.
         return f"/{omd_site()}/"
 
-    def _resume_session(self, app: Flask, request: flask.Request) -> CheckmkFileBasedSession | None:
+    def _resume_session(
+        self, app: Flask, request: flask.Request, user_permissions: UserPermissions
+    ) -> CheckmkFileBasedSession | None:
         """Check if there is a session to resume to
 
         check if cookie is there and if it is valid. If so return the session
@@ -325,7 +328,7 @@ class FileBasedSession(SessionInterface):
 
         try:
             user_name, session_id, _cookie_hash = parse_and_check_cookie(cookie_value)
-            sess = self.session_class.load_session(user_name, session_id)
+            sess = self.session_class.load_session(user_name, session_id, user_permissions)
             sess.warn_if_session_expires_soon(datetime.now())
             if sess.is_expired(datetime.now()):
                 return None
@@ -335,7 +338,7 @@ class FileBasedSession(SessionInterface):
         return sess
 
     def _authenticate_and_open(
-        self, app: Flask, request: flask.Request, config: Config
+        self, app: Flask, request: flask.Request, config: Config, user_permissions: UserPermissions
     ) -> CheckmkFileBasedSession:
         """Authenticate and open new session
 
@@ -364,7 +367,9 @@ class FileBasedSession(SessionInterface):
 
         self.update_last_login(user_name, auth_type, request)
 
-        return self.session_class.create_session(user_name, auth_type, request.is_secure)
+        return self.session_class.create_session(
+            user_name, auth_type, request.is_secure, user_permissions
+        )
 
     def update_last_login(
         self, userid: UserId, auth_type: AuthType, request: flask.Request
@@ -381,13 +386,14 @@ class FileBasedSession(SessionInterface):
     def open_session(self, app: Flask, request: flask.Request) -> CheckmkFileBasedSession | None:
         # We need the config to be able to set the timeout values correctly.
         config.initialize()
+        user_permissions = UserPermissions.from_config(config.active_config, permission_registry)
 
         try:
-            return self._resume_session(app, request) or self._authenticate_and_open(
-                app, request, config.active_config
-            )
+            return self._resume_session(
+                app, request, user_permissions
+            ) or self._authenticate_and_open(app, request, config.active_config, user_permissions)
         except MKAuthException as exc:
-            return self.session_class.create_empty_session(exc=exc)
+            return self.session_class.create_empty_session(exc, user_permissions)
 
     # NOTE: The type-ignore[override] here is due to the fact, that any alternative would result
     # in multiple hundreds of lines changes and hundreds of mypy errors at this point and is thus
@@ -467,6 +473,7 @@ def _UserContext(user_obj: LoggedInUser) -> Iterator[None]:
 
 def UserContext(
     user_id: UserId,
+    user_permissions: UserPermissions,
     *,
     explicit_permissions: Container[str] = frozenset(),
 ) -> ContextManager[None]:
@@ -477,6 +484,7 @@ def UserContext(
     return _UserContext(
         LoggedInUser(
             user_id,
+            user_permissions,
             explicitly_given_permissions=explicit_permissions,
         )
     )

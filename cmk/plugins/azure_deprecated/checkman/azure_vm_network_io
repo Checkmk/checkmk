@@ -1,0 +1,20 @@
+title: Microsoft Azure Virtual Machine: Network IO
+agents: azure
+catalog: cloud/azure
+license: GPLv2
+distribution: check_mk
+description:
+ This check and the associated special agent (agent_azure) are deprecated
+ and will be removed in a future version.
+
+ Please configure the new special agent using the "Microsoft Azure" ruleset.
+
+ This check provides information about VM network interface in
+ the Microsoft Azure cloud.
+
+ The thresholds can be configured using the rule "Network interfaces
+ and switch ports".
+
+discovery:
+ One service is created on every VM host. The option
+ "Map data to the VM itself" has to be configured in the Azure agent.

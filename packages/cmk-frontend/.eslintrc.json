@@ -1,60 +1,54 @@
 {
-    "parser": "@typescript-eslint/parser",
-    "env": {
-        "browser": true,
-        "commonjs": true
-    },
-    "extends": [
-        "eslint:recommended",
-        "plugin:compat/recommended",
-        "plugin:import/recommended",
-        "prettier",
-        "plugin:@typescript-eslint/recommended"
+  "parser": "@typescript-eslint/parser",
+  "env": {
+    "browser": true,
+    "commonjs": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:compat/recommended",
+    "plugin:import/recommended",
+    "prettier",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "parserOptions": {
+    "ecmaVersion": 6,
+    "sourceType": "module"
+  },
+  "settings": {
+    "import/resolver": {
+      "typescript": {}
+    }
+  },
+  "plugins": ["compat", "prettier", "simple-import-sort", "license-header", "no-unsanitized"],
+  "rules": {
+    "no-restricted-imports": ["error", { "patterns": ["../"] }],
+    "import/no-namespace": "error",
+    "simple-import-sort/exports": "error",
+    "simple-import-sort/imports": "error",
+    "no-eval": "error",
+    "no-implied-eval": "error",
+    "no-unsanitized/method": "error",
+    "no-unsanitized/property": "error",
+    "license-header/header": ["error", "./resources/license-header.js"],
+    "@typescript-eslint/consistent-type-imports": "error",
+    "@typescript-eslint/no-non-null-assertion": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/ban-ts-comment": "off",
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": [
+      "warn", // or "error"
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
+      }
     ],
-    "parserOptions": {
-        "ecmaVersion": 6,
-        "sourceType": "module"
-    },
-    "settings": {
-        "import/resolver": {
-            "typescript": {}
-        }
-    },
-    "plugins": [
-        "compat",
-        "prettier",
-        "simple-import-sort",
-        "license-header",
-        "no-unsanitized"
-    ],
-    "rules": {
-        "no-restricted-imports": ["error", {"patterns": ["../"]}],
-        "import/no-namespace": "error",
-        "simple-import-sort/exports": "error",
-        "simple-import-sort/imports": "error",
-        "no-eval": "error",
-        "no-implied-eval": "error",
-        "no-unsanitized/method": "error",
-        "no-unsanitized/property": "error",
-        "license-header/header": ["error", "./resources/license-header.js"],
-        "@typescript-eslint/consistent-type-imports": "error",
-        "@typescript-eslint/no-non-null-assertion": "off",
-        "@typescript-eslint/no-explicit-any": "off",
-        "@typescript-eslint/ban-ts-comment": "off",
-        "no-unused-vars": "off",
-        "@typescript-eslint/no-unused-vars": [
-            "warn", // or "error"
-            {
-                "argsIgnorePattern": "^_",
-                "varsIgnorePattern": "^_"
-            }
-        ],
-        "strict": 1,
-        "indent": "off",
-        "linebreak-style": ["error", "unix"],
-        "quotes": ["error", "double", {"avoidEscape": true}],
-        "semi": ["error", "always"],
-        "prettier/prettier": 2
-    },
-    "ignorePatterns": ["*_min.js"]
+    "strict": 1,
+    "indent": "off",
+    "linebreak-style": ["error", "unix"],
+    "quotes": ["error", "double", { "avoidEscape": true }],
+    "semi": ["error", "always"],
+    "prettier/prettier": 2
+  },
+  "ignorePatterns": ["*_min.js"]
 }

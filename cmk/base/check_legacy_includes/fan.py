@@ -16,7 +16,6 @@ def check_fan(rpm, params):
         rpm,
         "fan" if params.get("output_metrics") else None,
         levels,
-        unit="RPM",
-        human_readable_func=int,
+        human_readable_func=lambda x: f"{int(x)} RPM",
         infoname="Speed",
     )

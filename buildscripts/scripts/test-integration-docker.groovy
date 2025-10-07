@@ -22,7 +22,7 @@ def main() {
     def single_tests = load("${checkout_dir}/buildscripts/scripts/utils/single_tests.groovy");
 
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
-    def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
+    def branch_base_folder = package_helper.branch_base_folder(true);
 
     def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
@@ -39,7 +39,7 @@ def main() {
     def distro = "ubuntu-22.04";
     def fake_windows_artifacts = params.FAKE_WINDOWS_ARTIFACTS;
 
-    def relative_job_name = "${branch_base_folder}/builders/build-cmk-distro-package";
+    def relative_job_name = "${branch_base_folder}/builders/trigger-cmk-distro-package";
     def setup_values = single_tests.common_prepare(version: VERSION, make_target: make_target, docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD);
 
     stage("Prepare workspace") {
@@ -102,7 +102,7 @@ def main() {
                 build_instance = smart_build(
                     // see global-defaults.yml, needs to run in minimal container
                     use_upstream_build: true,
-                    relative_job_name: "${branch_base_folder}/builders/build-cmk-distro-package",
+                    relative_job_name: relative_job_name,
                     build_params: [
                         CUSTOM_GIT_REF: effective_git_ref,
                         VERSION: params.VERSION,
@@ -118,19 +118,8 @@ def main() {
                         CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: setup_values.docker_tag,
                     ],
                     no_remove_others: true, // do not delete other files in the dest dir
-                    download: false,    // use copyArtifacts to avoid nested directories
-                );
-            }
-            smart_stage(
-                name: "Copy artifacts",
-                condition: build_instance,
-                raiseOnError: true,
-            ) {
-                copyArtifacts(
-                    projectName: "${branch_base_folder}/builders/build-cmk-distro-package",
-                    selector: specific(build_instance.getId()),
-                    target: source_dir,
-                    fingerprintArtifacts: true,
+                    download: true,
+                    dest: "${source_dir}",
                 );
             }
         }

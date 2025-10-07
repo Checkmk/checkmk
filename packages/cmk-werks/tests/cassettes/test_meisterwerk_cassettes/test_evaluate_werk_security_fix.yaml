@@ -1,0 +1,62 @@
+interactions:
+- request:
+    body: '{"werk": {"title": "Security Fix: Authentication Bypass", "date": "2024-04-15T00:00:00Z",
+      "level": "1", "versions": ["1.3.2"], "werk_class": "security", "component":
+      "authentication", "compatible": true, "werk_text": "Fixed critical security
+      vulnerability in authentication system. Users should update immediately. No
+      configuration changes required. The vulnerability allowed unauthorized access
+      under specific conditions."}}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '409'
+      content-type:
+      - application/json
+      host:
+      - meisterwerk.lan.checkmk.net
+      user-agent:
+      - python-httpx/0.28.1
+      user-id:
+      - cli_user
+      x-request-id:
+      - 879a54e7-71a1-45ce-9ade-59daa642906c
+    method: POST
+    uri: http://meisterwerk.lan.checkmk.net/werks/evaluate/werk
+  response:
+    body:
+      string: '{"user_id":"python-httpx/0.28.1","request_id":"879a54e7-71a1-45ce-9ade-59daa642906c","response_datetime":"2025-09-18T13:42:57.106284Z","evaluation":{"aggregated_scores":{"grammar_score":3,"user_impact_clarity_score":2,"paragraph_division_score":1,"non_compatible_werk_score":null,"english_style_score":2},"aggregated_suggestions":{"grammar_suggestions_to_improve_text":"No
+        improvements necessary.","user_impact_clarity_suggestions_to_improve_text":"Explain
+        simply that the vulnerability allowed unauthorized users to gain access to
+        the system, emphasize the importance of updating promptly to prevent potential
+        security breaches, and clarify that no configuration changes or additional
+        steps are needed after updating.","paragraph_division_suggestions_to_improve_text":"Divide
+        the werk into four paragraphs: first, state the fixed critical security vulnerability;
+        second, emphasize that users should update immediately; third, mention that
+        no configuration changes are required; fourth, briefly explain that the vulnerability
+        allowed unauthorized access under specific conditions.","non_compatible_werk_suggestions_to_improve_text":null,"english_style_suggestions_to_improve_text":"Split
+        the entry into two sentences: first, state that the authentication system
+        fixed a critical security vulnerability that allowed unauthorized access under
+        specific conditions; second, instruct users to update immediately and note
+        that no configuration changes are required. Use active voice and place the
+        key effect at the end of the first sentence."}}}'
+    headers:
+      Content-Length:
+      - '1539'
+      Content-Type:
+      - text/html; charset=utf-8
+      - application/json
+      Date:
+      - Mon, 22 Sep 2025 12:01:43 GMT
+      Server:
+      - uvicorn
+      Via:
+      - 1.1 Caddy
+    status:
+      code: 200
+      message: OK
+version: 1

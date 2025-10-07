@@ -25,6 +25,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.automations import make_automation_config
@@ -141,6 +142,7 @@ class ModeBulkDiscovery(WatoMode):
                     self._do_full_scan,
                     self._ignore_errors,
                     self._bulk_size,
+                    UserPermissionSerializableConfig.from_global_config(config),
                     pprint_value=config.wato_pprint_config,
                     debug=config.debug,
                     use_git=config.wato_use_git,

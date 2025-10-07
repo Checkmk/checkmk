@@ -88,7 +88,7 @@ def register(
 
 ConfigVariableSiteAutostart = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
-    domain=ConfigDomainOMD,
+    primary_domain=ConfigDomainOMD,
     ident="site_autostart",
     valuespec=lambda: Checkbox(
         title=_("Start during system boot"),
@@ -98,7 +98,7 @@ ConfigVariableSiteAutostart = ConfigVariable(
 
 ConfigVariableSiteCore = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
-    domain=ConfigDomainOMD,
+    primary_domain=ConfigDomainOMD,
     ident="site_core",
     valuespec=lambda: DropdownChoice(
         title=_("Monitoring core"),
@@ -183,7 +183,7 @@ def _migrate_tcp_only_from(livestatus_tcp: dict[str, object]) -> dict[str, objec
 
 ConfigVariableSiteLivestatusTCP = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
-    domain=ConfigDomainOMD,
+    primary_domain=ConfigDomainOMD,
     ident="site_livestatus_tcp",
     valuespec=lambda: Optional(
         valuespec=Migrate(
@@ -238,7 +238,7 @@ class ConfigDomainDiskspace(ABCConfigDomain):
 
 ConfigVariableSiteDiskspaceCleanup = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
-    domain=ConfigDomainDiskspace,
+    primary_domain=ConfigDomainDiskspace,
     ident="diskspace_cleanup",
     valuespec=lambda: Dictionary(
         title=_("Automatic disk space cleanup"),
@@ -422,7 +422,7 @@ class ConfigDomainApache(ABCConfigDomain):
 
 ConfigVariableSiteApacheProcessTuning = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
-    domain=ConfigDomainApache,
+    primary_domain=ConfigDomainApache,
     ident="apache_process_tuning",
     valuespec=lambda: Dictionary(
         title=_("Apache process tuning"),
@@ -541,7 +541,7 @@ class ConfigDomainRRDCached(ABCConfigDomain):
 
 ConfigVariableSiteRRDCachedTuning = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
-    domain=ConfigDomainRRDCached,
+    primary_domain=ConfigDomainRRDCached,
     ident="rrdcached_tuning",
     valuespec=lambda: Dictionary(
         title=_("RRDCached tuning"),

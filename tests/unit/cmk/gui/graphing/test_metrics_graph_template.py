@@ -7,13 +7,18 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import graphs, metrics, Title
 from cmk.gui.graphing._from_api import RegisteredMetric
-from cmk.gui.graphing._graph_specification import GraphMetric, GraphRecipe, MinimalVerticalRange
+from cmk.gui.graphing._graph_metric_expressions import GraphMetricRRDSource
+from cmk.gui.graphing._graph_specification import (
+    GraphMetric,
+    GraphRecipe,
+    MinimalVerticalRange,
+)
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
-from cmk.gui.graphing._metric_operation import MetricOpRRDSource
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, IECNotation
 from cmk.gui.type_defs import Row
 from cmk.gui.unit_formatter import AutoPrecision
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 
 class FakeTemplateGraphSpecification(TemplateGraphSpecification):
@@ -96,6 +101,8 @@ def test_template_recipes() -> None:
             ),
         },
         UserPermissions({}, {}, {}, []),
+        debug=False,
+        temperature_unit=TemperatureUnit.CELSIUS,
     ) == [
         GraphRecipe(
             title="Size and used space",
@@ -111,7 +118,7 @@ def test_template_recipes() -> None:
                 GraphMetric(
                     title="Used space",
                     line_type="stack",
-                    operation=MetricOpRRDSource(
+                    operation=GraphMetricRRDSource(
                         site_id=SiteId("site_id"),
                         host_name=HostName("host_name"),
                         service_name="Service name",
@@ -128,7 +135,7 @@ def test_template_recipes() -> None:
                 GraphMetric(
                     title="Free space",
                     line_type="stack",
-                    operation=MetricOpRRDSource(
+                    operation=GraphMetricRRDSource(
                         site_id=SiteId("site_id"),
                         host_name=HostName("host_name"),
                         service_name="Service name",
@@ -145,7 +152,7 @@ def test_template_recipes() -> None:
                 GraphMetric(
                     title="Total size",
                     line_type="line",
-                    operation=MetricOpRRDSource(
+                    operation=GraphMetricRRDSource(
                         site_id=SiteId("site_id"),
                         host_name=HostName("host_name"),
                         service_name="Service name",
@@ -186,7 +193,7 @@ def test_template_recipes() -> None:
                 GraphMetric(
                     title="Growth",
                     line_type="area",
-                    operation=MetricOpRRDSource(
+                    operation=GraphMetricRRDSource(
                         site_id=SiteId("site_id"),
                         host_name=HostName("host_name"),
                         service_name="Service name",

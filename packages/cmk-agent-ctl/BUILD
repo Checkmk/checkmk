@@ -138,6 +138,13 @@ platform_transition_binary(
     visibility = ["//visibility:public"],
 )
 
+platform_transition_binary(
+    name = "cmk-agent-ctl-musl-aarch64",
+    binary = ":cmk-agent-ctl",
+    platform = "//bazel/platforms:aarch64-linux-musl",
+    visibility = ["//visibility:public"],
+)
+
 rust_doc(
     name = "doc",
     crate = ":cmk-agent-ctl-lib",

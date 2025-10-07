@@ -25,6 +25,7 @@ HACK_AGENTS = {
     "aws": False,
     "aws_status": False,  # needs no secret
     "azure": True,
+    "azure_v2": True,
     "azure_status": False,  # needs no secret
     "bazel_cache": True,
     "bi": False,  # needs no secret
@@ -42,7 +43,6 @@ HACK_AGENTS = {
     "proxmox_ve": True,
     "pure_storage_fa": True,
     "three_par": True,
-    "emcvnx": True,
     "rabbitmq": True,
     "redfish": False,
     "redfish_power": False,

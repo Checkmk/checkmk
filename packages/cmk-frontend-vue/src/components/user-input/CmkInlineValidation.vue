@@ -16,7 +16,7 @@ const props = defineProps<{
     v-if="props.validation !== undefined && props.validation.length > 0"
     class="cmk-inline-validation"
   >
-    <CmkIcon name="alert_crit" variant="inline" size="large" />
+    <CmkIcon name="alert-crit" variant="inline" size="large" />
     <div>
       <span v-for="message in props.validation" :key="message">{{ message }}</span>
     </div>

@@ -4,7 +4,11 @@ load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//:bazel_variables.bzl", "edition_python_deps")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 
-exports_files(["requirements.in"])
+exports_files([
+    "requirements.in",
+    "utils/password_store/cli.py",
+    "gui/openapi/spec/spec_generator/generate_api_spec.py",
+])
 
 REQUIRED_EXTERNAL_DEPS = [
     # alphabetical order
@@ -166,6 +170,7 @@ CMK_PACKAGES = [
     "//packages/cmk-ccc:tty",
     "//packages/cmk-ccc:user",
     "//packages/cmk-ccc:version",
+    "//packages/cmk-check-engine:fetchers",
     "//packages/cmk-check-engine:helper-interface",
     "//packages/cmk-check-engine:snmplib",
     "//packages/cmk-crypto",
@@ -185,6 +190,10 @@ CMK_PACKAGES = [
 ] + select({
     "@//:gpl_repo": [],
     "@//:gpl+enterprise_repo": [
+        "//non-free/packages/cmk-core-helpers:check-helper-protocol",
+        "//non-free/packages/cmk-core-helpers:fetcher-helper",
+        "//non-free/packages/cmk-core-helpers:inline-snmp",
+        "//non-free/packages/cmk-metric-backend",
         "//non-free/packages/cmk-mknotifyd",
         "//non-free/packages/cmk-otel-collector",
     ],
@@ -220,7 +229,11 @@ py_library(
     name = "lib_cmk_cre",
     srcs = CRE_PY,
     imports = [".."],
-    visibility = ["//tests:__subpackages__"],
+    visibility = [
+        "//tests:__subpackages__",
+        # for api spec
+        "//omd:__subpackages__",
+    ],
     deps = [
         "lib_cmk",
     ],
@@ -242,30 +255,15 @@ py_library(
 ]]
 
 py_library(
-    # HACK to avoid Source file found twice under different module names: "meraki" and "meraki.__init__"
-    name = "lib_cmk_repo_no_meraki",
-    srcs = glob(
-        include = ["**/*.py"],
-        exclude = ["plugins/cisco_meraki/special_agent/agent_cisco_meraki.py"],
-    ),
-    data = ["gui/wsgi/applications/index.wsgi"],
-    imports = [".."],
-    visibility = ["//tests/unit:__pkg__"],
-    deps = [
-        "//agents/plugins:mk_jolokia",
-    ] + select({
-        "@//:gpl_repo": [],
-        "@//:gpl+enterprise_repo": CMC_PROTO_DEPS,
-    }) + CMK_PACKAGES + [requirement(dep) for dep in REQUIRED_EXTERNAL_DEPS if dep != "meraki"],
-)
-
-py_library(
-    # The repo edition is only used for testing.
+    # The repo edition is only used for testing and generating the plugin-api doc with sphinx.
     name = "lib_cmk_repo",
     srcs = glob(["**/*.py"]),
     data = ["gui/wsgi/applications/index.wsgi"],
     imports = [".."],
-    visibility = ["//tests/unit:__pkg__"],
+    visibility = [
+        "//doc/plugin-api:__pkg__",
+        "//tests/unit:__pkg__",
+    ],
     deps = [
         "//agents/plugins:mk_jolokia",
     ] + select({

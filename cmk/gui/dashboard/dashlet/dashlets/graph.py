@@ -19,7 +19,11 @@ from cmk.gui import sites
 from cmk.gui.config import active_config, Config
 from cmk.gui.dashboard.type_defs import DashletId, DashletSize
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
-from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api, RegisteredMetric
+from cmk.gui.graphing._from_api import (
+    graphs_from_api,
+    metrics_from_api,
+    RegisteredMetric,
+)
 from cmk.gui.graphing._graph_render_config import (
     GraphRenderConfig,
     GraphRenderOptions,
@@ -35,6 +39,7 @@ from cmk.gui.graphing._graph_templates import (
 from cmk.gui.graphing._html_render import GraphDestinations
 from cmk.gui.graphing._metrics import get_metric_spec
 from cmk.gui.graphing._translated_metrics import translated_metrics_from_row
+from cmk.gui.graphing._unit import get_temperature_unit
 from cmk.gui.graphing._utils import MKCombinedGraphLimitExceededError
 from cmk.gui.graphing._valuespecs import vs_graph_render_options
 from cmk.gui.htmllib.html import html
@@ -42,9 +47,16 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import Choices, GraphRenderOptionsVS, SingleInfos, SizePT, VisualContext
+from cmk.gui.type_defs import (
+    Choices,
+    GraphRenderOptionsVS,
+    SingleInfos,
+    SizePT,
+    VisualContext,
+)
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.valuespec import (
     Dictionary,
     DictionaryElements,
@@ -58,7 +70,6 @@ from cmk.gui.visuals import (
     get_singlecontext_vars,
     livestatus_query_bare,
 )
-from cmk.utils.macros import MacroMapping
 
 from ...title_macros import macro_mapping_from_context
 from ...type_defs import ABCGraphDashletConfig, DashboardConfig, DashboardName
@@ -275,6 +286,8 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
                 metrics_from_api,
                 graphs_from_api,
                 UserPermissions.from_config(active_config, permission_registry),
+                debug=active_config.debug,
+                temperature_unit=get_temperature_unit(user, active_config.default_temperature_unit),
             )
         except MKMissingDataError:
             raise
@@ -321,13 +334,13 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
             json.dumps(self._dashlet_spec["timerange"]),
         )
 
-    def show(self) -> None:
+    def show(self, config: Config) -> None:
         if self._init_exception:
             raise self._init_exception
 
         html.div("", id_="dashlet_graph_%d" % self._dashlet_id)
 
-    def _get_macro_mapping(self, title: str) -> MacroMapping:
+    def _get_macro_mapping(self, title: str) -> Mapping[str, str]:
         macro_mapping = macro_mapping_from_context(
             self.context if self.has_context() else {},
             self.single_infos(),
@@ -450,21 +463,23 @@ def graph_templates_autocompleter(
     Called by the webservice with the current input field value and the
     completions_params to get the list of choices"""
     return _graph_templates_autocompleter_testable(
-        config=config,
         value_entered_by_user=value_entered_by_user,
         params=params,
         registered_metrics=metrics_from_api,
         registered_graphs=graphs_from_api,
+        debug=config.debug,
+        temperature_unit=get_temperature_unit(user, config.default_temperature_unit),
     )
 
 
 def _graph_templates_autocompleter_testable(
     *,
-    config: object,
     value_entered_by_user: str,
     params: Mapping[str, Any],
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
+    debug: bool,
+    temperature_unit: TemperatureUnit,
 ) -> Choices:
     if not params.get("context") and params.get("show_independent_of_context") is True:
         return _sorted_matching_graph_template_choices(
@@ -477,6 +492,8 @@ def _graph_templates_autocompleter_testable(
             params["context"],
             registered_metrics,
             registered_graphs,
+            debug=debug,
+            temperature_unit=temperature_unit,
         )
     )
 
@@ -493,6 +510,9 @@ def _graph_and_single_metric_templates_choices_for_context(
     context: VisualContext,
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
+    *,
+    debug: bool,
+    temperature_unit: TemperatureUnit,
 ) -> tuple[list[GraphTemplateChoice], list[GraphTemplateChoice]]:
     graph_template_choices: list[GraphTemplateChoice] = []
     single_metric_template_choices: list[GraphTemplateChoice] = []
@@ -507,6 +527,8 @@ def _graph_and_single_metric_templates_choices_for_context(
                 translated_metrics_from_row(
                     row,
                     registered_metrics,
+                    debug=debug,
+                    temperature_unit=temperature_unit,
                 ),
                 registered_metrics,
                 registered_graphs,

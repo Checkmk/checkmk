@@ -208,7 +208,7 @@ The following code is a possible implementation of the bakery plugin, using the 
       # To be loaded with 'source' in Solaris shell script
       return [
          f'USER={quote_shell_string(user)}',
-         f'CONTENT={quote_shell_string(user)}',
+         f'CONTENT={quote_shell_string(content)}',
       ]
 
 

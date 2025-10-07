@@ -133,9 +133,6 @@
     <ClCompile Include="watest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="pch.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="test-wtools_service.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -161,13 +158,16 @@
     <ClCompile Include="test-extensions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>Pch</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="pch.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="test_tools.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>Pch</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -218,6 +218,9 @@
     </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{2c0e1417-2b7f-4fc9-ae8b-f75163fcc4d2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Pch">
+      <UniqueIdentifier>{36f3f2d6-3ce8-4ead-9275-82016d7b3a43}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

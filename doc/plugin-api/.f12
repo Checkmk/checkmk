@@ -13,11 +13,9 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 test -d "${ROOT}" || exit 1
 
-echo "Cleanup old stuff..."
-git clean -xfd .
-
 echo "Updating documentation..."
-make html
+bazel_target="//doc/plugin-api:pkg_tar"
+bazel build ${bazel_target}
 
 echo "Updating site $SITE..."
-rsync -rlD build/html "$ROOT/share/doc/check_mk/plugin-api/"
+sudo tar --dereference -xvf "$(bazel info workspace)/$(bazel cquery --output=files ${bazel_target})" -C "$ROOT"/

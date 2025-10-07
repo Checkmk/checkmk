@@ -13,9 +13,10 @@ from cmk.bi.aggregation_functions import (
     BIAggregationFunctionCountOK,
     BIAggregationFunctionWorst,
 )
-from cmk.bi.lib import ABCBIAction, ABCBIAggregationFunction, ABCBISearch, ActionKind, SearchKind
+from cmk.bi.lib import ABCBIAction, ABCBIAggregationFunction, ABCBISearch, SearchKind
 from cmk.bi.packs import BIAggregationPack
 from cmk.bi.search import BIEmptySearch, BIFixedArgumentsSearch, BIHostSearch, BIServiceSearch
+from cmk.bi.type_defs import ActionKind
 from cmk.ccc import plugin_registry
 from cmk.gui import userdb
 from cmk.gui.exceptions import MKUserError

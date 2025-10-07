@@ -2,6 +2,7 @@ load("@aspect_rules_py//py:defs.bzl", "py_binary")
 load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:deb.bzl", "pkg_deb")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@rules_uv//uv:venv.bzl", "create_venv")
@@ -40,9 +41,64 @@ file_from_flag(
     tags = ["manual"],
 )
 
+py_binary(
+    name = "generate_api_spec",
+    srcs = ["//cmk:gui/openapi/spec/spec_generator/generate_api_spec.py"],
+    tags = ["manual"],
+    deps = [
+        "//cmk:lib_cmk_cre",
+    ],
+)
+
+run_binary(
+    name = "generate_doc.spec",
+    outs = ["doc.spec"],
+    args = [
+        "generate",
+        "--version",
+        "v1",
+        "--target",
+        "doc",
+        "--out",
+        "bazel-out/k8-fastbuild/bin/omd/doc.spec",
+        "--format",
+        "dict",
+    ],
+    tags = ["manual"],
+    tool = ":generate_api_spec",
+)
+
+run_binary(
+    name = "generate_swagger_ui.spec",
+    outs = ["swagger-ui.spec"],
+    args = [
+        "generate",
+        "--version",
+        "v1",
+        "--target",
+        "swagger-ui",
+        "--out",
+        "bazel-out/k8-fastbuild/bin/omd/swagger-ui.spec",
+        "--format",
+        "dict",
+    ],
+    tags = ["manual"],
+    tool = ":generate_api_spec",
+)
+
+pkg_files(
+    name = "rest_api_spec",
+    srcs = [
+        ":doc.spec",
+        ":swagger-ui.spec",
+    ],
+    prefix = "var/check_mk/rest_api/spec",
+)
+
 [pkg_tar(
     name = "deps_install_" + edition,
     srcs = [
+        ":rest_api_spec",
         "//omd/packages/freetds:freetds_pkg",
         "//omd/packages/protobuf",
         "//packages/check-http:check_http_pkg",
@@ -53,6 +109,7 @@ file_from_flag(
     deps = [
                "//bin:pkg_tar",
                "//active_checks:pkg_tar",
+               "//doc/plugin-api:pkg_tar",
                #added here instead of above because of disappearing file
                "//omd/packages/Python:python_tar",
                "//omd/packages/changelog",

@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Iterable, Sequence
-from typing import Annotated, Literal
+from typing import Annotated, NamedTuple
 
 from cmk import trace
+from cmk.gui.fields.fields_filter import FieldsFilter
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
     APIVersion,
@@ -16,28 +17,16 @@ from cmk.gui.openapi.framework import (
     QueryParam,
     VersionedEndpoint,
 )
-from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
-from cmk.gui.openapi.framework.model.base_models import DomainObjectCollectionModel, LinkModel
+from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import FieldsFilterType
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.openapi.shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 
-from ._utils import serialize_host
-from .models.response_models import HostConfigModel
+from ._utils import PERMISSIONS, serialize_host_collection
+from .models.response_models import HostConfigCollectionModel
 
 tracer = trace.get_tracer()
-
-
-@api_model
-class HostConfigCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["host_config"] = api_field(
-        description="The domain type of the objects in the collection",
-        example="host_config",
-    )
-    # TODO: add proper example
-    value: list[HostConfigModel] = api_field(description="A list of host objects", example="")
 
 
 class SearchFilter:
@@ -57,6 +46,29 @@ class SearchFilter:
 
     def filter_by_site(self, host: Host) -> bool:
         return host.site_id() == self._site if self._site else True
+
+
+class _ComputeFields(NamedTuple):
+    effective_attributes: bool
+    links: bool
+
+
+def _merge_filters(
+    fields: FieldsFilter | ApiOmitted, compute_effective_attributes: bool, compute_links: bool
+) -> _ComputeFields:
+    """Merge the fields filter with the effective attributes and include links flags.
+
+    The framework already handles the fields filter, we only care about specific fields for
+    performance gains by not computing them when they are not requested."""
+    if isinstance(fields, ApiOmitted):
+        return _ComputeFields(
+            effective_attributes=compute_effective_attributes,
+            links=compute_links,
+        )
+    return _ComputeFields(
+        effective_attributes=fields.is_included("extensions.effective_attributes"),
+        links=fields.is_included("links"),
+    )
 
 
 def list_hosts_v1(
@@ -101,20 +113,15 @@ def list_hosts_v1(
         hosts: Iterable[Host] = root_folder.all_hosts_recursively().values()
     else:
         hosts = _iter_hosts_with_permission(root_folder)
+
+    compute = _merge_filters(
+        fields, compute_effective_attributes=effective_attributes, compute_links=include_links
+    )
     with tracer.span("list-hosts-build-response"):
-        return HostConfigCollectionModel(
-            domainType="host_config",
-            id="host",
-            extensions=ApiOmitted(),
-            value=[
-                serialize_host(
-                    host=host,
-                    compute_links=include_links,
-                    compute_effective_attributes=effective_attributes,
-                )
-                for host in filter(hosts_filter, hosts)
-            ],
-            links=[LinkModel.create("self", collection_href("host_config"))],
+        return serialize_host_collection(
+            [host for host in filter(hosts_filter, hosts)],
+            compute_effective_attributes=compute.effective_attributes,
+            compute_links=compute.links,
         )
 
 
@@ -133,9 +140,7 @@ ENDPOINT_LIST_HOSTS = VersionedEndpoint(
         link_relation=".../collection",
         method="get",
     ),
-    permissions=EndpointPermissions(
-        required=permissions.Optional(permissions.Perm("wato.see_all_folders"))
-    ),
+    permissions=EndpointPermissions(required=PERMISSIONS),
     doc=EndpointDoc(family=HOST_CONFIG_FAMILY.name),
     versions={APIVersion.UNSTABLE: EndpointHandler(handler=list_hosts_v1)},
 )

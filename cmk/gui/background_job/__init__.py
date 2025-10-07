@@ -23,6 +23,7 @@ from ._models import ScheduledJobsHealth as ScheduledJobsHealth
 from ._models import StartRequest as StartRequest
 from ._models import StartResponse as StartResponse
 from ._models import TerminateRequest as TerminateRequest
+from ._process import BackgroundJobTimedOut as BackgroundJobTimedOut
 from ._registry import BackgroundJobRegistry as BackgroundJobRegistry
 from ._registry import job_registry as job_registry
 from ._status import BackgroundStatusSnapshot as BackgroundStatusSnapshot

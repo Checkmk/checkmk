@@ -1,10 +1,5 @@
 workspace(name = "omd_packages")
 
-load("//:bazel_variables.bzl", "RUFF_VERSION")
-load("//omd/packages/asio:asio_http.bzl", "asio_workspace")
-
-asio_workspace()
-
 load("//omd/packages/perl-modules:perl-modules_http.bzl", "perl_modules")
 
 perl_modules()
@@ -36,7 +31,3 @@ rrdtool_workspace()
 load("//omd/packages/rrdtool:rrdtool_native.bzl", "rrdtool_native_workspace")
 
 rrdtool_native_workspace()
-
-load("@aspect_rules_lint//lint:ruff.bzl", "fetch_ruff")
-
-fetch_ruff(RUFF_VERSION)

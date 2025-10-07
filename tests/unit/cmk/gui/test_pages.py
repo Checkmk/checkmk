@@ -64,6 +64,8 @@ def test_registered_pages() -> None:
         "ajax_sidebar_get_number_of_pending_changes",
         "ajax_sidebar_get_sites_and_changes",
         "ajax_unified_search",
+        "ajax_mark_step_as_complete",
+        "ajax_get_welcome_page_stage_information",
         "automation_login",
         "bi_map",
         "bi_render_tree",
@@ -144,6 +146,7 @@ def test_registered_pages() -> None:
         "user_webauthn_login_complete",
         "user_webauthn_login_begin",
         "view",
+        "widget_edit_view",
         "widget_figure",
         "widget_graph",
         "widget_iframe_view",
@@ -237,6 +240,7 @@ def test_registered_pages() -> None:
             "download_robotmk_suite_report",
             "ajax_fetch_metric_color",
             "ajax_fetch_ajax_graph",
+            "ajax_fetch_metric_types",
         ]
 
     if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CSE:

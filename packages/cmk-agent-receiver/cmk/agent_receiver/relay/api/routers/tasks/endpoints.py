@@ -4,35 +4,38 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Annotated
-from uuid import UUID
 
 import fastapi
 
 from cmk.agent_receiver.log import bound_contextvars
 from cmk.agent_receiver.relay.api.routers.tasks.dependencies import (
+    get_activate_config_handler,
     get_create_task_handler,
     get_relay_task_handler,
     get_relay_tasks_handler,
     get_update_task_handler,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
+    ActivateConfigHandler,
     CreateTaskHandler,
     GetRelayTaskHandler,
     GetRelayTasksHandler,
     UpdateTaskHandler,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
+    FetchSpec,
     ResultType,
     TaskStatus,
-    TaskType,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.serializers import (
     TaskListResponseSerializer,
     TaskResponseSerializer,
 )
 from cmk.agent_receiver.relay.lib.relays_repository import CheckmkAPIError
-from cmk.agent_receiver.relay.lib.shared_types import RelayID, TaskID
+from cmk.agent_receiver.relay.lib.shared_types import RelayID, Serial, TaskID
 from cmk.relay_protocols import tasks as tasks_protocol
+
+SERIAL_HEADER = "X-CMK-SERIAL"
 
 router = fastapi.APIRouter()
 
@@ -69,29 +72,22 @@ async def create_task_endpoint(
         - Task IDs are unique
         - Maximum number of stored tasks has limits
     """
-    # Business logic for task creation intentionally not implemented
-    # - Validate relay exists
-    # - Validate task type and payload
-    # - Check maximum task limit for the Relay
-    # - Create task
-    #   - Generate unique task ID
-    #   - Set creation and last update timestamps
-    #   - Set task type and payload from request
-    #   - Set status to PENDING
-    # - Store task in database
+
+    # In case a new TaskCreateRequestSpec is added in the future, extend this match-case
+    # match request.spec:
+    spec = FetchSpec(
+        payload=request.spec.payload,
+        timeout=request.spec.timeout,
+    )
 
     try:
-        task_id = handler.process(
-            RelayID(relay_id),
-            TaskType(request.type),
-            request.payload,
-        )
+        task_id = handler.process(RelayID(relay_id), spec)
     except CheckmkAPIError as e:
         raise fastapi.HTTPException(
             status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
             detail=e.msg,
         )
-    return tasks_protocol.TaskCreateResponse(task_id=UUID(task_id))
+    return tasks_protocol.TaskCreateResponse(task_id=task_id)
 
 
 @router.patch(
@@ -106,6 +102,7 @@ async def update_task(
     task_id: str,
     request: tasks_protocol.TaskUpdateRequest,
     handler: Annotated[UpdateTaskHandler, fastapi.Depends(get_update_task_handler)],
+    relay_serial: Annotated[str, fastapi.Header(alias=SERIAL_HEADER)],
 ) -> tasks_protocol.TaskResponse:
     """Update a task with results.
 
@@ -130,24 +127,14 @@ async def update_task(
         - Status changes based on result_type
         - Tasks with results can trigger expiration calculation
     """
-    # Business logic for task update intentionally not implemented
-    # - Validate relay exists
-    # - Validate task exists and belongs to Relay
-    # - Validate TaskUpdateRequest
-    #   - Check result_type
-    #   - Check result payload / Error
-    # - Update task with results
-    # - Update status based on result_type
-    # - Update last_update_timestamp
-    # - Store updated task
-
     try:
         with bound_contextvars(task_id=task_id):
             updated_task = handler.process(
-                RelayID(relay_id),
-                TaskID(task_id),
-                ResultType(request.result_type.value),
-                request.result_payload,
+                relay_id=RelayID(relay_id),
+                task_id=TaskID(task_id),
+                result_type=ResultType(request.result_type.value),
+                result_payload=request.result_payload,
+                relay_serial=Serial(relay_serial),
             )
     except CheckmkAPIError as e:
         raise fastapi.HTTPException(
@@ -184,12 +171,6 @@ async def get_tasks_endpoint(
         - Tasks are subject to expiration based on last_update_timestamp
         - Expired tasks are automatically removed
     """
-    # Business logic for task listing intentionally not implemented
-    # - Validate relay exists
-    # - Apply status filter if provided
-    # - Note: we can remove expired tasks based on expiration time configuration here
-    #         instead of having a separate cleanup task
-    # - Return filtered task list
     try:
         tasks = handler.process(RelayID(relay_id), TaskStatus(status.value) if status else None)
     except CheckmkAPIError as e:
@@ -226,3 +207,23 @@ async def get_task_endpoint(
         )
 
     return TaskResponseSerializer.serialize(task)
+
+
+@router.post("/activate-config", status_code=fastapi.status.HTTP_200_OK)
+async def create_relay_config_tasks(
+    handler: Annotated[ActivateConfigHandler, fastapi.Depends(get_activate_config_handler)],
+) -> tasks_protocol.TaskListResponse:
+    """
+    Create a relay configuration task for every registered relay.
+
+    The received RelayConfigTask payload is used to create and persist an individual task per relay
+    so that each relay can load its configuration independently.
+
+    Args:
+        payload: RelayConfigTask containing the configuration data template.
+
+    Returns:
+        TaskListResponse containing the list of created tasks.
+    """
+    created_tasks = handler.process()
+    return TaskListResponseSerializer.serialize(created_tasks)

@@ -67,7 +67,7 @@ def register(page_registry: PageRegistry) -> None:
 
 
 @contextlib.contextmanager
-def authenticate() -> Iterator[bool]:
+def authenticate(user_permissions: UserPermissions) -> Iterator[bool]:
     """Perform the user authentication
 
     This is called by index.py to ensure user
@@ -87,20 +87,14 @@ def authenticate() -> Iterator[bool]:
         yield True
     else:
         assert session.session_info.auth_type
-        with TransactionIdContext(session.user.ident):
+        with TransactionIdContext(session.user.ident, user_permissions):
             yield True
 
 
 @contextlib.contextmanager
-def TransactionIdContext(user_id: UserId) -> Iterator[None]:
-    """Managing context of authenticated user session with cleanup before logout.
-
-    Args:
-        user_id:
-            The username.
-
-    """
-    with UserContext(user_id):
+def TransactionIdContext(user_id: UserId, user_permissions: UserPermissions) -> Iterator[None]:
+    """Managing context of authenticated user session with cleanup before logout."""
+    with UserContext(user_id, user_permissions):
         try:
             yield
         finally:
@@ -211,12 +205,11 @@ class LoginPage(Page):
             if "logout.py" in origtarget or "side.py" in origtarget:
                 origtarget = default_origtarget
 
-            now = datetime.now()
             if result := userdb.check_credentials(
                 username,
                 password,
                 (user_attributes := get_user_attributes(config.wato_user_attrs)),
-                now,
+                (now := datetime.now()),
                 config.default_user_profile,
             ):
                 # use the username provided by the successful login function, this function
@@ -231,7 +224,17 @@ class LoginPage(Page):
                 # a) Set the auth cookie
                 # b) Unset the login vars in further processing
                 # c) Redirect to really requested page
-                session.login(LoggedInUser(username), request.is_secure)
+                session.login(
+                    LoggedInUser(
+                        username,
+                        (
+                            user_permissions := UserPermissions.from_config(
+                                config, permission_registry
+                            )
+                        ),
+                    ),
+                    request.is_secure,
+                )
 
                 # This must happen before the enforced password change is
                 # checked in order to have the redirects correct...
@@ -241,9 +244,7 @@ class LoginPage(Page):
                     )
 
                 # Having this before password updating to prevent redirect access issues
-                if session.two_factor_enforced(
-                    UserPermissions.from_config(config, permission_registry)
-                ):
+                if session.two_factor_enforced(user_permissions):
                     session.session_info.two_factor_required = True
                     raise HTTPRedirect(
                         "user_two_factor_enforce.py?_origtarget=%s"

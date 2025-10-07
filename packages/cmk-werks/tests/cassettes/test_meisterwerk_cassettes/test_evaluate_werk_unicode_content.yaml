@@ -1,0 +1,65 @@
+interactions:
+- request:
+    body: '{"werk": {"title": "Unicode Support: \u00e9mojis \ud83d\ude80 and sp\u00ebcial
+      chars", "date": "2024-12-01T15:45:30Z", "level": "2", "versions": ["2.4.0"],
+      "werk_class": "feature", "component": "internationalization", "compatible":
+      true, "werk_text": "Added support for unicode characters including \u00e9mojis
+      \ud83d\ude80, accented chars like caf\u00e9, and symbols like \u00a9\ufe0f\u2122\ufe0f.
+      The feature enables proper display and processing of international content.
+      Users can now input text in multiple languages without encoding issues."}}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '488'
+      content-type:
+      - application/json
+      host:
+      - meisterwerk.lan.checkmk.net
+      user-agent:
+      - python-httpx/0.28.1
+      user-id:
+      - cli_user
+      x-request-id:
+      - ead0bf31-989f-4666-b561-230fd32fac55
+    method: POST
+    uri: http://meisterwerk.lan.checkmk.net/werks/evaluate/werk
+  response:
+    body:
+      string: '{"user_id":"python-httpx/0.28.1","request_id":"ead0bf31-989f-4666-b561-230fd32fac55","response_datetime":"2025-09-18T13:42:57.106284Z","evaluation":{"aggregated_scores":{"grammar_score":3,"user_impact_clarity_score":2,"paragraph_division_score":1,"non_compatible_werk_score":null,"english_style_score":2},"aggregated_suggestions":{"grammar_suggestions_to_improve_text":"No
+        grammar improvements necessary.","user_impact_clarity_suggestions_to_improve_text":"Add
+        a sentence explaining whether users need to update any settings or if the
+        change is automatic. Provide examples of where users will see the improved
+        support, such as in host names, service descriptions, or notifications, to
+        clarify the user impact.","paragraph_division_suggestions_to_improve_text":"Divide
+        the text into three paragraphs: first, list the types of Unicode characters
+        supported (emojis, accented characters, symbols); second, explain the feature''s
+        purpose (proper display and processing of international content); third, describe
+        the user benefit (ability to input text in multiple languages without encoding
+        issues). This separation clarifies each concept and improves flow.","non_compatible_werk_suggestions_to_improve_text":null,"english_style_suggestions_to_improve_text":"Start
+        with the component or feature name, e.g., ''Unicode support''. Use a strong
+        verb and combine sentences to reduce verbosity. Remove filler phrases like
+        ''including'' and ''the feature enables''. For example: ''Unicode support
+        adds proper display and processing of international content, including emojis,
+        accented characters, and symbols. Users can now input text in multiple languages
+        without encoding issues.''"}}}'
+    headers:
+      Content-Length:
+      - '1666'
+      Content-Type:
+      - text/html; charset=utf-8
+      - application/json
+      Date:
+      - Mon, 22 Sep 2025 12:02:42 GMT
+      Server:
+      - uvicorn
+      Via:
+      - 1.1 Caddy
+    status:
+      code: 200
+      message: OK
+version: 1

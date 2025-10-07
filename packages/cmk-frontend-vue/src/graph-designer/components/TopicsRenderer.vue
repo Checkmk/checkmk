@@ -44,7 +44,7 @@ function getClass(ident: string) {
               class="gd-topics-renderer__icon"
               :class="{ 'gd-topics-renderer__icon--open': !hiddenTopics[topic.ident] }"
               size="xxsmall"
-              name="tree_closed"
+              name="tree-closed"
             />
             {{ topic.title }}
           </td>

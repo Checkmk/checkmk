@@ -46,7 +46,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.permissions import permission_registry
-from cmk.gui.type_defs import InfoName, VisualContext
+from cmk.gui.type_defs import InfoName, VisualContext, VisualTypeName
 from cmk.gui.utils.filter import check_if_non_default_filter_in_request
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import is_ntop_configured
@@ -103,7 +103,9 @@ def page_dashboard(config: Config) -> None:
         name = _get_default_dashboard_name()
         request.set_var("name", name)  # make sure that URL context is always complete
 
-    _draw_dashboard(name, config.sites, UserPermissions.from_config(config, permission_registry))
+    _draw_dashboard(
+        name, config, config.sites, UserPermissions.from_config(config, permission_registry)
+    )
 
 
 def page_dashboard_app(config: Config) -> None:
@@ -149,8 +151,8 @@ def page_dashboard_app(config: Config) -> None:
             },
         }
     else:
-        visual_name = "dashboard"
-        title = _("Create %s") % visual_name
+        visual_name: VisualTypeName = "dashboards"
+        title = _("Create dashboard")
         breadcrumb = visual_page_breadcrumb(visual_name, title, "create")
 
     html.body_start()
@@ -191,7 +193,10 @@ def _get_default_dashboard_name() -> str:
 
 
 def _draw_dashboard(
-    name: DashboardName, site_configs: SiteConfigurations, user_permissions: UserPermissions
+    name: DashboardName,
+    config: Config,
+    site_configs: SiteConfigurations,
+    user_permissions: UserPermissions,
 ) -> None:
     mode = "display"
     if request.var("edit") == "1":
@@ -271,6 +276,8 @@ def _draw_dashboard(
 
     for dashlet in dashlets:
         dashlet_title, content = _render_dashlet(
+            config,
+            user_permissions,
             board,
             dashlet,
             is_update=False,
@@ -293,7 +300,7 @@ def _draw_dashboard(
         "grid_size": RASTER,
         "dashlet_padding": DASHLET_PADDING,
         "dashlet_min_size": Dashlet.minimum_size,
-        "refresh_dashlets": _get_refresh_dashlets(dashlets),
+        "refresh_dashlets": _get_refresh_dashlets(dashlets, debug=config.debug),
         "on_resize_dashlets": _get_resize_dashlets(dashlets),
         "dashboard_name": name,
         "dashboard_mtime": board["mtime"],
@@ -347,12 +354,12 @@ def _get_dashlets(name: DashboardName, owner: UserId, board: DashboardConfig) ->
 
 
 def _get_refresh_dashlets(
-    dashlets: list[Dashlet],
+    dashlets: list[Dashlet], *, debug: bool
 ) -> list[tuple[DashletId, DashletRefreshInterval, DashletRefreshAction]]:
     """Return information for dashlets with automatic refresh"""
     refresh_dashlets = []
     for dashlet in dashlets:
-        refresh = get_dashlet_refresh(dashlet)
+        refresh = get_dashlet_refresh(dashlet, debug=debug)
         if refresh:
             refresh_dashlets.append(refresh)
     return refresh_dashlets
@@ -387,7 +394,12 @@ def dashlet_container(dashlet: Dashlet) -> Iterator[None]:
 
 
 def _render_dashlet(
-    board: DashboardConfig, dashlet: Dashlet, is_update: bool, mtime: int
+    config: Config,
+    user_permissions: UserPermissions,
+    board: DashboardConfig,
+    dashlet: Dashlet,
+    is_update: bool,
+    mtime: int,
 ) -> tuple[HTML | str, HTML | str]:
     content: HTML | str = ""
     title: HTML | str = ""
@@ -410,7 +422,9 @@ def _render_dashlet(
             )
 
         title = dashlet.render_title_html()
-        content = _render_dashlet_content(board, dashlet, is_update=is_update, mtime=board["mtime"])
+        content = _render_dashlet_content(
+            config, user_permissions, board, dashlet, is_update=is_update, mtime=board["mtime"]
+        )
 
     except Exception as e:
         content = render_dashlet_exception_content(dashlet, e)
@@ -419,13 +433,18 @@ def _render_dashlet(
 
 
 def _render_dashlet_content(
-    board: DashboardConfig, dashlet: Dashlet, is_update: bool, mtime: int
+    config: Config,
+    user_permissions: UserPermissions,
+    board: DashboardConfig,
+    dashlet: Dashlet,
+    is_update: bool,
+    mtime: int,
 ) -> HTML:
     with output_funnel.plugged():
         if is_update:
-            dashlet.update()
+            dashlet.update(config, user_permissions)
         else:
-            dashlet.show()
+            dashlet.show(config)
 
         if mtime < board["mtime"]:
             # prevent reloading on the dashboard which already has the current mtime,
@@ -1162,12 +1181,12 @@ def used_dashlet_types(board):
 # refreshed by us but need to do that themselves.
 # TODO: Refactor this to Dashlet or later Dashboard class
 def get_dashlet_refresh(
-    dashlet: Dashlet,
+    dashlet: Dashlet, *, debug: bool
 ) -> tuple[DashletId, DashletRefreshInterval, DashletRefreshAction] | None:
     if (
         not dashlet.is_iframe_dashlet()
         and (refresh := dashlet.refresh_interval())
-        and (action := dashlet.get_refresh_action())
+        and (action := dashlet.get_refresh_action(debug=debug))
     ):
         return (dashlet.dashlet_id, refresh, action)
     return None
@@ -1257,7 +1276,14 @@ def ajax_dashlet(config: Config) -> None:
     try:
         dashlet_type = get_dashlet_type(dashlet_spec)
         dashlet = dashlet_type(name, owner, board, ident, dashlet_spec)
-        _title, content = _render_dashlet(board, dashlet, is_update=True, mtime=mtime)
+        _title, content = _render_dashlet(
+            config,
+            UserPermissions.from_config(config, permission_registry),
+            board,
+            dashlet,
+            is_update=True,
+            mtime=mtime,
+        )
     except Exception as e:
         if dashlet is None:
             dashlet = _fallback_dashlet(name, owner, board, dashlet_spec, ident)

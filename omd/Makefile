@@ -34,19 +34,14 @@ PACKAGES += enterprise
 endif
 ifeq ($(EDITION),managed)
 PACKAGES += enterprise
-PACKAGES += cloud
-PACKAGES += managed
 PACKAGES += otel-collector
 endif
 ifeq ($(EDITION),cloud)
 PACKAGES += enterprise
-PACKAGES += cloud
 PACKAGES += otel-collector
 endif
 ifeq ($(EDITION),saas)
 PACKAGES += enterprise
-PACKAGES += cloud
-PACKAGES += saas
 endif
 
 BUILD_TARGET_VARS := $(call package_target_prefix,$(PACKAGES))

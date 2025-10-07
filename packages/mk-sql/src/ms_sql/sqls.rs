@@ -235,9 +235,9 @@ BEGIN
       AND UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS NVARCHAR(120)))
     GROUP BY
       type,
-      replica_id,
-      is_primary_replica,
-      is_local,
+      rep.replica_id,
+      rep.is_primary_replica,
+      rep.is_local,
       CAST(db.name AS NVARCHAR(MAX)),
       CAST(b.machine_name AS NVARCHAR(MAX)),
       rep.synchronization_state,

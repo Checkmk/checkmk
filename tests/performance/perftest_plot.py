@@ -779,11 +779,14 @@ class PerftestPlot:
 
         self.root_dir = self.args.root_dir
         self.root_dir.mkdir(parents=True, exist_ok=True)
-        self.read_from_database = not self.args.skip_database_reads
-        self.read_from_filesystem = not self.args.skip_filesystem_reads
-        self.write_to_database = not self.args.skip_database_writes
         self.update_db = self.args.update_db and len(self.args.job_names) > 0
         self.purge_db = self.args.purge_db and len(self.args.job_names) > 0
+        self.read_from_database = not (
+            self.args.skip_database_reads or self.update_db or self.purge_db
+        )
+        self.read_from_filesystem = not self.args.skip_filesystem_reads
+        self.write_to_database = not self.args.skip_database_writes
+
         if self.args.dbhost and (self.read_from_database or self.write_to_database):
             try:
                 self.database = PerformanceDb(

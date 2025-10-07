@@ -32,8 +32,11 @@ def _check_paths(root: str, namespace_dict: Mapping[str, object]) -> None:
             continue
 
         assert isinstance(value, Path)
-        required_prefix = _NON_STD_PREFIX.get(var, "%s") % root
-        assert str(value).startswith(required_prefix), repr((var, value, required_prefix))
+        if var.startswith("relative_"):
+            assert not value.is_absolute()
+        else:
+            required_prefix = _NON_STD_PREFIX.get(var, "%s") % root
+            assert str(value).startswith(required_prefix), repr((var, value, required_prefix))
 
 
 def test_paths_in_omd_and_opt_root(monkeypatch: MonkeyPatch) -> None:

@@ -66,6 +66,7 @@ def do_reload(
     locking_mode: _LockingMode,
     duplicates: Sequence[HostName],
     bake_on_restart: Callable[[], None],
+    notify_relay: Callable[[], None],
 ) -> None:
     do_restart(
         config_cache,
@@ -86,6 +87,7 @@ def do_reload(
         locking_mode=locking_mode,
         duplicates=duplicates,
         bake_on_restart=bake_on_restart,
+        notify_relay=notify_relay,
     )
 
 
@@ -115,6 +117,7 @@ def do_restart(
     locking_mode: _LockingMode,
     duplicates: Sequence[HostName],
     bake_on_restart: Callable[[], None],
+    notify_relay: Callable[[], None],
 ) -> None:
     try:
         with activation_lock(
@@ -137,6 +140,7 @@ def do_restart(
                 service_depends_on=service_depends_on,
                 duplicates=duplicates,
                 bake_on_restart=bake_on_restart,
+                notify_relay=notify_relay,
             )
             core.run(action)
 
@@ -170,6 +174,7 @@ def do_create_config(
     *,
     duplicates: Collection[HostName],
     bake_on_restart: Callable[[], None],
+    notify_relay: Callable[[], None],
 ) -> None:
     """Creating the monitoring core configuration and additional files
 
@@ -215,14 +220,13 @@ def do_create_config(
     with tracer.span("bake_on_restart"):
         bake_on_restart()
 
+    with tracer.span("announce_new_serial"):
+        notify_relay()
+
 
 @contextmanager
 def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
-    # TODO: should be a property of MonitoringCore, it seems.
-    if core.name() == "nagios":
-        objects_file = str(cmk.utils.paths.nagios_objects_file)
-    else:
-        objects_file = str(cmk.utils.paths.var_dir / "core/config")
+    objects_file = core.objects_file()
 
     backup_path = None
     if os.path.exists(objects_file):
@@ -243,7 +247,7 @@ def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
             and not _do_check_nagiosconfig()
         ):
             broken_config_path = cmk.utils.paths.tmp_dir / "check_mk_objects.cfg.broken"
-            shutil.move(cmk.utils.paths.nagios_objects_file, broken_config_path)
+            shutil.move(objects_file, broken_config_path)
 
             if backup_path:
                 os.rename(backup_path, objects_file)

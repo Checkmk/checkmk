@@ -25,6 +25,7 @@ from cmk.gui.openapi.framework.model.converter import (
     UserConverter,
 )
 from cmk.gui.session import SuperUserContext, UserContext
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.groups import HostAttributeContactGroups
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import folder_tree
@@ -325,24 +326,33 @@ class TestHostConverter:
             HostConverter(permission_type=permission_type).host_name("non_existent_host")
 
     def test_exists_monitor_without_permissions(self, sample_host: str) -> None:
-        with UserContext(UserId("made-up")):
+        with UserContext(UserId("made-up"), UserPermissions({}, {}, {}, [])):
             assert sample_host == HostConverter(permission_type="monitor").host_name(sample_host)
 
     @pytest.mark.parametrize("permission_type", _permission_types(except_monitor=True))
     def test_exists_fails_no_permission(
         self, sample_host: str, permission_type: HostConverter.PermissionType
     ) -> None:
-        with UserContext(UserId("made-up")), pytest.raises(MKAuthException):
+        with (
+            UserContext(UserId("made-up"), UserPermissions({}, {}, {}, [])),
+            pytest.raises(MKAuthException),
+        ):
             HostConverter(permission_type=permission_type).host_name(sample_host)
 
     def test_exists_setup_read_all_folders(self, sample_host: str) -> None:
-        with UserContext(UserId("made-up"), explicit_permissions={"wato.see_all_folders"}):
+        with UserContext(
+            UserId("made-up"),
+            UserPermissions({}, {}, {}, []),
+            explicit_permissions={"wato.see_all_folders"},
+        ):
             assert sample_host == HostConverter(permission_type="setup_read").host_name(sample_host)
 
     def test_exists_setup_write_all_folders(self, sample_host: str) -> None:
         # write also requires read permissions, could be changed in the future
         with UserContext(
-            UserId("made-up"), explicit_permissions={"wato.see_all_folders", "wato.all_folders"}
+            UserId("made-up"),
+            UserPermissions({}, {}, {}, []),
+            explicit_permissions={"wato.see_all_folders", "wato.all_folders"},
         ):
             assert sample_host == HostConverter(permission_type="setup_write").host_name(
                 sample_host
@@ -352,7 +362,9 @@ class TestHostConverter:
         # write also requires read permissions, could be changed in the future
         with create_and_destroy_user(config=active_config) as (user_id, _password):
             with UserContext(
-                user_id, explicit_permissions={"wato.see_all_folders", "wato.edit_hosts"}
+                user_id,
+                UserPermissions({}, {}, {}, []),
+                explicit_permissions={"wato.see_all_folders", "wato.edit_hosts"},
             ):
                 assert sample_host == HostConverter(permission_type="setup_write").host_name(
                     sample_host

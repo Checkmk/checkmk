@@ -154,7 +154,6 @@ EXCLUDE_CLEAN=$(EXCLUDE_PROPER) \
 # Rust dirs are kept due to heavy load when compiled: .cargo, controller
 HOST_PACKAGES_TARGET_PATH=packages/target
 EXCLUDE_BUILD_CLEAN=$(EXCLUDE_CLEAN) \
-	    --exclude="doc/plugin-api/build" \
 	    --exclude=".cargo" \
 	    --exclude=$(HOST_PACKAGES_TARGET_PATH) \
 	    --exclude="agents/plugins/*_2.py" \

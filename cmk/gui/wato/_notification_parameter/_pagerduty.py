@@ -5,7 +5,7 @@
 
 from typing import Literal
 
-from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
+from cmk.gui.form_specs.unstable.dictionary_extended import DictionaryExtended
 from cmk.gui.http import request
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (

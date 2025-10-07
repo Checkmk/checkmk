@@ -353,6 +353,10 @@ def pytest_configure(config: pytest.Config) -> None:
         "markers",
         f"{ContainerizedMarker.skip_if_not}: skips the tests for uncontainerized runs",
     )
+    config.addinivalue_line(
+        "markers",
+        "medium_test_chain: marks tests as part of the medium-test-chain CI job",
+    )
 
 
 def pytest_collection_modifyitems(items: list[pytest.Function], config: pytest.Config) -> None:

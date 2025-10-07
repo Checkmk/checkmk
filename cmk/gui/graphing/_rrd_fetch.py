@@ -7,7 +7,8 @@
 import collections
 import contextlib
 import time
-from collections.abc import Callable, Iterable, Iterator, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from dataclasses import dataclass
 from functools import lru_cache
 
 import livestatus
@@ -19,25 +20,23 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import parse_check_mk_version
 from cmk.gui import sites
-from cmk.gui.config import active_config
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
 from cmk.gui.type_defs import ColumnName
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
 from ._from_api import RegisteredMetric
-from ._graph_specification import GraphDataRange, GraphRecipe
-from ._legacy import (
-    check_metrics,
-    CheckMetricEntry,
-)
-from ._metric_operation import (
+from ._graph_metric_expressions import (
     GraphConsolidationFunction,
     op_func_wrapper,
     RRDData,
     RRDDataKey,
     time_series_operators,
+)
+from ._legacy import (
+    check_metrics,
+    CheckMetricEntry,
 )
 from ._metrics import get_metric_spec
 from ._time_series import TimeSeries, TimeSeriesValues
@@ -45,54 +44,88 @@ from ._translated_metrics import find_matching_translation, TranslationSpec
 from ._unit import user_specific_unit
 
 
-def fetch_rrd_data_for_graph(
-    graph_recipe: GraphRecipe,
-    graph_data_range: GraphDataRange,
-    registered_metrics: Mapping[str, RegisteredMetric],
-) -> RRDData:
-    conversion = user_specific_unit(graph_recipe.unit_spec, user, active_config).conversion
-    by_service = _group_needed_rrd_data_by_service(
-        key
-        for metric in graph_recipe.metrics
-        for key in metric.operation.keys(registered_metrics)
-        if isinstance(key, RRDDataKey)
+@dataclass(frozen=True, kw_only=True)
+class MetricProperties:
+    metric_name: str
+    consolidation_function: GraphConsolidationFunction | None
+    scale: float
+
+
+def _metric_props_by_service(
+    keys: Sequence[RRDDataKey],
+    consolidation_function: GraphConsolidationFunction | None,
+) -> Mapping[tuple[SiteId, HostName, ServiceName], set[MetricProperties]]:
+    by_service: dict[tuple[SiteId, HostName, ServiceName], set[MetricProperties]] = (
+        collections.defaultdict(set)
     )
-    rrd_data: dict[RRDDataKey, TimeSeries] = {}
-    for (site_id, host_name, service_description), metrics in by_service.items():
-        with contextlib.suppress(livestatus.MKLivestatusNotFoundError):
-            for (metric_name, consolidation_function, scale), (
-                start,
-                end,
-                step,
-                values,
-            ) in _fetch_rrd_data(
-                site_id,
-                host_name,
+    for key in keys:
+        by_service[(key.site_id, key.host_name, key.service_name)].add(
+            MetricProperties(
+                metric_name=key.metric_name,
+                consolidation_function=(
+                    consolidation_function or key.consolidation_function or "max"
+                ),
+                scale=key.scale,
+            )
+        )
+    return by_service
+
+
+def _rrd_columns(
+    metric_props: Iterable[MetricProperties], *, start_time: float, end_time: float, step: int | str
+) -> Iterator[ColumnName]:
+    """RRD data columns for each metric
+
+    Include scaling of metric directly in query"""
+    data_range = f"{start_time}:{end_time}:{step}"
+    for metric_prop in metric_props:
+        rpn = f"{metric_prop.metric_name}.{metric_prop.consolidation_function}"
+        if metric_prop.scale != 1.0:
+            rpn += ",%f,*" % metric_prop.scale
+        yield f"rrddata:{metric_prop.metric_name}:{rpn}:{data_range}"
+
+
+def _fetch_time_series_of_service(
+    site_id: SiteId,
+    host_name: HostName,
+    service_description: ServiceName,
+    metric_props: set[MetricProperties],
+    conversion: Callable[[float], float],
+    *,
+    start_time: float,
+    end_time: float,
+    step: int | str,
+) -> list[tuple[MetricProperties, TimeSeries]]:
+    # assumes str step is well formatted, colon separated step length & rrd point count
+    if not isinstance(step, str):
+        step = max(1, step)
+
+    with sites.only_sites(site_id):
+        data = sites.live().query_row(
+            livestatus_lql(
+                [host_name],
+                list(
+                    _rrd_columns(metric_props, start_time=start_time, end_time=end_time, step=step)
+                ),
                 service_description,
-                metrics,
-                graph_recipe.consolidation_function,
-                graph_data_range,
-            ):
-                rrd_data[
-                    RRDDataKey(
-                        site_id,
-                        host_name,
-                        service_description,
-                        metric_name,
-                        consolidation_function,
-                        scale,
-                    )
-                ] = TimeSeries(
-                    start=start,
-                    end=end,
-                    step=step,
-                    values=values,
+            )
+        )
+
+    return list(
+        zip(
+            metric_props,
+            [
+                TimeSeries(
+                    start=int(d[0]),
+                    end=int(d[1]),
+                    step=int(d[2]),
+                    values=d[3:],
                     conversion=conversion,
                 )
-    _align_and_resample_rrds(rrd_data, graph_recipe.consolidation_function)
-    _chop_last_empty_step(graph_data_range, rrd_data)
-
-    return rrd_data
+                for d in data
+            ],
+        )
+    )
 
 
 def _align_and_resample_rrds(
@@ -129,6 +162,12 @@ def _align_and_resample_rrds(
             )
 
 
+def _chop_end_of_the_curve(rrd_data: RRDData, step: int) -> None:
+    for data in rrd_data.values():
+        data.values = data.values[:-1]
+        data.end -= step
+
+
 # The idea is to omit the empty last step of graphs which are showing the
 # last data which ends now (at the current time) where there is not yet
 # data available for the current RRD step. Showing an empty space on the
@@ -136,14 +175,14 @@ def _align_and_resample_rrds(
 #
 # This makes only sense for graphs which are ending "now". So disable this
 # for the other graphs.
-def _chop_last_empty_step(graph_data_range: GraphDataRange, rrd_data: RRDData) -> None:
+def _chop_last_empty_step(end_time: float, rrd_data: RRDData) -> None:
     if not rrd_data:
         return
 
     sample_data = next(iter(rrd_data.values()))
     step = sample_data.step
     # Disable graph chop for graphs which do not end within the current step
-    if abs(time.time() - graph_data_range.time_range[1]) > step:
+    if abs(time.time() - end_time) > step:
         return
 
     # To avoid a gap when querying:
@@ -153,72 +192,45 @@ def _chop_last_empty_step(graph_data_range: GraphDataRange, rrd_data: RRDData) -
         _chop_end_of_the_curve(rrd_data, step)
 
 
-def _chop_end_of_the_curve(rrd_data: RRDData, step: int) -> None:
-    for data in rrd_data.values():
-        data.values = data.values[:-1]
-        data.end -= step
-
-
-MetricProperties = tuple[str, GraphConsolidationFunction | None, float]
-
-
-def _group_needed_rrd_data_by_service(
-    rrd_data_keys: Iterable[RRDDataKey],
-) -> dict[
-    tuple[SiteId, HostName, ServiceName],
-    set[MetricProperties],
-]:
-    by_service: dict[
-        tuple[SiteId, HostName, ServiceName],
-        set[MetricProperties],
-    ] = collections.defaultdict(set)
-    for key in rrd_data_keys:
-        by_service[(key.site_id, key.host_name, key.service_name)].add(
-            (key.metric_name, key.consolidation_function, key.scale)
-        )
-    return by_service
-
-
-def _fetch_rrd_data(
-    site_id: SiteId,
-    host_name: HostName,
-    service_description: ServiceName,
-    metrics: set[MetricProperties],
+def fetch_time_series_rrd(
+    registered_metrics: Mapping[str, RegisteredMetric],
+    keys: Sequence[RRDDataKey],
     consolidation_function: GraphConsolidationFunction | None,
-    graph_data_range: GraphDataRange,
-) -> list[tuple[MetricProperties, tuple[int, int, int, TimeSeriesValues]]]:
-    start_time, end_time = graph_data_range.time_range
+    conversion: Callable[[float], float],
+    *,
+    start_time: float,
+    end_time: float,
+    step: int | str,
+) -> RRDData:
+    rrd_data: dict[RRDDataKey, TimeSeries] = {}
+    for (site_id, host_name, service_description), metrics in _metric_props_by_service(
+        keys, consolidation_function
+    ).items():
+        with contextlib.suppress(livestatus.MKLivestatusNotFoundError):
+            for metric_props, time_series in _fetch_time_series_of_service(
+                site_id,
+                host_name,
+                service_description,
+                metrics,
+                conversion,
+                start_time=start_time,
+                end_time=end_time,
+                step=step,
+            ):
+                rrd_data[
+                    RRDDataKey(
+                        site_id,
+                        host_name,
+                        service_description,
+                        metric_props.metric_name,
+                        metric_props.consolidation_function,
+                        metric_props.scale,
+                    )
+                ] = time_series
 
-    step = graph_data_range.step
-    # assumes str step is well formatted, colon separated step length & rrd point count
-    if not isinstance(step, str):
-        step = max(1, step)
-
-    point_range = ":".join(map(str, (start_time, end_time, step)))
-    lql_columns = list(rrd_columns(metrics, consolidation_function, point_range))
-    query = livestatus_lql([host_name], lql_columns, service_description)
-
-    with sites.only_sites(site_id):
-        data = sites.live().query_row(query)
-
-    return list(zip(metrics, [(int(d[0]), int(d[1]), int(d[2]), d[3:]) for d in data]))
-
-
-def rrd_columns(
-    metrics: Iterable[MetricProperties],
-    consolidation_function: GraphConsolidationFunction | None,
-    data_range: str,
-) -> Iterator[ColumnName]:
-    """RRD data columns for each metric
-
-    Include scaling of metric directly in query"""
-
-    for perfvar, cf, scale in metrics:
-        cf = consolidation_function or cf or "max"
-        rpn = f"{perfvar}.{cf}"
-        if scale != 1.0:
-            rpn += ",%f,*" % scale
-        yield f"rrddata:{perfvar}:{rpn}:{data_range}"
+    _align_and_resample_rrds(rrd_data, consolidation_function)
+    _chop_last_empty_step(end_time, rrd_data)
+    return rrd_data
 
 
 def _reverse_translate_into_all_potentially_relevant_metrics(
@@ -266,24 +278,25 @@ def _reverse_translate_into_all_potentially_relevant_metrics_cached(
 def all_rrd_columns_potentially_relevant_for_metric(
     metric_name: MetricName,
     consolidation_function: GraphConsolidationFunction,
-    from_time: int,
-    until_time: int,
+    start_time: int,
+    end_time: int,
 ) -> Iterator[ColumnName]:
-    yield from rrd_columns(
+    yield from _rrd_columns(
         (
-            (
-                metric_name,
-                None,
+            MetricProperties(
+                metric_name=metric_name,
+                consolidation_function=consolidation_function or "max",
                 # at this point, we do not yet know if there any potential scalings due to metric
                 # translations
-                1,
+                scale=1,
             )
             for metric_name in _reverse_translate_into_all_potentially_relevant_metrics_cached(
                 metric_name
             )
         ),
-        consolidation_function,
-        f"{from_time}:{until_time}:60",
+        start_time=start_time,
+        end_time=end_time,
+        step=60,
     )
 
 
@@ -292,6 +305,8 @@ def translate_and_merge_rrd_columns(
     rrd_columms: Iterable[tuple[str, TimeSeriesValues]],
     translations: Mapping[MetricName, TranslationSpec],
     registered_metrics: Mapping[str, RegisteredMetric],
+    *,
+    temperature_unit: TemperatureUnit,
 ) -> TimeSeries:
     def scaler(scale: float) -> Callable[[float], float]:
         return lambda v: v * scale
@@ -333,11 +348,6 @@ def translate_and_merge_rrd_columns(
         step=timeseries.step,
         values=single_value_series,
         conversion=user_specific_unit(
-            get_metric_spec(
-                metric_name,
-                registered_metrics,
-            ).unit_spec,
-            user,
-            active_config,
+            get_metric_spec(metric_name, registered_metrics).unit_spec, temperature_unit
         ).conversion,
     )

@@ -134,14 +134,23 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.plugins.lib",  # ?
         "cmk.utils.paths",  # edition detection
     ),
-    "azure": (
+    "azure_deprecated": (
         "cmk.agent_based.v1",  # FIXME
         "cmk.ccc.version",  # edition detection
         "cmk.ccc.hostaddress",  # FormSpec validation
         "cmk.plugins.lib",  # ?
         "cmk.plugins.lib.azure_app_gateway",  # FIXME
         "cmk.plugins.lib.azure",  # FIXME
-        "cmk.utils.azure_constants",  # FIXME
+        "cmk.utils.http_proxy_config",
+        "cmk.utils.paths",  # edition detection
+    ),
+    "azure_v2": (
+        "cmk.agent_based.v1",  # FIXME
+        "cmk.ccc.version",  # edition detection
+        "cmk.ccc.hostaddress",  # FormSpec validation
+        "cmk.plugins.lib",  # ?
+        "cmk.plugins.lib.azure_app_gateway",  # FIXME
+        "cmk.plugins.lib.azure",  # FIXME
         "cmk.utils.http_proxy_config",
         "cmk.utils.paths",  # edition detection
     ),
@@ -172,7 +181,7 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.ccc.store",
         "cmk.ccc.version",  # edition detection
         "cmk.ec.export",
-        "cmk.gui.form_specs.private",
+        "cmk.gui.form_specs.unstable",
         "cmk.gui.mkeventd",
         "cmk.utils.http_proxy_config",
         "cmk.utils.paths",  # edition detection
@@ -198,7 +207,7 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.ccc.hostaddress",
         "cmk.ccc.profile",
         "cmk.ccc.version",  # edition detection
-        "cmk.gui.form_specs.private",
+        "cmk.gui.form_specs.unstable",
         "cmk.plugins.lib",
         "cmk.plugins.lib.node_exporter",
         "cmk.utils.http_proxy_config",
@@ -232,10 +241,11 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.plugins.lib.memory",
         "cmk.plugins.lib.cpu_util",
         "cmk.plugins.lib.uptime",
+        "cmk.plugins.lib.df",
         "cmk.utils.paths",
     ),
     "otel": (
-        "cmk.gui.form_specs.private",
+        "cmk.gui.form_specs.unstable",
         "cmk.otel_collector",
         "cmk.shared_typing.vue_formspec_components",
     ),
@@ -267,6 +277,7 @@ PACKAGE_PLUGIN_APIS = (
     "cmk.inventory_ui.v1_alpha",
     "cmk.rulesets.v1",
     "cmk.server_side_calls.v1",
+    "cmk.server_side_calls.alpha",
 )
 
 PACKAGE_CCC = ("cmk.ccc",)
@@ -284,7 +295,6 @@ PACKAGE_TRACE = ("cmk.trace",)
 CLEAN_UTILS_MODULES = (
     "agent_registration",
     "auto_queue",
-    "azure_constants",
     "check_utils",
     "crypto",
     "datastructures",
@@ -392,7 +402,9 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_CCC,
         *PACKAGE_PLUGIN_APIS,
         "cmk.base",
-        "cmk.cee.helpers",
+        "cmk.fetcher_encoder",
+        "cmk.fetcher_helper",
+        "cmk.check_helper_protocol",
         "cmk.checkengine",
         "cmk.events",
         "cmk.fetchers",
@@ -404,7 +416,8 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.base.cee",
         "cmk.base.config",
         "cmk.base.core",
-        "cmk.cee.helpers",
+        "cmk.fetcher_encoder",
+        "cmk.fetcher_helper",
         "cmk.cee.robotmk",
         "cmk.checkengine",
         "cmk.fetchers",
@@ -432,7 +445,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_TRACE,
         "cmk.automations",
         "cmk.cee.bakery",
-        "cmk.cee.helpers",
+        "cmk.fetcher_helper",
         "cmk.checkengine",
         "cmk.discover_plugins",
         "cmk.ec",
@@ -441,6 +454,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.helper_interface",
         "cmk.inventory",
         "cmk.piggyback",
+        "cmk.relay_fetcher_trigger",
         "cmk.rrd",
         "cmk.server_side_calls_backend",
         "cmk.snmplib",
@@ -479,7 +493,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.timeperiod",
         "cmk.utils.translations",
     ),
-    Component("cmk.cee.helpers"): _allow(
+    Component("cmk.fetcher_helper"): _allow(
         *PACKAGE_CCC,
         "cmk.fetchers",
         "cmk.helper_interface",
@@ -526,6 +540,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     ),
     Component("cmk.gui.cee.plugins"): _allow(
         *PACKAGE_CCC,
+        *PACKAGE_PLUGIN_APIS,
         "cmk.gui",
         "cmk.utils.cee",
         "cmk.utils.mrpe_config",
@@ -580,6 +595,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     Component("cmk.gui.cce"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_PLUGIN_APIS,
+        "cmk.cce.metric_backend.gui",
         "cmk.checkengine",
         "cmk.cee.robotmk.gui",
         "cmk.fields",
@@ -604,6 +620,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_CRYPTO,
         *PACKAGE_MESSAGING,
         "cmk.bi",
+        "cmk.cce.metric_backend.gui.register",
         "cmk.cee.robotmk.gui",
         "cmk.gui",
         "cmk.inventory",
@@ -621,6 +638,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_CCC,
         *PACKAGE_CRYPTO,
         *PACKAGE_TRACE,
+        "cmk.cce.metric_backend.gui.register",
         "cmk.fields",
         "cmk.gui",
         "cmk.utils.agent_registration",
@@ -759,6 +777,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_PLUGIN_APIS,
         *PACKAGE_WERKS,
         "cmk.base",
+        "cmk.cce.metric_backend",
         "cmk.checkengine",
         "cmk.cee.robotmk",
         "cmk.discover_plugins",
@@ -800,6 +819,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     ),
     Component("cmk.cee.dcd"): _allow(
         *PACKAGE_CCC,
+        "cmk.cce.metric_backend.dcd.register",
         "cmk.otel_collector",
         "cmk.piggyback",
         "cmk.utils",
@@ -900,6 +920,19 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.events",
         "cmk.otel_collector",
     ),
+    Component("cmk.cce.metric_backend.dcd"): _allow(
+        "cmk.ccc",
+        "cmk.cee.dcd",
+        "cmk.utils",
+    ),
+    Component("cmk.cce.metric_backend.gui"): _allow(
+        *PACKAGE_PLUGIN_APIS,
+        "cmk.ccc",
+        "cmk.fields",
+        "cmk.gui",
+        "cmk.metric_backend",
+        "cmk.utils",
+    ),
     Component("omdlib"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_CRYPTO,
@@ -964,6 +997,10 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.snmplib",
         "cmk.utils",
     ),
+    Component("tests.integration.otel"): _allow(
+        *PACKAGE_CCC,
+        "cmk.otel_collector.constants",
+    ),
     Component("tests.integration"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_MKP_TOOL,
@@ -989,8 +1026,10 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.agent_based",
         "cmk.checkengine",
         "cmk.fetchers",
+        "cmk.inline_snmp",
         "cmk.helper_interface",
         "cmk.relay_protocols",
+        "cmk.relay_fetcher_trigger",
         "cmk.snmplib",
         "cmk.utils",
     ),
@@ -1006,9 +1045,11 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.bakery",
         "cmk.base",
         "cmk.bi",
+        "cmk.cce.metric_backend",
         "cmk.cee.bakery",
         "cmk.cee.dcd",
-        "cmk.cee.helpers",
+        "cmk.fetcher_encoder",
+        "cmk.fetcher_helper",
         "cmk.cee.liveproxy",
         "cmk.cee.robotmk",
         "cmk.checkengine",
@@ -1074,8 +1115,8 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("omd/packages/appliance/webconf_snapin.py"): Component("cmk.gui"),
     ModulePath("omd/packages/enterprise/bin/cmk-dcd"): Component("cmk.cee.dcd"),
     ModulePath("omd/packages/enterprise/bin/dcd"): Component("cmk.cee.dcd"),
-    ModulePath("omd/packages/enterprise/bin/fetch-ad-hoc"): Component("cmk.cee.helpers"),
-    ModulePath("omd/packages/enterprise/bin/fetcher"): Component("cmk.cee.helpers"),
+    ModulePath("omd/packages/enterprise/bin/fetch-ad-hoc"): Component("cmk.fetcher_helper"),
+    ModulePath("omd/packages/enterprise/bin/fetcher"): Component("cmk.fetcher_helper"),
     ModulePath("omd/packages/enterprise/bin/liveproxyd"): Component("cmk.cee.liveproxy"),
     ModulePath("omd/packages/enterprise/bin/mknotifyd"): Component("cmk.cee.mknotifyd"),
     ModulePath("omd/packages/maintenance/diskspace.py"): Component("cmk.diskspace"),

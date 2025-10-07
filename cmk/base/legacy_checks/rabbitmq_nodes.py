@@ -200,8 +200,7 @@ def check_rabbitmq_nodes_filedesc(item, params, parsed):
             open_fd_rate,
             "file_descriptors_open_attempts_rate",
             levels_upper + levels_lower,
-            human_readable_func=float,
-            unit="1/s",
+            human_readable_func=lambda x: f"{float(x):.2f}/s",
             infoname="Rate",
         )
 
@@ -291,8 +290,7 @@ def check_rabbitmq_nodes_gc(item, params, parsed):
             value,
             perf_key,
             levels_upper + levels_lower,
-            human_readable_func=hr_func,
-            unit=_UNITS_NODES_GC.get(key, ""),
+            human_readable_func=lambda x, hr=hr_func, u=_UNITS_NODES_GC.get(key, ""): f"{hr(x)}{u}",
             infoname=infotext,
         )
 

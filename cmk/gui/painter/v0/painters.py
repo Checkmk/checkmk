@@ -15,7 +15,7 @@ import cmk.utils.paths
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.gui import sites
 from cmk.gui.color import render_color_icon
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.graphing._from_api import metrics_from_api, RegisteredMetric
 from cmk.gui.graphing._metrics import get_metric_spec, registered_metric_ids_and_titles
 from cmk.gui.graphing._translated_metrics import (
@@ -23,7 +23,7 @@ from cmk.gui.graphing._translated_metrics import (
     translate_metrics,
     TranslatedMetric,
 )
-from cmk.gui.graphing._unit import user_specific_unit
+from cmk.gui.graphing._unit import get_temperature_unit, user_specific_unit
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -50,6 +50,7 @@ from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.valuespec import (
     Checkbox,
     DateFormat,
@@ -730,12 +731,14 @@ class PainterSvcMetrics(Painter):
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         perf_data, check_command = parse_perf_data(
-            row["service_perf_data"], row["service_check_command"], config=self.config
+            row["service_perf_data"], row["service_check_command"], debug=self.config.debug
         )
+        temperature_unit = get_temperature_unit(user, self.config.default_temperature_unit)
         translated_metrics = translate_metrics(
             perf_data,
             check_command,
             metrics_from_api,
+            temperature_unit=temperature_unit,
         )
 
         if row["service_perf_data"] and not translated_metrics:
@@ -748,6 +751,7 @@ class PainterSvcMetrics(Painter):
                 row["service_description"],
                 show_metric_id=self._painter_options.get("show_internal_graph_and_metric_ids"),
                 theme=self.theme,
+                temperature_unit=temperature_unit,
             )
             return "", HTML.without_escaping(output_funnel.drain())
 
@@ -759,6 +763,7 @@ class PainterSvcMetrics(Painter):
         show_metric_id: bool,
         *,
         theme: Theme,
+        temperature_unit: TemperatureUnit,
     ) -> None:
         html.open_table(class_="metricstable")
         for metric_name, translated_metric in sorted(
@@ -771,11 +776,9 @@ class PainterSvcMetrics(Painter):
             html.td(render_color_icon(translated_metric.color), class_="color")
             html.td(f"{translated_metric.title}{optional_metric_id}:")
             html.td(
-                user_specific_unit(
-                    translated_metric.unit_spec,
-                    user,
-                    active_config,
-                ).formatter.render(translated_metric.value),
+                user_specific_unit(translated_metric.unit_spec, temperature_unit).formatter.render(
+                    translated_metric.value
+                ),
                 class_="value",
             )
             if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.CRE:
@@ -5487,12 +5490,14 @@ class AbstractColumnSpecificMetric(Painter):
         show_metric = parameters["metric"]
 
         perf_data, check_command = parse_perf_data(
-            perf_data_entries, check_command, config=self.config
+            perf_data_entries, check_command, debug=self.config.debug
         )
+        temperature_unit = get_temperature_unit(user, self.config.default_temperature_unit)
         translated_metrics = translate_metrics(
             perf_data,
             check_command,
             metrics_from_api,
+            temperature_unit=temperature_unit,
         )
 
         if show_metric not in translated_metrics:
@@ -5502,11 +5507,9 @@ class AbstractColumnSpecificMetric(Painter):
 
         return (
             "",
-            user_specific_unit(
-                translated_metric.unit_spec,
-                user,
-                active_config,
-            ).formatter.render(translated_metric.value),
+            user_specific_unit(translated_metric.unit_spec, temperature_unit).formatter.render(
+                translated_metric.value
+            ),
         )
 
 

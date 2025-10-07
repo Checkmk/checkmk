@@ -31,6 +31,7 @@ def default_cfg_fixture(request: pytest.FixtureRequest, site: Site) -> None:
 # Simply detects all tables by querying the columns table and then
 # queries each of those tables without any columns and filters
 @pytest.mark.usefixtures("default_cfg")
+@pytest.mark.medium_test_chain
 def test_tables(site: Site) -> None:
     columns_per_table: dict[str, list[str]] = {}
     for row in site.live.query_table_assoc("GET columns\n"):
@@ -211,12 +212,14 @@ class TestCrashReport:
         yield
         site.delete_dir("var/check_mk/crashes/%s" % component)
 
+    @pytest.mark.medium_test_chain
     def test_list_crash_report(self, site: Site, component: str, uuid: str) -> None:
         rows = site.live.query("GET crashreports")
         assert rows
         assert ["component", "id"] in rows
         assert [component, uuid] in rows
 
+    @pytest.mark.medium_test_chain
     def test_read_crash_report(
         self, site: Site, component: str, uuid: str, crash_info: Mapping[str, str]
     ) -> None:

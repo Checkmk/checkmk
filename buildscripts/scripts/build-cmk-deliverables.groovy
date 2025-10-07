@@ -49,7 +49,7 @@ def main() {
     def branch_version = versioning.get_branch_version(checkout_dir);
 
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
-    def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
+    def branch_base_folder = package_helper.branch_base_folder(true);
 
     def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, params.VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
@@ -195,7 +195,7 @@ def main() {
                 build_instance = smart_build(
                     // see global-defaults.yml, needs to run in minimal container
                     use_upstream_build: true,
-                    relative_job_name: "${branch_base_folder}/builders/build-cmk-distro-package",
+                    relative_job_name: "${branch_base_folder}/builders/trigger-cmk-distro-package",
                     build_params: [
                         CUSTOM_GIT_REF: effective_git_ref,
                         VERSION: params.VERSION,
@@ -211,19 +211,8 @@ def main() {
                         CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
                     ],
                     no_remove_others: true, // do not delete other files in the dest dir
-                    download: false,    // use copyArtifacts to avoid nested directories
-                );
-            }
-            smart_stage(
-                name: "Copy artifacts",
-                condition: run_condition && build_instance,
-                raiseOnError: false,
-            ) {
-                copyArtifacts(
-                    projectName: "${branch_base_folder}/builders/build-cmk-distro-package",
-                    selector: specific(build_instance.getId()),
-                    target: relative_deliverables_dir,
-                    fingerprintArtifacts: true,
+                    download: true,
+                    dest: deliverables_dir,
                 );
             }
         }]

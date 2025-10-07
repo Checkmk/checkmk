@@ -2736,6 +2736,27 @@ class UserRoleClient(RestApiClient):
         )
 
 
+class UserMessageClient(RestApiClient):
+    domain: DomainType = "user_message"
+    version: APIVersion = APIVersion.UNSTABLE
+
+    def acknowledge(self, message_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/objects/{self.domain}/{message_id}/actions/acknowledge/invoke",
+            expect_ok=expect_ok,
+            api_version=self.version,
+        )
+
+    def delete(self, message_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{message_id}",
+            expect_ok=expect_ok,
+            api_version=self.version,
+        )
+
+
 class AutocompleteClient(RestApiClient):
     domain: DomainType = "autocomplete"
 
@@ -3585,6 +3606,7 @@ class ClientRegistry:
     BiAggregation: BiAggregationClient
     BiRule: BiRuleClient
     UserRole: UserRoleClient
+    UserMessage: UserMessageClient
     AutoComplete: AutocompleteClient
     Service: ServiceClient
     ServiceDiscovery: ServiceDiscoveryClient
@@ -3635,6 +3657,7 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         BiAggregation=BiAggregationClient(request_handler, url_prefix),
         BiRule=BiRuleClient(request_handler, url_prefix),
         UserRole=UserRoleClient(request_handler, url_prefix),
+        UserMessage=UserMessageClient(request_handler, url_prefix),
         AutoComplete=AutocompleteClient(request_handler, url_prefix),
         Service=ServiceClient(request_handler, url_prefix),
         ServiceDiscovery=ServiceDiscoveryClient(request_handler, url_prefix),

@@ -16,7 +16,8 @@ SOURCE_BUILT_LINUX_AGENTS := \
 	$(REPO_PATH)/agents/check-mk-agent_$(VERSION)-1_all.deb \
 	$(REPO_PATH)/agents/linux/mk-sql \
 	$(REPO_PATH)/agents/linux/cmk-agent-ctl \
-	$(REPO_PATH)/agents/linux/cmk-agent-ctl.gz
+	$(REPO_PATH)/agents/linux/cmk-agent-ctl.gz \
+	$(REPO_PATH)/agents/linux/cmk-agent-ctl-aarch64
 ifeq ($(ENTERPRISE),yes)
 SOURCE_BUILT_AGENT_UPDATER := \
 	$(REPO_PATH)/non-free/packages/cmk-update-agent/cmk-update-agent \

@@ -107,7 +107,12 @@ def test_rename_host(
 ) -> None:
     # GIVEN
     job_interface = BackgroundProcessInterface(
-        "", "", logging.getLogger(), threading.Event(), gui_context, open("/dev/null", "w")
+        "",
+        "",
+        logging.getLogger(),
+        threading.Event(),
+        lambda x: gui_context(),
+        open("/dev/null", "w"),
     )
     if use_subfolder:
         folder = (

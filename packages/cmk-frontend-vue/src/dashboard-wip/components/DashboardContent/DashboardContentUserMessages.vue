@@ -139,7 +139,7 @@ function formatTimestamp(timestamp: number): string {
               />
               <CmkIconButton
                 v-else
-                name="werk_ack"
+                name="werk-ack"
                 :title="_t('Acknowledge message')"
                 variant="inline"
                 size="xlarge"

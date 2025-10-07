@@ -17,8 +17,7 @@ from cmk.ccc.version import Edition
 from cmk.gui import inventory as legacy_inventory_groups
 from cmk.gui import valuespec as legacy_valuespecs
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.converter import SimplePassword, Tuple
-from cmk.gui.form_specs.private import (
+from cmk.gui.form_specs.unstable import (
     DictionaryExtended,
     LegacyValueSpec,
     ListExtended,
@@ -27,6 +26,7 @@ from cmk.gui.form_specs.private import (
     StringAutocompleter,
     UserSelection,
 )
+from cmk.gui.form_specs.unstable.legacy_converter import SimplePassword, Tuple
 from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.userdb._user_selection import UserSelection as LegacyUserSelection
 from cmk.gui.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
@@ -1044,7 +1044,8 @@ def _convert_to_legacy_text_input(
     if to_convert.macro_support:
         macros_help_text = (
             "This field supports the use of macros. "
-            "The corresponding plug-in replaces the macros with the actual values."
+            "The corresponding plug-in replaces the macros with the actual values. "
+            "The most common ones are $HOSTNAME$, $HOSTALIAS$ or $HOSTADDRESS$."
         )
         localized_text = ruleset_api_v1.Help(macros_help_text).localize(localizer)
         converted_kwargs["help"] = f"{help_text} {localized_text}" if help_text else localized_text

@@ -11,15 +11,15 @@
 case "$1" in
     default)
         echo "on"
-    ;;
+        ;;
     choices)
         echo "on: Use a ramdisk for temporary files"
         echo "off: Do not use a ramdisk within this site"
-    ;;
+        ;;
     set)
         # Unmount the tmpfs when it was mounted before
         if [ "$2" == "off" ]; then
             omd umount >/dev/null
         fi
-    ;;
+        ;;
 esac

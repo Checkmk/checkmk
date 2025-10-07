@@ -37,8 +37,7 @@ def check_kentix_co(item: str, params: dict, section: int) -> Iterable:
         section,
         "parts_per_million",
         params["levels_ppm"],
-        unit="ppm",
-        human_readable_func=str,
+        human_readable_func=lambda x: f"{x} ppm",
         infoname="CO concentration",
     )
 

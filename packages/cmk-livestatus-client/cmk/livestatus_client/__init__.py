@@ -16,7 +16,7 @@ import socket
 import ssl
 import threading
 import time
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -1652,3 +1652,10 @@ def get_rrd_data(
         if (step := int(raw_step)) == 0
         else RRDResponse(range(int(raw_start), int(raw_end), step), values)
     )
+
+
+def get_timeperiods_active_map(timeout: int) -> Mapping[str, bool]:
+    connection = LocalConnection()
+    connection.set_timeout(timeout)
+    response = connection.query("GET timeperiods\nColumns: name in")
+    return {str(name): bool(active) for name, active in response}

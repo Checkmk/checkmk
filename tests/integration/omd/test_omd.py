@@ -14,7 +14,10 @@ def test_run_omd(site: Site) -> None:
     p = site.run(["omd"], check=False)
     assert p.returncode == 1
     assert p.stderr == ""
-    assert "Usage" in p.stdout
+    assert (
+        "Manage multiple monitoring sites comfortably with OMD. The Open Monitoring Distribution.\nUsage (called as site user):"
+        in p.stdout
+    )
     assert "omd COMMAND -h" in p.stdout
 
 

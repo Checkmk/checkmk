@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import dataclasses
 import uuid
-from datetime import datetime
+from datetime import datetime, UTC
 from enum import StrEnum
 from typing import final
 
@@ -36,9 +36,23 @@ class ResultType(StrEnum):
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
-class Task:
-    type: TaskType
+class FetchSpec:
     payload: str
+    timeout: float
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class RelayConfigSpec:
+    serial: str
+    tar_data: str
+
+
+Spec = FetchSpec | RelayConfigSpec
+
+
+@dataclasses.dataclass(frozen=True, slots=True, kw_only=True)
+class RelayTask:
+    spec: Spec
     creation_timestamp: datetime
     update_timestamp: datetime
     result_type: ResultType | None = None
@@ -71,7 +85,7 @@ class TasksRepository:
             GLOBAL_TASKS[relay_id] = TimedTaskStore(ttl_seconds=self.ttl_seconds)
         return GLOBAL_TASKS[relay_id]
 
-    def get_tasks(self, relay_id: RelayID) -> list[Task]:
+    def get_tasks(self, relay_id: RelayID) -> list[RelayTask]:
         try:
             tasks = GLOBAL_TASKS[relay_id]
             # _TimedTaskStore automatically handles expiration when calling values()
@@ -80,13 +94,13 @@ class TasksRepository:
             logger.warning("Relay with ID %s not found", relay_id)
             return []
 
-    def get_task(self, relay_id: RelayID, task_id: TaskID) -> Task:
+    def get_task(self, relay_id: RelayID, task_id: TaskID) -> RelayTask:
         try:
             return GLOBAL_TASKS[relay_id][task_id]
         except KeyError:
             raise TaskNotFoundError(task_id)
 
-    def store_task(self, relay_id: RelayID, task: Task) -> Task:
+    def store_task(self, relay_id: RelayID, task: RelayTask) -> RelayTask:
         tasks = self._get_or_create_storage(relay_id)
         if len(tasks) >= self.max_tasks_per_relay:
             raise TooManyTasksError(self.max_tasks_per_relay)
@@ -101,7 +115,7 @@ class TasksRepository:
         result_type: ResultType,
         result_payload: str,
         status: TaskStatus,
-    ) -> Task:
+    ) -> RelayTask:
         try:
             task = GLOBAL_TASKS[relay_id][task_id]
         except KeyError as exc:
@@ -113,7 +127,7 @@ class TasksRepository:
             result_type=result_type,
             result_payload=result_payload,
             status=status,
-            update_timestamp=datetime.now(),
+            update_timestamp=datetime.now(UTC),
         )
         GLOBAL_TASKS[relay_id][task_id] = new_task
         return new_task
@@ -125,11 +139,11 @@ class TimedTaskStore:
 
     def __init__(self, ttl_seconds: float):
         self.ttl_seconds = ttl_seconds
-        self._tasks: dict[TaskID, Task] = {}
+        self._tasks: dict[TaskID, RelayTask] = {}
 
-    def _is_expired(self, task: Task) -> bool:
+    def _is_expired(self, task: RelayTask) -> bool:
         """Check if a task has expired based on its update_timestamp."""
-        now = datetime.now()
+        now = datetime.now(UTC)
         return (now - task.update_timestamp).total_seconds() > self.ttl_seconds
 
     def _cleanup_expired(self) -> None:
@@ -142,15 +156,15 @@ class TimedTaskStore:
         for task_id in expired_task_ids:
             del self._tasks[task_id]
 
-    def __getitem__(self, key: TaskID) -> Task:
+    def __getitem__(self, key: TaskID) -> RelayTask:
         self._cleanup_expired()
         return self._tasks[key]
 
-    def __setitem__(self, key: TaskID, value: Task) -> None:
+    def __setitem__(self, key: TaskID, value: RelayTask) -> None:
         self._cleanup_expired()
         self._tasks[key] = value
 
-    def values(self) -> list[Task]:
+    def values(self) -> list[RelayTask]:
         """Return all non-expired tasks."""
         self._cleanup_expired()
         return list(self._tasks.values())

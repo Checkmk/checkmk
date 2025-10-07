@@ -2,12 +2,16 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Callable
 from typing import Any
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction, Tuple
-from cmk.gui.form_specs.private import SingleChoiceExtended
-from cmk.gui.form_specs.vue import DEFAULT_VALUE, get_visitor, VisitorOptions
+from cmk.gui.form_specs import DEFAULT_VALUE, get_visitor, VisitorOptions
+from cmk.gui.form_specs.unstable import SingleChoiceExtended
+from cmk.gui.form_specs.unstable.legacy_converter import (
+    TransformDataForLegacyFormatOrRecomposeFunction,
+    Tuple,
+)
 from cmk.rulesets.v1.form_specs import CascadingSingleChoice, FormSpec, SingleChoice
 
 
@@ -42,6 +46,7 @@ def _get_type_of_object_as_string(
 
 def enable_deprecated_alternative(
     wrapped_form_spec: CascadingSingleChoice,
+    match_function: Callable[[Any], int] | None = None,
 ) -> TransformDataForLegacyFormatOrRecomposeFunction:
     # Basic idea:
     # The CascadingSingleChoice elements should have "1", "2", "3", etc. as name.
@@ -86,6 +91,12 @@ def enable_deprecated_alternative(
         return value[1]
 
     def from_disk(value: object) -> tuple[str, Any]:
+        if match_function is not None:
+            # If a match function is provided, use it to determine the correct element
+            index = match_function(value)
+            if index < 0 or index >= len(wrapped_form_spec.elements):
+                raise MKGeneralException("Value does not match any alternative")
+            return wrapped_form_spec.elements[index].name, value
         return mapping[_get_type_of_object_as_string(value)], value
 
     return TransformDataForLegacyFormatOrRecomposeFunction(

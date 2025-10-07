@@ -76,6 +76,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.nodevis.utils import topology_dir
+from cmk.gui.permissions import permission_registry
 from cmk.gui.site_config import (
     is_distributed_setup_remote_site,
     is_single_local_site,
@@ -91,6 +92,10 @@ from cmk.gui.userdb.store import load_users_uncached, save_users
 from cmk.gui.utils import escaping
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.request_context import copy_request_context
+from cmk.gui.utils.roles import (
+    UserPermissions,
+    UserPermissionSerializableConfig,
+)
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib import backup_snapshots
 from cmk.gui.watolib.audit_log import log_audit
@@ -348,6 +353,7 @@ def sync_changes_before_remote_automation(site_id: SiteId, debug: bool) -> None:
         prevent_activate=True,
         source="INTERNAL",
         all_site_configs=active_config.sites,
+        user_permission_config=UserPermissionSerializableConfig.from_global_config(active_config),
         max_snapshots=active_config.wato_max_snapshots,
         use_git=active_config.wato_use_git,
         debug=debug,
@@ -899,10 +905,6 @@ def _confirm_activated_changes(
 ) -> None:
     with SiteChanges(site_id).mutable_view() as changes:
         changes[: len(site_changes_activate_until)] = []
-
-
-def _is_activate_needed(all_site_changes: Sequence[ChangeSpec]) -> bool:
-    return any(c["need_restart"] for c in all_site_changes)
 
 
 def _get_domains_needing_activation(
@@ -1551,6 +1553,7 @@ class ActivateChangesManager:
         source: ActivationSource,
         *,
         all_site_configs: SiteConfigurations,
+        user_permission_config: UserPermissionSerializableConfig,
         max_snapshots: int,
         use_git: bool,
         debug: bool,
@@ -1643,7 +1646,9 @@ class ActivateChangesManager:
         self._save_activation()
 
         with _debug_log_message("Starting activation"):
-            self._start_activation(all_site_configs, debug=debug, use_git=use_git)
+            self._start_activation(
+                all_site_configs, user_permission_config, debug=debug, use_git=use_git
+            )
 
         with _debug_log_message("Update and activate central rabbitmq changes"):
             create_rabbitmq_new_definitions_file(paths.omd_root, rabbitmq_definitions[omd_site()])
@@ -1935,7 +1940,12 @@ class ActivateChangesManager:
 
     @tracer.instrument("start_activation")
     def _start_activation(
-        self, all_site_configs: SiteConfigurations, *, debug: bool, use_git: bool
+        self,
+        all_site_configs: SiteConfigurations,
+        user_permission_config: UserPermissionSerializableConfig,
+        *,
+        debug: bool,
+        use_git: bool,
     ) -> None:
         self._log_activation(use_git=use_git)
         assert self._activation_id is not None
@@ -1949,6 +1959,7 @@ class ActivateChangesManager:
                     prevent_activate=self._prevent_activate,
                     source=self._source,
                     all_site_configs=all_site_configs,
+                    user_permission_config=user_permission_config,
                     debug=debug,
                     use_git=use_git,
                 ),
@@ -2664,6 +2675,7 @@ class ActivateChangesSchedulerJobArgs(BaseModel, frozen=True):
     prevent_activate: bool
     source: ActivationSource
     all_site_configs: SiteConfigurations
+    user_permission_config: UserPermissionSerializableConfig
     debug: bool
     use_git: bool
 
@@ -2677,6 +2689,7 @@ def activate_changes_scheduler_job_entry_point(
         args.prevent_activate,
         args.source,
         args.all_site_configs,
+        args.user_permission_config,
         args.debug,
         args.use_git,
     )
@@ -2702,10 +2715,13 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
         prevent_activate: bool,
         source: ActivationSource,
         all_site_configs: SiteConfigurations,
+        user_permission_config: UserPermissionSerializableConfig,
         debug: bool,
         use_git: bool,
     ) -> None:
-        with job_interface.gui_context():
+        with job_interface.gui_context(
+            UserPermissions.from_serialized_config(user_permission_config, permission_registry)
+        ):
             job_interface.send_progress_update(
                 _("Activate Changes Scheduler started"), with_timestamp=True
             )
@@ -3696,6 +3712,7 @@ def activate_changes_start(
     sites: Sequence[SiteId],
     enabled_sites: Sequence[SiteId],
     all_site_configs: SiteConfigurations,
+    user_permission_config: UserPermissionSerializableConfig,
     source: ActivationSource,
     comment: str | None,
     max_snapshots: int,
@@ -3778,6 +3795,7 @@ def activate_changes_start(
         activate_foreign=force_foreign_changes,
         source=source,
         all_site_configs=all_site_configs,
+        user_permission_config=user_permission_config,
         max_snapshots=max_snapshots,
         use_git=use_git,
         debug=debug,

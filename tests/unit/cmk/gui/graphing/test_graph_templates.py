@@ -12,9 +12,9 @@ import pytest
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import Title
-from cmk.gui.config import active_config
 from cmk.gui.graphing import _graph_templates as gt
 from cmk.gui.graphing._from_api import graphs_from_api, RegisteredMetric
+from cmk.gui.graphing._graph_metric_expressions import LineType
 from cmk.gui.graphing._graph_specification import HorizontalRule
 from cmk.gui.graphing._graph_templates import (
     _evaluate_predictive_metrics,
@@ -47,7 +47,6 @@ from cmk.gui.graphing._metric_expression import (
     Sum,
     WarningOf,
 )
-from cmk.gui.graphing._metric_operation import LineType
 from cmk.gui.graphing._translated_metrics import (
     Original,
     parse_perf_data,
@@ -57,6 +56,7 @@ from cmk.gui.graphing._translated_metrics import (
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 from cmk.gui.unit_formatter import AutoPrecision
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 _CPU_UTIL_GRAPHS = {
     "cpu_utilization_simple": graphs_api.Graph(
@@ -752,6 +752,7 @@ def test__matching_graph_templates(
                 translated_metrics=translated_metrics,
                 registered_metrics={},
                 registered_graphs=registered_graphs,
+                temperature_unit=TemperatureUnit.CELSIUS,
             )
         )
         == expected_result
@@ -766,6 +767,7 @@ def test_evaluate_title_ok() -> None:
                 [PerfDataTuple("load1", "load1", 1, "", 120, 240, 0, 25)],
                 "check_mk-cpu_loads",
                 {},
+                temperature_unit=TemperatureUnit.CELSIUS,
             ),
         )
         == "CPU Load - 25 CPU Cores"
@@ -780,6 +782,7 @@ def test_evaluate_title_missing_scalar() -> None:
                 [PerfDataTuple("load1", "load1", 1, "", None, None, None, None)],
                 "check_mk-cpu_loads",
                 {},
+                temperature_unit=TemperatureUnit.CELSIUS,
             ),
         )
         == "CPU Load"
@@ -913,16 +916,18 @@ def test_horizontal_rules_from_thresholds(
     metric_expressions: Sequence[MetricExpression],
     result: Sequence[HorizontalRule],
 ) -> None:
-    perf_data, check_command = parse_perf_data(perf_data_string, None, config=active_config)
+    perf_data, check_command = parse_perf_data(perf_data_string, None, debug=False)
     translated_metrics = translate_metrics(
         perf_data,
         check_command,
         registered_metrics,
+        temperature_unit=TemperatureUnit.CELSIUS,
     )
     assert (
         _evaluate_scalars(
             metric_expressions,
             translated_metrics,
+            temperature_unit=TemperatureUnit.CELSIUS,
         )
         == result
     )
@@ -1797,7 +1802,12 @@ def test__get_evaluated_graph_templates_1(
     graph_ids: Sequence[str],
 ) -> None:
     perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
-    translated_metrics = translate_metrics(perfdata, check_command, {})
+    translated_metrics = translate_metrics(
+        perfdata,
+        check_command,
+        {},
+        temperature_unit=TemperatureUnit.CELSIUS,
+    )
     assert sorted(
         [
             t.id
@@ -1805,6 +1815,7 @@ def test__get_evaluated_graph_templates_1(
                 translated_metrics,
                 {},
                 registered_graphs,
+                temperature_unit=TemperatureUnit.CELSIUS,
             )
         ]
     ) == sorted(graph_ids)
@@ -1831,7 +1842,12 @@ def test__get_evaluated_graph_templates_2(
     graph_ids: Sequence[str],
 ) -> None:
     perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", *warn_crit_min_max) for n in metric_names]
-    translated_metrics = translate_metrics(perfdata, check_command, {})
+    translated_metrics = translate_metrics(
+        perfdata,
+        check_command,
+        {},
+        temperature_unit=TemperatureUnit.CELSIUS,
+    )
     assert sorted(
         [
             t.id
@@ -1839,6 +1855,7 @@ def test__get_evaluated_graph_templates_2(
                 translated_metrics,
                 {},
                 registered_graphs,
+                temperature_unit=TemperatureUnit.CELSIUS,
             )
         ]
     ) == sorted(graph_ids)
@@ -2341,13 +2358,19 @@ def test__get_evaluated_graph_templates_with_predictive_metrics(
         + [PerfDataTuple(n, n[8:], 0, "", 1, 2, None, None) for n in predict_metric_names]
         + [PerfDataTuple(n, n[14:], 0, "", 3, 4, None, None) for n in predict_lower_metric_names]
     )
-    translated_metrics = translate_metrics(perfdata, check_command, registered_metrics)
+    translated_metrics = translate_metrics(
+        perfdata,
+        check_command,
+        registered_metrics,
+        temperature_unit=TemperatureUnit.CELSIUS,
+    )
     assert (
         list(
             _get_evaluated_graph_templates(
                 translated_metrics,
                 registered_metrics,
                 registered_graphs,
+                temperature_unit=TemperatureUnit.CELSIUS,
             )
         )
         == graph_templates
@@ -2870,7 +2893,12 @@ def test_conflicting_metrics(
     # 1. write test for expected metric names of a graph template if it has "conflicting_metrics"
     # 2. use metric names from (1) and conflicting metrics
     perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
-    translated_metrics = translate_metrics(perfdata, "check_command", {})
+    translated_metrics = translate_metrics(
+        perfdata,
+        "check_command",
+        {},
+        temperature_unit=TemperatureUnit.CELSIUS,
+    )
     assert sorted(
         [
             t.id
@@ -2878,6 +2906,7 @@ def test_conflicting_metrics(
                 translated_metrics,
                 {},
                 registered_graphs,
+                temperature_unit=TemperatureUnit.CELSIUS,
             )
         ]
     ) == sorted(graph_ids)

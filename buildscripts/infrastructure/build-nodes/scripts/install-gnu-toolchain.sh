@@ -28,8 +28,13 @@ TARGET_DIR="${TARGET_DIR:-/opt}"
 PREFIX=${TARGET_DIR}/${DIR_NAME}
 BUILD_DIR="${TARGET_DIR}/src"
 
+# As soon as the glibc version changes, we are rebuilding the toolchain.
+# Yes, a mkheaders would be sufficient to fix the includes, but let's not overengineer here.
+# The glibc version usally does not change that often.
+GLIBC_VERSION=$(ldd --version | awk 'NR==1 {print $NF}')
+
 # Increase this to enforce a recreation of the build cache
-BUILD_ID="${BINUTILS_VERSION}-1"
+BUILD_ID="binutils_${BINUTILS_VERSION}-glibc_${GLIBC_VERSION}-1"
 
 download_sources() {
     # Get the sources from nexus or upstream

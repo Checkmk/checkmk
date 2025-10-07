@@ -123,7 +123,9 @@ from cmk.server_side_calls_backend import (
     SpecialAgentCommandLine,
     SSCRules,
 )
-from cmk.server_side_calls_backend.config_processing import PreprocessingResult
+from cmk.server_side_calls_backend.config_processing import (
+    extract_all_adhoc_secrets,
+)
 from cmk.snmplib import (  # some of these are required in the modules' namespace to load the configuration!
     parse_oid_range_config,
     SNMPBackendEnum,
@@ -675,6 +677,8 @@ def _perform_post_config_loading_actions(
         host_tags=host_tags,
         cmc_log_rrdcreation=cmc_log_rrdcreation,
         cmc_host_rrd_config=cmc_host_rrd_config,
+        cmc_statehist_cache=cmc_statehist_cache,
+        cmc_timeperiod_horizon=cmc_timeperiod_horizon,
         host_recurring_downtimes=host_recurring_downtimes,
         cmc_flap_settings=cmc_flap_settings,
         cmc_host_flap_settings=cmc_host_flap_settings,
@@ -1335,19 +1339,44 @@ def _get_ssc_ip_family(
             assert_never(other)
 
 
-def get_resource_macros() -> Mapping[str, str]:
-    macros = {}
+# Should not be here, but can't be moved to cmk.base.core (yet) because of import cycles
+def load_resource_cfg_macros(
+    resource_cfg: Path, error_handler: Callable[[str], None] | None | None
+) -> Mapping[str, str]:
+    """Load user macros from resource.cfg
+
+    Example for resource.cfg:
+
+    ```
+        ############################################
+        # OMD settings, please use them to make your config
+        # portable, but don't change them
+        $USER1$=/omd/sites/prod/lib/nagios/plugins
+        $USER2$=/omd/sites/prod/local/lib/nagios/plugins
+        $USER3$=prod
+        $USER4$=/omd/sites/prod
+        ############################################
+        # set your own macros here:
+        $USER32$=wrdlpfrmpt
+    ```
+    """
+
     try:
-        for line in (cmk.utils.paths.omd_root / "etc/nagios/resource.cfg").open():
-            line = line.strip()
-            if not line or line[0] == "#":
-                continue
-            varname, value = line.split("=", 1)
-            macros[varname] = value
-    except Exception:
-        if cmk.ccc.debug.enabled():
+        raw = resource_cfg.read_text()
+    except FileNotFoundError:
+        return {}
+
+    try:
+        return dict(
+            stripped.split("=", 1)
+            for line in raw.splitlines()
+            if (stripped := line.strip()) and not stripped.startswith("#")
+        )
+    except ValueError as exc:
+        if error_handler is None:
             raise
-    return macros
+        error_handler(f"Cannot read {resource_cfg}: {exc}")
+    return {}
 
 
 def get_ssc_host_config(
@@ -2318,7 +2347,9 @@ class ConfigCache:
             host_name
         )
         host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
-        resource_macros = get_resource_macros()
+        resource_macros = load_resource_cfg_macros(
+            cmk.utils.paths.nagios_resource_cfg, None if cmk.ccc.debug.enabled() else lambda x: None
+        )
         macros = {**host_macros, **resource_macros}
         active_check_config = ActiveCheck(
             load_active_checks(raise_errors=cmk.ccc.debug.enabled()),
@@ -2481,12 +2512,8 @@ class ConfigCache:
 
         return {
             **password_store.load(password_store.password_store_path()),
-            **PreprocessingResult.from_config(
-                _compose_filtered_ssc_rules(active_checks.items())
-            ).ad_hoc_secrets,
-            **PreprocessingResult.from_config(
-                _compose_filtered_ssc_rules(special_agents.items())
-            ).ad_hoc_secrets,
+            **extract_all_adhoc_secrets(_compose_filtered_ssc_rules(active_checks.items())),
+            **extract_all_adhoc_secrets(_compose_filtered_ssc_rules(special_agents.items())),
         }
 
     def hostgroups(self, host_name: HostName) -> Sequence[str]:
@@ -3640,7 +3667,7 @@ def make_fetcher_trigger(
     match edition:
         case cmk_version.Edition.CCE | cmk_version.Edition.CME | cmk_version.Edition.CSE:
             if (relay_id := get_relay_id(host_labels)) is not None:
-                from cmk.fetchers.cce.trigger import (  # type: ignore[import-not-found, unused-ignore]
+                from cmk.relay_fetcher_trigger.trigger import (  # type: ignore[import-not-found, unused-ignore]
                     RelayFetcherTrigger,
                 )
 
@@ -3803,11 +3830,12 @@ class FetcherFactory:
             do_status_data_inventory=self._config_cache.hwsw_inventory_parameters(
                 host_name
             ).status_data_inventory,
-            section_cache_path=self._snmp_fetcher_config.section_cache_path(host_name),
+            base_path=self._snmp_fetcher_config.base_path,
+            relative_section_cache_path=self._snmp_fetcher_config.relative_section_cache_path,
             snmp_config=snmp_config,
             caching_config=self._snmp_fetcher_config.caching_config(host_name),
-            stored_walk_path=self._snmp_fetcher_config.stored_walk_path,
-            walk_cache_path=self._snmp_fetcher_config.walk_cache_path,
+            relative_stored_walk_path=self._snmp_fetcher_config.relative_stored_walk_path,
+            relative_walk_cache_path=self._snmp_fetcher_config.relative_walk_cache_path,
         )
         return fetcher
 

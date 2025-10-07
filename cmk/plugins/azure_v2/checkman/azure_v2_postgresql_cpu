@@ -1,0 +1,15 @@
+title: Microsoft Azure PostgreSQL Database: CPU Utilization
+agents: azure_v2
+catalog: cloud/azure
+license: GPLv2
+distribution: check_mk
+description:
+ This check reports the cpu utilization in percent.
+ You can configure levels using the rule "CPU Utilization".
+
+item:
+ The name of the resource.
+
+discovery:
+ One service is created for each database if the required metric
+ (average_cpu_percent) is given.

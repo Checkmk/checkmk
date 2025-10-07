@@ -8,11 +8,14 @@ use crate::config::OracleConfig;
 use crate::constants;
 use crate::platform::get_local_instances;
 use crate::types::{SectionFilter, UseHostClient};
+use crate::version::VERSION;
 use anyhow::Result;
 use clap::Parser;
 use flexi_logger::{self, Cleanup, Criterion, DeferredNow, FileSpec, LogSpecification, Record};
 use std::env::ArgsOs;
+use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::LazyLock;
 
 #[derive(Default, Clone, Debug)]
 pub struct Env {
@@ -33,6 +36,9 @@ pub struct Env {
 
     /// detect instances and stop
     execution: SectionFilter,
+
+    /// generate plugins and stop
+    generate_plugins: Option<PathBuf>,
 }
 
 impl Env {
@@ -50,6 +56,7 @@ impl Env {
             disable_caching: args.no_spool,
             detect_only: args.detect_only,
             execution: args.filter.clone().unwrap_or_default(),
+            generate_plugins: args.generate_plugins.clone(),
         }
     }
 
@@ -74,6 +81,10 @@ impl Env {
 
     pub fn detect_only(&self) -> bool {
         self.detect_only
+    }
+
+    pub fn generate_plugins(&self) -> Option<&Path> {
+        self.generate_plugins.as_deref()
     }
 
     pub fn execution(&self) -> SectionFilter {
@@ -216,28 +227,13 @@ fn custom_format(
     )
 }
 
-fn dec_level(level: log::Level) -> log::Level {
-    match level {
-        log::Level::Error => log::Level::Error,
-        log::Level::Warn => log::Level::Error,
-        log::Level::Info => log::Level::Warn,
-        log::Level::Debug => log::Level::Info,
-        log::Level::Trace => log::Level::Debug,
-    }
-}
-
 fn apply_logging_parameters(
     level: log::Level,
     log_dir: Option<&Path>,
     send_to: SendTo,
     logging: Logging,
 ) -> Result<flexi_logger::LoggerHandle> {
-    let spec = LogSpecification::parse(format!(
-        "{}, tiberius={}, odbc={}",
-        level.as_str().to_lowercase(),
-        dec_level(level).as_str().to_lowercase(),
-        dec_level(dec_level(level)).as_str().to_lowercase(),
-    ))?;
+    let spec = LogSpecification::parse(level.as_str().to_lowercase())?;
     let mut logger = flexi_logger::Logger::with(spec);
 
     logger = if let Some(dir) = log_dir {
@@ -272,7 +268,7 @@ fn make_log_file_spec(log_dir: &Path) -> FileSpec {
         .basename("mk-sql")
 }
 
-pub const RUNTIME_SUB_DIR: &str = "runtime";
+pub const RUNTIME_SUB_DIR: &str = "mk-oracle";
 
 pub fn detect_host_runtime() -> Option<PathBuf> {
     match get_local_instances() {
@@ -304,10 +300,22 @@ pub fn detect_host_runtime() -> Option<PathBuf> {
     }
 }
 
+/// Finds runtime dir using MK_LIBDIR or custom env var
+/// usually at: MK_LIBDIR/plugins/packages/mk-oracle
+/// Returns None if env var is not set or path is not a directory
 pub fn detect_factory_runtime(env_var: Option<String>) -> Option<PathBuf> {
     let env_var = env_var.unwrap_or_else(|| "MK_LIBDIR".to_string());
     if let Ok(lib_path) = std::env::var(&env_var) {
-        let runtime_path = PathBuf::from(lib_path).join(RUNTIME_SUB_DIR);
+        let runtime_path = PathBuf::from(lib_path)
+            .join("plugins")
+            .join("packages")
+            .join(RUNTIME_SUB_DIR);
+
+        let runtime_path = if cfg!(windows) && runtime_path.join("runtime").is_dir() {
+            runtime_path.join("runtime")
+        } else {
+            runtime_path
+        };
         if runtime_path.is_dir() {
             Some(runtime_path)
         } else {
@@ -351,7 +359,8 @@ const ENV_VAR_SEP: &str = ";";
 #[cfg(unix)]
 const ENV_VAR_SEP: &str = ":";
 
-/// On Unix/Windows, we modify LD_LIBRARY_PATH/PATH using config and, by default, MK_LIBDIR
+/// On Unix we modify LD_LIBRARY_PATH using config and, by default, MK_LIBDIR
+/// On Windows we modify PATH using config and, by default, MK_LIBDIR
 pub fn add_runtime_path_to_env(
     config: &OracleConfig,
     mk_lib_dir: Option<String>,
@@ -388,6 +397,170 @@ pub fn validate_permissions(_p: &Path) -> bool {
     // then permissions for directory and all required binaries should be admin only.
     log::warn!("CHECK PERMISSIONS is not implemented yet");
     true
+}
+
+#[cfg(windows)]
+static PLUGIN_TEMPLATE_TEXT: LazyLock<String> = LazyLock::new(|| {
+    format!(
+        r#" Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+$CMK_VERSION = "{}"
+
+& $env:MK_PLUGINSDIR\packages\mk-oracle\mk-oracle.exe -c $env:MK_CONFDIR/oracle.yml "#,
+        VERSION
+    )
+});
+
+const BAKERY_TEXT: &str = r#" Created by mk-oracle plugin.
+# This file is managed via mk-oracle plugin, do not edit manually or you
+# lose your changes next time when you update the agent.
+global:
+  enabled: true
+  install: true
+plugins:
+  enabled: true
+  execution:
+  - pattern: $CUSTOM_PLUGINS_PATH$\"#;
+
+#[cfg(not(windows))]
+static PLUGIN_TEMPLATE_TEXT: LazyLock<String> = LazyLock::new(|| {
+    format!(
+        r#"!/bin/bash
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+CMK_VERSION="{}"
+
+"${{MK_LIBDIR}}/plugins/packages/mk-oracle/mk-oracle" -c "${{MK_CONFDIR}}/oracle.yml" "#,
+        VERSION
+    )
+});
+
+fn delete_file_in_sub_dirs(folder: &Path, name: &str) -> std::io::Result<()> {
+    for entry in std::fs::read_dir(folder)? {
+        let entry = entry?;
+        let path = entry.path();
+        if path.is_dir() {
+            let file_path = path.join(name);
+            if file_path.is_file() {
+                std::fs::remove_file(file_path).unwrap_or_else(|e| {
+                    log::error!("Failed to delete old plugin file: {e}");
+                });
+            }
+        }
+    }
+    Ok(())
+}
+
+fn add_yml_config_async_entry(lib_dir: &Path, name: &str, cache_age: u32) -> bool {
+    if !lib_dir.is_dir() {
+        log::error!("Lib dir {:?} doesn't exist", lib_dir);
+        return false;
+    }
+    let bakery_dir = lib_dir.join("bakery");
+    if !bakery_dir.is_dir() {
+        log::error!("Bakery dir absent/inaccessible {:?}", &bakery_dir);
+        return false;
+    }
+    let bakery_file = bakery_dir.join("check_mk.bakery.yml");
+    if !&bakery_file.exists()
+        || !fs::read_to_string(&bakery_file)
+            .unwrap_or_default()
+            .contains("# Created by Check_MK Agent Bakery.")
+    {
+        let content =
+            BAKERY_TEXT.to_string() + name + "\n" + "    cache: " + &cache_age.to_string() + "\n";
+        fs::write(&bakery_file, content)
+            .map(|_| true)
+            .unwrap_or_else(|e| {
+                log::error!("Failed to create config file {:?}: {}", &bakery_file, &e);
+                false
+            })
+    } else {
+        log::error!("File {bakery_file:?} exists and it's managed by bakery");
+        false
+    }
+}
+
+#[cfg(unix)]
+fn set_file_permissions(path: &Path, mode: u32) -> std::io::Result<()> {
+    use std::os::unix::fs::PermissionsExt;
+
+    let perms = fs::Permissions::from_mode(mode);
+    fs::set_permissions(path, perms)
+}
+
+#[cfg(windows)]
+fn set_file_permissions(_path: &Path, _mode: u32) -> std::io::Result<()> {
+    // Windows doesn't support Unix-like permissions
+    Ok(())
+}
+
+pub fn create_plugin(name: &str, dir: &Path, cache_age: Option<u32>) -> bool {
+    if !dir.is_dir() {
+        log::info!("Plugin dir {:?} doesn't exist", dir);
+        return false;
+    }
+    if let Some(parent) = dir.parent() {
+        if !parent.is_dir() {
+            log::info!("Parent directory of plugin dir {:?} doesn't exist", dir);
+            return false;
+        }
+        if let Some(cache_age) = cache_age {
+            if cfg!(windows) {
+                if add_yml_config_async_entry(parent, name, cache_age) {
+                    Some(dir.to_owned())
+                } else {
+                    log::error!("Config is not updated/created");
+                    None
+                }
+            } else {
+                delete_file_in_sub_dirs(dir, name)
+                    .map(|_| make_cached_subdir(dir, cache_age))
+                    .unwrap_or_else(|e| {
+                        log::error!("Failed to delete old plugin files: {e}");
+                        None
+                    })
+            }
+        } else {
+            Some(dir.to_owned())
+        }
+        .map(|plugin_dir| {
+            let cmd_line = if cache_age.is_some() {
+                "--filter async"
+            } else {
+                "--filter sync"
+            };
+            let the_file = plugin_dir.join(name);
+            fs::write(
+                &the_file,
+                PLUGIN_TEMPLATE_TEXT.to_string() + cmd_line + "\n",
+            )
+            .map(|_| set_file_permissions(&the_file, 0o755))
+            .map(|_| true)
+            .unwrap_or_else(|e| {
+                log::error!("Failed to create plugin file: {e}");
+                false
+            })
+        })
+        .unwrap_or_default()
+    } else {
+        log::error!("Plugin dir {:?} has no parent dir", dir);
+        false
+    }
+}
+
+fn make_cached_subdir(dir: &Path, cache_age: u32) -> Option<PathBuf> {
+    let joined_path = dir.join(cache_age.to_string());
+    fs::create_dir_all(&joined_path)
+        .map(|_| Some(joined_path))
+        .unwrap_or_else(|e| {
+            log::error!("Failed to create parent directory of plugin dir: {e}");
+            None
+        })
 }
 
 #[cfg(test)]

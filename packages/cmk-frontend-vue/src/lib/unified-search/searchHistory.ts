@@ -63,9 +63,14 @@ export class SearchHistoryService {
   }
 
   public add(historyEntry: HistoryEntry): void {
+    this.addEntry(historyEntry)
+    this.addQuery(historyEntry)
+  }
+
+  public addEntry(historyEntry: HistoryEntry): void {
     let found = false
 
-    const [entries, queries] = this.getCopy()
+    const [entries] = this.getCopy()
 
     entries.forEach((hist) => {
       if (historyEntry.element.title === hist.element.title) {
@@ -78,10 +83,14 @@ export class SearchHistoryService {
     if (found === false) {
       entries.push(historyEntry)
     }
+    this.entries.value = entries
+  }
+
+  public addQuery(historyEntry: HistoryEntry): void {
+    const [, queries] = this.getCopy()
 
     queries.push(historyEntry.query as UnifiedSearchQueryLike)
     this.queries.value = queries
-    this.entries.value = entries
   }
 
   public remove(historyEntry: HistoryEntry): void {
@@ -116,8 +125,16 @@ export class SearchHistoryService {
   }
 
   private getCopy(): [HistoryEntry[], UnifiedSearchQueryLike[]] {
+    return [this.getEntriesCopy(), this.getQueriesCopy()]
+  }
+
+  private getEntriesCopy(): HistoryEntry[] {
     const entries: HistoryEntry[] = []
+    return entries.concat(this.entries.value)
+  }
+
+  private getQueriesCopy(): UnifiedSearchQueryLike[] {
     const queries: UnifiedSearchQueryLike[] = []
-    return [entries.concat(this.entries.value), queries.concat(this.queries.value)]
+    return queries.concat(this.queries.value)
   }
 }

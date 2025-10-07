@@ -1,0 +1,11 @@
+title: Proxmox VE: Node CPU Allocation
+agents: proxmox_ve
+catalog: os/misc
+license: GPLv2
+distribution: check_mk
+description:
+ This service monitors the CPU allocation of the Proxmox VE node. It sums all CPU cores
+ allocated to running VMs and compares it to the maximum CPU cores available on the node.
+
+discovery:
+ One service is created.

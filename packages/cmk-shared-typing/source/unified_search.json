@@ -1,29 +1,29 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "type": "object",
-    "title": "unified_search_config",
-    "properties": {
-        "providers": { "$ref": "#/$defs/providers" },
-        "user_id": { "type": "string" }
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "unified_search_config",
+  "properties": {
+    "providers": { "$ref": "#/$defs/providers" },
+    "user_id": { "type": "string" }
+  },
+  "required": ["providers", "user_id"],
+  "$defs": {
+    "providers": {
+      "type": "object",
+      "properties": {
+        "monitoring": { "$ref": "#/$defs/provider" },
+        "customize": { "$ref": "#/$defs/provider" },
+        "setup": { "$ref": "#/$defs/provider" }
+      },
+      "required": ["monitoring", "customize", "setup"]
     },
-    "required": ["providers", "user_id"],
-    "$defs": {
-        "providers": {
-            "type": "object",
-            "properties": {
-                "monitoring": { "$ref": "#/$defs/provider" },
-                "customize": { "$ref": "#/$defs/provider" },
-                "setup": { "$ref": "#/$defs/provider" }
-            },
-            "required": ["monitoring", "customize", "setup"]
-        },
-        "provider": {
-            "type": "object",
-            "properties": {
-                "active": { "type": "boolean" },
-                "sort": { "type": "number" }
-            },
-            "required": ["active", "sort"]
-        }
+    "provider": {
+      "type": "object",
+      "properties": {
+        "active": { "type": "boolean" },
+        "sort": { "type": "number" }
+      },
+      "required": ["active", "sort"]
     }
+  }
 }

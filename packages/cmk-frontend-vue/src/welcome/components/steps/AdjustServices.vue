@@ -8,7 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
 import type { Ref } from 'vue'
 
-import usei18n from '@/lib/i18n.ts'
+import usei18n from '@/lib/i18n'
 import usePersistentRef from '@/lib/usePersistentRef.ts'
 
 import CmkAccordionStepPanelItem from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
@@ -21,7 +21,7 @@ import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import StepCardsRow from '@/welcome/components/steps/components/StepCardsRow.vue'
 import StepParagraph from '@/welcome/components/steps/components/StepParagraph.vue'
-import { type StepId, markStepAsComplete } from '@/welcome/components/steps/utils.ts'
+import { type StepId } from '@/welcome/components/steps/utils.ts'
 
 const { _t } = usei18n()
 
@@ -31,6 +31,7 @@ const props = defineProps<{
   urls: WelcomeUrls
   accomplished: boolean
 }>()
+const emit = defineEmits(['step-completed'])
 
 const currentStep: Ref<number> = usePersistentRef<number>(`${props.stepId}-currentStep`, 0, 'local')
 </script>
@@ -92,7 +93,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(`${props.stepId}-curre
             {{ _t('In the Service Discovery view, find the service you want to configure.') }}
             <br />
             {{ _t('Click the') }}
-            <CmkIcon name="check_parameters" variant="inline" size="small" />{{
+            <CmkIcon name="check-parameters" variant="inline" size="small" />{{
               _t('-icon next to it to open the corresponding ruleset.')
             }}
           </StepParagraph>
@@ -143,7 +144,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(`${props.stepId}-curre
           </StepParagraph>
           <StepCardsRow>
             <CmkLinkCard
-              icon-name="main_changes"
+              icon-name="main-changes"
               :title="_t('Activate changes')"
               :url="urls.activate_changes"
               :open-in-new-tab="false"
@@ -155,7 +156,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(`${props.stepId}-curre
             v-if="!accomplished && stepId"
             type="finish"
             :override-label="_t('Mark as complete')"
-            @click="markStepAsComplete(urls.mark_step_completed, stepId)"
+            @click="emit('step-completed', stepId)"
           />
           <CmkWizardButton type="previous" />
         </template>

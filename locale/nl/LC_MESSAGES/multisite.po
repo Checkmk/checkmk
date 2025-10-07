@@ -2278,6 +2278,15 @@ msgstr "Een rubriek voor de grafieken"
 msgid "A heading for the view"
 msgstr "Een rubriek voor het uitzicht"
 
+msgid ""
+"A host filter requires an attribute key. Please choose one (e.g., host.name)"
+msgstr ""
+
+msgid ""
+"A host filter requires an attribute value. Please choose one (e.g., "
+"example.com)"
+msgstr ""
+
 #, fuzzy, python-format
 msgid ""
 "A host with the name %s already exists in the folder %s. Please choose a "
@@ -3223,6 +3232,11 @@ msgstr "Toegang Checkmk Agent via TCP"
 msgid "Access analyze configuration"
 msgstr "Toegang analyseren configuratie"
 
+msgid ""
+"Access is restricted, but no contact groups are assigned in the host's "
+"permissions."
+msgstr ""
+
 msgid "Access key"
 msgstr "Toegangssleutel"
 
@@ -3492,9 +3506,6 @@ msgstr "Exclusieve sloten"
 
 msgid "Act."
 msgstr "Act."
-
-msgid "Act. helper"
-msgstr "Act. helper"
 
 msgid "Action"
 msgstr "Actie"
@@ -4074,6 +4085,10 @@ msgstr "Voeg contextinformatie toe aan titel"
 
 msgid "Add customer"
 msgstr "Klant toevoegen"
+
+#, fuzzy
+msgid "Add dashboard (prototype)"
+msgstr "Dashboard-element"
 
 msgid "Add destination address"
 msgstr "Adres van bestemming toevoegen"
@@ -6541,10 +6556,6 @@ msgstr "Altijd als een evenement wordt geannuleerd"
 msgid "Amazon S3 Glacier (Glacier)"
 msgstr "Amazon S3 Glacier (Glacier)"
 
-#, fuzzy
-msgid "Amazon Web Service (AWS)"
-msgstr "Amazon Web Services (AWS)"
-
 msgid "Amazon Web Services (AWS)"
 msgstr "Amazon Web Services (AWS)"
 
@@ -6873,9 +6884,6 @@ msgid ""
 "handshake error."
 msgstr ""
 
-msgid "Apache"
-msgstr "Apache"
-
 msgid "Apache ActiveMQ Queue lengths"
 msgstr "Apache ActiveMQ Queue lengtes"
 
@@ -6997,6 +7005,10 @@ msgstr "Application Load Balancer Certificaten"
 
 msgid "Application Load balancers"
 msgstr "Load balancers voor toepassingen"
+
+#, fuzzy
+msgid "Application Monitoring"
+msgstr "Zoeken in Toezicht"
 
 msgid "Application Pool name"
 msgstr "Naam toepassingspool"
@@ -7415,14 +7427,8 @@ msgstr "Toewijzen via reguliere expressies"
 msgid "Assignee"
 msgstr ""
 
-msgid "Assignment of hosts to contact groups"
-msgstr "Toewijzing van hosts aan contactgroepen"
-
 msgid "Assignment of hosts to host groups"
 msgstr "Toewijzing van hosts aan hostgroepen"
-
-msgid "Assignment of services to contact groups"
-msgstr "Toewijzing van diensten aan contactgroepen"
 
 msgid "Assignment of services to service groups"
 msgstr "Toewijzing van diensten aan dienstengroepen"
@@ -7596,6 +7602,10 @@ msgstr "Atto Fibrebridge FC-poort"
 
 msgid "Attribute"
 msgstr "Attribuut"
+
+#, fuzzy
+msgid "Attribute filters"
+msgstr "In te stellen attribuut"
 
 #, fuzzy
 msgid "Attribute key"
@@ -7931,6 +7941,10 @@ msgstr "Automatisch aangepast aan beschikbare gegevens"
 
 msgid "Automatically create monitoring agents"
 msgstr "Automatisch aanmaken van bewakingsagenten"
+
+#, fuzzy
+msgid "Automatically delete hosts without OpenTelemetry data"
+msgstr "Automatisch hosts verwijderen zonder piggyback data"
 
 #, fuzzy
 msgid "Automatically delete hosts without open telemetry data"
@@ -8891,13 +8905,28 @@ msgstr "In afwachting van info"
 msgid "Azure"
 msgstr "Azure"
 
+#, fuzzy
 msgid "Azure AD Connect"
 msgstr "Azure AD Connect"
 
+#, fuzzy
+msgid "Azure AD Connect (deprecated)"
+msgstr "Azure AD Connect"
+
+#, fuzzy
 msgid "Azure Agent Info"
 msgstr "Azure Agent Info"
 
+#, fuzzy
+msgid "Azure Agent Info (deprecated)"
+msgstr "Azure Agent Info"
+
+#, fuzzy
 msgid "Azure Application Gateway"
+msgstr "Toepassing Gateway"
+
+#, fuzzy
+msgid "Azure Application Gateway (deprecated)"
 msgstr "Azure Application Gateway"
 
 msgid "Azure Blob Storage"
@@ -8906,10 +8935,19 @@ msgstr "Azure Blob Storage"
 msgid "Azure DB Storage"
 msgstr "Azure DB opslag"
 
+#, fuzzy
+msgid "Azure DB Storage (deprecated)"
+msgstr "Azure DB opslag"
+
 msgid "Azure Databases"
 msgstr "Azure Databases"
 
+#, fuzzy
 msgid "Azure Load Balancer Health"
+msgstr "Gezondheid van de loadbalancer"
+
+#, fuzzy
+msgid "Azure Load Balancer Health (deprecated)"
 msgstr "Gezondheid Azure Load Balancer"
 
 #, fuzzy
@@ -8949,6 +8987,10 @@ msgid "Azure SQL database CPU usage"
 msgstr "Azure Databases"
 
 #, fuzzy
+msgid "Azure SQL database CPU usage (deprecated)"
+msgstr "Azure Databases"
+
+#, fuzzy
 msgid "Azure SQL database connections"
 msgstr "Databaseverbindingen"
 
@@ -8957,11 +8999,23 @@ msgid "Azure SQL database deadlocks"
 msgstr "Databaseverbindingen"
 
 #, fuzzy
+msgid "Azure SQL database deadlocks (deprecated)"
+msgstr "Databaseverbindingen"
+
+#, fuzzy
 msgid "Azure SQL database storage"
 msgstr "Azure Databases"
 
 #, fuzzy
+msgid "Azure SQL database storage (deprecated)"
+msgstr "Azure Databases"
+
+#, fuzzy
 msgid "Azure SQL database throughput"
+msgstr "Database doorvoer eenheid"
+
+#, fuzzy
+msgid "Azure SQL database throughput (deprecated)"
 msgstr "Database doorvoer eenheid"
 
 msgid "Azure Storage"
@@ -8972,36 +9026,82 @@ msgid "Azure Storage Data Flow"
 msgstr "Azure Opslag"
 
 #, fuzzy
+msgid "Azure Storage Data Flow (deprecated)"
+msgstr "Azure Opslag"
+
+#, fuzzy
 msgid "Azure Storage Performance"
+msgstr "Azure Opslag"
+
+#, fuzzy
+msgid "Azure Storage Performance (deprecated)"
 msgstr "Azure Opslag"
 
 #, fuzzy
 msgid "Azure Storage Usage"
 msgstr "Azure Opslag"
 
+#, fuzzy
+msgid "Azure Storage Usage (deprecated)"
+msgstr "Azure Opslag"
+
+#, fuzzy
 msgid "Azure Traffic Manager Probe State"
 msgstr "Azure Traffic Manager Probe State"
 
+#, fuzzy
+msgid "Azure Traffic Manager Probe State (deprecated)"
+msgstr "Azure Traffic Manager Probe State"
+
+#, fuzzy
 msgid "Azure Traffic Manager Qps"
 msgstr "Azure Traffic Manager Qps"
 
+#, fuzzy
+msgid "Azure Traffic Manager Qps (deprecated)"
+msgstr "Azure Traffic Manager Qps"
+
+#, fuzzy
 msgid "Azure Usage Details (Costs)"
 msgstr "Details Azure-gebruik (kosten)"
 
+#, fuzzy
+msgid "Azure Usage Details (Costs) (deprecated)"
+msgstr "Details Azure-gebruik (kosten)"
+
+#, fuzzy
 msgid "Azure VM Burst CPU Credits"
 msgstr "Azure VM Burst CPU Kredieten"
 
+#, fuzzy
+msgid "Azure VM Burst CPU Credits (deprecated)"
+msgstr "Azure VM Burst CPU Kredieten"
+
+#, fuzzy
 msgid "Azure VM Disk"
+msgstr "Azure VM-instanties"
+
+#, fuzzy
+msgid "Azure VM Disk (deprecated)"
 msgstr "Azure VM-Disk"
 
 msgid "Azure VM instances"
 msgstr "Azure VM-instanties"
 
+#, fuzzy
 msgid "Azure VNet Gateway"
+msgstr "vNet Gateway"
+
+#, fuzzy
+msgid "Azure VNet Gateway  (deprecated)"
 msgstr "Azure VNet Gateway"
 
 #, fuzzy
 msgid "Azure database connections"
+msgstr "Databaseverbindingen"
+
+#, fuzzy
+msgid "Azure database connections (deprecated)"
 msgstr "Databaseverbindingen"
 
 #, fuzzy
@@ -9016,13 +9116,26 @@ msgstr "Azure opslagaccounts"
 
 #, fuzzy
 msgid "Azure virtual machines"
+msgstr "De virtuele machine"
+
+#, fuzzy
+msgid "Azure virtual machines (deprecated)"
 msgstr "Azure virtuele machines"
 
 #, fuzzy
 msgid "Azure virtual machines summary"
 msgstr "Samenvatting Azure virtuele machines"
 
+#, fuzzy
+msgid "Azure virtual machines summary  (deprecated)"
+msgstr "Samenvatting Azure virtuele machines"
+
+#, fuzzy
 msgid "Azure web servers (IIS)"
+msgstr "Azure webservers (IIS)"
+
+#, fuzzy
+msgid "Azure web servers (IIS) (deprecated)"
 msgstr "Azure webservers (IIS)"
 
 msgid "B"
@@ -10426,6 +10539,20 @@ msgstr ""
 
 #, python-brace-format
 msgid ""
+"By default, Checkmk imports all Azure tags as host/service labels. The "
+"imported tags are added as host labels for resource groups and VMs monitored "
+"as hosts and as service labels for resources monitored as services. The "
+"label syntax is 'cmk/azure/tag/{key}:{value}'.<br>Additionally, each host "
+"representing a resource group is given the host label 'cmk/azure/"
+"resource_group:{rg_name}', and VMs monitored as hosts are given the host "
+"label 'cmk/azure/vm:instance', which is done independent of this option."
+"<br>You can further restrict the imported tags by specifying a pattern which "
+"Checkmk searches for in the key of the Azure tag, or you can disable the "
+"import of Azure tags altogether."
+msgstr ""
+
+#, python-brace-format
+msgid ""
 "By default, Checkmk imports the AWS tags for EC2 and ELB instances as host "
 "labels for the respective piggyback hosts. The label syntax is 'cmk/aws/tag/"
 "{key}:{value}'.<br>Additionally, the piggyback hosts for EC2 instances are "
@@ -10505,6 +10632,19 @@ msgstr ""
 "Certificaatvalidatie is standaard uitgeschakeld omdat het in dit stadium "
 "niet relevant is voor de veiligheid, zie <a href=\"https://checkmk.com/werk/"
 "14715\" target=\"_blank\">werk #14715</a>."
+
+#, fuzzy
+msgid ""
+"By default, data relating to a VM is sent to the group host corresponding to "
+"the resource group of the VM, the same way as for any other resource. If the "
+"VM is present in your monitoring as a separate host, you can choose to send "
+"the data to the VM itself."
+msgstr ""
+"Standaard worden gegevens met betrekking tot een VM verzonden naar de groep "
+"host die overeenkomt met de resource groep van de VM, op dezelfde manier als "
+"voor elke andere resource. Als de VM als een afzonderlijke host in uw "
+"monitoring aanwezig is, kunt u ervoor kiezen om de gegevens naar de VM zelf "
+"te sturen."
 
 msgid ""
 "By default, each host has a piggyback data source.<br><br><b>Use piggyback "
@@ -10960,18 +11100,12 @@ msgstr "CLOSE_WAIT"
 msgid "CLOSING"
 msgstr "SLUITING"
 
-msgid "CMC"
-msgstr "CMC"
-
 #, fuzzy
 msgid "CMC (Checkmk Micro Core)"
 msgstr "CMC (Checkmk Microcore)"
 
 msgid "CMC status"
 msgstr "CMC status"
-
-msgid "CMK helper"
-msgstr "CMK helper"
 
 msgid "CMK helper usage"
 msgstr "CMK helper gebruik"
@@ -11021,6 +11155,10 @@ msgstr "CPU-gebruik"
 
 msgid "CPU Utilization of Clusters"
 msgstr "CPU-gebruik van clusters"
+
+#, fuzzy
+msgid "CPU allocation ratio"
+msgstr "Verdeling van de scherven in de tijd"
 
 #, fuzzy
 msgid "CPU architecture"
@@ -12631,9 +12769,6 @@ msgstr "Selectievakje Livetime"
 
 msgid "Checked"
 msgstr "Gecontroleerd"
-
-msgid "Checker helper"
-msgstr "Controleur helper"
 
 msgid "Checker helper usage"
 msgstr "Checker helper gebruik"
@@ -14643,11 +14778,15 @@ msgid "Configure"
 msgstr "Configureer"
 
 #, fuzzy
-msgid "Configure Amazon Web Service (AWS) monitoring in Checkmk"
+msgid "Configure Amazon Web Services (AWS) monitoring in Checkmk"
 msgstr "Toezicht op Amazon Web Services (AWS)"
 
 #, fuzzy
 msgid "Configure Google Cloud Platform (GCP) monitoring in Checkmk"
+msgstr "Toezicht op Amazon Web Services (AWS)"
+
+#, fuzzy
+msgid "Configure Microsoft Azure (deprecated) monitoring in Checkmk"
 msgstr "Toezicht op Amazon Web Services (AWS)"
 
 #, fuzzy
@@ -14713,6 +14852,12 @@ msgstr "Configureer detectie van afzonderlijke interfaces"
 msgid "Configure enforced checks without using service discovery"
 msgstr ""
 "Configureer opgelegde controles zonder gebruik te maken van service discovery"
+
+msgid ""
+"Configure expected states for Hyper-V VM network interfaces. You can set "
+"expected connection state, MAC configuration, and expected virtual switch "
+"assignment."
+msgstr ""
 
 #, fuzzy
 msgid "Configure fallback email address"
@@ -15257,6 +15402,10 @@ msgid "Connect without password"
 msgstr "Verbinden zonder wachtwoord"
 
 #, fuzzy
+msgid "Connected"
+msgstr "Connect"
+
+#, fuzzy
 msgid "Connected Clients"
 msgstr "Verbindingen"
 
@@ -15322,6 +15471,10 @@ msgstr "Weergave van de regel: %s"
 
 msgid "Connection settings"
 msgstr "Instellingen verbinding"
+
+#, fuzzy
+msgid "Connection state configuration"
+msgstr "Configuratie activeren"
 
 msgid ""
 "Connection state of customers' sites and button for enabling or disabling "
@@ -15427,6 +15580,10 @@ msgstr "Type aansluiting"
 msgid "Connector: Adding host changes to queue"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Connector: Collecting metric backend hosts on site  \"%s\""
+msgstr "Fase 1.1: Afhalen van site \"%s\""
+
 #, python-format
 msgid "Connector: Collecting open telemetry hosts on site  \"%s\""
 msgstr ""
@@ -15467,9 +15624,6 @@ msgstr "Consolidatiefunctie voor de [grafiek#rrds|RRD] gegevenskolom"
 
 msgid "Consolidation functions"
 msgstr "Consolidatiefuncties"
-
-msgid "Consumed capacity"
-msgstr "Verbruikte capaciteit"
 
 msgid "Consumed host memory"
 msgstr "Verbruikt hostgeheugen"
@@ -16385,6 +16539,10 @@ msgstr "Cluster maken"
 msgid "Create custom graph"
 msgstr "Maak aangepaste grafiek"
 
+#, fuzzy
+msgid "Create dashboard"
+msgstr "Gerelateerde dashboards"
+
 msgid "Create element"
 msgstr "Creëer element"
 
@@ -16880,9 +17038,6 @@ msgstr ""
 msgid "CronJobs"
 msgstr "CronJobs"
 
-msgid "Crontab"
-msgstr "Crontab"
-
 msgid "Crontab status"
 msgstr "Crontab status"
 
@@ -17053,6 +17208,10 @@ msgstr ""
 
 msgid "Custom Action"
 msgstr "Aangepaste actie"
+
+#, fuzzy
+msgid "Custom ClickHouse Instance"
+msgstr "Aangepaste sondestatus"
 
 #, python-format
 msgid "Custom GUI design of %s"
@@ -17480,9 +17639,6 @@ msgstr "DB2 logfile gebruik"
 msgid "DB2 memory usage"
 msgstr "DB2 geheugengebruik"
 
-msgid "DCD"
-msgstr "DCD"
-
 #, fuzzy
 msgid "DCD Batch"
 msgstr "DCD-status"
@@ -17782,9 +17938,6 @@ msgstr "Gegevensinvoer"
 msgid "Data is outdated and will be removed with the next check execution"
 msgstr ""
 
-msgid "Data movement completed"
-msgstr "Verplaatsen van gegevens voltooid"
-
 msgid "Data nodes"
 msgstr "Gegevens knooppunten"
 
@@ -17821,27 +17974,9 @@ msgstr "Verzonden gegevens"
 msgid "Data size"
 msgstr "Gegevensgrootte"
 
-msgid "Data targeted for higher tier"
-msgstr "Gegevens gericht op hoger niveau"
-
-msgid "Data targeted for lower tier"
-msgstr "Gegevens gericht op lager niveau"
-
-msgid "Data targeted for within tier"
-msgstr "Gegevens gericht op binnen niveau"
-
 #, fuzzy
 msgid "Data to collect (Sections)"
 msgstr "Vuilnisophaaldiensten"
-
-msgid "Data to move down"
-msgstr "Gegevens om naar beneden te gaan"
-
-msgid "Data to move up"
-msgstr "Gegevens om omhoog te gaan"
-
-msgid "Data to move within"
-msgstr "Gegevens om binnen te bewegen"
 
 #, fuzzy
 msgid ""
@@ -18239,20 +18374,8 @@ msgstr ""
 msgid "Dedicated white-/blacklists for new and vanished services"
 msgstr "Speciale witte/blacklists voor nieuwe en verdwenen diensten"
 
-msgid "Deduplication efficiency savings"
-msgstr "Deduplicatie-efficiëntiebesparingen"
-
-msgid "Deduplication percent completed"
-msgstr "Deduplicatie percentage voltooid"
-
 msgid "Deduplication rate"
 msgstr "Ontdubbelingspercentage"
-
-msgid "Deduplication remaining size"
-msgstr "Deduplicatie resterende grootte"
-
-msgid "Deduplication shared capacity"
-msgstr "Deduplicatie gedeelde capaciteit"
 
 msgid "Default"
 msgstr "Standaard"
@@ -18930,6 +19053,14 @@ msgstr "Doel verwijderen #%d"
 
 #, fuzzy
 msgid ""
+"Delete the hosts created by this connection whose OpenTelemetry data is no "
+"longer present."
+msgstr ""
+"Verwijder de door deze verbinding aangemaakte hosts waarvan de piggyback-"
+"gegevens niet langer aanwezig zijn."
+
+#, fuzzy
+msgid ""
 "Delete the hosts created by this connection whose open telemetry data is no "
 "longer present."
 msgstr ""
@@ -19371,10 +19502,6 @@ msgstr "Windows Printer Queue plugin implementeren"
 msgid "Deploy Windows Updates plug-in"
 msgstr "Windows Updates plugin implementeren"
 
-#, fuzzy
-msgid "Deploy Zorp plug-in"
-msgstr "Zet Zorp plugin in"
-
 msgid "Deploy agents"
 msgstr "Agenten inzetten"
 
@@ -19586,6 +19713,14 @@ msgstr "Implementeer de netstat plugin"
 #, fuzzy
 msgid "Deploy the nvidia_smi agent plug-in"
 msgstr "De nvidia_smi agent-plugin implementeren"
+
+#, fuzzy
+msgid "Deploy the plug-in and run it asynchronously"
+msgstr "MTR plugin asynchroon implementeren"
+
+#, fuzzy
+msgid "Deploy the plug-in and run it synchronously"
+msgstr "MTR plugin asynchroon implementeren"
 
 msgid "Deploy without authentication."
 msgstr "Implementeer zonder authenticatie."
@@ -20235,6 +20370,10 @@ msgstr ""
 #, fuzzy, python-format
 msgid "Discarded pending changes (restored %s)"
 msgstr "In behandeling zijnde wijzigingen verwijderd (Hersteld %s)"
+
+#, fuzzy
+msgid "Disconnected"
+msgstr "losgekoppeld"
 
 msgid "Discontinue counting after time has elapsed"
 msgstr "Stop met tellen nadat de tijd is verstreken"
@@ -21015,10 +21154,6 @@ msgid "Do not deploy mk_mongodb.py plug-in"
 msgstr "Zet de mk_mongodb.py plugin niet in"
 
 #, fuzzy
-msgid "Do not deploy plug-in"
-msgstr "Plugin niet implementeren"
-
-#, fuzzy
 msgid "Do not deploy plug-in for Citrix XenApp"
 msgstr "Invoegtoepassing niet implementeren voor Citrix XenApp"
 
@@ -21209,6 +21344,10 @@ msgstr "Gebruik de netstat plugin niet"
 #, fuzzy
 msgid "Do not deploy the nvidia_smi agent plug-in"
 msgstr "De nvidia_smi agent plugin niet implementeren"
+
+#, fuzzy
+msgid "Do not deploy the plug-in"
+msgstr "Implementeer de %s plugin niet"
 
 msgid "Do not deploy."
 msgstr "Niet inzetten."
@@ -21426,6 +21565,10 @@ msgstr ""
 
 msgid "Do you really want to switch the event daemon mode?"
 msgstr "Wil je echt de event daemon mode veranderen?"
+
+#, fuzzy
+msgid "Docker"
+msgstr "Docker knooppunt"
 
 msgid "Docker containers"
 msgstr "Docker-containers"
@@ -21962,6 +22105,10 @@ msgstr "Bulk gedurende de periode"
 msgid "Dw"
 msgstr "Dw"
 
+#, fuzzy
+msgid "Dynamic MAC enabled"
+msgstr "inschakelen"
+
 msgid "Dynamic Token Bucket"
 msgstr "Dynamische Token Emmer"
 
@@ -22003,33 +22150,6 @@ msgstr "EMC Data Domain MTree staat"
 
 msgid "EMC ScaleIO"
 msgstr "EMC ScaleIO"
-
-msgid "EMC VNX Enclosures"
-msgstr "EMC VNX Behuizingen"
-
-msgid "EMC VNX admin user name"
-msgstr "EMC VNX admin gebruikersnaam"
-
-msgid "EMC VNX admin user password"
-msgstr "EMC VNX admin gebruikerswachtwoord"
-
-msgid "EMC VNX storage pools"
-msgstr "EMC VNX opslagpools"
-
-msgid "EMC VNX storage pools capacity"
-msgstr "Capaciteit EMC VNX opslagpools"
-
-msgid "EMC VNX storage pools movement"
-msgstr "EMC VNX storage pools beweging"
-
-msgid "EMC VNX storage pools targeted tiers"
-msgstr "EMC VNX opslagpools gerichte tiers"
-
-msgid "EMC VNX storage pools tiering"
-msgstr "EMC VNX opslagpools tiering"
-
-msgid "EMC VNX storage systems"
-msgstr "EMC VNX opslagsystemen"
 
 msgid "ERROR"
 msgstr "ERROR"
@@ -22943,6 +23063,10 @@ msgstr "Caching inschakelen"
 msgid "Enable Livestatus access via network (TCP)"
 msgstr "Inschakelen Livestatus toegang via netwerk (TCP)"
 
+#, fuzzy
+msgid "Enable OpenTelemetry collector (experimental)"
+msgstr "Configuratie toestand toevoegen"
+
 msgid "Enable SMTP AUTH (LOGIN)"
 msgstr "SMTP AUTH (LOGIN) inschakelen"
 
@@ -23288,9 +23412,6 @@ msgstr "Enc-Out framesnelheid"
 
 msgid "Enc-Outs"
 msgstr "Enc-Outs"
-
-msgid "Enclosure ID"
-msgstr "Behuizing ID"
 
 msgid "Enclosure Stats"
 msgstr "Gegevens behuizing"
@@ -23862,9 +23983,6 @@ msgstr "Geschatte RAM voor nieuwe processen"
 msgid "Estimated remaining health of the disk based on other readings."
 msgstr ""
 "Geschatte resterende gezondheid van de schijf gebaseerd op andere metingen."
-
-msgid "Estimated time to complete"
-msgstr "Geschatte tijd om te voltooien"
 
 msgid "Etherbox / MessPC: Sensor Temperature"
 msgstr "Etherbox / MessPC: Temperatuur sensor"
@@ -24529,6 +24647,10 @@ msgstr "Verwachte autoextend instelling"
 msgid "Expected cluster type."
 msgstr "Verwacht clustertype."
 
+#, fuzzy
+msgid "Expected connection state"
+msgstr "Afgewezen verbindingen"
+
 msgid "Expected cpu usage"
 msgstr "Verwacht cpu-gebruik"
 
@@ -24596,6 +24718,14 @@ msgstr "Verwachte toestand"
 
 msgid "Expected update interval"
 msgstr "Verwacht update-interval"
+
+#, fuzzy
+msgid "Expected virtual switch"
+msgstr "Verwachte toestand"
+
+#, fuzzy
+msgid "Expected virtual switch name"
+msgstr "Verwachte vlaggenstaat"
 
 #, fuzzy
 msgid "Expiration date"
@@ -25424,6 +25554,9 @@ msgstr "Terugvalsjabloon (%s): Onbekende ID %s"
 msgid "Falling"
 msgstr "Falling"
 
+msgid "False"
+msgstr ""
+
 msgid "Fan Name"
 msgstr "Naam ventilator"
 
@@ -25549,9 +25682,6 @@ msgstr "Fetch met lengte"
 
 msgid "Fetch zero length"
 msgstr "Nullengte ophalen"
-
-msgid "Fetcher helper"
-msgstr "Fetcher helper"
 
 msgid "Fetcher helper usage"
 msgstr "Fetcher helper gebruik"
@@ -28268,9 +28398,6 @@ msgstr "Hardware beschadigd geheugen"
 
 msgid "Hardware information of the Checkmk Server"
 msgstr "Hardware-informatie van de Checkmk Server"
-
-msgid "Hardware status"
-msgstr "Hardware status"
 
 msgid "Hardware, BIOS"
 msgstr "Hardware, BIOS"
@@ -31007,6 +31134,10 @@ msgid "Host name or alias (regex)"
 msgstr "Hostnaam of alias"
 
 #, fuzzy
+msgid "Host name resource attribute"
+msgstr "Rolkenmerk"
+
+#, fuzzy
 msgid "Host name rules"
 msgstr "Hostnaam: %s"
 
@@ -31603,6 +31734,10 @@ msgstr "Hyper-V Server: Staat van VM's"
 
 msgid "Hyper-V VM Guest Information (Windows)"
 msgstr "Hyper-V VM Gastgegevens (Windows)"
+
+#, fuzzy
+msgid "Hyper-V VM Network Adapter"
+msgstr "Netwerk Adapters"
 
 #, fuzzy
 msgid "Hyper-V VM integration services"
@@ -33327,26 +33462,6 @@ msgstr ""
 "                PRE-EMPTIVELY BEËINDIGD: WARN<br>\n"
 "                STATUS NIET BESCHIKBAAR: OK<br>\n"
 "             "
-
-#, fuzzy
-msgid ""
-"If you don't configure the user name and password, the special agent tries "
-"to authenticate against the EMC VNX device by Security Files. These need to "
-"be created manually before using. Therefor run as instance user (if using "
-"OMD) or Nagios user (if not using OMD) a command like <tt>naviseccli "
-"-AddUserSecurity -scope 0 -password PASSWORD -user USER</tt>. This creates "
-"<tt>SecuredCLISecurityFile.xml</tt> and <tt>SecuredCLIXMLEncrypted.key</tt> "
-"in the home directory of the user and these files are used then."
-msgstr ""
-"Als u gebruikersnaam en wachtwoord leeg laat, probeert de special agent zich "
-"te authenticeren tegen het EMC VNX apparaat door middel van Security Files. "
-"Deze moeten voor gebruik handmatig worden aangemaakt. Voer daarom als "
-"instance gebruiker (als OMD wordt gebruikt) of Nagios gebruiker (als OMD "
-"niet wordt gebruikt) een commando uit als <tt>naviseccli -AddUserSecurity "
-"-scope 0 -password PASSWORD -user USER</tt> Hierdoor worden "
-"<tt>SecuredCLISecurityFile.xml</tt> en <tt>SecuredCLIXMLEncrypted.key</tt> "
-"aangemaakt in de home directory van de gebruiker en deze bestanden worden "
-"dan gebruikt."
 
 msgid ""
 "If you enable a wait time then this number of PINGs will always be sent in "
@@ -35819,6 +35934,10 @@ msgstr "Ongeldige man pagina: Mislukt om de titel te krijgen"
 msgid "Invalid mime type, supported types are: %s"
 msgstr "Ongeldig fixel element type '%s'"
 
+#, fuzzy, python-format
+msgid "Invalid mode '%s'."
+msgstr "Ongeldige ident: %s"
+
 #, fuzzy
 msgid "Invalid number"
 msgstr "Ongeldige bestandsnaam"
@@ -36790,6 +36909,10 @@ msgstr ""
 "moet specificeren om een waarschuwing te krijgen als er slechts 20% vrij RAM "
 "beschikbaar is. De vrije geheugen niveaus werken niet met de fortigate "
 "check, omdat die geen totale geheugen gegevens geeft."
+
+#, fuzzy
+msgid "Keep last successful data for"
+msgstr "Tijd sinds laatste succesvolle bouw"
 
 msgid "Keep service level from message (if available)"
 msgstr "Service level van bericht behouden (indien beschikbaar)"
@@ -38828,12 +38951,6 @@ msgstr ""
 msgid "Literal string"
 msgstr "Vast bereik"
 
-msgid "Live helper"
-msgstr "Live helper"
-
-msgid "Live helper usage"
-msgstr "Live hulp gebruik"
-
 msgid "Live monitor of the overall performance of all monitoring servers"
 msgstr "Live monitor van de algemene prestaties van alle monitoring servers"
 
@@ -38853,9 +38970,6 @@ msgstr "actief / actief"
 
 msgid "Liveproxy Daemon"
 msgstr "Liveproxy Daemon"
-
-msgid "Liveproxyd"
-msgstr "Liveproxyd"
 
 msgid "Liveproxyd status"
 msgstr "Liveproxyd status"
@@ -39857,6 +39971,10 @@ msgstr "Laagste: Geen kennisgeving, update badge nummer"
 msgid "MAC address"
 msgstr "MAC-adres"
 
+#, fuzzy
+msgid "MAC configuration"
+msgstr "RRA-configuratie"
+
 msgid "MB"
 msgstr "MB"
 
@@ -39911,16 +40029,12 @@ msgid ""
 "misconfigured network and for testing purposes"
 msgstr ""
 
-msgid "MKEventd"
-msgstr "MKEventd"
-
-msgid "MKEventd status"
+#, fuzzy
+msgid "MKEvent status"
 msgstr "MKEventd status"
 
-msgid "MKNotifyd"
-msgstr "MKNotifyd"
-
-msgid "MKNotifyd status"
+#, fuzzy
+msgid "MKNotify status"
 msgstr "MKNotifyd status"
 
 #, python-format
@@ -40623,8 +40737,21 @@ msgstr ""
 "worden."
 
 #, fuzzy
+msgid "Map data"
+msgstr "In kaart gebrachte gegevens"
+
+msgid "Map data relating to VMs"
+msgstr "Kaartgegevens met betrekking tot VM's"
+
+msgid "Map data to group host"
+msgstr "Map gegevens naar groep host"
+
+#, fuzzy
 msgid "Map data to specific host (Piggyback)"
 msgstr "uitdrukkelijk gespecificeerde groepen"
+
+msgid "Map data to the VM itself"
+msgstr "Map gegevens naar de VM zelf"
 
 msgid "Map device state"
 msgstr "Apparaatstatus in kaart brengen"
@@ -41677,6 +41804,10 @@ msgstr "Geheugengebruik"
 msgid "Memory allocated to percpu"
 msgstr "Geheugengebruik in procenten"
 
+#, fuzzy
+msgid "Memory allocation ratio"
+msgstr "Geheugengebruik in procenten"
+
 msgid "Memory and CPU of processes on Windows"
 msgstr "Geheugen en CPU van processen op Windows"
 
@@ -41982,11 +42113,19 @@ msgstr "Methode van sonderen"
 msgid "Metric"
 msgstr "Metrisch"
 
+#, fuzzy
+msgid "Metric Filters"
+msgstr "Service Filters"
+
 msgid "Metric Forecast"
 msgstr "Metrische prognose"
 
 msgid "Metric History"
 msgstr "Metrische geschiedenis"
+
+#, fuzzy
+msgid "Metric backend instance"
+msgstr "Oracle gevallen"
 
 #, fuzzy
 msgid "Metric configuration"
@@ -42045,6 +42184,14 @@ msgstr "MiB"
 
 msgid "Microsoft Azure"
 msgstr "Microsoft Azure"
+
+#, fuzzy
+msgid "Microsoft Azure (Deprecated)"
+msgstr "Microsoft SQL Server (Windows)"
+
+#, fuzzy
+msgid "Microsoft Azure (deprecated)"
+msgstr "Microsoft SQL Server (Windows)"
 
 msgid "Microsoft Azure Status"
 msgstr "Microsoft Azure Status"
@@ -42150,9 +42297,6 @@ msgstr ""
 msgid "Minimum connections per second"
 msgstr "Minimale verbindingen per seconde"
 
-msgid "Minimum error count"
-msgstr "Minimaal aantal fouten"
-
 #, fuzzy
 msgid "Minimum levels for current"
 msgstr "Minimum Spanningsniveaus"
@@ -42246,9 +42390,6 @@ msgstr "Spiegel marges"
 msgid "Mirror the vertical axis"
 msgstr "Spiegel de verticale as"
 
-msgid "Mirror views"
-msgstr "Spiegel aanzichten"
-
 #, fuzzy
 msgid "Mirroring"
 msgstr "Toezicht"
@@ -42262,6 +42403,10 @@ msgstr "Het spiegelen van de kritische toestand van de getuige"
 msgid "Miscellaneous"
 msgstr "Diversen"
 
+#, python-format
+msgid "Mismatching owner in `%s` mode."
+msgstr ""
+
 #, fuzzy
 msgid "Misplaced Objects"
 msgstr "Beheerde objecten"
@@ -42273,6 +42418,11 @@ msgid "Misscheduled replicas"
 msgstr "Verkeerd geplande replica's"
 
 msgid "Missing Residual current on the PDUs"
+msgstr ""
+
+msgid ""
+"Missing attribute filter configuration. Please configure at least one "
+"attribute filter"
 msgstr ""
 
 #, python-format
@@ -42293,6 +42443,11 @@ msgstr ""
 
 msgid "Missing host name"
 msgstr "Ontbrekende hostnaam"
+
+msgid ""
+"Missing hostname attribute. Please configure a resource attribute (e.g., "
+"host.name) so the system can determine the hostname"
+msgstr ""
 
 #, fuzzy
 msgid "Missing identity provider information in metadata"
@@ -42422,9 +42577,6 @@ msgstr "Modus: Offline verificatie"
 
 msgid "Model"
 msgstr "Model"
-
-msgid "Model and revsion"
-msgstr "Model en revsion"
 
 #, fuzzy
 msgid "Model name"
@@ -42728,10 +42880,6 @@ msgstr "Bewaak specifieke bestanden in map"
 #, fuzzy
 msgid "Monitor temporary tablespace"
 msgstr "Bewaak tijdelijke Tafelspace"
-
-#, fuzzy
-msgid "Monitor the collector"
-msgstr "Gestopte verzamelaars"
 
 msgid ""
 "Monitor the number of issues for given projects and their workflows. This "
@@ -43494,9 +43642,6 @@ msgstr "NGINX webservers (Linux)"
 msgid "NODATA"
 msgstr "NODATA"
 
-msgid "NPCD"
-msgstr "NPCD"
-
 msgid "NPCD status"
 msgstr "NPCD-status"
 
@@ -43566,9 +43711,6 @@ msgstr "NagVis: Zijbalk element"
 #, fuzzy
 msgid "NagVis: Sidebar element: Secs"
 msgstr "NagVis: Zijbalk element"
-
-msgid "Nagios"
-msgstr "Nagios"
 
 msgid "Nagios 3"
 msgstr "Nagios 3"
@@ -44049,6 +44191,10 @@ msgstr "Netscaler Geheugen Gebruik"
 
 msgid "Network"
 msgstr "Netwerk"
+
+#, fuzzy
+msgid "Network Adapter"
+msgstr "Netwerk Adapters"
 
 #, fuzzy
 msgid "Network Cards"
@@ -46886,6 +47032,10 @@ msgid "OTel Metrics"
 msgstr "Metriek"
 
 #, fuzzy
+msgid "OTel collector memory usage"
+msgstr "Netscaler Geheugen Gebruik"
+
+#, fuzzy
 msgid "OVS bonding"
 msgstr "Vswitch binding"
 
@@ -47589,6 +47739,14 @@ msgstr "Configuratie toestand toevoegen"
 #, fuzzy
 msgid "OpenTelemetry collector configurations"
 msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy
+msgid "OpenTelemetry data - Metric backend"
+msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy
+msgid "OpenTelemetry hosts creation options"
+msgstr "Piggyback creatie opties"
 
 #, fuzzy
 msgid "OpenTelemetry metric name"
@@ -49189,9 +49347,6 @@ msgstr "Overbruggingseenheid van sensor"
 msgid "Overriding by users"
 msgstr "Overschrijven door gebruikers"
 
-msgid "Oversubscribed"
-msgstr "Overschreven"
-
 msgid "Overview"
 msgstr "Overzicht"
 
@@ -50346,14 +50501,8 @@ msgstr "Per onderwerp"
 msgid "Percent and time"
 msgstr "Percentage en tijd"
 
-msgid "Percent full"
-msgstr "Percentage vol"
-
 msgid "Percent of OK-nodes"
 msgstr "Percentage OK-knooppunten"
-
-msgid "Percent subscribed"
-msgstr "Percentage ingeschrevenen"
 
 msgid "Percent time spent in garbage collection"
 msgstr "Percentage tijd besteed aan vuilnisophaling"
@@ -50741,6 +50890,9 @@ msgstr "Toegestane HW/SW inventarisatiepaden"
 #, fuzzy
 msgid "Permitted contact groups"
 msgstr "Toegestane contactgroepen"
+
+msgid "Persistence period for node disk usage fallback"
+msgstr ""
 
 msgid "Persistent (long)"
 msgstr "Persistent (lang)"
@@ -51666,6 +51818,10 @@ msgstr "Gelieve ten minste één adres te vermelden"
 
 #, fuzzy
 msgid "Please specify at least one \"Open telemetry hosts creation option\""
+msgstr "Gelieve minstens één \"Piggyback creatie optie\" op te geven"
+
+#, fuzzy
+msgid "Please specify at least one \"OpenTelemetry hosts creation option\""
 msgstr "Gelieve minstens één \"Piggyback creatie optie\" op te geven"
 
 msgid "Please specify at least one \"Piggyback creation option\""
@@ -52742,6 +52898,10 @@ msgstr ""
 "Geef de basis URL voor docker API engine aanroepen. Standaard proberen we te "
 "verbinden via de unix socket op %s."
 
+#, fuzzy
+msgid "Provider"
+msgstr "Zorg voor niveaus"
+
 msgid "Provisioned IOPS SSD (io1) IO operations per second"
 msgstr "Voorziene IOPS SSD (io1) IO-operaties per seconde"
 
@@ -52776,6 +52936,10 @@ msgstr "Provisioning Niveaus"
 msgid "Provisioning levels"
 msgstr "Provisioning Niveaus"
 
+#, fuzzy
+msgid "Proxmox"
+msgstr "Proxmox VE"
+
 msgid "Proxmox VE"
 msgstr "Proxmox VE"
 
@@ -52783,8 +52947,20 @@ msgstr "Proxmox VE"
 msgid "Proxmox VE CPU Utilization"
 msgstr "CPU-gebruik"
 
+#, fuzzy
+msgid "Proxmox VE Node CPU Allocation"
+msgstr "CPU-gebruik"
+
 msgid "Proxmox VE Node Info"
 msgstr "Proxmox VE Knooppunt Info"
+
+#, fuzzy
+msgid "Proxmox VE Node Memory Allocation"
+msgstr "Proxmox VE Knooppunt Info"
+
+#, fuzzy
+msgid "Proxmox VE Replication"
+msgstr "CPU-gebruik"
 
 msgid "Proxmox VE VM Backup"
 msgstr "Proxmox VE VM back-up"
@@ -53155,9 +53331,6 @@ msgstr "RA"
 msgid "RAID Arrays"
 msgstr "RAID-arrays"
 
-msgid "RAID groups"
-msgstr "RAID-groepen"
-
 msgid "RAID: overall state"
 msgstr "RAID: algemene toestand"
 
@@ -53335,9 +53508,6 @@ msgstr "RRD opslagformaat"
 
 msgid "RRD updates in journal of RRD Cache"
 msgstr "RRD updates in tijdschrift van RRD Cache"
-
-msgid "RRDCached"
-msgstr "RRDCached"
 
 msgid "RRDCached status"
 msgstr "RRDCached status"
@@ -55511,6 +55681,10 @@ msgid "Resource Name"
 msgstr "Bronnaam"
 
 #, fuzzy
+msgid "Resource attribute for hostname computation"
+msgstr "Hostname berekening"
+
+#, fuzzy
 msgid "Resource consumption of Windows processes"
 msgstr "Hulpbronnenverbruik van Windows-processen"
 
@@ -57052,9 +57226,6 @@ msgstr "STARTTLS ingeschakeld."
 msgid "STIME"
 msgstr "STIME"
 
-msgid "STunnel"
-msgstr "STunnel"
-
 msgid "STunnel status"
 msgstr "STunnel status"
 
@@ -58000,8 +58171,9 @@ msgstr ""
 "de selectie worden bijv. de attribuutnamen die in LDAP-query's worden "
 "gebruikt, gewijzigd."
 
+#, fuzzy
 msgid "Select the subscriptions you want to monitor."
-msgstr ""
+msgstr "Selecteer het type inhoudselement"
 
 msgid "Select the type of content element"
 msgstr "Selecteer het type inhoudselement"
@@ -58880,6 +59052,10 @@ msgstr "Dienst staat vertaling"
 msgid "Service state type"
 msgstr "Type dienststaat"
 
+#, fuzzy
+msgid "Service state when no replication jobs are configured on the cluster"
+msgstr "Staat wanneer replicatietoestand actief is"
+
 msgid "Service states"
 msgstr "Diensten"
 
@@ -59134,6 +59310,10 @@ msgstr ""
 msgid "Set height"
 msgstr "Hoogte instellen"
 
+#, fuzzy
+msgid "Set host visibility for contact groups"
+msgstr "Toewijzing van hosts aan contactgroepen"
+
 msgid "Set levels"
 msgstr "Ingestelde niveaus"
 
@@ -59334,6 +59514,10 @@ msgstr ""
 "verdwenen diensten automatisch te verwijderen. Als je zowel dit als "
 "'Verwijder geen overeenkomende verdwenen diensten' instelt, moeten beide "
 "regels van toepassing zijn om een dienst te kunnen verwijderen."
+
+#, fuzzy
+msgid "Set service visibility for contact groups"
+msgstr "Dienstcontactgroepen"
 
 msgid "Set state to"
 msgstr "Stel de toestand in op"
@@ -61371,14 +61555,6 @@ msgid "Sorry, you have no permission for this host."
 msgstr "Sorry, je hebt geen toestemming voor deze gastheer."
 
 #, python-format
-msgid ""
-"Sorry, you have no permission on the host '<b>%s</b>'. The hosts contact "
-"groups are <b>%s</b>, your contact groups are <b>%s</b>."
-msgstr ""
-"Sorry, u heeft geen toestemming voor de host '<b>%s</b>'. De contactgroepen "
-"van de host zijn <b>%s</b>, uw contactgroepen zijn <b>%s</b>."
-
-#, python-format
 msgid "Sorry, you have no permissions to the folder <b>%s</b>."
 msgstr "Sorry, u hebt geen rechten voor de map <b>%s</b>."
 
@@ -61809,9 +61985,6 @@ msgstr "Niveaus opgeven in absolute waarden"
 #, fuzzy
 msgid "Specify levels in percentage of CPU usage"
 msgstr "Niveaus opgeven in percentage van de totale ruimte"
-
-msgid "Specify levels in percentage of storage processor usage"
-msgstr "Geef niveaus aan in percentage van het gebruik van de opslagprocessor"
 
 msgid "Specify levels in percentage of total RAM"
 msgstr "Geef niveaus aan in percentage van het totale RAM"
@@ -63039,12 +63212,6 @@ msgstr "Staat van dienst"
 msgid "State of the event (0/1/2/3)"
 msgstr "Toestand van de gebeurtenis (0/1/2/3)"
 
-msgid "State on hard read error"
-msgstr "Staat bij hard-lezen fout"
-
-msgid "State on hard write error"
-msgstr "Toestand bij hardeschrijffout"
-
 msgid "State retention interval"
 msgstr "Bewaarinterval van de staat"
 
@@ -63251,9 +63418,6 @@ msgstr "Toestand wanneer een van de stromen in de status uitgeschakeld is"
 #, fuzzy
 msgid "State when packages are locked"
 msgstr "Toestand wanneer hardwarewijzigingen worden gedetecteerd"
-
-msgid "State when rebuildung enclosure"
-msgstr "Staat bij heropbouw behuizing"
 
 #, fuzzy
 msgid "State when recommended updates are pending"
@@ -63612,12 +63776,6 @@ msgstr "Opslag IO"
 msgid "Storage IO consumption"
 msgstr "Opslag IO verbruik"
 
-msgid "Storage Processor Utilization"
-msgstr "Opslag Processor Gebruik"
-
-msgid "Storage Processor utilization"
-msgstr "Opslag Processorgebruik"
-
 msgid "Storage Size"
 msgstr "Opslagruimte"
 
@@ -63626,12 +63784,6 @@ msgstr "Naam opslagrekening"
 
 msgid "Storage account shared key"
 msgstr "Gedeelde sleutel van opslagaccount"
-
-msgid "Storage pools"
-msgstr "Opslagbassins"
-
-msgid "Storage processor utilization"
-msgstr "Opslag processor gebruik"
 
 msgid "Storage space used"
 msgstr "Gebruikte opslagruimte"
@@ -63832,6 +63984,9 @@ msgstr "Subnet per DB subnet groepen"
 
 msgid "Subscription"
 msgstr "Abonnement"
+
+msgid "Subscription ID"
+msgstr "Abonnement ID"
 
 #, fuzzy
 msgid "Subscription Status (off: ignore subscription status)"
@@ -66887,6 +67042,12 @@ msgid ""
 msgstr ""
 
 #, python-format
+msgid ""
+"The dashboard '%s' already contains an embedded view with the ID '%s'. "
+"Please choose another ID."
+msgstr ""
+
+#, python-format
 msgid "The dashboard '%s' does not contain an embedded view with the ID '%s'."
 msgstr ""
 
@@ -66917,6 +67078,10 @@ msgstr "De naam van de database op de Mailbox Server."
 
 msgid "The database to authenticate on."
 msgstr "De database om te authenticeren."
+
+#, fuzzy, python-format
+msgid "The datasource '%s' does not exist."
+msgstr "De host '%s' bestaat niet"
 
 msgid "The datasource of a view cannot be changed."
 msgstr "De databron van een view kan niet worden gewijzigd."
@@ -67729,6 +67894,14 @@ msgid ""
 msgstr ""
 "De naam van de instantie, de naam van de database en de naam van de "
 "tablespace gecombineerd als volgt db2wps8:WPSCOMT8.USERSPACE1"
+
+#, fuzzy
+msgid ""
+"The interval the connection will be executed to check the available "
+"OpenTelemetry data and update the configuration."
+msgstr ""
+"Het interval dat de verbinding zal worden uitgevoerd om de beschikbare "
+"piggyback te controleren en de configuratie bij te werken."
 
 #, fuzzy
 msgid ""
@@ -69081,8 +69254,8 @@ msgstr ""
 
 #, python-format
 msgid ""
-"The relay '%s' is used by the following host(s): %s. Only relays that are "
-"not being used by a host can be deleted."
+"The relay '%s' is still assigned to one or more hosts. To delete it, first "
+"remove the relay from all associated hosts it is monitoring."
 msgstr ""
 
 #, fuzzy, python-format
@@ -71408,6 +71581,14 @@ msgstr "Deze verbinding wordt momenteel niet gebruikt voor synchronisatie."
 msgid ""
 "This connector can be used to automatically create hosts based on "
 "Opentelemetry collector data."
+msgstr ""
+"Deze connector kan gebruikt worden om automatisch hosts aan te maken op "
+"basis van mijn gegevens."
+
+#, fuzzy
+msgid ""
+"This connector can be used to automatically create hosts based on data in "
+"the OpenTelemetry metrics backend."
 msgstr ""
 "Deze connector kan gebruikt worden om automatisch hosts aan te maken op "
 "basis van mijn gegevens."
@@ -73841,18 +74022,6 @@ msgstr ""
 "Agent die de gegevens verzamelt via de Ruckus Spot web interface"
 
 msgid ""
-"This rule selects the EMC VNX agent instead of the normal Checkmk Agent and "
-"allows monitoring of EMC VNX storage systems by calling naviseccli "
-"commandline tool locally on the monitoring system. Make sure it is installed "
-"and working. You can configure your connection settings here."
-msgstr ""
-"Deze regel selecteert de EMC VNX agent in plaats van de normale Checkmk "
-"Agent en maakt monitoring van EMC VNX opslagsystemen mogelijk door lokaal op "
-"het monitoring systeem de naviseccli commandline tool aan te roepen. Zorg "
-"ervoor dat het geïnstalleerd is en werkt. U kunt uw verbindingsinstellingen "
-"hier configureren."
-
-msgid ""
 "This rule selects the Fritz!Box agent, which uses UPNP to gather information "
 "about configuration and connection status information."
 msgstr ""
@@ -75651,6 +75820,13 @@ msgstr "Te overwegen tijdspanne"
 
 #, fuzzy
 msgid ""
+"Time range to continue to consider outdated OpenTelemetry data as valid."
+msgstr ""
+"Tijdsspanne om verouderde piggyback-gegevens als geldig te blijven "
+"beschouwen."
+
+#, fuzzy
+msgid ""
 "Time range to continue to consider outdated open telemetry data as valid."
 msgstr ""
 "Tijdsspanne om verouderde piggyback-gegevens als geldig te blijven "
@@ -76155,6 +76331,12 @@ msgid ""
 "To enable the package anyway, use the `mkp` command on the command line. Its "
 "`enable` option provides you with a flag to disable all version checks. This "
 "might result in crashes or other unexpected behavior."
+msgstr ""
+
+#, python-format
+msgid ""
+"To get access, ensure your user is in a contact group specified in the "
+"host's permissions: <b>%s</b>."
 msgstr ""
 
 msgid ""
@@ -78880,9 +79062,6 @@ msgstr "Containers bovenste niveaus"
 msgid "Total slots"
 msgstr "Totaal aantal slots"
 
-msgid "Total subscribed capacity"
-msgstr "Totaal onderschreven capaciteit"
-
 msgid "Total swap space"
 msgstr "Totale swap ruimte"
 
@@ -79117,6 +79296,9 @@ msgid "Triggering events"
 msgstr "Archief gebeurtenissen"
 
 msgid "Troubleshooting/testing settings"
+msgstr ""
+
+msgid "True"
 msgstr ""
 
 msgid ""
@@ -80756,9 +80938,6 @@ msgstr "Bovenste niveaus voor aangetroffen waarschuwingen"
 msgid "Upper levels for errors"
 msgstr "Bovenste niveaus voor fouten"
 
-msgid "Upper levels for estimated time to complete"
-msgstr "Bovenste niveaus voor geschatte tijd om te voltooien"
-
 msgid "Upper levels for first output item"
 msgstr "Bovenste niveaus voor eerste uitgangsitem"
 
@@ -80830,9 +81009,6 @@ msgstr "Bovenste niveaus voor open netwerk sockets"
 
 msgid "Upper levels for pending activations"
 msgstr "Bovenste niveaus voor hangende activeringen"
-
-msgid "Upper levels for physical capacity in percent"
-msgstr "Bovengrenzen voor fysieke capaciteit in procenten"
 
 msgid ""
 "Upper levels for provisioned concurrency spillover invocations per second"
@@ -81059,6 +81235,10 @@ msgstr "Hogere niveaus bij tunnelinvoer pakketdaling"
 
 msgid "Upper levels provisioned concurrency utilization"
 msgstr "Bovenste niveaus voorziene concurrency gebruik"
+
+#, fuzzy
+msgid "Upper limit of time since last replication"
+msgstr "Waarschuwingsniveau voor tijd sinds laatste bijwerking"
 
 msgid "Upper limits in percent"
 msgstr "Bovengrenzen in procenten"
@@ -81385,6 +81565,9 @@ msgstr "Gebruik vet lettertype"
 msgid "Use credentials"
 msgstr "Gebruik geloofsbrieven"
 
+msgid "Use custom ClickHouse instance"
+msgstr ""
+
 msgid "Use custom connection parameters"
 msgstr "Gebruik aangepaste verbindingsparameters"
 
@@ -81601,6 +81784,9 @@ msgstr "Gebruik site ID"
 
 msgid "Use site ID prefix"
 msgstr "Gebruik site ID prefix"
+
+msgid "Use site-local ClickHouse instance"
+msgstr ""
 
 msgid "Use system wide CAs"
 msgstr "Gebruik systeemwijde CA's"
@@ -83791,6 +83977,10 @@ msgstr "Virtuele grootte"
 
 #, fuzzy
 msgid "Virtual size (average)"
+msgstr "Virtuele grootte"
+
+#, fuzzy
+msgid "Virtual switch name"
 msgstr "Virtuele grootte"
 
 msgid "VirtualBox Guests"
@@ -86250,9 +86440,6 @@ msgstr "Schrijfblokken per seconde"
 msgid "Write bytes per operation"
 msgstr "Schrijf bytes per operatie"
 
-msgid "Write cache state"
-msgstr "Schrijf cache status"
-
 msgid "Write cache usage"
 msgstr "Schrijf cache gebruik"
 
@@ -86398,9 +86585,6 @@ msgstr "Verkeerde klant"
 
 msgid "XDA hitratio"
 msgstr "XDA hitratio"
-
-msgid "XInetd"
-msgstr "XInetd"
 
 msgid "XInetd status"
 msgstr "XInetd status"
@@ -87725,6 +87909,10 @@ msgid ""
 "setup:"
 msgstr ""
 "U kunt deze hernoeming niet doen omdat de volgende hostnamen zouden botsen:"
+
+#, fuzzy, python-format
+msgid "You cannot edit the configuration for host '<b>%s</b>'. %s"
+msgstr "Kan configuratiebestand \"%s\" niet schrijven: %s"
 
 msgid "You cannot have more than one timing setting per notification method."
 msgstr "U kunt niet meer dan één timinginstelling per meldingsmethode hebben."
@@ -89603,9 +89791,6 @@ msgstr ""
 msgid "iSCSI"
 msgstr "iSCSI"
 
-msgid "iSCSI HBAs"
-msgstr "iSCSI HBA's"
-
 #, fuzzy
 msgid "iSCSI latency"
 msgstr "IO latentie"
@@ -90408,9 +90593,6 @@ msgstr ""
 "remote endpoint heeft zich afgesloten; de kernel wacht op de toepassing om "
 "de socket te sluiten"
 
-msgid "repeat every 20'th row"
-msgstr "herhaal elke 20ste rij"
-
 msgid "repeat:"
 msgstr "herhalen:"
 
@@ -91088,6 +91270,20 @@ msgstr ""
 msgid "required"
 msgstr "Vereiste poort"
 
+msgid ""
+"Due to a limitation in how Checkmk handles metrics internally, the results "
+"contain conflicting metrics and this top list may be incorrect or "
+"incomplete.n\n"
+"    This is caused by the service check commands with an example host and "
+"service in the following table.n\n"
+"    You can use these examples to identify hosts and services that must be "
+"filtered out in the top list configuration to resolve the problem."
+msgstr ""
+
+#, fuzzy
+msgid "Loading Top list content"
+msgstr "Etiketteringsopties"
+
 #, fuzzy
 msgid "Remove row"
 msgstr "Verwijderd: %s"
@@ -91271,6 +91467,23 @@ msgstr "van"
 msgid "No filter category available"
 msgstr "Geen informatie beschikbaar"
 
+msgid "Anchor"
+msgstr ""
+
+#, fuzzy
+msgid "Toggle sizing for width"
+msgstr "Een rubriek voor het uitzicht"
+
+msgid "Toggle sizing for height"
+msgstr ""
+
+#, fuzzy
+msgid "Loading datasources..."
+msgstr "%d vertalingen"
+
+msgid "Choose from available datasources"
+msgstr ""
+
 #, fuzzy
 msgid "Loading…"
 msgstr "Laden..."
@@ -91286,6 +91499,14 @@ msgstr "Informatie ophalen over..."
 #, fuzzy
 msgid "Loading options…"
 msgstr "Etiketteringsopties"
+
+#, fuzzy
+msgid "Loading views..."
+msgstr "Laden..."
+
+#, fuzzy
+msgid "Choose from available views"
+msgstr "Beschikbare poorten"
 
 #, fuzzy
 msgid "Add Widget"
@@ -91364,12 +91585,99 @@ msgid "Filter by service"
 msgstr "Filter %s selectie op dienst: "
 
 #, fuzzy
-msgid "Choose how to display your data"
-msgstr "Geef geen datum weer"
+msgid "Dashboard layout"
+msgstr "Dashboard-element"
+
+msgid ""
+"You can choose between a fixed layout or a responsive, scrollable grid "
+"layout. By default, the responsive grid layout is selected."
+msgstr ""
+
+#, fuzzy
+msgid "Responsive"
+msgstr "Responstijd"
+
+#, fuzzy
+msgid "Legacy"
+msgstr "erfenis run"
+
+msgid "Choose which objects this dashboard applies to"
+msgstr ""
+
+#, fuzzy
+msgid "Enter name"
+msgstr "Voer gebruikersnaam in"
+
+#, fuzzy
+msgid "Add filter as suffix"
+msgstr "Filter toevoegen"
+
+msgid "Include dashboard filter contents to the dashboard title."
+msgstr ""
+
+#, fuzzy
+msgid "Automatically create unique ID"
+msgstr "Automatisch aanmaken van bewakingsagenten"
+
+#, fuzzy
+msgid "Add unique ID"
+msgstr "Regel ID toevoegen"
+
+#, fuzzy
+msgid "Dashboard icon"
+msgstr "Dashboard"
+
+#, fuzzy
+msgid ""
+"This selection is only relevant if under 'User' -> 'Edit Profile' -> 'Mega "
+"menue icons' you have selected the options 'Per Entry'. You can select the "
+"icon to display next to your dashboard in the Monitoring menu. You can "
+"choose either a single colored icon or one with an additional symbol."
+msgstr ""
+"Deze selectie is alleen relevant indien u onder 'Gebruiker' -> 'Profiel "
+"bewerken' -> 'Megamenu pictogrammen' de opties 'Per item' heeft "
+"geselecteerd. In dat geval kiest u hier het icoon dat naast de naam van uw "
+"Dashboard komt te staan in het Bewakingsmenu. U kunt slechts één icoon "
+"kiezen (het gekleurde icoon) of één icoon dat wordt aangevuld met een extra "
+"symbool."
+
+#, fuzzy
+msgid "Dashboard visibility"
+msgstr "Grafiek zichtbaarheid"
+
+#, fuzzy
+msgid "Show in monitor menu"
+msgstr "Onderwerp in menu 'Monitor"
 
 #, fuzzy
 msgid "Select option"
 msgstr "Afgewezen verbindingen"
+
+#, fuzzy
+msgid "To be defined"
+msgstr "Geen verbindingen gedefinieerd"
+
+#, fuzzy
+msgid ""
+"You can set the order of the dashboard by changing this number. Lower "
+"numbers will be sorted first. Topics with the same number will be sorted "
+"alphabetically."
+msgstr ""
+"U kunt de volgorde van de %s aanpassen door dit getal te veranderen. Lagere "
+"nummers worden eerst gesorteerd. Onderwerpen met hetzelfde nummer worden "
+"alfabetisch gesorteerd."
+
+#, fuzzy
+msgid "Choose how to display your data"
+msgstr "Geef geen datum weer"
+
+#, fuzzy
+msgid "Single %{n}"
+msgstr "Single"
+
+#, fuzzy
+msgid "Multiple %{n}"
+msgstr "Meerdere locaties"
 
 #, fuzzy
 msgid "Inherited"
@@ -91380,8 +91688,57 @@ msgid "Overriden"
 msgstr "Overzicht"
 
 #, fuzzy
-msgid "Quick filter"
-msgstr "Service Filters"
+msgid "Runtime filter"
+msgstr "Verwijder filter"
+
+#, fuzzy
+msgid "Applied %{n} targeted filter"
+msgstr "Toegepaste filters:"
+
+msgid ""
+"Relevant %{n} targeted filter set on dashboard level via dashboard or "
+"runtime filters."
+msgstr ""
+
+#, fuzzy
+msgid "No %{n} targeted filter applied"
+msgstr "Ntop gastheer"
+
+msgid ""
+"A %{n} targeted filter selected as dashboard or runtime filter appears here "
+"and applies to this widget. You can override the value by setting a widget "
+"specific filter."
+msgstr ""
+
+#, fuzzy
+msgid "Applied %{n} filters"
+msgstr "Toegepaste filters:"
+
+msgid ""
+"Relevant %{n} filters set on dashboard level via dashboard or runtime "
+"filters."
+msgstr ""
+
+#, fuzzy
+msgid "No %{n} filters applied"
+msgstr "Ntop gastheer"
+
+msgid ""
+"Dashboard or runtime %{n} filters selected on dashboard level appear and "
+"apply to this widget. You can override the values by setting widget specific "
+"filters. "
+msgstr ""
+
+#, fuzzy
+msgid "Widget filters"
+msgstr "Filter toevoegen"
+
+msgid "Widget configured filters override dashboard and runtime filters"
+msgstr ""
+
+#, fuzzy
+msgid "See all"
+msgstr "Verwijder alle"
 
 msgid "% (Decimal, auto precision, 2 digits)"
 msgstr ""
@@ -91524,80 +91881,12 @@ msgstr ""
 msgid "€ (Decimal, strict precision, 2 digits)"
 msgstr ""
 
-#, fuzzy
-msgid "Specific host"
-msgstr "Specifieke sites"
+msgid "Barplot"
+msgstr "Barplot"
 
 #, fuzzy
-msgid "Multiple hosts"
-msgstr "Meerdere locaties"
-
-#, fuzzy
-msgid "Applied host name filter"
-msgstr "Toegepaste filters:"
-
-#, fuzzy
-msgid "to be defined"
-msgstr "Geen verbindingen gedefinieerd"
-
-#, fuzzy
-msgid "Widget filter"
-msgstr "Filter toevoegen"
-
-#, fuzzy
-msgid "Select host name"
-msgstr "Hosts verwijderen"
-
-#, fuzzy
-msgid "No host name filter applied."
-msgstr "Ntop gastheer"
-
-msgid ""
-"A host name filter selected as a dashboard or quick filter in the filters "
-"slideout appears here and applies to this widget"
-msgstr ""
-
-#, fuzzy
-msgid "Applied host filters"
-msgstr "Toegepaste filters:"
-
-#, fuzzy
-msgid "No host filters applied."
-msgstr "Ntop gastheer"
-
-msgid ""
-"Dashboard or quick filters selected in the filters slideout appear here and "
-"apply to this widget"
-msgstr ""
-
-#, fuzzy
-msgid "Specific service"
-msgstr "Specifieke sites"
-
-#, fuzzy
-msgid "Applied service name filter"
-msgstr "Alternatieve hostnaam"
-
-#, fuzzy
-msgid "Select service name"
-msgstr "Gebruikers verwijderen"
-
-msgid "No service name filter applied."
-msgstr ""
-
-msgid ""
-"A service name filter selected as a dashboard or quick filter in the filters "
-"slideout appears here and applies to this widget"
-msgstr ""
-
-#, fuzzy
-msgid "Applied service filters"
-msgstr "Service Filters"
-
-msgid ""
-"Dashboard or quick filters selected in the filters slideout appears here and "
-"applies to this widget"
-msgstr ""
+msgid "Scatterplot"
+msgstr "Gemiddelde scatterplot"
 
 #, fuzzy
 msgid "Value must be a valid URL"
@@ -91620,6 +91909,260 @@ msgid "Show widget background"
 msgstr "Titel tonen zonder achtergrond"
 
 #, fuzzy
+msgid "Unrestricted"
+msgstr "Niet-geregistreerd"
+
+#, fuzzy
+msgid "Specific host"
+msgstr "Specifieke sites"
+
+#, fuzzy
+msgid "Custom"
+msgstr "Klant"
+
+#, fuzzy
+msgid "Name is required."
+msgstr "is vereist"
+
+#, fuzzy
+msgid "Unique ID is required."
+msgstr "is vereist"
+
+#, fuzzy
+msgid ""
+"Unique ID must only contain lowercase letters, numbers, and underscores, and "
+"must start with a letter."
+msgstr ""
+"Metrieknamen mogen alleen uit letters, cijfers en underscores bestaan en "
+"moeten met een letter beginnen."
+
+#, fuzzy
+msgid "This Unique ID is already in use. Please choose another one."
+msgstr "Deze ID is al in gebruik. Gelieve een andere te kiezen."
+
+#, fuzzy
+msgid "At least one scope must be selected."
+msgstr "Staat wanneer bestand ontbreekt"
+
+#, fuzzy
+msgid "Create & set dashboard filters"
+msgstr "Gerelateerde dashboards"
+
+#, fuzzy
+msgid "Create & view list"
+msgstr "Map opslaan en bekijken"
+
+#, fuzzy
+msgid "Dashboard type"
+msgstr "Dashboard-element"
+
+msgid ""
+"Dashboards can display one or multiple entries depending on the selected "
+"datasource. By default, all are included. You can optionally restrict the "
+"configuration to a single host or specific datasources."
+msgstr ""
+
+#, fuzzy
+msgid "Dashboard scope"
+msgstr "Dashboards"
+
+msgid "Only me (private)"
+msgstr ""
+
+#, fuzzy
+msgid "Users of site"
+msgstr "Diensten van Site"
+
+#, fuzzy
+msgid "Enter description"
+msgstr "Beschrijving van het gebruik"
+
+#, fuzzy
+msgid "Only show when \"Show more\" is enabled"
+msgstr "Laat de %s alleen zien als show more actief is"
+
+#, fuzzy
+msgid "Show in dropdown menus"
+msgstr "Verberg deze %s in vervolgkeuzemenu's"
+
+#, fuzzy
+msgid "Dashboard settings of %{name}"
+msgstr "Eigenschappen van het dashboard"
+
+#, fuzzy
+msgid "Single graph"
+msgstr "Afgewezen verbindingen"
+
+#, fuzzy
+msgid "Data selection"
+msgstr "Map Selectie"
+
+#, fuzzy
+msgid "Define widget"
+msgstr "Doel toevoegen"
+
+#, fuzzy
+msgid "Service metric"
+msgstr "Dienst Metriek"
+
+#, fuzzy
+msgid "Must select an option"
+msgstr "Afgewezen verbindingen"
+
+#, fuzzy
+msgid "Metric (single)"
+msgstr "Metrisch etiket"
+
+#, fuzzy
+msgid "Graph (combined)"
+msgstr "Grafiek Opties"
+
+#, fuzzy
+msgid "Widget data"
+msgstr "Filter toevoegen"
+
+#, fuzzy
+msgid "Next step: Visualization"
+msgstr "Visualisatie"
+
+#, fuzzy
+msgid "Select the data you want to analyze"
+msgstr "Selecteer het type inhoudselement"
+
+msgid "Dashboard filters apply here and don't have to be selected again"
+msgstr ""
+
+#, fuzzy
+msgid "Host selection"
+msgstr "Map Selectie"
+
+#, fuzzy
+msgid "Service selection"
+msgstr "Map Selectie"
+
+#, fuzzy
+msgid "Metric selection"
+msgstr "Map Selectie"
+
+#, fuzzy
+msgid "Available visualization types"
+msgstr "Beschikbare opties"
+
+#, fuzzy
+msgid "Data settings"
+msgstr "Eigenschappen van het dashboard"
+
+#, fuzzy
+msgid "Widget visualization"
+msgstr "BI-visualisatie"
+
+#, fuzzy
+msgid "Fixed data range"
+msgstr "Vast bereik"
+
+msgid "Axis"
+msgstr ""
+
+#, fuzzy
+msgid "Horizontal axis"
+msgstr "Horizontale opvulling"
+
+#, fuzzy
+msgid "Vertical axis"
+msgstr "Verticale as breedte"
+
+#, fuzzy
+msgid "Graph styling"
+msgstr "Grafiek afstemming"
+
+msgid "Date and time stamp (right upper corner)"
+msgstr ""
+
+#, fuzzy
+msgid "Margin round the graph"
+msgstr "Toon marge rond de grafiek"
+
+#, fuzzy
+msgid "Graph legend"
+msgstr "Toon legende"
+
+#, fuzzy
+msgid "Interaction"
+msgstr "Pauze"
+
+#, fuzzy
+msgid "Click on graph to place pin"
+msgstr "Kloon grafiek collectie"
+
+msgid "Show burger menu for graph options"
+msgstr ""
+
+msgid ""
+"Do not follow timerange changes of other graphs on the current dashboard"
+msgstr ""
+
+#, fuzzy
+msgid "Additional graph options"
+msgstr "Extra opties"
+
+#, fuzzy
+msgid "Additional scatterplot options"
+msgstr "Extra opties"
+
+msgid "Scatterplot styling"
+msgstr ""
+
+#, fuzzy
+msgid "Add & place widget"
+msgstr "Doel toevoegen"
+
+#, fuzzy
+msgid "Value out of range"
+msgstr "De waarde moet een string zijn"
+
+#, fuzzy
+msgid "Rankin order"
+msgstr "Waarschuwing indien meer dan"
+
+msgid "entries (max. %{max_entries})"
+msgstr ""
+
+#, fuzzy
+msgid "Specific object type"
+msgstr "Selecteer specifiek objecttype"
+
+#, fuzzy
+msgid "Next step: Data configuration"
+msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy
+msgid "View selection"
+msgstr "Map Selectie"
+
+#, fuzzy
+msgid "Copy view"
+msgstr "Kloon uitzicht"
+
+#, fuzzy
+msgid "Unknown object type: %{objectType}"
+msgstr "Onbekend doeltype: %s. Beschikbare types: %s."
+
+#, fuzzy
+msgid "Data configuration"
+msgstr "Standaard configuratie"
+
+#, fuzzy
+msgid "Link to view: %{viewName}"
+msgstr "Link om te bekijken"
+
+msgid "New view based on: %{datasource}"
+msgstr ""
+
+#, fuzzy
+msgid "Copy existing view: %{viewName}"
+msgstr "Bestaand uitzicht kopiëren"
+
+#, fuzzy
 msgid "explicit password"
 msgstr "Nieuw wachtwoord"
 
@@ -91636,12 +92179,27 @@ msgid "Metric name"
 msgstr "Metrisch etiket"
 
 #, fuzzy
-msgid "Graph metrics with all zero values"
-msgstr "Metriek met alle nulwaarden"
+msgid "Resource attributes"
+msgstr "Rolkenmerk"
 
 #, fuzzy
-msgid "Custom"
-msgstr "Klant"
+msgid "Scope attributes"
+msgstr "Rolkenmerk"
+
+#, fuzzy
+msgid "Data point attributes"
+msgstr "Gewijzigde attributen"
+
+#, fuzzy
+msgid "Apply rate (sums)"
+msgstr "Latency"
+
+msgid "Apply percentile (histograms)"
+msgstr ""
+
+#, fuzzy
+msgid "Graph metrics with all zero values"
+msgstr "Metriek met alle nulwaarden"
 
 #, fuzzy
 msgid "Use unit of first entry"
@@ -91688,7 +92246,7 @@ msgid "Stack"
 msgstr "Stapels"
 
 #, fuzzy
-msgid "Graph lines"
+msgid "Graph lines (Standard)"
 msgstr "Grafiek Opties"
 
 msgid "Scalar"
@@ -91699,16 +92257,15 @@ msgid "Constant"
 msgstr "Instantie"
 
 #, fuzzy
-msgid "Operations on selected graph lines"
-msgstr "Werking op geselecteerde metriek"
-
-#, fuzzy
 msgid "Transformation"
 msgstr "Thermische informatie"
 
 #, fuzzy
 msgid "Graph options"
 msgstr "Grafiek Opties"
+
+msgid "Graph lines (OpenTelemetry)"
+msgstr ""
 
 #, fuzzy
 msgid "Mirrored"
@@ -92395,6 +92952,9 @@ msgid ""
 "your environment."
 msgstr ""
 
+msgid "Assignment of hosts to contact groups"
+msgstr "Toewijzing van hosts aan contactgroepen"
+
 #, fuzzy
 msgid "Create a dashboard"
 msgstr "Gerelateerde dashboards"
@@ -92467,6 +93027,313 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Quick filter"
+#~ msgstr "Service Filters"
+
+#, fuzzy
+#~ msgid "Multiple hosts"
+#~ msgstr "Meerdere locaties"
+
+#, fuzzy
+#~ msgid "Applied host name filter"
+#~ msgstr "Toegepaste filters:"
+
+#, fuzzy
+#~ msgid "to be defined"
+#~ msgstr "Geen verbindingen gedefinieerd"
+
+#, fuzzy
+#~ msgid "Widget filter"
+#~ msgstr "Filter toevoegen"
+
+#, fuzzy
+#~ msgid "Select host name"
+#~ msgstr "Hosts verwijderen"
+
+#, fuzzy
+#~ msgid "No host name filter applied."
+#~ msgstr "Ntop gastheer"
+
+#, fuzzy
+#~ msgid "Applied host filters"
+#~ msgstr "Toegepaste filters:"
+
+#, fuzzy
+#~ msgid "No host filters applied."
+#~ msgstr "Ntop gastheer"
+
+#, fuzzy
+#~ msgid "Specific service"
+#~ msgstr "Specifieke sites"
+
+#, fuzzy
+#~ msgid "Applied service name filter"
+#~ msgstr "Alternatieve hostnaam"
+
+#, fuzzy
+#~ msgid "Select service name"
+#~ msgstr "Gebruikers verwijderen"
+
+#, fuzzy
+#~ msgid "Applied service filters"
+#~ msgstr "Service Filters"
+
+#, fuzzy
+#~ msgid "Amazon Web Service (AWS)"
+#~ msgstr "Amazon Web Services (AWS)"
+
+#~ msgid "Consumed capacity"
+#~ msgstr "Verbruikte capaciteit"
+
+#~ msgid "Data movement completed"
+#~ msgstr "Verplaatsen van gegevens voltooid"
+
+#~ msgid "Data targeted for higher tier"
+#~ msgstr "Gegevens gericht op hoger niveau"
+
+#~ msgid "Data targeted for lower tier"
+#~ msgstr "Gegevens gericht op lager niveau"
+
+#~ msgid "Data targeted for within tier"
+#~ msgstr "Gegevens gericht op binnen niveau"
+
+#~ msgid "Data to move down"
+#~ msgstr "Gegevens om naar beneden te gaan"
+
+#~ msgid "Data to move up"
+#~ msgstr "Gegevens om omhoog te gaan"
+
+#~ msgid "Data to move within"
+#~ msgstr "Gegevens om binnen te bewegen"
+
+#~ msgid "Deduplication efficiency savings"
+#~ msgstr "Deduplicatie-efficiëntiebesparingen"
+
+#~ msgid "Deduplication percent completed"
+#~ msgstr "Deduplicatie percentage voltooid"
+
+#~ msgid "Deduplication remaining size"
+#~ msgstr "Deduplicatie resterende grootte"
+
+#~ msgid "Deduplication shared capacity"
+#~ msgstr "Deduplicatie gedeelde capaciteit"
+
+#, fuzzy
+#~ msgid "Deploy Zorp plug-in"
+#~ msgstr "Zet Zorp plugin in"
+
+#, fuzzy
+#~ msgid "Do not deploy plug-in"
+#~ msgstr "Plugin niet implementeren"
+
+#~ msgid "EMC VNX Enclosures"
+#~ msgstr "EMC VNX Behuizingen"
+
+#~ msgid "EMC VNX admin user name"
+#~ msgstr "EMC VNX admin gebruikersnaam"
+
+#~ msgid "EMC VNX admin user password"
+#~ msgstr "EMC VNX admin gebruikerswachtwoord"
+
+#~ msgid "EMC VNX storage pools"
+#~ msgstr "EMC VNX opslagpools"
+
+#~ msgid "EMC VNX storage pools capacity"
+#~ msgstr "Capaciteit EMC VNX opslagpools"
+
+#~ msgid "EMC VNX storage pools movement"
+#~ msgstr "EMC VNX storage pools beweging"
+
+#~ msgid "EMC VNX storage pools targeted tiers"
+#~ msgstr "EMC VNX opslagpools gerichte tiers"
+
+#~ msgid "EMC VNX storage pools tiering"
+#~ msgstr "EMC VNX opslagpools tiering"
+
+#~ msgid "EMC VNX storage systems"
+#~ msgstr "EMC VNX opslagsystemen"
+
+#~ msgid "Enclosure ID"
+#~ msgstr "Behuizing ID"
+
+#~ msgid "Estimated time to complete"
+#~ msgstr "Geschatte tijd om te voltooien"
+
+#~ msgid "Hardware status"
+#~ msgstr "Hardware status"
+
+#, fuzzy
+#~ msgid ""
+#~ "If you don't configure the user name and password, the special agent "
+#~ "tries to authenticate against the EMC VNX device by Security Files. These "
+#~ "need to be created manually before using. Therefor run as instance user "
+#~ "(if using OMD) or Nagios user (if not using OMD) a command like "
+#~ "<tt>naviseccli -AddUserSecurity -scope 0 -password PASSWORD -user USER</"
+#~ "tt>. This creates <tt>SecuredCLISecurityFile.xml</tt> and "
+#~ "<tt>SecuredCLIXMLEncrypted.key</tt> in the home directory of the user and "
+#~ "these files are used then."
+#~ msgstr ""
+#~ "Als u gebruikersnaam en wachtwoord leeg laat, probeert de special agent "
+#~ "zich te authenticeren tegen het EMC VNX apparaat door middel van Security "
+#~ "Files. Deze moeten voor gebruik handmatig worden aangemaakt. Voer daarom "
+#~ "als instance gebruiker (als OMD wordt gebruikt) of Nagios gebruiker (als "
+#~ "OMD niet wordt gebruikt) een commando uit als <tt>naviseccli "
+#~ "-AddUserSecurity -scope 0 -password PASSWORD -user USER</tt> Hierdoor "
+#~ "worden <tt>SecuredCLISecurityFile.xml</tt> en "
+#~ "<tt>SecuredCLIXMLEncrypted.key</tt> aangemaakt in de home directory van "
+#~ "de gebruiker en deze bestanden worden dan gebruikt."
+
+#~ msgid "Minimum error count"
+#~ msgstr "Minimaal aantal fouten"
+
+#~ msgid "Mirror views"
+#~ msgstr "Spiegel aanzichten"
+
+#~ msgid "Model and revsion"
+#~ msgstr "Model en revsion"
+
+#~ msgid "Oversubscribed"
+#~ msgstr "Overschreven"
+
+#~ msgid "Percent full"
+#~ msgstr "Percentage vol"
+
+#~ msgid "Percent subscribed"
+#~ msgstr "Percentage ingeschrevenen"
+
+#~ msgid "RAID groups"
+#~ msgstr "RAID-groepen"
+
+#~ msgid "Specify levels in percentage of storage processor usage"
+#~ msgstr ""
+#~ "Geef niveaus aan in percentage van het gebruik van de opslagprocessor"
+
+#~ msgid "State on hard read error"
+#~ msgstr "Staat bij hard-lezen fout"
+
+#~ msgid "State on hard write error"
+#~ msgstr "Toestand bij hardeschrijffout"
+
+#~ msgid "State when rebuildung enclosure"
+#~ msgstr "Staat bij heropbouw behuizing"
+
+#~ msgid "Storage Processor Utilization"
+#~ msgstr "Opslag Processor Gebruik"
+
+#~ msgid "Storage Processor utilization"
+#~ msgstr "Opslag Processorgebruik"
+
+#~ msgid "Storage pools"
+#~ msgstr "Opslagbassins"
+
+#~ msgid "Storage processor utilization"
+#~ msgstr "Opslag processor gebruik"
+
+#~ msgid ""
+#~ "This rule selects the EMC VNX agent instead of the normal Checkmk Agent "
+#~ "and allows monitoring of EMC VNX storage systems by calling naviseccli "
+#~ "commandline tool locally on the monitoring system. Make sure it is "
+#~ "installed and working. You can configure your connection settings here."
+#~ msgstr ""
+#~ "Deze regel selecteert de EMC VNX agent in plaats van de normale Checkmk "
+#~ "Agent en maakt monitoring van EMC VNX opslagsystemen mogelijk door lokaal "
+#~ "op het monitoring systeem de naviseccli commandline tool aan te roepen. "
+#~ "Zorg ervoor dat het geïnstalleerd is en werkt. U kunt uw "
+#~ "verbindingsinstellingen hier configureren."
+
+#~ msgid "Total subscribed capacity"
+#~ msgstr "Totaal onderschreven capaciteit"
+
+#~ msgid "Upper levels for estimated time to complete"
+#~ msgstr "Bovenste niveaus voor geschatte tijd om te voltooien"
+
+#~ msgid "Upper levels for physical capacity in percent"
+#~ msgstr "Bovengrenzen voor fysieke capaciteit in procenten"
+
+#~ msgid "Write cache state"
+#~ msgstr "Schrijf cache status"
+
+#~ msgid "iSCSI HBAs"
+#~ msgstr "iSCSI HBA's"
+
+#~ msgid "Assignment of services to contact groups"
+#~ msgstr "Toewijzing van diensten aan contactgroepen"
+
+#, python-format
+#~ msgid ""
+#~ "Sorry, you have no permission on the host '<b>%s</b>'. The hosts contact "
+#~ "groups are <b>%s</b>, your contact groups are <b>%s</b>."
+#~ msgstr ""
+#~ "Sorry, u heeft geen toestemming voor de host '<b>%s</b>'. De "
+#~ "contactgroepen van de host zijn <b>%s</b>, uw contactgroepen zijn <b>%s</"
+#~ "b>."
+
+#~ msgid "repeat every 20'th row"
+#~ msgstr "herhaal elke 20ste rij"
+
+#, fuzzy
+#~ msgid "Operations on selected graph lines"
+#~ msgstr "Werking op geselecteerde metriek"
+
+#~ msgid "Act. helper"
+#~ msgstr "Act. helper"
+
+#~ msgid "Apache"
+#~ msgstr "Apache"
+
+#~ msgid "CMC"
+#~ msgstr "CMC"
+
+#~ msgid "CMK helper"
+#~ msgstr "CMK helper"
+
+#~ msgid "Checker helper"
+#~ msgstr "Controleur helper"
+
+#~ msgid "Crontab"
+#~ msgstr "Crontab"
+
+#~ msgid "DCD"
+#~ msgstr "DCD"
+
+#~ msgid "Fetcher helper"
+#~ msgstr "Fetcher helper"
+
+#~ msgid "Live helper"
+#~ msgstr "Live helper"
+
+#~ msgid "Live helper usage"
+#~ msgstr "Live hulp gebruik"
+
+#~ msgid "Liveproxyd"
+#~ msgstr "Liveproxyd"
+
+#~ msgid "MKEventd"
+#~ msgstr "MKEventd"
+
+#~ msgid "MKNotifyd"
+#~ msgstr "MKNotifyd"
+
+#, fuzzy
+#~ msgid "Monitor the collector"
+#~ msgstr "Gestopte verzamelaars"
+
+#~ msgid "NPCD"
+#~ msgstr "NPCD"
+
+#~ msgid "Nagios"
+#~ msgstr "Nagios"
+
+#~ msgid "RRDCached"
+#~ msgstr "RRDCached"
+
+#~ msgid "STunnel"
+#~ msgstr "STunnel"
+
+#~ msgid "XInetd"
+#~ msgstr "XInetd"
 
 #~ msgid "MHz"
 #~ msgstr "MHz"
@@ -92572,19 +93439,6 @@ msgstr ""
 #~ msgstr "Operationele status"
 
 #, fuzzy
-#~ msgid ""
-#~ "By default, data relating to a VM is sent to the group host corresponding "
-#~ "to the resource group of the VM, the same way as for any other resource. "
-#~ "If the VM is present in your monitoring as a separate host, you can "
-#~ "choose to send the data to the VM itself."
-#~ msgstr ""
-#~ "Standaard worden gegevens met betrekking tot een VM verzonden naar de "
-#~ "groep host die overeenkomt met de resource groep van de VM, op dezelfde "
-#~ "manier als voor elke andere resource. Als de VM als een afzonderlijke "
-#~ "host in uw monitoring aanwezig is, kunt u ervoor kiezen om de gegevens "
-#~ "naar de VM zelf te sturen."
-
-#, fuzzy
 #~ msgid "GUI extensions (deprecated)"
 #~ msgstr "GUI-uitbreidingen"
 
@@ -92595,19 +93449,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Legacy check plug-ins (deprecated)"
 #~ msgstr "Plugins voor oudere controles"
-
-#, fuzzy
-#~ msgid "Map data"
-#~ msgstr "In kaart gebrachte gegevens"
-
-#~ msgid "Map data relating to VMs"
-#~ msgstr "Kaartgegevens met betrekking tot VM's"
-
-#~ msgid "Map data to group host"
-#~ msgstr "Map gegevens naar groep host"
-
-#~ msgid "Map data to the VM itself"
-#~ msgstr "Map gegevens naar de VM zelf"
 
 #, fuzzy
 #~ msgid "Name of group2"
@@ -92874,13 +93715,6 @@ msgstr ""
 #~ "De monitoring core van de doelsite '%s' heeft de versie '%s'. Die "
 #~ "ondersteunt het ophalen van logfile informatie niet. Gelieve te upgraden "
 #~ "naar een nieuwere versie."
-
-#~ msgid "Subscription ID"
-#~ msgstr "Abonnement ID"
-
-#, fuzzy
-#~ msgid "At least one selection is missing."
-#~ msgstr "Staat wanneer bestand ontbreekt"
 
 #~ msgid "Use the default start URL"
 #~ msgstr "Gebruik de standaard start URL"
@@ -93426,10 +94260,6 @@ msgstr ""
 
 #~ msgid "VMs"
 #~ msgstr "VM's"
-
-#, fuzzy
-#~ msgid "Connectee"
-#~ msgstr "Connect"
 
 #, fuzzy
 #~ msgid "Connecter"
@@ -94866,9 +95696,6 @@ msgstr ""
 
 #~ msgid "Add Contact Group"
 #~ msgstr "Contactgroep toevoegen"
-
-#~ msgid "Barplot"
-#~ msgstr "Barplot"
 
 #, fuzzy
 #~ msgid "Checkmk: WATO: Bytes"

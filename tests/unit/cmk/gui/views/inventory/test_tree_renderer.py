@@ -10,6 +10,7 @@ import pytest
 from cmk.gui.inventory._tree import InventoryPath, TreeSource
 from cmk.gui.inventory.filters import FilterInvText
 from cmk.gui.views.inventory._display_hints import (
+    _wrap_paint_function,
     AttributeDisplayHint,
     ColumnDisplayHint,
     NodeDisplayHint,
@@ -70,7 +71,7 @@ from cmk.inventory.structured_data import (
                         title="SID",
                         value="SID 1",
                         retention_interval=None,
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                         icon_path_svc_problems="",
                     ),
                     SDItem(
@@ -78,7 +79,7 @@ from cmk.inventory.structured_data import (
                         title="Flashback",
                         value="Flashback 1",
                         retention_interval=None,
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                         icon_path_svc_problems="",
                     ),
                     SDItem(
@@ -86,7 +87,7 @@ from cmk.inventory.structured_data import (
                         title="Other",
                         value="Other 1",
                         retention_interval=None,
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                         icon_path_svc_problems="",
                     ),
                 ],
@@ -96,7 +97,7 @@ from cmk.inventory.structured_data import (
                         title="SID",
                         value="SID 2",
                         retention_interval=RetentionInterval(1, 2, 3, "previous"),
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                         icon_path_svc_problems="",
                     ),
                     SDItem(
@@ -104,7 +105,7 @@ from cmk.inventory.structured_data import (
                         title="Flashback",
                         value="Flashback 2",
                         retention_interval=None,
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                         icon_path_svc_problems="",
                     ),
                     SDItem(
@@ -112,7 +113,7 @@ from cmk.inventory.structured_data import (
                         title="Other",
                         value="Other 2",
                         retention_interval=None,
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                         icon_path_svc_problems="",
                     ),
                 ],
@@ -139,31 +140,31 @@ def test_sort_table_rows_displayhint(
                         title="SID",
                         short_title="",
                         long_title="",
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                     ),
                     SDKey("changed"): ColumnDisplayHint(
                         title="Changed",
                         short_title="",
                         long_title="",
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                     ),
                     SDKey("foo"): ColumnDisplayHint(
                         title="Foo",
                         short_title="",
                         long_title="",
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                     ),
                     SDKey("flashback"): ColumnDisplayHint(
                         title="Flashback",
                         short_title="",
                         long_title="",
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                     ),
                     SDKey("other"): ColumnDisplayHint(
                         title="Other",
                         short_title="",
                         long_title="",
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                     ),
                 }
             ),
@@ -172,7 +173,16 @@ def test_sort_table_rows_displayhint(
         ImmutableAttributes(),
         table,
     )
-    assert items_sorter.sort_rows()[-1] == expected
+    sorted_rows = items_sorter.sort_rows()[-1]
+    assert len(sorted_rows) == len(expected)
+    for sorted_row, expected_row in zip(sorted_rows, expected):
+        assert len(sorted_row) == len(expected_row)
+        for item, expected_item in zip(sorted_row, expected_row):
+            assert item.key == expected_item.key
+            assert item.title == expected_item.title
+            assert item.value == expected_item.value
+            assert item.retention_interval == expected_item.retention_interval
+            assert item.icon_path_svc_problems == expected_item.icon_path_svc_problems
 
 
 @pytest.mark.parametrize(
@@ -220,14 +230,14 @@ def test_sort_table_rows_displayhint(
                         title="SID",
                         old="SID 2",
                         new="SID 2",
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                     ),
                     _SDDeltaItem(
                         key=SDKey("flashback"),
                         title="Flashback",
                         old="Flashback 21",
                         new="Flashback 22",
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                     ),
                 ],
             ],
@@ -263,28 +273,28 @@ def test_sort_table_rows_displayhint(
                         title="SID",
                         old="SID 1",
                         new=None,
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                     ),
                     _SDDeltaItem(
                         key=SDKey("changed"),
                         title="Changed",
                         old="Changed 11",
                         new="Changed 12",
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                     ),
                     _SDDeltaItem(
                         key=SDKey("flashback"),
                         title="Flashback",
                         old=None,
                         new="Flashback 1",
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                     ),
                     _SDDeltaItem(
                         key=SDKey("other"),
                         title="Other",
                         old="Other 1",
                         new="Other 1",
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                     ),
                 ],
                 [
@@ -293,28 +303,28 @@ def test_sort_table_rows_displayhint(
                         title="SID",
                         old="SID 2",
                         new=None,
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                     ),
                     _SDDeltaItem(
                         key=SDKey("changed"),
                         title="Changed",
                         old="Changed 21",
                         new="Changed 22",
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                     ),
                     _SDDeltaItem(
                         key=SDKey("flashback"),
                         title="Flashback",
                         old=None,
                         new="Flashback 2",
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                     ),
                     _SDDeltaItem(
                         key=SDKey("other"),
                         title="Other",
                         old="Other 2",
                         new="Other 2",
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                     ),
                 ],
             ],
@@ -350,28 +360,28 @@ def test_sort_table_rows_displayhint(
                         title="SID",
                         old="SID 1",
                         new=None,
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                     ),
                     _SDDeltaItem(
                         key=SDKey("changed"),
                         title="Changed",
                         old="Changed 11",
                         new="Changed 12",
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                     ),
                     _SDDeltaItem(
                         key=SDKey("flashback"),
                         title="Flashback",
                         old=None,
                         new="Flashback 1",
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                     ),
                     _SDDeltaItem(
                         key=SDKey("other"),
                         title="Other",
                         old="Other 1",
                         new="Other 1",
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                     ),
                 ],
                 [
@@ -380,28 +390,28 @@ def test_sort_table_rows_displayhint(
                         title="SID",
                         old="SID 2",
                         new=None,
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                     ),
                     _SDDeltaItem(
                         key=SDKey("changed"),
                         title="Changed",
                         old="Changed 21",
                         new="Changed 22",
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                     ),
                     _SDDeltaItem(
                         key=SDKey("flashback"),
                         title="Flashback",
                         old=None,
                         new="Flashback 2",
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                     ),
                     _SDDeltaItem(
                         key=SDKey("other"),
                         title="Other",
                         old="Other 2",
                         new="Other 2",
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                     ),
                 ],
             ],
@@ -427,31 +437,31 @@ def test_sort_delta_table_rows_displayhint(
                         title="SID",
                         short_title="",
                         long_title="",
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                     ),
                     SDKey("changed"): ColumnDisplayHint(
                         title="Changed",
                         short_title="",
                         long_title="",
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                     ),
                     SDKey("foo"): ColumnDisplayHint(
                         title="Foo",
                         short_title="",
                         long_title="",
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                     ),
                     SDKey("flashback"): ColumnDisplayHint(
                         title="Flashback",
                         short_title="",
                         long_title="",
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                     ),
                     SDKey("other"): ColumnDisplayHint(
                         title="Other",
                         short_title="",
                         long_title="",
-                        paint_function=inv_paint_generic,
+                        paint_function=_wrap_paint_function(inv_paint_generic),
                     ),
                 }
             ),
@@ -459,7 +469,15 @@ def test_sort_delta_table_rows_displayhint(
         ImmutableDeltaAttributes(),
         delta_table,
     )
-    assert delta_items_sorter.sort_rows()[-1] == expected
+    sorted_rows = delta_items_sorter.sort_rows()[-1]
+    assert len(sorted_rows) == len(expected)
+    for sorted_row, expected_row in zip(sorted_rows, expected):
+        assert len(sorted_row) == len(expected_row)
+        for item, expected_item in zip(sorted_row, expected_row):
+            assert item.key == expected_item.key
+            assert item.title == expected_item.title
+            assert item.old == expected_item.old
+            assert item.new == expected_item.new
 
 
 @pytest.mark.parametrize(
@@ -482,7 +500,7 @@ def test_sort_delta_table_rows_displayhint(
                     title="A",
                     value="A",
                     retention_interval=None,
-                    paint_function=inv_paint_generic,
+                    paint_function=_wrap_paint_function(inv_paint_generic),
                     icon_path_svc_problems="",
                 ),
                 SDItem(
@@ -490,7 +508,7 @@ def test_sort_delta_table_rows_displayhint(
                     title="B",
                     value="B",
                     retention_interval=None,
-                    paint_function=inv_paint_generic,
+                    paint_function=_wrap_paint_function(inv_paint_generic),
                     icon_path_svc_problems="",
                 ),
                 SDItem(
@@ -498,7 +516,7 @@ def test_sort_delta_table_rows_displayhint(
                     title="D",
                     value="D",
                     retention_interval=None,
-                    paint_function=inv_paint_generic,
+                    paint_function=_wrap_paint_function(inv_paint_generic),
                     icon_path_svc_problems="",
                 ),
                 SDItem(
@@ -506,7 +524,7 @@ def test_sort_delta_table_rows_displayhint(
                     title="C",
                     value="C",
                     retention_interval=RetentionInterval(1, 2, 3, "previous"),
-                    paint_function=inv_paint_generic,
+                    paint_function=_wrap_paint_function(inv_paint_generic),
                     icon_path_svc_problems="",
                 ),
             ],
@@ -531,7 +549,7 @@ def test_sort_attributes_pairs_displayhint(
                     title="A",
                     short_title="",
                     long_title="",
-                    paint_function=inv_paint_generic,
+                    paint_function=_wrap_paint_function(inv_paint_generic),
                     sort_function=lambda *args: 0,
                     filter=FilterInvText(
                         ident="inv_a",
@@ -549,7 +567,7 @@ def test_sort_attributes_pairs_displayhint(
                     title="B",
                     short_title="",
                     long_title="",
-                    paint_function=inv_paint_generic,
+                    paint_function=_wrap_paint_function(inv_paint_generic),
                     sort_function=lambda *args: 0,
                     filter=FilterInvText(
                         ident="inv_b",
@@ -567,7 +585,7 @@ def test_sort_attributes_pairs_displayhint(
                     title="D",
                     short_title="",
                     long_title="",
-                    paint_function=inv_paint_generic,
+                    paint_function=_wrap_paint_function(inv_paint_generic),
                     sort_function=lambda *args: 0,
                     filter=FilterInvText(
                         ident="inv_d",
@@ -585,7 +603,7 @@ def test_sort_attributes_pairs_displayhint(
                     title="C",
                     short_title="",
                     long_title="",
-                    paint_function=inv_paint_generic,
+                    paint_function=_wrap_paint_function(inv_paint_generic),
                     sort_function=lambda *args: 0,
                     filter=FilterInvText(
                         ident="inv_c",
@@ -605,7 +623,14 @@ def test_sort_attributes_pairs_displayhint(
         attributes,
         ImmutableTable(),
     )
-    assert items_sorter.sort_pairs() == expected
+    sorted_pairs = items_sorter.sort_pairs()
+    assert len(sorted_pairs) == len(expected)
+    for item, expected_item in zip(sorted_pairs, expected):
+        assert item.key == expected_item.key
+        assert item.title == expected_item.title
+        assert item.value == expected_item.value
+        assert item.retention_interval == expected_item.retention_interval
+        assert item.icon_path_svc_problems == expected_item.icon_path_svc_problems
 
 
 @pytest.mark.parametrize(
@@ -627,21 +652,21 @@ def test_sort_attributes_pairs_displayhint(
                     title="A",
                     old="A1",
                     new="A2",
-                    paint_function=inv_paint_generic,
+                    paint_function=_wrap_paint_function(inv_paint_generic),
                 ),
                 _SDDeltaItem(
                     key=SDKey("b"),
                     title="B",
                     old="B",
                     new=None,
-                    paint_function=inv_paint_generic,
+                    paint_function=_wrap_paint_function(inv_paint_generic),
                 ),
                 _SDDeltaItem(
                     key=SDKey("d"),
                     title="D",
                     old=None,
                     new="D",
-                    paint_function=inv_paint_generic,
+                    paint_function=_wrap_paint_function(inv_paint_generic),
                 ),
             ],
         ),
@@ -665,7 +690,7 @@ def test_sort_delta_attributes_pairs_displayhint(
                     title="A",
                     short_title="",
                     long_title="",
-                    paint_function=inv_paint_generic,
+                    paint_function=_wrap_paint_function(inv_paint_generic),
                     sort_function=lambda *args: 0,
                     filter=FilterInvText(
                         ident="inv_a",
@@ -683,7 +708,7 @@ def test_sort_delta_attributes_pairs_displayhint(
                     title="B",
                     short_title="",
                     long_title="",
-                    paint_function=inv_paint_generic,
+                    paint_function=_wrap_paint_function(inv_paint_generic),
                     sort_function=lambda *args: 0,
                     filter=FilterInvText(
                         ident="inv_b",
@@ -701,7 +726,7 @@ def test_sort_delta_attributes_pairs_displayhint(
                     title="D",
                     short_title="",
                     long_title="",
-                    paint_function=inv_paint_generic,
+                    paint_function=_wrap_paint_function(inv_paint_generic),
                     sort_function=lambda *args: 0,
                     filter=FilterInvText(
                         ident="inv_d",
@@ -719,7 +744,7 @@ def test_sort_delta_attributes_pairs_displayhint(
                     title="C",
                     short_title="",
                     long_title="",
-                    paint_function=inv_paint_generic,
+                    paint_function=_wrap_paint_function(inv_paint_generic),
                     sort_function=lambda *args: 0,
                     filter=FilterInvText(
                         ident="inv_c",
@@ -738,7 +763,13 @@ def test_sort_delta_attributes_pairs_displayhint(
         delta_attributes,
         ImmutableDeltaTable(),
     )
-    assert delta_items_sorter.sort_pairs() == expected
+    sorted_pairs = delta_items_sorter.sort_pairs()
+    assert len(sorted_pairs) == len(expected)
+    for item, expected_item in zip(sorted_pairs, expected):
+        assert item.key == expected_item.key
+        assert item.title == expected_item.title
+        assert item.old == expected_item.old
+        assert item.new == expected_item.new
 
 
 @pytest.mark.parametrize(

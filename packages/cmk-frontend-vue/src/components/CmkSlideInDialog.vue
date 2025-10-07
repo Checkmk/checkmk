@@ -31,6 +31,7 @@ const emit = defineEmits(['close'])
   <CmkSlideIn :open="open" @close="emit('close')">
     <DialogTitle v-if="header" class="cmk-slide-in-dialog__title">
       <CmkHeading type="h1">{{ header.title }}</CmkHeading>
+      <!-- @vue-ignore @click is not a property of DialogClose -->
       <DialogClose
         v-if="header.closeButton"
         class="cmk-slide-in-dialog__close"

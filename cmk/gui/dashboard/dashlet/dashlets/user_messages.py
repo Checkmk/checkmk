@@ -6,6 +6,7 @@
 import time
 
 from cmk.gui import message
+from cmk.gui.config import Config
 from cmk.gui.dashboard.dashlet.base import Dashlet
 from cmk.gui.dashboard.type_defs import DashletConfig
 from cmk.gui.htmllib.html import html
@@ -37,7 +38,7 @@ class MessageUsersDashlet(Dashlet[MessageUsersDashletConfig]):
     def sort_index(cls) -> int:
         return 75
 
-    def show(self) -> None:
+    def show(self, config: Config) -> None:
         html.open_div()
         with table_element(
             "user_messages",

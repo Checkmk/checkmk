@@ -20,7 +20,6 @@ from jinja2 import Environment, FileSystemLoader
 
 from cmk.notification_plugins import utils
 from cmk.notification_plugins.utils import get_password_from_env_or_context, render_cmk_graphs
-from cmk.utils.escaping import escape_permissive
 from cmk.utils.mail import (
     Attachment,
     default_from_address,
@@ -473,11 +472,11 @@ def construct_content(
 
     content_html = utils.substitute_context(
         TemplateRenderer().render_template(
-            "base.html",
+            "base.html.ninja",
             {
                 "data": context,
                 "graphs": file_names,
-                "insert": escape_permissive(context.get("PARAMETER_INSERT_HTML_SECTION", "")),
+                "insert": context.get("PARAMETER_INSERT_HTML_SECTION", ""),
                 "is_bulk": is_bulk,
                 "bulk_summary": bulk_summary,
                 "last_bulk_entry": last_bulk_entry,

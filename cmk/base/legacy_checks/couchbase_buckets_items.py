@@ -57,7 +57,7 @@ def check_couchbase_buckets_items(item, params, parsed):
             queue_fill,
             "disk_fill_rate",
             params.get("disk_fill_rate"),
-            unit="/s",
+            human_readable_func=lambda x: f"{x:.2f}/s",
             infoname="Disk queue fill rate",
         )
 
@@ -67,7 +67,7 @@ def check_couchbase_buckets_items(item, params, parsed):
             queue_drain,
             "disk_drain_rate",
             params.get("disk_drain_rate"),
-            unit="/s",
+            human_readable_func=lambda x: f"{x:.2f}/s",
             infoname="Disk queue drain rate",
         )
 

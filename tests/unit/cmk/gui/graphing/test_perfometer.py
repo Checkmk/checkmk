@@ -17,9 +17,14 @@ from cmk.gui.graphing._perfometer import (
     MetricometerRendererPerfometer,
     MetricometerRendererStacked,
 )
-from cmk.gui.graphing._translated_metrics import Original, ScalarBounds, TranslatedMetric
+from cmk.gui.graphing._translated_metrics import (
+    Original,
+    ScalarBounds,
+    TranslatedMetric,
+)
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.unit_formatter import AutoPrecision
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 
 @pytest.mark.usefixtures("request_context")
@@ -143,6 +148,7 @@ def test_perfometer_projection_error(focus_range: perfometers_api.FocusRange) ->
         MetricometerRendererPerfometer._PROJECTION_PARAMETERS,
         {},
         "name",
+        temperature_unit=TemperatureUnit.CELSIUS,
     )
     assert math.isnan(projection.start_of_focus_range)
     assert math.isnan(projection.end_of_focus_range)
@@ -165,6 +171,7 @@ def test_perfometer_projection_closed_closed(value: int | float, result: float) 
         MetricometerRendererPerfometer._PROJECTION_PARAMETERS,
         {},
         "name",
+        temperature_unit=TemperatureUnit.CELSIUS,
     )
     assert projection(value) == result
 
@@ -184,6 +191,7 @@ def test_perfometer_projection_closed_closed_exceeds(
         MetricometerRendererPerfometer._PROJECTION_PARAMETERS,
         {},
         "name",
+        temperature_unit=TemperatureUnit.CELSIUS,
     )
     assert projection(value) == result
 
@@ -203,6 +211,7 @@ def test_perfometer_projection_open_closed(value: int | float, result: float) ->
         MetricometerRendererPerfometer._PROJECTION_PARAMETERS,
         {},
         "name",
+        temperature_unit=TemperatureUnit.CELSIUS,
     )
     assert projection(value) == result
 
@@ -219,6 +228,7 @@ def test_perfometer_projection_open_closed_exceeds(value: int | float, result: i
         MetricometerRendererPerfometer._PROJECTION_PARAMETERS,
         {},
         "name",
+        temperature_unit=TemperatureUnit.CELSIUS,
     )
     assert projection(value) == result
 
@@ -238,6 +248,7 @@ def test_perfometer_projection_closed_open(value: int | float, result: float) ->
         MetricometerRendererPerfometer._PROJECTION_PARAMETERS,
         {},
         "name",
+        temperature_unit=TemperatureUnit.CELSIUS,
     )
     assert projection(value) == result
 
@@ -254,6 +265,7 @@ def test_perfometer_projection_closed_open_exceeds(value: int | float, result: i
         MetricometerRendererPerfometer._PROJECTION_PARAMETERS,
         {},
         "name",
+        temperature_unit=TemperatureUnit.CELSIUS,
     )
     assert projection(value) == result
 
@@ -274,6 +286,7 @@ def test_perfometer_projection_open_open(value: int | float, result: float) -> N
         MetricometerRendererPerfometer._PROJECTION_PARAMETERS,
         {},
         "name",
+        temperature_unit=TemperatureUnit.CELSIUS,
     )
     assert projection(value) == result
 
@@ -391,7 +404,6 @@ def test_perfometer_renderer_stack(
     ],
     translated_metrics: Mapping[str, TranslatedMetric],
     value_projections: Sequence[tuple[float, str]],
-    request_context: None,
     patch_theme: None,
 ) -> None:
     assert MetricometerRendererPerfometer(
@@ -404,10 +416,10 @@ def test_perfometer_renderer_stack(
         ),
         translated_metrics,
         "#bdbdbd",
-    ).get_stack() == [list(value_projections) + [(11.73, "#bdbdbd")]]
+    ).get_stack(TemperatureUnit.CELSIUS) == [list(value_projections) + [(11.73, "#bdbdbd")]]
 
 
-def test_perfometer_renderer_stack_same_values(request_context: None, patch_theme: None) -> None:
+def test_perfometer_renderer_stack_same_values(patch_theme: None) -> None:
     assert MetricometerRendererPerfometer(
         perfometers_api.Perfometer(
             name="name",
@@ -443,7 +455,9 @@ def test_perfometer_renderer_stack_same_values(request_context: None, patch_them
             ),
         },
         "#bdbdbd",
-    ).get_stack() == [[(44.13, "#111111"), (44.13, "#222222"), (11.74, "#bdbdbd")]]
+    ).get_stack(TemperatureUnit.CELSIUS) == [
+        [(44.13, "#111111"), (44.13, "#222222"), (11.74, "#bdbdbd")]
+    ]
 
 
 @pytest.mark.parametrize(
@@ -531,8 +545,8 @@ def test_perfometer_renderer_exceeds_limit(
         translated_metrics,
         "#bdbdbd",
     )
-    assert metricometer.get_stack() == stack
-    assert metricometer.get_label() == label
+    assert metricometer.get_stack(TemperatureUnit.CELSIUS) == stack
+    assert metricometer.get_label(TemperatureUnit.CELSIUS) == label
 
 
 def test_metricometer_renderer_stacked(request_context: None, patch_theme: None) -> None:
@@ -583,11 +597,11 @@ def test_metricometer_renderer_stacked(request_context: None, patch_theme: None)
             ),
         },
     )
-    assert metricometer.get_stack() == [
+    assert metricometer.get_stack(TemperatureUnit.CELSIUS) == [
         [(59.5, "#111111"), (40.5, "#bdbdbd")],
         [(17.0, "#111111"), (83.0, "#bdbdbd")],
     ]
-    assert metricometer.get_label() == "7 / 2"
+    assert metricometer.get_label(TemperatureUnit.CELSIUS) == "7 / 2"
 
 
 class TestArcTan:

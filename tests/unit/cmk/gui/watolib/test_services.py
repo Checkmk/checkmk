@@ -20,6 +20,7 @@ from cmk.ccc.user import UserId
 from cmk.checkengine.discovery import CheckPreviewEntry
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName, SectionName
 from cmk.gui.utils import transaction_manager
+from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.automations import LocalAutomationConfig
 from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
@@ -158,6 +159,7 @@ def test_perform_discovery_none_action(
         host=sample_host,
         previous_discovery_result=None,
         automation_config=LocalAutomationConfig(),
+        user_permission_config=UserPermissionSerializableConfig({}, {}, []),
         raise_errors=True,
         debug=False,
         use_git=False,
@@ -177,6 +179,7 @@ def test_perform_discovery_tabula_rasa_action_with_no_previous_discovery_result(
         sample_host,
         DiscoveryAction.TABULA_RASA,
         automation_config=LocalAutomationConfig(),
+        user_permission_config=UserPermissionSerializableConfig({}, {}, []),
         raise_errors=True,
         debug=False,
         use_git=False,
@@ -333,12 +336,14 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
             host=sample_host,
             previous_discovery_result=previous_discovery_result,
             automation_config=LocalAutomationConfig(),
+            user_permission_config=UserPermissionSerializableConfig({}, {}, []),
             raise_errors=True,
             debug=False,
             use_git=False,
         ),
         host=sample_host,
         automation_config=LocalAutomationConfig(),
+        user_permission_config=UserPermissionSerializableConfig({}, {}, []),
         raise_errors=True,
         pprint_value=False,
         debug=False,
@@ -592,6 +597,7 @@ def test_perform_discovery_single_update(
             host=sample_host,
             previous_discovery_result=previous_discovery_result,
             automation_config=LocalAutomationConfig(),
+            user_permission_config=UserPermissionSerializableConfig({}, {}, []),
             raise_errors=True,
             debug=False,
             use_git=False,
@@ -602,6 +608,7 @@ def test_perform_discovery_single_update(
         host=sample_host,
         raise_errors=True,
         automation_config=LocalAutomationConfig(),
+        user_permission_config=UserPermissionSerializableConfig({}, {}, []),
         pprint_value=False,
         debug=False,
         use_git=False,
@@ -810,6 +817,7 @@ def test_perform_discovery_action_update_services(
             host=sample_host,
             previous_discovery_result=previous_discovery_result,
             automation_config=LocalAutomationConfig(),
+            user_permission_config=UserPermissionSerializableConfig({}, {}, []),
             raise_errors=True,
             debug=False,
             use_git=False,
@@ -820,6 +828,7 @@ def test_perform_discovery_action_update_services(
         host=sample_host,
         raise_errors=True,
         automation_config=LocalAutomationConfig(),
+        user_permission_config=UserPermissionSerializableConfig({}, {}, []),
         pprint_value=False,
         debug=False,
         use_git=False,
@@ -932,6 +941,7 @@ def test_perform_discovery_action_update_host_labels(
             host=sample_host,
             previous_discovery_result=previous_discovery_result,
             automation_config=LocalAutomationConfig(),
+            user_permission_config=UserPermissionSerializableConfig({}, {}, []),
             raise_errors=True,
             debug=False,
             use_git=False,
@@ -939,6 +949,7 @@ def test_perform_discovery_action_update_host_labels(
         host=sample_host,
         raise_errors=True,
         automation_config=LocalAutomationConfig(),
+        user_permission_config=UserPermissionSerializableConfig({}, {}, []),
         pprint_value=False,
         debug=False,
         use_git=False,

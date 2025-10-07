@@ -9,26 +9,26 @@
 #  rules.
 
 case "$1" in
-default)
-    if [ "$2" = cse ]; then
-        echo "off"
-    else
-        echo "on"
-    fi
-    ;;
-choices)
-    echo "on: enable"
-    echo "off: disable"
-    ;;
-set)
-    if [ "$2" = on ]; then
-        enabled=True
-    else
-        enabled=False
-    fi
-    echo -e "# Set by OMD hook MKEVENTD, do not change here!\nmkeventd_enabled = $enabled" \
-        >$OMD_ROOT/etc/check_mk/multisite.d/mkeventd.mk
-    echo -e "# Set by OMD hook MKEVENTD, do not change here!\nmkeventd_enabled = $enabled" \
-        >$OMD_ROOT/etc/check_mk/conf.d/mkeventd.mk
-    ;;
+    default)
+        if [ "$2" = cse ]; then
+            echo "off"
+        else
+            echo "on"
+        fi
+        ;;
+    choices)
+        echo "on: enable"
+        echo "off: disable"
+        ;;
+    set)
+        if [ "$2" = on ]; then
+            enabled=True
+        else
+            enabled=False
+        fi
+        echo -e "# Set by OMD hook MKEVENTD, do not change here!\nmkeventd_enabled = $enabled" \
+            >$OMD_ROOT/etc/check_mk/multisite.d/mkeventd.mk
+        echo -e "# Set by OMD hook MKEVENTD, do not change here!\nmkeventd_enabled = $enabled" \
+            >$OMD_ROOT/etc/check_mk/conf.d/mkeventd.mk
+        ;;
 esac

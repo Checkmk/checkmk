@@ -3,20 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 
 from cmk.agent_based.legacy.v0_unstable import check_levels
 from cmk.agent_based.v2 import render
 
-_RENDER_FUNCTION_AND_UNIT: dict[str, tuple[Callable | None, str]] = {
-    "%": (
-        render.percent,
-        "",
-    ),
-    "mA": (
-        lambda current: f"{(current * 1000):.1f}",
-        "mA",
-    ),
+_RENDER_FUNCTION: Mapping[str, Callable[[float], str]] = {
+    "%": render.percent,
+    "mA": lambda current: f"{(current * 1000):.1f} mA",
 }
 
 
@@ -86,20 +80,11 @@ def check_elphase(item, params, parsed):
                 else:  # Bounds.Lower
                     levels[2:] = params[what]
 
-            render_func, unit = _RENDER_FUNCTION_AND_UNIT.get(
-                unit,
-                (
-                    lambda v: f"{v:.1f}",
-                    unit,
-                ),
-            )
-
             yield check_levels(
                 value * factor,
                 what,
-                tuple(level if level is None else level * factor for level in levels),
-                unit=unit,
-                human_readable_func=render_func,
+                tuple(None if level is None else level * factor for level in levels),
+                human_readable_func=_RENDER_FUNCTION.get(unit, lambda v: f"{v:.1f} {unit}"),
                 infoname=title,
             )
 

@@ -27,6 +27,8 @@ from cmk.ccc.user import UserId
 from cmk.gui import http, login
 from cmk.gui.config import active_config, Config
 from cmk.gui.livestatus_utils.testing import mock_livestatus
+from cmk.gui.permissions import permission_registry
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from tests.testlib.unit.rest_api_client import ClientRegistry, get_client_registry
@@ -186,9 +188,11 @@ def with_user(load_config: Config) -> Iterator[tuple[UserId, str]]:
 
 
 @pytest.fixture()
-def with_user_login(with_user: tuple[UserId, str]) -> Iterator[UserId]:
+def with_user_login(load_config: Config, with_user: tuple[UserId, str]) -> Iterator[UserId]:
     user_id = UserId(with_user[0])
-    with login.TransactionIdContext(user_id):
+    with login.TransactionIdContext(
+        user_id, UserPermissions(load_config.roles, permission_registry, {user_id: ["user"]}, [])
+    ):
         yield user_id
 
 
@@ -199,9 +203,11 @@ def with_admin(load_config: Config) -> Iterator[tuple[UserId, str]]:
 
 
 @pytest.fixture()
-def with_admin_login(with_admin: tuple[UserId, str]) -> Iterator[UserId]:
+def with_admin_login(load_config: Config, with_admin: tuple[UserId, str]) -> Iterator[UserId]:
     user_id = with_admin[0]
-    with login.TransactionIdContext(user_id):
+    with login.TransactionIdContext(
+        user_id, UserPermissions(load_config.roles, permission_registry, {user_id: ["admin"]}, [])
+    ):
         yield user_id
 
 
@@ -292,6 +298,12 @@ def suppress_spec_generation_in_background(mocker: MockerFixture) -> MagicMock:
 @pytest.fixture()
 def with_automation_user(load_config: Config) -> Iterator[tuple[UserId, str]]:
     with create_and_destroy_user(automation=True, role="admin", config=load_config) as user:
+        yield user
+
+
+@pytest.fixture()
+def with_automation_user_not_admin(load_config: Config) -> Iterator[tuple[UserId, str]]:
+    with create_and_destroy_user(automation=True, role="user", config=load_config) as user:
         yield user
 
 

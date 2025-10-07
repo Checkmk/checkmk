@@ -27,14 +27,14 @@ const rotate = ref(90)
       <ul>
         <li v-for="size in sizes" :key="size || 'dflt'" class="demo-cmk-icon__element-entry">
           size "{{ size }}":
-          <CmkIcon name="main_help" :variant="variant" :size="size" :title="title" />
+          <CmkIcon name="main-help" :variant="variant" :size="size" :title="title" />
         </li>
       </ul>
     </li>
   </ul>
   <div>
     <b>Dynamic CmkIcon by properties</b>
-    <div>e.g. "main_help" or "main-help" or "main_help.svg"</div>
+    <div>e.g."main-help""</div>
     <div>icon name: <input v-model="iconName" /></div>
     <div>size: <input v-model="sizeRef" /> ({{ sizes }})</div>
     <div>rotate (in degrees): <input v-model="rotate" /></div>

@@ -26,6 +26,9 @@ def branch_base_folder(with_testing_prefix) {
 }
 
 def provide_agent_binaries(Map args) {
+    // always download and move artifacts unless specified differently
+    def move_artifacts = args.move_artifacts == null ? true : args.move_artifacts.asBoolean();
+
     // This _should_ go to an externally maintained file (single point of truth), see
     // https://jira.lan.tribe29.com/browse/CMK-13857
     // and https://review.lan.tribe29.com/c/check_mk/+/67387
@@ -38,7 +41,7 @@ def provide_agent_binaries(Map args) {
             //       Windows for consistency).
             //       As 'soon' as this problem does not exist anymore we could run
             //       relatively from 'builders/..'
-            relative_job_name: "${branch_base_folder(with_testing_prefix=false)}/builders/build-linux-agent-updater",
+            relative_job_name: "${branch_base_folder(false)}/builders/build-linux-agent-updater",
             /// no Linux agent updaters for raw edition..
             condition: true, // edition != "raw",  // FIXME!
             install_cmd: """\
@@ -59,7 +62,7 @@ def provide_agent_binaries(Map args) {
             //       Windows for consistency).
             //       As 'soon' as this problem does not exist anymore we could run
             //       relatively from 'builders/..'
-            relative_job_name: "${branch_base_folder(with_testing_prefix=false)}/winagt-build",
+            relative_job_name: "${branch_base_folder(false)}/winagt-build",
             install_cmd: """\
                 cp \
                     check_mk_agent-64.exe \
@@ -92,7 +95,7 @@ def provide_agent_binaries(Map args) {
             //       Windows for consistency).
             //       As 'soon' as this problem does not exist anymore we could run
             //       relatively from 'builders/..'
-            relative_job_name: "${branch_base_folder(with_testing_prefix=false)}/winagt-build-modules",
+            relative_job_name: "${branch_base_folder(false)}/winagt-build-modules",
             install_cmd: """\
                 cp \
                     ./*.cab \
@@ -115,8 +118,7 @@ def provide_agent_binaries(Map args) {
                 condition: run_condition,
                 raiseOnError: true,
             ) {
-                build_instance = smart_build(
-                    // see global-defaults.yml, needs to run in minimal container
+                def this_parameters = [
                     use_upstream_build: true,
                     relative_job_name: details.relative_job_name,
                     build_params: [
@@ -128,14 +130,22 @@ def provide_agent_binaries(Map args) {
                         CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
                         CIPARAM_BISECT_COMMENT: args.bisect_comment,
                     ],
-                    dest: "${args.artifacts_base_dir}/${job_name}",
-                    no_remove_others: true, // do not delete other files in the dest dir
-                );
+                    download: false,
+                ];
+                if (move_artifacts) {
+                    // specify to download artifacts to desired destination
+                    this_parameters += [
+                        download: true,
+                        dest: "${args.artifacts_base_dir}/${job_name}",
+                        no_remove_others: true, // do not delete other files in the dest dir
+                    ];
+                }
+                build_instance = smart_build(this_parameters);
             }
 
             smart_stage(
                 name: "Move artifacts around",
-                condition: run_condition && build_instance,
+                condition: run_condition && build_instance && move_artifacts,
                 raiseOnError: true,
             ) {
                 // prevent "_tmp" directories created by the Jenkins groovy dir() command

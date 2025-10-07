@@ -1,0 +1,80 @@
+diff --git a/docs/formatting.md b/docs/formatting.md
+index b45fbef..790ac05 100644
+--- a/docs/formatting.md
++++ b/docs/formatting.md
+@@ -46,8 +46,7 @@ format_multirun(
+ )
+ ```
+ 
+-File discovery for each language is based on file extension - files with no extension will not be formatted.
+-Shebang-based discovery might be added in future, see [here](https://github.com/aspect-build/rules_lint/issues/549).
++File discovery for each language is based on file extension and shebang-based discovery is currently limited to shell.
+ 
+ ## Usage
+ 
+diff --git a/example/src/hello_sh b/example/src/hello_sh
+new file mode 100644
+index 0000000..528a034
+--- /dev/null
++++ b/example/src/hello_sh
+@@ -0,0 +1,10 @@
++#!/bin/bash
++
++# Missing quotes, auto-fixable under `--fix`
++[ -z $THING ] && echo "hello world"
++
++# Note, we should not get a lint here because the .shellcheckrc excludes it
++[ ! -z "$foo" ] && echo "foo"
++
++# Not auto-fixable. Should be reported under `--fix` and lint exits 1
++grep '*foo*' file
+diff --git a/format/private/format.sh b/format/private/format.sh
+index 7cad490..b9ac358 100755
+--- a/format/private/format.sh
++++ b/format/private/format.sh
+@@ -162,6 +162,11 @@ function ls-files {
+         ;;
+     esac
+ 
++    shebang_re=
++    case "$language" in
++      'Shell') shebang_re='^#![ \t]*/(usr/)?bin/(env[ \t]+)?(sh|bash|mksh|bats|zsh)(\s|$)' ;;
++    esac
++
+     if [ "$#" -eq 0 ]; then
+         # When the formatter is run with no arguments, we run over "all files in the repo".
+         # However, we want to ignore anything that is in .gitignore, is marked for delete, etc.
+@@ -174,6 +179,20 @@ function ls-files {
+             "^$(git ls-files --deleted)$" \
+           || true;
+         })
++
++        if [ -n "$shebang_re" ]; then
++            for candidate in $(git ls-files -t --cached --modified --other --exclude-standard | grep -v ^S | cut -f2- -d' ' | grep -v '\.' | {
++                grep -vE \
++                "^$(git ls-files --deleted)$" \
++                || true;
++            }); do
++                [ -f "$candidate" ] || continue
++                if head -n 1 "$candidate" | grep -E -q "$shebang_re"; then
++                    # files should be returned newline separated to avoid a "File name too long" error
++                    files+=$'\n'"$candidate"
++                fi
++            done
++        fi
+     else
+         # When given arguments, they are glob patterns of the superset of files to format.
+         # We just need to filter those so we only select files for this language
+diff --git a/format/test/format_test.bats b/format/test/format_test.bats
+index e01dcc9..22ec67f 100644
+--- a/format/test/format_test.bats
++++ b/format/test/format_test.bats
+@@ -154,6 +154,8 @@ bats_load_library "bats-assert"
+     assert_success
+ 
+     assert_output --partial "+ shfmt -w --apply-ignore .github/workflows/release_prep.sh"
++    assert_output --partial "example/src/hello.sh"
++    assert_output --partial "example/src/hello_sh"
+ }
+ 
+ @test "should run swiftformat on Swift" {

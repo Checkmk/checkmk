@@ -118,6 +118,7 @@ def test_all_sections_are_subscribed_by_some_plugin(
     allowed_unsubscribed_sections = {
         "labels",
         "azure_labels",
+        "azure_v2_labels",
         "ec2_labels",
         "elb_generic_labels",
         "elbv2_generic_labels",

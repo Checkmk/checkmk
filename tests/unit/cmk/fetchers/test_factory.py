@@ -16,7 +16,7 @@ from cmk.snmplib import SNMPBackendEnum, SNMPHostConfig, SNMPVersion
 from tests.testlib.common.repo import is_enterprise_repo
 
 if is_enterprise_repo():
-    from cmk.fetchers.cee.snmp_backend.inline import (  # type: ignore[import,unused-ignore]
+    from cmk.inline_snmp.inline import (  # type: ignore[import,unused-ignore]
         InlineSNMPBackend,
     )
 else:

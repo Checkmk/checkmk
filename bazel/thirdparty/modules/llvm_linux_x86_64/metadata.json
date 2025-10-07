@@ -1,11 +1,7 @@
 {
-    "homepage": "https://llvm.org/",
-    "maintainers": [],
-    "repository": [
-        "github:llvm/llvm-project"
-    ],
-    "version": [
-        "19.1.7",
-    ],
-    "yanked_versions": {}
+  "homepage": "https://llvm.org/",
+  "maintainers": [],
+  "repository": ["github:llvm/llvm-project"],
+  "version": ["19.1.7"],
+  "yanked_versions": {}
 }

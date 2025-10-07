@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/theoremlp/rules_multitool/main/lockfile.schema.json",
+  "ruff": {
+    "binaries": [
+      {
+        "kind": "archive",
+        "url": "https://github.com/astral-sh/ruff/releases/download/0.12.8/ruff-x86_64-unknown-linux-gnu.tar.gz",
+        "sha256": "ac0edfd0935dfedc884f2ddeab6705b4875e7e84aa9f1c7af78233492ebecdb0",
+        "file": "ruff-x86_64-unknown-linux-gnu/ruff",
+        "os": "linux",
+        "cpu": "x86_64"
+      }
+    ]
+  }
+}

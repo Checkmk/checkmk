@@ -7,6 +7,7 @@ import logging
 import os
 import threading
 from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from shutil import which
 from typing import Literal
@@ -66,34 +67,38 @@ def _track_resources(request: pytest.FixtureRequest) -> Iterator[None]:
         yield
 
 
-@pytest.fixture(name="central_site", scope="session")
-def _central_site(request: pytest.FixtureRequest, ensure_cron: None) -> Iterator[Site]:
-    """Provide a default, central monitoring site."""
+@contextmanager
+def _site(description: str, distributed: bool) -> Iterator[Site]:
+    """Provide a default monitoring site."""
     setup_stop_event = threading.Event()
     cleanup_start_event = threading.Event()
+    global_settings_updates = [
+        GlobalSettingsUpdate(
+            relative_path=Path("etc") / "check_mk" / "multisite.d" / "wato" / "global.mk",
+            update={
+                "log_levels": {
+                    "cmk.web": 10,
+                    "cmk.web.agent_registration": 10,
+                    "cmk.web.background-job": 10,
+                }
+            },
+        )
+    ]
+    if distributed:
+        global_settings_updates.append(
+            GlobalSettingsUpdate(
+                relative_path=Path("etc") / "check_mk" / "conf.d" / "wato" / "global.mk",
+                update={"agent_bakery_logging": 10},
+            )
+        )
     with (
         track_resources("setup_central_site", stop_event=setup_stop_event),
         site_factory.get_test_site_ctx(
             "central",
-            description=request.node.name,
+            description=description,
             auto_restart_httpd=True,
             tracing_config=tracing_config_from_env(os.environ),
-            global_settings_updates=[
-                GlobalSettingsUpdate(
-                    relative_path=Path("etc") / "check_mk" / "multisite.d" / "wato" / "global.mk",
-                    update={
-                        "log_levels": {
-                            "cmk.web": 10,
-                            "cmk.web.agent_registration": 10,
-                            "cmk.web.background-job": 10,
-                        }
-                    },
-                ),
-                GlobalSettingsUpdate(
-                    relative_path=Path("etc") / "check_mk" / "conf.d" / "wato" / "global.mk",
-                    update={"agent_bakery_logging": 10},
-                ),
-            ],
+            global_settings_updates=global_settings_updates,
         ) as central_site,
         track_resources("teardown_central_site", start_event=cleanup_start_event),
     ):
@@ -113,6 +118,20 @@ def _central_site(request: pytest.FixtureRequest, ensure_cron: None) -> Iterator
         central_site.openapi.changes.activate_and_wait_for_completion()
         yield central_site
         cleanup_start_event.set()
+
+
+@pytest.fixture(name="single_site", scope="session")
+def _single_site(request: pytest.FixtureRequest, ensure_cron: None) -> Iterator[Site]:
+    """Provide a default, single monitoring site."""
+    with _site(description=request.node.name, distributed=False) as single_site:
+        yield single_site
+
+
+@pytest.fixture(name="central_site", scope="session")
+def _central_site(request: pytest.FixtureRequest, ensure_cron: None) -> Iterator[Site]:
+    """Provide a default, central monitoring site."""
+    with _site(description=request.node.name, distributed=True) as central_site:
+        yield central_site
 
 
 def _make_connected_remote_site(

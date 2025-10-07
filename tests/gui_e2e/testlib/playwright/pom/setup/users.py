@@ -25,13 +25,13 @@ class Users(CmkPage):
     """
 
     page_title = "Users"
+    url_pattern = re.compile(quote_plus("wato.py?mode=users"))
 
     @override
     def navigate(self) -> None:
         logger.info("Navigate to '%s' page", self.page_title)
         self.main_menu.setup_menu(self.page_title).click()
-        _url_pattern: str = quote_plus("wato.py?mode=users")
-        self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
+        self.page.wait_for_url(url=self.url_pattern, wait_until="load")
         self.validate_page()
 
     @override

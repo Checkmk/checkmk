@@ -27,7 +27,7 @@ test('Render GraphDesignerApp', () => {
         explicit_vertical_range: 'auto',
         omit_zero_metrics: true
       },
-
+      metric_backend_available: false,
       graph_renderer: fakeGraphRenderer
     }
   })

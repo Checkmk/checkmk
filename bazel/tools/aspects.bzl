@@ -27,7 +27,7 @@ mypy_aspect = mypy(
 )
 
 ruff = lint_ruff_aspect(
-    binary = Label("@multitool//tools/ruff"),
+    binary = Label("@multitool_hub//tools/ruff"),
     configs = [Label("@//:pyproject.toml")],
 )
 

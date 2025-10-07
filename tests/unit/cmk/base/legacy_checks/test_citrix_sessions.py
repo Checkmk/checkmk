@@ -42,9 +42,9 @@ def test_inventory_citrix_sessions(
             {"active": (60, 65), "inactive": (10, 15), "total": (60, 65)},
             [["sessions", "1"], ["active_sessions", "1"], ["inactive_sessions", "0"]],
             [
-                (0, "Total: 1", [("total", 1, 60, 65)]),
-                (0, "Active: 1", [("active", 1, 60, 65)]),
-                (0, "Inactive: 0", [("inactive", 0, 10, 15)]),
+                (0, "Total: 1.00", [("total", 1, 60, 65)]),
+                (0, "Active: 1.00", [("active", 1, 60, 65)]),
+                (0, "Inactive: 0.00", [("inactive", 0, 10, 15)]),
             ],
         ),
     ],

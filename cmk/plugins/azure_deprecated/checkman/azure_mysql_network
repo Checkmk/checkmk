@@ -1,0 +1,20 @@
+title: Microsoft Azure MySQL Database: Network
+agents: azure
+catalog: cloud/azure
+license: GPLv2
+distribution: check_mk
+description:
+ This check and the associated special agent (agent_azure) are deprecated
+ and will be removed in a future version.
+
+ Please configure the new special agent using the "Microsoft Azure" ruleset.
+
+ This check reports the input and the output of a network in bytes.
+ You can configure levels using the rule "Network IO".
+
+item:
+ The name of the resource.
+
+discovery:
+ One service is created for each database if any of the required metrics
+ (total_network_bytes_ingress, total_network_bytes_egress) are given.

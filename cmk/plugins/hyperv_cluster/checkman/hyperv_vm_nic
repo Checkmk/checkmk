@@ -9,11 +9,16 @@ description:
 
  The check queries a Microsoft Hyper-V cluster via an agent plug-in and reports
  the status of each network interface. It monitors various attributes such as
- connection state, virtual switch, and VLAN ID. The check provides detailed
- information about the network configuration and connection status of each NIC.
+ connection state, virtual switch assignment, VLAN configuration, and MAC address settings.
+ 
+ Each network interface is uniquely identified by combining the NIC name with its
+ GUID from the nic.id field (e.g., "Network Adapter (8A19AF30-D015-443F-BFCC-214C70A9A242)").
+ This ensures stable service identification across VM configurations and prevents
+ conflicts when multiple NICs have the same name.
 
 item:
- The network interface name as discovered by the agent.
+ The network interface name combined with its unique GUID identifier as discovered
+ by the agent. Format: "NIC Name (GUID)", for example "Network Adapter (9A19BF50-DFFF-443F-AAAA-214C70A9A111)".
 
 inventory:
- One service per network interface is created, based on the presence of "nic.connectionstate" in the section data.
+ One service per network interface is created, based on the presence of "nic.name" in the section data.

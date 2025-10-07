@@ -143,7 +143,7 @@ def check_rabbitmq_cluster_messages(_no_item, params, parsed):
     if not msg_data:
         return
 
-    for key, infotext, hr_func in [
+    for key, infotext, type_ in [
         (MessageType.TOTAL, "Total number of messages", int),
         (MessageType.TOTAL_RATE, "Rate", float),
         (MessageType.READY, "Messages ready", int),
@@ -157,7 +157,7 @@ def check_rabbitmq_cluster_messages(_no_item, params, parsed):
         if value is None:
             continue
 
-        yield _handle_output(params, value, key, infotext, hr_func)
+        yield _handle_output(params, type_(value), key, infotext)
 
 
 check_info["rabbitmq_cluster.messages"] = LegacyCheckDefinition(
@@ -181,24 +181,22 @@ def check_rabbitmq_cluster_stats(_no_item, params, parsed):
     if not stats_data:
         return
 
-    for key, infotext, hr_func in [
-        ("channels", "Channels", int),
-        ("connections", "Connections", int),
-        ("consumers", "Consumers", int),
-        ("exchanges", "Exchanges", int),
-        ("queues", "Queues", int),
+    for key, infotext in [
+        ("channels", "Channels"),
+        ("connections", "Connections"),
+        ("consumers", "Consumers"),
+        ("exchanges", "Exchanges"),
+        ("queues", "Queues"),
     ]:
         value = stats_data.get(key)
         if value is None:
             continue
 
-        yield _handle_output(params, value, key, infotext, hr_func)
+        yield _handle_output(params, int(value), key, infotext)
 
 
-def _handle_output(params, value, key, infotext, hr_func):
-    unit = ""
-    if "rate" in key:
-        unit = "1/s"
+def _handle_output(params, value, key, infotext):
+    unit = "/s" if "rate" in key else ""
 
     levels_upper = params.get("%s_upper" % key, (None, None))
     levels_lower = params.get("%s_lower" % key, (None, None))
@@ -206,8 +204,7 @@ def _handle_output(params, value, key, infotext, hr_func):
         value,
         key,
         levels_upper + levels_lower,
-        human_readable_func=hr_func,
-        unit=unit,
+        human_readable_func=lambda x: f"{x}{unit}",
         infoname=infotext,
     )
 

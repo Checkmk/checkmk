@@ -25,21 +25,21 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.generators.dict_to_catalog import Dict2CatalogConverter, Headers
-from cmk.gui.form_specs.generators.setup_site_choice import create_setup_site_choice
-from cmk.gui.form_specs.private import (
-    Catalog,
-    CommentTextArea,
-    LegacyValueSpec,
-    SingleChoiceExtended,
-)
-from cmk.gui.form_specs.vue import (
+from cmk.gui.form_specs import (
     DEFAULT_VALUE,
     IncomingData,
     parse_data_from_field_id,
     RawDiskData,
     RawFrontendData,
     render_form_spec,
+)
+from cmk.gui.form_specs.generators.dict_to_catalog import Dict2CatalogConverter, Headers
+from cmk.gui.form_specs.generators.setup_site_choice import create_setup_site_choice
+from cmk.gui.form_specs.unstable import (
+    Catalog,
+    CommentTextArea,
+    LegacyValueSpec,
+    SingleChoiceExtended,
 )
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request

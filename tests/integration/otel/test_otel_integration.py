@@ -80,14 +80,10 @@ def otel_enabled_site(otel_site: Site) -> Iterator[Site]:
     """Fixture to enable OpenTelemetry collector"""
     otel_site.stop()
     otel_site.set_config("OPENTELEMETRY_COLLECTOR", "on")
-    otel_site.set_config("MKEVENTD_SYSLOG", "on")
-    otel_site.set_config("MKEVENTD_SYSLOG_TCP", "on")
     otel_site.start()
     yield otel_site
     otel_site.stop()
     otel_site.set_config("OPENTELEMETRY_COLLECTOR", "off")
-    otel_site.set_config("MKEVENTD_SYSLOG", "off")
-    otel_site.set_config("MKEVENTD_SYSLOG_TCP", "off")
     otel_site.start()
 
 
@@ -113,7 +109,6 @@ def delete_created_objects(
         delete_opentelemetry_data(site)
 
 
-@pytest.mark.skip(reason="Temporarily disabled while investigating why it fails on CI")
 @pytest.mark.parametrize(
     "receiver_type, receiver_config, script_file_name, host_name, metric_name",
     [
@@ -192,8 +187,7 @@ def test_otel_collector_with_receiver_config(
 
         logger.info("Adding a rule for OpenTelemetry special agent")
         rule_id = otel_enabled_site.openapi.rules.create(
-            ruleset_name="special_agents:otel",
-            value={"include_self_monitoring": False},
+            ruleset_name="special_agents:otel", value={}
         )
         otel_enabled_site.openapi.changes.activate_and_wait_for_completion()
 
@@ -270,8 +264,7 @@ def test_otel_collector_with_prometheus_scrape_config(otel_enabled_site: Site) -
 
         logger.info("Adding a rule for OpenTelemetry special agent")
         rule_id = otel_enabled_site.openapi.rules.create(
-            ruleset_name="special_agents:otel",
-            value={"include_self_monitoring": False},
+            ruleset_name="special_agents:otel", value={}
         )
         otel_enabled_site.openapi.changes.activate_and_wait_for_completion()
 
@@ -343,8 +336,7 @@ def test_otel_collector_with_prometheus_scrape_config_tls(otel_enabled_site: Sit
 
         logger.info("Adding a rule for OpenTelemetry special agent")
         rule_id = otel_enabled_site.openapi.rules.create(
-            ruleset_name="special_agents:otel",
-            value={"include_self_monitoring": False},
+            ruleset_name="special_agents:otel", value={}
         )
         otel_enabled_site.openapi.changes.activate_and_wait_for_completion()
 

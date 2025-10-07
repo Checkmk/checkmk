@@ -13,7 +13,7 @@ from pytest import MonkeyPatch
 import cmk.ccc.version as cmk_version
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.user import UserId
-from cmk.gui.config import default_authorized_builtin_role_ids
+from cmk.gui.config import Config, default_authorized_builtin_role_ids
 from cmk.gui.dashboard import DashboardConfig, dashlet_registry, DashletConfig
 from cmk.gui.dashboard.dashlet.base import Dashlet
 from cmk.gui.htmllib.html import html
@@ -41,7 +41,7 @@ class DummyDashlet(Dashlet[DummyDashletConfig]):
     def sort_index(cls) -> int:
         return 123
 
-    def show(self):
+    def show(self, config: Config) -> None:
         html.write_text_permissive("dummy")
 
 

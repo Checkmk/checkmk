@@ -3,14 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping, Sequence
-from typing import Any
-from unittest.mock import ANY
 
 import pytest
 
 from cmk.plugins.aws.server_side_calls.aws_agent_call import special_agent_aws
-from cmk.server_side_calls.v1 import HostConfig
-from cmk.server_side_calls_backend.config_processing import process_configuration_to_parameters
+from cmk.server_side_calls.v1 import HostConfig, Secret
 
 
 @pytest.mark.parametrize(
@@ -22,21 +19,13 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                     "access_key",
                     {
                         "access_key_id": "foo_key",
-                        "secret_access_key": (
-                            "cmk_postprocessed",
-                            "explicit_password",
-                            ("uuideb246734-2815-41fe-afbe-d420ed72e81a", "foo_pass"),
-                        ),
+                        "secret_access_key": Secret(1),
                     },
                 ),
                 "proxy_details": {
                     "proxy_host": "proxy_host",
                     "proxy_user": "foo_username",
-                    "proxy_password": (
-                        "cmk_postprocessed",
-                        "explicit_password",
-                        ("uuidbc10387e-9a3e-4920-9918-3eb5a3669202", "foo_proxy_pw"),
-                    ),
+                    "proxy_password": Secret(2),
                 },
                 "access": {
                     "global_service_region": "us-gov-east-1",
@@ -82,13 +71,13 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                 "--access-key-id",
                 "foo_key",
                 "--secret-access-key-reference",
-                ANY,
+                Secret(1),
                 "--proxy-host",
                 "proxy_host",
                 "--proxy-user",
                 "foo_username",
                 "--proxy-password-reference",
-                ANY,
+                Secret(2),
                 "--global-service-region",
                 "us-gov-east-1",
                 "--regions",
@@ -161,11 +150,7 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                     "access_key_sts",
                     {
                         "access_key_id": "foo_key",
-                        "secret_access_key": (
-                            "cmk_postprocessed",
-                            "explicit_password",
-                            ("uuideb246734-2815-41fe-afbe-d420ed72e81a", "foo_pass"),
-                        ),
+                        "secret_access_key": Secret(3),
                         "role_arn_id": "foo_arn_id",
                         "external_id": "foo_external_id",
                     },
@@ -179,7 +164,7 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                 "--access-key-id",
                 "foo_key",
                 "--secret-access-key-reference",
-                ANY,
+                Secret(3),
                 "--assume-role",
                 "--role-arn",
                 "foo_arn_id",
@@ -229,11 +214,7 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                 "proxy_details": {
                     "proxy_host": "1.1.1",
                     "proxy_user": "banana",
-                    "proxy_password": (
-                        "cmk_postprocessed",
-                        "stored_password",
-                        ("banana123", ""),
-                    ),
+                    "proxy_password": Secret(4),
                 },
                 "piggyback_naming_convention": "ip_region_instance",
             },
@@ -243,7 +224,7 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                 "--proxy-user",
                 "banana",
                 "--proxy-password-reference",
-                ANY,
+                Secret(4),
                 "--ignore-all-tags",
                 "--hostname",
                 "foo",
@@ -258,11 +239,7 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                 "proxy_details": {
                     "proxy_host": "1.1.1",
                     "proxy_user": "banana",
-                    "proxy_password": (
-                        "cmk_postprocessed",
-                        "stored_password",
-                        ("banana123", ""),
-                    ),
+                    "proxy_password": Secret(5),
                 },
                 "piggyback_naming_convention": "ip_region_instance",
                 "import_tags": ("all_tags", None),
@@ -273,7 +250,7 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                 "--proxy-user",
                 "banana",
                 "--proxy-password-reference",
-                ANY,
+                Secret(5),
                 "--hostname",
                 "foo",
                 "--piggyback-naming-convention",
@@ -287,11 +264,7 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                 "proxy_details": {
                     "proxy_host": "1.1.1",
                     "proxy_user": "banana",
-                    "proxy_password": (
-                        "cmk_postprocessed",
-                        "stored_password",
-                        ("banana123", ""),
-                    ),
+                    "proxy_password": Secret(6),
                 },
                 "piggyback_naming_convention": "ip_region_instance",
                 "import_tags": ("filter_tags", "foo:bar"),
@@ -302,7 +275,7 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                 "--proxy-user",
                 "banana",
                 "--proxy-password-reference",
-                ANY,
+                Secret(6),
                 "--import-matching-tags-as-labels",
                 "foo:bar",
                 "--hostname",
@@ -318,11 +291,7 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                 "proxy_details": {
                     "proxy_host": "1.1.1",
                     "proxy_user": "banana",
-                    "proxy_password": (
-                        "cmk_postprocessed",
-                        "stored_password",
-                        ("banana123", ""),
-                    ),
+                    "proxy_password": Secret(7),
                 },
                 "piggyback_naming_convention": "ip_region_instance",
                 "connection_test": True,
@@ -333,7 +302,7 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
                 "--proxy-user",
                 "banana",
                 "--proxy-password-reference",
-                ANY,
+                Secret(7),
                 "--ignore-all-tags",
                 "--hostname",
                 "foo",
@@ -345,12 +314,9 @@ from cmk.server_side_calls_backend.config_processing import process_configuratio
         ),
     ],
 )
-def test_values_to_args(value: Mapping[str, Any], expected_args: Sequence[Any]) -> None:
-    # GIVEN
-    params = process_configuration_to_parameters(value)
-
+def test_values_to_args(value: Mapping[str, object], expected_args: Sequence[str | Secret]) -> None:
     # WHEN
-    special_agent_calls = list(special_agent_aws(params.value, HostConfig(name="foo")))
+    special_agent_calls = list(special_agent_aws(value, HostConfig(name="foo")))
 
     # THEN
     assert len(special_agent_calls) == 1

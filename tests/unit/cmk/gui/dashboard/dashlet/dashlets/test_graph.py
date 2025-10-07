@@ -7,13 +7,15 @@ import pytest
 
 from cmk.graphing.v1 import Title
 from cmk.graphing.v1.graphs import Graph
-from cmk.gui.dashboard.dashlet.dashlets.graph import _graph_templates_autocompleter_testable
+from cmk.gui.dashboard.dashlet.dashlets.graph import (
+    _graph_templates_autocompleter_testable,
+)
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 
 def test_graph_templates_autocompleter_testable_unconstrained() -> None:
     assert _graph_templates_autocompleter_testable(
-        config=object(),
         value_entered_by_user="",
         params={"show_independent_of_context": True},
         registered_metrics={},
@@ -24,6 +26,8 @@ def test_graph_templates_autocompleter_testable_unconstrained() -> None:
                 simple_lines=["metric1"],
             )
         },
+        debug=False,
+        temperature_unit=TemperatureUnit.CELSIUS,
     ) == [
         (
             "graph1",
@@ -59,7 +63,6 @@ Filter: service_description = my-service
         )
 
         assert _graph_templates_autocompleter_testable(
-            config=object(),
             value_entered_by_user="",
             params={"context": {"host": {"host": "my-host"}, "service": {"service": "my-service"}}},
             registered_metrics={},
@@ -70,6 +73,8 @@ Filter: service_description = my-service
                     simple_lines=["metric1"],
                 )
             },
+            debug=False,
+            temperature_unit=TemperatureUnit.CELSIUS,
         ) == [
             (
                 "graph1",
@@ -109,7 +114,6 @@ Filter: service_description = my-service
         )
 
         assert _graph_templates_autocompleter_testable(
-            config=object(),
             value_entered_by_user="1",
             params={"context": {"host": {"host": "my-host"}, "service": {"service": "my-service"}}},
             registered_metrics={},
@@ -120,6 +124,8 @@ Filter: service_description = my-service
                     simple_lines=["metric1"],
                 )
             },
+            debug=False,
+            temperature_unit=TemperatureUnit.CELSIUS,
         ) == [
             (
                 "graph1",

@@ -5,7 +5,8 @@
 
 from __future__ import annotations
 
-from typing import Any, override
+from collections.abc import Mapping
+from typing import override
 
 from marshmallow_oneofschema import OneOfSchema
 
@@ -16,7 +17,6 @@ from cmk.bi.lib import (
     ABCWithSchema,
     ActionArgument,
     ActionArguments,
-    ActionKind,
     bi_action_registry,
     BIHostSearchMatch,
     BIParams,
@@ -31,7 +31,7 @@ from cmk.bi.lib import (
 from cmk.bi.rule_interface import bi_rule_id_registry
 from cmk.bi.schema import Schema
 from cmk.bi.trees import BICompiledLeaf, BIRemainingResult
-from cmk.utils.macros import MacroMapping
+from cmk.bi.type_defs import ActionKind, ActionSerialized
 
 #   .--CallARule-----------------------------------------------------------.
 #   |               ____      _ _    _    ____        _                    |
@@ -41,6 +41,11 @@ from cmk.utils.macros import MacroMapping
 #   |              \____\__,_|_|_/_/   \_\_| \_\\__,_|_|\___|              |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
+
+
+class BICallARuleActionSerialized(ActionSerialized):
+    rule_id: str
+    params: dict[str, list[str]]
 
 
 @bi_action_registry.register
@@ -56,21 +61,21 @@ class BICallARuleAction(ABCBIAction, ABCWithSchema):
         return BICallARuleActionSchema
 
     @override
-    def serialize(self):
+    def serialize(self) -> BICallARuleActionSerialized:
         return {
             "type": self.kind(),
             "rule_id": self.rule_id,
             "params": self.params.serialize(),
         }
 
-    def __init__(self, action_config: dict[str, Any]) -> None:
+    def __init__(self, action_config: BICallARuleActionSerialized) -> None:
         super().__init__(action_config)
         self.rule_id = action_config["rule_id"]
         self.params = BIParams(action_config["params"])
 
     @override
     def _generate_action_arguments(
-        self, search_results: SearchResults, macros: MacroMapping
+        self, search_results: SearchResults, macros: Mapping[str, str]
     ) -> ActionArguments:
         return [
             tuple(replace_macros(self.params.arguments, {**macros, **x})) for x in search_results
@@ -112,6 +117,10 @@ class BICallARuleActionSchema(Schema):
 #   +----------------------------------------------------------------------+
 
 
+class BIStateOfHostActionSerialized(ActionSerialized):
+    host_regex: str
+
+
 @bi_action_registry.register
 class BIStateOfHostAction(ABCBIAction, ABCWithSchema):
     @override
@@ -125,19 +134,19 @@ class BIStateOfHostAction(ABCBIAction, ABCWithSchema):
         return BIStateOfHostActionSchema
 
     @override
-    def serialize(self):
+    def serialize(self) -> BIStateOfHostActionSerialized:
         return {
             "type": self.kind(),
             "host_regex": self.host_regex,
         }
 
-    def __init__(self, action_config: dict[str, Any]) -> None:
+    def __init__(self, action_config: BIStateOfHostActionSerialized) -> None:
         super().__init__(action_config)
         self.host_regex = action_config["host_regex"]
 
     @override
     def _generate_action_arguments(
-        self, search_results: SearchResults, macros: MacroMapping
+        self, search_results: SearchResults, macros: Mapping[str, str]
     ) -> ActionArguments:
         return [(replace_macros(self.host_regex, {**macros, **x}),) for x in search_results]
 
@@ -168,6 +177,11 @@ class BIStateOfHostActionSchema(Schema):
 #   +----------------------------------------------------------------------+
 
 
+class BIStateOfServiceActionSerialized(ActionSerialized):
+    host_regex: str
+    service_regex: str
+
+
 @bi_action_registry.register
 class BIStateOfServiceAction(ABCBIAction, ABCWithSchema):
     @override
@@ -181,21 +195,21 @@ class BIStateOfServiceAction(ABCBIAction, ABCWithSchema):
         return BIStateOfServiceActionSchema
 
     @override
-    def serialize(self):
+    def serialize(self) -> BIStateOfServiceActionSerialized:
         return {
             "type": self.kind(),
             "host_regex": self.host_regex,
             "service_regex": self.service_regex,
         }
 
-    def __init__(self, action_config: dict[str, Any]) -> None:
+    def __init__(self, action_config: BIStateOfServiceActionSerialized) -> None:
         super().__init__(action_config)
         self.host_regex = action_config["host_regex"]
         self.service_regex = action_config["service_regex"]
 
     @override
     def _generate_action_arguments(
-        self, search_results: SearchResults, macros: MacroMapping
+        self, search_results: SearchResults, macros: Mapping[str, str]
     ) -> ActionArguments:
         return [
             (
@@ -248,6 +262,10 @@ class BIStateOfServiceActionSchema(Schema):
 #   +----------------------------------------------------------------------+
 
 
+class BIStateOfRemainingServicesActionSerialized(ActionSerialized):
+    host_regex: str
+
+
 @bi_action_registry.register
 class BIStateOfRemainingServicesAction(ABCBIAction, ABCWithSchema):
     @override
@@ -261,19 +279,19 @@ class BIStateOfRemainingServicesAction(ABCBIAction, ABCWithSchema):
         return BIStateOfRemainingServicesActionSchema
 
     @override
-    def serialize(self):
+    def serialize(self) -> BIStateOfRemainingServicesActionSerialized:
         return {
             "type": self.kind(),
             "host_regex": self.host_regex,
         }
 
-    def __init__(self, action_config: dict[str, Any]) -> None:
+    def __init__(self, action_config: BIStateOfRemainingServicesActionSerialized) -> None:
         super().__init__(action_config)
         self.host_regex = action_config["host_regex"]
 
     @override
     def _generate_action_arguments(
-        self, search_results: SearchResults, macros: MacroMapping
+        self, search_results: SearchResults, macros: Mapping[str, str]
     ) -> ActionArguments:
         return [(replace_macros(self.host_regex, {**macros, **x}),) for x in search_results]
 
@@ -318,5 +336,5 @@ class BIActionSchema(OneOfSchema):
     # }
 
     @override
-    def get_obj_type(self, obj: ABCBIAction | dict) -> str:
+    def get_obj_type(self, obj: ABCBIAction | ActionSerialized) -> str:
         return obj["type"] if isinstance(obj, dict) else obj.kind()

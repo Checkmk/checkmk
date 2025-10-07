@@ -80,10 +80,10 @@ div.topology_layout_designer,
 a#menu_shortcut_edit_layout,
 div.topology_compare_history {
   img {
-    content: url("images/icon_toggle_off.svg") !important;
+    content: url('images/icon_toggle_off.svg') !important;
 
     &.on {
-      content: url("images/icon_toggle_on.svg") !important;
+      content: url('images/icon_toggle_on.svg') !important;
     }
   }
 }
@@ -114,10 +114,10 @@ div.nodevis.toggle_switch_container {
   background-repeat: no-repeat;
   pointer-events: all;
 
-  background-image: url("images/icon_toggle_off.svg");
+  background-image: url('images/icon_toggle_off.svg');
 
   &.on {
-    background-image: url("images/icon_toggle_on.svg");
+    background-image: url('images/icon_toggle_on.svg');
   }
 
   img.iconbutton {
@@ -127,11 +127,11 @@ div.nodevis.toggle_switch_container {
 
 // Search box
 div#top_heading table.menubar td.inpage_search.node_vis {
-  input[type="text"] {
+  input[type='text'] {
     background-color: $ux-theme-5;
   }
 
-  input[type="button"] {
+  input[type='button'] {
     position: relative;
     left: -24px;
     top: -2px;
@@ -185,7 +185,7 @@ div.node_vis {
   }
 
   img.tick {
-    content: url("images/icon_tick.svg") !important;
+    content: url('images/icon_tick.svg') !important;
   }
 
   g#svg_layers .node_element circle.mesh_root {
@@ -232,7 +232,7 @@ div.node_vis {
   g#nodes img.unknown {
     height: 50px;
     width: 50px;
-    content: url("images/icon_maxisnapin.svg");
+    content: url('images/icon_maxisnapin.svg');
   }
 
   // Radio group
@@ -249,7 +249,7 @@ div.node_vis {
     border-collapse: separate;
     border-spacing: 0;
 
-    input[type="radio"] {
+    input[type='radio'] {
       display: none !important;
     }
 
@@ -258,7 +258,7 @@ div.node_vis {
     }
 
     td {
-      input[type="radio"]:checked + label {
+      input[type='radio']:checked + label {
         background-color: $ux-theme-6;
         font-weight: 700;
       }
@@ -470,7 +470,7 @@ div.node_vis {
     margin-left: 6px;
   }
 
-  input[type="checkbox"] {
+  input[type='checkbox'] {
     display: unset;
   }
 

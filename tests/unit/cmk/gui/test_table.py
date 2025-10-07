@@ -25,13 +25,13 @@ def read_out_simple_table(text):
     data = []
     # TODO: Typing chaos ahead! Clarify PageElement/Tag/NavigableString
     for row in bs(text, "lxml").find_all("tr"):
-        columns = row.find_all("th")  # type: ignore[union-attr]
+        columns = row.find_all("th")
         if not columns:
-            columns = row.find_all("td")  # type: ignore[union-attr]
+            columns = row.find_all("td")
         row_data = []
         for cell in columns:
-            cell = re.sub(r"\s", "", re.sub(r"<[^<]*>", "", cell.text))
-            row_data.append(cell)
+            cell_str = re.sub(r"\s", "", re.sub(r"<[^<]*>", "", cell.text))
+            row_data.append(cell_str)
         data.append(row_data)
     return data
 

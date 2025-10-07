@@ -53,11 +53,6 @@ def test_view_empty_title() -> None:
         View(name="view_name", title=Title(""))
 
 
-def test_view_empty_group() -> None:
-    with pytest.raises(ValueError):
-        View(name="view_name", title=Title("A title"), group=Title(""))
-
-
 def test_table_empty_column() -> None:
     with pytest.raises(ValueError):
         Table(columns={"": BoolField(Title("A title"))})

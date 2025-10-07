@@ -60,7 +60,7 @@ def check_jolokia_jvm_garbagecollectors_testable(item, params, parsed, value_sto
         count_rate,
         "jvm_garbage_collection_count",
         params.get("collection_count"),
-        unit="/s",
+        human_readable_func=lambda x: f"{x:.2f}/s",
         infoname="Garbage collections",
     )
 
@@ -68,7 +68,7 @@ def check_jolokia_jvm_garbagecollectors_testable(item, params, parsed, value_sto
         ctime_rate * 0.1,  # ms/s -> %
         "jvm_garbage_collection_time",
         params.get("collection_time"),
-        unit="%",
+        human_readable_func=lambda x: f"{x:.1f}%",
         infoname="Time spent collecting garbage",
     )
 

@@ -6,7 +6,7 @@
 
 import time
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import get_rate, get_value_store, SNMPTree
 from cmk.plugins.lib.checkpoint import DETECT
 
@@ -46,22 +46,13 @@ def check_checkpoint_packets(_no_item, params, parsed):
     this_time = time.time()
     for name, value in parsed.items():
         key = name.lower()
-        if params.get(key) is None:
-            warn, crit = (None, None)
-        else:
-            warn, crit = params[key]
-
-        rate = get_rate(get_value_store(), key, this_time, value, raise_overflow=True)
-        infotext = f"{name}: {rate:.1f} pkts/s"
-        state = 0
-        if crit is not None and rate >= crit:
-            state = 2
-        elif warn is not None and rate >= warn:
-            state = 1
-        if state:
-            infotext += f" (warn/crit at {warn}/{crit} pkts/s)"
-
-        yield state, infotext, [(key, rate, warn, crit, 0)]
+        yield check_levels(
+            get_rate(get_value_store(), key, this_time, value, raise_overflow=True),
+            key,
+            params.get(key),
+            human_readable_func=lambda x: f"{x:.1f} pkts/s",
+            infoname=name,
+        )
 
 
 check_info["checkpoint_packets"] = LegacyCheckDefinition(

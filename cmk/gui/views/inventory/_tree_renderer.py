@@ -8,7 +8,6 @@ import time
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from functools import total_ordering
-from typing import Literal
 
 import cmk.utils.paths
 import cmk.utils.render
@@ -48,13 +47,51 @@ from ._display_hints import (
     DisplayHints,
     inv_display_hints,
     NodeDisplayHint,
+    PaintFunctionFromAPI,
     TableWithView,
 )
-from .registry import PaintFunction
 
 
 def make_table_view_name_of_host(view_name: str) -> str:
     return f"{view_name}_of_host"
+
+
+@dataclass(frozen=True, kw_only=True)
+class TDSpec:
+    css_classes: Sequence[str]
+    text_align: str
+    background_color: str
+    color: str
+    html_value: HTML
+
+    @property
+    def css(self) -> str:
+        return " ".join(self.css_classes)
+
+    @property
+    def style(self) -> str:
+        parts = []
+        if self.text_align:
+            parts.append(f"text-align: {self.text_align}")
+        if self.background_color:
+            parts.append(f"background-color: {self.background_color}")
+        if self.color:
+            parts.append(f"color: {self.color}")
+        return "; ".join(parts)
+
+
+def compute_cell_spec(td_spec: TDSpec) -> tuple[str, HTML]:
+    css_classes = list(td_spec.css_classes)
+    if td_spec.background_color:
+        css_classes.append("inv_cell_no_padding")
+    return (
+        " ".join(css_classes),
+        (
+            HTMLWriter.render_div(td_spec.html_value, style=td_style)
+            if (td_style := td_spec.style)
+            else td_spec.html_value
+        ),
+    )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -63,30 +100,38 @@ class SDItem:
     title: str
     value: SDValue
     retention_interval: RetentionInterval | None
-    paint_function: PaintFunction
+    paint_function: PaintFunctionFromAPI
     icon_path_svc_problems: str
 
-    def compute_cell_spec(self) -> tuple[str, Literal["", "inactive_cell"], HTML]:
-        # Returns a tuple of two css classes (alignment and coloring) and the HTML value
-        # We keep alignment and coloring classes separate as we only need the coloring within
-        # tables
-        css_class, code = self.paint_function(self.value)
-        html_value = HTML.with_escaping(code)
+    def compute_td_spec(self, now: float) -> TDSpec:
+        td_styles, rendered_value = self.paint_function(now, self.value)
+        html_value = HTML.with_escaping(rendered_value)
         if (
             not html_value
             or self.retention_interval is None
             or self.retention_interval.source == "current"
         ):
-            return css_class, "", html_value
+            return TDSpec(
+                css_classes=[td_styles.css_class] if td_styles.css_class else [],
+                text_align=td_styles.text_align,
+                background_color=td_styles.background_color,
+                color=td_styles.color,
+                html_value=html_value,
+            )
 
-        now = int(time.time())
         valid_until = self.retention_interval.cached_at + self.retention_interval.cache_interval
         keep_until = valid_until + self.retention_interval.retention_interval
         if now > keep_until:
-            return (
-                css_class,
-                "inactive_cell",
-                HTMLWriter.render_span(
+            return TDSpec(
+                css_classes=(
+                    [td_styles.css_class, "inactive_cell"]
+                    if td_styles.css_class
+                    else ["inactive_cell"]
+                ),
+                text_align=td_styles.text_align,
+                background_color=td_styles.background_color,
+                color=td_styles.color,
+                html_value=HTMLWriter.render_span(
                     html_value
                     + HTMLWriter.render_nbsp()
                     + HTMLWriter.render_img(self.icon_path_svc_problems, class_=["icon"]),
@@ -94,11 +139,18 @@ class SDItem:
                     css=["muted_text"],
                 ),
             )
+
         if now > valid_until:
-            return (
-                css_class,
-                "inactive_cell",
-                HTMLWriter.render_span(
+            return TDSpec(
+                css_classes=(
+                    [td_styles.css_class, "inactive_cell"]
+                    if td_styles.css_class
+                    else ["inactive_cell"]
+                ),
+                text_align=td_styles.text_align,
+                background_color=td_styles.background_color,
+                color=td_styles.color,
+                html_value=HTMLWriter.render_span(
                     html_value,
                     title=_("Data was provided at %s and is considered valid until %s")
                     % (
@@ -108,7 +160,14 @@ class SDItem:
                     css=["muted_text"],
                 ),
             )
-        return css_class, "", html_value
+
+        return TDSpec(
+            css_classes=[td_styles.css_class] if td_styles.css_class else [],
+            text_align=td_styles.text_align,
+            background_color=td_styles.background_color,
+            color=td_styles.color,
+            html_value=html_value,
+        )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -117,39 +176,54 @@ class _SDDeltaItem:
     title: str
     old: SDValue
     new: SDValue
-    paint_function: PaintFunction
+    paint_function: PaintFunctionFromAPI
 
-    def compute_cell_spec(self) -> tuple[str, Literal["", "inactive_cell"], HTML]:
-        # Returns a tuple of two css classes (alignment and coloring) and the HTML value
-        # The coloring class is always an empty string but was added for a consistent fct signature
-        # between _SDDeltaItem and SDItem
+    def compute_td_spec(self, now: float) -> TDSpec:
         if self.old is None and self.new is not None:
-            css_class, rendered_value = self.paint_function(self.new)
-            return (
-                css_class,
-                "",
-                HTMLWriter.render_span(rendered_value, css="invnew"),
+            td_styles, rendered_value = self.paint_function(now, self.new)
+            return TDSpec(
+                css_classes=[td_styles.css_class] if td_styles.css_class else [],
+                text_align="",
+                background_color="",
+                color="",
+                html_value=HTMLWriter.render_span(rendered_value, css="invnew"),
             )
+
         if self.old is not None and self.new is None:
-            css_class, rendered_value = self.paint_function(self.old)
-            return (
-                css_class,
-                "",
-                HTMLWriter.render_span(rendered_value, css="invold"),
+            td_styles, rendered_value = self.paint_function(now, self.old)
+            return TDSpec(
+                css_classes=[td_styles.css_class] if td_styles.css_class else [],
+                text_align="",
+                background_color="",
+                color="",
+                html_value=HTMLWriter.render_span(rendered_value, css="invold"),
             )
+
         if self.old == self.new:
-            css_class, rendered_value = self.paint_function(self.old)
-            return css_class, "", HTML.with_escaping(rendered_value)
-        if self.old is not None and self.new is not None:
-            _, rendered_old_value = self.paint_function(self.old)
-            css_class, rendered_new_value = self.paint_function(self.new)
-            return (
-                css_class,
-                "",
-                HTMLWriter.render_span(rendered_old_value, css="invold")
-                + " → "
-                + HTMLWriter.render_span(rendered_new_value, css="invnew"),
+            td_styles, rendered_value = self.paint_function(now, self.old)
+            return TDSpec(
+                css_classes=[td_styles.css_class] if td_styles.css_class else [],
+                text_align="",
+                background_color="",
+                color="",
+                html_value=HTML.with_escaping(rendered_value),
             )
+
+        if self.old is not None and self.new is not None:
+            _td_styles, rendered_old_value = self.paint_function(now, self.old)
+            td_styles, rendered_new_value = self.paint_function(now, self.new)
+            return TDSpec(
+                css_classes=[td_styles.css_class] if td_styles.css_class else [],
+                text_align="",
+                background_color="",
+                color="",
+                html_value=(
+                    HTMLWriter.render_span(rendered_old_value, css="invold")
+                    + " → "
+                    + HTMLWriter.render_span(rendered_new_value, css="invnew")
+                ),
+            )
+
         raise NotImplementedError()
 
 
@@ -157,7 +231,7 @@ class _SDDeltaItem:
 class _Column:
     key: SDKey
     title: str
-    paint_function: PaintFunction
+    paint_function: PaintFunctionFromAPI
     key_info: str
 
 
@@ -382,7 +456,7 @@ def ajax_inv_render_tree(config: Config) -> None:
         theme=gui_theme,
         request=http_request,
         show_internal_tree_paths=show_internal_tree_paths,
-    ).show(tree.get_tree(inventory.parse_internal_raw_path(raw_path).path), tree_id)
+    ).show(time.time(), tree.get_tree(inventory.parse_internal_raw_path(raw_path).path), tree_id)
 
 
 def _replace_title_placeholders(hint: NodeDisplayHint, path: SDPath) -> str:
@@ -417,22 +491,26 @@ class TreeRenderer:
             header += " " + HTMLWriter.render_span(f"({key_info})", css="muted_text")
         return header
 
-    def _show_attributes(self, sorted_pairs: Sequence[SDItem] | Sequence[_SDDeltaItem]) -> None:
+    def _show_attributes(
+        self, now: float, sorted_pairs: Sequence[SDItem] | Sequence[_SDDeltaItem]
+    ) -> None:
         html.open_table()
         for item in sorted_pairs:
             html.open_tr()
             html.th(self._get_header(item.title, item.key))
-
-            # TODO separate css_class and coloring_class from rendered value
-            _css_class, coloring_class, rendered_value = item.compute_cell_spec()
-            html.open_td(class_=coloring_class)
-            html.write_html(rendered_value)
+            css_class, html_value = compute_cell_spec(item.compute_td_spec(now))
+            if css_class:
+                html.open_td(class_=css_class)
+            else:
+                html.open_td()
+            html.write_html(html_value)
             html.close_td()
             html.close_tr()
         html.close_table()
 
     def _show_table(
         self,
+        now: float,
         table_view_name: str,
         columns: Sequence[_Column],
         sorted_rows: Sequence[Sequence[SDItem]] | Sequence[Sequence[_SDDeltaItem]],
@@ -467,15 +545,19 @@ class TreeRenderer:
         for row in sorted_rows:
             html.open_tr(class_="even0")
             for item in row:
-                # TODO separate css_class and coloring_class from rendered value
-                css_class, coloring_class, rendered_value = item.compute_cell_spec()
-                html.open_td(class_=" ".join([css_class, coloring_class]))
-                html.write_html(rendered_value)
+                css_class, html_value = compute_cell_spec(item.compute_td_spec(now))
+                if css_class:
+                    html.open_td(class_=css_class)
+                else:
+                    html.open_td()
+                html.write_html(html_value)
                 html.close_td()
             html.close_tr()
         html.close_table()
 
-    def _show_node(self, node: ImmutableTree | ImmutableDeltaTree, tree_id: str) -> None:
+    def _show_node(
+        self, now: float, node: ImmutableTree | ImmutableDeltaTree, tree_id: str
+    ) -> None:
         hint = self._hints.get_node_hint(node.path)
         title = self._get_header(
             _replace_title_placeholders(hint, node.path),
@@ -508,9 +590,9 @@ class TreeRenderer:
             ),
         ) as is_open:
             if is_open:
-                self.show(node)
+                self.show(now, node)
 
-    def show(self, tree: ImmutableTree | ImmutableDeltaTree, tree_id: str = "") -> None:
+    def show(self, now: float, tree: ImmutableTree | ImmutableDeltaTree, tree_id: str = "") -> None:
         hint = self._hints.get_node_hint(tree.path)
 
         sorted_pairs: Sequence[SDItem] | Sequence[_SDDeltaItem]
@@ -535,12 +617,13 @@ class TreeRenderer:
                 columns, sorted_rows = delta_items_sorter.sort_rows()
 
         if sorted_pairs:
-            self._show_attributes(sorted_pairs)
+            self._show_attributes(now, sorted_pairs)
         if sorted_rows:
             self._show_table(
+                now,
                 hint.table.name if isinstance(hint.table, TableWithView) else "",
                 columns,
                 sorted_rows,
             )
         for name in sorted(tree.nodes_by_name):
-            self._show_node(tree.nodes_by_name[name], tree_id)
+            self._show_node(now, tree.nodes_by_name[name], tree_id)

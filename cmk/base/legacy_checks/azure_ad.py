@@ -71,13 +71,22 @@ def check_azure_users(item, _no_params, parsed):
             count,
             "count",
             None,
-            unit="User Accounts",
-            human_readable_func=int,
+            human_readable_func=str,
+            infoname="User accounts",
         )
 
 
 check_info["azure_ad"] = LegacyCheckDefinition(
     name="azure_ad",
+    parse_function=parse_azure_ad,
+    service_name="AD Users",
+    discovery_function=discover_ad_users,
+    check_function=check_azure_users,
+)
+
+# TODO: migrate and move to new folder struct
+check_info["azure_v2_ad"] = LegacyCheckDefinition(
+    name="azure_v2_ad",
     parse_function=parse_azure_ad,
     service_name="AD Users",
     discovery_function=discover_ad_users,
@@ -140,6 +149,19 @@ check_info["azure_ad.sync"] = LegacyCheckDefinition(
     discovery_function=discover_sync,
     check_function=check_azure_sync,
     check_ruleset_name="azure_ad",
+    check_default_parameters={
+        "age": (3600, 7200),
+    },
+)
+
+# TODO: migrate and move to new folder struct
+check_info["azure_v2_ad.sync"] = LegacyCheckDefinition(
+    name="azure_v2_ad_sync",
+    service_name="AD Sync %s",
+    sections=["azure_v2_ad"],
+    discovery_function=discover_sync,
+    check_function=check_azure_sync,
+    check_ruleset_name="azure_v2_ad",
     check_default_parameters={
         "age": (3600, 7200),
     },

@@ -6,7 +6,7 @@
 
 from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.version import Edition, edition
-from cmk.gui.form_specs.private import ListExtended
+from cmk.gui.form_specs.unstable import ListExtended
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,

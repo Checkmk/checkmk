@@ -4,10 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Mapping, Sequence
+from functools import partial
+from typing import Literal
+
 from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.i18n import _
 from cmk.gui.permissions import declare_permission, permission_registry
-from cmk.gui.type_defs import BuiltinIconVisibility, IconSpec
+from cmk.gui.type_defs import BuiltinIconVisibility, IconSpec, Row
+from cmk.utils.tags import TagID
 
 from .base import Icon
 
@@ -29,6 +34,19 @@ def update_builtin_icons_from_config(
 def config_based_icons(user_icons_and_actions: dict[str, IconSpec]) -> dict[str, Icon]:
     declare_icons_and_actions_perm(user_icons_and_actions)
 
+    def _render(
+        _what: Literal["host", "service"],
+        _row: Row,
+        _tags: Sequence[TagID],
+        _custom_vars: Mapping[str, str],
+        icon_cfg: IconSpec,
+    ) -> tuple[str, str | None, tuple[str, str] | None]:
+        return (
+            icon_cfg["icon"],
+            icon_cfg.get("title"),
+            icon_cfg.get("url"),
+        )
+
     return {
         icon_id: Icon(
             ident=icon_id,
@@ -36,11 +54,7 @@ def config_based_icons(user_icons_and_actions: dict[str, IconSpec]) -> dict[str,
             columns=[],
             host_columns=[],
             service_columns=[],
-            render=lambda *args: (  # type: ignore[arg-type]
-                icon_cfg["icon"],
-                icon_cfg.get("title"),
-                icon_cfg.get("url"),
-            ),
+            render=partial(_render, icon_cfg=icon_cfg),
             type_="custom_icon",
             sort_index=icon_cfg.get("sort_index", 15),
             toplevel=icon_cfg.get("toplevel", False),

@@ -3,12 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
 import os
 
 import pytest
 
 from tests.testlib.site import Site
 from tests.testlib.utils import run
+
+LOGGER = logging.getLogger(__name__)
 
 
 def _reinstall_command(distro: str) -> list[str]:
@@ -30,6 +33,8 @@ def _reinstall_command(distro: str) -> list[str]:
 def test_apache_restart_trigger(site: Site) -> None:
     assert site.is_running()
     previous_logs = site.read_file("var/log/apache/error_log")
-    run(_reinstall_command(os.environ.get("DISTRO", "")), check=True, sudo=True)
+    process = run(_reinstall_command(os.environ.get("DISTRO", "")), check=True, sudo=True)
+    logging.info("STDOUT: %s", process.stdout)
+    logging.info("STDERR: %s", process.stderr)
     logs = site.read_file("var/log/apache/error_log")
     assert "caught SIGTERM, shutting down" in logs.removeprefix(previous_logs)

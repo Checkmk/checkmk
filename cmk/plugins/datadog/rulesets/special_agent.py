@@ -5,7 +5,7 @@
 from collections.abc import Callable, Mapping
 
 from cmk.ccc.version import Edition, edition
-from cmk.gui.form_specs.private import ListExtended
+from cmk.gui.form_specs.unstable import ListExtended
 from cmk.gui.mkeventd import (
     service_levels,
     syslog_facilities,

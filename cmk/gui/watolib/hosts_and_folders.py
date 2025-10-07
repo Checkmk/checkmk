@@ -3449,16 +3449,19 @@ class Host:
         if self.is_contact(user):
             return
 
+        if len(self.groups()[0]) > 0:
+            group_sentence = _(
+                "To get access, ensure your user is in a contact "
+                "group specified in the host's permissions: <b>%s</b>."
+            ) % ", ".join(self.groups()[0])
+        else:
+            group_sentence = _(
+                "Access is restricted, but no contact groups are assigned in the host's permissions."
+            )
+
         raise MKAuthException(
-            _(
-                "Sorry, you have no permission on the host '<b>%s</b>'. The hosts contact "
-                "groups are <b>%s</b>, your contact groups are <b>%s</b>."
-            )
-            % (
-                self.name(),
-                ", ".join(self.groups()[0]),
-                ", ".join(user.contact_groups),
-            )
+            _("You cannot edit the configuration for host '<b>%s</b>'. %s")
+            % (self.name(), group_sentence)
         )
 
     def is_contact(self, user_: LoggedInUser) -> bool:

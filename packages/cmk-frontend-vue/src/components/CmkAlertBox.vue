@@ -21,13 +21,13 @@ const props = withDefaults(defineProps<CmkAlertBoxProps>(), {
 const alertIconName = computed(() => {
   switch (props.variant) {
     case 'error':
-      return 'alert_crit'
+      return 'alert-crit'
     case 'warning':
-      return 'alert_warn'
+      return 'alert-warn'
     case 'success':
-      return 'alert_up'
+      return 'alert-up'
     default:
-      return 'about_checkmk'
+      return 'about-checkmk'
   }
 })
 

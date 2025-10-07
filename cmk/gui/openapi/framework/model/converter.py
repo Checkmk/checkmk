@@ -96,15 +96,16 @@ class RegistryConverter[T]:
         return self._registry[value]
 
 
-@dataclass(slots=True)
+@dataclass(kw_only=True, slots=True)
 class HostConverter:
     type PermissionType = Literal["setup_write", "setup_read", "monitor"]
 
     permission_type: PermissionType = "monitor"
+    should_be_cluster: bool | None = None
 
     def host(self, value: str) -> Host:
         if host := Host.host(HostName(value)):
-            self._verify_user_permissions(host)
+            self._verify(host)
             return host
 
         raise ValueError(f"Host not found: {value!r}")
@@ -112,7 +113,7 @@ class HostConverter:
     def host_name(self, value: str) -> HostName:
         name = HostName(value)
         if host := Host.host(name):
-            self._verify_user_permissions(host)
+            self._verify(host)
             return name
 
         raise ValueError(f"Host not found: {value!r}")
@@ -125,6 +126,11 @@ class HostConverter:
 
         return name
 
+    def _verify(self, host: Host) -> None:
+        """Run all configured verifications for the host."""
+        self._verify_user_permissions(host)
+        self._verify_cluster(host)
+
     def _verify_user_permissions(self, host: Host) -> None:
         if self.permission_type == "monitor":
             return
@@ -132,6 +138,14 @@ class HostConverter:
         host.permissions.need_permission("read")
         if self.permission_type == "setup_write":
             host.permissions.need_permission("write")
+
+    def _verify_cluster(self, host: Host) -> None:
+        if self.should_be_cluster is None:
+            return
+        if self.should_be_cluster and not host.is_cluster():
+            raise ValueError(f"Host {host.name!r} is not a cluster host, but should be.")
+        if not self.should_be_cluster and host.is_cluster():
+            raise ValueError(f"Host {host.name!r} is a cluster host, but should not be.")
 
 
 @dataclass(slots=True)

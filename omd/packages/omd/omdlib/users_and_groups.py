@@ -249,8 +249,8 @@ def _group_by_id(id_: int) -> grp.struct_group:
     return grp.getgrgid(id_)
 
 
-def switch_to_site_user(site: "SiteContext") -> None:
-    p = pwd.getpwnam(site.name)
+def switch_to_site_user(site_name: str) -> None:
+    p = pwd.getpwnam(site_name)
     uid = p.pw_uid
     gid = p.pw_gid
     os.chdir(p.pw_dir)
@@ -262,7 +262,7 @@ def switch_to_site_user(site: "SiteContext") -> None:
     # If you know something better, that does not rely on an external
     # command (and that does not try to parse around /etc/group, of
     # course), then please tell mk -> mk@mathias-kettner.de.
-    os.setgroups(_groups_of(site.name))
+    os.setgroups(_groups_of(site_name))
     os.setuid(uid)
     os.umask(0o077)
 

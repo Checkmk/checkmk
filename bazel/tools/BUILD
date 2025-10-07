@@ -1,15 +1,49 @@
-load("@aspect_bazel_lib//lib:expand_template.bzl", "expand_template")
+load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:native_binary.bzl", "native_binary")
 load("@cmk_requirements//:requirements.bzl", "requirement")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@npm//bazel/tools:prettier/package_json.bzl", prettier_bin = "bin")
 load("@rules_mypy//mypy:mypy.bzl", "mypy_cli")
+load("@rules_python//python:defs.bzl", "py_binary")
+load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
+load("//bazel/rules:sh_expand_template.bzl", "sh_expand_template")
+
+npm_link_all_packages(name = "node_modules")
+
+js_library(
+    name = "prettierrc",
+    srcs = ["prettier.config.cjs"],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        ":node_modules/@trivago/prettier-plugin-sort-imports",
+    ],
+)
+
+py_console_script_binary(
+    name = "djlint",
+    data = ["//:pyproject.toml"],
+    pkg = "@cmk_requirements//djlint:pkg",
+)
 
 mypy_cli(
-    name = "mypy_cli",
+    name = "mypy_cli_original",
     mypy_requirement = requirement("mypy"),
     deps = [
         # for `plugins = ["pydantic.mypy"]`
+        requirement("pydantic"),
+    ],
+)
+
+# Custom mypy wrapper that filters problematic MYPYPATH entries
+py_binary(
+    name = "mypy_cli",
+    srcs = ["mypy_wrapper.py"],
+    data = [":mypy_cli_original"],
+    main = "mypy_wrapper.py",
+    deps = [
+        requirement("mypy"),
         requirement("pydantic"),
     ],
 )
@@ -19,8 +53,14 @@ format_multirun(
     name = "format",
     c = "@clang-linux-x86_64//:bin/clang-format",
     cc = "@clang-linux-x86_64//:bin/clang-format",
-    python = "@aspect_rules_lint//format:ruff",
+    css = ":prettier",
+    html = ":prettier",
+    html_jinja = ":djlint",
+    javascript = ":prettier",
+    python = "@multitool_hub//tools/ruff",
     rust = "@rules_rust//tools/upstream_wrapper:rustfmt",
+    shell = ":shfmt",
+    starlark = ":buildifier",
     toml = ":taplo_quiet",
     visibility = ["//visibility:public"],
 )
@@ -59,19 +99,6 @@ sh_binary(
     data = [":shellcheck_binary"],
 )
 
-copy_file(
-    name = "shfmt_binary",
-    src = "@shfmt//file",
-    out = "shfmt",
-)
-
-# Shell wrapper to execute shfmt in the callers working directory
-sh_binary(
-    name = "shfmt_bin",
-    srcs = ["run-shfmt"],
-    data = [":shfmt_binary"],
-)
-
 genrule(
     name = "taplo",
     srcs = ["@taplo.gz//file"],
@@ -80,22 +107,16 @@ genrule(
     executable = True,
 )
 
-expand_template(
-    name = "taplo_quiet_tp",
-    out = "taplo_wrapper.sh",
-    data = [":taplo_bin"],
+sh_expand_template(
+    name = "taplo_quiet",
+    src = ":taplo_bin",
     substitutions = {"{taplo_bin}": "$(execpath :taplo_bin)"},
     template = [
         "#!/bin/sh",
         'exec env RUST_LOG=warn "$BUILD_WORKSPACE_DIRECTORY/{taplo_bin}" "$@"',
         "",
     ],
-)
-
-sh_binary(
-    name = "taplo_quiet",
-    srcs = [":taplo_quiet_tp"],
-    data = [":taplo"],
+    visibility = ["//visibility:public"],
 )
 
 # TODO: Should we use buildifier more in the way aspect does?
@@ -110,4 +131,28 @@ alias(
 alias(
     name = "uv",
     actual = "@multitool//tools/uv",
+)
+
+sh_expand_template(
+    name = "shfmt",
+    src = "@multitool//tools/shfmt",
+    substitutions = {"{shfmt_bin}": "$(execpath @multitool//tools/shfmt)"},
+    template = [
+        "#!/bin/sh",
+        'cd "${BUILD_WORKSPACE_DIRECTORY:=.}" || exit 1',
+        'exec "$BUILD_WORKSPACE_DIRECTORY/{shfmt_bin}" --indent 4 -ci "$@"',
+        "",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+prettier_bin.prettier_binary(
+    name = "prettier",
+    data = [":prettierrc"],
+    env = {"BAZEL_BINDIR": "."},
+    fixed_args = [
+        "--config=\"$$JS_BINARY__RUNFILES\"/$(rlocationpath :prettierrc)",
+        "--ignore-path=\"$$BUILD_WORKSPACE_DIRECTORY/.prettierignore\"",
+        "--log-level=warn",
+    ],
 )

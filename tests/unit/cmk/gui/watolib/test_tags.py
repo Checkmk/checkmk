@@ -82,7 +82,7 @@ wato_tags = %s
         tags_mk.unlink()
 
 
-def test_tag_config_load(request_context: None, test_cfg: tags.TagConfig) -> None:
+def test_tag_config_load(test_cfg: tags.TagConfig) -> None:
     assert len(test_cfg.tag_groups) == 2
     assert len(test_cfg.aux_tag_list.get_tags()) == 1
 

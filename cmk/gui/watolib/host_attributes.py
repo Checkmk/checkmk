@@ -25,8 +25,10 @@ from cmk.ccc.user import UserId
 from cmk.fields import String
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.converter import TransformDataForLegacyFormatOrRecomposeFunction
-from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
+from cmk.gui.form_specs.unstable import SingleChoiceElementExtended, SingleChoiceExtended
+from cmk.gui.form_specs.unstable.legacy_converter import (
+    TransformDataForLegacyFormatOrRecomposeFunction,
+)
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -105,14 +107,15 @@ class MetaData(TypedDict):
     updated_at: NotRequired[float]
 
 
-class OTelMetricsAssociationFilter(TypedDict):
+class MetricsAssociationFilter(TypedDict):
     attribute_type: Literal["resource", "scope", "data_point"]
     attribute_key: str
     attribute_value: str
 
 
-class OTelMetricsAssociationEnabled(TypedDict):
-    attribute_filters: Sequence[OTelMetricsAssociationFilter]
+class MetricsAssociationEnabled(TypedDict):
+    attribute_filters: Sequence[MetricsAssociationFilter]
+    host_name_resource_attribute_key: str
 
 
 # Possible improvements for the future:
@@ -136,8 +139,8 @@ class BuiltInHostAttributes(TypedDict, total=False):
     additional_ipv4addresses: Sequence[HostAddress]
     additional_ipv6addresses: Sequence[HostAddress]
     snmp_community: SNMPCredentials
-    otel_metrics_association: (
-        tuple[Literal["enabled"], OTelMetricsAssociationEnabled] | tuple[Literal["disabled"], None]
+    metrics_association: (
+        tuple[Literal["enabled"], MetricsAssociationEnabled] | tuple[Literal["disabled"], None]
     )
     parents: Sequence[HostName]
     network_scan: NetworkScanSpec

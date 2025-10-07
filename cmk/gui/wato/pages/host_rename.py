@@ -36,11 +36,13 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
+from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import ActionResult, CustomUserAttrSpec, PermissionName
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Checkbox,
@@ -181,6 +183,9 @@ class ModeBulkRenameHost(WatoMode):
                             renamings=_renamings_to_job_args(renamings),
                             custom_user_attributes=config.wato_user_attrs,
                             site_configs=config.sites,
+                            user_permission_config=UserPermissionSerializableConfig.from_global_config(
+                                config
+                            ),
                             pprint_value=config.wato_pprint_config,
                             use_git=config.wato_use_git,
                             debug=config.debug,
@@ -448,13 +453,16 @@ class RenameHostsJobArgs(BaseModel, frozen=True):
     debug: bool
     site_configs: Mapping[SiteId, SiteConfiguration]
     custom_user_attributes: Sequence[CustomUserAttrSpec]
+    user_permission_config: UserPermissionSerializableConfig
 
 
 def rename_hosts_job_entry_point(
     job_interface: BackgroundProcessInterface,
     args: RenameHostsJobArgs,
 ) -> None:
-    with job_interface.gui_context():
+    with job_interface.gui_context(
+        UserPermissions.from_serialized_config(args.user_permission_config, permission_registry)
+    ):
         renamings = _renamings_from_job_args(args.renamings)
 
         actions, auth_problems = _rename_hosts(
@@ -589,6 +597,9 @@ class ModeRenameHost(WatoMode):
                         renamings=_renamings_to_job_args(renamings),
                         custom_user_attributes=config.wato_user_attrs,
                         site_configs=config.sites,
+                        user_permission_config=UserPermissionSerializableConfig.from_global_config(
+                            config
+                        ),
                         pprint_value=config.wato_pprint_config,
                         use_git=config.wato_use_git,
                         debug=config.debug,

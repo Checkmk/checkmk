@@ -15,7 +15,7 @@ THREE_TO_TWO := $(UVENV) 3to2
 BANDIT := $(UVENV) bandit
 SEMGREP := $(realpath semgrep)/run-semgrep
 SHELLCHECK := bazel run --ui_event_filters=-info,-stderr //bazel/tools:shellcheck_bin --
-SHFMT := bazel run --ui_event_filters=-info,-stderr //bazel/tools:shfmt_bin --
+SHFMT := bazel run --ui_event_filters=-info,-stderr //bazel/tools:shfmt --
 TAPLO := bazel run --ui_event_filters=-info,-stderr //bazel/tools:taplo_bin --
 ADDITIONAL_MYPY_ARGS := $(JUNIT_XML)
 # Please note: We can currently not include defines.make as it would override
@@ -82,7 +82,8 @@ DOCKERABLE_TESTS := \
 	test-unit-shell \
 	test-unit-testlib \
 	test-werks \
-	test-semgrep
+	test-semgrep \
+	test-medium-chain
 
 # HINT: the "layering_violation" checker is not production ready and left out on purpose
 PYLINT_CUSTOM_CHECKERS := cmk-module-layer-violation,localization-html-tags-checker,localization-literal-string-checker
@@ -149,7 +150,8 @@ bandit.ini:
 	( echo exclude: /tests >> bandit.ini )
 
 format-shell:
-	cd .. && $(SHFMT) -w -i 4 -ci $$($(FIND_SHELL_FILES))
+	# The configuration is in `bazel/tools/BUILD` to avoid inconsistencies.
+	cd .. && $(SHFMT) --write $$($(FIND_SHELL_FILES))
 
 agent-plugin-unit/py2/test_%.py: agent-plugin-unit/test_%.py
 	mkdir -p "$(dir $@)"
@@ -241,7 +243,8 @@ test-format-python-format: ../pyproject.toml
 	exit $${PIPESTATUS[1]}
 
 test-format-shell:
-	cd .. && $(SHFMT) -d -i 4 -ci $$($(FIND_SHELL_FILES))
+	# The configuration is in `bazel/tools/BUILD` to avoid inconsistencies.
+	cd .. && $(SHFMT) --diff --apply-ignore $$($(FIND_SHELL_FILES))
 
 format-toml:
 	$(TAPLO) format ../pyproject.toml
@@ -406,10 +409,10 @@ test-werks:
 
 test-code-quality: test-license-headers test-requirements test-file-content test-werks
 
-test-mypy: test-mypy-cmk test-mypy-not-cmk test-mypy-agent-cisco-meraki
+test-mypy: test-mypy-cmk test-mypy-not-cmk
 
 test-mypy-cmk:
-	bazel build --config=mypy //cmk:lib_cmk_repo_no_meraki
+	bazel build --config=mypy //cmk:lib_cmk_repo
 
 test-mypy-not-cmk:
 	cd .. && $(UVENV) mypy \
@@ -417,13 +420,6 @@ test-mypy-not-cmk:
 	    $(ADDITIONAL_MYPY_ARGS) \
 	    --config-file="$(REPO_PATH)/pyproject.toml" \
 	    -- $$($(FIND_PYTHON_FILES) | grep -v "$(realpath ..)\/cmk\/")
-
-test-mypy-agent-cisco-meraki:
-	cd .. && $(UVENV) mypy \
-	    $(MYPY_ADDOPTS) \
-	    $(ADDITIONAL_MYPY_ARGS) \
-	    --config-file="$(REPO_PATH)/pyproject.toml" \
-	    -- cmk/plugins/cisco_meraki/special_agent/agent_cisco_meraki.py
 
 test-mypy-raw:
 	$(MAKE) test-mypy ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"
@@ -492,6 +488,21 @@ test-unit-all: test-doctest
 	    --test_env=TZ=$(RANDOM_TZ) \
 	    --test_arg="--numprocesses=4"
 
+# Default bazel coverage options are defined in .bazelrc.
+# With BAZEL_COVERAGE_ARGS you can pass additional arguments to bazel coverage command, for example
+# to specify source module to be included in the coverage report with instrumentation_filter option.
+# Example:
+#    BAZEL_COVERAGE_ARGS='--instrumentation_filter="//(cmk|packages|agents)[/:@]"' make -C tests test-unit-all-coverage
+#
+test-unit-all-coverage:
+	cd .. && \
+	    bazel coverage --test_verbose_timeout_warnings //tests/unit:all \
+	    --test_env=TZ=$(RANDOM_TZ) \
+		$(BAZEL_COVERAGE_ARGS) ; \
+		genhtml --title "Checkmk Unit Test Coverage"  \
+			--quiet \
+			--output results/coverage bazel-out/_coverage/_coverage_report.dat
+
 test-unit-testlib:
 	find -name '__pycache__' -exec rm -rf {} \; 2> /dev/null || true
 	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
@@ -533,3 +544,10 @@ what-gerrit-makes:
 	    -e BASE_COMMIT_ID=origin/master \
 	    -e WORKSPACE="$$WORKSPACE" \
 	    -e RESULTS="$$WORKSPACE/results"
+
+EXCLUDE_PATTERN_MEDIUM_CHAIN := unit|unit-shell|agent-plugin-unit|schemathesis_openapi|qa-test-data
+TEST_DIRS_MEDIUM_CHAIN := $(shell find $(realpath) -mindepth 1 -maxdepth 1 -type d | grep -v -E "/($(EXCLUDE_PATTERN_MEDIUM_CHAIN))$$")
+
+test-medium-chain:
+	$(PYTEST) --log-cli-level=INFO -m medium_test_chain \
+	$(TEST_DIRS_MEDIUM_CHAIN) \

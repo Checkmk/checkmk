@@ -19,6 +19,15 @@ platform(
     ],
 )
 
+platform(
+    name = "aarch64-linux-musl",
+    constraint_values = [
+        ":musl",
+        "@platforms//cpu:aarch64",
+        "@platforms//os:linux",
+    ],
+)
+
 constraint_setting(
     name = "linker",
     default_constraint_value = ":linker_unknown",

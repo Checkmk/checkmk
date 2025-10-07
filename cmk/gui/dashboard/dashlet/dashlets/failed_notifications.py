@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui import notifications
+from cmk.gui.config import Config
 from cmk.gui.dashboard.dashlet.base import Dashlet
 from cmk.gui.dashboard.type_defs import DashletConfig
 from cmk.gui.htmllib.html import html
@@ -63,7 +64,7 @@ class FailedNotificationsDashlet(Dashlet[FailedNotificationsDashletConfig]):
     height:32px;
 }"""
 
-    def show(self):
+    def show(self, config: Config) -> None:
         failed_notifications = notifications.number_of_failed_notifications(
             after=notifications.acknowledged_time()
         )

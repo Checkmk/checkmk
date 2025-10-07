@@ -29,7 +29,7 @@ def main() {
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
 
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
-    def branch_base_folder = package_helper.branch_base_folder(with_testing_prefix: true);
+    def branch_base_folder = package_helper.branch_base_folder(true);
 
     // Use the directory also used by tests/testlib/containers.py to have it find
     // the downloaded package.
@@ -70,7 +70,7 @@ def main() {
                 build_instance = smart_build(
                     // see global-defaults.yml, needs to run in minimal container
                     use_upstream_build: true,
-                    relative_job_name: "${branch_base_folder}/builders/build-cmk-distro-package",
+                    relative_job_name: "${branch_base_folder}/builders/trigger-cmk-distro-package",
                     build_params: [
                         CUSTOM_GIT_REF: effective_git_ref,
                         VERSION: params.VERSION,
@@ -92,16 +92,9 @@ def main() {
 
             if ("${build_instance.result}" != "SUCCESS") {
                 notify.notify_maintainer_of_package("${TEAM_CI_MAIL}".split(","), edition, "${build_instance.absoluteUrl}");
+                return false;
             }
-
-            // Without this stage in place the whole job would fail, unclear why
-            smart_stage(
-                name: "Say hello",
-                condition: build_instance,
-                raiseOnError: true,
-            ) {
-                sh("echo hello");
-            }
+            return true;
         }]
     }
 
@@ -111,7 +104,7 @@ def main() {
 
     smart_stage(
         name: "Trigger trigger-post-submit-test-cascade-heavy",
-        condition: trigger_post_submit_heavy_chain,
+        condition: trigger_post_submit_heavy_chain && currentBuild.result == "SUCCESS",
     ) {
         build(
             job: "${branch_base_folder}/trigger-post-submit-test-cascade-heavy",

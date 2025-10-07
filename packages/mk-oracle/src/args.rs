@@ -56,6 +56,13 @@ pub struct Args {
     /// Use `async` to run only asynchronous sections
     #[arg(short, long)]
     pub filter: Option<SectionFilter>,
+
+    /// Create plugins in the given directory and exit
+    /// The directory must exist
+    /// Linux: async plugin will be created in corresponding subdir
+    /// Windows: entry will be added to the bakery file
+    #[arg(short, long)]
+    pub generate_plugins: Option<PathBuf>,
 }
 
 impl Args {

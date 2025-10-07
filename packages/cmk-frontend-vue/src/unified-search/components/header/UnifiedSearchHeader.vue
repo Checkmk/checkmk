@@ -29,9 +29,11 @@ const { _t } = usei18n()
 const searchUtils = getSearchUtils()
 const searchInput = useTemplateRef('unified-search-input')
 searchUtils.onResetSearch(() => {
-  searchUtils.query.filters.value = []
-  searchUtils.query.input.value = ''
-  setFocus()
+  setTimeout(() => {
+    searchUtils.query.filters.value = []
+    searchUtils.query.input.value = ''
+    setFocus()
+  })
 })
 
 searchUtils.input?.onSetFocus(setFocus)
@@ -88,7 +90,7 @@ function checkEmptyBackspace(e: KeyboardEvent) {
 function onInputEnter() {
   if (isMonitoringSearch()) {
     if (searchUtils.query.input.value.length > 0) {
-      const url = 'search_open.py?q='.concat(searchUtils.query.input.value)
+      const url = 'search_open.py?q='.concat(searchUtils.query.input.value.replace(/^\//, ''))
       searchUtils.history?.add(
         new HistoryEntry(searchUtils.query.toQueryLike(), {
           title: searchUtils.query.input.value,
@@ -138,7 +140,10 @@ const getSearchInputPlaceholder = computed(() => {
             id="unified-search-input"
             ref="unified-search-input"
             v-model="searchUtils.query.input.value"
+            type="search"
+            role="search"
             class="unified-search-input"
+            :aria-label="getSearchInputPlaceholder"
             :placeholder="getSearchInputPlaceholder"
             @input="onInput"
             @keydown.delete="checkEmptyBackspace"
@@ -157,7 +162,10 @@ const getSearchInputPlaceholder = computed(() => {
           @click.stop="searchUtils.resetSearch"
         ></CmkIcon>
 
-        <div v-if="isMonitoringSearch()" class="unified-search-info-item">
+        <div
+          v-if="isMonitoringSearch() && searchUtils.query.input.value.length > 0"
+          class="unified-search-info-item"
+        >
           <span>{{ _t('Press') }}</span>
           <CmkKeyboardKey keyboard-key="enter" size="small"></CmkKeyboardKey>
           <span>{{ _t('to trigger host/service search') }}</span>

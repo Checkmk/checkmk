@@ -2,17 +2,16 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 from collections.abc import Mapping
-from typing import Any, Literal
-
-from pydantic import BaseModel, Field
+from typing import Any
 
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    HostLabel,
+    HostLabelGenerator,
     Result,
     Service,
     State,
@@ -20,20 +19,24 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.lib.uptime import check as check_uptime_seconds
 from cmk.plugins.lib.uptime import Section as UptimeSection
-
-
-class SectionVMInfo(BaseModel, frozen=True):
-    vmid: str
-    node: str
-    status: str
-    type: Literal["qemu", "lxc"]
-    name: str
-    uptime: int = Field(default=0, ge=0)
-    lock: str | None = None
+from cmk.plugins.proxmox_ve.lib.vm_info import SectionVMInfo
 
 
 def parse_proxmox_ve_vm_info(string_table: StringTable) -> SectionVMInfo:
     return SectionVMInfo.model_validate_json(string_table[0][0])
+
+
+def host_label_function(section: SectionVMInfo) -> HostLabelGenerator:
+    """
+    Generate Proxmox VE VM host labels.
+    Labels:
+        cmk/pve/entity:<entity_type>:
+            Shows that the object type is VM. It can be VM (qemu) or LXC (lxc).
+        cmk/pve/node:<node_name>:
+            The node of the Proxmox VE VM.
+    """
+    yield HostLabel("cmk/pve/entity", "vm" if section.type == "qemu" else "LXC")
+    yield HostLabel("cmk/pve/node", section.node)
 
 
 def discover_single(section: SectionVMInfo) -> DiscoveryResult:
@@ -66,6 +69,7 @@ def check_proxmox_ve_vm_info(params: Mapping[str, Any], section: SectionVMInfo) 
 agent_section_proxmox_ve_vm_info = AgentSection(
     name="proxmox_ve_vm_info",
     parse_function=parse_proxmox_ve_vm_info,
+    host_label_function=host_label_function,
 )
 
 check_plugin_proxmox_ve_vm_info = CheckPlugin(

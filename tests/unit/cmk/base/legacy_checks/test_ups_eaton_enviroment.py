@@ -39,9 +39,13 @@ def test_inventory_ups_eaton_enviroment(
             {"humidity": (65, 80), "remote_temp": (40, 50), "temp": (40, 50)},
             [["1", "40", "3"]],
             [
-                1,
-                "Temperature: 1 °C (warn/crit at 40 °C/50 °C), Remote-Temperature: 40 °C (warn/crit at 40 °C/50 °C)(!), Humidity: 3% (warn/crit at 65%/80%)",
-                [("temp", 1, 40, 50), ("remote_temp", 40, 40, 50), ("humidity", 3, 65, 80)],
+                (0, "Temperature: 1.0 °C", [("temp", 1, 40, 50)]),
+                (
+                    1,
+                    "Remote-Temperature: 40.0 °C (warn/crit at 40.0 °C/50.0 °C)",
+                    [("remote_temp", 40, 40, 50)],
+                ),
+                (0, "Humidity: 3.0%", [("humidity", 3, 65, 80)]),
             ],
         ),
     ],

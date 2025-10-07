@@ -11,6 +11,7 @@ from cmk.gui.views.inventory import _register_sorter
 from cmk.gui.views.inventory._display_hints import (
     _cmp_inv_generic,
     _decorate_sort_function,
+    _wrap_paint_function,
     AttributeDisplayHint,
 )
 from cmk.gui.views.inventory._paint_functions import inv_paint_generic
@@ -27,7 +28,7 @@ def test_registered_sorter_cmp() -> None:
         title="Product",
         short_title="Product",
         long_title=long_title,
-        paint_function=inv_paint_generic,
+        paint_function=_wrap_paint_function(inv_paint_generic),
         sort_function=_decorate_sort_function(_cmp_inv_generic),
         filter=FilterInvText(
             ident=name,

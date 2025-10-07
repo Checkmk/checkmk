@@ -5,4 +5,18 @@
  */
 import type { components } from '@/lib/rest-api-client/openapi_internal'
 
+import type { ConfiguredValues } from '@/dashboard-wip/components/filter/types.ts'
+
 export type FilterCollection = components['schemas']['FilterCollection']
+
+export enum FilterOrigin {
+  DASHBOARD = 'DASHBOARD',
+  QUICK_FILTER = 'QUICK_FILTER'
+}
+
+export interface ContextFilter {
+  configuredValues: ConfiguredValues // TODO: later replace with FilterHTTPVars
+  source: FilterOrigin
+}
+
+export type ContextFilters = Record<string, ContextFilter>

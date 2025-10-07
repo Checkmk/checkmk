@@ -3,49 +3,49 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersApplications,
+from cmk.gui.form_specs.generators.tuple_utils import TupleLevels
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import (
+    DictElement,
+    Dictionary,
+    Integer,
+    String,
 )
-from cmk.gui.valuespec import Dictionary, Integer, Migrate, TextInput, Tuple
+from cmk.rulesets.v1.form_specs.validators import LengthInRange
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 
-def _item_spec_ad_replication():
-    return TextInput(
-        title=_("Replication Partner"),
-        help=_("The name of the replication partner (Destination DC Site/Destination DC)."),
+def _item_spec_ad_replication() -> String:
+    return String(
+        title=Title("Replication Partner"),
+        help_text=Help("The name of the replication partner (Destination DC Site/Destination DC)."),
+        custom_validate=[LengthInRange(min_value=1)],
     )
 
 
-def _parameter_valuespec_ad_replication() -> Migrate:
-    return Migrate(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "failure_levels",
-                    Tuple(
-                        help=_("Upper levels for the number of replication failures"),
-                        elements=[
-                            Integer(title=_("Warning at"), unit=_("failures")),
-                            Integer(title=_("Critical at"), unit=_("failures")),
-                        ],
-                    ),
+def _form_spec_ad_replication() -> Dictionary:
+    return Dictionary(
+        elements={
+            "failure_levels": DictElement(
+                required=True,
+                parameter_form=TupleLevels(
+                    help_text=Help("Upper levels for the number of replication failures"),
+                    elements=[
+                        Integer(title=Title("Warning at failure count")),
+                        Integer(title=Title("Critical at failure count")),
+                    ],
                 ),
-            ],
-            optional_keys=[],
-        ),
-        migrate=lambda p: p if isinstance(p, dict) else {"failure_levels": p},
+            )
+        }
     )
 
 
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="ad_replication",
-        group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_ad_replication,
-        parameter_valuespec=_parameter_valuespec_ad_replication,
-        title=lambda: _("Active Directory Replication"),
-    )
+rule_spec_ad_replication = CheckParameters(
+    name="ad_replication",
+    title=Title("Active Directory Replication"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_form_spec_ad_replication,
+    condition=HostAndItemCondition(
+        item_title=Title("Replication Partner"), item_form=_item_spec_ad_replication()
+    ),
 )

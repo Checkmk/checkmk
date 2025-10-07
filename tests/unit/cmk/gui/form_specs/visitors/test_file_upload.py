@@ -1,0 +1,103 @@
+#!/usr/bin/env python3
+# Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+import io
+
+import pytest
+from werkzeug import datastructures as werkzeug_datastructures
+
+from cmk.ccc.user import UserId
+from cmk.gui.form_specs import get_visitor, RawDiskData, RawFrontendData, VisitorOptions
+from cmk.gui.form_specs.visitors.file_upload import (
+    FileUploadModel,
+    FileUploadVisitor,
+)
+from cmk.gui.http import request
+from cmk.gui.session import UserContext
+from cmk.gui.utils.roles import UserPermissions
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import (
+    FileUpload,
+)
+
+
+@pytest.fixture(scope="module", name="spec")
+def file_upload_spec() -> FileUpload:
+    return FileUpload(title=Title("some file"))
+
+
+def test_file_upload_content_encryption(
+    spec: FileUpload,
+    with_user: tuple[UserId, str],
+) -> None:
+    with UserContext(with_user[0], UserPermissions({}, {}, {}, [])):
+        # Data from disk (unencrypted)
+        visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
+        vue_value = visitor.to_vue(RawDiskData(("my_file", "text/ascii", b"FOO")))[1]
+        assert isinstance(vue_value, FileUploadModel)
+        assert vue_value.file_type == "text/ascii"
+        assert vue_value.file_content_encrypted is not None
+        assert FileUploadVisitor.decrypt_content(vue_value.file_content_encrypted) == b"FOO"
+
+        # Data edited in frontend (encrypted)
+        value_from_frontend = {
+            "input_uuid": "some_uuid",
+            "file_name": "my_file",
+            "file_type": "text/ascii",
+            "file_content_encrypted": FileUploadVisitor.encrypt_content(b"FOO"),
+        }
+        vue_value = visitor.to_vue(RawFrontendData(value_from_frontend))[1]
+        assert isinstance(vue_value, FileUploadModel)
+        assert vue_value.file_type == "text/ascii"
+        assert vue_value.file_content_encrypted is not None
+        assert FileUploadVisitor.decrypt_content(vue_value.file_content_encrypted) == b"FOO"
+
+
+def test_file_upload_invalid_data(
+    spec: FileUpload,
+    with_user: tuple[UserId, str],
+) -> None:
+    invalid_value = RawDiskData({"BROKEN": True})
+    with UserContext(with_user[0], UserPermissions({}, {}, {}, [])):
+        visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
+        vue_value = visitor.to_vue(invalid_value)[1]
+        assert isinstance(vue_value, FileUploadModel)
+        assert vue_value.file_name is None
+        assert len(visitor.validate(invalid_value)) == 1
+
+
+def test_file_upload_new_file_from_frontend(
+    spec: FileUpload,
+    with_user: tuple[UserId, str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    with (
+        UserContext(with_user[0], UserPermissions({}, {}, {}, [])),
+        monkeypatch.context() as m,
+    ):
+        m.setattr(
+            request,
+            "files",
+            werkzeug_datastructures.ImmutableMultiDict(
+                {
+                    "some_uuid": werkzeug_datastructures.FileStorage(
+                        stream=io.BytesIO(b"some data"),
+                        filename="some_filename",
+                        content_type="text/plain",
+                    )
+                }
+            ),
+        )
+        visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
+        value_from_frontend = RawFrontendData({"input_uuid": "some_uuid"})
+        vue_value = visitor.to_vue(value_from_frontend)[1]
+        assert isinstance(vue_value, FileUploadModel)
+        assert vue_value.file_content_encrypted is not None
+        assert FileUploadVisitor.decrypt_content(vue_value.file_content_encrypted) == b"some data"
+
+        disk_value = visitor.to_disk(value_from_frontend)
+        assert isinstance(disk_value, tuple)
+        assert disk_value[0] == "some_filename"
+        assert disk_value[1] == "text/plain"
+        assert disk_value[2] == b"some data"

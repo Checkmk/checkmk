@@ -61,7 +61,7 @@ a.more {
     display: flex;
 
     &:after {
-      content: url("images/icon_show_more.svg");
+      content: url('images/icon_show_more.svg');
     }
   }
 
@@ -74,7 +74,7 @@ a.more {
       display: flex;
 
       &:after {
-        content: url("images/icon_show_less.svg");
+        content: url('images/icon_show_less.svg');
       }
     }
   }
@@ -91,11 +91,11 @@ a.more {
       color: $font-color-green;
 
       div.show_more::after {
-        content: url("images/icon_show_more_green.svg");
+        content: url('images/icon_show_more_green.svg');
       }
 
       div.show_less::after {
-        content: url("images/icon_show_less_green.svg");
+        content: url('images/icon_show_less_green.svg');
       }
     }
 

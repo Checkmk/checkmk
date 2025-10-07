@@ -36,7 +36,6 @@ from cmk.fetchers import (
     TCPFetcher,
     TLSConfig,
 )
-from cmk.fetchers.config import make_cached_snmp_sections_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.helper_interface import SourceType
 from cmk.snmplib import SNMPBackendEnum, SNMPVersion
@@ -209,11 +208,6 @@ def dump_host(
         + "\n"
     )
 
-    oid_cache_dir = cmk.utils.paths.snmp_scan_cache_dir
-    stored_walk_path = cmk.utils.paths.snmpwalks_dir
-    walk_cache_path = cmk.utils.paths.var_dir / "snmp_cache"
-    file_cache_path = cmk.utils.paths.data_source_cache_dir
-    tcp_cache_path = cmk.utils.paths.tcp_cache_dir
     tls_config = TLSConfig(
         cas_dir=Path(cmk.utils.paths.agent_cas_dir),
         ca_store=Path(cmk.utils.paths.agent_cert_store),
@@ -242,12 +236,12 @@ def dump_host(
                     SNMPFetcherConfig(
                         on_error=OnError.RAISE,
                         missing_sys_description=config_cache.missing_sys_description,
-                        oid_cache_dir=oid_cache_dir,
                         selected_sections=NoSelectedSNMPSections(),
                         backend_override=None,
-                        stored_walk_path=stored_walk_path,
-                        walk_cache_path=walk_cache_path,
-                        section_cache_path=make_cached_snmp_sections_dir(cmk.utils.paths.var_dir),
+                        base_path=cmk.utils.paths.omd_root,
+                        relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
+                        relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
+                        relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
                         caching_config=make_parsed_snmp_fetch_intervals_config(
                             loaded_config=loaded_config,
                             ruleset_matcher=config_cache.ruleset_matcher,
@@ -259,8 +253,9 @@ def dump_host(
                 simulation_mode=simulation_mode,
                 file_cache_max_age=MaxAge.zero(),
                 snmp_backend=config_cache.get_snmp_backend(hostname),
-                file_cache_path=file_cache_path,
-                tcp_cache_path=tcp_cache_path,
+                file_cache_path_base=cmk.utils.paths.omd_root,
+                file_cache_path_relative=cmk.utils.paths.relative_data_source_cache_dir,
+                tcp_cache_path_relative=cmk.utils.paths.relative_tcp_cache_dir,
                 tls_config=tls_config,
                 computed_datasources=config_cache.computed_datasources(hostname),
                 datasource_programs=config_cache.datasource_programs(hostname),

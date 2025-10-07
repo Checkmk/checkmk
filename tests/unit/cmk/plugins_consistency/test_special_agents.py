@@ -16,7 +16,9 @@ from cmk.plugins.activemq.special_agent import agent_activemq
 from cmk.plugins.alertmanager.special_agents import agent_alertmanager
 from cmk.plugins.allnet_ip_sensoric.special_agent import agent_allnet_ip_sensoric
 from cmk.plugins.aws.special_agent import agent_aws, agent_aws_status
-from cmk.plugins.azure.special_agent import agent_azure, agent_azure_status
+from cmk.plugins.azure_deprecated.special_agent import agent_azure
+from cmk.plugins.azure_status.special_agent import agent_azure_status
+from cmk.plugins.azure_v2.special_agent import agent_azure_v2 as agent_azure_v2
 from cmk.plugins.bazel.lib import agent as agent_bazel
 from cmk.plugins.checkmk.special_agents import agent_bi
 from cmk.plugins.cisco.special_agent import agent_cisco_prime
@@ -66,6 +68,7 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "aws": agent_aws,
     "aws_status": agent_aws_status,
     "azure": agent_azure,
+    "azure_v2": agent_azure_v2,
     "azure_status": agent_azure_status,
     "bazel_cache": agent_bazel,
     "bi": agent_bi,
@@ -75,7 +78,6 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "datadog": agent_datadog,
     "ddn_s2a": None,
     "elasticsearch": agent_elasticsearch,
-    "emcvnx": None,
     "fritzbox": agent_fritzbox,
     "gcp": agent_gcp,
     "gcp_status": agent_gcp_status,
@@ -132,6 +134,20 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
         "ip_region_instance",
     ],
     "azure": [
+        "--authority",
+        "global",
+        "--subscription",
+        "SUBSCRIPTION",
+        "--client",
+        "CLIENT",
+        "--tenant",
+        "TENANT",
+        "--secret",
+        "SECRET",
+        "--cache-id",
+        "HOSTNAME",
+    ],
+    "azure_v2": [
         "--authority",
         "global",
         "--subscription",

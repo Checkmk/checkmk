@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
 from contextlib import AbstractContextManager as ContextManager
 from contextlib import nullcontext
 
@@ -19,6 +18,20 @@ from cmk.gui.logged_in import user
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.audit_log import log_audit
+from cmk.livestatus_client.commands import (
+    DisableEventHandlers,
+    DisableFlapDetection,
+    DisableNotifications,
+    DisablePerformanceData,
+    EnableEventHandlers,
+    EnableFlapDetection,
+    EnableNotifications,
+    EnablePerformanceData,
+    StartExecutingHostChecks,
+    StartExecutingServiceChecks,
+    StopExecutingHostChecks,
+    StopExecutingServiceChecks,
+)
 
 from ._base import PageHandlers, SidebarSnapin
 from ._helpers import write_snapin_exception
@@ -182,26 +195,25 @@ class MasterControlSnapin(SidebarSnapin):
         column = request.get_ascii_input_mandatory("switch")
         state = request.get_integer_input_mandatory("state")
         commands = {
-            ("enable_notifications", 1): "ENABLE_NOTIFICATIONS",
-            ("enable_notifications", 0): "DISABLE_NOTIFICATIONS",
-            ("execute_service_checks", 1): "START_EXECUTING_SVC_CHECKS",
-            ("execute_service_checks", 0): "STOP_EXECUTING_SVC_CHECKS",
-            ("execute_host_checks", 1): "START_EXECUTING_HOST_CHECKS",
-            ("execute_host_checks", 0): "STOP_EXECUTING_HOST_CHECKS",
-            ("enable_flap_detection", 1): "ENABLE_FLAP_DETECTION",
-            ("enable_flap_detection", 0): "DISABLE_FLAP_DETECTION",
-            ("process_performance_data", 1): "ENABLE_PERFORMANCE_DATA",
-            ("process_performance_data", 0): "DISABLE_PERFORMANCE_DATA",
-            ("enable_event_handlers", 1): "ENABLE_EVENT_HANDLERS",
-            ("enable_event_handlers", 0): "DISABLE_EVENT_HANDLERS",
+            ("enable_notifications", 1): EnableNotifications(),
+            ("enable_notifications", 0): DisableNotifications(),
+            ("execute_service_checks", 1): StartExecutingServiceChecks(),
+            ("execute_service_checks", 0): StopExecutingServiceChecks(),
+            ("execute_host_checks", 1): StartExecutingHostChecks(),
+            ("execute_host_checks", 0): StopExecutingHostChecks(),
+            ("enable_flap_detection", 1): EnableFlapDetection(),
+            ("enable_flap_detection", 0): DisableFlapDetection(),
+            ("process_performance_data", 1): EnablePerformanceData(),
+            ("process_performance_data", 0): DisablePerformanceData(),
+            ("enable_event_handlers", 1): EnableEventHandlers(),
+            ("enable_event_handlers", 0): DisableEventHandlers(),
         }
 
         command = commands.get((column, state))
         if not command:
             html.write_text_permissive(_("Command %s/%d not found") % (column, state))
             return
-
-        sites.live().command("[%d] %s" % (int(time.time()), command), site)
+        sites.live().command_obj(command, site)
         sites.live().set_only_sites([site])
         sites.live().query(
             "GET status\nWaitTrigger: program\nWaitTimeout: 10000\nWaitCondition: %s = %d\nColumns: %s\n"

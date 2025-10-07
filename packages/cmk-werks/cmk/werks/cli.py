@@ -8,20 +8,16 @@ import argparse
 import ast
 import datetime
 import errno
-import fcntl
 import os
 import shlex
-import struct
 import subprocess
 import sys
-import termios
 import time
 import traceback
-import tty
 from collections.abc import Iterator, Sequence
 from functools import cache
 from pathlib import Path
-from typing import ClassVar, Literal, NamedTuple, NoReturn, override, TypeVar
+from typing import ClassVar, Literal, NamedTuple, override, TypeVar
 
 from pydantic import BaseModel, Field
 
@@ -30,115 +26,38 @@ from . import parse_werk
 from .config import Config, load_config, try_load_current_version_from_defines_make
 from .convert import werkv1_metadata_to_werkv2_metadata
 from .format import format_as_werk_v2
-from .parse import WerkV2ParseResult
-
-T = TypeVar("T", bound="Stash")
-
-
-class Stash(BaseModel):
-    PATH: ClassVar[Path] = Path.home() / ".cmk-werk-ids"
-
-    stash_version: Literal["2"] = Field(default="2", alias="__version__")
-    ids_by_project: dict[str, list[int]]
-
-    def count(self) -> int:
-        """
-        total number of ids available in the stash
-        """
-        return sum(len(ids) for ids in self.ids_by_project.values())
-
-    def pick_id(self, *, project: str) -> "WerkId":
-        """
-        the id will still be in the stash, but it could be freed next.
-        """
-        try:
-            return WerkId(sorted(self.ids_by_project[project])[0])
-        except (KeyError, IndexError) as e:
-            raise RuntimeError(
-                "You have no Werk IDs. You can reserve 10 additional Werk IDs with 'werk ids 10'."
-            ) from e
-
-    def free_id(self, werk_id: "WerkId") -> None:
-        """
-        remove id from stash
-        """
-        removed = False
-        for project, ids in self.ids_by_project.items():
-            if werk_id.id in ids:
-                removed = True
-                ids.remove(werk_id.id)
-                if not ids:
-                    sys.stdout.write(
-                        f"\n{TTY_RED}"
-                        f"This was your last reserved ID for project {project}"
-                        f"{TTY_NORMAL}\n\n"
-                    )
-
-        if not removed:
-            raise RuntimeError(f"Could not find werk_id {werk_id} in any project.")
-
-    def add_id(self, werk_id: "WerkId", *, project: str) -> None:
-        """
-        put a id into the stash
-        """
-        # werks can be delete, but we don't want to lose the id, lets put it back to the stash
-        if project not in self.ids_by_project:
-            self.ids_by_project[project] = []
-        self.ids_by_project[project].append(werk_id.id)
-
-    @classmethod
-    def load_from_file(cls: type[T]) -> T:
-        if not cls.PATH.exists():
-            return cls.model_validate({"ids_by_project": {}})
-        content = cls.PATH.read_text(encoding="utf-8")
-        if not content:
-            return cls.model_validate({"ids_by_project": {}})
-        if content[0] == "[":
-            # we have a legacy file, from cmk project, we need to adapt it:
-            return cls.model_validate({"ids_by_project": {"cmk": ast.literal_eval(content)}})
-        return cls.model_validate_json(content)
-
-    def dump_to_file(self) -> None:
-        self.PATH.write_text(self.model_dump_json(by_alias=True), encoding="utf-8")
-
-
-class WerkId:
-    __slots__ = ("__id",)
-
-    def __init__(self, id: int):  # noqa: A002
-        self.__id = id
-
-    @override
-    def __repr__(self) -> str:
-        return f"<WerkId {self.__id:0>5}>"
-
-    @override
-    def __str__(self) -> str:
-        return f"{self.__id:0>5}"
-
-    @property
-    def id(self) -> int:
-        return self.__id
-
-    @override
-    def __eq__(self, other: object) -> bool:
-        if isinstance(other, self.__class__):
-            return self.id == other.id
-        return False
-
-    @override
-    def __hash__(self) -> int:
-        return hash(self.__id)
-
-
-class Werk(NamedTuple):
-    path: Path
-    id: WerkId
-    content: WerkV2ParseResult
-
-    @property
-    def date(self) -> datetime.datetime:
-        return datetime.datetime.fromisoformat(self.content.metadata["date"])
+from .in_out_elements import (
+    bail_out,
+    get_input,
+    get_tty_size,
+    grep_colors,
+    input_choice,
+    TTY_BG_WHITE,
+    TTY_BLUE,
+    TTY_BOLD,
+    TTY_CYAN,
+    TTY_GREEN,
+    TTY_NORMAL,
+    TTY_RED,
+)
+from .meisterwerk import (
+    Choice,
+    display_evaluation,
+    display_rewritten_werk,
+    display_user_understanding,
+    evaluate_werk,
+    propose_rewriting,
+    rewrite_werk,
+    user_understanding_of_werk,
+    build_meisterwerk_payload,
+)
+from .parse import WerkV2ParseResult, parse_werk_v2
+from .schemas.requests import Werk as WerkRequest
+from .schemas.werk import (
+    WerkId,
+    Werk,
+    Stash,
+)
 
 
 WerkVersion = Literal["v1", "v2"]
@@ -151,52 +70,6 @@ WERK_ID_RANGES = {
     "cmk": [(10_000, 1_000_000)],
     "cloudmk": [(1_000_000, 2_000_000)],
 }
-
-
-# colored output, if stdout is a tty
-if sys.stdout.isatty():
-    TTY_RED = "\033[31m"
-    TTY_GREEN = "\033[32m"
-    TTY_YELLOW = "\033[33m"
-    TTY_BLUE = "\033[34m"
-    TTY_MAGENTA = "\033[35m"
-    TTY_CYAN = "\033[36m"
-    TTY_WHITE = "\033[37m"
-    TTY_BG_RED = "\033[41m"
-    TTY_BG_GREEN = "\033[42m"
-    TTY_BG_YELLOW = "\033[43m"
-    TTY_BG_BLUE = "\033[44m"
-    TTY_BG_MAGENTA = "\033[45m"
-    TTY_BG_CYAN = "\033[46m"
-    TTY_BG_WHITE = "\033[47m"
-    TTY_BOLD = "\033[1m"
-    TTY_UNDERLINE = "\033[4m"
-    TTY_NORMAL = "\033[0m"
-
-else:
-    TTY_RED = ""
-    TTY_GREEN = ""
-    TTY_YELLOW = ""
-    TTY_BLUE = ""
-    TTY_MAGENTA = ""
-    TTY_CYAN = ""
-    TTY_WHITE = ""
-    TTY_BG_RED = ""
-    TTY_BG_GREEN = ""
-    TTY_BG_BLUE = ""
-    TTY_BG_MAGENTA = ""
-    TTY_BG_CYAN = ""
-    TTY_BG_WHITE = ""
-    TTY_BOLD = ""
-    TTY_UNDERLINE = ""
-    TTY_NORMAL = ""
-
-
-grep_colors = [
-    TTY_BOLD + TTY_MAGENTA,
-    TTY_BOLD + TTY_CYAN,
-    TTY_BOLD + TTY_GREEN,
-]
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -335,6 +208,46 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     )
     parser_preview.set_defaults(func=main_preview)
 
+    # MEISTERWERK
+    parser_meisterwerk = subparsers.add_parser(
+        "meisterwerk", help="Use the ai tool to evaluate or rewrite a werk"
+    )
+    meisterwerk_subparser = parser_meisterwerk.add_subparsers(dest="meisterwerk_command")
+
+    evaluate_parser = meisterwerk_subparser.add_parser("evaluate", help="Evaluate a werk")
+    evaluate_parser.add_argument(
+        "id",
+        type=int,
+        help="werk ID",
+    )
+
+    rewrite_parser = meisterwerk_subparser.add_parser("rewrite", help="Rewrite a werk")
+    rewrite_parser.add_argument(
+        "id",
+        type=int,
+        help="werk ID",
+    )
+    rewrite_parser.add_argument(
+        "-a",
+        "--append",
+        action="store_true",
+        help="append the rewrite to the existing werk printing it to stdout",
+    )
+
+    user_understanding_parser = meisterwerk_subparser.add_parser(
+        "user-understanding",
+        help="Produce a simulated understanding of the current werk from a user perspective",
+    )
+    user_understanding_parser.add_argument(
+        "id",
+        type=int,
+        help="werk ID",
+    )
+
+    evaluate_parser.set_defaults(func=main_evaluate)
+    rewrite_parser.set_defaults(func=main_rewrite_werk)
+    user_understanding_parser.set_defaults(func=main_user_understanding)
+
     # URL
     parser_url = subparsers.add_parser("url", help="Show the online URL of a werk")
     parser_url.add_argument("id", type=int, help="werk ID")
@@ -352,23 +265,6 @@ def werk_path_by_id(werk_id: WerkId) -> Path:
     if path.exists():
         return path
     raise RuntimeError(f"Can not find werk with id={werk_id.id}")
-
-
-def get_tty_size() -> tuple[int, int]:
-    try:
-        ws = bytearray(8)
-        fcntl.ioctl(sys.stdout.fileno(), termios.TIOCGWINSZ, ws)
-        lines, columns, _x, _y = struct.unpack("HHHH", ws)
-        if lines > 0 and columns > 0:
-            return lines, columns
-    except OSError:
-        pass
-    return (24, 99999)
-
-
-def bail_out(text: str, exit_code: int = 1) -> NoReturn:
-    sys.stderr.write(text + "\n")
-    sys.exit(exit_code)
 
 
 BASE_DIR = ""
@@ -705,71 +601,6 @@ def main_show(args: argparse.Namespace) -> None:
     save_last_werkid(ids[-1])
 
 
-def get_input(what: str, default: str = "") -> str:
-    sys.stdout.write(f"{what}: ")
-    sys.stdout.flush()
-    value = sys.stdin.readline().strip()
-    if value == "":
-        return default
-    return value
-
-
-def getch() -> str:
-    # allow piping in the answers:
-    if not sys.stdin.isatty():
-        value = sys.stdin.readline().strip()
-        if not value:
-            raise RuntimeError("could not read character from stdin")
-        return value
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
-    try:
-        tty.setraw(sys.stdin.fileno())
-        ch = sys.stdin.read(1)
-    finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-    if ord(ch) == 3:
-        raise KeyboardInterrupt()
-    return ch
-
-
-def input_choice(
-    what: str, choices: list[str] | list[tuple[str, str]] | list[tuple[str, str, str]]
-) -> str:
-    next_index = 0
-    ctc = {}
-    texts = []
-    for choice in choices:
-        if isinstance(choice, tuple):
-            choice = choice[0]
-
-        added = False
-
-        # Find an identifying character for the input choice. In case all possible
-        # characters are already used start using unique numbers
-        for c in str(choice):
-            if c not in ".-_/" and c not in ctc:
-                ctc[c] = choice
-                texts.append(str(choice).replace(c, TTY_BOLD + c + TTY_NORMAL, 1))
-                added = True
-                break
-
-        if not added:
-            ctc[str(next_index)] = choice
-            texts.append(f"{TTY_BOLD}{next_index}{TTY_NORMAL}:{choice}")
-            next_index += 1
-
-    while True:
-        sys.stdout.write(f"{what} ({', '.join(texts)}): ")
-        sys.stdout.flush()
-        c = getch()
-        if c in ctc:
-            sys.stdout.write(f" {TTY_BOLD}{ctc[c]}{TTY_NORMAL}\n")
-            return ctc[c]
-
-        sys.stdout.write("\n")
-
-
 def get_edition_components(edition: str) -> list[tuple[str, str]]:
     return get_config().components + get_config().edition_components.get(edition, [])
 
@@ -818,14 +649,91 @@ def main_new(args: argparse.Namespace) -> None:
             metadata=werkv1_metadata_to_werkv2_metadata(metadata), description="\n"
         ),
     )
-
+    save_werk(werk, get_werk_file_version())
+    werk = meisterwerk_for_new_werk(werk_path, args.custom_files, werk_id, metadata)
     save_werk(werk, get_werk_file_version())
     git_add(werk)
     stash.free_id(werk_id)
     stash.dump_to_file()
-    edit_werk(werk_path, args.custom_files)
 
     sys.stdout.write(f"Werk {format_werk_id(werk_id)} saved.\n")
+
+
+def meisterwerk_for_new_werk(
+    werk_path: Path, custom_files: list[str], werk_id: WerkId, metadata: dict[str, str]
+) -> Werk:
+    edit_werk(werk_path, custom_files)
+    werk = load_werk(werk_path)
+    payload = build_meisterwerk_payload(werk)
+    evaluation = evaluate_werk(payload)
+    display_evaluation(evaluation)
+    if evaluation.evaluation.aggregated_scores.average_score <= 2.5:
+        rewritten_werk = rewrite_werk(payload, evaluation)
+        display_rewritten_werk(rewritten_werk)
+        choice = propose_rewriting()
+        if choice == Choice.APPEND:
+            text_to_append = (
+                f"\n\n\n<<<<<--- Rewritten Werk --->>>>\n\n{rewritten_werk.rewritten_text}"
+            )
+            with werk_path.open("a", encoding="utf-8") as f:
+                f.write(text_to_append)
+            edit_werk(werk_path, None, commit=False)
+        elif choice == Choice.REPLACE:
+            werk = Werk(
+                id=werk_id,
+                path=werk_path,
+                content=WerkV2ParseResult(
+                    metadata=werkv1_metadata_to_werkv2_metadata(metadata),
+                    description=rewritten_werk.rewritten_text,
+                ),
+            )
+            save_werk(werk, get_werk_file_version())
+        elif choice == Choice.KEEP:
+            pass
+        else:
+            bail_out("Invalid choice, aborting.")
+    return werk
+
+
+def main_evaluate(args: argparse.Namespace) -> None:
+    _, _, payload, _ = prepare_for_meisterwerk(args)
+    evaluation = evaluate_werk(payload)
+    display_evaluation(evaluation)
+
+
+def main_user_understanding(args: argparse.Namespace) -> None:
+    _, _, payload, werk_id = prepare_for_meisterwerk(args)
+    understanding = user_understanding_of_werk(payload)
+    display_user_understanding(understanding)
+
+
+def main_rewrite_werk(args: argparse.Namespace) -> None:
+    append_rewritten_werk: bool = args.append
+    werk_path, _, payload, werk_id = prepare_for_meisterwerk(args)
+    evaluation = evaluate_werk(payload)
+    rewritten_werk = rewrite_werk(payload, evaluation)
+    if append_rewritten_werk:
+        text_to_append = f"\n\n\n<<<<<--- Rewritten Werk --->>>>\n\n{rewritten_werk.rewritten_text}"
+        with werk_path.open("a", encoding="utf-8") as f:
+            f.write(text_to_append)
+        edit_werk(werk_path, None, commit=False)
+        save_last_werkid(werk_id)
+    else:
+        display_rewritten_werk(rewritten_werk)
+
+
+def prepare_for_meisterwerk(
+    args: argparse.Namespace,
+) -> tuple[Path, Werk, WerkRequest, WerkId]:
+    werk_id = WerkId(args.id) if args.id else get_last_werk()
+    werk_path = werk_path_by_id(werk_id)
+    if not werk_path.exists():
+        bail_out("No werk with this id.")
+    if werk_path.suffix != ".md":
+        bail_out("Can only evaluate werk v2 files (with .md suffix).")
+    werk = load_werk(werk_path)
+    payload = build_meisterwerk_payload(werk)
+    return werk_path, werk, payload, werk_id
 
 
 def get_werk_arg(arg: WerkId | None) -> WerkId:

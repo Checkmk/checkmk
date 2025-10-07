@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import defineCmkComponent from '@/lib/defineCmkComponent'
+import defineCmkComponent from '@/lib/web-component/defineCmkComponent'
 
 import { FormApp } from '@/form'
 
@@ -14,7 +14,9 @@ import NotificationParametersOverviewApp from '@/notification/NotificationParame
 import WelcomeSnapinSlideout from '@/welcome/components/snapin/WelcomeSnapinSlideout.vue'
 
 import Dashboard from './dashboard-wip/DashboardApp.vue'
+import LoadingTransition from './loading-transition/LoadingTransition.vue'
 import ChangesApp from './main-menu/ChangesApp.vue'
+import ModeCreateOTelConfApp from './mode-otel/ModeCreateOTelConfApp.vue'
 import ModeCreateRelayApp from './mode-relay/ModeCreateRelayApp.vue'
 import NotificationOverview from './notification/NotificationOverviewApp.vue'
 import QuickSetup from './quick-setup/QuickSetupApp.vue'
@@ -31,9 +33,11 @@ defineCmkComponent('cmk-agent-download', AgentDownload)
 defineCmkComponent('cmk-notification-parameters-overview', NotificationParametersOverviewApp)
 defineCmkComponent('cmk-graph-designer', GraphDesignerApp)
 defineCmkComponent('cmk-mode-host', ModeHostApp)
+defineCmkComponent('cmk-mode-create-otel-conf', ModeCreateOTelConfApp)
 defineCmkComponent('cmk-mode-create-relay', ModeCreateRelayApp)
 defineCmkComponent('cmk-unified-search', UnifiedSearchApp)
 defineCmkComponent('cmk-welcome', WelcomeApp)
 defineCmkComponent('cmk-welcome-snapin', WelcomeSnapin)
 defineCmkComponent('cmk-welcome-snapin-slideout', WelcomeSnapinSlideout)
 defineCmkComponent('cmk-main-menu-changes', ChangesApp)
+defineCmkComponent('cmk-loading-transition', LoadingTransition)

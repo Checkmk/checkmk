@@ -2,3 +2,4 @@ GitPython
 lxml
 markdown
 pydantic
+rich

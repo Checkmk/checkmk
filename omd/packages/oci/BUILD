@@ -13,7 +13,7 @@ pkg_files(
     name = "oci_light_win_x64_pkg",
     srcs = [":oci_light_win_x64"],
     attributes = pkg_attributes(mode = "0644"),
-    renames = {":oci_light_win_x64": "share/check_mk/agents/linux/oci_light_win_x64.zip"},
+    renames = {":oci_light_win_x64": "share/check_mk/agents/packages/mk-oracle/oci_light_win_x64.zip"},
     tags = ["manual"],
 )
 
@@ -97,7 +97,7 @@ pkg_files(
     name = "oci_light_lin_x64_files",
     srcs = [":oci_light_lin_x64"],
     attributes = pkg_attributes(mode = "0644"),
-    renames = {":oci_light_lin_x64": "share/check_mk/agents/linux/oci_light_lin_x64.zip"},
+    renames = {":oci_light_lin_x64": "share/check_mk/agents/packages/mk-oracle/oci_light_lin_x64.zip"},
     tags = ["manual"],
 )
 

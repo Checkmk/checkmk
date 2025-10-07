@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import type { StageInformation, WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -16,27 +16,39 @@ import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 
 import NextSteps from '@/welcome/components/NextSteps.vue'
 import OnboardingStepper from '@/welcome/components/OnboardingStepper.vue'
+import { getWelcomeStageInformation, markStepAsComplete } from '@/welcome/components/steps/utils.ts'
 
-import { totalSteps } from '../steps/stepComponents'
+import { type StepId, totalSteps } from '../steps/stepComponents'
 
 const { _t } = usei18n()
 
 const urls = ref<WelcomeUrls>()
 const stageInformation = ref<StageInformation>()
-const completedSteps = ref<number>(0)
 const slideInOpen = ref(false)
-const completed = ref(false)
 const nextStepsTitle = _t('Next steps with Checkmk')
 const firstStepsTitle = _t('First steps with Checkmk')
 const slideInTitle = ref(nextStepsTitle)
 
+const completedSteps = computed(() => stageInformation.value?.finished.length || 0)
+const completed = computed(() => completedSteps.value === totalSteps)
+
 function slideInEventListener(event: CustomEvent): void {
   urls.value = event.detail.urls
   stageInformation.value = event.detail.stage_information
-  completedSteps.value = stageInformation.value?.finished.length || 0
-  completed.value = completedSteps.value === totalSteps
   slideInTitle.value = completed.value ? nextStepsTitle : firstStepsTitle
   openSlideIn()
+}
+
+async function stepCompleted(stepId: StepId): Promise<void> {
+  if (urls.value) {
+    await markStepAsComplete(urls.value.mark_step_completed, stepId).then(async () => {
+      if (urls.value) {
+        stageInformation.value =
+          (await getWelcomeStageInformation(urls.value.get_stage_information)) ||
+          stageInformation.value
+      }
+    })
+  }
 }
 
 onMounted(() => {
@@ -73,6 +85,7 @@ function openSlideIn() {
       :urls="urls"
       :finished-steps="stageInformation?.finished || []"
       :show-heading="false"
+      @step-completed="stepCompleted"
     />
     <NextSteps v-else-if="urls" :urls="urls" />
   </CmkSlideInDialog>

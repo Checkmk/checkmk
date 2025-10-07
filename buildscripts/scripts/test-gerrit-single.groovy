@@ -20,7 +20,9 @@ def main() {
         "CIPARAM_CLEANUP_WORKSPACE",
     ]);
 
-    test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
+    def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
+    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+    def safe_branch_name = versioning.safe_branch_name();
 
     def env_var_list = [];
     def sec_var_list = [];
@@ -38,6 +40,10 @@ def main() {
     def extended_cmd = "set -x; ${params.CIPARAM_COMMAND}".replace("JOB_SPECIFIC_SPACE_PLACEHOLDER", "${checkout_dir}");
     def cmd_status = 1; // be sure to fail, in case of other failures
 
+    def do_use_node = currentBuild.fullProjectName.endsWith("/test-gerrit-single") || (kubernetes_inherit_from == "UNSET" && env.USE_K8S_GERRIT == "0");
+    def do_use_k8s = (kubernetes_inherit_from != "UNSET" && env.USE_K8S_GERRIT == "1");
+    def ensure_integrity = !(do_use_node ^ do_use_k8s);
+
     print(
         """
         |===== CONFIGURATION ===============================
@@ -52,8 +58,21 @@ def main() {
         |extended_cmd.......................|${extended_cmd}|
         |CIPARAM_RESULT_CHECK_FILE_PATTERN..|${params.CIPARAM_RESULT_CHECK_FILE_PATTERN}|
         |result_dir.........................|${result_dir}|
+        |do_use_node........................|${do_use_node}|
+        |do_use_k8s.........................|${do_use_k8s}|
+        |ensure_integrity...................|${ensure_integrity}|
         |===================================================
         """.stripMargin());
+
+    smart_stage(
+        name: "Ensure k8s integrity",
+        condition: ensure_integrity,
+    ) {
+        println("The job config has to be disabled by the Jenkins env flag 'USE_K8S_GERRIT' and by not setting 'kubernetes_inherit_from' in checkmk_ci");
+        println("kubernetes_inherit_from: ${kubernetes_inherit_from}");
+        println("env.USE_K8S_GERRIT: ${env.USE_K8S_GERRIT}");
+        raise("k8s for CV has to be turned off via Jenkins env flag 'USE_K8S_GERRIT' AND checkmk_ci 'kubernetes_inherit_from'");
+    }
 
     smart_stage(
         name: "Fetch git notes/werk_mail",
@@ -116,7 +135,10 @@ def main() {
         }
     }
 
-    stage(params.CIPARAM_NAME) {
+    smart_stage(
+        name: params.CIPARAM_NAME,
+        condition: do_use_node,
+    ) {
         dir("${checkout_dir}") {
             inside_container(privileged: true, set_docker_group_id: true) {
                 withCredentials(credentials) {
@@ -136,6 +158,36 @@ def main() {
                                     cmd_status = sh(script: "${extended_cmd}", returnStatus: true);
                                 }
                             }
+
+                            archiveArtifacts(
+                                artifacts: "${result_dir}/**",
+                                fingerprint: true,
+                            );
+
+                            /// make the stage fail if the command returned nonzero
+                            sh("exit ${cmd_status}");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    smart_stage(
+        name: "${params.CIPARAM_NAME} k8s",
+        condition: do_use_k8s,
+    ) {
+        dir("${checkout_dir}") {
+            def container_name = "ubuntu-2404-${safe_branch_name}-latest";
+            println("'execute_test' is using k8s container '${container_name}'");
+            container(container_name) {
+                withCredentials(credentials) {
+                    withEnv(env_var_list) {
+                        catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                            if (params.CIPARAM_DIR) {
+                                extended_cmd = "cd ${params.CIPARAM_DIR}; ${extended_cmd}";
+                            }
+                            cmd_status = sh(script: "${extended_cmd}", returnStatus: true);
 
                             archiveArtifacts(
                                 artifacts: "${result_dir}/**",

@@ -34,8 +34,8 @@ class NodeModelFactory(ModelFactory):
         pytest.param(
             NodeModelFactory.build(
                 name="cpu1",
-                processor_utilization_raw=30,
-                processor_utilization_base=100,
+                processor_utilization=30,
+                processor_utilization_timestamp="2025-09-30T15:00:00Z",
                 cpu_count=2,
                 version={"generation": 8, "major": 15, "minor": 1},
             ),
@@ -46,65 +46,14 @@ class NodeModelFactory(ModelFactory):
         pytest.param(
             NodeModelFactory.build(
                 name="cpu1",
-                processor_utilization_raw=30,
-                processor_utilization_base=100,
+                processor_utilization=30,
+                processor_utilization_timestamp="2025-09-30T15:00:00Z",
                 cpu_count=2,
                 version={"generation": 8, "major": 15, "minor": 1},
             ),
             {"levels": (30.0, 95.0)},
             State.WARN,
             id="cpu utilization status warn",
-        ),
-        pytest.param(
-            NodeModelFactory.build(
-                name="cpu1",
-                processor_utilization_raw=45,
-                processor_utilization_base=160,
-                cpu_count=2,
-                version={
-                    "full": "NetApp Release 9.15.1P6: Fri Aug 04 00:26:53 UTC 2023",
-                    "generation": 9,
-                    "major": 15,
-                    "minor": 1,
-                },
-            ),
-            {"levels": (90.0, 95.0)},
-            State.OK,
-            id="cpu utilization status ok >= v.9.15.1",
-        ),
-        pytest.param(
-            NodeModelFactory.build(
-                name="cpu1",
-                processor_utilization_raw=45,
-                processor_utilization_base=160,
-                cpu_count=2,
-                version={
-                    "full": "NetApp Release 9.15.1P6: Fri Aug 04 00:26:53 UTC 2023",
-                    "generation": 9,
-                    "major": 15,
-                    "minor": 1,
-                },
-            ),
-            {"levels": (30.0, 95.0)},
-            State.WARN,
-            id="cpu utilization status warn >=  v.9.15.1",
-        ),
-        pytest.param(
-            NodeModelFactory.build(
-                name="cpu1",
-                processor_utilization_raw=30,
-                processor_utilization_base=100,
-                cpu_count=2,
-                version={
-                    "full": "NetApp Release 9.15.1P10: Fri Aug 04 00:26:53 UTC 2023",
-                    "generation": 8,
-                    "major": 15,
-                    "minor": 1,
-                },
-            ),
-            {"levels": (90.0, 95.0)},
-            State.OK,
-            id="cpu utilization status ok >= v.9.15.1P10",
         ),
     ],
 )
@@ -113,7 +62,6 @@ def test_check_netapp_ontap_cpu_utilization(
     params: Mapping[str, Any],
     expected_state: State,
 ) -> None:
-    get_value_store().update({"netapp_cpu_util": (60, 15)})
     section = {node_model.name: node_model}
 
     result = list(check_netapp_ontap_cpu_utilization(item="cpu1", params=params, section=section))
@@ -123,6 +71,45 @@ def test_check_netapp_ontap_cpu_utilization(
     assert isinstance(result[1], Metric)
     assert result[1].name == "util"
     assert result[2] == Result(state=State.OK, summary="Number of CPUs: 2 CPUs")
+
+
+@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.parametrize(
+    "node_model, params, expected_state",
+    [
+        pytest.param(
+            NodeModelFactory.build(
+                name="cpu1",
+                processor_utilization=30,
+                processor_utilization_timestamp="2025-09-30T15:00:00Z",
+                cpu_count=2,
+                version={"generation": 8, "major": 15, "minor": 1},
+            ),
+            {"levels": (90.0, 95.0), "average": 10},
+            State.OK,
+            id="cpu utilization status ok",
+        ),
+    ],
+)
+def test_check_netapp_ontap_cpu_utilization_average(
+    node_model: NodeModel,
+    params: Mapping[str, Any],
+    expected_state: State,
+) -> None:
+    get_value_store().update(
+        {"cpu_utilization.avg": (1759243800.0, 1759243800.0, 60)}
+    )  # 2025-09-30T14:50:00Z
+    section = {node_model.name: node_model}
+
+    result = list(check_netapp_ontap_cpu_utilization(item="cpu1", params=params, section=section))
+
+    assert isinstance(result[1], Result)
+    assert result[1].state == expected_state and result[1].summary.startswith(
+        "Total CPU (10 min average): 45.00%"
+    )
+    assert isinstance(result[2], Metric)
+    assert result[2].name == "util_average"
+    assert result[2] == Metric("util_average", 45.0, levels=(90.0, 95.0), boundaries=(0.0, None))
 
 
 @pytest.mark.usefixtures("initialised_item_state")

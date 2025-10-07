@@ -1,0 +1,60 @@
+interactions:
+- request:
+    body: '{"werk": {"title": "Unicode Test: \u00e9mojis \ud83d\ude80 and sp\u00ebcial
+      chars", "date": "2022-01-01T00:00:00Z", "level": "2", "versions": ["2.0.0"],
+      "werk_class": "feature", "component": "core", "compatible": true, "werk_text":
+      "This werk contains \u00e9mojis \ud83d\ude80, accented chars like caf\u00e9,
+      and symbols like \u00a9\ufe0f\u2122\ufe0f.\nIt contains sample content for testing
+      the meisterwerk functionality.\n"}}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '366'
+      content-type:
+      - application/json
+      host:
+      - meisterwerk.lan.checkmk.net
+      user-agent:
+      - python-httpx/0.28.1
+      user-id:
+      - cli_user
+      x-request-id:
+      - 5652e654-4caa-43c0-a533-ee8e1b6de816
+    method: POST
+    uri: http://meisterwerk.lan.checkmk.net/werks/evaluate/werk
+  response:
+    body:
+      string: "{\"user_id\":\"python-httpx/0.28.1\",\"request_id\":\"5652e654-4caa-43c0-a533-ee8e1b6de816\",\"response_datetime\":\"2025-09-18T13:42:57.106284Z\",\"evaluation\":{\"aggregated_scores\":{\"grammar_score\":3,\"user_impact_clarity_score\":1,\"paragraph_division_score\":1,\"non_compatible_werk_score\":null,\"english_style_score\":1},\"aggregated_suggestions\":{\"grammar_suggestions_to_improve_text\":\"No
+        improvements necessary.\",\"user_impact_clarity_suggestions_to_improve_text\":\"Clarify
+        that emojis, accented characters, and symbols are now fully supported in the
+        UI, ensuring they display correctly without causing issues. Inform users if
+        any specific actions are required to handle these characters properly.\",\"paragraph_division_suggestions_to_improve_text\":\"Divide
+        the werk into four paragraphs: first, mention the presence of emojis (e.g.,
+        \U0001F680); second, mention accented characters like caf\xE9; third, mention
+        symbols like \xA9\uFE0F\u2122\uFE0F; and fourth, state that it contains sample
+        content for testing the meisterwerk functionality.\",\"non_compatible_werk_suggestions_to_improve_text\":null,\"english_style_suggestions_to_improve_text\":\"Replace
+        placeholder text with a clear, concise statement that starts with the component
+        or feature name, uses a strong verb, and explains the change or fix with user
+        impact. Remove irrelevant emojis and symbols unless they serve a clear purpose.
+        Focus on meaningful technical information and avoid filler content.\"}}}"
+    headers:
+      Content-Length:
+      - '1422'
+      Content-Type:
+      - text/html; charset=utf-8
+      - application/json
+      Date:
+      - Mon, 22 Sep 2025 12:04:41 GMT
+      Server:
+      - uvicorn
+      Via:
+      - 1.1 Caddy
+    status:
+      code: 200
+      message: OK
+version: 1

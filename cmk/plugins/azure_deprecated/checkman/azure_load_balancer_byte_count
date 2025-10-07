@@ -1,0 +1,22 @@
+title: Microsoft Azure Load Balancer: Byte Count
+agents: azure
+catalog: cloud/azure
+license: GPLv2
+distribution: check_mk
+description:
+ This check and the associated special agent (agent_azure) are deprecated
+ and will be removed in a future version.
+
+ Please configure the new special agent using the "Microsoft Azure" ruleset.
+
+ This check reports the bytes transmitted per second.
+ You can configure levels using the rule "Byte Count".
+
+ In order to use this check, you need to configure the Azure special agent.
+
+item:
+ The name of the resource.
+
+discovery:
+ One service is created for each load balancer if a required
+ metric (total_ByteCount) is given.

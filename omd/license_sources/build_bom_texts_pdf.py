@@ -20,7 +20,7 @@ from reportlab.lib.styles import ParagraphStyle as PS
 from reportlab.lib.units import cm, inch
 from reportlab.pdfbase.pdfmetrics import registerFont
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import Image, PageBreak, Paragraph, SimpleDocTemplate, Spacer
+from reportlab.platypus import Flowable, Image, PageBreak, Paragraph, SimpleDocTemplate, Spacer
 from reportlab.platypus.doctemplate import PageTemplate
 from reportlab.platypus.frames import Frame
 from reportlab.platypus.tableofcontents import TableOfContents
@@ -106,7 +106,7 @@ def test_license_str_to_html() -> None:
     )
 
 
-class MyDocTemplate(SimpleDocTemplate):  # type: ignore[misc]
+class MyDocTemplate(SimpleDocTemplate):
     """Custom DocTemplate configured for handling of table of contents"""
 
     def __init__(self, filename, **kw) -> None:
@@ -142,7 +142,7 @@ def heading(text: str, link: str, sty: PS) -> Paragraph:
     # Modify paragraph text to include an anchor point with name bn
     h = Paragraph(f'{text}<a name="{bn}"/>', sty)
     # Store the bookmark name on the flowable so afterFlowable can see this
-    h._bookmarkName = bn  # noqa: SLF001
+    h._bookmarkName = bn  # type: ignore[attr-defined] # noqa: SLF001
     return h
 
 
@@ -172,7 +172,7 @@ def read_license_csv(path_licenses_csv: Path) -> list[Dependency]:
         ]
 
 
-def setup_document(path_pdf: Path, path_logo: Path) -> tuple[MyDocTemplate, list]:
+def setup_document(path_pdf: Path, path_logo: Path) -> tuple[MyDocTemplate, list[Flowable]]:
     doc = MyDocTemplate(
         str(path_pdf),
         pagesize=letter,
@@ -199,16 +199,17 @@ def setup_document(path_pdf: Path, path_logo: Path) -> tuple[MyDocTemplate, list
     spacer = Spacer(width=0, height=2 * cm)
 
     drawing = svg2rlg(str(path_logo))
+    assert drawing is not None
     sx = sy = 2
     drawing.width, drawing.height = drawing.minWidth() * sx, drawing.height * sy
     drawing.scale(sx, sy)
     cover_logo = Image(drawing)
-    cover_logo.hAllign = "CENTER"
+    cover_logo.hAlign = "CENTER"
     cover_text = "Open Source licenses included in:<br /><br />\n\
             Checkmk Enterprise Edition<br />\n\
             Checkmk Managed Services Edition"
 
-    story = []
+    story: list[Flowable] = []
     story.append(Spacer(width=0, height=6 * cm))
     story.append(cover_logo)
     story.append(Spacer(width=0, height=1 * cm))

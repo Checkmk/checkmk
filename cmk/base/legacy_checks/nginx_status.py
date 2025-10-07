@@ -82,7 +82,13 @@ def check_nginx_status(item, params, parsed):
     yield 0, "", [(key, data[key]) for key in ("reading", "writing", "waiting")]
 
     requests_rate = computed_values["requests_per_sec"]
-    state, txt, perf = check_levels(requests_rate, "requests", None, infoname="Requests", unit="/s")
+    state, txt, perf = check_levels(
+        requests_rate,
+        "requests",
+        None,
+        human_readable_func=lambda x: f"{x:.2f}/s",
+        infoname="Requests",
+    )
     txt += " (%0.2f/Connection)" % computed_values["requests_per_conn"]
     yield state, txt, perf
 

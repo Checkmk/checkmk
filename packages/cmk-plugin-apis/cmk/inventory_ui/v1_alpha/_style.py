@@ -8,7 +8,7 @@ from enum import auto, Enum
 
 class Alignment(Enum):
     LEFT = auto()
-    CENTERED = auto()
+    CENTER = auto()
     RIGHT = auto()
 
 

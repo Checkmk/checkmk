@@ -149,3 +149,7 @@ class EditUser(BaseUserPage):
         self.main_area.check_page_title(self.page_title)
         expect(self.full_name_text_field).to_be_visible()
         expect(self.password_text_field).to_be_visible()
+
+    def save_changes(self) -> None:
+        self.save_button.click()
+        self.page.wait_for_url(url=Users.url_pattern, wait_until="load")

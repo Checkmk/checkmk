@@ -52,3 +52,18 @@ def test_weighted_sorter() -> None:
     ]
 
     assert results == expected
+
+
+def test_exact_match_in_parenthesis_ranks_higher_than_starts_with_query() -> None:
+    results = [
+        UnifiedSearchResultItem(title="Beta", url="/beta", provider="setup", topic="Code"),
+        UnifiedSearchResultItem(title="Alpha(bet)", url="/alpha", provider="setup", topic="Code"),
+    ]
+    get_sorter("weighted_index", query="bet")(results)
+
+    expected = [
+        UnifiedSearchResultItem(title="Alpha(bet)", url="/alpha", provider="setup", topic="Code"),
+        UnifiedSearchResultItem(title="Beta", url="/beta", provider="setup", topic="Code"),
+    ]
+
+    assert results == expected

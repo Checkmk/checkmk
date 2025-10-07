@@ -7,7 +7,14 @@ from http import HTTPStatus
 import httpx
 import pytest
 
-from .test_lib.site_mock import GetResponse, ListResponse, OP, PostResponse, SiteMock, User
+from cmk.testlib.agent_receiver.site_mock import (
+    GetResponse,
+    ListResponse,
+    OP,
+    PostResponse,
+    SiteMock,
+    User,
+)
 
 
 @pytest.fixture

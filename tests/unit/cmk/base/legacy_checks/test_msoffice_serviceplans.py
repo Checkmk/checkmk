@@ -7,10 +7,10 @@ from collections.abc import Mapping
 
 import pytest
 
-from .checktestlib import assertCheckResultsEqual, BasicCheckResult, Check, CheckResult
-
-# Mark all tests in this file as check related tests
-pytestmark = pytest.mark.checks
+from cmk.base.legacy_checks.msoffice_serviceplans import (
+    check_msoffice_serviceplans,
+    parse_msoffice_serviceplans,
+)
 
 
 @pytest.mark.parametrize(
@@ -24,26 +24,20 @@ pytestmark = pytest.mark.checks
 def test_check_win_license(
     params: Mapping[str, tuple[float, float]], expected_status: int, expected_levels_info: str
 ) -> None:
-    check = Check("msoffice_serviceplans")
-
-    item = "bundle"
-    output = check.run_check(
-        item,
-        params,
-        [
-            [item, "plan-success-1", "Success"],
-            [item, "plan-suc", "cess-2", "Success"],
-            [item, "plan-pending-1", "PendingActivation"],
-            [item, "plan-pen", "ding-2", "PendingActivation"],
-        ],
-    )
-
-    result = [
-        BasicCheckResult(expected_status, "Success: 2, Pending: 2%s" % expected_levels_info),
-        BasicCheckResult(0, "Pending Services: plan-pending-1, plan-pen ding-2"),
+    assert list(
+        check_msoffice_serviceplans(
+            "bundle",
+            params,
+            parse_msoffice_serviceplans(
+                [
+                    ["bundle", "plan-success-1", "Success"],
+                    ["bundle", "plan-suc", "cess-2", "Success"],
+                    ["bundle", "plan-pending-1", "PendingActivation"],
+                    ["bundle", "plan-pen", "ding-2", "PendingActivation"],
+                ]
+            ),
+        ),
+    ) == [
+        (expected_status, "Success: 2, Pending: 2%s" % expected_levels_info),
+        (0, "Pending Services: plan-pending-1, plan-pen ding-2"),
     ]
-
-    assertCheckResultsEqual(
-        CheckResult(output),
-        CheckResult(result),
-    )

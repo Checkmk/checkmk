@@ -687,10 +687,11 @@ def _filter_rows(rows: TableRows, search_term: str) -> TableRows:
             # The inpage search of the folder page adds href with
             # "search=searchterm" to cell.content and would always match => remove for matching
             if "inpage_search_form" in cell.content:
-                cell_string = (
-                    str(cell.content)
-                    .replace("search=" + search_term, "")
-                    .replace("search%253D" + search_term, "")  # url encoded string
+                cell_string = re.sub(
+                    r"&?search(?:=|%253D)[^&\"]*",
+                    "",
+                    str(cell.content),
+                    flags=re.IGNORECASE,
                 )
 
             if match_regex.search(cell_string):

@@ -1,0 +1,63 @@
+interactions:
+- request:
+    body: '{"werk": {"title": "Feature with bad grammer", "date": "2024-02-01T00:00:00Z",
+      "level": "2", "versions": ["1.1.0"], "werk_class": "feature", "component": "ui",
+      "compatible": true, "werk_text": "This feature are implemented for users. It
+      have many benefit and provide good experience. User can now do thing they couldn''t
+      did before. The feature work very good."}}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '346'
+      content-type:
+      - application/json
+      host:
+      - meisterwerk.lan.checkmk.net
+      user-agent:
+      - python-httpx/0.28.1
+      user-id:
+      - cli_user
+      x-request-id:
+      - 465f722e-d766-4ec0-9d73-4f045e49ae8e
+    method: POST
+    uri: http://meisterwerk.lan.checkmk.net/werks/evaluate/werk
+  response:
+    body:
+      string: '{"user_id":"python-httpx/0.28.1","request_id":"465f722e-d766-4ec0-9d73-4f045e49ae8e","response_datetime":"2025-09-18T13:42:57.106284Z","evaluation":{"aggregated_scores":{"grammar_score":1,"user_impact_clarity_score":1,"paragraph_division_score":1,"non_compatible_werk_score":null,"english_style_score":1},"aggregated_suggestions":{"grammar_suggestions_to_improve_text":"Correct
+        subject-verb agreement by changing ''feature are'' to ''feature is'' and ''It
+        have'' to ''It has''. Use the plural form ''benefits'' instead of ''benefit''.
+        Replace ''do thing'' with ''do things''. Change ''couldn''t did'' to ''couldn''t
+        do''. Use ''works very well'' instead of ''work very good''.","user_impact_clarity_suggestions_to_improve_text":"Specify
+        the new feature clearly and describe the new capabilities it provides to users.
+        Explain how it improves their workflow or experience and mention any required
+        user actions to benefit from it. Avoid vague phrases and provide concrete
+        examples or outcomes.","paragraph_division_suggestions_to_improve_text":"Divide
+        the text into separate paragraphs for each concept. For example, one paragraph
+        to introduce the feature, another to describe its benefits, a third to explain
+        new user capabilities, and a final one to comment on its performance.","non_compatible_werk_suggestions_to_improve_text":null,"english_style_suggestions_to_improve_text":"Begin
+        by naming the specific feature or component. Use active voice and strong verbs
+        to describe its functions. Replace vague phrases like ''many benefit'' and
+        ''good experience'' with concrete user advantages. Break the text into one
+        or two short sentences focusing on new user capabilities. Eliminate grammar
+        errors and redundant words to improve clarity and conciseness."}}}'
+    headers:
+      Content-Length:
+      - '1725'
+      Content-Type:
+      - text/html; charset=utf-8
+      - application/json
+      Date:
+      - Mon, 22 Sep 2025 12:01:43 GMT
+      Server:
+      - uvicorn
+      Via:
+      - 1.1 Caddy
+    status:
+      code: 200
+      message: OK
+version: 1

@@ -32,7 +32,6 @@ filegroup(
         "//packages/cmk-relay-protocols:dev-requirements.in",
         "//packages/cmk-trace:dev-requirements.in",
         "//packages/cmk-werks:dev-requirements.in",
-        "//packages/metric-backend:dev-requirements.in",
     ],
     visibility = ["//visibility:public"],
 )

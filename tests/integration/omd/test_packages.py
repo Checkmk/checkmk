@@ -129,6 +129,7 @@ MONITORING_PLUGINS: Sequence[Plugin] = (
 )
 
 
+@pytest.mark.medium_test_chain
 @pytest.mark.parametrize(
     "plugin",
     (pytest.param(p, id=f"{p.binary_name}") for p in MONITORING_PLUGINS),
@@ -145,6 +146,7 @@ def test_monitoring_plugins_can_be_executed(plugin: Plugin, site: Site) -> None:
     assert not process.stderr
 
 
+@pytest.mark.medium_test_chain
 def test_heirloommailx(site: Site) -> None:
     expected_version = "12.5"
     process = site.run(cmd := ["heirloom-mailx", "-V"])
@@ -156,6 +158,7 @@ def test_heirloommailx(site: Site) -> None:
     )
 
 
+@pytest.mark.medium_test_chain
 def test_heirloompkgtools_pkgmk(site: Site) -> None:
     process = site.run([tool := "pkgmk"], check=False)
     message = process.stderr if process.stderr else "<NO STDERR>"
@@ -164,6 +167,7 @@ def test_heirloompkgtools_pkgmk(site: Site) -> None:
     )
 
 
+@pytest.mark.medium_test_chain
 def test_heirloompkgtools_pkgtrans(site: Site) -> None:
     process = site.run([tool := "pkgtrans"], check=False)
     message = process.stderr if process.stderr else "<NO STDERR>"
@@ -172,6 +176,7 @@ def test_heirloompkgtools_pkgtrans(site: Site) -> None:
     )
 
 
+@pytest.mark.medium_test_chain
 def test_stunnel(site: Site) -> None:
     expected_version = "5.63"
     process = site.run(cmd := ["stunnel", "-help"])
@@ -182,6 +187,7 @@ def test_stunnel(site: Site) -> None:
     )
 
 
+@pytest.mark.medium_test_chain
 def test_unixcat(site: Site) -> None:
     tool = "unixcat"
     process = site.run([tool], check=False)
@@ -191,14 +197,7 @@ def test_unixcat(site: Site) -> None:
     )
 
 
-def test_navicli(site: Site) -> None:
-    version = "7.33.9.1.84"
-    process = site.run([tool := "naviseccli", "-Help"], check=False)
-    help_text = process.stdout if process.stdout else "<EXPECTED OUTPUT; OBSERVED NO OUTPUT>"
-    # TODO: Sync this with a global version for navicli (like we do it for python)
-    assert f"Revision {version}" in help_text, f"Expected '{tool}' to have version: {version}!"
-
-
+@pytest.mark.medium_test_chain
 def test_nrpe(site: Site) -> None:
     version = "3.2.1"
     process = site.run([tool := "lib/nagios/plugins/check_nrpe", "-V"], check=False)

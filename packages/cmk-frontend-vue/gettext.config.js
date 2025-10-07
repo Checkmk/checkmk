@@ -2,7 +2,7 @@ export default {
   input: {
     path: './',
     include: ['{src,demo}/**/*.js', '{src,demo}/**/*.ts', '{src,demo}/**/*.vue'],
-    exclude: ['./src/lib/i18n.ts'],
+    exclude: ['./src/lib/i18n/**/*'],
     parserOptions: {
       overrideDefaultKeywords: true,
       mapping: {

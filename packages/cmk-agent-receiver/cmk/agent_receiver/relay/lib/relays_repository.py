@@ -66,3 +66,12 @@ class RelaysRepository:
         if resp.status_code != HTTPStatus.NO_CONTENT:
             logger.error("could not delete relay %s : %s", resp.status_code, resp.text)
             raise CheckmkAPIError(resp.text)
+
+    def get_all_relay_ids(self, auth: SiteAuth) -> list[RelayID]:
+        resp = self.client.get(url="/domain-types/relay/collections/all", auth=auth)
+        if resp.status_code != HTTPStatus.OK:
+            logger.error("could not list relays %s : %s", resp.status_code, resp.text)
+            raise CheckmkAPIError(resp.text)
+        # only interested in the IDs
+        ids = [item["id"] for item in resp.json()["value"]]
+        return ids

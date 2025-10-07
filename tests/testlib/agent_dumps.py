@@ -288,9 +288,9 @@ def dummy_agent_dump_generator(
         ]
         rule_id = create_program_call_rule(site, f"{' '.join(args)}", rule_folder)
         try:
-            site.openapi.changes.activate_and_wait_for_completion()
+            site.openapi.changes.activate_and_wait_for_completion(strict=False)
             yield rule_id
         finally:
             if cleanup and site.openapi.rules.get(rule_id):
                 site.openapi.rules.delete(rule_id)
-                site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
+                site.openapi.changes.activate_and_wait_for_completion(strict=False)

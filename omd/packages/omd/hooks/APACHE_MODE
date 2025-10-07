@@ -13,14 +13,14 @@
 
 case "$1" in
     default)
-            if [ -n "$CONFIG_WEBSERVER" ]; then
-                echo "$CONFIG_WEBSERVER"
-            else
-                echo "own";
-            fi
-    ;;
+        if [ -n "$CONFIG_WEBSERVER" ]; then
+            echo "$CONFIG_WEBSERVER"
+        else
+            echo "own"
+        fi
+        ;;
     choices)
-            echo "own: Run an own webserver process for this instance"
-            echo "none: Do not run or configure a webserver"
-    ;;
+        echo "own: Run an own webserver process for this instance"
+        echo "none: Do not run or configure a webserver"
+        ;;
 esac

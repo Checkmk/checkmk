@@ -60,7 +60,11 @@ def check_ucs_c_rack_server_power(item, params, parsed):
     if not (data := parsed.get(item)):
         return
     yield check_levels(
-        data["consumedPower"], "power", params["power_upper_levels"], unit="W", infoname="Power"
+        data["consumedPower"],
+        "power",
+        params["power_upper_levels"],
+        human_readable_func=lambda x: f"{x:.1f} W",
+        infoname="Power",
     )
     yield 0, "Current: %s A" % data["inputCurrent"]
     yield 0, "Voltage: %s V" % data["inputVoltage"]

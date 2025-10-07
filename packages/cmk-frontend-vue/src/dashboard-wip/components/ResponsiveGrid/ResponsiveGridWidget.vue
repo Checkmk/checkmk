@@ -33,19 +33,19 @@ defineEmits<{
         <!-- TODO: icons are too small, likely need re-export of the SVG and adjustment here -->
         <CmkIconButton
           class="db-responsive-widget-frame__edit-controls-button"
-          name="widget_delete"
+          name="widget-delete"
           size="medium"
           @click="$emit('click:delete')"
         />
         <CmkIconButton
           class="db-responsive-grid-widget__edit-controls-button"
-          name="widget_clone"
+          name="widget-clone"
           size="medium"
           @click="$emit('click:clone')"
         />
         <CmkIconButton
           class="db-responsive-grid-widget__edit-controls-button"
-          name="widget_edit"
+          name="widget-edit"
           size="medium"
           @click="$emit('click:edit')"
         />

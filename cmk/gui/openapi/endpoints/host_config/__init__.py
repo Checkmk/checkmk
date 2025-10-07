@@ -44,6 +44,7 @@ from cmk.gui.openapi.restful_objects.type_defs import DomainObject, LinkType
 from cmk.gui.openapi.shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
 from cmk.gui.openapi.utils import EXT, problem, serve_json
 from cmk.gui.utils import permission_verification as permissions
+from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.wato.pages.host_rename import rename_hosts_job_entry_point, RenameHostsJobArgs
 from cmk.gui.watolib import bakery
 from cmk.gui.watolib.activate_changes import ActivateChanges
@@ -769,6 +770,9 @@ def rename_host(params: Mapping[str, Any]) -> Response:
                 use_git=active_config.wato_use_git,
                 debug=active_config.debug,
                 custom_user_attributes=active_config.wato_user_attrs,
+                user_permission_config=UserPermissionSerializableConfig.from_global_config(
+                    active_config
+                ),
             ),
         ),
         InitialStatusArgs(

@@ -73,7 +73,11 @@ def check_raritan_pdu_ocprot(item, params, parsed):
 
     if "current" in data:
         yield check_levels(
-            data["current"], "current", params["levels"], unit="A", infoname="Current"
+            data["current"],
+            "current",
+            params["levels"],
+            human_readable_func=lambda x: f"{x:.2f} A",
+            infoname="Current",
         )
 
 

@@ -57,7 +57,7 @@ def mobile_html_head(title: str) -> None:
             """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">"""
         )
     )
-    html.open_html()
+    html.open_html(lang=user.language)
     html.open_head()
     html.default_html_headers()
     html.meta(name="viewport", content="initial-scale=1.0")

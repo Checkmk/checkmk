@@ -14,9 +14,9 @@ from omdlib.contexts import SiteContext
 def test_site_context() -> None:
     site = SiteContext("dingeling")
     assert site.name == "dingeling"
-    assert site.real_dir == "/opt/omd/sites/dingeling"
     assert site.tmp_dir == "/omd/sites/dingeling/tmp"
     assert site.version_meta_dir == "/omd/sites/dingeling/.version_meta"
+    assert site.real_tmp_dir == "/opt/omd/sites/dingeling/tmp"
 
 
 def test_site_context_replacements(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -28,15 +28,3 @@ def test_site_context_replacements(monkeypatch: pytest.MonkeyPatch) -> None:
     assert replacements["###ROOT###"] == "/omd/sites/dingeling"
     assert replacements["###EDITION###"] in ("raw", "enterprise", "cloud", "managed")
     assert len(replacements) == 3
-
-
-def test_site_context_is_empty(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(
-        os, "listdir", lambda p: [] if p == "/omd/sites/dingeling" else ["abc", "version"]
-    )
-
-    site = SiteContext("dingeling")
-    assert site.is_empty()
-
-    site = SiteContext("dingelang")
-    assert not site.is_empty()

@@ -1,0 +1,15 @@
+title: Microsoft Azure AD Connect: Sync
+agents: azure_v2
+catalog: cloud/azure
+license: GPLv2
+distribution: check_mk
+description:
+ This check reports the state of Microsoft Azure AD Connect.
+ The check displays the last sync interval from the on-premise directory to Azure.
+ You can configure levels for the time since the last sync interval.
+
+item:
+ The organization name registered with Azure
+
+discovery:
+ One service is created per Azure organization if sync is enabled

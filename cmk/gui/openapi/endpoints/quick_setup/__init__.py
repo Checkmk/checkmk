@@ -66,6 +66,7 @@ from cmk.gui.quick_setup.v0_unstable.setups import (
 )
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData, RawFormData, StageIndex
 from cmk.gui.site_config import site_is_local
+from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.watolib.automations import do_remote_automation, RemoteAutomationConfig
 from cmk.utils.encoding import json_encode
 
@@ -295,6 +296,9 @@ def quicksetup_run_stage_action(params: Mapping[str, Any]) -> Response:
                 automation_config=RemoteAutomationConfig.from_site_config(
                     active_config.sites[SiteId(site_id)]
                 ),
+                user_permission_config=UserPermissionSerializableConfig.from_global_config(
+                    active_config
+                ),
                 quick_setup_id=quick_setup_id,
                 action_id=stage_action_id,
                 stage_index=stage_index,
@@ -309,6 +313,10 @@ def quicksetup_run_stage_action(params: Mapping[str, Any]) -> Response:
                 stage_index=stage_index,
                 user_input_stages=body["stages"],
                 language=language,
+                user_permission_config=UserPermissionSerializableConfig.from_global_config(
+                    active_config
+                ),
+                job_uuid=None,
             )
 
         background_job_status_link = constructors.link_endpoint(
@@ -474,6 +482,9 @@ def complete_quick_setup_action(params: Mapping[str, Any], mode: QuickSetupActio
                 mode=mode,
                 user_input_stages=body["stages"],
                 object_id=object_id,
+                user_permission_config=UserPermissionSerializableConfig.from_global_config(
+                    active_config
+                ),
                 use_git=active_config.wato_use_git,
                 pprint_value=active_config.wato_pprint_config,
             )

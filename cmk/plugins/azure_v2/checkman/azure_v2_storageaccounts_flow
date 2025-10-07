@@ -1,0 +1,18 @@
+title: Microsoft Azure Storage Accounts: Data Flow
+agents: azure_v2
+catalog: cloud/azure
+license: GPLv2
+distribution: check_mk
+description:
+ This check reports metrics regarding data flow of monitored
+ azure storage accounts.
+ You can configure levels for ingress, egress and transaction
+ count.
+ In order to use this check, you need to configure the Azure special agent.
+
+item:
+ The name of the resource.
+
+discovery:
+ One service is created for each storage account if all required metrics
+ (total_Ingress, total_Egress, total_Transactions) are given.

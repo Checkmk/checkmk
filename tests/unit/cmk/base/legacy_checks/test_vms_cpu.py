@@ -39,7 +39,7 @@ def test_inventory_vms_cpu(
                 (0, "System: 0.11%", [("system", 0.10999999999999827, None, None)]),
                 (0, "Wait: 0.18%", [("wait", 0.18, None, None)]),
                 (0, "Total CPU: 0.83%", [("util", 0.8299999999999983, None, None, 0, 100)]),
-                (0, "100% corresponding to: 1.00 CPU", [("cpu_entitlement", 1, None, None)]),
+                (0, "100% corresponding to: 1 CPU", [("cpu_entitlement", 1, None, None)]),
             ],
         ),
         (
@@ -51,7 +51,7 @@ def test_inventory_vms_cpu(
                 (0, "System: 0.11%", [("system", 0.10999999999999827, None, None)]),
                 (1, "Wait: 0.18% (warn/crit at 0.10%/0.50%)", [("wait", 0.18, 0.1, 0.5)]),
                 (0, "Total CPU: 0.83%", [("util", 0.8299999999999983, None, None, 0, 100)]),
-                (0, "100% corresponding to: 1.00 CPU", [("cpu_entitlement", 1, None, None)]),
+                (0, "100% corresponding to: 1 CPU", [("cpu_entitlement", 1, None, None)]),
             ],
         ),
     ],

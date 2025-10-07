@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.dashboard import DashletConfig, IFrameDashlet
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -78,11 +78,9 @@ class SnapinDashlet(IFrameDashlet[SnapinDashletConfig]):
             UserPermissions.from_config(active_config, permission_registry),
         )[self._dashlet_spec["snapin"]].title()
 
-    def update(self) -> None:
+    def update(self, config: Config, user_permissions: UserPermissions) -> None:
         dashlet = self._dashlet_spec
-        snapin = all_snapins(UserPermissions.from_config(active_config, permission_registry)).get(
-            self._dashlet_spec["snapin"]
-        )
+        snapin = all_snapins(user_permissions).get(self._dashlet_spec["snapin"])
         if not snapin:
             raise MKUserError(None, _("The configured element does not exist."))
         snapin_instance = snapin()
@@ -102,7 +100,7 @@ class SnapinDashlet(IFrameDashlet[SnapinDashletConfig]):
         styles = snapin_instance.styles()
         if styles:
             html.style(styles)
-        snapin_instance.show(active_config)
+        snapin_instance.show(config)
         html.close_div()
         html.close_div()
         html.close_div()

@@ -50,6 +50,72 @@ py_library(
     ],
 )
 
+py_library(
+    name = "fetchers",
+    srcs = [
+        "cmk/fetchers/__init__.py",
+        "cmk/fetchers/_abstract.py",
+        "cmk/fetchers/_agentprtcl.py",
+        "cmk/fetchers/_ipmi.py",
+        "cmk/fetchers/_nofetcher.py",
+        "cmk/fetchers/_piggyback.py",
+        "cmk/fetchers/_program.py",
+        "cmk/fetchers/_snmp.py",
+        "cmk/fetchers/_snmpscan.py",
+        "cmk/fetchers/_tcp.py",
+        "cmk/fetchers/_trigger.py",
+        "cmk/fetchers/config.py",
+        "cmk/fetchers/filecache/__init__.py",
+        "cmk/fetchers/filecache/_agent.py",
+        "cmk/fetchers/filecache/_cache.py",
+        "cmk/fetchers/filecache/_snmp.py",
+        "cmk/fetchers/serializertype.py",
+        "cmk/fetchers/snmp.py",
+        "cmk/fetchers/snmp_backend/__init__.py",
+        "cmk/fetchers/snmp_backend/_utils.py",
+        "cmk/fetchers/snmp_backend/classic.py",
+        "cmk/fetchers/snmp_backend/stored_walk.py",
+    ],
+    data = ["cmk/fetchers/py.typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":helper-interface",
+        ":snmplib",
+        requirement("pyghmi"),
+        "//packages/cmk-ccc:hostaddress",
+        "//packages/cmk-ccc:resulttype",
+        "//packages/cmk-ccc:store",
+        "//packages/cmk-ccc:tty",
+        "//packages/cmk-crypto",
+    ] + select({
+        "@//:gpl_repo": [],
+        "@//:gpl+enterprise_repo": [
+            "//non-free/packages/cmk-core-helpers:inline-snmp",
+        ],
+    }),
+)
+
+py_test(
+    name = "fetchers-tests",
+    size = "small",
+    srcs = [
+        "__test__.py",
+        "tests/cmk/fetchers/snmp_backend/test_classic_snmp.py",
+        "tests/cmk/fetchers/snmp_backend/test_stored_walk.py",
+        "tests/cmk/fetchers/test_agentprtcl.py",
+        "tests/cmk/fetchers/test_snmp.py",
+        "tests/cmk/fetchers/test_snmpscan.py",
+    ],
+    main = "__test__.py",
+    deps = [
+        "__test__",
+        requirement("pytest"),
+        ":fetchers",
+        "//packages/cmk-plugin-apis:agent_based",
+    ],
+)
+
 py_pytest_main(
     name = "__test__",
     deps = [
@@ -82,6 +148,7 @@ py_wheel(
     # Keep in sync with pyproject.toml
     version = "1.0.0",
     deps = [
+        ":fetchers",
         ":helper-interface",
         ":snmplib",
     ],
@@ -94,7 +161,7 @@ package_wheel(
 
 pkg_tar(
     name = "pkg_tar",
-    visibility = ["//omd:__pkg__"],
+    visibility = ["//omd:__subpackages__"],
     deps = [
         ":wheel_pkg",
     ],

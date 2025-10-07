@@ -1,0 +1,59 @@
+interactions:
+- request:
+    body: '{"werk": {"title": "Minimal Werk", "date": "2022-01-01T00:00:00Z", "level":
+      "1", "versions": ["2.0.0"], "werk_class": "fix", "component": "core", "compatible":
+      true, "werk_text": "Bug fix example.\n"}}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '185'
+      content-type:
+      - application/json
+      host:
+      - meisterwerk.lan.checkmk.net
+      user-agent:
+      - python-httpx/0.28.1
+      user-id:
+      - cli_user
+      x-request-id:
+      - 4bb316fc-1690-4f1d-8b72-c306d3f7e134
+    method: POST
+    uri: http://meisterwerk.lan.checkmk.net/werks/generate/user_comprehension
+  response:
+    body:
+      string: '{"user_id":"python-httpx/0.28.1","request_id":"4bb316fc-1690-4f1d-8b72-c306d3f7e134","response_datetime":"2025-09-18T13:42:57.107182Z","user_understanding":"The
+        werk describes a bug fix, meaning an error or issue in the software was identified
+        and corrected. In practical terms, this should improve the stability or accuracy
+        of the Checkmk monitoring system, potentially resolving false alerts or missed
+        notifications caused by the bug. For our monitoring setup, this means we can
+        expect more reliable data and alerting behavior without needing immediate
+        changes to configurations or alert rules. However, to ensure the fix is effective
+        and does not introduce new issues, we should schedule validation tests in
+        our staging environment and monitor the system closely after deployment. Additionally,
+        it would be prudent to inform the team about the fix so they are aware of
+        the improved reliability and can report any anomalies promptly. Since the
+        werk only states \"Bug fix example\" without specifying the exact nature of
+        the bug or the affected components, it is unclear what specific part of the
+        system was fixed or how critical the issue was, which limits our ability to
+        assess the full impact or necessary follow-up actions."}'
+    headers:
+      Content-Length:
+      - '1230'
+      Content-Type:
+      - text/html; charset=utf-8
+      - application/json
+      Date:
+      - Mon, 22 Sep 2025 12:04:49 GMT
+      Server:
+      - uvicorn
+      Via:
+      - 1.1 Caddy
+    status:
+      code: 200
+      message: OK
+version: 1

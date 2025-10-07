@@ -9,7 +9,7 @@ from pathlib import Path
 
 from cmk.ccc.hostaddress import HostName
 from cmk.discover_plugins import PluginLocation
-from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, HostConfig
+from cmk.server_side_calls import alpha, v1
 from cmk.utils import config_warnings, password_store
 from cmk.utils.servicename import ServiceName
 
@@ -32,9 +32,9 @@ class ActiveServiceData:
 class ActiveCheck:
     def __init__(
         self,
-        plugins: Mapping[PluginLocation, ActiveCheckConfig],
+        plugins: Mapping[PluginLocation, alpha.ActiveCheckConfig | v1.ActiveCheckConfig],
         host_name: HostName,
-        host_config: HostConfig,
+        host_config: v1.HostConfig,
         http_proxies: Mapping[str, Mapping[str, str]],
         service_name_finalizer: Callable[[ServiceName], ServiceName],
         stored_passwords: Mapping[str, str],
@@ -68,19 +68,30 @@ class ActiveCheck:
             return ()
 
         proxy_config = ProxyConfig(self.host_name, self._http_proxies)
+        original_and_processed_configs = (
+            (
+                config_set,
+                process_configuration_to_parameters(
+                    config_set,
+                    proxy_config,
+                    is_alpha=isinstance(active_check, alpha.ActiveCheckConfig),
+                ),
+            )
+            for config_set in plugin_params
+        )
+
         return [
-            self._make_service(active_check, service, proxy_config, configuration_set)
-            for configuration_set in plugin_params
-            for processed in [process_configuration_to_parameters(configuration_set, proxy_config)]
-            for service in active_check(processed.value, self.host_config)
+            self._make_service(active_check, service, config_set, params.surrogates)
+            for config_set, params in original_and_processed_configs
+            for service in active_check(params.value, self.host_config)
         ]
 
     def _make_service(
         self,
-        active_check: ActiveCheckConfig,
-        service: ActiveCheckCommand,
-        proxy_config: ProxyConfig,
+        active_check: v1.ActiveCheckConfig | alpha.ActiveCheckConfig,
+        service: v1.ActiveCheckCommand,
         conf_dict: Mapping[str, object],
+        surrogates: Mapping[int, str],
     ) -> ActiveServiceData:
         if self._ip_lookup_failed:
             executable = "check_always_crit"
@@ -89,13 +100,12 @@ class ActiveCheck:
             )
         else:
             executable = f"check_{active_check.name}"
-            processed = process_configuration_to_parameters(conf_dict, proxy_config)
             arguments = replace_passwords(
                 self.host_name,
                 service.command_arguments,
                 self.stored_passwords,
                 self.password_store_file,
-                processed.surrogates,
+                surrogates,
                 apply_password_store_hack=password_store.hack.HACK_CHECKS.get(
                     active_check.name, False
                 ),

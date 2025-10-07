@@ -6,4 +6,4 @@
 #  imitates agent behavior: setup LD_LIBRARY_PATH to include the runtime library
 # also adds MK_CONFDIR which may be needed for Oracle connections - this is not mandatory burt worth a check
 export MK_CONFDIR="${PWD}"
-MK_LIBDIR=${PWD}/runtimes/ cargo "$@"
+TNS_ADMIN=${PWD}/tests/files/tns MK_LIBDIR=${PWD}/runtimes/ cargo "$@"

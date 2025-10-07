@@ -132,7 +132,7 @@ class ABCFigureDashlet(Dashlet[T], abc.ABC):
             "instance": self.instance_name
         }
 
-    def show(self) -> None:
+    def show(self, config: Config) -> None:
         self.js_dashlet(figure_type_name=self.type_name())
 
     def js_dashlet(self, figure_type_name: str) -> None:

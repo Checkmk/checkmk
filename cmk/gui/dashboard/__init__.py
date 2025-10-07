@@ -27,9 +27,7 @@ from .dashlet import (
     DashletConfig,
     DashletRegistry,
     IFrameDashlet,
-    LinkedViewDashletConfig,
     StaticTextDashletConfig,
-    ViewDashletConfig,
 )
 from .store import get_all_dashboards, get_dashlet, get_permitted_dashboards
 from .title_macros import render_title_with_macros_string
@@ -49,8 +47,6 @@ __all__ = [
     "MAX",
     "GROW",
     "dashlet_registry",
-    "LinkedViewDashletConfig",
-    "ViewDashletConfig",
     "StaticTextDashletConfig",
     "get_dashlet",
     "get_topology_context_and_filters",

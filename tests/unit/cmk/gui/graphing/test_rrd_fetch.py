@@ -10,18 +10,27 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.gui.config import active_config
 from cmk.gui.graphing._from_api import RegisteredMetric
-from cmk.gui.graphing._graph_specification import GraphDataRange, GraphMetric, GraphRecipe
+from cmk.gui.graphing._graph_metric_expressions import (
+    AugmentedTimeSeries,
+    GraphMetricRRDSource,
+)
+from cmk.gui.graphing._graph_specification import (
+    GraphDataRange,
+    GraphMetric,
+    GraphRecipe,
+)
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._legacy import CheckMetricEntry
-from cmk.gui.graphing._metric_operation import MetricOpRRDSource, RRDDataKey
 from cmk.gui.graphing._rrd_fetch import (
     _reverse_translate_into_all_potentially_relevant_metrics,
-    fetch_rrd_data_for_graph,
     translate_and_merge_rrd_columns,
 )
 from cmk.gui.graphing._time_series import TimeSeries, TimeSeriesValues
+from cmk.gui.graphing._time_series_fetcher import (
+    AugmentedTimeSeriesSpec,
+    fetch_augmented_time_series,
+)
 from cmk.gui.graphing._translated_metrics import TranslationSpec
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.unit_formatter import AutoPrecision
@@ -62,7 +71,7 @@ _GRAPH_RECIPE = GraphRecipe(
         GraphMetric(
             title="Temperature",
             line_type="area",
-            operation=MetricOpRRDSource(
+            operation=GraphMetricRRDSource(
                 site_id=SiteId("NO_SITE"),
                 host_name=HostName("my-host"),
                 service_name="Temperature Zone 6",
@@ -96,57 +105,58 @@ _GRAPH_RECIPE = GraphRecipe(
 _GRAPH_DATA_RANGE = GraphDataRange(time_range=(1681985455, 1681999855), step=20)
 
 
-def test_fetch_rrd_data_for_graph(
-    mock_livestatus: MockLiveStatusConnection,
-    request_context: None,
+def test_fetch_augmented_time_series(
+    mock_livestatus: MockLiveStatusConnection, request_context: None
 ) -> None:
     with _setup_livestatus(mock_livestatus):
-        assert fetch_rrd_data_for_graph(
-            _GRAPH_RECIPE,
-            _GRAPH_DATA_RANGE,
-            {},
-        ) == {
-            RRDDataKey(
-                SiteId("NO_SITE"),
-                HostName("my-host"),
-                "Temperature Zone 6",
-                "temp",
-                "max",
-                1,
-            ): TimeSeries(
-                start=1,
-                end=2,
-                step=3,
-                values=[4, 5, None],
+        assert list(
+            fetch_augmented_time_series(
+                {},
+                _GRAPH_RECIPE,
+                _GRAPH_DATA_RANGE,
+                temperature_unit=TemperatureUnit.CELSIUS,
+                fetch_time_series=lambda *args, **kwargs: {},
             )
-        }
+        ) == [
+            AugmentedTimeSeriesSpec(
+                title="Temperature",
+                line_type="area",
+                color="#ffa000",
+                fade_odd_color=True,
+                augmented_time_series=[
+                    AugmentedTimeSeries(
+                        data=TimeSeries(start=1, end=2, step=3, values=[4, 5, None]),
+                    ),
+                ],
+            ),
+        ]
 
 
-def test_fetch_rrd_data_for_graph_with_conversion(
-    mock_livestatus: MockLiveStatusConnection,
-    request_context: None,
+def test_fetch_augmented_time_series_with_conversion(
+    mock_livestatus: MockLiveStatusConnection, request_context: None
 ) -> None:
-    active_config.default_temperature_unit = TemperatureUnit.FAHRENHEIT.value
     with _setup_livestatus(mock_livestatus):
-        assert fetch_rrd_data_for_graph(
-            _GRAPH_RECIPE,
-            _GRAPH_DATA_RANGE,
-            {},
-        ) == {
-            RRDDataKey(
-                SiteId("NO_SITE"),
-                HostName("my-host"),
-                "Temperature Zone 6",
-                "temp",
-                "max",
-                1,
-            ): TimeSeries(
-                start=1,
-                end=2,
-                step=3,
-                values=[39.2, 41.0, None],
+        assert list(
+            fetch_augmented_time_series(
+                {},
+                _GRAPH_RECIPE,
+                _GRAPH_DATA_RANGE,
+                temperature_unit=TemperatureUnit.FAHRENHEIT,
+                fetch_time_series=lambda *args, **kwargs: {},
             )
-        }
+        ) == [
+            AugmentedTimeSeriesSpec(
+                title="Temperature",
+                line_type="area",
+                color="#ffa000",
+                fade_odd_color=True,
+                augmented_time_series=[
+                    AugmentedTimeSeries(
+                        data=TimeSeries(start=1, end=2, step=3, values=[39.2, 41.0, None]),
+                    ),
+                ],
+            ),
+        ]
 
 
 def test_translate_and_merge_rrd_columns() -> None:
@@ -160,6 +170,7 @@ def test_translate_and_merge_rrd_columns() -> None:
         ],
         {},
         {},
+        temperature_unit=TemperatureUnit.CELSIUS,
     ) == TimeSeries(
         start=1682324400,
         end=1682497800,
@@ -190,6 +201,7 @@ def test_translate_and_merge_rrd_columns_with_translation() -> None:
             )
         },
         {},
+        temperature_unit=TemperatureUnit.CELSIUS,
     ) == TimeSeries(
         start=1682324400,
         end=1682497800,
@@ -251,9 +263,7 @@ def test_translate_and_merge_rrd_columns_with_translation() -> None:
 def test_translate_and_merge_rrd_columns_unit_conversion(
     default_temperature_unit: TemperatureUnit,
     expected_data_points: TimeSeriesValues,
-    request_context: None,
 ) -> None:
-    active_config.default_temperature_unit = default_temperature_unit.value
     assert translate_and_merge_rrd_columns(
         MetricName("temp"),
         [
@@ -319,6 +329,7 @@ def test_translate_and_merge_rrd_columns_unit_conversion(
                 color="",
             )
         },
+        temperature_unit=default_temperature_unit,
     ) == TimeSeries(
         start=1682324400,
         end=1682497800,

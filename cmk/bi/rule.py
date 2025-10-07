@@ -13,7 +13,7 @@
 #   +----------------------------------------------------------------------+
 
 from collections import OrderedDict
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any, override
 
 from cmk import fields
@@ -42,7 +42,6 @@ from cmk.bi.rule_interface import (
 )
 from cmk.bi.schema import Schema
 from cmk.bi.trees import BICompiledLeaf, BICompiledRule
-from cmk.utils.macros import MacroMapping
 
 
 class BIRule(ABCBIRule, ABCWithSchema):
@@ -127,7 +126,7 @@ class BIRule(ABCBIRule, ABCWithSchema):
         if self.computation_options.disabled:
             return []
 
-        mapped_rule_arguments: MacroMapping = dict(
+        mapped_rule_arguments: Mapping[str, str] = dict(
             zip([f"${x}$" for x in self._params.arguments], extern_arguments)
         )
 
@@ -141,7 +140,7 @@ class BIRule(ABCBIRule, ABCWithSchema):
         return [self._generate_rule_branch(action_results, mapped_rule_arguments)]
 
     def _generate_rule_branch(
-        self, nodes: list[ABCBICompiledNode], macros: MacroMapping
+        self, nodes: list[ABCBICompiledNode], macros: Mapping[str, str]
     ) -> ABCBICompiledNode:
         required_hosts = set()
         for node in nodes:

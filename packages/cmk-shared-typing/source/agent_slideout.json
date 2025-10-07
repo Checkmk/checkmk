@@ -1,47 +1,47 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "type": "object",
-    "title": "agent_slideout",
-    "properties": {
-        "agent_install_cmds": { "$ref": "#/$defs/agent_install_cmds" },
-        "agent_registration_cmds": {
-            "$ref": "#/$defs/agent_registration_cmds"
-        },
-        "host_name": { "type": "string" },
-        "all_agents_url": { "type": "string" },
-        "legacy_agent_url": { "type": "string" },
-        "save_host": { "type": "boolean" },
-        "host_exists": { "type": "boolean" }
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "agent_slideout",
+  "properties": {
+    "agent_install_cmds": { "$ref": "#/$defs/agent_install_cmds" },
+    "agent_registration_cmds": {
+      "$ref": "#/$defs/agent_registration_cmds"
     },
-    "required": [
-        "agent_install_cmds",
-        "agent_registration_cmds",
-        "host_name",
-        "all_agents_url",
-        "save_host"
-    ],
-    "$defs": {
-        "agent_install_cmds": {
-            "type": "object",
-            "properties": {
-                "windows": { "type": "string" },
-                "linux_deb": { "type": "string" },
-                "linux_rpm": { "type": "string" },
-                "linux_tgz": { "type": "string" },
-                "solaris": { "type": "string" },
-                "aix": { "type": "string" }
-            },
-            "required": ["windows", "linux_deb", "linux_rpm"]
-        },
-        "agent_registration_cmds": {
-            "type": "object",
-            "properties": {
-                "windows": { "type": "string" },
-                "linux": { "type": "string" },
-                "solaris": { "type": "string" },
-                "aix": { "type": "string" }
-            },
-            "required": ["windows", "linux", "solaris", "aix"]
-        }
+    "host_name": { "type": "string" },
+    "all_agents_url": { "type": "string" },
+    "legacy_agent_url": { "type": "string" },
+    "save_host": { "type": "boolean" },
+    "host_exists": { "type": "boolean" }
+  },
+  "required": [
+    "agent_install_cmds",
+    "agent_registration_cmds",
+    "host_name",
+    "all_agents_url",
+    "save_host"
+  ],
+  "$defs": {
+    "agent_install_cmds": {
+      "type": "object",
+      "properties": {
+        "windows": { "type": "string" },
+        "linux_deb": { "type": "string" },
+        "linux_rpm": { "type": "string" },
+        "linux_tgz": { "type": "string" },
+        "solaris": { "type": "string" },
+        "aix": { "type": "string" }
+      },
+      "required": ["windows", "linux_deb", "linux_rpm"]
+    },
+    "agent_registration_cmds": {
+      "type": "object",
+      "properties": {
+        "windows": { "type": "string" },
+        "linux": { "type": "string" },
+        "solaris": { "type": "string" },
+        "aix": { "type": "string" }
+      },
+      "required": ["windows", "linux", "solaris", "aix"]
     }
+  }
 }

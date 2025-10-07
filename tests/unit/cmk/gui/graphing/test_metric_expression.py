@@ -9,11 +9,15 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.gui.graphing._graph_metric_expressions import (
+    GraphMetricOperation,
+    GraphMetricRRDSource,
+    LineType,
+)
 from cmk.gui.graphing._metric_expression import (
     Metric,
     MetricExpression,
 )
-from cmk.gui.graphing._metric_operation import LineType, MetricOpOperator, MetricOpRRDSource
 from cmk.gui.graphing._translated_metrics import (
     Original,
     TranslatedMetric,
@@ -56,12 +60,12 @@ def test_metric_expression_mirror(line_type: LineType, expected_line_type: LineT
 
 
 @pytest.mark.parametrize(
-    ("orig_names", "scales", "expected_operation"),
+    ("orig_names", "scales", "expected"),
     [
         pytest.param(
             ["metric-name"],
             [1.0],
-            MetricOpRRDSource(
+            GraphMetricRRDSource(
                 site_id=SiteId("Site-ID"),
                 host_name=HostName("HostName"),
                 service_name="Service description",
@@ -74,10 +78,10 @@ def test_metric_expression_mirror(line_type: LineType, expected_line_type: LineT
         pytest.param(
             ["metric-name", "old-metric-name"],
             [1.0, 2.0],
-            MetricOpOperator(
+            GraphMetricOperation(
                 operator_name="MERGE",
                 operands=[
-                    MetricOpRRDSource(
+                    GraphMetricRRDSource(
                         site_id=SiteId("Site-ID"),
                         host_name=HostName("HostName"),
                         service_name="Service description",
@@ -85,7 +89,7 @@ def test_metric_expression_mirror(line_type: LineType, expected_line_type: LineT
                         consolidation_func_name=None,
                         scale=1.0,
                     ),
-                    MetricOpRRDSource(
+                    GraphMetricRRDSource(
                         site_id=SiteId("Site-ID"),
                         host_name=HostName("HostName"),
                         service_name="Service description",
@@ -99,13 +103,13 @@ def test_metric_expression_mirror(line_type: LineType, expected_line_type: LineT
         ),
     ],
 )
-def test_metric_to_metric_operation(
+def test_metric_to_graph_metric_expression(
     orig_names: Sequence[str],
     scales: Sequence[int | float],
-    expected_operation: MetricOpOperator | MetricOpRRDSource,
+    expected: GraphMetricOperation | GraphMetricRRDSource,
 ) -> None:
     assert (
-        Metric("metric-name").to_metric_operation(
+        Metric("metric-name").to_graph_metric_expression(
             SiteId("Site-ID"),
             HostName("HostName"),
             "Service description",
@@ -125,5 +129,5 @@ def test_metric_to_metric_operation(
             },
             None,
         )
-        == expected_operation
+        == expected
     )

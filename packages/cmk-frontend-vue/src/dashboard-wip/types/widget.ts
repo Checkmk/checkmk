@@ -6,6 +6,10 @@
 import type { components } from '@/lib/rest-api-client/openapi_internal'
 
 export type ComputedWidgetSpecResponse = components['schemas']['ComputedWidgetSpecResponse']
+export type ComputedTopListResponse = components['schemas']['ComputedTopListResponse']
+export type ComputedTopList = components['schemas']['TopList']
+export type TopListEntry = components['schemas']['TopListEntry']
+export type TopListError = components['schemas']['TopListError']
 
 export type WidgetContent = components['schemas']['WidgetContent']
 export type WidgetSizeValue = components['schemas']['WidgetSizeValue']
@@ -25,17 +29,27 @@ export type RelativeGridWidgetLayout = components['schemas']['WidgetRelativeGrid
 export type ResponsiveGridWidgetLayouts = components['schemas']['WidgetResponsiveGridLayouts']
 
 export type WidgetLayout = RelativeGridWidgetLayout | ResponsiveGridWidgetLayouts
+export interface WidgetSpec {
+  content: WidgetContent
+  filter_context: WidgetFilterContext
+  general_settings: WidgetGeneralSettings
+}
+export type WidgetContentType = components['schemas']['WidgetContent']['type']
 
 export type ResponsiveGridWidgetLayout = components['schemas']['WidgetResponsiveGridLayout']
 
-type AnnotatedInfoName = components['schemas']['AnnotatedInfoName']
+export type AnnotatedInfoName = components['schemas']['AnnotatedInfoName']
 
 export interface EffectiveWidgetFilterContext extends WidgetFilterContext {
   restricted_to_single: AnnotatedInfoName[]
 }
 
+export type FilterHTTPVars = Record<string, string>
+export type VisualContext = Record<string, FilterHTTPVars>
+
 // Specific widget types
 export type EmbeddedViewContent = components['schemas']['EmbeddedViewContent']
+export type IFrameContent = components['schemas']['URLContent']
 export type LinkedViewContent = components['schemas']['LinkedViewContent']
 export type StaticTextContent = components['schemas']['StaticTextContent']
-export type IFrameContent = components['schemas']['URLContent']
+export type TopListContent = components['schemas']['TopListContent']

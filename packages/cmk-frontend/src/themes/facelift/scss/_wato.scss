@@ -3,7 +3,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-@use "_mixins" as *;
+@use '_mixins' as *;
 
 /*-------------------------------------------------------------------------.
 |                     __        ___  _____ ___                             |
@@ -241,7 +241,7 @@ div.warning_container {
   &::before {
     display: inline-block;
     padding: 5px;
-    content: url("images/icon_problem.svg");
+    content: url('images/icon_problem.svg');
   }
 }
 
@@ -383,7 +383,7 @@ table.data tr.data > td.bulksearch {
 }
 
 .wato td.bulksearch {
-  input[type="text"] {
+  input[type='text'] {
     width: 150px;
     margin-right: 5px;
   }
@@ -414,7 +414,7 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
   float: left;
   width: 180px;
   height: 140px;
-  background-image: url("images/folder_closed.png");
+  background-image: url('images/folder_closed.png');
   background-position: top left;
   background-repeat: no-repeat;
 
@@ -468,7 +468,7 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
   }
 
   &.open {
-    background-image: url("images/folder_open.png");
+    background-image: url('images/folder_open.png');
 
     .infos {
       height: 50px;
@@ -830,9 +830,9 @@ div.filter_buttons {
   align-items: center;
 
   &::before {
-    content: "";
+    content: '';
     display: inline-block;
-    background-image: url("images/icon_manual_active.svg");
+    background-image: url('images/icon_manual_active.svg');
     background-repeat: no-repeat;
     background-size: 16px;
     width: 16px;
@@ -1273,31 +1273,31 @@ table.nform.rulesettings td.legend {
     }
 
     &.repl_locked {
-      background-image: url("images/icon_repl_locked.png");
+      background-image: url('images/icon_repl_locked.png');
     }
 
     &.repl_pending {
-      background-image: url("images/icon_repl_pending.png");
+      background-image: url('images/icon_repl_pending.png');
     }
 
     &.repl_failed {
-      background-image: url("images/icon_repl_failed.png");
+      background-image: url('images/icon_repl_failed.png');
     }
 
     &.repl_25 {
-      background-image: url("images/icon_repl_25.png");
+      background-image: url('images/icon_repl_25.png');
     }
 
     &.repl_50 {
-      background-image: url("images/icon_repl_50.png");
+      background-image: url('images/icon_repl_50.png');
     }
 
     &.repl_75 {
-      background-image: url("images/icon_repl_75.png");
+      background-image: url('images/icon_repl_75.png');
     }
 
     &.repl_success {
-      background-image: url("images/icon_success.png");
+      background-image: url('images/icon_success.png');
     }
   }
 }
@@ -1389,7 +1389,7 @@ form.biaggr div.label_groups,
 form.birule div.label_groups {
   @include label-groups-mixin; // from _main.scss
 
-  tr[id*="label_groups_entry"] > td.vlof_buttons a.delete_button img {
+  tr[id*='label_groups_entry'] > td.vlof_buttons a.delete_button img {
     width: 12px;
     height: 12px;
     opacity: 1;

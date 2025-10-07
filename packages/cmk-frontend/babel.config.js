@@ -6,5 +6,5 @@
 
 // This is for Jest/TypeScript. Without this, Jest won't understand TypeScript.
 module.exports = {
-    presets: [["@babel/preset-env", {targets: {node: "current"}}], "@babel/preset-typescript"],
-};
+  presets: [['@babel/preset-env', { targets: { node: 'current' } }], '@babel/preset-typescript']
+}

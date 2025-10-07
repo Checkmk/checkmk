@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import time
 from collections.abc import (
     Callable,
     Iterable,
@@ -20,7 +19,6 @@ import cmk.ccc.debug
 from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
 from cmk.gui import inventory
 from cmk.gui.color import parse_color_from_api
-from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _, _l
 from cmk.gui.inventory.filters import (
     FilterInvBool,
@@ -124,7 +122,7 @@ def _parse_alignment_from_api(alignment: AlignmentFromAPI) -> Literal["left", "c
     match alignment:
         case AlignmentFromAPI.LEFT:
             return "left"
-        case AlignmentFromAPI.CENTERED:
+        case AlignmentFromAPI.CENTER:
             return "center"
         case AlignmentFromAPI.RIGHT:
             return "right"
@@ -132,30 +130,50 @@ def _parse_alignment_from_api(alignment: AlignmentFromAPI) -> Literal["left", "c
             assert_never(other)
 
 
-def _add_html_styling(
-    rendered_value: str,
+@dataclass(frozen=True, kw_only=True)
+class TDStyles:
+    css_class: str
+    text_align: str
+    background_color: str
+    color: str
+
+
+PaintResultFromAPI = tuple[TDStyles, str | HTML]
+PaintFunctionFromAPI = Callable[[float, SDValue], PaintResultFromAPI]
+
+
+def _wrap_paint_function(paint_function: PaintFunction) -> PaintFunctionFromAPI:
+    def _wrap(now: float, value: SDValue) -> PaintResultFromAPI:
+        css_class, rendered_value = paint_function(value)
+        return (
+            TDStyles(css_class=css_class, text_align="", background_color="", color=""),
+            rendered_value,
+        )
+
+    return _wrap
+
+
+def _compute_td_styles(
     styles: Iterable[AlignmentFromAPI | BackgroundColorFromAPI | LabelColorFromAPI],
     default_alignment: AlignmentFromAPI,
-) -> HTML:
-    alignment: dict[str, str] = {}
+) -> TDStyles:
+    alignments: list[Literal["left", "center", "right"]] = []
     colors: dict[str, str] = {}
     for style in styles:
         match style:
             case AlignmentFromAPI() as alignment_from_api:
-                alignment.setdefault("text-align", _parse_alignment_from_api(alignment_from_api))
+                alignments.append(_parse_alignment_from_api(alignment_from_api))
             case BackgroundColorFromAPI() as bg_color_from_api:
-                colors.setdefault("background-color", parse_color_from_api(bg_color_from_api))
+                colors.setdefault("background_color", parse_color_from_api(bg_color_from_api))
             case LabelColorFromAPI() as label_color_from_api:
                 colors.setdefault("color", parse_color_from_api(label_color_from_api))
             case other:
                 assert_never(other)
-    alignment.setdefault("text-align", _parse_alignment_from_api(default_alignment))
-    return HTMLWriter.render_div(
-        HTMLWriter.render_span(
-            rendered_value,
-            style="; ".join(f"{k}: {v}" for k, v in colors.items()),
-        ),
-        style=f"text-align: {alignment['text-align']}",
+    return TDStyles(
+        css_class="",
+        text_align=alignments[0] if alignments else _parse_alignment_from_api(default_alignment),
+        background_color=colors.get("background_color", ""),
+        color=colors.get("color", ""),
     )
 
 
@@ -167,16 +185,13 @@ class _PaintBool:
     def default_alignment(self) -> AlignmentFromAPI:
         return AlignmentFromAPI.LEFT
 
-    def __call__(self, value: SDValue) -> tuple[str, str | HTML]:
+    def __call__(self, now: float, value: SDValue) -> PaintResultFromAPI:
         if not isinstance(value, bool):
             # TODO CMK-25119
-            return inv_paint_generic(value)
-
-        rendered_value = _make_str(self._field.render_true if value else self._field.render_false)
-        return "", _add_html_styling(
-            rendered_value,
-            self._field.style(value),
-            default_alignment=self.default_alignment,
+            return _wrap_paint_function(inv_paint_generic)(now, value)
+        return (
+            _compute_td_styles(self._field.style(value), self.default_alignment),
+            _make_str(self._field.render_true if value else self._field.render_false),
         )
 
 
@@ -223,10 +238,10 @@ class _PaintNumber:
     def default_alignment(self) -> AlignmentFromAPI:
         return AlignmentFromAPI.RIGHT
 
-    def __call__(self, value: SDValue, now: float) -> tuple[str, str | HTML]:
+    def __call__(self, now: float, value: SDValue) -> PaintResultFromAPI:
         if not isinstance(value, (int | float)):
             # TODO CMK-25119
-            return inv_paint_generic(value)
+            return _wrap_paint_function(inv_paint_generic)(now, value)
 
         match self._field.render:
             case c if callable(c):
@@ -236,10 +251,9 @@ class _PaintNumber:
             case _:
                 assert_never(self._field.render)
 
-        return "", _add_html_styling(
+        return (
+            _compute_td_styles(self._field.style(value), self.default_alignment),
             rendered_value,
-            self._field.style(value),
-            default_alignment=self.default_alignment,
         )
 
 
@@ -251,15 +265,13 @@ class _PaintText:
     def default_alignment(self) -> AlignmentFromAPI:
         return AlignmentFromAPI.LEFT
 
-    def __call__(self, value: SDValue) -> tuple[str, str | HTML]:
+    def __call__(self, now: float, value: SDValue) -> PaintResultFromAPI:
         if not isinstance(value, str):
             # TODO CMK-25119
-            return inv_paint_generic(value)
-
-        return "", _add_html_styling(
+            return _wrap_paint_function(inv_paint_generic)(now, value)
+        return (
+            _compute_td_styles(self._field.style(value), self.default_alignment),
             _make_str(_make_str(self._field.render(value))),
-            self._field.style(value),
-            default_alignment=self.default_alignment,
         )
 
 
@@ -269,33 +281,30 @@ class _PaintChoice:
 
     @property
     def default_alignment(self) -> AlignmentFromAPI:
-        return AlignmentFromAPI.CENTERED
+        return AlignmentFromAPI.CENTER
 
-    def __call__(self, value: SDValue) -> tuple[str, str | HTML]:
+    def __call__(self, now: float, value: SDValue) -> PaintResultFromAPI:
         if not isinstance(value, (int | float | str)):
             # TODO CMK-25119
-            return inv_paint_generic(value)
-
-        rendered_val = (
-            f"<{value}> (%s)" % _("No such value")
-            if (rendered := self._field.mapping.get(value)) is None
-            else _make_str(rendered)
-        )
-        return "", _add_html_styling(
-            rendered_val,
-            self._field.style(value),
-            default_alignment=self.default_alignment,
+            return _wrap_paint_function(inv_paint_generic)(now, value)
+        return (
+            _compute_td_styles(self._field.style(value), self.default_alignment),
+            (
+                f"<{value}> (%s)" % _("No such value")
+                if (rendered := self._field.mapping.get(value)) is None
+                else _make_str(rendered)
+            ),
         )
 
 
 def _make_paint_function(
     field_from_api: BoolFieldFromAPI | NumberFieldFromAPI | TextFieldFromAPI | ChoiceFieldFromAPI,
-) -> PaintFunction:
+) -> PaintFunctionFromAPI:
     match field_from_api:
         case BoolFieldFromAPI():
             return _PaintBool(field_from_api)
         case NumberFieldFromAPI():
-            return lambda value: _PaintNumber(field_from_api)(value, time.time())
+            return _PaintNumber(field_from_api)
         case TextFieldFromAPI():
             return _PaintText(field_from_api)
         case ChoiceFieldFromAPI():
@@ -553,10 +562,6 @@ def _parse_node_from_api(
         )
     else:
         table_view_name = _parse_view_name(node.table.view.name)
-        long_title = _make_long_title(parent_title, _make_str(node.table.view.title))
-        if node.table.view.group is not None:
-            # TODO CMK-25037
-            long_title = f"{long_title} (_make_str(node.table.view.group))"
         table = TableWithView(
             columns={
                 SDKey(k): _parse_col_field_of_view_from_api(table_view_name, title, k, v)
@@ -564,7 +569,7 @@ def _parse_node_from_api(
             },
             name=table_view_name,
             path=path,
-            long_title=long_title,
+            long_title=_make_long_title(parent_title, _make_str(node.table.view.title)),
             icon="",
             is_show_more=True,
         )
@@ -732,7 +737,7 @@ class AttributeDisplayHint:
     title: str
     short_title: str
     long_title: str
-    paint_function: PaintFunction
+    paint_function: PaintFunctionFromAPI
     sort_function: SortFunction
     filter: FilterInvText | FilterInvBool | FilterInvFloat | FilterInvChoice
 
@@ -761,7 +766,7 @@ def _parse_attribute_hint(
             title if (short_title := legacy_hint.get("short")) is None else str(short_title)
         ),
         long_title=long_title,
-        paint_function=paint_function,
+        paint_function=_wrap_paint_function(paint_function),
         sort_function=_make_sort_function_of_legacy_hint(legacy_hint),
         filter=_make_attribute_filter_from_legacy_hint(
             path=path,
@@ -779,7 +784,7 @@ class ColumnDisplayHint:
     title: str
     short_title: str
     long_title: str
-    paint_function: PaintFunction
+    paint_function: PaintFunctionFromAPI
 
     @property
     def long_inventory_title(self) -> str:
@@ -797,7 +802,7 @@ def _parse_column_hint(
             title if (short_title := legacy_hint.get("short")) is None else str(short_title)
         ),
         long_title=_make_long_title(node_title, title),
-        paint_function=paint_function,
+        paint_function=_wrap_paint_function(paint_function),
     )
 
 
@@ -895,7 +900,7 @@ class ColumnDisplayHintOfView:
     title: str
     short_title: str
     long_title: str
-    paint_function: PaintFunction
+    paint_function: PaintFunctionFromAPI
     sort_function: SortFunction
     filter: (
         FilterInvtableAdminStatus
@@ -929,7 +934,7 @@ def _parse_column_hint_of_view(
             title if (short_title := legacy_hint.get("short")) is None else str(short_title)
         ),
         long_title=long_title,
-        paint_function=paint_function,
+        paint_function=_wrap_paint_function(paint_function),
         sort_function=_make_sort_function_of_legacy_hint(legacy_hint),
         filter=_parse_column_display_hint_filter_class(
             table_view_name, name, long_title, legacy_hint.get("filter")
@@ -1029,7 +1034,9 @@ class NodeDisplayHint:
                 title=title,
                 short_title=title,
                 long_title=long_title,
-                paint_function=inv_paint_funtions["inv_paint_generic"]["func"],
+                paint_function=_wrap_paint_function(
+                    inv_paint_funtions["inv_paint_generic"]["func"]
+                ),
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter=_make_attribute_filter_from_legacy_hint(
                     path=self.path,
@@ -1050,7 +1057,9 @@ class NodeDisplayHint:
                 title=title,
                 short_title=title,
                 long_title=_make_long_title(self.title if self.path else "", title),
-                paint_function=inv_paint_funtions["inv_paint_generic"]["func"],
+                paint_function=_wrap_paint_function(
+                    inv_paint_funtions["inv_paint_generic"]["func"]
+                ),
             )
 
         return hint if (hint := self.table.columns.get(SDKey(key))) else _default()

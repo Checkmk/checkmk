@@ -5,8 +5,7 @@
 import logging
 
 from cmk.agent_receiver.config import get_config
-
-from .test_lib.agent_receiver import AgentReceiverClient
+from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
 
 
 def test_middleware_adds_request_id_to_logs(

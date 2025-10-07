@@ -109,6 +109,71 @@ TEST(SectionProviders, SystemTime) {
     EXPECT_GE(value, seconds_since_epoch);
 }
 
+TEST(SectionProviders_Integration, W32TimeStatus) {
+    srv::SectionProvider<W32TimeStatus> w32time_status_provider;
+    auto &engine = w32time_status_provider.getEngine();
+
+    static constexpr std::array<std::string_view, 16> kFields{
+        "Leap Indicator:",
+        "Stratum:",
+        "Precision:",
+        "Root Delay:",
+        "Root Dispersion:",
+        "ReferenceId:",
+        "Last Successful Sync Time:",
+        "Source:",
+        "Poll Interval:",
+        "Phase Offset:",
+        "ClockRate:",
+        "State Machine:",
+        "Time Source Flags:",
+        "Server Role:",
+        "Last Sync Error:",
+        "Time since Last Good Sync Time:"};
+
+    auto const &content = engine.generateContent(section_name);
+
+    EXPECT_EQ(engine.getUniqName(), section::kW32TimeStatus);
+    ASSERT_FALSE(content.empty());
+    EXPECT_NE(content.find("<<<w32time_status>>>"), std::string::npos);
+    for (auto f : kFields) {
+        EXPECT_NE(content.find(f), std::string::npos)
+            << "Missing field: " << f << "\nFull output:\n"
+            << content;
+    }
+}
+
+TEST(SectionProviders_Integration, W32TimePeers) {
+    srv::SectionProvider<W32TimePeers> w32time_peers_provider;
+    auto &engine = w32time_peers_provider.getEngine();
+    auto const &content = engine.generateContent(section_name);
+    static constexpr std::array<std::string_view, 15> kFields{
+        "#Peers:",
+        "Peer:",
+        "State:",
+        "Time Remaining:",
+        "Mode:",
+        "Stratum:",
+        "PeerPoll Interval:",
+        "HostPoll Interval:",
+        "Last Successful Sync Time:",
+        "LastSyncError:",
+        "LastSyncErrorMsgId:",
+        "AuthTypeMsgId:",
+        "Resolve Attempts:",
+        "ValidDataCounter:",
+        "Reachability:"};
+
+    EXPECT_EQ(engine.getUniqName(), section::kW32TimePeers);
+    ASSERT_FALSE(content.empty());
+    EXPECT_NE(content.find("<<<w32time_peers>>>"), std::string::npos);
+    for (auto f : kFields) {
+        EXPECT_NE(content.find(f), std::string::npos)
+            << "Missing field: " << f << "\nFull output:\n"
+            << content;
+    }
+}
+
 class SectionProviderCheckMkFixture : public ::testing::Test {
 public:
     static constexpr size_t core_lines_ = 23;

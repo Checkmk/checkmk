@@ -26,7 +26,7 @@ def test_match_item_generator_settings(
 
     config_variable = ConfigVariable(
         group=group,
-        domain=ConfigDomainCore,
+        primary_domain=ConfigDomainCore,
         ident="ident",
         valuespec=lambda: TextInput(title="title"),
     )

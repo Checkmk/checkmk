@@ -205,9 +205,8 @@ def wmi_yield_raw_counter(
         int(value),
         perfvar,
         get_levels_quadruple(levels),
+        human_readable_func=(lambda x: f"{x} {unit}") if unit else str,
         infoname=infoname,
-        unit=unit,
-        human_readable_func=str,
     )
 
 

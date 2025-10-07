@@ -1,0 +1,131 @@
+interactions:
+- request:
+    body: '{"werk": {"title": "some_cloud_title", "date": "2025-09-22T12:06:54Z",
+      "level": "1", "versions": ["0.1.0"], "werk_class": "feature", "component": "ccc",
+      "compatible": true, "werk_text": "\n"}}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '176'
+      content-type:
+      - application/json
+      host:
+      - meisterwerk.lan.checkmk.net
+      user-agent:
+      - python-httpx/0.28.1
+      user-id:
+      - cli_user
+      x-request-id:
+      - 09a4e30e-69f2-47d4-ad68-db142cb1a3be
+    method: POST
+    uri: http://meisterwerk.lan.checkmk.net/werks/evaluate/werk
+  response:
+    body:
+      string: '{"user_id":"python-httpx/0.28.1","request_id":"09a4e30e-69f2-47d4-ad68-db142cb1a3be","response_datetime":"2025-09-18T13:42:57.106284Z","evaluation":{"aggregated_scores":{"grammar_score":3,"user_impact_clarity_score":1,"paragraph_division_score":1,"non_compatible_werk_score":null,"english_style_score":1},"aggregated_suggestions":{"grammar_suggestions_to_improve_text":"No
+        improvements necessary.","user_impact_clarity_suggestions_to_improve_text":"Add
+        a clear description of the change, including what users will experience differently,
+        whether any action is needed from them, and how this change affects their
+        daily use of Checkmk.","paragraph_division_suggestions_to_improve_text":"Divide
+        the text into multiple paragraphs to separate distinct concepts. For example:
+        1. Describe the initial problem with storing values that do not match the
+        \"value_raw\" field. 2. Explain the validation and migration process and how
+        it could lead to issues. 3. Provide the example with the diskstat_inventory
+        rule. 4. Detail the fix implemented to ensure correct rule data persistence.
+        5. List the conditions under which existing invalid data will be fixed. This
+        structure improves readability and makes the changelog easier to scan.","non_compatible_werk_suggestions_to_improve_text":null,"english_style_suggestions_to_improve_text":"Provide
+        the werk text to enable evaluation and improvement suggestions."}}}'
+    headers:
+      Content-Length:
+      - '1398'
+      Content-Type:
+      - text/html; charset=utf-8
+      - application/json
+      Date:
+      - Mon, 22 Sep 2025 12:06:53 GMT
+      Server:
+      - uvicorn
+      Via:
+      - 1.1 Caddy
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"werk": {"title": "some_cloud_title", "date": "2025-09-22T12:06:54Z",
+      "level": "1", "versions": ["0.1.0"], "werk_class": "feature", "component": "ccc",
+      "compatible": true, "werk_text": "\n"}, "evaluation": {"aggregated_scores":
+      {"grammar_score": 3, "user_impact_clarity_score": 1, "paragraph_division_score":
+      1, "non_compatible_werk_score": null, "english_style_score": 1}, "aggregated_suggestions":
+      {"grammar_suggestions_to_improve_text": "No improvements necessary.", "user_impact_clarity_suggestions_to_improve_text":
+      "Add a clear description of the change, including what users will experience
+      differently, whether any action is needed from them, and how this change affects
+      their daily use of Checkmk.", "paragraph_division_suggestions_to_improve_text":
+      "Divide the text into multiple paragraphs to separate distinct concepts. For
+      example: 1. Describe the initial problem with storing values that do not match
+      the \"value_raw\" field. 2. Explain the validation and migration process and
+      how it could lead to issues. 3. Provide the example with the diskstat_inventory
+      rule. 4. Detail the fix implemented to ensure correct rule data persistence.
+      5. List the conditions under which existing invalid data will be fixed. This
+      structure improves readability and makes the changelog easier to scan.", "non_compatible_werk_suggestions_to_improve_text":
+      null, "english_style_suggestions_to_improve_text": "Provide the werk text to
+      enable evaluation and improvement suggestions."}}}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '1439'
+      content-type:
+      - application/json
+      host:
+      - meisterwerk.lan.checkmk.net
+      user-agent:
+      - werk-tool-v1.0.0
+      user-id:
+      - cli_user
+      x-request-id:
+      - 43d67aee-3e05-4a8d-8b43-f144a3d47799
+    method: POST
+    uri: http://meisterwerk.lan.checkmk.net/werks/generate/rewrite
+  response:
+    body:
+      string: '{"user_id":"werk-tool-v1.0.0","request_id":"43d67aee-3e05-4a8d-8b43-f144a3d47799","response_datetime":"2025-09-18T13:42:57.106799Z","rewritten_text":"Previously,
+        Checkmk stored rule values that did not match the expected \"value_raw\" field
+        format without validation. During the upgrade process, a validation and migration
+        step was introduced to ensure that all rule values conform to the correct
+        format. However, this migration could cause issues if existing rule data was
+        invalid or inconsistent.\n\nFor example, the diskstat_inventory rule was affected
+        by this problem, where some stored values did not match the required format.
+        This mismatch could lead to errors or unexpected behavior when applying or
+        editing these rules.\n\nTo address this, we have implemented a fix that ensures
+        rule data is correctly validated and persisted in the proper format. This
+        guarantees that only valid rule values are stored going forward, preventing
+        similar issues.\n\nExisting invalid rule data will be automatically corrected
+        during the upgrade if it meets certain conditions, ensuring a smooth transition
+        without requiring manual intervention from users.\n\nAs a result, users will
+        experience more reliable rule management and fewer errors related to rule
+        value formats. No action is needed on your part, but you will benefit from
+        improved stability and consistency in rule handling after upgrading."}'
+    headers:
+      Content-Length:
+      - '1392'
+      Content-Type:
+      - text/html; charset=utf-8
+      - application/json
+      Date:
+      - Mon, 22 Sep 2025 12:07:02 GMT
+      Server:
+      - uvicorn
+      Via:
+      - 1.1 Caddy
+    status:
+      code: 200
+      message: OK
+version: 1

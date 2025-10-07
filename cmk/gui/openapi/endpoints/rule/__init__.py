@@ -12,7 +12,7 @@ from typing import Any
 
 from cmk.gui import exceptions, http
 from cmk.gui.config import active_config
-from cmk.gui.form_specs.vue import get_visitor, RawDiskData, VisitorOptions
+from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.rule.fields import (
     APILabelGroupCondition,

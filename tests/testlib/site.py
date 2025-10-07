@@ -1639,9 +1639,6 @@ class Site:
                 continue
             crash_type = crash.get("exc_type", "")
             crash_detail = crash.get("exc_value", "")
-            if re.search("Cannot render negative timespan", crash_detail):
-                logger.warning("Ignored crash report due to CMK-18635!")
-                continue
             if re.search("systime", crash_detail):
                 logger.warning("Ignored crash report. See CMK-20674")
                 continue

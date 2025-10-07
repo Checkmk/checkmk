@@ -10,11 +10,13 @@ import fastapi
 from cmk.agent_receiver.config import Config, get_config
 from cmk.agent_receiver.relay.api.dependencies.relays_repository import get_relays_repository
 from cmk.agent_receiver.relay.api.routers.tasks.handlers import (
+    ActivateConfigHandler,
     CreateTaskHandler,
     GetRelayTaskHandler,
     GetRelayTasksHandler,
     UpdateTaskHandler,
 )
+from cmk.agent_receiver.relay.api.routers.tasks.libs.config_task_factory import ConfigTaskFactory
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import TasksRepository
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 
@@ -65,4 +67,22 @@ def get_update_task_handler(
     return UpdateTaskHandler(
         tasks_repository=tasks_repository,
         relays_repository=relays_repository,
+    )
+
+
+def get_config_task_factory(
+    tasks_repository: Annotated[TasksRepository, fastapi.Depends(get_tasks_repository)],
+    relays_repository: Annotated[RelaysRepository, fastapi.Depends(get_relays_repository)],
+) -> ConfigTaskFactory:
+    return ConfigTaskFactory(
+        tasks_repository=tasks_repository,
+        relays_repository=relays_repository,
+    )
+
+
+def get_activate_config_handler(
+    config_task_factory: Annotated[ConfigTaskFactory, fastapi.Depends(get_config_task_factory)],
+) -> ActivateConfigHandler:
+    return ActivateConfigHandler(
+        config_task_factory=config_task_factory,
     )

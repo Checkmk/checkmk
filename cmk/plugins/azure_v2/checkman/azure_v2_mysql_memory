@@ -1,0 +1,15 @@
+title: Microsoft Azure MySQL Database: Memory Utilization
+agents: azure_v2
+catalog: cloud/azure
+license: GPLv2
+distribution: check_mk
+description:
+ This check reports the memory utilization in percent.
+ You can configure levels using the rule "Memory Utilization".
+
+item:
+ The name of the resource.
+
+discovery:
+ One service is created for each database if the required metric
+ (average_memory_percent) is given.

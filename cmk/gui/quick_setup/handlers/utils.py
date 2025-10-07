@@ -10,7 +10,7 @@ from typing import Any, cast
 from pydantic import BaseModel
 
 from cmk.gui.background_job import BackgroundProcessInterface
-from cmk.gui.form_specs.vue import (
+from cmk.gui.form_specs import (
     DEFAULT_VALUE,
     get_visitor,
     RawDiskData,

@@ -79,6 +79,7 @@ class ApiConfig:
     # But we also want to limit this to values that are actually used throughout the API.
     agent_controller_certificates: AgentControllerCertificates
     debug: bool
+    default_temperature_unit: str
     graph_timeranges: list[GraphTimerange]
     password_policy: PasswordPolicy
     sites: SiteConfigurations
@@ -96,6 +97,7 @@ class ApiConfig:
         return cls(
             agent_controller_certificates=config.agent_controller_certificates,
             debug=config.debug,
+            default_temperature_unit=config.default_temperature_unit,
             graph_timeranges=config.graph_timeranges,
             password_policy=config.password_policy,
             sites=config.sites,

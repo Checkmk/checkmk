@@ -16,9 +16,9 @@ import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.version import Edition, edition, mark_edition_only
 from cmk.gui.config import active_config
-from cmk.gui.form_specs.converter import Tuple as FSTuple
-from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
-from cmk.gui.form_specs.private.time_specific import TimeSpecific
+from cmk.gui.form_specs.unstable import SingleChoiceElementExtended, SingleChoiceExtended
+from cmk.gui.form_specs.unstable.legacy_converter import Tuple as FSTuple
+from cmk.gui.form_specs.unstable.time_specific import TimeSpecific
 from cmk.gui.global_config import get_global_config
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html

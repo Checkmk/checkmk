@@ -55,8 +55,9 @@ class _Builder:
         max_age_agent: MaxAge,
         max_age_snmp: MaxAge,
         snmp_backend: SNMPBackendEnum,
-        file_cache_path: Path,
-        tcp_cache_path: Path,
+        file_cache_path_base: Path,
+        file_cache_path_relative: Path,
+        tcp_cache_path_relative: Path,
         tls_config: TLSConfig,
         computed_datasources: ComputedDataSources,
         datasource_programs: Sequence[str],
@@ -87,8 +88,9 @@ class _Builder:
         self.datasource_programs: Final = datasource_programs
         self.agent_connection_mode: Final = agent_connection_mode
         self.check_mk_check_interval: Final = check_mk_check_interval
-        self._file_cache_path: Final = file_cache_path
-        self._tcp_cache_path: Final = tcp_cache_path
+        self._file_cache_path_base: Final = file_cache_path_base
+        self._file_cache_path_relative: Final = file_cache_path_relative
+        self._tcp_cache_path_relative: Final = tcp_cache_path_relative
         self.tls_config: Final = tls_config
 
         self._elems: dict[str, Source] = {}
@@ -127,7 +129,8 @@ class _Builder:
                     agent_name=agentname,
                     cmdline=agent_data.cmdline,
                     stdin=agent_data.stdin,
-                    file_cache_path=self._file_cache_path,
+                    file_cache_path_base=self._file_cache_path_base,
+                    file_cache_path_relative=self._file_cache_path_relative,
                 )
 
         special_agents = tuple(make_special_agents())
@@ -171,7 +174,8 @@ class _Builder:
                     self.host_ip_family,
                     self.ipaddress or HostAddress("127.0.0.1"),
                     max_age=self.max_age_snmp,
-                    file_cache_path=self._file_cache_path,
+                    file_cache_path_base=self._file_cache_path_base,
+                    file_cache_path_relative=self._file_cache_path_relative,
                 )
             )
             return
@@ -191,7 +195,8 @@ class _Builder:
                 self.host_ip_family,
                 self.ipaddress,
                 max_age=self.max_age_snmp,
-                file_cache_path=self._file_cache_path,
+                file_cache_path_base=self._file_cache_path_base,
+                file_cache_path_relative=self._file_cache_path_relative,
             )
         )
 
@@ -216,7 +221,8 @@ class _Builder:
                         self.host_ip_family,
                         self.management_ip,
                         max_age=self.max_age_snmp,
-                        file_cache_path=self._file_cache_path,
+                        file_cache_path_base=self._file_cache_path_base,
+                        file_cache_path_relative=self._file_cache_path_relative,
                     )
                 )
             case "ipmi":
@@ -226,7 +232,8 @@ class _Builder:
                         self.host_name,
                         self.management_ip,
                         max_age=self.max_age_agent,
-                        file_cache_path=self._file_cache_path,
+                        file_cache_path_base=self._file_cache_path_base,
+                        file_cache_path_relative=self._file_cache_path_relative,
                     )
                 )
             case _:
@@ -245,7 +252,8 @@ class _Builder:
                     self.ipaddress,
                     program=self.datasource_programs[0],
                     max_age=self.max_age_agent,
-                    file_cache_path=self._tcp_cache_path,
+                    file_cache_path_base=self._file_cache_path_base,
+                    file_cache_path_relative=self._tcp_cache_path_relative,
                 )
             )
             return
@@ -260,7 +268,8 @@ class _Builder:
                         self.host_name,
                         self.ipaddress,
                         max_age=MaxAge(interval, interval, interval),
-                        file_cache_path=self._file_cache_path,
+                        file_cache_path_base=self._file_cache_path_base,
+                        file_cache_path_relative=self._file_cache_path_relative,
                     )
                 )
             case HostAgentConnectionMode.PULL:
@@ -276,7 +285,8 @@ class _Builder:
                         self.host_ip_family,
                         self.ipaddress,
                         max_age=self.max_age_agent,
-                        file_cache_path=self._tcp_cache_path,
+                        file_cache_path_base=self._file_cache_path_base,
+                        file_cache_path_relative=self._tcp_cache_path_relative,
                         tls_config=self.tls_config,
                     )
                 )
@@ -297,8 +307,9 @@ def make_sources(
     simulation_mode: bool,
     file_cache_options: FileCacheOptions,
     file_cache_max_age: MaxAge,
-    file_cache_path: Path,
-    tcp_cache_path: Path,
+    file_cache_path_base: Path,
+    file_cache_path_relative: Path,
+    tcp_cache_path_relative: Path,
     tls_config: TLSConfig,
     computed_datasources: ComputedDataSources,
     datasource_programs: Sequence[str],
@@ -338,8 +349,9 @@ def make_sources(
         snmp_backend=snmp_backend,
         max_age_agent=max_age_agent(),
         max_age_snmp=max_age_snmp(),
-        file_cache_path=file_cache_path,
-        tcp_cache_path=tcp_cache_path,
+        file_cache_path_base=file_cache_path_base,
+        file_cache_path_relative=file_cache_path_relative,
+        tcp_cache_path_relative=tcp_cache_path_relative,
         tls_config=tls_config,
         computed_datasources=computed_datasources,
         datasource_programs=datasource_programs,

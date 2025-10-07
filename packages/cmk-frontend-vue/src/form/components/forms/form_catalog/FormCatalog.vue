@@ -76,7 +76,7 @@ function isGroupedTopic(topic: Topic): boolean {
                 class="form-catalog__icon"
                 :class="{ 'form-catalog__icon--open': !hiddenTopics[topic.name] }"
                 size="xxsmall"
-                name="tree_closed"
+                name="tree-closed"
               />
               {{ topic.title }}
             </td>

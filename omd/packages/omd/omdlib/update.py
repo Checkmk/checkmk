@@ -15,9 +15,10 @@ from pathlib import Path
 from types import TracebackType
 from typing import Literal, Self
 
-from omdlib.contexts import SiteContext
 from omdlib.crash_reporting import report_crash
+from omdlib.skel_permissions import Permissions
 from omdlib.tmpfs import prepare_and_populate_tmpfs, unmount_tmpfs_without_save
+from omdlib.type_defs import Config, Replacements
 from omdlib.version_info import VersionInfo
 
 from cmk.ccc.crash_reporting import make_crash_report_base_path
@@ -189,8 +190,23 @@ class ManageUpdate:
             store(self.site_dir, relpath, self.backup_dir)
         return self
 
-    def prepare_and_populate_tmpfs(self, version: VersionInfo, site: SiteContext) -> None:
-        prepare_and_populate_tmpfs(version, site, str(self.new_skel))
+    def prepare_and_populate_tmpfs(
+        self,
+        version: VersionInfo,
+        config: Config,
+        replacements: Replacements,
+        skel_permissions: Permissions,
+    ) -> None:
+        prepare_and_populate_tmpfs(
+            config,
+            version,
+            self.site_name,
+            str(self.site_dir),
+            str(self.tmp_dir),
+            replacements,
+            skel_permissions,
+            str(self.new_skel),
+        )
         self.populated_tmpfs = True
 
     def __exit__(

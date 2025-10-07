@@ -6,16 +6,18 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import type { StageInformation, WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
+import { computed, ref } from 'vue'
 
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 
 import NextSteps from '@/welcome/components/NextSteps.vue'
 import OnboardingStepper from '@/welcome/components/OnboardingStepper.vue'
 import ResourceLinksPanel from '@/welcome/components/ResourceLinksPanel.vue'
+import { getWelcomeStageInformation, markStepAsComplete } from '@/welcome/components/steps/utils.ts'
 
 import WelcomeBanner from './components/WelcomeBanner.vue'
 import WelcomeFooter from './components/WelcomeFooter.vue'
-import { totalSteps } from './components/steps/stepComponents'
+import { type StepId, totalSteps } from './components/steps/stepComponents'
 
 const props = defineProps<{
   urls: WelcomeUrls
@@ -23,7 +25,16 @@ const props = defineProps<{
   is_start_url: boolean
 }>()
 
-const completedSteps = props.stage_information.finished.length
+const currentStageInformation = ref(props.stage_information)
+const completedSteps = computed(() => currentStageInformation.value.finished.length)
+
+async function stepCompleted(stepId: StepId): Promise<void> {
+  await markStepAsComplete(props.urls.mark_step_completed, stepId).then(async () => {
+    currentStageInformation.value =
+      (await getWelcomeStageInformation(props.urls.get_stage_information)) ||
+      currentStageInformation.value
+  })
+}
 </script>
 
 <template>
@@ -39,8 +50,9 @@ const completedSteps = props.stage_information.finished.length
           <NextSteps v-if="completedSteps === totalSteps" :urls="urls" />
           <OnboardingStepper
             :urls="urls"
-            :finished-steps="stage_information.finished"
+            :finished-steps="currentStageInformation.finished"
             :show-heading="true"
+            @step-completed="stepCompleted"
           />
         </div>
         <div class="welcome-app__panel-right">

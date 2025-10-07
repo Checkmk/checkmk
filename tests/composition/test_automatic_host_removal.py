@@ -16,6 +16,7 @@ from tests.testlib.site import Site
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.medium_test_chain
 @pytest.mark.skip_if_edition("saas")
 @pytest.mark.xfail(
     condition=os.getenv("DISTRO") == "almalinux-9",

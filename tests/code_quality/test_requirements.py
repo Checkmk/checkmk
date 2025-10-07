@@ -159,6 +159,8 @@ def iter_sourcefiles(basepath: Path) -> Iterable[Path]:
             continue
         if sub_path.name == "tests":
             continue
+        if "testlib" in sub_path.name:
+            continue
         if sub_path.name.startswith("."):
             continue
         if sub_path.is_file() and is_python_file(sub_path):
@@ -389,7 +391,7 @@ KNOWN_UNDECLARED_DEPENDENCIES = {
     ImportName("tinkerforge"): {Path("cmk/plugins/tinkerforge/special_agent/agent_tinkerforge.py")},
     ImportName("rados"): {Path("cmk/plugins/ceph/agents/mk_ceph.py")},
     ImportName("netsnmp"): {  # We ship it with omd/packages
-        Path("cmk/fetchers/cee/snmp_backend/inline.py")
+        Path("non-free/packages/cmk-core-helpers/cmk/inline_snmp/inline.py")
     },
     ImportName("rrdtool"): {  # is built as part of the project
         Path("bin/cmk-convert-rrds"),
@@ -418,6 +420,8 @@ def test_dependencies_are_used() -> None:
     known_unused_packages.add("setuptools")  # pinned transitive dependency
     # used for deploying the agent receiver, but in a bash script, so undetectable by this test
     known_unused_packages.add("gunicorn")
+    # Will soon be used
+    known_unused_packages.add("clickhouse-connect")
 
     if not is_enterprise_repo():
         known_unused_packages.update(("PyPDF", "numpy", "roman"))

@@ -14,6 +14,7 @@ from itertools import chain
 from typing import Final, override
 
 import redis
+from pydantic import BaseModel
 from redis import ConnectionError as RedisConnectionError
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -23,8 +24,7 @@ from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundProcessInterface,
     InitialStatusArgs,
-    NoArgs,
-    simple_job_target,
+    JobTarget,
 )
 from cmk.gui.config import active_config, Config
 from cmk.gui.ctx_stack import g
@@ -40,9 +40,11 @@ from cmk.gui.i18n import (
 )
 from cmk.gui.logged_in import user
 from cmk.gui.pages import get_page_handler
+from cmk.gui.permissions import permission_registry
 from cmk.gui.session import SuperUserContext
 from cmk.gui.type_defs import SearchQuery, SearchResult, SearchResultsByTopic
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.utils.urls import file_name_and_query_vars_from_url, QueryVars
 from cmk.gui.watolib.mode_permissions import mode_permissions_ensurance_registry
 from cmk.gui.watolib.rulesets import may_edit_ruleset
@@ -296,7 +298,7 @@ def may_see_url(url: str, config: Config) -> bool:
         if mode:
             mode_permissions_ensurance_registry[mode]().ensure_permissions()
         else:
-            _try_page(file_name, active_config)
+            _try_page(file_name, config)
         return True
     except MKAuthException:
         return False
@@ -393,14 +395,14 @@ class IndexSearcher:
         render only, thus avoiding checking the permissions for all found results.
         """
         yield from self._filter_results_by_user_permissions(
-            self._sort_search_results(self._search_redis(query)), config
+            self._sort_search_results(self._search_redis(query, config)), config
         )
 
     def _search_redis(
-        self, query: SearchQuery
+        self, query: SearchQuery, config: Config
     ) -> dict[str, list[_SearchResultWithVisibilityCheck]]:
         if not IndexBuilder.index_is_built(self._redis_client):
-            self._launch_index_building_in_background_job()
+            self._launch_index_building_in_background_job(config)
             raise IndexNotFoundException
 
         query_preprocessed = f"*{query.lower().replace(' ', '*')}*"
@@ -429,10 +431,17 @@ class IndexSearcher:
             for topic in chain(results_localization_independent, results_localization_dependent)
         }
 
-    def _launch_index_building_in_background_job(self) -> None:
+    def _launch_index_building_in_background_job(self, config: Config) -> None:
         build_job = SearchIndexBackgroundJob()
         build_job.start(
-            simple_job_target(_index_building_in_background_job),
+            JobTarget(
+                callable=_index_building_in_background_job,
+                args=SearchIndexBackgroundJobArgs(
+                    user_permission_config=UserPermissionSerializableConfig.from_global_config(
+                        config
+                    ),
+                ),
+            ),
             # We deliberately do not provide an estimated duration here, since that involves I/O.
             # We need to be as fast as possible here, since this is done at the end of HTTP
             # requests.
@@ -566,9 +575,14 @@ class _SearchResultWithVisibilityCheck:
 
 
 def _index_building_in_background_job(
-    job_interface: BackgroundProcessInterface, args: NoArgs
+    job_interface: BackgroundProcessInterface, args: SearchIndexBackgroundJobArgs
 ) -> None:
-    with job_interface.gui_context(), get_redis_client() as redis_client:
+    with (
+        job_interface.gui_context(
+            UserPermissions.from_serialized_config(args.user_permission_config, permission_registry)
+        ),
+        get_redis_client() as redis_client,
+    ):
         _build_index(job_interface, redis_client)
 
 
@@ -584,7 +598,14 @@ def launch_requests_processing_background() -> None:
     job = SearchIndexBackgroundJob()
     # Don't report any error from job.start() to not spam the logs
     job.start(
-        simple_job_target(_process_update_requests_background),
+        JobTarget(
+            callable=_process_update_requests_background,
+            args=SearchIndexBackgroundJobArgs(
+                user_permission_config=UserPermissionSerializableConfig.from_global_config(
+                    active_config
+                ),
+            ),
+        ),
         # We deliberately do not provide an estimated duration here, since that involves I/O.
         # We need to be as fast as possible here, since this is done at the end of HTTP
         # requests.
@@ -596,10 +617,19 @@ def launch_requests_processing_background() -> None:
     )
 
 
+class SearchIndexBackgroundJobArgs(BaseModel, frozen=True):
+    user_permission_config: UserPermissionSerializableConfig
+
+
 def _process_update_requests_background(
-    job_interface: BackgroundProcessInterface, args: NoArgs
+    job_interface: BackgroundProcessInterface, args: SearchIndexBackgroundJobArgs
 ) -> None:
-    with job_interface.gui_context(), get_redis_client() as redis_client:
+    with (
+        job_interface.gui_context(
+            UserPermissions.from_serialized_config(args.user_permission_config, permission_registry)
+        ),
+        get_redis_client() as redis_client,
+    ):
         if not redis_server_reachable(redis_client):
             job_interface.send_progress_update(_("Redis is not reachable, terminating"))
             return

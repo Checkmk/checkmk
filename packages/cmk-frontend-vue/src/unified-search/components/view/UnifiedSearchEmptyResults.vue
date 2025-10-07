@@ -28,6 +28,9 @@ const currentlySelected = ref<number>(-1)
 searchUtils.input?.onSetFocus(() => {
   currentlySelected.value = -1
 })
+searchUtils.onResetSearch(() => {
+  currentlySelected.value = -1
+})
 
 const shortcutCallbackIds = ref<string[]>([])
 shortcutCallbackIds.value.push(searchUtils.shortCuts.onArrowDown(toggleDown))

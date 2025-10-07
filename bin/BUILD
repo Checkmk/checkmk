@@ -67,7 +67,9 @@ pkg_files(
         ":cmk-monitor-diskusage",
         ":cmk-monitor-mkbackup",
         ":cmk-monitor-mknotifyd",
+        ":cmk-monitor-otel-collector",
         ":cmk-passwd",
+        ":cmk-passwordstore",
         ":cmk-piggyback",
         ":cmk-piggyback-hub",
         ":cmk-transform-inventory-trees",
@@ -96,7 +98,17 @@ pkg_tar(
     srcs = [
         ":bin_750",
         ":bin_755",
+        ":cmk-passwordstore",
         ":cmk_link",
     ],
     visibility = ["//visibility:public"],
+)
+
+pkg_files(
+    name = "cmk-passwordstore",
+    srcs = ["//cmk:utils/password_store/cli.py"],
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+    renames = {"//cmk:utils/password_store/cli.py": "bin/cmk-passwordstore"},
 )

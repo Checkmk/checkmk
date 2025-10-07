@@ -1,0 +1,23 @@
+title: Microsoft Azure Virtual Network Gateways: Remote Peering
+agents: azure
+catalog: cloud/azure
+license: GPLv2
+distribution: check_mk
+description:
+ This check and the associated special agent (agent_azure) are deprecated
+ and will be removed in a future version.
+
+ Please configure the new special agent using the "Microsoft Azure" ruleset.
+
+ This check monitors remote peerings of a Microsoft Azure
+ virtual network gateway.
+ The state is WARN if the remote peering's sync level isn't
+ "FullyInSync" or state isn't "Connected".
+
+ In order to use this check, you need to configure the Azure special agent.
+
+item:
+ The name of the resource.
+
+discovery:
+ One service is created for each remote peering.

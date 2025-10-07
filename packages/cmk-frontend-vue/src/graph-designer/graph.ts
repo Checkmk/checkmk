@@ -5,9 +5,7 @@
  */
 import { type GraphLines, type GraphOptions } from 'cmk-shared-typing/typescript/graph_designer'
 
-import { cmkFetch } from '@/lib/cmkFetch'
-
-import { AjaxResponseError, type MaybeApiError } from '@/graph-designer/fetch_metric_color'
+import { cmkAjax } from '@/lib/ajax'
 
 // Copied from cmk-frontend/src/js/modules/graphs.ts
 
@@ -197,23 +195,11 @@ async function fetchAjaxGraph<OutputType>(
   graphLines: GraphLines,
   graphOptions: GraphOptions
 ): Promise<OutputType> {
-  const response = await cmkFetch('ajax_fetch_ajax_graph.py', {
-    method: 'POST',
-    headers: {
-      'Content-type': 'application/x-www-form-urlencoded'
-    },
-    body: `request=${JSON.stringify({
-      graph_id: graphId,
-      graph_lines: graphLines,
-      graph_options: graphOptions
-    })}`
+  return cmkAjax('ajax_fetch_ajax_graph.py', {
+    graph_id: graphId,
+    graph_lines: graphLines,
+    graph_options: graphOptions
   })
-  await response.raiseForStatus()
-  const ajaxResponse = (await response.json()) as MaybeApiError
-  if (ajaxResponse.result_code !== 0) {
-    throw new AjaxResponseError('Endpoint returned an error.', ajaxResponse as MaybeApiError)
-  }
-  return ajaxResponse.result as OutputType
 }
 
 export type GraphRenderer = (

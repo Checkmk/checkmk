@@ -81,6 +81,9 @@ def check_elphase(item, params, parsed):  # pylint: disable=too-many-branches
             if what in params:
                 if bound == Bounds.Both:
                     levels = params[what]
+                    # The frequency option in the ruleset is switched up.
+                    if what == "frequency":
+                        levels = [levels[2], levels[3], levels[0], levels[1]]
                 elif bound == Bounds.Upper:
                     levels[:2] = params[what]
                 else:  # Bounds.Lower

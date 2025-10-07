@@ -72,7 +72,7 @@ native_binary(
 
 filegroup(
     name = "clang_tidy_config",
-    srcs = [".clang-tidy"],
+    srcs = ["//:.clang-tidy"],
     visibility = ["//visibility:public"],
 )
 

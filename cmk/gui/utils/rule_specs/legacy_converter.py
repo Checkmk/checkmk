@@ -16,7 +16,6 @@
 
 import dataclasses
 import enum
-import urllib.parse
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
@@ -2178,11 +2177,7 @@ def _convert_to_legacy_http_proxy(
 
     def _global_proxy_choices() -> legacy_valuespecs.DropdownChoiceEntries:
         settings = legacy_config_domains.ConfigDomainCore().load()
-        return [
-            (p["ident"], p["title"])
-            for p in settings.get("http_proxies", {}).values()
-            if urllib.parse.urlparse(p["proxy_url"]).scheme in allowed_schemas
-        ]
+        return [(p["ident"], p["title"]) for p in settings.get("http_proxies", {}).values()]
 
     return Transform(
         legacy_valuespecs.CascadingDropdown(

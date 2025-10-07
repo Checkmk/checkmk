@@ -6,8 +6,9 @@
 
 from cmk.server_side_calls import alpha, v1
 from cmk.server_side_calls_backend.config_processing import (
+    GlobalProxiesWithLookup,
+    GlobalProxy,
     process_configuration_to_parameters,
-    ProxyConfig,
     ReplacementResult,
 )
 
@@ -15,7 +16,10 @@ from cmk.server_side_calls_backend.config_processing import (
 def test_process_configuration_to_parameter_password_stored() -> None:
     assert process_configuration_to_parameters(
         params={"password": ("cmk_postprocessed", "stored_password", ("my_secret_id", ""))},
-        global_proxies={},
+        global_proxies_with_lookup=GlobalProxiesWithLookup(
+            global_proxies={},
+            password_lookup=lambda x: None,
+        ),
         usage_hint="test",
         is_alpha=False,
     ) == ReplacementResult(
@@ -30,7 +34,10 @@ def test_process_configuration_to_parameter_password_explicit() -> None:
         params={
             "password": ("cmk_postprocessed", "explicit_password", (":uuid:1234", "actual_secret"))
         },
-        global_proxies={},
+        global_proxies_with_lookup=GlobalProxiesWithLookup(
+            global_proxies={},
+            password_lookup=lambda x: None,
+        ),
         usage_hint="test",
         is_alpha=False,
     ) == ReplacementResult(
@@ -43,7 +50,10 @@ def test_process_configuration_to_parameter_password_explicit() -> None:
 def test_process_configuration_to_parameter_no_proxy_v1() -> None:
     assert process_configuration_to_parameters(
         params={"proxy": ("cmk_postprocessed", "no_proxy", "")},
-        global_proxies={},
+        global_proxies_with_lookup=GlobalProxiesWithLookup(
+            global_proxies={},
+            password_lookup=lambda x: None,
+        ),
         usage_hint="test",
         is_alpha=False,
     ) == ReplacementResult(
@@ -56,7 +66,9 @@ def test_process_configuration_to_parameter_no_proxy_v1() -> None:
 def test_process_configuration_to_parameter_env_proxy_v1() -> None:
     assert process_configuration_to_parameters(
         params={"proxy": ("cmk_postprocessed", "environment_proxy", "")},
-        global_proxies={},
+        global_proxies_with_lookup=GlobalProxiesWithLookup(
+            global_proxies={}, password_lookup=lambda x: None
+        ),
         usage_hint="test",
         is_alpha=False,
     ) == ReplacementResult(
@@ -69,7 +81,10 @@ def test_process_configuration_to_parameter_env_proxy_v1() -> None:
 def test_process_configuration_to_parameter_explicit_proxy_v1() -> None:
     assert process_configuration_to_parameters(
         params={"proxy": ("cmk_postprocessed", "explicit_proxy", "hurray.com")},
-        global_proxies={},
+        global_proxies_with_lookup=GlobalProxiesWithLookup(
+            global_proxies={},
+            password_lookup=lambda x: None,
+        ),
         usage_hint="test",
         is_alpha=False,
     ) == ReplacementResult(
@@ -82,7 +97,16 @@ def test_process_configuration_to_parameter_explicit_proxy_v1() -> None:
 def test_process_configuration_to_parameter_global_proxy_ok_v1() -> None:
     assert process_configuration_to_parameters(
         params={"proxy": ("cmk_postprocessed", "stored_proxy", "my_global_proxy")},
-        global_proxies={"my_global_proxy": ProxyConfig(url="http://proxy.example.com:3128")},
+        global_proxies_with_lookup=GlobalProxiesWithLookup(
+            global_proxies={
+                "my_global_proxy": GlobalProxy(
+                    scheme="http",
+                    proxy_server_name="proxy.example.com",
+                    port=3128,
+                ),
+            },
+            password_lookup=lambda x: None,
+        ),
         usage_hint="test",
         is_alpha=False,
     ) == ReplacementResult(
@@ -95,7 +119,10 @@ def test_process_configuration_to_parameter_global_proxy_ok_v1() -> None:
 def test_process_configuration_to_parameter_global_proxy_missing_v1() -> None:
     assert process_configuration_to_parameters(
         params={"proxy": ("cmk_postprocessed", "stored_proxy", "my_global_proxy")},
-        global_proxies={},
+        global_proxies_with_lookup=GlobalProxiesWithLookup(
+            global_proxies={},
+            password_lookup=lambda x: None,
+        ),
         usage_hint="test",
         is_alpha=False,
     ) == ReplacementResult(
@@ -108,7 +135,10 @@ def test_process_configuration_to_parameter_global_proxy_missing_v1() -> None:
 def test_process_configuration_to_parameter_no_proxy_alpha() -> None:
     assert process_configuration_to_parameters(
         params={"proxy": ("cmk_postprocessed", "no_proxy", "")},
-        global_proxies={},
+        global_proxies_with_lookup=GlobalProxiesWithLookup(
+            global_proxies={},
+            password_lookup=lambda x: None,
+        ),
         usage_hint="test",
         is_alpha=False,
     ) == ReplacementResult(
@@ -121,7 +151,10 @@ def test_process_configuration_to_parameter_no_proxy_alpha() -> None:
 def test_process_configuration_to_parameter_env_proxy_alpha() -> None:
     assert process_configuration_to_parameters(
         params={"proxy": ("cmk_postprocessed", "environment_proxy", "")},
-        global_proxies={},
+        global_proxies_with_lookup=GlobalProxiesWithLookup(
+            global_proxies={},
+            password_lookup=lambda x: None,
+        ),
         usage_hint="test",
         is_alpha=False,
     ) == ReplacementResult(
@@ -134,7 +167,10 @@ def test_process_configuration_to_parameter_env_proxy_alpha() -> None:
 def test_process_configuration_to_parameter_explicit_proxy_alpha() -> None:
     assert process_configuration_to_parameters(
         params={"proxy": ("cmk_postprocessed", "explicit_proxy", "hurray.com")},
-        global_proxies={},
+        global_proxies_with_lookup=GlobalProxiesWithLookup(
+            global_proxies={},
+            password_lookup=lambda x: None,
+        ),
         usage_hint="test",
         is_alpha=False,
     ) == ReplacementResult(
@@ -147,7 +183,16 @@ def test_process_configuration_to_parameter_explicit_proxy_alpha() -> None:
 def test_process_configuration_to_parameter_global_proxy_ok_alpha() -> None:
     assert process_configuration_to_parameters(
         params={"proxy": ("cmk_postprocessed", "stored_proxy", "my_global_proxy")},
-        global_proxies={"my_global_proxy": ProxyConfig(url="http://proxy.example.com:3128")},
+        global_proxies_with_lookup=GlobalProxiesWithLookup(
+            global_proxies={
+                "my_global_proxy": GlobalProxy(
+                    scheme="http",
+                    proxy_server_name="proxy.example.com",
+                    port=3128,
+                ),
+            },
+            password_lookup=lambda x: None,
+        ),
         usage_hint="test",
         is_alpha=False,
     ) == ReplacementResult(
@@ -160,7 +205,10 @@ def test_process_configuration_to_parameter_global_proxy_ok_alpha() -> None:
 def test_process_configuration_to_parameter_global_proxy_missing_alpha() -> None:
     assert process_configuration_to_parameters(
         params={"proxy": ("cmk_postprocessed", "stored_proxy", "my_global_proxy")},
-        global_proxies={},
+        global_proxies_with_lookup=GlobalProxiesWithLookup(
+            global_proxies={},
+            password_lookup=lambda x: None,
+        ),
         usage_hint="test",
         is_alpha=False,
     ) == ReplacementResult(

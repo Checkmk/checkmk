@@ -23,7 +23,7 @@ from cmk.server_side_calls.v1 import (
     IPv4Config,
     IPv6Config,
 )
-from cmk.server_side_calls_backend import ActiveCheck, ActiveServiceData
+from cmk.server_side_calls_backend import ActiveCheck, ActiveServiceData, config_processing
 from cmk.utils import password_store
 
 HOST_CONFIG = HostConfig(
@@ -90,7 +90,9 @@ def test_get_active_service_data_respects_finalizer(
         TEST_PLUGIN_STORE,
         HostName("myhost"),
         HOST_CONFIG,
-        global_proxies={},
+        global_proxies_with_lookup=config_processing.GlobalProxiesWithLookup(
+            global_proxies={}, password_lookup=lambda _name: None
+        ),
         service_name_finalizer=lambda x: x.upper(),
         stored_passwords={},
         password_store_file=Path("/pw/store"),
@@ -273,7 +275,9 @@ def test_get_active_service_data(
         active_check_plugins,
         hostname,
         host_config,
-        global_proxies={},
+        global_proxies_with_lookup=config_processing.GlobalProxiesWithLookup(
+            global_proxies={}, password_lookup=lambda _name: None
+        ),
         service_name_finalizer=lambda x: x,
         stored_passwords=stored_passwords,
         password_store_file=Path("/pw/store"),
@@ -317,7 +321,9 @@ def test_get_active_service_data_password_with_hack(
         plugins=_PASSWORD_TEST_ACTIVE_CHECKS,
         host_name=HostName("myhost"),
         host_config=HOST_CONFIG,
-        global_proxies={},
+        global_proxies_with_lookup=config_processing.GlobalProxiesWithLookup(
+            global_proxies={}, password_lookup=lambda _name: None
+        ),
         service_name_finalizer=lambda x: x,
         stored_passwords={"uuid1234": "p4ssw0rd!"},
         password_store_file=Path("/pw/store"),
@@ -363,7 +369,9 @@ def test_get_active_service_data_password_without_hack() -> None:
         plugins=_PASSWORD_TEST_ACTIVE_CHECKS,
         host_name=HostName("myhost"),
         host_config=HOST_CONFIG,
-        global_proxies={},
+        global_proxies_with_lookup=config_processing.GlobalProxiesWithLookup(
+            global_proxies={}, password_lookup=lambda _name: None
+        ),
         service_name_finalizer=lambda x: x,
         stored_passwords={"uuid1234": "p4ssw0rd!"},
         password_store_file=Path("/pw/store"),
@@ -436,7 +444,9 @@ def test_test_get_active_service_data_crash_with_debug(
         active_check_plugins,
         HostName("test_host"),
         HOST_CONFIG,
-        global_proxies={},
+        global_proxies_with_lookup=config_processing.GlobalProxiesWithLookup(
+            global_proxies={}, password_lookup=lambda _name: None
+        ),
         service_name_finalizer=lambda x: x,
         stored_passwords={},
         password_store_file=Path("/pw/store"),
@@ -555,7 +565,9 @@ def test_get_active_service_data_warnings(
         active_check_plugins,
         hostname,
         HOST_CONFIG,
-        global_proxies={},
+        global_proxies_with_lookup=config_processing.GlobalProxiesWithLookup(
+            global_proxies={}, password_lookup=lambda _name: None
+        ),
         service_name_finalizer=lambda x: x,
         stored_passwords={},
         password_store_file=Path("/pw/store"),

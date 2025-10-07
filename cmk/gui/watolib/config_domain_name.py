@@ -319,7 +319,7 @@ class ConfigVariable:
         self._in_global_settings = in_global_settings
         self._hint_func = hint
         self._domain_hint = domain_hint
-        self._idents_of_affected_domains = {self._primary_domain_ident}
+        self._idents_of_affected_domains = [self._primary_domain_ident]
 
     def group(self) -> ConfigVariableGroup:
         """Returns the the configuration variable group this configuration variable belongs to"""
@@ -375,7 +375,8 @@ class ConfigVariable:
         self,
         domain: type[ABCConfigDomain],
     ) -> None:
-        self._idents_of_affected_domains.add(domain.ident())
+        if (domain_ident := domain.ident()) not in self._idents_of_affected_domains:
+            self._idents_of_affected_domains.append(domain_ident)
 
 
 class ConfigVariableRegistry(cmk.ccc.plugin_registry.Registry[ConfigVariable]):

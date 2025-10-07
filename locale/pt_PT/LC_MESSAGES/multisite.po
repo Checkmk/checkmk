@@ -48425,6 +48425,10 @@ msgstr ""
 msgid "PGs Active + Clean + Inconsistent"
 msgstr "Primário - Inconsistente"
 
+#, fuzzy
+msgid "PGs Active + Clean + Laggy"
+msgstr "Primário - Inconsistente"
+
 msgid "PGs Active + Clean + Remapped"
 msgstr ""
 

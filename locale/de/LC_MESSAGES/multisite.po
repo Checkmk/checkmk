@@ -46569,6 +46569,10 @@ msgstr "PGs Active + Clean"
 msgid "PGs Active + Clean + Inconsistent"
 msgstr "PGs Active + Clean + Inconsistent"
 
+#, fuzzy
+msgid "PGs Active + Clean + Laggy"
+msgstr "PGs Active + Clean + Wait"
+
 msgid "PGs Active + Clean + Remapped"
 msgstr "PGs Active + Clean + Remapped"
 

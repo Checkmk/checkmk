@@ -2971,9 +2971,9 @@ class ConfigCache:
     def extra_attributes_of_service(
         self, host_name: HostName, service_name: ServiceName, service_labels: Labels
     ) -> dict[str, Any]:
-        attrs = {
-            "check_interval": SERVICE_CHECK_INTERVAL,
-        }
+        attrs = dict[str, object](
+            check_interval=SERVICE_CHECK_INTERVAL,
+        )
         for key, ruleset in extra_service_conf.items():
             values = self.ruleset_matcher.get_service_values_all(
                 host_name, service_name, service_labels, ruleset, self.label_manager.labels_of_host
@@ -2981,12 +2981,12 @@ class ConfigCache:
             if not values:
                 continue
 
-            value: float | None = values[0]
+            value = values[0]
             if value is None:
                 continue
 
             if key == "check_interval":
-                value = float(value)
+                value = _parse(value, float)
 
             if key[0] == "_":
                 key = key.upper()
@@ -3105,7 +3105,7 @@ class ConfigCache:
             extra_service_conf.get("_ec_sl", []),
             self.label_manager.labels_of_host,
         )
-        return out[0] if out else None
+        return _parse(out[0], int) if out else None
 
     def check_period_of_service(
         self, host_name: HostName, service_name: ServiceName, service_labels: Labels
@@ -3655,10 +3655,13 @@ def make_parser_config(
 
     def _check_mk_check_interval(host_name: HostName) -> float:
         """Return the check interval in seconds for a host"""
-        return 60 * check_interval_config(
-            host_name,
-            "Check_MK",
-            label_manager.labels_of_service(host_name, "Check_MK", discovered_labels={}),
+        return 60 * _parse(
+            check_interval_config(
+                host_name,
+                "Check_MK",
+                label_manager.labels_of_service(host_name, "Check_MK", discovered_labels={}),
+            ),
+            float,
         )
 
     return ParserConfig(
@@ -3861,3 +3864,7 @@ class FetcherFactory:
 
     def make_piggyback_fetcher(self) -> PiggybackFetcher:
         return PiggybackFetcher()
+
+
+def _parse[T](raw: object, type_: Callable[..., T], /) -> T:
+    return type_(raw)

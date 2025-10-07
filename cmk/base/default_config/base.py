@@ -275,7 +275,7 @@ distributed_wato_site: str | None = None  # used by distributed WATO
 is_distributed_setup_remote_site = False
 extra_host_conf: dict[str, list[RuleSpec[Any]]] = {}
 explicit_host_conf: dict[str, dict[HostName, Any]] = {}
-extra_service_conf: dict[str, list[RuleSpec[int]]] = {}
+extra_service_conf: dict[str, list[RuleSpec[object]]] = {}
 extra_nagios_conf = ""
 service_descriptions: dict[str, str] = {}
 # host_attributes store explicitly configured attributes in WATO

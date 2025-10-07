@@ -9,7 +9,7 @@ from typing import Final, Literal
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import (
+from cmk.server_side_calls.alpha import (
     ActiveCheckCommand,
     ActiveCheckConfig,
     EnvProxy,

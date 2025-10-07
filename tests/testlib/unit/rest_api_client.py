@@ -3273,6 +3273,19 @@ class OtelConfigClient(RestApiClient):
         )
 
 
+class OtelCollectorClient(RestApiClient):
+    domain: DomainType = "otel_collector"
+    default_version = APIVersion.INTERNAL
+
+    def update(self, payload: Mapping[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "put",
+            url=f"/domain-types/{self.domain}/actions/update/invoke",
+            body=dict(payload),
+            expect_ok=expect_ok,
+        )
+
+
 class BackgroundJobClient(RestApiClient):
     domain: DomainType = "background_job"
 
@@ -3630,6 +3643,7 @@ class ClientRegistry:
     BackgroundJob: BackgroundJobClient
     Acknowledge: AcknowledgeClient
     OtelConfigClient: OtelConfigClient
+    OtelCollectorClient: OtelCollectorClient
     VisualFilterClient: VisualFilterClient
     DashboardClient: DashboardClient
     ConstantClient: ConstantClient
@@ -3681,6 +3695,7 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         BackgroundJob=BackgroundJobClient(request_handler, url_prefix),
         Acknowledge=AcknowledgeClient(request_handler, url_prefix),
         OtelConfigClient=OtelConfigClient(request_handler, url_prefix),
+        OtelCollectorClient=OtelCollectorClient(request_handler, url_prefix),
         VisualFilterClient=VisualFilterClient(request_handler, url_prefix),
         DashboardClient=DashboardClient(request_handler, url_prefix),
         ConstantClient=ConstantClient(request_handler, url_prefix),

@@ -135,8 +135,6 @@ pkg_files(
                "//omd/packages/perl-modules",
                "//omd/packages/pnp4nagios",
                "//omd/packages/python3-modules:python3-modules.tar",
-               "//omd/packages/oci:oci_light_win_x64.tar",
-               "//omd/packages/oci:oci_light_lin_x64.tar",
                "//omd/packages/rabbitmq",
                "//omd/packages/redis",
                "//omd/packages/rrdtool:rrdtool_perl_bindings",

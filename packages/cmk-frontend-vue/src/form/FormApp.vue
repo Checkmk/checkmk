@@ -77,23 +77,15 @@ const { ErrorBoundary } = useErrorBoundary()
       </div>
 
       <HelpText :help="untranslated(spec.help)" />
-      <div v-if="activeMode === 'edit' || activeMode === 'both'">
-        <table class="form-app__root">
-          <tbody>
-            <tr>
-              <td>
-                <FormEdit
-                  v-if="display_mode === 'edit' || display_mode === 'both'"
-                  v-model:data="dataRef"
-                  :backend-validation="validation"
-                  :spec="spec"
-                />
-                <!-- This input field contains the computed json value which is sent when the form is submitted -->
-                <input v-model="valueAsJSON" :name="id" type="hidden" />
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div v-if="activeMode === 'edit' || activeMode === 'both'" class="form-app__root">
+        <FormEdit
+          v-if="display_mode === 'edit' || display_mode === 'both'"
+          v-model:data="dataRef"
+          :backend-validation="validation"
+          :spec="spec"
+        />
+        <!-- This input field contains the computed json value which is sent when the form is submitted -->
+        <input v-model="valueAsJSON" :name="id" type="hidden" />
       </div>
     </ErrorBoundary>
   </div>
@@ -101,11 +93,6 @@ const { ErrorBoundary } = useErrorBoundary()
 
 <style scoped>
 .form-app__root {
-  margin: 0;
-  background: transparent;
-
-  > tbody > tr:first-child > td {
-    padding: 0;
-  }
+  margin: 2px;
 }
 </style>

@@ -60,6 +60,11 @@ class Layout(abc.ABC):
         return False
 
     def csv_export(
-        self, rows: Rows, view: ViewSpec, group_cells: Sequence[Cell], cells: Sequence[Cell]
+        self,
+        rows: Rows,
+        view: ViewSpec,
+        group_cells: Sequence[Cell],
+        cells: Sequence[Cell],
+        user_permissions: UserPermissions,
     ) -> None:
         """Render the given data using this layout for CSV"""

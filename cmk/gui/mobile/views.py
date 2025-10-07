@@ -924,6 +924,7 @@ def render_mobile_table(
     cells: Sequence[Cell],
     num_columns: int,
     show_checkboxes: bool,
+    user_permissions: UserPermissions,
 ) -> None:
     if not is_mobile(request, response):
         html.show_error(_("This view can only be used in mobile mode."))
@@ -944,7 +945,7 @@ def render_mobile_table(
             cell.paint_as_header()
         html.close_tr()
 
-    link_renderer = partial(render_link_to_view, request=request)
+    link_renderer = partial(render_link_to_view, request=request, user_permissions=user_permissions)
     # Paint data rows
     for row in rows:
         odd = "even" if odd == "odd" else "odd"
@@ -992,7 +993,9 @@ class LayoutMobileTable(Layout):
         show_checkboxes: bool,
         user_permissions: UserPermissions,
     ) -> None:
-        render_mobile_table(rows, view, group_cells, cells, num_columns, show_checkboxes)
+        render_mobile_table(
+            rows, view, group_cells, cells, num_columns, show_checkboxes, user_permissions
+        )
 
 
 def render_mobile_list(
@@ -1002,6 +1005,7 @@ def render_mobile_list(
     cells: Sequence[Cell],
     num_columns: int,
     show_checkboxes: bool,
+    user_permissions: UserPermissions,
 ) -> None:
     if not is_mobile(request, response):
         html.show_error(_("This view can only be used in mobile mode."))
@@ -1013,7 +1017,7 @@ def render_mobile_list(
 
     html.open_ul(class_="mobilelist", **{"data-role": "listview"})
 
-    link_renderer = partial(render_link_to_view, request=request)
+    link_renderer = partial(render_link_to_view, request=request, user_permissions=user_permissions)
     # Paint data rows
     for row in rows:
         html.open_li()
@@ -1076,7 +1080,9 @@ class LayoutMobileList(Layout):
         show_checkboxes: bool,
         user_permissions: UserPermissions,
     ) -> None:
-        render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkboxes)
+        render_mobile_list(
+            rows, view, group_cells, cells, num_columns, show_checkboxes, user_permissions
+        )
 
 
 def render_mobile_dataset(

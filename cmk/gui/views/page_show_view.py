@@ -207,7 +207,7 @@ def _process_regular_view(
         intercepted_queries = queries
 
     if html.output_format != "html":
-        _export_view(view_renderer.view, rows)
+        _export_view(view_renderer.view, rows, user_permissions)
         return
 
     _add_rest_api_menu_entries(view_renderer, intercepted_queries)
@@ -469,11 +469,11 @@ def get_all_active_filters(view: View) -> list[Filter]:
     return use_filters
 
 
-def _export_view(view: View, rows: Rows) -> None:
+def _export_view(view: View, rows: Rows, user_permissions: UserPermissions) -> None:
     """Shows the views data in one of the supported machine readable formats"""
     layout = view.layout
     if html.output_format == "csv" and layout.has_individual_csv_export:
-        layout.csv_export(rows, view.spec, view.group_cells, view.row_cells)
+        layout.csv_export(rows, view.spec, view.group_cells, view.row_cells, user_permissions)
         return
 
     exporter = exporter_registry.get(html.output_format)

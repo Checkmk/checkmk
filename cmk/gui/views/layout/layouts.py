@@ -184,7 +184,9 @@ class GroupedBoxesLayout(Layout):
         for column in columns:
             html.open_td(class_="boxcolumn")
             for _header, rows_with_ids in column:
-                self._render_group(rows_with_ids, view, group_cells, cells, show_checkboxes)
+                self._render_group(
+                    rows_with_ids, view, group_cells, cells, show_checkboxes, user_permissions
+                )
             html.close_td()
         html.close_tr()
         html.close_table()
@@ -196,9 +198,10 @@ class GroupedBoxesLayout(Layout):
         group_cells: Sequence[Cell],
         cells: Sequence[Cell],
         show_checkboxes: bool,
+        user_permissions: UserPermissions,
     ) -> None:
         if group_cells:
-            self._show_group_header_table(group_cells, rows_with_ids[0][1])
+            self._show_group_header_table(group_cells, rows_with_ids[0][1], user_permissions)
 
         html.open_table(class_="data table")
         odd = "odd"
@@ -257,7 +260,9 @@ class GroupedBoxesLayout(Layout):
             if show_checkboxes:
                 render_checkbox_td(view, row, num_cells)
 
-            link_renderer = partial(render_link_to_view, request=request)
+            link_renderer = partial(
+                render_link_to_view, request=request, user_permissions=user_permissions
+            )
             for cell in cells:
                 cell.paint(row, link_renderer, user=user)
 
@@ -272,11 +277,15 @@ class GroupedBoxesLayout(Layout):
 
         init_rowselect(_get_view_name(view))
 
-    def _show_group_header_table(self, group_cells: Sequence[Cell], first_row: Row) -> None:
+    def _show_group_header_table(
+        self, group_cells: Sequence[Cell], first_row: Row, user_permissions: UserPermissions
+    ) -> None:
         html.open_table(class_="groupheader", cellspacing="0", cellpadding="0", border="0")
         html.open_tr(class_="groupheader")
         painted = False
-        link_renderer = partial(render_link_to_view, request=request)
+        link_renderer = partial(
+            render_link_to_view, request=request, user_permissions=user_permissions
+        )
         for cell in group_cells:
             if painted:
                 html.td(",&nbsp;")
@@ -858,7 +867,12 @@ class LayoutMatrix(Layout):
 
     @override
     def csv_export(
-        self, rows: Rows, view: ViewSpec, group_cells: Sequence[Cell], cells: Sequence[Cell]
+        self,
+        rows: Rows,
+        view: ViewSpec,
+        group_cells: Sequence[Cell],
+        cells: Sequence[Cell],
+        user_permissions: UserPermissions,
     ) -> None:
         output_csv_headers(view)
 
@@ -869,7 +883,9 @@ class LayoutMatrix(Layout):
 
         painter_options = PainterOptions.get_instance()
         with table_element(output_format="csv") as table:
-            link_renderer = partial(render_link_to_view, request=request)
+            link_renderer = partial(
+                render_link_to_view, request=request, user_permissions=user_permissions
+            )
             for cell_nr, cell in enumerate(group_cells):
                 table.row()
                 table.cell("", cell.title(use_short=False))

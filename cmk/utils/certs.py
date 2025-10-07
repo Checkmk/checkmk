@@ -108,6 +108,10 @@ def root_cert_path(ca_dir: Path) -> Path:
     return ca_dir / "ca.pem"
 
 
+def site_cert_path(site_root_dir: Path, site_id: SiteId) -> Path:
+    return (cert_dir(site_root_dir) / "sites" / site_id).with_suffix(".pem")
+
+
 def write_cert_store(source_dir: Path, store_path: Path) -> None:
     """Extract certificate part out of PEM files and concat
     to single cert store file."""

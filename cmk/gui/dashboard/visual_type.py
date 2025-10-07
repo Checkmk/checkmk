@@ -137,9 +137,6 @@ class VisualTypeDashboards(VisualType):
         # to the AJAX request
         response.set_data("OK dashboard.py?name=" + target_visual_name + "&edit=1")
 
-    def load_handler(self):
-        pass
-
     def permitted_visuals(
         self, user_permissions: UserPermissions
     ) -> dict[DashboardName, DashboardConfig]:

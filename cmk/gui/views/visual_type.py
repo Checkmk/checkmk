@@ -74,9 +74,6 @@ class VisualTypeViews(VisualType):
     ) -> None:
         return None
 
-    def load_handler(self) -> None:
-        pass
-
     def permitted_visuals(self, user_permissions: UserPermissions) -> PermittedViewSpecs:
         return get_permitted_views()
 

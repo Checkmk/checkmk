@@ -68,11 +68,6 @@ class VisualType(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def load_handler(self) -> None:
-        """Load all visuals of this type"""
-        raise NotImplementedError()
-
-    @abc.abstractmethod
     def permitted_visuals(self, user_permissions: UserPermissions) -> dict:
         """Get the permitted visuals of this type"""
         raise NotImplementedError()

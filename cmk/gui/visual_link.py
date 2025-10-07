@@ -106,7 +106,6 @@ def _get_visual_by_link_spec(
         return None
 
     visual_type = visual_type_registry[link_spec.type_name]()
-    visual_type.load_handler()
     available_visuals = visual_type.permitted_visuals(user_permissions)
 
     with suppress(KeyError):

@@ -5,6 +5,7 @@
 
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
+from typing import Literal
 
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
@@ -24,7 +25,7 @@ from ._unit import user_specific_unit
 @dataclass(frozen=True, kw_only=True)
 class AugmentedTimeSeriesSpec:
     title: str
-    line_type: LineType
+    line_type: LineType | Literal["ref"]
     color: str
     fade_odd_color: bool
     augmented_time_series: Sequence[AugmentedTimeSeries]

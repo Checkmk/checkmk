@@ -329,21 +329,6 @@ def _areastack(
     return list(map(fix_swap, zip_longest(base, edge)))
 
 
-def _parse_line_type(
-    mirror_prefix: Literal["", "-"], ts_line_type: LineType | Literal["ref"]
-) -> LineType | Literal["ref"]:
-    match ts_line_type:
-        case "line" | "-line":
-            return "line" if mirror_prefix == "" else "-line"
-        case "area" | "-area":
-            return "area" if mirror_prefix == "" else "-area"
-        case "stack" | "-stack":
-            return "stack" if mirror_prefix == "" else "-stack"
-        case "ref":
-            return "ref"
-    assert_never((mirror_prefix, ts_line_type))
-
-
 def _compute_graph_curves(
     registered_metrics: Mapping[str, RegisteredMetric],
     graph_recipe: GraphRecipe,
@@ -361,15 +346,14 @@ def _compute_graph_curves(
         fetch_time_series=fetch_time_series,
     ):
         multi = len(spec.augmented_time_series) > 1
-        mirror_prefix: Literal["", "-"] = "-" if spec.line_type.startswith("-") else ""
         for i, ts in enumerate(spec.augmented_time_series):
             title = spec.title
-            line_type: LineType | Literal["ref"] = spec.line_type
+            line_type = spec.line_type
             color = spec.color
             if ts.metadata:
                 if multi:
                     title = f"{spec.title} - {ts.metadata.title}"
-                    line_type = _parse_line_type(mirror_prefix, ts.metadata.line_type)
+                    line_type = ts.metadata.line_type
                 if ts.metadata.color:
                     color = ts.metadata.color
 

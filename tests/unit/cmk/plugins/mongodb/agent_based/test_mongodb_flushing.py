@@ -9,7 +9,10 @@
 import pytest
 
 from cmk.agent_based.v2 import Result
-from cmk.base.legacy_checks.mongodb_flushing import check_mongodb_flushing, parse_mongodb_flushing
+from cmk.plugins.mongodb.agent_based.mongodb_flushing import (
+    check_mongodb_flushing,
+    parse_mongodb_flushing,
+)
 
 # <<<mongodb_flushing>>>
 # average_ms 1.28893335892

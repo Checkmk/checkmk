@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
+
+# NOTE: This file has been created by an LLM (from something that was worse).
+# It mostly serves as test to ensure we don't accidentally break anything.
+# If you encounter something weird in here, do not hesitate to replace this
+# test by something more appropriate.
 
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -11,7 +16,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.base.legacy_checks.mongodb_mem import (
+from cmk.plugins.mongodb.agent_based.mongodb_mem import (
     check_mongodb_mem,
     discover_mongodb_mem,
     parse_mongodb_mem,
@@ -35,12 +40,16 @@ from cmk.base.legacy_checks.mongodb_mem import (
             ],
             [Service()],
         ),
+        (
+            [],
+            [],
+        ),
     ],
 )
-def test_discover_mongodb_mem(
+def test_discover_mongodb_mem_1_regression(
     string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
-    """Test discovery function for mongodb_mem check."""
+    """Test discovery function for mongodb_mem regression test."""
     parsed = parse_mongodb_mem(string_table)
     assert list(discover_mongodb_mem(parsed)) == expected_discoveries
 
@@ -73,12 +82,12 @@ def test_discover_mongodb_mem(
         ),
     ],
 )
-def test_check_mongodb_mem(
-    item: str,
+def test_check_mongodb_mem_1_regression(
+    item: str | None,
     params: Mapping[str, Any],
     string_table: StringTable,
-    expected_results: Sequence[Result | Metric],
+    expected_results: Sequence[Any],
 ) -> None:
-    """Test check function for mongodb_mem check."""
+    """Test check function for mongodb_mem regression test."""
     parsed = parse_mongodb_mem(string_table)
     assert list(check_mongodb_mem(params, parsed)) == expected_results

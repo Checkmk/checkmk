@@ -12,7 +12,7 @@ import pytest
 
 from cmk.agent_based.v1.type_defs import StringTable
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.base.legacy_checks.mongodb_instance import (
+from cmk.plugins.mongodb.agent_based.mongodb_instance import (
     check_mongodb_instance,
     inventory_mongodb_instance,
     parse_mongodb_instance,

@@ -10,7 +10,6 @@ data within the Checkmk ecosystem."""
 
 from __future__ import annotations
 
-import binascii
 import contextlib
 import re
 import socket
@@ -18,14 +17,11 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import NamedTuple
 
-from cryptography import x509
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes
-from cryptography.x509.oid import NameOID
 from OpenSSL import crypto, SSL
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.crypto.certificate import Certificate
+from cmk.crypto.certificate import Certificate, CertificatePEM
+from cmk.crypto.hash import HashAlgorithm
 
 _PEM_RE = re.compile(
     "-----BEGIN CERTIFICATE-----\r?.+?\r?-----END CERTIFICATE-----\r?\n?", re.DOTALL
@@ -80,24 +76,20 @@ def fetch_certificate_details(
     if not verify_chain_results:
         raise MKGeneralException("Failed to fetch the certificate chain")
 
-    def get_name(name_obj):
-        return name_obj.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
-
     for result in verify_chain_results:
-        crypto_cert = x509.load_pem_x509_certificate(result.cert_pem, default_backend())
-        if crypto_cert.signature_hash_algorithm is None:
-            # TODO: This could actually happen and should be allowed, e.g. for ed25519 certs
-            raise ValueError("Signature algorithm missing in certificate")
+        cmk_cert = Certificate.load_pem(CertificatePEM(result.cert_pem))
 
         yield CertificateDetails(
-            issued_to=get_name(crypto_cert.subject),
-            issued_by=get_name(crypto_cert.issuer),
-            valid_from=str(crypto_cert.not_valid_before),
-            valid_till=str(crypto_cert.not_valid_after),
-            signature_algorithm=crypto_cert.signature_hash_algorithm.name,
-            digest_sha256=binascii.hexlify(crypto_cert.fingerprint(hashes.SHA256())).decode(),
-            serial_number=crypto_cert.serial_number,
-            is_ca=Certificate(crypto_cert).may_sign_certificates(),
+            issued_to=cmk_cert.common_name or "Unknown subject name",
+            issued_by=cmk_cert.issuer.common_name or "Unknown issuer name",
+            valid_from=str(cmk_cert.not_valid_before),
+            valid_till=str(cmk_cert.not_valid_after),
+            signature_algorithm=algo.name
+            if (algo := cmk_cert._cert.signature_hash_algorithm)
+            else "Unknown signature algorithm",
+            digest_sha256=cmk_cert.fingerprint(HashAlgorithm.Sha256).hex(),
+            serial_number=cmk_cert.serial_number,
+            is_ca=cmk_cert.may_sign_certificates(),
             verify_result=result,
         )
 

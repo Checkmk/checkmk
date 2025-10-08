@@ -8,6 +8,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
+    CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
     TextInput,
@@ -42,6 +43,16 @@ rulespec_registry.register(
     )
 )
 
+# TODO: migrate and move to new folder structure
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="byte_count_without_item",
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_byte_count,
+        title=lambda: _("Byte Count"),
+    )
+)
+
 
 def _parameter_valuespec_snat_usage():
     return Dictionary(
@@ -63,6 +74,16 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="snat_usage",
         item_spec=lambda: TextInput(title=_("SNAT Consumption")),
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_snat_usage,
+        title=lambda: _("SNAT Usage (Deprecated)"),
+    )
+)
+
+# TODO: migrate and move to new folder structure
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="snat_usage_without_item",
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_snat_usage,
         title=lambda: _("SNAT Usage"),

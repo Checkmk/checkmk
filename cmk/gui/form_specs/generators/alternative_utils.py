@@ -14,6 +14,7 @@ from cmk.gui.form_specs.unstable.legacy_converter import (
 )
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
+    DataSize,
     Float,
     FormSpec,
     Integer,
@@ -22,14 +23,24 @@ from cmk.rulesets.v1.form_specs import (
 )
 
 
-class _DerivedTypeError(Exception):
+class _DeriveTypeError(Exception):
+    pass
+
+
+class _UnconvertableTypeError(Exception):
     pass
 
 
 def _derive_type_from_form_spec(value: object, form_spec: FormSpec[Any]) -> str:
+    if isinstance(form_spec, TransformDataForLegacyFormatOrRecomposeFunction):
+        raise _UnconvertableTypeError(
+            "Cannot derive type from TransformDataForLegacyFormatOrRecomposeFunction"
+        )
     if isinstance(form_spec, SingleChoice | SingleChoiceExtended):
         # TODO: support other types
         return "str"
+    if isinstance(form_spec, DataSize):
+        return "int"
     if isinstance(form_spec, Tuple):
         tuple_tokens = []
         assert isinstance(value, tuple | list)
@@ -42,7 +53,7 @@ def _derive_type_from_form_spec(value: object, form_spec: FormSpec[Any]) -> str:
         return "float"
     if isinstance(form_spec, Percentage):
         return "float"
-    raise _DerivedTypeError(
+    raise _DeriveTypeError(
         f"Deprecated alternative: Cannot derive type from form spec: {form_spec.__class__.__name__}"
     )
 
@@ -68,7 +79,7 @@ def _derive_type_from_data(value: object) -> str:
         return "list"
     if isinstance(value, dict):
         return "dict"
-    raise _DerivedTypeError(f"Deprecated alternative: Unsupported data type: {type(value)}")
+    raise _DeriveTypeError(f"Deprecated alternative: Unsupported data type: {type(value)}")
 
 
 def _derive_type(value: object, form_spec: FormSpec[Any] | None = None) -> str:
@@ -76,7 +87,7 @@ def _derive_type(value: object, form_spec: FormSpec[Any] | None = None) -> str:
         if form_spec is not None:
             return _derive_type_from_form_spec(value, form_spec)
         return _derive_type_from_data(value)
-    except _DerivedTypeError:
+    except _DeriveTypeError:
         return _derive_type_from_data(value)
 
 
@@ -102,21 +113,28 @@ def enable_deprecated_alternative(
     # This can't be waterproof, but it should be sufficient for the most common cases.
 
     mapping: dict[str, str] = {}
-    for element in wrapped_form_spec.elements:
-        visitor = get_visitor(
-            element.parameter_form, VisitorOptions(migrate_values=False, mask_values=False)
-        )
-        try:
-            example_value = visitor.to_disk(DEFAULT_VALUE)
-        except MKGeneralException:
-            example_value = visitor.to_vue(DEFAULT_VALUE)[1]
-
-        try:
-            mapping[_derive_type(example_value, element.parameter_form)] = element.name
-        except _DerivedTypeError:
-            raise MKGeneralException(
-                f"Deprecated Alternative handling: Cannot derive type for element '{element.name}'"
+    if not match_function:
+        for element in wrapped_form_spec.elements:
+            visitor = get_visitor(
+                element.parameter_form, VisitorOptions(migrate_values=False, mask_values=False)
             )
+            try:
+                example_value = visitor.to_disk(DEFAULT_VALUE)
+            except MKGeneralException:
+                example_value = visitor.to_vue(DEFAULT_VALUE)[1]
+
+            try:
+                mapping[_derive_type(example_value, element.parameter_form)] = element.name
+            except (_DeriveTypeError, _UnconvertableTypeError):
+                # This is the last resort. If we can not derive the type from the form spec
+                # we use transform[Any] as fallback. When reading from disk and no other data matches,
+                # this will be used. If the data can't be parsed by the chosen element, it will
+                # report an error, anyway.
+                if "transform[Any]" in mapping:
+                    raise MKGeneralException(
+                        f"Multiple elements with unconvertable types in CascadingSingleChoice {element} {wrapped_form_spec.title}"
+                    )
+                mapping["transform[Any]"] = element.name
 
     def to_disk(value: object) -> object:
         assert isinstance(value, tuple) and len(value) == 2
@@ -129,7 +147,14 @@ def enable_deprecated_alternative(
             if index < 0 or index >= len(wrapped_form_spec.elements):
                 raise MKGeneralException("Value does not match any alternative")
             return wrapped_form_spec.elements[index].name, value
-        return mapping[_derive_type_from_data(value)], value
+
+        try:
+            return mapping[_derive_type_from_data(value)], value
+        except KeyError:
+            if "transform[Any]" in mapping:
+                return mapping["transform[Any]"], value
+
+        raise MKGeneralException("Deprecated alternative: Unable to parse data from disk")
 
     return TransformDataForLegacyFormatOrRecomposeFunction(
         wrapped_form_spec=wrapped_form_spec,

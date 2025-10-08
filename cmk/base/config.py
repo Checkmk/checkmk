@@ -189,10 +189,6 @@ SERVICE_CHECK_INTERVAL: Final = 1.0
 ServicegroupName = str
 HostgroupName = str
 
-service_service_levels: list[RuleSpec[int]] = []
-host_service_levels: list[RuleSpec[int]] = []
-
-
 ObjectMacros = dict[str, AnyStr]
 
 CheckCommandArguments = Iterable[int | float | str | tuple[str, str, str]]
@@ -573,8 +569,6 @@ def load(
 
     _changed_var_names = _load_config(with_conf_d)
 
-    _initialize_derived_config_variables()
-
     loading_result = _perform_post_config_loading_actions(discovery_rulesets)
 
     if validate_hosts:
@@ -893,21 +887,6 @@ def get_config_file_paths(with_conf_d: bool) -> list[Path]:
     return list_of_files
 
 
-def _initialize_derived_config_variables() -> None:
-    global service_service_levels, host_service_levels
-    service_service_levels = extra_service_conf.get("_ec_sl", [])
-    _default: list[RuleSpec[int]] = []
-    host_service_levels = extra_host_conf.get("_ec_sl", _default)
-
-
-def get_derived_config_variable_names() -> set[str]:
-    """These variables are computed from other configuration variables and not configured directly.
-
-    The origin variable (extra_service_conf) should not be exported to the helper config. Only
-    the service levels are needed."""
-    return {"service_service_levels", "host_service_levels"}
-
-
 def save_packed_config(
     config_path: Path,
     config_cache: ConfigCache,
@@ -997,7 +976,10 @@ class PackedConfigGenerator:
         def filter_extra_service_conf(
             values: dict[str, list[dict[str, str]]],
         ) -> dict[str, list[dict[str, str]]]:
-            return {"check_interval": values.get("check_interval", [])}
+            return {
+                "check_interval": values.get("check_interval", []),
+                "_ec_sl": values.get("_ec_sl", []),
+            }
 
         filter_var_functions: dict[str, Callable[[Any], Any]] = {
             "all_hosts": filter_all_hosts,
@@ -1017,17 +999,16 @@ class PackedConfigGenerator:
         #
 
         variable_defaults = get_default_config()
-        derived_config_variable_names = get_derived_config_variable_names()
 
         global_variables = globals()
 
-        for varname in (*variable_defaults, *derived_config_variable_names):
+        for varname, default_value in variable_defaults.items():
             if varname in self._skipped_config_variable_names:
                 continue
 
             val = global_variables[varname]
 
-            if varname not in derived_config_variable_names and val == variable_defaults[varname]:
+            if val == default_value:
                 continue
 
             if varname in filter_var_functions:
@@ -2715,7 +2696,7 @@ class ConfigCache:
 
     def service_level(self, hostname: HostName) -> int | None:
         entries = self.ruleset_matcher.get_host_values_all(
-            hostname, host_service_levels, self.label_manager.labels_of_host
+            hostname, extra_host_conf.get("_ec_sl", []), self.label_manager.labels_of_host
         )
         return entries[0] if entries else None
 
@@ -3121,7 +3102,7 @@ class ConfigCache:
             host_name,
             service_name,
             service_labels,
-            service_service_levels,
+            extra_service_conf.get("_ec_sl", []),
             self.label_manager.labels_of_host,
         )
         return out[0] if out else None

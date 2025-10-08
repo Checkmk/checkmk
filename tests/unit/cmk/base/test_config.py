@@ -2307,8 +2307,9 @@ def test_config_cache_service_level_of_service(
 ) -> None:
     ts = Scenario()
     ts.add_host(hostname)
-    ts.set_ruleset(
-        "service_service_levels",
+    ts.add_to_ruleset_bundle(
+        "extra_service_conf",
+        "_ec_sl",
         [
             {
                 "id": "01",
@@ -2466,8 +2467,9 @@ def test_host_config_service_level(
 ) -> None:
     ts = Scenario()
     ts.add_host(hostname)
-    ts.set_ruleset(
-        "host_service_levels",
+    ts.add_to_ruleset_bundle(
+        "extra_host_conf",
+        "_ec_sl",
         [
             {
                 "id": "01",

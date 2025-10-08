@@ -48,7 +48,8 @@ onBeforeUnmount(() => {
 const mockLoaded = ref<boolean>(false)
 
 defineProps<{ screenshotMode: boolean }>()
-const stringSpec: String = {
+
+const autocompleterStringSpec: String = {
   type: 'string',
   title: '',
   help: '',
@@ -71,23 +72,72 @@ const stringSpec: String = {
   }
 }
 
-const spec: ListOfStrings = {
-  type: 'list_of_strings',
-  title: 'Hosts',
+const simpleStringSpec: String = {
+  type: 'string',
+  title: '',
   help: '',
   validators: [],
-  string_spec: stringSpec,
-  string_default_value: '',
-  layout: 'horizontal'
+  label: null,
+  input_hint: '',
+  field_size: 'MEDIUM',
+  autocompleter: null
+}
+
+function getSpec(additionalParams: Partial<ListOfStrings>): ListOfStrings {
+  const spec: ListOfStrings = {
+    type: 'list_of_strings',
+    title: 'Hosts',
+    help: '',
+    validators: [],
+    string_spec: simpleStringSpec,
+    string_default_value: '',
+    layout: 'vertical',
+    ...additionalParams
+  }
+  return spec
 }
 
 const data = ref<Array<string>>(['some', 'value'])
+const oneElementData1 = ref<Array<string>>([])
+const manyElementsData1 = ref<Array<string>>(['1', '2', '3', '4', '5', '6'])
+const oneElementData2 = ref<Array<string>>([])
+const manyElementsData2 = ref<Array<string>>(['1', '2', '3', '4', '5', '6'])
 </script>
 
 <template>
-  <h2>With autocompleter</h2>
-  <pre>{{ JSON.stringify(data) }}</pre>
   <span v-if="mockLoaded">
-    <FormEdit v-model:data="data" :spec="spec" :backend-validation="[]" />
+    <h2>With autocompleter</h2>
+    <pre>{{ JSON.stringify(data) }}</pre>
+    <FormEdit
+      v-model:data="data"
+      :spec="getSpec({ string_spec: autocompleterStringSpec })"
+      :backend-validation="[]"
+    />
   </span>
+  <h2>Horizontal</h2>
+  <h3>One element</h3>
+  <FormEdit
+    v-model:data="oneElementData1"
+    :spec="getSpec({ layout: 'horizontal' })"
+    :backend-validation="[]"
+  />
+  <h3>Many elements</h3>
+  <FormEdit
+    v-model:data="manyElementsData1"
+    :spec="getSpec({ layout: 'horizontal' })"
+    :backend-validation="[]"
+  />
+  <h2>Vertical</h2>
+  <h3>One element</h3>
+  <FormEdit
+    v-model:data="oneElementData2"
+    :spec="getSpec({ layout: 'vertical' })"
+    :backend-validation="[]"
+  />
+  <h3>Many elements</h3>
+  <FormEdit
+    v-model:data="manyElementsData2"
+    :spec="getSpec({ layout: 'vertical' })"
+    :backend-validation="[]"
+  />
 </template>

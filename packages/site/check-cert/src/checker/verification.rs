@@ -67,9 +67,13 @@ fn check_verify_chain(
     allow_self_signed: bool,
 ) -> SimpleCheckResult {
     let (ok, reason) = verify::verify(chain, cacerts);
+    // 0 = X509_V_OK: ok
     if ok {
         SimpleCheckResult::ok_with_details("Verification: OK", "Verification: OK")
-    } else if reason.as_raw() == 18 && allow_self_signed {
+    // 18 = X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT: self-signed certificate
+    // 19 = X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN: self-signed certificate in certificate chain
+    // 20 = X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY: unable to get local issuer certificate
+    } else if [18, 19, 20].contains(&reason.as_raw()) && allow_self_signed {
         SimpleCheckResult::ok_with_details(
             format!("Verification: {reason} (allowed)"),
             format!("Verification: {reason} (allowed)"),

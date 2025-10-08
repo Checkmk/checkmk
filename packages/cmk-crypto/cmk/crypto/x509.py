@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network
 from typing import TypeAlias
 from uuid import UUID
 
@@ -135,6 +136,11 @@ class SAN:
         return cls(pyca_x509.DNSName(name))
 
     @classmethod
+    def ip_address(cls, address: IPv4Address | IPv6Address | IPv4Network | IPv6Network) -> SAN:
+        """Create a SubjectAlternativeName that represents an IP address"""
+        return cls(pyca_x509.IPAddress(address))
+
+    @classmethod
     def uuid(cls, name: UUID) -> SAN:
         """Create a SubjectAlternativeName that represents a UUID.
 
@@ -193,7 +199,9 @@ class SubjectAlternativeNames(list[SAN]):
         uris = [
             SAN.from_urn(u) for u in ext.get_values_for_type(pyca_x509.UniformResourceIdentifier)
         ]
-        return cls(dns_names + uris)
+        ips = [SAN.ip_address(ip) for ip in ext.get_values_for_type(pyca_x509.IPAddress)]
+
+        return cls(dns_names + uris + ips)
 
     @classmethod
     def find_extension(cls, extensions: pyca_x509.Extensions) -> SubjectAlternativeNames | None:

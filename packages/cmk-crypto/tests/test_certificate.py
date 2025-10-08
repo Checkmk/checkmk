@@ -7,6 +7,7 @@
 from contextlib import AbstractContextManager
 from contextlib import nullcontext as does_not_raise
 from datetime import datetime, UTC
+from ipaddress import ip_network
 from pathlib import Path
 from typing import NoReturn
 from uuid import UUID
@@ -302,6 +303,7 @@ ip0CIBdH+5jSUeJjJx5LCycuvh4TO7TG33MvgZG71DxvUY6q
                 [
                     SAN.uuid(UUID("12345678-1234-5678-1234-567812345678")),
                     SAN.checkmk_site(SiteId("testsite")),
+                    SAN.ip_address(ip_network("127.0.0.1/24", strict=False)),
                 ]
             )
         ),
@@ -310,7 +312,12 @@ ip0CIBdH+5jSUeJjJx5LCycuvh4TO7TG33MvgZG71DxvUY6q
 def test_subject_alt_names(
     self_signed_cert: CertificateWithPrivateKey, sans: SubjectAlternativeNames
 ) -> None:
-    """test setting and retrieval of subject-alt-names (DNS)"""
+    """
+    Test setting and retrieval of subject-alt-names (DNS)
+
+    This is relevant because they get written into the x509 structure and need to be
+    read back correctly. See SubjectAlternativeNames.from_extension().
+    """
     assert (
         Certificate.create(
             subject_public_key=self_signed_cert.private_key.public_key,

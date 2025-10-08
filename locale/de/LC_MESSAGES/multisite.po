@@ -755,6 +755,10 @@ msgstr "%s Regeln"
 msgid "%s running for %s"
 msgstr "%s läuft seit %s"
 
+#, fuzzy, python-format
+msgid "%s section"
+msgstr "Host-Auswahl"
+
 #, python-format
 msgid "%s server"
 msgstr "%s Server"
@@ -4180,6 +4184,10 @@ msgstr "Neue Aggregation hinzufügen"
 msgid "Add new credentials"
 msgstr "Neue Zugangsdaten hinzufügen"
 
+#, fuzzy
+msgid "Add new database instance"
+msgstr "Remote-Instanz hinzufügen"
+
 msgid "Add new element"
 msgstr "Element hinzufügen"
 
@@ -4188,6 +4196,10 @@ msgstr "Neuen Endpunkt hinzufügen"
 
 msgid "Add new entry"
 msgstr "Neuen Eintrag hinzufügen"
+
+#, fuzzy
+msgid "Add new exclude pattern"
+msgstr "Neues Pattern hinzufügen"
 
 msgid "Add new field"
 msgstr "Neues Feld hinzufügen"
@@ -4205,6 +4217,10 @@ msgstr "Neue Gruppe hinzufügen"
 
 msgid "Add new grouping definition"
 msgstr "Neue Gruppendefinition hinzufügen"
+
+#, fuzzy
+msgid "Add new include pattern"
+msgstr "Neues Pattern hinzufügen"
 
 msgid "Add new label"
 msgstr "Neues Label hinzufügen"
@@ -4821,6 +4837,10 @@ msgstr "Betroffene Instanzen"
 #, python-format
 msgid "Affected sites: %s"
 msgstr "Betroffene Instanzen: %s"
+
+#, fuzzy
+msgid "Affinity"
+msgstr "initialisiere"
 
 msgid ""
 "After a battery diagnostics the battery capacity is reduced until the "
@@ -6395,6 +6415,9 @@ msgstr "Checkboxen immer anzeigen"
 msgid "Always use and expect piggyback data"
 msgstr "Immer Piggyback-Daten verwenden und erwarten"
 
+msgid "Always use host libraries (force host)"
+msgstr ""
+
 msgid "Always use service level from rule"
 msgstr "Immer Service-Ebene der Regel verwenden"
 
@@ -7309,6 +7332,10 @@ msgstr "Angenommen %s"
 msgid "Asynchronous"
 msgstr "Asynchron"
 
+#, fuzzy
+msgid "Asynchronous check"
+msgstr "Asynchron"
+
 msgid "Asynchronous closing connections"
 msgstr "Asynchrone schließende Verbindungen"
 
@@ -7634,6 +7661,10 @@ msgstr "Auto-Shrink aus"
 
 msgid "Auto shrink on"
 msgstr "Auto-Shrink an"
+
+#, fuzzy
+msgid "Auto-detect (default)"
+msgstr "Authentifizierung (Standard)"
 
 msgid "Auto-detect proxy settings for this network"
 msgstr "Automatische Erkennung von Proxy-Einstellungen für dieses Netzwerk"
@@ -11044,6 +11075,10 @@ msgstr ""
 "CURDEPTH_PERC: Prozentwert (CURDEPTH/MAXDEPTH) der Anzahl an Meldungen, die "
 "sich aktuell in der Warteschlange befinden."
 
+#, fuzzy
+msgid "Cache age"
+msgstr "Cachegröße"
+
 msgid "Cache age for asynchronous checks"
 msgstr "Cache-Alter für asynchrone Checks"
 
@@ -12076,6 +12111,10 @@ msgstr "Check-Zustand des Brokers auf dem Primary: "
 msgid "Check TCP port connection"
 msgstr "Check TCP Port Verbindung"
 
+#, fuzzy
+msgid "Check all instances"
+msgstr "Alle Instanzen überwachen"
+
 msgid "Check and CRIT"
 msgstr "Prüfen und CRIT"
 
@@ -12084,6 +12123,10 @@ msgstr "Prüfen und WARN"
 
 msgid "Check and display only"
 msgstr "Prüfen und nur anzeigen"
+
+#, fuzzy
+msgid "Check asm instances"
+msgstr "%s Instanzen"
 
 msgid "Check certificate"
 msgstr "Zertifikat prüfen"
@@ -12196,6 +12239,10 @@ msgstr "Prüfung nicht innerhalb von %d Sekunden ausgeführt"
 
 msgid "Check notification number per contact"
 msgstr "Benachrichtigungsnummer pro Kontakt prüfen"
+
+#, fuzzy
+msgid "Check only db instances"
+msgstr "Nur die aufgelisteten Mailboxen überprüfen"
 
 msgid "Check only the listed mailboxes"
 msgstr "Nur die aufgelisteten Mailboxen überprüfen"
@@ -14302,6 +14349,10 @@ msgstr "Konfiguration des Datadog-Spezialagenten."
 msgid "Configuration of update plug-in"
 msgstr "Konfiguration des Update-Plugins"
 
+#, fuzzy, python-format
+msgid "Configuration options for the %s section."
+msgstr "Keine zusätzlichen Konfigurationsoptionen für diese Methode."
+
 #, python-format
 msgid ""
 "Configuration update failed\n"
@@ -15398,6 +15449,13 @@ msgstr "Controller"
 
 msgid "Controller version"
 msgstr "Controller-Version"
+
+msgid ""
+"Controls usage of host Oracle client libraries. Allowed values: 'auto' (auto-"
+"detect, fallback to bundled), 'never' (force bundled), 'always' (force "
+"host), or an absolute path to an OCI library directory (e.g. /usr/lib/"
+"oracle/...)."
+msgstr ""
 
 msgid "Convert FQHN"
 msgstr "Vollqualifizierte Host-Namen reduzieren"
@@ -16843,6 +16901,9 @@ msgstr "Benutzerdefinierte Benachrichtigungstabelle von Benutzer %s"
 msgid "Custom notification table of this user"
 msgstr "Benutzerdefinierte Benachrichtigungstabelle dieses Benutzers"
 
+msgid "Custom path to Oracle client libraries"
+msgstr ""
+
 msgid "Custom port"
 msgstr "Benutzerdefinierter Port"
 
@@ -17544,6 +17605,14 @@ msgstr "Datenbank für einzelnen PostgreSQL-Server"
 msgid "Database identifier"
 msgstr "Datenbank-Identifier"
 
+#, fuzzy
+msgid "Database instance"
+msgstr "Datenbankname"
+
+#, fuzzy
+msgid "Database instances"
+msgstr "Datenbankname"
+
 msgid "Database is being recovered"
 msgstr "Datenbank wurde wiederhergestellt"
 
@@ -18001,6 +18070,10 @@ msgid "Deferred files in Spool"
 msgstr "Verzögerte Dateien im Spooler"
 
 msgid ""
+"Define Oracle database instances to monitor to overwrite default settings."
+msgstr ""
+
+msgid ""
 "Define a direct translation of the possible states of the HAProxy frontend "
 "to monitoring states, i.e. to the result of the check. This overwrites the "
 "default mapping used by the check."
@@ -18106,6 +18179,10 @@ msgid ""
 msgstr ""
 "Definiere Patterns, um die Kernel-Konfigurationsparameter bei der Inventur "
 "einzuschließen."
+
+#, fuzzy
+msgid "Define sections"
+msgstr "Deaktivierte Sektionen"
 
 msgid ""
 "Define the host to assign the discovered CloudFront services. You can assign "
@@ -19830,6 +19907,10 @@ msgstr ""
 "Erkennung auf Host %s: %d Services (%d hinzugefügt, %d geändert, %d "
 "entfernt, %d behalten) und %d Host-Labels (%d hinzugefügt, %d geändert, %d "
 "entfernt, %d behalten)"
+
+#, fuzzy
+msgid "Discovery options"
+msgstr "Erkennungseinstellungen"
 
 msgid "Discovery rules"
 msgstr "Erkennungsregeln"
@@ -22473,6 +22554,10 @@ msgstr "Zeilenschattierung einschalten"
 msgid "Enable safe host names"
 msgstr "Sichere Host-Namen aktivieren"
 
+#, fuzzy
+msgid "Enable service discovery"
+msgstr "Service-Erkennung durchführen"
+
 msgid "Enable service notifications"
 msgstr "Service-Benachrichtigungen ein"
 
@@ -23669,6 +23754,14 @@ msgstr "Instanzen ausschließen"
 
 msgid "Exclude namespaces matching"
 msgstr "Übereinstimmende Namespaces ausschließen"
+
+#, fuzzy
+msgid "Exclude pattern"
+msgstr "Pattern ausschließen"
+
+#, fuzzy
+msgid "Exclude patterns"
+msgstr "Pattern ausschließen"
 
 msgid "Exclude reserved space"
 msgstr "Reserviertern Speicher ausschließen"
@@ -30446,6 +30539,9 @@ msgid "How many days in the past Checkmk should evaluate the measurement data"
 msgstr ""
 "Wie viele Tage in der Vergangenheit Checkmk die Messdaten auswerten soll"
 
+msgid "How old (in minutes) the cache file is allowed to be."
+msgstr ""
+
 msgid ""
 "How the disks are named depends on the type of hardware being used. Please "
 "look at already discovered checks for examples."
@@ -31345,6 +31441,9 @@ msgstr ""
 "ersetzt, welcher eine Konfiguration pro Host erlaubt und zusätzliche "
 "Funktionen, wie z. B. automatische Wiedererkennung bietet. Regeln in diesem "
 "Regelsatz überschreiben diese globale Option."
+
+msgid "If enabled, the check will be executed asynchronously."
+msgstr ""
 
 msgid ""
 "If enabled, the service details will contain username of a process owner."
@@ -32832,6 +32931,10 @@ msgstr "Compliance State ignorieren"
 msgid "Ignore core restarts shorter than"
 msgstr "Neustarts des Kern ignorieren wenn kürzer als"
 
+#, fuzzy
+msgid "Ignore database name"
+msgstr "Datenbankname"
+
 msgid "Ignore default increment"
 msgstr "Standardinkrement ignorieren"
 
@@ -33620,6 +33723,14 @@ msgstr "Vollständigen Prozesspfad verwenden"
 
 msgid "Include indirectly connected hosts (recursively)"
 msgstr "Indirekt verbundene Hosts einbeziehen (rekursiv)"
+
+#, fuzzy
+msgid "Include pattern"
+msgstr "Pattern einschließen"
+
+#, fuzzy
+msgid "Include patterns"
+msgstr "Pattern einschließen"
 
 msgid "Include per-process arguments (security risk!)"
 msgstr "Einbeziehen von pro Prozess Argumenten (Sicherheitsrisiko!)"
@@ -34709,9 +34820,6 @@ msgstr "Ungültiger Proxy angegeben: keine zulässige URL"
 #, python-format
 msgid "Invalid proxy scheme given. Must be one of: %s"
 msgstr "Ungültiges Proxy-Schema angegeben. Muss eines der folgenden sein: %s"
-
-msgid "Invalid receipt"
-msgstr "Ungültiger Beleg"
 
 #, python-brace-format
 msgid "Invalid regex pattern. Expected: {validate_pattern}"
@@ -39859,6 +39967,10 @@ msgstr ""
 msgid "Maximum concurrent real-time checks"
 msgstr "Maximalzahl gleichzeitiger Echtzeitchecks"
 
+#, fuzzy
+msgid "Maximum connections"
+msgstr "% der maximalen Verbindungen"
+
 msgid "Maximum connections per second"
 msgstr "Maximale Verbindungen pro Sekunde"
 
@@ -39960,6 +40072,10 @@ msgstr "Maximale Anzahl an Clients"
 msgid "Maximum number of connections or listeners"
 msgstr "Maximale Anzahl von Verbindungen oder Listeners"
 
+#, fuzzy
+msgid "Maximum number of database connections to open."
+msgstr "Maximale Anzahl von Verbindungen oder Listeners"
+
 msgid "Maximum number of delivery attempts"
 msgstr "Maximale Anzahl Zustellungsversuche"
 
@@ -39985,6 +40101,10 @@ msgstr "Maximale Anzahl an Open File-Deskriptoren"
 msgid "Maximum number of parsed lines per log file"
 msgstr "Maximale Anzahl Zeilen, die pro Log-Datei gelesen werden"
 
+#, fuzzy
+msgid "Maximum number of queries to execute per connection."
+msgstr "Maximale Anzahl an Wiederausführungen"
+
 msgid "Maximum number of re-executions"
 msgstr "Maximale Anzahl an Wiederausführungen"
 
@@ -40009,6 +40129,10 @@ msgstr "Maximale Anzahl paralleler Verbindungen"
 
 msgid "Maximum possible value"
 msgstr "Höchster möglicher Wert"
+
+#, fuzzy
+msgid "Maximum queries"
+msgstr "Maximale Inodes"
 
 msgid "Maximum rate for total number of packets"
 msgstr "Maximale Rate der Gesamtanzahl der Pakete"
@@ -40761,6 +40885,10 @@ msgstr ""
 msgid "Minimum connections per second"
 msgstr "Minimale Verbindungen pro Sekunde"
 
+#, fuzzy
+msgid "Minimum length is 30 characters."
+msgstr "Die maximale Schlüssellänge beträgt 128 Zeichen."
+
 msgid "Minimum levels for current"
 msgstr "Untergrenzen für die Stromstärke"
 
@@ -41219,9 +41347,6 @@ msgstr "Überwache Android-Geräte"
 
 msgid "Monitor CloudFront WAFs"
 msgstr "Cloudfront WAFs überwachen"
-
-msgid "Monitor Oracle Databases"
-msgstr "Oracle-Datenbanken überwachen"
 
 msgid "Monitor Route53"
 msgstr "Route53 überwachen"
@@ -42713,6 +42838,9 @@ msgstr "Entferne niemals Dateien neuer als"
 
 msgid "Never synchronized"
 msgstr "Nie synchronisiert"
+
+msgid "Never use host libraries (force bundled)"
+msgstr ""
 
 msgid "Never use piggyback data"
 msgstr "Keine Piggyback-Daten verwenden"
@@ -45775,6 +45903,11 @@ msgstr ""
 msgid "Only root socket"
 msgstr "Nur Root-Socket"
 
+msgid ""
+"Only services matching one of these patterns will be discovered. If no "
+"pattern is defined, all services are included."
+msgstr ""
+
 msgid "Only show current value"
 msgstr "Nur aktuellen Wert anzeigen"
 
@@ -46245,6 +46378,10 @@ msgstr "Oracle DB Zeitstatistiken"
 msgid "Oracle Data-Guard Stats"
 msgstr "Oracle Data-Guard Statistiken"
 
+#, fuzzy
+msgid "Oracle Database default configuration"
+msgstr "Standardkonfiguration"
+
 msgid "Oracle IOSTAT IO"
 msgstr "Oracle IOSTAT E/A"
 
@@ -46310,6 +46447,10 @@ msgstr "Oracle SGA-Speicher-Statistiken"
 
 msgid "Oracle SID of the remote database"
 msgstr "Oracle-SID der Remote-Datenbank"
+
+#, fuzzy
+msgid "Oracle System Identifier of the database instance."
+msgstr "Der Identifier für den Sensor."
 
 msgid "Oracle Wait Class (FG lines are downside)"
 msgstr "Oracle Warteklasse (FG Zeilen sind von Nachteil)"
@@ -46396,6 +46537,14 @@ msgstr "Oracle Puffer Trefferquote"
 msgid "Oracle buffer pool statistics"
 msgstr "Oracle Bufferpool-Statistiken"
 
+#, fuzzy
+msgid "Oracle client library options"
+msgstr "Oracle Trefferquote"
+
+#, fuzzy
+msgid "Oracle client library usage"
+msgstr "Oracle-Zugangsdaten"
+
 msgid "Oracle cluster wait class"
 msgstr "Oracle Cluster Warteklasse"
 
@@ -46449,9 +46598,6 @@ msgstr "Oracle Kontrolldatei Small Writes"
 
 msgid "Oracle count"
 msgstr "Oracle Zählung"
-
-msgid "Oracle credentials"
-msgstr "Oracle-Zugangsdaten"
 
 msgid "Oracle data file backup large read bytes"
 msgstr "Oracle Dateisicherung Large Read in Bytes"
@@ -46866,6 +47012,10 @@ msgstr "Oracle Gesamtwartezeit"
 
 msgid "Oracle total waited (FG)"
 msgstr "Oracle Gesamtwartezeit (FG)"
+
+#, fuzzy
+msgid "Oracle type of authentication"
+msgstr "Authentifizierung erneut versuchen"
 
 msgid "Oracle undo retention"
 msgstr "Oracle Undo Retention"
@@ -54633,6 +54783,10 @@ msgstr "SMTP Befehle"
 msgid "SMTP Responses"
 msgstr "SMTP Antworten"
 
+#, fuzzy
+msgid "SMTP STARTTLS"
+msgstr "STARTTLS"
+
 msgid "SMTP TCP Port to connect to"
 msgstr "TCP-Port für die SMTP-Verbindung"
 
@@ -54844,6 +54998,15 @@ msgstr "SYN_RECV"
 
 msgid "SYN_SENT"
 msgstr "SYN_SENT"
+
+msgid "SYSASM"
+msgstr ""
+
+msgid "SYSDBA"
+msgstr ""
+
+msgid "SYSOPER"
+msgstr ""
 
 msgid "SaaS version: Skip request ID verification"
 msgstr "SaaS Version: Anfrage der ID-Verifizierung überspringen"
@@ -55588,6 +55751,12 @@ msgstr "Parameter auswählen"
 msgid "Select recipient"
 msgstr "Empfänger auswählen"
 
+msgid ""
+"Select sections of the Oracle monitoring plug-in and define their affinity "
+"and whether they should be run asynchronously(if not checked, all sections "
+"will be returned)."
+msgstr ""
+
 #, python-format
 msgid ""
 "Select sites the %s should be avalable on. It will become available for all "
@@ -55708,6 +55877,12 @@ msgstr ""
 "großen Systemen kann länger dauern."
 
 msgid ""
+"Select the connection type for the SSL/TLS check. Direct TLS establishes an "
+"immediate encrypted connection. SMTP STARTTLS negotiates encryption after "
+"connecting in plain text."
+msgstr ""
+
+msgid ""
 "Select the graph to be displayed by this element. In case the current "
 "selection displays 'Deprecated choice, please re-select', this element was "
 "created before the release of version 2.0. Before this version, the graph "
@@ -55778,6 +55953,11 @@ msgstr ""
 
 msgid "Select the subscriptions you want to monitor."
 msgstr "Wählen Sie die Subskriptionen aus, die Sie überwachen wollen."
+
+msgid ""
+"Select the type of authentication to use when connecting to the Oracle "
+"database."
+msgstr ""
 
 msgid "Select the type of content element"
 msgstr "Wählen Sie den Typ des Berichtelements"
@@ -56669,6 +56849,13 @@ msgstr "Services gruppiert nach Service-Gruppen"
 
 msgid "Services in downtime"
 msgstr "Services in Wartungszeit"
+
+#, fuzzy
+msgid ""
+"Services matching one of these patterns will be excluded from discovery."
+msgstr ""
+"iOS-Versionen, die diesem Pattern entsprechen, werden als OK gemeldet, "
+"ansonsten als CRIT."
 
 msgid "Services not being monitored due to configuration."
 msgstr "Services die aufgrund der Konfiguration nicht überwacht werden."
@@ -62064,6 +62251,10 @@ msgstr "TLS ohne Zertifikatsvalidierung"
 
 msgid "TLS/HTTPS configuration"
 msgstr "TLS/HTTPS-Konfiguration"
+
+#, fuzzy
+msgid "TLS/SSL"
+msgstr "TLS/SSL deaktivieren"
 
 msgid "TLS/SSL/Https disabled"
 msgstr "TLS/SSL/Https deaktiviert"
@@ -78520,6 +78711,10 @@ msgstr ""
 msgid "Use custom connection parameters"
 msgstr "Individuelle Verbindungsparameter nutzen"
 
+#, fuzzy
+msgid "Use custom path"
+msgstr "Verwende benutzerdefinierten Typ"
+
 msgid "Use custom region for global AWS services"
 msgstr "Benutzer-Region für globale AWS-Dienste verwenden"
 
@@ -88184,9 +88379,6 @@ msgstr "Ansichten werden geladen..."
 msgid "Choose from available views"
 msgstr "Wählen Sie aus den verfügbaren Ansichten"
 
-msgid "Add Widget"
-msgstr "Widget hinzufügen"
-
 msgid "Metrics & graphs"
 msgstr "Metriken & Graphen"
 
@@ -88523,6 +88715,14 @@ msgstr ""
 
 msgid "€ (Decimal, strict precision, 2 digits)"
 msgstr ""
+
+#, fuzzy
+msgid "Failed to load sidebar elements."
+msgstr "Seitenleistenelement hinzufügen"
+
+#, fuzzy
+msgid "Loading sidebar elements..."
+msgstr "Seitenleistenelement hinzufügen"
 
 msgid "Barplot"
 msgstr "Balkendiagramm"
@@ -89617,6 +89817,15 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Invalid receipt"
+#~ msgstr "Ungültiger Beleg"
+
+#~ msgid "Monitor Oracle Databases"
+#~ msgstr "Oracle-Datenbanken überwachen"
+
+#~ msgid "Add Widget"
+#~ msgstr "Widget hinzufügen"
 
 #, fuzzy
 #~ msgid "Custom ClickHouse Instance"
@@ -92839,9 +93048,6 @@ msgstr ""
 
 #~ msgid "Max Perm used"
 #~ msgstr "Max Perm used"
-
-#~ msgid "Maximum inodes"
-#~ msgstr "Maximale Inodes"
 
 #~ msgid ""
 #~ "Space in the database that has not been reserved for database objects"

@@ -758,6 +758,10 @@ msgid "%s running for %s"
 msgstr "%s loopt gedurende %s"
 
 #, fuzzy, python-format
+msgid "%s section"
+msgstr "Map Selectie"
+
+#, fuzzy, python-format
 msgid "%s server"
 msgstr "Als server"
 
@@ -4255,6 +4259,10 @@ msgstr "Nieuwe aggregatie toevoegen"
 msgid "Add new credentials"
 msgstr "Gebruik geloofsbrieven"
 
+#, fuzzy
+msgid "Add new database instance"
+msgstr "Externe instantie toevoegen"
+
 msgid "Add new element"
 msgstr "Nieuw element toevoegen"
 
@@ -4265,6 +4273,10 @@ msgstr "Nieuwe metriek toevoegen"
 #, fuzzy
 msgid "Add new entry"
 msgstr "Nieuwe metriek toevoegen"
+
+#, fuzzy
+msgid "Add new exclude pattern"
+msgstr "Nieuw patroon toevoegen"
 
 #, fuzzy
 msgid "Add new field"
@@ -4283,6 +4295,10 @@ msgstr "Nieuwe groep toevoegen"
 
 msgid "Add new grouping definition"
 msgstr "Nieuwe groeperingsdefinitie toevoegen"
+
+#, fuzzy
+msgid "Add new include pattern"
+msgstr "Nieuw patroon toevoegen"
 
 msgid "Add new label"
 msgstr "Nieuw etiket toevoegen"
@@ -4934,6 +4950,10 @@ msgstr "Betrokken sites"
 #, fuzzy, python-format
 msgid "Affected sites: %s"
 msgstr "Betrokken sites"
+
+#, fuzzy
+msgid "Affinity"
+msgstr "init"
 
 #, fuzzy
 msgid ""
@@ -6551,6 +6571,9 @@ msgstr "Toon altijd de checkboxes"
 msgid "Always use and expect piggyback data"
 msgstr "Gebruik en verwacht altijd piggyback data"
 
+msgid "Always use host libraries (force host)"
+msgstr ""
+
 msgid "Always use service level from rule"
 msgstr "Gebruik altijd service level van regel"
 
@@ -7484,6 +7507,10 @@ msgstr "Verondersteld %s te zijn"
 msgid "Asynchronous"
 msgstr "Asynchroon"
 
+#, fuzzy
+msgid "Asynchronous check"
+msgstr "Asynchroon"
+
 msgid "Asynchronous closing connections"
 msgstr "Asynchrone verbindingen sluiten"
 
@@ -7834,6 +7861,10 @@ msgstr "Automatisch krimpen uit"
 
 msgid "Auto shrink on"
 msgstr "Automatisch krimpen aan"
+
+#, fuzzy
+msgid "Auto-detect (default)"
+msgstr "Authenticatie (standaardinstellingen)"
 
 #, fuzzy
 msgid "Auto-detect proxy settings for this network"
@@ -11457,6 +11488,10 @@ msgstr ""
 "zich momenteel in de wachtrij bevindt."
 
 #, fuzzy
+msgid "Cache age"
+msgstr "Cachegrootte"
+
+#, fuzzy
 msgid "Cache age for asynchronous checks"
 msgstr "Cache leeftijd voor achtergrond controles"
 
@@ -12494,6 +12529,10 @@ msgstr "Controleer de staat van de makelaar op de primaire: "
 msgid "Check TCP port connection"
 msgstr "TCP-poortverbinding controleren"
 
+#, fuzzy
+msgid "Check all instances"
+msgstr "Controleer alle gevonden gevallen"
+
 msgid "Check and CRIT"
 msgstr "Check en CRIT"
 
@@ -12502,6 +12541,10 @@ msgstr "Controleer en WAARSCHUW"
 
 msgid "Check and display only"
 msgstr "Alleen controleren en weergeven"
+
+#, fuzzy
+msgid "Check asm instances"
+msgstr "%s instanties"
 
 #, fuzzy
 msgid "Check certificate"
@@ -12623,6 +12666,10 @@ msgstr "Controle niet uitgevoerd binnen %d seconden"
 
 msgid "Check notification number per contact"
 msgstr "Controleer het aantal meldingen per contactpersoon"
+
+#, fuzzy
+msgid "Check only db instances"
+msgstr "Controleer alleen de vermelde mailboxen"
 
 msgid "Check only the listed mailboxes"
 msgstr "Controleer alleen de vermelde mailboxen"
@@ -14760,6 +14807,10 @@ msgstr "Configuratie van de Datadog special agent."
 msgid "Configuration of update plug-in"
 msgstr "Configuratie van update plugin"
 
+#, fuzzy, python-format
+msgid "Configuration options for the %s section."
+msgstr "Configuratie aansluiting"
+
 #, python-format
 msgid ""
 "Configuration update failed\n"
@@ -15894,6 +15945,13 @@ msgstr "Controller"
 #, fuzzy
 msgid "Controller version"
 msgstr "Controller Versie"
+
+msgid ""
+"Controls usage of host Oracle client libraries. Allowed values: 'auto' (auto-"
+"detect, fallback to bundled), 'never' (force bundled), 'always' (force "
+"host), or an absolute path to an OCI library directory (e.g. /usr/lib/"
+"oracle/...)."
+msgstr ""
 
 msgid "Convert FQHN"
 msgstr "Omzetten FQHN"
@@ -17367,6 +17425,9 @@ msgstr "Aangepaste meldingentabel voor gebruiker %s"
 msgid "Custom notification table of this user"
 msgstr "Aangepaste meldingentabel van deze gebruiker"
 
+msgid "Custom path to Oracle client libraries"
+msgstr ""
+
 #, fuzzy
 msgid "Custom port"
 msgstr "Aangepaste gastheer"
@@ -18097,6 +18158,14 @@ msgstr "Database voor MySQL"
 msgid "Database identifier"
 msgstr "Identificatiecode databank"
 
+#, fuzzy
+msgid "Database instance"
+msgstr "Naam databank"
+
+#, fuzzy
+msgid "Database instances"
+msgstr "Naam databank"
+
 msgid "Database is being recovered"
 msgstr "Database wordt hersteld"
 
@@ -18562,6 +18631,10 @@ msgid "Deferred files in Spool"
 msgstr "Uitgestelde bestanden in Spool"
 
 msgid ""
+"Define Oracle database instances to monitor to overwrite default settings."
+msgstr ""
+
+msgid ""
 "Define a direct translation of the possible states of the HAProxy frontend "
 "to monitoring states, i.e. to the result of the check. This overwrites the "
 "default mapping used by the check."
@@ -18669,6 +18742,10 @@ msgid ""
 msgstr ""
 "Definieer patronen voor het opnemen van kernel configuratie parameters in de "
 "inventaris."
+
+#, fuzzy
+msgid "Define sections"
+msgstr "Secties voor gehandicapten"
 
 msgid ""
 "Define the host to assign the discovered CloudFront services. You can assign "
@@ -20489,6 +20566,10 @@ msgid ""
 msgstr ""
 "Heeft service gevonden op host %s: %d toegevoegd, %d verwijderd, %d bewaard, "
 "%d totaal services en %d hostlabels toegevoegd, %d hostlabels totaal"
+
+#, fuzzy
+msgid "Discovery options"
+msgstr "Ontdekkingsinstellingen"
 
 msgid "Discovery rules"
 msgstr "Ontdekking regels"
@@ -23245,6 +23326,10 @@ msgstr "Rij arcering inschakelen"
 msgid "Enable safe host names"
 msgstr "Hostnamen vertalen"
 
+#, fuzzy
+msgid "Enable service discovery"
+msgstr "Service discovery uitvoeren"
+
 msgid "Enable service notifications"
 msgstr "Inschakelen dienst meldingen"
 
@@ -24427,6 +24512,14 @@ msgstr "Instanties uitsluiten"
 
 msgid "Exclude namespaces matching"
 msgstr "Sluit namespaces uit die overeenkomen met"
+
+#, fuzzy
+msgid "Exclude pattern"
+msgstr "Patroon uitsluiten"
+
+#, fuzzy
+msgid "Exclude patterns"
+msgstr "Patroon uitsluiten"
 
 msgid "Exclude reserved space"
 msgstr "Exclusief gereserveerde ruimte"
@@ -31688,6 +31781,9 @@ msgstr ""
 msgid "How many days in the past Checkmk should evaluate the measurement data"
 msgstr ""
 
+msgid "How old (in minutes) the cache file is allowed to be."
+msgstr ""
+
 msgid ""
 "How the disks are named depends on the type of hardware being used. Please "
 "look at already discovered checks for examples."
@@ -32636,6 +32732,9 @@ msgstr ""
 "Discovery</a>, die een configuratie per host toestaat en aanvullende "
 "mogelijkheden zoals automatische herontdekking. Regels in die regelset "
 "zullen de globale instellingen hier overschrijven."
+
+msgid "If enabled, the check will be executed asynchronously."
+msgstr ""
 
 msgid ""
 "If enabled, the service details will contain username of a process owner."
@@ -34100,6 +34199,10 @@ msgstr "Nalevingsstatus negeren"
 msgid "Ignore core restarts shorter than"
 msgstr "Negeer core herstarts korter dan"
 
+#, fuzzy
+msgid "Ignore database name"
+msgstr "Naam databank"
+
 msgid "Ignore default increment"
 msgstr "Negeer standaard verhoging"
 
@@ -34878,6 +34981,14 @@ msgstr "Volledig pad opnemen"
 
 msgid "Include indirectly connected hosts (recursively)"
 msgstr ""
+
+#, fuzzy
+msgid "Include pattern"
+msgstr "Patroon opnemen"
+
+#, fuzzy
+msgid "Include patterns"
+msgstr "Patroon opnemen"
 
 msgid "Include per-process arguments (security risk!)"
 msgstr "Neem per-proces argumenten op (veiligheidsrisico!)"
@@ -36004,10 +36115,6 @@ msgstr ""
 #, fuzzy, python-format
 msgid "Invalid proxy scheme given. Must be one of: %s"
 msgstr "Ongeldig URL-schema. Moet een van zijn: %s"
-
-#, fuzzy
-msgid "Invalid receipt"
-msgstr "Ongeldig rapport"
 
 #, python-brace-format
 msgid "Invalid regex pattern. Expected: {validate_pattern}"
@@ -41381,6 +41488,10 @@ msgstr "Maximale gelijktijdige uitvoering voor doorgestuurde berichten"
 msgid "Maximum concurrent real-time checks"
 msgstr "Maximaal aantal gelijktijdige Real-Time controles"
 
+#, fuzzy
+msgid "Maximum connections"
+msgstr "% van maximum connecties"
+
 msgid "Maximum connections per second"
 msgstr "Maximale verbindingen per seconde"
 
@@ -41491,6 +41602,10 @@ msgstr "Maximum aantal cliënten"
 msgid "Maximum number of connections or listeners"
 msgstr "Maximum aantal verbindingen of luisteraars"
 
+#, fuzzy
+msgid "Maximum number of database connections to open."
+msgstr "Maximum aantal verbindingen of luisteraars"
+
 msgid "Maximum number of delivery attempts"
 msgstr "Maximum aantal leveringspogingen"
 
@@ -41520,6 +41635,10 @@ msgid "Maximum number of parsed lines per log file"
 msgstr "Maximum aantal geparseerde regels per logbestand"
 
 #, fuzzy
+msgid "Maximum number of queries to execute per connection."
+msgstr "Maximum aantal cliënten"
+
+#, fuzzy
 msgid "Maximum number of re-executions"
 msgstr "Maximum aantal cliënten"
 
@@ -41544,6 +41663,10 @@ msgstr "Maximaal aantal parallelle verbindingen"
 
 msgid "Maximum possible value"
 msgstr "Maximaal mogelijke waarde"
+
+#, fuzzy
+msgid "Maximum queries"
+msgstr "Maximum inodes"
 
 msgid "Maximum rate for total number of packets"
 msgstr "Maximumsnelheid voor totaal aantal pakketten"
@@ -42323,6 +42446,10 @@ msgid "Minimum connections per second"
 msgstr "Minimale verbindingen per seconde"
 
 #, fuzzy
+msgid "Minimum length is 30 characters."
+msgstr "De maximale sleutellengte is 128 tekens."
+
+#, fuzzy
 msgid "Minimum levels for current"
 msgstr "Minimum Spanningsniveaus"
 
@@ -42794,10 +42921,6 @@ msgstr "Monitor Android-apparaten"
 
 msgid "Monitor CloudFront WAFs"
 msgstr "CloudFront WAF's monitoren"
-
-#, fuzzy
-msgid "Monitor Oracle Databases"
-msgstr "Gebeurtenisendatabase"
 
 msgid "Monitor Route53"
 msgstr "Bewaak Route53"
@@ -44388,6 +44511,9 @@ msgstr "Verwijder nooit bestanden die nieuwer zijn dan"
 #, fuzzy
 msgid "Never synchronized"
 msgstr "synchroniseren"
+
+msgid "Never use host libraries (force bundled)"
+msgstr ""
 
 msgid "Never use piggyback data"
 msgstr "Gebruik nooit piggyback data"
@@ -47604,6 +47730,11 @@ msgstr ""
 msgid "Only root socket"
 msgstr "Slechts procent"
 
+msgid ""
+"Only services matching one of these patterns will be discovered. If no "
+"pattern is defined, all services are included."
+msgstr ""
+
 msgid "Only show current value"
 msgstr "Toon alleen huidige waarde"
 
@@ -48086,6 +48217,10 @@ msgid "Oracle Data-Guard Stats"
 msgstr "Oracle Data-Guard Stats"
 
 #, fuzzy
+msgid "Oracle Database default configuration"
+msgstr "Standaard configuratie"
+
+#, fuzzy
 msgid "Oracle IOSTAT IO"
 msgstr "ORACLE IOSTAT IO's"
 
@@ -48168,6 +48303,10 @@ msgstr "ORACLE SGA-geheugenstatistieken"
 #, fuzzy
 msgid "Oracle SID of the remote database"
 msgstr "ORACLE SID van de database op afstand"
+
+#, fuzzy
+msgid "Oracle System Identifier of the database instance."
+msgstr "De identificatiecode van de sensor."
 
 #, fuzzy
 msgid "Oracle Wait Class (FG lines are downside)"
@@ -48282,6 +48421,14 @@ msgid "Oracle buffer pool statistics"
 msgstr "ORACLE buffer pool statistieken"
 
 #, fuzzy
+msgid "Oracle client library options"
+msgstr "Cache hit ratio"
+
+#, fuzzy
+msgid "Oracle client library usage"
+msgstr "Gebruik geloofsbrieven"
+
+#, fuzzy
 msgid "Oracle cluster wait class"
 msgstr "ORACLE %s wacht klasse"
 
@@ -48352,10 +48499,6 @@ msgstr "ORACLE Totaal kleine schrijffouten"
 #, fuzzy
 msgid "Oracle count"
 msgstr "Totaal aantal"
-
-#, fuzzy
-msgid "Oracle credentials"
-msgstr "Gebruik geloofsbrieven"
 
 #, fuzzy
 msgid "Oracle data file backup large read bytes"
@@ -48896,6 +49039,10 @@ msgstr "ORACLE Totaal gewacht"
 #, fuzzy
 msgid "Oracle total waited (FG)"
 msgstr "ORACLE Totaal gewacht (FG)"
+
+#, fuzzy
+msgid "Oracle type of authentication"
+msgstr "Token authenticatie"
 
 #, fuzzy
 msgid "Oracle undo retention"
@@ -57060,6 +57207,10 @@ msgstr "SMTP Opdrachten"
 msgid "SMTP Responses"
 msgstr "SMTP antwoorden"
 
+#, fuzzy
+msgid "SMTP STARTTLS"
+msgstr "STARTTLS"
+
 msgid "SMTP TCP Port to connect to"
 msgstr "SMTP TCP-poort om verbinding mee te maken"
 
@@ -57278,6 +57429,15 @@ msgstr "SYN_RECV"
 
 msgid "SYN_SENT"
 msgstr "SYN_SENT"
+
+msgid "SYSASM"
+msgstr ""
+
+msgid "SYSDBA"
+msgstr ""
+
+msgid "SYSOPER"
+msgstr ""
 
 #, fuzzy
 msgid "SaaS version: Skip request ID verification"
@@ -58045,6 +58205,12 @@ msgstr "Modelparameters"
 msgid "Select recipient"
 msgstr "Ontvanger"
 
+msgid ""
+"Select sections of the Oracle monitoring plug-in and define their affinity "
+"and whether they should be run asynchronously(if not checked, all sections "
+"will be returned)."
+msgstr ""
+
 #, python-format
 msgid ""
 "Select sites the %s should be avalable on. It will become available for all "
@@ -58138,6 +58304,12 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Select the connection type for the SSL/TLS check. Direct TLS establishes an "
+"immediate encrypted connection. SMTP STARTTLS negotiates encryption after "
+"connecting in plain text."
+msgstr ""
+
+msgid ""
 "Select the graph to be displayed by this element. In case the current "
 "selection displays 'Deprecated choice, please re-select', this element was "
 "created before the release of version 2.0. Before this version, the graph "
@@ -58211,6 +58383,11 @@ msgstr ""
 #, fuzzy
 msgid "Select the subscriptions you want to monitor."
 msgstr "Selecteer het type inhoudselement"
+
+msgid ""
+"Select the type of authentication to use when connecting to the Oracle "
+"database."
+msgstr ""
 
 msgid "Select the type of content element"
 msgstr "Selecteer het type inhoudselement"
@@ -59159,6 +59336,13 @@ msgstr "Diensten gegroepeerd per dienstengroep"
 
 msgid "Services in downtime"
 msgstr "Diensten in stilstand"
+
+#, fuzzy
+msgid ""
+"Services matching one of these patterns will be excluded from discovery."
+msgstr ""
+"iOS versies die overeenkomen met dit patroon zullen worden gerapporteerd als "
+"OK, anders CRIT."
 
 msgid "Services not being monitored due to configuration."
 msgstr "Diensten worden niet gemonitord vanwege configuratie."
@@ -64709,6 +64893,10 @@ msgstr "TLS zonder certificaatvalidatie"
 
 msgid "TLS/HTTPS configuration"
 msgstr "TLS/HTTPS configuratie"
+
+#, fuzzy
+msgid "TLS/SSL"
+msgstr "Schakel TLS/SSL uit"
 
 msgid "TLS/SSL/Https disabled"
 msgstr "TLS/SSL/Https uitgeschakeld"
@@ -81605,6 +81793,10 @@ msgstr ""
 msgid "Use custom connection parameters"
 msgstr "Gebruik aangepaste verbindingsparameters"
 
+#, fuzzy
+msgid "Use custom path"
+msgstr "Aangepast thema instellen"
+
 msgid "Use custom region for global AWS services"
 msgstr ""
 
@@ -91549,10 +91741,6 @@ msgid "Choose from available views"
 msgstr "Beschikbare poorten"
 
 #, fuzzy
-msgid "Add Widget"
-msgstr "Doel toevoegen"
-
-#, fuzzy
 msgid "Metrics & graphs"
 msgstr "Dienstgrafieken"
 
@@ -91920,6 +92108,14 @@ msgstr ""
 
 msgid "€ (Decimal, strict precision, 2 digits)"
 msgstr ""
+
+#, fuzzy
+msgid "Failed to load sidebar elements."
+msgstr "Zijbalk element toevoegen"
+
+#, fuzzy
+msgid "Loading sidebar elements..."
+msgstr "Zijbalk element toevoegen"
 
 msgid "Barplot"
 msgstr "Barplot"
@@ -93121,6 +93317,18 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Invalid receipt"
+#~ msgstr "Ongeldig rapport"
+
+#, fuzzy
+#~ msgid "Monitor Oracle Databases"
+#~ msgstr "Gebeurtenisendatabase"
+
+#, fuzzy
+#~ msgid "Add Widget"
+#~ msgstr "Doel toevoegen"
 
 #, fuzzy
 #~ msgid "Custom ClickHouse Instance"
@@ -95956,9 +96164,6 @@ msgstr ""
 
 #~ msgid "Max Perm used"
 #~ msgstr "Max. gebruikt Perm"
-
-#~ msgid "Maximum inodes"
-#~ msgstr "Maximum inodes"
 
 #~ msgid ""
 #~ "Space in the database that has not been reserved for database objects"

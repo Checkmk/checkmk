@@ -739,6 +739,10 @@ msgstr "%s ルール"
 msgid "%s running for %s"
 msgstr "%s は %sで実行されています"
 
+#, fuzzy, python-format
+msgid "%s section"
+msgstr "サイト選択"
+
 #, python-format
 msgid "%s server"
 msgstr "%sサーバー"
@@ -4050,6 +4054,10 @@ msgstr "アグリゲーションを追加"
 msgid "Add new credentials"
 msgstr "新しい資格情報を追加"
 
+#, fuzzy
+msgid "Add new database instance"
+msgstr "リモートインスタンスを追加します"
+
 msgid "Add new element"
 msgstr "新しい要素を追加する"
 
@@ -4058,6 +4066,10 @@ msgstr "新しいエンドポイントを追加する"
 
 msgid "Add new entry"
 msgstr "新しいエントリーを追加する"
+
+#, fuzzy
+msgid "Add new exclude pattern"
+msgstr "新しいパターンを追加する"
 
 msgid "Add new field"
 msgstr "新しいフィールドを追加"
@@ -4074,6 +4086,10 @@ msgstr "新しいグループを追加する"
 
 msgid "Add new grouping definition"
 msgstr "新しいグループ定義を追加する"
+
+#, fuzzy
+msgid "Add new include pattern"
+msgstr "新しいパターンを追加する"
 
 msgid "Add new label"
 msgstr "ラベルを追加"
@@ -4677,6 +4693,10 @@ msgstr "影響を受けるサイト"
 #, python-format
 msgid "Affected sites: %s"
 msgstr "影響を受けるサイト：%s"
+
+#, fuzzy
+msgid "Affinity"
+msgstr "初期化"
 
 msgid ""
 "After a battery diagnostics the battery capacity is reduced until the "
@@ -6187,6 +6207,9 @@ msgstr "チェックボックスを常に表示する"
 msgid "Always use and expect piggyback data"
 msgstr "常にピギーバックデータを使用し、期待する"
 
+msgid "Always use host libraries (force host)"
+msgstr ""
+
 msgid "Always use service level from rule"
 msgstr "常にルールのサービスレベルを使用する"
 
@@ -7074,6 +7097,10 @@ msgstr "%s と見なされます"
 msgid "Asynchronous"
 msgstr "非同期"
 
+#, fuzzy
+msgid "Asynchronous check"
+msgstr "非同期"
+
 msgid "Asynchronous closing connections"
 msgstr "非同期のクローズ接続"
 
@@ -7394,6 +7421,10 @@ msgstr "自動シュリンクオフ"
 
 msgid "Auto shrink on"
 msgstr "自動縮小オン"
+
+#, fuzzy
+msgid "Auto-detect (default)"
+msgstr "認証(デフォルト)"
 
 msgid "Auto-detect proxy settings for this network"
 msgstr "このネットワークのプロキシ設定を自動検出する"
@@ -10738,6 +10769,10 @@ msgstr ""
 "CURDEPTH_PERC:現在キューにあるメッセージの数のパーセンテージ(CURDEPTH/"
 "MAXDEPTH)。"
 
+#, fuzzy
+msgid "Cache age"
+msgstr "キャッシュサイズ"
+
 msgid "Cache age for asynchronous checks"
 msgstr "非同期チェックのキャッシュ年齢"
 
@@ -11737,6 +11772,10 @@ msgstr "プライマリのブローカーの状態を確認します。 "
 msgid "Check TCP port connection"
 msgstr "TCPポート接続を確認する"
 
+#, fuzzy
+msgid "Check all instances"
+msgstr "すべてのインスタンスを監視する"
+
 msgid "Check and CRIT"
 msgstr "チェックとクリティカル"
 
@@ -11745,6 +11784,10 @@ msgstr "チェックして警告"
 
 msgid "Check and display only"
 msgstr "チェックして表示するだけ"
+
+#, fuzzy
+msgid "Check asm instances"
+msgstr "%s インスタンス"
 
 msgid "Check certificate"
 msgstr "証明書のチェック"
@@ -11855,6 +11898,10 @@ msgstr "チェックが %d 秒以内に実行されない"
 
 msgid "Check notification number per contact"
 msgstr "連絡先ごとの通知番号を確認する"
+
+#, fuzzy
+msgid "Check only db instances"
+msgstr "リストされているメールボックスのみを確認する"
 
 msgid "Check only the listed mailboxes"
 msgstr "リストされているメールボックスのみを確認する"
@@ -13894,6 +13941,10 @@ msgstr "Datadog Specialエージェントの設定。"
 msgid "Configuration of update plug-in"
 msgstr "更新プラグインの設定"
 
+#, fuzzy, python-format
+msgid "Configuration options for the %s section."
+msgstr "このメソッドには追加の設定オプションはありません。"
+
 #, python-format
 msgid ""
 "Configuration update failed\n"
@@ -14955,6 +15006,13 @@ msgstr "コントローラー"
 
 msgid "Controller version"
 msgstr "コントローラバージョン"
+
+msgid ""
+"Controls usage of host Oracle client libraries. Allowed values: 'auto' (auto-"
+"detect, fallback to bundled), 'never' (force bundled), 'always' (force "
+"host), or an absolute path to an OCI library directory (e.g. /usr/lib/"
+"oracle/...)."
+msgstr ""
 
 msgid "Convert FQHN"
 msgstr "FQHNを変換する"
@@ -16361,6 +16419,9 @@ msgstr "ユーザー %s のカスタム通知テーブル"
 msgid "Custom notification table of this user"
 msgstr "このユーザーのカスタム通知テーブル"
 
+msgid "Custom path to Oracle client libraries"
+msgstr ""
+
 msgid "Custom port"
 msgstr "カスタムポート"
 
@@ -17059,6 +17120,14 @@ msgstr "PostgreSQLシングルサーバー用データベース"
 msgid "Database identifier"
 msgstr "データベース識別子"
 
+#, fuzzy
+msgid "Database instance"
+msgstr "データベース名"
+
+#, fuzzy
+msgid "Database instances"
+msgstr "データベース名"
+
 msgid "Database is being recovered"
 msgstr "データベースが復元されています"
 
@@ -17506,6 +17575,10 @@ msgid "Deferred files in Spool"
 msgstr "スプール内の遅延ファイル"
 
 msgid ""
+"Define Oracle database instances to monitor to overwrite default settings."
+msgstr ""
+
+msgid ""
 "Define a direct translation of the possible states of the HAProxy frontend "
 "to monitoring states, i.e. to the result of the check. This overwrites the "
 "default mapping used by the check."
@@ -17603,6 +17676,10 @@ msgid ""
 "inventory."
 msgstr ""
 "カーネル構成パラメーターをインベントリに含めるためのパターンを定義します。"
+
+#, fuzzy
+msgid "Define sections"
+msgstr "無効なセクション"
 
 msgid ""
 "Define the host to assign the discovered CloudFront services. You can assign "
@@ -19295,6 +19372,10 @@ msgid ""
 msgstr ""
 "ホスト %s で検出: %dサービス（%d 追加, %d 変更, %d 削除, %d 保持）、%dホスト"
 "ラベル(%d 追加, %d変更, %d 削除, %d 保持)"
+
+#, fuzzy
+msgid "Discovery options"
+msgstr "ディスカバリー設定"
 
 msgid "Discovery rules"
 msgstr "ディスカバリールール"
@@ -21881,6 +21962,10 @@ msgstr "行のシェーディングを有効にする"
 msgid "Enable safe host names"
 msgstr "ホスト名を翻訳する"
 
+#, fuzzy
+msgid "Enable service discovery"
+msgstr "サービスディスカバリ実行"
+
 msgid "Enable service notifications"
 msgstr "サービス通知を有効にする"
 
@@ -23037,6 +23122,14 @@ msgstr "インスタンスを除外する"
 
 msgid "Exclude namespaces matching"
 msgstr "名前空間の一致を除外する"
+
+#, fuzzy
+msgid "Exclude pattern"
+msgstr "パターンを除外する"
+
+#, fuzzy
+msgid "Exclude patterns"
+msgstr "パターンを除外する"
 
 msgid "Exclude reserved space"
 msgstr "予約済みスペースを除外する"
@@ -29694,6 +29787,9 @@ msgstr ""
 msgid "How many days in the past Checkmk should evaluate the measurement data"
 msgstr "Checkmkが測定データを評価すべき過去の日数"
 
+msgid "How old (in minutes) the cache file is allowed to be."
+msgstr ""
+
 msgid ""
 "How the disks are named depends on the type of hardware being used. Please "
 "look at already discovered checks for examples."
@@ -30575,6 +30671,9 @@ msgstr ""
 "的なサービス検出</a>に置き換えられました。これにより、ホストごとの構成や、次"
 "のような追加機能が可能になります。自動再検出。そのルールセットのルールは、こ"
 "こで行われたグローバル設定を上書きします。"
+
+msgid "If enabled, the check will be executed asynchronously."
+msgstr ""
 
 msgid ""
 "If enabled, the service details will contain username of a process owner."
@@ -31969,6 +32068,10 @@ msgstr "コンプライアンス状態を無視する"
 msgid "Ignore core restarts shorter than"
 msgstr "より短いコア再起動を無視する"
 
+#, fuzzy
+msgid "Ignore database name"
+msgstr "データベース名"
+
 msgid "Ignore default increment"
 msgstr "デフォルトの増分を無視する"
 
@@ -32724,6 +32827,14 @@ msgstr "フルパスを含める"
 
 msgid "Include indirectly connected hosts (recursively)"
 msgstr "間接的に接続されたホストを含める（再帰的に）"
+
+#, fuzzy
+msgid "Include pattern"
+msgstr "パターンを含める"
+
+#, fuzzy
+msgid "Include patterns"
+msgstr "パターンを含める"
 
 msgid "Include per-process arguments (security risk!)"
 msgstr "プロセスごとの引数を含める(セキュリティリスク!)"
@@ -33802,9 +33913,6 @@ msgstr "無効なプロキシ：許可されていないURL"
 msgid "Invalid proxy scheme given. Must be one of: %s"
 msgstr ""
 "無効なプロキシスキームが指定されました。次のいずれかである必要があります：%s"
-
-msgid "Invalid receipt"
-msgstr "無効なレシート"
 
 #, python-brace-format
 msgid "Invalid regex pattern. Expected: {validate_pattern}"
@@ -38874,6 +38982,10 @@ msgstr "転送されたメッセージの最大同時実行数"
 msgid "Maximum concurrent real-time checks"
 msgstr "最大同時リアルタイムチェック"
 
+#, fuzzy
+msgid "Maximum connections"
+msgstr "最大接続数の %"
+
 msgid "Maximum connections per second"
 msgstr "1秒あたりの最大接続数"
 
@@ -38975,6 +39087,10 @@ msgstr "最大クライアント数"
 msgid "Maximum number of connections or listeners"
 msgstr "接続またはリスナーの最大数"
 
+#, fuzzy
+msgid "Maximum number of database connections to open."
+msgstr "接続またはリスナーの最大数"
+
 msgid "Maximum number of delivery attempts"
 msgstr "配信の最大試行回数"
 
@@ -39000,6 +39116,10 @@ msgstr "開いているファイル記述子の最大数"
 msgid "Maximum number of parsed lines per log file"
 msgstr "ログファイルごとに解析される最大行数"
 
+#, fuzzy
+msgid "Maximum number of queries to execute per connection."
+msgstr "最大再実行回数"
+
 msgid "Maximum number of re-executions"
 msgstr "最大再実行回数"
 
@@ -39024,6 +39144,10 @@ msgstr "最大並列接続"
 
 msgid "Maximum possible value"
 msgstr "可能な最大値"
+
+#, fuzzy
+msgid "Maximum queries"
+msgstr "最大 iノード"
 
 msgid "Maximum rate for total number of packets"
 msgstr "パケット総数の最大レート"
@@ -39765,6 +39889,10 @@ msgstr "グループサービスを作成するためのグループ内のアラ
 msgid "Minimum connections per second"
 msgstr "1秒あたりの最小接続数"
 
+#, fuzzy
+msgid "Minimum length is 30 characters."
+msgstr "キーの最大長は128文字です。"
+
 msgid "Minimum levels for current"
 msgstr "電流の最小レベル"
 
@@ -40225,10 +40353,6 @@ msgstr "Android端末の監視"
 
 msgid "Monitor CloudFront WAFs"
 msgstr "CloudFront WAFを監視する"
-
-#, fuzzy
-msgid "Monitor Oracle Databases"
-msgstr "データベースの監視"
 
 msgid "Monitor Route53"
 msgstr "モニターRoute53"
@@ -41701,6 +41825,9 @@ msgstr "設定期間より新しいファイルは削除しない"
 #, fuzzy
 msgid "Never synchronized"
 msgstr "同期する"
+
+msgid "Never use host libraries (force bundled)"
+msgstr ""
 
 msgid "Never use piggyback data"
 msgstr "ピギーバックデータは絶対に使用しないでください"
@@ -44700,6 +44827,11 @@ msgstr ""
 msgid "Only root socket"
 msgstr "rootソケットのみ"
 
+msgid ""
+"Only services matching one of these patterns will be discovered. If no "
+"pattern is defined, all services are included."
+msgstr ""
+
 msgid "Only show current value"
 msgstr "現在の値のみを表示"
 
@@ -45158,6 +45290,10 @@ msgstr "Oracle DBの時間統計"
 msgid "Oracle Data-Guard Stats"
 msgstr "Oracle Data-Guard Stats"
 
+#, fuzzy
+msgid "Oracle Database default configuration"
+msgstr "デフォルト設定"
+
 msgid "Oracle IOSTAT IO"
 msgstr "Oracle IOSTAT IOs"
 
@@ -45223,6 +45359,10 @@ msgstr "Oracle SGAメモリ統計"
 
 msgid "Oracle SID of the remote database"
 msgstr "リモートデータベースのOracle SID"
+
+#, fuzzy
+msgid "Oracle System Identifier of the database instance."
+msgstr "センサーの識別子。"
 
 msgid "Oracle Wait Class (FG lines are downside)"
 msgstr "Oracle待機クラス(FGラインはダウンサイド)"
@@ -45309,6 +45449,14 @@ msgstr "Oracle バッファヒット率"
 msgid "Oracle buffer pool statistics"
 msgstr "Oracleバッファプールの統計"
 
+#, fuzzy
+msgid "Oracle client library options"
+msgstr "Oracleヒット率"
+
+#, fuzzy
+msgid "Oracle client library usage"
+msgstr "資格情報を使用する"
+
 msgid "Oracle cluster wait class"
 msgstr "Oracleクラスタ待機クラス"
 
@@ -45362,10 +45510,6 @@ msgstr "Oracle コントロールファイルの小規模書き込み"
 
 msgid "Oracle count"
 msgstr "Oracle カウント"
-
-#, fuzzy
-msgid "Oracle credentials"
-msgstr "資格情報を使用する"
 
 msgid "Oracle data file backup large read bytes"
 msgstr "Oracle データファイルバックアップの大規模読み取りバイト数"
@@ -45780,6 +45924,10 @@ msgstr "Oracle合計待機"
 
 msgid "Oracle total waited (FG)"
 msgstr "Oracle合計待機(FG)"
+
+#, fuzzy
+msgid "Oracle type of authentication"
+msgstr "認証の再試行"
 
 msgid "Oracle undo retention"
 msgstr "Oracle Undo Retention"
@@ -53412,6 +53560,10 @@ msgstr "SMTPコマンド"
 msgid "SMTP Responses"
 msgstr "SMTP応答"
 
+#, fuzzy
+msgid "SMTP STARTTLS"
+msgstr "STARTTLS"
+
 msgid "SMTP TCP Port to connect to"
 msgstr "接続するSMTP TCPポート"
 
@@ -53623,6 +53775,15 @@ msgstr "SYN_RECV"
 
 msgid "SYN_SENT"
 msgstr "SYN_SENT"
+
+msgid "SYSASM"
+msgstr ""
+
+msgid "SYSDBA"
+msgstr ""
+
+msgid "SYSOPER"
+msgstr ""
 
 msgid "SaaS version: Skip request ID verification"
 msgstr "SaaS バージョン: リクエスト ID の検証をスキップする"
@@ -54355,6 +54516,12 @@ msgstr "パラメータを選択"
 msgid "Select recipient"
 msgstr "受信者を選択"
 
+msgid ""
+"Select sections of the Oracle monitoring plug-in and define their affinity "
+"and whether they should be run asynchronously(if not checked, all sections "
+"will be returned)."
+msgstr ""
+
 #, python-format
 msgid ""
 "Select sites the %s should be avalable on. It will become available for all "
@@ -54467,6 +54634,12 @@ msgstr ""
 "リソースを消費し、収集に時間がかかる場合があります。"
 
 msgid ""
+"Select the connection type for the SSL/TLS check. Direct TLS establishes an "
+"immediate encrypted connection. SMTP STARTTLS negotiates encryption after "
+"connecting in plain text."
+msgstr ""
+
+msgid ""
 "Select the graph to be displayed by this element. In case the current "
 "selection displays 'Deprecated choice, please re-select', this element was "
 "created before the release of version 2.0. Before this version, the graph "
@@ -54533,6 +54706,11 @@ msgstr ""
 
 msgid "Select the subscriptions you want to monitor."
 msgstr "監視したいサブスクリプションを選択してください。"
+
+msgid ""
+"Select the type of authentication to use when connecting to the Oracle "
+"database."
+msgstr ""
 
 msgid "Select the type of content element"
 msgstr "コンテンツ要素のタイプを選択します"
@@ -55420,6 +55598,12 @@ msgstr "サービスグループごとにグループ化されたサービス"
 
 msgid "Services in downtime"
 msgstr "ダウンタイム時のサービス"
+
+#, fuzzy
+msgid ""
+"Services matching one of these patterns will be excluded from discovery."
+msgstr ""
+"このパターンに一致するiOSのバージョンはOK、それ以外はCRITとして報告されます。"
 
 msgid "Services not being monitored due to configuration."
 msgstr "設定により監視されていないサービス。"
@@ -60664,6 +60848,10 @@ msgstr "検証なしのTLS証明書"
 
 msgid "TLS/HTTPS configuration"
 msgstr "TLS/HTTPS構成"
+
+#, fuzzy
+msgid "TLS/SSL"
+msgstr "TLS/SSL無効"
 
 msgid "TLS/SSL/Https disabled"
 msgstr "TLS/SSL/Httpsが無効になっています"
@@ -76408,6 +76596,10 @@ msgstr ""
 msgid "Use custom connection parameters"
 msgstr "カスタム接続パラメータを使用する"
 
+#, fuzzy
+msgid "Use custom path"
+msgstr "カスタムタイプを使用する"
+
 msgid "Use custom region for global AWS services"
 msgstr "グローバルAWSサービスにカスタムリージョンを使用する"
 
@@ -85762,10 +85954,6 @@ msgid "Choose from available views"
 msgstr "利用可能なユーザーはいません"
 
 #, fuzzy
-msgid "Add Widget"
-msgstr "ターゲットを追加"
-
-#, fuzzy
 msgid "Metrics & graphs"
 msgstr "サービスグラフ"
 
@@ -86130,6 +86318,14 @@ msgstr ""
 
 msgid "€ (Decimal, strict precision, 2 digits)"
 msgstr ""
+
+#, fuzzy
+msgid "Failed to load sidebar elements."
+msgstr "サイドバー要素を追加する"
+
+#, fuzzy
+msgid "Loading sidebar elements..."
+msgstr "サイドバー要素を追加する"
 
 msgid "Barplot"
 msgstr "棒グラフ"
@@ -87294,6 +87490,17 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Invalid receipt"
+#~ msgstr "無効なレシート"
+
+#, fuzzy
+#~ msgid "Monitor Oracle Databases"
+#~ msgstr "データベースの監視"
+
+#, fuzzy
+#~ msgid "Add Widget"
+#~ msgstr "ターゲットを追加"
 
 #, fuzzy
 #~ msgid "Custom ClickHouse Instance"
@@ -90176,9 +90383,6 @@ msgstr ""
 
 #~ msgid "Max Perm used"
 #~ msgstr "使用される最大パーマ"
-
-#~ msgid "Maximum inodes"
-#~ msgstr "最大 iノード"
 
 #~ msgid ""
 #~ "Space in the database that has not been reserved for database objects"

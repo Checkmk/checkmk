@@ -764,6 +764,10 @@ msgid "%s running for %s"
 msgstr "%s rulează pentru %s"
 
 #, fuzzy, python-format
+msgid "%s section"
+msgstr "Selecția fișierelor"
+
+#, fuzzy, python-format
 msgid "%s server"
 msgstr "Ca server"
 
@@ -4270,6 +4274,10 @@ msgstr "Adăugați o nouă agregare"
 msgid "Add new credentials"
 msgstr "Utilizați acreditările"
 
+#, fuzzy
+msgid "Add new database instance"
+msgstr "Adăugați o instanță la distanță"
+
 msgid "Add new element"
 msgstr "Adaungă un nou element"
 
@@ -4278,6 +4286,10 @@ msgstr "Adăugați un nou punct final"
 
 msgid "Add new entry"
 msgstr "Adăugați o nouă intrare"
+
+#, fuzzy
+msgid "Add new exclude pattern"
+msgstr "Adăugați un nou model"
 
 #, fuzzy
 msgid "Add new field"
@@ -4296,6 +4308,10 @@ msgstr "Adăugați un nou grup"
 
 msgid "Add new grouping definition"
 msgstr "Adăugați o nouă definiție a grupării"
+
+#, fuzzy
+msgid "Add new include pattern"
+msgstr "Adăugați un nou model"
 
 msgid "Add new label"
 msgstr "Adăugați o nouă etichetă"
@@ -4940,6 +4956,10 @@ msgstr "Situri afectate"
 #, fuzzy, python-format
 msgid "Affected sites: %s"
 msgstr "Situri afectate"
+
+#, fuzzy
+msgid "Affinity"
+msgstr "init"
 
 msgid ""
 "After a battery diagnostics the battery capacity is reduced until the "
@@ -6561,6 +6581,9 @@ msgstr "Afișați întotdeauna casetele de selectare"
 msgid "Always use and expect piggyback data"
 msgstr "Folosiți întotdeauna și așteptați-vă la date piggyback"
 
+msgid "Always use host libraries (force host)"
+msgstr ""
+
 msgid "Always use service level from rule"
 msgstr "Folosiți întotdeauna nivelul de serviciu din regula"
 
@@ -7499,6 +7522,10 @@ msgstr "Se presupune că este %s."
 msgid "Asynchronous"
 msgstr "Asincronă"
 
+#, fuzzy
+msgid "Asynchronous check"
+msgstr "Asincronă"
+
 msgid "Asynchronous closing connections"
 msgstr "Închiderea asincronă a conexiunilor"
 
@@ -7835,6 +7862,10 @@ msgstr "Auto shrink off"
 
 msgid "Auto shrink on"
 msgstr "Auto shrink on"
+
+#, fuzzy
+msgid "Auto-detect (default)"
+msgstr "Autentificare (valori implicite)"
 
 #, fuzzy
 msgid "Auto-detect proxy settings for this network"
@@ -11497,6 +11528,10 @@ msgstr ""
 "CURDEPTH_PERC: Procentul (CURDEPTH/MAXDEPTH) din numărul de mesaje aflate în "
 "prezent în coada de așteptare."
 
+#, fuzzy
+msgid "Cache age"
+msgstr "Dimensiunea cache-ului"
+
 msgid "Cache age for asynchronous checks"
 msgstr "Vârsta cache-ului pentru verificările asincrone"
 
@@ -12528,6 +12563,10 @@ msgstr "Verificați statul brokerului de pe primar: "
 msgid "Check TCP port connection"
 msgstr "Verificați conexiunea portului TCP"
 
+#, fuzzy
+msgid "Check all instances"
+msgstr "Monitorizarea tuturor instanțelor găsite"
+
 msgid "Check and CRIT"
 msgstr "Verificați și CRIT"
 
@@ -12536,6 +12575,10 @@ msgstr "Verificați și WARN"
 
 msgid "Check and display only"
 msgstr "Doar verificare și afișare"
+
+#, fuzzy
+msgid "Check asm instances"
+msgstr "%s instanțe"
 
 #, fuzzy
 msgid "Check certificate"
@@ -12651,6 +12694,10 @@ msgstr "Verificarea nu a fost executată în %d secunde"
 
 msgid "Check notification number per contact"
 msgstr "Verificați numărul de notificări pentru fiecare contact"
+
+#, fuzzy
+msgid "Check only db instances"
+msgstr "Verificați numai căsuțele poștale listate"
 
 msgid "Check only the listed mailboxes"
 msgstr "Verificați numai căsuțele poștale listate"
@@ -14785,6 +14832,10 @@ msgstr "Configurarea agentului special Datadog."
 msgid "Configuration of update plug-in"
 msgstr "Configurarea plugin-ului de actualizare"
 
+#, fuzzy, python-format
+msgid "Configuration options for the %s section."
+msgstr "Nu există opțiuni suplimentare de configurare pentru această metodă."
+
 #, python-format
 msgid ""
 "Configuration update failed\n"
@@ -15912,6 +15963,13 @@ msgstr "Controler"
 #, fuzzy
 msgid "Controller version"
 msgstr "Versiunea controlerului"
+
+msgid ""
+"Controls usage of host Oracle client libraries. Allowed values: 'auto' (auto-"
+"detect, fallback to bundled), 'never' (force bundled), 'always' (force "
+"host), or an absolute path to an OCI library directory (e.g. /usr/lib/"
+"oracle/...)."
+msgstr ""
 
 msgid "Convert FQHN"
 msgstr "Conversia FQHN"
@@ -17392,6 +17450,9 @@ msgstr "Tabel de notificare personalizat pentru utilizatorul %s"
 msgid "Custom notification table of this user"
 msgstr "Tabel de notificare personalizat al acestui utilizator"
 
+msgid "Custom path to Oracle client libraries"
+msgstr ""
+
 #, fuzzy
 msgid "Custom port"
 msgstr "Gazdă personalizată"
@@ -18116,6 +18177,14 @@ msgstr "Baza de date pentru MySQL"
 msgid "Database identifier"
 msgstr "Identificatorul bazei de date"
 
+#, fuzzy
+msgid "Database instance"
+msgstr "Numele bazei de date"
+
+#, fuzzy
+msgid "Database instances"
+msgstr "Numele bazei de date"
+
 msgid "Database is being recovered"
 msgstr "Baza de date este în curs de recuperare"
 
@@ -18578,6 +18647,10 @@ msgid "Deferred files in Spool"
 msgstr "Fișiere amânate în Spool"
 
 msgid ""
+"Define Oracle database instances to monitor to overwrite default settings."
+msgstr ""
+
+msgid ""
 "Define a direct translation of the possible states of the HAProxy frontend "
 "to monitoring states, i.e. to the result of the check. This overwrites the "
 "default mapping used by the check."
@@ -18690,6 +18763,10 @@ msgid ""
 msgstr ""
 "Definiți modelele de includere a parametrilor de configurare a kernelului în "
 "inventar."
+
+#, fuzzy
+msgid "Define sections"
+msgstr "Secțiuni pentru persoane cu handicap"
 
 msgid ""
 "Define the host to assign the discovered CloudFront services. You can assign "
@@ -20520,6 +20597,10 @@ msgstr ""
 "A efectuat descoperirea serviciului pe gazda %s: %d adăugat, %d eliminat, %d "
 "păstrat, %d total servicii și %d etichete gazdă adăugate, %d total etichete "
 "gazdă"
+
+#, fuzzy
+msgid "Discovery options"
+msgstr "Setări de descoperire"
 
 msgid "Discovery rules"
 msgstr "Reguli de descoperire"
@@ -23297,6 +23378,10 @@ msgstr "Activați umbrirea rândurilor"
 msgid "Enable safe host names"
 msgstr "Traducere nume de gazde"
 
+#, fuzzy
+msgid "Enable service discovery"
+msgstr "Rulați descoperirea serviciilor"
+
 msgid "Enable service notifications"
 msgstr "Activați notificările de serviciu"
 
@@ -24507,6 +24592,14 @@ msgstr "Excludeți instanțe"
 
 msgid "Exclude namespaces matching"
 msgstr "Excludeți spațiile de nume care corespund"
+
+#, fuzzy
+msgid "Exclude pattern"
+msgstr "Excludeți modelul"
+
+#, fuzzy
+msgid "Exclude patterns"
+msgstr "Excludeți modelul"
 
 msgid "Exclude reserved space"
 msgstr "Excludeți spațiul rezervat"
@@ -31754,6 +31847,9 @@ msgstr ""
 msgid "How many days in the past Checkmk should evaluate the measurement data"
 msgstr "Câte zile din trecut Checkmk trebuie să evalueze datele de măsurare"
 
+msgid "How old (in minutes) the cache file is allowed to be."
+msgstr ""
+
 msgid ""
 "How the disks are named depends on the type of hardware being used. Please "
 "look at already discovered checks for examples."
@@ -32705,6 +32801,9 @@ msgstr ""
 "configurare per gazdă și caracteristici suplimentare, cum ar fi "
 "redescoperirea automată. Regulile din acel set de reguli vor înlocui "
 "setările globale efectuate aici."
+
+msgid "If enabled, the check will be executed asynchronously."
+msgstr ""
 
 msgid ""
 "If enabled, the service details will contain username of a process owner."
@@ -34189,6 +34288,10 @@ msgstr "Ignoră starea de conformitate"
 msgid "Ignore core restarts shorter than"
 msgstr "Ignoră repornirile de bază mai scurte de"
 
+#, fuzzy
+msgid "Ignore database name"
+msgstr "Numele bazei de date"
+
 msgid "Ignore default increment"
 msgstr "Ignoră incrementarea implicită"
 
@@ -34989,6 +35092,14 @@ msgstr "Includeți calea completă"
 
 msgid "Include indirectly connected hosts (recursively)"
 msgstr "Includeți gazdele conectate indirect (recursiv)"
+
+#, fuzzy
+msgid "Include pattern"
+msgstr "Includeți modelul"
+
+#, fuzzy
+msgid "Include patterns"
+msgstr "Includeți modelul"
 
 msgid "Include per-process arguments (security risk!)"
 msgstr "Includeți argumente per-proces (risc de securitate!)"
@@ -36120,10 +36231,6 @@ msgstr ""
 #, fuzzy, python-format
 msgid "Invalid proxy scheme given. Must be one of: %s"
 msgstr "Schemă URL invalidă. Trebuie să fie una dintre următoarele: %s"
-
-#, fuzzy
-msgid "Invalid receipt"
-msgstr "Raport invalid"
 
 #, python-brace-format
 msgid "Invalid regex pattern. Expected: {validate_pattern}"
@@ -41466,6 +41573,10 @@ msgstr "Numărul maxim de execuții simultane pentru mesajele transmise"
 msgid "Maximum concurrent real-time checks"
 msgstr "Număr maxim de verificări simultane în timp real"
 
+#, fuzzy
+msgid "Maximum connections"
+msgstr "% din numărul maxim de conexiuni"
+
 msgid "Maximum connections per second"
 msgstr "Conexiuni maxime pe secundă"
 
@@ -41575,6 +41686,10 @@ msgstr "Numărul maxim de clienți"
 msgid "Maximum number of connections or listeners"
 msgstr "Numărul maxim de conexiuni sau de ascultători"
 
+#, fuzzy
+msgid "Maximum number of database connections to open."
+msgstr "Numărul maxim de conexiuni sau de ascultători"
+
 msgid "Maximum number of delivery attempts"
 msgstr "Numărul maxim de încercări de livrare"
 
@@ -41602,6 +41717,10 @@ msgstr "Numărul așteptat de descriptori de fișiere deschise"
 msgid "Maximum number of parsed lines per log file"
 msgstr "Numarul maxim de linii parsate per fisier de loguri"
 
+#, fuzzy
+msgid "Maximum number of queries to execute per connection."
+msgstr "Numărul maxim de re-executări"
+
 msgid "Maximum number of re-executions"
 msgstr "Numărul maxim de re-executări"
 
@@ -41626,6 +41745,10 @@ msgstr "Număr maxim de conexiuni paralele"
 
 msgid "Maximum possible value"
 msgstr "Valoarea maximă posibilă"
+
+#, fuzzy
+msgid "Maximum queries"
+msgstr "Noduri maxime"
 
 msgid "Maximum rate for total number of packets"
 msgstr "Rata maximă pentru numărul total de pachete"
@@ -42407,6 +42530,10 @@ msgid "Minimum connections per second"
 msgstr "Conexiuni minime pe secundă"
 
 #, fuzzy
+msgid "Minimum length is 30 characters."
+msgstr "Lungimea maximă a cheii este de 128 de caractere."
+
+#, fuzzy
 msgid "Minimum levels for current"
 msgstr "Niveluri minime de tensiune"
 
@@ -42879,10 +43006,6 @@ msgstr "Monitorizați dispozitivele Android"
 
 msgid "Monitor CloudFront WAFs"
 msgstr "Monitorizarea WAF-urilor CloudFront"
-
-#, fuzzy
-msgid "Monitor Oracle Databases"
-msgstr "Baza de date a evenimentelor"
 
 msgid "Monitor Route53"
 msgstr "Monitorizarea Route53"
@@ -44492,6 +44615,9 @@ msgstr "Nu eliminați niciodată fișiere mai noi decât"
 #, fuzzy
 msgid "Never synchronized"
 msgstr "sincronizare"
+
+msgid "Never use host libraries (force bundled)"
+msgstr ""
 
 msgid "Never use piggyback data"
 msgstr "Nu folosiți niciodată date piggyback"
@@ -47700,6 +47826,11 @@ msgstr ""
 msgid "Only root socket"
 msgstr "Numai la sută"
 
+msgid ""
+"Only services matching one of these patterns will be discovered. If no "
+"pattern is defined, all services are included."
+msgstr ""
+
 msgid "Only show current value"
 msgstr "Afișează doar valoarea curentă"
 
@@ -48185,6 +48316,10 @@ msgid "Oracle Data-Guard Stats"
 msgstr "Statistici Oracle Data-Guard"
 
 #, fuzzy
+msgid "Oracle Database default configuration"
+msgstr "Configurație implicită"
+
+#, fuzzy
 msgid "Oracle IOSTAT IO"
 msgstr "ORACLE IOSTAT IOs"
 
@@ -48267,6 +48402,10 @@ msgstr "Statistici de memorie ORACLE SGA"
 #, fuzzy
 msgid "Oracle SID of the remote database"
 msgstr "ORACLE SID al bazei de date la distanță"
+
+#, fuzzy
+msgid "Oracle System Identifier of the database instance."
+msgstr "Identificatorul senzorului."
 
 #, fuzzy
 msgid "Oracle Wait Class (FG lines are downside)"
@@ -48381,6 +48520,14 @@ msgid "Oracle buffer pool statistics"
 msgstr "Statisticile ORACLE privind bazinul tampon"
 
 #, fuzzy
+msgid "Oracle client library options"
+msgstr "Rata de accesare a memoriei cache"
+
+#, fuzzy
+msgid "Oracle client library usage"
+msgstr "Utilizați acreditările"
+
+#, fuzzy
 msgid "Oracle cluster wait class"
 msgstr "ORACLE %s wait class"
 
@@ -48451,10 +48598,6 @@ msgstr "ORACLE Total scrieri mici"
 #, fuzzy
 msgid "Oracle count"
 msgstr "Număr total"
-
-#, fuzzy
-msgid "Oracle credentials"
-msgstr "Utilizați acreditările"
 
 #, fuzzy
 msgid "Oracle data file backup large read bytes"
@@ -48995,6 +49138,10 @@ msgstr "ORACLE Total așteptat"
 #, fuzzy
 msgid "Oracle total waited (FG)"
 msgstr "ORACLE Total așteptat (FG)"
+
+#, fuzzy
+msgid "Oracle type of authentication"
+msgstr "Reîncercați autentificarea"
 
 #, fuzzy
 msgid "Oracle undo retention"
@@ -57162,6 +57309,10 @@ msgstr "Comenzi SMTP"
 msgid "SMTP Responses"
 msgstr "Răspunsuri SMTP"
 
+#, fuzzy
+msgid "SMTP STARTTLS"
+msgstr "STARTTLS"
+
 msgid "SMTP TCP Port to connect to"
 msgstr "Portul SMTP TCP la care să se conecteze"
 
@@ -57379,6 +57530,15 @@ msgstr "SYN_RECV"
 
 msgid "SYN_SENT"
 msgstr "SYN_SENT"
+
+msgid "SYSASM"
+msgstr ""
+
+msgid "SYSDBA"
+msgstr ""
+
+msgid "SYSOPER"
+msgstr ""
 
 #, fuzzy
 msgid "SaaS version: Skip request ID verification"
@@ -58144,6 +58304,12 @@ msgstr "Parametrii impliciți"
 msgid "Select recipient"
 msgstr "Destinatarul"
 
+msgid ""
+"Select sections of the Oracle monitoring plug-in and define their affinity "
+"and whether they should be run asynchronously(if not checked, all sections "
+"will be returned)."
+msgstr ""
+
 #, python-format
 msgid ""
 "Select sites the %s should be avalable on. It will become available for all "
@@ -58259,6 +58425,12 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Select the connection type for the SSL/TLS check. Direct TLS establishes an "
+"immediate encrypted connection. SMTP STARTTLS negotiates encryption after "
+"connecting in plain text."
+msgstr ""
+
+msgid ""
 "Select the graph to be displayed by this element. In case the current "
 "selection displays 'Deprecated choice, please re-select', this element was "
 "created before the release of version 2.0. Before this version, the graph "
@@ -58333,6 +58505,11 @@ msgstr ""
 #, fuzzy
 msgid "Select the subscriptions you want to monitor."
 msgstr "Selectați tipul de element de conținut"
+
+msgid ""
+"Select the type of authentication to use when connecting to the Oracle "
+"database."
+msgstr ""
 
 msgid "Select the type of content element"
 msgstr "Selectați tipul de element de conținut"
@@ -59295,6 +59472,13 @@ msgstr "Servicii grupate pe grupe de servicii"
 
 msgid "Services in downtime"
 msgstr "Servicii în timp de nefuncționare"
+
+#, fuzzy
+msgid ""
+"Services matching one of these patterns will be excluded from discovery."
+msgstr ""
+"Versiunile iOS care corespund acestui model vor fi raportate ca OK, în caz "
+"contrar CRIT."
 
 msgid "Services not being monitored due to configuration."
 msgstr "Serviciile nu sunt monitorizate din cauza configurației."
@@ -64894,6 +65078,10 @@ msgstr "TLS fără validarea certificatului"
 
 msgid "TLS/HTTPS configuration"
 msgstr "Configurația TLS/HTTPS"
+
+#, fuzzy
+msgid "TLS/SSL"
+msgstr "Dezactivați TLS/SSL"
 
 msgid "TLS/SSL/Https disabled"
 msgstr "TLS/SSL/Https dezactivat"
@@ -81808,6 +81996,10 @@ msgstr ""
 msgid "Use custom connection parameters"
 msgstr "Utilizați parametri de conectare personalizați"
 
+#, fuzzy
+msgid "Use custom path"
+msgstr "Utilizați tipul personalizat"
+
 msgid "Use custom region for global AWS services"
 msgstr "Utilizați regiunea personalizată pentru serviciile AWS globale"
 
@@ -91784,10 +91976,6 @@ msgstr "Încărcare..."
 msgid "Choose from available views"
 msgstr "Porturi disponibile"
 
-#, fuzzy
-msgid "Add Widget"
-msgstr "Adăugați o țintă"
-
 # georgem ##############
 #, fuzzy
 msgid "Metrics & graphs"
@@ -92158,6 +92346,14 @@ msgstr ""
 
 msgid "€ (Decimal, strict precision, 2 digits)"
 msgstr ""
+
+#, fuzzy
+msgid "Failed to load sidebar elements."
+msgstr "Adăugați elementul sidebar"
+
+#, fuzzy
+msgid "Loading sidebar elements..."
+msgstr "Adăugați elementul sidebar"
 
 msgid "Barplot"
 msgstr "Barplot"
@@ -93367,6 +93563,18 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Invalid receipt"
+#~ msgstr "Raport invalid"
+
+#, fuzzy
+#~ msgid "Monitor Oracle Databases"
+#~ msgstr "Baza de date a evenimentelor"
+
+#, fuzzy
+#~ msgid "Add Widget"
+#~ msgstr "Adăugați o țintă"
 
 #, fuzzy
 #~ msgid "Custom ClickHouse Instance"
@@ -96272,9 +96480,6 @@ msgstr ""
 
 #~ msgid "Max Perm used"
 #~ msgstr "Max Perm utilizat"
-
-#~ msgid "Maximum inodes"
-#~ msgstr "Noduri maxime"
 
 #~ msgid ""
 #~ "Space in the database that has not been reserved for database objects"

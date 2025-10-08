@@ -124,6 +124,8 @@ def _welcome_page(config: Config) -> None:
 
     html.vue_component(component_name="cmk-welcome", data=asdict(get_welcome_data()))
 
+    html.footer()
+
 
 def get_welcome_data() -> WelcomePage:
     return WelcomePage(

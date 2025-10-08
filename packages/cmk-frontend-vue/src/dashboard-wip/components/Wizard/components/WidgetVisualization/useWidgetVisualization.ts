@@ -3,9 +3,11 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { type Ref, ref, watch } from 'vue'
+import { type Ref, computed, ref, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
+
+import type { WidgetGeneralSettings } from '@/dashboard-wip/types/widget'
 
 import type { TitleSpec } from '../../types'
 import { isUrl } from '../../utils'
@@ -24,18 +26,47 @@ export interface UseWidgetVisualizationOptions {
 
 export interface UseWidgetVisualizationProps extends UseWidgetVisualizationOptions {
   validate: () => boolean
+  widgetGeneralSettings: Ref<WidgetGeneralSettings>
+
+  //To be removed once all widgets use the new system
   generateTitleSpec: () => TitleSpec
 }
 
-export const useWidgetVisualizationProps = (metric: string): UseWidgetVisualizationProps => {
-  //Todo: Fill values if they exist in serializedData
-  const title = ref<string>(metric)
-  const showTitle = ref<boolean>(true)
-  const showTitleBackground = ref<boolean>(true)
-  const showWidgetBackground = ref<boolean>(true) // TODO: LMP: Not doing anytihng with this
-  const titleUrlEnabled = ref<boolean>(false)
-  const titleUrl = ref<string>('')
+export const useWidgetVisualizationProps = (
+  initialTitle: string,
+  currentSettings?: WidgetGeneralSettings
+): UseWidgetVisualizationProps => {
+  const title = ref<string>(currentSettings?.title?.text ?? initialTitle)
+  const showTitle = ref<boolean>(currentSettings?.title?.render_mode !== 'hidden')
+  const showTitleBackground = ref<boolean>(
+    currentSettings?.title?.render_mode === 'with_background'
+  )
+  const showWidgetBackground = ref<boolean>(!!currentSettings?.render_background)
+  const titleUrlEnabled = ref<boolean>(currentSettings?.title?.url ? true : false)
+  const titleUrl = ref<string>(currentSettings?.title?.url ?? '')
   const titleUrlValidationErrors = ref<string[]>([])
+
+  const widgetGeneralSettings = computed((): WidgetGeneralSettings => {
+    const titleSpec: TitleSpec = {
+      text: title.value,
+      render_mode: showTitle.value
+        ? showTitleBackground.value
+          ? 'with_background'
+          : 'without_background'
+        : 'hidden'
+    }
+
+    if (titleUrl.value) {
+      titleSpec['url'] = titleUrl.value
+    }
+
+    const generalSetings: WidgetGeneralSettings = {
+      title: titleSpec,
+      render_background: showWidgetBackground.value
+    }
+
+    return generalSetings
+  })
 
   watch(titleUrlEnabled, () => {
     titleUrl.value = ''
@@ -52,21 +83,9 @@ export const useWidgetVisualizationProps = (metric: string): UseWidgetVisualizat
     return false
   }
 
+  //To be removed once all widgets use the new system
   const generateTitleSpec = (): TitleSpec => {
-    const titleSpec: TitleSpec = {
-      text: title.value,
-      render_mode: showTitle.value
-        ? showTitleBackground.value
-          ? 'with_background'
-          : 'without_background'
-        : 'hidden'
-    }
-
-    if (titleUrl.value) {
-      titleSpec['url'] = titleUrl.value
-    }
-
-    return titleSpec
+    return widgetGeneralSettings.value.title!
   }
 
   return {
@@ -79,6 +98,8 @@ export const useWidgetVisualizationProps = (metric: string): UseWidgetVisualizat
 
     titleUrlValidationErrors,
     validate,
+
+    widgetGeneralSettings,
 
     generateTitleSpec
   }

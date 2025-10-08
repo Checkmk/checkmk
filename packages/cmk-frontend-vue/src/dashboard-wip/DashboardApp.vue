@@ -77,10 +77,12 @@ onBeforeMount(async () => {
   filterCollection.value = filterDefsRecord
 
   if (props.dashboard) {
+    const dashboard = props.dashboard
     await dashboardsManager.loadDashboard(
-      props.dashboard.name,
-      props.dashboard.metadata.layout_type as DashboardLayout
+      dashboard.name,
+      dashboard.metadata.layout_type as DashboardLayout
     )
+    dashboardFilters.handleApplyRuntimeFilters(dashboard.filter_context.context)
   }
 })
 

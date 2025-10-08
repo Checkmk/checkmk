@@ -11,16 +11,16 @@ from cmk.agent_based.v2 import (
     render,
 )
 from cmk.plugins.azure_v2.agent_based.lib import (
-    CheckFunction,
-    create_check_metrics_function,
-    create_discover_by_metrics_function,
+    CheckFunctionWithoutItem,
+    create_check_metrics_function_single,
+    create_discover_by_metrics_function_single,
     MetricData,
-    parse_resources,
+    parse_resource,
 )
 
 
-def create_check_azure_storage() -> CheckFunction:
-    return create_check_metrics_function(
+def create_check_azure_storage() -> CheckFunctionWithoutItem:
+    return create_check_metrics_function_single(
         [
             MetricData(
                 "total_UsedCapacity",
@@ -35,13 +35,13 @@ def create_check_azure_storage() -> CheckFunction:
 
 
 agent_section_azure_storageaccounts = AgentSection(
-    name="azure_v2_storageaccounts", parse_function=parse_resources
+    name="azure_v2_storageaccounts", parse_function=parse_resource
 )
 check_plugin_azure_storageaccounts = CheckPlugin(
     name="azure_v2_storageaccounts",
-    service_name="Storage %s account",
+    service_name="Storage account",
     sections=["azure_v2_storageaccounts"],
-    discovery_function=create_discover_by_metrics_function("total_UsedCapacity"),
+    discovery_function=create_discover_by_metrics_function_single("total_UsedCapacity"),
     check_function=create_check_azure_storage(),
     check_ruleset_name="azure_v2_storageaccounts_usage",
     check_default_parameters={
@@ -64,8 +64,8 @@ FLOW_METRICS = {
 }
 
 
-def create_check_azure_storageaccounts_flow() -> CheckFunction:
-    return create_check_metrics_function(
+def create_check_azure_storageaccounts_flow() -> CheckFunctionWithoutItem:
+    return create_check_metrics_function_single(
         [
             MetricData(
                 metric_key,
@@ -82,9 +82,9 @@ def create_check_azure_storageaccounts_flow() -> CheckFunction:
 
 check_plugin_azure_storageaccounts_flow = CheckPlugin(
     name="azure_v2_storageaccounts_flow",
-    service_name="Storage %s flow",
+    service_name="Storage flow",
     sections=["azure_v2_storageaccounts"],
-    discovery_function=create_discover_by_metrics_function(*FLOW_METRICS.keys()),
+    discovery_function=create_discover_by_metrics_function_single(*FLOW_METRICS.keys()),
     check_function=create_check_azure_storageaccounts_flow(),
     check_ruleset_name="azure_v2_storageaccounts_flow",
     check_default_parameters={
@@ -124,8 +124,8 @@ PERFORMANCE_METRICS = {
 }
 
 
-def create_check_azure_storageaccounts_performance() -> CheckFunction:
-    return create_check_metrics_function(
+def create_check_azure_storageaccounts_performance() -> CheckFunctionWithoutItem:
+    return create_check_metrics_function_single(
         [
             MetricData(
                 metric_key,
@@ -149,9 +149,9 @@ def create_check_azure_storageaccounts_performance() -> CheckFunction:
 
 check_plugin_azure_storageaccounts_performance = CheckPlugin(
     name="azure_v2_storageaccounts_performance",
-    service_name="Storage %s performance",
+    service_name="Storage performance",
     sections=["azure_v2_storageaccounts"],
-    discovery_function=create_discover_by_metrics_function(*PERFORMANCE_METRICS.keys()),
+    discovery_function=create_discover_by_metrics_function_single(*PERFORMANCE_METRICS.keys()),
     check_function=create_check_azure_storageaccounts_performance(),
     check_ruleset_name="azure_v2_storageaccounts_performance",
     check_default_parameters={

@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import (
     State,
 )
 from cmk.plugins.azure_v2.agent_based.lib import (
-    CheckFunction,
+    CheckFunctionWithItem,
     create_check_metrics_function,
     create_discover_by_metrics_function,
     get_service_labels_from_resource_tags,
@@ -29,7 +29,7 @@ from cmk.plugins.azure_v2.agent_based.lib import (
 # https://www.unigma.com/2016/07/11/best-practices-for-monitoring-microsoft-azure/
 
 
-def create_check_azure_databases_storage() -> CheckFunction:
+def create_check_azure_databases_storage() -> CheckFunctionWithItem:
     return create_check_metrics_function(
         [
             MetricData(
@@ -55,7 +55,7 @@ check_plugin_azure_databases_storage = CheckPlugin(
 )
 
 
-def create_check_azure_databases_deadlock() -> CheckFunction:
+def create_check_azure_databases_deadlock() -> CheckFunctionWithItem:
     return create_check_metrics_function(
         [
             MetricData(
@@ -81,7 +81,7 @@ check_plugin_azure_databases_deadlock = CheckPlugin(
 )
 
 
-def create_check_azure_databases_cpu() -> CheckFunction:
+def create_check_azure_databases_cpu() -> CheckFunctionWithItem:
     return create_check_metrics_function(
         [
             MetricData(
@@ -107,7 +107,7 @@ check_plugin_azure_databases_cpu = CheckPlugin(
 )
 
 
-def create_check_azure_databases_dtu() -> CheckFunction:
+def create_check_azure_databases_dtu() -> CheckFunctionWithItem:
     return create_check_metrics_function(
         [
             MetricData(
@@ -133,7 +133,7 @@ check_plugin_azure_databases_dtu = CheckPlugin(
 )
 
 
-def create_check_azure_databases_connections() -> CheckFunction:
+def create_check_azure_databases_connections() -> CheckFunctionWithItem:
     return create_check_metrics_function(
         [
             MetricData(

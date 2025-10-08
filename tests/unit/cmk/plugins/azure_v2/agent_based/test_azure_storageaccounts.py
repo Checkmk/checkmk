@@ -9,16 +9,20 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, State
+from cmk.agent_based.v2 import Metric, Result, State, StringTable
 from cmk.plugins.azure_v2.agent_based.azure_storageaccounts import (
     check_plugin_azure_storageaccounts,
     check_plugin_azure_storageaccounts_flow,
     check_plugin_azure_storageaccounts_performance,
 )
-from cmk.plugins.azure_v2.agent_based.lib import AzureMetric, parse_resources, Resource, Section
+from cmk.plugins.azure_v2.agent_based.lib import (
+    AzureMetric,
+    parse_resource,
+    Resource,
+)
 
 MiB = 1024**2
-STRING_TABLE = [
+STRING_TABLE_STORAGETESTACCOUNT = [
     ["Resource"],
     [
         '{"sku": {"tier": "Standard", "name": "Standard_LRS"}, "kind": "BlobStorage", "group":'
@@ -50,6 +54,9 @@ STRING_TABLE = [
     [
         '{"name": "Availability", "timestamp": "1544595420", "aggregation": "average", "interval_id": "PT1H", "filter": "None", "value": 6200.0, "unit": "percent"}'
     ],
+]
+
+STRING_TABLE_GLASTONBURY = [
     ["Resource"],
     [
         '{"sku": {"tier": "Standard", "name": "Standard_LRS"}, "kind": "Storage", "group":'
@@ -87,17 +94,17 @@ LEVELS_EGRESS = (100 * MiB, 200 * MiB)
 LEVELS_AVAILABILITY = (10_000, 5_000)
 
 
-@pytest.fixture(scope="module")
-def section_fixture() -> Section:
-    return parse_resources(STRING_TABLE)
+def _parse_section(section: StringTable) -> Resource:
+    if not (resource := parse_resource(section)):
+        raise ValueError("Failed to parse resource from section")
+    return resource
 
 
-@pytest.mark.usefixtures("section_fixture")
 @pytest.mark.parametrize(
-    ["item", "params", "results_expected"],
+    ["section", "params", "results_expected"],
     [
         pytest.param(
-            "glastonburydiag381",
+            _parse_section(STRING_TABLE_GLASTONBURY),
             {},
             [
                 Result(state=State.OK, summary="Used capacity: 10.0 GiB"),
@@ -106,7 +113,7 @@ def section_fixture() -> Section:
             id="No params",
         ),
         pytest.param(
-            "st0ragetestaccount",
+            _parse_section(STRING_TABLE_STORAGETESTACCOUNT),
             {"used_capacity_levels": ("fixed", LEVELS_USED)},
             [
                 Result(
@@ -120,50 +127,45 @@ def section_fixture() -> Section:
     ],
 )
 def test_check_azure_storageaccounts(
-    item: str,
+    section: Resource,
     params: Mapping[str, object],
     results_expected: list[object],
-    section_fixture: Section,
 ) -> None:
-    actual = list(check_plugin_azure_storageaccounts.check_function(item, params, section_fixture))
+    actual = list(check_plugin_azure_storageaccounts.check_function(params, section))
     assert actual == results_expected
 
 
 def test_check_azure_storageaccounts_defaults():
-    resource = {
-        "st0ragetestaccount": Resource(
-            id="/subscriptions/2fac104f-cb9c-461d-be57-037039662426/resourceGroups/BurningMan/providers/Microsoft.Storage/storageAccounts/st0ragetestaccount",
-            name="st0ragetestaccount",
-            type="Microsoft.Storage/storageAccounts",
-            group="BurningMan",
-            kind="BlobStorage",
-            location="westeurope",
-            tags={"monitoring": "some value"},
-            properties={},
-            specific_info={},
-            metrics={
-                "total_UsedCapacity": AzureMetric(
-                    name="UsedCapacity", aggregation="total", value=62225513949213.0, unit="bytes"
-                ),
-            },
-        )
-    }
-    params = check_plugin_azure_storageaccounts.check_default_parameters
-    result = list(
-        check_plugin_azure_storageaccounts.check_function("st0ragetestaccount", params, resource)
+    resource = Resource(
+        id="/subscriptions/2fac104f-cb9c-461d-be57-037039662426/resourceGroups/BurningMan/providers/Microsoft.Storage/storageAccounts/st0ragetestaccount",
+        name="st0ragetestaccount",
+        type="Microsoft.Storage/storageAccounts",
+        group="BurningMan",
+        kind="BlobStorage",
+        location="westeurope",
+        tags={"monitoring": "some value"},
+        properties={},
+        specific_info={},
+        metrics={
+            "total_UsedCapacity": AzureMetric(
+                name="UsedCapacity", aggregation="total", value=62225513949213.0, unit="bytes"
+            ),
+        },
     )
+
+    params = check_plugin_azure_storageaccounts.check_default_parameters
+    result = list(check_plugin_azure_storageaccounts.check_function(params, resource))
     assert result == [
         Result(state=State.WARN, summary="Used capacity: 56.6 TiB (warn/crit at 50.0 TiB/500 TiB)"),
         Metric("used_space", 62225513949213.0, levels=(54975581388800.0, 549755813888000.0)),
     ]
 
 
-@pytest.mark.usefixtures("section_fixture")
 @pytest.mark.parametrize(
-    ["item", "params", "results_expected"],
+    ["section", "params", "results_expected"],
     [
         pytest.param(
-            "glastonburydiag381",
+            _parse_section(STRING_TABLE_GLASTONBURY),
             {},
             [
                 Result(state=State.OK, summary="Ingress: 41.2 MiB"),
@@ -176,7 +178,7 @@ def test_check_azure_storageaccounts_defaults():
             id="No params",
         ),
         pytest.param(
-            "st0ragetestaccount",
+            _parse_section(STRING_TABLE_STORAGETESTACCOUNT),
             {"egress_levels": ("fixed", LEVELS_EGRESS)},
             [
                 Result(state=State.OK, summary="Ingress: 30.9 KiB"),
@@ -191,48 +193,40 @@ def test_check_azure_storageaccounts_defaults():
     ],
 )
 def test_check_azure_storageaccounts_flow(
-    item: str,
+    section: Resource,
     params: Mapping[str, object],
     results_expected: list[object],
-    section_fixture: Section,
 ) -> None:
-    actual = list(
-        check_plugin_azure_storageaccounts_flow.check_function(item, params, section_fixture)
-    )
+    actual = list(check_plugin_azure_storageaccounts_flow.check_function(params, section))
     assert actual == results_expected
 
 
 def test_check_azure_storageaccounts_flow_defaults():
-    resource = {
-        "st0ragetestaccount": Resource(
-            id="/subscriptions/2fac104f-cb9c-461d-be57-037039662426/resourceGroups/BurningMan/providers/Microsoft.Storage/storageAccounts/st0ragetestaccount",
-            name="st0ragetestaccount",
-            type="Microsoft.Storage/storageAccounts",
-            group="BurningMan",
-            kind="BlobStorage",
-            location="westeurope",
-            tags={"monitoring": "some value"},
-            properties={},
-            specific_info={},
-            metrics={
-                "total_Ingress": AzureMetric(
-                    name="Ingress", aggregation="total", value=31620.0, unit="bytes"
-                ),
-                "total_Egress": AzureMetric(
-                    name="Egress", aggregation="total", value=237007090.0, unit="bytes"
-                ),
-                "total_Transactions": AzureMetric(
-                    name="Transactions", aggregation="total", value=62.0, unit="count"
-                ),
-            },
-        )
-    }
-    params = check_plugin_azure_storageaccounts_flow.check_default_parameters
-    result = list(
-        check_plugin_azure_storageaccounts_flow.check_function(
-            "st0ragetestaccount", params, resource
-        )
+    resource = Resource(
+        id="/subscriptions/2fac104f-cb9c-461d-be57-037039662426/resourceGroups/BurningMan/providers/Microsoft.Storage/storageAccounts/st0ragetestaccount",
+        name="st0ragetestaccount",
+        type="Microsoft.Storage/storageAccounts",
+        group="BurningMan",
+        kind="BlobStorage",
+        location="westeurope",
+        tags={"monitoring": "some value"},
+        properties={},
+        specific_info={},
+        metrics={
+            "total_Ingress": AzureMetric(
+                name="Ingress", aggregation="total", value=31620.0, unit="bytes"
+            ),
+            "total_Egress": AzureMetric(
+                name="Egress", aggregation="total", value=237007090.0, unit="bytes"
+            ),
+            "total_Transactions": AzureMetric(
+                name="Transactions", aggregation="total", value=62.0, unit="count"
+            ),
+        },
     )
+
+    params = check_plugin_azure_storageaccounts_flow.check_default_parameters
+    result = list(check_plugin_azure_storageaccounts_flow.check_function(params, resource))
     assert result == [
         Result(state=State.OK, summary="Ingress: 30.9 KiB"),
         Metric("ingress", 31620.0),
@@ -243,12 +237,11 @@ def test_check_azure_storageaccounts_flow_defaults():
     ]
 
 
-@pytest.mark.usefixtures("section_fixture")
 @pytest.mark.parametrize(
-    ["item", "params", "results_expected"],
+    ["section", "params", "results_expected"],
     [
         pytest.param(
-            "glastonburydiag381",
+            _parse_section(STRING_TABLE_GLASTONBURY),
             {},
             [
                 Result(state=State.OK, summary="Success server latency: 20105 ms"),
@@ -261,7 +254,7 @@ def test_check_azure_storageaccounts_flow_defaults():
             id="no params",
         ),
         pytest.param(
-            "st0ragetestaccount",
+            _parse_section(STRING_TABLE_STORAGETESTACCOUNT),
             {"availability_levels": ("fixed", LEVELS_AVAILABILITY)},
             [
                 Result(state=State.OK, summary="Success server latency: 5624 ms"),
@@ -279,55 +272,49 @@ def test_check_azure_storageaccounts_flow_defaults():
     ],
 )
 def test_check_plugin_azure_storageaccounts_performance(
-    item: str,
+    section: Resource,
     params: Mapping[str, object],
     results_expected: list[object],
-    section_fixture: Section,
 ) -> None:
-    actual = list(
-        check_plugin_azure_storageaccounts_performance.check_function(item, params, section_fixture)
-    )
+    actual = list(check_plugin_azure_storageaccounts_performance.check_function(params, section))
     assert actual == results_expected
 
 
 def test_check_azure_storageaccounts_performance_defaults():
-    resource = {
-        "st0ragetestaccount": Resource(
-            id="/subscriptions/2fac104f-cb9c-461d-be57-037039662426/resourceGroups/BurningMan/providers/Microsoft.Storage/storageAccounts/st0ragetestaccount",
-            name="st0ragetestaccount",
-            type="Microsoft.Storage/storageAccounts",
-            group="BurningMan",
-            kind="BlobStorage",
-            location="westeurope",
-            tags={"monitoring": "some value"},
-            properties={},
-            specific_info={},
-            metrics={
-                "average_SuccessServerLatency": AzureMetric(
-                    name="SuccessServerLatency",
-                    aggregation="average",
-                    value=5624.0,
-                    unit="milli_seconds",
-                ),
-                "average_SuccessE2ELatency": AzureMetric(
-                    name="SuccessE2ELatency",
-                    aggregation="average",
-                    value=802.0,
-                    unit="milli_seconds",
-                ),
-                "average_Availability": AzureMetric(
-                    name="Availability",
-                    aggregation="average",
-                    value=97.98,
-                    unit="percent",
-                ),
-            },
-        ),
-    }
+    resource = Resource(
+        id="/subscriptions/2fac104f-cb9c-461d-be57-037039662426/resourceGroups/BurningMan/providers/Microsoft.Storage/storageAccounts/st0ragetestaccount",
+        name="st0ragetestaccount",
+        type="Microsoft.Storage/storageAccounts",
+        group="BurningMan",
+        kind="BlobStorage",
+        location="westeurope",
+        tags={"monitoring": "some value"},
+        properties={},
+        specific_info={},
+        metrics={
+            "average_SuccessServerLatency": AzureMetric(
+                name="SuccessServerLatency",
+                aggregation="average",
+                value=5624.0,
+                unit="milli_seconds",
+            ),
+            "average_SuccessE2ELatency": AzureMetric(
+                name="SuccessE2ELatency",
+                aggregation="average",
+                value=802.0,
+                unit="milli_seconds",
+            ),
+            "average_Availability": AzureMetric(
+                name="Availability",
+                aggregation="average",
+                value=97.98,
+                unit="percent",
+            ),
+        },
+    )
     params = check_plugin_azure_storageaccounts_performance.check_default_parameters
     result = list(
         check_plugin_azure_storageaccounts_performance.check_function(
-            "st0ragetestaccount",
             params,
             resource,
         )

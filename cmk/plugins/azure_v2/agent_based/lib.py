@@ -108,7 +108,8 @@ class FrontendIpConfiguration(BaseModel):
 
 
 Section = Mapping[str, Resource]
-CheckFunction = Callable[[str, Mapping[str, Any], Section], CheckResult]
+type CheckFunctionWithItem = Callable[[str, Mapping[str, Any], Section], CheckResult]
+type CheckFunctionWithoutItem = Callable[[Mapping[str, Any], Resource], CheckResult]
 
 
 def parse_azure_datetime(datetime_string: str) -> datetime:
@@ -396,7 +397,7 @@ def create_check_metrics_function_single(
     metrics_data: Sequence[MetricData],
     suppress_error: bool = False,
     check_levels: Callable[..., Iterable[Result | Metric]] = check_levels_v1,
-) -> Callable[[Mapping[str, Any], Resource], CheckResult]:
+) -> CheckFunctionWithoutItem:
     def check_metric(params: Mapping[str, Any], section: Resource) -> CheckResult:
         yield from check_resource_metrics(
             section, params, metrics_data, suppress_error, check_levels
@@ -405,7 +406,7 @@ def create_check_metrics_function_single(
     return check_metric
 
 
-def check_memory() -> CheckFunction:
+def check_memory() -> CheckFunctionWithItem:
     return create_check_metrics_function(
         [
             MetricData(
@@ -419,7 +420,7 @@ def check_memory() -> CheckFunction:
     )
 
 
-def check_cpu() -> CheckFunction:
+def check_cpu() -> CheckFunctionWithItem:
     return create_check_metrics_function(
         [
             MetricData(
@@ -433,7 +434,7 @@ def check_cpu() -> CheckFunction:
     )
 
 
-def check_connections() -> CheckFunction:
+def check_connections() -> CheckFunctionWithItem:
     return create_check_metrics_function(
         [
             MetricData(
@@ -463,7 +464,7 @@ def check_connections() -> CheckFunction:
     )
 
 
-def check_network() -> CheckFunction:
+def check_network() -> CheckFunctionWithItem:
     return create_check_metrics_function(
         [
             MetricData(
@@ -484,7 +485,7 @@ def check_network() -> CheckFunction:
     )
 
 
-def check_storage() -> CheckFunction:
+def check_storage() -> CheckFunctionWithItem:
     return create_check_metrics_function(
         [
             MetricData(

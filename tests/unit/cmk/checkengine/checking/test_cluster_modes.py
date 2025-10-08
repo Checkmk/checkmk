@@ -419,3 +419,57 @@ def test_summarizer_result_generation(
     assert expected_secondary_result == list(
         summarizer.secondary_results(levels_additional_nodes_count=(0.0, 0.0))
     )
+
+
+@pytest.mark.parametrize(
+    "node_results, expected_primary_result, expected_secondary_result",
+    [
+        pytest.param(
+            cluster_mode.NodeResults(
+                results={
+                    HostName("Nodebert"): [
+                        Result(state=State.OK, notice="[Nodebert]: CPU load: 0.00")
+                    ],
+                    HostName("Nodett"): [
+                        Result(state=State.CRIT, notice="[Nodett]: CPU load: 0.00")
+                    ],
+                },
+                metrics={
+                    HostName("Nodebert"): [Metric("CPULoad", 0.00335345)],
+                    HostName("Nodett"): [Metric("CPULoad", 0.00387467)],
+                },
+                ignore_results={HostName("Nodebert"): [], HostName("Nodett"): []},
+            ),
+            [
+                Result(state=State.OK, summary="Active: [Nodebert]"),
+                Result(state=State.CRIT, summary="[Nodett]: CPU load: 0.00"),
+            ],
+            [
+                Result(
+                    state=State.CRIT, summary="More than one node are reporting results: [Nodebert]"
+                ),
+                Result(state=State.OK, notice="[Nodebert]: CPU load: 0.00"),
+            ],
+            id="notice only",
+        ),
+    ],
+)
+def test_summarizer_result_generation_for_failover(
+    node_results: cluster_mode.NodeResults,
+    expected_primary_result: CheckResult,
+    expected_secondary_result: CheckResult,
+) -> None:
+    clusterization_parameters = {"primary_node": HostName("Nodebert")}
+    summarizer = cluster_mode.Summarizer(
+        node_results=node_results,
+        label="active",
+        additional_node_label="More than one node are reporting results:",
+        selector=State.worst,
+        preferred=clusterization_parameters.get("primary_node"),
+        unpreferred_node_state=State.WARN,
+    )
+
+    assert expected_primary_result == list(summarizer.primary_results())
+    assert expected_secondary_result == list(
+        summarizer.secondary_results(levels_additional_nodes_count=(0.0, 0.0))
+    )

@@ -3563,6 +3563,19 @@ class RelayClient(RestApiClient):
         )
 
 
+class MetricBackendClient(RestApiClient):
+    domain: DomainType = "metric_backend"
+    default_version = APIVersion.INTERNAL
+
+    def update(self, payload: Mapping[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "put",
+            url=f"/domain-types/{self.domain}/actions/update/invoke",
+            body=dict(payload),
+            expect_ok=expect_ok,
+        )
+
+
 @dataclasses.dataclass
 class ClientRegistry:
     """Overall client registry for all available endpoint family clients.
@@ -3622,6 +3635,7 @@ class ClientRegistry:
     ConstantClient: ConstantClient
     ViewClient: ViewClient
     RelayClient: RelayClient
+    MetricBackendClient: MetricBackendClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -3673,4 +3687,5 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         ViewClient=ViewClient(request_handler, url_prefix),
         RelayClient=RelayClient(request_handler, url_prefix),
         SidebarElement=SidebarElementClient(request_handler, url_prefix),
+        MetricBackendClient=MetricBackendClient(request_handler, url_prefix),
     )

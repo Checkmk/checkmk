@@ -51,6 +51,7 @@ DomainType = Literal[
     "license_usage",
     "license_request",
     "metric",
+    "metric_backend",
     "notification_rule",
     "notification_parameter",
     "otel_collector_config",

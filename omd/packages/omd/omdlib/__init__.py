@@ -5,4 +5,4 @@
 
 """omd - Implementation of the OMD management program"""
 
-__version__ = "###OMD_VERSION###"
+__version__ = "{CMK_VERSION}.{CMK_EDITION}"

@@ -121,6 +121,7 @@ pkg_files(
                "//omd/packages/navicli",
                "//omd/packages/net-snmp:net-snmp_tar",
                "//omd/packages/nrpe",
+               "//omd/packages/omd",
                "//omd/packages/openssl:openssl_tar_" + edition,
                "//omd/packages/patch",
                "//omd/packages/perl-modules",

@@ -65,10 +65,7 @@ DOCKERABLE_TESTS := \
 	test-code-quality \
 	test-cycles \
 	test-file-content \
-	test-format-bazel \
-	test-format-python \
-	test-format-shell \
-	test-format-toml \
+	test-format \
 	test-license-headers \
 	test-lint-bazel \
 	test-lint-groovy \
@@ -94,14 +91,12 @@ PYLINT_CUSTOM_CHECKERS := cmk-module-layer-violation,localization-html-tags-chec
 AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
 AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/py2,$(AGENT_PLUGIN_UNIT_TEST_FILES))
 
-.PHONY: clean format-shell help prepare-playwright  bandit.ini \
+.PHONY: clean help prepare-playwright  bandit.ini \
 	$(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
 	test-bandit test-code-quality test-code-quality-docker
 	test-docker test-docker-docker \
 	test-integration-agent-plugin test-integration-agent-plugin-docker \
-	test-format-python test-format-python-docker \
-	test-format-shell test-format-shell-docker \
-	format-toml test-format-toml test-format-toml-docker \
+	test-format \
 	$(SYSTEM_TESTS) \
 	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker) \
 	container-debug \
@@ -119,8 +114,6 @@ clean:
 
 help:
 	@echo "container-debug                     - Run container for manual test debugging"
-	@echo "format-shell                        - Format shell agents"
-	@echo "format-toml                         - Format toml files"
 	@for i in $(AGENT_PLUGIN_PYTHON_VERSIONS); do \
 	    echo "test-agent-plugin-unit-py$${i}-docker - Run Agent plugin tests in container with Python $${i}"; \
 	done
@@ -148,10 +141,6 @@ bandit.ini:
 	  $(FIND_PYTHON_FILES) | tr '\n' ',' | sed 's/,$$//'; \
 	  echo ) > bandit.ini
 	( echo exclude: /tests >> bandit.ini )
-
-format-shell:
-	# The configuration is in `bazel/tools/BUILD` to avoid inconsistencies.
-	cd .. && $(SHFMT) --write $$($(FIND_SHELL_FILES))
 
 agent-plugin-unit/py2/test_%.py: agent-plugin-unit/test_%.py
 	mkdir -p "$(dir $@)"
@@ -232,31 +221,8 @@ test-integration-agent-plugin:
 	$(PYTEST) -x $(realpath agent_plugin_integration) \
 	$(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 3600
 
-test-format-python: test-format-python-sort test-format-python-format
-
-test-format-python-sort: ../pyproject.toml
-	echo $$($(FIND_PYTHON_FILES)) | xargs $(MAX_CHARS:%=--max-chars=%) $(UVENV) ruff check --select I --diff | tee -a ../ruff_check_and_format.txt;\
-	exit $${PIPESTATUS[1]}
-
-test-format-python-format: ../pyproject.toml
-	echo $$($(FIND_PYTHON_FILES)) | xargs $(MAX_CHARS:%=--max-chars=%) $(UVENV) ruff format --check --diff | tee -a ../ruff_check_and_format.txt;\
-	exit $${PIPESTATUS[1]}
-
-test-format-shell:
-	# The configuration is in `bazel/tools/BUILD` to avoid inconsistencies.
-	cd .. && $(SHFMT) --diff --apply-ignore $$($(FIND_SHELL_FILES))
-
-format-toml:
-	$(TAPLO) format ../pyproject.toml
-
-test-format-toml:
-	$(TAPLO) format --check --diff ../pyproject.toml
-
 test-lint-bazel:
 	../scripts/run-buildifier --lint=warn --mode=check
-
-test-format-bazel:
-	../scripts/run-buildifier --mode=check
 
 test-lint-groovy:
 	cd ..; scripts/run-groovy-lint --loglevel warning --failon error $(GROOVYLINT_OUTPUT_ARGS)
@@ -403,6 +369,9 @@ test-file-content:
 	else \
 	    cat "$$CHANGED_FILES_REL_FILE" | xargs $(MAX_CHARS:%=--max-chars=%) --no-run-if-empty $(PYTEST) --log-cli-level=INFO $(realpath code_quality/file_content) --changed-files ; \
 	fi \
+
+test-format:
+	bazel run //:format.check
 
 test-werks:
 	$(PYTEST) --log-cli-level=INFO $(realpath code_quality/test_werks.py);

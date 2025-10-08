@@ -17,7 +17,7 @@ CI ?= false
 
 .PHONY: announcement all build \
         clean dist documentation \
-        format format-c test-format-c format-python format-shell \
+        format \
         help install mrproper mrclean \
         packages setup setversion version openapi \
         requirements.txt .venv
@@ -178,37 +178,11 @@ setup:
 linesofcode:
 	@wc -l $$(find -type f -name "*.py" -o -name "*.js" -o -name "*.cc" -o -name "*.h" -o -name "*.css" | grep -v openhardwaremonitor | grep -v jquery ) | sort -n
 
-format: format-python format-c format-shell format-bazel
-
-format-c:
-	packages/livestatus/run --format
-	packages/unixcat/run --format
-	packages/neb/run --format
-ifeq ($(ENTERPRISE),yes)
-	non-free/packages/cmc/run --format
-endif
-
-test-format-c:
-	packages/livestatus/run --check-format
-	packages/unixcat/run --check-format
-	packages/neb/run --check-format
-ifeq ($(ENTERPRISE),yes)
-	non-free/packages/cmc/run --check-format
-endif
-
-format-python:
-	./scripts/run-uvenv ruff check --select I --fix
-	./.venv/bin/ruff format
-
-
-format-shell:
-	$(MAKE)	-C tests format-shell
+format:
+	bazel run //:format
 
 what-gerrit-makes:
 	$(MAKE)	-C tests what-gerrit-makes
-
-format-bazel:
-	scripts/run-buildifier --mode=fix
 
 lint-bazel:
 	scripts/run-buildifier --lint=fix

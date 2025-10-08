@@ -74,7 +74,7 @@ make -C tests test-unit-all  # Include slow tests
 # Code quality and formatting
 make -C tests test-ruff
 make -C tests test-bandit
-make -C tests test-format-python
+make -C tests test-format
 make -C tests test-mypy
 
 # Integration and system tests

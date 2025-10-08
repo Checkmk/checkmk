@@ -21,7 +21,10 @@ import { dashboardWidgetWorkflows } from '@/dashboard-wip/components/WidgetWorkf
 import CreateDashboardWizard from '@/dashboard-wip/components/Wizard/CreateDashboardWizard.vue'
 import WizardSelector from '@/dashboard-wip/components/WizardSelector/WizardSelector.vue'
 import { widgetTypeToSelectorMatcher } from '@/dashboard-wip/components/WizardSelector/utils.ts'
-import type { FilterDefinition } from '@/dashboard-wip/components/filter/types.ts'
+import type {
+  ConfiguredFilters,
+  FilterDefinition
+} from '@/dashboard-wip/components/filter/types.ts'
 import { useDashboardFilters } from '@/dashboard-wip/composables/useDashboardFilters.ts'
 import { useDashboardWidgets } from '@/dashboard-wip/composables/useDashboardWidgets.ts'
 import { useDashboardsManager } from '@/dashboard-wip/composables/useDashboardsManager.ts'
@@ -40,7 +43,7 @@ import type {
   WidgetLayout,
   WidgetSpec
 } from '@/dashboard-wip/types/widget'
-import { dashboardAPI } from '@/dashboard-wip/utils.ts'
+import { dashboardAPI, urlHandler } from '@/dashboard-wip/utils.ts'
 
 import DashboardSettingsWizard from './components/Wizard/DashboardSettingsWizard.vue'
 
@@ -218,6 +221,35 @@ const createDashboard = async (
   }
 }
 
+const handleApplyRuntimeFilters = (filters: ConfiguredFilters) => {
+  dashboardFilters.handleApplyRuntimeFilters(filters)
+
+  let urlSearchParams = {}
+  if (Object.keys(filters).length > 0) {
+    const allFilterIds: string[] = []
+    const allFilterValues: Record<string, string> = {}
+    Object.entries(filters).forEach(([filterId, filterValues]) => {
+      Object.entries(filterValues).forEach(([key, value]) => {
+        allFilterValues[key] = value
+      })
+      allFilterIds.push(filterId)
+    })
+    urlSearchParams = {
+      filled_in: 'filter',
+      _apply: 'Apply+filters',
+      _active: allFilterIds.join(';'),
+      ...allFilterValues
+    }
+  }
+
+  const updatedDashboardUrl = urlHandler.updateWithPreserve(
+    window.location.href,
+    ['name'],
+    urlSearchParams
+  )
+  urlHandler.updateCheckmkPageUrl(updatedDashboardUrl)
+}
+
 function deepClone<T>(obj: T): T {
   return structuredClone(obj)
 }
@@ -269,7 +301,7 @@ function deepClone<T>(obj: T): T {
         :can-edit="true"
         starting-tab="dashboard-filter"
         @save-dashboard-filters="dashboardFilters.handleSaveDashboardFilters"
-        @apply-runtime-filters="dashboardFilters.handleApplyRuntimeFilters"
+        @apply-runtime-filters="handleApplyRuntimeFilters"
         @save-mandatory-runtime-filters="dashboardFilters.handleSaveMandatoryRuntimeFilters"
         @close="openDashboardFilterSettings = false"
       />

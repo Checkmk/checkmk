@@ -167,3 +167,50 @@ export const determineWidgetEffectiveFilterContext = async (
     restricted_to_single: constants.widgets[widgetContent.type]!.filter_context.restricted_to_single
   }
 }
+
+export const urlHandler = {
+  setDashboardName(input: string, dashboardName: string): URL {
+    const url = new URL(input)
+    url.searchParams.set('name', dashboardName)
+    return url
+  },
+
+  /**
+   * Update query params while **preserving** the specified keys.
+   * - `preserveKeys`: keys to keep unmodified (e.g., ['name'])
+   * - `updates`: keys to add/update (others remain untouched unless updated)
+   */
+  updateWithPreserve(input: string, preserveKeys: string[], updates: Record<string, string>): URL {
+    const url = new URL(input)
+    const preserve = new Set(preserveKeys)
+
+    const toDelete: string[] = []
+    for (const key of url.searchParams.keys()) {
+      if (!preserve.has(key)) {
+        toDelete.push(key)
+      }
+    }
+    for (const key of toDelete) {
+      url.searchParams.delete(key)
+    }
+
+    for (const [k, v] of Object.entries(updates)) {
+      if (preserve.has(k)) {
+        continue
+      }
+      url.searchParams.set(k, v)
+    }
+
+    return url
+  },
+
+  updateCheckmkPageUrl(dashboardAppUrl: URL): void {
+    const checkmkUrl = new URL(window.parent.location.href)
+    checkmkUrl.searchParams.set('start_url', toPathAndSearch(dashboardAppUrl))
+    window.parent.history.replaceState({}, '', checkmkUrl.toString())
+  }
+}
+
+export function toPathAndSearch(url: URL): string {
+  return url.pathname + url.search
+}

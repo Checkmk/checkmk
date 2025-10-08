@@ -121,7 +121,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
   min-width: 240px;
   max-width: 240px;
   padding: 5px 2px;
-  color: #333;
+  color: var(--font-color);
   display: table-cell;
   letter-spacing: 1px;
 }
@@ -129,7 +129,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 .form-topic-ungrouped__dots {
   margin-left: 5px;
   overflow: hidden;
-  color: rgb(51 51 51 / 80%);
+  color: var(--grey-4-dimmed);
 }
 
 .form-topic-ungrouped__hidden-checkbox-size {

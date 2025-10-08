@@ -250,6 +250,8 @@
     --even-tr-bg-color: var(--ux-theme-2);
     --odd-tr-bg-color: var(--ux-theme-4);
     --perfometer-bg-color: var(--color-white-100);
+    --inline-help-text-bg: rgb(223 239 251);
+    --inline-help-icon-bg: rgb(12 129 238);
   }
 
   body[data-theme='modern-dark'] {
@@ -327,6 +329,8 @@
     --even-tr-bg-color: var(--ux-theme-3);
     --odd-tr-bg-color: var(--ux-theme-2);
     --perfometer-bg-color: var(--color-mist-grey-30);
+    --inline-help-text-bg: rgb(17 24 29);
+    --inline-help-icon-bg: rgb(6 103 193);
   }
 }
 

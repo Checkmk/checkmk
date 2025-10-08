@@ -103,7 +103,7 @@ function isGroupedTopic(topic: Topic): boolean {
   width: 100%;
   padding: 0;
   margin: 10px 0;
-  background: #f5f5fb;
+  background: var(--ux-theme-2);
   border-radius: 4px;
   border-collapse: collapse;
 }
@@ -114,7 +114,7 @@ function isGroupedTopic(topic: Topic): boolean {
   padding: 4px 10px 3px 9px;
   font-weight: 700;
   letter-spacing: 1px;
-  background-color: #e8e8ee;
+  background-color: var(--ux-theme-3);
   vertical-align: middle;
   cursor: pointer;
   border-radius: 4px 4px 0 0;

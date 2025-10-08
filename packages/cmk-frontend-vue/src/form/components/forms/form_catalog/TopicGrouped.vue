@@ -101,7 +101,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
 .form-topic-grouped__dots {
   margin-left: 5px;
   overflow: hidden;
-  color: rgb(51 51 51 / 80%);
+  color: var(--grey-4-dimmed);
 }
 
 .form-topic-grouped:nth-child(1) > td {

@@ -8,7 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { ref } from 'vue'
 
 import CmkDropdown from '@/components/CmkDropdown.vue'
-import CmkUnifiedIcon from '@/components/CmkIcon/CmkUnifeidIcon.vue'
+import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
 import type {
   CmkIconSize,
   CmkMultitoneIconColor,
@@ -104,12 +104,12 @@ const toneSuggestions = [
   </div>
 
   <div class="demo-cmk-multitone-icon">
-    <CmkUnifiedIcon
+    <CmkMultitoneIcon
       :name="icon"
       :primary-color="primaryTone"
       :secondary-color="secondaryTone"
       :size="size"
-    ></CmkUnifiedIcon>
+    ></CmkMultitoneIcon>
   </div>
 </template>
 

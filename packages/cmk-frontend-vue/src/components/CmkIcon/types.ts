@@ -14,7 +14,6 @@ export type TwoColorIcons = (typeof twoColorIcons)[number]
 
 export type CmkMultitoneIconNames = OneColorIcons | TwoColorIcons
 export type CmkMultitoneIconProps = OneColorIconProps | TwoColorIconProps
-export type CmkAllIconProps = CmkMultitoneIconProps | CmkIconProps
 export type CmkIconVariants = VariantProps<typeof cmkIconVariants>
 
 export type CmkIconSize = VariantProps<typeof cmkIconVariants>['size']

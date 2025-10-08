@@ -6,6 +6,7 @@
 
 from collections.abc import Mapping, Sequence
 from types import EllipsisType
+from typing import Any
 from unittest import mock
 from unittest.mock import Mock
 
@@ -32,7 +33,12 @@ from cmk.plugins.azure_v2.agent_based.lib import (
     _parse_resource,
     _threshold_hit_for_time,
     AzureMetric,
+    check_connections,
+    check_cpu,
+    check_memory,
+    check_network,
     check_resource_metrics,
+    check_storage,
     create_check_metrics_function_single,
     create_discover_by_metrics_function,
     create_discover_by_metrics_function_single,
@@ -736,7 +742,7 @@ def test_create_discover_by_metrics_function_single(
     "resource,include_keys,expected_result",
     [
         (
-            PARSED_RESOURCES["checkmk-mysql-server"],
+            PARSED_RESOURCE,
             ("kind", "group", "type"),
             [
                 ("Group", "BurningMan"),
@@ -757,7 +763,7 @@ def test_iter_resource_attributes(
     "resource,expected_result",
     [
         (
-            PARSED_RESOURCES["checkmk-mysql-server"],
+            PARSED_RESOURCE,
             [("Location", "westeurope"), ("Tag1", "value1"), ("Tag2", "value2")],
         ),
     ],
@@ -806,3 +812,135 @@ def test_inventory_common_azure() -> None:
     assert tags["tag1"] == "value1"
     assert tags["tag2"] == "value2"
     assert len(tags) == 2
+
+
+@pytest.mark.parametrize(
+    "section, item, params, expected_result",
+    [
+        (
+            PARSED_RESOURCE,
+            "checkmk-mysql-server",
+            {"levels": (10.0, 30.0)},
+            [
+                Result(
+                    state=State.WARN,
+                    summary="Memory utilization: 24.36% (warn/crit at 10.00%/30.00%)",
+                ),
+                Metric("mem_used_percent", 24.36, levels=(10.0, 30.0)),
+            ],
+        ),
+    ],
+)
+def test_check_memory(
+    section: Resource,
+    item: str,
+    params: Mapping[str, Any],
+    expected_result: Sequence[Result | Metric],
+) -> None:
+    assert list(check_memory()("Memory", params, {"Memory": section})) == expected_result
+
+
+@pytest.mark.parametrize(
+    "section, item, params, expected_result",
+    [
+        (
+            PARSED_RESOURCE,
+            "checkmk-mysql-server",
+            {"levels": (0.0, 0.0)},
+            [
+                Result(state=State.CRIT, summary="CPU utilization: 0% (warn/crit at 0%/0%)"),
+                Metric("util", 0.0, levels=(0.0, 0.0)),
+            ],
+        ),
+    ],
+)
+def test_check_cpu(
+    section: Resource,
+    item: str,
+    params: Mapping[str, Any],
+    expected_result: Sequence[Result | Metric],
+) -> None:
+    assert list(check_cpu()(params, section)) == expected_result
+
+
+@pytest.mark.parametrize(
+    "section, item, params, expected_result",
+    [
+        (
+            PARSED_RESOURCE,
+            "checkmk-mysql-server",
+            {"active_connections": (5, 10), "failed_connections": (1, 2)},
+            [
+                Result(state=State.WARN, summary="Active connections: 6 (warn/crit at 5/10)"),
+                Metric("active_connections", 6.0, levels=(5.0, 10.0)),
+                Result(state=State.CRIT, summary="Failed connections: 2 (warn/crit at 1/2)"),
+                Metric("failed_connections", 2.0, levels=(1.0, 2.0)),
+            ],
+        ),
+    ],
+)
+def test_check_connections(
+    section: Resource,
+    item: str,
+    params: Mapping[str, Any],
+    expected_result: Sequence[Result | Metric],
+) -> None:
+    assert list(check_connections()(params, section)) == expected_result
+
+
+@pytest.mark.parametrize(
+    "section, item, params, expected_result",
+    [
+        (
+            PARSED_RESOURCE,
+            "checkmk-mysql-server",
+            {"ingress_levels": (5000, 10000), "egress_levels": (1000, 2000)},
+            [
+                Result(state=State.OK, summary="Network in: 1000 B"),
+                Metric("ingress", 1000.0, levels=(5000.0, 10000.0)),
+                Result(
+                    state=State.WARN, summary="Network out: 1.46 KiB (warn/crit at 1000 B/1.95 KiB)"
+                ),
+                Metric("egress", 1500.0, levels=(1000.0, 2000.0)),
+            ],
+        ),
+    ],
+)
+def test_check_network(
+    section: Resource,
+    item: str,
+    params: Mapping[str, Any],
+    expected_result: Sequence[Result | Metric],
+) -> None:
+    assert list(check_network()(params, section)) == expected_result
+
+
+@pytest.mark.parametrize(
+    "section, item, params, expected_result",
+    [
+        (
+            PARSED_RESOURCE,
+            "checkmk-mysql-server",
+            {
+                "io_consumption": (70.0, 90.0),
+                "storage": (70.0, 90.0),
+                "serverlog_storage": (70.0, 90.0),
+            },
+            [
+                Result(state=State.WARN, summary="IO: 88.50% (warn/crit at 70.00%/90.00%)"),
+                Metric("io_consumption_percent", 88.5, levels=(70.0, 90.0)),
+                Result(state=State.OK, summary="Storage: 2.95%"),
+                Metric("storage_percent", 2.95, levels=(70.0, 90.0)),
+                Result(state=State.OK, summary="Server log storage: 0%"),
+                Metric("serverlog_storage_percent", 0.0, levels=(70.0, 90.0)),
+            ],
+        ),
+    ],
+)
+def test_check_storage(
+    section: Resource,
+    item: str,
+    params: Mapping[str, Any],
+    expected_result: Sequence[Result | Metric],
+) -> None:
+    assert list(check_storage()(params, section)) == expected_result

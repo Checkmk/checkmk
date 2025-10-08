@@ -16,7 +16,7 @@ from cmk.plugins.azure_v2.agent_based.azure_databases import (
     create_check_azure_databases_dtu,
     create_check_azure_databases_storage,
 )
-from cmk.plugins.azure_v2.agent_based.lib import AzureMetric, Resource, Section
+from cmk.plugins.azure_v2.agent_based.lib import AzureMetric, Resource
 
 LEVELS = (5.0, 20.0)
 METRIC_CONN_FAILED_OK = Metric(name="connections_failed_rate", value=10)
@@ -55,50 +55,44 @@ RESULT_STORAGE_WARN = Result(
 
 
 @pytest.mark.parametrize(
-    "section, item, params, expected_result",
+    "section, params, expected_result",
     [
         pytest.param(
-            {
-                "foo": Resource(
-                    id="/subscriptions/1234/resourceGroups/group/foo/bar/foo",
-                    name="foo",
-                    type="foo/bar",
-                    group="group",
-                    location="westeurope",
-                    metrics={
-                        "average_storage_percent": AzureMetric(
-                            name="storage_percent",
-                            aggregation="average",
-                            value=10,
-                            unit="percent",
-                        )
-                    },
-                )
-            },
-            "foo",
+            Resource(
+                id="/subscriptions/1234/resourceGroups/group/foo/bar/foo",
+                name="foo",
+                type="foo/bar",
+                group="group",
+                location="westeurope",
+                metrics={
+                    "average_storage_percent": AzureMetric(
+                        name="storage_percent",
+                        aggregation="average",
+                        value=10,
+                        unit="percent",
+                    )
+                },
+            ),
             {},
             [RESULT_STORAGE_OK, METRIC_STORAGE_OK],
             id="Storage without levels",
         ),
         pytest.param(
-            {
-                "foo": Resource(
-                    id="/subscriptions/1234/resourceGroups/group/foo/bar/foo",
-                    name="foo",
-                    type="foo/bar",
-                    group="group",
-                    location="westeurope",
-                    metrics={
-                        "average_storage_percent": AzureMetric(
-                            name="storage_percent",
-                            aggregation="average",
-                            value=10,
-                            unit="percent",
-                        )
-                    },
-                )
-            },
-            "foo",
+            Resource(
+                id="/subscriptions/1234/resourceGroups/group/foo/bar/foo",
+                name="foo",
+                type="foo/bar",
+                group="group",
+                location="westeurope",
+                metrics={
+                    "average_storage_percent": AzureMetric(
+                        name="storage_percent",
+                        aggregation="average",
+                        value=10,
+                        unit="percent",
+                    )
+                },
+            ),
             {"storage_percent": ("fixed", LEVELS)},
             [RESULT_STORAGE_WARN, METRIC_STORAGE_WARN],
             id="Storage with WARN level exceeded",
@@ -106,59 +100,52 @@ RESULT_STORAGE_WARN = Result(
     ],
 )
 def test_check_azure_databases_storage(
-    section: Section,
-    item: str,
+    section: Resource,
     params: Mapping[str, Any],
     expected_result: Sequence[Result | Metric],
 ) -> None:
-    assert list(create_check_azure_databases_storage()(item, params, section)) == expected_result
+    assert list(create_check_azure_databases_storage()(params, section)) == expected_result
 
 
 @pytest.mark.parametrize(
-    "section, item, params, expected_result",
+    "section, params, expected_result",
     [
         pytest.param(
-            {
-                "foo": Resource(
-                    id="/subscriptions/1234/resourceGroups/group/foo/bar/foo",
-                    name="foo",
-                    type="foo/bar",
-                    group="group",
-                    location="westeurope",
-                    metrics={
-                        "average_deadlock": AzureMetric(
-                            name="deadlock",
-                            aggregation="average",
-                            value=10,
-                            unit="count",
-                        )
-                    },
-                )
-            },
-            "foo",
+            Resource(
+                id="/subscriptions/1234/resourceGroups/group/foo/bar/foo",
+                name="foo",
+                type="foo/bar",
+                group="group",
+                location="westeurope",
+                metrics={
+                    "average_deadlock": AzureMetric(
+                        name="deadlock",
+                        aggregation="average",
+                        value=10,
+                        unit="count",
+                    )
+                },
+            ),
             {},
             [RESULT_DEADLOCK_OK, METRIC_DEADLOCK_OK],
             id="Deadlock without levels",
         ),
         pytest.param(
-            {
-                "foo": Resource(
-                    id="/subscriptions/1234/resourceGroups/group/foo/bar/foo",
-                    name="foo",
-                    type="foo/bar",
-                    group="group",
-                    location="westeurope",
-                    metrics={
-                        "average_deadlock": AzureMetric(
-                            name="deadlock",
-                            aggregation="average",
-                            value=10,
-                            unit="count",
-                        )
-                    },
-                )
-            },
-            "foo",
+            Resource(
+                id="/subscriptions/1234/resourceGroups/group/foo/bar/foo",
+                name="foo",
+                type="foo/bar",
+                group="group",
+                location="westeurope",
+                metrics={
+                    "average_deadlock": AzureMetric(
+                        name="deadlock",
+                        aggregation="average",
+                        value=10,
+                        unit="count",
+                    )
+                },
+            ),
             {"deadlocks": ("fixed", LEVELS)},
             [RESULT_DEADLOCK_WARN, METRIC_DEADLOCK_WARN],
             id="Deadlock without WARN levels exceeded",
@@ -166,59 +153,52 @@ def test_check_azure_databases_storage(
     ],
 )
 def test_check_azure_databases_deadlock(
-    section: Section,
-    item: str,
+    section: Resource,
     params: Mapping[str, Any],
     expected_result: Sequence[Result | Metric],
 ) -> None:
-    assert list(create_check_azure_databases_deadlock()(item, params, section)) == expected_result
+    assert list(create_check_azure_databases_deadlock()(params, section)) == expected_result
 
 
 @pytest.mark.parametrize(
-    "section, item, params, expected_result",
+    "section, params, expected_result",
     [
         pytest.param(
-            {
-                "foo": Resource(
-                    id="/subscriptions/1234/resourceGroups/group/foo/bar/foo",
-                    name="foo",
-                    type="foo/bar",
-                    group="group",
-                    location="westeurope",
-                    metrics={
-                        "average_cpu_percent": AzureMetric(
-                            name="cpu_percent",
-                            aggregation="average",
-                            value=10,
-                            unit="percent",
-                        )
-                    },
-                )
-            },
-            "foo",
+            Resource(
+                id="/subscriptions/1234/resourceGroups/group/foo/bar/foo",
+                name="foo",
+                type="foo/bar",
+                group="group",
+                location="westeurope",
+                metrics={
+                    "average_cpu_percent": AzureMetric(
+                        name="cpu_percent",
+                        aggregation="average",
+                        value=10,
+                        unit="percent",
+                    )
+                },
+            ),
             {},
             [RESULT_CPU_OK, METRIC_CPU_OK],
             id="CPU without levels",
         ),
         pytest.param(
-            {
-                "foo": Resource(
-                    id="/subscriptions/1234/resourceGroups/group/foo/bar/foo",
-                    name="foo",
-                    type="foo/bar",
-                    group="group",
-                    location="westeurope",
-                    metrics={
-                        "average_cpu_percent": AzureMetric(
-                            name="cpu_percent",
-                            aggregation="average",
-                            value=10,
-                            unit="percent",
-                        )
-                    },
-                )
-            },
-            "foo",
+            Resource(
+                id="/subscriptions/1234/resourceGroups/group/foo/bar/foo",
+                name="foo",
+                type="foo/bar",
+                group="group",
+                location="westeurope",
+                metrics={
+                    "average_cpu_percent": AzureMetric(
+                        name="cpu_percent",
+                        aggregation="average",
+                        value=10,
+                        unit="percent",
+                    )
+                },
+            ),
             {"cpu_percent": ("fixed", LEVELS)},
             [RESULT_CPU_WARN, METRIC_CPU_WARN],
             id="CPU with WARN level exceeded",
@@ -226,59 +206,52 @@ def test_check_azure_databases_deadlock(
     ],
 )
 def test_check_azure_databases_cpu(
-    section: Section,
-    item: str,
+    section: Resource,
     params: Mapping[str, Any],
     expected_result: Sequence[Result | Metric],
 ) -> None:
-    assert list(create_check_azure_databases_cpu()(item, params, section)) == expected_result
+    assert list(create_check_azure_databases_cpu()(params, section)) == expected_result
 
 
 @pytest.mark.parametrize(
-    "section, item, params, expected_result",
+    "section, params, expected_result",
     [
         pytest.param(
-            {
-                "foo": Resource(
-                    id="/subscriptions/1234/resourceGroups/group/foo/bar/foo",
-                    name="foo",
-                    type="foo/bar",
-                    group="group",
-                    location="westeurope",
-                    metrics={
-                        "average_dtu_consumption_percent": AzureMetric(
-                            name="dtu_percent",
-                            aggregation="average",
-                            value=10,
-                            unit="percent",
-                        )
-                    },
-                )
-            },
-            "foo",
+            Resource(
+                id="/subscriptions/1234/resourceGroups/group/foo/bar/foo",
+                name="foo",
+                type="foo/bar",
+                group="group",
+                location="westeurope",
+                metrics={
+                    "average_dtu_consumption_percent": AzureMetric(
+                        name="dtu_percent",
+                        aggregation="average",
+                        value=10,
+                        unit="percent",
+                    )
+                },
+            ),
             {},
             [RESULT_DTU_OK, METRIC_DTU_OK],
             id="DTU without levels",
         ),
         pytest.param(
-            {
-                "foo": Resource(
-                    id="/subscriptions/1234/resourceGroups/group/foo/bar/foo",
-                    name="foo",
-                    type="foo/bar",
-                    group="group",
-                    location="westeurope",
-                    metrics={
-                        "average_dtu_consumption_percent": AzureMetric(
-                            name="dtu_percent",
-                            aggregation="average",
-                            value=10,
-                            unit="percent",
-                        )
-                    },
-                )
-            },
-            "foo",
+            Resource(
+                id="/subscriptions/1234/resourceGroups/group/foo/bar/foo",
+                name="foo",
+                type="foo/bar",
+                group="group",
+                location="westeurope",
+                metrics={
+                    "average_dtu_consumption_percent": AzureMetric(
+                        name="dtu_percent",
+                        aggregation="average",
+                        value=10,
+                        unit="percent",
+                    )
+                },
+            ),
             {"dtu_percent": ("fixed", LEVELS)},
             [RESULT_DTU_WARN, METRIC_DTU_WARN],
             id="DTU with WARN level exceeded",
@@ -286,42 +259,38 @@ def test_check_azure_databases_cpu(
     ],
 )
 def test_check_azure_databases_dtu(
-    section: Section,
-    item: str,
+    section: Resource,
     params: Mapping[str, Any],
     expected_result: Sequence[Result | Metric],
 ) -> None:
-    assert list(create_check_azure_databases_dtu()(item, params, section)) == expected_result
+    assert list(create_check_azure_databases_dtu()(params, section)) == expected_result
 
 
 @pytest.mark.parametrize(
-    "section, item, params, expected_result",
+    "section, params, expected_result",
     [
         pytest.param(
-            {
-                "foo": Resource(
-                    id="/subscriptions/1234/resourceGroups/group/foo/bar/foo",
-                    name="foo",
-                    type="foo/bar",
-                    group="group",
-                    location="westeurope",
-                    metrics={
-                        "average_connection_successful": AzureMetric(
-                            name="connection_successful",
-                            aggregation="average",
-                            value=10,
-                            unit="count",
-                        ),
-                        "average_connection_failed": AzureMetric(
-                            name="connection_failed",
-                            aggregation="average",
-                            value=10,
-                            unit="count",
-                        ),
-                    },
-                )
-            },
-            "foo",
+            Resource(
+                id="/subscriptions/1234/resourceGroups/group/foo/bar/foo",
+                name="foo",
+                type="foo/bar",
+                group="group",
+                location="westeurope",
+                metrics={
+                    "average_connection_successful": AzureMetric(
+                        name="connection_successful",
+                        aggregation="average",
+                        value=10,
+                        unit="count",
+                    ),
+                    "average_connection_failed": AzureMetric(
+                        name="connection_failed",
+                        aggregation="average",
+                        value=10,
+                        unit="count",
+                    ),
+                },
+            ),
             {},
             [
                 RESULT_CONN_SUCCESS_OK,
@@ -332,30 +301,27 @@ def test_check_azure_databases_dtu(
             id="DB connections without levels",
         ),
         pytest.param(
-            {
-                "foo": Resource(
-                    id="/subscriptions/1234/resourceGroups/group/foo/bar/foo",
-                    name="foo",
-                    type="foo/bar",
-                    group="group",
-                    location="westeurope",
-                    metrics={
-                        "average_connection_successful": AzureMetric(
-                            name="connection_successful",
-                            aggregation="average",
-                            value=10,
-                            unit="count",
-                        ),
-                        "average_connection_failed": AzureMetric(
-                            name="connection_failed",
-                            aggregation="average",
-                            value=10,
-                            unit="count",
-                        ),
-                    },
-                )
-            },
-            "foo",
+            Resource(
+                id="/subscriptions/1234/resourceGroups/group/foo/bar/foo",
+                name="foo",
+                type="foo/bar",
+                group="group",
+                location="westeurope",
+                metrics={
+                    "average_connection_successful": AzureMetric(
+                        name="connection_successful",
+                        aggregation="average",
+                        value=10,
+                        unit="count",
+                    ),
+                    "average_connection_failed": AzureMetric(
+                        name="connection_failed",
+                        aggregation="average",
+                        value=10,
+                        unit="count",
+                    ),
+                },
+            ),
             {"successful_connections": ("fixed", LEVELS), "failed_connections": ("fixed", LEVELS)},
             [
                 RESULT_CONN_SUCCESS_WARN,
@@ -366,30 +332,27 @@ def test_check_azure_databases_dtu(
             id="Both DB connection metrics above WARN threshold",
         ),
         pytest.param(
-            {
-                "foo": Resource(
-                    id="/subscriptions/1234/resourceGroups/group/foo/bar/foo",
-                    name="foo",
-                    type="foo/bar",
-                    group="group",
-                    location="westeurope",
-                    metrics={
-                        "average_connection_successful": AzureMetric(
-                            name="connection_successful",
-                            aggregation="average",
-                            value=10,
-                            unit="count",
-                        ),
-                        "average_connection_failed": AzureMetric(
-                            name="connection_failed",
-                            aggregation="average",
-                            value=10,
-                            unit="count",
-                        ),
-                    },
-                )
-            },
-            "foo",
+            Resource(
+                id="/subscriptions/1234/resourceGroups/group/foo/bar/foo",
+                name="foo",
+                type="foo/bar",
+                group="group",
+                location="westeurope",
+                metrics={
+                    "average_connection_successful": AzureMetric(
+                        name="connection_successful",
+                        aggregation="average",
+                        value=10,
+                        unit="count",
+                    ),
+                    "average_connection_failed": AzureMetric(
+                        name="connection_failed",
+                        aggregation="average",
+                        value=10,
+                        unit="count",
+                    ),
+                },
+            ),
             check_plugin_azure_databases_connections.check_default_parameters,
             [
                 Result(state=State.OK, summary="Successful connections: 10"),
@@ -402,11 +365,8 @@ def test_check_azure_databases_dtu(
     ],
 )
 def test_check_azure_databases_connections(
-    section: Section,
-    item: str,
+    section: Resource,
     params: Mapping[str, Any],
     expected_result: Sequence[Result | Metric],
 ) -> None:
-    assert (
-        list(create_check_azure_databases_connections()(item, params, section)) == expected_result
-    )
+    assert list(create_check_azure_databases_connections()(params, section)) == expected_result

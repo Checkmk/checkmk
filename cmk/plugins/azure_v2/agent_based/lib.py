@@ -420,8 +420,8 @@ def check_memory() -> CheckFunctionWithItem:
     )
 
 
-def check_cpu() -> CheckFunctionWithItem:
-    return create_check_metrics_function(
+def check_cpu() -> CheckFunctionWithoutItem:
+    return create_check_metrics_function_single(
         [
             MetricData(
                 "average_cpu_percent",
@@ -434,8 +434,8 @@ def check_cpu() -> CheckFunctionWithItem:
     )
 
 
-def check_connections() -> CheckFunctionWithItem:
-    return create_check_metrics_function(
+def check_connections() -> CheckFunctionWithoutItem:
+    return create_check_metrics_function_single(
         [
             MetricData(
                 "average_active_connections",
@@ -464,8 +464,8 @@ def check_connections() -> CheckFunctionWithItem:
     )
 
 
-def check_network() -> CheckFunctionWithItem:
-    return create_check_metrics_function(
+def check_network() -> CheckFunctionWithoutItem:
+    return create_check_metrics_function_single(
         [
             MetricData(
                 "total_network_bytes_ingress",
@@ -485,8 +485,8 @@ def check_network() -> CheckFunctionWithItem:
     )
 
 
-def check_storage() -> CheckFunctionWithItem:
-    return create_check_metrics_function(
+def check_storage() -> CheckFunctionWithoutItem:
+    return create_check_metrics_function_single(
         [
             MetricData(
                 "average_io_consumption_percent",

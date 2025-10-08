@@ -15,31 +15,32 @@ from cmk.plugins.azure_v2.agent_based.azure_mysql import (
     check_plugin_azure_mysql_replication,
     check_replication,
 )
-from cmk.plugins.azure_v2.agent_based.lib import AzureMetric, check_connections, Resource, Section
+from cmk.plugins.azure_v2.agent_based.lib import (
+    AzureMetric,
+    check_connections,
+    Resource,
+)
 
 
 @pytest.mark.parametrize(
-    "section, item, params, expected_result",
+    "section, params, expected_result",
     [
         pytest.param(
-            {
-                "checkmk-mysql-single-server": Resource(
-                    id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/servers/checkmk-mysql-single-server",
-                    name="checkmk-mysql-single-server",
-                    type="Microsoft.DBforMySQL/servers",
-                    group="BurningMan",
-                    location="westeurope",
-                    metrics={
-                        "maximum_seconds_behind_master": AzureMetric(
-                            name="seconds_behind_master",
-                            aggregation="maximum",
-                            value=2.0,
-                            unit="seconds",
-                        ),
-                    },
-                )
-            },
-            "checkmk-mysql-single-server",
+            Resource(
+                id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/servers/checkmk-mysql-single-server",
+                name="checkmk-mysql-single-server",
+                type="Microsoft.DBforMySQL/servers",
+                group="BurningMan",
+                location="westeurope",
+                metrics={
+                    "maximum_seconds_behind_master": AzureMetric(
+                        name="seconds_behind_master",
+                        aggregation="maximum",
+                        value=2.0,
+                        unit="seconds",
+                    ),
+                },
+            ),
             {"levels": (1.0, 5.0)},
             [
                 Result(
@@ -51,24 +52,21 @@ from cmk.plugins.azure_v2.agent_based.lib import AzureMetric, check_connections,
             id="single server",
         ),
         pytest.param(
-            {
-                "checkmk-mysql-flexible-server": Resource(
-                    id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/flexibleServers/checkmk-mysql-flexible-server",
-                    name="checkmk-mysql-flexible-server",
-                    type="Microsoft.DBforMySQL/flexibleServers",
-                    group="BurningMan",
-                    location="westeurope",
-                    metrics={
-                        "maximum_replication_lag": AzureMetric(
-                            name="replication_lag",
-                            aggregation="maximum",
-                            value=6.0,
-                            unit="seconds",
-                        ),
-                    },
-                )
-            },
-            "checkmk-mysql-flexible-server",
+            Resource(
+                id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/flexibleServers/checkmk-mysql-flexible-server",
+                name="checkmk-mysql-flexible-server",
+                type="Microsoft.DBforMySQL/flexibleServers",
+                group="BurningMan",
+                location="westeurope",
+                metrics={
+                    "maximum_replication_lag": AzureMetric(
+                        name="replication_lag",
+                        aggregation="maximum",
+                        value=6.0,
+                        unit="seconds",
+                    ),
+                },
+            ),
             {"levels": (1.0, 5.0)},
             [
                 Result(
@@ -80,24 +78,21 @@ from cmk.plugins.azure_v2.agent_based.lib import AzureMetric, check_connections,
             id="flexible server",
         ),
         pytest.param(
-            {
-                "checkmk-mysql-flexible-server": Resource(
-                    id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/flexibleServers/checkmk-mysql-flexible-server",
-                    name="checkmk-mysql-flexible-server",
-                    type="Microsoft.DBforMySQL/flexibleServers",
-                    group="BurningMan",
-                    location="westeurope",
-                    metrics={
-                        "maximum_replication_lag": AzureMetric(
-                            name="replication_lag",
-                            aggregation="maximum",
-                            value=65.0,
-                            unit="seconds",
-                        ),
-                    },
-                )
-            },
-            "checkmk-mysql-flexible-server",
+            Resource(
+                id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/flexibleServers/checkmk-mysql-flexible-server",
+                name="checkmk-mysql-flexible-server",
+                type="Microsoft.DBforMySQL/flexibleServers",
+                group="BurningMan",
+                location="westeurope",
+                metrics={
+                    "maximum_replication_lag": AzureMetric(
+                        name="replication_lag",
+                        aggregation="maximum",
+                        value=65.0,
+                        unit="seconds",
+                    ),
+                },
+            ),
             check_plugin_azure_mysql_replication.check_default_parameters,
             [
                 Result(
@@ -111,42 +106,41 @@ from cmk.plugins.azure_v2.agent_based.lib import AzureMetric, check_connections,
     ],
 )
 def test_check_replication(
-    section: Section,
-    item: str,
+    section: Resource,
     params: Mapping[str, Any],
     expected_result: Sequence[Result | Metric],
 ) -> None:
-    assert list(check_replication()(item, params, section)) == expected_result
+    assert (
+        list(check_replication()("Replication", params, {"Replication": section}))
+        == expected_result
+    )
 
 
 @pytest.mark.parametrize(
-    "section, item, params, expected_result",
+    "section, params, expected_result",
     [
         pytest.param(
-            {
-                "checkmk-mysql-single-server": Resource(
-                    id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/servers/checkmk-mysql-single-server",
-                    name="checkmk-mysql-single-server",
-                    type="Microsoft.DBforMySQL/servers",
-                    group="BurningMan",
-                    location="westeurope",
-                    metrics={
-                        "average_active_connections": AzureMetric(
-                            name="active_connections",
-                            aggregation="average",
-                            value=6.0,
-                            unit="count",
-                        ),
-                        "total_connections_failed": AzureMetric(
-                            name="connections_failed",
-                            aggregation="total",
-                            value=2.0,
-                            unit="count",
-                        ),
-                    },
-                )
-            },
-            "checkmk-mysql-single-server",
+            Resource(
+                id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/servers/checkmk-mysql-single-server",
+                name="checkmk-mysql-single-server",
+                type="Microsoft.DBforMySQL/servers",
+                group="BurningMan",
+                location="westeurope",
+                metrics={
+                    "average_active_connections": AzureMetric(
+                        name="active_connections",
+                        aggregation="average",
+                        value=6.0,
+                        unit="count",
+                    ),
+                    "total_connections_failed": AzureMetric(
+                        name="connections_failed",
+                        aggregation="total",
+                        value=2.0,
+                        unit="count",
+                    ),
+                },
+            ),
             {"active_connections": (5, 10), "failed_connections": (1, 2)},
             [
                 Result(state=State.WARN, summary="Active connections: 6 (warn/crit at 5/10)"),
@@ -157,30 +151,27 @@ def test_check_replication(
             id="single server",
         ),
         pytest.param(
-            {
-                "checkmk-mysql-flexible-server": Resource(
-                    id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/flexibleServers/checkmk-mysql-flexible-server",
-                    name="checkmk-mysql-flexible-server",
-                    type="Microsoft.DBforMySQL/flexibleServers",
-                    group="BurningMan",
-                    location="westeurope",
-                    metrics={
-                        "average_active_connections": AzureMetric(
-                            name="active_connections",
-                            aggregation="average",
-                            value=4.0,
-                            unit="count",
-                        ),
-                        "total_aborted_connections": AzureMetric(
-                            name="aborted_connections",
-                            aggregation="total",
-                            value=3.0,
-                            unit="count",
-                        ),
-                    },
-                )
-            },
-            "checkmk-mysql-flexible-server",
+            Resource(
+                id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/flexibleServers/checkmk-mysql-flexible-server",
+                name="checkmk-mysql-flexible-server",
+                type="Microsoft.DBforMySQL/flexibleServers",
+                group="BurningMan",
+                location="westeurope",
+                metrics={
+                    "average_active_connections": AzureMetric(
+                        name="active_connections",
+                        aggregation="average",
+                        value=4.0,
+                        unit="count",
+                    ),
+                    "total_aborted_connections": AzureMetric(
+                        name="aborted_connections",
+                        aggregation="total",
+                        value=3.0,
+                        unit="count",
+                    ),
+                },
+            ),
             check_plugin_azure_mysql_connections.check_default_parameters,
             [
                 Result(state=State.OK, summary="Active connections: 4"),
@@ -193,36 +184,32 @@ def test_check_replication(
     ],
 )
 def test_check_connections(
-    section: Section,
-    item: str,
+    section: Resource,
     params: Mapping[str, Any],
     expected_result: Sequence[Result | Metric],
 ) -> None:
-    assert list(check_connections()(item, params, section)) == expected_result
+    assert list(check_connections()(params, section)) == expected_result
 
 
 def test_azure_mysql_connections_active_connections_lower() -> None:
     assert list(
         check_plugin_azure_mysql_connections.check_function(
-            "item",
             {"active_connections_lower": (11, 9)},
-            {
-                "item": Resource(
-                    id="id",
-                    name="name",
-                    type="type",
-                    group="group",
-                    location="location",
-                    metrics={
-                        "average_active_connections": AzureMetric(
-                            name="name",
-                            aggregation="aggregation",
-                            value=10,
-                            unit="unit",
-                        )
-                    },
-                )
-            },
+            Resource(
+                id="id",
+                name="name",
+                type="type",
+                group="group",
+                location="location",
+                metrics={
+                    "average_active_connections": AzureMetric(
+                        name="name",
+                        aggregation="aggregation",
+                        value=10,
+                        unit="unit",
+                    )
+                },
+            ),
         )
     ) == [
         Result(state=State.WARN, summary="Active connections: 10 (warn/crit below 11/9)"),
@@ -231,24 +218,22 @@ def test_azure_mysql_connections_active_connections_lower() -> None:
 
 
 def test_check_memory_defaults() -> None:
-    section = {
-        "checkmk-mysql-flexible-server": Resource(
-            id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/servers/checkmk-mysql-single-server",
-            name="checkmk-mysql-single-server",
-            type="Microsoft.DBforMySQL/servers",
-            group="BurningMan",
-            location="westeurope",
-            metrics={
-                "average_memory_percent": AzureMetric(
-                    name="memory_percent",
-                    aggregation="average",
-                    value=96.03,
-                    unit="percent",
-                ),
-            },
-        ),
-    }
-    item = "checkmk-mysql-flexible-server"
+    section = Resource(
+        id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/servers/checkmk-mysql-single-server",
+        name="checkmk-mysql-single-server",
+        type="Microsoft.DBforMySQL/servers",
+        group="BurningMan",
+        location="westeurope",
+        metrics={
+            "average_memory_percent": AzureMetric(
+                name="memory_percent",
+                aggregation="average",
+                value=96.03,
+                unit="percent",
+            ),
+        },
+    )
+
     params = check_plugin_azure_mysql_memory.check_default_parameters
     expected = [
         Result(
@@ -257,4 +242,7 @@ def test_check_memory_defaults() -> None:
         ),
         Metric("mem_used_percent", 96.03, levels=(80.0, 90.0)),
     ]
-    assert list(check_plugin_azure_mysql_memory.check_function(item, params, section)) == expected
+    assert (
+        list(check_plugin_azure_mysql_memory.check_function("Memory", params, {"Memory": section}))
+        == expected
+    )

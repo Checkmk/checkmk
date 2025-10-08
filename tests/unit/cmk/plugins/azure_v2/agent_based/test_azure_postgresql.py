@@ -15,31 +15,32 @@ from cmk.plugins.azure_v2.agent_based.azure_postgresql import (
     check_plugin_azure_postgresql_replication,
     check_replication,
 )
-from cmk.plugins.azure_v2.agent_based.lib import AzureMetric, check_connections, Resource, Section
+from cmk.plugins.azure_v2.agent_based.lib import (
+    AzureMetric,
+    check_connections,
+    Resource,
+)
 
 
 @pytest.mark.parametrize(
-    "section, item, params, expected_result",
+    "section, params, expected_result",
     [
         pytest.param(
-            {
-                "checkmk-postgresql-single-server": Resource(
-                    id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforPostgreSQL/servers/checkmk-postgresql-single-server",
-                    name="checkmk-postgresql-single-server",
-                    type="Microsoft.DBforPostgreSQL/servers",
-                    group="BurningMan",
-                    location="westeurope",
-                    metrics={
-                        "maximum_pg_replica_log_delay_in_seconds": AzureMetric(
-                            name="pg_replica_log_delay_in_seconds",
-                            aggregation="maximum",
-                            value=2.0,
-                            unit="seconds",
-                        ),
-                    },
-                )
-            },
-            "checkmk-postgresql-single-server",
+            Resource(
+                id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforPostgreSQL/servers/checkmk-postgresql-single-server",
+                name="checkmk-postgresql-single-server",
+                type="Microsoft.DBforPostgreSQL/servers",
+                group="BurningMan",
+                location="westeurope",
+                metrics={
+                    "maximum_pg_replica_log_delay_in_seconds": AzureMetric(
+                        name="pg_replica_log_delay_in_seconds",
+                        aggregation="maximum",
+                        value=2.0,
+                        unit="seconds",
+                    ),
+                },
+            ),
             {"levels": (1.0, 5.0)},
             [
                 Result(
@@ -51,24 +52,21 @@ from cmk.plugins.azure_v2.agent_based.lib import AzureMetric, check_connections,
             id="single server",
         ),
         pytest.param(
-            {
-                "checkmk-postgres-flexible-server": Resource(
-                    id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforPostgreSQL/flexibleServers/checkmk-postgres-flexible-server",
-                    name="checkmk-postgres-flexible-server",
-                    type="Microsoft.DBforPostgreSQL/flexibleServers",
-                    group="BurningMan",
-                    location="westeurope",
-                    metrics={
-                        "maximum_physical_replication_delay_in_seconds": AzureMetric(
-                            name="maximum_physical_replication_delay_in_seconds",
-                            aggregation="maximum",
-                            value=6.0,
-                            unit="seconds",
-                        ),
-                    },
-                )
-            },
-            "checkmk-postgres-flexible-server",
+            Resource(
+                id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforPostgreSQL/flexibleServers/checkmk-postgres-flexible-server",
+                name="checkmk-postgres-flexible-server",
+                type="Microsoft.DBforPostgreSQL/flexibleServers",
+                group="BurningMan",
+                location="westeurope",
+                metrics={
+                    "maximum_physical_replication_delay_in_seconds": AzureMetric(
+                        name="maximum_physical_replication_delay_in_seconds",
+                        aggregation="maximum",
+                        value=6.0,
+                        unit="seconds",
+                    ),
+                },
+            ),
             {"levels": (1.0, 5.0)},
             [
                 Result(
@@ -80,24 +78,21 @@ from cmk.plugins.azure_v2.agent_based.lib import AzureMetric, check_connections,
             id="flexible server",
         ),
         pytest.param(
-            {
-                "checkmk-postgres-flexible-server": Resource(
-                    id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforPostgreSQL/flexibleServers/checkmk-postgres-flexible-server",
-                    name="checkmk-postgres-flexible-server",
-                    type="Microsoft.DBforPostgreSQL/flexibleServers",
-                    group="BurningMan",
-                    location="westeurope",
-                    metrics={
-                        "maximum_physical_replication_delay_in_seconds": AzureMetric(
-                            name="maximum_physical_replication_delay_in_seconds",
-                            aggregation="maximum",
-                            value=65.0,
-                            unit="seconds",
-                        ),
-                    },
-                )
-            },
-            "checkmk-postgres-flexible-server",
+            Resource(
+                id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforPostgreSQL/flexibleServers/checkmk-postgres-flexible-server",
+                name="checkmk-postgres-flexible-server",
+                type="Microsoft.DBforPostgreSQL/flexibleServers",
+                group="BurningMan",
+                location="westeurope",
+                metrics={
+                    "maximum_physical_replication_delay_in_seconds": AzureMetric(
+                        name="maximum_physical_replication_delay_in_seconds",
+                        aggregation="maximum",
+                        value=65.0,
+                        unit="seconds",
+                    ),
+                },
+            ),
             check_plugin_azure_postgresql_replication.check_default_parameters,
             [
                 Result(
@@ -111,36 +106,35 @@ from cmk.plugins.azure_v2.agent_based.lib import AzureMetric, check_connections,
     ],
 )
 def test_check_replication(
-    section: Section,
-    item: str,
+    section: Resource,
     params: Mapping[str, Any],
     expected_result: Sequence[Result | Metric],
 ) -> None:
-    assert list(check_replication()(item, params, section)) == expected_result
+    assert (
+        list(check_replication()("Replication", params, {"Replication": section}))
+        == expected_result
+    )
 
 
 def test_azure_postgresql_connections_active_connections_lower() -> None:
     assert list(
         check_plugin_azure_postgresql_connections.check_function(
-            "item",
             {"active_connections_lower": (11, 9)},
-            {
-                "item": Resource(
-                    id="id",
-                    name="name",
-                    type="type",
-                    group="group",
-                    location="location",
-                    metrics={
-                        "average_active_connections": AzureMetric(
-                            name="name",
-                            aggregation="aggregation",
-                            value=10,
-                            unit="unit",
-                        )
-                    },
-                )
-            },
+            Resource(
+                id="id",
+                name="name",
+                type="type",
+                group="group",
+                location="location",
+                metrics={
+                    "average_active_connections": AzureMetric(
+                        name="name",
+                        aggregation="aggregation",
+                        value=10,
+                        unit="unit",
+                    )
+                },
+            ),
         )
     ) == [
         Result(state=State.WARN, summary="Active connections: 10 (warn/crit below 11/9)"),
@@ -149,33 +143,30 @@ def test_azure_postgresql_connections_active_connections_lower() -> None:
 
 
 @pytest.mark.parametrize(
-    "section, item, params, expected_result",
+    "section, params, expected_result",
     [
         pytest.param(
-            {
-                "checkmk-postgres-single-server": Resource(
-                    id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforPostgreSQL/servers/checkmk-postgres-single-server",
-                    name="checkmk-postgres-single-server",
-                    type="Microsoft.DBforPostgreSQL/servers",
-                    group="BurningMan",
-                    location="westeurope",
-                    metrics={
-                        "average_active_connections": AzureMetric(
-                            name="active_connections",
-                            aggregation="average",
-                            value=6.0,
-                            unit="count",
-                        ),
-                        "total_connections_failed": AzureMetric(
-                            name="connections_failed",
-                            aggregation="total",
-                            value=2.0,
-                            unit="count",
-                        ),
-                    },
-                )
-            },
-            "checkmk-postgres-single-server",
+            Resource(
+                id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforPostgreSQL/servers/checkmk-postgres-single-server",
+                name="checkmk-postgres-single-server",
+                type="Microsoft.DBforPostgreSQL/servers",
+                group="BurningMan",
+                location="westeurope",
+                metrics={
+                    "average_active_connections": AzureMetric(
+                        name="active_connections",
+                        aggregation="average",
+                        value=6.0,
+                        unit="count",
+                    ),
+                    "total_connections_failed": AzureMetric(
+                        name="connections_failed",
+                        aggregation="total",
+                        value=2.0,
+                        unit="count",
+                    ),
+                },
+            ),
             {"active_connections": (5, 10), "failed_connections": (1, 2)},
             [
                 Result(state=State.WARN, summary="Active connections: 6 (warn/crit at 5/10)"),
@@ -186,30 +177,27 @@ def test_azure_postgresql_connections_active_connections_lower() -> None:
             id="single server",
         ),
         pytest.param(
-            {
-                "checkmk-postgres-flexible-server": Resource(
-                    id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforPostgreSQL/flexibleServers/checkmk-postgres-flexible-server",
-                    name="checkmk-postgres-flexible-server",
-                    type="Microsoft.DBforPostgreSQL/flexibleServers",
-                    group="BurningMan",
-                    location="westeurope",
-                    metrics={
-                        "average_active_connections": AzureMetric(
-                            name="active_connections",
-                            aggregation="average",
-                            value=4.0,
-                            unit="count",
-                        ),
-                        "total_connections_failed": AzureMetric(
-                            name="connections_failed",
-                            aggregation="total",
-                            value=3.0,
-                            unit="count",
-                        ),
-                    },
-                )
-            },
-            "checkmk-postgres-flexible-server",
+            Resource(
+                id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforPostgreSQL/flexibleServers/checkmk-postgres-flexible-server",
+                name="checkmk-postgres-flexible-server",
+                type="Microsoft.DBforPostgreSQL/flexibleServers",
+                group="BurningMan",
+                location="westeurope",
+                metrics={
+                    "average_active_connections": AzureMetric(
+                        name="active_connections",
+                        aggregation="average",
+                        value=4.0,
+                        unit="count",
+                    ),
+                    "total_connections_failed": AzureMetric(
+                        name="connections_failed",
+                        aggregation="total",
+                        value=3.0,
+                        unit="count",
+                    ),
+                },
+            ),
             check_plugin_azure_postgresql_connections.check_default_parameters,
             [
                 Result(state=State.OK, summary="Active connections: 4"),
@@ -222,33 +210,29 @@ def test_azure_postgresql_connections_active_connections_lower() -> None:
     ],
 )
 def test_check_connections(
-    section: Section,
-    item: str,
+    section: Resource,
     params: Mapping[str, Any],
     expected_result: Sequence[Result | Metric],
 ) -> None:
-    assert list(check_connections()(item, params, section)) == expected_result
+    assert list(check_connections()(params, section)) == expected_result
 
 
 def test_check_memory_defaults() -> None:
-    section = {
-        "checkmk-postgres-flexible-server": Resource(
-            id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforPostgreSQL/flexibleServers/checkmk-postgres-flexible-server",
-            name="checkmk-postgres-flexible-server",
-            type="Microsoft.DBforPostgreSQL/flexibleServers",
-            group="BurningMan",
-            location="westeurope",
-            metrics={
-                "average_memory_percent": AzureMetric(
-                    name="memory_percent",
-                    aggregation="average",
-                    value=96.03,
-                    unit="percent",
-                ),
-            },
-        ),
-    }
-    item = "checkmk-postgres-flexible-server"
+    section = Resource(
+        id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforPostgreSQL/flexibleServers/checkmk-postgres-flexible-server",
+        name="checkmk-postgres-flexible-server",
+        type="Microsoft.DBforPostgreSQL/flexibleServers",
+        group="BurningMan",
+        location="westeurope",
+        metrics={
+            "average_memory_percent": AzureMetric(
+                name="memory_percent",
+                aggregation="average",
+                value=96.03,
+                unit="percent",
+            ),
+        },
+    )
     params = check_plugin_azure_postgresql_memory.check_default_parameters
     expected = [
         Result(
@@ -258,5 +242,10 @@ def test_check_memory_defaults() -> None:
         Metric("mem_used_percent", 96.03, levels=(80.0, 90.0)),
     ]
     assert (
-        list(check_plugin_azure_postgresql_memory.check_function(item, params, section)) == expected
+        list(
+            check_plugin_azure_postgresql_memory.check_function(
+                "Memory", params, {"Memory": section}
+            )
+        )
+        == expected
     )

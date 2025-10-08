@@ -8,12 +8,30 @@ from __future__ import annotations
 import uuid
 from http import HTTPStatus
 
+import httpx
+import pytest
+
 from cmk.agent_receiver.config import Config
 from cmk.relay_protocols.tasks import RelayConfigTask, TaskResponse, TaskStatus
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
 from cmk.testlib.agent_receiver.config_file_system import ConfigFolder, create_config_folder
-from cmk.testlib.agent_receiver.site_mock import SiteMock
+from cmk.testlib.agent_receiver.site_mock import (
+    OP,
+    SiteMock,
+    User,
+)
 from cmk.testlib.agent_receiver.tasks import get_relay_tasks
+
+
+@pytest.fixture
+def site_client(site: SiteMock, user: User) -> httpx.Client:
+    return httpx.Client(
+        base_url=site.base_url,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": user.bearer,
+        },
+    )
 
 
 def test_activation_performed_by_user_creates_config_tasks_for_each_relay(
@@ -96,6 +114,85 @@ def test_activation_performed_twice_with_new_config(
     # Assert each relay has the new pending config task with correct serial
     _assert_pending_config_task_is_present(agent_receiver, config_b, relay_id_a)
     _assert_pending_config_task_is_present(agent_receiver, config_b, relay_id_b)
+
+
+def test_new_relays_when_activation_performed(
+    site: SiteMock,
+    site_client: httpx.Client,
+    agent_receiver: AgentReceiverClient,
+    site_context: Config,
+) -> None:
+    # Start AR with two relays configured in the site
+    relay_id_a = str(uuid.uuid4())
+    relay_id_b = str(uuid.uuid4())
+    relay_id_c = str(uuid.uuid4())
+    site.set_scenario(relays=[relay_id_a, relay_id_b], changes=[(relay_id_c, OP.ADD)])
+
+    config_a = create_config_folder(site_context.omd_root, [relay_id_a, relay_id_b])
+
+    # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
+    resp = agent_receiver.activate_config()
+    assert resp.status_code == HTTPStatus.OK, resp.text
+
+    # Assert each relay has exactly one pending config task with correct serial
+    _assert_single_pending_config_task(agent_receiver, config_a, relay_id_a)
+    _assert_single_pending_config_task(agent_receiver, config_a, relay_id_b)
+
+    with pytest.raises(AssertionError):
+        get_relay_tasks(agent_receiver, relay_id_c)
+
+    # Add new relay in the site mock
+    site_client.post(
+        "/domain-types/relay/collections/all",
+        json={"alias": relay_id_c, "siteid": site.site_name},
+    )
+    # Create a new configuration folder with new relays in site simulating a new config activation by user
+    config_b = create_config_folder(site_context.omd_root, [relay_id_a, relay_id_b, relay_id_c])
+
+    # Simulate second user activation.
+    resp = agent_receiver.activate_config()
+    assert resp.status_code == HTTPStatus.OK, resp.text
+
+    # Assert each relay has the new pending config task with correct serial
+    _assert_pending_config_task_is_present(agent_receiver, config_b, relay_id_a)
+    _assert_pending_config_task_is_present(agent_receiver, config_b, relay_id_b)
+    _assert_pending_config_task_is_present(agent_receiver, config_b, relay_id_c)
+
+
+def test_removed_relays_when_activation_performed(
+    site: SiteMock,
+    site_client: httpx.Client,
+    agent_receiver: AgentReceiverClient,
+    site_context: Config,
+) -> None:
+    # Start AR with two relays configured in the site
+    relay_id_a = str(uuid.uuid4())
+    relay_id_b = str(uuid.uuid4())
+    site.set_scenario(relays=[relay_id_a, relay_id_b], changes=[(relay_id_a, OP.DEL)])
+
+    config_a = create_config_folder(site_context.omd_root, [relay_id_a, relay_id_b])
+
+    # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
+    resp = agent_receiver.activate_config()
+    assert resp.status_code == HTTPStatus.OK, resp.text
+
+    # Assert each relay has exactly one pending config task with correct serial
+    _assert_single_pending_config_task(agent_receiver, config_a, relay_id_a)
+    _assert_single_pending_config_task(agent_receiver, config_a, relay_id_b)
+
+    # Remove relay_a in the site mock
+    site_client.delete(f"/objects/relay/{relay_id_a}")
+    # Create a new configuration folder with new relays in site simulating a new config activation by user
+    config_b = create_config_folder(site_context.omd_root, [relay_id_b])
+
+    # Simulate second user activation.
+    resp = agent_receiver.activate_config()
+    assert resp.status_code == HTTPStatus.OK, resp.text
+
+    # Assert each relay has the new pending config task with correct serial
+    _assert_pending_config_task_is_present(agent_receiver, config_b, relay_id_b)
+    with pytest.raises(AssertionError):
+        get_relay_tasks(agent_receiver, relay_id_a)
 
 
 def test_activation_with_no_relays(

@@ -68,6 +68,7 @@ def get_cluster_check_function(
             executor=executor,
             check_function=plugin.check_function,
             label="active",
+            additional_nodes_label="More than one node are reporting results:",
             selector=State.worst,
             levels_additional_nodes_count=(1, _INF),
             unpreferred_node_state=State.WARN,
@@ -80,6 +81,7 @@ def get_cluster_check_function(
             executor=executor,
             check_function=plugin.check_function,
             label="worst",
+            additional_nodes_label="Additional results from:",
             selector=State.worst,
             levels_additional_nodes_count=(_INF, _INF),
             unpreferred_node_state=State.OK,
@@ -92,6 +94,7 @@ def get_cluster_check_function(
             executor=executor,
             check_function=plugin.check_function,
             label="best",
+            additional_nodes_label="Additional results from:",
             selector=State.best,
             levels_additional_nodes_count=(_INF, _INF),
             unpreferred_node_state=State.OK,
@@ -106,6 +109,7 @@ def _cluster_check(
     executor: "NodeCheckExecutor",
     check_function: Callable,
     label: str,
+    additional_nodes_label: str,
     selector: Selector,
     levels_additional_nodes_count: tuple[float, float],
     unpreferred_node_state: State,
@@ -114,6 +118,7 @@ def _cluster_check(
     summarizer = Summarizer(
         node_results=executor(check_function, cluster_kwargs),
         label=label,
+        additional_node_label=additional_nodes_label,
         selector=selector,
         preferred=clusterization_parameters.get("primary_node"),
         unpreferred_node_state=unpreferred_node_state,
@@ -146,9 +151,11 @@ class Summarizer:
         selector: Selector,
         preferred: HostName | None,
         unpreferred_node_state: State,
+        additional_node_label: str = "Additional results from:",
     ) -> None:
         self._node_results = node_results
         self._label = label.title()
+        self._additional_node_label = additional_node_label
         self._selector = selector
         self._preferred = preferred
         self._unpreferred_node_state = unpreferred_node_state
@@ -156,6 +163,14 @@ class Summarizer:
         selected_nodes = self._get_selected_nodes(node_results.results, selector)
         # fallback: arbitrary, but comprehensible choice.
         self._pivoting = preferred if preferred in selected_nodes else sorted(selected_nodes)[0]
+
+        if label == "active":
+            # If we are in failover mode, always pick preferred node
+            self._active = (
+                preferred if preferred in node_results.results else sorted(selected_nodes)[0]
+            )
+        else:
+            self._active = self._pivoting
 
     @staticmethod
     def _get_selected_nodes(
@@ -181,13 +196,13 @@ class Summarizer:
             raise IgnoreResultsError(", ".join(msgs))
 
     def primary_results(self) -> Iterable[Result]:
-        if self._preferred is None or self._preferred == self._pivoting:
-            yield Result(state=State.OK, summary=f"{self._label}: [{self._pivoting}]")
+        if self._preferred is None or self._preferred == self._active:
+            yield Result(state=State.OK, summary=f"{self._label}: [{self._active}]")
         else:
             yield Result(
                 state=self._unpreferred_node_state,
-                summary=f"{self._label}: [{self._pivoting}]",
-                details=f"{self._label}: [{self._pivoting}], Preferred node is [{self._preferred}]",
+                summary=f"{self._label}: [{self._active}]",
+                details=f"{self._label}: [{self._active}], Preferred node is [{self._preferred}]",
             )
         yield from self._node_results.results[self._pivoting]
 
@@ -206,7 +221,7 @@ class Summarizer:
 
         yield Result(
             state=self._secondary_nodes_state(secondary_nodes, levels_additional_nodes_count),
-            summary=f"Additional results from: {', '.join(f'[{n}]' for n in secondary_nodes)}",
+            summary=f"{self._additional_node_label} {', '.join(f'[{n}]' for n in secondary_nodes)}",
         )
         yield from (
             Result(

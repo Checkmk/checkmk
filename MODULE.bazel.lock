@@ -1846,7 +1846,7 @@
         "usagesDigest": "jcf+ROaCqHFFmSmqJ4vYsOEVa88JPeszIAfPy+qjIYg=",
         "recordedFileInputs": {
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
-          "@@//requirements_all_lock.txt": "b542c7d48c757d490878902f5c9fa80b9476aed7ad11c802ea8afe0e31f8671f",
+          "@@//requirements_all_lock.txt": "d18af995be3e114571e1c3a6d4a3ec0f0a0ae7e32d04125285b246bd2a28e460",
           "@@rules_mypy~//mypy/private/requirements.txt": "f6c7c90744df0481ca13d433dd2790c62af0b6fef11cdd85ac5424bc87b39fac",
           "@@protobuf~//python/requirements.txt": "983be60d3cec4b319dcab6d48aeb3f5b2f7c3350f26b3a9e97486c37967c73c5"
         },
@@ -2533,7 +2533,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "faker==37.8.0     --hash=sha256:090bb5abbec2b30949a95ce1ba6b20d1d0ed222883d63483a0d4be4a970d6fb8     --hash=sha256:b08233118824423b5fc239f7dd51f145e7018082b4164f8da6a9994e1f1ae793"
+              "requirement": "faker==37.11.0     --hash=sha256:1508d2da94dfd1e0087b36f386126d84f8583b3de19ac18e392a2831a6676c57     --hash=sha256:22969803849ba0618be8eee2dd01d0d9e2cd3b75e6ff1a291fa9abcdb34da5e6"
             }
           },
           "cmk_requirements_312_fido2": {
@@ -7276,7 +7276,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "websocket-client==1.8.0     --hash=sha256:17b44cc997f5c498e809b22cdf2d9c7a9e71c02c8cc2b6c56e7c2d1239bfa526     --hash=sha256:3239df9f44da632f96012472805d40a23281a991027ce11d2f45a6f24ac4c3da"
+              "requirement": "websocket-client==1.9.0     --hash=sha256:9e813624b6eb619999a97dc7958469217c3176312b3a16a4bd1bc7e08a46ec98     --hash=sha256:af248a825037ef591efbf6ed20cc5faa03d3b47b9e5a2230a529eeee1c1fc3ef"
             }
           },
           "cmk_requirements_312_boto3_stubs": {
@@ -8415,7 +8415,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "google-cloud-access-context-manager==0.2.2     --hash=sha256:4ec3028885129c67052dd4f082b20412e53c425ccc5a08e8f003b63a52fa34e6     --hash=sha256:f27f86087fade15df68017c769e1b930d559088a5358f070220dfa9794ace31d"
+              "requirement": "google-cloud-access-context-manager==0.2.3     --hash=sha256:525d0306433f4fecf7ba343211ba04f3f900f1283682abe14c0e3cda6c1ca73e     --hash=sha256:c2de80fba1190e4679d33626384d19e04a56ba3b4d461ed521e89209af63a209"
             }
           },
           "cmk_requirements_312_opentelemetry_instrumentation_redis": {

@@ -27,7 +27,7 @@ def branch_base_folder(with_testing_prefix) {
 
 def directory_sha256sum(directories) {
     return directories.collectEntries({ path ->
-        ["${path}": cmd_output("sha256sum <(find ${path} -type f -exec sha256sum {} \\; | sort) | cut -d' ' -f1")]
+        [("${path}".toString()): cmd_output("sha256sum <(find ${path} -type f -exec sha256sum {} \\; | sort) | cut -d' ' -f1")]
     });
 }
 
@@ -69,6 +69,7 @@ def dependency_paths_hashes() {
     }
 }
 
+/* groovylint-disable MethodSize */
 def provide_agent_binaries(Map args) {
     // always download and move artifacts unless specified differently
     def move_artifacts = args.move_artifacts == null ? true : args.move_artifacts.asBoolean();

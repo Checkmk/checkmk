@@ -16,7 +16,6 @@ import FormIndent from '@/components/CmkIndent.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
-import FormReadonly from '@/form/components/FormReadonly.vue'
 import { type ValidationMessages, groupNestedValidations } from '@/form/components/utils/validation'
 import { useFormEditDispatcher } from '@/form/private'
 import FormHelp from '@/form/private/FormHelp.vue'
@@ -110,65 +109,63 @@ const { FormEditDispatcher } = useFormEditDispatcher()
             class="form-dictionary__group-elems"
             :class="dictionaryVariants({ group_layout: group.layout })"
           >
-            <div
+            <template
               v-for="dict_element in group.elems"
               :key="`${componentId}.${dict_element.dict_config.name}`"
-              class="form-dictionary__group_elem"
-              role="group"
-              :aria-label="dict_element.dict_config.parameter_form.title"
             >
-              <span
-                v-if="titleRequired(dict_element.dict_config)"
-                class="form-dictionary__group-elem__title"
+              <div
+                v-if="!dict_element.dict_config.render_only"
+                class="form-dictionary__group_elem"
+                role="group"
+                :aria-label="dict_element.dict_config.parameter_form.title"
               >
                 <span
-                  v-if="dict_element.dict_config.required"
-                  :class="{
-                    'form-dictionary__required-without-indent': !indentRequired(
-                      dict_element.dict_config,
-                      group.layout
-                    )
-                  }"
+                  v-if="titleRequired(dict_element.dict_config)"
+                  class="form-dictionary__group-elem__title"
                 >
-                  <CmkHtml :html="dict_element.dict_config.parameter_form.title" /><FormRequired
-                    v-if="!rendersRequiredLabelItself(dict_element.dict_config.parameter_form)"
-                    :spec="dict_element.dict_config.parameter_form"
-                    :space="'before'"
+                  <span
+                    v-if="dict_element.dict_config.required"
+                    :class="{
+                      'form-dictionary__required-without-indent': !indentRequired(
+                        dict_element.dict_config,
+                        group.layout
+                      )
+                    }"
+                  >
+                    <CmkHtml :html="dict_element.dict_config.parameter_form.title" /><FormRequired
+                      v-if="!rendersRequiredLabelItself(dict_element.dict_config.parameter_form)"
+                      :spec="dict_element.dict_config.parameter_form"
+                      :space="'before'"
+                    />
+                  </span>
+                  <CmkCheckbox
+                    v-else
+                    v-model="dict_element.is_active"
+                    :padding="
+                      dict_element.is_active &&
+                      indentRequired(dict_element.dict_config, group.layout)
+                        ? 'top'
+                        : 'both'
+                    "
+                    :label="untranslated(dict_element.dict_config.parameter_form.title)"
+                    :help="untranslated(dict_element.dict_config.parameter_form.help)"
+                    @update:model-value="
+                      toggleElement(data, spec.elements, dict_element.dict_config.name)
+                    "
                   />
                 </span>
-                <CmkCheckbox
-                  v-else
-                  v-model="dict_element.is_active"
-                  :padding="
-                    dict_element.is_active && indentRequired(dict_element.dict_config, group.layout)
-                      ? 'top'
-                      : 'both'
-                  "
-                  :label="untranslated(dict_element.dict_config.parameter_form.title)"
-                  :help="untranslated(dict_element.dict_config.parameter_form.help)"
-                  @update:model-value="
-                    toggleElement(data, spec.elements, dict_element.dict_config.name)
-                  "
-                />
-              </span>
-              <FormIndent
-                v-if="dict_element.is_active"
-                :indent="indentRequired(dict_element.dict_config, group.layout)"
-              >
-                <FormEditDispatcher
-                  v-if="!dict_element.dict_config.render_only"
-                  v-model:data="data[dict_element.dict_config.name]"
-                  :spec="dict_element.dict_config.parameter_form"
-                  :backend-validation="elementValidation[dict_element.dict_config.name]!"
-                />
-                <FormReadonly
-                  v-else
-                  :data="data[dict_element.dict_config.name]"
-                  :backend-validation="elementValidation[dict_element.dict_config.name]!"
-                  :spec="dict_element.dict_config.parameter_form"
-                ></FormReadonly>
-              </FormIndent>
-            </div>
+                <FormIndent
+                  v-if="dict_element.is_active"
+                  :indent="indentRequired(dict_element.dict_config, group.layout)"
+                >
+                  <FormEditDispatcher
+                    v-model:data="data[dict_element.dict_config.name]"
+                    :spec="dict_element.dict_config.parameter_form"
+                    :backend-validation="elementValidation[dict_element.dict_config.name]!"
+                  />
+                </FormIndent>
+              </div>
+            </template>
           </div>
         </td>
       </tr>

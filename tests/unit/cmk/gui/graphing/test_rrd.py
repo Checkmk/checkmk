@@ -10,14 +10,12 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.gui.graphing._fetch_time_series import (
-    AugmentedTimeSeriesSpec,
-    fetch_augmented_time_series,
-)
+from cmk.gui.graphing._fetch_time_series import fetch_augmented_time_series
 from cmk.gui.graphing._from_api import RegisteredMetric
 from cmk.gui.graphing._graph_metric_expressions import (
     AugmentedTimeSeries,
     GraphMetricRRDSource,
+    TimeSeriesMetaData,
 )
 from cmk.gui.graphing._graph_specification import (
     GraphDataRange,
@@ -118,16 +116,13 @@ def test_fetch_augmented_time_series(
                 fetch_time_series=lambda *args, **kwargs: {},
             )
         ) == [
-            AugmentedTimeSeriesSpec(
-                title="Temperature",
-                line_type="area",
-                color="#ffa000",
-                fade_odd_color=True,
-                augmented_time_series=[
-                    AugmentedTimeSeries(
-                        data=TimeSeries(start=1, end=2, step=3, values=[4, 5, None]),
-                    ),
-                ],
+            AugmentedTimeSeries(
+                data=TimeSeries(start=1, end=2, step=3, values=[4, 5, None]),
+                metadata=TimeSeriesMetaData(
+                    title="Temperature",
+                    line_type="area",
+                    color="#ffa000",
+                ),
             ),
         ]
 
@@ -145,16 +140,13 @@ def test_fetch_augmented_time_series_with_conversion(
                 fetch_time_series=lambda *args, **kwargs: {},
             )
         ) == [
-            AugmentedTimeSeriesSpec(
-                title="Temperature",
-                line_type="area",
-                color="#ffa000",
-                fade_odd_color=True,
-                augmented_time_series=[
-                    AugmentedTimeSeries(
-                        data=TimeSeries(start=1, end=2, step=3, values=[39.2, 41.0, None]),
-                    ),
-                ],
+            AugmentedTimeSeries(
+                data=TimeSeries(start=1, end=2, step=3, values=[39.2, 41.0, None]),
+                metadata=TimeSeriesMetaData(
+                    title="Temperature",
+                    line_type="area",
+                    color="#ffa000",
+                ),
             ),
         ]
 

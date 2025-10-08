@@ -15,7 +15,6 @@ from dateutil.relativedelta import relativedelta
 from pydantic import BaseModel
 
 import cmk.utils.render
-from cmk.gui.color import fade_color, parse_color, render_color
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -329,45 +328,6 @@ def _areastack(
     return list(map(fix_swap, zip_longest(base, edge)))
 
 
-def _compute_graph_curves(
-    registered_metrics: Mapping[str, RegisteredMetric],
-    graph_recipe: GraphRecipe,
-    graph_data_range: GraphDataRange,
-    *,
-    temperature_unit: TemperatureUnit,
-    fetch_time_series: FetchTimeSeries,
-) -> Iterator[Curve]:
-    # Fetch all raw RRD data
-    for spec in fetch_augmented_time_series(
-        registered_metrics,
-        graph_recipe,
-        graph_data_range,
-        temperature_unit=temperature_unit,
-        fetch_time_series=fetch_time_series,
-    ):
-        multi = len(spec.augmented_time_series) > 1
-        for i, ts in enumerate(spec.augmented_time_series):
-            title = spec.title
-            line_type = spec.line_type
-            color = spec.color
-            if ts.metadata:
-                if multi:
-                    title = f"{spec.title} - {ts.metadata.title}"
-                    line_type = ts.metadata.line_type
-                if ts.metadata.color:
-                    color = ts.metadata.color
-
-            if i % 2 == 1 and spec.fade_odd_color:
-                color = render_color(fade_color(parse_color(color), 0.3))
-
-            yield Curve(
-                line_type=line_type,
-                color=color,
-                title=title,
-                rrddata=ts.data,
-            )
-
-
 def compute_graph_artwork_curves(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
@@ -376,15 +336,22 @@ def compute_graph_artwork_curves(
     temperature_unit: TemperatureUnit,
     fetch_time_series: FetchTimeSeries,
 ) -> list[Curve]:
-    curves = list(
-        _compute_graph_curves(
+    curves = [
+        Curve(
+            line_type=augmented_time_series.metadata.line_type,
+            color=augmented_time_series.metadata.color,
+            title=augmented_time_series.metadata.title,
+            rrddata=augmented_time_series.data,
+        )
+        for augmented_time_series in fetch_augmented_time_series(
             registered_metrics,
             graph_recipe,
             graph_data_range,
             temperature_unit=temperature_unit,
             fetch_time_series=fetch_time_series,
         )
-    )
+        if augmented_time_series.metadata
+    ]
     if graph_recipe.omit_zero_metrics:
         curves = [curve for curve in curves if any(curve["rrddata"])]
     return curves

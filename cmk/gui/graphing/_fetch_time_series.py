@@ -32,22 +32,22 @@ def _refine_augmented_time_series(
     fade_odd_color: bool,
 ) -> Iterator[AugmentedTimeSeries]:
     multi = len(augmented_time_series) > 1
-    for i, ts in enumerate(augmented_time_series):
+    for i, ats in enumerate(augmented_time_series):
         title = graph_metric_title
         line_type = graph_metric_line_type
         color = graph_metric_color
-        if ts.meta_data:
+        if ats.meta_data:
             if multi:
-                title = f"{graph_metric_title} - {ts.meta_data.title}"
-                line_type = ts.meta_data.line_type
-            if ts.meta_data.color:
-                color = ts.meta_data.color
+                title = f"{graph_metric_title} - {ats.meta_data.title}"
+                line_type = ats.meta_data.line_type
+            if ats.meta_data.color:
+                color = ats.meta_data.color
 
         if i % 2 == 1 and fade_odd_color:
             color = render_color(fade_color(parse_color(color), 0.3))
 
         yield AugmentedTimeSeries(
-            time_series=ts.time_series,
+            time_series=ats.time_series,
             meta_data=TimeSeriesMetaData(
                 title=title,
                 line_type=line_type,

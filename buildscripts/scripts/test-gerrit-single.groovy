@@ -94,9 +94,10 @@ def main() {
                     // work properly.
                     // We use the same commit limitation as the werk commands uses in stages.yml.
                     sh("""
+                        FOUR_WEEKS_AGO="\$(date --date=@\$(( \$(date +%s) - 4 * 7 * 24 * 60 * 60 ))";
                         git fetch \
                             --no-tags \
-                            --shallow-since=\$(date --date='4 weeks ago' --iso=seconds) \
+                            --shallow-since="\${FOUR_WEEKS_AGO}" \
                             origin \
                             \$(cat .git/FETCH_HEAD | cut -f 1)
                         git fetch origin 'refs/notes/werk_mail:refs/notes/werk_mail'

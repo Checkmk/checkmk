@@ -2099,7 +2099,9 @@ pub async fn find_all_instance_builders(
     }
     .into_iter()
     .map(|b| b.piggyback(ms_sql.piggyback_host().map(|h| h.to_string().into())))
-    .collect();
+    .collect::<Vec<_>>();
+    print_builders("Detected", &detected);
+    print_custom_instances("Custom instances to add", ms_sql.instances());
     let customizations: HashMap<&InstanceName, &CustomInstance> = ms_sql
         .instances()
         .iter()
@@ -2112,7 +2114,7 @@ pub async fn find_all_instance_builders(
         })
         .collect();
     let builders = apply_customizations(detected, &customizations);
-    print_builders("Builders", &builders);
+    print_builders("All builders", &builders);
     let reconnects = determine_reconnect(builders, &customizations);
     print_reconnects(&reconnects);
 
@@ -2183,6 +2185,19 @@ fn print_builders(title: &str, builders: &[SqlInstanceBuilder]) {
     );
 }
 
+fn print_custom_instances(title: &str, instances: &[CustomInstance]) {
+    log::info!(
+        "{}: found {} instances: [ {} ]",
+        title,
+        instances.len(),
+        instances
+            .iter()
+            .map(|i| format!("{} {}", i.name(), i.conn().hostname()))
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
+}
+
 async fn get_custom_instance_builder(
     builder: &SqlInstanceBuilder,
     endpoint: &Endpoint,
@@ -2191,16 +2206,17 @@ async fn get_custom_instance_builder(
     let auth = endpoint.auth();
     let conn = endpoint.conn();
     if is_local_endpoint(auth, conn) && !is_use_tcp(instance_name, auth, conn) {
-        if let Ok(mut client) = create_odbc_client(&conn.hostname(), instance_name, None).await {
+        log::info!("Use odbc for {} host:{}", instance_name, conn.hostname());
+        let ret = create_odbc_client(&conn.hostname(), instance_name, None).await;
+        return if let Ok(mut client) = ret {
             log::debug!("Trying to connect to `{instance_name}` using ODBC");
-            let b = obtain_properties(&mut client, instance_name)
+            obtain_properties(&mut client, instance_name)
                 .await
-                .map(|p| to_instance_builder(endpoint, &p));
-            return b;
+                .map(|p| to_instance_builder(endpoint, &p))
         } else {
             log::error!("Can't use ODBC for `{instance_name}`");
-            return None;
-        }
+            None
+        };
     }
     let port = get_reasonable_port(builder, endpoint);
     log::debug!("Trying to connect to `{instance_name}` using config port {port}");

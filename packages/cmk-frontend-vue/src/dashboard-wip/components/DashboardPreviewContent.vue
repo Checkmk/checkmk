@@ -20,6 +20,7 @@ defineProps<ContentProps>()
 .db-preview-content {
   display: flex;
   flex-direction: column;
+  position: relative;
   height: 240px;
   margin: 0;
   padding: var(--dimension-3);

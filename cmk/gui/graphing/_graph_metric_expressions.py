@@ -114,8 +114,14 @@ class QueryDataKey:
     aggregation_histogram: QueryAggregationHistogramPercentile | None
 
 
+@dataclass(frozen=True)
+class QueryDataValue:
+    metric_type: Literal["gauge", "sum", "histogram", "exponential_histogram", "exemplar"]
+    time_series: TimeSeries
+
+
 type RRDData = Mapping[RRDDataKey, TimeSeries]
-type QueryData = Mapping[QueryDataKey, TimeSeries]
+type QueryData = Mapping[QueryDataKey, QueryDataValue]
 
 
 def _derive_num_points(rrd_data: RRDData) -> tuple[int, int, int, int]:

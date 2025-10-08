@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import override
 
 from cmk.gui.http import Request
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.type_defs import ABCMainMenuSearch, MainMenu, MainMenuData, MainMenuVueApp
@@ -35,7 +35,7 @@ def register(mega_menu_registry: MainMenuRegistry) -> None:
     mega_menu_registry.register(
         MainMenu(
             name="search",
-            title=_("Search"),
+            title=_l("Search"),
             icon="main_search",
             sort_index=1,
             topics=None,

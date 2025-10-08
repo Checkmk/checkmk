@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "sidebar_config",
+  "properties": {
+    "snapins": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/sidebar_snapin" }
+    }
+  },
+  "required": ["snapins"],
+  "$defs": {
+    "sidebar_snapin": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "title": { "type": "string" },
+        "refresh_regularly": { "type": "boolean" },
+        "refresh_on_restart": { "type": "boolean" },
+        "has_show_more_items": { "type": "boolean" },
+        "open": { "type": "boolean" },
+        "show_more_active": { "type": "boolean" }
+      },
+      "required": ["name", "title"]
+    }
+  }
+}

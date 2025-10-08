@@ -107,9 +107,9 @@ class QueryAggregationHistogramPercentile:
 @dataclass(frozen=True)
 class QueryDataKey:
     metric_name: MetricName
-    resource_attributes: Sequence[str]
-    scope_attributes: Sequence[str]
-    data_point_attributes: Sequence[str]
+    resource_attributes: tuple[str, ...]
+    scope_attributes: tuple[str, ...]
+    data_point_attributes: tuple[str, ...]
     aggregation_sum: QueryAggregationSumRate | None
     aggregation_histogram: QueryAggregationHistogramPercentile | None
 

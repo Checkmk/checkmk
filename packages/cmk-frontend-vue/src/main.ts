@@ -22,6 +22,7 @@ import ModeCreateRelayApp from './mode-relay/ModeCreateRelayApp.vue'
 import NotificationOverview from './notification/NotificationOverviewApp.vue'
 import QuickSetup from './quick-setup/QuickSetupApp.vue'
 import AgentDownload from './setup/AgentDownloadApp.vue'
+import SidebarApp from './sidebar/SidebarApp.vue'
 import UnifiedSearchApp from './unified-search/UnifiedSearchApp.vue'
 import WelcomeApp from './welcome/WelcomeApp.vue'
 import WelcomeSnapin from './welcome/components/snapin/WelcomeSnapin.vue'
@@ -36,6 +37,7 @@ defineCmkComponent('cmk-graph-designer', GraphDesignerApp)
 defineCmkComponent('cmk-mode-host', ModeHostApp)
 defineCmkComponent('cmk-mode-create-otel-conf', ModeCreateOTelConfApp)
 defineCmkComponent('cmk-mode-create-relay', ModeCreateRelayApp)
+defineCmkComponent('cmk-sidebar', SidebarApp)
 defineCmkComponent('cmk-unified-search', UnifiedSearchApp)
 defineCmkComponent('cmk-welcome', WelcomeApp)
 defineCmkComponent('cmk-welcome-snapin', WelcomeSnapin)

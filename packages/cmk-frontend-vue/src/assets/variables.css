@@ -88,6 +88,7 @@
   --icon-external: url('~cmk-frontend/themes/facelift/images/icon_external.svg');
   --icon-plus: url('~cmk-frontend/themes/facelift/images/icon_plus.svg');
   --icon-edit: url('~cmk-frontend/themes/facelift/images/icon_edit.svg');
+  --icon-delete: url('~cmk-frontend/themes/facelift/images/icon_delete.svg');
   --icon-load-graph: url('~cmk-frontend/themes/facelift/images/load_graph.png');
   --icon-filter: url('~cmk-frontend/themes/facelift/images/icon_filter.svg');
   --icon-toggle-on: url('~cmk-frontend/themes/facelift/images/icon_toggle_on.svg');

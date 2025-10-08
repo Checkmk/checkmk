@@ -18,7 +18,7 @@ from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
 
 @pytest.fixture()
-def reset_hooks() -> Generator[None, None, None]:
+def reset_hooks() -> Generator[None]:
     old_hooks = hooks.hooks
     try:
         hooks.hooks = {}

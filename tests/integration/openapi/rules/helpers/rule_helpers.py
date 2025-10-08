@@ -151,7 +151,7 @@ def setup_test_environment(
     folder: str = FOLDER_PATH,
     folder_title: str = "RulesAPI Tests",
     allow_foreign_changes: bool = False,
-) -> Generator[None, None, None]:
+) -> Generator[None]:
     """Creates and cleans up a test environment with a folder and a host."""
     logger.info(f"Create test environment: folder='{folder}', host='{hostname}' via API")
     try:

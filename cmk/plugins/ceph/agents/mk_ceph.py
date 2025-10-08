@@ -25,7 +25,7 @@ except ImportError:
 
 
 def _output_json_section(name, data):
-    sys.stdout.write("<<<%s:sep(0)>>>\n%s\n" % (name, json.dumps(data)))
+    sys.stdout.write(f"<<<{name}:sep(0)>>>\n{json.dumps(data)}\n")
 
 
 class RadosCMD(rados.Rados):  # type: ignore[misc]

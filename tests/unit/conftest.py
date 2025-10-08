@@ -246,7 +246,7 @@ def fixture_edition(request: pytest.FixtureRequest) -> Iterable[cmk_version.Edit
 
 
 @pytest.fixture(autouse=True, scope="session")
-def fixture_omd_site() -> Generator[None, None, None]:
+def fixture_omd_site() -> Generator[None]:
     os.environ["OMD_SITE"] = "NO_SITE"
     yield
 

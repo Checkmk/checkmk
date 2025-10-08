@@ -11,7 +11,7 @@ from cmk.gui.utils.output_funnel import output_funnel
 
 
 @contextmanager
-def loading_transition(template: str = "default", delay_ms: int = 0) -> Generator[None, None, None]:
+def loading_transition(template: str = "default", delay_ms: int = 0) -> Generator[None]:
     with output_funnel.plugged():
         yield
         html.span(

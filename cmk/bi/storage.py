@@ -52,7 +52,7 @@ class AggregationStore:
     def get(self, aggregation_id: str) -> BICompiledAggregation:
         return self.get_by_identifier(generate_identifier(aggregation_id))
 
-    def yield_stored_identifiers(self) -> Generator[Identifier, None, None]:
+    def yield_stored_identifiers(self) -> Generator[Identifier]:
         for path in self.fs_cache.compiled_aggregations.iterdir():
             # yield only valid identifiers (filter out temp files with *.new suffix)
             if path.is_file() and _IDENTIFIER_REGEX.match(path.name):
@@ -141,7 +141,7 @@ class LookupStore:
         return bool(self._redis_client.exists(lookup_key))
 
     @contextmanager
-    def get_aggregation_lookup_lock(self) -> Generator[None, None, None]:
+    def get_aggregation_lookup_lock(self) -> Generator[None]:
         lock = self._redis_client.lock(self._lookup_key_lock)
         try:
             lock.acquire()

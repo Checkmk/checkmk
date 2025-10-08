@@ -99,7 +99,7 @@ def _cleanup_locked_pid_file(path: Path) -> None:
 
 
 @contextmanager
-def pid_file_lock(path: Path) -> Generator[None, None, None]:
+def pid_file_lock(path: Path) -> Generator[None]:
     """Context manager for PID file based locking"""
     lock_with_pid_file(path)
     try:

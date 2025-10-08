@@ -1060,6 +1060,24 @@ class SingleServiceRulesetMatcherFirst[TRuleValue, TDefaultValue]:
         return all[0] if all else self.default
 
 
+# We experimenting here. If this is superior to the above, consolidate.
+@dataclass(frozen=True)
+class SingleServiceRulesetMatcherFirstParsed[TRuleValue, TDefaultValue, TParsedValue]:
+    host_ruleset: Sequence[RuleSpec[TRuleValue]]
+    default: TDefaultValue
+    matcher: RulesetMatcher
+    labels_of_host: Callable[[HostName], Labels]
+    parser: Callable[[TRuleValue], TParsedValue]
+
+    def __call__(
+        self, host_name: HostName, service_name: ServiceName, service_labels: Labels
+    ) -> TParsedValue | TDefaultValue:
+        all = self.matcher.get_service_values_all(
+            host_name, service_name, service_labels, self.host_ruleset, self.labels_of_host
+        )
+        return self.parser(all[0]) if all else self.default
+
+
 @dataclass(frozen=True)
 class BundledHostRulesetMatcher[TRuleValue]:
     host_rulesets: Mapping[RulesetName, Sequence[RuleSpec[TRuleValue]]]

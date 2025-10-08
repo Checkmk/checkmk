@@ -57,6 +57,7 @@ from cmk.base.configlib.piggyback import (
     guess_piggybacked_hosts_time_settings,
     make_piggyback_time_settings,
 )
+from cmk.base.configlib.scheduling import make_check_interval_config
 from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.base.default_config import *  # noqa: F403
 from cmk.base.parent_scan import ScanConfig as ParentScanConfig
@@ -165,7 +166,6 @@ from cmk.utils.rulesets.ruleset_matcher import (
     RulesetName,
     RuleSpec,
     SingleHostRulesetMatcherMerge,
-    SingleServiceRulesetMatcherFirst,
 )
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.tags import ComputedDataSources, TagGroupID, TagID
@@ -191,7 +191,7 @@ SMARTPING_CHECK_INTERVAL: Final = 0.1
 HOST_CHECK_INTERVAL: Final = 1.0
 # Services. Check and retry intervals may differ
 SERVICE_RETRY_INTERVAL: Final = 1.0
-SERVICE_CHECK_INTERVAL: Final = 1.0
+# SERVICE_CHECK_INTERVAL see configlib/scheduling (wip)
 
 ServicegroupName = str
 HostgroupName = str
@@ -1522,7 +1522,6 @@ class ConfigCache:
             tuple[HostName, ServiceName, tuple[tuple[str, str], ...]],
             HostName,
         ] = {}
-        self._check_mk_check_interval: dict[HostName, float] = {}
 
         self.hosts_config = make_hosts_config(self._loaded_config)
 
@@ -1568,6 +1567,9 @@ class ConfigCache:
                 for hn in set(self.hosts_config.hosts).union(self.hosts_config.clusters)
                 if self.is_active(hn) and self.is_online(hn)
             }
+        )
+        self.check_interval = make_check_interval_config(
+            self._loaded_config, self.ruleset_matcher, self.label_manager
         )
         return self
 
@@ -2851,20 +2853,8 @@ class ConfigCache:
         the host may be not discovered and should be ignore"""
         return host_attributes.get(hostname, {}).get("waiting_for_discovery", False)
 
-    def check_mk_check_interval(self, hostname: HostName) -> float:
-        if (interval := self._check_mk_check_interval.get(hostname)) is not None:
-            return interval
-
-        description = "Check_MK"
-        return self._check_mk_check_interval.setdefault(
-            hostname,
-            self.extra_attributes_of_service(
-                hostname,
-                description,
-                self.label_manager.labels_of_service(hostname, description, discovered_labels={}),
-            )["check_interval"]
-            * 60,
-        )
+    def check_mk_check_interval(self, host_name: HostName) -> float:
+        return self.check_interval(host_name, "Check_MK")
 
     def ip_stack_config(self, host_name: HostName | HostAddress) -> IPStackConfig:
         # TODO(ml): [IPv6] clarify tag_groups vs tag_groups["address_family"]
@@ -2980,9 +2970,12 @@ class ConfigCache:
         self, host_name: HostName, service_name: ServiceName, service_labels: Labels
     ) -> dict[str, Any]:
         attrs = dict[str, object](
-            check_interval=SERVICE_CHECK_INTERVAL,
+            check_interval=self.check_interval(host_name, service_name) / 60.0,
         )
         for key, ruleset in self._loaded_config.extra_service_conf.items():
+            if key == "check_interval":
+                continue  # already handled above
+
             values = self.ruleset_matcher.get_service_values_all(
                 host_name, service_name, service_labels, ruleset, self.label_manager.labels_of_host
             )
@@ -2992,9 +2985,6 @@ class ConfigCache:
             value = values[0]
             if value is None:
                 continue
-
-            if key == "check_interval":
-                value = _parse(value, float)
 
             if key[0] == "_":
                 key = key.upper()
@@ -3654,27 +3644,12 @@ def make_parser_config(
     ruleset_matcher: RulesetMatcher,
     label_manager: LabelManager,
 ) -> ParserConfig:
-    check_interval_config = SingleServiceRulesetMatcherFirst(
-        loaded_config.extra_service_conf.get("check_interval", ()),
-        SERVICE_CHECK_INTERVAL,
-        ruleset_matcher,
-        label_manager.labels_of_host,
+    check_interval_config = make_check_interval_config(
+        loaded_config, ruleset_matcher, label_manager
     )
-
-    def _check_mk_check_interval(host_name: HostName) -> float:
-        """Return the check interval in seconds for a host"""
-        return 60 * _parse(
-            check_interval_config(
-                host_name,
-                "Check_MK",
-                label_manager.labels_of_service(host_name, "Check_MK", discovered_labels={}),
-            ),
-            float,
-        )
-
     return ParserConfig(
         fallback_agent_output_encoding=loaded_config.fallback_agent_output_encoding,
-        check_interval=_check_mk_check_interval,
+        check_interval=lambda host_name: check_interval_config(host_name, "Check_MK"),
         piggyback_translations=SingleHostRulesetMatcherMerge(
             loaded_config.piggyback_translation, ruleset_matcher, label_manager.labels_of_host
         ),

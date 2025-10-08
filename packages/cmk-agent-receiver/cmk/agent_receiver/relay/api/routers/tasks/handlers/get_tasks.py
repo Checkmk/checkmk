@@ -15,6 +15,7 @@ from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.shared_types import (
     RelayID,
     RelayNotFoundError,
+    Serial,
     TaskID,
 )
 from cmk.agent_receiver.relay.lib.site_auth import InternalAuth
@@ -25,7 +26,11 @@ class GetRelayTasksHandler:
     tasks_repository: TasksRepository
     relay_repository: RelaysRepository
 
-    def process(self, relay_id: RelayID, status: TaskStatus | None) -> list[RelayTask]:
+    def process(
+        self, relay_id: RelayID, status: TaskStatus | None, relay_serial: Serial
+    ) -> list[RelayTask]:
+        # TODO use relay_serial
+        _ = relay_serial
         auth = InternalAuth()
         if not self.relay_repository.has_relay(relay_id, auth):
             raise RelayNotFoundError(relay_id)

@@ -17,9 +17,12 @@ from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.shared_types import (
     RelayID,
     RelayNotFoundError,
+    Serial,
     TaskID,
     TaskNotFoundError,
 )
+
+SERIAL = Serial("")
 
 
 @pytest.mark.usefixtures("site_context")
@@ -65,7 +68,7 @@ def test_get_tasks_handler(
 ) -> None:
     relay_id, task, relays_repository, tasks_repository = populated_repos
 
-    handled_tasks = get_tasks_handler.process(relay_id=relay_id, status=None)
+    handled_tasks = get_tasks_handler.process(relay_id=relay_id, status=None, relay_serial=SERIAL)
     assert handled_tasks == [task]
 
 
@@ -75,7 +78,9 @@ def test_get_tasks_handler_with_filter(
     populated_repos: tuple[RelayID, RelayTask, RelaysRepository, TasksRepository],
 ) -> None:
     relay_id, task, relays_repository, tasks_repository = populated_repos
-    handled_tasks = get_tasks_handler.process(relay_id=relay_id, status=TaskStatus.FINISHED)
+    handled_tasks = get_tasks_handler.process(
+        relay_id=relay_id, status=TaskStatus.FINISHED, relay_serial=SERIAL
+    )
     assert handled_tasks == []
 
 
@@ -84,4 +89,6 @@ def test_get_task_handler_raises_error_if_relay_is_unknown(
     get_tasks_handler: GetRelayTasksHandler,
 ) -> None:
     with pytest.raises(RelayNotFoundError):
-        get_tasks_handler.process(relay_id=RelayID("unknown-relay-id"), status=None)
+        get_tasks_handler.process(
+            relay_id=RelayID("unknown-relay-id"), status=None, relay_serial=SERIAL
+        )

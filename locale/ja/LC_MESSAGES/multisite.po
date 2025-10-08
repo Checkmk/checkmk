@@ -33221,9 +33221,6 @@ msgid "Invalid proxy scheme given. Must be one of: %s"
 msgstr ""
 "無効なプロキシスキームが指定されました。次のいずれかである必要があります：%s"
 
-msgid "Invalid receipt"
-msgstr "無効なレシート"
-
 msgid "Invalid regular expression"
 msgstr "無効な正規表現"
 
@@ -39056,6 +39053,10 @@ msgstr "1秒あたりの最小接続数"
 
 msgid "Minimum error count"
 msgstr "最小エラー数"
+
+#, fuzzy
+msgid "Minimum length is 30 characters."
+msgstr "キーの最大長は128文字です。"
 
 msgid "Minimum levels for current"
 msgstr "電流の最小レベル"
@@ -84005,6 +84006,9 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠Robotmk Core MKP がインストールされているため<b>利用できません</b>"
+
+#~ msgid "Invalid receipt"
+#~ msgstr "無効なレシート"
 
 #~ msgid "Monitor the collector"
 #~ msgstr "コレクターの監視"

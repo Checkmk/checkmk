@@ -34166,9 +34166,6 @@ msgstr "Ungültiger Proxy angegeben: keine zulässige URL"
 msgid "Invalid proxy scheme given. Must be one of: %s"
 msgstr "Ungültiges Proxy-Schema angegeben. Muss eines der folgenden sein: %s"
 
-msgid "Invalid receipt"
-msgstr "Ungültiger Beleg"
-
 msgid "Invalid regular expression"
 msgstr "Ungültiger regulärer Ausdruck"
 
@@ -40105,6 +40102,10 @@ msgstr "Minimale Verbindungen pro Sekunde"
 
 msgid "Minimum error count"
 msgstr "Minimale Fehleranzahl"
+
+#, fuzzy
+msgid "Minimum length is 30 characters."
+msgstr "Die maximale Schlüssellänge beträgt 128 Zeichen."
 
 msgid "Minimum levels for current"
 msgstr "Untergrenzen für die Stromstärke"
@@ -86582,6 +86583,9 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b>, da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid "Invalid receipt"
+#~ msgstr "Ungültiger Beleg"
 
 #~ msgid "Monitor the collector"
 #~ msgstr "Den Kollektor überwachen"

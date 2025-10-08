@@ -35714,10 +35714,6 @@ msgstr ""
 msgid "Invalid proxy scheme given. Must be one of: %s"
 msgstr "Schéma d'URL non valide. Doit être l'un de : %s"
 
-#, fuzzy
-msgid "Invalid receipt"
-msgstr "Rapport invalide"
-
 msgid "Invalid regular expression"
 msgstr "Expression régulière invalide"
 
@@ -41915,6 +41911,10 @@ msgstr "Connexions minimales par seconde"
 
 msgid "Minimum error count"
 msgstr "Nombre minimal d'erreurs"
+
+#, fuzzy
+msgid "Minimum length is 30 characters."
+msgstr "La longueur maximale de la clé est de 128 caractères."
 
 #, fuzzy
 msgid "Minimum levels for current"
@@ -90474,6 +90474,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
+
+#, fuzzy
+#~ msgid "Invalid receipt"
+#~ msgstr "Rapport invalide"
 
 #, fuzzy
 #~ msgid "Monitor the collector"

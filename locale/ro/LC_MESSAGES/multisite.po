@@ -35478,10 +35478,6 @@ msgstr ""
 msgid "Invalid proxy scheme given. Must be one of: %s"
 msgstr "Schemă URL invalidă. Trebuie să fie una dintre următoarele: %s"
 
-#, fuzzy
-msgid "Invalid receipt"
-msgstr "Raport invalid"
-
 msgid "Invalid regular expression"
 msgstr "Expresie regulată invalidă"
 
@@ -41618,6 +41614,10 @@ msgstr "Conexiuni minime pe secundă"
 
 msgid "Minimum error count"
 msgstr "Număr minim de erori"
+
+#, fuzzy
+msgid "Minimum length is 30 characters."
+msgstr "Lungimea maximă a cheii este de 128 de caractere."
 
 #, fuzzy
 msgid "Minimum levels for current"
@@ -89799,6 +89799,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, fuzzy
+#~ msgid "Invalid receipt"
+#~ msgstr "Raport invalid"
 
 #, fuzzy
 #~ msgid "Monitor the collector"

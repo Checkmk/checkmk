@@ -211,7 +211,7 @@ class TimeSeriesMetaData:
 @dataclass(frozen=True)
 class AugmentedTimeSeries:
     time_series: TimeSeries
-    metadata: TimeSeriesMetaData | None = None
+    meta_data: TimeSeriesMetaData | None = None
 
 
 class GraphMetricExpression(BaseModel, ABC, frozen=True):

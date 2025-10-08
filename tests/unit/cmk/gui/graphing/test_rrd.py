@@ -118,7 +118,7 @@ def test_fetch_augmented_time_series(
         ) == [
             AugmentedTimeSeries(
                 time_series=TimeSeries(start=1, end=2, step=3, values=[4, 5, None]),
-                metadata=TimeSeriesMetaData(
+                meta_data=TimeSeriesMetaData(
                     title="Temperature",
                     line_type="area",
                     color="#ffa000",
@@ -142,7 +142,7 @@ def test_fetch_augmented_time_series_with_conversion(
         ) == [
             AugmentedTimeSeries(
                 time_series=TimeSeries(start=1, end=2, step=3, values=[39.2, 41.0, None]),
-                metadata=TimeSeriesMetaData(
+                meta_data=TimeSeriesMetaData(
                     title="Temperature",
                     line_type="area",
                     color="#ffa000",

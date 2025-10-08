@@ -338,9 +338,9 @@ def compute_graph_artwork_curves(
 ) -> list[Curve]:
     curves = [
         Curve(
-            line_type=augmented_time_series.metadata.line_type,
-            color=augmented_time_series.metadata.color,
-            title=augmented_time_series.metadata.title,
+            line_type=augmented_time_series.meta_data.line_type,
+            color=augmented_time_series.meta_data.color,
+            title=augmented_time_series.meta_data.title,
             rrddata=augmented_time_series.time_series,
         )
         for augmented_time_series in fetch_augmented_time_series(
@@ -350,7 +350,7 @@ def compute_graph_artwork_curves(
             temperature_unit=temperature_unit,
             fetch_time_series=fetch_time_series,
         )
-        if augmented_time_series.metadata
+        if augmented_time_series.meta_data
     ]
     if graph_recipe.omit_zero_metrics:
         curves = [curve for curve in curves if any(curve["rrddata"])]

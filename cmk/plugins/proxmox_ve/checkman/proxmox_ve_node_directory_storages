@@ -1,0 +1,13 @@
+title: Proxmox VE: Node Directory Storages
+agents: proxmox_ve
+catalog: os/storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the storage usage of directory-based storage on Proxmox VE nodes.
+ It reports disk space usage, free space, and utilization percentages for each directory
+ storage configured as storage in Proxmox VE.
+ Directory storages are storage backends of type "dir" and "pbs".
+
+discovery:
+ One service per directory storage is created.

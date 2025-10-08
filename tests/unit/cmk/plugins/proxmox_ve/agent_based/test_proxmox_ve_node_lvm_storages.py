@@ -8,35 +8,35 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
-from cmk.plugins.proxmox_ve.agent_based.proxmox_ve_node_directory_filesystems import (
-    discover_proxmox_ve_node_directory_filesystem,
+from cmk.plugins.proxmox_ve.agent_based.proxmox_ve_node_lvm_storages import (
+    discover_proxmox_ve_node_lvm_storage,
 )
-from cmk.plugins.proxmox_ve.lib.node_filesystems import (
-    check_proxmox_ve_node_filesystems,
-    SectionNodeFilesystems,
+from cmk.plugins.proxmox_ve.lib.node_storages import (
+    check_proxmox_ve_node_storage,
+    SectionNodeStorages,
     Storage,
 )
 
-SECTION = SectionNodeFilesystems(
+SECTION = SectionNodeStorages(
     node="pve-node1",
-    filesystems=[
+    storages=[
         Storage.model_validate(
             {
                 "node": "pve-node1",
                 "disk": 17737418240.0,
                 "maxdisk": 21474836480.0,
-                "plugintype": "dir",
-                "status": "active",
+                "plugintype": "lvm",
+                "status": "unknown",
                 "storage": "local",
             }
         ),
         Storage.model_validate(
             {
                 "node": "pve-node1",
-                "disk": 5368709120.0,
+                "disk": 9968709120.0,
                 "maxdisk": 10737418240.0,
-                "plugintype": "pbs",
-                "status": "unknown",
+                "plugintype": "lvmthin",
+                "status": "active",
                 "storage": "data",
             }
         ),
@@ -54,8 +54,8 @@ SECTION = SectionNodeFilesystems(
 )
 
 
-def test_discover_proxmox_ve_node_directory_filesystem() -> None:
-    assert list(discover_proxmox_ve_node_directory_filesystem(SECTION)) == [
+def test_discover_proxmox_ve_node_lvm_storage() -> None:
+    assert list(discover_proxmox_ve_node_lvm_storage(SECTION)) == [
         Service(item="local"),
         Service(item="data"),
     ]
@@ -65,61 +65,52 @@ def test_discover_proxmox_ve_node_directory_filesystem() -> None:
     "item,params,section,expected_results",
     [
         pytest.param(
-            "local",
+            "data",
             {"levels": (95.0, 100.0)},
             SECTION,
             [
                 Metric(
-                    "fs_used",
-                    16915.72021484375,
-                    levels=(19456.0, 20480.0),
-                    boundaries=(0.0, 20480.0),
+                    "fs_used", 9506.90185546875, levels=(9728.0, 10240.0), boundaries=(0.0, 10240.0)
                 ),
-                Metric("fs_free", 3564.27978515625, boundaries=(0.0, None)),
+                Metric("fs_free", 733.09814453125, boundaries=(0.0, None)),
                 Metric(
                     "fs_used_percent",
-                    82.59629011154175,
+                    92.84083843231201,
                     levels=(95.0, 100.0),
                     boundaries=(0.0, 100.0),
                 ),
-                Result(
-                    state=State.OK,
-                    summary="Used: 82.60% - 16.5 GiB of 20.0 GiB",
-                ),
-                Metric("fs_size", 20480.0, boundaries=(0.0, None)),
-                Result(state=State.OK, summary="Type: dir"),
+                Result(state=State.OK, summary="Used: 92.84% - 9.28 GiB of 10.0 GiB"),
+                Metric("fs_size", 10240.0, boundaries=(0.0, None)),
+                Result(state=State.OK, summary="Type: lvmthin"),
             ],
             id="Everything OK",
         ),
         pytest.param(
-            "local",
+            "data",
             {"levels": (80.0, 90.0)},
             SECTION,
             [
                 Metric(
-                    "fs_used",
-                    16915.72021484375,
-                    levels=(16384.0, 18432.0),
-                    boundaries=(0.0, 20480.0),
+                    "fs_used", 9506.90185546875, levels=(8192.0, 9216.0), boundaries=(0.0, 10240.0)
                 ),
-                Metric("fs_free", 3564.27978515625, boundaries=(0.0, None)),
+                Metric("fs_free", 733.09814453125, boundaries=(0.0, None)),
                 Metric(
                     "fs_used_percent",
-                    82.59629011154175,
+                    92.84083843231201,
                     levels=(80.0, 90.0),
                     boundaries=(0.0, 100.0),
                 ),
                 Result(
-                    state=State.WARN,
-                    summary="Used: 82.60% - 16.5 GiB of 20.0 GiB (warn/crit at 80.00%/90.00% used)",
+                    state=State.CRIT,
+                    summary="Used: 92.84% - 9.28 GiB of 10.0 GiB (warn/crit at 80.00%/90.00% used)",
                 ),
-                Metric("fs_size", 20480.0, boundaries=(0.0, None)),
-                Result(state=State.OK, summary="Type: dir"),
+                Metric("fs_size", 10240.0, boundaries=(0.0, None)),
+                Result(state=State.OK, summary="Type: lvmthin"),
             ],
             id="WARN, with levels",
         ),
         pytest.param(
-            "data",
+            "local",
             {"levels": (80.0, 90.0)},
             SECTION,
             [
@@ -135,15 +126,15 @@ def test_discover_proxmox_ve_node_directory_filesystem() -> None:
 def test_check_proxmox_ve_node_info(
     item: str,
     params: Mapping[str, object],
-    section: SectionNodeFilesystems,
+    section: SectionNodeStorages,
     expected_results: CheckResult,
 ) -> None:
     assert (
         list(
-            check_proxmox_ve_node_filesystems(
+            check_proxmox_ve_node_storage(
                 item=item,
                 params=params,
-                section=section.directory_filesystems,
+                section=section.lvm_storages,
                 value_store={},
             )
         )

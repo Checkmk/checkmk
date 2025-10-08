@@ -54,55 +54,53 @@ class Storage(BaseModel, frozen=True):
     name: str = Field(alias="name", validation_alias=AliasChoices("storage", "name"))
 
 
-class SectionNodeFilesystems(BaseModel, frozen=True):
+class SectionNodeStorages(BaseModel, frozen=True):
     node: str
-    filesystems: Sequence[Storage]
+    storages: Sequence[Storage]
 
     @property
-    def directory_filesystems(self) -> Mapping[str, Storage]:
+    def directory_storages(self) -> Mapping[str, Storage]:
         return {
-            filesystem.name: filesystem
-            for filesystem in self.filesystems
-            if filesystem.storage_type in (StorageType.DIR, StorageType.PBS)
+            storage.name: storage
+            for storage in self.storages
+            if storage.storage_type in (StorageType.DIR, StorageType.PBS)
         }
 
     @property
-    def lvm_filesystems(self) -> Mapping[str, Storage]:
+    def lvm_storages(self) -> Mapping[str, Storage]:
         return {
-            filesystem.name: filesystem
-            for filesystem in self.filesystems
-            if filesystem.storage_type in (StorageType.LVM, StorageType.LVMTHIN)
+            storage.name: storage
+            for storage in self.storages
+            if storage.storage_type in (StorageType.LVM, StorageType.LVMTHIN)
         }
 
 
-def check_proxmox_ve_node_filesystems(
+def check_proxmox_ve_node_storage(
     item: str,
     params: Mapping[str, Any],
     section: Mapping[str, Storage],
     value_store: MutableMapping[str, Any],
 ) -> CheckResult:
-    if (filesystem := section.get(item)) is None:
+    if (storage := section.get(item)) is None:
         return
 
-    if filesystem.status not in (StorageStatus.AVAILABLE, StorageStatus.ACTIVE):
+    if storage.status not in (StorageStatus.AVAILABLE, StorageStatus.ACTIVE):
         yield Result(
             state=State.WARN,
-            summary=f"Storage status is {filesystem.status}. Skipping filesystem check.",
+            summary=f"Storage status is {storage.status}. Skipping filesystem check.",
         )
         return
 
     yield from df_check_filesystem_single(
         value_store=value_store,
         mountpoint=item,
-        filesystem_size=(filesystem.maxdisk / (1024 * 1024))
-        if filesystem.maxdisk is not None
-        else None,
-        free_space=((filesystem.maxdisk - filesystem.disk) / (1024 * 1024))
-        if filesystem.disk is not None and filesystem.maxdisk is not None
+        filesystem_size=(storage.maxdisk / (1024 * 1024)) if storage.maxdisk is not None else None,
+        free_space=((storage.maxdisk - storage.disk) / (1024 * 1024))
+        if storage.disk is not None and storage.maxdisk is not None
         else None,
         reserved_space=0.0,
         inodes_avail=None,
         inodes_total=None,
         params=params,
     )
-    yield Result(state=State.OK, summary=f"Type: {filesystem.storage_type}")
+    yield Result(state=State.OK, summary=f"Type: {storage.storage_type}")

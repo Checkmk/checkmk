@@ -30,7 +30,7 @@ from zoneinfo import ZoneInfo
 
 from cmk.plugins.proxmox_ve.lib.node_allocation import SectionNodeAllocation
 from cmk.plugins.proxmox_ve.lib.node_attributes import SectionNodeAttributes
-from cmk.plugins.proxmox_ve.lib.node_filesystems import SectionNodeFilesystems
+from cmk.plugins.proxmox_ve.lib.node_storages import SectionNodeStorages
 from cmk.plugins.proxmox_ve.lib.replication import Replication, SectionReplication
 from cmk.plugins.proxmox_ve.lib.vm_info import SectionVMInfo
 from cmk.plugins.proxmox_ve.special_agent.libbackups import fetch_backup_data
@@ -149,7 +149,7 @@ def agent_proxmox_ve_main(args: Args) -> int:
     replications = {
         node["node"]: [rep for rep in node.get("replication", [])] for node in data["nodes"]
     }
-    all_filesystems = {
+    all_storages = {
         entry["storage"]: entry
         for entry in data["cluster"]["resources"]
         if entry["type"] == "storage"
@@ -270,14 +270,14 @@ def agent_proxmox_ve_main(args: Args) -> int:
                         cluster_has_replications=True if data["cluster"]["replication"] else False,
                     ).model_dump_json()
                 )
-            with SectionWriter("proxmox_ve_node_filesystems") as writer:
+            with SectionWriter("proxmox_ve_node_storage") as writer:
                 writer.append_json(
-                    SectionNodeFilesystems(
+                    SectionNodeStorages(
                         node=node["node"],
-                        filesystems=[
-                            filesystem_data
-                            for filesystem_data in all_filesystems.values()
-                            if filesystem_data.get("node", "") == node["node"]
+                        storages=[
+                            storage_data
+                            for storage_data in all_storages.values()
+                            if storage_data.get("node", "") == node["node"]
                         ],
                     ).model_dump_json()
                 )

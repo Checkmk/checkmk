@@ -21,7 +21,7 @@ from typing import Any, assert_never, cast, Final, Literal, override
 from cmk import trace
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.hostaddress import HostName
+from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.regex import escape_regex_chars
 from cmk.ccc.version import Edition, edition
 from cmk.gui import hooks, utils
@@ -1431,8 +1431,9 @@ class Rule:
         ):
             return False
 
-        if self.conditions.host_list and not _match_one_of_search_expression(
-            search_options, "rule_host_list", self.conditions.host_list[0]
+        if "rule_host_list" in search_options and not _match_rule_host_list(
+            rule=self,
+            search_hosts_str=search_options["rule_host_list"],
         ):
             return False
 
@@ -1551,6 +1552,36 @@ class Rule:
                 did_rename = True
 
         return did_rename
+
+
+def _match_rule_host_list(rule: Rule, search_hosts_str: str) -> bool:
+    # Regex
+    if any(c in ".?*+^$|[](){}\\" for c in search_hosts_str):
+        match_regex = re.compile(search_hosts_str)
+        rule_host_list = []
+        for host_name, _host in Host.all().items():
+            if match_regex.search(host_name):
+                rule_host_list.append(host_name)
+        if not any(
+            analyze_host_rule_matches(
+                HostAddress(host_name),
+                [rule.to_single_base_ruleset()],
+                debug=False,
+            ).results[rule.id]
+            for host_name in rule_host_list
+        ):
+            return False
+    # Single host or host list
+    elif not all(
+        analyze_host_rule_matches(
+            HostAddress(host_name),
+            [rule.to_single_base_ruleset()],
+            debug=False,
+        ).results[rule.id]
+        for host_name in search_hosts_str.split(" ")
+    ):
+        return False
+    return True
 
 
 def _match_search_expression(search_options: SearchOptions, attr_name: str, search_in: str) -> bool:

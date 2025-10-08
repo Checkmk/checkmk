@@ -21,8 +21,14 @@ import pytest
 from pytest import FixtureRequest
 
 import cmk.gui.utils
-from cmk.automations.results import AnalyzeHostRuleEffectivenessResult
-from cmk.base.automations.check_mk import AutomationAnalyzeHostRuleEffectiveness
+from cmk.automations.results import (
+    AnalyzeHostRuleEffectivenessResult,
+    AnalyzeHostRuleMatchesResult,
+)
+from cmk.base.automations.check_mk import (
+    AutomationAnalyzeHostRuleEffectiveness,
+    AutomationAnalyzeHostRuleMatches,
+)
 from cmk.base.config import LoadingResult
 from cmk.ccc import version
 from cmk.ccc.exceptions import MKGeneralException
@@ -724,6 +730,30 @@ def test_ruleset_ordering_insert_after(
     assert ruleset.get_folder_rules(folder)[expected_index] == rule
 
 
+@pytest.fixture(name="mock_analyze_host_rule_matches_automation")
+def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Replace rule matching via automation call, which does not work in unit test context,
+    with a direct call to the automation"""
+
+    def analyze_with_matcher(
+        h: HostName, r: Sequence[Sequence[RuleSpec]], *, debug: bool
+    ) -> AnalyzeHostRuleMatchesResult:
+        ts = Scenario()
+        ts.add_host(HostName("foobar123"), host_path="/wato/regex_check/hosts.mk")
+        ts.add_host(HostName("foobar456"), host_path="/wato/regex_check/hosts.mk")
+        config_cache = ts.apply(monkeypatch)
+        loading_result = LoadingResult(
+            loaded_config=config_cache._loaded_config,
+            config_cache=config_cache,
+        )
+
+        with monkeypatch.context() as m:
+            m.setattr(sys, "stdin", StringIO(repr(r)))
+            return AutomationAnalyzeHostRuleMatches().execute([h], None, loading_result)
+
+    monkeypatch.setattr(rulesets, "analyze_host_rule_matches", analyze_with_matcher)
+
+
 @pytest.mark.parametrize(
     "search_options, rule_config, folder_name, expected_result",
     [
@@ -777,8 +807,61 @@ def test_ruleset_ordering_insert_after(
             "regex_check",
             False,
         ),
+        (
+            {"rule_host_list": "foobar123"},
+            {
+                "id": "e10843c55-11ea-4eb2-bfbc-bce65cd2ae22",
+                "value": "all",
+                "condition": {
+                    "host_name": ["foobar123"],
+                },
+                "options": {"description": "foo"},
+            },
+            "wrong_folder",
+            False,
+        ),
+        (
+            {"rule_host_list": "foobar123 foobar456"},
+            {
+                "id": "e10843c55-11ea-4eb2-bfbc-bce65cd2ae22",
+                "value": "all",
+                "condition": {
+                    "host_name": ["foobar123", "foobar456"],
+                },
+                "options": {"description": "foo"},
+            },
+            "",
+            True,
+        ),
+        (
+            {"rule_host_list": "foobar456"},
+            {
+                "id": "e10843c55-11ea-4eb2-bfbc-bce65cd2ae22",
+                "value": "all",
+                "condition": {
+                    "host_name": ["foobar123", "foobar456"],
+                },
+                "options": {"description": "foo"},
+            },
+            "",
+            True,
+        ),
+        (
+            {"rule_host_list": "foobar123 foobar456"},
+            {
+                "id": "e10843c55-11ea-4eb2-bfbc-bce65cd2ae22",
+                "value": "all",
+                "condition": {
+                    "host_name": ["foobar456"],
+                },
+                "options": {"description": "foo"},
+            },
+            "",
+            False,
+        ),
     ],
 )
+@pytest.mark.usefixtures("mock_analyze_host_rule_matches_automation")
 def test_matches_search_with_rules(
     with_admin_login: UserId,
     search_options: rulesets.SearchOptions,

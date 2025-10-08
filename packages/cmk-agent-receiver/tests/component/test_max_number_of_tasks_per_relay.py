@@ -6,15 +6,19 @@
 import uuid
 from http import HTTPStatus
 
+from cmk.agent_receiver.config import Config
 from cmk.relay_protocols.tasks import FetchAdHocTask
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
 from cmk.testlib.agent_receiver.config import create_relay_config
+from cmk.testlib.agent_receiver.config_file_system import create_config_folder
 from cmk.testlib.agent_receiver.site_mock import SiteMock
 from cmk.testlib.agent_receiver.tasks import add_tasks, get_all_tasks
 
 
 def test_cannot_push_more_tasks_than_allowed(
-    agent_receiver: AgentReceiverClient, site: SiteMock
+    agent_receiver: AgentReceiverClient,
+    site: SiteMock,
+    site_context: Config,
 ) -> None:
     """
     We should not be able to push more tasks than maximum allowed.
@@ -23,6 +27,7 @@ def test_cannot_push_more_tasks_than_allowed(
     create_relay_config(max_number_of_tasks=task_count)
 
     relay_id = add_relays(site, 1)[0]
+    _ = create_config_folder(root=site_context.omd_root, relays=[relay_id])
 
     # add maximum number of tasks allowed
 

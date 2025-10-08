@@ -6,6 +6,9 @@
 
 import dataclasses
 
+from cmk.agent_receiver.relay.api.routers.tasks.libs.retrieve_config_serial import (
+    retrieve_config_serial,
+)
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     RelayTask,
     TasksRepository,
@@ -31,6 +34,9 @@ class GetRelayTasksHandler:
     ) -> list[RelayTask]:
         # TODO use relay_serial
         _ = relay_serial
+        current_serial = retrieve_config_serial()
+        # TODO use current_serial
+        _ = current_serial
         auth = InternalAuth()
         if not self.relay_repository.has_relay(relay_id, auth):
             raise RelayNotFoundError(relay_id)

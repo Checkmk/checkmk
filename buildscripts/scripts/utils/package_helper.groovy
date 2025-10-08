@@ -31,9 +31,48 @@ def directory_sha256sum(directories) {
     });
 }
 
+def dependency_paths_mapping() {
+    return [
+        "build-linux-agent-updater": [
+            "agents",
+            "defines.make",
+            "non-free/packages/cmk-update-agent",
+        ],
+        "winagt-build": [
+            "agents",
+            "defines.make",
+            "packages/cmk-agent-ctl",
+            "packages/mk-sql",
+            "third_party/asio",
+            "third_party/fmt",
+            "third_party/googletest",
+            "third_party/openhardwaremonitor",
+            "third_party/simpleini",
+            "third_party/yaml-cpp",
+        ],
+        "winagt-build-modules": [
+            "agents/modules/windows",
+            "defines.make",
+        ],
+    ];
+}
+
+def dependency_paths_hashes() {
+    dir("${checkout_dir}") {
+        return dependency_paths_mapping().collectEntries({ job_name, paths ->
+            [("${job_name}".toString()) : {
+                def all_directory_hash_map = directory_sha256sum(paths);
+                def all_directory_hash = all_directory_hash_map.collect { k, v -> "${k}=${v}" }.join('-');
+                return all_directory_hash
+          }()]
+        });
+    }
+}
+
 def provide_agent_binaries(Map args) {
     // always download and move artifacts unless specified differently
     def move_artifacts = args.move_artifacts == null ? true : args.move_artifacts.asBoolean();
+    def all_dependency_paths_hashes = dependency_paths_hashes();
 
     // This _should_ go to an externally maintained file (single point of truth), see
     // https://jira.lan.tribe29.com/browse/CMK-13857
@@ -50,11 +89,7 @@ def provide_agent_binaries(Map args) {
             relative_job_name: "${branch_base_folder(false)}/builders/build-linux-agent-updater",
             /// no Linux agent updaters for raw edition..
             condition: true, // edition != "raw",  // FIXME!
-            dependency_paths: [
-                "defines.make",
-                "agents",
-                "non-free/packages/cmk-update-agent",
-            ],
+            dependency_paths_hash: all_dependency_paths_hashes["build-linux-agent-updater"],
             install_cmd: """\
                 # check-mk-agent-*.{deb,rpm}
                 cp *.deb *.rpm ${checkout_dir}/agents/
@@ -74,18 +109,7 @@ def provide_agent_binaries(Map args) {
             //       As 'soon' as this problem does not exist anymore we could run
             //       relatively from 'builders/..'
             relative_job_name: "${branch_base_folder(false)}/winagt-build",
-            dependency_paths: [
-                "defines.make",
-                "agents",
-                "packages/cmk-agent-ctl",
-                "packages/mk-sql",
-                "third_party/asio",
-                "third_party/fmt",
-                "third_party/googletest",
-                "third_party/openhardwaremonitor",
-                "third_party/simpleini",
-                "third_party/yaml-cpp",
-            ],
+            dependency_paths_hash: all_dependency_paths_hashes["winagt-build"],
             install_cmd: """\
                 cp \
                     check_mk_agent-64.exe \
@@ -119,10 +143,7 @@ def provide_agent_binaries(Map args) {
             //       As 'soon' as this problem does not exist anymore we could run
             //       relatively from 'builders/..'
             relative_job_name: "${branch_base_folder(false)}/winagt-build-modules",
-            dependency_paths: [
-                "defines.make",
-                "agents/modules/windows",
-            ],
+            dependency_paths_hash: all_dependency_paths_hashes["winagt-build-modules"],
             install_cmd: """\
                 cp \
                     ./*.cab \
@@ -151,17 +172,12 @@ def provide_agent_binaries(Map args) {
                     download: false,
                 ];
 
-                if (details.dependency_paths) {
+                if (details.dependency_paths_hash) {
                     // if dependency_paths are specified these will be used as unique identifier
                     // CUSTOM_GIT_REF is handed over as well, but not activly checked by ci-artifacts
-                    def all_directory_hash = "";
-                    dir("${checkout_dir}") {
-                        def all_directory_hash_map = directory_sha256sum(details.dependency_paths);
-                        all_directory_hash = all_directory_hash_map.collect { k, v -> "${k}=${v}" }.join('-');
-                    }
                     this_parameters += [
                         build_params: [
-                            CIPARAM_PATH_HASH: all_directory_hash,
+                            CIPARAM_PATH_HASH: details.dependency_paths_hash,
                             VERSION: args.version,
                             DISABLE_CACHE: args.disable_cache,
                         ],

@@ -12,23 +12,50 @@ from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
     Tuple,
 )
-from cmk.rulesets.v1.form_specs import CascadingSingleChoice, FormSpec, SingleChoice
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice,
+    Float,
+    FormSpec,
+    Integer,
+    Percentage,
+    SingleChoice,
+)
 
 
-def _get_type_of_object_as_string(
-    value: object, form_spec_type_hint: FormSpec[Any] | None = None
-) -> str:
+class _DerivedTypeError(Exception):
+    pass
+
+
+def _derive_type_from_form_spec(value: object, form_spec: FormSpec[Any]) -> str:
+    if isinstance(form_spec, SingleChoice | SingleChoiceExtended):
+        # TODO: support other types
+        return "str"
+    if isinstance(form_spec, Tuple):
+        tuple_tokens = []
+        assert isinstance(value, tuple | list)
+        for idx, element in enumerate(form_spec.elements):
+            tuple_tokens.append(_derive_type(value[idx], form_spec=element))
+        return f"tuple[{', '.join(tuple_tokens)}]"
+    if isinstance(form_spec, Integer):
+        return "int"
+    if isinstance(form_spec, Float):
+        return "float"
+    if isinstance(form_spec, Percentage):
+        return "float"
+    raise _DerivedTypeError(
+        f"Deprecated alternative: Cannot derive type from form spec: {form_spec.__class__.__name__}"
+    )
+
+
+def _derive_type_from_data(value: object) -> str:
     """
     Returns a string representation of the type of the given object.
     This is used to create a mapping for the CascadingSingleChoice elements.
     """
     if value is None:
         return "None"
-    if isinstance(form_spec_type_hint, SingleChoice | SingleChoiceExtended):
-        return "str"
-    if isinstance(form_spec_type_hint, Tuple) or isinstance(value, tuple):
-        assert isinstance(value, tuple | list)
-        return f"tuple[{', '.join(_get_type_of_object_as_string(v) for v in value)}]"
+    if isinstance(value, tuple):
+        return f"tuple[{', '.join(_derive_type_from_data(v) for v in value)}]"
     if isinstance(value, bool):
         return f"bool:{value}"
     if isinstance(value, int):
@@ -41,7 +68,16 @@ def _get_type_of_object_as_string(
         return "list"
     if isinstance(value, dict):
         return "dict"
-    raise TypeError(f"Unsupported type: {type(value)}")
+    raise _DerivedTypeError(f"Deprecated alternative: Unsupported data type: {type(value)}")
+
+
+def _derive_type(value: object, form_spec: FormSpec[Any] | None = None) -> str:
+    try:
+        if form_spec is not None:
+            return _derive_type_from_form_spec(value, form_spec)
+        return _derive_type_from_data(value)
+    except _DerivedTypeError:
+        return _derive_type_from_data(value)
 
 
 def enable_deprecated_alternative(
@@ -70,21 +106,17 @@ def enable_deprecated_alternative(
         visitor = get_visitor(
             element.parameter_form, VisitorOptions(migrate_values=False, mask_values=False)
         )
-
-        # Try to determine the best fitting value
-        # to_disk obviously returns the value as it would be stored on disk
-        # since to_disk may raise a MKGeneralException with the DEFAULT_VALUE,
-        # we use the to_vue method as fallback
         try:
-            example_value_for_mapping = visitor.to_disk(DEFAULT_VALUE)
+            example_value = visitor.to_disk(DEFAULT_VALUE)
         except MKGeneralException:
-            example_value_for_mapping = visitor.to_vue(DEFAULT_VALUE)[1]
+            example_value = visitor.to_vue(DEFAULT_VALUE)[1]
 
-        mapping[
-            _get_type_of_object_as_string(
-                example_value_for_mapping, form_spec_type_hint=element.parameter_form
+        try:
+            mapping[_derive_type(example_value, element.parameter_form)] = element.name
+        except _DerivedTypeError:
+            raise MKGeneralException(
+                f"Deprecated Alternative handling: Cannot derive type for element '{element.name}'"
             )
-        ] = element.name
 
     def to_disk(value: object) -> object:
         assert isinstance(value, tuple) and len(value) == 2
@@ -97,7 +129,7 @@ def enable_deprecated_alternative(
             if index < 0 or index >= len(wrapped_form_spec.elements):
                 raise MKGeneralException("Value does not match any alternative")
             return wrapped_form_spec.elements[index].name, value
-        return mapping[_get_type_of_object_as_string(value)], value
+        return mapping[_derive_type_from_data(value)], value
 
     return TransformDataForLegacyFormatOrRecomposeFunction(
         wrapped_form_spec=wrapped_form_spec,

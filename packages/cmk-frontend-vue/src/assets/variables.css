@@ -191,6 +191,7 @@
     --ux-theme-8: var(--color-daylight-grey-80);
     --ux-theme-9: var(--color-daylight-grey-90);
     --ux-theme-10: var(--color-daylight-grey-100);
+    --color-popup-backdrop: rgb(0 0 0 /50%);
     --color-skeleton: var(--color-conference-grey-10);
     --color-skeleton-shimmer-0: rgb(30 38 46 / 0%);
     --color-skeleton-shimmer-1: rgb(30 38 46 / 2%);
@@ -220,6 +221,7 @@
     --icon-add: url('~cmk-frontend/themes/facelift/images/emblem_add.svg');
 
     /* Colors */
+    --default-nav-bg-color: var(--ux-theme-0);
     --default-submit-button-border-color: var(--success-dimmed);
     --default-border-color: rgb(234 234 234);
     --default-bg-color: var(--ux-theme-0);
@@ -267,6 +269,7 @@
     --ux-theme-8: var(--color-midnight-grey-20);
     --ux-theme-9: var(--color-midnight-grey-10);
     --ux-theme-10: var(--color-midnight-grey-0);
+    --color-popup-backdrop: rgb(0 0 0 /50%);
     --color-skeleton: var(--color-white-0);
     --color-skeleton-shimmer-0: rgb(255 255 255 / 0%);
     --color-skeleton-shimmer-1: rgb(255 255 255 / 2%);
@@ -299,6 +302,7 @@
     --icon-add: url('~cmk-frontend/themes/modern-dark/images/emblem_add.svg');
 
     /* Colors */
+    --default-nav-bg-color: rgb(17 24 29);
     --default-submit-button-border-color: rgb(8 94 61);
     --default-border-color: rgb(38 45 52);
     --default-bg-color: var(--ux-theme-1);

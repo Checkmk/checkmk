@@ -25,6 +25,7 @@ import DemoCmkKeyboardKey from './DemoCmkKeyboardKey.vue'
 import DemoCmkLinkCard from './DemoCmkLinkCard.vue'
 import DemoCmkList from './DemoCmkList.vue'
 import DemoCmkMultitoneIcon from './DemoCmkMultitoneIcon.vue'
+import DemoCmkPopupDialog from './DemoCmkPopupDialog.vue'
 import DemoCmkProgressbar from './DemoCmkProgressbar.vue'
 import DemoCmkSkeleton from './DemoCmkSkeleton.vue'
 import DemoCmkSlideInDialog from './DemoCmkSlideInDialog.vue'
@@ -43,6 +44,7 @@ export const pages = [
   new Folder('CmkTabs', DemoEmpty, CmkTabPages),
   new Page('CmkAlertBox', DemoCmkAlertBox),
   new Page('CmkSlideInDialog', DemoCmkSlideInDialog),
+  new Page('CmkPopupDialog', DemoCmkPopupDialog),
   new Page('CmkSpace', DemoCmkSpace),
   new Page('CmkIcon', DemoCmkIcon),
   new Page('CmkList', DemoCmkList),

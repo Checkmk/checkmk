@@ -5,8 +5,6 @@
 
 """Raw edition and only raw edition specific registrations"""
 
-import cmk.gui.graphing._graph_images as graph_images
-import cmk.gui.graphing._html_render as html_render
 import cmk.gui.wato._notification_parameter._mail as mail
 from cmk.ccc.version import Edition
 from cmk.gui import nagvis, sidebar, visuals
@@ -121,16 +119,6 @@ from cmk.gui.watolib.users import default_sites, user_features_registry, UserFea
 def register_pages() -> None:
     page_registry.register(PageEndpoint("graph_dashlet", PageGraphDashlet))
     page_registry.register(PageEndpoint("host_service_graph_popup", PageHostServiceGraphPopup))
-
-    page_registry.register(
-        PageEndpoint("ajax_render_graph_content", html_render.AjaxRenderGraphContent)
-    )
-
-    page_registry.register(PageEndpoint("ajax_graph_hover", html_render.AjaxGraphHover))
-    page_registry.register(PageEndpoint("ajax_graph", html_render.AjaxGraph))
-    page_registry.register(
-        PageEndpoint("ajax_graph_images", graph_images.AjaxGraphImagesForNotifications)
-    )
 
 
 def register_painters() -> None:

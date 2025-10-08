@@ -10,6 +10,7 @@ from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
 
 from .._autocompleter import metrics_autocompleter
 from .._explicit_graphs import ExplicitGraphSpecification
+from .._graph_images import AjaxGraphImagesForNotifications
 from .._graph_metric_expressions import (
     graph_metric_expression_registry,
     GraphMetricConstant,
@@ -19,6 +20,7 @@ from .._graph_metric_expressions import (
 )
 from .._graph_specification import graph_specification_registry
 from .._graph_templates import TemplateGraphSpecification
+from .._html_render import AjaxGraph, AjaxGraphHover, AjaxRenderGraphContent
 from .._metric_backend_registry import (
     metric_backend_registry,
     MetricBackend,
@@ -33,6 +35,10 @@ def register(
     config_variable_registry: ConfigVariableRegistry,
     autocompleter_registry: AutocompleterRegistry,
 ) -> None:
+    page_registry.register(PageEndpoint("ajax_graph", AjaxGraph))
+    page_registry.register(PageEndpoint("ajax_graph_hover", AjaxGraphHover))
+    page_registry.register(PageEndpoint("ajax_graph_images", AjaxGraphImagesForNotifications))
+    page_registry.register(PageEndpoint("ajax_render_graph_content", AjaxRenderGraphContent))
     page_registry.register(PageEndpoint("ajax_vs_unit_resolver", PageVsAutocomplete))
 
     config_variable_registry.register(ConfigVariableGraphTimeranges)

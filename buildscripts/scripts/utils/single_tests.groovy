@@ -58,7 +58,7 @@ def fetch_package(Map args) {
     }
 
     inside_container_minimal(safe_branch_name: args.safe_branch_name) {
-        upstream_build(
+        def this_parameters = [
             relative_job_name: relative_job_name,
             build_params: [
                 /// currently CUSTOM_GIT_REF must match, but in the future
@@ -78,7 +78,16 @@ def fetch_package(Map args) {
             no_remove_others: args.no_remove_others,    // do not delete other files in the dest dir
             no_venv: true,          // run ci-artifacts call without venv
             omit_build_venv: true,  // do not check or build a venv first
-        );
+        ];
+        if (args.dependency_paths) {
+            this_parameters["build_params"].remove("CUSTOM_GIT_REF");
+
+            // do not use map[keyX] += [key: value] as this would overwrite all existing values of keyX with [key: value]
+            // using the dot operator does not do this
+            this_parameters.build_params += [CIPARAM_PATH_HASH: args.dependency_paths];
+            this_parameters.build_params_no_check += [CUSTOM_GIT_REF: cmd_output("git rev-parse HEAD")];
+        }
+        upstream_build(this_parameters);
     }
 }
 

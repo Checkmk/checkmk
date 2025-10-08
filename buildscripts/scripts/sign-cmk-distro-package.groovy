@@ -99,6 +99,7 @@ def main() {
                     download_dir: checkout_dir,
                     fake_windows_artifacts: "",
                     no_remove_others: true,
+                    dependency_paths: package_helper.dependency_paths_hashes()["winagt-build"],
                 );
 
                 // Hardcoded paths are the dream of all devs,

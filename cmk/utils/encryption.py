@@ -118,17 +118,10 @@ def _fetch_certificate_chain_verify_results(
         certificate_store = sock.get_context().get_cert_store()
         certificate_chain = sock.get_peer_cert_chain()
 
-    assert certificate_store is not None  # or return??
-    # No chain, no need to verify
-    if not certificate_chain:
+    # Can't verify anything without store and chain
+    if certificate_store is None or not certificate_chain:
         return []
 
-    return _verify_certificate_chain(certificate_store, certificate_chain)
-
-
-def _verify_certificate_chain(
-    x509_store: crypto.X509Store, certificate_chain: list[crypto.X509]
-) -> list[ChainVerifyResult]:
     verify_chain_results = []
 
     # Used to record all certificates and verification results for later displaying
@@ -136,7 +129,7 @@ def _verify_certificate_chain(
         # This is mainly done to get the textual error message without accessing internals of the SSL modules
         error_number, error_depth, error_message = 0, 0, ""
         try:
-            crypto.X509StoreContext(x509_store, cert).verify_certificate()
+            crypto.X509StoreContext(certificate_store, cert).verify_certificate()
         except crypto.X509StoreContextError as e:
             error_number, error_depth, error_message = e.errors
 

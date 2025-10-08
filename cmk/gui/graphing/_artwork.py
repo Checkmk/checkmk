@@ -341,7 +341,7 @@ def compute_graph_artwork_curves(
             line_type=augmented_time_series.metadata.line_type,
             color=augmented_time_series.metadata.color,
             title=augmented_time_series.metadata.title,
-            rrddata=augmented_time_series.data,
+            rrddata=augmented_time_series.time_series,
         )
         for augmented_time_series in fetch_augmented_time_series(
             registered_metrics,

@@ -210,7 +210,7 @@ class TimeSeriesMetaData:
 
 @dataclass(frozen=True)
 class AugmentedTimeSeries:
-    data: TimeSeries
+    time_series: TimeSeries
     metadata: TimeSeriesMetaData | None = None
 
 
@@ -287,7 +287,7 @@ class GraphMetricConstant(GraphMetricExpression, frozen=True):
         num_points, start, end, step = _derive_num_points(rrd_data)
         return [
             AugmentedTimeSeries(
-                data=TimeSeries(
+                time_series=TimeSeries(
                     start=start,
                     end=end,
                     step=step,
@@ -317,7 +317,7 @@ class GraphMetricConstantNA(GraphMetricExpression, frozen=True):
         num_points, start, end, step = _derive_num_points(rrd_data)
         return [
             AugmentedTimeSeries(
-                data=TimeSeries(
+                time_series=TimeSeries(
                     start=start,
                     end=end,
                     step=step,
@@ -385,14 +385,14 @@ class GraphMetricOperation(GraphMetricExpression, frozen=True):
         if result := _time_series_math(
             self.operator_name,
             [
-                operand_evaluated.data
+                operand_evaluated.time_series
                 for operand_evaluated in chain.from_iterable(
                     operand.compute_augmented_time_series(registered_metrics, rrd_data, query_data)
                     for operand in self.operands
                 )
             ],
         ):
-            return [AugmentedTimeSeries(data=result)]
+            return [AugmentedTimeSeries(time_series=result)]
         return []
 
 
@@ -443,12 +443,12 @@ class GraphMetricRRDSource(GraphMetricExpression, frozen=True):
                 self.scale,
             )
         ) in rrd_data:
-            return [AugmentedTimeSeries(data=rrd_data[key])]
+            return [AugmentedTimeSeries(time_series=rrd_data[key])]
 
         num_points, start, end, step = _derive_num_points(rrd_data)
         return [
             AugmentedTimeSeries(
-                data=TimeSeries(
+                time_series=TimeSeries(
                     start=start,
                     end=end,
                     step=step,

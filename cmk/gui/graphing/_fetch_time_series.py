@@ -47,7 +47,7 @@ def _refine_augmented_time_series(
             color = render_color(fade_color(parse_color(color), 0.3))
 
         yield AugmentedTimeSeries(
-            data=ts.data,
+            time_series=ts.time_series,
             metadata=TimeSeriesMetaData(
                 title=title,
                 line_type=line_type,

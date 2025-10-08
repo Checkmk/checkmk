@@ -186,23 +186,39 @@ function Get-VMDriveInfo {
   Write-Output "vhd $($vmHDDs.Count)"
 
   foreach ($vmHDD in $vmHDDs) {
-    Write-Output "vhd.name $($vmHDD.Name)"
-    Write-Output "vhd.controller.id $($vmHDD.ID)"
-    Write-Output "vhd.controller.type $($vmHDD.ControllerType)"
-    Write-Output "vhd.controller.number $($vmHDD.ControllerNumber)"
-    Write-Output "vhd.controller.location $($vmHDD.ControllerLocation)"
-    Write-Output "vhd.path $($vmHDD.Path)"
+    Write-Output "vhd.Name $($vmHDD.Name)"
+    Write-Output "vhd.controller.ID $($vmHDD.ID)"
+    Write-Output "vhd.controller.Type $($vmHDD.ControllerType)"
+    Write-Output "vhd.controller.Number $($vmHDD.ControllerNumber)"
+    Write-Output "vhd.controller.Location $($vmHDD.ControllerLocation)"
 
     $vmHDDVHD = $vmHDD.Path | Get-VHD -ComputerName $clusterNode -ErrorAction SilentlyContinue
 
-    if ($null -ne $vmHDDVHD) {
-      Write-Output "vhd.format $($vmHDDVHD.VhdFormat)"
-      Write-Output "vhd.type $($vmHDDVHD.VhdType)"
-      Write-Output "vhd.maximumcapacity $($vmHDDVHD.Size / 1MB)"
-      Write-Output "vhd.usedcapacity $($vmHDDVHD.FileSize / 1MB)"
+    if ($vmHDDVHD -ne $null) {
+      # When automatic checkpoints are enabled, the volume
+      # of a system may not strictly be the original
+      # but instead a snapshot, so we have to go one level up to get the real drive info
+      # because these snapshots can be shortlived.
+      $ext = (Get-Item($vmHDDVHD.Path)).Extension.ToLower();
+      if (($ext -eq ".avhd" -or $ext -eq ".avhdx") -and $vmHDDVHD.VhdType -eq "Differencing") {
+        $parentVmHDDVHD = $vmHDDVHD.ParentPath | Get-VHD -ComputerName $clusterNode -ErrorAction SilentlyContinue
+        Write-Output "vhd.Path $($vmHDDVHD.ParentPath)"
+        Write-Output "vhd.DiskSize $($parentVmHDDVHD.Size)"
+        Write-Output "vhd.FileSize $($parentVmHDDVHD.FileSize)"
+        Write-Output "vhd.Type $($parentVmHDDVHD.VhdType)"
+        Write-Output "vhd.Format $($parentVmHDDVHD.VhdType)"
+      }
+      else {
+        Write-Output "vhd.Path $($vmHDD.Path)"
+        Write-Output "vhd.Format $($vmHDDVHD.VhdFormat)"
+        Write-Output "vhd.Type $($vmHDDVHD.VhdType)"
+        Write-Output "vhd.DiskSize $($vmHDDVHD.Size)"
+        Write-Output "vhd.FileSize $($vmHDDVHD.FileSize)"
+      }
     }
     else {
-      Write-Output "vhd.type Direct"
+      Write-Output "vhd.Path $($vmHDD.Path)"
+      Write-Output "vhd.Type Direct"
     }
   }
 
@@ -212,12 +228,12 @@ function Get-VMDriveInfo {
     Write-Output "vsan $($vmvSAN.Count)"
 
     foreach ($vmvSAN in $vmvSAN) {
-      Write-Output "vsan.name $($vmvSAN.SanName)"
-      Write-Output "vsan.primaryWWNN $($vmvSAN.WorldWideNodeNameSetA)"
-      Write-Output "vsan.primaryWWPN $($vmvSAN.WorldWidePortNameSetA)"
-      Write-Output "vsan.secondaryWWNN $($vmvSAN.WorldWideNodeNameSetB)"
-      Write-Output "vsan.secondaryWWPN $($vmvSAN.WorldWidePortNameSetB)"
-      Write-Output "vsan.id $($vmvSAN.ID)"
+      Write-Output "vsan.Name $($vmvSAN.SanName)"
+      Write-Output "vsan.PrimaryWWNN $($vmvSAN.WorldWideNodeNameSetA)"
+      Write-Output "vsan.PrimaryWWPN $($vmvSAN.WorldWidePortNameSetA)"
+      Write-Output "vsan.SecondaryWWNN $($vmvSAN.WorldWideNodeNameSetB)"
+      Write-Output "vsan.SecondaryWWPN $($vmvSAN.WorldWidePortNameSetB)"
+      Write-Output "vsan.ID $($vmvSAN.ID)"
     }
   }
 }

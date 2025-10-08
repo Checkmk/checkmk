@@ -49,7 +49,7 @@ def parse_hyperv_io(string_table: StringTable) -> Section:
 
 def parse_hyperv(string_table: StringTable) -> Section:
     datatypes = {
-        "vhd": "vhd.name",
+        "vhd": "vhd.Name",
         "nic": "nic.name",
         "checkpoints": "checkpoint.name",
         "cluster.number_of_nodes": "cluster.node.name",

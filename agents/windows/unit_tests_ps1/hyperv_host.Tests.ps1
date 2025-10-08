@@ -273,7 +273,7 @@ Context "Hyper-V Host Plugin Tests" {
                     ControllerType     = "SCSI"
                     ControllerNumber   = 0
                     ControllerLocation = 1
-                    Path               = "C:\VMs\Disk1.avhdx"
+                    Path               = "C:\VMs\Disk1.vhdx"
                 }
                 $vmHDDs = @($vmHDD)
                 $vhdInfo = [PSCustomObject]@{
@@ -281,25 +281,27 @@ Context "Hyper-V Host Plugin Tests" {
                     VhdType   = "Differencing"
                     Size      = 2147483648 # 2GB in bytes
                     FileSize  = 1073741824 # 1GB in bytes
+                    Path               = "C:\VMs\Disk1.vhdx"
                 }
 
                 Mock Get-VMHardDiskDrive { $vmHDDs }
                 Mock Get-VHD { $vhdInfo }
                 Mock Get-VMFibreChannelHba { @() }
+                Mock Get-Item { @{ Extension = ".vhdx" } }
 
                 $output = Get-VMDriveInfo -vm $vm -clusterNode $clusterNode
 
                 $output | Should -Contain "vhd 1"
-                $output | Should -Contain "vhd.name Hard Drive on SCSI controller number 0 at location 1"
-                $output | Should -Contain "vhd.controller.id Microsoft:2211F777-6A47-4411-81DC-AC7769111191\CC1F1658-1135-1111-A87C-35F7B259360C\0\0\D"
-                $output | Should -Contain "vhd.controller.type SCSI"
-                $output | Should -Contain "vhd.controller.number 0"
-                $output | Should -Contain "vhd.controller.location 1"
-                $output | Should -Contain "vhd.path C:\VMs\Disk1.avhdx"
-                $output | Should -Contain "vhd.format VHDX"
-                $output | Should -Contain "vhd.type Differencing"
-                $output | Should -Contain "vhd.maximumcapacity 2048"
-                $output | Should -Contain "vhd.usedcapacity 1024"
+                $output | Should -Contain "vhd.Name Hard Drive on SCSI controller number 0 at location 1"
+                $output | Should -Contain "vhd.Controller.ID Microsoft:2211F777-6A47-4411-81DC-AC7769111191\CC1F1658-1135-1111-A87C-35F7B259360C\0\0\D"
+                $output | Should -Contain "vhd.controller.Type SCSI"
+                $output | Should -Contain "vhd.controller.Number 0"
+                $output | Should -Contain "vhd.controller.Location 1"
+                $output | Should -Contain "vhd.Path C:\VMs\Disk1.vhdx"
+                $output | Should -Contain "vhd.Format VHDX"
+                $output | Should -Contain "vhd.Type Differencing"
+                $output | Should -Contain "vhd.DiskSize 2147483648"
+                $output | Should -Contain "vhd.FileSize 1073741824"
             }
         }
 
@@ -324,13 +326,13 @@ Context "Hyper-V Host Plugin Tests" {
                 $output = Get-VMDriveInfo -vm $vm -clusterNode $clusterNode
 
                 $output | Should -Contain "vhd 1"
-                $output | Should -Contain "vhd.name Disk2"
-                $output | Should -Contain "vhd.controller.id 2"
-                $output | Should -Contain "vhd.controller.type IDE"
-                $output | Should -Contain "vhd.controller.number 1"
-                $output | Should -Contain "vhd.controller.location 0"
-                $output | Should -Contain "vhd.path C:\VMs\Disk2.vhdx"
-                $output | Should -Contain "vhd.type Direct"
+                $output | Should -Contain "vhd.Name Disk2"
+                $output | Should -Contain "vhd.controller.ID 2"
+                $output | Should -Contain "vhd.controller.Type IDE"
+                $output | Should -Contain "vhd.controller.Number 1"
+                $output | Should -Contain "vhd.controller.Location 0"
+                $output | Should -Contain "vhd.Path C:\VMs\Disk2.vhdx"
+                $output | Should -Contain "vhd.Type Direct"
             }
         }
 

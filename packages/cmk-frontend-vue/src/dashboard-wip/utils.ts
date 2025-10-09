@@ -25,6 +25,7 @@ import type {
   EffectiveWidgetFilterContext,
   TopListContent,
   VisualContext,
+  WidgetAvailableInventory,
   WidgetContent
 } from '@/dashboard-wip/types/widget.ts'
 
@@ -38,7 +39,7 @@ type EditRelativeGridResult =
   | { success: false; status: 400; error: BadRequestBody }
   | { success: false; status: number; error: unknown }
 
-const API_ROOT = 'api/unstable'
+const API_ROOT = 'api/internal'
 
 export const dashboardAPI = {
   getRelativeDashboard: async (
@@ -132,6 +133,12 @@ export const dashboardAPI = {
   },
   listFilterCollection: async (): Promise<FilterCollection> => {
     const url = `${API_ROOT}/domain-types/visual_filter/collections/all`
+    const response = await fetchRestAPI(url, 'GET')
+    await response.raiseForStatus()
+    return await response.json()
+  },
+  listAvailableInventory: async (): Promise<WidgetAvailableInventory[]> => {
+    const url = `${API_ROOT}/objects/constant/widget_available_inventory/collections/all`
     const response = await fetchRestAPI(url, 'GET')
     await response.raiseForStatus()
     return await response.json()

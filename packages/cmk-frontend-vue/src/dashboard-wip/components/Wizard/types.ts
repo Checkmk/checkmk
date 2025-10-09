@@ -37,11 +37,11 @@ export interface HostServiceContext {
   service?: { service: string }
 }
 
-export interface UseValidable {
+export interface UseValidate {
   validate: () => boolean
 }
 
-export interface UseWidgetHandler extends UseValidable {
+export interface UseWidgetHandler extends UseValidate {
   widgetProps: Ref<WidgetProps>
 }
 export interface WidgetProps {
@@ -66,6 +66,7 @@ export type WidgetFiltersType = {
 }
 
 export type WidgetContentType =
+  | InventoryContent
   | BarplotContent
   | GaugeContent
   | GraphContent
@@ -79,6 +80,8 @@ export type WidgetContentType =
   | ServiceStateContent
   | ServiceStateSummaryContent
   | ServiceStatisticsContent
+
+export type InventoryContent = components['schemas']['InventoryContent']
 
 export type MetricDisplayRangeModel = components['schemas']['MetricDisplayRangeModel']
 export type FixedDataRangeModel = components['schemas']['MetricDisplayRangeFixedModel']

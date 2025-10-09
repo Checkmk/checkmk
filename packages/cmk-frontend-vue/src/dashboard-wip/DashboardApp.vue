@@ -108,6 +108,11 @@ const selectedDashboard = computed(() => {
   }
 })
 
+const handleGoBack = () => {
+  openAddWidgetDialog.value = true
+  openWizard.value = false
+}
+
 const handleAddWidget = (widgetIdent: string) => {
   openAddWidgetDialog.value = false
   selectedWizard.value = widgetIdent
@@ -165,6 +170,7 @@ function addWidget(
     throw new Error(`Unknown dashboard layout type: ${activeDashboard.content.layout}`)
   }
   dashboardWidgets.addWidget(widgetId, content, generalSettings, filterContext, layout)
+  openWizard.value = false
 }
 
 function editWidget(widgetId: string) {
@@ -174,6 +180,21 @@ function editWidget(widgetId: string) {
     throw new Error(`Widget with id ${widgetId} not found`)
   }
   selectedWizard.value = widgetTypeToSelectorMatcher(widgetSpec.content.type)
+  openWizard.value = true
+}
+
+function executeEditWidget(
+  widgetId: string,
+  content: WidgetContent,
+  generalSettings: WidgetGeneralSettings,
+  filterContext: WidgetFilterContext
+) {
+  // @TODO edit function
+  // #dashboardWidgets.updateWidget(widgetId, content, generalSettings, filterContext)
+  console.log('Edit widget', widgetId, content, generalSettings, filterContext)
+
+  widgetToEdit.value = null
+  openWizard.value = false
 }
 
 function cloneWidget(oldWidgetId: string, newLayout: WidgetLayout) {
@@ -293,14 +314,17 @@ function deepClone<T>(obj: T): T {
         @close="openAddWidgetDialog = false"
       />
       <WizardSelector
+        :is-open="openWizard"
         :selected-wizard="selectedWizard"
         :dashboard-name="dashboardsManager.activeDashboardName.value || ''"
         :dashboard-owner="dashboardsManager.activeDashboard.value?.owner || ''"
         :context-filters="dashboardFilters.contextFilters.value || {}"
         :dashboard-constants="dashboardsManager.constants.value!"
-        :edit-widget-spec="getWidgetSpecToEdit(widgetToEdit)"
-        @back-button="openAddWidgetDialog = true"
+        :edit-widget-spec="getWidgetSpecToEdit(widgetToEdit ?? null)"
+        :edit-widget-id="widgetToEdit"
+        @back-button="handleGoBack"
         @add-widget="addWidget"
+        @edit-widget="executeEditWidget"
       />
       <DashboardFilterSettings
         v-model:open="openDashboardFilterSettings"

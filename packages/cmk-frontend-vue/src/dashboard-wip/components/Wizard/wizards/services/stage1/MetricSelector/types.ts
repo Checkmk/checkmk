@@ -3,6 +3,6 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { UseValidable } from '@/dashboard-wip/components/Wizard/types'
+import type { UseValidate } from '@/dashboard-wip/components/Wizard/types'
 
-export type MetricHandler = UseValidable
+export type MetricHandler = UseValidate

@@ -51,8 +51,8 @@ check_plugin_azure_storageaccounts = CheckPlugin(
             "fixed",
             (
                 # B   KiB    MiB    GiB    TiB
-                1.0 * 1024 * 1024 * 1024 * 1024 * 50,  # 50 TiB
-                1.0 * 1024 * 1024 * 1024 * 1024 * 500,  # 500 TiB
+                1 * 1024 * 1024 * 1024 * 1024 * 50,  # 50 TiB
+                1 * 1024 * 1024 * 1024 * 1024 * 500,  # 500 TiB
             ),
         )
     },
@@ -92,7 +92,7 @@ check_plugin_azure_storageaccounts_flow = CheckPlugin(
     check_default_parameters={
         "ingress_levels": ("no_levels", None),
         "egress_levels": ("no_levels", None),
-        "transactions_levels": ("fixed", (8.0, 10.0)),
+        "transactions_levels": ("fixed", (8, 10)),
     },
 )
 
@@ -157,8 +157,8 @@ check_plugin_azure_storageaccounts_performance = CheckPlugin(
     check_function=create_check_azure_storageaccounts_performance(),
     check_ruleset_name="azure_storageaccounts_performance",
     check_default_parameters={
-        "server_latency_levels": ("fixed", (701.0, 1001.0)),
-        "e2e_latency_levels": ("fixed", (701.0, 1001.0)),
+        "server_latency_levels": ("fixed", (701, 1001)),
+        "e2e_latency_levels": ("fixed", (701, 1001)),
         "availability_levels": ("fixed", (99.8, 99.0)),
     },
 )

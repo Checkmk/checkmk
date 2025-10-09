@@ -32,7 +32,7 @@ def migrate_to_float_simple_levels_ignoring_predictive(
             return migrate_to_float_simple_levels(value)
 
 
-def _parameter_valuespec_gcp_cost() -> Dictionary:
+def _parameter_form_spec_gcp_cost() -> Dictionary:
     return Dictionary(
         title=Title("Levels monthly GCP costs"),
         elements={
@@ -53,6 +53,6 @@ rule_spec_gcp_cost = CheckParameters(
     name="gcp_cost",
     title=Title("GCP Cost"),
     topic=Topic.CLOUD,
-    parameter_form=_parameter_valuespec_gcp_cost,
+    parameter_form=_parameter_form_spec_gcp_cost,
     condition=HostAndItemCondition(item_title=Title("Project")),
 )

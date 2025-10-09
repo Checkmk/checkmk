@@ -100,5 +100,5 @@ check_plugin_gcp_cost = CheckPlugin(
     discovery_function=discover,
     check_function=check,
     check_ruleset_name="gcp_cost",
-    check_default_parameters={"levels": None},
+    check_default_parameters={"levels": ("no_levels", None)},
 )

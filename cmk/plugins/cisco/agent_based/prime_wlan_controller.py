@@ -278,6 +278,6 @@ check_plugin_cisco_prime_wlan_controller_last_backup = CheckPlugin(
     check_function=check_wlan_controller_last_backup,
     check_ruleset_name="cisco_prime_wlan_controller_last_backup",
     check_default_parameters={
-        "last_backup": (7.0 * DAY_IN_SECONDS, 30.0 * DAY_IN_SECONDS),
+        "last_backup": ("fixed", (7.0 * DAY_IN_SECONDS, 30.0 * DAY_IN_SECONDS)),
     },
 )

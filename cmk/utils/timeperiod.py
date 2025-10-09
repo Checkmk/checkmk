@@ -191,15 +191,7 @@ def is_timeperiod_active(
     ):
         return False
 
-    days: list[Weekday] = [
-        "monday",
-        "tuesday",
-        "wednesday",
-        "thursday",
-        "friday",
-        "saturday",
-        "sunday",
-    ]
+    days = weekday_ids()
     current_datetime = datetime.fromtimestamp(timestamp, tzlocal())
     if _is_timeperiod_active_via_exception(
         timeperiod_definition,

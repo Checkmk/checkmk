@@ -43,7 +43,7 @@ if cassette:
 
         # Configure VCR with settings from pytest fixtures
         print(f"Creating VCR with config: {vcr_config}", file=sys.stderr, flush=True)
-        myvcr = vcr.VCR(**vcr_config)
+        myvcr = vcr.VCR(**vcr_config)  # type: ignore[attr-defined]
 
         ctx = myvcr.use_cassette(str(cassette_path))
 

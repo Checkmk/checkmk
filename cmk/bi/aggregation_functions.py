@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import Literal, override, TypedDict
 
 from marshmallow import validate
-from marshmallow_oneofschema import OneOfSchema
+from marshmallow_oneofschema import OneOfSchema  # type: ignore[attr-defined]
 
 from cmk.bi.lib import (
     ABCBIAggregationFunction,

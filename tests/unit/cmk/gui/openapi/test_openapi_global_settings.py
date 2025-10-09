@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from marshmallow_oneofschema import OneOfSchema
+from marshmallow_oneofschema import OneOfSchema  # type: ignore[attr-defined]
 
 from cmk.gui.openapi.endpoints.global_settings.schemas import (
     CAInputSchema,

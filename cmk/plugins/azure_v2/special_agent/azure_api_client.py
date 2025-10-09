@@ -182,7 +182,7 @@ class BaseAsyncApiClient:
         self._session = None
 
     async def login_async(self, tenant: str, client: str, secret: str) -> None:
-        client_app = msal.ConfidentialClientApplication(
+        client_app = msal.ConfidentialClientApplication(  # type: ignore[attr-defined]
             client,
             secret,
             f"{self._login_url}/{tenant}",

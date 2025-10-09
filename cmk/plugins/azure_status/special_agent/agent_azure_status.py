@@ -97,7 +97,7 @@ def get_azure_issues(
 
 def write_section(args: Args) -> int:
     response = requests.get("https://status.azure.com/en-us/status/feed/", timeout=900)
-    feed = feedparser.parse(response.text)
+    feed = feedparser.parse(response.text)  # type: ignore[attr-defined]
 
     selected_regions = [AZURE_REGIONS[r] for r in args.regions]
     selected_regions.append("Global")

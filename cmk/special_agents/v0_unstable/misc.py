@@ -279,7 +279,7 @@ def vcrtrace(**vcr_init_kwargs):
 
             import vcr
 
-            use_cassette = vcr.VCR(**vcr_init_kwargs).use_cassette
+            use_cassette = vcr.VCR(**vcr_init_kwargs).use_cassette  # type: ignore[attr-defined]
             setattr(namespace, self.dest, lambda **kwargs: use_cassette(filename, **kwargs))
             global_context = use_cassette(filename)
             atexit.register(global_context.__exit__)

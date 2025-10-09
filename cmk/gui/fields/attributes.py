@@ -9,7 +9,7 @@ from typing import Any, Literal, override
 
 from marshmallow import ValidationError
 from marshmallow.decorators import post_load, pre_dump, validates_schema
-from marshmallow_oneofschema import OneOfSchema
+from marshmallow_oneofschema import OneOfSchema  # type: ignore[attr-defined]
 
 from cmk.ccc.user import UserId
 from cmk.fields import Boolean, Constant, Integer, List, Nested, String, Time

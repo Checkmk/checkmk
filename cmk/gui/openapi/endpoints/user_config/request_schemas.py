@@ -9,7 +9,7 @@ from typing import Any
 
 import marshmallow
 from marshmallow import pre_load
-from marshmallow_oneofschema import OneOfSchema
+from marshmallow_oneofschema import OneOfSchema  # type: ignore[attr-defined]
 
 from cmk import fields
 from cmk.gui import fields as gui_fields

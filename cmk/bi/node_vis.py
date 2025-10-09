@@ -15,7 +15,7 @@
 from collections.abc import Mapping
 from typing import override
 
-from marshmallow_oneofschema import OneOfSchema
+from marshmallow_oneofschema import OneOfSchema  # type: ignore[attr-defined]
 
 from cmk.bi.lib import ReqBoolean, ReqConstant, ReqInteger, ReqNested, ReqString
 from cmk.bi.schema import Schema

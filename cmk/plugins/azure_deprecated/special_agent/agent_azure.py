@@ -495,7 +495,7 @@ class BaseApiClient(abc.ABC):
         self._http_proxy_config = http_proxy_config
 
     def login(self, tenant: str, client: str, secret: str) -> None:
-        client_app = msal.ConfidentialClientApplication(
+        client_app = msal.ConfidentialClientApplication(  # type: ignore[attr-defined]
             client,
             secret,
             f"{self._login_url}/{tenant}",

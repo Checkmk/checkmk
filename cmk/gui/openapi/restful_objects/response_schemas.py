@@ -7,7 +7,7 @@ import datetime as dt
 import logging
 
 from marshmallow import Schema
-from marshmallow_oneofschema import OneOfSchema
+from marshmallow_oneofschema import OneOfSchema  # type: ignore[attr-defined]
 
 from cmk import fields
 from cmk.gui import fields as gui_fields

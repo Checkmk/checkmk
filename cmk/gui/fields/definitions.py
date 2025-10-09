@@ -20,7 +20,7 @@ from cryptography.x509.oid import NameOID
 from marshmallow import fields as _fields
 from marshmallow import ValidationError
 from marshmallow.types import StrSequenceOrSet
-from marshmallow_oneofschema import OneOfSchema
+from marshmallow_oneofschema import OneOfSchema  # type: ignore[attr-defined]
 
 from cmk.ccc import version
 from cmk.ccc.exceptions import MKException, MKGeneralException

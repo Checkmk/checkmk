@@ -6,7 +6,7 @@ from collections.abc import MutableMapping
 from typing import Any, override
 
 from marshmallow import INCLUDE, post_load, pre_load, ValidationError
-from marshmallow_oneofschema import OneOfSchema
+from marshmallow_oneofschema import OneOfSchema  # type: ignore[attr-defined]
 
 from cmk import fields
 from cmk.gui.fields import LDAPConnectionID, Timestamp

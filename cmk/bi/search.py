@@ -9,7 +9,7 @@ from collections.abc import Mapping
 from typing import Any, override
 
 from marshmallow import post_dump, post_load, pre_dump, pre_load
-from marshmallow_oneofschema import OneOfSchema
+from marshmallow_oneofschema import OneOfSchema  # type: ignore[attr-defined]
 
 from cmk import fields
 from cmk.bi.lib import (

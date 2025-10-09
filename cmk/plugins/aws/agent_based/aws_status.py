@@ -91,7 +91,7 @@ class AWSRSSFeed(pydantic.BaseModel):
 
     @classmethod
     def parse_rss(cls, element: str) -> "AWSRSSFeed":
-        return cls.model_validate(feedparser.parse(element))
+        return cls.model_validate(feedparser.parse(element))  # type: ignore[attr-defined]
 
 
 class DiscoveryParam(pydantic.BaseModel):

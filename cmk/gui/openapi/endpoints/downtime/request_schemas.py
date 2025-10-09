@@ -6,7 +6,7 @@
 from typing import Any
 
 from marshmallow import post_load, ValidationError
-from marshmallow_oneofschema import OneOfSchema
+from marshmallow_oneofschema import OneOfSchema  # type: ignore[attr-defined]
 
 from cmk import fields
 from cmk.gui import fields as gui_fields

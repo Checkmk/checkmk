@@ -11,7 +11,7 @@ from pprint import pformat
 from typing import cast
 
 import urllib3
-from opsgenie_sdk import (
+from opsgenie_sdk import (  # type: ignore[attr-defined]
     AcknowledgeAlertPayload,
     AddNoteToAlertPayload,
     AddTagsToAlertPayload,

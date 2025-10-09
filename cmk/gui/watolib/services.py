@@ -92,8 +92,8 @@ class DiscoveryState:
     CLUSTERED_NEW = "clustered_new"
     CLUSTERED_VANISHED = "clustered_vanished"
     CLUSTERED_IGNORED = "clustered_ignored"
-    ACTIVE_IGNORED = "active_ignored"
-    CUSTOM_IGNORED = "custom_ignored"
+    ACTIVE_IGNORED = "ignored_active"
+    CUSTOM_IGNORED = "ignored_custom"
 
     @classmethod
     def is_discovered(cls, table_source: str) -> bool:

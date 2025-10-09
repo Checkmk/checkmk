@@ -13,7 +13,7 @@ from cmk.plugins.azure_deprecated.agent_based.azure_traffic_manager import (
     check_probe_state,
     check_qps,
 )
-from cmk.plugins.lib.azure import AzureMetric, Resource, Section
+from cmk.plugins.azure_deprecated.agent_based.lib import AzureMetric, Resource, Section
 
 
 @pytest.mark.parametrize(

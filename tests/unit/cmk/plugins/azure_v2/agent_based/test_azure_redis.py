@@ -17,7 +17,7 @@ import time_machine
 
 from cmk.agent_based.v2 import CheckPlugin, Metric, Result, State
 from cmk.plugins.azure_v2.agent_based import azure_redis
-from cmk.plugins.lib.azure import AzureMetric, Resource, Section
+from cmk.plugins.azure_v2.agent_based.lib import AzureMetric, Resource, Section
 
 AZURE_REDIS_WITH_METRICS = {
     "az-redis-test": Resource(
@@ -374,7 +374,7 @@ def test_check_azure_redis_check_functions(
 
 
 @mock.patch(
-    "cmk.plugins.lib.azure.get_value_store",
+    "cmk.plugins.azure_v2.agent_based.lib.get_value_store",
     return_value={"azure_redis_server_load_average": (EPOCH - 300, EPOCH, 99)},
 )
 @time_machine.travel(EPOCH + 300)
@@ -391,7 +391,7 @@ def test_check_azure_v2_redis_server_load_average(_get_value_store: Mock) -> Non
 
 
 @mock.patch(
-    "cmk.plugins.lib.azure.get_value_store",
+    "cmk.plugins.azure_v2.agent_based.lib.get_value_store",
     return_value={"azure_redis_server_load_sustained_threshold": EPOCH - 45.0},
 )
 @time_machine.travel(EPOCH)
@@ -414,7 +414,7 @@ def test_check_azure_v2_redis_server_load_sustained(_get_value_store: Mock) -> N
 
 
 @mock.patch(
-    "cmk.plugins.lib.azure.get_value_store",
+    "cmk.plugins.azure_v2.agent_based.lib.get_value_store",
     return_value={"util_average": (EPOCH - 300, EPOCH, 99)},
 )
 @time_machine.travel(EPOCH + 300)
@@ -431,7 +431,7 @@ def test_check_azure_redis_cpu_util_average(_get_value_store: Mock) -> None:
 
 
 @mock.patch(
-    "cmk.plugins.lib.azure.get_value_store",
+    "cmk.plugins.azure_v2.agent_based.lib.get_value_store",
     return_value={"util_sustained_threshold": EPOCH - 45.0},
 )
 @time_machine.travel(EPOCH)

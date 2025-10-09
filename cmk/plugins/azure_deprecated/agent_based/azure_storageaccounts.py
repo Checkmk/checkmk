@@ -12,7 +12,7 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     render,
 )
-from cmk.plugins.lib.azure import (
+from cmk.plugins.azure_deprecated.agent_based.lib import (
     CheckFunction,
     create_check_metrics_function,
     create_discover_by_metrics_function,

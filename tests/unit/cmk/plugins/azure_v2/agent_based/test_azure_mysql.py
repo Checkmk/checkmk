@@ -15,7 +15,7 @@ from cmk.plugins.azure_v2.agent_based.azure_mysql import (
     check_plugin_azure_mysql_replication,
     check_replication,
 )
-from cmk.plugins.lib.azure import AzureMetric, check_connections, Resource, Section
+from cmk.plugins.azure_v2.agent_based.lib import AzureMetric, check_connections, Resource, Section
 
 
 @pytest.mark.parametrize(

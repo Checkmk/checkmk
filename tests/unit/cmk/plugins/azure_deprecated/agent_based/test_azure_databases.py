@@ -15,7 +15,7 @@ from cmk.plugins.azure_deprecated.agent_based.azure_databases import (
     create_check_azure_databases_dtu,
     create_check_azure_databases_storage,
 )
-from cmk.plugins.lib.azure import AzureMetric, Resource, Section
+from cmk.plugins.azure_deprecated.agent_based.lib import AzureMetric, Resource, Section
 
 LEVELS = (5.0, 20.0)
 METRIC_CONN_FAILED_OK = Metric(name="connections_failed_rate", value=10)

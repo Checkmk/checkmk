@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
     State,
 )
 from cmk.agent_based.v2 import check_levels as check_levels_v2
-from cmk.plugins.lib.azure import (
+from cmk.plugins.azure_v2.agent_based.lib import (
     check_resource_metrics,
     create_check_metrics_function_single,
     create_discover_by_metrics_function_single,

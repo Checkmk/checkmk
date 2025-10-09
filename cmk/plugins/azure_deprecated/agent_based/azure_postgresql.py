@@ -10,7 +10,7 @@ from collections.abc import Callable, Mapping
 from typing import Any
 
 from cmk.agent_based.v2 import CheckPlugin, CheckResult, render
-from cmk.plugins.lib.azure import (
+from cmk.plugins.azure_deprecated.agent_based.lib import (
     check_connections,
     check_cpu,
     check_memory,

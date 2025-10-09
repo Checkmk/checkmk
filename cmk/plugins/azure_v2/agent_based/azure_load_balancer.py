@@ -4,8 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any
+
+from pydantic import BaseModel
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
@@ -21,13 +23,60 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.azure import (
+from cmk.plugins.azure_v2.agent_based.lib import (
     create_check_metrics_function,
+    FrontendIpConfiguration,
     get_service_labels_from_resource_tags,
     MetricData,
     parse_resources,
+    Resource,
 )
-from cmk.plugins.lib.azure_load_balancer import LoadBalancer, Section
+
+
+class BackendIpConfiguration(BaseModel):
+    name: str
+    privateIPAddress: str
+    privateIPAllocationMethod: str
+
+
+class InboundNatRule(BaseModel):
+    name: str
+    frontendIPConfiguration: Mapping[str, str]
+    frontendPort: int
+    backendPort: int
+    backend_ip_config: BackendIpConfiguration | None = None
+
+
+class LoadBalancerBackendAddress(BaseModel):
+    name: str
+    privateIPAddress: str
+    privateIPAllocationMethod: str
+    primary: bool = False
+
+
+class LoadBalancerBackendPool(BaseModel):
+    id: str
+    name: str
+    addresses: Sequence[LoadBalancerBackendAddress] = []
+
+
+class OutboundRule(BaseModel):
+    name: str
+    protocol: str
+    idleTimeoutInMinutes: int
+    backendAddressPool: Mapping[str, str]
+
+
+class LoadBalancer(BaseModel):
+    resource: Resource
+    name: str
+    frontend_ip_configs: Mapping[str, FrontendIpConfiguration]
+    inbound_nat_rules: Sequence[InboundNatRule]
+    backend_pools: Mapping[str, LoadBalancerBackendPool] = {}
+    outbound_rules: Sequence[OutboundRule] = []
+
+
+Section = Mapping[str, LoadBalancer]
 
 
 def parse_load_balancer(string_table: StringTable) -> Section:

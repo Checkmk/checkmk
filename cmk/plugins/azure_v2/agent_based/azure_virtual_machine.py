@@ -20,8 +20,7 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.plugins.lib import interfaces
-from cmk.plugins.lib.azure import (
+from cmk.plugins.azure_v2.agent_based.lib import (
     create_check_metrics_function_single,
     create_discover_by_metrics_function,
     create_discover_by_metrics_function_single,
@@ -32,6 +31,7 @@ from cmk.plugins.lib.azure import (
     Resource,
     Section,
 )
+from cmk.plugins.lib import interfaces
 
 _MAP_STATES = {
     # Provisioning states

@@ -22,7 +22,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.lib.azure import (
+from cmk.plugins.azure_deprecated.agent_based.lib import (
     create_check_metrics_function,
     get_service_labels_from_resource_tags,
     iter_resource_attributes,

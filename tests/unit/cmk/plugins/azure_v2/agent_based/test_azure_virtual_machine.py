@@ -31,8 +31,8 @@ from cmk.plugins.azure_v2.agent_based.azure_virtual_machine import (
     discover_azure_vm_network_io,
     VMSummaryParams,
 )
+from cmk.plugins.azure_v2.agent_based.lib import AzureMetric, Resource, Section
 from cmk.plugins.lib import interfaces
-from cmk.plugins.lib.azure import AzureMetric, Resource, Section
 
 SECTION = {
     "VM-test-1": Resource(

@@ -7,7 +7,7 @@ This special agent is deprecated. Please use the new azure_v2.
 """
 
 from cmk.agent_based.v2 import AgentSection
-from cmk.plugins.lib.azure import parse_resources
+from cmk.plugins.azure_deprecated.agent_based.lib import parse_resources
 
 # This section contains data for both the postgresql and mysql checks
 agent_section_azure_servers = AgentSection(

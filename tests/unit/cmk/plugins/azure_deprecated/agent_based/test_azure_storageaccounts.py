@@ -15,7 +15,12 @@ from cmk.plugins.azure_deprecated.agent_based.azure_storageaccounts import (
     check_plugin_azure_storageaccounts_flow,
     check_plugin_azure_storageaccounts_performance,
 )
-from cmk.plugins.lib.azure import AzureMetric, parse_resources, Resource, Section
+from cmk.plugins.azure_deprecated.agent_based.lib import (
+    AzureMetric,
+    parse_resources,
+    Resource,
+    Section,
+)
 
 MiB = 1024**2
 STRING_TABLE = [

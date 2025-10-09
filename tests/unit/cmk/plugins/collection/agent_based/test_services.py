@@ -104,7 +104,7 @@ def test_parse() -> None:
     ],
 )
 def test_discovery_windows_services(
-    params: Sequence[Mapping[str, object]], discovered_services: DiscoveryResult
+    params: Sequence[services.WindowsServiceDiscoveryParams], discovered_services: DiscoveryResult
 ) -> None:
     assert discovered_services == list(services.discovery_windows_services(params, PARSED))
 

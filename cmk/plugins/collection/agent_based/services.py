@@ -7,7 +7,7 @@
 
 import re
 from collections.abc import Generator, Mapping, Sequence
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, TypedDict
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -45,7 +45,6 @@ from cmk.agent_based.v2 import (
 # <state> is the expected state to inventorize services of (running, stopped, ...)
 # <start_mode> is the expected state to inventorize services of (auto, manual, ...)
 
-WINDOWS_SERVICES_DISCOVERY_DEFAULT_PARAMETERS: dict[str, Any] = {}
 
 WINDOWS_SERVICES_CHECK_DEFAULT_PARAMETERS = {
     "states": [("running", None, 0)],
@@ -83,7 +82,13 @@ agent_section_services = AgentSection(
 )
 
 
-def _match_service(service: WinService, settings: Mapping[str, Any]) -> bool:
+class WindowsServiceDiscoveryParams(TypedDict, total=False):
+    services: Sequence[str]
+    state: str
+    start_mode: str
+
+
+def _match_service(service: WinService, settings: WindowsServiceDiscoveryParams) -> bool:
     # Skip empty discovery settings, i.e. default settings.
     if not settings:
         return False
@@ -103,7 +108,7 @@ def _match_service(service: WinService, settings: Mapping[str, Any]) -> bool:
 
 
 def discovery_windows_services(
-    params: Sequence[Mapping[str, Any]], section: Section
+    params: Sequence[WindowsServiceDiscoveryParams], section: Section
 ) -> DiscoveryResult:
     # Extract the WATO compatible rules for the current host
     for service in section:
@@ -202,7 +207,7 @@ check_plugin_services = CheckPlugin(
     discovery_ruleset_type=RuleSetType.ALL,
     discovery_ruleset_name="inventory_services_rules",
     discovery_function=discovery_windows_services,
-    discovery_default_parameters=WINDOWS_SERVICES_DISCOVERY_DEFAULT_PARAMETERS,
+    discovery_default_parameters=WindowsServiceDiscoveryParams(),
     check_ruleset_name="services",
     check_default_parameters=WINDOWS_SERVICES_CHECK_DEFAULT_PARAMETERS,
     check_function=check_windows_services,

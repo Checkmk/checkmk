@@ -381,8 +381,7 @@ STAGES:
           scripts/run-uvenv python3 -m cmk.utils.werks announce .werks $(make print-VERSION) --format txt &>> ${RESULTS}/werk_commands.txt
           scripts/run-uvenv python3 -m cmk.werks.utils precompile .werks precompiled.json &>> ${RESULTS}/werk_commands.txt
           scripts/run-uvenv python3 -m cmk.werks.utils changelog CHANGELOG precompiled.json &>> ${RESULTS}/werk_commands.txt
-          FOUR_WEEKS_AGO="$(date --date=@$(( $(date +%s) - 4 * 7 * 24 * 60 * 60 )) -Iseconds)"
-          scripts/run-uvenv python3 -m cmk.utils.werks mail . HEAD werk_mail --assume-no-notes-but=$(git log --before="$FOUR_WEEKS_AGO" --format="%H" --max-count=1) &>> ${RESULTS}/werk_commands.txt
+          scripts/run-uvenv python3 -m cmk.utils.werks mail . HEAD werk_mail --assume-no-notes-but=$(git log --before="$(date --date="4 weeks ago" --iso=seconds)" --format="%H" --max-count=1) &>> ${RESULTS}/werk_commands.txt
           scripts/run-uvenv werk list &>> ${RESULTS}/werk_commands.txt
       TEXT_ON_SKIP: "No Werk code files changed"
       RESULT_CHECK_FILE_PATTERN: "results/werk_commands.txt"

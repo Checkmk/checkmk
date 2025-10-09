@@ -94,7 +94,7 @@ types-setuptools = "==69.0.0.20240125"  # used for type checking
 types-simplejson = "==3.19.0.2"  # used for type checking
 types-six = "==1.16.21.20240106"  # used for type checking
 types-urllib3 = "==1.26.25.14"  # used for type checking
-types-xmltodict = "==0.13.0.3" # used by xmltodict
+types-xmltodict = "==0.15.0.20250907" # used by xmltodict
 uvicorn = "==0.20.0"
 webtest = "==3.0.0"  # used by WSGI based tests
 
@@ -201,7 +201,7 @@ GitPython = "~=3.1"  # used for werk collecting
 icalendar = "==5.0.7"  # used for importing .ical files
 recurring_ical_events = "==2.0.2"  # used for parsing recurring events in icalendar objects
 typing-extensions = "==4.15.0"
-xmltodict = "==0.13.0" # used for parsing robotmk test results
+xmltodict = "==0.15.1" # used for parsing robotmk test results
 netapp-ontap = "==9.14.1.0"  # used by netapp special agent
 redfish = "~= 3.2.2"  # used for management board monitoring via Redfish, used by optional MKP
 

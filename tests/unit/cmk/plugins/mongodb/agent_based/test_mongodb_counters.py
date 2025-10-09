@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import StringTable
-from cmk.plugins.collection.agent_based.mongodb_counters import parse_mongodb_counters
+from cmk.plugins.mongodb.agent_based.mongodb_counters import parse_mongodb_counters
 
 _SECTION = {
     "opcounters": {

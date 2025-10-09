@@ -92,7 +92,7 @@ def _create_dashboard_payload(
     icon_config: Mapping[str, object] | None = None,
 ) -> dict[str, object]:
     menu: dict[str, object] = {
-        "topic": "general",
+        "topic": "overview",
         "sort_index": 99,
         "search_terms": [],
         "is_show_more": False,

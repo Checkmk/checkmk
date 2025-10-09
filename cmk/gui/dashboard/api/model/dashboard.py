@@ -10,6 +10,7 @@ from typing import Annotated, Literal, override, Self
 from pydantic import AfterValidator, Discriminator
 
 from cmk.ccc.user import UserId
+from cmk.gui.config import active_config
 from cmk.gui.dashboard import DashboardConfig
 from cmk.gui.dashboard.page_edit_dashboard import dashboard_info_handler
 from cmk.gui.dashboard.type_defs import DashboardRelativeGridLayoutSpec
@@ -21,6 +22,8 @@ from cmk.gui.openapi.framework.model.converter import (
     SiteIdConverter,
 )
 from cmk.gui.openapi.restful_objects.validators import RequestDataValidator
+from cmk.gui.pagetypes import PagetypeTopics
+from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import (
     AnnotatedUserId,
     DashboardEmbeddedViewSpec,
@@ -29,8 +32,8 @@ from cmk.gui.type_defs import (
     SingleInfos,
     VisualContext,
 )
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.icon.registry import all_icons
-from cmk.gui.watolib.main_menu import main_module_topic_registry
 
 from .type_defs import AnnotatedInfoName
 from .widget import BaseWidgetRequest, RelativeGridWidgetRequest, RelativeGridWidgetResponse
@@ -72,19 +75,25 @@ class DashboardIcon:
         return {"icon": icon.name, "emblem": icon.emblem}
 
 
-def _validate_topic(value: str) -> str:
-    # NOTE: `other` is not in the registry, but is the default value for the topic
-    if value != "other" and value not in main_module_topic_registry:
-        raise ValueError(
-            f"Invalid topic, valid options are: {', '.join(main_module_topic_registry)}"
-        )
+def _validate_topic(value: str, user_permissions: UserPermissions) -> str:
+    topic_choices = PagetypeTopics.choices(user_permissions)
+    topic_names = {topic[0] for topic in topic_choices}
+    if value not in topic_names:
+        raise ValueError(f"Invalid topic, valid options are: {', '.join(topic_names)}")
 
     return value
 
 
 @api_model
 class DashboardMenuSettings:
-    topic: Annotated[str, AfterValidator(_validate_topic)] = api_field(
+    topic: Annotated[
+        str,
+        AfterValidator(
+            lambda value: _validate_topic(
+                value, UserPermissions.from_config(active_config, permission_registry)
+            )
+        ),
+    ] = api_field(
         description="Which section in the `Monitor` menu this dashboard is displayed under."
     )
     sort_index: int = api_field(description="Order of the dashboard within the topic.")

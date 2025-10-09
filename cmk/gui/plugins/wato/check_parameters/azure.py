@@ -692,18 +692,6 @@ rulespec_registry.register(
     )
 )
 
-# TODO: migrate and move to new folder structure
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="azure_v2_usagedetails",
-        group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextInput(title=_("Service Type")),
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_azure_usagedetails,
-        title=lambda: _("Azure Usage Details (Costs)"),
-    )
-)
-
 
 def _parameter_valuespec_storage():
     return Dictionary(

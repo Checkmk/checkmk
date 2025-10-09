@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -13,8 +12,12 @@ import time_machine
 
 from cmk.agent_based.v1.type_defs import StringTable
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.base.legacy_checks.systemtime import check_systemtime, discover_systemtime, Params
-from cmk.plugins.collection.agent_based.systemtime import parse_systemtime
+from cmk.plugins.collection.agent_based.systemtime import (
+    check_systemtime,
+    discover_systemtime,
+    Params,
+    parse_systemtime,
+)
 
 
 @pytest.mark.parametrize(

@@ -1,0 +1,16 @@
+#!/bin/bash
+set -euo pipefail
+
+# first param must point on msi file to check
+FILE="$1"
+
+# 3 entries per every sign, we have 3 exe + msi self
+EXPECTED=12
+
+count=$(grep -a -c -P 'Sectigo Public Code Signing CA' "$FILE")
+if [[ "$count" -ne "$EXPECTED" ]]; then
+    echo "Error: $FILE looks as NOT correctly signed, expected $EXPECTED matches, but found $count."
+    exit 1
+else
+    echo "OK: $FILE looks as correctly signed"
+fi

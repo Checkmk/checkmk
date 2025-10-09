@@ -18,7 +18,6 @@ from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.converter import (
     GroupConverter,
-    RegistryConverter,
     SiteIdConverter,
 )
 from cmk.gui.openapi.restful_objects.validators import RequestDataValidator
@@ -33,7 +32,6 @@ from cmk.gui.type_defs import (
     VisualContext,
 )
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.views.icon.registry import all_icons
 
 from .type_defs import AnnotatedInfoName
 from .widget import BaseWidgetRequest, RelativeGridWidgetRequest, RelativeGridWidgetResponse
@@ -47,13 +45,16 @@ class DashboardTitle:
     include_context: bool = api_field(description="Include the context in the title.")
 
 
-type IconName = Annotated[str, AfterValidator(RegistryConverter(lambda x: all_icons()).validate)]
+# TODO: replace with proper icon lookup once it has been properly migrated
+#  the misleading all_icons currently does not contain all icons
+#  alternatively the existing IconSelector should get adjusted to retrieve the correct list
+# type IconName = Annotated[str, AfterValidator(RegistryConverter(lambda x: all_icons()).validate)]
 
 
 @api_model
 class DashboardIcon:
-    name: IconName = api_field(description="The icon name.")
-    emblem: IconName | ApiOmitted = api_field(
+    name: str = api_field(description="The icon name.")
+    emblem: str | ApiOmitted = api_field(
         description="Additional icon name, that will be displayed as a smaller emblem.",
         default_factory=ApiOmitted,
     )

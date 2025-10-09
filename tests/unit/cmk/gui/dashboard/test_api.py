@@ -215,20 +215,6 @@ class TestDashboardIcon:
             "Expected icon to be set"
         )
 
-    def test_invalid_icon_name(self, clients: ClientRegistry) -> None:
-        resp = clients.DashboardClient.create_relative_grid_dashboard(
-            _create_dashboard_payload(
-                "test_dashboard_with_invalid_icon",
-                {},
-                icon_config={"name": "non_existent_icon"},
-            ),
-            expect_ok=False,
-        )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
-        assert resp.json["fields"]["body.general_settings.menu.icon.DashboardIcon.name"][
-            "msg"
-        ].startswith("Value error, Value 'non_existent_icon' is not allowed, valid options are:")
-
 
 def _check_widget_create(
     clients: ClientRegistry,

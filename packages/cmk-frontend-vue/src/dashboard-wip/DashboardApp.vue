@@ -141,8 +141,6 @@ async function cancelEdit() {
   isDashboardEditingMode.value = false
 }
 
-// @ts-expect-error: TODO: use this
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function addWidget(
   content: WidgetContent,
   generalSettings: WidgetGeneralSettings,
@@ -290,6 +288,7 @@ function deepClone<T>(obj: T): T {
         :dashboard-constants="dashboardsManager.constants.value!"
         :edit-widget-spec="getWidgetSpecToEdit(widgetToEdit)"
         @back-button="openAddWidgetDialog = true"
+        @add-widget="addWidget"
       />
       <DashboardFilterSettings
         v-model:open="openDashboardFilterSettings"

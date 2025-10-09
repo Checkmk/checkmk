@@ -950,6 +950,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.ccc",
         "cmk.cee.dcd",
         "cmk.utils",
+        "cmk.metric_backend",
     ),
     Component("cmk.cce.metric_backend.gui"): _allow(
         *PACKAGE_PLUGIN_APIS,

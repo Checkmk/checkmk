@@ -43,35 +43,35 @@ def _make_form() -> Dictionary:
                                     "usually means that the service has not synced since starting. "
                                     "The reported state in this scenario can be configured here."
                                 ),
-                                prefill=DefaultValue(ServiceState.OK),
+                                prefill=DefaultValue(ServiceState.WARN),
                             ),
                         ),
                         "no_data": DictElement(
                             required=False,
                             parameter_form=ServiceState(
                                 title=Title("No data from time provider"),
-                                prefill=DefaultValue(ServiceState.OK),
+                                prefill=DefaultValue(ServiceState.WARN),
                             ),
                         ),
                         "stale_data": DictElement(
                             required=False,
                             parameter_form=ServiceState(
                                 title=Title("Stale data received from time provider"),
-                                prefill=DefaultValue(ServiceState.OK),
+                                prefill=DefaultValue(ServiceState.WARN),
                             ),
                         ),
                         "time_diff_too_large": DictElement(
                             required=False,
                             parameter_form=ServiceState(
                                 title=Title("Difference in time from provider was too large"),
-                                prefill=DefaultValue(ServiceState.OK),
+                                prefill=DefaultValue(ServiceState.WARN),
                             ),
                         ),
                         "shutting_down": DictElement(
                             required=False,
                             parameter_form=ServiceState(
                                 title=Title("The time service was shutting down"),
-                                prefill=DefaultValue(ServiceState.OK),
+                                prefill=DefaultValue(ServiceState.WARN),
                             ),
                         ),
                     },
@@ -101,7 +101,7 @@ def _make_form() -> Dictionary:
                             TimeMagnitude.MILLISECOND,
                         ]
                     ),
-                    prefill_fixed_levels=DefaultValue((0.8, 1.0)),
+                    prefill_fixed_levels=DefaultValue((0.2, 0.5)),
                 ),
             ),
             "time_since_last_successful_sync": DictElement(

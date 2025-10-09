@@ -22,6 +22,8 @@ export type RelativeGridDashboardDomainObject =
 export type ResponsiveGridDashboardDomainObject =
   components['schemas']['ResponsiveGridDashboardDomainObject']
 export type DashboardFilterContext = components['schemas']['DashboardFilterContext']
+export type DashboardFilterContextWithSingleInfos =
+  components['schemas']['DashboardFilterContextResponse']
 export type DashboardGeneralSettings = components['schemas']['DashboardGeneralSettings']
 export type DashboardRelativeGridLayout = components['schemas']['DashboardRelativeGridLayout']
 export type DashboardResponsiveGridLayout = components['schemas']['DashboardResponsiveGridLayout']
@@ -39,7 +41,7 @@ export type ContentResponsiveGrid = {
 export type DashboardModel<T = ContentResponsiveGrid | ContentRelativeGrid> = {
   owner: string
   general_settings: DashboardGeneralSettings
-  filter_context: DashboardFilterContext
+  filter_context: DashboardFilterContextWithSingleInfos
   content: T
 }
 

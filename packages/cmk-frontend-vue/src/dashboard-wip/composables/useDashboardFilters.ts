@@ -6,7 +6,7 @@
 import { type Ref, computed, ref } from 'vue'
 
 import type { ConfiguredFilters, ConfiguredValues } from '@/dashboard-wip/components/filter/types'
-import type { DashboardFilterContext } from '@/dashboard-wip/types/dashboard'
+import type { DashboardFilterContextWithSingleInfos } from '@/dashboard-wip/types/dashboard'
 import {
   type ContextFilter,
   type ContextFilters,
@@ -14,7 +14,7 @@ import {
 } from '@/dashboard-wip/types/filter.ts'
 
 export function useDashboardFilters(
-  dashboardFilterContextRef: Ref<DashboardFilterContext | undefined>
+  dashboardFilterContextRef: Ref<DashboardFilterContextWithSingleInfos | undefined>
 ) {
   const appliedRuntimeFilters = ref<ConfiguredFilters>({})
 

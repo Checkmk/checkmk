@@ -6,6 +6,7 @@
 
 import dataclasses
 
+from cmk.agent_receiver.relay.api.routers.tasks.libs.config_task_factory import ConfigTaskFactory
 from cmk.agent_receiver.relay.api.routers.tasks.libs.retrieve_config_serial import (
     retrieve_config_serial,
 )
@@ -28,6 +29,7 @@ from cmk.agent_receiver.relay.lib.site_auth import InternalAuth
 class GetRelayTasksHandler:
     tasks_repository: TasksRepository
     relay_repository: RelaysRepository
+    config_task_factory: ConfigTaskFactory
 
     def process(
         self, relay_id: RelayID, status: TaskStatus | None, relay_serial: Serial

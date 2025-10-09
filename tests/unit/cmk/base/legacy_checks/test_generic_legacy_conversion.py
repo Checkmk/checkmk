@@ -992,7 +992,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "symantec_av_progstate",
         "symantec_av_quarantine",
         "symantec_av_updates",
-        "systemtime",
         "teracom_tcw241_analog",
         "teracom_tcw241_digital",
         "tinkerforge",

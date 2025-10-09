@@ -5,45 +5,51 @@
 
 
 import time
-from collections.abc import Iterable
+from typing import TypedDict
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import render
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Service,
+)
 from cmk.plugins.collection.agent_based.systemtime import Section
 
-check_info = {}
+
+class Params(TypedDict):
+    levels: tuple[int, int]
 
 
-def discover_systemtime(section: Section) -> Iterable[tuple[None, dict]]:
-    if section:
-        yield None, {}
+def discover_systemtime(section: Section) -> DiscoveryResult:
+    yield Service()
 
 
-def check_systemtime(item, params, parsed):
-    if not parsed:
+def check_systemtime(params: Params, section: Section) -> CheckResult:
+    if "foreign_systemtime" not in section:
         return
 
-    systemtime = parsed["foreign_systemtime"]
-    if "our_systemtime" in parsed:
-        offset = systemtime - parsed["our_systemtime"]
-    else:
-        offset = systemtime - time.time()
+    systemtime = section["foreign_systemtime"]
+    ourtime = section.get("our_systemtime") or time.time()
+    offset = systemtime - ourtime
 
-    warn, crit = params if isinstance(params, tuple) else params["levels"]
-    yield check_levels(
+    warn, crit = params["levels"]
+    yield from check_levels(
         offset,
-        "offset",
-        (warn, crit, -warn, -crit),
-        human_readable_func=render.time_offset,
-        infoname="Offset",
+        metric_name="offset",
+        levels_upper=(warn, crit),
+        levels_lower=(-warn, -crit),
+        render_func=render.time_offset,
+        label="Offset",
     )
 
 
-check_info["systemtime"] = LegacyCheckDefinition(
+check_plugin_systemtime = CheckPlugin(
     name="systemtime",
     service_name="System Time",
     discovery_function=discover_systemtime,
     check_function=check_systemtime,
     check_ruleset_name="systemtime",
-    check_default_parameters={"levels": (30, 60)},
+    check_default_parameters=Params(levels=(30, 60)),
 )

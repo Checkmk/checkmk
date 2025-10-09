@@ -133,7 +133,6 @@ def test_parse() -> None:
                 Service(item="wscsvc"),
             ],
             id="Match only on pattern",
-            marks=pytest.mark.xfail(reason="CMK-25592: currently matches all services"),
         ),
         pytest.param(
             [
@@ -146,7 +145,6 @@ def test_parse() -> None:
                 Service(item="wscsvc"),
             ],
             id="Match all pattern and state",
-            marks=pytest.mark.xfail(reason="CMK-25592: currently matches all services"),
         ),
         pytest.param(
             [
@@ -160,7 +158,6 @@ def test_parse() -> None:
                 Service(item="app2"),
             ],
             id="Match all pattern and start mode",
-            marks=pytest.mark.xfail(reason="CMK-25592: currently matches all services"),
         ),
     ],
 )

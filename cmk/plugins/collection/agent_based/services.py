@@ -93,18 +93,38 @@ def _match_service(service: WinService, settings: WindowsServiceDiscoveryParams)
     if not settings:
         return False
 
-    for pattern in settings.get("services", []):
-        # First match name or description (optional since rule based config option available)
+    def _check_pattern(pattern: str) -> bool:
         expr = re.compile(pattern)
-        if expr.match(service.name) and expr.match(service.description):
-            return True
+        return bool(expr.match(service.name) or expr.match(service.description))
 
     state = settings.get("state")
     mode = settings.get("start_mode")
-    if (state and state != service.state) or (mode and mode != service.start_type):
-        return False
+    patterns = settings.get("services")
 
-    return True
+    # One could argue that these checks should be called from within the match statement below, but
+    # for readability reasons and how cheap these checks are, I think it's fine to do it upfront.
+    has_state_match = bool(state and state == service.state)
+    has_mode_match = bool(mode and mode == service.start_type)
+    has_pattern_match = any(_check_pattern(pattern) for pattern in patterns or [])
+
+    match (state, mode, patterns):
+        case [state, None, None]:
+            return has_state_match
+        case [None, mode, None]:
+            return has_mode_match
+        case [None, None, patterns]:
+            return has_pattern_match
+        case [state, mode, None]:
+            return has_state_match and has_mode_match
+        case [state, None, patterns]:
+            return has_state_match and has_pattern_match
+        case [None, mode, patterns]:
+            return has_mode_match and has_pattern_match
+        case [state, mode, patterns]:
+            return has_state_match and has_mode_match and has_pattern_match
+        # Note: unable to use `assert_never` when matching on a tuple.
+        case _:
+            return False
 
 
 def discovery_windows_services(

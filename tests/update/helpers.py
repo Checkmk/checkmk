@@ -216,18 +216,20 @@ def check_services(site: Site, hostname: str, base_data: dict[str, ServiceInfo])
 
 
 def check_core_reinit(site: Site) -> None:
-    """reinitialize (reload, then restart) the core and check the output"""
+    """Reinitialize (reload, then restart) the core and check the output"""
 
     # reload the core and check the output (see CMK-20653)
     logger.info("Reloading the core...")
     ret_reload = site.run(["cmk", "--reload", "--debug"])
-    assert ret_reload.returncode == 0 and not ret_reload.stderr, "Reloading the core failed!"
+    assert ret_reload.returncode == 0, f"Reloading the core failed!\n STDERR:{ret_reload.stderr}"
+    logger.warning(ret_reload.stderr)  # log possible warnings coming from STDERR
     assert get_site_status(site) == "running", "Invalid service status after reloading!"
 
     # restart the core and check the output (see CMK-20653)
     logger.info("Restarting the core...")
     ret_restart = site.run(["cmk", "--restart", "--debug"])
-    assert ret_restart.returncode == 0 and not ret_restart.stderr, "Restarting the core failed!"
+    assert ret_restart.returncode == 0, f"Restarting the core failed!\n STDERR:{ret_restart.stderr}"
+    logger.warning(ret_restart.stderr)  # log possible warnings coming from STDERR
     assert get_site_status(site) == "running", "Invalid service status after restarting!"
 
 

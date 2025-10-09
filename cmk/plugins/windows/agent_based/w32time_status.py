@@ -79,6 +79,7 @@ class Params(TypedDict):
     offset: LevelsT[float]
     time_since_last_successful_sync: LevelsT[float]
     states: StateParams
+    stratum: LevelsT[int]
 
 
 DEFAULT_PARAMS = Params(
@@ -91,6 +92,7 @@ DEFAULT_PARAMS = Params(
         time_diff_too_large=int(State.OK),
         shutting_down=int(State.OK),
     ),
+    stratum=("fixed", (10, 10)),
 )
 
 
@@ -242,6 +244,7 @@ def check_w32time_status(params: Params, section: QueryStatus) -> CheckResult:
 
     yield from check_levels(
         value=section.stratum,
+        levels_upper=params["stratum"],
         notice_only=True,
         label="Stratum",
         render_func=str,

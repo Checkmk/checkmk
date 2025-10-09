@@ -451,7 +451,7 @@ def test_check_w32time_status_respects_params() -> None:
         Metric("root_dispersion", 0.1054265),
         Result(state=State.OK, notice="Root delay: 34 milliseconds"),
         Metric("root_delay", 0.0336332),
-        Result(state=State.OK, notice="Stratum: 3"),
+        Result(state=State.WARN, notice="Stratum: 3 (warn/crit at 2/5)"),
         Result(state=State.WARN, notice="Sync status: Stale data received from time provider"),
     ]
 

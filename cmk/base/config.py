@@ -700,6 +700,7 @@ def _perform_post_config_loading_actions(
         cluster_max_cachefile_age=cluster_max_cachefile_age,
         http_proxies=http_proxies,
         extra_service_conf=extra_service_conf,
+        timeperiods=timeperiods,
     )
 
     config_cache = ConfigCache(loaded_config).initialize()

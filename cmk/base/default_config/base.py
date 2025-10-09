@@ -22,7 +22,6 @@ from cmk.utils.password_store import Password
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec, TagsOfHosts
 from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import TagConfigSpec
-from cmk.utils.timeperiod import TimeperiodSpecs
 
 # This file contains the defaults settings for almost all configuration
 # variables that can be overridden in main.mk. Some configuration
@@ -252,7 +251,7 @@ define_contactgroups: dict[_ContactgroupName, str] = {}
 contactgroup_members: dict[_ContactgroupName, list[ContactName]] = {}
 contacts: dict[ContactName, Contact] = {}
 # needed for WATO
-timeperiods: TimeperiodSpecs = {}
+timeperiods: object = {}
 clusters: dict[HostName, list[HostName]] = {}
 clustered_services: list[RuleSpec[object]] = []
 # new in 1.1.4

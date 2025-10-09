@@ -30,7 +30,6 @@ import cmk.ec.export as ec
 import cmk.fetchers.snmp as snmp_factory
 import cmk.utils.password_store
 import cmk.utils.paths
-import cmk.utils.timeperiod
 from cmk import trace
 from cmk.agent_based.v1.value_store import set_value_store_manager
 from cmk.base import config, profiling, sources
@@ -131,7 +130,7 @@ from cmk.snmplib import (
     SNMPSectionName,
     walk_for_export,
 )
-from cmk.utils import config_warnings, http_proxy_config, ip_lookup, log
+from cmk.utils import config_warnings, http_proxy_config, ip_lookup, log, timeperiod
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.diagnostics import (
@@ -900,7 +899,7 @@ def mode_dump_hosts(hostlist: Iterable[HostName]) -> None:
             ip_address_of=ip_address_of,
             ip_address_of_mgmt=ip_address_of_mgmt,
             simulation_mode=config.simulation_mode,
-            timeperiod_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
+            timeperiod_active=timeperiod.TimeperiodActiveCoreLookup(
                 livestatus.get_optional_timeperiods_active_map, log=logger.warning
             ).get,
         )
@@ -1550,6 +1549,7 @@ def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
             tag_list=config_cache.host_tags.tag_list,
             service_dependencies=loading_result.loaded_config.service_dependencies,
         ),
+        timeperiods=timeperiod.get_all_timeperiods(loaded_config.timeperiods),
     )
 
 
@@ -1682,6 +1682,7 @@ def mode_update() -> None:
                 ),
                 bake_on_restart=bake_on_restart,
                 notify_relay=_make_configured_notify_relay(),
+                timeperiods=timeperiod.get_all_timeperiods(loaded_config.timeperiods),
             )
     except Exception as e:
         console.error(f"Configuration Error: {e}", file=sys.stderr)
@@ -1786,6 +1787,7 @@ def mode_restart(args: Sequence[HostName]) -> None:
                 and loading_result.config_cache.is_online(hn)
             )
         ),
+        timeperiods=timeperiod.get_all_timeperiods(loaded_config.timeperiods),
         bake_on_restart=_make_configured_bake_on_restart(loading_result, hosts_config.hosts),
         notify_relay=_make_configured_notify_relay(),
     )
@@ -1886,6 +1888,7 @@ def mode_reload(args: Sequence[HostName]) -> None:
                 and loading_result.config_cache.is_online(hn)
             ),
         ),
+        timeperiods=timeperiod.get_all_timeperiods(loaded_config.timeperiods),
         bake_on_restart=_make_configured_bake_on_restart(loading_result, hosts_config.hosts),
         notify_relay=_make_configured_notify_relay(),
     )
@@ -2111,8 +2114,8 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
         backlog_size=config.notification_backlog,
         logging_level=ConfigCache.notification_logging_level(),
         keepalive=keepalive,
-        all_timeperiods=cmk.utils.timeperiod.load_timeperiods(),
-        timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
+        all_timeperiods=timeperiod.load_timeperiods(),
+        timeperiods_active=timeperiod.TimeperiodActiveCoreLookup(
             livestatus.get_optional_timeperiods_active_map, notify.logger.warning
         ),
     )
@@ -2875,7 +2878,7 @@ def run_checking(
         nodes=config_cache.nodes,
         effective_host=config_cache.effective_host,
         get_snmp_backend=config_cache.get_snmp_backend,
-        timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
+        timeperiods_active=timeperiod.TimeperiodActiveCoreLookup(
             livestatus.get_optional_timeperiods_active_map, logger.warning
         ),
     )

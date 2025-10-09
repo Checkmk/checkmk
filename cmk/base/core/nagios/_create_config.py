@@ -66,7 +66,7 @@ from cmk.utils.notify_types import Contact
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.servicename import MAX_SERVICE_NAME_LEN, ServiceName
-from cmk.utils.timeperiod import add_builtin_timeperiods
+from cmk.utils.timeperiod import TimeperiodSpecs
 
 from ._precompile_host_checks import precompile_hostchecks, PrecompileMode
 
@@ -132,6 +132,7 @@ class NagiosCore(MonitoringCore):
         *,
         hosts_to_update: set[HostName] | None = None,
         service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
+        timeperiods: TimeperiodSpecs,
     ) -> None:
         self._config_cache = config_cache
         self._create_core_config(
@@ -146,6 +147,7 @@ class NagiosCore(MonitoringCore):
             default_address_family,
             ip_address_of,
             service_depends_on,
+            timeperiods,
         )
         store.save_text_to_file(
             plugin_index.make_index_file(Path(config_path)),
@@ -183,6 +185,7 @@ class NagiosCore(MonitoringCore):
         ],
         ip_address_of: ip_lookup.IPLookup,
         service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
+        timeperiods: TimeperiodSpecs,
     ) -> None:
         """Tries to create a new Checkmk object configuration file for the Nagios core
 
@@ -216,6 +219,7 @@ class NagiosCore(MonitoringCore):
             default_address_family=default_address_family,
             ip_address_of=ip_address_of,
             service_depends_on=service_depends_on,
+            timeperiods=timeperiods,
         )
 
         store.save_text_to_file(self.objects_file_path, config_buffer.getvalue())
@@ -266,7 +270,9 @@ class NagiosCore(MonitoringCore):
 
 
 class NagiosConfig:
-    def __init__(self, outfile: IO[str], hostnames: Sequence[HostName] | None) -> None:
+    def __init__(
+        self, outfile: IO[str], hostnames: Sequence[HostName] | None, timeperiods: TimeperiodSpecs
+    ) -> None:
         super().__init__()
         self._outfile = outfile
         self.hostnames = hostnames
@@ -278,6 +284,7 @@ class NagiosConfig:
         self.active_checks_to_define: dict[str, str] = {}
         self.custom_commands_to_define: set[CoreCommandName] = set()
         self.hostcheck_commands_to_define: list[tuple[CoreCommand, str]] = []
+        self.timeperiods: Final = timeperiods
 
     def write_str(self, x: str) -> None:
         self._outfile.write(x)
@@ -316,8 +323,9 @@ def create_config(
     ],
     ip_address_of: ip_lookup.IPLookup,
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
+    timeperiods: TimeperiodSpecs,
 ) -> None:
-    cfg = NagiosConfig(outfile, hostnames)
+    cfg = NagiosConfig(outfile, hostnames, timeperiods)
 
     _output_conf_header(cfg)
 
@@ -1181,12 +1189,10 @@ def create_nagios_config_commands(cfg: NagiosConfig) -> None:
 
 
 def _create_nagios_config_timeperiods(cfg: NagiosConfig) -> None:
-    timeperiods = add_builtin_timeperiods(config.timeperiods)
     cfg.write_str("\n# ------------------------------------------------------------\n")
     cfg.write_str("# Timeperiod definitions (controlled by variable 'timeperiods')\n")
     cfg.write_str("# ------------------------------------------------------------\n\n")
-    for name in sorted(timeperiods):
-        tp = timeperiods[name]
+    for name, tp in sorted(cfg.timeperiods.items()):
         timeperiod_spec = {
             "timeperiod_name": name,
             "alias": tp["alias"],

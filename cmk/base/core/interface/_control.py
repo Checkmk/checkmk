@@ -34,6 +34,7 @@ from cmk.utils.log import console
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.servicename import ServiceName
+from cmk.utils.timeperiod import TimeperiodSpecs
 
 from ._base_core import CoreAction, MonitoringCore
 
@@ -67,6 +68,7 @@ def do_reload(
     service_depends_on: Callable[[HostName, ServiceName], Sequence[ServiceName]],
     locking_mode: _LockingMode,
     duplicates: Sequence[HostName],
+    timeperiods: TimeperiodSpecs,
     bake_on_restart: Callable[[], None],
     notify_relay: Callable[[], None],
 ) -> None:
@@ -90,6 +92,7 @@ def do_reload(
         duplicates=duplicates,
         bake_on_restart=bake_on_restart,
         notify_relay=notify_relay,
+        timeperiods=timeperiods,
     )
 
 
@@ -118,6 +121,7 @@ def do_restart(
     service_depends_on: Callable[[HostName, ServiceName], Sequence[ServiceName]],
     locking_mode: _LockingMode,
     duplicates: Sequence[HostName],
+    timeperiods: TimeperiodSpecs,
     bake_on_restart: Callable[[], None],
     notify_relay: Callable[[], None],
 ) -> None:
@@ -143,6 +147,7 @@ def do_restart(
                 duplicates=duplicates,
                 bake_on_restart=bake_on_restart,
                 notify_relay=notify_relay,
+                timeperiods=timeperiods,
             )
             core.run(action)
 
@@ -177,6 +182,7 @@ def do_create_config(
     duplicates: Collection[HostName],
     bake_on_restart: Callable[[], None],
     notify_relay: Callable[[], None],
+    timeperiods: TimeperiodSpecs,
 ) -> None:
     """Creating the monitoring core configuration and additional files
 
@@ -213,6 +219,7 @@ def do_create_config(
                 hosts_to_update=hosts_to_update,
                 service_depends_on=service_depends_on,
                 duplicates=duplicates,
+                timeperiods=timeperiods,
             )
     except Exception as e:
         if cmk.ccc.debug.enabled():
@@ -288,6 +295,7 @@ def _create_core_config(
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     *,
     duplicates: Collection[HostName],
+    timeperiods: TimeperiodSpecs,
 ) -> None:
     config_warnings.initialize()
 
@@ -315,6 +323,7 @@ def _create_core_config(
             hosts_to_update=hosts_to_update,
             service_depends_on=service_depends_on,
             passwords=passwords,
+            timeperiods=timeperiods,
         )
 
     cmk.utils.password_store.save(

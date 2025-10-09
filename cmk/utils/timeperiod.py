@@ -5,7 +5,7 @@
 
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from datetime import datetime
-from typing import NewType, NotRequired, TypeAlias, TypedDict, TypeGuard
+from typing import NewType, NotRequired, TypedDict, TypeGuard
 
 from dateutil.tz import tzlocal
 
@@ -22,7 +22,7 @@ __all__ = [
 ]
 
 TimeperiodName = NewType("TimeperiodName", str)
-DayTimeFrame: TypeAlias = tuple[str, str]
+type DayTimeFrame = tuple[str, str]
 
 
 # TODO: in python 3.13 we may be able to add support for the
@@ -46,6 +46,40 @@ class TimeperiodSpec(TypedDict):
 
 
 TimeperiodSpecs = Mapping[TimeperiodName, TimeperiodSpec]
+
+
+def get_all_timeperiods(raw_configured_timeperiods: object) -> TimeperiodSpecs:
+    return add_builtin_timeperiods(_parse_configured_timeperiods(raw_configured_timeperiods))
+
+
+def _parse_configured_timeperiods(raw: object) -> TimeperiodSpecs:
+    if not isinstance(raw, Mapping):
+        raise TypeError(f"Error parsing configured timeperiods: {raw!r}")
+
+    # This is easier once all keys are mandatory...
+    return {
+        TimeperiodName(raw_name): TimeperiodSpec(
+            alias=str(raw_spec["alias"]),
+            **{  # type: ignore[typeddict-item]
+                k: [_parse_daytimeframe(t) for t in v]
+                for k, v in raw_spec.items()
+                if k not in ("alias", "exclude")
+            },
+            **(
+                {"exclude": [TimeperiodName(e) for e in raw_spec["exclude"]]}
+                if "exclude" in raw_spec
+                else {}
+            ),
+        )
+        for raw_name, raw_spec in raw.items()
+    }
+
+
+def _parse_daytimeframe(value: object) -> DayTimeFrame:
+    match value:
+        case (start, end):
+            return (str(start), str(end))
+    raise TypeError(f"Error parsing DayTimeFrame: {value!r}")
 
 
 def add_builtin_timeperiods(timeperiods: TimeperiodSpecs) -> TimeperiodSpecs:

@@ -58,6 +58,28 @@ def test_parse() -> None:
         pytest.param(
             [
                 {
+                    "state": "paused",
+                },
+            ],
+            [
+                Service(item="app2"),
+            ],
+            id="Match only on state",
+        ),
+        pytest.param(
+            [
+                {
+                    "start_mode": "demand",
+                },
+            ],
+            [
+                Service(item="WSearch"),
+            ],
+            id="Match only on start mode",
+        ),
+        pytest.param(
+            [
+                {
                     "services": ["app*"],
                     "state": "pending",
                 },
@@ -100,6 +122,45 @@ def test_parse() -> None:
             ],
             [Service(item="app2")],
             id="Match on pattern, state, and start mode",
+        ),
+        pytest.param(
+            [
+                {
+                    "services": ["Security*"],
+                },
+            ],
+            [
+                Service(item="wscsvc"),
+            ],
+            id="Match only on pattern",
+            marks=pytest.mark.xfail(reason="CMK-25592: currently matches all services"),
+        ),
+        pytest.param(
+            [
+                {
+                    "services": [".*"],
+                    "state": "running",
+                },
+            ],
+            [
+                Service(item="wscsvc"),
+            ],
+            id="Match all pattern and state",
+            marks=pytest.mark.xfail(reason="CMK-25592: currently matches all services"),
+        ),
+        pytest.param(
+            [
+                {
+                    "services": [".*"],
+                    "start_mode": "auto",
+                },
+            ],
+            [
+                Service(item="wscsvc"),
+                Service(item="app2"),
+            ],
+            id="Match all pattern and start mode",
+            marks=pytest.mark.xfail(reason="CMK-25592: currently matches all services"),
         ),
     ],
 )

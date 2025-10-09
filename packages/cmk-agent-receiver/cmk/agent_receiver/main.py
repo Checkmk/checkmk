@@ -57,7 +57,7 @@ def _build_config_task_factory() -> ConfigTaskFactory:
 async def _build_config_for_relays() -> None:
     """Enqueue initial relay config tasks."""
     factory = _build_config_task_factory()
-    created = factory.process()
+    created = factory.create_for_all_relays()
     logger.info(
         "startup: created %d config task(s) for %d relay(s)",
         len(created),

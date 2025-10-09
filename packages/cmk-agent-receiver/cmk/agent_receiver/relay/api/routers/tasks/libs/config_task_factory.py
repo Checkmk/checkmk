@@ -32,21 +32,40 @@ class ConfigTaskFactory:
     relays_repository: RelaysRepository
     tasks_repository: TasksRepository
 
-    def process(self) -> list[RelayTask]:
+    def create_for_all_relays(self) -> list[RelayTask]:
+        """
+        Creates relay config tasks for all registered relays.
+        The number of actually created task might be lower than the number of the relays,
+        because some relays might already have existing pending tasks for the current serial value.
+        """
+        auth = InternalAuth()
+        relay_ids = self.relays_repository.get_all_relay_ids(auth)
+        return self._create(relay_ids)
+
+    def create_for_relay(self, relay_id: RelayID) -> RelayTask | None:
+        """
+        Creates a relay config task for the specified relay.
+        If the relay has already a pending relay for the current serial value, the function
+        does nothing and returns None.
+        """
+        result = self._create([relay_id])
+        return None if not result else result[0]
+
+    def _create(self, relay_ids: list[RelayID]) -> list[RelayTask]:
         now = datetime.now(UTC)
         created_tasks: list[RelayTask] = []
-        auth = InternalAuth()
         serial = retrieve_config_serial()
         config = get_config()
 
-        for relay_id in self.relays_repository.get_all_relay_ids(auth):
-            if self._pending_configuration_task_exists(relay_id, serial):
+        for rid in relay_ids:
+            # TODO This check should be performed in TasksRepository, when saving
+            if self._pending_configuration_task_exists(rid, serial):
                 continue  # Skip creating duplicate pending tasks
-            parent = config.helper_config_dir / f"{serial}/relays/{relay_id}"
+            parent = config.helper_config_dir / f"{serial}/relays/{rid}"
             relay_config_spec = self._generate_relay_config_spec(serial, parent)
             task = RelayTask(spec=relay_config_spec, creation_timestamp=now, update_timestamp=now)
             with bound_contextvars(task_id=task.id):
-                self.tasks_repository.store_task(relay_id, task)
+                self.tasks_repository.store_task(rid, task)
                 created_tasks.append(task)
         return created_tasks
 

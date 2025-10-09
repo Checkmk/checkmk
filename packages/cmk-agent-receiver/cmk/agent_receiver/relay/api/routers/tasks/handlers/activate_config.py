@@ -15,4 +15,4 @@ class ActivateConfigHandler:
     config_task_factory: ConfigTaskFactory
 
     def process(self) -> list[RelayTask]:
-        return self.config_task_factory.process()
+        return self.config_task_factory.create_for_all_relays()

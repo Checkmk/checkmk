@@ -142,6 +142,7 @@ async def update_task(
     return TaskResponseSerializer.serialize(updated_task)
 
 
+# TODO try to use dependency to check the serial mismatch
 @router.get("/{relay_id}/tasks")
 async def get_tasks_endpoint(
     relay_id: str,

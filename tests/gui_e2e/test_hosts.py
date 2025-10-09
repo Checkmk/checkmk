@@ -269,7 +269,7 @@ def test_agent_test(dashboard_page: MainDashboard) -> None:
         )
     finally:
         if is_cleanup_enabled():
-            SetupHost(dashboard_page.page).delete_host(host_name)
+            SetupHost(dashboard_page.page).delete_hosts(host_name)
 
 
 def test_ping_host(dashboard_page: MainDashboard) -> None:
@@ -336,10 +336,11 @@ server02#127.0.0.2
         preview_page.do_import()
 
         # Let's make sure it actually imported the hosts
-        setup_host = SetupHost(preview_page.page)
+        setup_host = SetupHost(preview_page.page, navigate_to_page=False)
         setup_host.check_host_present("server01")
         setup_host.check_host_present("server02")
     finally:
         if is_cleanup_enabled():
-            SetupHost(preview_page.page).delete_host("server01")
-            SetupHost(preview_page.page).delete_host("server02")
+            SetupHost(preview_page.page, navigate_to_page=False).delete_hosts(
+                "server01", "server02"
+            )

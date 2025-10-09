@@ -144,12 +144,15 @@ class SetupHost(CmkPage):
         logger.info("Check that host '%s' is present", host_name)
         expect(self._host_row(host_name)).to_be_visible()
 
-    def delete_host(self, host_name: str) -> None:
-        host_link = self.main_area.locator("a", has_text=host_name)
-        host_row = self.main_area.locator("table.data tr", has=host_link)
-        host_row.get_by_role("link", name="Delete").click()
-        self.main_area.get_confirmation_popup_button("Yes, delete host").click()
-        self.check_host_not_present(host_name)
+    def delete_hosts(self, *host_names: str) -> None:
+        for host_name in host_names:
+            logger.info("Delete host: %s", host_name)
+            host_link = self.main_area.locator("a", has_text=host_name)
+            host_row = self.main_area.locator("table.data tr", has=host_link)
+            host_row.get_by_role("link", name="Delete").click()
+            self.main_area.get_confirmation_popup_button("Yes, delete host").click()
+            self.validate_page()
+            self.check_host_not_present(host_name)
         self.activate_changes()
 
 

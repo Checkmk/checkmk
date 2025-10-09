@@ -836,6 +836,24 @@ EXAMPLE_99: Mapping[str, object] = {
     ),
 }
 
+EXAMPLE_100: Mapping[str, object] = {
+    "name": "empty_host",
+    "host": {"address": ("direct", "checkmk.com"), "virthost": "/web"},
+    "mode": ("cert", {"cert_days": ("no_levels", None)}),
+}
+
+EXAMPLE_101: Mapping[str, object] = {
+    "name": "empty_host",
+    "host": {"address": ("direct", "checkmk.com"), "virthost": "/web"},
+    "mode": ("url", {"add_headers": ["head:  tail  "]}),
+}
+
+EXAMPLE_102: Mapping[str, object] = {
+    "name": "empty_host",
+    "host": {"address": ("direct", "checkmk.com"), "virthost": "/web"},
+    "mode": ("url", {"add_headers": ["host:  me  "]}),
+}
+
 
 @pytest.mark.parametrize(
     "rule_value, conflict",
@@ -1096,6 +1114,7 @@ def test_nothing_to_assert_rules(rule_value: Mapping[str, object], config: Confi
         (EXAMPLE_25, KEEP_CONFIGURATION, "https://[::1]", "[::1]"),
         (EXAMPLE_26, KEEP_CONFIGURATION, "https://google.com", "google.com"),
         (EXAMPLE_11, KEEP_CONFIGURATION, "http://facebook.de", "$HOSTADDRESS$"),
+        (EXAMPLE_100, KEEP_CONFIGURATION, "https://checkmk.com", "checkmk.com"),
     ],
 )
 def test_migrate_url(
@@ -1623,6 +1642,26 @@ def test_migrate_user_agent(
             EXAMPLE_33,
             Config(add_headers_incompatible=AdditionalHeaders.ignore),
             [{"header_name": "head", "header_value": "tail"}],
+        ),
+        (
+            EXAMPLE_100,
+            KEEP_CONFIGURATION,
+            [{"header_name": "Host", "header_value": "/web"}],
+        ),
+        (
+            EXAMPLE_101,
+            KEEP_CONFIGURATION,
+            [
+                {"header_name": "head", "header_value": "tail"},
+                {"header_name": "Host", "header_value": "/web"},
+            ],
+        ),
+        (
+            EXAMPLE_102,
+            KEEP_CONFIGURATION,
+            [
+                {"header_name": "host", "header_value": "me"},
+            ],
         ),
     ],
 )

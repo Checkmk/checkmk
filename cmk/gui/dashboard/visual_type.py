@@ -62,7 +62,9 @@ class VisualTypeDashboards(VisualType):
     def show_url(self):
         return "dashboard.py"
 
-    def page_menu_add_to_entries(self, add_type: str) -> Iterator[PageMenuEntry]:
+    def page_menu_add_to_entries(
+        self, add_type: str, user_permissions: UserPermissions
+    ) -> Iterator[PageMenuEntry]:
         if not user.may("general.edit_dashboards"):
             return
 
@@ -84,6 +86,7 @@ class VisualTypeDashboards(VisualType):
         add_type: str,
         context: VisualContext | None,
         parameters: dict,
+        user_permissions: UserPermissions,
     ) -> None:
         if not user.may("general.edit_dashboards"):
             # Exceptions do not work here.

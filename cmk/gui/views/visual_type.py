@@ -63,9 +63,7 @@ class VisualTypeViews(VisualType):
     def show_url(self) -> str:
         return "view.py"
 
-    def page_menu_add_to_entries(
-        self, add_type: str, user_permissions: UserPermissions
-    ) -> Iterator[PageMenuEntry]:
+    def page_menu_add_to_entries(self, add_type: str) -> Iterator[PageMenuEntry]:
         return iter(())
 
     def add_visual_handler(
@@ -74,7 +72,6 @@ class VisualTypeViews(VisualType):
         add_type: str,
         context: VisualContext | None,
         parameters: dict,
-        user_permissions: UserPermissions,
     ) -> None:
         return None
 

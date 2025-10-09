@@ -58,15 +58,12 @@ class VisualType(abc.ABC):
         add_type: str,
         context: VisualContext | None,
         parameters: dict,
-        user_permissions: UserPermissions,
     ) -> None:
         """The function to handle adding the given visual to the given visual of this type"""
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def page_menu_add_to_entries(
-        self, add_type: str, user_permissions: UserPermissions
-    ) -> Iterator[PageMenuEntry]:
+    def page_menu_add_to_entries(self, add_type: str) -> Iterator[PageMenuEntry]:
         """List of visual choices another visual of the given type can be added to"""
         raise NotImplementedError()
 

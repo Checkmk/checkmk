@@ -90,7 +90,7 @@ def page_menu_dropdown_add_to_visual(
     for visual_type_class in visual_type_registry.values():
         visual_type = visual_type_class()
 
-        entries = list(visual_type.page_menu_add_to_entries(add_type, user_permissions))
+        entries = list(visual_type.page_menu_add_to_entries(add_type))
         if not entries:
             continue
 
@@ -174,7 +174,6 @@ def ajax_add_visual(config: Config) -> None:
         element_type,
         create_info.context,
         create_info.params,
-        UserPermissions.from_config(config, permission_registry),
     )
 
 

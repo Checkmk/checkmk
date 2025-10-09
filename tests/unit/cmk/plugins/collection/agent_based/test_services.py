@@ -51,7 +51,7 @@ def test_parse() -> None:
     "params, discovered_services",
     [
         pytest.param(
-            [services.WINDOWS_SERVICES_DISCOVERY_DEFAULT_PARAMETERS],
+            [],
             [],
             id="No non-default params passed",
         ),
@@ -61,7 +61,6 @@ def test_parse() -> None:
                     "services": ["app*"],
                     "state": "pending",
                 },
-                services.WINDOWS_SERVICES_DISCOVERY_DEFAULT_PARAMETERS,
             ],
             [
                 Service(item="app", parameters={}, labels=[]),
@@ -74,7 +73,6 @@ def test_parse() -> None:
                     "services": ["Windows*"],
                     "start_mode": "demand",
                 },
-                services.WINDOWS_SERVICES_DISCOVERY_DEFAULT_PARAMETERS,
             ],
             [
                 Service(item="WSearch", parameters={}, labels=[]),
@@ -88,7 +86,6 @@ def test_parse() -> None:
                     "start_mode": "demand",
                     "state": "running",
                 },
-                services.WINDOWS_SERVICES_DISCOVERY_DEFAULT_PARAMETERS,
             ],
             [],
             id="No match on pattern, state, and start mode",
@@ -100,7 +97,6 @@ def test_parse() -> None:
                     "start_mode": "auto",
                     "state": "paused",
                 },
-                services.WINDOWS_SERVICES_DISCOVERY_DEFAULT_PARAMETERS,
             ],
             [Service(item="app2")],
             id="Match on pattern, state, and start mode",

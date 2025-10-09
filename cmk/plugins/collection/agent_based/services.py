@@ -84,6 +84,10 @@ agent_section_services = AgentSection(
 
 
 def _match_service(service: WinService, settings: Mapping[str, Any]) -> bool:
+    # Skip empty discovery settings, i.e. default settings.
+    if not settings:
+        return False
+
     for pattern in settings.get("services", []):
         # First match name or description (optional since rule based config option available)
         expr = re.compile(pattern)
@@ -104,8 +108,7 @@ def discovery_windows_services(
     # Extract the WATO compatible rules for the current host
     for service in section:
         # If no rule is set by user, *no* windows services should be discovered.
-        # Skip the default settings which are the last element of the list:
-        for settings in params[:-1]:
+        for settings in params:
             if _match_service(service, settings):
                 yield Service(item=service.name)
 

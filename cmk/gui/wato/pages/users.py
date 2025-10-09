@@ -28,7 +28,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.i18n import _, _u, get_language_alias, get_languages
+from cmk.gui.i18n import _, _u, get_language_alias, get_languages, ungettext
 from cmk.gui.ldap.ldap_connector import LDAPUserConnector
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -62,7 +62,7 @@ from cmk.gui.userdb import (
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.userdb.user_sync_job import sync_entry_point, UserSyncArgs, UserSyncBackgroundJob
 from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import get_ntop_connection_mandatory, is_ntop_available
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
@@ -101,6 +101,7 @@ from cmk.gui.watolib.users import (
     verify_password_policy,
 )
 from cmk.utils import paths, render
+from cmk.utils.notify_types import EventRule
 
 
 def register(_mode_registry: ModeRegistry) -> None:
@@ -295,16 +296,23 @@ class ModeUsers(WatoMode):
         if not transactions.check_transaction():
             return redirect(self.mode_url())
 
+        for message in get_flashed_messages():
+            html.show_message(message.msg)
+
         if self._can_create_and_delete_users and (
             delete_user := request.get_validated_type_input(UserId, "_delete")
         ):
-            delete_users(
+            deleted_users, users_used_in_notification_rule = delete_users(
                 [delete_user],
                 user_features_registry.features().sites,
                 get_user_attributes(config.wato_user_attrs),
                 use_git=config.wato_use_git,
                 acting_user=user,
             )
+            if users_used_in_notification_rule:
+                self._render_related_rule_warning(users_used_in_notification_rule)
+            if deleted_users:
+                flash(_("Successfully deleted the following user '%s'") % delete_user)
             return redirect(self.mode_url())
 
         if request.var("_sync"):
@@ -371,12 +379,52 @@ class ModeUsers(WatoMode):
                     selected_users.append(user_id)
 
         if selected_users:
-            delete_users(
+            deleted_users, users_used_in_notification_rule = delete_users(
                 selected_users,
                 user_features_registry.features().sites,
                 user_attributes,
                 use_git=use_git,
                 acting_user=user,
+            )
+
+            if users_used_in_notification_rule:
+                self._render_related_rule_warning(users_used_in_notification_rule)
+
+            if deleted_users:
+                flash(
+                    _("Successfully deleted the following %s: %s")
+                    % (
+                        ungettext("user", "users", len(deleted_users)),
+                        (",").join(deleted_users),
+                    )
+                )
+
+    def _render_related_rule_warning(self, related_rules: dict[UserId, list[EventRule]]) -> None:
+        for user_id, rules in related_rules.items():
+            rule_count = len(rules)
+            rule_singular_plural = ungettext("rule", "rules", rule_count)
+            flash(
+                _(
+                    "The deleted user '%s' is used as only specific user by %d notification %s. Please adjust the affected %s."
+                )
+                % (
+                    user_id,
+                    rule_count,
+                    rule_singular_plural,
+                    html.render_a(
+                        _(" notification %s") % rule_singular_plural,
+                        href=makeuri(
+                            request,
+                            [
+                                ("mode", "notifications"),
+                                ("search", f"\\b(?:users:|{user_id})\\b"),
+                                ("filled_in", "inpage_search_form"),
+                            ],
+                            filename="wato.py",
+                        ),
+                    ),
+                ),
+                msg_type="warning",
             )
 
     def page(self, config: Config) -> None:

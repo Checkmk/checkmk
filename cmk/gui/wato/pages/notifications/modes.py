@@ -440,6 +440,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
 
         vs_match_conditions = Dictionary(elements=self._rule_match_conditions(service_levels))
 
+        all_users = userdb.load_users()
         title = self._table_title(show_title, profilemode, userid)
         with table_element(title=title, limit=None, sortable=False) as table:
             if analyse:
@@ -539,7 +540,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
                 html.write_text_permissive(rule["description"])
                 table.cell(_("Contacts"))
 
-                infos = self._rule_infos(rule)
+                infos = self._rule_infos(rule, all_users)
                 if not infos:
                     html.i(_("(no one)"))
                 else:
@@ -619,8 +620,8 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
             return code + _("Notification rules of user %s") % userid
         return _("Global notification rules")
 
-    def _rule_infos(self, rule: EventRule) -> list[str]:
-        infos = []
+    def _rule_infos(self, rule: EventRule, all_users: Users) -> list[str | HTML]:
+        infos: list[str | HTML] = []
         if rule.get("contact_object"):
             infos.append(_("all contacts of the notified object"))
         if rule.get("contact_all"):
@@ -628,7 +629,15 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
         if rule.get("contact_all_with_email"):
             infos.append(_("all users with and email address"))
         if rule.get("contact_users"):
-            infos.append(_("users: ") + (", ".join(rule["contact_users"])))
+            contact_users_list = rule["contact_users"]
+            info = HTML.with_escaping(_("users: "))
+            if (
+                len(contact_users_list) == 1
+                and (explicit_user := contact_users_list[0]) not in all_users
+            ):
+                info += html.render_icon("warning", _("User %s does not exist.") % explicit_user)
+            info += HTML.with_escaping(", ".join(rule["contact_users"]))
+            infos.append(info)
         if rule.get("contact_groups"):
             infos.append(_("contact groups: ") + (", ".join(rule["contact_groups"])))
         if rule.get("contact_emails"):

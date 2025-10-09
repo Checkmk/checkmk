@@ -11,7 +11,3 @@ build-backend = "setuptools.build_meta"
 dependencies = { file = ["requirements.txt"] }
 
 [tool.bandit]
-
-[tool.mypy]
-packages = ["cmk", "tests"]
-strict = true

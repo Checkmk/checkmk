@@ -2114,7 +2114,7 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
         backlog_size=config.notification_backlog,
         logging_level=ConfigCache.notification_logging_level(),
         keepalive=keepalive,
-        all_timeperiods=timeperiod.load_timeperiods(),
+        all_timeperiods=timeperiod.get_all_timeperiods(loading_result.loaded_config.timeperiods),
         timeperiods_active=timeperiod.TimeperiodActiveCoreLookup(
             livestatus.get_optional_timeperiods_active_map, notify.logger.warning
         ),

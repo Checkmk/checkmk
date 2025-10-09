@@ -10,9 +10,7 @@ from typing import NewType, NotRequired, TypedDict, TypeGuard
 from dateutil.tz import tzlocal
 
 from cmk.ccc.i18n import _
-from cmk.ccc.store import load_from_mk_file
 from cmk.utils.dateutils import Weekday, weekday_ids
-from cmk.utils.paths import check_mk_config_dir
 
 __all__ = [
     "TimeperiodName",
@@ -107,15 +105,6 @@ def _builtin_timeperiods() -> TimeperiodSpecs:
             sunday=[("00:00", "24:00")],
         )
     }
-
-
-# NOTE: This is a variation of cmk.gui.watolib.timeperiods.load_timeperiods(). Can we somehow unify this?
-def load_timeperiods() -> TimeperiodSpecs:
-    return add_builtin_timeperiods(
-        load_from_mk_file(
-            check_mk_config_dir / "wato/timeperiods.mk", key="timeperiods", default={}, lock=False
-        )
-    )
 
 
 def _is_time_range(obj: object) -> TypeGuard[DayTimeFrame]:

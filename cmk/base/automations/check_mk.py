@@ -237,6 +237,7 @@ from cmk.utils.rulesets.ruleset_matcher import (
     RulesetName,
 )
 from cmk.utils.servicename import Item, ServiceName
+from cmk.utils.timeperiod import get_all_timeperiods
 
 HistoryFile = str
 HistoryFilePair = tuple[HistoryFile, HistoryFile]
@@ -4188,7 +4189,7 @@ class AutomationNotificationReplay(Automation):
             spooling=ConfigCache.notification_spooling(),
             backlog_size=config.notification_backlog,
             logging_level=ConfigCache.notification_logging_level(),
-            all_timeperiods=cmk.utils.timeperiod.load_timeperiods(),
+            all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),
             timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
                 livestatus.get_optional_timeperiods_active_map, log=logger.warning
             ),
@@ -4231,7 +4232,7 @@ class AutomationNotificationAnalyse(Automation):
                 spooling=ConfigCache.notification_spooling(),
                 backlog_size=config.notification_backlog,
                 logging_level=ConfigCache.notification_logging_level(),
-                all_timeperiods=cmk.utils.timeperiod.load_timeperiods(),
+                all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),
                 timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
                     livestatus.get_optional_timeperiods_active_map, log=logger.warning
                 ),
@@ -4277,7 +4278,7 @@ class AutomationNotificationTest(Automation):
                 spooling=ConfigCache.notification_spooling(),
                 backlog_size=config.notification_backlog,
                 logging_level=ConfigCache.notification_logging_level(),
-                all_timeperiods=cmk.utils.timeperiod.load_timeperiods(),
+                all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),
                 dispatch=dispatch,
                 timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
                     livestatus.get_optional_timeperiods_active_map, log=logger.warning

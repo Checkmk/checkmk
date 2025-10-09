@@ -29,7 +29,7 @@ SOURCE_BUILT_OHM := \
 	$(REPO_PATH)/agents/windows/OpenHardwareMonitorCLI.exe \
 	$(REPO_PATH)/agents/windows/OpenHardwareMonitorLib.dll
 SOURCE_BUILT_EXT := $(REPO_PATH)/agents/windows/robotmk_ext.exe
-SOURCE_BUILT_MK_ORACLE := $(REPO_PATH)/agents/windows/mk-oracle.exe
+SOURCE_BUILT_MK_ORACLE := $(REPO_PATH)/cmk/plugins/oracle/agents/mk-oracle.exe
 SOURCE_BUILT_MK_SQL := $(REPO_PATH)/agents/windows/mk-sql.exe
 SOURCE_BUILT_WINDOWS := \
 	$(REPO_PATH)/agents/windows/check_mk_agent.msi \

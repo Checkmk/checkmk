@@ -113,6 +113,9 @@ def provide_agent_binaries(Map args) {
             dependency_paths_hash: all_dependency_paths_hashes["winagt-build"],
             install_cmd: """\
                 cp \
+                    mk-oracle.exe \
+                    ${checkout_dir}/cmk/plugins/oracle/agents/
+                cp \
                     check_mk_agent-64.exe \
                     check_mk_agent.exe \
                     check_mk_agent.msi \
@@ -122,7 +125,6 @@ def provide_agent_binaries(Map args) {
                     check_mk.user.yml \
                     OpenHardwareMonitorLib.dll \
                     OpenHardwareMonitorCLI.exe \
-                    mk-oracle.exe \
                     mk-sql.exe \
                     robotmk_ext.exe \
                     windows_files_hashes.txt \

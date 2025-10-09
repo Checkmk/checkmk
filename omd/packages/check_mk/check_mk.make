@@ -130,7 +130,6 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) agent
 	    windows/OpenHardwareMonitorLib.dll \
 	    windows/OpenHardwareMonitorCLI.exe \
 	    windows/robotmk_ext.exe \
-	    windows/mk-oracle.exe \
 	    windows/mk-sql.exe \
 	    windows/windows_files_hashes.txt \
 	    windows/mrpe \

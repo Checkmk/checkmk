@@ -34,12 +34,14 @@ from cmk.plugins.azure_v2.agent_based.lib import (
     AzureMetric,
     check_resource_metrics,
     create_check_metrics_function_single,
+    create_discover_by_metrics_function,
     create_discover_by_metrics_function_single,
     inventory_common_azure,
     iter_resource_attributes,
     MetricData,
     parse_resources,
     Resource,
+    Section,
     SustainedLevelDirection,
 )
 
@@ -229,6 +231,56 @@ def test__parse_resource(resource_data: Sequence[str], expected_result: Resource
 
 def test_parse_resources() -> None:
     assert parse_resources(RESOURCES) == PARSED_RESOURCES
+
+
+@pytest.mark.parametrize(
+    "resource_types,section,expected_discovery",
+    [
+        pytest.param(
+            None,
+            PARSED_RESOURCES,
+            [
+                Service(
+                    item="checkmk-mysql-server",
+                    labels=[
+                        ServiceLabel("cmk/azure/tag/tag1", "value1"),
+                        ServiceLabel("cmk/azure/tag/tag2", "value2"),
+                    ],
+                )
+            ],
+            id="single resource, no resource type",
+        ),
+        pytest.param(
+            ["Microsoft.DBforMySQL/servers"],
+            PARSED_RESOURCES,
+            [
+                Service(
+                    item="checkmk-mysql-server",
+                    labels=[
+                        ServiceLabel("cmk/azure/tag/tag1", "value1"),
+                        ServiceLabel("cmk/azure/tag/tag2", "value2"),
+                    ],
+                ),
+            ],
+            id="single resource, matching resource type",
+        ),
+        pytest.param(
+            ["Microsoft.DBforMySQL/flexibleServers"],
+            PARSED_RESOURCES,
+            [],
+            id="single resource, non-matching resource type",
+        ),
+    ],
+)
+def test_create_discover_by_metrics_function(
+    resource_types: Sequence[str] | None, section: Section, expected_discovery: DiscoveryResult
+) -> None:
+    discovery_func = create_discover_by_metrics_function(
+        "average_storage_percent",
+        "average_active_connections",
+        resource_types=resource_types,
+    )
+    assert list(discovery_func(section)) == expected_discovery
 
 
 @pytest.mark.parametrize(

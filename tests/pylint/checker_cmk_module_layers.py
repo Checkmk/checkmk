@@ -373,6 +373,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.helper_interface",
         "cmk.utils.check_utils",
         "cmk.utils.config_warnings",
+        "cmk.utils.http_proxy_config",
         "cmk.utils.ip_lookup",
         "cmk.utils.labels",
         "cmk.utils.notify_types",

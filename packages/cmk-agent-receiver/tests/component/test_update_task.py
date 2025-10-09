@@ -43,7 +43,8 @@ def test_updating_task_should_change_stored_task_object(
     The task status should reflect the type of the attached result.
     """
 
-    _ = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    agent_receiver.set_serial(cf.serial)
 
     task_ids = add_tasks(1, agent_receiver, relay_id)
     task_id = task_ids[0]
@@ -88,7 +89,8 @@ def test_task_no_longer_pending(
     Once a task has been updated with a result, it should no longer appear in the list of pending tasks.
     """
 
-    _ = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    agent_receiver.set_serial(cf.serial)
 
     task_ids = add_tasks(3, agent_receiver, relay_id)
     task_id = task_ids[1]
@@ -120,7 +122,8 @@ def test_timestamps_are_handled(
     modify the "creation_timestamp" value.
     """
 
-    _ = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    agent_receiver.set_serial(cf.serial)
 
     task_ids = add_tasks(1, agent_receiver, relay_id)
     task_id = task_ids[0]
@@ -156,7 +159,8 @@ def test_the_other_tasks_are_not_changed(
     A call to update task should not modify any other possible tasks that belong to the relay.
     """
 
-    _ = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    agent_receiver.set_serial(cf.serial)
 
     task_ids = add_tasks(3, agent_receiver, relay_id)
     task_id = task_ids[1]

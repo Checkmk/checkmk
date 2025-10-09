@@ -45,6 +45,7 @@ def test_activation_performed_by_user_creates_config_tasks_for_each_relay(
     site.set_scenario([relay_id_a, relay_id_b])
 
     serial_folder = create_config_folder(site_context.omd_root, [relay_id_a, relay_id_b])
+    agent_receiver.set_serial(serial_folder.serial)
 
     # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
     resp = agent_receiver.activate_config()
@@ -66,6 +67,7 @@ def test_activation_performed_twice_with_same_config(
     site.set_scenario([relay_id_a, relay_id_b])
 
     serial_folder = create_config_folder(site_context.omd_root, [relay_id_a, relay_id_b])
+    agent_receiver.set_serial(serial_folder.serial)
 
     # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
     resp = agent_receiver.activate_config()
@@ -95,6 +97,7 @@ def test_activation_performed_twice_with_new_config(
     site.set_scenario([relay_id_a, relay_id_b])
 
     config_a = create_config_folder(site_context.omd_root, [relay_id_a, relay_id_b])
+    agent_receiver.set_serial(config_a.serial)
 
     # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
     resp = agent_receiver.activate_config()
@@ -106,6 +109,7 @@ def test_activation_performed_twice_with_new_config(
 
     # Create a new configuration folder simulating a new config activation by user
     config_b = create_config_folder(site_context.omd_root, [relay_id_a, relay_id_b])
+    agent_receiver.set_serial(config_b.serial)
 
     # Simulate second user activation.
     resp = agent_receiver.activate_config()
@@ -129,6 +133,7 @@ def test_new_relays_when_activation_performed(
     site.set_scenario(relays=[relay_id_a, relay_id_b], changes=[(relay_id_c, OP.ADD)])
 
     config_a = create_config_folder(site_context.omd_root, [relay_id_a, relay_id_b])
+    agent_receiver.set_serial(config_a.serial)
 
     # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
     resp = agent_receiver.activate_config()
@@ -148,6 +153,7 @@ def test_new_relays_when_activation_performed(
     )
     # Create a new configuration folder with new relays in site simulating a new config activation by user
     config_b = create_config_folder(site_context.omd_root, [relay_id_a, relay_id_b, relay_id_c])
+    agent_receiver.set_serial(config_b.serial)
 
     # Simulate second user activation.
     resp = agent_receiver.activate_config()
@@ -171,6 +177,7 @@ def test_removed_relays_when_activation_performed(
     site.set_scenario(relays=[relay_id_a, relay_id_b], changes=[(relay_id_a, OP.DEL)])
 
     config_a = create_config_folder(site_context.omd_root, [relay_id_a, relay_id_b])
+    agent_receiver.set_serial(config_a.serial)
 
     # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
     resp = agent_receiver.activate_config()
@@ -184,6 +191,7 @@ def test_removed_relays_when_activation_performed(
     site_client.delete(f"/objects/relay/{relay_id_a}")
     # Create a new configuration folder with new relays in site simulating a new config activation by user
     config_b = create_config_folder(site_context.omd_root, [relay_id_b])
+    agent_receiver.set_serial(config_b.serial)
 
     # Simulate second user activation.
     resp = agent_receiver.activate_config()
@@ -204,7 +212,8 @@ def test_activation_with_no_relays(
     # Start AR with no relays configured in the site
     site.set_scenario([])
 
-    create_config_folder(site_context.omd_root, [])
+    cf = create_config_folder(site_context.omd_root, [])
+    agent_receiver.set_serial(cf.serial)
 
     # Simulate user activation with no relays
     resp = agent_receiver.activate_config()
@@ -226,6 +235,7 @@ def test_activation_with_mixed_relay_task_states(
     site.set_scenario([relay_id_a, relay_id_b])
 
     serial_folder = create_config_folder(site_context.omd_root, [relay_id_a, relay_id_b])
+    agent_receiver.set_serial(serial_folder.serial)
 
     # First activation - creates pending tasks for both relays
     resp = agent_receiver.activate_config()

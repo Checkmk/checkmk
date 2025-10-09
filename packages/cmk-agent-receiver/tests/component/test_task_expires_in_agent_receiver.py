@@ -41,7 +41,8 @@ def test_task_expires_in_agent_receiver(
     # Step 1: Register relay
     site.set_scenario([], [("Wonderful_relay", OP.ADD)])
     relay_id = register_relay(agent_receiver, "Wonderful_relay")
-    _ = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    agent_receiver.set_serial(cf.serial)
 
     # Step 2: Add a task
     task_response = push_task(
@@ -83,7 +84,8 @@ def test_task_expiration_resets_on_update(
     # Register relay
     site.set_scenario([], [("Wonderful_relay", OP.ADD)])
     relay_id = register_relay(agent_receiver, "Wonderful_relay")
-    _ = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    agent_receiver.set_serial(cf.serial)
 
     # Step 2: Add a task
     task_response = push_task(
@@ -137,7 +139,8 @@ def test_completed_tasks_expiration(
     # Register relay
     site.set_scenario([], [("Wonderful_relay", OP.ADD)])
     relay_id = register_relay(agent_receiver, "Wonderful_relay")
-    _ = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    agent_receiver.set_serial(cf.serial)
 
     # Step 2: Add a tasks
     task_a_response = push_task(

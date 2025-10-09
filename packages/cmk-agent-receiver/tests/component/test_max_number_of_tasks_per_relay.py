@@ -27,7 +27,8 @@ def test_cannot_push_more_tasks_than_allowed(
     create_relay_config(max_number_of_tasks=task_count)
 
     relay_id = add_relays(site, 1)[0]
-    _ = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    agent_receiver.set_serial(cf.serial)
 
     # add maximum number of tasks allowed
 

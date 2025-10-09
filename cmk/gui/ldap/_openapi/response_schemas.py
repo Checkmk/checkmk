@@ -507,7 +507,7 @@ class LDAPGroupsToSyncSelector(OneOfSchema):
     }
 
     @override
-    def get_obj_type(self, obj):  # type: ignore[no-untyped-def]
+    def get_obj_type(self, obj):
         attribute_to_set = obj.get("attribute_to_set")
         if attribute_to_set not in self.type_schemas:
             self.type_schemas[attribute_to_set] = LDAPGroupsToSyncAllOthers

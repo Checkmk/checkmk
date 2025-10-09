@@ -16,7 +16,7 @@ class GetRateError(IgnoreResultsError):
     """
 
 
-def get_rate(  # type: ignore[explicit-any]
+def get_rate(
     value_store: MutableMapping[str, Any],
     key: str,
     time: float,
@@ -109,7 +109,7 @@ def get_rate(  # type: ignore[explicit-any]
     return rate
 
 
-def get_average(  # type: ignore[explicit-any]
+def get_average(
     value_store: MutableMapping[str, Any],
     key: str,
     time: float,
@@ -180,9 +180,9 @@ def get_average(  # type: ignore[explicit-any]
     relative_series_legth = (time - start_time) / (backlog_minutes * 60.0)
     # go back to regular EMA once the timeseries is twice   ↓ the backlog.
     # float**float is Any to mypy :-(
-    backlog_weight = 0.5 ** min(1.0, relative_series_legth / 2.0)  # type: ignore[misc]
+    backlog_weight = 0.5 ** min(1.0, relative_series_legth / 2.0)
 
-    weight: float = (1 - backlog_weight) ** (1.0 / backlog_count)  # type: ignore[misc]
+    weight: float = (1 - backlog_weight) ** (1.0 / backlog_count)
 
     average = (1.0 - weight) * value + weight * last_average
     value_store[key] = (start_time, time, average)

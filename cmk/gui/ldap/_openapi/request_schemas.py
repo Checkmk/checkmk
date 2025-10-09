@@ -41,7 +41,7 @@ class LDAPCheckboxSelector(OneOfSchema):
     type_field_remove = False
 
     @override
-    def get_obj_type(self, obj):  # type: ignore[no-untyped-def]
+    def get_obj_type(self, obj):
         return obj["state"]
 
 
@@ -666,7 +666,7 @@ class LDAPSyncPluginGroupsToSyncSelector(OneOfSchema):
     }
 
     @override
-    def get_data_type(self, data):  # type: ignore[no-untyped-def]
+    def get_data_type(self, data):
         data_type = data.get(self.type_field)
         if data_type not in ("start_url", "disable_notifications"):
             return "all_others"

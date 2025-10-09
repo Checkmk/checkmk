@@ -21,7 +21,7 @@ def ajax_tree_openclose(config: Config) -> None:
     tree = request.get_str_input_mandatory("tree")
     name = request.get_str_input_mandatory("name")
 
-    user.set_tree_state(tree, name, request.get_str_input("state"))  # type: ignore[no-untyped-call]
+    user.set_tree_state(tree, name, request.get_str_input("state"))
     user.save_tree_states()
     response.set_data("OK")  # Write out something to make debugging easier
 

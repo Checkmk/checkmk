@@ -54,9 +54,7 @@ class SNMPTrapParser:
             return
 
         # Hand over our logger to PySNMP
-        pysnmp.debug.setLogger(  # type: ignore[no-untyped-call]
-            pysnmp.debug.Debug("all", printer=logger.debug)  # type: ignore[no-untyped-call]
-        )
+        pysnmp.debug.setLogger(pysnmp.debug.Debug("all", printer=logger.debug))
 
         self.snmp_engine = pysnmp.entity.engine.SnmpEngine()
         self._initialize_snmp_credentials(config)
@@ -65,14 +63,14 @@ class SNMPTrapParser:
         # receiver instance is kept alive by the registration itself, so there is no need to store
         # it anywhere here. The callback stores the parsed trap in _varbinds_and_ipaddress when
         # parse() is called.
-        SNMPTrapParser._ECNotificationReceiver(  # type: ignore[no-untyped-call]
+        SNMPTrapParser._ECNotificationReceiver(
             self.snmp_engine,
             self._handle_snmptrap,
         )
         self._varbinds_and_ipaddress: tuple[Iterable[tuple[str, str]], str] | None = None
         self._snmp_trap_translator = SNMPTrapTranslator(settings, config, logger)
 
-        self.snmp_engine.observer.registerObserver(  # type: ignore[no-untyped-call]
+        self.snmp_engine.observer.registerObserver(
             self._handle_unauthenticated_snmptrap,
             "rfc2576.prepareDataElements:sm-failure",
             "rfc3412.prepareDataElements:sm-failure",
@@ -155,7 +153,7 @@ class SNMPTrapParser:
                     ".".join(str(i) for i in priv_proto),
                     engine_id,
                 )
-                pysnmp.entity.config.addV3User(  # type: ignore[no-untyped-call]
+                pysnmp.entity.config.addV3User(
                     self.snmp_engine,
                     user_id,
                     auth_proto,
@@ -173,10 +171,8 @@ class SNMPTrapParser:
             VERBOSE, "Trap received from %s:%d. Checking for acceptance now.", sender_address
         )
         self._varbinds_and_ipaddress = None
-        self.snmp_engine.setUserContext(  # type: ignore[no-untyped-call]
-            sender_address=sender_address
-        )
-        self.snmp_engine.msgAndPduDsp.receiveMessage(  # type: ignore[no-untyped-call]
+        self.snmp_engine.setUserContext(sender_address=sender_address)
+        self.snmp_engine.msgAndPduDsp.receiveMessage(
             snmpEngine=self.snmp_engine,
             transportDomain=(),
             transportAddress=sender_address,
@@ -212,7 +208,7 @@ class SNMPTrapParser:
                 VERBOSE,
                 'Trap accepted from %s (ContextEngineId "%s", SNMPContext "%s")',
                 ipaddress,
-                context_engine_id.prettyPrint(),  # type: ignore[no-untyped-call]
+                context_engine_id.prettyPrint(),
                 context_name.prettyPrint(),
             )
 
@@ -276,7 +272,7 @@ class SNMPTrapTranslator:
     ) -> pysnmp.smi.view.MibViewController | None:
         try:
             # manages python MIB modules
-            builder = pysnmp.smi.builder.MibBuilder()  # type: ignore[no-untyped-call]
+            builder = pysnmp.smi.builder.MibBuilder()
 
             # we need compiled Mib Dir and explicit system Mib Dir
             for source in [
@@ -285,20 +281,20 @@ class SNMPTrapTranslator:
                 paths.system_mibs_dir,
                 paths.compiled_mibs_dir,
             ]:
-                builder.addMibSources(pysnmp.smi.builder.DirMibSource(source.value))  # type: ignore[no-untyped-call]
+                builder.addMibSources(pysnmp.smi.builder.DirMibSource(source.value))
 
             # Indicate if we wish to load DESCRIPTION and other texts from MIBs
             builder.loadTexts = load_texts
 
             # This loads all or specified pysnmp MIBs into memory
-            builder.loadModules()  # type: ignore[no-untyped-call]
+            builder.loadModules()
 
             loaded_mib_module_names = list(builder.mibSymbols.keys())
             logger.info("Loaded %d SNMP MIB modules", len(loaded_mib_module_names))
             logger.log(VERBOSE, "Found modules: %s", ", ".join(loaded_mib_module_names))
 
             # This object maintains various indices built from MIBs data
-            return pysnmp.smi.view.MibViewController(builder)  # type: ignore[no-untyped-call]
+            return pysnmp.smi.view.MibViewController(builder)
         except pysnmp.smi.error.SmiError:
             logger.info(
                 "Exception while loading MIB modules. Proceeding without modules!", exc_info=True
@@ -312,7 +308,7 @@ class SNMPTrapTranslator:
     def _translate_binding_simple(
         oid: pysnmp.proto.rfc1902.ObjectName, value: SimpleAsn1Type
     ) -> tuple[str, str]:
-        key = "Uptime" if oid.asTuple() == (1, 3, 6, 1, 2, 1, 1, 3, 0) else str(oid)  # type: ignore[no-untyped-call]
+        key = "Uptime" if oid.asTuple() == (1, 3, 6, 1, 2, 1, 1, 3, 0) else str(oid)
         # We could use Asn1Type.isSuperTypeOf() instead of isinstance() below.
         if isinstance(value, pysnmp.proto.rfc1155.TimeTicks | pysnmp.proto.rfc1902.TimeTicks):
             val = approx_age(float(value) / 100)
@@ -350,7 +346,7 @@ class SNMPTrapTranslator:
     ) -> tuple[str, str]:
         # Disable mib_var[0] type detection
         mib_var = pysnmp.smi.rfc1902.ObjectType(
-            pysnmp.smi.rfc1902.ObjectIdentity(oid),  # type: ignore[no-untyped-call]
+            pysnmp.smi.rfc1902.ObjectIdentity(oid),
             value,
         ).resolveWithMib(self._mib_resolver)
         node = mib_var[0].getMibNode()
@@ -375,21 +371,21 @@ def compile_mib(
     return (
         MibCompiler(
             SmiV1CompatParser(),
-            PySnmpCodeGen(),  # type: ignore[no-untyped-call]
-            PyFileWriter(destination_dir),  # type: ignore[no-untyped-call]
+            PySnmpCodeGen(),
+            PyFileWriter(destination_dir),
         )
         .addSources(
             # Provides the just uploaded MIB module
-            CallbackReader(lambda name, _context: content if name == mibname else "", None),  # type: ignore[no-untyped-call]
+            CallbackReader(lambda name, _context: content if name == mibname else "", None),
             # Directories containing ASN1 MIB files which may be used for dependency resolution
-            *[FileReader(path) for path in source_dirs],  # type: ignore[no-untyped-call]
+            *[FileReader(path) for path in source_dirs],
         )
         .addSearchers(
             # check for additional already compiled MIBs
-            *[PyFileSearcher(path) for path in search_dirs],  # type: ignore[no-untyped-call]
+            *[PyFileSearcher(path) for path in search_dirs],
             # check compiled MIBs shipped with PySNMP
-            *[PyPackageSearcher(package) for package in PySnmpCodeGen.defaultMibPackages],  # type: ignore[no-untyped-call]
+            *[PyPackageSearcher(package) for package in PySnmpCodeGen.defaultMibPackages],
             # never recompile MIBs with MACROs
-            StubSearcher(*PySnmpCodeGen.baseMibs),  # type: ignore[no-untyped-call]
+            StubSearcher(*PySnmpCodeGen.baseMibs),
         )
     ).compile(mibname, ignoreErrors=True, genTexts=True)

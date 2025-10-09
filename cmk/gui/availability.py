@@ -202,7 +202,7 @@ class AvailabilityColumns:
         self.bi = self._bi_availability_columns()
 
     def __getitem__(self, key: str) -> list[ColumnSpec]:
-        return getattr(self, key)  # type: ignore[no-any-return]
+        return getattr(self, key)
 
     def _host_availability_columns(self) -> list[ColumnSpec]:
         return [
@@ -1593,7 +1593,7 @@ def load_annotations(lock: bool = False) -> AVAnnotations:
         # Support legacy old wrong name-clashing path
         path = cmk.utils.paths.var_dir / "web/statehist_annotations.mk"
 
-    return store.load_object_from_file(path, default={}, lock=lock)  # type: ignore[no-any-return]
+    return store.load_object_from_file(path, default={}, lock=lock)
 
 
 def update_annotations(

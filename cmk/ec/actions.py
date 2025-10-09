@@ -160,7 +160,7 @@ def do_event_action(
             _do_script_action(history, logger, event_columns, act[1], action_id, event, user)
         else:
             # TODO: Really parse the config, then this can't happen
-            logger.error("Cannot execute action %s: invalid action type %s", action_id, act[0])  # type: ignore[unreachable]
+            logger.error("Cannot execute action %s: invalid action type %s", action_id, act[0])
     except Exception:
         if settings.options.debug:
             raise

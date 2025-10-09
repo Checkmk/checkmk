@@ -66,7 +66,7 @@ def _new_migrated_rules(
 
 
 def _service_name_from_v2(rule_v2: Rule) -> str:
-    return rule_v2.value["endpoints"][0]["service_name"]["name"].removesuffix(MIGRATE_POSTFIX)  # type: ignore[no-any-return]
+    return rule_v2.value["endpoints"][0]["service_name"]["name"].removesuffix(MIGRATE_POSTFIX)
 
 
 def _render_rule(folder_title: str, rule_index: int, service_name: str) -> str:

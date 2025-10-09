@@ -16,7 +16,7 @@ def _extract_bound(
 ) -> tuple[_NumberT, _NumberT] | None:
     match (model, level_dir):
         case ({"levels_upper_min": (warn, crit)}, LevelDirection.UPPER):
-            return ntype(warn * scale), ntype(crit * scale)  # type: ignore[misc]
+            return ntype(warn * scale), ntype(crit * scale)
         case _:
             return None
 
@@ -73,7 +73,7 @@ def _parse_to_predictive_levels(
             return _PredictiveLevelsT[_NumberT](
                 period=p,
                 horizon=h,
-                levels=_extract_levels(raw_levels, scale, ntype),  # type: ignore[misc]
+                levels=_extract_levels(raw_levels, scale, ntype),
                 bound=_extract_bound(model, scale, ntype, level_dir),
             )
         # migrate lower predictive levels
@@ -87,7 +87,7 @@ def _parse_to_predictive_levels(
             return _PredictiveLevelsT[_NumberT](
                 period=p,
                 horizon=h,
-                levels=_extract_levels(raw_levels, scale, ntype),  # type: ignore[misc]
+                levels=_extract_levels(raw_levels, scale, ntype),
                 bound=_extract_bound(model, scale, ntype, level_dir),
             )
         # migrate not configured predictive levels

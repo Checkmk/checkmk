@@ -556,7 +556,7 @@ opt_verbose = 0
 opt_debug = False
 
 
-def parse_arguments():  # type: ignore[no-untyped-def]
+def parse_arguments():
     global opt_verbose, opt_debug
     short_options = "h"
     long_options = ["help", "version", "verbose", "debug"]
@@ -603,7 +603,7 @@ def parse_arguments():  # type: ignore[no-untyped-def]
 def main() -> None:
     register_signal_handlers()
     config = Config.load()
-    mode, mode_args, mode_opts, opts = parse_arguments()  # type: ignore[no-untyped-call]
+    mode, mode_args, mode_opts, opts = parse_arguments()
     try:
         current_site_id()
     except KeyError:

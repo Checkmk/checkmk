@@ -208,7 +208,7 @@ def _get_prediction(
             metric_name,
             direction,
             PredictionParameters.model_validate(
-                {  # type: ignore[misc]
+                {
                     "horizon": levels["horizon"],
                     "period": levels["period"],
                     "levels": levels_spec,

@@ -1048,7 +1048,7 @@ class EventServer(ECServerThread):
 
         # Changed "acked" to ("acked", bool) with 1.6.0p20
         if isinstance(merge, tuple):  # TODO: Move this to upgrade time
-            merge, reset_ack = merge  # type: ignore[unreachable]
+            merge, reset_ack = merge
 
         if merge != "never":
             for event in self._event_status.events():

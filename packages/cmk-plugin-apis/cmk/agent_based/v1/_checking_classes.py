@@ -408,7 +408,7 @@ class Result(_ResultTuple):
         cls,
         **kwargs,
     ) -> Result:
-        state, summary, details = _create_result_fields(**kwargs)  # type: ignore[misc]
+        state, summary, details = _create_result_fields(**kwargs)
         return super().__new__(
             cls,
             state=state,

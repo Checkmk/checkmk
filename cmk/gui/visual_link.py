@@ -109,7 +109,7 @@ def _get_visual_by_link_spec(
     available_visuals = visual_type.permitted_visuals(visual_type.visuals(), user_permissions)
 
     with suppress(KeyError):
-        return available_visuals[link_spec.name]  # type: ignore[no-any-return]
+        return available_visuals[link_spec.name]
 
     return None
 

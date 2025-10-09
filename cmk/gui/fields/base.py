@@ -649,7 +649,7 @@ Keys 'optional1', 'required1' occur more than once.
         errors: str | list | dict,
     ) -> None:
         if isinstance(errors, dict):
-            error_store.store_error(errors)  # type: ignore[no-untyped-call]
+            error_store.store_error(errors)
         elif isinstance(errors, list):
             error_store.errors.setdefault("_schema", []).extend(errors)
         elif isinstance(errors, str):
@@ -659,7 +659,7 @@ Keys 'optional1', 'required1' occur more than once.
 
     def _dump_schemas(self, scalar: Result) -> Result | list[Result]:
         rv = []
-        error_store = ErrorStore()  # type: ignore[no-untyped-call]
+        error_store = ErrorStore()
         value = dict(scalar)
         value_initially_empty = not value
 
@@ -710,7 +710,7 @@ Keys 'optional1', 'required1' occur more than once.
         obj: typing.Any,
         **kwargs: typing.Any,
     ) -> Result | list[Result]:
-        error_store = ErrorStore()  # type: ignore[no-untyped-call]
+        error_store = ErrorStore()
 
         result: list[MultiNested.Result] = []
         if self.many:
@@ -722,7 +722,7 @@ Keys 'optional1', 'required1' occur more than once.
                     )
                     result.extend(schemas)
             else:
-                error_store.store_error(self._make_type_error(value))  # type: ignore[no-untyped-call]
+                error_store.store_error(self._make_type_error(value))
         else:
             schemas = self._dump_schemas(value)
             assert isinstance(schemas, list), f"Expected a collection of schemas, got {schemas!r}"
@@ -753,7 +753,7 @@ Keys 'optional1', 'required1' occur more than once.
         self, scalar: Result, partial: bool | types.StrSequenceOrSet | None = None
     ) -> Result:
         rv = {}
-        error_store = ErrorStore()  # type: ignore[no-untyped-call]
+        error_store = ErrorStore()
 
         try:
             value = dict(scalar)

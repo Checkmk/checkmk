@@ -94,7 +94,7 @@ class JobTarget[Args](BaseModel, frozen=True):
         func = getattr(importlib.import_module(value[0]), value[1])
         if not callable(func):
             raise ValueError("The callable must be a callable")
-        return func  # type: ignore[no-any-return]
+        return func
 
     @field_serializer("callable")
     def serialize_callable(self, value: Callable) -> tuple[str, str]:

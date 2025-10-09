@@ -407,9 +407,7 @@ class ExprSchema(CmkOneOfSchema):
                     tree_to_expr(item, self.context["table"])
         except ValueError as e:
             raise ValidationError(str(e)) from e
-        return super().load(  # type: ignore[no-untyped-call]
-            data, many=many, partial=partial, unknown=unknown, **kwargs
-        )
+        return super().load(data, many=many, partial=partial, unknown=unknown, **kwargs)
 
 
 class _ExprNested(base.Nested):

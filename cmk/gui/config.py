@@ -242,7 +242,7 @@ def make_config_object(raw_config: dict[str, Any]) -> Config:
             bases=(Config,),
         )
 
-    return cls(**raw_config)  # type: ignore[no-any-return]
+    return cls(**raw_config)
 
 
 def execute_post_config_load_hooks(config: Config) -> None:

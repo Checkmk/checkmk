@@ -23,9 +23,10 @@ import type {
   OnCloseCallback,
   OnNavigateCallback,
   OnShowAllTopic,
+  OnUserPopupMessagesCallback,
   UnackIncompWerksResult,
   UserHintMessages,
-  UserPopupMessage
+  UserPopupMessageRef
 } from './type-defs'
 
 export class MainMenuService extends ServiceBase {
@@ -35,7 +36,7 @@ export class MainMenuService extends ServiceBase {
   protected showMoreActive: { [key: string]: Ref<boolean> } = {}
   protected userMessageTrigger: UserHintMessages | null = null
   protected unackIncompWerksTrigger: UnackIncompWerksResult | null = null
-  protected userPopupMessages: UserPopupMessage[] = []
+  protected userPopupMessages: UserPopupMessageRef[] = []
   protected itemBadge: { [key: string]: Ref<MenuItemBadge | null> } = {}
   protected api: MainMenuApiClient = new MainMenuApiClient()
 
@@ -172,8 +173,12 @@ export class MainMenuService extends ServiceBase {
     }
   }
 
-  public async markMessageRead(id: NavItemIdEnum) {
-    await this.api.markMessageRead(id)
+  public async markMessageRead(msgId: string) {
+    await this.api.markMessageRead(msgId)
+  }
+
+  public onUserPopupMessages(callback: OnUserPopupMessagesCallback) {
+    this.pushCallBack('user-popup-messages', callback)
   }
 
   protected async updateUserMessages() {
@@ -188,9 +193,17 @@ export class MainMenuService extends ServiceBase {
     }
 
     this.userPopupMessages = res.popup_messages.map((msg) => {
-      msg.title = res.hint_messages.title
-      return msg
+      return {
+        id: msg.id,
+        text: msg.text,
+        title: res.hint_messages.title,
+        open: ref<boolean>(true)
+      }
     })
+
+    if (this.userPopupMessages.length > 0) {
+      this.dispatchCallback('user-popup-messages', this.userPopupMessages)
+    }
   }
 
   protected async updateUnacknowledgedIncompatibleWerks() {

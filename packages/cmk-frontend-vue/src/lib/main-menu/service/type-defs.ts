@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { NavItem, NavItemTopic } from 'cmk-shared-typing/typescript/main_menu'
+import type { Ref } from 'vue'
 
 import type { Colors } from '@/components/CmkBadge.vue'
 
@@ -11,6 +12,7 @@ export type OnNavigateCallback = (item: NavItem) => void
 export type OnCloseCallback = (id: string) => void
 export type OnToggleShowMoreLess = (id: string, show_more_active: boolean) => void
 export type OnShowAllTopic = (id: string, topic: NavItemTopic) => void
+export type OnUserPopupMessagesCallback = (msgs: UserPopupMessageRef[]) => void
 
 export interface AjaxResponse<T> {
   result_code: number
@@ -38,7 +40,11 @@ export interface UserMessagesResult {
 export interface UserPopupMessage {
   id: string
   text: string
-  title?: string
+}
+
+export interface UserPopupMessageRef extends UserPopupMessage {
+  title: string
+  open: Ref<boolean>
 }
 
 export interface UserHintMessages {

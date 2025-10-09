@@ -6,14 +6,17 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import { type MainMenuConfig } from 'cmk-shared-typing/typescript/main_menu'
-import { provide } from 'vue'
+import { provide, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
+import type { TranslatedString } from '@/lib/i18nString'
 import { KeyShortcutService } from '@/lib/keyShortcuts'
 import { MainMenuService } from '@/lib/main-menu/service/main-menu'
+import { type UserPopupMessageRef } from '@/lib/main-menu/service/type-defs'
 
 import CmkButton from '@/components/CmkButton.vue'
 import CmkKeyboardKey from '@/components/CmkKeyboardKey.vue'
+import CmkPopupDialog from '@/components/CmkPopupDialog.vue'
 
 import NavItem from './components/NavItem.vue'
 import ItemPopup from './components/popup/ItemPopup.vue'
@@ -25,6 +28,12 @@ const props = defineProps<MainMenuConfig>()
 
 const mainMenu = new MainMenuService(props.main, props.user, new KeyShortcutService(window))
 provide(mainMenuKey, mainMenu)
+
+const usePopupMessages = ref<UserPopupMessageRef[]>([])
+
+mainMenu.onUserPopupMessages((msgs) => {
+  usePopupMessages.value = msgs
+})
 </script>
 
 <template>
@@ -78,6 +87,19 @@ provide(mainMenuKey, mainMenu)
       </template>
     </PopupBackdrop>
   </nav>
+  <CmkPopupDialog
+    v-for="msg in usePopupMessages"
+    :key="msg.id"
+    :open="msg.open"
+    :title="msg.title as TranslatedString"
+    :text="msg.text as TranslatedString"
+    @close="
+      () => {
+        mainMenu.markMessageRead(msg.id)
+        msg.open = false
+      }
+    "
+  />
 </template>
 
 <style scoped>

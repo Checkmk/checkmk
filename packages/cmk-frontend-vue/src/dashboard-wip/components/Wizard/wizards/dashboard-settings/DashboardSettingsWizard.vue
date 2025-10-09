@@ -146,7 +146,7 @@ const save = async () => {
           <CmkTab id="visibility">{{ _t('Visibility') }}</CmkTab>
         </template>
         <template #tab-contents>
-          <CmkTabContent id="general">
+          <CmkTabContent id="general" class="db-settings-wizard__box">
             <GeneralSettings
               v-model:name="generalSettings.title.text"
               v-model:add-filter-suffix="generalSettings.title.include_context"
@@ -162,10 +162,10 @@ const save = async () => {
               @update:description="updateDescription"
             />
           </CmkTabContent>
-          <CmkTabContent id="access">
+          <CmkTabContent id="access" class="db-settings-wizard__box">
             <AccessSettings v-model:share="generalSettings.visibility.share" />
           </CmkTabContent>
-          <CmkTabContent id="visibility">
+          <CmkTabContent id="visibility" class="db-settings-wizard__box">
             <VisibilitySettings
               v-model:monitor-menu="generalSettings.menu.topic"
               v-model:hide-in-monitor-menu="generalSettings.visibility.hide_in_monitor_menu"
@@ -191,5 +191,9 @@ const save = async () => {
   width: 100vh;
   flex: 2;
   padding: var(--spacing-double);
+}
+
+.db-settings-wizard__box {
+  background-color: var(--ux-theme-2);
 }
 </style>

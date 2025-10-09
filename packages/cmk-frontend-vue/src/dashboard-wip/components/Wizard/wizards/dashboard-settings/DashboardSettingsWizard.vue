@@ -28,17 +28,17 @@ import VisibilitySettings from './components/VisibilitySettings.vue'
 const { _t } = usei18n()
 
 const props = defineProps<{
-  dashboardId: string
+  activeDashboardId: string
   dashboardGeneralSettings: DashboardGeneralSettings
   dashboardRestrictedToSingle: string[]
 }>()
 
 const emit = defineEmits<{
-  save: [dashboardName: string, generalSettings: DashboardGeneralSettings]
+  save: [dashboardId: string, generalSettings: DashboardGeneralSettings]
   cancel: []
 }>()
 
-const uniqueId = ref<string>(props.dashboardId)
+const uniqueId = ref<string>(props.activeDashboardId)
 const generalSettings = reactive(props.dashboardGeneralSettings)
 
 // //General

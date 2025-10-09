@@ -250,6 +250,18 @@ const handleApplyRuntimeFilters = (filters: ConfiguredFilters) => {
   urlHandler.updateCheckmkPageUrl(updatedDashboardUrl)
 }
 
+const updateDashboardSettings = async (
+  dashboardName: string,
+  generalSettings: DashboardGeneralSettings
+) => {
+  dashboardsManager.activeDashboard.value!.general_settings = generalSettings
+  await dashboardsManager.persistDashboard()
+  openDashboardSettings.value = false
+  if (dashboardsManager.activeDashboardName.value !== dashboardName) {
+    //TODO: Handle ID change
+  }
+}
+
 function deepClone<T>(obj: T): T {
   return structuredClone(obj)
 }
@@ -308,7 +320,7 @@ function deepClone<T>(obj: T): T {
       />
       <DashboardSettingsWizard
         v-if="openDashboardSettings"
-        :dashboard-id="dashboardsManager.activeDashboardName.value!"
+        :active-dashboard-id="dashboardsManager.activeDashboardName.value!"
         :dashboard-general-settings="
           deepClone(dashboardsManager.activeDashboard.value!.general_settings)
         "
@@ -316,7 +328,7 @@ function deepClone<T>(obj: T): T {
           dashboardsManager.activeDashboard.value!.filter_context.restricted_to_single!
         "
         @cancel="openDashboardSettings = false"
-        @save="() => {}"
+        @save="updateDashboardSettings"
       />
     </div>
     <template v-if="dashboardsManager.isInitialized.value">

@@ -50,11 +50,12 @@ def test_parse() -> None:
 @pytest.mark.parametrize(
     "params, discovered_services",
     [
-        (
+        pytest.param(
             [services.WINDOWS_SERVICES_DISCOVERY_DEFAULT_PARAMETERS],
             [],
+            id="No non-default params passed",
         ),
-        (
+        pytest.param(
             [
                 {
                     "services": ["app*"],
@@ -65,8 +66,9 @@ def test_parse() -> None:
             [
                 Service(item="app", parameters={}, labels=[]),
             ],
+            id="Match on pattern and state",
         ),
-        (
+        pytest.param(
             [
                 {
                     "services": ["Windows*"],
@@ -77,8 +79,9 @@ def test_parse() -> None:
             [
                 Service(item="WSearch", parameters={}, labels=[]),
             ],
+            id="Match on pattern and start mode",
         ),
-        (
+        pytest.param(
             [
                 {
                     "services": ["Windows*"],
@@ -88,8 +91,9 @@ def test_parse() -> None:
                 services.WINDOWS_SERVICES_DISCOVERY_DEFAULT_PARAMETERS,
             ],
             [],
+            id="No match on pattern, state, and start mode",
         ),
-        (
+        pytest.param(
             [
                 {
                     "services": ["app2"],
@@ -99,6 +103,7 @@ def test_parse() -> None:
                 services.WINDOWS_SERVICES_DISCOVERY_DEFAULT_PARAMETERS,
             ],
             [Service(item="app2")],
+            id="Match on pattern, state, and start mode",
         ),
     ],
 )

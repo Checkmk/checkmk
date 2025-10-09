@@ -40,7 +40,7 @@ from ._graph_specification import (
     MinimalVerticalRange,
 )
 from ._graphs_order import GRAPHS_ORDER
-from ._metric_expression import (
+from ._metric_expressions import (
     BaseMetricExpression,
     Constant,
     CriticalOf,

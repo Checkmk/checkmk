@@ -14,7 +14,7 @@ from cmk.gui.graphing._graph_metric_expressions import (
     GraphMetricRRDSource,
     LineType,
 )
-from cmk.gui.graphing._metric_expression import (
+from cmk.gui.graphing._metric_expressions import (
     Metric,
     MetricExpression,
 )

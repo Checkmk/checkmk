@@ -6,7 +6,12 @@
 from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api
 from cmk.gui.graphing._graph_templates import get_graph_template_from_id, GraphTemplate
 from cmk.gui.graphing._legacy import check_metrics
-from cmk.gui.graphing._metric_expression import CriticalOf, Metric, MetricExpression, WarningOf
+from cmk.gui.graphing._metric_expressions import (
+    CriticalOf,
+    Metric,
+    MetricExpression,
+    WarningOf,
+)
 from cmk.gui.graphing._metrics import get_metric_spec
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.graphing_main import _add_graphing_plugins, _load_graphing_plugins

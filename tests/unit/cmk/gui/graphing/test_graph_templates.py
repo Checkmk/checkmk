@@ -30,7 +30,7 @@ from cmk.gui.graphing._graph_templates import (
     GraphTemplate,
     MinimalGraphTemplateRange,
 )
-from cmk.gui.graphing._metric_expression import (
+from cmk.gui.graphing._metric_expressions import (
     BaseMetricExpression,
     Constant,
     CriticalOf,

@@ -47,7 +47,10 @@ TimeperiodSpecs = Mapping[TimeperiodName, TimeperiodSpec]
 
 
 def get_all_timeperiods(raw_configured_timeperiods: object) -> TimeperiodSpecs:
-    return add_builtin_timeperiods(_parse_configured_timeperiods(raw_configured_timeperiods))
+    return {
+        **_parse_configured_timeperiods(raw_configured_timeperiods),
+        **builtin_timeperiods(),
+    }
 
 
 def _parse_configured_timeperiods(raw: object) -> TimeperiodSpecs:
@@ -80,19 +83,15 @@ def _parse_daytimeframe(value: object) -> DayTimeFrame:
     raise TypeError(f"Error parsing DayTimeFrame: {value!r}")
 
 
-def add_builtin_timeperiods(timeperiods: TimeperiodSpecs) -> TimeperiodSpecs:
-    return {**timeperiods, **_builtin_timeperiods()}
-
-
 def remove_builtin_timeperiods(timeperiods: TimeperiodSpecs) -> TimeperiodSpecs:
-    return {k: timeperiods[k] for k in timeperiods.keys() - _builtin_timeperiods().keys()}
+    return {k: timeperiods[k] for k in timeperiods.keys() - builtin_timeperiods().keys()}
 
 
 def is_builtin_timeperiod(name: TimeperiodName) -> bool:
-    return name in _builtin_timeperiods()
+    return name in builtin_timeperiods()
 
 
-def _builtin_timeperiods() -> TimeperiodSpecs:
+def builtin_timeperiods() -> TimeperiodSpecs:
     return {
         TimeperiodName("24X7"): TimeperiodSpec(
             alias=_("Always"),

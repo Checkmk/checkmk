@@ -3168,32 +3168,6 @@ class ConfigurationEntityClient(RestApiClient):
         )
 
 
-class ManagedRobotsClient(RestApiClient):
-    domain: DomainType = "managed_robots"
-
-    def show(self, robot_id: str, expect_ok: bool = True) -> Response:
-        return self.request(
-            "get",
-            url=f"/objects/{self.domain}/{robot_id}",
-            expect_ok=expect_ok,
-        )
-
-    def delete(self, robot_id: str, expect_ok: bool = True) -> Response:
-        return self.request(
-            "delete",
-            url=f"/objects/{self.domain}/{robot_id}",
-            expect_ok=expect_ok,
-        )
-
-    def create(self, managed_robot_data: dict[str, Any], expect_ok: bool = True) -> Response:
-        return self.request(
-            "post",
-            url=f"/domain-types/{self.domain}/collections/all",
-            body=managed_robot_data,
-            expect_ok=expect_ok,
-        )
-
-
 class BrokerConnectionClient(RestApiClient):
     domain: DomainType = "broker_connection"
 
@@ -3634,7 +3608,6 @@ class ClientRegistry:
     SidebarElement: SidebarElementClient
     ParentScan: ParentScanClient
     QuickSetup: QuickSetupClient
-    ManagedRobots: ManagedRobotsClient
     BrokerConnection: BrokerConnectionClient
     BackgroundJob: BackgroundJobClient
     Acknowledge: AcknowledgeClient
@@ -3685,7 +3658,6 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         ParentScan=ParentScanClient(request_handler, url_prefix),
         SamlConnection=SAMLConnectionClient(request_handler, url_prefix),
         QuickSetup=QuickSetupClient(request_handler, url_prefix),
-        ManagedRobots=ManagedRobotsClient(request_handler, url_prefix),
         BrokerConnection=BrokerConnectionClient(request_handler, url_prefix),
         BackgroundJob=BackgroundJobClient(request_handler, url_prefix),
         Acknowledge=AcknowledgeClient(request_handler, url_prefix),

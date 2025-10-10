@@ -80,7 +80,6 @@ DomainType = Literal[
     "quick_setup_action_result",
     "quick_setup_stage",
     "quick_setup_stage_action_result",
-    "managed_robots",
     "onboarding",
     "view",
     "visual_filter",

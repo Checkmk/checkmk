@@ -211,9 +211,9 @@ azure-identity==1.25.1 \
     --hash=sha256:87ca8328883de6036443e1c37b40e8dc8fb74898240f61071e09d2e369361456 \
     --hash=sha256:e9edd720af03dff020223cd269fa3a61e8f345ea75443858273bcb44844ab651
     # via -r cmk/requirements.in
-azure-mgmt-compute==37.0.0 \
-    --hash=sha256:6cf26ef8a32707c1dfc45cd4ec4c949c2a637a9caf7e0e59731ab98e532c7c9f \
-    --hash=sha256:cb7f163fedc93a8125490c572947862fe5b65d570edd00e9874a9ff129a8b4b2
+azure-mgmt-compute==37.0.1 \
+    --hash=sha256:958e61a4d9b0f4d24bf6df81b48deee4bbb8ef2386391d59064e006be9e21452 \
+    --hash=sha256:a99662ed3d7d704530edb2c5e98402c82782c9baa0c660b3db5c81a6b6a10e7f
     # via -r tests/dev-requirements.in
 azure-mgmt-core==1.6.0 \
     --hash=sha256:0460d11e85c408b71c727ee1981f74432bc641bb25dfcf1bb4e90a49e776dbc4 \
@@ -334,17 +334,17 @@ blinker==1.9.0 \
     --hash=sha256:b4ce2265a7abece45e7cc896e98dbebe6cead56bcf805a3d23136d145f5445bf \
     --hash=sha256:ba0efaa9080b619ff2f3459d1d500c57bddea4a6b424b60a91141db6fd2f08bc
     # via flask
-boto3==1.40.48 \
-    --hash=sha256:8a5fb8b5509cd5ddaf3d1d1f0385c974038b47492ca25f3414042676d188f635 \
-    --hash=sha256:b993bbef91f3796f0ae69b2a310a6cef41a06348ed80961f0ebc804680d8e9a4
+boto3==1.40.49 \
+    --hash=sha256:64eb7af5f66998b34ad629786ff4a7f81d74c2d4ef9e42f69d99499dbee46d07 \
+    --hash=sha256:ea37d133548fbae543092ada61aeb08bced8f9aecd2e96e803dc8237459a80a0
     # via -r cmk/requirements.in
-boto3-stubs[logs]==1.40.48 \
-    --hash=sha256:3091ff8d7d6f8ba81236510ded9019230034d229ecf2f08ddec635199a475262 \
-    --hash=sha256:f384d86ae5284285415835a769e6bbdffb6e9d91073fdf4260c10ad222997616
+boto3-stubs[logs]==1.40.49 \
+    --hash=sha256:89b6a64593f9d41b80472d6248148c41eec569172e9175312382838ea7f09092 \
+    --hash=sha256:a4ffaea20b16b9f15c546a7a4ece8abefe356d5f2dbe5727ecd9af4dd62ff93c
     # via -r tests/dev-requirements.in
-botocore==1.40.48 \
-    --hash=sha256:18bed348ce707aa896065b424f36a0b8d542fa6810e9165618e105b1abf34e7e \
-    --hash=sha256:34795305bb5aa670befcbdc936fd144a0af5db5323d78e7245dbd6aa246bf3db
+botocore==1.40.49 \
+    --hash=sha256:bf1089d0e77e4fc2e195d81c519b194ab62a4d4dd3e7113ee4e2bf903b0b75ab \
+    --hash=sha256:fe8d4cbcc22de84c20190ae728c46b931bafeb40fce247010fb071c31b6532b5
     # via
     #   -r cmk/requirements.in
     #   boto3
@@ -4403,9 +4403,9 @@ rfc3987==1.3.8 \
     --hash=sha256:10702b1e51e5658843460b189b185c0366d2cf4cff716f13111b0ea9fd2dce53 \
     --hash=sha256:d3c4d257a560d544e9826b38bc81db676890c79ab9d7ac92b39c7a253d5ca733
     # via jsonschema
-rich==14.1.0 \
-    --hash=sha256:536f5f1785986d6dbdea3c75205c473f970777b4a0d6c6dd1b696aa05a3fa04f \
-    --hash=sha256:e497a48b844b0320d45007cdebfeaeed8db2a4f4bcf49f15e455cfc4af11eaa8
+rich==14.2.0 \
+    --hash=sha256:73ff50c7c0c1c77c8243079283f4edb376f0f6442433aecb8ce7e6d0b92d1fe4 \
+    --hash=sha256:76bc51fe2e57d2b1be1f96c524b890b816e334ab4c1e45888799bfaab0021edd
     # via
     #   -r packages/cmk-werks/requirements.in
     #   bandit
@@ -4918,9 +4918,9 @@ sphinx-autoapi==3.6.0 \
     --hash=sha256:c685f274e41d0842ae7e199460c322c4bd7fec816ccc2da8d806094b4f64af06 \
     --hash=sha256:f3b66714493cab140b0e896d33ce7137654a16ac1edb6563edcbd47bf975f711
     # via -r tests/dev-requirements.in
-sphinx-autodoc-typehints==3.4.0 \
-    --hash=sha256:396c6f9d7e81602110147f4ec16eaf2c1392513c028bc4b2814e2ee170f96934 \
-    --hash=sha256:a249eb72649d05b4b87d42a0ca42259f55049a0ff15539341463f59e4b256ac5
+sphinx-autodoc-typehints==3.5.1 \
+    --hash=sha256:6114bc788d7b5118712b4f163e0c693e3828c552296007ff1a60ba1606b04718 \
+    --hash=sha256:e5c61ae50d0b311129a1f0091c9c25075a5734d575549cbd1b9d9f8a3fc35cfb
     # via -r tests/dev-requirements.in
 sphinx-basic-ng==1.0.0b2 \
     --hash=sha256:9ec55a47c90c8c002b5960c57492ec3021f5193cb26cebc2dc4ea226848651c9 \
@@ -5451,9 +5451,9 @@ vcrpy==7.0.0 \
     # via
     #   -r cmk/requirements.in
     #   pytest-recording
-virtualenv==20.34.0 \
-    --hash=sha256:341f5afa7eee943e4984a9207c025feedd768baff6753cd660c857ceb3e36026 \
-    --hash=sha256:44815b2c9dee7ed86e387b842a84f20b93f7f417f95886ca1996a72a4138eb1a
+virtualenv==20.35.1 \
+    --hash=sha256:041dac43b6899858a91838b616599e80000e545dee01a21172a6a46746472cb2 \
+    --hash=sha256:1d9d93cd01d35b785476e2fa7af711a98d40d227a078941695bbae394f8737e2
     # via pre-commit
 watchdog==6.0.0 \
     --hash=sha256:07df1fdd701c5d4c8e55ef6cf55b8f0120fe1aef7ef39a1c6fc6bc2e606d517a \

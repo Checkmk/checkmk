@@ -146,7 +146,6 @@ def send_requests(
             query=query,
             query_url=config.query_url(),
             session=session,
-            requests_verify=config.usage_verify_cert,
             requests_timeout=config.requests_timeout(),
         )
 
@@ -155,7 +154,6 @@ def _send_query_request_get(
     query: Query,
     session: requests.Session,
     query_url: str,
-    requests_verify: bool,
     requests_timeout: TCPTimeout,
 ) -> HTTPResponse:
     request = requests.Request("GET", query_url + f"?query={query}")

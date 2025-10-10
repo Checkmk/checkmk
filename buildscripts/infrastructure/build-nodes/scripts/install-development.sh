@@ -246,6 +246,8 @@ install_for_python_dev() {
         "libxmlsec1-dev"
         "libffi-dev"
         "liblzma-dev"
+        "libperl-dev"
+        "libpcap-dev"
     )
     install_packages "${PACKAGES_TO_INSTALL[@]}"
 

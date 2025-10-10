@@ -44,7 +44,7 @@ def page_clone_dashlet(config: Config) -> None:
 
     dashboard["dashlets"].append(new_dashlet_spec)
     dashboard["mtime"] = int(time.time())
-    save_and_replicate_all_dashboards()
+    save_and_replicate_all_dashboards(dashboard["owner"])
 
     raise HTTPRedirect(request.get_url_input("back"))
 
@@ -71,7 +71,7 @@ def page_delete_dashlet(config: Config) -> None:
 
     dashboard["dashlets"].pop(ident)
     dashboard["mtime"] = int(time.time())
-    save_and_replicate_all_dashboards()
+    save_and_replicate_all_dashboards(dashboard["owner"])
 
     raise HTTPRedirect(request.get_url_input("back"))
 
@@ -89,7 +89,7 @@ def ajax_dashlet_pos(config: Config) -> None:
         request.get_integer_input_mandatory("w"),
         request.get_integer_input_mandatory("h"),
     )
-    save_and_replicate_all_dashboards()
+    save_and_replicate_all_dashboards(board["owner"])
     response.set_data("OK %d" % board["mtime"])
 
 

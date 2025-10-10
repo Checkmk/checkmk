@@ -150,7 +150,7 @@ def make_main_menu(
         except KeyError:
             topic = topics["other"]
 
-        url = _visual_url(visual_type_name, name)
+        url = _visual_url(visual_type_name, name, visual)
 
         main_menu_topic = by_topic.setdefault(
             topic,
@@ -189,12 +189,12 @@ def make_main_menu(
     ]
 
 
-def _visual_url(visual_type_name: str, name: str) -> str:
+def _visual_url(visual_type_name: str, name: str, visual: Visual) -> str:
     if visual_type_name == "views":
         return "view.py?view_name=%s" % name
 
     if visual_type_name == "dashboards":
-        return "dashboard.py?name=%s" % name
+        return "dashboard.py?name=%s&owner=%s" % (name, visual["owner"])
 
     # Note: This is no real visual type like the others here. This is just a hack to make top level
     # pages work with this function.

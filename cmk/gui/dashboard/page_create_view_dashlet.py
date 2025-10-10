@@ -7,6 +7,7 @@
 
 from collections.abc import Callable
 
+from cmk.ccc.user import UserId
 from cmk.gui import forms, visuals
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
@@ -32,7 +33,7 @@ from .dashlet import (
     DashletConfig,
 )
 from .page_edit_dashlet import dashlet_editor_breadcrumb
-from .store import add_dashlet, get_permitted_dashboards
+from .store import add_dashlet, get_permitted_dashboards_by_owners
 from .type_defs import DashboardName, DashletId, LinkedViewDashletConfig, ViewDashletConfig
 
 __all__ = ["page_create_link_view_dashlet", "page_create_view_dashlet"]
@@ -41,7 +42,9 @@ __all__ = ["page_create_link_view_dashlet", "page_create_view_dashlet"]
 def page_create_link_view_dashlet(config: Config) -> None:
     """Choose an existing view from the list of available views"""
     name = request.get_str_input_mandatory("name")
+    owner = request.get_str_input_mandatory("owner")
     choose_view(
+        UserId(owner),
         name,
         _("Embed existing view"),
         _create_linked_view_dashlet_spec,
@@ -66,11 +69,12 @@ def _create_linked_view_dashlet_spec(dashlet_id: int, view_name: str) -> LinkedV
 def page_create_view_dashlet(config: Config) -> None:
     create = request.var("create", "1") == "1"
     name = request.get_str_input_mandatory("name")
+    owner = request.get_str_input_mandatory("owner")
 
     if create:
         url = makeuri(
             request,
-            [("back", makeuri(request, []))],
+            [("back", makeuri(request, [])), ("owner", owner)],
             filename="create_view_dashlet_infos.py",
         )
         show_create_view_dialog(next_url=url)
@@ -78,6 +82,7 @@ def page_create_view_dashlet(config: Config) -> None:
     else:
         # Choose an existing view from the list of available views
         choose_view(
+            UserId(owner),
             name,
             _("Copy existing view"),
             _create_cloned_view_dashlet_spec,
@@ -143,6 +148,7 @@ def page_create_view_dashlet_infos(config: Config) -> None:
 
 
 def choose_view(
+    owner: UserId,
     name: DashboardName,
     title: str,
     create_dashlet_spec_func: Callable[[DashletId, ViewName], DashletConfig],
@@ -156,7 +162,7 @@ def choose_view(
     )
 
     try:
-        dashboard = get_permitted_dashboards()[name]
+        dashboard = get_permitted_dashboards_by_owners()[name][owner]
     except KeyError:
         raise MKUserError("name", _("The requested dashboard does not exist."))
 
@@ -182,6 +188,7 @@ def choose_view(
                 makeuri_contextless(
                     request,
                     [
+                        ("owner", owner),
                         ("name", name),
                         ("id", str(dashlet_id)),
                         ("back", request.get_url_input("back")),

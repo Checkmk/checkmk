@@ -814,7 +814,7 @@ class ViewWidgetEditPage(Page):
         view_spec = create_view_from_valuespec(old_view=view_spec, view=view_spec)
         embedded = EmbeddedViewSpecManager.normal_to_embedded_view_spec(view_spec)
         dashboard.setdefault("embedded_views", {})[embedded_id] = embedded
-        save_all_dashboards()
+        save_all_dashboards(dashboard["owner"])
         # we don't do the remote site sync here, as this is done when the dashboard is saved
         # we accept that this might drift apart for now
 

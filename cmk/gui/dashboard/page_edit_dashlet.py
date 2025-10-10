@@ -9,6 +9,7 @@
 
 from collections.abc import Callable
 
+from cmk.ccc.user import UserId
 from cmk.gui import forms, visuals
 from cmk.gui.breadcrumb import (
     Breadcrumb,
@@ -43,7 +44,10 @@ from cmk.gui.valuespec import (
 from cmk.gui.visuals.info import visual_info_registry
 
 from .dashlet import Dashlet, dashlet_registry, DashletConfig, DashletId
-from .store import get_permitted_dashboards, save_and_replicate_all_dashboards
+from .store import (
+    get_permitted_dashboards_by_owners,
+    save_and_replicate_all_dashboards,
+)
 from .title_macros import title_help_text_for_macros
 from .type_defs import DashboardConfig
 
@@ -59,10 +63,11 @@ class EditDashletPage(Page):
             raise MKAuthException(_("You are not allowed to edit dashboards."))
 
         self._board = request.get_str_input_mandatory("name")
+        self._owner = request.get_str_input_mandatory("owner")
         self._ident = request.get_integer_input("id")
 
         try:
-            self._dashboard = get_permitted_dashboards()[self._board]
+            self._dashboard = get_permitted_dashboards_by_owners()[self._board][UserId(self._owner)]
         except KeyError:
             raise MKUserError("name", _("The requested dashboard does not exist."))
 
@@ -213,7 +218,7 @@ class EditDashletPage(Page):
                 else:
                     self._dashboard["dashlets"][self._ident] = new_dashlet_spec
 
-                save_and_replicate_all_dashboards()
+                save_and_replicate_all_dashboards(UserId(self._owner))
                 html.footer()
                 raise HTTPRedirect(request.get_url_input("next", request.get_url_input("back")))
 

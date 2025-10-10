@@ -59,9 +59,9 @@ from ._metric_expressions import (
     parse_expression_from_api,
     WarningOf,
 )
+from ._rrd import get_graph_data_from_livestatus
 from ._translated_metrics import translated_metrics_from_row, TranslatedMetric
 from ._unit import ConvertibleUnitSpecification, user_specific_unit
-from ._utils import get_graph_data_from_livestatus
 
 
 class MKGraphNotFound(MKGeneralException): ...

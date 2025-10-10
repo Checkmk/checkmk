@@ -61,6 +61,7 @@ from ._perfometer import get_first_matching_perfometer
 from ._rrd import (
     _reverse_translate_into_all_potentially_relevant_metrics_cached,
     all_rrd_columns_potentially_relevant_for_metric,
+    get_graph_data_from_livestatus,
     translate_and_merge_rrd_columns,
 )
 from ._translated_metrics import (
@@ -77,10 +78,7 @@ from ._unit import (
     user_specific_unit,
     UserSpecificUnit,
 )
-from ._utils import (
-    get_graph_data_from_livestatus,
-    MKCombinedGraphLimitExceededError,
-)
+from ._utils import MKCombinedGraphLimitExceededError
 from ._valuespecs import (
     id_from_unit_spec,
     MetricName,

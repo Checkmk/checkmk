@@ -63,8 +63,8 @@ from ._metric_backend_registry import (
     FetchTimeSeries,
     metric_backend_registry,
 )
+from ._rrd import get_graph_data_from_livestatus
 from ._unit import get_temperature_unit
-from ._utils import get_graph_data_from_livestatus
 
 
 # NOTE

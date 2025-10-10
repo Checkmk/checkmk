@@ -44,6 +44,22 @@ from ._translated_metrics import find_matching_translation, TranslationSpec
 from ._unit import user_specific_unit
 
 
+def get_graph_data_from_livestatus(only_sites, host_name, service_description):  # type: ignore[no-untyped-def]
+    columns = ["perf_data", "metrics", "check_command"]
+    query = livestatus_lql([host_name], columns, service_description)
+    what = "host" if service_description == "_HOST_" else "service"
+    labels = ["site"] + [f"{what}_{col}" for col in columns]
+
+    with sites.only_sites(only_sites), sites.prepend_site():
+        info = dict(zip(labels, sites.live().query_row(query)))
+
+    info["host_name"] = host_name
+    if what == "service":
+        info["service_description"] = service_description
+
+    return info
+
+
 @dataclass(frozen=True, kw_only=True)
 class MetricProperties:
     metric_name: str

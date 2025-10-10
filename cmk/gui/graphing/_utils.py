@@ -9,9 +9,6 @@
 import http
 from typing import NewType
 
-from livestatus import livestatus_lql
-
-from cmk.gui import sites
 from cmk.gui.exceptions import MKHTTPException
 
 
@@ -20,22 +17,6 @@ class MKCombinedGraphLimitExceededError(MKHTTPException):
 
 
 SizeEx = NewType("SizeEx", int)
-
-
-def get_graph_data_from_livestatus(only_sites, host_name, service_description):
-    columns = ["perf_data", "metrics", "check_command"]
-    query = livestatus_lql([host_name], columns, service_description)
-    what = "host" if service_description == "_HOST_" else "service"
-    labels = ["site"] + [f"{what}_{col}" for col in columns]
-
-    with sites.only_sites(only_sites), sites.prepend_site():
-        info = dict(zip(labels, sites.live().query_row(query)))
-
-    info["host_name"] = host_name
-    if what == "service":
-        info["service_description"] = service_description
-
-    return info
 
 
 # TODO: Refactor to some namespace object

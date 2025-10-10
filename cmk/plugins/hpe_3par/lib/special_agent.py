@@ -6,6 +6,8 @@
 Special agent for monitoring 3par devices.
 """
 
+# mypy: disable-error-code="no-untyped-call"
+
 import argparse
 import json
 import sys

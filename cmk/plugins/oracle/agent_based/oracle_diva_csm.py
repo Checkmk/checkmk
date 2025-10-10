@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-call"
+
 # .1.3.6.1.4.1.110901.1.2.1.1.1.2.1       lib status
 # .1.3.6.1.4.1.110901.1.2.2.1.1.8.1.1.x   drive x status
 # .1.3.6.1.4.1.110901.1.3.1.1.4.1         actor status

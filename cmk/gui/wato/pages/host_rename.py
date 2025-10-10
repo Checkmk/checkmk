@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Modes for renaming one or multiple existing hosts"""
 
+# mypy: disable-error-code="no-untyped-call"
+
 import socket
 from collections.abc import Collection, Iterable, Mapping, Sequence
 from typing import Any

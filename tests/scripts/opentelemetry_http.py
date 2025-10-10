@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-call"
+
 """This script demonstrates the use of OpenTelemetry for logging and metrics export via HTTP.
 It sets up OpenTelemetry providers for metrics and logging, sends logs and metrics to a specified
 endpoint, and handles the shutdown on termination signals."""

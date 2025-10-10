@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Check_MK HP StoreOnce Special Agent for REST API Version 4.2.3"""
 
+# mypy: disable-error-code="no-untyped-call"
+
 # TODO: once this agent can be used on a 2.x live system, it should be checked for functionality
 #       and against known exceptions
 

@@ -5,6 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 r"""Check_MK Agent Plugin: mk_filestats
 
+# mypy: disable-error-code="no-untyped-call"
+
 This is a Check_MK Agent plugin. If configured, it will be called by the
 agent without any arguments.
 

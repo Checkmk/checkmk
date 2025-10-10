@@ -6,6 +6,8 @@
 Write cisco_prime_ sections containing JSON formatted results from Cisco Prime API
 """
 
+# mypy: disable-error-code="no-untyped-call"
+
 import argparse
 import json
 import logging

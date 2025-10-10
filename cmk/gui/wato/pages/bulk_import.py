@@ -6,6 +6,8 @@
 single Setup folder. The hosts can either be provided by uploading a CSV file or
 by pasting the contents of a CSV file into a textbox."""
 
+# mypy: disable-error-code="no-untyped-call"
+
 import csv
 import itertools
 import operator

@@ -5,6 +5,8 @@
 """Manage the variable config.wato_host_tags -> The set of tags to be assigned
 to hosts and that is the basis of the rules."""
 
+# mypy: disable-error-code="no-untyped-call"
+
 import abc
 from collections.abc import Collection, Sequence
 

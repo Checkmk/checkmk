@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Special agent: agent_bazel_cache.
 
+# mypy: disable-error-code="no-untyped-call"
+
 This agent collects the metrics from https://bazel-cache-server/metrics.
 Since this endpoint is public, no authentication is required.
 """

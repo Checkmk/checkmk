@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper functions for dealing with Check_MK tags"""
 
+# mypy: disable-error-code="no-untyped-call"
+
 from __future__ import annotations
 
 import contextlib

@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Redfish firmware inventory for HPE devices"""
 
+# mypy: disable-error-code="no-untyped-call"
+
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,

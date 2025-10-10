@@ -5,6 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 r"""Check_MK Agent Plug-in: mk_docker.py
 
+# mypy: disable-error-code="no-untyped-call"
+
 This plugin is configured using an ini-style configuration file,
 i.e. a file with lines of the form 'key: value'.
 At 'agents/cfg_examples/mk_docker.cfg' (relative to the check_mk

@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """functions for all redfish components"""
 
+# mypy: disable-error-code="no-untyped-call"
+
 import json
 from collections.abc import Mapping
 from dataclasses import dataclass

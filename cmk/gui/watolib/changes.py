@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Functions for logging changes and keeping the "Activate Changes" state and finally activating changes."""
 
+# mypy: disable-error-code="no-untyped-call"
+
 import time
 from collections.abc import Iterable, Iterator, Sequence
 from contextlib import contextmanager

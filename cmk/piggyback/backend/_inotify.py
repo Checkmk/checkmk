@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Small wrapper for the kernels `inotify` feature
 
+# mypy: disable-error-code="no-untyped-call"
+
 Existing libraries seem to be rather unmaintained or lack
 features that we want (type annotations).
 

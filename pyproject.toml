@@ -148,7 +148,7 @@ check_untyped_defs = true
 disallow_any_generics = false      # lots of findings all over the place
 disallow_incomplete_defs = true
 disallow_subclassing_any = true
-disallow_untyped_calls = false     # lots of findings all over the place
+disallow_untyped_calls = true
 disallow_untyped_decorators = true
 disallow_untyped_defs = false      # lots of findings all over the place
 extra_checks = true
@@ -184,6 +184,11 @@ enable_error_code = [
   "unused-awaitable",
   "unused-ignore",
 ]
+
+# Do not complain about --strict problems in generated protobuf code
+[[tool.mypy.overrides]]
+module = ["cmc_proto.*"]
+disallow_untyped_calls = false
 
 [tool.pydantic-mypy]
 init_forbid_extra = true

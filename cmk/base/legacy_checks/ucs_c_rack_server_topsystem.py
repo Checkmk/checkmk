@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-call"
+
 # exemplary output of the special agent ucs_bladecenter (separator is <TAB> and means tabulator):
 #
 # <<<ucsc_topsystem:sep(9)>>>

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-call"
+
 # Example output of multi-unit stack (SS5500-EL, etc):
 # SNMPv2-SMI::enterprises.43.45.1.6.1.1.1.3.65536 = Gauge32: 11
 #

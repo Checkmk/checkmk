@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-call"
+
 # DB2 support requires installation of the IBM Data Server Client:
 #  http://www-01.ibm.com/support/docview.wss?uid=swg27016878
 # as well as the ibm_db2 Python DBI driver for DB2:

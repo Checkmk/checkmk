@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """WATO-Module for the rules and aggregations of Checkmk BI"""
 
+# mypy: disable-error-code="no-untyped-call"
+
 import copy
 import json
 from collections.abc import Collection, Iterable

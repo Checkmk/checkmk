@@ -6,6 +6,8 @@
 Special agent for monitoring Amazon web services (AWS) with Check_MK.
 """
 
+# mypy: disable-error-code="no-untyped-call"
+
 # TODO: Using BaseClient all over the place is wrong and leads to the tons of ignore[attr-defined]
 # suppressions below. The code and types have to be restructured to use the right subclass of
 # BaseClient for the client in question.

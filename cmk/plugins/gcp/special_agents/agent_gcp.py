@@ -2,7 +2,9 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-# mypy: disallow_untyped_defs
+
+# mypy: disable-error-code="no-untyped-call"
+
 import datetime
 import json
 import sys

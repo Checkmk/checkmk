@@ -10,6 +10,8 @@ Kubernetes version v1.26 or higher. Moreover, read access to the Kubernetes API
 endpoints monitored by Checkmk must be provided.
 """
 
+# mypy: disable-error-code="no-untyped-call"
+
 # mypy: warn_return_any
 # mypy: disallow_untyped_defs
 

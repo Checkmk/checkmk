@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-call"
+
 # Example output from agent:
 # <<<prtconf:sep(58):persist(1404743142)>>>
 # System Model: IBM,8231-E2D

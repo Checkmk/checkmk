@@ -5,6 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Monitor MongoDB on Linux
 
+# mypy: disable-error-code="no-untyped-call"
+
 This agent plugin creates various sections out of the MongoDB server status information.
 Important: 1) If MongoDB runs as single instance the agent data is assigned
               to the host same host where the plugin resides.

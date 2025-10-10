@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Rulesets"""
 
+# mypy: disable-error-code="no-untyped-call"
+
 from __future__ import annotations
 
 from cmk.gui.config import active_config

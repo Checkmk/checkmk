@@ -5,6 +5,8 @@
 """Python module for generating a PDF containing all license texts that can be
 found under ./license_texts/"""
 
+# mypy: disable-error-code="no-untyped-call"
+
 # mypy: disable-error-code="import-untyped,no-untyped-def"
 
 import argparse

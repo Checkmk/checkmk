@@ -6,6 +6,8 @@
 Special agent for monitoring Prometheus with Checkmk.
 """
 
+# mypy: disable-error-code="no-untyped-call"
+
 import argparse
 import ast
 import json

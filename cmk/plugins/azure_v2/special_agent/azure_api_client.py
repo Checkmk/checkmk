@@ -9,6 +9,8 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Literal, NamedTuple
 
+# mypy: disable-error-code="no-untyped-call"
+
 # workaround - can be removed when CMK-25281 is resolved
 os.environ["SSL_CERT_FILE"] = str(Path(os.getenv("OMD_ROOT", "")) / "var/ssl/ca-certificates.crt")
 

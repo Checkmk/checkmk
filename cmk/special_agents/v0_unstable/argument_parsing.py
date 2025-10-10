@@ -11,6 +11,8 @@ Current responsibilities include:
 * logging
 """
 
+# mypy: disable-error-code="no-untyped-call"
+
 import argparse
 
 from .misc import vcrtrace

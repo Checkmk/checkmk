@@ -5,6 +5,8 @@
 """Render Checkmk graphs as PNG images.
 This is needed for the graphs sent with mail notifications."""
 
+# mypy: disable-error-code="no-untyped-call"
+
 import base64
 import json
 import time

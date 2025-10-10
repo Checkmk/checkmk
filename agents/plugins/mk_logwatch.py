@@ -7,6 +7,8 @@
 This is the Check_MK Agent plugin. If configured it will be called by the
 agent without arguments.
 
+# mypy: disable-error-code="no-untyped-call"
+
 Options:
     -d               Debug mode: No saving of status.
     -c CONFIG_FILE   Use this config file

@@ -5,6 +5,8 @@
 """This module provides commonly used functions for the handling of encrypted
 data within the Checkmk ecosystem."""
 
+# mypy: disable-error-code="no-untyped-call"
+
 from __future__ import annotations
 
 import binascii

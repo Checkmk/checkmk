@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Common module request related stuff"""
 
+# mypy: disable-error-code="no-untyped-call"
+
 import abc
 import base64
 import json

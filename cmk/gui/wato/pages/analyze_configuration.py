@@ -7,6 +7,8 @@ Provides the user with hints about his setup. Performs different
 checks and tells the user what could be improved.
 """
 
+# mypy: disable-error-code="no-untyped-call"
+
 from __future__ import annotations
 
 import dataclasses

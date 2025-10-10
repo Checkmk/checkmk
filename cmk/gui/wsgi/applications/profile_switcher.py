@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Middleware support for conditional request profiling in WSGI applications.
 
+# mypy: disable-error-code="no-untyped-call"
+
 Enables runtime toggling of performance profiling based on configurable triggers, such as specific
 query parameters or configuration settings.
 

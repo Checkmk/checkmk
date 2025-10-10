@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-call"
+
 # <<<jira_custom_svc>>>
 # {"Jira custom 2": {"count": 3200}, "Custom avg": {"avg_sum": 42.0,
 # "avg_total": 50, "avg": "0.84"}} {"Custom Service Count": {"count": 270},

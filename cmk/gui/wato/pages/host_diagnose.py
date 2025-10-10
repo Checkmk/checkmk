@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Verify or find out a hosts agent related configuration"""
 
+# mypy: disable-error-code="no-untyped-call"
+
 import base64
 import json
 from collections.abc import Collection

@@ -1332,7 +1332,8 @@ class Rule:
         # Special case: The main folder must not have a host_folder condition, because
         # these rules should also affect non Setup hosts.
         return self._to_config(
-            use_host_folder=UseHostFolder.NONE if self.folder.is_root() else use_host_folder
+            use_host_folder=UseHostFolder.NONE if self.folder.is_root() else use_host_folder,
+            value=self.value,
         )
 
     def to_single_base_ruleset(self) -> Sequence[RuleSpec]:
@@ -1344,24 +1345,20 @@ class Rule:
         return self._single_base_ruleset_representation
 
     def to_web_api(self) -> RuleSpec:
-        return self._to_config(use_host_folder=UseHostFolder.NONE)
+        return self._to_config(use_host_folder=UseHostFolder.NONE, value=self.value)
 
     def to_log(self) -> RuleSpec:
-        """Returns a JSON compatible format suitable for logging, where passwords are replaced"""
-        vs = self.ruleset.valuespec()
-        masked_value_fn = lambda value: vs.value_to_json(vs.mask(self.value))
-
-        return self._to_config(use_host_folder=UseHostFolder.NONE, transform_value=masked_value_fn)
+        return self._to_config(use_host_folder=UseHostFolder.NONE, value=self.value_masked())
 
     def _to_config(
         self,
         *,
         use_host_folder: UseHostFolder,
-        transform_value: Callable[[RuleValue], RuleValue] | None = None,
+        value: object,
     ) -> RuleSpec:
         rule_spec = RuleSpec(
             id=self.id,
-            value=transform_value(self.value) if transform_value else self.value,
+            value=value,
             condition=self.conditions.to_config(use_host_folder),
         )
         if options := self.rule_options.to_config():

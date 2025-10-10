@@ -945,7 +945,7 @@ def rule_helper(request: FixtureRequest) -> _RuleHelper:
 
 def test_to_log_masks_secrets() -> None:
     log = str(_RuleHelper.gcp_rule().to_log())
-    assert "'password'" in log, "password tuple is present"
+    assert "'explicit_password'" in log, "password tuple is present"
     assert "hunter2" not in log, "password is masked"
 
 

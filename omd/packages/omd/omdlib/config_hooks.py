@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
 """Site configuration and config hooks
 
 Hooks are scripts in lib/omd/hooks that are being called with one
@@ -41,7 +39,7 @@ if TYPE_CHECKING:
 from omdlib.site_paths import SitePaths
 
 ConfigHookChoiceItem = tuple[str, str]
-ConfigHookChoices = Pattern | list[ConfigHookChoiceItem] | ConfigChoiceHasError
+ConfigHookChoices = Pattern[str] | list[ConfigHookChoiceItem] | ConfigChoiceHasError
 ConfigHookResult = tuple[int, str]
 
 
@@ -110,7 +108,7 @@ class NetworkPortHasError(ConfigChoiceHasError):
 class ApacheTCPAddrHasError(ConfigChoiceHasError):
     @override
     def __call__(self, value: str) -> result.Result[None, str]:
-        class _Parser(pydantic.RootModel):
+        class _Parser(pydantic.RootModel[object]):
             root: pydantic.HttpUrl
 
         url = f"http://{value}:80"

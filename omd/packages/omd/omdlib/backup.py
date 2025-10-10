@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
 """Cares about backing up the files of a site"""
 
 import contextlib
@@ -182,7 +180,7 @@ def get_exclude_patterns(options: CommandOptions) -> list[str]:
     return excludes
 
 
-class _RRDSocket(contextlib.AbstractContextManager):
+class _RRDSocket(contextlib.AbstractContextManager["_RRDSocket"]):
     def __init__(self, site_stopped: bool, site_name: str, verbose: bool) -> None:
         self._rrdcached_socket_path = str(Path("site_dir") / "tmp/run/rrdcached.sock")
         self._site_requires_suspension = not site_stopped and os.path.exists(

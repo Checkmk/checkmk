@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
 import abc
 import os
 import subprocess
@@ -77,7 +75,7 @@ class PackageManager(abc.ABC):
         if p.wait() != 0:
             sys.exit("Failed to uninstall package:\n%s" % output)
 
-    def _execute(self, cmd: list[str], verbose: bool) -> subprocess.Popen:
+    def _execute(self, cmd: list[str], verbose: bool) -> subprocess.Popen[str]:
         if verbose:
             sys.stdout.write("Executing: " + subprocess.list2cmdline(cmd))
 

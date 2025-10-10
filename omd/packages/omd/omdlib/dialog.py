@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
 
 """Wrapper functions for interactive dialogs using the dialog cmd tool"""
 
@@ -42,7 +39,7 @@ def dialog_menu(
 
 
 def dialog_regex(
-    title: str, text: str, regex: Pattern, value: str, oktext: str, canceltext: str
+    title: str, text: str, regex: Pattern[str], value: str, oktext: str, canceltext: str
 ) -> DialogResult:
     while True:
         args = [
@@ -177,7 +174,7 @@ def user_confirms(
 
 # TODO: Use standard textwrap module?
 def _wrap_text(text: str, width: int) -> list[str]:
-    def fillup(line, width):
+    def fillup(line: str, width: int) -> str:
         if len(line) < width:
             line += " " * (width - len(line))
         return line
@@ -238,7 +235,7 @@ def _getch() -> str:
 def ask_user_choices(title: str, message: str, choices: list[tuple[str, str]]) -> str:
     sys.stdout.write("\n")
 
-    def pl(line):
+    def pl(line: str) -> None:
         sys.stdout.write(" %s %-76s %s\n" % (tty.bgcyan + tty.white, line, tty.normal))
 
     pl("")

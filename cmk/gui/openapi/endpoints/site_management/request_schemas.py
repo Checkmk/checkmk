@@ -369,6 +369,15 @@ class ConfigurationConnectionWithReplicationAttributes(BaseSchema):
         description="If you enable the replication of MKPs then during each Activate Changes MKPs that are installed on your central site and all other files below the ~/local/ directory will be also transferred to the remote site. Note: all other MKPs and files below ~/local/ on the remote site will be removed.",
         example=True,
     )
+    is_trusted = fields.Boolean(
+        required=False,
+        description=(
+            "When this option is enabled the central site might get compromised by a rogue remote site. "
+            "If you disable this option, some features, such as HTML rendering in service descriptions for the services monitored on this remote site, will no longer work. "
+            "In case the sites are managed by different groups of people, especially when belonging to different organizations, we recommend to disable this setting."
+        ),
+        example=False,
+    )
 
 
 class ConfigurationConnectionAttributes(OneOfSchema):

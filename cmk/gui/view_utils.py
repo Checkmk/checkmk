@@ -61,8 +61,10 @@ _URL_PATTERN = (
 _STATE_MARKER_PATTERN = r"(.*)(\((?:!|!!|.)\))$"
 
 
-def format_plugin_output(output: str, row: Row | None = None, shall_escape: bool = True) -> HTML:
-    shall_escape = _consolidate_escaping_options(row, shall_escape)
+def format_plugin_output(
+    output: str, must_escape: bool, row: Row | None = None, shall_escape: bool = True
+) -> HTML:
+    shall_escape = must_escape or _consolidate_escaping_options(row, shall_escape)
 
     if shall_escape and _render_url_icons(row):
         output = _normalize_check_http_link(output)

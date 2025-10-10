@@ -72,4 +72,4 @@ from cmk.gui.view_utils import format_plugin_output
     ],
 )
 def test_button_url(args: str, expected: HTML) -> None:
-    assert format_plugin_output(args) == expected
+    assert format_plugin_output(args, must_escape=False) == expected

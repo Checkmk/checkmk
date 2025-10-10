@@ -472,6 +472,7 @@ class ConfigurationConnection:
     direct_login_to_web_gui_allowed: bool = True
     replicate_event_console: bool = True
     replicate_extensions: bool = True
+    is_trusted: bool = False
 
     @classmethod
     def from_internal(
@@ -490,6 +491,7 @@ class ConfigurationConnection:
             ),
             replicate_event_console=internal_config["replicate_ec"],
             replicate_extensions=internal_config.get("replicate_mkps", False),
+            is_trusted=internal_config.get("is_trusted", False),
         )
 
     @classmethod
@@ -519,6 +521,7 @@ class ConfigurationConnection:
             "user_sync": self.user_sync.to_internal(),
             "replicate_ec": self.replicate_event_console,
             "replicate_mkps": self.replicate_extensions,
+            "is_trusted": self.is_trusted,
         }
         return configconnection
 

@@ -26,7 +26,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from functools import cache
 from io import BytesIO
-from typing import Any, Literal, NamedTuple, NewType, TypedDict
+from typing import Any, Literal, NamedTuple, NewType, NotRequired, TypedDict
 
 UserId = NewType("UserId", str)
 SiteId = NewType("SiteId", str)
@@ -101,6 +101,12 @@ class SiteConfiguration(TypedDict, total=False):
     url_prefix: str
     user_login: bool
     user_sync: Literal["all"] | tuple[Literal["list"], list[str]] | None
+
+    # Should this site be technically be able to XSS the central site or do other harm
+    # In 2.5 this is mandatory, that meant that all creations of a SiteConfiguration need this
+    # attribute. In order to minimize the changes I went for NotRequired. The default should always
+    # be False
+    is_trusted: NotRequired[bool]
 
     # Thanks to SingleSiteConnection we need str here. The conversion can
     # probably be moved into the SingleSiteConnection

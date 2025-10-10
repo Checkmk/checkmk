@@ -681,7 +681,14 @@ class DiscoveryPageRenderer:
                 html.write_html(HTML(get_html_state_marker(state)))
                 html.close_td()
                 # Make sure not to show long output
-                html.td(format_plugin_output(output.split("\n", 1)[0].replace(" ", ": ", 1)))
+                html.td(
+                    format_plugin_output(
+                        output.split("\n", 1)[0].replace(" ", ": ", 1),
+                        must_escape=not active_config.sites[self._host.site_id()].get(
+                            "is_trusted", False
+                        ),
+                    )
+                )
                 html.close_tr()
             html.close_table()
 
@@ -1141,7 +1148,11 @@ class DiscoveryPageRenderer:
                 html.write_html(
                     HTML(
                         format_plugin_output(
-                            output, shall_escape=active_config.escape_plugin_output
+                            output,
+                            must_escape=not active_config.sites[self._host.site_id()].get(
+                                "is_trusted", False
+                            ),
+                            shall_escape=active_config.escape_plugin_output,
                         )
                     )
                 )

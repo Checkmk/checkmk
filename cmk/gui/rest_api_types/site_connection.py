@@ -78,6 +78,7 @@ class ConfigurationConnection(TypedDict, total=False):
     user_sync: dict
     replicate_event_console: bool
     replicate_extensions: bool
+    is_trusted: bool
 
 
 class SiteConfig(TypedDict):

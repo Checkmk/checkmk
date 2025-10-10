@@ -6,10 +6,7 @@
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.openapi.endpoints.site_management.common import default_config_example
-from cmk.gui.openapi.restful_objects.response_schemas import (
-    DomainObject,
-    DomainObjectCollection,
-)
+from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, DomainObjectCollection
 
 from cmk import fields
 
@@ -271,6 +268,14 @@ class ConfigurationConnectionAttributesOutput(BaseSchema):
         required=False,
         description="If you enable the replication of MKPs then during each Activate Changes MKPs that are installed on your central site and all other files below the ~/local/ directory will be also transferred to the remote site. Note: all other MKPs and files below ~/local/ on the remote site will be removed.",
         example=True,
+    )
+    is_trusted = fields.Boolean(
+        required=False,
+        description=(
+            "When this option is enabled the central site might get compromised by a rogue remote site. "
+            "If you disable this option some features like rendering HTML in service descriptions will not work for services monitored on this site."
+        ),
+        example=False,
     )
 
 

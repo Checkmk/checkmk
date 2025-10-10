@@ -328,6 +328,7 @@ def default_single_site_configuration() -> SiteConfigurations:
                     "timeout": 5,
                     "user_login": True,
                     "proxy": None,
+                    "is_trusted": True,
                 }
             )
         }

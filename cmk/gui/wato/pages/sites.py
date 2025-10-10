@@ -85,10 +85,7 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.wato.pages._html_elements import wato_html_head
-from cmk.gui.wato.pages.global_settings import (
-    ABCEditGlobalSettingMode,
-    ABCGlobalSettingsMode,
-)
+from cmk.gui.wato.pages.global_settings import ABCEditGlobalSettingMode, ABCGlobalSettingsMode
 from cmk.gui.watolib.activate_changes import get_free_message
 from cmk.gui.watolib.automations import (
     do_remote_automation,
@@ -108,11 +105,7 @@ from cmk.gui.watolib.global_settings import (
     save_global_settings,
     save_site_global_settings,
 )
-from cmk.gui.watolib.hosts_and_folders import (
-    folder_preserving_link,
-    folder_tree,
-    make_action_link,
-)
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree, make_action_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.site_management import add_changes_after_editing_site_connection
 from cmk.gui.watolib.sites import (
@@ -556,6 +549,18 @@ class ModeEditSite(WatoMode):
                             "that are installed on your central site and all other files below the <tt>~/local/</tt> "
                             "directory will be also transferred to the remote site. Note: <b>all other MKPs and files "
                             "below <tt>~/local/</tt> on the remote site will be removed</b>."
+                        ),
+                    ),
+                ),
+                (
+                    "is_trusted",
+                    Checkbox(
+                        title=_("Trust this site completely"),
+                        label=_("Trust this site completely"),
+                        help=_(
+                            "When this option is enabled the central site might get compromised by a rogue remote site. "
+                            "If you disable this option, some features, such as HTML rendering in service descriptions for the services monitored on this remote site, will no longer work. "
+                            "In case the sites are managed by different groups of people, especially when belonging to different organizations, we recommend to disable this setting."
                         ),
                     ),
                 ),

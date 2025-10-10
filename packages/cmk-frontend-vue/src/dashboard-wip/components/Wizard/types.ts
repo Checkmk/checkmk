@@ -83,6 +83,10 @@ export type WidgetContentType =
   | PerformanceGraphContent
   | EventStatsContent
   | CustomGraphContent
+  | AlertOverviewContent
+  | AlertTimelineContent
+  | NotificationTimelineContent
+  | ProblemGraphContent
 
 export type InventoryContent = components['schemas']['InventoryContent']
 
@@ -106,6 +110,10 @@ export type CombinedGraphContent = components['schemas']['CombinedGraphContent']
 export type PerformanceGraphContent = components['schemas']['PerformanceGraphContent']
 export type EventStatsContent = components['schemas']['EventStatsContent']
 export type CustomGraphContent = components['schemas']['CustomGraphContent']
+export type AlertOverviewContent = components['schemas']['AlertOverviewContent']
+export type AlertTimelineContent = components['schemas']['AlertTimelineContent']
+export type NotificationTimelineContent = components['schemas']['NotificationTimelineContent']
+export type ProblemGraphContent = components['schemas']['ProblemGraphContent']
 
 export type TitleSpec = components['schemas']['WidgetTitle']
 export type DefaultOrColor = components['schemas']['DefaultOrColor']

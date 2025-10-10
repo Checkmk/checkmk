@@ -14,6 +14,7 @@ import type {
   WidgetGeneralSettings,
   WidgetSpec
 } from '../../types/widget'
+import AlertsAndNotificationsWizard from '../Wizard/wizards/alert-notification/AlertNotificationWizard.vue'
 import CustomGraphsWizard from '../Wizard/wizards/custom-graphs/CustomGraphsWizard.vue'
 import EventsWizard from '../Wizard/wizards/events/EventsWizard.vue'
 import HostsSiteWizard from '../Wizard/wizards/hosts-site/HostsSiteWizard.vue'
@@ -76,6 +77,15 @@ const handleAddEditWidget = (
   <div v-if="!selectedWizard"></div>
   <div v-else>
     <CmkSlideIn :open="isOpen">
+      <AlertsAndNotificationsWizard
+        v-if="selectedWizard === 'alerts_notifications'"
+        :dashboard-name="dashboardName"
+        :dashboard-constants="dashboardConstants"
+        :context-filters="contextFilters"
+        @go-back="handleGoBack"
+        @add-widget="handleAddEditWidget"
+      />
+
       <HostsSiteWizard
         v-if="selectedWizard === 'host_site_overview'"
         :dashboard-name="dashboardName"

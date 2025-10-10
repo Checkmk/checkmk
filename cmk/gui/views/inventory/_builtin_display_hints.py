@@ -805,24 +805,24 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED },
         # MIGRATED ".software.applications.docker.containers:*.status": {"title": _l("Status")},
         # MIGRATED ".software.applications.docker.containers:*.image": {"title": _l("Image")},
-        ".software.applications.docker.networks:": {
-            "title": _l("Docker networks"),
-            "keyorder": [
-                "network_id",
-                "short_id",
-                "name",
-                "scope",
-                "labels",
-            ],
-        },
-        ".software.applications.docker.networks:*.network_id": {"title": _l("Network ID")},
-        ".software.applications.docker.networks:*.short_id": {"title": _l("Short ID")},
-        ".software.applications.docker.networks:*.name": {"title": _l("Name")},
-        ".software.applications.docker.networks:*.scope": {"title": _l("Scope")},
-        ".software.applications.docker.networks:*.labels": {
-            "title": "Labels",
-            "paint": "csv_labels",
-        },
+        # MIGRATED ".software.applications.docker.networks:": {
+        # MIGRATED     "title": _l("Docker networks"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "network_id",
+        # MIGRATED         "short_id",
+        # MIGRATED         "name",
+        # MIGRATED         "scope",
+        # MIGRATED         "labels",
+        # MIGRATED     ],
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.networks:*.network_id": {"title": _l("Network ID")},
+        # MIGRATED ".software.applications.docker.networks:*.short_id": {"title": _l("Short ID")},
+        # MIGRATED ".software.applications.docker.networks:*.name": {"title": _l("Name")},
+        # MIGRATED ".software.applications.docker.networks:*.scope": {"title": _l("Scope")},
+        # MIGRATED ".software.applications.docker.networks:*.labels": {
+        # MIGRATED     "title": "Labels",
+        # MIGRATED     "paint": "csv_labels",
+        # MIGRATED },
         # MIGRATED ".software.applications.docker.container.": {
         # MIGRATED     "title": _l("Container"),
         # MIGRATED     "keyorder": ["node_name"],

@@ -555,6 +555,21 @@ node_software_applications_docker_images = Node(
     ),
 )
 
+node_software_applications_docker_networks = Node(
+    name="software_applications_docker_networks",
+    path=["software", "applications", "docker", "networks"],
+    title=Title("Docker networks"),
+    table=Table(
+        columns={
+            "network_id": TextField(Title("Network ID")),
+            "short_id": TextField(Title("Short ID")),
+            "name": TextField(Title("Name")),
+            "scope": TextField(Title("Scope")),
+            "labels": TextField(Title("Labels")),
+        },
+    ),
+)
+
 node_software_applications_docker_networks_containers = Node(
     name="software_applications_docker_networks_containers",
     path=["software", "applications", "docker", "networks", "containers"],

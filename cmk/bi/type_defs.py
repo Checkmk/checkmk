@@ -24,6 +24,14 @@ class ActionSerialized(TypedDict):
     type: ActionKind
 
 
+SearchKind = Literal[
+    "empty",
+    "fixed_arguments",
+    "host_search",
+    "service_search",
+]
+
+
 class NodeDict(TypedDict):
     search: SearchConfig
     action: ActionSerialized

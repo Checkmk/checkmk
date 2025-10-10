@@ -31,9 +31,9 @@ from cmk.bi.lib import (
     ReqList,
     ReqNested,
     ReqString,
-    SearchKind,
 )
 from cmk.bi.schema import Schema
+from cmk.bi.type_defs import SearchKind
 from cmk.ccc.hostaddress import HostName
 from cmk.utils.labels import AndOrNotLiteral, LabelGroup
 

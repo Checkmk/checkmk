@@ -43,6 +43,7 @@ from cmk.bi.type_defs import (
     HostServiceConditions,
     HostState,
     SearchConfig,
+    SearchKind,
 )
 from cmk.ccc import plugin_registry
 from cmk.ccc.hostaddress import HostName
@@ -643,13 +644,6 @@ bi_action_registry = BIActionRegistry()
 #   |                  |____/ \___|\__,_|_|  \___|_| |_|                   |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-
-SearchKind = Literal[
-    "empty",
-    "fixed_arguments",
-    "host_search",
-    "service_search",
-]
 
 
 class ABCBISearch(ABC):

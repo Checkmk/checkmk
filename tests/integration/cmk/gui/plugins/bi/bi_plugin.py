@@ -8,8 +8,9 @@
 
 from collections.abc import Mapping
 
-from cmk.bi.lib import ABCBISearch, ABCBISearcher, bi_search_registry, SearchKind
+from cmk.bi.lib import ABCBISearch, ABCBISearcher, bi_search_registry
 from cmk.bi.schema import Schema
+from cmk.bi.type_defs import SearchKind
 
 
 @bi_search_registry.register

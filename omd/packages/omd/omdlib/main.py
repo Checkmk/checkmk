@@ -2313,6 +2313,35 @@ def main_rm(
     _args: object,
     options: CommandOptions,
 ) -> None:
+    if not global_opts.force:
+        confirm_text = (
+            "PLEASE NOTE: This action removes all configuration files\n"
+            "             and variable data of the site.\n"
+            "\n"
+            "In detail the following steps will be done:\n"
+            "- Stop all processes of the site\n"
+            "- Unmount tmpfs of the site\n"
+            "- Remove tmpfs of the site from fstab\n"
+            "- Remove the system user <SITENAME>\n"
+            "- Remove the system group <SITENAME>\n"
+            "- Remove the site home directory\n"
+            "- Restart the system wide apache daemon\n"
+            " [yes/NO]:"
+        )
+        answer = None
+        while answer not in ["", "yes", "no"]:
+            answer = input(confirm_text).strip().lower()
+        if answer in ["", "no"]:
+            sys.exit("Aborted.")
+    _main_rm(version_info, site, global_opts, options)
+
+
+def _main_rm(
+    version_info: VersionInfo,
+    site: SiteContext,
+    global_opts: GlobalOptions,
+    options: CommandOptions,
+) -> None:
     # omd rm is called as root but the init scripts need to be called as
     # site user but later steps need root privilegies. So a simple user
     # switch to the site user would not work. Better create a subprocess
@@ -2575,7 +2604,7 @@ def main_mv_or_cp(
 
     # clean up old site
     if command_type is CommandType.move and reuse:
-        main_rm(version_info, old_site, global_opts, [], {"reuse": None})
+        _main_rm(version_info, old_site, global_opts, {"reuse": None})
 
     sys.stdout.write("OK\n")
 
@@ -3703,13 +3732,6 @@ def main() -> None:
         if site_name is None
         else _site_environment(site_name, command, global_opts.verbose)
     )
-
-    if (global_opts.interactive or command.confirm) and not global_opts.force:
-        answer = None
-        while answer not in ["", "yes", "no"]:
-            answer = input(f"{command.confirm_text} [yes/NO]: ").strip().lower()
-        if answer in ["", "no"]:
-            sys.exit(tty.normal + "Aborted.")
 
     _run_command(
         command, version_info, site, global_opts, args, command_options, orig_working_directory

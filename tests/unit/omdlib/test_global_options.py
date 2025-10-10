@@ -44,29 +44,10 @@ from omdlib.global_options import GlobalOptions, parse_global_opts
             ["create", "s"],
         ),
         (
-            ["-f", "-i", "-V", "2.4.0p8.cce", "create", "s"],
-            GlobalOptions(
-                version="2.4.0p8.cce",
-                force=False,
-                interactive=True,
-            ),
-            ["create", "s"],
-        ),
-        (
-            ["-i", "-f", "-V", "2.4.0p8.cce", "create", "s"],
+            ["-f", "-V", "2.4.0p8.cce", "create", "s"],
             GlobalOptions(
                 version="2.4.0p8.cce",
                 force=True,
-                interactive=False,
-            ),
-            ["create", "s"],
-        ),
-        (
-            ["--i", "-V", "2.4.0p8.cce", "create", "s"],
-            GlobalOptions(
-                version="2.4.0p8.cce",
-                force=False,
-                interactive=True,
             ),
             ["create", "s"],
         ),
@@ -75,16 +56,6 @@ from omdlib.global_options import GlobalOptions, parse_global_opts
             GlobalOptions(
                 version="2.4.0p8.cce",
                 force=True,
-                interactive=False,
-            ),
-            ["create", "s"],
-        ),
-        (
-            ["-if", "-V", "2.4.0p8.cce", "create", "s"],
-            GlobalOptions(
-                version="2.4.0p8.cce",
-                force=True,
-                interactive=False,
             ),
             ["create", "s"],
         ),
@@ -94,11 +65,10 @@ from omdlib.global_options import GlobalOptions, parse_global_opts
             ["create", "s"],
         ),
         (
-            ["-ifv", "-V", "2.4.0p8.cce", "create", "s"],
+            ["-fv", "-V", "2.4.0p8.cce", "create", "s"],
             GlobalOptions(
                 version="2.4.0p8.cce",
                 force=True,
-                interactive=False,
                 verbose=True,
             ),
             ["create", "s"],

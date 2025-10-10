@@ -384,4 +384,4 @@ def edition_from_env(fallback: TypeCMKEdition = CMKEdition(CMKEdition.CEE)) -> T
 
 def get_min_version() -> CMKVersion:
     """Minimal version supported for an update to the daily version of this branch."""
-    return CMKVersion(os.getenv("MIN_VERSION", "2.4.0p3"))
+    return CMKVersion(os.getenv("MIN_VERSION", "2.4.0p13"))

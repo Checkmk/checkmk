@@ -65,7 +65,7 @@ class BISearcher(ABCBISearcher):
         condition: dict,
     ) -> tuple[list[BIHostData], dict]:
         if condition["type"] == "all_hosts":
-            return hosts, self._host_match_groups(hosts)
+            return hosts, self._get_host_match_groups_by_name(hosts)
 
         if condition["type"] == "host_name_regex":
             return self.get_host_name_matches(hosts, condition["pattern"])
@@ -75,8 +75,11 @@ class BISearcher(ABCBISearcher):
 
         raise NotImplementedError("Invalid condition type %r" % condition["type"])
 
-    def _host_match_groups(self, hosts: list[BIHostData], match: str = "name") -> dict[str, tuple]:
-        return {host.name: (getattr(host, match),) for host in hosts}
+    def _get_host_match_groups_by_name(self, hosts: list[BIHostData]) -> dict[str, tuple]:
+        return {host.name: (host.name,) for host in hosts}
+
+    def _get_host_match_groups_by_alias(self, hosts: list[BIHostData]) -> dict[str, tuple]:
+        return {host.name: (host.alias,) for host in hosts}
 
     @override
     def get_host_name_matches(
@@ -85,7 +88,7 @@ class BISearcher(ABCBISearcher):
         pattern: str,
     ) -> tuple[list[BIHostData], dict]:
         if pattern == "(.*)":
-            return hosts, self._host_match_groups(hosts)
+            return hosts, self._get_host_match_groups_by_name(hosts)
 
         is_regex_match = any(map(lambda x: x in pattern, ["(", ")", "*", "$", "|", "[", "]"]))
         if not is_regex_match:
@@ -130,7 +133,7 @@ class BISearcher(ABCBISearcher):
         pattern: str,
     ) -> tuple[list[BIHostData], dict]:
         if pattern == "(.*)":
-            return hosts, self._host_match_groups(hosts, "alias")
+            return hosts, self._get_host_match_groups_by_alias(hosts)
 
         # TODO: alias matches currently costs way more performance than the host matches
         #       requires alias lookup cache to fix

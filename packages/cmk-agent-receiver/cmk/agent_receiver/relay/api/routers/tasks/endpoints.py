@@ -146,7 +146,7 @@ async def update_task(
 
 
 # TODO try to use dependency to check the serial mismatch
-@router.get("/{relay_id}/tasks")
+@router.get("/{relay_id}/tasks", dependencies=[fastapi.Depends(check_relay)])
 async def get_tasks_endpoint(
     relay_id: str,
     handler: Annotated[GetRelayTasksHandler, fastapi.Depends(get_relay_tasks_handler)],

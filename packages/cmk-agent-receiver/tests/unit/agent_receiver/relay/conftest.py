@@ -166,12 +166,10 @@ def get_task_handler(
 @pytest.fixture()
 def get_tasks_handler(
     tasks_repository: TasksRepository,
-    relays_repository: RelaysRepository,
     config_task_factory: ConfigTaskFactory,
 ) -> Iterator[GetRelayTasksHandler]:
     handler = GetRelayTasksHandler(
         tasks_repository=tasks_repository,
-        relay_repository=relays_repository,
         config_task_factory=config_task_factory,
     )
     yield handler

@@ -93,13 +93,3 @@ def test_get_tasks_handler_with_filter(
         relay_id=relay_id, status=TaskStatus.FINISHED, relay_serial=SERIAL
     )
     assert handled_tasks == []
-
-
-def test_get_task_handler_raises_error_if_relay_is_unknown(
-    get_tasks_handler: GetRelayTasksHandler, omd_root: Path
-) -> None:
-    _ = create_config_folder(root=omd_root, relays=["some-relay"])
-    with pytest.raises(RelayNotFoundError):
-        get_tasks_handler.process(
-            relay_id=RelayID("unknown-relay-id"), status=None, relay_serial=SERIAL
-        )

@@ -31,16 +31,11 @@ TEMP_RELAY_SERIAL_FLAG = "0"
 @dataclasses.dataclass
 class GetRelayTasksHandler:
     tasks_repository: TasksRepository
-    relay_repository: RelaysRepository
     config_task_factory: ConfigTaskFactory
 
     def process(
         self, relay_id: RelayID, status: TaskStatus | None, relay_serial: Serial
     ) -> list[RelayTask]:
-        auth = InternalAuth()
-        if not self.relay_repository.has_relay(relay_id, auth):
-            raise RelayNotFoundError(relay_id)
-
         current_serial = retrieve_config_serial()
         # TODO remove this flag-if once the relay sends correct serial values
         if relay_serial and relay_serial != TEMP_RELAY_SERIAL_FLAG:

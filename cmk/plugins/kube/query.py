@@ -116,9 +116,7 @@ def create_session(config: SessionConfig, logger: logging.Logger) -> requests.Se
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         session.verify = False
     session.proxies.update(config.requests_proxies())
-    session.headers.update(
-        {} if config.token is None else {"Authorization": f"Bearer {config.token}"}
-    )
+    session.headers.update({"Authorization": f"Bearer {config.token}"})
     return session
 
 

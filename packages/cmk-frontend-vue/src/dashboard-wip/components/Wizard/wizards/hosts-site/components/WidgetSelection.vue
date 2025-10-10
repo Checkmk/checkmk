@@ -35,26 +35,26 @@ const updateWidgetSelection = (graph: string) => {
       :selected="selectedWidget === Graph.SITE_OVERVIEW"
       @click="() => updateWidgetSelection(Graph.SITE_OVERVIEW)"
     />
-
+    <WidgetButton
+      icon="graph"
+      :label="_t('Host statistics')"
+      :selected="selectedWidget === Graph.HOST_STATISTICS"
+      @click="() => updateWidgetSelection(Graph.HOST_STATISTICS)"
+    />
+  </div>
+  <div class="db-widget-selection__container">
     <WidgetButton
       icon="graph"
       :label="_t('Host state')"
       :selected="selectedWidget === Graph.HOST_STATE"
       @click="() => updateWidgetSelection(Graph.HOST_STATE)"
     />
-  </div>
-  <div class="db-widget-selection__container">
+
     <WidgetButton
       icon="graph"
       :label="_t('Host state summary')"
       :selected="selectedWidget === Graph.HOST_STATE_SUMMARY"
       @click="() => updateWidgetSelection(Graph.HOST_STATE_SUMMARY)"
-    />
-    <WidgetButton
-      icon="graph"
-      :label="_t('Host statistics')"
-      :selected="selectedWidget === Graph.HOST_STATISTICS"
-      @click="() => updateWidgetSelection(Graph.HOST_STATISTICS)"
     />
   </div>
 </template>

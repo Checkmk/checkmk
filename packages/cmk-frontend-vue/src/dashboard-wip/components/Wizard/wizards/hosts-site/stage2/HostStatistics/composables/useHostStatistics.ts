@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { ref, watch } from 'vue'
+import { type Ref, ref, watch } from 'vue'
 
 import {
   type UseWidgetVisualizationOptions,
@@ -14,13 +14,19 @@ import type {
   UseWidgetHandler,
   WidgetProps
 } from '@/dashboard-wip/components/Wizard/types'
-import { generateWidgetProps } from '@/dashboard-wip/components/Wizard/utils'
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
 import { useDebounceFn } from '@/dashboard-wip/composables/useDebounce'
+import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
+import type { WidgetSpec } from '@/dashboard-wip/types/widget'
+import { determineWidgetEffectiveFilterContext } from '@/dashboard-wip/utils'
 
 export interface UseHostStatistics extends UseWidgetHandler, UseWidgetVisualizationOptions {}
 
-export const useHostStatistics = (filters: ConfiguredFilters): UseHostStatistics => {
+export const useHostStatistics = async (
+  filters: ConfiguredFilters,
+  dashboardConstants: DashboardConstants,
+  currentSpec?: WidgetSpec | null
+): Promise<UseHostStatistics> => {
   const {
     title,
     showTitle,
@@ -30,30 +36,43 @@ export const useHostStatistics = (filters: ConfiguredFilters): UseHostStatistics
     titleUrl,
     titleUrlValidationErrors,
     validate: validateTitle,
-    generateTitleSpec
-  } = useWidgetVisualizationProps('')
+    widgetGeneralSettings
+  } = useWidgetVisualizationProps('', currentSpec?.general_settings)
+
+  const widgetProps = ref<WidgetProps>()
 
   const validate = (): boolean => {
     return validateTitle()
   }
 
-  const _generateWidgetProps = (): WidgetProps => {
-    const content: HostStatisticsContent = {
+  const _generateContent = (): HostStatisticsContent => {
+    return {
       type: 'host_stats'
     }
-
-    return generateWidgetProps(generateTitleSpec(), content, filters)
   }
 
-  const widgetProps = ref<WidgetProps>(_generateWidgetProps())
+  const _updateWidgetProps = async () => {
+    const content = _generateContent()
+    widgetProps.value = {
+      general_settings: widgetGeneralSettings.value,
+      content,
+      effective_filter_context: await determineWidgetEffectiveFilterContext(
+        content,
+        filters,
+        dashboardConstants
+      )
+    }
+  }
 
   watch(
-    [title, showTitle, showTitleBackground, titleUrlEnabled, titleUrl],
+    [widgetGeneralSettings],
     useDebounceFn(() => {
-      widgetProps.value = _generateWidgetProps()
+      void _updateWidgetProps()
     }, 300),
     { deep: true }
   )
+
+  await _updateWidgetProps()
 
   return {
     title,
@@ -66,6 +85,6 @@ export const useHostStatistics = (filters: ConfiguredFilters): UseHostStatistics
     titleUrlValidationErrors,
     validate,
 
-    widgetProps
+    widgetProps: widgetProps as Ref<WidgetProps>
   }
 }

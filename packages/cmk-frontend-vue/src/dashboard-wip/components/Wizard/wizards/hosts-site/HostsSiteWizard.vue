@@ -17,7 +17,8 @@ import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
 import type {
   WidgetContent,
   WidgetFilterContext,
-  WidgetGeneralSettings
+  WidgetGeneralSettings,
+  WidgetSpec
 } from '@/dashboard-wip/types/widget'
 import QuickSetup from '@/quick-setup/components/quick-setup/QuickSetup.vue'
 import type { QuickSetupStageSpec } from '@/quick-setup/components/quick-setup/quick_setup_types'
@@ -41,8 +42,8 @@ const { _t } = usei18n()
 interface MetricsWizardProps {
   dashboardName: string
   contextFilters: ContextFilters
-  // TODO: widgetFilters?: ConfiguredFilters (during edit mode)
   dashboardConstants: DashboardConstants
+  editWidgetSpec?: WidgetSpec | null
 }
 
 const props = defineProps<MetricsWizardProps>()
@@ -165,6 +166,7 @@ const handleObjectTypeSwitch = (objectType: string): void => {
           :host-filter-type="hostFilterType"
           :filters="appliedFilters"
           :dashboard-constants="dashboardConstants"
+          :edit-widget-spec="editWidgetSpec ?? null"
           @go-prev="wizardHandler.prev"
           @add-widget="
             (content, generalSettings, filterContext) =>

@@ -8,8 +8,6 @@ import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkHeading from '@/components/typography/CmkHeading.vue'
-
 import DashboardPreviewContent from '@/dashboard-wip/components/DashboardPreviewContent.vue'
 import GraphTimeRange from '@/dashboard-wip/components/TimeRange/GraphTimeRange.vue'
 import ContentSpacer from '@/dashboard-wip/components/Wizard/components/ContentSpacer.vue'
@@ -36,8 +34,6 @@ const widgetProps = computed(() => handler.value.widgetProps)
 </script>
 
 <template>
-  <CmkHeading type="h3">{{ _t('Choose a visualization type.') }}</CmkHeading>
-
   <DashboardPreviewContent
     widget_id="notification-timeline-preview"
     :dashboard-name="dashboardName"

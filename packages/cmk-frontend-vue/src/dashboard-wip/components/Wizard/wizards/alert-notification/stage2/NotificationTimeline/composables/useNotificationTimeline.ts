@@ -40,6 +40,7 @@ export interface UseNotificationTimeline extends UseWidgetHandler, UseWidgetVisu
   logtarget: Ref<'both' | 'host' | 'service'>
   logtargetOptions: Suggestions
   widgetProps: Ref<WidgetProps>
+  isUpdating: Ref<boolean>
 }
 
 type TimeRangeType = 'current' | 'window'
@@ -49,6 +50,7 @@ export const useNotificationTimeline = async (
   dashboardConstants: DashboardConstants,
   currentSpec?: WidgetSpec | null
 ): Promise<UseNotificationTimeline> => {
+  const isUpdating = ref(false)
   const timeRangeType = ref<TimeRangeType>('current')
   const { timeRange, widgetProps: generateTimeRangeProps } = useTimeRange(_t('Time range'))
 
@@ -135,9 +137,13 @@ export const useNotificationTimeline = async (
 
   watch(
     [timeRangeType, timeRange, timeResolution, visualizationType, logtarget, widgetGeneralSettings],
-    useDebounceFn(() => {
-      void _updateWidgetProps()
-    }, 300),
+    () => {
+      isUpdating.value = true
+      useDebounceFn(async () => {
+        await _updateWidgetProps()
+        isUpdating.value = false
+      }, 300)()
+    },
     { deep: true }
   )
 
@@ -161,6 +167,7 @@ export const useNotificationTimeline = async (
     titleUrlValidationErrors,
     validate,
 
-    widgetProps: widgetProps as Ref<WidgetProps>
+    widgetProps: widgetProps as Ref<WidgetProps>,
+    isUpdating
   }
 }

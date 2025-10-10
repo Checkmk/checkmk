@@ -45,19 +45,23 @@ const availableVisualizationTypes = getVisualizationTypes()
 
 <template>
   <CmkHeading type="h3">{{ _t('Choose a visualization type.') }}</CmkHeading>
+  <ContentSpacer />
   <SelectableWidgets
     v-model:selected-widget="handler.visualizationType.value"
     :available-items="availableVisualizationTypes"
     :enabled-widgets="Object.values(VisualizationTimelineType)"
   />
-
-  <DashboardPreviewContent
-    widget_id="notification-timeline-preview"
-    :dashboard-name="dashboardName"
-    :general_settings="widgetProps.value!.general_settings!"
-    :content="widgetProps.value!.content!"
-    :effective_filter_context="widgetProps.value!.effective_filter_context!"
-  />
+  <ContentSpacer />
+  <div v-if="!handler.isUpdating.value">
+    <DashboardPreviewContent
+      widget_id="notification-timeline-preview"
+      :dashboard-name="dashboardName"
+      :general_settings="widgetProps.value!.general_settings!"
+      :content="widgetProps.value!.content!"
+      :effective_filter_context="widgetProps.value!.effective_filter_context!"
+    />
+  </div>
+  <div v-else class="db-notification-timeline__size-preview">&nbsp;</div>
 
   <ContentSpacer />
 
@@ -136,3 +140,16 @@ const availableVisualizationTypes = getVisualizationTypes()
 
   <ContentSpacer />
 </template>
+<style scoped>
+.db-notification-timeline__size-preview {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  height: 240px;
+  margin: 0;
+  padding: var(--dimension-3);
+  box-sizing: border-box;
+  pointer-events: none;
+  background-color: var(--db-content-bg-color);
+}
+</style>

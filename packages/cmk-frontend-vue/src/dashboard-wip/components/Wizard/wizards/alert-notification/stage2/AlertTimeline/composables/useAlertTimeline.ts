@@ -34,6 +34,7 @@ export interface UseAlertTimeline extends UseWidgetHandler, UseWidgetVisualizati
   timeResolution: Ref<'hour' | 'day'>
   visualizationType: Ref<VisualizationTimelineType>
   widgetProps: Ref<WidgetProps>
+  isUpdating: Ref<boolean>
 }
 
 type TimeRangeType = 'current' | 'window'
@@ -43,6 +44,7 @@ export const useAlertTimeline = async (
   dashboardConstants: DashboardConstants,
   currentSpec?: WidgetSpec | null
 ): Promise<UseAlertTimeline> => {
+  const isUpdating = ref(false)
   const timeRangeType = ref<TimeRangeType>('current')
   const { timeRange, widgetProps: generateTimeRangeProps } = useTimeRange(_t('Time range'))
 
@@ -60,7 +62,6 @@ export const useAlertTimeline = async (
 
   const timeResolution = ref<'hour' | 'day'>('hour')
   const visualizationType = ref<VisualizationTimelineType>(VisualizationTimelineType.BARPLOT)
-
   const widgetProps = ref<WidgetProps>()
 
   const validate = (): boolean => {
@@ -104,9 +105,13 @@ export const useAlertTimeline = async (
 
   watch(
     [timeRangeType, timeRange, timeResolution, visualizationType, widgetGeneralSettings],
-    useDebounceFn(() => {
-      void _updateWidgetProps()
-    }, 300),
+    () => {
+      isUpdating.value = true
+      useDebounceFn(async () => {
+        await _updateWidgetProps()
+        isUpdating.value = false
+      }, 300)()
+    },
     { deep: true }
   )
 
@@ -128,6 +133,7 @@ export const useAlertTimeline = async (
     titleUrlValidationErrors,
     validate,
 
-    widgetProps: widgetProps as Ref<WidgetProps>
+    widgetProps: widgetProps as Ref<WidgetProps>,
+    isUpdating
   }
 }

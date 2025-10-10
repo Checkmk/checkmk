@@ -144,7 +144,7 @@ class GraphTemplate:
 
 
 def _parse_graph_from_api(
-    id_: str,
+    name: str,
     graph: graphs_api.Graph,
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
@@ -178,7 +178,7 @@ def _parse_graph_from_api(
             metrics.append(parsed)
 
     return GraphTemplate(
-        id=id_,
+        id=name,
         title=_parse_title(graph),
         range=(None if graph.minimal_range is None else _parse_minimal_range(graph.minimal_range)),
         metrics=metrics,
@@ -191,7 +191,7 @@ def _parse_graph_from_api(
 
 
 def _parse_bidirectional_from_api(
-    id_: str,
+    name: str,
     bidirectional: graphs_api.Bidirectional,
     registered_metrics: Mapping[str, RegisteredMetric],
 ) -> GraphTemplate:
@@ -219,7 +219,7 @@ def _parse_bidirectional_from_api(
         ranges_max.append(lower.range.max)
 
     return GraphTemplate(
-        id=id_,
+        id=name,
         title=_parse_title(bidirectional),
         range=(
             MinimalGraphTemplateRange(
@@ -241,21 +241,21 @@ def _parse_bidirectional_from_api(
 
 
 def _parse_graph_plugin(
-    id_: str,
+    name: str,
     template: graphs_api.Graph | graphs_api.Bidirectional,
     registered_metrics: Mapping[str, RegisteredMetric],
 ) -> GraphTemplate:
     match template:
         case graphs_api.Graph():
             return _parse_graph_from_api(
-                id_,
+                name,
                 template,
                 registered_metrics,
                 mirrored=False,
             )
         case graphs_api.Bidirectional():
             return _parse_bidirectional_from_api(
-                id_,
+                name,
                 template,
                 registered_metrics,
             )
@@ -297,9 +297,9 @@ def get_graph_template_from_id(
 ) -> GraphTemplate:
     if template_id.startswith("METRIC_"):
         return _create_graph_template_from_name(template_id)
-    for id_, graph_plugin in _sort_registered_graph_plugins(registered_graphs):
-        if template_id == id_:
-            return _parse_graph_plugin(id_, graph_plugin, registered_metrics)
+    for name, graph_plugin in _sort_registered_graph_plugins(registered_graphs):
+        if template_id == name:
+            return _parse_graph_plugin(name, graph_plugin, registered_metrics)
     raise MKGraphNotFound(_("There is no graph plug-in with the id '%s'") % template_id)
 
 
@@ -331,8 +331,8 @@ def graph_and_single_metric_template_choices_for_metrics(
 ) -> tuple[list[GraphTemplateChoice], list[GraphTemplateChoice]]:
     graph_template_choices = []
     already_graphed_metrics = set()
-    for id_, graph_plugin in _sort_registered_graph_plugins(registered_graphs):
-        graph_template = _parse_graph_plugin(id_, graph_plugin, registered_metrics)
+    for name, graph_plugin in _sort_registered_graph_plugins(registered_graphs):
+        graph_template = _parse_graph_plugin(name, graph_plugin, registered_metrics)
         if evaluated_metrics := evaluate_metrics(
             conflicting_metrics=graph_template.conflicting_metrics,
             optional_metrics=graph_template.optional_metrics,
@@ -610,8 +610,8 @@ def _get_evaluated_graph_templates(
         return
 
     already_graphed_metrics = set()
-    for id_, graph_plugin in _sort_registered_graph_plugins(registered_graphs):
-        graph_template = _parse_graph_plugin(id_, graph_plugin, registered_metrics)
+    for name, graph_plugin in _sort_registered_graph_plugins(registered_graphs):
+        graph_template = _parse_graph_plugin(name, graph_plugin, registered_metrics)
         if evaluated_metrics := evaluate_metrics(
             conflicting_metrics=graph_template.conflicting_metrics,
             optional_metrics=graph_template.optional_metrics,

@@ -790,21 +790,21 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED     "paint": "csv_labels",
         # MIGRATED },
         # Node containers
-        ".software.applications.docker.containers:": {
-            "title": _l("Docker containers"),
-            "keyorder": ["id", "creation", "name", "labels", "status", "image"],
-            "view": "invdockercontainers",
-            "is_show_more": False,
-        },
-        ".software.applications.docker.containers:*.id": {"title": _l("ID")},
-        ".software.applications.docker.containers:*.creation": {"title": _l("Creation")},
-        ".software.applications.docker.containers:*.name": {"title": _l("Name")},
-        ".software.applications.docker.containers:*.labels": {
-            "title": _l("Labels"),
-            "paint": "csv_labels",
-        },
-        ".software.applications.docker.containers:*.status": {"title": _l("Status")},
-        ".software.applications.docker.containers:*.image": {"title": _l("Image")},
+        # MIGRATED ".software.applications.docker.containers:": {
+        # MIGRATED     "title": _l("Docker containers"),
+        # MIGRATED     "keyorder": ["id", "creation", "name", "labels", "status", "image"],
+        # MIGRATED     "view": "invdockercontainers",
+        # MIGRATED     "is_show_more": False,
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.containers:*.id": {"title": _l("ID")},
+        # MIGRATED ".software.applications.docker.containers:*.creation": {"title": _l("Creation")},
+        # MIGRATED ".software.applications.docker.containers:*.name": {"title": _l("Name")},
+        # MIGRATED ".software.applications.docker.containers:*.labels": {
+        # MIGRATED     "title": _l("Labels"),
+        # MIGRATED     "paint": "csv_labels",
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.containers:*.status": {"title": _l("Status")},
+        # MIGRATED ".software.applications.docker.containers:*.image": {"title": _l("Image")},
         ".software.applications.docker.networks:": {
             "title": _l("Docker networks"),
             "keyorder": [

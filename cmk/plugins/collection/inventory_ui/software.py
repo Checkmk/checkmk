@@ -491,6 +491,23 @@ node_software_applications_docker_container = Node(
     },
 )
 
+node_software_applications_docker_containers = Node(
+    name="software_applications_docker_containers",
+    path=["software", "applications", "docker", "containers"],
+    title=Title("Containers"),
+    table=Table(
+        view=View(name="invdockercontainers", title=Title("Containers")),
+        columns={
+            "id": TextField(Title("ID")),
+            "creation": TextField(Title("Creation")),
+            "name": TextField(Title("Name")),
+            "labels": TextField(Title("Labels")),
+            "status": TextField(Title("Status")),
+            "image": TextField(Title("Image")),
+        },
+    ),
+)
+
 node_software_applications_docker_container_networks = Node(
     name="software_applications_docker_container_networks",
     path=["software", "applications", "docker", "container", "networks"],

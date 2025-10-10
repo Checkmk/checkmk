@@ -394,6 +394,7 @@ def _create_graph_recipe_from_template(
     service_name: ServiceName,
     graph_template: EvaluatedGraphTemplate,
     translated_metrics: Mapping[str, TranslatedMetric],
+    painter_options: PainterOptions,
     specification: GraphSpecification,
 ) -> GraphRecipe:
     metrics = [
@@ -428,12 +429,12 @@ def _create_graph_recipe_from_template(
     if not title:
         title = next((m.title for m in metrics), "")
 
-    painter_options = PainterOptions.get_instance()
-    if painter_options.get("show_internal_graph_and_metric_ids"):
-        title = title + f" (Graph ID: {graph_template.id})"
-
     return GraphRecipe(
-        title=title,
+        title=(
+            f"{title} (Graph ID: {graph_template.id})"
+            if painter_options.get("show_internal_graph_and_metric_ids")
+            else title
+        ),
         metrics=metrics,
         unit_spec=units.pop(),
         explicit_vertical_range=evaluate_graph_template_range(
@@ -719,6 +720,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         translated_metrics: Mapping[str, TranslatedMetric],
         index: int,
         user_permissions: UserPermissions,
+        painter_options: PainterOptions,
     ) -> GraphRecipe | None:
         return _create_graph_recipe_from_template(
             row["site"],
@@ -726,6 +728,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
             row.get("service_description", "_HOST_"),
             graph_template,
             translated_metrics,
+            painter_options,
             specification=self._make_specification(
                 site=self.site,
                 host_name=self.host_name,
@@ -752,6 +755,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
             debug=debug,
             temperature_unit=temperature_unit,
         )
+        painter_options = PainterOptions.get_instance()
         # Performance graph dashlets already use graph_id, but for example in reports, we still use
         # graph_index. Therefore, this function needs to support both. We should switch to graph_id
         # everywhere (CMK-7308) and remove the support for graph_index. However, note that we cannot
@@ -779,7 +783,6 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
                 unit=translated_metric.unit_spec,
                 color=translated_metric.color,
             )
-            painter_options = PainterOptions.get_instance()
             return [
                 GraphRecipe(
                     title=(
@@ -823,6 +826,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
                     translated_metrics=translated_metrics,
                     index=index,
                     user_permissions=user_permissions,
+                    painter_options=painter_options,
                 )
             )
         ]

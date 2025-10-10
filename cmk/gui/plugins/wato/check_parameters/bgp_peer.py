@@ -4,56 +4,68 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-def"
-
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersNetworking,
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import (
+    DictElement,
+    Dictionary,
+    ServiceState,
 )
-from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 
-def _parameter_valuespec_bgp_peer():
+def _parameter_form_spec_bgp_peer():
     return Dictionary(
-        elements=[
-            (
-                "admin_state_mapping",
-                Dictionary(
-                    title=_("Admin states"),
-                    elements=[
-                        ("halted", MonitoringState(title="halted")),
-                        ("running", MonitoringState(title="running")),
-                    ],
-                    optional_keys=[],
+        elements={
+            "admin_state_mapping": DictElement(
+                required=False,
+                parameter_form=Dictionary(
+                    title=Title("Admin states"),
+                    elements={
+                        "halted": DictElement(
+                            required=True, parameter_form=ServiceState(title=Title("halted"))
+                        ),
+                        "running": DictElement(
+                            required=True, parameter_form=ServiceState(title=Title("running"))
+                        ),
+                    },
                 ),
             ),
-            (
-                "peer_state_mapping",
-                Dictionary(
-                    title=_("Peer states"),
-                    elements=[
-                        ("idle", MonitoringState(title="idle")),
-                        ("connect", MonitoringState(title="connect")),
-                        ("active", MonitoringState(title="active")),
-                        ("opensent", MonitoringState(title="opensent")),
-                        ("openconfirm", MonitoringState(title="openconfirm")),
-                        ("established", MonitoringState(title="established")),
-                    ],
-                    optional_keys=[],
+            "peer_state_mapping": DictElement(
+                required=False,
+                parameter_form=Dictionary(
+                    title=Title("Peer states"),
+                    elements={
+                        "idle": DictElement(
+                            required=True, parameter_form=ServiceState(title=Title("idle"))
+                        ),
+                        "connect": DictElement(
+                            required=True, parameter_form=ServiceState(title=Title("connect"))
+                        ),
+                        "active": DictElement(
+                            required=True, parameter_form=ServiceState(title=Title("active"))
+                        ),
+                        "opensent": DictElement(
+                            required=True, parameter_form=ServiceState(title=Title("opensent"))
+                        ),
+                        "openconfirm": DictElement(
+                            required=True, parameter_form=ServiceState(title=Title("openconfirm"))
+                        ),
+                        "established": DictElement(
+                            required=True, parameter_form=ServiceState(title=Title("established"))
+                        ),
+                    },
                 ),
             ),
-        ],
+        }
     )
 
 
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="bgp_peer",
-        group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextInput(title=_("Remote IP address"), allow_empty=False),
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_bgp_peer,
-        title=lambda: _("BGP Peer State Mapping"),
-    )
+rule_spec_bgp_peer = CheckParameters(
+    name="bgp_peer",
+    title=Title("BGP Peer State Mapping"),
+    topic=Topic.NETWORKING,
+    parameter_form=_parameter_form_spec_bgp_peer,
+    condition=HostAndItemCondition(
+        item_title=Title("Remote IP address"),
+    ),
 )

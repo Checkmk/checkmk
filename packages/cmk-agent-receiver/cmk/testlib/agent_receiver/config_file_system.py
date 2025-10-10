@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import base64
 import dataclasses
 import io
 import secrets
@@ -40,7 +39,7 @@ class ConfigFolder:
 
     def assert_tar_content(self, relay_id: RelayId, tar_data: str) -> None:
         relay_files = self.files[relay_id]
-        tar_bytes = base64.b64decode(tar_data)
+        tar_bytes = tar_data.encode()
         tar_buffer = io.BytesIO(tar_bytes)
         with tarfile.open(fileobj=tar_buffer, mode="r") as tar:
             members = tar.getmembers()

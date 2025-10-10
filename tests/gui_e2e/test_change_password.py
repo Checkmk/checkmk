@@ -51,9 +51,9 @@ def _change_password(page: PPage, new_pw: str, new_pw_conf: str, old_pw: str) ->
     page.goto_main_dashboard()
     page.main_menu.user.click()
     page.main_menu.locator("text=Change password").click()
-    page.main_area.locator("input[name='cur_password']").fill(old_pw)
-    page.main_area.locator("input[name='password']").fill(new_pw)
-    page.main_area.locator("input[name='password2']").fill(new_pw_conf)
+    page.main_area.locator("input[name='_cur_password']").fill(old_pw)
+    page.main_area.locator("input[name='_password']").fill(new_pw)
+    page.main_area.locator("input[name='_password2']").fill(new_pw_conf)
     page.main_area.locator("#suggestions >> text=Save").click()
 
 

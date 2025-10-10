@@ -5,6 +5,7 @@
 """Predefine conditions that can be used in the Setup rule editor"""
 
 # mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 

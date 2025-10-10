@@ -5,6 +5,7 @@
 """Module to hold shared code for interface check parameter module internals"""
 
 # mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import PredictiveLevels

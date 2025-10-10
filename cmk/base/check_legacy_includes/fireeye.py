@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
 
 
 def inventory_fireeye_generic(info, has_item, has_params=False):

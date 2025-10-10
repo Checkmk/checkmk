@@ -6,6 +6,8 @@
 cleanup is implemented here: the bulk removal of explicit attribute
 values."""
 
+# mypy: disable-error-code="type-arg"
+
 from collections.abc import Collection, Mapping, Sequence
 from hashlib import sha256
 from typing import override

@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
 
 # .1.3.6.1.4.1.110901.1.2.1.1.1.2.1       lib status
 # .1.3.6.1.4.1.110901.1.2.2.1.1.8.1.1.x   drive x status

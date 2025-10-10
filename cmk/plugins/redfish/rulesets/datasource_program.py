@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """rule for assinging the special agent to host objects"""
 
+# mypy: disable-error-code="type-arg"
+
 from collections.abc import Mapping
 
 from cmk.plugins.redfish.lib import REDFISH_SECTIONS

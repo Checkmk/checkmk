@@ -5,6 +5,7 @@
 """WATO-Module for the rules and aggregations of Checkmk BI"""
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="type-arg"
 
 import copy
 import json

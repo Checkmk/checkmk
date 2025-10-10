@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper to register a new-style section based on config.check_info"""
 
+# mypy: disable-error-code="type-arg"
+
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import cast
 

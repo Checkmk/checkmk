@@ -8,6 +8,7 @@ by pasting the contents of a CSV file into a textbox."""
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
 
 import csv
 import itertools

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 from typing import Generic, NotRequired, TypedDict, TypeVar
 
 from cmk.rulesets.v1 import Help, rule_specs, Title

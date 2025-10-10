@@ -5,6 +5,7 @@
 """Generate code-examples for the documentation.
 
 # mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
 
 To add a new example (new language, library, etc.), a new Jinja2-Template has to be written and
 be referenced in the result of _build_code_templates.

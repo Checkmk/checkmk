@@ -2,14 +2,16 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-# mypy: disallow_untyped_defs
+
+# mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="type-arg"
+
 import json
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import IntEnum, unique
 from typing import Any, NewType
 
-# mypy: disable-error-code="no-any-return"
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v1 import check_levels_predictive
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable

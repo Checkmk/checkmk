@@ -7,6 +7,7 @@ Special agent for monitoring Pure Storage FlashArray via REST API 2.x with Check
 """
 
 # mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="type-arg"
 
 from __future__ import annotations
 

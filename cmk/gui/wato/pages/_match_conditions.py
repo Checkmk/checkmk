@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 
 from cmk.gui.i18n import _
 from cmk.gui.user_sites import get_activation_site_choices, get_configured_site_choices

@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
 
 
 """Wrapper from marshmallow based NetApp-Python-Library pydantic Checkmk-NetApp-Protocol

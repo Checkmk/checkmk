@@ -5,6 +5,7 @@
 """Mange custom attributes of users and hosts"""
 
 # mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
 
 import abc
 import re

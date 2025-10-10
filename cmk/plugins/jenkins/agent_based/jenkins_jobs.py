@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 # <<<jenkins_jobs>>>
 # cmk_140 clang_tidy blue 90 1554371146806 200 SUCCESS 1251806 1554371146806
 # cmk_140 cppcheck blue 100 1554371034436 174 SUCCESS 165226 1554371034436

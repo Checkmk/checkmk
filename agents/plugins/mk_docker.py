@@ -7,6 +7,7 @@ r"""Check_MK Agent Plug-in: mk_docker.py
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
 
 This plugin is configured using an ini-style configuration file,
 i.e. a file with lines of the form 'key: value'.

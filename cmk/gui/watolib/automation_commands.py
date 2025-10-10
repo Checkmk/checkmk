@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Managing the available automation calls"""
 
+# mypy: disable-error-code="type-arg"
+
 import subprocess
 from abc import ABC, abstractmethod
 from collections.abc import Mapping

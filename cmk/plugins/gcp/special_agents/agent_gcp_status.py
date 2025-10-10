@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Special agent: agent_gcp_status.
 
+# mypy: disable-error-code="type-arg"
+
 This agent retrieves the service status from https://status.cloud.google.com/incidents.json.
 Since this feed is public, no authentication is required.
 """

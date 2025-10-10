@@ -5,6 +5,7 @@
 """Module to help generate pydantic based Kubernetes models
 
 # mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="type-arg"
 
 Notice (for polyfactory):
     For models which make use of validator such as api.StorageRequirement, the build function will

@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Configuration variables for the notification via cmk --notify"""
 
+# mypy: disable-error-code="type-arg"
+
 import cmk.utils.paths
 from cmk.gui.i18n import _
 from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_valuespec

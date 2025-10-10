@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 # TODO: Cluster with different data sources, eg. TCP node and SNMP node:
 # - Discovery works.
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.

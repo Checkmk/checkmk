@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Command line interface for the Checkmk Extension Packages"""
 
+# mypy: disable-error-code="type-arg"
+
 import argparse
 import json
 import logging

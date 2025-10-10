@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
 
 """A host attribute is something that is inherited from folders to
 hosts. Examples are the IP address and the host tags."""

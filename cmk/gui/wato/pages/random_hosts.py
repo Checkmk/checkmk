@@ -5,6 +5,8 @@
 """This module allows the creation of large numbers of random hosts
 for test and development."""
 
+# mypy: disable-error-code="type-arg"
+
 import random
 from collections.abc import Collection
 

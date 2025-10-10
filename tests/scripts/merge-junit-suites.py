@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Merge several junit report files (combining suites of the same name)."""
 
+# mypy: disable-error-code="type-arg"
+
 import os
 import sys
 from xml.etree import ElementTree

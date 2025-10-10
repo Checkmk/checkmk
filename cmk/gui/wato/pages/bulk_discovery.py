@@ -5,6 +5,8 @@
 """When the user wants to scan the services of multiple hosts at once
 this mode is used."""
 
+# mypy: disable-error-code="type-arg"
+
 import copy
 from collections.abc import Collection
 from typing import cast, override

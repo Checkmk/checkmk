@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
 
 # Device Manual: https://www.hopf.com/downloads/manuals/8030hepta-gps_v0400_en.pdf
 

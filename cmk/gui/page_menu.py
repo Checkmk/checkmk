@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Page menu processing
 
+# mypy: disable-error-code="type-arg"
+
 Cares about the page navigation of our GUI. This is the menu bar that can be found on top of each
 page. It is meant to be used for page wide actions and navigation to other related pages.
 

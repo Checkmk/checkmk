@@ -5,6 +5,7 @@
 """This module defines various classes and functions for handling REST API requests in Checkmk.
 
 # mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="type-arg"
 
 It includes clients for different API domains, providing methods to perform create, read, update,
 delete operations and other actions.

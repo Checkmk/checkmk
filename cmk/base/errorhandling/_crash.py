@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Check_MK base specific code of the crash reporting"""
 
+# mypy: disable-error-code="type-arg"
+
 import traceback
 from collections.abc import Sequence
 from pathlib import Path

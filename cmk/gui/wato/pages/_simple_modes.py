@@ -5,6 +5,7 @@
 """These modes implement a complete set of modes for managing a set of standard objects
 
 # mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
 
 Together with WatoSimpleConfigFile() as store class this implements
 

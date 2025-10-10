@@ -5,6 +5,7 @@
 """Module to hold shared code for filesystem check parameter module internals"""
 
 # mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
 
 from collections.abc import Callable, Mapping, MutableMapping, Sequence
 from enum import Enum

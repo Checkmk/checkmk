@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-
-# mypy: disable-error-code="no-untyped-call,union-attr"
+# mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="union-attr"
 
 
 # TODO FIXME: Change attribute sync plug-ins to classes. The current dict

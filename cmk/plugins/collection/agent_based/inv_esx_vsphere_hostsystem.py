@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 # Example output:
 # hardware.pciDevice.deviceName.00:00.0 5520 I/O Hub to ESI Port
 # hardware.pciDevice.deviceName.00:01.0 5520/5500/X58 I/O Hub PCI Express Root Port 1

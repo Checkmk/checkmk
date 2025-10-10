@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
 
 
 """Mode for displaying and modifying the rule based host and service

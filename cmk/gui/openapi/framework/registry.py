@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
 
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass

@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disallow-untyped-defs
-# mypy: disallow-incomplete-defs
-# mypy: disallow-untyped-decorators
+# mypy: disable-error-code="type-arg"
 
 # TODO:
 # - The classes here mix two things:

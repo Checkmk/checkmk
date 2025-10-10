@@ -5,6 +5,7 @@
 """Some helpers for ntop related GUI code
 
 # mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="type-arg"
 
 Needs to be part of the generic code, not packed into NTOP addon.
 """

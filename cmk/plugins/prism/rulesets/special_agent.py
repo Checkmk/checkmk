@@ -19,6 +19,8 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.rulesets.v1.form_specs.validators import LengthInRange, NetworkPort
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
+# mypy: disable-error-code="type-arg"
+
 
 def _form_spec() -> Dictionary:
     def _pre_24_to_formspec_migration(values: object) -> dict:

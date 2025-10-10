@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """A user can edit some user profile attributes on this page"""
 
+# mypy: disable-error-code="type-arg"
+
 from collections.abc import Iterable, Sequence
 from datetime import datetime
 from typing import Any

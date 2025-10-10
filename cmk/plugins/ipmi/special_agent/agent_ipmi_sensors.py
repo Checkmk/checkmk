@@ -6,6 +6,8 @@
 Special agent for collecting data from IPMI sensors via freeipmi or ipmitool.
 """
 
+# mypy: disable-error-code="type-arg"
+
 import os
 import subprocess
 import sys

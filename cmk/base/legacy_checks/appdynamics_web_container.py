@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 # <<<appdynamics_web_container:sep(124)>>>
 # Hans|http-8180|Error Count:0|Busy Threads:0|Current Threads In Pool:0|Request Count:0|Maximum Threads:200
 # Hans|jk-8109|Error Count:0|Request Count:2

@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """cmk-piggyback
 
+# mypy: disable-error-code="type-arg"
+
 Debugging and testing tool for piggyback related functionality.
 
 THIS DOES NOT PROVIDE A STABLE INTERFACE FOR SCRIPTING.

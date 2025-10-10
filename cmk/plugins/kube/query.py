@@ -3,12 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disallow-any-unimported
-# mypy: disallow-any-decorated
-# mypy: disallow-any-explicit
-# mypy: disallow-any-generics
-# mypy: disallow-subclassing-any
-# mypy: warn-return-any
 
 import argparse
 import enum

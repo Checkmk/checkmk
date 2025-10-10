@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
 
 # needs to issue a command like
 # ssh USER@HOSTNAME 'echo \<\<\<ibm_svc_host:sep\(58\)\>\>\>; lshost -delim :; echo \<\<\<ibm_svc_license:sep\(58\)\>\>\>; lslicense -delim :; echo \<\<\<ibm_svc_mdisk:sep\(58\)\>\>\>; lsmdisk -delim :; echo \<\<\<ibm_svc_mdiskgrp:sep\(58\)\>\>\>; lsmdiskgrp -delim :; echo \<\<\<ibm_svc_node:sep\(58\)\>\>\>; lsnode -delim :; echo \<\<\<ibm_svc_nodestats:sep\(58\)\>\>\>; lsnodestats -delim :; echo \<\<\<ibm_svc_system:sep\(58\)\>\>\>; lssystem -delim :; echo \<\<\<ibm_svc_systemstats:sep\(58\)\>\>\>; lssystemstats -delim :'

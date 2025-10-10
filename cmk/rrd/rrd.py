@@ -14,6 +14,8 @@ This module does the following operations
 - Converting existing RRDs in formatn PNP MULTIPLE into CMC SINGLE
 """
 
+# mypy: disable-error-code="type-arg"
+
 import os
 import select
 import sys

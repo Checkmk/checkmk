@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disallow_untyped_defs
-
 
 from cmk.agent_based.v2 import Result, State
 from cmk.plugins.collection.agent_based.kube_namespace_info import check_kube_namespace_info

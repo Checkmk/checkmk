@@ -5,6 +5,7 @@
 """Persisted sections type and store.
 
 # mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="type-arg"
 
 Cache hierarchy
 

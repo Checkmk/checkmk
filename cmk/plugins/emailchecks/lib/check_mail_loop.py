@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Email server roundtrip active check"""
 
+# mypy: disable-error-code="type-arg"
+
 import argparse
 import email.utils
 import logging

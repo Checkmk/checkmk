@@ -5,6 +5,7 @@
 """Background tools required to register a section plug-in"""
 
 # mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
 
 import functools
 import inspect

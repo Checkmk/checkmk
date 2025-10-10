@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="type-arg"
+
 from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.liebert.agent_based.lib import Section
 from cmk.plugins.liebert.agent_based.liebert_compressor import (

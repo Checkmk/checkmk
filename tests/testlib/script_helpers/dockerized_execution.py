@@ -5,6 +5,7 @@
 """This module provides functionality to execute tests within a Docker container.
 
 # mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="type-arg"
 
 It handles the preparation of the Docker environment, executing specified test commands within
 the container, and collecting and storing the test results.

@@ -2,58 +2,66 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 # mypy: disable-error-code="no-untyped-def"
-
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithItem,
-    CheckParameterRulespecWithoutItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersApplications,
-    TextInput,
+from cmk.gui.form_specs.unstable.legacy_converter.generators import OptionalTupleLevels
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import (
+    DictElement,
+    Dictionary,
+    InputHint,
+    Integer,
+    LevelDirection,
 )
-from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Dictionary, Integer
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, HostCondition, Topic
 
 
-def _parameter_valuespec_connections():
+def _parameter_form_spec_connections():
     return Dictionary(
-        title=_("Levels connections"),
-        elements=[
-            (
-                "active_connections_lower",
-                SimpleLevels(Integer, title=_("Lower levels for active connections")),
+        title=Title("Levels connections"),
+        elements={
+            "active_connections_lower": DictElement(
+                required=False,
+                parameter_form=OptionalTupleLevels(
+                    title=Title("Lower levels for active connections"),
+                    level_direction=LevelDirection.UPPER,
+                    form_spec_template=Integer(),
+                    prefill_fixed_levels=InputHint((0, 0)),
+                ),
             ),
-            (
-                "active_connections",
-                SimpleLevels(Integer, title=_("Upper levels for active connections")),
+            "active_connections": DictElement(
+                required=False,
+                parameter_form=OptionalTupleLevels(
+                    title=Title("Upper levels for active connections"),
+                    level_direction=LevelDirection.UPPER,
+                    form_spec_template=Integer(),
+                    prefill_fixed_levels=InputHint((0, 0)),
+                ),
             ),
-            (
-                "failed_connections",
-                SimpleLevels(Integer, title=_("Failed connections")),
+            "failed_connections": DictElement(
+                required=False,
+                parameter_form=OptionalTupleLevels(
+                    title=Title("Failed connections"),
+                    level_direction=LevelDirection.UPPER,
+                    form_spec_template=Integer(),
+                    prefill_fixed_levels=InputHint((0, 0)),
+                ),
             ),
-        ],
-        required_keys=[],
+        },
     )
 
 
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="database_connections",
-        item_spec=lambda: TextInput(title=_("Database")),
-        group=RulespecGroupCheckParametersApplications,
-        parameter_valuespec=_parameter_valuespec_connections,
-        title=lambda: _("Azure database connections (deprecated)"),
-    )
+rule_spec_database_connections = CheckParameters(
+    name="database_connections",
+    title=Title("Azure database connections (deprecated)"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_connections,
+    condition=HostAndItemCondition(item_title=Title("Database")),
 )
 
-# TODO: migrate and move to new folder struct
-rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
-        check_group_name="azure_v2_database_connections",
-        group=RulespecGroupCheckParametersApplications,
-        parameter_valuespec=_parameter_valuespec_connections,
-        title=lambda: _("Azure database connections"),
-    )
+rule_spec_azure_v2_database_connections = CheckParameters(
+    name="azure_v2_database_connections",
+    title=Title("Azure database connections"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_connections,
+    condition=HostCondition(),
 )

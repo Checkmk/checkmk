@@ -7,6 +7,7 @@ Special agent for monitoring Amazon web services (AWS) with Check_MK.
 """
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 # TODO: Using BaseClient all over the place is wrong and leads to the tons of ignore[attr-defined]
 # suppressions below. The code and types have to be restructured to use the right subclass of
@@ -912,7 +913,7 @@ class AWSSection(DataCache):
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         pass
 
-    def _get_response_content(self, response, key: str, dflt=None):  # type: ignore[no-untyped-def]
+    def _get_response_content(self, response, key: str, dflt=None):
         if dflt is None:
             dflt = []
         try:

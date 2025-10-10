@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 
 from __future__ import annotations
 
@@ -225,7 +227,7 @@ _TRawData = TypeVar("_TRawData", bound=Sized)
 class StubFileCache(Generic[_TRawData], FileCache[_TRawData]):
     """Holds the data to be cached in-memory for testing"""
 
-    def __init__(self, *args, **kwargs) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.cache: _TRawData | None = None
 

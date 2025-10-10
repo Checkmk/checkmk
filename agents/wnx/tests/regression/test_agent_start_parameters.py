@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 import os
 import platform
@@ -151,7 +152,7 @@ def post_test():
     yield
 
 
-def test_agent_start_parameters(  # type: ignore[no-untyped-def]
+def test_agent_start_parameters(
     request, testconfig, expected_output, actual_output, testfile
 ) -> None:
     # request.node.name gives test name

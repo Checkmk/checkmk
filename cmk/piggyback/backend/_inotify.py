@@ -5,6 +5,7 @@
 """Small wrapper for the kernels `inotify` feature
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 Existing libraries seem to be rather unmaintained or lack
 features that we want (type annotations).

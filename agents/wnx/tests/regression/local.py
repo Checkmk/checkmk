@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 
 import os
@@ -125,14 +126,14 @@ def assert_subprocess(cmd):
 class DuplicateSectionError(Exception):
     """Raised when a section is multiply-created."""
 
-    def __init__(self, section) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, section) -> None:
         super().__init__(self, "Section %r already exists" % section)
 
 
 class NoSectionError(Exception):
     """Raised when no section matches a requested option."""
 
-    def __init__(self, section) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, section) -> None:
         super().__init__(self, "No section: %r" % section)
 
 

@@ -5,6 +5,7 @@
 """Redfish firmware inventory for HPE devices"""
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 from cmk.agent_based.v2 import (
     AgentSection,

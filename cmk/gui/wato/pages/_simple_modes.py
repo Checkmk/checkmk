@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """These modes implement a complete set of modes for managing a set of standard objects
 
+# mypy: disable-error-code="no-untyped-def"
+
 Together with WatoSimpleConfigFile() as store class this implements
 
 a) A list mode where all objects are shown. All objects can be deleted here.

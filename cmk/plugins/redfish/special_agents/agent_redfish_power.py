@@ -5,6 +5,7 @@
 """Special Agent to fetch Redfish data from management interfaces"""
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 import json
 import logging

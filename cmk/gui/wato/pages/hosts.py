@@ -5,6 +5,7 @@
 """Modes for creating and editing hosts"""
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 import abc
 import copy

@@ -12,6 +12,8 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
+# mypy: disable-error-code="no-untyped-def"
+
 
 def _convert_regions(values: object) -> list[str]:
     assert isinstance(values, list)

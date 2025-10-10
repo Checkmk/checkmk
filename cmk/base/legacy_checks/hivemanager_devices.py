@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 # <<<hivemanager_devices:sep(124)>>>
 # BBSA-WIFI-LSN-Rhod-F4-1|8|Cleared|True|21 Days, 17 Hrs 43 Mins 43 Secs
 # BBSA-WIFI-LSN-Rhod-F4-2|8|Cleared|True|21 Days, 17 Hrs 43 Mins 43 Secs

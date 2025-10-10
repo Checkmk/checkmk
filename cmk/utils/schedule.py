@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 # Computes for a scheduling entry the last/next time that this entry
 # should have run or will be run. Such a scheduling entry is specified

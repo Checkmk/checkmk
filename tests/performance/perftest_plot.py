@@ -6,6 +6,7 @@
 Plot performance data from filesystem or database.
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 This script provides a CLI tool for aggregating, storing, and visualizing performance test results
 from either a PostgreSQL database or the local filesystem.

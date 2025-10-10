@@ -7,6 +7,7 @@ Tests for legacy tuple rulesets.
 """
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Mapping, Sequence
 from typing import Final

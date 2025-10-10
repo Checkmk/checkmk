@@ -6,6 +6,7 @@
 r"""Check_MK Agent Plugin: mk_postgres
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 This is a Check_MK Agent plugin. If configured, it will be called by the
 agent without any arguments.

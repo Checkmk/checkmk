@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 import os
 import re
@@ -51,8 +52,6 @@ def expected_output_engine():
     return expected
 
 
-def test_section_mem(  # type: ignore[no-untyped-def]
-    request, testconfig, expected_output, actual_output, testfile
-) -> None:
+def test_section_mem(request, testconfig, expected_output, actual_output, testfile) -> None:
     # request.node.name gives test name
     local_test(expected_output, actual_output, testfile, request.node.name)

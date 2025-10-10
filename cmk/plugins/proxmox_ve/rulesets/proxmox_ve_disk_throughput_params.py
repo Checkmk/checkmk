@@ -16,6 +16,8 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 
+# mypy: disable-error-code="no-untyped-def"
+
 
 def _parameter_valuespec_proxmox_ve_disk_throughput():
     return Dictionary(

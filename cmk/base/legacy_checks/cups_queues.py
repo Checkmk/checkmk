@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 # Example output from agent:
 # <<<cups_queues>>>
 # printer lpr1 disabled since Wed Jun 16 14:21:14 2010 -

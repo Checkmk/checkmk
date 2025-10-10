@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 # <<<hivemanager_ng_devices:sep(124)>>>
 # osVersion::8.1.2.1|ip::10.8.92.100|hostName::Host-1|lastUpdated::2017-11-08T10:01:43.674Z|activeClients::0|connected::True|serialId::00000000000001
 # osVersion::8.1.2.1|ip::10.8.92.130|hostName::Host-2|lastUpdated::2017-11-08T10:01:44.056Z|activeClients::14|connected::True|serialId::00000000000002

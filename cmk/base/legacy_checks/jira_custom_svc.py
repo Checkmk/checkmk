@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 # <<<jira_custom_svc>>>
 # {"Jira custom 2": {"count": 3200}, "Custom avg": {"avg_sum": 42.0,

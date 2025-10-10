@@ -6,6 +6,7 @@
 remote sites in distributed Setup."""
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 import ast
 import enum

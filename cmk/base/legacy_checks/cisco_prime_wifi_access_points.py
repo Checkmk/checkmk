@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 """Cisco Prime access point check
 see https://solutionpartner.cisco.com/media/prime-infrastructure/api-reference/
       szier-m8-106.cisco.com/webacs/api/v1/data/AccessPointscc3b.html

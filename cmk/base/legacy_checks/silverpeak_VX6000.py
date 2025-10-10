@@ -16,6 +16,8 @@
 # .1.3.6.1.4.1.23867.3.1.1.2.1.1.6.3 to_sp01-dnd_WAN-WAN --> SILVERPEAK-MGMT-MIB::spsActiveAlarmSource.3
 # .1.3.6.1.4.1.23867.3.1.1.2.1.1.6.4 to_sp01-mad_WAN-WAN --> SILVERPEAK-MGMT-MIB::spsActiveAlarmSource.4
 
+# mypy: disable-error-code="no-untyped-def"
+
 # Taken from SILVERPEAK-TC.txt: translates silverpeak severities to checkmk's OK,WARN,CRIT
 
 

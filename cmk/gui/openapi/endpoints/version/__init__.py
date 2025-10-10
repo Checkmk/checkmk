@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Miscellaneous
 
+# mypy: disable-error-code="no-untyped-def"
+
 This folder collects individual endpoints not fitting into the other endpoint folders.
 """
 

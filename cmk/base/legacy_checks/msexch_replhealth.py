@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 # Example Output:
 # <<<msexch_replhealth:sep(58)>>>
 # RunspaceId       : d58353f4-f868-43b2-8404-25875841a47b

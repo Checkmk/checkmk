@@ -182,7 +182,7 @@ def test_reserve_ids_and_create_werk(
     home = tmp_path / "home"
     home.mkdir()
 
-    def read_reserved_werks():
+    def read_reserved_werks() -> Any:
         return json.loads((home / ".cmk-werk-ids").read_text().strip())["ids_by_project"]
 
     cmk_repo_path = tmp_path / "repo_cmk"

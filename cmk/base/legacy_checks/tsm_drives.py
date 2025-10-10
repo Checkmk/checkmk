@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 # <<<tsm_drives>>>
 # tsmfarm3   LIBRARY3           DRIVE01        LOADED             YES            000782XXXX
 # tsmfarm3   LIBRARY3           DRIVE02        LOADED             YES            002348XXXX

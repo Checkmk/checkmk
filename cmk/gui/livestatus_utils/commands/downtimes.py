@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module contains commands for managing downtimes through LiveStatus."""
 
+# mypy: disable-error-code="no-untyped-def"
+
 import datetime as dt
 from typing import Literal
 

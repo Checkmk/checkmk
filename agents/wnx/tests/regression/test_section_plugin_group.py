@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 import os
 import platform
@@ -194,7 +195,7 @@ def manage_plugins_engine(request, plugin_dir):
                     time.sleep(1)
 
 
-def test_section_plugin_group(  # type: ignore[no-untyped-def]
+def test_section_plugin_group(
     request, testconfig, expected_output, actual_output, testfile
 ) -> None:
     # request.node.name gives test name

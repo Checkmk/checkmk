@@ -6,6 +6,7 @@
 the desired Checkmk version"""
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 import argparse
 import logging

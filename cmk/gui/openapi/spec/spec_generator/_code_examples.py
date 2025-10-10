@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Generate code-examples for the documentation.
 
+# mypy: disable-error-code="no-untyped-def"
+
 To add a new example (new language, library, etc.), a new Jinja2-Template has to be written and
 be referenced in the result of _build_code_templates.
 

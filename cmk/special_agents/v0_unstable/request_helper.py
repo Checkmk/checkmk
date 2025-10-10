@@ -5,6 +5,7 @@
 """Common module request related stuff"""
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 import abc
 import base64

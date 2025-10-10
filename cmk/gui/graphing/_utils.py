@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for main module internals and the plugins"""
 
+# mypy: disable-error-code="no-untyped-def"
+
 import http
 from typing import NewType
 

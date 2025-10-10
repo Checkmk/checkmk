@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Rules"""
 
+# mypy: disable-error-code="no-untyped-def"
+
 from __future__ import annotations
 
 import dataclasses

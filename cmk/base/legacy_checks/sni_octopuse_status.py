@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 # iso.3.6.1.4.1.231.7.2.9.1.1.0 = INTEGER: 1
 # The actual error state of the Octopus E PABX. Contains the highest severity level of the recent error events. This object is updated automatically, but it can also be modified manually.
 

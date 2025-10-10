@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 import datetime as dt
 from collections.abc import Iterable
@@ -200,7 +201,7 @@ from .checktestlib import mock_item_state
         ),
     ],
 )
-def test_check_temperature(  # type: ignore[no-untyped-def]
+def test_check_temperature(
     params: tuple[Number, TempParamType, str | None],
     kwargs,
     expected: Iterable[object] | None,
@@ -309,7 +310,7 @@ def test_check_temperature_trend_exception() -> None:
 
     time = dt.datetime(2014, 1, 1, 0, 0, 0)
 
-    def raises_exception(*args, **kwargs) -> None:  # type: ignore[no-untyped-def]
+    def raises_exception(*args, **kwargs) -> None:
         raise IgnoreResultsError("Value Store does not have any valid values")
 
     with mock_item_state(raises_exception):

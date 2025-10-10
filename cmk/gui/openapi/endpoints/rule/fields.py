@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 from __future__ import annotations
 
@@ -537,7 +538,7 @@ class HostOrServiceConditionSchema(base.BaseSchema):
 
             raise ValidationError(f"Unknown format: {_entry}")
 
-        def _ensure_list(_entry) -> list[str]:  # type: ignore[no-untyped-def]
+        def _ensure_list(_entry) -> list[str]:
             if isinstance(_entry, list):
                 return _entry
 

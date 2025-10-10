@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 """HTML page handler for generating the (a) dashboard. The name
 of the dashboard to render is given in the HTML variable 'name'.

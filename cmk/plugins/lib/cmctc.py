@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 from cmk.agent_based.v2 import contains
 
 DETECT_CMCTC = contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2606.4")

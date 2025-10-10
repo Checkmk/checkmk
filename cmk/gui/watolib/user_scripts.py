@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Common code for reading and offering notification scripts and alert handlers.
 
+# mypy: disable-error-code="no-untyped-def"
+
 # Example header of a notification script:
 
 #!/usr/bin/env python3

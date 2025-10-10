@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 # <<<appdynamics_memory:sep(124)>>>
 # Hans|Non-Heap|Max Available (MB):304|Current Usage (MB):78|Used %:25|Committed (MB):267
 # Hans|Heap|Max Available (MB):455|Current Usage (MB):66|Used %:14|Committed (MB):252

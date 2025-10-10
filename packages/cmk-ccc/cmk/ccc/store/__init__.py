@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 """This module cares about Check_MK's file storage accessing. Most important
 functionality is the locked file opening realized with the File() context

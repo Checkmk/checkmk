@@ -2,6 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 from collections.abc import Iterable
 
 import pytest
@@ -288,7 +289,7 @@ def test_match_ok() -> None:
             assert False
 
 
-def test_match_error():
+def test_match_error() -> None:
     err: Result[int, str] = Error("a")
     match err:
         case Error(v):

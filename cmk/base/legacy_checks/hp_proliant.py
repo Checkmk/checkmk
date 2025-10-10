@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 # .1.3.6.1.4.1.232.11.1.3.0  1
 # .1.3.6.1.4.1.232.11.2.14.1.1.5.0  "2009.05.18"
 # .1.3.6.1.4.1.232.2.2.2.1.0  "GB8851CPPH

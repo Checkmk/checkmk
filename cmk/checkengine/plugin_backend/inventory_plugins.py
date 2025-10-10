@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Background tools required to register a check plug-in"""
 
+# mypy: disable-error-code="no-untyped-def"
+
 import functools
 from collections.abc import Callable, Iterable, Mapping
 from typing import Any

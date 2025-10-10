@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module provides some bytes-unicode encoding functions"""
 
+# mypy: disable-error-code="no-untyped-def"
+
 import base64
 import json
 

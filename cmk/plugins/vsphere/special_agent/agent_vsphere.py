@@ -5,6 +5,7 @@
 """Check_MK vSphere Special Agent"""
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 import argparse
 import collections

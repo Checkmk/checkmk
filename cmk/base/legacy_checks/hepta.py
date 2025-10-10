@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 # Device Manual: https://www.hopf.com/downloads/manuals/8030hepta-gps_v0400_en.pdf
 

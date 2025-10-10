@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 
 """Wrapper from marshmallow based NetApp-Python-Library pydantic Checkmk-NetApp-Protocol

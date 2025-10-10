@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 # <<<ad_replication>>>
 # showrepl_COLUMNS,Destination DC Site,Destination DC,Naming Context,Source DC Site,Source DC,\

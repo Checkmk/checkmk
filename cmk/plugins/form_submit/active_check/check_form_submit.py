@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 """
 This check performs HTTP requests with some advanced features like
 a) Detecting, populating and submitting HTML forms
@@ -165,7 +167,7 @@ def init_http(validate_server_cert: bool) -> urllib.request.OpenerDirector:
     )
 
 
-def open_url(  # type: ignore[no-untyped-def]
+def open_url(
     *,
     client: urllib.request.OpenerDirector,
     url: str,
@@ -260,7 +262,7 @@ class FormParser(html.parser.HTMLParser):
 # One form found and no form_name given, use that one
 # Loop all forms for the given form_name, use the matching one
 # otherwise raise an exception
-def parse_form(content: str, form_name: str):  # type: ignore[no-untyped-def]
+def parse_form(content: str, form_name: str):
     parser = FormParser()
     parser.feed(content)
     forms = parser.forms
@@ -297,7 +299,7 @@ def parse_form(content: str, form_name: str):  # type: ignore[no-untyped-def]
     return form
 
 
-def update_form_vars(form_elem, params: Mapping[str, str]):  # type: ignore[no-untyped-def]
+def update_form_vars(form_elem, params: Mapping[str, str]):
     v = form_elem["elements"].copy()
     v.update(params)
     return v
@@ -355,7 +357,7 @@ def raise_host_state(
         new_state(0, "Form has been submitted")
 
 
-def check_host_states(  # type: ignore[no-untyped-def]
+def check_host_states(
     states,
     levels: tuple[int, int] | None,
 ) -> tuple[int, str]:

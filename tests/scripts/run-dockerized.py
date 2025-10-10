@@ -5,6 +5,7 @@
 """Starts a docker container and executes tests in it
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 The tests are executed in the container using the MAKE_TARGET given as first argument
 to this script.

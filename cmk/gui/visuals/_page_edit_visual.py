@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 """Edit global settings of the visual"""
 
@@ -64,7 +65,7 @@ from ._filter_valuespecs import VisualFilterList
 from ._store import available, delete_local_file, move_visual_to_local, save, TVisual
 
 
-def page_edit_visual(  # type: ignore[no-untyped-def]
+def page_edit_visual(
     what: VisualTypeName,
     all_visuals: dict[tuple[UserId, VisualName], TVisual],
     user_permissions: UserPermissions,

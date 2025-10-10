@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 import os
 import platform
@@ -150,7 +151,7 @@ def use_testfiles():
 
 
 @pytest.mark.usefixtures("use_testfiles")
-def test_section_fileinfo(  # type: ignore[no-untyped-def]
+def test_section_fileinfo(
     request, testconfig, expected_output: Sequence[str] | None, actual_output, testfile
 ) -> None:
     # request.node.name gives test name

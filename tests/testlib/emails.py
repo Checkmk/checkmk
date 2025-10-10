@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module sets up environment for sending and testing email notifications.
 
+# mypy: disable-error-code="no-untyped-def"
+
 It includes functions to configure and remove local Postfix server, wait for incoming emails,
 and verify the content of received emails.
 """

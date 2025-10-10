@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 # .1.3.6.1.4.1.17163.1.1.2.6.1.1.2.1 vadetsh1 --> STEELHEAD-MIB::peerHostname.1
 # .1.3.6.1.4.1.17163.1.1.2.6.1.1.3.1 8.5.3c --> STEELHEAD-MIB::peerVersion.1
 # .1.3.6.1.4.1.17163.1.1.2.6.1.1.4.1 10.1.0.14 --> STEELHEAD-MIB::peerAddress.1

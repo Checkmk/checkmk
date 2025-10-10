@@ -9,6 +9,7 @@ from typing import TypeVar
 from urllib.parse import quote as urlquote
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 _DefaultReturnValue = TypeVar("_DefaultReturnValue")
 

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 import os
 import platform
@@ -85,7 +86,7 @@ def manage_ohm_binaries():
         it_utils.remove_files(target_dir, binaries)
 
 
-def test_section_openhardwaremonitor(  # type: ignore[no-untyped-def]
+def test_section_openhardwaremonitor(
     request, testconfig, expected_output, actual_output, testfile
 ) -> None:
     required_lines = 2

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 # Example for info:
 
 # [['0'], ['1'], ['2'], ['3'], ['4'], ['5'], ['Critical'], ['Critical'],

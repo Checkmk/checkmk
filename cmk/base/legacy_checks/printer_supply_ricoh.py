@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 # .1.3.6.1.4.1.367.3.2.1.2.24.1.1.2.1 Black Toner
 # .1.3.6.1.4.1.367.3.2.1.2.24.1.1.2.2 Cyan Toner

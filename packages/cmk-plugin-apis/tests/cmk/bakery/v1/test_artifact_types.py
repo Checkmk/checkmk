@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
 import re
+from collections.abc import Iterable
 from pathlib import Path
 
 import pytest
@@ -40,7 +39,7 @@ def test_plugin() -> None:
 
 
 def test_plugin_config() -> None:
-    def get_lines():
+    def get_lines() -> Iterable[str]:
         yield "dummy"
 
     with pytest.raises(TypeError) as exc_info:

@@ -5,6 +5,7 @@
 """Modes for managing users and contacts"""
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 import base64
 import time

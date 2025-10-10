@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 """This script demonstrates the use of OpenTelemetry for logging and metrics export via HTTP.
 It sets up OpenTelemetry providers for metrics and logging, sends logs and metrics to a specified

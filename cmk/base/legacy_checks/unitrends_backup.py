@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 # Header: Schedule Name, Application Name, Schedule Description, Failures
 # <<<unitrends_backup:sep(124)>>>
 # HEADER|DMZ-SR01|Hyper-V 2012|DMZ-HV01|0

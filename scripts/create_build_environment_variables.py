@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 """ Creates sh/bash compatible lines to be sourced/evaled in order to set
 enviroment variables with generic values.

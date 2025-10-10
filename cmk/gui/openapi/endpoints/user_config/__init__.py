@@ -5,6 +5,7 @@
 """Users"""
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="no-untyped-def"
 
 import datetime as dt
 import time

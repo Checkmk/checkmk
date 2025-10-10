@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-untyped-def"
+
 # Example output from agent:
 # <<<ibm_svc_eventlog:sep(58)>>>
 # 588:120404112526:mdiskgrp:6:md07_sas10k::alert:no:989001::Managed Disk Group space warning

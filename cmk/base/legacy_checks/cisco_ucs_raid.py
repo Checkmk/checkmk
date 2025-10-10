@@ -5,6 +5,8 @@
 #
 # comNET GmbH, Fabian Binder - 2018-05-07
 
+# mypy: disable-error-code="no-untyped-def"
+
 from typing import NamedTuple
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition

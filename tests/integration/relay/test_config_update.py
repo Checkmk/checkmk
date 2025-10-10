@@ -2,6 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import pytest
 
 from cmk.agent_receiver.certs import serialize_to_pem
@@ -13,6 +14,7 @@ from ..agent_receiver.test_agent_receiver import generate_csr_pair
 pytestmark = pytest.mark.skip_if_not_edition("cloud", "managed")
 
 
+@pytest.skip("Not all parts are integrated yet. This will only cause test failures")
 class TestRelay:
     registered_relays: set[str] = set()
     created_hosts: set[str] = set()

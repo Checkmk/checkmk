@@ -88,6 +88,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     folder_preserving_link,
     folder_tree,
     Host,
+    strip_hostname_whitespace_chars,
     validate_all_hosts,
 )
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
@@ -906,7 +907,10 @@ class CreateHostMode(ABCHostMode):
         )
         cluster_nodes = self._get_cluster_nodes(attributes)
         try:
-            hostname = request.get_validated_type_input_mandatory(HostName, self.VAR_HOST)
+            hostname = strip_hostname_whitespace_chars(
+                request.get_ascii_input_mandatory(self.VAR_HOST)
+            )
+            hostname = HostName(hostname)
         except MKUserError:
             hostname = HostName("")
 
@@ -987,9 +991,10 @@ class ModeCreateHost(CreateHostMode):
     @classmethod
     def _init_new_host_object(cls) -> Host:
         try:
-            host_name = request.get_validated_type_input_mandatory(
-                HostName, cls.VAR_HOST, deflt=HostName("")
+            host_name = strip_hostname_whitespace_chars(
+                request.get_ascii_input_mandatory(cls.VAR_HOST)
             )
+            host_name = HostName(host_name)
         except MKUserError:
             host_name = HostName("")
         if prefill := request.get_ascii_input("prefill"):
@@ -1047,9 +1052,10 @@ class ModeCreateCluster(CreateHostMode):
     @classmethod
     def _init_new_host_object(cls) -> Host:
         try:
-            host_name = request.get_validated_type_input_mandatory(
-                HostName, cls.VAR_HOST, deflt=HostName("")
+            host_name = strip_hostname_whitespace_chars(
+                request.get_ascii_input_mandatory(cls.VAR_HOST)
             )
+            host_name = HostName(host_name)
         except MKUserError:
             host_name = HostName("")
         return Host(

@@ -23,7 +23,7 @@ from cmk.gui.permissions import load_dynamic_permissions, permission_registry
 from cmk.gui.userdb import connection_choices
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib import groups_io, tags
-from cmk.gui.watolib.hosts_and_folders import Host
+from cmk.gui.watolib.hosts_and_folders import Host, strip_hostname_whitespace_chars
 from cmk.gui.watolib.passwords import load_passwords
 from cmk.gui.watolib.userroles import role_exists, RoleID
 from cmk.utils.livestatus_helpers.queries import Query
@@ -107,10 +107,10 @@ class HostConverter:
     def _parse_host_name(value: str) -> HostName:
         if not value:
             raise ValueError("Host name cannot be empty.")
-        return HostName(value)
+        return HostName(strip_hostname_whitespace_chars(value))
 
     def host(self, value: str) -> Host:
-        if host := Host.host(self._parse_host_name(value)):
+        if host := Host.host(HostName(self._parse_host_name(value))):
             self._verify(host)
             return host
 

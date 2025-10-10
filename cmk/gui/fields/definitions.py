@@ -45,7 +45,12 @@ from cmk.gui.userdb import load_users
 from cmk.gui.watolib import userroles
 from cmk.gui.watolib.groups_io import load_group_information
 from cmk.gui.watolib.host_attributes import ABCHostAttribute, all_host_attributes
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import (
+    Folder,
+    folder_tree,
+    Host,
+    strip_hostname_whitespace_chars,
+)
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 from cmk.gui.watolib.sites import site_management_registry
 from cmk.gui.watolib.tags import load_tag_config_read_only
@@ -669,7 +674,7 @@ class HostField(base.String):
     ) -> HostAddress:
         value = super()._deserialize(value, attr, data, **kwargs)
         try:
-            return HostAddress(value)
+            return HostAddress(strip_hostname_whitespace_chars(value))
         except ValueError as e:
             raise ValidationError(str(e)) from e
 

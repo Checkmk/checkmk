@@ -57,7 +57,11 @@ from cmk.gui.watolib.check_mk_automations import delete_hosts
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.host_rename import RenameHostBackgroundJob, RenameHostsBackgroundJob
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import (
+    Folder,
+    folder_tree,
+    Host,
+)
 
 BAKE_AGENT_PARAM_NAME = "bake_agent"
 BAKE_AGENT_PARAM = {

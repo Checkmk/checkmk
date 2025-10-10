@@ -64,7 +64,11 @@ from cmk.gui.wato.pages.custom_attributes import ModeCustomHostAttrs
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib import bakery
 from cmk.gui.watolib.host_attributes import ABCHostAttribute, all_host_attributes, HostAttributes
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_from_request
+from cmk.gui.watolib.hosts_and_folders import (
+    Folder,
+    folder_from_request,
+    strip_hostname_whitespace_chars,
+)
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.utils.tags import TagGroup
 
@@ -179,7 +183,7 @@ def _host_rows_to_bulk(
                 hostname_valuespec.validate_value(attr_value, "host")
                 # Remove host_name from attributes
                 del entry["host_name"]
-                _host_name = HostName(attr_value)
+                _host_name = HostName(strip_hostname_whitespace_chars(attr_value))
             elif attr_name in ("-", ""):
                 # Don't import / No select
                 del entry[attr_name]

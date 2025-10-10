@@ -140,6 +140,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     FolderTree,
     Host,
     make_action_link,
+    strip_hostname_whitespace_chars,
 )
 from cmk.gui.watolib.main_menu import main_module_registry
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
@@ -2742,6 +2743,8 @@ class VSExplicitConditions(Transform):
             if is_service:
                 sub_conditions.append({"$regex": entry})
                 continue
+
+            entry = strip_hostname_whitespace_chars(entry)
 
             if entry[0] == "~":
                 sub_conditions.append({"$regex": entry[1:]})

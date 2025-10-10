@@ -4071,3 +4071,7 @@ class FolderValidatorsRegistry(Registry[FolderValidators]):
 
 
 folder_validators_registry = FolderValidatorsRegistry()
+
+
+def strip_hostname_whitespace_chars(host: str) -> str:
+    return host.strip(" \n\t\r")

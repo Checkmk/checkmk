@@ -7,8 +7,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 import usei18n from '@/lib/i18n'
 
 import CmkIndent from '@/components/CmkIndent.vue'
+import CmkLabel from '@/components/CmkLabel.vue'
 import ToggleButtonGroup from '@/components/ToggleButtonGroup.vue'
 
+import ContentSpacer from '@/dashboard-wip/components/Wizard/components/ContentSpacer.vue'
 import { MetricSelection } from '@/dashboard-wip/components/Wizard/wizards/metrics/composables/useSelectGraphTypes'
 
 import CombinedMetricSelector from './CombinedMetric.vue'
@@ -42,13 +44,26 @@ const _updateMetricType = (value: string) => {
     @update:model-value="_updateMetricType"
   />
   <CmkIndent>
-    <SingleMetricSelector
-      v-if="metricType === MetricSelection.SINGLE_METRIC"
-      v-model:handler="singleMetricHandler"
-    />
-    <CombinedMetricSelector
-      v-if="metricType === MetricSelection.COMBINED_GRAPH"
-      v-model:handler="combinedMetricHandler"
-    />
+    <div class="db-metric-selector__container">
+      <CmkLabel>{{ _t('Service metric') }} (*)</CmkLabel>
+      <ContentSpacer />
+
+      <div v-if="metricType === MetricSelection.SINGLE_METRIC">
+        <CmkIndent>
+          <SingleMetricSelector v-model:handler="singleMetricHandler" />
+        </CmkIndent>
+      </div>
+      <CombinedMetricSelector
+        v-if="metricType === MetricSelection.COMBINED_GRAPH"
+        v-model:handler="combinedMetricHandler"
+      />
+    </div>
   </CmkIndent>
 </template>
+
+<style scoped>
+.db-metric-selector__container {
+  background-color: var(--ux-theme-3);
+  padding: 10px;
+}
+</style>

@@ -8,9 +8,8 @@ import { ref } from 'vue'
 
 import type { TranslatedString } from '@/lib/i18nString'
 
-import CmkCollapsible from '@/components/CmkCollapsible.vue'
-import CmkCollapsibleTitle from '@/components/CmkCollapsibleTitle.vue'
-
+import CollapsibleContent from '@/dashboard-wip/components/Wizard/components/collapsible/CollapsibleContent.vue'
+import CollapsibleTitle from '@/dashboard-wip/components/Wizard/components/collapsible/CollapsibleTitle.vue'
 import type { FilterConfigState } from '@/dashboard-wip/components/Wizard/components/filter/utils.ts'
 import { ElementSelection } from '@/dashboard-wip/components/Wizard/types.ts'
 import type { ConfiguredValues } from '@/dashboard-wip/components/filter/types.ts'
@@ -55,13 +54,13 @@ const onUpdateFilterValues = (filterId: string, values: ConfiguredValues | null)
 </script>
 
 <template>
-  <CmkCollapsibleTitle
+  <CollapsibleTitle
     :title="filterLabels.title"
     :help_text="filterLabels.tooltip"
     :open="displayFilters"
     @toggle-open="displayFilters = !displayFilters"
   />
-  <CmkCollapsible :open="displayFilters">
+  <CollapsibleContent :open="displayFilters">
     <MultiFilter
       v-if="objectSelectionMode === ElementSelection.MULTIPLE"
       :object-type="objectType"
@@ -80,5 +79,5 @@ const onUpdateFilterValues = (filterId: string, values: ConfiguredValues | null)
         }
       "
     />
-  </CmkCollapsible>
+  </CollapsibleContent>
 </template>

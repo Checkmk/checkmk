@@ -18,7 +18,7 @@ interface WidgetSelectionProps {
   enabledWidgets: string[]
 }
 
-defineProps<WidgetSelectionProps>()
+const props = defineProps<WidgetSelectionProps>()
 const selectedWidget = defineModel<string>('selectedWidget', { required: true })
 
 const updateWidgetSelection = (graph: string) => {
@@ -33,12 +33,14 @@ const updateWidgetSelection = (graph: string) => {
       icon="graph"
       :label="_t('Site overview')"
       :selected="selectedWidget === Graph.SITE_OVERVIEW"
+      :disabled="!props.enabledWidgets.includes(Graph.SITE_OVERVIEW)"
       @click="() => updateWidgetSelection(Graph.SITE_OVERVIEW)"
     />
     <WidgetButton
       icon="graph"
       :label="_t('Host statistics')"
       :selected="selectedWidget === Graph.HOST_STATISTICS"
+      :disabled="!props.enabledWidgets.includes(Graph.HOST_STATISTICS)"
       @click="() => updateWidgetSelection(Graph.HOST_STATISTICS)"
     />
   </div>
@@ -47,6 +49,7 @@ const updateWidgetSelection = (graph: string) => {
       icon="graph"
       :label="_t('Host state')"
       :selected="selectedWidget === Graph.HOST_STATE"
+      :disabled="!props.enabledWidgets.includes(Graph.HOST_STATE)"
       @click="() => updateWidgetSelection(Graph.HOST_STATE)"
     />
 
@@ -54,6 +57,7 @@ const updateWidgetSelection = (graph: string) => {
       icon="graph"
       :label="_t('Host state summary')"
       :selected="selectedWidget === Graph.HOST_STATE_SUMMARY"
+      :disabled="!props.enabledWidgets.includes(Graph.HOST_STATE_SUMMARY)"
       @click="() => updateWidgetSelection(Graph.HOST_STATE_SUMMARY)"
     />
   </div>

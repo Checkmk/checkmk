@@ -8,11 +8,12 @@ import { onBeforeMount, ref } from 'vue'
 
 import usei18n, { untranslated } from '@/lib/i18n'
 
-import CmkCollapsible from '@/components/CmkCollapsible.vue'
-import CmkCollapsibleTitle from '@/components/CmkCollapsibleTitle.vue'
 import CmkDropdown from '@/components/CmkDropdown.vue'
 import CmkIndent from '@/components/CmkIndent.vue'
 import type { Suggestion } from '@/components/suggestions'
+
+import CollapsibleContent from '@/dashboard-wip/components/Wizard/components/collapsible/CollapsibleContent.vue'
+import CollapsibleTitle from '@/dashboard-wip/components/Wizard/components/collapsible/CollapsibleTitle.vue'
 
 import { dashboardAPI } from '../../../../../../utils.ts'
 import ContentSpacer from '../../../../components/ContentSpacer.vue'
@@ -47,13 +48,13 @@ onBeforeMount(async () => {
 </script>
 
 <template>
-  <CmkCollapsibleTitle
+  <CollapsibleTitle
     :title="_t('Widget visualization')"
     :open="displayVisualizationSettings"
     class="collapsible"
     @toggle-open="displayVisualizationSettings = !displayVisualizationSettings"
   />
-  <CmkCollapsible :open="displayVisualizationSettings">
+  <CollapsibleContent :open="displayVisualizationSettings">
     <WidgetVisualization
       v-model:show-title="handler.showTitle.value"
       v-model:show-title-background="handler.showTitleBackground.value"
@@ -63,17 +64,17 @@ onBeforeMount(async () => {
       v-model:title-url-enabled="handler.titleUrlEnabled.value"
       v-model:title-url-validation-errors="handler.titleUrlValidationErrors.value"
     />
-  </CmkCollapsible>
+  </CollapsibleContent>
 
   <ContentSpacer />
 
-  <CmkCollapsibleTitle
+  <CollapsibleTitle
     :title="_t('Metric selection')"
     :open="displayHwSwPropertySelection"
     class="collapsible"
     @toggle-open="displayHwSwPropertySelection = !displayHwSwPropertySelection"
   />
-  <CmkCollapsible :open="displayHwSwPropertySelection">
+  <CollapsibleContent :open="displayHwSwPropertySelection">
     <CmkIndent>
       <TableForm>
         <TableFormRow>
@@ -96,7 +97,7 @@ onBeforeMount(async () => {
         </TableFormRow>
       </TableForm>
     </CmkIndent>
-  </CmkCollapsible>
+  </CollapsibleContent>
 </template>
 
 <style scoped>

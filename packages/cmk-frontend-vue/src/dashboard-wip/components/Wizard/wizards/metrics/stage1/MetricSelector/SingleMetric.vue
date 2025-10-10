@@ -6,7 +6,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
 
-import CmkLabel from '@/components/CmkLabel.vue'
 import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import AutocompleteHost from '@/dashboard-wip/components/Wizard/components/autocompleters/AutocompleteHost.vue'
@@ -31,7 +30,6 @@ const handler = defineModel<UseSingleMetric>('handler', { required: true })
       </div>
     </div>
     <div class="row db-single-metric__bottom-row">
-      <CmkLabel>{{ _t('Service metric') }} (*)</CmkLabel>
       <AutocompleteMonitoredMetrics
         v-model:service-metrics="handler.singleMetric.value"
         :host-name="handler.host.value"

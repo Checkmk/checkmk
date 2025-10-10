@@ -5469,6 +5469,14 @@ msgstr "Atribuirea agregării"
 msgid "Aggregation checks"
 msgstr "Controale de agregare"
 
+#, fuzzy
+msgid "Aggregation for histograms"
+msgstr "Grupuri de agregare"
+
+#, fuzzy
+msgid "Aggregation for sums"
+msgstr "Grupuri de agregare"
+
 msgid "Aggregation function"
 msgstr "Funcția de agregare"
 
@@ -6087,6 +6095,13 @@ msgid "All resource groups that belong to this node run on this node (local)"
 msgstr ""
 "Toate grupurile de resurse care aparțin acestui nod rulează pe acest nod "
 "(local)"
+
+#, python-format
+msgid ""
+"All rows in the CSV file must have the same number of columns. The following "
+"row had a different number of columns than the first row (or the title row, "
+"if one is present): %s"
+msgstr ""
 
 msgid "All services"
 msgstr "Toate serviciile"
@@ -7551,6 +7566,10 @@ msgstr "Rezultatele verificărilor în spoilere asincronă"
 msgid "At least"
 msgstr "Cel puțin"
 
+#, fuzzy
+msgid "At least one host event must be selected."
+msgstr "Starea când lipsește fișierul"
+
 msgid ""
 "At least one of these strings is expected in the first (status) line of the "
 "server response (default: <tt>HTTP/1.</tt>). If specified skips all other "
@@ -7560,6 +7579,10 @@ msgstr ""
 "linie (de stare) a răspunsului serverului (implicit: <tt>HTTP/1.</tt>). Dacă "
 "este specificat, sare peste toate celelalte logici ale liniei de stare (ex: "
 "procesarea 3xx, 4xx, 5xx)"
+
+#, fuzzy
+msgid "At least one service event must be selected."
+msgstr "Starea când lipsește fișierul"
 
 msgid "At least one triggering event must be selected."
 msgstr ""
@@ -18053,6 +18076,14 @@ msgstr "Disponibilitatea căii de acces a datelor la nivelurile inferioare"
 #, fuzzy
 msgid "Data point"
 msgstr "Date trimise"
+
+#, fuzzy
+msgid "Data point attribute"
+msgstr "Atributele timpilor morți:"
+
+#, fuzzy
+msgid "Data point attributes"
+msgstr "Atributele timpilor morți:"
 
 msgid "Data range"
 msgstr "Intervalul de date"
@@ -42352,6 +42383,10 @@ msgid "Metric History"
 msgstr "Istoria metrică"
 
 #, fuzzy
+msgid "Metric backend (Custom query)"
+msgstr "Instanțe Oracle"
+
+#, fuzzy
 msgid "Metric backend instance"
 msgstr "Instanțe Oracle"
 
@@ -42369,6 +42404,10 @@ msgstr "Etichetă metrică"
 
 msgid "Metric levels"
 msgstr "Niveluri metrice"
+
+#, fuzzy
+msgid "Metric name"
+msgstr "Etichetă metrică"
 
 #, fuzzy
 msgid "Metric name (exact match)"
@@ -44886,6 +44925,10 @@ msgstr "Nu există opțiuni suplimentare de configurare pentru această metodă.
 
 msgid "No agent labels present."
 msgstr "Nu sunt prezente etichete de agent."
+
+#, fuzzy
+msgid "No aggregation"
+msgstr "agregare"
 
 msgid "No appropriate request ID"
 msgstr "Nu există un ID de cerere corespunzător"
@@ -51898,6 +51941,10 @@ msgstr "Vă rugăm să furnizați o cale absolută pentru Windows"
 msgid "Please provide an absolute path"
 msgstr "Vă rugăm să furnizați o cale absolută pentru Windows"
 
+#, fuzzy
+msgid "Please provide unique ports."
+msgstr "Vă rugăm să furnizați o cale absolută pentru Windows"
+
 msgid ""
 "Please refer to the [dashboards#host_problems|Checkmk user guide] for more "
 "details."
@@ -53501,6 +53548,10 @@ msgid "Query or SQL statement"
 msgstr "Interogare sau instrucțiune SQL"
 
 #, fuzzy
+msgid "Query the metric backend"
+msgstr "Configurația stilului selectat"
+
+#, fuzzy
 msgid "Query time limit"
 msgstr "Limita de timp de interogare"
 
@@ -53947,6 +53998,9 @@ msgstr "Raritan EMX Rack: Temperatura"
 
 msgid "Raritan PDU: Input Phases"
 msgstr "Raritan PDU: Fazele de intrare"
+
+msgid "Rate"
+msgstr ""
 
 #, fuzzy
 msgid "Rate computation"
@@ -55958,8 +56012,16 @@ msgid "Resource Name"
 msgstr "Numele resursei"
 
 #, fuzzy
+msgid "Resource attribute"
+msgstr "Resetarea atributelor"
+
+#, fuzzy
 msgid "Resource attribute for hostname computation"
 msgstr "Calcularea numelui de gazdă"
+
+#, fuzzy
+msgid "Resource attributes"
+msgstr "Resetarea atributelor"
 
 #, fuzzy
 msgid "Resource consumption of Windows processes"
@@ -57740,6 +57802,14 @@ msgstr ""
 
 msgid "Scope"
 msgstr ""
+
+#, fuzzy
+msgid "Scope attribute"
+msgstr "Atributul rolului"
+
+#, fuzzy
+msgid "Scope attributes"
+msgstr "Atributul rolului"
 
 msgid ""
 "Scope to be used in LDAP searches. In most cases <i>Search whole subtree "
@@ -66805,10 +66875,10 @@ msgstr ""
 msgid "The aspect of the image is preserved."
 msgstr "Aspectul imaginii este păstrat."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The attribute \"%s\" is assigned to multiple columns. You can not populate "
-"one attribute from multiple columns. The column to attribute associations "
+"one attribute from multiple columns. The column-to-attribute associations "
 "need to be unique."
 msgstr ""
 "Atributul \"%s\" este atribuit la mai multe coloane. Nu puteți completa un "
@@ -80618,8 +80688,8 @@ msgstr "Serviciu necunoscut"
 msgid "Unknown paths"
 msgstr "Trasee necunoscute"
 
-#, python-format
-msgid "Unknown rendering mode %s"
+#, fuzzy, python-format
+msgid "Unknown render mode %s"
 msgstr "Mod de redare necunoscut %s"
 
 #, fuzzy
@@ -92631,6 +92701,23 @@ msgstr "Ordinea de clasament"
 msgid "entries (max. %{max_entries})"
 msgstr "intrări (max. 50)"
 
+# georgem ##############
+#, fuzzy
+msgid "ServicesOverview & graphs"
+msgstr "Grafice de servicii"
+
+#, fuzzy
+msgid "Colorize not OK states"
+msgstr "nu %s state"
+
+#, fuzzy
+msgid "Show summary for not OK states"
+msgstr "Afișați rezumatul pentru statele care nu sunt %s"
+
+#, fuzzy
+msgid "Update widget"
+msgstr "Adăugați o țintă"
+
 #, fuzzy
 msgid "Specific object type"
 msgstr "Selectați un anumit tip de obiect"
@@ -92677,22 +92764,6 @@ msgstr "Automat"
 #, fuzzy
 msgid "Strict"
 msgstr "Metric"
-
-#, fuzzy
-msgid "Metric name"
-msgstr "Etichetă metrică"
-
-#, fuzzy
-msgid "Resource attributes"
-msgstr "Resetarea atributelor"
-
-#, fuzzy
-msgid "Scope attributes"
-msgstr "Atributul rolului"
-
-#, fuzzy
-msgid "Data point attributes"
-msgstr "Atributele timpilor morți:"
 
 #, fuzzy
 msgid "Apply rate (sums)"
@@ -92784,6 +92855,10 @@ msgstr "Operațiunea de dizolvare"
 #, fuzzy
 msgid "Clone this entry"
 msgstr "Clonați această metrică"
+
+#, fuzzy
+msgid "Create services"
+msgstr "Servicii schimbate"
 
 #, fuzzy
 msgid "Select at least two graph lines to edit"

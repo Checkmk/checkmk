@@ -5422,6 +5422,14 @@ msgstr "Assegnazione di aggregazione"
 msgid "Aggregation checks"
 msgstr "Controlli di aggregazione"
 
+#, fuzzy
+msgid "Aggregation for histograms"
+msgstr "Gruppi di aggregazione"
+
+#, fuzzy
+msgid "Aggregation for sums"
+msgstr "Gruppi di aggregazione"
+
 msgid "Aggregation function"
 msgstr "Funzione di aggregazione"
 
@@ -6042,6 +6050,13 @@ msgid "All resource groups that belong to this node run on this node (local)"
 msgstr ""
 "Tutti i gruppi di risorse che appartengono a questo nodo girano su questo "
 "nodo (locale)"
+
+#, python-format
+msgid ""
+"All rows in the CSV file must have the same number of columns. The following "
+"row had a different number of columns than the first row (or the title row, "
+"if one is present): %s"
+msgstr ""
 
 msgid "All services"
 msgstr "Tutti i servizi"
@@ -7485,6 +7500,10 @@ msgstr "Risultati dei controlli in spool asincrono"
 msgid "At least"
 msgstr "Almeno"
 
+#, fuzzy
+msgid "At least one host event must be selected."
+msgstr "Stato quando il file manca"
+
 msgid ""
 "At least one of these strings is expected in the first (status) line of the "
 "server response (default: <tt>HTTP/1.</tt>). If specified skips all other "
@@ -7493,6 +7512,10 @@ msgstr ""
 "Almeno una di queste stringhe è attesa nella prima riga (di stato) della "
 "risposta del server (predefinito: <tt>HTTP/1.</tt>). Se specificato salta "
 "tutta la logica delle altre righe di stato (es: elaborazione 3xx, 4xx, 5xx)"
+
+#, fuzzy
+msgid "At least one service event must be selected."
+msgstr "Stato quando il file manca"
 
 msgid "At least one triggering event must be selected."
 msgstr ""
@@ -17870,6 +17893,14 @@ msgstr "Disponibilità del percorso dati livelli inferiori"
 #, fuzzy
 msgid "Data point"
 msgstr "Dati inviati"
+
+#, fuzzy
+msgid "Data point attribute"
+msgstr "Attributi di inattività:"
+
+#, fuzzy
+msgid "Data point attributes"
+msgstr "Attributi di inattività:"
 
 msgid "Data range"
 msgstr "Gamma di dati"
@@ -41925,6 +41956,10 @@ msgid "Metric History"
 msgstr "Storia metrica"
 
 #, fuzzy
+msgid "Metric backend (Custom query)"
+msgstr "Istanze Oracle"
+
+#, fuzzy
 msgid "Metric backend instance"
 msgstr "Istanze Oracle"
 
@@ -41941,6 +41976,10 @@ msgstr "Etichetta metrica"
 
 msgid "Metric levels"
 msgstr "Livelli metrici"
+
+#, fuzzy
+msgid "Metric name"
+msgstr "Etichetta metrica"
 
 #, fuzzy
 msgid "Metric name (exact match)"
@@ -44422,6 +44461,10 @@ msgstr ""
 
 msgid "No agent labels present."
 msgstr "Non sono presenti etichette di agenti."
+
+#, fuzzy
+msgid "No aggregation"
+msgstr "aggregazione"
 
 msgid "No appropriate request ID"
 msgstr ""
@@ -51387,6 +51430,10 @@ msgstr "Fornire un percorso assoluto di Windows"
 msgid "Please provide an absolute path"
 msgstr "Fornire un percorso assoluto di Windows"
 
+#, fuzzy
+msgid "Please provide unique ports."
+msgstr "Fornire un percorso assoluto di Windows"
+
 msgid ""
 "Please refer to the [dashboards#host_problems|Checkmk user guide] for more "
 "details."
@@ -52973,6 +53020,10 @@ msgid "Query or SQL statement"
 msgstr "Query o dichiarazione SQL"
 
 #, fuzzy
+msgid "Query the metric backend"
+msgstr "Configurazione dello stile selezionato"
+
+#, fuzzy
 msgid "Query time limit"
 msgstr "Limite di tempo della query"
 
@@ -53416,6 +53467,9 @@ msgstr "Raritan EMX Rack: Temperatura"
 
 msgid "Raritan PDU: Input Phases"
 msgstr "PDU Raritan: fasi di ingresso"
+
+msgid "Rate"
+msgstr ""
 
 #, fuzzy
 msgid "Rate computation"
@@ -55427,8 +55481,16 @@ msgid "Resource Name"
 msgstr "Nome della risorsa"
 
 #, fuzzy
+msgid "Resource attribute"
+msgstr "Azzeramento degli attributi"
+
+#, fuzzy
 msgid "Resource attribute for hostname computation"
 msgstr "Calcolo del nome host"
+
+#, fuzzy
+msgid "Resource attributes"
+msgstr "Azzeramento degli attributi"
 
 #, fuzzy
 msgid "Resource consumption of Windows processes"
@@ -57192,6 +57254,14 @@ msgstr ""
 
 msgid "Scope"
 msgstr ""
+
+#, fuzzy
+msgid "Scope attribute"
+msgstr "Attributo del ruolo"
+
+#, fuzzy
+msgid "Scope attributes"
+msgstr "Attributo del ruolo"
 
 msgid ""
 "Scope to be used in LDAP searches. In most cases <i>Search whole subtree "
@@ -66099,10 +66169,10 @@ msgstr ""
 msgid "The aspect of the image is preserved."
 msgstr "L'aspetto dell'immagine è conservato."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The attribute \"%s\" is assigned to multiple columns. You can not populate "
-"one attribute from multiple columns. The column to attribute associations "
+"one attribute from multiple columns. The column-to-attribute associations "
 "need to be unique."
 msgstr ""
 "L'attributo \"%s\" è assegnato a più colonne. Non è possibile popolare un "
@@ -79758,8 +79828,8 @@ msgstr "Servizio sconosciuto"
 msgid "Unknown paths"
 msgstr "Percorsi sconosciuti"
 
-#, python-format
-msgid "Unknown rendering mode %s"
+#, fuzzy, python-format
+msgid "Unknown render mode %s"
 msgstr "Modalità di rendering sconosciuta %s"
 
 #, fuzzy
@@ -91634,6 +91704,22 @@ msgid "entries (max. %{max_entries})"
 msgstr ""
 
 #, fuzzy
+msgid "ServicesOverview & graphs"
+msgstr "Grafici di servizio"
+
+#, fuzzy
+msgid "Colorize not OK states"
+msgstr "non %s stati"
+
+#, fuzzy
+msgid "Show summary for not OK states"
+msgstr "Mostra il riepilogo per gli stati non %s"
+
+#, fuzzy
+msgid "Update widget"
+msgstr "Aggiungere l'obiettivo"
+
+#, fuzzy
 msgid "Specific object type"
 msgstr "Seleziona il tipo di oggetto specifico"
 
@@ -91679,22 +91765,6 @@ msgstr "Automatico"
 #, fuzzy
 msgid "Strict"
 msgstr "Metrico"
-
-#, fuzzy
-msgid "Metric name"
-msgstr "Etichetta metrica"
-
-#, fuzzy
-msgid "Resource attributes"
-msgstr "Azzeramento degli attributi"
-
-#, fuzzy
-msgid "Scope attributes"
-msgstr "Attributo del ruolo"
-
-#, fuzzy
-msgid "Data point attributes"
-msgstr "Attributi di inattività:"
 
 #, fuzzy
 msgid "Apply rate (sums)"
@@ -91786,6 +91856,10 @@ msgstr "Sciogliere l'operazione"
 #, fuzzy
 msgid "Clone this entry"
 msgstr "Clona questa metrica"
+
+#, fuzzy
+msgid "Create services"
+msgstr "Servizi modificati"
 
 #, fuzzy
 msgid "Select at least two graph lines to edit"

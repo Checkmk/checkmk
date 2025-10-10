@@ -5163,6 +5163,14 @@ msgstr "集計の割り当て"
 msgid "Aggregation checks"
 msgstr "集約チェック"
 
+#, fuzzy
+msgid "Aggregation for histograms"
+msgstr "集約グループ"
+
+#, fuzzy
+msgid "Aggregation for sums"
+msgstr "集約グループ"
+
 msgid "Aggregation function"
 msgstr "集計関数"
 
@@ -5750,6 +5758,13 @@ msgid "All resource groups that belong to this node run on this node (local)"
 msgstr ""
 "このノードに属するすべてのリソースグループは、このノードで実行されます(ローカ"
 "ル)"
+
+#, python-format
+msgid ""
+"All rows in the CSV file must have the same number of columns. The following "
+"row had a different number of columns than the first row (or the title row, "
+"if one is present): %s"
+msgstr ""
 
 msgid "All services"
 msgstr "すべてのサービス"
@@ -7125,6 +7140,10 @@ msgstr "非同期にスプールされたチェック結果"
 msgid "At least"
 msgstr "少なくとも"
 
+#, fuzzy
+msgid "At least one host event must be selected."
+msgstr "少なくとも1つのトリガーイベントを選択する必要があります。"
+
 msgid ""
 "At least one of these strings is expected in the first (status) line of the "
 "server response (default: <tt>HTTP/1.</tt>). If specified skips all other "
@@ -7133,6 +7152,10 @@ msgstr ""
 "これらの文字列の少なくとも1つは、サーバー応答の最初の(ステータス)行に含まれて"
 "いる必要があります(デフォルト: <tt>HTTP/1.</tt>)。指定した場合、他のすべての"
 "ステータスラインロジックをスキップします(例: 3xx、4xx、5xx 処理)"
+
+#, fuzzy
+msgid "At least one service event must be selected."
+msgstr "少なくとも1つのトリガーイベントを選択する必要があります。"
 
 msgid "At least one triggering event must be selected."
 msgstr "少なくとも1つのトリガーイベントを選択する必要があります。"
@@ -17004,6 +17027,14 @@ msgstr "データパスの可用性下位レベル"
 #, fuzzy
 msgid "Data point"
 msgstr "送信データ"
+
+#, fuzzy
+msgid "Data point attribute"
+msgstr "ダウンタイム属性:"
+
+#, fuzzy
+msgid "Data point attributes"
+msgstr "ダウンタイム属性:"
 
 msgid "Data range"
 msgstr "データ範囲"
@@ -39722,6 +39753,10 @@ msgid "Metric History"
 msgstr "メトリック履歴"
 
 #, fuzzy
+msgid "Metric backend (Custom query)"
+msgstr "Oracleインスタンス"
+
+#, fuzzy
 msgid "Metric backend instance"
 msgstr "Oracleインスタンス"
 
@@ -39738,6 +39773,9 @@ msgstr "メトリックのラベル"
 
 msgid "Metric levels"
 msgstr "メートリックレベル"
+
+msgid "Metric name"
+msgstr "メトリック名"
 
 msgid "Metric name (exact match)"
 msgstr "メトリック名(完全一致)"
@@ -42075,6 +42113,10 @@ msgstr "このメソッドには追加の設定オプションはありません
 
 msgid "No agent labels present."
 msgstr "エージェントラベルはありません。"
+
+#, fuzzy
+msgid "No aggregation"
+msgstr "集約"
 
 msgid "No appropriate request ID"
 msgstr "適切なリクエストIDがない"
@@ -48496,6 +48538,10 @@ msgstr "Windowsの絶対パスを指定してください"
 msgid "Please provide an absolute path"
 msgstr "絶対パスを指定してください"
 
+#, fuzzy
+msgid "Please provide unique ports."
+msgstr "絶対パスを指定してください"
+
 msgid ""
 "Please refer to the [dashboards#host_problems|Checkmk user guide] for more "
 "details."
@@ -49985,6 +50031,10 @@ msgstr "Elasticsearchログをクエリする"
 msgid "Query or SQL statement"
 msgstr "クエリまたはSQLステートメント"
 
+#, fuzzy
+msgid "Query the metric backend"
+msgstr "OpenTelemetryメトリック名"
+
 msgid "Query time limit"
 msgstr "クエリの時間制限"
 
@@ -50400,6 +50450,9 @@ msgstr "Raritan EMXラック: 温度"
 
 msgid "Raritan PDU: Input Phases"
 msgstr "Raritan PDU: 入力フェーズ"
+
+msgid "Rate"
+msgstr ""
 
 msgid "Rate computation"
 msgstr "料金計算"
@@ -52312,8 +52365,16 @@ msgid "Resource Name"
 msgstr "リソース名"
 
 #, fuzzy
+msgid "Resource attribute"
+msgstr "属性をリセット"
+
+#, fuzzy
 msgid "Resource attribute for hostname computation"
 msgstr "カスタムホスト名算出"
+
+#, fuzzy
+msgid "Resource attributes"
+msgstr "属性をリセット"
 
 msgid "Resource consumption of Windows processes"
 msgstr "Windowsプロセスのリソース消費"
@@ -53978,6 +54039,14 @@ msgstr "科学的（標準）シンボル%s"
 
 msgid "Scope"
 msgstr "スコープ"
+
+#, fuzzy
+msgid "Scope attribute"
+msgstr "役割属性"
+
+#, fuzzy
+msgid "Scope attributes"
+msgstr "役割属性"
 
 msgid ""
 "Scope to be used in LDAP searches. In most cases <i>Search whole subtree "
@@ -62490,10 +62559,10 @@ msgstr ""
 msgid "The aspect of the image is preserved."
 msgstr "画像のアスペクトは保持されます。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The attribute \"%s\" is assigned to multiple columns. You can not populate "
-"one attribute from multiple columns. The column to attribute associations "
+"one attribute from multiple columns. The column-to-attribute associations "
 "need to be unique."
 msgstr ""
 "属性 \"%s\"は複数の列に割り当てられています。複数の列から1つの属性を設定する"
@@ -75295,8 +75364,8 @@ msgstr "不明なメトリック"
 msgid "Unknown paths"
 msgstr "不明なパス"
 
-#, python-format
-msgid "Unknown rendering mode %s"
+#, fuzzy, python-format
+msgid "Unknown render mode %s"
 msgstr "不明なレンダリングモード %s"
 
 msgid "Unknown rule sets"
@@ -86598,6 +86667,22 @@ msgid "entries (max. %{max_entries})"
 msgstr "エントリー数 (最大50)"
 
 #, fuzzy
+msgid "ServicesOverview & graphs"
+msgstr "サービスグラフ"
+
+#, fuzzy
+msgid "Colorize not OK states"
+msgstr "%s以外の状態"
+
+#, fuzzy
+msgid "Show summary for not OK states"
+msgstr "%s状態以外の概要の表示"
+
+#, fuzzy
+msgid "Update widget"
+msgstr "ターゲットを追加"
+
+#, fuzzy
 msgid "Specific object type"
 msgstr "特定のオブジェクトタイプを選択します"
 
@@ -86641,21 +86726,6 @@ msgstr "自動"
 
 msgid "Strict"
 msgstr "制限"
-
-msgid "Metric name"
-msgstr "メトリック名"
-
-#, fuzzy
-msgid "Resource attributes"
-msgstr "属性をリセット"
-
-#, fuzzy
-msgid "Scope attributes"
-msgstr "役割属性"
-
-#, fuzzy
-msgid "Data point attributes"
-msgstr "ダウンタイム属性:"
 
 #, fuzzy
 msgid "Apply rate (sums)"
@@ -86733,6 +86803,10 @@ msgstr "溶解操作"
 
 msgid "Clone this entry"
 msgstr "このエントリのクローンを作成する"
+
+#, fuzzy
+msgid "Create services"
+msgstr "サービス変更"
 
 #, fuzzy
 msgid "Select at least two graph lines to edit"

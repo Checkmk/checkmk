@@ -5458,6 +5458,14 @@ msgstr "Aggregatietoewijzing"
 msgid "Aggregation checks"
 msgstr "Aggregatiecontroles"
 
+#, fuzzy
+msgid "Aggregation for histograms"
+msgstr "Aggregatiegroepen"
+
+#, fuzzy
+msgid "Aggregation for sums"
+msgstr "Aggregatiegroepen"
+
 msgid "Aggregation function"
 msgstr "Aggregatiefunctie"
 
@@ -6080,6 +6088,13 @@ msgid "All resource groups that belong to this node run on this node (local)"
 msgstr ""
 "Alle resource groepen die bij dit knooppunt horen draaien op dit knooppunt "
 "(lokaal)"
+
+#, python-format
+msgid ""
+"All rows in the CSV file must have the same number of columns. The following "
+"row had a different number of columns than the first row (or the title row, "
+"if one is present): %s"
+msgstr ""
 
 msgid "All services"
 msgstr "Alle diensten"
@@ -7536,6 +7551,10 @@ msgstr "Asynchroon gespoolde controleresultaten"
 msgid "At least"
 msgstr "Tenminste"
 
+#, fuzzy
+msgid "At least one host event must be selected."
+msgstr "Staat wanneer bestand ontbreekt"
+
 msgid ""
 "At least one of these strings is expected in the first (status) line of the "
 "server response (default: <tt>HTTP/1.</tt>). If specified skips all other "
@@ -7544,6 +7563,10 @@ msgstr ""
 "Tenminste één van deze strings wordt verwacht in de eerste (status) regel "
 "van het server antwoord (standaard: <tt>HTTP/1.</tt>). Indien gespecificeerd "
 "slaat alle andere statusregel logica over (ex: 3xx, 4xx, 5xx verwerking)"
+
+#, fuzzy
+msgid "At least one service event must be selected."
+msgstr "Staat wanneer bestand ontbreekt"
 
 msgid "At least one triggering event must be selected."
 msgstr ""
@@ -18032,6 +18055,14 @@ msgstr "Beschikbaarheid gegevenspad lagere niveaus"
 #, fuzzy
 msgid "Data point"
 msgstr "Verzonden gegevens"
+
+#, fuzzy
+msgid "Data point attribute"
+msgstr "Gewijzigde attributen"
+
+#, fuzzy
+msgid "Data point attributes"
+msgstr "Gewijzigde attributen"
 
 msgid "Data range"
 msgstr "Gegevensbereik"
@@ -42268,6 +42299,10 @@ msgid "Metric History"
 msgstr "Metrische geschiedenis"
 
 #, fuzzy
+msgid "Metric backend (Custom query)"
+msgstr "Oracle gevallen"
+
+#, fuzzy
 msgid "Metric backend instance"
 msgstr "Oracle gevallen"
 
@@ -42284,6 +42319,10 @@ msgstr "Metrisch etiket"
 
 msgid "Metric levels"
 msgstr "Metrische niveaus"
+
+#, fuzzy
+msgid "Metric name"
+msgstr "Metrisch etiket"
 
 #, fuzzy
 msgid "Metric name (exact match)"
@@ -44781,6 +44820,10 @@ msgstr ""
 
 msgid "No agent labels present."
 msgstr "Geen agent labels aanwezig."
+
+#, fuzzy
+msgid "No aggregation"
+msgstr "aggregatie"
 
 msgid "No appropriate request ID"
 msgstr ""
@@ -51810,6 +51853,10 @@ msgstr "Geef een geldige naam"
 msgid "Please provide an absolute path"
 msgstr "Geef een geldige naam"
 
+#, fuzzy
+msgid "Please provide unique ports."
+msgstr "Geef een geldige naam"
+
 msgid ""
 "Please refer to the [dashboards#host_problems|Checkmk user guide] for more "
 "details."
@@ -53399,6 +53446,10 @@ msgid "Query or SQL statement"
 msgstr "Query of SQL verklaring"
 
 #, fuzzy
+msgid "Query the metric backend"
+msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy
 msgid "Query time limit"
 msgstr "Beperking van de zoektijd"
 
@@ -53849,6 +53900,9 @@ msgstr "Raritan EMX Rack: Temperatuur"
 
 msgid "Raritan PDU: Input Phases"
 msgstr "Raritan PDU: Ingangsfasen"
+
+msgid "Rate"
+msgstr ""
 
 #, fuzzy
 msgid "Rate computation"
@@ -55865,8 +55919,16 @@ msgid "Resource Name"
 msgstr "Bronnaam"
 
 #, fuzzy
+msgid "Resource attribute"
+msgstr "Rolkenmerk"
+
+#, fuzzy
 msgid "Resource attribute for hostname computation"
 msgstr "Hostname berekening"
+
+#, fuzzy
+msgid "Resource attributes"
+msgstr "Rolkenmerk"
 
 #, fuzzy
 msgid "Resource consumption of Windows processes"
@@ -57640,6 +57702,14 @@ msgstr ""
 
 msgid "Scope"
 msgstr ""
+
+#, fuzzy
+msgid "Scope attribute"
+msgstr "Rolkenmerk"
+
+#, fuzzy
+msgid "Scope attributes"
+msgstr "Rolkenmerk"
 
 msgid ""
 "Scope to be used in LDAP searches. In most cases <i>Search whole subtree "
@@ -66626,10 +66696,10 @@ msgstr ""
 msgid "The aspect of the image is preserved."
 msgstr "Het aspect van het beeld blijft behouden."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The attribute \"%s\" is assigned to multiple columns. You can not populate "
-"one attribute from multiple columns. The column to attribute associations "
+"one attribute from multiple columns. The column-to-attribute associations "
 "need to be unique."
 msgstr ""
 "Het attribuut \"%s\" is toegewezen aan meerdere kolommen. U kunt niet één "
@@ -80410,7 +80480,7 @@ msgid "Unknown paths"
 msgstr "Onbekende paden"
 
 #, fuzzy, python-format
-msgid "Unknown rendering mode %s"
+msgid "Unknown render mode %s"
 msgstr "Onbekend metriek type %s"
 
 #, fuzzy
@@ -92390,6 +92460,22 @@ msgid "entries (max. %{max_entries})"
 msgstr ""
 
 #, fuzzy
+msgid "ServicesOverview & graphs"
+msgstr "Dienstgrafieken"
+
+#, fuzzy
+msgid "Colorize not OK states"
+msgstr "niet %s staten"
+
+#, fuzzy
+msgid "Show summary for not OK states"
+msgstr "Toon samenvatting voor niet %s staten"
+
+#, fuzzy
+msgid "Update widget"
+msgstr "Doel toevoegen"
+
+#, fuzzy
 msgid "Specific object type"
 msgstr "Selecteer specifiek objecttype"
 
@@ -92435,22 +92521,6 @@ msgstr "Automatisch"
 #, fuzzy
 msgid "Strict"
 msgstr "Metrisch"
-
-#, fuzzy
-msgid "Metric name"
-msgstr "Metrisch etiket"
-
-#, fuzzy
-msgid "Resource attributes"
-msgstr "Rolkenmerk"
-
-#, fuzzy
-msgid "Scope attributes"
-msgstr "Rolkenmerk"
-
-#, fuzzy
-msgid "Data point attributes"
-msgstr "Gewijzigde attributen"
 
 #, fuzzy
 msgid "Apply rate (sums)"
@@ -92542,6 +92612,10 @@ msgstr "Oplossen"
 #, fuzzy
 msgid "Clone this entry"
 msgstr "Kloon deze metriek"
+
+#, fuzzy
+msgid "Create services"
+msgstr "Diensten beheren"
 
 #, fuzzy
 msgid "Select at least two graph lines to edit"

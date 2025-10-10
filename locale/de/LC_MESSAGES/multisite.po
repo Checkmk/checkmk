@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-09-25 22:54+0000\n"
+"PO-Revision-Date: 2025-10-09 20:39+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -755,9 +755,9 @@ msgstr "%s Regeln"
 msgid "%s running for %s"
 msgstr "%s läuft seit %s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s section"
-msgstr "Host-Auswahl"
+msgstr "%s Sektion"
 
 #, python-format
 msgid "%s server"
@@ -3899,9 +3899,8 @@ msgstr "OID-Beschreibung hinzufügen"
 msgid "Add OpenTelemetry collector configuration"
 msgstr "Konfiguration des OpenTelemetry Collectors hinzufügen"
 
-#, fuzzy
 msgid "Add OpenTelemetry configuration"
-msgstr "Konfiguration des OpenTelemetry Collectors hinzufügen"
+msgstr "OpenTelemetry-Konfiguration hinzufügen"
 
 msgid "Add Prefix"
 msgstr "Präfix hinzufügen"
@@ -4021,9 +4020,8 @@ msgstr "Kontaktinformation zu Titel ergänzen"
 msgid "Add customer"
 msgstr "Kunde hinzufügen"
 
-#, fuzzy
 msgid "Add dashboard (prototype)"
-msgstr "Dashboard-Filter"
+msgstr "Dashboard hinzufügen (Prototyp)"
 
 msgid "Add destination address"
 msgstr "Zieladresse hinzufügen"
@@ -4184,9 +4182,8 @@ msgstr "Neue Aggregation hinzufügen"
 msgid "Add new credentials"
 msgstr "Neue Zugangsdaten hinzufügen"
 
-#, fuzzy
 msgid "Add new database instance"
-msgstr "Remote-Instanz hinzufügen"
+msgstr "Neue Datenbank-Instanz hinzufügen"
 
 msgid "Add new element"
 msgstr "Element hinzufügen"
@@ -4197,9 +4194,8 @@ msgstr "Neuen Endpunkt hinzufügen"
 msgid "Add new entry"
 msgstr "Neuen Eintrag hinzufügen"
 
-#, fuzzy
 msgid "Add new exclude pattern"
-msgstr "Neues Pattern hinzufügen"
+msgstr "Neues auszuschließendes Pattern hinzufügen"
 
 msgid "Add new field"
 msgstr "Neues Feld hinzufügen"
@@ -4218,9 +4214,8 @@ msgstr "Neue Gruppe hinzufügen"
 msgid "Add new grouping definition"
 msgstr "Neue Gruppendefinition hinzufügen"
 
-#, fuzzy
 msgid "Add new include pattern"
-msgstr "Neues Pattern hinzufügen"
+msgstr "Neues einzuschließendes Pattern hinzufügen"
 
 msgid "Add new label"
 msgstr "Neues Label hinzufügen"
@@ -4838,9 +4833,8 @@ msgstr "Betroffene Instanzen"
 msgid "Affected sites: %s"
 msgstr "Betroffene Instanzen: %s"
 
-#, fuzzy
 msgid "Affinity"
-msgstr "initialisiere"
+msgstr "Affinität"
 
 msgid ""
 "After a battery diagnostics the battery capacity is reduced until the "
@@ -5323,6 +5317,14 @@ msgstr "Aggregationszuordnung"
 
 msgid "Aggregation checks"
 msgstr "Aggregierte Checks"
+
+#, fuzzy
+msgid "Aggregation for histograms"
+msgstr "Aggregationsgruppen"
+
+#, fuzzy
+msgid "Aggregation for sums"
+msgstr "Aggregationsgruppen"
 
 msgid "Aggregation function"
 msgstr "Aggregationsfunktion"
@@ -5937,6 +5939,13 @@ msgid "All resource groups that belong to this node run on this node (local)"
 msgstr ""
 "Alle Ressourcengruppen, die zu dieser Gruppe gehören, laufen auf diesem "
 "Knoten (local)"
+
+#, python-format
+msgid ""
+"All rows in the CSV file must have the same number of columns. The following "
+"row had a different number of columns than the first row (or the title row, "
+"if one is present): %s"
+msgstr ""
 
 msgid "All services"
 msgstr "Alle Services"
@@ -6865,9 +6874,8 @@ msgstr "Application Load Balancer Zertifikate"
 msgid "Application Load balancers"
 msgstr "Application Load Balancer"
 
-#, fuzzy
 msgid "Application Monitoring"
-msgstr "Symbol im Monitoring"
+msgstr "Monitoring der Applikation"
 
 msgid "Application Pool name"
 msgstr "Name des Anwendungspools"
@@ -6899,9 +6907,8 @@ msgstr "Application Load Balancer Zielgruppen"
 msgid "Application load balancers"
 msgstr "Application Load Balancer"
 
-#, fuzzy
 msgid "Application monitoring"
-msgstr "Symbol im Monitoring"
+msgstr "Monitoring der Applikation"
 
 msgid "Application name"
 msgstr "Name der Anwendung"
@@ -7332,9 +7339,8 @@ msgstr "Angenommen %s"
 msgid "Asynchronous"
 msgstr "Asynchron"
 
-#, fuzzy
 msgid "Asynchronous check"
-msgstr "Asynchron"
+msgstr "Asynchroner Check"
 
 msgid "Asynchronous closing connections"
 msgstr "Asynchrone schließende Verbindungen"
@@ -7360,6 +7366,9 @@ msgstr "Asynchron übertragene Checkergebnisse"
 msgid "At least"
 msgstr "Mindestens"
 
+msgid "At least one host event must be selected."
+msgstr "Mindestens ein Host-Ereignis muss ausgewählt werden."
+
 msgid ""
 "At least one of these strings is expected in the first (status) line of the "
 "server response (default: <tt>HTTP/1.</tt>). If specified skips all other "
@@ -7369,6 +7378,9 @@ msgstr ""
 "Server-Antwort erwartet (Standard: <tt>HTTP/1.</tt>). Wenn definiert, wird "
 "jede anders lautende Statuszeilenlogik übersprungen (z. B. 3xx, 4xx, 5xx "
 "Verarbeitung)"
+
+msgid "At least one service event must be selected."
+msgstr "Mindestens ein Service-Ereignis muss ausgewählt werden."
 
 msgid "At least one triggering event must be selected."
 msgstr "Es muss mindestens ein auslösendes Ereignis ausgewählt werden."
@@ -7456,9 +7468,8 @@ msgstr "Atto Fibrebridge FC Port"
 msgid "Attribute"
 msgstr "Attribut"
 
-#, fuzzy
 msgid "Attribute filters"
-msgstr "Attributtyp"
+msgstr "Attributfilter"
 
 msgid "Attribute key"
 msgstr "Attributschlüssel"
@@ -7662,9 +7673,8 @@ msgstr "Auto-Shrink aus"
 msgid "Auto shrink on"
 msgstr "Auto-Shrink an"
 
-#, fuzzy
 msgid "Auto-detect (default)"
-msgstr "Authentifizierung (Standard)"
+msgstr "Automatische Erkennung (Standard)"
 
 msgid "Auto-detect proxy settings for this network"
 msgstr "Automatische Erkennung von Proxy-Einstellungen für dieses Netzwerk"
@@ -7778,9 +7788,8 @@ msgstr "Automatisch auf verfügbare Daten angepasst"
 msgid "Automatically create monitoring agents"
 msgstr "Monitoring-Agenten automatisch erstellen"
 
-#, fuzzy
 msgid "Automatically delete hosts without OpenTelemetry data"
-msgstr "Hosts mit OpenTelemetry-Daten automatisch löschen"
+msgstr "Hosts ohne OpenTelemetry-Daten automatisch löschen"
 
 msgid "Automatically delete hosts without open telemetry data"
 msgstr "Hosts mit OpenTelemetry-Daten automatisch löschen"
@@ -8083,9 +8092,8 @@ msgstr "Obergrenzen für die durchschnittliche Anzahl an Meldungen"
 msgid "Average number of messages"
 msgstr "Durchschnittliche Anzahl an Meldungen"
 
-#, fuzzy
 msgid "Average over"
-msgstr "Durchschnittswert"
+msgstr "Durchschnitt über"
 
 msgid "Average pending tasks delta"
 msgstr "Durchschnittliches Delta anstehender Aufgaben"
@@ -8592,29 +8600,23 @@ msgstr "Warte auf Informationen"
 msgid "Azure"
 msgstr "Azure"
 
-#, fuzzy
 msgid "Azure AD Connect"
 msgstr "Azure AD Connect"
 
-#, fuzzy
 msgid "Azure AD Connect (deprecated)"
-msgstr "Azure AD Connect"
+msgstr "Azure AD Connect (veraltet)"
 
-#, fuzzy
 msgid "Azure Agent Info"
-msgstr "Azure Agenten-Info"
+msgstr "Azure Agent-Info"
 
-#, fuzzy
 msgid "Azure Agent Info (deprecated)"
-msgstr "Azure Agenten-Info"
+msgstr "Azure Agent-Info (veraltet)"
 
-#, fuzzy
 msgid "Azure Application Gateway"
-msgstr "Applikations-Gateway"
+msgstr "Azure Applikations-Gateway"
 
-#, fuzzy
 msgid "Azure Application Gateway (deprecated)"
-msgstr "Azure Application Gateway"
+msgstr "Azure Application Gateway (veraltet)"
 
 msgid "Azure Blob Storage"
 msgstr "Azure Blob Speicher"
@@ -8622,20 +8624,17 @@ msgstr "Azure Blob Speicher"
 msgid "Azure DB Storage"
 msgstr "Azure DB Speicher"
 
-#, fuzzy
 msgid "Azure DB Storage (deprecated)"
-msgstr "Azure DB Speicher"
+msgstr "Azure DB Speicher (veraltet)"
 
 msgid "Azure Databases"
 msgstr "Azure Datenbanken"
 
-#, fuzzy
 msgid "Azure Load Balancer Health"
-msgstr "Load Balancer Gesundheit"
+msgstr "Azure Load Balancer Gesundheit"
 
-#, fuzzy
 msgid "Azure Load Balancer Health (deprecated)"
-msgstr "Azure Load Balancer Zustand"
+msgstr "Azure Load Balancer Gesundheit (veraltet)"
 
 msgid "Azure Redis CPU utilization"
 msgstr "Azure Redis CPU-Auslastung"
@@ -8661,118 +8660,92 @@ msgstr "Azure Redis Serverauslastung"
 msgid "Azure Redis throughput"
 msgstr "Azure Redis Durchsatz"
 
-#, fuzzy
 msgid "Azure SQL database CPU usage"
 msgstr "CPU-Auslastung der Azure SQL-Datenbank"
 
-#, fuzzy
 msgid "Azure SQL database CPU usage (deprecated)"
-msgstr "CPU-Auslastung der Azure SQL-Datenbank"
+msgstr "CPU-Auslastung der Azure SQL-Datenbank (veraltet)"
 
 msgid "Azure SQL database connections"
 msgstr "Azure SQL Datenbank-Verbindungen"
 
-#, fuzzy
 msgid "Azure SQL database deadlocks"
 msgstr "Deadlocks der Azure SQL-Datenbank"
 
-#, fuzzy
 msgid "Azure SQL database deadlocks (deprecated)"
-msgstr "Deadlocks der Azure SQL-Datenbank"
+msgstr "Deadlocks der Azure SQL-Datenbank (veraltet)"
 
-#, fuzzy
 msgid "Azure SQL database storage"
 msgstr "Speicher der Azure SQL-Datenbank"
 
-#, fuzzy
 msgid "Azure SQL database storage (deprecated)"
-msgstr "Speicher der Azure SQL-Datenbank"
+msgstr "Speicher der Azure SQL-Datenbank (veraltet)"
 
-#, fuzzy
 msgid "Azure SQL database throughput"
 msgstr "Durchsatz der Azure SQL-Datenbank"
 
-#, fuzzy
 msgid "Azure SQL database throughput (deprecated)"
-msgstr "Durchsatz der Azure SQL-Datenbank"
+msgstr "Durchsatz der Azure SQL-Datenbank (veraltet)"
 
 msgid "Azure Storage"
 msgstr "Azure Speicher"
 
-#, fuzzy
 msgid "Azure Storage Data Flow"
 msgstr "Azure Speicherdatenfluss"
 
-#, fuzzy
 msgid "Azure Storage Data Flow (deprecated)"
-msgstr "Azure Speicherdatenfluss"
+msgstr "Azure Speicherdatenfluss (veraltet)"
 
-#, fuzzy
 msgid "Azure Storage Performance"
-msgstr "Azure Speicher Performance"
+msgstr "Azure Speicher-Performance"
 
-#, fuzzy
 msgid "Azure Storage Performance (deprecated)"
-msgstr "Azure Speicher Performance"
+msgstr "Azure Speicher-Performance (veraltet)"
 
-#, fuzzy
 msgid "Azure Storage Usage"
-msgstr "Azure Speicher"
-
-#, fuzzy
-msgid "Azure Storage Usage (deprecated)"
 msgstr "Azure Speicherauslastung"
 
-#, fuzzy
+msgid "Azure Storage Usage (deprecated)"
+msgstr "Azure Speicherauslastung (veraltet)"
+
 msgid "Azure Traffic Manager Probe State"
-msgstr "Azure Traffic Manager Probe Zustand"
+msgstr ""
 
-#, fuzzy
 msgid "Azure Traffic Manager Probe State (deprecated)"
-msgstr "Azure Traffic Manager Probe Zustand"
+msgstr ""
 
-#, fuzzy
 msgid "Azure Traffic Manager Qps"
-msgstr "Azure Traffic Manager Qps"
+msgstr "Azure Traffic Manager Anfragen pro Sekunde (QPS)"
 
-#, fuzzy
 msgid "Azure Traffic Manager Qps (deprecated)"
-msgstr "Azure Traffic Manager Qps"
+msgstr "Azure Traffic Manager Anfragen pro Sekunde (QPS) (veraltet)"
 
-#, fuzzy
 msgid "Azure Usage Details (Costs)"
-msgstr "Azure Nutzungsdetails (Kosten)"
+msgstr "Azure Auslastungsdetails (Kosten)"
 
-#, fuzzy
 msgid "Azure Usage Details (Costs) (deprecated)"
-msgstr "Azure Nutzungsdetails (Kosten)"
+msgstr "Azure Auslastungsdetails (Kosten) (veraltet)"
 
-#, fuzzy
 msgid "Azure VM Burst CPU Credits"
 msgstr "Azure VM Burst CPU Credits"
 
-#, fuzzy
 msgid "Azure VM Burst CPU Credits (deprecated)"
-msgstr "Azure VM Burst CPU Credits"
+msgstr "Azure VM Burst CPU Credits (veraltet)"
 
-#, fuzzy
 msgid "Azure VM Disk"
-msgstr "Azure VM Instanzen"
-
-#, fuzzy
-msgid "Azure VM Disk (deprecated)"
 msgstr "Azure VM Festplatte"
+
+msgid "Azure VM Disk (deprecated)"
+msgstr "Azure VM Festplatte (veraltet)"
 
 msgid "Azure VM instances"
 msgstr "Azure VM Instanzen"
 
-#, fuzzy
 msgid "Azure VNet Gateway"
-msgstr "vNet Gateway"
-
-#, fuzzy
-msgid "Azure VNet Gateway  (deprecated)"
 msgstr "Azure VNet Gateway"
+
+msgid "Azure VNet Gateway  (deprecated)"
+msgstr "Azure VNet Gateway (veraltet)"
 
 #, fuzzy
 msgid "Azure database connections"
@@ -14349,9 +14322,9 @@ msgstr "Konfiguration des Datadog-Spezialagenten."
 msgid "Configuration of update plug-in"
 msgstr "Konfiguration des Update-Plugins"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Configuration options for the %s section."
-msgstr "Keine zusätzlichen Konfigurationsoptionen für diese Methode."
+msgstr "Konfigurationsoptionen für die %s Sektion."
 
 #, python-format
 msgid ""
@@ -17489,6 +17462,13 @@ msgstr "Untergrenzen für Datenpfadverfügbarkeit"
 
 msgid "Data point"
 msgstr "Datenpunkt"
+
+#, fuzzy
+msgid "Data point attribute"
+msgstr "Attribute des Datenpunkts"
+
+msgid "Data point attributes"
+msgstr "Attribute des Datenpunkts"
 
 msgid "Data range"
 msgstr "Datenbereich"
@@ -40072,9 +40052,8 @@ msgstr "Maximale Anzahl an Clients"
 msgid "Maximum number of connections or listeners"
 msgstr "Maximale Anzahl von Verbindungen oder Listeners"
 
-#, fuzzy
 msgid "Maximum number of database connections to open."
-msgstr "Maximale Anzahl von Verbindungen oder Listeners"
+msgstr "Maximale Anzahl von Datenbankverbindungen, die geöffnet werden."
 
 msgid "Maximum number of delivery attempts"
 msgstr "Maximale Anzahl Zustellungsversuche"
@@ -40101,9 +40080,8 @@ msgstr "Maximale Anzahl an Open File-Deskriptoren"
 msgid "Maximum number of parsed lines per log file"
 msgstr "Maximale Anzahl Zeilen, die pro Log-Datei gelesen werden"
 
-#, fuzzy
 msgid "Maximum number of queries to execute per connection."
-msgstr "Maximale Anzahl an Wiederausführungen"
+msgstr "Maximale Anzahl an Anfragen, die pro Verbindung ausgeführt werden."
 
 msgid "Maximum number of re-executions"
 msgstr "Maximale Anzahl an Wiederausführungen"
@@ -40716,6 +40694,10 @@ msgid "Metric History"
 msgstr "Metrik-Historie"
 
 #, fuzzy
+msgid "Metric backend (Custom query)"
+msgstr "Oracle-Instanz"
+
+#, fuzzy
 msgid "Metric backend instance"
 msgstr "Oracle-Instanz"
 
@@ -40731,6 +40713,9 @@ msgstr "Metrik-Bezeichnung"
 
 msgid "Metric levels"
 msgstr "Metrik-Levels"
+
+msgid "Metric name"
+msgstr "Metrik-Name"
 
 msgid "Metric name (exact match)"
 msgstr "Metrikname (exakter Match)"
@@ -43086,6 +43071,10 @@ msgstr "Keine zusätzlichen Konfigurationsoptionen für diese Methode."
 
 msgid "No agent labels present."
 msgstr "Keine Agentenlabels vorhanden."
+
+#, fuzzy
+msgid "No aggregation"
+msgstr "Aggregation"
 
 msgid "No appropriate request ID"
 msgstr "Keine passende Anfrage-ID"
@@ -49658,6 +49647,10 @@ msgstr "Bitte geben Sie einen absoluten Windows-Pfad an"
 msgid "Please provide an absolute path"
 msgstr "Bitte geben Sie einen absoluten Pfad an"
 
+#, fuzzy
+msgid "Please provide unique ports."
+msgstr "Bitte geben Sie einen absoluten Pfad an"
+
 msgid ""
 "Please refer to the [dashboards#host_problems|Checkmk user guide] for more "
 "details."
@@ -51139,7 +51132,7 @@ msgid "QoS: Quality of Service Configuration"
 msgstr "QoS: Qualität der Servicekonfiguration"
 
 msgid "Qps"
-msgstr "Qps"
+msgstr "Anfragen pro Sekunde (QPS)"
 
 msgid "Qtree Quotas"
 msgstr "Qtree-Kontingente"
@@ -51181,6 +51174,10 @@ msgstr "Abfrage von Elasticsearch Logs"
 
 msgid "Query or SQL statement"
 msgstr "Query oder SQL-Anfrage"
+
+#, fuzzy
+msgid "Query the metric backend"
+msgstr "Name der OpenTelemetry Metrik"
 
 msgid "Query time limit"
 msgstr "Zeitbegrenzung für Abfrage"
@@ -51600,6 +51597,9 @@ msgstr "Raritan EMX Rack: Temperatur"
 
 msgid "Raritan PDU: Input Phases"
 msgstr "Raritan PDU: Eingabephasen"
+
+msgid "Rate"
+msgstr ""
 
 msgid "Rate computation"
 msgstr "Berechnung der Rate"
@@ -53513,8 +53513,16 @@ msgid "Resource Name"
 msgstr "Ressourcenname"
 
 #, fuzzy
+msgid "Resource attribute"
+msgstr "Attribute zurücksetzen"
+
+#, fuzzy
 msgid "Resource attribute for hostname computation"
 msgstr "Benutzerdefinierte Berechnung von Host-Namen"
+
+#, fuzzy
+msgid "Resource attributes"
+msgstr "Attribute zurücksetzen"
 
 msgid "Resource consumption of Windows processes"
 msgstr "Ressourcenverbrauch von Windows-Prozessen"
@@ -55201,6 +55209,14 @@ msgstr "Wissenschaftlich (Standard) mit Symbol %s"
 
 msgid "Scope"
 msgstr "Umfang"
+
+#, fuzzy
+msgid "Scope attribute"
+msgstr "Rollen-Attribut"
+
+#, fuzzy
+msgid "Scope attributes"
+msgstr "Rollen-Attribut"
 
 msgid ""
 "Scope to be used in LDAP searches. In most cases <i>Search whole subtree "
@@ -63978,10 +63994,10 @@ msgstr ""
 msgid "The aspect of the image is preserved."
 msgstr "Das Seitenverhältnis des Bildes wird erhalten."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The attribute \"%s\" is assigned to multiple columns. You can not populate "
-"one attribute from multiple columns. The column to attribute associations "
+"one attribute from multiple columns. The column-to-attribute associations "
 "need to be unique."
 msgstr ""
 "Das Attribut \"%s\" ist mehreren Spalten zugeordnet. Sie können nicht ein "
@@ -77396,8 +77412,8 @@ msgstr "Unbekannte Metrik"
 msgid "Unknown paths"
 msgstr "Unbekannte Pfade"
 
-#, python-format
-msgid "Unknown rendering mode %s"
+#, fuzzy, python-format
+msgid "Unknown render mode %s"
 msgstr "Unbekannter Rendering-Modus %s"
 
 msgid "Unknown rule sets"
@@ -84870,9 +84886,10 @@ msgstr ""
 "Sie können die Umbenennung nicht durchführen, da die folgenden Hosts von "
 "Quick Setup gesperrt sind:"
 
-#, fuzzy, python-format
+#, python-format
 msgid "You cannot edit the configuration for host '<b>%s</b>'. %s"
-msgstr "Kann Konfigurationsdatei \"%s\" nicht schreiben: %s"
+msgstr ""
+"Sie können die Konfiguration des Hosts '<b>%s</b>' nicht bearbeiten. %s"
 
 msgid "You cannot have more than one timing setting per notification method."
 msgstr ""
@@ -88348,9 +88365,8 @@ msgstr "Keine Filterkategorie verfügbar"
 msgid "Anchor"
 msgstr ""
 
-#, fuzzy
 msgid "Toggle sizing for width"
-msgstr " wartend auf "
+msgstr "Größe für Breite umschalten"
 
 msgid "Toggle sizing for height"
 msgstr ""
@@ -88447,9 +88463,8 @@ msgstr ""
 msgid "Responsive"
 msgstr ""
 
-#, fuzzy
 msgid "Legacy"
-msgstr "Legacy"
+msgstr ""
 
 msgid "Choose which objects this dashboard applies to"
 msgstr ""
@@ -88536,9 +88551,8 @@ msgid ""
 "runtime filters."
 msgstr ""
 
-#, fuzzy
 msgid "No %{n} targeted filter applied"
-msgstr "Es wurde kein Host-Namen-Filter angewendet."
+msgstr "Kein %{n} gezielter Filter angewendet"
 
 msgid ""
 "A %{n} targeted filter selected as dashboard or runtime filter appears here "
@@ -88555,9 +88569,8 @@ msgid ""
 "filters."
 msgstr ""
 
-#, fuzzy
 msgid "No %{n} filters applied"
-msgstr "Es wurden keine Host-Filter angewendet."
+msgstr "Keine %{n} Filter angewendet"
 
 msgid ""
 "Dashboard or runtime %{n} filters selected on dashboard level appear and "
@@ -88716,13 +88729,11 @@ msgstr ""
 msgid "€ (Decimal, strict precision, 2 digits)"
 msgstr ""
 
-#, fuzzy
 msgid "Failed to load sidebar elements."
-msgstr "Seitenleistenelement hinzufügen"
+msgstr "Laden der Seitenleistenelement ist fehlgeschlagen."
 
-#, fuzzy
 msgid "Loading sidebar elements..."
-msgstr "Seitenleistenelement hinzufügen"
+msgstr "Seitenleistenelemente laden..."
 
 msgid "Barplot"
 msgstr "Balkendiagramm"
@@ -88958,6 +88969,22 @@ msgstr "Rangfolge"
 msgid "entries (max. %{max_entries})"
 msgstr "Einträge (max. %{max_entries})"
 
+#, fuzzy
+msgid "ServicesOverview & graphs"
+msgstr "Servicegraphen"
+
+#, fuzzy
+msgid "Colorize not OK states"
+msgstr "nicht %s Zustände"
+
+#, fuzzy
+msgid "Show summary for not OK states"
+msgstr "Zusammenfassung für nicht %s Zustände anzeigen"
+
+#, fuzzy
+msgid "Update widget"
+msgstr "Widgets bearbeiten"
+
 msgid "Specific object type"
 msgstr "Spezifischer Objekttyp"
 
@@ -88970,9 +88997,8 @@ msgstr "Auswahl ansehen"
 msgid "Copy view"
 msgstr "Tabellenansicht kopieren"
 
-#, fuzzy
 msgid "Unknown object type: %{objectType}"
-msgstr "Unbekannter Zieltyp: %s. Vorhandene Typen: %s."
+msgstr "Unbekannter Objekttyp: %{objectType}"
 
 #, fuzzy
 msgid "Data configuration"
@@ -88997,20 +89023,6 @@ msgstr "Auto"
 
 msgid "Strict"
 msgstr "Streng"
-
-msgid "Metric name"
-msgstr "Metrik-Name"
-
-#, fuzzy
-msgid "Resource attributes"
-msgstr "Attribute zurücksetzen"
-
-#, fuzzy
-msgid "Scope attributes"
-msgstr "Rollen-Attribut"
-
-msgid "Data point attributes"
-msgstr "Attribute des Datenpunkts"
 
 #, fuzzy
 msgid "Apply rate (sums)"
@@ -89089,6 +89101,10 @@ msgstr "Operation auflösen"
 
 msgid "Clone this entry"
 msgstr "Diesen Eintrag klonen"
+
+#, fuzzy
+msgid "Create services"
+msgstr "Geänderte Services"
 
 msgid "Select at least two graph lines to edit"
 msgstr "Wählen Sie mindestens zwei Graph-Linien zur Bearbeitung aus"

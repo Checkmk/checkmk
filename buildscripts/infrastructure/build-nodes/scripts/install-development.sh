@@ -294,6 +294,7 @@ install_for_cpp_dev() {
     prepare_gplusplus_sources_list
 
     local PACKAGES_TO_INSTALL=(
+        "flex"            # to build pcap
         "bison"           # to build binutils
         "texinfo"         # to build gdb
         "tk-dev"          # to build gdb

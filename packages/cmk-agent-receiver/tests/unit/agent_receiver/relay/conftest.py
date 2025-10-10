@@ -147,13 +147,9 @@ def create_task_handler(tasks_repository: TasksRepository) -> Iterator[CreateTas
 
 
 @pytest.fixture()
-def update_task_handler(
-    tasks_repository: TasksRepository, relays_repository: RelaysRepository
-) -> Iterator[UpdateTaskHandler]:
+def update_task_handler(tasks_repository: TasksRepository) -> Iterator[UpdateTaskHandler]:
     """Provides an UpdateTaskHandler with mock dependencies."""
-    handler = UpdateTaskHandler(
-        tasks_repository=tasks_repository, relays_repository=relays_repository
-    )
+    handler = UpdateTaskHandler(tasks_repository=tasks_repository)
     yield handler
 
 

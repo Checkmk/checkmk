@@ -10,19 +10,15 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     TasksRepository,
     TaskStatus,
 )
-from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.shared_types import (
     RelayID,
-    RelayNotFoundError,
     TaskID,
 )
-from cmk.agent_receiver.relay.lib.site_auth import InternalAuth
 
 
 @dataclasses.dataclass
 class UpdateTaskHandler:
     tasks_repository: TasksRepository
-    relays_repository: RelaysRepository
 
     def process(
         self,
@@ -32,15 +28,10 @@ class UpdateTaskHandler:
         result_type: ResultType,
         result_payload: str,
     ) -> RelayTask:
-        auth = InternalAuth()
-        if not self.relays_repository.has_relay(relay_id, auth):
-            raise RelayNotFoundError(relay_id)
-
-        task = self.tasks_repository.update_task(
+        return self.tasks_repository.update_task(
             relay_id=relay_id,
             task_id=task_id,
             result_type=result_type,
             result_payload=result_payload,
             status=TaskStatus.FINISHED if result_type == ResultType.OK else TaskStatus.FAILED,
         )
-        return task

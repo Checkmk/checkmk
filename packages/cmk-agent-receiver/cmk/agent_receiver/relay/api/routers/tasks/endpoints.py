@@ -98,6 +98,7 @@ async def create_task_endpoint(
     responses={
         202: {"model": tasks_protocol.TaskResponse},
     },
+    dependencies=[fastapi.Depends(check_relay)],
 )
 async def update_task(
     relay_id: str,

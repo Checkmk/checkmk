@@ -127,7 +127,7 @@ const handleObjectTypeSwitch = (objectType: string): void => {
 
     <WizardStepsContainer v-else>
       <StepsHeader
-        :title="_t('Metrics & graphs')"
+        :title="_t('Host & site overview')"
         :subtitle="_t('Define widget')"
         @back="() => emit('goBack')"
       />

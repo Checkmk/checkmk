@@ -4,40 +4,35 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-def"
-
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersNetworking,
+from cmk.gui.form_specs.generators.age import Age
+from cmk.gui.form_specs.unstable.legacy_converter import Tuple
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
 )
-from cmk.gui.valuespec import Age, Dictionary, TextInput, Tuple
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 
-def _parameter_valuespec_azure_ad():
+def _parameter_form_spec_azure_ad():
     return Dictionary(
-        elements=[
-            (
-                "age",
-                Tuple(
-                    title=_("Time since last AD Connect sync"),
-                    elements=[
-                        Age(title=_("Warning at"), default_value=1800),
-                        Age(title=_("Critical at"), default_value=3600),
-                    ],
+        elements={
+            "age": DictElement(
+                required=False,
+                parameter_form=Tuple(
+                    title=Title("Time since last AD Connect sync"),
+                    elements=[Age(prefill=DefaultValue(1800)), Age(prefill=DefaultValue(3600))],
                 ),
-            ),
-        ],
+            )
+        }
     )
 
 
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="azure_ad",
-        match_type="dict",
-        group=RulespecGroupCheckParametersNetworking,
-        parameter_valuespec=_parameter_valuespec_azure_ad,
-        title=lambda: _("Azure AD Connect (deprecated)"),
-        item_spec=lambda: TextInput(title=_("Accounts display name")),
-    )
+rule_spec_azure_ad = CheckParameters(
+    name="azure_ad",
+    title=Title("Azure AD Connect (deprecated)"),
+    topic=Topic.NETWORKING,
+    parameter_form=_parameter_form_spec_azure_ad,
+    condition=HostAndItemCondition(item_title=Title("Accounts display name")),
 )

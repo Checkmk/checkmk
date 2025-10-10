@@ -29,7 +29,18 @@ FROM ${IMAGE_BASE}
 # vim-tiny is required for convenience, requires +20MB
 # wget is required to download artifacts, requires +1MB
 RUN apt-get update && \
-    apt-get install -y bash curl git gpg jq lsb-release make python3 rsync vim-tiny wget && \
+    apt-get install -y \
+        bash \
+        curl \
+        git \
+        gpg \
+        jq \
+        lsb-release \
+        make \
+        python3 \
+        rsync \
+        vim-tiny \
+        wget && \
     rm -rf /var/cache/apt/*
 
 # bazelisk and bazel are basic tools for running tests, requires +77MB

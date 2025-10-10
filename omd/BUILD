@@ -92,7 +92,7 @@ pkg_files(
         ":doc.spec",
         ":swagger-ui.spec",
     ],
-    prefix = "var/check_mk/rest_api/spec",
+    prefix = "share/doc/check_mk/rest-api/spec",
 )
 
 [pkg_tar(

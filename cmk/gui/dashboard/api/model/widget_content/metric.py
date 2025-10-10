@@ -22,16 +22,15 @@ from cmk.gui.dashboard.type_defs import (
 )
 from cmk.gui.graphing import id_from_unit_spec, metrics_from_api
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
-from cmk.gui.openapi.framework.model.common_fields import (
-    timerange_from_internal,
-    TimerangeModel,
-)
+from cmk.gui.openapi.framework.model.common_fields import timerange_from_internal, TimerangeModel
 from cmk.gui.openapi.framework.model.converter import RegistryConverter
 
 from ..type_defs import ColorHex
 from ._base import BaseWidgetContent
 
 
+# TODO: Reimplement/Investigate a validation function for this class MetricDisplayRangeFixedModel
+#       See ticket CMK-26644.
 @api_model
 class MetricDisplayRangeFixedModel:
     type: Literal["fixed"] = api_field(description="Display a fixed range of values.")
@@ -42,14 +41,6 @@ class MetricDisplayRangeFixedModel:
     def __post_init__(self) -> None:
         if self.minimum >= self.maximum:
             raise ValueError("Minimum must be less than maximum")
-
-    def validate_unit(self, metric_name: str) -> None:
-        unit_spec = metrics_from_api[metric_name].unit_spec
-        if unit_spec.notation.symbol != self.unit:
-            raise ValueError(
-                f"Unit of the display range {self.unit!r} "
-                f"does not match the unit of the metric: {unit_spec.notation.symbol}"
-            )
 
     @staticmethod
     def _unit_symbol_from_internal(value: str) -> str:
@@ -252,10 +243,6 @@ class BarplotContent(_BaseMetricContent):
     def internal_type(cls) -> str:
         return "barplot"
 
-    def __post_init__(self) -> None:
-        if isinstance(self.display_range, MetricDisplayRangeFixedModel):
-            self.display_range.validate_unit(self.metric)
-
     @classmethod
     def from_internal(cls, config: BarplotDashletConfig) -> Self:
         return cls(
@@ -289,9 +276,6 @@ class GaugeContent(_BaseMetricContent):
     @override
     def internal_type(cls) -> str:
         return "gauge"
-
-    def __post_init__(self) -> None:
-        self.display_range.validate_unit(self.metric)
 
     @classmethod
     def from_internal(cls, config: GaugeDashletConfig) -> Self:
@@ -333,10 +317,6 @@ class SingleMetricContent(_BaseMetricContent):
     @override
     def internal_type(cls) -> str:
         return "single_metric"
-
-    def __post_init__(self) -> None:
-        if isinstance(self.display_range, MetricDisplayRangeFixedModel):
-            self.display_range.validate_unit(self.metric)
 
     @classmethod
     def from_internal(cls, config: SingleGraphDashletConfig) -> Self:
@@ -441,10 +421,6 @@ class TopListContent(_BaseMetricContent):
     @override
     def internal_type(cls) -> str:
         return "top_list"
-
-    def __post_init__(self) -> None:
-        if isinstance(self.display_range, MetricDisplayRangeFixedModel):
-            self.display_range.validate_unit(self.metric)
 
     @classmethod
     def from_internal(cls, config: TopListDashletConfig) -> Self:

@@ -447,32 +447,6 @@ class TestBarplotContent:
             "msg"
         ].startswith("Value error, Value 'non_existent_metric' is not allowed, valid options are:")
 
-    def test_invalid_display_range_unit(self, clients: ClientRegistry) -> None:
-        resp = clients.DashboardClient.create_relative_grid_dashboard(
-            _create_dashboard_payload(
-                "test_dashboard",
-                {
-                    "test_widget": _create_widget(
-                        {
-                            "type": "barplot",
-                            "metric": "availability",
-                            "display_range": {
-                                "type": "fixed",
-                                "unit": "invalid",
-                                "minimum": 0,
-                                "maximum": 100,
-                            },
-                        }
-                    )
-                },
-            ),
-            expect_ok=False,
-        )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
-        assert resp.json["fields"]["body.widgets.test_widget.content.barplot"]["msg"].startswith(
-            "Value error, Unit of the display range 'invalid' does not match the unit of the metric: %"
-        )
-
 
 @pytest.mark.usefixtures("skip_in_raw_edition")
 class TestGaugeContent:
@@ -519,34 +493,6 @@ class TestGaugeContent:
             "msg"
         ].startswith("Value error, Value 'non_existent_metric' is not allowed, valid options are:")
 
-    def test_invalid_display_range_unit(self, clients: ClientRegistry) -> None:
-        resp = clients.DashboardClient.create_relative_grid_dashboard(
-            _create_dashboard_payload(
-                "test_dashboard",
-                {
-                    "test_widget": _create_widget(
-                        {
-                            "type": "gauge",
-                            "metric": "availability",
-                            "display_range": {
-                                "type": "fixed",
-                                "unit": "invalid",
-                                "minimum": 0,
-                                "maximum": 100,
-                            },
-                            "time_range": "current",
-                            "status_display": {"type": "text", "for_states": "not_ok"},
-                        }
-                    )
-                },
-            ),
-            expect_ok=False,
-        )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
-        assert resp.json["fields"]["body.widgets.test_widget.content.gauge"]["msg"].startswith(
-            "Value error, Unit of the display range 'invalid' does not match the unit of the metric: %"
-        )
-
 
 @pytest.mark.usefixtures("skip_in_raw_edition")
 class TestSingleMetricContent:
@@ -590,37 +536,6 @@ class TestSingleMetricContent:
         assert resp.json["fields"]["body.widgets.test_widget.content.single_metric.metric"][
             "msg"
         ].startswith("Value error, Value 'non_existent_metric' is not allowed, valid options are:")
-
-    def test_invalid_display_range_unit(self, clients: ClientRegistry) -> None:
-        resp = clients.DashboardClient.create_relative_grid_dashboard(
-            _create_dashboard_payload(
-                "test_dashboard",
-                {
-                    "test_widget": _create_widget(
-                        {
-                            "type": "single_metric",
-                            "metric": "availability",
-                            "time_range": "current",
-                            "status_display": {"type": "text", "for_states": "not_ok"},
-                            "display_range": {
-                                "type": "fixed",
-                                "unit": "invalid",
-                                "minimum": 0,
-                                "maximum": 100,
-                            },
-                            "show_display_range_limits": False,
-                        }
-                    )
-                },
-            ),
-            expect_ok=False,
-        )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
-        assert resp.json["fields"]["body.widgets.test_widget.content.single_metric"][
-            "msg"
-        ].startswith(
-            "Value error, Unit of the display range 'invalid' does not match the unit of the metric: %"
-        )
 
 
 @pytest.mark.usefixtures("skip_in_raw_edition")
@@ -707,38 +622,6 @@ class TestTopListContent:
         assert resp.json["fields"]["body.widgets.test_widget.content.top_list.metric"][
             "msg"
         ].startswith("Value error, Value 'non_existent_metric' is not allowed, valid options are:")
-
-    def test_invalid_display_range_unit(self, clients: ClientRegistry) -> None:
-        resp = clients.DashboardClient.create_relative_grid_dashboard(
-            _create_dashboard_payload(
-                "test_dashboard",
-                {
-                    "test_widget": _create_widget(
-                        {
-                            "type": "top_list",
-                            "metric": "availability",
-                            "display_range": {
-                                "type": "fixed",
-                                "unit": "invalid",
-                                "minimum": 0,
-                                "maximum": 100,
-                            },
-                            "columns": {
-                                "show_service_description": False,
-                                "show_bar_visualization": False,
-                            },
-                            "ranking_order": "low",
-                            "limit_to": 10,
-                        }
-                    )
-                },
-            ),
-            expect_ok=False,
-        )
-        assert resp.status_code == 400, f"Expected 400, got {resp.status_code} {resp.body!r}"
-        assert resp.json["fields"]["body.widgets.test_widget.content.top_list"]["msg"].startswith(
-            "Value error, Unit of the display range 'invalid' does not match the unit of the metric: %"
-        )
 
 
 @pytest.mark.usefixtures("skip_in_raw_edition")

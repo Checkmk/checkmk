@@ -93,7 +93,6 @@ def _find_control_chains(
     return {pod_uid: _find_controllers(pod_uid, object_to_owners).chain for pod_uid in pod_uids}
 
 
-# TODO Needs an integration test
 def _match_controllers(
     pod_to_controllers: Mapping[api.PodUID, Sequence[api.Controller]],
 ) -> Mapping[str, Sequence[api.PodUID]]:

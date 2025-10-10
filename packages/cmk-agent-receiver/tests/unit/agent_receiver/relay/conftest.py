@@ -140,13 +140,9 @@ def unregister_relay_handler(
 
 
 @pytest.fixture()
-def create_task_handler(
-    tasks_repository: TasksRepository, relays_repository: RelaysRepository
-) -> Iterator[CreateTaskHandler]:
+def create_task_handler(tasks_repository: TasksRepository) -> Iterator[CreateTaskHandler]:
     """Provides a CreateTaskHandler with mock dependencies."""
-    handler = CreateTaskHandler(
-        tasks_repository=tasks_repository, relays_repository=relays_repository
-    )
+    handler = CreateTaskHandler(tasks_repository=tasks_repository)
     yield handler
 
 

@@ -65,12 +65,12 @@ RAW_AZURE_SERVICES: Final = [
     ),
     ("Microsoft.Network/trafficmanagerprofiles", Title("Traffic Manager")),
     ("Microsoft.Network/loadBalancers", Title("Load Balancer")),
-    ("Microsoft.Cache/Redis", Title("Redis Caches")),
 ]
 
 CCE_AZURE_SERVICES: Final = [
     ("Microsoft.RecoveryServices/vaults", Title("Recovery Services Vault")),
     ("Microsoft.Network/applicationGateways", Title("Application Gateway")),
+    ("Microsoft.Cache/Redis", Title("Redis Caches")),
 ]
 
 

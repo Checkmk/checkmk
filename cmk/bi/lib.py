@@ -42,8 +42,8 @@ from cmk.bi.type_defs import (
     HostRegexMatches,
     HostServiceConditions,
     HostState,
-    SearchConfig,
     SearchKind,
+    SearchSerialized,
 )
 from cmk.ccc import plugin_registry
 from cmk.ccc.hostaddress import HostName
@@ -647,7 +647,7 @@ bi_action_registry = BIActionRegistry()
 
 
 class ABCBISearch(ABC):
-    def __init__(self, search_config: dict[str, Any]) -> None:
+    def __init__(self, search_config: SearchSerialized) -> None:
         super().__init__()
 
     @classmethod
@@ -661,7 +661,7 @@ class ABCBISearch(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def serialize(self) -> dict[str, Any]:
+    def serialize(self) -> SearchSerialized:
         raise NotImplementedError()
 
     @abstractmethod
@@ -674,7 +674,7 @@ class BISearchRegistry(plugin_registry.Registry[type[ABCBISearch]]):
     def plugin_name(self, instance: type[ABCBISearch]) -> str:
         return instance.kind()
 
-    def instantiate(self, search_config: SearchConfig) -> ABCBISearch:
+    def instantiate(self, search_config: SearchSerialized) -> ABCBISearch:
         return self._entries[search_config["type"]](search_config)
 
 

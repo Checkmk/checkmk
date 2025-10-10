@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-09-25 19:45+0000\n"
+"PO-Revision-Date: 2025-10-09 20:39+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -6813,9 +6813,8 @@ msgstr "Application Load Balancer Zertifikate"
 msgid "Application Load balancers"
 msgstr "Application Load Balancer"
 
-#, fuzzy
 msgid "Application Monitoring"
-msgstr "Name des Anwendungspools"
+msgstr "Monitoring der Applikation"
 
 msgid "Application Pool name"
 msgstr "Name des Anwendungspools"
@@ -8491,10 +8490,10 @@ msgid "Azure AD Connect"
 msgstr "Azure AD Connect"
 
 msgid "Azure Agent Info"
-msgstr "Azure Agenten-Info"
+msgstr "Azure Agent-Info"
 
 msgid "Azure Application Gateway"
-msgstr "Azure Application Gateway"
+msgstr "Azure Applikations-Gateway"
 
 msgid "Azure Blob Storage"
 msgstr "Azure Blob Speicher"
@@ -8506,7 +8505,7 @@ msgid "Azure Databases"
 msgstr "Azure Datenbanken"
 
 msgid "Azure Load Balancer Health"
-msgstr "Azure Load Balancer Zustand"
+msgstr "Azure Load Balancer Gesundheit"
 
 msgid "Azure SQL database CPU usage"
 msgstr "CPU-Auslastung der Azure SQL-Datenbank"
@@ -8524,13 +8523,13 @@ msgid "Azure Storage"
 msgstr "Azure Speicher"
 
 msgid "Azure Traffic Manager Probe State"
-msgstr "Azure Traffic Manager Probe Zustand"
+msgstr ""
 
 msgid "Azure Traffic Manager Qps"
-msgstr "Azure Traffic Manager Qps"
+msgstr "Azure Traffic Manager Anfragen pro Sekunde (QPS)"
 
 msgid "Azure Usage Details (Costs)"
-msgstr "Azure Nutzungsdetails (Kosten)"
+msgstr "Azure Auslastungsdetails (Kosten)"
 
 msgid "Azure VM Burst CPU Credits"
 msgstr "Azure VM Burst CPU Credits"
@@ -50116,7 +50115,7 @@ msgid "QoS: Quality of Service Configuration"
 msgstr "QoS: Qualität der Servicekonfiguration"
 
 msgid "Qps"
-msgstr "Qps"
+msgstr "Anfragen pro Sekunde (QPS)"
 
 msgid "Qtree Quotas"
 msgstr "Qtree-Kontingente"
@@ -83320,9 +83319,10 @@ msgstr ""
 "Sie können die Umbenennung nicht durchführen, da die folgenden Hosts von "
 "Quick Setup gesperrt sind:"
 
-#, fuzzy, python-format
+#, python-format
 msgid "You cannot edit the configuration for host '<b>%s</b>'. %s"
-msgstr "Kann Konfigurationsdatei \"%s\" nicht schreiben: %s"
+msgstr ""
+"Sie können die Konfiguration des Hosts '<b>%s</b>' nicht bearbeiten. %s"
 
 msgid "You cannot have more than one timing setting per notification method."
 msgstr ""

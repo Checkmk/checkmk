@@ -35,7 +35,9 @@ def _build_config_task_factory() -> ConfigTaskFactory:
         ttl_seconds=config.task_ttl,
         max_tasks_per_relay=config.max_tasks_per_relay,
     )
-    relays_repository = RelaysRepository.from_site(config.site_url, config.site_name)
+    relays_repository = RelaysRepository.from_site(
+        config.site_url, config.site_name, config.helper_config_dir
+    )
     return ConfigTaskFactory(
         relays_repository=relays_repository,
         tasks_repository=tasks_repository,

@@ -22,7 +22,6 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.shared_types import RelayID
-from cmk.agent_receiver.relay.lib.site_auth import InternalAuth
 
 _ARCHIVE_ROOT_NAME = "config"
 
@@ -38,8 +37,7 @@ class ConfigTaskFactory:
         The number of actually created task might be lower than the number of the relays,
         because some relays might already have existing pending tasks for the current serial value.
         """
-        auth = InternalAuth()
-        relay_ids = self.relays_repository.get_all_relay_ids(auth)
+        relay_ids = self.relays_repository.get_all_relay_ids()
         return self._create(relay_ids)
 
     def create_for_relay(self, relay_id: RelayID) -> RelayTask | None:

@@ -81,14 +81,14 @@ def create_relay_mock_transport() -> httpx.MockTransport:
     return httpx.MockTransport(handler)
 
 
-def create_test_relays_repository() -> RelaysRepository:
+def create_test_relays_repository(helper_config_dir: Path) -> RelaysRepository:
     """Create a RelaysRepository configured with mock transport for testing."""
     client = httpx.Client(
         base_url="http://test.com/test/check_mk/api/1.0",
         headers={"Content-Type": "application/json"},
         transport=create_relay_mock_transport(),
     )
-    return RelaysRepository(client, siteid="test-site")
+    return RelaysRepository(client, siteid="test-site", helper_config_dir=helper_config_dir)
 
 
 @pytest.fixture
@@ -110,9 +110,9 @@ def test_user() -> UserAuth:
 
 
 @pytest.fixture()
-def relays_repository() -> Iterator[RelaysRepository]:
+def relays_repository(site_context: Config) -> Iterator[RelaysRepository]:
     """Provides a RelaysRepository with mock transport for testing."""
-    repository = create_test_relays_repository()
+    repository = create_test_relays_repository(site_context.helper_config_dir)
     yield repository
 
 

@@ -6,8 +6,8 @@
 # mypy: disable-error-code="no-any-return"
 
 import logging
-import os
 from http import HTTPStatus
+from pathlib import Path
 from typing import final
 
 import httpx
@@ -28,12 +28,15 @@ logger = logging.getLogger("agent-receiver")
 
 @final
 class RelaysRepository:
-    def __init__(self, client: httpx.Client, siteid: str) -> None:
+    def __init__(self, client: httpx.Client, siteid: str, helper_config_dir: Path) -> None:
         self.client = client
         self.siteid = siteid
+        self.helper_config_dir = helper_config_dir
 
     @classmethod
-    def from_site(cls, site_url: str, site_name: str) -> "RelaysRepository":
+    def from_site(
+        cls, site_url: str, site_name: str, helper_config_dir: Path
+    ) -> "RelaysRepository":
         """Create RelaysRepository from site configuration."""
         base_url = f"{site_url}/{site_name}/check_mk/api/1.0"
         # FIXME async client
@@ -41,8 +44,7 @@ class RelaysRepository:
             base_url=base_url,
             headers={"Content-Type": "application/json"},
         )
-        siteid = os.environ["OMD_SITE"]
-        return cls(client, siteid)
+        return cls(client, site_name, helper_config_dir)
 
     def add_relay(self, auth: SiteAuth, alias: str) -> RelayID:
         resp = self.client.post(
@@ -70,11 +72,11 @@ class RelaysRepository:
             logger.error("could not delete relay %s : %s", resp.status_code, resp.text)
             raise CheckmkAPIError(resp.text)
 
-    def get_all_relay_ids(self, auth: SiteAuth) -> list[RelayID]:
-        resp = self.client.get(url="/domain-types/relay/collections/all", auth=auth)
-        if resp.status_code != HTTPStatus.OK:
-            logger.error("could not list relays %s : %s", resp.status_code, resp.text)
-            raise CheckmkAPIError(resp.text)
-        # only interested in the IDs
-        ids = [item["id"] for item in resp.json()["value"]]
-        return ids
+    def get_all_relay_ids(self) -> list[RelayID]:
+        latest = self.helper_config_dir / "latest/relays"
+        try:
+            dirs = next(latest.walk())[1]
+            return [RelayID(x) for x in dirs]
+        except StopIteration:
+            # The folder does not exist
+            return []

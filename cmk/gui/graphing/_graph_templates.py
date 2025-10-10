@@ -620,16 +620,16 @@ def _get_evaluated_graph_templates(
             translated_metrics=translated_metrics,
         ):
             evaluated_graph_template = EvaluatedGraphTemplate(
-                id=graph_template.id,
-                title=_evaluate_title(graph_template.title, translated_metrics),
+                id=name,
+                title=_evaluate_title(_parse_title(graph_plugin), translated_metrics),
                 horizontal_rules=_evaluate_scalars(
                     graph_template.scalars,
                     translated_metrics,
                     temperature_unit=temperature_unit,
                 ),
-                consolidation_function=graph_template.consolidation_function or "max",
+                consolidation_function="max",
                 range=graph_template.range,
-                omit_zero_metrics=graph_template.omit_zero_metrics,
+                omit_zero_metrics=False,
                 metrics=list(
                     itertools.chain(
                         evaluated_metrics,

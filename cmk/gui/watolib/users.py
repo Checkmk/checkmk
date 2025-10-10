@@ -254,7 +254,7 @@ def create_user(
     affected_sites = _update_affected_sites(set(), sites(new_user))
     add_change(
         action_name="edit-users",
-        text=_l("Created new users: %s") % new_user,
+        text=_l("Created new user: %s") % user_id,
         user_id=acting_user.id,
         sites=None if affected_sites == "all" else list(affected_sites),
         use_git=use_git,

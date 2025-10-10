@@ -22,8 +22,8 @@ from tests.testlib.site import Site
 
 def _change_password(page: LoginPage, old_password: str, new_password: str) -> None:
     page.main_menu.user_change_password.click()
-    page.main_area.locator("input[name='cur_password']").fill(old_password)
-    page.main_area.locator("input[name='password']").fill(new_password)
+    page.main_area.locator("input[name='_cur_password']").fill(old_password)
+    page.main_area.locator("input[name='_password']").fill(new_password)
     page.main_area.locator("#suggestions >> text=Save").click()
     page.main_area.check_success("Successfully changed password.")
 
@@ -55,8 +55,8 @@ def test_password_truncation_error(logged_in_page: LoginPage) -> None:
     page = logged_in_page
     page.main_menu.user_change_password.click()
 
-    page.main_area.locator("input[name='cur_password']").fill("cmk")
-    page.main_area.locator("input[name='password']").fill("A" * 80)
+    page.main_area.locator("input[name='_cur_password']").fill("cmk")
+    page.main_area.locator("input[name='_password']").fill("A" * 80)
     page.main_area.locator("#suggestions >> text=Save").click()
     page.main_area.check_error(
         "Passwords over 72 bytes would be truncated and are therefore not allowed!"

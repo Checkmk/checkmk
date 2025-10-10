@@ -741,11 +741,29 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
             and self.graph_id.startswith("METRIC_")
             and self.graph_id[7:] in translated_metrics
         ):
+            name = self.graph_id[7:]
+            translated_metric = translated_metrics[name]
             if recipe := self._build_recipe_from_template(
-                graph_template=_create_evaluated_graph_template_from_name(
-                    self.graph_id,
-                    translated_metrics,
-                    temperature_unit=temperature_unit,
+                graph_template=EvaluatedGraphTemplate(
+                    id=f"METRIC_{name}",
+                    title="",
+                    metrics=[
+                        Evaluated(
+                            base=Metric(name),
+                            value=translated_metric.value,
+                            unit_spec=translated_metric.unit_spec,
+                            color=translated_metric.color,
+                            line_type="area",
+                            title=translated_metric.title,
+                        )
+                    ],
+                    horizontal_rules=compute_warn_crit_rules_from_translated_metric(
+                        user_specific_unit(translated_metric.unit_spec, temperature_unit),
+                        translated_metric,
+                    ),
+                    consolidation_function="max",
+                    range=None,
+                    omit_zero_metrics=False,
                 ),
                 row=row,
                 translated_metrics=translated_metrics,

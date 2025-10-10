@@ -655,28 +655,6 @@ def _matching_graph_templates(
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     temperature_unit: TemperatureUnit,
 ) -> Iterable[tuple[int, EvaluatedGraphTemplate]]:
-    # Performance graph dashlets already use graph_id, but for example in reports, we still use
-    # graph_index. Therefore, this function needs to support both. We should switch to graph_id
-    # everywhere (CMK-7308) and remove the support for graph_index. However, note that we cannot
-    # easily build a corresponding transform, so even after switching to graph_id everywhere, we
-    # will need to keep this functionality here for some time to support already created dashlets,
-    # reports etc.
-    if (
-        isinstance(graph_id, str)
-        and graph_id.startswith("METRIC_")
-        and graph_id[7:] in translated_metrics
-    ):
-        # Single metrics
-        yield (
-            0,
-            _create_evaluated_graph_template_from_name(
-                graph_id,
-                translated_metrics,
-                temperature_unit=temperature_unit,
-            ),
-        )
-        return
-
     yield from (
         (index, graph_template)
         for index, graph_template in enumerate(
@@ -752,6 +730,30 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
             debug=debug,
             temperature_unit=temperature_unit,
         )
+        # Performance graph dashlets already use graph_id, but for example in reports, we still use
+        # graph_index. Therefore, this function needs to support both. We should switch to graph_id
+        # everywhere (CMK-7308) and remove the support for graph_index. However, note that we cannot
+        # easily build a corresponding transform, so even after switching to graph_id everywhere, we
+        # will need to keep this functionality here for some time to support already created dashlets,
+        # reports etc.
+        if (
+            isinstance(self.graph_id, str)
+            and self.graph_id.startswith("METRIC_")
+            and self.graph_id[7:] in translated_metrics
+        ):
+            if recipe := self._build_recipe_from_template(
+                graph_template=_create_evaluated_graph_template_from_name(
+                    self.graph_id,
+                    translated_metrics,
+                    temperature_unit=temperature_unit,
+                ),
+                row=row,
+                translated_metrics=translated_metrics,
+                index=0,
+                user_permissions=user_permissions,
+            ):
+                return [recipe]
+            return []
         return [
             recipe
             for index, graph_template in _matching_graph_templates(

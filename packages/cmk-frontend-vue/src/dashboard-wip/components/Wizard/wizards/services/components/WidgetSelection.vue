@@ -42,8 +42,6 @@ const updateWidgetSelection = (graph: string) => {
       :selected="selectedWidget === Graph.SERVICE_STATE_SUMMARY"
       @click="() => updateWidgetSelection(Graph.SERVICE_STATE_SUMMARY)"
     />
-  </div>
-  <div class="db-widget-selection__container">
     <WidgetButton
       icon="graph"
       :label="_t('Service statistics')"

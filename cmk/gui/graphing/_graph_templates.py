@@ -12,7 +12,7 @@ import itertools
 import re
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import assert_never, Literal
+from typing import assert_never, Literal, Self
 
 from pydantic import BaseModel
 
@@ -691,6 +691,26 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
             self.service_description,
         )
 
+    @classmethod
+    def _make_specification(
+        cls,
+        *,
+        site: SiteId | None,
+        host_name: AnnotatedHostName,
+        service_description: ServiceName,
+        graph_index: int | None,
+        graph_id: str | None,
+        destination: str | None,
+    ) -> Self:
+        return cls(
+            site=site,
+            host_name=host_name,
+            service_description=service_description,
+            destination=destination,
+            graph_index=graph_index,
+            graph_id=graph_id,
+        )
+
     def _build_recipe_from_template(
         self,
         *,
@@ -706,13 +726,13 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
             row.get("service_description", "_HOST_"),
             graph_template,
             translated_metrics,
-            specification=type(self)(
+            specification=self._make_specification(
                 site=self.site,
                 host_name=self.host_name,
                 service_description=self.service_description,
-                destination=self.destination,
                 graph_index=index,
                 graph_id=graph_template.id,
+                destination=self.destination,
             ),
         )
 
@@ -776,13 +796,13 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
                     ),
                     omit_zero_metrics=False,
                     consolidation_function=consolidation_function,
-                    specification=type(self)(
+                    specification=self._make_specification(
                         site=self.site,
                         host_name=self.host_name,
                         service_description=self.service_description,
-                        destination=self.destination,
                         graph_index=0,
                         graph_id=self.graph_id,
+                        destination=self.destination,
                     ),
                 )
             ]

@@ -2,61 +2,50 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 # mypy: disable-error-code="no-untyped-def"
-
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersEnvironment,
+from cmk.gui.form_specs.unstable.legacy_converter.generators import TupleLevels
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import (
+    DictElement,
+    Dictionary,
+    Percentage,
 )
-from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 
-def _item_spec_battery():
-    return TextInput(
-        title=_("Sensor name"),
-        help=_("The identifier of the sensor."),
-    )
-
-
-def _parameter_valuespec_battery() -> Dictionary:
+def _parameter_form_spec_battery() -> Dictionary:
     return Dictionary(
-        help=_("This Ruleset sets the threshold limits for battery sensors"),
-        elements=[
-            (
-                "levels",
-                Tuple(
-                    title=_("Upper levels"),
+        help_text=Help("This Ruleset sets the threshold limits for battery sensors"),
+        elements={
+            "levels": DictElement(
+                required=False,
+                parameter_form=TupleLevels(
+                    title=Title("Upper levels"),
                     elements=[
-                        Percentage(title=_("Warning at")),
-                        Percentage(title=_("Critical at")),
+                        Percentage(title=Title("Warning at")),
+                        Percentage(title=Title("Critical at")),
                     ],
                 ),
             ),
-            (
-                "levels_lower",
-                Tuple(
-                    title=_("Lower levels"),
+            "levels_lower": DictElement(
+                required=False,
+                parameter_form=TupleLevels(
+                    title=Title("Lower levels"),
                     elements=[
-                        Percentage(title=_("Warning below")),
-                        Percentage(title=_("Critical below")),
+                        Percentage(title=Title("Warning below")),
+                        Percentage(title=Title("Critical below")),
                     ],
                 ),
             ),
-        ],
-        ignored_keys=["_item_key"],
+        },
+        ignored_elements=("_item_key",),
     )
 
 
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="battery",
-        group=RulespecGroupCheckParametersEnvironment,
-        item_spec=_item_spec_battery,
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_battery,
-        title=lambda: _("Battery Levels"),
-    )
+rule_spec_battery = CheckParameters(
+    name="battery",
+    title=Title("Battery Levels"),
+    topic=Topic.ENVIRONMENTAL,
+    parameter_form=_parameter_form_spec_battery,
+    condition=HostAndItemCondition(item_title=Title("Sensor name")),
 )

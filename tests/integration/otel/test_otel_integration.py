@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import os
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from typing import Literal
 
 import pytest
@@ -41,6 +41,10 @@ pytestmark = pytest.mark.skip_if_not_edition("cloud", "managed")
 
 logger = logging.getLogger(__name__)
 
+DUMMY_USERNAME = "dummyuser"
+DUMMY_PASSWORD_ID = "dummypasswordid"
+PASSWORD_ID = "otel_test_password_id"
+
 GRPC_CONFIG = {
     "endpoint": {
         "address": "0.0.0.0",
@@ -58,13 +62,39 @@ GRPC_CONFIG = {
     }
 }
 
-HTTP_CONFIG = {
+HTTP_CONFIG_SINGLE_PASSWORD = {
     "endpoint": {
         "address": "127.0.0.1",
         "auth": {
             "type": "basicauth",
             "userlist": [
-                {"username": USERNAME, "password": {"type": "explicit", "value": PASSWORD}}
+                {"username": USERNAME, "password": {"type": "store", "value": PASSWORD_ID}},
+            ],
+        },
+        "export_to_syslog": False,
+        "host_name_rules": [
+            [{"type": "key", "value": "cmk.test.attribute"}],
+            [{"type": "free", "value": "fallback_host"}],
+        ],
+        "encryption": False,
+        "port": HTTP_PORT,
+    }
+}
+
+
+HTTP_CONFIG_MULTIPLE_PASSWORDS = {
+    "endpoint": {
+        "address": "127.0.0.1",
+        "auth": {
+            "type": "basicauth",
+            "userlist": [
+                # To test definition of multiple credentials, although only one is actually
+                # used for authentication
+                {
+                    "username": DUMMY_USERNAME,
+                    "password": {"type": "store", "value": DUMMY_PASSWORD_ID},
+                },
+                {"username": USERNAME, "password": {"type": "store", "value": PASSWORD_ID}},
             ],
         },
         "export_to_syslog": False,
@@ -97,6 +127,7 @@ def delete_created_objects(
     rule_id: str | None = None,
     cleanup_ec: bool = False,
     collector_type: Literal["receivers", "prom_scrape"] = "receivers",
+    password_ids: Sequence[str] | None = None,
 ) -> None:
     if os.getenv("CLEANUP", "1") == "1":
         logger.info("Cleaning up created resources")
@@ -111,7 +142,10 @@ def delete_created_objects(
         if cleanup_ec:
             _write_ec_rule(site, None)
             _activate_ec_changes(site)
-            site.openapi.event_console.archive_events_by_params({"phase": "open"})
+        if password_ids is not None:
+            for pwd_id in password_ids:
+                if site.openapi.passwords.exists(pwd_id):
+                    site.openapi.passwords.delete(pwd_id)
         site.openapi.changes.activate_and_wait_for_completion()
         delete_opentelemetry_data(site)
 
@@ -129,7 +163,7 @@ def delete_created_objects(
         ),
         pytest.param(
             "http",
-            HTTP_CONFIG,
+            HTTP_CONFIG_MULTIPLE_PASSWORDS,
             ScriptFileName.OTEL_HTTP,
             "fallback_host",
             HTTP_METRIC_NAME,
@@ -170,6 +204,16 @@ def test_otel_collector_with_receiver_config(
                 collector_id, "Test collector", False, receiver_protocol_grpc=receiver_config
             )
         elif receiver_type == "http":
+            logger.info("Setting up passwords for OTel HTTP receiver authentication")
+            otel_enabled_site.openapi.passwords.create(
+                PASSWORD_ID, "OTel test password", "test comment", PASSWORD
+            )
+            # not used for authentication, just to test multiple credentials definition in
+            # collector configuration
+            otel_enabled_site.openapi.passwords.create(
+                DUMMY_PASSWORD_ID, "OTel dummy test password", "test comment", "dummy password"
+            )
+
             logger.info("Creating OpenTelemetry collector with HTTP receiver")
             otel_enabled_site.openapi.otel_collector.create_receivers(
                 collector_id, "Test collector", False, receiver_protocol_http=receiver_config
@@ -211,9 +255,20 @@ def test_otel_collector_with_receiver_config(
             assert otel_service_name in services, "OTel service was not found in host services"
             assert services[otel_service_name].state == 0, "OTel service is not in OK or PEND state"
     finally:
-        delete_created_objects(
-            otel_enabled_site, collector_id, host_name, rule_id, collector_type="receivers"
-        )
+        if receiver_type == "http":
+            delete_created_objects(
+                otel_enabled_site,
+                collector_id,
+                host_name,
+                rule_id,
+                False,
+                collector_type="receivers",
+                password_ids=[PASSWORD_ID, DUMMY_PASSWORD_ID],
+            )
+        else:
+            delete_created_objects(
+                otel_enabled_site, collector_id, host_name, rule_id, collector_type="receivers"
+            )
 
 
 def test_otel_collector_with_prometheus_scrape_config(otel_enabled_site: Site) -> None:
@@ -399,10 +454,15 @@ def test_otel_logs_received_by_event_console(otel_enabled_site: Site) -> None:
     expected_event_count = len(expected_log_levels)
 
     # Use existing config and enable syslog export
-    receiver_config = HTTP_CONFIG.copy()
+    receiver_config = HTTP_CONFIG_SINGLE_PASSWORD.copy()
     receiver_config["endpoint"]["export_to_syslog"] = True
 
     try:
+        logger.info("Setting up password for OTel HTTP receiver authentication")
+        otel_enabled_site.openapi.passwords.create(
+            PASSWORD_ID, "OTel test password", "test comment", PASSWORD
+        )
+
         logger.info(
             "Creating OpenTelemetry collector with 'Send log messages to EC' option enabled"
         )
@@ -439,5 +499,9 @@ def test_otel_logs_received_by_event_console(otel_enabled_site: Site) -> None:
 
     finally:
         delete_created_objects(
-            otel_enabled_site, collector_id, cleanup_ec=True, collector_type="receivers"
+            otel_enabled_site,
+            collector_id,
+            cleanup_ec=True,
+            collector_type="receivers",
+            password_ids=[PASSWORD_ID],
         )

@@ -520,6 +520,24 @@ node_software_applications_docker_container_ports = Node(
     ),
 )
 
+node_software_applications_docker_images = Node(
+    name="software_applications_docker_images",
+    path=["software", "applications", "docker", "images"],
+    title=Title("Images"),
+    table=Table(
+        view=View(name="invdockerimages", title=Title("Images")),
+        columns={
+            "id": TextField(Title("ID")),
+            "creation": TextField(Title("Creation")),
+            "size": NumberField(Title("Size"), render=UNIT_COUNT),
+            "labels": TextField(Title("Labels")),
+            "amount_containers": TextField(Title("#Containers")),
+            "repotags": TextField(Title("Repository/Tag")),
+            "repodigests": TextField(Title("Digests")),
+        },
+    ),
+)
+
 node_software_applications_docker_networks_containers = Node(
     name="software_applications_docker_networks_containers",
     path=["software", "applications", "docker", "networks", "containers"],
@@ -1160,7 +1178,7 @@ node_software_applications_podman_images = Node(
             "container_num": NumberField(Title("#Containers"), render=UNIT_COUNT),
             "repository": TextField(Title("Repository")),
             "tag": TextField(Title("Tag")),
-        }
+        },
     ),
 )
 

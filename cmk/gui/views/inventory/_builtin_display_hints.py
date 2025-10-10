@@ -759,36 +759,36 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED },
         # MIGRATED ".software.applications.docker.swarm_manager:*.NodeID": {"title": _l("Node ID")},
         # MIGRATED ".software.applications.docker.swarm_manager:*.Addr": {"title": _l("Address")},
-        ".software.applications.docker.images:": {
-            "title": _l("Docker images"),
-            "keyorder": [
-                "id",
-                "creation",
-                "size",
-                "labels",
-                "amount_containers",
-                "repotags",
-                "repodigests",
-            ],
-            "view": "invdockerimages",
-            "is_show_more": False,
-        },
-        ".software.applications.docker.images:*.id": {"title": _l("ID")},
-        ".software.applications.docker.images:*.creation": {"title": _l("Creation")},
-        ".software.applications.docker.images:*.size": {"title": _l("Size"), "paint": "size"},
-        ".software.applications.docker.images:*.labels": {
-            "title": _l("Labels"),
-            "paint": "csv_labels",
-        },
-        ".software.applications.docker.images:*.amount_containers": {"title": _l("# Containers")},
-        ".software.applications.docker.images:*.repotags": {
-            "title": _l("Repository/Tag"),
-            "paint": "csv_labels",
-        },
-        ".software.applications.docker.images:*.repodigests": {
-            "title": _l("Digests"),
-            "paint": "csv_labels",
-        },
+        # MIGRATED ".software.applications.docker.images:": {
+        # MIGRATED     "title": _l("Docker images"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "id",
+        # MIGRATED         "creation",
+        # MIGRATED         "size",
+        # MIGRATED         "labels",
+        # MIGRATED         "amount_containers",
+        # MIGRATED         "repotags",
+        # MIGRATED         "repodigests",
+        # MIGRATED     ],
+        # MIGRATED     "view": "invdockerimages",
+        # MIGRATED     "is_show_more": False,
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.images:*.id": {"title": _l("ID")},
+        # MIGRATED ".software.applications.docker.images:*.creation": {"title": _l("Creation")},
+        # MIGRATED ".software.applications.docker.images:*.size": {"title": _l("Size"), "paint": "size"},
+        # MIGRATED ".software.applications.docker.images:*.labels": {
+        # MIGRATED     "title": _l("Labels"),
+        # MIGRATED     "paint": "csv_labels",
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.images:*.amount_containers": {"title": _l("# Containers")},
+        # MIGRATED ".software.applications.docker.images:*.repotags": {
+        # MIGRATED     "title": _l("Repository/Tag"),
+        # MIGRATED     "paint": "csv_labels",
+        # MIGRATED },
+        # MIGRATED ".software.applications.docker.images:*.repodigests": {
+        # MIGRATED     "title": _l("Digests"),
+        # MIGRATED     "paint": "csv_labels",
+        # MIGRATED },
         # Node containers
         ".software.applications.docker.containers:": {
             "title": _l("Docker containers"),

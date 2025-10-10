@@ -2,9 +2,13 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Mapping
 from typing import Any, Literal, NotRequired, TypedDict
 
 import cmk.utils.paths
+from cmk.utils.labels import LabelGroups
+from cmk.utils.rulesets.ruleset_matcher import TagCondition
+from cmk.utils.tags import TagGroupID
 
 SearchConfig = dict[str, Any]
 
@@ -60,3 +64,21 @@ class AggrConfigDict(TypedDict):
 frozen_aggregations_dir = cmk.utils.paths.var_dir / "frozen_aggregations"
 
 HostState = int
+HostRegexMatches = dict[str, tuple[str, ...]]
+
+
+class HostChoice(TypedDict):
+    type: Literal["all_hosts", "host_name_regex", "host_alias_regex"]
+    pattern: str
+
+
+class HostConditions(TypedDict):
+    host_folder: str
+    host_label_groups: LabelGroups
+    host_tags: Mapping[TagGroupID, TagCondition]
+    host_choice: HostChoice
+
+
+class HostServiceConditions(HostConditions):
+    service_regex: str
+    service_label_groups: LabelGroups

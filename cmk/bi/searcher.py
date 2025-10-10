@@ -6,9 +6,10 @@
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Iterable, Mapping
-from typing import Any, override
+from typing import override
 
 from cmk.bi.lib import ABCBISearcher, BIHostData, BIHostSearchMatch, BIServiceSearchMatch
+from cmk.bi.type_defs import HostChoice, HostConditions, HostRegexMatches, HostServiceConditions
 from cmk.utils.labels import LabelGroups
 from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import matches_labels, matches_tag_condition, TagCondition
@@ -49,7 +50,7 @@ class BISearcher(ABCBISearcher):
         self._host_regex_miss_cache.clear()
 
     @override
-    def search_hosts(self, conditions: dict) -> list[BIHostSearchMatch]:
+    def search_hosts(self, conditions: HostConditions) -> list[BIHostSearchMatch]:
         hosts, matched_re_groups = self.filter_host_choice(
             list(self.hosts.values()), conditions["host_choice"]
         )
@@ -62,8 +63,8 @@ class BISearcher(ABCBISearcher):
     def filter_host_choice(
         self,
         hosts: list[BIHostData],
-        condition: dict,
-    ) -> tuple[list[BIHostData], dict]:
+        condition: HostChoice,
+    ) -> tuple[list[BIHostData], HostRegexMatches]:
         if condition["type"] == "all_hosts":
             return hosts, self._get_host_match_groups_by_name(hosts)
 
@@ -75,10 +76,10 @@ class BISearcher(ABCBISearcher):
 
         raise NotImplementedError("Invalid condition type %r" % condition["type"])
 
-    def _get_host_match_groups_by_name(self, hosts: list[BIHostData]) -> dict[str, tuple]:
+    def _get_host_match_groups_by_name(self, hosts: list[BIHostData]) -> HostRegexMatches:
         return {host.name: (host.name,) for host in hosts}
 
-    def _get_host_match_groups_by_alias(self, hosts: list[BIHostData]) -> dict[str, tuple]:
+    def _get_host_match_groups_by_alias(self, hosts: list[BIHostData]) -> HostRegexMatches:
         return {host.name: (host.alias,) for host in hosts}
 
     @override
@@ -86,7 +87,7 @@ class BISearcher(ABCBISearcher):
         self,
         hosts: list[BIHostData],
         pattern: str,
-    ) -> tuple[list[BIHostData], dict]:
+    ) -> tuple[list[BIHostData], HostRegexMatches]:
         if pattern == "(.*)":
             return hosts, self._get_host_match_groups_by_name(hosts)
 
@@ -102,8 +103,8 @@ class BISearcher(ABCBISearcher):
         if not pattern_with_anchor.endswith("$"):
             pattern_with_anchor += "$"
 
-        matched_hosts = []
-        matched_re_groups = {}
+        matched_hosts: list[BIHostData] = []
+        matched_re_groups: HostRegexMatches = {}
         regex_pattern = regex(pattern_with_anchor)
         pattern_match_cache = self._host_regex_match_cache.setdefault(pattern_with_anchor, {})
         pattern_miss_cache = self._host_regex_miss_cache.setdefault(pattern_with_anchor, {})
@@ -131,14 +132,14 @@ class BISearcher(ABCBISearcher):
         self,
         hosts: list[BIHostData],
         pattern: str,
-    ) -> tuple[list[BIHostData], dict]:
+    ) -> tuple[list[BIHostData], HostRegexMatches]:
         if pattern == "(.*)":
             return hosts, self._get_host_match_groups_by_alias(hosts)
 
         # TODO: alias matches currently costs way more performance than the host matches
         #       requires alias lookup cache to fix
-        matched_hosts = []
-        matched_re_groups = {}
+        matched_hosts: list[BIHostData] = []
+        matched_re_groups: HostRegexMatches = {}
         regex_pattern = regex(pattern)
         for host in hosts:
             match = regex_pattern.match(host.alias)
@@ -165,7 +166,7 @@ class BISearcher(ABCBISearcher):
         return matched_services
 
     @override
-    def search_services(self, conditions: dict) -> list[BIServiceSearchMatch]:
+    def search_services(self, conditions: HostServiceConditions) -> list[BIServiceSearchMatch]:
         host_matches: list[BIHostSearchMatch] = self.search_hosts(conditions)
         service_matches = self.get_service_description_matches(
             host_matches, conditions["service_regex"]
@@ -215,12 +216,12 @@ class BISearcher(ABCBISearcher):
         return (x for x in hosts if matches_labels(x.labels, required_label_groups))
 
     def filter_service_labels(
-        self, services: list[BIServiceSearchMatch], required_label_groups: Any
-    ) -> list:
+        self, services: list[BIServiceSearchMatch], required_label_groups: LabelGroups
+    ) -> list[BIServiceSearchMatch]:
         if not required_label_groups:
             return services
 
-        matched_services = []
+        matched_services: list[BIServiceSearchMatch] = []
         for service in services:
             service_data = service.host_match.host.services[service.service_description]
             if matches_labels(service_data.labels, required_label_groups):

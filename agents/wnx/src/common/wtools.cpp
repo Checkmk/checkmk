@@ -3712,13 +3712,24 @@ std::optional<uint64_t> _to_speed(uint64_t speed) {
     return speed == 0xFFFF'FFFF'FFFF'FFFF ? std::nullopt : std::optional{speed};
 }
 
+std::string DecodeMac(const IP_ADAPTER_ADDRESSES &a) {
+    if (a.PhysicalAddressLength == 0) {
+        // backward compatibility for devices with no physical address
+        return "00:00:00:00:00:00:00:00";
+    }
+
+    const auto *begin = std::begin(a.PhysicalAddress);
+    const auto *end = begin + a.PhysicalAddressLength;
+
+    return std::accumulate(std::next(begin), end, fmt::format("{:02X}", *begin),
+                           [](std::string acc, BYTE b) {
+                               acc += fmt::format(":{:02X}", b);
+                               return acc;
+                           });
+}
+
 AdapterInfo ToAdapterInfo(const IP_ADAPTER_ADDRESSES &a) {
-    const auto address = std::accumulate(
-        std::next(std::begin(a.PhysicalAddress)), std::end(a.PhysicalAddress),
-        fmt::format("{:02X}", a.PhysicalAddress[0]),
-        [](std::string_view a, BYTE b) -> std::string {
-            return fmt::format("{}:{:02X}", a, b);
-        });
+    const auto address = DecodeMac(a);
     return AdapterInfo{
         .guid{a.AdapterName},
         .friendly_name{a.FriendlyName},

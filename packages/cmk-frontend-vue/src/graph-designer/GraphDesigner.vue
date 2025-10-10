@@ -53,6 +53,7 @@ const props = defineProps<{
   graph_options: GraphOptions
   graph_renderer: GraphRenderer
   metric_backend_available: boolean
+  create_services_available: boolean
 }>()
 
 const preventLeaving = ref(false)
@@ -856,7 +857,7 @@ const graphDesignerContentAsJson = computed(() => {
             @click="deleteGraphLine(graphLine)"
           />
           <img
-            v-if="graphLine.type === 'query'"
+            v-if="props.create_services_available && graphLine.type === 'query'"
             :title="_t('Create services')"
             src="themes/facelift/images/icon_checkmk.svg"
             class="icon iconbutton"

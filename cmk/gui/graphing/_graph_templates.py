@@ -606,10 +606,6 @@ def _get_evaluated_graph_templates(
     *,
     temperature_unit: TemperatureUnit,
 ) -> Iterator[EvaluatedGraphTemplate]:
-    if not translated_metrics:
-        yield from ()
-        return
-
     already_graphed_metrics = set()
     for name, graph_plugin in _sort_registered_graph_plugins(registered_graphs):
         graph_template = _parse_graph_plugin(name, graph_plugin, registered_metrics)
@@ -749,12 +745,16 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         temperature_unit: TemperatureUnit,
     ) -> list[GraphRecipe]:
         row = self._get_graph_data_from_livestatus()
-        translated_metrics = translated_metrics_from_row(
-            row,
-            registered_metrics,
-            debug=debug,
-            temperature_unit=temperature_unit,
-        )
+        if not (
+            translated_metrics := translated_metrics_from_row(
+                row,
+                registered_metrics,
+                debug=debug,
+                temperature_unit=temperature_unit,
+            )
+        ):
+            return []
+
         painter_options = PainterOptions.get_instance()
         # Performance graph dashlets already use graph_id, but for example in reports, we still use
         # graph_index. Therefore, this function needs to support both. We should switch to graph_id

@@ -41,16 +41,3 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Accounts display name")),
     )
 )
-
-
-# TODO: migrate and move to new folder struct
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="azure_v2_ad",
-        match_type="dict",
-        group=RulespecGroupCheckParametersNetworking,
-        parameter_valuespec=_parameter_valuespec_azure_ad,
-        title=lambda: _("Azure AD Connect"),
-        item_spec=lambda: TextInput(title=_("Accounts display name")),
-    )
-)

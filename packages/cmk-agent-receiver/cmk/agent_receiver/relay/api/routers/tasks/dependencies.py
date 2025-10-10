@@ -53,11 +53,9 @@ def get_relay_tasks_handler(
 
 def get_relay_task_handler(
     tasks_repository: Annotated[TasksRepository, fastapi.Depends(get_tasks_repository)],
-    relays_repository: Annotated[RelaysRepository, fastapi.Depends(get_relays_repository)],
 ) -> GetRelayTaskHandler:
     return GetRelayTaskHandler(
         tasks_repository=tasks_repository,
-        relay_repository=relays_repository,
     )
 
 

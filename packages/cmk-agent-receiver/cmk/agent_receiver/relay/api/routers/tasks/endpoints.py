@@ -188,7 +188,7 @@ async def get_tasks_endpoint(
     return TaskListResponseSerializer.serialize(tasks)
 
 
-@router.get("/{relay_id}/tasks/{task_id}")
+@router.get("/{relay_id}/tasks/{task_id}", dependencies=[fastapi.Depends(check_relay)])
 async def get_task_endpoint(
     relay_id: str,
     task_id: str,

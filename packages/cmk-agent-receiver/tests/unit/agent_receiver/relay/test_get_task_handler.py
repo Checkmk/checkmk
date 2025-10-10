@@ -19,7 +19,6 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.shared_types import (
     RelayID,
-    RelayNotFoundError,
     Serial,
     TaskID,
     TaskNotFoundError,
@@ -43,17 +42,6 @@ def test_get_task_handler(
     _ = create_config_folder(root=omd_root, relays=[relay_id])
     handled_task = get_task_handler.process(relay_id=relay_id, task_id=task.id)
     assert handled_task == task
-
-
-@pytest.mark.usefixtures("site_context")
-def test_get_task_handler_with_unknown_relay(
-    get_task_handler: GetRelayTaskHandler,
-    populated_repos: tuple[RelayID, RelayTask, RelaysRepository, TasksRepository],
-) -> None:
-    relay_id, task, relays_repository, tasks_repository = populated_repos
-
-    with pytest.raises(RelayNotFoundError):
-        get_task_handler.process(relay_id=RelayID("unknown-relay-id"), task_id=task.id)
 
 
 @pytest.mark.usefixtures("site_context")

@@ -15,14 +15,11 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
     TasksRepository,
     TaskStatus,
 )
-from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.shared_types import (
     RelayID,
-    RelayNotFoundError,
     Serial,
     TaskID,
 )
-from cmk.agent_receiver.relay.lib.site_auth import InternalAuth
 
 # TODO remove this flag once the relay engine sends the right values
 TEMP_RELAY_SERIAL_FLAG = "0"
@@ -56,13 +53,6 @@ class GetRelayTasksHandler:
 @dataclasses.dataclass
 class GetRelayTaskHandler:
     tasks_repository: TasksRepository
-    relay_repository: RelaysRepository
 
     def process(self, relay_id: RelayID, task_id: TaskID) -> RelayTask:
-        auth = InternalAuth()
-        if not self.relay_repository.has_relay(relay_id, auth):
-            raise RelayNotFoundError(relay_id)
-        return self._get_task(relay_id, task_id)
-
-    def _get_task(self, relay_id: RelayID, task_id: TaskID) -> RelayTask:
         return self.tasks_repository.get_task(relay_id, task_id)

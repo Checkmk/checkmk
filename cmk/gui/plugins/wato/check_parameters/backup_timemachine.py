@@ -4,39 +4,35 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-def"
-
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithoutItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersApplications,
+from cmk.gui.form_specs.generators.age import Age
+from cmk.gui.form_specs.unstable.legacy_converter.generators import TupleLevels
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
 )
-from cmk.gui.valuespec import Age, Dictionary, Tuple
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 
 
-def _parameter_valuespec_backup_timemachine():
+def _parameter_form_spec_backup_timemachine():
     return Dictionary(
-        elements=[
-            (
-                "age",
-                Tuple(
-                    title=_("Maximum age of latest timemachine backup"),
-                    elements=[
-                        Age(title=_("Warning if older than"), default_value=86400),
-                        Age(title=_("Critical if older than"), default_value=172800),
-                    ],
+        elements={
+            "age": DictElement(
+                required=False,
+                parameter_form=TupleLevels(
+                    title=Title("Maximum age of latest timemachine backup"),
+                    elements=[Age(prefill=DefaultValue(86400)), Age(prefill=DefaultValue(172800))],
                 ),
-            ),
-        ],
+            )
+        }
     )
 
 
-rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
-        check_group_name="backup_timemachine",
-        group=RulespecGroupCheckParametersApplications,
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_backup_timemachine,
-        title=lambda: _("Timemachine backup age"),
-    )
+rule_spec_backup_timemachine = CheckParameters(
+    name="backup_timemachine",
+    title=Title("Timemachine backup age"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_backup_timemachine,
+    condition=HostCondition(),
 )

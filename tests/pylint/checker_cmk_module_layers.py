@@ -273,6 +273,7 @@ PACKAGE_PLUGIN_APIS = (
     "cmk.bakery.v2_alpha",
     "cmk.graphing.v1",
     "cmk.inventory_ui.v1_alpha",
+    "cmk.password_store.v1_alpha",
     "cmk.rulesets.v1",
     "cmk.server_side_calls.v1",
     "cmk.server_side_calls.alpha",
@@ -349,7 +350,6 @@ CROSS_DEPENDING_UTILS_MODULES = (
     "msi_engine",
     "msi_patch",
     "observer",
-    "password_store",
     "paths",
     "redis",
     "render",
@@ -887,6 +887,12 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_CCC,
         "cmk.utils.log",
     ),
+    Component("cmk.utils.password_store"): _allow(
+        *PACKAGE_CCC,
+        *PACKAGE_PLUGIN_APIS,
+        "cmk.utils.paths",
+        "cmk.utils.global_ident_type",
+    ),
     Component("cmk.utils.prediction"): _allow(
         *PACKAGE_CCC,
         "cmk.agent_based.prediction_backend",
@@ -936,6 +942,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
             *PACKAGE_CCC,
             *PACKAGE_CRYPTO,
             *(f"cmk.utils.{m}" for m in CROSS_DEPENDING_UTILS_MODULES),
+            "cmk.utils.password_store",
         )
         for module in CROSS_DEPENDING_UTILS_MODULES
     },

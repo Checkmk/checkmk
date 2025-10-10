@@ -24,7 +24,6 @@ from ._pwstore import make_staged_passwords_lookup as make_staged_passwords_look
 from ._pwstore import Password as Password
 from ._pwstore import password_store_path as password_store_path
 from ._pwstore import PasswordId as PasswordId
-from ._pwstore import PasswordStore as PasswordStore
 from ._pwstore import pending_password_store_path as pending_password_store_path
 from ._pwstore import save as save
 from .hack import replace_passwords as replace_passwords

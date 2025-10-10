@@ -16,12 +16,13 @@ ARG IMAGE_BASE
 FROM ${IMAGE_BASE}
 # above image is ubuntu-24.04:master-latest
 # docker inspect -f "{{ .Size }}" minimal-ubuntu-checkmk-master:latest
-# 1460MB (1460664040)
+# 1568MB (1567599932)
 # bash is required to be used in Jenkins with image.inside(), requires +0MB
 # curl is required to download artifacts, requires +15MB
 # git is required to use tests, requires +83MB
 # gpg is required to use installation scripts, requires +13MB
-# jq is required to parse bazel log files, requires +MB
+# jq is required to parse bazel log files, requires +0.1MB
+# ksh is required for the shell tests, requires +3MB
 # lsb-release is required to use installation scripts, requires +4MB
 # make is required by tests, requires +47MB
 # rsync is required to upload artifacts, requires +1MB
@@ -35,6 +36,7 @@ RUN apt-get update && \
         git \
         gpg \
         jq \
+        ksh \
         lsb-release \
         make \
         python3 \

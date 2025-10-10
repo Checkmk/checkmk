@@ -12,9 +12,10 @@ import secrets
 from abc import ABC, abstractmethod
 from hashlib import sha256
 from pathlib import Path
-from typing import AnyStr
+from typing import AnyStr, final
 
 
+@final
 class Secret:
     """A class for cryptographic secrets.
 

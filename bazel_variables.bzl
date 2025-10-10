@@ -48,6 +48,7 @@ edition_deps = {
         "//non-free/packages/cmk-otel-collector:pkg_tar",
         "//non-free/packages/cmk-update-agent:pkg_tar",
         "//omd/non-free/packages/cmc:pkg_tar",
+        "//omd/non-free/packages/cmk-dcd:pkg_tar",
         "//omd/non-free/packages/cmk-liveproxyd:pkg_tar",
         "//omd/non-free/packages/metric-backend:pkg_tar",
         "//omd/packages/cloud",
@@ -61,6 +62,7 @@ edition_deps = {
         "//non-free/packages/cmk-mknotifyd:pkg_tar",
         "//non-free/packages/cmk-update-agent:pkg_tar",
         "//omd/non-free/packages/cmc:pkg_tar",
+        "//omd/non-free/packages/cmk-dcd:pkg_tar",
         "//omd/non-free/packages/cmk-liveproxyd:pkg_tar",
         "//omd/packages/enterprise",
         "//omd/packages/jaeger:pkg_tar",
@@ -75,6 +77,7 @@ edition_deps = {
         "//non-free/packages/cmk-otel-collector:pkg_tar",
         "//non-free/packages/cmk-update-agent:pkg_tar",
         "//omd/non-free/packages/cmc:pkg_tar",
+        "//omd/non-free/packages/cmk-dcd:pkg_tar",
         "//omd/non-free/packages/cmk-liveproxyd:pkg_tar",
         "//omd/non-free/packages/metric-backend:pkg_tar",
         "//omd/packages/cloud",
@@ -91,6 +94,7 @@ edition_deps = {
         "//non-free/packages/cmk-otel-collector:pkg_tar",
         "//non-free/packages/cmk-update-agent:pkg_tar",
         "//omd/non-free/packages/cmc:pkg_tar",
+        "//omd/non-free/packages/cmk-dcd:pkg_tar",
         "//omd/non-free/packages/cmk-liveproxyd:pkg_tar",
         "//omd/packages/cloud",
         "//omd/packages/enterprise",
@@ -112,6 +116,7 @@ edition_skel_permissions = {
     "cce": [
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
         "//omd/non-free/packages/cmc:skel.permissions",
+        "//omd/non-free/packages/cmk-dcd:skel.permissions",
         "//omd/non-free/packages/cmk-liveproxyd:skel.permissions",
         "//omd/non-free/packages/metric-backend:skel.permissions",
         "//omd/packages/enterprise:skel.permissions",
@@ -128,6 +133,7 @@ edition_skel_permissions = {
     "cee": [
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
         "//omd/non-free/packages/cmc:skel.permissions",
+        "//omd/non-free/packages/cmk-dcd:skel.permissions",
         "//omd/non-free/packages/cmk-liveproxyd:skel.permissions",
         "//omd/packages/enterprise:skel.permissions",
         "//omd/packages/jaeger:skel.permissions",
@@ -143,6 +149,7 @@ edition_skel_permissions = {
     "cme": [
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
         "//omd/non-free/packages/cmc:skel.permissions",
+        "//omd/non-free/packages/cmk-dcd:skel.permissions",
         "//omd/non-free/packages/cmk-liveproxyd:skel.permissions",
         "//omd/non-free/packages/metric-backend:skel.permissions",
         "//omd/packages/enterprise:skel.permissions",
@@ -159,6 +166,7 @@ edition_skel_permissions = {
     "cse": [
         "//non-free/packages/cmk-mknotifyd:skel.permissions",
         "//omd/non-free/packages/cmc:skel.permissions",
+        "//omd/non-free/packages/cmk-dcd:skel.permissions",
         "//omd/non-free/packages/cmk-liveproxyd:skel.permissions",
         "//omd/packages/enterprise:skel.permissions",
         "//omd/packages/maintenance:skel.permissions",

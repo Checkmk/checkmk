@@ -157,6 +157,7 @@ SRCS = [
     "demo/**/*.ts",
     "demo/**/*.vue",
     "demo/**/*.css",
+    "demo/public/*",
 ])
 
 SRCS_AND_TESTS = SRCS + glob([

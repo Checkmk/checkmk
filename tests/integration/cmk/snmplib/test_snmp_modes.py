@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="no-any-return"
+
 """
 "netsnmp" python module (used for inline SNMP) and snmp commands (used for
 classic SNMP) are not available in the git environment. For the moment it

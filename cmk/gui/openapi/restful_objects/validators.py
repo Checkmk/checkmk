@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Common operations for API endpoints."""
 
+# mypy: disable-error-code="no-any-return"
+
 from __future__ import annotations
 
 import contextlib

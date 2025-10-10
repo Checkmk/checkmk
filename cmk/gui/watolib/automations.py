@@ -6,6 +6,8 @@
 used for doing inventory, showing the services of a host, deletion of a host
 and similar things."""
 
+# mypy: disable-error-code="no-any-return"
+
 from __future__ import annotations
 
 import ast

@@ -5,6 +5,7 @@
 """
 Plot performance data from filesystem or database.
 
+# mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 

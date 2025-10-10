@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to help generate pydantic based Kubernetes models
 
+# mypy: disable-error-code="no-any-return"
+
 Notice (for polyfactory):
     For models which make use of validator such as api.StorageRequirement, the build function will
     first generate the field value before passing it through the validator function. This will in

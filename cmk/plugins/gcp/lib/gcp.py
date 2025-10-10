@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from enum import IntEnum, unique
 from typing import Any, NewType
 
+# mypy: disable-error-code="no-any-return"
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v1 import check_levels_predictive
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable

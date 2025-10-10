@@ -10,6 +10,8 @@ is fetched from the Datadog API, https://docs.datadoghq.com/api/. Endpoints:
 * Logs: logs (v2)
 """
 
+# mypy: disable-error-code="no-any-return"
+
 import datetime
 import json
 import logging

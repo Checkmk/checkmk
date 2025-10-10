@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """An error container adapted from OCaml.
 
+# mypy: disable-error-code="no-any-return"
+
 Note:
     The conversions to sequence (`to_seq`) and list (`to_list`) are not necessary.
 

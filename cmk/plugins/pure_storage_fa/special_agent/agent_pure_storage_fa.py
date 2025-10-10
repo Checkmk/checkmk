@@ -6,6 +6,8 @@
 Special agent for monitoring Pure Storage FlashArray via REST API 2.x with Check_MK.
 """
 
+# mypy: disable-error-code="no-any-return"
+
 from __future__ import annotations
 
 import logging

@@ -5,6 +5,7 @@
 """Mode for activating pending changes. Does also replication with
 remote sites in distributed Setup."""
 
+# mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 

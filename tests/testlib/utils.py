@@ -6,6 +6,8 @@
 handling file operations, and interacting with the system environment.
 """
 
+# mypy: disable-error-code="no-any-return"
+
 import dataclasses
 import enum
 import logging

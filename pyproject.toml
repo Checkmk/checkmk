@@ -156,7 +156,7 @@ no_implicit_reexport = true
 strict_bytes = true
 strict_equality = true
 warn_redundant_casts = true
-warn_return_any = false            # lots of findings all over the place
+warn_return_any = true
 warn_unused_configs = true
 warn_unused_ignores = true
 

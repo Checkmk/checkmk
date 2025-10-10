@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Synchronize discovered host labels from remote site to central site"""
 
+# mypy: disable-error-code="no-any-return"
+
 from __future__ import annotations
 
 import ast

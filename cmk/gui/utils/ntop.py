@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Some helpers for ntop related GUI code
 
+# mypy: disable-error-code="no-any-return"
+
 Needs to be part of the generic code, not packed into NTOP addon.
 """
 

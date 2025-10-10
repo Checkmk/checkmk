@@ -6,6 +6,8 @@
 Common parts of buildscripts scripts
 """
 
+# mypy: disable-error-code="no-any-return"
+
 import argparse
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager

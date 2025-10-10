@@ -10,6 +10,8 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
+# mypy: disable-error-code="no-any-return"
+
 DEFAULT_CFG_PATH = Path(os.getenv("MK_CONFDIR", "")) / "mk_podman_cfg.json"
 
 DEFAULT_SOCKET_PATH = "/run/podman/podman.sock"

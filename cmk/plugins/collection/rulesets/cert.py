@@ -68,6 +68,10 @@ def _valuespec_connection_type() -> SingleChoice:
                 name=ConnectionType.SMTP_STARTTLS.value,
                 title=Title("SMTP STARTTLS"),
             ),
+            SingleChoiceElement(
+                name=ConnectionType.POSTGRES_STARTTLS.value,
+                title=Title("Postgres STARTTLS"),
+            ),
         ],
         prefill=DefaultValue(ConnectionType.TLS.value),
     )

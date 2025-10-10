@@ -31,6 +31,7 @@ class ServicePrefix(StrEnum):
 class ConnectionType(StrEnum):
     TLS = "tls"
     SMTP_STARTTLS = "smtp_starttls"
+    POSTGRES_STARTTLS = "postgres_starttls"
 
 
 FloatLevels = (

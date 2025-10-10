@@ -9,19 +9,17 @@
 # mypy: disable-error-code="type-arg"
 
 import base64
-import copy
 import itertools
 import json
 import struct
 import uuid
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import TypedDict
 
 import pytest
 
 from cmk.ccc.crash_reporting import (
-    _format_var_for_export,
     ABCCrashReport,
     CrashInfo,
     CrashReportStore,
@@ -110,61 +108,6 @@ def test_crash_report_crash_dir(tmp_path: Path, crash: UnitTestCrashReport) -> N
 def test_crash_report_local_crash_report_url(crash: UnitTestCrashReport) -> None:
     url = "crash.py?component=test&ident=%s" % crash.ident_to_text()
     assert crash.local_crash_report_url() == url
-
-
-def test_format_var_for_export_strip_nested_dict() -> None:
-    orig_var: dict[str, Any] = {
-        "a": {
-            "b": {
-                "c": {
-                    "d": {},
-                },
-            },
-        },
-    }
-
-    var = copy.deepcopy(orig_var)
-    formated = _format_var_for_export(var)
-
-    # Stripped?
-    assert formated["a"]["b"]["c"]["d"] == "Max recursion depth reached"
-
-    # Not modified original data
-    assert orig_var == var
-
-
-def test_format_var_for_export_strip_large_data() -> None:
-    orig_var = {
-        "a": {"y": ("a" * 1024 * 1024) + "a"},
-    }
-
-    var = copy.deepcopy(orig_var)
-    formated = _format_var_for_export(var)
-
-    # Stripped?
-    assert formated["a"]["y"].endswith("(1 bytes stripped)")
-
-    # Not modified original data
-    assert orig_var == var
-
-
-def test_format_var_for_export_strip_nested_dict_with_list() -> None:
-    orig_var: dict[str, Any] = {
-        "a": {
-            "b": {
-                "c": [{}],
-            },
-        },
-    }
-
-    var = copy.deepcopy(orig_var)
-    formated = _format_var_for_export(var)
-
-    # Stripped?
-    assert formated["a"]["b"]["c"][0] == "Max recursion depth reached"
-
-    # Not modified original data
-    assert orig_var == var
 
 
 @pytest.fixture

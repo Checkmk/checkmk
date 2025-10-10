@@ -290,48 +290,63 @@ def _get_local_vars_of_last_exception() -> str:
     # This needs to be encoded as the local vars might contain binary data which can not be
     # transported using JSON.
     return base64.b64encode(
-        _format_var_for_export(pprint.pformat(local_vars).encode("utf-8"), maxsize=5 * 1024 * 1024)
+        _truncate_str(pprint.pformat(local_vars), max_size=5 * 1024 * 1024).encode("utf-8")
     ).decode()
 
 
-def _sanitize_variables(unsanitized_variables: dict[str, Any]) -> dict[str, Any]:
+def _sanitize_variables(unsanitized_variables: dict[str, object]) -> dict[str, object]:
     return {
         key: REDACTED_STRING
         if any(sensitive_keyword in key.lower() for sensitive_keyword in SENSITIVE_KEYWORDS)
-        else _format_var_for_export(value)
+        else format_var_for_export(value)
         for key, value in unsanitized_variables.items()
     }
 
 
-def _format_var_for_export(val: Any, maxdepth: int = 4, maxsize: int = 1024 * 1024) -> Any:
+def _truncate_str(value: str, max_size: int) -> str:
+    """truncate a string if it is too long and add how much was truncated
+
+    >>> _truncate_str("foo", 3)
+    'foo'
+    >>> _truncate_str("foo", 2)
+    'fo... (1 bytes stripped)'
+    """
+    if (size := len(value)) > max_size:
+        return value[:max_size] + f"... ({(size - max_size)} bytes stripped)"
+    return value
+
+
+def format_var_for_export(val: object, maxdepth: int = 4, maxsize: int = 1024 * 1024) -> object:
     if maxdepth == 0:
         return "Max recursion depth reached"
 
-    if isinstance(val, dict):
-        val = val.copy()
-        for item_key, item_val in val.items():
-            if any(
-                sensitive_keyword in item_key.lower() for sensitive_keyword in SENSITIVE_KEYWORDS
-            ):
-                val[item_key] = REDACTED_STRING
-            else:
-                val[item_key] = _format_var_for_export(item_val, maxdepth - 1)
+    match val:
+        case dict():
+            val = val.copy()
+            item_key: object  # mypy says Any
+            item_val: object
+            for item_key, item_val in val.items():
+                if isinstance(item_key, str) and any(
+                    sensitive_keyword in item_key.lower()
+                    for sensitive_keyword in SENSITIVE_KEYWORDS
+                ):
+                    val[item_key] = REDACTED_STRING
+                else:
+                    val[item_key] = format_var_for_export(item_val, maxdepth - 1)
 
-    elif isinstance(val, list):
-        val = val[:]
-        for index, item in enumerate(val):
-            val[index] = _format_var_for_export(item, maxdepth - 1)
+        case list():
+            val = val[:]
+            for index, item in enumerate(val):
+                val[index] = format_var_for_export(item, maxdepth - 1)
 
-    elif isinstance(val, tuple):
-        new_val: tuple[Any, ...] = ()
-        for item in val:
-            new_val += (_format_var_for_export(item, maxdepth - 1),)
-        val = new_val
+        case tuple():
+            new_val: tuple[object, ...] = ()
+            for item in val:
+                new_val += (format_var_for_export(item, maxdepth - 1),)
+            val = new_val
 
-    # Check and limit size
-    if isinstance(val, str):
-        size = len(val)
-        if size > maxsize:
-            val = val[:maxsize] + f"... ({(size - maxsize)} bytes stripped)"
+        # Check and limit size
+        case str():
+            val = _truncate_str(val, maxsize)
 
     return val

@@ -41,15 +41,6 @@ file_from_flag(
     tags = ["manual"],
 )
 
-py_binary(
-    name = "generate_api_spec",
-    srcs = ["//cmk:gui/openapi/spec/spec_generator/generate_api_spec.py"],
-    tags = ["manual"],
-    deps = [
-        "//cmk:lib_cmk_cre",
-    ],
-)
-
 run_binary(
     name = "generate_doc.spec",
     outs = ["doc.spec"],
@@ -65,7 +56,7 @@ run_binary(
         "dict",
     ],
     tags = ["manual"],
-    tool = ":generate_api_spec",
+    tool = "//cmk:generate_api_spec_cre",
 )
 
 run_binary(
@@ -83,7 +74,7 @@ run_binary(
         "dict",
     ],
     tags = ["manual"],
-    tool = ":generate_api_spec",
+    tool = "//cmk:generate_api_spec_cre",
 )
 
 pkg_files(

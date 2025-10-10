@@ -2,9 +2,11 @@ load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//bazel/tools:prettier/package_json.bzl", prettier_bin = "bin")
+load("@npm//packages/cmk-shared-typing:openapi-typescript/package_json.bzl", openapi_typescript = "bin")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
 load("//bazel/rules:shared_typing_generators.bzl", "json2python", "json2typescript")
@@ -56,6 +58,32 @@ write_file(
     out = "typescript/index.ts",
 )
 
+run_binary(
+    name = "openapi_spec_internal",
+    outs = ["openapi_spec_internal.yaml"],
+    args = [
+        "generate",
+        "--version",
+        "internal",
+        "--format",
+        "yaml",
+        "--out",
+        "$(execpath openapi_spec_internal.yaml)",
+    ],
+    tool = "//cmk:generate_api_spec_repo",
+)
+
+openapi_typescript.openapi_typescript(
+    name = "openapi_internal_ts_file",
+    srcs = [":openapi_spec_internal"],
+    outs = ["typescript/openapi_internal.d.ts"],
+    args = [
+        "$(rootpath :openapi_spec_internal)",
+        "-o",
+        "$(rootpath typescript/openapi_internal.d.ts)",
+    ],
+)
+
 js_library(
     name = "cmk_shared_typing_ts",
     srcs = [
@@ -64,6 +92,7 @@ js_library(
         ":cmk_shared_typing_ts_lib",
         ":empty_index_ts",
         ":generated_ts_files",
+        ":openapi_internal_ts_file",
     ],
     visibility = ["//packages:__subpackages__"],
 )

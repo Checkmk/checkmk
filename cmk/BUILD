@@ -1,4 +1,4 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main")
+load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library", "py_pytest_main")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//:bazel_variables.bzl", "edition_python_deps")
@@ -320,4 +320,24 @@ py_doc_test(
     env = {
         "PYTHONWARNINGS": "ignore",
     },
+)
+
+py_binary(
+    name = "generate_api_spec_repo",
+    srcs = ["gui/openapi/spec/spec_generator/generate_api_spec.py"],
+    main = "gui/openapi/spec/spec_generator/generate_api_spec.py",
+    visibility = ["//packages/cmk-shared-typing:__pkg__"],
+    deps = [
+        "lib_cmk_repo",
+    ],
+)
+
+py_binary(
+    name = "generate_api_spec_cre",
+    srcs = ["gui/openapi/spec/spec_generator/generate_api_spec.py"],
+    main = "gui/openapi/spec/spec_generator/generate_api_spec.py",
+    visibility = ["//omd:__pkg__"],
+    deps = [
+        "lib_cmk_cre",
+    ],
 )

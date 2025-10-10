@@ -1068,7 +1068,6 @@ def _create_sections_based_on_container_metrics(
     debug: bool,
     cluster_name: str,
     pods_to_host: PodsToHost,
-    piggyback_formatter: PiggybackFormatter,
     usage_config: query.CollectorSessionConfig,
 ) -> section.CollectorHandlerLog:
     try:
@@ -1272,7 +1271,6 @@ def _main(arguments: argparse.Namespace, checkmk_host_settings: CheckmkHostSetti
         arguments.debug,
         arguments.cluster,
         pods_to_host,
-        piggyback_formatter,
         usage_config,
     )
 

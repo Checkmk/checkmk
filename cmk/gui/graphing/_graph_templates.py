@@ -29,6 +29,7 @@ from cmk.utils.servicename import ServiceName
 from ._from_api import RegisteredMetric
 from ._graph_metric_expressions import (
     AnnotatedHostName,
+    create_graph_metric_expression_from_translated_metric,
     GraphConsolidationFunction,
 )
 from ._graph_specification import (
@@ -741,37 +742,49 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
             and self.graph_id.startswith("METRIC_")
             and self.graph_id[7:] in translated_metrics
         ):
-            name = self.graph_id[7:]
-            translated_metric = translated_metrics[name]
-            if recipe := self._build_recipe_from_template(
-                graph_template=EvaluatedGraphTemplate(
-                    id=f"METRIC_{name}",
-                    title="",
-                    metrics=[
-                        Evaluated(
-                            base=Metric(name),
-                            value=translated_metric.value,
-                            unit_spec=translated_metric.unit_spec,
-                            color=translated_metric.color,
-                            line_type="area",
-                            title=translated_metric.title,
-                        )
-                    ],
+            translated_metric = translated_metrics[self.graph_id[7:]]
+            title = translated_metric.title
+            consolidation_function: Literal["max"] = "max"
+            graph_metric = GraphMetric(
+                title=title,
+                line_type="area",
+                operation=create_graph_metric_expression_from_translated_metric(
+                    row["site"],
+                    row["host_name"],
+                    row.get("service_description", "_HOST_"),
+                    translated_metric,
+                    consolidation_function,
+                ),
+                unit=translated_metric.unit_spec,
+                color=translated_metric.color,
+            )
+            painter_options = PainterOptions.get_instance()
+            return [
+                GraphRecipe(
+                    title=(
+                        f"{title} (Graph ID: {self.graph_id})"
+                        if painter_options.get("show_internal_graph_and_metric_ids")
+                        else title
+                    ),
+                    metrics=[graph_metric],
+                    unit_spec=graph_metric.unit,
+                    explicit_vertical_range=None,
                     horizontal_rules=compute_warn_crit_rules_from_translated_metric(
                         user_specific_unit(translated_metric.unit_spec, temperature_unit),
                         translated_metric,
                     ),
-                    consolidation_function="max",
-                    range=None,
                     omit_zero_metrics=False,
-                ),
-                row=row,
-                translated_metrics=translated_metrics,
-                index=0,
-                user_permissions=user_permissions,
-            ):
-                return [recipe]
-            return []
+                    consolidation_function=consolidation_function,
+                    specification=type(self)(
+                        site=self.site,
+                        host_name=self.host_name,
+                        service_description=self.service_description,
+                        destination=self.destination,
+                        graph_index=0,
+                        graph_id=self.graph_id,
+                    ),
+                )
+            ]
         return [
             recipe
             for index, graph_template in _matching_graph_templates(

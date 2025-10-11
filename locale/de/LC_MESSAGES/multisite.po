@@ -257,9 +257,6 @@ msgstr ""
 msgid "# %s - Cycle details"
 msgstr "# %s - Zyklusdetails"
 
-msgid "# Containers"
-msgstr "# Container"
-
 #, python-format
 msgid "#%s of unknown ruleset %r"
 msgstr "#%s von unbekanntem Regelsatz %r"
@@ -16326,8 +16323,8 @@ msgstr "Neues Regelpaket mit ID %s erstellt"
 msgid "Created new time period %s"
 msgstr "Neue Zeitperiode %s erstellt"
 
-#, python-format
-msgid "Created new users: %s"
+#, fuzzy, python-format
+msgid "Created new user: %s"
 msgstr "Neue Benutzer erstellt: %s"
 
 #, python-format
@@ -16500,6 +16497,10 @@ msgstr "Kritisch bei oder unter"
 
 msgid "Critical at stratum"
 msgstr "Kritisch bei Stratum"
+
+#, fuzzy
+msgid "Critical at usage"
+msgstr "CRIT bei einer Benutzung von"
 
 msgid "Critical at usage of"
 msgstr "CRIT bei einer Benutzung von"
@@ -20905,9 +20906,6 @@ msgstr "Docker"
 
 msgid "Docker containers"
 msgstr "Docker-Container"
-
-msgid "Docker images"
-msgstr "Docker Images"
 
 msgid "Docker networks"
 msgstr "Docker-Netzwerke"
@@ -25500,6 +25498,10 @@ msgstr "Flexible Dauer der Wartungszeit:"
 
 msgid "Flexible downtime options"
 msgstr "Flexible Optionen für Wartungszeit"
+
+#, fuzzy
+msgid "Float field can not be empty"
+msgstr "Textfeld darf nicht leer sein"
 
 msgid "Flow-controlled Connections"
 msgstr "Verbindungen unter Flusskontrolle"
@@ -34308,6 +34310,10 @@ msgstr ""
 "weitergeleitet werden. Die Ziel-Event Console kann für jeden Host in einer "
 "separaten Regel konfiguriert werden."
 
+#, fuzzy
+msgid "Integer field can not be empty"
+msgstr "Textfeld darf nicht leer sein"
+
 msgid "Integrate Nagios plug-ins"
 msgstr "Nagios-Plugins einbinden"
 
@@ -36782,6 +36788,10 @@ msgstr "Levels für benutzten Speicher"
 
 msgid "Levels for used processes"
 msgstr "Levels für die benutzten Prozesse"
+
+#, fuzzy
+msgid "Levels for used space"
+msgstr "Levels für benutzten Speicherplatz"
 
 msgid "Levels for used space (reclaimable is considered as free)"
 msgstr "Levels für belegten Platz (Reclaimable wird als frei betrachtet)"
@@ -48630,6 +48640,10 @@ msgstr "Prozentwert PUT-Anfragen"
 msgid "Percentage SELECT requests"
 msgstr "Prozentwert SELECT-Anfragen"
 
+#, fuzzy
+msgid "Percentage field can not be empty"
+msgstr "Textfeld darf nicht leer sein"
+
 msgid "Percentage free"
 msgstr "Prozentwert frei"
 
@@ -55677,6 +55691,10 @@ msgid ""
 msgstr ""
 "Wählen und konfigurieren Sie die Microsoft Azure-Services, die Sie "
 "überwachen möchten"
+
+#, fuzzy
+msgid "Select at least one element"
+msgstr "Bitte wählen Sie mindestens ein Element aus"
 
 msgid "Select contact group"
 msgstr "Kontaktgruppe auswählen"
@@ -81379,6 +81397,10 @@ msgstr "Warnung bei oder über"
 msgid "Warning at or below"
 msgstr "Warnung bei oder unter"
 
+#, fuzzy
+msgid "Warning at usage"
+msgstr "Warnung bei Verwendung von"
+
 msgid "Warning at usage of"
 msgstr "Warnung bei Verwendung von"
 
@@ -88893,11 +88915,23 @@ msgstr ""
 msgid "Add & place widget"
 msgstr "Widget hinzufügen & platzieren"
 
+msgid "Metric selection"
+msgstr "Metrik-Auswahl"
+
+#, fuzzy
+msgid "HW/SW inventory property"
+msgstr "HW-/SW-Inventur"
+
+#, fuzzy
+msgid "Select inventory path"
+msgstr "Netzwerk-Parents erkennen"
+
+#, fuzzy
+msgid "Inventory path"
+msgstr "Inventurbaum"
+
 msgid "Single graph"
 msgstr "Einzelner Graph"
-
-msgid "Service metric"
-msgstr "Service-Metrik"
 
 msgid "Must select an option"
 msgstr "Sie müssen eine Option auswählen"
@@ -88908,11 +88942,11 @@ msgstr "Metrik (einfach)"
 msgid "Graph (combined)"
 msgstr "Graph (kombiniert)"
 
+msgid "Service metric"
+msgstr "Service-Metrik"
+
 msgid "Service selection"
 msgstr "Service-Auswahl"
-
-msgid "Metric selection"
-msgstr "Metrik-Auswahl"
 
 msgid "Fixed data range"
 msgstr "Fester Datenbereich"
@@ -88968,10 +89002,6 @@ msgstr "Rangfolge"
 
 msgid "entries (max. %{max_entries})"
 msgstr "Einträge (max. %{max_entries})"
-
-#, fuzzy
-msgid "ServicesOverview & graphs"
-msgstr "Servicegraphen"
 
 #, fuzzy
 msgid "Colorize not OK states"
@@ -89833,6 +89863,16 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "# Containers"
+#~ msgstr "# Container"
+
+#~ msgid "Docker images"
+#~ msgstr "Docker Images"
+
+#, fuzzy
+#~ msgid "ServicesOverview & graphs"
+#~ msgstr "Servicegraphen"
 
 #~ msgid "Invalid receipt"
 #~ msgstr "Ungültiger Beleg"

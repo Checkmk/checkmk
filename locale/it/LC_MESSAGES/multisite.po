@@ -255,9 +255,6 @@ msgstr ""
 msgid "# %s - Cycle details"
 msgstr "Dettagli del servizio BI"
 
-msgid "# Containers"
-msgstr "# Contenitori"
-
 #, fuzzy, python-format
 msgid "#%s of unknown ruleset %r"
 msgstr "Numero di allarmi sconosciuti"
@@ -16722,8 +16719,8 @@ msgstr "Creato nuovo pacchetto di regole con id %s"
 msgid "Created new time period %s"
 msgstr "Creato nuovo periodo di tempo %s"
 
-#, python-format
-msgid "Created new users: %s"
+#, fuzzy, python-format
+msgid "Created new user: %s"
 msgstr "Creati nuovi utenti: %s"
 
 #, fuzzy, python-format
@@ -16899,6 +16896,10 @@ msgstr "Critico a o sotto"
 
 msgid "Critical at stratum"
 msgstr "Critico a livello di strato"
+
+#, fuzzy
+msgid "Critical at usage"
+msgstr "Critico all'uso di"
 
 msgid "Critical at usage of"
 msgstr "Critico all'uso di"
@@ -21533,9 +21534,6 @@ msgstr "Nodo Docker"
 
 msgid "Docker containers"
 msgstr "Contenitori Docker"
-
-msgid "Docker images"
-msgstr "Immagini Docker"
 
 #, fuzzy
 msgid "Docker networks"
@@ -26177,6 +26175,10 @@ msgstr "Durata flessibile del tempo di inattività:"
 
 msgid "Flexible downtime options"
 msgstr "Opzioni flessibili per i tempi di inattività"
+
+#, fuzzy
+msgid "Float field can not be empty"
+msgstr "Chiave segreta"
 
 msgid "Flow-controlled Connections"
 msgstr "Connessioni a flusso controllato"
@@ -35354,6 +35356,10 @@ msgstr ""
 "configurata per ogni host in una regola separata."
 
 #, fuzzy
+msgid "Integer field can not be empty"
+msgstr "Chiave segreta"
+
+#, fuzzy
 msgid "Integrate Nagios plug-ins"
 msgstr "Integrare i plugin Nagios"
 
@@ -37935,6 +37941,10 @@ msgstr "Livelli per la memoria usata"
 
 msgid "Levels for used processes"
 msgstr "Livelli per i processi utilizzati"
+
+#, fuzzy
+msgid "Levels for used space"
+msgstr "Livelli per lo spazio su disco utilizzato"
 
 msgid "Levels for used space (reclaimable is considered as free)"
 msgstr ""
@@ -50370,6 +50380,10 @@ msgstr "Percentuale %s Richieste"
 msgid "Percentage SELECT requests"
 msgstr "Percentuale %s Richieste"
 
+#, fuzzy
+msgid "Percentage field can not be empty"
+msgstr "Chiave segreta"
+
 msgid "Percentage free"
 msgstr "Percentuale libera"
 
@@ -57735,6 +57749,10 @@ msgstr "Servizi Azure da monitorare"
 msgid ""
 "Select and configure the Microsoft Azure services you would like to monitor"
 msgstr "Servizi Azure da monitorare"
+
+#, fuzzy
+msgid "Select at least one element"
+msgstr "Seleziona almeno un elemento"
 
 #, fuzzy
 msgid "Select contact group"
@@ -84027,6 +84045,10 @@ msgstr "Attenzione a o sopra"
 msgid "Warning at or below"
 msgstr "Attenzione a o sotto"
 
+#, fuzzy
+msgid "Warning at usage"
+msgstr "Attenzione all'uso di"
+
 msgid "Warning at usage of"
 msgstr "Attenzione all'uso di"
 
@@ -91609,12 +91631,24 @@ msgid "Add & place widget"
 msgstr "Aggiungere l'obiettivo"
 
 #, fuzzy
-msgid "Single graph"
-msgstr "Connessioni rifiutate"
+msgid "Metric selection"
+msgstr "Selezione dei file"
 
 #, fuzzy
-msgid "Service metric"
-msgstr "Metriche di servizio"
+msgid "HW/SW inventory property"
+msgstr "Inventario HW/SW"
+
+#, fuzzy
+msgid "Select inventory path"
+msgstr "Rilevare i genitori della rete"
+
+#, fuzzy
+msgid "Inventory path"
+msgstr "Albero dell'inventario"
+
+#, fuzzy
+msgid "Single graph"
+msgstr "Connessioni rifiutate"
 
 #, fuzzy
 msgid "Must select an option"
@@ -91629,11 +91663,11 @@ msgid "Graph (combined)"
 msgstr "Opzioni del grafico"
 
 #, fuzzy
-msgid "Service selection"
-msgstr "Selezione dei file"
+msgid "Service metric"
+msgstr "Metriche di servizio"
 
 #, fuzzy
-msgid "Metric selection"
+msgid "Service selection"
 msgstr "Selezione dei file"
 
 #, fuzzy
@@ -91702,10 +91736,6 @@ msgstr "Ordine di classifica"
 
 msgid "entries (max. %{max_entries})"
 msgstr ""
-
-#, fuzzy
-msgid "ServicesOverview & graphs"
-msgstr "Grafici di servizio"
 
 #, fuzzy
 msgid "Colorize not OK states"
@@ -92635,6 +92665,16 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "# Containers"
+#~ msgstr "# Contenitori"
+
+#~ msgid "Docker images"
+#~ msgstr "Immagini Docker"
+
+#, fuzzy
+#~ msgid "ServicesOverview & graphs"
+#~ msgstr "Grafici di servizio"
 
 #, fuzzy
 #~ msgid "Invalid receipt"

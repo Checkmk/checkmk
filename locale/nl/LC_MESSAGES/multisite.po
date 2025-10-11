@@ -259,9 +259,6 @@ msgstr ""
 msgid "# %s - Cycle details"
 msgstr "Details BI-dienst"
 
-msgid "# Containers"
-msgstr "# Containers"
-
 #, fuzzy, python-format
 msgid "#%s of unknown ruleset %r"
 msgstr "Aantal onbekende signaleringen"
@@ -16873,8 +16870,8 @@ msgstr "Nieuw regelpakket aangemaakt met id %s"
 msgid "Created new time period %s"
 msgstr "Nieuwe tijdsperiode aangemaakt %s"
 
-#, python-format
-msgid "Created new users: %s"
+#, fuzzy, python-format
+msgid "Created new user: %s"
 msgstr "Nieuwe gebruikers aangemaakt: %s"
 
 #, fuzzy, python-format
@@ -17051,6 +17048,10 @@ msgstr "Kritisch op of onder"
 
 msgid "Critical at stratum"
 msgstr "Kritisch op stratum"
+
+#, fuzzy
+msgid "Critical at usage"
+msgstr "Kritisch op het gebruik van"
 
 msgid "Critical at usage of"
 msgstr "Kritisch op het gebruik van"
@@ -21705,9 +21706,6 @@ msgstr "Docker knooppunt"
 
 msgid "Docker containers"
 msgstr "Docker-containers"
-
-msgid "Docker images"
-msgstr "Docker-afbeeldingen"
 
 #, fuzzy
 msgid "Docker networks"
@@ -26387,6 +26385,10 @@ msgstr "Flexibele stilstandsduur:"
 #, fuzzy
 msgid "Flexible downtime options"
 msgstr "Flexibele stilstandsduur:"
+
+#, fuzzy
+msgid "Float field can not be empty"
+msgstr "Geheime sleutel"
 
 msgid "Flow-controlled Connections"
 msgstr "Stromingsgecontroleerde aansluitingen"
@@ -35630,6 +35632,10 @@ msgstr ""
 "afzonderlijke regel worden geconfigureerd."
 
 #, fuzzy
+msgid "Integer field can not be empty"
+msgstr "Geheime sleutel"
+
+#, fuzzy
 msgid "Integrate Nagios plug-ins"
 msgstr "Nagios plugins integreren"
 
@@ -38233,6 +38239,10 @@ msgstr "Niveaus voor gebruikt geheugen"
 
 msgid "Levels for used processes"
 msgstr "Niveaus voor gebruikte processen"
+
+#, fuzzy
+msgid "Levels for used space"
+msgstr "Niveaus voor gebruikte schijfruimte"
 
 msgid "Levels for used space (reclaimable is considered as free)"
 msgstr "Niveaus voor gebruikte ruimte (reclaimable wordt beschouwd als vrij)"
@@ -50781,6 +50791,10 @@ msgstr "Percentage %s Verzoeken"
 msgid "Percentage SELECT requests"
 msgstr "Percentage %s Verzoeken"
 
+#, fuzzy
+msgid "Percentage field can not be empty"
+msgstr "Geheime sleutel"
+
 msgid "Percentage free"
 msgstr "Percentage vrij"
 
@@ -58192,6 +58206,10 @@ msgstr "Te controleren Azure diensten"
 msgid ""
 "Select and configure the Microsoft Azure services you would like to monitor"
 msgstr "Te controleren Azure diensten"
+
+#, fuzzy
+msgid "Select at least one element"
+msgstr "Selecteer ten minste één element"
 
 #, fuzzy
 msgid "Select contact group"
@@ -84712,6 +84730,10 @@ msgstr "Waarschuwing op of boven"
 msgid "Warning at or below"
 msgstr "Waarschuwing op of onder"
 
+#, fuzzy
+msgid "Warning at usage"
+msgstr "Waarschuwing bij gebruik van"
+
 msgid "Warning at usage of"
 msgstr "Waarschuwing bij gebruik van"
 
@@ -92365,12 +92387,24 @@ msgid "Add & place widget"
 msgstr "Doel toevoegen"
 
 #, fuzzy
-msgid "Single graph"
-msgstr "Afgewezen verbindingen"
+msgid "Metric selection"
+msgstr "Map Selectie"
 
 #, fuzzy
-msgid "Service metric"
-msgstr "Dienst Metriek"
+msgid "HW/SW inventory property"
+msgstr "HW/SW-inventaris"
+
+#, fuzzy
+msgid "Select inventory path"
+msgstr "Netwerkouders opsporen"
+
+#, fuzzy
+msgid "Inventory path"
+msgstr "Inventaris Boom"
+
+#, fuzzy
+msgid "Single graph"
+msgstr "Afgewezen verbindingen"
 
 #, fuzzy
 msgid "Must select an option"
@@ -92385,11 +92419,11 @@ msgid "Graph (combined)"
 msgstr "Grafiek Opties"
 
 #, fuzzy
-msgid "Service selection"
-msgstr "Map Selectie"
+msgid "Service metric"
+msgstr "Dienst Metriek"
 
 #, fuzzy
-msgid "Metric selection"
+msgid "Service selection"
 msgstr "Map Selectie"
 
 #, fuzzy
@@ -92458,10 +92492,6 @@ msgstr "Waarschuwing indien meer dan"
 
 msgid "entries (max. %{max_entries})"
 msgstr ""
-
-#, fuzzy
-msgid "ServicesOverview & graphs"
-msgstr "Dienstgrafieken"
 
 #, fuzzy
 msgid "Colorize not OK states"
@@ -93391,6 +93421,16 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "# Containers"
+#~ msgstr "# Containers"
+
+#~ msgid "Docker images"
+#~ msgstr "Docker-afbeeldingen"
+
+#, fuzzy
+#~ msgid "ServicesOverview & graphs"
+#~ msgstr "Dienstgrafieken"
 
 #, fuzzy
 #~ msgid "Invalid receipt"

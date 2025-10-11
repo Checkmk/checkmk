@@ -251,9 +251,6 @@ msgstr ""
 msgid "# %s - Cycle details"
 msgstr "#%s - サイクルの詳細"
 
-msgid "# Containers"
-msgstr "# コンテナ"
-
 #, python-format
 msgid "#%s of unknown ruleset %r"
 msgstr "#%s 不明なルール %r"
@@ -15901,8 +15898,8 @@ msgstr "ID %s で新しいルールパックを作成しました"
 msgid "Created new time period %s"
 msgstr "新しい期 %sを作成しました"
 
-#, python-format
-msgid "Created new users: %s"
+#, fuzzy, python-format
+msgid "Created new user: %s"
 msgstr "作成された新しいユーザー: %s"
 
 #, fuzzy, python-format
@@ -16071,6 +16068,10 @@ msgstr "下回る場合はクリティカル"
 
 msgid "Critical at stratum"
 msgstr "stratumでクリティカル"
+
+#, fuzzy
+msgid "Critical at usage"
+msgstr "の使用量にクリティカル"
 
 msgid "Critical at usage of"
 msgstr "の使用量にクリティカル"
@@ -20401,9 +20402,6 @@ msgstr "Dockerノード"
 
 msgid "Docker containers"
 msgstr "Dockerコンテナ"
-
-msgid "Docker images"
-msgstr "Dockerイメージ"
 
 msgid "Docker networks"
 msgstr "Dockerネットワーク"
@@ -24900,6 +24898,10 @@ msgstr "柔軟なダウンタイム期間:"
 
 msgid "Flexible downtime options"
 msgstr "柔軟なダウンタイムオプション:"
+
+#, fuzzy
+msgid "Float field can not be empty"
+msgstr "入力を空にすることはできません"
 
 msgid "Flow-controlled Connections"
 msgstr "フロー制御接続"
@@ -33455,6 +33457,10 @@ msgstr ""
 "Checkmkイベントコンソールデーモンに転送して処理することができる。ターゲットの"
 "イベントコンソールは、各ホストごとに個別のルールで設定できます。"
 
+#, fuzzy
+msgid "Integer field can not be empty"
+msgstr "入力を空にすることはできません"
+
 msgid "Integrate Nagios plug-ins"
 msgstr "Nagiosプラグイン統合"
 
@@ -35900,6 +35906,10 @@ msgstr "使用済みメモリのレベル"
 
 msgid "Levels for used processes"
 msgstr "使用済みプロセスのレベル"
+
+#, fuzzy
+msgid "Levels for used space"
+msgstr "使用済みディスクスペースのレベル"
 
 msgid "Levels for used space (reclaimable is considered as free)"
 msgstr "使用済みスペースのレベル(再生可能なものは空きスペースとみなす)"
@@ -47560,6 +47570,10 @@ msgstr "パーセンテージ PUT リクエスト"
 msgid "Percentage SELECT requests"
 msgstr "パーセンテージ SELECT リクエスト"
 
+#, fuzzy
+msgid "Percentage field can not be empty"
+msgstr "入力を空にすることはできません"
+
 msgid "Percentage free"
 msgstr "パーセンテージ無料"
 
@@ -54499,6 +54513,10 @@ msgid ""
 "Select and configure the Microsoft Azure services you would like to monitor"
 msgstr ""
 "監視対象として選択し、設定するMicrosoft Azureサービスを選択してください"
+
+#, fuzzy
+msgid "Select at least one element"
+msgstr "少なくとも1つの要素を選択してください"
 
 msgid "Select contact group"
 msgstr "連絡先グループを選択"
@@ -79248,6 +79266,10 @@ msgstr "以上での警告"
 msgid "Warning at or below"
 msgstr "以下での警告"
 
+#, fuzzy
+msgid "Warning at usage"
+msgstr "使用量の警告"
+
 msgid "Warning at usage of"
 msgstr "使用量の警告"
 
@@ -86571,12 +86593,24 @@ msgid "Add & place widget"
 msgstr "ターゲットを追加"
 
 #, fuzzy
-msgid "Single graph"
-msgstr "オプション選択"
+msgid "Metric selection"
+msgstr "ファイル選択"
 
 #, fuzzy
-msgid "Service metric"
-msgstr "サービスメトリクス"
+msgid "HW/SW inventory property"
+msgstr "HW/SWインベントリ"
+
+#, fuzzy
+msgid "Select inventory path"
+msgstr "ネットワークの親を検出する"
+
+#, fuzzy
+msgid "Inventory path"
+msgstr "インベントリツリー"
+
+#, fuzzy
+msgid "Single graph"
+msgstr "オプション選択"
 
 #, fuzzy
 msgid "Must select an option"
@@ -86591,12 +86625,12 @@ msgid "Graph (combined)"
 msgstr "グラフライン"
 
 #, fuzzy
-msgid "Service selection"
-msgstr "サイト選択"
+msgid "Service metric"
+msgstr "サービスメトリクス"
 
 #, fuzzy
-msgid "Metric selection"
-msgstr "ファイル選択"
+msgid "Service selection"
+msgstr "サイト選択"
 
 #, fuzzy
 msgid "Fixed data range"
@@ -86665,10 +86699,6 @@ msgstr "順位"
 #, fuzzy
 msgid "entries (max. %{max_entries})"
 msgstr "エントリー数 (最大50)"
-
-#, fuzzy
-msgid "ServicesOverview & graphs"
-msgstr "サービスグラフ"
 
 #, fuzzy
 msgid "Colorize not OK states"
@@ -87564,6 +87594,16 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "# Containers"
+#~ msgstr "# コンテナ"
+
+#~ msgid "Docker images"
+#~ msgstr "Dockerイメージ"
+
+#, fuzzy
+#~ msgid "ServicesOverview & graphs"
+#~ msgstr "サービスグラフ"
 
 #~ msgid "Invalid receipt"
 #~ msgstr "無効なレシート"

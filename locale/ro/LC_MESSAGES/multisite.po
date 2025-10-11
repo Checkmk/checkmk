@@ -257,9 +257,6 @@ msgstr ""
 msgid "# %s - Cycle details"
 msgstr "Detalii despre serviciul BI"
 
-msgid "# Containers"
-msgstr "# Containere"
-
 #, fuzzy, python-format
 msgid "#%s of unknown ruleset %r"
 msgstr "Numărul de alerte necunoscute"
@@ -16898,8 +16895,8 @@ msgstr "A creat un nou pachet de reguli cu id %s"
 msgid "Created new time period %s"
 msgstr "A creat o nouă perioadă de timp %s."
 
-#, python-format
-msgid "Created new users: %s"
+#, fuzzy, python-format
+msgid "Created new user: %s"
 msgstr "A creat noi utilizatori: %s"
 
 #, fuzzy, python-format
@@ -17079,6 +17076,10 @@ msgstr "Critic la sau sub"
 
 msgid "Critical at stratum"
 msgstr "Critic la nivelul stratului"
+
+#, fuzzy
+msgid "Critical at usage"
+msgstr "Critic la utilizarea de"
 
 msgid "Critical at usage of"
 msgstr "Critic la utilizarea de"
@@ -21754,9 +21755,6 @@ msgstr "Nod Docker"
 
 msgid "Docker containers"
 msgstr "Containere Docker"
-
-msgid "Docker images"
-msgstr "Imagini Docker"
 
 #, fuzzy
 msgid "Docker networks"
@@ -26463,6 +26461,10 @@ msgstr "Durata flexibilă a timpului de oprire:"
 
 msgid "Flexible downtime options"
 msgstr "Opțiuni flexibile pentru timpii morți"
+
+#, fuzzy
+msgid "Float field can not be empty"
+msgstr "Cheia secretă"
 
 msgid "Flow-controlled Connections"
 msgstr "Conexiuni cu debit controlat"
@@ -35741,6 +35743,10 @@ msgstr ""
 "evenimente Checkmk pentru a fi procesate. Consola de evenimente țintă poate "
 "fi configurată pentru fiecare gazdă într-o regulă separată."
 
+#, fuzzy
+msgid "Integer field can not be empty"
+msgstr "Cheia secretă"
+
 # georgem ##############
 #, fuzzy
 msgid "Integrate Nagios plug-ins"
@@ -38336,6 +38342,10 @@ msgstr "Niveluri pentru memoria utilizată"
 
 msgid "Levels for used processes"
 msgstr "Niveluri pentru procesele utilizate"
+
+#, fuzzy
+msgid "Levels for used space"
+msgstr "Niveluri pentru spațiul pe disc utilizat"
 
 msgid "Levels for used space (reclaimable is considered as free)"
 msgstr ""
@@ -50873,6 +50883,10 @@ msgstr "Procentul %s Cereri"
 msgid "Percentage SELECT requests"
 msgstr "Procentul %s Cereri"
 
+#, fuzzy
+msgid "Percentage field can not be empty"
+msgstr "Cheia secretă"
+
 msgid "Percentage free"
 msgstr "Procentul liber"
 
@@ -58291,6 +58305,10 @@ msgstr "Servicii Azure de monitorizat"
 msgid ""
 "Select and configure the Microsoft Azure services you would like to monitor"
 msgstr "Servicii Azure de monitorizat"
+
+#, fuzzy
+msgid "Select at least one element"
+msgstr "Vă rugăm să selectați cel puțin un element"
 
 #, fuzzy
 msgid "Select contact group"
@@ -84927,6 +84945,10 @@ msgstr "Avertisment la sau peste"
 msgid "Warning at or below"
 msgstr "Avertisment la sau sub"
 
+#, fuzzy
+msgid "Warning at usage"
+msgstr "Avertisment la utilizarea de"
+
 msgid "Warning at usage of"
 msgstr "Avertisment la utilizarea de"
 
@@ -92605,13 +92627,24 @@ msgid "Add & place widget"
 msgstr "Adăugați o țintă"
 
 #, fuzzy
+msgid "Metric selection"
+msgstr "Selecția fișierelor"
+
+#, fuzzy
+msgid "HW/SW inventory property"
+msgstr "Inventarul HW/SW"
+
+#, fuzzy
+msgid "Select inventory path"
+msgstr "Detectarea părinților rețelei"
+
+#, fuzzy
+msgid "Inventory path"
+msgstr "Arbore de inventariere"
+
+#, fuzzy
 msgid "Single graph"
 msgstr "Conexiuni respinse"
-
-# georgem ##############
-#, fuzzy
-msgid "Service metric"
-msgstr "Metrici de servicii"
 
 #, fuzzy
 msgid "Must select an option"
@@ -92625,12 +92658,13 @@ msgstr "Etichetă metrică"
 msgid "Graph (combined)"
 msgstr "Opțiuni grafice"
 
+# georgem ##############
 #, fuzzy
-msgid "Service selection"
-msgstr "Selecția fișierelor"
+msgid "Service metric"
+msgstr "Metrici de servicii"
 
 #, fuzzy
-msgid "Metric selection"
+msgid "Service selection"
 msgstr "Selecția fișierelor"
 
 #, fuzzy
@@ -92700,11 +92734,6 @@ msgstr "Ordinea de clasament"
 #, fuzzy
 msgid "entries (max. %{max_entries})"
 msgstr "intrări (max. 50)"
-
-# georgem ##############
-#, fuzzy
-msgid "ServicesOverview & graphs"
-msgstr "Grafice de servicii"
 
 #, fuzzy
 msgid "Colorize not OK states"
@@ -93638,6 +93667,17 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "# Containers"
+#~ msgstr "# Containere"
+
+#~ msgid "Docker images"
+#~ msgstr "Imagini Docker"
+
+# georgem ##############
+#, fuzzy
+#~ msgid "ServicesOverview & graphs"
+#~ msgstr "Grafice de servicii"
 
 #, fuzzy
 #~ msgid "Invalid receipt"

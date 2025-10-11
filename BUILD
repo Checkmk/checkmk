@@ -86,11 +86,11 @@ compile_requirements_in(
         "//packages:python_requirements",
         "//packages:dev_python_requirements",
     ] + select({
-        "@//:gpl_repo": [],
         "@//:gpl+enterprise_repo": [
             "//non-free/packages:python_requirements",
             "//non-free/packages:dev_python_requirements",
         ],
+        "@//:gpl_repo": [],
     }),
 )
 
@@ -134,8 +134,8 @@ compile_requirements_in(
         "//cmk:requirements.in",
         "//packages:python_requirements",
     ] + select({
-        "@//:gpl_repo": [],
         "@//:gpl+enterprise_repo": ["//non-free/packages:python_requirements"],
+        "@//:gpl_repo": [],
     }),
 )
 
@@ -196,12 +196,12 @@ write_file(
         "",
         "add_packages(repo_path)",
     ] + select({
-        "@//:gpl_repo": [],
         "@//:gpl+enterprise_repo": [
             "add_packages(repo_path.joinpath('non-free'))",
             # needed for composition tests: they want to 'import cmk_update_agent' via the .venv
             "sys.path.insert(0, str(repo_path.joinpath('non-free/packages/cmk-update-agent')))",
         ],
+        "@//:gpl_repo": [],
     }),
 )
 
@@ -209,8 +209,8 @@ create_venv(
     name = "create_venv",
     destination_folder = ".venv",
     requirements_txt = select({
-        "@//:gpl_repo": ":raw-requirements.txt",
         "@//:gpl+enterprise_repo": ":requirements.txt",
+        "@//:gpl_repo": ":raw-requirements.txt",
     }),
     site_packages_extra_files = [":sitecustomize.py"],
     whls = [
@@ -219,10 +219,10 @@ create_venv(
         "//packages/cmk-werks:wheel_entrypoint_only",
         "//packages/cmk-mkp-tool:wheel_entrypoint_only",
     ] + select({
-        "@//:gpl_repo": [],
         "@//:gpl+enterprise_repo": [
             "//non-free/packages/cmc-protocols:wheel",
         ],
+        "@//:gpl_repo": [],
     }),
 )
 

@@ -4,12 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import time
-from collections.abc import Generator, Sequence
-from typing import AnyStr, NotRequired, TypedDict
+from collections.abc import Generator, Mapping, Sequence
+from typing import Any, AnyStr, NotRequired, TypedDict
 
 from cmk.agent_based.legacy.v0_unstable import check_levels
 from cmk.agent_based.v2 import get_average, get_rate, get_value_store, IgnoreResultsError
@@ -25,6 +24,8 @@ from cmk.plugins.lib.temperature import to_celsius as to_celsius
 from cmk.plugins.lib.temperature import TwoLevelsType as TwoLevelsType
 
 Number = int | float
+
+type OptFloat = float | None
 
 # ('foo', 5), ('foo', 5, 2, 7), ('foo', 5, None, None)
 PerfDataEntryType = tuple[AnyStr, Number] | tuple[AnyStr, Number, Number | None]
@@ -55,7 +56,7 @@ class CheckTempKwargs(TypedDict):
 ##################################################################################################
 
 
-def minn(a, b):
+def minn(a: OptFloat, b: OptFloat) -> OptFloat:
     if a is None:
         return b
     if b is None:
@@ -63,7 +64,7 @@ def minn(a, b):
     return min(a, b)
 
 
-def maxx(a, b):
+def maxx(a: OptFloat, b: OptFloat) -> OptFloat:
     if a is None:
         return b
     if b is None:
@@ -71,7 +72,8 @@ def maxx(a, b):
     return max(a, b)
 
 
-def _normalize_level(entry):
+# the type annotation shows how silly this function is :-)
+def _normalize_level[T](entry: T) -> T | None:
     """Collapse tuples containing only None to None itself.
 
     >>> _normalize_level(None)
@@ -90,16 +92,16 @@ def _normalize_level(entry):
 
 
 def check_temperature_determine_levels(
-    dlh,
-    usr_warn,
-    usr_crit,
-    usr_warn_lower,
-    usr_crit_lower,
-    dev_warn,
-    dev_crit,
-    dev_warn_lower,
-    dev_crit_lower,
-):
+    dlh: str,
+    usr_warn: OptFloat,
+    usr_crit: OptFloat,
+    usr_warn_lower: OptFloat,
+    usr_crit_lower: OptFloat,
+    dev_warn: OptFloat,
+    dev_crit: OptFloat,
+    dev_warn_lower: OptFloat,
+    dev_crit_lower: OptFloat,
+) -> tuple[OptFloat, OptFloat, OptFloat, OptFloat]:
     # Default values if none of the branches will match.
     warn = crit = warn_lower = crit_lower = None
 
@@ -160,16 +162,16 @@ def check_temperature_determine_levels(
 
 # determine temperature trends. This is a private function, not to be called by checks
 def check_temperature_trend(
-    temp,
-    params,
-    output_unit,
-    crit,
-    crit_lower,
-    unique_name,
-):
+    temp: float,
+    params: Mapping[str, Any],
+    output_unit: str,
+    crit: OptFloat,
+    crit_lower: OptFloat,
+    unique_name: str,
+) -> tuple[int, str]:
     value_store = get_value_store()
 
-    def combiner(status, infotext):
+    def combiner(status: int, infotext: str) -> None:
         if "status" in dir(combiner):
             combiner.status = max(combiner.status, status)  # type: ignore[attr-defined]
         else:
@@ -248,17 +250,17 @@ def check_temperature_trend(
                 else:
                     minutes_left = float("inf")
 
-                def format_minutes(minutes):
+                def format_minutes(minutes: float) -> str:
                     if minutes > 60:  # hours
                         hours = int(minutes / 60.0)
                         minutes += -int(hours) * 60
                         return "%dh %02dm" % (hours, minutes)
                     return "%d minutes" % minutes
 
-                warn, crit = params["trend_timeleft"]
-                if minutes_left <= crit:
+                ml_warn, ml_crit = params["trend_timeleft"]
+                if minutes_left <= ml_crit:
                     combiner(2, "%s until temp limit reached(!!)" % format_minutes(minutes_left))
-                elif minutes_left <= warn:
+                elif minutes_left <= ml_warn:
                     combiner(1, "%s until temp limit reached(!)" % format_minutes(minutes_left))
     except IgnoreResultsError as e:
         combiner(3, str(e))
@@ -266,14 +268,14 @@ def check_temperature_trend(
 
 
 def check_temperature(
-    reading: Number,
+    reading: float,
     params: TempParamType,
-    unique_name: AnyStr | None,
-    dev_unit: AnyStr = "c",  # type: ignore[assignment]
+    unique_name: str | None,
+    dev_unit: str = "c",
     dev_levels: TwoLevelsType | None = None,
     dev_levels_lower: TwoLevelsType | None = None,
     dev_status: StatusType | None = None,
-    dev_status_name: AnyStr = None,  # type: ignore[assignment]
+    dev_status_name: str | None = None,
 ) -> CheckType:
     """Check temperature levels and trends.
 
@@ -281,14 +283,14 @@ def check_temperature(
     temperature reading and warn/crit on failed levels or trends.
 
     Args:
-        reading (Number): The numeric temperature value itself.
-        params (dict): A dictionary giving the user's configuration. See below.
-        unique_name (str): The name under which to track perf-data.
-        dev_unit (str): The unit. May be one of 'c', 'f' or 'k'. Default is 'c'.
-        dev_levels (LevelsType | None): The upper levels (warn, crit)
-        dev_levels_lower (LevelsType | None): The lower levels (warn, crit)
-        dev_status (Number | None): The status according to the device itself.
-        dev_status_name (AnyStr | None): What the device thinks the status should be called.
+        reading: The numeric temperature value itself.
+        params: A dictionary giving the user's configuration. See below.
+        unique_name: The name under which to track perf-data.
+        dev_unit: The unit. May be one of 'c', 'f' or 'k'. Default is 'c'.
+        dev_levels: The upper levels (warn, crit)
+        dev_levels_lower: The lower levels (warn, crit)
+        dev_status: The status according to the device itself.
+        dev_status_name: What the device thinks the status should be called.
 
     Configuration:
         The parameter `params` may contain user configurable settings with the following keys:
@@ -384,10 +386,10 @@ def check_temperature(
             usr_levelstext_lower = f" (warn/crit below {render_temp(usr_warn_lower, output_unit)}/{render_temp(usr_crit_lower, output_unit)} {temp_unitsym[output_unit]})"
 
         if dev_levels:
-            dev_levelstext = f" (device warn/crit at {render_temp(dev_warn, output_unit)}/{render_temp(dev_crit, output_unit)} {temp_unitsym[output_unit]})"
+            dev_levelstext = f" (device warn/crit at {'never' if dev_warn is None else render_temp(dev_warn, output_unit)}/{'never' if dev_crit is None else render_temp(dev_crit, output_unit)} {temp_unitsym[output_unit]})"
 
         if dev_levels_lower:
-            dev_levelstext_lower = f" (device warn/crit below {render_temp(dev_warn_lower, output_unit)}/{render_temp(dev_crit_lower, output_unit)} {temp_unitsym[output_unit]})"
+            dev_levelstext_lower = f" (device warn/crit below {'never' if dev_warn_lower is None else render_temp(dev_warn_lower, output_unit)}/{'never' if dev_crit_lower is None else render_temp(dev_crit_lower, output_unit)} {temp_unitsym[output_unit]})"
 
         # Output only levels that are relevant when computing the state
         if dlh == "usr":
@@ -422,7 +424,7 @@ def check_temperature(
             status = max(status, dev_status)
 
     if dev_status is not None and dev_status != 0 and dev_status_name:  # omit status in OK case
-        infotext += ", State on device: %s" % dev_status_name  # type: ignore[str-bytes-safe]
+        infotext += ", State on device: %s" % dev_status_name
 
     # all checks specify a unique_name but when multiple sensors are handled through
     #   check_temperature_list, trend is only calculated for the average and then the individual

@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import dataclasses
 import math
@@ -17,13 +16,15 @@ from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import CheckResult, get_average, get_rate, Metric, Result, State
 from cmk.agent_based.v2.render import timespan
 
-StatusType = int
-TempUnitType = str
-LevelModes = str
+type StatusType = int
+type TempUnitType = str
+type LevelModes = str
 
-TwoLevelsType = tuple[float | None, float | None]
-FourLevelsType = tuple[float | None, float | None, float | None, float | None]
-LevelsType = TwoLevelsType | FourLevelsType
+type OptFloat = float | None
+
+type TwoLevelsType = tuple[OptFloat, OptFloat]
+type FourLevelsType = tuple[OptFloat, OptFloat, OptFloat, OptFloat]
+type LevelsType = TwoLevelsType | FourLevelsType
 
 
 class TrendComputeDict(TypedDict, total=False):
@@ -45,7 +46,7 @@ class TempParamDict(TypedDict, total=False):
 TempParamType = None | TwoLevelsType | FourLevelsType | TempParamDict
 
 
-def fahrenheit_to_celsius(tempf, relative=False):
+def fahrenheit_to_celsius[T: (float, None, OptFloat)](tempf: T, relative: bool = False) -> T:
     if tempf is None:
         return None
 
@@ -54,7 +55,7 @@ def fahrenheit_to_celsius(tempf, relative=False):
     return (float(tempf) - 32) * (5.0 / 9.0)
 
 
-def celsius_to_fahrenheit(tempc, relative=False):
+def celsius_to_fahrenheit[T: (None, float, OptFloat)](tempc: T, relative: bool = False) -> T:
     if tempc is None:
         return None
 
@@ -63,7 +64,9 @@ def celsius_to_fahrenheit(tempc, relative=False):
     return (float(tempc) * (9.0 / 5.0)) + 32
 
 
-def to_celsius(reading, unit, relative=False):
+def to_celsius[T: (float, None, OptFloat, tuple[OptFloat, ...])](
+    reading: T, unit: str, relative: bool = False
+) -> T:
     if isinstance(reading, tuple):
         return tuple(to_celsius(x, unit, relative) for x in reading)
     if unit == "f":
@@ -77,7 +80,7 @@ def to_celsius(reading, unit, relative=False):
     return reading
 
 
-def from_celsius(tempc, unit, relative=False):
+def from_celsius(tempc: float, unit: str, relative: bool = False) -> float:
     if unit == "f":
         return celsius_to_fahrenheit(tempc, relative)
     if unit == "k":
@@ -272,7 +275,7 @@ def check_temperature(
     *,
     unique_name: str,
     value_store: MutableMapping[str, Any],
-    dev_unit: str | None = "c",
+    dev_unit: str = "c",
     dev_levels: tuple[float, float] | None = None,
     dev_levels_lower: tuple[float, float] | None = None,
     dev_status: StatusType | None = None,
@@ -287,7 +290,7 @@ def check_temperature(
     *,
     unique_name: None = None,
     value_store: None = None,
-    dev_unit: str | None = "c",
+    dev_unit: str = "c",
     dev_levels: tuple[float, float] | None = None,
     dev_levels_lower: tuple[float, float] | None = None,
     dev_status: StatusType | None = None,
@@ -301,7 +304,7 @@ def check_temperature(
     *,
     unique_name: str | None = None,
     value_store: MutableMapping[str, Any] | None = None,
-    dev_unit: str | None = "c",
+    dev_unit: str = "c",
     dev_levels: tuple[float, float] | None = None,
     dev_levels_lower: tuple[float, float] | None = None,
     dev_status: StatusType | None = None,
@@ -362,8 +365,16 @@ def check_temperature(
     # User levels are already in Celsius
     usr_levels_upper = parse_levels(params.get("levels"))
     usr_levels_lower = parse_levels(params.get("levels_lower"))
-    dev_levels_upper = to_celsius(dev_levels, dev_unit)
-    dev_levels_lower = to_celsius(dev_levels_lower, dev_unit)
+    dev_levels_upper = (
+        None
+        if dev_levels is None
+        else (to_celsius(dev_levels[0], dev_unit), to_celsius(dev_levels[1], dev_unit))
+    )
+    dev_levels_lower = (
+        None
+        if dev_levels_lower is None
+        else (to_celsius(dev_levels_lower[0], dev_unit), to_celsius(dev_levels_lower[1], dev_unit))
+    )
 
     device_levels_handling = params.get("device_levels_handling", "usrdefault")
 

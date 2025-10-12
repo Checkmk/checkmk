@@ -210,7 +210,8 @@ def test_check_temperature(
     assert result == expected
 
 
-def unix_ts(datetime_obj, epoch=dt.datetime(1970, 1, 1)):
+def unix_ts(datetime_obj: dt.datetime) -> float:
+    epoch = dt.datetime(1970, 1, 1)
     return (datetime_obj - epoch).total_seconds()
 
 

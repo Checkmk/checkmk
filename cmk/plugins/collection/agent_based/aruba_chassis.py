@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
 from collections.abc import Mapping
 from typing import NamedTuple
 
@@ -53,7 +51,7 @@ default_chassis_temperature_parameters = TempParamDict(
 
 
 def _string_to_celsius(temp_str: str) -> float:
-    return float(to_celsius(temp_str[:-1], temp_str[-1].lower()))
+    return to_celsius(float(temp_str[:-1]), temp_str[-1].lower())
 
 
 def parse_aruba_chassis(string_table: StringTable) -> Section:

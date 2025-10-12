@@ -454,6 +454,7 @@ node_hardware_video = Node(
     title=Title("Graphic cards"),
     table=Table(
         columns={
+            "slot": TextField(Title("Slot")),
             "name": TextField(Title("Graphic card name")),
             "subsystem": TextField(Title("Vendor and device ID")),
             "driver": TextField(Title("Driver")),

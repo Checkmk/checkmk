@@ -183,10 +183,7 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "azure_ad_sync",
         "azure_agent_info",
         "azure_sites",
-        # TEMPORARY:
         "azure_v2_agent_info",
-        "azure_v2_sites",
-        # -----
         "azure_usagedetails",
         "barracuda_mail_latency",
         "barracuda_mailqueues",

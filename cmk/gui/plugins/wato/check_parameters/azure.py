@@ -163,18 +163,6 @@ rulespec_registry.register(
     )
 )
 
-# TODO: migrate and move to new folder struct
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="azure_v2_webserver",
-        group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_webserver,
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_webserver,
-        title=lambda: _("Azure web servers (IIS)"),
-    )
-)
-
 
 def _item_spec_azure_storageaccounts():
     return TextInput(

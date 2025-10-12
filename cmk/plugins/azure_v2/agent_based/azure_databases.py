@@ -9,6 +9,7 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    InventoryPlugin,
     render,
     Result,
     Service,
@@ -18,6 +19,7 @@ from cmk.plugins.azure_v2.agent_based.lib import (
     CheckFunctionWithoutItem,
     create_check_metrics_function_single,
     create_discover_by_metrics_function_single,
+    create_inventory_function,
     get_service_labels_from_resource_tags,
     iter_resource_attributes,
     MetricData,
@@ -26,6 +28,12 @@ from cmk.plugins.azure_v2.agent_based.lib import (
 )
 
 # https://www.unigma.com/2016/07/11/best-practices-for-monitoring-microsoft-azure/
+
+
+inventory_plugin_azure_databases = InventoryPlugin(
+    name="azure_v2_databases",
+    inventory_function=create_inventory_function(),
+)
 
 
 def create_check_azure_databases_storage() -> CheckFunctionWithoutItem:

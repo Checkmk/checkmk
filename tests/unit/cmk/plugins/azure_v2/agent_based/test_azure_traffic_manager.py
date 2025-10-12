@@ -11,8 +11,14 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, State
-from cmk.plugins.azure_v2.agent_based.azure_traffic_manager import check_probe_state, check_qps
+from cmk.plugins.azure_v2.agent_based.azure_traffic_manager import (
+    check_probe_state,
+    check_qps,
+    inventory_plugin_azure_traffic_manager,
+)
 from cmk.plugins.azure_v2.agent_based.lib import AzureMetric, Resource
+
+from .inventory import get_inventory_value
 
 
 @pytest.mark.parametrize(
@@ -143,3 +149,23 @@ def test_check_probe_state(
 def test_check_probe_state_stale(section: Resource) -> None:
     with pytest.raises(IgnoreResultsError, match="Data not present at the moment"):
         list(check_probe_state({}, section))
+
+
+def test_azure_traffic_manager_inventory() -> None:
+    section = Resource(
+        id="/subscriptions/c17d121d-dd5c-4156-875f-1df9862eef93/resourceGroups/Group1/providers/Microsoft.Network/trafficmanagerprofiles/traffic-manager-1",
+        name="traffic-manager-1",
+        type="Microsoft.Network/trafficmanagerprofiles",
+        group="BurningMan",
+        location="westeurope",
+        metrics={
+            "total_QpsByEndpoint": AzureMetric(
+                name="QpsByEndpoint",
+                aggregation="total",
+                value=6000.0,
+                unit="count",
+            ),
+        },
+    )
+    inventory = inventory_plugin_azure_traffic_manager.inventory_function(section)
+    assert get_inventory_value(inventory, "Region") == "westeurope"

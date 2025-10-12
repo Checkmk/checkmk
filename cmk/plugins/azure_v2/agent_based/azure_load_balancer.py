@@ -16,6 +16,8 @@ from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
     IgnoreResultsError,
+    InventoryPlugin,
+    InventoryResult,
     Metric,
     render,
     Result,
@@ -25,6 +27,7 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.azure_v2.agent_based.lib import (
     create_check_metrics_function_single,
+    create_inventory_function,
     FrontendIpConfiguration,
     get_service_labels_from_resource_tags,
     MetricData,
@@ -77,6 +80,16 @@ class LoadBalancer(BaseModel):
 
 
 Section = Mapping[str, LoadBalancer]
+
+
+def load_balancer_inventory(section: LoadBalancer) -> InventoryResult:
+    yield from create_inventory_function()(section.resource)
+
+
+inventory_plugin_azure_load_balancer = InventoryPlugin(
+    name="azure_v2_loadbalancers",
+    inventory_function=load_balancer_inventory,
+)
 
 
 def parse_load_balancer(string_table: StringTable) -> LoadBalancer | None:

@@ -12,14 +12,22 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     IgnoreResultsError,
+    InventoryPlugin,
     Result,
     State,
 )
 from cmk.plugins.azure_v2.agent_based.lib import (
     create_discover_by_metrics_function_single,
+    create_inventory_function,
     parse_resource,
     Resource,
 )
+
+inventory_plugin_azure_traffic_manager = InventoryPlugin(
+    name="azure_v2_trafficmanagerprofiles",
+    inventory_function=create_inventory_function(),
+)
+
 
 agent_section_azure_trafficmanagerprofiles = AgentSection(
     name="azure_v2_trafficmanagerprofiles",

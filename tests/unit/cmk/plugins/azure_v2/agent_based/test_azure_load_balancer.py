@@ -18,6 +18,7 @@ from cmk.plugins.azure_v2.agent_based.azure_load_balancer import (
     check_health,
     check_snat,
     InboundNatRule,
+    inventory_plugin_azure_load_balancer,
     LoadBalancer,
     LoadBalancerBackendAddress,
     LoadBalancerBackendPool,
@@ -30,6 +31,8 @@ from cmk.plugins.azure_v2.agent_based.lib import (
     PublicIP,
     Resource,
 )
+
+from .inventory import get_inventory_value
 
 SECTION = LoadBalancer(
     resource=Resource(
@@ -442,3 +445,8 @@ def test_check_health(
 def test_check_health_stale(section: LoadBalancer) -> None:
     with pytest.raises(IgnoreResultsError, match="Data not present at the moment"):
         list(check_health({}, section))
+
+
+def test_azure_load_balancer_inventory() -> None:
+    inventory = inventory_plugin_azure_load_balancer.inventory_function(SECTION)
+    assert get_inventory_value(inventory, "Region") == "fijieast"

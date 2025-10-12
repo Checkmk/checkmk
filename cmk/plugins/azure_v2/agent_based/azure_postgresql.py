@@ -6,7 +6,7 @@
 from collections.abc import Callable, Mapping
 from typing import Any
 
-from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, render
+from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, InventoryPlugin, render
 from cmk.plugins.azure_v2.agent_based.lib import (
     check_connections,
     check_cpu,
@@ -17,6 +17,7 @@ from cmk.plugins.azure_v2.agent_based.lib import (
     create_check_metrics_function_single,
     create_discover_by_metrics_function,
     create_discover_by_metrics_function_single,
+    create_inventory_function,
     MetricData,
     Resource,
     Section,
@@ -26,6 +27,13 @@ DB_POSTGRESQL_RESOURCE_TYPES = [
     "Microsoft.DBforPostgreSQL/servers",
     "Microsoft.DBforPostgreSQL/flexibleServers",
 ]
+
+
+inventory_plugin_azure_postgresql = InventoryPlugin(
+    name="azure_v2_postgresql",
+    sections=["azure_v2_servers"],
+    inventory_function=create_inventory_function(),
+)
 
 
 def discover_azure_postgresql_memory(section: Resource) -> DiscoveryResult:

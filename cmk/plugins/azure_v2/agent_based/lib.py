@@ -526,44 +526,50 @@ def check_storage() -> CheckFunctionWithoutItem:
     )
 
 
-def inventory_common_azure(section: Resource) -> InventoryResult:
-    path = ["software", "applications", "azure"]
+# We wrap this so that potentially we can pass in extra data in the future,
+# per resource type.
+def create_inventory_function() -> Callable[[Resource], InventoryResult]:
+    def inventory_common_azure(section: Resource) -> InventoryResult:
+        type_to_path = [component.replace(".", "_") for component in section.type.split("/")]
+        path = ["software", "applications", "azure", *type_to_path]
 
-    # Table label -> resource dict key
-    mapping = {
-        "Object": "type",
-        "Name": "name",
-        "Tenant ID": "tenant_id",
-        "Subscription ID": "subscription",
-        "Subscription name": "subscription_name",
-        "Resource group": "group",
-        "Region": "location",
-    }
+        # Table label -> resource dict key
+        mapping = {
+            "Object": "type",
+            "Name": "name",
+            "Tenant ID": "tenant_id",
+            "Subscription ID": "subscription",
+            "Subscription name": "subscription_name",
+            "Resource group": "group",
+            "Region": "location",
+        }
 
-    hardcoded_values = {
-        "Cloud provider": "Azure",
-        "Entity": "Resource",
-    }
+        hardcoded_values = {
+            "Cloud provider": "Azure",
+            "Entity": "Resource",
+        }
 
-    for label, value in mapping.items() | hardcoded_values.items():
-        if label in mapping:
-            row_value = getattr(section, value, None)
-        else:
-            row_value = value
+        for label, value in mapping.items() | hardcoded_values.items():
+            if label in mapping:
+                row_value = getattr(section, value, None)
+            else:
+                row_value = value
 
-        if row_value is not None:
+            if row_value is not None:
+                yield TableRow(
+                    path=path + ["metadata"],
+                    key_columns={"information": label},
+                    inventory_columns={"value": row_value},
+                )
+
+        for tag_key, tag_value in (section.tags or {}).items():
             yield TableRow(
-                path=path + ["metadata"],
-                key_columns={"information": label},
-                inventory_columns={"value": row_value},
+                path=path + ["tags"],
+                key_columns={"name": tag_key},
+                inventory_columns={"value": tag_value},
             )
 
-    for tag_key, tag_value in (section.tags or {}).items():
-        yield TableRow(
-            path=path + ["tags"],
-            key_columns={"name": tag_key},
-            inventory_columns={"value": tag_value},
-        )
+    return inventory_common_azure
 
 
 def _threshold_hit_for_time[NumberT: (int, float)](

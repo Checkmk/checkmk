@@ -44,7 +44,7 @@ from cmk.plugins.azure_v2.agent_based.lib import (
     create_check_metrics_function_single,
     create_discover_by_metrics_function,
     create_discover_by_metrics_function_single,
-    inventory_common_azure,
+    create_inventory_function,
     iter_resource_attributes,
     MetricData,
     parse_resources,
@@ -777,7 +777,7 @@ def test_iter_resource_attributes_default_keys(
 
 
 def test_inventory_common_azure() -> None:
-    inventory = list(inventory_common_azure(PARSED_RESOURCE))
+    inventory = list(create_inventory_function()(PARSED_RESOURCE))
 
     expected_metadata: dict[int | float | str, str] = {
         "Object": "Microsoft.DBforMySQL/servers",

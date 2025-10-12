@@ -13,6 +13,8 @@ from cmk.agent_based.v2 import (
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    InventoryPlugin,
+    InventoryResult,
     render,
     Result,
     Service,
@@ -21,6 +23,7 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.azure_v2.agent_based.lib import (
     create_check_metrics_function_single,
+    create_inventory_function,
     get_service_labels_from_resource_tags,
     iter_resource_attributes,
     MetricData,
@@ -88,6 +91,16 @@ def parse_virtual_network_gateway(string_table: StringTable) -> VNetGateway | No
 agent_section_azure_virtualnetworkgateways = AgentSection(
     name="azure_v2_virtualnetworkgateways",
     parse_function=parse_virtual_network_gateway,
+)
+
+
+def virtualnetworkgateways_inventory(section: VNetGateway) -> InventoryResult:
+    yield from create_inventory_function()(section.resource)
+
+
+inventory_plugin_azure_virtualnetworkgateways = InventoryPlugin(
+    name="azure_v2_virtualnetworkgateways",
+    inventory_function=virtualnetworkgateways_inventory,
 )
 
 

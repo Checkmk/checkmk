@@ -16,8 +16,11 @@ from cmk.plugins.azure_v2.agent_based.azure_databases import (
     create_check_azure_databases_deadlock,
     create_check_azure_databases_dtu,
     create_check_azure_databases_storage,
+    inventory_plugin_azure_databases,
 )
 from cmk.plugins.azure_v2.agent_based.lib import AzureMetric, Resource
+
+from .inventory import get_inventory_value
 
 LEVELS = (5.0, 20.0)
 METRIC_CONN_FAILED_OK = Metric(name="connections_failed_rate", value=10)
@@ -371,3 +374,23 @@ def test_check_azure_databases_connections(
     expected_result: Sequence[Result | Metric],
 ) -> None:
     assert list(create_check_azure_databases_connections()(params, section)) == expected_result
+
+
+def test_azure_databases_inventory() -> None:
+    section = Resource(
+        id="/subscriptions/1234/resourceGroups/group/foo/bar/foo",
+        name="foo",
+        type="foo/bar",
+        group="group",
+        location="westeurope",
+        metrics={
+            "average_storage_percent": AzureMetric(
+                name="storage_percent",
+                aggregation="average",
+                value=10,
+                unit="percent",
+            )
+        },
+    )
+    inventory = inventory_plugin_azure_databases.inventory_function(section)
+    assert get_inventory_value(inventory, "Region") == "westeurope"

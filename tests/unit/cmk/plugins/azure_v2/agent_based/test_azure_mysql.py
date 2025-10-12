@@ -16,12 +16,15 @@ from cmk.plugins.azure_v2.agent_based.azure_mysql import (
     check_plugin_azure_mysql_memory,
     check_plugin_azure_mysql_replication,
     check_replication,
+    inventory_plugin_azure_mysql,
 )
 from cmk.plugins.azure_v2.agent_based.lib import (
     AzureMetric,
     check_connections,
     Resource,
 )
+
+from .inventory import get_inventory_value
 
 
 @pytest.mark.parametrize(
@@ -248,3 +251,23 @@ def test_check_memory_defaults() -> None:
         list(check_plugin_azure_mysql_memory.check_function("Memory", params, {"Memory": section}))
         == expected
     )
+
+
+def test_azure_mysql_inventory() -> None:
+    section = Resource(
+        id="/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/servers/checkmk-mysql-single-server",
+        name="checkmk-mysql-single-server",
+        type="Microsoft.DBforMySQL/servers",
+        group="BurningMan",
+        location="westeurope",
+        metrics={
+            "maximum_seconds_behind_master": AzureMetric(
+                name="seconds_behind_master",
+                aggregation="maximum",
+                value=2.0,
+                unit="seconds",
+            ),
+        },
+    )
+    inventory = inventory_plugin_azure_mysql.inventory_function(section)
+    assert get_inventory_value(inventory, "Region") == "westeurope"

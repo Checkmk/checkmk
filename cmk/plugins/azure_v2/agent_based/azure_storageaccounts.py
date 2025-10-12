@@ -8,14 +8,21 @@ from cmk.agent_based.v2 import (
     AgentSection,
     check_levels,
     CheckPlugin,
+    InventoryPlugin,
     render,
 )
 from cmk.plugins.azure_v2.agent_based.lib import (
     CheckFunctionWithoutItem,
     create_check_metrics_function_single,
     create_discover_by_metrics_function_single,
+    create_inventory_function,
     MetricData,
     parse_resource,
+)
+
+inventory_plugin_azure_storageaccounts = InventoryPlugin(
+    name="azure_v2_storageaccounts",
+    inventory_function=create_inventory_function(),
 )
 
 

@@ -15,12 +15,15 @@ from cmk.plugins.azure_v2.agent_based.azure_storageaccounts import (
     check_plugin_azure_storageaccounts,
     check_plugin_azure_storageaccounts_flow,
     check_plugin_azure_storageaccounts_performance,
+    inventory_plugin_azure_storageaccounts,
 )
 from cmk.plugins.azure_v2.agent_based.lib import (
     AzureMetric,
     parse_resource,
     Resource,
 )
+
+from .inventory import get_inventory_value
 
 MiB = 1024**2
 STRING_TABLE_STORAGETESTACCOUNT = [
@@ -334,3 +337,9 @@ def test_check_azure_storageaccounts_performance_defaults():
         Result(state=State.CRIT, summary="Availability: 97.98% (warn/crit below 99.80%/99.00%)"),
         Metric("availability", 97.98),
     ]
+
+
+def test_azure_storageaccounts_inventory() -> None:
+    resource = _parse_section(STRING_TABLE_STORAGETESTACCOUNT)
+    inventory = inventory_plugin_azure_storageaccounts.inventory_function(resource)
+    assert get_inventory_value(inventory, "Region") == "westeurope"

@@ -14,6 +14,7 @@ from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
     get_value_store,
+    InventoryPlugin,
     render,
     Result,
     Service,
@@ -23,6 +24,7 @@ from cmk.plugins.azure_v2.agent_based.lib import (
     create_check_metrics_function_single,
     create_discover_by_metrics_function,
     create_discover_by_metrics_function_single,
+    create_inventory_function,
     get_service_labels_from_resource_tags,
     iter_resource_attributes,
     MetricData,
@@ -58,6 +60,12 @@ class VMStatus(NamedTuple):
 
 
 VMSummaryParams = Mapping[str, Mapping[str, tuple[float, float]]]
+
+
+inventory_plugin_azure_virtualmachines = InventoryPlugin(
+    name="azure_v2_virtualmachines",
+    inventory_function=create_inventory_function(),
+)
 
 
 agent_section_azure_virtualmachines = AgentSection(

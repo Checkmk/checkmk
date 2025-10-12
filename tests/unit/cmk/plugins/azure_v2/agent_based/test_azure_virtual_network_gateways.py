@@ -20,6 +20,7 @@ from cmk.plugins.azure_v2.agent_based.azure_virtual_network_gateways import (
     check_virtual_network_gateway_settings,
     discover_virtual_network_gateway,
     discover_virtual_network_gateway_peering,
+    inventory_plugin_azure_virtualnetworkgateways,
     parse_virtual_network_gateway,
     PeeringAddresses,
     RemoteVnetPeering,
@@ -28,6 +29,8 @@ from cmk.plugins.azure_v2.agent_based.azure_virtual_network_gateways import (
     VNetGWSettings,
 )
 from cmk.plugins.azure_v2.agent_based.lib import AzureMetric, Resource
+
+from .inventory import get_inventory_value
 
 SECTION = VNetGateway(
     name="vpn-001",
@@ -663,3 +666,8 @@ def test_discover_virtual_network_gateway_peering(section, expected_discovery):
 )
 def test_check_virtual_network_gateway_peering(section, item, expected_result):
     assert list(check_virtual_network_gateway_peering(item, section)) == expected_result
+
+
+def test_azure_virtual_network_gateways_inventory() -> None:
+    inventory = inventory_plugin_azure_virtualnetworkgateways.inventory_function(SECTION)
+    assert get_inventory_value(inventory, "Region") == "maxwellmonteswest"

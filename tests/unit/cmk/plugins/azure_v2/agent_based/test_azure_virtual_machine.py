@@ -28,9 +28,12 @@ from cmk.plugins.azure_v2.agent_based.azure_virtual_machine import (
     discover_azure_virtual_machine,
     discover_azure_vm_cpu_utilization,
     discover_azure_vm_network_io,
+    inventory_plugin_azure_virtualmachines,
 )
 from cmk.plugins.azure_v2.agent_based.lib import AzureMetric, Resource
 from cmk.plugins.lib import interfaces
+
+from .inventory import get_inventory_value
 
 SECTION = Resource(
     id="/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourceGroups/test1/providers/Microsoft.Compute/virtualMachines/VM-test-1",
@@ -397,3 +400,8 @@ def test_check_azure_vm_network_io(
     expected_result: CheckResult,
 ) -> None:
     assert list(check_azure_vm_network_io("Network IO", params, section)) == expected_result
+
+
+def test_azure_virtualmachines_inventory() -> None:
+    inventory = inventory_plugin_azure_virtualmachines.inventory_function(SECTION)
+    assert get_inventory_value(inventory, "Region") == "uksouth"

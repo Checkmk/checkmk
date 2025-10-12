@@ -671,6 +671,7 @@ def test_registered_display_hints() -> None:
         ".hardware.video:*.driver_version",
         ".hardware.video:*.graphic_memory",
         ".hardware.video:*.name",
+        ".hardware.video:*.slot",
         ".hardware.video:*.subsystem",
         ".hardware.volumes.",
         ".hardware.volumes.physical_volumes:",

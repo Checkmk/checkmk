@@ -472,6 +472,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".hardware.video:": {
             "title": _l("Graphic cards"),
             "keyorder": [
+                "slot",
                 "name",
                 "subsystem",
                 "driver",
@@ -481,6 +482,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
             ],
         },
         ".hardware.video:*.": {"title": _l("Graphic card %d")},
+        ".hardware.video:*.slot": {"title": _l("Slot")},
         ".hardware.video:*.name": {"title": _l("Graphic card name")},
         ".hardware.video:*.subsystem": {"title": _l("Vendor and device ID")},
         ".hardware.video:*.driver": {"title": _l("Driver")},

@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module defines various classes and functions for handling REST API requests in Checkmk.
 
+# mypy: disable-error-code="mutable-override"
+
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 

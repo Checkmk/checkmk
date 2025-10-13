@@ -7,6 +7,8 @@ from cmk.gui.fields.base import BaseSchema
 from cmk.gui.fields.definitions import customer_field_response
 from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, DomainObjectCollection
 
+# mypy: disable-error-code="mutable-override"
+
 
 class ServiceGroupExtensions(BaseSchema):
     customer = customer_field_response()

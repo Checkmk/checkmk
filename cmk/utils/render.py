@@ -7,6 +7,8 @@ text representations optimized for human beings - with optional localization.
 The resulting strings are not ment to be parsed into values again later. They
 are just for optical output purposes."""
 
+# mypy: disable-error-code="mutable-override"
+
 import abc
 import math
 import time

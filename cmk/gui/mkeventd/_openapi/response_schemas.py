@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="mutable-override"
+
 from typing import get_args
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation

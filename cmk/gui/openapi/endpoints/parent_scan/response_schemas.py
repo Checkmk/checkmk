@@ -5,6 +5,8 @@
 from cmk import fields
 from cmk.gui.openapi.restful_objects.response_schemas import BackgroundJobStatus, DomainObject
 
+# mypy: disable-error-code="mutable-override"
+
 
 class BackgroundJobStatusObject(DomainObject):
     domainType = fields.Constant(

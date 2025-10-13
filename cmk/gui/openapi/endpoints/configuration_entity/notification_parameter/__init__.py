@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Configuration entities / Notification Parameter
 
+# mypy: disable-error-code="mutable-override"
+
 These endpoints can be used to manipulate notification parameter via the configuration
 entity API, for more information see "Configuration entities" endpoints."""
 

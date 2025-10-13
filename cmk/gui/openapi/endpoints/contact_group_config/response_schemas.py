@@ -8,6 +8,8 @@ from cmk.gui.fields.definitions import customer_field_response
 from cmk.gui.openapi.endpoints.contact_group_config.common import InventoryPaths
 from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, DomainObjectCollection
 
+# mypy: disable-error-code="mutable-override"
+
 
 class ContactGroupExtensions(BaseSchema):
     customer = customer_field_response()

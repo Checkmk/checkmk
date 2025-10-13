@@ -7,6 +7,8 @@ Module which contains functions to parse and write out the performance data coll
 Cluster Collector for the Kubernetes Monitoring solution
 """
 
+# mypy: disable-error-code="mutable-override"
+
 from __future__ import annotations
 
 import enum

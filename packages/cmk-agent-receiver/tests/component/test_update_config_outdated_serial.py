@@ -5,7 +5,7 @@
 import uuid
 
 from cmk.agent_receiver.config import Config
-from cmk.relay_protocols.tasks import RelayConfigTask
+from cmk.relay_protocols.tasks import RelayConfigTask, TaskStatus
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
 from cmk.testlib.agent_receiver.config_file_system import create_config_folder
 from cmk.testlib.agent_receiver.site_mock import SiteMock
@@ -45,7 +45,7 @@ def test_config_update_triggered_by_outdated_serial_is_generated_once(
     site_context: Config,
     agent_receiver: AgentReceiverClient,
 ) -> None:
-    # register two relays
+    # register one relay
     relay_id_1 = str(uuid.uuid4())
     site.set_scenario([relay_id_1])
     cf = create_config_folder(root=site_context.omd_root, relays=[relay_id_1])
@@ -64,3 +64,48 @@ def test_config_update_triggered_by_outdated_serial_is_generated_once(
     tasklist = get_relay_tasks(agent_receiver, relay_id_1, status="PENDING").tasks
     assert len(tasklist) == 1
     assert tasklist[0].id == task.id
+
+
+def test_config_update_triggered_by_old_serial_twice_in_a_row(
+    site: SiteMock,
+    site_context: Config,
+    agent_receiver: AgentReceiverClient,
+) -> None:
+    # register one relay
+    relay_id_1 = str(uuid.uuid4())
+    site.set_scenario([relay_id_1])
+    initial_config = create_config_folder(root=site_context.omd_root, relays=[relay_id_1])
+
+    # relays ask with an outdated serial
+    outdated_serial = "some-old-serial"
+    agent_receiver.set_serial(outdated_serial)
+
+    tasks_a_first = get_relay_tasks(agent_receiver, relay_id_1, status="PENDING").tasks
+
+    # assert the initial config has been created
+    assert len(tasks_a_first) == 1, (
+        f"Expected exactly one task for relay {relay_id_1}, got: {tasks_a_first}"
+    )
+    first_task = tasks_a_first[0]
+    assert isinstance(first_task.spec, RelayConfigTask)
+    assert first_task.status == TaskStatus.PENDING
+    assert first_task.spec.serial == initial_config.serial
+    initial_config.assert_tar_content(relay_id_1, first_task.spec.tar_data)
+
+    # new configuration in the AR (new serial)
+    new_config = create_config_folder(root=site_context.omd_root, relays=[relay_id_1])
+
+    # relay sends again an outdated serial
+    agent_receiver.set_serial(outdated_serial)
+
+    tasks_a_after = get_relay_tasks(agent_receiver, relay_id_1, status="PENDING").tasks
+
+    # assert the new config has been created
+    assert len(tasks_a_after) == 2, (
+        f"Expected exactly two tasks for relay {relay_id_1}, got: {tasks_a_after}"
+    )
+    new_task_config = tasks_a_after[1]
+    assert isinstance(new_task_config.spec, RelayConfigTask)
+    assert new_task_config.status == TaskStatus.PENDING
+    assert new_task_config.spec.serial == new_config.serial
+    new_config.assert_tar_content(relay_id_1, new_task_config.spec.tar_data)

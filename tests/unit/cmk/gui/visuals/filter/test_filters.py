@@ -814,6 +814,61 @@ filter_table_tests = [
     # Testing base class FilterInvtableVersion
     FilterTableTest(
         ident="invswpac_package_version",
+        request_vars=[],
+        rows=[
+            {"invswpac_package_version": "0.5"},
+            {"invswpac_package_version": "0.5.1"},
+            {"invswpac_package_version": "1.5.1"},
+            {"invswpac_package_version": "2.0.0"},
+            {"invswpac_package_version": "4.5.1"},
+        ],
+        expected_rows=[
+            {"invswpac_package_version": "0.5"},
+            {"invswpac_package_version": "0.5.1"},
+            {"invswpac_package_version": "1.5.1"},
+            {"invswpac_package_version": "2.0.0"},
+            {"invswpac_package_version": "4.5.1"},
+        ],
+    ),
+    FilterTableTest(
+        ident="invswpac_package_version",
+        request_vars=[
+            ("invswpac_package_version_from", "1.0"),
+        ],
+        rows=[
+            {"invswpac_package_version": "0.5"},
+            {"invswpac_package_version": "0.5.1"},
+            {"invswpac_package_version": "1.5.1"},
+            {"invswpac_package_version": "2.0.0"},
+            {"invswpac_package_version": "4.5.1"},
+        ],
+        expected_rows=[
+            {"invswpac_package_version": "1.5.1"},
+            {"invswpac_package_version": "2.0.0"},
+            {"invswpac_package_version": "4.5.1"},
+        ],
+    ),
+    FilterTableTest(
+        ident="invswpac_package_version",
+        request_vars=[
+            ("invswpac_package_version_until", "3.0"),
+        ],
+        rows=[
+            {"invswpac_package_version": "0.5"},
+            {"invswpac_package_version": "0.5.1"},
+            {"invswpac_package_version": "1.5.1"},
+            {"invswpac_package_version": "2.0.0"},
+            {"invswpac_package_version": "4.5.1"},
+        ],
+        expected_rows=[
+            {"invswpac_package_version": "0.5"},
+            {"invswpac_package_version": "0.5.1"},
+            {"invswpac_package_version": "1.5.1"},
+            {"invswpac_package_version": "2.0.0"},
+        ],
+    ),
+    FilterTableTest(
+        ident="invswpac_package_version",
         request_vars=[
             ("invswpac_package_version_from", "1.0"),
             ("invswpac_package_version_until", "3.0"),
@@ -827,6 +882,41 @@ filter_table_tests = [
         ],
         expected_rows=[
             {"invswpac_package_version": "1.5.1"},
+            {"invswpac_package_version": "2.0.0"},
+        ],
+    ),
+    FilterTableTest(
+        ident="invswpac_package_version",
+        request_vars=[],
+        rows=[
+            {"invswpac_package_version": "0.5"},
+            {"invswpac_package_version": "0.5.1"},
+            {"invswpac_package_version": None},
+            {"invswpac_package_version": "2.0.0"},
+            {"invswpac_package_version": "4.5.1"},
+        ],
+        expected_rows=[
+            {"invswpac_package_version": "0.5"},
+            {"invswpac_package_version": "0.5.1"},
+            {"invswpac_package_version": None},
+            {"invswpac_package_version": "2.0.0"},
+            {"invswpac_package_version": "4.5.1"},
+        ],
+    ),
+    FilterTableTest(
+        ident="invswpac_package_version",
+        request_vars=[
+            ("invswpac_package_version_from", "1.0"),
+            ("invswpac_package_version_until", "3.0"),
+        ],
+        rows=[
+            {"invswpac_package_version": "0.5"},
+            {"invswpac_package_version": "0.5.1"},
+            {"invswpac_package_version": None},
+            {"invswpac_package_version": "2.0.0"},
+            {"invswpac_package_version": "4.5.1"},
+        ],
+        expected_rows=[
             {"invswpac_package_version": "2.0.0"},
         ],
     ),

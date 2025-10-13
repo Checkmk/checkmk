@@ -40,6 +40,8 @@ from cmk.gui.visuals.filter.components import (
     RadioButton,
     TextInput,
 )
+from cmk.inventory.structured_data import SDValue
+from cmk.inventory_ui.v1_alpha import Comparable
 
 from ._tree import InventoryPath
 
@@ -132,6 +134,109 @@ class FilterInvText(InputTextFilter):
             show_heading=False,
             is_show_more=is_show_more,
         )
+
+    def need_inventory(self, value: FilterHTTPVariables) -> bool:
+        return bool(value.get(self.htmlvars[0], "").strip().lower())
+
+
+def _filter_with_sort_key(
+    *,
+    value: SDValue,
+    from_value: str | None,
+    until_value: str | None,
+    sort_key: Callable[[str], Comparable],
+) -> bool:
+    if value is None:
+        return not from_value and not until_value
+
+    if not isinstance(value, str):
+        raise TypeError(value)
+
+    sortable_value = sort_key(value)
+
+    if from_value and until_value:
+        return sort_key(from_value) < sortable_value < sort_key(until_value)
+
+    if from_value and not until_value:
+        return sort_key(from_value) < sortable_value
+
+    if not from_value and until_value:
+        return sortable_value < sort_key(until_value)
+
+    return True
+
+
+def _rows_filter_attribute(
+    ident: str,
+    request_vars: list[str],
+    inventory_path: InventoryPath,
+    sort_key: Callable[[str], Comparable],
+    context: VisualContext,
+    rows: Rows,
+) -> Rows:
+    from_value, until_value = (context.get(ident, {}).get(v) for v in request_vars)
+    return [
+        r
+        for r in rows
+        if _filter_with_sort_key(
+            value=r["host_inventory"].get_attribute(inventory_path.path, inventory_path.key),
+            from_value=from_value,
+            until_value=until_value,
+            sort_key=sort_key,
+        )
+    ]
+
+
+class FilterInvTextWithSortKey(Filter):
+    def __init__(
+        self,
+        *,
+        ident: str,
+        title: str | LazyString,
+        inventory_path: InventoryPath,
+        sort_key: Callable[[str], Comparable],
+        is_show_more: bool = True,
+    ) -> None:
+        request_vars = [ident + "_from", ident + "_until"]
+        self.query_filter = query_filters.Query(
+            ident=ident,
+            request_vars=request_vars,
+            rows_filter=partial(
+                _rows_filter_attribute, ident, request_vars, inventory_path, sort_key
+            ),
+        )
+        super().__init__(
+            ident=self.query_filter.ident,
+            title=title,
+            sort_index=800,
+            info="host",
+            htmlvars=self.query_filter.request_vars,
+            link_columns=[],
+            is_show_more=is_show_more,
+        )
+
+    def display(self, value: FilterHTTPVariables) -> None:
+        # keep this in sync with components(), remove once all filter menus are switched to vue
+        # this special styling is not supported by the current components
+        html.write_text_permissive(_("From:") + "&nbsp;")
+        html.text_input(
+            self.htmlvars[0], default_value=value.get(self.htmlvars[0], ""), style="width: 80px;"
+        )
+        html.write_text_permissive(" &nbsp; " + _("To:") + "&nbsp;")
+        html.text_input(
+            self.htmlvars[1], default_value=value.get(self.htmlvars[1], ""), style="width: 80px;"
+        )
+
+    def components(self) -> Iterable[FilterComponent]:
+        yield HorizontalGroup(
+            components=[
+                TextInput(id=self.query_filter.request_vars[0], label=_("From:")),
+                TextInput(id=self.query_filter.request_vars[1], label=_("To:")),
+            ]
+        )
+
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        return self.query_filter.filter_table(context, rows)
 
     def need_inventory(self, value: FilterHTTPVariables) -> bool:
         return bool(value.get(self.htmlvars[0], "").strip().lower())
@@ -233,6 +338,71 @@ class FilterInvtableText(InputTextFilter):
             ),
             show_heading=False,
         )
+
+
+def _rows_filter_table(
+    ident: str,
+    request_vars: list[str],
+    sort_key: Callable[[str], Comparable],
+    context: VisualContext,
+    rows: Rows,
+) -> Rows:
+    from_value, until_value = (context.get(ident, {}).get(v) for v in request_vars)
+    return [
+        r
+        for r in rows
+        if _filter_with_sort_key(
+            value=r.get(ident),
+            from_value=from_value,
+            until_value=until_value,
+            sort_key=sort_key,
+        )
+    ]
+
+
+class FilterInvtableTextWithSortKey(Filter):
+    def __init__(
+        self,
+        *,
+        inv_info: str,
+        ident: str,
+        title: str,
+        sort_key: Callable[[str], Comparable],
+    ) -> None:
+        request_vars = [ident + "_from", ident + "_until"]
+        self.query_filter = query_filters.Query(
+            ident=ident,
+            request_vars=request_vars,
+            rows_filter=partial(_rows_filter_table, ident, request_vars, sort_key),
+        )
+        super().__init__(
+            ident=self.query_filter.ident,
+            title=title,
+            sort_index=800,
+            info=inv_info,
+            htmlvars=self.query_filter.request_vars,
+            link_columns=[],
+        )
+
+    def display(self, value: FilterHTTPVariables) -> None:
+        # keep this in sync with components(), remove once all filter menus are switched to vue
+        # this special styling is not supported by the current components
+        html.write_text_permissive(_("From:"))
+        html.text_input(self.htmlvars[0], default_value=value.get(self.htmlvars[0], ""), size=7)
+        html.write_text_permissive(" &nbsp; ")
+        html.write_text_permissive(_("To:"))
+        html.text_input(self.htmlvars[1], default_value=value.get(self.htmlvars[1], ""), size=7)
+
+    def components(self) -> Iterable[FilterComponent]:
+        yield HorizontalGroup(
+            components=[
+                TextInput(id=self.htmlvars[0], label=_("From:")),
+                TextInput(id=self.htmlvars[1], label=_("To:")),
+            ]
+        )
+
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        return self.query_filter.filter_table(context, rows)
 
 
 class FilterInvtableDualChoice(DualListFilter):

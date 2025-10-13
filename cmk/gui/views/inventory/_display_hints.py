@@ -42,9 +42,11 @@ from cmk.gui.inventory.filters import (
     FilterInvtableInterfaceType,
     FilterInvtableOperStatus,
     FilterInvtableText,
+    FilterInvtableTextWithSortKey,
     FilterInvtableTimestampAsAge,
     FilterInvtableVersion,
     FilterInvText,
+    FilterInvTextWithSortKey,
 )
 from cmk.gui.log import logger
 from cmk.gui.unit_formatter import AutoPrecision as AutoPrecisionFormatter
@@ -390,7 +392,7 @@ def _make_attribute_filter(
     name: str,
     long_title: str,
     inventory_path: inventory.InventoryPath,
-) -> FilterInvBool | FilterInvFloat | FilterInvText | FilterInvChoice:
+) -> FilterInvBool | FilterInvFloat | FilterInvText | FilterInvChoice | FilterInvTextWithSortKey:
     match field_from_api:
         case BoolFieldFromAPI():
             return FilterInvBool(
@@ -409,6 +411,14 @@ def _make_attribute_filter(
                 is_show_more=True,
             )
         case TextFieldFromAPI():
+            if field_from_api.sort_key:
+                return FilterInvTextWithSortKey(
+                    ident=name,
+                    title=long_title,
+                    inventory_path=inventory_path,
+                    sort_key=field_from_api.sort_key,
+                    is_show_more=True,
+                )
             return FilterInvText(
                 ident=name,
                 title=long_title,
@@ -484,6 +494,7 @@ def _make_column_filter(
     | FilterInvtableIntegerRange
     | FilterInvtableChoice
     | FilterInvtableDualChoice
+    | FilterInvtableTextWithSortKey
 ):
     match field_from_api:
         case BoolFieldFromAPI():
@@ -506,6 +517,13 @@ def _make_column_filter(
                 scale=1,
             )
         case TextFieldFromAPI():
+            if field_from_api.sort_key:
+                return FilterInvtableTextWithSortKey(
+                    inv_info=table_view_name,
+                    ident=name,
+                    title=long_title,
+                    sort_key=field_from_api.sort_key,
+                )
             return FilterInvtableText(
                 inv_info=table_view_name,
                 ident=name,
@@ -749,7 +767,9 @@ class AttributeDisplayHint:
     long_title: str
     paint_function: PaintFunctionFromAPI
     sort_function: SortFunction
-    filter: FilterInvText | FilterInvBool | FilterInvFloat | FilterInvChoice
+    filter: (
+        FilterInvText | FilterInvBool | FilterInvFloat | FilterInvChoice | FilterInvTextWithSortKey
+    )
 
     @property
     def long_inventory_title(self) -> str:
@@ -923,6 +943,7 @@ class ColumnDisplayHintOfView:
         | FilterInvtableVersion
         | FilterInvtableChoice
         | FilterInvtableDualChoice
+        | FilterInvtableTextWithSortKey
     )
 
     @property

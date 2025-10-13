@@ -7,6 +7,7 @@ import pytest
 
 from cmk.agent_receiver.certs import serialize_to_pem
 from cmk.relay_protocols.tasks import RelayConfigTask
+from tests.testlib.openapi_session import Relay
 from tests.testlib.site import Site
 
 from ..agent_receiver.test_agent_receiver import generate_csr_pair
@@ -58,6 +59,29 @@ class TestRelay:
         hostname = "localhost"
         site.openapi.hosts.create(hostname=hostname, attributes={"ipaddress": "127.0.0.1"})
         self.created_hosts.add(hostname)
+
+        site.openapi.changes.activate_and_wait_for_completion()
+
+        tasks = site.openapi_agent_receiver.relays.get_tasks(relay_id)
+        assert len(tasks) == 1
+        assert isinstance(tasks[0].spec, RelayConfigTask)
+
+    def test_config_update_of_relay(self, site: Site) -> None:
+        """
+        Test that change to relay's config triggers submission of the new activated config to relays
+        """
+        self._site = site
+        relay_id = self._register_relay(alias="foo_alias")
+
+        self._site.openapi.relays.edit(
+            Relay(
+                id=relay_id,
+                alias="bar_alias",
+                site_id=self._site.id,
+                num_fetchers=1,
+                log_level="DEBUG",
+            )
+        )
 
         site.openapi.changes.activate_and_wait_for_completion()
 

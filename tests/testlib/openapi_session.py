@@ -98,8 +98,8 @@ class Relay(NamedTuple):
     id: str
     alias: str
     site_id: str
-    num_fetchers: int
-    log_level: str
+    num_fetchers: int | None
+    log_level: str | None
 
 
 class CMKOpenApiSession(requests.Session):
@@ -1603,7 +1603,15 @@ class RelayAPI(BaseAPI):
             for relay_dict in response.json()["value"]
         ]
 
-    def edit(self) -> None: ...
+    def edit(self, relay: Relay) -> None:
+        body: dict[str, object] = {"alias": relay.alias, "siteid": relay.site_id}
+        if relay.num_fetchers is not None:
+            body["num_fetchers"] = relay.num_fetchers
+        if relay.log_level is not None:
+            body["log_level"] = relay.log_level
+        response = self.session.put(url=self._object_url(relay.id), json=body)
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
 
     def delete(self, relay_id: str, etag: str) -> None:
         response = self.session.delete(

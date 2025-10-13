@@ -22,6 +22,16 @@ class TestRelay:
     created_hosts: set[str] = set()
     _site: Site | None = None
 
+    def _register_relay(self, alias: str) -> str:
+        assert self._site is not None
+
+        _, csr = generate_csr_pair(alias)
+        relay_id = self._site.openapi_agent_receiver.relays.register(
+            alias=alias, csr=serialize_to_pem(csr)
+        )
+        self.registered_relays.add(relay_id)
+        return relay_id
+
     def teardown_method(self, method: object) -> None:
         if self._site is None:
             return
@@ -43,11 +53,7 @@ class TestRelay:
         """
         self._site = site
         alias = "foo_alias"
-        _, csr = generate_csr_pair(alias)
-        relay_id = site.openapi_agent_receiver.relays.register(
-            alias=alias, csr=serialize_to_pem(csr)
-        )
-        self.registered_relays.add(relay_id)
+        relay_id = self._register_relay(alias=alias)
 
         hostname = "localhost"
         site.openapi.hosts.create(hostname=hostname, attributes={"ipaddress": "127.0.0.1"})

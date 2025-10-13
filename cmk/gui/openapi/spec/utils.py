@@ -17,4 +17,4 @@ LIVESTATUS_GENERIC_EXPLANATION = (
 
 
 def spec_path(target: EndpointTarget) -> Path:
-    return cmk.utils.paths.doc_dir / "rest-api" / "spec" / f"{target}.spec"
+    return cmk.utils.paths.var_dir / "rest_api" / "spec" / f"{target}.spec"

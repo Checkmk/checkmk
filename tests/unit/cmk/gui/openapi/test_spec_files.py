@@ -40,7 +40,7 @@ def _write_dummy_spec(spec_path: Path) -> None:
 
 @pytest.mark.usefixtures("patch_theme")
 def test_yaml_file_authenticated(logged_in_wsgi_app: WebTestAppForCMK) -> None:
-    _write_dummy_spec(paths.doc_dir / "rest-api/spec/swagger-ui.spec")
+    _write_dummy_spec(paths.var_dir / "rest_api/spec/swagger-ui.spec")
     resp = logged_in_wsgi_app.get("/NO_SITE/check_mk/api/1.0/openapi-swagger-ui.yaml", status=200)
     assert resp.content_type.startswith("application/x-yaml")
     data = yaml.safe_load(resp.body)
@@ -49,7 +49,7 @@ def test_yaml_file_authenticated(logged_in_wsgi_app: WebTestAppForCMK) -> None:
 
 @pytest.mark.usefixtures("patch_theme")
 def test_json_file_authenticated(logged_in_wsgi_app: WebTestAppForCMK) -> None:
-    _write_dummy_spec(paths.doc_dir / "rest-api/spec/doc.spec")
+    _write_dummy_spec(paths.var_dir / "rest_api/spec/doc.spec")
     resp = logged_in_wsgi_app.get("/NO_SITE/check_mk/api/1.0/openapi-doc.json", status=200)
     assert resp.content_type.startswith("application/json")
     data = json.loads(resp.body)

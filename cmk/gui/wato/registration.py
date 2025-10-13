@@ -15,6 +15,7 @@ from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.quick_setup.v0_unstable._registry import QuickSetupRegistry
 from cmk.gui.search import MatchItemGeneratorRegistry
 from cmk.gui.sidebar import SnapinRegistry
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.icon import IconRegistry
 from cmk.gui.views.sorter import SorterRegistry
 from cmk.gui.visuals.filter import FilterRegistry
@@ -89,7 +90,7 @@ def register(
     contact_group_usage_finder_registry: ContactGroupUsageFinderRegistry,
     notification_parameter_registry: NotificationParameterRegistry,
     replication_path_registry: ReplicationPathRegistry,
-    user_menu_topics: Callable[[], list[MainMenuTopic]],
+    user_menu_topics: Callable[[UserPermissions], list[MainMenuTopic]],
 ) -> None:
     painter_registry.register(PainterHostFilename)
     painter_registry.register(PainterWatoFolderAbs)

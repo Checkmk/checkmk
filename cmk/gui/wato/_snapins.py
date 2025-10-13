@@ -59,7 +59,7 @@ def render_wato(config: Config, mini: bool) -> None:
     if not user.may("wato.use"):
         html.write_text_permissive(_("You are not allowed to use the setup."))
 
-    menu = get_wato_menu_items()
+    menu = get_wato_menu_items(UserPermissions.from_config(config, permission_registry))
 
     if mini:
         for topic in menu:
@@ -81,7 +81,7 @@ def render_wato(config: Config, mini: bool) -> None:
         html.div("", class_="clear")
 
 
-def get_wato_menu_items() -> list[MainMenuTopic]:
+def get_wato_menu_items(user_permissions: UserPermissions) -> list[MainMenuTopic]:
     by_topic: dict[MainModuleTopic, MainMenuTopic] = {}
     for module_class in main_module_registry.values():
         module = module_class()
@@ -140,7 +140,7 @@ class MatchItemGeneratorSetupMenu(ABCMatchItemGenerator):
     def __init__(
         self,
         name: str,
-        topic_generator: Callable[[], Iterable[MainMenuTopic]] | None,
+        topic_generator: Callable[[UserPermissions], Iterable[MainMenuTopic]] | None,
     ) -> None:
         super().__init__(name)
         self._topic_generator = topic_generator
@@ -156,7 +156,13 @@ class MatchItemGeneratorSetupMenu(ABCMatchItemGenerator):
                     *main_menu_item.main_menu_search_terms,
                 ],
             )
-            for main_menu_topic in (self._topic_generator() if self._topic_generator else [])
+            for main_menu_topic in (
+                self._topic_generator(
+                    UserPermissions.from_config(active_config, permission_registry)
+                )
+                if self._topic_generator
+                else []
+            )
             for main_menu_item in get_main_menu_items_prefixed_by_segment(main_menu_topic)
         )
 

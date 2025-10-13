@@ -19,6 +19,7 @@ from cmk.gui.main_menu_types import (
     MainMenuTopicSegment,
 )
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri_contextless
 from cmk.utils import paths
 from cmk.utils.licensing.registry import get_license_message
@@ -197,8 +198,8 @@ def _help_menu_topics(
     learning_entries: Callable[[], MainMenuTopicEntries],
     developer_entries: Callable[[], MainMenuTopicEntries],
     about_checkmk_entries: Callable[[], MainMenuTopicEntries],
-) -> Callable[[], list[MainMenuTopic]]:
-    def _fun() -> list[MainMenuTopic]:
+) -> Callable[[UserPermissions], list[MainMenuTopic]]:
+    def _fun(user_permissions: UserPermissions) -> list[MainMenuTopic]:
         return [
             MainMenuTopic(
                 name="learning_checkmk",

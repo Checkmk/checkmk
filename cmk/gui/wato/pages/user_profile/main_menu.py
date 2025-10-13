@@ -20,13 +20,14 @@ from cmk.gui.theme.current_theme import theme
 from cmk.gui.userdb import remove_custom_attr, validate_start_url
 from cmk.gui.userdb.store import load_custom_attr, save_custom_attr
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
 
 
 def register(
     page_registry: PageRegistry,
     main_menu_registry: MainMenuRegistry,
-    user_menu_topics: Callable[[], list[MainMenuTopic]],
+    user_menu_topics: Callable[[UserPermissions], list[MainMenuTopic]],
 ) -> None:
     page_registry.register(PageEndpoint("ajax_ui_theme", ModeAjaxCycleThemes))
     page_registry.register(PageEndpoint("ajax_sidebar_position", ModeAjaxCycleSidebarPosition))
@@ -68,7 +69,9 @@ def _sidebar_position_id(stored_value: str) -> str:
 
 
 def default_user_menu_topics(
-    add_change_password_menu_item: bool = True, add_two_factor_menu_item: bool = True
+    user_permissions: UserPermissions,
+    add_change_password_menu_item: bool = True,
+    add_two_factor_menu_item: bool = True,
 ) -> list[MainMenuTopic]:
     quick_entries: MainMenuTopicEntries = [
         MainMenuItem(

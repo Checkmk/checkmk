@@ -12,6 +12,7 @@ from typing import Literal, NamedTuple
 
 from cmk.gui.http import Request
 from cmk.gui.type_defs import Icon
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.speaklater import LazyString
 
 
@@ -67,7 +68,7 @@ class MainMenu(NamedTuple):
     title: str | LazyString
     icon: Icon
     sort_index: int
-    topics: Callable[[], list[MainMenuTopic]] | None
+    topics: Callable[[UserPermissions], list[MainMenuTopic]] | None
     search: ABCMainMenuSearch | None = None
     info_line: Callable[[], str] | None = None
     hide: Callable[[], bool] = lambda: False

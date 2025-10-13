@@ -21,6 +21,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.main_menu import get_main_menu_items_prefixed_by_segment, main_menu_registry
+from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import (
     HTTPVariables,
     Row,
@@ -38,6 +39,7 @@ from cmk.gui.utils.labels import (
     Labels,
 )
 from cmk.gui.utils.regex import validate_regex
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri
 from cmk.utils.tags import TagGroupID, TagID
 
@@ -1346,7 +1348,9 @@ class MonitorMenuMatchPlugin(ABCBasicMatchPlugin):
                 url=main_menu_item.url,
             )
             for main_menu_topic in (
-                main_menu_registry["monitoring"].topics()
+                main_menu_registry["monitoring"].topics(
+                    UserPermissions.from_config(active_config, permission_registry)
+                )
                 if main_menu_registry["monitoring"].topics
                 else []
             )

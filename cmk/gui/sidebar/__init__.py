@@ -92,7 +92,7 @@ def register(
     snapin_registry_: SnapinRegistry,
     dashlet_registry: DashletRegistry,
     main_menu_registry_: MainMenuRegistry,
-    view_menu_topics: Callable[[], list[MainMenuTopic]],
+    view_menu_topics: Callable[[UserPermissions], list[MainMenuTopic]],
 ) -> None:
     page_registry.register(PageEndpoint("sidebar_fold", AjaxFoldSnapin))
     page_registry.register(PageEndpoint("sidebar_openclose", AjaxOpenCloseSnapin))
@@ -475,7 +475,7 @@ class SidebarRenderer:
             id_="check_mk_navigation",
             class_="min" if user.get_attribute("nav_hide_icons_title") else None,
         )
-        self._show_sidebar_head(start_url)
+        self._show_sidebar_head(start_url, user_permissions)
         html.close_div()
 
         assert user.id is not None
@@ -687,7 +687,7 @@ class SidebarRenderer:
             html.write_html(content)
         html.close_div()
 
-    def _show_sidebar_head(self, start_url: str) -> None:
+    def _show_sidebar_head(self, start_url: str, user_permissions: UserPermissions) -> None:
         html.open_div(id_="side_header")
         html.open_a(
             href=user.start_url or start_url,
@@ -698,7 +698,7 @@ class SidebarRenderer:
         html.close_a()
         html.close_div()
 
-        MainMenuRenderer().show()
+        MainMenuRenderer().show(user_permissions)
 
         hooks.call("show-main-menu-bottom")
 

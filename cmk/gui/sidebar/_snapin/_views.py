@@ -11,9 +11,8 @@ from collections.abc import Callable
 
 from cmk.ccc.user import UserId
 from cmk.gui import pagetypes
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.dashboard import get_permitted_dashboards
-from cmk.gui.hooks import request_memoize
 from cmk.gui.http import response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
@@ -35,7 +34,7 @@ def register(
     page_registry: PageRegistry,
     snapin_registry: SnapinRegistry,
     main_menu_registry: MainMenuRegistry,
-    view_menu_topics: Callable[[], list[MainMenuTopic]],
+    view_menu_topics: Callable[[UserPermissions], list[MainMenuTopic]],
 ) -> None:
     snapin_registry.register(Views)
     page_registry.register(PageEndpoint("export_views", ajax_export_views))
@@ -91,12 +90,9 @@ def ajax_export_views(config: Config) -> None:
     response.set_data(pprint.pformat(get_permitted_views()))
 
 
-@request_memoize()
-def default_view_menu_topics() -> list[MainMenuTopic]:
+def default_view_menu_topics(user_permissions: UserPermissions) -> list[MainMenuTopic]:
     return make_main_menu(
-        view_menu_items(
-            user_permissions := UserPermissions.from_config(active_config, permission_registry)
-        ),
+        view_menu_items(user_permissions),
         user_permissions,
     )
 

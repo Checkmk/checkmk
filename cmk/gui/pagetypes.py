@@ -2380,7 +2380,7 @@ def _no_bi_aggregate_active() -> bool:
 # .
 
 
-def _customize_menu_topics() -> list[MainMenuTopic]:
+def _customize_menu_topics(user_permissions: UserPermissions) -> list[MainMenuTopic]:
     general_entries: MainMenuTopicEntries = []
     monitoring_entries: MainMenuTopicEntries = []
     graph_entries: MainMenuTopicEntries = []

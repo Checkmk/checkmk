@@ -11,7 +11,7 @@
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
-# mypy: disable-error-code=var-annotated
+# mypy: disable-error-code="var-annotated"
 
 from typing import Any
 

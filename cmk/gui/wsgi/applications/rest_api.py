@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="possibly-undefined"
 
 from __future__ import annotations
 

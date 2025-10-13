@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Modes for managing notification configuration"""
 
+# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 import abc

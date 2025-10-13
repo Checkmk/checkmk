@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Pre update checks, executed before any configuration is changed."""
 
+# mypy: disable-error-code="possibly-undefined"
+
 import warnings
 from dataclasses import dataclass
 from logging import Logger

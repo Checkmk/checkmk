@@ -5,6 +5,7 @@
 """WATO's awesome rule editor: Lets the user edit rule based parameters"""
 
 # mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"

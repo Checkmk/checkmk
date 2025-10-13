@@ -3,10 +3,12 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-r"""Check_MK Agent Plugin: mk_filestats
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="possibly-undefined"
+
+r"""Check_MK Agent Plugin: mk_filestats
 
 This is a Check_MK Agent plugin. If configured, it will be called by the
 agent without any arguments.

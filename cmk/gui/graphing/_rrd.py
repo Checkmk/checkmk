@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Core for getting the actual raw data points via Livestatus from RRD"""
 
+# mypy: disable-error-code="possibly-undefined"
+
 import collections
 import contextlib
 import time

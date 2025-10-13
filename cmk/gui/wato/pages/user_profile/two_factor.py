@@ -5,6 +5,7 @@
 """The user can change own 2FA related settings on this page"""
 
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 import abc

@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Main menu processing
 
+# mypy: disable-error-code="possibly-undefined"
+
 Cares about the main navigation of our GUI. This is a) the small sidebar and b) the main menu
 """
 

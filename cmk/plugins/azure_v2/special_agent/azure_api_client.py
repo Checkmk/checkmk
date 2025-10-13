@@ -11,6 +11,7 @@ from typing import Literal, NamedTuple
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 # workaround - can be removed when CMK-25281 is resolved

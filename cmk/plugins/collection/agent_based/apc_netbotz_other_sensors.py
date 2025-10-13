@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="possibly-undefined"
+
 # Max. eigth sensors
 # .1.3.6.1.4.1.5528.100.4.2.10.1.4.399845582 Wasserstand_FG1
 # .1.3.6.1.4.1.5528.100.4.2.10.1.4.3502248167 Ethernet Link Status

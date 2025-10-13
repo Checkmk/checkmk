@@ -5,9 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="type-arg"
 
 """mk_logwatch
 This is the Check_MK Agent plugin. If configured it will be called by the

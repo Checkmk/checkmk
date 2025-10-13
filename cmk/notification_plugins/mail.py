@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="possibly-undefined"
+
 # Argument 1: Full system path to the pnp4nagios index.php for fetching the graphs. Usually auto configured in OMD.
 # Argument 2: HTTP-URL-Prefix to open Multisite. When provided, several links are added to the mail.
 #             Example: http://myserv01/prod

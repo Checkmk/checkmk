@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """check single redfish outlet state"""
 
+# mypy: disable-error-code="possibly-undefined"
+
 from collections.abc import Mapping
 from typing import Any
 

@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="possibly-undefined"
 
 """This script demonstrates the use of OpenTelemetry for logging and metrics export via HTTP.
 It sets up OpenTelemetry providers for metrics and logging, sends logs and metrics to a specified

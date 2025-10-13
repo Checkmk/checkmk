@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Checkmk development script to manage werks"""
 
+# mypy: disable-error-code="comparison-overlap"
+
 import argparse
 import errno
 import os
@@ -569,7 +571,7 @@ def werk_class(werk: Werk) -> str:
     cl = werk.content.metadata["class"]
     for entry in get_config().classes:
         # typing: why would this be? LH: Tuple[str, str, str], RH: str
-        if entry == cl:  # type: ignore[comparison-overlap]
+        if entry == cl:
             return cl
 
         if entry[0] == cl:

@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module provides generic Check_MK ruleset processing functionality"""
 
+# mypy: disable-error-code="comparison-overlap"
+
 # mypy: disable-error-code="redundant-expr"
 
 import contextlib

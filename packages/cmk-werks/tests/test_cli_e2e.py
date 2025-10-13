@@ -168,7 +168,7 @@ def create_werk(*, title: str, vcr_cassette_dir: str, vcr_config: dict[str, Any]
 def latest_commit_subject(repo_path: Path) -> str:
     repo = Repo(repo_path)
     message = repo.head.commit.message
-    if message is None:
+    if message is None:  # type: ignore[comparison-overlap]
         raise RuntimeError("message is none")
     if isinstance(message, bytes):
         message = message.decode("utf-8")

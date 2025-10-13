@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Rendering the page state (top right of the page header)
 
+# mypy: disable-error-code="comparison-overlap"
+
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="unreachable"
 

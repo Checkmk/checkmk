@@ -6,6 +6,7 @@
 to produce crash reports in a generic format which can then be sent to Check_MK
 developers for analyzing the crashes."""
 
+# mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="type-arg"
 
 from __future__ import annotations

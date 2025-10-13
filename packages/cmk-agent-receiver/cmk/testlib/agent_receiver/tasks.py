@@ -48,7 +48,7 @@ def add_tasks(count: int, agent_receiver: AgentReceiverClient, relay_id: str) ->
         )
         for i in range(count)
     )
-    result = [TaskID(str(r.task_id)) for r in gen if r is not None]
+    result = [TaskID(str(r.task_id)) for r in gen if r is not None]  # type: ignore[comparison-overlap]
     assert len(result) == count
     return result
 

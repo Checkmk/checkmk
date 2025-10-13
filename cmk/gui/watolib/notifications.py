@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module for managing rule based notifications
 
+# mypy: disable-error-code="comparison-overlap"
+
 The class 'NotificationRule' represents a single rule object that bridges
 the mk file config format of a notification rule and an api response.
 

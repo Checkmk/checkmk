@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Modes for services and discovery"""
 
+# mypy: disable-error-code="comparison-overlap"
+
 # mypy: disable-error-code="unreachable"
 
 # mypy: disable-error-code="exhaustive-match"

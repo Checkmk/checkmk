@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module provides functionality to execute tests within a Docker container.
 
+# mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 

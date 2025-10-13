@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module handles the manual pages of Checkmk checks
 
+# mypy: disable-error-code="comparison-overlap"
+
 These man pages are meant to document the individual checks of Checkmk and are
 used as base for the list of supported checks and catalogs of checks.
 

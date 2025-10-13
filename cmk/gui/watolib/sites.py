@@ -85,6 +85,8 @@ from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleCon
 from cmk.utils import paths
 from cmk.utils.licensing.handler import LicenseState
 
+STATIC_PERMISSIONS_SITES = ["sites"]
+
 
 class SitesConfigFile(WatoSingleConfigFile[SiteConfigurations]):
     def __init__(self) -> None:

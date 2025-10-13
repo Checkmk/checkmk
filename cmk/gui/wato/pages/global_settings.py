@@ -72,7 +72,11 @@ from cmk.gui.watolib.config_domains import (
     ConfigDomainCore,
     finalize_all_settings_per_site,
 )
-from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
+from cmk.gui.watolib.global_settings import (
+    load_configuration_settings,
+    save_global_settings,
+    STATIC_PERMISSIONS_GLOBAL_SETTINGS,
+)
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.piggyback_hub import validate_piggyback_hub_config
@@ -536,7 +540,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
 
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:
-        return ["global"]
+        return STATIC_PERMISSIONS_GLOBAL_SETTINGS
 
     def __init__(
         self,
@@ -644,7 +648,7 @@ class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
 
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:
-        return ["global"]
+        return STATIC_PERMISSIONS_GLOBAL_SETTINGS
 
     @classmethod
     def parent_mode(cls) -> type[WatoMode] | None:

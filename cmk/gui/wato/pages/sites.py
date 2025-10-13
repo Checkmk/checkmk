@@ -122,6 +122,7 @@ from cmk.gui.watolib.global_settings import (
     load_site_global_settings,
     save_global_settings,
     save_site_global_settings,
+    STATIC_PERMISSIONS_GLOBAL_SETTINGS,
 )
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
@@ -146,6 +147,7 @@ from cmk.gui.watolib.sites import (
     ReplicationStatusFetcher,
     site_globals_editable,
     site_management_registry,
+    STATIC_PERMISSIONS_SITES,
 )
 from cmk.messaging import check_remote_connection, ConnectionFailed, ConnectionOK, ConnectionRefused
 from cmk.utils.encryption import CertificateDetails, fetch_certificate_details
@@ -170,7 +172,7 @@ class ModeEditSite(WatoMode):
 
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:
-        return ["sites"]
+        return STATIC_PERMISSIONS_SITES
 
     @classmethod
     def parent_mode(cls) -> type[WatoMode] | None:
@@ -638,7 +640,7 @@ class ModeEditBrokerConnection(WatoMode):
 
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:
-        return ["sites"]
+        return STATIC_PERMISSIONS_SITES
 
     @classmethod
     def parent_mode(cls) -> type[WatoMode] | None:
@@ -843,7 +845,7 @@ class ModeDistributedMonitoring(WatoMode):
 
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:
-        return ["sites"]
+        return STATIC_PERMISSIONS_SITES
 
     def __init__(self) -> None:
         super().__init__()
@@ -1562,7 +1564,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
 
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:
-        return ["sites"]
+        return STATIC_PERMISSIONS_SITES
 
     @classmethod
     def parent_mode(cls) -> type[WatoMode] | None:
@@ -1734,7 +1736,7 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
 
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:
-        return ["global"]
+        return STATIC_PERMISSIONS_GLOBAL_SETTINGS
 
     @classmethod
     def parent_mode(cls) -> type[WatoMode] | None:
@@ -1785,7 +1787,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
 
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:
-        return ["sites"]
+        return STATIC_PERMISSIONS_SITES
 
     @classmethod
     def parent_mode(cls) -> type[WatoMode] | None:

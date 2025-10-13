@@ -17,6 +17,8 @@ from cmk.gui.watolib.config_domain_name import (
 )
 from cmk.utils import paths
 
+STATIC_PERMISSIONS_GLOBAL_SETTINGS = ["global"]
+
 
 def load_configuration_settings(
     site_specific: bool = False, custom_site_path: str | None = None, full_config: bool = False

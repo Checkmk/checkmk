@@ -1,1 +1,0 @@
-Oracle SQL check

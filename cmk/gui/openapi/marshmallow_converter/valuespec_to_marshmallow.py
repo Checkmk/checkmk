@@ -215,6 +215,7 @@ def get_schema_from_choices(
     )
 
 
+@match_on(valuespec.LegacyDataSize)
 @match_on(valuespec.Integer)
 @match_on(valuespec.Filesize)
 def valuespec_integer(

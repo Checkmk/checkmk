@@ -83,7 +83,6 @@ def expected_items() -> dict[str, list[str]]:
         cmk_version.Edition.CCE,
         cmk_version.Edition.CME,
     ]:
-        hosts_items.append("otel_collectors")
         hosts_items.append("otel_collectors_receivers")
         hosts_items.append("otel_collectors_prom_scrapes")
         hosts_items.append("relays")

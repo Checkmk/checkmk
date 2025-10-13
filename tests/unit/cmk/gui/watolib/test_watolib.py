@@ -306,7 +306,11 @@ def test_registered_configvars() -> None:
         cmk_version.Edition.CME,
         cmk_version.Edition.CSE,
     }:
-        expected_vars += ["metric_backend_instance", "site_opentelemetry_collector"]
+        expected_vars += [
+            "metric_backend_instance",
+            "site_opentelemetry_collector",
+            "site_opentelemetry_collector_memory_limit",
+        ]
 
     registered = sorted(config_variable_registry.keys())
     assert registered == sorted(expected_vars)

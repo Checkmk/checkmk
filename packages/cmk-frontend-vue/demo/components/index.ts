@@ -32,6 +32,7 @@ import DemoCmkSlideInDialog from './DemoCmkSlideInDialog.vue'
 import DemoCmkSpace from './DemoCmkSpace.vue'
 import DemoCmkSwitch from './DemoCmkSwitch.vue'
 import DemoErrorBoundary from './DemoErrorBoundary.vue'
+import DemoHelp from './DemoHelp.vue'
 import DemoToggleButtonGroup from './DemoToggleButtonGroup.vue'
 import { pages as typographyPages } from './typography'
 import { pages as userInputPages } from './user-input'
@@ -66,5 +67,6 @@ export const pages = [
   new Page('CmkCode', DemoCmkCode),
   new Page('CmkCollapsible', DemoCmkCollapsible),
   new Page('CmkKeyboardKey', DemoCmkKeyboardKey),
-  new Page('CmkDualList', DemoCmkDualList)
+  new Page('CmkDualList', DemoCmkDualList),
+  new Page('HelpText', DemoHelp)
 ]

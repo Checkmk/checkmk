@@ -173,17 +173,17 @@ def cleanup_cmk_package(site: Site, request: pytest.FixtureRequest) -> None:
 
 def check_agent_receiver_error_log(site: Site) -> None:
     """Assert that there are no unexpected errors in the agent receiver log."""
+    # Default pattern should be "^.*error.*$"
+    # TODO: Remove "sigterm" from pattern after CMK-24766 is done
+    # TODO: Remove "relay|ASGI|middleware|receive_or_disconnect" from pattern after SAASDEV-5615 is done
+    content_pattern = "^(?!.*(sigterm|relay|ASGI|middleware|receive_or_disconnect)).*error.*$"
+
     error_match_dict = parse_files(
         path_name=site.logs_dir / "agent-receiver",
         files_name_pattern="*log*",
-        content_pattern="error",
+        content_pattern=content_pattern,
         sudo=True,
     )
-    # TODO: Remove the following block after CMK-24766 is done
-    for file in list(error_match_dict):
-        for error in error_match_dict[file]:
-            if "was sent SIGTERM!" in error:
-                error_match_dict.pop(file)
 
     assert not error_match_dict, f"Error string found in one or more log files: {error_match_dict}"
 

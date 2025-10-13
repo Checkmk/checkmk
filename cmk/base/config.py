@@ -170,6 +170,7 @@ from cmk.utils.rulesets.ruleset_matcher import (
     RulesetName,
     RuleSpec,
     SingleHostRulesetMatcherMerge,
+    SingleServiceRulesetMatcherFirstParsed,
 )
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.tags import ComputedDataSources, TagGroupID, TagID
@@ -704,6 +705,7 @@ def _perform_post_config_loading_actions(
         http_proxies=http_proxies,
         extra_service_conf=extra_service_conf,
         timeperiods=timeperiods,
+        check_periods=check_periods,
     )
 
     config_cache = ConfigCache(loaded_config).initialize()
@@ -1574,6 +1576,13 @@ class ConfigCache:
         )
         self.check_interval = make_check_interval_config(
             self._loaded_config, self.ruleset_matcher, self.label_manager
+        )
+        self.check_period_of_passive_service = SingleServiceRulesetMatcherFirstParsed(
+            self._loaded_config.check_periods,
+            "24X7",
+            self.ruleset_matcher,
+            self.label_manager.labels_of_host,
+            parser=str,
         )
         return self
 
@@ -3069,18 +3078,6 @@ class ConfigCache:
             cgrs.add("check-mk-notify")
 
         return list(cgrs)
-
-    def check_period_of_passive_service(
-        self, host_name: HostName, service_name: ServiceName, service_labels: Labels
-    ) -> str:
-        out = self.ruleset_matcher.get_service_values_all(
-            host_name,
-            service_name,
-            service_labels,
-            check_periods,
-            self.label_manager.labels_of_host,
-        )
-        return out[0] if out else "24X7"
 
     def custom_attributes_of_service(
         self, host_name: HostName, service_name: ServiceName, service_labels: Labels

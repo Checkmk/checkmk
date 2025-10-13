@@ -87,6 +87,7 @@ EMPTY_CONFIG = LoadedConfigFragment(
     http_proxies={},
     extra_service_conf={},
     timeperiods={},
+    check_periods=(),
 )
 
 

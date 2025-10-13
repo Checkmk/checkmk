@@ -301,7 +301,7 @@ class _NestedExitSpec(ExitSpec, total=False):
 check_mk_exit_status: list[RuleSpec[_NestedExitSpec]] = []
 # Rule for defining expected version for agents
 check_mk_agent_target_versions: list[RuleSpec[str]] = []
-check_periods: list[RuleSpec[str]] = []
+check_periods: Sequence[RuleSpec[object]] = []
 snmp_check_interval: list[
     RuleSpec[tuple[list[str], tuple[Literal["cached"], float] | tuple[Literal["uncached"], None]]]
 ] = []

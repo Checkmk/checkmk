@@ -11,7 +11,12 @@ import abc
 import copy
 from typing import Any
 
-from cmk.bi import actions
+from cmk.bi.actions import (
+    BICallARuleAction,
+    BIStateOfHostAction,
+    BIStateOfRemainingServicesAction,
+    BIStateOfServiceAction,
+)
 from cmk.bi.aggregation_functions import (
     BIAggregationFunctionBest,
     BIAggregationFunctionCountOK,
@@ -557,7 +562,7 @@ class BIConfigActionRegistry(plugin_registry.Registry[type[ABCBIConfigAction]]):
 bi_config_action_registry = BIConfigActionRegistry()
 
 
-class BIConfigCallARuleAction(actions.BICallARuleAction, ABCBIConfigAction):
+class BIConfigCallARuleAction(BICallARuleAction, ABCBIConfigAction):
     @classmethod
     def cascading_dropdown_choice_element(cls) -> tuple[ActionKind, str, ValueSpec]:
         return (cls.kind(), _("Call a Rule"), cls.valuespec())
@@ -669,7 +674,7 @@ def is_contact_for_pack(bi_pack: BIAggregationPack) -> bool:
     return False
 
 
-class BIConfigStateOfHostAction(actions.BIStateOfHostAction, ABCBIConfigAction):
+class BIConfigStateOfHostAction(BIStateOfHostAction, ABCBIConfigAction):
     @classmethod
     def cascading_dropdown_choice_element(cls) -> tuple[ActionKind, str, ValueSpec]:
         return (cls.kind(), _("State of a host"), cls.valuespec())
@@ -700,7 +705,7 @@ class BIConfigStateOfHostAction(actions.BIStateOfHostAction, ABCBIConfigAction):
         )
 
 
-class BIConfigStateOfServiceAction(actions.BIStateOfServiceAction, ABCBIConfigAction):
+class BIConfigStateOfServiceAction(BIStateOfServiceAction, ABCBIConfigAction):
     @classmethod
     def cascading_dropdown_choice_element(cls) -> tuple[ActionKind, str, ValueSpec]:
         return (cls.kind(), _("State of a service"), cls.valuespec())
@@ -733,9 +738,7 @@ class BIConfigStateOfServiceAction(actions.BIStateOfServiceAction, ABCBIConfigAc
         )
 
 
-class BIConfigStateOfRemainingServicesAction(
-    actions.BIStateOfRemainingServicesAction, ABCBIConfigAction
-):
+class BIConfigStateOfRemainingServicesAction(BIStateOfRemainingServicesAction, ABCBIConfigAction):
     @classmethod
     def cascading_dropdown_choice_element(cls) -> tuple[ActionKind, str, ValueSpec]:
         return (cls.kind(), _("State of remaining services"), cls.valuespec())

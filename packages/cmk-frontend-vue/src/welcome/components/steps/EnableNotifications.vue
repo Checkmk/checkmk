@@ -13,9 +13,7 @@ import usePersistentRef from '@/lib/usePersistentRef.ts'
 
 import CmkAccordionStepPanelItem from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
 import CmkLinkCard from '@/components/CmkLinkCard'
-import CmkWizard from '@/components/CmkWizard/CmkWizard.vue'
-import CmkWizardButton from '@/components/CmkWizard/CmkWizardButton.vue'
-import CmkWizardStep from '@/components/CmkWizard/CmkWizardStep.vue'
+import CmkWizard, { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import StepCardsRow from '@/welcome/components/steps/components/StepCardsRow.vue'

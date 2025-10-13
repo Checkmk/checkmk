@@ -9,9 +9,7 @@ import { ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkWizard from '@/components/CmkWizard/CmkWizard.vue'
-import CmkWizardButton from '@/components/CmkWizard/CmkWizardButton.vue'
-import CmkWizardStep from '@/components/CmkWizard/CmkWizardStep.vue'
+import CmkWizard, { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import ConnectionCheck from './add-relay-configuration-steps/ConnectionCheck.vue'

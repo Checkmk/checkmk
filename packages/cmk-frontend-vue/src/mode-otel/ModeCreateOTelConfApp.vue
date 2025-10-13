@@ -9,10 +9,11 @@ import { ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkWizard from '@/components/CmkWizard/CmkWizard.vue'
-import CmkWizardButton from '@/components/CmkWizard/CmkWizardButton.vue'
-import CmkWizardModeToggle from '@/components/CmkWizard/CmkWizardModeToggle.vue'
-import CmkWizardStep from '@/components/CmkWizard/CmkWizardStep.vue'
+import CmkWizard, {
+  CmkWizardButton,
+  CmkWizardModeToggle,
+  CmkWizardStep
+} from '@/components/CmkWizard'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import ConfigureCollector from './otel-configuration-steps/ConfigureCollector.vue'

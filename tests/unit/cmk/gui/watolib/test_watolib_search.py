@@ -38,6 +38,7 @@ from cmk.gui.search import (
 from cmk.gui.search.engines import setup as search
 from cmk.gui.session import _UserContext
 from cmk.gui.type_defs import SearchResult, SearchResultsByTopic
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.wato._omd_configuration import (
     ConfigDomainApache,
     ConfigDomainDiskspace,
@@ -131,7 +132,7 @@ class MatchItemGeneratorLocDep(ABCMatchItemGenerator):
         match_texts=["localization_dependent"],
     )
 
-    def generate_match_items(self) -> MatchItems:
+    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
         yield self.match_item
 
     @staticmethod
@@ -151,7 +152,7 @@ class MatchItemGeneratorChangeDep(ABCMatchItemGenerator):
         match_texts=["change_dependent"],
     )
 
-    def generate_match_items(self) -> MatchItems:
+    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
         yield self.match_item
 
     @staticmethod
@@ -293,7 +294,7 @@ class TestIndexBuilderAndSearcher:
         Test if things can also be deleted from the index during an update
         """
 
-        def empty_match_item_gen():
+        def empty_match_item_gen(user_permissions: UserPermissions):
             yield from ()
 
         index_builder.build_full_index()

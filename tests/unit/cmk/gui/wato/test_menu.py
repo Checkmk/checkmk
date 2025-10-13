@@ -171,7 +171,6 @@ def test_unique_wato_menu_item_titels() -> None:
     assert len(titles) == len(set(titles))
 
 
-@pytest.mark.usefixtures("request_context")
 def test_match_item_generator_setup_menu() -> None:
     assert list(
         MatchItemGeneratorSetupMenu(
@@ -186,7 +185,7 @@ def test_match_item_generator_setup_menu() -> None:
                     ],
                 )
             ],
-        ).generate_match_items()
+        ).generate_match_items(UserPermissions({}, {}, {}, []))
     ) == [
         MatchItem(title="Item 1", topic="Setup", url="url 1", match_texts=["item 1"]),
         MatchItem(title="Item 2", topic="Setup", url="url 2", match_texts=["item 2"]),

@@ -32,7 +32,6 @@ from livestatus import (
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.changes as _changes
 import cmk.mkp_tool
-import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.render
 import cmk.utils.translations
@@ -83,6 +82,7 @@ from cmk.gui.user_sites import get_event_console_site_choices
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.rule_specs.legacy_converter import convert_dictionary_formspec_to_valuespec
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
@@ -5252,7 +5252,7 @@ class MatchItemGeneratorECRulePacksAndRules(ABCMatchItemGenerator):
         super().__init__(name)
         self._rule_pack_loader = rule_pack_loader
 
-    def generate_match_items(self) -> MatchItems:
+    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
         for rule_pack in self._iter_rulepacks():
             rule_pack_title = rule_pack["title"]
             rule_pack_id = rule_pack["id"]

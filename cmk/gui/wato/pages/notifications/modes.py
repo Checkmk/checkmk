@@ -92,6 +92,7 @@ from cmk.gui.utils.notifications import (
     OPTIMIZE_NOTIFICATIONS_ENTRIES,
     SUPPORT_NOTIFICATIONS_ENTRIES,
 )
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_valuespec
 from cmk.gui.utils.time import timezone_utc_offset_str
 from cmk.gui.utils.transaction_manager import transactions
@@ -4244,7 +4245,7 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
 
 
 class MatchItemGeneratorNotificationParameter(ABCMatchItemGenerator):
-    def generate_match_items(self) -> MatchItems:
+    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
         for script_name, script_title in notification_script_choices():
             title = _("%s") % script_title
             yield MatchItem(

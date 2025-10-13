@@ -9,6 +9,7 @@
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.search import ABCMatchItemGenerator, MatchItem, MatchItems
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import (
     makeuri_contextless,
 )
@@ -32,7 +33,7 @@ class MatchItemGeneratorRules(ABCMatchItemGenerator):
             return _("Deprecated rulesets")
         return f"{self._rulespec_group_registry[rulespec.main_group_name]().title}"
 
-    def generate_match_items(self) -> MatchItems:
+    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
         allow_list = get_rulespec_allow_list()
         for group in self._rulespec_registry.get_all_groups():
             for rulespec in self._rulespec_registry.get_by_group(group):

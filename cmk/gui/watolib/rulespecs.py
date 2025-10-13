@@ -1213,7 +1213,7 @@ class RulespecRegistry(cmk.ccc.plugin_registry.Registry[Rulespec]):
                 rulespecs.append(rulespec_instance)
         return rulespecs
 
-    def get_all_groups(self):
+    def get_all_groups(self) -> list[str]:
         """Returns a list of all rulespec groups that have rules registered for
 
         Can not use direct rulespec_group_registry access for this, because the

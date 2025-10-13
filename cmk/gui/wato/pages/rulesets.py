@@ -77,6 +77,7 @@ from cmk.gui.utils.escaping import escape_to_html_permissive, strip_tags
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     doc_reference_url,
@@ -3384,7 +3385,7 @@ def _get_rule_render_mode() -> RenderMode:
 
 
 class MatchItemGeneratorUnknownRuleSets(ABCMatchItemGenerator):
-    def generate_match_items(self) -> MatchItems:
+    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
         yield MatchItem(
             title=_("Unknown rulesets"),
             topic=_("Setup"),

@@ -3,10 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
-
 from collections.abc import Sequence
 
 import pytest
@@ -17,6 +13,7 @@ import cmk.gui.watolib.rulespecs
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.wato.utils import TimeperiodValuespec
 from cmk.gui.search import MatchItem
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.rule_specs.legacy_converter import GENERATED_GROUP_PREFIX
 from cmk.gui.valuespec import Dictionary, FixedValue, TextInput
 from cmk.gui.watolib.main_menu import main_module_registry
@@ -47,7 +44,7 @@ def test_rulespec_sub_group() -> None:
             return "Title"
 
         @property
-        def help(self):
+        def help(self) -> str:
             return "help text"
 
     class TestSubGroup(RulespecSubGroup):
@@ -92,7 +89,7 @@ def test_legacy_get_not_existing_rule_sub_group(monkeypatch: MonkeyPatch) -> Non
     assert group.help is None
 
 
-def _expected_rulespec_group_choices():
+def _expected_rulespec_group_choices() -> list[tuple[str, str]]:
     expected = [
         ("activechecks", "HTTP, TCP, email, ..."),
         ("agent", "Access to agents"),
@@ -365,7 +362,7 @@ class DummyGroup(RulespecGroup):
         return "Group title"
 
     @property
-    def help(self):
+    def help(self) -> str:
         return "help text"
 
 
@@ -399,7 +396,7 @@ def test_match_item_generator_rules() -> None:
             return "Rulespec Group"
 
         @property
-        def help(self):
+        def help(self) -> str:
             return ""
 
     rulespec_group_reg = RulespecGroupRegistry()
@@ -429,7 +426,7 @@ def test_match_item_generator_rules() -> None:
         rulespec_group_reg,
         rulespec_reg,
     )
-    assert list(match_item_generator.generate_match_items()) == [
+    assert list(match_item_generator.generate_match_items(UserPermissions({}, {}, {}, []))) == [
         MatchItem(
             title="Title",
             topic="Rulespec Group",

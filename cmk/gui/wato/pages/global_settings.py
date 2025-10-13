@@ -54,6 +54,7 @@ from cmk.gui.utils import escaping
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Transform, ValueSpec
@@ -706,7 +707,7 @@ class MatchItemGeneratorSettings(ABCMatchItemGenerator):
             match_texts=[title, ident],
         )
 
-    def generate_match_items(self) -> MatchItems:
+    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
         mode = self._mode_class()
         yield from (
             self._config_variable_to_match_item(config_variable, mode.edit_mode_name)

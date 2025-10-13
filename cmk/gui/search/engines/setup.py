@@ -89,7 +89,7 @@ class ABCMatchItemGenerator(ABC):
         return hash(self.name)
 
     @abstractmethod
-    def generate_match_items(self) -> MatchItems: ...
+    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems: ...
 
     @staticmethod
     @abstractmethod
@@ -232,7 +232,11 @@ class IndexBuilder:
         prefix = cls.add_to_prefix(redis_prefix, match_item_generator.name)
         key_match_texts = cls.key_match_texts(prefix)
         redis_pipeline.delete(key_match_texts)
-        for idx, match_item in enumerate(match_item_generator.generate_match_items()):
+        for idx, match_item in enumerate(
+            match_item_generator.generate_match_items(
+                UserPermissions.from_config(active_config, permission_registry)
+            )
+        ):
             redis_pipeline.hset(
                 key_match_texts,
                 key=" ".join(match_item.match_texts),

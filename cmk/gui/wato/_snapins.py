@@ -145,7 +145,7 @@ class MatchItemGeneratorSetupMenu(ABCMatchItemGenerator):
         super().__init__(name)
         self._topic_generator = topic_generator
 
-    def generate_match_items(self) -> MatchItems:
+    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
         yield from (
             MatchItem(
                 title=main_menu_item.title,
@@ -157,11 +157,7 @@ class MatchItemGeneratorSetupMenu(ABCMatchItemGenerator):
                 ],
             )
             for main_menu_topic in (
-                self._topic_generator(
-                    UserPermissions.from_config(active_config, permission_registry)
-                )
-                if self._topic_generator
-                else []
+                self._topic_generator(user_permissions) if self._topic_generator else []
             )
             for main_menu_item in get_main_menu_items_prefixed_by_segment(main_menu_topic)
         )

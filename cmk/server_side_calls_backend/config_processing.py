@@ -3,10 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
-
-# mypy: disable-error-code="type-arg"
-
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Generic, Literal, TypeVar
@@ -138,25 +134,29 @@ def _processed_config_value(
                             proxy_type, proxy_spec, global_proxies, usage_hint
                         )
                     )
-
-            results = [
-                _processed_config_value(v, global_proxies, usage_hint, is_alpha) for v in params
-            ]
-            return ReplacementResult(
-                value=tuple(res.value for res in results),
-                found_secrets={k: v for res in results for k, v in res.found_secrets.items()},
-                surrogates={k: v for res in results for k, v in res.surrogates.items()},
-            )
+                case _:
+                    results = [
+                        _processed_config_value(v, global_proxies, usage_hint, is_alpha)
+                        for v in params
+                    ]
+                    return ReplacementResult(
+                        value=tuple(res.value for res in results),
+                        found_secrets={
+                            k: v for res in results for k, v in res.found_secrets.items()
+                        },
+                        surrogates={k: v for res in results for k, v in res.surrogates.items()},
+                    )
         case dict():
             return process_configuration_to_parameters(params, global_proxies, usage_hint, is_alpha)
-    return ReplacementResult(value=params, found_secrets={}, surrogates={})
+        case other:
+            return ReplacementResult(value=other, found_secrets={}, surrogates={})
 
 
 def _replace_password(
     name: str,
     value: str | None,
     is_alpha: bool,
-) -> ReplacementResult:
+) -> ReplacementResult[alpha.Secret | v1.Secret]:
     # We need some injective function.
     surrogate = id(name)
     return ReplacementResult(

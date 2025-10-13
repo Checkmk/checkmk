@@ -8,7 +8,7 @@ import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkDropdown from '@/components/CmkDropdown'
 import CmkIndent from '@/components/CmkIndent.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 

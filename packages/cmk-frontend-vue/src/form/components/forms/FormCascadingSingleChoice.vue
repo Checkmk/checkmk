@@ -14,7 +14,7 @@ import { computed, ref, toRaw, watch } from 'vue'
 import { untranslated } from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
-import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkDropdown from '@/components/CmkDropdown'
 import FormIndent from '@/components/CmkIndent.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import HelpText from '@/components/HelpText.vue'

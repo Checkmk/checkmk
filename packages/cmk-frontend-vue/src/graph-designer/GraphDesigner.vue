@@ -21,7 +21,7 @@ import useDragging from '@/lib/useDragging'
 
 import CmkButton from '@/components/CmkButton.vue'
 import CmkColorPicker from '@/components/CmkColorPicker.vue'
-import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkDropdown from '@/components/CmkDropdown'
 import CmkSwitch from '@/components/CmkSwitch.vue'
 import type { Suggestion } from '@/components/suggestions'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'

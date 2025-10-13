@@ -15,7 +15,7 @@ import { untranslated } from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 import { immediateWatch } from '@/lib/watch'
 
-import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkDropdown from '@/components/CmkDropdown'
 import CmkList from '@/components/CmkList'
 import CmkSpace from '@/components/CmkSpace.vue'
 

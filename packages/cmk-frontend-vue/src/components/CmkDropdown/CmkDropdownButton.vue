@@ -12,7 +12,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type VariantProps, cva } from 'class-variance-authority'
 import { useTemplateRef } from 'vue'
 
-import CmkButton from './CmkButton.vue'
+import CmkButton from '@/components/CmkButton.vue'
 
 export interface ButtonProps {
   group?: ButtonVariants['group']

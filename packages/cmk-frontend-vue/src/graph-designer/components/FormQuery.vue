@@ -15,7 +15,7 @@ import { ref, watch } from 'vue'
 import { untranslated } from '@/lib/i18n'
 import usei18n from '@/lib/i18n'
 
-import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkDropdown from '@/components/CmkDropdown'
 import CmkList from '@/components/CmkList'
 import { type Suggestion } from '@/components/suggestions'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'

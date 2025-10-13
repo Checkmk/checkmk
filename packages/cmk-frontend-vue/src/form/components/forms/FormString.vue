@@ -9,7 +9,7 @@ import { X } from 'lucide-vue-next'
 
 import { untranslated } from '@/lib/i18n'
 
-import CmkDropdownButton from '@/components/CmkDropdownButton.vue'
+import CmkDropdownButton from '@/components/CmkDropdown/CmkDropdownButton.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'

@@ -8,7 +8,7 @@ import { computed } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkDropdown from '@/components/CmkDropdown'
 import CmkLabel from '@/components/CmkLabel.vue'
 import CmkList from '@/components/CmkList'
 

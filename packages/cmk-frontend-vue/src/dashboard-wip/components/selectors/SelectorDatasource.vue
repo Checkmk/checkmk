@@ -8,7 +8,7 @@ import { computed, onMounted } from 'vue'
 
 import usei18n, { untranslated } from '@/lib/i18n'
 
-import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkDropdown from '@/components/CmkDropdown'
 import type { Suggestion } from '@/components/suggestions'
 
 import { useDataSourcesCollection } from '@/dashboard-wip/composables/api/useDataSourcesCollection'

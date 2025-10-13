@@ -10,7 +10,7 @@ import { computed, ref } from 'vue'
 import usei18n, { untranslated } from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
-import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkDropdown from '@/components/CmkDropdown'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import { type ValidationMessages, validateValue } from '@/form/components/utils/validation'

@@ -11,7 +11,7 @@ import { onMounted, ref, toRaw } from 'vue'
 import { untranslated } from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
-import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkDropdown from '@/components/CmkDropdown'
 import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import { useErrorBoundary } from '@/components/useErrorBoundary'

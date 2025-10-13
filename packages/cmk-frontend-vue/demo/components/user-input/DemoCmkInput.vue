@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type ComponentInstance, ref } from 'vue'
 
 import CmkButton from '@/components/CmkButton.vue'
-import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkDropdown from '@/components/CmkDropdown'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 

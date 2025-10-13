@@ -10,7 +10,7 @@ import { fetchRestAPI } from '@/lib/cmkFetch.ts'
 import usei18n, { untranslated } from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
-import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkDropdown from '@/components/CmkDropdown'
 import type { Suggestion } from '@/components/suggestions'
 
 const { _t } = usei18n()

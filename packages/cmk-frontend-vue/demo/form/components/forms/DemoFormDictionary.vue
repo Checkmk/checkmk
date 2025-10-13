@@ -11,7 +11,7 @@ import type {
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { computed, ref } from 'vue'
 
-import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkDropdown from '@/components/CmkDropdown'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import FormEdit from '@/form/components/FormEdit.vue'

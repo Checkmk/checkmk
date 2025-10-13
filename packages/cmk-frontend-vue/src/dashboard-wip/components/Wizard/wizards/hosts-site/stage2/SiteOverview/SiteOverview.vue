@@ -8,7 +8,7 @@ import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkDropdown from '@/components/CmkDropdown'
 
 import DashboardPreviewContent from '@/dashboard-wip/components/DashboardPreviewContent.vue'
 import ContentSpacer from '@/dashboard-wip/components/Wizard/components/ContentSpacer.vue'

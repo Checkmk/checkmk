@@ -7,7 +7,7 @@ import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import { defineComponent, ref } from 'vue'
 
-import CmkDropdown from '@/components/CmkDropdown.vue'
+import CmkDropdown from '@/components/CmkDropdown'
 import { Response } from '@/components/suggestions'
 
 test('dropdown shows options', async () => {

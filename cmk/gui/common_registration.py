@@ -279,7 +279,12 @@ def register(
     )
     nodevis.register(page_registry, filter_registry, icon_and_action_registry, cron_job_registry)
     notifications.register(page_registry, permission_section_registry)
-    user_message.register(page_registry, versioned_endpoint_registry, endpoint_family_registry)
+    user_message.register(
+        page_registry,
+        versioned_endpoint_registry,
+        endpoint_family_registry,
+        ignore_duplicate_endpoints=ignore_duplicate_endpoints,
+    )
     valuespec.register(page_registry)
     autocompleters.register(page_registry, autocompleter_registry)
     werks.register(page_registry)

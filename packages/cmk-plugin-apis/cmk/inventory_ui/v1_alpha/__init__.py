@@ -9,6 +9,7 @@ from ._localize import Label, Title
 from ._node import (
     BoolField,
     ChoiceField,
+    Comparable,
     Node,
     NumberField,
     Table,
@@ -56,6 +57,7 @@ __all__ = [
     "BackgroundColor",
     "BoolField",
     "ChoiceField",
+    "Comparable",
     "DecimalNotation",
     "EngineeringScientificNotation",
     "IECNotation",

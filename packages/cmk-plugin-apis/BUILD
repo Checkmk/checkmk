@@ -130,7 +130,6 @@ py_library(
         "cmk/inventory_ui/v1_alpha/_localize.py",
         "cmk/inventory_ui/v1_alpha/_node.py",
         "cmk/inventory_ui/v1_alpha/_style.py",
-        "cmk/inventory_ui/v1_alpha/_types.py",
         "cmk/inventory_ui/v1_alpha/_unit.py",
     ],
     data = ["cmk/inventory_ui/py.typed"],

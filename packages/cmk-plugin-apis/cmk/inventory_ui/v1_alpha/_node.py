@@ -9,12 +9,21 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, KW_ONLY
-from typing import Generic, TypeVar
+from typing import Generic, Protocol, Self, TypeVar
 
 from ._localize import Label, Title
 from ._style import Alignment, BackgroundColor, LabelColor
-from ._types import SupportsRichComparison
 from ._unit import Unit
+
+
+class Comparable(Protocol):
+    """
+    An object which is comparable, ie. it supports equal, lower and greater comparisons
+    """
+
+    def __eq__(self, other: object) -> bool: ...
+    def __lt__(self, other: Self) -> bool: ...
+    def __gt__(self, other: Self) -> bool: ...
 
 
 @dataclass(frozen=True)
@@ -80,7 +89,7 @@ class TextField:
         [str],
         Iterable[Alignment | BackgroundColor | LabelColor],
     ] = lambda _: ()
-    sort_key: Callable[[str], SupportsRichComparison] | None = None
+    sort_key: Callable[[str], Comparable] | None = None
 
     def __post_init__(self) -> None:
         if not self.title.localize(lambda v: v):

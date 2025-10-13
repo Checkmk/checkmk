@@ -1044,7 +1044,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.snmplib",
         "cmk.utils",
     ),
-    Component("tests.integration.otel"): _allow(
+    Component("tests.integration.cce.otel"): _allow(
         *PACKAGE_CCC,
         "cmk.otel_collector.constants",
     ),

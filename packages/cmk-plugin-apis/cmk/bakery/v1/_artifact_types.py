@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 
@@ -281,7 +278,7 @@ class Scriptlet:
         self.lines = lines
 
     @staticmethod
-    def _validate_step(step):
+    def _validate_step(step: PkgStep) -> None:
         expected_types = (RpmStep, DebStep, SolStep)
         if not isinstance(step, expected_types):
             raise TypeError(

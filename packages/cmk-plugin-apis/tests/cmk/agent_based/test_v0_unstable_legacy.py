@@ -34,7 +34,7 @@ def _rint(x: float | int) -> str:
 def test_boundaries(
     value: int,
     levels: tuple[int, int, int, int],
-    representation: Callable[[object], object],
+    representation: Callable[[object], str],
     result: tuple[int, str],
 ) -> None:
     assert _do_check_levels(value, levels, representation) == result

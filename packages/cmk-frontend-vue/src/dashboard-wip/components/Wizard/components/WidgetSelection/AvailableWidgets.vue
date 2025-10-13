@@ -1,0 +1,37 @@
+<!--
+Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+conditions defined in the file COPYING, which is part of this source code package.
+-->
+<script setup lang="ts">
+import AvailableWidget from './AvailableWidget.vue'
+import type { WidgetItemList } from './types'
+
+interface AvailableWidgetsProps {
+  availableItems: WidgetItemList
+  enabledWidgets: string[]
+}
+
+defineProps<AvailableWidgetsProps>()
+</script>
+
+<template>
+  <div class="db-available-widgets__container">
+    <div v-for="(item, index) in availableItems" :key="index">
+      <AvailableWidget
+        :label="item.label"
+        :icon="item.icon"
+        :disabled="!enabledWidgets.includes(item.id)"
+      />
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.db-available-widgets__container {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  width: 100%;
+}
+</style>

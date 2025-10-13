@@ -2899,6 +2899,8 @@ def main_update(
             )
 
             additional_update_env = {
+                "OMD_FROM_EDITION": from_edition,
+                "OMD_FROM_VERSION": from_version,
                 "OMD_TO_EDITION": to_edition,
                 "OMD_TO_VERSION": to_version,
             }

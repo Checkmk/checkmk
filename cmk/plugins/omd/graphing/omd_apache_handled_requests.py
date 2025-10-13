@@ -37,6 +37,48 @@ metric_requests_cmk_dashboards = metrics.Metric(
     unit=UNIT_PER_SECOND,
     color=metrics.Color.DARK_BLUE,
 )
+metric_requests_cmk_api = metrics.Metric(
+    name="requests_cmk_api",
+    title=Title("Checkmk: API: Requests"),
+    unit=UNIT_PER_SECOND,
+    color=metrics.Color.ORANGE,
+)
+metric_requests_cmk_ajax = metrics.Metric(
+    name="requests_cmk_ajax",
+    title=Title("Checkmk: Ajax: Requests"),
+    unit=UNIT_PER_SECOND,
+    color=metrics.Color.LIGHT_YELLOW,
+)
+metric_requests_cmk_index = metrics.Metric(
+    name="requests_cmk_index",
+    title=Title("Checkmk: Index: Requests"),
+    unit=UNIT_PER_SECOND,
+    color=metrics.Color.DARK_YELLOW,
+)
+metric_requests_cmk_login = metrics.Metric(
+    name="requests_cmk_login",
+    title=Title("Checkmk: Login: Requests"),
+    unit=UNIT_PER_SECOND,
+    color=metrics.Color.DARK_RED,
+)
+metric_requests_cmk_search = metrics.Metric(
+    name="requests_cmk_search",
+    title=Title("Checkmk: Search: Requests"),
+    unit=UNIT_PER_SECOND,
+    color=metrics.Color.LIGHT_BROWN,
+)
+metric_requests_cmk_sidebar = metrics.Metric(
+    name="requests_cmk_sidebar",
+    title=Title("Checkmk: Sidebar: Requests"),
+    unit=UNIT_PER_SECOND,
+    color=metrics.Color.BROWN,
+)
+metric_requests_cmk_graphs = metrics.Metric(
+    name="requests_cmk_graphs",
+    title=Title("Checkmk: Graphs: Requests"),
+    unit=UNIT_PER_SECOND,
+    color=metrics.Color.DARK_BROWN,
+)
 metric_requests_cmk_other = metrics.Metric(
     name="requests_cmk_other",
     title=Title("Checkmk: Other: Requests"),
@@ -95,6 +137,13 @@ graph_handled_requests = graphs.Graph(
         "requests_cmk_bi",
         "requests_cmk_snapins",
         "requests_cmk_dashboards",
+        "requests_cmk_api",
+        "requests_cmk_ajax",
+        "requests_cmk_index",
+        "requests_cmk_login",
+        "requests_cmk_search",
+        "requests_cmk_sidebar",
+        "requests_cmk_graphs",
         "requests_cmk_other",
         "requests_nagvis_snapin",
         "requests_nagvis_ajax",

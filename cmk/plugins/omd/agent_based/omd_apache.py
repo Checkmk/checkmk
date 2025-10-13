@@ -45,6 +45,13 @@ OMD_APACHE_PATTERNS: list[tuple[PerfKey, URLRegex]] = [
     ("cmk_bi", re.compile(r"^check_mk/bi\.py")),
     ("cmk_snapins", re.compile(r"^check_mk/sidebar_snapin\.py")),
     ("cmk_dashboards", re.compile(r"^check_mk/dashboard(\.py|_dashlet\.py)")),
+    ("cmk_api", re.compile(r"^check_mk/api/")),
+    ("cmk_ajax", re.compile(r"^check_mk/ajax_.*\.py")),
+    ("cmk_index", re.compile(r"^check_mk/index.*\.py")),
+    ("cmk_login", re.compile(r"^check_mk/login.*\.py")),
+    ("cmk_search", re.compile(r"^check_mk/search_open.*\.py")),
+    ("cmk_sidebar", re.compile(r"^check_mk/sidebar_.*\.py")),
+    ("cmk_graphs", re.compile(r"^check_mk/(host_service_graph_popup\.py|custom_graph.*)")),
     ("cmk_other", re.compile(r"^check_mk/.*\.py")),
     (
         "nagvis_snapin",

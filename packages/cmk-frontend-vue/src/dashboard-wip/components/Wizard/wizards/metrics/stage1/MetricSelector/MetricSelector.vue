@@ -45,18 +45,18 @@ const _updateMetricType = (value: string) => {
   />
   <CmkIndent>
     <div class="db-metric-selector__container">
-      <CmkLabel>{{ _t('Service metric') }} (*)</CmkLabel>
-      <ContentSpacer />
-
       <div v-if="metricType === MetricSelection.SINGLE_METRIC">
+        <CmkLabel>{{ _t('Service metric') }} (*)</CmkLabel>
+        <ContentSpacer />
         <CmkIndent>
           <SingleMetricSelector v-model:handler="singleMetricHandler" />
         </CmkIndent>
       </div>
-      <CombinedMetricSelector
-        v-if="metricType === MetricSelection.COMBINED_GRAPH"
-        v-model:handler="combinedMetricHandler"
-      />
+      <div v-if="metricType === MetricSelection.COMBINED_GRAPH">
+        <CmkLabel>{{ _t('Service graph') }} (*)</CmkLabel>
+        <ContentSpacer />
+        <CombinedMetricSelector v-model:handler="combinedMetricHandler" />
+      </div>
     </div>
   </CmkIndent>
 </template>

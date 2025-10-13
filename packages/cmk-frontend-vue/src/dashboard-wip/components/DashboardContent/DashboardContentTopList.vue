@@ -96,7 +96,7 @@ const percentage = (metricValue: number) => {
 </script>
 
 <template>
-  <DashboardContentContainer v-bind="general_settings">
+  <DashboardContentContainer :general_settings="general_settings">
     <div v-if="isLoading" class="db-content-top-list__loading">
       {{ _t('Loading Top list content') }}...
     </div>

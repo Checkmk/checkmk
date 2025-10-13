@@ -118,7 +118,7 @@ function formatTimestamp(timestamp: number): string {
 </script>
 
 <template>
-  <DashboardContentContainer v-bind="general_settings">
+  <DashboardContentContainer :general_settings="general_settings">
     <div>
       <table v-if="messages!.length" class="db-content-user-messages__table">
         <tbody>

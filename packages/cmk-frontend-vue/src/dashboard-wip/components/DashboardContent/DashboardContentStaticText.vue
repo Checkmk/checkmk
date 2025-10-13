@@ -14,7 +14,7 @@ const content = props.content as StaticTextContent
 </script>
 
 <template>
-  <DashboardContentContainer v-bind="general_settings">
+  <DashboardContentContainer :general_settings="general_settings">
     <div class="db-content-static-text__text">
       {{ content.text }}
     </div>

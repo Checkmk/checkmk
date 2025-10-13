@@ -366,6 +366,7 @@ certifi==2025.10.5 \
     #   -r requirements_all.txt
     #   httpcore
     #   httpx
+    #   influxdb-client
     #   kubernetes
     #   msrest
     #   netapp-ontap
@@ -557,9 +558,9 @@ check-manifest==0.50 \
     --hash=sha256:6ab3e3aa72a008da3314b432f4c768c9647b4d6d8032f9e1a4672a572118e48c \
     --hash=sha256:d300f9f292986aa1a30424af44eb45c5644e0a810e392e62d553b24bb3393494
     # via devpi-client
-checkmk-dev-tools==0.7.1 \
-    --hash=sha256:979d06590d7a36beb64df61d46b1488ceb465b127db863a6504c360a2ca2781a \
-    --hash=sha256:ccb74b1a45c68c987f37dc3c37134044e54e7d8dc6645fe0549359b3bf25c2e2
+checkmk-dev-tools==1.0.0 \
+    --hash=sha256:5af8ae55cd1884d8dcdb9c43bd931eaaac6f5443f8228d58f8d780f5822ef26a \
+    --hash=sha256:c19841516909b5c6c2336a1a0bc08b4632a0118c2c81e972cc9c604f187830d7
     # via -r requirements_dev.txt
 click==8.3.0 \
     --hash=sha256:9b9f285302c6e3064f4330c05f05b81945b2a39544279343e6e7c5f27a9baddc \
@@ -1352,6 +1353,10 @@ inflect==5.6.2 \
     --hash=sha256:aadc7ed73928f5e014129794bbac03058cca35d0a973a5fc4eb45c7fa26005f9 \
     --hash=sha256:b45d91a4a28a4e617ff1821117439b06eaa86e2a4573154af0149e9be6687238
     # via datamodel-code-generator
+influxdb-client==1.49.0 \
+    --hash=sha256:4a53a218adef6ac9458bfbd31fa08c76194f70310c6b4e01f53d804bd2c48e03 \
+    --hash=sha256:b3a688f02cdf18e17ec08ef35bee489fdb90e4e5969bd0a8dd1a8657a66d892b
+    # via checkmk-dev-tools
 iniconfig==2.1.0 \
     --hash=sha256:3abbd2e30b36733fee78f9c7f7308f2d0050e88f0087fd25c2645f63c773e1c7 \
     --hash=sha256:9deba5723312380e77435581c6bf4935c94cbfab9b1ed33ef8d238ea168eb760
@@ -3374,6 +3379,7 @@ python-dateutil==2.9.0.post0 \
     #   botocore
     #   bson
     #   icalendar
+    #   influxdb-client
     #   kubernetes
     #   opsgenie-sdk
     #   pyghmi
@@ -3495,6 +3501,10 @@ pyyaml==6.0.2 \
     #   schemathesis
     #   sphinx-autoapi
     #   vcrpy
+reactivex==4.0.4 \
+    --hash=sha256:0004796c420bd9e68aad8e65627d85a8e13f293de76656165dffbcb3a0e3fb6a \
+    --hash=sha256:e912e6591022ab9176df8348a653fe8c8fa7a301f26f9931c9d8c78a650e04e8
+    # via influxdb-client
 readme-renderer==43.0 \
     --hash=sha256:1818dd28140813509eeed8d62687f7cd4f7bad90d4db586001c5dc09d4fde311 \
     --hash=sha256:19db308d86ecd60e5affa3b2a98f017af384678c63c88e5d4556a380e674f3f9
@@ -3933,6 +3943,7 @@ setuptools==70.3.0 \
     # via
     #   -r requirements_all.txt
     #   check-manifest
+    #   influxdb-client
     #   kubernetes
     #   opsgenie-sdk
     #   pbr
@@ -4371,6 +4382,7 @@ typing-extensions==4.15.0 \
     #   pydantic
     #   pydantic-core
     #   pyee
+    #   reactivex
     #   referencing
     #   starlette
     #   types-lxml
@@ -4492,6 +4504,7 @@ urllib3==2.5.0 \
     #   -r requirements_all.txt
     #   botocore
     #   docker
+    #   influxdb-client
     #   kubernetes
     #   netapp-ontap
     #   opsgenie-sdk

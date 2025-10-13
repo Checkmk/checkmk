@@ -5,7 +5,7 @@
  */
 import { type Component, type Ref, h, onErrorCaptured, ref } from 'vue'
 
-import ErrorBoundary from './private/ErrorBoundary.vue'
+import CmkErrorBoundary from './CmkErrorBoundary.vue'
 
 /**
  * ATTENTION, this might seem that you only catch errors from components
@@ -16,7 +16,7 @@ import ErrorBoundary from './private/ErrorBoundary.vue'
  * all the time, otherwise you may catch an error that is not immediately
  * visible.
  */
-export function useErrorBoundary(): { ErrorBoundary: Component; error: Ref<Error | null> } {
+export function useCmkErrorBoundary(): { CmkErrorBoundary: Component; error: Ref<Error | null> } {
   // we use a composeable here, because otherwise we can not catch errors that happen directly
   // in the component, but only from child components.
   const error = ref<Error | null>(null)
@@ -26,7 +26,7 @@ export function useErrorBoundary(): { ErrorBoundary: Component; error: Ref<Error
     return false
   })
   return {
-    ErrorBoundary: h(ErrorBoundary, { error: error }),
+    CmkErrorBoundary: h(CmkErrorBoundary, { error: error }),
     error: error
   }
 }

@@ -8,8 +8,8 @@ import { computed, onBeforeMount, provide, ref } from 'vue'
 
 import { randomId } from '@/lib/randomId'
 
+import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
 import CmkIcon from '@/components/CmkIcon'
-import { useErrorBoundary } from '@/components/useErrorBoundary'
 
 import DashboardComponent from '@/dashboard-wip/components/DashboardComponent.vue'
 import DashboardFilterSettings from '@/dashboard-wip/components/DashboardFilterSettings/DashboardFilterSettings.vue'
@@ -47,7 +47,8 @@ import { dashboardAPI, urlHandler } from '@/dashboard-wip/utils.ts'
 
 import DashboardSettingsWizard from './components/Wizard/DashboardSettingsWizard.vue'
 
-const { ErrorBoundary: errorBoundary } = useErrorBoundary()
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const { CmkErrorBoundary } = useCmkErrorBoundary()
 
 const props = defineProps<DashboardPageProperties>()
 
@@ -292,7 +293,7 @@ function deepClone<T>(obj: T): T {
 </script>
 
 <template>
-  <errorBoundary>
+  <CmkErrorBoundary>
     <div>
       <DashboardMenuHeader
         :selected-dashboard="selectedDashboard"
@@ -383,5 +384,5 @@ function deepClone<T>(obj: T): T {
     <template v-else>
       <CmkIcon name="load-graph" size="xxlarge" />
     </template>
-  </errorBoundary>
+  </CmkErrorBoundary>
 </template>

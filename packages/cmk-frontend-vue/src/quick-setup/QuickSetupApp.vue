@@ -6,8 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { onBeforeMount, onUnmounted } from 'vue'
 
+import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
 import CmkIcon from '@/components/CmkIcon'
-import { useErrorBoundary } from '@/components/useErrorBoundary'
 
 import QuickSetupAsync from './QuickSetupAsync.vue'
 import type { QuickSetupAppProps } from './types'
@@ -27,10 +27,10 @@ onUnmounted(() => {
   }
 })
 // eslint-disable-next-line @typescript-eslint/naming-convention
-const { ErrorBoundary } = useErrorBoundary()
+const { CmkErrorBoundary } = useCmkErrorBoundary()
 </script>
 <template>
-  <ErrorBoundary>
+  <CmkErrorBoundary>
     <!-- this seems okay, but it does not show a good error message !-->
     <Suspense>
       <QuickSetupAsync
@@ -43,7 +43,7 @@ const { ErrorBoundary } = useErrorBoundary()
         <CmkIcon name="load-graph" size="xxlarge" />
       </template>
     </Suspense>
-  </ErrorBoundary>
+  </CmkErrorBoundary>
 </template>
 
 <style>

@@ -52,7 +52,7 @@ export const pages = [
   new Page('ToggleButtonGroup', DemoToggleButtonGroup),
   new Page('CmkButton', DemoCmkButton),
   new Page('CmkDropdown', DemoCmkDropdown),
-  new Page('ErrorBoundary', DemoErrorBoundary),
+  new Page('CmkErrorBoundary', DemoErrorBoundary),
   new Page('CmkSwitch', DemoCmkSwitch),
   new Page('CmkColorPicker', DemoCmkColorPicker),
   new Page('CmkHtml', DemoCmkHtml),

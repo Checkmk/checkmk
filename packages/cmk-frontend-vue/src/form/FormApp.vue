@@ -10,8 +10,8 @@ import { computed, ref } from 'vue'
 import { untranslated } from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
+import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
 import HelpText from '@/components/HelpText.vue'
-import { useErrorBoundary } from '@/components/useErrorBoundary'
 
 import FormReadonly from '@/form/components/FormReadonly.vue'
 import type { ValidationMessages } from '@/form/components/utils/validation'
@@ -60,12 +60,12 @@ function toggleActiveMode() {
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-const { ErrorBoundary } = useErrorBoundary()
+const { CmkErrorBoundary } = useCmkErrorBoundary()
 </script>
 
 <template>
   <div :id="`form-app--${id}`">
-    <ErrorBoundary>
+    <CmkErrorBoundary>
       <input
         v-if="showToggleMode"
         type="button"
@@ -87,7 +87,7 @@ const { ErrorBoundary } = useErrorBoundary()
         <!-- This input field contains the computed json value which is sent when the form is submitted -->
         <input v-model="valueAsJSON" :name="id" type="hidden" />
       </div>
-    </ErrorBoundary>
+    </CmkErrorBoundary>
   </div>
 </template>
 

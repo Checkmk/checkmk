@@ -17,9 +17,9 @@ import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
 import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
 import CmkDialog from '@/components/CmkDialog.vue'
+import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
 import CmkIcon from '@/components/CmkIcon'
 import CmkSpace from '@/components/CmkSpace.vue'
-import { useErrorBoundary } from '@/components/useErrorBoundary'
 
 import { useFormEditDispatcher } from '@/form/private'
 
@@ -102,12 +102,12 @@ immediateWatch(() => ({ api: props.api, objectId: props.objectId }), reloadAll)
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const { FormEditDispatcher } = useFormEditDispatcher()
 // eslint-disable-next-line @typescript-eslint/naming-convention
-const { ErrorBoundary } = useErrorBoundary()
+const { CmkErrorBoundary } = useCmkErrorBoundary()
 </script>
 
 <template>
   <div class="form-single-choice-editable-edit-async__wrapper">
-    <ErrorBoundary>
+    <CmkErrorBoundary>
       <CmkDialog
         class="form-single-choice-editable-edit-async__dialog"
         :message="untranslated(props.i18n.permanent_choice_warning)"
@@ -139,7 +139,7 @@ const { ErrorBoundary } = useErrorBoundary()
       <div v-if="schema === undefined">
         <CmkIcon name="load-graph" size="xxlarge" /> {{ i18n.loading }}
       </div>
-    </ErrorBoundary>
+    </CmkErrorBoundary>
   </div>
 </template>
 

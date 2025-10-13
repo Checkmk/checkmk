@@ -8,9 +8,9 @@ import { defineComponent } from 'vue'
 
 import { CmkError } from '@/lib/error.ts'
 
-import { useErrorBoundary } from '@/components/useErrorBoundary'
+import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
 
-test('ErrorBoundary shows full stack', async () => {
+test('CmkErrorBoundary shows full stack', async () => {
   class DemoError<T extends Error> extends CmkError<T> {
     override name = 'DemoError'
     override getContext(): string {
@@ -22,7 +22,7 @@ test('ErrorBoundary shows full stack', async () => {
     components: {},
     setup() {
       // eslint-disable-next-line @typescript-eslint/naming-convention
-      const { ErrorBoundary } = useErrorBoundary()
+      const { CmkErrorBoundary } = useCmkErrorBoundary()
       function throwCmkError() {
         try {
           try {
@@ -39,14 +39,14 @@ test('ErrorBoundary shows full stack', async () => {
         throw new Error(message)
       }
       return {
-        ErrorBoundary,
+        CmkErrorBoundary,
         throwError,
         throwCmkError
       }
     },
     template: `
       <div>
-        <component :is=ErrorBoundary>
+        <component :is=CmkErrorBoundary>
           <button @click="throwError('this is a test error')">throw new Error()</button>
           <button @click="throwCmkError()">throw new CmkError()</button>
         </component>

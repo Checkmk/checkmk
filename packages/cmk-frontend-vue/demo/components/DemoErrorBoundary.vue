@@ -9,7 +9,7 @@ import { defineComponent } from 'vue'
 
 import { CmkError } from '@/lib/error.ts'
 
-import { useErrorBoundary } from '@/components/useErrorBoundary'
+import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
 
 const props = defineProps<{ screenshotMode: boolean }>()
 
@@ -46,17 +46,17 @@ const ScreenshotModeEnabler = defineComponent(() => {
 }, {})
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-const { ErrorBoundary } = useErrorBoundary()
+const { CmkErrorBoundary } = useCmkErrorBoundary()
 </script>
 
 <template>
   <div>
     &lt;ErrorBoundary&gt;
-    <ErrorBoundary>
+    <CmkErrorBoundary>
       <button @click="throwError('this is a test error')">throw new Error()</button>
       <button @click="throwCmkError()">throw new CmkError()</button>
       <ScreenshotModeEnabler />
-    </ErrorBoundary>
+    </CmkErrorBoundary>
     &lt;/ErrorBoundary&gt;
   </div>
   <!-- I would have expected that this also triggers the onErrorCaptured method in useErrorBoundary, but its also fine this way -->

@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { useErrorBoundary } from '@/components/useErrorBoundary'
+import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
 
 import type {
   ContentProps,
@@ -72,11 +72,12 @@ const widgetContentProps = computed<ContentPropsRecord>(() => {
   return record
 })
 
-const { ErrorBoundary: errorBoundary } = useErrorBoundary()
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const { CmkErrorBoundary } = useCmkErrorBoundary()
 </script>
 
 <template>
-  <errorBoundary>
+  <CmkErrorBoundary>
     <ResponsiveGrid
       v-if="dashboard.content.layout.type === 'responsive_grid'"
       v-model:content="dashboard.content as ContentResponsiveGrid"
@@ -98,5 +99,5 @@ const { ErrorBoundary: errorBoundary } = useErrorBoundary()
       @widget:delete="$emit('widget:delete', $event)"
       @widget:clone="(oldWidgetId, newLayout) => $emit('widget:clone', oldWidgetId, newLayout)"
     />
-  </errorBoundary>
+  </CmkErrorBoundary>
 </template>

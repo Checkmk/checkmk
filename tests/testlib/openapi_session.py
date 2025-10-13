@@ -144,6 +144,7 @@ class CMKOpenApiSession(requests.Session):
         self.event_console = EventConsoleAPI(self)
         self.saml2 = Saml2API(self)
         self.relays = RelayAPI(self)
+        self.metric_backend = MetricBackendAPI(self)
 
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
@@ -1611,6 +1612,71 @@ class RelayAPI(BaseAPI):
         )
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
+
+
+class MetricBackendAPI(BaseAPI):
+    def __init__(self, session: CMKOpenApiSession):
+        super().__init__(session)
+        self._base_url_internal = f"http://{self.session.host}:{self.session.port}/{self.session.site}/check_mk/api/internal"
+
+    def disable_metric_backend(self, site_id: str) -> None:
+        response = self.session.put(
+            url=self._config_endpoint_url(),
+            json={
+                "site_id": site_id,
+                "config": {
+                    "type": "disabled",
+                },
+            },
+        )
+
+        if not response.ok:
+            raise UnexpectedResponse.from_response(response)
+
+    def enable_site_local_metric_backend(self, site_id: str) -> None:
+        response = self.session.put(
+            url=self._config_endpoint_url(),
+            json={
+                "site_id": site_id,
+                "config": {
+                    "type": "site_local",
+                },
+            },
+        )
+
+        if not response.ok:
+            raise UnexpectedResponse.from_response(response)
+
+    def enable_custom_metric_backend(
+        self,
+        *,
+        site_id: str,
+        address: str,
+        tcp_port: int,
+        http_port: int,
+        username: str,
+        password: str,
+    ) -> None:
+        response = self.session.put(
+            url=self._config_endpoint_url(),
+            json={
+                "site_id": site_id,
+                "config": {
+                    "type": "custom",
+                    "address": address,
+                    "tcp_port": tcp_port,
+                    "http_port": http_port,
+                    "username": username,
+                    "password": password,
+                },
+            },
+        )
+
+        if not response.ok:
+            raise UnexpectedResponse.from_response(response)
+
+    def _config_endpoint_url(self) -> str:
+        return f"{self._base_url_internal}/domain-types/metric_backend/actions/update/invoke"
 
 
 class AgentReceiverRelayAPI(ARBaseAPI):

@@ -294,6 +294,8 @@ PACKAGE_CRYPTO = ("cmk.crypto",)
 
 PACKAGE_TRACE = ("cmk.trace",)
 
+PACKAGE_METRIC_BACKEND = ("cmk.metric_backend",)
+
 CLEAN_UTILS_MODULES = (
     "agent_registration",
     "auto_queue",
@@ -624,6 +626,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     Component("cmk.gui.cce"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_PLUGIN_APIS,
+        *PACKAGE_METRIC_BACKEND,
         "cmk.cce.metric_backend.gui",
         "cmk.checkengine",
         "cmk.cee.robotmk.gui",
@@ -958,17 +961,17 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.otel_collector",
     ),
     Component("cmk.cce.metric_backend.dcd"): _allow(
+        *PACKAGE_METRIC_BACKEND,
         "cmk.ccc",
         "cmk.cee.dcd",
         "cmk.utils",
-        "cmk.metric_backend",
     ),
     Component("cmk.cce.metric_backend.gui"): _allow(
         *PACKAGE_PLUGIN_APIS,
+        *PACKAGE_METRIC_BACKEND,
         "cmk.ccc",
         "cmk.fields",
         "cmk.gui",
-        "cmk.metric_backend",
         "cmk.utils",
     ),
     Component("omdlib"): _allow(

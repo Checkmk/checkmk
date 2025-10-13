@@ -225,7 +225,7 @@ def check_host_services(
         s
         for s in services
         if s.check_plugin_name in run_plugin_names
-        and not _service_outside_check_period(
+        and _service_inside_check_period(
             s.description, get_check_period(s.description, s.labels), timeperiods_active
         )
     ):
@@ -241,13 +241,13 @@ def check_host_services(
             yield plugin.function(host_name, service, providers=providers)
 
 
-def _service_outside_check_period(
+def _service_inside_check_period(
     description: ServiceName, period: TimeperiodName | None, timeperiods_active: Mapping[str, bool]
 ) -> bool:
     if period is None:
-        return False
+        return True
     if timeperiods_active.get(period, True):
         console.debug(f"Service {description}: time period {period} is currently active.")
-        return False
+        return True
     console.verbose(f"Skipping service {description}: currently not in time period {period}.")
-    return True
+    return False

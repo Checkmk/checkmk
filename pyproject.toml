@@ -178,7 +178,7 @@ enable_error_code = [
   # "possibly-undefined",  # lots of findings all over the place
   # "redundant-expr",      # lots of findings all over the place
   "redundant-self",
-  # "truthy-bool",         # lots of findings all over the place
+  "truthy-bool",
   "truthy-iterable",
   "unimported-reveal",
   "unused-awaitable",

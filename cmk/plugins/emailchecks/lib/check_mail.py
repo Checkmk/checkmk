@@ -151,7 +151,7 @@ def prepare_messages_for_ec(args: Args, mails: MailMessages) -> list[str]:
                 + " | "  # type: ignore[operator]
                 + (
                     msg.text_body[: args.body_limit]  # type: ignore[index]
-                    if msg.text_body
+                    if msg.text_body  # type: ignore[truthy-bool]
                     else "No mail body found."
                 )
             )

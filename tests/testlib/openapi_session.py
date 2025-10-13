@@ -1269,6 +1269,33 @@ class PasswordsAPI(BaseAPI):
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
 
+    def delete(
+        self,
+        ident: str,
+    ) -> None:
+        """Delete a password via REST API."""
+        response = self.session.delete(f"/objects/password/{ident}", headers={"If-Match": "*"})
+
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
+    def get_all(self) -> list[dict[str, Any]]:
+        """Get all configured passwords via REST API."""
+        response = self.session.get(
+            "/domain-types/password/collections/all", headers={"Content-Type": "application/json"}
+        )
+
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+        value: list[dict[str, Any]] = response.json()["value"]
+        return value
+
+    def exists(self, ident: str) -> bool:
+        """Check if a password exists via REST API."""
+        raw_passwords = self.get_all()
+        return any(pw["id"] == ident for pw in raw_passwords)
+
 
 class LicenseAPI(BaseAPI):
     def download(self) -> requests.Response:

@@ -15,13 +15,19 @@
 #   +----------------------------------------------------------------------+
 
 from collections.abc import Mapping
-from typing import override
+from typing import override, TypedDict
 
 from cmk.bi.actions import BIActionSchema, BICallARuleAction, BIStateOfHostActionSchema
 from cmk.bi.lib import ABCBICompiledNode, ABCBISearcher, create_nested_schema
 from cmk.bi.node_generator_interface import ABCBINodeGenerator
 from cmk.bi.schema import Schema
 from cmk.bi.search import BIEmptySearchSchema, BISearchSchema
+from cmk.bi.type_defs import ActionSerialized, SearchSerialized
+
+
+class BINodeGeneratorSerialized(TypedDict):
+    search: SearchSerialized
+    action: ActionSerialized
 
 
 class BINodeGenerator(ABCBINodeGenerator):
@@ -48,7 +54,7 @@ class BINodeGenerator(ABCBINodeGenerator):
 
         return sorted(self.action.execute_search_results(search_results, macros, bi_searcher))
 
-    def serialize(self):
+    def serialize(self) -> BINodeGeneratorSerialized:
         return {
             "search": self.search.serialize(),
             "action": self.action.serialize(),

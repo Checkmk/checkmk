@@ -32,8 +32,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.plugins.wato.check_parameters.local import _parameter_valuespec_local
 from cmk.gui.plugins.wato.check_parameters.ps import _valuespec_inventory_processes_rules
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.rule_specs import legacy_converter
-from cmk.gui.watolib import rulesets
+from cmk.gui.watolib import password_store, rulesets
 from cmk.gui.watolib.configuration_bundle_store import BundleId
 from cmk.gui.watolib.configuration_bundles import create_config_bundle, CreateBundleEntities
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
@@ -961,7 +960,7 @@ def test_diff_to_no_changes(rule_helper: _RuleHelper) -> None:
     rule = rule_helper.rule()
     # An uuid is created every time a rule is created/edited, so mock it here for the comparison.
     # The actual password should stay the same
-    with patch.object(legacy_converter, "ad_hoc_password_id", return_value="test-uuid"):
+    with patch.object(password_store, "ad_hoc_password_id", return_value="test-uuid"):
         assert rule.diff_to(rule) == "Nothing was changed."
 
 
@@ -976,7 +975,7 @@ def test_diff_to_secret_unchanged(rule_helper: _RuleHelper) -> None:
     new.value[rule_helper.other_attr] = "new_value"
     # An uuid is created every time a rule is created/edited, so mock it here for the comparison.
     # The actual password should stay the same
-    with patch.object(legacy_converter, "ad_hoc_password_id", return_value="test-uuid"):
+    with patch.object(password_store, "ad_hoc_password_id", return_value="test-uuid"):
         diff = old.diff_to(new)
     assert "Redacted secrets changed." not in diff
     assert 'changed from "old_value" to "new_value".' in diff

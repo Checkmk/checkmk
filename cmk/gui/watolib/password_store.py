@@ -7,7 +7,7 @@
 
 import subprocess
 from collections.abc import Mapping
-from typing import override
+from typing import Literal, override
 
 from cmk.ccc import store
 from cmk.gui import userdb, valuespec
@@ -15,10 +15,11 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Choices
+from cmk.gui.valuespec import Transform
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSimpleConfigFile
 from cmk.gui.watolib.utils import wato_root_dir
 from cmk.utils import password_store
-from cmk.utils.password_store import Password
+from cmk.utils.password_store import ad_hoc_password_id, Password
 
 
 class PasswordStore(WatoSimpleConfigFile[Password]):
@@ -201,3 +202,43 @@ def MigrateToIndividualOrStoredPassword(
         ),
         migrate=lambda v: ("password", v) if not isinstance(v, tuple) else v,
     )
+
+
+def postprocessable_ios_password(
+    *,
+    title: str | None,
+    help_text: str | None,
+) -> Transform:
+    return Transform(
+        IndividualOrStoredPassword(
+            title=title,
+            help=help_text,
+            allow_empty=False,
+        ),
+        forth=_transform_password_forth,
+        back=_transform_password_back,
+    )
+
+
+def _transform_password_forth(value: object) -> tuple[str, str]:
+    match value:
+        case "cmk_postprocessed", "explicit_password", (str(), str(password)):
+            return "password", password
+        case "cmk_postprocessed", "stored_password", (str(password_store_id), str()):
+            return "store", password_store_id
+        case _other:
+            raise ValueError(value)
+
+
+def _transform_password_back(
+    value: tuple[str, str],
+) -> tuple[
+    Literal["cmk_postprocessed"], Literal["explicit_password", "stored_password"], tuple[str, str]
+]:
+    match value:
+        case "password", str(password):
+            return "cmk_postprocessed", "explicit_password", (ad_hoc_password_id(), password)
+        case "store", str(password_store_id):
+            return "cmk_postprocessed", "stored_password", (password_store_id, "")
+        case _other:
+            raise ValueError(value)

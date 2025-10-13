@@ -53,7 +53,7 @@ from cmk.gui.watolib import config_domains as legacy_config_domains
 from cmk.gui.watolib import rulespec_groups as legacy_rulespec_groups
 from cmk.gui.watolib import rulespecs as legacy_rulespecs
 from cmk.gui.watolib import timeperiods as legacy_timeperiods
-from cmk.gui.watolib.password_store import IndividualOrStoredPassword
+from cmk.gui.watolib.password_store import postprocessable_ios_password
 from cmk.gui.watolib.rulespecs import (
     CheckParameterRulespecWithItem,
     CheckParameterRulespecWithoutItem,
@@ -64,7 +64,6 @@ from cmk.gui.watolib.rulespecs import (
 )
 from cmk.rulesets import v1 as ruleset_api_v1
 from cmk.shared_typing.vue_formspec_components import ListOfStringsLayout
-from cmk.utils.password_store import ad_hoc_password_id
 from cmk.utils.rulesets.definition import RuleGroup
 
 RulespecGroupMonitoringAgentsAgentPlugins: type[RulespecSubGroup] | None
@@ -2334,41 +2333,12 @@ def _convert_to_legacy_monitored_service_description(
     return legacy_valuespecs.MonitoredServiceDescription(**converted_kwargs)
 
 
-def _transform_password_forth(value: object) -> tuple[str, str]:
-    match value:
-        case "cmk_postprocessed", "explicit_password", (str(), str(password)):
-            return "password", password
-        case "cmk_postprocessed", "stored_password", (str(password_store_id), str()):
-            return "store", password_store_id
-
-    raise ValueError(value)
-
-
-def _transform_password_back(
-    value: tuple[str, str],
-) -> tuple[
-    Literal["cmk_postprocessed"], Literal["explicit_password", "stored_password"], tuple[str, str]
-]:
-    match value:
-        case "password", str(password):
-            return "cmk_postprocessed", "explicit_password", (ad_hoc_password_id(), password)
-        case "store", str(password_store_id):
-            return "cmk_postprocessed", "stored_password", (password_store_id, "")
-
-    raise ValueError(value)
-
-
 def _convert_to_legacy_individual_or_stored_password(
     to_convert: ruleset_api_v1.form_specs.Password, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.Transform:
-    return Transform(
-        IndividualOrStoredPassword(
-            title=_localize_optional(to_convert.title, localizer),
-            help=_localize_optional(to_convert.help_text, localizer),
-            allow_empty=False,
-        ),
-        forth=_transform_password_forth,
-        back=_transform_password_back,
+    return postprocessable_ios_password(
+        title=_localize_optional(to_convert.title, localizer),
+        help_text=_localize_optional(to_convert.help_text, localizer),
     )
 
 

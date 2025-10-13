@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Checker to prevent disallowed imports of modules"""
 
+# mypy: disable-error-code="misc"
+
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence

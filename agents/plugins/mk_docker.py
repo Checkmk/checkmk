@@ -3,11 +3,13 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-r"""Check_MK Agent Plug-in: mk_docker.py
 
+# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
+
+r"""Check_MK Agent Plug-in: mk_docker.py
 
 This plugin is configured using an ini-style configuration file,
 i.e. a file with lines of the form 'key: value'.
@@ -270,7 +272,7 @@ class ParallelDfCall:
             return json.loads(file_.read())
 
 
-class MKDockerClient(docker.DockerClient):  # type: ignore[misc]
+class MKDockerClient(docker.DockerClient):
     """a docker.DockerClient that caches containers and node info"""
 
     API_VERSION = "auto"

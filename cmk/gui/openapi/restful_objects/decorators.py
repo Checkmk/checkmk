@@ -5,7 +5,7 @@
 """Decorators to expose API endpoints.
 
 # mypy: disable-error-code="comparison-overlap"
-
+# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 

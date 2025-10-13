@@ -6,6 +6,7 @@
 handling file operations, and interacting with the system environment.
 """
 
+# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 

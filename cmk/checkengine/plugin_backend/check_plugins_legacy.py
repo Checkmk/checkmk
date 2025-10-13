@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
@@ -237,7 +238,7 @@ def _create_signature_check_function(
 
     else:
 
-        def check_migration_wrapper(params, section):  # type: ignore[misc]
+        def check_migration_wrapper(params, section):
             return original_function(None, params, section)
 
     return check_migration_wrapper

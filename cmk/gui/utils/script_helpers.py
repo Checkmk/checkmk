@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper functions for executing GUI code in external scripts.
 
+# mypy: disable-error-code="misc"
+
 The intended use is for scripts such as cmk-update-config or init-redis.
 """
 

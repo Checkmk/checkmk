@@ -606,7 +606,7 @@ def fetch_metric(inst, path, title, itemspec, inst_add=None):
 
 
 @cached
-def _get_queries(do_search, inst, itemspec, title, path, mbean):
+def _get_queries(do_search, inst, itemspec, title, path, mbean):  # type: ignore[misc]
     if not do_search:
         return [(mbean + "/" + path, title, itemspec)]
 

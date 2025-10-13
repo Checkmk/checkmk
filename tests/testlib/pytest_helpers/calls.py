@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module provides functionality for handling conditions and exceptions in pytest.
 
+# mypy: disable-error-code="misc"
+
 It includes functions to skip tests based on specific conditions and a context manager to exit
 pytest with detailed exception tracebacks.
 """

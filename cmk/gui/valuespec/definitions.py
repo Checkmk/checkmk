@@ -10,9 +10,9 @@
 # mypy: disable-error-code="unreachable"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="redundant-expr"
-# mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
 
 # FIXME: Cleanups
 # - Consolidate ListChoice and DualListChoice to use the same class

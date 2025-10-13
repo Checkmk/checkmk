@@ -161,7 +161,7 @@ warn_unused_configs = true
 warn_unused_ignores = true
 
 # additional checks not enabled via --strict
-disallow_any_decorated = false  # lots of findings all over the place
+disallow_any_decorated = true
 disallow_any_explicit = false   # lots of findings all over the place
 disallow_any_expr = false       # lots of findings all over the place
 disallow_any_unimported = false # lots of findings all over the place

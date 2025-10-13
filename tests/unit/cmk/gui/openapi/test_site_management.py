@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
 import pytest
@@ -184,7 +185,7 @@ def test_create_site_connection_missing_config(
     key: str,
 ) -> None:
     config = _default_config()
-    config.pop(key)  # type: ignore[misc]
+    config.pop(key)
     clients.SiteManagement.create(
         site_config=config,
         expect_ok=False,

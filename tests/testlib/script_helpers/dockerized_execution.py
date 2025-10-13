@@ -5,6 +5,7 @@
 """This module provides functionality to execute tests within a Docker container.
 
 # mypy: disable-error-code="comparison-overlap"
+# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
+# mypy: disable-error-code="misc"
 
 """Helper functions for tests against rules with predictive and fixed levels.."""
 

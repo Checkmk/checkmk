@@ -8,9 +8,9 @@ Special agent azure: Monitoring Azure cloud applications with Checkmk
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="unreachable"
 # mypy: disable-error-code="possibly-undefined"
-# mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="type-arg"
 
 Resources and resourcegroups are all treated lowercase because of:
 https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/frequently-asked-questions#are-resource-group-names-case-sensitive

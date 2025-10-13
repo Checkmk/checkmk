@@ -5,10 +5,9 @@
 """Special Agent to fetch Redfish data from management interfaces"""
 
 # mypy: disable-error-code="exhaustive-match"
-
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="no-untyped-call"
+# mypy: disable-error-code="type-arg"
 
 import json
 import logging

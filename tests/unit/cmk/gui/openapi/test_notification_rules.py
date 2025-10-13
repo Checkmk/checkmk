@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
-
 
 from collections.abc import Generator, Iterator
 from typing import Any, get_args, Literal
@@ -406,7 +406,7 @@ def test_create_and_update_rule_with_conditions_data_200(
 def invalid_conditions() -> Iterator:
     for k in notification_rule_request_example()["conditions"]:
         config = notification_rule_request_example()
-        config["conditions"].update({k: {"state": "enabled"}})  # type: ignore[misc]
+        config["conditions"].update({k: {"state": "enabled"}})
         yield config
 
 

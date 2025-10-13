@@ -5,6 +5,7 @@
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+# mypy: disable-error-code="misc"
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State

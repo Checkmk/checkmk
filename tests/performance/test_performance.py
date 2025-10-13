@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="misc"
+
 """To run this test with all reporting enabled, use the following command:
 
 $ pytest tests/performance --html=performance.htm --self-contained-html --ignore-running-procs

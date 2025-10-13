@@ -321,6 +321,9 @@ importers:
       lucide-vue-next:
         specifier: ^0.487.0
         version: 0.487.0(vue@3.5.22)
+      openapi-fetch:
+        specifier: ^0.14.1
+        version: 0.14.1
       radix-vue:
         specifier: ^1.9.17
         version: 1.9.17(vue@3.5.22)
@@ -11118,6 +11121,16 @@ packages:
       is-inside-container: 1.0.0
       wsl-utils: 0.1.0
     dev: true
+
+  /openapi-fetch@0.14.1:
+    resolution: {integrity: sha512-l7RarRHxlEZYjMLd/PR0slfMVse2/vvIAGm75/F7J6MlQ8/b9uUQmUF2kCPrQhJqMXSxmYWObVgeYXbFYzZR+A==}
+    dependencies:
+      openapi-typescript-helpers: 0.0.15
+    dev: false
+
+  /openapi-typescript-helpers@0.0.15:
+    resolution: {integrity: sha512-opyTPaunsklCBpTK8JGef6mfPhLSnyy5a0IN9vKtx3+4aExf+KxEqYwIy3hqkedXIB97u357uLMJsOnm3GVjsw==}
+    dev: false
 
   /openapi-typescript@7.9.1(typescript@5.9.2):
     resolution: {integrity: sha512-9gJtoY04mk6iPMbToPjPxEAtfXZ0dTsMZtsgUI8YZta0btPPig9DJFP4jlerQD/7QOwYgb0tl+zLUpDf7vb7VA==}

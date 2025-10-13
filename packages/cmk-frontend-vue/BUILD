@@ -141,6 +141,7 @@ SRCS = [
     ":node_modules/grid-layout-plus",
     ":node_modules/lucide-vue-next",
     ":node_modules/msw",
+    ":node_modules/openapi-fetch",
     ":node_modules/radix-vue",
     ":node_modules/rollup",
     ":node_modules/sanitize-html",

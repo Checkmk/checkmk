@@ -13,6 +13,7 @@
     "clsx": "^2.1.1",
     "grid-layout-plus": "^1.1.0",
     "lucide-vue-next": "^0.487.0",
+    "openapi-fetch": "^0.14.1",
     "radix-vue": "^1.9.17",
     "sanitize-html": "^2.15.0",
     "tailwindcss": "^3.0.0",

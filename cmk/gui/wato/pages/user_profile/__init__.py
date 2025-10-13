@@ -6,8 +6,8 @@
 from collections.abc import Callable
 
 from cmk.gui.main_menu import MainMenuRegistry
+from cmk.gui.main_menu_types import MainMenuTopic
 from cmk.gui.pages import PageRegistry
-from cmk.gui.type_defs import MainMenuTopic
 
 from . import async_replication, change_password, edit_profile, main_menu, replicate, two_factor
 

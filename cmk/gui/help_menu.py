@@ -11,7 +11,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import MainMenuRegistry
-from cmk.gui.type_defs import (
+from cmk.gui.main_menu_types import (
     MainMenu,
     MainMenuItem,
     MainMenuTopic,

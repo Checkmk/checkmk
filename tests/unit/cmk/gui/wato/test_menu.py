@@ -7,8 +7,8 @@
 import pytest
 
 import cmk.ccc.version as cmk_version
+from cmk.gui.main_menu_types import MainMenuItem, MainMenuTopic
 from cmk.gui.search import MatchItem
-from cmk.gui.type_defs import MainMenuItem, MainMenuTopic
 from cmk.gui.wato._snapins import get_wato_menu_items, MatchItemGeneratorSetupMenu
 from cmk.utils import paths
 

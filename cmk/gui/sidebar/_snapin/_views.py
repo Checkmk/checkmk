@@ -18,14 +18,11 @@ from cmk.gui.http import response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import MainMenuRegistry
+from cmk.gui.main_menu_types import MainMenu, MainMenuTopic
 from cmk.gui.nodevis.topology import ParentChildTopologyPage
 from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.permissions import permission_registry
-from cmk.gui.type_defs import (
-    MainMenu,
-    MainMenuTopic,
-    Visual,
-)
+from cmk.gui.type_defs import Visual
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.store import get_permitted_views
 

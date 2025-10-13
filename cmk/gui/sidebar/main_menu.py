@@ -22,9 +22,10 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import any_show_more_items, main_menu_registry
+from cmk.gui.main_menu_types import MainMenu, MainMenuItem, MainMenuTopic, MainMenuTopicSegment
 from cmk.gui.pages import AjaxPage, PageResult
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import Icon, MainMenu, MainMenuItem, MainMenuTopic, MainMenuTopicSegment
+from cmk.gui.type_defs import Icon
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodInline

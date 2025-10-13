@@ -50,6 +50,12 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l, _u
 from cmk.gui.logged_in import save_user_file, user
 from cmk.gui.main_menu import main_menu_registry, MainMenuRegistry
+from cmk.gui.main_menu_types import (
+    MainMenu,
+    MainMenuItem,
+    MainMenuTopic,
+    MainMenuTopicEntries,
+)
 from cmk.gui.page_menu import (
     doc_reference_to_page_menu,
     make_confirmed_form_submit_link,
@@ -77,10 +83,6 @@ from cmk.gui.type_defs import (
     AnnotatedUserId,
     HTTPVariables,
     Icon,
-    MainMenu,
-    MainMenuItem,
-    MainMenuTopic,
-    MainMenuTopicEntries,
     PermissionName,
     Visual,
 )

@@ -17,8 +17,9 @@ from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
+from cmk.gui.main_menu_types import MainMenu
 from cmk.gui.page_menu import PageMenu
-from cmk.gui.type_defs import ActionResult, HTTPVariables, MainMenu, PermissionName
+from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.main_menu import main_module_registry

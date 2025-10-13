@@ -16,7 +16,7 @@ from collections.abc import Iterable, MutableSequence
 from typing import NamedTuple
 
 import cmk.gui.htmllib.html
-from cmk.gui.type_defs import MainMenu
+from cmk.gui.main_menu_types import MainMenu
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 

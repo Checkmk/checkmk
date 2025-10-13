@@ -16,8 +16,9 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import get_main_menu_items_prefixed_by_segment
+from cmk.gui.main_menu_types import MainMenuItem, MainMenuTopic
 from cmk.gui.sites import SiteStatus, states
-from cmk.gui.type_defs import Choices, Icon, MainMenuItem, MainMenuTopic, Visual
+from cmk.gui.type_defs import Choices, Icon, Visual
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visuals import visual_title

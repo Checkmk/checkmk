@@ -12,7 +12,7 @@ import copy
 from typing import override
 
 from cmk.ccc.plugin_registry import Registry
-from cmk.gui.type_defs import MainMenu, MainMenuItem, MainMenuTopic, MainMenuTopicSegment
+from cmk.gui.main_menu_types import MainMenu, MainMenuItem, MainMenuTopic, MainMenuTopicSegment
 
 
 def any_show_more_items(topics: list[MainMenuTopic]) -> bool:

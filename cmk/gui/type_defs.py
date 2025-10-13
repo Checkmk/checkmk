@@ -9,7 +9,6 @@
 from __future__ import annotations
 
 import uuid
-from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -28,7 +27,6 @@ from cmk.crypto.password import Password
 from cmk.crypto.password_hashing import PasswordHash
 from cmk.crypto.secrets import Secret
 from cmk.gui.exceptions import FinalizeRequest
-from cmk.gui.http import Request
 from cmk.gui.utils.speaklater import LazyString
 from cmk.inventory.structured_data import SDPath
 from cmk.utils.labels import Labels
@@ -596,91 +594,12 @@ class SetOnceDict(dict):
         raise NotImplementedError("Deleting items are not supported.")
 
 
-class ABCMainMenuSearch(ABC):
-    """Abstract base class for search fields in main menus"""
-
-    def __init__(self, name: str) -> None:
-        self._name = name
-
-    @property
-    def name(self) -> str:
-        return self._name
-
-    @property
-    def onopen(self) -> str:
-        return 'cmk.popup_menu.focus_search_field("mk_side_search_field_%s");' % self.name
-
-    @abstractmethod
-    def show_search_field(self) -> None: ...
-
-
 class _Icon(TypedDict):
     icon: str
     emblem: str | None
 
 
 Icon = str | _Icon
-
-
-@dataclass(kw_only=True, slots=True)
-class _MainMenuEntry:
-    name: str
-    title: str
-    sort_index: int
-    is_show_more: bool = False
-    icon: Icon | None = None
-
-
-@dataclass(kw_only=True, slots=True)
-class MainMenuItem(_MainMenuEntry):
-    url: str
-    target: str = "main"
-    button_title: str | None = None
-    main_menu_search_terms: Sequence[str] = ()
-
-
-@dataclass(kw_only=True, slots=True)
-class MainMenuTopicSegment(_MainMenuEntry):
-    mode: Literal["multilevel", "indented"]
-    entries: list[MainMenuItem | MainMenuTopicSegment]
-    max_entries: int = 10
-    hide: bool = False
-
-
-MainMenuTopicEntries = list[MainMenuItem | MainMenuTopicSegment]
-
-
-class MainMenuTopic(NamedTuple):
-    name: str
-    title: str
-    entries: MainMenuTopicEntries
-    max_entries: int = 10
-    icon: Icon | None = None
-    hide: bool = False
-
-
-@dataclass()
-class MainMenuData: ...
-
-
-@dataclass
-class MainMenuVueApp:
-    name: str
-    data: Callable[[Request], MainMenuData]
-
-
-class MainMenu(NamedTuple):
-    name: str
-    title: str | LazyString
-    icon: Icon
-    sort_index: int
-    topics: Callable[[], list[MainMenuTopic]] | None
-    search: ABCMainMenuSearch | None = None
-    info_line: Callable[[], str] | None = None
-    hide: Callable[[], bool] = lambda: False
-    vue_app: MainMenuVueApp | None = None
-    onopen: str | None = None
-    hint: str | None = None
 
 
 SearchQuery = str

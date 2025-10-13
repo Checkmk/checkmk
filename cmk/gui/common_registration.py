@@ -46,6 +46,7 @@ from cmk.gui.dashboard import registration as dashboard_registration
 from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.form_specs import registration as vue_registration
 from cmk.gui.main_menu import MainMenuRegistry
+from cmk.gui.main_menu_types import MainMenuTopicEntries
 from cmk.gui.nodevis import nodevis
 from cmk.gui.openapi import registration as openapi_registration
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
@@ -60,7 +61,6 @@ from cmk.gui.quick_setup.v0_unstable._registry import QuickSetupRegistry
 from cmk.gui.search import MatchItemGeneratorRegistry
 from cmk.gui.search import registration as search_registration
 from cmk.gui.sidebar import SnapinRegistry
-from cmk.gui.type_defs import MainMenuTopicEntries
 from cmk.gui.userdb import register_config_file as user_connections_config
 from cmk.gui.userdb import register_userroles_config_file as register_userroles
 from cmk.gui.userdb import registration as userdb_registration

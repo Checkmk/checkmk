@@ -52,6 +52,7 @@ from cmk.gui.http import Request, request
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
+from cmk.gui.main_menu_types import MainMenu
 from cmk.gui.mkeventd import syslog_facilities, syslog_priorities
 from cmk.gui.page_menu import (
     make_display_options_dropdown,
@@ -77,7 +78,7 @@ from cmk.gui.site_config import (
     site_is_local,
 )
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import ActionResult, HTTPVariables, MainMenu, PermissionName, Users
+from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName, Users
 from cmk.gui.user_async_replication import user_profile_async_replication_dialog
 from cmk.gui.userdb import get_user_attributes, UserAttribute
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig

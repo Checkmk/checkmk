@@ -18,7 +18,6 @@ from collections.abc import Callable, Sequence
 from enum import Enum
 from typing import Any
 
-import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
 from cmk.gui import hooks, pagetypes, sites
@@ -33,12 +32,13 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.main_menu import main_menu_registry, MainMenuRegistry
+from cmk.gui.main_menu_types import MainMenuTopic
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuTopic
 from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.permissions import permission_registry, PermissionSectionRegistry
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import MainMenuTopic
 from cmk.gui.user_sites import get_configured_site_choices
+from cmk.gui.userdb import load_custom_attr
 from cmk.gui.utils import load_web_plugins
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
@@ -479,7 +479,7 @@ class SidebarRenderer:
         html.close_div()
 
         assert user.id is not None
-        sidebar_position = cmk.gui.userdb.load_custom_attr(
+        sidebar_position = load_custom_attr(
             user_id=user.id,
             key="ui_sidebar_position",
             parser=lambda x: None if x == "None" else "left",

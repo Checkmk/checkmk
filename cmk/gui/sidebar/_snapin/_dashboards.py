@@ -7,8 +7,8 @@ from cmk.gui.config import Config
 from cmk.gui.dashboard import get_permitted_dashboards
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.main_menu_types import MainMenuTopic
 from cmk.gui.permissions import permission_registry
-from cmk.gui.type_defs import MainMenuTopic
 from cmk.gui.utils.roles import UserPermissions
 
 from ._base import SidebarSnapin

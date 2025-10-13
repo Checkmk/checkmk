@@ -8,7 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { ref } from 'vue'
 
 import CmkDropdown from '@/components/CmkDropdown'
-import CmkLinkCard from '@/components/CmkLinkCard.vue'
+import CmkLinkCard from '@/components/CmkLinkCard'
 
 defineProps<{ screenshotMode: boolean }>()
 const variantSelected = ref<'standard' | 'borderless'>('standard')

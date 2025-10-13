@@ -10,7 +10,7 @@ import type { WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
 import usei18n from '@/lib/i18n'
 
 import CmkAccordionStepPanelItem from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
-import CmkLinkCard from '@/components/CmkLinkCard.vue'
+import CmkLinkCard from '@/components/CmkLinkCard'
 
 import StepCardsRow from '@/welcome/components/steps/components/StepCardsRow.vue'
 import StepParagraph from '@/welcome/components/steps/components/StepParagraph.vue'

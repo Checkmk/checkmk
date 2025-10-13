@@ -9,8 +9,7 @@ import type { WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
 
 import usei18n from '@/lib/i18n'
 
-import CmkLinkCard from '@/components/CmkLinkCard.vue'
-import CmkLinkCardContainer from '@/components/CmkLinkCardContainer.vue'
+import CmkLinkCard, { CmkLinkCardContainer } from '@/components/CmkLinkCard'
 import CmkSpace from '@/components/CmkSpace.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 

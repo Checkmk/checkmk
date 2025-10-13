@@ -9,9 +9,7 @@ import { ref } from 'vue'
 
 import CmkIcon from '@/components/CmkIcon'
 import type { CmkIconProps } from '@/components/CmkIcon'
-import CmkTab from '@/components/CmkTabs/CmkTab.vue'
-import CmkTabContent from '@/components/CmkTabs/CmkTabContent.vue'
-import CmkTabs from '@/components/CmkTabs/CmkTabs.vue'
+import CmkTabs, { CmkTab, CmkTabContent } from '@/components/CmkTabs'
 
 const openedTab = ref<string | number>('tab-3')
 

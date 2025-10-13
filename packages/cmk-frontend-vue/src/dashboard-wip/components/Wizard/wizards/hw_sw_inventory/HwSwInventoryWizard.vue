@@ -23,6 +23,7 @@ import type {
   WidgetSpec
 } from '../../../../types/widget'
 import AddFilters from '../../components/AddFilters/AddFilters.vue'
+import CloseButton from '../../components/CloseButton.vue'
 import ContentSpacer from '../../components/ContentSpacer.vue'
 import FiltersRecap from '../../components/FiltersRecap/FiltersRecap.vue'
 import { parseContextConfiguredFilters, squashFilters } from '../../components/FiltersRecap/utils'
@@ -163,6 +164,7 @@ const handleAddWidget = (
     </WizardStepsContainer>
 
     <WizardStageContainer>
+      <CloseButton @close="() => emit('goBack')" />
       <Stage1
         v-if="wizardHandler.stage.value === 0"
         v-model:host-filter-type="hostFilterType"

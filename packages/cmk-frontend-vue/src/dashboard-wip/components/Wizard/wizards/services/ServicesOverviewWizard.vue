@@ -28,6 +28,7 @@ import useWizard from '@/quick-setup/components/quick-setup/useWizard'
 
 import AddFilters from '../../components/AddFilters/AddFilters.vue'
 import { useAddFilter } from '../../components/AddFilters/composables/useAddFilters'
+import CloseButton from '../../components/CloseButton.vue'
 import ContentSpacer from '../../components/ContentSpacer.vue'
 import FiltersRecap from '../../components/FiltersRecap/FiltersRecap.vue'
 import { parseContextConfiguredFilters, squashFilters } from '../../components/FiltersRecap/utils'
@@ -145,6 +146,7 @@ const handleObjectTypeSwitch = (objectType: string): void => {
     </WizardStepsContainer>
 
     <WizardStageContainer>
+      <CloseButton @close="() => emit('goBack')" />
       <Stage1
         v-if="wizardHandler.stage.value === 0"
         v-model:host-filter-type="hostFilterType"

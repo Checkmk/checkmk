@@ -5,16 +5,13 @@
 
 # mypy: disable-error-code="no-untyped-def"
 
-
-# mypy: disable-error-code="index"
-
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 
 check_info = {}
 
 
 def parse_couchbase_nodes_operations(string_table):
-    parsed = {}
+    parsed = dict[str | None, float]()
     for line in string_table:
         if len(line) < 2:
             continue

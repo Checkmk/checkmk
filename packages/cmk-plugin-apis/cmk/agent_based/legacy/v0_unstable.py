@@ -5,9 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-# Anys all over the place :-(
-# mypy: disable-error-code="misc"
-
 """
 The things in this module specify the old Check_MK (<- see? Old!) check API
 

@@ -17,34 +17,29 @@ check_info = {}
 # .1.3.6.1.4.1.19011.1.3.2.1.3.2.4.1.3.1 2 --> ISPRO-MIB::isDeviceConfigDigitalInState
 
 
-# mypy: disable-error-code="attr-defined"
-
-
 def inventory_ispro_sensors_digital(info):
     return [(line[0], None) for line in info if line[0] and line[2] != "1"]
 
 
 def check_ispro_sensors_digital(item, params, info):
-    map_states = {
-        "state": {
-            "1": "disabled",
-            "2": "normal open",
-            "3": "normal close",
-        },
-        "alarm": {
-            "1": (0, "normal", "active"),
-            "2": (2, "alarm", "inactive"),
-        },
+    map_alarm = {
+        "1": (0, "normal", "active"),
+        "2": (2, "alarm", "inactive"),
+    }
+    map_state = {
+        "1": "disabled",
+        "2": "normal open",
+        "3": "normal close",
     }
 
     for name, alarm, state in info:
         if item == name:
             # more readable, avoiding confusion
-            alarm_state, alarm_state_readable, alarm_device_state_readable = map_states[
-                "alarm"
-            ].get(alarm, (3, "unknown", "unexpected(%s)" % alarm))
+            alarm_state, alarm_state_readable, alarm_device_state_readable = map_alarm.get(
+                alarm, (3, "unknown", "unexpected(%s)" % alarm)
+            )
             return alarm_state, "Status: {}, Alarm status: {} (device: {})".format(
-                map_states["state"].get(state, "unexpected(%s)" % state),
+                map_state.get(state, "unexpected(%s)" % state),
                 alarm_state_readable,
                 alarm_device_state_readable,
             )

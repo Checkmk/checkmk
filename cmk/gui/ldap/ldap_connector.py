@@ -7,8 +7,6 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="union-attr"
-
 
 # TODO FIXME: Change attribute sync plug-ins to classes. The current dict
 # based approach is not very readable. Classes/objects make it a lot
@@ -1111,7 +1109,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
     # Returns the ldap attribute name depending on the configured ldap directory type
     # If a key is not present in the map, the assumption is, that the key matches 1:1
     # Always use lower case here, just to prevent confusions.
-    def _ldap_attr(self, key):
+    def _ldap_attr(self, key: str) -> str:
         return ldap_attr_map[self._directory_type()].get(key, key).lower()
 
     # Returns the given distinguished name template with replaced vars

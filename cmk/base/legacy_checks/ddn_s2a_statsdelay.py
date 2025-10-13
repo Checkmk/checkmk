@@ -6,9 +6,6 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
-
-# mypy: disable-error-code="list-item"
-
 from collections.abc import Mapping, Sequence
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
@@ -79,20 +76,18 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
 
     def _check_levels(infotext_formatstring, value, levels, perfname):
         infotext = infotext_formatstring % value
-        if levels:
-            warn, crit = levels
-            levelstext = f" (warn/crit at {warn:.2f}/{crit:.2f} s)"
-            perfdata = [(perfname, value, warn, crit)]
-            if value >= crit:
-                status = 2
-                infotext += levelstext
-            elif value >= warn:
-                status = 1
-                infotext += levelstext
-            else:
-                status = 0
+        if not levels:
+            return 0, infotext, [(perfname, value)]
+        warn, crit = levels
+        levelstext = f" (warn/crit at {warn:.2f}/{crit:.2f} s)"
+        perfdata = [(perfname, value, warn, crit)]
+        if value >= crit:
+            status = 2
+            infotext += levelstext
+        elif value >= warn:
+            status = 1
+            infotext += levelstext
         else:
-            perfdata = [(perfname, value)]
             status = 0
         return status, infotext, perfdata
 

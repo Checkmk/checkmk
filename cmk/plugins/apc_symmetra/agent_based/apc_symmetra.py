@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="arg-type"
-# mypy: disable-error-code="list-item"
 # mypy: disable-error-code="var-annotated"
 
 import time

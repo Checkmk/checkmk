@@ -6,9 +6,6 @@
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
-
-# mypy: disable-error-code="list-item"
-
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import contains, SNMPTree
 from cmk.base.check_legacy_includes.temperature import check_temperature
@@ -148,8 +145,7 @@ def check_icom_repeater_pll_volt(item, params, parsed):
     paramlist = params.get(item.lower(), None)
 
     if not paramlist:
-        perfdata = [("voltage", voltage)]
-        return 1, "Please specify parameters for PLL voltage", perfdata
+        return 1, "Please specify parameters for PLL voltage", [("voltage", voltage)]
 
     i = 0
     while i < len(paramlist):

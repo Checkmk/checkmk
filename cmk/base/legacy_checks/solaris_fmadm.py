@@ -138,8 +138,6 @@
 # ...
 
 
-# mypy: disable-error-code="attr-defined"
-
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 
 check_info = {}
@@ -154,23 +152,22 @@ def parse_solaris_fmadm(string_table):
         if entry:
             event.append(entry)
 
-    parsed = {
+    problems = []
+    # Skip header
+    for line in string_table[4:]:
+        stripped = [x.strip() for x in line]
+        if stripped[0] in ["Problem class", "Fault class"]:
+            problems.append(":".join(stripped[1:]))
+
+    return {
         "event": {
             "time": " ".join(event[:-3]),
             "id": event[-3],
             "msg": event[-2],
             "severity": event[-1].lower(),
         },
-        "problems": [],
+        "problems": problems,
     }
-
-    # Skip header
-    for line in string_table[4:]:
-        stripped = [x.strip() for x in line]
-        if stripped[0] in ["Problem class", "Fault class"]:
-            parsed["problems"].append(":".join(stripped[1:]))
-
-    return parsed
 
 
 def inventory_solaris_fmadm(parsed):

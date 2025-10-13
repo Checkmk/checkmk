@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="index"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="var-annotated"
@@ -69,7 +68,7 @@ def parse_silverpeak(string_table):
             parsed.setdefault("alarms", [])
             parsed["alarms"].append(
                 {
-                    "state": severity_to_states.get(sever, 3)[1],
+                    "state": severity_to_states.get(sever, ("unknown", 3))[1],
                     "severity_as_text": severity_to_states.get(sever, "unkown[%s]" % sever)[0],
                     "descr": descr,
                     "source": source,

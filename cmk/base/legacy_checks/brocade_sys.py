@@ -6,9 +6,6 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
-
-# mypy: disable-error-code="list-item"
-
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import any_of, equals, render, SNMPTree, startswith
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util

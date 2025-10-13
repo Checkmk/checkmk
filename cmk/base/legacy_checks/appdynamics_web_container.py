@@ -9,9 +9,6 @@
 # Hans|http-8180|Error Count:0|Busy Threads:0|Current Threads In Pool:0|Request Count:0|Maximum Threads:200
 # Hans|jk-8109|Error Count:0|Request Count:2
 
-
-# mypy: disable-error-code="list-item"
-
 import time
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any

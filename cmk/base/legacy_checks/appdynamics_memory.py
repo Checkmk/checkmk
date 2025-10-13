@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="arg-type"
-# mypy: disable-error-code="list-item"
 # mypy: disable-error-code="no-untyped-def"
 
 # <<<appdynamics_memory:sep(124)>>>
@@ -83,23 +82,23 @@ def check_appdynamics_memory(item, params, info):
                 levels_label = f" (levels at {warn_label}/{crit_label})"
 
             if max_available > 0:
-                perfdata = [("mem_%s" % mem_type, used, warn, crit, 0, max_available)]
                 yield (
                     state,
                     f"Used: {render.bytes(used)} of {render.bytes(max_available)} ({used_percent:.2f}%){levels_label}",
-                    perfdata,
+                    [("mem_%s" % mem_type, used, warn, crit, 0, max_available)],
+                )
+                yield (
+                    0,
+                    "Committed: %s" % render.bytes(committed),
+                    [("mem_%s_committed" % mem_type, committed, None, None, 0, max_available)],
                 )
             else:
-                perfdata = [("mem_%s" % mem_type, used)]
-                yield state, "Used: %s" % render.bytes(used), perfdata
-
-            if max_available > 0:
-                perfdata = [
-                    ("mem_%s_committed" % mem_type, committed, None, None, 0, max_available)
-                ]
-            else:
-                perfdata = [("mem_%s_committed" % mem_type, committed)]
-            yield 0, "Committed: %s" % render.bytes(committed), perfdata
+                yield state, "Used: %s" % render.bytes(used), [("mem_%s" % mem_type, used)]
+                yield (
+                    0,
+                    "Committed: %s" % render.bytes(committed),
+                    [("mem_%s_committed" % mem_type, committed)],
+                )
 
 
 def parse_appdynamics_memory(string_table: StringTable) -> StringTable:

@@ -415,6 +415,7 @@ class Document:
         self.restore_state()
 
     def place_text(self, position: Position, text: str) -> None:
+        text = self._sanitize_text(text)
         el_height = self._gfx_state["font_size"] * self._gfx_state["font_zoom_factor"]
         el_width = self._canvas.stringWidth(text)
         l, t = self.convert_position(position, el_width, el_height)
@@ -423,12 +424,19 @@ class Document:
         # self._canvas.rect(l, t, el_width, el_height, fill=0)
 
     def place_text_lines(self, position: Position, lines: Sequence[str]) -> None:
-        el_height = self._gfx_state["font_size"] * self._gfx_state["font_zoom_factor"] * len(lines)
-        el_width = max(self._canvas.stringWidth(l) for l in lines) if lines else 0
+        sanitized_lines = [self._sanitize_text(line) for line in lines]
+        el_height = (
+            self._gfx_state["font_size"]
+            * self._gfx_state["font_zoom_factor"]
+            * len(sanitized_lines)
+        )
+        el_width = (
+            max(self._canvas.stringWidth(l) for l in sanitized_lines) if sanitized_lines else 0
+        )
 
         l, t = self.convert_position(position, el_width, el_height)
 
-        for num, line in enumerate(lines):
+        for num, line in enumerate(sanitized_lines):
             # Try to move to correct Y position
             self._canvas.drawString(l, (t + el_height * 0.66) - (el_height * 0.5 * num), line)
             # Debug the text bounding box
@@ -462,6 +470,7 @@ class Document:
         bold: bool = False,
         color: tuple[float, float, float] = black,
     ) -> None:
+        txt = self._sanitize_text(txt)
         lines = self.wrap_text(txt, width=self._right - self._left)
         for line in lines:
             self.add_text_line(l=line, bold=bold, color=color)
@@ -471,6 +480,7 @@ class Document:
             self.add_paragraph(repr(arg))
 
     def add_heading(self, level: int, text: str, numbers: bool) -> None:
+        text = self._sanitize_text(text)
         level = self._gfx_state["heading_offset"] + level
 
         next_number = self._heading_numbers.get(level, 0) + 1
@@ -605,6 +615,8 @@ class Document:
             else:
                 self._canvas.drawCentredString(x, y, t)
 
+        l = self._sanitize_text(l)
+
         l = l.strip(" ")
         self._linepos -= self.lineskip()
         tab = -1
@@ -717,6 +729,7 @@ class Document:
         bold: bool = False,
         color: RGBColor = black,
     ) -> None:
+        text = self._sanitize_text(text)
         self.save_state()
         self.set_font_bold(bold)
         self.set_font_color(color)
@@ -767,6 +780,7 @@ class Document:
         bold: bool = False,
         color: RGBColor | None = None,
     ) -> None:
+        text = self._sanitize_text(text)
         if color or bold:
             self.save_state()
 
@@ -975,6 +989,13 @@ class Document:
                 elif height_mm is None:
                     height = width / aspect  # fixed: true-division
         return width, height
+
+    @staticmethod
+    def _sanitize_text(text: str) -> str:
+        """
+        Replace problematic characters in text for PDF rendering.
+        """
+        return text.replace("\N{THIN SPACE}", " ")
 
 
 class CellRenderer(Protocol):

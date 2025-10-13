@@ -10,8 +10,7 @@ import { formatError } from '@/lib/error.ts'
 import usei18n from '@/lib/i18n'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
-import CmkCollapsible from '@/components/CmkCollapsible.vue'
-import CmkCollapsibleTitle from '@/components/CmkCollapsibleTitle.vue'
+import CmkCollapsible, { CmkCollapsibleTitle } from '@/components/CmkCollapsible'
 import CmkHtml from '@/components/CmkHtml.vue'
 import CmkIndent from '@/components/CmkIndent.vue'
 

@@ -6,8 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { ref } from 'vue'
 
-import CmkCollapsible from '@/components/CmkCollapsible.vue'
-import CmkCollapsibleTitle from '@/components/CmkCollapsibleTitle.vue'
+import CmkCollapsible, { CmkCollapsibleTitle } from '@/components/CmkCollapsible'
 import CmkIndent from '@/components/CmkIndent.vue'
 
 defineProps<{ screenshotMode: boolean }>()

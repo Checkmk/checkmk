@@ -9,8 +9,7 @@ import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkCollapsible from '@/components/CmkCollapsible.vue'
-import CmkCollapsibleTitle from '@/components/CmkCollapsibleTitle.vue'
+import CmkCollapsible, { CmkCollapsibleTitle } from '@/components/CmkCollapsible'
 import CmkIndent from '@/components/CmkIndent.vue'
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 import CmkZebra from '@/components/CmkZebra.vue'

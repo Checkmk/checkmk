@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import CmkCollapsible from '@/components/CmkCollapsible.vue'
+import CmkCollapsible from '@/components/CmkCollapsible'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 

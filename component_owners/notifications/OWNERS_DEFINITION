@@ -1,4 +1,4 @@
-# Business Intelligence
+# Notifications
 #
 # This file is auto-generated but won't be kept up to date automatically.
 # So it might contain errors or lack information and has to be maintained manually.
@@ -6,6 +6,6 @@
 #  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
 #  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax
 
-andreas.boesl@checkmk.com  # component lead
+ronny.bruska@checkmk.com  # component lead
 
-logan.connolly@checkmk.com
+christopher.krause@checkmk.com

@@ -1,4 +1,4 @@
-# Component Availability & SLA, UI - Authentication, UI - Monitoring
+# Component Basic Python Functionality, Graphing & Metrics, Notifications
 #
 # This file is auto-generated but won't be kept up to date automatically.
 # So it might contain errors or lack information and has to be maintained manually.
@@ -8,9 +8,11 @@
 
 set noparent  # don't inherit owners information from parent folders
 
-file:/component_owners/ui_monitoring/OWNERS_DEFINITION
+file:/component_owners/basic_python_functionality/OWNERS_DEFINITION
 
-per-file availability.py=file:/component_owners/availability_and_sla/OWNERS_DEFINITION
-per-file availability.py=set noparent
-per-file login.py=file:/component_owners/ui_authentication/OWNERS_DEFINITION
-per-file login.py=set noparent
+per-file metrics.py=file:/component_owners/graphing_and_metrics/OWNERS_DEFINITION
+per-file metrics.py=set noparent
+per-file notify.py=file:/component_owners/notifications/OWNERS_DEFINITION
+per-file notify.py=set noparent
+per-file notify_types.py=file:/component_owners/notifications/OWNERS_DEFINITION
+per-file notify_types.py=set noparent

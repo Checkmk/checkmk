@@ -5,6 +5,7 @@ filegroup(
         exclude = [
             "_*/**",
             ".*",
+            "OWNERS",
         ],
     ),
     visibility = ["//:__subpackages__"],

@@ -1,4 +1,4 @@
-# Business Intelligence
+# Distributed Monitoring, Liveproxyd
 #
 # This file is auto-generated but won't be kept up to date automatically.
 # So it might contain errors or lack information and has to be maintained manually.
@@ -8,4 +8,4 @@
 
 andreas.boesl@checkmk.com  # component lead
 
-logan.connolly@checkmk.com
+joerg.herbel@checkmk.com

@@ -1,4 +1,4 @@
-# Business Intelligence
+# Component Database Monitoring
 #
 # This file is auto-generated but won't be kept up to date automatically.
 # So it might contain errors or lack information and has to be maintained manually.
@@ -6,6 +6,10 @@
 #  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
 #  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax
 
-andreas.boesl@checkmk.com  # component lead
 
-logan.connolly@checkmk.com
+per-file test_mk_oracle*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
+per-file test_mk_oracle*=set noparent
+per-file test_mk_redis*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
+per-file test_mk_redis*=set noparent
+per-file test_mk_sap_hana*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
+per-file test_mk_sap_hana*=set noparent

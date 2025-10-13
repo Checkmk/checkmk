@@ -1,0 +1,26 @@
+# Check & Agent Plugins
+#
+# This file is auto-generated but won't be kept up to date automatically.
+# So it might contain errors or lack information and has to be maintained manually.
+# Find information about code-owners (+ find-owners syntax) here:
+#  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
+#  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax
+
+moritz.kiemer@checkmk.com  # component lead
+
+andreas.umbreit@checkmk.com
+benedikt.seidl@checkmk.com
+benjamin.knapp@checkmk.com
+david.gervasoni@checkmk.com
+dennis.schmalacker@checkmk.com
+diana.ivanchevska@checkmk.com
+joerg.herbel@checkmk.com
+logan.connolly@checkmk.com
+luka.racic@checkmk.com
+matthew.rindel@checkmk.com
+moritz.kirschner@checkmk.com
+rebekka.seltmann@checkmk.com
+robin.loesch@checkmk.com
+sebastian.groemcke@checkmk.com
+solomon.jacobs@checkmk.com
+wontek.hong@checkmk.com

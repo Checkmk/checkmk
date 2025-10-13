@@ -1,4 +1,4 @@
-# Component Agent Bakery, Updater, Database Monitoring
+# Component Database Monitoring
 #
 # This file is auto-generated but won't be kept up to date automatically.
 # So it might contain errors or lack information and has to be maintained manually.
@@ -6,21 +6,14 @@
 #  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
 #  https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax
 
-set noparent  # don't inherit owners information from parent folders
 
-file:/component_owners/agent_bakery_updater/OWNERS_DEFINITION
-
-per-file mk_informix*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
-per-file mk_informix*=set noparent
+per-file informix*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
+per-file informix*=set noparent
 per-file mk_mongodb*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
 per-file mk_mongodb*=set noparent
-per-file mk_mysql*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
-per-file mk_mysql*=set noparent
 per-file mk_oracle*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
 per-file mk_oracle*=set noparent
-per-file mk_postgres*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
-per-file mk_postgres*=set noparent
 per-file mk_redis*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
 per-file mk_redis*=set noparent
-per-file mk_sap_hana*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
-per-file mk_sap_hana*=set noparent
+per-file mysql*=file:/component_owners/database_monitoring/OWNERS_DEFINITION
+per-file mysql*=set noparent

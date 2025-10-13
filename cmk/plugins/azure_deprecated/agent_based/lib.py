@@ -25,13 +25,11 @@ from cmk.agent_based.v2 import (
     get_average,
     get_value_store,
     IgnoreResultsError,
-    InventoryResult,
     LevelsT,
     render,
     Service,
     ServiceLabel,
     StringTable,
-    TableRow,
 )
 from cmk.plugins.lib.labels import ensure_valid_labels
 
@@ -524,47 +522,6 @@ def check_storage() -> CheckFunction:
             ),
         ]
     )
-
-
-def inventory_common_azure(section: Section) -> InventoryResult:
-    resource = list(section.values())[0]
-    path = ["software", "applications", "azure"]
-
-    # Table label -> resource dict key
-    mapping = {
-        "Object": "type",
-        "Name": "name",
-        "Tenant ID": "tenant_id",
-        "Subscription ID": "subscription",
-        "Subscription name": "subscription_name",
-        "Resource group": "group",
-        "Region": "location",
-    }
-
-    hardcoded_values = {
-        "Cloud provider": "Azure",
-        "Entity": "Resource",
-    }
-
-    for label, value in mapping.items() | hardcoded_values.items():
-        if label in mapping:
-            row_value = getattr(resource, value, None)
-        else:
-            row_value = value
-
-        if row_value is not None:
-            yield TableRow(
-                path=path + ["metadata"],
-                key_columns={"information": label},
-                inventory_columns={"value": row_value},
-            )
-
-    for tag_key, tag_value in (resource.tags or {}).items():
-        yield TableRow(
-            path=path + ["tags"],
-            key_columns={"name": tag_key},
-            inventory_columns={"value": tag_value},
-        )
 
 
 def _threshold_hit_for_time[NumberT: (int, float)](

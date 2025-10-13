@@ -27,7 +27,6 @@ from cmk.agent_based.v2 import (
     Service,
     ServiceLabel,
     State,
-    TableRow,
 )
 from cmk.plugins.azure_deprecated.agent_based.lib import (
     _get_metrics,
@@ -44,7 +43,6 @@ from cmk.plugins.azure_deprecated.agent_based.lib import (
     create_check_metrics_function_single,
     create_discover_by_metrics_function,
     create_discover_by_metrics_function_single,
-    inventory_common_azure,
     iter_resource_attributes,
     MetricData,
     parse_resources,
@@ -889,46 +887,6 @@ def test_check_resource_sustained_threshold_map_func(get_value_store: Mock) -> N
     )
 
     get_value_store.assert_called_once()
-
-
-def test_inventory_common_azure() -> None:
-    inventory = list(inventory_common_azure(PARSED_RESOURCES))
-
-    expected_metadata: dict[int | float | str, str] = {
-        "Object": "Microsoft.DBforMySQL/servers",
-        "Resource group": "BurningMan",
-        "Entity": "Resource",
-        "Cloud provider": "Azure",
-        "Region": "westeurope",
-        "Name": "checkmk-mysql-server",
-        # TODO: These require updating the fixture data
-        # "Subscription name": ,
-        # "Subscription ID",
-    }
-
-    tags = {}
-    matched_rows = 0
-    for inv in inventory:
-        assert isinstance(inv, TableRow)  # sate mypy
-        if "metadata" in inv.path:
-            key = inv.key_columns["information"]
-            value = inv.inventory_columns["value"]
-
-            # We might output more than we look for.
-            # Particularly with outdated fixture data.
-            if key in expected_metadata:
-                matched_rows += 1
-                assert expected_metadata[key] == value
-        elif "tags" in inv.path:
-            tags[inv.key_columns["name"]] = inv.inventory_columns["value"]
-
-    # Since the test is not 1:1 with the expected rows, do an extra check after,
-    # to ensure we actually ran the assertion above
-    assert matched_rows == len(expected_metadata)
-
-    assert tags["tag1"] == "value1"
-    assert tags["tag2"] == "value2"
-    assert len(tags) == 2
 
 
 @pytest.mark.parametrize(

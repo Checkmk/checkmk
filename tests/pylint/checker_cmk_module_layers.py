@@ -150,7 +150,6 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.ccc.version",  # edition detection
         "cmk.ccc.hostaddress",  # FormSpec validation
         "cmk.plugins.lib",  # ?
-        "cmk.plugins.lib.azure",  # FIXME
         "cmk.utils.http_proxy_config",
         "cmk.utils.paths",  # edition detection
     ),

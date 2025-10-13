@@ -73,7 +73,11 @@ def construct_content(context: dict[str, str]) -> str:
     context["SUBJECT"] = utils.substitute_context(tmpl, context)
     body = utils.substitute_context(tmpl_body, context)
 
-    return body
+    return _ensure_line_break(body)
+
+
+def _ensure_line_break(body: str) -> str:
+    return body.replace("\\n", "\n")
 
 
 def main() -> NoReturn:

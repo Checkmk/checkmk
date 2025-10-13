@@ -313,8 +313,8 @@ class Version:
                     _ReleaseCandidate(int(rc)),
                     _ReleaseMeta(meta),
                 )
-
-        raise ValueError(f'Cannot parse version string "{vstring}".')
+            case _:
+                raise ValueError(f'Cannot parse version string "{vstring}".')
 
     @classmethod
     def _parse_daily_version(cls, vstring: str) -> Self:

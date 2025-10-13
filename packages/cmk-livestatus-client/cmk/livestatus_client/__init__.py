@@ -405,8 +405,8 @@ class Helpers:
                     return ",".join(map(str, value))
                 case Enum():
                     return str(value.value)
-
-            assert False, f"Unexpected type in serialization: {type(value)}"
+                case _:
+                    assert False, f"Unexpected type in serialization: {type(value)}"
 
         serialized_args = ";".join(map(_serialize_type, command.args()))
         return f"{command.name()};{serialized_args}"

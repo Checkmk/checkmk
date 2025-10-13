@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Event Console
 
+# mypy: disable-error-code="exhaustive-match"
+
 # mypy: disable-error-code="possibly-undefined"
 
 With the Event Console (EC for short), Checkmk provides a fully integrated system for monitoring events

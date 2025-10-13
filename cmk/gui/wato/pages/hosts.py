@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Modes for creating and editing hosts"""
 
+# mypy: disable-error-code="exhaustive-match"
+
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="no-untyped-call"

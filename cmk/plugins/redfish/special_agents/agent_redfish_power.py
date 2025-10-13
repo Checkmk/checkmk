@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Special Agent to fetch Redfish data from management interfaces"""
 
+# mypy: disable-error-code="exhaustive-match"
+
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"

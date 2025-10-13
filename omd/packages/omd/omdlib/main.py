@@ -3708,6 +3708,8 @@ def _run_command(
                 main_restore(version_info, object(), global_opts, args, command_options)
             case "cleanup":
                 main_cleanup(version_info, object(), global_opts, object(), object())
+            case _:
+                pass  # TODO: Hmmmm...
     except MKTerminate as e:
         sys.exit(str(e))
     except KeyboardInterrupt:

@@ -139,8 +139,8 @@ class TestCollector:
                 )
             case "your_module":
                 return _make_module("your_module", [], your_plugin_1=MyOtherPlugin("herbert"))
-
-        raise ValueError("this test seems broken")
+            case _:
+                raise ValueError("this test seems broken")
 
     def test_sipmle_ok_case(self) -> None:
         """Load a plugin"""

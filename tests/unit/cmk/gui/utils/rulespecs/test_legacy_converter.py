@@ -2442,6 +2442,8 @@ def test_simple_levels_custom_validate() -> None:
                     raise api_v1.form_specs.validators.ValidationError(
                         message=api_v1.Message("Warning level must be lower than critical level")
                     )
+            case _:
+                pass
 
     api_v1_levels = api_v1.form_specs.SimpleLevels(
         form_spec_template=api_v1.form_specs.Float(),
@@ -2462,6 +2464,8 @@ def test_levels_custom_validate() -> None:
                     raise api_v1.form_specs.validators.ValidationError(
                         message=api_v1.Message("Warning level must be lower than critical level")
                     )
+            case _:
+                pass
 
     api_v1_levels = api_v1.form_specs.Levels(
         form_spec_template=api_v1.form_specs.Float(),

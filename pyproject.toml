@@ -171,7 +171,7 @@ warn_unreachable = false         # lots of findings all over the place
 # error codes which are not enabled by default
 enable_error_code = [
   "deprecated",
-  # "exhaustive-match",    # lots of findings all over the place
+  "exhaustive-match",
   # "explicit-override",   # lots of findings all over the place
   "ignore-without-code",
   "mutable-override",

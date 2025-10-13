@@ -247,6 +247,8 @@ class AWSPublisher(CloudPublisher):
                     )
                 case "SUCCEEDED":
                     return
+                case _:
+                    pass  # TODO: Hmmmm...
 
 
 class AzurePublisher(CloudPublisher):
@@ -403,3 +405,5 @@ if __name__ == "__main__":
                     args.azure_resource_group,
                 ).publish()
             )
+        case _:
+            pass

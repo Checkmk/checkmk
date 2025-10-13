@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Flashing messages to the next request.
 
+# mypy: disable-error-code="exhaustive-match"
+
 Inspired by generic logic flask flashed messages, but implemented in a simpler way.
 Flask uses a generic session cookie store which we don't want to implement here for
 simplicity. In case we have such a generic thing, it will be easy to switch to it.

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="exhaustive-match"
+
 # <<<diskstat>>>
 # 1300264105
 #    8       0 sda 691860 951191 13559915 491748 234686 197346 3359512 94944 0 56844 586312

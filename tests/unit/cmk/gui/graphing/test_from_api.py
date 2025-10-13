@@ -86,6 +86,8 @@ def _collect_metric_names_from_quantity(
         case metrics_api.Fraction():
             yield from _collect_metric_names_from_quantity(quantity.dividend)
             yield from _collect_metric_names_from_quantity(quantity.divisor)
+        case _:
+            pass  # TODO: Hmmmm...
 
 
 def _collect_metric_names_from_perfometer(
@@ -189,6 +191,8 @@ class _MetricNamesInModule:
                         _collect_metric_names_from_graph(plugin.upper)
                     ),
                 )
+            case _:
+                pass
 
 
 @pytest.mark.parametrize(

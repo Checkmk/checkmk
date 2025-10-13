@@ -8,5 +8,5 @@ from cmk.relay_protocols.configuration import EngineConfig, UserEngineConfig
 
 class TestEngingeConfig:
     def test_from_user_engine_config(self) -> None:
-        uec = UserEngineConfig(num_fetchers=0, hosts=())
+        uec = UserEngineConfig(num_fetchers=0, hosts=(), log_level="ERROR")
         _ = EngineConfig.model_validate_json(uec.model_dump_json())

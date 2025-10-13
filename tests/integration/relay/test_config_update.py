@@ -38,6 +38,9 @@ class TestRelay:
             self.created_hosts.clear()
 
     def test_config_update(self, site: Site) -> None:
+        """
+        Test that unrelated config change triggers submission of the new activated config to relays
+        """
         self._site = site
         alias = "foo_alias"
         _, csr = generate_csr_pair(alias)

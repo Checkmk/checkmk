@@ -98,6 +98,8 @@ class Relay(NamedTuple):
     id: str
     alias: str
     site_id: str
+    num_fetchers: int
+    log_level: str
 
 
 class CMKOpenApiSession(requests.Session):
@@ -1524,11 +1526,22 @@ class RelayAPI(BaseAPI):
 
         return f"https://{self.session.host}:{port}/{self.session.site}/agent-receiver/relays/"
 
-    def create(self, alias: str, site_id: str) -> None:
+    def create(
+        self,
+        alias: str,
+        site_id: str,
+        num_fetchers: int | None = None,
+        log_level: str | None = None,
+    ) -> None:
+        body: dict[str, object] = {"alias": alias, "siteid": site_id}
+        if num_fetchers is not None:
+            body["num_fetchers"] = num_fetchers
+        if log_level is not None:
+            body["log_level"] = log_level
         response = self.session.post(
             url=self._domain_url,
             headers=self._headers,
-            json={"alias": alias, "siteid": site_id},
+            json=body,
         )
 
         if response.status_code != 200:
@@ -1543,6 +1556,8 @@ class RelayAPI(BaseAPI):
             id=relay_id,
             alias=response_json["extensions"]["alias"],
             site_id=response_json["extensions"]["siteid"],
+            num_fetchers=response_json["extensions"].get("num_fetchers"),
+            log_level=response_json["extensions"].get("log_level"),
         ), response.headers["Etag"]
 
     def get_all(self) -> list[Relay]:
@@ -1554,6 +1569,8 @@ class RelayAPI(BaseAPI):
                 id=relay_dict["id"],
                 alias=relay_dict["extensions"]["alias"],
                 site_id=relay_dict["extensions"]["siteid"],
+                num_fetchers=relay_dict["extensions"].get("num_fetchers"),
+                log_level=relay_dict["extensions"].get("log_level"),
             )
             for relay_dict in response.json()["value"]
         ]

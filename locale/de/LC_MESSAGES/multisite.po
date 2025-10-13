@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-10-09 20:39+0000\n"
+"PO-Revision-Date: 2025-10-13 13:00+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -1058,7 +1058,7 @@ msgstr ""
 
 #, python-format
 msgid ", elapsed cache lifespan: %s"
-msgstr ", elapsed Cache lifespan: %s"
+msgstr ""
 
 msgid ", errors occurred"
 msgstr ", es sind Fehler aufgetreten"
@@ -2174,7 +2174,7 @@ msgid ""
 "enable caching for plug-ins that are lacking this option at their dedicated "
 "ruleset."
 msgstr ""
-"Limit für das Cachealter von Plugins. Wenn gesetzt, wird die Ausgabe von "
+"Limit für das Cache-Alter von Plugins. Wenn gesetzt, wird die Ausgabe von "
 "Plugins gespeichert und für die eingestellte Zeit wiederverwendet. "
 "Insbesondere kann diese Regel verwendet werden, um die Zwischenspeicherung "
 "für Plugins zu aktivieren, die diese Option in ihrem eigenen Regelsatz nicht "
@@ -2299,6 +2299,8 @@ msgstr "Eine Überschrift für die Ansicht"
 msgid ""
 "A host filter requires an attribute key. Please choose one (e.g., host.name)"
 msgstr ""
+"Ein Host-Filter benötigt einen Attributschlüssel. Bitte wählen Sie einen ("
+"z.B. host.name)"
 
 msgid ""
 "A host filter requires an attribute value. Please choose one (e.g., "
@@ -5315,13 +5317,11 @@ msgstr "Aggregationszuordnung"
 msgid "Aggregation checks"
 msgstr "Aggregierte Checks"
 
-#, fuzzy
 msgid "Aggregation for histograms"
-msgstr "Aggregationsgruppen"
+msgstr "Aggregation der Histogramme"
 
-#, fuzzy
 msgid "Aggregation for sums"
-msgstr "Aggregationsgruppen"
+msgstr "Aggregation der Summen"
 
 msgid "Aggregation function"
 msgstr "Aggregationsfunktion"
@@ -6242,7 +6242,7 @@ msgid ""
 "Allows to define levels for the counts and size of Docker containers, "
 "images, local volumes, and the build cache."
 msgstr ""
-"Erlaubt die Definition von Levels für die Anzahl und die Größe von Docker-"
+"Erlaubt die Definition von Leveln für die Anzahl und die Größe von Docker-"
 "Containern, Images, lokalen Volumes und den Build Cache."
 
 #, python-format
@@ -8744,13 +8744,11 @@ msgstr "Azure VNet Gateway"
 msgid "Azure VNet Gateway  (deprecated)"
 msgstr "Azure VNet Gateway (veraltet)"
 
-#, fuzzy
 msgid "Azure database connections"
-msgstr "Azure SQL Datenbank-Verbindungen"
-
-#, fuzzy
-msgid "Azure database connections (deprecated)"
 msgstr "Azure Datenbank-Verbindungen"
+
+msgid "Azure database connections (deprecated)"
+msgstr "Azure Datenbank-Verbindungen (veraltet)"
 
 msgid "Azure services found!"
 msgstr "Azure Services gefunden!"
@@ -8761,29 +8759,20 @@ msgstr "Zu überwachende Azure-Dienste"
 msgid "Azure storage accounts"
 msgstr "Azure Speicherkonten"
 
-#, fuzzy
 msgid "Azure virtual machines"
-msgstr "Die virtuelle Maschine"
-
-#, fuzzy
-msgid "Azure virtual machines (deprecated)"
 msgstr "Virtuelle Maschinen von Azure"
 
-#, fuzzy
-msgid "Azure virtual machines summary"
-msgstr "Zusammenfassung der virtuellen Maschinen von Azure"
+msgid "Azure virtual machines (deprecated)"
+msgstr "Virtuelle Maschinen von Azure (veraltet)"
 
-#, fuzzy
 msgid "Azure virtual machines summary  (deprecated)"
-msgstr "Zusammenfassung der virtuellen Maschinen von Azure"
+msgstr "Zusammenfassung der virtuellen Maschinen von Azure (veraltet)"
 
-#, fuzzy
 msgid "Azure web servers (IIS)"
 msgstr "Azure-Webserver (IIS)"
 
-#, fuzzy
 msgid "Azure web servers (IIS) (deprecated)"
-msgstr "Azure-Webserver (IIS)"
+msgstr "Azure-Webserver (IIS) (veraltet)"
 
 msgid "B"
 msgstr "B"
@@ -9245,10 +9234,10 @@ msgid "Bazel Cache Port"
 msgstr "Bazel Cache-Port"
 
 msgid "Bazel Cache User"
-msgstr "Bazel Cache Benutzer"
+msgstr "Bazel Cache-Benutzer"
 
 msgid "Bazel Cache Version"
-msgstr "Bazel Cache Version"
+msgstr "Bazel Cache-Version"
 
 msgid "Bazel Cache password"
 msgstr "Bazel Cache-Passwort"
@@ -9540,7 +9529,7 @@ msgstr ""
 "Nur für Buckets: Levels für Anzahl an abgerufenen Items von einer Festplatte"
 
 msgid "Buffer cache size"
-msgstr "Größe des Puffercache"
+msgstr "Größe des Puffer-Cache"
 
 msgid "Buffered I/O"
 msgstr "Gepufferter I/O"
@@ -11045,9 +11034,8 @@ msgstr ""
 "CURDEPTH_PERC: Prozentwert (CURDEPTH/MAXDEPTH) der Anzahl an Meldungen, die "
 "sich aktuell in der Warteschlange befinden."
 
-#, fuzzy
 msgid "Cache age"
-msgstr "Cachegröße"
+msgstr "Cache-Alter"
 
 msgid "Cache age for asynchronous checks"
 msgstr "Cache-Alter für asynchrone Checks"
@@ -11071,12 +11059,11 @@ msgstr "Cache-Treffer"
 msgid "Cache hits for pass"
 msgstr "Durchgelassene Cache-Treffer"
 
-#, fuzzy
 msgid "Cache internode latency"
-msgstr "Latenz bei Erstellung von Konferenzen"
+msgstr "Cache-Latenz zwischen den Knoten"
 
 msgid "Cache interval"
-msgstr "Speicherintervall"
+msgstr "Cache-Intervall"
 
 msgid "Cache misses"
 msgstr "Cache Misses"
@@ -11094,7 +11081,7 @@ msgid "Cache several non-status queries"
 msgstr "Etliche statusfreie Anfragen zwischenspeichern"
 
 msgid "Cache size"
-msgstr "Cachegröße"
+msgstr "Cache-Größe"
 
 msgid "Cache this section"
 msgstr "Diese Sektion zwischenspeichern"
@@ -11127,7 +11114,7 @@ msgstr ""
 "Aggregation enthaltenen Hosts/Services."
 
 msgid "Cached memory"
-msgstr "gecachter Speicher"
+msgstr "Gecachter Speicher"
 
 msgid "Cached output of monitoring agent"
 msgstr "Gecachte Ausgabe vom Monitoring-Agent"
@@ -12081,9 +12068,8 @@ msgstr "Check-Zustand des Brokers auf dem Primary: "
 msgid "Check TCP port connection"
 msgstr "Check TCP Port Verbindung"
 
-#, fuzzy
 msgid "Check all instances"
-msgstr "Alle Instanzen überwachen"
+msgstr "Alle Instanzen prüfen"
 
 msgid "Check and CRIT"
 msgstr "Prüfen und CRIT"
@@ -12094,9 +12080,8 @@ msgstr "Prüfen und WARN"
 msgid "Check and display only"
 msgstr "Prüfen und nur anzeigen"
 
-#, fuzzy
 msgid "Check asm instances"
-msgstr "%s Instanzen"
+msgstr "asm Instanzen prüfen"
 
 msgid "Check certificate"
 msgstr "Zertifikat prüfen"
@@ -12210,9 +12195,8 @@ msgstr "Prüfung nicht innerhalb von %d Sekunden ausgeführt"
 msgid "Check notification number per contact"
 msgstr "Benachrichtigungsnummer pro Kontakt prüfen"
 
-#, fuzzy
 msgid "Check only db instances"
-msgstr "Nur die aufgelisteten Mailboxen überprüfen"
+msgstr "Nur DB-Instanzen prüfen"
 
 msgid "Check only the listed mailboxes"
 msgstr "Nur die aufgelisteten Mailboxen überprüfen"
@@ -13347,13 +13331,12 @@ msgstr ""
 "Klicken Sie auf 'Registriere %s' um die Zwei-Faktor-Authentifizierung über "
 "%s zu aktivieren."
 
-#, fuzzy
 msgid ""
 "Click the \"Add OpenTelemetry configuration\" button to start setting up "
 "your first OpenTelemetry configuration."
 msgstr ""
-"Klicken Sie auf den Knopf \"Konfiguration hinzufügen\", um mit dem "
-"Einrichten Ihrer ersten Konfiguration zu beginnen."
+"Klicken Sie auf den Knopf \"OpenTelemetry-Konfiguration hinzufügen\", um mit "
+"dem Einrichten Ihrer ersten OpenTelemetry-Konfiguration zu beginnen."
 
 msgid ""
 "Click the \"Add Relay\" button to start setting up your first Relay "
@@ -14351,16 +14334,14 @@ msgstr "Konfigurationen"
 msgid "Configure"
 msgstr "Konfiguriere"
 
-#, fuzzy
 msgid "Configure Amazon Web Services (AWS) monitoring in Checkmk"
-msgstr "Amazon Web Service (AWS) Monitoring in Checkmk konfigurieren"
+msgstr "Amazon Web Services (AWS) Monitoring in Checkmk konfigurieren"
 
 msgid "Configure Google Cloud Platform (GCP) monitoring in Checkmk"
 msgstr "Google Cloud Plattform (GCP) Monitoring in Checkmk konfigurieren"
 
-#, fuzzy
 msgid "Configure Microsoft Azure (deprecated) monitoring in Checkmk"
-msgstr "Microsoft Azure Monitoring in Checkmk konfigurieren"
+msgstr "Microsoft Azure (veraltet) Monitoring in Checkmk konfigurieren"
 
 msgid "Configure Microsoft Azure monitoring in Checkmk"
 msgstr "Microsoft Azure Monitoring in Checkmk konfigurieren"
@@ -14963,9 +14944,8 @@ msgstr "Verbindung über Unix-Socket"
 msgid "Connect without password"
 msgstr "Verbinden ohne Passwort"
 
-#, fuzzy
 msgid "Connected"
-msgstr "Verbindungsannehmende Instanz"
+msgstr "Verbunden"
 
 msgid "Connected Clients"
 msgstr "Verbundene Clients"
@@ -15031,9 +15011,8 @@ msgstr "Darstellung der Verbindung: %s"
 msgid "Connection settings"
 msgstr "Verbindungseinstellungen"
 
-#, fuzzy
 msgid "Connection state configuration"
-msgstr "Aktiviere Konfiguration"
+msgstr "Konfiguration des Verbindungszustands"
 
 msgid ""
 "Connection state of customers' sites and button for enabling or disabling "
@@ -15138,9 +15117,9 @@ msgstr "Verbindungstyp"
 msgid "Connector: Adding host changes to queue"
 msgstr "Vermittler: Host-Änderungen zur Warteschlange hinzufügen"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Connector: Collecting metric backend hosts on site  \"%s\""
-msgstr "Vermittler: Sammlung der Piggyback-Hosts auf der Instanz \"%s\""
+msgstr "Vermittler: Sammlung der Metrik-Backend-Hosts auf der Instanz \"%s\""
 
 #, python-format
 msgid "Connector: Collecting open telemetry hosts on site  \"%s\""
@@ -15623,7 +15602,7 @@ msgid "Couchbase vBuckets"
 msgstr "Couchbase-vBuckets"
 
 msgid "Couchbase: Cache"
-msgstr "Couchbase-Cache"
+msgstr "Couchbase: Cache"
 
 msgid ""
 "Could not access your AWS account. Please check your Access and Secret key "
@@ -16086,9 +16065,8 @@ msgstr "Cluster erstellen"
 msgid "Create custom graph"
 msgstr "Benutzerdefinierten Graph erstellen"
 
-#, fuzzy
 msgid "Create dashboard"
-msgstr "Erstelle ein Dashboard"
+msgstr "Erstelle Dashboard"
 
 msgid "Create element"
 msgstr "Element erstellen"
@@ -16323,9 +16301,9 @@ msgstr "Neues Regelpaket mit ID %s erstellt"
 msgid "Created new time period %s"
 msgstr "Neue Zeitperiode %s erstellt"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Created new user: %s"
-msgstr "Neue Benutzer erstellt: %s"
+msgstr "Neuen Benutzer erstellt: %s"
 
 #, python-format
 msgid "Created relay '%s'"
@@ -16481,13 +16459,11 @@ msgstr "CRIT bei einer Benutzung von"
 msgid "Critical at a utilization of"
 msgstr "CRIT bei einer Auslastung von"
 
-#, fuzzy
 msgid "Critical at failure count"
-msgstr "CRIT bei einer Benutzung von"
+msgstr ""
 
-#, fuzzy
 msgid "Critical at l/s"
-msgstr "Kritisch bei"
+msgstr "Kritisch bei l/s"
 
 msgid "Critical at or above"
 msgstr "Kritisch bei oder über"
@@ -16498,9 +16474,8 @@ msgstr "Kritisch bei oder unter"
 msgid "Critical at stratum"
 msgstr "Kritisch bei Stratum"
 
-#, fuzzy
 msgid "Critical at usage"
-msgstr "CRIT bei einer Benutzung von"
+msgstr "Kritisch bei Auslastung"
 
 msgid "Critical at usage of"
 msgstr "CRIT bei einer Benutzung von"
@@ -16527,9 +16502,8 @@ msgstr "Kritisch ab"
 msgid "Critical if below"
 msgstr "Kritisch wenn unter"
 
-#, fuzzy
 msgid "Critical if below l/s"
-msgstr "Kritisch wenn unter"
+msgstr "Kritisch wenn unter l/s"
 
 msgid "Critical if below or equal"
 msgstr "Kritisch bei oder unter"
@@ -17464,9 +17438,8 @@ msgstr "Untergrenzen für Datenpfadverfügbarkeit"
 msgid "Data point"
 msgstr "Datenpunkt"
 
-#, fuzzy
 msgid "Data point attribute"
-msgstr "Attribute des Datenpunkts"
+msgstr "Attribut des Datenpunkts"
 
 msgid "Data point attributes"
 msgstr "Attribute des Datenpunkts"
@@ -17513,7 +17486,7 @@ msgid "Data transfer"
 msgstr "Datenübertragung"
 
 msgid "Data transfer cache size"
-msgstr "Cachegröße der Datenübertragung"
+msgstr "Cache-Größe der Datenübertragung"
 
 msgid "Data transfer rate"
 msgstr "Datenübertragungsrate"
@@ -17586,13 +17559,11 @@ msgstr "Datenbank für einzelnen PostgreSQL-Server"
 msgid "Database identifier"
 msgstr "Datenbank-Identifier"
 
-#, fuzzy
 msgid "Database instance"
-msgstr "Datenbankname"
+msgstr "Datenbankinstanz"
 
-#, fuzzy
 msgid "Database instances"
-msgstr "Datenbankname"
+msgstr "Datenbankinstanzen"
 
 msgid "Database is being recovered"
 msgstr "Datenbank wurde wiederhergestellt"
@@ -18161,9 +18132,8 @@ msgstr ""
 "Definiere Patterns, um die Kernel-Konfigurationsparameter bei der Inventur "
 "einzuschließen."
 
-#, fuzzy
 msgid "Define sections"
-msgstr "Deaktivierte Sektionen"
+msgstr "Definiere Sektionen"
 
 msgid ""
 "Define the host to assign the discovered CloudFront services. You can assign "
@@ -22470,7 +22440,7 @@ msgid "Enable host notifications"
 msgstr "Host-Benachrichtigungen ein"
 
 msgid "Enable in-memory cache for availability"
-msgstr "Caching für Verfügbarkeiten einschalten"
+msgstr "In-Memory-Cache für Verfügbarkeit aktivieren"
 
 msgid "Enable logging of logon failures"
 msgstr "Protokollierung von Anmeldefehlern einschalten"
@@ -30668,7 +30638,7 @@ msgid "IBM SVC / V7000 user name"
 msgstr "IBM SVC / V7000 Benutzername"
 
 msgid "IBM SVC / V7000: Cache Usage in Total"
-msgstr "IBM SVC / V7000: Gesamte Cachebelegung"
+msgstr "IBM SVC / V7000: Gesamte Cache-Belegung"
 
 msgid "IBM SVC / V7000: Disk Throughput for Drives/MDisks/VDisks in Total"
 msgstr "IBM SVC / V7000: Plattendurchsatz von Drives/MDisks/VDisks gesamt"
@@ -30729,7 +30699,7 @@ msgid "ID <b>%s</b> is reserved for internal use."
 msgstr "Die ID <b>%s</b> ist für den internen Gebrauch reserviert."
 
 msgid "ID cache size"
-msgstr "ID-Cachegröße"
+msgstr "ID-Cache-Größe"
 
 msgid "ID of phase"
 msgstr "ID der Phase"
@@ -31661,7 +31631,7 @@ msgstr ""
 "Verfügung steht, um neue Applikationen ohne swapping zu starten. Berechnet "
 "wird es über MemFree, Sreclaimable, die Größe der Datei LRU lists und der "
 "unteren Grenze in jeder Zone. Die Schätzung berücksichtigt, dass das System "
-"Page-Caches benötigt, um gut zu funktionieren und, durch Objekte in "
+"Page Caches benötigt, um gut zu funktionieren und, durch Objekte in "
 "Benutzung, nicht alle slabs frei gemacht werden können, auch wenn der "
 "Speicher theoretisch zurückforderbar ist. Die Auswirkungen dieser Faktoren "
 "unterscheiden sich von System zu System.' (In engl.: https://www.kernel.org/"
@@ -33477,11 +33447,11 @@ msgid ""
 "number needs more RAM. Note: even if you set this to 0 there might be some "
 "cases where messages need to be cached anyway."
 msgstr ""
-"Um Anfragen nach historischen Daten zu beschleunigen, hält der Kern einen "
-"Bereich mit Log-Dateimeldungen im Speicher. Die Anzahl kann hier "
-"konfiguriert werden. Eine größere Zahl verbraucht mehr Speicher. Hinweis: "
-"Selbst wenn Sie diesen Wert auf 0 setzen, kann es Fälle geben, in denen die "
-"Meldungen trotzdem zwischengespeichert werden müssen."
+"Um Anfragen nach historischen Daten zu beschleunigen, hält der Kern einen In-"
+"Memory-Cache mit Log-Dateimeldungen. Die Anzahl kann hier konfiguriert "
+"werden. Eine größere Zahl verbraucht mehr Speicher. Hinweis: Selbst wenn Sie "
+"diesen Wert auf 0 setzen, kann es Fälle geben, in denen die Meldungen "
+"trotzdem zwischengespeichert werden müssen."
 
 msgid ""
 "In previous Checkmk versions, it was possible to use an automation user to "
@@ -33647,7 +33617,7 @@ msgid "In-memory area"
 msgstr "In-Memory Bereich"
 
 msgid "In-memory cache for availability data"
-msgstr "Hauptspeicher-Cache für Verfügbarkeitsdaten"
+msgstr "In-Memory-Cache für Verfügbarkeitsdaten"
 
 msgid "Inactive"
 msgstr "Inaktiv"
@@ -35866,7 +35836,7 @@ msgid "L2 cache hit ratio"
 msgstr "L2-Cache Hit Ratio"
 
 msgid "L2 cache size"
-msgstr "L2-Cachegröße"
+msgstr "L2-Cache-Größe"
 
 msgid "LAST_ACK"
 msgstr "LAST_ACK"
@@ -38763,7 +38733,7 @@ msgid "MSSQL Blocked Sessions"
 msgstr "MSSQL Blocked Sessions"
 
 msgid "MSSQL Cache Hits"
-msgstr "MSSQL-Cachetreffer"
+msgstr "MSSQL-Cache-Treffer"
 
 msgid "MSSQL Connections"
 msgstr "MSSQL Verbindungen"
@@ -39694,7 +39664,7 @@ msgid "Matrix of performance data"
 msgstr "Matrix der Metriken"
 
 msgid "Max Cache Age"
-msgstr "Maximales Cachealter"
+msgstr "Maximales Cache-Alter"
 
 msgid "Max age of the newest snapshot"
 msgstr "Höchstalter des neuesten Snapshots"
@@ -46528,7 +46498,7 @@ msgid "Oracle buffer busy wait"
 msgstr "Oracle Puffer beschäftigt Wartezeit"
 
 msgid "Oracle buffer cache size"
-msgstr "Oracle Puffercachegröße"
+msgstr "Oracle Puffer-Cache-Größe"
 
 msgid "Oracle buffer hit ratio"
 msgstr "Oracle Puffer Trefferquote"
@@ -49661,9 +49631,8 @@ msgstr "Bitte geben Sie einen absoluten Windows-Pfad an"
 msgid "Please provide an absolute path"
 msgstr "Bitte geben Sie einen absoluten Pfad an"
 
-#, fuzzy
 msgid "Please provide unique ports."
-msgstr "Bitte geben Sie einen absoluten Pfad an"
+msgstr "Bitte geben Sie eindeutige Pfade an."
 
 msgid ""
 "Please refer to the [dashboards#host_problems|Checkmk user guide] for more "
@@ -50446,7 +50415,7 @@ msgid "Presentations"
 msgstr "Präsentationen"
 
 msgid "Preserve cache times configured by other rules"
-msgstr "Behalte, durch andere Regeln konfigurierte, cache Zeiten"
+msgstr "Behalte, durch andere Regeln konfigurierte, Cache-Zeiten"
 
 msgid "Press Ctrl + K to trigger search"
 msgstr ""
@@ -52048,7 +52017,7 @@ msgid "Redirect URL (has to be https)"
 msgstr "URL für die Umleitung (muss HTTPS verwenden)"
 
 msgid "Redis Caches"
-msgstr "Redis Caches"
+msgstr "Redis-Caches"
 
 msgid "Redis clients"
 msgstr "Redis-Clients"
@@ -53286,7 +53255,7 @@ msgid ""
 "Requests data from a Bazel Remote Cache instance metrics endpoint running "
 "version v2.4.1 or higher"
 msgstr ""
-"Fordert Daten von einem Bazel Remote Cache Instanz Metrics Endpunkt mit "
+"Fordert Daten von einem Bazel Remote Cache Instanzmetrik-Endpunkt mit "
 "Version v2.4.1 oder höher an"
 
 msgid "Requests data from a Gerrit instance."
@@ -54499,7 +54468,7 @@ msgid "S."
 msgstr "s."
 
 msgid "S3 backend cache hits"
-msgstr "S3 Backend Cache Treffer"
+msgstr "S3 Backend Cache-Treffer"
 
 msgid "S3 backend cache missess"
 msgstr "S3 Backend Cache Misses"
@@ -58823,7 +58792,7 @@ msgid "Skype for Business XMPP"
 msgstr "Skype for Business - XMPP"
 
 msgid "Slab (Various smaller caches)"
-msgstr "Slab (Verschiedene kleinere Caches)"
+msgstr "Slab (verschiedene kleinere Caches)"
 
 msgid "Slack or Mattermost parameters"
 msgstr "Slack- oder Mattermost-Parameter"
@@ -70274,8 +70243,8 @@ msgid ""
 "large installations."
 msgstr ""
 "Diese Einstellung aktiviert eine neue Implementierung der Livestatustabelle "
-"<tt>statehist</tt>, welche einen Hauptspeicher-Cache der Zustandsübergänge "
-"von Hosts und Services aufbaut. Das beschleunigt Anfragen in großen "
+"<tt>statehist</tt>, welche einen In-Memory-Cache der Zustandsübergänge von "
+"Hosts und Services verwendet. Das beschleunigt Anfragen in großen "
 "Installation dramatisch."
 
 msgid ""
@@ -73522,7 +73491,7 @@ msgid "Time horizon for repeated events"
 msgstr "Zeithorizont für wiederkehrende Ereignisse"
 
 msgid "Time horizon to keep in cache"
-msgstr "Zeithorizont, der gegacht werden soll"
+msgstr "Zeithorizont, der im Cache gehalten werden soll"
 
 msgid "Time interval"
 msgstr "Zeitintervall"
@@ -74477,7 +74446,7 @@ msgid "Total bandwidth (sum of in and out)"
 msgstr "Gesamtbandbreite (Summe aus Eingang und Ausgang)"
 
 msgid "Total cache usage"
-msgstr "Gesamte Cachenutzung"
+msgstr "Gesamte Cache-Auslastung"
 
 #, python-format
 msgid "Total comments: %d"
@@ -83441,7 +83410,7 @@ msgid "Write bytes per operation"
 msgstr "Schreibe Bytes pro Operation"
 
 msgid "Write cache usage"
-msgstr "Schreibepufferauslastung"
+msgstr "Schreib-Cache-Auslastung"
 
 msgid "Write capacity"
 msgstr "Schreibkapazitätseinheiten"
@@ -89863,6 +89832,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Azure virtual machines summary"
+#~ msgstr "Zusammenfassung der virtuellen Maschinen von Azure"
 
 #~ msgid "# Containers"
 #~ msgstr "# Container"

@@ -8582,10 +8582,6 @@ msgid "Azure virtual machines (deprecated)"
 msgstr "Azure仮想マシン"
 
 #, fuzzy
-msgid "Azure virtual machines summary"
-msgstr "Azure仮想マシンの概要"
-
-#, fuzzy
 msgid "Azure virtual machines summary  (deprecated)"
 msgstr "Azure仮想マシンの概要"
 
@@ -87594,6 +87590,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Azure virtual machines summary"
+#~ msgstr "Azure仮想マシンの概要"
 
 #~ msgid "# Containers"
 #~ msgstr "# コンテナ"

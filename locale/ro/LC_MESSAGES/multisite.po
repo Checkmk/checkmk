@@ -9181,10 +9181,6 @@ msgid "Azure virtual machines (deprecated)"
 msgstr "Mașini virtuale Azure"
 
 #, fuzzy
-msgid "Azure virtual machines summary"
-msgstr "Rezumat al mașinilor virtuale Azure"
-
-#, fuzzy
 msgid "Azure virtual machines summary  (deprecated)"
 msgstr "Rezumat al mașinilor virtuale Azure"
 
@@ -93667,6 +93663,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Azure virtual machines summary"
+#~ msgstr "Rezumat al mașinilor virtuale Azure"
 
 #~ msgid "# Containers"
 #~ msgstr "# Containere"

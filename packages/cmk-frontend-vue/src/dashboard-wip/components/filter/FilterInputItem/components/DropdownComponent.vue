@@ -9,7 +9,7 @@ import { computed, ref, watch } from 'vue'
 import usei18n, { untranslated } from '@/lib/i18n'
 
 import CmkDropdown from '@/components/CmkDropdown'
-import type { Suggestions } from '@/components/CmkSuggestions.vue'
+import type { Suggestions } from '@/components/CmkSuggestions'
 
 import type { DropdownConfig } from '../../types.ts'
 import type { ComponentEmits, FilterComponentProps } from './types.ts'

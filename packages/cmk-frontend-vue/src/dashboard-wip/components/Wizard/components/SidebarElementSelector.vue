@@ -11,7 +11,7 @@ import usei18n, { untranslated } from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkDropdown from '@/components/CmkDropdown'
-import type { Suggestion } from '@/components/suggestions'
+import type { Suggestion } from '@/components/CmkSuggestions'
 
 const { _t } = usei18n()
 

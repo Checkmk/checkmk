@@ -12,7 +12,7 @@ import { cmkFetch } from '@/lib/cmkFetch'
 import { CmkError } from '@/lib/error'
 import { untranslated } from '@/lib/i18n'
 
-import { ErrorResponse, Response } from '@/components/suggestions'
+import { ErrorResponse, Response } from '@/components/CmkSuggestions'
 
 export interface MaybeApiError {
   result?: string

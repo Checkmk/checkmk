@@ -11,8 +11,8 @@ import type { TranslatedString } from '@/lib/i18nString'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkHtml from '@/components/CmkHtml.vue'
+import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 
-import CmkScrollContainer from './CmkScrollContainer.vue'
 import { ErrorResponse, Response, type Suggestion } from './suggestions'
 
 const { _t } = usei18n()

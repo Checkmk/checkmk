@@ -8,7 +8,7 @@ import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_compon
 import { onBeforeUpdate, ref, watch } from 'vue'
 
 import CmkList from '@/components/CmkList'
-import { type Suggestion } from '@/components/suggestions'
+import { type Suggestion } from '@/components/CmkSuggestions'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 import { inputSizes } from '@/components/user-input/sizes'
 

@@ -17,7 +17,7 @@ import usei18n from '@/lib/i18n'
 
 import CmkDropdown from '@/components/CmkDropdown'
 import CmkList from '@/components/CmkList'
-import { type Suggestion } from '@/components/suggestions'
+import { type Suggestion } from '@/components/CmkSuggestions'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 import { inputSizes } from '@/components/user-input/sizes'

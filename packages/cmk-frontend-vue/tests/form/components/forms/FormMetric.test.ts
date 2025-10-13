@@ -7,7 +7,7 @@ import { fireEvent, render, screen } from '@testing-library/vue'
 import type { Metric, Validator } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { vi } from 'vitest'
 
-import { Response } from '@/components/suggestions'
+import { Response } from '@/components/CmkSuggestions'
 
 import FormMetric from '@/form/components/forms/FormMetric.vue'
 

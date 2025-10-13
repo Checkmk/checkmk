@@ -10,10 +10,8 @@ import type { TranslatedString } from '@/lib/i18nString'
 import useClickOutside from '@/lib/useClickOutside'
 import { immediateWatch } from '@/lib/watch'
 
-import CmkSuggestions from '@/components/CmkSuggestions.vue'
-import { type Suggestions } from '@/components/CmkSuggestions.vue'
+import CmkSuggestions, { ErrorResponse, type Suggestions } from '@/components/CmkSuggestions'
 import ArrowDown from '@/components/graphics/ArrowDown.vue'
-import { ErrorResponse } from '@/components/suggestions'
 import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 
 import CmkDropdownButton from './CmkDropdownButton.vue'

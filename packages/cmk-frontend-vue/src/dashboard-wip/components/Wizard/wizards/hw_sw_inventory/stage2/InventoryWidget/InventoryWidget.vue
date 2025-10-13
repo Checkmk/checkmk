@@ -10,7 +10,7 @@ import usei18n, { untranslated } from '@/lib/i18n'
 
 import CmkDropdown from '@/components/CmkDropdown'
 import CmkIndent from '@/components/CmkIndent.vue'
-import type { Suggestion } from '@/components/suggestions'
+import type { Suggestion } from '@/components/CmkSuggestions'
 
 import CollapsibleContent from '@/dashboard-wip/components/Wizard/components/collapsible/CollapsibleContent.vue'
 import CollapsibleTitle from '@/dashboard-wip/components/Wizard/components/collapsible/CollapsibleTitle.vue'

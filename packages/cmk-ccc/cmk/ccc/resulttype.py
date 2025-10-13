@@ -165,7 +165,7 @@ class OK(Result[T_co, E_co]):
     @override
     def __lt__(self, other: Result[T_co, E_co]) -> bool:
         if not isinstance(other, Result):
-            return NotImplemented
+            return NotImplemented  # type: ignore[unreachable]
         if isinstance(other, Error):
             return True
         assert isinstance(other, OK)
@@ -174,7 +174,7 @@ class OK(Result[T_co, E_co]):
     @override
     def __gt__(self, other: Result[T_co, E_co]) -> bool:
         if not isinstance(other, Result):
-            return NotImplemented
+            return NotImplemented  # type: ignore[unreachable]
         if isinstance(other, Error):
             return False
         assert isinstance(other, OK)
@@ -265,7 +265,7 @@ class Error(Result[T_co, E_co]):
     @override
     def __lt__(self, other: Result[T_co, E_co]) -> bool:
         if not isinstance(other, Result):
-            return NotImplemented
+            return NotImplemented  # type: ignore[unreachable]
         if isinstance(other, OK):
             return False
         assert isinstance(other, Error)
@@ -274,7 +274,7 @@ class Error(Result[T_co, E_co]):
     @override
     def __gt__(self, other: Result[T_co, E_co]) -> bool:
         if not isinstance(other, Result):
-            return NotImplemented
+            return NotImplemented  # type: ignore[unreachable]
         if isinstance(other, OK):
             return True
         assert isinstance(other, Error)

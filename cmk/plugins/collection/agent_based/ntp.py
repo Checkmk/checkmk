@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="unreachable"
+
 # Example output from agent:
 # <<<ntp>>>
 # - 42.202.61.100   .INIT.          16 u    - 1024    0    0.000    0.000   0.000

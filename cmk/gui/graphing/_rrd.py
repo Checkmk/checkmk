@@ -5,6 +5,7 @@
 """Core for getting the actual raw data points via Livestatus from RRD"""
 
 # mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="unreachable"
 
 import collections
 import contextlib

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
 
 from collections.abc import Iterable
 from importlib import import_module

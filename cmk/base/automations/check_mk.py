@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="mutable-override"
-
 # mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="unreachable"
 
 import abc
 import ast

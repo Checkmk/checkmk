@@ -234,7 +234,7 @@ def _sanitize_path(raw_file_path):
     #   str_with_surrogates.encode('utf-8', 'surrogateescape')
     if sys.version_info[0] >= 3:
         return raw_file_path.encode("utf-8", "surrogateescape").decode("utf-8", "replace")
-    if isinstance(raw_file_path, unicode):  # type: ignore[name-defined] # noqa: F821
+    if isinstance(raw_file_path, unicode):  # type: ignore[name-defined,unreachable] # noqa: F821
         return raw_file_path
     return raw_file_path.decode("utf-8", "replace")
 

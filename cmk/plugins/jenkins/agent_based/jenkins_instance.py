@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="redundant-expr"
-
 # mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
 
 # <<<jenkins_instance>>>
 # {"quietingDown": false, "nodeDescription": "the master Jenkins node",

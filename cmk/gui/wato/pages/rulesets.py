@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """WATO's awesome rule editor: Lets the user edit rule based parameters"""
 
+# mypy: disable-error-code="unreachable"
+
 # mypy: disable-error-code="exhaustive-match"
 
 # mypy: disable-error-code="no-any-return"

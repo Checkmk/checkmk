@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
 
 from __future__ import annotations
 

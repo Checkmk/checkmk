@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
 
 # README: HISTORICAL HINT
 # This inventory plug-in used to be split-up into the inventory plugins "livestatus_status",

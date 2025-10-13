@@ -5,6 +5,8 @@
 from cmk.agent_based.v2 import AgentSection, StringTable
 from cmk.plugins.lib import docker, memory
 
+# mypy: disable-error-code="unreachable"
+
 
 def _parse_docker_container_mem_plugin(string_table: StringTable) -> docker.MemorySection:
     """

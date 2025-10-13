@@ -8,6 +8,8 @@ of Check_MK. The GUI is e.g. accessing this module for gathering the default
 configuration.
 """
 
+# mypy: disable-error-code="unreachable"
+
 import contextlib
 import copy
 import logging

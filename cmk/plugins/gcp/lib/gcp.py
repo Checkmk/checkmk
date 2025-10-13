@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
 
 import json
 from collections.abc import Callable, Mapping, Sequence

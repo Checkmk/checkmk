@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
 
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from typing import Any, NotRequired, TypedDict, TypeVar

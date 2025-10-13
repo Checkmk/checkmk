@@ -87,7 +87,7 @@ class CrashReportStore:
             fname = "crash.info" if key == "crash_info" else key
 
             if value is None:
-                continue
+                continue  # type: ignore[unreachable]
 
             if fname == "crash.info":
                 store.save_text_to_file(

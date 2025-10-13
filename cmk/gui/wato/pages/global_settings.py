@@ -6,6 +6,7 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
 
 
 """Editor for global settings in main.mk and modes for these global

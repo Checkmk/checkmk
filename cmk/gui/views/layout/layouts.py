@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
 
 import abc
 import re

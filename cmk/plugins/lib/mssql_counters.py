@@ -11,6 +11,8 @@
 #  - Rate counters (per second)
 """
 
+# mypy: disable-error-code="unreachable"
+
 from collections.abc import MutableMapping
 from contextlib import suppress
 from typing import Any

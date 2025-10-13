@@ -9,6 +9,7 @@ Special agent for monitoring Amazon web services (AWS) with Check_MK.
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 

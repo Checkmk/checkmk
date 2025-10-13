@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="unreachable"
+
 # <<<graylog_nodes:sep(0)>>>
 # {"139f455e-0bb7-4db9-9b9d-bba11767a674": {"facility": "graylog-server",
 # "codename": "Noir", "node_id": "139f455e-0bb7-4db9-9b9d-bba11767a674",

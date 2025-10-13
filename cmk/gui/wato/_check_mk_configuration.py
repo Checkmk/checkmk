@@ -7,6 +7,7 @@
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="unreachable"
 
 import logging
 import re

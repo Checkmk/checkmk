@@ -133,7 +133,7 @@ class TestOk:
 
     def test_map(self, result: Result[int, object]) -> None:
         ok = "ok"
-        assert not isinstance(result.ok, type(ok))
+        assert not isinstance(result.ok, type(ok))  # type: ignore[unreachable]
 
         other = result.map(lambda _: ok)
         assert other != result
@@ -270,7 +270,7 @@ class TestError:
 
     def test_map_error(self, result: Result[object, int]) -> None:
         error = "error"
-        assert not isinstance(result.error, type(error))
+        assert not isinstance(result.error, type(error))  # type: ignore[unreachable]
 
         other = result.map_error(lambda _: error)
         assert other != result

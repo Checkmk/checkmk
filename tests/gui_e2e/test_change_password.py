@@ -56,6 +56,7 @@ def _change_password(page: LoginPage, new_pw: str, new_pw_conf: str, old_pw: str
     page.main_area.locator("#suggestions >> text=Save").click()
 
 
+@pytest.mark.skip(reason="CMK-26721; outdated locators.")
 @pytest.mark.parametrize(
     "new_pw,new_pw_conf",
     [
@@ -82,6 +83,7 @@ def test_user_change_password_success(
     test_site.reset_admin_password()
 
 
+@pytest.mark.skip(reason="CMK-26721; outdated locators.")
 @pytest.mark.parametrize(
     "new_pw,new_pw_conf,old_pw,expect_error_contains",
     [
@@ -107,6 +109,7 @@ def test_user_change_password_errors(
     page.main_area.check_error(re.compile(f".*{expect_error_contains}.*"))
 
 
+@pytest.mark.skip(reason="CMK-26721; outdated locators.")
 def test_user_change_password_incompatible_with_policy(
     logged_in_page: LoginPage,
     with_password_policy: None,

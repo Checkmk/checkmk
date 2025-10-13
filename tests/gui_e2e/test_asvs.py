@@ -28,6 +28,7 @@ def _change_password(page: LoginPage, old_password: str, new_password: str) -> N
     page.main_area.check_success("Successfully changed password.")
 
 
+@pytest.mark.skip(reason="CMK-26721; outdated locators.")
 def test_v2_1_5(test_site: Site, logged_in_page: LoginPage, credentials: CmkCredentials) -> None:
     """Verify users can change their password."""
 
@@ -47,6 +48,7 @@ def test_v2_1_5(test_site: Site, logged_in_page: LoginPage, credentials: CmkCred
     page.main_area.check_page_title("Main dashboard")
 
 
+@pytest.mark.skip(reason="CMK-26721; outdated locators.")
 def test_password_truncation_error(logged_in_page: LoginPage) -> None:
     """Bcrypt truncates at 72 chars, check for the error if the password is longer"""
 

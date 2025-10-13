@@ -19,7 +19,6 @@ from typing import Any, Final
 
 from livestatus import SiteConfigurations
 
-import cmk.gui.watolib.changes as _changes
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
@@ -73,6 +72,7 @@ from cmk.gui.watolib.config_domains import (
     finalize_all_settings_per_site,
 )
 from cmk.gui.watolib.global_settings import (
+    add_global_settings_change,
     load_configuration_settings,
     save_global_settings,
     STATIC_PERMISSIONS_GLOBAL_SETTINGS,
@@ -413,18 +413,11 @@ class ABCEditGlobalSettingMode(WatoMode):
         if new_value and self._varname == "trusted_certificate_authorities":
             ConfigDomainCACertificates.log_changes(current, new_value)
 
-        _changes.add_change(
-            action_name="edit-configvar",
-            text=msg,
+        add_global_settings_change(
+            self._config_variable,
             user_id=user.id,
+            text=msg,
             sites=self._affected_sites(),
-            domains=list(self._config_variable.all_domains()),
-            need_restart=self._config_variable.need_restart(),
-            need_apache_reload=self._config_variable.need_apache_reload(),
-            domain_settings={
-                domain.ident(): {"need_apache_reload": self._config_variable.need_apache_reload()}
-                for domain in self._config_variable.all_domains()
-            },
             use_git=config.wato_use_git,
         )
 
@@ -614,17 +607,11 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
         )
         save_global_settings(self._current_settings)
 
-        _changes.add_change(
-            action_name="edit-configvar",
-            text=msg,
+        add_global_settings_change(
+            config_variable,
             user_id=user.id,
-            domains=list(config_variable.all_domains()),
-            need_restart=config_variable.need_restart(),
-            need_apache_reload=config_variable.need_apache_reload(),
-            domain_settings={
-                domain.ident(): {"need_apache_reload": config_variable.need_apache_reload()}
-                for domain in config_variable.all_domains()
-            },
+            text=msg,
+            sites=None,
             use_git=config.wato_use_git,
         )
 

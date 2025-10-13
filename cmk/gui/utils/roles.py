@@ -13,7 +13,7 @@ from typing import cast, Final, get_args, Literal
 from cmk.ccc import store
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config, Config
-from cmk.gui.permissions import Permission, permission_registry
+from cmk.gui.permissions import Permission
 from cmk.gui.role_types import BuiltInUserRole, BuiltInUserRoleID, CustomUserRole
 from cmk.utils import paths
 
@@ -217,11 +217,6 @@ def is_user_with_publish_permissions(
         or user_permissions.user_may(user_id, publish_foreign_groups_permission)
         or user_permissions.user_may(user_id, publish_sites_permission)
     )
-
-
-# TODO: Move to UserPermissions.user_may
-def roles_of_user(user_id: UserId | None) -> list[str]:
-    return UserPermissions.from_config(active_config, permission_registry).roles_of_user(user_id)
 
 
 def is_automation_user(user_id: UserId) -> bool:

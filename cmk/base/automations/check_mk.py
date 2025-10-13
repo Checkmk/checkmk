@@ -205,7 +205,7 @@ from cmk.snmplib import (
     SNMPVersion,
     walk_for_export,
 )
-from cmk.utils import config_warnings, http_proxy_config, ip_lookup, log, man_pages, timeperiod
+from cmk.utils import config_warnings, http_proxy_config, ip_lookup, log, man_pages
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.caching import cache_manager
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
@@ -1321,7 +1321,6 @@ def _execute_autodiscovery(
                             lambda hn: config_cache.is_active(hn) and config_cache.is_online(hn)
                         ),
                     ),
-                    timeperiods=timeperiod.get_all_timeperiods(loaded_config.timeperiods),
                     bake_on_restart=bake_on_restart,
                     notify_relay=notify_relay,
                 )
@@ -1349,7 +1348,6 @@ def _execute_autodiscovery(
                             lambda hn: config_cache.is_active(hn) and config_cache.is_online(hn)
                         ),
                     ),
-                    timeperiods=timeperiod.get_all_timeperiods(loaded_config.timeperiods),
                     bake_on_restart=bake_on_restart,
                     notify_relay=notify_relay,
                 )
@@ -1612,7 +1610,6 @@ class AutomationRenameHosts(Automation):
                         tag_list=config_cache.host_tags.tag_list,
                         service_dependencies=loaded_config.service_dependencies,
                     ),
-                    timeperiods=timeperiod.get_all_timeperiods(loaded_config.timeperiods),
                     bake_on_restart=_make_configured_bake_on_restart_callback(
                         loading_result, hosts_config.hosts
                     ),
@@ -2680,7 +2677,6 @@ class AutomationRestart(Automation):
                 tag_list=loading_result.config_cache.host_tags.tag_list,
                 service_dependencies=loaded_config.service_dependencies,
             ),
-            timeperiods=timeperiod.get_all_timeperiods(loaded_config.timeperiods),
             bake_on_restart=_make_configured_bake_on_restart_callback(
                 loading_result, hosts_config.hosts
             ),
@@ -2772,7 +2768,6 @@ def _execute_silently(
     service_depends_on: Callable[[HostName, ServiceName], Sequence[ServiceName]],
     bake_on_restart: Callable[[], None],
     notify_relay: Callable[[], None],
-    timeperiods: timeperiod.TimeperiodSpecs,
 ) -> RestartResult:
     with redirect_stdout(open(os.devnull, "w")):
         # The IP lookup used to write to stdout, that is not the case anymore.
@@ -2801,7 +2796,6 @@ def _execute_silently(
                         lambda hn: config_cache.is_active(hn) and config_cache.is_online(hn)
                     )
                 ),
-                timeperiods=timeperiods,
                 bake_on_restart=bake_on_restart,
                 notify_relay=notify_relay,
             )

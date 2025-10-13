@@ -1683,7 +1683,6 @@ def mode_update() -> None:
                 ),
                 bake_on_restart=bake_on_restart,
                 notify_relay=_make_configured_notify_relay(),
-                timeperiods=timeperiod.get_all_timeperiods(loaded_config.timeperiods),
             )
     except Exception as e:
         console.error(f"Configuration Error: {e}", file=sys.stderr)
@@ -1788,7 +1787,6 @@ def mode_restart(args: Sequence[HostName]) -> None:
                 and loading_result.config_cache.is_online(hn)
             )
         ),
-        timeperiods=timeperiod.get_all_timeperiods(loaded_config.timeperiods),
         bake_on_restart=_make_configured_bake_on_restart(loading_result, hosts_config.hosts),
         notify_relay=_make_configured_notify_relay(),
     )
@@ -1889,7 +1887,6 @@ def mode_reload(args: Sequence[HostName]) -> None:
                 and loading_result.config_cache.is_online(hn)
             ),
         ),
-        timeperiods=timeperiod.get_all_timeperiods(loaded_config.timeperiods),
         bake_on_restart=_make_configured_bake_on_restart(loading_result, hosts_config.hosts),
         notify_relay=_make_configured_notify_relay(),
     )

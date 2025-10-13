@@ -5,6 +5,7 @@
 
 from typing import assert_never
 
+from cmk.base.cee.precompute_timeperiods import precompute_timeperiods
 from cmk.base.config import ConfigCache
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.base.core.interface import MonitoringCore
@@ -15,6 +16,7 @@ from cmk.utils import paths
 from cmk.utils.labels import LabelManager
 from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
+from cmk.utils.timeperiod import get_all_timeperiods
 
 
 def get_licensing_handler_type() -> type[LicensingHandler]:
@@ -43,12 +45,19 @@ def create_core(
             from cmk.base.configlib.cee.microcore import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
                 make_cmc_config,
                 make_fetcher_config_writer,
+                make_statehist_cache_config,
             )
             from cmk.base.core.cee.cmc import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
                 CmcPb,
                 ConfigWriterInterface,
             )
 
+            statehist_cache = make_statehist_cache_config(loaded_config)
+            timeperiods = precompute_timeperiods(
+                get_all_timeperiods(loaded_config.timeperiods),
+                (statehist_cache.horizon if statehist_cache else 0),
+                loaded_config.cmc_timeperiod_horizon,
+            )
             helper_config_writers: list[ConfigWriterInterface] = [
                 make_fetcher_config_writer(
                     edition,
@@ -78,14 +87,19 @@ def create_core(
 
             return CmcPb(
                 get_licensing_handler_type(),
-                make_cmc_config(loaded_config, matcher, label_manager),
+                make_cmc_config(
+                    loaded_config, matcher, label_manager, statehist_cache, timeperiods
+                ),
                 helper_config_writers,
             )
         case "nagios":
             from cmk.base.core.nagios import NagiosCore
 
             return NagiosCore(
-                get_licensing_handler_type(), paths.nagios_startscript, paths.nagios_objects_file
+                get_licensing_handler_type(),
+                paths.nagios_startscript,
+                paths.nagios_objects_file,
+                get_all_timeperiods(loaded_config.timeperiods),
             )
         case other_core:
             assert_never(other_core)

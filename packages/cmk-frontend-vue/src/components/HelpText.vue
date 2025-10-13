@@ -9,7 +9,11 @@ import { ref } from 'vue'
 import type { TranslatedString } from '@/lib/i18nString'
 import { getUserFrontendConfig } from '@/lib/userConfig'
 
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/tooltip'
+import CmkTooltip, {
+  CmkTooltipContent,
+  CmkTooltipProvider,
+  CmkTooltipTrigger
+} from '@/components/CmkTooltip'
 
 import CmkHtml from './CmkHtml.vue'
 import CmkIconButton from './CmkIconButton.vue'
@@ -52,9 +56,9 @@ const hideHelpIcon = getUserFrontendConfig()?.hide_contextual_help_icon ?? false
 </script>
 
 <template>
-  <TooltipProvider v-if="!!props.help && !hideHelpIcon">
-    <Tooltip :open="open" disable-closing-trigger>
-      <TooltipTrigger
+  <CmkTooltipProvider v-if="!!props.help && !hideHelpIcon">
+    <CmkTooltip :open="open" disable-closing-trigger>
+      <CmkTooltipTrigger
         class="cmk-help-text__trigger"
         as-child
         @click="(e: MouseEvent) => triggerHelp(e)"
@@ -66,8 +70,8 @@ const hideHelpIcon = getUserFrontendConfig()?.hide_contextual_help_icon ?? false
           class="cmk-help-text__icon"
           aria-label="?"
         />
-      </TooltipTrigger>
-      <TooltipContent
+      </CmkTooltipTrigger>
+      <CmkTooltipContent
         side="top"
         align="start"
         as-child
@@ -80,9 +84,9 @@ const hideHelpIcon = getUserFrontendConfig()?.hide_contextual_help_icon ?? false
             <CmkHtml :html="props.help" />
           </div>
         </CmkScrollContainer>
-      </TooltipContent>
-    </Tooltip>
-  </TooltipProvider>
+      </CmkTooltipContent>
+    </CmkTooltip>
+  </CmkTooltipProvider>
 </template>
 
 <style scoped>

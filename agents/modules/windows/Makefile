@@ -28,17 +28,16 @@ PYTHON_SAVE_DIR    := $(PYTHON_TMP_DIR)\to_save
 
 # external paths
 ROOT_CMK_PATH      := ..\..\..
-OMD_PACKAGES_DIR   := $(ROOT_CMK_PATH)\omd\packages\Python
 ARTEFACTS_DIR      := $(ROOT_CMK_PATH)\artefacts
 SRC_PIPFILE_DIR    := pipfiles\3
 
 # names
-OMD_PYTHON_NAME    := Python-$(PY_VER).$(PY_SUBVER)
+PYTHON_NAME    := Python-$(PY_VER).$(PY_SUBVER)
 PYTHON_MODULE_NAME := python-$(PY_VER).cab
 
 # files
-PYTHON_TIMESTAMP   := $(PYTHON_SRC_DIR)\$(OMD_PYTHON_NAME).timestamp
-OMD_PYTHON_PACKAGE := $(OMD_PACKAGES_DIR)\$(OMD_PYTHON_NAME).tar.xz
+PYTHON_TIMESTAMP   := $(PYTHON_SRC_DIR)\$(PYTHON_NAME).timestamp
+PYTHON_PACKAGE     := $(PYTHON_NAME).tar.xz
 
 PYTHON_INSTALLER   := $(PYTHON_TMP_DIR)\out\win32\python-$(PY_VER).$(PY_SUBVER).exe
 SRC_PIPFILE        := $(SRC_PIPFILE_DIR)\Pipfile
@@ -49,6 +48,7 @@ PYTHON_PIPFILE_LOCK:= $(PYTHON_PIPFILE).lock
 ARTEFACT_MODULE    := $(ARTEFACTS_DIR)\python-3.cab
 PYTHON_MODULE      := $(PYTHON_TMP_DIR)\$(PYTHON_MODULE_NAME)
 
+NEXUS_UPSTREAM_ARCHIVES_URL := https://artifacts.lan.tribe29.com/repository/upstream-archives
 
 
 .PHONY: clean venv 7zip unpack build python_install usage python_version integration
@@ -62,13 +62,18 @@ usage:
 python_version:
 	@echo $(PY_VER) $(PY_SUBVER)
 
-$(PYTHON_TIMESTAMP): $(OMD_PYTHON_PACKAGE) ## deploying python sources
+$(PYTHON_PACKAGE):
+	@powershell where curl.exe > nul 2>&1 ||  powershell Write-Host "[-] curl not found"  -Foreground red && exit /B 10
+	@powershell powershell Write-Host "[+] curl found" -Foreground green
+	curl -o "$@" "$(NEXUS_UPSTREAM_ARCHIVES_URL)/$@"
+
+$(PYTHON_TIMESTAMP): $(PYTHON_PACKAGE) ## deploying python sources
 	@powershell Write-Host "$@ is to be processed" -foreground White
 	@if not exist "$(MSBUILD)" powershell Write-Host -foreground Red "MS VS 2022 must be installed" && exit 1
 	@if not exist $< powershell Write-Host -foreground Red "$< absent" && exit 1
 	@powershell Write-Host -foreground Green "Unpacking $< ..."
 	7z x -y -mmt4 -o$(PYTHON_SRC_DIR) $<
-	7z x -y -o$(PYTHON_SRC_DIR) $(PYTHON_SRC_DIR)\$(OMD_PYTHON_NAME).tar && del /S $(PYTHON_SRC_DIR)\$(OMD_PYTHON_NAME).tar
+	7z x -y -o$(PYTHON_SRC_DIR) $(PYTHON_SRC_DIR)\$(PYTHON_NAME).tar && del /S $(PYTHON_SRC_DIR)\$(PYTHON_NAME).tar
 	@type nul >>$@ && powershell (ls $@).LastWriteTime = Get-Date   # windows touch
 	@powershell Write-Host -foreground Green "Done"
 

@@ -25,6 +25,7 @@ from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.inventory import HWSWInventoryParameters
 from cmk.helper_interface import FetcherType, SourceInfo, SourceType
 from cmk.utils.everythingtype import EVERYTHING
+from cmk.utils.timeperiod import TimeperiodName
 from tests.plugins_siteless.helpers import (
     BasicSubmitter,
     compare_services_states,
@@ -137,7 +138,7 @@ def test_checks_executor(
             params=HWSWInventoryParameters.from_raw({}),
             services=discovered_services,
             run_plugin_names=EVERYTHING,
-            get_check_period=lambda *_a, **_kw: None,
+            get_check_period=lambda *_a, **_kw: TimeperiodName("24X7"),
             submitter=submitter,
             exit_spec=ExitSpec(),
             timeperiods_active={},

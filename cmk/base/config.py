@@ -173,7 +173,6 @@ from cmk.utils.rulesets.ruleset_matcher import (
 )
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.tags import ComputedDataSources, TagGroupID, TagID
-from cmk.utils.timeperiod import TimeperiodName
 
 try:
     from cmk.utils.cme.labels import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
@@ -3071,7 +3070,7 @@ class ConfigCache:
 
         return list(cgrs)
 
-    def passive_check_period_of_service(
+    def check_period_of_passive_service(
         self, host_name: HostName, service_name: ServiceName, service_labels: Labels
     ) -> str:
         out = self.ruleset_matcher.get_service_values_all(
@@ -3109,18 +3108,6 @@ class ConfigCache:
             self.label_manager.labels_of_host,
         )
         return _parse(out[0], int) if out else None
-
-    def check_period_of_service(
-        self, host_name: HostName, service_name: ServiceName, service_labels: Labels
-    ) -> TimeperiodName | None:
-        out = self.ruleset_matcher.get_service_values_all(
-            host_name,
-            service_name,
-            service_labels,
-            check_periods,
-            self.label_manager.labels_of_host,
-        )
-        return TimeperiodName(out[0]) if out and out[0] != "24X7" else None
 
     @staticmethod
     def get_explicit_service_custom_variables(

@@ -2945,9 +2945,10 @@ def run_checking(
                     service_depends_on,
                 ),
                 run_plugin_names=run_plugin_names,
-                get_check_period=lambda service_name,
-                service_labels: config_cache.check_period_of_service(
-                    hostname, service_name, service_labels
+                get_check_period=lambda service_name, service_labels: timeperiod.TimeperiodName(
+                    config_cache.check_period_of_passive_service(
+                        hostname, service_name, service_labels
+                    )
                 ),
                 submitter=get_submitter(
                     check_submission=config.check_submission,

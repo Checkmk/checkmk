@@ -2248,7 +2248,7 @@ def test_config_cache_passive_check_period_of_service(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.passive_check_period_of_service(hostname, "CPU load", {}) == result
+    assert config_cache.check_period_of_passive_service(hostname, "CPU load", {}) == result
 
 
 @pytest.mark.parametrize(
@@ -2340,8 +2340,8 @@ def test_config_cache_service_level_of_service(
 @pytest.mark.parametrize(
     "hostname,result",
     [
-        (HostName("testhost1"), None),
-        (HostName("testhost2"), None),
+        (HostName("testhost1"), "24X7"),
+        (HostName("testhost2"), "24X7"),
         (HostName("testhost3"), "xyz"),
     ],
 )
@@ -2380,7 +2380,7 @@ def test_config_cache_check_period_of_service(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.check_period_of_service(hostname, "CPU load", {}) == result
+    assert config_cache.check_period_of_passive_service(hostname, "CPU load", {}) == result
 
 
 def test_config_cache_max_cachefile_age_no_cluster(monkeypatch: MonkeyPatch) -> None:

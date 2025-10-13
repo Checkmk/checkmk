@@ -85,7 +85,7 @@ def execute_checkmk_checks(
     inventory_parameters: Callable[[HostName, InventoryPlugin], Mapping[str, object]],
     params: HWSWInventoryParameters,
     services: Sequence[ConfiguredService],
-    get_check_period: Callable[[ServiceName, _Labels], TimeperiodName | None],
+    get_check_period: Callable[[ServiceName, _Labels], TimeperiodName],
     run_plugin_names: Container[CheckPluginName],
     submitter: Submitter,
     exit_spec: ExitSpec,
@@ -217,7 +217,7 @@ def check_host_services(
     services: Sequence[ConfiguredService],
     check_plugins: Mapping[CheckPluginName, CheckerPlugin],
     run_plugin_names: Container[CheckPluginName],
-    get_check_period: Callable[[ServiceName, _Labels], TimeperiodName | None],
+    get_check_period: Callable[[ServiceName, _Labels], TimeperiodName],
     timeperiods_active: Mapping[str, bool],
 ) -> Iterable[AggregatedResult]:
     """Compute service state results for all given services on node or cluster"""
@@ -242,9 +242,10 @@ def check_host_services(
 
 
 def _service_inside_check_period(
-    description: ServiceName, period: TimeperiodName | None, timeperiods_active: Mapping[str, bool]
+    description: ServiceName, period: TimeperiodName, timeperiods_active: Mapping[str, bool]
 ) -> bool:
-    if period is None:
+    if period == TimeperiodName("24X7"):
+        # No need to look this one up. Might save us a livestatus query.
         return True
     if timeperiods_active.get(period, True):
         console.debug(f"Service {description}: time period {period} is currently active.")

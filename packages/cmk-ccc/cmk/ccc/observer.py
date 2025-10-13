@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
 import abc
 import itertools
 import sys
@@ -162,7 +159,7 @@ class FetcherMemoryObserver(AbstractMemoryObserver):
                 self._log_verbose_info()
             sys.exit(14)
 
-    def _log_verbose_info(self):
+    def _log_verbose_info(self) -> None:
         self._print_global_memory_usage()
         self._error(
             "memory usage increased from %s to %s, exiting"

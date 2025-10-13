@@ -5,8 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 """This module cares about Check_MK's file storage accessing. Most important
 functionality is the locked file opening realized with the File() context
@@ -20,7 +18,7 @@ from collections.abc import Mapping
 from contextlib import AbstractContextManager, nullcontext
 from pathlib import Path
 from threading import Lock
-from typing import Any
+from typing import Any, final, TYPE_CHECKING
 
 from cmk.ccc.exceptions import MKGeneralException, MKTerminate, MKTimeout
 from cmk.ccc.i18n import _
@@ -48,6 +46,9 @@ from cmk.ccc.store._locks import (
 )
 from cmk.ccc.store._locks import leave_locked_unless_exception as _leave_locked_unless_exception
 
+if TYPE_CHECKING:
+    from cmk.trace import Tracer
+
 __all__ = [
     "activation_lock",
     "BytesSerializer",
@@ -72,10 +73,11 @@ __all__ = [
 logger = logging.getLogger("cmk.store")
 
 
+@final
 class LazyTracer:
-    def __init__(self):
+    def __init__(self) -> None:
         self._lock = Lock()
-        self._tracer = None
+        self._tracer: Tracer | None = None
 
     # NOTE: Actually AbstractContextManager's first type argument is Span, but to use this we
     # would need to pull in OpenTelemetry stuff unconditionally or do some other hacks.

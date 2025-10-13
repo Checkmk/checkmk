@@ -242,7 +242,7 @@ def _get_generic_crash_info[TDetails](
     type_name: str,
     version_info: VersionInfo,
     details: TDetails,
-) -> CrashInfo:
+) -> CrashInfo[TDetails]:
     """Produces the crash info data structure.
 
     The top level keys of the crash info dict are standardized and need

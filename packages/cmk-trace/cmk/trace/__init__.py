@@ -25,7 +25,7 @@ from ._propagate import (
 from ._propagate import (
     extract_context_from_environment as extract_context_from_environment,
 )
-from ._tracer import Tracer
+from ._tracer import Tracer as Tracer
 
 # Re-export 3rd party names to avoid direct dependencies in the code
 Span = trace.Span

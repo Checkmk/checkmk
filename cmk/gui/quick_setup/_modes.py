@@ -121,7 +121,7 @@ class ModeQuickSetupSpecialAgent(WatoMode):
 
     @override
     def ensure_permissions(self) -> None:
-        self._ensure_static_permissions()
+        super().ensure_permissions()
         for domain_definition in bundle_domains()[RuleGroupType.SPECIAL_AGENTS]:
             pname = domain_definition.permission
             user.need_permission(pname if "." in pname else ("wato." + pname))
@@ -184,7 +184,7 @@ class ModeEditConfigurationBundles(WatoMode):
 
     @override
     def ensure_permissions(self) -> None:
-        self._ensure_static_permissions()
+        super().ensure_permissions()
         for domain_definition in bundle_domains()[self._bundle_group_type]:
             pname = domain_definition.permission
             user.need_permission(pname if "." in pname else ("wato." + pname))
@@ -657,7 +657,7 @@ class ModeConfigurationBundle(WatoMode):
         if not self._existing_bundle:
             return
 
-        self._ensure_static_permissions()
+        super().ensure_permissions()
         for domain_definition in bundle_domains().get(self._rule_group_type, []):
             pname = domain_definition.permission
             user.need_permission(pname if "." in pname else ("wato." + pname))

@@ -7,7 +7,6 @@
 
 import abc
 from collections.abc import Collection, Iterable
-from typing import final
 
 from cmk.ccc.resulttype import Error, Result
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -44,24 +43,12 @@ class WatoMode[RequestOK](abc.ABC):
         for each permission in the list."""
         raise NotImplementedError()
 
-    @final
-    @classmethod
-    def _ensure_static_permissions(cls) -> None:
-        permissions = cls.static_permissions()
-        if permissions is None:
-            permissions = []
-        else:
-            user.need_permission("wato.use")
-        if transactions.is_transaction():
-            user.need_permission("wato.edit")
-        elif user.may("wato.seeall"):
-            permissions = []
-        for pname in permissions:
-            user.need_permission(pname if "." in pname else ("wato." + pname))
-
     def ensure_permissions(self) -> None:
         """Overwrite this method to additionally check request-specific permissions if needed."""
-        self._ensure_static_permissions()
+        ensure_static_permissions(
+            self.static_permissions(),
+            transactions.is_transaction(),
+        )
 
     @classmethod
     @abc.abstractmethod
@@ -180,3 +167,19 @@ class WatoMode[RequestOK](abc.ABC):
 
     def handle_page(self, config: Config) -> None:
         return self.page(config)
+
+
+def ensure_static_permissions(
+    permissions: Iterable[PermissionName] | None,
+    need_modification_permission: bool,
+) -> None:
+    if permissions is None:
+        permissions = []
+    else:
+        user.need_permission("wato.use")
+    if need_modification_permission:
+        user.need_permission("wato.edit")
+    elif user.may("wato.seeall"):
+        permissions = []
+    for pname in permissions:
+        user.need_permission(pname if "." in pname else ("wato." + pname))

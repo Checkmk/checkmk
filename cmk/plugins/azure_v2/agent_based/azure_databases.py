@@ -45,7 +45,7 @@ def create_check_azure_databases_storage() -> CheckFunctionWithoutItem:
 
 check_plugin_azure_databases_storage = CheckPlugin(
     name="azure_v2_databases_storage",
-    service_name="DB Storage",
+    service_name="Azure/DB Storage",
     sections=["azure_v2_databases"],
     discovery_function=create_discover_by_metrics_function_single("average_storage_percent"),
     check_function=create_check_azure_databases_storage(),
@@ -71,7 +71,7 @@ def create_check_azure_databases_deadlock() -> CheckFunctionWithoutItem:
 
 check_plugin_azure_databases_deadlock = CheckPlugin(
     name="azure_v2_databases_deadlock",
-    service_name="DB Deadlocks",
+    service_name="Azure/DB Deadlocks",
     sections=["azure_v2_databases"],
     discovery_function=create_discover_by_metrics_function_single("average_deadlock"),
     check_function=create_check_azure_databases_deadlock(),
@@ -97,7 +97,7 @@ def create_check_azure_databases_cpu() -> CheckFunctionWithoutItem:
 
 check_plugin_azure_databases_cpu = CheckPlugin(
     name="azure_v2_databases_cpu",
-    service_name="DB CPU",
+    service_name="Azure/DB CPU",
     sections=["azure_v2_databases"],
     discovery_function=create_discover_by_metrics_function_single("average_cpu_percent"),
     check_function=create_check_azure_databases_cpu(),
@@ -123,7 +123,7 @@ def create_check_azure_databases_dtu() -> CheckFunctionWithoutItem:
 
 check_plugin_azure_databases_dtu = CheckPlugin(
     name="azure_v2_databases_dtu",
-    service_name="DB DTU",
+    service_name="Azure/DB DTU",
     sections=["azure_v2_databases"],
     discovery_function=create_discover_by_metrics_function_single(
         "average_dtu_consumption_percent"
@@ -159,7 +159,7 @@ def create_check_azure_databases_connections() -> CheckFunctionWithoutItem:
 
 check_plugin_azure_databases_connections = CheckPlugin(
     name="azure_v2_databases_connections",
-    service_name="DB Connections",
+    service_name="Azure/DB Connections",
     sections=["azure_v2_databases"],
     discovery_function=create_discover_by_metrics_function_single(
         "average_connection_successful", "average_connection_failed"
@@ -184,7 +184,7 @@ agent_section_azure_databases = AgentSection(
 )
 check_plugin_azure_databases = CheckPlugin(
     name="azure_v2_databases",
-    service_name="DB",
+    service_name="Azure/DB",
     discovery_function=discover_azure_databases,
     check_function=check_azure_databases,
 )

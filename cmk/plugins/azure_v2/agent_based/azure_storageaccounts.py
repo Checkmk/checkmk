@@ -39,7 +39,7 @@ agent_section_azure_storageaccounts = AgentSection(
 )
 check_plugin_azure_storageaccounts = CheckPlugin(
     name="azure_v2_storageaccounts",
-    service_name="Storage account",
+    service_name="Azure/Storage account",
     sections=["azure_v2_storageaccounts"],
     discovery_function=create_discover_by_metrics_function_single("total_UsedCapacity"),
     check_function=create_check_azure_storage(),
@@ -82,7 +82,7 @@ def create_check_azure_storageaccounts_flow() -> CheckFunctionWithoutItem:
 
 check_plugin_azure_storageaccounts_flow = CheckPlugin(
     name="azure_v2_storageaccounts_flow",
-    service_name="Storage flow",
+    service_name="Azure/Storage flow",
     sections=["azure_v2_storageaccounts"],
     discovery_function=create_discover_by_metrics_function_single(*FLOW_METRICS.keys()),
     check_function=create_check_azure_storageaccounts_flow(),
@@ -149,7 +149,7 @@ def create_check_azure_storageaccounts_performance() -> CheckFunctionWithoutItem
 
 check_plugin_azure_storageaccounts_performance = CheckPlugin(
     name="azure_v2_storageaccounts_performance",
-    service_name="Storage performance",
+    service_name="Azure/Storage performance",
     sections=["azure_v2_storageaccounts"],
     discovery_function=create_discover_by_metrics_function_single(*PERFORMANCE_METRICS.keys()),
     check_function=create_check_azure_storageaccounts_performance(),

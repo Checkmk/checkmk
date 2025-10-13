@@ -87,7 +87,7 @@ def check_azure_sites(params: Mapping[str, FixedLevelsT[float]], section: Resour
 check_plugin_azure_sites = CheckPlugin(
     name="azure_v2_sites",
     sections=["azure_v2_sites"],
-    service_name="Site",
+    service_name="Azure/Site",
     discovery_function=discover_azure_sites,
     check_function=check_azure_sites,
     check_ruleset_name="azure_v2_webserver",

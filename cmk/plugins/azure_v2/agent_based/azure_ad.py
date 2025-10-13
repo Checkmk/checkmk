@@ -81,7 +81,7 @@ def check_azure_ad_users(section: Section) -> CheckResult:
 check_plugin_azure_ad_users = CheckPlugin(
     name="azure_v2_ad",
     sections=["azure_v2_ad"],
-    service_name="AD Users",
+    service_name="Azure/AD Users",
     discovery_function=discover_azure_ad_users,
     check_function=check_azure_ad_users,
 )
@@ -123,7 +123,7 @@ def check_azure_ad_sync(item: str, params: Mapping[str, Any], section: Section) 
 check_plugin_azure_v2_ad_sync = CheckPlugin(
     name="azure_v2_ad_sync",
     sections=["azure_v2_ad"],
-    service_name="AD Sync %s",
+    service_name="Azure/AD Sync %s",
     discovery_function=discover_azure_ad_sync,
     check_function=check_azure_ad_sync,
     check_ruleset_name="azure_v2_ad",

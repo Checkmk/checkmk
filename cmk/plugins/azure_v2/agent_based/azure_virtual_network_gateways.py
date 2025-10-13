@@ -180,7 +180,7 @@ def check_azure_virtual_network_gateway(
 check_plugin_azure_virtual_network_gateways = CheckPlugin(
     name="azure_v2_virtual_network_gateways",
     sections=["azure_v2_virtualnetworkgateways"],
-    service_name="VNet Gateway",
+    service_name="Azure/VNet Gateway",
     discovery_function=discover_virtual_network_gateway,
     check_function=check_azure_virtual_network_gateway,
     check_ruleset_name="azure_v2_virtualnetworkgateways",
@@ -216,7 +216,7 @@ def check_virtual_network_gateway_settings(section: VNetGateway) -> CheckResult:
 check_plugin_azure_virtual_network_gateway_settings = CheckPlugin(
     name="azure_v2_virtual_network_gateway_settings",
     sections=["azure_v2_virtualnetworkgateways"],
-    service_name="VNet Gateway Settings",
+    service_name="Azure/VNet Gateway Settings",
     discovery_function=discover_virtual_network_gateway,
     check_function=check_virtual_network_gateway_settings,
 )
@@ -251,7 +251,7 @@ def check_virtual_network_gateway_health(section: VNetGateway) -> CheckResult:
 check_plugin_azure_virtual_network_gateway_health = CheckPlugin(
     name="azure_v2_virtual_network_gateway_health",
     sections=["azure_v2_virtualnetworkgateways"],
-    service_name="VNet Gateway Health Probe",
+    service_name="Azure/VNet Gateway Health Probe",
     discovery_function=discover_virtual_network_gateway,
     check_function=check_virtual_network_gateway_health,
 )
@@ -297,7 +297,7 @@ def check_virtual_network_gateway_bgp(section: VNetGateway) -> CheckResult:
 check_plugin_azure_virtual_network_gateway_bgp = CheckPlugin(
     name="azure_v2_virtual_network_gateway_bgp",
     sections=["azure_v2_virtualnetworkgateways"],
-    service_name="VNet Gateway BGP",
+    service_name="Azure/VNet Gateway BGP",
     discovery_function=discover_virtual_network_gateway,
     check_function=check_virtual_network_gateway_bgp,
 )
@@ -344,7 +344,7 @@ def check_virtual_network_gateway_peering(item: str, section: VNetGateway) -> Ch
 check_plugin_azure_virtual_network_gateway_peering = CheckPlugin(
     name="azure_v2_virtual_network_gateway_peering",
     sections=["azure_v2_virtualnetworkgateways"],
-    service_name="VNet Gateway %s",
+    service_name="Azure/VNet Gateway %s",
     discovery_function=discover_virtual_network_gateway_peering,
     check_function=check_virtual_network_gateway_peering,
 )

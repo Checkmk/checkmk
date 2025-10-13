@@ -32,10 +32,11 @@ const displayVisualizationSettings = ref<boolean>(true)
 // [value, label]
 const states: [string, string][] = [
   ['OK', 'OK'],
-  ['WARN', 'WARN'],
-  ['CRIT', 'CRIT'],
-  ['UNREACH', 'UNREACH']
+  ['WARNING', 'WARN'],
+  ['CRITICAL', 'CRIT'],
+  ['UNKNOWN', 'UNKNOWN']
 ]
+
 const widgetProps = computed(() => handler.value.widgetProps)
 </script>
 

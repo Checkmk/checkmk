@@ -22,7 +22,6 @@ import type { WidgetSpec } from '@/dashboard-wip/types/widget'
 import { determineWidgetEffectiveFilterContext } from '@/dashboard-wip/utils'
 
 export interface UseServiceStateSummary extends UseWidgetHandler, UseWidgetVisualizationOptions {
-  //Data
   selectedState: Ref<string>
 }
 

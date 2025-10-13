@@ -358,12 +358,9 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         dflt_target_name: str = "allhosts"
         dflt_topic_name: str = ""
         for name, view in get_permitted_views().items():
-            if (not config.visible_views or name in config.visible_views) and (
-                not config.hidden_views or name not in config.hidden_views
-            ):
-                views_to_show.append((name, view))
-                if name == dflt_target_name:
-                    dflt_topic_name = view["topic"]
+            views_to_show.append((name, view))
+            if name == dflt_target_name:
+                dflt_topic_name = view["topic"]
 
         selected_topic_name: str
         selected_target_name: str

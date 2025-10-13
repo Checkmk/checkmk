@@ -302,13 +302,6 @@ class CREConfig:
     # Whether the livestatu proxy daemon is available
     liveproxyd_enabled: bool = False
 
-    # Set this to a list in order to globally control which views are
-    # being displayed in the sidebar snap-in "Views"
-    visible_views: list[str] | None = None
-
-    # Set this list in order to actively hide certain views
-    hidden_views: list[str] | None = None
-
     # Patterns to group services in table views together
     service_view_grouping: list[GroupSpec] = field(default_factory=list)
 

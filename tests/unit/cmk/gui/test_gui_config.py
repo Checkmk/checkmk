@@ -54,8 +54,6 @@ def test_default_config_from_plugins() -> None:
         "debug_livestatus_queries",
         "show_livestatus_errors",
         "liveproxyd_enabled",
-        "visible_views",
-        "hidden_views",
         "service_view_grouping",
         "custom_style_sheet",
         "ui_theme",

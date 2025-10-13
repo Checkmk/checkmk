@@ -6,6 +6,7 @@
 automation functions on slaves,"""
 
 # mypy: disable-error-code="no-any-return"
+# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 
 import secrets

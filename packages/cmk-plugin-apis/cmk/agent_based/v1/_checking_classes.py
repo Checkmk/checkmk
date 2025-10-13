@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Classes used by the API for check plug-ins"""
 
+# mypy: disable-error-code="redundant-expr"
+
 from __future__ import annotations
 
 import enum

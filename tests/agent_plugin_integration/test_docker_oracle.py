@@ -5,7 +5,7 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-def"
-
+# mypy: disable-error-code="redundant-expr"
 
 import logging
 import os

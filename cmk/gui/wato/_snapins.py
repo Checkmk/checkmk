@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="redundant-expr"
 
 from collections.abc import Callable, Iterable
 from typing import TypedDict

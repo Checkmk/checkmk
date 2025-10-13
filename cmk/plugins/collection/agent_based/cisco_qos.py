@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# mypy: disable-error-code="redundant-expr"
+
 # Relevant SNMP OIDs:
 # .1.3.6.1.4.1.9.9.166.1.1.1.1.4.144 9
 # .1.3.6.1.4.1.9.9.166.1.1.1.1.4.258 16

@@ -5,6 +5,8 @@
 """This consolidates the hack that we currently use to make plugins
 password store compatible.
 
+# mypy: disable-error-code="redundant-expr"
+
 We are working towards a more staight forward solution.
 """
 

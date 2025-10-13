@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="redundant-expr"
 
 # TODO: Refactor/document locking. It is not clear when and how to apply
 # locks or when they are held by which component.

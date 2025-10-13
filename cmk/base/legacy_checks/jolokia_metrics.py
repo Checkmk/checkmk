@@ -6,6 +6,7 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="redundant-expr"
 
 
 # mypy: disable-error-code="arg-type"

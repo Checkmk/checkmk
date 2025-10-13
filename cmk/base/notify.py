@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="possibly-undefined"
+# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 
 # Please have a look at doc/Notifications.png:

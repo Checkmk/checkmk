@@ -22,8 +22,9 @@ import { useFilterDefinitions } from '@/dashboard-wip/components/filter/utils.ts
 import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
 import type { ObjectType } from '@/dashboard-wip/types/shared.ts'
 
-import AvailableGraphs from '../components/AvailableGraphs.vue'
-import { useSelectGraphTypes } from '../composables/useSelectGraphTypes'
+import AvailableWidgets from '../../../components/WidgetSelection/AvailableWidgets.vue'
+import type { WidgetItemList } from '../../../components/WidgetSelection/types'
+import { Graph, useSelectGraphTypes } from '../composables/useSelectGraphTypes'
 
 const { _t } = usei18n()
 
@@ -54,7 +55,13 @@ const serviceObjectType = 'service'
 const hostFilterType = defineModel<ElementSelection>('hostFilterType', { required: true })
 const serviceFilterType = defineModel<ElementSelection>('serviceFilterType', { required: true })
 
-const availableGraphs = useSelectGraphTypes(hostFilterType, serviceFilterType)
+const enabledWidgets = useSelectGraphTypes(hostFilterType, serviceFilterType)
+
+const availableWidgets: WidgetItemList = [
+  { id: Graph.SERVICE_STATE, label: _t('Service state'), icon: 'graph' },
+  { id: Graph.SERVICE_STATE_SUMMARY, label: _t('Service state summary'), icon: 'gauge' },
+  { id: Graph.SERVICE_STATISTICS, label: _t('Service statistics'), icon: 'single-metric' }
+]
 
 // Filters
 const filterDefinitions = useFilterDefinitions()
@@ -129,7 +136,6 @@ const configuredFiltersByObjectType = computed(() =>
     {{ _t('Available visualization types') }}
   </CmkHeading>
 
-  <AvailableGraphs :available-graphs="availableGraphs" />
-
+  <AvailableWidgets :available-items="availableWidgets" :enabled-widgets="enabledWidgets" />
   <ContentSpacer />
 </template>

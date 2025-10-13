@@ -17,8 +17,8 @@ import ContentSpacer from '@/dashboard-wip/components/Wizard/components/ContentS
 import SingleMultiWidgetObjectFilterConfiguration from '@/dashboard-wip/components/Wizard/components/filter/SingleMultiWidgetObjectFilterConfiguration.vue'
 import { parseFilters } from '@/dashboard-wip/components/Wizard/components/filter/utils.ts'
 import type { ElementSelection } from '@/dashboard-wip/components/Wizard/types'
-import AvailableGraphs from '@/dashboard-wip/components/Wizard/wizards/metrics/components/AvailableGraphs.vue'
 import {
+  Graph,
   MetricSelection,
   useSelectGraphTypes
 } from '@/dashboard-wip/components/Wizard/wizards/metrics/composables/useSelectGraphTypes'
@@ -27,6 +27,8 @@ import { useFilterDefinitions } from '@/dashboard-wip/components/filter/utils.ts
 import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
 import type { ObjectType } from '@/dashboard-wip/types/shared.ts'
 
+import AvailableWidgets from '../../../components/WidgetSelection/AvailableWidgets.vue'
+import type { WidgetItemList } from '../../../components/WidgetSelection/types'
 import MetricSelector from './MetricSelector/MetricSelector.vue'
 import type { UseCombinedMetric } from './MetricSelector/useCombinedMetric'
 import type { UseSingleMetric } from './MetricSelector/useSingleMetric'
@@ -81,7 +83,17 @@ const combinedMetricHandler = defineModel<UseCombinedMetric>('combinedMetricHand
   required: true
 })
 
-const availableGraphs = useSelectGraphTypes(hostFilterType, serviceFilterType, metricType)
+const enabledWidgets = useSelectGraphTypes(hostFilterType, serviceFilterType, metricType)
+const availableWidgets: WidgetItemList = [
+  { id: Graph.SINGLE_GRAPH, label: _t('Single graph'), icon: 'graph' },
+  { id: Graph.GAUGE, label: _t('Gauge'), icon: 'gauge' },
+  { id: Graph.SINGLE_METRIC, label: _t('Single metric'), icon: 'single-metric' },
+  { id: Graph.BARPLOT, label: _t('Barplot'), icon: 'barplot' },
+  { id: Graph.SCATTERPLOT, label: _t('Scatterplot'), icon: 'scatterplot' },
+  { id: Graph.TOP_LIST, label: _t('Top list'), icon: 'top-list' },
+  { id: Graph.PERFORMANCE_GRAPH, label: _t('Performance graph'), icon: 'graph' },
+  { id: Graph.COMBINED_GRAPH, label: _t('Combined graph'), icon: 'graph' }
+]
 
 // Filters
 const filterDefinitions = useFilterDefinitions()
@@ -168,7 +180,7 @@ const configuredFiltersByObjectType = computed(() =>
     {{ _t('Available visualization types') }}
   </CmkHeading>
 
-  <AvailableGraphs :available-graphs="availableGraphs" />
+  <AvailableWidgets :available-items="availableWidgets" :enabled-widgets="enabledWidgets" />
 
   <ContentSpacer />
 </template>

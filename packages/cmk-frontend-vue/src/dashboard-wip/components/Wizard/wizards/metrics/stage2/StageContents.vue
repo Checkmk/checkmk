@@ -13,11 +13,10 @@ import CmkHeading from '@/components/typography/CmkHeading.vue'
 import ActionBar from '@/dashboard-wip/components/Wizard/components/ActionBar.vue'
 import ActionButton from '@/dashboard-wip/components/Wizard/components/ActionButton.vue'
 import ContentSpacer from '@/dashboard-wip/components/Wizard/components/ContentSpacer.vue'
-import WidgetSelection from '@/dashboard-wip/components/Wizard/components/WidgetSelection/WidgetSelection.vue'
 import type { ElementSelection, UseWidgetHandler } from '@/dashboard-wip/components/Wizard/types'
 import {
   Graph,
-  type MetricSelection,
+  MetricSelection,
   getAvailableGraphs
 } from '@/dashboard-wip/components/Wizard/wizards/metrics/composables/useSelectGraphTypes'
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
@@ -28,6 +27,8 @@ import type {
   WidgetGeneralSettings
 } from '@/dashboard-wip/types/widget'
 
+import SelectableWidgets from '../../../components/WidgetSelection/SelectableWidgets.vue'
+import type { WidgetItemList } from '../../../components/WidgetSelection/types'
 import BarplotWidget from './BarplotWidget/BarplotWidget.vue'
 import { type UseBarplot, useBarplot } from './BarplotWidget/composables/useBarplot'
 import GaugeWidget from './GaugeWidget/GaugeWidget.vue'
@@ -87,12 +88,30 @@ const gotoPrevStage = () => {
   emit('goPrev')
 }
 
-const availableGraphs = getAvailableGraphs(
+const enabledWidgets = getAvailableGraphs(
   props.hostFilterType,
   props.serviceFilterType,
   props.metricType
 )
-const selectedWidget = ref<Graph | null>(Graph.SINGLE_GRAPH)
+
+const availableWidgetsTop: WidgetItemList = [
+  { id: Graph.SINGLE_GRAPH, label: _t('Single graph'), icon: 'graph' },
+  { id: Graph.SINGLE_METRIC, label: _t('Single metric'), icon: 'single-metric' },
+  { id: Graph.GAUGE, label: _t('Gauge'), icon: 'gauge' }
+]
+
+const availableWidgetsBottom: WidgetItemList = [
+  { id: Graph.BARPLOT, label: _t('Barplot'), icon: 'barplot' },
+  { id: Graph.SCATTERPLOT, label: _t('Scatterplot'), icon: 'scatterplot' },
+  { id: Graph.TOP_LIST, label: _t('Top list'), icon: 'top-list' }
+]
+
+const availableGraphWidgets: WidgetItemList = [
+  { id: Graph.PERFORMANCE_GRAPH, label: _t('Performance graph'), icon: 'graph' },
+  { id: Graph.COMBINED_GRAPH, label: _t('Combined graph'), icon: 'graph' }
+]
+
+const selectedWidget = ref<Graph | null>(enabledWidgets[0] || null)
 
 // TODO: We need to provide the current widget config to the handlers in order to edit it
 const handler: Partial<Record<Graph, UseWidgetHandler>> = {
@@ -119,16 +138,35 @@ const handler: Partial<Record<Graph, UseWidgetHandler>> = {
       :action="gotoPrevStage"
       variant="secondary"
     />
-    <ActionButton :label="_t('Add & place widget')" :action="gotoNextStage" variant="secondary" />
+    <ActionButton :label="_t('Add & place widget')" :action="gotoNextStage" variant="primary" />
   </ActionBar>
 
   <ContentSpacer />
 
-  <WidgetSelection
-    v-model:selected-widget="selectedWidget as Graph"
-    :available-items="Object.keys(Graph)"
-    :enabled-widgets="availableGraphs"
-  />
+  <CmkHeading type="h3">{{ _t('Choose how to display your data') }}</CmkHeading>
+
+  <div v-if="metricType === MetricSelection.SINGLE_METRIC">
+    <SelectableWidgets
+      v-model:selected-widget="selectedWidget as Graph"
+      :available-items="availableWidgetsTop"
+      :enabled-widgets="enabledWidgets"
+    />
+
+    <ContentSpacer />
+
+    <SelectableWidgets
+      v-model:selected-widget="selectedWidget as Graph"
+      :available-items="availableWidgetsBottom"
+      :enabled-widgets="enabledWidgets"
+    />
+  </div>
+  <div v-else>
+    <SelectableWidgets
+      v-model:selected-widget="selectedWidget as Graph"
+      :available-items="availableGraphWidgets"
+      :enabled-widgets="enabledWidgets"
+    />
+  </div>
 
   <ContentSpacer />
 

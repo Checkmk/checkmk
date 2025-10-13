@@ -23,7 +23,8 @@ import type {
   WidgetSpec
 } from '@/dashboard-wip/types/widget'
 
-import WidgetSelection from '../components/WidgetSelection.vue'
+import SelectableWidgets from '../../../components/WidgetSelection/SelectableWidgets.vue'
+import type { WidgetItemList } from '../../../components/WidgetSelection/types'
 import { Graph, getAvailableGraphs } from '../composables/useSelectGraphTypes'
 import ServiceState from './ServiceState/ServiceState.vue'
 import { type UseServiceState, useServiceState } from './ServiceState/composables/useServiceState'
@@ -106,9 +107,14 @@ const gotoPrevStage = () => {
   emit('goPrev')
 }
 
-const availableGraphs = getAvailableGraphs(props.hostFilterType, props.serviceFilterType)
+const enabledWidgets = getAvailableGraphs(props.hostFilterType, props.serviceFilterType)
+const availableWidgets: WidgetItemList = [
+  { id: Graph.SERVICE_STATE, label: _t('Service state'), icon: 'graph' },
+  { id: Graph.SERVICE_STATE_SUMMARY, label: _t('Service state summary'), icon: 'gauge' },
+  { id: Graph.SERVICE_STATISTICS, label: _t('Service statistics'), icon: 'single-metric' }
+]
 
-const selectedWidget = ref<Graph | null>(Graph.SERVICE_STATE)
+const selectedWidget = ref<Graph | null>(enabledWidgets[0] ?? null)
 
 const handler: Partial<Record<Graph, UseWidgetHandler>> = {
   [Graph.SERVICE_STATE]: await useServiceState(
@@ -144,20 +150,21 @@ const handler: Partial<Record<Graph, UseWidgetHandler>> = {
       variant="secondary"
     />
     <ActionButton
-      v-if="!!editWidgetSpec"
+      v-if="!editWidgetSpec"
       :label="_t('Add & place widget')"
       :action="addWidget"
-      variant="secondary"
+      variant="primary"
     />
     <ActionButton v-else :label="_t('Update widget')" :action="updateWidget" variant="secondary" />
   </ActionBar>
 
   <ContentSpacer />
 
-  <WidgetSelection
+  <CmkHeading type="h3">{{ _t('Choose how to display your data') }}</CmkHeading>
+  <SelectableWidgets
     v-model:selected-widget="selectedWidget as Graph"
-    :available-items="Object.keys(Graph)"
-    :enabled-widgets="availableGraphs"
+    :available-items="availableWidgets"
+    :enabled-widgets="enabledWidgets"
   />
 
   <ContentSpacer />

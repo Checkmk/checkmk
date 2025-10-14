@@ -14754,6 +14754,9 @@ msgstr "コネクター：サイト \"%s\"で開いているtelemetry ホスト�
 msgid "Connector: Collecting piggyback hosts on site  \"%s\""
 msgstr "コネクター：サイト \"%s\"でピギーバックホストを習得しています"
 
+msgid "Consecutive reachability failures (up to 8)"
+msgstr ""
+
 msgid "Consider alerts for Prism Central only"
 msgstr "Prism Centralのみのアラートを検討する"
 
@@ -41729,6 +41732,10 @@ msgstr "ネットワークID"
 msgid "Network IO"
 msgstr "ネットワークIO"
 
+#, fuzzy
+msgid "Network IO (Deprecated)"
+msgstr "ネットワークインターフェース"
+
 msgid "Network Inbound"
 msgstr "ネットワーク Inbound"
 
@@ -42817,6 +42824,27 @@ msgstr ""
 "OK OKの5つのノードの場合、結果の状態はWARNになります。または、最も悪い2つの"
 "ノードが最初に削除され、残りのノードの中で最も悪いノードが状態を定義すると言"
 "うことができます。 "
+
+msgid ""
+"Normally, the Windows Time Service (being an NTP client) follows the NTP "
+"convention of maintaining a 'reachbility' register, which remembers the "
+"result (success or failure) of the last (up to) 8 transactions with the "
+"peer. This setting looks into the reachability register and checks for "
+"consecutive, recent failures, alerting after too many consecutive failures "
+"have occurred. If reachability is 0, the 'Resolve Attempts' count reported "
+"by the Windows Time Service is used instead to determine how many attempts "
+"have been made."
+msgstr ""
+
+msgid ""
+"Normally, the Windows Time Service (being an NTP client) follows the NTP "
+"convention of maintaining a 'reachbility' register, which remembers the "
+"result (success or failure) of the last (up to) 8 transactions with the "
+"peer. This setting looks into the reachability register and counts the total "
+"number of failed attempts, alerting when there have been too many. If "
+"reachability is 0, the 'Resolve Attempts' count reported by the Windows Time "
+"Service is used instead to determine how many attempts have been made."
+msgstr ""
 
 msgid ""
 "Normally, the interface checks create a single service for each interface. "
@@ -49123,6 +49151,10 @@ msgstr "PostgreSQLデータベース接続"
 msgid "PostgreSQL database statistics"
 msgstr "PostgreSQLデータベース統計"
 
+#, fuzzy
+msgid "Postgres STARTTLS"
+msgstr "STARTTLS"
+
 msgid "Power"
 msgstr "Power"
 
@@ -53649,6 +53681,10 @@ msgstr "SNAT の消費電力"
 
 msgid "SNAT Usage"
 msgstr "SNAT使用量"
+
+#, fuzzy
+msgid "SNAT Usage (Deprecated)"
+msgstr "Azureストレージ使用量"
 
 msgid "SNAT usage"
 msgstr "SNAT 利用量"
@@ -67473,6 +67509,12 @@ msgstr "このチェックは、PostgreSQLデータベースのサイズとア�
 
 #, fuzzy
 msgid ""
+"This check monitors the status of a peer configured in the Windows Time "
+"Service."
+msgstr "このプラグインは、Windowsホスト上のHyper-V VMの状態を監視します。"
+
+#, fuzzy
+msgid ""
 "This check monitors the status of time synchronization for Windows hosts."
 msgstr "このプラグインは、Windowsホスト上のHyper-V VMの状態を監視します。"
 
@@ -72739,6 +72781,9 @@ msgstr "印刷されたページの総数"
 
 msgid "Total query timeout"
 msgstr "合計クエリタイムアウト"
+
+msgid "Total reachability failures (up to 8)"
+msgstr ""
 
 msgid "Total read latency"
 msgstr "総読取レイテンシ"
@@ -80684,6 +80729,10 @@ msgid "Windows service discovery"
 msgstr "Windowsサービスディスカバリ"
 
 #, fuzzy
+msgid "Windows time service peers"
+msgstr "Windowsサービス"
+
+#, fuzzy
 msgid "Windows time service status"
 msgstr "Windowsサービス"
 
@@ -86623,6 +86672,10 @@ msgstr "グラフライン"
 #, fuzzy
 msgid "Service metric"
 msgstr "サービスメトリクス"
+
+#, fuzzy
+msgid "Service graph"
+msgstr "サービスグラフ"
 
 #, fuzzy
 msgid "Service selection"

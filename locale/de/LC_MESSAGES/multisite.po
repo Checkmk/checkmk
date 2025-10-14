@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2025-10-13 13:00+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
@@ -2299,8 +2299,8 @@ msgstr "Eine Überschrift für die Ansicht"
 msgid ""
 "A host filter requires an attribute key. Please choose one (e.g., host.name)"
 msgstr ""
-"Ein Host-Filter benötigt einen Attributschlüssel. Bitte wählen Sie einen ("
-"z.B. host.name)"
+"Ein Host-Filter benötigt einen Attributschlüssel. Bitte wählen Sie einen "
+"(z.B. host.name)"
 
 msgid ""
 "A host filter requires an attribute value. Please choose one (e.g., "
@@ -15128,6 +15128,9 @@ msgstr "Vermittler: Sammlung der OpenTelemetry-Hosts auf der Instanz \"%s\""
 #, python-format
 msgid "Connector: Collecting piggyback hosts on site  \"%s\""
 msgstr "Vermittler: Sammlung der Piggyback-Hosts auf der Instanz \"%s\""
+
+msgid "Consecutive reachability failures (up to 8)"
+msgstr ""
 
 msgid "Consider alerts for Prism Central only"
 msgstr "Nur Alerts für Prism Central berücksichtigen"
@@ -42664,6 +42667,10 @@ msgstr "Netzwerk-ID"
 msgid "Network IO"
 msgstr "Netzwerk-E/A"
 
+#, fuzzy
+msgid "Network IO (Deprecated)"
+msgstr "Netzwerkschnittstellen"
+
 msgid "Network Inbound"
 msgstr "Netzwerk eingehend"
 
@@ -43774,6 +43781,27 @@ msgstr ""
 "Oder man könnte sagen, dass die beiden schlechtesten Knoten zuerst verworfen "
 "werden und dann der schlechteste der verbleibenden Knoten den Zustand "
 "bestimmt. "
+
+msgid ""
+"Normally, the Windows Time Service (being an NTP client) follows the NTP "
+"convention of maintaining a 'reachbility' register, which remembers the "
+"result (success or failure) of the last (up to) 8 transactions with the "
+"peer. This setting looks into the reachability register and checks for "
+"consecutive, recent failures, alerting after too many consecutive failures "
+"have occurred. If reachability is 0, the 'Resolve Attempts' count reported "
+"by the Windows Time Service is used instead to determine how many attempts "
+"have been made."
+msgstr ""
+
+msgid ""
+"Normally, the Windows Time Service (being an NTP client) follows the NTP "
+"convention of maintaining a 'reachbility' register, which remembers the "
+"result (success or failure) of the last (up to) 8 transactions with the "
+"peer. This setting looks into the reachability register and counts the total "
+"number of failed attempts, alerting when there have been too many. If "
+"reachability is 0, the 'Resolve Attempts' count reported by the Windows Time "
+"Service is used instead to determine how many attempts have been made."
+msgstr ""
 
 msgid ""
 "Normally, the interface checks create a single service for each interface. "
@@ -50231,6 +50259,10 @@ msgstr "PostgreSQL-Datenbankverbindungen"
 msgid "PostgreSQL database statistics"
 msgstr "PostgreSQL Datenbankstatistiken"
 
+#, fuzzy
+msgid "Postgres STARTTLS"
+msgstr "STARTTLS"
+
 msgid "Power"
 msgstr "Leistung"
 
@@ -54792,6 +54824,10 @@ msgstr "SNAT Verbrauch"
 
 msgid "SNAT Usage"
 msgstr "SNAT-Nutzung"
+
+#, fuzzy
+msgid "SNAT Usage (Deprecated)"
+msgstr "Azure Speicherauslastung (veraltet)"
 
 msgid "SNAT usage"
 msgstr "SNAT-Nutzung"
@@ -69209,6 +69245,13 @@ msgstr ""
 "Dieser Check überwacht die Größe sowie die Zugänge einer PostgreSQL "
 "Datenbank."
 
+#, fuzzy
+msgid ""
+"This check monitors the status of a peer configured in the Windows Time "
+"Service."
+msgstr ""
+"Dieser Check überwacht den Status der Zeitsynchronisierung für Windows-Hosts."
+
 msgid ""
 "This check monitors the status of time synchronization for Windows hosts."
 msgstr ""
@@ -74742,6 +74785,9 @@ msgstr "Gesamte gedruckte Seiten"
 
 msgid "Total query timeout"
 msgstr "Gesamttimeout für Anfragen"
+
+msgid "Total reachability failures (up to 8)"
+msgstr ""
 
 msgid "Total read latency"
 msgstr "Gesamte Lese-Latenz"
@@ -82880,6 +82926,10 @@ msgstr "Windows-Drucker: Anzahl der offenen Aufträge"
 msgid "Windows service discovery"
 msgstr "Windows-Service-Erkennung"
 
+#, fuzzy
+msgid "Windows time service peers"
+msgstr "Status des Windows Zeit-Services"
+
 msgid "Windows time service status"
 msgstr "Status des Windows Zeit-Services"
 
@@ -88913,6 +88963,10 @@ msgstr "Graph (kombiniert)"
 
 msgid "Service metric"
 msgstr "Service-Metrik"
+
+#, fuzzy
+msgid "Service graph"
+msgstr "Servicegraphen"
 
 msgid "Service selection"
 msgstr "Service-Auswahl"

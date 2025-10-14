@@ -15672,6 +15672,9 @@ msgstr ""
 msgid "Connector: Collecting piggyback hosts on site  \"%s\""
 msgstr ""
 
+msgid "Consecutive reachability failures (up to 8)"
+msgstr ""
+
 msgid "Consider alerts for Prism Central only"
 msgstr "Overweeg waarschuwingen alleen voor Prism Central"
 
@@ -44400,6 +44403,10 @@ msgid "Network IO"
 msgstr "Netwerk IO"
 
 #, fuzzy
+msgid "Network IO (Deprecated)"
+msgstr "Netwerk interfaces"
+
+#, fuzzy
 msgid "Network Inbound"
 msgstr "Netwerk uit"
 
@@ -45589,6 +45596,27 @@ msgstr ""
 "resulterende toestand WARN zijn. Of je zou kunnen zeggen dat de slechtste "
 "tot knooppunten eerst weggelaten worden en dat dan het slechtste van de "
 "overgebleven knooppunten de toestand bepaalt. "
+
+msgid ""
+"Normally, the Windows Time Service (being an NTP client) follows the NTP "
+"convention of maintaining a 'reachbility' register, which remembers the "
+"result (success or failure) of the last (up to) 8 transactions with the "
+"peer. This setting looks into the reachability register and checks for "
+"consecutive, recent failures, alerting after too many consecutive failures "
+"have occurred. If reachability is 0, the 'Resolve Attempts' count reported "
+"by the Windows Time Service is used instead to determine how many attempts "
+"have been made."
+msgstr ""
+
+msgid ""
+"Normally, the Windows Time Service (being an NTP client) follows the NTP "
+"convention of maintaining a 'reachbility' register, which remembers the "
+"result (success or failure) of the last (up to) 8 transactions with the "
+"peer. This setting looks into the reachability register and counts the total "
+"number of failed attempts, alerting when there have been too many. If "
+"reachability is 0, the 'Resolve Attempts' count reported by the Windows Time "
+"Service is used instead to determine how many attempts have been made."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -52492,6 +52520,10 @@ msgstr "PostgreSQL database verbindingen"
 msgid "PostgreSQL database statistics"
 msgstr "PostgreSQL Database Statistieken"
 
+#, fuzzy
+msgid "Postgres STARTTLS"
+msgstr "STARTTLS"
+
 msgid "Power"
 msgstr "Vermogen"
 
@@ -57298,6 +57330,10 @@ msgstr "SNAT-verbruik"
 
 msgid "SNAT Usage"
 msgstr "SNAT gebruik"
+
+#, fuzzy
+msgid "SNAT Usage (Deprecated)"
+msgstr "Azure Opslag"
 
 msgid "SNAT usage"
 msgstr "SNAT gebruik"
@@ -71768,6 +71804,12 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This check monitors the status of a peer configured in the Windows Time "
+"Service."
+msgstr "Deze plugin controleert de status van Hyper-V VM's op Window hosts."
+
+#, fuzzy
+msgid ""
 "This check monitors the status of time synchronization for Windows hosts."
 msgstr "Deze plugin controleert de status van Hyper-V VM's op Window hosts."
 
@@ -77284,6 +77326,9 @@ msgstr "Totaal afgedrukte pagina's"
 
 msgid "Total query timeout"
 msgstr "Totale query timeout"
+
+msgid "Total reachability failures (up to 8)"
+msgstr ""
 
 #, fuzzy
 msgid "Total read latency"
@@ -86247,6 +86292,10 @@ msgid "Windows service discovery"
 msgstr "Windows service ontdekking"
 
 #, fuzzy
+msgid "Windows time service peers"
+msgstr "Windows Diensten"
+
+#, fuzzy
 msgid "Windows time service status"
 msgstr "Windows Diensten"
 
@@ -92417,6 +92466,10 @@ msgstr "Grafiek Opties"
 #, fuzzy
 msgid "Service metric"
 msgstr "Dienst Metriek"
+
+#, fuzzy
+msgid "Service graph"
+msgstr "Dienstgrafieken"
 
 #, fuzzy
 msgid "Service selection"

@@ -15696,6 +15696,9 @@ msgstr ""
 msgid "Connector: Collecting piggyback hosts on site  \"%s\""
 msgstr ""
 
+msgid "Consecutive reachability failures (up to 8)"
+msgstr ""
+
 msgid "Consider alerts for Prism Central only"
 msgstr "Luați în considerare alertele numai pentru Prism Central"
 
@@ -44507,6 +44510,10 @@ msgid "Network IO"
 msgstr "Rețea IO"
 
 #, fuzzy
+msgid "Network IO (Deprecated)"
+msgstr "Interfețe de rețea"
+
+#, fuzzy
 msgid "Network Inbound"
 msgstr "Rețea afară"
 
@@ -45689,6 +45696,27 @@ msgstr ""
 "CRIT CRIT WARN OK OK OK, starea rezultată va fi WARN. Sau se poate spune că "
 "cele mai proaste două noduri sunt mai întâi eliminate și apoi cel mai prost "
 "dintre nodurile rămase definește starea. "
+
+msgid ""
+"Normally, the Windows Time Service (being an NTP client) follows the NTP "
+"convention of maintaining a 'reachbility' register, which remembers the "
+"result (success or failure) of the last (up to) 8 transactions with the "
+"peer. This setting looks into the reachability register and checks for "
+"consecutive, recent failures, alerting after too many consecutive failures "
+"have occurred. If reachability is 0, the 'Resolve Attempts' count reported "
+"by the Windows Time Service is used instead to determine how many attempts "
+"have been made."
+msgstr ""
+
+msgid ""
+"Normally, the Windows Time Service (being an NTP client) follows the NTP "
+"convention of maintaining a 'reachbility' register, which remembers the "
+"result (success or failure) of the last (up to) 8 transactions with the "
+"peer. This setting looks into the reachability register and counts the total "
+"number of failed attempts, alerting when there have been too many. If "
+"reachability is 0, the 'Resolve Attempts' count reported by the Windows Time "
+"Service is used instead to determine how many attempts have been made."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -52591,6 +52619,10 @@ msgstr "Conexiuni la baza de date PostgreSQL"
 msgid "PostgreSQL database statistics"
 msgstr "Statisticile bazei de date PostgreSQL"
 
+#, fuzzy
+msgid "Postgres STARTTLS"
+msgstr "STARTTLS"
+
 msgid "Power"
 msgstr "Putere"
 
@@ -57399,6 +57431,10 @@ msgstr "Consumul de SNAT"
 
 msgid "SNAT Usage"
 msgstr "Utilizarea SNAT"
+
+#, fuzzy
+msgid "SNAT Usage (Deprecated)"
+msgstr "Azure Storage"
 
 msgid "SNAT usage"
 msgstr "Utilizarea SNAT"
@@ -71988,6 +72024,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This check monitors the status of a peer configured in the Windows Time "
+"Service."
+msgstr ""
+"Acest plugin monitorizează starea mașinilor virtuale Hyper-V pe gazdele "
+"Window."
+
+#, fuzzy
+msgid ""
 "This check monitors the status of time synchronization for Windows hosts."
 msgstr ""
 "Acest plugin monitorizează starea mașinilor virtuale Hyper-V pe gazdele "
@@ -77572,6 +77616,9 @@ msgstr "Total pagini tipărite"
 
 msgid "Total query timeout"
 msgstr "Timeout total de interogare"
+
+msgid "Total reachability failures (up to 8)"
+msgstr ""
 
 #, fuzzy
 msgid "Total read latency"
@@ -86466,6 +86513,10 @@ msgid "Windows service discovery"
 msgstr "Descoperirea serviciilor Windows"
 
 #, fuzzy
+msgid "Windows time service peers"
+msgstr "Servicii Windows"
+
+#, fuzzy
 msgid "Windows time service status"
 msgstr "Servicii Windows"
 
@@ -92658,6 +92709,11 @@ msgstr "Opțiuni grafice"
 #, fuzzy
 msgid "Service metric"
 msgstr "Metrici de servicii"
+
+# georgem ##############
+#, fuzzy
+msgid "Service graph"
+msgstr "Grafice de servicii"
 
 #, fuzzy
 msgid "Service selection"

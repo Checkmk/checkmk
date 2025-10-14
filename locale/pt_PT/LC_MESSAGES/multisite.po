@@ -15669,6 +15669,9 @@ msgstr ""
 msgid "Connector: Collecting piggyback hosts on site  \"%s\""
 msgstr ""
 
+msgid "Consecutive reachability failures (up to 8)"
+msgstr ""
+
 msgid "Consider alerts for Prism Central only"
 msgstr "Considerar alertas apenas para Prism Central"
 
@@ -44390,6 +44393,10 @@ msgid "Network IO"
 msgstr "IO de rede"
 
 #, fuzzy
+msgid "Network IO (Deprecated)"
+msgstr "Interfaces de rede"
+
+#, fuzzy
 msgid "Network Inbound"
 msgstr "Saída de rede"
 
@@ -45576,6 +45583,27 @@ msgstr ""
 "CRIT WARN OK OK, o estado resultante seria WARN. Ou pode dizer-se que os "
 "dois piores nós são primeiro eliminados e depois o pior dos restantes nós "
 "define o estado. "
+
+msgid ""
+"Normally, the Windows Time Service (being an NTP client) follows the NTP "
+"convention of maintaining a 'reachbility' register, which remembers the "
+"result (success or failure) of the last (up to) 8 transactions with the "
+"peer. This setting looks into the reachability register and checks for "
+"consecutive, recent failures, alerting after too many consecutive failures "
+"have occurred. If reachability is 0, the 'Resolve Attempts' count reported "
+"by the Windows Time Service is used instead to determine how many attempts "
+"have been made."
+msgstr ""
+
+msgid ""
+"Normally, the Windows Time Service (being an NTP client) follows the NTP "
+"convention of maintaining a 'reachbility' register, which remembers the "
+"result (success or failure) of the last (up to) 8 transactions with the "
+"peer. This setting looks into the reachability register and counts the total "
+"number of failed attempts, alerting when there have been too many. If "
+"reachability is 0, the 'Resolve Attempts' count reported by the Windows Time "
+"Service is used instead to determine how many attempts have been made."
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -52460,6 +52488,10 @@ msgstr "Conexões de banco de dados PostgreSQL"
 msgid "PostgreSQL database statistics"
 msgstr "Estatísticas da Base de Dados PostgreSQL"
 
+#, fuzzy
+msgid "Postgres STARTTLS"
+msgstr "STARTTLS"
+
 msgid "Power"
 msgstr "Energia"
 
@@ -57287,6 +57319,10 @@ msgstr "Consumo de SNAT"
 
 msgid "SNAT Usage"
 msgstr "Utilização do SNAT"
+
+#, fuzzy
+msgid "SNAT Usage (Deprecated)"
+msgstr "Armazenamento Azure"
 
 msgid "SNAT usage"
 msgstr "Utilização do SNAT"
@@ -71720,6 +71756,12 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This check monitors the status of a peer configured in the Windows Time "
+"Service."
+msgstr "Este plugin monitora o estado dos Hyper-V VMs em hosts Window."
+
+#, fuzzy
+msgid ""
 "This check monitors the status of time synchronization for Windows hosts."
 msgstr "Este plugin monitora o estado dos Hyper-V VMs em hosts Window."
 
@@ -77231,6 +77273,9 @@ msgstr "Total de páginas impressas"
 
 msgid "Total query timeout"
 msgstr "Tempo limite total de consulta"
+
+msgid "Total reachability failures (up to 8)"
+msgstr ""
 
 #, fuzzy
 msgid "Total read latency"
@@ -86163,6 +86208,10 @@ msgid "Windows service discovery"
 msgstr "descoberta de serviços do Windows"
 
 #, fuzzy
+msgid "Windows time service peers"
+msgstr "Serviços Windows"
+
+#, fuzzy
 msgid "Windows time service status"
 msgstr "Serviços Windows"
 
@@ -92305,6 +92354,10 @@ msgstr "Opções Gráficas"
 #, fuzzy
 msgid "Service metric"
 msgstr "Métricas de Serviço"
+
+#, fuzzy
+msgid "Service graph"
+msgstr "Gráficos de serviços"
 
 #, fuzzy
 msgid "Service selection"

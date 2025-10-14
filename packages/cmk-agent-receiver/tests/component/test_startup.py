@@ -23,7 +23,7 @@ from cmk.testlib.agent_receiver.tasks import get_relay_tasks
 
 
 @pytest.mark.parametrize("edition", ["cme", "cce", "cse"])
-def test_lifespan_with_relays(
+def test_startup_with_relays(
     site: SiteMock, site_context: Config, user: User, edition: str
 ) -> None:
     """
@@ -75,7 +75,7 @@ def test_empty_relays_folder(
     """
     Given:
     - the cmk edition is in the accepted list,
-    - the relays folder is defined, but it's empty .../latest/relays/
+    - the relays folder is defined, but it's empty .../latest/relays/404
     Then:
     - starting the application will not create relay config tasks
     """

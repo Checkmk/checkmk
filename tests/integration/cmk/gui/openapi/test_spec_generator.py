@@ -7,6 +7,6 @@
 from tests.testlib.site import Site
 
 
-def test_initial_api_spec_computation_was_done(site: Site) -> None:
+def test_api_spec_shipped(site: Site) -> None:
     assert site.file_exists("share/doc/check_mk/rest-api/spec/doc.spec")
     assert site.file_exists("share/doc/check_mk/rest-api/spec/swagger-ui.spec")

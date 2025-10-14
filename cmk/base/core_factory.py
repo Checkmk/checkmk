@@ -87,7 +87,7 @@ def create_core(
                     )
                 )
 
-            return CmcPb(
+            return CmcPb(  # type: ignore[no-any-return, unused-ignore]
                 get_licensing_handler_type(),
                 make_cmc_config(
                     loaded_config, matcher, label_manager, statehist_cache, timeperiods

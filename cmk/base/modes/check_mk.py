@@ -1595,7 +1595,7 @@ def _make_configured_bake_on_restart(
     except ImportError:
         return lambda: None
 
-    return make_configured_bake_on_restart_callback(
+    return make_configured_bake_on_restart_callback(  # type: ignore[no-any-return, unused-ignore]
         loading_result,
         hosts,
         agents_dir=cmk.utils.paths.agents_dir,
@@ -1611,7 +1611,7 @@ def _make_configured_notify_relay() -> Callable[[], None]:
     except ImportError:
         return lambda: None
 
-    return Client.from_omd_config(omd_root=cmk.utils.paths.omd_root).publish_new_config
+    return Client.from_omd_config(omd_root=cmk.utils.paths.omd_root).publish_new_config  # type: ignore[no-any-return, unused-ignore]
 
 
 def mode_update() -> None:

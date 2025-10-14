@@ -11,7 +11,6 @@ from dataclasses import dataclass
 from typing import Literal
 
 import cmk.utils.regex
-from cmk.gui.config import active_config
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, user
@@ -24,7 +23,7 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view_utils import CellSpec, CSVExportError
 from cmk.utils.tags import TagID
 
-from .base import Icon
+from .base import Icon, IconConfig
 from .registry import all_icons
 
 IconObjectType = Literal["host", "service"]
@@ -70,12 +69,20 @@ class PainterServiceIcons(Painter):
         return ("",)  # Do not account for in grouping
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return _paint_icons("service", row, _get_row_icons("service", row, self._user_permissions))
+        return _paint_icons(
+            "service",
+            row,
+            _get_row_icons(
+                "service", row, self._user_permissions, IconConfig.from_config(self.config)
+            ),
+        )
 
     def _compute_data(self, row: Row, cell: Cell, user: LoggedInUser) -> list[IconSpec]:
         return [
             i.icon_name
-            for i in _get_row_icons("service", row, self._user_permissions)
+            for i in _get_row_icons(
+                "service", row, self._user_permissions, IconConfig.from_config(self.config)
+            )
             if isinstance(i, IconEntry)
         ]
 
@@ -106,12 +113,20 @@ class PainterHostIcons(Painter):
         return ("",)  # Do not account for in grouping
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return _paint_icons("host", row, _get_row_icons("host", row, self._user_permissions))
+        return _paint_icons(
+            "host",
+            row,
+            _get_row_icons(
+                "host", row, self._user_permissions, IconConfig.from_config(self.config)
+            ),
+        )
 
     def _compute_data(self, row: Row, cell: Cell, user: LoggedInUser) -> list[IconSpec]:
         return [
             i.icon_name
-            for i in _get_row_icons("host", row, self._user_permissions)
+            for i in _get_row_icons(
+                "host", row, self._user_permissions, IconConfig.from_config(self.config)
+            )
             if isinstance(i, IconEntry)
         ]
 
@@ -150,7 +165,7 @@ def _paint_icons(
 
 
 def _get_row_icons(
-    what: IconObjectType, row: Row, user_permissions: UserPermissions
+    what: IconObjectType, row: Row, user_permissions: UserPermissions, icon_config: IconConfig
 ) -> list[ABCIconEntry]:
     # EC: In case of unrelated events also skip rendering this painter. All the icons
     # that display a host state are useless in this case. Maybe we make this decision
@@ -158,11 +173,16 @@ def _get_row_icons(
     if not row["host_name"] or row.get("event_is_unrelated"):
         return []  # Host probably does not exist
 
-    return get_icons(what, row, user_permissions, toplevel=True)
+    return get_icons(what, row, user_permissions, icon_config, toplevel=True)
 
 
 def get_icons(
-    what: IconObjectType, row: Row, user_permissions: UserPermissions, *, toplevel: bool
+    what: IconObjectType,
+    row: Row,
+    user_permissions: UserPermissions,
+    icon_config: IconConfig,
+    *,
+    toplevel: bool,
 ) -> list[ABCIconEntry]:
     host_custom_vars = dict(
         zip(
@@ -187,7 +207,14 @@ def get_icons(
 
     return sorted(
         _process_icons(
-            what, row, tags, host_custom_vars, user_permissions, toplevel, user_icon_ids
+            what,
+            row,
+            tags,
+            host_custom_vars,
+            user_permissions,
+            toplevel,
+            user_icon_ids,
+            icon_config,
         ),
         key=lambda i: i.sort_index,
     )
@@ -201,6 +228,7 @@ def _process_icons(
     user_permissions: UserPermissions,
     toplevel: bool,
     user_icon_ids: list[str],
+    icon_config: IconConfig,
 ) -> list[ABCIconEntry]:
     icons: list[ABCIconEntry] = []
     for icon_id, icon in all_icons().items():
@@ -215,7 +243,7 @@ def _process_icons(
 
         try:
             for result in _process_icon(
-                what, row, tags, custom_vars, user_permissions, icon_id, icon
+                what, row, tags, custom_vars, user_permissions, icon_id, icon, icon_config
             ):
                 icons.append(result)
         except Exception:
@@ -241,6 +269,7 @@ def _process_icon(
     user_permissions: UserPermissions,
     icon_id: str,
     icon: Icon,
+    icon_config: IconConfig,
 ) -> Iterator[ABCIconEntry]:
     # In old versions, the icons produced html code directly. The new API
     # is that the icon functions need to return:
@@ -250,9 +279,9 @@ def _process_icon(
     # d) triple        - icon, title, url
     result = None
     try:
-        result = icon.render(what, row, tags, custom_vars, user_permissions)
+        result = icon.render(what, row, tags, custom_vars, user_permissions, icon_config)
     except Exception:
-        if active_config.debug:
+        if icon_config.debug:
             raise
         yield IconEntry(
             sort_index=icon.sort_index,

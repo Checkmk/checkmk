@@ -245,7 +245,7 @@ class GroupedBoxesLayout(Layout):
 
             css_classes = []
 
-            if is_stale(row, config=active_config):
+            if is_stale(row, active_config.staleness_threshold):
                 css_classes.append("stale")
 
             hide = ""
@@ -397,7 +397,7 @@ def calculate_view_grouping_of_services(
 
         # When the service is not OK and should not be grouped, move it's row
         # in front of the group.
-        if row.get("service_state", -1) != 0 or is_stale(row, config=active_config):
+        if row.get("service_state", -1) != 0 or is_stale(row, active_config.staleness_threshold):
             if current_group is None or current_group != group_spec:
                 continue  # skip grouping first row
 

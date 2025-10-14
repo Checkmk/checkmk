@@ -13,7 +13,7 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Row, VisualLinkSpec
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.views.icon import Icon
+from cmk.gui.views.icon import Icon, IconConfig
 from cmk.gui.visual_link import url_to_visual
 from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.utils.tags import TagID
@@ -30,6 +30,7 @@ def _render_inventory_icon(
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> None | tuple[str, str, str]:
     if (
         what == "host"
@@ -82,6 +83,7 @@ def _render_inventory_history_icon(
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> None | tuple[str, str, str]:
     if (
         what == "host"

@@ -74,7 +74,7 @@ def _get_perfdata_with_staleness_callable(
         return [
             StrWithStaleness(
                 get_perfdata_nth_value(row, value_number),
-                is_stale(row, config=active_config),
+                is_stale(row, active_config.staleness_threshold),
             )
             for row in rows
         ]

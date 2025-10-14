@@ -21,7 +21,14 @@ from cmk.gui.type_defs import Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.utils.servicename import ServiceName
 
-from .painter import get_icons, IconEntry, IconObjectType, iconpainter_columns, LegacyIconEntry
+from .base import IconConfig
+from .painter import (
+    get_icons,
+    IconEntry,
+    IconObjectType,
+    iconpainter_columns,
+    LegacyIconEntry,
+)
 
 
 def ajax_popup_action_menu(config: Config) -> None:
@@ -34,7 +41,11 @@ def ajax_popup_action_menu(config: Config) -> None:
 
     row = _query_action_data(what, host, site, svcdesc)
     icons = get_icons(
-        what, row, UserPermissions.from_config(config, permission_registry), toplevel=False
+        what,
+        row,
+        UserPermissions.from_config(config, permission_registry),
+        IconConfig.from_config(config),
+        toplevel=False,
     )
 
     html.open_ul()

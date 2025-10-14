@@ -13,7 +13,7 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.utils.tags import TagID
 
-from .base import Icon
+from .base import Icon, IconConfig
 
 
 def _render_parent_child_topology_icon(
@@ -22,6 +22,7 @@ def _render_parent_child_topology_icon(
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> tuple[str, str, str]:
     url = makeuri_contextless(
         request,

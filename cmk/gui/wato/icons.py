@@ -8,7 +8,6 @@
 from collections.abc import Mapping, Sequence
 from typing import Literal
 
-from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l
@@ -17,7 +16,7 @@ from cmk.gui.type_defs import HTTPVariables, Row
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
-from cmk.gui.views.icon import Icon
+from cmk.gui.views.icon import Icon, IconConfig
 from cmk.utils.tags import TagID
 
 
@@ -27,6 +26,7 @@ def _render_wato_icon(
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> tuple[str, str, str] | None:
     def may_see_hosts() -> bool:
         return user.may("wato.use") and (user.may("wato.seeall") or user.may("wato.hosts"))
@@ -38,10 +38,13 @@ def _render_wato_icon(
     if wato_folder is None:
         return None
 
-    if what == "host":
+    if icon_config.wato_enabled and what == "host":
         return _wato_link(wato_folder, row["host_name"], "edithost")
 
-    if row["service_description"] in ["Check_MK inventory", "Check_MK Discovery"]:
+    if icon_config.wato_enabled and row["service_description"] in [
+        "Check_MK inventory",
+        "Check_MK Discovery",
+    ]:
         return _wato_link(wato_folder, row["host_name"], "inventory")
 
     return None
@@ -58,9 +61,6 @@ WatoIcon = Icon(
 def _wato_link(
     folder: str, hostname: str, where: Literal["edithost", "inventory"]
 ) -> tuple[str, str, str] | None:
-    if not active_config.wato_enabled:
-        return None
-
     if display_options.enabled(display_options.X):
         vars: HTTPVariables = [
             ("folder", folder),
@@ -85,6 +85,7 @@ def _render_download_agent_output_icon(
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> tuple[str, str, str] | None:
     return _paint_download_host_info(what, row, tags, custom_vars, ty="agent")
 
@@ -104,6 +105,7 @@ def _render_download_snmp_walk_icon(
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> tuple[str, str, str] | None:
     return _paint_download_host_info(what, row, tags, custom_vars, ty="walk")
 

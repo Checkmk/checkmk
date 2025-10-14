@@ -535,7 +535,7 @@ def service_state_short(row: Row) -> tuple[str, str]:
 
 def _paint_service_state_short(row: Row, *, config: Config) -> CellSpec:
     state, name = service_state_short(row)
-    if is_stale(row, config=config):
+    if is_stale(row, config.staleness_threshold):
         state = state + " stale"
     return "state svcstate state%s" % state, HTMLWriter.render_span(
         name, class_=["state_rounded_fill"]
@@ -556,7 +556,7 @@ def host_state_short(row: Row) -> tuple[str, str]:
 
 def _paint_host_state_short(row: Row, short: bool = False, *, config: Config) -> CellSpec:
     state, name = host_state_short(row)
-    if is_stale(row, config=config):
+    if is_stale(row, config.staleness_threshold):
         state = state + " stale"
 
     if short:
@@ -616,7 +616,7 @@ class PainterSvcPluginOutput(Painter):
         return paint_stalified(
             row,
             format_plugin_output(row["service_plugin_output"], request=self.request, row=row),
-            config=self.config,
+            self.config.staleness_threshold,
         )
 
 
@@ -693,7 +693,7 @@ class PainterSvcLongPluginOutput(Painter):
                 + content
             )
 
-        return paint_stalified(row, content, config=self.config)
+        return paint_stalified(row, content, self.config.staleness_threshold)
 
 
 class PainterSvcPerfData(Painter):
@@ -712,7 +712,7 @@ class PainterSvcPerfData(Painter):
         return ["service_perf_data"]
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return paint_stalified(row, row["service_perf_data"], config=self.config)
+        return paint_stalified(row, row["service_perf_data"], self.config.staleness_threshold)
 
 
 class PainterSvcMetrics(Painter):
@@ -833,7 +833,9 @@ class PainterSvcPerfVal(Painter):
         return ["service_perf_data"]
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return paint_stalified(row, get_perfdata_nth_value(row, self._num - 1), config=self.config)
+        return paint_stalified(
+            row, get_perfdata_nth_value(row, self._num - 1), self.config.staleness_threshold
+        )
 
 
 class PainterSvcPerfVal01(PainterSvcPerfVal):
@@ -1073,7 +1075,7 @@ def _paint_checked(
         painter_options=painter_options,
     )
     assert css is not None
-    if is_stale(row, config=config):
+    if is_stale(row, config.staleness_threshold):
         css += " staletime"
     return css, td
 
@@ -1794,8 +1796,8 @@ class PainterSvcStaleness(Painter):
         return ("", "%0.2f" % row.get("service_staleness", 0))
 
 
-def _paint_is_stale(row: Row, *, config: Config) -> CellSpec:
-    if is_stale(row, config=config):
+def _paint_is_stale(row: Row, staleness_threshold: float) -> CellSpec:
+    if is_stale(row, staleness_threshold):
         return "badflag", HTMLWriter.render_span(_("yes"))
     return "goodflag", _("no")
 
@@ -1820,7 +1822,7 @@ class PainterSvcIsStale(Painter):
         return "svc_staleness"
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return _paint_is_stale(row, config=self.config)
+        return _paint_is_stale(row, self.config.staleness_threshold)
 
 
 def _paint_custom_vars(what: str, row: Row, blacklist: list | None = None) -> CellSpec:
@@ -3403,7 +3405,7 @@ class PainterHostIsStale(Painter):
         return "svc_staleness"
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return _paint_is_stale(row, config=self.config)
+        return _paint_is_stale(row, self.config.staleness_threshold)
 
 
 class PainterHostCustomVariables(Painter):
@@ -4574,7 +4576,7 @@ class PainterLogDetailsHistory(Painter):
                 + content
             )
 
-        return paint_stalified(row, content, config=self.config)
+        return paint_stalified(row, content, self.config.staleness_threshold)
 
 
 class PainterLogMessage(Painter):

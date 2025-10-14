@@ -86,7 +86,7 @@ from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnSpec, PainterParameters, Row, Visual, VisualLinkSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.views.icon import Icon, IconRegistry
+from cmk.gui.views.icon import Icon, IconConfig, IconRegistry
 from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals import get_livestatus_filter_headers
@@ -132,6 +132,7 @@ def _render_network_topology_icon(
     tags: Sequence[TagID],
     custom_vars: Mapping[str, str],
     user_permissions: UserPermissions,
+    icon_config: IconConfig,
 ) -> tuple[str, str, str] | None:
     # Only show this icon if topology data is available
     files = glob.glob("data_*.json", root_dir=topology_data_dir / "default")

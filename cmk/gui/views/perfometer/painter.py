@@ -53,7 +53,7 @@ class PainterPerfometer(Painter):
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         classes = ["perfometer"]
-        if is_stale(row, config=self.config):
+        if is_stale(row, self.config.staleness_threshold):
             classes.append("stale")
 
         try:

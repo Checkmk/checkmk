@@ -10,7 +10,7 @@ from cmk.gui.permissions import (
     PermissionSectionRegistry,
 )
 
-from .base import Icon
+from .base import Icon, IconConfig
 from .builtin import (
     AcknowledgeIcon,
     ActionMenuIcon,
@@ -89,5 +89,6 @@ __all__ = [
     "icon_and_action_registry",
     "IconRegistry",
     "Icon",
+    "IconConfig",
     "ajax_popup_action_menu",
 ]

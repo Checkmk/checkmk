@@ -13,7 +13,7 @@ import pytest
 import cmk.gui.mkeventd.icon as mkeventd_icon
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.views.icon import icon_and_action_registry
+from cmk.gui.views.icon import icon_and_action_registry, IconConfig
 from cmk.utils.tags import TagID
 
 
@@ -251,7 +251,6 @@ def test_icon_options(
     args: IconRenderArgs,
     result: IconRenderResult,
     monkeypatch: pytest.MonkeyPatch,
-    request_context: None,
 ) -> None:
     """Creation of title and url for links to event console entries of host"""
     icon = icon_and_action_registry["mkeventd"]
@@ -274,7 +273,18 @@ def test_icon_options(
 
     assert (
         icon.render(
-            args.what, args.row, args.tags, args.custom_vars, UserPermissions({}, {}, {}, [])
+            args.what,
+            args.row,
+            args.tags,
+            args.custom_vars,
+            UserPermissions({}, {}, {}, []),
+            IconConfig(
+                wato_enabled=True,
+                mkeventd_enabled=True,
+                multisite_draw_ruleicon=True,
+                staleness_threshold=1.5,
+                debug=True,
+            ),
         )
         == result
     )

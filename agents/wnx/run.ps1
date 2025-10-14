@@ -646,6 +646,47 @@ function Update-ArtefactDirs() {
     }
 }
 
+function Test-MsiSigning($file) {
+    if ($argSign -ne $true) {
+        Write-Host "Skipping Validate signing..." -ForegroundColor Yellow
+        return
+    }
+
+    Write-Host "Validate signing $file ..." -ForegroundColor White
+    $random_dir = Join-Path $Env:Temp $(New-Guid); New-Item -Type Directory -Path $random_dir | Out-Null
+    try{
+        & 7z x "$results_dir\$file" -aoa -o"$random_dir\" *.cab > nul
+        & 7z x "$random_dir\fixed.cab" -aoa -o"$random_dir\" *.exe > nul
+
+        $exe_files = @(
+            "cmk_agent_ctl.exe",
+            "check_mk_svc32.exe",
+            "check_mk_svc64.exe"
+        )
+
+        foreach ($exe in $exe_files) {
+            Write-Host "Validate executable $exe ..." -ForegroundColor White
+            $state = Get-AuthenticodeSignature -FilePath $random_dir\$exe -ErrorAction Stop
+            if ($state.Status -ne "Valid") {
+                Write-Host "Signature check Failed: $($state.Status) status: $($state.StatusMessage)" -ForegroundColor Red
+                Write-Host "BUILD FAILED - EXITING..." -ForegroundColor Red
+                throw
+            }
+            else {
+                Write-Host "Signature check Valid"
+            }
+        }
+    }
+    catch {
+        Write-Host "Failed to validate signing for $file - $_" -ForegroundColor Red
+        throw
+    }
+    finally {
+        Remove-Item -Path $random_dir -Recurse -Force -ErrorAction SilentlyContinue
+    }
+
+}
+
 
 Invoke-CheckApp "choco" "choco -v"
 Invoke-CheckApp "perl" "perl -v"
@@ -690,6 +731,9 @@ try {
     Start-ArtifactUploading
     Start-MsiPatching
     Start-MsiSigning
+    Test-MsiSigning "check_mk_agent.msi"
+    Test-MsiSigning "check_mk_agent_unsigned.msi"
+
     $endTime = Get-Date
     $elapsedTime = $endTime - $mainStartTime
     Write-Host "Elapsed time: $($elapsedTime.Hours):$($elapsedTime.Minutes):$($elapsedTime.Seconds)"

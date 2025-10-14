@@ -14,6 +14,6 @@ def test_clickhouse_exists(site: Site) -> None:
 
 @pytest.mark.skip_if_edition("raw", "enterprise", "saas")
 def test_clickhouse_executable(site: Site) -> None:
-    assert "ClickHouse local version 25.6.5.41 (official build)." in site.check_output(
+    assert "ClickHouse local version 25.9.3.48 (official build)." in site.check_output(
         ["clickhouse", "--version"]
     )

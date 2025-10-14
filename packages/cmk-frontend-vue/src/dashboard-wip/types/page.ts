@@ -31,4 +31,7 @@ export interface DashboardPageProperties {
   mode: 'display' | 'create'
   can_edit_dashboards: boolean
   url_params: Record<string, string>
+  links: {
+    list_dashboards: string
+  }
 }

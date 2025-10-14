@@ -17,6 +17,8 @@ from cmk.gui.utils.urls import makeuri_contextless
 from .store import get_all_dashboards
 from .type_defs import DashboardConfig, DashboardName
 
+PAGE_EDIT_DASHBOARDS_LINK = "edit_dashboards"
+
 
 def page_edit_dashboards(config: Config) -> None:
     visuals.page_list(

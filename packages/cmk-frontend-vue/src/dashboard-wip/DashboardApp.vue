@@ -235,11 +235,14 @@ const createDashboard = async (
   if (nextStep === 'setFilters') {
     openDashboardFilterSettings.value = true
   } else if (nextStep === 'viewList') {
-    // TODO
-    console.log('return to list review')
+    redirectToListDashboardsPage()
   } else {
     throw new Error(`Unknown next step: ${nextStep}`)
   }
+}
+
+const redirectToListDashboardsPage = () => {
+  window.location.href = props.links.list_dashboards
 }
 
 const handleApplyRuntimeFilters = (filters: ConfiguredFilters) => {
@@ -306,6 +309,7 @@ function deepClone<T>(obj: T): T {
       <CreateDashboardWizard
         v-model:open="openDashboardCreationDialog"
         @create-dashboard="(...args) => createDashboard(...args)"
+        @cancel-creation="redirectToListDashboardsPage"
       />
       <AddWidgetDialog
         v-model:open="openAddWidgetDialog"

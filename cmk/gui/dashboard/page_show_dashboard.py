@@ -81,6 +81,7 @@ from .dashlet import (
     StaticTextDashletConfig,
 )
 from .metadata import DashboardMetadataObject
+from .page_edit_dashboards import PAGE_EDIT_DASHBOARDS_LINK
 from .store import (
     get_all_dashboards,
     get_permitted_dashboards,
@@ -174,6 +175,9 @@ def page_dashboard_app(config: Config) -> None:
         # required for edit, clone and new dashboard creation
         "can_edit_dashboards": user.may("general.edit_dashboards"),
         "url_params": {"ifid": request.get_ascii_input("ifid")},
+        "links": {
+            "list_dashboards": f"{PAGE_EDIT_DASHBOARDS_LINK}.py",
+        },
     }
     html.vue_component("cmk-dashboard", data=page_properties)
 

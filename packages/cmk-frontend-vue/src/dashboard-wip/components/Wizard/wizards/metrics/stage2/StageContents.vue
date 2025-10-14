@@ -24,7 +24,8 @@ import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
 import type {
   WidgetContent,
   WidgetFilterContext,
-  WidgetGeneralSettings
+  WidgetGeneralSettings,
+  WidgetSpec
 } from '@/dashboard-wip/types/widget'
 
 import SelectableWidgets from '../../../components/WidgetSelection/SelectableWidgets.vue'
@@ -53,6 +54,8 @@ interface Stage2Props {
   filters: ConfiguredFilters
   metric: string
   dashboardConstants: DashboardConstants
+
+  editWidgetSpec: WidgetSpec | null
 }
 
 const props = defineProps<Stage2Props>()

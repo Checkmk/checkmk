@@ -2495,8 +2495,8 @@ def _is_apache_enabled(config: Config) -> bool:
 def _get_conflict_mode(options: CommandOptions) -> str:
     conflict_mode = cast(str, options.get("conflict", "ask"))
 
-    if conflict_mode not in ["ask", "install", "keepold", "abort"]:
-        sys.exit("Argument to --conflict must be one of ask, install, keepold and abort.")
+    if conflict_mode not in ["ask", "install", "keepold", "abort", "ignore"]:
+        sys.exit("Argument to --conflict must be one of ask, install, keepold, ignore and abort.")
 
     return conflict_mode
 
@@ -2851,6 +2851,8 @@ def main_update(
         from_skelroot = site.version_skel_dir
         to_skelroot = "/omd/versions/%s/skel" % to_version
 
+        skeleton_mode = "install" if conflict_mode == "ignore" else conflict_mode
+
         with ManageUpdate(
             site.name, site.tmp_dir, Path(site_home), Path(from_skelroot), Path(to_skelroot)
         ) as mu:
@@ -2859,7 +2861,7 @@ def main_update(
                 _execute_update_file(
                     relpath,
                     site,
-                    conflict_mode,
+                    skeleton_mode,
                     from_version,
                     to_version,
                     from_edition,
@@ -2873,7 +2875,7 @@ def main_update(
                 _execute_update_file(
                     relpath,
                     site,
-                    conflict_mode,
+                    skeleton_mode,
                     from_version,
                     to_version,
                     from_edition,
@@ -2906,20 +2908,23 @@ def main_update(
                 "OMD_TO_EDITION": to_edition,
                 "OMD_TO_VERSION": to_version,
             }
-            command = ["cmk-update-config", "--conflict", conflict_mode, "--dry-run"]
-            sys.stdout.write(f"Executing '{subprocess.list2cmdline(command)}'")
-            returncode = _call_script(
-                is_tty,
-                {
-                    **os.environ,
-                    "OMD_ROOT": site_home,
-                    "OMD_SITE": site.name,
-                    **additional_update_env,
-                },
-                command,
-            )
-            if returncode != 0:
-                sys.exit(returncode)
+            if conflict_mode != "ignore":
+                command = ["cmk-update-config", "--conflict", conflict_mode, "--dry-run"]
+                sys.stdout.write(f"Executing '{subprocess.list2cmdline(command)}'")
+                returncode = _call_script(
+                    is_tty,
+                    {
+                        **os.environ,
+                        "OMD_ROOT": site_home,
+                        "OMD_SITE": site.name,
+                        **additional_update_env,
+                    },
+                    command,
+                )
+                if returncode != 0:
+                    sys.exit(returncode)
+            else:
+                sys.stdout.write("Skipping pre-flight check")
             sys.stdout.write(
                 f"\nCompleted verifying site configuration. Your site now has version {to_version}.\n"
             )

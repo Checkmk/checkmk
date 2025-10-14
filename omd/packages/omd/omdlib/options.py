@@ -312,7 +312,7 @@ COMMANDS: Final = [
                 "conflict",
                 None,
                 True,
-                "non-interactive conflict resolution. ARG is install, keepold, abort or ask",
+                "non-interactive conflict resolution. ARG is install, keepold, abort, ignore or ask",
             ),
             Option(
                 UpdateOption.confirm_version,

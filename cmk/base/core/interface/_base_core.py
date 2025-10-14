@@ -29,7 +29,6 @@ from cmk.utils.licensing.helper import get_licensed_state_file_path
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.servicename import ServiceName
-from cmk.utils.timeperiod import TimeperiodSpecs
 
 tracer = trace.get_tracer()
 
@@ -83,7 +82,6 @@ class MonitoringCore(abc.ABC):
         passwords: Mapping[str, str],
         hosts_to_update: set[HostName] | None,
         service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
-        timeperiods: TimeperiodSpecs,
     ) -> None:
         licensing_handler = self.licensing_handler_type.make()
         licensing_handler.persist_licensed_state(get_licensed_state_file_path())
@@ -104,7 +102,6 @@ class MonitoringCore(abc.ABC):
             passwords,
             hosts_to_update=hosts_to_update,
             service_depends_on=service_depends_on,
-            timeperiods=timeperiods,
         )
 
     @abc.abstractmethod
@@ -133,7 +130,6 @@ class MonitoringCore(abc.ABC):
         *,
         hosts_to_update: set[HostName] | None = None,
         service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
-        timeperiods: TimeperiodSpecs,
     ) -> None:
         raise NotImplementedError
 

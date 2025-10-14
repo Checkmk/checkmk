@@ -78,9 +78,9 @@ Default SID is `XE` and it's not configurable.
 
 #### Oracle 19c
 
-To start the **Oracle 12c** database, run:
+To start the **Oracle 19c** database, run:
 ```bash
-docker compose -f <path_to_docker_compose_file> up oracle-12c
+docker compose -f <path_to_docker_compose_file> up oracle-19c
 ```
 
 Available environment variables:

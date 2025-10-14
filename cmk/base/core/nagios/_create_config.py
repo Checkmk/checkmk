@@ -81,13 +81,10 @@ class NagiosCore(MonitoringCore):
         licensing_handler_type: type[LicensingHandler],
         init_script_path: Path,
         objects_file_path: Path,
-        # we should consider passing a NagiosConfig here, in analogy to CmcPb
-        timeperiods: TimeperiodSpecs,
     ) -> None:
         super().__init__(licensing_handler_type)
         self.init_script_path: Final = init_script_path
         self.objects_file_path: Final = objects_file_path
-        self.timeperiods: Final = timeperiods
 
     @classmethod
     def name(cls) -> Literal["nagios"]:
@@ -136,6 +133,7 @@ class NagiosCore(MonitoringCore):
         *,
         hosts_to_update: set[HostName] | None = None,
         service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
+        timeperiods: TimeperiodSpecs,
     ) -> None:
         self._config_cache = config_cache
         self._create_core_config(
@@ -150,6 +148,7 @@ class NagiosCore(MonitoringCore):
             default_address_family,
             ip_address_of,
             service_depends_on,
+            timeperiods,
         )
         store.save_text_to_file(
             plugin_index.make_index_file(Path(config_path)),
@@ -187,6 +186,7 @@ class NagiosCore(MonitoringCore):
         ],
         ip_address_of: ip_lookup.IPLookup,
         service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
+        timeperiods: TimeperiodSpecs,
     ) -> None:
         """Tries to create a new Checkmk object configuration file for the Nagios core
 
@@ -220,7 +220,7 @@ class NagiosCore(MonitoringCore):
             default_address_family=default_address_family,
             ip_address_of=ip_address_of,
             service_depends_on=service_depends_on,
-            timeperiods=self.timeperiods,
+            timeperiods=timeperiods,
         )
 
         store.save_text_to_file(self.objects_file_path, config_buffer.getvalue())

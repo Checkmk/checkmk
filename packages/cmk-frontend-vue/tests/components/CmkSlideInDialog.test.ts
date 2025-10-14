@@ -7,17 +7,17 @@ import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitForElementToBeRemoved } from '@testing-library/vue'
 import { defineComponent, ref } from 'vue'
 
+import CmkHelpText from '@/components/CmkHelpText.vue'
 import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
-import HelpText from '@/components/HelpText.vue'
 
-const helpTextComp = `<HelpText :help="'some help'" />`
+const helpTextComp = `<CmkHelpText :help="'some help'" />`
 
 // We need to test the slideout specifically with and without a nested tooltip
 // because the nested portals (dialog & tooltip) from radix break their auto
 // focus functionality.
 const createCmkSlideInDialogComp = (addHelp: boolean) =>
   defineComponent({
-    components: { CmkSlideInDialog, HelpText },
+    components: { CmkSlideInDialog, CmkHelpText },
     setup() {
       const open = ref(false)
       return { open }

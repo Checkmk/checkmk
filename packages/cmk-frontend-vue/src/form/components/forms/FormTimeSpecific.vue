@@ -11,8 +11,8 @@ import { untranslated } from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkButton from '@/components/CmkButton.vue'
+import CmkHelpText from '@/components/CmkHelpText.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
-import HelpText from '@/components/HelpText.vue'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import { type ValidationMessages } from '@/form/components/utils/validation'
@@ -71,7 +71,7 @@ const { FormEditDispatcher } = useFormEditDispatcher()
   <span>
     <CmkButton @click="toggleTimeSpecific">
       {{ timespecificActive ? spec.i18n.disable : spec.i18n.enable }} </CmkButton
-    ><CmkSpace size="small" /><HelpText :help="untranslated(spec.help)" />
+    ><CmkSpace size="small" /><CmkHelpText :help="untranslated(spec.help)" />
     <br />
     <CmkSpace size="small" direction="vertical" />
     <template v-if="timespecificActive">

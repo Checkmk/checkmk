@@ -8,9 +8,9 @@ import { computed, useAttrs } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
+import CmkHelpText from '@/components/CmkHelpText.vue'
 import CmkIndent from '@/components/CmkIndent.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
-import HelpText from '@/components/HelpText.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
@@ -129,7 +129,7 @@ const displaySuffixInput = computed(() => 'addFilterSuffix' in attrs)
       <TableFormRow>
         <FieldDescription>
           {{ _t('Dashboard icon') }}
-          <HelpText
+          <CmkHelpText
             :help="
               _t(
                 'This selection is only relevant if under \'User\' -> \'Edit Profile\' -> \'Mega menue icons\' you have selected the options \'Per Entry\'. You can select the icon to display next to your dashboard in the Monitoring menu. You can choose either a single colored icon or one with an additional symbol.'

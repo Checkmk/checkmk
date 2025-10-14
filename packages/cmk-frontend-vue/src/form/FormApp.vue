@@ -11,7 +11,7 @@ import { untranslated } from '@/lib/i18n'
 import { immediateWatch } from '@/lib/watch'
 
 import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
-import HelpText from '@/components/HelpText.vue'
+import CmkHelpText from '@/components/CmkHelpText.vue'
 
 import FormReadonly from '@/form/components/FormReadonly.vue'
 import type { ValidationMessages } from '@/form/components/utils/validation'
@@ -76,7 +76,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         <FormReadonly :data="dataRef" :backend-validation="validation" :spec="spec"></FormReadonly>
       </div>
 
-      <HelpText :help="untranslated(spec.help)" />
+      <CmkHelpText :help="untranslated(spec.help)" />
       <div v-if="activeMode === 'edit' || activeMode === 'both'" class="form-app__root">
         <FormEdit
           v-if="display_mode === 'edit' || display_mode === 'both'"

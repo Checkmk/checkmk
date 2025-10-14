@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { TranslatedString } from '@/lib/i18nString'
 
-import HelpText from '@/components/HelpText.vue'
+import CmkHelpText from '@/components/CmkHelpText.vue'
 
 interface CollapsibleTitleProps {
   /**@property {TranslatedString} title - Text to display next to the chevron */
@@ -41,7 +41,7 @@ defineEmits(['toggleOpen'])
       {{ sideTitle }}
     </span>
     <span class="cmk-collapsible-title__help">
-      <HelpText v-if="help_text" :help="help_text" />
+      <CmkHelpText v-if="help_text" :help="help_text" />
     </span>
   </button>
 </template>

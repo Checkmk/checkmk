@@ -5,11 +5,11 @@
  */
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 
-import HelpText from '@/components/HelpText.vue'
+import CmkHelpText from '@/components/CmkHelpText.vue'
 
-describe('HelpText', () => {
+describe('CmkHelpText', () => {
   test('renders help tooltip when click on trigger', async () => {
-    render(HelpText, {
+    render(CmkHelpText, {
       props: {
         help: 'fooHelp'
       }
@@ -21,7 +21,7 @@ describe('HelpText', () => {
   })
 
   test('keep tooltip open when click on tooltip', async () => {
-    render(HelpText, {
+    render(CmkHelpText, {
       props: {
         help: 'fooHelp'
       }
@@ -34,7 +34,7 @@ describe('HelpText', () => {
   })
 
   test('close open tooltip when clicking on icon', async () => {
-    render(HelpText, {
+    render(CmkHelpText, {
       props: {
         help: 'fooHelp'
       }
@@ -49,7 +49,7 @@ describe('HelpText', () => {
   })
 
   test('close tooltip when pressing escape key', async () => {
-    render(HelpText, {
+    render(CmkHelpText, {
       props: {
         help: 'fooHelp'
       }

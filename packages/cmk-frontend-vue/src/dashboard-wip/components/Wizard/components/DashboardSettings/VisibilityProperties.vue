@@ -7,8 +7,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 import usei18n from '@/lib/i18n'
 
 import CmkDropdown from '@/components/CmkDropdown'
+import CmkHelpText from '@/components/CmkHelpText.vue'
 import CmkIndent from '@/components/CmkIndent.vue'
-import HelpText from '@/components/HelpText.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
@@ -54,7 +54,7 @@ const sortIndex = defineModel<number>('sortIndex', { required: true })
       <TableFormRow>
         <FieldDescription>
           {{ _t('Sort index') }}
-          <HelpText
+          <CmkHelpText
             :help="
               _t(
                 'You can set the order of the dashboard by changing this number. Lower numbers will be sorted first. Topics with the same number will be sorted alphabetically.'

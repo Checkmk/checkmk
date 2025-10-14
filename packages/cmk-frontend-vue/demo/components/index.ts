@@ -68,5 +68,5 @@ export const pages = [
   new Page('CmkCollapsible', DemoCmkCollapsible),
   new Page('CmkKeyboardKey', DemoCmkKeyboardKey),
   new Page('CmkDualList', DemoCmkDualList),
-  new Page('HelpText', DemoHelp)
+  new Page('CmkHelpText', DemoHelp)
 ]

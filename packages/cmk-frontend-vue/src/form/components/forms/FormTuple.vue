@@ -10,8 +10,8 @@ import { ref, watch } from 'vue'
 import { untranslated } from '@/lib/i18n'
 import { capitalizeFirstLetter } from '@/lib/utils'
 
+import CmkHelpText from '@/components/CmkHelpText.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
-import HelpText from '@/components/HelpText.vue'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import {
@@ -78,7 +78,7 @@ const CLASS_LOOKUP: Record<FormSpec.Tuple['layout'], string> = {
           :spec="element"
           :backend-validation="elementValidation[index]!"
         />
-        <HelpText :help="untranslated(element.help)" />
+        <CmkHelpText :help="untranslated(element.help)" />
       </div>
     </div>
   </div>

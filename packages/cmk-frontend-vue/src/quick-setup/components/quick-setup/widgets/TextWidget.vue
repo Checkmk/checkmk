@@ -4,9 +4,9 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkHelpText from '@/components/CmkHelpText.vue'
 import CmkHtml from '@/components/CmkHtml.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
-import HelpText from '@/components/HelpText.vue'
 
 import { type TextWidgetProps } from './widget_types'
 
@@ -18,7 +18,7 @@ defineProps<TextWidgetProps>()
     <CmkHtml :html="text" />
     <template v-if="tooltip">
       <CmkSpace :size="'small'" />
-      <HelpText :help="tooltip" />
+      <CmkHelpText :help="tooltip" />
     </template>
   </span>
 </template>

@@ -74,7 +74,7 @@ def _continue_on_broken_ruleset(conflict_mode: ConflictMode) -> Resume:
         case ConflictMode.FORCE:
             return Resume.UPDATE
         case ConflictMode.ABORT:
-            return Resume.UPDATE
+            return Resume.ABORT
         case ConflictMode.INSTALL | ConflictMode.KEEP_OLD:
             return Resume.UPDATE
         case ConflictMode.ASK:

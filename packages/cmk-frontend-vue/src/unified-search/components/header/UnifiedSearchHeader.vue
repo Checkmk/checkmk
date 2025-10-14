@@ -140,7 +140,6 @@ const getSearchInputPlaceholder = computed(() => {
             id="unified-search-input"
             ref="unified-search-input"
             v-model="searchUtils.query.input.value"
-            type="search"
             role="search"
             class="unified-search-input"
             :aria-label="getSearchInputPlaceholder"

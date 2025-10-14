@@ -23,6 +23,7 @@ from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
     get_average,
+    get_rate,
     get_value_store,
     IgnoreResultsError,
     InventoryResult,
@@ -93,6 +94,8 @@ class MetricData(NamedTuple):
     sustained_levels_time_param: str | Callable[[Mapping[str, Any]], str] = ""
     sustained_level_direction: SustainedLevelDirection = SustainedLevelDirection.UPPER_BOUND
     sustained_label: str | None = None
+
+    is_rate: bool = False  # if true, compute rate from value
 
 
 class PublicIP(BaseModel):
@@ -361,6 +364,12 @@ def check_resource_metrics(
                 now,
                 metric.value,
                 average_mins,
+            )
+        elif metric_data.is_rate:
+            metric_name = metric_data.metric_name
+            countername = f"{resource.id}.{metric_data.azure_metric_name}"
+            metric_value = get_rate(
+                get_value_store(), countername, time.time(), metric.value, raise_overflow=True
             )
         else:
             metric_name = metric_data.metric_name

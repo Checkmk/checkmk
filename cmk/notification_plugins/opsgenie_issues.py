@@ -14,6 +14,9 @@ from pprint import pformat
 from typing import cast
 
 import urllib3
+
+# TODO The opsgenie-sdk is untyped in its current state.
+# Does not look like that typing will follow.
 from opsgenie_sdk import (  # type: ignore[attr-defined]
     AcknowledgeAlertPayload,
     AddNoteToAlertPayload,

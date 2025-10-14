@@ -62,11 +62,11 @@ from cmk.utils.urls import is_allowed_url
 def register(page_registry: PageRegistry) -> None:
     # TODO: only overwrite this in cse specific files
     if cmk_version.edition(cmk.utils.paths.omd_root) == cmk_version.Edition.CSE:
-        page_registry.register(PageEndpoint("login", SaasLoginPage))
-        page_registry.register(PageEndpoint("logout", SaasLogoutPage))
+        page_registry.register(PageEndpoint("login", SaasLoginPage()))
+        page_registry.register(PageEndpoint("logout", SaasLogoutPage()))
     else:
-        page_registry.register(PageEndpoint("login", LoginPage))
-        page_registry.register(PageEndpoint("logout", LogoutPage))
+        page_registry.register(PageEndpoint("login", LoginPage()))
+        page_registry.register(PageEndpoint("logout", LogoutPage()))
 
 
 @contextlib.contextmanager

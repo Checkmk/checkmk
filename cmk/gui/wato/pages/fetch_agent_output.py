@@ -60,8 +60,8 @@ def register(
     automation_command_registry: AutomationCommandRegistry,
     job_registry: BackgroundJobRegistry,
 ) -> None:
-    page_registry.register(PageEndpoint("fetch_agent_output", PageFetchAgentOutput))
-    page_registry.register(PageEndpoint("download_agent_output", PageDownloadAgentOutput))
+    page_registry.register(PageEndpoint("fetch_agent_output", PageFetchAgentOutput()))
+    page_registry.register(PageEndpoint("download_agent_output", PageDownloadAgentOutput()))
     automation_command_registry.register(AutomationFetchAgentOutputStart)
     automation_command_registry.register(AutomationFetchAgentOutputGetStatus)
     automation_command_registry.register(AutomationFetchAgentOutputGetFile)

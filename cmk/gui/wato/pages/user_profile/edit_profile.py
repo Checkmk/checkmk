@@ -44,7 +44,7 @@ def _get_input(valuespec: ValueSpec, varprefix: str) -> Any:
 
 
 def register(page_registry: PageRegistry) -> None:
-    page_registry.register(PageEndpoint("user_profile", UserProfile))
+    page_registry.register(PageEndpoint("user_profile", UserProfile()))
 
 
 class UserProfile(Page):

@@ -22,7 +22,7 @@ from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 
 
 def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
-    page_registry.register(PageEndpoint("ajax_backup_job_state", PageAjaxBackupJobState))
+    page_registry.register(PageEndpoint("ajax_backup_job_state", PageAjaxBackupJobState()))
     mode_registry.register(ModeBackup)
     mode_registry.register(ModeBackupTargets)
     mode_registry.register(ModeEditBackupTarget)

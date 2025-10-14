@@ -26,7 +26,7 @@ def register(page_registry: PageRegistry) -> None:
     page_registry.register(PageEndpoint("welcome", _welcome_page))
     page_registry.register(PageEndpoint("ajax_mark_step_as_complete", _ajax_mark_step_as_complete))
     page_registry.register(
-        PageEndpoint("ajax_get_welcome_page_stage_information", PageWelcomePageStageInformation)
+        PageEndpoint("ajax_get_welcome_page_stage_information", PageWelcomePageStageInformation())
     )
 
 

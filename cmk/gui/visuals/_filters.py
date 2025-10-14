@@ -67,7 +67,7 @@ from .filter.components import (
 
 
 def register(page_registry: PageRegistry, filter_registry: FilterRegistry) -> None:
-    page_registry.register(PageEndpoint("ajax_validate_filter", PageValidateFilter))
+    page_registry.register(PageEndpoint("ajax_validate_filter", PageValidateFilter()))
     register_host_and_service_basic_filters(filter_registry)
     register_host_address_filters(filter_registry)
     register_host_and_service_group_filters(filter_registry)

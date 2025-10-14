@@ -27,7 +27,7 @@ from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional
 
 
 def register(page_registry: PageRegistry) -> None:
-    page_registry.register(PageEndpoint("wato_ajax_profile_repl", ModeAjaxProfileReplication))
+    page_registry.register(PageEndpoint("wato_ajax_profile_repl", ModeAjaxProfileReplication()))
 
 
 class ModeAjaxProfileReplication(AjaxPage):

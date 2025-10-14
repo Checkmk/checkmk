@@ -38,4 +38,4 @@ class GuiTimingsPage(Page):
 
 
 def register(page_registry: PageRegistry) -> None:
-    page_registry.register(PageEndpoint("gui_timings", GuiTimingsPage))
+    page_registry.register(PageEndpoint("gui_timings", GuiTimingsPage()))

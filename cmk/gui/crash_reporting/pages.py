@@ -69,8 +69,8 @@ CrashReportRow = dict[str, str]
 
 
 def register(page_registry: PageRegistry) -> None:
-    page_registry.register(PageEndpoint("crash", PageCrash))
-    page_registry.register(PageEndpoint("download_crash_report", PageDownloadCrashReport))
+    page_registry.register(PageEndpoint("crash", PageCrash()))
+    page_registry.register(PageEndpoint("download_crash_report", PageDownloadCrashReport()))
     report_renderer_registry.register(ReportRendererGeneric)
     report_renderer_registry.register(ReportRendererSection)
     report_renderer_registry.register(ReportRendererCheck)

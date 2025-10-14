@@ -29,9 +29,9 @@ def register(
     main_menu_registry: MainMenuRegistry,
     user_menu_topics: Callable[[UserPermissions], list[MainMenuTopic]],
 ) -> None:
-    page_registry.register(PageEndpoint("ajax_ui_theme", ModeAjaxCycleThemes))
-    page_registry.register(PageEndpoint("ajax_sidebar_position", ModeAjaxCycleSidebarPosition))
-    page_registry.register(PageEndpoint("ajax_set_dashboard_start_url", ModeAjaxSetStartURL))
+    page_registry.register(PageEndpoint("ajax_ui_theme", ModeAjaxCycleThemes()))
+    page_registry.register(PageEndpoint("ajax_sidebar_position", ModeAjaxCycleSidebarPosition()))
+    page_registry.register(PageEndpoint("ajax_set_dashboard_start_url", ModeAjaxSetStartURL()))
 
     main_menu_registry.register(
         MainMenu(

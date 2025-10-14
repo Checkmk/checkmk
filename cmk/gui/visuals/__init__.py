@@ -106,7 +106,7 @@ def register(
     ignore_duplicate_endpoints: bool = False,
 ) -> None:
     page_registry.register(
-        PageEndpoint("ajax_visual_filter_list_get_choice", PageAjaxVisualFilterListGetChoice)
+        PageEndpoint("ajax_visual_filter_list_get_choice", PageAjaxVisualFilterListGetChoice())
     )
     page_registry.register(PageEndpoint("ajax_popup_add_visual", ajax_popup_add))
     page_registry.register(PageEndpoint("ajax_add_visual", ajax_add_visual))

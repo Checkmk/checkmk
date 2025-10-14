@@ -123,8 +123,8 @@ def register(
     mode_registry: ModeRegistry,
     permission_registry: PermissionRegistry,
 ) -> None:
-    page_registry.register(PageEndpoint("ajax_bi_rule_preview", AjaxBIRulePreview))
-    page_registry.register(PageEndpoint("ajax_bi_aggregation_preview", AjaxBIAggregationPreview))
+    page_registry.register(PageEndpoint("ajax_bi_rule_preview", AjaxBIRulePreview()))
+    page_registry.register(PageEndpoint("ajax_bi_aggregation_preview", AjaxBIAggregationPreview()))
 
     main_module_topic_registry.register(MainModuleTopicBI)
     main_module_registry.register(MainModuleBI)

@@ -73,7 +73,7 @@ TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 def register(page_registry: PageRegistry) -> None:
-    page_registry.register(PageEndpoint("change_log", ChangeLogPage))
+    page_registry.register(PageEndpoint("change_log", ChangeLogPage()))
     page_registry.register(PageEndpoint("werk", page_werk))
 
 

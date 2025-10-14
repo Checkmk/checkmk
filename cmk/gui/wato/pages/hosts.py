@@ -112,8 +112,8 @@ def register(mode_registry: ModeRegistry, page_registry: PageRegistry) -> None:
     mode_registry.register(ModeEditHost)
     mode_registry.register(ModeCreateHost)
     mode_registry.register(ModeCreateCluster)
-    page_registry.register(PageEndpoint("ajax_ping_host", PageAjaxPingHost))
-    page_registry.register(PageEndpoint("wato_ajax_diag_cmk_agent", PageAjaxDiagCmkAgent))
+    page_registry.register(PageEndpoint("ajax_ping_host", PageAjaxPingHost()))
+    page_registry.register(PageEndpoint("wato_ajax_diag_cmk_agent", PageAjaxDiagCmkAgent()))
 
 
 class ABCHostMode(WatoMode, abc.ABC):

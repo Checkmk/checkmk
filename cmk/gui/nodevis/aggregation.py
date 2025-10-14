@@ -42,15 +42,15 @@ def register(
     filter_registry: FilterRegistry,
     _icon_and_action_registry: IconRegistry,
 ) -> None:
-    page_registry.register(PageEndpoint("ajax_fetch_aggregation_data", AjaxFetchAggregationData))
+    page_registry.register(PageEndpoint("ajax_fetch_aggregation_data", AjaxFetchAggregationData()))
     page_registry.register(
-        PageEndpoint("ajax_save_bi_aggregation_layout", AjaxSaveBIAggregationLayout)
+        PageEndpoint("ajax_save_bi_aggregation_layout", AjaxSaveBIAggregationLayout())
     )
     page_registry.register(
-        PageEndpoint("ajax_delete_bi_aggregation_layout", AjaxDeleteBIAggregationLayout)
+        PageEndpoint("ajax_delete_bi_aggregation_layout", AjaxDeleteBIAggregationLayout())
     )
     page_registry.register(
-        PageEndpoint("ajax_load_bi_aggregation_layout", AjaxLoadBIAggregationLayout)
+        PageEndpoint("ajax_load_bi_aggregation_layout", AjaxLoadBIAggregationLayout())
     )
     page_registry.register(PageEndpoint("bi_map", _bi_map))
     filter_registry.register(FilterTopologyMeshDepth())

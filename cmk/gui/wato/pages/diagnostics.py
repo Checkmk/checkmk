@@ -113,7 +113,7 @@ def register(
     automation_command_registry: AutomationCommandRegistry,
     job_registry: BackgroundJobRegistry,
 ) -> None:
-    page_registry.register(PageEndpoint("download_diagnostics_dump", PageDownloadDiagnosticsDump))
+    page_registry.register(PageEndpoint("download_diagnostics_dump", PageDownloadDiagnosticsDump()))
     mode_registry.register(ModeDiagnostics)
     automation_command_registry.register(AutomationDiagnosticsDumpGetFile)
     job_registry.register(DiagnosticsDumpBackgroundJob)

@@ -237,17 +237,21 @@ overview_page_name: str = "user_two_factor_overview"
 
 
 def register(page_registry: PageRegistry) -> None:
-    page_registry.register(PageEndpoint(overview_page_name, UserTwoFactorOverview))
-    page_registry.register(PageEndpoint("user_two_factor_enforce", UserTwoFactorEnforce))
-    page_registry.register(PageEndpoint("user_two_factor_edit_credential", EditCredentialAlias))
-    page_registry.register(PageEndpoint("user_webauthn_register_begin", UserWebAuthnRegisterBegin))
+    page_registry.register(PageEndpoint(overview_page_name, UserTwoFactorOverview()))
+    page_registry.register(PageEndpoint("user_two_factor_enforce", UserTwoFactorEnforce()))
+    page_registry.register(PageEndpoint("user_two_factor_edit_credential", EditCredentialAlias()))
     page_registry.register(
-        PageEndpoint("user_webauthn_register_complete", UserWebAuthnRegisterComplete)
+        PageEndpoint("user_webauthn_register_begin", UserWebAuthnRegisterBegin())
     )
-    page_registry.register(PageEndpoint("user_login_two_factor", UserLoginTwoFactor))
-    page_registry.register(PageEndpoint("user_webauthn_login_begin", UserWebAuthnLoginBegin))
-    page_registry.register(PageEndpoint("user_webauthn_login_complete", UserWebAuthnLoginComplete))
-    page_registry.register(PageEndpoint("user_totp_register", RegisterTotpSecret))
+    page_registry.register(
+        PageEndpoint("user_webauthn_register_complete", UserWebAuthnRegisterComplete())
+    )
+    page_registry.register(PageEndpoint("user_login_two_factor", UserLoginTwoFactor()))
+    page_registry.register(PageEndpoint("user_webauthn_login_begin", UserWebAuthnLoginBegin()))
+    page_registry.register(
+        PageEndpoint("user_webauthn_login_complete", UserWebAuthnLoginComplete())
+    )
+    page_registry.register(PageEndpoint("user_totp_register", RegisterTotpSecret()))
 
 
 class UserTwoFactorOverview(Page):

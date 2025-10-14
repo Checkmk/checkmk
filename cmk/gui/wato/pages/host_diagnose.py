@@ -64,7 +64,7 @@ class HostSpec(TypedDict):
 
 
 def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
-    page_registry.register(PageEndpoint("wato_ajax_diag_host", PageAjaxDiagHost))
+    page_registry.register(PageEndpoint("wato_ajax_diag_host", PageAjaxDiagHost()))
     mode_registry.register(ModeDiagHost)
 
 

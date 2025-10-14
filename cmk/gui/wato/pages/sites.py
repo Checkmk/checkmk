@@ -156,7 +156,7 @@ from cmk.utils.paths import omd_root
 
 
 def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
-    page_registry.register(PageEndpoint("wato_ajax_fetch_site_status", PageAjaxFetchSiteStatus))
+    page_registry.register(PageEndpoint("wato_ajax_fetch_site_status", PageAjaxFetchSiteStatus()))
     mode_registry.register(ModeEditSite)
     mode_registry.register(ModeEditBrokerConnection)
     mode_registry.register(ModeDistributedMonitoring)

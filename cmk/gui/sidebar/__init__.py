@@ -95,24 +95,24 @@ def register(
     main_menu_registry_: MainMenuRegistry,
     view_menu_topics: Callable[[UserPermissions], list[MainMenuTopic]],
 ) -> None:
-    page_registry.register(PageEndpoint("sidebar_fold", AjaxFoldSnapin))
-    page_registry.register(PageEndpoint("sidebar_openclose", AjaxOpenCloseSnapin))
-    page_registry.register(PageEndpoint("sidebar_ajax_add_snapin", AjaxAddSnapin))
+    page_registry.register(PageEndpoint("sidebar_fold", AjaxFoldSnapin()))
+    page_registry.register(PageEndpoint("sidebar_openclose", AjaxOpenCloseSnapin()))
+    page_registry.register(PageEndpoint("sidebar_ajax_add_snapin", AjaxAddSnapin()))
     page_registry.register(PageEndpoint("side", page_side))
     page_registry.register(PageEndpoint("sidebar_snapin", ajax_snapin))
     page_registry.register(PageEndpoint("sidebar_move_snapin", move_snapin))
     page_registry.register(PageEndpoint("sidebar_add_snapin", page_add_snapin))
     page_registry.register(PageEndpoint("sidebar_ajax_set_snapin_site", ajax_set_snapin_site))
     page_registry.register(PageEndpoint("sidebar_message_read", ajax_message_read))
-    page_registry.register(PageEndpoint("ajax_sidebar_get_messages", PageAjaxSidebarGetMessages))
+    page_registry.register(PageEndpoint("ajax_sidebar_get_messages", PageAjaxSidebarGetMessages()))
     page_registry.register(
-        PageEndpoint("ajax_sidebar_get_unack_incomp_werks", PageAjaxSidebarGetUnackIncompWerks)
+        PageEndpoint("ajax_sidebar_get_unack_incomp_werks", PageAjaxSidebarGetUnackIncompWerks())
     )
     page_registry.register(
-        PageEndpoint("ajax_sidebar_get_number_of_pending_changes", PageAjaxSidebarChangesMenu)
+        PageEndpoint("ajax_sidebar_get_number_of_pending_changes", PageAjaxSidebarChangesMenu())
     )
     page_registry.register(
-        PageEndpoint("ajax_sidebar_get_sites_and_changes", PageAjaxSitesAndChanges)
+        PageEndpoint("ajax_sidebar_get_sites_and_changes", PageAjaxSitesAndChanges())
     )
     permission_section_registry.register(PERMISSION_SECTION_SIDEBAR_SNAPINS)
     _snapin.register(

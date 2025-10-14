@@ -105,12 +105,12 @@ def register(
     icon_and_action_registry: IconRegistry,
     cron_job_registry: CronJobRegistry,
 ) -> None:
-    page_registry.register(PageEndpoint("parent_child_topology", ParentChildTopologyPage))
-    page_registry.register(PageEndpoint("network_topology", NetworkTopologyPage))
+    page_registry.register(PageEndpoint("parent_child_topology", ParentChildTopologyPage()))
+    page_registry.register(PageEndpoint("network_topology", NetworkTopologyPage()))
     page_registry.register(
-        PageEndpoint("ajax_initial_topology_filters", AjaxInitialTopologyFilters)
+        PageEndpoint("ajax_initial_topology_filters", AjaxInitialTopologyFilters())
     )
-    page_registry.register(PageEndpoint("ajax_fetch_topology", AjaxFetchTopology))
+    page_registry.register(PageEndpoint("ajax_fetch_topology", AjaxFetchTopology()))
     icon_and_action_registry.register(NetworkTopologyIcon)
     cron_job_registry.register(
         CronJob(

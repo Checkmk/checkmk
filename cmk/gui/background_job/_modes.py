@@ -40,7 +40,7 @@ def register(
     main_module_registry: MainModuleRegistry,
 ) -> None:
     page_registry.register(
-        PageEndpoint("ajax_background_job_details", ModeAjaxBackgroundJobDetails)
+        PageEndpoint("ajax_background_job_details", ModeAjaxBackgroundJobDetails())
     )
     mode_registry.register(ModeBackgroundJobsOverview)
     mode_registry.register(ModeBackgroundJobDetails)

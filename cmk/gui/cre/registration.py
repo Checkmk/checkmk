@@ -117,8 +117,8 @@ from cmk.gui.watolib.users import default_sites, user_features_registry, UserFea
 
 
 def register_pages() -> None:
-    page_registry.register(PageEndpoint("graph_dashlet", PageGraphDashlet))
-    page_registry.register(PageEndpoint("host_service_graph_popup", PageHostServiceGraphPopup))
+    page_registry.register(PageEndpoint("graph_dashlet", PageGraphDashlet()))
+    page_registry.register(PageEndpoint("host_service_graph_popup", PageHostServiceGraphPopup()))
 
 
 def register_painters() -> None:

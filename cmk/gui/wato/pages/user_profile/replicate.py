@@ -20,7 +20,7 @@ from cmk.gui.wato.pages.user_profile.page_menu import page_menu_dropdown_user_re
 
 
 def register(page_registry: PageRegistry) -> None:
-    page_registry.register(PageEndpoint("user_profile_replicate", UserProfileReplicate))
+    page_registry.register(PageEndpoint("user_profile_replicate", UserProfileReplicate()))
 
 
 class UserProfileReplicate(Page):

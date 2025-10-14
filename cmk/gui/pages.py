@@ -41,6 +41,17 @@ class PageHandler(Protocol):
 # TODO: Check out the WatoMode class and find out how to do this. Looks like handle_page() could
 # implement parts of the cmk.gui.wato.page_handler.page_handler() logic.
 class Page(abc.ABC):
+    """The base page class for our page registry.
+
+    It is important that you DO NOT handle global variables like request and session from within the
+    __init__ function.
+
+    This causes a temporal dependency as the pages are now initialized at registration. You do,
+    however, now have the ability to inject dependencies from external registries at registration.
+    That is up to the discretion of the page and is totally optional as the __init__ method is not
+    part of the base class.
+    """
+
     def _from_vars(self) -> None:
         """Override this method to set mode specific attributes based on the
         given HTTP variables."""
@@ -111,7 +122,7 @@ class AjaxPage(Page, abc.ABC):
 @dataclass(frozen=True)
 class PageEndpoint:
     ident: str
-    handler: PageHandler | type[Page]
+    handler: PageHandler | Page
 
 
 class PageRegistry(cmk.ccc.plugin_registry.Registry[PageEndpoint]):
@@ -129,14 +140,7 @@ def get_page_handler(name: str, dflt: PageHandler | None = None) -> PageHandler 
     In case dflt is given it returns dflt instead of None when there is no
     page handler for the requested name."""
     if endpoint := page_registry.get(name):
-        if isinstance(endpoint.handler, type):
-            return _wrap_page_as_handler(endpoint.handler)
+        if isinstance(endpoint.handler, Page):
+            return endpoint.handler.handle_page
         return endpoint.handler
     return dflt
-
-
-def _wrap_page_as_handler(page: type[Page]) -> PageHandler:
-    def wrapper(config: Config) -> None:
-        return page().handle_page(config)
-
-    return wrapper

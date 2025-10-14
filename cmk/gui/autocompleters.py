@@ -27,7 +27,7 @@ from cmk.utils.regex import regex
 
 
 def register(page_registry: PageRegistry, autocompleter_registry_: AutocompleterRegistry) -> None:
-    page_registry.register(PageEndpoint("ajax_vs_autocomplete", PageVsAutocomplete))
+    page_registry.register(PageEndpoint("ajax_vs_autocomplete", PageVsAutocomplete()))
     autocompleter_registry_.register_autocompleter(
         "monitored_hostname", monitored_hostname_autocompleter
     )

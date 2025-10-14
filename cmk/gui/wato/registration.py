@@ -108,7 +108,7 @@ def register(
     page_registry.register(PageEndpoint("ajax_popup_host_action_menu", ajax_popup_host_action_menu))
     page_registry.register(
         PageEndpoint(
-            "ajax_dict_host_tag_condition_get_choice", PageAjaxDictHostTagConditionGetChoice
+            "ajax_dict_host_tag_condition_get_choice", PageAjaxDictHostTagConditionGetChoice()
         )
     )
 

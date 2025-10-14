@@ -88,8 +88,8 @@ def register(
     mode_registry: ModeRegistry,
     automation_command_registry: AutomationCommandRegistry,
 ) -> None:
-    page_registry.register(PageEndpoint("ajax_start_activation", PageAjaxStartActivation))
-    page_registry.register(PageEndpoint("ajax_activation_state", PageAjaxActivationState))
+    page_registry.register(PageEndpoint("ajax_start_activation", PageAjaxStartActivation()))
+    page_registry.register(PageEndpoint("ajax_activation_state", PageAjaxActivationState()))
     mode_registry.register(ModeActivateChanges)
     mode_registry.register(ModeRevertChanges)
     automation_command_registry.register(AutomationActivateChanges)

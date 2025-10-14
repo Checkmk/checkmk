@@ -33,7 +33,7 @@ from .definitions import (
 
 
 def register(page_registry: PageRegistry) -> None:
-    page_registry.register(PageEndpoint("ajax_fetch_ca", AjaxFetchCA))
+    page_registry.register(PageEndpoint("ajax_fetch_ca", AjaxFetchCA()))
     page_registry.register(PageEndpoint("ajax_popup_icon_selector", ajax_popup_icon_selector))
 
 

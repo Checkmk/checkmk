@@ -57,8 +57,8 @@ tracer = trace.get_tracer()
 
 
 def register(page_registry: PageRegistry) -> None:
-    page_registry.register(PageEndpoint("automation_login", PageAutomationLogin))
-    page_registry.register(PageEndpoint("noauth:automation", PageAutomation))
+    page_registry.register(PageEndpoint("automation_login", PageAutomationLogin()))
+    page_registry.register(PageEndpoint("noauth:automation", PageAutomation()))
 
 
 def _store_central_site_info() -> None:

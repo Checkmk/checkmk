@@ -53,15 +53,15 @@ def register(
     visual_type_registry.register(VisualTypeDashboards)
     permission_section_registry.register(PERMISSION_SECTION_DASHBOARD)
 
-    page_registry.register(PageEndpoint("ajax_figure_dashlet_data", FigureDashletPage))
-    page_registry.register(PageEndpoint("widget_figure", FigureWidgetPage))
-    page_registry.register(PageEndpoint("widget_graph", GraphWidgetPage))
-    page_registry.register(PageEndpoint("widget_iframe_view", ViewWidgetIFramePage))
-    page_registry.register(PageEndpoint("widget_edit_view", ViewWidgetEditPage))
+    page_registry.register(PageEndpoint("ajax_figure_dashlet_data", FigureDashletPage()))
+    page_registry.register(PageEndpoint("widget_figure", FigureWidgetPage()))
+    page_registry.register(PageEndpoint("widget_graph", GraphWidgetPage()))
+    page_registry.register(PageEndpoint("widget_iframe_view", ViewWidgetIFramePage()))
+    page_registry.register(PageEndpoint("widget_edit_view", ViewWidgetEditPage()))
     page_registry.register(
-        PageEndpoint("ajax_initial_dashboard_filters", AjaxInitialDashboardFilters)
+        PageEndpoint("ajax_initial_dashboard_filters", AjaxInitialDashboardFilters())
     )
-    page_registry.register(PageEndpoint("edit_dashlet", EditDashletPage))
+    page_registry.register(PageEndpoint("edit_dashlet", EditDashletPage()))
     page_registry.register(PageEndpoint("delete_dashlet", page_delete_dashlet))
     # TODO: old dashboard page should be removed
     page_registry.register(PageEndpoint("dashboard", page_dashboard))

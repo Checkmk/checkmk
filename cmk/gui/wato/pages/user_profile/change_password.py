@@ -43,7 +43,7 @@ from .verify_requirements import verify_requirements
 
 
 def register(page_registry: PageRegistry) -> None:
-    page_registry.register(PageEndpoint("user_change_pw", UserChangePasswordPage))
+    page_registry.register(PageEndpoint("user_change_pw", UserChangePasswordPage()))
 
 
 class UserChangePasswordPage(Page):

@@ -144,11 +144,11 @@ def register(
     mode_registry: ModeRegistry,
     automation_command_registry: AutomationCommandRegistry,
 ) -> None:
-    page_registry.register(PageEndpoint("ajax_service_discovery", ModeAjaxServiceDiscovery))
+    page_registry.register(PageEndpoint("ajax_service_discovery", ModeAjaxServiceDiscovery()))
     page_registry.register(
         PageEndpoint("ajax_popup_service_action_menu", ajax_popup_service_action_menu)
     )
-    page_registry.register(PageEndpoint("wato_ajax_execute_check", ModeAjaxExecuteCheck))
+    page_registry.register(PageEndpoint("wato_ajax_execute_check", ModeAjaxExecuteCheck()))
     mode_registry.register(ModeDiscovery)
     automation_command_registry.register(AutomationServiceDiscoveryJob)
     automation_command_registry.register(AutomationServiceDiscoveryJobSnapshot)

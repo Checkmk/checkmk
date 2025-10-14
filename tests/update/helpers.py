@@ -175,8 +175,7 @@ def check_agent_receiver_error_log(site: Site) -> None:
     """Assert that there are no unexpected errors in the agent receiver log."""
     # Default pattern should be "^.*error.*$"
     # TODO: Remove "sigterm" from pattern after CMK-24766 is done
-    # TODO: Remove "relay|ASGI|middleware|receive_or_disconnect" from pattern after SAASDEV-5615 is done
-    content_pattern = "^(?!.*(sigterm|relay|ASGI|middleware|receive_or_disconnect)).*error.*$"
+    content_pattern = "^(?!.*(sigterm)).*error.*$"
 
     error_match_dict = parse_files(
         path_name=site.logs_dir / "agent-receiver",

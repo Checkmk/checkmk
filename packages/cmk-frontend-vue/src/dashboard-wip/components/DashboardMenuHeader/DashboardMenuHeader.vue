@@ -20,6 +20,7 @@ import type { SelectedDashboard } from './types'
 
 interface Props {
   selectedDashboard: SelectedDashboard | null
+  linkUserGuide: string
 }
 
 const { _t } = usei18n()
@@ -110,7 +111,12 @@ const handleAddWidget = () => {
                 <div class="menu-label">{{ _t('Clone dashboard') }}</div>
               </div>
 
-              <a href="/" class="menu-item menu-item--link" target="_blank" @click="hideMenu()">
+              <a
+                :href="linkUserGuide"
+                class="menu-item menu-item--link"
+                target="_blank"
+                @click="hideMenu()"
+              >
                 <div class="menu-label">{{ _t('Dashboard user guide') }}</div>
                 <CmkIcon name="external-link" size="small" />
               </a>

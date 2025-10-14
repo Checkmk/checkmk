@@ -177,6 +177,7 @@ def page_dashboard_app(config: Config) -> None:
         "url_params": {"ifid": request.get_ascii_input("ifid")},
         "links": {
             "list_dashboards": f"{PAGE_EDIT_DASHBOARDS_LINK}.py",
+            "user_guide": "https://docs.checkmk.com/master/en/dashboards.html",
         },
     }
     html.vue_component("cmk-dashboard", data=page_properties)

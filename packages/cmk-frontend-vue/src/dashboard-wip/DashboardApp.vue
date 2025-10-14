@@ -296,6 +296,7 @@ function deepClone<T>(obj: T): T {
     <div>
       <DashboardMenuHeader
         :selected-dashboard="selectedDashboard"
+        :link-user-guide="props.links.user_guide"
         @open-filter="openDashboardFilterSettings = true"
         @open-settings="openDashboardSettings = true"
         @open-widget-workflow="openAddWidgetDialog = true"

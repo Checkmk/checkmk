@@ -33,5 +33,6 @@ export interface DashboardPageProperties {
   url_params: Record<string, string>
   links: {
     list_dashboards: string
+    user_guide: string
   }
 }

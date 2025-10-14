@@ -14,13 +14,13 @@ defineEmits<CloseButtonEmits>()
 </script>
 
 <template>
-  <div class="cb-content">
+  <div class="db-close-button">
     <CmkIconButton name="close" size="xsmall" @click="$emit('close')" />
   </div>
 </template>
 
 <style scoped>
-.cb-content {
+.db-close-button {
   position: absolute;
   top: 5px;
   right: 10px;

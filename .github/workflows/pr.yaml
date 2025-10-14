@@ -22,8 +22,8 @@ jobs:
         include:
         - name: Bandit tests
           target: test-bandit
-        - name: Python formatting
-          target: test-format-python
+        - name: Formatting
+          target: test-format
         - name: Ruff lint tests
           target: test-ruff
         - name: Python unit tests

@@ -15,8 +15,8 @@ from typing import TypedDict
 class CoverageStats(TypedDict):
     """Type definition for coverage statistics."""
 
-    line_coverage_percent: float
-    function_coverage_percent: float
+    lines_coverage_percent: float
+    functions_coverage_percent: float
     covered_lines: int
     total_lines: int
     covered_functions: int
@@ -84,8 +84,8 @@ def calculate_coverage_stats(stats: RawStats) -> CoverageStats:
     func_cov_pct = 100.0 * covered_funcs / total_funcs if total_funcs else 0
 
     return CoverageStats(
-        line_coverage_percent=round(line_cov_pct, 2),
-        function_coverage_percent=round(func_cov_pct, 2),
+        lines_coverage_percent=round(line_cov_pct, 2),
+        functions_coverage_percent=round(func_cov_pct, 2),
         covered_lines=covered_lines,
         total_lines=total_lines,
         covered_functions=covered_funcs,
@@ -121,8 +121,8 @@ def write_csv(
     """Write coverage data to CSV file."""
     fieldnames = [
         "file_path",
-        "line_coverage_percent",
-        "function_coverage_percent",
+        "lines_coverage_percent",
+        "functions_coverage_percent",
         "covered_lines",
         "total_lines",
         "covered_functions",

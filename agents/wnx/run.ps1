@@ -680,7 +680,8 @@ function Test-MsiSigning($file) {
         }
     }
     catch {
-        Write-Host "Failed to validate signing: $_" -ForegroundColor Red
+        Write-Host "Failed to validate signing for $file - $_" -ForegroundColor Red
+        throw
     }
     finally {
         Remove-Item -Path $random_dir -Recurse -Force -ErrorAction SilentlyContinue

@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import axios from 'axios'
 import { ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
@@ -63,6 +64,31 @@ const handleCancel = () => {
 const handleAddWidget = () => {
   emit('open-widget-workflow')
 }
+
+const setStartUrl = async (): Promise<void> => {
+  const dashboardName = props.selectedDashboard?.name
+  if (!dashboardName) {
+    console.error('No dashboard selected to set as start URL')
+    return
+  }
+  console.log('Setting start URL to dashboard:', dashboardName)
+  try {
+    const url = 'ajax_set_dashboard_start_url.py'
+    const response = await axios.post(url, null, {
+      params: {
+        name: dashboardName,
+        // @ts-expect-error  TODO change if something is implemented to use CSRF token
+        _csrf_token: global_csrf_token
+      }
+    })
+
+    if (response.data.result_code !== 0) {
+      console.error('Error setting start URL:', response.data.result)
+    }
+  } catch (error) {
+    console.error('Request failed:', error)
+  }
+}
 </script>
 
 <template>
@@ -121,7 +147,15 @@ const handleAddWidget = () => {
                 <CmkIcon name="external-link" size="small" />
               </a>
 
-              <div class="menu-item">
+              <div
+                class="menu-item"
+                @click="
+                  () => {
+                    setStartUrl()
+                    hideMenu()
+                  }
+                "
+              >
                 <div class="menu-label">{{ _t('Set as start URL') }}</div>
               </div>
 

@@ -213,7 +213,7 @@ class TestIndexBuilder:
         clean_redis_client: "Redis",
         index_builder: IndexBuilder,
     ) -> None:
-        index_builder.build_changed_sub_indices(["something"])
+        index_builder.build_changed_sub_indices(["something"], UserPermissions({}, {}, {}, []))
         assert not index_builder.index_is_built(clean_redis_client)
 
     @pytest.mark.usefixtures("with_admin_login")
@@ -243,7 +243,7 @@ class TestIndexBuilder:
 
         start_lang = "en"
         localize_with_memory(start_lang)
-        index_builder.build_full_index()
+        index_builder.build_full_index(UserPermissions({}, {}, {}, []))
         assert current_lang == start_lang
 
 
@@ -254,7 +254,7 @@ class TestIndexBuilderAndSearcher:
         index_builder: IndexBuilder,
         index_searcher: IndexSearcher,
     ) -> None:
-        index_builder.build_full_index()
+        index_builder.build_full_index(UserPermissions({}, {}, {}, []))
         assert self._evaluate_search_results_by_topic(index_searcher.search("**", Config())) == [
             ("Change-dependent", [SearchResult(title="change_dependent", url="")]),
             ("Localization-dependent", [SearchResult(title="localization_dependent", url="")]),
@@ -267,7 +267,7 @@ class TestIndexBuilderAndSearcher:
         index_searcher: IndexSearcher,
     ) -> None:
         index_builder._mark_index_as_built()
-        index_builder.build_changed_sub_indices(["something"])
+        index_builder.build_changed_sub_indices(["something"], UserPermissions({}, {}, {}, []))
         assert not self._evaluate_search_results_by_topic(index_searcher.search("**", Config()))
 
     @pytest.mark.usefixtures("with_admin_login")
@@ -277,7 +277,9 @@ class TestIndexBuilderAndSearcher:
         index_searcher: IndexSearcher,
     ) -> None:
         index_builder._mark_index_as_built()
-        index_builder.build_changed_sub_indices(["some_change_dependent_whatever"])
+        index_builder.build_changed_sub_indices(
+            ["some_change_dependent_whatever"], UserPermissions({}, {}, {}, [])
+        )
         assert self._evaluate_search_results_by_topic(index_searcher.search("**", Config())) == [
             ("Change-dependent", [SearchResult(title="change_dependent", url="")]),
         ]
@@ -297,7 +299,7 @@ class TestIndexBuilderAndSearcher:
         def empty_match_item_gen(user_permissions: UserPermissions):
             yield from ()
 
-        index_builder.build_full_index()
+        index_builder.build_full_index(UserPermissions({}, {}, {}, []))
 
         monkeypatch.setattr(
             match_item_generator_registry["change_dependent"],
@@ -305,7 +307,9 @@ class TestIndexBuilderAndSearcher:
             empty_match_item_gen,
         )
 
-        index_builder.build_changed_sub_indices(["some_change_dependent_whatever"])
+        index_builder.build_changed_sub_indices(
+            ["some_change_dependent_whatever"], UserPermissions({}, {}, {}, [])
+        )
         assert self._evaluate_search_results_by_topic(index_searcher.search("**", Config())) == [
             ("Localization-dependent", [SearchResult(title="localization_dependent", url="")]),
         ]
@@ -480,7 +484,9 @@ class TestRealisticSearch:
         self,
         clean_redis_client: "Redis",
     ) -> None:
-        IndexBuilder(real_match_item_generator_registry, clean_redis_client).build_full_index()
+        IndexBuilder(real_match_item_generator_registry, clean_redis_client).build_full_index(
+            UserPermissions({}, {}, {}, [])
+        )
         assert IndexBuilder.index_is_built(clean_redis_client)
         assert (
             len(
@@ -515,7 +521,9 @@ class TestRealisticSearch:
         We test that the index is always built as a super user.
         """
         with _UserContext(LoggedInNobody()):
-            IndexBuilder(real_match_item_generator_registry, clean_redis_client).build_full_index()
+            IndexBuilder(real_match_item_generator_registry, clean_redis_client).build_full_index(
+                UserPermissions({}, {}, {}, [])
+            )
 
         # if the search index did not internally use the super user while building, this item would
         # be missing, because the match item generator for the setup menu only yields entries which
@@ -556,7 +564,9 @@ class TestRealisticSearch:
         )
 
         with _UserContext(LoggedInNobody()):
-            IndexBuilder(real_match_item_generator_registry, clean_redis_client).build_full_index()
+            IndexBuilder(real_match_item_generator_registry, clean_redis_client).build_full_index(
+                UserPermissions({}, {}, {}, [])
+            )
 
         assert not list(
             IndexSearcher(

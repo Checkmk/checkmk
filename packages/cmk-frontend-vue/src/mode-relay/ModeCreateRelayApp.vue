@@ -27,7 +27,7 @@ const currentStep = ref<number>(1)
   <CmkWizard v-model="currentStep" mode="guided">
     <CmkWizardStep :index="1" :is-completed="() => currentStep > 1">
       <template #header>
-        <CmkHeading> {{ _t('Deploy the relay to your environment') }}</CmkHeading>
+        <CmkHeading type="h2"> {{ _t('Deploy the relay to your environment') }}</CmkHeading>
       </template>
 
       <template #content>
@@ -48,7 +48,9 @@ const currentStep = ref<number>(1)
       "
     >
       <template #header>
-        <CmkHeading> {{ _t('Name the relay and register with your Checkmk site') }}</CmkHeading>
+        <CmkHeading type="h2">
+          {{ _t('Name the relay and register with your Checkmk site') }}</CmkHeading
+        >
       </template>
 
       <template #content>
@@ -61,7 +63,7 @@ const currentStep = ref<number>(1)
 
     <CmkWizardStep :index="3" :is-completed="() => currentStep > 3">
       <template #header>
-        <CmkHeading> {{ _t('Connection check') }}</CmkHeading>
+        <CmkHeading type="h2"> {{ _t('Connection check') }}</CmkHeading>
       </template>
 
       <template #content>

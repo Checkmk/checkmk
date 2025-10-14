@@ -36,6 +36,7 @@ SOURCE_BUILT_EXT := $(REPO_PATH)/agents/windows/robotmk_ext.exe
 SOURCE_BUILT_MK_SQL := $(REPO_PATH)/agents/windows/mk-sql.exe
 SOURCE_BUILT_WINDOWS := \
 	$(REPO_PATH)/agents/windows/check_mk_agent.msi \
+	$(REPO_PATH)/agents/windows/check_mk_agent_unsigned.msi \
 	$(REPO_PATH)/agents/windows/python-3.cab \
 	$(REPO_PATH)/agents/windows/windows_files_hashes.txt \
 	$(REPO_PATH)/agents/windows/check_mk.user.yml \

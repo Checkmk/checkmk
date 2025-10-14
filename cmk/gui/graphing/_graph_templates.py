@@ -27,6 +27,7 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.utils.servicename import ServiceName
 
+from ._evaluations_from_api import evaluate_graph_plugin_range
 from ._from_api import RegisteredMetric
 from ._graph_metric_expressions import (
     AnnotatedHostName,
@@ -358,35 +359,6 @@ def graph_and_single_metric_template_choices_for_metrics(
     return graph_template_choices, single_metric_template_choices
 
 
-def _evaluate_graph_template_range_boundary(
-    base_metric_expression: BaseMetricExpression, translated_metrics: Mapping[str, TranslatedMetric]
-) -> float | None:
-    if (result := base_metric_expression.evaluate(translated_metrics)).is_error():
-        return None
-    return result.ok.value
-
-
-def evaluate_graph_template_range(
-    graph_template_range: FixedGraphTemplateRange | MinimalGraphTemplateRange | None,
-    translated_metrics: Mapping[str, TranslatedMetric],
-) -> FixedVerticalRange | MinimalVerticalRange | None:
-    match graph_template_range:
-        case FixedGraphTemplateRange(min=min_, max=max_):
-            return FixedVerticalRange(
-                min=_evaluate_graph_template_range_boundary(min_, translated_metrics),
-                max=_evaluate_graph_template_range_boundary(max_, translated_metrics),
-            )
-        case MinimalGraphTemplateRange(min=min_, max=max_):
-            return MinimalVerticalRange(
-                min=_evaluate_graph_template_range_boundary(min_, translated_metrics),
-                max=_evaluate_graph_template_range_boundary(max_, translated_metrics),
-            )
-        case None:
-            return None
-        case _:
-            assert_never(graph_template_range)
-
-
 def _evaluate_predictive_metrics(
     evaluated_metrics: Sequence[Evaluated],
     translated_metrics: Mapping[str, TranslatedMetric],
@@ -535,9 +507,8 @@ def _compute_graph_recipes(
                         )
                         for evaluated in all_evaluated_metrics
                     ],
-                    explicit_vertical_range=evaluate_graph_template_range(
-                        graph_template.range,
-                        translated_metrics,
+                    explicit_vertical_range=evaluate_graph_plugin_range(
+                        graph_plugin, translated_metrics
                     ),
                     horizontal_rules=_evaluate_scalars(
                         graph_template.scalars,

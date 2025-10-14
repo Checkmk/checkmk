@@ -8,10 +8,14 @@ import dataclasses
 import os
 from pathlib import Path
 
+import pytest
+
+from omdlib.type_defs import CommandOptions
 from omdlib.update import (
     _restore_version_meta_dir,
     _store_version_meta_dir,
     file_type,
+    get_conflict_mode_update,
     ManagedTypes,
     ManageUpdate,
     restore,
@@ -400,3 +404,15 @@ def test_restore_version_meta_dir(tmp_path: Path) -> None:
     assert save != [read_all(p) for p in walk_in_DFS_order(version_metadir)]
     _restore_version_meta_dir(site_dir, backup_dir)
     assert save == [read_all(p) for p in walk_in_DFS_order(version_metadir)]
+
+
+@pytest.mark.parametrize(
+    "options, expected",
+    [
+        ({"conflict": "ask"}, "ask"),
+        ({}, "ask"),
+        ({"conflict": "ignore"}, "ignore"),
+    ],
+)
+def test_get_conflict_mode_update(options: CommandOptions, expected: str) -> None:
+    assert get_conflict_mode_update(options) == expected

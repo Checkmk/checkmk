@@ -90,7 +90,7 @@ from omdlib.tmpfs import (
     unmount_tmpfs,
 )
 from omdlib.type_defs import CommandOptions, Config, ConfigChoiceHasError, Replacements
-from omdlib.update import ManageUpdate
+from omdlib.update import get_conflict_mode_update, ManageUpdate
 from omdlib.users_and_groups import (
     find_processes_of_user,
     group_exists,
@@ -2871,7 +2871,7 @@ def main_update(  # pylint: disable=too-many-branches
     args: Arguments,
     options: CommandOptions,
 ) -> None:
-    conflict_mode = _get_conflict_mode(options)
+    conflict_mode = get_conflict_mode_update(options)
 
     if not site.is_stopped():
         bail_out("Please completely stop '%s' before updating it." % site.name)
@@ -2951,7 +2951,7 @@ def main_update(  # pylint: disable=too-many-branches
                 "If you continue, those werks will be automatically acknowledged and "
                 f"the list of unacknowledged werks is replaced with the ones of the new version.\n\n"
             )
-            if conflict_mode in ["install", "keepold", "abort"]:
+            if conflict_mode in ["ignore", "install", "keepold", "abort"]:
                 werks_list = "\n".join(f"  * {werk.id} {werk.title}" for werk in unack_werks)
                 sys.stdout.write(werk_text + "\n")
                 if conflict_mode == "abort":
@@ -3045,6 +3045,8 @@ def main_update(  # pylint: disable=too-many-branches
     from_skelroot = site.version_skel_dir
     to_skelroot = "/omd/versions/%s/skel" % to_version
 
+    skeleton_mode = "install" if conflict_mode == "ignore" else conflict_mode
+
     with ManageUpdate(
         site.name, site.tmp_dir, Path(site.dir), Path(from_skelroot), Path(to_skelroot)
     ) as mu:
@@ -3053,7 +3055,7 @@ def main_update(  # pylint: disable=too-many-branches
             _execute_update_file(
                 relpath,
                 site,
-                conflict_mode,
+                skeleton_mode,
                 from_version,
                 to_version,
                 from_edition,
@@ -3067,7 +3069,7 @@ def main_update(  # pylint: disable=too-many-branches
             _execute_update_file(
                 relpath,
                 site,
-                conflict_mode,
+                skeleton_mode,
                 from_version,
                 to_version,
                 from_edition,
@@ -3098,25 +3100,28 @@ def main_update(  # pylint: disable=too-many-branches
         # initialized tmpfs.
         mu.prepare_and_populate_tmpfs(version_info, site)
 
-        additional_update_env = {
-            "OMD_CONFLICT_MODE": conflict_mode,
-            "OMD_TO_EDITION": to_edition,
-            "OMD_FROM_VERSION": from_version,
-            "OMD_TO_VERSION": to_version,
-            "OMD_FROM_EDITION": from_edition,
-        }
-        returncode = _call_script(
-            is_tty,
-            {
-                **os.environ,
-                "OMD_ROOT": site.dir,
-                "OMD_SITE": site.name,
-                **additional_update_env,
-            },
-            f"cmk-update-config --conflict {conflict_mode} --dry-run",
-        )
-        if returncode != 0:
-            sys.exit(returncode)
+        if conflict_mode != "ignore":
+            additional_update_env = {
+                "OMD_CONFLICT_MODE": conflict_mode,
+                "OMD_TO_EDITION": to_edition,
+                "OMD_FROM_VERSION": from_version,
+                "OMD_TO_VERSION": to_version,
+                "OMD_FROM_EDITION": from_edition,
+            }
+            returncode = _call_script(
+                is_tty,
+                {
+                    **os.environ,
+                    "OMD_ROOT": site.dir,
+                    "OMD_SITE": site.name,
+                    **additional_update_env,
+                },
+                f"cmk-update-config --conflict {conflict_mode} --dry-run",
+            )
+            if returncode != 0:
+                sys.exit(returncode)
+        else:
+            sys.stdout.write("Skipping pre-flight check")
         sys.stdout.write(
             f"\nCompleted verifying site configuration. Your site now has version {to_version}.\n"
         )
@@ -4403,7 +4408,7 @@ COMMANDS: Final = [
                 "conflict",
                 None,
                 True,
-                "non-interactive conflict resolution. ARG is install, keepold, abort or ask",
+                "non-interactive conflict resolution. ARG is install, keepold, abort, ignore or ask",
             )
         ],
         description="Update site to other version of OMD",

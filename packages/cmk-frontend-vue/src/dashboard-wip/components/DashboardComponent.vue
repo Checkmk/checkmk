@@ -95,6 +95,8 @@ const { ErrorBoundary: errorBoundary } = useErrorBoundary()
       :is-editing="isEditing"
       :dashboard-constants="constants"
       @widget:edit="$emit('widget:edit', $event)"
+      @widget:delete="$emit('widget:delete', $event)"
+      @widget:clone="(oldWidgetId, newLayout) => $emit('widget:clone', oldWidgetId, newLayout)"
     />
   </errorBoundary>
 </template>

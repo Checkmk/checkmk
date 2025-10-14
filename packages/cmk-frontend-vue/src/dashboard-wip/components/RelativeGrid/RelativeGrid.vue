@@ -45,16 +45,16 @@ interface RelativeGridDashboardProps {
   isEditing: boolean
 }
 
-defineProps<RelativeGridDashboardProps>()
+const props = defineProps<RelativeGridDashboardProps>()
 
 const content = defineModel<ContentRelativeGrid>('content', {
   required: true
 })
 
-defineEmits<{
+const emit = defineEmits<{
   'widget:edit': [widgetId: string]
   'widget:delete': [widgetId: string]
-  'widget:clone': [widgetId: string, newLayout: WidgetLayout]
+  'widget:clone': [widgetId: string, newWidgetLayout: WidgetLayout]
 }>()
 
 const dashboard = ref<HTMLElement | null>(null)
@@ -156,6 +156,17 @@ function handleResizeForWidget(widgetId: string) {
     event.stopPropagation()
   }
 }
+
+const cloneRelativeGridWidget = (oldWidgetId: string) => {
+  const widgetType = props.contentProps[oldWidgetId]!.content.type
+  const layoutConstant = props.dashboardConstants.widgets[widgetType]!.layout.relative
+
+  emit('widget:clone', oldWidgetId, {
+    type: 'relative_grid',
+    position: layoutConstant.initial_position,
+    size: layoutConstant.initial_size
+  })
+}
 </script>
 
 <template>
@@ -186,6 +197,7 @@ function handleResizeForWidget(widgetId: string) {
           "
           @click:edit="$emit('widget:edit', spec.widget_id)"
           @click:delete="$emit('widget:delete', spec.widget_id)"
+          @click:clone="cloneRelativeGridWidget(spec.widget_id)"
         />
       </div>
     </div>

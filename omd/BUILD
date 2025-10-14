@@ -51,12 +51,12 @@ run_binary(
         "--target",
         "doc",
         "--out",
-        "bazel-out/k8-fastbuild/bin/omd/doc.spec",
+        "$(execpath doc.spec)",
         "--format",
         "dict",
     ],
     tags = ["manual"],
-    tool = "//cmk:generate_api_spec_cre",
+    tool = "//cmk:generate_api_spec",
 )
 
 run_binary(
@@ -69,12 +69,12 @@ run_binary(
         "--target",
         "swagger-ui",
         "--out",
-        "bazel-out/k8-fastbuild/bin/omd/swagger-ui.spec",
+        "$(execpath swagger-ui.spec)",
         "--format",
         "dict",
     ],
     tags = ["manual"],
-    tool = "//cmk:generate_api_spec_cre",
+    tool = "//cmk:generate_api_spec",
 )
 
 pkg_files(

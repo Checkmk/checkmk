@@ -324,21 +324,14 @@ py_doc_test(
 )
 
 py_binary(
-    name = "generate_api_spec_repo",
+    name = "generate_api_spec",
     srcs = ["gui/openapi/spec/spec_generator/generate_api_spec.py"],
     main = "gui/openapi/spec/spec_generator/generate_api_spec.py",
-    visibility = ["//packages/cmk-shared-typing:__pkg__"],
+    visibility = [
+        "//omd:__subpackages__",
+        "//packages/cmk-shared-typing:__subpackages__",
+    ],
     deps = [
         "lib_cmk_repo",
-    ],
-)
-
-py_binary(
-    name = "generate_api_spec_cre",
-    srcs = ["gui/openapi/spec/spec_generator/generate_api_spec.py"],
-    main = "gui/openapi/spec/spec_generator/generate_api_spec.py",
-    visibility = ["//omd:__pkg__"],
-    deps = [
-        "lib_cmk_cre",
     ],
 )

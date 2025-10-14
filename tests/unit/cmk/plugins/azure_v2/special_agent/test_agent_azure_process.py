@@ -11,6 +11,7 @@
 import argparse
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
@@ -22,6 +23,7 @@ from cmk.plugins.azure_v2.special_agent.agent_azure_v2 import (
     AzureSubscription,
     filter_tags,
     get_group_labels,
+    get_resource_groups,
     get_resource_host_labels_section,
     GroupLabels,
     process_app_registrations,
@@ -34,6 +36,7 @@ from cmk.plugins.azure_v2.special_agent.agent_azure_v2 import (
     TagsOption,
     write_group_info,
     write_remaining_reads,
+    write_resource_groups_sections,
 )
 
 from .lib import fake_azure_subscription, MockAzureSection
@@ -210,8 +213,108 @@ async def test_get_group_labels(
 ) -> None:
     mock_api_client.get_async.return_value = RESOURCE_GROUPS_RESPONSE
 
-    group_tags = await get_group_labels(mock_api_client, monitored_groups, tag_key_pattern)
+    groups = await get_resource_groups(mock_api_client, monitored_groups)
+    group_tags = get_group_labels(groups, tag_key_pattern)
     assert group_tags == expected_result
+
+
+@pytest.mark.parametrize(
+    "monitored_groups, expected_result",
+    [
+        pytest.param(
+            ["resource_group_non_existent"],
+            [],
+            id="No groups monitored",
+        ),
+        pytest.param(
+            ["resource_group_1"],
+            [
+                {
+                    "id": "/subscriptions/subscripion_id/resourceGroups/resource_group_1",
+                    "location": "eastus",
+                    "managedBy": "subscriptions/subscripion_id/providers/Microsoft.RecoveryServices/",
+                    "name": "resource_group_1",
+                    "properties": {
+                        "provisioningState": "Succeeded",
+                    },
+                    "tags": {
+                        "group_tag_key_1": "group_tag_value_1",
+                    },
+                    "type": "Microsoft.Resources/resourceGroups",
+                },
+            ],
+            id="One group monitored",
+        ),
+        pytest.param(
+            ["resource_group_1", "resource_group_2"],
+            [
+                {
+                    "id": "/subscriptions/subscripion_id/resourceGroups/resource_group_1",
+                    "location": "eastus",
+                    "managedBy": "subscriptions/subscripion_id/providers/Microsoft.RecoveryServices/",
+                    "name": "resource_group_1",
+                    "properties": {
+                        "provisioningState": "Succeeded",
+                    },
+                    "tags": {
+                        "group_tag_key_1": "group_tag_value_1",
+                    },
+                    "type": "Microsoft.Resources/resourceGroups",
+                },
+                {
+                    "id": "/subscriptions/subscripion_id/resourceGroups/resource_group_2",
+                    "location": "westeurope",
+                    "name": "resource_group_2",
+                    "properties": {
+                        "provisioningState": "Succeeded",
+                    },
+                    "tags": {
+                        "group_tag_key_2": "group_tag_value_2",
+                    },
+                    "type": "Microsoft.Resources/resourceGroups",
+                },
+            ],
+            id="Multiple groups monitored",
+        ),
+    ],
+)
+@pytest.mark.asyncio
+async def test_get_resource_groups(
+    mock_api_client: AsyncMock,
+    monitored_groups: Sequence[str],
+    expected_result: Sequence[Mapping[str, Any]],
+) -> None:
+    mock_api_client.get_async.return_value = RESOURCE_GROUPS_RESPONSE
+
+    groups = await get_resource_groups(mock_api_client, monitored_groups)
+    assert groups == expected_result
+
+
+@pytest.mark.asyncio
+async def test_write_resource_groups_sections(
+    mock_api_client: AsyncMock,
+    mock_azure_subscription: AzureSubscription,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    mock_api_client.get_async.return_value = RESOURCE_GROUPS_RESPONSE
+
+    groups = await get_resource_groups(mock_api_client, ["resource_group_1", "resource_group_2"])
+    write_resource_groups_sections(groups, mock_azure_subscription)
+    captured = capsys.readouterr()
+    assert (
+        captured.out
+        == """<<<<resource_group_1>>>>
+<<<azure_v2_resourcegroups:sep(124)>>>
+Resource
+{"id": "/subscriptions/subscripion_id/resourceGroups/resource_group_1", "name": "resource_group_1", "type": "Microsoft.Resources/resourceGroups", "location": "eastus", "managedBy": "subscriptions/subscripion_id/providers/Microsoft.RecoveryServices/", "properties": {"provisioningState": "Succeeded"}, "tags": {"group_tag_key_1": "group_tag_value_1"}, "tenant_id": "c8d03e63-0d65-41a7-81fd-0ccc184bdd1a", "subscription_name": "mock_subscription_name", "subscription": "subscripion_id", "group": "resource_group_1"}
+<<<<>>>>
+<<<<resource_group_2>>>>
+<<<azure_v2_resourcegroups:sep(124)>>>
+Resource
+{"id": "/subscriptions/subscripion_id/resourceGroups/resource_group_2", "name": "resource_group_2", "type": "Microsoft.Resources/resourceGroups", "location": "westeurope", "properties": {"provisioningState": "Succeeded"}, "tags": {"group_tag_key_2": "group_tag_value_2"}, "tenant_id": "c8d03e63-0d65-41a7-81fd-0ccc184bdd1a", "subscription_name": "mock_subscription_name", "subscription": "subscripion_id", "group": "resource_group_2"}
+<<<<>>>>
+"""
+    )
 
 
 TAGS = {"tag_key_1": "tag_value_1", "tag_key_2": "tag_value_2"}

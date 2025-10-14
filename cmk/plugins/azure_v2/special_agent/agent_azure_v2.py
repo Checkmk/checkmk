@@ -1681,22 +1681,41 @@ def get_resource_host_labels_section(
     )
 
 
-async def get_group_labels(
+def write_resource_groups_sections(
+    resource_groups: Sequence[Mapping[str, Any]], subscription: AzureSubscription
+):
+    # Fake a resource here for inventory purposes
+    for group in resource_groups:
+        resource = AzureResource(group, TagsImportPatternOption.import_all, subscription)
+        section = AzureResourceSection(resource)
+        section.add(resource.dumpinfo())
+        section.write()
+
+
+async def get_resource_groups(
     mgmt_client: BaseAsyncApiClient,
     monitored_groups: Sequence[str],
-    tag_key_pattern: TagsOption,
-) -> GroupLabels:
+) -> list[Mapping[str, Any]]:
     resource_groups = await mgmt_client.get_async(
         "resourcegroups", key="value", params={"api-version": "2019-05-01"}
     )
 
-    group_labels = {
-        name: filter_tags(group.get("tags", {}), tag_key_pattern)
-        for group in resource_groups
-        if (name := group["name"].lower()) and name in monitored_groups
-    }
+    groups = []
+    for group in resource_groups:
+        if (name := group["name"].lower()) and name in monitored_groups:
+            group["name"] = name
+            groups.append(group)
+    return groups
 
-    return group_labels
+
+def get_group_labels(
+    resource_groups: Sequence[Mapping[str, Any]],
+    tag_key_pattern: TagsOption,
+) -> GroupLabels:
+    return {
+        group["name"].lower(): filter_tags(group.get("tags", {}), tag_key_pattern)
+        for group in resource_groups
+    }
 
 
 def write_group_info(
@@ -2285,10 +2304,10 @@ async def main_subscription(
                 mgmt_client, subscription, args, selector
             )
 
-            group_labels = await get_group_labels(
-                mgmt_client, monitored_groups, args.tag_key_pattern
-            )
+            resource_groups = await get_resource_groups(mgmt_client, monitored_groups)
+            group_labels = get_group_labels(resource_groups, args.tag_key_pattern)
             write_group_info(monitored_groups, selected_resources, subscription, group_labels)
+            write_resource_groups_sections(resource_groups, subscription)
             write_subscription_info(subscription)
 
             tasks = {

@@ -8,6 +8,8 @@ from typing import cast, get_args, override
 from cmk.gui.config import Config
 from cmk.gui.http import request
 from cmk.gui.pages import AjaxPage, PageResult
+from cmk.gui.permissions import permission_registry
+from cmk.gui.utils.roles import UserPermissions
 
 from .engines.customize import CustomizeSearchEngine
 from .engines.monitoring import MonitoringSearchEngine
@@ -25,7 +27,9 @@ class PageUnifiedSearch(AjaxPage):
 
         unified_search_engine = UnifiedSearch(
             setup_engine=SetupSearchEngine(config),
-            monitoring_engine=MonitoringSearchEngine(),
+            monitoring_engine=MonitoringSearchEngine(
+                UserPermissions.from_config(config, permission_registry)
+            ),
             customize_engine=CustomizeSearchEngine(),
         )
 

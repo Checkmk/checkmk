@@ -16,6 +16,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.permissions import permission_registry
 from cmk.gui.search import (
     ABCQuicksearchConductor,
     IncorrectLabelInputError,
@@ -26,6 +27,7 @@ from cmk.gui.type_defs import (
     SearchQuery,
     SearchResultsByTopic,
 )
+from cmk.gui.utils.roles import UserPermissions
 
 from ._base import PageHandlers, SidebarSnapin
 
@@ -88,7 +90,7 @@ class QuicksearchSnapin(SidebarSnapin):
         search_objects: list[ABCQuicksearchConductor] = []
         try:
             search_objects = self._quicksearch_manager._determine_search_objects(
-                livestatus.lqencode(query)
+                livestatus.lqencode(query), UserPermissions.from_config(config, permission_registry)
             )
             self._quicksearch_manager._conduct_search(search_objects)
 
@@ -121,7 +123,11 @@ class QuicksearchSnapin(SidebarSnapin):
         if not query:
             return
 
-        raise HTTPRedirect(self._quicksearch_manager.generate_search_url(query))
+        raise HTTPRedirect(
+            self._quicksearch_manager.generate_search_url(
+                query, UserPermissions.from_config(config, permission_registry)
+            )
+        )
 
 
 class QuicksearchResultRenderer:

@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, h, ref } from 'vue'
+import { computed, h, ref, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -82,6 +82,25 @@ const combinedMetricHandler = useCombinedMetric(null)
 
 // TODO: Fill with saved values if available --^--
 // /////////////////////////////////////////////////////////
+
+watch(
+  [widgetFilterManager.filterHandler.configuredFilters],
+  (newConfiguredFilters) => {
+    if (metricType.value === MetricSelection.SINGLE_METRIC) {
+      const host: string | null = newConfiguredFilters[0]?.host?.host ?? null
+      const svc: string | null = newConfiguredFilters[0]?.service?.service ?? null
+
+      if (host && hostFilterType.value === ElementSelection.SPECIFIC) {
+        singleMetricHandler.host.value = host
+      }
+
+      if (svc && serviceFilterType.value === ElementSelection.SPECIFIC) {
+        singleMetricHandler.service.value = svc
+      }
+    }
+  },
+  { deep: true }
+)
 
 const wizardHandler = useWizard(2)
 const wizardStages: QuickSetupStageSpec[] = [

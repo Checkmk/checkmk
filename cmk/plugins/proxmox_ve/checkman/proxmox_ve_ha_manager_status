@@ -1,0 +1,11 @@
+title: Proxmox VE: HA Manager Status/Watcher
+agents: proxmox_ve
+catalog: os/misc
+license: GPLv2
+distribution: check_mk
+description:
+  This check monitors the status of the Proxmox VE High Availability (HA) Manager and its associated services.
+  It checks the status of the HA Manager node, quorum status, and individual HA-managed services (like VMs).
+
+discovery:
+ One service per node is created. And one service is for the quorum status.

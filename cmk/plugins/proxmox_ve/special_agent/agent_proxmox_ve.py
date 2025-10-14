@@ -28,6 +28,7 @@ from collections.abc import Sequence
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+from cmk.plugins.proxmox_ve.lib.ha_manager_status import SectionHaManagerCurrent
 from cmk.plugins.proxmox_ve.lib.node_allocation import SectionNodeAllocation
 from cmk.plugins.proxmox_ve.lib.node_attributes import SectionNodeAttributes
 from cmk.plugins.proxmox_ve.lib.node_storages import SectionNodeStorages
@@ -83,6 +84,11 @@ def agent_proxmox_ve_main(args: Args) -> int:
                     "resources": [],
                     "replication": [],
                     "status": [],
+                    "ha": {
+                        "status": {
+                            "current": [],
+                        }
+                    },
                 },
                 "nodes": [
                     {
@@ -146,6 +152,7 @@ def agent_proxmox_ve_main(args: Args) -> int:
     node_timezones = {}  # Timezones on nodes can be potentially different
     snapshot_data = {}
     config_lock_data = {}
+
     replications = {
         node["node"]: [rep for rep in node.get("replication", [])] for node in data["nodes"]
     }
@@ -153,6 +160,9 @@ def agent_proxmox_ve_main(args: Args) -> int:
         entry["id"]: entry for entry in data["cluster"]["resources"] if entry["type"] == "storage"
     }
 
+    ha_manager_status = SectionHaManagerCurrent.from_json_list(
+        data["cluster"]["ha"]["status"]["current"]
+    )
     cluster_name = next(
         (item["name"] for item in data["cluster"]["status"] if item.get("type") == "cluster"),
         "",
@@ -286,6 +296,8 @@ def agent_proxmox_ve_main(args: Args) -> int:
                         node_name=node["node"],
                     ).model_dump_json()
                 )
+            with SectionWriter("proxmox_ve_ha_manager_status") as writer:
+                writer.append_json(ha_manager_status.model_dump())
             if "mem" in node and "maxmem" in node:
                 with SectionWriter("proxmox_ve_mem_usage") as writer:
                     writer.append_json(

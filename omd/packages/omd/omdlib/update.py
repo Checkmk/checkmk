@@ -18,6 +18,7 @@ from typing import Literal, Self
 from omdlib.contexts import SiteContext
 from omdlib.crash_reporting import report_crash
 from omdlib.tmpfs import prepare_and_populate_tmpfs, unmount_tmpfs_without_save
+from omdlib.type_defs import CommandOptions
 from omdlib.version_info import VersionInfo
 
 from cmk.utils.paths import crash_dir
@@ -220,3 +221,15 @@ class ManageUpdate:
                 )
         shutil.rmtree(self.backup_dir)
         return False  # Don't suppress the exception
+
+
+def get_conflict_mode_update(options: CommandOptions) -> str:
+    match options.get("conflict", "ask"):
+        case "ask" | "install" | "keepold" | "abort" | "ignore" as conflict_mode:
+            return conflict_mode
+        case None:  # mismatch between our yanky argument parsing and reading the result.
+            raise NotImplementedError()
+        case _:
+            sys.exit(
+                "Argument to --conflict must be one of ask, install, keepold, ignore and abort."
+            )

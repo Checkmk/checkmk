@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="deprecated"
 # mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
-import datetime as dt
 import logging
 
 from marshmallow import Schema
@@ -22,17 +20,6 @@ from cmk.gui.fields.utils import BaseSchema
 #       distinct values
 
 _logger = logging.getLogger(__name__)
-
-
-class UserSchema(BaseSchema):
-    id = fields.Integer(dump_only=True)
-    name = fields.String(description="The user's name")
-    created = fields.DateTime(
-        dump_only=True,
-        format="iso8601",
-        dump_default=dt.datetime.utcnow,
-        doc_default="The current datetime",
-    )
 
 
 class LinkSchema(BaseSchema):

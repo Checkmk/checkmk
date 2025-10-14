@@ -14,7 +14,6 @@ py_library(
     name = "cmk-agent-receiver",
     srcs = [
         "cmk/agent_receiver/__init__.py",
-        "cmk/agent_receiver/apps_and_routers.py",
         "cmk/agent_receiver/certs.py",
         "cmk/agent_receiver/checkmk_rest_api.py",
         "cmk/agent_receiver/config.py",
@@ -51,6 +50,7 @@ py_library(
         "cmk/agent_receiver/relay/lib/relays_repository.py",
         "cmk/agent_receiver/relay/lib/shared_types.py",
         "cmk/agent_receiver/relay/lib/site_auth.py",
+        "cmk/agent_receiver/route_classes.py",
         "cmk/agent_receiver/utils.py",
         "cmk/agent_receiver/worker.py",
     ],

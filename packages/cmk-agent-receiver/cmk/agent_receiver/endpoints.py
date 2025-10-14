@@ -22,7 +22,6 @@ from starlette.status import (
     HTTP_501_NOT_IMPLEMENTED,
 )
 
-from .apps_and_routers import UUIDValidationRoute
 from .certs import (
     agent_root_ca,
     current_time_naive,
@@ -65,6 +64,7 @@ from .models import (
     RenewCertResponse,
     RequestForRegistration,
 )
+from .route_classes import UUIDValidationRoute
 from .utils import (
     internal_credentials,
     NotRegisteredException,

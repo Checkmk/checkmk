@@ -675,7 +675,9 @@ function Test-MsiSigning($file) {
             Write-Host "Validate executable $exe ..." -ForegroundColor White
             $state = Get-AuthenticodeSignature -FilePath $random_dir\$exe -ErrorAction Stop
             if ($state.Status -ne "Valid") {
-                Write-Host "Signature check failed: $($state.Status) status: $($state.StatusMessage)" -ForegroundColor Red
+                Write-Host "Signature check Failed: $($state.Status) status: $($state.StatusMessage)" -ForegroundColor Red
+                Write-Host "BUILD FAILED - EXITING..." -ForegroundColor Red
+                throw
             }
             else {
                 Write-Host "Signature check Valid"

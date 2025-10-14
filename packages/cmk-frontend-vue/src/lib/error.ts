@@ -55,3 +55,17 @@ export class CmkSimpleError extends CmkError {
     this.name = 'CmkSimpleError'
   }
 }
+
+export class CmkApiError extends CmkError {
+  context: string
+
+  constructor(message: string, cause: Error | null, context: string) {
+    super(message, cause)
+    this.name = 'CmkApiError'
+    this.context = context
+  }
+
+  override getContext(): string {
+    return this.context
+  }
+}

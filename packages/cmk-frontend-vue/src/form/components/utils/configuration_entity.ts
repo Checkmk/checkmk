@@ -4,10 +4,14 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { ConfigEntityType } from 'cmk-shared-typing/typescript/configuration_entity'
+import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
+import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
 
-import { type CmkFetchResponse, fetchRestAPI } from '@/lib/cmkFetch'
+import client, { unwrap } from '@/lib/rest-api-client/client'
 
 import type { SetDataResult } from '@/form/components/forms/FormSingleChoiceEditableEditAsync.vue'
+
+import type { ValidationMessages } from './validation'
 
 export interface EntityDescription {
   ident: string
@@ -16,54 +20,63 @@ export interface EntityDescription {
 
 export type Payload = Record<string, unknown>
 
-const API_ROOT = 'api/1.0'
+type SaveResponseData = components['schemas']['EditConfigurationEntityResponse']
+type SaveResponseError422 = components['schemas']['Api422DefaultError']
 
-const GET_CONFIG_ENTITY_SCHEMA = (entityType: ConfigEntityType, entityTypeSpecifier: string) =>
-  `${API_ROOT}/domain-types/form_spec/collections/${entityType}?entity_type_specifier=${entityTypeSpecifier}`
-/* TODO the way we define a new collection for every entity type risks a name clash with rulespecs for example. */
-const GET_CONFIG_ENTITY_DATA = (entityType: ConfigEntityType, entityId: string) =>
-  `${API_ROOT}/objects/${entityType}/${entityId}`
-const LIST_CONFIG_ENTITIES = (entityType: ConfigEntityType, entityTypeSpecifier: string) =>
-  `${API_ROOT}/domain-types/${entityType}/collections/${entityTypeSpecifier}`
-const CREATE_CONFIG_ENTITY = `${API_ROOT}/domain-types/configuration_entity/collections/all`
-const UPDATE_CONFIG_ENTITY = `${API_ROOT}/domain-types/configuration_entity/actions/edit-single-entity/invoke`
-
-async function processSaveResponse(
-  response: CmkFetchResponse
-): Promise<SetDataResult<EntityDescription>> {
-  const returnData = await response.json()
-  if (response.status === 422) {
-    return { type: 'error', validationMessages: returnData.ext.validation_errors }
+function processSaveResponse(result: {
+  data?: SaveResponseData
+  error?: object
+  response: Response
+}): SetDataResult<EntityDescription> {
+  try {
+    const data = unwrap(result)
+    return { type: 'success', entity: { ident: data.id!, description: data.title! } }
+  } catch (e) {
+    if (result.error && 'status' in result.error && result.error.status === 422) {
+      const validationMessages = (result.error as SaveResponseError422).ext!
+        .validation_errors as ValidationMessages
+      return {
+        type: 'error',
+        validationMessages
+      }
+    }
+    throw e
   }
-  await response.raiseForStatus()
-  /* TODO: Handle generic errors everywhere*/
-  return { type: 'success', entity: { ident: returnData.id, description: returnData.title } }
 }
 
 export const configEntityAPI = {
   getSchema: async (entityType: ConfigEntityType, entityTypeSpecifier: string) => {
-    const response = await fetchRestAPI(
-      GET_CONFIG_ENTITY_SCHEMA(entityType, entityTypeSpecifier),
-      'GET'
+    const data = unwrap(
+      await client.GET('/domain-types/form_spec/collections/{entity_type}', {
+        params: {
+          path: { entity_type: entityType },
+          query: { entity_type_specifier: entityTypeSpecifier }
+        }
+      })
     )
-    await response.raiseForStatus()
-    const data = await response.json()
-    return { schema: data.extensions.schema, defaultValues: data.extensions.default_values }
+    return {
+      schema: data.extensions!.schema as FormSpec,
+      defaultValues: data.extensions!.default_values as Payload
+    }
   },
   getData: async (entityType: ConfigEntityType, entityId: string) => {
-    const response = await fetchRestAPI(GET_CONFIG_ENTITY_DATA(entityType, entityId), 'GET')
-    const data = await response.json()
-    await response.raiseForStatus()
-    return data.extensions
-  },
-  /* TODO we should use an openAPI-generated client here */
-  listEntities: async (entityType: ConfigEntityType, entityTypeSpecifier: string) => {
-    const response = await fetchRestAPI(
-      LIST_CONFIG_ENTITIES(entityType, entityTypeSpecifier),
-      'GET'
+    if (entityType === 'folder') {
+      throw new Error('Folders are not supported in configEntityAPI.getData')
+    }
+    const data = unwrap(
+      await client.GET(`/objects/${entityType}/{entity_id}`, {
+        params: { path: { entity_id: entityId } }
+      })
     )
-    const values: { id: string; title: string }[] = (await response.json()).value
-    await response.raiseForStatus()
+    return data.extensions as Payload
+  },
+  listEntities: async (entityType: ConfigEntityType, entityTypeSpecifier: string) => {
+    const data = unwrap(
+      await client.GET(`/domain-types/${entityType}/collections/{entity_type_specifier}`, {
+        params: { path: { entity_type_specifier: entityTypeSpecifier } }
+      })
+    )
+    const values = data.value as { id: string; title: string }[]
     const entities = values.map((entity) => ({
       ident: entity.id,
       description: entity.title
@@ -75,10 +88,13 @@ export const configEntityAPI = {
     entityTypeSpecifier: string,
     data: Payload
   ) => {
-    const response = await fetchRestAPI(CREATE_CONFIG_ENTITY, 'POST', {
-      entity_type: entityType,
-      entity_type_specifier: entityTypeSpecifier,
-      data
+    const response = await client.POST('/domain-types/configuration_entity/collections/all', {
+      params: { header: { 'Content-Type': 'application/json' } },
+      body: {
+        entity_type: entityType,
+        entity_type_specifier: entityTypeSpecifier,
+        data
+      }
     })
     return await processSaveResponse(response)
   },
@@ -88,12 +104,18 @@ export const configEntityAPI = {
     entityId: string,
     data: Payload
   ) => {
-    const response = await fetchRestAPI(UPDATE_CONFIG_ENTITY, 'PUT', {
-      entity_type: entityType,
-      entity_type_specifier: entityTypeSpecifier,
-      entity_id: entityId,
-      data
-    })
+    const response = await client.PUT(
+      '/domain-types/configuration_entity/actions/edit-single-entity/invoke',
+      {
+        params: { header: { 'Content-Type': 'application/json' } },
+        body: {
+          entity_type: entityType,
+          entity_type_specifier: entityTypeSpecifier,
+          entity_id: entityId,
+          data
+        }
+      }
+    )
     return await processSaveResponse(response)
   }
 }

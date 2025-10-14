@@ -619,3 +619,8 @@ def test_unwanted_package_dependencies(package_path: str) -> None:
     assert not actual_unwanted_dependencies, "\n" + "\n".join(
         [u.printable() for u in actual_unwanted_dependencies]
     )
+
+
+def test_windows_artifacts_are_signed(package_path: str) -> None:
+    # TODO: Extend test
+    assert "osslsigncode 2.10" in subprocess.check_output(["osslsigncode", "--version"]).decode()

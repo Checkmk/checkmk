@@ -626,6 +626,18 @@ http_archive(
     ],
 )
 
+# TODO: Make a bazel mod
+http_archive(
+    name = "osslsigncode",
+    build_file = "//bazel/tools:BUILD.osslsigncode.bazel",
+    sha256 = "2a864e6127ee2350fb648070fa0d459c534ac6400ca0048886aeab7afb250f65",
+    strip_prefix = "osslsigncode-2.10",
+    urls = [
+        "https://github.com/mtrojnar/osslsigncode/archive/refs/tags/2.10.tar.gz",
+        UPSTREAM_MIRROR_URL + "osslsigncode-2.10.tar.gz",
+    ],
+)
+
 repo_license(name = "repo_license")
 
 multitool = use_extension("@rules_multitool//multitool:extension.bzl", "multitool")

@@ -73,6 +73,9 @@ def main() {
                 sh("""
                     apt-get update
                     apt-get install -y dpkg-sig msitools
+                    # TODO: Make the binary run-able via bazel-run or add it to the image
+                     bazel build @osslsigncode
+                    cp bazel-bin/external/+_repo_rules+osslsigncode/osslsigncode/bin/osslsigncode /usr/local/bin/osslsigncode
                 """);
                 println("Installed dpkg-sig manually, not part of default Ubuntu 22.04 image");
             }

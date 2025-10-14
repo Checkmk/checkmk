@@ -1,0 +1,16 @@
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "cmake")
+
+filegroup(
+    name = "all_srcs",
+    srcs = glob(
+        ["**/*"],
+    ),
+)
+
+cmake(
+    name = "osslsigncode",
+    generate_args = ["-D BASH_COMPLETION_USER_DIR=${INSTALLDIR}"],
+    lib_source = "@osslsigncode//:all_srcs",
+    out_binaries = ["osslsigncode"],
+    visibility = ["//visibility:public"],
+)

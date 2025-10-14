@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="deprecated"
-
 """
 BEWARE: Even though we are using pydantic, *no* validation is happening (see BaseModel.construct).
 In the current state, we cannot validate because we have no good way to handle validation erros. In
@@ -40,7 +38,7 @@ class SiteConfig(BaseModel, frozen=True):
 
     @classmethod
     def load(cls, path: Path) -> SiteConfig:
-        return cls.construct(
+        return cls.model_construct(
             **load_object_from_file(
                 path,
                 default={

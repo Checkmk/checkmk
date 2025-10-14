@@ -9,16 +9,6 @@
 # at your choice adding temporarily in the style file the option:
 # each_dict_entry_on_separate_line=False
 
-from cmk.gui.i18n import _l
-from cmk.gui.inventory.filters import (
-    FilterInvtableAdminStatus,
-    FilterInvtableAvailable,
-    FilterInvtableIntegerRange,
-    FilterInvtableInterfaceType,
-    FilterInvtableOperStatus,
-    FilterInvtableTimestampAsAge,
-)
-
 from .registry import InventoryHintRegistry
 
 ### PLEASE DO NO ADD FURTHER LEGACY DISPLAY HINTS ###
@@ -1820,61 +1810,61 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED ".networking.addresses:*.address": {"title": _l("Address")},
         # MIGRATED ".networking.addresses:*.device": {"title": _l("Device")},
         # MIGRATED ".networking.addresses:*.type": {"title": _l("Address type"), "paint": "ip_address_type"},
-        ".networking.interfaces:": {
-            "title": _l("Network interfaces"),
-            "keyorder": [
-                "index",
-                "description",
-                "alias",
-                "oper_status",
-                "admin_status",
-                "available",
-                "speed",
-                "last_change",
-                "port_type",
-                "phys_address",
-                "vlantype",
-                "vlans",
-            ],
-            "view": "invinterface",
-            "is_show_more": False,
-        },
-        ".networking.interfaces:*.index": {
-            "title": _l("Index"),
-            "paint": "number",
-            "filter": FilterInvtableIntegerRange,
-        },
-        ".networking.interfaces:*.description": {"title": _l("Description")},
-        ".networking.interfaces:*.alias": {"title": _l("Alias")},
-        ".networking.interfaces:*.oper_status": {
-            "title": _l("Operational status"),
-            "paint": "if_oper_status",
-            "filter": FilterInvtableOperStatus,
-        },
-        ".networking.interfaces:*.admin_status": {
-            "title": _l("Administrative status"),
-            "paint": "if_admin_status",
-            "filter": FilterInvtableAdminStatus,
-        },
-        ".networking.interfaces:*.available": {
-            "title": _l("Port usage"),
-            "paint": "if_available",
-            "filter": FilterInvtableAvailable,
-        },
-        ".networking.interfaces:*.speed": {"title": _l("Speed"), "paint": "nic_speed"},
-        ".networking.interfaces:*.phys_address": {"title": _l("Physical address (MAC)")},
-        ".networking.interfaces:*.port_type": {
-            "title": _l("Type"),
-            "paint": "if_port_type",
-            "filter": FilterInvtableInterfaceType,
-        },
-        ".networking.interfaces:*.last_change": {
-            "title": _l("Last change"),
-            "paint": "timestamp_as_age_days",
-            "filter": FilterInvtableTimestampAsAge,
-        },
-        ".networking.interfaces:*.vlans": {"title": _l("VLANs")},
-        ".networking.interfaces:*.vlantype": {"title": _l("VLAN type")},
+        # MIGRATED ".networking.interfaces:": {
+        # MIGRATED     "title": _l("Network interfaces"),
+        # MIGRATED     "keyorder": [
+        # MIGRATED         "index",
+        # MIGRATED         "description",
+        # MIGRATED         "alias",
+        # MIGRATED         "oper_status",
+        # MIGRATED         "admin_status",
+        # MIGRATED         "available",
+        # MIGRATED         "speed",
+        # MIGRATED         "last_change",
+        # MIGRATED         "port_type",
+        # MIGRATED         "phys_address",
+        # MIGRATED         "vlantype",
+        # MIGRATED         "vlans",
+        # MIGRATED     ],
+        # MIGRATED     "view": "invinterface",
+        # MIGRATED     "is_show_more": False,
+        # MIGRATED },
+        # MIGRATED ".networking.interfaces:*.index": {
+        # MIGRATED     "title": _l("Index"),
+        # MIGRATED     "paint": "number",
+        # MIGRATED     "filter": FilterInvtableIntegerRange,
+        # MIGRATED },
+        # MIGRATED ".networking.interfaces:*.description": {"title": _l("Description")},
+        # MIGRATED ".networking.interfaces:*.alias": {"title": _l("Alias")},
+        # MIGRATED ".networking.interfaces:*.oper_status": {
+        # MIGRATED     "title": _l("Operational status"),
+        # MIGRATED     "paint": "if_oper_status",
+        # MIGRATED     "filter": FilterInvtableOperStatus,
+        # MIGRATED },
+        # MIGRATED ".networking.interfaces:*.admin_status": {
+        # MIGRATED     "title": _l("Administrative status"),
+        # MIGRATED     "paint": "if_admin_status",
+        # MIGRATED     "filter": FilterInvtableAdminStatus,
+        # MIGRATED },
+        # MIGRATED ".networking.interfaces:*.available": {
+        # MIGRATED     "title": _l("Port usage"),
+        # MIGRATED     "paint": "if_available",
+        # MIGRATED     "filter": FilterInvtableAvailable,
+        # MIGRATED },
+        # MIGRATED ".networking.interfaces:*.speed": {"title": _l("Speed"), "paint": "nic_speed"},
+        # MIGRATED ".networking.interfaces:*.phys_address": {"title": _l("Physical address (MAC)")},
+        # MIGRATED ".networking.interfaces:*.port_type": {
+        # MIGRATED     "title": _l("Type"),
+        # MIGRATED     "paint": "if_port_type",
+        # MIGRATED     "filter": FilterInvtableInterfaceType,
+        # MIGRATED },
+        # MIGRATED ".networking.interfaces:*.last_change": {
+        # MIGRATED     "title": _l("Last change"),
+        # MIGRATED     "paint": "timestamp_as_age_days",
+        # MIGRATED     "filter": FilterInvtableTimestampAsAge,
+        # MIGRATED },
+        # MIGRATED ".networking.interfaces:*.vlans": {"title": _l("VLANs")},
+        # MIGRATED ".networking.interfaces:*.vlantype": {"title": _l("VLAN type")},
         # MIGRATED ".networking.routes:": {
         # MIGRATED     "title": _l("Routes"),
         # MIGRATED     "keyorder": ["target", "device", "type", "gateway"],

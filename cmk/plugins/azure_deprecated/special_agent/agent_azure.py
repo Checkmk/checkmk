@@ -1912,7 +1912,11 @@ def process_resource_health(
         health_section[group].append(json.dumps(health_data))
 
     for group, values in health_section.items():
-        section = AzureSection("resource_health", [group.lower()])
+        section = AzureSection(
+            "resource_health",
+            piggytargets=[group.lower()],
+            separator=0,
+        )
         for value in values:
             section.add([value])
         yield section

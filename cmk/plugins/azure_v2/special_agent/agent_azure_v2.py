@@ -2115,7 +2115,12 @@ def _get_resource_health_sections(
 
     sections = []
     for group, values in health_section.items():
-        section = AzureSection("resource_health", resource.piggytargets, subscription=subscription)
+        section = AzureSection(
+            "resource_health",
+            piggytargets=resource.piggytargets,
+            separator=0,
+            subscription=subscription,
+        )
         for value in values:
             section.add([value])
         sections.append(section)

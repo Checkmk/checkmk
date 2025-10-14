@@ -498,6 +498,7 @@ RESOURCE_HEALTH_ENTRY = {
 "name": "virtualmachines/vm-test-1", "availabilityState": "Available", "summary": "There aren\'t any known Azure platform problems affecting this virtual machine.", \
 "reasonType": "", "occuredTime": "2023-02-09T16: 19: 01Z", "tags": {}}\n',
                     ],
+                    separator=0,
                 )
             ],
             id="virtual machine with 2 entries in resource health",
@@ -514,6 +515,7 @@ RESOURCE_HEALTH_ENTRY = {
 "name": "virtualmachines/vm-test-1", "availabilityState": "Available", "summary": "There aren\'t any known Azure platform problems affecting this virtual machine.", \
 "reasonType": "", "occuredTime": "2023-02-09T16: 19: 01Z", "tags": {"tag1": "value1"}}\n',
                     ],
+                    separator=0,
                 )
             ],
             id="virtual machine import tags",

@@ -7,13 +7,13 @@ from fastapi import APIRouter, FastAPI
 from fastapi.testclient import TestClient
 from starlette.routing import Mount
 
-from cmk.agent_receiver.apps_and_routers import _UUIDValidationRoute, AGENT_RECEIVER_APP
+from cmk.agent_receiver.apps_and_routers import UUIDValidationRoute
 from cmk.agent_receiver.main import main_app
 
 
 def test_uuid_validation_route() -> None:
     app = FastAPI()
-    uuid_validation_router = APIRouter(route_class=_UUIDValidationRoute)
+    uuid_validation_router = APIRouter(route_class=UUIDValidationRoute)
 
     @uuid_validation_router.get("/endpoint/1234")
     def endpoint() -> dict[str, str]:
@@ -44,5 +44,4 @@ def test_main_app_structure() -> None:
     # we only want one route, namely the one to the sub-app which is mounted under the site name
     assert len(main_app_.routes) == 1
     assert isinstance(mount := main_app_.routes[0], Mount)
-    assert mount.app is AGENT_RECEIVER_APP
     assert mount.path == "/NO_SITE/agent-receiver"

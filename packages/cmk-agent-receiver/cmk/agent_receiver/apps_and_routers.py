@@ -4,17 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Coroutine
-from typing import Final, override
+from typing import override
 
-from fastapi import APIRouter, FastAPI, Request, Response
+from fastapi import Request, Response
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
 from starlette.status import HTTP_400_BAD_REQUEST
 
-from .middleware import B3RequestIDMiddleware
 
-
-class _UUIDValidationRoute(APIRoute):
+class UUIDValidationRoute(APIRoute):
     @override
     def get_route_handler(self) -> Callable[[Request], Coroutine[object, object, Response]]:
         original_route_handler = super().get_route_handler()
@@ -45,8 +43,3 @@ def _create_400_bad_request(header_uuid: str, *, url_uuid: str) -> JSONResponse:
             )
         },
     )
-
-
-AGENT_RECEIVER_APP: Final = FastAPI(title="Checkmk Agent Receiver")
-AGENT_RECEIVER_APP.add_middleware(B3RequestIDMiddleware)
-UUID_VALIDATION_ROUTER: Final = APIRouter(route_class=_UUIDValidationRoute)

@@ -13,10 +13,9 @@ from fastapi.testclient import TestClient
 from pydantic import UUID4
 from pytest_mock import MockerFixture
 
-from cmk.agent_receiver.apps_and_routers import AGENT_RECEIVER_APP
 from cmk.agent_receiver.checkmk_rest_api import ControllerCertSettings
 from cmk.agent_receiver.config import get_config
-from cmk.agent_receiver.main import main_app
+from cmk.agent_receiver.main import create_sub_app, main_app
 
 _CA = b"""-----BEGIN PRIVATE KEY-----
 MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDpDGxoGtI59lZM
@@ -162,7 +161,7 @@ def mock_controller_certificate_settings(mocker: MockerFixture) -> None:
 @pytest.fixture(name="client")
 def fixture_client() -> TestClient:
     main_app()
-    return TestClient(AGENT_RECEIVER_APP)
+    return TestClient(create_sub_app())
 
 
 @pytest.fixture(name="uuid")

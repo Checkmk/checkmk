@@ -109,6 +109,7 @@ def recompose(
             title=Title("%s") % p["title"],
         )
         for p in global_proxies
+        if urllib.parse.urlparse(p["proxy_url"]).scheme in form_spec.allowed_schemas
     ]
 
     elements: list[CascadingSingleChoiceElement[Any]] = [

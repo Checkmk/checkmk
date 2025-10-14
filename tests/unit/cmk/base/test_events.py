@@ -20,9 +20,7 @@ from cmk.base.events import (
 from cmk.events.event_context import EnrichedEventContext, EventContext
 from cmk.utils.http_proxy_config import (
     EnvironmentProxyConfig,
-    HTTPProxySpec,
     make_http_proxy_getter,
-    ProxyConfigSpec,
 )
 from cmk.utils.notify import NotificationHostConfig
 from cmk.utils.notify_types import (
@@ -459,7 +457,7 @@ def test_match_host_tags(
         pytest.param(
             {"proxy_url": ("cmk_postprocessed", "stored_proxy", "proxy_id")},
             {
-                "PARAMETER_PROXY_URL": "http://stored_url:8080",
+                "PARAMETER_PROXY_URL": "stored_url",
             },
             id="Stored proxy",
         ),
@@ -488,20 +486,7 @@ def test_add_to_event_context_proxy(
         context,
         "PARAMETER",
         params,
-        make_http_proxy_getter(
-            {
-                "proxy_id": HTTPProxySpec(
-                    ident="proxy_id",
-                    title="proxy_id",
-                    proxy_config=ProxyConfigSpec(
-                        scheme="http",
-                        proxy_server_name="stored_url",
-                        port=8080,
-                        auth=None,
-                    ),
-                )
-            },
-        ),
+        make_http_proxy_getter({"proxy_id": {"proxy_url": "stored_url"}}),
     )
     assert context == expected
 

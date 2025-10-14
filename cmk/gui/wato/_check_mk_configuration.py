@@ -2780,7 +2780,7 @@ ConfigVariableHTTPProxies = ConfigVariable(
                             size=80,
                         ),
                     ),
-                    ("proxy_config", HTTPProxyInput()),
+                    ("proxy_url", HTTPProxyInput()),
                 ],
                 optional_keys=False,
             ),

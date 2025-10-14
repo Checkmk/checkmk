@@ -16,7 +16,6 @@ from cmk.inventory.structured_data import RawIntervalFromConfig
 from cmk.server_side_calls_backend import ConfigSet as SSCConfigSet
 from cmk.snmplib import SNMPCredentials, SNMPTiming
 from cmk.utils.host_storage import FolderAttributesForBase
-from cmk.utils.http_proxy_config import HTTPProxySpec
 from cmk.utils.labels import Labels
 from cmk.utils.notify_types import Contact, ContactName
 from cmk.utils.password_store import Password
@@ -78,7 +77,7 @@ stored_passwords: dict[str, Password] = {}
 predefined_conditions: dict = {}
 
 # Global setting for managing HTTP proxy configs
-http_proxies: dict[str, HTTPProxySpec] = {}
+http_proxies: dict[str, dict[str, str]] = {}
 
 # SNMP communities and encoding
 

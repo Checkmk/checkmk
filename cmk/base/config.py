@@ -163,7 +163,6 @@ from cmk.utils.labels import LabelManager, Labels, LabelSources
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.misc import key_config_paths
-from cmk.utils.password_store import make_staged_passwords_lookup
 from cmk.utils.regex import regex
 from cmk.utils.rulesets import ruleset_matcher, RuleSetName, tuple_rulesets
 from cmk.utils.rulesets.ruleset_matcher import (
@@ -1479,24 +1478,6 @@ class AutochecksConfigurer:
         )
 
 
-def _set_global_proxy(raw: Mapping[str, Any]) -> config_processing.GlobalProxy:
-    proxy_config_auth = (
-        config_processing.GlobalProxyAuth(
-            user=auth["user"],
-            password=auth["password"],
-        )
-        if (auth := raw["proxy_config"].get("auth")) is not None
-        else None
-    )
-
-    return config_processing.GlobalProxy(
-        scheme=raw["proxy_config"]["scheme"],
-        proxy_server_name=raw["proxy_config"]["proxy_server_name"],
-        port=raw["proxy_config"]["port"],
-        auth=proxy_config_auth,
-    )
-
-
 class ConfigCache:
     def __init__(self, loaded_config: LoadedConfigFragment) -> None:
         super().__init__()
@@ -2356,13 +2337,10 @@ class ConfigCache:
                 macros,
                 ip_address_of,
             ),
-            config_processing.GlobalProxiesWithLookup(
-                global_proxies={
-                    name: _set_global_proxy(raw)
-                    for name, raw in self._loaded_config.http_proxies.items()
-                },
-                password_lookup=make_staged_passwords_lookup(),
-            ),
+            {
+                name: config_processing.ProxyConfig(url=raw["proxy_url"])
+                for name, raw in self._loaded_config.http_proxies.items()
+            },
             lambda x: final_service_name_config(host_name, x, self.label_manager.labels_of_host),
             passwords,
             password_store_file,
@@ -2478,13 +2456,10 @@ class ConfigCache:
                 ip_address_of,
             ),
             host_attrs,
-            config_processing.GlobalProxiesWithLookup(
-                global_proxies={
-                    name: _set_global_proxy(raw)
-                    for name, raw in self._loaded_config.http_proxies.items()
-                },
-                password_lookup=make_staged_passwords_lookup(),
-            ),
+            {
+                name: config_processing.ProxyConfig(url=raw["proxy_url"])
+                for name, raw in self._loaded_config.http_proxies.items()
+            },
             passwords,
             password_store_file,
             ExecutableFinder(
@@ -2514,23 +2489,10 @@ class ConfigCache:
             """Get _all_ configured rulesets (not only the ones matching any host)"""
             return [(name, [r["value"] for r in ruleset]) for name, ruleset in ssc_config]
 
-        global_proxies_with_lookup = config_processing.GlobalProxiesWithLookup(
-            global_proxies={
-                name: _set_global_proxy(raw)
-                for name, raw in self._loaded_config.http_proxies.items()
-            },
-            password_lookup=make_staged_passwords_lookup(),
-        )
         return {
             **password_store.load(password_store.password_store_path()),
-            **extract_all_adhoc_secrets(
-                rules_by_name=_compose_filtered_ssc_rules(active_checks.items()),
-                global_proxies_with_lookup=global_proxies_with_lookup,
-            ),
-            **extract_all_adhoc_secrets(
-                rules_by_name=_compose_filtered_ssc_rules(special_agents.items()),
-                global_proxies_with_lookup=global_proxies_with_lookup,
-            ),
+            **extract_all_adhoc_secrets(_compose_filtered_ssc_rules(active_checks.items())),
+            **extract_all_adhoc_secrets(_compose_filtered_ssc_rules(special_agents.items())),
         }
 
     def hostgroups(self, host_name: HostName) -> Sequence[str]:

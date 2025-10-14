@@ -25,7 +25,6 @@ from cmk.checkengine.submitters import ServiceDetails, ServiceState
 from cmk.helper_interface import AgentRawData
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.config_warnings import ConfigurationWarnings
-from cmk.utils.http_proxy_config import HTTPProxySpec
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import HostLabel, HostLabelValueDict, Labels, LabelSources
 from cmk.utils.notify_types import NotifyAnalysisInfo, NotifyBulks
@@ -642,7 +641,7 @@ class DiagSpecialAgentInput:
     agent_name: str
     params: Mapping[str, object]
     passwords: Mapping[str, str]
-    http_proxies: Mapping[str, HTTPProxySpec] = field(default_factory=dict)
+    http_proxies: Mapping[str, Mapping[str, str]] = field(default_factory=dict)
     is_cmc: bool = True
 
     @classmethod

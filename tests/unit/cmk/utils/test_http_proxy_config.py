@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Mapping
 from typing import Literal
 
 import pytest
@@ -14,56 +13,30 @@ from cmk.utils.http_proxy_config import (
     ExplicitProxyConfig,
     http_proxy_config_from_user_setting,
     HTTPProxyConfig,
-    HTTPProxySpec,
     NoProxyConfig,
-    ProxyAuthSpec,
-    ProxyConfigSpec,
 )
 
-_PROXIES_GLOBAL_SETTINGS: Mapping[str, HTTPProxySpec] = {
-    "http_blub": HTTPProxySpec(
-        ident="blub",
-        title="HTTP blub",
-        proxy_config=ProxyConfigSpec(
-            scheme="http",
-            proxy_server_name="blub",
-            port=8080,
-            auth=None,
-        ),
-    ),
-    "https_blab": HTTPProxySpec(
-        ident="blab",
-        title="HTTPS blab",
-        proxy_config=ProxyConfigSpec(
-            scheme="https",
-            proxy_server_name="blab",
-            port=8181,
-            auth=None,
-        ),
-    ),
-    "https_blub": HTTPProxySpec(
-        ident="blub",
-        title="HTTPS blub",
-        proxy_config=ProxyConfigSpec(
-            scheme="https",
-            proxy_server_name="blub",
-            port=8181,
-            auth=None,
-        ),
-    ),
-    "socks5_authed": HTTPProxySpec(
-        ident="socks5",
-        title="HTTP socks5 authed",
-        proxy_config=ProxyConfigSpec(
-            scheme="socks5",
-            proxy_server_name="socks.proxy",
-            port=443,
-            auth=ProxyAuthSpec(
-                user="us%3Aer",
-                password=("password", "s%40crit"),
-            ),
-        ),
-    ),
+_PROXIES_GLOBAL_SETTINGS = {
+    "http_blub": {
+        "ident": "blub",
+        "title": "HTTP blub",
+        "proxy_url": "http://blub:8080",
+    },
+    "https_blab": {
+        "ident": "blab",
+        "title": "HTTPS blab",
+        "proxy_url": "https://blab:8181",
+    },
+    "https_blub": {
+        "ident": "blub",
+        "title": "HTTPS blub",
+        "proxy_url": "https://blub:8181",
+    },
+    "socks5_authed": {
+        "ident": "socks5",
+        "title": "HTTP socks5 authed",
+        "proxy_url": "socks5://us%3Aer:s%40crit@socks.proxy:443",
+    },
 }
 
 

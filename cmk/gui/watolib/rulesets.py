@@ -43,10 +43,7 @@ from cmk.gui.watolib.check_mk_automations import (
     analyze_service_rule_matches,
 )
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
-from cmk.server_side_calls_backend.config_processing import (
-    GlobalProxiesWithLookup,
-    process_configuration_to_parameters,
-)
+from cmk.server_side_calls_backend.config_processing import process_configuration_to_parameters
 from cmk.utils import paths
 from cmk.utils.global_ident_type import GlobalIdent
 from cmk.utils.labels import LabelGroups, Labels
@@ -474,13 +471,7 @@ class RulesetCollection:
         # check if this contains a password. If so, the password file must be updated
         return any(
             process_configuration_to_parameters(
-                rule.value,
-                global_proxies_with_lookup=GlobalProxiesWithLookup(
-                    global_proxies={},
-                    password_lookup=lambda _name: None,
-                ),
-                usage_hint=f"ruleset: {name}",
-                is_alpha=True,
+                rule.value, global_proxies={}, usage_hint=f"ruleset: {name}", is_alpha=True
             ).found_secrets
             for name, rules in rulesets.items()
             if RuleGroup.is_active_checks_rule(name) or RuleGroup.is_special_agents_rule(name)

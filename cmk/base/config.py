@@ -3913,7 +3913,9 @@ def get_metric_backend_fetcher(
 def make_metric_backend_fetcher(
     host_name: HostName, metric_backend_fetcher_config: MetricBackendFetcherConfig, is_cmc: bool
 ) -> ProgramFetcher:
-    from cmk.plugins.otel.special_agents.cce import agent_otel
+    from cmk.plugins.otel.special_agents.cce import (  # type: ignore[import-not-found, unused-ignore]
+        agent_otel,
+    )
 
     # metrics_association = json.loads(metric_backend_fetcher_config.metrics_association)
     # host_name_resource_attribute_key = metrics_association["host_name_resource_attribute_key"]

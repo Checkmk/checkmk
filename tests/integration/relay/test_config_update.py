@@ -14,7 +14,9 @@ from ..agent_receiver.test_agent_receiver import generate_csr_pair
 pytestmark = pytest.mark.skip_if_not_edition("cloud", "managed")
 
 
-@pytest.skip("Not all parts are integrated yet. This will only cause test failures")
+@pytest.skip(
+    "Not all parts are integrated yet. This will only cause test failures", allow_module_level=True
+)
 class TestRelay:
     registered_relays: set[str] = set()
     created_hosts: set[str] = set()

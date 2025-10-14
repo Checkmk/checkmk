@@ -12,6 +12,8 @@ from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.i18n import _
 from cmk.gui.permissions import declare_permission, permission_registry
 from cmk.gui.type_defs import BuiltinIconVisibility, IconSpec, Row
+from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.views.icon.base import IconConfig
 from cmk.utils.tags import TagID
 
 from .base import Icon
@@ -39,27 +41,29 @@ def config_based_icons(user_icons_and_actions: dict[str, IconSpec]) -> dict[str,
         _row: Row,
         _tags: Sequence[TagID],
         _custom_vars: Mapping[str, str],
-        icon_cfg: IconSpec,
+        _user_permissions: UserPermissions,
+        _icon_cfg: IconConfig,
+        icon_spec: IconSpec,
     ) -> tuple[str, str | None, tuple[str, str] | None]:
         return (
-            icon_cfg["icon"],
-            icon_cfg.get("title"),
-            icon_cfg.get("url"),
+            icon_spec["icon"],
+            icon_spec.get("title"),
+            icon_spec.get("url"),
         )
 
     return {
         icon_id: Icon(
             ident=icon_id,
-            title=icon_cfg.get("title", icon_id),
+            title=icon_spec.get("title", icon_id),
             columns=[],
             host_columns=[],
             service_columns=[],
-            render=partial(_render, icon_cfg=icon_cfg),
+            render=partial(_render, icon_spec=icon_spec),
             type_="custom_icon",
-            sort_index=icon_cfg.get("sort_index", 15),
-            toplevel=icon_cfg.get("toplevel", False),
+            sort_index=icon_spec.get("sort_index", 15),
+            toplevel=icon_spec.get("toplevel", False),
         )
-        for icon_id, icon_cfg in user_icons_and_actions.items()
+        for icon_id, icon_spec in user_icons_and_actions.items()
     }
 
 

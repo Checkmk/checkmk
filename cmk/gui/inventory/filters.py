@@ -260,8 +260,7 @@ class FilterInvChoice(FilterOption):
                 ident=ident,
                 options=list(options),
                 filter_code=lambda x: "",
-                filter_row=lambda selection, row: (selection == "yes")
-                == row.get("invinterface_available"),
+                filter_row=lambda selection, row: (selection == "yes") == row.get(ident),
             ),
             is_show_more=is_show_more,
         )

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.server_side_calls import alpha, v1
+from cmk.server_side_calls import internal, v1
 from cmk.server_side_calls_backend.config_processing import (
     GlobalProxiesWithLookup,
     GlobalProxy,
@@ -21,7 +21,7 @@ def test_process_configuration_to_parameter_password_stored() -> None:
             password_lookup=lambda x: None,
         ),
         usage_hint="test",
-        is_alpha=False,
+        is_internal=False,
     ) == ReplacementResult(
         value={"password": v1.Secret(id("my_secret_id"))},
         found_secrets={},
@@ -39,7 +39,7 @@ def test_process_configuration_to_parameter_password_explicit() -> None:
             password_lookup=lambda x: None,
         ),
         usage_hint="test",
-        is_alpha=False,
+        is_internal=False,
     ) == ReplacementResult(
         value={"password": v1.Secret(id(":uuid:1234"))},
         found_secrets={":uuid:1234": "actual_secret"},
@@ -55,7 +55,7 @@ def test_process_configuration_to_parameter_no_proxy_v1() -> None:
             password_lookup=lambda x: None,
         ),
         usage_hint="test",
-        is_alpha=False,
+        is_internal=False,
     ) == ReplacementResult(
         value={"proxy": v1.NoProxy()},
         found_secrets={},
@@ -70,7 +70,7 @@ def test_process_configuration_to_parameter_env_proxy_v1() -> None:
             global_proxies={}, password_lookup=lambda x: None
         ),
         usage_hint="test",
-        is_alpha=False,
+        is_internal=False,
     ) == ReplacementResult(
         value={"proxy": v1.EnvProxy()},
         found_secrets={},
@@ -86,7 +86,7 @@ def test_process_configuration_to_parameter_explicit_proxy_v1() -> None:
             password_lookup=lambda x: None,
         ),
         usage_hint="test",
-        is_alpha=False,
+        is_internal=False,
     ) == ReplacementResult(
         value={"proxy": v1.URLProxy("url_proxy", "hurray.com")},
         found_secrets={},
@@ -108,7 +108,7 @@ def test_process_configuration_to_parameter_global_proxy_ok_v1() -> None:
             password_lookup=lambda x: None,
         ),
         usage_hint="test",
-        is_alpha=False,
+        is_internal=False,
     ) == ReplacementResult(
         value={"proxy": v1.URLProxy("url_proxy", "http://proxy.example.com:3128")},
         found_secrets={},
@@ -124,7 +124,7 @@ def test_process_configuration_to_parameter_global_proxy_missing_v1() -> None:
             password_lookup=lambda x: None,
         ),
         usage_hint="test",
-        is_alpha=False,
+        is_internal=False,
     ) == ReplacementResult(
         value={"proxy": v1.EnvProxy()},
         found_secrets={},
@@ -132,7 +132,7 @@ def test_process_configuration_to_parameter_global_proxy_missing_v1() -> None:
     )
 
 
-def test_process_configuration_to_parameter_no_proxy_alpha() -> None:
+def test_process_configuration_to_parameter_no_proxy_internal() -> None:
     assert process_configuration_to_parameters(
         params={"proxy": ("cmk_postprocessed", "no_proxy", "")},
         global_proxies_with_lookup=GlobalProxiesWithLookup(
@@ -140,15 +140,15 @@ def test_process_configuration_to_parameter_no_proxy_alpha() -> None:
             password_lookup=lambda x: None,
         ),
         usage_hint="test",
-        is_alpha=False,
+        is_internal=False,
     ) == ReplacementResult(
-        value={"proxy": alpha.NoProxy()},
+        value={"proxy": internal.NoProxy()},
         found_secrets={},
         surrogates={},
     )
 
 
-def test_process_configuration_to_parameter_env_proxy_alpha() -> None:
+def test_process_configuration_to_parameter_env_proxy_internal() -> None:
     assert process_configuration_to_parameters(
         params={"proxy": ("cmk_postprocessed", "environment_proxy", "")},
         global_proxies_with_lookup=GlobalProxiesWithLookup(
@@ -156,15 +156,15 @@ def test_process_configuration_to_parameter_env_proxy_alpha() -> None:
             password_lookup=lambda x: None,
         ),
         usage_hint="test",
-        is_alpha=False,
+        is_internal=False,
     ) == ReplacementResult(
-        value={"proxy": alpha.EnvProxy()},
+        value={"proxy": internal.EnvProxy()},
         found_secrets={},
         surrogates={},
     )
 
 
-def test_process_configuration_to_parameter_explicit_proxy_alpha() -> None:
+def test_process_configuration_to_parameter_explicit_proxy_internal() -> None:
     assert process_configuration_to_parameters(
         params={"proxy": ("cmk_postprocessed", "explicit_proxy", "hurray.com")},
         global_proxies_with_lookup=GlobalProxiesWithLookup(
@@ -172,15 +172,15 @@ def test_process_configuration_to_parameter_explicit_proxy_alpha() -> None:
             password_lookup=lambda x: None,
         ),
         usage_hint="test",
-        is_alpha=False,
+        is_internal=False,
     ) == ReplacementResult(
-        value={"proxy": alpha.URLProxy("url_proxy", "hurray.com")},
+        value={"proxy": internal.URLProxy("url_proxy", "hurray.com")},
         found_secrets={},
         surrogates={},
     )
 
 
-def test_process_configuration_to_parameter_global_proxy_ok_alpha() -> None:
+def test_process_configuration_to_parameter_global_proxy_ok_internal() -> None:
     assert process_configuration_to_parameters(
         params={"proxy": ("cmk_postprocessed", "stored_proxy", "my_global_proxy")},
         global_proxies_with_lookup=GlobalProxiesWithLookup(
@@ -194,15 +194,15 @@ def test_process_configuration_to_parameter_global_proxy_ok_alpha() -> None:
             password_lookup=lambda x: None,
         ),
         usage_hint="test",
-        is_alpha=False,
+        is_internal=False,
     ) == ReplacementResult(
-        value={"proxy": alpha.URLProxy("url_proxy", "http://proxy.example.com:3128")},
+        value={"proxy": internal.URLProxy("url_proxy", "http://proxy.example.com:3128")},
         found_secrets={},
         surrogates={},
     )
 
 
-def test_process_configuration_to_parameter_global_proxy_missing_alpha() -> None:
+def test_process_configuration_to_parameter_global_proxy_missing_internal() -> None:
     assert process_configuration_to_parameters(
         params={"proxy": ("cmk_postprocessed", "stored_proxy", "my_global_proxy")},
         global_proxies_with_lookup=GlobalProxiesWithLookup(
@@ -210,9 +210,9 @@ def test_process_configuration_to_parameter_global_proxy_missing_alpha() -> None
             password_lookup=lambda x: None,
         ),
         usage_hint="test",
-        is_alpha=False,
+        is_internal=False,
     ) == ReplacementResult(
-        value={"proxy": alpha.EnvProxy()},
+        value={"proxy": internal.EnvProxy()},
         found_secrets={},
         surrogates={},
     )

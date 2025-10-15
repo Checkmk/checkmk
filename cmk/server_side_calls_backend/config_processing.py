@@ -7,7 +7,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Generic, Literal, TypeVar
 
-from cmk.server_side_calls import alpha, v1
+from cmk.server_side_calls import internal, v1
 from cmk.utils import config_warnings
 
 CheckCommandArguments = Iterable[int | float | str | tuple[str, str, str]]
@@ -116,10 +116,10 @@ def process_configuration_to_parameters(
     params: Mapping[str, object],
     global_proxies_with_lookup: GlobalProxiesWithLookup,
     usage_hint: str,
-    is_alpha: bool,
+    is_internal: bool,
 ) -> ReplacementResult[Mapping[str, object]]:
     d_results = [
-        (k, _processed_config_value(v, global_proxies_with_lookup, usage_hint, is_alpha))
+        (k, _processed_config_value(v, global_proxies_with_lookup, usage_hint, is_internal))
         for k, v in params.items()
     ]
     return ReplacementResult(
@@ -133,12 +133,12 @@ def _processed_config_value(
     params: object,
     global_proxies_with_lookup: GlobalProxiesWithLookup,
     usage_hint: str,
-    is_alpha: bool,
+    is_internal: bool,
 ) -> ReplacementResult[object]:
     match params:
         case list():
             results = [
-                _processed_config_value(v, global_proxies_with_lookup, usage_hint, is_alpha)
+                _processed_config_value(v, global_proxies_with_lookup, usage_hint, is_internal)
                 for v in params
             ]
             return ReplacementResult(
@@ -149,14 +149,16 @@ def _processed_config_value(
         case tuple():
             match params:
                 case ("cmk_postprocessed", "stored_password", value):
-                    return _replace_password(value[0], None, is_alpha=is_alpha)
+                    return _replace_password(value[0], None, is_internal=is_internal)
                 case ("cmk_postprocessed", "explicit_password", value):
-                    return _replace_password(value[0], value[1], is_alpha=is_alpha)
+                    return _replace_password(value[0], value[1], is_internal=is_internal)
                 case ("cmk_postprocessed", "no_proxy", str()):
-                    return ReplacementResult(alpha.NoProxy() if is_alpha else v1.NoProxy(), {}, {})
+                    return ReplacementResult(
+                        internal.NoProxy() if is_internal else v1.NoProxy(), {}, {}
+                    )
                 case ("cmk_postprocessed", "environment_proxy", str()):
                     return ReplacementResult(
-                        alpha.EnvProxy() if is_alpha else v1.EnvProxy(), {}, {}
+                        internal.EnvProxy() if is_internal else v1.EnvProxy(), {}, {}
                     )
                 case (
                     "cmk_postprocessed",
@@ -167,14 +169,16 @@ def _processed_config_value(
                         _replace_alpha_url_proxies(
                             proxy_type, proxy_spec, global_proxies_with_lookup, usage_hint
                         )
-                        if is_alpha
+                        if is_internal
                         else _replace_v1_url_proxies(
                             proxy_type, proxy_spec, global_proxies_with_lookup, usage_hint
                         )
                     )
                 case _:
                     results = [
-                        _processed_config_value(v, global_proxies_with_lookup, usage_hint, is_alpha)
+                        _processed_config_value(
+                            v, global_proxies_with_lookup, usage_hint, is_internal
+                        )
                         for v in params
                     ]
                     return ReplacementResult(
@@ -186,7 +190,7 @@ def _processed_config_value(
                     )
         case dict():
             return process_configuration_to_parameters(
-                params, global_proxies_with_lookup, usage_hint, is_alpha
+                params, global_proxies_with_lookup, usage_hint, is_internal
             )
         case other:
             return ReplacementResult(value=other, found_secrets={}, surrogates={})
@@ -195,12 +199,12 @@ def _processed_config_value(
 def _replace_password(
     name: str,
     value: str | None,
-    is_alpha: bool,
-) -> ReplacementResult[alpha.Secret | v1.Secret]:
+    is_internal: bool,
+) -> ReplacementResult[internal.Secret | v1.Secret]:
     # We need some injective function.
     surrogate = id(name)
     return ReplacementResult(
-        value=(alpha.Secret if is_alpha else v1.Secret)(surrogate),
+        value=(internal.Secret if is_internal else v1.Secret)(surrogate),
         found_secrets={} if value is None else {name: value},
         surrogates={surrogate: name},
     )
@@ -233,18 +237,18 @@ def _replace_alpha_url_proxies(
     proxy_spec: str,
     global_proxies_with_lookup: GlobalProxiesWithLookup,
     usage_hint: str,
-) -> ReplacementResult[alpha.EnvProxy | alpha.URLProxy]:
+) -> ReplacementResult[internal.EnvProxy | internal.URLProxy]:
     if proxy_type == "explicit_proxy":
-        return ReplacementResult(alpha.URLProxy(url=proxy_spec), {}, {})
+        return ReplacementResult(internal.URLProxy(url=proxy_spec), {}, {})
 
     try:
         global_proxy = global_proxies_with_lookup.global_proxies[proxy_spec]
     except KeyError:
         config_warnings.warn(f'The global proxy "{proxy_spec}" ({usage_hint}) does not exist.')
-        return ReplacementResult(alpha.EnvProxy(), {}, {})
+        return ReplacementResult(internal.EnvProxy(), {}, {})
 
     return ReplacementResult(
-        alpha.URLProxy(url=global_proxy.url(global_proxies_with_lookup.password_lookup)),
+        internal.URLProxy(url=global_proxy.url(global_proxies_with_lookup.password_lookup)),
         {},
         {},
     )

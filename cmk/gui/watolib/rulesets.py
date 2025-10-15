@@ -479,7 +479,7 @@ class RulesetCollection:
                     password_lookup=lambda _name: None,
                 ),
                 usage_hint=f"ruleset: {name}",
-                is_alpha=True,
+                is_internal=True,
             ).found_secrets
             for name, rules in rulesets.items()
             if RuleGroup.is_active_checks_rule(name) or RuleGroup.is_special_agents_rule(name)

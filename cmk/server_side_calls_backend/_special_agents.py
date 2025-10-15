@@ -11,7 +11,7 @@ from pathlib import Path
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.discover_plugins import PluginLocation
-from cmk.server_side_calls import alpha, v1
+from cmk.server_side_calls import internal, v1
 from cmk.utils import password_store
 
 from ._commons import ExecutableFinderProtocol, replace_passwords
@@ -30,7 +30,7 @@ class SpecialAgentCommandLine:
 class SpecialAgent:
     def __init__(
         self,
-        plugins: Mapping[PluginLocation, v1.SpecialAgentConfig | alpha.SpecialAgentConfig],
+        plugins: Mapping[PluginLocation, v1.SpecialAgentConfig | internal.SpecialAgentConfig],
         host_name: HostName,
         host_address: HostAddress | None,
         host_config: v1.HostConfig,
@@ -56,14 +56,14 @@ class SpecialAgent:
 
     def _iter_commands(
         self,
-        special_agent: v1.SpecialAgentConfig | alpha.SpecialAgentConfig,
+        special_agent: v1.SpecialAgentConfig | internal.SpecialAgentConfig,
         conf_dict: Mapping[str, object],
     ) -> Iterator[SpecialAgentCommandLine]:
         processed = process_configuration_to_parameters(
             conf_dict,
             self._global_proxies_with_lookup,
             usage_hint=f"special agent: {special_agent.name}",
-            is_alpha=isinstance(special_agent, alpha.SpecialAgentConfig),
+            is_internal=isinstance(special_agent, internal.SpecialAgentConfig),
         )
 
         for command in special_agent(processed.value, self.host_config):

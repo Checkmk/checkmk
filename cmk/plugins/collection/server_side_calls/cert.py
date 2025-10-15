@@ -11,7 +11,7 @@ from typing import Final, Literal
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.alpha import (
+from cmk.server_side_calls.internal import (
     ActiveCheckCommand,
     ActiveCheckConfig,
     HostConfig,

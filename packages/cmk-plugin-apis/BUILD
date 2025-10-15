@@ -120,9 +120,9 @@ py_library(
     name = "server_side_calls",
     srcs = [
         "cmk/server_side_calls/__init__.py",
-        "cmk/server_side_calls/alpha/__init__.py",
-        "cmk/server_side_calls/alpha/_active_checks.py",
-        "cmk/server_side_calls/alpha/_special_agents.py",
+        "cmk/server_side_calls/internal/__init__.py",
+        "cmk/server_side_calls/internal/_active_checks.py",
+        "cmk/server_side_calls/internal/_special_agents.py",
         "cmk/server_side_calls/v1/__init__.py",
         "cmk/server_side_calls/v1/_active_checks.py",
         "cmk/server_side_calls/v1/_special_agents.py",

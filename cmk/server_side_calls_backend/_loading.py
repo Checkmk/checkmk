@@ -8,14 +8,14 @@
 from collections.abc import Mapping
 
 from cmk.discover_plugins import discover_all_plugins, PluginGroup, PluginLocation
-from cmk.server_side_calls import alpha, v1
+from cmk.server_side_calls import internal, v1
 
 
 def load_active_checks(
     *, raise_errors: bool
-) -> Mapping[PluginLocation, alpha.ActiveCheckConfig | v1.ActiveCheckConfig]:
-    entry_points: Mapping[type[alpha.ActiveCheckConfig] | type[v1.ActiveCheckConfig], str] = {
-        alpha.ActiveCheckConfig: alpha.entry_point_prefixes()[alpha.ActiveCheckConfig],
+) -> Mapping[PluginLocation, internal.ActiveCheckConfig | v1.ActiveCheckConfig]:
+    entry_points: Mapping[type[internal.ActiveCheckConfig] | type[v1.ActiveCheckConfig], str] = {
+        internal.ActiveCheckConfig: internal.entry_point_prefixes()[internal.ActiveCheckConfig],
         v1.ActiveCheckConfig: v1.entry_point_prefixes()[v1.ActiveCheckConfig],
     }
     return discover_all_plugins(
@@ -25,9 +25,9 @@ def load_active_checks(
 
 def load_special_agents(
     *, raise_errors: bool
-) -> Mapping[PluginLocation, alpha.SpecialAgentConfig | v1.SpecialAgentConfig]:
-    entry_points: Mapping[type[alpha.SpecialAgentConfig] | type[v1.SpecialAgentConfig], str] = {
-        alpha.SpecialAgentConfig: alpha.entry_point_prefixes()[alpha.SpecialAgentConfig],
+) -> Mapping[PluginLocation, internal.SpecialAgentConfig | v1.SpecialAgentConfig]:
+    entry_points: Mapping[type[internal.SpecialAgentConfig] | type[v1.SpecialAgentConfig], str] = {
+        internal.SpecialAgentConfig: internal.entry_point_prefixes()[internal.SpecialAgentConfig],
         v1.SpecialAgentConfig: v1.entry_point_prefixes()[v1.SpecialAgentConfig],
     }
     return discover_all_plugins(

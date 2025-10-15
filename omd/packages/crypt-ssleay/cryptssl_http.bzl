@@ -2,7 +2,7 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
 
 def crypt_ssleay_workspace():
-    version_str = "0.73_06"
+    version_str = "0.72"
     filename = "Crypt-SSLeay-" + version_str + ".tar.gz"
     http_archive(
         name = "Crypt-SSLeay",
@@ -10,8 +10,11 @@ def crypt_ssleay_workspace():
             "https://www.cpan.org/modules/by-module/Net/NANIS/" + filename,
             UPSTREAM_MIRROR_URL + filename,
         ],
-        sha256 = "f8ecca45c87eb91325992b13f0594f808e6f1bc4c3b9a7f141b9a838384d252c",
+        sha256 = "f5d34f813677829857cf8a0458623db45b4d9c2311daaebe446f9e01afa9ffe8",
         build_file = "@omd_packages//omd/packages/perl-modules:BUILD.Crypt-SSLeay.bazel",
+        patches = [
+            "//omd/packages/perl-modules/patches:Crypt-SSLeay-0.72-do-not-use-SSLv2_client_method-with-new-openssl.dif",
+        ],
         patch_args = ["-p1"],
         patch_tool = "patch",
         strip_prefix = "Crypt-SSLeay-" + version_str,

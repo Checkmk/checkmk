@@ -41,7 +41,12 @@ class PageHandler(Protocol):
 # TODO: Check out the WatoMode class and find out how to do this. Looks like handle_page() could
 # implement parts of the cmk.gui.wato.page_handler.page_handler() logic.
 class Page(abc.ABC):
+    def _from_vars(self) -> None:
+        """Override this method to set mode specific attributes based on the
+        given HTTP variables."""
+
     def handle_page(self, config: Config) -> None:
+        self._from_vars()
         self.page(config)
 
     @abc.abstractmethod
@@ -53,10 +58,6 @@ class Page(abc.ABC):
 # TODO: Clean up implicit _from_vars() procotocol
 class AjaxPage(Page, abc.ABC):
     """Generic page handler that wraps page() calls into AJAX respones"""
-
-    def _from_vars(self) -> None:
-        """Override this method to set mode specific attributes based on the
-        given HTTP variables."""
 
     def webapi_request(self) -> dict[str, Any]:
         return request.get_request()

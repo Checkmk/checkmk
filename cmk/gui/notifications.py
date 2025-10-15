@@ -192,7 +192,7 @@ def _may_see_failed_notifications() -> bool:
 
 
 class ClearFailedNotificationPage(Page):
-    def __init__(self) -> None:
+    def _from_vars(self) -> None:
         if not _may_see_failed_notifications():
             raise MKAuthException(_("You are not allowed to view the failed notifications."))
 

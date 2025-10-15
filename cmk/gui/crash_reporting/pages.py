@@ -18,7 +18,7 @@ import tarfile
 import time
 import traceback
 from collections.abc import Iterator, Mapping, Sequence
-from typing import Final, TypedDict
+from typing import TypedDict
 
 import livestatus
 
@@ -83,10 +83,9 @@ class ReportSubmitDetails(TypedDict):
 
 
 class ABCCrashReportPage(Page, abc.ABC):
-    def __init__(self) -> None:
-        super().__init__()
-        self._crash_id: Final = request.get_str_input_mandatory("crash_id")
-        self._site_id: Final = request.get_str_input_mandatory("site")
+    def _from_vars(self) -> None:
+        self._crash_id = request.get_str_input_mandatory("crash_id")
+        self._site_id = request.get_str_input_mandatory("site")
 
     def _get_crash_info(self, row: CrashReportRow) -> CrashInfo:
         return json.loads(row["crash_info"])

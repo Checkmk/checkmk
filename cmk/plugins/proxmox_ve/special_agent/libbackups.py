@@ -27,7 +27,6 @@ from cmk.plugins.proxmox_ve.special_agent.libproxmox import (
     TaskInfo,
 )
 from cmk.special_agents.v0_unstable.argument_parsing import Args
-from cmk.special_agents.v0_unstable.misc import to_bytes
 from cmk.special_agents.v0_unstable.storage import Storage
 from cmk.utils.paths import tmp_dir
 
@@ -35,6 +34,68 @@ LOGGER = logging.getLogger("agent_proxmox_ve.backups")
 
 BackupInfo = MutableMapping[str, Any]
 LogCacheFilePath = tmp_dir / "special_agents" / "agent_proxmox_ve"
+
+
+def to_bytes(string: str) -> int:
+    """Turn a string containing a byte-size with units like (MiB, ..) into an int
+    containing the size in bytes
+
+    >>> to_bytes("123B")
+    123
+    >>> to_bytes("123 B")
+    123
+    >>> to_bytes("123")
+    123
+    >>> to_bytes("123KiB")
+    125952
+    >>> to_bytes("123 KiB")
+    125952
+    >>> to_bytes("123KB")
+    123000
+    >>> to_bytes("123 MiB")
+    128974848
+    >>> to_bytes("123 GiB")
+    132070244352
+    >>> to_bytes("123.5 GiB")
+    132607115264
+    """
+    return round(
+        (float(string[:-3]) * (1 << 10))
+        if string.endswith("KiB")
+        else (
+            (float(string[:-2]) * (10**3))
+            if string.endswith("KB")
+            else (
+                (float(string[:-3]) * (1 << 20))
+                if string.endswith("MiB")
+                else (
+                    (float(string[:-2]) * (10**6))
+                    if string.endswith("MB")
+                    else (
+                        (float(string[:-3]) * (1 << 30))
+                        if string.endswith("GiB")
+                        else (
+                            (float(string[:-2]) * (10**9))
+                            if string.endswith("GB")
+                            else (
+                                (float(string[:-3]) * (1 << 40))
+                                if string.endswith("TiB")
+                                else (
+                                    (float(string[:-2]) * (10**12))
+                                    if string.endswith("TB")
+                                    else (
+                                        float(string[:-1])  #
+                                        if string.endswith("B")
+                                        else float(string)
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        )  #
+    )
 
 
 class BackupTask:

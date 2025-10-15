@@ -63,6 +63,7 @@ LINKS = {
     "WTFPL": "https://spdx.org/licenses/WTFPL.html",
     "ZPL-2.1": "https://old.zope.dev/Resources/ZPL/",
     "Zlib": "https://opensource.org/license/Zlib",
+    "python-ldap": "https://github.com/python-ldap/python-ldap/blob/python-ldap-3.4.4/LICENCE.MIT",
     "xinetd": "https://fedoraproject.org/wiki/Licensing/Xinetd_License",
 }
 

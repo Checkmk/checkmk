@@ -23,8 +23,6 @@ from cmk.rulesets.v1.form_specs import (
     FixedValue,
     List,
     MatchingScope,
-    migrate_to_password,
-    migrate_to_proxy,
     MultipleChoice,
     MultipleChoiceElement,
     Password,
@@ -103,7 +101,7 @@ def get_azure_services_elements() -> Sequence[MultipleChoiceElement]:
     ]
 
 
-def _special_agents_azure_explicit_config():
+def _special_agents_azure_explicit_config() -> DictElement:
     return DictElement(
         parameter_form=List(
             element_template=Dictionary(
@@ -133,24 +131,11 @@ def _special_agents_azure_explicit_config():
     )
 
 
-def _migrate_tag_based_config(values: object) -> dict:
-    if isinstance(values, dict):
-        return values
-    if isinstance(values, tuple):
-        value = values[1]
-        if isinstance(value, str) and value == "exists":
-            return {"tag": values[0], "condition": ("exists", None)}
-        if isinstance(value, tuple) and value[0] == "value":
-            return {"tag": values[0], "condition": ("equals", value[1])}
-    raise TypeError(values)
-
-
 def _special_agents_azure_tag_based_config_resources() -> DictElement:
     return DictElement(
         parameter_form=List(
             custom_validate=(validators.LengthInRange(min_value=1),),
             element_template=Dictionary(
-                migrate=_migrate_tag_based_config,
                 elements={
                     "tag": DictElement(
                         parameter_form=String(
@@ -196,7 +181,6 @@ def _special_agents_azure_tag_based_config_subscriptions() -> List:
     return List(
         custom_validate=(validators.LengthInRange(min_value=1),),
         element_template=Dictionary(
-            migrate=_migrate_tag_based_config,
             elements={
                 "tag": DictElement(
                     parameter_form=String(
@@ -248,28 +232,6 @@ def _migrate_services_to_monitor(values: object) -> list[str]:
         result = [value for value in valid_choices if value in values_migrated]
         return result
     raise TypeError(values)
-
-
-def _migrate(value: object) -> Mapping[str, object]:
-    if not isinstance(value, dict):
-        raise TypeError(value)
-
-    if "safe_hostnames" not in value:
-        value["safe_hostnames"] = False
-
-    if "subscription" not in value:
-        value["subscription"] = ("no_subscriptions", None)
-    elif isinstance(value["subscription"], str):
-        value["subscription"] = ("explicit_subscriptions", [value["subscription"]])
-    elif isinstance(value["subscription"], tuple):
-        ...  # already in the correct format
-    else:
-        raise TypeError("Unexpected type for subscription: %s" % type(value["subscription"]))
-
-    value.pop("sequential", None)
-    value.pop("import_tags", None)
-    value.pop("piggyback_vms", None)
-    return value
 
 
 def _migrate_authority(value: object) -> str:
@@ -333,7 +295,6 @@ def configuration_authentication() -> Mapping[str, DictElement]:
         ),
         "secret": DictElement(
             parameter_form=Password(
-                migrate=migrate_to_password,
                 title=Title("Client Secret"),
                 custom_validate=(validators.LengthInRange(min_value=1),),
             ),
@@ -363,7 +324,6 @@ def configuration_authentication() -> Mapping[str, DictElement]:
         "proxy": DictElement(
             parameter_form=Proxy(
                 title=Title("HTTP proxy"),
-                migrate=migrate_to_proxy,
             ),
         ),
     }
@@ -467,7 +427,6 @@ def configuration_advanced() -> Mapping[str, DictElement]:
 
 def formspec() -> Dictionary:
     return Dictionary(
-        migrate=_migrate,
         elements={
             **configuration_authentication(),
             **configuration_services(),

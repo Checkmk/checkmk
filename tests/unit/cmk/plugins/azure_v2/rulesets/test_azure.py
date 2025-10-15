@@ -5,34 +5,6 @@
 from typing import Final
 
 import cmk.plugins.azure_v2.rulesets.azure as azure_ruleset
-from cmk.ccc.version import Edition
-from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
-
-AZURE_VS_RULESET_VALUE: Final = {
-    "authority": "global",
-    "tenant": "my_tenant",
-    "client": "my_client",
-    "secret": ("password", "my_secret"),
-    "proxy": ("url", "http://test.proxy"),
-    "services": [
-        "ad_connect",
-        "usage_details",
-        "Microsoft.Compute/virtualMachines",
-        "Microsoft.Sql/servers/databases",
-        "Microsoft.Storage/storageAccounts",
-        "Microsoft.Web/sites",
-        "Microsoft.DBforMySQL/servers",
-        "Microsoft.DBforPostgreSQL/servers",
-        "Microsoft.Network/trafficmanagerprofiles",
-        "Microsoft.Network/loadBalancers",
-    ],
-    "config": {
-        "explicit": [{"group_name": "foobar", "resources": ["foo", "bar"]}],
-        "tag_based": [("foobar", "exists"), ("foo", ("value", "bar"))],
-    },
-    "import_tags": ("filter_tags", "my_tag"),
-    "safe_hostnames": False,
-}
 
 AZURE_FS_RULESET_VALUE: Final = {
     "authority": "global_",
@@ -65,27 +37,6 @@ AZURE_FS_RULESET_VALUE: Final = {
     },
     "import_tags": ("filter_tags", "my_tag"),
 }
-
-
-def test_vs_to_fs_update() -> None:
-    valuespec = convert_to_legacy_rulespec(
-        azure_ruleset.rule_spec_azure, Edition.CRE, lambda x: x
-    ).valuespec
-
-    value = valuespec.transform_value(AZURE_VS_RULESET_VALUE)
-    valuespec.validate_datatype(value, "")
-
-    assert value["authority"] == AZURE_FS_RULESET_VALUE["authority"]
-    assert value["tenant"] == AZURE_FS_RULESET_VALUE["tenant"]
-    assert value["client"] == AZURE_FS_RULESET_VALUE["client"]
-    secret = value["secret"]
-    expected_secret = tuple(AZURE_FS_RULESET_VALUE["secret"])
-    assert secret[0] == expected_secret[0]
-    assert secret[1] == expected_secret[1]
-    assert secret[2][1] == expected_secret[2][1]
-    assert value["proxy"] == AZURE_FS_RULESET_VALUE["proxy"]
-    assert value["config"] == AZURE_FS_RULESET_VALUE["config"]
-    assert "import_tags" not in value
 
 
 def test_migrate_keeps_values() -> None:

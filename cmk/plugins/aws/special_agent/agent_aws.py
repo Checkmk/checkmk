@@ -69,7 +69,6 @@ from cmk.special_agents.v0_unstable.argument_parsing import Args
 from cmk.special_agents.v0_unstable.misc import (
     DataCache,
     datetime_serializer,
-    get_seconds_since_midnight,
     vcrtrace,
 )
 from cmk.utils.password_store import lookup as password_store_lookup
@@ -293,6 +292,11 @@ TagsOption = str | Literal[TagsImportPatternOption.ignore_all, TagsImportPattern
 # '-- ElastiCacheSummary
 #     |
 #     '-- ElastiCache
+
+
+def get_seconds_since_midnight(current_time: datetime) -> float:
+    midnight = datetime.combine(current_time.date(), datetime.min.time())
+    return (current_time - midnight).total_seconds()
 
 
 class AWSConfig:

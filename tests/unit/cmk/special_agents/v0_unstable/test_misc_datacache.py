@@ -7,13 +7,12 @@
 # mypy: disable-error-code="no-untyped-call"
 
 
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 import pytest
 
-from cmk.special_agents.v0_unstable.misc import DataCache, get_seconds_since_midnight
+from cmk.special_agents.v0_unstable.misc import DataCache
 
 
 class KeksDose(DataCache):
@@ -74,14 +73,3 @@ def test_datacache_validity(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> 
 
     assert not tcache._cache_is_valid()
     assert tcache.get_data(True) == "live data"
-
-
-@pytest.mark.parametrize(
-    "now, result",
-    [
-        ("2020-07-24 00:00:16.0", 16.0),
-        ("2020-07-13 00:01:00.194", 60.194),
-    ],
-)
-def test_get_seconds_since_midnight(now: str, result: float) -> None:
-    assert get_seconds_since_midnight(datetime.strptime(now, "%Y-%m-%d %H:%M:%S.%f")) == result

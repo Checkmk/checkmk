@@ -10,13 +10,48 @@
 # mypy: disable-error-code="possibly-undefined"
 
 from collections.abc import Callable, Mapping
-from typing import Literal
+from typing import Literal, NotRequired, TypedDict
+
+from cmk.utils.password_store import (  # pylint: disable=cmk-module-layer-violation
+    extract_formspec_password,
+)
 
 type _RulesetProxySpec = tuple[
     Literal["cmk_postprocessed"],
     Literal["environment_proxy", "no_proxy", "stored_proxy", "explicit_proxy"],
     str,
 ]
+
+
+class ProxyAuthSpec(TypedDict):
+    user: str
+    password: (
+        tuple[
+            Literal["cmk_postprocessed"],
+            Literal["explicit_password"],
+            tuple[str, str],
+        ]
+        | tuple[
+            Literal["cmk_postprocessed"],
+            Literal["stored_password"],
+            tuple[str, str],
+        ]
+    )
+
+
+class ProxyConfigSpec(TypedDict):
+    scheme: str
+    proxy_server_name: str
+    port: int
+    auth: NotRequired[ProxyAuthSpec]
+
+
+class HTTPProxySpec(TypedDict):
+    """Actual representation of a proxy configuration on disk"""
+
+    ident: str
+    title: str
+    proxy_config: ProxyConfigSpec
 
 
 class EnvironmentProxyConfig:
@@ -88,7 +123,7 @@ def deserialize_http_proxy_config(serialized_config: str | None) -> HTTPProxyCon
 
 
 def make_http_proxy_getter(
-    http_proxies: Mapping[str, Mapping[str, str]],
+    http_proxies: Mapping[str, HTTPProxySpec],
 ) -> Callable[[tuple[str, str | None] | _RulesetProxySpec], HTTPProxyConfig]:
     def get_http_proxy(
         http_proxy: tuple[str, str | None] | _RulesetProxySpec,
@@ -112,7 +147,7 @@ def http_proxy_config_from_user_setting(
         Literal["environment_proxy", "no_proxy", "stored_proxy", "explicit_proxy"],
         str,
     ],
-    http_proxies_global_settings: Mapping[str, Mapping[str, str]],
+    http_proxies_global_settings: Mapping[str, HTTPProxySpec],
 ) -> HTTPProxyConfig:
     """Returns a proxy config object to be used for HTTP requests
 
@@ -142,18 +177,20 @@ def http_proxy_config_from_user_setting(
 
     if (
         proxy_type == "global"
-        and (
-            global_proxy := http_proxies_global_settings.get(
-                str(value),
-                {},
-            ).get(
-                "proxy_url",
-                None,
-            )
-        )
-        is not None
+        and (global_proxy := http_proxies_global_settings.get(str(value))) is not None
     ):
-        return ExplicitProxyConfig(global_proxy)
+        proxy_config = global_proxy["proxy_config"]
+
+        proxy_auth = (
+            ""
+            if (auth := proxy_config.get("auth")) is None
+            else f"{auth['user']}:{extract_formspec_password(auth['password'])}@"
+        )
+
+        return ExplicitProxyConfig(
+            url=f"{proxy_config['scheme']}://{proxy_auth}"
+            f"{proxy_config['proxy_server_name']}:{proxy_config['port']}",
+        )
 
     if proxy_type == "url":
         return ExplicitProxyConfig(str(value))

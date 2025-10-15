@@ -19,6 +19,7 @@ from cmk.base.default_config.cmc import RealTimeChecks
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.rrd.config import RRDObjectConfig
 from cmk.utils.host_storage import FolderAttributesForBase
+from cmk.utils.http_proxy_config import HTTPProxySpec
 from cmk.utils.rulesets import ruleset_matcher, RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 
@@ -105,7 +106,7 @@ class LoadedConfigFragment:
     cmc_influxdb_service_metrics: Sequence[RuleSpec[Mapping[str, object]]]
     cmc_log_levels: Mapping[str, int]
     cluster_max_cachefile_age: int
-    http_proxies: Mapping[str, Mapping[str, str]]
+    http_proxies: Mapping[str, HTTPProxySpec]
     extra_service_conf: Mapping[str, Sequence[RuleSpec[object]]]
     timeperiods: object  # Here we don't lie for a change. We haven't parsed anything.
     check_periods: Sequence[RuleSpec[object]]

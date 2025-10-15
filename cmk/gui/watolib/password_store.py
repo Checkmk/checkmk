@@ -207,7 +207,7 @@ def MigrateToIndividualOrStoredPassword(
 def postprocessable_ios_password(
     *,
     title: str | None,
-    help_text: str | None,
+    help_text: str | None = None,
 ) -> Transform:
     return Transform(
         IndividualOrStoredPassword(

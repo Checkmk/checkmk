@@ -217,6 +217,7 @@ from cmk.utils.ip_lookup import make_lookup_mgmt_board_ip_address
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel, LabelManager, Labels
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
+from cmk.utils.password_store import make_staged_passwords_lookup
 from cmk.utils.paths import (
     autochecks_dir,
     autodiscovery_dir,
@@ -488,6 +489,24 @@ class AutomationDiscovery(DiscoveryAutomation):
 automations.register(AutomationDiscovery())
 
 
+def _set_global_proxy(raw: Mapping[str, Any]) -> config_processing.GlobalProxy:
+    proxy_config_auth = (
+        config_processing.GlobalProxyAuth(
+            user=auth["user"],
+            password=auth["password"],
+        )
+        if (auth := raw["proxy_config"].get("auth")) is not None
+        else None
+    )
+
+    return config_processing.GlobalProxy(
+        scheme=raw["proxy_config"]["scheme"],
+        proxy_server_name=raw["proxy_config"]["proxy_server_name"],
+        port=raw["proxy_config"]["port"],
+        auth=proxy_config_auth,
+    )
+
+
 class AutomationSpecialAgentDiscoveryPreview(Automation):
     cmd = "special-agent-discovery-preview"
 
@@ -524,11 +543,15 @@ class AutomationSpecialAgentDiscoveryPreview(Automation):
                 run_settings.params,
                 password_store_file,
                 run_settings.passwords,
-                {
-                    name: config_processing.ProxyConfig(url=raw["proxy_url"])
-                    for name, raw in run_settings.http_proxies.items()
-                },
+                config_processing.GlobalProxiesWithLookup(
+                    global_proxies={
+                        name: _set_global_proxy(raw)
+                        for name, raw in run_settings.http_proxies.items()
+                    },
+                    password_lookup=make_staged_passwords_lookup(),
+                ),
             )
+
             fetcher = SpecialAgentFetcher(
                 PlainFetcherTrigger(),  # no relay support yet
                 agent_name=run_settings.agent_name,
@@ -3012,7 +3035,7 @@ def get_special_agent_commandline(
     params: Mapping[str, object],
     password_store_file: Path,
     passwords: Mapping[str, str],
-    global_proxies: config_processing.GlobalProxies,
+    global_proxies_with_lookup: config_processing.GlobalProxiesWithLookup,
 ) -> Iterator[SpecialAgentCommandLine]:
     special_agent = SpecialAgent(
         load_special_agents(raise_errors=cmk.ccc.debug.enabled()),
@@ -3029,7 +3052,7 @@ def get_special_agent_commandline(
             _disabled_ip_lookup,
         ),
         host_config.host_attrs,
-        global_proxies,
+        global_proxies_with_lookup,
         passwords,
         password_store_file,
         ExecutableFinder(
@@ -3077,10 +3100,13 @@ class AutomationDiagSpecialAgent(Automation):
                 diag_special_agent_input.params,
                 password_store_file,
                 diag_special_agent_input.passwords,
-                {
-                    name: config_processing.ProxyConfig(url=raw["proxy_url"])
-                    for name, raw in diag_special_agent_input.http_proxies.items()
-                },
+                config_processing.GlobalProxiesWithLookup(
+                    global_proxies={
+                        name: _set_global_proxy(raw)
+                        for name, raw in diag_special_agent_input.http_proxies.items()
+                    },
+                    password_lookup=make_staged_passwords_lookup(),
+                ),
             )
             for cmd in cmds:
                 fetcher = ProgramFetcher(

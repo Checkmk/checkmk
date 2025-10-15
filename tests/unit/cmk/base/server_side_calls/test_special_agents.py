@@ -25,7 +25,7 @@ from cmk.server_side_calls.v1 import (
     SpecialAgentCommand,
     SpecialAgentConfig,
 )
-from cmk.server_side_calls_backend import SpecialAgent
+from cmk.server_side_calls_backend import config_processing, SpecialAgent
 from cmk.server_side_calls_backend._special_agents import SpecialAgentCommandLine
 from cmk.utils import password_store
 
@@ -195,7 +195,9 @@ def test_iter_special_agent_commands(
         HostAddress("127.0.0.1"),
         host_config,
         host_attrs,
-        global_proxies={},
+        global_proxies_with_lookup=config_processing.GlobalProxiesWithLookup(
+            global_proxies={}, password_lookup=lambda _name: None
+        ),
         stored_passwords=stored_passwords,
         password_store_file=Path("/pw/store"),
         finder=lambda *_: "agent_path",
@@ -237,7 +239,9 @@ def test_iter_special_agent_commands_stored_password_with_hack(
         host_address=HostAddress("127.0.0.1"),
         host_config=HOST_CONFIG,
         host_attrs=HOST_ATTRS,
-        global_proxies={},
+        global_proxies_with_lookup=config_processing.GlobalProxiesWithLookup(
+            global_proxies={}, password_lookup=lambda _name: None
+        ),
         stored_passwords={"1234": "p4ssw0rd!"},
         password_store_file=Path("/pw/store"),
         finder=lambda *_: "agent_path",
@@ -262,7 +266,9 @@ def test_iter_special_agent_commands_stored_password_without_hack() -> None:
         host_address=HostAddress("127.0.0.1"),
         host_config=HOST_CONFIG,
         host_attrs=HOST_ATTRS,
-        global_proxies={},
+        global_proxies_with_lookup=config_processing.GlobalProxiesWithLookup(
+            global_proxies={}, password_lookup=lambda _name: None
+        ),
         stored_passwords={"uuid1234": "p4ssw0rd!"},
         password_store_file=Path("/pw/store"),
         finder=lambda *_: "agent_path",
@@ -295,7 +301,9 @@ def test_iter_special_agent_commands_crash() -> None:
         HostAddress("127.0.0.1"),
         HOST_CONFIG,
         HOST_ATTRS,
-        global_proxies={},
+        global_proxies_with_lookup=config_processing.GlobalProxiesWithLookup(
+            global_proxies={}, password_lookup=lambda _name: None
+        ),
         stored_passwords={},
         password_store_file=Path("/pw/store"),
         finder=lambda *_: "/path/to/agent",

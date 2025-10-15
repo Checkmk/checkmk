@@ -16,7 +16,7 @@ from cmk.utils import password_store
 
 from ._commons import ExecutableFinderProtocol, replace_passwords
 from .config_processing import (
-    GlobalProxies,
+    GlobalProxiesWithLookup,
     process_configuration_to_parameters,
 )
 
@@ -35,7 +35,7 @@ class SpecialAgent:
         host_address: HostAddress | None,
         host_config: v1.HostConfig,
         host_attrs: Mapping[str, str],
-        global_proxies: GlobalProxies,
+        global_proxies_with_lookup: GlobalProxiesWithLookup,
         stored_passwords: Mapping[str, str],
         password_store_file: Path,
         finder: ExecutableFinderProtocol,
@@ -46,7 +46,7 @@ class SpecialAgent:
         self.host_address = host_address
         self.host_config = host_config
         self.host_attrs = host_attrs
-        self._global_proxies = global_proxies
+        self._global_proxies_with_lookup = global_proxies_with_lookup
         self.stored_passwords = stored_passwords
         self.password_store_file = password_store_file
         self._finder = finder
@@ -61,7 +61,7 @@ class SpecialAgent:
     ) -> Iterator[SpecialAgentCommandLine]:
         processed = process_configuration_to_parameters(
             conf_dict,
-            self._global_proxies,
+            self._global_proxies_with_lookup,
             usage_hint=f"special agent: {special_agent.name}",
             is_alpha=isinstance(special_agent, alpha.SpecialAgentConfig),
         )

@@ -210,6 +210,10 @@ msgstr "Volgende controle"
 msgid " next week"
 msgstr " volgende week"
 
+#, fuzzy, python-format
+msgid " notification %s"
+msgstr "laatste mededeling"
+
 #, python-format
 msgid " of service %s on host %s"
 msgstr " van service %s op host %s"
@@ -5193,8 +5197,16 @@ msgstr "De leeftijd van de huidige host state"
 msgid "Age of the current service state"
 msgstr "De leeftijd van de huidige service status"
 
+#, fuzzy
+msgid "Age of the latest checkpoint"
+msgstr "Leeftijd van de laatste momentopname"
+
 msgid "Age of the latest snapshot"
 msgstr "Leeftijd van de laatste momentopname"
+
+#, fuzzy
+msgid "Age of the oldest checkpoint"
+msgstr "Leeftijd van de oudste momentopname"
 
 msgid "Age of the oldest snapshot"
 msgstr "Leeftijd van de oudste momentopname"
@@ -8198,6 +8210,10 @@ msgstr "Gemiddeld"
 msgid "Average CPU Value over"
 msgstr "Gemiddelde waarde"
 
+#, fuzzy
+msgid "Average Latency"
+msgstr "Gemiddelde latentie"
+
 msgid "Average Outgoing Queue Delay"
 msgstr "Gemiddelde Uitgaande wachtrijvertraging"
 
@@ -8280,6 +8296,10 @@ msgstr "Gemiddeld interval"
 
 #, fuzzy
 msgid "Average latency"
+msgstr "Gemiddelde latentie"
+
+#, fuzzy
+msgid "Average latency (ms)"
 msgstr "Gemiddelde latentie"
 
 msgid "Average latency for RPC requests"
@@ -14642,10 +14662,6 @@ msgid "Computation result: %s - %s"
 msgstr "Berekeningsresultaat: %s - %s"
 
 #, fuzzy
-msgid "Compute REST API specification"
-msgstr "SLA-specificatie"
-
-#, fuzzy
 msgid "Compute a rate"
 msgstr "Snelheid afgeleverde berichten"
 
@@ -14892,6 +14908,11 @@ msgstr "Een logbestand sectie configureren"
 
 msgid "Configure access permissions to NagVis maps."
 msgstr "Configureer toegangsmachtigingen voor NagVis-maps."
+
+msgid ""
+"Configure age thresholds for VM checkpoints. You can set warning and "
+"critical levels for both the newest and oldest checkpoints."
+msgstr ""
 
 #, fuzzy
 msgid "Configure agent access related settings using rule sets"
@@ -15281,6 +15302,11 @@ msgstr ""
 #, fuzzy
 msgid "Configure upper levels"
 msgstr "Containers bovenste niveaus"
+
+msgid ""
+"Configure warning and critical upper thresholds for Corosync link latency: "
+"both instantaneous maximum values and the averaged latency."
+msgstr ""
 
 msgid ""
 "Configure whether RCC validates TLS certificates when downloading or pulling "
@@ -16115,6 +16141,20 @@ msgstr "Kern gestopt"
 
 msgid "Cores per CPU"
 msgstr "Cores per CPU"
+
+#, fuzzy
+msgid "Corosync Latency"
+msgstr "Sproc latentie"
+
+msgid "Corosync Latency max/avg"
+msgstr ""
+
+msgid "Corosync Link"
+msgstr ""
+
+#, fuzzy
+msgid "Corosync latency"
+msgstr "Sync latentie"
 
 msgid "Corrected codewords"
 msgstr "Gecorrigeerde codewoorden"
@@ -25472,10 +25512,6 @@ msgstr "Kan peer-certificaat niet ophalen (%s)"
 msgid "Failed to find matching certificate in chain"
 msgstr "Geen overeenkomend certificaat gevonden in keten"
 
-#, fuzzy, python-format
-msgid "Failed to generate REST API specification: %s"
-msgstr "Kan peer-certificaat niet ophalen (%s)"
-
 #, python-format
 msgid "Failed to get the status from DCD (%s)"
 msgstr "Mislukt om de status van DCD te krijgen (%s)"
@@ -27508,10 +27544,6 @@ msgid "Generate"
 msgstr "Genereer"
 
 #, fuzzy
-msgid "Generate REST API specification"
-msgstr "SLA-specificatie"
-
-#, fuzzy
 msgid "Generate backup codes"
 msgstr "Back-upcodes opnieuw genereren"
 
@@ -27558,10 +27590,6 @@ msgstr ""
 
 msgid "Generate this report"
 msgstr "Genereer dit rapport"
-
-#, fuzzy
-msgid "Generating REST API specification"
-msgstr "cartridge specificatie"
 
 msgid "Generating report..."
 msgstr "Het genereren van rapport..."
@@ -31884,6 +31912,10 @@ msgstr "Vochtigheidsniveaus voor apparaten met een enkele sensor"
 
 msgid "Hyper-V Server: State of VMs"
 msgstr "Hyper-V Server: Staat van VM's"
+
+#, fuzzy
+msgid "Hyper-V VM Checkpoints"
+msgstr "Hyper-V VM's (Windows)"
 
 msgid "Hyper-V VM Guest Information (Windows)"
 msgstr "Hyper-V VM Gastgegevens (Windows)"
@@ -41406,6 +41438,10 @@ msgstr "Maximum %s instanties van duur groter dan %s"
 msgid "Maximum KPI runtime"
 msgstr "Procesruntime"
 
+#, fuzzy
+msgid "Maximum Latency"
+msgstr "Maximale leeftijd"
+
 msgid "Maximum PGA allocated"
 msgstr "Maximaal toegewezen PGA"
 
@@ -41558,6 +41594,10 @@ msgstr "Maximale grootte"
 #, python-format
 msgid "Maximum image size: %dx%dpx"
 msgstr "Maximale afbeeldingsgrootte: %dx%dpx"
+
+#, fuzzy
+msgid "Maximum latency (ms)"
+msgstr "Mail vertraging"
 
 msgid "Maximum latency of successful GetItem requests"
 msgstr "Maximale latentie van succesvolle GetItem-verzoeken"
@@ -53699,10 +53739,6 @@ msgstr "REST API interactieve GUI"
 msgid "REST API introduction"
 msgstr "REST API inleiding"
 
-#, fuzzy
-msgid "REST API specification successfully generated"
-msgstr "Host succesvol aangemaakt"
-
 msgid "REST API: Use HTTP ETags for optimistic locking"
 msgstr "REST API: Gebruik HTTP ETags voor optimistische vergrendeling"
 
@@ -64381,6 +64417,14 @@ msgstr ""
 msgid "Successfully deleted %d hosts"
 msgstr "Succesvol verwijderd %d hosts"
 
+#, fuzzy, python-format
+msgid "Successfully deleted the following %s: %s"
+msgstr "Succesvol verwijderd %d hosts"
+
+#, fuzzy, python-format
+msgid "Successfully deleted the following user '%s'"
+msgstr "Succesvol verwijderd %d hosts"
+
 msgid "Successfully discarded all pending changes."
 msgstr "Met succes alle hangende wijzigingen verwijderd."
 
@@ -67497,6 +67541,12 @@ msgstr ""
 "De gedefinieerde niveaus zullen enkel van toepassing zijn indien het metriek "
 "label overeenstemt met het label dat in de aangepaste Prometheus service "
 "werd gespecificeerd."
+
+#, python-format
+msgid ""
+"The deleted user '%s' is used as only specific user by %d notification %s. "
+"Please adjust the affected %s."
+msgstr ""
 
 msgid ""
 "The description is optional and can be used for explanations or documentation"
@@ -74698,6 +74748,12 @@ msgstr ""
 "tablespace en indexspace."
 
 #, fuzzy
+msgid "This ruleset allows you to configure levels for the daily usage costs."
+msgstr ""
+"Deze regel staat je toe om bloat levels te configureren voor een databases "
+"tablespace en indexspace."
+
+#, fuzzy
 msgid "This ruleset allows you to configure levels for the database CPU usage"
 msgstr ""
 "Deze regel staat je toe om bloat levels te configureren voor een databases "
@@ -81403,6 +81459,10 @@ msgstr "Bovenste niveaus voor de grootte van de DB-ruimte"
 msgid "Upper levels for the age of the update"
 msgstr "Maximale niveaus voor de leeftijd van de update"
 
+msgid ""
+"Upper levels for the average latency. Defaults: 5 ms (WARN), 10 ms (CRIT)."
+msgstr ""
+
 msgid "Upper levels for the backup age"
 msgstr "Bovenste niveaus voor het back-up tijdperk"
 
@@ -81420,6 +81480,10 @@ msgstr "Bovenste niveaus voor het gebruik van de licentie"
 
 msgid "Upper levels for the logs usage size"
 msgstr "Bovenste niveaus voor de loggebruiksgrootte"
+
+msgid ""
+"Upper levels for the maximum latency. Defaults: 5 ms (WARN), 10 ms (CRIT)."
+msgstr ""
 
 #, fuzzy
 msgid "Upper levels for the number of HTTP requests per second"
@@ -82762,6 +82826,10 @@ msgstr "Gemiddeld virtueel geheugen"
 
 msgid "User"
 msgstr "Gebruiker"
+
+#, fuzzy, python-format
+msgid "User %s does not exist."
+msgstr "De %s bestaat niet."
 
 #, python-format
 msgid "User %s of DCD connection was modified"
@@ -92254,13 +92322,6 @@ msgstr "Zijbalk element toevoegen"
 msgid "Loading sidebar elements..."
 msgstr "Zijbalk element toevoegen"
 
-msgid "Barplot"
-msgstr "Barplot"
-
-#, fuzzy
-msgid "Scatterplot"
-msgstr "Gemiddelde scatterplot"
-
 #, fuzzy
 msgid "Value must be a valid URL"
 msgstr "De waarde moet een string zijn"
@@ -92450,6 +92511,13 @@ msgstr "Inventaris Boom"
 #, fuzzy
 msgid "Single graph"
 msgstr "Afgewezen verbindingen"
+
+msgid "Barplot"
+msgstr "Barplot"
+
+#, fuzzy
+msgid "Scatterplot"
+msgstr "Gemiddelde scatterplot"
 
 #, fuzzy
 msgid "Must select an option"
@@ -93470,6 +93538,26 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Compute REST API specification"
+#~ msgstr "SLA-specificatie"
+
+#, fuzzy, python-format
+#~ msgid "Failed to generate REST API specification: %s"
+#~ msgstr "Kan peer-certificaat niet ophalen (%s)"
+
+#, fuzzy
+#~ msgid "Generate REST API specification"
+#~ msgstr "SLA-specificatie"
+
+#, fuzzy
+#~ msgid "Generating REST API specification"
+#~ msgstr "cartridge specificatie"
+
+#, fuzzy
+#~ msgid "REST API specification successfully generated"
+#~ msgstr "Host succesvol aangemaakt"
 
 #, fuzzy
 #~ msgid "Azure virtual machines summary"
@@ -95308,10 +95396,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Use the value of the key"
 #~ msgstr "Gebruik de status van de dienst..."
-
-#, fuzzy, python-format
-#~ msgid "%s notification %s"
-#~ msgstr "laatste mededeling"
 
 #, fuzzy
 #~ msgid "Advanced - Number of retries"

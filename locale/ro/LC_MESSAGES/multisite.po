@@ -208,6 +208,10 @@ msgstr "Următoarea verificare"
 msgid " next week"
 msgstr " săptămâna viitoare"
 
+#, fuzzy, python-format
+msgid " notification %s"
+msgstr "Notificări de testare"
+
 #, python-format
 msgid " of service %s on host %s"
 msgstr " de serviciu %s pe gazdă %s"
@@ -5203,8 +5207,16 @@ msgstr "Vârsta stării actuale a gazdei"
 msgid "Age of the current service state"
 msgstr "Vârsta stării actuale a serviciului"
 
+#, fuzzy
+msgid "Age of the latest checkpoint"
+msgstr "Vârsta ultimului instantaneu"
+
 msgid "Age of the latest snapshot"
 msgstr "Vârsta ultimului instantaneu"
+
+#, fuzzy
+msgid "Age of the oldest checkpoint"
+msgstr "Vârsta celui mai vechi instantaneu"
 
 msgid "Age of the oldest snapshot"
 msgstr "Vârsta celui mai vechi instantaneu"
@@ -8200,6 +8212,10 @@ msgstr "Media"
 msgid "Average CPU Value over"
 msgstr "Valoarea medie"
 
+#, fuzzy
+msgid "Average Latency"
+msgstr "Latență medie"
+
 msgid "Average Outgoing Queue Delay"
 msgstr "Întârziere medie a cozii de așteptare de ieșire"
 
@@ -8283,6 +8299,10 @@ msgstr "Interval mediu"
 
 #, fuzzy
 msgid "Average latency"
+msgstr "Latență medie"
+
+#, fuzzy
+msgid "Average latency (ms)"
 msgstr "Latență medie"
 
 msgid "Average latency for RPC requests"
@@ -14667,9 +14687,6 @@ msgstr "Opțiuni de calcul"
 msgid "Computation result: %s - %s"
 msgstr "Rezultatul calculului: %s - %s"
 
-msgid "Compute REST API specification"
-msgstr "Specificația API REST Compute"
-
 #, fuzzy
 msgid "Compute a rate"
 msgstr "Rata mesajelor livrate"
@@ -14917,6 +14934,11 @@ msgstr "Configurați o secțiune de fișier jurnal"
 
 msgid "Configure access permissions to NagVis maps."
 msgstr "Configurați permisiunile de acces la hărțile NagVis."
+
+msgid ""
+"Configure age thresholds for VM checkpoints. You can set warning and "
+"critical levels for both the newest and oldest checkpoints."
+msgstr ""
 
 #, fuzzy
 msgid "Configure agent access related settings using rule sets"
@@ -15304,6 +15326,11 @@ msgstr ""
 
 msgid "Configure upper levels"
 msgstr "Configurați nivelurile superioare"
+
+msgid ""
+"Configure warning and critical upper thresholds for Corosync link latency: "
+"both instantaneous maximum values and the averaged latency."
+msgstr ""
 
 msgid ""
 "Configure whether RCC validates TLS certificates when downloading or pulling "
@@ -16127,6 +16154,20 @@ msgstr "Miezul oprit"
 
 msgid "Cores per CPU"
 msgstr "Cores per CPU"
+
+#, fuzzy
+msgid "Corosync Latency"
+msgstr "Latență Sproc"
+
+msgid "Corosync Latency max/avg"
+msgstr ""
+
+msgid "Corosync Link"
+msgstr ""
+
+#, fuzzy
+msgid "Corosync latency"
+msgstr "Latență de sincronizare"
 
 msgid "Corrected codewords"
 msgstr "Cuvinte de cod corectate"
@@ -25553,10 +25594,6 @@ msgid "Failed to find matching certificate in chain"
 msgstr "Nu a reușit să găsească certificatul corespunzător în lanț"
 
 #, python-format
-msgid "Failed to generate REST API specification: %s"
-msgstr "Nu s-a reușit generarea specificației REST API: %s"
-
-#, python-format
 msgid "Failed to get the status from DCD (%s)"
 msgstr "Nu a reușit să obțină starea de la DCD (%s)"
 
@@ -27582,9 +27619,6 @@ msgstr "Eroare generală"
 msgid "Generate"
 msgstr "Generați"
 
-msgid "Generate REST API specification"
-msgstr "Generarea specificației REST API"
-
 msgid "Generate backup codes"
 msgstr "Generarea codurilor de rezervă"
 
@@ -27633,9 +27667,6 @@ msgstr ""
 
 msgid "Generate this report"
 msgstr "Generarea acestui raport"
-
-msgid "Generating REST API specification"
-msgstr "Generarea specificației REST API"
 
 msgid "Generating report..."
 msgstr "Generarea de rapoarte..."
@@ -31948,6 +31979,10 @@ msgstr "Niveluri de umiditate pentru dispozitive cu un singur senzor"
 
 msgid "Hyper-V Server: State of VMs"
 msgstr "Server Hyper-V: Starea mașinilor virtuale"
+
+#, fuzzy
+msgid "Hyper-V VM Checkpoints"
+msgstr "VM Hyper-V (Windows)"
 
 msgid "Hyper-V VM Guest Information (Windows)"
 msgstr "Informații despre Hyper-V VM Guest (Windows)"
@@ -41492,6 +41527,10 @@ msgstr "Maximum %s cazuri de durată mai mare de %s"
 msgid "Maximum KPI runtime"
 msgstr "Durata maximă de funcționare a testului"
 
+#, fuzzy
+msgid "Maximum Latency"
+msgstr "Vechimea maxima"
+
 msgid "Maximum PGA allocated"
 msgstr "PGA maxim alocat"
 
@@ -41644,6 +41683,10 @@ msgstr "Dimensiunea maximă"
 #, python-format
 msgid "Maximum image size: %dx%dpx"
 msgstr "Dimensiunea maximă a imaginii: %dx%dpx"
+
+#, fuzzy
+msgid "Maximum latency (ms)"
+msgstr "Latența corespondenței"
 
 msgid "Maximum latency of successful GetItem requests"
 msgstr "Latența maximă a cererilor GetItem reușite"
@@ -53800,9 +53843,6 @@ msgstr "REST API interactiv GUI"
 msgid "REST API introduction"
 msgstr "Introducere REST API"
 
-msgid "REST API specification successfully generated"
-msgstr "Specificația REST API generată cu succes"
-
 msgid "REST API: Use HTTP ETags for optimistic locking"
 msgstr "REST API: Utilizați HTTP ETags pentru blocarea optimistă"
 
@@ -64578,6 +64618,14 @@ msgstr ""
 msgid "Successfully deleted %d hosts"
 msgstr "Ați eliminat cu succes gazdele %d."
 
+#, fuzzy, python-format
+msgid "Successfully deleted the following %s: %s"
+msgstr "Ați eliminat cu succes gazdele %d."
+
+#, fuzzy, python-format
+msgid "Successfully deleted the following user '%s'"
+msgstr "Ați eliminat cu succes gazdele %d."
+
 msgid "Successfully discarded all pending changes."
 msgstr "A eliminat cu succes toate modificările în așteptare."
 
@@ -67677,6 +67725,12 @@ msgid ""
 msgstr ""
 "Nivelurile definite se vor aplica numai dacă eticheta metrică se potrivește "
 "cu cea specificată în serviciul Prometheus personalizat."
+
+#, python-format
+msgid ""
+"The deleted user '%s' is used as only specific user by %d notification %s. "
+"Please adjust the affected %s."
+msgstr ""
 
 msgid ""
 "The description is optional and can be used for explanations or documentation"
@@ -74977,6 +75031,12 @@ msgstr ""
 "tablespace și un indexspace al bazei de date."
 
 #, fuzzy
+msgid "This ruleset allows you to configure levels for the daily usage costs."
+msgstr ""
+"Această regulă vă permite să configurați nivelurile de bloat pentru un "
+"tablespace și un indexspace al bazei de date."
+
+#, fuzzy
 msgid "This ruleset allows you to configure levels for the database CPU usage"
 msgstr ""
 "Această regulă vă permite să configurați nivelurile de bloat pentru un "
@@ -81612,6 +81672,10 @@ msgstr "Niveluri superioare pentru dimensiunea spațiului BD"
 msgid "Upper levels for the age of the update"
 msgstr "Niveluri superioare pentru vârsta actualizării"
 
+msgid ""
+"Upper levels for the average latency. Defaults: 5 ms (WARN), 10 ms (CRIT)."
+msgstr ""
+
 msgid "Upper levels for the backup age"
 msgstr "Niveluri superioare pentru vârsta de rezervă"
 
@@ -81630,6 +81694,10 @@ msgstr "Niveluri superioare pentru utilizarea licenței"
 
 msgid "Upper levels for the logs usage size"
 msgstr "Niveluri superioare pentru dimensiunea de utilizare a jurnalelor"
+
+msgid ""
+"Upper levels for the maximum latency. Defaults: 5 ms (WARN), 10 ms (CRIT)."
+msgstr ""
 
 msgid "Upper levels for the number of HTTP requests per second"
 msgstr "Niveluri superioare pentru numărul de cereri HTTP pe secundă"
@@ -82980,6 +83048,10 @@ msgstr "Memorie comutabilă (medie)"
 
 msgid "User"
 msgstr "Utilizator"
+
+#, fuzzy, python-format
+msgid "User %s does not exist."
+msgstr "%s nu există."
 
 #, python-format
 msgid "User %s of DCD connection was modified"
@@ -92494,13 +92566,6 @@ msgstr "Adăugați elementul sidebar"
 msgid "Loading sidebar elements..."
 msgstr "Adăugați elementul sidebar"
 
-msgid "Barplot"
-msgstr "Barplot"
-
-#, fuzzy
-msgid "Scatterplot"
-msgstr "Graficul de dispersie mediu"
-
 #, fuzzy
 msgid "Value must be a valid URL"
 msgstr "Valoarea trebuie să fie un șir de caractere"
@@ -92692,6 +92757,13 @@ msgstr "Arbore de inventariere"
 #, fuzzy
 msgid "Single graph"
 msgstr "Conexiuni respinse"
+
+msgid "Barplot"
+msgstr "Barplot"
+
+#, fuzzy
+msgid "Scatterplot"
+msgstr "Graficul de dispersie mediu"
 
 #, fuzzy
 msgid "Must select an option"
@@ -93719,6 +93791,22 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Compute REST API specification"
+#~ msgstr "Specificația API REST Compute"
+
+#, python-format
+#~ msgid "Failed to generate REST API specification: %s"
+#~ msgstr "Nu s-a reușit generarea specificației REST API: %s"
+
+#~ msgid "Generate REST API specification"
+#~ msgstr "Generarea specificației REST API"
+
+#~ msgid "Generating REST API specification"
+#~ msgstr "Generarea specificației REST API"
+
+#~ msgid "REST API specification successfully generated"
+#~ msgstr "Specificația REST API generată cu succes"
 
 #, fuzzy
 #~ msgid "Azure virtual machines summary"
@@ -95593,10 +95681,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Use the value of the key"
 #~ msgstr "Utilizați starea serviciului..."
-
-#, fuzzy, python-format
-#~ msgid "%s notification %s"
-#~ msgstr "Notificări de testare"
 
 #, fuzzy
 #~ msgid "Advanced - Number of retries"

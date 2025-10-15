@@ -205,6 +205,10 @@ msgstr " 次のサイクル開始"
 msgid " next week"
 msgstr " 来週"
 
+#, fuzzy, python-format
+msgid " notification %s"
+msgstr "最終通知"
+
 #, python-format
 msgid " of service %s on host %s"
 msgstr " ホスト %s のサービス%s"
@@ -4912,8 +4916,16 @@ msgstr "現在のホスト状態の年齢"
 msgid "Age of the current service state"
 msgstr "現在のサービス状態の期間"
 
+#, fuzzy
+msgid "Age of the latest checkpoint"
+msgstr "最新のスナップショットの期間"
+
 msgid "Age of the latest snapshot"
 msgstr "最新のスナップショットの期間"
+
+#, fuzzy
+msgid "Age of the oldest checkpoint"
+msgstr "最も古いスナップショットの経過時間"
 
 msgid "Age of the oldest snapshot"
 msgstr "最も古いスナップショットの経過時間"
@@ -7742,6 +7754,10 @@ msgstr "平均"
 msgid "Average CPU Value over"
 msgstr "CPUの平均値"
 
+#, fuzzy
+msgid "Average Latency"
+msgstr "平均待ち時間"
+
 msgid "Average Outgoing Queue Delay"
 msgstr "平均発信キュー遅延"
 
@@ -7819,6 +7835,10 @@ msgid "Average interval"
 msgstr "平均間隔"
 
 msgid "Average latency"
+msgstr "平均待ち時間"
+
+#, fuzzy
+msgid "Average latency (ms)"
 msgstr "平均待ち時間"
 
 msgid "Average latency for RPC requests"
@@ -13782,9 +13802,6 @@ msgstr "計算オプション"
 msgid "Computation result: %s - %s"
 msgstr "計算結果: %s - %s"
 
-msgid "Compute REST API specification"
-msgstr "REST APIの仕様"
-
 #, fuzzy
 msgid "Compute a rate"
 msgstr "レートを計算しないでください"
@@ -14021,6 +14038,11 @@ msgstr "ログファイルセクションを構成する"
 
 msgid "Configure access permissions to NagVis maps."
 msgstr "NagVisマップへのアクセス許可を構成します。"
+
+msgid ""
+"Configure age thresholds for VM checkpoints. You can set warning and "
+"critical levels for both the newest and oldest checkpoints."
+msgstr ""
 
 msgid "Configure agent access related settings using rule sets"
 msgstr "ルールセットを使用してエージェントアクセス関連の設定を構成する"
@@ -14375,6 +14397,11 @@ msgstr "クラスタのノード数に応じて、クラスタに適用する閾
 
 msgid "Configure upper levels"
 msgstr "上位レベルの設定"
+
+msgid ""
+"Configure warning and critical upper thresholds for Corosync link latency: "
+"both instantaneous maximum values and the averaged latency."
+msgstr ""
 
 msgid ""
 "Configure whether RCC validates TLS certificates when downloading or pulling "
@@ -15156,6 +15183,20 @@ msgstr "コアが停止しました"
 
 msgid "Cores per CPU"
 msgstr "CPUあたりのコア数"
+
+#, fuzzy
+msgid "Corosync Latency"
+msgstr "Sprocレイテンシ"
+
+msgid "Corosync Latency max/avg"
+msgstr ""
+
+msgid "Corosync Link"
+msgstr ""
+
+#, fuzzy
+msgid "Corosync latency"
+msgstr "同期レイテンシ"
 
 msgid "Corrected codewords"
 msgstr "修正されたコード語"
@@ -24027,10 +24068,6 @@ msgid "Failed to find matching certificate in chain"
 msgstr "チェーン内の一致する証明書を見つけることができませんでした"
 
 #, python-format
-msgid "Failed to generate REST API specification: %s"
-msgstr "REST API仕様の生成に失敗しました：%s"
-
-#, python-format
 msgid "Failed to get the status from DCD (%s)"
 msgstr "DCDからステータスを取得できませんでした(%s)"
 
@@ -25970,9 +26007,6 @@ msgstr "一般的な値のエラー：%s"
 msgid "Generate"
 msgstr "生成する"
 
-msgid "Generate REST API specification"
-msgstr "REST API仕様の生成"
-
 msgid "Generate backup codes"
 msgstr "バックアップコードを作成する"
 
@@ -26021,9 +26055,6 @@ msgstr ""
 
 msgid "Generate this report"
 msgstr "このレポートを生成する"
-
-msgid "Generating REST API specification"
-msgstr "REST API仕様の生成"
 
 msgid "Generating report..."
 msgstr "レポートを生成しています..."
@@ -29888,6 +29919,10 @@ msgstr "単一センサー搭載機器の湿度レベル"
 
 msgid "Hyper-V Server: State of VMs"
 msgstr "Hyper-Vサーバー:VMの状態"
+
+#, fuzzy
+msgid "Hyper-V VM Checkpoints"
+msgstr "Hyper-V VM (Windows)"
 
 msgid "Hyper-V VM Guest Information (Windows)"
 msgstr "Hyper-V VMゲスト情報(Windows)"
@@ -38904,6 +38939,10 @@ msgstr "最大 %s インスタンス 期間が %s を超える"
 msgid "Maximum KPI runtime"
 msgstr "最大KPIランタイム"
 
+#, fuzzy
+msgid "Maximum Latency"
+msgstr "最大経過時間"
+
 msgid "Maximum PGA allocated"
 msgstr "割り当てられた最大PGA"
 
@@ -39051,6 +39090,10 @@ msgstr "最大hexagonサイズ"
 #, python-format
 msgid "Maximum image size: %dx%dpx"
 msgstr "最大画像サイズ: %dx%dpx"
+
+#, fuzzy
+msgid "Maximum latency (ms)"
+msgstr "メールの待ち時間"
 
 msgid "Maximum latency of successful GetItem requests"
 msgstr "成功したGetItemリクエストの最大レイテンシ"
@@ -50270,9 +50313,6 @@ msgstr "RESTAPIインタラクティブGUI"
 msgid "REST API introduction"
 msgstr "REST API紹介"
 
-msgid "REST API specification successfully generated"
-msgstr "REST API仕様の生成に成功"
-
 msgid "REST API: Use HTTP ETags for optimistic locking"
 msgstr "REST API: 楽観的ロックにHTTP Etags を使用する"
 
@@ -60381,6 +60421,14 @@ msgstr ""
 msgid "Successfully deleted %d hosts"
 msgstr "%d ホストが正常に削除されました"
 
+#, fuzzy, python-format
+msgid "Successfully deleted the following %s: %s"
+msgstr "%d ホストが正常に削除されました"
+
+#, fuzzy, python-format
+msgid "Successfully deleted the following user '%s'"
+msgstr "%d ホストが正常に削除されました"
+
 msgid "Successfully discarded all pending changes."
 msgstr "保留中のすべての変更を正常に破棄しました。"
 
@@ -63321,6 +63369,12 @@ msgid ""
 msgstr ""
 "定義されたレベルは、メトリックラベルがカスタムPrometheusサービスで指定された"
 "ものと一致する場合にのみ適用されます。"
+
+#, python-format
+msgid ""
+"The deleted user '%s' is used as only specific user by %d notification %s. "
+"Please adjust the affected %s."
+msgstr ""
 
 msgid ""
 "The description is optional and can be used for explanations or documentation"
@@ -70298,6 +70352,11 @@ msgid "This ruleset allows you to configure levels for the Storage usage"
 msgstr ""
 "このルールセットを使用すると、ストレージの使用量に関するレベルを設定できます"
 
+#, fuzzy
+msgid "This ruleset allows you to configure levels for the daily usage costs."
+msgstr ""
+"このルールセットを使用すると、ストレージの使用量に関するレベルを設定できます"
+
 msgid "This ruleset allows you to configure levels for the database CPU usage"
 msgstr ""
 "このルールでは、データベースのCPU使用率のレベルを設定することができます"
@@ -76242,6 +76301,10 @@ msgstr "DBスペースサイズの上位レベル"
 msgid "Upper levels for the age of the update"
 msgstr "更新期間の上位レベル"
 
+msgid ""
+"Upper levels for the average latency. Defaults: 5 ms (WARN), 10 ms (CRIT)."
+msgstr ""
+
 msgid "Upper levels for the backup age"
 msgstr "バックアップ経過日数の上位レベル"
 
@@ -76259,6 +76322,10 @@ msgstr "ライセンス使用の上位レベル"
 
 msgid "Upper levels for the logs usage size"
 msgstr "ログ使用の上位レベル"
+
+msgid ""
+"Upper levels for the maximum latency. Defaults: 5 ms (WARN), 10 ms (CRIT)."
+msgstr ""
 
 msgid "Upper levels for the number of HTTP requests per second"
 msgstr "1秒あたりのHTTPリクエスト数の上位レベル"
@@ -77506,6 +77573,10 @@ msgstr "使用済み仮想メモリ（平均）"
 
 msgid "User"
 msgstr "ユーザー"
+
+#, fuzzy, python-format
+msgid "User %s does not exist."
+msgstr "%s は存在しません。"
 
 #, python-format
 msgid "User %s of DCD connection was modified"
@@ -86463,13 +86534,6 @@ msgstr "サイドバー要素を追加する"
 msgid "Loading sidebar elements..."
 msgstr "サイドバー要素を追加する"
 
-msgid "Barplot"
-msgstr "棒グラフ"
-
-#, fuzzy
-msgid "Scatterplot"
-msgstr "平均散布図"
-
 #, fuzzy
 msgid "Value must be a valid URL"
 msgstr "値は文字列であること"
@@ -86656,6 +86720,13 @@ msgstr "インベントリツリー"
 #, fuzzy
 msgid "Single graph"
 msgstr "オプション選択"
+
+msgid "Barplot"
+msgstr "棒グラフ"
+
+#, fuzzy
+msgid "Scatterplot"
+msgstr "平均散布図"
 
 #, fuzzy
 msgid "Must select an option"
@@ -87643,6 +87714,22 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Compute REST API specification"
+#~ msgstr "REST APIの仕様"
+
+#, python-format
+#~ msgid "Failed to generate REST API specification: %s"
+#~ msgstr "REST API仕様の生成に失敗しました：%s"
+
+#~ msgid "Generate REST API specification"
+#~ msgstr "REST API仕様の生成"
+
+#~ msgid "Generating REST API specification"
+#~ msgstr "REST API仕様の生成"
+
+#~ msgid "REST API specification successfully generated"
+#~ msgstr "REST API仕様の生成に成功"
 
 #, fuzzy
 #~ msgid "Azure virtual machines summary"
@@ -89512,10 +89599,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Use the value of the key"
 #~ msgstr "サービスのステータスを使用します..."
-
-#, fuzzy, python-format
-#~ msgid "%s notification %s"
-#~ msgstr "最終通知"
 
 #, fuzzy
 #~ msgid "Advanced - Number of retries"

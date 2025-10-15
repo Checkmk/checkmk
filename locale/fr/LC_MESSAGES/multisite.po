@@ -202,6 +202,10 @@ msgstr ""
 msgid " next week"
 msgstr " semaine prochaine"
 
+#, fuzzy, python-format
+msgid " notification %s"
+msgstr "dernière notification"
+
 #, python-format
 msgid " of service %s on host %s"
 msgstr " du service %s sur l'hôte %s"
@@ -5225,8 +5229,16 @@ msgstr "L'âge de l'état actuel de l'hôte"
 msgid "Age of the current service state"
 msgstr "L'âge de l'état de service actuel"
 
+#, fuzzy
+msgid "Age of the latest checkpoint"
+msgstr "Âge du dernier instantané"
+
 msgid "Age of the latest snapshot"
 msgstr "Âge du dernier instantané"
+
+#, fuzzy
+msgid "Age of the oldest checkpoint"
+msgstr "Âge de l'instantané le plus ancien"
 
 msgid "Age of the oldest snapshot"
 msgstr "Âge de l'instantané le plus ancien"
@@ -8247,6 +8259,10 @@ msgstr "Moyenne"
 msgid "Average CPU Value over"
 msgstr "Valeur moyenne"
 
+#, fuzzy
+msgid "Average Latency"
+msgstr "Latence moyenne"
+
 msgid "Average Outgoing Queue Delay"
 msgstr "Retard moyen des files d'attente sortantes"
 
@@ -8331,6 +8347,10 @@ msgstr "Intervalle moyen"
 
 #, fuzzy
 msgid "Average latency"
+msgstr "Latence moyenne"
+
+#, fuzzy
+msgid "Average latency (ms)"
 msgstr "Latence moyenne"
 
 msgid "Average latency for RPC requests"
@@ -14728,10 +14748,6 @@ msgid "Computation result: %s - %s"
 msgstr "Résultat du calcul : %s - %s"
 
 #, fuzzy
-msgid "Compute REST API specification"
-msgstr "Spécification SLA"
-
-#, fuzzy
 msgid "Compute a rate"
 msgstr "Taux de messages délivrés"
 
@@ -14982,6 +14998,11 @@ msgstr "Configurer une section de fichier journal"
 
 msgid "Configure access permissions to NagVis maps."
 msgstr "Configurer les permissions d'accès aux cartes de NagVis."
+
+msgid ""
+"Configure age thresholds for VM checkpoints. You can set warning and "
+"critical levels for both the newest and oldest checkpoints."
+msgstr ""
 
 #, fuzzy
 msgid "Configure agent access related settings using rule sets"
@@ -15373,6 +15394,11 @@ msgstr ""
 #, fuzzy
 msgid "Configure upper levels"
 msgstr "Conteneurs niveaux supérieurs"
+
+msgid ""
+"Configure warning and critical upper thresholds for Corosync link latency: "
+"both instantaneous maximum values and the averaged latency."
+msgstr ""
 
 msgid ""
 "Configure whether RCC validates TLS certificates when downloading or pulling "
@@ -16212,6 +16238,20 @@ msgstr "Le cœur s'est arrêté"
 
 msgid "Cores per CPU"
 msgstr "Cœurs par CPU"
+
+#, fuzzy
+msgid "Corosync Latency"
+msgstr "Latence du Sproc"
+
+msgid "Corosync Latency max/avg"
+msgstr ""
+
+msgid "Corosync Link"
+msgstr ""
+
+#, fuzzy
+msgid "Corosync latency"
+msgstr "Latence de synchronisation"
 
 msgid "Corrected codewords"
 msgstr "Mots de code corrigés"
@@ -25664,10 +25704,6 @@ msgstr "Échec de la récupération du certificat du pair (%s)"
 msgid "Failed to find matching certificate in chain"
 msgstr "Impossible de trouver le certificat correspondant dans la chaîne"
 
-#, fuzzy, python-format
-msgid "Failed to generate REST API specification: %s"
-msgstr "Échec de la récupération du certificat du pair (%s)"
-
 #, python-format
 msgid "Failed to get the status from DCD (%s)"
 msgstr "Échec de la récupération de l'état du DCD (%s)"
@@ -27712,10 +27748,6 @@ msgid "Generate"
 msgstr "Générer"
 
 #, fuzzy
-msgid "Generate REST API specification"
-msgstr "Spécification SLA"
-
-#, fuzzy
 msgid "Generate backup codes"
 msgstr "Régénérer les codes de sauvegarde"
 
@@ -27762,10 +27794,6 @@ msgstr ""
 
 msgid "Generate this report"
 msgstr "Générer ce rapport"
-
-#, fuzzy
-msgid "Generating REST API specification"
-msgstr "spécification de la cartouche"
 
 msgid "Generating report..."
 msgstr "Générer des rapports..."
@@ -32130,6 +32158,10 @@ msgstr "Niveaux d'humidité pour les appareils avec un seul capteur"
 
 msgid "Hyper-V Server: State of VMs"
 msgstr "Serveur Hyper-V : État des VMs"
+
+#, fuzzy
+msgid "Hyper-V VM Checkpoints"
+msgstr "VMs Hyper-V (Windows)"
 
 msgid "Hyper-V VM Guest Information (Windows)"
 msgstr "Informations sur l'invité de la VM Hyper-V (Windows)"
@@ -41715,6 +41747,10 @@ msgstr "Maximum %s instances de durée supérieure à %s"
 msgid "Maximum KPI runtime"
 msgstr "Durée d'exécution du processus"
 
+#, fuzzy
+msgid "Maximum Latency"
+msgstr "Âge maximum"
+
 msgid "Maximum PGA allocated"
 msgstr "PGA maximum alloué"
 
@@ -41868,6 +41904,10 @@ msgstr "Taille maximale"
 #, python-format
 msgid "Maximum image size: %dx%dpx"
 msgstr "Taille maximale de l'image : %dx%dpx"
+
+#, fuzzy
+msgid "Maximum latency (ms)"
+msgstr "Latence du courrier"
 
 msgid "Maximum latency of successful GetItem requests"
 msgstr "Latence maximale des demandes GetItem réussies"
@@ -54115,9 +54155,6 @@ msgstr "Interface graphique interactive REST API"
 msgid "REST API introduction"
 msgstr "Introduction à l'API REST"
 
-msgid "REST API specification successfully generated"
-msgstr ""
-
 msgid "REST API: Use HTTP ETags for optimistic locking"
 msgstr "API REST : Utilisation des ETags HTTP pour le verrouillage optimiste"
 
@@ -64912,6 +64949,14 @@ msgstr ""
 msgid "Successfully deleted %d hosts"
 msgstr "Suppression réussie de %d hôtes"
 
+#, fuzzy, python-format
+msgid "Successfully deleted the following %s: %s"
+msgstr "Suppression réussie de %d hôtes"
+
+#, fuzzy, python-format
+msgid "Successfully deleted the following user '%s'"
+msgstr "Suppression réussie de %d hôtes"
+
 msgid "Successfully discarded all pending changes."
 msgstr "Tous les changements en attente ont été rejetés avec succès."
 
@@ -68061,6 +68106,12 @@ msgid ""
 msgstr ""
 "Les niveaux définis ne s'appliquent que si l'étiquette de la métrique "
 "correspond à celle spécifiée dans le service Prometheus personnalisé."
+
+#, python-format
+msgid ""
+"The deleted user '%s' is used as only specific user by %d notification %s. "
+"Please adjust the affected %s."
+msgstr ""
 
 msgid ""
 "The description is optional and can be used for explanations or documentation"
@@ -75343,6 +75394,12 @@ msgstr ""
 "tablespace et un index de bases de données."
 
 #, fuzzy
+msgid "This ruleset allows you to configure levels for the daily usage costs."
+msgstr ""
+"Cette règle vous permet de configurer les niveaux de bloat pour un "
+"tablespace et un index de bases de données."
+
+#, fuzzy
 msgid "This ruleset allows you to configure levels for the database CPU usage"
 msgstr ""
 "Cette règle vous permet de configurer les niveaux de bloat pour un "
@@ -82088,6 +82145,10 @@ msgstr "Niveaux supérieurs pour la taille de l'espace de la BD"
 msgid "Upper levels for the age of the update"
 msgstr "Niveaux supérieurs pour l'âge de la mise à jour"
 
+msgid ""
+"Upper levels for the average latency. Defaults: 5 ms (WARN), 10 ms (CRIT)."
+msgstr ""
+
 msgid "Upper levels for the backup age"
 msgstr "Niveaux supérieurs pour l'âge de la sauvegarde"
 
@@ -82106,6 +82167,10 @@ msgstr "Niveaux supérieurs pour l'utilisation de la licence"
 
 msgid "Upper levels for the logs usage size"
 msgstr "Niveaux supérieurs pour la taille d'utilisation des journaux"
+
+msgid ""
+"Upper levels for the maximum latency. Defaults: 5 ms (WARN), 10 ms (CRIT)."
+msgstr ""
 
 #, fuzzy
 msgid "Upper levels for the number of HTTP requests per second"
@@ -83481,6 +83546,10 @@ msgstr "Moyenne de la mémoire virtuelle"
 
 msgid "User"
 msgstr "Utilisateur"
+
+#, fuzzy, python-format
+msgid "User %s does not exist."
+msgstr "Le %s n'existe pas."
 
 #, python-format
 msgid "User %s of DCD connection was modified"
@@ -93067,13 +93136,6 @@ msgstr "Ajouter un élément de barre latérale"
 msgid "Loading sidebar elements..."
 msgstr "Ajouter un élément de barre latérale"
 
-msgid "Barplot"
-msgstr "Diagramme en barres"
-
-#, fuzzy
-msgid "Scatterplot"
-msgstr "Diagramme de dispersion moyen"
-
 #, fuzzy
 msgid "Value must be a valid URL"
 msgstr "La valeur doit être une chaîne de caractères"
@@ -93263,6 +93325,13 @@ msgstr "Arbre d'inventaire"
 #, fuzzy
 msgid "Single graph"
 msgstr "Connexions rejetées"
+
+msgid "Barplot"
+msgstr "Diagramme en barres"
+
+#, fuzzy
+msgid "Scatterplot"
+msgstr "Diagramme de dispersion moyen"
 
 #, fuzzy
 msgid "Must select an option"
@@ -94284,6 +94353,22 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Compute REST API specification"
+#~ msgstr "Spécification SLA"
+
+#, fuzzy, python-format
+#~ msgid "Failed to generate REST API specification: %s"
+#~ msgstr "Échec de la récupération du certificat du pair (%s)"
+
+#, fuzzy
+#~ msgid "Generate REST API specification"
+#~ msgstr "Spécification SLA"
+
+#, fuzzy
+#~ msgid "Generating REST API specification"
+#~ msgstr "spécification de la cartouche"
 
 #, fuzzy
 #~ msgid "Azure virtual machines summary"
@@ -96088,10 +96173,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Use the value of the key"
 #~ msgstr "Utiliser le statut du service..."
-
-#, fuzzy, python-format
-#~ msgid "%s notification %s"
-#~ msgstr "dernière notification"
 
 #, fuzzy
 #~ msgid "Advanced - Number of retries"

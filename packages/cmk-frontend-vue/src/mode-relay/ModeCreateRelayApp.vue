@@ -24,75 +24,83 @@ const relayName = ref<string>('')
 </script>
 
 <template>
-  <CmkWizard v-model="currentStep" mode="guided">
-    <CmkWizardStep :index="1" :is-completed="() => currentStep > 1">
-      <template #header>
-        <CmkHeading type="h2"> {{ _t('Deploy the relay to your environment') }}</CmkHeading>
-      </template>
+  <div class="mode-relay-mode-create-relay-app">
+    <CmkWizard v-model="currentStep" mode="guided">
+      <CmkWizardStep :index="1" :is-completed="() => currentStep > 1">
+        <template #header>
+          <CmkHeading type="h2"> {{ _t('Deploy the relay to your environment') }}</CmkHeading>
+        </template>
 
-      <template #content>
-        <DeployRelay></DeployRelay>
-      </template>
+        <template #content>
+          <DeployRelay></DeployRelay>
+        </template>
 
-      <template #actions>
-        <CmkWizardButton type="next" />
-      </template>
-    </CmkWizardStep>
+        <template #actions>
+          <CmkWizardButton type="next" />
+        </template>
+      </CmkWizardStep>
 
-    <CmkWizardStep
-      :index="2"
-      :is-completed="
-        () => {
-          return currentStep > 2
-        }
-      "
-    >
-      <template #header>
-        <CmkHeading type="h2"> {{ _t('Name the relay') }}</CmkHeading>
-      </template>
+      <CmkWizardStep
+        :index="2"
+        :is-completed="
+          () => {
+            return currentStep > 2
+          }
+        "
+      >
+        <template #header>
+          <CmkHeading type="h2"> {{ _t('Name the relay') }}</CmkHeading>
+        </template>
 
-      <template #content>
-        <NameRelay v-model="relayName" />
-      </template>
-      <template #actions>
-        <CmkWizardButton type="next" />
-        <CmkWizardButton type="previous" />
-      </template>
-    </CmkWizardStep>
+        <template #content>
+          <NameRelay v-model="relayName" />
+        </template>
+        <template #actions>
+          <CmkWizardButton type="next" />
+          <CmkWizardButton type="previous" />
+        </template>
+      </CmkWizardStep>
 
-    <CmkWizardStep
-      :index="3"
-      :is-completed="
-        () => {
-          return currentStep > 3
-        }
-      "
-    >
-      <template #header>
-        <CmkHeading type="h2"> {{ _t('Register the relay with your Checkmk site') }}</CmkHeading>
-      </template>
+      <CmkWizardStep
+        :index="3"
+        :is-completed="
+          () => {
+            return currentStep > 3
+          }
+        "
+      >
+        <template #header>
+          <CmkHeading type="h2"> {{ _t('Register the relay with your Checkmk site') }}</CmkHeading>
+        </template>
 
-      <template #content>
-        <RegisterRelay :relay-name="relayName" />
-      </template>
-      <template #actions>
-        <CmkWizardButton type="next" />
-        <CmkWizardButton type="previous" />
-      </template>
-    </CmkWizardStep>
+        <template #content>
+          <RegisterRelay :relay-name="relayName" />
+        </template>
+        <template #actions>
+          <CmkWizardButton type="next" />
+          <CmkWizardButton type="previous" />
+        </template>
+      </CmkWizardStep>
 
-    <CmkWizardStep :index="4" :is-completed="() => currentStep > 4">
-      <template #header>
-        <CmkHeading type="h2"> {{ _t('Connection check') }}</CmkHeading>
-      </template>
+      <CmkWizardStep :index="4" :is-completed="() => currentStep > 4">
+        <template #header>
+          <CmkHeading type="h2"> {{ _t('Connection check') }}</CmkHeading>
+        </template>
 
-      <template #content>
-        <ConnectionCheck></ConnectionCheck>
-      </template>
-      <template #actions>
-        <CmkWizardButton type="finish" />
-        <CmkWizardButton type="previous" />
-      </template>
-    </CmkWizardStep>
-  </CmkWizard>
+        <template #content>
+          <ConnectionCheck></ConnectionCheck>
+        </template>
+        <template #actions>
+          <CmkWizardButton type="finish" />
+          <CmkWizardButton type="previous" />
+        </template>
+      </CmkWizardStep>
+    </CmkWizard>
+  </div>
 </template>
+
+<style scoped>
+.mode-relay-mode-create-relay-app {
+  max-width: 628px;
+}
+</style>

@@ -87,6 +87,9 @@ WIN_ORACLE_CLIENT: tuple[OS, Sequence[OraclePluginFile]] = (
 )
 
 
+GuiSectionOptions = Mapping[str, Literal["synchronous", "asynchronous", "disabled"]]
+
+
 class GuiAuthUserPasswordData(BaseModel):
     username: str
     password: Secret
@@ -112,11 +115,6 @@ class GuiDiscoveryConf(BaseModel):
     exclude: list[str] | None = None
 
 
-class GuiSectionConf(BaseModel):
-    affinity: str
-    is_async: bool
-
-
 class GuiOracleClientLibOptions(BaseModel):
     deploy_lib: bool = False
     use_host_client: (
@@ -137,7 +135,7 @@ class GuiMainConf(BaseModel):
     options: GuiAdditionalOptionsConf | None = None
     cache_age: int | None = None
     discovery: GuiDiscoveryConf | None = None
-    sections: Mapping[str, GuiSectionConf] | None = None
+    sections: GuiSectionOptions | None = None
 
     def get_active_cache_age(self) -> int:
         """Return cache age in seconds, default is 600 seconds: must be in sync with agent plugin"""
@@ -179,7 +177,6 @@ class OracleDiscovery(TypedDict):
 
 
 class OracleSection(TypedDict):
-    affinity: NotRequired[str]
     is_async: NotRequired[bool]
 
 
@@ -217,7 +214,7 @@ class OracleMain(TypedDict):
     options: NotRequired[OracleAdditionalOptions]
     cache_age: NotRequired[int]
     discovery: NotRequired[OracleDiscovery]
-    sections: NotRequired[list[Mapping[str, OracleSection]]]
+    sections: NotRequired[Sequence[Mapping[str, OracleSection]]]
     instances: NotRequired[list[OracleInstance]]
 
 
@@ -336,20 +333,20 @@ def _get_oracle_discovery(discovery: GuiDiscoveryConf) -> OracleDiscovery:
     return result
 
 
-def _get_oracle_section(section: GuiSectionConf) -> OracleSection:
-    result: OracleSection = {"is_async": section.is_async}
-    if section.affinity:
-        result["affinity"] = section.affinity
-    return result
-
-
 def _get_oracle_sections(
-    sections: Mapping[str, GuiSectionConf],
-) -> list[Mapping[str, OracleSection]]:
+    sections: GuiSectionOptions,
+) -> Sequence[Mapping[str, OracleSection]]:
     result = []
-    for name, section in sections.items():
-        sec_dict: Mapping[str, OracleSection] = {name: _get_oracle_section(section)}
-        result.append(sec_dict)
+    for section_name, mode in sections.items():
+        oracle_section: OracleSection = {}
+        match mode:
+            case "synchronous":
+                oracle_section["is_async"] = False
+            case "asynchronous":
+                oracle_section["is_async"] = True
+            case "disabled":
+                continue
+        result.append({section_name: oracle_section})
     return result
 
 

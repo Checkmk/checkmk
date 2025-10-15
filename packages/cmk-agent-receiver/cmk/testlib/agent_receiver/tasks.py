@@ -2,9 +2,6 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-# mypy: disable-error-code="redundant-expr"
-
 from http import HTTPStatus
 
 from cmk.agent_receiver.relay.lib.shared_types import TaskID
@@ -48,9 +45,7 @@ def add_tasks(count: int, agent_receiver: AgentReceiverClient, relay_id: str) ->
         )
         for i in range(count)
     )
-    result = [TaskID(str(r.task_id)) for r in gen if r is not None]  # type: ignore[comparison-overlap]
-    assert len(result) == count
-    return result
+    return [TaskID(str(r.task_id)) for r in gen]
 
 
 def get_all_tasks(agent_receiver: AgentReceiverClient, relay_id: str) -> list[TaskResponse]:

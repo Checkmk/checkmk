@@ -13,7 +13,7 @@ import datetime as dt
 import logging
 import sys
 from collections.abc import Callable, Generator, Sequence
-from typing import Any
+from typing import Any, TypedDict
 
 import urllib3
 from oauthlib.oauth2 import LegacyApplicationClient
@@ -22,20 +22,32 @@ from requests_oauthlib import OAuth2Session  # type: ignore[attr-defined]
 import cmk.utils.paths
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
-from cmk.special_agents.v0_unstable.request_helper import (
-    Requester,
-    StringMap,
-    to_token_dict,
-    TokenDict,
-)
 
 AnyGenerator = Generator[Any, None, None]
 ResultFn = Callable[..., AnyGenerator]
 
 LOGGER = logging.getLogger("agent_storeonce4x")
 
+StringMap = dict[str, str]  # should be Mapping[] but we're not ready yet..
 
-class StoreOnceOauth2Session(Requester):
+
+class TokenDict(TypedDict):
+    access_token: str
+    refresh_token: str
+    expires_in: float
+    expires_in_abs: str | None
+
+
+def to_token_dict(data: Any) -> TokenDict:
+    return {
+        "access_token": str(data["access_token"]),
+        "refresh_token": str(data["refresh_token"]),
+        "expires_in": float(data["expires_in"]),
+        "expires_in_abs": str(data["expires_in_abs"]) if "expires_in_abs" in data else None,
+    }
+
+
+class StoreOnceOauth2Session:
     _token_dir = cmk.utils.paths.tmp_dir / "special_agents/agent_storeonce4x"
     _token_file_suffix = "%s_oAuthToken.json"
     _refresh_endpoint = "/pml/login/refresh"
@@ -103,11 +115,13 @@ class StoreOnceOauth2Session(Requester):
         return resp.json()
 
 
-def handler_simple(requester: Requester, uris: Sequence[str]) -> AnyGenerator:
+def handler_simple(requester: StoreOnceOauth2Session, uris: Sequence[str]) -> AnyGenerator:
     yield from (requester.get(uri) for uri in uris)
 
 
-def handler_nested(requester: Requester, uris: Sequence[str], identifier: str) -> AnyGenerator:
+def handler_nested(
+    requester: StoreOnceOauth2Session, uris: Sequence[str], identifier: str
+) -> AnyGenerator:
     # Get all appliance UUIDs
     members = requester.get(uris[0])
     yield members

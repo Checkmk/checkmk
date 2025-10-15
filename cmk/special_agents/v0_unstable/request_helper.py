@@ -7,38 +7,12 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
-import abc
 from collections.abc import Mapping
-from typing import Any, TypedDict
 from urllib.parse import urljoin
 
 from requests import Response, Session
 from requests.adapters import HTTPAdapter
 from requests.auth import HTTPBasicAuth
-
-StringMap = dict[str, str]  # should be Mapping[] but we're not ready yet..
-
-
-class TokenDict(TypedDict):
-    access_token: str
-    refresh_token: str
-    expires_in: float
-    expires_in_abs: str | None
-
-
-def to_token_dict(data: Any) -> TokenDict:
-    return {
-        "access_token": str(data["access_token"]),
-        "refresh_token": str(data["refresh_token"]),
-        "expires_in": float(data["expires_in"]),
-        "expires_in_abs": str(data["expires_in_abs"]) if "expires_in_abs" in data else None,
-    }
-
-
-class Requester(abc.ABC):
-    @abc.abstractmethod
-    def get(self, path: str, parameters: StringMap | None = None) -> Any:
-        raise NotImplementedError()
 
 
 class HostnameValidationAdapter(HTTPAdapter):

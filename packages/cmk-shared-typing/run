@@ -17,6 +17,7 @@ usage() {
     echo "  -b, --build             build"
     echo "  -F, --check-format      check for correct formatting"
     echo "  -a, --all               shortcut for -c -b -F -f"
+    echo "  -s, --update-spec       update OpenAPI spec"
     echo "  -f, --format            format sources"
     echo "  -h, --help              show this help"
 }
@@ -25,9 +26,10 @@ parse_options() {
     # Yes, all those option variables are global.
     RUN_BUILD=no
     RUN_CHECK_FORMAT=no
+    RUN_UPDATE_OPENAPI_SPEC=no
     RUN_FORMAT=no
 
-    if ! OPTIONS=$(getopt --options 'bFafh' --long 'build,check-format,all,format,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'bFafsh' --long 'build,check-format,all,format,update-spec,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -58,6 +60,11 @@ parse_options() {
                 shift
                 continue
                 ;;
+            '-s' | '--update-spec')
+                RUN_UPDATE_OPENAPI_SPEC=yes
+                shift
+                continue
+                ;;
             '-h' | '--help')
                 usage
                 exit 0
@@ -78,6 +85,12 @@ run_build() {
     bazel build :cmk_shared_typing_ts :cmk_shared_typing_py
 }
 
+run_update_openapi_spec() {
+    # Note: This is called after cd to script directory in main()
+    local spec_path="$PWD/source/openapi_spec_internal.yaml"
+    bazel run //cmk:generate_api_spec_repo -- generate --version internal --format yaml --out "$spec_path"
+}
+
 run_check_format() {
     bazel run //:format.check "$PWD"
 }
@@ -93,6 +106,7 @@ main() {
     parse_options "$@"
     test ${RUN_BUILD} = yes && run_build
     test ${RUN_CHECK_FORMAT} = yes && run_check_format
+    test ${RUN_UPDATE_OPENAPI_SPEC} = yes && run_update_openapi_spec
     test ${RUN_FORMAT} = yes && run_format
     true
 }

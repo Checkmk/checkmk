@@ -37,6 +37,10 @@ network_bytes_egress = AzureMetric(
     name="network_bytes_egress", interval="PT1M", aggregation="total"
 )
 
+database_accounts_metrics = [
+    AzureMetric(name="ServiceAvailability", interval="PT1H", aggregation="minimum")
+]
+
 ALL_METRICS: dict[str, list[AzureMetric]] = {
     # to add a new metric, just add a made up name, run the
     # agent, and you'll get a error listing available metrics!
@@ -178,6 +182,8 @@ ALL_METRICS: dict[str, list[AzureMetric]] = {
     "Microsoft.Network/natGateways": [
         AzureMetric(name="DatapathAvailability", interval="PT1M", aggregation="average"),
     ],
+    "Microsoft.DocumentDb/databaseAccounts": database_accounts_metrics,
+    "Microsoft.DocumentDB/databaseAccounts": database_accounts_metrics,
 }
 
 OPTIONAL_METRICS: Mapping[str, Sequence[str]] = {

@@ -5,17 +5,17 @@
 
 # Example output:
 # <<<msoffice_licenses>>>
-# msonline:VISIOCLIENT 11 0 10
-# msonline:POWER_BI_PRO 13 0 11
-# msonline:WINDOWS_STORE 1000000 0 0
-# msonline:ENTERPRISEPACK 1040 1 395
-# msonline:FLOW_FREE 10000 0 11
-# msonline:EXCHANGESTANDARD 5 0 2
-# msonline:POWER_BI_STANDARD 1000000 0 18
-# msonline:EMS 1040 0 991
-# msonline:RMSBASIC 1 0 0
-# msonline:PROJECTPROFESSIONAL 10 0 10
-# msonline:ATP_ENTERPRISE 1040 0 988
+# mggraph:VISIOCLIENT 11 0 10
+# mggraph:POWER_BI_PRO 13 0 11
+# mggraph:WINDOWS_STORE 1000000 0 0
+# mggraph:ENTERPRISEPACK 1040 1 395
+# mggraph:FLOW_FREE 10000 0 11
+# mggraph:EXCHANGESTANDARD 5 0 2
+# mggraph:POWER_BI_STANDARD 1000000 0 18
+# mggraph:EMS 1040 0 991
+# mggraph:RMSBASIC 1 0 0
+# mggraph:PROJECTPROFESSIONAL 10 0 10
+# mggraph:ATP_ENTERPRISE 1040 0 988
 
 
 # mypy: disable-error-code="var-annotated"
@@ -30,6 +30,11 @@ def parse_msoffice_licenses(string_table):
     parsed = {}
 
     for line in string_table:
+        if len(line) >= 1 and "Microsoft.Graph module is not installed" in " ".join(line):
+            return {
+                "_error": "MS Office agent plugin requires installation of the Powershell Module Microsoft.Graph for all users, see werk #18609"
+            }
+
         if len(line) != 4:
             continue
 
@@ -49,6 +54,9 @@ def parse_msoffice_licenses(string_table):
 
 
 def check_msoffice_licenses(item, params, parsed):
+    if "_error" in parsed:
+        yield 2, parsed["_error"]
+        return
     if not (item_data := parsed.get(item)):
         return
     lcs_active = item_data["active"]

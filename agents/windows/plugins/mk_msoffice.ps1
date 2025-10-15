@@ -8,6 +8,15 @@ $ClientId = ""
 $TenantId = ""
 $ClientSecret = ""
 
+# Microsoft.Graph module is required for all users, please install
+if (-not (Get-Module -ListAvailable -Name Microsoft.Graph)) {
+    Write-Host "<<<msoffice_licenses>>>"
+    Write-Host "Microsoft.Graph module is not installed, exiting."
+    Write-Host "<<<msoffice_serviceplans>>>"
+    Write-Host "Microsoft.Graph module is not installed, exiting."
+    exit
+}
+
 if(-not $MK_CONFDIR) {
     Write-Host '$env:MK_CONFDIR is not initialized, it should point to %SystemDrive%\ProgramData\checkmk\agent\config, exiting.'
     exit
@@ -36,15 +45,6 @@ if ([string]::IsNullOrEmpty($ClientId) -or
     [string]::IsNullOrEmpty($ClientSecret)) {
     Write-Host "One or more required credentials are empty, check your configuration in ${MK_CONFDIR}\msoffice_cfg.json."
     exit
-}
-
-if (-not (Get-Module -ListAvailable -Name Microsoft.Graph)) {
-    try {
-        Install-Module -Name Microsoft.Graph -Scope CurrentUser -Force -ErrorAction Stop
-    } catch {
-        Write-Host "Failed to install Microsoft.Graph module: $_"
-        exit
-    }
 }
 
 try {

@@ -210,10 +210,10 @@ prettier_bin.prettier_binary(
 
 alias(
     name = "format",
-    actual = "//bazel/tools:format",
+    actual = "//bazel/tools/format",
 )
 
 alias(
     name = "format.check",
-    actual = "//bazel/tools:format.check",
+    actual = "//bazel/tools/format:check",
 )

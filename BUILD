@@ -271,11 +271,11 @@ gazelle(
 
 alias(
     name = "format",
-    actual = "//bazel/tools:format",
+    actual = "//bazel/tools/format",
     visibility = ["//visibility:public"],
 )
 
 alias(
     name = "format.check",
-    actual = "//bazel/tools:format.check",
+    actual = "//bazel/tools/format:check",
 )

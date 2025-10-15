@@ -418,8 +418,12 @@ sub install_module {
     print "installing... ";
 
     my $makefile_opts = '';
-    if($modname eq 'XML::LibXML') {
-        $makefile_opts = 'FORCE=1';
+    if(index($modname, 'XML::LibXML') != -1) {
+        $makefile_opts = "$makefile_opts FORCE=1 CCFLAGS=\"$Config::Config{ccflags} -Wno-incompatible-pointer-types\"";
+    }
+    if(index($modname, 'Crypt::SSLeay') != -1) {
+        print "in CryptSS";
+        $makefile_opts = "$makefile_opts FORCE=1 CCFLAGS=\"$Config::Config{ccflags} -Wno-implicit-function-declaration -Wno-int-conversion\"";
     }
     if($modname eq 'List::MoreUtils') {
         system("sed -i -e '/url\\s*=>.*github/d' -e '/perl.*=>\\s*\\\$^V/d' Makefile.PL");

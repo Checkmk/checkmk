@@ -247,8 +247,6 @@ _PLUGIN_FAMILIES_WITH_KNOWN_API_VIOLATIONS = {
         "cmk.gui.form_specs.unstable",
         "cmk.otel_collector",
         "cmk.shared_typing.vue_formspec_components",
-        "cmk.metric_backend",
-        "cmk.utils.paths",
     ),
     "redfish": (
         "cmk.plugins.lib.elphase",

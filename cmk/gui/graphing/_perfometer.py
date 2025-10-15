@@ -9,7 +9,7 @@
 
 import abc
 import math
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from itertools import repeat
 from typing import assert_never, Self
@@ -517,12 +517,6 @@ def _make_projection(
     assert False, focus_range
 
 
-def _evaluate_segments(
-    segments: Iterable[Quantity], translated_metrics: Mapping[str, TranslatedMetric]
-) -> Sequence[_EvaluatedQuantity]:
-    return [_evaluate_quantity(segment, translated_metrics) for segment in segments]
-
-
 def _project_segments(
     projection: _ProjectionFromMetricValueToPerfFillLevel,
     segments: Sequence[_EvaluatedQuantity],
@@ -632,10 +626,7 @@ class MetricometerRendererPerfometer(MetricometerRenderer):
                 self.perfometer.name,
                 temperature_unit=temperature_unit,
             ),
-            _evaluate_segments(
-                self.perfometer.segments,
-                self.translated_metrics,
-            ),
+            [_evaluate_quantity(s, self.translated_metrics) for s in self.perfometer.segments],
             self._PROJECTION_PARAMETERS.perfometer_full_at,
             self.themed_perfometer_bg_color,
         ):
@@ -695,10 +686,7 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
                 self.perfometer.name,
                 temperature_unit=temperature_unit,
             ),
-            _evaluate_segments(
-                self.perfometer.left.segments,
-                self.translated_metrics,
-            ),
+            [_evaluate_quantity(s, self.translated_metrics) for s in self.perfometer.left.segments],
             self._PROJECTION_PARAMETERS.perfometer_full_at,
             self.themed_perfometer_bg_color,
         ):
@@ -715,10 +703,10 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
                 self.perfometer.name,
                 temperature_unit=temperature_unit,
             ),
-            _evaluate_segments(
-                self.perfometer.right.segments,
-                self.translated_metrics,
-            ),
+            [
+                _evaluate_quantity(s, self.translated_metrics)
+                for s in self.perfometer.right.segments
+            ],
             self._PROJECTION_PARAMETERS.perfometer_full_at,
             self.themed_perfometer_bg_color,
         ):

@@ -222,7 +222,10 @@ def _draw_dashboard(
     board = load_dashboard(permitted_dashboards, name)
 
     owner = board["owner"]
-    if mode == "edit" and owner == UserId.builtin():
+    if mode == "edit" and (
+        owner == UserId.builtin()
+        or (owner != UserId.builtin() and user.may("general.edit_foreign_dashboards"))
+    ):
         # Trying to edit a built-in dashboard results in doing a copy
         all_dashboards = get_all_dashboards()
         active_user = user.id
@@ -233,7 +236,10 @@ def _draw_dashboard(
 
         all_dashboards[(active_user, name)] = board
         permitted_dashboards[name] = board
-        save_all_dashboards(owner)
+        if owner != UserId.builtin():
+            save_all_dashboards(owner)
+        else:
+            save_all_dashboards()
         need_replication = True
 
     board = _add_context_to_dashboard(board)

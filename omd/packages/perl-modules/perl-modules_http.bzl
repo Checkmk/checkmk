@@ -2,42 +2,6 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
 
 PERL_MODULES_LIST_1 = {
-    "Capture-Tiny-0.27.tar.gz": {
-        "sha256": "ba54bc0305eb91ee2b0d769470d6bc62edb5b18d9c75b7ea709ea6b31e9bab21",
-        "url": "https://cpan.metacpan.org/authors/id/D/DA/DAGOLDEN/Capture-Tiny-0.27.tar.gz",
-    },
-    "File-ShareDir-Install-0.14.tar.gz": {
-        "sha256": "8f9533b198f2d4a9a5288cbc7d224f7679ad05a7a8573745599789428bc5aea0",
-        "url": "https://www.cpan.org/modules/by-module/File/File-ShareDir-Install-0.14.tar.gz",
-    },
-    "File-ShareDir-1.118.tar.gz": {
-        "sha256": "3bb2a20ba35df958dc0a4f2306fc05d903d8b8c4de3c8beefce17739d281c958",
-        "url": "https://www.cpan.org/modules/by-module/File/File-ShareDir-1.118.tar.gz",
-    },
-    "File-chdir-0.1011.tar.gz": {
-        "sha256": "31ebf912df48d5d681def74b9880d78b1f3aca4351a0ed1fe3570b8e03af6c79",
-        "url": "https://www.cpan.org/modules/by-module/File/File-chdir-0.1011.tar.gz",
-    },
-    "Path-Tiny-0.104.tar.gz": {
-        "sha256": "c69f1dcfeb4aa004086deb9bc14c7d79f45798b947f1efbd634a3442e267aaef",
-        "url": "https://cpan.metacpan.org/authors/id/D/DA/DAGOLDEN/Path-Tiny-0.104.tar.gz",
-    },
-    "Alien-Build-Plugin-Download-GitHub-0.10.tar.gz": {
-        "sha256": "60e17142cb943828f54cb6de3e3caeb551545b31a66135c987f58a9e3eb0073c",
-        "url": "https://www.cpan.org/modules/by-module/Alien/Alien-Build-Plugin-Download-GitHub-0.10.tar.gz",
-    },
-    "Alien-Build-Plugin-Download-GitLab-0.01.tar.gz": {
-        "sha256": "c1f089c8ea152a789909d48a83dbfcf2626f773daf30431c8622582b26aba902",
-        "url": "https://www.cpan.org/modules/by-module/Alien/Alien-Build-Plugin-Download-GitLab-0.01.tar.gz",
-    },
-    "Alien-Build-2.84.tar.gz": {
-        "sha256": "8e891fd3acbac39dd8fdc01376b9abff931e625be41e0910ca30ad59363b4477",
-        "url": "https://www.cpan.org/modules/by-module/Alien/Alien-Build-2.84.tar.gz",
-    },
-    "Alien-Libxml2-0.20.tar.gz": {
-        "sha256": "56aae7b339bbeb02f77c5801f57a821be5791b51f43bf7f9062bb3bfa444c328",
-        "url": "https://www.cpan.org/modules/by-module/Alien/Alien-Libxml2-0.20.tar.gz",
-    },
     "ExtUtils-MakeMaker-7.04.tar.gz": {
         "sha256": "98126b012d70c2af0f8e33a07ebe0d6f2340281b2460981b959a9fb31d5ad97f",
         "url": "https://www.cpan.org/modules/by-module/ExtUtils/ExtUtils-MakeMaker-7.04.tar.gz",
@@ -77,6 +41,10 @@ PERL_MODULES_LIST_1 = {
 }
 
 PERL_MODULES_LIST_2 = {
+    "Capture-Tiny-0.27.tar.gz": {
+        "sha256": "ba54bc0305eb91ee2b0d769470d6bc62edb5b18d9c75b7ea709ea6b31e9bab21",
+        "url": "https://cpan.metacpan.org/authors/id/D/DA/DAGOLDEN/Capture-Tiny-0.27.tar.gz",
+    },
     "Carp-Clan-6.04.tar.gz": {
         "sha256": "542e13ece92d40545b8ba6626cfc6ed73071c6cbf6a5537ca126c41b349ae1ec",
         "url": "https://www.cpan.org/modules/by-module/Carp/Carp-Clan-6.04.tar.gz",
@@ -161,9 +129,9 @@ PERL_MODULES_LIST_2 = {
         "sha256": "e144207a6fd261eb9f98554c76bea66d95870ee1f62d2d346a1ea95fdccf80db",
         "url": "https://www.cpan.org/modules/by-module/Sys/Sys-SigAction-0.21.tar.gz",
     },
-    "Term-ReadLine-Gnu-1.47.tar.gz": {
-        "sha256": "3b07ac8a9b494c50aa87a40dccab3f879b92eb9527ac0f2ded5d4743d166b649",
-        "url": "https://www.cpan.org/modules/by-module/Term/Term-ReadLine-Gnu-1.47.tar.gz",
+    "Term-ReadLine-Gnu-1.25.tar.gz": {
+        "sha256": "22a1b4a156b10dc5e55be5f0030460e62a210f9194e5a469e857e5d17186b003",
+        "url": "https://www.cpan.org/modules/by-module/Term/Term-ReadLine-Gnu-1.25.tar.gz",
     },
     "Term-ShellUI-0.92.tar.gz": {
         "sha256": "3279c01c76227335eeff09032a40f4b02b285151b3576c04cacd15be05942bdb",
@@ -241,9 +209,9 @@ PERL_MODULES_LIST_2 = {
         "sha256": "55a414ce89eb7a5e9e84186f286b002054f10ae8ef4f8f2d61bb710e7549f16b",
         "url": "https://www.cpan.org/modules/by-module/Test/EXODIST/Test-Simple-1.001014.tar.gz",
     },
-    "XML-LibXML-2.0210.tar.gz": {
-        "sha256": "a29bf3f00ab9c9ee04218154e0afc8f799bf23674eb99c1a9ed4de1f4059a48d",
-        "url": "https://www.cpan.org/modules/by-module/XML/XML-LibXML-2.0210.tar.gz",
+    "XML-LibXML-2.0134.tar.gz": {
+        "sha256": "f0bca4d0c2da35d879fee4cd13f352014186cedab27ab5e191f39b5d7d4f46cf",
+        "url": "https://www.cpan.org/modules/by-module/XML/XML-LibXML-2.0134.tar.gz",
     },
     "HTTP-Cookies-6.01.tar.gz": {
         "sha256": "f5d3ade383ce6389d80cb0d0356b643af80435bb036afd8edce335215ec5eb20",

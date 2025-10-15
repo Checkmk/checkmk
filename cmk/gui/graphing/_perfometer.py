@@ -107,6 +107,27 @@ class _MetricNamesOrScalars:
         return self._scalars
 
 
+def _extract_metric_names_or_scalars(
+    perfometer: (
+        perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
+    ),
+    translated_metrics: Mapping[str, TranslatedMetric],
+) -> _MetricNamesOrScalars:
+    match perfometer:
+        case perfometers_api.Perfometer():
+            return _MetricNamesOrScalars.from_perfometers(perfometer)
+        case perfometers_api.Bidirectional():
+            return _MetricNamesOrScalars.from_perfometers(
+                perfometer.left,
+                perfometer.right,
+            )
+        case perfometers_api.Stacked():
+            return _MetricNamesOrScalars.from_perfometers(
+                perfometer.lower,
+                perfometer.upper,
+            )
+
+
 def _perfometer_matches(
     perfometer: (
         perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
@@ -115,19 +136,7 @@ def _perfometer_matches(
 ) -> bool:
     assert translated_metrics
 
-    match perfometer:
-        case perfometers_api.Perfometer():
-            metric_names_or_scalars = _MetricNamesOrScalars.from_perfometers(perfometer)
-        case perfometers_api.Bidirectional():
-            metric_names_or_scalars = _MetricNamesOrScalars.from_perfometers(
-                perfometer.left,
-                perfometer.right,
-            )
-        case perfometers_api.Stacked():
-            metric_names_or_scalars = _MetricNamesOrScalars.from_perfometers(
-                perfometer.lower,
-                perfometer.upper,
-            )
+    metric_names_or_scalars = _extract_metric_names_or_scalars(perfometer, translated_metrics)
 
     if not metric_names_or_scalars.metric_names:
         return False

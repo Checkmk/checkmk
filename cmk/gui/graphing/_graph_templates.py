@@ -437,10 +437,7 @@ def _create_graph_recipe_from_template(
         ),
         metrics=metrics,
         unit_spec=units.pop(),
-        explicit_vertical_range=evaluate_graph_template_range(
-            graph_template.range,
-            translated_metrics,
-        ),
+        explicit_vertical_range=graph_template.range,
         horizontal_rules=graph_template.horizontal_rules,
         omit_zero_metrics=graph_template.omit_zero_metrics,
         consolidation_function=graph_template.consolidation_function,
@@ -551,7 +548,7 @@ class EvaluatedGraphTemplate:
     title: str
     horizontal_rules: Sequence[HorizontalRule]
     consolidation_function: GraphConsolidationFunction
-    range: FixedGraphTemplateRange | MinimalGraphTemplateRange | None
+    range: FixedVerticalRange | MinimalVerticalRange | None
     omit_zero_metrics: bool
     metrics: Sequence[Evaluated]
 
@@ -624,7 +621,10 @@ def _get_evaluated_graph_templates(
                     temperature_unit=temperature_unit,
                 ),
                 consolidation_function="max",
-                range=graph_template.range,
+                range=evaluate_graph_template_range(
+                    graph_template.range,
+                    translated_metrics,
+                ),
                 omit_zero_metrics=False,
                 metrics=list(
                     itertools.chain(

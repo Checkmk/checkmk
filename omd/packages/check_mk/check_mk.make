@@ -44,6 +44,8 @@ $(CHECK_MK_BUILD):
 	$(REPO_PATH)/locale/compile_mo_files
 	$(TOUCH) $@
 
+ADDITIONAL_EXCLUDE=--exclude "BUILD.*" --exclude "BUILD" --exclude "OWNERS"
+
 EDITION_EXCLUDE=
 ifeq ($(EDITION),raw)
 	EDITION_EXCLUDE += \
@@ -98,6 +100,7 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) agent
 	    --exclude plugins/Makefile \
 	    --exclude plugins/*.checksum \
 	    --exclude plugins/__init__.py \
+	    $(ADDITIONAL_EXCLUDE) \
 	    cfg_examples \
 	    plugins \
 	    sap \
@@ -140,6 +143,7 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) agent
 	tar -c -C $(REPO_PATH) \
 	    $(CHECK_MK_TAROPTS) \
 	    $(EDITION_EXCLUDE) \
+	    $(ADDITIONAL_EXCLUDE) \
 	    cmk | tar -x -C $(CHECK_MK_INSTALL_DIR)/lib/python3
 
 	# legacy checks have been moved to checks/ in a dedicated step above.

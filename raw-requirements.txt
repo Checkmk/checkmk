@@ -225,9 +225,9 @@ azure-common==1.1.28 \
     # via
     #   -c requirements.txt
     #   azure-mgmt-resource
-azure-core==1.35.1 \
-    --hash=sha256:12da0c9e08e48e198f9158b56ddbe33b421477e1dc98c2e1c8f9e254d92c468b \
-    --hash=sha256:435d05d6df0fff2f73fb3c15493bb4721ede14203f1ff1382aa6b6b2bdd7e562
+azure-core==1.36.0 \
+    --hash=sha256:22e5605e6d0bf1d229726af56d9e92bc37b6e726b141a18be0b4d424131741b7 \
+    --hash=sha256:fee9923a3a753e94a259563429f3644aaf05c486d45b1215d098115102d91d3b
     # via
     #   -c requirements.txt
     #   azure-identity
@@ -381,29 +381,29 @@ blinker==1.9.0 \
     # via
     #   -c requirements.txt
     #   flask
-boto3==1.40.51 \
-    --hash=sha256:6aa81b9acb4eff87b5505ae26c948883a2015cc3308ce5168a9df6e00ab815d2 \
-    --hash=sha256:ed1b7750df07b2f2ece0141ff2ed0489db2ec2b5311a956d00a496b05fd4fadb
+boto3==1.40.52 \
+    --hash=sha256:96ee720b52be647d8ef5ba92fccfce6b65d6321769430fe6edd10d57ec43c25b \
+    --hash=sha256:ecc8c99d3cc96716cdfba62d9c9c6ce0eb98d02494a66690bcc2ec181c1ced67
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-boto3-stubs[logs]==1.40.51 \
-    --hash=sha256:0281e820813a310954e15fb7c1d470c24c34c1cccc7b1ddad977fa293a1080a9 \
-    --hash=sha256:896d0ffaa298ce1749eea1a54946320a0f4e07c6912f8e1f8c0744a708ee25a4
+boto3-stubs[logs]==1.40.52 \
+    --hash=sha256:5e2b74b7b5ad71ca2b8c35a8d3bf1e4ef60317b1682b5e7dda9f16a1c0b43844 \
+    --hash=sha256:bd20a7bc9122bb1b939195431b9d3f540b1ef050103bc1720d786960907464fd
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
-botocore==1.40.51 \
-    --hash=sha256:a06de20408c3009e59e8f161a1146f1801d279d0923ab950349154900951bb20 \
-    --hash=sha256:d5811a834bbdec6dac540565eab9f5ad954ed439b535686fbc3219e1cbfbfc49
+botocore==1.40.52 \
+    --hash=sha256:838697a06c7713df8d39f088105334b4eadcc3d65c7a260bf1a1bd8bf616ce4a \
+    --hash=sha256:b65d970ca4ccd869639332083da17c3a933bcf495120dcc4f5c7723cb3f6216c
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   boto3
     #   s3transfer
-botocore-stubs==1.40.51 \
-    --hash=sha256:8ddbeb1f68e39382533bb53f3b968d29e640406016af00ad8bbd6e1a2bd59536 \
-    --hash=sha256:9a028104979205c9be0b68bb59ba679e4fe452e017eec3d40f6c2b41c590a73c
+botocore-stubs==1.40.52 \
+    --hash=sha256:4f3e244aad34997cb88aa81c64eb0df23c19d3cbc9337366dfb7f992807d2e53 \
+    --hash=sha256:9e9809e563eb2c925051d849257bdc7605760bcbb62b3d5fe3117f9385345488
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
@@ -1541,9 +1541,9 @@ google-cloud-asset==4.0.0 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-google-cloud-monitoring==2.27.2 \
-    --hash=sha256:70b2e877d6267a3548ca17be301a4253fe83d4bebf7ea5cd8ee68b9dd3a70a02 \
-    --hash=sha256:d0f00205a5f94530dc72c3b96f681be14abdf1d6144dae5d2b922b54a90c43fa
+google-cloud-monitoring==2.28.0 \
+    --hash=sha256:25175590907e038add644b5b744941d221776342924637095a879973a7c0ac37 \
+    --hash=sha256:64f4c57cc465dd51cceffe559f0ec6fa9f96aa6d82790cd8d3af6d5cc3795160
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -1717,6 +1717,7 @@ grpcio==1.75.1 \
     # via
     #   -c requirements.txt
     #   google-api-core
+    #   google-cloud-monitoring
     #   googleapis-common-protos
     #   grpc-google-iam-v1
     #   grpcio-status
@@ -1768,9 +1769,9 @@ httpx==0.28.1 \
     #   -c requirements.txt
     #   -r packages/cmk-agent-receiver/requirements.in
     #   schemathesis
-hypothesis==6.140.3 \
-    --hash=sha256:4f4a09bf77af21e0cc3dffed1ea639812dc75d38f81308ec9fb0e33f8557b0cb \
-    --hash=sha256:a2cfff51641a58a56081f5c90ae1da6ccf3d043404f411805f7f0e0d75742d0e
+hypothesis==6.140.4 \
+    --hash=sha256:a4f61b0c1977a0bc1a28b7fe979f7c045092a57760e58083c956dfd538ff754e \
+    --hash=sha256:b05eee9ba0d69f479657a0952679d2ff8967ea5e05ca7bddc86ddb60c49291b2
     # via
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
@@ -5367,7 +5368,6 @@ six==1.17.0 \
     --hash=sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81
     # via
     #   -c requirements.txt
-    #   azure-core
     #   bson
     #   cssbeautifier
     #   dockerpty

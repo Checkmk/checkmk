@@ -180,9 +180,9 @@ attrs==25.4.0 \
     #   aiohttp
     #   jsonschema
     #   referencing
-azure-core==1.35.1 \
-    --hash=sha256:12da0c9e08e48e198f9158b56ddbe33b421477e1dc98c2e1c8f9e254d92c468b \
-    --hash=sha256:435d05d6df0fff2f73fb3c15493bb4721ede14203f1ff1382aa6b6b2bdd7e562
+azure-core==1.36.0 \
+    --hash=sha256:22e5605e6d0bf1d229726af56d9e92bc37b6e726b141a18be0b4d424131741b7 \
+    --hash=sha256:fee9923a3a753e94a259563429f3644aaf05c486d45b1215d098115102d91d3b
     # via
     #   -c requirements.txt
     #   azure-identity
@@ -262,15 +262,15 @@ blinker==1.9.0 \
     # via
     #   -c requirements.txt
     #   flask
-boto3==1.40.51 \
-    --hash=sha256:6aa81b9acb4eff87b5505ae26c948883a2015cc3308ce5168a9df6e00ab815d2 \
-    --hash=sha256:ed1b7750df07b2f2ece0141ff2ed0489db2ec2b5311a956d00a496b05fd4fadb
+boto3==1.40.52 \
+    --hash=sha256:96ee720b52be647d8ef5ba92fccfce6b65d6321769430fe6edd10d57ec43c25b \
+    --hash=sha256:ecc8c99d3cc96716cdfba62d9c9c6ce0eb98d02494a66690bcc2ec181c1ced67
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-botocore==1.40.51 \
-    --hash=sha256:a06de20408c3009e59e8f161a1146f1801d279d0923ab950349154900951bb20 \
-    --hash=sha256:d5811a834bbdec6dac540565eab9f5ad954ed439b535686fbc3219e1cbfbfc49
+botocore==1.40.52 \
+    --hash=sha256:838697a06c7713df8d39f088105334b4eadcc3d65c7a260bf1a1bd8bf616ce4a \
+    --hash=sha256:b65d970ca4ccd869639332083da17c3a933bcf495120dcc4f5c7723cb3f6216c
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -929,9 +929,9 @@ google-cloud-asset==4.0.0 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-google-cloud-monitoring==2.27.2 \
-    --hash=sha256:70b2e877d6267a3548ca17be301a4253fe83d4bebf7ea5cd8ee68b9dd3a70a02 \
-    --hash=sha256:d0f00205a5f94530dc72c3b96f681be14abdf1d6144dae5d2b922b54a90c43fa
+google-cloud-monitoring==2.28.0 \
+    --hash=sha256:25175590907e038add644b5b744941d221776342924637095a879973a7c0ac37 \
+    --hash=sha256:64f4c57cc465dd51cceffe559f0ec6fa9f96aa6d82790cd8d3af6d5cc3795160
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -1028,6 +1028,7 @@ grpcio==1.75.1 \
     # via
     #   -c requirements.txt
     #   google-api-core
+    #   google-cloud-monitoring
     #   googleapis-common-protos
     #   grpc-google-iam-v1
     #   grpcio-status
@@ -3420,7 +3421,6 @@ six==1.17.0 \
     --hash=sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81
     # via
     #   -c requirements.txt
-    #   azure-core
     #   jsonpath-rw
     #   kubernetes
     #   opsgenie-sdk

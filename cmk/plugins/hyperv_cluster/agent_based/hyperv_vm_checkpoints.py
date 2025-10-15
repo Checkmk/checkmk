@@ -39,13 +39,11 @@ hyperv_vm_checkpoints_default_params: CheckpointParams = {
 }
 
 
-def parse_hyperv_vm_checkpoints(string_table: StringTable) -> dict[str, list[CheckpointInfo]]:
-    parsed: dict[str, list[CheckpointInfo]] = {}
-
+def parse_hyperv_vm_checkpoints(string_table: StringTable) -> Section:
     if not string_table:
-        return parsed
+        return {}
 
-    checkpoints: list[CheckpointInfo] = []
+    checkpoints = []
     current_checkpoint: CheckpointInfo = {}
 
     for line in string_table:
@@ -66,8 +64,7 @@ def parse_hyperv_vm_checkpoints(string_table: StringTable) -> dict[str, list[Che
     if current_checkpoint:
         checkpoints.append(current_checkpoint)
 
-    parsed["checkpoints"] = checkpoints
-    return parsed
+    return {"checkpoints": checkpoints}
 
 
 def discover_hyperv_vm_checkpoints(section: Section) -> DiscoveryResult:

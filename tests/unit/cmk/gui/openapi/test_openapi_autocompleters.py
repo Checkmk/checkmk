@@ -20,6 +20,7 @@ def fixture_expected_autocompleters() -> list[str]:
     autocompleters = [
         "sites",
         "monitored_hostname",
+        "available_graph_templates",
         "allgroups",
         "label",
         "tag_groups",
@@ -67,6 +68,10 @@ def test_openapi_all_groups_autocompleter(
         clients.AutoComplete.invoke(
             "allgroups", {"group_type": "host", "strict": True, "context": {}}, ""
         )
+
+
+def test_openapi_available_graph_templates(clients: ClientRegistry) -> None:
+    clients.AutoComplete.invoke("available_graph_templates", {"strict": True, "context": {}}, "")
 
 
 def test_openapi_tag_groups_autocompleter(clients: ClientRegistry) -> None:

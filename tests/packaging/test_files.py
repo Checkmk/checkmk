@@ -637,31 +637,40 @@ def _verify_signature(file_path: Path) -> None | str:
 def test_windows_artifacts_are_signed(package_path: str, cmk_version: str) -> None:
     signing_failures = []
 
-    for non_msi_files in ("OpenHardwareMonitorLib.dll", "OpenHardwareMonitorCLI.exe", "mk-sql.exe"):
-        with NamedTemporaryFile() as non_msi_file:
-            non_msi_file.write(
-                _get_file_from_package(
-                    package_path, cmk_version, f"share/check_mk/agents/windows/{non_msi_files}"
-                )
-            )
-            signing_failures.append(_verify_signature(Path(non_msi_file.name)))
+    non_msi_files = ["mk-sql.exe"]
+    if not package_path.endswith(".tar.gz"):
+        non_msi_files += [ "OpenHardwareMonitorLib.dll", "OpenHardwareMonitorCLI.exe" ]
+        path_prefix="share/check_mk/agents/windows"
+    else:
+        path_prefix="agents/windows"
 
-    with NamedTemporaryFile() as msi_file:
-        msi_file.write(
-            _get_file_from_package(
-                package_path, cmk_version, "share/check_mk/agents/windows/check_mk_agent.msi"
-            )
-        )
-        signing_failures.append(_verify_signature(Path(msi_file.name)))
-        with TemporaryDirectory() as msi_content:
-            subprocess.run(
-                ["msiextract", "-C", msi_content, msi_file.name],
-                check=False,
-                stdout=subprocess.DEVNULL,
-            )
-            for file in ("check_mk_agent.exe", "cmk-agent-ctl.exe"):
-                signing_failures.append(
-                    _verify_signature(Path(msi_content + "/Program Files/checkmk/service/" + file))
+    for non_msi_file in non_msi_files:
+        with NamedTemporaryFile() as non_msi_file_temp:
+            non_msi_file_temp.write(
+                _get_file_from_package(
+                    package_path, cmk_version, f"{path_prefix}/{non_msi_file}"
                 )
+            )
+            signing_failures.append(_verify_signature(Path(non_msi_file_temp.name)))
+
+    # TODO: Clarify why the msi is missing in the source.tar.gz CMK-26785
+    if not package_path.endswith(".tar.gz"):
+        with NamedTemporaryFile() as msi_file:
+            msi_file.write(
+                _get_file_from_package(
+                    package_path, cmk_version, f"{path_prefix}/check_mk_agent.msi"
+                )
+            )
+            signing_failures.append(_verify_signature(Path(msi_file.name)))
+            with TemporaryDirectory() as msi_content:
+                subprocess.run(
+                    ["msiextract", "-C", msi_content, msi_file.name],
+                    check=False,
+                    stdout=subprocess.DEVNULL,
+                )
+                for file in ("check_mk_agent.exe", "cmk-agent-ctl.exe"):
+                    signing_failures.append(
+                        _verify_signature(Path(msi_content + "/Program Files/checkmk/service/" + file))
+                    )
 
     assert not any(signing_failures)

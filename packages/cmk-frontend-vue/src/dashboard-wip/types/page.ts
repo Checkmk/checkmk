@@ -34,5 +34,6 @@ export interface DashboardPageProperties {
   links: {
     list_dashboards: string
     user_guide: string
+    navigation_embedding_page: string
   }
 }

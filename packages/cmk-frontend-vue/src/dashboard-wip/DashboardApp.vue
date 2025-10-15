@@ -298,6 +298,7 @@ function deepClone<T>(obj: T): T {
       <DashboardMenuHeader
         :selected-dashboard="selectedDashboard"
         :link-user-guide="props.links.user_guide"
+        :link-navigation-embedding-page="props.links.navigation_embedding_page"
         @open-filter="openDashboardFilterSettings = true"
         @open-settings="openDashboardSettings = true"
         @open-widget-workflow="openAddWidgetDialog = true"

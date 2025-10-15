@@ -13,6 +13,7 @@ import CmkIcon from '@/components/CmkIcon'
 import CmkLabel from '@/components/CmkLabel.vue'
 
 import type { DashboardMetadata } from '@/dashboard-wip/types/dashboard.ts'
+import { toPathAndSearch } from '@/dashboard-wip/utils.ts'
 
 import ButtonDropdownMenu from './ButtonDropdownMenu.vue'
 import DashboardSelector from './DashboardSelector.vue'
@@ -22,6 +23,7 @@ import type { SelectedDashboard } from './types'
 interface Props {
   selectedDashboard: SelectedDashboard | null
   linkUserGuide: string
+  linkNavigationEmbeddingPage: string
 }
 
 const { _t } = usei18n()
@@ -89,6 +91,25 @@ const setStartUrl = async (): Promise<void> => {
     console.error('Request failed:', error)
   }
 }
+
+const parsePageNavigation = () => {
+  let redirectLink
+  let toggle
+  if (window.self !== window.top) {
+    // inside the embedding iframe which show the page nagivation
+    redirectLink = window.location.href
+    toggle = 'on'
+  } else {
+    redirectLink = `${props.linkNavigationEmbeddingPage}?start_url=${toPathAndSearch(new URL(window.location.href))}`
+    toggle = 'off'
+  }
+  return {
+    redirectLink,
+    toggle
+  }
+}
+
+const pageNavigation = parsePageNavigation()
 </script>
 
 <template>
@@ -159,9 +180,14 @@ const setStartUrl = async (): Promise<void> => {
                 <div class="menu-label">{{ _t('Set as start URL') }}</div>
               </div>
 
-              <div class="menu-item">
-                <div class="menu-label">{{ _t('Show page navigation') }}</div>
-              </div>
+              <a :href="pageNavigation.redirectLink" target="_top" class="no-underline">
+                <div class="menu-item">
+                  <div class="menu-label no-underline">{{ _t('Show page navigation') }}</div>
+                  <div>
+                    <CmkIcon :name="pageNavigation.toggle === 'on' ? 'toggle-on' : 'toggle-off'" />
+                  </div>
+                </div>
+              </a>
             </div>
           </template>
         </ButtonDropdownMenu>
@@ -275,6 +301,11 @@ const setStartUrl = async (): Promise<void> => {
       justify-content: flex-start;
     }
   }
+}
+
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+.no-underline {
+  text-decoration: none !important;
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

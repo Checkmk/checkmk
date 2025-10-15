@@ -178,6 +178,7 @@ def page_dashboard_app(config: Config) -> None:
         "links": {
             "list_dashboards": f"{PAGE_EDIT_DASHBOARDS_LINK}.py",
             "user_guide": "https://docs.checkmk.com/master/en/dashboards.html",
+            "navigation_embedding_page": makeuri_contextless(request, [], filename="index.py"),
         },
     }
     html.vue_component("cmk-dashboard", data=page_properties)

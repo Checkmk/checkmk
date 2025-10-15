@@ -53,6 +53,7 @@ export const simpleIcons = [
   'load-graph',
   'filter',
   'toggle-on',
+  'toggle-off',
   'help-activated',
   'connection-tests',
   'rulesets',

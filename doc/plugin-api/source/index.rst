@@ -60,6 +60,20 @@ Each plugin expects a different prefix in the variable name:
    - graphs the ``graph_`` prefix
    - nodes (inventory UI) the ``node_`` prefix
 
+Internal and "alpha" APIs
+=========================
+
+Along with the regular versioned plugin APIs you might find "internal" and "alpha" APIs.
+These APIs adhere to the same architectural principles.
+**However: They do not provide a stable interface!**
+They might change without prior notice.
+
+"Alpha" APIs are still in an experimental state, but they are built with the intention of becoming the next version of a regular API in the future.
+Third party developers are encouraged to try them out and provide feedback.
+
+The "internal" APIs are used by plugins maintained by Checkmk, but they are not intended for use by third party developers.
+Their contents may or may not become part of a future regular API.
+
 .. toctree::
    :glob:
 

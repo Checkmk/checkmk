@@ -5,14 +5,14 @@
 
 # Example output:
 # <<<msoffice_serviceplans>>>
-# msonline:VISIOCLIENT ONEDRIVE_BASIC Success
-# msonline:VISIOCLIENT VISIOONLINE Success
-# msonline:VISIOCLIENT EXCHANGE_S_FOUNDATION Success
-# msonline:VISIOCLIENT VISIO_CLIENT_SUBSCRIPTION Success
-# msonline:POWER_BI_PRO EXCHANGE_S_FOUNDATION Success
-# msonline:POWER_BI_PRO BI_AZURE_P2 Success
-# msonline:WINDOWS_STORE EXCHANGE_S_FOUNDATION Success
-# msonline:WINDOWS_STORE WINDOWS_STORE PendingActivation
+# mggraph:VISIOCLIENT ONEDRIVE_BASIC Success
+# mggraph:VISIOCLIENT VISIOONLINE Success
+# mggraph:VISIOCLIENT EXCHANGE_S_FOUNDATION Success
+# mggraph:VISIOCLIENT VISIO_CLIENT_SUBSCRIPTION Success
+# mggraph:POWER_BI_PRO EXCHANGE_S_FOUNDATION Success
+# mggraph:POWER_BI_PRO BI_AZURE_P2 Success
+# mggraph:WINDOWS_STORE EXCHANGE_S_FOUNDATION Success
+# mggraph:WINDOWS_STORE WINDOWS_STORE PendingActivation
 
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
@@ -23,6 +23,9 @@ check_info = {}
 
 def inventory_msoffice_serviceplans(info):
     for line in info:
+        if len(line) >= 1 and "Microsoft.Graph module is not installed" in " ".join(line):
+            yield "_error", {}
+            return
         yield line[0], {}
 
 
@@ -32,6 +35,13 @@ def check_msoffice_serviceplans(item, params, info):
     pending_list = []
     warn, crit = params.get("levels", (None, None))
     for line in info:
+        if len(line) >= 1 and "Microsoft.Graph module is not installed" in " ".join(line):
+            yield (
+                2,
+                "MS Office agent plugin requires installation of the Powershell Module Microsoft.Graph for all users, see werk #18609",
+            )
+            return
+
         bundle, plan, status = line[0], " ".join(line[1:-1]), line[-1]
         if bundle == item:
             if status == "Success":

@@ -10,7 +10,7 @@
 import copy
 import json
 from collections.abc import Collection, Iterable
-from typing import Any, overload, TypedDict
+from typing import Any, overload, override, TypedDict
 
 import cmk.ccc.version as cmk_version
 from cmk.bi.actions import BICallARuleAction
@@ -1530,6 +1530,7 @@ class BIAggregationForm(Dictionary):
 
 
 class AjaxBIRulePreview(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         sites_callback = SitesCallback(all_sites_with_id_and_online, bi_livestatus_query, _)
         compiler = BICompiler(BIManager.bi_configuration_file(), sites_callback)
@@ -1571,6 +1572,7 @@ class AjaxBIRulePreview(AjaxPage):
 
 
 class AjaxBIAggregationPreview(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         # Prepare compiler
         sites_callback = SitesCallback(all_sites_with_id_and_online, bi_livestatus_query, _)

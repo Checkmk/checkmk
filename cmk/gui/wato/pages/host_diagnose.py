@@ -13,7 +13,7 @@
 import base64
 import json
 from collections.abc import Collection
-from typing import NotRequired, TypedDict
+from typing import NotRequired, override, TypedDict
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -477,6 +477,7 @@ class ModeDiagHost(WatoMode):
 
 
 class PageAjaxDiagHost(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         check_csrf_token()
         if not user.may("wato.diag_host"):

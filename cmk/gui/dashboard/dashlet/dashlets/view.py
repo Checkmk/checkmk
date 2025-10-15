@@ -12,7 +12,7 @@ import dataclasses
 import json
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
-from typing import cast, get_args, Literal, TypeVar
+from typing import cast, get_args, Literal, override, TypeVar
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
@@ -560,6 +560,7 @@ class EmbeddedViewSpecManager:
 
 
 class ViewWidgetIFramePage(Page):
+    @override
     def page(self, config: Config) -> None:
         """Render a single view for use in an iframe.
 
@@ -714,6 +715,7 @@ class ViewWidgetEditPage(Page):
         datasource: str
         single_infos: SingleInfos
 
+    @override
     def page(self, config: Config) -> None:
         """Render the view editor for embedded views in dashboards.
 

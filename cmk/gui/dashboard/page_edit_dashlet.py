@@ -8,6 +8,7 @@
 
 
 from collections.abc import Callable
+from typing import override
 
 from cmk.ccc.user import UserId
 from cmk.gui import forms, visuals
@@ -58,6 +59,7 @@ DashletHandleInputFunc = Callable[[DashletId, DashletConfig, DashletConfig], Das
 
 
 class EditDashletPage(Page):
+    @override
     def _handle_http_request(self) -> None:
         if not user.may("general.edit_dashboards"):
             raise MKAuthException(_("You are not allowed to edit dashboards."))
@@ -71,6 +73,7 @@ class EditDashletPage(Page):
         except KeyError:
             raise MKUserError("name", _("The requested dashboard does not exist."))
 
+    @override
     def page(self, config: Config) -> PageResult:
         if self._ident is None:
             type_name = request.get_str_input_mandatory("type")

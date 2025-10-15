@@ -7,7 +7,7 @@
 
 import time
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 import livestatus
 
@@ -30,6 +30,7 @@ from cmk.livestatus_client.commands import (
 class PageRescheduleCheck(AjaxPage):
     """Is called to trigger a host / service check"""
 
+    @override
     def page(self, config: Config) -> PageResult:
         api_request = request.get_request()
         return self._do_reschedule(api_request, config.reschedule_timeout)

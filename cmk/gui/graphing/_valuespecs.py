@@ -13,7 +13,7 @@ import json
 import re
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, assert_never, Literal, TypedDict
+from typing import Any, assert_never, Literal, override, TypedDict
 
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
@@ -431,6 +431,7 @@ def _vs_type_from_formatter(
 
 
 class PageVsAutocomplete(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         temperature_unit = get_temperature_unit(user, config.default_temperature_unit)
         if metric_name := self.webapi_request()["metric"]:

@@ -10,7 +10,7 @@
 import re
 from collections.abc import Callable, Container, Iterable, Mapping
 from functools import partial
-from typing import Literal
+from typing import Literal, override
 
 import livestatus
 
@@ -116,6 +116,7 @@ class RegexAjaxDropdownFilter(AjaxDropdownFilter):
 
 
 class PageValidateFilter(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         api_request = self.webapi_request()
         varname = str(api_request.get("varname"))

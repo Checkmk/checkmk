@@ -17,7 +17,7 @@ from __future__ import annotations
 import ast
 import string
 from collections.abc import Iterator, Mapping, Sequence
-from typing import Any, Literal, NamedTuple, overload, TypedDict
+from typing import Any, Literal, NamedTuple, overload, override, TypedDict
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
@@ -791,6 +791,7 @@ def view_editor_sorter_specs(
 
 
 class PageAjaxCascadingRenderPainterParameters(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         api_request = request.get_request()
 

@@ -9,7 +9,7 @@
 
 import json
 import time
-from typing import Any
+from typing import Any, override
 
 from cmk.bi.aggregation_functions import BIAggregationFunctionSchema
 from cmk.bi.computer import BIAggregationFilter
@@ -59,6 +59,7 @@ def register(
 
 
 class AjaxFetchAggregationData(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         aggregations_var = request.get_str_input_mandatory("aggregations", "[]")
         filter_names = json.loads(aggregations_var)
@@ -276,6 +277,7 @@ class NodeVisualizationBIDataMapper:
 
 
 class AjaxSaveBIAggregationLayout(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         check_csrf_token()
         layout_var = request.get_str_input_mandatory("layout", "{}")
@@ -286,6 +288,7 @@ class AjaxSaveBIAggregationLayout(AjaxPage):
 
 
 class AjaxDeleteBIAggregationLayout(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         check_csrf_token()
         for_aggregation = request.var("aggregation_name")
@@ -295,6 +298,7 @@ class AjaxDeleteBIAggregationLayout(AjaxPage):
 
 
 class AjaxLoadBIAggregationLayout(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         aggregation_name = request.var("aggregation_name")
         return BILayoutManagement.load_bi_aggregation_layout(aggregation_name)

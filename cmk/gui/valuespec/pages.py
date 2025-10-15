@@ -8,6 +8,7 @@
 import abc
 import socket
 from collections.abc import Mapping
+from typing import override
 
 import cmk.utils.paths
 from cmk.gui.config import Config
@@ -55,6 +56,7 @@ class ABCPageListOfMultipleGetChoice(AjaxPage, abc.ABC):
     ) -> GroupedListOfMultipleChoices | ListOfMultipleChoices:
         raise NotImplementedError()
 
+    @override
     def page(self, config: Config) -> dict:
         api_request = request.get_request()
         vs = ListOfMultiple(
@@ -66,6 +68,7 @@ class ABCPageListOfMultipleGetChoice(AjaxPage, abc.ABC):
 
 
 class AjaxFetchCA(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         check_csrf_token()
         user.need_permission("general.server_side_requests")

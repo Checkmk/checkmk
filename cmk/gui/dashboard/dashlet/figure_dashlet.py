@@ -8,7 +8,7 @@
 
 import abc
 import json
-from typing import cast
+from typing import cast, override
 
 from cmk.ccc.user import UserId
 from cmk.gui.config import Config
@@ -31,6 +31,7 @@ __all__ = ["FigureDashletPage", "ABCFigureDashlet"]
 
 
 class FigureDashletPage(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         dashboard_name = request.get_ascii_input_mandatory("name")
         dashboard_owner = request.get_validated_type_input_mandatory(UserId, "owner")

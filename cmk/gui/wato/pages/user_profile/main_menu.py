@@ -6,6 +6,7 @@
 """The user profile main menu and related AJAX endpoints"""
 
 from collections.abc import Callable
+from typing import override
 
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
@@ -186,6 +187,7 @@ def default_user_menu_topics(
 class ModeAjaxCycleThemes(AjaxPage):
     """AJAX handler for quick access option 'Interface theme" in user menu"""
 
+    @override
     def page(self, config: Config) -> PageResult:
         check_csrf_token()
         themes = [theme for theme, _title in theme_choices()]
@@ -207,6 +209,7 @@ class ModeAjaxCycleThemes(AjaxPage):
 class ModeAjaxCycleSidebarPosition(AjaxPage):
     """AJAX handler for quick access option 'Sidebar position" in user menu"""
 
+    @override
     def page(self, config: Config) -> PageResult:
         check_csrf_token()
         set_user_attribute(
@@ -219,6 +222,7 @@ class ModeAjaxCycleSidebarPosition(AjaxPage):
 class ModeAjaxSetStartURL(AjaxPage):
     """AJAX handler to set the start URL of a user"""
 
+    @override
     def page(self, config: Config) -> PageResult:
         try:
             check_csrf_token()

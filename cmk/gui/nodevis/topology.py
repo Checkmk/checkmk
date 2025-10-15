@@ -18,7 +18,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 import livestatus
 
@@ -222,6 +222,7 @@ class ABCTopologyPage(Page):
     def visual_spec(cls):
         raise NotImplementedError
 
+    @override
     def page(self, config: Config) -> None:
         """Determines the hosts to be shown"""
         user.need_permission("general.parent_child_topology")
@@ -382,6 +383,7 @@ class AjaxInitialTopologyFilters(ABCAjaxInitialFilters):
 
 
 class AjaxFetchTopology(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         topology_type = request.get_str_input_mandatory("topology_type")
         if topology_type == "network_topology":

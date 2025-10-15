@@ -7,6 +7,7 @@
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Collection
+from typing import override
 
 import cmk.utils.paths
 from cmk.crypto.password import Password
@@ -113,9 +114,11 @@ class ModeBackupJobState(handler.PageBackupJobState, WatoMode):
 class PageAjaxBackupJobState(AjaxPage):
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
+    @override
     def handle_page(self, config: Config) -> None:
         self._handle_exc(config, self.page)
 
+    @override
     def page(self, config: Config) -> PageResult:
         user.need_permission("wato.backups")
         if request.var("job") == "restore":

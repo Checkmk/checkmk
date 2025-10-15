@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
+from typing import override
 
 import pytest
 
@@ -273,6 +274,7 @@ def test_page_registry_register_page(capsys: pytest.CaptureFixture[str]) -> None
     page_registry = cmk.gui.pages.PageRegistry()
 
     class PageClass(cmk.gui.pages.Page):
+        @override
         def page(self, config: Config) -> None:
             sys.stdout.write("234")
 

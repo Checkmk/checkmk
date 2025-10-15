@@ -8,7 +8,7 @@
 
 from collections.abc import Iterable, Sequence
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
@@ -113,6 +113,7 @@ class UserProfile(Page):
 
         raise FinalizeRequest(code=200)
 
+    @override
     def page(self, config: Config) -> None:
         verify_requirements(
             UserPermissions.from_config(config, permission_registry),

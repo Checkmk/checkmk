@@ -20,7 +20,7 @@ import pprint
 import traceback
 from collections.abc import Collection, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import asdict
-from typing import Any, Literal, NamedTuple
+from typing import Any, Literal, NamedTuple, override
 
 from pydantic import BaseModel, Field
 
@@ -211,6 +211,7 @@ class ModeDiscovery(WatoMode):
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return service_page_menu(breadcrumb, self._host, self._options)
 
+    @override
     def page(self, config: Config) -> None:
         # This is needed to make the discovery page show the help toggle
         # button. The help texts on this page are only added dynamically via
@@ -317,6 +318,7 @@ class AutomationServiceDiscoveryJob(AutomationCommand[_AutomationServiceDiscover
 
 
 class ModeAjaxServiceDiscovery(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         check_csrf_token()
         user.need_permission("wato.hosts")
@@ -1921,6 +1923,7 @@ class DiscoveryPageRenderer:
 
 
 class ModeAjaxExecuteCheck(AjaxPage):
+    @override
     def _handle_http_request(self) -> None:
         self._site = SiteId(request.get_ascii_input_mandatory("site"))
         if self._site not in active_config.sites:
@@ -1939,6 +1942,7 @@ class ModeAjaxExecuteCheck(AjaxPage):
         # TODO: Validate
         self._item = request.get_str_input_mandatory("item")
 
+    @override
     def page(self, config: Config) -> PageResult:
         check_csrf_token()
         try:

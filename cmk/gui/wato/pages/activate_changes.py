@@ -17,7 +17,7 @@ import json
 import os
 import tarfile
 from collections.abc import Collection, Iterator, Sequence
-from typing import Literal
+from typing import Literal, override
 
 from livestatus import SiteConfiguration, SiteConfigurations
 
@@ -1037,6 +1037,7 @@ def _vs_activation(
 
 
 class PageAjaxStartActivation(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         check_csrf_token()
         user.need_permission("wato.activate")
@@ -1094,6 +1095,7 @@ class PageAjaxStartActivation(AjaxPage):
 
 
 class PageAjaxActivationState(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         user.need_permission("wato.activate")
 

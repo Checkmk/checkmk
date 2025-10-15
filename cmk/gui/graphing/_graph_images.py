@@ -12,7 +12,7 @@ import json
 import time
 import traceback
 from collections.abc import Mapping, Sequence
-from typing import Any
+from typing import Any, override
 
 from pydantic import ValidationError as PydanticValidationError
 
@@ -76,6 +76,7 @@ from ._unit import get_temperature_unit
 # of a host or service.
 #    # Needed by mail notification plug-in (-> no authentication from localhost)
 class AjaxGraphImagesForNotifications(Page):
+    @override
     def page(self, config: Config) -> None:
         """Registered as `ajax_graph_images`."""
         if not isinstance(user, LoggedInSuperUser):

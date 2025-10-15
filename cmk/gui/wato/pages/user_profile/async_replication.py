@@ -5,7 +5,7 @@
 """Displaying the asynchronous replication of the current users user profile"""
 
 import time
-from typing import get_args
+from typing import get_args, override
 
 import cmk.gui.sites
 from cmk.ccc.exceptions import MKGeneralException
@@ -33,6 +33,7 @@ def register(page_registry: PageRegistry) -> None:
 class ModeAjaxProfileReplication(AjaxPage):
     """AJAX handler for asynchronous replication of user profiles (changed passwords)"""
 
+    @override
     def page(self, config: Config) -> PageResult:
         check_csrf_token()
         ajax_request = self.webapi_request()

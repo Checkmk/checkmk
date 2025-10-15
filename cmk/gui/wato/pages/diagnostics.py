@@ -11,6 +11,7 @@ import tarfile
 import uuid
 from collections.abc import Collection, Iterator, Sequence
 from pathlib import Path
+from typing import override
 
 from pydantic import BaseModel
 
@@ -887,6 +888,7 @@ def _create_file_path() -> str:
 
 
 class PageDownloadDiagnosticsDump(Page):
+    @override
     def page(self, config: Config) -> None:
         if not user.may("wato.diagnostics"):
             raise MKAuthException(

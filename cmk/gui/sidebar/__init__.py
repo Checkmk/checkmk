@@ -17,7 +17,7 @@ import textwrap
 import traceback
 from collections.abc import Callable, Sequence
 from enum import Enum
-from typing import Any
+from typing import Any, override
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
@@ -796,6 +796,7 @@ def ajax_snapin(config: Config) -> None:
 
 
 class AjaxFoldSnapin(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         check_csrf_token()
         response.set_content_type("application/json")
@@ -808,6 +809,7 @@ class AjaxFoldSnapin(AjaxPage):
 
 
 class AjaxOpenCloseSnapin(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         check_csrf_token()
         response.set_content_type("application/json")
@@ -947,6 +949,7 @@ def _used_snapins(config: Config, user_permissions: UserPermissions) -> list[Any
 
 
 class AjaxAddSnapin(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         check_csrf_token()
         if not user.may("general.configure_sidebar"):

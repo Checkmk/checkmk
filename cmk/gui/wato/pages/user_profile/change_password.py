@@ -6,6 +6,7 @@
 import time
 from collections.abc import Sequence
 from datetime import datetime
+from typing import override
 
 from cmk.crypto.password import Password, PasswordPolicy
 from cmk.gui import forms, userdb
@@ -169,6 +170,7 @@ class UserChangePasswordPage(Page):
             )
         raise redirect(origtarget)
 
+    @override
     def page(self, config: Config) -> None:
         verify_requirements(
             UserPermissions.from_config(config, permission_registry),

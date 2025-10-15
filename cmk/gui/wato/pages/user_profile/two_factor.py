@@ -16,7 +16,7 @@ import time
 from base64 import b32decode, b32encode
 from collections.abc import Sequence
 from http import HTTPStatus
-from typing import assert_never, Literal
+from typing import assert_never, Literal, override
 from urllib import parse
 from uuid import uuid4
 
@@ -537,6 +537,7 @@ class UserTwoFactorOverview(Page):
         html.close_div()
         html.footer()
 
+    @override
     def page(self, config: Config) -> None:
         verify_requirements(
             UserPermissions.from_config(config, permission_registry),
@@ -712,6 +713,7 @@ class UserTwoFactorEnforce(Page):
         html.close_div()
         html.footer()
 
+    @override
     def page(self, config: Config) -> None:
         verify_requirements(
             UserPermissions.from_config(config, permission_registry),
@@ -876,6 +878,7 @@ class RegisterTotpSecret(Page):
             html.hidden_fields()
         html.footer()
 
+    @override
     def page(self, config: Config) -> None:
         verify_requirements(
             UserPermissions.from_config(config, permission_registry),
@@ -988,6 +991,7 @@ class EditCredentialAlias(Page):
             html.hidden_fields()
         html.footer()
 
+    @override
     def page(self, config: Config) -> None:
         verify_requirements(
             UserPermissions.from_config(config, permission_registry),
@@ -1038,6 +1042,7 @@ class EditCredentialAlias(Page):
 
 
 class JsonPage(Page, abc.ABC):
+    @override
     def handle_page(self, config: Config) -> None:
         try:
             response.set_content_type("application/json")
@@ -1073,6 +1078,7 @@ def _serialize_webauthn_state(state: dict) -> WebAuthnActionState:
 
 
 class UserWebAuthnRegisterBegin(JsonPage):
+    @override
     def page(self, config: Config) -> JsonSerializable:
         assert user.id is not None
 
@@ -1101,6 +1107,7 @@ class UserWebAuthnRegisterBegin(JsonPage):
 
 
 class UserWebAuthnRegisterComplete(JsonPage):
+    @override
     def page(self, config: Config) -> JsonSerializable:
         assert user.id is not None
 
@@ -1352,6 +1359,7 @@ class UserLoginTwoFactor(Page):
                 )
                 raise MKUserError(None, _("Invalid code provided"), HTTPStatus.UNAUTHORIZED)
 
+    @override
     def page(self, config: Config) -> None:
         assert user.id is not None
 
@@ -1417,6 +1425,7 @@ class UserLoginTwoFactor(Page):
 
 
 class UserWebAuthnLoginBegin(JsonPage):
+    @override
     def page(self, config: Config) -> JsonSerializable:
         assert user.id is not None
 
@@ -1436,6 +1445,7 @@ class UserWebAuthnLoginBegin(JsonPage):
 
 
 class UserWebAuthnLoginComplete(JsonPage):
+    @override
     def page(self, config: Config) -> JsonSerializable:
         assert user.id is not None
 

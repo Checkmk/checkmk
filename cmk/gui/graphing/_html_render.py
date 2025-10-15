@@ -9,7 +9,7 @@ import time
 import traceback
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from livestatus import MKLivestatusNotFoundError
 
@@ -861,6 +861,7 @@ def _render_graph_container_html(
 
 
 class AjaxRenderGraphContent(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         # Called from javascript code via JSON to initially render a graph
         """Registered as `ajax_render_graph_content`."""

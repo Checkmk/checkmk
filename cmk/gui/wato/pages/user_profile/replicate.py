@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import override
+
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
@@ -31,6 +33,7 @@ class UserProfileReplicate(Page):
         menu.dropdowns.insert(1, page_menu_dropdown_user_related(requested_file_name(request)))
         return menu
 
+    @override
     def page(self, config: Config) -> None:
         if not user.id:
             raise MKUserError(None, _("Not logged in."))

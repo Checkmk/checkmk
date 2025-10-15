@@ -194,6 +194,7 @@ def _may_see_failed_notifications() -> bool:
 
 
 class ClearFailedNotificationPage(Page):
+    @override
     def _handle_http_request(self) -> None:
         if not _may_see_failed_notifications():
             raise MKAuthException(_("You are not allowed to view the failed notifications."))

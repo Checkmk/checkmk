@@ -9,6 +9,7 @@
 import datetime
 import threading
 from collections.abc import Generator
+from typing import override
 
 import pytest
 from pytest_mock import MockerFixture
@@ -79,6 +80,7 @@ def test_request_memoize_request_integration(
         return mock()
 
     class PageClass(Page):
+        @override
         def page(self, config: Config) -> None:
             mock.return_value = 1
             assert memoized() == 1
@@ -140,6 +142,7 @@ def test_threaded_memoize(
         return x * x
 
     class PageClass(Page):
+        @override
         def page(self, config: Config) -> None:
             def worker(i: int) -> None:
                 cached_function(i)

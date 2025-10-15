@@ -9,6 +9,7 @@ import abc
 import ast
 from collections.abc import Mapping
 from pathlib import Path
+from typing import override
 
 from pydantic import BaseModel
 
@@ -139,6 +140,7 @@ class FetchAgentOutputRequest:
 # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
 # would need larger refactoring of the generic html.popup_trigger() mechanism.
 class AgentOutputPage(Page, abc.ABC):
+    @override
     def _handle_http_request(self) -> None:
         user.need_permission("wato.download_agent_output")
 
@@ -175,6 +177,7 @@ class AgentOutputPage(Page, abc.ABC):
 
 
 class PageFetchAgentOutput(AgentOutputPage):
+    @override
     def page(self, config: Config) -> None:
         title = self._title()
         make_header(

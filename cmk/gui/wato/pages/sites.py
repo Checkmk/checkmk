@@ -16,7 +16,7 @@ import socket
 import traceback
 from collections.abc import Collection, Iterable, Iterator, Mapping
 from copy import deepcopy
-from typing import Any, assert_never, cast, Literal, overload
+from typing import Any, assert_never, cast, Literal, overload, override
 from urllib.parse import urlparse
 
 from livestatus import (
@@ -1416,6 +1416,7 @@ class ModeDistributedMonitoring(WatoMode):
 class PageAjaxFetchSiteStatus(AjaxPage):
     """AJAX handler for asynchronous fetching of the site status"""
 
+    @override
     def page(self, config: Config) -> PageResult:
         user.need_permission("wato.sites")
 

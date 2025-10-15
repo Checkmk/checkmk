@@ -11,7 +11,7 @@ Cares about the main navigation of our GUI. This is a) the small sidebar and b) 
 """
 
 from dataclasses import asdict
-from typing import NamedTuple, TypedDict
+from typing import NamedTuple, override, TypedDict
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui import message
@@ -188,6 +188,7 @@ def ajax_message_read(config: Config) -> None:
 
 
 class PageAjaxSidebarChangesMenu(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         return {
             "number_of_pending_changes": ActivateChanges.get_number_of_pending_changes(
@@ -198,6 +199,7 @@ class PageAjaxSidebarChangesMenu(AjaxPage):
 
 
 class PageAjaxSitesAndChanges(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         return ActivateChanges().get_all_data_required_for_activation_popout(config.sites)
 
@@ -208,6 +210,7 @@ class PopUpMessage(TypedDict):
 
 
 class PageAjaxSidebarGetMessages(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         popup_msg: list[PopUpMessage] = []
         hint_msg: int = 0
@@ -229,6 +232,7 @@ class PageAjaxSidebarGetMessages(AjaxPage):
 
 
 class PageAjaxSidebarGetUnackIncompWerks(AjaxPage):
+    @override
     def page(self, config: Config) -> PageResult:
         if not may_acknowledge():
             raise MKAuthException(_("You are not allowed to acknowlegde werks"))

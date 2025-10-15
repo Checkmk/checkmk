@@ -1,0 +1,21 @@
+#!/usr/bin/env python3
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+
+from cmk.agent_based.v2 import (
+    AgentSection,
+    InventoryPlugin,
+)
+from cmk.plugins.azure_v2.agent_based.lib import create_inventory_function, parse_resource
+
+agent_section_azure_subscription = AgentSection(
+    name="azure_v2_subscription",
+    parse_function=parse_resource,
+)
+
+inventory_plugin_azure_subscription = InventoryPlugin(
+    name="azure_v2_subscription",
+    inventory_function=create_inventory_function(),
+)

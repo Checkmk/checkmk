@@ -544,6 +544,9 @@ def create_inventory_function() -> Callable[[Resource], InventoryResult]:
             "Region": "location",
         }
 
+        if section.type == "subscription":
+            mapping["ID"] = "id"
+
         hardcoded_values = {
             "Cloud provider": "Azure",
             "Entity": "Resource",
@@ -555,7 +558,7 @@ def create_inventory_function() -> Callable[[Resource], InventoryResult]:
             else:
                 row_value = value
 
-            if row_value is not None:
+            if row_value is not None and row_value != "":
                 yield TableRow(
                     path=path + ["metadata"],
                     key_columns={"information": label},

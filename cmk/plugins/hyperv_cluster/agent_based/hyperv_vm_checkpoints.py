@@ -53,16 +53,16 @@ def parse_hyperv_vm_checkpoints(string_table: StringTable) -> dict[str, list[Che
             continue
 
         match line:
-            case ["checkpoint.name", *field_values]:
+            case ["checkpoint.name", *name_parts]:
                 if current_checkpoint:
                     checkpoints.append(current_checkpoint)
-                current_checkpoint = {"name": " ".join(field_values)}
-            case ["checkpoint.path", *field_values]:
-                current_checkpoint["path"] = " ".join(field_values)
-            case ["checkpoint.created", *field_values]:
-                current_checkpoint["created"] = " ".join(field_values)
-            case ["checkpoint.parent", *field_values]:
-                current_checkpoint["parent"] = " ".join(field_values) if field_values else ""
+                current_checkpoint = {"name": " ".join(name_parts)}
+            case ["checkpoint.path", *path_parts]:
+                current_checkpoint["path"] = " ".join(path_parts)
+            case ["checkpoint.created", *created_parts]:
+                current_checkpoint["created"] = " ".join(created_parts)
+            case ["checkpoint.parent", *parent_parts]:
+                current_checkpoint["parent"] = " ".join(parent_parts) if parent_parts else ""
             case _:
                 pass
 

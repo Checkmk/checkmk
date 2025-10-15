@@ -127,8 +127,6 @@ def main() {
                 sh("""
                     # TODO: Make the binary run-able via bazel-run or add it to the image
                     bazel build @osslsigncode
-                    mkdir -p ~/.local/bin
-                    cp bazel-bin/external/+_repo_rules+osslsigncode/osslsigncode/bin/osslsigncode ~/.local/bin/osslsigncode
                 """);
             }
             package_helper.test_package(

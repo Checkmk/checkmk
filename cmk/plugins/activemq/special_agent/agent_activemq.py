@@ -6,12 +6,13 @@
 import sys
 import xml.etree.ElementTree as ET
 from collections.abc import Sequence
+from typing import Literal
 
 from requests.auth import HTTPBasicAuth
 
 from cmk.special_agents.v0_unstable.agent_common import special_agent_main
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
-from cmk.special_agents.v0_unstable.request_helper import ApiSession, parse_api_url
+from cmk.special_agents.v0_unstable.request_helper import ApiSession
 
 
 def parse_arguments(args: Sequence[str] | None) -> Args:
@@ -56,10 +57,23 @@ def parse_arguments(args: Sequence[str] | None) -> Args:
     return parser.parse_args(args)
 
 
+def _parse_api_url(
+    server_address: str,
+    protocol: Literal["http", "https"],
+    port: int | None,
+) -> str:
+    address_start = f"{protocol}://{server_address}"
+    if port:
+        address = f"{address_start}:{port}"
+    else:
+        address = f"{address_start}"
+
+    return f"{address}/admin/xml/"
+
+
 def agent_activemq_main(args: Args) -> int:
-    api_url = parse_api_url(
+    api_url = _parse_api_url(
         server_address=args.servername,
-        api_path="admin/xml/",
         port=args.port,
         protocol=args.protocol,
     )

@@ -13,7 +13,7 @@ import json
 import ssl
 from collections.abc import Mapping
 from http.client import HTTPConnection, HTTPResponse, HTTPSConnection
-from typing import Any, Literal, TypedDict
+from typing import Any, TypedDict
 from urllib.parse import urljoin
 from urllib.request import build_opener, HTTPSHandler, Request
 
@@ -173,61 +173,3 @@ class ApiSession:
             url,
             params=params,
         )
-
-
-def parse_api_url(
-    server_address: str,
-    api_path: str,
-    protocol: Literal["http", "https"] = "http",
-    port: int | None = None,
-    url_prefix: str | None = None,
-    path_prefix: str | None = None,
-) -> str:
-    """Parse the server api address
-
-    custom url always has priority over other options, if not specified the address contains
-    either the ip address or the hostname in the url
-
-    the protocol should not be specified through the custom url
-
-    Args:
-        api_path:
-            the path to the api seen from the full server address. This is the address
-            where the API can be queried
-
-        server_address:
-            hostname or ip address to the server
-
-        protocol:
-            the transfer protocol (http or https)
-
-        port:
-            TCP/Web port of the server
-
-        url_prefix:
-            custom url prefix for the server address
-
-        path_prefix:
-            custom path_prefix which is appended to the server address
-
-    Returns:
-        the full api url address
-
-    Examples:
-        >>> parse_api_url("localhost", "api/v1/", port=8080, path_prefix="extra")
-        'http://localhost:8080/extra/api/v1/'
-
-
-    """
-    if url_prefix is None:
-        url_prefix = ""
-
-    address_start = f"{protocol}://{url_prefix}{server_address}"
-    if port:
-        address = f"{address_start}:{port}/"
-    else:
-        address = f"{address_start}/"
-
-    path_prefix = f"{path_prefix}/" if path_prefix else ""
-    api_address = f"{address}{path_prefix}{api_path}"
-    return api_address

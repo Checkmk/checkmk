@@ -28,5 +28,5 @@ Second, copy the files to the local structure of your site:
 ## Appendix
 
 Reference build for Open Hardware Monitor.
-Windows-10. 
+Windows-10.
 MS Visual Studio 2017.

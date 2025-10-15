@@ -61,6 +61,7 @@ format_multirun(
     html = ":prettier",
     html_jinja = ":djlint",
     javascript = ":prettier",
+    markdown = ":prettier",
     python = "@multitool_hub//tools/ruff",
     rust = "@rules_rust//tools/upstream_wrapper:rustfmt",
     shell = ":shfmt",

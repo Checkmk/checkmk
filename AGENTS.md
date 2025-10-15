@@ -7,6 +7,7 @@ This file provides guidance to AI agents when working with code in this reposito
 Checkmk follows a modular architecture with several key components:
 
 ### Core Components
+
 - **cmk/base/**: Core monitoring engine, configuration handling, and host management
 - **cmk/gui/**: Web interface and user interaction components
 - **cmk/checkengine/**: Check execution framework and result processing
@@ -19,6 +20,7 @@ Checkmk follows a modular architecture with several key components:
 - ...
 
 ### Supporting Components
+
 - **agents/**: Monitoring agents for various platforms (Linux, Windows, etc.)
 - **active_checks/**: Active check implementations
 - **notifications/**: Notification plugins and handling
@@ -31,6 +33,7 @@ Checkmk follows a modular architecture with several key components:
 The `packages/` directory contains independent subprojects, each with its own `run` script and Bazel targets:
 
 #### Core Python Packages
+
 - **cmk-ccc/**: Core common components (daemon, debugging, site management)
 - **cmk-crypto/**: Cryptographic utilities (certificates, passwords, TOTP)
 - **cmk-trace/**: OpenTelemetry tracing integration
@@ -41,17 +44,20 @@ The `packages/` directory contains independent subprojects, each with its own `r
 - **cmk-plugin-apis/**: API definitions for plugin development
 
 #### Frontend Packages
+
 - **cmk-frontend-vue/**: Modern Vue.js 3 frontend framework
 - **cmk-frontend/**: Legacy frontend assets and webpack build
 - **cmk-shared-typing/**: TypeScript type definitions shared between vue frontend and backend
 
 #### Infrastructure Packages
+
 - **cmk-agent-receiver/**: FastAPI service for receiving agent data
 - **cmk-agent-ctl/**: Rust-based agent controller
 - **cmk-livestatus-client/**: Python client for Livestatus queries
 - **cmk-relay-protocols/**: Protocol definitions for relay communication
 
 #### Native/Compiled Packages
+
 - **livestatus/**: C++ Livestatus query interface
 - **neb/**: Nagios Event Broker module (C++)
 - **unixcat/**: Unix socket communication utility (C++)
@@ -61,11 +67,13 @@ The `packages/` directory contains independent subprojects, each with its own `r
 - **mk-sql/**: SQL Server monitoring (Rust)
 
 ### Build System
+
 Uses Bazel as the primary build system with Make for legacy compatibility. Each package has individual run scripts with standardized interfaces.
 
 ## Common Development Commands
 
 ### Python Testing
+
 ```bash
 # Unit tests
 make -C tests test-unit
@@ -85,6 +93,7 @@ make -C tests test-plugins
 ```
 
 ### Package-Specific Development
+
 Each package in `packages/` has its own `run` script with standardized options:
 
 ```bash
@@ -99,6 +108,7 @@ Each package in `packages/` has its own `run` script with standardized options:
 ## Testing Strategy
 
 ### Test Categories
+
 1. **Unit tests**: Fast, isolated component testing (`tests/unit/`)
 2. **Integration tests**: Component interaction testing (`tests/integration/`)
 3. **Composition tests**: Multi-service integration (`tests/composition/`)
@@ -107,6 +117,7 @@ Each package in `packages/` has its own `run` script with standardized options:
 6. **Agent plugin tests**: Cross-platform agent functionality (`tests/agent-plugin-unit/`)
 
 ### Running Tests
+
 - All test commands are prefixed with `make -C tests`
 - Docker variants available by adding `-docker` suffix
 - Use `PYTEST_ADDOPTS` for additional pytest arguments
@@ -115,6 +126,7 @@ Each package in `packages/` has its own `run` script with standardized options:
 ## Code Structure and Conventions
 
 ### Module Organization
+
 - **cmk.base**: Core monitoring functionality, not GUI-dependent
 - **cmk.gui**: Web interface and user-facing components
 - **cmk.utils**: Shared utilities accessible across components
@@ -122,6 +134,7 @@ Each package in `packages/` has its own `run` script with standardized options:
 - Component isolation enforced - GUI cannot import base internals
 
 ### Python Standards
+
 - Python 3.12 for main codebase
 - Agent plugins: Python 3.4+ compatible, with Python 2.7 auto-conversion
 - Type hints required (mypy enforcement)
@@ -141,6 +154,7 @@ Each package in `packages/` has its own `run` script with standardized options:
 ## Multi-Edition Support
 
 The codebase supports multiple Checkmk editions:
+
 - **CRE** (Raw): Open source base edition
 - **CEE** (Enterprise): Commercial with advanced features
 - **CCE** (Cloud): Cloud-native monitoring

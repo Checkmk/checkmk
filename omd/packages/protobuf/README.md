@@ -1,5 +1,4 @@
-Checkmk protobuf integration
-============================
+# Checkmk protobuf integration
 
 The protobuf integration is a little tricky because we need protobuf in
 different situations. We need protobuf for the following parts of Checkmk:

@@ -11,11 +11,11 @@ A little context will help us assess your proposed change.
 
 Please include:
 
-+ Your operating system name and version
-+ Any details about your local setup that might be helpful in troubleshooting
-+ Detailed steps to reproduce the bug
-+ An agent output or SNMP walk
-+ The ID of a submitted crash report for reference (if applicable)
+- Your operating system name and version
+- Any details about your local setup that might be helpful in troubleshooting
+- Detailed steps to reproduce the bug
+- An agent output or SNMP walk
+- The ID of a submitted crash report for reference (if applicable)
 
 ## Proposed changes
 
@@ -23,8 +23,8 @@ Sometimes it is hard for us to assess the quality of a fix.
 While it may work for you, it is our job to ensure that it works for everybody.
 These are some ways to help us:
 
-+ What is the expected behavior?
-+ What is the observed behavior?
-+ If it's not obvious from the above: In what way does your patch change the current behavior?
-+ Consider writing a unit test that would have failed without your fix.
-+ Is this a new problem? What made you submit this PR (new firmware, new device, changed device behavior)?
+- What is the expected behavior?
+- What is the observed behavior?
+- If it's not obvious from the above: In what way does your patch change the current behavior?
+- Consider writing a unit test that would have failed without your fix.
+- Is this a new problem? What made you submit this PR (new firmware, new device, changed device behavior)?

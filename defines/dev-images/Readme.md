@@ -4,19 +4,19 @@ This document describes the current use of Docker images in development workflow
 
 ## Distro-Images
 
-* pinned as image aliases
-* from docker hub where available, homegrown for SLES
-* located at `buildscripts/infrastructure/build-nodes`
-
+- pinned as image aliases
+- from docker hub where available, homegrown for SLES
+- located at `buildscripts/infrastructure/build-nodes`
 
 ## Build images
 
-* Used for building CMK packages
-* Nested builds to avoid leaking of credentials
-* Tagged `<DISTRO>:<BRANCH>-latest` and `<DISTRO>:<BRANCH>-<DATE>-<GIT-SHA>`
+- Used for building CMK packages
+- Nested builds to avoid leaking of credentials
+- Tagged `<DISTRO>:<BRANCH>-latest` and `<DISTRO>:<BRANCH>-<DATE>-<GIT-SHA>`
 
 This will create a 'build image' named `local-build-image-${DISTRO}` similar to
 how `buildscripts/scripts/build-build-images.groovy` does it:
+
 ```
 export NEXUS_USERNAME=frans.fuerst
 export NEXUS_PASSWORD=...
@@ -44,6 +44,7 @@ export NEXUS_PASSWORD=...
 ```
 
 Time/space needed:
+
 ```
 real        7m9,887s
 user        0m2,604s
@@ -54,15 +55,15 @@ Reclaimable:    8.418GB
 Total:          8.418GB
 ```
 
-
 ## Reference image (formerly called IMAGE_TESTING)
 
-* Used for testing
-* Used for building non distro-specifc stuff
-* Made available locally via `defines/dev-images/reference-image-id`
-* Which is wrapped by `scripts/run-in-docker.sh`
+- Used for testing
+- Used for building non distro-specifc stuff
+- Made available locally via `defines/dev-images/reference-image-id`
+- Which is wrapped by `scripts/run-in-docker.sh`
 
 Time/space needed:
+
 ```
 real        4m10,052s
 user        0m0,864s
@@ -75,22 +76,21 @@ Total:          10.91GB
 
 ## Left to do
 
-* [ ] adapt this Readme
-* [ ] check build image tag propagation
-* [ ] check reference image for missing dependencies
-* [ ] remove package list updates
-* [ ] check: credentials needed for IMAGE_TESTING?
-* [ ] remove unneeded packages
-* [ ] provide tests for build/reference images
-* [ ] make validate changes locally executable
-* [ ] share pre-built reference image /
-* [ ] activate docker build cache
-    - https://stackoverflow.com/questions/77516243/reuse-docker-cache-from-another-machine
-* [ ] move context relevant files to `defines`
-* [ ] issue: `dpkg-sig` not available on 23:10+
-* [ ] share logic with install-development script
-* [x] remove references to IMAGE_TESTING
-* [x] quieten docker build
-* [x] split commits
-* [x] use different build context
-
+- [ ] adapt this Readme
+- [ ] check build image tag propagation
+- [ ] check reference image for missing dependencies
+- [ ] remove package list updates
+- [ ] check: credentials needed for IMAGE_TESTING?
+- [ ] remove unneeded packages
+- [ ] provide tests for build/reference images
+- [ ] make validate changes locally executable
+- [ ] share pre-built reference image /
+- [ ] activate docker build cache
+  - https://stackoverflow.com/questions/77516243/reuse-docker-cache-from-another-machine
+- [ ] move context relevant files to `defines`
+- [ ] issue: `dpkg-sig` not available on 23:10+
+- [ ] share logic with install-development script
+- [x] remove references to IMAGE_TESTING
+- [x] quieten docker build
+- [x] split commits
+- [x] use different build context

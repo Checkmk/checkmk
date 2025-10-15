@@ -52,33 +52,34 @@ IF THE DISCLAIMER AND DAMAGE WAIVER MENTIONED IN SECTION 4. AND SECTION 5. CANNO
 
 ## 7. Term
 
-### 7.1 
+### 7.1
 
 This Agreement shall come into effect upon Your acceptance of the terms and conditions.
 
-### 7.2 
+### 7.2
 
-This Agreement shall apply for the term of the copyright and patents licensed here. 
+This Agreement shall apply for the term of the copyright and patents licensed here.
 
 ## 8 Miscellaneous
 
-### 8.1 
+### 8.1
 
 This Agreement and all disputes, claims, actions, suits or other proceedings arising out of this agreement or relating in any way to it shall be governed by the laws of Germany excluding its private international law provisions.
 
-### 8.2 
+### 8.2
 
 This Agreement sets out the entire agreement between You and Us for Your past, present and future Contributions to Us and overrides all other agreements or understandings.
 
-### 8.3 
+### 8.3
 
 In case of Your death, this agreement shall continue with Your heirs. In case of more than one heir, all heirs must exercise their rights through a commonly authorized person.
 
-### 8.4 
+### 8.4
 
 If any provision of this Agreement is found void and unenforceable, such provision will be replaced to the extent possible with a provision that comes closest to the meaning of the original provision and that is enforceable. The terms and conditions set forth in this Agreement shall apply notwithstanding any failure of essential purpose of this Agreement or any limited remedy to the maximum extent possible under law.
 
-### 8.5 
+### 8.5
+
 You agree to notify Us of any facts or circumstances of which you become aware that would make this Agreement inaccurate in any respect.
 
 This is a legal contract containing personal data. Please refer to https://checkmk.com/privacy-policy for the policy governing how personal data is used and shared.

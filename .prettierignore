@@ -2,11 +2,14 @@
 package-lock.json
 pnpm-lock.yaml
 node_modules/
+.werks/
 
 *.jsonl
 
-# cmk-frontend
 # 3rd party
+third_party/
+
+# cmk-frontend
 packages/cmk-frontend/src/js/modules/colorpicker.js
 packages/cmk-frontend/src/jquery
 packages/cmk-frontend/src/openapi
@@ -16,3 +19,7 @@ packages/cmk-frontend/src/js/modules/figures/cmk_stats.ts
 packages/cmk-frontend-vue/demo/public/mockServiceWorker.js
 packages/cmk-frontend-vue/dist-dev/
 packages/cmk-frontend-vue/*.md
+
+# broken CI build
+agents/modules/
+agents/wnx/

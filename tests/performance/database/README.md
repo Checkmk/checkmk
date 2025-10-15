@@ -1,5 +1,6 @@
 Performance test
-****************
+
+---
 
 # Postges configuration
 
@@ -27,21 +28,20 @@ ssl = on
 ssl_ca_file = '/etc/postgresql/ssl/root.crt'
 ssl_key_file = '/etc/postgresql/ssl/server.key'
 ssl_cert_file = '/etc/postgresql/ssl/server.crt'
-listen_addresses = '*'
+listen_addresses = '\*'
 
 ## pg_hba.conf
 
-hostssl performance     performance     0.0.0.0/0               cert
+hostssl performance performance 0.0.0.0/0 cert
 
 # Database creation
 
-* sudo -u postgres psql --file=./createuser_performance.sql
-* sudo -u postgres psql --file=./createdb_performance.sql
-* sudo -u postgres psql --username=performance --dbname=performance --file=./initdb_performance.sql
+- sudo -u postgres psql --file=./createuser_performance.sql
+- sudo -u postgres psql --file=./createdb_performance.sql
+- sudo -u postgres psql --username=performance --dbname=performance --file=./initdb_performance.sql
 
 # Database recreation
 
-* sudo -u postgres psql --file=./dropdb_performance.sql
-* sudo -u postgres psql --file=./createdb_performance.sql
-* sudo -u postgres psql --username=performance --dbname=performance --file=./initdb_performance.sql
-
+- sudo -u postgres psql --file=./dropdb_performance.sql
+- sudo -u postgres psql --file=./createdb_performance.sql
+- sudo -u postgres psql --username=performance --dbname=performance --file=./initdb_performance.sql

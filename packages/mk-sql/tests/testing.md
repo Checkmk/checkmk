@@ -2,12 +2,14 @@
 
 ## Setup
 
-1. Install certificate
+1.  Install certificate
 
-    either from real certificate
-[msdn docu](https://learn.microsoft.com/en-us/sql/database-engine/configure-windows/configure-sql-server-encryption?view=sql-server-ver16#computers-with-sql-server-configuration-manager-for-sql-server-2017-and-earlier) positions 1..7
+        either from real certificate
 
-    or using next powershell command
+    [msdn docu](https://learn.microsoft.com/en-us/sql/database-engine/configure-windows/configure-sql-server-encryption?view=sql-server-ver16#computers-with-sql-server-configuration-manager-for-sql-server-2017-and-earlier) positions 1..7
+
+        or using next powershell command
+
 ```powershell
 New-SelfSignedCertificate -Type SSLServerAuthentication -Subject "CN=$env:COMPUTERNAME" `
 -DnsName ("{0}" -f [System.Net.Dns]::GetHostByName($env:computerName).HostName),'localhost' `
@@ -32,11 +34,14 @@ You may use file from p.3 as CA certificate
 
 You may use `CI_TEST_MS_SQL_DB_CERT` environment variable to store path to certificate
 Fort example on Windows:
+
 ```batch
 setx CI_TEST_MS_SQL_DB_CERT c:\common\checkmk\certificates\mssql-YOUR-MACHINE-NAME.der
 ```
+
 Testing code is looks like
-```rust 
+
+```rust
         pub const MS_SQL_DB_CERT: &str = "CI_TEST_MS_SQL_DB_CERT";
         if let Ok(certificate_path) = std::env::var(MS_SQL_DB_CERT) {
             create_local(1433u16, certificate_path.to_owned().into())

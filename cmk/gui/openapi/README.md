@@ -1,25 +1,23 @@
-Checkmk OpenAPI
-===============
+# Checkmk OpenAPI
 
 Implementer. THIS IS IMPORTANT! PLEASE READ!
 
 When writing a new API endpoint please make sure to adhere to these standards:
 
- * All API endpoints return a dictionary-structure which follows the
+- All API endpoints return a dictionary-structure which follows the
   "Restful Objects" specification. This specification defines `domain types`
   and their representations as single-objects or collections. To always adhere
   to this standard, please refer to the helper functions in the
   `restful_objects.constructors` module.
 
- * All API endpoints need to have a doc-string for documentation purposes.
-   Keep the first line short, as there is limited space in the documentation
-   for the overview.
+- All API endpoints need to have a doc-string for documentation purposes.
+  Keep the first line short, as there is limited space in the documentation
+  for the overview.
 
- * If you create a new module in `endpoints`, make sure to add a short
-   doc-string on top for documentation purposes.
+- If you create a new module in `endpoints`, make sure to add a short
+  doc-string on top for documentation purposes.
 
-Overview
---------
+## Overview
 
 The main entities of the REST API system are `User`, `Request`, `Response`, `Endpoint`, `Decorator`, `API WSGI App`, `Request Schema`, `Response Schema`, `Path Schema`, `Header Schema`, `Permission Object` and `Endpoint registry`.
 
@@ -38,11 +36,11 @@ or the docstring at `cmk/gui/openapi/restful_objects/specification.py`
 Strictly speaking the REST API consists of endpoints that can be called via
 HTTP-Requests. The REST API comes with a few features or artifacts:
 
-* The OpenAPI document: A YAML document describing all available Endpoints
+- The OpenAPI document: A YAML document describing all available Endpoints
   with their request and response objects.
-* The Swagger GUI: A single page web application to explore the REST API, based
+- The Swagger GUI: A single page web application to explore the REST API, based
   on the OpenAPI document.
-* ReDoc: A human-readable representation of the OpenAPI document that includes code
+- ReDoc: A human-readable representation of the OpenAPI document that includes code
   snippets.
 
 The REST API itself is modeled according to the [Restful Objects Spec
@@ -107,13 +105,13 @@ is described by a URL and HTTP-method. In the Checkmk REST API backend the API
 is completely described by its endpoints. That means all aspects of the REST
 API are defined in each endpoint:
 
-* the python function called when the endpoint is called
-* the URL under which the endpoint can be reached, including:
-    * the placeholders defined in the URL
-    * possible keys and values of the query string
-* the valid HTTP methods you can call the endpoint with
-* the request schema of the request body for POST and PUT methods
-* the response schema for all endpoints
+- the python function called when the endpoint is called
+- the URL under which the endpoint can be reached, including:
+  - the placeholders defined in the URL
+  - possible keys and values of the query string
+- the valid HTTP methods you can call the endpoint with
+- the request schema of the request body for POST and PUT methods
+- the response schema for all endpoints
 
 All these attributes are defined with the help of a decorator, decorating the
 python function that should be executed when the endpoint is called. The
@@ -166,9 +164,9 @@ In order to detect [edit
 conflicts](https://en.wikipedia.org/wiki/Edit_conflict) one have to provide the
 `If-Match` HTTP-Header. The work flow looks like this:
 
-* Request an object, receive `ETag` HTTP-Header
-* Make local modification to the object
-* Save modified object, specify content of the `ETag` Header in the `If-Match`
+- Request an object, receive `ETag` HTTP-Header
+- Make local modification to the object
+- Save modified object, specify content of the `ETag` Header in the `If-Match`
   HTTP-Header
 
 The content of the `Etag` HTTP-Header is a checksum or the last modified

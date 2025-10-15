@@ -73,11 +73,12 @@ directory.
 
 The OMD packages are built in the following phases in general:
 
-  1. unpacking
-  2. building
-  3. intermediate install
-    - optionally processing build cache
-  4. installing to final directory
+1. unpacking
+2. building
+3. intermediate install
+   - optionally processing build cache
+
+4. installing to final directory
 
 ### `{PKG}_UNPACK` - Unpack the source archive
 
@@ -105,7 +106,7 @@ In case the nexus is available, and it has a build cache archive, this is
 downloaded and unpacked to `{PKG}_INTERMEDIATE_INSTALL` instead of performing
 the previous steps.
 
-See also *Using package cache* on how to use it.
+See also _Using package cache_ on how to use it.
 
 ### `{PKG}_INSTALL` - Install package files to final target directory
 
@@ -211,13 +212,13 @@ create `[name].make` which build/deploy your binary or library.
 Step by step:
 
 1. Modify `PACKAGES` variable in `omd/Makefile` adding a line with `[name]` of
-a package to be added.
+   a package to be added.
 2. Create a corresponding directory with name of the package in the
-`omd/packages` subdir, i.e. `omd/packages/[name]`.
+   `omd/packages` subdir, i.e. `omd/packages/[name]`.
 3. Create in the directory from p.2 the file having name of the package and
-extension make, i.e. `omd/packages/[name]/[name].make`
+   extension make, i.e. `omd/packages/[name]/[name].make`
 4. Add `omd/packages/[name]/[name].make` to the rule include in the file
-`omd/packages/package.make`
+   `omd/packages/package.make`
 
 In the simple cases you should use `livestatus.make` or `unixcat.make` as a template.
 

@@ -2,22 +2,22 @@
 
 ## Goals
 
-* pull from corporate registry whenever possible
-** no Docker:pull operation should use the global Docker hub by default
-* allow reproducability of exact images for every branch
-** instead of (volatile) global names for images (e.g. `busybox:latest`) their SHAs should be used
-** a git tracable text file contains mapping from aliases to image SHAs
-* avoid redundancy
-** updating one alias should be done in exactly one file
-* allow parallelization
-** alias -> SHA mapping must not be part of global docker state
-* allow work from outside of corporate network
-** using the Docker hub should still be possible
+- pull from corporate registry whenever possible
+  - no Docker:pull operation should use the global Docker hub by default
+- allow reproducability of exact images for every branch
+  - instead of (volatile) global names for images (e.g. `busybox:latest`) their SHAs should be used
+  - a git tracable text file contains mapping from aliases to image SHAs
+- avoid redundancy
+  - updating one alias should be done in exactly one file
+- allow parallelization
+  - alias -> SHA mapping must not be part of global docker state
+- allow work from outside of corporate network
+  - using the Docker hub should still be possible
 
 see:
+
 - Jira ticket: CMK-8148
 - https://superuser.com/questions/1658083
-
 
 ## Usage
 

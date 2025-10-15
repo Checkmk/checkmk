@@ -28,7 +28,6 @@ For teams that prefer not to deploy Checkmk themselves, [Checkmk Cloud](https://
 
 Designed for managed service providers, Checkmk MSP builds on the Checkmk Cloud (self-hosted) feature set and adds multitenancy support, centralized monitoring across multiple customer environments, isolated access controls, and MSP-specific reporting. A [free trial](https://checkmk.com/msp-trial) is available or you can directly [request a quote](https://checkmk.com/request-quote/msp).
 
-
 ## Installation
 
 Checkmk can be installed on Linux via DEB and RPM packages. We support RedHat (and derived distributions like CentOS, AlmaLinux, Rocky Linux, Oracle Linux and more), Ubuntu, and SUSE Linux Enterprise Server with official packages. Generally LTS/stable versions of these distributions are supported. Direct instructions on the installation of Checkmk can be found on these distribution-specific documentation pages:

@@ -12,7 +12,9 @@ the supported request parameters and the request and response schemas, through
 the use of type annotations.
 
 ### Code structure
+
 The recommended package structure for endpoints is as follows:
+
 ```
 <some-package>/
     __init__.py
@@ -20,15 +22,18 @@ The recommended package structure for endpoints is as follows:
     <one_endpoint>.py
     <other_endpoint>.py
 ```
+
 Where `<some-package>` is either:
-* `api` or something similar, within an existing package - example:
+
+- `api` or something similar, within an existing package - example:
   `cmk/gui/cee/dcd/_openapi`
-* `cmk/gui/openapi/api_endpoints/<family_name>` if there is no clear package for
+- `cmk/gui/openapi/api_endpoints/<family_name>` if there is no clear package for
   the family
 
 The endpoint family definition should be:
-* in `_family.py` if the family is fully migrated to the versioned endpoints
-* in `cmk/gui/openapi/shared_endpoint_families` if it's shared with the legacy
+
+- in `_family.py` if the family is fully migrated to the versioned endpoints
+- in `cmk/gui/openapi/shared_endpoint_families` if it's shared with the legacy
   implementation
 
 Every endpoint within the family should have its own module, named after the
@@ -40,6 +45,7 @@ The `__init__.py` file should contain a `register` function, which would then
 register the family and all endpoints within it to the appropriate registries.
 
 ### Endpoint family
+
 Before we can define an endpoint, we need to define the family it belongs to.
 Some families already exist in the legacy world (`cmk/gui/openapi/endpoints`),
 these will need to be migrated to the new system.
@@ -47,6 +53,7 @@ these will need to be migrated to the new system.
 Define the family either within the package (for new or fully migrated families)
 or in `cmk/gui/openapi/shared_endpoint_families` (for shared families).
 Check there for a more detailed example.
+
 ```python
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamily
 
@@ -60,20 +67,24 @@ family = EndpointFamily(
 ```
 
 ### Endpoint handler functions
+
 The handler function is the actual implementation of the endpoint. This is where
 you define the logic of what happens when the endpoint is accessed. This
 includes checking permissions and converting between "internal" and "external"
 (API) data models. The response type will what is returned to the client.
 
 The simplest possible handler function is this:
+
 ```python
 def handler() -> None:
     return
 ```
+
 This would handler takes no parameters or request body and returns an empty
 response (204 No Content).
 
 #### Adding a request body
+
 To add a request body, you need to define an API model for it. The `@api_model`
 decorator behaves like the dataclass one, except that it sets some defaults.
 Every field in the model should have a description and an example. Fields of
@@ -83,6 +94,7 @@ See the [omitted fields](#omitted-fields) and
 [`api_field` sections](#the-api_field-function) for more details.
 
 Then, add a `body` parameter to the handler, with the correct type annotation.
+
 ```python
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 
@@ -103,12 +115,14 @@ def handler(body: RequestBodyModel) -> None:
 ```
 
 #### Path, query and request parameters
+
 Adding parameters requires annotating the argument with a marker.
 The public facing names will be the same as the argument names, but query and
 headers may be aliased to a different name. This also allows for using names
 that would be invalid in Python, like `X-Header-Name`.
 Note that headers are case-insensitive, so the only problem is using dashes.
 The types can be anything, as long as pydantic can deserialize into them.
+
 ```python
 from typing import Annotated
 from cmk.gui.openapi.framework import HeaderParam, PathParam, QueryParam
@@ -124,6 +138,7 @@ def handler(
 ) -> None:
     return
 ```
+
 Path parameters will need to be specified (with the same name) in the URL.
 We will get to that later, when we talk about `VersionedEndpoint`.
 
@@ -132,6 +147,7 @@ multiple times in the URL. For that, change the parameters type to `list[...]`
 and set the `is_list=True` flag in the `QueryParam` marker.
 
 #### Changing the response
+
 Similar to the request body, the response body should be defined as an
 `@api_model`.
 The same restrictions on descriptions and examples apply. Additionally, no
@@ -159,15 +175,18 @@ class ResponseModel:
 def handler() -> ResponseModel:
     return ResponseModel(required_field="value")
 ```
+
 This would return a 200 OK response with this JSON body:
+
 ```json
-{"required_field":"value"}
+{ "required_field": "value" }
 ```
 
 If you need to return a different status code or additional headers,
 change the return type to `TypedResponse[ResponseModel]`.
-This allows you to return *either* your `ResponseModel` or an `ApiResponse`
+This allows you to return _either_ your `ResponseModel` or an `ApiResponse`
 which wraps your `ResponseModel`.
+
 ```python
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.response import ApiResponse, TypedResponse
@@ -188,6 +207,7 @@ def handler() -> TypedResponse[ResponseModel]:
 ```
 
 ### VersionedEndpoint
+
 The remaining metadata will be defined in the `VersionedEndpoint` class.
 Most options should be self-explanatory. Check the documentation on the
 individual classes for more details.
@@ -216,36 +236,40 @@ my_endpoint = VersionedEndpoint(
     removed_in_version=None,
 )
 ```
+
 Once you have your versioned endpoint defined, you can register it in the
 `VersionedEndpointRegistry`.
 
 ## Advanced models
+
 We are using `pydantic` for validation and serialization of the models. This
 means, all types supported by pydantic are supported in the REST API as well.
-For *request* models, the use of validator annotations is encouraged.
+For _request_ models, the use of validator annotations is encouraged.
 
 ### The `api_field` function
+
 Apart from defining the fields description and example, the `api_field` function
 can be used for a few other things:
 
-* `default` and `default_factory` - mostly used for `ApiOmitted`, but can also
-  be used within *request* models for other defaults.
-* `alias` - used to define a different name for the field in the JSON
+- `default` and `default_factory` - mostly used for `ApiOmitted`, but can also
+  be used within _request_ models for other defaults.
+- `alias` - used to define a different name for the field in the JSON
   representation. This is useful for camelCase names, or if the field name is
   invalid in Python.
-* `title` - define a custom title. Usually the default title is fine.
-* `pattern` - define a regex pattern for the field, will be used for validation.
+- `title` - define a custom title. Usually the default title is fine.
+- `pattern` - define a regex pattern for the field, will be used for validation.
 
 ### Omitted fields
+
 Due to the way some internal data structures distinguish between `None` and
 "not set", we need to use a special type (`ApiOmitted`) for fields that may be
 omitted from the response. This is equivalent to `NotRequired` for `TypedDict`.
 
 When using `ApiOmitted` in your models, you must set the `default_factory` on
 the field. This will be checked in unit tests. For request models, it is usually
-better to *not* use `ApiOmitted`, and have different defaults.
+better to _not_ use `ApiOmitted`, and have different defaults.
 
-It is important that `ApiOmitted` stays *within the API*. This means that within
+It is important that `ApiOmitted` stays _within the API_. This means that within
 an endpoint handler function, you should convert `ApiOmitted` to whatever the
 correct internal representation is.
 
@@ -261,21 +285,21 @@ class MyModel:
         description="Name of the object.",
         example="foo",
     )
-    
+
 class InternalModel(TypedDict):
     id: str
     name: NotRequired[str]
-    
+
 def _some_internal_function(internal: InternalModel) -> InternalModel:
     return internal  # do something with the data
-    
+
 def handler(body: MyModel) -> MyModel:
     as_internal: InternalModel = {
         "id": body.id,
     }
     if not isinstance(body.name, ApiOmitted):
         as_internal["name"] = body.name
-    
+
     # do something with the data
     internal_out = _some_internal_function(as_internal)
     return MyModel(
@@ -286,20 +310,22 @@ def handler(body: MyModel) -> MyModel:
 ```
 
 ### Validators
+
 Pydantic offers a few different ways of validating data through annotations:
 
-* `AfterValidator` - runs **after** the normal pydantic validation. This should
+- `AfterValidator` - runs **after** the normal pydantic validation. This should
   be your first choice for custom validation.
-* `BeforeValidator` - runs **before** the normal pydantic validation. Use this
+- `BeforeValidator` - runs **before** the normal pydantic validation. Use this
   to transform the data to a different type.
-* `PlainValidator` - runs **instead of** the normal pydantic validation. This
+- `PlainValidator` - runs **instead of** the normal pydantic validation. This
   should be used for custom types, where you want to validate the data in a
   different way than pydantic does.
-* `WrapValidator` - has an additional parameter for the normal validator. Can be
+- `WrapValidator` - has an additional parameter for the normal validator. Can be
   used to run validation before and after the pydantic validation.
 
 Each of these will take a validation function as an argument. The function must
 return the value (even if unmodified) or raise an exception in case of errors.
+
 ```python
 from typing import Annotated
 from pydantic import AfterValidator
@@ -326,6 +352,7 @@ for new validators.
 [validators]: https://docs.pydantic.dev/latest/concepts/validators/
 
 #### Custom types
+
 Fully custom types are also supported. Either by using the validators (and
 serializers) through annotations, or by implementing the pydantic specific
 class methods.
@@ -335,6 +362,7 @@ See the [pydantic documentation on custom types][custom-types].
 [custom-types]: https://docs.pydantic.dev/latest/concepts/types/#custom-types
 
 ### Dynamic fields (custom attributes)
+
 Some entities allow the user to add custom attributes.
 In order to support this, we use the `WithDynamicFields` class.
 In short, this class adds a `dynamic_fields` field to the model, which will be
@@ -358,6 +386,7 @@ print(json_dump_without_omitted(MyModel, x))
 
 Adding validations to the dynamic fields can be dony by overriding the
 `dynamic_fields` field or the `_populate_dynamic_fields` class method.
+
 ```python
 from typing import Annotated, Mapping
 from pydantic import AfterValidator
@@ -578,11 +607,11 @@ class UserModel:
 
 ### Additional Marshmallow Notes
 
-* the `cast_to_dict` functionality in some marshmallow schemas can be ignored
+- the `cast_to_dict` functionality in some marshmallow schemas can be ignored
   in the API model, as the model will automatically handle this.
 
-
 ## The API context
+
 The API context is a special handler parameter that provides access to various
 information about the request and other global state.
 It can be added to a handler function by adding an `api_context: ApiContext`
@@ -592,6 +621,7 @@ Instead of using the `active_config` directly, you should use the `config` from
 the `api_context`.
 
 ## ETags
+
 ETags are used as a sort of identifier for a specific version of a resource.
 Mostly, this is used to determine if the resource has changed since the last
 time it was accessed. This tries to prevent the "lost update problem", where
@@ -599,6 +629,7 @@ two concurrent requests modify the same resource, and one of them overwrites
 the changes made by the other.
 
 ### Returning an ETag
+
 To return an ETag, you need to set the `ETag` header in the response.
 This can be done by returning an `ApiResponse`, which provides an easy way to
 set this correctly.
@@ -618,6 +649,7 @@ def handler() -> ApiResponse[None]:
 ```
 
 ### Validating an ETag
+
 To validate the ETag, you need to check the `If-Match` header in the request.
 This header is automatically handled by the framework, and added to the
 `api_context`.
@@ -636,6 +668,7 @@ def handler(api_context: ApiContext) -> None:
 ```
 
 ### Endpoint configuration
+
 To enable ETags for an endpoint, you need to set the `etag` parameter in the
 `EndpointBehavior` of the `VersionedEndpoint`. This will include the ETag
 headers in the schema. Generation and validation of the ETag is done manually
@@ -643,11 +676,11 @@ in the handler function, as seen above.
 
 There are 4 possible values for the `etag` parameter:
 
-* `None`: the endpoint does not support ETags (list, some actions, etc.)
-* `"input"`: the endpoint checks the `If-Match` header,
-but does not return an ETag (delete)
-* `"output"`: the endpoint only returns an ETag (create, show)
-* `"both"`: the endpoint validates and returns an ETag (update)
+- `None`: the endpoint does not support ETags (list, some actions, etc.)
+- `"input"`: the endpoint checks the `If-Match` header,
+  but does not return an ETag (delete)
+- `"output"`: the endpoint only returns an ETag (create, show)
+- `"both"`: the endpoint validates and returns an ETag (update)
 
 The framework will raise an error, when the ETag header is missing for the
 `"output"` or `"both"` cases. However, doesn't ensure that the ETag is validated

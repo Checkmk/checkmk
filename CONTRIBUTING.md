@@ -4,17 +4,17 @@ Thanks for your interest to contribute to [Checkmk on Github](https://github.com
 
 Here are some ways you can help out:
 
-* Bug fixes (as pull requests)
-* Feature enhancements (as pull requests)
-* New plugins (via Checkmk Exchange)
+- Bug fixes (as pull requests)
+- Feature enhancements (as pull requests)
+- New plugins (via Checkmk Exchange)
 
 Here are the links to major sections of this document:
 
-* [Contributing Code](#contributing-code)
-* [How to prepare for contributing](#how-to-prepare-for-contributing)
-* [How to change Checkmk](#how-to-change-checkmk)
-* [How to execute tests](#how-to-execute-tests)
-* [Style Guide](#style-guide)
+- [Contributing Code](#contributing-code)
+- [How to prepare for contributing](#how-to-prepare-for-contributing)
+- [How to change Checkmk](#how-to-change-checkmk)
+- [How to execute tests](#how-to-execute-tests)
+- [Style Guide](#style-guide)
 
 If you have questions, please create a post at the [Checkmk Forum](https://forum.checkmk.com).
 
@@ -27,14 +27,14 @@ For feature requests, please share your idea via the [Checkmk ideas portal](http
 
 In general, we follow the standard GitHub workflow which roughly works like this:
 
- 1. **Fork** the repository on GitHub
- 2. **Clone** the forked repository to your own machine
- 3. **Commit** changes to your own feature branch
- 4. **Push** your work back up to your forked repository
- 5. Submit a **Pull request** (PR) so that we can review your changes
- 6. Sign the necessary [CLA](./doc/cla/cla.md) either directly in the PR via the bot, or sent the signed document to cla@checkmk.com ([further information](./doc/cla/cla_readme.md)).
+1.  **Fork** the repository on GitHub
+2.  **Clone** the forked repository to your own machine
+3.  **Commit** changes to your own feature branch
+4.  **Push** your work back up to your forked repository
+5.  Submit a **Pull request** (PR) so that we can review your changes
+6.  Sign the necessary [CLA](./doc/cla/cla.md) either directly in the PR via the bot, or sent the signed document to cla@checkmk.com ([further information](./doc/cla/cla_readme.md)).
 
- ⚠ Please reply when asked for more information or update your PR in case in didn't meet the requirements (e.g. failed checks).
+⚠ Please reply when asked for more information or update your PR in case in didn't meet the requirements (e.g. failed checks).
 If there is no response from the author or the checks do not pass within 14 days, the PR will be considered stale.
 If there is still no response or the checks are not passing after 60 days, the PR will be closed.
 You will be notified in both cases.
@@ -47,9 +47,9 @@ You may also want to try the [GitHub Hello World tutorial](https://guides.github
 We are developing Checkmk on **Ubuntu Linux** systems. We support these
 versions:
 
-* Current LTS
-* Previous LTS
-* Current non-LTS (If you want bleeding edge, then you get it. We won't support the previous non-LTS)
+- Current LTS
+- Previous LTS
+- Current non-LTS (If you want bleeding edge, then you get it. We won't support the previous non-LTS)
 
 Anything that deviates from it can not be supported.
 
@@ -57,61 +57,61 @@ To set up the development environment do the following:
 
 1. [Fork the repository and clone to your computer](https://help.github.com/en/github/getting-started-with-github/fork-a-repo)
 
-    Then change to the just created project directory.
+   Then change to the just created project directory.
 
-    ```console
-    cd checkmk
-    ```
+   ```console
+   cd checkmk
+   ```
 
 2. Install development dependencies
 
-    Before you can start working on Checkmk, you will have to install some additional software, like tools for development and testing.
-    Execute this in the project directory:
+   Before you can start working on Checkmk, you will have to install some additional software, like tools for development and testing.
+   Execute this in the project directory:
 
-    ```console
-    $ make setup
-    ```
+   ```console
+   $ make setup
+   ```
 
-    > This is optimized for Ubuntu, but you may also get all the required programs on other platforms.
+   > This is optimized for Ubuntu, but you may also get all the required programs on other platforms.
 
-    After the dependencies have been installed, you could execute the shipped tests to ensure everything is working fine before start making changes to Checkmk.
-    If you like to do this, please have a look at the [How to execute tests?](#how-to-execute-tests) chapter.
+   After the dependencies have been installed, you could execute the shipped tests to ensure everything is working fine before start making changes to Checkmk.
+   If you like to do this, please have a look at the [How to execute tests?](#how-to-execute-tests) chapter.
 
 3. Install pre-commit checks
 
-    In order to keep your commits to our standard we provide a [pre-commit](https://pre-commit.com/) configuration and some custom-made checking scripts.
-    You can install it like this:
+   In order to keep your commits to our standard we provide a [pre-commit](https://pre-commit.com/) configuration and some custom-made checking scripts.
+   You can install it like this:
 
-    > Warning: Python3 is required for pre-commit!
-    > Installing it with Python 2 will break your environment and leave you unable to use pip due to a backports module clash!
+   > Warning: Python3 is required for pre-commit!
+   > Installing it with Python 2 will break your environment and leave you unable to use pip due to a backports module clash!
 
-    ```console
-    $ pip3 install pre-commit
-    ```
+   ```console
+   $ pip3 install pre-commit
+   ```
 
-    After successful installation, hook it up to your git-repository by issuing the following command inside your git repository:
+   After successful installation, hook it up to your git-repository by issuing the following command inside your git repository:
 
-    ```console
-    $ pre-commit install --allow-missing-config
-    ```
+   ```console
+   $ pre-commit install --allow-missing-config
+   ```
 
-    The `--allow-missing-config` parameter is needed so that branches of older versions of Checkmk which don't support this feature and are missing the configuration file won't throw errors.
+   The `--allow-missing-config` parameter is needed so that branches of older versions of Checkmk which don't support this feature and are missing the configuration file won't throw errors.
 
-    Afterwards your commits will automatically be checked for conformity by `pre-commit`.
-    If you know a check (like mypy for example) would find an issue, but you don't want to fix it right away you can skip execution of the checkers with `git commit -n`.
-    Please don't push unchecked changes as this will introduce delays and additional work.
+   Afterwards your commits will automatically be checked for conformity by `pre-commit`.
+   If you know a check (like mypy for example) would find an issue, but you don't want to fix it right away you can skip execution of the checkers with `git commit -n`.
+   Please don't push unchecked changes as this will introduce delays and additional work.
 
-    Additional helpers can be found in `scripts/`.
-    One notable one is `scripts/check-current-commit` which checks your commit *after* it has been made.
-    You can then fix errors and amend or squash your commit.
-    You can also use this script in a rebase like such:
+   Additional helpers can be found in `scripts/`.
+   One notable one is `scripts/check-current-commit` which checks your commit _after_ it has been made.
+   You can then fix errors and amend or squash your commit.
+   You can also use this script in a rebase like such:
 
-    ```console
-    $ git rebase --exec scripts/check-current-commit
-    ```
+   ```console
+   $ git rebase --exec scripts/check-current-commit
+   ```
 
-    This will rebase your current changes and check each commit for errors.
-    After fixing them you can then continue rebasing.
+   This will rebase your current changes and check each commit for errors.
+   After fixing them you can then continue rebasing.
 
 Once done, you are ready for the next chapter.
 
@@ -119,51 +119,51 @@ Once done, you are ready for the next chapter.
 
 1. Create your feature branch
 
-    The number one rule is to *put each piece of work on its own branch*.
-    Please note that in general, we only accept changes which are based on the *master* branch.
-    There is one (rare) exception, namely bug fixes which *only* affect older branches.
-    So let's start like this:
+   The number one rule is to _put each piece of work on its own branch_.
+   Please note that in general, we only accept changes which are based on the _master_ branch.
+   There is one (rare) exception, namely bug fixes which _only_ affect older branches.
+   So let's start like this:
 
-    ```console
-    $ git checkout master
-    $ git checkout -b my-feature-branch
-    ```
+   ```console
+   $ git checkout master
+   $ git checkout -b my-feature-branch
+   ```
 
-    The first command ensures you start with the master branch.
-    The second command created the branch `my-feature-branch`.
-    Pick some descriptive name you can remember later.
+   The first command ensures you start with the master branch.
+   The second command created the branch `my-feature-branch`.
+   Pick some descriptive name you can remember later.
 
-    Let's check if everything worked fine:
+   Let's check if everything worked fine:
 
-    ```console
-    $ git status
-    On branch my-feature-branch
-    (...)
-    ```
+   ```console
+   $ git status
+   On branch my-feature-branch
+   (...)
+   ```
 
 2. Start developing and create one or multiple commits.
 
-    **Important**: Do one thing in one commit, e.g. don't mix code reorganization and changes of the moved lines.
-    Separate this in two commits.
+   **Important**: Do one thing in one commit, e.g. don't mix code reorganization and changes of the moved lines.
+   Separate this in two commits.
 
-    Make sure that you commit in logical blocks and write [good commit messages](#style-guide-commit-messages).
+   Make sure that you commit in logical blocks and write [good commit messages](#style-guide-commit-messages).
 
-    If you have finished your work, it's a good time to [execute the tests locally](#how-to-execute-tests) to ensure you did not break anything.
+   If you have finished your work, it's a good time to [execute the tests locally](#how-to-execute-tests) to ensure you did not break anything.
 
-    Once you are done with the commits and tests in your feature branch you could push them to your own GitHub fork like this.
+   Once you are done with the commits and tests in your feature branch you could push them to your own GitHub fork like this.
 
-    ```console
-    $ git push -u origin my-feature-branch
-    ```
+   ```console
+   $ git push -u origin my-feature-branch
+   ```
 
-    In the output of this command you will see a URL which you can open to create a pull request from your feature branch.
+   In the output of this command you will see a URL which you can open to create a pull request from your feature branch.
 
 3. Submit a pull request (PR)
 
-    On GitHub in your browser, submit a pull request from your `my-feature-branch` to the official Checkmk branch you forked from.
+   On GitHub in your browser, submit a pull request from your `my-feature-branch` to the official Checkmk branch you forked from.
 
-    The Github Actions CI bot will start testing your commits for issues.
-    In case there are issues, it will send you a mail and ask you to [fix the issues](#help-i-need-to-change-my-commits).
+   The Github Actions CI bot will start testing your commits for issues.
+   In case there are issues, it will send you a mail and ask you to [fix the issues](#help-i-need-to-change-my-commits).
 
 ### Help: I have a conflict
 
@@ -229,11 +229,11 @@ Respect the [Guidelines for coding check plug-ins](https://docs.checkmk.com/mast
 
 ## Commit messages
 
-* Use the present tense ("Add feature" not "Added feature")
-* Use the imperative mood ("Move cursor to..." not "Moves cursor to...")
-* The first line is a short title (limit to 72 characters or less)
-* Reference issues and pull requests liberally after the first line
-* Write [good commit messages](https://chris.beams.io/posts/git-commit/)
+- Use the present tense ("Add feature" not "Added feature")
+- Use the imperative mood ("Move cursor to..." not "Moves cursor to...")
+- The first line is a short title (limit to 72 characters or less)
+- Reference issues and pull requests liberally after the first line
+- Write [good commit messages](https://chris.beams.io/posts/git-commit/)
 
 ## Python
 
@@ -250,19 +250,21 @@ Checkmk is mostly written in Python.
 Most code in this repository is run under a fairly recent version of Python3.
 
 Only rely on non-standard modules that are mentioned in the `Pipfile`.
+
 <!--- TODO: How to add new modules? -->
 
 ### File extensions
 
-All python files must have a `.py`-extension. 
+All python files must have a `.py`-extension.
 Vice versa all files with `.py`-extension must be valid python files.
 For a transition phase existing files are still tolerated.
 
 Executable python scripts should be replaced by shell wrappers like
+
 ```
 #!/bin/sh
 # $LICENSE-TEXT
- 
+
 exec python3 -m cmk.something.ninja_module "$@"
 ```
 
@@ -295,10 +297,12 @@ For new plugins it is okay to use special dependencies, e.g. API bindings.
 But we have to take older Python versions and incompatibilities into account and produce error agent sections + error messages that tell the user about this issue.
 
 ---
+
 **Known issues regarding 3to2 conversion**
 
-- `f-strings`: Currently 3to2  cannot convert `f-strings` into `python2`
+- `f-strings`: Currently 3to2 cannot convert `f-strings` into `python2`
   compatible syntax. So use `format()` instead.
+
 ---
 
 ### Imports
@@ -308,81 +312,81 @@ They make it hard to understand which names are really available and needed in t
 
 ### Exception handling
 
-* Easier to ask for forgiveness than permission
+- Easier to ask for forgiveness than permission
 
-    ```python
-    def get_status(file):
-        if not os.path.exists(file):
-            print("file not found")
-            sys.exit(1)
-        with open(file) as f:
-            return f.readline()
-    ```
+  ```python
+  def get_status(file):
+      if not os.path.exists(file):
+          print("file not found")
+          sys.exit(1)
+      with open(file) as f:
+          return f.readline()
+  ```
 
-    vs.
+  vs.
 
-    ```python
-    def get_status(file):
-        try:
-            with open(file) as f:
-                return f.readline()
-        except OSError as e:
-            print("Unable to open file: %s" % e)
-            sys.exit(1)
-    ```
+  ```python
+  def get_status(file):
+      try:
+          with open(file) as f:
+              return f.readline()
+      except OSError as e:
+          print("Unable to open file: %s" % e)
+          sys.exit(1)
+  ```
 
-* Be as specific as possible when catching exceptions
-* Keep try-blocks as small as possible
-* Don't use `except:` (Slightly better for special cases: `except Exception`)
+- Be as specific as possible when catching exceptions
+- Keep try-blocks as small as possible
+- Don't use `except:` (Slightly better for special cases: `except Exception`)
 
 ### Paths and files
 
-* Use `pathlib`.
-* Use context-managers (the `with` keyword) to open files.
-* You are welcome to refactor old style file IO to pathlib (with tests :-))
+- Use `pathlib`.
+- Use context-managers (the `with` keyword) to open files.
+- You are welcome to refactor old style file IO to pathlib (with tests :-))
 
 ### String formatting
 
-* Use classic format strings (`%s`) for the time being.
+- Use classic format strings (`%s`) for the time being.
   We'll move over to the new `format()` syntax in the future, but for the moment we'd like to stay consistent.
 
 ### Sub processes
 
-* Use mechanisms that are natively available in Python instead of subprocess/command line tools.
+- Use mechanisms that are natively available in Python instead of subprocess/command line tools.
   Example: Don't use `tar` command line tools.
   Use the `tarfile` module instead.
   There may be good reasons to go with the command line tools in special situations.
 
-* Use secure methods for calling external programs to prevent shell injections
-  * Use the `subprocess` module instead of `os.system()` or `os.popen()`
-  * Use `shell=False` and `close_fds=True` with subprocess.
-  * Use `pipes.quote()` in case you need to create a command line string
+- Use secure methods for calling external programs to prevent shell injections
+  - Use the `subprocess` module instead of `os.system()` or `os.popen()`
+  - Use `shell=False` and `close_fds=True` with subprocess.
+  - Use `pipes.quote()` in case you need to create a command line string
 
 ### Argument parsing
 
-* Use `argparse`.
+- Use `argparse`.
   In agent plugins, which have to support Python <2.5, use `optparse`.
 
 ### Logging
 
-* Use logger or `cmk.log`, `cmk.gui.log` as base for logging
-* Add a logger object to `self._logger` to all classes (Use either a class/object specific child logger, the module level `logger` or `cmk.log.logger`)
-* Don't use format strings for log messages.
+- Use logger or `cmk.log`, `cmk.gui.log` as base for logging
+- Add a logger object to `self._logger` to all classes (Use either a class/object specific child logger, the module level `logger` or `cmk.log.logger`)
+- Don't use format strings for log messages.
   Use `logger.info('Hello, %s', world)`
 
 ### HTTP requests
 
-* Use `requests`, it's great!
-* Work with requests sessions in case you need to perform multiple requests
+- Use `requests`, it's great!
+- Work with requests sessions in case you need to perform multiple requests
 
 ### Times and Dates
 
-* Use top level functionality, e.g.: `datetime`, `dateutil`
+- Use top level functionality, e.g.: `datetime`, `dateutil`
 
 ### Comments
 
-* Document the non-obvious. Document why, not how.
-* Use doc-strings for classes and methods.
+- Document the non-obvious. Document why, not how.
+- Use doc-strings for classes and methods.
 
 ### Doctests
 
@@ -393,12 +397,12 @@ from the code.
 In other words: Use doctests when you want to explain your function with the
 help of code examples. Don't use them to test the behavior of your function.
 
-Some indicators for *not* using doctests:
+Some indicators for _not_ using doctests:
 
-* You need to import something
-* Without reformatting or using `pprint` either your function call or your output looks ugly
-* You need to write more than 5 doctests for a single function
-* Your docstring is 2 times longer than the body of the function
+- You need to import something
+- Without reformatting or using `pprint` either your function call or your output looks ugly
+- You need to write more than 5 doctests for a single function
+- Your docstring is 2 times longer than the body of the function
 
 Here it is fine to use doctests:
 
@@ -417,67 +421,67 @@ def worst_service_state(*states: int, default: int) -> int:
 
 ### Code structuring
 
-* Use the right data structure for combining data.
+- Use the right data structure for combining data.
   For more complex code it is important to carefully think about this.
   This may help you find the right data structure for your data.
   In increasing order of preference:
-    * Dictionaries:
-      Worst possible representation.
-      One has no clue whatsoever about the valid keys nor the valid values for a given key.
-      In addition, they are mutable, which might not be what one wants.
-      In effect, we are abusing a useful mapping type to simulate a struct.
-    * Tuples of varying length:
-      Basically the same as dictionaries with all the downsides.
-    * Tuples of a fixed length:
-      Slightly better, they have a fixed number of slots and are immutable.
-      Still, one has no clue what a slot should mean.
-    * `collections.namedtuple`:
-      A bit better than tuples of a fixed length, at least the slots have names now.
-      Still no clue about the valid values of a slot.
-    * `typing.NamedTuple`:
-      Kind of OK, slots have names and a type now.
-      Still not really OO, because it is still a dumb data container, but at least we have reached a state where Pascal was in the 70s.
-    * A `class`:
-      This is almost what we want.
-      Note: Classes with tons of static/class methods are actually //not// a class, they are a namespace in disguise, so we should not use them like that.
-    * A `class` with mypy type annotations:
-      This is the optimum.
-      Now we're talking OO and mypy can help us tremendously during e.g. refactorings.
-* Don't use global variables unless you have to and can do so thread-safe.
-* Don't assign attributes to function objects.
-* Use `abc` for specifying abstract classes, methods and properties and add `raise NotImplementedError()` in abstract methods and properties)
-* Make class attributes explicit in the constructor or helper functions (Don't add them dynamically e.g. via a dict argument and ''getattr()'')
-* Extensive getter/setters:
+  - Dictionaries:
+    Worst possible representation.
+    One has no clue whatsoever about the valid keys nor the valid values for a given key.
+    In addition, they are mutable, which might not be what one wants.
+    In effect, we are abusing a useful mapping type to simulate a struct.
+  - Tuples of varying length:
+    Basically the same as dictionaries with all the downsides.
+  - Tuples of a fixed length:
+    Slightly better, they have a fixed number of slots and are immutable.
+    Still, one has no clue what a slot should mean.
+  - `collections.namedtuple`:
+    A bit better than tuples of a fixed length, at least the slots have names now.
+    Still no clue about the valid values of a slot.
+  - `typing.NamedTuple`:
+    Kind of OK, slots have names and a type now.
+    Still not really OO, because it is still a dumb data container, but at least we have reached a state where Pascal was in the 70s.
+  - A `class`:
+    This is almost what we want.
+    Note: Classes with tons of static/class methods are actually //not// a class, they are a namespace in disguise, so we should not use them like that.
+  - A `class` with mypy type annotations:
+    This is the optimum.
+    Now we're talking OO and mypy can help us tremendously during e.g. refactorings.
+- Don't use global variables unless you have to and can do so thread-safe.
+- Don't assign attributes to function objects.
+- Use `abc` for specifying abstract classes, methods and properties and add `raise NotImplementedError()` in abstract methods and properties)
+- Make class attributes explicit in the constructor or helper functions (Don't add them dynamically e.g. via a dict argument and ''getattr()'')
+- Extensive getter/setters:
   In Python it is acceptable to simply access class or object members directly.
   In case you want to protect things from external access make use of `@property`
-* Use `@staticmethod` and `@classmethod` decorators for methods without references to `cls` or `self`
-* Use early exits in your functions.
+- Use `@staticmethod` and `@classmethod` decorators for methods without references to `cls` or `self`
+- Use early exits in your functions.
 
 ### Module: cmk
 
-* The entire Python code of Checkmk should be under the main module `cmk` in the future
-* Below `cmk.utils` there is a module that provides functionalities for all components.
+- The entire Python code of Checkmk should be under the main module `cmk` in the future
+- Below `cmk.utils` there is a module that provides functionalities for all components.
   These can be imported from anywhere. e.g. below is `cmk.utils.log` for logging functionalities.
-* At the first module level, the component modules are split up, e.g.:
-  * `cmk.base`
-  * `cmk.gui`
-  * `cmk.ec`
-* All names that a component declares on its main level may be loaded by other components.
-  * Another approach may be to explicitly declare the exports in a dedicated
+- At the first module level, the component modules are split up, e.g.:
+  - `cmk.base`
+  - `cmk.gui`
+  - `cmk.ec`
+- All names that a component declares on its main level may be loaded by other components.
+  - Another approach may be to explicitly declare the exports in a dedicated
     sub module, e.g. `cmk.ec.export.`.
-  * e.g. if the name `load_ec_rule_packs` is registered in `cmk/ec/__init__.py`,
+  - e.g. if the name `load_ec_rule_packs` is registered in `cmk/ec/__init__.py`,
     the GUI code may access `cmk.ec.load_ec_rule_packs`.
-  * Names from submodules must not be imported from other components.
-* For the CME/CEE there is a module hierarchy under `cmk/cee` or `cmk/cme`.
+  - Names from submodules must not be imported from other components.
+- For the CME/CEE there is a module hierarchy under `cmk/cee` or `cmk/cme`.
   The same rules apply as for `cmk` itself.
 
 ### Code formatting
 
-* We supply an `.editorconfig` file, which is used to automatically configure your editor to adhere to the most basic formatting style, like indents or line-lengths.
+- We supply an `.editorconfig` file, which is used to automatically configure your editor to adhere to the most basic formatting style, like indents or line-lengths.
   If your editor doesn't already come with Editorconfig support, install [one of the available plugins](https://editorconfig.org/#download).
-* We use [`ruff`](https://docs.astral.sh/ruff/) for automatic formatting of the Python code.
+- We use [`ruff`](https://docs.astral.sh/ruff/) for automatic formatting of the Python code.
   Have a look [below](#automatic-formatting) for further information.
-* We use also `ruff` for automatic sorting of imports in Python code.
+- We use also `ruff` for automatic sorting of imports in Python code.
 
 ### Automatic formatting/sorting with ruff
 
@@ -486,7 +490,7 @@ The `ruff` configuration file(s), `pyproject.toml`, live in the corresponding di
 
 This make target will then format your codebase as well as sort the import statements.
 
-*NOTE*: You will also find other `pyproject.toml` files in our codebase (at the time of writing, e.g. under `packges/cmk-*`).
+_NOTE_: You will also find other `pyproject.toml` files in our codebase (at the time of writing, e.g. under `packges/cmk-*`).
 Those are individual project settings for our own python packages and may differ from the top-level `pyproject.toml`.
 
 #### Manual ruff formatting invocation: Single file
@@ -527,7 +531,7 @@ For info about how to type hint refer to [mypy docs - Type hints cheat sheet (Py
 This is where [ALE](https://github.com/w0rp/ale) comes in again.
 To include mypy there adjust the following things in the `.vimrc`:
 
-* Add mypy to the liners.
+- Add mypy to the liners.
   With me it looks like this:
 
   ```vim
@@ -537,13 +541,14 @@ To include mypy there adjust the following things in the `.vimrc`:
   \}
   ```
 
-* Then tell the linter how to run mypy:
+- Then tell the linter how to run mypy:
 
   ```vim
   let g:ale_python_mypy_executable = 'YOUR_REPO_PATH/check_mk/scripts/run-mypy'
   ```
 
 ---
+
 **NOTE**
 
 mypy may not support home expansion ("~"), so it is recommended to use an absolute Path for 'YOUR_REPO_PATH'.
@@ -553,11 +558,11 @@ mypy may not support home expansion ("~"), so it is recommended to use an absolu
 The mypy-Checker should run with this.
 With ":ALEInfo" you get information about the error diagnosis below, if it doesn't work.
 
-#### Editor integration: *macs
+#### Editor integration: \*macs
 
-* The mypy.ini should be found by Flycheck without further configuration.
-* To use the correct mypy executable a `.dir-locals.el` in the root directory of the Checkmk repository is used.
-* To disable the risky variable warning that is triggered by setting the mypy executable the `safe-local-variables` variable has to be extended by:
+- The mypy.ini should be found by Flycheck without further configuration.
+- To use the correct mypy executable a `.dir-locals.el` in the root directory of the Checkmk repository is used.
+- To disable the risky variable warning that is triggered by setting the mypy executable the `safe-local-variables` variable has to be extended by:
 
   ```lisp
   (eval setq flycheck-python-mypy-executable
@@ -566,7 +571,7 @@ With ":ALEInfo" you get information about the error diagnosis below, if it doesn
               "scripts/run-mypy"))
   ```
 
-* An example value of the `safe-local-variables` variable is e.g.:
+- An example value of the `safe-local-variables` variable is e.g.:
 
   ```lisp
   ((eval setq flycheck-python-mypy-executable
@@ -590,8 +595,8 @@ If you think you need to use more advanced (read: less portable) shell capabilit
 
 If you're only familiar with shell, or it's all that's available to your particular situation, that's fine, but you should:
 
-* Put a comment in your code stating that you're open to having your check or plugin rewritten, or why you don't want it rewritten
-* Fail-fast, fail-early e.g
+- Put a comment in your code stating that you're open to having your check or plugin rewritten, or why you don't want it rewritten
+- Fail-fast, fail-early e.g
 
 ```bash
 # Restrict this plugin script to bash 4 and newer
@@ -609,15 +614,15 @@ If you think you need to use more advanced shell capability for the agent code, 
 
 Format your code according to the following guidelines:
 
-* [ChromiumOS's Shell Style Guidelines](https://chromium.googlesource.com/chromiumos/docs/+/master/styleguide/shell.md)
-* [Google's Shell Style Guidelines](https://google.github.io/styleguide/shell.xml)
+- [ChromiumOS's Shell Style Guidelines](https://chromium.googlesource.com/chromiumos/docs/+/master/styleguide/shell.md)
+- [Google's Shell Style Guidelines](https://google.github.io/styleguide/shell.xml)
 
 Checkmk specific guidance below supersedes what's offered in those guidelines:
 
 ### Indentation and column width
 
-* Line length up to 100 characters is allowed
-* Use 4 spaces for indentation
+- Line length up to 100 characters is allowed
+- Use 4 spaces for indentation
 
 ### Function Names
 
@@ -664,27 +669,27 @@ Variables must be in the appropriate format for its "scope" as defined below:
 
 ##### Environment
 
-We know from long-established convention that *environment* variables are almost always in UPPERCASE.
+We know from long-established convention that _environment_ variables are almost always in UPPERCASE.
 You can see this in e.g. `bash` by running `set` and/or `printenv`.
 
 We generally shouldn't need to put any variables into the environment, so you should avoid UPPERCASE as much as possible.
-If you *do* need a variable in the environment "scope" for whatever reason, use the form `MK_VARNAME` e.g. `MK_VERSION`
+If you _do_ need a variable in the environment "scope" for whatever reason, use the form `MK_VARNAME` e.g. `MK_VERSION`
 
-You might often see this "scope" referred to as the *global* scope, or *shell* scope.
+You might often see this "scope" referred to as the _global_ scope, or _shell_ scope.
 This scope also contains shell built-in variables.
 
 ##### Script
 
-Variables in the *script* "scope" often tend to be mistakenly written in UPPERCASE, which gives rise to the possibility of clobbering a legitimate variable in the *environment* "scope".
+Variables in the _script_ "scope" often tend to be mistakenly written in UPPERCASE, which gives rise to the possibility of clobbering a legitimate variable in the _environment_ "scope".
 This can have results that are [potentially hilarious, or potentially bad](https://stackoverflow.com/q/28310594) depending on your point of view.
 
-For that reason, UPPERCASE variable names are strongly discouraged outside the *environment* scope.
+For that reason, UPPERCASE variable names are strongly discouraged outside the _environment_ scope.
 
 Instead, use lowercase, with underscores to separate words i.e. `snake_case`.
 
 GNU Autoconf's documentation also states:
 
->As a general rule, shell variable names containing a lower-case letter are safe; you can define and use these variables without worrying about their effect on the underlying system, and without worrying about whether the shell changes them unexpectedly.
+> As a general rule, shell variable names containing a lower-case letter are safe; you can define and use these variables without worrying about their effect on the underlying system, and without worrying about whether the shell changes them unexpectedly.
 
 Try, also, to use meaningful names.
 This is meaningless:
@@ -703,9 +708,9 @@ for block_device in $(lsblk -ln -o NAME); do
 
 This also reduces/eliminates unexpected in-scope collisions.
 
-*Exception:*
-*C-Style `for (( i=0; i<max_count; i++ )); do` style loops,*
-*as the var `i` is usually self-contained and is shorthand for 'integer'*
+_Exception:_
+_C-Style `for (( i=0; i<max_count; i++ )); do` style loops,_
+_as the var `i` is usually self-contained and is shorthand for 'integer'_
 
 You should consider `unset`ting your variables once you're done with them, though this isn't strictly necessary.
 
@@ -757,12 +762,12 @@ In the first example, there is no such variable as `$timemetricmins`.
 In the second example, the curly braces explicitly tell the shell interpreter where the variable name boundaries are.
 Instead of applying this via trial and error, the simplest approach is to just use curly braces by default.
 
-*Exception: When you're in an arithmetic context e.g. `$(( time_metric + 10 ))`*
+_Exception: When you're in an arithmetic context e.g. `$(( time_metric + 10 ))`_
 
-*Exceptions to the exception: If your var is an array element or requires transformation e.g.*
+_Exceptions to the exception: If your var is an array element or requires transformation e.g._
 
-* *`$(( "${time_metrics[2]}" + 20 ))`*
-* *`$(( "${10#time_metric}" + 10 ))`*
+- _`$(( "${time_metrics[2]}" + 20 ))`_
+- _`$(( "${10#time_metric}" + 10 ))`_
 
 ##### Constants
 
@@ -775,10 +780,10 @@ readonly MK_CONSTANT
 
 #### Variable pseudoscopes recap
 
-* **Environment**:       `${MK_UPPERCASE}`
-* **Script**:            `${meaningful_snake_case}`
-* **Function / Local**:  `${_underscore_prepended_snake_case}` with `unset -v`
-* **Constants**:         The appropriate above form set to `readonly`
+- **Environment**: `${MK_UPPERCASE}`
+- **Script**: `${meaningful_snake_case}`
+- **Function / Local**: `${_underscore_prepended_snake_case}` with `unset -v`
+- **Constants**: The appropriate above form set to `readonly`
 
 ### Linting
 
@@ -815,27 +820,27 @@ $ sudo docker run --rm -v "$(pwd):/sh" -w /sh peterdavehello/shfmt shfmt -i 4 -c
 
 ### Portability
 
-* We are loosely aiming for "POSIX plus simple named arrays"
+- We are loosely aiming for "POSIX plus simple named arrays"
 
-* `echo` is a portability nightmare. Prefer `printf` instead.
+- `echo` is a portability nightmare. Prefer `printf` instead.
 
-* Existing scripts have been written using a variety of shells.
+- Existing scripts have been written using a variety of shells.
   Scripts that use `bash` have tended to be written for `bash` 3.x.
 
-* In the future, we will attempt to make our shell code more portable, which means reducing `bash`isms.
+- In the future, we will attempt to make our shell code more portable, which means reducing `bash`isms.
   If you're making shell code now, try to approach it with portability in mind.
   Your code may be used on older systems and/or commercial unices (e.g. AIX, Solaris etc).
 
-* `ksh` is in some ways a reasonable lowest common denominator to target as it's [virtually everywhere](https://www.in-ulm.de/~mascheck/various/shells/), and its syntax is almost directly runnable in `bash`, `zsh` and others.
+- `ksh` is in some ways a reasonable lowest common denominator to target as it's [virtually everywhere](https://www.in-ulm.de/~mascheck/various/shells/), and its syntax is almost directly runnable in `bash`, `zsh` and others.
   Be aware, however, that there are many variants of `ksh`.
   [`oksh`](https://github.com/ibara/oksh) is a decent variant.
 
-* Ubuntu's [DashAsBinSh](https://wiki.ubuntu.com/DashAsBinSh) wiki page can give you some ideas on more portable scripting, and `dash` is a readily available shell that you can test your code within.
+- Ubuntu's [DashAsBinSh](https://wiki.ubuntu.com/DashAsBinSh) wiki page can give you some ideas on more portable scripting, and `dash` is a readily available shell that you can test your code within.
   Do be aware that `dash` is stricter than our goals.
 
-* The needs of `busybox ash` (i.e. for `openwrt`) may also be something to consider
+- The needs of `busybox ash` (i.e. for `openwrt`) may also be something to consider
 
-* A tool like [shall](https://github.com/mklement0/shall) might be useful
+- A tool like [shall](https://github.com/mklement0/shall) might be useful
 
 ### The Unofficial Strict Mode
 
@@ -852,13 +857,13 @@ This is well-meaning, but flawed advice.
 Firstly, it's not portable, so it's disqualified by default for our purposes.
 Secondly, it comes with its own flaws.
 Some of these options have reasonable uses, but it's dangerous to think that this one-line incantation is somehow perfect.
-You can read more about it, and specifically `set -e` at one of the following links (read *at least* the first):
+You can read more about it, and specifically `set -e` at one of the following links (read _at least_ the first):
 
-* <https://www.reddit.com/r/commandline/comments/g1vsxk/the_first_two_statements_of_your_bash_script/fniifmk/>
-* <http://wiki.bash-hackers.org/scripting/obsolete>
-* <http://mywiki.wooledge.org/BashFAQ/105>
-* <http://mywiki.wooledge.org/BashFAQ/112>
-* <https://www.reddit.com/r/bash/comments/8asn1e/trying_to_understand_a_script_to_delete_all_but/dx1y785/>
+- <https://www.reddit.com/r/commandline/comments/g1vsxk/the_first_two_statements_of_your_bash_script/fniifmk/>
+- <http://wiki.bash-hackers.org/scripting/obsolete>
+- <http://mywiki.wooledge.org/BashFAQ/105>
+- <http://mywiki.wooledge.org/BashFAQ/112>
+- <https://www.reddit.com/r/bash/comments/8asn1e/trying_to_understand_a_script_to_delete_all_but/dx1y785/>
 
 ### Performance
 
@@ -905,9 +910,9 @@ Often we see blocks of `if...elif...elif...elif`'s that can and should be replac
 
 The style guides linked to earlier both state:
 
->Given the choice between invoking a shell built-in and invoking a separate process, choose the built-in.
+> Given the choice between invoking a shell built-in and invoking a separate process, choose the built-in.
 >
->We prefer the use of built-ins such as the Parameter Expansion functions in bash(1) as it’s more robust and portable (especially when compared to things like sed).
+> We prefer the use of built-ins such as the Parameter Expansion functions in bash(1) as it’s more robust and portable (especially when compared to things like sed).
 
 Often (but not always) there are massive performance gains to be had through the use of built-ins, usually at the expense of some readability.
 This can be counter-balanced via explanatory comments.
@@ -929,11 +934,11 @@ Technical terms outside Checkmk like "container" may be translated according to 
 There are several terms in Checkmk that may be kept for a better understanding.
 Some of them are:
 
-* Host
-* Service
-* Check
-* Item
-* DOWN, UP, PENDING
+- Host
+- Service
+- Check
+- Item
+- DOWN, UP, PENDING
 
 ### Consistency
 

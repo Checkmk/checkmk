@@ -1766,6 +1766,20 @@ def write_subscription_info(subscription: AzureSubscription) -> None:
     ).write()
 
 
+def write_subscription_section(subscription: AzureSubscription) -> None:
+    info = {
+        "name": subscription.name,
+        "tags": subscription.tags,
+        "id": subscription.id,
+        "type": "subscription",  # This doesn't exist, but sure.
+        "group": "",
+    }
+    resource = AzureResource(info, TagsImportPatternOption.import_all, subscription)
+    section = AzureResourceSection(resource)
+    section.add(resource.dumpinfo())
+    section.write()
+
+
 def write_remaining_reads(rate_limit: int | None, subscription: AzureSubscription) -> None:
     agent_info_section = AzureSection(
         "agent_info", [subscription.hostname], subscription=subscription
@@ -2309,6 +2323,7 @@ async def main_subscription(
             write_group_info(monitored_groups, selected_resources, subscription, group_labels)
             write_resource_groups_sections(resource_groups, subscription)
             write_subscription_info(subscription)
+            write_subscription_section(subscription)
 
             tasks = {
                 process_usage_details(mgmt_client, subscription, monitored_groups, args)

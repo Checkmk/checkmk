@@ -37,6 +37,7 @@ from cmk.plugins.azure_v2.special_agent.agent_azure_v2 import (
     write_group_info,
     write_remaining_reads,
     write_resource_groups_sections,
+    write_subscription_section,
 )
 
 from .lib import fake_azure_subscription, MockAzureSection
@@ -1033,3 +1034,21 @@ def test_azure_resource(
     assert resource.info["group"] == expected_resource.info_group, "Info group mismatch"
     assert resource.piggytargets == expected_resource.piggytargets, "Piggy targets mismatch"
     assert resource.tags == expected_resource.tags, "Tags mismatch"
+
+
+@pytest.mark.asyncio
+async def test_write_subscription_section(
+    mock_azure_subscription: AzureSubscription,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    write_subscription_section(mock_azure_subscription)
+    captured = capsys.readouterr()
+    assert (
+        captured.out
+        == """<<<<mock_subscription_name>>>>
+<<<azure_v2_subscription:sep(124)>>>
+Resource
+{"name": "mock_subscription_name", "tags": {}, "id": "mock_subscription_id", "type": "subscription", "group": "", "tenant_id": "c8d03e63-0d65-41a7-81fd-0ccc184bdd1a", "subscription_name": "mock_subscription_name"}
+<<<<>>>>
+"""
+    )

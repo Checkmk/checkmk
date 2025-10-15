@@ -10,8 +10,12 @@ import pytest
 from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
 from cmk.graphing.v1 import Title
-from cmk.gui.graphing._perfometer import _evaluate_quantity, _perfometer_matches
-from cmk.gui.graphing._translated_metrics import Original, ScalarBounds, TranslatedMetric
+from cmk.gui.graphing._perfometer import _evaluate_quantity, _perfometer_plugin_matches
+from cmk.gui.graphing._translated_metrics import (
+    Original,
+    ScalarBounds,
+    TranslatedMetric,
+)
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.unit_formatter import AutoPrecision
 
@@ -79,13 +83,13 @@ def _make_translated_metric(name: str, scalar: ScalarBounds) -> TranslatedMetric
     )
 
 
-def test__perfometer_matches_no_translated_metrics() -> None:
+def test__perfometer_plugin_matches_no_translated_metrics() -> None:
     with pytest.raises(AssertionError):
-        assert _perfometer_matches(_make_perfometer("name", 0), {})
+        assert _perfometer_plugin_matches(_make_perfometer("name", 0), {})
 
 
 @pytest.mark.parametrize(
-    "perfometer, translated_metrics, result",
+    "perfometer_plugin, translated_metrics, result",
     [
         pytest.param(
             _make_perfometer("name", 0),
@@ -245,14 +249,14 @@ def test__perfometer_matches_no_translated_metrics() -> None:
         ),
     ],
 )
-def test__perfometer_matches(
-    perfometer: (
+def test__perfometer_plugin_matches(
+    perfometer_plugin: (
         perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
     ),
     translated_metrics: Mapping[str, TranslatedMetric],
     result: bool,
 ) -> None:
-    assert _perfometer_matches(perfometer, translated_metrics) is result
+    assert _perfometer_plugin_matches(perfometer_plugin, translated_metrics) is result
 
 
 @pytest.mark.parametrize(

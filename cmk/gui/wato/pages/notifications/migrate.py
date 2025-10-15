@@ -395,6 +395,7 @@ def migrate_to_notification_quick_setup_spec(event_rule: EventRule) -> Notificat
             "match_services",
             "match_exclude_services",
             "match_exclude_servicegroups_regex",
+            "match_checktype",
         ]
     ):
         spec["service_filters"] = _get_service_filters(event_rule)

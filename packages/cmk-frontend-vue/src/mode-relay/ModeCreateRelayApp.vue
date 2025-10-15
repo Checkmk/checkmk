@@ -20,6 +20,7 @@ import RegisterRelay from './add-relay-configuration-steps/RegisterRelay.vue'
 const { _t } = usei18n()
 
 const currentStep = ref<number>(1)
+const relayName = ref<string>('')
 </script>
 
 <template>
@@ -51,7 +52,7 @@ const currentStep = ref<number>(1)
       </template>
 
       <template #content>
-        <NameRelay></NameRelay>
+        <NameRelay v-model="relayName" />
       </template>
       <template #actions>
         <CmkWizardButton type="next" />
@@ -72,7 +73,7 @@ const currentStep = ref<number>(1)
       </template>
 
       <template #content>
-        <RegisterRelay></RegisterRelay>
+        <RegisterRelay :relay-name="relayName" />
       </template>
       <template #actions>
         <CmkWizardButton type="next" />

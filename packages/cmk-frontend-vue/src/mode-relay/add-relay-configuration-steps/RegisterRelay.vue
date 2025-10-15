@@ -10,6 +10,8 @@ import usei18n from '@/lib/i18n'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 const { _t } = usei18n()
+
+defineProps<{ relayName: string }>()
 </script>
 
 <template>

@@ -118,12 +118,42 @@ const selectedWidget = ref<Graph | null>(enabledWidgets[0] || null)
 
 // TODO: We need to provide the current widget config to the handlers in order to edit it
 const handler: Partial<Record<Graph, UseWidgetHandler>> = {
-  [Graph.SINGLE_GRAPH]: useGraph(props.metric, props.filters),
-  [Graph.SINGLE_METRIC]: useMetric(props.metric, props.filters),
-  [Graph.GAUGE]: useGauge(props.metric, props.filters),
-  [Graph.BARPLOT]: useBarplot(props.metric, props.filters),
-  [Graph.SCATTERPLOT]: useScatterplot(props.metric, props.filters),
-  [Graph.TOP_LIST]: useTopList(props.metric, props.filters)
+  [Graph.SINGLE_GRAPH]: await useGraph(
+    props.metric,
+    props.filters,
+    props.dashboardConstants,
+    props.editWidgetSpec
+  ),
+  [Graph.SINGLE_METRIC]: await useMetric(
+    props.metric,
+    props.filters,
+    props.dashboardConstants,
+    props.editWidgetSpec
+  ),
+  [Graph.GAUGE]: await useGauge(
+    props.metric,
+    props.filters,
+    props.dashboardConstants,
+    props.editWidgetSpec
+  ),
+  [Graph.BARPLOT]: await useBarplot(
+    props.metric,
+    props.filters,
+    props.dashboardConstants,
+    props.editWidgetSpec
+  ),
+  [Graph.SCATTERPLOT]: await useScatterplot(
+    props.metric,
+    props.filters,
+    props.dashboardConstants,
+    props.editWidgetSpec
+  ),
+  [Graph.TOP_LIST]: await useTopList(
+    props.metric,
+    props.filters,
+    props.dashboardConstants,
+    props.editWidgetSpec
+  )
 }
 </script>
 

@@ -19,9 +19,11 @@ import type {
   UseWidgetHandler,
   WidgetProps
 } from '@/dashboard-wip/components/Wizard/types'
-import { generateWidgetProps } from '@/dashboard-wip/components/Wizard/utils'
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
 import { useDebounceFn } from '@/dashboard-wip/composables/useDebounce'
+import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
+import type { WidgetSpec } from '@/dashboard-wip/types/widget'
+import { determineWidgetEffectiveFilterContext } from '@/dashboard-wip/utils'
 
 const { _t } = usei18n()
 
@@ -39,8 +41,13 @@ export interface UseGauge extends UseWidgetHandler, UseWidgetVisualizationOption
   showServiceStatus: Ref<boolean>
 }
 
-export const useGauge = (metric: string, filters: ConfiguredFilters): UseGauge => {
-  //Todo: Fill values if they exist in serializedData
+export const useGauge = async (
+  metric: string,
+  filters: ConfiguredFilters,
+  dashboardConstants: DashboardConstants,
+  currentSpec?: WidgetSpec | null
+): Promise<UseGauge> => {
+  const currentContent = currentSpec?.content as GaugeContent
 
   const timeRangeType = ref<TimeRangeType>('current')
   const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(_t('Time range'))
@@ -49,9 +56,15 @@ export const useGauge = (metric: string, filters: ConfiguredFilters): UseGauge =
     symbol: dataRangeSymbol,
     maximum: dataRangeMax,
     minimum: dataRangeMin,
-    widgetProps: dataRangeProps
-  } = useFixedDataRange()
+    fixedDataRangeProps
+  } = useFixedDataRange(
+    currentContent?.display_range?.unit,
+    currentContent?.display_range?.maximum,
+    currentContent?.display_range?.minimum
+  )
 
+  // TODO: This field is incomplete, both here and the vue component.
+  // Its missing a dropdwon with 3 options - CMK-26777
   const showServiceStatus = ref<boolean>(false)
 
   const {
@@ -62,50 +75,51 @@ export const useGauge = (metric: string, filters: ConfiguredFilters): UseGauge =
     titleUrl,
     titleUrlValidationErrors,
     validate: validateTitle,
-    generateTitleSpec,
+    widgetGeneralSettings,
     showWidgetBackground
-  } = useWidgetVisualizationProps(metric)
+  } = useWidgetVisualizationProps(metric, currentSpec?.general_settings)
+
+  const widgetProps = ref<WidgetProps>()
 
   const validate = (): boolean => {
     return validateTitle()
   }
 
-  const _generateWidgetProps = (): WidgetProps => {
-    const content: GaugeContent = {
+  const _generateContent = (): GaugeContent => {
+    return {
       type: 'gauge',
       metric: metric,
-      display_range: dataRangeProps(),
+      display_range: fixedDataRangeProps.value,
       time_range: {
         type: 'window',
         window: generateTimeRangeSpec(),
         consolidation: 'average'
       }
     }
-
-    return generateWidgetProps(generateTitleSpec(), content, filters)
   }
 
-  const widgetProps = ref<WidgetProps>(_generateWidgetProps())
+  const _updateWidgetProps = async () => {
+    const content = _generateContent()
+    widgetProps.value = {
+      general_settings: widgetGeneralSettings.value,
+      content,
+      effective_filter_context: await determineWidgetEffectiveFilterContext(
+        content,
+        filters,
+        dashboardConstants
+      )
+    }
+  }
 
   watch(
-    [
-      timeRangeType,
-      timeRange,
-      dataRangeSymbol,
-      dataRangeMax,
-      dataRangeMin,
-      showServiceStatus,
-      title,
-      showTitle,
-      showTitleBackground,
-      titleUrlEnabled,
-      titleUrl
-    ],
+    [timeRangeType, timeRange, fixedDataRangeProps, showServiceStatus, showWidgetBackground],
     useDebounceFn(() => {
-      widgetProps.value = _generateWidgetProps()
+      void _updateWidgetProps()
     }, 300),
     { deep: true }
   )
+
+  await _updateWidgetProps()
 
   return {
     timeRangeType,
@@ -126,6 +140,6 @@ export const useGauge = (metric: string, filters: ConfiguredFilters): UseGauge =
     titleUrlValidationErrors,
     validate,
 
-    widgetProps
+    widgetProps: widgetProps as Ref<WidgetProps>
   }
 }

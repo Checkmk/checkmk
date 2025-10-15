@@ -15,9 +15,11 @@ import type {
   UseWidgetHandler,
   WidgetProps
 } from '@/dashboard-wip/components/Wizard/types'
-import { generateWidgetProps } from '@/dashboard-wip/components/Wizard/utils'
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
 import { useDebounceFn } from '@/dashboard-wip/composables/useDebounce'
+import type { DashboardConstants } from '@/dashboard-wip/types/dashboard'
+import type { WidgetSpec } from '@/dashboard-wip/types/widget'
+import { determineWidgetEffectiveFilterContext } from '@/dashboard-wip/utils'
 
 type DataRangeType = 'fixed' | 'automatic'
 
@@ -29,8 +31,14 @@ export interface UseBarplot extends UseWidgetHandler, UseWidgetVisualizationOpti
   dataRangeMax: Ref<number>
 }
 
-export const useBarplot = (metric: string, filters: ConfiguredFilters): UseBarplot => {
-  //Todo: Fill values if they exist in serializedData
+export const useBarplot = async (
+  metric: string,
+  filters: ConfiguredFilters,
+  dashboardConstants: DashboardConstants,
+  currentSpec?: WidgetSpec | null
+): Promise<UseBarplot> => {
+  const currentContent = currentSpec?.content as BarplotContent
+
   const {
     title,
     showTitle,
@@ -40,50 +48,53 @@ export const useBarplot = (metric: string, filters: ConfiguredFilters): UseBarpl
     titleUrl,
     titleUrlValidationErrors,
     validate: validateTitle,
-    generateTitleSpec
-  } = useWidgetVisualizationProps(metric)
+    widgetGeneralSettings
+  } = useWidgetVisualizationProps(metric, currentSpec?.general_settings)
 
   const {
     type: dataRangeType,
     symbol,
     maximum,
     minimum,
-    widgetProps: dataRangeProps
-  } = useDataRangeInput()
+    dataRangeProps
+  } = useDataRangeInput(currentContent?.display_range)
+
+  const widgetProps = ref<WidgetProps>()
 
   const validate = (): boolean => {
     return validateTitle()
   }
 
-  const _generateWidgetProps = (): WidgetProps => {
-    const content: BarplotContent = {
+  const _generateContent = (): BarplotContent => {
+    return {
       type: 'barplot',
       metric: metric,
-      display_range: dataRangeProps()
+      display_range: dataRangeProps.value
     }
-
-    return generateWidgetProps(generateTitleSpec(), content, filters)
   }
 
-  const widgetProps = ref<WidgetProps>(_generateWidgetProps())
+  const _updateWidgetProps = async () => {
+    const content = _generateContent()
+    widgetProps.value = {
+      general_settings: widgetGeneralSettings.value,
+      content,
+      effective_filter_context: await determineWidgetEffectiveFilterContext(
+        content,
+        filters,
+        dashboardConstants
+      )
+    }
+  }
 
   watch(
-    [
-      dataRangeType,
-      title,
-      showTitle,
-      showTitleBackground,
-      titleUrlEnabled,
-      titleUrl,
-      symbol,
-      maximum,
-      minimum
-    ],
+    [widgetGeneralSettings, dataRangeProps],
     useDebounceFn(() => {
-      widgetProps.value = _generateWidgetProps()
+      void _updateWidgetProps()
     }, 300),
     { deep: true }
   )
+
+  await _updateWidgetProps()
 
   return {
     dataRangeType,
@@ -101,6 +112,6 @@ export const useBarplot = (metric: string, filters: ConfiguredFilters): UseBarpl
     titleUrlValidationErrors,
     validate,
 
-    widgetProps
+    widgetProps: widgetProps as Ref<WidgetProps>
   }
 }

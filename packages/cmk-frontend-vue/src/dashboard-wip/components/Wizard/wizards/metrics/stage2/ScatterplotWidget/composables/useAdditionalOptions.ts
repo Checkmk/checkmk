@@ -13,10 +13,14 @@ export interface UseAdditionalOptions {
   medianColor: Ref<DefaultOrColor>
 }
 
-export const useAdditionalOptions = (): UseAdditionalOptions => {
-  const metricColor = ref<DefaultOrColor>('default')
-  const averageColor = ref<DefaultOrColor>('default')
-  const medianColor = ref<DefaultOrColor>('default')
+export const useAdditionalOptions = (
+  mColor: DefaultOrColor = 'default',
+  aColor: DefaultOrColor = 'default',
+  mdColor: DefaultOrColor = 'default'
+): UseAdditionalOptions => {
+  const metricColor = ref<DefaultOrColor>(mColor)
+  const averageColor = ref<DefaultOrColor>(aColor)
+  const medianColor = ref<DefaultOrColor>(mdColor)
 
   return {
     metricColor,

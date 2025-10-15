@@ -18,7 +18,12 @@ export const isUrl = (text: string): boolean => {
   }
 }
 
-// To be removed once the widget composables get refactored
+/**
+ * Generates WidgetProps
+ * To be removed once all widgets use the new system
+ * @deprecated
+ * @returns WidgetProps
+ */
 export const generateWidgetProps = (
   titleSpec: TitleSpec,
   widgetContent: WidgetContentType,
@@ -34,7 +39,11 @@ export const generateWidgetProps = (
   }
 }
 
-// To be removed once the widget composables get refactored
+/**
+ * Generates an effective filter context based on the currently configured filters
+ * To be removed once all widgets use the new system
+ * @deprecated
+ */
 export const generateEffectiveFilterContext = (filters: ConfiguredFilters) => {
   return {
     uses_infos: [],

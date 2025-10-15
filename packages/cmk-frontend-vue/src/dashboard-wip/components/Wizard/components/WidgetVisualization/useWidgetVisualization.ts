@@ -28,7 +28,11 @@ export interface UseWidgetVisualizationProps extends UseWidgetVisualizationOptio
   validate: () => boolean
   widgetGeneralSettings: Ref<WidgetGeneralSettings>
 
-  //To be removed once all widgets use the new system
+  /**
+   * use widgetGeneralSettings ref instead
+   * @deprecated
+   * @returns TitleSpec
+   */
   generateTitleSpec: () => TitleSpec
 }
 

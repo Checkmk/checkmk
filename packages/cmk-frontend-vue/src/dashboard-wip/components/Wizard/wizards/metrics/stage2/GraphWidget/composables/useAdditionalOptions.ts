@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { type Ref, ref } from 'vue'
+import { type Ref, computed, ref } from 'vue'
 
 import type { DefaultOrColor, GraphRenderOptions } from '@/dashboard-wip/components/Wizard/types'
 
@@ -26,28 +26,38 @@ export interface UseAdditionalOptionsReferences {
 }
 
 export interface UseAdditionalOptions extends UseAdditionalOptionsReferences {
+  graphRenderOptions: Ref<GraphRenderOptions>
+
+  /**
+   * @deprecated Use graphRenderOptions ref instead
+   * @returns GraphRenderOptions
+   */
   generateSpec: () => GraphRenderOptions
 }
 
-export const useAdditionalOptions = (): UseAdditionalOptions => {
-  const horizontalAxis = ref<boolean>(true)
-  const verticalAxis = ref<boolean>(true)
-  const verticalAxisWidthMode = ref<'fixed' | 'absolute'>('fixed')
-  const fixedVerticalAxisWidth = ref<number>(8)
+export const useAdditionalOptions = (data?: GraphRenderOptions): UseAdditionalOptions => {
+  const horizontalAxis = ref<boolean>(data?.show_time_axis ?? true)
+  const verticalAxis = ref<boolean>(data?.show_vertical_axis ?? true)
+  const verticalAxisWidthMode = ref<'fixed' | 'absolute'>(
+    Number.isFinite(data?.vertical_axis_width) ? 'absolute' : 'fixed'
+  )
+  const fixedVerticalAxisWidth = ref<number>(
+    Number.isFinite(data?.vertical_axis_width) ? (data?.vertical_axis_width as number) : 8
+  )
 
-  const fontSize = ref<number>(12)
+  const fontSize = ref<number>(data?.font_size_pt ?? 12)
   const color = ref<DefaultOrColor>('default')
-  const timestamp = ref<boolean>(true)
-  const roundMargin = ref<boolean>(true)
-  const graphLegend = ref<boolean>(true)
+  const timestamp = ref<boolean>(data?.show_graph_time ?? true)
+  const roundMargin = ref<boolean>(data?.show_margin ?? true)
+  const graphLegend = ref<boolean>(data?.show_legend ?? true)
 
-  const clickToPlacePin = ref<boolean>(true)
-  const showBurgerMenu = ref<boolean>(true)
+  const clickToPlacePin = ref<boolean>(data?.show_pin ?? true)
+  const showBurgerMenu = ref<boolean>(data?.show_controls ?? true)
 
-  const dontFollowTimerange = ref<boolean>(false)
+  const dontFollowTimerange = ref<boolean>(data?.fixed_timerange ? !data.fixed_timerange : false)
 
-  const generateSpec = (): GraphRenderOptions => {
-    const result: GraphRenderOptions = {
+  const graphRenderOptions = computed<GraphRenderOptions>(() => {
+    return {
       show_time_axis: horizontalAxis.value,
       show_vertical_axis: verticalAxis.value,
       vertical_axis_width:
@@ -61,8 +71,10 @@ export const useAdditionalOptions = (): UseAdditionalOptions => {
       show_controls: showBurgerMenu.value,
       fixed_timerange: !dontFollowTimerange.value
     }
+  })
 
-    return result
+  const generateSpec = (): GraphRenderOptions => {
+    return graphRenderOptions.value
   }
 
   return {
@@ -80,6 +92,8 @@ export const useAdditionalOptions = (): UseAdditionalOptions => {
     clickToPlacePin,
     showBurgerMenu,
     dontFollowTimerange,
+
+    graphRenderOptions,
 
     generateSpec
   }

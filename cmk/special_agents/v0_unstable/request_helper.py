@@ -231,31 +231,3 @@ def parse_api_url(
     path_prefix = f"{path_prefix}/" if path_prefix else ""
     api_address = f"{address}{path_prefix}{api_path}"
     return api_address
-
-
-def parse_api_custom_url(
-    url_custom: str,
-    api_path: str,
-    protocol: str = "http",
-) -> str:
-    """Parse API address with custom url
-
-    Args:
-        url_custom:
-            the custom url to connect to the server
-
-        api_path:
-            the api path which is appended to the custom url
-
-        protocol:
-            the transfer protocol (http or https)
-
-    Returns:
-        str representing the API url
-
-    Examples:
-        >>> parse_api_custom_url("localhost:8080", "api/v1/")
-        'http://localhost:8080/api/v1/'
-
-    """
-    return f"{protocol}://{url_custom}/{api_path}"

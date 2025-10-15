@@ -231,15 +231,17 @@ def _draw_dashboard(
         active_user = user.id
         assert active_user is not None
         board = copy.deepcopy(board)
-        board["owner"] = active_user
-        board["public"] = False
+        if owner == UserId.builtin():
+            board["owner"] = active_user
+            board["public"] = False
 
         all_dashboards[(active_user, name)] = board
         permitted_dashboards[name] = board
-        if owner != UserId.builtin():
-            save_all_dashboards(owner)
-        else:
+        if owner == UserId.builtin():
+            owner = active_user
             save_all_dashboards()
+        else:
+            save_all_dashboards(owner)
         need_replication = True
 
     board = _add_context_to_dashboard(board)

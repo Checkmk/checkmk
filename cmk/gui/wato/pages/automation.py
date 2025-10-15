@@ -154,6 +154,7 @@ class PageAutomation(AjaxPage):
         # the code free from special cases (if no user logged in, then...). So fake the
         # logged in user here.
         with SuperUserContext():
+            self._from_vars()
             self._handle_exc(config, self.page)
 
     @tracer.instrument("PageAutomation.page")

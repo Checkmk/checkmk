@@ -142,7 +142,7 @@ class TestPageAutomation:
                 {"x-checkmk-version": "2.4.0b1", "x-checkmk-edition": "cee"},
             )
             with pytest.raises(MKGeneralException, match="not compatible"):
-                automation.PageAutomation()._execute_cmk_automation(debug=False)
+                automation.PageAutomation()._from_vars()
 
     @pytest.mark.parametrize(
         "incomp_version",
@@ -169,7 +169,7 @@ class TestPageAutomation:
                 {"x-checkmk-version": incomp_version, "x-checkmk-edition": "cee"},
             )
             with pytest.raises(MKGeneralException, match="not compatible"):
-                automation.PageAutomation()._execute_cmk_automation(debug=False)
+                automation.PageAutomation()._from_vars()
 
     @pytest.mark.usefixtures(
         "request_context",

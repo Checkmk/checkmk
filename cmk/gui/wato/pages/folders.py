@@ -1352,6 +1352,7 @@ class PageAjaxPopupMoveToFolder(AjaxPage):
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
     @override
     def handle_page(self, config: Config) -> None:
+        self._from_vars()
         self._handle_exc(config, self.page)
 
     @override

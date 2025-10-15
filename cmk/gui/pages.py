@@ -54,10 +54,6 @@ class Page(abc.ABC):
 class AjaxPage(Page, abc.ABC):
     """Generic page handler that wraps page() calls into AJAX respones"""
 
-    def __init__(self) -> None:
-        super().__init__()
-        self._from_vars()
-
     def _from_vars(self) -> None:
         """Override this method to set mode specific attributes based on the
         given HTTP variables."""
@@ -86,6 +82,8 @@ class AjaxPage(Page, abc.ABC):
     @override
     def handle_page(self, config: Config) -> None:
         """The page handler, called by the page registry"""
+        self._from_vars()
+
         response.set_content_type("application/json")
         try:
             action_response = self.page(config)

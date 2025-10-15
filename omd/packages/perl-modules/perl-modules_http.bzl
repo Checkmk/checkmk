@@ -129,9 +129,9 @@ PERL_MODULES_LIST_2 = {
         "sha256": "e144207a6fd261eb9f98554c76bea66d95870ee1f62d2d346a1ea95fdccf80db",
         "url": "https://www.cpan.org/modules/by-module/Sys/Sys-SigAction-0.21.tar.gz",
     },
-    "Term-ReadLine-Gnu-1.25.tar.gz": {
-        "sha256": "22a1b4a156b10dc5e55be5f0030460e62a210f9194e5a469e857e5d17186b003",
-        "url": "https://www.cpan.org/modules/by-module/Term/Term-ReadLine-Gnu-1.25.tar.gz",
+    "Term-ReadLine-Gnu-1.47.tar.gz": {
+        "sha256": "3b07ac8a9b494c50aa87a40dccab3f879b92eb9527ac0f2ded5d4743d166b649",
+        "url": "https://www.cpan.org/modules/by-module/Term/Term-ReadLine-Gnu-1.47.tar.gz",
     },
     "Term-ShellUI-0.92.tar.gz": {
         "sha256": "3279c01c76227335eeff09032a40f4b02b285151b3576c04cacd15be05942bdb",

@@ -12,7 +12,6 @@ def main() {
             name: "test-shell-unit",
             cmd: "make -C tests test-unit-shell",
             output_file: "shell-unit.txt",
-            container_name: "ubuntu-2404-${safe_branch_name}-latest",
         ]);
 
         test_jenkins_helper.analyse_issues("SHELLUNIT", "shell-unit.txt");

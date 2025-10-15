@@ -126,7 +126,7 @@ class PageAutomation(AjaxPage):
     login secret that has previously been exchanged during "site login" (see above).
     """
 
-    def _from_vars(self) -> None:
+    def _handle_http_request(self) -> None:
         self._authenticate()
         _set_version_headers()
         self._command = request.get_str_input_mandatory("command")
@@ -154,7 +154,7 @@ class PageAutomation(AjaxPage):
         # the code free from special cases (if no user logged in, then...). So fake the
         # logged in user here.
         with SuperUserContext():
-            self._from_vars()
+            self._handle_http_request()
             self._handle_exc(config, self.page)
 
     @tracer.instrument("PageAutomation.page")

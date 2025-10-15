@@ -83,7 +83,7 @@ class ReportSubmitDetails(TypedDict):
 
 
 class ABCCrashReportPage(Page, abc.ABC):
-    def _from_vars(self) -> None:
+    def _handle_http_request(self) -> None:
         self._crash_id = request.get_str_input_mandatory("crash_id")
         self._site_id = request.get_str_input_mandatory("site")
 

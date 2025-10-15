@@ -58,7 +58,7 @@ DashletHandleInputFunc = Callable[[DashletId, DashletConfig, DashletConfig], Das
 
 
 class EditDashletPage(Page):
-    def _from_vars(self) -> None:
+    def _handle_http_request(self) -> None:
         if not user.may("general.edit_dashboards"):
             raise MKAuthException(_("You are not allowed to edit dashboards."))
 

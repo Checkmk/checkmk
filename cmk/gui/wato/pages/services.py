@@ -1921,7 +1921,7 @@ class DiscoveryPageRenderer:
 
 
 class ModeAjaxExecuteCheck(AjaxPage):
-    def _from_vars(self) -> None:
+    def _handle_http_request(self) -> None:
         self._site = SiteId(request.get_ascii_input_mandatory("site"))
         if self._site not in active_config.sites:
             raise MKUserError("site", _("You called this page with an invalid site."))

@@ -1,5 +1,4 @@
 site_crates = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
-
 site_crates.from_cargo(
     name = "site_crates",
     cargo_lockfile = "//requirements/rust/site:Cargo.lock",
@@ -11,11 +10,8 @@ site_crates.from_cargo(
     ],
     supported_platform_triples = ["x86_64-unknown-linux-gnu"],
 )
-
 use_repo(site_crates, "site_crates")
-
 site_crates.annotation(
-    crate = "openssl-sys",
     build_script_data = [
         "@openssl//:gen_dir",
     ],
@@ -23,9 +19,9 @@ site_crates.annotation(
         "OPENSSL_DIR": "$(execpath @openssl//:gen_dir)",
         "OPENSSL_NO_VENDOR": "1",
     },
+    crate = "openssl-sys",
     repositories = ["site_crates"],
 )
-
 site_crates.splicing_config(
     repositories = ["site_crates"],
     resolver_version = "2",

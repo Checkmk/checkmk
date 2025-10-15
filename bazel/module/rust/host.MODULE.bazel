@@ -1,5 +1,4 @@
 host_crates = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
-
 host_crates.from_cargo(
     name = "host_crates",
     cargo_config = "//requirements/rust/host:.cargo/config.toml",
@@ -11,13 +10,13 @@ host_crates.from_cargo(
         "//packages/mk-sql:Cargo.toml",
         "//packages/mk-oracle:Cargo.toml",
     ],
-    supported_platform_triples = ["x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu"],
+    supported_platform_triples = [
+        "x86_64-unknown-linux-gnu",
+        "aarch64-unknown-linux-gnu",
+    ],
 )
-
 use_repo(host_crates, "host_crates")
-
 host_crates.annotation(
-    crate = "openssl-sys",
     build_script_data = [
         "@openssl_static//:gen_dir",
     ],
@@ -26,9 +25,9 @@ host_crates.annotation(
         "OPENSSL_NO_VENDOR": "1",
         "OPENSSL_STATIC": "1",
     },
+    crate = "openssl-sys",
     repositories = ["host_crates"],
 )
-
 host_crates.splicing_config(
     repositories = ["host_crates"],
     resolver_version = "2",

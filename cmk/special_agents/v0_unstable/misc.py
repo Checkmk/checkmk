@@ -23,8 +23,6 @@ from typing import Any
 
 from cmk.ccc import store
 
-LOG = logging.getLogger(__name__)
-
 
 def datetime_serializer(obj):
     """Custom serializer to pass to json dump functions"""

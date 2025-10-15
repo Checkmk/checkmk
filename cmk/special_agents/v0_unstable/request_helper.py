@@ -8,14 +8,9 @@
 # mypy: disable-error-code="no-untyped-def"
 
 import abc
-import base64
-import json
-import ssl
 from collections.abc import Mapping
-from http.client import HTTPConnection, HTTPResponse, HTTPSConnection
 from typing import Any, TypedDict
 from urllib.parse import urljoin
-from urllib.request import build_opener, HTTPSHandler, Request
 
 from requests import Response, Session
 from requests.adapters import HTTPAdapter
@@ -44,74 +39,6 @@ class Requester(abc.ABC):
     @abc.abstractmethod
     def get(self, path: str, parameters: StringMap | None = None) -> Any:
         raise NotImplementedError()
-
-
-class HTTPSConfigurableConnection(HTTPSConnection):
-    IGNORE = "__ignore"
-
-    def __init__(self, host: str, ca_file: str | None = None) -> None:
-        self.__ca_file = ca_file
-        context = ssl.create_default_context(
-            cafile=None if ca_file == HTTPSConfigurableConnection.IGNORE else ca_file
-        )
-        if self.__ca_file:
-            if self.__ca_file == HTTPSConfigurableConnection.IGNORE:
-                context.check_hostname = False
-                context.verify_mode = ssl.CERT_NONE
-            else:
-                context.verify_mode = ssl.CERT_REQUIRED
-                context.check_hostname = True
-
-        super().__init__(host, context=context)
-
-    def connect(self) -> None:
-        if not self.__ca_file:
-            HTTPSConnection.connect(self)
-        else:
-            HTTPConnection.connect(self)
-
-
-class HTTPSAuthHandler(HTTPSHandler):
-    def __init__(self, ca_file: str) -> None:
-        super().__init__()
-        self.__ca_file = ca_file
-
-    def https_open(self, req: Request) -> HTTPResponse:
-        # TODO: Slightly interesting things in the typeshed here, investigate...
-        return self.do_open(self.get_connection, req)  # type: ignore[arg-type]
-
-    # Hmmm, this should be a HTTPConnectionProtocol...
-    def get_connection(self, host: str, timeout: float) -> HTTPSConnection:
-        return HTTPSConfigurableConnection(host, ca_file=self.__ca_file)
-
-
-class HTTPSAuthRequester(Requester):
-    def __init__(
-        self,
-        server: str,
-        port: int,
-        base_url: str,
-        username: str,
-        password: str,
-    ) -> None:
-        self._req_headers = {
-            "Authorization": "Basic "
-            + base64.encodebytes((f"{username}:{password}").encode())
-            .strip()
-            .decode()
-            .replace("\n", "")
-        }
-        self._base_url = "https://%s:%d/%s" % (server, port, base_url)
-        self._opener = build_opener(HTTPSAuthHandler(HTTPSConfigurableConnection.IGNORE))
-
-    def get(self, path: str, parameters: StringMap | None = None) -> Any:
-        url = f"{self._base_url}/{path}/"
-        if parameters is not None:
-            url = "{}?{}".format(url, "&".join(["%s=%s" % par for par in parameters.items()]))
-
-        request = Request(url, headers=self._req_headers)
-        response = self._opener.open(request)
-        return json.loads(response.read())
 
 
 class HostnameValidationAdapter(HTTPAdapter):

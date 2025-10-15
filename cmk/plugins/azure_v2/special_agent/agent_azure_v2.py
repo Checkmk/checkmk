@@ -2431,7 +2431,7 @@ async def _get_subscriptions(args: Args) -> set[AzureSubscription]:
 async def collect_info(
     args: Args, selector: Selector, subscriptions: set[AzureSubscription]
 ) -> None:
-    monitored_services = set(args.services)
+    monitored_services = {service for service in args.services}
     await asyncio.gather(
         main_graph_client(args, monitored_services),
         *{

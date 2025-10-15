@@ -70,6 +70,7 @@ CCE_AZURE_SERVICES: Final = [
     ("Microsoft.Network/applicationGateways", Title("Application Gateway")),
     ("Microsoft.Cache/Redis", Title("Redis Caches")),
     ("Microsoft.Network/natGateways", Title("NAT Gateways")),
+    ("Microsoft.DocumentDB/databaseAccounts", Title("CosmosDb")),
 ]
 
 

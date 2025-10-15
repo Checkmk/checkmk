@@ -22,7 +22,11 @@ from cmk.gui.watolib.automations import RemoteAutomationConfig
 from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional_wrapper
 from cmk.gui.watolib.users import get_enabled_remote_sites_for_logged_in_user
 
-from .model.dashboard import RelativeGridDashboardResponse
+from .. import DashboardConfig
+from ..store import DashboardStore, save_all_dashboards
+from .model.dashboard import (
+    RelativeGridDashboardResponse,
+)
 from .model.response_model import RelativeGridDashboardDomainObject
 
 INTERNAL_TO_API_TYPE_NAME: Mapping[str, str] = {
@@ -130,6 +134,15 @@ def serialize_relative_grid_dashboard(
         links=generate_links("dashboard", dashboard_id),
         extensions=dashboard,
     )
+
+
+def save_dashboard_to_file(sites: SiteConfigurations, dashboard: DashboardConfig) -> None:
+    dashboard_id = dashboard["name"]
+    store = DashboardStore.get_instance()
+    store.all[(user.id, dashboard_id)] = dashboard
+
+    save_all_dashboards()
+    sync_user_to_remotes(sites)
 
 
 def sync_user_to_remotes(sites: SiteConfigurations) -> None:

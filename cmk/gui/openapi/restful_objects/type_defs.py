@@ -101,6 +101,7 @@ CmkEndpointName = Literal[
     "cmk/bulk_create",
     "cmk/bulk_discovery",
     "cmk/bulk_update",
+    "cmk/clone_dashboard_relative_grid",
     "cmk/compute",
     "cmk/compute-list",
     "cmk/configure",

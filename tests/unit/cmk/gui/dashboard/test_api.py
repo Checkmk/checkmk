@@ -148,6 +148,16 @@ def test_create_empty_dashboard(clients: ClientRegistry) -> None:
     assert resp.json["extensions"]["widgets"] == {}, "Expected no widgets"
 
 
+def test_clone_relative_dashboard(clients: ClientRegistry) -> None:
+    _resp = clients.DashboardClient.create_relative_grid_dashboard(
+        _create_dashboard_payload("test_dashboard", {})
+    )
+    resp = clients.DashboardClient.clone_as_relative_grid_dashboard(
+        {"reference_dashboard_id": "test_dashboard", "dashboard_id": "clone_dashboard"}
+    )
+    assert resp.status_code == 204, f"Expected 204, got {resp.status_code}"
+
+
 @pytest.mark.parametrize(
     "dashboard_id", [pytest.param("", id="empty"), "with whitespace", "with_special_chars!!!"]
 )

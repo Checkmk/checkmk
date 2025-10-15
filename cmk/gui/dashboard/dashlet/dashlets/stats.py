@@ -102,7 +102,12 @@ class ServiceStats(NamedTuple):
                 self.host_down,
                 view_url(
                     general_url_vars
-                    + [("hst1", "on"), ("hst2", "on"), ("hstp", "on"), ("is_in_downtime", "0")]
+                    + [
+                        ("hst1", "on"),
+                        ("hst2", "on"),
+                        ("hstp", "on"),
+                        ("is_in_downtime", "0"),
+                    ]
                 ),
             ),
             (
@@ -295,7 +300,10 @@ S = TypeVar("S", bound=HostStats | ServiceStats | EventStats)
 class StatsDashletDataGenerator(Generic[S], abc.ABC):
     @classmethod
     def generate_response_data(
-        cls, dashlet_spec: StatsDashletConfig, context: VisualContext, infos: SingleInfos
+        cls,
+        dashlet_spec: StatsDashletConfig,
+        context: VisualContext,
+        infos: SingleInfos,
     ) -> FigureResponseData:
         return {
             "title": dashlet_spec.get("title", cls._title()),
@@ -325,7 +333,10 @@ class StatsDashletDataGenerator(Generic[S], abc.ABC):
 
     @classmethod
     def _collect_data(
-        cls, dashlet_spec: StatsDashletConfig, context: VisualContext, infos: SingleInfos
+        cls,
+        dashlet_spec: StatsDashletConfig,
+        context: VisualContext,
+        infos: SingleInfos,
     ) -> StatsElement:
         stats = cls._get_stats(dashlet_spec, context, infos)
         general_url_vars = cls._general_url_vars(context)
@@ -334,7 +345,10 @@ class StatsDashletDataGenerator(Generic[S], abc.ABC):
 
     @classmethod
     def _get_stats(
-        cls, dashlet_spec: StatsDashletConfig, context: VisualContext, infos: SingleInfos
+        cls,
+        dashlet_spec: StatsDashletConfig,
+        context: VisualContext,
+        infos: SingleInfos,
     ) -> S:
         filter_headers, only_sites = visuals.get_filter_headers(infos=infos, context=context)
         query = cls._stats_query() + "\n" + filter_headers
@@ -348,7 +362,9 @@ class StatsDashletDataGenerator(Generic[S], abc.ABC):
 
     @classmethod
     def _get_stats_element(
-        cls, parts_data: list[tuple[str, str, int, str]], general_url_vars: HTTPVariables
+        cls,
+        parts_data: list[tuple[str, str, int, str]],
+        general_url_vars: HTTPVariables,
     ) -> StatsElement:
         parts = []
         total_count = 0

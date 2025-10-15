@@ -58,7 +58,7 @@ def register(
     permission_section_registry.register(PERMISSION_SECTION_DASHBOARD)
 
     page_registry.register(PageEndpoint("ajax_figure_dashlet_data", FigureDashletPage()))
-    page_registry.register(PageEndpoint("widget_figure", FigureWidgetPage()))
+    page_registry.register(PageEndpoint(FigureWidgetPage.ident(), FigureWidgetPage()))
     page_registry.register(PageEndpoint("widget_graph", GraphWidgetPage()))
     page_registry.register(PageEndpoint("widget_iframe_view", ViewWidgetIFramePage()))
     page_registry.register(PageEndpoint("widget_edit_view", ViewWidgetEditPage()))

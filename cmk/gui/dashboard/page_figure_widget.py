@@ -6,12 +6,11 @@
 # mypy: disable-error-code="type-arg"
 
 import json
-from typing import Annotated, cast, override
+from collections.abc import Callable, Mapping
+from typing import Annotated, override
 
 from pydantic import Discriminator, TypeAdapter, ValidationError
 
-from cmk.ccc.user import UserId
-from cmk.gui.dashboard import DashboardConfig
 from cmk.gui.dashboard.api.model.widget_content.inventory import InventoryContent
 from cmk.gui.dashboard.api.model.widget_content.metric import (
     AverageScatterplotContent,
@@ -37,9 +36,13 @@ from cmk.gui.dashboard.api.model.widget_content.timeline import (
     AlertTimelineContent,
     NotificationTimelineContent,
 )
-from cmk.gui.dashboard.dashlet.dashlets.stats import StatsDashletConfig
-from cmk.gui.dashboard.dashlet.figure_dashlet import ABCFigureDashlet
-from cmk.gui.dashboard.dashlet.registry import dashlet_registry
+from cmk.gui.dashboard.dashlet.base import T
+from cmk.gui.dashboard.dashlet.dashlets.stats import (
+    EventStatsDashletDataGenerator,
+    HostStatsDashletDataGenerator,
+    ServiceStatsDashletDataGenerator,
+    StatsDashletConfig,
+)
 from cmk.gui.dashboard.type_defs import (
     AlertOverviewDashletConfig,
     AverageScatterplotDashletConfig,
@@ -54,7 +57,7 @@ from cmk.gui.dashboard.type_defs import (
     StateDashletConfig,
 )
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.figures import create_figures_response
+from cmk.gui.figures import create_figures_response, FigureResponseData
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
@@ -98,7 +101,7 @@ type FigureDashletConfig = (
 )
 
 
-def _get_figure_config(request: Request) -> FigureDashletConfig:
+def get_figure_config(request: Request) -> FigureDashletConfig:
     content_str = request.get_ascii_input_mandatory("content")
     adapter: TypeAdapter[FigureContent] = TypeAdapter(  # nosemgrep: type-adapter-detected
         FigureContent
@@ -110,50 +113,44 @@ def _get_figure_config(request: Request) -> FigureDashletConfig:
     return content_model.to_internal()
 
 
+GENERATOR_BY_FIGURE_TYPE: Mapping[
+    str,
+    Callable[..., FigureResponseData],
+] = {
+    "eventstats": EventStatsDashletDataGenerator.generate_response_data,
+    "hoststats": HostStatsDashletDataGenerator.generate_response_data,
+    "servicestats": ServiceStatsDashletDataGenerator.generate_response_data,
+}
+
+
+def get_response_data_by_figure_type(
+    figure_type_name: str, dashlet_spec: T, context: VisualContext, infos: SingleInfos
+) -> FigureResponseData:
+    if not (generator := GENERATOR_BY_FIGURE_TYPE.get(figure_type_name)):
+        raise KeyError(_("No data generator found for figure type name '%s'") % figure_type_name)
+    return generator(dashlet_spec, context, infos)
+
+
 class FigureWidgetPage(AjaxPage):
+    @classmethod
+    def ident(cls) -> str:
+        return "widget_figure"
+
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        figure_config: FigureDashletConfig = _get_figure_config(ctx.request)
-        dashlet_type = cast(type[ABCFigureDashlet], dashlet_registry[figure_config["type"]])
-
-        # Get context from the AJAX request body (not simply from the dashboard config) to include
-        # potential dashboard context given via HTTP request variables
+        figure_config: FigureDashletConfig = get_figure_config(ctx.request)
         context: VisualContext = json.loads(ctx.request.get_ascii_input_mandatory("context"))
         single_infos: SingleInfos = json.loads(
             ctx.request.get_ascii_input_mandatory("single_infos")
         )
-
-        figure_config["context"] = context
-        figure_config["single_infos"] = single_infos
-
-        # create a dummy dashboard, so that we can create the dashlet instance
-        dashboard = DashboardConfig(
-            owner=UserId.builtin(),
-            name="dummy-dashboard",
-            context={},
-            single_infos=[],
-            add_context_to_title=False,
-            title="Dummy Dashboard",
-            description="",
-            topic="",
-            sort_index=0,
-            is_show_more=False,
-            icon=None,
-            hidden=False,
-            hidebutton=False,
-            public=False,
-            packaged=False,
-            link_from={},
-            main_menu_search_terms=[],
-            mtime=0,
-            dashlets=[figure_config],
-            show_title=True,
-            mandatory_context_filters=[],
+        figure_config.update(
+            {
+                "context": context,
+                "single_infos": single_infos,
+            }
         )
-
-        dashlet = dashlet_type(dashboard["name"], dashboard["owner"], dashboard, 0, figure_config)
-
-        # TODO: try to make generate_response_data a classmethod so we do not need to create
-        #       dashboard and dashlet instances here, but can call that function directly with the
-        #       necessary params
-        return create_figures_response(dashlet.generate_response_data())
+        return create_figures_response(
+            get_response_data_by_figure_type(
+                figure_config["type"], figure_config, context, single_infos
+            )
+        )

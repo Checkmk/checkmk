@@ -9,6 +9,9 @@
 import pytest
 
 from cmk.gui.dashboard.dashlet.figure_dashlet import ABCFigureDashlet
+from cmk.gui.dashboard.dashlet.registry import dashlet_registry
+from cmk.gui.dashboard.page_figure_widget import GENERATOR_BY_FIGURE_TYPE
+from tests.testlib.common.repo import is_non_free_repo
 
 
 @pytest.mark.parametrize(
@@ -23,3 +26,15 @@ from cmk.gui.dashboard.dashlet.figure_dashlet import ABCFigureDashlet
 )
 def test_migrate_dashlet_status_display(entry: dict[str, object], result: str) -> None:
     assert ABCFigureDashlet._migrate_vs(entry) == result
+
+
+@pytest.mark.skipif(
+    is_non_free_repo(), reason="GENERATOR_BY_FIGURE_TYPE holds CRE-only figure types"
+)
+def test_generate_response_data_mapping() -> None:
+    all_figure_types = {
+        dashlet.type_name()
+        for dashlet in dashlet_registry.values()
+        if issubclass(dashlet, ABCFigureDashlet)
+    }
+    assert set(GENERATOR_BY_FIGURE_TYPE.keys()) == all_figure_types

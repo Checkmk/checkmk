@@ -10,9 +10,9 @@ PERL_MODULES_LIST_1 = {
         "sha256": "1f8f5c928fd6699a25ead67c23e1159482e7088ce684fbc084b3bcef115e1fc3",
         "url": "https://cpan.metacpan.org/authors/id/C/CO/CORION/parent-0.232.tar.gz",
     },
-    "version-0.9924.tar.gz": {
-        "sha256": "81e4485ff3faf9b7813584d57b557f4b34e73b6c2eb696394f6deefacf5ca65b",
-        "url": "https://www.cpan.org/modules/by-module/version/version-0.9924.tar.gz",
+    "version-0.9933.tar.gz": {
+        "sha256": "dc07d9388ca3d3f67146312904bcdb35fe416bb30056158f80df3281a94fae58",
+        "url": "https://www.cpan.org/modules/by-module/version/version-0.9933.tar.gz",
     },
     "Module-CoreList-5.20150420.tar.gz": {
         "sha256": "03768bde1f5c02ba3fc4c093ed58c1c461d1251187b21f2c4ddfffc04b33e686",

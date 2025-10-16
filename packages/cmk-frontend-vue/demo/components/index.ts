@@ -17,6 +17,7 @@ import DemoCmkChip from './DemoCmkChip.vue'
 import DemoCmkCode from './DemoCmkCode.vue'
 import DemoCmkCollapsible from './DemoCmkCollapsible.vue'
 import DemoCmkColorPicker from './DemoCmkColorPicker.vue'
+import DemoCmkDialog from './DemoCmkDialog.vue'
 import DemoCmkDropdown from './DemoCmkDropdown.vue'
 import DemoCmkDualList from './DemoCmkDualList.vue'
 import DemoCmkHtml from './DemoCmkHtml.vue'
@@ -51,6 +52,7 @@ export const pages = [
   new Page('CmkList', DemoCmkList),
   new Page('ToggleButtonGroup', DemoToggleButtonGroup),
   new Page('CmkButton', DemoCmkButton),
+  new Page('CmkDialog', DemoCmkDialog),
   new Page('CmkDropdown', DemoCmkDropdown),
   new Page('CmkErrorBoundary', DemoErrorBoundary),
   new Page('CmkSwitch', DemoCmkSwitch),

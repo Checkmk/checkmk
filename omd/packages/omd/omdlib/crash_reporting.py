@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from pathlib import Path
 from typing import override
 
 from cmk.ccc import version
 from cmk.ccc.crash_reporting import ABCCrashReport, CrashReportStore, make_crash_report_base_path
-from cmk.utils.paths import omd_root
 
 
 class _OMDCrashReport(ABCCrashReport[None]):
@@ -18,11 +18,11 @@ class _OMDCrashReport(ABCCrashReport[None]):
         return "omd"
 
 
-def report_crash() -> str:
+def report_crash(site_home: Path) -> str:
     crash = _OMDCrashReport(
-        crash_report_base_path=make_crash_report_base_path(omd_root),
+        crash_report_base_path=make_crash_report_base_path(site_home),
         crash_info=_OMDCrashReport.make_crash_info(
-            version.get_general_version_infos(omd_root), None
+            version.get_general_version_infos(site_home), None
         ),
     )
     CrashReportStore().save(crash)

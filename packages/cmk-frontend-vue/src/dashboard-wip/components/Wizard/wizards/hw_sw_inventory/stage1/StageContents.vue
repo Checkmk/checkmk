@@ -78,6 +78,7 @@ const hostObjectType = 'host'
     :configured-filters-of-object-type="props.widgetConfiguredFilters"
     :context-filters="contextFilters"
     :in-selection-menu-focus="isInFilterSelectionMenuFocus(hostObjectType)"
+    :single-only="true"
     @set-focus="emit('set-focus', $event)"
     @update-filter-values="(filterId, values) => emit('update-filter-values', filterId, values)"
     @reset-object-type-filters="emit('reset-object-type-filters', $event)"

@@ -53,7 +53,5 @@ export type IFrameContent = components['schemas']['URLContent']
 export type LinkedViewContent = components['schemas']['LinkedViewContent']
 export type StaticTextContent = components['schemas']['StaticTextContent']
 export type TopListContent = components['schemas']['TopListContent']
-export type WidgetAvailableInventory = {
-  id: string
-  title: string
-}
+export type WidgetAvailableInventory =
+  components['schemas']['WidgetAvailableInventoryCollectionModel']

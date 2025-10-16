@@ -40,10 +40,13 @@ const displayHwSwPropertySelection = ref<boolean>(true)
 const inventoryPaths = ref<Suggestion[]>([])
 
 onBeforeMount(async () => {
-  inventoryPaths.value = (await dashboardAPI.listAvailableInventory()).map((item) => ({
-    name: item.id,
-    title: untranslated(item.title)
-  }))
+  const result = await dashboardAPI.listAvailableInventory()
+  inventoryPaths.value = Array.isArray(result.value)
+    ? result.value.map((item) => ({
+        name: item.id ?? null,
+        title: untranslated(item.title ?? '')
+      }))
+    : []
 })
 </script>
 

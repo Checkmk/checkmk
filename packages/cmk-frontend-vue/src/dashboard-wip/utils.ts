@@ -137,7 +137,7 @@ export const dashboardAPI = {
     await response.raiseForStatus()
     return await response.json()
   },
-  listAvailableInventory: async (): Promise<WidgetAvailableInventory[]> => {
+  listAvailableInventory: async (): Promise<WidgetAvailableInventory> => {
     const url = `${API_ROOT}/objects/constant/widget_available_inventory/collections/all`
     const response = await fetchRestAPI(url, 'GET')
     await response.raiseForStatus()

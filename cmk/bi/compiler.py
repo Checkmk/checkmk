@@ -289,7 +289,12 @@ class BICompiler:
         # required_program_starts. Empty branches are simply not shown during computation
         cached_program_starts = self._bi_structure_fetcher.get_cached_program_starts()
         required_program_starts = current_configstatus["online_sites"]
-        return len(required_program_starts - cached_program_starts) > 0
+
+        if differing_program_starts := required_program_starts - cached_program_starts:
+            differing_site_ids = ", ".join(site_id for site_id, _ in differing_program_starts)
+            _LOGGER.debug(f"Detected restarts for the following site ids: {differing_site_ids}")
+
+        return len(differing_program_starts) > 0
 
     def compute_current_configstatus(self) -> ConfigStatus:
         current_configstatus: ConfigStatus = {

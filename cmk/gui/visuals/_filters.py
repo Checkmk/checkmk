@@ -17,12 +17,12 @@ import livestatus
 from cmk.ccc.site import SiteId
 from cmk.gui import query_filters
 from cmk.gui import sites as sites
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
-from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.type_defs import (
     ChoiceMapping,
     ColumnName,
@@ -117,7 +117,7 @@ class RegexAjaxDropdownFilter(AjaxDropdownFilter):
 
 class PageValidateFilter(AjaxPage):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         api_request = self.webapi_request()
         varname = str(api_request.get("varname"))
         value = str(api_request.get("value"))

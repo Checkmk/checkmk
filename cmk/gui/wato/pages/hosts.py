@@ -44,7 +44,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.quick_setup.html import quick_setup_duplication_warning, quick_setup_locked_warning
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import ActionResult, PermissionName
@@ -1016,18 +1016,18 @@ class ModeCreateCluster(CreateHostMode):
 
 class PageAjaxPingHost(AjaxPage):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         site_id = request.get_validated_type_input(SiteId, "site_id", deflt=omd_site())
         ip_or_dns_name = request.get_ascii_input_mandatory("ip_or_dns_name")
         cmd = request.get_validated_type_input(PingHostCmd, "cmd", PingHostCmd.PING)
 
         result = ping_host(
-            automation_config=make_automation_config(config.sites[site_id]),
+            automation_config=make_automation_config(ctx.config.sites[site_id]),
             ping_host_input=PingHostInput(
                 ip_or_dns_name=unquote(ip_or_dns_name),
                 base_cmd=cmd,
             ),
-            debug=config.debug,
+            debug=ctx.config.debug,
         )
         return {
             "status_code": result.return_code,
@@ -1037,10 +1037,10 @@ class PageAjaxPingHost(AjaxPage):
 
 class PageAjaxDiagCmkAgent(AjaxPage):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         api_request = self.webapi_request()
         result = diag_cmk_agent(
-            automation_config=make_automation_config(config.sites[api_request["site_id"]]),
+            automation_config=make_automation_config(ctx.config.sites[api_request["site_id"]]),
             diag_cmk_agent_input=DiagCmkAgentInput(
                 host_name=api_request["host_name"],
                 ip_address=api_request["ipaddress"],
@@ -1048,7 +1048,7 @@ class PageAjaxDiagCmkAgent(AjaxPage):
                 agent_port=api_request["agent_port"],
                 timeout=api_request["timeout"],
             ),
-            debug=config.debug,
+            debug=ctx.config.debug,
         )
 
         return {

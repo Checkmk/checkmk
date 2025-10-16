@@ -63,7 +63,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import Page, PageEndpoint, PageRegistry
+from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import permission_registry
 from cmk.gui.session import session
 from cmk.gui.site_config import has_distributed_setup_remote_sites, is_distributed_setup_remote_site
@@ -538,11 +538,11 @@ class UserTwoFactorOverview(Page):
         html.footer()
 
     @override
-    def page(self, config: Config) -> None:
+    def page(self, ctx: PageContext) -> None:
         verify_requirements(
-            UserPermissions.from_config(config, permission_registry),
+            UserPermissions.from_config(ctx.config, permission_registry),
             "general.manage_2fa",
-            config.wato_enabled,
+            ctx.config.wato_enabled,
         )
         title = self._page_title()
         breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_user(), self._page_title())
@@ -550,7 +550,7 @@ class UserTwoFactorOverview(Page):
 
         if transactions.check_transaction():
             try:
-                self._action(config)
+                self._action(ctx.config)
             except MKUserError as e:
                 user_errors.add(e)
 
@@ -559,7 +559,7 @@ class UserTwoFactorOverview(Page):
 
         html.show_user_errors()
 
-        self._show_form(config)
+        self._show_form(ctx.config)
 
     @classmethod
     def _show_registered_credentials(
@@ -714,11 +714,11 @@ class UserTwoFactorEnforce(Page):
         html.footer()
 
     @override
-    def page(self, config: Config) -> None:
+    def page(self, ctx: PageContext) -> None:
         verify_requirements(
-            UserPermissions.from_config(config, permission_registry),
+            UserPermissions.from_config(ctx.config, permission_registry),
             "general.manage_2fa",
-            config.wato_enabled,
+            ctx.config.wato_enabled,
         )
         title = self._page_title()
         breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_user(), self._page_title())
@@ -735,7 +735,7 @@ class UserTwoFactorEnforce(Page):
 
         html.show_user_errors()
 
-        self._show_form(config)
+        self._show_form(ctx.config)
 
 
 class RegisterTotpSecret(Page):
@@ -879,11 +879,11 @@ class RegisterTotpSecret(Page):
         html.footer()
 
     @override
-    def page(self, config: Config) -> None:
+    def page(self, ctx: PageContext) -> None:
         verify_requirements(
-            UserPermissions.from_config(config, permission_registry),
+            UserPermissions.from_config(ctx.config, permission_registry),
             "general.manage_2fa",
-            config.wato_enabled,
+            ctx.config.wato_enabled,
         )
         title = self._page_title()
         breadcrumb = self._breadcrumb()
@@ -891,7 +891,7 @@ class RegisterTotpSecret(Page):
 
         if transactions.check_transaction():
             try:
-                self._action(config)
+                self._action(ctx.config)
             except MKUserError as e:
                 user_errors.add(e)
 
@@ -992,11 +992,11 @@ class EditCredentialAlias(Page):
         html.footer()
 
     @override
-    def page(self, config: Config) -> None:
+    def page(self, ctx: PageContext) -> None:
         verify_requirements(
-            UserPermissions.from_config(config, permission_registry),
+            UserPermissions.from_config(ctx.config, permission_registry),
             "general.manage_2fa",
-            config.wato_enabled,
+            ctx.config.wato_enabled,
         )
         title = self._page_title()
         breadcrumb = self._breadcrumb()
@@ -1004,7 +1004,7 @@ class EditCredentialAlias(Page):
 
         if transactions.check_transaction():
             try:
-                self._action(config)
+                self._action(ctx.config)
             except MKUserError as e:
                 user_errors.add(e)
 
@@ -1043,10 +1043,10 @@ class EditCredentialAlias(Page):
 
 class JsonPage(Page, abc.ABC):
     @override
-    def handle_page(self, config: Config) -> None:
+    def handle_page(self, ctx: PageContext) -> None:
         try:
             response.set_content_type("application/json")
-            response.set_data(json.dumps(self.page(config)))
+            response.set_data(json.dumps(self.page(ctx)))
         except MKGeneralException as e:
             response.status_code = http_client.BAD_REQUEST
             response.set_data(str(e))
@@ -1059,7 +1059,7 @@ class JsonPage(Page, abc.ABC):
             response.set_data(str(e))
 
     @abc.abstractmethod
-    def page(self, config: Config) -> JsonSerializable:
+    def page(self, ctx: PageContext) -> JsonSerializable:
         """Override this to implement the page functionality"""
         raise NotImplementedError()
 
@@ -1079,11 +1079,11 @@ def _serialize_webauthn_state(state: dict) -> WebAuthnActionState:
 
 class UserWebAuthnRegisterBegin(JsonPage):
     @override
-    def page(self, config: Config) -> JsonSerializable:
+    def page(self, ctx: PageContext) -> JsonSerializable:
         assert user.id is not None
 
         if not session.two_factor_enforced(
-            UserPermissions.from_config(config, permission_registry)
+            UserPermissions.from_config(ctx.config, permission_registry)
         ):
             user.need_permission("general.manage_2fa")
 
@@ -1108,11 +1108,11 @@ class UserWebAuthnRegisterBegin(JsonPage):
 
 class UserWebAuthnRegisterComplete(JsonPage):
     @override
-    def page(self, config: Config) -> JsonSerializable:
+    def page(self, ctx: PageContext) -> JsonSerializable:
         assert user.id is not None
 
         if not session.two_factor_enforced(
-            UserPermissions.from_config(config, permission_registry)
+            UserPermissions.from_config(ctx.config, permission_registry)
         ):
             user.need_permission("general.manage_2fa")
 
@@ -1160,7 +1160,7 @@ class UserWebAuthnRegisterComplete(JsonPage):
         session.session_info.two_factor_completed = True
         flash(_("Registration successful"))
         navigation_json = {"status": "OK", "redirect": False, "replicate": False}
-        if has_distributed_setup_remote_sites(config.sites):
+        if has_distributed_setup_remote_sites(ctx.config.sites):
             navigation_json["replicate"] = True
         if session.session_info.two_factor_required:
             session.session_info.two_factor_required = False
@@ -1360,7 +1360,7 @@ class UserLoginTwoFactor(Page):
                 raise MKUserError(None, _("Invalid code provided"), HTTPStatus.UNAUTHORIZED)
 
     @override
-    def page(self, config: Config) -> None:
+    def page(self, ctx: PageContext) -> None:
         assert user.id is not None
 
         html.render_headfoot = False
@@ -1408,10 +1408,10 @@ class UserLoginTwoFactor(Page):
         self._check_totp_and_backup(
             available_methods,
             credentials,
-            config.sites,
-            get_user_attributes(config.wato_user_attrs),
-            config.lock_on_logon_failures,
-            config.log_logon_failures,
+            ctx.config.sites,
+            get_user_attributes(ctx.config.wato_user_attrs),
+            ctx.config.lock_on_logon_failures,
+            ctx.config.log_logon_failures,
         )
 
         if user_errors:
@@ -1426,7 +1426,7 @@ class UserLoginTwoFactor(Page):
 
 class UserWebAuthnLoginBegin(JsonPage):
     @override
-    def page(self, config: Config) -> JsonSerializable:
+    def page(self, ctx: PageContext) -> JsonSerializable:
         assert user.id is not None
 
         if not is_two_factor_login_enabled(user.id):
@@ -1446,7 +1446,7 @@ class UserWebAuthnLoginBegin(JsonPage):
 
 class UserWebAuthnLoginComplete(JsonPage):
     @override
-    def page(self, config: Config) -> JsonSerializable:
+    def page(self, ctx: PageContext) -> JsonSerializable:
         assert user.id is not None
 
         if not is_two_factor_login_enabled(user.id):
@@ -1475,9 +1475,9 @@ class UserWebAuthnLoginComplete(JsonPage):
             _handle_failed_auth(
                 user.id,
                 user.attributes,
-                get_user_attributes(config.wato_user_attrs),
-                config.lock_on_logon_failures,
-                config.log_logon_failures,
+                get_user_attributes(ctx.config.wato_user_attrs),
+                ctx.config.lock_on_logon_failures,
+                ctx.config.log_logon_failures,
             )
             raise
 

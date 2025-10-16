@@ -12,6 +12,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.pages import PageContext
 from cmk.gui.type_defs import RoleName
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
@@ -123,7 +124,7 @@ class SiteStatus(SidebarSnapin):
             "set_all_sites": self._ajax_set_all_sites,
         }
 
-    def _ajax_switch_site(self, config: Config) -> None:
+    def _ajax_switch_site(self, ctx: PageContext) -> None:
         check_csrf_token()
         response.set_content_type("application/json")
         # _site_switch=sitename1:on,sitename2:off,...
@@ -135,7 +136,7 @@ class SiteStatus(SidebarSnapin):
             for info in switch_var.split(","):
                 sitename_str, onoff = info.split(":")
                 sitename = SiteId(sitename_str)
-                if sitename not in config.sites:
+                if sitename not in ctx.config.sites:
                     continue
 
                 if onoff == "on":
@@ -145,11 +146,11 @@ class SiteStatus(SidebarSnapin):
 
             user.save_site_config()
 
-    def _ajax_set_all_sites(self, config: Config) -> None:
+    def _ajax_set_all_sites(self, ctx: PageContext) -> None:
         sites.update_site_states_from_dead_sites()
         new_state = request.var("_new_state")
 
-        for sitename, _sitealias in user_sites.sorted_sites(config.sites):
+        for sitename, _sitealias in user_sites.sorted_sites(ctx.config.sites):
             current_state = sites.states().get(sitename, sites.SiteStatus({})).get("state")
 
             # Enable all disabled sites

@@ -15,7 +15,6 @@ from typing import NamedTuple, override, TypedDict
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui import message
-from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -24,7 +23,7 @@ from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import any_show_more_items, main_menu_registry
 from cmk.gui.main_menu_types import MainMenu, MainMenuItem, MainMenuTopic, MainMenuTopicSegment
-from cmk.gui.pages import AjaxPage, PageResult
+from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import Icon
 from cmk.gui.utils.html import HTML
@@ -176,23 +175,23 @@ class MainMenuRenderer:
             return output_funnel.drain()
 
 
-def ajax_message_read(config: Config) -> None:
+def ajax_message_read(ctx: PageContext) -> None:
     response.set_content_type("application/json")
     try:
         message.delete_gui_message(request.get_str_input_mandatory("id"))
         html.write_text_permissive("OK")
     except Exception:
-        if config.debug:
+        if ctx.config.debug:
             raise
         html.write_text_permissive("ERROR")
 
 
 class PageAjaxSidebarChangesMenu(AjaxPage):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         return {
             "number_of_pending_changes": ActivateChanges.get_number_of_pending_changes(
-                sites=list(config.sites),
+                sites=list(ctx.config.sites),
                 count_limit=10,
             )
         }
@@ -200,8 +199,8 @@ class PageAjaxSidebarChangesMenu(AjaxPage):
 
 class PageAjaxSitesAndChanges(AjaxPage):
     @override
-    def page(self, config: Config) -> PageResult:
-        return ActivateChanges().get_all_data_required_for_activation_popout(config.sites)
+    def page(self, ctx: PageContext) -> PageResult:
+        return ActivateChanges().get_all_data_required_for_activation_popout(ctx.config.sites)
 
 
 class PopUpMessage(TypedDict):
@@ -211,7 +210,7 @@ class PopUpMessage(TypedDict):
 
 class PageAjaxSidebarGetMessages(AjaxPage):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         popup_msg: list[PopUpMessage] = []
         hint_msg: int = 0
 
@@ -233,7 +232,7 @@ class PageAjaxSidebarGetMessages(AjaxPage):
 
 class PageAjaxSidebarGetUnackIncompWerks(AjaxPage):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         if not may_acknowledge():
             raise MKAuthException(_("You are not allowed to acknowlegde werks"))
 

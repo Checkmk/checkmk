@@ -16,7 +16,7 @@ from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import GroupType
 from cmk.gui.i18n import _
-from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.type_defs import Choices
 from cmk.gui.utils.labels import encode_label_for_livestatus, Label, LABEL_REGEX
 from cmk.gui.utils.user_errors import user_errors
@@ -247,7 +247,7 @@ def validate_autocompleter_data(api_request: dict[str, Any]) -> None:
 
 class PageVsAutocomplete(AjaxPage):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         api_request = self.webapi_request()
         validate_autocompleter_data(api_request)
         ident = api_request["ident"]
@@ -256,7 +256,7 @@ class PageVsAutocomplete(AjaxPage):
         if completer is None:
             raise MKUserError("ident", _("Invalid ident: %s") % ident)
 
-        result_data = completer(config, api_request["value"], api_request["params"])
+        result_data = completer(ctx.config, api_request["value"], api_request["params"])
 
         # Check for correct result_data format
         assert isinstance(result_data, list)

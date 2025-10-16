@@ -11,7 +11,6 @@ from typing import Annotated, cast, override
 from pydantic import Discriminator, TypeAdapter, ValidationError
 
 from cmk.ccc.user import UserId
-from cmk.gui.config import Config
 from cmk.gui.dashboard import DashboardConfig
 from cmk.gui.dashboard.api.model.widget_content.inventory import InventoryContent
 from cmk.gui.dashboard.api.model.widget_content.metric import (
@@ -58,7 +57,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.figures import create_figures_response
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.pages import AjaxPage, PageResult
+from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.type_defs import SingleInfos, VisualContext
 
 __all__ = ["FigureWidgetPage"]
@@ -113,7 +112,7 @@ def _get_figure_config() -> FigureDashletConfig:
 
 class FigureWidgetPage(AjaxPage):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         figure_config: FigureDashletConfig = _get_figure_config()
         dashlet_type = cast(type[ABCFigureDashlet], dashlet_registry[figure_config["type"]])
 

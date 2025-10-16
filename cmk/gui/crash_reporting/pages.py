@@ -33,7 +33,6 @@ from cmk.gui.breadcrumb import (
     make_current_page_breadcrumb_item,
     make_topic_breadcrumb,
 )
-from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.debug_vars import debug_vars
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -51,7 +50,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import Page, PageEndpoint, PageRegistry
+from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils import escaping
@@ -123,15 +122,13 @@ class ABCCrashReportPage(Page, abc.ABC):
 
 class PageCrash(ABCCrashReportPage):
     @override
-    def page(self, config: Config) -> None:
-        self._handle_http_request()
-
+    def page(self, ctx: PageContext) -> None:
         row = self._get_crash_row()
         crash_info = self._get_crash_info(row)
 
         title = _("Crash report: %s") % self._crash_id
         breadcrumb = self._breadcrumb(
-            title, UserPermissions.from_config(config, permission_registry)
+            title, UserPermissions.from_config(ctx.config, permission_registry)
         )
         make_header(html, title, breadcrumb, self._page_menu(breadcrumb, crash_info))
 
@@ -151,7 +148,9 @@ class PageCrash(ABCCrashReportPage):
             return
 
         if request.has_var("_report") and transactions.check_transaction():
-            details = self._handle_report_form(config.crash_report_target, config.crash_report_url)
+            details = self._handle_report_form(
+                ctx.config.crash_report_target, ctx.config.crash_report_url
+            )
         else:
             details = ReportSubmitDetails(name="", mail="")
 
@@ -720,7 +719,7 @@ def _show_agent_output(row: CrashReportRow) -> None:
 
 class PageDownloadCrashReport(ABCCrashReportPage):
     @override
-    def page(self, config: Config) -> None:
+    def page(self, ctx: PageContext) -> None:
         user.need_permission("general.see_crash_reports")
         self._handle_http_request()
 

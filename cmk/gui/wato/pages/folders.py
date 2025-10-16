@@ -40,7 +40,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.quick_setup.html import quick_setup_source_cell
 from cmk.gui.table import show_row_count, Table, table_element
 from cmk.gui.type_defs import ActionResult, Choices, HTTPVariables, PermissionName
@@ -1350,12 +1350,12 @@ class PageAjaxPopupMoveToFolder(AjaxPage):
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
     @override
-    def handle_page(self, config: Config) -> None:
+    def handle_page(self, ctx: PageContext) -> None:
         self._handle_http_request()
-        self._handle_exc(config, self.page)
+        self._handle_exc(ctx, self.page)
 
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         html.span(self._move_title())
 
         choices = self._get_choices()
@@ -1627,7 +1627,7 @@ class ModeCreateFolder(ABCFolderMode):
 
 class PageAjaxSetFoldertree(AjaxPage):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         check_csrf_token()
         api_request = self.webapi_request()
         user.save_file("foldertree", (api_request.get("topic"), api_request.get("target")))

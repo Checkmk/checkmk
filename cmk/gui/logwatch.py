@@ -23,7 +23,6 @@ from cmk.gui.breadcrumb import (
     make_current_page_breadcrumb_item,
     make_simple_page_breadcrumb,
 )
-from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
@@ -40,7 +39,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import PageEndpoint, PageRegistry
+from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import permission_registry
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import HTTPVariables
@@ -66,7 +65,7 @@ def register(page_registry: PageRegistry) -> None:
     page_registry.register(PageEndpoint("logwatch", page_show))
 
 
-def page_show(config: Config) -> None:
+def page_show(ctx: PageContext) -> None:
     site = request.get_validated_type_input(SiteId, "site")  # optional site hint
     host_name = request.get_validated_type_input_mandatory(HostName, "host", deflt=HostName(""))
     file_name = request.get_str_input_mandatory("file", "")
@@ -80,14 +79,14 @@ def page_show(config: Config) -> None:
         pass  # host_name log dir does not exist
 
     if not host_name:
-        show_log_list(debug=config.debug)
+        show_log_list(debug=ctx.config.debug)
         return
 
-    user_permissions = UserPermissions.from_config(config, permission_registry)
+    user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
     if file_name:
-        show_file(site, host_name, file_name, user_permissions, debug=config.debug)
+        show_file(site, host_name, file_name, user_permissions, debug=ctx.config.debug)
     else:
-        show_host_log_list(site, host_name, user_permissions, debug=config.debug)
+        show_host_log_list(site, host_name, user_permissions, debug=ctx.config.debug)
 
 
 def show_log_list(*, debug: bool) -> None:

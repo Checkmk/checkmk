@@ -57,6 +57,7 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.page_menu import confirmed_form_submit_options
+from cmk.gui.pages import PageContext
 from cmk.gui.session import session
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import (
@@ -3959,7 +3960,7 @@ def rebuild_folder_lookup_cache(config: Config) -> None:
     folder_lookup_cache().rebuild_outdated(max_age=300)
 
 
-def ajax_popup_host_action_menu(config: Config) -> None:
+def ajax_popup_host_action_menu(ctx: PageContext) -> None:
     hostname = request.get_validated_type_input_mandatory(HostName, "hostname")
     host = Host.host(hostname)
     if host is None:

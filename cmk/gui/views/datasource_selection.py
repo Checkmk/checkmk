@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui import forms, visuals
-from cmk.gui.config import Config
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.htmllib.header import make_header
@@ -12,6 +11,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_simple_form_page_menu
+from cmk.gui.pages import PageContext
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.valuespec import DropdownChoice
@@ -27,7 +27,7 @@ def DatasourceSelection() -> DropdownChoice[str]:
     )
 
 
-def page_select_datasource(config: Config) -> None:
+def page_select_datasource(ctx: PageContext) -> None:
     show_create_view_dialog()
 
 

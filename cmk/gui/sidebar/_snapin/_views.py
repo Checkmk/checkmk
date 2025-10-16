@@ -19,7 +19,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.main_menu_types import MainMenu, MainMenuTopic
 from cmk.gui.nodevis.topology import ParentChildTopologyPage
-from cmk.gui.pages import PageEndpoint, PageRegistry
+from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import Visual
 from cmk.gui.utils.roles import UserPermissions
@@ -83,7 +83,7 @@ class Views(SidebarSnapin):
             footnotelinks(links)
 
 
-def ajax_export_views(config: Config) -> None:
+def ajax_export_views(ctx: PageContext) -> None:
     for view in get_permitted_views().values():
         view["owner"] = UserId.builtin()
         view["public"] = True

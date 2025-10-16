@@ -7,13 +7,12 @@ from dataclasses import asdict
 from typing import override
 
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import Config
 from cmk.gui.dashboard.store import get_all_dashboards
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
-from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri, makeuri_contextless
 from cmk.gui.wato.pages.user_profile.main_menu import set_user_attribute
 from cmk.gui.watolib.hosts_and_folders import Host
@@ -88,7 +87,7 @@ WELCOME_PAGE_PERMISSIONS = {
 }
 
 
-def _ajax_mark_step_as_complete(config: Config) -> None:
+def _ajax_mark_step_as_complete(ctx: PageContext) -> None:
     # Handle step completion if completed-step parameter is provided
     if completed_step_name := request.get_ascii_input("_completed_step"):
         if completed_step_name in FinishedEnum:
@@ -99,11 +98,11 @@ def _ajax_mark_step_as_complete(config: Config) -> None:
 
 class PageWelcomePageStageInformation(AjaxPage):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         return asdict(get_welcome_data().stage_information)
 
 
-def _welcome_page(config: Config) -> None:
+def _welcome_page(ctx: PageContext) -> None:
     make_header(
         html,
         "Welcome",
@@ -113,7 +112,7 @@ def _welcome_page(config: Config) -> None:
     )
     if not all(user.may(perm) for perm in WELCOME_PAGE_PERMISSIONS):
         set_user_attribute("start_url", None)
-        default_start_url = user.start_url or config.start_url
+        default_start_url = user.start_url or ctx.config.start_url
         if not is_allowed_url(default_start_url):
             default_start_url = "dashboard.py"
         html.immediate_browser_redirect(

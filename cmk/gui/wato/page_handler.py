@@ -16,6 +16,7 @@ from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.pages import PageContext
 from cmk.gui.utils.flashed_messages import get_flashed_messages_with_categories
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
@@ -55,10 +56,10 @@ from .pages.not_implemented import ModeNotImplemented
 #   `----------------------------------------------------------------------'
 
 
-def page_handler(config: Config) -> None:
+def page_handler(ctx: PageContext) -> None:
     initialize_wato_html_head()
 
-    if not config.wato_enabled:
+    if not ctx.config.wato_enabled:
         raise MKGeneralException(
             _(
                 "Setup is disabled. Please set <tt>wato_enabled = True</tt>"
@@ -72,7 +73,7 @@ def page_handler(config: Config) -> None:
     # config.current_customer can not be checked with CRE repos
     if (
         cmk_version.edition(paths.omd_root) is cmk_version.Edition.CME
-        and not customer_api().is_provider(config.current_customer)
+        and not customer_api().is_provider(ctx.config.current_customer)
         and not current_mode.startswith(("backup", "edit_backup"))
     ):
         raise MKGeneralException(_("Checkmk can only be configured on the managers central site."))
@@ -88,9 +89,9 @@ def page_handler(config: Config) -> None:
     # If we do an action, we acquire an exclusive lock on the complete Setup.
     if transactions.is_transaction():
         with store.lock_checkmk_configuration(configuration_lockfile):
-            _wato_page_handler(config, current_mode, mode_instance)
+            _wato_page_handler(ctx.config, current_mode, mode_instance)
     else:
-        _wato_page_handler(config, current_mode, mode_instance)
+        _wato_page_handler(ctx.config, current_mode, mode_instance)
 
 
 def _wato_page_handler(config: Config, current_mode: str, mode: WatoMode) -> None:

@@ -38,7 +38,7 @@ from cmk.gui.logged_in import (
     user,
 )
 from cmk.gui.main import get_page_heading
-from cmk.gui.pages import Page, PageEndpoint, PageRegistry
+from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import permission_registry
 from cmk.gui.session import session, UserContext
 from cmk.gui.theme.current_theme import theme
@@ -115,13 +115,13 @@ def del_auth_cookie() -> None:
 
 class SaasLoginPage(Page):
     @override
-    def page(self, config: Config) -> None:
+    def page(self, ctx: PageContext) -> None:
         raise HTTPRedirect("cognito_sso.py")
 
 
 class SaasLogoutPage(Page):
     @override
-    def page(self, config: Config) -> None:
+    def page(self, ctx: PageContext) -> None:
         raise HTTPRedirect("cognito_logout.py")
 
 
@@ -146,21 +146,21 @@ class LoginPage(Page):
         self._no_html_output = no_html_output
 
     @override
-    def page(self, config: Config) -> None:
+    def page(self, ctx: PageContext) -> None:
         # Initialize the cmk.gui.i18n for the login dialog. This might be
         # overridden later after user login
-        cmk.gui.i18n.localize(request.var("lang", config.default_language))
+        cmk.gui.i18n.localize(request.var("lang", ctx.config.default_language))
 
-        self._do_login(config)
+        self._do_login(ctx.config)
 
         if self._no_html_output:
             raise MKAuthException(_("Invalid login credentials."))
 
         if is_mobile(request, response):
-            cmk.gui.mobile.page_login(config)
+            cmk.gui.mobile.page_login(ctx.config)
             return
 
-        self._show_login_page(config)
+        self._show_login_page(ctx.config)
 
     def _do_login(self, config: Config) -> None:
         """handle the login form"""
@@ -466,7 +466,7 @@ def _show_remaining_trial_time(remaining_trial_time: RemainingTrialTime) -> None
 
 class LogoutPage(Page):
     @override
-    def page(self, config: Config) -> None:
+    def page(self, ctx: PageContext) -> None:
         assert user.id is not None
 
         session.invalidate()

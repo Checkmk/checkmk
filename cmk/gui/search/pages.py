@@ -5,9 +5,8 @@
 
 from typing import cast, get_args, override
 
-from cmk.gui.config import Config
 from cmk.gui.http import request
-from cmk.gui.pages import AjaxPage, PageResult
+from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
 
@@ -20,15 +19,15 @@ from .unified import UnifiedSearch
 
 class PageUnifiedSearch(AjaxPage):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         query = request.get_str_input_mandatory("q")
         provider = self._parse_provider_query_param()
         sort_type = self._parse_sort_query_param()
 
         unified_search_engine = UnifiedSearch(
-            setup_engine=SetupSearchEngine(config),
+            setup_engine=SetupSearchEngine(ctx.config),
             monitoring_engine=MonitoringSearchEngine(
-                UserPermissions.from_config(config, permission_registry)
+                UserPermissions.from_config(ctx.config, permission_registry)
             ),
             customize_engine=CustomizeSearchEngine(),
         )

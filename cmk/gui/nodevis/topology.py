@@ -79,7 +79,7 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, Page, PageEndpoint, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, Page, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.permissions import permission_registry
 from cmk.gui.theme.current_theme import theme
@@ -223,10 +223,10 @@ class ABCTopologyPage(Page):
         raise NotImplementedError
 
     @override
-    def page(self, config: Config) -> None:
+    def page(self, ctx: PageContext) -> None:
         """Determines the hosts to be shown"""
         user.need_permission("general.parent_child_topology")
-        self.show_topology(UserPermissions.from_config(config, permission_registry))
+        self.show_topology(UserPermissions.from_config(ctx.config, permission_registry))
 
     def show_topology(self, user_permissions: UserPermissions) -> None:
         visual_spec = self.visual_spec()
@@ -384,7 +384,7 @@ class AjaxInitialTopologyFilters(ABCAjaxInitialFilters):
 
 class AjaxFetchTopology(AjaxPage):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         topology_type = request.get_str_input_mandatory("topology_type")
         if topology_type == "network_topology":
             default_overlays = NetworkTopologyPage.get_default_overlays_config()

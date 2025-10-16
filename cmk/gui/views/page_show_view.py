@@ -35,6 +35,7 @@ from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_external_link, PageMenuDropdown, PageMenuEntry, PageMenuTopic
+from cmk.gui.pages import PageContext
 from cmk.gui.painter.v0 import Cell, columns_of_cells
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.permissions import permission_registry
@@ -66,7 +67,7 @@ from .store import get_all_views, get_permitted_views
 
 
 def page_show_view(
-    config: Config,
+    ctx: PageContext,
     page_menu_dropdowns_callback: Callable[[View, Rows, list[PageMenuDropdown]], None],
 ) -> None:
     """Central entry point for the initial HTML page rendering of a view"""
@@ -81,16 +82,16 @@ def page_show_view(
         )
         _patch_view_context(view_spec)
 
-        user_permissions = UserPermissions.from_config(config, permission_registry)
+        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
         datasource = data_source_registry[view_spec["datasource"]]()
         context = visuals.active_context_from_request(datasource.infos, view_spec["context"])
 
         view = View(view_name, view_spec, context, user_permissions)
         view.row_limit = get_limit(
             request_limit_mode=request.get_ascii_input_mandatory("limit", "soft"),
-            soft_query_limit=config.soft_query_limit,
+            soft_query_limit=ctx.config.soft_query_limit,
             may_ignore_soft_limit=user.may("general.ignore_soft_limit"),
-            hard_query_limit=config.hard_query_limit,
+            hard_query_limit=ctx.config.hard_query_limit,
             may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
         )
 
@@ -117,10 +118,12 @@ def page_show_view(
                 page_menu_dropdowns_callback=page_menu_dropdowns_callback,
             ),
             user_permissions,
-            debug=config.debug,
+            debug=ctx.config.debug,
         )
 
-    _may_create_slow_view_log_entry(page_view_tracker, view, config.slow_views_duration_threshold)
+    _may_create_slow_view_log_entry(
+        page_view_tracker, view, ctx.config.slow_views_duration_threshold
+    )
 
 
 def _may_create_slow_view_log_entry(

@@ -24,12 +24,11 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
-from cmk.gui.config import Config
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request as request_
 from cmk.gui.i18n import _
-from cmk.gui.pages import PageEndpoint, PageRegistry
+from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import permission_registry
 from cmk.gui.sites import live
 from cmk.gui.utils.roles import UserPermissions
@@ -160,13 +159,13 @@ def _available_predictions(
     return available
 
 
-def page_graph(config: Config) -> None:
+def page_graph(ctx: PageContext) -> None:
     host_name = request_.get_validated_type_input_mandatory(HostName, "host")
     service_name = ServiceName(request_.get_str_input_mandatory("service"))
     metric_name = MetricName(request_.get_str_input_mandatory("dsname"))
     livestatus_connection = live().get_connection(SiteId(request_.get_str_input_mandatory("site")))
 
-    user_permissions = UserPermissions.from_config(config, permission_registry)
+    user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
     breadcrumb = make_service_breadcrumb(host_name, service_name, user_permissions)
     make_header(
         html,

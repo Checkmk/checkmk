@@ -52,7 +52,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.page_menu_entry import disable_page_menu_entry, enable_page_menu_entry
-from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.table import Foldable, Table, table_element
 from cmk.gui.type_defs import HTTPVariables, PermissionName
 from cmk.gui.utils.agent_commands import agent_commands_registry
@@ -319,7 +319,7 @@ class AutomationServiceDiscoveryJob(AutomationCommand[_AutomationServiceDiscover
 
 class ModeAjaxServiceDiscovery(AjaxPage):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         check_csrf_token()
         user.need_permission("wato.hosts")
 
@@ -351,7 +351,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             api_request.discovery_options.action, api_request.update_target
         ):
             discovery_options = api_request.discovery_options._replace(action=DiscoveryAction.NONE)
-        user_permission_config = UserPermissionSerializableConfig.from_global_config(config)
+        user_permission_config = UserPermissionSerializableConfig.from_global_config(ctx.config)
 
         discovery_result = self._perform_discovery_action(
             action=api_request.discovery_options.action,
@@ -364,12 +364,12 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             selected_services=self._resolve_selected_services(
                 api_request.update_services, api_request.discovery_options.show_checkboxes
             ),
-            automation_config=make_automation_config(config.sites[host.site_id()]),
+            automation_config=make_automation_config(ctx.config.sites[host.site_id()]),
             user_permission_config=user_permission_config,
             raise_errors=not api_request.discovery_options.ignore_errors,
-            pprint_value=config.wato_pprint_config,
-            debug=config.debug,
-            use_git=config.wato_use_git,
+            pprint_value=ctx.config.wato_pprint_config,
+            debug=ctx.config.debug,
+            use_git=ctx.config.wato_use_git,
         )
         if self._sources_failed_on_first_attempt(previous_discovery_result, discovery_result):
             discovery_result = discovery_result._replace(
@@ -408,8 +408,8 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         page_code = renderer.render(
             discovery_result,
             api_request.update_services,
-            debug=config.debug,
-            escape_plugin_output=config.escape_plugin_output,
+            debug=ctx.config.debug,
+            escape_plugin_output=ctx.config.escape_plugin_output,
         )
         datasources_code = renderer.render_datasources(discovery_result.sources)
         fix_all_code = renderer.render_fix_all(discovery_result)
@@ -432,7 +432,9 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             "fixall": fix_all_code,
             "page_menu": self._get_page_menu(discovery_options, host),
             "pending_changes_info": (
-                pending_changes_info := ActivateChanges.get_pending_changes_info(list(config.sites))
+                pending_changes_info := ActivateChanges.get_pending_changes_info(
+                    list(ctx.config.sites)
+                )
             ).message,
             "pending_changes_tooltip": get_pending_changes_tooltip(pending_changes_info),
             "discovery_options": discovery_options._asdict(),
@@ -1942,16 +1944,16 @@ class ModeAjaxExecuteCheck(AjaxPage):
         self._item = request.get_str_input_mandatory("item")
 
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         self._handle_http_request()
         check_csrf_token()
         try:
             active_check_result = active_check(
-                make_automation_config(config.sites[self._site]),
+                make_automation_config(ctx.config.sites[self._site]),
                 self._host_name,
                 self._check_type,
                 self._item,
-                debug=config.debug,
+                debug=ctx.config.debug,
             )
             state = 3 if active_check_result.state is None else active_check_result.state
             output = active_check_result.output
@@ -2399,7 +2401,7 @@ def _start_js_call(host: Host, options: DiscoveryOptions, request_vars: dict | N
     return f"cmk.service_discovery.start({json.dumps(host.name())}, {json.dumps(host.folder().path())}, {json.dumps(options._asdict())}, {json.dumps(transactions.get())}, {json.dumps(request_vars)})"
 
 
-def ajax_popup_service_action_menu(config: Config) -> None:
+def ajax_popup_service_action_menu(ctx: PageContext) -> None:
     checkbox_name = request.get_ascii_input_mandatory("checkboxname")
     hostname = request.get_validated_type_input_mandatory(HostName, "hostname")
     entry = CheckPreviewEntry(*json.loads(request.get_ascii_input_mandatory("entry")))

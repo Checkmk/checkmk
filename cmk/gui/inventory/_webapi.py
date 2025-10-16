@@ -15,11 +15,11 @@ from typing import Literal, TypedDict
 from cmk.ccc.exceptions import MKException, MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
-from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
+from cmk.gui.pages import PageContext
 from cmk.inventory.structured_data import SDRawTree, serialize_tree
 
 from . import _xml
@@ -63,7 +63,7 @@ def _write_python(resp):
     response.set_data(repr(resp))
 
 
-def page_host_inv_api(config: Config) -> None:
+def page_host_inv_api(ctx: PageContext) -> None:
     resp: _HostInvAPIResponse
     try:
         api_request = request.get_request()
@@ -94,7 +94,7 @@ def page_host_inv_api(config: Config) -> None:
         resp = {"result_code": 1, "result": "%s" % e}
 
     except Exception as e:
-        if config.debug:
+        if ctx.config.debug:
             raise
         resp = {"result_code": 1, "result": "%s" % e}
 

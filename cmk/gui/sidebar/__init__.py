@@ -35,7 +35,7 @@ from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.main_menu import main_menu_registry, MainMenuRegistry
 from cmk.gui.main_menu_types import MainMenuTopic
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuTopic
-from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.permissions import permission_registry, PermissionSectionRegistry
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.user_sites import get_configured_site_choices
@@ -722,28 +722,28 @@ def _render_header_icon() -> None:
         html.icon("checkmk_logo" + ("_min" if user.get_attribute("nav_hide_icons_title") else ""))
 
 
-def page_side(config: Config) -> None:
+def page_side(ctx: PageContext) -> None:
     SidebarRenderer().show(
-        config=config,
-        user_permissions=UserPermissions.from_config(config, permission_registry),
+        config=ctx.config,
+        user_permissions=UserPermissions.from_config(ctx.config, permission_registry),
         title=None,
         content=None,
-        sidebar_config=config.sidebar,
-        screenshot_mode=config.screenshotmode,
-        sidebar_notify_interval=config.sidebar_notify_interval,
-        start_url=config.start_url,
-        show_scrollbar=config.sidebar_show_scrollbar,
-        sidebar_update_interval=config.sidebar_update_interval,
+        sidebar_config=ctx.config.sidebar,
+        screenshot_mode=ctx.config.screenshotmode,
+        sidebar_notify_interval=ctx.config.sidebar_notify_interval,
+        start_url=ctx.config.start_url,
+        show_scrollbar=ctx.config.sidebar_show_scrollbar,
+        sidebar_update_interval=ctx.config.sidebar_update_interval,
     )
 
 
-def ajax_snapin(config: Config) -> None:
+def ajax_snapin(ctx: PageContext) -> None:
     """Renders and returns the contents of the requested sidebar snapin(s) in JSON format"""
     response.set_content_type("application/json")
     user_config = UserSidebarConfig(
         user,
-        config.sidebar,
-        (user_permissions := UserPermissions.from_config(config, permission_registry)),
+        ctx.config.sidebar,
+        (user_permissions := UserPermissions.from_config(ctx.config, permission_registry)),
     )
 
     snapin_id = request.var("name")
@@ -776,7 +776,7 @@ def ajax_snapin(config: Config) -> None:
 
         with output_funnel.plugged():
             try:
-                snapin_instance.show(config)
+                snapin_instance.show(ctx.config)
             except Exception as e:
                 write_snapin_exception(e)
                 e_message = (
@@ -797,11 +797,11 @@ def ajax_snapin(config: Config) -> None:
 
 class AjaxFoldSnapin(AjaxPage):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         check_csrf_token()
         response.set_content_type("application/json")
         user_config = UserSidebarConfig(
-            user, config.sidebar, UserPermissions.from_config(config, permission_registry)
+            user, ctx.config.sidebar, UserPermissions.from_config(ctx.config, permission_registry)
         )
         user_config.folded = request.var("fold") == "yes"
         user_config.save()
@@ -810,7 +810,7 @@ class AjaxFoldSnapin(AjaxPage):
 
 class AjaxOpenCloseSnapin(AjaxPage):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         check_csrf_token()
         response.set_content_type("application/json")
         if not user.may("general.configure_sidebar"):
@@ -829,7 +829,7 @@ class AjaxOpenCloseSnapin(AjaxPage):
             raise MKUserError("state", "Invalid state: %s" % state)
 
         user_config = UserSidebarConfig(
-            user, config.sidebar, UserPermissions.from_config(config, permission_registry)
+            user, ctx.config.sidebar, UserPermissions.from_config(ctx.config, permission_registry)
         )
 
         try:
@@ -846,7 +846,7 @@ class AjaxOpenCloseSnapin(AjaxPage):
         return None
 
 
-def move_snapin(config: Config) -> None:
+def move_snapin(ctx: PageContext) -> None:
     response.set_content_type("application/json")
     if not user.may("general.configure_sidebar"):
         return None
@@ -856,7 +856,7 @@ def move_snapin(config: Config) -> None:
         return None
 
     user_config = UserSidebarConfig(
-        user, config.sidebar, UserPermissions.from_config(config, permission_registry)
+        user, ctx.config.sidebar, UserPermissions.from_config(ctx.config, permission_registry)
     )
 
     try:
@@ -888,8 +888,8 @@ def move_snapin(config: Config) -> None:
 #   '----------------------------------------------------------------------'
 
 
-def page_add_snapin(config: Config) -> None:
-    user_permissions = UserPermissions.from_config(config, permission_registry)
+def page_add_snapin(ctx: PageContext) -> None:
+    user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
     if not user.may("general.configure_sidebar"):
         raise MKGeneralException(_("You are not allowed to change the sidebar."))
 
@@ -897,7 +897,7 @@ def page_add_snapin(config: Config) -> None:
     breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_customize(), title)
     make_header(html, title, breadcrumb, _add_snapins_page_menu(breadcrumb))
 
-    used_snapins = _used_snapins(config, user_permissions)
+    used_snapins = _used_snapins(ctx.config, user_permissions)
 
     html.open_div(class_=["add_snapin"])
     for name, snapin_class in sorted(all_snapins(user_permissions).items()):
@@ -915,7 +915,7 @@ def page_add_snapin(config: Config) -> None:
         html.open_div(class_=["snapin_preview"])
         html.div("", class_=["clickshield"])
         SidebarRenderer().render_snapin(
-            config, UserSidebarSnapin.from_snapin_type_id(name, user_permissions)
+            ctx.config, UserSidebarSnapin.from_snapin_type_id(name, user_permissions)
         )
         html.close_div()
         html.div(snapin_class.description(), class_=["description"])
@@ -950,28 +950,28 @@ def _used_snapins(config: Config, user_permissions: UserPermissions) -> list[Any
 
 class AjaxAddSnapin(AjaxPage):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         check_csrf_token()
         if not user.may("general.configure_sidebar"):
             raise MKGeneralException(_("You are not allowed to change the sidebar."))
 
         addname = request.var("name")
 
-        user_permissions = UserPermissions.from_config(config, permission_registry)
+        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
         if addname is None or addname not in all_snapins(user_permissions):
             raise MKUserError(None, _("Invalid sidebar element %s") % addname)
 
-        if addname in _used_snapins(config, user_permissions):
+        if addname in _used_snapins(ctx.config, user_permissions):
             raise MKUserError(None, _("Element %s is already enabled") % addname)
 
-        user_config = UserSidebarConfig(user, config.sidebar, user_permissions)
+        user_config = UserSidebarConfig(user, ctx.config.sidebar, user_permissions)
         snapin = UserSidebarSnapin.from_snapin_type_id(addname, user_permissions)
         user_config.add_snapin(snapin)
         user_config.save()
 
         with output_funnel.plugged():
             try:
-                url = SidebarRenderer().render_snapin(config, snapin)
+                url = SidebarRenderer().render_snapin(ctx.config, snapin)
             finally:
                 snapin_code = output_funnel.drain()
 
@@ -985,10 +985,10 @@ class AjaxAddSnapin(AjaxPage):
 
 
 # TODO: This is snapin specific. Move this handler to the snapin file
-def ajax_set_snapin_site(config: Config) -> None:
+def ajax_set_snapin_site(ctx: PageContext) -> None:
     response.set_content_type("application/json")
     ident = request.var("ident")
-    if ident not in all_snapins(UserPermissions.from_config(config, permission_registry)):
+    if ident not in all_snapins(UserPermissions.from_config(ctx.config, permission_registry)):
         raise MKUserError(None, _("Invalid ident"))
 
     site = request.var("site")

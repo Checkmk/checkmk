@@ -10,6 +10,7 @@ from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
+from cmk.gui.pages import PageContext
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import RoleName
 
@@ -52,7 +53,7 @@ class Speedometer(SidebarSnapin):
             "sidebar_ajax_speedometer": self._ajax_speedometer,
         }
 
-    def _ajax_speedometer(self, config: Config) -> None:
+    def _ajax_speedometer(self, ctx: PageContext) -> None:
         response.set_content_type("application/json")
         try:
             # Try to get values from last call in order to compute

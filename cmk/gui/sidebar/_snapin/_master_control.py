@@ -17,6 +17,7 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
+from cmk.gui.pages import PageContext
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.audit_log import log_audit
@@ -186,7 +187,7 @@ class MasterControlSnapin(SidebarSnapin):
             "switch_master_state": self._ajax_switch_masterstate,
         }
 
-    def _ajax_switch_masterstate(self, config: Config) -> None:
+    def _ajax_switch_masterstate(self, ctx: PageContext) -> None:
         check_csrf_token()
         response.set_content_type("text/plain")
 
@@ -235,4 +236,4 @@ class MasterControlSnapin(SidebarSnapin):
             use_git=False,
         )
 
-        self.show(config)
+        self.show(ctx.config)

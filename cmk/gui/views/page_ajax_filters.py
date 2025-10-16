@@ -7,11 +7,10 @@ import abc
 from typing import override
 
 from cmk.gui import visuals
-from cmk.gui.config import Config
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.pages import AjaxPage
+from cmk.gui.pages import AjaxPage, PageContext
 from cmk.gui.type_defs import VisualContext
 from cmk.gui.utils.output_funnel import output_funnel
 
@@ -24,7 +23,7 @@ class ABCAjaxInitialFilters(AjaxPage):
         raise NotImplementedError()
 
     @override
-    def page(self, config: Config) -> dict[str, str]:
+    def page(self, ctx: PageContext) -> dict[str, str]:
         api_request = self.webapi_request()
         varprefix = api_request.get("varprefix", "")
         page_name = api_request.get("page_name", "")

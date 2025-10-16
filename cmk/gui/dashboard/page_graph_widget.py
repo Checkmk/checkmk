@@ -13,7 +13,6 @@ from pydantic import Discriminator, TypeAdapter, ValidationError
 import cmk.gui.pages
 from cmk.ccc.user import UserId
 from cmk.ccc.version import edition
-from cmk.gui.config import Config
 from cmk.gui.dashboard.api.model.widget_content.graph import (
     CombinedGraphContent,
     CustomGraphContent,
@@ -46,6 +45,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import SingleInfos, VisualContext
@@ -87,7 +87,7 @@ def _get_graph_config() -> GraphDashletConfig:
 
 class GraphWidgetPage(cmk.gui.pages.Page):
     @override
-    def page(self, config: Config) -> None:
+    def page(self, ctx: PageContext) -> None:
         widget_id = request.get_str_input_mandatory("widget_id")
         graph_config: GraphDashletConfig = _get_graph_config()
 
@@ -147,10 +147,12 @@ class GraphWidgetPage(cmk.gui.pages.Page):
                     ),
                     metrics_from_api,
                     graphs_from_api,
-                    UserPermissions.from_config(config, permission_registry),
-                    debug=config.debug,
-                    graph_timeranges=config.graph_timeranges,
-                    temperature_unit=get_temperature_unit(user, config.default_temperature_unit),
+                    UserPermissions.from_config(ctx.config, permission_registry),
+                    debug=ctx.config.debug,
+                    graph_timeranges=ctx.config.graph_timeranges,
+                    temperature_unit=get_temperature_unit(
+                        user, ctx.config.default_temperature_unit
+                    ),
                     fetch_time_series=metric_backend_registry[str(edition(paths.omd_root))].client,
                     graph_display_id=widget_id,
                     time_range=graph_config["timerange"],

@@ -12,11 +12,11 @@ from typing import override
 import cmk.utils.paths
 from cmk.crypto.password import Password
 from cmk.gui.backup import handler
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
@@ -115,11 +115,11 @@ class PageAjaxBackupJobState(AjaxPage):
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
     @override
-    def handle_page(self, config: Config) -> None:
-        self._handle_exc(config, self.page)
+    def handle_page(self, ctx: PageContext) -> None:
+        self._handle_exc(ctx, self.page)
 
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         user.need_permission("wato.backups")
         if request.var("job") == "restore":
             page: handler.PageAbstractMKBackupJobState = handler.PageBackupRestoreState()

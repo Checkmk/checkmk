@@ -5,17 +5,16 @@
 from typing import override
 
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
-from cmk.gui.config import Config
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.main_menu import main_menu_registry
-from cmk.gui.pages import Page, PageEndpoint, PageRegistry, PageResult
+from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry, PageResult
 
 
 class GuiTimingsPage(Page):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         breadcrumb = make_simple_page_breadcrumb(main_menu_registry["help"], _("Info"))
         make_header(
             html,

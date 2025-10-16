@@ -35,7 +35,7 @@ from cmk.gui.htmllib.html import html, HTMLGenerator
 from cmk.gui.http import ContentDispositionType, Request, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.pages import Page, PageEndpoint, PageRegistry
+from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import permission_registry
 from cmk.gui.theme import make_theme
 from cmk.gui.utils.escaping import escape_attribute
@@ -177,7 +177,7 @@ class AgentOutputPage(Page, abc.ABC):
 
 class PageFetchAgentOutput(AgentOutputPage):
     @override
-    def page(self, config: Config) -> None:
+    def page(self, ctx: PageContext) -> None:
         self._handle_http_request()
 
         title = self._title()
@@ -185,16 +185,17 @@ class PageFetchAgentOutput(AgentOutputPage):
             html,
             title,
             self._breadcrumb(
-                title, user_permissions := UserPermissions.from_config(config, permission_registry)
+                title,
+                user_permissions := UserPermissions.from_config(ctx.config, permission_registry),
             ),
         )
 
         self._action(user_permissions)
 
-        automation_config = make_automation_config(config.sites[self._request.host.site_id()])
+        automation_config = make_automation_config(ctx.config.sites[self._request.host.site_id()])
         if request.has_var("_start"):
-            self._start_fetch(automation_config, debug=config.debug)
-        self._show_status(automation_config, debug=config.debug)
+            self._start_fetch(automation_config, debug=ctx.config.debug)
+        self._show_status(automation_config, debug=ctx.config.debug)
 
         html.footer()
 
@@ -452,15 +453,17 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
 
 
 class PageDownloadAgentOutput(AgentOutputPage):
-    def page(self, config: Config) -> None:
+    def page(self, ctx: PageContext) -> None:
         self._handle_http_request()
 
         file_name = self.file_name(
             self._request.host.site_id(), self._request.host.name(), self._request.agent_type
         )
         file_content = self._get_agent_output_file(
-            automation_config=make_automation_config(config.sites[self._request.host.site_id()]),
-            debug=config.debug,
+            automation_config=make_automation_config(
+                ctx.config.sites[self._request.host.site_id()]
+            ),
+            debug=ctx.config.debug,
         )
 
         response.set_content_type("text/plain")

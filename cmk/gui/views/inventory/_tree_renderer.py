@@ -16,7 +16,6 @@ import cmk.utils.render
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui import inventory
-from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -24,6 +23,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request
 from cmk.gui.http import request as http_request
 from cmk.gui.i18n import _
+from cmk.gui.pages import PageContext
 from cmk.gui.theme import Theme
 from cmk.gui.theme.current_theme import theme as gui_theme
 from cmk.gui.utils.html import HTML
@@ -401,7 +401,7 @@ class _SDDeltaItemsSorter(_ABCItemsSorter):
 
 
 # Ajax call for fetching parts of the tree
-def ajax_inv_render_tree(config: Config) -> None:
+def ajax_inv_render_tree(ctx: PageContext) -> None:
     site_id = SiteId(http_request.get_ascii_input_mandatory("site"))
     host_name = http_request.get_validated_type_input_mandatory(HostName, "host")
     inventory.verify_permission(site_id, host_name)
@@ -435,7 +435,7 @@ def ajax_inv_render_tree(config: Config) -> None:
                 raw_status_data_tree=raw_status_data_tree,
             )
         except Exception as e:
-            if config.debug:
+            if ctx.config.debug:
                 html.show_warning("%s" % e)
             user_errors.add(
                 MKUserError(

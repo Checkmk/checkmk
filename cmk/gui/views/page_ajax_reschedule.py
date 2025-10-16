@@ -14,11 +14,10 @@ import livestatus
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
-from cmk.gui.config import Config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.pages import AjaxPage, PageResult
+from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.livestatus_client.commands import (
     Command,
@@ -31,9 +30,9 @@ class PageRescheduleCheck(AjaxPage):
     """Is called to trigger a host / service check"""
 
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         api_request = request.get_request()
-        return self._do_reschedule(api_request, config.reschedule_timeout)
+        return self._do_reschedule(api_request, ctx.config.reschedule_timeout)
 
     @staticmethod
     def _wait_for(

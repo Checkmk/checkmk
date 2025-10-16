@@ -18,7 +18,6 @@ from cmk.gui.breadcrumb import (
     make_current_page_breadcrumb_item,
     make_topic_breadcrumb,
 )
-from cmk.gui.config import Config
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -27,7 +26,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
-from cmk.gui.pages import Page, PageResult
+from cmk.gui.pages import Page, PageContext, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import SingleInfos
@@ -60,7 +59,7 @@ DashletHandleInputFunc = Callable[[DashletId, DashletConfig, DashletConfig], Das
 
 class EditDashletPage(Page):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         if not user.may("general.edit_dashboards"):
             raise MKAuthException(_("You are not allowed to edit dashboards."))
 
@@ -128,7 +127,7 @@ class EditDashletPage(Page):
             self._board,
             self._dashboard,
             title,
-            UserPermissions.from_config(config, permission_registry),
+            UserPermissions.from_config(ctx.config, permission_registry),
         )
         make_header(
             html,

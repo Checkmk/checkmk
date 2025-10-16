@@ -40,7 +40,7 @@ from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, edition
 from cmk.gui import sites, userdb
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadcrumb
-from cmk.gui.config import active_config, Config, default_authorized_builtin_role_ids
+from cmk.gui.config import active_config, default_authorized_builtin_role_ids
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.default_permissions import PERMISSION_SECTION_GENERAL
 from cmk.gui.exceptions import MKAuthException, MKUserError
@@ -72,7 +72,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.pages import Page, page_registry, PageEndpoint, PageHandler
+from cmk.gui.pages import Page, page_registry, PageContext, PageEndpoint, PageHandler
 from cmk.gui.permissions import (
     declare_dynamic_permissions,
     declare_permission_section,
@@ -524,8 +524,8 @@ class Overridable(Base[_T_OverridableConfig]):
         handlers = super().page_handlers()
         handlers.update(
             {
-                "%ss" % cls.type_name(): lambda config: ListPage(cls).page(config),
-                "edit_%s" % cls.type_name(): lambda config: EditPage(cls).page(config),
+                "%ss" % cls.type_name(): ListPage(cls).page,
+                "edit_%s" % cls.type_name(): EditPage(cls).page,
             }
         )
         return handlers
@@ -976,8 +976,8 @@ class ListPage(Page, Generic[_T]):
         self._type = pagetype
 
     @override
-    def page(self, config: Config) -> None:
-        user_permissions = UserPermissions.from_config(config, permission_registry)
+    def page(self, ctx: PageContext) -> None:
+        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
         instances = self._type.load(user_permissions)
         self._type.need_overriding_permission("edit")
 
@@ -1209,12 +1209,12 @@ class EditPage(Page, Generic[_T_OverridableConfig, _T]):
         self._type = pagetype
 
     @override
-    def page(self, config: Config) -> None:
+    def page(self, ctx: PageContext) -> None:
         """Page for editing an existing page, or creating a new one"""
         back_url = request.get_url_input("back", self._type.list_url())
 
         instances = self._type.load(
-            user_permissions := UserPermissions.from_config(config, permission_registry)
+            user_permissions := UserPermissions.from_config(ctx.config, permission_registry)
         )
         self._type.need_overriding_permission("edit")
 
@@ -1735,7 +1735,7 @@ class OverridableContainer(Overridable[_T_OverridableContainerConfig]):
     # not with any actual subclass like GraphCollection. We need to find that
     # class by the URL variable page_type.
     @classmethod
-    def ajax_add_element(cls, config: Config) -> None:
+    def ajax_add_element(cls, ctx: PageContext) -> None:
         page_type_name = request.get_ascii_input_mandatory("page_type")
         page_name = request.get_ascii_input_mandatory("page_name")
         element_type = request.get_ascii_input_mandatory("element_type")
@@ -1747,7 +1747,7 @@ class OverridableContainer(Overridable[_T_OverridableContainerConfig]):
             page_name,
             element_type,
             create_info,
-            UserPermissions.from_config(config, permission_registry),
+            UserPermissions.from_config(ctx.config, permission_registry),
         )
         # Redirect user to tha page this displays the thing we just added to
         if target_page:
@@ -1919,7 +1919,7 @@ class PageRenderer(OverridableContainer[_T_PageRendererConfig]):
 
     @classmethod
     @abc.abstractmethod
-    def page_show(cls, config: Config) -> None: ...
+    def page_show(cls, ctx: PageContext) -> None: ...
 
     @classmethod
     def requested_page(

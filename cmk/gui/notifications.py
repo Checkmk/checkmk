@@ -14,7 +14,7 @@ import cmk.gui.pages
 import cmk.utils.render
 from cmk.gui import sites
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.htmllib.header import make_header
@@ -30,7 +30,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import Page, PageEndpoint, PageRegistry
+from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import (
     declare_dynamic_permissions,
     PermissionSection,
@@ -195,7 +195,7 @@ def _may_see_failed_notifications() -> bool:
 
 class ClearFailedNotificationPage(Page):
     @override
-    def page(self, config: Config) -> None:
+    def page(self, ctx: PageContext) -> None:
         if not _may_see_failed_notifications():
             raise MKAuthException(_("You are not allowed to view the failed notifications."))
 
@@ -203,7 +203,7 @@ class ClearFailedNotificationPage(Page):
         if request.var("_confirm"):
             _acknowledge_failed_notifications(acktime, time.time())
 
-            if get_enabled_remote_sites_for_logged_in_user(user, config.sites):
+            if get_enabled_remote_sites_for_logged_in_user(user, ctx.config.sites):
                 title = _("Replicate user profile")
                 breadcrumb = make_simple_page_breadcrumb(
                     main_menu_registry.menu_monitoring(), title

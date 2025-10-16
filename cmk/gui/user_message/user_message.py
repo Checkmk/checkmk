@@ -9,7 +9,6 @@ from typing import override
 
 from cmk.gui import forms, message
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
-from cmk.gui.config import Config
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -23,7 +22,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import Page
+from cmk.gui.pages import Page, PageContext
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
@@ -60,7 +59,7 @@ class PageUserMessage(Page):
         )
 
     @override
-    def page(self, config: Config) -> None:
+    def page(self, ctx: PageContext) -> None:
         breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_user(), _("Messages"))
         make_header(html, _("Your messages"), breadcrumb, self.page_menu(breadcrumb))
 
@@ -222,13 +221,13 @@ def show_message_actions(
         )
 
 
-def ajax_delete_user_message(config: Config) -> None:
+def ajax_delete_user_message(ctx: PageContext) -> None:
     check_csrf_token()
     msg_id = request.get_str_input_mandatory("id")
     message.delete_gui_message(msg_id)
 
 
-def ajax_acknowledge_user_message(config: Config) -> None:
+def ajax_acknowledge_user_message(ctx: PageContext) -> None:
     check_csrf_token()
     msg_id = request.get_str_input_mandatory("id")
     message.acknowledge_gui_message(msg_id)

@@ -18,7 +18,7 @@ from cmk.gui.figures import create_figures_response, FigureResponseData
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.pages import AjaxPage, PageResult
+from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.type_defs import HTTPVariables, SingleInfos
 from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.valuespec import Dictionary, DictionaryElements, MigrateNotUpdated
@@ -32,7 +32,7 @@ __all__ = ["FigureDashletPage", "ABCFigureDashlet"]
 
 class FigureDashletPage(AjaxPage):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         dashboard_name = request.get_ascii_input_mandatory("name")
         dashboard_owner = request.get_validated_type_input_mandatory(UserId, "owner")
         try:

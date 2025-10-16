@@ -19,13 +19,13 @@ import cmk.utils.paths
 from cmk import trace
 from cmk.ccc.site import url_prefix
 from cmk.gui import login, pages, userdb
-from cmk.gui.config import Config
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUnauthenticatedException
 from cmk.gui.http import request, Response, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInRemoteSite, LoggedInSuperUser, user
+from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.session import session
 from cmk.gui.theme.current_theme import theme
@@ -54,19 +54,19 @@ class AbstractWSGIApp(abc.ABC):
         raise NotImplementedError
 
 
-def ensure_authentication(handler: pages.PageHandler) -> Callable[[Config], Response]:
+def ensure_authentication(handler: pages.PageHandler) -> Callable[[PageContext], Response]:
     # Ensure the user is authenticated. This call is wrapping all the different
     # authentication modes the Checkmk GUI supports and initializes the logged-in
     # user objects.
     @functools.wraps(handler)
-    def _call_auth(config: Config) -> Response:
-        user_permissions = UserPermissions.from_config(config, permission_registry)
+    def _call_auth(ctx: PageContext) -> Response:
+        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
         with login.authenticate(user_permissions) as authenticated:
             if not authenticated:
-                return _handle_not_authenticated(config)
+                return _handle_not_authenticated(ctx)
 
             if isinstance(session.user, LoggedInRemoteSite | LoggedInSuperUser):
-                handler(config)
+                handler(ctx)
                 return response
 
             user_id = session.user.ident
@@ -135,7 +135,7 @@ def ensure_authentication(handler: pages.PageHandler) -> Callable[[Config], Resp
 
             set_user_frontend_config_cookie(request, response, user.frontend_config)
 
-            handler(config)
+            handler(ctx)
 
             return response
 
@@ -184,7 +184,7 @@ def _ensure_general_access() -> None:
     raise MKAuthException(" ".join(reason))
 
 
-def _handle_not_authenticated(config: Config) -> Response:
+def _handle_not_authenticated(ctx: PageContext) -> Response:
     if fail_silently():
         # While api call don't show the login dialog
         raise MKUnauthenticatedException(_("You are not authenticated."))
@@ -213,11 +213,11 @@ def _handle_not_authenticated(config: Config) -> Response:
         )
 
         saas_login_page = SingleSignOn()
-        saas_login_page.handle_page(config)
+        saas_login_page.handle_page(ctx)
     else:
         login_page = login.LoginPage()
         login_page.set_no_html_output(plain_error())
-        login_page.handle_page(config)
+        login_page.handle_page(ctx)
 
     return response
 

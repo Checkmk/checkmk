@@ -16,8 +16,7 @@ from pytest_mock import MockerFixture
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui import hooks
-from cmk.gui.config import Config
-from cmk.gui.pages import Page, page_registry, PageEndpoint
+from cmk.gui.pages import Page, page_registry, PageContext, PageEndpoint
 from tests.unit.cmk.web_test_app import WebTestAppForCMK
 
 
@@ -81,7 +80,7 @@ def test_request_memoize_request_integration(
 
     class PageClass(Page):
         @override
-        def page(self, config: Config) -> None:
+        def page(self, ctx: PageContext) -> None:
             mock.return_value = 1
             assert memoized() == 1
 
@@ -143,7 +142,7 @@ def test_threaded_memoize(
 
     class PageClass(Page):
         @override
-        def page(self, config: Config) -> None:
+        def page(self, ctx: PageContext) -> None:
             def worker(i: int) -> None:
                 cached_function(i)
                 cached_function(i)

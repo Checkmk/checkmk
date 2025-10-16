@@ -21,6 +21,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.pages import PageContext
 from cmk.gui.sidebar import PageHandlers, SidebarSnapin
 from cmk.gui.type_defs import HTTPVariables, VirtualHostTreeSpec
 from cmk.gui.utils.html import HTML
@@ -570,7 +571,7 @@ function virtual_host_tree_enter(path)
             "sidebar_ajax_tag_tree_enter": self._ajax_tag_tree_enter,
         }
 
-    def _ajax_tag_tree(self, config: Config) -> None:
+    def _ajax_tag_tree(self, ctx: PageContext) -> None:
         response.set_content_type("application/json")
         self._load(active_config.virtual_host_trees)
         new_tree = request.var("tree_id")
@@ -583,7 +584,7 @@ function virtual_host_tree_enter(path)
         response.set_data("OK")
 
     # TODO: Validate path in current tree
-    def _ajax_tag_tree_enter(self, config: Config) -> None:
+    def _ajax_tag_tree_enter(self, ctx: PageContext) -> None:
         response.set_content_type("application/json")
         self._load(active_config.virtual_host_trees)
         path = request.get_str_input_mandatory("path").split("|") if request.var("path") else []

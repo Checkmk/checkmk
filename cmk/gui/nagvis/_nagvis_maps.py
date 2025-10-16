@@ -13,6 +13,7 @@ from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.pages import PageContext
 from cmk.gui.sidebar import footnotelinks, PageHandlers, SidebarSnapin
 
 
@@ -42,7 +43,7 @@ class NagVisMaps(SidebarSnapin):
             "ajax_nagvis_maps_snapin": self._ajax_show_nagvis_maps_snapin,
         }
 
-    def _ajax_show_nagvis_maps_snapin(self, config: Config) -> None:
+    def _ajax_show_nagvis_maps_snapin(self, ctx: PageContext) -> None:
         api_request = request.get_request()
         if api_request["type"] == "table":
             self._show_table(api_request)

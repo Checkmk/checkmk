@@ -36,7 +36,7 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.session import SuperUserContext
 from cmk.gui.type_defs import CustomUserAttrSpec
 from cmk.gui.userdb import get_user_attributes
@@ -90,12 +90,12 @@ class PageAutomationLogin(AjaxPage):
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
     @override
-    def handle_page(self, config: Config) -> None:
-        self._handle_exc(config, self.page)
+    def handle_page(self, ctx: PageContext) -> None:
+        self._handle_exc(ctx, self.page)
 
     @override
     @tracer.instrument("PageAutomationLogin.page")
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         if not user.may("wato.automation"):
             raise MKAuthException(_("This account has no permission for automation."))
 
@@ -152,18 +152,18 @@ class PageAutomation(AjaxPage):
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
     @override
-    def handle_page(self, config: Config) -> None:
+    def handle_page(self, ctx: PageContext) -> None:
         # The automation page is accessed unauthenticated. After leaving the index.py area
         # into the page handler we always want to have a user context initialized to keep
         # the code free from special cases (if no user logged in, then...). So fake the
         # logged in user here.
         with SuperUserContext():
             self._handle_http_request()
-            self._handle_exc(config, self.page)
+            self._handle_exc(ctx, self.page)
 
     @override
     @tracer.instrument("PageAutomation.page")
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         # To prevent mixups in written files we use the same lock here as for
         # the normal Setup page processing. This might not be needed for some
         # special automation requests, like inventory e.g., but to keep it simple,
@@ -177,7 +177,7 @@ class PageAutomation(AjaxPage):
             if lock_config
             else nullcontext()
         ):
-            self._execute_automation(config)
+            self._execute_automation(ctx.config)
         return None
 
     def _execute_automation(self, config: Config) -> None:

@@ -47,7 +47,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.permissions import Permission, PermissionRegistry
 from cmk.gui.site_config import wato_site_ids
 from cmk.gui.table import init_rowselect, table_element
@@ -1531,7 +1531,7 @@ class BIAggregationForm(Dictionary):
 
 class AjaxBIRulePreview(AjaxPage):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         sites_callback = SitesCallback(all_sites_with_id_and_online, bi_livestatus_query, _)
         compiler = BICompiler(BIManager.bi_configuration_file(), sites_callback)
         compiler.prepare_for_compilation(compiler.compute_current_configstatus()["online_sites"])
@@ -1573,7 +1573,7 @@ class AjaxBIRulePreview(AjaxPage):
 
 class AjaxBIAggregationPreview(AjaxPage):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         # Prepare compiler
         sites_callback = SitesCallback(all_sites_with_id_and_online, bi_livestatus_query, _)
         compiler = BICompiler(BIManager.bi_configuration_file(), sites_callback)

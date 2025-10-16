@@ -27,6 +27,7 @@ from cmk.gui.page_menu import (
     PageMenuPopup,
     PageMenuTopic,
 )
+from cmk.gui.pages import PageContext
 from cmk.gui.pagetypes import page_menu_add_to_topics
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import Choices, VisualContext
@@ -40,12 +41,12 @@ from cmk.gui.visuals.type import visual_type_registry
 from cmk.utils import paths
 
 
-def ajax_popup_add(config: Config) -> None:
+def ajax_popup_add(ctx: PageContext) -> None:
     # name is unused at the moment in this, hand over as empty name
     page_menu_dropdown = page_menu_dropdown_add_to_visual(
         add_type=request.get_ascii_input_mandatory("add_type"),
         name="",
-        user_permissions=UserPermissions.from_config(config, permission_registry),
+        user_permissions=UserPermissions.from_config(ctx.config, permission_registry),
     )[0]
 
     html.open_ul()
@@ -156,7 +157,7 @@ class CreateInfoModel(BaseModel):
     context: VisualContext | None
 
 
-def ajax_add_visual(config: Config) -> None:
+def ajax_add_visual(ctx: PageContext) -> None:
     check_csrf_token()
     visual_type_name = request.get_str_input_mandatory("visual_type")  # dashboards / views / ...
     try:
@@ -176,7 +177,7 @@ def ajax_add_visual(config: Config) -> None:
         element_type,
         create_info.context,
         create_info.params,
-        UserPermissions.from_config(config, permission_registry),
+        UserPermissions.from_config(ctx.config, permission_registry),
     )
 
 

@@ -10,7 +10,6 @@ from collections.abc import Callable
 from cmk.ccc.user import UserId
 from cmk.gui import forms, visuals
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import Config
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.htmllib.header import make_header
@@ -18,6 +17,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
+from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import ViewName
 from cmk.gui.utils.roles import UserPermissions
@@ -39,7 +39,7 @@ from .type_defs import DashboardName, DashletId, LinkedViewDashletConfig, ViewDa
 __all__ = ["page_create_link_view_dashlet", "page_create_view_dashlet"]
 
 
-def page_create_link_view_dashlet(config: Config) -> None:
+def page_create_link_view_dashlet(ctx: PageContext) -> None:
     """Choose an existing view from the list of available views"""
     name = request.get_str_input_mandatory("name")
     owner = request.get_str_input_mandatory("owner")
@@ -48,7 +48,7 @@ def page_create_link_view_dashlet(config: Config) -> None:
         name,
         _("Embed existing view"),
         _create_linked_view_dashlet_spec,
-        UserPermissions.from_config(config, permission_registry),
+        UserPermissions.from_config(ctx.config, permission_registry),
     )
 
 
@@ -66,7 +66,7 @@ def _create_linked_view_dashlet_spec(dashlet_id: int, view_name: str) -> LinkedV
     )
 
 
-def page_create_view_dashlet(config: Config) -> None:
+def page_create_view_dashlet(ctx: PageContext) -> None:
     create = request.var("create", "1") == "1"
     name = request.get_str_input_mandatory("name")
     owner = request.get_str_input_mandatory("owner")
@@ -86,7 +86,7 @@ def page_create_view_dashlet(config: Config) -> None:
             name,
             _("Copy existing view"),
             _create_cloned_view_dashlet_spec,
-            UserPermissions.from_config(config, permission_registry),
+            UserPermissions.from_config(ctx.config, permission_registry),
         )
 
 
@@ -117,7 +117,7 @@ def _create_cloned_view_dashlet_spec(dashlet_id: int, view_name: str) -> ViewDas
     return dashlet_spec
 
 
-def page_create_view_dashlet_infos(config: Config) -> None:
+def page_create_view_dashlet_infos(ctx: PageContext) -> None:
     ds_name = request.get_str_input_mandatory("datasource")
     if ds_name not in data_source_registry:
         raise MKUserError("datasource", _("The given datasource is not supported"))

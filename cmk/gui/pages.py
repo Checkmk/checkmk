@@ -25,8 +25,15 @@ from cmk.gui.utils.json import CustomObjectJSONEncoder
 PageResult = object
 
 
+@dataclass(frozen=True)
+class PageContext:
+    """Context passed to page handlers, please use these instead of importing globals."""
+
+    config: Config
+
+
 class PageHandler(Protocol):
-    def __call__(self, config: Config) -> None: ...
+    def __call__(self, ctx: PageContext) -> None: ...
 
 
 # At the moment pages are simply callables that somehow render content for the HTTP response
@@ -52,11 +59,11 @@ class Page(abc.ABC):
     part of the base class.
     """
 
-    def handle_page(self, config: Config) -> None:
-        self.page(config)
+    def handle_page(self, ctx: PageContext) -> None:
+        self.page(ctx)
 
     @abc.abstractmethod
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         """Override this to implement the page functionality"""
         raise NotImplementedError()
 
@@ -68,16 +75,16 @@ class AjaxPage(Page, abc.ABC):
     def webapi_request(self) -> dict[str, Any]:
         return request.get_request()
 
-    def _handle_exc(self, config: Config, method: Callable[[Config], PageResult]) -> None:
+    def _handle_exc(self, ctx: PageContext, method: Callable[[PageContext], PageResult]) -> None:
         try:
-            method(config)
+            method(ctx)
         # I added MKGeneralException during a refactoring, but I did not check if it is needed.
         except (MKException, MKGeneralException) as e:
             response.status_code = http_client.BAD_REQUEST
             html.write_text_permissive(str(e))
         except Exception as e:
             response.status_code = http_client.INTERNAL_SERVER_ERROR
-            if config.debug:
+            if ctx.config.debug:
                 raise
             logger.exception("error calling AJAX page handler")
             handle_exception_as_gui_crash_report(
@@ -87,11 +94,11 @@ class AjaxPage(Page, abc.ABC):
             html.write_text_permissive(str(e))
 
     @override
-    def handle_page(self, config: Config) -> None:
+    def handle_page(self, ctx: PageContext) -> None:
         """The page handler, called by the page registry"""
         response.set_content_type("application/json")
         try:
-            action_response = self.page(config)
+            action_response = self.page(ctx)
             resp = {"result_code": 0, "result": action_response, "severity": "success"}
         except MKMissingDataError as e:
             resp = {"result_code": 1, "result": str(e), "severity": "success"}
@@ -100,7 +107,7 @@ class AjaxPage(Page, abc.ABC):
             resp = {"result_code": 1, "result": str(e), "severity": "error"}
 
         except Exception as e:
-            if config.debug:
+            if ctx.config.debug:
                 raise
             logger.exception("error calling AJAX page handler")
             handle_exception_as_gui_crash_report(

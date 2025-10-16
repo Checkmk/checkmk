@@ -47,7 +47,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
     show_confirm_cancel_dialog,
 )
-from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.sites import SiteStatus
 from cmk.gui.table import Foldable, init_rowselect, table_element
@@ -1038,7 +1038,7 @@ def _vs_activation(
 
 class PageAjaxStartActivation(AjaxPage):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         check_csrf_token()
         user.need_permission("wato.activate")
 
@@ -1048,11 +1048,11 @@ class PageAjaxStartActivation(AjaxPage):
             raise MKUserError("activate_until", _('Missing parameter "%s".') % "activate_until")
 
         manager = activate_changes.ActivateChangesManager()
-        manager.changes.load(list(config.sites))
+        manager.changes.load(list(ctx.config.sites))
         affected_sites_request = api_request.get("sites", "").strip()
         if not affected_sites_request:
             affected_sites = manager.changes.dirty_and_active_activation_sites(
-                activation_sites(config.sites)
+                activation_sites(ctx.config.sites)
             )
         else:
             affected_sites = [SiteId(s) for s in affected_sites_request.split(",")]
@@ -1062,7 +1062,7 @@ class PageAjaxStartActivation(AjaxPage):
         activate_foreign = api_request.get("activate_foreign", "0") == "1"
 
         valuespec = _vs_activation(
-            "", config.wato_activate_changes_comment_mode, manager.changes.has_foreign_changes()
+            "", ctx.config.wato_activate_changes_comment_mode, manager.changes.has_foreign_changes()
         )
         if valuespec:
             valuespec.validate_value(
@@ -1078,15 +1078,15 @@ class PageAjaxStartActivation(AjaxPage):
 
         activation_id = manager.start(
             sites=affected_sites,
-            all_site_configs=config.sites,
+            all_site_configs=ctx.config.sites,
             activate_until=activate_until,
             comment=comment,
             activate_foreign=activate_foreign,
-            user_permission_config=UserPermissionSerializableConfig.from_global_config(config),
+            user_permission_config=UserPermissionSerializableConfig.from_global_config(ctx.config),
             source="GUI",
-            max_snapshots=config.wato_max_snapshots,
-            use_git=config.wato_use_git,
-            debug=config.debug,
+            max_snapshots=ctx.config.wato_max_snapshots,
+            use_git=ctx.config.wato_use_git,
+            debug=ctx.config.debug,
         )
 
         return {
@@ -1096,7 +1096,7 @@ class PageAjaxStartActivation(AjaxPage):
 
 class PageAjaxActivationState(AjaxPage):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         user.need_permission("wato.activate")
 
         api_request = self.webapi_request()
@@ -1106,7 +1106,7 @@ class PageAjaxActivationState(AjaxPage):
             raise MKUserError("activation_id", _('Missing parameter "%s".') % "activation_id")
 
         manager = activate_changes.ActivateChangesManager()
-        manager.changes.load(list(config.sites))
+        manager.changes.load(list(ctx.config.sites))
         manager.load_activation(activation_id)
 
         return manager.get_state()

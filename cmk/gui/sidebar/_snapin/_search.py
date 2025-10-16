@@ -16,6 +16,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.search import (
     ABCQuicksearchConductor,
@@ -81,7 +82,7 @@ class QuicksearchSnapin(SidebarSnapin):
             "search_open": self._page_search_open,
         }
 
-    def _ajax_search(self, config: Config) -> None:
+    def _ajax_search(self, ctx: PageContext) -> None:
         """Generate the search result list"""
         query = _maybe_strip(request.get_str_input("q"))
         if not query:
@@ -90,7 +91,8 @@ class QuicksearchSnapin(SidebarSnapin):
         search_objects: list[ABCQuicksearchConductor] = []
         try:
             search_objects = self._quicksearch_manager._determine_search_objects(
-                livestatus.lqencode(query), UserPermissions.from_config(config, permission_registry)
+                livestatus.lqencode(query),
+                UserPermissions.from_config(ctx.config, permission_registry),
             )
             self._quicksearch_manager._conduct_search(search_objects)
 
@@ -117,7 +119,7 @@ class QuicksearchSnapin(SidebarSnapin):
             self._quicksearch_manager._evaluate_results(search_objects), query
         )
 
-    def _page_search_open(self, config: Config) -> None:
+    def _page_search_open(self, ctx: PageContext) -> None:
         """Generate the URL to the view that is opened when confirming the search field"""
         query = _maybe_strip(request.var("q"))
         if not query:
@@ -125,7 +127,7 @@ class QuicksearchSnapin(SidebarSnapin):
 
         raise HTTPRedirect(
             self._quicksearch_manager.generate_search_url(
-                query, UserPermissions.from_config(config, permission_registry)
+                query, UserPermissions.from_config(ctx.config, permission_registry)
             )
         )
 

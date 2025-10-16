@@ -48,7 +48,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import PageEndpoint, PageRegistry
+from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.type_defs import AnnotatedUserId
 from cmk.gui.utils.html import HTML
@@ -257,7 +257,7 @@ permission_registry.register(
 )
 
 
-def page_message(config: Config) -> None:
+def page_message(ctx: PageContext) -> None:
     if not user.may("general.message"):
         raise MKAuthException(_("You are not allowed to use the message module."))
 
@@ -268,7 +268,7 @@ def page_message(config: Config) -> None:
 
     spec = _message_spec(
         userdb.UserData.from_userspec({"user_id": UserId(uid), **attrs})
-        for uid, attrs in config.multisite_users.items()
+        for uid, attrs in ctx.config.multisite_users.items()
     )
 
     flat_catalog = create_flat_catalog_from_dictionary(spec)
@@ -285,7 +285,7 @@ def page_message(config: Config) -> None:
                     methods=msg["methods"],
                     valid_till=msg["valid_till"],
                 ),
-                multisite_user_ids=config.multisite_users.keys(),
+                multisite_user_ids=ctx.config.multisite_users.keys(),
             )
         except MKUserError as e:
             html.user_error(e)

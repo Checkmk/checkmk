@@ -41,7 +41,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import Page, PageEndpoint, PageRegistry
+from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import permission_registry
 from cmk.gui.theme import make_theme
 from cmk.gui.type_defs import ActionResult, PermissionName
@@ -889,7 +889,7 @@ def _create_file_path() -> str:
 
 class PageDownloadDiagnosticsDump(Page):
     @override
-    def page(self, config: Config) -> None:
+    def page(self, ctx: PageContext) -> None:
         if not user.may("wato.diagnostics"):
             raise MKAuthException(
                 _("Sorry, you lack the permission for downloading diagnostics dumps.")
@@ -901,10 +901,10 @@ class PageDownloadDiagnosticsDump(Page):
         _validate_diagnostics_dump_tarfile_name(tarfile_name)
 
         file_content = _get_diagnostics_dump_file(
-            make_automation_config(config.sites[site_id]),
+            make_automation_config(ctx.config.sites[site_id]),
             tarfile_name,
             timeout,
-            debug=config.debug,
+            debug=ctx.config.debug,
         )
 
         response.set_content_type("application/x-tgz")

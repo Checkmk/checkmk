@@ -51,6 +51,7 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
+from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import InfoName, VisualContext, VisualTypeName
 from cmk.gui.utils.filter import check_if_non_default_filter_in_request
@@ -104,18 +105,21 @@ DASHLET_PADDING = (
 RASTER = 10  # Raster the dashlet coords are measured in (px)
 
 
-def page_dashboard(config: Config) -> None:
+def page_dashboard(ctx: PageContext) -> None:
     name = request.get_ascii_input_mandatory("name", "")
     if not name:
         name = _get_default_dashboard_name()
         request.set_var("name", name)  # make sure that URL context is always complete
 
     _draw_dashboard(
-        name, config, config.sites, UserPermissions.from_config(config, permission_registry)
+        name,
+        ctx.config,
+        ctx.config.sites,
+        UserPermissions.from_config(ctx.config, permission_registry),
     )
 
 
-def page_dashboard_app(config: Config) -> None:
+def page_dashboard_app(ctx: PageContext) -> None:
     mode: Literal["display", "create"] = "display"  # edit mode lives within the page
     if request.var("create") == "1":
         if not user.may("general.edit_dashboards"):
@@ -136,7 +140,7 @@ def page_dashboard_app(config: Config) -> None:
         board_context = visuals.active_context_from_request(["host", "service"], board["context"])
         board["context"] = board_context
         title = visuals.visual_title("dashboard", board, board_context)
-        user_permissions = UserPermissions.from_config(config, permission_registry)
+        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
         # some dashboards have more complicated context requirements when loaded, these are
         # constructed when clicking on a linking dashboard which means that this will (for now
         # with the current architecture) always go through a full page reload rather than a
@@ -1285,7 +1289,7 @@ def draw_dashlet(dashlet: Dashlet, content: HTML | str, title: HTML | str) -> No
     html.close_div()
 
 
-def ajax_dashlet(config: Config) -> None:
+def ajax_dashlet(ctx: PageContext) -> None:
     """Render the inner HTML of a dashlet"""
     name = request.get_ascii_input_mandatory("name", "")
     if not name:
@@ -1319,8 +1323,8 @@ def ajax_dashlet(config: Config) -> None:
         dashlet_type = get_dashlet_type(dashlet_spec)
         dashlet = dashlet_type(name, owner, board, ident, dashlet_spec)
         _title, content = _render_dashlet(
-            config,
-            UserPermissions.from_config(config, permission_registry),
+            ctx.config,
+            UserPermissions.from_config(ctx.config, permission_registry),
             board,
             dashlet,
             is_update=True,

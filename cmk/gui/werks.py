@@ -24,7 +24,6 @@ from cmk.gui.breadcrumb import (
     make_main_menu_breadcrumb,
     make_simple_page_breadcrumb,
 )
-from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -45,7 +44,7 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
-from cmk.gui.pages import Page, PageEndpoint, PageRegistry, PageResult
+from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.table import Table, table_element
 from cmk.gui.utils.escaping import escape_to_html_permissive, strip_tags
 from cmk.gui.utils.flashed_messages import get_flashed_messages
@@ -131,7 +130,7 @@ _WerkTableOptionColumns = Literal[
 
 class ChangeLogPage(Page):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         breadcrumb = make_simple_page_breadcrumb(
             main_menu_registry["help"], _("Change log (Werks)")
         )
@@ -274,7 +273,7 @@ def _show_werk_options_controls() -> None:
     html.close_div()
 
 
-def page_werk(config: Config) -> None:
+def page_werk(ctx: PageContext) -> None:
     werk = get_werk_by_id(request.get_integer_input_mandatory("werk"))
 
     title = ("%s %s - %s") % (

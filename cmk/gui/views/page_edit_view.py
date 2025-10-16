@@ -22,14 +22,14 @@ from typing import Any, Literal, NamedTuple, overload, override, TypedDict
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
 from cmk.gui import visuals
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import active_config
 from cmk.gui.dashboard.type_defs import ViewDashletConfig
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
-from cmk.gui.pages import AjaxPage, PageResult
+from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.painter.v0 import all_painters, Cell, Painter
 from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
@@ -83,7 +83,7 @@ from .store import get_all_views
 from .view_choices import view_choices
 
 
-def page_edit_view(config: Config) -> None:
+def page_edit_view(ctx: PageContext) -> None:
     def get_view_infos(view: ViewSpec) -> SingleInfos:
         """Return list of available datasources (used to render filters)"""
         # In create mode "datasource" is mandatory, in other mode it's not
@@ -96,7 +96,7 @@ def page_edit_view(config: Config) -> None:
     visuals.page_edit_visual(
         "views",
         get_all_views(),
-        UserPermissions.from_config(config, permission_registry),
+        UserPermissions.from_config(ctx.config, permission_registry),
         custom_field_handler=render_view_config,
         create_handler=create_view_from_valuespec,
         info_handler=get_view_infos,
@@ -792,10 +792,10 @@ def view_editor_sorter_specs(
 
 class PageAjaxCascadingRenderPainterParameters(AjaxPage):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         api_request = request.get_request()
 
-        user_permissions = UserPermissions.from_config(config, permission_registry)
+        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
         if api_request["painter_type"] == "painter":
             painters = painters_of_datasource(api_request["ds_name"], user_permissions)
         elif api_request["painter_type"] == "join_painter":

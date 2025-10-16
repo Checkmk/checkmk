@@ -28,7 +28,7 @@ from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.nodevis.filters import FilterTopologyMaxNodes, FilterTopologyMeshDepth
 from cmk.gui.nodevis.utils import BILayoutManagement, get_toggle_layout_designer_page_menu_entry
 from cmk.gui.page_menu import make_display_options_dropdown, PageMenu, PageMenuTopic
-from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnSpec, PainterParameters, VisualLinkSpec
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -60,7 +60,7 @@ def register(
 
 class AjaxFetchAggregationData(AjaxPage):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         aggregations_var = request.get_str_input_mandatory("aggregations", "[]")
         filter_names = json.loads(aggregations_var)
 
@@ -96,13 +96,15 @@ class AjaxFetchAggregationData(AjaxPage):
                     layout["origin_info"] = _("Explicit set")
                     layout["explicit_id"] = aggr_name
                 else:
-                    layout.update(self._get_template_based_layout_settings(aggr_settings, config))
+                    layout.update(
+                        self._get_template_based_layout_settings(aggr_settings, ctx.config)
+                    )
                 layout.setdefault("force_config", {})
 
                 if "ignore_rule_styles" not in layout:
                     layout["ignore_rule_styles"] = aggr_settings.get("ignore_rule_styles", False)
                 if "line_config" not in layout:
-                    layout["line_config"] = self._get_line_style_config(aggr_settings, config)
+                    layout["line_config"] = self._get_line_style_config(aggr_settings, ctx.config)
 
                 aggregation_info["node_config"] = data
                 aggregation_info["layout"] = layout
@@ -278,33 +280,33 @@ class NodeVisualizationBIDataMapper:
 
 class AjaxSaveBIAggregationLayout(AjaxPage):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         check_csrf_token()
         layout_var = request.get_str_input_mandatory("layout", "{}")
         layout_config = json.loads(layout_var)
-        config.bi_layouts["aggregations"].update(layout_config)
+        ctx.config.bi_layouts["aggregations"].update(layout_config)
         BILayoutManagement.save_layouts()
         return {}
 
 
 class AjaxDeleteBIAggregationLayout(AjaxPage):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         check_csrf_token()
         for_aggregation = request.var("aggregation_name")
-        config.bi_layouts["aggregations"].pop(for_aggregation)
+        ctx.config.bi_layouts["aggregations"].pop(for_aggregation)
         BILayoutManagement.save_layouts()
         return {}
 
 
 class AjaxLoadBIAggregationLayout(AjaxPage):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         aggregation_name = request.var("aggregation_name")
         return BILayoutManagement.load_bi_aggregation_layout(aggregation_name)
 
 
-def _bi_map(config: Config) -> None:
+def _bi_map(ctx: PageContext) -> None:
     aggr_name = request.var("aggr_name")
     layout_id = request.var("layout_id")
     title = _("BI visualization")

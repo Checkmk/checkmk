@@ -10,12 +10,12 @@ Then the user is redirected to the view editor dialog.
 """
 
 from cmk.gui import visuals
-from cmk.gui.config import Config
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.http import request
+from cmk.gui.pages import PageContext
 
 
-def page_create_view(config: Config) -> None:
+def page_create_view(ctx: PageContext) -> None:
     ds_class, ds_name = request.get_item_input("datasource", data_source_registry)
     visuals.page_create_visual(
         "views",

@@ -21,7 +21,6 @@ from cmk.ccc.user import UserId
 from cmk.ccc.version import edition
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.gui.color import render_color_icon
-from cmk.gui.config import Config
 from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -34,7 +33,7 @@ from cmk.gui.logged_in import (
     user,
     UserGraphDataRangeFileName,
 )
-from cmk.gui.pages import AjaxPage, PageResult
+from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.sites import get_alias_of_host
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import GraphTimerange, SizePT
@@ -576,7 +575,7 @@ def _graph_margin_ex(
 # of things, we keep it.
 # TODO: Migrate this to a real AjaxPage
 class AjaxGraph(cmk.gui.pages.Page):
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         """Registered as `ajax_graph`."""
         response.set_content_type("application/json")
         try:
@@ -585,13 +584,13 @@ class AjaxGraph(cmk.gui.pages.Page):
             response_data = render_ajax_graph(
                 context,
                 metrics_from_api,
-                temperature_unit=get_temperature_unit(user, config.default_temperature_unit),
+                temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
                 fetch_time_series=metric_backend_registry[str(edition(paths.omd_root))].client,
             )
             response.set_data(json.dumps(response_data))
         except Exception as e:
             logger.error("Ajax call ajax_graph.py failed: %s\n%s", e, traceback.format_exc())
-            if config.debug:
+            if ctx.config.debug:
                 raise
             response.set_data("ERROR: %s" % e)
         return None
@@ -862,7 +861,7 @@ def _render_graph_container_html(
 
 class AjaxRenderGraphContent(AjaxPage):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         # Called from javascript code via JSON to initially render a graph
         """Registered as `ajax_render_graph_content`."""
         api_request = request.get_request()
@@ -871,9 +870,9 @@ class AjaxRenderGraphContent(AjaxPage):
             GraphDataRange.model_validate(api_request["graph_data_range"]),
             GraphRenderConfig.model_validate(api_request["graph_render_config"]),
             metrics_from_api,
-            debug=config.debug,
-            graph_timeranges=config.graph_timeranges,
-            temperature_unit=get_temperature_unit(user, config.default_temperature_unit),
+            debug=ctx.config.debug,
+            graph_timeranges=ctx.config.graph_timeranges,
+            temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
             fetch_time_series=metric_backend_registry[str(edition(paths.omd_root))].client,
             graph_display_id=api_request["graph_display_id"],
         )
@@ -1032,7 +1031,7 @@ def estimate_graph_step_for_html(
 # of things, we keep it.
 # TODO: Migrate this to a real AjaxPage
 class AjaxGraphHover(cmk.gui.pages.Page):
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         """Registered as `ajax_graph_hover`."""
         response.set_content_type("application/json")
         try:
@@ -1043,13 +1042,13 @@ class AjaxGraphHover(cmk.gui.pages.Page):
                 context,
                 hover_time,
                 metrics_from_api,
-                temperature_unit=get_temperature_unit(user, config.default_temperature_unit),
+                temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
                 fetch_time_series=metric_backend_registry[str(edition(paths.omd_root))].client,
             )
             response.set_data(json.dumps(response_data))
         except Exception as e:
             logger.error("Ajax call ajax_graph_hover.py failed: %s\n%s", e, traceback.format_exc())
-            if config.debug:
+            if ctx.config.debug:
                 raise
             response.set_data("ERROR: %s" % e)
         return None

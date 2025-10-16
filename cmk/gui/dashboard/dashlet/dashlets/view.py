@@ -40,7 +40,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.pages import Page
+from cmk.gui.pages import Page, PageContext
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import (
@@ -561,7 +561,7 @@ class EmbeddedViewSpecManager:
 
 class ViewWidgetIFramePage(Page):
     @override
-    def page(self, config: Config) -> None:
+    def page(self, ctx: PageContext) -> None:
         """Render a single view for use in an iframe.
 
         This needs to support two modes:
@@ -581,7 +581,7 @@ class ViewWidgetIFramePage(Page):
         if request.var("filled_in") is None:
             request.set_var("filled_in", "filter")
 
-        user_permissions = UserPermissions.from_config(config, permission_registry)
+        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
         view = View(
             widget_unique_name,
             view_spec,
@@ -590,9 +590,9 @@ class ViewWidgetIFramePage(Page):
         )
         view.row_limit = get_limit(
             request_limit_mode=request.get_ascii_input_mandatory("limit", "soft"),
-            soft_query_limit=config.soft_query_limit,
+            soft_query_limit=ctx.config.soft_query_limit,
             may_ignore_soft_limit=user.may("general.ignore_soft_limit"),
-            hard_query_limit=config.hard_query_limit,
+            hard_query_limit=ctx.config.hard_query_limit,
             may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
         )
         view.only_sites = get_only_sites_from_context(context)
@@ -716,7 +716,7 @@ class ViewWidgetEditPage(Page):
         single_infos: SingleInfos
 
     @override
-    def page(self, config: Config) -> None:
+    def page(self, ctx: PageContext) -> None:
         """Render the view editor for embedded views in dashboards.
 
         This reuses the existing view editor, but should only show the view specific fields.

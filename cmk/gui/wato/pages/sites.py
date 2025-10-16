@@ -57,7 +57,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.site_config import (
     distributed_setup_remote_sites,
     has_distributed_setup_remote_sites,
@@ -1417,7 +1417,7 @@ class PageAjaxFetchSiteStatus(AjaxPage):
     """AJAX handler for asynchronous fetching of the site status"""
 
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         user.need_permission("wato.sites")
 
         site_states = {}
@@ -1428,7 +1428,7 @@ class PageAjaxFetchSiteStatus(AjaxPage):
             for (site_id, site_config) in sites.items()
             if is_replication_enabled(site_config)
         ]
-        remote_status = ReplicationStatusFetcher().fetch(replication_sites, debug=config.debug)
+        remote_status = ReplicationStatusFetcher().fetch(replication_sites, debug=ctx.config.debug)
 
         for site_id, site in sites.items():
             site_id_str: str = site_id

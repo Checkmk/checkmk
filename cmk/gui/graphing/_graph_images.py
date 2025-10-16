@@ -23,13 +23,12 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.version import edition
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.gui import pdf
-from cmk.gui.config import Config
 from cmk.gui.exceptions import MKNotFound, MKUnauthenticatedException, MKUserError
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInSuperUser, user
-from cmk.gui.pages import Page
+from cmk.gui.pages import Page, PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import SizePT
 from cmk.gui.utils.roles import UserPermissions
@@ -77,7 +76,7 @@ from ._unit import get_temperature_unit
 #    # Needed by mail notification plug-in (-> no authentication from localhost)
 class AjaxGraphImagesForNotifications(Page):
     @override
-    def page(self, config: Config) -> None:
+    def page(self, ctx: PageContext) -> None:
         """Registered as `ajax_graph_images`."""
         if not isinstance(user, LoggedInSuperUser):
             # This page used to be noauth but restricted to local ips.
@@ -87,9 +86,9 @@ class AjaxGraphImagesForNotifications(Page):
         _answer_graph_image_request(
             metrics_from_api,
             graphs_from_api,
-            UserPermissions.from_config(config, permission_registry),
-            debug=config.debug,
-            temperature_unit=get_temperature_unit(user, config.default_temperature_unit),
+            UserPermissions.from_config(ctx.config, permission_registry),
+            debug=ctx.config.debug,
+            temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
             fetch_time_series=metric_backend_registry[str(edition(paths.omd_root))].client,
         )
 

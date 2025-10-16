@@ -27,7 +27,6 @@ from cmk.graphing.v1 import graphs as graphs_api
 from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
 from cmk.graphing.v1 import translations as translations_api
-from cmk.gui.config import Config
 from cmk.gui.graphing import (
     check_metrics,
     CheckMetricEntry,
@@ -46,7 +45,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.pages import PageResult
+from cmk.gui.pages import PageContext, PageResult
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
 from cmk.utils import paths
@@ -180,7 +179,7 @@ def load_plugins() -> None:
 
 class PageHostServiceGraphPopup(cmk.gui.pages.Page):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         """This page is called for the popup of the graph icon of hosts/services."""
         host_service_graph_popup_cmk(
             SiteId(raw_site_id) if (raw_site_id := request.var("site")) else None,
@@ -188,10 +187,10 @@ class PageHostServiceGraphPopup(cmk.gui.pages.Page):
             ServiceName(request.get_str_input_mandatory("service")),
             metrics_from_api,
             graphs_from_api,
-            UserPermissions.from_config(config, permission_registry),
-            debug=config.debug,
-            graph_timeranges=config.graph_timeranges,
-            temperature_unit=get_temperature_unit(user, config.default_temperature_unit),
+            UserPermissions.from_config(ctx.config, permission_registry),
+            debug=ctx.config.debug,
+            graph_timeranges=ctx.config.graph_timeranges,
+            temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
             fetch_time_series=metric_backend_registry[str(edition(paths.omd_root))].client,
         )
         return None  # for mypy
@@ -199,17 +198,17 @@ class PageHostServiceGraphPopup(cmk.gui.pages.Page):
 
 class PageGraphDashlet(cmk.gui.pages.Page):
     @override
-    def page(self, config: Config) -> None:
+    def page(self, ctx: PageContext) -> None:
         html.write_html(
             host_service_graph_dashlet_cmk(
                 parse_raw_graph_specification(json.loads(request.get_str_input_mandatory("spec"))),
                 GraphRenderConfig.model_validate_json(request.get_str_input_mandatory("config")),
                 metrics_from_api,
                 graphs_from_api,
-                UserPermissions.from_config(config, permission_registry),
-                debug=config.debug,
-                graph_timeranges=config.graph_timeranges,
-                temperature_unit=get_temperature_unit(user, config.default_temperature_unit),
+                UserPermissions.from_config(ctx.config, permission_registry),
+                debug=ctx.config.debug,
+                graph_timeranges=ctx.config.graph_timeranges,
+                temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
                 fetch_time_series=metric_backend_registry[str(edition(paths.omd_root))].client,
                 graph_display_id=request.get_str_input_mandatory("id"),
             )

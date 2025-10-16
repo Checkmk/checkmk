@@ -39,7 +39,7 @@ from cmk.gui.i18n import (
     translate_to_current_language,
 )
 from cmk.gui.logged_in import user
-from cmk.gui.pages import get_page_handler
+from cmk.gui.pages import get_page_handler, PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.session import SuperUserContext
 from cmk.gui.type_defs import SearchQuery, SearchResult, SearchResultsByTopic
@@ -341,7 +341,7 @@ def _try_page(file_name: str, config: Config) -> None:
         return
 
     with output_funnel.plugged():
-        handler(config)
+        handler(PageContext(config=config))
         output_funnel.drain()
 
 

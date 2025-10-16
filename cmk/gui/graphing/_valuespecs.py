@@ -15,12 +15,12 @@ from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, assert_never, Literal, override, TypedDict
 
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.pages import AjaxPage, PageResult
+from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.type_defs import Choice, Choices, GraphTitleFormatVS, VisualContext
 from cmk.gui.unit_formatter import (
     AutoPrecision,
@@ -432,8 +432,8 @@ def _vs_type_from_formatter(
 
 class PageVsAutocomplete(AjaxPage):
     @override
-    def page(self, config: Config) -> PageResult:
-        temperature_unit = get_temperature_unit(user, config.default_temperature_unit)
+    def page(self, ctx: PageContext) -> PageResult:
+        temperature_unit = get_temperature_unit(user, ctx.config.default_temperature_unit)
         if metric_name := self.webapi_request()["metric"]:
             metric_spec = get_metric_spec(metric_name, metrics_from_api)
             unit_choice_for_metric = _unit_choice_from_unit_spec(

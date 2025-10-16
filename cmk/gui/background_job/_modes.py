@@ -25,7 +25,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.type_defs import ActionResult, Icon, PermissionName
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri_contextless
@@ -195,12 +195,12 @@ class ModeAjaxBackgroundJobDetails(AjaxPage):
     """AJAX handler for supporting the background job state update"""
 
     @override
-    def handle_page(self, config: Config) -> None:
+    def handle_page(self, ctx: PageContext) -> None:
         self.action()
-        super().handle_page(config)
+        super().handle_page(ctx)
 
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         with output_funnel.plugged():
             api_request = request.get_request()
             job_snapshot = self._show_details_page(api_request["job_id"])

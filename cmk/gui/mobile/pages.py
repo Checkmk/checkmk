@@ -20,7 +20,7 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import PageMenuEntry, PageMenuLink
 from cmk.gui.page_menu_utils import collect_context_links
-from cmk.gui.pages import Page, PageResult
+from cmk.gui.pages import Page, PageContext, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.permissions import permission_registry
@@ -237,8 +237,8 @@ def page_login(config: Config) -> None:
 
 class PageMobileIndex(Page):
     @override
-    def page(self, config: Config) -> PageResult:
-        _page_index(config)
+    def page(self, ctx: PageContext) -> PageResult:
+        _page_index(ctx.config)
         return None
 
 
@@ -306,8 +306,8 @@ def _page_index(config: Config) -> None:
 
 class PageMobileView(Page):
     @override
-    def page(self, config: Config) -> PageResult:
-        _page_view(config, debug=config.debug)
+    def page(self, ctx: PageContext) -> PageResult:
+        _page_view(ctx.config, debug=ctx.config.debug)
         return None
 
 

@@ -24,6 +24,7 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.logged_in import user
+from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import (
@@ -107,7 +108,7 @@ def _userdb_sync_job_enabled(site_configs: SiteConfigurations) -> bool:
     return True
 
 
-def ajax_sync(config: Config) -> None:
+def ajax_sync(ctx: PageContext) -> None:
     try:
         job = UserSyncBackgroundJob()
         if (
@@ -117,10 +118,10 @@ def ajax_sync(config: Config) -> None:
                     args=UserSyncArgs(
                         add_to_changelog=False,
                         enforce_sync=True,
-                        custom_user_attributes=config.wato_user_attrs,
-                        default_user_profile=config.default_user_profile,
+                        custom_user_attributes=ctx.config.wato_user_attrs,
+                        default_user_profile=ctx.config.default_user_profile,
                         user_permission_config=UserPermissionSerializableConfig.from_global_config(
-                            config
+                            ctx.config
                         ),
                     ),
                 ),
@@ -135,7 +136,7 @@ def ajax_sync(config: Config) -> None:
         response.set_data("OK Started synchronization\n")
     except Exception as e:
         gui_logger.exception("error synchronizing user DB")
-        if config.debug:
+        if ctx.config.debug:
             raise
         response.set_data("ERROR %s\n" % e)
 

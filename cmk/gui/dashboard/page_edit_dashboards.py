@@ -5,11 +5,11 @@
 
 from cmk.ccc.user import UserId
 from cmk.gui import visuals
-from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
@@ -20,12 +20,12 @@ from .type_defs import DashboardConfig, DashboardName
 PAGE_EDIT_DASHBOARDS_LINK = "edit_dashboards"
 
 
-def page_edit_dashboards(config: Config) -> None:
+def page_edit_dashboards(ctx: PageContext) -> None:
     visuals.page_list(
         what="dashboards",
         title=_("Edit dashboards"),
         visuals=get_all_dashboards(),
-        user_permissions=UserPermissions.from_config(config, permission_registry),
+        user_permissions=UserPermissions.from_config(ctx.config, permission_registry),
         render_custom_buttons=_render_dashboard_buttons,
     )
 

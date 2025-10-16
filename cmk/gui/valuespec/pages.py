@@ -17,7 +17,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
@@ -38,7 +38,7 @@ def register(page_registry: PageRegistry) -> None:
     page_registry.register(PageEndpoint("ajax_popup_icon_selector", ajax_popup_icon_selector))
 
 
-def ajax_popup_icon_selector(config: Config) -> None:
+def ajax_popup_icon_selector(ctx: PageContext) -> None:
     """AJAX API call for rendering the icon selector"""
     varprefix = request.get_ascii_input_mandatory("varprefix")
     value = request.var("value")
@@ -57,10 +57,10 @@ class ABCPageListOfMultipleGetChoice(AjaxPage, abc.ABC):
         raise NotImplementedError()
 
     @override
-    def page(self, config: Config) -> dict:
+    def page(self, ctx: PageContext) -> dict:
         api_request = request.get_request()
         vs = ListOfMultiple(
-            choices=self._get_choices(config, api_request), choice_page_name="unused_dummy_page"
+            choices=self._get_choices(ctx.config, api_request), choice_page_name="unused_dummy_page"
         )
         with output_funnel.plugged():
             vs.show_choice_row(api_request["varprefix"], api_request["ident"], {})
@@ -69,7 +69,7 @@ class ABCPageListOfMultipleGetChoice(AjaxPage, abc.ABC):
 
 class AjaxFetchCA(AjaxPage):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         check_csrf_token()
         user.need_permission("general.server_side_requests")
 

@@ -8,14 +8,13 @@
 from collections.abc import Callable
 from typing import override
 
-from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.main_menu_types import MainMenu, MainMenuItem, MainMenuTopic, MainMenuTopicEntries
-from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.theme.choices import theme_choices
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.userdb import remove_custom_attr, validate_start_url
@@ -188,7 +187,7 @@ class ModeAjaxCycleThemes(AjaxPage):
     """AJAX handler for quick access option 'Interface theme" in user menu"""
 
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         check_csrf_token()
         themes = [theme for theme, _title in theme_choices()]
         current_theme = theme.get()
@@ -210,7 +209,7 @@ class ModeAjaxCycleSidebarPosition(AjaxPage):
     """AJAX handler for quick access option 'Sidebar position" in user menu"""
 
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         check_csrf_token()
         set_user_attribute(
             "ui_sidebar_position",
@@ -223,7 +222,7 @@ class ModeAjaxSetStartURL(AjaxPage):
     """AJAX handler to set the start URL of a user"""
 
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         try:
             check_csrf_token()
             if request.var("name"):

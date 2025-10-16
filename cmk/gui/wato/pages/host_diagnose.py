@@ -32,7 +32,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
+from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.encrypter import Encrypter
@@ -478,7 +478,7 @@ class ModeDiagHost(WatoMode):
 
 class PageAjaxDiagHost(AjaxPage):
     @override
-    def page(self, config: Config) -> PageResult:
+    def page(self, ctx: PageContext) -> PageResult:
         check_csrf_token()
         if not user.may("wato.diag_host"):
             raise MKAuthException(_("You are not permitted to perform this action."))
@@ -560,10 +560,10 @@ class PageAjaxDiagHost(AjaxPage):
                 args[9] = api_request.get("snmpv3_security_name", "")
 
         result = diag_host(
-            make_automation_config(config.sites[host.site_id()]),
+            make_automation_config(ctx.config.sites[host.site_id()]),
             hostname,
             _test,
-            config.debug,
+            ctx.config.debug,
             *args,
         )
         return {

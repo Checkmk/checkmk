@@ -149,7 +149,12 @@ def test_new_relays_when_activation_performed(
     # Add new relay in the site mock
     site_client.post(
         "/domain-types/relay/collections/all",
-        json={"alias": relay_id_c, "siteid": site.site_name},
+        json={
+            "alias": relay_id_c,
+            "siteid": site.site_name,
+            "num_fetchers": 17,
+            "log_level": "INFO",
+        },
     )
     # Create a new configuration folder with new relays in site simulating a new config activation by user
     config_b = create_config_folder(site_context.omd_root, [relay_id_a, relay_id_b, relay_id_c])

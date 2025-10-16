@@ -1591,18 +1591,18 @@ class RelayAPI(BaseAPI):
         self,
         alias: str,
         site_id: str,
-        num_fetchers: int | None = None,
-        log_level: str | None = None,
+        num_fetchers: int = 13,
+        log_level: str = "INFO",
     ) -> None:
-        body: dict[str, object] = {"alias": alias, "siteid": site_id}
-        if num_fetchers is not None:
-            body["num_fetchers"] = num_fetchers
-        if log_level is not None:
-            body["log_level"] = log_level
         response = self.session.post(
             url=self._domain_url,
             headers=self._headers,
-            json=body,
+            json={
+                "alias": alias,
+                "siteid": site_id,
+                "num_fetchers": num_fetchers,
+                "log_level": log_level,
+            },
         )
 
         if response.status_code != 200:
@@ -1617,8 +1617,8 @@ class RelayAPI(BaseAPI):
             id=relay_id,
             alias=response_json["extensions"]["alias"],
             site_id=response_json["extensions"]["siteid"],
-            num_fetchers=response_json["extensions"].get("num_fetchers"),
-            log_level=response_json["extensions"].get("log_level"),
+            num_fetchers=response_json["extensions"]["num_fetchers"],
+            log_level=response_json["extensions"]["log_level"],
         ), response.headers["Etag"]
 
     def get_all(self) -> list[Relay]:
@@ -1630,19 +1630,22 @@ class RelayAPI(BaseAPI):
                 id=relay_dict["id"],
                 alias=relay_dict["extensions"]["alias"],
                 site_id=relay_dict["extensions"]["siteid"],
-                num_fetchers=relay_dict["extensions"].get("num_fetchers"),
-                log_level=relay_dict["extensions"].get("log_level"),
+                num_fetchers=relay_dict["extensions"]["num_fetchers"],
+                log_level=relay_dict["extensions"]["log_level"],
             )
             for relay_dict in response.json()["value"]
         ]
 
     def edit(self, relay: Relay) -> None:
-        body: dict[str, object] = {"alias": relay.alias, "siteid": relay.site_id}
-        if relay.num_fetchers is not None:
-            body["num_fetchers"] = relay.num_fetchers
-        if relay.log_level is not None:
-            body["log_level"] = relay.log_level
-        response = self.session.put(url=self._object_url(relay.id), json=body)
+        response = self.session.put(
+            url=self._object_url(relay.id),
+            json={
+                "alias": relay.alias,
+                "siteid": relay.site_id,
+                "num_fetchers": relay.num_fetchers,
+                "log_level": relay.log_level,
+            },
+        )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
 

@@ -21,6 +21,8 @@ class CheckmkAPIError(Exception):
 
 
 logger = logging.getLogger("agent-receiver")
+default_num_fetchers = 13
+default_log_level = "INFO"
 
 
 @final
@@ -47,7 +49,12 @@ class RelaysRepository:
         resp = self.client.post(
             "/domain-types/relay/collections/all",
             auth=auth,
-            json={"alias": alias, "siteid": self.siteid},
+            json={
+                "alias": alias,
+                "siteid": self.siteid,
+                "num_fetchers": default_num_fetchers,
+                "log_level": default_log_level,
+            },
         )
         if resp.status_code != HTTPStatus.OK:
             logger.error("could not register relay %s : %s", resp.status_code, resp.text)

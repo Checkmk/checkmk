@@ -2,7 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import json
 import secrets
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 
 from cmk.agent_receiver.utils import B64SiteInternalSecret
 
+from .schema import JsonSchema
 from .wiremock import Request, Response, Wiremock, WMapping
 
 
@@ -30,6 +31,8 @@ State = NewType("State", str)
 class RelayData(BaseModel):
     alias: str
     siteid: str
+    num_fetchers: int = 17
+    log_level: str = "INFO"
 
 
 class GetResponse(BaseModel):
@@ -162,9 +165,9 @@ class SiteMock:
                 },
                 bodyPatterns=[
                     {
-                        "equalToJson": RelayData(
-                            alias=relayid, siteid=self.site_name
-                        ).model_dump_json()
+                        "matchesJsonSchema": json.dumps(
+                            RelayData.model_json_schema(schema_generator=JsonSchema)
+                        ),
                     }
                 ],
             ),

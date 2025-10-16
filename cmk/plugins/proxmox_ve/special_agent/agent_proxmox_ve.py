@@ -150,9 +150,7 @@ def agent_proxmox_ve_main(args: Args) -> int:
         node["node"]: [rep for rep in node.get("replication", [])] for node in data["nodes"]
     }
     all_storages = {
-        entry["storage"]: entry
-        for entry in data["cluster"]["resources"]
-        if entry["type"] == "storage"
+        entry["id"]: entry for entry in data["cluster"]["resources"] if entry["type"] == "storage"
     }
 
     cluster_name = next(

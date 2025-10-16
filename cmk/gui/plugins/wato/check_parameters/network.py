@@ -60,11 +60,11 @@ def _parameter_valuespec_snat_usage():
         elements=[
             (
                 "upper_levels",
-                SimpleLevels(Percentage, title=_("SNAT usage upper levels")),
+                SimpleLevels(Percentage, title=_("SNAT usage upper levels"), unit="%"),
             ),
             (
                 "lower_levels",
-                SimpleLevels(Percentage, title=_("SNAT usage lower levels")),
+                SimpleLevels(Percentage, title=_("SNAT usage lower levels"), unit="%"),
             ),
         ],
     )

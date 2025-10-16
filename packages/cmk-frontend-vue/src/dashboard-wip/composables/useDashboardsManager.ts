@@ -77,8 +77,9 @@ export function useDashboardsManager() {
     dashboardName: string,
     generalSettings: DashboardGeneralSettings,
     layoutType: DashboardLayout,
-    restrictedToSingle: string[] = []
-  ): Promise<DashboardModel> {
+    restrictedToSingle: string[] = [],
+    postCreateMode: 'setDashboardAsActive' | null = 'setDashboardAsActive'
+  ): Promise<void> {
     const filterContext = {
       restricted_to_single: restrictedToSingle,
       filters: {},
@@ -133,7 +134,9 @@ export function useDashboardsManager() {
       content
     }
 
-    return setActiveDashboard(dashboardName, dashboard)
+    if (postCreateMode === 'setDashboardAsActive') {
+      setActiveDashboard(dashboardName, dashboard)
+    }
   }
 
   async function persistDashboard() {

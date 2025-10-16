@@ -230,7 +230,7 @@ const createDashboard = async (
   nextStep: 'setFilters' | 'viewList'
 ) => {
   openDashboardCreationDialog.value = false
-  await dashboardsManager.createDashboard(dashboardId, settings, layout, scopeIds)
+  await dashboardsManager.createDashboard(dashboardId, settings, layout, scopeIds, null)
   isDashboardEditingMode.value = true
 
   if (nextStep === 'setFilters') {

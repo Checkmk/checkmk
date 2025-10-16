@@ -5,6 +5,7 @@
 
 
 from collections.abc import Sequence
+from typing import NamedTuple
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -19,9 +20,42 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-Section = Sequence[StringTable] | None
 
-ibm_storage_ts_status_name_map = {
+class Info(NamedTuple):
+    product: str
+    vendor: str
+    version: str
+
+
+class Library(NamedTuple):
+    entry: str
+    status: str
+    serial: str
+    drive_count: str
+    fault: str
+    severity: str
+    descr: str
+
+
+class Drive(NamedTuple):
+    entry: str
+    serial: str
+    write_warn: str
+    write_err: str
+    read_warn: str
+    read_err: str
+
+
+class Collection(NamedTuple):
+    info: Info
+    status: str
+    libraries: list[Library]
+    drives: list[Drive]
+
+
+Section = Collection | None
+
+IBM_STORAGE_TS_STATUS_NAME_MAP = {
     "1": "other",
     "2": "unknown",
     "3": "Ok",
@@ -30,19 +64,36 @@ ibm_storage_ts_status_name_map = {
     "6": "non-Recoverable",
 }
 
-ibm_storage_ts_status_nagios_map = {"1": 1, "2": 1, "3": 0, "4": 1, "5": 2, "6": 2}
+IBM_STORAGE_TS_STATUS_NAGIOS_MAP = {
+    "1": State.WARN,
+    "2": State.WARN,
+    "3": State.OK,
+    "4": State.WARN,
+    "5": State.CRIT,
+    "6": State.CRIT,
+}
 
-ibm_storage_ts_fault_nagios_map = {
-    "0": 0,  # no fault (undocumented)
-    "1": 0,  # informational
-    "2": 1,  # minor
-    "3": 2,  # major
-    "4": 2,  # critical
+IBM_STORAGE_TS_FAULT_NAGIOS_MAP = {
+    "0": State.OK,  # no fault (undocumented)
+    "1": State.OK,  # informational
+    "2": State.WARN,  # minor
+    "3": State.CRIT,  # major
+    "4": State.CRIT,  # critical
 }
 
 
 def parse_ibm_storage_ts(string_table: Sequence[StringTable]) -> Section:
-    return string_table if any(string_table) else None
+    if not any(string_table):
+        return None
+
+    info_raw, status_raw, library_raw, drives_raw = string_table
+
+    return Collection(
+        Info(*info_raw[0]),
+        status_raw[0][0],
+        [Library(*library) for library in library_raw],
+        [Drive(*drive) for drive in drives_raw],
+    )
 
 
 snmp_section_ibm_storage_ts = SNMPSection(
@@ -78,8 +129,10 @@ def discover_ibm_storage_ts(section: Section) -> DiscoveryResult:
 def check_ibm_storage_ts(section: Section) -> CheckResult:
     if section is None:
         return
-    product, vendor, version = section[0][0]
-    yield Result(state=State.OK, summary=f"{vendor} {product}, Version {version}")
+    yield Result(
+        state=State.OK,
+        summary=f"{section.info.vendor} {section.info.product}, Version {section.info.version}",
+    )
 
 
 check_plugin_ibm_storage_ts = CheckPlugin(
@@ -93,11 +146,10 @@ check_plugin_ibm_storage_ts = CheckPlugin(
 def check_ibm_storage_ts_status(section: Section) -> CheckResult:
     if section is None:
         return
-    (status,) = section[1][0]
 
     yield Result(
-        state=State(ibm_storage_ts_status_nagios_map[status]),
-        summary="Device Status: %s" % ibm_storage_ts_status_name_map[status],
+        state=State(IBM_STORAGE_TS_STATUS_NAGIOS_MAP[section.status]),
+        summary="Device Status: %s" % IBM_STORAGE_TS_STATUS_NAME_MAP[section.status],
     )
 
 
@@ -113,29 +165,25 @@ check_plugin_ibm_storage_ts_status = CheckPlugin(
 def discover_ibm_storage_ts_library(section: Section) -> DiscoveryResult:
     if section is None:
         return
-    for entry, _status, _serial, _count, _fault, _severity, _descr in section[2]:
-        yield Service(item=entry)
+    for library in section.libraries:
+        yield Service(item=library.entry)
 
 
 def check_ibm_storage_ts_library(item: str, section: Section) -> CheckResult:
     if section is None:
         return
 
-    def worst_status(*args):
-        order = [0, 1, 3, 2]
-        return sorted(args, key=lambda x: order[x], reverse=True)[0]
-
-    for entry, status, serial, count, fault, severity, descr in section[2]:
-        if item == entry:
-            dev_status = ibm_storage_ts_status_nagios_map[status]
-            fault_status = ibm_storage_ts_fault_nagios_map[severity]
+    for library in section.libraries:
+        if item == library.entry:
+            state_device = IBM_STORAGE_TS_STATUS_NAGIOS_MAP[library.status]
+            fault_status = IBM_STORAGE_TS_FAULT_NAGIOS_MAP[library.severity]
             # I have the suspicion that these status are dependent in the device anyway
             # but who knows?
-            infotext = f"Device {serial}, Status: {ibm_storage_ts_status_name_map[status]}, Drives: {count}"
-            if fault != "0":
-                infotext += f", Fault: {descr} ({fault})"
+            infotext = f"Device {library.serial}, Status: {IBM_STORAGE_TS_STATUS_NAME_MAP[library.status]}, Drives: {library.drive_count}"
+            if library.fault != "0":
+                infotext += f", Fault: {library.descr} ({library.fault})"
             yield Result(
-                state=State(worst_status(dev_status, fault_status)),
+                state=State.worst(state_device, fault_status),
                 summary=infotext,
             )
 
@@ -152,26 +200,24 @@ check_plugin_ibm_storage_ts_library = CheckPlugin(
 def discover_ibm_storage_ts_drive(section: Section) -> DiscoveryResult:
     if section is None:
         return
-    for entry, _serial, _write_warn, _write_err, _read_warn, _read_err in section[3]:
-        yield Service(item=entry)
+    for drive in section.drives:
+        yield Service(item=drive.entry)
 
 
 def check_ibm_storage_ts_drive(item: str, section: Section) -> CheckResult:
     if section is None:
         return
-    for line in section[3]:
-        if item == line[0]:
-            serial = line[1]
-            write_warn, write_err, read_warn, read_err = map(int, line[2:])
-            yield Result(state=State(0), summary="S/N: %s" % serial)
-            if write_err > 0:
-                yield Result(state=State(2), summary="%d hard write errors" % write_err)
-            if write_warn > 0:
-                yield Result(state=State(1), summary="%d recovered write errors" % write_warn)
-            if read_err > 0:
-                yield Result(state=State(2), summary="%d hard read errors" % read_err)
-            if read_warn > 0:
-                yield Result(state=State(1), summary="%d recovered read errors" % read_warn)
+    for drive in section.drives:
+        if item == drive.entry:
+            yield Result(state=State.OK, summary=f"S/N: {drive.serial}")
+            if drive.write_err != "0":
+                yield Result(state=State.CRIT, summary=f"{drive.write_err} hard write errors")
+            if drive.write_warn != "0":
+                yield Result(state=State.WARN, summary=f"{drive.write_warn} recovered write errors")
+            if drive.read_err != "0":
+                yield Result(state=State.CRIT, summary=f"{drive.read_err} hard read errors")
+            if drive.read_warn != "0":
+                yield Result(state=State.WARN, summary=f"{drive.read_warn} recovered read errors")
 
 
 check_plugin_ibm_storage_ts_drive = CheckPlugin(

@@ -280,13 +280,13 @@ class BICompiler:
             aggregation.node.restrict_rule_title = None
 
     def _compilation_required(self, current_configstatus: ConfigStatus) -> bool:
-        # Check monitoring core changes
-        if self._site_status_changed(current_configstatus["online_sites"]):
-            return True
-
         # Check BI configuration changes
         last_compilation = self._metadata_store.get_last_compilation()
-        return current_configstatus["configfile_timestamp"] > last_compilation
+        if current_configstatus["configfile_timestamp"] > last_compilation:
+            return True
+
+        # Check monitoring core changes
+        return self._site_status_changed(current_configstatus["online_sites"])
 
     def _site_status_changed(self, required_program_starts: set[SiteProgramStart]) -> bool:
         # The cached data may include more data than the currently required_program_starts

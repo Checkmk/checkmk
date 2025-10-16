@@ -41,7 +41,7 @@ GroupDomainType = Literal[
 ]
 
 
-def complement_customer(details):
+def complement_customer(details: dict[str, Any]) -> dict[str, Any]:
     if edition(paths.omd_root) is not Edition.CME:
         return details
 

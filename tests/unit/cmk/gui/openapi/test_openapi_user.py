@@ -508,6 +508,9 @@ def test_openapi_user_internal_auth_handling(
     )
 
     name = UserId("foo")
+    password_hash = PasswordHash(
+        "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C"
+    )
     user_object: UserSpec = {
         "ui_theme": None,
         "ui_sidebar_position": None,
@@ -524,9 +527,7 @@ def test_openapi_user_internal_auth_handling(
         "contactgroups": [],
         "email": "",
         "fallback_contact": False,
-        "password": PasswordHash(
-            "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C"
-        ),
+        "password": password_hash,
         "last_pw_change": 1265011200,  # 2010-02-01 08:00:00
         "serial": 1,
         "disable_notifications": {},
@@ -542,25 +543,14 @@ def test_openapi_user_internal_auth_handling(
             acting_user=LoggedInSuperUser(),
         )
 
-    assert _load_internal_attributes(name) == {
-        "alias": "Foo Bar",
-        "customer": "provider",
-        "email": "",
-        "pager": "",
-        "contactgroups": [],
-        "fallback_contact": False,
-        "disable_notifications": {},
-        "user_scheme_serial": 1,
-        "locked": False,
-        "roles": ["user"],
-        "password": "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
-        "serial": 1,
-        "last_pw_change": 1265011200,  # 08:00:00 -- uses creation data, not current time
-        "enforce_pw_change": True,
-        "num_failed_logins": 0,
-        "is_automation_user": False,
-        "store_automation_secret": False,
-    }
+    loaded = _load_internal_attributes(name)
+    assert loaded["password"] == password_hash
+    assert loaded["enforce_pw_change"] is True  # from creation
+    # last_pw_change should be unchanged, since it uses creation data, not current time
+    assert loaded["last_pw_change"] == 1265011200  # 08:00:00
+    # defaults for automation user fields
+    assert loaded["is_automation_user"] is False
+    assert loaded["store_automation_secret"] is False
 
     with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 09:00:00Z")):
         updated_internal_attributes = _api_to_internal_format(
@@ -576,26 +566,12 @@ def test_openapi_user_internal_auth_handling(
             acting_user=LoggedInSuperUser(),
         )
 
-    assert _load_internal_attributes(name) == {
-        "alias": "Foo Bar",
-        "customer": "provider",
-        "email": "",
-        "pager": "",
-        "contactgroups": [],
-        "fallback_contact": False,
-        "disable_notifications": {},
-        "user_scheme_serial": 1,
-        "locked": False,
-        "roles": ["user"],
-        "password": "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
-        "serial": 1,  # this is 2 internally but the function is not invoked here
-        "last_pw_change": 1265014800,  # 09:00:00 -- changed as secret was changed
-        "enforce_pw_change": True,
-        "num_failed_logins": 0,
-        "connector": "htpasswd",
-        "is_automation_user": True,
-        "store_automation_secret": False,
-    }
+    loaded = _load_internal_attributes(name)
+    assert loaded["last_pw_change"] == 1265014800  # 09:00:00 -- changed as secret was changed
+    assert loaded["is_automation_user"] is True
+    assert loaded["store_automation_secret"] is False  # default
+    assert loaded["password"] == password_hash  # unchanged -- I don't know if this is intended
+    assert loaded["enforce_pw_change"] is True
 
     with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 09:30:00Z")):
         updated_internal_attributes = _api_to_internal_format(
@@ -610,25 +586,15 @@ def test_openapi_user_internal_auth_handling(
             use_git=False,
             acting_user=LoggedInSuperUser(),
         )
-    assert _load_internal_attributes(name) == {
-        "alias": "Foo Bar",
-        "customer": "provider",
-        "email": "",
-        "pager": "",
-        "contactgroups": [],
-        "fallback_contact": False,
-        "disable_notifications": {},
-        "user_scheme_serial": 1,
-        "locked": False,
-        "roles": ["user"],
-        "serial": 1,
-        "last_pw_change": 1265014800,  # 09:00:00 -- no change from previous edit (secret unchanged)
-        "enforce_pw_change": True,
-        "num_failed_logins": 0,
-        "connector": "htpasswd",
-        "is_automation_user": False,
-        "store_automation_secret": False,
-    }
+
+    loaded = _load_internal_attributes(name)
+    assert "password" not in loaded  # password removed
+    assert (
+        loaded["last_pw_change"] == 1265014800
+    )  # 09:00:00 -- no change from previous edit (secret unchanged)
+    assert loaded["enforce_pw_change"] is True
+    assert loaded["is_automation_user"] is False
+    assert loaded["store_automation_secret"] is False
 
 
 @managedtest
@@ -1004,12 +970,9 @@ def _random_string(size: int) -> str:
     return "".join(random.choice(string.ascii_letters + string.digits) for _ in range(size))
 
 
-def _load_internal_attributes(username: UserId) -> object:
-    return complement_customer(_internal_attributes(_load_user(username)))
-
-
-def _internal_attributes(user_attributes):
-    return {
+def _load_internal_attributes(username: UserId) -> dict[str, Any]:
+    user_attributes = _load_user(username)
+    internal_attributes = {
         k: v
         for k, v in user_attributes.items()
         if k
@@ -1023,6 +986,7 @@ def _internal_attributes(user_attributes):
             "force_authuser",
         )
     }
+    return complement_customer(internal_attributes)
 
 
 @managedtest

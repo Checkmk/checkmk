@@ -19,6 +19,7 @@ import CmkKeyboardKey from '@/components/CmkKeyboardKey.vue'
 import CmkPopupDialog from '@/components/CmkPopupDialog.vue'
 
 import NavItem from './components/NavItem.vue'
+import SidebarToggle from './components/SidebarToggle.vue'
 import ItemPopup from './components/popup/ItemPopup.vue'
 import PopupBackdrop from './components/popup/PopupBackdrop.vue'
 import { mainMenuKey } from './provider/main-menu'
@@ -60,7 +61,7 @@ mainMenu.onUserPopupMessages((msgs) => {
         </CmkButton>
         <CmkKeyboardKey
           v-if="mainMenu.showKeyHints.value"
-          keyboard-key="Alt"
+          :keyboard-key="_t('Ctrl + Alt')"
           size="small"
           class="mm-app__key-hint"
         />
@@ -75,6 +76,7 @@ mainMenu.onUserPopupMessages((msgs) => {
         @click="mainMenu.navigate(item.id)"
         @mouseover="mainMenu.navigateIfAnyNavItemIsActive(item.id)"
       />
+      <SidebarToggle />
     </ul>
     <PopupBackdrop v-if="mainMenu.isAnyNavItemActive()">
       <template v-for="item in props.main.concat(props.user)">

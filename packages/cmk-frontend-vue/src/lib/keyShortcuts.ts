@@ -77,7 +77,7 @@ export class KeyShortcutService {
     this.propagateTo = propagateTo
   }
 
-  public getShortCutInfo(shortcut: KeyShortcut): string {
+  public static getShortCutInfo(shortcut: KeyShortcut): string {
     const keys = []
     if (shortcut.ctrl) {
       keys.push((_t('Ctrl') as unknown as Ref).value)

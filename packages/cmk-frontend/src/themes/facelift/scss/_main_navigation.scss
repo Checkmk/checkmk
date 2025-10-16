@@ -13,7 +13,12 @@
   }
 
   #sidebar {
-    width: 280px;
+    width: 0;
+    overflow: hidden;
+
+    &.unfolded {
+      width: 280px;
+    }
   }
 
   #main-content {
@@ -21,7 +26,7 @@
     width: calc(100% - 64px);
   }
 
-  &:has(> #sidebar) {
+  &:has(> #sidebar.unfolded) {
     #main-content {
       width: calc(100% - 64px - 280px);
     }

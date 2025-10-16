@@ -14,7 +14,7 @@ import type {
 } from 'cmk-shared-typing/typescript/main_menu'
 import { type Ref, ref } from 'vue'
 
-import type { KeyShortcut, KeyShortcutService } from '@/lib/keyShortcuts'
+import { type KeyShortcut, KeyShortcutService } from '@/lib/keyShortcuts'
 import { ServiceBase } from '@/lib/service/base'
 
 import { MainMenuApiClient } from './main-menu-api-client'
@@ -60,7 +60,7 @@ export class MainMenuService extends ServiceBase {
       ctrl: shortcut.ctrl,
       shift: shortcut.shift
     }
-    return this.shortCutService.getShortCutInfo(sc)
+    return KeyShortcutService.getShortCutInfo(sc)
   }
 
   public isAnyNavItemActive() {
@@ -255,7 +255,7 @@ export class MainMenuService extends ServiceBase {
       }
     }
 
-    this.registerShortCut({ key: ['Alt'], alt: true }, () => {
+    this.registerShortCut({ key: ['Alt'], alt: true, ctrl: true }, () => {
       this.toggleKeyHints()
     })
     this.registerShortCut({ key: ['Escape'] }, () => {

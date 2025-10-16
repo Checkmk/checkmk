@@ -1,0 +1,12 @@
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+	x="0px" y="0px"
+	viewBox="0 0 18 18" xml:space="preserve">
+	<g transform="translate(-15.000000, -652.000000)">
+		<g  transform="translate(16.000000, 653.000000)">
+			<path class="icon-primary-color" d="M15,16.5H1c-0.9,0-1.5-0.6-1.5-1.5V1c0-0.9,0.6-1.5,1.5-1.5h14c0.9,0,1.5,0.6,1.5,1.5v14
+				C16.5,15.9,15.9,16.5,15,16.5z M1,0.5C0.7,0.5,0.5,0.7,0.5,1v14c0,0.3,0.2,0.5,0.5,0.5h14c0.3,0,0.5-0.2,0.5-0.5V1
+				c0-0.3-0.2-0.5-0.5-0.5H1z"/>
+			<rect x="1" y="1" class="icon-primary-color" width="6" height="14"/>
+		</g>
+	</g>
+</svg>

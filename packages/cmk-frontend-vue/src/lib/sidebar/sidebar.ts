@@ -11,6 +11,7 @@ import { ServiceBase } from '../service/base'
 import { SidebarApiClient } from './sidebar-api-cleint'
 import type { OnUpdateSnapinContent, SidebarSnapinContents } from './type-defs'
 
+const active = ref<boolean>(true)
 export class SidebarService extends ServiceBase {
   protected snapinContents: SidebarSnapinContents = {}
   protected showMoreActive: { [key: string]: Ref<boolean> } = {}
@@ -64,6 +65,22 @@ export class SidebarService extends ServiceBase {
     return this.getSnapinByName(name)?.refresh_regularly === true
   }
 
+  public static toggle(): void {
+    active.value = !active.value
+    const container = document.getElementById('sidebar')
+    if (container) {
+      if (active.value) {
+        container?.classList.add('unfolded')
+      } else {
+        container?.classList.remove('unfolded')
+      }
+    }
+  }
+
+  public static isActive(): boolean {
+    return active.value
+  }
+
   protected awaitSnapinContent(
     name: string,
     resolve: (value: string | PromiseLike<string>) => void
@@ -104,13 +121,30 @@ export class SidebarService extends ServiceBase {
       }
     }
 
+    this.registerShortCut(
+      {
+        key: ['/'],
+        ctrl: true
+      },
+      SidebarService.toggle
+    )
+    this.registerShortCut(
+      {
+        key: ['/'],
+        ctrl: true,
+        shift: true
+      },
+      SidebarService.toggle
+    )
+
+    this.enableShortCuts()
+
     void this.updateSnapinContent(this.snapins.map((s) => s.name))
     this.initPeriodically()
   }
 
   private initPeriodically() {
     setInterval(() => {
-      console.log('exec update')
       void this.updateSnapinContent(
         this.snapins.filter((s) => s.refresh_on_restart || s.refresh_on_restart).map((s) => s.name)
       )

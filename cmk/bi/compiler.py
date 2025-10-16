@@ -285,13 +285,10 @@ class BICompiler:
         if current_configstatus["configfile_timestamp"] > last_compilation:
             return True
 
-        # Check monitoring core changes
-        return self._site_status_changed(current_configstatus["online_sites"])
-
-    def _site_status_changed(self, required_program_starts: set[SiteProgramStart]) -> bool:
-        # The cached data may include more data than the currently required_program_starts
-        # Empty branches are simply not shown during computation
+        # Check monitoring core changes as the cached data may include more data than the currently
+        # required_program_starts. Empty branches are simply not shown during computation
         cached_program_starts = self._bi_structure_fetcher.get_cached_program_starts()
+        required_program_starts = current_configstatus["online_sites"]
         return len(required_program_starts - cached_program_starts) > 0
 
     def compute_current_configstatus(self) -> ConfigStatus:

@@ -32,6 +32,7 @@ TARGET_DIR="$(realpath "${1:-.}")"
         install-python.sh \
         install-rust-cargo.sh \
         install-valgrind.sh \
+        install-osslsigncode.sh \
         ci.bazelrc \
         "${TARGET_DIR}"
 )

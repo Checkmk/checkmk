@@ -84,5 +84,10 @@ COPY \
 RUN /opt/install-aws-cli.sh
 
 COPY \
+    install-osslsigncode.sh \
+    /opt/
+RUN /opt/install-osslsigncode.sh
+
+COPY \
     entrypoint.sh \
     /opt/

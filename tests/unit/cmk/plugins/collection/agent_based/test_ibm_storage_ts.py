@@ -11,10 +11,11 @@ import pytest
 from cmk.agent_based.v2 import (
     CheckResult,
     Result,
+    Service,
     State,
     StringTable,
 )
-from cmk.checkengine.plugins import AgentBasedPlugins, CheckPluginName
+from cmk.plugins.collection.agent_based import ibm_storage_ts as plugin
 
 STRING_TABLE_OK = [
     [["TS3100", "IBM", "F.01"]],
@@ -42,15 +43,11 @@ STRING_TABLE_NOK = [
     ],
 )
 def test_ibm_storage_ts_info(
-    agent_based_plugins: AgentBasedPlugins,
     as_path: Callable[[str], Path],
     string_table: Sequence[StringTable],
     expected_result: CheckResult,
 ) -> None:
-    plugin = agent_based_plugins.check_plugins[CheckPluginName("ibm_storage_ts")]
-    assert (
-        list(plugin.check_function(section=string_table, item=None, params={})) == expected_result
-    )
+    assert list(plugin.check_ibm_storage_ts(section=string_table)) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -69,15 +66,11 @@ def test_ibm_storage_ts_info(
     ],
 )
 def test_ibm_storage_ts_status(
-    agent_based_plugins: AgentBasedPlugins,
     as_path: Callable[[str], Path],
     string_table: Sequence[StringTable],
     expected_result: CheckResult,
 ) -> None:
-    plugin = agent_based_plugins.check_plugins[CheckPluginName("ibm_storage_ts_status")]
-    assert (
-        list(plugin.check_function(section=string_table, item=None, params={})) == expected_result
-    )
+    assert list(plugin.check_ibm_storage_ts_status(section=string_table)) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -100,13 +93,13 @@ def test_ibm_storage_ts_status(
     ],
 )
 def test_ibm_storage_ts_library(
-    agent_based_plugins: AgentBasedPlugins,
     as_path: Callable[[str], Path],
     string_table: Sequence[StringTable],
     expected_result: CheckResult,
 ) -> None:
-    plugin = agent_based_plugins.check_plugins[CheckPluginName("ibm_storage_ts_library")]
-    assert list(plugin.check_function(section=string_table, item="1", params={})) == expected_result
+    assert (
+        list(plugin.check_ibm_storage_ts_library(section=string_table, item="1")) == expected_result
+    )
 
 
 @pytest.mark.parametrize(
@@ -131,10 +124,64 @@ def test_ibm_storage_ts_library(
     ],
 )
 def test_ibm_storage_ts_drive(
-    agent_based_plugins: AgentBasedPlugins,
     as_path: Callable[[str], Path],
     string_table: Sequence[StringTable],
     expected_result: CheckResult,
 ) -> None:
-    plugin = agent_based_plugins.check_plugins[CheckPluginName("ibm_storage_ts_drive")]
-    assert list(plugin.check_function(section=string_table, item="1", params={})) == expected_result
+    assert (
+        list(plugin.check_ibm_storage_ts_drive(section=string_table, item="1")) == expected_result
+    )
+
+
+@pytest.mark.parametrize(
+    "string_table, expected_discoveries",
+    [
+        (
+            [
+                [["3100 Storage", "IBM", "v1.2.3"]],
+                ["3"],
+                [
+                    ["0", "3", "1234567890", "2", "0", "2", ""],
+                    ["1", "3", "1234567891", "2", "2", "2", "Message 2"],
+                ],
+                [["0", "9876543210", "0", "0", "0", "0"], ["1", "9876543211", "3", "4", "5", "6"]],
+            ],
+            [Service()],
+        ),
+    ],
+)
+def test_inventory_ibm_storage_ts(
+    string_table: Sequence[list[list[str]]],
+    expected_discoveries: Sequence[Service],
+) -> None:
+    """Test discovery function for ibm_storage_ts check."""
+    parsed = plugin.parse_ibm_storage_ts(string_table)
+    result = list(plugin.discover_ibm_storage_ts(parsed))
+    assert sorted(result) == sorted(expected_discoveries)
+
+
+@pytest.mark.parametrize(
+    "string_table, expected_results",
+    [
+        (
+            [
+                [["3100 Storage", "IBM", "v1.2.3"]],
+                ["3"],
+                [
+                    ["0", "3", "1234567890", "2", "0", "2", ""],
+                    ["1", "3", "1234567891", "2", "2", "2", "Message 2"],
+                ],
+                [["0", "9876543210", "0", "0", "0", "0"], ["1", "9876543211", "3", "4", "5", "6"]],
+            ],
+            [Result(state=State.OK, summary="IBM 3100 Storage, Version v1.2.3")],
+        ),
+    ],
+)
+def test_check_ibm_storage_ts(
+    string_table: Sequence[list[list[str]]],
+    expected_results: CheckResult,
+) -> None:
+    """Test check function for ibm_storage_ts check."""
+    parsed = plugin.parse_ibm_storage_ts(string_table)
+    result = list(plugin.check_ibm_storage_ts(parsed))
+    assert result == expected_results

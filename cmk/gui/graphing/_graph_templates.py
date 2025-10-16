@@ -618,8 +618,8 @@ def _create_graph_recipe_from_translated_metric(
     service_name: ServiceName,
     painter_options: PainterOptions,
     translated_metric: TranslatedMetric,
-    name: str,
     specification: TemplateGraphSpecification,
+    graph_id: str,
     *,
     temperature_unit: TemperatureUnit,
 ) -> GraphRecipe:
@@ -640,7 +640,7 @@ def _create_graph_recipe_from_translated_metric(
     )
     return GraphRecipe(
         title=(
-            f"{title} (Graph ID: {name})"
+            f"{title} (Graph ID: {graph_id})"
             if painter_options.get("show_internal_graph_and_metric_ids")
             else title
         ),
@@ -661,10 +661,10 @@ def _create_graph_recipe_from_template(
     site_id: SiteId,
     host_name: HostName,
     service_name: ServiceName,
-    graph_template: EvaluatedGraphTemplate,
-    translated_metrics: Mapping[str, TranslatedMetric],
     painter_options: PainterOptions,
+    translated_metrics: Mapping[str, TranslatedMetric],
     specification: GraphSpecification,
+    graph_template: EvaluatedGraphTemplate,
 ) -> GraphRecipe:
     metrics = [
         GraphMetric(
@@ -769,10 +769,9 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
             site_id,
             host_name,
             service_name,
-            graph_template,
-            translated_metrics,
             painter_options,
-            specification=self._make_specification(
+            translated_metrics,
+            self._make_specification(
                 site=self.site,
                 host_name=self.host_name,
                 service_description=self.service_description,
@@ -780,6 +779,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
                 graph_id=graph_template.id,
                 destination=self.destination,
             ),
+            graph_template,
         )
 
     def recipes(
@@ -824,7 +824,6 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
                     service_name,
                     painter_options,
                     translated_metrics[self.graph_id[7:]],
-                    self.graph_id,
                     self._make_specification(
                         site=self.site,
                         host_name=self.host_name,
@@ -833,6 +832,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
                         graph_id=self.graph_id,
                         destination=self.destination,
                     ),
+                    self.graph_id,
                     temperature_unit=temperature_unit,
                 )
             ]

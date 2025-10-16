@@ -248,6 +248,9 @@ ALL_METRICS: dict[str, list[tuple[str, str, str]]] = {
         ("allcacheRead,allcacheWrite", "PT1M", "maximum"),
         ("serverLoad", "PT1M", "maximum"),
     ],
+    "Microsoft.Network/natGateways": [
+        ("DatapathAvailability", "PT1M", "average"),
+    ],
 }
 
 OPTIONAL_METRICS: Mapping[str, Sequence[str]] = {

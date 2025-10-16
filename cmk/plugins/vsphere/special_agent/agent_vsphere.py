@@ -19,7 +19,6 @@ import time
 from collections import Counter
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from datetime import datetime, timedelta
-from pathlib import Path
 from typing import Any
 from xml.dom import minidom
 
@@ -31,10 +30,9 @@ import requests
 import urllib3
 
 import cmk.special_agents.v0_unstable.misc as utils
-import cmk.utils.password_store
 import cmk.utils.paths
+from cmk.password_store.v1_alpha import dereference_secret, Secret
 from cmk.special_agents.v0_unstable.request_helper import HostnameValidationAdapter
-from cmk.utils.password_store import lookup as password_store_lookup
 
 #   .--defines-------------------------------------------------------------.
 #   |                      _       __ _                                    |
@@ -1052,6 +1050,7 @@ def _add_secret_option(
         long,
         default=None,
         help=help,
+        type=Secret,
     )
     group.add_argument(
         f"{long}-id",
@@ -1061,14 +1060,12 @@ def _add_secret_option(
 
 
 # we'll use this a lot. we can consider providing this as a utility API element
-def _resolve_secret_option(secret_id: str | None, secret: str | None) -> str:
+def _resolve_secret_option(secret_id: str | None, secret: Secret | None) -> Secret:
     if secret_id is None:
         if secret is None:
             raise ValueError("neither secret nor secret id given")
         return secret
-
-    pw_id, pw_file = secret_id.split(":", 1)
-    return password_store_lookup(Path(pw_file), pw_id)
+    return dereference_secret(secret_id)
 
 
 # .
@@ -1243,13 +1240,16 @@ class ESXConnection:
         self._perf_samples = max(1, int(delta / 20.0))
         return self._perf_samples
 
-    def login(self, user: str, password: str) -> None:
+    def login(self, user: str, password: Secret) -> None:
         if self._is_cookie_valid():
             self._session.headers["Cookie"] = self._server_cookie_path.read_text(encoding="utf-8")
             return
 
-        auth = {"username": self._escape_xml(user), "password": self._escape_xml(password)}
-        response = self._session.postsoap(self._soap_templates.login % auth)
+        auth = {"username": self._escape_xml(user), "password": self._escape_xml(password.reveal())}
+        try:
+            response = self._session.postsoap(self._soap_templates.login % auth)
+        finally:
+            auth["password"] = "*****"
 
         if response.status_code != 200:
             raise SystemExit(

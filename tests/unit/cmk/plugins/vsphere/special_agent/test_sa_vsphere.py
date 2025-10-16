@@ -56,14 +56,9 @@ DEFAULT_AGRS = {
         (["--user", "hi-its-me"], {"user": "hi-its-me"}),
         (["-u", "hi-its-me"], {"user": "hi-its-me"}),
         (
-            ["--secret", "I like listening to Folk music"],
-            {"secret": "I like listening to Folk music"},
-        ),
-        (
             ["--secret-id", "I'm Batman"],
             {"secret_id": "I'm Batman"},
         ),
-        (["-s", "I like listening to Folk music"], {"secret": "I like listening to Folk music"}),
     ],
 )
 def test_parse_arguments(
@@ -74,6 +69,18 @@ def test_parse_arguments(
         expected = expected_non_default_args.get(attr, value)
         actual = getattr(args, attr)
         assert actual == expected
+
+
+def test_parse_arguments_secret_short() -> None:
+    args = agent_vsphere.parse_arguments(["-s", "I like listening to Folk music", "test_host"])
+    assert args.secret.reveal() == "I like listening to Folk music"
+
+
+def test_parse_arguments_secret_long() -> None:
+    args = agent_vsphere.parse_arguments(
+        ["--secret", "I like listening to Folk music", "test_host"]
+    )
+    assert args.secret.reveal() == "I like listening to Folk music"
 
 
 @pytest.mark.parametrize(

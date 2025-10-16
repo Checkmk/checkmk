@@ -1,0 +1,11 @@
+title: Podman Status
+agents: linux
+catalog: app/podman
+license: GPLv2
+distribution: check_mk
+description: This check plug-in monitors the Podman status.
+  More specifically, it checks if there were any errors while getting the information
+  while contacting the API. If there were no errors, the state is OK.
+  If there were errors, the state is CRIT.
+
+discovery: One service is created.

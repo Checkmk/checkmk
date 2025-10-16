@@ -1,0 +1,12 @@
+title: Podman Container Uptime
+agents: linux
+catalog: app/podman
+license: GPLv2
+distribution: check_mk
+description: This check outputs the uptime of the monitored containers
+  (when the last start was and how much time has elapsed since).
+  This check can go WARN or CRIT when the uptime is below or above certain
+  configurable levels.
+
+discovery: One service is created for each active container,
+  unless the {uptime} plug-in has discovered a service.

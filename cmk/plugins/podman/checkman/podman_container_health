@@ -1,0 +1,11 @@
+title: Podman Container Health
+agents: linux
+catalog: app/podman
+license: GPLv2
+distribution: check_mk
+description: This service monitors the health of the underlying
+  container. The service reports the current health status of the container.
+
+  The is the possibility to map the container health status to a service state.
+
+discovery: One service is created.

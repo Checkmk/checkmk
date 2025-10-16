@@ -1,0 +1,13 @@
+title: Podman Container Restarts
+agents: linux
+catalog: app/podman
+license: GPLv2
+distribution: check_mk
+description: This service monitors the number of restarts of the underlying
+  container. The service reports the total number of
+  restarts.
+
+  Upper levels for {WARN}/{CRIT} can be defined.
+  No levels are set by default.
+
+discovery: One service is created.

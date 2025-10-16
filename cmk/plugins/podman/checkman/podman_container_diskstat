@@ -1,0 +1,12 @@
+title: Podman Container Diskstat
+agents: linux
+catalog: app/podman
+license: GPLv2
+distribution: check_mk
+description: This check monitors the disk I/O statistics of a Podman container.
+  More specifically, it reports the read and write IOs.
+  It uses the `BlockInput` and `BlockOutput` fields reported by the Podman API.
+
+item: The item will always be "SUMMARY".
+
+discovery: One service is created.

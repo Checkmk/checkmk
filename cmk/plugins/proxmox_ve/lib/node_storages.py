@@ -54,9 +54,16 @@ class Storage(BaseModel, frozen=True):
     name: str = Field(alias="name", validation_alias=AliasChoices("storage", "name"))
 
 
+class StorageLink(BaseModel, frozen=True):
+    type: str
+    size: str
+    vmid: str
+
+
 class SectionNodeStorages(BaseModel, frozen=True):
     node: str
     storages: Sequence[Storage]
+    storage_links: Mapping[str, Sequence[StorageLink]] = {}
 
     @property
     def directory_storages(self) -> Mapping[str, Storage]:

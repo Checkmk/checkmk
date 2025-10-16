@@ -24,14 +24,14 @@ information about VMs and nodes:
 
 import logging
 import sys
-from collections.abc import Sequence
+from collections.abc import Mapping, MutableMapping, MutableSequence, Sequence
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from cmk.plugins.proxmox_ve.lib.ha_manager_status import SectionHaManagerCurrent
 from cmk.plugins.proxmox_ve.lib.node_allocation import SectionNodeAllocation
 from cmk.plugins.proxmox_ve.lib.node_attributes import SectionNodeAttributes
-from cmk.plugins.proxmox_ve.lib.node_storages import SectionNodeStorages
+from cmk.plugins.proxmox_ve.lib.node_storages import SectionNodeStorages, StorageLink
 from cmk.plugins.proxmox_ve.lib.replication import Replication, SectionReplication
 from cmk.plugins.proxmox_ve.lib.vm_info import SectionVMInfo
 from cmk.plugins.proxmox_ve.special_agent.libbackups import fetch_backup_data
@@ -65,6 +65,34 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser.add_argument("--no-cert-check", action="store_true")
     parser.add_argument("hostname", help="Name of the Proxmox VE instance to query.")
     return parser.parse_args(argv)
+
+
+def find_storage_for_vmid(
+    all_vms: Mapping[str, Mapping[str, object]],
+    vmid: str,
+    config: Mapping[str, str],
+) -> MutableMapping[str, MutableSequence[StorageLink]]:
+    storage_links: MutableMapping[str, MutableSequence[StorageLink]] = {}
+
+    vm_type = all_vms[vmid].get("type")
+    pattern = ("ide", "scsi", "sata", "virtio") if vm_type == "qemu" else ("mp", "rootfs")
+
+    for key, value in config.items():
+        if not key.startswith(pattern):
+            continue
+
+        storage_name = value.partition(":")[0]
+        size = ""
+        for part in value.split(","):
+            if part.startswith("size="):
+                size = part[5:]
+                break
+
+        storage_links.setdefault(storage_name, []).append(
+            StorageLink(type=key, size=size, vmid=vmid)
+        )
+
+    return storage_links
 
 
 def agent_proxmox_ve_main(args: Args) -> int:
@@ -173,6 +201,7 @@ def agent_proxmox_ve_main(args: Args) -> int:
         if item.get("type") == "node" and item.get("name")
     }
 
+    node_storage: MutableMapping[str, MutableMapping[str, MutableSequence[StorageLink]]] = {}
     for node in data["nodes"]:
         if (timezone := node["time"].get("timezone")) is not None:
             node_timezones[node["node"]] = timezone
@@ -184,6 +213,9 @@ def agent_proxmox_ve_main(args: Args) -> int:
             config_lock_data[str(vm["vmid"])] = {
                 "lock": vm["config"].get("lock"),
             }
+            node_storage[node["node"]] = find_storage_for_vmid(
+                all_vms, str(vm["vmid"]), vm["config"]
+            )
 
     def date_to_utc(naive_string: str, tz: str) -> str:
         """
@@ -287,7 +319,8 @@ def agent_proxmox_ve_main(args: Args) -> int:
                             for storage_data in all_storages.values()
                             if storage_data.get("node", "") == node["node"]
                         ],
-                    ).model_dump_json()
+                        storage_links=node_storage.get(node["node"], {}),
+                    ).model_dump()
                 )
             with SectionWriter("proxmox_ve_node_attributes") as writer:
                 writer.append_json(

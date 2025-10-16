@@ -330,8 +330,8 @@ def graph_and_single_metric_template_choices_for_metrics(
 ) -> tuple[list[GraphTemplateChoice], list[GraphTemplateChoice]]:
     graph_template_choices = []
     already_graphed_metrics = set()
-    for name, graph_plugin in _sort_registered_graph_plugins(registered_graphs):
-        graph_template = _parse_graph_plugin(name, graph_plugin, registered_metrics)
+    for graph_id, graph_plugin in _sort_registered_graph_plugins(registered_graphs):
+        graph_template = _parse_graph_plugin(graph_id, graph_plugin, registered_metrics)
         if evaluated_metrics := evaluate_metrics(
             conflicting_metrics=graph_template.conflicting_metrics,
             optional_metrics=graph_template.optional_metrics,
@@ -547,8 +547,8 @@ def _get_evaluated_graph_templates(
     temperature_unit: TemperatureUnit,
 ) -> Iterator[tuple[str, EvaluatedGraphTemplate]]:
     already_graphed_metrics = set()
-    for name, graph_plugin in _sort_registered_graph_plugins(registered_graphs):
-        graph_template = _parse_graph_plugin(name, graph_plugin, registered_metrics)
+    for graph_id, graph_plugin in _sort_registered_graph_plugins(registered_graphs):
+        graph_template = _parse_graph_plugin(graph_id, graph_plugin, registered_metrics)
         if evaluated_metrics := evaluate_metrics(
             conflicting_metrics=graph_template.conflicting_metrics,
             optional_metrics=graph_template.optional_metrics,
@@ -578,7 +578,7 @@ def _get_evaluated_graph_templates(
             already_graphed_metrics.update(
                 {n for e in evaluated_graph_template.metrics for n in e.metric_names()}
             )
-            yield (name, evaluated_graph_template)
+            yield (graph_id, evaluated_graph_template)
 
     for metric_name, translated_metric in sorted(translated_metrics.items()):
         if translated_metric.auto_graph and metric_name not in already_graphed_metrics:

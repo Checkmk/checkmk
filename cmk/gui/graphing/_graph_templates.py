@@ -388,63 +388,6 @@ def evaluate_graph_template_range(
             assert_never(graph_template_range)
 
 
-def _create_graph_recipe_from_template(
-    site_id: SiteId,
-    host_name: HostName,
-    service_name: ServiceName,
-    graph_template: EvaluatedGraphTemplate,
-    translated_metrics: Mapping[str, TranslatedMetric],
-    painter_options: PainterOptions,
-    specification: GraphSpecification,
-) -> GraphRecipe:
-    metrics = [
-        GraphMetric(
-            title=evaluated.title,
-            line_type=evaluated.line_type,
-            operation=evaluated.base.to_graph_metric_expression(
-                site_id,
-                host_name,
-                service_name,
-                translated_metrics,
-                graph_template.consolidation_function,
-            ),
-            unit=evaluated.unit_spec,
-            color=evaluated.color,
-        )
-        for evaluated in graph_template.metrics
-    ]
-    units = {m.unit for m in metrics}
-
-    # We cannot validate the hypothetical case of a mixture of metrics from the legacy and the new API
-    if all(isinstance(m.unit, str) for m in metrics) or all(
-        isinstance(m.unit, ConvertibleUnitSpecification) for m in metrics
-    ):
-        if len(units) > 1:
-            raise MKGeneralException(
-                _("Cannot create graph with metrics of different units '%s'")
-                % ", ".join(repr(unit) for unit in units)
-            )
-
-    title = graph_template.title
-    if not title:
-        title = next((m.title for m in metrics), "")
-
-    return GraphRecipe(
-        title=(
-            f"{title} (Graph ID: {graph_template.id})"
-            if painter_options.get("show_internal_graph_and_metric_ids")
-            else title
-        ),
-        metrics=metrics,
-        unit_spec=units.pop(),
-        explicit_vertical_range=graph_template.range,
-        horizontal_rules=graph_template.horizontal_rules,
-        omit_zero_metrics=graph_template.omit_zero_metrics,
-        consolidation_function=graph_template.consolidation_function,
-        specification=specification,
-    )
-
-
 def _evaluate_predictive_metrics(
     evaluated_metrics: Sequence[Evaluated],
     translated_metrics: Mapping[str, TranslatedMetric],
@@ -710,6 +653,63 @@ def _create_graph_recipe_from_translated_metric(
         ),
         omit_zero_metrics=False,
         consolidation_function=consolidation_function,
+        specification=specification,
+    )
+
+
+def _create_graph_recipe_from_template(
+    site_id: SiteId,
+    host_name: HostName,
+    service_name: ServiceName,
+    graph_template: EvaluatedGraphTemplate,
+    translated_metrics: Mapping[str, TranslatedMetric],
+    painter_options: PainterOptions,
+    specification: GraphSpecification,
+) -> GraphRecipe:
+    metrics = [
+        GraphMetric(
+            title=evaluated.title,
+            line_type=evaluated.line_type,
+            operation=evaluated.base.to_graph_metric_expression(
+                site_id,
+                host_name,
+                service_name,
+                translated_metrics,
+                graph_template.consolidation_function,
+            ),
+            unit=evaluated.unit_spec,
+            color=evaluated.color,
+        )
+        for evaluated in graph_template.metrics
+    ]
+    units = {m.unit for m in metrics}
+
+    # We cannot validate the hypothetical case of a mixture of metrics from the legacy and the new API
+    if all(isinstance(m.unit, str) for m in metrics) or all(
+        isinstance(m.unit, ConvertibleUnitSpecification) for m in metrics
+    ):
+        if len(units) > 1:
+            raise MKGeneralException(
+                _("Cannot create graph with metrics of different units '%s'")
+                % ", ".join(repr(unit) for unit in units)
+            )
+
+    title = graph_template.title
+    if not title:
+        title = next((m.title for m in metrics), "")
+
+    return GraphRecipe(
+        title=(
+            f"{title} (Graph ID: {graph_template.id})"
+            if painter_options.get("show_internal_graph_and_metric_ids")
+            else title
+        ),
+        metrics=metrics,
+        unit_spec=units.pop(),
+        explicit_vertical_range=graph_template.range,
+        horizontal_rules=graph_template.horizontal_rules,
+        omit_zero_metrics=graph_template.omit_zero_metrics,
+        consolidation_function=graph_template.consolidation_function,
         specification=specification,
     )
 

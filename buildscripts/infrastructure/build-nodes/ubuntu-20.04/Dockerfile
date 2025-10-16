@@ -225,6 +225,9 @@ RUN /opt/install-aws-cli.sh
 COPY scripts/install-buildifier.sh /opt/
 RUN /opt/install-buildifier.sh
 
+COPY scripts/install-osslsigncode.sh /opt/
+RUN /opt/install-osslsigncode.sh
+
 # save a massive 108kB of space
 RUN rm /opt/*.sh /opt/strip_binaries /opt/*.mk
 

@@ -164,7 +164,7 @@ from cmk.utils.labels import LabelManager, Labels, LabelSources
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.misc import key_config_paths
-from cmk.utils.password_store import make_staged_passwords_lookup
+from cmk.utils.password_store import make_configured_passwords_lookup
 from cmk.utils.regex import regex
 from cmk.utils.rulesets import ruleset_matcher, RuleSetName, tuple_rulesets
 from cmk.utils.rulesets.ruleset_matcher import (
@@ -2370,7 +2370,7 @@ class ConfigCache:
                     name: _set_global_proxy(raw)
                     for name, raw in self._loaded_config.http_proxies.items()
                 },
-                password_lookup=make_staged_passwords_lookup(),
+                password_lookup=make_configured_passwords_lookup(),
             ),
             lambda x: final_service_name_config(host_name, x, self.label_manager.labels_of_host),
             passwords,
@@ -2492,7 +2492,7 @@ class ConfigCache:
                     name: _set_global_proxy(raw)
                     for name, raw in self._loaded_config.http_proxies.items()
                 },
-                password_lookup=make_staged_passwords_lookup(),
+                password_lookup=make_configured_passwords_lookup(),
             ),
             passwords,
             password_store_file,
@@ -2528,7 +2528,7 @@ class ConfigCache:
                 name: _set_global_proxy(raw)
                 for name, raw in self._loaded_config.http_proxies.items()
             },
-            password_lookup=make_staged_passwords_lookup(),
+            password_lookup=make_configured_passwords_lookup(),
         )
         return {
             **password_store.load(password_store.password_store_path()),

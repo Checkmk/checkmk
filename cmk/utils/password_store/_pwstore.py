@@ -154,11 +154,16 @@ def extract(password_id: PasswordId) -> str:
 
 def make_staged_passwords_lookup() -> Callable[[str], str | None]:
     """Returns something similar to `extract`. Intended for internal use only."""
-    staging_path = (
-        pending_password_store_path()
-    )  # maybe we should pass this, but lets be consistent for now.
-    store = load(staging_path)
-    return store.get
+    # maybe we should pass this, but lets be consistent for now.
+    staging_path = pending_password_store_path()
+    return load(staging_path).get
+
+
+def make_configured_passwords_lookup() -> Callable[[str], str | None]:
+    """Returns something similar to `extract`. Intended for internal use only."""
+    # maybe we should pass this, but lets be consistent for now.
+    path = password_store_path()
+    return load(path).get
 
 
 def lookup(pw_file: Path, pw_id: str) -> str:

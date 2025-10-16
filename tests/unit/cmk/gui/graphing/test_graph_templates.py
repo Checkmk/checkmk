@@ -747,11 +747,11 @@ def test__matching_graph_templates(
     assert (
         list(
             _matching_graph_templates(
+                {},
+                registered_graphs,
+                translated_metrics,
                 graph_id=graph_id,
                 graph_index=graph_index,
-                translated_metrics=translated_metrics,
-                registered_metrics={},
-                registered_graphs=registered_graphs,
                 temperature_unit=TemperatureUnit.CELSIUS,
             )
         )
@@ -1812,9 +1812,9 @@ def test__get_evaluated_graph_templates_1(
         [
             t.id
             for t in _get_evaluated_graph_templates(
-                translated_metrics,
                 {},
                 registered_graphs,
+                translated_metrics,
                 temperature_unit=TemperatureUnit.CELSIUS,
             )
         ]
@@ -1852,9 +1852,9 @@ def test__get_evaluated_graph_templates_2(
         [
             t.id
             for t in _get_evaluated_graph_templates(
-                translated_metrics,
                 {},
                 registered_graphs,
+                translated_metrics,
                 temperature_unit=TemperatureUnit.CELSIUS,
             )
         ]
@@ -2367,9 +2367,9 @@ def test__get_evaluated_graph_templates_with_predictive_metrics(
     assert (
         list(
             _get_evaluated_graph_templates(
-                translated_metrics,
                 registered_metrics,
                 registered_graphs,
+                translated_metrics,
                 temperature_unit=TemperatureUnit.CELSIUS,
             )
         )
@@ -2903,9 +2903,9 @@ def test_conflicting_metrics(
         [
             t.id
             for t in _get_evaluated_graph_templates(
-                translated_metrics,
                 {},
                 registered_graphs,
+                translated_metrics,
                 temperature_unit=TemperatureUnit.CELSIUS,
             )
         ]

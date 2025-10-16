@@ -597,9 +597,9 @@ def _create_evaluated_graph_template_from_name(
 
 
 def _get_evaluated_graph_templates(
-    translated_metrics: Mapping[str, TranslatedMetric],
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
+    translated_metrics: Mapping[str, TranslatedMetric],
     *,
     temperature_unit: TemperatureUnit,
 ) -> Iterator[EvaluatedGraphTemplate]:
@@ -646,21 +646,21 @@ def _get_evaluated_graph_templates(
 
 
 def _matching_graph_templates(
+    registered_metrics: Mapping[str, RegisteredMetric],
+    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
+    translated_metrics: Mapping[str, TranslatedMetric],
     *,
     graph_id: str | None,
     graph_index: int | None,
-    translated_metrics: Mapping[str, TranslatedMetric],
-    registered_metrics: Mapping[str, RegisteredMetric],
-    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     temperature_unit: TemperatureUnit,
 ) -> Iterable[tuple[int, EvaluatedGraphTemplate]]:
     yield from (
         (index, graph_template)
         for index, graph_template in enumerate(
             _get_evaluated_graph_templates(
-                translated_metrics,
                 registered_metrics,
                 registered_graphs,
+                translated_metrics,
                 temperature_unit=temperature_unit,
             )
         )
@@ -670,12 +670,12 @@ def _matching_graph_templates(
 
 
 def _create_graph_recipe_from_translated_metric(
-    name: str,
-    translated_metric: TranslatedMetric,
     site_id: SiteId,
     host_name: HostName,
     service_name: ServiceName,
     painter_options: PainterOptions,
+    translated_metric: TranslatedMetric,
+    name: str,
     specification: TemplateGraphSpecification,
     *,
     temperature_unit: TemperatureUnit,
@@ -755,15 +755,15 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
 
     def _build_recipe_from_template(
         self,
+        user_permissions: UserPermissions,
         site_id: SiteId,
         host_name: HostName,
         service_name: ServiceName,
+        painter_options: PainterOptions,
+        translated_metrics: Mapping[str, TranslatedMetric],
         *,
         graph_template: EvaluatedGraphTemplate,
-        translated_metrics: Mapping[str, TranslatedMetric],
         index: int,
-        user_permissions: UserPermissions,
-        painter_options: PainterOptions,
     ) -> GraphRecipe | None:
         return _create_graph_recipe_from_template(
             site_id,
@@ -819,12 +819,12 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         ):
             return [
                 _create_graph_recipe_from_translated_metric(
-                    self.graph_id,
-                    translated_metrics[self.graph_id[7:]],
                     site_id,
                     host_name,
                     service_name,
                     painter_options,
+                    translated_metrics[self.graph_id[7:]],
+                    self.graph_id,
                     self._make_specification(
                         site=self.site,
                         host_name=self.host_name,
@@ -839,23 +839,23 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         return [
             recipe
             for index, graph_template in _matching_graph_templates(
+                registered_metrics,
+                registered_graphs,
+                translated_metrics,
                 graph_id=self.graph_id,
                 graph_index=self.graph_index,
-                translated_metrics=translated_metrics,
-                registered_metrics=registered_metrics,
-                registered_graphs=registered_graphs,
                 temperature_unit=temperature_unit,
             )
             if (
                 recipe := self._build_recipe_from_template(
+                    user_permissions,
                     site_id,
                     host_name,
                     service_name,
+                    painter_options,
+                    translated_metrics,
                     graph_template=graph_template,
-                    translated_metrics=translated_metrics,
                     index=index,
-                    user_permissions=user_permissions,
-                    painter_options=painter_options,
                 )
             )
         ]

@@ -1,5 +1,3 @@
-OpenHardwareMonitorCLI.exe
-OpenHardwareMonitorLib.dll
 check_mk.example.ini
 check_mk.user.yml
 check_mk_agent.msi

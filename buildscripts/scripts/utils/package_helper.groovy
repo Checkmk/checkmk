@@ -123,8 +123,6 @@ def provide_agent_binaries(Map args) {
                     cmk-agent-ctl.exe \
                     check_mk.yml \
                     check_mk.user.yml \
-                    OpenHardwareMonitorLib.dll \
-                    OpenHardwareMonitorCLI.exe \
                     mk-sql.exe \
                     robotmk_ext.exe \
                     windows_files_hashes.txt \

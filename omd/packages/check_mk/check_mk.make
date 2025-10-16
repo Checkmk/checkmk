@@ -130,8 +130,6 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) agent
 	    windows/unsign-msi.patch \
 	    windows/python-3.cab \
 	    windows/check_mk.user.yml \
-	    windows/OpenHardwareMonitorLib.dll \
-	    windows/OpenHardwareMonitorCLI.exe \
 	    windows/robotmk_ext.exe \
 	    windows/mk-sql.exe \
 	    windows/windows_files_hashes.txt \

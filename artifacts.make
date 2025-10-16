@@ -25,9 +25,6 @@ SOURCE_BUILT_AGENT_UPDATER := \
 else
 SOURCE_BUILT_AGENT_UPDATER :=
 endif
-SOURCE_BUILT_OHM := \
-	$(REPO_PATH)/agents/windows/OpenHardwareMonitorCLI.exe \
-	$(REPO_PATH)/agents/windows/OpenHardwareMonitorLib.dll
 SOURCE_BUILT_EXT := $(REPO_PATH)/agents/windows/robotmk_ext.exe
 SOURCE_BUILT_MK_ORACLE := $(REPO_PATH)/cmk/plugins/oracle/agents/mk-oracle.exe
 SOURCE_BUILT_MK_SQL := $(REPO_PATH)/agents/windows/mk-sql.exe
@@ -39,7 +36,6 @@ SOURCE_BUILT_WINDOWS := \
 	$(REPO_PATH)/agents/windows/unsign-msi.patch
 SOURCE_BUILT_AGENTS := \
 	$(SOURCE_BUILT_LINUX_AGENTS) \
-	$(SOURCE_BUILT_OHM) \
 	$(SOURCE_BUILT_EXT) \
 	$(SOURCE_BUILT_MK_SQL) \
 	$(SOURCE_BUILT_MK_ORACLE) \

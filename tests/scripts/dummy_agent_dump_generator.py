@@ -68,7 +68,7 @@ def _generate_local_services(hostname: str, number_of_services: int) -> list[str
     def _local_services(start_idx: int, service_data_: ServiceData, prefix_: str) -> list[str]:
         stdout_ = []
         for idx in range(start_idx, start_idx + service_data_.count):
-            random_percent = randrange(service_data_.value_range[0], service_data_.value_range[1])
+            random_percent = randrange(*service_data_.value_range)
             stdout_.append(
                 f"{service_data_.status} {prefix_}-service-{idx} state={random_percent} "
                 f"{datetime.now()} state: {random_percent}%"
@@ -242,8 +242,8 @@ def parse_cli_args() -> type[TypeCliArgs]:
         ),
         action="store_true",
     )
-    args, _ = parser.parse_known_args(namespace=TypeCliArgs)
-    return args
+    args_, _ = parser.parse_known_args(namespace=TypeCliArgs)
+    return args_
 
 
 if __name__ == "__main__":

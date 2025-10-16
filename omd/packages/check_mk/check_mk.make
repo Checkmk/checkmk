@@ -126,17 +126,6 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS)
 	# cmk needs to be a namespace package (CMK-3979)
 	grep -Rl 'check_mk.make: do-not-deploy' $(CHECK_MK_INSTALL_DIR)/lib/python3/ | xargs rm
 
-	# After installing all python modules, ensure they are compiled
-	# compile pyc files explicitly selecting `checked-hash` invalidation mode
-	bazel run :venv
-	source .venv/bin/activate \
-	&& python3 -m compileall \
-	    -f \
-	    --invalidation-mode=checked-hash \
-	    -s "$(CHECK_MK_INSTALL_DIR)/lib/python3" \
-	    "$(CHECK_MK_INSTALL_DIR)/lib/python3/cmk" \
-	&& deactivate
-
 	# Create the plugin namespaces
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk_addons/plugins
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/plugins

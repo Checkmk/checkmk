@@ -89,6 +89,10 @@ case "$1" in
       fi
     done
 
+    # we can't use dh_python3's py3compile here because we have a custom python interpreter
+    echo "pre-compile bytecode (.pyc) for Python files.."
+    "${BASE_PATH}/bin/python3" -m compileall -s "${BASE_PATH}" "${BASE_PATH}" >/dev/null
+
     db_stop
     # -- create apache config include if not exist
     if test -d /etc/apache2/conf-available; then

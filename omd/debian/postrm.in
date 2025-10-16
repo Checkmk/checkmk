@@ -25,6 +25,7 @@ set -e
 APACHE_OMD_CONF="/etc/apache2/conf.d/zzz_omd.conf"
 APACHE_OMD_EMPTY_CONF="/opt/omd/apache/empty.conf"
 OMD="omd-{CMK_VERSION}.{CMK_EDITION}"
+BASE_PATH="/omd/versions/{CMK_VERSION}.{CMK_EDITION}"
 
 case "$1" in
     upgrade)
@@ -32,6 +33,14 @@ case "$1" in
 
     remove|failed-upgrade|abort-install|abort-upgrade|disappear)
       # update-alternatives --remove  omd /omd/versions/{CMK_VERSION}.{CMK_EDITION}
+      # safely remove __pycache__ and remainting empty folders (not handled
+      # automatically) by removing deepest elements first
+      find "${BASE_PATH}" -type d -name __pycache__ \
+        | awk '{print length, $0}' | sort -n -r | cut -d' ' -f2- \
+        | xargs -I{} sh -c 'rm -rf "$1"' cmd {}
+      find "${BASE_PATH}" -type d \
+        | awk '{print length, $0}' | sort -n -r | cut -d' ' -f2- \
+        | xargs -I{} sh -c 'rmdir "$1"' cmd {}
     ;;
 
     purge)

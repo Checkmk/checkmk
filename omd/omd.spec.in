@@ -142,6 +142,10 @@ if [ $ACTIVATE_INIT -eq 1 ]; then
     fi
 fi
 
+echo "pre-compile bytecode (.pyc) for Python files.."
+BASE_PATH="/omd/versions/%{version}"
+"${BASE_PATH}/bin/python3" -m compileall -s "${BASE_PATH}" "${BASE_PATH}" >/dev/null
+
 # SLES: make sure apache modules are activated
 if which a2enmod >/dev/null 2>&1
 then
@@ -197,6 +201,14 @@ fi
 
 
 %postun
+BASE_PATH="/omd/versions/%{version}"
+find "${BASE_PATH}" -type d -name __pycache__ \
+  | awk '{print length, $0}' | sort -n -r | cut -d' ' -f2- \
+  | xargs -I{} sh -c 'rm -rf "$1"' cmd {}
+find "${BASE_PATH}" -type d \
+  | awk '{print length, $0}' | sort -n -r | cut -d' ' -f2- \
+  | xargs -I{} sh -c 'rmdir "$1"' cmd {}
+
 v=$(ls -A /omd/versions 2>/dev/null| sort -n | tail -n 1)
 if [ -n "$v" ]
 then

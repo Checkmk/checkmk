@@ -7,6 +7,7 @@
 
 import json
 import subprocess
+from importlib.util import cache_from_source
 from pathlib import Path
 from subprocess import check_output
 from typing import NamedTuple, NewType
@@ -241,3 +242,15 @@ def test_python_is_bytecode_compiled(
     assert (
         f"{site.root}/{expected_pyc_file} matches {site.root}/{expected_source_file}" in output
     ), f"No matching pyc file for '{import_path}' found"
+
+
+def test_all_bytecode_files_exist(site: Site) -> None:
+    # see CMK-24370 - pyc files will be generated as a postinst step. In contrast to before, `compileall` will
+    # be executed on _all_ files below `site.root`, so we simply check for an 1on1 existence.
+    for py_path in Path(site.root).rglob("*.py"):
+        pyc_path = Path(cache_from_source(py_path))
+        expected_pyc_path = (
+            py_path.parent / f"__pycache__/{py_path.stem}.cpython-{PYVER.major}{PYVER.minor}.pyc"
+        )
+        assert pyc_path == expected_pyc_path, (pyc_path, expected_pyc_path)
+        assert pyc_path.exists(), f"{pyc_path} for {py_path} does not exist"

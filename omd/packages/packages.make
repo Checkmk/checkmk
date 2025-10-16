@@ -46,22 +46,6 @@ $(DEPS_INSTALL_BAZEL):
 	$(SED) -i "s|/replace-me|$(OMD_ROOT)|g" \
 	    $(DESTDIR)/$(OMD_ROOT)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/_sysconfigdata__linux_x86_64-linux-gnu.py
 
-	# pre-compile pyc files enforcing `checked-hash` invalidation
-	# note: this is a workaround and should be handled in according Bazel project
-	$(DESTDIR)$(OMD_ROOT)/bin/python3 -m compileall \
-	    -f \
-	    --invalidation-mode=checked-hash \
-	    -s "$(DESTDIR)/$(OMD_ROOT)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/" \
-	    -x "bad_coding|badsyntax|test/test_lib2to3/data" \
-	    "$(DESTDIR)/$(OMD_ROOT)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/"
-
-	$(DESTDIR)$(OMD_ROOT)/bin/python3 -m compileall \
-	    -f \
-	    --invalidation-mode=checked-hash \
-	    -s "$(DESTDIR)/$(OMD_ROOT)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/" \
-	    -x "bad_coding|badsyntax|test/test_lib2to3/data" \
-	    "$(DESTDIR)/$(OMD_ROOT)/lib/python3/omdlib/"
-
 	# This will replace forced absolute paths determined at build time by
 	# Bazel/foreign_cc. Note that this step depends on $OMD_ROOT which is different
 	# each time

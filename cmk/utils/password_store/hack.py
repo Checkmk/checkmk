@@ -68,7 +68,7 @@ HACK_AGENTS = {
     "ibmsvc": False,  # needs no secret
     "innovaphone": True,
     "storeonce4x": True,
-    "vsphere": True,
+    "vsphere": False,
     "jolokia": True,
     "random": False,  # needs no secret
     "mqtt": True,

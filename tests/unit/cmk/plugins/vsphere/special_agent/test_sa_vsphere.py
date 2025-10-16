@@ -59,6 +59,10 @@ DEFAULT_AGRS = {
             ["--secret", "I like listening to Folk music"],
             {"secret": "I like listening to Folk music"},
         ),
+        (
+            ["--secret-id", "I'm Batman"],
+            {"secret_id": "I'm Batman"},
+        ),
         (["-s", "I like listening to Folk music"], {"secret": "I like listening to Folk music"}),
     ],
 )

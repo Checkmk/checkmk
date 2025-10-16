@@ -8,10 +8,9 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+from cmk.plugins.vsphere.lib.special_agent import InfoSelection, QueryType
 from cmk.server_side_calls.v1 import HostConfig, SpecialAgentCommand, SpecialAgentConfig
 from cmk.server_side_calls.v1._utils import Secret
-
-from ..lib.special_agent import InfoSelection, QueryType
 
 
 class Params(BaseModel):
@@ -43,7 +42,7 @@ def commands_function(params: Params, host_config: HostConfig) -> Iterable[Speci
         command_arguments += ["-p", "%d" % params.tcp_port]
 
     command_arguments += ["-u", params.user]
-    command_arguments += [params.secret.unsafe("-s=%s")]
+    command_arguments += ["--secret-id", params.secret]
     command_arguments += ["-i", ",".join(params.infos)]
 
     if params.direct[0] == QueryType.HOST_SYSTEM:

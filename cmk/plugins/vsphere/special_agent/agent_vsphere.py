@@ -19,6 +19,7 @@ import time
 from collections import Counter
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Any
 from xml.dom import minidom
 
@@ -33,6 +34,7 @@ import cmk.special_agents.v0_unstable.misc as utils
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.special_agents.v0_unstable.request_helper import HostnameValidationAdapter
+from cmk.utils.password_store import lookup as password_store_lookup
 
 #   .--defines-------------------------------------------------------------.
 #   |                      _       __ _                                    |
@@ -1028,8 +1030,8 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
 
     # optional arguments (from a coding point of view - should some of them be mandatory?)
     parser.add_argument("-u", "--user", default=None, help="""Username for vSphere login""")
-    parser.add_argument(
-        "-s", "--secret", default=None, help="""Secret/Password for vSphere login"""
+    _add_secret_option(
+        parser, short="-s", long="--secret", help="Secret/Password for vSphere login"
     )
 
     # positional arguments
@@ -1038,6 +1040,35 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     )
 
     return parser.parse_args(argv)
+
+
+# we'll use this a lot. we can consider providing this as a utility API element
+def _add_secret_option(
+    parser: argparse.ArgumentParser, short: str | None, long: str, help: str
+) -> None:
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        *((short,) if short else ()),
+        long,
+        default=None,
+        help=help,
+    )
+    group.add_argument(
+        f"{long}-id",
+        default=None,
+        help=f'Same as "{long}", but containing the reference to the password store rather than the actual secret.',
+    )
+
+
+# we'll use this a lot. we can consider providing this as a utility API element
+def _resolve_secret_option(secret_id: str | None, secret: str | None) -> str:
+    if secret_id is None:
+        if secret is None:
+            raise ValueError("neither secret nor secret id given")
+        return secret
+
+    pw_id, pw_file = secret_id.split(":", 1)
+    return password_store_lookup(Path(pw_file), pw_id)
 
 
 # .
@@ -2080,7 +2111,6 @@ def fetch_data(connection: ESXConnection, opt: argparse.Namespace) -> list[str]:
 
 def main(argv: Sequence[str] | None = None) -> int:
     if argv is None:
-        cmk.utils.password_store.replace_passwords()
         argv = sys.argv[1:]
 
     opt = parse_arguments(argv)
@@ -2090,7 +2120,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         esx_connection = ESXConnection(opt.host_address, opt.port, opt)
 
-        esx_connection.login(opt.user, opt.secret)
+        esx_connection.login(opt.user, _resolve_secret_option(opt.secret_id, opt.secret))
         try:
             vsphere_output = fetch_data(esx_connection, opt)
         except ESXCookieInvalid:

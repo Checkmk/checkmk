@@ -8,7 +8,7 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.podman.agent_based.cee.lib import (
+from cmk.plugins.podman.agent_based.lib import (
     ContainerHealth,
     ContainerHealthcheck,
     HealthCheckLog,
@@ -17,10 +17,10 @@ from cmk.plugins.podman.agent_based.cee.lib import (
     SectionPodmanContainerInspect,
     SectionPodmanContainerState,
 )
-from cmk.plugins.podman.agent_based.cee.podman_container_inspect import (
+from cmk.plugins.podman.agent_based.podman_container_inspect import (
     parse_podman_container_inspect,
 )
-from cmk.plugins.podman.agent_based.cee.podman_container_uptime import (
+from cmk.plugins.podman.agent_based.podman_container_uptime import (
     calculate_uptime,
     check_podman_container_uptime,
     discover_podman_container_uptime,

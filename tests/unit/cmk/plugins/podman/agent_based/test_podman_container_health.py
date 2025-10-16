@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Result, Service, State
-from cmk.plugins.podman.agent_based.cee.lib import (
+from cmk.plugins.podman.agent_based.lib import (
     ContainerHealth,
     HealthCheckLog,
     PodmanContainerNetworkSettings,
@@ -14,7 +14,7 @@ from cmk.plugins.podman.agent_based.cee.lib import (
     SectionPodmanContainerInspect,
     SectionPodmanContainerState,
 )
-from cmk.plugins.podman.agent_based.cee.podman_container_health import (
+from cmk.plugins.podman.agent_based.podman_container_health import (
     check_podman_container_health,
     discover_podman_container_health,
     Params,

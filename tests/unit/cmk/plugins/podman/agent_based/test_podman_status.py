@@ -5,7 +5,7 @@
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Result, Service, State, StringTable
-from cmk.plugins.podman.agent_based.cee.podman_status import (
+from cmk.plugins.podman.agent_based.podman_status import (
     check_podman_status,
     discover_podman_status,
     parse_podman_status,

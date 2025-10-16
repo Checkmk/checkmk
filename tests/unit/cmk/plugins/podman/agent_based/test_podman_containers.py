@@ -8,7 +8,7 @@
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
-from cmk.plugins.podman.agent_based.cee.podman_containers import (
+from cmk.plugins.podman.agent_based.podman_containers import (
     check_podman_containers,
     DEFAULT_PARAMS,
     discover_podman_containers,

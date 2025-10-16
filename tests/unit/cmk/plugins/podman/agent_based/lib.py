@@ -4,7 +4,7 @@
 # # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.plugins.podman.agent_based.cee.lib import (
+from cmk.plugins.podman.agent_based.lib import (
     ContainerHealth,
     ContainerHealthcheck,
     HealthCheckLog,

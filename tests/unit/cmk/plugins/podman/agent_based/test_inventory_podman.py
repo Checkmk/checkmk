@@ -5,15 +5,15 @@
 import pytest
 
 from cmk.agent_based.v2 import Attributes, InventoryResult, TableRow
-from cmk.plugins.podman.agent_based.cee.inventory_podman import inventory_podman
-from cmk.plugins.podman.agent_based.cee.lib import SectionPodmanEngineStats
-from cmk.plugins.podman.agent_based.cee.podman_containers import (
+from cmk.plugins.podman.agent_based.inventory_podman import inventory_podman
+from cmk.plugins.podman.agent_based.lib import SectionPodmanEngineStats
+from cmk.plugins.podman.agent_based.podman_containers import (
     Container,
     ContainerStateCounts,
     SectionContainers,
 )
-from cmk.plugins.podman.agent_based.cee.podman_disk_usage import DiskUsage, Entity, EntityGroup
-from cmk.plugins.podman.agent_based.cee.podman_disk_usage import Section as DiskUsageSection
+from cmk.plugins.podman.agent_based.podman_disk_usage import DiskUsage, Entity, EntityGroup
+from cmk.plugins.podman.agent_based.podman_disk_usage import Section as DiskUsageSection
 
 SECTION_PODMAN_ENGINE = SectionPodmanEngineStats.model_validate(
     {

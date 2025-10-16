@@ -2,16 +2,19 @@
 # # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # # conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="misc"
+
 from collections.abc import MutableMapping
 from typing import Any
 
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
-from cmk.plugins.podman.agent_based.cee.lib import (
+from cmk.plugins.podman.agent_based.lib import (
     SectionPodmanContainerInspect,
 )
-from cmk.plugins.podman.agent_based.cee.podman_container_restarts import (
+from cmk.plugins.podman.agent_based.podman_container_restarts import (
     _check_podman_container_restarts,
     discover_podman_container_restarts,
     Params,

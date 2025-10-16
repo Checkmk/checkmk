@@ -4,8 +4,8 @@
 # # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.plugins.podman.agent_based.cee.lib import SectionPodmanContainerStats
-from cmk.plugins.podman.agent_based.cee.podman_container_stats import (
+from cmk.plugins.podman.agent_based.lib import SectionPodmanContainerStats
+from cmk.plugins.podman.agent_based.podman_container_stats import (
     parse_podman_container_stats,
 )
 

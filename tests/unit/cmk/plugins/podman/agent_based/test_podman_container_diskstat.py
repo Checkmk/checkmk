@@ -4,7 +4,7 @@
 # # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.podman.agent_based.cee.podman_container_diskstat import (
+from cmk.plugins.podman.agent_based.podman_container_diskstat import (
     _check_diskstat_testable,
     discover_podman_container_diskstat,
 )

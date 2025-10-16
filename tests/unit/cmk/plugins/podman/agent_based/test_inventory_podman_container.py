@@ -5,8 +5,8 @@
 import pytest
 
 from cmk.agent_based.v2 import Attributes, InventoryResult
-from cmk.plugins.podman.agent_based.cee.inventory_podman_container import inventory_podman_container
-from cmk.plugins.podman.agent_based.cee.lib import SectionPodmanContainerInspect
+from cmk.plugins.podman.agent_based.inventory_podman_container import inventory_podman_container
+from cmk.plugins.podman.agent_based.lib import SectionPodmanContainerInspect
 
 from .lib import SECTION_RUNNING
 

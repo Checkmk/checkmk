@@ -33,6 +33,7 @@ from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
     Tuple,
 )
+from cmk.gui.form_specs.unstable.passwordstore_password import PasswordStorePassword
 from cmk.gui.form_specs.unstable.two_column_dictionary import TwoColumnDictionary
 from cmk.gui.form_specs.visitors.condition_choices import ConditionChoicesVisitor
 from cmk.gui.form_specs.visitors.metric import MetricVisitor
@@ -46,6 +47,7 @@ from cmk.gui.form_specs.visitors.recomposers import (
     recompose_monitored_host,
     recompose_monitored_service,
     recompose_multiple_choice,
+    recompose_passwordstore_password,
     recompose_percentage,
     recompose_proxy,
     recompose_regular_expression,
@@ -182,6 +184,7 @@ def register_form_specs() -> None:
     register_recomposer_function(Levels, recompose_levels)
     register_recomposer_function(SimpleLevels, recompose_levels)
     register_recomposer_function(List, recompose_list)
+    register_recomposer_function(PasswordStorePassword, recompose_passwordstore_password)
     register_recomposer_function(Percentage, recompose_percentage)
     register_recomposer_function(UserSelection, recompose_user_selection)
     register_recomposer_function(Dictionary, recompose_dictionary)

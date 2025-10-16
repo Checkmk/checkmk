@@ -19,6 +19,7 @@ from .multiple_choice import (
     MultipleChoiceExtendedLayout,
 )
 from .optional_choice import OptionalChoice
+from .passwordstore_password import PasswordStorePassword
 from .single_choice_editable import SingleChoiceEditable
 from .single_choice_extended import (
     SingleChoiceElementExtended,
@@ -55,6 +56,7 @@ __all__ = [
     "MultipleChoiceExtended",
     "MultipleChoiceExtendedLayout",
     "not_empty",
+    "PasswordStorePassword",
     "OptionalChoice",
     "SingleChoiceEditable",
     "SingleChoiceElementExtended",

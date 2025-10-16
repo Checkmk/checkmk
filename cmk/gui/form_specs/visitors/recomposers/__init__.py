@@ -12,6 +12,7 @@ from .metric import recompose as recompose_metric
 from .monitored_host import recompose as recompose_monitored_host
 from .monitored_service import recompose as recompose_monitored_service
 from .multiple_choice import recompose as recompose_multiple_choice
+from .passwordstore_password import recompose as recompose_passwordstore_password
 from .percentage import recompose as recompose_percentage
 from .proxy import recompose as recompose_proxy
 from .regular_expression import recompose as recompose_regular_expression
@@ -31,6 +32,7 @@ __all__ = [
     "recompose_monitored_host",
     "recompose_monitored_service",
     "recompose_multiple_choice",
+    "recompose_passwordstore_password",
     "recompose_percentage",
     "recompose_proxy",
     "recompose_regular_expression",

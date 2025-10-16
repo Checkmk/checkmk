@@ -263,21 +263,20 @@ def _parse_graph_plugin(
             assert_never(template)
 
 
-def _create_graph_template_from_name(name: str) -> GraphTemplate:
-    if name.startswith("METRIC_"):
-        name = name[7:]
+def _create_graph_template_from_template_id(template_id: str) -> GraphTemplate:
+    metric_name = template_id[7:]
     return GraphTemplate(
-        id=f"METRIC_{name}",
+        id=template_id,
         title="",
-        metrics=[MetricExpression(Metric(name), line_type="area")],
+        metrics=[MetricExpression(Metric(metric_name), line_type="area")],
         scalars=[
             MetricExpression(
-                WarningOf(Metric(name)),
+                WarningOf(Metric(metric_name)),
                 line_type="line",
                 title=str(_("Warning")),
             ),
             MetricExpression(
-                CriticalOf(Metric(name)),
+                CriticalOf(Metric(metric_name)),
                 line_type="line",
                 title=str(_("Critical")),
             ),
@@ -296,7 +295,7 @@ def get_graph_template_from_id(
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
 ) -> GraphTemplate:
     if template_id.startswith("METRIC_"):
-        return _create_graph_template_from_name(template_id)
+        return _create_graph_template_from_template_id(template_id)
     for name, graph_plugin in _sort_registered_graph_plugins(registered_graphs):
         if template_id == name:
             return _parse_graph_plugin(name, graph_plugin, registered_metrics)
@@ -495,43 +494,41 @@ class EvaluatedGraphTemplate:
     metrics: Sequence[Evaluated]
 
 
-def _create_evaluated_graph_template_from_name(
-    name: str,
+def _create_evaluated_graph_template_from_metric_name(
     translated_metrics: Mapping[str, TranslatedMetric],
+    metric_name: str,
     *,
     temperature_unit: TemperatureUnit,
 ) -> tuple[str, EvaluatedGraphTemplate]:
-    if name.startswith("METRIC_"):
-        name = name[7:]
-
-    if translated_metric := translated_metrics.get(name):
-        return (
-            f"METRIC_{name}",
-            EvaluatedGraphTemplate(
-                title="",
-                metrics=[
-                    Evaluated(
-                        base=Metric(name),
-                        value=translated_metric.value,
-                        unit_spec=translated_metric.unit_spec,
-                        color=translated_metric.color,
-                        line_type="area",
-                        title=translated_metric.title,
-                    )
-                ],
-                horizontal_rules=compute_warn_crit_rules_from_translated_metric(
-                    user_specific_unit(translated_metric.unit_spec, temperature_unit),
-                    translated_metric,
-                ),
-                consolidation_function="max",
-                range=None,
-                omit_zero_metrics=False,
-            ),
-        )
-
+    if metric_name.startswith("METRIC_"):
+        graph_id = metric_name
+        metric_name = metric_name[7:]
+    else:
+        graph_id = f"METRIC_{metric_name}"
     return (
-        f"METRIC_{name}",
+        graph_id,
         EvaluatedGraphTemplate(
+            title="",
+            metrics=[
+                Evaluated(
+                    base=Metric(metric_name),
+                    value=translated_metric.value,
+                    unit_spec=translated_metric.unit_spec,
+                    color=translated_metric.color,
+                    line_type="area",
+                    title=translated_metric.title,
+                )
+            ],
+            horizontal_rules=compute_warn_crit_rules_from_translated_metric(
+                user_specific_unit(translated_metric.unit_spec, temperature_unit),
+                translated_metric,
+            ),
+            consolidation_function="max",
+            range=None,
+            omit_zero_metrics=False,
+        )
+        if (translated_metric := translated_metrics.get(metric_name))
+        else EvaluatedGraphTemplate(
             title="",
             metrics=[],
             horizontal_rules=[],
@@ -585,8 +582,8 @@ def _get_evaluated_graph_templates(
 
     for metric_name, translated_metric in sorted(translated_metrics.items()):
         if translated_metric.auto_graph and metric_name not in already_graphed_metrics:
-            yield _create_evaluated_graph_template_from_name(
-                metric_name, translated_metrics, temperature_unit=temperature_unit
+            yield _create_evaluated_graph_template_from_metric_name(
+                translated_metrics, metric_name, temperature_unit=temperature_unit
             )
 
 

@@ -598,8 +598,8 @@ def _matching_graph_templates(
     temperature_unit: TemperatureUnit,
 ) -> Iterable[tuple[int, EvaluatedGraphTemplate]]:
     yield from (
-        (index, graph_template)
-        for index, graph_template in enumerate(
+        (graph_template_index, graph_template)
+        for graph_template_index, graph_template in enumerate(
             _get_evaluated_graph_templates(
                 registered_metrics,
                 registered_graphs,
@@ -607,8 +607,8 @@ def _matching_graph_templates(
                 temperature_unit=temperature_unit,
             )
         )
-        if (graph_index is None or index == graph_index)
-        and (graph_id is None or graph_template.id == graph_id)
+        if (graph_index is None or graph_index == graph_template_index)
+        and (graph_id is None or graph_id == graph_template.id)
     )
 
 

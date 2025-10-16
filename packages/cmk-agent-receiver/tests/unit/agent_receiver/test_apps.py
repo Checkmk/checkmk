@@ -41,7 +41,11 @@ def test_uuid_validation_route() -> None:
 
 def test_main_app_structure() -> None:
     main_app_ = main_app()
-    # we only want one route, namely the one to the sub-app which is mounted under the site name
-    assert len(main_app_.routes) == 1
+
+    assert len(main_app_.routes) == 2
+
     assert isinstance(mount := main_app_.routes[0], Mount)
+    assert mount.path == "/NO_SITE/agent-receiver/relays"
+
+    assert isinstance(mount := main_app_.routes[1], Mount)
     assert mount.path == "/NO_SITE/agent-receiver"

@@ -32,7 +32,7 @@ class AgentReceiverClient:
 
     def register_relay(self, name: str) -> httpx.Response:
         return self.client.post(
-            f"/{self.site_name}/agent-receiver/relays",
+            f"/{self.site_name}/agent-receiver/relays/",
             json={
                 "relay_name": name,
                 "csr": "CSR for Relay A",

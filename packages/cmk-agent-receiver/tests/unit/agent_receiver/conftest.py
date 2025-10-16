@@ -162,8 +162,8 @@ def mock_controller_certificate_settings(mocker: MockerFixture) -> None:
 @pytest.fixture(name="client")
 def fixture_client() -> TestClient:
     app = main_app()
-    assert len(app.routes) == 1
-    assert isinstance(mount := app.routes[0], Mount)
+    assert len(app.routes) == 2
+    assert isinstance(mount := app.routes[1], Mount)
     return TestClient(mount.app)
 
 

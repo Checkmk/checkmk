@@ -7,7 +7,7 @@ import { type Ref, computed, ref } from 'vue'
 
 import type { DefaultOrColor, GraphRenderOptions } from '@/dashboard-wip/components/Wizard/types'
 
-export interface UseAdditionalOptionsReferences {
+export interface UseGraphRenderOptions {
   horizontalAxis: Ref<boolean>
   verticalAxis: Ref<boolean>
   verticalAxisWidthMode: Ref<'fixed' | 'absolute'>
@@ -25,7 +25,7 @@ export interface UseAdditionalOptionsReferences {
   dontFollowTimerange: Ref<boolean>
 }
 
-export interface UseAdditionalOptions extends UseAdditionalOptionsReferences {
+export interface UseGraphRenderProps extends UseGraphRenderOptions {
   graphRenderOptions: Ref<GraphRenderOptions>
 
   /**
@@ -35,7 +35,7 @@ export interface UseAdditionalOptions extends UseAdditionalOptionsReferences {
   generateSpec: () => GraphRenderOptions
 }
 
-export const useAdditionalOptions = (data?: GraphRenderOptions): UseAdditionalOptions => {
+export const useGraphRenderOptions = (data?: GraphRenderOptions): UseGraphRenderProps => {
   const horizontalAxis = ref<boolean>(data?.show_time_axis ?? true)
   const verticalAxis = ref<boolean>(data?.show_vertical_axis ?? true)
   const verticalAxisWidthMode = ref<'fixed' | 'absolute'>(

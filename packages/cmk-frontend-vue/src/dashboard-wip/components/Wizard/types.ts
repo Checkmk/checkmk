@@ -79,6 +79,8 @@ export type WidgetContentType =
   | ServiceStateContent
   | ServiceStateSummaryContent
   | ServiceStatisticsContent
+  | CombinedGraphContent
+  | PerformanceGraphContent
 
 export type InventoryContent = components['schemas']['InventoryContent']
 
@@ -98,8 +100,12 @@ export type ServiceStateContent = components['schemas']['ServiceStateContent']
 export type ServiceStateSummaryContent = components['schemas']['ServiceStateSummaryContent']
 export type ServiceState = components['schemas']['MonitoringState']
 export type ServiceStatisticsContent = components['schemas']['ServiceStatsContent']
+export type CombinedGraphContent = components['schemas']['CombinedGraphContent']
+export type PerformanceGraphContent = components['schemas']['PerformanceGraphContent']
 
 export type TitleSpec = components['schemas']['WidgetTitle']
 export type DefaultOrColor = components['schemas']['DefaultOrColor']
 export type GraphRenderOptions = components['schemas']['GraphRenderOptions']
 export type HostState = components['schemas']['HostState']
+export type CombinedGraphContentPresentation =
+  components['schemas']['CombinedGraphContent']['presentation']

@@ -21,13 +21,13 @@ import CollapsibleTitle from '@/dashboard-wip/components/Wizard/components/colla
 import type { BaseWidgetProp } from '@/dashboard-wip/components/Wizard/types.ts'
 
 import GraphRenderOptions from '../../components/GraphRenderOptions.vue'
-import type { UseGraph } from './composables/useGraph.ts'
+import type { UsePerformanceGraph } from './composables/usePerformanceGraph.ts'
 
 const { _t } = usei18n()
 
 defineProps<BaseWidgetProp>()
 
-const handler = defineModel<UseGraph>('handler', { required: true })
+const handler = defineModel<UsePerformanceGraph>('handler', { required: true })
 
 defineExpose({ validate })
 

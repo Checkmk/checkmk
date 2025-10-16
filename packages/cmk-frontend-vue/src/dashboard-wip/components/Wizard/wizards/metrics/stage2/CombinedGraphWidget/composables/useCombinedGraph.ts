@@ -14,7 +14,8 @@ import {
   useWidgetVisualizationProps
 } from '@/dashboard-wip/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
 import type {
-  GraphContent,
+  CombinedGraphContent,
+  CombinedGraphContentPresentation,
   UseWidgetHandler,
   WidgetProps
 } from '@/dashboard-wip/components/Wizard/types'
@@ -31,20 +32,24 @@ import {
 
 const { _t } = usei18n()
 
-export interface UseGraph
+export interface UseCombinedGraph
   extends UseWidgetHandler,
     UseGraphRenderOptions,
     UseWidgetVisualizationOptions {
   timeRange: Ref<GraphTimerange>
+  graphTemplate: Ref<string>
+  presentation: Ref<CombinedGraphContentPresentation>
+
+  widgetProps: Ref<WidgetProps>
 }
 
-export const useGraph = async (
+export const useCombinedGraph = async (
   metric: string,
   filters: ConfiguredFilters,
   dashboardConstants: DashboardConstants,
   currentSpec?: WidgetSpec | null
-): Promise<UseGraph> => {
-  const currentContent = currentSpec?.content as GraphContent
+): Promise<UseCombinedGraph> => {
+  const currentContent = currentSpec?.content as CombinedGraphContent
 
   const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(_t('Time range'))
 
@@ -76,21 +81,25 @@ export const useGraph = async (
     graphRenderOptions
   } = useGraphRenderOptions(currentContent?.graph_render_options)
 
+  const graphTemplate = ref<string>(currentContent?.graph_template ?? 'TODO')
+  const presentation = ref<CombinedGraphContentPresentation>(
+    currentContent?.presentation ?? 'lines'
+  )
+
   const widgetProps = ref<WidgetProps>()
 
   const validate = (): boolean => {
     return validateTitle()
   }
 
-  const _generateContent = (): GraphContent => {
+  const _generateContent = (): CombinedGraphContent => {
     return {
-      type: 'single_timeseries',
-      metric,
+      type: 'combined_graph',
       timerange: generateTimeRangeSpec(),
       graph_render_options: graphRenderOptions.value,
 
-      //TODO: this should map to color reference
-      color: 'default_theme'
+      graph_template: 'TODO',
+      presentation: 'lines'
     }
   }
 
@@ -108,7 +117,7 @@ export const useGraph = async (
   }
 
   watch(
-    [timeRange, widgetGeneralSettings, graphRenderOptions],
+    [timeRange, widgetGeneralSettings, graphRenderOptions, graphTemplate, presentation],
     useDebounceFn(() => {
       void _updateWidgetProps()
     }, 300),
@@ -142,6 +151,9 @@ export const useGraph = async (
     clickToPlacePin,
     showBurgerMenu,
     dontFollowTimerange,
+
+    graphTemplate,
+    presentation,
 
     widgetProps: widgetProps as Ref<WidgetProps>
   }

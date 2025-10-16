@@ -14,7 +14,7 @@ import {
   useWidgetVisualizationProps
 } from '@/dashboard-wip/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
 import type {
-  GraphContent,
+  PerformanceGraphContent,
   UseWidgetHandler,
   WidgetProps
 } from '@/dashboard-wip/components/Wizard/types'
@@ -31,20 +31,23 @@ import {
 
 const { _t } = usei18n()
 
-export interface UseGraph
+export interface UsePerformanceGraph
   extends UseWidgetHandler,
     UseGraphRenderOptions,
     UseWidgetVisualizationOptions {
   timeRange: Ref<GraphTimerange>
+  source: Ref<string | number>
+
+  widgetProps: Ref<WidgetProps>
 }
 
-export const useGraph = async (
+export const usePerformanceGraph = async (
   metric: string,
   filters: ConfiguredFilters,
   dashboardConstants: DashboardConstants,
   currentSpec?: WidgetSpec | null
-): Promise<UseGraph> => {
-  const currentContent = currentSpec?.content as GraphContent
+): Promise<UsePerformanceGraph> => {
+  const currentContent = currentSpec?.content as PerformanceGraphContent
 
   const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(_t('Time range'))
 
@@ -76,21 +79,20 @@ export const useGraph = async (
     graphRenderOptions
   } = useGraphRenderOptions(currentContent?.graph_render_options)
 
+  const source = ref<string | number>(currentContent?.source ?? '')
+
   const widgetProps = ref<WidgetProps>()
 
   const validate = (): boolean => {
     return validateTitle()
   }
 
-  const _generateContent = (): GraphContent => {
+  const _generateContent = (): PerformanceGraphContent => {
     return {
-      type: 'single_timeseries',
-      metric,
+      type: 'performance_graph',
       timerange: generateTimeRangeSpec(),
       graph_render_options: graphRenderOptions.value,
-
-      //TODO: this should map to color reference
-      color: 'default_theme'
+      source: source.value
     }
   }
 
@@ -108,7 +110,7 @@ export const useGraph = async (
   }
 
   watch(
-    [timeRange, widgetGeneralSettings, graphRenderOptions],
+    [timeRange, widgetGeneralSettings, graphRenderOptions, source],
     useDebounceFn(() => {
       void _updateWidgetProps()
     }, 300),
@@ -142,6 +144,8 @@ export const useGraph = async (
     clickToPlacePin,
     showBurgerMenu,
     dontFollowTimerange,
+
+    source,
 
     widgetProps: widgetProps as Ref<WidgetProps>
   }

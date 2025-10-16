@@ -32,12 +32,22 @@ import SelectableWidgets from '../../../components/WidgetSelection/SelectableWid
 import type { WidgetItemList } from '../../../components/WidgetSelection/types'
 import BarplotWidget from './BarplotWidget/BarplotWidget.vue'
 import { type UseBarplot, useBarplot } from './BarplotWidget/composables/useBarplot'
+import CombinedGraphWidget from './CombinedGraphWidget/CombinedGraphWidget.vue'
+import {
+  type UseCombinedGraph,
+  useCombinedGraph
+} from './CombinedGraphWidget/composables/useCombinedGraph'
 import GaugeWidget from './GaugeWidget/GaugeWidget.vue'
 import { type UseGauge, useGauge } from './GaugeWidget/composables/useGauge'
 import GraphWidget from './GraphWidget/GraphWidget.vue'
 import { type UseGraph, useGraph } from './GraphWidget/composables/useGraph'
 import MetricWidget from './MetricWidget/MetricWidget.vue'
 import { type UseMetric, useMetric } from './MetricWidget/composables/useMetric'
+import PerformanceGraphWidget from './PerformanceGraphWidget/PerformanceGraphWidget.vue'
+import {
+  type UsePerformanceGraph,
+  usePerformanceGraph
+} from './PerformanceGraphWidget/composables/usePerformanceGraph'
 import ScatterplotWidget from './ScatterplotWidget/ScatterplotWidget.vue'
 import { type UseScatterplot, useScatterplot } from './ScatterplotWidget/composables/useScatterplot'
 import TopListWidget from './TopListWidget/TopListWidget.vue'
@@ -153,6 +163,18 @@ const handler: Partial<Record<Graph, UseWidgetHandler>> = {
     props.filters,
     props.dashboardConstants,
     props.editWidgetSpec
+  ),
+  [Graph.PERFORMANCE_GRAPH]: await usePerformanceGraph(
+    props.metric,
+    props.filters,
+    props.dashboardConstants,
+    props.editWidgetSpec
+  ),
+  [Graph.COMBINED_GRAPH]: await useCombinedGraph(
+    props.metric,
+    props.filters,
+    props.dashboardConstants,
+    props.editWidgetSpec
   )
 }
 </script>
@@ -234,6 +256,18 @@ const handler: Partial<Record<Graph, UseWidgetHandler>> = {
   <TopListWidget
     v-if="selectedWidget === Graph.TOP_LIST"
     v-model:handler="handler[Graph.TOP_LIST] as unknown as UseTopList"
+    :dashboard-name="dashboardName"
+  />
+
+  <PerformanceGraphWidget
+    v-if="selectedWidget === Graph.PERFORMANCE_GRAPH"
+    v-model:handler="handler[Graph.PERFORMANCE_GRAPH] as unknown as UsePerformanceGraph"
+    :dashboard-name="dashboardName"
+  />
+
+  <CombinedGraphWidget
+    v-if="selectedWidget === Graph.COMBINED_GRAPH"
+    v-model:handler="handler[Graph.COMBINED_GRAPH] as unknown as UseCombinedGraph"
     :dashboard-name="dashboardName"
   />
 </template>

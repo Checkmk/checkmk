@@ -8,6 +8,7 @@ import os
 import re
 import subprocess
 from pathlib import Path
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 
 import pytest
 
@@ -348,3 +349,61 @@ def test_not_rc_tag(package_path: str, cmk_version: str) -> None:
     assert "ProductVersion" in properties
     assert properties["ProductVersion"] == cmk_version
     assert not re.match(r".*-rc\d+$", properties["ProductVersion"])
+
+
+def _verify_signature(file_path: Path, file_name: str) -> None | str:
+    result = subprocess.run(
+        [
+            "osslsigncode",
+            "verify",
+            file_path,
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        return f"{file_name}: " + result.stderr
+    return None
+
+
+def test_windows_artifacts_are_signed(package_path: str, cmk_version: str) -> None:
+    signing_failures = []
+
+    non_msi_files = ["mk-sql.exe"]
+    if not package_path.endswith(".tar.gz"):
+        non_msi_files += ["OpenHardwareMonitorLib.dll", "OpenHardwareMonitorCLI.exe"]
+        path_prefix = "share/check_mk/agents/windows"
+    else:
+        path_prefix = "agents/windows"
+
+    for non_msi_file in non_msi_files:
+        with NamedTemporaryFile() as non_msi_file_temp:
+            non_msi_file_temp.write(
+                _get_file_from_package(package_path, cmk_version, f"{path_prefix}/{non_msi_file}")
+            )
+            signing_failures.append(_verify_signature(Path(non_msi_file_temp.name), non_msi_file))
+
+    # TODO: Clarify why the msi is missing in the source.tar.gz CMK-26785
+    if not package_path.endswith(".tar.gz"):
+        with NamedTemporaryFile() as msi_file:
+            msi_file.write(
+                _get_file_from_package(
+                    package_path, cmk_version, f"{path_prefix}/check_mk_agent.msi"
+                )
+            )
+            signing_failures.append(_verify_signature(Path(msi_file.name), "check_mk_agent.msi"))
+            with TemporaryDirectory() as msi_content:
+                subprocess.run(
+                    ["msiextract", "-C", msi_content, msi_file.name],
+                    check=False,
+                    stdout=subprocess.DEVNULL,
+                )
+                for file in ("check_mk_agent.exe", "cmk-agent-ctl.exe"):
+                    signing_failures.append(
+                        _verify_signature(
+                            Path(msi_content + "/Program Files/checkmk/service/" + file), file
+                        )
+                    )
+
+    assert not any(signing_failures)

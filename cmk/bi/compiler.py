@@ -21,16 +21,14 @@ from cmk.bi.aggregation import BIAggregation
 from cmk.bi.data_fetcher import BIStructureFetcher, SiteProgramStart
 from cmk.bi.filesystem import BIFileSystem, get_default_site_filesystem
 from cmk.bi.lib import SitesCallback
+from cmk.bi.log import LOGGER
 from cmk.bi.packs import BIAggregationPacks
 from cmk.bi.searcher import BISearcher
 from cmk.bi.trees import BICompiledAggregation, BICompiledRule, FrozenBIInfo
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
-from cmk.utils.log import logger
 from cmk.utils.redis import get_redis_client
-
-_LOGGER = logger.getChild("web.bi.compilation")
 
 # NOTE: Multiprocessing support was reverted due to unexpected high resource usage. However, the
 # utility code was kept to further test on sandbox environments.
@@ -171,7 +169,7 @@ class BICompiler:
     def _load_compiled_aggregations(self) -> None:
         for identifier in self._get_vanished_aggregation_identifiers():
             aggregation = self._aggregation_store.get_by_identifier(identifier)
-            _LOGGER.debug("Loaded cached aggregation result: %s", aggregation.id)
+            LOGGER.debug("Loaded cached aggregation result: %s", aggregation.id)
             self._compiled_aggregations[aggregation.id] = aggregation
 
         self._compiled_aggregations = self._manage_frozen_branches(self._compiled_aggregations)
@@ -179,7 +177,7 @@ class BICompiler:
     def _check_compilation_status(self) -> None:
         current_configstatus = self.compute_current_configstatus()
         if not self._compilation_required(current_configstatus):
-            _LOGGER.debug("No compilation required.")
+            LOGGER.debug("No compilation required.")
             return
 
         with store.locked(self._fs.cache.compilation_lock):
@@ -187,7 +185,7 @@ class BICompiler:
             # Another apache might have done the job
             current_configstatus = self.compute_current_configstatus()
             if not self._compilation_required(current_configstatus):
-                _LOGGER.debug("No compilation required. Another process already compiled it.")
+                LOGGER.debug("No compilation required. Another process already compiled it.")
                 return
 
             self.prepare_for_compilation(current_configstatus["online_sites"])
@@ -196,7 +194,7 @@ class BICompiler:
                 start = time.perf_counter()
                 self._compiled_aggregations[aggregation.id] = aggregation.compile(self.bi_searcher)
                 end = time.perf_counter()
-                _LOGGER.debug(f"Compilation of {aggregation.id} took {end - start:f}")
+                LOGGER.debug(f"Compilation of {aggregation.id} took {end - start:f}")
 
             self._verify_aggregation_title_uniqueness(self._compiled_aggregations)
 
@@ -233,7 +231,7 @@ class BICompiler:
         start = time.perf_counter()
         self._aggregation_store.save(compiled_aggregation)
         end = time.perf_counter()
-        _LOGGER.debug(
+        LOGGER.debug(
             "Schema dump of %s (%d branches) took: %fs"
             % (compiled_aggregation.id, len(compiled_aggregation.branches), end - start)
         )
@@ -292,7 +290,7 @@ class BICompiler:
 
         if differing_program_starts := required_program_starts - cached_program_starts:
             differing_site_ids = ", ".join(site_id for site_id, _ in differing_program_starts)
-            _LOGGER.debug(f"Detected restarts for the following site ids: {differing_site_ids}")
+            LOGGER.debug(f"Detected restarts for the following site ids: {differing_site_ids}")
 
         return bool(differing_program_starts)
 
@@ -345,5 +343,5 @@ def _process_compilation(aggregation: BIAggregation) -> BICompiledAggregation:
     start = time.perf_counter()
     compiled_aggregation = aggregation.compile(_process_compilation.searcher)  # type: ignore[attr-defined]
     end = time.perf_counter()
-    _LOGGER.debug("Compilation of %s took: %fs", aggregation.id, end - start)
+    LOGGER.debug("Compilation of %s took: %fs", aggregation.id, end - start)
     return compiled_aggregation

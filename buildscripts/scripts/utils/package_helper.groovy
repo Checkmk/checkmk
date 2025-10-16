@@ -76,8 +76,6 @@ def provide_agent_binaries(version, edition, disable_cache, bisect_comment) {
                     check_mk_agent_unsigned.msi \
                     cmk-agent-ctl.exe \
                     check_mk.user.yml \
-                    OpenHardwareMonitorLib.dll \
-                    OpenHardwareMonitorCLI.exe \
                     mk-sql.exe \
                     robotmk_ext.exe \
                     windows_files_hashes.txt \

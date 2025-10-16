@@ -43,8 +43,6 @@ def build(Map args) {
                     "watest32.exe",
                     "watest64.exe",
                     "unit_tests_results.zip",
-                    "OpenHardwareMonitorLib.dll",
-                    "OpenHardwareMonitorCLI.exe",
                     "robotmk_ext.exe",
                     "mk-sql.exe",
                     "windows_files_hashes.txt",

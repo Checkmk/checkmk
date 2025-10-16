@@ -3,12 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 import pytest
 
 from cmk.graphing import v1 as graphing_api
 from cmk.graphing.v1 import graphs as graphs_api
-from cmk.gui.graphing._evaluations_from_api import evaluate_graph_plugin_range
-from cmk.gui.graphing._graph_specification import MinimalVerticalRange
+from cmk.graphing.v1 import metrics as metrics_api
+from cmk.gui.graphing._evaluations_from_api import (
+    evaluate_graph_plugin_range,
+    evaluate_graph_plugin_scalars,
+)
+from cmk.gui.graphing._graph_specification import HorizontalRule, MinimalVerticalRange
 from cmk.gui.graphing._translated_metrics import (
     Original,
     ScalarBounds,
@@ -16,6 +22,7 @@ from cmk.gui.graphing._translated_metrics import (
 )
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.unit_formatter import AutoPrecision
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 
 @pytest.mark.parametrize(
@@ -147,6 +154,7 @@ def test_evaluate_graph_plugin_range(
 ) -> None:
     assert (
         evaluate_graph_plugin_range(
+            {},
             graph_plugin,
             {
                 "metric": TranslatedMetric(
@@ -162,6 +170,128 @@ def test_evaluate_graph_plugin_range(
                     color="#123456",
                 )
             },
+        )
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
+    "graph_plugin, expected",
+    [
+        pytest.param(
+            graphs_api.Graph(
+                name="graph",
+                title=graphing_api.Title("Graph"),
+                compound_lines=["metric"],
+            ),
+            [],
+            id="graph-no-scalars",
+        ),
+        pytest.param(
+            graphs_api.Graph(
+                name="graph",
+                title=graphing_api.Title("Graph"),
+                compound_lines=["metric"],
+                simple_lines=[
+                    metrics_api.WarningOf("metric1"),
+                    metrics_api.CriticalOf("metric1"),
+                ],
+            ),
+            [],
+            id="graph-with-scalars-no-values",
+        ),
+        pytest.param(
+            graphs_api.Graph(
+                name="graph",
+                title=graphing_api.Title("Graph"),
+                compound_lines=["metric"],
+                simple_lines=[
+                    metrics_api.WarningOf("metric"),
+                    metrics_api.CriticalOf("metric"),
+                ],
+            ),
+            [
+                HorizontalRule(
+                    value=12.34,
+                    rendered_value="12.34 U",
+                    color="#ffd000",
+                    title="Warning of Metric",
+                ),
+                HorizontalRule(
+                    value=56.78,
+                    rendered_value="56.78 U",
+                    color="#ff3232",
+                    title="Critical of Metric",
+                ),
+            ],
+            id="graph-with-scalars-with-values",
+        ),
+        pytest.param(
+            graphs_api.Bidirectional(
+                name="graph",
+                title=graphing_api.Title("Graph"),
+                upper=graphs_api.Graph(
+                    name="graph_upper",
+                    title=graphing_api.Title("Graph upper"),
+                    minimal_range=graphs_api.MinimalRange("metric", 200),
+                    compound_lines=["metric"],
+                    simple_lines=[
+                        metrics_api.WarningOf("metric"),
+                    ],
+                ),
+                lower=graphs_api.Graph(
+                    name="graph_lower",
+                    title=graphing_api.Title("Graph lower"),
+                    minimal_range=graphs_api.MinimalRange(0, "metric"),
+                    compound_lines=["metric"],
+                    simple_lines=[
+                        metrics_api.CriticalOf("metric"),
+                    ],
+                ),
+            ),
+            [
+                HorizontalRule(
+                    value=12.34,
+                    rendered_value="12.34 U",
+                    color="#ffd000",
+                    title="Warning of Metric",
+                ),
+                HorizontalRule(
+                    value=-56.78,
+                    rendered_value="56.78 U",
+                    color="#ff3232",
+                    title="Critical of Metric",
+                ),
+            ],
+            id="bidirectional",
+        ),
+    ],
+)
+def test_evaluate_graph_plugin_scalars(
+    graph_plugin: graphs_api.Graph | graphs_api.Bidirectional, expected: Sequence[HorizontalRule]
+) -> None:
+    assert (
+        evaluate_graph_plugin_scalars(
+            {},
+            graph_plugin,
+            {
+                "metric": TranslatedMetric(
+                    originals=[Original("metric", 1.0)],
+                    value=123.456,
+                    scalar=ScalarBounds(
+                        warn=12.34,
+                        crit=56.78,
+                    ),
+                    auto_graph=True,
+                    title="Metric",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol="U"),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#123456",
+                )
+            },
+            temperature_unit=TemperatureUnit.CELSIUS,
         )
         == expected
     )

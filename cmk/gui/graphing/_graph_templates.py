@@ -27,7 +27,10 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.utils.servicename import ServiceName
 
-from ._evaluations_from_api import evaluate_graph_plugin_range
+from ._evaluations_from_api import (
+    evaluate_graph_plugin_range,
+    evaluate_graph_plugin_scalars,
+)
 from ._from_api import RegisteredMetric
 from ._graph_metric_expressions import (
     AnnotatedHostName,
@@ -429,33 +432,6 @@ def _graph_title_expression_to_metric_expression(
     return scalar
 
 
-def _evaluate_scalars(
-    metric_expressions: Sequence[MetricExpression],
-    translated_metrics: Mapping[str, TranslatedMetric],
-    *,
-    temperature_unit: TemperatureUnit,
-) -> Sequence[HorizontalRule]:
-    results = []
-    for metric_expression in metric_expressions:
-        if (result := metric_expression.evaluate(translated_metrics)).is_error():
-            # Scalar value like min and max are always optional. This makes configuration
-            # of graphs easier.
-            if result.error.metric_name:
-                continue
-            return []
-        results.append(
-            HorizontalRule(
-                value=result.ok.value * (-1 if result.ok.line_type.startswith("-") else 1),
-                rendered_value=user_specific_unit(
-                    result.ok.unit_spec, temperature_unit
-                ).formatter.render(result.ok.value),
-                color=result.ok.color,
-                title=result.ok.title,
-            )
-        )
-    return results
-
-
 def _compute_graph_recipes(
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
@@ -508,10 +484,13 @@ def _compute_graph_recipes(
                         for evaluated in all_evaluated_metrics
                     ],
                     explicit_vertical_range=evaluate_graph_plugin_range(
-                        graph_plugin, translated_metrics
+                        registered_metrics,
+                        graph_plugin,
+                        translated_metrics,
                     ),
-                    horizontal_rules=_evaluate_scalars(
-                        graph_template.scalars,
+                    horizontal_rules=evaluate_graph_plugin_scalars(
+                        registered_metrics,
+                        graph_plugin,
                         translated_metrics,
                         temperature_unit=temperature_unit,
                     ),

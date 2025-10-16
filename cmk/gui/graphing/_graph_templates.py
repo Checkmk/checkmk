@@ -8,7 +8,6 @@
 
 from __future__ import annotations
 
-import itertools
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import assert_never, Literal, Self
@@ -25,6 +24,7 @@ from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.utils.servicename import ServiceName
 
 from ._evaluations_from_api import (
+    evaluate_graph_plugin_metrics,
     evaluate_graph_plugin_range,
     evaluate_graph_plugin_scalars,
     evaluate_graph_plugin_title,
@@ -358,27 +358,6 @@ def graph_and_single_metric_template_choices_for_metrics(
     return graph_template_choices, single_metric_template_choices
 
 
-def _evaluate_predictive_metrics(
-    evaluated_metrics: Sequence[Evaluated],
-    translated_metrics: Mapping[str, TranslatedMetric],
-) -> Iterator[Evaluated]:
-    computed = set()
-    for evaluated in evaluated_metrics:
-        line_type: Literal["line", "-line"] = (
-            "-line" if evaluated.line_type.startswith("-") else "line"
-        )
-        for metric_name in evaluated.metric_names():
-            if metric_name in computed:
-                continue
-            computed.add(metric_name)
-            for predictive_metric_expression in [
-                MetricExpression(Metric(f"predict_{metric_name}"), line_type=line_type),
-                MetricExpression(Metric(f"predict_lower_{metric_name}"), line_type=line_type),
-            ]:
-                if (result := predictive_metric_expression.evaluate(translated_metrics)).is_ok():
-                    yield result.ok
-
-
 def _compute_graph_recipes(
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
@@ -391,24 +370,19 @@ def _compute_graph_recipes(
     temperature_unit: TemperatureUnit,
 ) -> Iterator[tuple[str, GraphRecipe]]:
     consolidation_function: Literal["max"] = "max"
-    already_graphed_metrics = set()
+    already_graphed_metrics: set[str] = set()
     for graph_id, graph_plugin in _sort_registered_graph_plugins(registered_graphs):
-        graph_template = _parse_graph_plugin(graph_id, graph_plugin, registered_metrics)
-        if evaluated_metrics := evaluate_metrics(
-            conflicting_metrics=graph_template.conflicting_metrics,
-            optional_metrics=graph_template.optional_metrics,
-            metric_expressions=graph_template.metrics,
-            translated_metrics=translated_metrics,
-        ):
-            all_evaluated_metrics = list(
-                itertools.chain(
-                    evaluated_metrics,
-                    _evaluate_predictive_metrics(evaluated_metrics, translated_metrics),
-                )
+        if (
+            graphed_metrics := evaluate_graph_plugin_metrics(
+                registered_metrics,
+                site_id,
+                host_name,
+                service_name,
+                graph_plugin,
+                translated_metrics,
             )
-            already_graphed_metrics.update(
-                {n for e in all_evaluated_metrics for n in e.metric_names()}
-            )
+        ).graph_metrics:
+            already_graphed_metrics.update(graphed_metrics.metric_names)
             yield (
                 graph_id,
                 _create_graph_recipe(
@@ -418,22 +392,7 @@ def _compute_graph_recipes(
                         graph_plugin.title.localize(translate_to_current_language),
                         translated_metrics,
                     ),
-                    graph_metrics=[
-                        GraphMetric(
-                            title=evaluated.title,
-                            line_type=evaluated.line_type,
-                            operation=evaluated.base.to_graph_metric_expression(
-                                site_id,
-                                host_name,
-                                service_name,
-                                translated_metrics,
-                                consolidation_function,
-                            ),
-                            unit=evaluated.unit_spec,
-                            color=evaluated.color,
-                        )
-                        for evaluated in all_evaluated_metrics
-                    ],
+                    graph_metrics=graphed_metrics.graph_metrics,
                     explicit_vertical_range=evaluate_graph_plugin_range(
                         registered_metrics,
                         graph_plugin,

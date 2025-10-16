@@ -15,7 +15,7 @@ from cmk.graphing.v1 import graphs as graphs_api
 from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import Title
 from cmk.gui.graphing._from_api import graphs_from_api, RegisteredMetric
-from cmk.gui.graphing._graph_metric_expressions import GraphMetricRRDSource, LineType
+from cmk.gui.graphing._graph_metric_expressions import GraphMetricRRDSource
 from cmk.gui.graphing._graph_specification import (
     GraphMetric,
     GraphRecipe,
@@ -23,19 +23,16 @@ from cmk.gui.graphing._graph_specification import (
 )
 from cmk.gui.graphing._graph_templates import (
     _compute_graph_recipes,
-    _evaluate_predictive_metrics,
     _matching_graph_recipes,
     _parse_bidirectional_from_api,
     _parse_graph_from_api,
     _parse_graph_plugin,
     _sort_registered_graph_plugins,
-    evaluate_metrics,
     GraphTemplate,
     MinimalGraphTemplateRange,
     TemplateGraphSpecification,
 )
 from cmk.gui.graphing._metric_expressions import (
-    BaseMetricExpression,
     Constant,
     CriticalOf,
     Difference,
@@ -1733,184 +1730,6 @@ def test__compute_graph_recipes_2(
 
 
 @pytest.mark.parametrize(
-    "metric_expressions, expected_predictive_metric_expressions",
-    [
-        pytest.param(
-            [],
-            [],
-            id="empty",
-        ),
-        pytest.param(
-            [MetricExpression(Metric("metric_name"), line_type="line")],
-            [
-                (Metric("predict_metric_name"), "line"),
-                (Metric("predict_lower_metric_name"), "line"),
-            ],
-            id="line",
-        ),
-        pytest.param(
-            [MetricExpression(Metric("metric_name"), line_type="area")],
-            [
-                (Metric("predict_metric_name"), "line"),
-                (Metric("predict_lower_metric_name"), "line"),
-            ],
-            id="area",
-        ),
-        pytest.param(
-            [MetricExpression(Metric("metric_name"), line_type="stack")],
-            [
-                (Metric("predict_metric_name"), "line"),
-                (Metric("predict_lower_metric_name"), "line"),
-            ],
-            id="stack",
-        ),
-        pytest.param(
-            [MetricExpression(Metric("metric_name"), line_type="-line")],
-            [
-                (Metric("predict_metric_name"), "-line"),
-                (Metric("predict_lower_metric_name"), "-line"),
-            ],
-            id="-line",
-        ),
-        pytest.param(
-            [MetricExpression(Metric("metric_name"), line_type="-area")],
-            [
-                (Metric("predict_metric_name"), "-line"),
-                (Metric("predict_lower_metric_name"), "-line"),
-            ],
-            id="-area",
-        ),
-        pytest.param(
-            [MetricExpression(Metric("metric_name"), line_type="-stack")],
-            [
-                (Metric("predict_metric_name"), "-line"),
-                (Metric("predict_lower_metric_name"), "-line"),
-            ],
-            id="-stack",
-        ),
-    ],
-)
-def test__evaluate_predictive_metrics_line_type(
-    metric_expressions: Sequence[MetricExpression],
-    expected_predictive_metric_expressions: Sequence[tuple[BaseMetricExpression, LineType]],
-) -> None:
-    translated_metrics = {
-        "metric_name": TranslatedMetric(
-            originals=[Original("metric_name", 1.0)],
-            value=1.0,
-            scalar={},
-            auto_graph=True,
-            title="",
-            unit_spec=ConvertibleUnitSpecification(
-                notation=DecimalNotation(symbol=""),
-                precision=AutoPrecision(digits=2),
-            ),
-            color="#0080c0",
-        ),
-        "predict_metric_name": TranslatedMetric(
-            originals=[Original("predict_metric_name", 1.0)],
-            value=2.0,
-            scalar={},
-            auto_graph=True,
-            title="",
-            unit_spec=ConvertibleUnitSpecification(
-                notation=DecimalNotation(symbol=""),
-                precision=AutoPrecision(digits=2),
-            ),
-            color="#0080c0",
-        ),
-        "predict_lower_metric_name": TranslatedMetric(
-            originals=[Original("predict_lower_metric_name", 1.0)],
-            value=3.0,
-            scalar={},
-            auto_graph=True,
-            title="",
-            unit_spec=ConvertibleUnitSpecification(
-                notation=DecimalNotation(symbol=""),
-                precision=AutoPrecision(digits=2),
-            ),
-            color="#0080c0",
-        ),
-    }
-    assert [
-        (e.base, e.line_type)
-        for e in _evaluate_predictive_metrics(
-            evaluate_metrics(
-                conflicting_metrics=[],
-                optional_metrics=[],
-                metric_expressions=metric_expressions,
-                translated_metrics=translated_metrics,
-            ),
-            translated_metrics,
-        )
-    ] == expected_predictive_metric_expressions
-
-
-def test__evaluate_predictive_metrics_duplicates() -> None:
-    translated_metrics = {
-        "metric_name": TranslatedMetric(
-            originals=[Original("metric_name", 1.0)],
-            value=1.0,
-            scalar={"warn": 1.1, "crit": 1.2},
-            auto_graph=True,
-            title="",
-            unit_spec=ConvertibleUnitSpecification(
-                notation=DecimalNotation(symbol=""),
-                precision=AutoPrecision(digits=2),
-            ),
-            color="#0080c0",
-        ),
-        "predict_metric_name": TranslatedMetric(
-            originals=[Original("predict_metric_name", 1.0)],
-            value=2.0,
-            scalar={},
-            auto_graph=True,
-            title="",
-            unit_spec=ConvertibleUnitSpecification(
-                notation=DecimalNotation(symbol=""),
-                precision=AutoPrecision(digits=2),
-            ),
-            color="#0080c0",
-        ),
-        "predict_lower_metric_name": TranslatedMetric(
-            originals=[Original("predict_lower_metric_name", 1.0)],
-            value=3.0,
-            scalar={},
-            auto_graph=True,
-            title="",
-            unit_spec=ConvertibleUnitSpecification(
-                notation=DecimalNotation(symbol=""),
-                precision=AutoPrecision(digits=2),
-            ),
-            color="#0080c0",
-        ),
-    }
-    assert [
-        (e.base, e.line_type)
-        for e in _evaluate_predictive_metrics(
-            evaluate_metrics(
-                conflicting_metrics=[],
-                optional_metrics=[],
-                metric_expressions=[
-                    MetricExpression(Metric("metric_name"), line_type="line"),
-                    MetricExpression(
-                        WarningOf(Metric("metric_name")), line_type="line", title="Warn"
-                    ),
-                    MetricExpression(
-                        CriticalOf(Metric("metric_name")), line_type="line", title="Crit"
-                    ),
-                ],
-                translated_metrics=translated_metrics,
-            ),
-            translated_metrics,
-        )
-    ] == [
-        (Metric("predict_metric_name"), "line"),
-        (Metric("predict_lower_metric_name"), "line"),
-    ]
-
-
-@pytest.mark.parametrize(
     (
         "metric_names",
         "predict_metric_names",
@@ -2012,40 +1831,6 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                             color="#1ee6e6",
                         ),
                         GraphMetric(
-                            title="Prediction of Outbound messages (upper levels)",
-                            line_type="line",
-                            operation=GraphMetricRRDSource(
-                                site_id=SiteId("site_id"),
-                                host_name=HostName("host_name"),
-                                service_name=ServiceName("service_name"),
-                                metric_name="predict_messages_outbound",
-                                consolidation_func_name="max",
-                                scale=1.0,
-                            ),
-                            unit=ConvertibleUnitSpecification(
-                                notation=DecimalNotation(symbol="/s"),
-                                precision=AutoPrecision(digits=2),
-                            ),
-                            color="#4b4b4b",
-                        ),
-                        GraphMetric(
-                            title="Prediction of Outbound messages (lower levels)",
-                            line_type="line",
-                            operation=GraphMetricRRDSource(
-                                site_id=SiteId("site_id"),
-                                host_name=HostName("host_name"),
-                                service_name=ServiceName("service_name"),
-                                metric_name="predict_lower_messages_outbound",
-                                consolidation_func_name="max",
-                                scale=1.0,
-                            ),
-                            unit=ConvertibleUnitSpecification(
-                                notation=DecimalNotation(symbol="/s"),
-                                precision=AutoPrecision(digits=2),
-                            ),
-                            color="#696969",
-                        ),
-                        GraphMetric(
                             title="Prediction of Inbound messages (upper levels)",
                             line_type="line",
                             operation=GraphMetricRRDSource(
@@ -2078,6 +1863,40 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                                 precision=AutoPrecision(digits=2),
                             ),
                             color="#787878",
+                        ),
+                        GraphMetric(
+                            title="Prediction of Outbound messages (upper levels)",
+                            line_type="line",
+                            operation=GraphMetricRRDSource(
+                                site_id=SiteId("site_id"),
+                                host_name=HostName("host_name"),
+                                service_name=ServiceName("service_name"),
+                                metric_name="predict_messages_outbound",
+                                consolidation_func_name="max",
+                                scale=1.0,
+                            ),
+                            unit=ConvertibleUnitSpecification(
+                                notation=DecimalNotation(symbol="/s"),
+                                precision=AutoPrecision(digits=2),
+                            ),
+                            color="#4b4b4b",
+                        ),
+                        GraphMetric(
+                            title="Prediction of Outbound messages (lower levels)",
+                            line_type="line",
+                            operation=GraphMetricRRDSource(
+                                site_id=SiteId("site_id"),
+                                host_name=HostName("host_name"),
+                                service_name=ServiceName("service_name"),
+                                metric_name="predict_lower_messages_outbound",
+                                consolidation_func_name="max",
+                                scale=1.0,
+                            ),
+                            unit=ConvertibleUnitSpecification(
+                                notation=DecimalNotation(symbol="/s"),
+                                precision=AutoPrecision(digits=2),
+                            ),
+                            color="#696969",
                         ),
                     ],
                     specification=TemplateGraphSpecification(

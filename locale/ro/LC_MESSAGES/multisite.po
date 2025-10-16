@@ -4958,10 +4958,6 @@ msgstr "Situri afectate"
 msgid "Affected sites: %s"
 msgstr "Situri afectate"
 
-#, fuzzy
-msgid "Affinity"
-msgstr "init"
-
 msgid ""
 "After a battery diagnostics the battery capacity is reduced until the "
 "battery is fully charged again. Here you can specify an alternative lower "
@@ -7544,10 +7540,6 @@ msgid "Assumed to be %s"
 msgstr "Se presupune că este %s."
 
 msgid "Asynchronous"
-msgstr "Asincronă"
-
-#, fuzzy
-msgid "Asynchronous check"
 msgstr "Asincronă"
 
 msgid "Asynchronous closing connections"
@@ -12599,10 +12591,6 @@ msgstr "Verificați statul brokerului de pe primar: "
 msgid "Check TCP port connection"
 msgstr "Verificați conexiunea portului TCP"
 
-#, fuzzy
-msgid "Check all instances"
-msgstr "Monitorizarea tuturor instanțelor găsite"
-
 msgid "Check and CRIT"
 msgstr "Verificați și CRIT"
 
@@ -12611,10 +12599,6 @@ msgstr "Verificați și WARN"
 
 msgid "Check and display only"
 msgstr "Doar verificare și afișare"
-
-#, fuzzy
-msgid "Check asm instances"
-msgstr "%s instanțe"
 
 #, fuzzy
 msgid "Check certificate"
@@ -12730,10 +12714,6 @@ msgstr "Verificarea nu a fost executată în %d secunde"
 
 msgid "Check notification number per contact"
 msgstr "Verificați numărul de notificări pentru fiecare contact"
-
-#, fuzzy
-msgid "Check only db instances"
-msgstr "Verificați numai căsuțele poștale listate"
 
 msgid "Check only the listed mailboxes"
 msgstr "Verificați numai căsuțele poștale listate"
@@ -13187,8 +13167,32 @@ msgstr ""
 msgid "Checkmk with times performance data"
 msgstr "Checkmk cu date de performanță ori"
 
+#, fuzzy
+msgid "Checkmk: API: Bytes"
+msgstr "Checkmk: BI"
+
+#, fuzzy
+msgid "Checkmk: API: Requests"
+msgstr "Checkmk: BI"
+
+#, fuzzy
+msgid "Checkmk: API: Secs"
+msgstr "Checkmk: BI"
+
 msgid "Checkmk: Agent bakery signing keys expire soon"
 msgstr ""
+
+#, fuzzy
+msgid "Checkmk: Ajax: Bytes"
+msgstr "Checkmk: WATO"
+
+#, fuzzy
+msgid "Checkmk: Ajax: Requests"
+msgstr "Checkmk: WATO"
+
+#, fuzzy
+msgid "Checkmk: Ajax: Secs"
+msgstr "Checkmk: WATO"
 
 #, fuzzy
 msgid "Checkmk: BI: Bytes"
@@ -13215,8 +13219,44 @@ msgid "Checkmk: Dashboards: Secs"
 msgstr "Checkmk: Tablouri de bord"
 
 #, fuzzy
+msgid "Checkmk: Graphs: Bytes"
+msgstr "Checkmk: BI"
+
+#, fuzzy
+msgid "Checkmk: Graphs: Requests"
+msgstr "Checkmk: BI"
+
+#, fuzzy
+msgid "Checkmk: Graphs: Secs"
+msgstr "Checkmk: BI"
+
+#, fuzzy
+msgid "Checkmk: Index: Bytes"
+msgstr "Checkmk: BI"
+
+#, fuzzy
+msgid "Checkmk: Index: Requests"
+msgstr "Checkmk: BI"
+
+#, fuzzy
+msgid "Checkmk: Index: Secs"
+msgstr "Checkmk: BI"
+
+#, fuzzy
 msgid "Checkmk: License verification failed"
 msgstr "Verificarea licenței a eșuat"
+
+#, fuzzy
+msgid "Checkmk: Login: Bytes"
+msgstr "Checkmk: BI"
+
+#, fuzzy
+msgid "Checkmk: Login: Requests"
+msgstr "Checkmk: BI"
+
+#, fuzzy
+msgid "Checkmk: Login: Secs"
+msgstr "Checkmk: BI"
 
 #, fuzzy
 msgid "Checkmk: Other: Bytes"
@@ -13229,6 +13269,18 @@ msgstr "Checkmk: Altele"
 #, fuzzy
 msgid "Checkmk: Other: Secs"
 msgstr "Checkmk: Altele"
+
+#, fuzzy
+msgid "Checkmk: Search: Bytes"
+msgstr "Checkmk: BI"
+
+#, fuzzy
+msgid "Checkmk: Search: Requests"
+msgstr "Checkmk: BI"
+
+#, fuzzy
+msgid "Checkmk: Search: Secs"
+msgstr "Checkmk: BI"
 
 #, fuzzy
 msgid "Checkmk: Setup: Bytes"
@@ -13252,6 +13304,18 @@ msgstr "Checkmk: Elemente de bară laterală"
 
 #, fuzzy
 msgid "Checkmk: Sidebar elements: Secs"
+msgstr "Checkmk: Elemente de bară laterală"
+
+#, fuzzy
+msgid "Checkmk: Sidebar: Bytes"
+msgstr "Checkmk: Elemente de bară laterală"
+
+#, fuzzy
+msgid "Checkmk: Sidebar: Requests"
+msgstr "Checkmk: Elemente de bară laterală"
+
+#, fuzzy
+msgid "Checkmk: Sidebar: Secs"
 msgstr "Checkmk: Elemente de bară laterală"
 
 #, fuzzy
@@ -16011,7 +16075,7 @@ msgid "Controller version"
 msgstr "Versiunea controlerului"
 
 msgid ""
-"Controls usage of host Oracle client libraries. Allowed values: 'auto' (auto-"
+"Controls usage of host Oracle Instant Client. Allowed values: 'auto' (auto-"
 "detect, fallback to bundled), 'never' (force bundled), 'always' (force "
 "host), or an absolute path to an OCI library directory (e.g. /usr/lib/"
 "oracle/...)."
@@ -18836,10 +18900,6 @@ msgstr ""
 "Definiți modelele de includere a parametrilor de configurare a kernelului în "
 "inventar."
 
-#, fuzzy
-msgid "Define sections"
-msgstr "Secțiuni pentru persoane cu handicap"
-
 msgid ""
 "Define the host to assign the discovered CloudFront services. You can assign "
 "them to the AWS host as any other AWS service or to a piggyback host that "
@@ -20479,6 +20539,10 @@ msgstr "Dezactivați expirarea timpului de conectare"
 
 msgid "Disable this package"
 msgstr "Dezactivați acest pachet"
+
+#, fuzzy
+msgid "Disable this section"
+msgstr "dezactivați această secțiune"
 
 msgid "Disable this site"
 msgstr "Dezactivați acest site"
@@ -32869,7 +32933,9 @@ msgstr ""
 "redescoperirea automată. Regulile din acel set de reguli vor înlocui "
 "setările globale efectuate aici."
 
-msgid "If enabled, the check will be executed asynchronously."
+msgid ""
+"If enabled, the instance name will be queried from the database instead of "
+"the database name."
 msgstr ""
 
 msgid ""
@@ -34358,6 +34424,9 @@ msgstr "Ignoră repornirile de bază mai scurte de"
 #, fuzzy
 msgid "Ignore database name"
 msgstr "Numele bazei de date"
+
+msgid "Ignore database name and use instance name instead"
+msgstr ""
 
 msgid "Ignore default increment"
 msgstr "Ignoră incrementarea implicită"
@@ -48488,6 +48557,14 @@ msgid "Oracle IOSTAT write bytes"
 msgstr "ORACLE IOSTAT Bytes"
 
 #, fuzzy
+msgid "Oracle Instant Client options"
+msgstr "Rata de accesare a memoriei cache"
+
+#, fuzzy
+msgid "Oracle Instant Client usage"
+msgstr "Utilizați acreditările"
+
+#, fuzzy
 msgid "Oracle Java pool size"
 msgstr "Dimensiunea bazinului Java"
 
@@ -48638,14 +48715,6 @@ msgstr "Rata de accesare a memoriei cache"
 #, fuzzy
 msgid "Oracle buffer pool statistics"
 msgstr "Statisticile ORACLE privind bazinul tampon"
-
-#, fuzzy
-msgid "Oracle client library options"
-msgstr "Rata de accesare a memoriei cache"
-
-#, fuzzy
-msgid "Oracle client library usage"
-msgstr "Utilizați acreditările"
 
 #, fuzzy
 msgid "Oracle cluster wait class"
@@ -57682,7 +57751,16 @@ msgstr "SYN_SENT"
 msgid "SYSASM"
 msgstr ""
 
+msgid "SYSBACKUP"
+msgstr ""
+
 msgid "SYSDBA"
+msgstr ""
+
+msgid "SYSDG"
+msgstr ""
+
+msgid "SYSKM"
 msgstr ""
 
 msgid "SYSOPER"
@@ -58464,12 +58542,6 @@ msgstr "Parametrii impliciți"
 msgid "Select recipient"
 msgstr "Destinatarul"
 
-msgid ""
-"Select sections of the Oracle monitoring plug-in and define their affinity "
-"and whether they should be run asynchronously(if not checked, all sections "
-"will be returned)."
-msgstr ""
-
 #, python-format
 msgid ""
 "Select sites the %s should be avalable on. It will become available for all "
@@ -58715,6 +58787,10 @@ msgstr ""
 "Connect) sau \"App Registrations\" (Înregistrări aplicații), va trebui să "
 "acordați permisiunea grafică \"Directory.Read.All\" (Director.Read.All) "
 "aplicației Azure și să îi acordați consimțământul administratorului."
+
+msgid ""
+"Select which data(sections) should be collected from the Oracle database."
+msgstr ""
 
 msgid "Selected"
 msgstr "Selectată"
@@ -91901,6 +91977,18 @@ msgstr "Selectată"
 msgid "No elements"
 msgstr "Elemente de comutare"
 
+#, fuzzy
+msgid "An unexpected error occurred"
+msgstr "S-a produs o excepție: %s"
+
+#, fuzzy
+msgid ""
+"Refresh the page to try again. If the problem persists, reach out to the "
+"Checkmk support."
+msgstr ""
+"Dacă această eroare persistă, vă rugăm să contactați echipa de asistență "
+"Checkmk."
+
 msgid "Drag to reorder"
 msgstr ""
 
@@ -91931,18 +92019,6 @@ msgstr "Finalizat"
 #, fuzzy
 msgid "Guided"
 msgstr "Modul deschis"
-
-#, fuzzy
-msgid "An unexpected error occurred"
-msgstr "S-a produs o excepție: %s"
-
-#, fuzzy
-msgid ""
-"Refresh the page to try again. If the problem persists, reach out to the "
-"Checkmk support."
-msgstr ""
-"Dacă această eroare persistă, vă rugăm să contactați echipa de asistență "
-"Checkmk."
 
 #, fuzzy
 msgid "required"
@@ -93021,6 +93097,16 @@ msgstr "Vă rugăm să selectați cel puțin un element"
 msgid "Select one graph line to edit"
 msgstr "Vă rugăm să selectați cel puțin un element"
 
+msgid "Ctrl"
+msgstr ""
+
+msgid "Shift"
+msgstr ""
+
+#, fuzzy
+msgid "Alt"
+msgstr "Alertă"
+
 #, fuzzy
 msgid "Open full view"
 msgstr "Fișiere deschise"
@@ -93085,6 +93171,9 @@ msgstr "A început să activeze modificările: %s"
 #, fuzzy
 msgid "Sites with errors: %{n}"
 msgstr "%d site-uri cu erori: %s"
+
+msgid "Key hints"
+msgstr ""
 
 #, fuzzy
 msgid "Agent connection test running"
@@ -93351,11 +93440,21 @@ msgid ""
 "is pending."
 msgstr ""
 
+msgid ""
+"Download the Relay container image and run it in your environment to start "
+"the setup."
+msgstr ""
+
 msgid "Deploy the relay to your environment"
 msgstr ""
 
-msgid "Name the relay and register with your Checkmk site"
-msgstr ""
+#, fuzzy
+msgid "Name the relay"
+msgstr "Numele reprezentantului"
+
+#, fuzzy
+msgid "Register the relay with your Checkmk site"
+msgstr "Afișarea stării site-urilor Checkmk\n"
 
 #, fuzzy
 msgid "Connection check"
@@ -93791,6 +93890,30 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Affinity"
+#~ msgstr "init"
+
+#, fuzzy
+#~ msgid "Asynchronous check"
+#~ msgstr "Asincronă"
+
+#, fuzzy
+#~ msgid "Check all instances"
+#~ msgstr "Monitorizarea tuturor instanțelor găsite"
+
+#, fuzzy
+#~ msgid "Check asm instances"
+#~ msgstr "%s instanțe"
+
+#, fuzzy
+#~ msgid "Check only db instances"
+#~ msgstr "Verificați numai căsuțele poștale listate"
+
+#, fuzzy
+#~ msgid "Define sections"
+#~ msgstr "Secțiuni pentru persoane cu handicap"
 
 #~ msgid "Compute REST API specification"
 #~ msgstr "Specificația API REST Compute"
@@ -96581,18 +96704,6 @@ msgstr ""
 
 #~ msgid "Add Contact Group"
 #~ msgstr "Adăugați un grup de contacte"
-
-#, fuzzy
-#~ msgid "Checkmk: WATO: Bytes"
-#~ msgstr "Checkmk: WATO"
-
-#, fuzzy
-#~ msgid "Checkmk: WATO: Requests"
-#~ msgstr "Checkmk: WATO"
-
-#, fuzzy
-#~ msgid "Checkmk: WATO: Secs"
-#~ msgstr "Checkmk: WATO"
 
 #~ msgid "File Size Levels"
 #~ msgstr "Niveluri de mărime a fișierelor"

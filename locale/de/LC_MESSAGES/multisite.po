@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2025-10-15 10:16+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
@@ -4836,9 +4836,6 @@ msgstr "Betroffene Instanzen"
 msgid "Affected sites: %s"
 msgstr "Betroffene Instanzen: %s"
 
-msgid "Affinity"
-msgstr "Affinität"
-
 msgid ""
 "After a battery diagnostics the battery capacity is reduced until the "
 "battery is fully charged again. Here you can specify an alternative lower "
@@ -7346,9 +7343,6 @@ msgstr "Angenommen %s"
 
 msgid "Asynchronous"
 msgstr "Asynchron"
-
-msgid "Asynchronous check"
-msgstr "Asynchroner Check"
 
 msgid "Asynchronous closing connections"
 msgstr "Asynchrone schließende Verbindungen"
@@ -12085,9 +12079,6 @@ msgstr "Check-Zustand des Brokers auf dem Primary: "
 msgid "Check TCP port connection"
 msgstr "Check TCP Port Verbindung"
 
-msgid "Check all instances"
-msgstr "Alle Instanzen prüfen"
-
 msgid "Check and CRIT"
 msgstr "Prüfen und CRIT"
 
@@ -12096,9 +12087,6 @@ msgstr "Prüfen und WARN"
 
 msgid "Check and display only"
 msgstr "Prüfen und nur anzeigen"
-
-msgid "Check asm instances"
-msgstr "asm Instanzen prüfen"
 
 msgid "Check certificate"
 msgstr "Zertifikat prüfen"
@@ -12211,9 +12199,6 @@ msgstr "Prüfung nicht innerhalb von %d Sekunden ausgeführt"
 
 msgid "Check notification number per contact"
 msgstr "Benachrichtigungsnummer pro Kontakt prüfen"
-
-msgid "Check only db instances"
-msgstr "Nur DB-Instanzen prüfen"
 
 msgid "Check only the listed mailboxes"
 msgstr "Nur die aufgelisteten Mailboxen überprüfen"
@@ -12668,8 +12653,32 @@ msgstr ""
 msgid "Checkmk with times performance data"
 msgstr "Checkmk mit Zeitmetriken"
 
+#, fuzzy
+msgid "Checkmk: API: Bytes"
+msgstr "Checkmk: BI: Bytes"
+
+#, fuzzy
+msgid "Checkmk: API: Requests"
+msgstr "Checkmk: BI: Anfragen"
+
+#, fuzzy
+msgid "Checkmk: API: Secs"
+msgstr "Checkmk: BI: Sekunden"
+
 msgid "Checkmk: Agent bakery signing keys expire soon"
 msgstr "Checkmk: Signaturschlüssel der Agentenbäckerei laufen bald ab"
+
+#, fuzzy
+msgid "Checkmk: Ajax: Bytes"
+msgstr "Checkmk: Setup: Bytes"
+
+#, fuzzy
+msgid "Checkmk: Ajax: Requests"
+msgstr "Checkmk: Setup: Anfragen"
+
+#, fuzzy
+msgid "Checkmk: Ajax: Secs"
+msgstr "Checkmk: Setup: Sekunden"
 
 msgid "Checkmk: BI: Bytes"
 msgstr "Checkmk: BI: Bytes"
@@ -12689,8 +12698,44 @@ msgstr "Checkmk: Dashboards: Anfragen"
 msgid "Checkmk: Dashboards: Secs"
 msgstr "Checkmk: Dashboards: Sekunden"
 
+#, fuzzy
+msgid "Checkmk: Graphs: Bytes"
+msgstr "Checkmk: BI: Bytes"
+
+#, fuzzy
+msgid "Checkmk: Graphs: Requests"
+msgstr "Checkmk: BI: Anfragen"
+
+#, fuzzy
+msgid "Checkmk: Graphs: Secs"
+msgstr "Checkmk: BI: Sekunden"
+
+#, fuzzy
+msgid "Checkmk: Index: Bytes"
+msgstr "Checkmk: BI: Bytes"
+
+#, fuzzy
+msgid "Checkmk: Index: Requests"
+msgstr "Checkmk: BI: Anfragen"
+
+#, fuzzy
+msgid "Checkmk: Index: Secs"
+msgstr "Checkmk: BI: Sekunden"
+
 msgid "Checkmk: License verification failed"
 msgstr "Checkmk: Lizenzverifizierung fehlgeschlagen"
+
+#, fuzzy
+msgid "Checkmk: Login: Bytes"
+msgstr "Checkmk: BI: Bytes"
+
+#, fuzzy
+msgid "Checkmk: Login: Requests"
+msgstr "Checkmk: BI: Anfragen"
+
+#, fuzzy
+msgid "Checkmk: Login: Secs"
+msgstr "Checkmk: BI: Sekunden"
 
 msgid "Checkmk: Other: Bytes"
 msgstr "Checkmk: Sonstige: Bytes"
@@ -12700,6 +12745,18 @@ msgstr "Checkmk: Sonstige: Anfragen"
 
 msgid "Checkmk: Other: Secs"
 msgstr "Checkmk: Sonstige: Sekunden"
+
+#, fuzzy
+msgid "Checkmk: Search: Bytes"
+msgstr "Checkmk: Setup: Bytes"
+
+#, fuzzy
+msgid "Checkmk: Search: Requests"
+msgstr "Checkmk: Setup: Anfragen"
+
+#, fuzzy
+msgid "Checkmk: Search: Secs"
+msgstr "Checkmk: Setup: Sekunden"
 
 msgid "Checkmk: Setup: Bytes"
 msgstr "Checkmk: Setup: Bytes"
@@ -12717,6 +12774,18 @@ msgid "Checkmk: Sidebar elements: Requests"
 msgstr "Checkmk: Seitenleistenelemente: Anfragen"
 
 msgid "Checkmk: Sidebar elements: Secs"
+msgstr "Checkmk: Seitenleistenelemente: Sekunden"
+
+#, fuzzy
+msgid "Checkmk: Sidebar: Bytes"
+msgstr "Checkmk: Seitenleistenelemente: Bytes"
+
+#, fuzzy
+msgid "Checkmk: Sidebar: Requests"
+msgstr "Checkmk: Seitenleistenelemente: Anfragen"
+
+#, fuzzy
+msgid "Checkmk: Sidebar: Secs"
 msgstr "Checkmk: Seitenleistenelemente: Sekunden"
 
 msgid "Checkmk: Views: Bytes"
@@ -15427,7 +15496,7 @@ msgid "Controller version"
 msgstr "Controller-Version"
 
 msgid ""
-"Controls usage of host Oracle client libraries. Allowed values: 'auto' (auto-"
+"Controls usage of host Oracle Instant Client. Allowed values: 'auto' (auto-"
 "detect, fallback to bundled), 'never' (force bundled), 'always' (force "
 "host), or an absolute path to an OCI library directory (e.g. /usr/lib/"
 "oracle/...)."
@@ -18171,9 +18240,6 @@ msgstr ""
 "Definiere Patterns, um die Kernel-Konfigurationsparameter bei der Inventur "
 "einzuschließen."
 
-msgid "Define sections"
-msgstr "Definiere Sektionen"
-
 msgid ""
 "Define the host to assign the discovered CloudFront services. You can assign "
 "them to the AWS host as any other AWS service or to a piggyback host that "
@@ -19712,6 +19778,10 @@ msgstr "Login-Timeout deaktivieren"
 
 msgid "Disable this package"
 msgstr "Dieses Paket deaktivieren"
+
+#, fuzzy
+msgid "Disable this section"
+msgstr "Diese Sektion deaktivieren"
 
 msgid "Disable this site"
 msgstr "Diese Instanz deaktivieren"
@@ -31408,7 +31478,9 @@ msgstr ""
 "Funktionen, wie z. B. automatische Wiedererkennung bietet. Regeln in diesem "
 "Regelsatz überschreiben diese globale Option."
 
-msgid "If enabled, the check will be executed asynchronously."
+msgid ""
+"If enabled, the instance name will be queried from the database instead of "
+"the database name."
 msgstr ""
 
 msgid ""
@@ -32899,6 +32971,9 @@ msgstr "Neustarts des Kern ignorieren wenn kürzer als"
 
 msgid "Ignore database name"
 msgstr "Datenbankname ignorieren"
+
+msgid "Ignore database name and use instance name instead"
+msgstr ""
 
 msgid "Ignore default increment"
 msgstr "Standardinkrement ignorieren"
@@ -46410,6 +46485,14 @@ msgstr "Oracle IOSTAT Gesamt-Schreib-Bytes"
 msgid "Oracle IOSTAT write bytes"
 msgstr "Oracle IOSTAT Schreib-Bytes"
 
+#, fuzzy
+msgid "Oracle Instant Client options"
+msgstr "Optionen der Oracle Client-Bibliothek"
+
+#, fuzzy
+msgid "Oracle Instant Client usage"
+msgstr "Auslastung der Oracle Client-Bibliothek"
+
 msgid "Oracle Java pool size"
 msgstr "Oracle Java-Poolgröße"
 
@@ -46527,12 +46610,6 @@ msgstr "Oracle Puffer Trefferquote"
 
 msgid "Oracle buffer pool statistics"
 msgstr "Oracle Bufferpool-Statistiken"
-
-msgid "Oracle client library options"
-msgstr "Optionen der Oracle Client-Bibliothek"
-
-msgid "Oracle client library usage"
-msgstr "Auslastung der Oracle Client-Bibliothek"
 
 msgid "Oracle cluster wait class"
 msgstr "Oracle Cluster Warteklasse"
@@ -55005,7 +55082,16 @@ msgstr "SYN_SENT"
 msgid "SYSASM"
 msgstr ""
 
+msgid "SYSBACKUP"
+msgstr ""
+
 msgid "SYSDBA"
+msgstr ""
+
+msgid "SYSDG"
+msgstr ""
+
+msgid "SYSKM"
 msgstr ""
 
 msgid "SYSOPER"
@@ -55763,12 +55849,6 @@ msgstr "Parameter auswählen"
 msgid "Select recipient"
 msgstr "Empfänger auswählen"
 
-msgid ""
-"Select sections of the Oracle monitoring plug-in and define their affinity "
-"and whether they should be run asynchronously(if not checked, all sections "
-"will be returned)."
-msgstr ""
-
 #, python-format
 msgid ""
 "Select sites the %s should be avalable on. It will become available for all "
@@ -56021,6 +56101,10 @@ msgstr ""
 "Registrations' überwachen möchten, müssen Sie der Azure-App die Graphen-"
 "Berechtigung 'Directory.Read.All' erteilen und ihr die Admin-Zustimmung "
 "erteilen."
+
+msgid ""
+"Select which data(sections) should be collected from the Oracle database."
+msgstr ""
 
 msgid "Selected"
 msgstr "Ausgewählt"
@@ -88206,6 +88290,16 @@ msgstr "ausgewählt"
 msgid "No elements"
 msgstr "Keine Elemente"
 
+msgid "An unexpected error occurred"
+msgstr "Ein unerwarteter Fehler ist aufgetreten"
+
+msgid ""
+"Refresh the page to try again. If the problem persists, reach out to the "
+"Checkmk support."
+msgstr ""
+"Aktualisieren Sie die Seite, um es erneut zu versuchen. Wenn das Problem "
+"weiterhin besteht, wenden Sie sich an den Checkmk-Support."
+
 msgid "Drag to reorder"
 msgstr ""
 
@@ -88229,16 +88323,6 @@ msgstr "Fertigstellen"
 
 msgid "Guided"
 msgstr "Geführt"
-
-msgid "An unexpected error occurred"
-msgstr "Ein unerwarteter Fehler ist aufgetreten"
-
-msgid ""
-"Refresh the page to try again. If the problem persists, reach out to the "
-"Checkmk support."
-msgstr ""
-"Aktualisieren Sie die Seite, um es erneut zu versuchen. Wenn das Problem "
-"weiterhin besteht, wenden Sie sich an den Checkmk-Support."
 
 msgid "required"
 msgstr "erforderlich"
@@ -89122,6 +89206,16 @@ msgstr "Wählen Sie mindestens zwei Graph-Linien zur Bearbeitung aus"
 msgid "Select one graph line to edit"
 msgstr "Wählen Sie eine Graph-Linie zur Bearbeitung aus"
 
+msgid "Ctrl"
+msgstr ""
+
+msgid "Shift"
+msgstr ""
+
+#, fuzzy
+msgid "Alt"
+msgstr "Alert"
+
 msgid "Open full view"
 msgstr "Vollbild öffnen"
 
@@ -89175,6 +89269,9 @@ msgstr "Instanzen mit Änderungen: %{n}"
 
 msgid "Sites with errors: %{n}"
 msgstr "Instanzen mit Fehlern: %{n}"
+
+msgid "Key hints"
+msgstr ""
 
 msgid "Agent connection test running"
 msgstr "Test der Agentenverbindung läuft"
@@ -89421,11 +89518,21 @@ msgid ""
 "is pending."
 msgstr ""
 
+msgid ""
+"Download the Relay container image and run it in your environment to start "
+"the setup."
+msgstr ""
+
 msgid "Deploy the relay to your environment"
 msgstr ""
 
-msgid "Name the relay and register with your Checkmk site"
-msgstr ""
+#, fuzzy
+msgid "Name the relay"
+msgstr "Name des Proxy"
+
+#, fuzzy
+msgid "Register the relay with your Checkmk site"
+msgstr "Zeigt den Zustand der Checkmk-Instanzen an\n"
 
 msgid "Connection check"
 msgstr "Verbindungstest"
@@ -89839,6 +89946,24 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Affinity"
+#~ msgstr "Affinität"
+
+#~ msgid "Asynchronous check"
+#~ msgstr "Asynchroner Check"
+
+#~ msgid "Check all instances"
+#~ msgstr "Alle Instanzen prüfen"
+
+#~ msgid "Check asm instances"
+#~ msgstr "asm Instanzen prüfen"
+
+#~ msgid "Check only db instances"
+#~ msgstr "Nur DB-Instanzen prüfen"
+
+#~ msgid "Define sections"
+#~ msgstr "Definiere Sektionen"
 
 #~ msgid "Compute REST API specification"
 #~ msgstr "Verarbeite REST-API Spezifikation"
@@ -92947,15 +93072,6 @@ msgstr ""
 
 #~ msgid "Add Contact Group"
 #~ msgstr "Kontaktgruppe hinzufügen"
-
-#~ msgid "Checkmk: WATO: Bytes"
-#~ msgstr "Checkmk: Setup: Bytes"
-
-#~ msgid "Checkmk: WATO: Requests"
-#~ msgstr "Checkmk: Setup: Anfragen"
-
-#~ msgid "Checkmk: WATO: Secs"
-#~ msgstr "Checkmk: Setup: Sekunden"
 
 #~ msgid "File Size Levels"
 #~ msgstr "Level für Dateigrößen"

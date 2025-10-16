@@ -4695,10 +4695,6 @@ msgstr "影響を受けるサイト"
 msgid "Affected sites: %s"
 msgstr "影響を受けるサイト：%s"
 
-#, fuzzy
-msgid "Affinity"
-msgstr "初期化"
-
 msgid ""
 "After a battery diagnostics the battery capacity is reduced until the "
 "battery is fully charged again. Here you can specify an alternative lower "
@@ -7119,10 +7115,6 @@ msgid "Assumed to be %s"
 msgstr "%s と見なされます"
 
 msgid "Asynchronous"
-msgstr "非同期"
-
-#, fuzzy
-msgid "Asynchronous check"
 msgstr "非同期"
 
 msgid "Asynchronous closing connections"
@@ -11808,10 +11800,6 @@ msgstr "プライマリのブローカーの状態を確認します。 "
 msgid "Check TCP port connection"
 msgstr "TCPポート接続を確認する"
 
-#, fuzzy
-msgid "Check all instances"
-msgstr "すべてのインスタンスを監視する"
-
 msgid "Check and CRIT"
 msgstr "チェックとクリティカル"
 
@@ -11820,10 +11808,6 @@ msgstr "チェックして警告"
 
 msgid "Check and display only"
 msgstr "チェックして表示するだけ"
-
-#, fuzzy
-msgid "Check asm instances"
-msgstr "%s インスタンス"
 
 msgid "Check certificate"
 msgstr "証明書のチェック"
@@ -11934,10 +11918,6 @@ msgstr "チェックが %d 秒以内に実行されない"
 
 msgid "Check notification number per contact"
 msgstr "連絡先ごとの通知番号を確認する"
-
-#, fuzzy
-msgid "Check only db instances"
-msgstr "リストされているメールボックスのみを確認する"
 
 msgid "Check only the listed mailboxes"
 msgstr "リストされているメールボックスのみを確認する"
@@ -12376,8 +12356,32 @@ msgstr ""
 msgid "Checkmk with times performance data"
 msgstr "タイムパフォーマンスデータとCheckmk"
 
+#, fuzzy
+msgid "Checkmk: API: Bytes"
+msgstr "Checkmk: BI: Bytes"
+
+#, fuzzy
+msgid "Checkmk: API: Requests"
+msgstr "Checkmk:BI: Requests"
+
+#, fuzzy
+msgid "Checkmk: API: Secs"
+msgstr "Checkmk: BI: Secs"
+
 msgid "Checkmk: Agent bakery signing keys expire soon"
 msgstr "Checkmk: エージェントベーカリーの署名キーの期限"
+
+#, fuzzy
+msgid "Checkmk: Ajax: Bytes"
+msgstr "Checkmk: WATO: Bytes"
+
+#, fuzzy
+msgid "Checkmk: Ajax: Requests"
+msgstr "Checkmk: WATO: Requests"
+
+#, fuzzy
+msgid "Checkmk: Ajax: Secs"
+msgstr "Checkmk: WATO: Secs"
 
 msgid "Checkmk: BI: Bytes"
 msgstr "Checkmk: BI: Bytes"
@@ -12397,8 +12401,44 @@ msgstr "Checkmk: ダッシュボード: Requests"
 msgid "Checkmk: Dashboards: Secs"
 msgstr "Checkmk: ダッシュボード: Secs"
 
+#, fuzzy
+msgid "Checkmk: Graphs: Bytes"
+msgstr "Checkmk: BI: Bytes"
+
+#, fuzzy
+msgid "Checkmk: Graphs: Requests"
+msgstr "Checkmk:BI: Requests"
+
+#, fuzzy
+msgid "Checkmk: Graphs: Secs"
+msgstr "Checkmk: BI: Secs"
+
+#, fuzzy
+msgid "Checkmk: Index: Bytes"
+msgstr "Checkmk: BI: Bytes"
+
+#, fuzzy
+msgid "Checkmk: Index: Requests"
+msgstr "Checkmk:BI: Requests"
+
+#, fuzzy
+msgid "Checkmk: Index: Secs"
+msgstr "Checkmk: BI: Secs"
+
 msgid "Checkmk: License verification failed"
 msgstr "Checkmk:ライセンス認証に失敗しました"
+
+#, fuzzy
+msgid "Checkmk: Login: Bytes"
+msgstr "Checkmk: BI: Bytes"
+
+#, fuzzy
+msgid "Checkmk: Login: Requests"
+msgstr "Checkmk:BI: Requests"
+
+#, fuzzy
+msgid "Checkmk: Login: Secs"
+msgstr "Checkmk: BI: Secs"
 
 msgid "Checkmk: Other: Bytes"
 msgstr "Checkmk:その他: Bytes"
@@ -12408,6 +12448,18 @@ msgstr "Checkmk:他: Requests"
 
 msgid "Checkmk: Other: Secs"
 msgstr "Checkmk: その他: Secs"
+
+#, fuzzy
+msgid "Checkmk: Search: Bytes"
+msgstr "Checkmk: Setup: Bytes"
+
+#, fuzzy
+msgid "Checkmk: Search: Requests"
+msgstr "Checkmk: Setup: Requests"
+
+#, fuzzy
+msgid "Checkmk: Search: Secs"
+msgstr "Checkmk: Setup: Secs"
 
 msgid "Checkmk: Setup: Bytes"
 msgstr "Checkmk: Setup: Bytes"
@@ -12425,6 +12477,18 @@ msgid "Checkmk: Sidebar elements: Requests"
 msgstr "Checkmk: サイドバー要素: Requests"
 
 msgid "Checkmk: Sidebar elements: Secs"
+msgstr "Checkmk: サイドバー要素: Secs"
+
+#, fuzzy
+msgid "Checkmk: Sidebar: Bytes"
+msgstr "Checkmk: サイドバー要素: Bytes"
+
+#, fuzzy
+msgid "Checkmk: Sidebar: Requests"
+msgstr "Checkmk: サイドバー要素: Requests"
+
+#, fuzzy
+msgid "Checkmk: Sidebar: Secs"
 msgstr "Checkmk: サイドバー要素: Secs"
 
 msgid "Checkmk: Views: Bytes"
@@ -15054,7 +15118,7 @@ msgid "Controller version"
 msgstr "コントローラバージョン"
 
 msgid ""
-"Controls usage of host Oracle client libraries. Allowed values: 'auto' (auto-"
+"Controls usage of host Oracle Instant Client. Allowed values: 'auto' (auto-"
 "detect, fallback to bundled), 'never' (force bundled), 'always' (force "
 "host), or an absolute path to an OCI library directory (e.g. /usr/lib/"
 "oracle/...)."
@@ -17749,10 +17813,6 @@ msgid ""
 msgstr ""
 "カーネル構成パラメーターをインベントリに含めるためのパターンを定義します。"
 
-#, fuzzy
-msgid "Define sections"
-msgstr "無効なセクション"
-
 msgid ""
 "Define the host to assign the discovered CloudFront services. You can assign "
 "them to the AWS host as any other AWS service or to a piggyback host that "
@@ -19267,6 +19327,10 @@ msgstr "ログインタイムアウトを無効にする"
 
 msgid "Disable this package"
 msgstr "このパッケージを無効にする"
+
+#, fuzzy
+msgid "Disable this section"
+msgstr "このセクションを無効にする"
 
 msgid "Disable this site"
 msgstr "サイトを無効化"
@@ -30739,7 +30803,9 @@ msgstr ""
 "のような追加機能が可能になります。自動再検出。そのルールセットのルールは、こ"
 "こで行われたグローバル設定を上書きします。"
 
-msgid "If enabled, the check will be executed asynchronously."
+msgid ""
+"If enabled, the instance name will be queried from the database instead of "
+"the database name."
 msgstr ""
 
 msgid ""
@@ -32138,6 +32204,9 @@ msgstr "より短いコア再起動を無視する"
 #, fuzzy
 msgid "Ignore database name"
 msgstr "データベース名"
+
+msgid "Ignore database name and use instance name instead"
+msgstr ""
 
 msgid "Ignore default increment"
 msgstr "デフォルトの増分を無視する"
@@ -45449,6 +45518,14 @@ msgstr "Oracle IOSTATの合計書き込みバイト数"
 msgid "Oracle IOSTAT write bytes"
 msgstr "Oracle IOSTAT書き込みバイト"
 
+#, fuzzy
+msgid "Oracle Instant Client options"
+msgstr "Oracleヒット率"
+
+#, fuzzy
+msgid "Oracle Instant Client usage"
+msgstr "資格情報を使用する"
+
 msgid "Oracle Java pool size"
 msgstr "Oracle Javaプールサイズ"
 
@@ -45567,14 +45644,6 @@ msgstr "Oracle バッファヒット率"
 
 msgid "Oracle buffer pool statistics"
 msgstr "Oracleバッファプールの統計"
-
-#, fuzzy
-msgid "Oracle client library options"
-msgstr "Oracleヒット率"
-
-#, fuzzy
-msgid "Oracle client library usage"
-msgstr "資格情報を使用する"
 
 msgid "Oracle cluster wait class"
 msgstr "Oracleクラスタ待機クラス"
@@ -53926,7 +53995,16 @@ msgstr "SYN_SENT"
 msgid "SYSASM"
 msgstr ""
 
+msgid "SYSBACKUP"
+msgstr ""
+
 msgid "SYSDBA"
+msgstr ""
+
+msgid "SYSDG"
+msgstr ""
+
+msgid "SYSKM"
 msgstr ""
 
 msgid "SYSOPER"
@@ -54675,12 +54753,6 @@ msgstr "パラメータを選択"
 msgid "Select recipient"
 msgstr "受信者を選択"
 
-msgid ""
-"Select sections of the Oracle monitoring plug-in and define their affinity "
-"and whether they should be run asynchronously(if not checked, all sections "
-"will be returned)."
-msgstr ""
-
 #, python-format
 msgid ""
 "Select sites the %s should be avalable on. It will become available for all "
@@ -54918,6 +54990,10 @@ msgstr ""
 "「Active Directory のユーザー」または「AD Connect Sync」、「アプリ登録」を監"
 "視する場合は、Azure アプリに「Directory.Read.All」グラフ権限を付与し、管理者"
 "権限を付与する必要があります。"
+
+msgid ""
+"Select which data(sections) should be collected from the Oracle database."
+msgstr ""
 
 msgid "Selected"
 msgstr "選択済み"
@@ -85889,6 +85965,16 @@ msgstr "選択済み"
 msgid "No elements"
 msgstr "エレメントを切り替えます"
 
+#, fuzzy
+msgid "An unexpected error occurred"
+msgstr "接続エラーが発生しました: %s"
+
+#, fuzzy
+msgid ""
+"Refresh the page to try again. If the problem persists, reach out to the "
+"Checkmk support."
+msgstr "このエラーが続く場合は、Checkmkサポートチームまでご連絡ください。"
+
 msgid "Drag to reorder"
 msgstr ""
 
@@ -85919,16 +86005,6 @@ msgstr "終了しました"
 #, fuzzy
 msgid "Guided"
 msgstr "ガイドモード"
-
-#, fuzzy
-msgid "An unexpected error occurred"
-msgstr "接続エラーが発生しました: %s"
-
-#, fuzzy
-msgid ""
-"Refresh the page to try again. If the problem persists, reach out to the "
-"Checkmk support."
-msgstr "このエラーが続く場合は、Checkmkサポートチームまでご連絡ください。"
 
 msgid "required"
 msgstr "必須"
@@ -86966,6 +87042,16 @@ msgstr "編集するグラフの線を少なくとも１つ選択してくださ
 msgid "Select one graph line to edit"
 msgstr "編集するグラフの線を選択してください"
 
+msgid "Ctrl"
+msgstr ""
+
+msgid "Shift"
+msgstr ""
+
+#, fuzzy
+msgid "Alt"
+msgstr "アラート"
+
 #, fuzzy
 msgid "Open full view"
 msgstr "ファイルを開く"
@@ -87027,6 +87113,9 @@ msgstr "変更の有効化を開始しました: %s"
 #, fuzzy
 msgid "Sites with errors: %{n}"
 msgstr "%d サイトでエラーが発生しました: %s"
+
+msgid "Key hints"
+msgstr ""
 
 #, fuzzy
 msgid "Agent connection test running"
@@ -87286,11 +87375,21 @@ msgid ""
 "is pending."
 msgstr ""
 
+msgid ""
+"Download the Relay container image and run it in your environment to start "
+"the setup."
+msgstr ""
+
 msgid "Deploy the relay to your environment"
 msgstr ""
 
-msgid "Name the relay and register with your Checkmk site"
-msgstr ""
+#, fuzzy
+msgid "Name the relay"
+msgstr "プロキシの名前"
+
+#, fuzzy
+msgid "Register the relay with your Checkmk site"
+msgstr "Checkmkサイトの状態を表示する\n"
 
 #, fuzzy
 msgid "Connection check"
@@ -87714,6 +87813,30 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Affinity"
+#~ msgstr "初期化"
+
+#, fuzzy
+#~ msgid "Asynchronous check"
+#~ msgstr "非同期"
+
+#, fuzzy
+#~ msgid "Check all instances"
+#~ msgstr "すべてのインスタンスを監視する"
+
+#, fuzzy
+#~ msgid "Check asm instances"
+#~ msgstr "%s インスタンス"
+
+#, fuzzy
+#~ msgid "Check only db instances"
+#~ msgstr "リストされているメールボックスのみを確認する"
+
+#, fuzzy
+#~ msgid "Define sections"
+#~ msgstr "無効なセクション"
 
 #~ msgid "Compute REST API specification"
 #~ msgstr "REST APIの仕様"
@@ -90487,15 +90610,6 @@ msgstr ""
 
 #~ msgid "Add Contact Group"
 #~ msgstr "連絡先グループを追加"
-
-#~ msgid "Checkmk: WATO: Bytes"
-#~ msgstr "Checkmk: WATO: Bytes"
-
-#~ msgid "Checkmk: WATO: Requests"
-#~ msgstr "Checkmk: WATO: Requests"
-
-#~ msgid "Checkmk: WATO: Secs"
-#~ msgstr "Checkmk: WATO: Secs"
 
 #~ msgid "File Size Levels"
 #~ msgstr "ファイルサイズレベル"

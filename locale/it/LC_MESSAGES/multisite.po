@@ -4913,10 +4913,6 @@ msgstr "Siti interessati"
 msgid "Affected sites: %s"
 msgstr "Siti interessati"
 
-#, fuzzy
-msgid "Affinity"
-msgstr "init"
-
 msgid ""
 "After a battery diagnostics the battery capacity is reduced until the "
 "battery is fully charged again. Here you can specify an alternative lower "
@@ -7478,10 +7474,6 @@ msgid "Assumed to be %s"
 msgstr "Si presume che sia %s"
 
 msgid "Asynchronous"
-msgstr "Asincrono"
-
-#, fuzzy
-msgid "Asynchronous check"
 msgstr "Asincrono"
 
 msgid "Asynchronous closing connections"
@@ -12453,10 +12445,6 @@ msgstr "Controllare lo Stato del Broker sul primario: "
 msgid "Check TCP port connection"
 msgstr "Controllare la connessione della porta TCP"
 
-#, fuzzy
-msgid "Check all instances"
-msgstr "Controlla tutte le istanze trovate"
-
 msgid "Check and CRIT"
 msgstr "Controllare e CRIT"
 
@@ -12465,10 +12453,6 @@ msgstr "Controllare e avvisare"
 
 msgid "Check and display only"
 msgstr "Solo controllo e visualizzazione"
-
-#, fuzzy
-msgid "Check asm instances"
-msgstr "%s Istanze"
 
 #, fuzzy
 msgid "Check certificate"
@@ -12584,10 +12568,6 @@ msgstr "Controllo non eseguito entro %d secondi"
 
 msgid "Check notification number per contact"
 msgstr "Controlla il numero di notifiche per contatto"
-
-#, fuzzy
-msgid "Check only db instances"
-msgstr "Controlla solo le caselle di posta elencate"
 
 msgid "Check only the listed mailboxes"
 msgstr "Controlla solo le caselle di posta elencate"
@@ -13040,8 +13020,32 @@ msgstr ""
 msgid "Checkmk with times performance data"
 msgstr "Checkmk con i dati sulle prestazioni dei tempi"
 
+#, fuzzy
+msgid "Checkmk: API: Bytes"
+msgstr "Checkmk: BI"
+
+#, fuzzy
+msgid "Checkmk: API: Requests"
+msgstr "Checkmk: BI"
+
+#, fuzzy
+msgid "Checkmk: API: Secs"
+msgstr "Checkmk: BI"
+
 msgid "Checkmk: Agent bakery signing keys expire soon"
 msgstr ""
+
+#, fuzzy
+msgid "Checkmk: Ajax: Bytes"
+msgstr "Checkmk: WATO"
+
+#, fuzzy
+msgid "Checkmk: Ajax: Requests"
+msgstr "Checkmk: WATO"
+
+#, fuzzy
+msgid "Checkmk: Ajax: Secs"
+msgstr "Checkmk: WATO"
 
 #, fuzzy
 msgid "Checkmk: BI: Bytes"
@@ -13068,8 +13072,44 @@ msgid "Checkmk: Dashboards: Secs"
 msgstr "Checkmk: Dashboard"
 
 #, fuzzy
+msgid "Checkmk: Graphs: Bytes"
+msgstr "Checkmk: BI"
+
+#, fuzzy
+msgid "Checkmk: Graphs: Requests"
+msgstr "Checkmk: BI"
+
+#, fuzzy
+msgid "Checkmk: Graphs: Secs"
+msgstr "Checkmk: BI"
+
+#, fuzzy
+msgid "Checkmk: Index: Bytes"
+msgstr "Checkmk: BI"
+
+#, fuzzy
+msgid "Checkmk: Index: Requests"
+msgstr "Checkmk: BI"
+
+#, fuzzy
+msgid "Checkmk: Index: Secs"
+msgstr "Checkmk: BI"
+
+#, fuzzy
 msgid "Checkmk: License verification failed"
 msgstr "Verifica della licenza fallita"
+
+#, fuzzy
+msgid "Checkmk: Login: Bytes"
+msgstr "Checkmk: BI"
+
+#, fuzzy
+msgid "Checkmk: Login: Requests"
+msgstr "Checkmk: BI"
+
+#, fuzzy
+msgid "Checkmk: Login: Secs"
+msgstr "Checkmk: BI"
 
 #, fuzzy
 msgid "Checkmk: Other: Bytes"
@@ -13082,6 +13122,18 @@ msgstr "Checkmk: Altro"
 #, fuzzy
 msgid "Checkmk: Other: Secs"
 msgstr "Checkmk: Altro"
+
+#, fuzzy
+msgid "Checkmk: Search: Bytes"
+msgstr "Checkmk: BI"
+
+#, fuzzy
+msgid "Checkmk: Search: Requests"
+msgstr "Checkmk: BI"
+
+#, fuzzy
+msgid "Checkmk: Search: Secs"
+msgstr "Checkmk: BI"
 
 #, fuzzy
 msgid "Checkmk: Setup: Bytes"
@@ -13105,6 +13157,18 @@ msgstr "Checkmk: Elementi della barra laterale"
 
 #, fuzzy
 msgid "Checkmk: Sidebar elements: Secs"
+msgstr "Checkmk: Elementi della barra laterale"
+
+#, fuzzy
+msgid "Checkmk: Sidebar: Bytes"
+msgstr "Checkmk: Elementi della barra laterale"
+
+#, fuzzy
+msgid "Checkmk: Sidebar: Requests"
+msgstr "Checkmk: Elementi della barra laterale"
+
+#, fuzzy
+msgid "Checkmk: Sidebar: Secs"
 msgstr "Checkmk: Elementi della barra laterale"
 
 #, fuzzy
@@ -15849,7 +15913,7 @@ msgid "Controller version"
 msgstr "Versione del controllore"
 
 msgid ""
-"Controls usage of host Oracle client libraries. Allowed values: 'auto' (auto-"
+"Controls usage of host Oracle Instant Client. Allowed values: 'auto' (auto-"
 "detect, fallback to bundled), 'never' (force bundled), 'always' (force "
 "host), or an absolute path to an OCI library directory (e.g. /usr/lib/"
 "oracle/...)."
@@ -18639,10 +18703,6 @@ msgstr ""
 "Definire i modelli per includere i parametri di configurazione del kernel "
 "nell'inventario."
 
-#, fuzzy
-msgid "Define sections"
-msgstr "Sezioni disabili"
-
 msgid ""
 "Define the host to assign the discovered CloudFront services. You can assign "
 "them to the AWS host as any other AWS service or to a piggyback host that "
@@ -20268,6 +20328,10 @@ msgstr "Disattivare il timeout di login"
 
 msgid "Disable this package"
 msgstr "Disattivare questo pacchetto"
+
+#, fuzzy
+msgid "Disable this section"
+msgstr "disabilitare questa sezione"
 
 msgid "Disable this site"
 msgstr "Disattivare questo sito"
@@ -32549,7 +32613,9 @@ msgstr ""
 "aggiuntive come la riscoperta automatica. Le regole di questo set di regole "
 "sovrascrivono le impostazioni globali effettuate qui."
 
-msgid "If enabled, the check will be executed asynchronously."
+msgid ""
+"If enabled, the instance name will be queried from the database instead of "
+"the database name."
 msgstr ""
 
 msgid ""
@@ -34001,6 +34067,9 @@ msgstr "Ignora i riavvii del nucleo più brevi di"
 #, fuzzy
 msgid "Ignore database name"
 msgstr "Nome del database"
+
+msgid "Ignore database name and use instance name instead"
+msgstr ""
 
 msgid "Ignore default increment"
 msgstr "Ignora l'incremento predefinito"
@@ -47991,6 +48060,14 @@ msgid "Oracle IOSTAT write bytes"
 msgstr "ORACLE IOSTAT Bytes"
 
 #, fuzzy
+msgid "Oracle Instant Client options"
+msgstr "Cache hit ratio"
+
+#, fuzzy
+msgid "Oracle Instant Client usage"
+msgstr "Utilizzare le credenziali"
+
+#, fuzzy
 msgid "Oracle Java pool size"
 msgstr "Dimensione del pool Java"
 
@@ -48141,14 +48218,6 @@ msgstr "Cache hit ratio"
 #, fuzzy
 msgid "Oracle buffer pool statistics"
 msgstr "Statistiche del buffer pool ORACLE"
-
-#, fuzzy
-msgid "Oracle client library options"
-msgstr "Cache hit ratio"
-
-#, fuzzy
-msgid "Oracle client library usage"
-msgstr "Utilizzare le credenziali"
 
 #, fuzzy
 msgid "Oracle cluster wait class"
@@ -57136,7 +57205,16 @@ msgstr "SYN_SENT"
 msgid "SYSASM"
 msgstr ""
 
+msgid "SYSBACKUP"
+msgstr ""
+
 msgid "SYSDBA"
+msgstr ""
+
+msgid "SYSDG"
+msgstr ""
+
+msgid "SYSKM"
 msgstr ""
 
 msgid "SYSOPER"
@@ -57908,12 +57986,6 @@ msgstr "Parametri predefiniti"
 msgid "Select recipient"
 msgstr "Destinatario"
 
-msgid ""
-"Select sections of the Oracle monitoring plug-in and define their affinity "
-"and whether they should be run asynchronously(if not checked, all sections "
-"will be returned)."
-msgstr ""
-
 #, python-format
 msgid ""
 "Select sites the %s should be avalable on. It will become available for all "
@@ -58135,6 +58207,10 @@ msgstr ""
 "Connect' o 'Registrazioni app', è necessario concedere l'autorizzazione "
 "grafica 'Directory.Read.All' all'applicazione Azure e concedere il consenso "
 "all'amministratore."
+
+msgid ""
+"Select which data(sections) should be collected from the Oracle database."
+msgstr ""
 
 msgid "Selected"
 msgstr "Selezionato"
@@ -90911,6 +90987,16 @@ msgstr "Selezionato"
 msgid "No elements"
 msgstr "Elementi a ginocchiera"
 
+#, fuzzy
+msgid "An unexpected error occurred"
+msgstr "Si è verificata un'eccezione: %s"
+
+#, fuzzy
+msgid ""
+"Refresh the page to try again. If the problem persists, reach out to the "
+"Checkmk support."
+msgstr "Se l'errore persiste, contattare il team di assistenza Checkmk."
+
 msgid "Drag to reorder"
 msgstr ""
 
@@ -90941,16 +91027,6 @@ msgstr "Finito"
 #, fuzzy
 msgid "Guided"
 msgstr "Modo aperto"
-
-#, fuzzy
-msgid "An unexpected error occurred"
-msgstr "Si è verificata un'eccezione: %s"
-
-#, fuzzy
-msgid ""
-"Refresh the page to try again. If the problem persists, reach out to the "
-"Checkmk support."
-msgstr "Se l'errore persiste, contattare il team di assistenza Checkmk."
 
 #, fuzzy
 msgid "required"
@@ -92020,6 +92096,16 @@ msgstr "Seleziona almeno un elemento"
 msgid "Select one graph line to edit"
 msgstr "Seleziona almeno un elemento"
 
+msgid "Ctrl"
+msgstr ""
+
+msgid "Shift"
+msgstr ""
+
+#, fuzzy
+msgid "Alt"
+msgstr "Allerta"
+
 #, fuzzy
 msgid "Open full view"
 msgstr "Aprire i file"
@@ -92084,6 +92170,9 @@ msgstr "Partire attivare le modifiche: %s"
 #, fuzzy
 msgid "Sites with errors: %{n}"
 msgstr "%d siti con errori: %s"
+
+msgid "Key hints"
+msgstr ""
 
 #, fuzzy
 msgid "Agent connection test running"
@@ -92349,11 +92438,21 @@ msgid ""
 "is pending."
 msgstr ""
 
+msgid ""
+"Download the Relay container image and run it in your environment to start "
+"the setup."
+msgstr ""
+
 msgid "Deploy the relay to your environment"
 msgstr ""
 
-msgid "Name the relay and register with your Checkmk site"
-msgstr ""
+#, fuzzy
+msgid "Name the relay"
+msgstr "Nome del delegato"
+
+#, fuzzy
+msgid "Register the relay with your Checkmk site"
+msgstr "Visualizzazione dello stato dei siti Checkmk\n"
 
 #, fuzzy
 msgid "Connection check"
@@ -92786,6 +92885,30 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Affinity"
+#~ msgstr "init"
+
+#, fuzzy
+#~ msgid "Asynchronous check"
+#~ msgstr "Asincrono"
+
+#, fuzzy
+#~ msgid "Check all instances"
+#~ msgstr "Controlla tutte le istanze trovate"
+
+#, fuzzy
+#~ msgid "Check asm instances"
+#~ msgstr "%s Istanze"
+
+#, fuzzy
+#~ msgid "Check only db instances"
+#~ msgstr "Controlla solo le caselle di posta elencate"
+
+#, fuzzy
+#~ msgid "Define sections"
+#~ msgstr "Sezioni disabili"
 
 #~ msgid "Compute REST API specification"
 #~ msgstr "Specifiche API REST di calcolo"
@@ -95477,18 +95600,6 @@ msgstr ""
 
 #~ msgid "Add Contact Group"
 #~ msgstr "Aggiungi gruppo di contatti"
-
-#, fuzzy
-#~ msgid "Checkmk: WATO: Bytes"
-#~ msgstr "Checkmk: WATO"
-
-#, fuzzy
-#~ msgid "Checkmk: WATO: Requests"
-#~ msgstr "Checkmk: WATO"
-
-#, fuzzy
-#~ msgid "Checkmk: WATO: Secs"
-#~ msgstr "Checkmk: WATO"
 
 #~ msgid "File Size Levels"
 #~ msgstr "Livelli di dimensione dei file"

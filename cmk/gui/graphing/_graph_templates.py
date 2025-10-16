@@ -575,42 +575,41 @@ def _compute_graph_recipes(
                     _evaluate_predictive_metrics(evaluated_metrics, translated_metrics),
                 )
             )
-            evaluated_graph_template = EvaluatedGraphTemplate(
-                title=_evaluate_title(_parse_title(graph_plugin), translated_metrics),
-                horizontal_rules=_evaluate_scalars(
-                    graph_template.scalars,
-                    translated_metrics,
-                    temperature_unit=temperature_unit,
-                ),
-                consolidation_function=consolidation_function,
-                range=evaluate_graph_template_range(
-                    graph_template.range,
-                    translated_metrics,
-                ),
-                omit_zero_metrics=False,
-                metrics=[
-                    GraphMetric(
-                        title=evaluated.title,
-                        line_type=evaluated.line_type,
-                        operation=evaluated.base.to_graph_metric_expression(
-                            site_id,
-                            host_name,
-                            service_name,
-                            translated_metrics,
-                            consolidation_function,
-                        ),
-                        unit=evaluated.unit_spec,
-                        color=evaluated.color,
-                    )
-                    for evaluated in all_evaluated_metrics
-                ],
-            )
             already_graphed_metrics.update(
                 {n for e in all_evaluated_metrics for n in e.metric_names()}
             )
             yield (
                 graph_id,
-                _create_graph_recipe_from_template(specification, evaluated_graph_template),
+                _create_graph_recipe(
+                    specification,
+                    title=_evaluate_title(_parse_title(graph_plugin), translated_metrics),
+                    graph_metrics=[
+                        GraphMetric(
+                            title=evaluated.title,
+                            line_type=evaluated.line_type,
+                            operation=evaluated.base.to_graph_metric_expression(
+                                site_id,
+                                host_name,
+                                service_name,
+                                translated_metrics,
+                                consolidation_function,
+                            ),
+                            unit=evaluated.unit_spec,
+                            color=evaluated.color,
+                        )
+                        for evaluated in all_evaluated_metrics
+                    ],
+                    explicit_vertical_range=evaluate_graph_template_range(
+                        graph_template.range,
+                        translated_metrics,
+                    ),
+                    horizontal_rules=_evaluate_scalars(
+                        graph_template.scalars,
+                        translated_metrics,
+                        temperature_unit=temperature_unit,
+                    ),
+                    consolidation_function=consolidation_function,
+                ),
             )
 
     for metric_name, translated_metric in sorted(translated_metrics.items()):
@@ -625,7 +624,14 @@ def _compute_graph_recipes(
             )
             yield (
                 graph_id,
-                _create_graph_recipe_from_template(specification, evaluated_graph_template),
+                _create_graph_recipe(
+                    specification,
+                    title=evaluated_graph_template.title,
+                    graph_metrics=evaluated_graph_template.metrics,
+                    explicit_vertical_range=evaluated_graph_template.range,
+                    horizontal_rules=evaluated_graph_template.horizontal_rules,
+                    consolidation_function=evaluated_graph_template.consolidation_function,
+                ),
             )
 
 
@@ -700,15 +706,20 @@ def _create_graph_recipe_from_translated_metric(
     )
 
 
-def _create_graph_recipe_from_template(
+def _create_graph_recipe(
     specification: GraphSpecification,
-    graph_template: EvaluatedGraphTemplate,
+    *,
+    title: str,
+    graph_metrics: Sequence[GraphMetric],
+    explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None,
+    horizontal_rules: Sequence[HorizontalRule],
+    consolidation_function: GraphConsolidationFunction,
 ) -> GraphRecipe:
-    units = {m.unit for m in graph_template.metrics}
+    units = {m.unit for m in graph_metrics}
 
     # We cannot validate the hypothetical case of a mixture of metrics from the legacy and the new API
-    if all(isinstance(m.unit, str) for m in graph_template.metrics) or all(
-        isinstance(m.unit, ConvertibleUnitSpecification) for m in graph_template.metrics
+    if all(isinstance(m.unit, str) for m in graph_metrics) or all(
+        isinstance(m.unit, ConvertibleUnitSpecification) for m in graph_metrics
     ):
         if len(units) > 1:
             raise MKGeneralException(
@@ -716,18 +727,17 @@ def _create_graph_recipe_from_template(
                 % ", ".join(repr(unit) for unit in units)
             )
 
-    title = graph_template.title
     if not title:
-        title = next((m.title for m in graph_template.metrics), "")
+        title = next((m.title for m in graph_metrics), "")
 
     return GraphRecipe(
         title=title,
-        metrics=graph_template.metrics,
+        metrics=graph_metrics,
         unit_spec=units.pop(),
-        explicit_vertical_range=graph_template.range,
-        horizontal_rules=graph_template.horizontal_rules,
-        omit_zero_metrics=graph_template.omit_zero_metrics,
-        consolidation_function=graph_template.consolidation_function,
+        explicit_vertical_range=explicit_vertical_range,
+        horizontal_rules=horizontal_rules,
+        omit_zero_metrics=False,
+        consolidation_function=consolidation_function,
         specification=specification,
     )
 

@@ -192,6 +192,7 @@ class BICompiler:
 
             for aggregation in self._bi_packs.get_all_aggregations():
                 start = time.perf_counter()
+                LOGGER.debug(f"Starting compilation for {aggregation.id} ...")
                 self._compiled_aggregations[aggregation.id] = aggregation.compile(self.bi_searcher)
                 end = time.perf_counter()
                 LOGGER.debug(f"Compilation of {aggregation.id} took {end - start:f}")

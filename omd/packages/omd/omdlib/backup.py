@@ -27,8 +27,6 @@ from omdlib.global_options import GlobalOptions
 from omdlib.options import CommandOptions
 from omdlib.site_paths import SitePaths
 
-from cmk.utils.paths import mkbackup_lock_dir
-
 
 def _try_backup_site_to_tarfile(
     tar: tarfile.TarFile,
@@ -82,6 +80,7 @@ def main_backup(
 
 
 def ensure_mkbackup_lock_dir_rights() -> None:
+    mkbackup_lock_dir = Path("/run/lock/mkbackup")
     try:
         mkbackup_lock_dir.mkdir(mode=0o0770, exist_ok=True)
         shutil.chown(mkbackup_lock_dir, group="omd")

@@ -669,6 +669,51 @@ def _matching_graph_templates(
     )
 
 
+def _create_graph_recipe_from_translated_metric(
+    name: str,
+    translated_metric: TranslatedMetric,
+    site_id: SiteId,
+    host_name: HostName,
+    service_name: ServiceName,
+    painter_options: PainterOptions,
+    specification: TemplateGraphSpecification,
+    *,
+    temperature_unit: TemperatureUnit,
+) -> GraphRecipe:
+    title = translated_metric.title
+    consolidation_function: Literal["max"] = "max"
+    graph_metric = GraphMetric(
+        title=title,
+        line_type="area",
+        operation=create_graph_metric_expression_from_translated_metric(
+            site_id,
+            host_name,
+            service_name,
+            translated_metric,
+            consolidation_function,
+        ),
+        unit=translated_metric.unit_spec,
+        color=translated_metric.color,
+    )
+    return GraphRecipe(
+        title=(
+            f"{title} (Graph ID: {name})"
+            if painter_options.get("show_internal_graph_and_metric_ids")
+            else title
+        ),
+        metrics=[graph_metric],
+        unit_spec=graph_metric.unit,
+        explicit_vertical_range=None,
+        horizontal_rules=compute_warn_crit_rules_from_translated_metric(
+            user_specific_unit(translated_metric.unit_spec, temperature_unit),
+            translated_metric,
+        ),
+        omit_zero_metrics=False,
+        consolidation_function=consolidation_function,
+        specification=specification,
+    )
+
+
 class TemplateGraphSpecification(GraphSpecification, frozen=True):
     site: SiteId | None
     host_name: AnnotatedHostName
@@ -767,39 +812,15 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
             and self.graph_id.startswith("METRIC_")
             and self.graph_id[7:] in translated_metrics
         ):
-            translated_metric = translated_metrics[self.graph_id[7:]]
-            title = translated_metric.title
-            consolidation_function: Literal["max"] = "max"
-            graph_metric = GraphMetric(
-                title=title,
-                line_type="area",
-                operation=create_graph_metric_expression_from_translated_metric(
+            return [
+                _create_graph_recipe_from_translated_metric(
+                    self.graph_id,
+                    translated_metrics[self.graph_id[7:]],
                     row["site"],
                     row["host_name"],
                     row.get("service_description", "_HOST_"),
-                    translated_metric,
-                    consolidation_function,
-                ),
-                unit=translated_metric.unit_spec,
-                color=translated_metric.color,
-            )
-            return [
-                GraphRecipe(
-                    title=(
-                        f"{title} (Graph ID: {self.graph_id})"
-                        if painter_options.get("show_internal_graph_and_metric_ids")
-                        else title
-                    ),
-                    metrics=[graph_metric],
-                    unit_spec=graph_metric.unit,
-                    explicit_vertical_range=None,
-                    horizontal_rules=compute_warn_crit_rules_from_translated_metric(
-                        user_specific_unit(translated_metric.unit_spec, temperature_unit),
-                        translated_metric,
-                    ),
-                    omit_zero_metrics=False,
-                    consolidation_function=consolidation_function,
-                    specification=self._make_specification(
+                    painter_options,
+                    self._make_specification(
                         site=self.site,
                         host_name=self.host_name,
                         service_description=self.service_description,
@@ -807,6 +828,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
                         graph_id=self.graph_id,
                         destination=self.destination,
                     ),
+                    temperature_unit=temperature_unit,
                 )
             ]
         return [

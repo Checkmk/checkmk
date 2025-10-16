@@ -34,6 +34,7 @@ def check_proxmox_ve_node_directory_storage(
         item=item,
         params=params,
         section=section.directory_storages,
+        storage_links=section.storage_links,
         value_store=get_value_store(),
     )
 

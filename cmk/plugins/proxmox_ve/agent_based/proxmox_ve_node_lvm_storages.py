@@ -32,6 +32,7 @@ def check_proxmox_ve_node_lvm_storage(
         item=item,
         params=params,
         section=section.lvm_storages,
+        storage_links=section.storage_links,
         value_store=get_value_store(),
     )
 

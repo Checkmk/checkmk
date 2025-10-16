@@ -15,6 +15,7 @@ from cmk.plugins.proxmox_ve.lib.node_storages import (
     check_proxmox_ve_node_storage,
     SectionNodeStorages,
     Storage,
+    StorageLink,
 )
 
 SECTION = SectionNodeStorages(
@@ -50,7 +51,23 @@ SECTION = SectionNodeStorages(
                 "storage": "nfs-storage",
             }
         ),
+        Storage.model_validate(
+            {
+                "node": "pve1",
+                "disk": 212992.0,
+                "maxdisk": 19799465984.0,
+                "plugintype": "zfspool",
+                "status": "available",
+                "storage": "local-zfs",
+            }
+        ),
     ],
+    storage_links={
+        "local-zfs": [
+            StorageLink(type="scsi0", size="16G", vmid="101"),
+            StorageLink(type="scsi0", size="16G", vmid="100"),
+        ],
+    },
 )
 
 
@@ -58,6 +75,7 @@ def test_discover_proxmox_ve_node_directory_storage() -> None:
     assert list(discover_proxmox_ve_node_directory_storage(SECTION)) == [
         Service(item="local"),
         Service(item="data"),
+        Service(item="local-zfs"),
     ]
 
 
@@ -130,6 +148,34 @@ def test_discover_proxmox_ve_node_directory_storage() -> None:
             ],
             id="WARN, because the storage is not active or available",
         ),
+        pytest.param(
+            "local-zfs",
+            {"levels": (80.0, 90.0)},
+            SECTION,
+            [
+                Metric(
+                    "fs_used",
+                    0.203125,
+                    levels=(15105.793749809265, 16994.017968177795),
+                    boundaries=(0.0, 18882.2421875),
+                ),
+                Metric("fs_free", 18882.0390625, boundaries=(0.0, None)),
+                Metric(
+                    "fs_used_percent",
+                    0.0010757461851350909,
+                    levels=(79.99999999898988, 89.99999999696962),
+                    boundaries=(0.0, 100.0),
+                ),
+                Result(state=State.OK, summary="Used: <0.01% - 208 KiB of 18.4 GiB"),
+                Metric("fs_size", 18882.2421875, boundaries=(0.0, None)),
+                Result(state=State.OK, summary="Type: zfspool"),
+                Result(state=State.OK, summary="Uncommitted: 0 B"),
+                Metric("uncommitted", 0.0),
+                Result(state=State.OK, summary="Provisioning: 173.54%"),
+                Metric("provisioned_storage_usage", 173.54),
+            ],
+            id="OK, with storage links",
+        ),
     ],
 )
 def test_check_proxmox_ve_node_info(
@@ -144,6 +190,7 @@ def test_check_proxmox_ve_node_info(
                 item=item,
                 params=params,
                 section=section.directory_storages,
+                storage_links=section.storage_links,
                 value_store={},
             )
         )

@@ -9,7 +9,7 @@ from typing import Any
 
 from pydantic import AliasChoices, BaseModel, Field
 
-from cmk.agent_based.v2 import CheckResult, Result, State
+from cmk.agent_based.v2 import check_levels, CheckResult, render, Result, State
 from cmk.plugins.lib.df import df_check_filesystem_single
 
 
@@ -59,6 +59,22 @@ class StorageLink(BaseModel, frozen=True):
     size: str
     vmid: str
 
+    @property
+    def bytes_size(self) -> float | None:
+        size_str = self.size.upper()
+        if size_str.endswith("G"):
+            return float(size_str[:-1]) * 1024**3
+        if size_str.endswith("M"):
+            return float(size_str[:-1]) * 1024**2
+        if size_str.endswith("K"):
+            return float(size_str[:-1]) * 1024
+        if size_str.endswith("T"):
+            return float(size_str[:-1]) * 1024**4
+        try:
+            return float(size_str)
+        except ValueError:
+            return None
+
 
 class SectionNodeStorages(BaseModel, frozen=True):
     node: str
@@ -70,7 +86,13 @@ class SectionNodeStorages(BaseModel, frozen=True):
         return {
             storage.name: storage
             for storage in self.storages
-            if storage.storage_type in (StorageType.DIR, StorageType.PBS)
+            if storage.storage_type
+            in (
+                StorageType.DIR,
+                StorageType.PBS,
+                StorageType.ZFS,
+                StorageType.ZFSPOOL,
+            )
         }
 
     @property
@@ -86,6 +108,7 @@ def check_proxmox_ve_node_storage(
     item: str,
     params: Mapping[str, Any],
     section: Mapping[str, Storage],
+    storage_links: Mapping[str, Sequence[StorageLink]],
     value_store: MutableMapping[str, Any],
 ) -> CheckResult:
     if (storage := section.get(item)) is None:
@@ -111,3 +134,41 @@ def check_proxmox_ve_node_storage(
         params=params,
     )
     yield Result(state=State.OK, summary=f"Type: {storage.storage_type}")
+    yield from _check_proxmox_ve_node_storage_provision(
+        item=item,
+        storage_max_disk=storage.maxdisk,
+        storage_links=storage_links,
+    )
+
+
+def _check_proxmox_ve_node_storage_provision(
+    item: str,
+    storage_max_disk: float | None,
+    storage_links: Mapping[str, Sequence[StorageLink]],
+) -> CheckResult:
+    if (storage := storage_links.get(item)) is None:
+        return
+
+    if storage_max_disk is None or storage_max_disk <= 0:
+        yield Result(
+            state=State.WARN,
+            summary="Cannot calculate committed space as storage max disk is unknown or zero.",
+        )
+        return
+
+    committed = sum(link.bytes_size for link in storage if link.bytes_size is not None)
+    uncommitted = storage_max_disk - committed if storage_max_disk > committed else 0
+    yield from check_levels(
+        value=uncommitted,
+        metric_name="uncommitted",
+        label="Uncommitted",
+        render_func=render.bytes,
+    )
+
+    provisioned_percent = round((committed / storage_max_disk) * 100, 2)
+    yield from check_levels(
+        value=provisioned_percent,
+        metric_name="provisioned_storage_usage",
+        label="Provisioning",
+        render_func=render.percent,
+    )

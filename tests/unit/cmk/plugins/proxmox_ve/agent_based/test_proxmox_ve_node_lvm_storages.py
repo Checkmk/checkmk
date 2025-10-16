@@ -135,6 +135,7 @@ def test_check_proxmox_ve_node_info(
                 item=item,
                 params=params,
                 section=section.lvm_storages,
+                storage_links=section.storage_links,
                 value_store={},
             )
         )

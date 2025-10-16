@@ -17,6 +17,7 @@ def fixture_expected_autocompleters() -> list[str]:
     # Please contact the grafana component members before removing one from this list!
     autocompleters = [
         "sites",
+        "available_graph_templates",
         "monitored_hostname",
         "allgroups",
         "label",
@@ -149,3 +150,7 @@ def test_openapi_combined_graphs_autocompleter(
             "context": {},
         },
     )
+
+
+def test_openapi_available_graph_templates(clients: ClientRegistry) -> None:
+    clients.AutoComplete.invoke("available_graph_templates", {"strict": True, "context": {}}, "")

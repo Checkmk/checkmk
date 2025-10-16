@@ -755,18 +755,20 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
 
     def _build_recipe_from_template(
         self,
+        site_id: SiteId,
+        host_name: HostName,
+        service_name: ServiceName,
         *,
         graph_template: EvaluatedGraphTemplate,
-        row: Row,
         translated_metrics: Mapping[str, TranslatedMetric],
         index: int,
         user_permissions: UserPermissions,
         painter_options: PainterOptions,
     ) -> GraphRecipe | None:
         return _create_graph_recipe_from_template(
-            row["site"],
-            row["host_name"],
-            row.get("service_description", "_HOST_"),
+            site_id,
+            host_name,
+            service_name,
             graph_template,
             translated_metrics,
             painter_options,
@@ -800,6 +802,9 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         ):
             return []
 
+        site_id = row["site"]
+        host_name = row["host_name"]
+        service_name = row.get("service_description", "_HOST_")
         painter_options = PainterOptions.get_instance()
         # Performance graph dashlets already use graph_id, but for example in reports, we still use
         # graph_index. Therefore, this function needs to support both. We should switch to graph_id
@@ -816,9 +821,9 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
                 _create_graph_recipe_from_translated_metric(
                     self.graph_id,
                     translated_metrics[self.graph_id[7:]],
-                    row["site"],
-                    row["host_name"],
-                    row.get("service_description", "_HOST_"),
+                    site_id,
+                    host_name,
+                    service_name,
                     painter_options,
                     self._make_specification(
                         site=self.site,
@@ -843,8 +848,10 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
             )
             if (
                 recipe := self._build_recipe_from_template(
+                    site_id,
+                    host_name,
+                    service_name,
                     graph_template=graph_template,
-                    row=row,
                     translated_metrics=translated_metrics,
                     index=index,
                     user_permissions=user_permissions,

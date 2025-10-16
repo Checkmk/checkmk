@@ -3,9 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Literal
+from typing import assert_never, Literal
+
+from pydantic import BaseModel
 
 from cmk.ccc.resulttype import Error, OK, Result
 from cmk.graphing.v1 import graphs as graphs_api
@@ -284,6 +287,57 @@ def _evaluate_quantity(
                     value=result_dividend.ok.value / result_divisor.ok.value,
                 )
             )
+
+
+def extract_raw_expressions_from_graph_title(title: str) -> list[str]:
+    return re.findall(r"_EXPRESSION:\{.*?\}", title)
+
+
+class _GraphTitleExpression(BaseModel, frozen=True):
+    metric: str
+    scalar: Literal["warn", "crit", "min", "max"]
+
+
+def _parse_graph_title_expression(
+    expression: _GraphTitleExpression,
+) -> metrics_api.WarningOf | metrics_api.CriticalOf | metrics_api.MinimumOf | metrics_api.MaximumOf:
+    match expression.scalar:
+        case "warn":
+            return metrics_api.WarningOf(expression.metric)
+        case "crit":
+            return metrics_api.CriticalOf(expression.metric)
+        case "min":
+            return metrics_api.MinimumOf(expression.metric, color=metrics_api.Color.BLACK)
+        case "max":
+            return metrics_api.MaximumOf(expression.metric, color=metrics_api.Color.BLACK)
+        case _:
+            assert_never(expression.scalar)
+
+
+def evaluate_graph_plugin_title(
+    registered_metrics: Mapping[str, RegisteredMetric],
+    title: str,
+    translated_metrics: Mapping[str, TranslatedMetric],
+) -> str:
+    for raw in extract_raw_expressions_from_graph_title(title):
+        if (
+            result := _evaluate_quantity(
+                registered_metrics,
+                _parse_graph_title_expression(
+                    _GraphTitleExpression.model_validate_json(raw[len("_EXPRESSION:") :]),
+                ),
+                translated_metrics,
+            )
+        ).is_ok():
+            title = title.replace(
+                raw,
+                # rendering as an integer is hard-coded because it is all we need for now
+                str(int(result.ok.value)),
+                1,
+            )
+        else:
+            return title.split("-")[0].strip()
+    return title
 
 
 def _evaluate_boundary(

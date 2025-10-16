@@ -9,12 +9,9 @@
 from __future__ import annotations
 
 import itertools
-import re
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import assert_never, Literal, Self
-
-from pydantic import BaseModel
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
@@ -30,6 +27,7 @@ from cmk.utils.servicename import ServiceName
 from ._evaluations_from_api import (
     evaluate_graph_plugin_range,
     evaluate_graph_plugin_scalars,
+    evaluate_graph_plugin_title,
 )
 from ._from_api import RegisteredMetric
 from ._graph_metric_expressions import (
@@ -54,11 +52,9 @@ from ._metric_expressions import (
     CriticalOf,
     Evaluated,
     Maximum,
-    MaximumOf,
     Metric,
     MetricExpression,
     Minimum,
-    MinimumOf,
     parse_base_expression_from_api,
     parse_expression_from_api,
     WarningOf,
@@ -383,55 +379,6 @@ def _evaluate_predictive_metrics(
                     yield result.ok
 
 
-def _evaluate_title(title: str, translated_metrics: Mapping[str, TranslatedMetric]) -> str:
-    # Note: This is not officially supported and only has to work for our internal needs:
-    # CPU load, CPU utilization
-    for serialized_expression in extract_raw_expressions_from_graph_title(title):
-        evaluated_expression = _graph_title_expression_to_metric_expression(
-            _GraphTitleExpression.model_validate_json(serialized_expression[len("_EXPRESSION:") :])
-        ).evaluate(translated_metrics)
-        if evaluated_expression.is_ok():
-            title = title.replace(
-                serialized_expression,
-                str(
-                    # rendering as an integer is hard-coded because it is all we need for now
-                    int(evaluated_expression.ok.value)
-                ),
-                1,
-            )
-        else:
-            return title.split("-")[0].strip()
-    return title
-
-
-def extract_raw_expressions_from_graph_title(title: str) -> list[str]:
-    return re.findall(r"_EXPRESSION:\{.*?\}", title)
-
-
-class _GraphTitleExpression(BaseModel, frozen=True):
-    metric: str
-    scalar: Literal["warn", "crit", "min", "max"]
-
-
-def _graph_title_expression_to_metric_expression(
-    expression: _GraphTitleExpression,
-) -> BaseMetricExpression:
-    metric = Metric(expression.metric, consolidation=None)
-    scalar: BaseMetricExpression
-    match expression.scalar:
-        case "warn":
-            scalar = WarningOf(metric)
-        case "crit":
-            scalar = CriticalOf(metric)
-        case "min":
-            scalar = MinimumOf(metric)
-        case "max":
-            scalar = MaximumOf(metric)
-        case _:
-            assert_never(expression.scalar)
-    return scalar
-
-
 def _compute_graph_recipes(
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
@@ -466,7 +413,11 @@ def _compute_graph_recipes(
                 graph_id,
                 _create_graph_recipe(
                     specification,
-                    title=_evaluate_title(_parse_title(graph_plugin), translated_metrics),
+                    title=evaluate_graph_plugin_title(
+                        registered_metrics,
+                        graph_plugin.title.localize(translate_to_current_language),
+                        translated_metrics,
+                    ),
                     graph_metrics=[
                         GraphMetric(
                             title=evaluated.title,

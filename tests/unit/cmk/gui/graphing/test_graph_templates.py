@@ -14,7 +14,6 @@ from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import Title
-from cmk.gui.graphing import _graph_templates as gt
 from cmk.gui.graphing._from_api import graphs_from_api, RegisteredMetric
 from cmk.gui.graphing._graph_metric_expressions import GraphMetricRRDSource, LineType
 from cmk.gui.graphing._graph_specification import (
@@ -787,36 +786,6 @@ def test__matching_graph_recipes(
             temperature_unit=TemperatureUnit.CELSIUS,
         )
     ] == expected_result
-
-
-def test_evaluate_title_ok() -> None:
-    assert (
-        gt._evaluate_title(
-            'CPU Load - _EXPRESSION:{"metric":"load1","scalar":"max"} CPU Cores',
-            translate_metrics(
-                [PerfDataTuple("load1", "load1", 1, "", 120, 240, 0, 25)],
-                "check_mk-cpu_loads",
-                {},
-                temperature_unit=TemperatureUnit.CELSIUS,
-            ),
-        )
-        == "CPU Load - 25 CPU Cores"
-    )
-
-
-def test_evaluate_title_missing_scalar() -> None:
-    assert (
-        gt._evaluate_title(
-            'CPU Load - _EXPRESSION:{"metric":"load1","scalar":"max"} CPU Cores',
-            translate_metrics(
-                [PerfDataTuple("load1", "load1", 1, "", None, None, None, None)],
-                "check_mk-cpu_loads",
-                {},
-                temperature_unit=TemperatureUnit.CELSIUS,
-            ),
-        )
-        == "CPU Load"
-    )
 
 
 def test_duplicate_graph_templates() -> None:

@@ -13,6 +13,7 @@ from cmk.graphing.v1 import metrics as metrics_api
 from cmk.gui.graphing._evaluations_from_api import (
     evaluate_graph_plugin_range,
     evaluate_graph_plugin_scalars,
+    evaluate_graph_plugin_title,
 )
 from cmk.gui.graphing._graph_specification import HorizontalRule, MinimalVerticalRange
 from cmk.gui.graphing._translated_metrics import (
@@ -23,6 +24,50 @@ from cmk.gui.graphing._translated_metrics import (
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.unit_formatter import AutoPrecision
 from cmk.gui.utils.temperate_unit import TemperatureUnit
+
+
+@pytest.mark.parametrize(
+    "graph_plugin_title, expected",
+    [
+        pytest.param(
+            "Graph",
+            "Graph",
+            id="graph-no-expression",
+        ),
+        pytest.param(
+            'Graph - _EXPRESSION:{"metric":"metric1","scalar":"max"} Items',
+            "Graph",
+            id="graph-with-expression-no-values",
+        ),
+        pytest.param(
+            'Graph - _EXPRESSION:{"metric":"metric","scalar":"max"} Items',
+            "Graph - 10 Items",
+            id="graph-with-expression-with-values",
+        ),
+    ],
+)
+def test_evaluate_graph_plugin_title(graph_plugin_title: str, expected: str) -> None:
+    assert (
+        evaluate_graph_plugin_title(
+            {},
+            graph_plugin_title,
+            {
+                "metric": TranslatedMetric(
+                    originals=[Original("metric", 1.0)],
+                    value=123.456,
+                    scalar=ScalarBounds(max=10),
+                    auto_graph=True,
+                    title="Metric",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol="U"),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#123456",
+                )
+            },
+        )
+        == expected
+    )
 
 
 @pytest.mark.parametrize(

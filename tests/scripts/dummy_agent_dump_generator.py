@@ -25,15 +25,16 @@ from typing import Any, Final, TextIO
 DIR_MODULE = Path(__file__).parent
 ENCODING = "utf-8"
 PREFIX = "dummy_agent_dump"
+FLAP_SERVICE_STATE = "flap_service_state"
 SUFFIX = "out"
 SEPARATOR = "\n"
 
 
 def generate_data(
-    hostname: str, number_of_services: int, payload: int, debug: bool = False
+    hostname: str, number_of_services: int, payload: int, debug: bool = False, flap: bool = False
 ) -> list[str]:
     stdout = ["<<<local>>>"]
-    stdout += _generate_local_services(hostname, number_of_services)
+    stdout += _generate_local_services(hostname, number_of_services, flap)
     if payload > 0:
         stdout += _generate_payload(payload)
     if debug:
@@ -43,7 +44,9 @@ def generate_data(
     return stdout
 
 
-def _generate_local_services(hostname: str, number_of_services: int) -> list[str]:
+def _generate_local_services(
+    hostname: str, number_of_services: int, flap: bool = False
+) -> list[str]:
     """Generate text to simulate service data, corresponding to a host.
 
     Services are prefixed with the 'hostname'. Out of all the services created,
@@ -55,6 +58,11 @@ def _generate_local_services(hostname: str, number_of_services: int) -> list[str
     All the services initialize 'state' as a variable,
     which can be monitored over a period of time within the Checkmk site.
     Value of 'state' depends on the service status.
+
+    Args:
+        number_of_services (int): Number of services to be created.
+        flap (bool, optional): Enable a flapping service. Defaults to False.
+            Flapping service changes it's state from ... -> OK -> WARN -> CRIT -> OK ...
     """
 
     class ServiceData:
@@ -87,6 +95,17 @@ def _generate_local_services(hostname: str, number_of_services: int) -> list[str
     for service_data in (crit, warn, ok):
         stdout += _local_services(start_idx, service_data, hostname)
         start_idx = start_idx + service_data.count
+
+    if flap:
+        # service state of the flapping service is stored in a file.
+        state_file = DIR_MODULE / Path(f"{PREFIX}.{FLAP_SERVICE_STATE}.{SUFFIX}")
+        try:
+            flap_state = int(state_file.read_text())
+        except FileNotFoundError:
+            flap_state = 0
+        state_file.write_text(f"{(flap_state + 1) % 3}")
+        flap_service = ServiceData(flap_state, 1, (flap_state, flap_state + 1))
+        stdout += _local_services(start_idx, flap_service, hostname)
     return stdout
 
 
@@ -155,6 +174,7 @@ class TypeCliArgs(Namespace):
     debug: bool
     host_name: str
     service_count: int
+    service_flap: bool
     payload: int
     piggyback_hosts: int
     piggyback_services: int
@@ -194,6 +214,16 @@ def parse_cli_args() -> type[TypeCliArgs]:
         help=(
             "Number of services to be generated, corresponding to the host. "
             "By default, 10 services are generated."
+        ),
+    )
+    classic_parser.add_argument(
+        "-sf",
+        "--service-flap",
+        dest="service_flap",
+        action="store_true",
+        help=(
+            "Add one additional service, the service state of which is 'flapping'. "
+            "NOTE: Flapping services are NOT added for piggyback'd hosts."
         ),
     )
     # add additional payload to the agent output to validate data fetching mechanism.
@@ -264,7 +294,9 @@ if __name__ == "__main__":
         )
 
     # generate host data
-    entries += generate_data(args.host_name, args.service_count, args.payload, args.debug)
+    entries += generate_data(
+        args.host_name, args.service_count, args.payload, args.debug, args.service_flap
+    )
 
     # list to string conversion
     print_data(*entries)

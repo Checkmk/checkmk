@@ -201,7 +201,7 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) agent
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-create
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/post-create/01_create-sample-config.py $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-create/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/post-create/03_message-broker-certs  $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-create/
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/post-create/02_message-broker-certs  $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-create/
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-update
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/post-update/01_mkp-disable-outdated $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-update/

@@ -4163,12 +4163,30 @@ pyyaml==6.0.3 \
     #   djlint
     #   jsonschema-path
     #   kubernetes
-    #   libcst
     #   pre-commit
     #   responses
     #   schemathesis
     #   sphinx-autoapi
     #   vcrpy
+pyyaml-ft==8.0.0 \
+    --hash=sha256:052561b89d5b2a8e1289f326d060e794c21fa068aa11255fe71d65baf18a632e \
+    --hash=sha256:06237267dbcab70d4c0e9436d8f719f04a51123f0ca2694c00dd4b68c338e40b \
+    --hash=sha256:0c947dce03954c7b5d38869ed4878b2e6ff1d44b08a0d84dc83fdad205ae39ab \
+    --hash=sha256:30c5f1751625786c19de751e3130fc345ebcba6a86f6bddd6e1285342f4bbb69 \
+    --hash=sha256:3bb4b927929b0cb162fb1605392a321e3333e48ce616cdcfa04a839271373255 \
+    --hash=sha256:3fa992481155ddda2e303fcc74c79c05eddcdbc907b888d3d9ce3ff3e2adcfb0 \
+    --hash=sha256:58e1015098cf8d8aec82f360789c16283b88ca670fe4275ef6c48c5e30b22a96 \
+    --hash=sha256:7d10175a746be65f6feb86224df5d6bc5c049ebf52b89a88cf1cd78af5a367a8 \
+    --hash=sha256:8a7f332bc565817644cdb38ffe4739e44c3e18c55793f75dddb87630f03fc254 \
+    --hash=sha256:8c1306282bc958bfda31237f900eb52c9bedf9b93a11f82e1aab004c9a5657a6 \
+    --hash=sha256:8c56bb46b4fda34cbb92a9446a841da3982cdde6ea13de3fbd80db7eeeab8b49 \
+    --hash=sha256:8d445bf6ea16bb93c37b42fdacfb2f94c8e92a79ba9e12768c96ecde867046d1 \
+    --hash=sha256:bd48d639cab5ca50ad957b6dd632c7dd3ac02a1abe0e8196a3c24a52f5db3f7a \
+    --hash=sha256:cec6c92b4207004b62dfad1f0be321c9f04725e0f271c16247d8b39c3bf3ea42 \
+    --hash=sha256:dab0abb46eb1780da486f022dce034b952c8ae40753627b27a626d803926483b \
+    --hash=sha256:de04cfe9439565e32f178106c51dd6ca61afaa2907d143835d501d84703d3793 \
+    --hash=sha256:e64fa5f3e2ceb790d50602b2fd4ec37abbd760a8c778e46354df647e7c5a4ebb
+    # via libcst
 reactivex==4.0.4 \
     --hash=sha256:0004796c420bd9e68aad8e65627d85a8e13f293de76656165dffbcb3a0e3fb6a \
     --hash=sha256:e912e6591022ab9176df8348a653fe8c8fa7a301f26f9931c9d8c78a650e04e8
@@ -5241,8 +5259,6 @@ typing-extensions==4.15.0 \
     --hash=sha256:0cea48d173cc12fa28ecabc3b837ea3cf6f38c6d1136f85cbaaf598984861466 \
     --hash=sha256:f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548
     # via
-    #   aiosignal
-    #   anyio
     #   azure-core
     #   azure-identity
     #   azure-mgmt-compute
@@ -5261,16 +5277,11 @@ typing-extensions==4.15.0 \
     #   opentelemetry-semantic-conventions
     #   oracledb
     #   polyfactory
-    #   psycopg
     #   pydantic
     #   pydantic-core
     #   pyee
-    #   pyopenssl
     #   reactivex
-    #   referencing
-    #   starlette
     #   typeguard
-    #   types-lxml
 tzdata==2025.2 \
     --hash=sha256:1a403fada01ff9221ca8044d701868fa132215d84beb92242d9acd2147f667a8 \
     --hash=sha256:b60a638fcc0daffadf82fe0f57e53d06bdec2f36c4df66280ae79bce6bd6f2b9

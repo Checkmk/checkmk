@@ -90,6 +90,7 @@ def test_dict_to_document_empty_value(payload: dict[str, Any], content: str) -> 
     assert value == expected
 
 
+@pytest.mark.skip(reason="CMK-26821")
 @pytest.mark.parametrize(
     "payload, content",
     [

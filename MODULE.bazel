@@ -528,11 +528,11 @@ http_archive(
 http_archive(
     name = "python",
     build_file = "//omd/packages/Python:BUILD.Python.bazel",
-    sha256 = "c30bb24b7f1e9a19b11b55a546434f74e739bb4c271a3e3a80ff4380d49f7adb",
-    strip_prefix = "Python-3.12.11",
+    integrity = "sha256-7V7zTNo2z6Lzo0DwfKx+eBT5HH88QR9tNWIyOoZsXGY=",
+    strip_prefix = "Python-3.13.9",
     urls = [
-        "https://www.python.org/ftp/python/3.12.11/Python-3.12.11.tar.xz",
-        # UPSTREAM_MIRROR_URL + "Python-3.12.11.tar.xz",
+        "https://www.python.org/ftp/python/3.13.9/Python-3.13.9.tar.xz",
+        UPSTREAM_MIRROR_URL + "Python-3.13.9.tar.xz",
     ],
 )
 

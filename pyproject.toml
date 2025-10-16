@@ -132,7 +132,7 @@ mypy_path = """\
     $MYPY_CONFIG_FILE_DIR/omd/packages/omd:\
     """
 plugins = ["pydantic.mypy"]
-python_version = "3.12"
+python_version = "3.13"
 scripts_are_modules = true
 
 # do not descend into 3rd party dependencies

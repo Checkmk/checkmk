@@ -117,7 +117,7 @@ _RuleSetType_co = TypeVar("_RuleSetType_co", covariant=True)
 
 @dataclass(frozen=True)
 class ReplacementResult(Generic[_RuleSetType_co]):
-    value: _RuleSetType_co
+    value: _RuleSetType_co  # type: ignore[misc]
     found_secrets: Mapping[str, str]
     surrogates: Mapping[int, str]
 

@@ -3418,8 +3418,6 @@ typing-extensions==4.15.0 \
     --hash=sha256:f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548
     # via
     #   -c requirements.txt
-    #   aiosignal
-    #   anyio
     #   azure-core
     #   azure-identity
     #   azure-storage-blob
@@ -3434,9 +3432,6 @@ typing-extensions==4.15.0 \
     #   oracledb
     #   pydantic
     #   pydantic-core
-    #   pyopenssl
-    #   referencing
-    #   starlette
 tzdata==2025.2 \
     --hash=sha256:1a403fada01ff9221ca8044d701868fa132215d84beb92242d9acd2147f667a8 \
     --hash=sha256:b60a638fcc0daffadf82fe0f57e53d06bdec2f36c4df66280ae79bce6bd6f2b9

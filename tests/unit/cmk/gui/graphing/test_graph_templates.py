@@ -624,7 +624,6 @@ _REGISTERED_GRAPHS = {
 
 _EVALUATED_GRAPH_TEMPLATES = [
     EvaluatedGraphTemplate(
-        id="graph1",
         title="Graph 1",
         horizontal_rules=[],
         consolidation_function="max",
@@ -649,7 +648,6 @@ _EVALUATED_GRAPH_TEMPLATES = [
         ],
     ),
     EvaluatedGraphTemplate(
-        id="graph2",
         title="Graph 2",
         horizontal_rules=[],
         consolidation_function="max",
@@ -744,19 +742,17 @@ def test__matching_graph_templates(
     graph_index: int | None,
     expected_result: Sequence[tuple[int, EvaluatedGraphTemplate]],
 ) -> None:
-    assert (
-        list(
-            _matching_graph_templates(
-                {},
-                registered_graphs,
-                translated_metrics,
-                graph_id=graph_id,
-                graph_index=graph_index,
-                temperature_unit=TemperatureUnit.CELSIUS,
-            )
+    assert [
+        (graph_index, evaluated_graph_template)
+        for graph_index, _graph_id, evaluated_graph_template in _matching_graph_templates(
+            {},
+            registered_graphs,
+            translated_metrics,
+            graph_id=graph_id,
+            graph_index=graph_index,
+            temperature_unit=TemperatureUnit.CELSIUS,
         )
-        == expected_result
-    )
+    ] == expected_result
 
 
 def test_evaluate_title_ok() -> None:
@@ -1810,8 +1806,8 @@ def test__get_evaluated_graph_templates_1(
     )
     assert sorted(
         [
-            t.id
-            for t in _get_evaluated_graph_templates(
+            graph_id
+            for graph_id, _evaluated_graph_template in _get_evaluated_graph_templates(
                 {},
                 registered_graphs,
                 translated_metrics,
@@ -1850,8 +1846,8 @@ def test__get_evaluated_graph_templates_2(
     )
     assert sorted(
         [
-            t.id
-            for t in _get_evaluated_graph_templates(
+            graph_id
+            for graph_id, _evaluated_graph_template in _get_evaluated_graph_templates(
                 {},
                 registered_graphs,
                 translated_metrics,
@@ -2096,7 +2092,6 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
             },
             [
                 EvaluatedGraphTemplate(
-                    id="inbound_and_outbound_messages",
                     title="Inbound and Outbound Messages",
                     horizontal_rules=[],
                     consolidation_function="max",
@@ -2219,7 +2214,6 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
             },
             [
                 EvaluatedGraphTemplate(
-                    id="inbound_and_outbound_messages",
                     title="Inbound and Outbound Messages",
                     horizontal_rules=[],
                     consolidation_function="max",
@@ -2251,7 +2245,6 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                     ],
                 ),
                 EvaluatedGraphTemplate(
-                    id="METRIC_foo",
                     title="",
                     horizontal_rules=[],
                     consolidation_function="max",
@@ -2272,7 +2265,6 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                     ],
                 ),
                 EvaluatedGraphTemplate(
-                    id="METRIC_predict_foo",
                     title="",
                     horizontal_rules=[
                         HorizontalRule(
@@ -2306,7 +2298,6 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                     ],
                 ),
                 EvaluatedGraphTemplate(
-                    id="METRIC_predict_lower_foo",
                     title="",
                     horizontal_rules=[
                         HorizontalRule(
@@ -2364,17 +2355,15 @@ def test__get_evaluated_graph_templates_with_predictive_metrics(
         registered_metrics,
         temperature_unit=TemperatureUnit.CELSIUS,
     )
-    assert (
-        list(
-            _get_evaluated_graph_templates(
-                registered_metrics,
-                registered_graphs,
-                translated_metrics,
-                temperature_unit=TemperatureUnit.CELSIUS,
-            )
+    assert [
+        evaluated_graph_template
+        for _graph_id, evaluated_graph_template in _get_evaluated_graph_templates(
+            registered_metrics,
+            registered_graphs,
+            translated_metrics,
+            temperature_unit=TemperatureUnit.CELSIUS,
         )
-        == graph_templates
-    )
+    ] == graph_templates
 
 
 @pytest.mark.parametrize(
@@ -2901,8 +2890,8 @@ def test_conflicting_metrics(
     )
     assert sorted(
         [
-            t.id
-            for t in _get_evaluated_graph_templates(
+            graph_id
+            for graph_id, _evaluated_graph_template in _get_evaluated_graph_templates(
                 {},
                 registered_graphs,
                 translated_metrics,

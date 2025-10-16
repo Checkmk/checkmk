@@ -115,9 +115,12 @@ def agent_proxmox_ve_main(args: Args) -> int:
                 "version": {},
             }
         )
-
         LOGGER.info("Fetch and process backup logs..")
-        logged_backup_data = fetch_backup_data(args, session, data["nodes"])
+        try:
+            logged_backup_data = fetch_backup_data(args, session, data["nodes"])
+        except Exception as e:
+            LOGGER.warning(f"Could not fetch backup logs due to: {e}")
+            logged_backup_data = {}
 
     all_vms = {
         str(entry["vmid"]): entry

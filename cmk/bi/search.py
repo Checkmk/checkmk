@@ -456,7 +456,7 @@ class BIHostSearchSchema(Schema):
 
 
 class BIServiceSearchSerialized(SearchSerialized):
-    conditions: HostConditions
+    conditions: HostServiceConditions
 
 
 @bi_search_registry.register

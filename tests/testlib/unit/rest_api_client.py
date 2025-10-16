@@ -3509,6 +3509,16 @@ class DashboardClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def clone_as_responsive_grid_dashboard(
+        self, payload: dict[str, Any], expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain_responsive}/actions/clone/invoke",
+            body=payload,
+            expect_ok=expect_ok,
+        )
+
     def edit_relative_grid_dashboard(
         self, dashboard_id: str, payload: dict[str, Any], expect_ok: bool = True
     ) -> Response:

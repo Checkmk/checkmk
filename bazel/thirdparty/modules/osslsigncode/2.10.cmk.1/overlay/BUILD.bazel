@@ -1,3 +1,4 @@
+load("@bazel_skylib//rules:native_binary.bzl", "native_binary")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "cmake")
 
 filegroup(
@@ -12,12 +13,16 @@ cmake(
     generate_args = ["-D BASH_COMPLETION_USER_DIR=${INSTALLDIR}"],
     lib_source = "@osslsigncode//:all_srcs",
     out_binaries = ["osslsigncode"],
-    visibility = ["//visibility:public"],
 )
 
 filegroup(
-    name = "osslsigncode",
+    name = "osslsigncode_fg",
     srcs = [":osslsigncode_cmake"],
     output_group = "osslsigncode",
+)
+
+native_binary(
+    name = "osslsigncode",
+    src = ":osslsigncode_fg",
     visibility = ["//visibility:public"],
 )

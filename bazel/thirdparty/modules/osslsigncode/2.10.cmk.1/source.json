@@ -1,0 +1,9 @@
+{
+  "integrity": "sha256-KoZOYSfuI1D7ZIBw+g1FnFNKxkAMoASIhq6revslD2U=",
+  "strip_prefix": "osslsigncode-2.10",
+  "url": "https://github.com/mtrojnar/osslsigncode/archive/refs/tags/2.10.tar.gz",
+  "overlay": {
+    "BUILD.bazel": "sha256-3J2urceVl25c/ncDs72LZEbdVZn6lHHqer6B9ycjZ4k=",
+    "MODULE.bazel": "sha256-6Vfgw0BmROqHhEvBP2mlkONMdgAjllFhSpAlmH8yhE0="
+  }
+}

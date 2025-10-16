@@ -71,11 +71,6 @@ native_binary(
     src = "@clang-linux-x86_64//:bin/clang-tidy",
 )
 
-native_binary(
-    name = "osslsigncode",
-    src = "@osslsigncode",
-)
-
 filegroup(
     name = "clang_tidy_config",
     srcs = ["//:.clang-tidy"],
@@ -167,6 +162,6 @@ bazel_env(
     name = "bazel_env",
     toolchains = {},
     tools = {
-        "osslsigncode": ":osslsigncode",
+        "osslsigncode": "@osslsigncode",
     },
 )

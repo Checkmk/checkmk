@@ -1,0 +1,9 @@
+module(
+    name = "osslsigncode",
+    version = "2.10.cmk.1",
+    bazel_compatibility = [">=7.2.1"],
+    compatibility_level = 1,
+)
+
+bazel_dep(name = "bazel_skylib", version = "1.8.1")
+bazel_dep(name = "rules_foreign_cc", version = "0.15.0")

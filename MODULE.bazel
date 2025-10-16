@@ -21,6 +21,7 @@ bazel_dep(name = "libgsf", version = "1.14.44.cmk.1")
 bazel_dep(name = "msitools", version = "0.94.cmk.1")
 bazel_dep(name = "openssl", version = "3.0.16.cmk.1")
 bazel_dep(name = "openssl_static", version = "3.0.16.cmk.1")
+bazel_dep(name = "osslsigncode", version = "2.10.cmk.1")
 bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "protobuf", version = "31.1")
 bazel_dep(name = "rules_cc", version = "0.1.2")
@@ -619,18 +620,6 @@ http_archive(
     urls = [
         UPSTREAM_MIRROR_URL + "nagvis-1.9.47.tar.gz",
         "https://www.nagvis.org/share/nagvis-1.9.47.tar.gz",
-    ],
-)
-
-# TODO: Make a bazel mod
-http_archive(
-    name = "osslsigncode",
-    build_file = "//bazel/tools:BUILD.osslsigncode.bazel",
-    sha256 = "2a864e6127ee2350fb648070fa0d459c534ac6400ca0048886aeab7afb250f65",
-    strip_prefix = "osslsigncode-2.10",
-    urls = [
-        "https://github.com/mtrojnar/osslsigncode/archive/refs/tags/2.10.tar.gz",
-        UPSTREAM_MIRROR_URL + "osslsigncode-2.10.tar.gz",
     ],
 )
 

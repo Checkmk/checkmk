@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-any-return"
-
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -230,7 +228,10 @@ class AutomationUserFile:
         self.path = profile_dir / user_id / "automation_user.mk"
 
     def load(self) -> bool:
-        return store.load_object_from_file(self.path, default=False)
+        value = store.load_object_from_file(self.path, default=False)
+        if not isinstance(value, bool):
+            raise TypeError(value)
+        return value
 
     def save(self, value: bool) -> None:
         self.path.parent.mkdir(mode=0o770, exist_ok=True)

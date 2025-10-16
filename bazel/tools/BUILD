@@ -1,5 +1,6 @@
 load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
+load("@bazel_env.bzl", "bazel_env")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:native_binary.bzl", "native_binary")
 load("@cmk_requirements//:requirements.bzl", "requirement")
@@ -68,6 +69,11 @@ format_multirun(
 native_binary(
     name = "clang_tidy",
     src = "@clang-linux-x86_64//:bin/clang-tidy",
+)
+
+native_binary(
+    name = "osslsigncode",
+    src = "@osslsigncode",
 )
 
 filegroup(
@@ -155,4 +161,12 @@ prettier_bin.prettier_binary(
         "--ignore-path=\"$$BUILD_WORKSPACE_DIRECTORY/.prettierignore\"",
         "--log-level=warn",
     ],
+)
+
+bazel_env(
+    name = "bazel_env",
+    toolchains = {},
+    tools = {
+        "osslsigncode": ":osslsigncode",
+    },
 )

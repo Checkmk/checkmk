@@ -22,8 +22,6 @@ from typing import NamedTuple
 
 import pytest
 
-from tests.testlib.common.repo import repo_path
-
 LOGGER = logging.getLogger()
 
 
@@ -626,9 +624,8 @@ def test_unwanted_package_dependencies(package_path: str) -> None:
 
 def _verify_signature(file_path: Path) -> None | str:
     result = subprocess.run(
-        # TODO: Make the tool available via bazel
         [
-            f"{repo_path()}/bazel-bin/external/+_repo_rules+osslsigncode/osslsigncode/bin/osslsigncode",
+            "osslsigncode",
             "verify",
             file_path,
         ],

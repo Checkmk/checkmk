@@ -394,6 +394,7 @@ test-mypy-raw:
 	$(MAKE) test-mypy ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"
 
 test-packaging:
+	export PATH=$$PATH:$$(bazel run //bazel/tools:bazel_env print-path); \
 	$(PYTEST) packaging
 
 test-pylint:

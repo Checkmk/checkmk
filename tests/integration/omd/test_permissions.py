@@ -16,6 +16,8 @@ import pytest
 
 from tests.testlib.site import Site
 
+LOGGER = logging.getLogger(__name__)
+
 
 class Mode(IntFlag):
     """Merely aliases for the stat constants
@@ -43,7 +45,7 @@ def has_permission(path: Path, mode_to_test: Mode) -> bool:
 def iter_dir(path: Path) -> Iterator[Path]:
     for sub_path in path.iterdir():
         if sub_path.is_symlink():
-            logging.info("Skipping Symlink %s", sub_path)
+            LOGGER.info("Skipping Symlink %s", sub_path)
             continue
 
         yield sub_path

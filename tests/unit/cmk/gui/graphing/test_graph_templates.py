@@ -9,13 +9,15 @@ from typing import Literal
 
 import pytest
 
+from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import Title
 from cmk.gui.graphing import _graph_templates as gt
 from cmk.gui.graphing._from_api import graphs_from_api, RegisteredMetric
-from cmk.gui.graphing._graph_metric_expressions import LineType
-from cmk.gui.graphing._graph_specification import HorizontalRule
+from cmk.gui.graphing._graph_metric_expressions import GraphMetricRRDSource, LineType
+from cmk.gui.graphing._graph_specification import GraphMetric, HorizontalRule
 from cmk.gui.graphing._graph_templates import (
     _evaluate_predictive_metrics,
     _evaluate_scalars,
@@ -35,7 +37,6 @@ from cmk.gui.graphing._metric_expressions import (
     Constant,
     CriticalOf,
     Difference,
-    Evaluated,
     Fraction,
     Maximum,
     MaximumOf,
@@ -57,6 +58,7 @@ from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 from cmk.gui.unit_formatter import AutoPrecision
 from cmk.gui.utils.temperate_unit import TemperatureUnit
+from cmk.utils.servicename import ServiceName
 
 _CPU_UTIL_GRAPHS = {
     "cpu_utilization_simple": graphs_api.Graph(
@@ -630,20 +632,22 @@ _EVALUATED_GRAPH_TEMPLATES = [
         range=None,
         omit_zero_metrics=False,
         metrics=[
-            Evaluated(
-                base=Metric(
-                    name="metric1",
-                    consolidation=None,
+            GraphMetric(
+                title="Metric1",
+                line_type="line",
+                operation=GraphMetricRRDSource(
+                    site_id=SiteId("site_id"),
+                    host_name=HostName("host_name"),
+                    service_name=ServiceName("service_name"),
+                    metric_name="metric1",
+                    consolidation_func_name="max",
+                    scale=1.0,
                 ),
-                value=1.0,
-                unit_spec=ConvertibleUnitSpecification(
-                    type="convertible",
-                    notation=DecimalNotation(type="decimal", symbol=""),
-                    precision=AutoPrecision(type="auto", digits=2),
+                unit=ConvertibleUnitSpecification(
+                    notation=DecimalNotation(symbol=""),
+                    precision=AutoPrecision(digits=2),
                 ),
                 color="#0080c0",
-                line_type="line",
-                title="Metric1",
             ),
         ],
     ),
@@ -654,20 +658,22 @@ _EVALUATED_GRAPH_TEMPLATES = [
         range=None,
         omit_zero_metrics=False,
         metrics=[
-            Evaluated(
-                base=Metric(
-                    name="metric2",
-                    consolidation=None,
+            GraphMetric(
+                title="Metric2",
+                line_type="line",
+                operation=GraphMetricRRDSource(
+                    site_id=SiteId("site_id"),
+                    host_name=HostName("host_name"),
+                    service_name=ServiceName("service_name"),
+                    metric_name="metric2",
+                    consolidation_func_name="max",
+                    scale=1.0,
                 ),
-                value=1.0,
-                unit_spec=ConvertibleUnitSpecification(
-                    type="convertible",
-                    notation=DecimalNotation(type="decimal", symbol=""),
-                    precision=AutoPrecision(type="auto", digits=2),
+                unit=ConvertibleUnitSpecification(
+                    notation=DecimalNotation(symbol=""),
+                    precision=AutoPrecision(digits=2),
                 ),
                 color="#0080c0",
-                line_type="line",
-                title="Metric2",
             ),
         ],
     ),
@@ -747,6 +753,9 @@ def test__matching_graph_templates(
         for graph_index, _graph_id, evaluated_graph_template in _matching_graph_templates(
             {},
             registered_graphs,
+            SiteId("site_id"),
+            HostName("host_name"),
+            ServiceName("service_name"),
             translated_metrics,
             graph_id=graph_id,
             graph_index=graph_index,
@@ -1810,6 +1819,9 @@ def test__get_evaluated_graph_templates_1(
             for graph_id, _evaluated_graph_template in _get_evaluated_graph_templates(
                 {},
                 registered_graphs,
+                SiteId("site_id"),
+                HostName("host_name"),
+                ServiceName("service_name"),
                 translated_metrics,
                 temperature_unit=TemperatureUnit.CELSIUS,
             )
@@ -1850,6 +1862,9 @@ def test__get_evaluated_graph_templates_2(
             for graph_id, _evaluated_graph_template in _get_evaluated_graph_templates(
                 {},
                 registered_graphs,
+                SiteId("site_id"),
+                HostName("host_name"),
+                ServiceName("service_name"),
                 translated_metrics,
                 temperature_unit=TemperatureUnit.CELSIUS,
             )
@@ -2098,71 +2113,107 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                     range=None,
                     omit_zero_metrics=False,
                     metrics=[
-                        Evaluated(
-                            Metric("messages_outbound"),
-                            0.0,
-                            ConvertibleUnitSpecification(
+                        GraphMetric(
+                            title="Outbound messages",
+                            line_type="stack",
+                            operation=GraphMetricRRDSource(
+                                site_id=SiteId("site_id"),
+                                host_name=HostName("host_name"),
+                                service_name=ServiceName("service_name"),
+                                metric_name="messages_outbound",
+                                consolidation_func_name="max",
+                                scale=1.0,
+                            ),
+                            unit=ConvertibleUnitSpecification(
                                 notation=DecimalNotation(symbol="/s"),
                                 precision=AutoPrecision(digits=2),
                             ),
-                            "#1e90ff",
-                            "stack",
-                            "Outbound messages",
+                            color="#1e90ff",
                         ),
-                        Evaluated(
-                            Metric("messages_inbound"),
-                            0.0,
-                            ConvertibleUnitSpecification(
+                        GraphMetric(
+                            title="Inbound messages",
+                            line_type="stack",
+                            operation=GraphMetricRRDSource(
+                                site_id=SiteId("site_id"),
+                                host_name=HostName("host_name"),
+                                service_name=ServiceName("service_name"),
+                                metric_name="messages_inbound",
+                                consolidation_func_name="max",
+                                scale=1.0,
+                            ),
+                            unit=ConvertibleUnitSpecification(
                                 notation=DecimalNotation(symbol="/s"),
                                 precision=AutoPrecision(digits=2),
                             ),
-                            "#1ee6e6",
-                            "stack",
-                            "Inbound messages",
+                            color="#1ee6e6",
                         ),
-                        Evaluated(
-                            base=Metric("predict_messages_outbound"),
-                            value=0.0,
-                            unit_spec=ConvertibleUnitSpecification(
+                        GraphMetric(
+                            title="Prediction of Outbound messages (upper levels)",
+                            line_type="line",
+                            operation=GraphMetricRRDSource(
+                                site_id=SiteId("site_id"),
+                                host_name=HostName("host_name"),
+                                service_name=ServiceName("service_name"),
+                                metric_name="predict_messages_outbound",
+                                consolidation_func_name="max",
+                                scale=1.0,
+                            ),
+                            unit=ConvertibleUnitSpecification(
                                 notation=DecimalNotation(symbol="/s"),
                                 precision=AutoPrecision(digits=2),
                             ),
                             color="#4b4b4b",
-                            line_type="line",
-                            title="Prediction of Outbound messages (upper levels)",
                         ),
-                        Evaluated(
-                            base=Metric("predict_lower_messages_outbound"),
-                            value=0.0,
-                            unit_spec=ConvertibleUnitSpecification(
+                        GraphMetric(
+                            title="Prediction of Outbound messages (lower levels)",
+                            line_type="line",
+                            operation=GraphMetricRRDSource(
+                                site_id=SiteId("site_id"),
+                                host_name=HostName("host_name"),
+                                service_name=ServiceName("service_name"),
+                                metric_name="predict_lower_messages_outbound",
+                                consolidation_func_name="max",
+                                scale=1.0,
+                            ),
+                            unit=ConvertibleUnitSpecification(
                                 notation=DecimalNotation(symbol="/s"),
                                 precision=AutoPrecision(digits=2),
                             ),
                             color="#696969",
-                            line_type="line",
-                            title="Prediction of Outbound messages (lower levels)",
                         ),
-                        Evaluated(
-                            base=Metric("predict_messages_inbound"),
-                            value=0.0,
-                            unit_spec=ConvertibleUnitSpecification(
+                        GraphMetric(
+                            title="Prediction of Inbound messages (upper levels)",
+                            line_type="line",
+                            operation=GraphMetricRRDSource(
+                                site_id=SiteId("site_id"),
+                                host_name=HostName("host_name"),
+                                service_name=ServiceName("service_name"),
+                                metric_name="predict_messages_inbound",
+                                consolidation_func_name="max",
+                                scale=1.0,
+                            ),
+                            unit=ConvertibleUnitSpecification(
                                 notation=DecimalNotation(symbol="/s"),
                                 precision=AutoPrecision(digits=2),
                             ),
                             color="#5a5a5a",
-                            line_type="line",
-                            title="Prediction of Inbound messages (upper levels)",
                         ),
-                        Evaluated(
-                            base=Metric("predict_lower_messages_inbound"),
-                            value=0.0,
-                            unit_spec=ConvertibleUnitSpecification(
+                        GraphMetric(
+                            title="Prediction of Inbound messages (lower levels)",
+                            line_type="line",
+                            operation=GraphMetricRRDSource(
+                                site_id=SiteId("site_id"),
+                                host_name=HostName("host_name"),
+                                service_name=ServiceName("service_name"),
+                                metric_name="predict_lower_messages_inbound",
+                                consolidation_func_name="max",
+                                scale=1.0,
+                            ),
+                            unit=ConvertibleUnitSpecification(
                                 notation=DecimalNotation(symbol="/s"),
                                 precision=AutoPrecision(digits=2),
                             ),
                             color="#787878",
-                            line_type="line",
-                            title="Prediction of Inbound messages (lower levels)",
                         ),
                     ],
                 )
@@ -2220,27 +2271,39 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                     range=None,
                     omit_zero_metrics=False,
                     metrics=[
-                        Evaluated(
-                            Metric("messages_outbound"),
-                            0.0,
-                            ConvertibleUnitSpecification(
+                        GraphMetric(
+                            title="Outbound messages",
+                            line_type="stack",
+                            operation=GraphMetricRRDSource(
+                                site_id=SiteId("site_id"),
+                                host_name=HostName("host_name"),
+                                service_name=ServiceName("service_name"),
+                                metric_name="messages_outbound",
+                                consolidation_func_name="max",
+                                scale=1.0,
+                            ),
+                            unit=ConvertibleUnitSpecification(
                                 notation=DecimalNotation(symbol="/s"),
                                 precision=AutoPrecision(digits=2),
                             ),
-                            "#1e90ff",
-                            "stack",
-                            "Outbound messages",
+                            color="#1e90ff",
                         ),
-                        Evaluated(
-                            Metric("messages_inbound"),
-                            0.0,
-                            ConvertibleUnitSpecification(
+                        GraphMetric(
+                            title="Inbound messages",
+                            line_type="stack",
+                            operation=GraphMetricRRDSource(
+                                site_id=SiteId("site_id"),
+                                host_name=HostName("host_name"),
+                                service_name=ServiceName("service_name"),
+                                metric_name="messages_inbound",
+                                consolidation_func_name="max",
+                                scale=1.0,
+                            ),
+                            unit=ConvertibleUnitSpecification(
                                 notation=DecimalNotation(symbol="/s"),
                                 precision=AutoPrecision(digits=2),
                             ),
-                            "#1ee6e6",
-                            "stack",
-                            "Inbound messages",
+                            color="#1ee6e6",
                         ),
                     ],
                 ),
@@ -2251,17 +2314,23 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                     range=None,
                     omit_zero_metrics=False,
                     metrics=[
-                        Evaluated(
-                            Metric("foo"),
-                            0.0,
-                            ConvertibleUnitSpecification(
+                        GraphMetric(
+                            title="Foo",
+                            line_type="area",
+                            operation=GraphMetricRRDSource(
+                                site_id=SiteId("site_id"),
+                                host_name=HostName("host_name"),
+                                service_name=ServiceName("service_name"),
+                                metric_name="foo",
+                                consolidation_func_name="max",
+                                scale=1.0,
+                            ),
+                            unit=ConvertibleUnitSpecification(
                                 notation=DecimalNotation(symbol=""),
                                 precision=AutoPrecision(digits=2),
                             ),
-                            "#cc00ff",
-                            "area",
-                            "Foo",
-                        )
+                            color="#cc00ff",
+                        ),
                     ],
                 ),
                 EvaluatedGraphTemplate(
@@ -2284,17 +2353,23 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                     range=None,
                     omit_zero_metrics=False,
                     metrics=[
-                        Evaluated(
-                            Metric("predict_foo"),
-                            0.0,
-                            ConvertibleUnitSpecification(
+                        GraphMetric(
+                            title="Prediction of Foo (upper levels)",
+                            line_type="area",
+                            operation=GraphMetricRRDSource(
+                                site_id=SiteId("site_id"),
+                                host_name=HostName("host_name"),
+                                service_name=ServiceName("service_name"),
+                                metric_name="predict_foo",
+                                consolidation_func_name="max",
+                                scale=1.0,
+                            ),
+                            unit=ConvertibleUnitSpecification(
                                 notation=DecimalNotation(symbol=""),
                                 precision=AutoPrecision(digits=2),
                             ),
-                            "#4b4b4b",
-                            "area",
-                            "Prediction of Foo (upper levels)",
-                        )
+                            color="#4b4b4b",
+                        ),
                     ],
                 ),
                 EvaluatedGraphTemplate(
@@ -2317,17 +2392,23 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                     range=None,
                     omit_zero_metrics=False,
                     metrics=[
-                        Evaluated(
-                            Metric("predict_lower_foo"),
-                            0.0,
-                            ConvertibleUnitSpecification(
+                        GraphMetric(
+                            title="Prediction of Foo (lower levels)",
+                            line_type="area",
+                            operation=GraphMetricRRDSource(
+                                site_id=SiteId("site_id"),
+                                host_name=HostName("host_name"),
+                                service_name=ServiceName("service_name"),
+                                metric_name="predict_lower_foo",
+                                consolidation_func_name="max",
+                                scale=1.0,
+                            ),
+                            unit=ConvertibleUnitSpecification(
                                 notation=DecimalNotation(symbol=""),
                                 precision=AutoPrecision(digits=2),
                             ),
-                            "#5a5a5a",
-                            "area",
-                            "Prediction of Foo (lower levels)",
-                        )
+                            color="#5a5a5a",
+                        ),
                     ],
                 ),
             ],
@@ -2360,6 +2441,9 @@ def test__get_evaluated_graph_templates_with_predictive_metrics(
         for _graph_id, evaluated_graph_template in _get_evaluated_graph_templates(
             registered_metrics,
             registered_graphs,
+            SiteId("site_id"),
+            HostName("host_name"),
+            ServiceName("service_name"),
             translated_metrics,
             temperature_unit=TemperatureUnit.CELSIUS,
         )
@@ -2894,6 +2978,9 @@ def test_conflicting_metrics(
             for graph_id, _evaluated_graph_template in _get_evaluated_graph_templates(
                 {},
                 registered_graphs,
+                SiteId("site_id"),
+                HostName("host_name"),
+                ServiceName("service_name"),
                 translated_metrics,
                 temperature_unit=TemperatureUnit.CELSIUS,
             )

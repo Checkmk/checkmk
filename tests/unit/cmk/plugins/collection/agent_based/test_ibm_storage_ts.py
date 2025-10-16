@@ -41,7 +41,10 @@ def test_ibm_storage_ts_info(
     string_table: Sequence[StringTable],
     expected_result: CheckResult,
 ) -> None:
-    assert list(plugin.check_ibm_storage_ts(section=string_table)) == expected_result
+    assert (
+        list(plugin.check_ibm_storage_ts(section=plugin.parse_ibm_storage_ts(string_table)))
+        == expected_result
+    )
 
 
 @pytest.mark.parametrize(
@@ -64,7 +67,14 @@ def test_ibm_storage_ts_status(
     string_table: Sequence[StringTable],
     expected_result: CheckResult,
 ) -> None:
-    assert list(plugin.check_ibm_storage_ts_status(section=string_table)) == expected_result
+    assert (
+        list(
+            plugin.check_ibm_storage_ts_status(
+                section=plugin.parse_ibm_storage_ts(string_table),
+            )
+        )
+        == expected_result
+    )
 
 
 @pytest.mark.parametrize(
@@ -92,7 +102,13 @@ def test_ibm_storage_ts_library(
     expected_result: CheckResult,
 ) -> None:
     assert (
-        list(plugin.check_ibm_storage_ts_library(section=string_table, item="1")) == expected_result
+        list(
+            plugin.check_ibm_storage_ts_library(
+                section=plugin.parse_ibm_storage_ts(string_table),
+                item="1",
+            )
+        )
+        == expected_result
     )
 
 
@@ -123,7 +139,13 @@ def test_ibm_storage_ts_drive(
     expected_result: CheckResult,
 ) -> None:
     assert (
-        list(plugin.check_ibm_storage_ts_drive(section=string_table, item="1")) == expected_result
+        list(
+            plugin.check_ibm_storage_ts_drive(
+                section=plugin.parse_ibm_storage_ts(string_table),
+                item="1",
+            )
+        )
+        == expected_result
     )
 
 

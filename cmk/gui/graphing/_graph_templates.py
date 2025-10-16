@@ -548,16 +548,17 @@ def _create_evaluated_graph_template_from_metric_name(
     )
 
 
-def _get_evaluated_graph_templates(
+def _compute_graph_recipes(
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     site_id: SiteId,
     host_name: HostName,
     service_name: ServiceName,
     translated_metrics: Mapping[str, TranslatedMetric],
+    specification: TemplateGraphSpecification,
     *,
     temperature_unit: TemperatureUnit,
-) -> Iterator[tuple[str, EvaluatedGraphTemplate]]:
+) -> Iterator[tuple[str, GraphRecipe]]:
     already_graphed_metrics = set()
     for graph_id, graph_plugin in _sort_registered_graph_plugins(registered_graphs):
         graph_template = _parse_graph_plugin(graph_id, graph_plugin, registered_metrics)
@@ -607,11 +608,14 @@ def _get_evaluated_graph_templates(
             already_graphed_metrics.update(
                 {n for e in all_evaluated_metrics for n in e.metric_names()}
             )
-            yield (graph_id, evaluated_graph_template)
+            yield (
+                graph_id,
+                _create_graph_recipe_from_template(specification, evaluated_graph_template),
+            )
 
     for metric_name, translated_metric in sorted(translated_metrics.items()):
         if translated_metric.auto_graph and metric_name not in already_graphed_metrics:
-            yield _create_evaluated_graph_template_from_metric_name(
+            graph_id, evaluated_graph_template = _create_evaluated_graph_template_from_metric_name(
                 site_id,
                 host_name,
                 service_name,
@@ -619,35 +623,41 @@ def _get_evaluated_graph_templates(
                 metric_name,
                 temperature_unit=temperature_unit,
             )
+            yield (
+                graph_id,
+                _create_graph_recipe_from_template(specification, evaluated_graph_template),
+            )
 
 
-def _matching_graph_templates(
+def _matching_graph_recipes(
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     site_id: SiteId,
     host_name: HostName,
     service_name: ServiceName,
     translated_metrics: Mapping[str, TranslatedMetric],
+    specification: TemplateGraphSpecification,
     *,
     graph_index: int | None,
     graph_id: str | None,
     temperature_unit: TemperatureUnit,
-) -> Iterable[tuple[int, str, EvaluatedGraphTemplate]]:
+) -> Iterable[tuple[int, str, GraphRecipe]]:
     yield from (
-        (graph_template_index, graph_template_id, graph_template)
-        for graph_template_index, (graph_template_id, graph_template) in enumerate(
-            _get_evaluated_graph_templates(
+        (graph_recipe_index, graph_recipe_id, graph_recipe)
+        for graph_recipe_index, (graph_recipe_id, graph_recipe) in enumerate(
+            _compute_graph_recipes(
                 registered_metrics,
                 registered_graphs,
                 site_id,
                 host_name,
                 service_name,
                 translated_metrics,
+                specification,
                 temperature_unit=temperature_unit,
             )
         )
-        if (graph_index is None or graph_index == graph_template_index)
-        and (graph_id is None or graph_id == graph_template_id)
+        if (graph_index is None or graph_index == graph_recipe_index)
+        and (graph_id is None or graph_id == graph_recipe_id)
     )
 
 
@@ -697,13 +707,7 @@ def _create_graph_recipe_from_translated_metric(
 
 
 def _create_graph_recipe_from_template(
-    site_id: SiteId,
-    host_name: HostName,
-    service_name: ServiceName,
-    painter_options: PainterOptions,
-    translated_metrics: Mapping[str, TranslatedMetric],
     specification: GraphSpecification,
-    graph_id: str,
     graph_template: EvaluatedGraphTemplate,
 ) -> GraphRecipe:
     units = {m.unit for m in graph_template.metrics}
@@ -723,11 +727,7 @@ def _create_graph_recipe_from_template(
         title = next((m.title for m in graph_template.metrics), "")
 
     return GraphRecipe(
-        title=(
-            f"{title} (Graph ID: {graph_id})"
-            if painter_options.get("show_internal_graph_and_metric_ids")
-            else title
-        ),
+        title=title,
         metrics=graph_template.metrics,
         unit_spec=units.pop(),
         explicit_vertical_range=graph_template.range,
@@ -777,35 +777,38 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
             graph_id=graph_id,
         )
 
-    def _build_recipe_from_template(
+    def _post_process_recipe(
         self,
         user_permissions: UserPermissions,
         site_id: SiteId,
         host_name: HostName,
         service_name: ServiceName,
         painter_options: PainterOptions,
-        translated_metrics: Mapping[str, TranslatedMetric],
         *,
         graph_index: int,
         graph_id: str,
-        graph_template: EvaluatedGraphTemplate,
+        graph_recipe: GraphRecipe,
     ) -> GraphRecipe | None:
-        return _create_graph_recipe_from_template(
-            site_id,
-            host_name,
-            service_name,
-            painter_options,
-            translated_metrics,
-            self._make_specification(
-                site=self.site,
+        return GraphRecipe(
+            title=(
+                f"{graph_recipe.title} (Graph ID: {graph_id})"
+                if painter_options.get("show_internal_graph_and_metric_ids")
+                else graph_recipe.title
+            ),
+            unit_spec=graph_recipe.unit_spec,
+            explicit_vertical_range=graph_recipe.explicit_vertical_range,
+            horizontal_rules=graph_recipe.horizontal_rules,
+            omit_zero_metrics=graph_recipe.omit_zero_metrics,
+            consolidation_function=graph_recipe.consolidation_function,
+            metrics=graph_recipe.metrics,
+            specification=self._make_specification(
+                site=site_id,
                 host_name=self.host_name,
                 service_description=self.service_description,
                 graph_index=graph_index,
                 graph_id=graph_id,
                 destination=self.destination,
             ),
-            graph_id,
-            graph_template,
         )
 
     def recipes(
@@ -863,29 +866,29 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
                 )
             ]
         return [
-            recipe
-            for graph_index, graph_id, graph_template in _matching_graph_templates(
+            post_processed_recipe
+            for graph_index, graph_id, graph_recipe in _matching_graph_recipes(
                 registered_metrics,
                 registered_graphs,
                 site_id,
                 host_name,
                 service_name,
                 translated_metrics,
+                self,  # does not matter here, it will be overwritten in _post_process_recipe
                 graph_index=self.graph_index,
                 graph_id=self.graph_id,
                 temperature_unit=temperature_unit,
             )
             if (
-                recipe := self._build_recipe_from_template(
+                post_processed_recipe := self._post_process_recipe(
                     user_permissions,
                     site_id,
                     host_name,
                     service_name,
                     painter_options,
-                    translated_metrics,
                     graph_index=graph_index,
                     graph_id=graph_id,
-                    graph_template=graph_template,
+                    graph_recipe=graph_recipe,
                 )
             )
         ]

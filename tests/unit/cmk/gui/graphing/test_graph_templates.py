@@ -17,20 +17,24 @@ from cmk.graphing.v1 import Title
 from cmk.gui.graphing import _graph_templates as gt
 from cmk.gui.graphing._from_api import graphs_from_api, RegisteredMetric
 from cmk.gui.graphing._graph_metric_expressions import GraphMetricRRDSource, LineType
-from cmk.gui.graphing._graph_specification import GraphMetric, HorizontalRule
+from cmk.gui.graphing._graph_specification import (
+    GraphMetric,
+    GraphRecipe,
+    HorizontalRule,
+)
 from cmk.gui.graphing._graph_templates import (
+    _compute_graph_recipes,
     _evaluate_predictive_metrics,
     _evaluate_scalars,
-    _get_evaluated_graph_templates,
-    _matching_graph_templates,
+    _matching_graph_recipes,
     _parse_bidirectional_from_api,
     _parse_graph_from_api,
     _parse_graph_plugin,
     _sort_registered_graph_plugins,
     evaluate_metrics,
-    EvaluatedGraphTemplate,
     GraphTemplate,
     MinimalGraphTemplateRange,
+    TemplateGraphSpecification,
 )
 from cmk.gui.graphing._metric_expressions import (
     BaseMetricExpression,
@@ -624,13 +628,17 @@ _REGISTERED_GRAPHS = {
     ),
 }
 
-_EVALUATED_GRAPH_TEMPLATES = [
-    EvaluatedGraphTemplate(
+_GRAPH_RECIPES = [
+    GraphRecipe(
         title="Graph 1",
+        unit_spec=ConvertibleUnitSpecification(
+            notation=DecimalNotation(symbol=""),
+            precision=AutoPrecision(digits=2),
+        ),
+        explicit_vertical_range=None,
         horizontal_rules=[],
-        consolidation_function="max",
-        range=None,
         omit_zero_metrics=False,
+        consolidation_function="max",
         metrics=[
             GraphMetric(
                 title="Metric1",
@@ -648,15 +656,24 @@ _EVALUATED_GRAPH_TEMPLATES = [
                     precision=AutoPrecision(digits=2),
                 ),
                 color="#0080c0",
-            ),
+            )
         ],
+        specification=TemplateGraphSpecification(
+            site=SiteId("site_id"),
+            host_name=HostName("host_name"),
+            service_description=ServiceName("service_name"),
+        ),
     ),
-    EvaluatedGraphTemplate(
+    GraphRecipe(
         title="Graph 2",
+        unit_spec=ConvertibleUnitSpecification(
+            notation=DecimalNotation(symbol=""),
+            precision=AutoPrecision(digits=2),
+        ),
+        explicit_vertical_range=None,
         horizontal_rules=[],
-        consolidation_function="max",
-        range=None,
         omit_zero_metrics=False,
+        consolidation_function="max",
         metrics=[
             GraphMetric(
                 title="Metric2",
@@ -674,8 +691,13 @@ _EVALUATED_GRAPH_TEMPLATES = [
                     precision=AutoPrecision(digits=2),
                 ),
                 color="#0080c0",
-            ),
+            )
         ],
+        specification=TemplateGraphSpecification(
+            site=SiteId("site_id"),
+            host_name=HostName("host_name"),
+            service_description=ServiceName("service_name"),
+        ),
     ),
 ]
 
@@ -688,7 +710,7 @@ _EVALUATED_GRAPH_TEMPLATES = [
             _REGISTERED_GRAPHS,
             None,
             None,
-            list(enumerate(_EVALUATED_GRAPH_TEMPLATES)),
+            list(enumerate(_GRAPH_RECIPES)),
             id="no index and no id",
         ),
         pytest.param(
@@ -696,7 +718,7 @@ _EVALUATED_GRAPH_TEMPLATES = [
             _REGISTERED_GRAPHS,
             None,
             0,
-            [(0, _EVALUATED_GRAPH_TEMPLATES[0])],
+            [(0, _GRAPH_RECIPES[0])],
             id="matching index and no id",
         ),
         pytest.param(
@@ -712,7 +734,7 @@ _EVALUATED_GRAPH_TEMPLATES = [
             _REGISTERED_GRAPHS,
             "graph2",
             None,
-            [(1, _EVALUATED_GRAPH_TEMPLATES[1])],
+            [(1, _GRAPH_RECIPES[1])],
             id="no index and matching id",
         ),
         pytest.param(
@@ -728,7 +750,7 @@ _EVALUATED_GRAPH_TEMPLATES = [
             _REGISTERED_GRAPHS,
             "graph1",
             0,
-            [(0, _EVALUATED_GRAPH_TEMPLATES[0])],
+            [(0, _GRAPH_RECIPES[0])],
             id="matching index and matching id",
         ),
         pytest.param(
@@ -741,22 +763,27 @@ _EVALUATED_GRAPH_TEMPLATES = [
         ),
     ],
 )
-def test__matching_graph_templates(
+def test__matching_graph_recipes(
     translated_metrics: Mapping[str, TranslatedMetric],
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     graph_id: str | None,
     graph_index: int | None,
-    expected_result: Sequence[tuple[int, EvaluatedGraphTemplate]],
+    expected_result: Sequence[tuple[int, GraphRecipe]],
 ) -> None:
     assert [
-        (graph_index, evaluated_graph_template)
-        for graph_index, _graph_id, evaluated_graph_template in _matching_graph_templates(
+        (graph_index, graph_recipe)
+        for graph_index, _graph_id, graph_recipe in _matching_graph_recipes(
             {},
             registered_graphs,
             SiteId("site_id"),
             HostName("host_name"),
             ServiceName("service_name"),
             translated_metrics,
+            TemplateGraphSpecification(
+                site=SiteId("site_id"),
+                host_name=HostName("host_name"),
+                service_description=ServiceName("service_name"),
+            ),
             graph_id=graph_id,
             graph_index=graph_index,
             temperature_unit=TemperatureUnit.CELSIUS,
@@ -1800,7 +1827,7 @@ def test__parse_bidirectional_from_api(
         ),
     ],
 )
-def test__get_evaluated_graph_templates_1(
+def test__compute_graph_recipes_1(
     metric_names: Sequence[str],
     check_command: str,
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
@@ -1816,13 +1843,18 @@ def test__get_evaluated_graph_templates_1(
     assert sorted(
         [
             graph_id
-            for graph_id, _evaluated_graph_template in _get_evaluated_graph_templates(
+            for graph_id, _graph_recipe in _compute_graph_recipes(
                 {},
                 registered_graphs,
                 SiteId("site_id"),
                 HostName("host_name"),
                 ServiceName("service_name"),
                 translated_metrics,
+                TemplateGraphSpecification(
+                    site=SiteId("site_id"),
+                    host_name=HostName("host_name"),
+                    service_description=ServiceName("service_name"),
+                ),
                 temperature_unit=TemperatureUnit.CELSIUS,
             )
         ]
@@ -1842,7 +1874,7 @@ def test__get_evaluated_graph_templates_1(
         ),
     ],
 )
-def test__get_evaluated_graph_templates_2(
+def test__compute_graph_recipes_2(
     metric_names: Sequence[str],
     warn_crit_min_max: tuple[int, int, int, int],
     check_command: str,
@@ -1859,13 +1891,18 @@ def test__get_evaluated_graph_templates_2(
     assert sorted(
         [
             graph_id
-            for graph_id, _evaluated_graph_template in _get_evaluated_graph_templates(
+            for graph_id, _graph_recipe in _compute_graph_recipes(
                 {},
                 registered_graphs,
                 SiteId("site_id"),
                 HostName("host_name"),
                 ServiceName("service_name"),
                 translated_metrics,
+                TemplateGraphSpecification(
+                    site=SiteId("site_id"),
+                    host_name=HostName("host_name"),
+                    service_description=ServiceName("service_name"),
+                ),
                 temperature_unit=TemperatureUnit.CELSIUS,
             )
         ]
@@ -2106,12 +2143,16 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                 )
             },
             [
-                EvaluatedGraphTemplate(
+                GraphRecipe(
                     title="Inbound and Outbound Messages",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol="/s"),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    explicit_vertical_range=None,
                     horizontal_rules=[],
-                    consolidation_function="max",
-                    range=None,
                     omit_zero_metrics=False,
+                    consolidation_function="max",
                     metrics=[
                         GraphMetric(
                             title="Outbound messages",
@@ -2216,7 +2257,12 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                             color="#787878",
                         ),
                     ],
-                )
+                    specification=TemplateGraphSpecification(
+                        site=SiteId("site_id"),
+                        host_name=HostName("host_name"),
+                        service_description=ServiceName("service_name"),
+                    ),
+                ),
             ],
             id="matches",
         ),
@@ -2264,12 +2310,16 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                 )
             },
             [
-                EvaluatedGraphTemplate(
+                GraphRecipe(
                     title="Inbound and Outbound Messages",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol="/s"),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    explicit_vertical_range=None,
                     horizontal_rules=[],
-                    consolidation_function="max",
-                    range=None,
                     omit_zero_metrics=False,
+                    consolidation_function="max",
                     metrics=[
                         GraphMetric(
                             title="Outbound messages",
@@ -2306,13 +2356,22 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                             color="#1ee6e6",
                         ),
                     ],
+                    specification=TemplateGraphSpecification(
+                        site=SiteId("site_id"),
+                        host_name=HostName("host_name"),
+                        service_description=ServiceName("service_name"),
+                    ),
                 ),
-                EvaluatedGraphTemplate(
-                    title="",
+                GraphRecipe(
+                    title="Foo",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    explicit_vertical_range=None,
                     horizontal_rules=[],
-                    consolidation_function="max",
-                    range=None,
                     omit_zero_metrics=False,
+                    consolidation_function="max",
                     metrics=[
                         GraphMetric(
                             title="Foo",
@@ -2326,32 +2385,36 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                                 scale=1.0,
                             ),
                             unit=ConvertibleUnitSpecification(
+                                type="convertible",
                                 notation=DecimalNotation(symbol=""),
                                 precision=AutoPrecision(digits=2),
                             ),
                             color="#cc00ff",
-                        ),
+                        )
                     ],
+                    specification=TemplateGraphSpecification(
+                        site=SiteId("site_id"),
+                        host_name=HostName("host_name"),
+                        service_description=ServiceName("service_name"),
+                    ),
                 ),
-                EvaluatedGraphTemplate(
-                    title="",
+                GraphRecipe(
+                    title="Prediction of Foo (upper levels)",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    explicit_vertical_range=None,
                     horizontal_rules=[
                         HorizontalRule(
-                            value=1.0,
-                            rendered_value="1",
-                            color="#ffd000",
-                            title="Warning",
+                            value=1.0, rendered_value="1", color="#ffd000", title="Warning"
                         ),
                         HorizontalRule(
-                            value=2.0,
-                            rendered_value="2",
-                            color="#ff3232",
-                            title="Critical",
+                            value=2.0, rendered_value="2", color="#ff3232", title="Critical"
                         ),
                     ],
-                    consolidation_function="max",
-                    range=None,
                     omit_zero_metrics=False,
+                    consolidation_function="max",
                     metrics=[
                         GraphMetric(
                             title="Prediction of Foo (upper levels)",
@@ -2369,28 +2432,31 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                                 precision=AutoPrecision(digits=2),
                             ),
                             color="#4b4b4b",
-                        ),
+                        )
                     ],
+                    specification=TemplateGraphSpecification(
+                        site=SiteId("site_id"),
+                        host_name=HostName("host_name"),
+                        service_description=ServiceName("service_name"),
+                    ),
                 ),
-                EvaluatedGraphTemplate(
-                    title="",
+                GraphRecipe(
+                    title="Prediction of Foo (lower levels)",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    explicit_vertical_range=None,
                     horizontal_rules=[
                         HorizontalRule(
-                            value=3.0,
-                            rendered_value="3",
-                            color="#ffd000",
-                            title="Warning",
+                            value=3.0, rendered_value="3", color="#ffd000", title="Warning"
                         ),
                         HorizontalRule(
-                            value=4.0,
-                            rendered_value="4",
-                            color="#ff3232",
-                            title="Critical",
+                            value=4.0, rendered_value="4", color="#ff3232", title="Critical"
                         ),
                     ],
-                    consolidation_function="max",
-                    range=None,
                     omit_zero_metrics=False,
+                    consolidation_function="max",
                     metrics=[
                         GraphMetric(
                             title="Prediction of Foo (lower levels)",
@@ -2408,22 +2474,27 @@ def test__evaluate_predictive_metrics_duplicates() -> None:
                                 precision=AutoPrecision(digits=2),
                             ),
                             color="#5a5a5a",
-                        ),
+                        )
                     ],
+                    specification=TemplateGraphSpecification(
+                        site=SiteId("site_id"),
+                        host_name=HostName("host_name"),
+                        service_description=ServiceName("service_name"),
+                    ),
                 ),
             ],
             id="does-not-match",
         ),
     ],
 )
-def test__get_evaluated_graph_templates_with_predictive_metrics(
+def test__compute_graph_recipes_with_predictive_metrics(
     metric_names: Sequence[str],
     predict_metric_names: Sequence[str],
     predict_lower_metric_names: Sequence[str],
     check_command: str,
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
-    graph_templates: Sequence[EvaluatedGraphTemplate],
+    graph_templates: Sequence[GraphRecipe],
 ) -> None:
     perfdata: Perfdata = (
         [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
@@ -2437,14 +2508,19 @@ def test__get_evaluated_graph_templates_with_predictive_metrics(
         temperature_unit=TemperatureUnit.CELSIUS,
     )
     assert [
-        evaluated_graph_template
-        for _graph_id, evaluated_graph_template in _get_evaluated_graph_templates(
+        graph_recipe
+        for _graph_id, graph_recipe in _compute_graph_recipes(
             registered_metrics,
             registered_graphs,
             SiteId("site_id"),
             HostName("host_name"),
             ServiceName("service_name"),
             translated_metrics,
+            TemplateGraphSpecification(
+                site=SiteId("site_id"),
+                host_name=HostName("host_name"),
+                service_description=ServiceName("service_name"),
+            ),
             temperature_unit=TemperatureUnit.CELSIUS,
         )
     ] == graph_templates
@@ -2975,13 +3051,18 @@ def test_conflicting_metrics(
     assert sorted(
         [
             graph_id
-            for graph_id, _evaluated_graph_template in _get_evaluated_graph_templates(
+            for graph_id, _graph_recipe in _compute_graph_recipes(
                 {},
                 registered_graphs,
                 SiteId("site_id"),
                 HostName("host_name"),
                 ServiceName("service_name"),
                 translated_metrics,
+                TemplateGraphSpecification(
+                    site=SiteId("site_id"),
+                    host_name=HostName("host_name"),
+                    service_description=ServiceName("service_name"),
+                ),
                 temperature_unit=TemperatureUnit.CELSIUS,
             )
         ]

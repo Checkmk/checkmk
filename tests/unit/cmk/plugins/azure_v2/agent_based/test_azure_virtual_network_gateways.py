@@ -14,6 +14,7 @@ from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, Stri
 from cmk.plugins.azure_v2.agent_based.azure_virtual_network_gateways import (
     BgpSettings,
     check_azure_virtual_network_gateway,
+    check_plugin_azure_virtual_network_gateways,
     check_virtual_network_gateway_bgp,
     check_virtual_network_gateway_health,
     check_virtual_network_gateway_peering,
@@ -527,7 +528,35 @@ def test_discovery_virtual_network_gateways(
                 Result(state=State.OK, summary="Location: maxwellmonteswest"),
             ],
             id="item_present",
-        )
+        ),
+        pytest.param(
+            SECTION,
+            check_plugin_azure_virtual_network_gateways.check_default_parameters,
+            [
+                Result(state=State.OK, summary="Point-to-site connections: 1"),
+                Metric("connections", 1.0, boundaries=(0.0, None)),
+                Result(state=State.OK, summary="Point-to-site bandwidth: 0.00 B/s"),
+                Metric("p2s_bandwidth", 0.0, boundaries=(0.0, None)),
+                Result(state=State.OK, summary="Site-to-site bandwidth: 13.7 kB/s"),
+                Metric("s2s_bandwidth", 13729.0, boundaries=(0.0, None)),
+                Result(state=State.OK, summary="Tunnel Ingress Bytes: 4 B"),
+                Metric("ingress", 4.0, boundaries=(0.0, None)),
+                Result(state=State.OK, summary="Tunnel Egress Bytes: 4 B"),
+                Metric("egress", 4.0, boundaries=(0.0, None)),
+                Result(
+                    state=State.CRIT,
+                    summary="Tunnel Ingress Packet Drop Count: 4 (warn/crit at 1/1)",
+                ),
+                Metric("ingress_packet_drop", 4.0, levels=(1.0, 1.0), boundaries=(0.0, None)),
+                Result(
+                    state=State.CRIT,
+                    summary="Tunnel Egress Packet Drop Count: 4 (warn/crit at 1/1)",
+                ),
+                Metric("egress_packet_drop", 4.0, levels=(1.0, 1.0), boundaries=(0.0, None)),
+                Result(state=State.OK, summary="Location: maxwellmonteswest"),
+            ],
+            id="default levels",
+        ),
     ],
 )
 def test_check_virtual_network_gateways(

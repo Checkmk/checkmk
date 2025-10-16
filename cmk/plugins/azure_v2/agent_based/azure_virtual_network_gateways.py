@@ -197,7 +197,10 @@ check_plugin_azure_virtual_network_gateways = CheckPlugin(
     discovery_function=discover_virtual_network_gateway,
     check_function=check_azure_virtual_network_gateway,
     check_ruleset_name="azure_v2_virtualnetworkgateways",
-    check_default_parameters={},
+    check_default_parameters={
+        "ingress_packet_drop_levels": (1, 1),
+        "egress_packet_drop_levels": (1, 1),
+    },
 )
 
 

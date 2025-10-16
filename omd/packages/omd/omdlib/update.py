@@ -23,9 +23,9 @@ from omdlib.version_info import VersionInfo
 from cmk.ccc.crash_reporting import make_crash_report_base_path
 
 
-def store(site_dir: Path, relpath: Path | str, backup_dir: Path) -> None:
+def store(site_home: Path, relpath: Path | str, backup_dir: Path) -> None:
     # `store` is only valid on files, symlinks and empty dirs.
-    source = site_dir / relpath
+    source = site_home / relpath
     destination = backup_dir / relpath
     match file_type(source):
         case ManagedTypes.file:
@@ -41,9 +41,9 @@ def store(site_dir: Path, relpath: Path | str, backup_dir: Path) -> None:
             raise NotImplementedError()
 
 
-def restore(site_dir: Path, relpath: Path | str, backup_dir: Path) -> None:
+def restore(site_home: Path, relpath: Path | str, backup_dir: Path) -> None:
     source = backup_dir / relpath
-    destination = site_dir / relpath
+    destination = site_home / relpath
     match file_type(source):
         case ManagedTypes.file:
             shutil.copy2(source, destination)
@@ -98,30 +98,30 @@ def walk_managed(skel: Path) -> Iterator[str]:
         yield relpath
 
 
-def backup_managed(site_dir: Path, old_skel: Path, new_skel: Path, backup_dir: Path) -> None:
+def backup_managed(site_home: Path, old_skel: Path, new_skel: Path, backup_dir: Path) -> None:
     for relpath in walk_managed(new_skel):
-        store(site_dir, Path(relpath), backup_dir)
+        store(site_home, Path(relpath), backup_dir)
     for relpath in walk_managed(old_skel):
         if not os.path.lexists(new_skel / relpath):  # Already backed-up
-            store(site_dir, Path(relpath), backup_dir)
+            store(site_home, Path(relpath), backup_dir)
 
 
-def restore_managed(site_dir: Path, old_skel: Path, new_skel: Path, backup_dir: Path) -> None:
+def restore_managed(site_home: Path, old_skel: Path, new_skel: Path, backup_dir: Path) -> None:
     for relpath in walk_managed(old_skel):
         if not (new_skel / relpath).exists():
-            restore(site_dir, Path(relpath), backup_dir)
+            restore(site_home, Path(relpath), backup_dir)
     for relpath in reversed(list(walk_managed(new_skel))):
-        restore(site_dir, Path(relpath), backup_dir)
+        restore(site_home, Path(relpath), backup_dir)
 
 
-def _store_version_meta_dir(site_dir: Path, backup_dir: Path) -> None:
-    version_meta_dir = site_dir / ".version_meta"
+def _store_version_meta_dir(site_home: Path, backup_dir: Path) -> None:
+    version_meta_dir = site_home / ".version_meta"
     if version_meta_dir.exists():
         shutil.copytree(version_meta_dir, backup_dir / ".version_meta", symlinks=True)
 
 
-def _restore_version_meta_dir(site_dir: Path, backup_dir: Path) -> None:
-    version_meta_dir = site_dir / ".version_meta"
+def _restore_version_meta_dir(site_home: Path, backup_dir: Path) -> None:
+    version_meta_dir = site_home / ".version_meta"
     backup_version_meta_dir = backup_dir / ".version_meta"
     with contextlib.suppress(FileNotFoundError):
         shutil.rmtree(version_meta_dir)
@@ -162,12 +162,12 @@ HOOK_RELPATHS = [
 
 class ManageUpdate:
     def __init__(
-        self, site_name: str, tmp_dir: str, site_dir: Path, old_skel: Path, new_skel: Path
+        self, site_name: str, tmp_dir: str, site_home: Path, old_skel: Path, new_skel: Path
     ) -> None:
-        self.backup_dir = site_dir / ".update_backup"
+        self.backup_dir = site_home / ".update_backup"
         self.old_skel = old_skel
         self.new_skel = new_skel
-        self.site_dir = site_dir
+        self.site_home = site_home
         self.site_name = site_name
         self.tmp_dir = tmp_dir
         self.populated_tmpfs = False
@@ -177,15 +177,15 @@ class ManageUpdate:
             sys.exit(
                 f"The folder {self.backup_dir} contains data from a failed update attempt. This "
                 "only happens, if a serious error occurred during a previous update attempt. "
-                f"Please contact support. A crash report may be available in {make_crash_report_base_path(self.site_dir)}. "
+                f"Please contact support. A crash report may be available in {make_crash_report_base_path(self.site_home)}. "
                 "Since the root cause of this error is not known to OMD, the site is an "
                 "unknown state and both, restarting or updating the site, can have unknown effects.\n"
             )
-        backup_managed(self.site_dir, self.old_skel, self.new_skel, self.backup_dir)
-        store(self.site_dir, "version", self.backup_dir)
-        _store_version_meta_dir(self.site_dir, self.backup_dir)
+        backup_managed(self.site_home, self.old_skel, self.new_skel, self.backup_dir)
+        store(self.site_home, "version", self.backup_dir)
+        _store_version_meta_dir(self.site_home, self.backup_dir)
         for relpath in HOOK_RELPATHS:
-            store(self.site_dir, relpath, self.backup_dir)
+            store(self.site_home, relpath, self.backup_dir)
         return self
 
     def prepare_and_populate_tmpfs(
@@ -199,7 +199,7 @@ class ManageUpdate:
             config,
             version,
             self.site_name,
-            str(self.site_dir),
+            str(self.site_home),
             str(self.tmp_dir),
             replacements,
             skel_permissions,
@@ -221,12 +221,12 @@ class ManageUpdate:
                     # are pointing to the new context. Thus, we only umount here.
                     unmount_tmpfs_without_save(self.site_name, self.tmp_dir, False, False)
                 for relpath in HOOK_RELPATHS:
-                    restore(self.site_dir, relpath, self.backup_dir)
-                _restore_version_meta_dir(self.site_dir, self.backup_dir)
-                restore(self.site_dir, "version", self.backup_dir)
-                restore_managed(self.site_dir, self.old_skel, self.new_skel, self.backup_dir)
+                    restore(self.site_home, relpath, self.backup_dir)
+                _restore_version_meta_dir(self.site_home, self.backup_dir)
+                restore(self.site_home, "version", self.backup_dir)
+                restore_managed(self.site_home, self.old_skel, self.new_skel, self.backup_dir)
             except Exception:
-                identity = report_crash(self.site_dir)
+                identity = report_crash(self.site_home)
                 sys.stderr.write(
                     f"A serious error occurred, which resulted in a crash with id: {identity}\n"
                     "Please contact support with this crash id.\n"

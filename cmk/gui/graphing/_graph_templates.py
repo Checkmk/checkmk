@@ -484,70 +484,6 @@ def _evaluate_scalars(
     return results
 
 
-@dataclass(frozen=True)
-class EvaluatedGraphTemplate:
-    title: str
-    horizontal_rules: Sequence[HorizontalRule]
-    consolidation_function: GraphConsolidationFunction
-    range: FixedVerticalRange | MinimalVerticalRange | None
-    omit_zero_metrics: bool
-    metrics: Sequence[GraphMetric]
-
-
-def _create_evaluated_graph_template_from_metric_name(
-    site_id: SiteId,
-    host_name: HostName,
-    service_name: ServiceName,
-    translated_metrics: Mapping[str, TranslatedMetric],
-    metric_name: str,
-    *,
-    temperature_unit: TemperatureUnit,
-) -> tuple[str, EvaluatedGraphTemplate]:
-    if metric_name.startswith("METRIC_"):
-        graph_id = metric_name
-        metric_name = metric_name[7:]
-    else:
-        graph_id = f"METRIC_{metric_name}"
-    consolidation_function: Literal["max"] = "max"
-    return (
-        graph_id,
-        EvaluatedGraphTemplate(
-            title="",
-            metrics=[
-                GraphMetric(
-                    title=translated_metric.title,
-                    line_type="area",
-                    operation=create_graph_metric_expression_from_translated_metric(
-                        site_id,
-                        host_name,
-                        service_name,
-                        translated_metric,
-                        consolidation_function,
-                    ),
-                    unit=translated_metric.unit_spec,
-                    color=translated_metric.color,
-                )
-            ],
-            horizontal_rules=compute_warn_crit_rules_from_translated_metric(
-                user_specific_unit(translated_metric.unit_spec, temperature_unit),
-                translated_metric,
-            ),
-            consolidation_function=consolidation_function,
-            range=None,
-            omit_zero_metrics=False,
-        )
-        if (translated_metric := translated_metrics.get(metric_name))
-        else EvaluatedGraphTemplate(
-            title="",
-            metrics=[],
-            horizontal_rules=[],
-            consolidation_function=consolidation_function,
-            range=None,
-            omit_zero_metrics=False,
-        ),
-    )
-
-
 def _compute_graph_recipes(
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
@@ -559,6 +495,7 @@ def _compute_graph_recipes(
     *,
     temperature_unit: TemperatureUnit,
 ) -> Iterator[tuple[str, GraphRecipe]]:
+    consolidation_function: Literal["max"] = "max"
     already_graphed_metrics = set()
     for graph_id, graph_plugin in _sort_registered_graph_plugins(registered_graphs):
         graph_template = _parse_graph_plugin(graph_id, graph_plugin, registered_metrics)
@@ -568,7 +505,6 @@ def _compute_graph_recipes(
             metric_expressions=graph_template.metrics,
             translated_metrics=translated_metrics,
         ):
-            consolidation_function: Literal["max"] = "max"
             all_evaluated_metrics = list(
                 itertools.chain(
                     evaluated_metrics,
@@ -614,23 +550,32 @@ def _compute_graph_recipes(
 
     for metric_name, translated_metric in sorted(translated_metrics.items()):
         if translated_metric.auto_graph and metric_name not in already_graphed_metrics:
-            graph_id, evaluated_graph_template = _create_evaluated_graph_template_from_metric_name(
-                site_id,
-                host_name,
-                service_name,
-                translated_metrics,
-                metric_name,
-                temperature_unit=temperature_unit,
-            )
             yield (
-                graph_id,
+                metric_name if metric_name.startswith("METRIC_") else f"METRIC_{metric_name}",
                 _create_graph_recipe(
                     specification,
-                    title=evaluated_graph_template.title,
-                    graph_metrics=evaluated_graph_template.metrics,
-                    explicit_vertical_range=evaluated_graph_template.range,
-                    horizontal_rules=evaluated_graph_template.horizontal_rules,
-                    consolidation_function=evaluated_graph_template.consolidation_function,
+                    title="",
+                    graph_metrics=[
+                        GraphMetric(
+                            title=translated_metric.title,
+                            line_type="area",
+                            operation=create_graph_metric_expression_from_translated_metric(
+                                site_id,
+                                host_name,
+                                service_name,
+                                translated_metric,
+                                consolidation_function,
+                            ),
+                            unit=translated_metric.unit_spec,
+                            color=translated_metric.color,
+                        )
+                    ],
+                    explicit_vertical_range=None,
+                    horizontal_rules=compute_warn_crit_rules_from_translated_metric(
+                        user_specific_unit(translated_metric.unit_spec, temperature_unit),
+                        translated_metric,
+                    ),
+                    consolidation_function=consolidation_function,
                 ),
             )
 

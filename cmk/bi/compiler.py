@@ -294,7 +294,7 @@ class BICompiler:
             differing_site_ids = ", ".join(site_id for site_id, _ in differing_program_starts)
             _LOGGER.debug(f"Detected restarts for the following site ids: {differing_site_ids}")
 
-        return len(differing_program_starts) > 0
+        return bool(differing_program_starts)
 
     def compute_current_configstatus(self) -> ConfigStatus:
         current_configstatus: ConfigStatus = {

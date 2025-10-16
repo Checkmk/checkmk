@@ -665,10 +665,8 @@ def _create_graph_recipe_from_translated_metric(
     site_id: SiteId,
     host_name: HostName,
     service_name: ServiceName,
-    painter_options: PainterOptions,
     translated_metric: TranslatedMetric,
     specification: TemplateGraphSpecification,
-    graph_id: str,
     *,
     temperature_unit: TemperatureUnit,
 ) -> GraphRecipe:
@@ -688,11 +686,7 @@ def _create_graph_recipe_from_translated_metric(
         color=translated_metric.color,
     )
     return GraphRecipe(
-        title=(
-            f"{title} (Graph ID: {graph_id})"
-            if painter_options.get("show_internal_graph_and_metric_ids")
-            else title
-        ),
+        title=title,
         metrics=[graph_metric],
         unit_spec=graph_metric.unit,
         explicit_vertical_range=None,
@@ -846,39 +840,38 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
             and self.graph_id.startswith("METRIC_")
             and self.graph_id[7:] in translated_metrics
         ):
-            return [
-                _create_graph_recipe_from_translated_metric(
+            recipes = [
+                (
+                    0,
+                    self.graph_id,
+                    _create_graph_recipe_from_translated_metric(
+                        site_id,
+                        host_name,
+                        service_name,
+                        translated_metrics[self.graph_id[7:]],
+                        self,  # does not matter here, it will be overwritten in _post_process_recipe
+                        temperature_unit=temperature_unit,
+                    ),
+                )
+            ]
+        else:
+            recipes = list(
+                _matching_graph_recipes(
+                    registered_metrics,
+                    registered_graphs,
                     site_id,
                     host_name,
                     service_name,
-                    painter_options,
-                    translated_metrics[self.graph_id[7:]],
-                    self._make_specification(
-                        site=self.site,
-                        host_name=self.host_name,
-                        service_description=self.service_description,
-                        graph_index=0,
-                        graph_id=self.graph_id,
-                        destination=self.destination,
-                    ),
-                    self.graph_id,
+                    translated_metrics,
+                    self,  # does not matter here, it will be overwritten in _post_process_recipe
+                    graph_index=self.graph_index,
+                    graph_id=self.graph_id,
                     temperature_unit=temperature_unit,
                 )
-            ]
+            )
         return [
             post_processed_recipe
-            for graph_index, graph_id, graph_recipe in _matching_graph_recipes(
-                registered_metrics,
-                registered_graphs,
-                site_id,
-                host_name,
-                service_name,
-                translated_metrics,
-                self,  # does not matter here, it will be overwritten in _post_process_recipe
-                graph_index=self.graph_index,
-                graph_id=self.graph_id,
-                temperature_unit=temperature_unit,
-            )
+            for graph_index, graph_id, graph_recipe in recipes
             if (
                 post_processed_recipe := self._post_process_recipe(
                     user_permissions,

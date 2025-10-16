@@ -694,6 +694,12 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.urls",
         exclude=("cmk.gui.plugins", "cmk.gui.cee.plugins"),
     ),
+    Component("cmk.gui.graphing.cce"): _allow(
+        *PACKAGE_CCC,
+        "cmk.gui",
+        "cmk.metric_backend",
+        "cmk.utils.paths",
+    ),
     Component("cmk.gui"): _allow(
         *PACKAGE_CCC,
         *PACKAGE_PLUGIN_APIS,

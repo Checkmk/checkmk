@@ -4,7 +4,6 @@ SHELL := bash
 CHECK_MK := check_mk
 CHECK_MK_DIR := $(CHECK_MK)-$(CMK_VERSION)
 
-CHECK_MK_BUILD := $(BUILD_HELPER_DIR)/$(CHECK_MK_DIR)-build
 CHECK_MK_INTERMEDIATE_INSTALL := $(BUILD_HELPER_DIR)/$(CHECK_MK_DIR)-install-intermediate
 CHECK_MK_INSTALL := $(BUILD_HELPER_DIR)/$(CHECK_MK_DIR)-install
 CHECK_MK_PATCHING := $(BUILD_HELPER_DIR)/$(CHECK_MK_DIR)-patching
@@ -12,8 +11,6 @@ CHECK_MK_PATCHING := $(BUILD_HELPER_DIR)/$(CHECK_MK_DIR)-patching
 CHECK_MK_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(CHECK_MK_DIR)
 CHECK_MK_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(CHECK_MK_DIR)
 CHECK_MK_WORK_DIR := $(PACKAGE_WORK_DIR)/$(CHECK_MK_DIR)
-
-CHECK_MK_LANGUAGES := de ro nl fr it ja pt_PT es
 
 CHECK_MK_TAROPTS := \
 	--owner=root --group=root --exclude=.svn --exclude=*~ \
@@ -38,11 +35,6 @@ endif
 .PHONY: agent_plugins_py2
 agent_plugins_py2:
 	$(MAKE) -C $(REPO_PATH)/agents/plugins/
-
-$(CHECK_MK_BUILD):
-	$(MKDIR) $(CHECK_MK_BUILD_DIR)
-	$(REPO_PATH)/locale/compile_mo_files
-	$(TOUCH) $@
 
 ADDITIONAL_EXCLUDE=--exclude "BUILD.*" --exclude "BUILD" --exclude "OWNERS"
 
@@ -72,7 +64,7 @@ ifeq ($(filter $(EDITION),saas),)
 	    --exclude "cse.py"
 endif
 
-$(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) agent_plugins_py2
+$(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) agent_plugins_py2
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks
 	install -m 644 $(REPO_PATH)/cmk/base/legacy_checks/* $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks
 	rm $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks/__init__.py
@@ -174,14 +166,6 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) agent
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/nagios/plugins
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/skel/local/lib/nagios/plugins
-
-	# Install localizations
-	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/locale
-	for lang in $(CHECK_MK_LANGUAGES) ; do \
-		$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/locale/$$lang/LC_MESSAGES ; \
-		install -m 644 $(REPO_PATH)/locale/$$lang/LC_MESSAGES/multisite.mo $(CHECK_MK_INSTALL_DIR)/share/check_mk/locale/$$lang/LC_MESSAGES ; \
-		install -m 644 $(REPO_PATH)/locale/$$lang/alias $(CHECK_MK_INSTALL_DIR)/share/check_mk/locale/$$lang ; \
-	done
 
 	# Install hooks
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks

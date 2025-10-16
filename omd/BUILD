@@ -101,6 +101,7 @@ pkg_files(
                "//bin:pkg_tar",
                "//active_checks:pkg_tar",
                "//doc/plugin-api:pkg_tar",
+               "//locale",
                #added here instead of above because of disappearing file
                "//omd/packages/Python:python_tar",
                "//omd/packages/changelog",

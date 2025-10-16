@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import type { StageInformation, WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
+import type { StageInformation, WelcomeCards } from 'cmk-shared-typing/typescript/welcome'
 import { computed, onMounted, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
@@ -22,7 +22,7 @@ import { type StepId, totalSteps } from '../steps/stepComponents'
 
 const { _t } = usei18n()
 
-const urls = ref<WelcomeUrls>()
+const cards = ref<WelcomeCards>()
 const stageInformation = ref<StageInformation>()
 const slideInOpen = ref(false)
 const nextStepsTitle = _t('Next steps with Checkmk')
@@ -33,18 +33,18 @@ const completedSteps = computed(() => stageInformation.value?.finished.length ||
 const completed = computed(() => completedSteps.value === totalSteps)
 
 function slideInEventListener(event: CustomEvent): void {
-  urls.value = event.detail.urls
+  cards.value = event.detail.cards
   stageInformation.value = event.detail.stage_information
   slideInTitle.value = completed.value ? nextStepsTitle : firstStepsTitle
   openSlideIn()
 }
 
 async function stepCompleted(stepId: StepId): Promise<void> {
-  if (urls.value) {
-    await markStepAsComplete(urls.value.mark_step_completed, stepId).then(async () => {
-      if (urls.value) {
+  if (cards.value) {
+    await markStepAsComplete(cards.value.mark_step_completed, stepId).then(async () => {
+      if (cards.value) {
         stageInformation.value =
-          (await getWelcomeStageInformation(urls.value.get_stage_information)) ||
+          (await getWelcomeStageInformation(cards.value.get_stage_information)) ||
           stageInformation.value
       }
     })
@@ -81,13 +81,13 @@ function openSlideIn() {
       {{ _t('Open full view') }}
     </CmkButton>
     <OnboardingStepper
-      v-if="!completed && urls"
-      :urls="urls"
+      v-if="!completed && cards"
+      :cards="cards"
       :finished-steps="stageInformation?.finished || []"
       :show-heading="false"
       @step-completed="stepCompleted"
     />
-    <NextSteps v-else-if="urls" :urls="urls" />
+    <NextSteps v-else-if="cards" :cards="cards" />
   </CmkSlideInDialog>
 </template>
 

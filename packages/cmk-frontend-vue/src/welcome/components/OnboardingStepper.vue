@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import type { WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
+import type { WelcomeCards } from 'cmk-shared-typing/typescript/welcome'
 import { ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
@@ -20,7 +20,7 @@ import { stepComponents } from './steps/stepComponents'
 const { _t } = usei18n()
 
 const props = defineProps<{
-  urls: WelcomeUrls
+  cards: WelcomeCards
   finishedSteps: string[]
   showHeading: boolean
 }>()
@@ -60,7 +60,7 @@ immediateWatch(
       :key="stepNumber"
       :step="stepNumber"
       :step-id="stepId"
-      :urls="urls"
+      :cards="cards"
       :accomplished="finishedSteps.includes(stepId)"
       @step-completed="emit('step-completed', $event)"
     />

@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import type { WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
+import type { WelcomeCards } from 'cmk-shared-typing/typescript/welcome'
 import type { Ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
@@ -25,7 +25,7 @@ const { _t } = usei18n()
 const props = defineProps<{
   step: number
   stepId: StepId
-  urls: WelcomeUrls
+  cards: WelcomeCards
   accomplished: boolean
 }>()
 
@@ -67,7 +67,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(`${props.stepId}-curre
             <CmkLinkCard
               icon-name="contactgroups"
               :title="_t('Contact groups')"
-              :url="urls.create_contactgroups"
+              :url="cards.create_contactgroups"
               :open-in-new-tab="false"
             />
           </StepCardsRow>
@@ -93,7 +93,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(`${props.stepId}-curre
             <CmkLinkCard
               icon-name="users"
               :title="_t('Users')"
-              :url="urls.users"
+              :url="cards.users"
               :open-in-new-tab="false"
             />
           </StepCardsRow>
@@ -126,7 +126,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(`${props.stepId}-curre
             <CmkLinkCard
               icon-name="assign"
               :title="_t('Assignment of hosts to contact groups')"
-              :url="urls.assign_host_to_contactgroups"
+              :url="cards.assign_host_to_contactgroups"
               :open-in-new-tab="false"
             />
           </StepCardsRow>
@@ -156,7 +156,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(`${props.stepId}-curre
             <CmkLinkCard
               icon-name="main-changes"
               :title="_t('Activate changes')"
-              :url="urls.activate_changes"
+              :url="cards.activate_changes"
               :open-in-new-tab="false"
             />
           </StepCardsRow>

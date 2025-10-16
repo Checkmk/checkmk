@@ -3,9 +3,9 @@
   "type": "object",
   "title": "Welcome page",
   "properties": {
-    "urls": {
+    "cards": {
       "type": "object",
-      "$ref": "#/$defs/welcome_urls"
+      "$ref": "#/$defs/welcome_cards"
     },
     "is_start_url": {
       "type": "boolean"
@@ -17,7 +17,7 @@
   },
   "required": ["urls", "is_start_url", "stage_information"],
   "$defs": {
-    "welcome_urls": {
+    "welcome_cards": {
       "type": "object",
       "properties": {
         "checkmk_ai": { "type": "string" },

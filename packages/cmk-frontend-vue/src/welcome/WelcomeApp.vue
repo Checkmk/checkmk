@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import type { StageInformation, WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
+import type { StageInformation, WelcomeCards } from 'cmk-shared-typing/typescript/welcome'
 import { computed, ref } from 'vue'
 
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
@@ -20,7 +20,7 @@ import WelcomeFooter from './components/WelcomeFooter.vue'
 import { type StepId, totalSteps } from './components/steps/stepComponents'
 
 const props = defineProps<{
-  urls: WelcomeUrls
+  cards: WelcomeCards
   stage_information: StageInformation
   is_start_url: boolean
 }>()
@@ -29,9 +29,9 @@ const currentStageInformation = ref(props.stage_information)
 const completedSteps = computed(() => currentStageInformation.value.finished.length)
 
 async function stepCompleted(stepId: StepId): Promise<void> {
-  await markStepAsComplete(props.urls.mark_step_completed, stepId).then(async () => {
+  await markStepAsComplete(props.cards.mark_step_completed, stepId).then(async () => {
     currentStageInformation.value =
-      (await getWelcomeStageInformation(props.urls.get_stage_information)) ||
+      (await getWelcomeStageInformation(props.cards.get_stage_information)) ||
       currentStageInformation.value
   })
 }
@@ -47,16 +47,16 @@ async function stepCompleted(stepId: StepId): Promise<void> {
       />
       <div class="welcome-app__panels">
         <div class="welcome-app__panel-left">
-          <NextSteps v-if="completedSteps === totalSteps" :urls="urls" />
+          <NextSteps v-if="completedSteps === totalSteps" :cards="cards" />
           <OnboardingStepper
-            :urls="urls"
+            :cards="cards"
             :finished-steps="currentStageInformation.finished"
             :show-heading="true"
             @step-completed="stepCompleted"
           />
         </div>
         <div class="welcome-app__panel-right">
-          <ResourceLinksPanel :urls="urls" />
+          <ResourceLinksPanel :cards="cards" />
         </div>
       </div>
       <WelcomeFooter class="welcome-app__footer" :is_start_url="is_start_url" />

@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import type { WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
+import type { WelcomeCards } from 'cmk-shared-typing/typescript/welcome'
 
 import usei18n from '@/lib/i18n'
 
@@ -19,7 +19,7 @@ const { _t } = usei18n()
 
 defineProps<{
   step: number
-  urls: WelcomeUrls
+  urls: WelcomeCards
   accomplished: boolean
 }>()
 </script>

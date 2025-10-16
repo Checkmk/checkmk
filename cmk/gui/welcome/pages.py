@@ -17,8 +17,8 @@ from cmk.gui.pages import AjaxPage, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri, makeuri_contextless
 from cmk.gui.wato.pages.user_profile.main_menu import set_user_attribute
 from cmk.gui.watolib.hosts_and_folders import Host
-from cmk.gui.welcome.registry import welcome_url_registry, WelcomeCallback
-from cmk.shared_typing.welcome import FinishedEnum, StageInformation, WelcomePage, WelcomeUrls
+from cmk.gui.welcome.registry import welcome_card_registry, WelcomeCardCallback
+from cmk.shared_typing.welcome import FinishedEnum, StageInformation, WelcomeCards, WelcomePage
 from cmk.utils.urls import is_allowed_url
 
 
@@ -52,11 +52,11 @@ def _get_finished_stages() -> Generator[FinishedEnum]:
 
 
 def make_url_or_callback_from_registry(identifier: str, permitted: bool = True) -> str | None:
-    url = welcome_url_registry.get(identifier)
+    url = welcome_card_registry.get(identifier)
     if url is None or not permitted:
         return None
 
-    if isinstance(url, WelcomeCallback):
+    if isinstance(url, WelcomeCardCallback):
         return url.callback_id
 
     return makeuri(
@@ -133,7 +133,7 @@ def _welcome_page(config: Config) -> None:
 
 def get_welcome_data() -> WelcomePage:
     return WelcomePage(
-        urls=WelcomeUrls(
+        cards=WelcomeCards(
             checkmk_ai="https://chat.checkmk.com",
             checkmk_forum="https://forum.checkmk.com",
             checkmk_docs=doc_reference_url(),

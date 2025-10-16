@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import type { WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
+import type { WelcomeCards } from 'cmk-shared-typing/typescript/welcome'
 import type { Ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
@@ -25,7 +25,7 @@ const { _t } = usei18n()
 const props = defineProps<{
   step: number
   stepId: StepId
-  urls: WelcomeUrls
+  cards: WelcomeCards
   accomplished: boolean
 }>()
 const emit = defineEmits(['step-completed'])
@@ -68,7 +68,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(`${props.stepId}-curre
             <CmkLinkCard
               icon-name="notifications"
               :title="_t('Add notification rule')"
-              :url="urls.add_notification_rule"
+              :url="cards.add_notification_rule"
               :open-in-new-tab="false"
             />
           </StepCardsRow>
@@ -94,7 +94,7 @@ const currentStep: Ref<number> = usePersistentRef<number>(`${props.stepId}-curre
             <CmkLinkCard
               icon-name="analysis"
               :title="_t('Test notifications')"
-              :url="urls.test_notifications"
+              :url="cards.test_notifications"
               :open-in-new-tab="false"
             />
           </StepCardsRow>

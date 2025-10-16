@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import type { StageInformation, WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
+import type { StageInformation, WelcomeCards } from 'cmk-shared-typing/typescript/welcome'
 import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
@@ -23,7 +23,7 @@ import { totalSteps } from '../steps/stepComponents'
 const { _t } = usei18n()
 
 const props = defineProps<{
-  urls: WelcomeUrls
+  cards: WelcomeCards
   stage_information: StageInformation
 }>()
 
@@ -37,10 +37,10 @@ const completed = computed(() => completedSteps.value === totalSteps)
 
 async function openSlideIn() {
   currentStageInformation.value =
-    (await getWelcomeStageInformation(props.urls.get_stage_information)) || props.stage_information
+    (await getWelcomeStageInformation(props.cards.get_stage_information)) || props.stage_information
   const event = new CustomEvent('open-welcome-slide-in', {
     detail: {
-      urls: props.urls,
+      cards: props.cards,
       stage_information: currentStageInformation.value
     }
   })

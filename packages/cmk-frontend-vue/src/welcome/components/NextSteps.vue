@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import type { WelcomeUrls } from 'cmk-shared-typing/typescript/welcome'
+import type { WelcomeCards } from 'cmk-shared-typing/typescript/welcome'
 
 import usei18n from '@/lib/i18n'
 
@@ -16,7 +16,7 @@ import CmkHeading from '@/components/typography/CmkHeading.vue'
 const { _t } = usei18n()
 
 defineProps<{
-  urls: WelcomeUrls
+  cards: WelcomeCards
 }>()
 </script>
 
@@ -32,7 +32,7 @@ defineProps<{
         _t('No backup, no mercy! Protect your configuration and data with automated backups.')
       "
       icon-name="backup"
-      :url="urls.setup_backup"
+      :url="cards.setup_backup"
       variant="borderless"
       :open-in-new-tab="false"
     />
@@ -40,7 +40,7 @@ defineProps<{
       :title="_t('Learn how to scale your monitoring')"
       :subtitle="_t('Add more hosts, sites, or distributed setups as your environment grows.')"
       icon-name="sites"
-      :url="urls.scale_monitoring"
+      :url="cards.scale_monitoring"
       variant="borderless"
       :open-in-new-tab="true"
     />
@@ -52,7 +52,7 @@ defineProps<{
         )
       "
       icon-name="rulesets"
-      :url="urls.fine_tune_monitoring"
+      :url="cards.fine_tune_monitoring"
       variant="borderless"
       :open-in-new-tab="true"
     />
@@ -64,7 +64,7 @@ defineProps<{
         )
       "
       icon-name="licensing"
-      :url="urls.license_site"
+      :url="cards.license_site"
       variant="borderless"
       :open-in-new-tab="false"
     />

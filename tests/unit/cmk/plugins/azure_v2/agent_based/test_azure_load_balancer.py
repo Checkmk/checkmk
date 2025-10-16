@@ -16,6 +16,7 @@ from cmk.plugins.azure_v2.agent_based.azure_load_balancer import (
     BackendIpConfiguration,
     check_byte_count,
     check_health,
+    check_plugin_azure_load_balancer_snat,
     check_snat,
     InboundNatRule,
     inventory_plugin_azure_load_balancer,
@@ -379,6 +380,48 @@ def test_check_byte_count_stale(section: LoadBalancer) -> None:
                 Metric("used_snat_ports", 3.0),
             ],
             id="allocated_ports_is_0",
+        ),
+        pytest.param(
+            LoadBalancer(
+                name="myLoadBalancer",
+                resource=Resource(
+                    id="/subscriptions/c17d121d-dd5c-4156-875f-1df9862eef93/resourceGroups/CreatePubLBQS-rg/providers/Microsoft.Network/loadBalancers/myLoadBalancer",
+                    name="myLoadBalancer",
+                    type="Microsoft.Network/loadBalancers",
+                    group="CreatePubLBQS-rg",
+                    kind=None,
+                    location="westeurope",
+                    tags={},
+                    properties={},
+                    specific_info={},
+                    metrics={
+                        "average_AllocatedSnatPorts": AzureMetric(
+                            name="AllocatedSnatPorts",
+                            aggregation="average",
+                            value=16.0,
+                            unit="count",
+                        ),
+                        "average_UsedSnatPorts": AzureMetric(
+                            name="UsedSnatPorts", aggregation="average", value=15.0, unit="count"
+                        ),
+                    },
+                    subscription="c17d121d-dd5c-4156-875f-1df9862eef93",
+                ),
+                frontend_ip_configs={},
+                inbound_nat_rules=[],
+                backend_pools={},
+                outbound_rules=[],
+            ),
+            check_plugin_azure_load_balancer_snat.check_default_parameters,
+            [
+                Result(state=State.WARN, summary="SNAT usage: 93.75% (warn/crit at 75.00%/95.00%)"),
+                Metric("snat_usage", 93.75, levels=(75.0, 95.0)),
+                Result(state=State.OK, summary="Allocated SNAT ports: 16"),
+                Metric("allocated_snat_ports", 16.0),
+                Result(state=State.OK, summary="Used SNAT ports: 15"),
+                Metric("used_snat_ports", 15.0),
+            ],
+            id="default levels for allocation",
         ),
     ],
 )

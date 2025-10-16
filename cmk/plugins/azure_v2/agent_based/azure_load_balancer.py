@@ -211,7 +211,9 @@ check_plugin_azure_load_balancer_snat = CheckPlugin(
     ),
     check_function=check_snat,
     check_ruleset_name="snat_usage_without_item",
-    check_default_parameters={},
+    check_default_parameters={
+        "upper_levels": (75.0, 95.0),
+    },
 )
 
 

@@ -39,6 +39,8 @@ def to_domain_type(entity_type: ConfigEntityType) -> type_defs.DomainType:
             return ConfigEntityType.notification_parameter.value
         case ConfigEntityType.folder:
             return ConfigEntityType.folder.value
+        case ConfigEntityType.password:
+            return ConfigEntityType.password.value
         case other:
             assert_never(other)
 

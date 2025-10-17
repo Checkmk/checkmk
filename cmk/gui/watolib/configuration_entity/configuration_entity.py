@@ -13,9 +13,14 @@ from typing import assert_never, NamedTuple, NewType
 
 from cmk.gui.form_specs import DEFAULT_VALUE, get_visitor, RawFrontendData, VisitorOptions
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.watolib.configuration_entity._folder import (
     get_folder_slidein_schema,
     save_folder_from_slidein_schema,
+)
+from cmk.gui.watolib.configuration_entity._password import (
+    get_password_slidein_schema,
+    save_password_from_slidein_schema,
 )
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.notification_parameter import (
@@ -24,6 +29,7 @@ from cmk.gui.watolib.notification_parameter import (
     notification_parameter_registry,
     save_notification_parameter,
 )
+from cmk.gui.watolib.password_store import passwordstore_choices
 from cmk.gui.watolib.users import notification_script_title
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
@@ -43,6 +49,7 @@ def save_configuration_entity(
     entity_type: ConfigEntityType,
     entity_type_specifier: str,
     data: object,
+    user: LoggedInUser,
     object_id: EntityId | None,
     pprint_value: bool,
     use_git: bool,
@@ -71,6 +78,13 @@ def save_configuration_entity(
             return ConfigurationEntityDescription(
                 ident=EntityId(folder.path), description=folder.title
             )
+        case ConfigEntityType.password:
+            password = save_password_from_slidein_schema(
+                RawFrontendData(data), user=user, pprint_value=pprint_value, use_git=use_git
+            )
+            return ConfigurationEntityDescription(
+                ident=EntityId(password.id), description=password.title
+            )
         case other:
             assert_never(other)
 
@@ -78,12 +92,15 @@ def save_configuration_entity(
 def _get_configuration_fs(
     entity_type: ConfigEntityType,
     entity_type_specifier: str,
+    user: LoggedInUser,
 ) -> FormSpec:
     match entity_type:
         case ConfigEntityType.notification_parameter:
             return notification_parameter_registry.form_spec(entity_type_specifier)
         case ConfigEntityType.folder:
             return get_folder_slidein_schema()
+        case ConfigEntityType.password:
+            return get_password_slidein_schema(user)
         case other:
             assert_never(other)
 
@@ -96,8 +113,9 @@ class ConfigurationEntitySchema(NamedTuple):
 def get_configuration_entity_schema(
     entity_type: ConfigEntityType,
     entity_type_specifier: str,
+    user: LoggedInUser,
 ) -> ConfigurationEntitySchema:
-    form_spec = _get_configuration_fs(entity_type, entity_type_specifier)
+    form_spec = _get_configuration_fs(entity_type, entity_type_specifier, user)
     visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
     schema, default_values = visitor.to_vue(DEFAULT_VALUE)
     return ConfigurationEntitySchema(schema=schema, default_values=default_values)
@@ -109,6 +127,8 @@ def get_readable_entity_selection(entity_type: ConfigEntityType, entity_type_spe
             return _("%s parameter") % notification_script_title(entity_type_specifier)
         case ConfigEntityType.folder:
             return _("folder")
+        case ConfigEntityType.password:
+            return _("password")
         case other:
             assert_never(other)
 
@@ -136,6 +156,10 @@ def get_configuration_entity(
             return ConfigurationEntity(description=entity.description, data=entity.data)
         case ConfigEntityType.folder:
             raise NotImplementedError("Editing folders via config entity API is not yet supported.")
+        case ConfigEntityType.password:
+            raise NotImplementedError(
+                "Editing passwords via config entity API is not yet supported."
+            )
         case other:
             assert_never(other)
 
@@ -158,6 +182,12 @@ def get_list_of_configuration_entities(
             return [
                 ConfigurationEntityDescription(ident=EntityId(ident), description=description)
                 for ident, description in folder_tree().folder_choices_fulltitle()
+            ]
+        case ConfigEntityType.password:
+            return [
+                ConfigurationEntityDescription(ident=EntityId(ident), description=title)
+                for ident, title in passwordstore_choices()
+                if ident is not None
             ]
         case other:
             assert_never(other)

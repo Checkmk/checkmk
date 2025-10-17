@@ -16,6 +16,7 @@ from cmk import fields
 from cmk.gui.config import active_config
 from cmk.gui.form_specs import FormSpecValidationError
 from cmk.gui.http import Response
+from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.configuration_entity import folder as folder_endpoints
 from cmk.gui.openapi.endpoints.configuration_entity import (
     notification_parameter as notification_parameter_endpoints,
@@ -101,6 +102,7 @@ def _create_configuration_entity(params: Mapping[str, Any]) -> Response:
             entity_type,
             entity_type_specifier,
             data,
+            user,
             object_id=None,
             pprint_value=active_config.wato_pprint_config,
             use_git=active_config.wato_use_git,
@@ -133,6 +135,7 @@ def _update_configuration_entity(params: Mapping[str, Any]) -> Response:
             entity_type,
             entity_type_specifier,
             data,
+            user,
             object_id=entity_id,
             pprint_value=active_config.wato_pprint_config,
             use_git=active_config.wato_use_git,
@@ -157,7 +160,9 @@ def _get_configuration_entity_form_spec_schema(params: Mapping[str, Any]) -> Res
     entity_type = ConfigEntityType(params["entity_type"])
     entity_type_specifier = params["entity_type_specifier"]
 
-    schema, default_values = get_configuration_entity_schema(entity_type, entity_type_specifier)
+    schema, default_values = get_configuration_entity_schema(
+        entity_type, entity_type_specifier, user
+    )
 
     return serve_json(
         constructors.domain_object(

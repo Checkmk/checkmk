@@ -1157,11 +1157,13 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("bin/cmk-create-rrd"): Component("cmk.rrd"),
     ModulePath("cmk/active_checks/check_cmk_inv.py"): Component("cmk.base"),
     ModulePath("omd/packages/appliance/webconf_snapin.py"): Component("cmk.gui"),
-    ModulePath("omd/packages/enterprise/bin/cmk-dcd"): Component("cmk.cee.dcd"),
-    ModulePath("omd/packages/enterprise/bin/dcd"): Component("cmk.cee.dcd"),
+    ModulePath("omd/non-free/packages/cmk-dcd/cmk-dcd.py"): Component("cmk.cee.dcd"),
+    ModulePath("omd/non-free/packages/cmk-dcd/dcd.py"): Component("cmk.cee.dcd"),
     ModulePath("omd/packages/enterprise/bin/fetch-ad-hoc"): Component("cmk.fetcher_helper"),
     ModulePath("omd/packages/enterprise/bin/fetcher"): Component("cmk.fetcher_helper"),
-    ModulePath("omd/packages/enterprise/bin/liveproxyd"): Component("cmk.cee.liveproxy"),
+    ModulePath("omd/non-free/packages/cmk-liveproxyd/liveproxyd.py"): Component(
+        "cmk.cee.liveproxy"
+    ),
     ModulePath("omd/packages/enterprise/bin/mknotifyd"): Component("cmk.cee.mknotifyd"),
     ModulePath("omd/packages/maintenance/diskspace.py"): Component("cmk.diskspace"),
     # Notification plugins
@@ -1222,7 +1224,7 @@ _EXPLICIT_FILE_TO_DEPENDENCIES = {
     ModulePath("buildscripts/scripts/unpublish-container-image.py"): _allow(*PACKAGE_CCC),
     ModulePath("buildscripts/scripts/lib/registry.py"): _allow(*PACKAGE_CCC),
     ModulePath("omd/packages/check_mk/post-create/01_create-sample-config.py"): _allow(),
-    ModulePath("omd/packages/enterprise/bin/cmk-license-email-notification"): _allow(
+    ModulePath("omd/non-free/packages/licensing/cmk-license-email-notification.py"): _allow(
         "cmk.utils.cee.licensing"
     ),
 }

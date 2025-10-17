@@ -34,14 +34,12 @@ get_candidates_from_filesystem() {
     SEARCH+=" cmk"
     SEARCH+=" doc"
     PRUNE+=" -path $(realpath doc/treasures) -prune -o" # our "treasures" need much more love before they can be linted
-    if [ -d "omd/packages/enterprise" ]; then
-        SEARCH+=" omd/packages/enterprise/alert_handlers"
-        SEARCH+=" omd/packages/enterprise/bin"
-        SEARCH+=" omd/packages/enterprise/saml2/attribute_mappings"
-    fi
     SEARCH+=" locale"
     SEARCH+=" notifications"
     # Do not search whole omd/ because it may contain unpacked sub-packages
+    if [ -d "omd/non-free/packages" ]; then
+        SEARCH+=" omd/non-free/packages"
+    fi
     SEARCH+=" omd/license_sources"
     SEARCH+=" omd/packages/appliance"
     SEARCH+=" omd/packages/maintenance"

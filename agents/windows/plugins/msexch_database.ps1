@@ -3,6 +3,7 @@ $CMK_VERSION = "2.4.0p16"
 
 ## localize counter name
 $locale = ([System.Globalization.Cultureinfo]::CurrentCulture.name)
+$decimal_separator = ([System.Globalization.Cultureinfo]::CurrentCulture.NumberFormat.NumberDecimalSeparator)
 
 $counter_name = "\MSExchange Database ==> Instances(*)\*"
 switch -wildcard($locale){
@@ -11,4 +12,5 @@ switch -wildcard($locale){
 
 Write-Host "<<<msexch_database:sep(59)>>>"
 Write-Host "locale;"$locale
+Write-Host "separator;"$decimal_separator
 Get-Counter -Counter $counter_name | % {$_.CounterSamples} | Select path,cookedvalue | ConvertTo-CSV -NoTypeInformation -Delimiter ";"

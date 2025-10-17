@@ -3,6 +3,7 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//:bazel_variables.bzl", "edition_python_deps")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
+load("//bazel/rules:package_wheel.bzl", "package_wheel")
 
 exports_files([
     "requirements.in",
@@ -148,6 +149,37 @@ CSE_PY = glob(
     allow_empty = True,
 )
 
+filegroup(
+    name = "checkman",
+    srcs = glob(
+        [
+            "**/checkman/*",
+        ],
+    ),
+)
+
+filegroup(
+    name = "libexec",
+    srcs = glob(
+        [
+            "**/libexec/*",
+        ],
+    ),
+)
+
+filegroup(
+    name = "miscellaneous",
+    srcs = [
+        "gui/wsgi/applications/index.wsgi",
+        "plugins/oracle/agents/oracle_unified_async",
+        "plugins/oracle/agents/oracle_unified_async.ps1",
+        "plugins/oracle/agents/oracle_unified_sync",
+        "plugins/oracle/agents/oracle_unified_sync.ps1",
+        "utils/werks/announce/templates/announce.md.jinja2",
+        "utils/werks/announce/templates/announce.txt.jinja2",
+    ],
+)
+
 CMK_PACKAGES = [
     "//packages/cmk-shared-typing:cmk_shared_typing_py",
     "//packages/cmk-agent-receiver",
@@ -283,6 +315,9 @@ py_wheel(
     deps = [
         "lib_cmk",
         "lib_cmk_cre",
+        ":checkman",
+        ":libexec",
+        ":miscellaneous",
     ],
 )
 
@@ -298,6 +333,18 @@ py_wheel(
         "lib_cmk_" + edition,
     ],
 ) for edition in [
+    "cce",
+    "cee",
+    "cme",
+    "cse",
+]]
+
+[package_wheel(
+    name = "cmk_tar_" + edition,
+    visibility = ["//visibility:public"],
+    whl = "cmk_" + edition,
+) for edition in [
+    "cre",
     "cce",
     "cee",
     "cme",

@@ -37,7 +37,6 @@ export interface UseCombinedGraph
     UseGraphRenderOptions,
     UseWidgetVisualizationOptions {
   timeRange: Ref<GraphTimerange>
-  graphTemplate: Ref<string>
   presentation: Ref<CombinedGraphContentPresentation>
 
   widgetProps: Ref<WidgetProps>
@@ -81,7 +80,6 @@ export const useCombinedGraph = async (
     graphRenderOptions
   } = useGraphRenderOptions(currentContent?.graph_render_options)
 
-  const graphTemplate = ref<string>(currentContent?.graph_template ?? 'TODO')
   const presentation = ref<CombinedGraphContentPresentation>(
     currentContent?.presentation ?? 'lines'
   )
@@ -98,7 +96,7 @@ export const useCombinedGraph = async (
       timerange: generateTimeRangeSpec(),
       graph_render_options: graphRenderOptions.value,
 
-      graph_template: 'TODO',
+      graph_template: currentContent?.graph_template ?? metric,
       presentation: 'lines'
     }
   }
@@ -117,7 +115,7 @@ export const useCombinedGraph = async (
   }
 
   watch(
-    [timeRange, widgetGeneralSettings, graphRenderOptions, graphTemplate, presentation],
+    [timeRange, widgetGeneralSettings, graphRenderOptions, presentation],
     useDebounceFn(() => {
       void _updateWidgetProps()
     }, 300),
@@ -152,7 +150,6 @@ export const useCombinedGraph = async (
     showBurgerMenu,
     dontFollowTimerange,
 
-    graphTemplate,
     presentation,
 
     widgetProps: widgetProps as Ref<WidgetProps>

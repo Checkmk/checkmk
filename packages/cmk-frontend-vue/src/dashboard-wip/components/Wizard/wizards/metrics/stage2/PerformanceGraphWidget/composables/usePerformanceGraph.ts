@@ -36,7 +36,6 @@ export interface UsePerformanceGraph
     UseGraphRenderOptions,
     UseWidgetVisualizationOptions {
   timeRange: Ref<GraphTimerange>
-  source: Ref<string | number>
 
   widgetProps: Ref<WidgetProps>
 }
@@ -79,8 +78,6 @@ export const usePerformanceGraph = async (
     graphRenderOptions
   } = useGraphRenderOptions(currentContent?.graph_render_options)
 
-  const source = ref<string | number>(currentContent?.source ?? '')
-
   const widgetProps = ref<WidgetProps>()
 
   const validate = (): boolean => {
@@ -92,7 +89,7 @@ export const usePerformanceGraph = async (
       type: 'performance_graph',
       timerange: generateTimeRangeSpec(),
       graph_render_options: graphRenderOptions.value,
-      source: source.value
+      source: currentContent?.source ?? metric
     }
   }
 
@@ -110,7 +107,7 @@ export const usePerformanceGraph = async (
   }
 
   watch(
-    [timeRange, widgetGeneralSettings, graphRenderOptions, source],
+    [timeRange, widgetGeneralSettings, graphRenderOptions],
     useDebounceFn(() => {
       void _updateWidgetProps()
     }, 300),
@@ -144,8 +141,6 @@ export const usePerformanceGraph = async (
     clickToPlacePin,
     showBurgerMenu,
     dontFollowTimerange,
-
-    source,
 
     widgetProps: widgetProps as Ref<WidgetProps>
   }

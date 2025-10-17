@@ -36,8 +36,7 @@ import WizardStageContainer from '../../components/WizardStageContainer.vue'
 import WizardStepsContainer from '../../components/WizardStepsContainer.vue'
 import { ElementSelection } from '../../types'
 import { MetricSelection } from './composables/useSelectGraphTypes'
-import { useCombinedMetric } from './stage1/MetricSelector/useCombinedMetric'
-import { useSingleMetric } from './stage1/MetricSelector/useSingleMetric'
+import { useMetric } from './stage1/MetricSelector/useMetric'
 import Stage1 from './stage1/StageContents.vue'
 import Stage2 from './stage2/StageContents.vue'
 
@@ -75,8 +74,7 @@ const hostFilterType = ref<ElementSelection>(ElementSelection.SPECIFIC)
 const serviceFilterType = ref<ElementSelection>(ElementSelection.SPECIFIC)
 
 const metricType = ref<MetricSelection>(MetricSelection.SINGLE_METRIC)
-const singleMetricHandler = useSingleMetric(null, null, null)
-const combinedMetricHandler = useCombinedMetric(null)
+const metricHandler = useMetric(null, null, null)
 
 // Stage 2
 
@@ -86,21 +84,21 @@ const combinedMetricHandler = useCombinedMetric(null)
 watch(
   [widgetFilterManager.filterHandler.configuredFilters],
   (newConfiguredFilters) => {
-    if (metricType.value === MetricSelection.SINGLE_METRIC) {
-      const host: string | null = newConfiguredFilters[0]?.host?.host ?? null
-      const svc: string | null = newConfiguredFilters[0]?.service?.service ?? null
+    const host: string | null = newConfiguredFilters[0]?.host?.host ?? null
+    const svc: string | null = newConfiguredFilters[0]?.service?.service ?? null
 
-      if (host && hostFilterType.value === ElementSelection.SPECIFIC) {
-        singleMetricHandler.host.value = host
-      }
+    if (host && hostFilterType.value === ElementSelection.SPECIFIC) {
+      metricHandler.host.value = host
+    }
 
-      if (svc && serviceFilterType.value === ElementSelection.SPECIFIC) {
-        singleMetricHandler.service.value = svc
-      }
+    if (svc && serviceFilterType.value === ElementSelection.SPECIFIC) {
+      metricHandler.service.value = svc
     }
   },
   { deep: true }
 )
+
+watch([metricType], () => (metricHandler.metric.value = null))
 
 const wizardHandler = useWizard(2)
 const wizardStages: QuickSetupStageSpec[] = [
@@ -134,8 +132,7 @@ const recapAndNext = () => {
   widgetFilterManager.closeSelectionMenu()
   wizardStages[0]!.recapContent = h(FiltersRecap, {
     metricType: metricType.value,
-    singleMetric: singleMetricHandler.singleMetric.value,
-    combinedMetric: combinedMetricHandler.combinedMetric.value,
+    metric: metricHandler.metric.value,
     contextConfiguredFilters: contextConfiguredFilters.value,
     widgetFilters: _getConfiguredFilters()
   })
@@ -145,14 +142,6 @@ const recapAndNext = () => {
 
 const appliedFilters = computed((): ConfiguredFilters => {
   return squashFilters(contextConfiguredFilters.value, _getConfiguredFilters())
-})
-
-const selectedMetric = computed((): string => {
-  return (
-    (metricType.value === MetricSelection.SINGLE_METRIC
-      ? singleMetricHandler.singleMetric.value
-      : combinedMetricHandler.combinedMetric.value) || ''
-  )
 })
 
 const handleObjectTypeSwitch = (objectType: string): void => {
@@ -198,8 +187,7 @@ const handleObjectTypeSwitch = (objectType: string): void => {
         v-model:host-filter-type="hostFilterType"
         v-model:service-filter-type="serviceFilterType"
         v-model:metric-type="metricType"
-        v-model:single-metric-handler="singleMetricHandler"
-        v-model:combined-metric-handler="combinedMetricHandler"
+        v-model:metric-handler="metricHandler"
         :widget-configured-filters="widgetFilterManager.getConfiguredFilters()"
         :widget-active-filters="widgetFilterManager.getSelectedFilters()"
         :context-filters="contextFilters"
@@ -220,7 +208,7 @@ const handleObjectTypeSwitch = (objectType: string): void => {
           :service-filter-type="serviceFilterType"
           :metric-type="metricType"
           :filters="appliedFilters"
-          :metric="selectedMetric"
+          :metric="metricHandler.metric.value!"
           :edit-widget-spec="editWidgetSpec ?? null"
           @go-prev="wizardHandler.prev"
           @add-widget="

@@ -17,11 +17,6 @@ import ContentSpacer from '@/dashboard-wip/components/Wizard/components/ContentS
 import SingleMultiWidgetObjectFilterConfiguration from '@/dashboard-wip/components/Wizard/components/filter/SingleMultiWidgetObjectFilterConfiguration.vue'
 import { parseFilters } from '@/dashboard-wip/components/Wizard/components/filter/utils.ts'
 import type { ElementSelection } from '@/dashboard-wip/components/Wizard/types'
-import {
-  Graph,
-  MetricSelection,
-  useSelectGraphTypes
-} from '@/dashboard-wip/components/Wizard/wizards/metrics/composables/useSelectGraphTypes'
 import type { ConfiguredFilters, ConfiguredValues } from '@/dashboard-wip/components/filter/types'
 import { useFilterDefinitions } from '@/dashboard-wip/components/filter/utils.ts'
 import type { ContextFilters } from '@/dashboard-wip/types/filter.ts'
@@ -29,9 +24,13 @@ import type { ObjectType } from '@/dashboard-wip/types/shared.ts'
 
 import AvailableWidgets from '../../../components/WidgetSelection/AvailableWidgets.vue'
 import type { WidgetItemList } from '../../../components/WidgetSelection/types'
+import {
+  Graph,
+  type MetricSelection,
+  useSelectGraphTypes
+} from '../composables/useSelectGraphTypes'
 import MetricSelector from './MetricSelector/MetricSelector.vue'
-import type { UseCombinedMetric } from './MetricSelector/useCombinedMetric'
-import type { UseSingleMetric } from './MetricSelector/useSingleMetric'
+import type { UseMetric } from './MetricSelector/useMetric'
 
 const { _t } = usei18n()
 
@@ -59,12 +58,7 @@ const gotoNextStage = () => {
   - Return processed data
   */
 
-  const handler =
-    metricType.value === MetricSelection.SINGLE_METRIC
-      ? singleMetricHandler.value
-      : combinedMetricHandler.value
-
-  const isValid = handler.validate()
+  const isValid = metricHandler.value.validate()
   if (isValid) {
     emit('goNext')
   }
@@ -77,11 +71,7 @@ const hostFilterType = defineModel<ElementSelection>('hostFilterType', { require
 const serviceFilterType = defineModel<ElementSelection>('serviceFilterType', { required: true })
 
 const metricType = defineModel<MetricSelection>('metricType', { required: true })
-
-const singleMetricHandler = defineModel<UseSingleMetric>('singleMetricHandler', { required: true })
-const combinedMetricHandler = defineModel<UseCombinedMetric>('combinedMetricHandler', {
-  required: true
-})
+const metricHandler = defineModel<UseMetric>('metricHandler', { required: true })
 
 const enabledWidgets = useSelectGraphTypes(hostFilterType, serviceFilterType, metricType)
 const availableWidgets: WidgetItemList = [
@@ -166,11 +156,7 @@ const configuredFiltersByObjectType = computed(() =>
     {{ _t('Metric selection') }}
   </CmkHeading>
 
-  <MetricSelector
-    v-model:metric-type="metricType"
-    v-model:single-metric-handler="singleMetricHandler"
-    v-model:combined-metric-handler="combinedMetricHandler"
-  />
+  <MetricSelector v-model:metric-type="metricType" v-model:metric-handler="metricHandler" />
 
   <ContentSpacer />
 

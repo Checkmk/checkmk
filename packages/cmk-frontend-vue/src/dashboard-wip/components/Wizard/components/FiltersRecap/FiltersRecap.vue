@@ -14,7 +14,7 @@ import FilterDisplayItem from '@/dashboard-wip/components/filter/FilterDisplayIt
 import type { ConfiguredFilters } from '@/dashboard-wip/components/filter/types'
 import { useFilterDefinitions } from '@/dashboard-wip/components/filter/utils'
 
-import { MetricSelection } from '../../wizards/metrics/composables/useSelectGraphTypes'
+import { type MetricSelection } from '../../wizards/metrics/composables/useSelectGraphTypes'
 import ContentSpacer from '../ContentSpacer.vue'
 import { splitFiltersByCategory, squashFilters } from './utils'
 
@@ -25,8 +25,7 @@ interface FiltersRecapProps {
   widgetFilters?: ConfiguredFilters
 
   metricType?: MetricSelection | null
-  combinedMetric?: string | null
-  singleMetric?: string | null
+  metric?: string | null
 }
 
 const props = withDefaults(defineProps<FiltersRecapProps>(), {
@@ -34,8 +33,7 @@ const props = withDefaults(defineProps<FiltersRecapProps>(), {
     return {} as ConfiguredFilters
   },
   metricType: null,
-  combinedMetric: null,
-  singleMetric: null
+  metric: null
 })
 
 const filterDefinitions = useFilterDefinitions()
@@ -128,8 +126,7 @@ const serviceFiltersCount = computed((): number => {
     <CmkHeading type="h2">{{ _t('Metric') }}</CmkHeading>
     <div class="filter-recap__content">
       <ul class="db-filters-recap__list">
-        <li v-if="props.metricType === MetricSelection.SINGLE_METRIC">{{ props.singleMetric }}</li>
-        <li v-else>{{ props.combinedMetric }}</li>
+        <li>{{ props.metric }}</li>
       </ul>
     </div>
   </div>

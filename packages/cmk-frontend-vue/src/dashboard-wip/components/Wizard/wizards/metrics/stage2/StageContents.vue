@@ -126,56 +126,68 @@ const availableGraphWidgets: WidgetItemList = [
 
 const selectedWidget = ref<Graph | null>(enabledWidgets[0] || null)
 
-// TODO: We need to provide the current widget config to the handlers in order to edit it
-const handler: Partial<Record<Graph, UseWidgetHandler>> = {
-  [Graph.SINGLE_GRAPH]: await useGraph(
-    props.metric,
-    props.filters,
-    props.dashboardConstants,
-    props.editWidgetSpec
-  ),
-  [Graph.SINGLE_METRIC]: await useMetric(
-    props.metric,
-    props.filters,
-    props.dashboardConstants,
-    props.editWidgetSpec
-  ),
-  [Graph.GAUGE]: await useGauge(
-    props.metric,
-    props.filters,
-    props.dashboardConstants,
-    props.editWidgetSpec
-  ),
-  [Graph.BARPLOT]: await useBarplot(
-    props.metric,
-    props.filters,
-    props.dashboardConstants,
-    props.editWidgetSpec
-  ),
-  [Graph.SCATTERPLOT]: await useScatterplot(
-    props.metric,
-    props.filters,
-    props.dashboardConstants,
-    props.editWidgetSpec
-  ),
-  [Graph.TOP_LIST]: await useTopList(
-    props.metric,
-    props.filters,
-    props.dashboardConstants,
-    props.editWidgetSpec
-  ),
-  [Graph.PERFORMANCE_GRAPH]: await usePerformanceGraph(
-    props.metric,
-    props.filters,
-    props.dashboardConstants,
-    props.editWidgetSpec
-  ),
-  [Graph.COMBINED_GRAPH]: await useCombinedGraph(
-    props.metric,
-    props.filters,
-    props.dashboardConstants,
-    props.editWidgetSpec
-  )
+let handler: Partial<Record<Graph, UseWidgetHandler>> = {}
+
+if (props.metricType === MetricSelection.SINGLE_METRIC) {
+  handler = {
+    [Graph.SINGLE_GRAPH]: await useGraph(
+      props.metric,
+      props.filters,
+      props.dashboardConstants,
+      props.editWidgetSpec
+    ),
+
+    [Graph.SINGLE_METRIC]: await useMetric(
+      props.metric,
+      props.filters,
+      props.dashboardConstants,
+      props.editWidgetSpec
+    ),
+
+    [Graph.GAUGE]: await useGauge(
+      props.metric,
+      props.filters,
+      props.dashboardConstants,
+      props.editWidgetSpec
+    ),
+
+    [Graph.BARPLOT]: await useBarplot(
+      props.metric,
+      props.filters,
+      props.dashboardConstants,
+      props.editWidgetSpec
+    ),
+
+    [Graph.SCATTERPLOT]: await useScatterplot(
+      props.metric,
+      props.filters,
+      props.dashboardConstants,
+      props.editWidgetSpec
+    ),
+
+    [Graph.TOP_LIST]: await useTopList(
+      props.metric,
+      props.filters,
+      props.dashboardConstants,
+      props.editWidgetSpec
+    )
+  }
+} else {
+  handler = {
+    [Graph.PERFORMANCE_GRAPH]: await usePerformanceGraph(
+      props.metric,
+      props.filters,
+      props.dashboardConstants,
+      props.editWidgetSpec
+    ),
+
+    [Graph.COMBINED_GRAPH]: await useCombinedGraph(
+      props.metric,
+      props.filters,
+      props.dashboardConstants,
+      props.editWidgetSpec
+    )
+  }
 }
 </script>
 
@@ -225,49 +237,52 @@ const handler: Partial<Record<Graph, UseWidgetHandler>> = {
 
   <ContentSpacer />
 
-  <GaugeWidget
-    v-if="selectedWidget === Graph.GAUGE"
-    v-model:handler="handler[Graph.GAUGE] as unknown as UseGauge"
-    :dashboard-name="dashboardName"
-  />
-  <GraphWidget
-    v-if="selectedWidget === Graph.SINGLE_GRAPH"
-    v-model:handler="handler[Graph.SINGLE_GRAPH] as unknown as UseGraph"
-    :dashboard-name="dashboardName"
-  />
-  <MetricWidget
-    v-if="selectedWidget === Graph.SINGLE_METRIC"
-    v-model:handler="handler[Graph.SINGLE_METRIC] as unknown as UseMetric"
-    :dashboard-name="dashboardName"
-  />
+  <div v-if="metricType === MetricSelection.SINGLE_METRIC">
+    <GaugeWidget
+      v-if="selectedWidget === Graph.GAUGE"
+      v-model:handler="handler[Graph.GAUGE] as unknown as UseGauge"
+      :dashboard-name="dashboardName"
+    />
+    <GraphWidget
+      v-if="selectedWidget === Graph.SINGLE_GRAPH"
+      v-model:handler="handler[Graph.SINGLE_GRAPH] as unknown as UseGraph"
+      :dashboard-name="dashboardName"
+    />
+    <MetricWidget
+      v-if="selectedWidget === Graph.SINGLE_METRIC"
+      v-model:handler="handler[Graph.SINGLE_METRIC] as unknown as UseMetric"
+      :dashboard-name="dashboardName"
+    />
 
-  <BarplotWidget
-    v-if="selectedWidget === Graph.BARPLOT"
-    v-model:handler="handler[Graph.BARPLOT] as unknown as UseBarplot"
-    :dashboard-name="dashboardName"
-  />
+    <BarplotWidget
+      v-if="selectedWidget === Graph.BARPLOT"
+      v-model:handler="handler[Graph.BARPLOT] as unknown as UseBarplot"
+      :dashboard-name="dashboardName"
+    />
 
-  <ScatterplotWidget
-    v-if="selectedWidget === Graph.SCATTERPLOT"
-    v-model:handler="handler[Graph.SCATTERPLOT] as unknown as UseScatterplot"
-    :dashboard-name="dashboardName"
-  />
+    <ScatterplotWidget
+      v-if="selectedWidget === Graph.SCATTERPLOT"
+      v-model:handler="handler[Graph.SCATTERPLOT] as unknown as UseScatterplot"
+      :dashboard-name="dashboardName"
+    />
 
-  <TopListWidget
-    v-if="selectedWidget === Graph.TOP_LIST"
-    v-model:handler="handler[Graph.TOP_LIST] as unknown as UseTopList"
-    :dashboard-name="dashboardName"
-  />
+    <TopListWidget
+      v-if="selectedWidget === Graph.TOP_LIST"
+      v-model:handler="handler[Graph.TOP_LIST] as unknown as UseTopList"
+      :dashboard-name="dashboardName"
+    />
+  </div>
+  <div v-else>
+    <PerformanceGraphWidget
+      v-if="selectedWidget === Graph.PERFORMANCE_GRAPH"
+      v-model:handler="handler[Graph.PERFORMANCE_GRAPH] as unknown as UsePerformanceGraph"
+      :dashboard-name="dashboardName"
+    />
 
-  <PerformanceGraphWidget
-    v-if="selectedWidget === Graph.PERFORMANCE_GRAPH"
-    v-model:handler="handler[Graph.PERFORMANCE_GRAPH] as unknown as UsePerformanceGraph"
-    :dashboard-name="dashboardName"
-  />
-
-  <CombinedGraphWidget
-    v-if="selectedWidget === Graph.COMBINED_GRAPH"
-    v-model:handler="handler[Graph.COMBINED_GRAPH] as unknown as UseCombinedGraph"
-    :dashboard-name="dashboardName"
-  />
+    <CombinedGraphWidget
+      v-if="selectedWidget === Graph.COMBINED_GRAPH"
+      v-model:handler="handler[Graph.COMBINED_GRAPH] as unknown as UseCombinedGraph"
+      :dashboard-name="dashboardName"
+    />
+  </div>
 </template>

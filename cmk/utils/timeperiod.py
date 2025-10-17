@@ -28,6 +28,9 @@ type DayTimeFrame = tuple[str, str]
 # TODO: in python 3.13 we may be able to add support for the
 # timeperiod exceptions - see https://peps.python.org/pep-0728/
 
+TIMESPECIFIC_DEFAULT_KEY = "tp_default_value"
+TIMESPECIFIC_VALUES_KEY = "tp_values"
+
 
 class TimeperiodSpec(TypedDict):
     # In addition to the defined fields the data structures allows arbitrary

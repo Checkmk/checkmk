@@ -27,12 +27,13 @@ from cmk.ccc.version import Edition, edition
 from cmk.gui import hooks, utils
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
+from cmk.gui.form_specs.unstable.time_specific import TimeSpecific
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.utils.html import HTML
-from cmk.gui.valuespec import DropdownChoiceEntries, ValueSpec
+from cmk.gui.valuespec import DropdownChoiceEntries
 from cmk.gui.watolib.automations import (
     LocalAutomationConfig,
     RemoteAutomationConfig,
@@ -64,6 +65,7 @@ from cmk.utils.rulesets.ruleset_matcher import (
     TagConditionNE,
 )
 from cmk.utils.tags import TagGroupID, TagID
+from cmk.utils.timeperiod import TIMESPECIFIC_DEFAULT_KEY, TIMESPECIFIC_VALUES_KEY
 
 from .changes import add_change
 from .check_mk_automations import get_services_labels, update_merged_password_file
@@ -85,7 +87,7 @@ from .rulespecs import (
     TimeperiodValuespec,
 )
 from .simple_config_file import WatoConfigFile
-from .timeperiods import TimeperiodSelection, TimeperiodUsage
+from .timeperiods import TimeperiodUsage
 from .utils import ALL_HOSTS, ALL_SERVICES, NEGATE, wato_root_dir
 
 tracer = trace.get_tracer()
@@ -1054,10 +1056,6 @@ class Ruleset:
         )
         return index
 
-    # TODO: Remove these getters
-    def valuespec(self) -> ValueSpec:
-        return self.rulespec.valuespec
-
     def help(self) -> None | str | HTML:
         try:
             return self.rulespec.help
@@ -1306,7 +1304,7 @@ class Rule:
         except FormSpecNotImplementedError:
             pass
 
-        return self.ruleset.valuespec().mask(self.value)
+        return self.ruleset.rulespec.valuespec.mask(self.value)
 
     def diff_to(self, other: Rule) -> str:
         """Diff to another rule, masking secrets"""
@@ -1411,7 +1409,7 @@ class Rule:
 
         value_text = None
         try:
-            value_text = str(self.ruleset.valuespec().value_to_html(self.value))
+            value_text = str(self.ruleset.rulespec.valuespec.value_to_html(self.value))
         except Exception as e:
             logger.exception("error searching ruleset %s", self.ruleset.title())
             html.show_warning(
@@ -1734,7 +1732,7 @@ class EnabledDisabledServicesEditor:
                     rule.conditions.service_description.append(service_condition)
 
         elif service_patterns:
-            rule = Rule.from_ruleset(folder, ruleset, ruleset.valuespec().default_value())
+            rule = Rule.from_ruleset(folder, ruleset, ruleset.rulespec.valuespec.default_value())
             conditions = RuleConditions(
                 folder.path(),
                 host_name=[self._host.name()],
@@ -1764,7 +1762,7 @@ def find_timeperiod_usage_in_host_and_service_rules(time_period_name: str) -> li
     used_in: list[TimeperiodUsage] = []
     rulesets = AllRulesets.load_all_rulesets()
     for varname, ruleset in rulesets.get_rulesets().items():
-        if not isinstance(ruleset.valuespec(), TimeperiodSelection):
+        if not isinstance(ruleset.rulespec.value_model, TimeperiodValuespec | TimeSpecific):
             continue
 
         for _folder, _rulenr, rule in ruleset.get_rules():
@@ -1779,19 +1777,26 @@ def find_timeperiod_usage_in_host_and_service_rules(time_period_name: str) -> li
     return used_in
 
 
+def _is_active(value: object) -> bool:
+    return isinstance(value, dict) and TIMESPECIFIC_DEFAULT_KEY in value
+
+
+def _get_used_timeperiods(value: dict[str, Any]) -> set[str]:
+    return {tp for tp, _params in value.get(TIMESPECIFIC_VALUES_KEY, [])}
+
+
 def find_timeperiod_usage_in_time_specific_parameters(
     time_period_name: str,
 ) -> list[TimeperiodUsage]:
     used_in: list[TimeperiodUsage] = []
     rulesets = AllRulesets.load_all_rulesets()
     for ruleset in rulesets.get_rulesets().values():
-        vs = ruleset.valuespec()
-        if not isinstance(vs, TimeperiodValuespec):
+        if not isinstance(ruleset.rulespec.value_model, TimeperiodValuespec | TimeSpecific):
             continue
         for rule_folder, rule_index, rule in ruleset.get_rules():
-            if not vs.is_active(rule.value):
+            if not _is_active(rule.value):
                 continue
-            for index, (rule_tp_name, _value) in enumerate(rule.value["tp_values"]):
+            for index, rule_tp_name in enumerate(_get_used_timeperiods(rule.value)):
                 if rule_tp_name != time_period_name:
                     continue
                 edit_url = folder_preserving_link(

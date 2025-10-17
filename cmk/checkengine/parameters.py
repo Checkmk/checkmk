@@ -13,7 +13,7 @@ from typing import Final, TypedDict
 import cmk.ccc.debug
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.parameters import merge_parameters
-from cmk.utils.timeperiod import TimeperiodName
+from cmk.utils.timeperiod import TimeperiodName, TIMESPECIFIC_DEFAULT_KEY, TIMESPECIFIC_VALUES_KEY
 
 __all__ = [
     "Parameters",
@@ -101,9 +101,9 @@ class TimespecificParameterSet:
     @classmethod
     def from_parameters(cls, parameters: Mapping[str, object]) -> TimespecificParameterSet:
         if (
-            "tp_default_value" in parameters
-            and isinstance((default := parameters["tp_default_value"]), dict)
-            and isinstance((tp_values := parameters["tp_values"]), list)
+            TIMESPECIFIC_DEFAULT_KEY in parameters
+            and isinstance((default := parameters[TIMESPECIFIC_DEFAULT_KEY]), dict)
+            and isinstance((tp_values := parameters[TIMESPECIFIC_VALUES_KEY]), list)
         ):
             return cls(default, tp_values)
         return cls(parameters, ())

@@ -63,6 +63,7 @@ from cmk.rulesets.v1.form_specs import DefaultValue, FormSpec
 from cmk.rulesets.v1.form_specs import FixedValue as FSFixedValue
 from cmk.utils import paths
 from cmk.utils.rulesets.definition import RuleGroup
+from cmk.utils.timeperiod import TIMESPECIFIC_DEFAULT_KEY, TIMESPECIFIC_VALUES_KEY
 
 from .check_mk_automations import get_check_information_cached
 from .main_menu import ABCMainModule, MainModuleRegistry
@@ -415,6 +416,17 @@ class Rulespec(abc.ABC):
     @property
     def valuespec(self) -> ValueSpec:
         return self._valuespec()
+
+    @property
+    def value_model(self) -> ValueSpec | FormSpec[Any]:
+        """Returns the ValueSpec or FormSpec representing the value model of this Rulespec.
+        The ValueSpec will be removed over time..
+        """
+
+        try:
+            return self.form_spec
+        except FormSpecNotImplementedError:
+            return self.valuespec
 
     @property
     def has_valuespec(self) -> bool:
@@ -1288,9 +1300,6 @@ class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
     tp_toggle_var = "tp_toggle"
     tp_current_mode = "tp_active"
 
-    tp_default_value_key = "tp_default_value"  # Used in valuespec
-    tp_values_key = "tp_values"  # Used in valuespec
-
     def __init__(self, valuespec: ValueSpec[dict[str, Any]]) -> None:
         super().__init__(
             title=valuespec.title(),
@@ -1346,11 +1355,11 @@ class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
         if request.var(self.tp_current_mode) == "1":
             # Fetch the timespecific settings
             parameters = self._get_timeperiod_valuespec().from_html_vars(varprefix)
-            if parameters[self.tp_values_key]:
+            if parameters[TIMESPECIFIC_VALUES_KEY]:
                 return parameters
 
             # Fall back to enclosed valuespec data when no timeperiod is set
-            return parameters[self.tp_default_value_key]
+            return parameters[TIMESPECIFIC_DEFAULT_KEY]
 
         # Fetch the data from the enclosed valuespec
         return self._enclosed_valuespec.from_html_vars(varprefix)
@@ -1370,14 +1379,14 @@ class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
         return Dictionary(
             elements=[
                 (
-                    self.tp_default_value_key,
+                    TIMESPECIFIC_DEFAULT_KEY,
                     Transparent(
                         valuespec=self._enclosed_valuespec,
                         title=_("Default parameters when no time period matches"),
                     ),
                 ),
                 (
-                    self.tp_values_key,
+                    TIMESPECIFIC_VALUES_KEY,
                     ListOf(
                         valuespec=Tuple(
                             elements=[
@@ -1405,18 +1414,18 @@ class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
 
     # Checks whether the value itself already uses the tp-mode
     def is_active(self, value: dict[str, Any]) -> bool:
-        return isinstance(value, dict) and self.tp_default_value_key in value
+        return isinstance(value, dict) and TIMESPECIFIC_DEFAULT_KEY in value
 
     # Returns simply the value or converts a plain value to a tp-value
     def _get_timeperiod_value(self, value: dict[str, Any]) -> dict[str, Any]:
-        if isinstance(value, dict) and self.tp_default_value_key in value:
+        if isinstance(value, dict) and TIMESPECIFIC_DEFAULT_KEY in value:
             return value
-        return {self.tp_values_key: [], self.tp_default_value_key: value}
+        return {TIMESPECIFIC_VALUES_KEY: [], TIMESPECIFIC_DEFAULT_KEY: value}
 
     # Returns simply the value or converts tp-value back to a plain value
     def _get_timeless_value(self, value: dict[str, Any]) -> Any:
-        if isinstance(value, dict) and self.tp_default_value_key in value:
-            return value.get(self.tp_default_value_key)
+        if isinstance(value, dict) and TIMESPECIFIC_DEFAULT_KEY in value:
+            return value.get(TIMESPECIFIC_DEFAULT_KEY)
         return value
 
     # Returns the currently used ValueSpec based on the current value

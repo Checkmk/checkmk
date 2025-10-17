@@ -36,7 +36,7 @@ from cmk.gui.logged_in import LoggedInNobody, LoggedInRemoteSite, LoggedInSuperU
 from cmk.gui.logged_in import user as logged_in_user
 from cmk.gui.permissions import permission_registry
 from cmk.gui.pseudo_users import PseudoUserId, RemoteSitePseudoUser, SiteInternalPseudoUser
-from cmk.gui.type_defs import AuthType, SessionId, SessionInfo
+from cmk.gui.type_defs import AuthType, SessionInfo
 from cmk.gui.userdb.session import auth_cookie_value
 from cmk.gui.userdb.store import convert_idle_timeout, load_custom_attr
 from cmk.gui.utils import roles
@@ -160,23 +160,9 @@ class CheckmkFileBasedSession(dict, SessionMixin):
     def load_session(
         cls,
         user_name: UserId,
-        session_id: SessionId,
+        info: SessionInfo,
         user_permissions: UserPermissions,
     ) -> CheckmkFileBasedSession:
-        """Load the session data from disk.
-
-        Raises:
-            KeyError: when session_id is not in user's session.
-
-        """
-        now = datetime.now()
-        session_infos = userdb.session.active_sessions(
-            userdb.session.load_session_infos(user_name), now
-        )
-        if session_id not in session_infos:
-            raise MKAuthException(f"Session {session_id} not found.")
-
-        info = session_infos[session_id]
         if info.logged_out:
             raise MKAuthException("You have been logged out.")
 
@@ -211,10 +197,10 @@ class CheckmkFileBasedSession(dict, SessionMixin):
             datetime.now(),
         )
 
+        # Ensure we don't override an already logged-out session with an active one (Werk #17808)
         # Check if the latest session persist was a logout, then keep the logged_out state
-        if self.session_info.session_id in session_infos:
-            if session_infos[self.session_info.session_id].logged_out is True:
-                self.session_info.logged_out = True
+        if (sid := session_infos.get(self.session_info.session_id)) and sid.logged_out:
+            self.session_info.logged_out = True
 
         session_infos[self.session_info.session_id] = self.session_info
         userdb.session.save_session_infos(self.user.ident, session_infos)
@@ -333,13 +319,28 @@ class FileBasedSession(SessionInterface):
 
         try:
             user_name, session_id, _cookie_hash = parse_and_check_cookie(cookie_value)
-            sess = self.session_class.load_session(user_name, session_id, user_permissions)
-            sess.warn_if_session_expires_soon(datetime.now())
-            if sess.is_expired(datetime.now()):
-                return None
         except MKAuthException:
-            # Catches an invalid cred issue checked by test_session.py
+            # Don't abort if we find an invalid cookie, see regression test in test_session.py
             return None
+
+        now = datetime.now()
+        active_sessions = userdb.session.active_sessions(
+            userdb.session.load_session_infos(user_name), now
+        )
+        if (session_info := active_sessions.get(session_id)) is None:
+            return None
+
+        try:
+            sess = self.session_class.load_session(user_name, session_info, user_permissions)
+        except MKAuthException:
+            # load_session will raise if the session is logged out
+            return None
+
+        # TODO: should the `is_expired` check come before the `warn_if_session_expires_soon`?
+        sess.warn_if_session_expires_soon(now)
+        if sess.is_expired(now):
+            return None
+
         return sess
 
     def _authenticate_and_open(

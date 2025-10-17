@@ -7351,6 +7351,10 @@ msgstr "認証失敗（直近5分間）"
 msgid "Authentication failures within the last 5 minutes"
 msgstr "過去5分以内の認証失敗数"
 
+#, fuzzy
+msgid "Authentication for proxy required"
+msgstr "認証エラー"
+
 msgid "Authentication mechanism"
 msgstr "認証方法"
 
@@ -16273,6 +16277,10 @@ msgstr "現在のDCD の状態。"
 msgid "Current O2 percentage"
 msgstr "現在のO2パーセンテージ"
 
+#, fuzzy
+msgid "Current RAM"
+msgstr "電流"
+
 msgid "Current agent update status of all registered hosts."
 msgstr "登録されているすべてのホストの現在のエージェント更新ステータス。"
 
@@ -18466,6 +18474,10 @@ msgstr "配信されたメッセージ"
 
 msgid "Delivered notifications"
 msgstr "配信済通知"
+
+#, fuzzy
+msgid "Demand"
+msgstr "要求する"
 
 msgid "Demo"
 msgstr "デモ"
@@ -29996,6 +30008,10 @@ msgid "Hyper-V VM Network Adapter"
 msgstr "ネットワークアダプタ"
 
 #, fuzzy
+msgid "Hyper-V VM RAM"
+msgstr "Hyper-V VM (Windows)"
+
+#, fuzzy
 msgid "Hyper-V VM integration services"
 msgstr "Hyper-V統合サービスの状態"
 
@@ -38887,6 +38903,10 @@ msgstr "最大ファイル記述子"
 msgid "Max length"
 msgstr "最大長"
 
+#, fuzzy
+msgid "Max levels for ram"
+msgstr "電力の最大レベル"
+
 msgid "Max time for last reported"
 msgstr "最後のレポートからの最大待ち時間"
 
@@ -39020,6 +39040,10 @@ msgstr "自動ワークエリアに使用される最大PGA"
 
 msgid "Maximum PGA used for manual workareas"
 msgstr "手動ワークエリアに使用される最大PGA"
+
+#, fuzzy
+msgid "Maximum RAM"
+msgstr "最大"
 
 msgid "Maximum Rate of Accepted Packets"
 msgstr "受け入れられたパケットの最大レート"
@@ -39985,6 +40009,10 @@ msgstr "%d%sをコネクタ'%s'に移行しました:%s"
 msgid "Migrating"
 msgstr "移行する"
 
+#, fuzzy
+msgid "Min levels for ram"
+msgstr "Stratumの警告レベル"
+
 msgid "Min.&nbsp;Version:"
 msgstr "Min&nbsp;バージョン:"
 
@@ -40035,6 +40063,10 @@ msgstr "証明書の最低期間"
 
 msgid "Minimum Page Life Expectancy"
 msgstr "最小ページ寿命"
+
+#, fuzzy
+msgid "Minimum RAM"
+msgstr "最小"
 
 msgid "Minimum allowed age"
 msgstr "最小許容期間"
@@ -49979,6 +50011,10 @@ msgstr "プロキシサーバー"
 msgid "Proxy server details"
 msgstr "プロキシサーバーの詳細"
 
+#, fuzzy
+msgid "Proxy server name or IP address"
+msgstr "DNSホスト名またはIPアドレス"
+
 msgid "Proxy settings"
 msgstr "プロキシ設定"
 
@@ -50329,6 +50365,10 @@ msgstr "RAM + スワップの概要"
 
 msgid "RAM + swap used"
 msgstr "RAM +スワップ使用"
+
+#, fuzzy
+msgid "RAM Metrics"
+msgstr "メトリクス"
 
 msgid "RAM free"
 msgstr "RAM空き"
@@ -54192,6 +54232,10 @@ msgstr "スケジューラジョブ名"
 #, python-format
 msgid "Scheduling report in background failed: %s"
 msgstr "バックグラウンドでのレポートのスケジュールに失敗しました: %s"
+
+#, fuzzy
+msgid "Scheme"
+msgstr "スケジュール"
 
 #, python-format
 msgid "Scientific (engineering) with symbol %s"
@@ -59149,6 +59193,10 @@ msgstr "出演者"
 msgid "Start"
 msgstr "開始"
 
+#, fuzzy
+msgid "Start RAM"
+msgstr "開始"
+
 msgid "Start URL to display in main frame"
 msgstr "メインフレームに表示する開始URL"
 
@@ -59446,6 +59494,9 @@ msgstr "チェックプラグインが監視データを受信しなかった場
 
 msgid "State if conditions above are not satisfied."
 msgstr "上記条件を満たさない場合、その旨を記載する。"
+
+msgid "State if demand is higher than used RAM"
+msgstr ""
 
 msgid "State if ha local State is Active"
 msgstr "haローカル状態がアクティブな場合の状態"
@@ -87503,6 +87554,58 @@ msgstr "ログをクリアする"
 msgid "Recently searched"
 msgstr "最近変更されたサービス"
 
+#, fuzzy
+msgid "Add your first host"
+msgstr "現ホストに対するルールを追加"
+
+msgid "View your newly added host"
+msgstr ""
+
+#, fuzzy
+msgid "View hosts"
+msgstr "Vhosts"
+
+#, fuzzy
+msgid "Trigger download of the Checkmk agent package"
+msgstr "CheckmkエージェントVanillaをダウンロード"
+
+#, fuzzy
+msgid "Install the Checkmk agent package"
+msgstr "Checkmkエージェント"
+
+#, fuzzy
+msgid "Note: The above command contains the credentials for a site user with "
+msgstr "ここで、使用する認証情報を設定できます。"
+
+#, fuzzy
+msgid "DEB"
+msgstr "DB2"
+
+#, fuzzy
+msgid "Download the Checkmk agent package for your system."
+msgstr ""
+"他のオペレーティングシステム用のCheckmkエージェントをダウンロードします"
+
+msgid "Run this command to install the Checkmk agent on your workstation."
+msgstr ""
+
+#, fuzzy
+msgid "RPM"
+msgstr "RAM"
+
+msgid ""
+"Run this command to trigger the download of the Checkmk agent onto your "
+msgstr ""
+
+msgid ""
+"Run this command in PowerShell as an administrator to trigger the "
+"installation"
+msgstr ""
+
+msgid ""
+"A couple of minutes after the installation, the agent will start reporting"
+msgstr ""
+
 msgid "What's next?"
 msgstr ""
 
@@ -87581,10 +87684,6 @@ msgstr "次"
 #, fuzzy
 msgid "Next steps with Checkmk"
 msgstr "Checkmkに同梱されているMIB"
-
-#, fuzzy
-msgid "Add your first host"
-msgstr "現ホストに対するルールを追加"
 
 #, fuzzy
 msgid "2-5 min"

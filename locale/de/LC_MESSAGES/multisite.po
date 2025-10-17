@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-10-15 10:16+0000\n"
+"PO-Revision-Date: 2025-10-16 20:39+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -3219,6 +3219,8 @@ msgid ""
 "Access is restricted, but no contact groups are assigned in the host's "
 "permissions."
 msgstr ""
+"Der Zugriff ist eingeschränkt, aber in den Berechtigungen des Hosts sind "
+"keine Kontaktgruppen zugewiesen."
 
 msgid "Access key"
 msgstr "Zugriffsschlüssel"
@@ -7581,6 +7583,10 @@ msgstr "Authentifizierungsfehler (letzte 5 Minuten)"
 msgid "Authentication failures within the last 5 minutes"
 msgstr "Authentifizierungsfehler in den letzten 5 Minuten"
 
+#, fuzzy
+msgid "Authentication for proxy required"
+msgstr "Authentifizierungsfehler"
+
 msgid "Authentication mechanism"
 msgstr "Authentifizierungsmechanismus"
 
@@ -11575,7 +11581,7 @@ msgid "Carbon queue usage rate"
 msgstr "Auslastungsrate der Warteschlange für Carbon"
 
 msgid "Cardinality reduction aggregation method"
-msgstr "Aggregationsmethode für die Reduktion der Kardinalität"
+msgstr "Aggregationsmethode zur Reduktion der Kardinalität"
 
 msgid "Casa module: CPU temperature"
 msgstr "Casa module: CPU-Temperatur"
@@ -12653,32 +12659,26 @@ msgstr ""
 msgid "Checkmk with times performance data"
 msgstr "Checkmk mit Zeitmetriken"
 
-#, fuzzy
 msgid "Checkmk: API: Bytes"
-msgstr "Checkmk: BI: Bytes"
+msgstr "Checkmk: API: Bytes"
 
-#, fuzzy
 msgid "Checkmk: API: Requests"
-msgstr "Checkmk: BI: Anfragen"
+msgstr "Checkmk: API: Anfragen"
 
-#, fuzzy
 msgid "Checkmk: API: Secs"
-msgstr "Checkmk: BI: Sekunden"
+msgstr "Checkmk: API: Sekunden"
 
 msgid "Checkmk: Agent bakery signing keys expire soon"
 msgstr "Checkmk: Signaturschlüssel der Agentenbäckerei laufen bald ab"
 
-#, fuzzy
 msgid "Checkmk: Ajax: Bytes"
-msgstr "Checkmk: Setup: Bytes"
+msgstr "Checkmk: Ajax: Bytes"
 
-#, fuzzy
 msgid "Checkmk: Ajax: Requests"
-msgstr "Checkmk: Setup: Anfragen"
+msgstr "Checkmk: Ajax: Anfragen"
 
-#, fuzzy
 msgid "Checkmk: Ajax: Secs"
-msgstr "Checkmk: Setup: Sekunden"
+msgstr "Checkmk: Ajax: Sekunden"
 
 msgid "Checkmk: BI: Bytes"
 msgstr "Checkmk: BI: Bytes"
@@ -12698,44 +12698,35 @@ msgstr "Checkmk: Dashboards: Anfragen"
 msgid "Checkmk: Dashboards: Secs"
 msgstr "Checkmk: Dashboards: Sekunden"
 
-#, fuzzy
 msgid "Checkmk: Graphs: Bytes"
-msgstr "Checkmk: BI: Bytes"
+msgstr "Checkmk: Graphen: Bytes"
 
-#, fuzzy
 msgid "Checkmk: Graphs: Requests"
-msgstr "Checkmk: BI: Anfragen"
+msgstr "Checkmk: Graphen: Anfragen"
 
-#, fuzzy
 msgid "Checkmk: Graphs: Secs"
-msgstr "Checkmk: BI: Sekunden"
+msgstr "Checkmk: Graphen: Sekunden"
 
-#, fuzzy
 msgid "Checkmk: Index: Bytes"
-msgstr "Checkmk: BI: Bytes"
+msgstr "Checkmk: Index: Bytes"
 
-#, fuzzy
 msgid "Checkmk: Index: Requests"
-msgstr "Checkmk: BI: Anfragen"
+msgstr "Checkmk: Index: Anfragen"
 
-#, fuzzy
 msgid "Checkmk: Index: Secs"
-msgstr "Checkmk: BI: Sekunden"
+msgstr "Checkmk: Index: Sekunden"
 
 msgid "Checkmk: License verification failed"
 msgstr "Checkmk: Lizenzverifizierung fehlgeschlagen"
 
-#, fuzzy
 msgid "Checkmk: Login: Bytes"
-msgstr "Checkmk: BI: Bytes"
+msgstr "Checkmk: Login: Bytes"
 
-#, fuzzy
 msgid "Checkmk: Login: Requests"
-msgstr "Checkmk: BI: Anfragen"
+msgstr "Checkmk: Login: Anfragen"
 
-#, fuzzy
 msgid "Checkmk: Login: Secs"
-msgstr "Checkmk: BI: Sekunden"
+msgstr "Checkmk: Login: Sekunden"
 
 msgid "Checkmk: Other: Bytes"
 msgstr "Checkmk: Sonstige: Bytes"
@@ -12746,17 +12737,14 @@ msgstr "Checkmk: Sonstige: Anfragen"
 msgid "Checkmk: Other: Secs"
 msgstr "Checkmk: Sonstige: Sekunden"
 
-#, fuzzy
 msgid "Checkmk: Search: Bytes"
-msgstr "Checkmk: Setup: Bytes"
+msgstr "Checkmk: Suche: Bytes"
 
-#, fuzzy
 msgid "Checkmk: Search: Requests"
-msgstr "Checkmk: Setup: Anfragen"
+msgstr "Checkmk: Suche: Anfragen"
 
-#, fuzzy
 msgid "Checkmk: Search: Secs"
-msgstr "Checkmk: Setup: Sekunden"
+msgstr "Checkmk: Suche: Sekunden"
 
 msgid "Checkmk: Setup: Bytes"
 msgstr "Checkmk: Setup: Bytes"
@@ -12776,17 +12764,14 @@ msgstr "Checkmk: Seitenleistenelemente: Anfragen"
 msgid "Checkmk: Sidebar elements: Secs"
 msgstr "Checkmk: Seitenleistenelemente: Sekunden"
 
-#, fuzzy
 msgid "Checkmk: Sidebar: Bytes"
-msgstr "Checkmk: Seitenleistenelemente: Bytes"
+msgstr "Checkmk: Seitenleiste: Bytes"
 
-#, fuzzy
 msgid "Checkmk: Sidebar: Requests"
-msgstr "Checkmk: Seitenleistenelemente: Anfragen"
+msgstr "Checkmk: Seitenleiste: Anfragen"
 
-#, fuzzy
 msgid "Checkmk: Sidebar: Secs"
-msgstr "Checkmk: Seitenleistenelemente: Sekunden"
+msgstr "Checkmk: Seitenleiste: Sekunden"
 
 msgid "Checkmk: Views: Bytes"
 msgstr "Checkmk: Ansichten: Bytes"
@@ -13362,7 +13347,7 @@ msgid "Cleanup of working directory"
 msgstr "Bereinigung des Arbeitsverzeichnisses"
 
 msgid "Cleanup parameters"
-msgstr "Parameter für die Bereinigung"
+msgstr "Bereinigungsparameter"
 
 msgid "Cleanup strategy"
 msgstr "Bereinigungsstrategie"
@@ -16682,6 +16667,10 @@ msgstr "Aktueller DCD-Zustand."
 msgid "Current O2 percentage"
 msgstr "Aktueller O2-Prozentsatz"
 
+#, fuzzy
+msgid "Current RAM"
+msgstr "Stromstärke"
+
 msgid "Current agent update status of all registered hosts."
 msgstr "Aktueller Status des Agenten-Updates von allen registrierten Hosts."
 
@@ -17987,7 +17976,7 @@ msgid "Default BI visualization settings"
 msgstr "Standard BI Visualisierungseinstellungen"
 
 msgid "Default cleanup parameters"
-msgstr "Standardparameter für Bereinigung"
+msgstr "Standard-Bereinigungsparameter"
 
 msgid "Default color"
 msgstr "Standardfarbe"
@@ -18904,6 +18893,10 @@ msgstr "Zugestellte Meldungen"
 msgid "Delivered notifications"
 msgstr "Zugestellte Benachrichtigungen"
 
+#, fuzzy
+msgid "Demand"
+msgstr "Bedarf"
+
 msgid "Demo"
 msgstr "Demo"
 
@@ -19779,7 +19772,6 @@ msgstr "Login-Timeout deaktivieren"
 msgid "Disable this package"
 msgstr "Dieses Paket deaktivieren"
 
-#, fuzzy
 msgid "Disable this section"
 msgstr "Diese Sektion deaktivieren"
 
@@ -20895,7 +20887,7 @@ msgstr ""
 "Keine Aktion durchführen, diese Meldung verwerfen, Verarbeitung abbrechen"
 
 msgid "Do not perform periodic service discovery check"
-msgstr "Keinen periodischen Service-Discovery Check ausführen"
+msgstr "Keinen periodischen Service Discovery Check ausführen"
 
 msgid "Do not regard required mirror space as free space"
 msgstr "Benötigten Mirrorspace nicht als frei betrachten"
@@ -25401,10 +25393,10 @@ msgid "Find on this page ..."
 msgstr "Suche ... auf dieser Seite."
 
 msgid "Finetune Windows Eventlog monitoring"
-msgstr "Windows Ereignisprotokoll-Monitoring justieren"
+msgstr "Windows Ereignisprotokoll-Monitoring feinjustieren"
 
 msgid "Finetune Windows process monitoring"
-msgstr "Windows Prozess-Monitoring justieren"
+msgstr "Windows Prozess-Monitoring feinjustieren"
 
 msgid "Fingerprint"
 msgstr "Fingerprint"
@@ -30651,6 +30643,10 @@ msgstr "Hyper-V VM Gastinformationen (Windows)"
 
 msgid "Hyper-V VM Network Adapter"
 msgstr "Hyper-V VM Netzwerkadapter"
+
+#, fuzzy
+msgid "Hyper-V VM RAM"
+msgstr "Hyper-V VM Zusammenfassung"
 
 msgid "Hyper-V VM integration services"
 msgstr "Hyper-V VM Integrationsdienste"
@@ -39769,6 +39765,10 @@ msgstr "Maximale Dateideskriptoren"
 msgid "Max length"
 msgstr "maximale Länge"
 
+#, fuzzy
+msgid "Max levels for ram"
+msgstr "Obergrenzen für die Leistung"
+
 msgid "Max time for last reported"
 msgstr "Maximale Zeit für die letzte Meldung"
 
@@ -39890,9 +39890,8 @@ msgstr "Maximale Anzahl von %s Instanzen mit einer Dauer größer als %s"
 msgid "Maximum KPI runtime"
 msgstr "Maximale KPI-Laufzeit"
 
-#, fuzzy
 msgid "Maximum Latency"
-msgstr "Maximales Alter"
+msgstr "Maximale Latenz"
 
 msgid "Maximum PGA allocated"
 msgstr "Maximal zugewiesener PGA"
@@ -39902,6 +39901,10 @@ msgstr "Maximale PGA verwendet für Auto-Workareas"
 
 msgid "Maximum PGA used for manual workareas"
 msgstr "Maximal verwendete PGA für manuelle Arbeitsbereiche"
+
+#, fuzzy
+msgid "Maximum RAM"
+msgstr "Maximum"
 
 msgid "Maximum Rate of Accepted Packets"
 msgstr "Maximale Rate für akzeptierte Pakete"
@@ -40041,9 +40044,8 @@ msgstr "Maximale Sechseckgröße"
 msgid "Maximum image size: %dx%dpx"
 msgstr "Maximale Bildgröße: %dx%dpx"
 
-#, fuzzy
 msgid "Maximum latency (ms)"
-msgstr "E-Mail-Latenz"
+msgstr "Maximale Latenz (ms)"
 
 msgid "Maximum latency of successful GetItem requests"
 msgstr "Maximale Latenzzeit für erfolgreiche GetItem-Anfragen"
@@ -40868,6 +40870,10 @@ msgstr "%d %s auf Connector '%s': %s migriert"
 msgid "Migrating"
 msgstr "Migration"
 
+#, fuzzy
+msgid "Min levels for ram"
+msgstr "WARN-Levels für das Stratum"
+
 msgid "Min.&nbsp;Version:"
 msgstr "Min.&nbsp;Version:"
 
@@ -40918,6 +40924,10 @@ msgstr "Minimales Zertifikatsalter"
 
 msgid "Minimum Page Life Expectancy"
 msgstr "Minimale Page Life Expectancy (PLE)"
+
+#, fuzzy
+msgid "Minimum RAM"
+msgstr "Minimum"
 
 msgid "Minimum allowed age"
 msgstr "Mindestalter"
@@ -46485,13 +46495,11 @@ msgstr "Oracle IOSTAT Gesamt-Schreib-Bytes"
 msgid "Oracle IOSTAT write bytes"
 msgstr "Oracle IOSTAT Schreib-Bytes"
 
-#, fuzzy
 msgid "Oracle Instant Client options"
-msgstr "Optionen der Oracle Client-Bibliothek"
+msgstr "Optionen des Oracle Instant Client"
 
-#, fuzzy
 msgid "Oracle Instant Client usage"
-msgstr "Auslastung der Oracle Client-Bibliothek"
+msgstr "Auslastung des Oracle Instant Client"
 
 msgid "Oracle Java pool size"
 msgstr "Oracle Java-Poolgröße"
@@ -51046,6 +51054,10 @@ msgstr "Proxy-Server"
 msgid "Proxy server details"
 msgstr "Details zum Proxyserver"
 
+#, fuzzy
+msgid "Proxy server name or IP address"
+msgstr "DNS Host-Name oder IP-Adresse"
+
 msgid "Proxy settings"
 msgstr "Proxy-Einstellungen"
 
@@ -51395,6 +51407,10 @@ msgstr "RAM + Swap Übersicht"
 
 msgid "RAM + swap used"
 msgstr "RAM + Swap genutzt"
+
+#, fuzzy
+msgid "RAM Metrics"
+msgstr "Metriken"
 
 msgid "RAM free"
 msgstr "RAM frei"
@@ -52704,7 +52720,7 @@ msgid "Remove Windows Firewall configuration if present"
 msgstr "Windows Firewall Konfiguration entfernen, falls vorhanden"
 
 msgid "Remove abandoned host files older than"
-msgstr "Veraltete Host-Dateien entfernen, die älter sind als"
+msgstr "Stillgelegte Host-Dateien entfernen, die älter sind als"
 
 msgid "Remove acknowledgments"
 msgstr "Entferne Quittierungen"
@@ -52740,13 +52756,13 @@ msgid "Remove filter"
 msgstr "Filter entfernen"
 
 msgid "Remove history entries older than"
-msgstr "Historieneinträge entfernen, die älter sind als"
+msgstr "Historieneinträge löschen, die älter sind als"
 
 msgid "Remove history entries right after"
 msgstr "Historieneinträge entfernen direkt nach"
 
 msgid "Remove history entries which meet the following conditions"
-msgstr "Historieneinträge entfernen, die den folgenden Bedingungen entsprechen"
+msgstr "Historieneinträge löschen, welche die folgenden Bedingungen erfüllen"
 
 msgid "Remove name"
 msgstr "Name entfernen"
@@ -53068,7 +53084,7 @@ msgid "Replayed notification number %d"
 msgstr "Nummer der wiederholten Benachrichtigungen %d"
 
 msgid "Replica aggregation method"
-msgstr "Aggregationsmethode der Replica"
+msgstr "Replica-Aggregationsmethode"
 
 msgid "Replica available state"
 msgstr "Verfügbarkeitszustand des Replikats"
@@ -55279,6 +55295,10 @@ msgstr "Name des Scheduler-Jobs"
 #, python-format
 msgid "Scheduling report in background failed: %s"
 msgstr "Planung von Report in Hintergrund fehlgeschlagen: %s"
+
+#, fuzzy
+msgid "Scheme"
+msgstr "Planer"
 
 #, python-format
 msgid "Scientific (engineering) with symbol %s"
@@ -60392,6 +60412,10 @@ msgstr "Sterne"
 msgid "Start"
 msgstr "Beginn"
 
+#, fuzzy
+msgid "Start RAM"
+msgstr "Beginn"
+
 msgid "Start URL to display in main frame"
 msgstr "Start-URL für den Haupt-Frame"
 
@@ -60693,6 +60717,9 @@ msgstr "Zustand, wenn Check-Plugins keine Monitoring-Daten empfangen haben"
 
 msgid "State if conditions above are not satisfied."
 msgstr "Zustand, wenn die Bedingungen von oben nicht erfüllt sind."
+
+msgid "State if demand is higher than used RAM"
+msgstr ""
 
 msgid "State if ha local State is Active"
 msgstr "Zustand, wenn HA-Local-Zustand Active ist"
@@ -61756,13 +61783,13 @@ msgstr ""
 msgid "Successfully deleted %d hosts"
 msgstr "%d Hosts wurden erfolgreich entfernt"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Successfully deleted the following %s: %s"
-msgstr "%d Hosts wurden erfolgreich entfernt"
+msgstr "Das folgende %s wurde erfolgreich gelöscht: %s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Successfully deleted the following user '%s'"
-msgstr "%d Hosts wurden erfolgreich entfernt"
+msgstr "Der folgende Benutzer '%s' wurde erfolgreich gelöscht"
 
 msgid "Successfully discarded all pending changes."
 msgstr "Alle ausstehenden Änderungen wurden erfolgreich verworfen."
@@ -72269,11 +72296,10 @@ msgstr ""
 "Dieser Regelsatz ermöglicht es Ihnen, Levels für die Speicherauslastung zu "
 "konfigurieren"
 
-#, fuzzy
 msgid "This ruleset allows you to configure levels for the daily usage costs."
 msgstr ""
-"Dieser Regelsatz ermöglicht es Ihnen, Levels für die Speicherauslastung zu "
-"konfigurieren"
+"Dieser Regelsatz ermöglicht es Ihnen, Levels für die Kosten der täglichen "
+"Auslastung zu konfigurieren."
 
 msgid "This ruleset allows you to configure levels for the database CPU usage"
 msgstr ""
@@ -79663,9 +79689,9 @@ msgstr "Verwendeter virtueller Speicher (gemittelt)"
 msgid "User"
 msgstr "Benutzer"
 
-#, fuzzy, python-format
+#, python-format
 msgid "User %s does not exist."
-msgstr "%s existiert nicht."
+msgstr "Benutzer %s existiert nicht."
 
 #, python-format
 msgid "User %s of DCD connection was modified"
@@ -86508,7 +86534,7 @@ msgid "disable the login to this account"
 msgstr "Login für dieses Konto deaktivieren"
 
 msgid "disable this section"
-msgstr "Diese Sektion deaktivieren"
+msgstr "diese Sektion deaktivieren"
 
 msgid "disabled"
 msgstr "deaktiviert"
@@ -86621,7 +86647,7 @@ msgid "entries (max. 50)"
 msgstr "Einträge (max. 50)"
 
 msgid "entry number"
-msgstr "Eingangsnummer"
+msgstr "Eintragsnummer"
 
 msgid "estimated duration"
 msgstr "geschätzte Dauer"
@@ -89120,9 +89146,8 @@ msgstr "Auto"
 msgid "Strict"
 msgstr "Streng"
 
-#, fuzzy
 msgid "Apply rate (sums)"
-msgstr "Latenz anwenden"
+msgstr ""
 
 msgid "Apply percentile (histograms)"
 msgstr ""
@@ -89212,9 +89237,8 @@ msgstr ""
 msgid "Shift"
 msgstr ""
 
-#, fuzzy
 msgid "Alt"
-msgstr "Alert"
+msgstr "Alt"
 
 msgid "Open full view"
 msgstr "Vollbild öffnen"
@@ -89501,17 +89525,15 @@ msgstr ""
 "Geben Sie die Instanz an, auf welcher der OpenTelemetry Collector laufen "
 "wird."
 
-#, fuzzy
 msgid ""
 "Provide a title for the configuration and select the site where the "
 "OpenTelemetry collector will run."
 msgstr ""
-"Alle damit verbundenen Konfigurationen des integrierten OpenTelemetry "
-"Collectors."
+"Geben Sie einen Titel für die Konfiguration ein und wählen Sie die Instanz "
+"aus, auf welcher der OpenTelemetry Collector ausgeführt werden soll."
 
-#, fuzzy
 msgid "Select the folder your host(s) will be created in."
-msgstr "Legen Sie fest, wo der Host erstellt werden soll."
+msgstr "Wählen Sie den Ordner, in dem Ihre Hosts angelegt werden."
 
 msgid ""
 "This is a placeholder for the relay setup wizard. The actual implementation "
@@ -89526,13 +89548,11 @@ msgstr ""
 msgid "Deploy the relay to your environment"
 msgstr ""
 
-#, fuzzy
 msgid "Name the relay"
-msgstr "Name des Proxy"
+msgstr ""
 
-#, fuzzy
 msgid "Register the relay with your Checkmk site"
-msgstr "Zeigt den Zustand der Checkmk-Instanzen an\n"
+msgstr "Registrieren Sie das Relais für Ihre Checkmk-Instanz"
 
 msgid "Connection check"
 msgstr "Verbindungstest"
@@ -89557,9 +89577,8 @@ msgstr ""
 msgid "Read Checkmk user guide"
 msgstr "Lesen Sie das Checkmk-Handbuch"
 
-#, fuzzy
 msgid "Close & run service discovery"
-msgstr "Speichern & Service-Erkennung durchführen"
+msgstr "Schließen & Service-Erkennung durchführen"
 
 msgid "No filters can be applied to your current search query."
 msgstr ""
@@ -89578,17 +89597,14 @@ msgstr ""
 msgid "Search in monitoring – Type '/' for search operators"
 msgstr ""
 
-#, fuzzy
 msgid "Search in customize"
-msgstr "%d Icons angepasst"
+msgstr "In 'Anpassen' suchen"
 
-#, fuzzy
 msgid "Search in setup"
-msgstr "Suche in Setup"
+msgstr "Suche in 'Setup'"
 
-#, fuzzy
 msgid "Press"
-msgstr "Druck"
+msgstr "Drücken"
 
 msgid "to trigger host/service search"
 msgstr ""
@@ -89596,16 +89612,14 @@ msgstr ""
 msgid "Only available for 'Monitoring' and 'All'"
 msgstr ""
 
-#, fuzzy
 msgid "Search operators"
-msgstr "Such-Pattern"
+msgstr "Such-Operatoren"
 
 msgid "Type \"/\" to use search operator"
 msgstr ""
 
-#, fuzzy
 msgid "Search in"
-msgstr "Suchindex"
+msgstr "Suche in"
 
 msgid "¯\\_(ツ)_/¯"
 msgstr ""
@@ -89613,9 +89627,8 @@ msgstr ""
 msgid "No results found for your search"
 msgstr ""
 
-#, fuzzy
 msgid "Reset search"
-msgstr "Suche verfeinern"
+msgstr "Suche zurücksetzen"
 
 msgid "Find rules, hosts, dashboards, settings ..."
 msgstr ""
@@ -89628,104 +89641,141 @@ msgid ""
 "label (hl:)"
 msgstr ""
 
-#, fuzzy
 msgid "Recently viewed"
-msgstr "Ansicht auswählen"
+msgstr "Zuletzt angesehen"
 
-#, fuzzy
 msgid "Clear all"
-msgstr "Log leeren"
+msgstr "Alle leeren"
+
+msgid "Recently searched"
+msgstr "Zuletzt gesucht"
+
+msgid "Add your first host"
+msgstr "Fügen Sie Ihren ersten Host hinzu"
+
+msgid "View your newly added host"
+msgstr ""
 
 #, fuzzy
-msgid "Recently searched"
-msgstr "Kürzlich geänderte Services"
+msgid "View hosts"
+msgstr "Vhosts"
+
+#, fuzzy
+msgid "Trigger download of the Checkmk agent package"
+msgstr "Checkmk-Agent Vanilla herunterladen"
+
+#, fuzzy
+msgid "Install the Checkmk agent package"
+msgstr "Checkmk-Agent installieren"
+
+#, fuzzy
+msgid "Note: The above command contains the credentials for a site user with "
+msgstr "Hier können Sie die zu verwendenden Anmeldedaten konfigurieren."
+
+#, fuzzy
+msgid "DEB"
+msgstr "DB2"
+
+#, fuzzy
+msgid "Download the Checkmk agent package for your system."
+msgstr "Lädt Checkmk-Agenten für andere Betriebssysteme herunter"
+
+#, fuzzy
+msgid "Run this command to install the Checkmk agent on your workstation."
+msgstr ""
+"Diesen Befehl ausführen, um den Checkmk-Agent herunterzuladen und zu "
+"installieren."
+
+#, fuzzy
+msgid "RPM"
+msgstr "RAM"
+
+#, fuzzy
+msgid ""
+"Run this command to trigger the download of the Checkmk agent onto your "
+msgstr ""
+"Diesen Befehl ausführen, um den Checkmk-Agent herunterzuladen und zu "
+"installieren."
+
+msgid ""
+"Run this command in PowerShell as an administrator to trigger the "
+"installation"
+msgstr ""
+
+msgid ""
+"A couple of minutes after the installation, the agent will start reporting"
+msgstr ""
 
 msgid "What's next?"
 msgstr ""
 
-#, fuzzy
 msgid "Set up backup"
-msgstr "Instanzsicherung"
+msgstr "Sicherung einrichten"
 
 msgid ""
 "No backup, no mercy! Protect your configuration and data with automated "
 "backups."
 msgstr ""
 
-#, fuzzy
 msgid "Learn how to scale your monitoring"
-msgstr "Failover Monitoring"
+msgstr "Lernen Sie, wie Sie Ihr Monitoring skalieren"
 
 msgid "Add more hosts, sites, or distributed setups as your environment grows."
 msgstr ""
 
-#, fuzzy
 msgid "Fine-tune your monitoring"
-msgstr "Windows Prozess-Monitoring justieren"
+msgstr "Ihr Monitoring feinjustieren"
 
 msgid ""
 "Dive deep into the details and learn how to optimize checks, thresholds, and "
 "notifications."
 msgstr ""
 
-#, fuzzy
 msgid "License your site"
-msgstr "Lizenzstatus"
+msgstr "Lizenzieren Sie Ihre Instanz"
 
 msgid ""
 "It’s time to enjoy the full experience! Set up automated licensing for a "
 "smooth experience."
 msgstr ""
 
-#, fuzzy
 msgid "First steps with Checkmk"
-msgstr "MIBs, die mit Checkmk ausgeliefert werden"
+msgstr "Erste Schritte in Checkmk"
 
-#, fuzzy
 msgid "Resources"
-msgstr "Quellen"
+msgstr "Ressourcen"
 
 msgid ""
 "Your assistant for Checkmk - ask anything from setup to troubleshooting."
 msgstr ""
 
-#, fuzzy
 msgid "Read the Beginner’s Guide"
-msgstr "Leitfaden für Einsteiger"
+msgstr "Lese Sie den Leitfaden für Einsteiger"
 
 msgid ""
 "A step-by-step introduction to help you get started quickly and confidently."
 msgstr ""
 
-#, fuzzy
 msgid "Join the community"
-msgstr "Kommunikation im Klartext"
+msgstr "Der Community beitreten"
 
 msgid "Connect with other users and ask questions in our active forum."
 msgstr ""
 
-#, fuzzy
 msgid "All steps completed"
-msgstr "Alle Hosts der Instanz"
+msgstr "Alle Schritte abgeschlossen"
 
-#, fuzzy
 msgid "Continue setup"
-msgstr "Suche verfeinern"
+msgstr "Setup fortsetzen"
 
 msgid "What's next"
 msgstr ""
 
-#, fuzzy
 msgid "Next steps with Checkmk"
-msgstr "MIBs, die mit Checkmk ausgeliefert werden"
+msgstr "Nächste Schritte in Checkmk"
 
-#, fuzzy
-msgid "Add your first host"
-msgstr "Regel für aktuellen Host hinzufügen"
-
-#, fuzzy
 msgid "2-5 min"
-msgstr "5 Minuten"
+msgstr "2-5 Minuten"
 
 msgid ""
 "Each host includes a number of services that represent what you want to "
@@ -89737,29 +89787,23 @@ msgid ""
 "  monitoring with minimal setup."
 msgstr ""
 
-#, fuzzy
 msgid "On-premises hosts"
-msgstr "Levels Hosts"
+msgstr "On-Premises Hosts"
 
-#, fuzzy
 msgid "Server (Linux, Windows, Solaris, ...)"
-msgstr "HW-/SW-Inventur (Linux, Windows, Solaris, AIX)"
+msgstr "Server (Linux, Windows, Solaris, ...)"
 
-#, fuzzy
 msgid "Network devices and SNMP"
-msgstr "Netzwerk-Scan"
+msgstr "Netzwerkgeräte und SNMP"
 
-#, fuzzy
 msgid "OpenTelemetry (Beta)"
-msgstr "OpenTelemetry (experimentell)"
+msgstr "OpenTelemetry (Beta)"
 
-#, fuzzy
 msgid "Adjust services"
-msgstr "Alle Services"
+msgstr "Services anpassen"
 
-#, fuzzy
 msgid "5-7 min"
-msgstr "5 Minuten"
+msgstr "5-7 Minuten"
 
 msgid ""
 "Each service in Checkmk comes with default parameter values.\n"
@@ -89770,41 +89814,35 @@ msgid ""
 "            start with the Service discovery page of a host."
 msgstr ""
 
-#, fuzzy
 msgid "Run a service discovery"
-msgstr "Service-Erkennung durchführen"
+msgstr "Eine Service-Erkennung durchführen"
 
 msgid "To adjust parameters for a host, start by running a service discovery."
 msgstr ""
 
-#, fuzzy
 msgid "In the host table, click on the"
-msgstr "Host-Aktionsmenü öffnen"
+msgstr "Klicken Sie in der Host-Tabelle auf"
 
 msgid "-icon next to the host to open the service discovery."
 msgstr ""
 
-#, fuzzy
 msgid "View host table"
-msgstr "Tabelle anzeigen"
+msgstr "Host-Tabelle anzeigen"
 
-#, fuzzy
 msgid "Open the ruleset for a check parameter"
-msgstr "Parameter-Regelsatz für diesen Check-Typ editieren"
+msgstr "Den Regelsatz für einen Check-Parameter öffnen"
 
 msgid "In the Service Discovery view, find the service you want to configure."
 msgstr ""
 
-#, fuzzy
 msgid "Click the"
-msgstr "Prüfe die URL"
+msgstr "Klicken Sie auf"
 
 msgid "-icon next to it to open the corresponding ruleset."
 msgstr ""
 
-#, fuzzy
 msgid "Create a check parameter rule"
-msgstr "Unbekannte Check-Parameter-Regelsätze"
+msgstr "Eine Check-Parameter-Regel erstellen"
 
 msgid ""
 "In the ruleset view, click Add rule for current host to create a rule that "
@@ -89824,13 +89862,11 @@ msgid "Activate changes to apply them to live monitoring."
 msgstr ""
 "Aktivieren Sie die Änderungen, um sie auf das Live-Monitoring anzuwenden."
 
-#, fuzzy
 msgid "Mark as complete"
-msgstr "PGs unvollständig"
+msgstr "Als komplett markieren"
 
-#, fuzzy
 msgid "Assign responsibilities"
-msgstr "Filter der Adressaten"
+msgstr "Verantwortlichkeiten zuweisen"
 
 msgid ""
 "The recommended way to manage responsibilities in Checkmk is by using "
@@ -89840,9 +89876,8 @@ msgid ""
 "            and scalable tool for defining who is responsible for what."
 msgstr ""
 
-#, fuzzy
 msgid "Create a contact group"
-msgstr "Kontaktgruppen abgleichen"
+msgstr "Eine Kontaktgruppe erstellen"
 
 msgid ""
 "By default, there is one contact group available, called \"Everything\"."
@@ -89851,9 +89886,8 @@ msgstr ""
 msgid "Go to Setup > Users > Contact groups to create or edit contact groups."
 msgstr ""
 
-#, fuzzy
 msgid "Assign users to a contact group"
-msgstr "Zuweisung von Services zu Kontaktgruppen"
+msgstr "Benutzer einer Kontaktgruppe zuweisen"
 
 msgid ""
 "Each user can belong to multiple contact groups. You can assign them to "
@@ -89861,9 +89895,8 @@ msgid ""
 "user."
 msgstr ""
 
-#, fuzzy
 msgid "Assign the contact group to hosts"
-msgstr "Diese Kontaktgruppen zum Host hinzufügen"
+msgstr "Hosts die Kontaktgruppe zuweisen"
 
 msgid ""
 "There are two options available for assigning hosts to contact groups. "
@@ -89908,31 +89941,27 @@ msgid ""
 "            your environment."
 msgstr ""
 
-#, fuzzy
 msgid "Create a notification rule"
-msgstr "Eine neue Benachrichtigungsregel erstellen"
+msgstr "Eine Benachrichtigungsregel erstellen"
 
 msgid ""
 "Follow the step-by-step guide in Setup > Notifications to set up "
 "notification rules."
 msgstr ""
 
-#, fuzzy
 msgid "Send a test notification"
-msgstr "Individuelle Benachrichtigung senden"
+msgstr "Eine Testbenachrichtigung senden"
 
 msgid ""
 "After creation, test your notification rule to make sure alerts reach you "
 "the way you expect."
 msgstr ""
 
-#, fuzzy
 msgid "Your progress"
-msgstr "In Bearbeitung"
+msgstr "Ihr Fortschritt"
 
-#, fuzzy
 msgid "Steps complete"
-msgstr "vollständig"
+msgstr "Vollständige Schritte"
 
 msgid "Welcome to Checkmk!"
 msgstr "Willkommen bei Checkmk!"

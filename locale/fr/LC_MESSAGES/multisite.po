@@ -7830,6 +7830,10 @@ msgstr "Échecs d'authentification (5 dernières minutes)"
 msgid "Authentication failures within the last 5 minutes"
 msgstr "Échecs d'authentification au cours des 5 dernières minutes"
 
+#, fuzzy
+msgid "Authentication for proxy required"
+msgstr "Erreurs du système d'authentification"
+
 msgid "Authentication mechanism"
 msgstr "Mécanisme d'authentification"
 
@@ -17376,6 +17380,10 @@ msgstr "État actuel du DCD."
 msgid "Current O2 percentage"
 msgstr "Pourcentage actuel d'O2"
 
+#, fuzzy
+msgid "Current RAM"
+msgstr "Actuel"
+
 msgid "Current agent update status of all registered hosts."
 msgstr ""
 "État actuel de la mise à jour des agents de tous les hôtes enregistrés."
@@ -19671,6 +19679,10 @@ msgstr "Messages délivrés"
 
 msgid "Delivered notifications"
 msgstr "Notifications délivrées"
+
+#, fuzzy
+msgid "Demand"
+msgstr "demande"
 
 msgid "Demo"
 msgstr "Démonstration"
@@ -32235,6 +32247,10 @@ msgid "Hyper-V VM Network Adapter"
 msgstr "Adaptateurs de réseau"
 
 #, fuzzy
+msgid "Hyper-V VM RAM"
+msgstr "VMs Hyper-V (Windows)"
+
+#, fuzzy
 msgid "Hyper-V VM integration services"
 msgstr "Serveur Hyper-V : État des VMs"
 
@@ -41691,6 +41707,10 @@ msgstr "Descripteurs de fichiers maximum"
 msgid "Max length"
 msgstr "Longueur maximale"
 
+#, fuzzy
+msgid "Max levels for ram"
+msgstr "Niveaux maximums de tension"
+
 msgid "Max time for last reported"
 msgstr ""
 
@@ -41828,6 +41848,10 @@ msgstr "PGA maximum utilisé pour les zones de travail automobile"
 
 msgid "Maximum PGA used for manual workareas"
 msgstr "PGA maximale utilisée pour les zones de travail manuel"
+
+#, fuzzy
+msgid "Maximum RAM"
+msgstr "Maximum"
 
 msgid "Maximum Rate of Accepted Packets"
 msgstr "Taux maximum de paquets acceptés"
@@ -42853,6 +42877,10 @@ msgstr "Migration de %d %s vers le connecteur '%s' : %s"
 msgid "Migrating"
 msgstr "Configuration"
 
+#, fuzzy
+msgid "Min levels for ram"
+msgstr "Niveaux d'alerte pour Stratum"
+
 msgid "Min.&nbsp;Version:"
 msgstr "Min.&nbsp;Version :"
 
@@ -42903,6 +42931,10 @@ msgstr "Âge minimum du certificat"
 
 msgid "Minimum Page Life Expectancy"
 msgstr "Durée de vie minimale des pages"
+
+#, fuzzy
+msgid "Minimum RAM"
+msgstr "Minimum"
 
 msgid "Minimum allowed age"
 msgstr "Âge minimum autorisé"
@@ -53800,6 +53832,10 @@ msgstr "Serveur proxy"
 msgid "Proxy server details"
 msgstr "Détails du serveur proxy"
 
+#, fuzzy
+msgid "Proxy server name or IP address"
+msgstr "Nom d'hôte DNS ou adresse IP"
+
 msgid "Proxy settings"
 msgstr "Paramètres du proxy"
 
@@ -54166,6 +54202,10 @@ msgstr "Aperçu de la RAM + Swap"
 #, fuzzy
 msgid "RAM + swap used"
 msgstr "RAM + Swap utilisés"
+
+#, fuzzy
+msgid "RAM Metrics"
+msgstr "Métriques"
 
 #, fuzzy
 msgid "RAM free"
@@ -58321,6 +58361,10 @@ msgstr "Nom du travail du planificateur"
 #, python-format
 msgid "Scheduling report in background failed: %s"
 msgstr "La planification du rapport en arrière-plan a échoué : %s"
+
+#, fuzzy
+msgid "Scheme"
+msgstr "Programme"
 
 #, python-format
 msgid "Scientific (engineering) with symbol %s"
@@ -63586,6 +63630,10 @@ msgstr "Étoiles"
 msgid "Start"
 msgstr "Début"
 
+#, fuzzy
+msgid "Start RAM"
+msgstr "Début"
+
 msgid "Start URL to display in main frame"
 msgstr "URL de départ à afficher dans le cadre principal"
 
@@ -63911,6 +63959,9 @@ msgstr ""
 
 msgid "State if conditions above are not satisfied."
 msgstr "Indiquer si les conditions ci-dessus ne sont pas remplies."
+
+msgid "State if demand is higher than used RAM"
+msgstr ""
 
 msgid "State if ha local State is Active"
 msgstr "Indiquer si l'État local est actif"
@@ -94138,6 +94189,59 @@ msgstr "Effacer le journal"
 msgid "Recently searched"
 msgstr "Services récemment modifiés"
 
+#, fuzzy
+msgid "Add your first host"
+msgstr "Ajouter une règle pour l'hôte actuel"
+
+msgid "View your newly added host"
+msgstr ""
+
+#, fuzzy
+msgid "View hosts"
+msgstr "Hôtes virtuels"
+
+#, fuzzy
+msgid "Trigger download of the Checkmk agent package"
+msgstr "Télécharger l'agent Checkmk Vanilla"
+
+#, fuzzy
+msgid "Install the Checkmk agent package"
+msgstr "Agent de contrôle"
+
+#, fuzzy
+msgid "Note: The above command contains the credentials for a site user with "
+msgstr ""
+"Vous pouvez configurer ici les paramètres de délai d'attente en secondes."
+
+#, fuzzy
+msgid "DEB"
+msgstr "DB2"
+
+#, fuzzy
+msgid "Download the Checkmk agent package for your system."
+msgstr ""
+"Téléchargement des agents Checkmk pour d'autres systèmes d'exploitation"
+
+msgid "Run this command to install the Checkmk agent on your workstation."
+msgstr ""
+
+#, fuzzy
+msgid "RPM"
+msgstr "RAM"
+
+msgid ""
+"Run this command to trigger the download of the Checkmk agent onto your "
+msgstr ""
+
+msgid ""
+"Run this command in PowerShell as an administrator to trigger the "
+"installation"
+msgstr ""
+
+msgid ""
+"A couple of minutes after the installation, the agent will start reporting"
+msgstr ""
+
 msgid "What's next?"
 msgstr ""
 
@@ -94217,10 +94321,6 @@ msgstr "Le prochain "
 #, fuzzy
 msgid "Next steps with Checkmk"
 msgstr "MIBs livrées avec Checkmk"
-
-#, fuzzy
-msgid "Add your first host"
-msgstr "Ajouter une règle pour l'hôte actuel"
 
 #, fuzzy
 msgid "2-5 min"

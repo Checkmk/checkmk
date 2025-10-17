@@ -7780,6 +7780,10 @@ msgstr "Authenticatie mislukkingen (laatste 5 minuten)"
 msgid "Authentication failures within the last 5 minutes"
 msgstr "Authenticatie mislukt in de laatste 5 minuten"
 
+#, fuzzy
+msgid "Authentication for proxy required"
+msgstr "Authenticatie systeemfouten"
+
 msgid "Authentication mechanism"
 msgstr "Authenticatiemechanisme"
 
@@ -17261,6 +17265,10 @@ msgstr "Huidige toestand"
 msgid "Current O2 percentage"
 msgstr "Huidig O2 percentage"
 
+#, fuzzy
+msgid "Current RAM"
+msgstr "Huidige"
+
 msgid "Current agent update status of all registered hosts."
 msgstr "Huidige agent update status van alle geregistreerde hosts."
 
@@ -19540,6 +19548,10 @@ msgstr "Afgeleverde berichten"
 
 msgid "Delivered notifications"
 msgstr "Afgeleverde meldingen"
+
+#, fuzzy
+msgid "Demand"
+msgstr "vraag"
 
 msgid "Demo"
 msgstr "Demo"
@@ -31989,6 +32001,10 @@ msgid "Hyper-V VM Network Adapter"
 msgstr "Netwerk Adapters"
 
 #, fuzzy
+msgid "Hyper-V VM RAM"
+msgstr "Hyper-V VM's (Windows)"
+
+#, fuzzy
 msgid "Hyper-V VM integration services"
 msgstr "Hyper-V Server: Staat van VM's"
 
@@ -41381,6 +41397,10 @@ msgid "Max length"
 msgstr "Max. lengte"
 
 #, fuzzy
+msgid "Max levels for ram"
+msgstr "Maximumniveaus voor spanning"
+
+#, fuzzy
 msgid "Max time for last reported"
 msgstr "Max. wachttijd voor een antwoord."
 
@@ -41519,6 +41539,10 @@ msgstr "Maximaal PGA gebruikt voor auto-werkzones"
 
 msgid "Maximum PGA used for manual workareas"
 msgstr "Maximaal PGA gebruikt voor handmatige werkgebieden"
+
+#, fuzzy
+msgid "Maximum RAM"
+msgstr "Maximum"
 
 msgid "Maximum Rate of Accepted Packets"
 msgstr "Maximale snelheid van geaccepteerde pakketten"
@@ -42536,6 +42560,10 @@ msgstr "Gemigreerd %d %s naar connector '%s': %s"
 msgid "Migrating"
 msgstr "Configuratie"
 
+#, fuzzy
+msgid "Min levels for ram"
+msgstr "Waarschuwingsniveaus voor Stratum"
+
 msgid "Min.&nbsp;Version:"
 msgstr "Min.&nbsp;Versie:"
 
@@ -42586,6 +42614,10 @@ msgstr "Minimumleeftijd certificaat"
 
 msgid "Minimum Page Life Expectancy"
 msgstr "Minimum levensduur pagina"
+
+#, fuzzy
+msgid "Minimum RAM"
+msgstr "Minimum"
 
 msgid "Minimum allowed age"
 msgstr "Toegestane minimumleeftijd"
@@ -53386,6 +53418,10 @@ msgstr "Proxyserver"
 msgid "Proxy server details"
 msgstr "Proxy server gegevens"
 
+#, fuzzy
+msgid "Proxy server name or IP address"
+msgstr "DNS-hostnaam of IP-adres"
+
 msgid "Proxy settings"
 msgstr "Proxy-instellingen"
 
@@ -53750,6 +53786,10 @@ msgstr "RAM + Swap overzicht"
 #, fuzzy
 msgid "RAM + swap used"
 msgstr "RAM + Swap gebruikt"
+
+#, fuzzy
+msgid "RAM Metrics"
+msgstr "Metriek"
 
 #, fuzzy
 msgid "RAM free"
@@ -57851,6 +57891,10 @@ msgstr "Taaknaam planner"
 #, python-format
 msgid "Scheduling report in background failed: %s"
 msgstr "Schema rapport op achtergrond mislukt: %s"
+
+#, fuzzy
+msgid "Scheme"
+msgstr "Schema"
 
 #, python-format
 msgid "Scientific (engineering) with symbol %s"
@@ -63060,6 +63104,10 @@ msgstr "Sterren"
 msgid "Start"
 msgstr "Start"
 
+#, fuzzy
+msgid "Start RAM"
+msgstr "Start"
+
 msgid "Start URL to display in main frame"
 msgstr "Start URL om in hoofdframe te tonen"
 
@@ -63385,6 +63433,9 @@ msgstr "Staat als controleplugins geen controlegegevens hebben ontvangen"
 
 msgid "State if conditions above are not satisfied."
 msgstr "Vermeld of aan bovenstaande voorwaarden niet is voldaan."
+
+msgid "State if demand is higher than used RAM"
+msgstr ""
 
 msgid "State if ha local State is Active"
 msgstr "Geef aan of ha lokale staat actief is"
@@ -93323,6 +93374,57 @@ msgstr "Logboek wissen"
 msgid "Recently searched"
 msgstr "Onlangs gewijzigde diensten"
 
+#, fuzzy
+msgid "Add your first host"
+msgstr "Regel toevoegen voor huidige host"
+
+msgid "View your newly added host"
+msgstr ""
+
+#, fuzzy
+msgid "View hosts"
+msgstr "Vhosts"
+
+#, fuzzy
+msgid "Trigger download of the Checkmk agent package"
+msgstr "Download Checkmk agent Vanilla"
+
+#, fuzzy
+msgid "Install the Checkmk agent package"
+msgstr "Checkmk agent"
+
+#, fuzzy
+msgid "Note: The above command contains the credentials for a site user with "
+msgstr "Hier kunt u de time-out in seconden instellen."
+
+#, fuzzy
+msgid "DEB"
+msgstr "DB2"
+
+#, fuzzy
+msgid "Download the Checkmk agent package for your system."
+msgstr "Downloads Checkmk agents voor andere besturingssystemen"
+
+msgid "Run this command to install the Checkmk agent on your workstation."
+msgstr ""
+
+#, fuzzy
+msgid "RPM"
+msgstr "RAM"
+
+msgid ""
+"Run this command to trigger the download of the Checkmk agent onto your "
+msgstr ""
+
+msgid ""
+"Run this command in PowerShell as an administrator to trigger the "
+"installation"
+msgstr ""
+
+msgid ""
+"A couple of minutes after the installation, the agent will start reporting"
+msgstr ""
+
 msgid "What's next?"
 msgstr ""
 
@@ -93402,10 +93504,6 @@ msgstr "De volgende "
 #, fuzzy
 msgid "Next steps with Checkmk"
 msgstr "MIB's geleverd met Checkmk"
-
-#, fuzzy
-msgid "Add your first host"
-msgstr "Regel toevoegen voor huidige host"
 
 #, fuzzy
 msgid "2-5 min"

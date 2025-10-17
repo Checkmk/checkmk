@@ -7788,6 +7788,10 @@ msgstr "Eșecuri de autentificare (ultimele 5 minute)"
 msgid "Authentication failures within the last 5 minutes"
 msgstr "Eșecuri de autentificare în ultimele 5 minute"
 
+#, fuzzy
+msgid "Authentication for proxy required"
+msgstr "Eroare de autentificare"
+
 msgid "Authentication mechanism"
 msgstr "Mecanism de autentificare"
 
@@ -17287,6 +17291,10 @@ msgstr "Starea actuală"
 msgid "Current O2 percentage"
 msgstr "Procentul actual de O2"
 
+#, fuzzy
+msgid "Current RAM"
+msgstr "Curent"
+
 msgid "Current agent update status of all registered hosts."
 msgstr ""
 "Starea curentă de actualizare a agentului pentru toate gazdele înregistrate."
@@ -19570,6 +19578,10 @@ msgstr "Mesaje livrate"
 
 msgid "Delivered notifications"
 msgstr "Notificări livrate"
+
+#, fuzzy
+msgid "Demand"
+msgstr "cerere"
 
 msgid "Demo"
 msgstr "Demo"
@@ -32056,6 +32068,10 @@ msgid "Hyper-V VM Network Adapter"
 msgstr "Adaptoare de rețea"
 
 #, fuzzy
+msgid "Hyper-V VM RAM"
+msgstr "VM Hyper-V (Windows)"
+
+#, fuzzy
 msgid "Hyper-V VM integration services"
 msgstr "Server Hyper-V: Starea mașinilor virtuale"
 
@@ -41472,6 +41488,10 @@ msgid "Max length"
 msgstr "Lungime maximă"
 
 #, fuzzy
+msgid "Max levels for ram"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
 msgid "Max time for last reported"
 msgstr "Timpul maxim de așteptare pentru un răspuns."
 
@@ -41608,6 +41628,10 @@ msgstr "PGA maximă utilizată pentru zonele de lucru auto"
 
 msgid "Maximum PGA used for manual workareas"
 msgstr "PGA maximă utilizată pentru zonele de lucru manual"
+
+#, fuzzy
+msgid "Maximum RAM"
+msgstr "Maxim"
 
 msgid "Maximum Rate of Accepted Packets"
 msgstr "Rata maximă a pachetelor acceptate"
@@ -42623,6 +42647,10 @@ msgstr "A migrat %d %s la conectorul '%s': %s."
 msgid "Migrating"
 msgstr "Migrarea"
 
+#, fuzzy
+msgid "Min levels for ram"
+msgstr "Niveluri de avertizare pentru Stratum"
+
 msgid "Min.&nbsp;Version:"
 msgstr "Min.&nbsp;Versiune:"
 
@@ -42673,6 +42701,10 @@ msgstr "Vârsta minimă pentru certificat"
 
 msgid "Minimum Page Life Expectancy"
 msgstr "Speranța de viață minimă a paginii"
+
+#, fuzzy
+msgid "Minimum RAM"
+msgstr "Minim"
 
 msgid "Minimum allowed age"
 msgstr "Vârsta minimă permisă"
@@ -53486,6 +53518,10 @@ msgstr "Server Proxy"
 msgid "Proxy server details"
 msgstr "Detalii despre serverul proxy"
 
+#, fuzzy
+msgid "Proxy server name or IP address"
+msgstr "Numele de gazdă DNS sau adresa IP"
+
 msgid "Proxy settings"
 msgstr "Setări Proxy"
 
@@ -53854,6 +53890,10 @@ msgstr "Prezentare generală RAM + Swap"
 #, fuzzy
 msgid "RAM + swap used"
 msgstr "RAM + Swap folosit"
+
+#, fuzzy
+msgid "RAM Metrics"
+msgstr "Metrici"
 
 msgid "RAM free"
 msgstr "RAM liber"
@@ -57955,6 +57995,10 @@ msgstr "Numele lucrării Scheduler"
 #, python-format
 msgid "Scheduling report in background failed: %s"
 msgstr "Programarea raportului în fundal a eșuat: %s."
+
+#, fuzzy
+msgid "Scheme"
+msgstr "Programare"
 
 #, python-format
 msgid "Scientific (engineering) with symbol %s"
@@ -63250,6 +63294,10 @@ msgstr "Stele"
 msgid "Start"
 msgstr "Start"
 
+#, fuzzy
+msgid "Start RAM"
+msgstr "Start"
+
 msgid "Start URL to display in main frame"
 msgstr "URL de pornire pentru afișarea în cadrul principal"
 
@@ -63572,6 +63620,9 @@ msgstr "Stare dacă fișele de verificare nu au primit date de monitorizare"
 
 msgid "State if conditions above are not satisfied."
 msgstr "A se preciza dacă nu sunt îndeplinite condițiile de mai sus."
+
+msgid "State if demand is higher than used RAM"
+msgstr ""
 
 msgid "State if ha local State is Active"
 msgstr "Stabiliți dacă statul local este activ"
@@ -93573,6 +93624,57 @@ msgstr "Ștergeți jurnalul"
 msgid "Recently searched"
 msgstr "Servicii schimbate recent"
 
+#, fuzzy
+msgid "Add your first host"
+msgstr "Adăugați o regulă pentru gazda curentă"
+
+msgid "View your newly added host"
+msgstr ""
+
+#, fuzzy
+msgid "View hosts"
+msgstr "Vhosts"
+
+#, fuzzy
+msgid "Trigger download of the Checkmk agent package"
+msgstr "Descărcați Checkmk agent Vanilla"
+
+#, fuzzy
+msgid "Install the Checkmk agent package"
+msgstr "Agent Checkmk"
+
+#, fuzzy
+msgid "Note: The above command contains the credentials for a site user with "
+msgstr "Aici puteți configura setările de temporizare în secunde."
+
+#, fuzzy
+msgid "DEB"
+msgstr "DB2"
+
+#, fuzzy
+msgid "Download the Checkmk agent package for your system."
+msgstr "Descărcări agenți Checkmk pentru alte sisteme de operare"
+
+msgid "Run this command to install the Checkmk agent on your workstation."
+msgstr ""
+
+#, fuzzy
+msgid "RPM"
+msgstr "RAM"
+
+msgid ""
+"Run this command to trigger the download of the Checkmk agent onto your "
+msgstr ""
+
+msgid ""
+"Run this command in PowerShell as an administrator to trigger the "
+"installation"
+msgstr ""
+
+msgid ""
+"A couple of minutes after the installation, the agent will start reporting"
+msgstr ""
+
 msgid "What's next?"
 msgstr ""
 
@@ -93652,10 +93754,6 @@ msgstr "Următorul "
 #, fuzzy
 msgid "Next steps with Checkmk"
 msgstr "MIB-uri livrate cu Checkmk"
-
-#, fuzzy
-msgid "Add your first host"
-msgstr "Adăugați o regulă pentru gazda curentă"
 
 #, fuzzy
 msgid "2-5 min"

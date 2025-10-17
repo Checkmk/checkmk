@@ -35,6 +35,7 @@ import type {
   DashboardMetadata,
   DashboardModel
 } from '@/dashboard-wip/types/dashboard.ts'
+import { RuntimeFilterMode } from '@/dashboard-wip/types/filter.ts'
 import type { DashboardPageProperties } from '@/dashboard-wip/types/page.ts'
 import type {
   WidgetContent,
@@ -246,8 +247,9 @@ const redirectToListDashboardsPage = () => {
   window.location.href = props.links.list_dashboards
 }
 
-const handleApplyRuntimeFilters = (filters: ConfiguredFilters) => {
+const handleApplyRuntimeFilters = (filters: ConfiguredFilters, mode: RuntimeFilterMode) => {
   dashboardFilters.handleApplyRuntimeFilters(filters)
+  dashboardFilters.setRuntimeFiltersMode(mode)
 
   let urlSearchParams = {}
   if (Object.keys(filters).length > 0) {
@@ -259,10 +261,11 @@ const handleApplyRuntimeFilters = (filters: ConfiguredFilters) => {
       })
       allFilterIds.push(filterId)
     })
+    // TODO: may have to reverify after discussion on behavior
     urlSearchParams = {
       filled_in: 'filter',
       _apply: 'Apply+filters',
-      _active: allFilterIds.join(';'),
+      ...(mode !== RuntimeFilterMode.MERGE ? { _active: allFilterIds.join(';') } : {}),
       ...allFilterValues
     }
   }
@@ -343,6 +346,9 @@ function deepClone<T>(obj: T): T {
         :configured-mandatory-runtime-filters="[
           ...(dashboardFilters.configuredMandatoryRuntimeFilters.value || [])
         ]"
+        :configured-runtime-filters-mode="
+          dashboardFilters.runtimeFiltersMode.value || RuntimeFilterMode.OVERRIDE
+        "
         :can-edit="true"
         starting-tab="dashboard-filter"
         @save-dashboard-filters="dashboardFilters.handleSaveDashboardFilters"

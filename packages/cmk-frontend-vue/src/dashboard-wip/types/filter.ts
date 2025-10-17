@@ -20,3 +20,8 @@ export interface ContextFilter {
 }
 
 export type ContextFilters = Record<string, ContextFilter>
+
+export enum RuntimeFilterMode {
+  OVERRIDE = 'override',
+  MERGE = 'merge'
+}

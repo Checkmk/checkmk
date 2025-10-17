@@ -10,12 +10,14 @@ import type { DashboardFilterContextWithSingleInfos } from '@/dashboard-wip/type
 import {
   type ContextFilter,
   type ContextFilters,
-  FilterOrigin
+  FilterOrigin,
+  RuntimeFilterMode
 } from '@/dashboard-wip/types/filter.ts'
 
 export function useDashboardFilters(
   dashboardFilterContextRef: Ref<DashboardFilterContextWithSingleInfos | undefined>
 ) {
+  const runtimeFiltersMode = ref<RuntimeFilterMode>(RuntimeFilterMode.OVERRIDE)
   const appliedRuntimeFilters = ref<ConfiguredFilters>({})
 
   const configuredMandatoryRuntimeFilters = computed<string[]>(() => {
@@ -41,10 +43,15 @@ export function useDashboardFilters(
     return Object.fromEntries(entries)
   }
 
-  const contextFilters = computed<ContextFilters>(() => ({
-    ...toContextFilters(configuredDashboardFilters.value, FilterOrigin.DASHBOARD),
-    ...toContextFilters(appliedRuntimeFilters.value, FilterOrigin.QUICK_FILTER)
-  }))
+  const contextFilters = computed<ContextFilters>(() => {
+    if (runtimeFiltersMode.value === 'override') {
+      return toContextFilters(appliedRuntimeFilters.value, FilterOrigin.QUICK_FILTER)
+    }
+    return {
+      ...toContextFilters(configuredDashboardFilters.value, FilterOrigin.DASHBOARD),
+      ...toContextFilters(appliedRuntimeFilters.value, FilterOrigin.QUICK_FILTER)
+    }
+  })
 
   const handleSaveDashboardFilters = (filters: ConfiguredFilters) => {
     const ctx = dashboardFilterContextRef.value
@@ -66,6 +73,10 @@ export function useDashboardFilters(
     ctx.mandatory_context_filters = structuredClone(mandatoryFilters)
   }
 
+  const setRuntimeFiltersMode = (mode: RuntimeFilterMode) => {
+    runtimeFiltersMode.value = mode
+  }
+
   const handleResetRuntimeFilters = () => {
     appliedRuntimeFilters.value = {}
   }
@@ -76,6 +87,8 @@ export function useDashboardFilters(
     appliedRuntimeFilters,
     baseFilters,
     contextFilters,
+    runtimeFiltersMode: computed(() => runtimeFiltersMode.value),
+    setRuntimeFiltersMode,
     handleSaveDashboardFilters,
     handleApplyRuntimeFilters,
     handleSaveMandatoryRuntimeFilters,

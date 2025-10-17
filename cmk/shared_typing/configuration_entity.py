@@ -17,3 +17,4 @@ from enum import Enum
 class ConfigEntityType(str, Enum):
     notification_parameter = "notification_parameter"
     folder = "folder"
+    passwordstore_password = "passwordstore_password"

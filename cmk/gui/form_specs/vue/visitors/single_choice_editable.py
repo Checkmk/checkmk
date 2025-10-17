@@ -8,6 +8,7 @@ from collections.abc import Callable, Sequence
 from cmk.gui.form_specs.private.single_choice_editable import SingleChoiceEditable
 from cmk.gui.form_specs.vue.validators import build_vue_validators
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 
 from cmk.rulesets.v1 import Message
 from cmk.rulesets.v1.form_specs.validators import ValidationError
@@ -72,7 +73,7 @@ class SingleChoiceEditableVisitor(
         title, help_text = get_title_and_help(self.form_spec)
         entity_type = ConfigEntityType(self.form_spec.entity_type.value)
         entity_selection = self.form_spec.entity_type_specifier
-        entities = get_list_of_configuration_entities(entity_type, entity_selection)
+        entities = get_list_of_configuration_entities(entity_type, entity_selection, user=user)
         readable_entity_selection = get_readable_entity_selection(entity_type, entity_selection)
         input_hint = compute_title_input_hint(self.form_spec.prefill) or _(
             "Please select an element"

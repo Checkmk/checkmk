@@ -28,11 +28,12 @@ from cmk.gui.form_specs.private import (
     ListExtended,
     ListOfStrings,
     MonitoredHostExtended,
+    PasswordStorePassword,
     SingleChoiceExtended,
     StringAutocompleter,
     UserSelection,
 )
-from cmk.gui.form_specs.vue.visitors import DefaultValue as VueDefaultValue
+from cmk.gui.form_specs.vue.visitors._type_defs import DefaultValue as VueDefaultValue
 from cmk.gui.userdb._user_selection import UserSelection as LegacyUserSelection
 from cmk.gui.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
@@ -44,7 +45,10 @@ from cmk.gui.watolib import config_domains as legacy_config_domains
 from cmk.gui.watolib import rulespec_groups as legacy_rulespec_groups
 from cmk.gui.watolib import rulespecs as legacy_rulespecs
 from cmk.gui.watolib import timeperiods as legacy_timeperiods
-from cmk.gui.watolib.password_store import IndividualOrStoredPassword
+from cmk.gui.watolib.password_store import (
+    IndividualOrStoredPassword,
+    postprocessable_passwordstore_password,
+)
 from cmk.gui.watolib.rulespecs import (
     CheckParameterRulespecWithItem,
     CheckParameterRulespecWithoutItem,
@@ -824,6 +828,9 @@ def _convert_to_inner_legacy_valuespec(
 
         case SimplePassword():
             return _convert_to_legacy_password(to_convert, localizer)
+
+        case PasswordStorePassword():
+            return _convert_passwordstore_password_to_legacy_dropdown_choice(to_convert, localizer)
 
         case LegacyValueSpec():
             return to_convert.valuespec
@@ -2505,6 +2512,18 @@ def _convert_to_legacy_password(
     return legacy_valuespecs.Password(
         title=_localize_optional(to_convert.title, localizer),
         help=_localize_optional(to_convert.help_text, localizer),
+        validate=_convert_to_legacy_validation(to_convert.custom_validate, localizer)
+        if to_convert.custom_validate
+        else None,
+    )
+
+
+def _convert_passwordstore_password_to_legacy_dropdown_choice(
+    to_convert: PasswordStorePassword, localizer: Callable[[str], str]
+) -> legacy_valuespecs.Transform:
+    return postprocessable_passwordstore_password(
+        title=_localize_optional(to_convert.title, localizer),
+        help_text=_localize_optional(to_convert.help_text, localizer),
         validate=_convert_to_legacy_validation(to_convert.custom_validate, localizer)
         if to_convert.custom_validate
         else None,

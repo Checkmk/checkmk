@@ -25,6 +25,7 @@ from .multiple_choice import (
     MultipleChoiceExtendedLayout,
 )
 from .optional_choice import OptionalChoice
+from .passwordstore_password import PasswordStorePassword
 from .single_choice_editable import SingleChoiceEditable
 from .string_autocompleter import StringAutocompleter
 from .time_specific import TimeSpecific
@@ -44,6 +45,7 @@ __all__ = [
     "ListUniqueSelection",
     "ListOfStrings",
     "MultipleChoiceExtended",
+    "PasswordStorePassword",
     "SingleChoiceElementExtended",
     "SingleChoiceExtended",
     "SingleChoiceEditable",

@@ -6,6 +6,7 @@
 import subprocess
 from collections.abc import Mapping
 from pathlib import Path
+from typing import Literal
 
 from cmk.ccc import store
 
@@ -17,6 +18,7 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Choices
+from cmk.gui.valuespec import DropdownChoice, Transform, ValueSpecValidateFunc
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSimpleConfigFile
 from cmk.gui.watolib.utils import wato_root_dir
 
@@ -198,4 +200,40 @@ def MigrateToIndividualOrStoredPassword(
             size=size,
         ),
         migrate=lambda v: ("password", v) if not isinstance(v, tuple) else v,
+    )
+
+
+def _transform_passwordstore_password_forth(value: object) -> str:
+    match value:
+        case "cmk_postprocessed", "stored_password", (str(password_store_id), str()):
+            return password_store_id
+        case _other:
+            raise ValueError(value)
+
+
+def _transform_passwordstore_password_back(
+    value: str,
+) -> tuple[Literal["cmk_postprocessed"], Literal["stored_password"], tuple[str, str]]:
+    match value:
+        case str(password_store_id):
+            return "cmk_postprocessed", "stored_password", (password_store_id, "")
+        case _other:
+            raise ValueError(value)
+
+
+def postprocessable_passwordstore_password(
+    title: str | None,
+    help_text: str | None,
+    validate: ValueSpecValidateFunc | None,
+) -> Transform:
+    return Transform(
+        DropdownChoice(
+            title=title,
+            help=help_text,
+            choices=passwordstore_choices,
+            empty_text="No passwords configured yet",
+        ),
+        forth=_transform_passwordstore_password_forth,
+        back=_transform_passwordstore_password_back,
+        validate=validate,
     )

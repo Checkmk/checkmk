@@ -9,4 +9,4 @@
  * Do not edit manually.
  */
 
-export type ConfigEntityType = "notification_parameter" | "folder";
+export type ConfigEntityType = "notification_parameter" | "folder" | "passwordstore_password";

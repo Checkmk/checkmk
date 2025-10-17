@@ -37,6 +37,7 @@ from cmk.gui.form_specs.private import (
     MonitoredHostExtended,
     MultipleChoiceExtended,
     OptionalChoice,
+    PasswordStorePassword,
     SingleChoiceEditable,
     SingleChoiceExtended,
     StringAutocompleter,
@@ -58,6 +59,7 @@ from cmk.gui.form_specs.vue.visitors.recomposers import (
     recompose_monitored_host_extended,
     recompose_monitored_service,
     recompose_multiple_choice,
+    recompose_passwordstore_password,
     recompose_percentage,
     recompose_proxy,
     recompose_regular_expression,
@@ -233,6 +235,7 @@ def register_form_specs():
     register_recomposer_function(CascadingSingleChoice, recompose_cascading_single_choice)
     register_recomposer_function(Proxy, recompose_proxy)
     register_recomposer_function(TimePeriod, recompose_time_period)
+    register_recomposer_function(PasswordStorePassword, recompose_passwordstore_password)
 
 
 def register_validators():

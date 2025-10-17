@@ -342,6 +342,81 @@ def get_graph_plugin_and_single_metric_choices(
     return graph_plugin_choices, single_metric_choices
 
 
+def _create_graph_recipe_from_translated_metric(
+    site_id: SiteId,
+    host_name: HostName,
+    service_name: ServiceName,
+    translated_metric: TranslatedMetric,
+    specification: TemplateGraphSpecification,
+    *,
+    temperature_unit: TemperatureUnit,
+) -> GraphRecipe:
+    title = translated_metric.title
+    consolidation_function: Literal["max"] = "max"
+    graph_metric = GraphMetric(
+        title=title,
+        line_type="area",
+        operation=create_graph_metric_expression_from_translated_metric(
+            site_id,
+            host_name,
+            service_name,
+            translated_metric,
+            consolidation_function,
+        ),
+        unit=translated_metric.unit_spec,
+        color=translated_metric.color,
+    )
+    return GraphRecipe(
+        title=title,
+        metrics=[graph_metric],
+        unit_spec=graph_metric.unit,
+        explicit_vertical_range=None,
+        horizontal_rules=compute_warn_crit_rules_from_translated_metric(
+            user_specific_unit(translated_metric.unit_spec, temperature_unit),
+            translated_metric,
+        ),
+        omit_zero_metrics=False,
+        consolidation_function=consolidation_function,
+        specification=specification,
+    )
+
+
+def _create_graph_recipe(
+    specification: GraphSpecification,
+    *,
+    title: str,
+    graph_metrics: Sequence[GraphMetric],
+    explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None,
+    horizontal_rules: Sequence[HorizontalRule],
+    consolidation_function: GraphConsolidationFunction,
+) -> GraphRecipe:
+    units = {m.unit for m in graph_metrics}
+
+    # We cannot validate the hypothetical case of a mixture of metrics from the legacy and the new API
+    if all(isinstance(m.unit, str) for m in graph_metrics) or all(
+        isinstance(m.unit, ConvertibleUnitSpecification) for m in graph_metrics
+    ):
+        if len(units) > 1:
+            raise MKGeneralException(
+                _("Cannot create graph with metrics of different units '%s'")
+                % ", ".join(repr(unit) for unit in units)
+            )
+
+    if not title:
+        title = next((m.title for m in graph_metrics), "")
+
+    return GraphRecipe(
+        title=title,
+        metrics=graph_metrics,
+        unit_spec=units.pop(),
+        explicit_vertical_range=explicit_vertical_range,
+        horizontal_rules=horizontal_rules,
+        omit_zero_metrics=False,
+        consolidation_function=consolidation_function,
+        specification=specification,
+    )
+
+
 def _compute_graph_recipes(
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
@@ -453,81 +528,6 @@ def _matching_graph_recipes(
         )
         if (graph_index is None or graph_index == graph_recipe_index)
         and (graph_id is None or graph_id == graph_recipe_id)
-    )
-
-
-def _create_graph_recipe_from_translated_metric(
-    site_id: SiteId,
-    host_name: HostName,
-    service_name: ServiceName,
-    translated_metric: TranslatedMetric,
-    specification: TemplateGraphSpecification,
-    *,
-    temperature_unit: TemperatureUnit,
-) -> GraphRecipe:
-    title = translated_metric.title
-    consolidation_function: Literal["max"] = "max"
-    graph_metric = GraphMetric(
-        title=title,
-        line_type="area",
-        operation=create_graph_metric_expression_from_translated_metric(
-            site_id,
-            host_name,
-            service_name,
-            translated_metric,
-            consolidation_function,
-        ),
-        unit=translated_metric.unit_spec,
-        color=translated_metric.color,
-    )
-    return GraphRecipe(
-        title=title,
-        metrics=[graph_metric],
-        unit_spec=graph_metric.unit,
-        explicit_vertical_range=None,
-        horizontal_rules=compute_warn_crit_rules_from_translated_metric(
-            user_specific_unit(translated_metric.unit_spec, temperature_unit),
-            translated_metric,
-        ),
-        omit_zero_metrics=False,
-        consolidation_function=consolidation_function,
-        specification=specification,
-    )
-
-
-def _create_graph_recipe(
-    specification: GraphSpecification,
-    *,
-    title: str,
-    graph_metrics: Sequence[GraphMetric],
-    explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None,
-    horizontal_rules: Sequence[HorizontalRule],
-    consolidation_function: GraphConsolidationFunction,
-) -> GraphRecipe:
-    units = {m.unit for m in graph_metrics}
-
-    # We cannot validate the hypothetical case of a mixture of metrics from the legacy and the new API
-    if all(isinstance(m.unit, str) for m in graph_metrics) or all(
-        isinstance(m.unit, ConvertibleUnitSpecification) for m in graph_metrics
-    ):
-        if len(units) > 1:
-            raise MKGeneralException(
-                _("Cannot create graph with metrics of different units '%s'")
-                % ", ".join(repr(unit) for unit in units)
-            )
-
-    if not title:
-        title = next((m.title for m in graph_metrics), "")
-
-    return GraphRecipe(
-        title=title,
-        metrics=graph_metrics,
-        unit_spec=units.pop(),
-        explicit_vertical_range=explicit_vertical_range,
-        horizontal_rules=horizontal_rules,
-        omit_zero_metrics=False,
-        consolidation_function=consolidation_function,
-        specification=specification,
     )
 
 

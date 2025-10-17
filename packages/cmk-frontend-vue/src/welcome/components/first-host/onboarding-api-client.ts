@@ -21,6 +21,6 @@ export interface EffectiveAttributes {
 }
 export class CseOnboardingApiClient extends Api {
   public getAgentSecret(): Promise<{ secret: string }> {
-    return this.get('objects/onboarding/agent') as Promise<{ secret: string }> // TODO BKP: test if this works
+    return this.get('objects/onboarding/agent') as Promise<{ secret: string }>
   }
 }

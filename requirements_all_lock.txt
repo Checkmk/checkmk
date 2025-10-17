@@ -209,9 +209,9 @@ azure-common==1.1.28 \
     # via
     #   azure-mgmt-compute
     #   azure-mgmt-resource
-azure-core==1.35.1 \
-    --hash=sha256:12da0c9e08e48e198f9158b56ddbe33b421477e1dc98c2e1c8f9e254d92c468b \
-    --hash=sha256:435d05d6df0fff2f73fb3c15493bb4721ede14203f1ff1382aa6b6b2bdd7e562
+azure-core==1.36.0 \
+    --hash=sha256:22e5605e6d0bf1d229726af56d9e92bc37b6e726b141a18be0b4d424131741b7 \
+    --hash=sha256:fee9923a3a753e94a259563429f3644aaf05c486d45b1215d098115102d91d3b
     # via
     #   -r requirements_all.txt
     #   azure-identity
@@ -588,13 +588,13 @@ charset-normalizer==3.4.4 \
     # via
     #   -r requirements_all.txt
     #   requests
-check-manifest==0.50 \
-    --hash=sha256:6ab3e3aa72a008da3314b432f4c768c9647b4d6d8032f9e1a4672a572118e48c \
-    --hash=sha256:d300f9f292986aa1a30424af44eb45c5644e0a810e392e62d553b24bb3393494
+check-manifest==0.51 \
+    --hash=sha256:9801c7637675755a563f33e3c48ee59a59b37a7677297c05c910c16c5b9b6d67 \
+    --hash=sha256:f5f35ed561012fc2115bb070e42a748ac2e034cf8904ab4dfaae893859085ca4
     # via devpi-client
-checkmk-dev-tools==1.0.0 \
-    --hash=sha256:5af8ae55cd1884d8dcdb9c43bd931eaaac6f5443f8228d58f8d780f5822ef26a \
-    --hash=sha256:c19841516909b5c6c2336a1a0bc08b4632a0118c2c81e972cc9c604f187830d7
+checkmk-dev-tools==1.0.1 \
+    --hash=sha256:80ddb8d3fe0d1e59181f899b4fd1b242720f2dcd51c4dcae1e8386a1cfe7f46c \
+    --hash=sha256:b323215bc6eecee26b6653ea80888a20681a963328d919f97eab8a2c86b2f422
     # via -r requirements_dev.txt
 click==8.3.0 \
     --hash=sha256:9b9f285302c6e3064f4330c05f05b81945b2a39544279343e6e7c5f27a9baddc \
@@ -1090,9 +1090,9 @@ google-auth-httplib2==0.2.0 \
     # via
     #   -r requirements_all.txt
     #   google-api-python-client
-google-cloud-access-context-manager==0.2.3 \
-    --hash=sha256:525d0306433f4fecf7ba343211ba04f3f900f1283682abe14c0e3cda6c1ca73e \
-    --hash=sha256:c2de80fba1190e4679d33626384d19e04a56ba3b4d461ed521e89209af63a209
+google-cloud-access-context-manager==0.3.0 \
+    --hash=sha256:5d15ad51547f06c281e35f16b4ffcb3e98bb2d898b01470f88b94edfb2eeb0a3 \
+    --hash=sha256:f3aa35c9225b7aaef85ecdacedcc1577789be8d458b7a41b6ad23b504786e5f9
     # via
     #   -r requirements_all.txt
     #   google-cloud-asset
@@ -1215,9 +1215,9 @@ grequests==0.7.0 \
     --hash=sha256:4733edfcece027de25ae8eff86a87f563d7e829fdacbf3ce8b3aeea507694287 \
     --hash=sha256:5c33f14268df5b8fa1107d8537815be6febbad6ec560524d6a404b7778cf6ba6
     # via -r requirements_dev.txt
-grpc-google-iam-v1==0.14.2 \
-    --hash=sha256:a3171468459770907926d56a440b2bb643eec1d7ba215f48f3ecece42b4d8351 \
-    --hash=sha256:b3e1fc387a1a329e41672197d0ace9de22c78dd7d215048c4c78712073f7bd20
+grpc-google-iam-v1==0.14.3 \
+    --hash=sha256:7a7f697e017a067206a3dfef44e4c634a34d3dee135fe7d7a4613fe3e59217e6 \
+    --hash=sha256:879ac4ef33136c5491a6300e27575a9ec760f6cdf9a2518798c1b8977a5dc389
     # via
     #   -r requirements_all.txt
     #   google-cloud-asset
@@ -3456,9 +3456,9 @@ python-snap7==1.3 \
     --hash=sha256:f8bb72cf387b1af8e1e1b4bbbabf086ca7694c6024129c7a52054e3913f40ad6 \
     --hash=sha256:fc2dada8e157a6e8f5e02b7a702f3103ec1d99ad2f06b69748a2c40405b3e229
     # via -r requirements_all.txt
-pytokens==0.1.10 \
-    --hash=sha256:c9a4bfa0be1d26aebce03e6884ba454e842f186a59ea43a6d3b25af58223c044 \
-    --hash=sha256:db7b72284e480e69fb085d9f251f66b3d2df8b7166059261258ff35f50fb711b
+pytokens==0.2.0 \
+    --hash=sha256:532d6421364e5869ea57a9523bf385f02586d4662acbcc0342afd69511b4dd43 \
+    --hash=sha256:74d4b318c67f4295c13782ddd9abcb7e297ec5630ad060eb90abf7ebbefe59f8
     # via black
 pytz==2025.2 \
     --hash=sha256:360b9e3dbb49a209c21ad61809c7fb453643e048b38924c765813546746e81c3 \
@@ -3997,7 +3997,6 @@ six==1.17.0 \
     --hash=sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81
     # via
     #   -r requirements_all.txt
-    #   azure-core
     #   bson
     #   dockerpty
     #   jsonpath-rw

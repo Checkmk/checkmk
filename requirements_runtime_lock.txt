@@ -163,9 +163,9 @@ attrs==25.4.0 \
     #   aiohttp
     #   jsonschema
     #   referencing
-azure-core==1.35.1 \
-    --hash=sha256:12da0c9e08e48e198f9158b56ddbe33b421477e1dc98c2e1c8f9e254d92c468b \
-    --hash=sha256:435d05d6df0fff2f73fb3c15493bb4721ede14203f1ff1382aa6b6b2bdd7e562
+azure-core==1.36.0 \
+    --hash=sha256:22e5605e6d0bf1d229726af56d9e92bc37b6e726b141a18be0b4d424131741b7 \
+    --hash=sha256:fee9923a3a753e94a259563429f3644aaf05c486d45b1215d098115102d91d3b
     # via
     #   azure-identity
     #   azure-storage-blob
@@ -795,9 +795,9 @@ google-auth-httplib2==0.2.0 \
     --hash=sha256:38aa7badf48f974f1eb9861794e9c0cb2a0511a4ec0679b1f886d108f5640e05 \
     --hash=sha256:b65a0a2123300dd71281a7bf6e64d65a0759287df52729bdd1ae2e47dc311a3d
     # via google-api-python-client
-google-cloud-access-context-manager==0.2.3 \
-    --hash=sha256:525d0306433f4fecf7ba343211ba04f3f900f1283682abe14c0e3cda6c1ca73e \
-    --hash=sha256:c2de80fba1190e4679d33626384d19e04a56ba3b4d461ed521e89209af63a209
+google-cloud-access-context-manager==0.3.0 \
+    --hash=sha256:5d15ad51547f06c281e35f16b4ffcb3e98bb2d898b01470f88b94edfb2eeb0a3 \
+    --hash=sha256:f3aa35c9225b7aaef85ecdacedcc1577789be8d458b7a41b6ad23b504786e5f9
     # via google-cloud-asset
 google-cloud-asset==3.28.0 \
     --hash=sha256:25b716f02ed0dedce12d4659cdcae0149b6c5e3e7190c2a71644299189b0e3cd \
@@ -824,9 +824,9 @@ googleapis-common-protos[grpc]==1.70.0 \
     #   grpcio-status
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
-grpc-google-iam-v1==0.14.2 \
-    --hash=sha256:a3171468459770907926d56a440b2bb643eec1d7ba215f48f3ecece42b4d8351 \
-    --hash=sha256:b3e1fc387a1a329e41672197d0ace9de22c78dd7d215048c4c78712073f7bd20
+grpc-google-iam-v1==0.14.3 \
+    --hash=sha256:7a7f697e017a067206a3dfef44e4c634a34d3dee135fe7d7a4613fe3e59217e6 \
+    --hash=sha256:879ac4ef33136c5491a6300e27575a9ec760f6cdf9a2518798c1b8977a5dc389
     # via google-cloud-asset
 grpcio==1.75.1 \
     --hash=sha256:0049a7bf547dafaeeb1db17079ce79596c298bfe308fc084d023c8907a845b9a \
@@ -2806,7 +2806,6 @@ six==1.17.0 \
     --hash=sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274 \
     --hash=sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81
     # via
-    #   azure-core
     #   jsonpath-rw
     #   kubernetes
     #   opsgenie-sdk

@@ -1846,7 +1846,7 @@
         "usagesDigest": "08kH9jjVabmjH4pZe4CwkHoktWUZb/WfeLdICjLor2c=",
         "recordedFileInputs": {
           "@@rules_fuzzing~//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
-          "@@//requirements_all_lock.txt": "9459a74b33d43995a26c3d5bea0b968499c55b1b4768420bb02e57d50972ac13",
+          "@@//requirements_all_lock.txt": "ca2f0066d651966d0616a1f674148545ab8922fe35e16b2b8af4c443b375d46b",
           "@@rules_mypy~//mypy/private/requirements.txt": "f6c7c90744df0481ca13d433dd2790c62af0b6fef11cdd85ac5424bc87b39fac",
           "@@protobuf~//python/requirements.txt": "983be60d3cec4b319dcab6d48aeb3f5b2f7c3350f26b3a9e97486c37967c73c5"
         },
@@ -4335,7 +4335,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "pytokens==0.1.10     --hash=sha256:c9a4bfa0be1d26aebce03e6884ba454e842f186a59ea43a6d3b25af58223c044     --hash=sha256:db7b72284e480e69fb085d9f251f66b3d2df8b7166059261258ff35f50fb711b"
+              "requirement": "pytokens==0.2.0     --hash=sha256:532d6421364e5869ea57a9523bf385f02586d4662acbcc0342afd69511b4dd43     --hash=sha256:74d4b318c67f4295c13782ddd9abcb7e297ec5630ad060eb90abf7ebbefe59f8"
             }
           },
           "cmk_requirements_312_requests": {
@@ -4820,7 +4820,7 @@
             "attributes": {
               "dep_template": "@cmk_requirements//{name}:{target}",
               "environment": {
-                "CC": "gcc-13"
+                "CC": "gcc-14"
               },
               "extra_pip_args": [
                 "--index-url",
@@ -4981,7 +4981,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "azure-core==1.35.1     --hash=sha256:12da0c9e08e48e198f9158b56ddbe33b421477e1dc98c2e1c8f9e254d92c468b     --hash=sha256:435d05d6df0fff2f73fb3c15493bb4721ede14203f1ff1382aa6b6b2bdd7e562"
+              "requirement": "azure-core==1.36.0     --hash=sha256:22e5605e6d0bf1d229726af56d9e92bc37b6e726b141a18be0b4d424131741b7     --hash=sha256:fee9923a3a753e94a259563429f3644aaf05c486d45b1215d098115102d91d3b"
             }
           },
           "cmk_requirements_312_cachetools": {
@@ -6307,7 +6307,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "check-manifest==0.50     --hash=sha256:6ab3e3aa72a008da3314b432f4c768c9647b4d6d8032f9e1a4672a572118e48c     --hash=sha256:d300f9f292986aa1a30424af44eb45c5644e0a810e392e62d553b24bb3393494"
+              "requirement": "check-manifest==0.51     --hash=sha256:9801c7637675755a563f33e3c48ee59a59b37a7677297c05c910c16c5b9b6d67     --hash=sha256:f5f35ed561012fc2115bb070e42a748ac2e034cf8904ab4dfaae893859085ca4"
             }
           },
           "cmk_requirements_312_fakeredis": {
@@ -6792,7 +6792,7 @@
             "attributes": {
               "dep_template": "@cmk_requirements//{name}:{target}",
               "environment": {
-                "CC": "gcc-13"
+                "CC": "gcc-14"
               },
               "extra_pip_args": [
                 "--index-url",
@@ -7344,7 +7344,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "checkmk-dev-tools==1.0.0     --hash=sha256:5af8ae55cd1884d8dcdb9c43bd931eaaac6f5443f8228d58f8d780f5822ef26a     --hash=sha256:c19841516909b5c6c2336a1a0bc08b4632a0118c2c81e972cc9c604f187830d7"
+              "requirement": "checkmk-dev-tools==1.0.1     --hash=sha256:80ddb8d3fe0d1e59181f899b4fd1b242720f2dcd51c4dcae1e8386a1cfe7f46c     --hash=sha256:b323215bc6eecee26b6653ea80888a20681a963328d919f97eab8a2c86b2f422"
             }
           },
           "cmk_requirements_312_lazy_object_proxy": {
@@ -7599,7 +7599,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "grpc-google-iam-v1==0.14.2     --hash=sha256:a3171468459770907926d56a440b2bb643eec1d7ba215f48f3ecece42b4d8351     --hash=sha256:b3e1fc387a1a329e41672197d0ace9de22c78dd7d215048c4c78712073f7bd20"
+              "requirement": "grpc-google-iam-v1==0.14.3     --hash=sha256:7a7f697e017a067206a3dfef44e4c634a34d3dee135fe7d7a4613fe3e59217e6     --hash=sha256:879ac4ef33136c5491a6300e27575a9ec760f6cdf9a2518798c1b8977a5dc389"
             }
           },
           "cmk_requirements_312_hypothesis_graphql": {
@@ -8449,7 +8449,7 @@
               ],
               "python_interpreter_target": "@@rules_python~~python~python_3_12_11_host//:python",
               "repo": "cmk_requirements_312",
-              "requirement": "google-cloud-access-context-manager==0.2.3     --hash=sha256:525d0306433f4fecf7ba343211ba04f3f900f1283682abe14c0e3cda6c1ca73e     --hash=sha256:c2de80fba1190e4679d33626384d19e04a56ba3b4d461ed521e89209af63a209"
+              "requirement": "google-cloud-access-context-manager==0.3.0     --hash=sha256:5d15ad51547f06c281e35f16b4ffcb3e98bb2d898b01470f88b94edfb2eeb0a3     --hash=sha256:f3aa35c9225b7aaef85ecdacedcc1577789be8d458b7a41b6ad23b504786e5f9"
             }
           },
           "cmk_requirements_312_opentelemetry_instrumentation_redis": {

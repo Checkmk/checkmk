@@ -20,6 +20,7 @@ from cmk.bi.lib import (
     create_nested_schema_for_class,
     ReqString,
 )
+from cmk.bi.log import LOGGER
 from cmk.bi.node_generator import BINodeGenerator
 from cmk.bi.node_vis import BIAggregationVisualizationSchema
 from cmk.bi.rule import BIRule
@@ -83,6 +84,7 @@ class BIAggregation:
     def compile(self, bi_searcher: ABCBISearcher) -> BICompiledAggregation:
         compiled_branches: list[BICompiledRule] = []
         if not self.computation_options.disabled:
+            LOGGER.debug(f"Searching {self.id} with {self.node.search.metadata}")
             branches = self.node.compile({}, bi_searcher)
 
             # Each sub-branch represents one BI Aggregation with an unique name

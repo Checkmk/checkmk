@@ -11,8 +11,9 @@
 
 from __future__ import annotations
 
+import dataclasses
 from collections.abc import Mapping
-from typing import cast, override, TypedDict
+from typing import cast, override, Self, TypedDict
 
 from marshmallow import post_dump, post_load, pre_dump, pre_load
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[attr-defined]
@@ -34,6 +35,7 @@ from cmk.bi.lib import (
 )
 from cmk.bi.schema import Schema
 from cmk.bi.type_defs import (
+    HostChoice,
     HostConditions,
     HostServiceConditions,
     LabelGroupCondition,
@@ -41,6 +43,7 @@ from cmk.bi.type_defs import (
     ReferToChildWith,
     ReferToType,
     SearchKind,
+    SearchMetadata,
     SearchResult,
     SearchSerialized,
 )
@@ -197,6 +200,9 @@ class ServiceConditionsSchema(HostConditionsSchema):
 class BIEmptySearchSerialized(SearchSerialized): ...
 
 
+class EmptySearchMetadata(SearchMetadata): ...
+
+
 @bi_search_registry.register
 class BIEmptySearch(ABCBISearch):
     @override
@@ -219,6 +225,11 @@ class BIEmptySearch(ABCBISearch):
             "type": self.kind(),
         }
 
+    @property
+    @override
+    def metadata(self) -> EmptySearchMetadata:
+        return EmptySearchMetadata(kind="empty")
+
 
 class BIEmptySearchSchema(Schema):
     type = ReqConstant(BIEmptySearch.kind(), description="Empty search.")
@@ -237,6 +248,24 @@ class BIEmptySearchSchema(Schema):
 class BIHostSearchSerialized(SearchSerialized):
     conditions: HostConditions
     refer_to: ReferTo | str
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class HostSearchMetadata(SearchMetadata):
+    host_folder: str
+    host_choice: HostChoice
+    host_tags_count: int
+    host_label_groups_count: int
+
+    @classmethod
+    def build(cls, *, conditions: HostConditions) -> Self:
+        return cls(
+            kind="host_search",
+            host_folder=conditions["host_folder"],
+            host_choice=conditions["host_choice"],
+            host_tags_count=len(conditions["host_tags"]),
+            host_label_groups_count=len(conditions["host_label_groups"]),
+        )
 
 
 @bi_search_registry.register
@@ -263,6 +292,12 @@ class BIHostSearch(ABCBISearch):
         super().__init__(search_config)
         self.conditions = search_config["conditions"]
         self.refer_to = search_config["refer_to"]
+        self._metadata = HostSearchMetadata.build(conditions=self.conditions)
+
+    @property
+    @override
+    def metadata(self) -> HostSearchMetadata:
+        return self._metadata
 
     @override
     def execute(self, macros: Mapping[str, str], bi_searcher: ABCBISearcher) -> list[SearchResult]:
@@ -459,6 +494,28 @@ class BIServiceSearchSerialized(SearchSerialized):
     conditions: HostServiceConditions
 
 
+@dataclasses.dataclass(frozen=True, slots=True)
+class ServiceSearchMetadata(SearchMetadata):
+    host_folder: str
+    host_choice: HostChoice
+    service_regex: str
+    host_tags_count: int
+    host_label_groups_count: int
+    service_label_groups_count: int
+
+    @classmethod
+    def build(cls, *, conditions: HostServiceConditions) -> Self:
+        return cls(
+            kind="service_search",
+            host_folder=conditions["host_folder"],
+            host_choice=conditions["host_choice"],
+            service_regex=conditions["service_regex"],
+            host_tags_count=len(conditions["host_tags"]),
+            host_label_groups_count=len(conditions["host_label_groups"]),
+            service_label_groups_count=len(conditions["service_label_groups"]),
+        )
+
+
 @bi_search_registry.register
 class BIServiceSearch(ABCBISearch):
     @override
@@ -481,6 +538,12 @@ class BIServiceSearch(ABCBISearch):
     def __init__(self, search_config: BIServiceSearchSerialized) -> None:
         super().__init__(search_config)
         self.conditions = search_config["conditions"]
+        self._metadata = ServiceSearchMetadata.build(conditions=self.conditions)
+
+    @property
+    @override
+    def metadata(self) -> ServiceSearchMetadata:
+        return self._metadata
 
     @override
     def execute(self, macros: Mapping[str, str], bi_searcher: ABCBISearcher) -> list[SearchResult]:
@@ -530,6 +593,18 @@ class BIFixedArgumentsSearchSerialized(SearchSerialized):
     arguments: list[FixedArguments]
 
 
+@dataclasses.dataclass(frozen=True, slots=True)
+class FixedArgsSearchMetadata(SearchMetadata):
+    key_value_counts: dict[str, int]
+
+    @classmethod
+    def build(cls, *, arguments: list[FixedArguments]) -> Self:
+        return cls(
+            kind="fixed_arguments",
+            key_value_counts={item["key"]: len(item["values"]) for item in arguments},
+        )
+
+
 @bi_search_registry.register
 class BIFixedArgumentsSearch(ABCBISearch):
     @override
@@ -552,6 +627,12 @@ class BIFixedArgumentsSearch(ABCBISearch):
     def __init__(self, search_config: BIFixedArgumentsSearchSerialized) -> None:
         super().__init__(search_config)
         self.arguments = search_config["arguments"]
+        self._metadata = FixedArgsSearchMetadata.build(arguments=self.arguments)
+
+    @property
+    @override
+    def metadata(self) -> FixedArgsSearchMetadata:
+        return self._metadata
 
     @override
     def execute(self, macros: Mapping[str, str], bi_searcher: ABCBISearcher) -> list[SearchResult]:

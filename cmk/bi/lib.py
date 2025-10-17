@@ -43,6 +43,7 @@ from cmk.bi.type_defs import (
     HostServiceConditions,
     HostState,
     SearchKind,
+    SearchMetadata,
     SearchSerialized,
 )
 from cmk.ccc import plugin_registry
@@ -662,6 +663,11 @@ class ABCBISearch(ABC):
 
     @abstractmethod
     def serialize(self) -> SearchSerialized:
+        raise NotImplementedError()
+
+    @property
+    @abstractmethod
+    def metadata(self) -> SearchMetadata:
         raise NotImplementedError()
 
     @abstractmethod

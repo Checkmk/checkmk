@@ -645,6 +645,7 @@ builtin_views.update(
                 ColumnSpec(name="downtime_duration"),
                 ColumnSpec(name="downtime_recurring"),
                 ColumnSpec(name="downtime_comment"),
+                ColumnSpec(name="downtime_what"),
             ],
             "public": True,
             "sorters": [],

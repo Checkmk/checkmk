@@ -2,7 +2,7 @@ load("@aspect_rules_py//py:defs.bzl", "py_binary")
 load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:deb.bzl", "pkg_deb")
-load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@rules_uv//uv:venv.bzl", "create_venv")
@@ -176,6 +176,14 @@ pkg_files(
     prefix = "share/check_mk/agents/z_os",
 )
 
+pkg_files(
+    name = "cmk_libexec",
+    srcs = ["//cmk:libexec"],
+    attributes = pkg_attributes(mode = "0755"),
+    prefix = "lib/python3/cmk",
+    strip_prefix = strip_prefix.from_pkg(""),
+)
+
 [pkg_tar(
     name = "deps_install_" + edition,
     srcs = [
@@ -185,6 +193,7 @@ pkg_files(
         ":agents_sap",
         ":agents_scripts",
         ":agents_z_os",
+        ":cmk_libexec",
         ":diskspace_cleanup_plugin",
         ":omd_hooks",
         ":rest_api_spec",

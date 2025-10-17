@@ -34,27 +34,6 @@ endif
 
 ADDITIONAL_EXCLUDE=--exclude "BUILD.*" --exclude "BUILD" --exclude "OWNERS"
 
-EDITION_EXCLUDE=
-ifeq ($(EDITION),community)
-	EDITION_EXCLUDE += \
-	    --exclude "non-free" \
-	    --exclude "nonfree" \
-	    --exclude "enterprise" \
-	    --exclude "pro"
-endif
-ifneq ($(EDITION),ultimatemt)
-	EDITION_EXCLUDE += \
-	    --exclude "ultimatemt"
-endif
-ifeq ($(filter $(EDITION),ultimate cloud ultimatemt),)
-	EDITION_EXCLUDE += \
-	    --exclude "ultimate"
-endif
-ifeq ($(filter $(EDITION),cloud),)
-	EDITION_EXCLUDE += \
-	    --exclude "cloud"
-endif
-
 $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS)
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/agents
 	tar -c -C $(REPO_PATH)/agents \
@@ -77,18 +56,14 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS)
 	    windows/windows_files_hashes.txt \
 	    | tar -x -C $(CHECK_MK_INSTALL_DIR)/share/check_mk/agents/
 
-	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/python3
-	tar -c -C $(REPO_PATH) \
-	    $(CHECK_MK_TAROPTS) \
-	    $(EDITION_EXCLUDE) \
-	    $(ADDITIONAL_EXCLUDE) \
-	    cmk | tar -x -C $(CHECK_MK_INSTALL_DIR)/lib/python3
+	# install mk-oracle explicitly
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/plugins/oracle/agents/
+	cp $(REPO_PATH)/cmk/plugins/oracle/agents/mk-oracle.aix $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/plugins/oracle/agents/
+	cp $(REPO_PATH)/cmk/plugins/oracle/agents/mk-oracle.exe $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/plugins/oracle/agents/
+	cp $(REPO_PATH)/cmk/plugins/oracle/agents/mk-oracle.solaris $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/plugins/oracle/agents/
 
 	# legacy checks have been moved to checks/ in a dedicated step above.
 	rm -rf $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/legacy_checks
-
-	# cmk needs to be a namespace package (CMK-3979)
-	grep -Rl 'check_mk.make: do-not-deploy' $(CHECK_MK_INSTALL_DIR)/lib/python3/ | xargs rm
 
 $(CHECK_MK_INSTALL): $(CHECK_MK_INTERMEDIATE_INSTALL)
 	$(RSYNC) $(CHECK_MK_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/

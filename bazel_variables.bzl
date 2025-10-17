@@ -10,7 +10,8 @@ edition_python_deps = {
         "//non-free/packages/cmk-otel-collector",
         "//non-free/packages/cmk-update-agent",
     ],
-    "community": [],
+    "community": [
+    ],
     "pro": [
         "//non-free/packages/cmk-mknotifyd",
         "//non-free/packages/cmk-update-agent",
@@ -33,6 +34,7 @@ edition_python_deps = {
 
 edition_deps = {
     "cloud": [
+        "//cmk:cmk_tar_cloud",
         "//non-free/packages/cmc-protocols:pkg_tar",
         "//non-free/packages/cmk-core-helpers:pkg_tar",
         "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger-pkg_tar",
@@ -54,10 +56,12 @@ edition_deps = {
     # * jaeger should be added to all editions EXCEPT cloud - cloud has its own tracing collector
     # * nagvis should be added to all editions EXCEPT cloud - see CMK-14926
     "community": [
+        "//cmk:cmk_tar_community",
         "//omd/packages/jaeger:pkg_tar",
         "//omd/packages/nagvis:pkg_tar",
     ],
     "pro": [
+        "//cmk:cmk_tar_pro",
         "//non-free/packages/cmc-protocols:pkg_tar",
         "//non-free/packages/cmk-core-helpers:pkg_tar",
         "//non-free/packages/cmk-mknotifyd:pkg_tar",
@@ -75,6 +79,7 @@ edition_deps = {
         "//omd/packages/nagvis:pkg_tar",
     ],
     "ultimate": [
+        "//cmk:cmk_tar_ultimate",
         "//non-free/packages/cmc-protocols:pkg_tar",
         "//non-free/packages/cmk-core-helpers:pkg_tar",
         "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger-pkg_tar",
@@ -96,6 +101,7 @@ edition_deps = {
         "//omd/packages/nagvis:pkg_tar",
     ],
     "ultimatemt": [
+        "//cmk:cmk_tar_ultimatemt",
         "//non-free/packages/cmc-protocols:pkg_tar",
         "//non-free/packages/cmk-core-helpers:pkg_tar",
         "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger-pkg_tar",

@@ -6,6 +6,7 @@ load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//:bazel_variables.bzl", "edition_python_deps")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
+load("do_not_deploy.bzl", "DO_NOT_DEPLOY")
 
 # To update the list run the following command:
 # echo "LEGACY_CHECKS = [" > legacy_checks_list.bzl;for F in $(ls *.py); do echo $F | sed 's/\(.*\)\.py/    "\1",/' >> legacy_checks_list.bzl; done; echo "]" >> legacy_checks_list.bzl
@@ -119,6 +120,7 @@ COMMUNITY_PY = glob(
         "**/community/**/*.py",
     ],
     allow_empty = True,
+    exclude = DO_NOT_DEPLOY,
 )
 
 ULTIMATE_PY = glob(
@@ -126,6 +128,7 @@ ULTIMATE_PY = glob(
         "**/ultimate/**/*.py",
     ],
     allow_empty = True,
+    exclude = DO_NOT_DEPLOY,
 )
 
 PRO_PY = glob(
@@ -133,6 +136,7 @@ PRO_PY = glob(
         "**/pro/**/*.py",
     ],
     allow_empty = True,
+    exclude = DO_NOT_DEPLOY,
 )
 
 ULTIMATEMT_PY = glob(
@@ -140,6 +144,7 @@ ULTIMATEMT_PY = glob(
         "**/ultimatemt/**/*.py",
     ],
     allow_empty = True,
+    exclude = DO_NOT_DEPLOY,
 )
 
 CLOUD_PY = glob(
@@ -147,6 +152,7 @@ CLOUD_PY = glob(
         "**/cloud/**/*.py",
     ],
     allow_empty = True,
+    exclude = DO_NOT_DEPLOY,
 )
 
 filegroup(
@@ -165,6 +171,7 @@ filegroup(
             "**/libexec/*",
         ],
     ),
+    visibility = ["//omd:__subpackages__"],
 )
 
 filegroup(
@@ -247,7 +254,7 @@ py_library(
     srcs = glob(
         # Keep in sync with `REPO_PATCH_RULES` from `versioning.groovy`.
         include = ["**/*.py"],
-        exclude = COMMUNITY_PY + ULTIMATE_PY + PRO_PY + ULTIMATEMT_PY + CLOUD_PY,
+        exclude = COMMUNITY_PY + ULTIMATE_PY + PRO_PY + ULTIMATEMT_PY + CLOUD_PY + DO_NOT_DEPLOY + ["base/legacy_checks/*"],
     ),
     data = ["gui/wsgi/applications/index.wsgi"],
     imports = [".."],
@@ -320,7 +327,6 @@ py_wheel(
         "lib_cmk",
         "lib_cmk_community",
         ":checkman",
-        ":libexec",
         ":miscellaneous",
     ],
 )
@@ -334,6 +340,9 @@ py_wheel(
     visibility = ["//visibility:public"],
     deps = CMC_PROTO_DEPS + [
         "lib_cmk",
+        ":checkman",
+        ":libexec",
+        ":miscellaneous",
         "lib_cmk_" + edition,
     ],
 ) for edition in [
@@ -345,6 +354,7 @@ py_wheel(
 
 [package_wheel(
     name = "cmk_tar_" + edition,
+    prefix = "lib/python3",
     visibility = ["//visibility:public"],
     whl = "cmk_" + edition,
 ) for edition in [

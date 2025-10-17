@@ -8,6 +8,7 @@ import { computed } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
+import CmkButton from '@/components/CmkButton.vue'
 import CmkIconButton from '@/components/CmkIconButton.vue'
 
 import DashboardContent from '@/dashboard-wip/components/DashboardContent/DashboardContent.vue'
@@ -47,23 +48,21 @@ const containerStyle = computed(() => ({
   height: `${props.dimensions?.height || 100}px`
 }))
 
-const anchorBg = (pos: string) =>
-  props.anchorPosition === pos
-    ? 'var(--color-corporate-green-50, #1db954)'
-    : 'var(--ux-theme-5, rgb(255,255,255,0.06))'
+const anchorBackgroundColorClass = (pos: string) =>
+  props.anchorPosition === pos ? 'anchor-icon--selected' : 'anchor-icon--unselected'
 
 const getSizingText = (mode: SIZING_MODE | undefined, dimension: 'width' | 'height'): string => {
   if (!mode) {
-    return `manual ${dimension}`
+    return `Manual ${dimension}`
   }
   switch (mode) {
     case SIZING_MODE.MAX:
-      return `max ${dimension}`
+      return `Max ${dimension}`
     case SIZING_MODE.GROW:
-      return `auto ${dimension}`
+      return `Auto ${dimension}`
     case SIZING_MODE.MANUAL:
     default:
-      return `manual ${dimension}`
+      return `Manual ${dimension}`
   }
 }
 
@@ -82,7 +81,7 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
 <template>
   <div
     :id="`db-relative-grid-frame-${contentProps.widget_id}`"
-    class="db-relative-grid-frame"
+    class="db-relative-grid-frame db-widget-theme"
     :style="{ ...containerStyle }"
   >
     <div :style="{ position: 'relative', height: '100%', width: '100%', zIndex: zIndex }">
@@ -97,22 +96,22 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
         <!-- Resize handles -->
         <div
           v-if="isResizable && props.dimensionModes.width === SIZING_MODE.MANUAL"
-          class="resize-handle resize-left"
+          class="resize-handle resize-left resize"
           @pointerdown.stop.prevent="(e) => handleResize(e, 'left')"
         ></div>
         <div
           v-if="isResizable && props.dimensionModes.width === SIZING_MODE.MANUAL"
-          class="resize-handle resize-right"
+          class="resize-handle resize-right resize-right-border"
           @pointerdown.stop.prevent="(e) => handleResize(e, 'right')"
         ></div>
         <div
           v-if="isResizable && props.dimensionModes.height === SIZING_MODE.MANUAL"
-          class="resize-handle resize-top"
+          class="resize-handle resize-top resize-top-border"
           @pointerdown.stop.prevent="(e) => handleResize(e, 'top')"
         ></div>
         <div
           v-if="isResizable && props.dimensionModes.height === SIZING_MODE.MANUAL"
-          class="resize-handle resize-bottom"
+          class="resize-handle resize-bottom resize-bottom-border"
           @pointerdown.stop.prevent="(e) => handleResize(e, 'bottom')"
         ></div>
 
@@ -120,12 +119,14 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
         <template v-for="corner in anchorCorners" :key="corner.key">
           <div class="anchor-slot" :class="`anchor--${corner.key}`">
             <div
-              class="anchor-icon"
-              :style="{ background: anchorBg(corner.pos) }"
+              :class="`anchor-icon ${anchorBackgroundColorClass(corner.pos)}`"
               aria-hidden="true"
               @pointerdown.stop.prevent="onAnchorSelect(corner.pos)"
             />
-            <div v-if="props.anchorPosition === corner.pos" class="anchor-label anchor-label-pos">
+            <div
+              v-if="props.anchorPosition === corner.pos"
+              class="anchor-label anchor-label-pos anchor-label-color"
+            >
               {{ _t('Anchor') }}
             </div>
           </div>
@@ -135,41 +136,41 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
         <div class="db-centered-edit-controls">
           <!-- left column: sizing buttons -->
           <div v-if="isResizable" class="db-sizing-controls">
-            <button
-              class="db-centered-edit-controls-button sizing-button"
+            <CmkButton
+              class="sizing-button"
               :title="_t('Toggle sizing for width')"
               @click.stop="emit('toggle:sizing', 'width')"
             >
               {{ getSizingText(props.dimensionModes.width, 'width') }}
-            </button>
+            </CmkButton>
 
-            <button
-              class="db-centered-edit-controls-button sizing-button"
+            <CmkButton
+              class="sizing-button"
               :title="_t('Toggle sizing for height')"
               @click.stop="emit('toggle:sizing', 'height')"
             >
               {{ getSizingText(props.dimensionModes.height, 'height') }}
-            </button>
+            </CmkButton>
           </div>
 
           <!-- right row: icon buttons -->
           <div class="db-icon-controls">
             <CmkIconButton
-              class="db-centered-edit-controls-button"
+              class="db-centered-edit-controls-button control-button-color"
               name="widget-delete"
-              size="xxlarge"
+              size="xlarge"
               @click="emit('click:delete')"
             />
             <CmkIconButton
-              class="db-centered-edit-controls-button"
+              class="db-centered-edit-controls-button control-button-color"
               name="widget-clone"
-              size="xxlarge"
+              size="xlarge"
               @click="emit('click:clone')"
             />
             <CmkIconButton
-              class="db-centered-edit-controls-button"
+              class="db-centered-edit-controls-button control-button-color"
               name="widget-edit"
-              size="xxlarge"
+              size="xlarge"
               @click="emit('click:edit')"
             />
           </div>
@@ -188,8 +189,64 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
 /* Not applying the dimension variables because this is unique to the relative grid implementation */
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+[data-theme='facelift'] .db-widget-theme {
+  --resize-border-color: var(--color-corporate-green-80);
+
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+  .anchor-label-color {
+    color: var(--color-corporate-green-80);
+  }
+
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+  .anchor-icon--selected {
+    background-color: var(--color-corporate-green-50);
+    border: 1px solid var(--color-corporate-green-80);
+  }
+
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+  .anchor-icon--unselected {
+    background-color: var(--color-mid-grey-50);
+    border: 1px solid var(--color-mid-grey-50);
+  }
+
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+  .control-button-color {
+    filter: brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(7500%) hue-rotate(93deg)
+      brightness(0%) contrast(105%);
+  }
+}
+
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+[data-theme='modern-dark'] .db-widget-theme {
+  --resize-border-color: var(--color-corporate-green-50);
+
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+  .anchor-label-color {
+    color: var(--color-corporate-green-50);
+  }
+
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+  .anchor-icon--selected {
+    background-color: var(--color-corporate-green-50);
+    border: 1px solid var(--color-corporate-green-50);
+  }
+
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+  .anchor-icon--unselected {
+    background-color: var(--color-mid-grey-60);
+    border: 1px solid var(--color-mid-grey-60);
+  }
+
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+  .control-button-color {
+    filter: brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(7500%) hue-rotate(93deg)
+      brightness(105%) contrast(105%);
+  }
+}
+
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .db-relative-grid-frame {
-  --anchor-size: 16px;
+  --anchor-size: var(--dimension-5);
 
   position: absolute;
   display: flex;
@@ -216,7 +273,6 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
 .resize-handle {
   position: absolute;
   z-index: 1100;
-  background-color: rgb(from var(--color-corporate-green-80) r g b / 25%);
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
@@ -225,7 +281,7 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
   left: 0;
   width: 6px;
   height: 100%;
-  border-left: 2px dashed var(--color-corporate-green-50);
+  border-left: var(--dimension-1) dashed var(--resize-border-color);
   cursor: ew-resize;
 }
 
@@ -235,7 +291,7 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
   right: 0;
   width: 6px;
   height: 100%;
-  border-right: 2px dashed var(--color-corporate-green-50);
+  border-right: var(--dimension-1) dashed var(--resize-border-color);
   cursor: ew-resize;
 }
 
@@ -245,7 +301,7 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
   left: 0;
   width: 100%;
   height: 6px;
-  border-top: 2px dashed var(--color-corporate-green-50);
+  border-top: var(--dimension-1) dashed var(--resize-border-color);
   cursor: ns-resize;
 }
 
@@ -255,7 +311,7 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
   left: 0;
   width: 100%;
   height: 6px;
-  border-bottom: 2px dashed var(--color-corporate-green-50);
+  border-bottom: var(--dimension-1) dashed var(--resize-border-color);
   cursor: ns-resize;
 }
 
@@ -281,15 +337,14 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
   position: absolute;
   font-size: 12px;
   font-weight: 500;
-  color: var(--color-corporate-green-50);
   white-space: nowrap;
   pointer-events: none;
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .anchor--tl {
-  top: 6px;
-  left: 6px;
+  top: 0;
+  left: 0;
 
   /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   & .anchor-icon {
@@ -298,15 +353,15 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
 
   /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   & .anchor-label-pos {
-    top: 10px;
-    left: 24px;
+    top: 6px;
+    left: 12px;
   }
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .anchor--tr {
-  top: 6px;
-  right: 6px;
+  top: 0;
+  right: 0;
 
   /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   & .anchor-icon {
@@ -315,15 +370,15 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
 
   /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   & .anchor-label-pos {
-    top: 10px;
-    right: 24px;
+    top: 6px;
+    right: 12px;
   }
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .anchor--bl {
-  bottom: 6px;
-  left: 6px;
+  left: 0;
+  bottom: 0;
 
   /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   & .anchor-icon {
@@ -332,15 +387,15 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
 
   /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   & .anchor-label-pos {
-    bottom: 10px;
-    left: 24px;
+    bottom: 6px;
+    left: 12px;
   }
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .anchor--br {
-  bottom: 6px;
-  right: 6px;
+  bottom: 0;
+  right: 0;
 
   /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   & .anchor-icon {
@@ -349,8 +404,8 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
 
   /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   & .anchor-label-pos {
-    bottom: 10px;
-    right: 24px;
+    bottom: 6px;
+    right: 12px;
   }
 }
 
@@ -383,17 +438,14 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
 .db-icon-controls {
   display: flex;
   flex-direction: row;
-  gap: 8px;
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .db-centered-edit-controls-button {
-  padding: 8px 10px;
-  filter: brightness(0) saturate(100%) invert(100%) brightness(70%);
+  padding: 6px 8px;
   transition: filter 200ms ease;
   border: none;
-  background: transparent;
-  color: inherit;
+  background-color: transparent;
   font-weight: 600;
   font-size: 13px;
   cursor: pointer;
@@ -402,29 +454,14 @@ function onAnchorSelect(pos: ANCHOR_POSITION) {
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .db-centered-edit-controls-button:hover {
-  filter: brightness(0) saturate(100%) invert(100%) brightness(100%);
-  background-color: rgb(from var(--white) r g b / 3%);
+  filter: brightness(0) saturate(100%) invert(39%) sepia(98%) saturate(749%) hue-rotate(85deg)
+    brightness(91%) contrast(86%);
+  background-color: rgb(from var(--ux-theme-5) r g b / 20%);
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .sizing-button {
-  min-width: 100px;
-  text-transform: none;
-  letter-spacing: 0.2px;
-  background: rgb(from var(--white) r g b / 20%);
-  border: 1px solid rgb(from var(--white) r g b / 30%);
-  border-radius: 6px;
-  color: var(--font-color);
-  font-size: 13px;
-  font-weight: 500;
-  text-align: center;
-  padding: 6px 12px;
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.sizing-button:hover {
-  background: rgb(from var(--white) r g b / 20%);
-  border-color: rgb(from var(--white) r g b / 30%);
+  border: 1px solid var(--ux-theme-10);
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

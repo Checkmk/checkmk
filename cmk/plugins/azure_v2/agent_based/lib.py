@@ -86,7 +86,7 @@ class MetricData(NamedTuple):
     map_func: Callable[[float], float] | None = None
     notice_only: bool = False
     # Optionally, average the value over time
-    average_mins_param: str = ""
+    average_param: str = ""
     # Optionally, allow for monitoring a sustained threshold
     # The Callable looks weird but allows for pulling params out of deeply nested rulespecs
     # e.g. sustained_threshold_param=lambda params: params.get("time_based", {}).get("threshold")
@@ -352,8 +352,9 @@ def check_resource_metrics(
             )
 
         if (
-            metric_data.average_mins_param is not None
-            and (average_mins := params.get(metric_data.average_mins_param)) is not None
+            metric_data.average_param
+            and (average_config := params.get(metric_data.average_param)) is not None
+            and average_config[0] != "disable"
         ):
             # Even if we alert on the average, we still emit the instantaneous value as a metric.
             yield Metric(metric_data.metric_name, metric.value)
@@ -363,7 +364,7 @@ def check_resource_metrics(
                 metric_name,  # value_store key, we just use the metric name
                 now,
                 metric.value,
-                average_mins,
+                average_config[1] / 60,  # average_config = ("seconds", 300.0)
             )
         elif metric_data.is_rate:
             metric_name = metric_data.metric_name

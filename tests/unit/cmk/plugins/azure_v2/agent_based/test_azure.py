@@ -588,13 +588,13 @@ def test_check_resource_metric_average(get_value_store: Mock) -> None:
         "connections_failed",
         "Connections failed",
         str,
-        average_mins_param="average_mins",
+        average_param="average",
     )
 
     check_result = check_resource_metrics(
         PARSED_RESOURCE,
         {
-            "average_mins": 5,
+            "average": ("seconds", 60 * 5),
         },
         [metric_data],
     )

@@ -6,9 +6,11 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime
+from ipaddress import ip_address, ip_network
 from pathlib import Path
 from typing import Final, Literal
 
@@ -246,16 +248,34 @@ class SiteCA:
     def create_site_certificate(
         self,
         site_id: SiteId,
+        *,
+        additional_sans: Sequence[str],
         expiry: relativedelta = relativedelta(years=10),
         key_size: int = 4096,
     ) -> None:
         """Creates the key / certificate for the given Checkmk site"""
+
+        def _guess_san_type(entry: str) -> SAN:
+            with suppress(ValueError):
+                return SAN.ip_address(ip_address(entry))
+            with suppress(ValueError):
+                return SAN.ip_address(ip_network(entry, strict=False))
+            return SAN.dns_name(entry)
+
+        sans = SubjectAlternativeNames(
+            # builtin names
+            [
+                SAN.dns_name(site_id),  # historic reasons
+                SAN.checkmk_site(site_id),  # preferred
+            ]
+            # user configured
+            + [_guess_san_type(name) for name in additional_sans]
+        )
+
         new_cert, new_key = self.root_ca.issue_new_certificate(
             common_name=str(site_id),
             organization=f"Checkmk Site {site_id}",
-            subject_alternative_names=SubjectAlternativeNames(
-                [SAN.dns_name(site_id), SAN.checkmk_site(site_id)]
-            ),
+            subject_alternative_names=sans,
             expiry=expiry,
             key_size=key_size,
         )

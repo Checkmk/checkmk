@@ -29,6 +29,7 @@ def test_registered_config_domains() -> None:
         "multisite",
         "omd",
         "rrdcached",
+        "site-certificate",
     ]
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
@@ -186,6 +187,7 @@ def test_registered_configvars() -> None:
         "site_livestatus_tcp",
         "site_mkeventd",
         "site_piggyback_hub",
+        "site_subject_alternative_names",
         "slow_views_duration_threshold",
         "snmp_credentials",
         "socket_queue_len",

@@ -3,20 +3,29 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 from datetime import datetime, UTC
+from ipaddress import ip_address, ip_network
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+import pytest
 import time_machine
 from cryptography import x509
 from dateutil.relativedelta import relativedelta
 
 from cmk.ccc.site import SiteId
-from cmk.crypto.certificate import Certificate, CertificateWithPrivateKey
+from cmk.crypto.certificate import Certificate, CertificatePEM, CertificateWithPrivateKey
 from cmk.crypto.keys import PlaintextPrivateKeyPEM, PrivateKey
 from cmk.crypto.x509 import SAN, SubjectAlternativeNames, X509Name
-from cmk.utils.certs import CN_TEMPLATE, RootCA
+from cmk.utils.certs import CN_TEMPLATE, RootCA, SiteCA
+
+
+@pytest.fixture(name="ca_cert_files")
+def fixture_ca_cert_files(tmp_path: Path) -> Path:
+    ca_path = tmp_path / "test_certificates" / "ca.pem"
+    ca_path.parent.mkdir(parents=True, exist_ok=True)
+    ca_path.write_bytes(_CA)
+    return ca_path
 
 
 def _rsa_private_keys_equal(key_a: PrivateKey, key_b: PrivateKey) -> bool:
@@ -253,3 +262,26 @@ MC4CAQAwBQYDK2VwBCIEIK/fWo6sKC4PDigGfEntUd/o8KKs76Hsi03su4QhpZox
     assert daughter_cert.common_name == "peters_daughter", "subject CN is the daughter"
     assert daughter_cert.subject_alternative_names == alt_names, "subject alt name is the daughter"
     assert daughter_cert.issuer == peter_cert.subject, "issuer is peter"
+
+
+def test_site_certificate_alternative_names(ca_cert_files: Path) -> None:
+    site_ca = SiteCA.load(ca_cert_files.parent)
+
+    site_ca.create_site_certificate(
+        SiteId("test_site"),
+        additional_sans=["checkmk.testing.local", "::", "127.0.0.1/28"],
+        key_size=1024,
+    )
+
+    mixed_pem = site_ca.site_certificate_path(site_ca.cert_dir, SiteId("test_site")).read_bytes()
+    certificate = Certificate.load_pem(CertificatePEM(mixed_pem))
+    expected_sans = [
+        SAN.dns_name("test_site"),
+        SAN.dns_name("checkmk.testing.local"),
+        SAN.checkmk_site(SiteId("test_site")),
+        SAN.ip_address(ip_address("::")),
+        SAN.ip_address(ip_network("127.0.0.0/28")),
+    ]
+    assert sorted(certificate.subject_alternative_names or [], key=str) == sorted(
+        expected_sans, key=str
+    )

@@ -63,6 +63,6 @@ update_action_registry.register(
     CleanupDuplicateNotificationParameters(
         name="cleanup_duplicate_notification_parameters",
         title="Cleanup duplicate notification parameters",
-        sort_index=50,
+        sort_index=51,  # has to run after migrate_notifications.py
     )
 )

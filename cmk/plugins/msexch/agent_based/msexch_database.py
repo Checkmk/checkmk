@@ -2,6 +2,8 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import functools
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import TypedDict
@@ -38,26 +40,102 @@ class DbPerfData:
     log_latency_s: float | None = None
 
 
-def _delocalize_de_DE(value: str) -> str:
-    # replace localized thousands-/ decimal-separators
-    return value.replace(".", "").replace(",", ".")
+@functools.lru_cache(maxsize=16)
+def _get_compiled_pattern(decimal_separator: str) -> re.Pattern[str]:
+    escaped_decimal = re.escape(decimal_separator)
+    pattern = f"[^0-9{escaped_decimal}]+"
+    return re.compile(pattern)
+
+
+def _normalize_decimal(value: str, decimal_separator: str) -> str:
+    pattern = _get_compiled_pattern(decimal_separator)
+    normalized = re.sub(pattern, "", value)
+
+    if decimal_separator != ".":
+        normalized = normalized.replace(decimal_separator, ".")
+
+    return normalized
+
+
+def _normalize_decimal_positional(value: str) -> str:
+    if "," not in value:
+        return value  # No comma, assume it's already in correct format
+
+    last_comma_pos = value.rfind(",")
+    last_dot_pos = value.rfind(".")
+
+    if last_dot_pos > last_comma_pos:
+        # US format: "1,234.56" - comma=thousands, dot=decimal
+        pattern = _get_compiled_pattern(".")
+        return pattern.sub("", value)
+    else:
+        # European format: "1.234,56" - dot=thousands, comma=decimal
+        pattern = _get_compiled_pattern(",")
+        normalized = pattern.sub("", value)
+        return normalized.replace(",", ".")
+
+
+def _normalize_by_locale(value: str, locale: str) -> str | None:
+    locale_lower = locale.lower()
+    eu_prefixes = ["de-", "fr-", "it-", "es-", "nl-", "da-", "sv-", "no-", "fi-", "pt-"]
+    en_prefixes = ["en-"]
+
+    if any(locale_lower.startswith(prefix) for prefix in eu_prefixes):
+        pattern = _get_compiled_pattern(",")
+        normalized = pattern.sub("", value)
+        return normalized.replace(",", ".")
+    if any(locale_lower.startswith(prefix) for prefix in en_prefixes):
+        pattern = _get_compiled_pattern(".")
+        normalized = pattern.sub("", value)
+        return normalized
+    return None
+
+
+def _normalize_decimal_fallback(value: str, locale: str | None = None) -> str:
+    if not locale:
+        return _normalize_decimal_positional(value)
+
+    normalized = _normalize_by_locale(value, locale)
+    if normalized is not None:
+        return normalized
+
+    # Unknown locale
+    return _normalize_decimal_positional(value)
 
 
 Section = Mapping[str, DbPerfData]
+
+
+def get_meta_data(tbl: StringTable) -> tuple[str | None, str | None, int]:
+    locale = None
+    separator = None
+    offset = 0
+
+    for i, row in enumerate(tbl[:3]):
+        if len(row) >= 2:
+            key = row[0].strip('"')
+            value = row[1].strip()
+            match key:
+                case "locale":
+                    locale = value
+                    offset = i + 1
+                case "separator":
+                    separator = value
+                    offset = i + 1
+                case "Path":
+                    offset = i + 1
+                    break
+                case _:
+                    pass
+
+    return locale, separator, offset
 
 
 def parse_msexch_database(string_table: StringTable) -> Section:
     if not (string_table and string_table[0]):
         return {}
 
-    delocalize_func = None
-    offset = 0
-    if len(string_table[0]) > 1 and string_table[0][0] == "locale":
-        locale = string_table[0][1].strip()
-        offset = 1
-        delocalize_func = {
-            "de-DE": _delocalize_de_DE,
-        }.get(locale)
+    locale, decimal_separator, offset = get_meta_data(string_table)
 
     parsed: dict[str, dict[str, float]] = {}
     for row in string_table[offset:]:
@@ -68,15 +146,17 @@ def parse_msexch_database(string_table: StringTable) -> Section:
         __, obj, counter = row[0].rsplit("\\", 2)
 
         try:
-            var = _counter_to_var[counter]
+            var = _counter_to_var[counter.lower()]
         except KeyError:
             continue
 
         instance = obj.split("(", 1)[-1].split(")", 1)[0]
         value = row[1]
 
-        if delocalize_func is not None:
-            value = delocalize_func(value)
+        if decimal_separator:
+            value = _normalize_decimal(value, decimal_separator)
+        else:
+            value = _normalize_decimal_fallback(value, locale)
 
         # The entries for log verifier contain an ID as the last part
         # which changes upon reboot of the exchange server. Therefore,

@@ -19,7 +19,14 @@ def _install_packaged_rule_packs(paths: Paths, file_names: Iterable[Path]) -> No
     of file names. The file names without the file extension are used as
     the ID of the rule pack.
     """
-    rule_packs = list(load_rule_packs(paths))
+    rule_packs = list(
+        load_rule_packs(
+            paths,
+            # Do not bind proxies when loading rule packs here.
+            # We expect it should be possible, but let's not needlessly fail in case something else is awry.
+            apply_binding=False,
+        )
+    )
     rule_pack_ids = {rp["id"]: i for i, rp in enumerate(rule_packs)}
     ids = [fn.stem for fn in file_names]
     for id_ in ids:
@@ -39,7 +46,9 @@ def _uninstall_packaged_rule_packs(paths: Paths, file_names: Iterable[Path]) -> 
     """
     affected_ids = {fn.stem for fn in file_names}
     save_rule_packs(
-        (rp for rp in load_rule_packs(paths) if rp["id"] not in affected_ids),
+        # Do not try to bind the proxies.
+        # We're calling this to drop the onces we can't bind anymore.
+        (rp for rp in load_rule_packs(paths, apply_binding=False) if rp["id"] not in affected_ids),
         pretty_print=False,
         path=paths.rule_pack_dir.value,
     )
@@ -56,7 +65,14 @@ def _release_packaged_rule_packs(paths: Paths, file_names: Iterable[Path]) -> No
         2. Upon release of a MKP package with locally modified rule packs the
            modified rule pack updates the exported version.
     """
-    rule_packs = list(load_rule_packs(paths))
+    rule_packs = list(
+        load_rule_packs(
+            paths,
+            # Do not bind proxies when loading rule packs here.
+            # We expect it should be possible, but let's not needlessly fail in case something else is awry.
+            apply_binding=False,
+        )
+    )
     rule_pack_ids = [rp["id"] for rp in rule_packs]
     affected_ids = [fn.stem for fn in file_names]
 

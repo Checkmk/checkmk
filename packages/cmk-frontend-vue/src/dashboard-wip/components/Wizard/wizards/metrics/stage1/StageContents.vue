@@ -85,14 +85,12 @@ const combinedMetricHandler = defineModel<UseCombinedMetric>('combinedMetricHand
 
 const enabledWidgets = useSelectGraphTypes(hostFilterType, serviceFilterType, metricType)
 const availableWidgets: WidgetItemList = [
-  { id: Graph.SINGLE_GRAPH, label: _t('Single graph'), icon: 'graph' },
+  { id: Graph.ANY_GRAPH, label: _t('Graph'), icon: 'graph' },
   { id: Graph.GAUGE, label: _t('Gauge'), icon: 'gauge' },
   { id: Graph.SINGLE_METRIC, label: _t('Single metric'), icon: 'single-metric' },
   { id: Graph.BARPLOT, label: _t('Barplot'), icon: 'barplot' },
   { id: Graph.SCATTERPLOT, label: _t('Scatterplot'), icon: 'scatterplot' },
-  { id: Graph.TOP_LIST, label: _t('Top list'), icon: 'top-list' },
-  { id: Graph.PERFORMANCE_GRAPH, label: _t('Performance graph'), icon: 'graph' },
-  { id: Graph.COMBINED_GRAPH, label: _t('Combined graph'), icon: 'graph' }
+  { id: Graph.TOP_LIST, label: _t('Top list'), icon: 'top-list' }
 ]
 
 // Filters

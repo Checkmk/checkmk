@@ -17,7 +17,7 @@ import StepCardsRow from '@/welcome/components/steps/components/StepCardsRow.vue
 import StepHeading from '@/welcome/components/steps/components/StepHeading.vue'
 import StepParagraph from '@/welcome/components/steps/components/StepParagraph.vue'
 
-import FirstHostSlideout from '../cse/FirstHostSlideout.vue'
+import FirstHostSlideout from '../first-host/FirstHostSlideout.vue'
 
 const { _t } = usei18n()
 

@@ -45,7 +45,7 @@ def test_main_app_structure() -> None:
     assert len(main_app_.routes) == 2
 
     assert isinstance(mount := main_app_.routes[0], Mount)
-    assert mount.path == "/NO_SITE/agent-receiver/relays"
+    assert mount.path == "/NO_SITE/relays"
 
     assert isinstance(mount := main_app_.routes[1], Mount)
     assert mount.path == "/NO_SITE/agent-receiver"

@@ -32,7 +32,7 @@ class AgentReceiverClient:
 
     def register_relay(self, name: str) -> httpx.Response:
         return self.client.post(
-            f"/{self.site_name}/agent-receiver/relays/",
+            f"/{self.site_name}/relays/",
             json={
                 "relay_name": name,
                 "csr": "CSR for Relay A",
@@ -41,12 +41,12 @@ class AgentReceiverClient:
 
     def unregister_relay(self, relay_id: str) -> httpx.Response:
         return self.client.delete(
-            f"/{self.site_name}/agent-receiver/relays/{relay_id}",
+            f"/{self.site_name}/relays/{relay_id}",
         )
 
     def push_task(self, *, relay_id: str, spec: TaskCreateRequestSpec) -> httpx.Response:
         return self.client.post(
-            f"/{self.site_name}/agent-receiver/relays/{relay_id}/tasks",
+            f"/{self.site_name}/relays/{relay_id}/tasks",
             json=TaskCreateRequest(
                 spec=spec,
             ).model_dump(),
@@ -57,7 +57,7 @@ class AgentReceiverClient:
         if status:
             params = {"status": status}
         return self.client.get(
-            f"/{self.site_name}/agent-receiver/relays/{relay_id}/tasks",
+            f"/{self.site_name}/relays/{relay_id}/tasks",
             params=params,
         )
 
@@ -65,7 +65,7 @@ class AgentReceiverClient:
         self, *, relay_id: str, task_id: str, result_type: str, result_payload: str
     ) -> httpx.Response:
         return self.client.patch(
-            f"/{self.site_name}/agent-receiver/relays/{relay_id}/tasks/{task_id}",
+            f"/{self.site_name}/relays/{relay_id}/tasks/{task_id}",
             json={
                 "result_type": result_type,
                 "result_payload": result_payload,
@@ -73,4 +73,4 @@ class AgentReceiverClient:
         )
 
     def activate_config(self) -> httpx.Response:
-        return self.client.post(f"/{self.site_name}/agent-receiver/relays/activate-config")
+        return self.client.post(f"/{self.site_name}/relays/activate-config")

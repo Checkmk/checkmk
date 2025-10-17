@@ -1584,7 +1584,7 @@ class RelayAPI(BaseAPI):
         response = self.session.get("/domain-types/internal/actions/discover-receiver/invoke")
         port = int(response.text)
 
-        return f"https://{self.session.host}:{port}/{self.session.site}/agent-receiver/relays/"
+        return f"https://{self.session.host}:{port}/{self.session.site}/relays/"
 
     def create(
         self,

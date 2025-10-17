@@ -36,6 +36,6 @@ def main_app() -> FastAPI:
     main_app_.add_middleware(B3RequestIDMiddleware)
 
     # Mount the sub-app
-    main_app_.mount(f"/{config.site_name}/agent-receiver/relays", create_relay_app())
+    main_app_.mount(f"/{config.site_name}/relays", create_relay_app())
     main_app_.mount(f"/{config.site_name}/agent-receiver", create_sub_app())
     return main_app_

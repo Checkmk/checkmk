@@ -111,7 +111,7 @@ def cmk_page(
 # https://docs.pytest.org/en/latest/example/simple.html#making-test-result-information-available-in-fixtures
 # NOTE: hookimpl is poorly typed, so the decorator effectively removes the types from the decorated function!
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
-def pytest_runtest_makereport(item: t.Any) -> t.Generator[None, t.Any, None]:
+def pytest_runtest_makereport(item: t.Any) -> t.Generator[None, t.Any]:
     """Set a report attribute for each phase of a pytest test execution call.
 
     Phases can be "setup", "call", "teardown.

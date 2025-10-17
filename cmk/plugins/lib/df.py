@@ -378,7 +378,7 @@ def check_inodes(
     levels: Mapping[str, Any],
     inodes_total: float,
     inodes_avail: float,
-) -> Generator[Metric | Result, None, None]:
+) -> Generator[Metric | Result]:
     """
     >>> levels = {
     ...     "inodes_levels": (10, 5),
@@ -506,7 +506,7 @@ def check_filesystem_levels(
     used_space: float,
     params: Mapping[str, Any],
     show_levels: Literal["onmagic", "always", "onproblem"] = "onproblem",
-) -> Generator[Result | Metric, None, None]:
+) -> Generator[Result | Metric]:
     # Get warning and critical levels already with 'magic factor' applied
     filesystem_levels = get_filesystem_levels(filesystem_size / 1024.0, params)
     warn_mb, crit_mb = (

@@ -430,7 +430,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         """
         return sites.query(self.compile())
 
-    def iterate(self, sites: MultiSiteConnection) -> Generator[ResultRow, None, None]:
+    def iterate(self, sites: MultiSiteConnection) -> Generator[ResultRow]:
         """Return a generator of the result.
 
         Args:
@@ -768,7 +768,7 @@ def _parse_line(
 @contextmanager
 def detailed_connection(
     connection: MultiSiteConnection,
-) -> Generator[MultiSiteConnection, None, None]:
+) -> Generator[MultiSiteConnection]:
     prev = connection.prepend_site
     connection.set_prepend_site(True)
     try:

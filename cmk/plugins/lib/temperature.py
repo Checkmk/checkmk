@@ -177,7 +177,7 @@ def _check_trend(
     crit_temp: float | None,
     crit_temp_lower: float | None,
     unique_name: str,
-) -> Generator[Result, None, None]:
+) -> Generator[Result]:
     trend_range_min = params["period"]
     this_time = time.time()
 

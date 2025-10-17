@@ -22,7 +22,7 @@ def fixture_transaction_ids() -> list[str]:
 
 
 @pytest.fixture(name="tm")
-def fixture_tm(transaction_ids: list[str]) -> Generator[TransactionManager, None, None]:
+def fixture_tm(transaction_ids: list[str]) -> Generator[TransactionManager]:
     def transids(lock=False):
         return transaction_ids
 

@@ -169,7 +169,7 @@ def check_cmk_site_statistics(
     item: str,
     section_cmk_site_statistics: CMKSiteStatisticsSection | None,
     section_livestatus_status: LivestatusSection | None,
-) -> Generator[Metric | Result, None, None]:
+) -> Generator[Metric | Result]:
     if not section_cmk_site_statistics or item not in section_cmk_site_statistics:
         return
     host_stats, service_stats = section_cmk_site_statistics[item]

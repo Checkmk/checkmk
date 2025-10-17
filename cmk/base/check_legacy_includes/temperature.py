@@ -458,7 +458,7 @@ def check_temperature(
 def check_temperature_list(
     sensorlist: Sequence[tuple[str, Number, CheckTempKwargs]],
     params: TempParamDict,
-) -> Generator[tuple[int, str, list[tuple[str, Number]]], None, None]:
+) -> Generator[tuple[int, str, list[tuple[str, Number]]]]:
     output_unit = params.get("output_unit", "c")
 
     if not sensorlist:

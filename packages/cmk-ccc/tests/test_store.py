@@ -360,7 +360,7 @@ def test_release_lock_already_closed(test_file: Path, path_type: type[str] | typ
     assert store.have_lock(path) is False
 
 
-_Files = Generator[Path, None, None]
+_Files = Generator[Path]
 
 
 @pytest.fixture(name="few_files")

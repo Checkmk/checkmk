@@ -72,7 +72,7 @@ class Parser(Generic[_Section]):
             },
         )
 
-    def _parse(self, string_table: StringTable) -> Generator[SectionItem, None, None]:
+    def _parse(self, string_table: StringTable) -> Generator[SectionItem]:
         for (word,) in string_table:
             parsed_word = json.loads(word)
             if isinstance(parsed_word, dict) and "error" in parsed_word:

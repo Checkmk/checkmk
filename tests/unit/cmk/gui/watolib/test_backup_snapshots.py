@@ -13,7 +13,7 @@ from cmk.ccc.user import UserId
 from cmk.gui.watolib import backup_snapshots
 
 
-def _snapshot_files() -> Generator[pathlib.Path, None, None]:
+def _snapshot_files() -> Generator[pathlib.Path]:
     yield from pathlib.Path(backup_snapshots.snapshot_dir).glob("wato-snapshot*.tar")
 
 

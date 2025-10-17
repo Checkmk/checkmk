@@ -223,7 +223,7 @@ def check_veritas_vcs_subsection(
     item: str,
     params: Mapping[str, Any],
     subsection: SubSection,
-) -> Generator[Result, None, None]:
+) -> Generator[Result]:
     list_vcs_tuples = subsection.get(item)
     if list_vcs_tuples is None:
         return  # vanished

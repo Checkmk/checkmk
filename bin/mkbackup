@@ -90,7 +90,7 @@ def _ensure_lock_file(lock_file_path: Path) -> None:
 
 
 @contextmanager
-def acquire_single_lock(lock_file_path: Path) -> Generator[IO[bytes], None, None]:
+def acquire_single_lock(lock_file_path: Path) -> Generator[IO[bytes]]:
     """Ensure only one "mkbackup" instance can run on each system at a time.
     We are using multiple locks:
     * one lock per site, which gets restored / backup

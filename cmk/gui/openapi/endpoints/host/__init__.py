@@ -219,8 +219,8 @@ def contains_inventory_column(columns: Sequence[str]) -> bool:
 
 
 def fixup_inventory_column(
-    result: Generator[ResultRow, None, None],
-) -> Generator[ResultRow, None, None]:
+    result: Generator[ResultRow],
+) -> Generator[ResultRow]:
     for row in result:
         if inventory_data := row.get(INVENTORY_COLUMN):
             copy = dict(row)

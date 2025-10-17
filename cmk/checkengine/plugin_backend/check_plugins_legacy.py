@@ -211,7 +211,7 @@ def _create_new_result(
     yield from _create_new_metric(legacy_metrics)
 
 
-def _create_new_metric(legacy_metrics: tuple | list = ()) -> Generator[Metric, None, None]:
+def _create_new_metric(legacy_metrics: tuple | list = ()) -> Generator[Metric]:
     for metric in legacy_metrics:
         if len(metric) < 2:
             continue

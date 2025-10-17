@@ -65,7 +65,7 @@ def check_levels(
     label: str | None = None,
     boundaries: tuple[float | None, float | None] | None = None,
     notice_only: bool = False,
-) -> Generator[Result, None, None]:
+) -> Generator[Result]:
     pass
 
 
@@ -80,7 +80,7 @@ def check_levels(
     label: str | None = None,
     boundaries: tuple[float | None, float | None] | None = None,
     notice_only: bool = False,
-) -> Generator[Result | Metric, None, None]:
+) -> Generator[Result | Metric]:
     pass
 
 
@@ -94,7 +94,7 @@ def check_levels(
     label: str | None = None,
     boundaries: tuple[float | None, float | None] | None = None,
     notice_only: bool = False,
-) -> Generator[Result | Metric, None, None]:
+) -> Generator[Result | Metric]:
     """Generic function for checking a value against levels.
 
     Args:
@@ -154,7 +154,7 @@ def check_levels_predictive(
     render_func: Callable[[float], str] | None = None,
     label: str | None = None,
     boundaries: tuple[float | None, float | None] | None = None,
-) -> Generator[Result | Metric, None, None]:
+) -> Generator[Result | Metric]:
     """Generic function for checking a value against levels.
 
     Args:

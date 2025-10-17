@@ -20,7 +20,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.pulse_secure import lib as pulse_secure
 
 Section = Mapping[str, int]
-CheckOutput = Generator[Result | Metric, None, None]
+CheckOutput = Generator[Result | Metric]
 
 
 def parse_pulse_secure_users(string_table: Sequence[StringTable]) -> Section | None:
@@ -47,7 +47,7 @@ snmp_section_pulse_secure_users = SNMPSection(
 )
 
 
-def discover_pulse_secure_users(section: Section) -> Generator[Service, None, None]:
+def discover_pulse_secure_users(section: Section) -> Generator[Service]:
     if section:
         yield Service()
 

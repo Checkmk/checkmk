@@ -542,7 +542,7 @@ class MessageForwarder:
         return LogwatchForwardedResult(num_forwarded=len(syslog_messages))
 
     @staticmethod
-    def _split_file_messages(file_messages: Generator[str, None, None]) -> list[list[str]]:
+    def _split_file_messages(file_messages: Generator[str]) -> list[list[str]]:
         result: list[list[str]] = [[]]
         curr_file_index = 0
         curr_character_count = 0

@@ -146,7 +146,7 @@ def iter_shared_files(conn, hostname, share_name, pattern, subdir="", recursive=
 
 def get_all_shared_files(
     conn: SMBConnection, hostname: str, patterns: list[str], recursive: bool
-) -> Generator[tuple[str, set[File]], None, None]:
+) -> Generator[tuple[str, set[File]]]:
     share_names = [s.name.lower() for s in conn.listShares()]
     for pattern_string in patterns:
         pattern = pattern_string.strip("\\").split("\\")
@@ -168,7 +168,7 @@ def get_all_shared_files(
         )
 
 
-def write_section(all_files: Generator[tuple[str, set[File]], None, None]) -> None:
+def write_section(all_files: Generator[tuple[str, set[File]]]) -> None:
     with SectionWriter("fileinfo", separator="|") as writer:
         now = datetime.now(tz=UTC)
         writer.append(int(datetime.timestamp(now)))
@@ -190,7 +190,7 @@ def write_section(all_files: Generator[tuple[str, set[File]], None, None]) -> No
 @contextmanager
 def connect(
     username: str, password: str, remote_name: str, ip_address: str
-) -> Generator[SMBConnection, None, None]:
+) -> Generator[SMBConnection]:
     logging.debug("Creating SMB connection")
     conn = SMBConnection(username, password, socket.gethostname(), remote_name, is_direct_tcp=True)
 

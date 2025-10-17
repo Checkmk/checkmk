@@ -65,7 +65,7 @@ def _requires_item(service_name: str) -> bool:
 
 
 def _filter_discovery(
-    generator: Callable[..., Generator[Any, None, None]],
+    generator: Callable[..., Generator[Any]],
     requires_item: bool,
 ) -> DiscoveryFunction:
     """Only let Services through
@@ -86,7 +86,7 @@ def _filter_discovery(
 
 
 def _filter_check(
-    generator: Callable[..., Generator[Any, None, None]],
+    generator: Callable[..., Generator[Any]],
 ) -> CheckFunction:
     """Only let Result, Metric and IgnoreResults through
 

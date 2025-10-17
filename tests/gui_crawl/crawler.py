@@ -719,7 +719,7 @@ class XssCrawler(Crawler):
         return False
 
 
-def mutate_url_with_xss_payload(url: Url, payload: str) -> Generator[Url, None, None]:
+def mutate_url_with_xss_payload(url: Url, payload: str) -> Generator[Url]:
     """For each query parameter in `url`, produce a URL where that parameter is set to `payload`
 
     >>> urls = mutate_url_with_xss_payload(Url("example.com?foo=bar&empty="), "PAYLOAD")

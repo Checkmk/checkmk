@@ -185,7 +185,7 @@ def get_service_labels_from_resource_tags(tags: Mapping[str, str]) -> Sequence[S
 
 def iter_resource_attributes(
     resource: Resource, include_keys: tuple[str, ...] = ("location",)
-) -> Generator[tuple[str, str | None], None, None]:
+) -> Generator[tuple[str, str | None]]:
     def capitalize(string: str) -> str:
         return string[0].upper() + string[1:]
 

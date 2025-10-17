@@ -41,7 +41,7 @@ InventoryResult = _Iterable[_Attributes | _TableRow]
 StringTable = _List[_List[str]]
 StringByteTable = _List[_List[str | _List[int]]]
 
-HostLabelGenerator = _Generator[_HostLabel, None, None]
+HostLabelGenerator = _Generator[_HostLabel]
 
 
 __all__ = [

@@ -37,21 +37,19 @@ def test_bakery_plugin_name() -> None:
     assert re.search("Invalid character.*ü", str(exc_info_value.value))
 
 
-def right_files_function() -> Generator[Plugin, None, None]:
+def right_files_function() -> Generator[Plugin]:
     yield Plugin(base_os=OS.LINUX, source=Path("dummy"))
 
 
-def right_scriptlets_function() -> Generator[Scriptlet, None, None]:
+def right_scriptlets_function() -> Generator[Scriptlet]:
     yield Scriptlet(step=RpmStep.POST, lines=[])
 
 
-def right_windows_config_function() -> Generator[WindowsGlobalConfigEntry, None, None]:
+def right_windows_config_function() -> Generator[WindowsGlobalConfigEntry]:
     yield WindowsGlobalConfigEntry(name="dummy", content=False)
 
 
-def wrong_artifact_function() -> Generator[
-    Plugin | Scriptlet | WindowsGlobalConfigEntry, None, None
-]:
+def wrong_artifact_function() -> Generator[Plugin | Scriptlet | WindowsGlobalConfigEntry]:
     yield Plugin(base_os=OS.LINUX, source=Path("dummy"))
     yield Scriptlet(step=RpmStep.POST, lines=[])
     yield WindowsGlobalConfigEntry(name="dummy", content=False)

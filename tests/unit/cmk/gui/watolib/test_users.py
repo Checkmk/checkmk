@@ -42,7 +42,7 @@ def _reset_site_changes(sites: list[SiteId]) -> None:
 
 
 @pytest.fixture(name="sites")
-def setup_site_changes(monkeypatch: pytest.MonkeyPatch) -> Generator[list[SiteId], None, None]:
+def setup_site_changes(monkeypatch: pytest.MonkeyPatch) -> Generator[list[SiteId]]:
     def extend_site_context(m: pytest.MonkeyPatch) -> None:
         m.setattr(
             active_config,

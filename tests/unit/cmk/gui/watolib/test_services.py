@@ -137,7 +137,7 @@ def fixture_sample_host(
     request_context: None,
     with_admin_login: UserId,
     sample_host_name: HostName,
-) -> Generator[Host, None, None]:
+) -> Generator[Host]:
     hostname = sample_host_name
     root_folder = folder_tree().root_folder()
     root_folder.create_hosts([(hostname, {}, None)], pprint_value=False, use_git=False)

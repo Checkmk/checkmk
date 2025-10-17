@@ -153,7 +153,7 @@ def _detect_attribute(attributes: Choices, header: str) -> str:
 def _host_rows_to_bulk(
     iterator: typing.Iterator[dict[str, str]],
     host_attributes: Mapping[str, ABCHostAttribute],
-) -> typing.Generator[ImportTuple, None, None]:
+) -> typing.Generator[ImportTuple]:
     """Here we transform each row into a tuple of HostName and HostAttributes and None.
 
     This format is directly compatible with Folder().create_hosts(...)

@@ -23,7 +23,7 @@ from .utils import (
 )
 
 T = TypeVar("T")
-YieldFixture = Generator[T, None, None]
+YieldFixture = Generator[T]
 
 
 check_os()

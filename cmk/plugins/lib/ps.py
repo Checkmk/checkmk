@@ -570,7 +570,7 @@ def discover_ps(
 def unused_value_remover(
     value_store: MutableMapping[str, Any],
     key: str,
-) -> Generator[dict[str, tuple[float, float]], None, None]:
+) -> Generator[dict[str, tuple[float, float]]]:
     """Remove all values that remain unchanged
 
     This plug-in uses the process IDs in the keys to persist values.

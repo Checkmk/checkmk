@@ -79,9 +79,9 @@ LegacyResult = (
 
 _CheckFunctionLegacy = Callable[
     ...,
-    None | LegacyResult | Iterable[LegacyResult] | Generator[LegacyResult, None, None],
+    None | LegacyResult | Iterable[LegacyResult] | Generator[LegacyResult],
 ]
-_CheckFunctionV2Compliant = Callable[..., Generator[Result | Metric | IgnoreResults, None, None]]
+_CheckFunctionV2Compliant = Callable[..., Generator[Result | Metric | IgnoreResults]]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -102,7 +102,7 @@ STATE_MARKERS = ("", "(!)", "(!!)", "(?)")
 
 _Levels = tuple  # Has length 2 or 4
 
-LegacyCheckResult = Generator[LegacyResult, None, None]
+LegacyCheckResult = Generator[LegacyResult]
 
 LegacyService = tuple[str | None, Mapping[str, object]]
 LegacyDiscoveryResult = Iterable[LegacyService]

@@ -116,7 +116,7 @@ def make_application(
 
 
 @asynccontextmanager
-async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+async def _lifespan(app: FastAPI) -> AsyncGenerator[None]:
     dependencies: _ApplicationDependencies = app.state.dependencies
 
     # Continue on error. Either the reloader can fix it, or we will raise in the automation endpoint.

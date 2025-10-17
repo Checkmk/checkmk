@@ -27,7 +27,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 
 
 @pytest.fixture(name="test_site", scope="session")
-def get_site(request: pytest.FixtureRequest) -> Generator[Site, None, None]:
+def get_site(request: pytest.FixtureRequest) -> Generator[Site]:
     with exit_pytest_on_exceptions(
         exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
     ):
@@ -35,7 +35,7 @@ def get_site(request: pytest.FixtureRequest) -> Generator[Site, None, None]:
 
 
 @pytest.fixture(name="test_crawler", scope="session")
-def crawler(test_site: Site, pytestconfig: pytest.Config) -> Generator[Crawler, None, None]:
+def crawler(test_site: Site, pytestconfig: pytest.Config) -> Generator[Crawler]:
     xss_crawl = os.environ.get("XSS_CRAWL", "0") == "1"
     crawler_type = XssCrawler if xss_crawl else Crawler
     test_crawler = crawler_type(

@@ -59,7 +59,7 @@ class WlanController(NamedTuple):
     last_backup: datetime | None
 
 
-def get_controllers(controller_data: dict[str, Any]) -> Generator[dict[str, Any], None, None]:
+def get_controllers(controller_data: dict[str, Any]) -> Generator[dict[str, Any]]:
     for entity in controller_data["queryResponse"]["entity"]:
         dto_type = entity["@dtoType"]
         yield entity[dto_type]

@@ -143,7 +143,7 @@ def check_windows_services_single(
     item: str,
     params: Mapping[str, Any],
     section: Section,
-) -> Generator[Result, None, None]:
+) -> Generator[Result]:
     """
     >>> for result in check_windows_services_single(
     ...    item="GoodService",
@@ -185,7 +185,7 @@ def check_windows_services(
     item: str,
     params: Mapping[str, Any],
     section: Section,
-) -> Generator[Result, None, None]:
+) -> Generator[Result]:
     results = list(check_windows_services_single(item, params, section))
     if results:
         yield from results

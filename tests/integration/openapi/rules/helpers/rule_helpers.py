@@ -136,7 +136,7 @@ def managed_rule_with_levels(
     comment: str,
     expected_checks: list[str] | None = None,
     rule_type: Literal["predictive_levels", "fixed_levels"] = "predictive_levels",
-) -> Generator[str, None, None]:
+) -> Generator[str]:
     """Automatically handles rule creation, validation, and cleanup."""
     rule_id = create_and_verify_rule_with_levels(
         site, rule_value, comment, expected_checks, rule_type

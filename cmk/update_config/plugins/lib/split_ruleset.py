@@ -103,7 +103,7 @@ class RulesetSplitMigration:
                     ),
                 )
 
-    def __iter__(self) -> Generator[MigrationError, None, None]:
+    def __iter__(self) -> Generator[MigrationError]:
         try:
             old_ruleset = self.all_rulesets.get(self.old_ruleset_name)
         except KeyError:

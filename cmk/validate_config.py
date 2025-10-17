@@ -120,7 +120,7 @@ def validate_timeperiods(time_periods: TimeperiodSpecs) -> None:
 
 def _validate_folder_ruleset_rules(
     folder: Folder, rule_validator: TypeAdapter
-) -> Generator[tuple[str, str, bool], None, None]:
+) -> Generator[tuple[str, str, bool]]:
     """Validate the rulesets of each folder recursively
 
     Folders are allowed to have overlapping names so display the folder path

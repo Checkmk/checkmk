@@ -12,12 +12,12 @@ from itertools import chain
 from pathlib import Path
 from types import ModuleType
 
-PluginFailures = Generator[tuple[str, BaseException], None, None]
+PluginFailures = Generator[tuple[str, BaseException]]
 
 
 def load_plugins(
     package_name: str,
-) -> Generator[tuple[str, ModuleType | BaseException], None, None]:
+) -> Generator[tuple[str, ModuleType | BaseException]]:
     """Load all specified packages
 
     This function accepts a package name in Pythons dotted syntax (e.g. requests.exceptions).

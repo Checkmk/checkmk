@@ -34,9 +34,7 @@ class InternalAuth(httpx.Auth):
         self._cached_token = None
 
     @override
-    def sync_auth_flow(
-        self, request: httpx.Request
-    ) -> Generator[httpx.Request, httpx.Response, None]:
+    def sync_auth_flow(self, request: httpx.Request) -> Generator[httpx.Request, httpx.Response]:
         request.headers["Authorization"] = self._get_auth_header_sync()
         response = yield request
 
@@ -66,7 +64,7 @@ class UserAuth(httpx.Auth):
         self.secret = secret
 
     @override
-    def auth_flow(self, request: httpx.Request) -> Generator[httpx.Request, httpx.Response, None]:
+    def auth_flow(self, request: httpx.Request) -> Generator[httpx.Request, httpx.Response]:
         request.headers["Authorization"] = self.secret.get_secret_value()
         yield request
 

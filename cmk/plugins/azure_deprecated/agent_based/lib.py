@@ -295,7 +295,7 @@ def create_discover_by_metrics_function_single(
 
 def iter_resource_attributes(
     resource: Resource, include_keys: tuple[str, ...] = ("location",)
-) -> Generator[tuple[str, str | None], None, None]:
+) -> Generator[tuple[str, str | None]]:
     def capitalize(string: str) -> str:
         return string[0].upper() + string[1:]
 

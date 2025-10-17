@@ -52,7 +52,6 @@ def provide_agent_binaries(Map args) {
             /// no Linux agent updaters for raw edition..
             condition: true, // edition != "raw",  // FIXME!
             dependency_paths: [
-                "defines.make",
                 "agents",
                 "non-free/cmk-update-agent",
             ],
@@ -76,7 +75,6 @@ def provide_agent_binaries(Map args) {
             //       relatively from 'builders/..'
             relative_job_name: "${branch_base_folder(false)}/winagt-build",
             dependency_paths: [
-                "defines.make",
                 "agents",
                 "packages/host/cmk-agent-ctl",
                 "packages/host/mk-sql",
@@ -112,7 +110,6 @@ def provide_agent_binaries(Map args) {
             //       relatively from 'builders/..'
             relative_job_name: "${branch_base_folder(false)}/winagt-build-modules",
             dependency_paths: [
-                "defines.make",
                 "agents/modules/windows",
             ],
             install_cmd: """\

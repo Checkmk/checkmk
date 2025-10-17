@@ -115,10 +115,18 @@ def agent_proxmox_ve_main(args: Args) -> int:
                 "version": {},
             }
         )
-
         LOGGER.info("Fetch and process backup logs..")
-        logged_backup_data = fetch_backup_data(args, session, data["nodes"])
+        logged_backup_data = {}
 
+        for node in data["nodes"]:
+            try:
+                node_backups = fetch_backup_data(args, session, [node])
+                if not node_backups:
+                    LOGGER.info(f"No backups found for any VMs on node {node}")
+                else:
+                    logged_backup_data.update(node_backups)
+            except Exception as e:
+                LOGGER.warning(f"Could not fetch backup logs for node {node} due to: {e}")
     all_vms = {
         str(entry["vmid"]): entry
         for entry in data["cluster"]["resources"]

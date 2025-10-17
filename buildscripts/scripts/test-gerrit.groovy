@@ -392,7 +392,7 @@ def job_result_row(Map args) {
     def test_result_link = "n/a";
 
     if (args.pattern != null && args.pattern != '--') {
-        pattern_url = "<a href='artifact/${args.pattern}'>${args.pattern}</a>";
+        pattern_url = "<a href='${args.triggered_build_url}/artifact/${args.pattern}'>${args.pattern}</a>";
     }
     if (args.triggered_build_url) {
         triggered_build = "<a href='${args.triggered_build_url}'>${args.stepName}</a>";

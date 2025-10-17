@@ -395,7 +395,7 @@ test-mypy-raw:
 
 test-packaging:
 	export PATH=$$PATH:$$(bazel run //bazel/tools:bazel_env print-path); \
-	$(PYTEST) packaging
+	$(PYTEST) --log-cli-level=INFO packaging
 
 test-pylint:
 	cd ..; $(UVENV) pylint --disable=all --enable=useless-suppression,$(PYLINT_CUSTOM_CHECKERS) --jobs=6 $(PYLINT_ARGS) $$($(FIND_PYTHON_FILES))

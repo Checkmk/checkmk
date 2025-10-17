@@ -9,8 +9,5 @@ description:
  You can configure levels for used capacity using the rule "Azure Storage".
  In order to use this check, you need to configure the Azure special agent.
 
-item:
- The name of the resource.
-
 discovery:
  One service is created for each storage account.

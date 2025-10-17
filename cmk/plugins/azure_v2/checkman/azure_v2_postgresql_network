@@ -7,9 +7,6 @@ description:
  This check reports the input and the output of a network in bytes.
  You can configure levels using the rule "Network IO".
 
-item:
- The name of the resource.
-
 discovery:
  One service is created for each database if any of the required metrics
  (total_network_bytes_ingress, total_network_bytes_egress) are given.

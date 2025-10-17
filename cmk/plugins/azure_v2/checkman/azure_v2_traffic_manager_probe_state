@@ -8,9 +8,6 @@ description:
  You can configure a CheckMk state in case endpoint state isn't OK
  using the "Azure Traffic Manager Probe State" rule.
 
-item:
- The name of the resource.
-
 discovery:
  One service is created for each traffic manager profile if
  required metric (maximum_ProbeAgentCurrentEndpointStateByProfileResourceId)

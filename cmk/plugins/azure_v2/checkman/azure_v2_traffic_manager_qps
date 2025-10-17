@@ -8,9 +8,6 @@ description:
  was returned per second.
  You can configure levels using the rule "Azure Traffic Manager Qps".
 
-item:
- The name of the resource.
-
 discovery:
  One service is created for each traffic manager profile if
  required metric (total_QpsByEndpoint) is given.

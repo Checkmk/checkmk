@@ -11,8 +11,5 @@ description:
 
  In order to use this check, you need to configure the Azure special agent.
 
-item:
- The name of the resource.
-
 discovery:
  One service is created for each remote peering.

@@ -10,9 +10,6 @@ description:
  and availability.
  In order to use this check, you need to configure the Azure special agent.
 
-item:
- The name of the resource.
-
 discovery:
  One service is created for each storage account if all required metrics
  (total_SuccessServerLatency, total_SuccessE2ELatency, total_Availability) are given.

@@ -6,9 +6,6 @@ distribution: check_mk
 description:
  This check reports the number of deadlocks.
 
-item:
- The name of the resource.
-
 discovery:
  One service is created for each database if all required metrics
  (average_deadlock) are given.

@@ -8,9 +8,6 @@ description:
  used and server log storage used.
  You can configure levels using the rule "Azure DB Storage".
 
-item:
- The name of the resource.
-
 discovery:
  One service is created for each database if any of the required metrics
  (average_io_consumption_percent, average_storage_percent,

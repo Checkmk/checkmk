@@ -7,9 +7,6 @@ description:
  This check reports the lag of the replica server against the source
  server in seconds. You can configure levels using the rule "Replication Lag".
 
-item:
- The name of the resource.
-
 discovery:
  One service is created for each database if any of the required metrics
  (maximum_seconds_behind_master, maximum_replication_lag) are given.

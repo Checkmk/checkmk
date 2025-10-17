@@ -7,9 +7,6 @@ description:
  This check reports the cpu utilization in percent.
  You can configure levels using the rule "CPU Utilization".
 
-item:
- The name of the resource.
-
 discovery:
  One service is created for each database if the required metric
  (average_cpu_percent) is given.

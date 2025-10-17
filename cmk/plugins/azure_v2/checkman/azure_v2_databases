@@ -6,8 +6,5 @@ distribution: check_mk
 description:
  This check reports general info on azure databases.
 
-item:
- The name of the resource.
-
 discovery:
  One service is created for each database.

@@ -7,9 +7,6 @@ description:
  This check reports the amount of storage used by an azure database.
  You can configure levels for the percentage using the rule "Azure Databases".
 
-item:
- The name of the resource.
-
 discovery:
  One service is created for each database if all required metrics
  (average_storage_percent) are given.

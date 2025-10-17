@@ -10,9 +10,6 @@ description:
  The levels for this check can be configured using the ruleset
  "Azure SQL database connections".
 
-item:
- The name of the resource.
-
 discovery:
  One service is created for each database if all required metrics
  (average_connection_successful, average_connection_failed) are given.

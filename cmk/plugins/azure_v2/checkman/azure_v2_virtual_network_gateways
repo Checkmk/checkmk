@@ -13,8 +13,5 @@ description:
  You can configure levels for these metrics using the rule "Azure VNet Gateway".
  In order to use this check, you need to configure the Azure special agent.
 
-item:
- The name of the resource.
-
 discovery:
  One service is created for each virtual network gateway.

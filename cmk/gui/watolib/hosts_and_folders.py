@@ -180,7 +180,16 @@ class FolderMetaData:
             if may_use_redis():
                 self._num_hosts_recursively = get_wato_redis_client(
                     self.tree
-                ).num_hosts_recursively_lua(self._path)
+                ).num_hosts_recursively_lua(
+                    self._path,
+                    skip_permission_checks=(
+                        user.may("wato.see_all_folders")
+                        or not active_config.wato_hide_folders_without_read_permissions
+                    ),
+                    user_contact_groups=(
+                        set(userdb.contactgroups_of_user(user.id)) if user.id is not None else set()
+                    ),
+                )
             else:
                 self._num_hosts_recursively = self.tree.folder(
                     self._path.rstrip("/")
@@ -343,7 +352,14 @@ class _RedisHelper:
         self._loaded_wato_folders = None
         self._folder_paths = None
 
-    def choices_for_moving(self, path: PathWithoutSlash, move_type: _MoveType) -> Choices:
+    def choices_for_moving(
+        self,
+        path: PathWithoutSlash,
+        move_type: _MoveType,
+        *,
+        may_see_all_folders: bool,
+        user_contact_groups: set[str],
+    ) -> Choices:
         self._fetch_all_metadata()
         path_to_title = {x.path: x.title_path_without_root for x in self._folder_metadata.values()}
 
@@ -362,13 +378,11 @@ class _RedisHelper:
                     del path_to_title[possible_child_path]
 
         # Check permissions
-        if not user.may("wato.all_folders"):
-            assert user.id is not None
-            user_cgs = set(userdb.contactgroups_of_user(user.id))
+        if not may_see_all_folders:
             # Remove folders without permission
             for check_path in list(path_to_title.keys()):
                 if permitted_groups := self._folder_metadata[check_path].permitted_groups:
-                    if not user_cgs.intersection(set(permitted_groups)):
+                    if not user_contact_groups.intersection(set(permitted_groups)):
                         del path_to_title[check_path]
 
         return [(key.rstrip("/"), value) for key, value in path_to_title.items()]
@@ -521,7 +535,13 @@ class _RedisHelper:
     def _add_last_folder_update_to_pipeline(self, pipeline: Pipeline, timestamp: str) -> None:
         pipeline.set("wato:folder_list:last_update", timestamp)
 
-    def num_hosts_recursively_lua(self, path_with_slash: PathWithSlash) -> int:
+    def num_hosts_recursively_lua(
+        self,
+        path_with_slash: PathWithSlash,
+        *,
+        skip_permission_checks: bool,
+        user_contact_groups: set[str],
+    ) -> int:
         """Returns the number of hosts in subfolder, excluding hosts not visible to the current user"""
         recursive_hosts = self._client.register_script(
             """
@@ -554,10 +574,7 @@ class _RedisHelper:
         if not results:
             return total_hosts
 
-        if (
-            user.may("wato.see_all_folders")
-            or not active_config.wato_hide_folders_without_read_permissions
-        ):
+        if skip_permission_checks:
             return sum(map(int, results[0][1::2]))
 
         def pairwise(iterable: Iterable[str]) -> Iterator[tuple[str, str]]:
@@ -565,11 +582,9 @@ class _RedisHelper:
             a = iter(iterable)
             return zip(a, a)
 
-        assert user.id is not None
-        user_cgs = set(userdb.contactgroups_of_user(user.id))
         for folder_cgs, num_hosts in pairwise(results[0]):
             cgs = set(folder_cgs.split(","))
-            if user_cgs.intersection(cgs):
+            if user_contact_groups.intersection(cgs):
                 total_hosts += int(num_hosts)
 
         return total_hosts
@@ -1872,7 +1887,14 @@ class Folder(FolderProtocol):
 
         if may_use_redis():
             return self._get_sorted_choices(
-                get_wato_redis_client(self.tree).choices_for_moving(self.path(), _MoveType(what))
+                get_wato_redis_client(self.tree).choices_for_moving(
+                    self.path(),
+                    _MoveType(what),
+                    may_see_all_folders=user.may("wato.all_folders"),
+                    user_contact_groups=(
+                        set(userdb.contactgroups_of_user(user.id)) if user.id is not None else set()
+                    ),
+                )
             )
 
         for folder in self.tree.all_folders().values():

@@ -26,7 +26,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Edition, edition
 from cmk.gui import hooks, utils
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
+from cmk.gui.form_specs import DEFAULT_VALUE, get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.form_specs.unstable.time_specific import TimeSpecific
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
@@ -44,6 +44,7 @@ from cmk.gui.watolib.check_mk_automations import (
     analyze_service_rule_matches,
 )
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
+from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.server_side_calls_backend.config_processing import (
     GlobalProxiesWithLookup,
     process_configuration_to_parameters,
@@ -1409,7 +1410,16 @@ class Rule:
 
         value_text = None
         try:
-            value_text = str(self.ruleset.rulespec.valuespec.value_to_html(self.value))
+            value_model = self.ruleset.rulespec.value_model
+            if isinstance(value_model, FormSpec):
+                visitor = get_visitor(
+                    value_model,
+                    VisitorOptions(migrate_values=True, mask_values=True),
+                )
+                _spec, data = visitor.to_vue(RawDiskData(self.value))
+                value_text = repr(data)
+            else:
+                value_text = str(value_model.value_to_html(self.value))
         except Exception as e:
             logger.exception("error searching ruleset %s", self.ruleset.title())
             html.show_warning(
@@ -1732,7 +1742,12 @@ class EnabledDisabledServicesEditor:
                     rule.conditions.service_description.append(service_condition)
 
         elif service_patterns:
-            rule = Rule.from_ruleset(folder, ruleset, ruleset.rulespec.valuespec.default_value())
+            value_model = ruleset.rulespec.value_model
+            rule = Rule.from_ruleset(
+                folder,
+                ruleset,
+                DEFAULT_VALUE if isinstance(value_model, FormSpec) else value_model.default_value(),
+            )
             conditions = RuleConditions(
                 folder.path(),
                 host_name=[self._host.name()],

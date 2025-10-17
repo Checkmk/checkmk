@@ -188,7 +188,7 @@ def _get_ruleset(
 def _apply_rulesets_migration(
     params: LegacyCheckParameters, ruleset: Ruleset, plugin_name: CheckPluginName
 ) -> Mapping[str, object]:
-    new_params = ruleset.valuespec().transform_value(params) if params else {}
+    new_params = ruleset.rulespec.valuespec.transform_value(params) if params else {}
 
     if not (isinstance(new_params, dict) and all(isinstance(k, str) for k in new_params)):
         raise TypeError(

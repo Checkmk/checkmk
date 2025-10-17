@@ -22,7 +22,7 @@ from cmk.utils.rulesets.definition import RuleGroup
 def _check_mail_vs() -> ValueSpec:
     all_rulesets = AllRulesets.load_all_rulesets().get_rulesets()
     try:
-        return all_rulesets[RuleGroup.ActiveChecks("mail")].valuespec()
+        return all_rulesets[RuleGroup.ActiveChecks("mail")].rulespec.valuespec
     except KeyError:
         raise RuntimeError(sorted(all_rulesets))
 

@@ -211,7 +211,7 @@ def transform_wato_rulesets_params(
     migrated_rulesets = set()
     for ruleset in all_rulesets.get_rulesets().values():
         try:
-            valuespec = ruleset.valuespec()
+            valuespec = ruleset.rulespec.valuespec
         except Exception:
             logger.error(
                 "ERROR: Failed to load Ruleset: %s. "

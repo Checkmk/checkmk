@@ -57,7 +57,7 @@ class PreUpdateRulesets(PreUpdateAction):
             )
             for ruleset in rulesets.get_rulesets().values():
                 try:
-                    ruleset.valuespec()
+                    ruleset.rulespec.valuespec
                 except Exception:
                     logger.error(
                         "ERROR: Failed to load Ruleset: %s. "

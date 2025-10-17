@@ -83,17 +83,17 @@ def _parse_title(template: graphs_api.Graph | graphs_api.Bidirectional) -> str:
 
 
 @dataclass(frozen=True)
-class GraphTemplateChoice:
+class GraphPluginChoice:
     id: str
     title: str
 
 
-def get_graph_template_choices(
+def get_graph_plugin_choices(
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
-) -> list[GraphTemplateChoice]:
+) -> list[GraphPluginChoice]:
     return sorted(
         [
-            GraphTemplateChoice(graph.name, _parse_title(graph))
+            GraphPluginChoice(graph.name, _parse_title(graph))
             for graph in registered_graphs.values()
         ],
         key=lambda c: c.title,
@@ -301,15 +301,15 @@ def get_graph_template_from_id(
     raise MKGraphNotFound(_("There is no graph plug-in with the id '%s'") % template_id)
 
 
-def graph_and_single_metric_template_choices_for_metrics(
+def get_graph_plugin_and_single_metric_choices(
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     site_id: SiteId,
     host_name: HostName,
     service_name: ServiceName,
     translated_metrics: Mapping[str, TranslatedMetric],
-) -> tuple[list[GraphTemplateChoice], list[GraphTemplateChoice]]:
-    graph_template_choices = []
+) -> tuple[list[GraphPluginChoice], list[GraphPluginChoice]]:
+    graph_plugin_choices = []
     already_graphed_metrics: set[str] = set()
     for _graph_id, graph_plugin in _sort_registered_graph_plugins(registered_graphs):
         if (
@@ -323,23 +323,23 @@ def graph_and_single_metric_template_choices_for_metrics(
             )
         ).graph_metrics:
             already_graphed_metrics.update(graphed_metrics.metric_names)
-            graph_template_choices.append(
-                GraphTemplateChoice(
+            graph_plugin_choices.append(
+                GraphPluginChoice(
                     graph_plugin.name,
                     graph_plugin.title.localize(translate_to_current_language),
                 )
             )
 
-    single_metric_template_choices = []
+    single_metric_choices = []
     for metric_name, translated_metric in sorted(translated_metrics.items()):
         if translated_metric.auto_graph and metric_name not in already_graphed_metrics:
-            single_metric_template_choices.append(
-                GraphTemplateChoice(
+            single_metric_choices.append(
+                GraphPluginChoice(
                     f"METRIC_{metric_name}",
                     _("Metric: %s") % translated_metric.title,
                 )
             )
-    return graph_template_choices, single_metric_template_choices
+    return graph_plugin_choices, single_metric_choices
 
 
 def _compute_graph_recipes(

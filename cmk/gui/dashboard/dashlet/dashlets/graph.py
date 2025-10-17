@@ -26,17 +26,17 @@ from cmk.gui.config import active_config, Config
 from cmk.gui.dashboard.type_defs import DashletId, DashletSize
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.graphing import (
-    get_graph_template_choices,
+    get_graph_plugin_and_single_metric_choices,
+    get_graph_plugin_choices,
     get_metric_spec,
     get_temperature_unit,
     get_template_graph_specification,
-    graph_and_single_metric_template_choices_for_metrics,
     GraphDestinations,
+    GraphPluginChoice,
     GraphRenderConfig,
     GraphRenderOptions,
     graphs_from_api,
     GraphSpecification,
-    GraphTemplateChoice,
     metrics_from_api,
     MKCombinedGraphLimitExceededError,
     RegisteredMetric,
@@ -122,7 +122,7 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
             next(
                 (
                     (c.id, c.title)
-                    for c in get_graph_template_choices(graphs_from_api)
+                    for c in get_graph_plugin_choices(graphs_from_api)
                     if c.id == value
                 ),
                 (
@@ -487,7 +487,7 @@ def _graph_templates_autocompleter_testable(
     if not params.get("context") and params.get("show_independent_of_context") is True:
         return _sorted_matching_graph_template_choices(
             value_entered_by_user,
-            get_graph_template_choices(registered_graphs),
+            get_graph_plugin_choices(registered_graphs),
         )
 
     graph_template_choices, single_metric_template_choices = (
@@ -516,9 +516,9 @@ def _graph_and_single_metric_templates_choices_for_context(
     *,
     debug: bool,
     temperature_unit: TemperatureUnit,
-) -> tuple[list[GraphTemplateChoice], list[GraphTemplateChoice]]:
-    graph_template_choices: list[GraphTemplateChoice] = []
-    single_metric_template_choices: list[GraphTemplateChoice] = []
+) -> tuple[list[GraphPluginChoice], list[GraphPluginChoice]]:
+    graph_template_choices: list[GraphPluginChoice] = []
+    single_metric_template_choices: list[GraphPluginChoice] = []
 
     for row in livestatus_query_bare(
         "service",
@@ -526,7 +526,7 @@ def _graph_and_single_metric_templates_choices_for_context(
         ["service_check_command", "service_perf_data", "service_metrics"],
     ):
         graph_template_choices_for_row, single_metric_template_choices_for_row = (
-            graph_and_single_metric_template_choices_for_metrics(
+            get_graph_plugin_and_single_metric_choices(
                 registered_metrics,
                 registered_graphs,
                 row["site"],
@@ -548,7 +548,7 @@ def _graph_and_single_metric_templates_choices_for_context(
 
 def _sorted_matching_graph_template_choices(
     value_entered_by_user: str,
-    all_choices: Iterable[GraphTemplateChoice],
+    all_choices: Iterable[GraphPluginChoice],
 ) -> Choices:
     return [
         (graph_template_choice.id, graph_template_choice.title)

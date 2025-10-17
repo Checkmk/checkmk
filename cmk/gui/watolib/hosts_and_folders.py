@@ -743,13 +743,15 @@ class _PickleWATOInfoStorage(_ABCWATOInfoStorage):
 class _WATOInfoStorageManager:
     """Handles read/write operations for the .wato file"""
 
-    def __init__(self) -> None:
-        self._write_storages = self._get_write_storages()
+    def __init__(self, storage_format: Literal["standard", "pickle", "raw"]) -> None:
+        self._write_storages = self._get_write_storages(storage_format)
         self._read_storages = list(reversed(self._write_storages))
 
-    def _get_write_storages(self) -> list[_ABCWATOInfoStorage]:
+    def _get_write_storages(
+        self, storage_format: Literal["standard", "pickle", "raw"]
+    ) -> list[_ABCWATOInfoStorage]:
         storages: list[_ABCWATOInfoStorage] = [_StandardWATOInfoStorage()]
-        if get_storage_format(active_config.config_storage_format) == StorageFormat.PICKLE:
+        if get_storage_format(storage_format) == StorageFormat.PICKLE:
             storages.append(_PickleWATOInfoStorage())
         return storages
 
@@ -1592,7 +1594,9 @@ class Folder(FolderProtocol):
     @classmethod
     def wato_info_storage_manager(cls) -> _WATOInfoStorageManager:
         if "wato_info_storage_manager" not in g:
-            g.wato_info_storage_manager = _WATOInfoStorageManager()
+            g.wato_info_storage_manager = _WATOInfoStorageManager(
+                active_config.config_storage_format
+            )
         return g.wato_info_storage_manager
 
     def save_folder_attributes(self) -> None:

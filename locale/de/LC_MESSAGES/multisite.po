@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2025-10-15 10:16+0000\n"
+"PO-Revision-Date: 2025-10-16 20:39+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -3190,6 +3190,8 @@ msgid ""
 "Access is restricted, but no contact groups are assigned in the host's "
 "permissions."
 msgstr ""
+"Der Zugriff ist eingeschränkt, aber in den Berechtigungen des Hosts sind "
+"keine Kontaktgruppen zugewiesen."
 
 msgid "Access key"
 msgstr "Zugriffsschlüssel"
@@ -3889,7 +3891,12 @@ msgstr "NGNIX-Instanz hinzufügen"
 msgid "Add OID descriptions"
 msgstr "OID-Beschreibung hinzufügen"
 
-msgid "Add OpenTelemetry collector configuration"
+#, fuzzy
+msgid "Add OpenTelemetry collector prometheus scraping configuration"
+msgstr "Konfiguration des OpenTelemetry Collectors hinzufügen"
+
+#, fuzzy
+msgid "Add OpenTelemetry collector receiver configuration"
 msgstr "Konfiguration des OpenTelemetry Collectors hinzufügen"
 
 msgid "Add Prefix"
@@ -4169,9 +4176,8 @@ msgstr "Neue Aggregation hinzufügen"
 msgid "Add new constant"
 msgstr "Neue Konstante hinzufügen"
 
-#, fuzzy
 msgid "Add new credentials"
-msgstr "Zugangsdaten angeben"
+msgstr "Neue Zugangsdaten hinzufügen"
 
 msgid "Add new element"
 msgstr "Element hinzufügen"
@@ -5860,7 +5866,18 @@ msgstr "Alle Protokolle"
 msgid "All queues listed here will be skipped."
 msgstr "Alle hier aufgelisteten Warteschlangen werden übersprungen."
 
-msgid "All related configuration of the integrated OpenTelemetry collector."
+#, fuzzy
+msgid ""
+"All related configuration of the integrated OpenTelemetry collector "
+"Prometheus scraping."
+msgstr ""
+"Alle damit verbundenen Konfigurationen des integrierten OpenTelemetry "
+"Collectors."
+
+#, fuzzy
+msgid ""
+"All related configuration of the integrated OpenTelemetry collector "
+"receivers."
 msgstr ""
 "Alle damit verbundenen Konfigurationen des integrierten OpenTelemetry "
 "Collectors."
@@ -7569,9 +7586,8 @@ msgstr "Einstellungen zur Berechtigung"
 msgid "Authorizations per DB security group"
 msgstr "Berechtigungen pro DB-Sicherheitsgruppe"
 
-#, fuzzy
 msgid "Authorized user"
-msgstr "Berechtigte Benutzer"
+msgstr "Berechtigter Benutzer"
 
 msgid "Auto"
 msgstr "Auto"
@@ -9216,7 +9232,7 @@ msgid "Both - Display the information for both pod and container levels"
 msgstr "Beide - Zeige Informationen für das Pod- und das Container-Level"
 
 msgid "Both conditions must match (defensive)"
-msgstr ""
+msgstr "Beide Bedingungen müssen zutreffen (defensiv)"
 
 msgid "Bottom"
 msgstr "Unten"
@@ -11328,9 +11344,8 @@ msgstr "Warteschlangenauslastung des Carbon"
 msgid "Carbon queue usage rate"
 msgstr "Auslastungsrate der Warteschlange für Carbon"
 
-#, fuzzy
 msgid "Cardinality reduction aggregation method"
-msgstr "Datenreduzierungsrate"
+msgstr "Aggregationsmethode zur Reduktion der Kardinalität"
 
 msgid "Casa module: CPU temperature"
 msgstr "Casa module: CPU-Temperatur"
@@ -13012,9 +13027,8 @@ msgstr "Meldungen aufräumen"
 msgid "Cleanup of working directory"
 msgstr "Bereinigung des Arbeitsverzeichnisses"
 
-#, fuzzy
 msgid "Cleanup parameters"
-msgstr "Standardparameter"
+msgstr "Bereinigungsparameter"
 
 msgid "Cleanup strategy"
 msgstr "Bereinigungsstrategie"
@@ -17549,9 +17563,8 @@ msgstr "Voreinstellung (%s)"
 msgid "Default BI visualization settings"
 msgstr "Standard BI Visualisierungseinstellungen"
 
-#, fuzzy
 msgid "Default cleanup parameters"
-msgstr "Standardparameter"
+msgstr "Standard-Bereinigungsparameter"
 
 msgid "Default color"
 msgstr "Standardfarbe"
@@ -20394,7 +20407,7 @@ msgstr ""
 "Keine Aktion durchführen, diese Meldung verwerfen, Verarbeitung abbrechen"
 
 msgid "Do not perform periodic service discovery check"
-msgstr "Keinen periodischen Service-Discovery Check ausführen"
+msgstr "Keinen periodischen Service Discovery Check ausführen"
 
 msgid "Do not regard required mirror space as free space"
 msgstr "Benötigten Mirrorspace nicht als frei betrachten"
@@ -24811,10 +24824,10 @@ msgid "Find on this page ..."
 msgstr "Suche ... auf dieser Seite."
 
 msgid "Finetune Windows Eventlog monitoring"
-msgstr "Windows Ereignisprotokoll-Monitoring justieren"
+msgstr "Windows Ereignisprotokoll-Monitoring feinjustieren"
 
 msgid "Finetune Windows process monitoring"
-msgstr "Windows Prozess-Monitoring justieren"
+msgstr "Windows Prozess-Monitoring feinjustieren"
 
 msgid "Fingerprint"
 msgstr "Fingerprint"
@@ -25288,9 +25301,8 @@ msgstr ""
 msgid "For specific SIDs"
 msgstr "Für spezifische SIDs"
 
-#, fuzzy
 msgid "For specific hosts"
-msgstr "Für spezifische SIDs"
+msgstr "Für spezifische Hosts"
 
 msgid ""
 "For the host name field, a partial word search (infix search) is used — the "
@@ -26923,9 +26935,8 @@ msgstr "HW-/SW-Inventur"
 msgid "HW/SW Inventory (Linux, Windows, Solaris, AIX)"
 msgstr "HW-/SW-Inventur (Linux, Windows, Solaris, AIX)"
 
-#, fuzzy
 msgid "HW/SW Inventory cleanup"
-msgstr "Regeln der HW-/SW-Inventur"
+msgstr "Bereinigung der HW-/SW-Inventur"
 
 msgid "HW/SW Inventory history"
 msgstr "Historie der HW-/SW-Inventur"
@@ -32161,13 +32172,13 @@ msgstr ""
 "Prozesse, die Lesezugriff auf diese Datei haben, können die graphische "
 "Benutzeroberfläche (GUI) ohne weitere Konfiguration als Webdienst nutzen."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "If you want to continue to use Checkmk and keep your data, please contact "
 "the Checkmk sales team at %s."
 msgstr ""
-"Wenn Sie Checkmk weiterhin nutzen möchten, kontaktieren Sie das Checkmk-"
-"Verkaufsteam unter %s."
+"Wenn Sie Checkmk weiterhin nutzen und Ihre Daten behalten möchten, "
+"kontaktieren Sie das Checkmk-Verkaufsteam unter %s."
 
 #, python-format
 msgid ""
@@ -38838,9 +38849,8 @@ msgstr "Host-Gruppen abgleichen"
 msgid "Match host labels"
 msgstr "Host-Labels abgleichen"
 
-#, fuzzy
 msgid "Match host names"
-msgstr "Host-Labels abgleichen"
+msgstr "Host-Namen abgleichen"
 
 msgid "Match host tags"
 msgstr "Host-Merkmale abgleichen"
@@ -39934,9 +39944,8 @@ msgstr "Metrik-Vorhersage"
 msgid "Metric History"
 msgstr "Metrik-Historie"
 
-#, fuzzy
 msgid "Metric configuration"
-msgstr "Konfiguration testen"
+msgstr "Metrik-Konfiguration"
 
 msgid "Metric label"
 msgstr "Metrik-Bezeichnung"
@@ -42337,9 +42346,8 @@ msgstr "Keine Daten."
 msgid "No datasource defined."
 msgstr "Keine Datenquelle definiert."
 
-#, fuzzy
 msgid "No defaults"
-msgstr "Standard"
+msgstr "Keine Standards"
 
 msgid "No deprecated rule sets found."
 msgstr "Es wurden keine veralteten Regelsätze gefunden."
@@ -44127,9 +44135,8 @@ msgstr "Anzahl der hängengebliebenen Aufgaben"
 msgid "Number of tables"
 msgstr "Anzahl von Tabellen"
 
-#, fuzzy
 msgid "Number of tapes in the scratch pool"
-msgstr "Anzahl der Änderungen seit dem letzten Dump"
+msgstr "Anzahl der Bänder im Scratch-Pool"
 
 msgid "Number of tasks"
 msgstr "Anzahl von Aufgaben"
@@ -45095,11 +45102,21 @@ msgstr "OpenLDAP"
 msgid "OpenTelemetry (experimental)"
 msgstr "OpenTelemetry (experimentell)"
 
-msgid "OpenTelemetry collector (experimental)"
+#, fuzzy
+msgid "OpenTelemetry collector prometheus scraping configurations"
+msgstr "Konfigurationen des OpenTelemetry Collectors"
+
+#, fuzzy
+msgid "OpenTelemetry collector receiver configurations"
+msgstr "Konfigurationen des OpenTelemetry Collectors"
+
+#, fuzzy
+msgid "OpenTelemetry collector: Prometheus scraping (experimental)"
 msgstr "OpenTelemetry Collector (experimentell)"
 
-msgid "OpenTelemetry collector configurations"
-msgstr "Konfigurationen des OpenTelemetry Collectors"
+#, fuzzy
+msgid "OpenTelemetry collector: Receiver (experimental)"
+msgstr "OpenTelemetry Collector (experimentell)"
 
 msgid "OpenTelemetry metric name"
 msgstr "Name der OpenTelemetry Metrik"
@@ -51584,9 +51601,8 @@ msgstr "TLS-Registrierung ausgewählter Hosts entfernen"
 msgid "Remove Windows Firewall configuration if present"
 msgstr "Windows Firewall Konfiguration entfernen, falls vorhanden"
 
-#, fuzzy
 msgid "Remove abandoned host files older than"
-msgstr "Veraltete Host-Dateien löschen, die älter sind als"
+msgstr "Stillgelegte Host-Dateien entfernen, die älter sind als"
 
 msgid "Remove acknowledgments"
 msgstr "Entferne Quittierungen"
@@ -51621,16 +51637,14 @@ msgstr "Entferne explizite Einstellungen"
 msgid "Remove filter"
 msgstr "Filter entfernen"
 
-#, fuzzy
 msgid "Remove history entries older than"
-msgstr "Lösche Dateien älter als"
+msgstr "Historieneinträge löschen, die älter sind als"
 
 msgid "Remove history entries right after"
 msgstr ""
 
-#, fuzzy
 msgid "Remove history entries which meet the following conditions"
-msgstr "Informationen über die folgenden Partitionen einholen"
+msgstr "Historieneinträge löschen, welche die folgenden Bedingungen erfüllen"
 
 msgid "Remove name"
 msgstr "Name entfernen"
@@ -51951,9 +51965,8 @@ msgstr "Diese Benachrichtigung erneut zustellen!"
 msgid "Replayed notification number %d"
 msgstr "Nummer der wiederholten Benachrichtigungen %d"
 
-#, fuzzy
 msgid "Replica aggregation method"
-msgstr "Aggregationsmethode"
+msgstr "Replica-Aggregationsmethode"
 
 msgid "Replica available state"
 msgstr "Verfügbarkeitszustand des Replikats"
@@ -75069,6 +75082,10 @@ msgstr "Vertrauen"
 msgid "Trust system wide configured CAs"
 msgstr "Systemweit konfigurierten CAs vertrauen"
 
+#, fuzzy
+msgid "Trust this site completely"
+msgstr "Geschätzte Zeit um abzuschließen"
+
 msgid "Trusted"
 msgstr "Vertrauenswürdig"
 
@@ -77510,9 +77527,8 @@ msgstr "Die folgende Farbe verwenden"
 msgid "Use the following credentials"
 msgstr "Mit den folgenden Daten anmelden"
 
-#, fuzzy
 msgid "Use the following defaults"
-msgstr "Die folgenden Levels benutzen"
+msgstr "Die folgenden Standards benutzen"
 
 msgid "Use the following levels"
 msgstr "Die folgenden Levels benutzen"
@@ -80861,6 +80877,15 @@ msgstr ""
 "unverändert in die Ereignismeldung geschrieben."
 
 msgid ""
+"When this option is enabled the central site might get compromised by a "
+"rogue remote site. If you disable this option, some features, such as HTML "
+"rendering in service descriptions for the services monitored on this remote "
+"site, will no longer work. In case the sites are managed by different groups "
+"of people, especially when belonging to different organizations, we "
+"recommend to disable this setting."
+msgstr ""
+
+msgid ""
 "When this option is enabled then after each change of the service "
 "configuration of a host via Setup - may it be via manual changes or a bulk "
 "discovery - the service discovery check is automatically rescheduled in "
@@ -83900,7 +83925,6 @@ msgstr ""
 "Sie müssen einen gültigen \"Host-Namen\" angeben. Erlaubt sind nur "
 "Buchstaben, Ziffern, Bindestriche, Unterstriche und Punkte."
 
-#, fuzzy
 msgid ""
 "You need to provide a valid API key to be able to send push notifications "
 "using Pushover. Register and login to <a href=\"https://www.pushover.net\" "
@@ -83909,9 +83933,9 @@ msgid ""
 msgstr ""
 "Sie müssen einen gültigen API-Schlüssel angeben, um Push-Benachrichtigungen "
 "mit Pushover senden zu können. Registrieren Sie sich und melden Sie sich auf "
-"<a href=\"https://www.pushover.net\" target=\"_blank\">Pushover</a> an, "
-"erstellen Sie Ihre Checkmk-Installation als Anwendung und erhalten Sie Ihren "
-"API-Schlüssel."
+"<a href=\"https://www.pushover.net\" target=\"_blank\">Pushover</a> an. "
+"Erstellen Sie dann Ihre Checkmk-Installation als Anwendung und erhalten Sie "
+"Ihren API-Schlüssel."
 
 msgid "You need to provide a valid key id."
 msgstr "Sie müssen eine gültige Schlüssel-ID angeben."
@@ -84823,7 +84847,7 @@ msgid "disable the login to this account"
 msgstr "Login für dieses Konto deaktivieren"
 
 msgid "disable this section"
-msgstr "Diese Sektion deaktivieren"
+msgstr "diese Sektion deaktivieren"
 
 msgid "disabled"
 msgstr "deaktiviert"
@@ -84935,9 +84959,8 @@ msgstr "Einträge"
 msgid "entries (max. 50)"
 msgstr "Einträge (max. 50)"
 
-#, fuzzy
 msgid "entry number"
-msgstr "Seriennummer"
+msgstr "Eintragsnummer"
 
 msgid "estimated duration"
 msgstr "geschätzte Dauer"
@@ -86187,9 +86210,9 @@ msgid_plural "sites"
 msgstr[0] "Instanz"
 msgstr[1] "Instanzen"
 
-#, fuzzy, python-format
+#, python-format
 msgid "site must be a list. Current type is: %s "
-msgstr "Typ muss eine Liste sein - ist aber %s"
+msgstr "Instanz muss eine Liste sein. Aktueller Typ ist: %s "
 
 msgid "slots"
 msgstr "Slots"

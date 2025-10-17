@@ -3947,7 +3947,11 @@ msgid "Add OID descriptions"
 msgstr "OID-beschrijvingen toevoegen"
 
 #, fuzzy
-msgid "Add OpenTelemetry collector configuration"
+msgid "Add OpenTelemetry collector prometheus scraping configuration"
+msgstr "Nieuwe gebruikersconfiguratie toevoegen"
+
+#, fuzzy
+msgid "Add OpenTelemetry collector receiver configuration"
 msgstr "Nieuwe gebruikersconfiguratie toevoegen"
 
 msgid "Add Prefix"
@@ -5997,7 +6001,14 @@ msgstr "Alle protocollen"
 msgid "All queues listed here will be skipped."
 msgstr "Alle wachtrijen die hier staan, worden overgeslagen."
 
-msgid "All related configuration of the integrated OpenTelemetry collector."
+msgid ""
+"All related configuration of the integrated OpenTelemetry collector "
+"Prometheus scraping."
+msgstr ""
+
+msgid ""
+"All related configuration of the integrated OpenTelemetry collector "
+"receivers."
 msgstr ""
 
 msgid "All related information or settings of licensing of Checkmk sites."
@@ -46763,12 +46774,21 @@ msgstr "OpenLDAP"
 msgid "OpenTelemetry (experimental)"
 msgstr ""
 
-msgid "OpenTelemetry collector (experimental)"
-msgstr ""
+#, fuzzy
+msgid "OpenTelemetry collector prometheus scraping configurations"
+msgstr "Configuratie toestand toevoegen"
 
 #, fuzzy
-msgid "OpenTelemetry collector configurations"
+msgid "OpenTelemetry collector receiver configurations"
 msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy
+msgid "OpenTelemetry collector: Prometheus scraping (experimental)"
+msgstr "Interval voor het verzamelen van gegevens"
+
+#, fuzzy
+msgid "OpenTelemetry collector: Receiver (experimental)"
+msgstr "Interval voor het verzamelen van gegevens"
 
 msgid "OpenTelemetry metric name"
 msgstr ""
@@ -77817,6 +77837,10 @@ msgstr "Vertrouwd"
 msgid "Trust system wide configured CAs"
 msgstr "Vertrouw op systeemwijde geconfigureerde CA's"
 
+#, fuzzy
+msgid "Trust this site completely"
+msgstr "Geschatte tijd om te voltooien"
+
 msgid "Trusted"
 msgstr "Vertrouwd"
 
@@ -83878,6 +83902,15 @@ msgstr ""
 "bestanden worden gebruikt om de inkomende SNMP traps te vertalen. Informatie "
 "die niet vertaald kan worden, b.v. omdat een MIB ontbreekt, wordt "
 "onaangeroerd in het event bericht geschreven."
+
+msgid ""
+"When this option is enabled the central site might get compromised by a "
+"rogue remote site. If you disable this option, some features, such as HTML "
+"rendering in service descriptions for the services monitored on this remote "
+"site, will no longer work. In case the sites are managed by different groups "
+"of people, especially when belonging to different organizations, we "
+"recommend to disable this setting."
+msgstr ""
 
 msgid ""
 "When this option is enabled then after each change of the service "

@@ -3946,7 +3946,11 @@ msgid "Add OID descriptions"
 msgstr "Adicionar descrições de OID"
 
 #, fuzzy
-msgid "Add OpenTelemetry collector configuration"
+msgid "Add OpenTelemetry collector prometheus scraping configuration"
+msgstr "Adicionar nova configuração de usuário"
+
+#, fuzzy
+msgid "Add OpenTelemetry collector receiver configuration"
 msgstr "Adicionar nova configuração de usuário"
 
 msgid "Add Prefix"
@@ -5999,7 +6003,14 @@ msgstr "Todos os protocolos"
 msgid "All queues listed here will be skipped."
 msgstr "Todas as filas listadas aqui serão ignoradas."
 
-msgid "All related configuration of the integrated OpenTelemetry collector."
+msgid ""
+"All related configuration of the integrated OpenTelemetry collector "
+"Prometheus scraping."
+msgstr ""
+
+msgid ""
+"All related configuration of the integrated OpenTelemetry collector "
+"receivers."
 msgstr ""
 
 msgid "All related information or settings of licensing of Checkmk sites."
@@ -46732,12 +46743,21 @@ msgstr "OpenLDAP"
 msgid "OpenTelemetry (experimental)"
 msgstr ""
 
-msgid "OpenTelemetry collector (experimental)"
-msgstr ""
+#, fuzzy
+msgid "OpenTelemetry collector prometheus scraping configurations"
+msgstr "Adicionar configuração do estado"
 
 #, fuzzy
-msgid "OpenTelemetry collector configurations"
+msgid "OpenTelemetry collector receiver configurations"
 msgstr "Adicionar configuração do estado"
+
+#, fuzzy
+msgid "OpenTelemetry collector: Prometheus scraping (experimental)"
+msgstr "Intervalo para recolha de dados"
+
+#, fuzzy
+msgid "OpenTelemetry collector: Receiver (experimental)"
+msgstr "Intervalo para recolha de dados"
 
 msgid "OpenTelemetry metric name"
 msgstr ""
@@ -77767,6 +77787,10 @@ msgstr "Confiado"
 msgid "Trust system wide configured CAs"
 msgstr "CAs configurados em todo o sistema de confiança"
 
+#, fuzzy
+msgid "Trust this site completely"
+msgstr "Tempo estimado para completar"
+
 msgid "Trusted"
 msgstr "Confiado"
 
@@ -83799,6 +83823,15 @@ msgstr ""
 "serão usados para traduzir as armadilhas SNMP de entrada. As informações que "
 "não podem ser traduzidas, por exemplo, porque falta um MIB, são escritas sem "
 "serem tocadas na mensagem do evento."
+
+msgid ""
+"When this option is enabled the central site might get compromised by a "
+"rogue remote site. If you disable this option, some features, such as HTML "
+"rendering in service descriptions for the services monitored on this remote "
+"site, will no longer work. In case the sites are managed by different groups "
+"of people, especially when belonging to different organizations, we "
+"recommend to disable this setting."
+msgstr ""
 
 msgid ""
 "When this option is enabled then after each change of the service "

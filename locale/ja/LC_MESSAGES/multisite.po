@@ -3766,7 +3766,12 @@ msgstr "NGINXインスタンスを追加します"
 msgid "Add OID descriptions"
 msgstr "OIDの説明を追加する"
 
-msgid "Add OpenTelemetry collector configuration"
+#, fuzzy
+msgid "Add OpenTelemetry collector prometheus scraping configuration"
+msgstr "OpenTelemetryコレクターの設定を追加する"
+
+#, fuzzy
+msgid "Add OpenTelemetry collector receiver configuration"
 msgstr "OpenTelemetryコレクターの設定を追加する"
 
 msgid "Add Prefix"
@@ -5679,7 +5684,16 @@ msgstr "すべてのプロトコル"
 msgid "All queues listed here will be skipped."
 msgstr "ここにリストされているすべてのキューはスキップされます。"
 
-msgid "All related configuration of the integrated OpenTelemetry collector."
+#, fuzzy
+msgid ""
+"All related configuration of the integrated OpenTelemetry collector "
+"Prometheus scraping."
+msgstr "統合 OpenTelemetry コレクタのすべての関連構成。"
+
+#, fuzzy
+msgid ""
+"All related configuration of the integrated OpenTelemetry collector "
+"receivers."
 msgstr "統合 OpenTelemetry コレクタのすべての関連構成。"
 
 msgid "All related information or settings of licensing of Checkmk sites."
@@ -43961,11 +43975,21 @@ msgstr "OpenLDAP"
 msgid "OpenTelemetry (experimental)"
 msgstr "OpenTelemetry（実験的）"
 
-msgid "OpenTelemetry collector (experimental)"
+#, fuzzy
+msgid "OpenTelemetry collector prometheus scraping configurations"
+msgstr "Open Telemetryコレクターの構成"
+
+#, fuzzy
+msgid "OpenTelemetry collector receiver configurations"
+msgstr "Open Telemetryコレクターの構成"
+
+#, fuzzy
+msgid "OpenTelemetry collector: Prometheus scraping (experimental)"
 msgstr "OpenTelemetryコレクター（実験的）"
 
-msgid "OpenTelemetry collector configurations"
-msgstr "Open Telemetryコレクターの構成"
+#, fuzzy
+msgid "OpenTelemetry collector: Receiver (experimental)"
+msgstr "OpenTelemetryコレクター（実験的）"
 
 msgid "OpenTelemetry metric name"
 msgstr "OpenTelemetryメトリック名"
@@ -72901,6 +72925,10 @@ msgstr "信頼できる"
 msgid "Trust system wide configured CAs"
 msgstr "システム全体で構成されたCAを信頼する"
 
+#, fuzzy
+msgid "Trust this site completely"
+msgstr "完了するまでの推定時間"
+
 msgid "Trusted"
 msgstr "信頼できる"
 
@@ -78513,6 +78541,15 @@ msgstr ""
 "このオプションを有効にすると、使用可能なすべてのSNMPMIBファイルが着信SNMPト"
 "ラップの変換に使用されます。MIBが欠落しているなどの理由で変換できない情報は、"
 "イベントメッセージにそのまま書き込まれます。"
+
+msgid ""
+"When this option is enabled the central site might get compromised by a "
+"rogue remote site. If you disable this option, some features, such as HTML "
+"rendering in service descriptions for the services monitored on this remote "
+"site, will no longer work. In case the sites are managed by different groups "
+"of people, especially when belonging to different organizations, we "
+"recommend to disable this setting."
+msgstr ""
 
 msgid ""
 "When this option is enabled then after each change of the service "

@@ -3964,7 +3964,11 @@ msgid "Add OID descriptions"
 msgstr "Adăugați descrieri OID"
 
 #, fuzzy
-msgid "Add OpenTelemetry collector configuration"
+msgid "Add OpenTelemetry collector prometheus scraping configuration"
+msgstr "Adaugp o noua configurație de utilizator"
+
+#, fuzzy
+msgid "Add OpenTelemetry collector receiver configuration"
 msgstr "Adaugp o noua configurație de utilizator"
 
 msgid "Add Prefix"
@@ -6004,7 +6008,14 @@ msgstr "Toate protocoalele"
 msgid "All queues listed here will be skipped."
 msgstr "Toate cozile de așteptare enumerate aici vor fi ignorate."
 
-msgid "All related configuration of the integrated OpenTelemetry collector."
+msgid ""
+"All related configuration of the integrated OpenTelemetry collector "
+"Prometheus scraping."
+msgstr ""
+
+msgid ""
+"All related configuration of the integrated OpenTelemetry collector "
+"receivers."
 msgstr ""
 
 msgid "All related information or settings of licensing of Checkmk sites."
@@ -46835,12 +46846,21 @@ msgstr "OpenLDAP"
 msgid "OpenTelemetry (experimental)"
 msgstr ""
 
-msgid "OpenTelemetry collector (experimental)"
-msgstr ""
+#, fuzzy
+msgid "OpenTelemetry collector prometheus scraping configurations"
+msgstr "Configurația stilului selectat"
 
 #, fuzzy
-msgid "OpenTelemetry collector configurations"
+msgid "OpenTelemetry collector receiver configurations"
 msgstr "Configurația stilului selectat"
+
+#, fuzzy
+msgid "OpenTelemetry collector: Prometheus scraping (experimental)"
+msgstr "Intervalul de colectare a datelor"
+
+#, fuzzy
+msgid "OpenTelemetry collector: Receiver (experimental)"
+msgstr "Intervalul de colectare a datelor"
 
 msgid "OpenTelemetry metric name"
 msgstr ""
@@ -77991,6 +78011,10 @@ msgstr "Încredere"
 msgid "Trust system wide configured CAs"
 msgstr "Încredere în CA configurate la nivel de sistem"
 
+#, fuzzy
+msgid "Trust this site completely"
+msgstr "Timpul estimat de finalizare"
+
 msgid "Trusted"
 msgstr "De încredere"
 
@@ -84058,6 +84082,15 @@ msgstr ""
 "fi utilizate pentru a traduce capcanele SNMP primite. Informațiile care nu "
 "pot fi traduse, de exemplu, pentru că lipsește un MIB, sunt scrise neatinse "
 "în mesajul de eveniment."
+
+msgid ""
+"When this option is enabled the central site might get compromised by a "
+"rogue remote site. If you disable this option, some features, such as HTML "
+"rendering in service descriptions for the services monitored on this remote "
+"site, will no longer work. In case the sites are managed by different groups "
+"of people, especially when belonging to different organizations, we "
+"recommend to disable this setting."
+msgstr ""
 
 msgid ""
 "When this option is enabled then after each change of the service "

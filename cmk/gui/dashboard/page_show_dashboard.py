@@ -180,6 +180,9 @@ def page_dashboard_app(config: Config) -> None:
             "user_guide": "https://docs.checkmk.com/master/en/dashboards.html",
             "navigation_embedding_page": makeuri_contextless(request, [], filename="index.py"),
         },
+        "available_layouts": {"relative_grid"}
+        if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CRE
+        else {"relative_grid", "responsive_grid"},
     }
     html.vue_component("cmk-dashboard", data=page_properties)
 

@@ -311,6 +311,7 @@ function deepClone<T>(obj: T): T {
     <div>
       <CreateDashboardWizard
         v-model:open="openDashboardCreationDialog"
+        :available-layouts="available_layouts"
         @create-dashboard="(...args) => createDashboard(...args)"
         @cancel-creation="redirectToListDashboardsPage"
       />

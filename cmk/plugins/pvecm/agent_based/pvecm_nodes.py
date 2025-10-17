@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="possibly-undefined"
 
 # Version 2
 # healthy if all nodes are reachable (at discovery)
@@ -62,16 +59,26 @@
 #
 
 
-# mypy: disable-error-code="var-annotated"
+from collections.abc import Mapping, Sequence
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-check_info = {}
+type Section = Mapping[str, Mapping[str, str]]
 
 
-def parse_pvecm_nodes(string_table):
-    parsed = {}
+def parse_pvecm_nodes(string_table: StringTable) -> Section:
+    parsed = dict[str, Mapping[str, str]]()
     header = None
+    parse_func = None
     for line in string_table:
         if line == ["Node", "Sts", "Inc", "Joined", "Name"]:
             header = ["node_id", "status", "joined", "name"]
@@ -88,7 +95,7 @@ def parse_pvecm_nodes(string_table):
             parse_func = _parse_version_gt_2_with_qdevice
             continue
 
-        if header is None:
+        if header is None or parse_func is None:
             continue
 
         k, v = parse_func(line, header)
@@ -96,19 +103,25 @@ def parse_pvecm_nodes(string_table):
     return parsed
 
 
-def _parse_version_eq_2(line, header):
+def _parse_version_eq_2(
+    line: Sequence[str], header: Sequence[str]
+) -> tuple[str, Mapping[str, str]]:
     if len(line) == 6:
-        data = dict(zip(header[:3], line[:2] + [" ".join(line[3:5])]))
+        data = dict(zip(header[:3], [*line[:2], " ".join(line[3:5])]))
     else:
         data = dict(zip(["node_id", "status"], line[:2]))
     return line[-1], data
 
 
-def _parse_version_gt_2(line, header):
+def _parse_version_gt_2(
+    line: Sequence[str], header: Sequence[str]
+) -> tuple[str, Mapping[str, str]]:
     return " ".join(line[2:]), dict(zip(header[:2], line[:2]))
 
 
-def _parse_version_gt_2_with_qdevice(line, header):
+def _parse_version_gt_2_with_qdevice(
+    line: Sequence[str], header: Sequence[str]
+) -> tuple[str, Mapping[str, str]]:
     if len(line) > 3:
         name = " ".join(line[3:])
     else:
@@ -116,36 +129,42 @@ def _parse_version_gt_2_with_qdevice(line, header):
     return name, dict(zip(header[:3], line[:3]))
 
 
-def inventory_pvecm_nodes(parsed):
-    for name in parsed:
-        yield name, None
+def inventory_pvecm_nodes(section: Section) -> DiscoveryResult:
+    for name in section:
+        yield Service(item=name)
 
 
-def check_pvecm_nodes(item, _no_params, parsed):
-    if item not in parsed:
-        return 2, "Node is missing"
+def check_pvecm_nodes(item: str, section: Section) -> CheckResult:
+    if (data := section.get(item)) is None:
+        # sure? general policy would be to go to unknown.
+        yield Result(state=State.CRIT, summary="Node is missing")
+        return
 
     map_states = {
-        "m": (0, "member of the cluster"),
-        "x": (1, "not a member of the cluster"),
-        "d": (2, "known to the cluster but disallowed access to it"),
+        "m": (State.OK, "member of the cluster"),
+        "x": (State.WARN, "not a member of the cluster"),
+        "d": (State.CRIT, "known to the cluster but disallowed access to it"),
     }
-    data = parsed[item]
-    infotexts = ["ID: %s" % data["node_id"]]
-    state = 0
+
+    yield Result(state=State.OK, summary=f"ID: {data['node_id']}")
+
     if "status" in data:
         state, state_readable = map_states[data["status"].lower()]
-        infotexts.append("Status: %s" % state_readable)
+        yield Result(state=state, summary=f"Status: {state_readable}")
     if "joined" in data:
-        infotexts.append("Joined: %s" % data["joined"])
+        yield Result(state=State.OK, summary=f"Joined: {data['joined']}")
     if "votes" in data:
-        infotexts.append("Votes: %s" % data["votes"])
-    return state, ", ".join(infotexts)
+        yield Result(state=State.OK, summary=f"Votes: {data['votes']}")
 
 
-check_info["pvecm_nodes"] = LegacyCheckDefinition(
+agent_section_pvecm_nodes = AgentSection(
     name="pvecm_nodes",
     parse_function=parse_pvecm_nodes,
+)
+
+
+check_plugin_pvecm_nodes = CheckPlugin(
+    name="pvecm_nodes",
     service_name="PVE Node %s",
     discovery_function=inventory_pvecm_nodes,
     check_function=check_pvecm_nodes,

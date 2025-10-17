@@ -54,7 +54,7 @@ def load_all_plugins(
                 # right away. This is for convenience of the reviewer of a plugin migration only:
                 # This way we can separate migration and moving.
                 # For example:
-                # "cmk.base.legacy_checks.oracle_locks"
+                # "cmk.base.legacy_checks.oracle_locks",
             )
         ):
             more_discovered_plugins = discover_plugins_from_modules(

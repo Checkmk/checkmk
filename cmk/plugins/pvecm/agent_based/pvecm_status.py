@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 # healthy
 # <<<pvecm_status:sep(58)>>>
@@ -51,15 +50,24 @@
 # Node addresses: nnn.mmm.ooo.ppp
 
 
-# mypy: disable-error-code="var-annotated"
+from collections.abc import Mapping
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-check_info = {}
+type Section = Mapping[str, str]
 
 
-def parse_pvecm_status(string_table):
-    parsed = {}
+def parse_pvecm_status(string_table: StringTable) -> Section:
+    parsed = dict[str, str]()
     for line in string_table:
         if len(line) < 2:
             continue
@@ -72,39 +80,43 @@ def parse_pvecm_status(string_table):
     return parsed
 
 
-def inventory_pvecm_status(parsed):
-    if parsed:
-        return [(None, None)]
-    return []
+def inventory_pvecm_status(section: Section) -> DiscoveryResult:
+    if section:
+        yield Service()
 
 
-def check_pvecm_status(_no_item, _no_params, parsed):
-    if "cman_tool" in parsed and "cannot open connection to cman" in parsed["cman_tool"]:
-        yield 2, "Cluster management tool: %s" % parsed["cman_tool"]
+def check_pvecm_status(section: Section) -> CheckResult:
+    if "cman_tool" in section and "cannot open connection to cman" in section["cman_tool"]:
+        yield Result(state=State.CRIT, summary="Cluster management tool: %s" % section["cman_tool"])
 
     else:
-        name = parsed.get("cluster name", parsed.get("quorum provider", "unknown"))
+        name = section.get("cluster name", section.get("quorum provider", "unknown"))
 
-        yield 0, "Name: {}, Nodes: {}".format(name, parsed["nodes"])
+        yield Result(state=State.OK, summary="Name: {}, Nodes: {}".format(name, section["nodes"]))
 
-        if "activity blocked" in parsed["quorum"]:
-            yield 2, "Quorum: %s" % parsed["quorum"]
+        if "activity blocked" in section["quorum"]:
+            yield Result(state=State.CRIT, summary="Quorum: %s" % section["quorum"])
 
-        if int(parsed["expected votes"]) == int(parsed["total votes"]):
-            yield 0, "No faults"
+        if int(section["expected votes"]) == int(section["total votes"]):
+            yield Result(state=State.OK, summary="No faults")
         else:
-            yield (
-                2,
-                "Expected votes: {}, Total votes: {}".format(
-                    parsed["expected votes"],
-                    parsed["total votes"],
+            yield Result(
+                state=State.CRIT,
+                summary="Expected votes: {}, Total votes: {}".format(
+                    section["expected votes"],
+                    section["total votes"],
                 ),
             )
 
 
-check_info["pvecm_status"] = LegacyCheckDefinition(
+agent_section_pvecm_status = AgentSection(
     name="pvecm_status",
     parse_function=parse_pvecm_status,
+)
+
+
+check_plugin_pvecm_status = CheckPlugin(
+    name="pvecm_status",
     service_name="PVE Cluster State",
     discovery_function=inventory_pvecm_status,
     check_function=check_pvecm_status,

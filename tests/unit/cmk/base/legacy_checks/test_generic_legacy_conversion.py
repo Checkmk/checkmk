@@ -845,8 +845,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "pulse_secure_log_util",
         "pulse_secure_mem_util",
         "pulse_secure_temp",
-        "pvecm_nodes",
-        "pvecm_status",
         "qlogic_fcport",
         "qlogic_sanbox",
         "qlogic_sanbox_temp",

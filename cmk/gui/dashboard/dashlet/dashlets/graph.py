@@ -72,6 +72,7 @@ from cmk.gui.visuals import (
     get_singlecontext_vars,
     livestatus_query_bare,
 )
+from cmk.utils.servicename import ServiceName
 
 from ...title_macros import macro_mapping_from_context
 from ...type_defs import ABCGraphDashletConfig, DashboardConfig, DashboardName
@@ -526,14 +527,17 @@ def _graph_and_single_metric_templates_choices_for_context(
     ):
         graph_template_choices_for_row, single_metric_template_choices_for_row = (
             graph_and_single_metric_template_choices_for_metrics(
+                registered_metrics,
+                registered_graphs,
+                row["site"],
+                HostName(context["host"]["host"]),
+                ServiceName(context["service"]["service"]),
                 translated_metrics_from_row(
                     row,
                     registered_metrics,
                     debug=debug,
                     temperature_unit=temperature_unit,
                 ),
-                registered_metrics,
-                registered_graphs,
             )
         )
         graph_template_choices.extend(graph_template_choices_for_row)

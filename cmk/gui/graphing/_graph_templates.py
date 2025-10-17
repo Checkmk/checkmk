@@ -50,7 +50,6 @@ from ._metric_expressions import (
     BaseMetricExpression,
     Constant,
     CriticalOf,
-    Evaluated,
     Maximum,
     Metric,
     MetricExpression,
@@ -302,49 +301,34 @@ def get_graph_template_from_id(
     raise MKGraphNotFound(_("There is no graph plug-in with the id '%s'") % template_id)
 
 
-def evaluate_metrics(
-    *,
-    conflicting_metrics: Sequence[str],
-    optional_metrics: Sequence[str],
-    metric_expressions: Sequence[MetricExpression],
-    translated_metrics: Mapping[str, TranslatedMetric],
-) -> Sequence[Evaluated]:
-    # Skip early on conflicting_metrics
-    for var in conflicting_metrics:
-        if var in translated_metrics:
-            return []
-    results = []
-    for metric_expression in metric_expressions:
-        if (result := metric_expression.evaluate(translated_metrics)).is_error():
-            if result.error.metric_name and result.error.metric_name in optional_metrics:
-                continue
-            return []
-        results.append(result.ok)
-    return results
-
-
 def graph_and_single_metric_template_choices_for_metrics(
-    translated_metrics: Mapping[str, TranslatedMetric],
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
+    site_id: SiteId,
+    host_name: HostName,
+    service_name: ServiceName,
+    translated_metrics: Mapping[str, TranslatedMetric],
 ) -> tuple[list[GraphTemplateChoice], list[GraphTemplateChoice]]:
     graph_template_choices = []
-    already_graphed_metrics = set()
-    for graph_id, graph_plugin in _sort_registered_graph_plugins(registered_graphs):
-        graph_template = _parse_graph_plugin(graph_id, graph_plugin, registered_metrics)
-        if evaluated_metrics := evaluate_metrics(
-            conflicting_metrics=graph_template.conflicting_metrics,
-            optional_metrics=graph_template.optional_metrics,
-            metric_expressions=graph_template.metrics,
-            translated_metrics=translated_metrics,
-        ):
+    already_graphed_metrics: set[str] = set()
+    for _graph_id, graph_plugin in _sort_registered_graph_plugins(registered_graphs):
+        if (
+            graphed_metrics := evaluate_graph_plugin_metrics(
+                registered_metrics,
+                site_id,
+                host_name,
+                service_name,
+                graph_plugin,
+                translated_metrics,
+            )
+        ).graph_metrics:
+            already_graphed_metrics.update(graphed_metrics.metric_names)
             graph_template_choices.append(
                 GraphTemplateChoice(
-                    graph_template.id,
-                    graph_template.title,
+                    graph_plugin.name,
+                    graph_plugin.title.localize(translate_to_current_language),
                 )
             )
-            already_graphed_metrics.update({n for e in evaluated_metrics for n in e.metric_names()})
 
     single_metric_template_choices = []
     for metric_name, translated_metric in sorted(translated_metrics.items()):

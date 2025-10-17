@@ -119,6 +119,27 @@ snmp_section_pdu_gude_8310 = SimpleSNMPSection(
 )
 
 
+snmp_section_pdu_gude_8311 = SimpleSNMPSection(
+    name="pdu_gude_8311",
+    parsed_section_name="pdu_gude",
+    parse_function=parse_pdu_gude,
+    detect=equals(
+        ".1.3.6.1.2.1.1.2.0",
+        ".1.3.6.1.4.1.28507.62",
+    ),
+    fetch=SNMPTree(
+        ".1.3.6.1.4.1.28507.62.1.5.1.2.1",
+        [
+            "3",  # Consumption
+            "4",  # Power
+            "5",  # Current
+            "6",  # Voltage
+            "10",  # Track power
+        ],
+    ),
+)
+
+
 snmp_section_pdu_gude_8801 = SimpleSNMPSection(
     name="pdu_gude_8801",
     parsed_section_name="pdu_gude",

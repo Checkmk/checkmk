@@ -10,10 +10,12 @@ import sqlite3
 import time
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from logging import Logger
 from pathlib import Path
 from typing import Final, Literal
+
+from cmk.utils.log import VERBOSE
 
 from .config import Config
 from .event import Event
@@ -282,23 +284,44 @@ class SQLiteHistory(History):
         And performs a vacuum to shrink the database file.
         """
         now = time.time()
-        if now - self._last_housekeeping > self._config["sqlite_housekeeping_interval"]:
-            delta = now - timedelta(days=self._config["history_lifetime"]).total_seconds()
-            with self.conn as connection:
-                cur = connection.cursor()
-                cur.execute("DELETE FROM history WHERE time <= ?;", (delta,))
-            # should be executed outside of the transaction
-            self._vacuum()
-            self._last_housekeeping = now
+        if now - self._last_housekeeping <= self._config["sqlite_housekeeping_interval"]:
+            return
+        delta = now - timedelta(days=self._config["history_lifetime"]).total_seconds()
+        self._logger.log(
+            VERBOSE,
+            "SQLite history housekeeping: deleting events before %s",
+            datetime.fromtimestamp(delta).isoformat(),
+        )
+        with self.conn as connection:
+            cur = connection.cursor()
+            cur.execute("DELETE FROM history WHERE time <= ?;", (delta,))
+        # should be executed outside of the transaction
+        self._vacuum()
+        self._last_housekeeping = now
 
     def _vacuum(self) -> None:
-        """Run VACUUM command only if the free pages in DB are greater than 50 Mb."""
+        """Run VACUUM command only if the free pages in DB are greater than the configured limit"""
         with self.conn as connection:
             freelist_count = connection.execute("PRAGMA freelist_count").fetchone()[0]
             freelist_size = freelist_count * self._page_size
 
-        if freelist_size > self._config["sqlite_freelist_size"]:
-            self.conn.execute("VACUUM;")
+        max_freelist_size = self._config["sqlite_freelist_size"]
+        if freelist_size <= max_freelist_size:
+            return
+        self._logger.log(
+            VERBOSE,
+            "SQLite's freelist size of %d bytes is larger than the configured limit of %d bytes, cleanup needed",
+            freelist_size,
+            max_freelist_size,
+        )
+        self._logger.log(
+            VERBOSE,
+            "running VACUUM on event console history %s",
+            f"at {self._settings.database}"
+            if isinstance(self._settings.database, Path)
+            else "in-memory DB",
+        )
+        self.conn.execute("VACUUM;")
 
     def close(self) -> None:
         """Explicitly close the connection to the sqlite database.

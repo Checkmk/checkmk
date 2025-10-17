@@ -35,12 +35,10 @@ def dependency_paths_mapping() {
     return [
         "build-linux-agent-updater": [
             "agents",
-            "defines.make",
             "non-free/packages/cmk-update-agent",
         ],
         "winagt-build": [
             "agents",
-            "defines.make",
             "packages/cmk-agent-ctl",
             "packages/mk-sql",
             "third_party/asio",
@@ -52,7 +50,6 @@ def dependency_paths_mapping() {
         ],
         "winagt-build-modules": [
             "agents/modules/windows",
-            "defines.make",
         ],
     ];
 }

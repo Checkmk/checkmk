@@ -3904,6 +3904,14 @@ msgstr "OID-Beschreibung hinzufügen"
 msgid "Add OpenTelemetry collector configuration"
 msgstr "Konfiguration des OpenTelemetry Collectors hinzufügen"
 
+#, fuzzy
+msgid "Add OpenTelemetry collector prometheus scraping configuration"
+msgstr "Konfiguration des OpenTelemetry Collectors hinzufügen"
+
+#, fuzzy
+msgid "Add OpenTelemetry collector receiver configuration"
+msgstr "Konfiguration des OpenTelemetry Collectors hinzufügen"
+
 msgid "Add OpenTelemetry configuration"
 msgstr "OpenTelemetry-Konfiguration hinzufügen"
 
@@ -5915,6 +5923,22 @@ msgstr "Alle Protokolle"
 
 msgid "All queues listed here will be skipped."
 msgstr "Alle hier aufgelisteten Warteschlangen werden übersprungen."
+
+#, fuzzy
+msgid ""
+"All related configuration of the integrated OpenTelemetry collector "
+"Prometheus scraping."
+msgstr ""
+"Alle damit verbundenen Konfigurationen des integrierten OpenTelemetry "
+"Collectors."
+
+#, fuzzy
+msgid ""
+"All related configuration of the integrated OpenTelemetry collector "
+"receivers."
+msgstr ""
+"Alle damit verbundenen Konfigurationen des integrierten OpenTelemetry "
+"Collectors."
 
 msgid "All related configuration of the integrated OpenTelemetry collector."
 msgstr ""
@@ -42034,6 +42058,10 @@ msgstr "NAS DB-Pfad"
 msgid "NAS DB user name"
 msgstr "NAS DB Benutzername"
 
+#, fuzzy
+msgid "NAT Gateways"
+msgstr "vNet Gateway"
+
 msgid "NFS"
 msgstr "NFS"
 
@@ -46134,6 +46162,16 @@ msgstr "OpenHardwareMonitor (Windows)"
 msgid "OpenHardwareMonitor S.M.A.R.T."
 msgstr "OpenHardwareMonitor S.M.A.R.T."
 
+msgid ""
+"OpenHardwareMonitor files have been removed due to security reasons.To use "
+"OpenHardwareMonitor you may download it from our site using commands as Site "
+"user:wget https://github.com/Checkmk/checkmk/blob/master/doc/treasures/"
+"windows/ohm/OpenHardwareMonitorCLI.exe -P local/share/check_mk/agents/"
+"windows/wget https://github.com/Checkmk/checkmk/blob/master/doc/treasures/"
+"windows/ohm/OpenHardwareMonitorLib.dll -P local/share/check_mk/agents/"
+"windows/"
+msgstr ""
+
 msgid "OpenLDAP"
 msgstr "OpenLDAP"
 
@@ -46148,6 +46186,22 @@ msgstr "OpenTelemetry Collector (experimentell)"
 
 msgid "OpenTelemetry collector configurations"
 msgstr "Konfigurationen des OpenTelemetry Collectors"
+
+#, fuzzy
+msgid "OpenTelemetry collector prometheus scraping configurations"
+msgstr "Konfigurationen des OpenTelemetry Collectors"
+
+#, fuzzy
+msgid "OpenTelemetry collector receiver configurations"
+msgstr "Konfigurationen des OpenTelemetry Collectors"
+
+#, fuzzy
+msgid "OpenTelemetry collector: Prometheus scraping (experimental)"
+msgstr "OpenTelemetry Collector (experimentell)"
+
+#, fuzzy
+msgid "OpenTelemetry collector: Receiver (experimental)"
+msgstr "OpenTelemetry Collector (experimentell)"
 
 msgid "OpenTelemetry data - Metric backend"
 msgstr "OpenTelemetry-Daten - Metrik-Backend"
@@ -89028,27 +89082,6 @@ msgstr "Balkendiagramm"
 msgid "Scatterplot"
 msgstr ""
 
-msgid "Must select an option"
-msgstr "Sie müssen eine Option auswählen"
-
-msgid "Metric (single)"
-msgstr "Metrik (einfach)"
-
-msgid "Graph (combined)"
-msgstr "Graph (kombiniert)"
-
-msgid "Service metric"
-msgstr "Service-Metrik"
-
-msgid "Service graph"
-msgstr "Service-Graph"
-
-msgid "Service selection"
-msgstr "Service-Auswahl"
-
-msgid "Fixed data range"
-msgstr "Fester Datenbereich"
-
 msgid "Axis"
 msgstr ""
 
@@ -89083,8 +89116,29 @@ msgid ""
 "Do not follow timerange changes of other graphs on the current dashboard"
 msgstr ""
 
+msgid "Must select an option"
+msgstr "Sie müssen eine Option auswählen"
+
+msgid "Metric (single)"
+msgstr "Metrik (einfach)"
+
+msgid "Graph (combined)"
+msgstr "Graph (kombiniert)"
+
+msgid "Service metric"
+msgstr "Service-Metrik"
+
+msgid "Service graph"
+msgstr "Service-Graph"
+
+msgid "Service selection"
+msgstr "Service-Auswahl"
+
 msgid "Additional graph options"
 msgstr "Zusätzliche Graph-Optionen"
+
+msgid "Fixed data range"
+msgstr "Fester Datenbereich"
 
 msgid "Additional scatterplot options"
 msgstr ""
@@ -89295,6 +89349,9 @@ msgid "Sites with errors: %{n}"
 msgstr "Instanzen mit Fehlern: %{n}"
 
 msgid "Key hints"
+msgstr ""
+
+msgid "Ctrl + Alt"
 msgstr ""
 
 msgid "Agent connection test running"
@@ -89543,6 +89600,15 @@ msgstr ""
 msgid ""
 "Download the Relay container image and run it in your environment to start "
 "the setup."
+msgstr ""
+
+#, fuzzy
+msgid "Provide a display name for your Relay."
+msgstr "Alternativer Anzeigename für Services"
+
+msgid ""
+"The name you enter here will be automatically inserted into the terminal "
+"code in the next step."
 msgstr ""
 
 msgid "Deploy the relay to your environment"

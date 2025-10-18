@@ -3777,6 +3777,14 @@ msgid "Add OpenTelemetry collector configuration"
 msgstr "OpenTelemetryコレクターの設定を追加する"
 
 #, fuzzy
+msgid "Add OpenTelemetry collector prometheus scraping configuration"
+msgstr "OpenTelemetryコレクターの設定を追加する"
+
+#, fuzzy
+msgid "Add OpenTelemetry collector receiver configuration"
+msgstr "OpenTelemetryコレクターの設定を追加する"
+
+#, fuzzy
 msgid "Add OpenTelemetry configuration"
 msgstr "OpenTelemetryコレクターの設定を追加する"
 
@@ -5736,6 +5744,18 @@ msgstr "すべてのプロトコル"
 
 msgid "All queues listed here will be skipped."
 msgstr "ここにリストされているすべてのキューはスキップされます。"
+
+#, fuzzy
+msgid ""
+"All related configuration of the integrated OpenTelemetry collector "
+"Prometheus scraping."
+msgstr "統合 OpenTelemetry コレクタのすべての関連構成。"
+
+#, fuzzy
+msgid ""
+"All related configuration of the integrated OpenTelemetry collector "
+"receivers."
+msgstr "統合 OpenTelemetry コレクタのすべての関連構成。"
 
 msgid "All related configuration of the integrated OpenTelemetry collector."
 msgstr "統合 OpenTelemetry コレクタのすべての関連構成。"
@@ -41166,6 +41186,10 @@ msgstr "NASDBパス"
 msgid "NAS DB user name"
 msgstr "NAS DBユーザー名"
 
+#, fuzzy
+msgid "NAT Gateways"
+msgstr "vNet ゲートウェイ"
+
 msgid "NFS"
 msgstr "enter"
 
@@ -45197,6 +45221,16 @@ msgstr "OpenHardwareMonitor(Windows)"
 msgid "OpenHardwareMonitor S.M.A.R.T."
 msgstr "OpenHardwareMonitor S.M.A.R.T."
 
+msgid ""
+"OpenHardwareMonitor files have been removed due to security reasons.To use "
+"OpenHardwareMonitor you may download it from our site using commands as Site "
+"user:wget https://github.com/Checkmk/checkmk/blob/master/doc/treasures/"
+"windows/ohm/OpenHardwareMonitorCLI.exe -P local/share/check_mk/agents/"
+"windows/wget https://github.com/Checkmk/checkmk/blob/master/doc/treasures/"
+"windows/ohm/OpenHardwareMonitorLib.dll -P local/share/check_mk/agents/"
+"windows/"
+msgstr ""
+
 msgid "OpenLDAP"
 msgstr "OpenLDAP"
 
@@ -45212,6 +45246,22 @@ msgstr "OpenTelemetryコレクター（実験的）"
 
 msgid "OpenTelemetry collector configurations"
 msgstr "Open Telemetryコレクターの構成"
+
+#, fuzzy
+msgid "OpenTelemetry collector prometheus scraping configurations"
+msgstr "Open Telemetryコレクターの構成"
+
+#, fuzzy
+msgid "OpenTelemetry collector receiver configurations"
+msgstr "Open Telemetryコレクターの構成"
+
+#, fuzzy
+msgid "OpenTelemetry collector: Prometheus scraping (experimental)"
+msgstr "OpenTelemetryコレクター（実験的）"
+
+#, fuzzy
+msgid "OpenTelemetry collector: Receiver (experimental)"
+msgstr "OpenTelemetryコレクター（実験的）"
 
 #, fuzzy
 msgid "OpenTelemetry data - Metric backend"
@@ -86855,34 +86905,6 @@ msgstr "棒グラフ"
 msgid "Scatterplot"
 msgstr "平均散布図"
 
-#, fuzzy
-msgid "Must select an option"
-msgstr "オプション選択"
-
-#, fuzzy
-msgid "Metric (single)"
-msgstr "メトリック名"
-
-#, fuzzy
-msgid "Graph (combined)"
-msgstr "グラフライン"
-
-#, fuzzy
-msgid "Service metric"
-msgstr "サービスメトリクス"
-
-#, fuzzy
-msgid "Service graph"
-msgstr "サービスグラフ"
-
-#, fuzzy
-msgid "Service selection"
-msgstr "サイト選択"
-
-#, fuzzy
-msgid "Fixed data range"
-msgstr "固定範囲"
-
 msgid "Axis"
 msgstr ""
 
@@ -86925,8 +86947,36 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Must select an option"
+msgstr "オプション選択"
+
+#, fuzzy
+msgid "Metric (single)"
+msgstr "メトリック名"
+
+#, fuzzy
+msgid "Graph (combined)"
+msgstr "グラフライン"
+
+#, fuzzy
+msgid "Service metric"
+msgstr "サービスメトリクス"
+
+#, fuzzy
+msgid "Service graph"
+msgstr "サービスグラフ"
+
+#, fuzzy
+msgid "Service selection"
+msgstr "サイト選択"
+
+#, fuzzy
 msgid "Additional graph options"
 msgstr "追加オプション"
+
+#, fuzzy
+msgid "Fixed data range"
+msgstr "固定範囲"
 
 #, fuzzy
 msgid "Additional scatterplot options"
@@ -87166,6 +87216,9 @@ msgid "Sites with errors: %{n}"
 msgstr "%d サイトでエラーが発生しました: %s"
 
 msgid "Key hints"
+msgstr ""
+
+msgid "Ctrl + Alt"
 msgstr ""
 
 #, fuzzy
@@ -87429,6 +87482,15 @@ msgstr ""
 msgid ""
 "Download the Relay container image and run it in your environment to start "
 "the setup."
+msgstr ""
+
+#, fuzzy
+msgid "Provide a display name for your Relay."
+msgstr "サービスの代替表示名"
+
+msgid ""
+"The name you enter here will be automatically inserted into the terminal "
+"code in the next step."
 msgstr ""
 
 msgid "Deploy the relay to your environment"

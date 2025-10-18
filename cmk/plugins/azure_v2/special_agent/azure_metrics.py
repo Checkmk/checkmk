@@ -292,6 +292,36 @@ ALL_METRICS: dict[str, list[AzureMetric]] = {
     ],
     "Microsoft.Network/natGateways": [
         AzureMetric(name="DatapathAvailability", interval="PT1M", aggregation="average"),
+        AzureMetric(name="TotalConnectionCount", interval="PT1M", aggregation="total"),
+        AzureMetric(
+            name="SNATConnectionCount",
+            interval="PT1M",
+            aggregation="total",
+        ),
+        AzureMetric(
+            name="SNATConnectionCount",
+            interval="PT1M",
+            aggregation="total",
+            dimension_filters=(
+                DimensionFilter(
+                    name="ConnectionState",
+                    value="Attempted",
+                ),
+            ),
+            explicit_metric_alias="total_SNATConnectionCountAttempted",
+        ),
+        AzureMetric(
+            name="SNATConnectionCount",
+            interval="PT1M",
+            aggregation="total",
+            dimension_filters=(
+                DimensionFilter(
+                    name="ConnectionState",
+                    value="Failed",
+                ),
+            ),
+            explicit_metric_alias="total_SNATConnectionCountFailed",
+        ),
     ],
     "Microsoft.DocumentDb/databaseAccounts": cosmos_accounts_metrics,
     "Microsoft.DocumentDB/databaseAccounts": cosmos_accounts_metrics,

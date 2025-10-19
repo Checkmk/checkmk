@@ -73,6 +73,7 @@ cc_library(
     ],
     copts = [
         "-Wno-int-conversion",
+        "-Wno-stringop-overflow",
         "-Wno-stringop-truncation",
         "-Wno-unknown-warning",
         "-Wno-unused-but-set-variable",
@@ -134,6 +135,7 @@ cc_library(
         "-Wno-format-truncation",
         "-Wno-implicit-function-declaration",
         "-Wno-strict-aliasing",
+        "-Wno-stringop-overflow",
         "-Wno-unknown-warning",
         "-Wno-unused-but-set-variable",
         "-O2",

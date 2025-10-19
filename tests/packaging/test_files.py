@@ -371,10 +371,9 @@ def test_windows_artifacts_are_signed(package_path: str, cmk_version: str) -> No
     signing_failures = []
 
     non_msi_files = ["mk-sql.exe"]
-    if not package_path.endswith(".tar.gz"):
-        path_prefix = "share/check_mk/agents/windows"
-    else:
-        path_prefix = "agents/windows"
+    path_prefix = (
+        "agents/windows" if package_path.endswith(".tar.gz") else "share/check_mk/agents/windows"
+    )
 
     for non_msi_file in non_msi_files:
         with NamedTemporaryFile() as non_msi_file_temp:

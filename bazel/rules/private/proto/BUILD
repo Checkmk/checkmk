@@ -11,6 +11,7 @@ py_console_script_binary(
 proto_plugin(
     name = "pyi_plugin",
     exclusions = ["google/protobuf"],
+    options = ["quiet"],
     outputs = ["{protopath|python}_pb2.pyi"],
     # protoc_plugin_name = "pyi",
     tool = ":protoc-gen-mypy",

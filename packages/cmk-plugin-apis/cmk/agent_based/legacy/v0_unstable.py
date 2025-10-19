@@ -52,7 +52,9 @@ __all__ = [
 _DiscoveredParameters = Mapping | tuple | str | None
 
 
-_DiscoveryFunctionLegacy = Callable[..., None | Iterable[tuple[str | None, _DiscoveredParameters]]]
+_DiscoveryFunctionLegacy = Callable[
+    ..., None | Iterable[tuple[str | None, _DiscoveredParameters]]
+]
 _DiscoveryFunctionV2Compliant = Callable[..., DiscoveryResult]
 
 _OptNumber = None | int | float
@@ -81,7 +83,9 @@ _CheckFunctionLegacy = Callable[
     ...,
     None | LegacyResult | Iterable[LegacyResult] | Generator[LegacyResult],
 ]
-_CheckFunctionV2Compliant = Callable[..., Generator[Result | Metric | IgnoreResults]]
+_CheckFunctionV2Compliant = Callable[
+    ..., Generator[Result | Metric | IgnoreResults, None, None]
+]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -91,7 +95,9 @@ class LegacyCheckDefinition:
     fetch: list[SNMPTree] | SNMPTree | None = None
     sections: list[str] | None = None
     check_function: _CheckFunctionV2Compliant | _CheckFunctionLegacy | None = None
-    discovery_function: _DiscoveryFunctionV2Compliant | _DiscoveryFunctionLegacy | None = None
+    discovery_function: (
+        _DiscoveryFunctionV2Compliant | _DiscoveryFunctionLegacy | None
+    ) = None
     parse_function: Callable[[list], object] | None = None
     check_ruleset_name: str | None = None
     check_default_parameters: Mapping[str, Any] | None = None
@@ -159,7 +165,9 @@ def _build_perfdata(
 ) -> list:
     if not dsname:
         return []
-    used_boundaries = boundaries if isinstance(boundaries, tuple) and len(boundaries) == 2 else ()
+    used_boundaries = (
+        boundaries if isinstance(boundaries, tuple) and len(boundaries) == 2 else ()
+    )
     return [(dsname, value, levels[0], levels[1], *used_boundaries)]
 
 
@@ -244,4 +252,8 @@ def check_levels(
         levels = _normalize_levels(params)
 
     state, levelstext = _do_check_levels(value, levels, render_func)
-    return state, infotext + levelstext, _build_perfdata(dsname, value, levels, boundaries)
+    return (
+        state,
+        infotext + levelstext,
+        _build_perfdata(dsname, value, levels, boundaries),
+    )

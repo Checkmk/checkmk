@@ -18,9 +18,9 @@ from netapp_ontap.host_connection import HostConnection
 from pydantic import BaseModel
 
 from cmk.plugins.netapp import models
+from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter
 from cmk.special_agents.v0_unstable.agent_common import CannotRecover, special_agent_main
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
-from cmk.special_agents.v0_unstable.request_helper import HostnameValidationAdapter
 
 __version__ = "2.5.0b1"
 

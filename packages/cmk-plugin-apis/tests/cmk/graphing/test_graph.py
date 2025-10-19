@@ -60,7 +60,9 @@ def test_graph_error_conflicting_empty_name() -> None:
     title = Title("Title")
     simple_lines = ["metric-name"]
     with pytest.raises(ValueError):
-        graphs.Graph(name=name, title=title, simple_lines=simple_lines, conflicting=[""])
+        graphs.Graph(
+            name=name, title=title, simple_lines=simple_lines, conflicting=[""]
+        )
 
 
 def test_bidirectional_error_empty_name() -> None:

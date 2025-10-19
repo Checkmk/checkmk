@@ -19,7 +19,7 @@ import time
 from collections import Counter
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, TYPE_CHECKING
 from xml.dom import minidom
 
 # TODO: minicompat include internal impl details. But NodeList is only defined there for <3.11
@@ -29,10 +29,12 @@ import dateutil.parser
 import requests
 import urllib3
 
-import cmk.special_agents.v0_unstable.misc as utils
 import cmk.utils.paths
 from cmk.password_store.v1_unstable import dereference_secret, Secret
-from cmk.special_agents.v0_unstable.request_helper import HostnameValidationAdapter
+from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter, vcrtrace
+
+if TYPE_CHECKING:
+    pass
 
 #   .--defines-------------------------------------------------------------.
 #   |                      _       __ _                                    |
@@ -956,7 +958,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument(
         "--vcrtrace",
         "--tracefile",
-        action=utils.vcrtrace(filter_body=ESXConnection.filter_request_body),
+        action=vcrtrace(filter_body=ESXConnection.filter_request_body),
     )
     parser.add_argument(
         "-t",

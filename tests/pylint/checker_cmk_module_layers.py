@@ -280,6 +280,7 @@ PACKAGE_PLUGIN_APIS = (
     "cmk.rulesets.v1",
     "cmk.server_side_calls.internal",
     "cmk.server_side_calls.v1",
+    "cmk.server_side_programs.v1_unstable",
 )
 
 PACKAGE_CCC = ("cmk.ccc",)
@@ -808,6 +809,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     ),
     Component("cmk.special_agents"): _allow(
         *PACKAGE_CCC,
+        *PACKAGE_PLUGIN_APIS,
         "cmk.utils.password_store",
         "cmk.utils.paths",
     ),

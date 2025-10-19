@@ -77,8 +77,8 @@ from cmk.plugins.kube.common import (
     RawMetrics,
 )
 from cmk.plugins.kube.schemata import api, section
+from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import ConditionalPiggybackSection, SectionWriter
-from cmk.special_agents.v0_unstable.misc import vcrtrace
 
 
 class MonitoredObject(enum.Enum):

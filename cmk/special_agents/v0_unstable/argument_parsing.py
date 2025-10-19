@@ -15,7 +15,7 @@ Current responsibilities include:
 
 import argparse
 
-from .misc import vcrtrace
+from cmk.server_side_programs.v1_unstable import vcrtrace
 
 Args = argparse.Namespace
 

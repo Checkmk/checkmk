@@ -132,13 +132,17 @@ def test__check_levels_errors(
     "upper_result, lower_result, expected_result",
     [
         pytest.param(
-            CheckLevelsResult(Type.FIXED, State.WARN, (6.0, 7.0), "(warn/crit at 6.00/7.00)", None),
+            CheckLevelsResult(
+                Type.FIXED, State.WARN, (6.0, 7.0), "(warn/crit at 6.00/7.00)", None
+            ),
             CheckLevelsResult(Type.NO_LEVELS, State.OK),
             ((), ""),
             id="no predictive levels",
         ),
         pytest.param(
-            CheckLevelsResult(Type.FIXED, State.WARN, (6.0, 7.0), "(warn/crit at 6.00/7.00)", None),
+            CheckLevelsResult(
+                Type.FIXED, State.WARN, (6.0, 7.0), "(warn/crit at 6.00/7.00)", None
+            ),
             CheckLevelsResult(
                 Type.PREDICTIVE,
                 State.OK,

@@ -78,5 +78,7 @@ class Password(
 
 
 @dataclass(frozen=True, kw_only=True)
-class TimePeriod(FormSpec[tuple[Literal["cmk_postprocessed"], Literal["stored_time_period"], str]]):
+class TimePeriod(
+    FormSpec[tuple[Literal["cmk_postprocessed"], Literal["stored_time_period"], str]]
+):
     """Specifies a form selecting from a list of time periods configured in Checkmk"""

@@ -186,7 +186,9 @@ class Translation:
     """
 
     name: str
-    check_commands: Sequence[PassiveCheck | ActiveCheck | HostCheckCommand | NagiosPlugin]
+    check_commands: Sequence[
+        PassiveCheck | ActiveCheck | HostCheckCommand | NagiosPlugin
+    ]
     translations: Mapping[str, RenameTo | ScaleBy | RenameToAndScaleBy]
 
     def __post_init__(self) -> None:

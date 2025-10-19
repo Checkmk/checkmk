@@ -113,7 +113,9 @@ class SNMPTree(_SNMPTreeTuple):
 
     def __new__(cls, base: str, oids: Sequence[str | _OIDSpecTuple]) -> Self:
         if not isinstance(oids, list):
-            raise TypeError(f"'oids' argument to SNMPTree must be a list, got {type(oids)}")
+            raise TypeError(
+                f"'oids' argument to SNMPTree must be a list, got {type(oids)}"
+            )
 
         return super().__new__(
             cls,
@@ -160,7 +162,13 @@ class SNMPTree(_SNMPTreeTuple):
         heads: list[str] = []
 
         for column, _encoding, _save_to_cache in oid_list:
-            if column in (0, -1, -2, -3, -4):  # alowed for legacy checks. Remove some day (tm).
+            if column in (
+                0,
+                -1,
+                -2,
+                -3,
+                -4,
+            ):  # alowed for legacy checks. Remove some day (tm).
                 continue
             if not isinstance(column, str):
                 raise ValueError(f"invalid OID column {column!r}")

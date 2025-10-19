@@ -53,5 +53,7 @@ class TestPasswordStore:
         )
         assert {
             k: v.reveal()
-            for k, v in PasswordStore(Secret(b"password-secret")).load_bytes(encrypted).items()
+            for k, v in PasswordStore(Secret(b"password-secret"))
+            .load_bytes(encrypted)
+            .items()
         } == {"time": "is tight"}

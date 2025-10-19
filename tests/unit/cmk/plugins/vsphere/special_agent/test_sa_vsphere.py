@@ -94,11 +94,6 @@ def test_parse_arguments_secret_long() -> None:
         ["--vm_piggyname", "MissPiggy"],
     ],
 )
-def test_parse_arguments_invalid(
-    invalid_argv: Sequence[str], monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(
-        "cmk.special_agents.v0_unstable.misc.vcrtrace", lambda **vcr_init_kwargs: None
-    )
+def test_parse_arguments_invalid(invalid_argv: Sequence[str]) -> None:
     with pytest.raises(SystemExit):
         agent_vsphere.parse_arguments(invalid_argv)

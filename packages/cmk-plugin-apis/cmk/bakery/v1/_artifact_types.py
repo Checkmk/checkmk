@@ -131,7 +131,9 @@ class SystemBinary:
             the plug-in will be deployed under it's relative source path/filename.
     """
 
-    def __init__(self, *, base_os: OS, source: Path, target: Path | None = None) -> None:
+    def __init__(
+        self, *, base_os: OS, source: Path, target: Path | None = None
+    ) -> None:
         _validate_base_os(base_os)
         _validate_source(source)
         _validate_optional_target(target)
@@ -176,7 +178,12 @@ class PluginConfig:
     """
 
     def __init__(
-        self, *, base_os: OS, lines: Iterable[str], target: Path, include_header: bool = False
+        self,
+        *,
+        base_os: OS,
+        lines: Iterable[str],
+        target: Path,
+        include_header: bool = False,
     ) -> None:
         _validate_base_os(base_os)
         _validate_lines(lines)
@@ -225,7 +232,12 @@ class SystemConfig:
     """
 
     def __init__(
-        self, *, base_os: OS, lines: list[str], target: Path, include_header: bool = False
+        self,
+        *,
+        base_os: OS,
+        lines: list[str],
+        target: Path,
+        include_header: bool = False,
     ) -> None:
         _validate_base_os(base_os)
         _validate_lines(lines)
@@ -349,7 +361,9 @@ class WindowsConfigEntry:
         self.content = content
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(path={self.path!r}, content={self.content!r})"
+        return (
+            f"{self.__class__.__name__}(path={self.path!r}, content={self.content!r})"
+        )
 
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
@@ -387,7 +401,9 @@ class WindowsConfigItems:
                 raise TypeError(f"At index {index} of content argument: {te}")
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(path={self.path!r}, content={self.content!r})"
+        return (
+            f"{self.__class__.__name__}(path={self.path!r}, content={self.content!r})"
+        )
 
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
@@ -412,7 +428,9 @@ class WindowsGlobalConfigEntry:
         self.content = content
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(name={self.name!r}, content={self.content!r})"
+        return (
+            f"{self.__class__.__name__}(name={self.name!r}, content={self.content!r})"
+        )
 
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
@@ -437,7 +455,9 @@ class WindowsSystemConfigEntry:
         self.content = content
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(name={self.name!r}, content={self.content!r})"
+        return (
+            f"{self.__class__.__name__}(name={self.name!r}, content={self.content!r})"
+        )
 
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__ and self.__dict__ == other.__dict__

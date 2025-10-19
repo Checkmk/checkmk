@@ -46,7 +46,9 @@ def test_node_returns_metric() -> None:
 
 
 def test_node_returns_details_only() -> None:
-    node_results = _check_function_node((Result(state=State.OK, notice="This is detailed"),))
+    node_results = _check_function_node(
+        (Result(state=State.OK, notice="This is detailed"),)
+    )
     assert list(make_node_notice_results("test_node", node_results)) == [
         Result(state=State.OK, notice="[test_node]: This is detailed"),
     ]
@@ -62,10 +64,14 @@ def test_node_returns_ok_and_warn() -> None:
 
 def test_node_mutliline() -> None:
     node_results = (Result(state=State.WARN, notice="These\nare\nfour\nlines"),)
-    assert list(make_node_notice_results("test_node", _check_function_node(node_results))) == [
+    assert list(
+        make_node_notice_results("test_node", _check_function_node(node_results))
+    ) == [
         Result(
             state=State.WARN,
             summary="[test_node]: These, are, four, lines",
-            details=("[test_node]: These\n[test_node]: are\n[test_node]: four\n[test_node]: lines"),
+            details=(
+                "[test_node]: These\n[test_node]: are\n[test_node]: four\n[test_node]: lines"
+            ),
         ),
     ]

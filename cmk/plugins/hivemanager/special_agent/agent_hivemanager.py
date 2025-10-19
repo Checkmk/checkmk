@@ -11,8 +11,8 @@ from collections.abc import Sequence
 
 import requests
 
+from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter
 from cmk.special_agents.v0_unstable.agent_common import special_agent_main
-from cmk.special_agents.v0_unstable.request_helper import HostnameValidationAdapter
 
 
 def main() -> int:

@@ -70,7 +70,9 @@ def get_value_store() -> MutableMapping[str, Any]:
     return _active_host_value_store.active_service_interface
 
 
-_TypeValueStoreManager = TypeVar("_TypeValueStoreManager", bound=_ValueStoreManagerProtocol)
+_TypeValueStoreManager = TypeVar(
+    "_TypeValueStoreManager", bound=_ValueStoreManagerProtocol
+)
 
 
 @contextmanager

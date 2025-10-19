@@ -60,17 +60,14 @@ from cmk.plugins.aws.constants import (
     AWSElastiCacheQuotaDefaults,
     AWSRegions,
 )
+from cmk.server_side_programs.v1_unstable import vcrtrace
 from cmk.special_agents.v0_unstable.agent_common import (
     ConditionalPiggybackSection,
     SectionWriter,
     special_agent_main,
 )
 from cmk.special_agents.v0_unstable.argument_parsing import Args
-from cmk.special_agents.v0_unstable.misc import (
-    DataCache,
-    datetime_serializer,
-    vcrtrace,
-)
+from cmk.special_agents.v0_unstable.misc import DataCache, datetime_serializer
 from cmk.utils.password_store import lookup as password_store_lookup
 from cmk.utils.paths import tmp_dir
 

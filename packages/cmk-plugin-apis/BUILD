@@ -4,11 +4,13 @@ load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
 
-exports_files([
-    "dev-requirements.in",
-    "pyproject.toml",
-    "requirements.in",
-])
+exports_files(
+    [
+        "dev-requirements.in",
+        "pyproject.toml",
+        "requirements.in",
+    ],
+)
 
 py_library(
     name = "agent_based",
@@ -137,6 +139,24 @@ py_library(
 )
 
 py_library(
+    name = "server_side_programs",
+    srcs = [
+        "cmk/server_side_programs/__init__.py",
+        "cmk/server_side_programs/v1_unstable/__init__.py",
+        "cmk/server_side_programs/v1_unstable/_host_name_validation.py",
+        "cmk/server_side_programs/v1_unstable/_storage.py",
+        "cmk/server_side_programs/v1_unstable/_vcrtrace.py",
+    ],
+    data = ["cmk/server_side_programs/py.typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        requirement("requests"),
+        requirement("vcrpy"),
+    ],
+)
+
+py_library(
     name = "inventory_ui",
     srcs = [
         "cmk/inventory_ui/__init__.py",
@@ -161,6 +181,7 @@ py_doc_test(
         ":inventory_ui",
         ":rulesets",
         ":server_side_calls",
+        ":server_side_programs",
     ],
     tags = ["no-mypy"],
 )
@@ -246,6 +267,18 @@ py_test(
 )
 
 py_test(
+    name = "server_side_programs-test",
+    size = "small",
+    srcs = glob(["tests/cmk/server_side_programs/**/*.py"]) + [":__test__.py"],
+    main = ":__test__.py",
+    deps = [
+        ":__test__",
+        ":server_side_programs",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
     name = "inventory_ui-test",
     size = "small",
     srcs = glob(["tests/cmk/inventory_ui/**/*.py"]) + [":__test__.py"],
@@ -272,6 +305,7 @@ py_wheel(
         ":py_typed",
         ":rulesets",
         ":server_side_calls",
+        ":server_side_programs",
     ],
 )
 
@@ -285,6 +319,7 @@ filegroup(
         "cmk/password_store/py.typed",
         "cmk/rulesets/py.typed",
         "cmk/server_side_calls/py.typed",
+        "cmk/server_side_programs/py.typed",
     ],
 )
 

@@ -45,9 +45,9 @@ class TestLocalizable:
 
     @pytest.mark.parametrize(["localizable"], [(Title,), (Message,), (Label,), (Help,)])
     def test_add(self, localizable: type[_Localizable]) -> None:
-        assert (localizable("One sentence. ") + localizable("Another sentence.")).localize(
-            _localizer
-        ) == "blahblah"
+        assert (
+            localizable("One sentence. ") + localizable("Another sentence.")
+        ).localize(_localizer) == "blahblah"
 
     @pytest.mark.parametrize(
         ["title1", "title2", "expected_equality"],

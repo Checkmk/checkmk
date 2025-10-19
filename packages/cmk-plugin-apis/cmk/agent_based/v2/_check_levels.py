@@ -12,7 +12,9 @@ from cmk.agent_based.v1 import Metric, Result, State
 
 NoLevelsT = tuple[Literal["no_levels"], None]
 
-type FixedLevelsT[_NumberT: (int, float)] = tuple[Literal["fixed"], tuple[_NumberT, _NumberT]]
+type FixedLevelsT[_NumberT: (int, float)] = tuple[
+    Literal["fixed"], tuple[_NumberT, _NumberT]
+]
 
 type PredictiveLevelsT[_NumberT: (int, float)] = tuple[
     Literal["predictive"], tuple[str, float | None, tuple[_NumberT, _NumberT] | None]
@@ -94,17 +96,23 @@ def _check_predictive_levels(
             state=State.OK,
             levels=None,
             levels_text="",
-            prediction=_make_prediction_metric(metric_name, predicted_value, levels_direction),
+            prediction=_make_prediction_metric(
+                metric_name, predicted_value, levels_direction
+            ),
         )
 
     return replace(
         _check_fixed_levels(value, levels, levels_direction, render_func),
         type=Type.PREDICTIVE,
-        prediction=_make_prediction_metric(metric_name, predicted_value, levels_direction),
+        prediction=_make_prediction_metric(
+            metric_name, predicted_value, levels_direction
+        ),
     )
 
 
-def _make_prediction_metric(name: str, value: float | None, direction: Direction) -> Metric | None:
+def _make_prediction_metric(
+    name: str, value: float | None, direction: Direction
+) -> Metric | None:
     if value is None:
         return None
     if direction is Direction.UPPER:
@@ -126,7 +134,9 @@ def _check_levels[NumberT: (int, float)](
 
         case "fixed", (warn, crit):
             assert isinstance(warn, float | int) and isinstance(crit, float | int)
-            return _check_fixed_levels(value, (warn, crit), levels_direction, render_func)
+            return _check_fixed_levels(
+                value, (warn, crit), levels_direction, render_func
+            )
 
         case "predictive", (metric, prediction, p_levels):
             assert isinstance(metric, str)
@@ -141,7 +151,9 @@ def _check_levels[NumberT: (int, float)](
             raise TypeError(f"Incorrect level parameters: {other!r}")
 
 
-def _prediction_text(prediction: float | None, render_func: Callable[[float], str]) -> str:
+def _prediction_text(
+    prediction: float | None, render_func: Callable[[float], str]
+) -> str:
     rendered = render_func(prediction) if prediction is not None else "N/A"
     return f"prediction: {rendered}"
 
@@ -154,7 +166,9 @@ def _summarize_predictions(
     if Type.PREDICTIVE not in (upper_result.type, lower_result.type):
         return (), ""
 
-    predictions = [p for p in (upper_result.prediction, lower_result.prediction) if p is not None]
+    predictions = [
+        p for p in (upper_result.prediction, lower_result.prediction) if p is not None
+    ]
 
     if not predictions:
         return (), f"({_prediction_text(None, render_func)})"
@@ -221,7 +235,12 @@ def check_levels[NumberT: (int, float)](
         result_upper, result_lower, render_func
     )
 
-    messages = [info_text, prediction_text, result_upper.levels_text, result_lower.levels_text]
+    messages = [
+        info_text,
+        prediction_text,
+        result_upper.levels_text,
+        result_lower.levels_text,
+    ]
     summary = " ".join(m for m in messages if m)
 
     if notice_only:

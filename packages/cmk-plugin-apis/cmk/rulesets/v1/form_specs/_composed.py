@@ -72,7 +72,10 @@ class CascadingSingleChoice(FormSpec[tuple[str, object]]):
 
     def __post_init__(self) -> None:
         avail_idents = {elem.name for elem in self.elements}
-        if isinstance(self.prefill, DefaultValue) and self.prefill.value not in avail_idents:
+        if (
+            isinstance(self.prefill, DefaultValue)
+            and self.prefill.value not in avail_idents
+        ):
             raise ValueError(
                 f"Default element {self.prefill.value!r} is not "
                 f"one of the specified elements {avail_idents!r}"

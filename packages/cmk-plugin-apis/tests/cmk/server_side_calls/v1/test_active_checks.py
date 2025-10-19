@@ -7,7 +7,12 @@ from collections.abc import Iterator, Mapping
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, HostConfig, Secret
+from cmk.server_side_calls.v1 import (
+    ActiveCheckCommand,
+    ActiveCheckConfig,
+    HostConfig,
+    Secret,
+)
 
 
 class ExampleParams(BaseModel):

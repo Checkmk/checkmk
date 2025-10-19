@@ -36,7 +36,8 @@ from typing import Any, Literal, NamedTuple, TypeVar
 import msal
 import requests
 
-from cmk.special_agents.v0_unstable.misc import DataCache, vcrtrace
+from cmk.server_side_programs.v1_unstable import vcrtrace
+from cmk.special_agents.v0_unstable.misc import DataCache
 from cmk.utils import password_store
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config, HTTPProxyConfig
 from cmk.utils.paths import tmp_dir

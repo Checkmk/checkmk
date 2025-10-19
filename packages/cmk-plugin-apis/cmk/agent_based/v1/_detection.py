@@ -41,7 +41,9 @@ def all_of(
         >>> DETECT = all_of(exists("1.2.3.4"), contains("1.2.3.5", "foo"))
 
     """
-    reduced = SNMPDetectSpecification(l0 + l1 for l0, l1 in itertools.product(spec_0, spec_1))
+    reduced = SNMPDetectSpecification(
+        l0 + l1 for l0, l1 in itertools.product(spec_0, spec_1)
+    )
     if not specs:
         return reduced
     return all_of(reduced, *specs)
@@ -67,7 +69,9 @@ def any_of(*specs: SNMPDetectSpecification) -> SNMPDetectSpecification:
 def _negate(spec: SNMPDetectSpecification) -> SNMPDetectSpecification:
     assert len(spec) == 1
     assert len(spec[0]) == 1
-    return SNMPDetectSpecification([[(spec[0][0][0], spec[0][0][1], not spec[0][0][2])]])
+    return SNMPDetectSpecification(
+        [[(spec[0][0][0], spec[0][0][1], not spec[0][0][2])]]
+    )
 
 
 def matches(oidstr: str, value: str) -> SNMPDetectSpecification:

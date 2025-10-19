@@ -21,7 +21,11 @@ from cmk.agent_based.v1 import get_average, get_rate, GetRateError
     ],
 )
 def test_get_rate_raises(
-    pre_state: None | tuple[int, int], time: int, value: int, raise_of: bool, errmsg: str
+    pre_state: None | tuple[int, int],
+    time: int,
+    value: int,
+    raise_of: bool,
+    errmsg: str,
 ) -> None:
     store = {"foo": pre_state}
     with pytest.raises(GetRateError, match=errmsg):
@@ -84,7 +88,9 @@ def test_get_rate(
         ),
     ],
 )
-def test_get_average(backlog_min: int, timeseries: Sequence[tuple[float, float, float]]) -> None:
+def test_get_average(
+    backlog_min: int, timeseries: Sequence[tuple[float, float, float]]
+) -> None:
     store: dict[str, tuple[float, float, float]] = {}
     for idx, (this_time, this_value, expected_average) in enumerate(timeseries):
         avg = get_average(
@@ -94,4 +100,6 @@ def test_get_average(backlog_min: int, timeseries: Sequence[tuple[float, float, 
             this_value,
             backlog_min,
         )
-        assert avg == expected_average, f"at [{idx!r}]: got {avg!r} expected {expected_average!r}"
+        assert avg == expected_average, (
+            f"at [{idx!r}]: got {avg!r} expected {expected_average!r}"
+        )

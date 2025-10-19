@@ -6004,6 +6004,7 @@ vcrpy==7.0.0 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
+    #   -r packages/cmk-plugin-apis/requirements.in
 virtualenv==20.35.3 \
     --hash=sha256:4f1a845d131133bdff10590489610c98c168ff99dc75d6c96853801f7f67af44 \
     --hash=sha256:63d106565078d8c8d0b206d48080f938a8b25361e19432d2c9db40d2899c810a

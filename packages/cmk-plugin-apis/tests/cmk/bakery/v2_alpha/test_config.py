@@ -37,5 +37,9 @@ class TestSecret:
     def test_repr_is_password_model_compatible() -> None:
         # this test is a little silly, but it should catch if someone changes the repr
         # in a way that breaks compatibility with the backend password model.
-        ui_compatible_model = ("cmk_postprocessed", _SECRET.source, (_SECRET.id, str(_SECRET)))
+        ui_compatible_model = (
+            "cmk_postprocessed",
+            _SECRET.source,
+            (_SECRET.id, str(_SECRET)),
+        )
         assert repr(_SECRET) == repr(ui_compatible_model)

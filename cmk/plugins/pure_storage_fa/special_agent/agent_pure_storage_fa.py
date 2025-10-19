@@ -20,9 +20,9 @@ from typing import NamedTuple
 import requests
 import urllib3
 
+from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter
 from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
-from cmk.special_agents.v0_unstable.request_helper import HostnameValidationAdapter
 
 _LOGGER = logging.getLogger("agent_pure_storage_fa")
 

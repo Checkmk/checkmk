@@ -26,8 +26,8 @@ from cmk.plugins.proxmox_ve.special_agent.libproxmox import (
     ProxmoxVeAPI,
     TaskInfo,
 )
+from cmk.server_side_programs.v1_unstable import Storage
 from cmk.special_agents.v0_unstable.argument_parsing import Args
-from cmk.special_agents.v0_unstable.storage import Storage
 from cmk.utils.paths import tmp_dir
 
 LOGGER = logging.getLogger("agent_proxmox_ve.backups")

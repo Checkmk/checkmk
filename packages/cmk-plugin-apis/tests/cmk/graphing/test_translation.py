@@ -52,21 +52,27 @@ def test_translation_error_empty_name() -> None:
     check_commands = [translations.PassiveCheck("passive-check")]
     translations_ = {"old-metric-name": translations.RenameTo("new-metric-name")}
     with pytest.raises(ValueError):
-        translations.Translation(name="", check_commands=check_commands, translations=translations_)
+        translations.Translation(
+            name="", check_commands=check_commands, translations=translations_
+        )
 
 
 def test_translation_error_missing_check_commands() -> None:
     name = "name"
     translations_ = {"old-metric-name": translations.RenameTo("new-metric-name")}
     with pytest.raises(AssertionError):
-        translations.Translation(name=name, check_commands=[], translations=translations_)
+        translations.Translation(
+            name=name, check_commands=[], translations=translations_
+        )
 
 
 def test_translation_error_missing_translations() -> None:
     name = "name"
     check_commands = [translations.PassiveCheck("check-command-name")]
     with pytest.raises(AssertionError):
-        translations.Translation(name=name, check_commands=check_commands, translations={})
+        translations.Translation(
+            name=name, check_commands=check_commands, translations={}
+        )
 
 
 def test_translation_error_empty_old_name() -> None:

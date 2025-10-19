@@ -93,7 +93,9 @@ class SystemBinary:
             the plug-in will be deployed under it's relative source path/filename.
     """
 
-    def __init__(self, *, base_os: OS, source: Path, target: Path | None = None) -> None:
+    def __init__(
+        self, *, base_os: OS, source: Path, target: Path | None = None
+    ) -> None:
         self.base_os = OS(base_os)
         self.source = Path(source)
         self.target = None if target is None else Path(target)

@@ -7,6 +7,11 @@ dynamic = ["dependencies"]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
+[tool.ruff.lint.per-file-ignores]
+"cmk/server_side_programs/**/_vcrtrace" = [
+  "A002", # unused args. We're following protocols.
+]
+
 [tool.setuptools.dynamic]
 dependencies = { file = ["requirements.txt"] }
 

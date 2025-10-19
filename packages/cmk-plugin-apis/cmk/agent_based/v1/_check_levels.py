@@ -136,7 +136,9 @@ def check_levels(
     if label:
         info_text = f"{label}: {info_text}"
 
-    value_state, levels_text = _do_check_levels(value, levels_upper, levels_lower, render_func)
+    value_state, levels_text = _do_check_levels(
+        value, levels_upper, levels_lower, render_func
+    )
 
     if notice_only:
         yield Result(state=value_state, notice=info_text + levels_text)
@@ -188,7 +190,9 @@ def check_levels_predictive(
     else:
         predictive_levels_msg = " (no reference for prediction yet)"
 
-    value_state, levels_text = _do_check_levels(value, levels_upper, levels_lower, render_func)
+    value_state, levels_text = _do_check_levels(
+        value, levels_upper, levels_lower, render_func
+    )
 
     if label:
         info_text = f"{label}: {render_func(value)}{predictive_levels_msg}"
@@ -215,7 +219,9 @@ def _get_prediction(
                     "horizon": levels["horizon"],
                     "period": levels["period"],
                     "levels": levels_spec,
-                    "bound": levels.get("levels_upper_min") if direction == "upper" else None,
+                    "bound": levels.get("levels_upper_min")
+                    if direction == "upper"
+                    else None,
                 }
             ),
             InjectedParameters.model_validate(levels["__injected__"]),

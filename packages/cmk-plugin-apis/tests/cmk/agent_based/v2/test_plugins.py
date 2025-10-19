@@ -30,7 +30,9 @@ def test_invalid_agent_section_name(str_name: str) -> None:
 @pytest.mark.parametrize("str_name", INVALID_NAMES)
 def test_invalid_agent_parsed_section_name(str_name: str) -> None:
     with pytest.raises(ValueError):
-        _ = AgentSection(name="foo", parsed_section_name=str_name, parse_function=lambda x: x)
+        _ = AgentSection(
+            name="foo", parsed_section_name=str_name, parse_function=lambda x: x
+        )
 
 
 @pytest.mark.parametrize("str_name", INVALID_NAMES)
@@ -71,7 +73,9 @@ def test_invalid_snmp_parsed_section_name(str_name: str) -> None:
 @pytest.mark.parametrize("str_name", INVALID_NAMES)
 def test_invalid_snmp_section_name(str_name: str) -> None:
     with pytest.raises(ValueError):
-        _ = SNMPSection(name=str_name, detect=exists("1"), fetch=(), parse_function=lambda x: x)
+        _ = SNMPSection(
+            name=str_name, detect=exists("1"), fetch=(), parse_function=lambda x: x
+        )
 
 
 def _noop(*_a: object) -> Generator[Never]:
@@ -82,7 +86,10 @@ def _noop(*_a: object) -> Generator[Never]:
 def test_invalid_check_plugin_name(str_name: str) -> None:
     with pytest.raises(ValueError):
         _ = CheckPlugin(
-            name=str_name, service_name="foo", discovery_function=_noop, check_function=_noop
+            name=str_name,
+            service_name="foo",
+            discovery_function=_noop,
+            check_function=_noop,
         )
 
 

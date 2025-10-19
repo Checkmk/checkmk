@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 import pytest
 
-from cmk.special_agents.v0_unstable.misc import _check_path
+from cmk.server_side_programs.v1_unstable._vcrtrace import _check_path
 
 
 @pytest.fixture(name="mocked_home")

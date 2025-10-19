@@ -25,7 +25,9 @@ class Storage:
         Raises a RuntimeError if OMD_ROOT environment variable is not set.
         """
         self._full_dir = Path(
-            self._get_base_path(), self._sanitize_key(program_ident), self._sanitize_key(host)
+            self._get_base_path(),
+            self._sanitize_key(program_ident),
+            self._sanitize_key(host),
         )
 
     @staticmethod
@@ -38,7 +40,9 @@ class Storage:
     def _sanitize_key(key: str) -> str:
         skey = urlquote(key, safe="")
         if len(skey) > 255:
-            raise ValueError(f"too long (max 255 characters after URL quoting): {skey!r}")
+            raise ValueError(
+                f"too long (max 255 characters after URL quoting): {skey!r}"
+            )
         return skey
 
     def _get_path(self, key: str) -> Path:

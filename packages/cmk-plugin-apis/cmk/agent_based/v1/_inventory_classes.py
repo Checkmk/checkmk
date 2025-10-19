@@ -26,7 +26,9 @@ def _parse_valid_path(path: list[str]) -> list[str]:
     return path
 
 
-def _raise_invalid_attr_dict(kwarg_name: str, dict_: Mapping[str, _SDValue]) -> NoReturn:
+def _raise_invalid_attr_dict(
+    kwarg_name: str, dict_: Mapping[str, _SDValue]
+) -> NoReturn:
     value_types = ", ".join(t.__name__ for t in _ATTR_DICT_VAL_TYPES)
     raise TypeError(
         f"{kwarg_name} must be a dict with keys of type `str`"
@@ -42,7 +44,8 @@ def _parse_valid_dict(
     if not isinstance(dict_, dict):
         _raise_invalid_attr_dict(kwarg_name, dict_)
     if not all(
-        isinstance(k, str) and isinstance(v, _ATTR_DICT_VAL_TYPES) for k, v in dict_.items()
+        isinstance(k, str) and isinstance(v, _ATTR_DICT_VAL_TYPES)
+        for k, v in dict_.items()
     ):
         _raise_invalid_attr_dict(kwarg_name, dict_)
     return dict_
@@ -80,7 +83,9 @@ class Attributes(_AttributesTuple):
             ... )
 
         """
-        inventory_attributes = _parse_valid_dict("inventory_attributes", inventory_attributes)
+        inventory_attributes = _parse_valid_dict(
+            "inventory_attributes", inventory_attributes
+        )
         status_attributes = _parse_valid_dict("status_attributes", status_attributes)
         common_keys = set(inventory_attributes) & set(status_attributes)
         if common_keys:
@@ -143,7 +148,11 @@ class TableRow(_TableRowTuple):
         status_columns = _parse_valid_dict("status_columns", status_columns)
 
         for key in set(inventory_columns) | set(status_columns):
-            if ((key in key_columns) + (key in inventory_columns) + (key in status_columns)) > 1:
+            if (
+                (key in key_columns)
+                + (key in inventory_columns)
+                + (key in status_columns)
+            ) > 1:
                 raise ValueError(f"conflicting key: {key!r}")
 
         return super().__new__(

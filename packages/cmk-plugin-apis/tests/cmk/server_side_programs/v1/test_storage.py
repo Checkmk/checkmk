@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.special_agents.v0_unstable.storage import Storage
+from cmk.server_side_programs.v1_unstable import Storage
 
 TEST_AGENT = "test_agent"
 TEST_HOST = "test_host"
@@ -28,7 +28,8 @@ class TestStorage:
             pytest.param("pid.log-cache.json", "pid.log-cache.json"),
             pytest.param("pid.log123-7412cache.json", "pid.log123-7412cache.json"),
             pytest.param(
-                "7d160171-a52a-43d0-b43c-644540aad7ec", "7d160171-a52a-43d0-b43c-644540aad7ec"
+                "7d160171-a52a-43d0-b43c-644540aad7ec",
+                "7d160171-a52a-43d0-b43c-644540aad7ec",
             ),
             pytest.param("pid.log.-sad?/&fjaads", "pid.log.-sad?/&fjaads"),
             pytest.param("pid.lo__-sadöfjaads", "pid.lo__-sadöfjaads"),

@@ -41,7 +41,7 @@ from typing import Final
 
 import requests
 
-from cmk.special_agents.v0_unstable.misc import vcrtrace
+from cmk.server_side_programs.v1_unstable import vcrtrace
 
 __version__ = "2.5.0b1"
 

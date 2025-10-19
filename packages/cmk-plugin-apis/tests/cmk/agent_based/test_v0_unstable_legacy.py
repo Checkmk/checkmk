@@ -9,7 +9,11 @@ from collections.abc import Callable, Mapping
 
 import pytest
 
-from cmk.agent_based.legacy.v0_unstable import _do_check_levels, check_levels, LegacyResult
+from cmk.agent_based.legacy.v0_unstable import (
+    _do_check_levels,
+    check_levels,
+    LegacyResult,
+)
 
 
 def _rmeter(x: float | int) -> str:

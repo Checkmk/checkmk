@@ -18,7 +18,9 @@ from cmk.agent_based.v1 import render
         (1587908220.0, "2020-04-26"),
     ],
 )
-def test_date(epoch: float | None, output: str, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_date(
+    epoch: float | None, output: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.setattr(time, "localtime", time.gmtime)
     assert output == render.date(epoch=epoch)
 
@@ -31,7 +33,9 @@ def test_date(epoch: float | None, output: str, monkeypatch: pytest.MonkeyPatch)
         (1587908220.0, "2020-04-26 13:37:00"),
     ],
 )
-def test_datetime(epoch: float | None, output: str, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_datetime(
+    epoch: float | None, output: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.setattr(time, "localtime", time.gmtime)
     assert output == render.datetime(epoch=epoch)
 

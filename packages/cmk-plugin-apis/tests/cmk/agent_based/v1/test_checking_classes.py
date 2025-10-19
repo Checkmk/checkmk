@@ -9,7 +9,14 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v1 import IgnoreResults, Metric, Result, Service, ServiceLabel, State
+from cmk.agent_based.v1 import (
+    IgnoreResults,
+    Metric,
+    Result,
+    Service,
+    ServiceLabel,
+    State,
+)
 from cmk.agent_based.v1._checking_classes import _EvalableFloat
 
 
@@ -135,7 +142,9 @@ def test_metric_kwarg() -> None:
         ("name", 7, (23, 42), (None, "max")),
     ],
 )
-def test_metric_invalid(name: object, value: object, levels: object, boundaries: object) -> None:
+def test_metric_invalid(
+    name: object, value: object, levels: object, boundaries: object
+) -> None:
     with pytest.raises(TypeError):
         _ = Metric(name, value, levels=levels, boundaries=boundaries)  # type: ignore[arg-type]
 
@@ -161,10 +170,17 @@ def test_metric() -> None:
         (State.OK, "", "", "details"),  # either is required
         (State.OK, None, None, "details"),  # either is required
         (State.OK, "these are", "mutually exclusive", None),
-        (State.OK, "summary", None, {"at the moment": "impossible", "someday": "maybe"}),
+        (
+            State.OK,
+            "summary",
+            None,
+            {"at the moment": "impossible", "someday": "maybe"},
+        ),
     ],
 )
-def test_result_invalid(state_: object, summary: object, notice: object, details: object) -> None:
+def test_result_invalid(
+    state_: object, summary: object, notice: object, details: object
+) -> None:
     with pytest.raises((TypeError, ValueError)):
         _: Result = Result(
             state=state_,

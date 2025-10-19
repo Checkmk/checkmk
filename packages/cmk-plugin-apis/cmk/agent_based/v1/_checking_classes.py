@@ -55,7 +55,9 @@ class HostLabel(_KV):
         if not isinstance(name, str):
             raise TypeError(f"Invalid label name given: Expected string (got {name!r})")
         if not isinstance(value, str):
-            raise TypeError(f"Invalid label value given: Expected string (got {value!r})")
+            raise TypeError(
+                f"Invalid label value given: Expected string (got {value!r})"
+            )
         return super().__new__(cls, name, value)
 
     @override
@@ -79,7 +81,9 @@ class ServiceLabel(_KV):
         if not isinstance(name, str):
             raise TypeError(f"Invalid label name given: Expected string (got {name!r})")
         if not isinstance(value, str):
-            raise TypeError(f"Invalid label value given: Expected string (got {value!r})")
+            raise TypeError(
+                f"Invalid label value given: Expected string (got {value!r})"
+            )
         return super().__new__(cls, name, value)
 
     @override
@@ -130,10 +134,14 @@ class Service(_ServiceTuple):
             return None
         if item and isinstance(item, str):
             return item
-        raise TypeError(f"'item' must be a non empty string or ommited entirely, got {item!r}")
+        raise TypeError(
+            f"'item' must be a non empty string or ommited entirely, got {item!r}"
+        )
 
     @staticmethod
-    def _parse_parameters(parameters: Mapping[str, object] | None) -> Mapping[str, object]:
+    def _parse_parameters(
+        parameters: Mapping[str, object] | None,
+    ) -> Mapping[str, object]:
         if parameters is None:
             return {}
         if isinstance(parameters, dict) and all(isinstance(k, str) for k in parameters):
@@ -144,9 +152,13 @@ class Service(_ServiceTuple):
     def _parse_labels(labels: Sequence[ServiceLabel] | None) -> Sequence[ServiceLabel]:
         if not labels:
             return []
-        if isinstance(labels, list) and all(isinstance(label, ServiceLabel) for label in labels):
+        if isinstance(labels, list) and all(
+            isinstance(label, ServiceLabel) for label in labels
+        ):
             return labels
-        raise TypeError(f"'labels' must be list of ServiceLabels or None, got {labels!r}")
+        raise TypeError(
+            f"'labels' must be list of ServiceLabels or None, got {labels!r}"
+        )
 
     @override
     def __repr__(self) -> str:
@@ -298,10 +310,14 @@ class Metric(_MetricTuple):
 
         # this is set is chosen such that the metric name would not be changed by `pnp_cleanup`
         if offenders := set(metric_name) & {" ", ":", "/", "\\"}:
-            raise TypeError(f"invalid character(s) in metric name: {''.join(offenders)!r}")
+            raise TypeError(
+                f"invalid character(s) in metric name: {''.join(offenders)!r}"
+            )
 
     @staticmethod
-    def _sanitize_single_value(field: str, value: float | None) -> _EvalableFloat | None:
+    def _sanitize_single_value(
+        field: str, value: float | None
+    ) -> _EvalableFloat | None:
         if value is None:
             return None
         if isinstance(value, int | float):
@@ -328,7 +344,11 @@ class Metric(_MetricTuple):
     @override
     def __repr__(self) -> str:
         levels = "" if self.levels == (None, None) else f", levels={self.levels!r}"
-        boundaries = "" if self.boundaries == (None, None) else f", boundaries={self.boundaries!r}"
+        boundaries = (
+            ""
+            if self.boundaries == (None, None)
+            else f", boundaries={self.boundaries!r}"
+        )
         return f"{self.__class__.__name__}({self.name!r}, {self.value!r}{levels}{boundaries})"
 
 

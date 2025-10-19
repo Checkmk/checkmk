@@ -107,7 +107,9 @@ class ActiveCheckConfig(Generic[_ParsedParameters]):
         *,
         name: str,
         parameter_parser: Callable[[Mapping[str, object]], _ParsedParameters],
-        commands_function: Callable[[_ParsedParameters, HostConfig], Iterable[ActiveCheckCommand]],
+        commands_function: Callable[
+            [_ParsedParameters, HostConfig], Iterable[ActiveCheckCommand]
+        ],
     ):
         self.name = name
         self._parameter_parser = parameter_parser

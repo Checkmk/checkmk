@@ -78,7 +78,9 @@ class PasswordStore:
 
     @staticmethod
     def _serialize(passwords: Mapping[str, Secret[str]]) -> str:
-        return "".join(f"{ident}:{password.reveal()}\n" for ident, password in passwords.items())
+        return "".join(
+            f"{ident}:{password.reveal()}\n" for ident, password in passwords.items()
+        )
 
     @classmethod
     def _deserialise(cls, raw: str) -> Mapping[str, Secret[str]]:
@@ -93,7 +95,9 @@ class PasswordStore:
             for line in raw.splitlines():
                 if (sline := line.strip()).startswith(cls._PASSWORD_ID_PREFIX):
                     uuid = sline.removeprefix(cls._PASSWORD_ID_PREFIX).split(":", 1)[0]
-                    password = Secret(sline.removeprefix(cls._PASSWORD_ID_PREFIX).split(":", 1)[1])
+                    password = Secret(
+                        sline.removeprefix(cls._PASSWORD_ID_PREFIX).split(":", 1)[1]
+                    )
                     ident = f"{cls._PASSWORD_ID_PREFIX}{uuid}"
                 else:
                     ident = sline.split(":", 1)[0]
@@ -140,7 +144,9 @@ class PasswordStore:
         # password but "real" random data.
         # Note that key derivation and encryption/decryption of passwords is duplicated in omd
         # cmk_password_store.h and must be kept compatible!
-        return hashlib.scrypt(self._secret.reveal(), salt=salt, n=2**14, r=8, p=1, dklen=32)
+        return hashlib.scrypt(
+            self._secret.reveal(), salt=salt, n=2**14, r=8, p=1, dklen=32
+        )
 
 
 def _load(
@@ -173,7 +179,9 @@ def dereference_secret(raw: str, /) -> Secret[str]:
         The password as found in the password store.
     """
     if not (raw_key_file := os.environ.get("PASSWORD_STORE_SECRET_FILE")):
-        raise PasswordStoreError("Environment variable PASSWORD_STORE_SECRET_FILE is not set")
+        raise PasswordStoreError(
+            "Environment variable PASSWORD_STORE_SECRET_FILE is not set"
+        )
 
     secret_id, pws_path = raw.split(":", 1)
     store = _load(store_file=Path(pws_path), key_file=Path(raw_key_file))

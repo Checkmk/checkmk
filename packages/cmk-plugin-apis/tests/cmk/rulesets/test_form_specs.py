@@ -65,7 +65,9 @@ def test_dictionary_ignored_elements_validation() -> None:
 def test_multiple_choice_validation() -> None:
     with pytest.raises(ValueError, match="Invalid prefill element"):
         MultipleChoice(
-            elements=[MultipleChoiceElement(name="element_abc", title=Title("Element ABC"))],
+            elements=[
+                MultipleChoiceElement(name="element_abc", title=Title("Element ABC"))
+            ],
             prefill=DefaultValue(("element_xyz",)),
         )
 

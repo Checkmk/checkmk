@@ -5425,6 +5425,7 @@ vcrpy==7.0.0 \
     --hash=sha256:55791e26c18daa363435054d8b35bd41a4ac441b6676167635d1b37a71dbe124
     # via
     #   -r cmk/requirements.in
+    #   -r packages/cmk-plugin-apis/requirements.in
     #   pytest-recording
 virtualenv==20.35.3 \
     --hash=sha256:4f1a845d131133bdff10590489610c98c168ff99dc75d6c96853801f7f67af44 \

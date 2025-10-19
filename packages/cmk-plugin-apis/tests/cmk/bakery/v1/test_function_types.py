@@ -49,7 +49,9 @@ def right_windows_config_function() -> Generator[WindowsGlobalConfigEntry]:
     yield WindowsGlobalConfigEntry(name="dummy", content=False)
 
 
-def wrong_artifact_function() -> Generator[Plugin | Scriptlet | WindowsGlobalConfigEntry]:
+def wrong_artifact_function() -> Generator[
+    Plugin | Scriptlet | WindowsGlobalConfigEntry
+]:
     yield Plugin(base_os=OS.LINUX, source=Path("dummy"))
     yield Scriptlet(step=RpmStep.POST, lines=[])
     yield WindowsGlobalConfigEntry(name="dummy", content=False)
@@ -104,7 +106,9 @@ def files_function_with_aghash(_conf: Any, _aghash: str) -> FileGenerator:
     yield Plugin(base_os=OS.LINUX, source=Path("dummy"))
 
 
-def scriptlets_function_with_dummy(_conf: Any, _aghash: str, _dummy: Any) -> ScriptletGenerator:
+def scriptlets_function_with_dummy(
+    _conf: Any, _aghash: str, _dummy: Any
+) -> ScriptletGenerator:
     yield Scriptlet(step=RpmStep.POST, lines=[])
 
 

@@ -11,18 +11,9 @@ from collections.abc import Mapping
 from urllib.parse import urljoin
 
 from requests import Response, Session
-from requests.adapters import HTTPAdapter
 from requests.auth import HTTPBasicAuth
 
-
-class HostnameValidationAdapter(HTTPAdapter):
-    def __init__(self, hostname: str) -> None:
-        super().__init__()
-        self._reference_hostname = hostname
-
-    def cert_verify(self, conn, url, verify, cert):
-        conn.assert_hostname = self._reference_hostname
-        return super().cert_verify(conn, url, verify, cert)
+from cmk.server_side_programs.v1_unstable import HostnameValidationAdapter
 
 
 class ApiSession:

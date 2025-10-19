@@ -21,7 +21,9 @@ class _IPConfig:
     Defines an IP configuration of the host
     """
 
-    def __init__(self, *, address: str | None, additional_addresses: Sequence[str] = ()):
+    def __init__(
+        self, *, address: str | None, additional_addresses: Sequence[str] = ()
+    ):
         self._address = address
         self.additional_addresses: Final = additional_addresses
 
@@ -142,7 +144,9 @@ class HostConfig:
         self.ipv6_config: Final = ipv6_config
         self._primary_family: Final = primary_family
         self._primary_ip_config: Final = (
-            self.ipv4_config if primary_family == IPAddressFamily.IPV4 else self.ipv6_config
+            self.ipv4_config
+            if primary_family == IPAddressFamily.IPV4
+            else self.ipv6_config
         )
         self.macros: Final = macros or {}
 

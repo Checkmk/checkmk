@@ -44,7 +44,9 @@ def test_boundaries(
 
 
 def test_check_levels_wo_levels() -> None:
-    assert list(check_levels_v1(5, metric_name="battery", render_func=render.percent)) == [
+    assert list(
+        check_levels_v1(5, metric_name="battery", render_func=render.percent)
+    ) == [
         Result(state=State.OK, summary="5.00%"),
         Metric("battery", 5.0),
     ]
@@ -53,7 +55,10 @@ def test_check_levels_wo_levels() -> None:
 def test_check_levels_ok_levels() -> None:
     assert list(
         check_levels_v1(
-            5, metric_name="battery", render_func=render.percent, levels_upper=(100, 200)
+            5,
+            metric_name="battery",
+            render_func=render.percent,
+            levels_upper=(100, 200),
         )
     ) == [
         Result(state=State.OK, summary="5.00%"),
@@ -97,6 +102,9 @@ def test_check_levels_boundaries() -> None:
             boundaries=(0, None),
         )
     ) == [
-        Result(state=State.WARN, summary="Water acidity: pH 6.3 (warn/crit at pH 6.4/pH 6.1)"),
+        Result(
+            state=State.WARN,
+            summary="Water acidity: pH 6.3 (warn/crit at pH 6.4/pH 6.1)",
+        ),
         Metric("H_concentration", 5e-7, levels=(4e-7, 8e-7), boundaries=(0, None)),
     ]

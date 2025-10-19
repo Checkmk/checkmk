@@ -427,7 +427,9 @@ class SingleChoiceElement:
 
     def __post_init__(self) -> None:
         if not self.name.isidentifier() or iskeyword(self.name):
-            raise ValueError(f"'{self.name}' is not a valid, non-reserved Python identifier")
+            raise ValueError(
+                f"'{self.name}' is not a valid, non-reserved Python identifier"
+            )
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -656,7 +656,7 @@ def test_proxy_arguments(params: Mapping[str, object], expected_proxy_arg: str) 
             Namespace(
                 debug=False,
                 verbose=0,
-                vcrtrace=False,
+                vcrtrace=None,
                 cluster="mycluster",
                 kubernetes_cluster_hostname="host",
                 token="Secret(id=1, format='%s', pass_safely=False)",
@@ -695,7 +695,7 @@ def test_proxy_arguments(params: Mapping[str, object], expected_proxy_arg: str) 
             Namespace(
                 debug=False,
                 verbose=0,
-                vcrtrace=False,
+                vcrtrace=None,
                 cluster="mycluster",
                 kubernetes_cluster_hostname="host",
                 token="Secret(id=1, format='%s', pass_safely=False)",
@@ -734,7 +734,7 @@ def test_proxy_arguments(params: Mapping[str, object], expected_proxy_arg: str) 
             Namespace(
                 debug=False,
                 verbose=0,
-                vcrtrace=False,
+                vcrtrace=None,
                 cluster="mycluster",
                 kubernetes_cluster_hostname="host",
                 token="Secret(id=1, format='%s', pass_safely=False)",

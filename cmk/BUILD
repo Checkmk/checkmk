@@ -218,6 +218,7 @@ CMK_PACKAGES = [
     "//packages/cmk-plugin-apis:rulesets",
     "//packages/cmk-plugin-apis:password_store",
     "//packages/cmk-plugin-apis:server_side_calls",
+    "//packages/cmk-plugin-apis:server_side_programs",
     "//packages/cmk-trace",
     "//packages/cmk-werks",
 ] + select({

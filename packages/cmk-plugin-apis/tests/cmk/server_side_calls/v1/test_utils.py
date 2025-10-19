@@ -46,7 +46,9 @@ class TestHostConfig:
             _ = HostConfig(name="my_name").primary_ip_config
 
     def test_host_config_eq(self) -> None:
-        assert HostConfig(name="my_name", alias="my_alias") != HostConfig(name="my_name")
+        assert HostConfig(name="my_name", alias="my_alias") != HostConfig(
+            name="my_name"
+        )
         assert HostConfig(name="my_name") == HostConfig(name="my_name")
 
 

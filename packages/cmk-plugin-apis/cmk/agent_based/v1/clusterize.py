@@ -69,7 +69,9 @@ def make_node_notice_results(
 
     # consume potential generator and drop Metrics
     try:
-        returns_wo_metrics = [r for r in node_check_results if not isinstance(r, _Metric)]
+        returns_wo_metrics = [
+            r for r in node_check_results if not isinstance(r, _Metric)
+        ]
     except _IgnoreResultsError:
         return
 

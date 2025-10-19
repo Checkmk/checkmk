@@ -59,7 +59,9 @@ class _Localizable:
     """
 
     _arg: str | Self
-    _modifier: tuple[_Operation, tuple[str | Self, ...]] | None = field(kw_only=True, default=None)
+    _modifier: tuple[_Operation, tuple[str | Self, ...]] | None = field(
+        kw_only=True, default=None
+    )
 
     @override
     def __repr__(self) -> str:
@@ -71,14 +73,18 @@ class _Localizable:
 
     def localize(self, localizer: Callable[[str], str], /) -> str:
         local_arg = (
-            localizer(self._arg) if isinstance(self._arg, str) else self._arg.localize(localizer)
+            localizer(self._arg)
+            if isinstance(self._arg, str)
+            else self._arg.localize(localizer)
         )
         if self._modifier is None:
             return local_arg
 
         operation, operands = self._modifier
 
-        local_operands = tuple(v if isinstance(v, str) else v.localize(localizer) for v in operands)
+        local_operands = tuple(
+            v if isinstance(v, str) else v.localize(localizer) for v in operands
+        )
 
         match operation:
             case _Operation.ADD:

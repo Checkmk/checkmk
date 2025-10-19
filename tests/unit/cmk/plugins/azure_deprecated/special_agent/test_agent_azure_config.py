@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging
 from collections.abc import Sequence
 
 import pytest
@@ -49,7 +48,7 @@ ARGV = [
 ARGS = Args(
     debug=False,
     verbose=0,
-    vcrtrace=False,
+    vcrtrace=None,
     dump_config=False,
     timeout=10,
     piggyback_vms="grouphost",
@@ -69,45 +68,8 @@ ARGS = Args(
 )
 
 
-@pytest.mark.parametrize(
-    "argv,args,expected_log",
-    [
-        (
-            ARGV,
-            ARGS,
-            [
-                "argparse: debug = False",
-                "argparse: verbose = 0",
-                "argparse: vcrtrace = False",
-                "argparse: dump_config = False",
-                "argparse: timeout = 10",
-                "argparse: piggyback_vms = 'grouphost'",
-                "argparse: subscriptions = ['subscription-id']",
-                "argparse: client = 'client-id'",
-                "argparse: tenant = 'tenant-id'",
-                "argparse: secret = '****'",
-                "argparse: cache_id = 'testhost'",
-                "argparse: proxy = None",
-                "argparse: require_tag = ['tag1']",
-                "argparse: require_tag_value = [['tag2', 'value2']]",
-                "argparse: explicit_config = ['group=test-group', 'resources=Resource1,Resource2']",
-                "argparse: services = ['Microsoft.Compute/virtualMachines', 'Microsoft.Storage/storageAccounts']",
-                "argparse: authority = 'global'",
-                "argparse: tag_key_pattern = <TagsImportPatternOption.import_all: 'IMPORT_ALL'>",
-                "argparse: connection_test = False",
-            ],
-        ),
-    ],
-)
-def test_parse_arguments(
-    argv: Sequence[str],
-    args: Args,
-    expected_log: Sequence[str],
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    caplog.set_level(logging.DEBUG)
-    assert parse_arguments(argv) == args
-    assert caplog.messages == expected_log
+def test_parse_arguments() -> None:
+    assert parse_arguments(ARGV) == ARGS
 
 
 @pytest.mark.parametrize(

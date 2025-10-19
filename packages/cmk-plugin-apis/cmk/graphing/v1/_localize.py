@@ -59,7 +59,9 @@ class Title:
     """
 
     _arg: str | Self
-    _modifier: tuple[_Operation, tuple[str | Self, ...]] | None = field(kw_only=True, default=None)
+    _modifier: tuple[_Operation, tuple[str | Self, ...]] | None = field(
+        kw_only=True, default=None
+    )
 
     @override
     def __repr__(self) -> str:
@@ -71,14 +73,18 @@ class Title:
 
     def localize(self, localizer: Callable[[str], str], /) -> str:
         local_arg = (
-            localizer(self._arg) if isinstance(self._arg, str) else self._arg.localize(localizer)
+            localizer(self._arg)
+            if isinstance(self._arg, str)
+            else self._arg.localize(localizer)
         )
         if self._modifier is None:
             return local_arg
 
         operation, operands = self._modifier
 
-        local_operands = tuple(v if isinstance(v, str) else v.localize(localizer) for v in operands)
+        local_operands = tuple(
+            v if isinstance(v, str) else v.localize(localizer) for v in operands
+        )
 
         match operation:
             case _Operation.ADD:
@@ -93,7 +99,8 @@ class Title:
 
     def __mod__(self, other: str | Self | tuple[str | Self, ...]) -> Self:
         return self.__class__(
-            self, _modifier=(_Operation.MOD, other if isinstance(other, tuple) else (other,))
+            self,
+            _modifier=(_Operation.MOD, other if isinstance(other, tuple) else (other,)),
         )
 
     def __rmod__(self, other: Self) -> Self:

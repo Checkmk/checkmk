@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import os
 from pathlib import Path
+from typing import Final
 from urllib.parse import quote as urlquote
 
-SERVER_SIDE_PROGRAM_STORAGE_PATH = "var/check_mk/server_side_program_storage"
+_STORAGE_PATH_ENV: Final = "SERVER_SIDE_PROGRAM_STORAGE_PATH"
 
 
 class Storage:
@@ -29,9 +30,9 @@ class Storage:
 
     @staticmethod
     def _get_base_path() -> Path:
-        if omd_root := os.getenv("OMD_ROOT"):
-            return Path(omd_root, SERVER_SIDE_PROGRAM_STORAGE_PATH)
-        raise RuntimeError("OMD_ROOT environment variable is not set.")
+        if p := os.getenv(_STORAGE_PATH_ENV):
+            return Path(p)
+        raise RuntimeError(f"{_STORAGE_PATH_ENV} environment variable is not set.")
 
     @staticmethod
     def _sanitize_key(key: str) -> str:

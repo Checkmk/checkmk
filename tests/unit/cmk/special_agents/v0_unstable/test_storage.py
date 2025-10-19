@@ -7,7 +7,6 @@
 from pathlib import Path
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
 
 from cmk.special_agents.v0_unstable.storage import Storage
 
@@ -16,8 +15,8 @@ TEST_HOST = "test_host"
 
 
 @pytest.fixture(autouse=True)
-def patch_env(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
-    monkeypatch.setenv("OMD_ROOT", str(tmp_path))
+def patch_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("SERVER_SIDE_PROGRAM_STORAGE_PATH", str(tmp_path))
 
 
 class TestStorage:

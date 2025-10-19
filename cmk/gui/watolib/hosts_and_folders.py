@@ -3346,27 +3346,6 @@ class Host:
         ):
             tag_groups[TagGroupID("ping")] = TagID("ping")
 
-        # The following code is needed to migrate host/rule matching from <1.5
-        # to 1.5 when a user did not modify the "agent type" tag group.  (See
-        # migrate_old_sample_config_tag_groups() for more information)
-        aux_tag_ids = [t.id for t in active_config.tags.aux_tag_list.get_tags()]
-
-        # Be compatible to: Agent type -> SNMP v2 or v3
-        if (
-            tag_groups[TagGroupID("agent")] == TagID("no-agent")
-            and tag_groups[TagGroupID("snmp_ds")] == TagID("snmp-v2")
-            and TagID("snmp-only") in aux_tag_ids
-        ):
-            tag_groups[TagGroupID("snmp-only")] = TagID("snmp-only")
-
-        # Be compatible to: Agent type -> Dual: SNMP + TCP
-        if (
-            tag_groups[TagGroupID("agent")] == TagID("cmk-agent")
-            and tag_groups[TagGroupID("snmp_ds")] == TagID("snmp-v2")
-            and TagID("snmp-tcp") in aux_tag_ids
-        ):
-            tag_groups[TagGroupID("snmp-tcp")] = TagID("snmp-tcp")
-
         self._cached_host_tags = tag_groups
         return tag_groups
 

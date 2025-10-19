@@ -32,7 +32,8 @@ def parse_arguments(argv):
         "--debug", action="store_true", help="Debug mode: let python exceptions come through"
     )
     parser.add_argument(
-        "--vcrtrace", action=vcrtrace(**mk_jolokia.JolokiaInstance.FILTER_SENSITIVE)
+        "--vcrtrace",
+        action=vcrtrace(filter_headers=mk_jolokia.JolokiaInstance.FILTER_HEADERS),
     )
 
     opts_with_help: list[tuple[str, str | None | float, str]] = [

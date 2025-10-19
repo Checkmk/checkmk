@@ -18,8 +18,11 @@ import json
 import logging
 import sys
 import time
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
+
+from requests import Request
 
 from cmk.ccc import store
 
@@ -136,22 +139,6 @@ class DataCache(abc.ABC):
         store.save_text_to_file(self._cache_file, json_dump)
 
 
-class _NullContext:
-    """A context manager that does nothing and is falsey"""
-
-    def __call__(self, *_args, **_kwargs):
-        return self
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *exc_info: object) -> None:
-        pass
-
-    def __bool__(self) -> bool:
-        return False
-
-
 def _check_path(filename: str) -> None:
     """make sure we are only writing/reading traces from tmp/debug"""
 
@@ -161,7 +148,13 @@ def _check_path(filename: str) -> None:
         raise ValueError(f"Traces can only be stored in {allowed_path}")
 
 
-def vcrtrace(**vcr_init_kwargs):
+# typing is still lacking, but at least our user interface is typed :-/
+def vcrtrace(
+    before_record_request: Callable[[Request], Request] | None = None,
+    filter_query_parameters: Sequence[tuple[str, str | None]] = (),
+    filter_headers: Sequence[tuple[str, str | None]] = (),
+    filter_post_data_parameters: Sequence[tuple[str, str | None]] = (),
+) -> type[argparse.Action]:
     """Returns the class of an argparse.Action to enter a vcr context
 
     Provided keyword arguments will be passed to the call of vcrpy.VCR.
@@ -175,14 +168,7 @@ def vcrtrace(**vcr_init_kwargs):
     If the file already exists, no requests are sent to the server, but the responses will be
     replayed from the tracefile.
 
-    If you need to access the VCRs use_cassette method (e.g. to filter out sensitive data),
-    you can do so via the returned args namespace (omitting the filename argument):
-
-        with args.vcrtrace(filter_headers=[('authorization', '*********')]):
-            requests.get('https://www.google.de', headers={'authorization': 'mooop'})
-
-    If the corresponding flag ('--vcrtrace' in the above example) was not specified,
-    the args attribute will be a null-context.
+    No attribute on the created argparse.Namespace will be set.
     """
 
     class VcrTraceAction(argparse.Action):
@@ -196,7 +182,6 @@ def vcrtrace(**vcr_init_kwargs):
 
         def __call__(self, _parser, namespace, filename, option_string=None):
             if not filename:
-                setattr(namespace, self.dest, _NullContext())
                 return
 
             if not sys.stdin.isatty():
@@ -209,8 +194,12 @@ def vcrtrace(**vcr_init_kwargs):
 
             import vcr
 
-            use_cassette = vcr.VCR(**vcr_init_kwargs).use_cassette  # type: ignore[attr-defined]
-            setattr(namespace, self.dest, lambda **kwargs: use_cassette(filename, **kwargs))
+            use_cassette = vcr.VCR(  # type: ignore[attr-defined]
+                before_record_request=before_record_request,
+                filter_query_parameters=filter_query_parameters,
+                filter_headers=filter_headers,
+                filter_post_data_parameters=filter_post_data_parameters,
+            ).use_cassette
             global_context = use_cassette(filename)
             atexit.register(global_context.__exit__)
             global_context.__enter__()

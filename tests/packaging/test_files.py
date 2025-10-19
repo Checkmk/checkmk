@@ -372,7 +372,6 @@ def test_windows_artifacts_are_signed(package_path: str, cmk_version: str) -> No
 
     non_msi_files = ["mk-sql.exe"]
     if not package_path.endswith(".tar.gz"):
-        non_msi_files += ["OpenHardwareMonitorLib.dll", "OpenHardwareMonitorCLI.exe"]
         path_prefix = "share/check_mk/agents/windows"
     else:
         path_prefix = "agents/windows"

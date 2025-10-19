@@ -498,7 +498,6 @@ def create_source_package(workspace, source_dir, cmk_version) {
         def scripts_dir = "${checkout_dir}/buildscripts/scripts";
         def patch_script = "create_unsign_msi_patch.sh";
         def patch_file = "unsign-msi.patch";
-        def ohm_files = "OpenHardwareMonitorLib.dll,OpenHardwareMonitorCLI.exe";
         def ext_files = "robotmk_ext.exe";
         def mk_sql = "mk-sql.exe";
         def hashes_file = "windows_files_hashes.txt";
@@ -509,7 +508,6 @@ def create_source_package(workspace, source_dir, cmk_version) {
             "${unsigned_msi}",
             "check_mk.user.yml",
             "python-3.cab",
-            "${ohm_files}",
             "${ext_files}",
             "${mk_sql}",
             "${hashes_file}",

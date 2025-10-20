@@ -32,6 +32,8 @@ from typing import Any, Final, Literal, NamedTuple, NotRequired, Protocol, Self,
 
 from redis.client import Pipeline
 
+from livestatus import SiteConfiguration
+
 import cmk.utils.paths
 from cmk.automations.results import ABCAutomationResult
 from cmk.ccc import store
@@ -57,7 +59,13 @@ from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.page_menu import confirmed_form_submit_options
 from cmk.gui.session import session
 from cmk.gui.site_config import is_distributed_setup_remote_site
-from cmk.gui.type_defs import Choices, GlobalSettings, HTTPVariables, SetOnceDict
+from cmk.gui.type_defs import (
+    Choices,
+    CustomHostAttrSpec,
+    GlobalSettings,
+    HTTPVariables,
+    SetOnceDict,
+)
 from cmk.gui.utils import urls
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
 from cmk.gui.utils.html import HTML
@@ -111,11 +119,32 @@ from cmk.utils.labels import Labels
 from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.redis import get_redis_client, redis_enabled, redis_server_reachable
 from cmk.utils.regex import regex, WATO_FOLDER_PATH_NAME_CHARS, WATO_FOLDER_PATH_NAME_REGEX
-from cmk.utils.tags import TagGroupID, TagID
+from cmk.utils.tags import TagConfig, TagGroupID, TagID
 
 _ContactgroupName = str
 
 SearchCriteria = Mapping[str, Any]
+
+
+@dataclass(frozen=True)
+class HostsAndFoldersConfig:
+    """Configuration needed by the hosts_and_folders module."""
+
+    config_storage_format: Literal["standard", "pickle", "raw"]
+    wato_hide_folders_without_read_permissions: bool
+    wato_host_attrs: Sequence[CustomHostAttrSpec]
+    tags: TagConfig
+    sites: dict[SiteId, SiteConfiguration]
+
+    @classmethod
+    def from_config(cls, config: Config) -> HostsAndFoldersConfig:
+        return cls(
+            config_storage_format=config.config_storage_format,
+            wato_hide_folders_without_read_permissions=config.wato_hide_folders_without_read_permissions,
+            wato_host_attrs=config.wato_host_attrs,
+            tags=config.tags,
+            sites=config.sites,
+        )
 
 
 class CollectedHostAttributes(HostAttributes):
@@ -984,8 +1013,9 @@ def _core_settings_hosts_to_update(hostnames: Sequence[HostName]) -> DomainSetti
 class FolderTree:
     """Folder tree for organizing hosts in Setup"""
 
-    def __init__(self, root_dir: str | None = None) -> None:
+    def __init__(self, root_dir: str | None = None, *, config: HostsAndFoldersConfig) -> None:
         self._root_dir = _ensure_trailing_slash(root_dir if root_dir else str(wato_root_dir()))
+        self._config = config
         self._all_host_attributes: dict[str, ABCHostAttribute] | None = None
 
     def all_folders(self) -> Mapping[PathWithoutSlash, Folder]:
@@ -1055,7 +1085,7 @@ class FolderTree:
     def all_host_attributes(self) -> dict[str, ABCHostAttribute]:
         if self._all_host_attributes is None:
             self._all_host_attributes = all_host_attributes(
-                active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
+                self._config.wato_host_attrs, self._config.tags.get_tag_groups_by_topic()
             )
         return self._all_host_attributes
 
@@ -1103,7 +1133,7 @@ class FolderTree:
 # Hope that we can cleanup these request global objects one day
 def folder_tree() -> FolderTree:
     if "folder_tree" not in g:
-        g.folder_tree = FolderTree()
+        g.folder_tree = FolderTree(config=HostsAndFoldersConfig.from_config(active_config))
     return g.folder_tree
 
 

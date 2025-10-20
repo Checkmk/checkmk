@@ -20,8 +20,9 @@ from cmk.base.automations.check_mk import (
     AutomationAnalyzeServiceRuleMatches,
 )
 from cmk.ccc.hostaddress import HostName
+from cmk.gui.config import active_config
 from cmk.gui.watolib import rulesets
-from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree
+from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree, HostsAndFoldersConfig
 from cmk.gui.watolib.rulesets import FolderRulesets, Rule, RuleConditions, RuleOptions, Ruleset
 from cmk.utils.labels import Labels
 from cmk.utils.paths import default_config_dir
@@ -53,7 +54,9 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
     "request_context", "with_admin_login", "mock_analyze_host_rule_matches_automation"
 )
 def test_analyse_host_ruleset() -> None:
-    ruleset = _test_host_ruleset(folder := FolderTree().root_folder())
+    ruleset = _test_host_ruleset(
+        folder := FolderTree(config=HostsAndFoldersConfig.from_config(active_config)).root_folder()
+    )
     _test_hosts(folder)
     (default_config_dir / "main.mk").touch()
     FolderRulesets({ruleset.name: ruleset}, folder=folder).save_folder(
@@ -177,7 +180,9 @@ def fixture_mock_analyze_service_rule_matches_automation(monkeypatch: pytest.Mon
     "request_context", "with_admin_login", "mock_analyze_service_rule_matches_automation"
 )
 def test_analyse_service_ruleset() -> None:
-    ruleset = _test_service_ruleset(folder := FolderTree().root_folder())
+    ruleset = _test_service_ruleset(
+        folder := FolderTree(config=HostsAndFoldersConfig.from_config(active_config)).root_folder()
+    )
     _test_hosts(folder)
     (default_config_dir / "main.mk").touch()
     FolderRulesets({ruleset.name: ruleset}, folder=folder).save_folder(

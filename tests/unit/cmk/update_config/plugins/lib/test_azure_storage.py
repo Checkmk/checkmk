@@ -6,8 +6,9 @@ import logging
 
 import pytest
 
+from cmk.gui.config import active_config
 from cmk.gui.utils.script_helpers import gui_context
-from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree
+from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree, HostsAndFoldersConfig
 from cmk.gui.watolib.rulesets import AllRulesets, Rule
 from cmk.update_config.plugins.lib.azure_storage import AzureStorageMigration
 
@@ -78,7 +79,11 @@ def test_migrate(
         for rule in old_ruleset.rules:
             old_ruleset.delete_rule(rule, create_change=True, use_git=False)
 
-        folder = Folder.load(tree=FolderTree(), name="Main", parent_folder=None)
+        folder = Folder.load(
+            tree=FolderTree(config=HostsAndFoldersConfig.from_config(active_config)),
+            name="Main",
+            parent_folder=None,
+        )
         old_rule = Rule.from_ruleset(
             folder, old_ruleset, old_ruleset.rulespec.valuespec.default_value()
         )

@@ -9,7 +9,7 @@ from typing import override
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.config import active_config
 from cmk.gui.watolib.check_mk_automations import delete_hosts
-from cmk.gui.watolib.hosts_and_folders import FolderTree
+from cmk.gui.watolib.hosts_and_folders import FolderTree, HostsAndFoldersConfig
 from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.utils.log import VERBOSE
@@ -18,7 +18,11 @@ from cmk.utils.log import VERBOSE
 class RemoveInvalidHost(UpdateAction):
     @override
     def __call__(self, logger: Logger) -> None:
-        for folder_path, folder in FolderTree().all_folders().items():
+        for folder_path, folder in (
+            FolderTree(config=HostsAndFoldersConfig.from_config(active_config))
+            .all_folders()
+            .items()
+        ):
             if folder.has_host(HostName("")):
                 folder.delete_hosts(
                     [HostName("")],

@@ -558,6 +558,7 @@ def test_windows_artifacts_are_signed(package_path: str, cmk_version: str) -> No
         mk_sql_temp.write(
             _get_file_from_package(package_path, cmk_version, f"{path_prefix}/{mk_sql}")
         )
+        mk_sql_temp.flush()
         signing_failures.append(_verify_signature(Path(mk_sql_temp.name)))
 
     # TODO: Clarify why the msi is missing in the source.tar.gz CMK-26785
@@ -568,6 +569,7 @@ def test_windows_artifacts_are_signed(package_path: str, cmk_version: str) -> No
                     package_path, cmk_version, f"{path_prefix}/check_mk_agent.msi"
                 )
             )
+            msi_file.flush()
             signing_failures.append(_verify_signature(Path(msi_file.name)))
             with TemporaryDirectory() as msi_content:
                 subprocess.run(

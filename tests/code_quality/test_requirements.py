@@ -10,7 +10,6 @@
 
 import ast
 import csv
-import logging
 import re
 import warnings
 from collections import defaultdict
@@ -232,20 +231,12 @@ def imports_for_file(path: Path) -> set[ImportName]:
 
     # We don't care about warnings from 3rd party packages
     with path.open("rb") as source_file, warnings.catch_warnings():
-        try:
-            # NOTE: In summary, this takes quite some time: parse: 5s, scan: 3.3s
-            return {
-                toplevel_importname(imp)
-                for node in ast.walk(ast.parse(source_file.read(), str(path)))
-                for imp in imports_for_node(node)
-            }
-        except SyntaxError as e:
-            # We have various py2 scripts which raise SyntaxErrors.
-            # e.g. agents/pugins/*_2.py also some google test stuff...
-            # If we should check them they would fail the unittests,
-            # providing a whitelist here is not really maintainable
-            logging.getLogger().warning("Failed to read %r: %r", source_file, e)
-            return set()
+        # NOTE: In summary, this takes quite some time: parse: 5s, scan: 3.3s
+        return {
+            toplevel_importname(imp)
+            for node in ast.walk(ast.parse(source_file.read(), str(path)))
+            for imp in imports_for_node(node)
+        }
 
 
 @cache

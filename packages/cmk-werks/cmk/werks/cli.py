@@ -960,7 +960,8 @@ def werk_cherry_pick(commit_id: str, no_commit: bool, werk_version: WerkVersion)
 
 
 def current_branch() -> str:
-    return [line for line in os.popen("git branch") if line.startswith("*")][0].split()[-1]
+    result = subprocess.run(["git", "branch", "--show-current"], check=True, capture_output=True)
+    return result.stdout.strip().decode("utf-8")
 
 
 def current_repo() -> str:

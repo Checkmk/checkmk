@@ -91208,6 +91208,10 @@ msgstr "Aggiungi al cruscotto"
 msgid "Edit required runtime filters"
 msgstr "Filtri di contesto richiesti"
 
+#, fuzzy
+msgid "Override dashboard filters"
+msgstr "Cruscotti correlati"
+
 msgid "Success! Your runtime filters have been applied"
 msgstr ""
 

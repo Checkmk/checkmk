@@ -91847,6 +91847,10 @@ msgstr "Ligação ao tablier"
 msgid "Edit required runtime filters"
 msgstr "Filtros de contexto requeridos"
 
+#, fuzzy
+msgid "Override dashboard filters"
+msgstr "Painéis de controlo relacionados"
+
 msgid "Success! Your runtime filters have been applied"
 msgstr ""
 

@@ -92201,6 +92201,10 @@ msgstr "Adăugați la tabloul de bord"
 msgid "Edit required runtime filters"
 msgstr "Filtre de context necesare"
 
+#, fuzzy
+msgid "Override dashboard filters"
+msgstr "Tablouri de bord conexe"
+
 msgid "Success! Your runtime filters have been applied"
 msgstr ""
 

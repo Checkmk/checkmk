@@ -92773,6 +92773,10 @@ msgstr "Lien vers le tableau de bord"
 msgid "Edit required runtime filters"
 msgstr "Filtres contextuels requis"
 
+#, fuzzy
+msgid "Override dashboard filters"
+msgstr "Tableaux de bord connexes"
+
 msgid "Success! Your runtime filters have been applied"
 msgstr ""
 

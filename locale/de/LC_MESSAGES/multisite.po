@@ -88465,6 +88465,10 @@ msgstr "Auf das Dashboard anwenden"
 msgid "Edit required runtime filters"
 msgstr "Erforderliche Laufzeitfilter bearbeiten"
 
+#, fuzzy
+msgid "Override dashboard filters"
+msgstr "Erstelle & setze Dashboard-Filter"
+
 msgid "Success! Your runtime filters have been applied"
 msgstr ""
 

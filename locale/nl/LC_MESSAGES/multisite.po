@@ -91957,6 +91957,10 @@ msgstr "Link naar dashboard"
 msgid "Edit required runtime filters"
 msgstr "Vereiste context filters"
 
+#, fuzzy
+msgid "Override dashboard filters"
+msgstr "Gerelateerde dashboards"
+
 msgid "Success! Your runtime filters have been applied"
 msgstr ""
 

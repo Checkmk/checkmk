@@ -92688,6 +92688,10 @@ msgstr "Enlace al panel de control"
 msgid "Edit required runtime filters"
 msgstr "Filtros de contexto necesarios"
 
+#, fuzzy
+msgid "Override dashboard filters"
+msgstr "Cuadros de mando relacionados"
+
 msgid "Success! Your runtime filters have been applied"
 msgstr ""
 

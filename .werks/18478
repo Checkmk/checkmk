@@ -1,0 +1,17 @@
+Title: ibm_storage_ts_drive: handle empty string for read/write errors
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1760958612
+Edition: cre
+Level: 1
+Version: 2.2.0p47
+
+A customer reported that IBM TS3100 tape library devices return an empty string
+instead of the number of recovered write errors. This happens sporadically and
+the correct number of recovered write errors is reported in the next check
+cycle.
+
+Prior to this werk the plugin was crashing in that situation, now the check
+will return state "unknown" and the summary will indicate that it received an
+empty string.

@@ -129,20 +129,24 @@ def inventory_ibm_storage_ts_drive(info):
         yield entry, None
 
 
+def _check_counter(state, message, counter):
+    if counter == "":
+        yield 3, message.format("got empty string for")
+        return
+    if counter != "0":
+        yield state, message.format(counter)
+
+
 def check_ibm_storage_ts_drive(item, params, info):
     for line in info[3]:
         if item == line[0]:
             serial = line[1]
-            write_warn, write_err, read_warn, read_err = map(int, line[2:])
             yield 0, "S/N: %s" % serial
-            if write_err > 0:
-                yield 2, "%d hard write errors" % write_err
-            if write_warn > 0:
-                yield 1, "%d recovered write errors" % write_warn
-            if read_err > 0:
-                yield 2, "%d hard read errors" % read_err
-            if read_warn > 0:
-                yield 1, "%d recovered read errors" % read_warn
+            write_warn, write_err, read_warn, read_err = line[2:]
+            yield from _check_counter(2, "{} hard write errors", write_err)
+            yield from _check_counter(1, "{} recovered write errors", write_warn)
+            yield from _check_counter(2, "{} hard read errors", read_err)
+            yield from _check_counter(1, "{} recovered read errors", read_warn)
 
 
 check_info["ibm_storage_ts.drive"] = {

@@ -240,9 +240,7 @@ def _reset_cache_for_folders_and_hosts_setup() -> None:
 
     if hasattr(g, "folder_tree"):
         g.folder_tree.invalidate_caches()
-
-    if hasattr(g, "wato_redis_client"):
-        del g.wato_redis_client
+        g.folder_tree.reset_redis_client()
 
 
 class CmkTestResponse(TestResponse):

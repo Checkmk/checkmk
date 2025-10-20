@@ -1011,7 +1011,7 @@ def get_fake_setup_redis_client(
         mock_redis_client = MockRedisClient(redis_answers)
         monkeypatch.setattr(hosts_and_folders._RedisHelper, "_cache_integrity_ok", lambda x: True)
         tree = folder_tree()
-        redis_helper = hosts_and_folders.get_wato_redis_client(tree)
+        redis_helper = tree.redis_client
         monkeypatch.setattr(redis_helper, "_client", mock_redis_client)
         monkeypatch.setattr(redis_helper, "_folder_paths", [f"{x}/" for x in all_folders.keys()])
         monkeypatch.setattr(

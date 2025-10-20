@@ -71,7 +71,6 @@ from .hosts_and_folders import (
     Folder,
     folder_preserving_link,
     folder_tree,
-    get_wato_redis_client,
     Host,
     may_use_redis,
 )
@@ -534,7 +533,7 @@ class AllRulesets(RulesetCollection):
         # Note: The sort order of the folders does not matter here
         #       self._load_folder_rulesets ultimately puts each folder into a dict
         #       and groups/sorts them later on with a different mechanism
-        all_folders = get_wato_redis_client(tree).recursive_subfolders_for_path(
+        all_folders = tree.redis_client.recursive_subfolders_for_path(
             f"{folder.path()}/".lstrip("/")
         )
 
@@ -621,7 +620,7 @@ class SingleRulesetRecursively(RulesetCollection):
         # Note: The sort order of the folders does not matter here
         #       self._load_folder_rulesets ultimately puts each folder into a dict
         #       and groups/sorts them later on with a different mechanism
-        all_folders = get_wato_redis_client(tree).recursive_subfolders_for_path(
+        all_folders = tree.redis_client.recursive_subfolders_for_path(
             f"{folder.path()}/".lstrip("/")
         )
 
@@ -1886,7 +1885,7 @@ class RuleConfigFile(WatoConfigFile[Mapping[RulesetName, Any]]):
             )
         finally:
             if may_use_redis():
-                get_wato_redis_client(folder.tree).folder_updated(folder.filesystem_path())
+                folder.tree.redis_client.folder_updated(folder.filesystem_path())
 
 
 def may_edit_ruleset(varname: str) -> bool:

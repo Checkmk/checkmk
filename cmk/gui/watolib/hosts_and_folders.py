@@ -207,9 +207,7 @@ class FolderMetaData:
     def num_hosts_recursively(self) -> int:
         if self._num_hosts_recursively is None:
             if may_use_redis():
-                self._num_hosts_recursively = get_wato_redis_client(
-                    self.tree
-                ).num_hosts_recursively_lua(
+                self._num_hosts_recursively = self.tree.redis_client.num_hosts_recursively_lua(
                     self._path,
                     skip_permission_checks=(
                         user.may("wato.see_all_folders")
@@ -953,12 +951,6 @@ def update_metadata(
     return attributes
 
 
-def get_wato_redis_client(tree: FolderTree) -> _RedisHelper:
-    if "wato_redis_client" not in g:
-        g.wato_redis_client = _RedisHelper(tree)
-    return g.wato_redis_client
-
-
 class WATOHosts(TypedDict):
     locked: bool
     host_attributes: Mapping[HostName, HostAttributes]
@@ -997,13 +989,13 @@ def _wato_folders_factory(tree: FolderTree) -> Mapping[PathWithoutSlash, Folder]
     if not may_use_redis():
         return _get_fully_loaded_wato_folders(tree)
 
-    wato_redis_client = get_wato_redis_client(tree)
-    if wato_redis_client.loaded_wato_folders is not None:
+    redis_client = tree.redis_client
+    if redis_client.loaded_wato_folders is not None:
         # Folders were already completely loaded during cache generation -> use these
-        return wato_redis_client.loaded_wato_folders
+        return redis_client.loaded_wato_folders
 
     # Provide a dict where the values are generated on demand
-    return WATOFoldersOnDemand(tree, {x.rstrip("/"): None for x in wato_redis_client.folder_paths})
+    return WATOFoldersOnDemand(tree, {x.rstrip("/"): None for x in redis_client.folder_paths})
 
 
 def _core_settings_hosts_to_update(hostnames: Sequence[HostName]) -> DomainSettings:
@@ -1017,6 +1009,13 @@ class FolderTree:
         self._root_dir = _ensure_trailing_slash(root_dir if root_dir else str(wato_root_dir()))
         self._config = config
         self._all_host_attributes: dict[str, ABCHostAttribute] | None = None
+        self._redis_client: _RedisHelper | None = None
+
+    @property
+    def redis_client(self) -> _RedisHelper:
+        if self._redis_client is None:
+            self._redis_client = _RedisHelper(self)
+        return self._redis_client
 
     def all_folders(self) -> Mapping[PathWithoutSlash, Folder]:
         if "wato_folders" not in g:
@@ -1076,11 +1075,14 @@ class FolderTree:
         # to the recursive .drop_caches missing them them.
         self.root_folder().drop_caches()
         if may_use_redis():
-            get_wato_redis_client(self).clear_cached_folders()
+            self.redis_client.clear_cached_folders()
         g.pop("wato_folders", {})
         for cache_id in ["folder_choices", "folder_choices_full_title"]:
             g.pop(cache_id, None)
         self._all_host_attributes = None
+
+    def reset_redis_client(self) -> None:
+        self._redis_client = None
 
     def all_host_attributes(self) -> dict[str, ABCHostAttribute]:
         if self._all_host_attributes is None:
@@ -1410,7 +1412,7 @@ class Folder(FolderProtocol):
             self._save_hosts_file(pprint_value=pprint_value)
             if may_use_redis():
                 # Inform redis that the modified-timestamp of the folder has been updated.
-                get_wato_redis_client(self.tree).folder_updated(self.filesystem_path())
+                self.tree.redis_client.folder_updated(self.filesystem_path())
 
         call_hook_hosts_changed(self)
 
@@ -1650,7 +1652,7 @@ class Folder(FolderProtocol):
         Path(self.wato_info_path()).parent.mkdir(mode=0o770, parents=True, exist_ok=True)
         self.wato_info_storage_manager().write(Path(self.wato_info_path()), self.serialize())
         if may_use_redis():
-            get_wato_redis_client(self.tree).save_folder_info(self)
+            self.tree.redis_client.save_folder_info(self)
 
     def has_rules(self) -> bool:
         return self.rules_file_path().exists()
@@ -1771,7 +1773,7 @@ class Folder(FolderProtocol):
 
     def num_hosts_recursively(self) -> int:
         if may_use_redis():
-            if folder_metadata := get_wato_redis_client(self.tree).folder_metadata(self.path()):
+            if folder_metadata := self.tree.redis_client.folder_metadata(self.path()):
                 return folder_metadata.num_hosts_recursively
             return 0
 
@@ -1917,7 +1919,7 @@ class Folder(FolderProtocol):
 
         if may_use_redis():
             return self._get_sorted_choices(
-                get_wato_redis_client(self.tree).choices_for_moving(
+                self.tree.redis_client.choices_for_moving(
                     self.path(),
                     _MoveType(what),
                     may_see_all_folders=user.may("wato.all_folders"),

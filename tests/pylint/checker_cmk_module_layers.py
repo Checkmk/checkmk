@@ -567,6 +567,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.checkengine",
         "cmk.gui",
         "cmk.inventory",
+        "cmk.shared_typing.vue_formspec_components",
         "cmk.utils.dateutils",
         "cmk.utils.paths",
         "cmk.utils.rulesets",
@@ -576,6 +577,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_CCC,
         *PACKAGE_PLUGIN_APIS,
         "cmk.gui",
+        "cmk.shared_typing.vue_formspec_components",
         "cmk.utils.cee",
         "cmk.utils.mrpe_config",
         "cmk.utils.paths",
@@ -583,7 +585,9 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.rulesets",
     ),
     Component("cmk.gui.cce.plugins"): _allow(
+        *PACKAGE_PLUGIN_APIS,
         "cmk.gui",
+        "cmk.shared_typing.vue_formspec_components",
     ),
     Component("cmk.gui.cee"): _allow(
         *PACKAGE_CCC,

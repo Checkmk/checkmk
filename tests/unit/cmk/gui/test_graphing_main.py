@@ -3,15 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.graphing import v1 as graphing_api
+from cmk.graphing.v1 import graphs as graphs_api
+from cmk.graphing.v1 import metrics as metrics_api
 from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api
-from cmk.gui.graphing._graph_templates import get_graph_template_from_id, GraphTemplate
+from cmk.gui.graphing._graph_templates import get_graph_plugin_from_id
 from cmk.gui.graphing._legacy import check_metrics
-from cmk.gui.graphing._metric_expressions import (
-    CriticalOf,
-    Metric,
-    MetricExpression,
-    WarningOf,
-)
 from cmk.gui.graphing._metrics import get_metric_spec
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.graphing_main import _add_graphing_plugins, _load_graphing_plugins
@@ -55,41 +52,13 @@ def test_add_graphing_plugins() -> None:
         "write_latency": {"scale": 0.001},
     }
 
-    graph_template = get_graph_template_from_id(
-        "db_connections",
-        metrics_from_api,
-        graphs_from_api,
-    )
-    assert graph_template == GraphTemplate(
-        id="db_connections",
-        title="DB Connections",
-        scalars=[
-            MetricExpression(
-                WarningOf(Metric("active_connections")),
-                line_type="line",
-                title="Warning of Active connections",
-            ),
-            MetricExpression(
-                CriticalOf(Metric("active_connections")),
-                line_type="line",
-                title="Critical of Active connections",
-            ),
-        ],
-        conflicting_metrics=(),
-        optional_metrics=(),
-        consolidation_function=None,
-        range=None,
-        omit_zero_metrics=False,
-        metrics=[
-            MetricExpression(
-                Metric("active_connections"),
-                line_type="line",
-                title="Active connections",
-            ),
-            MetricExpression(
-                Metric("idle_connections"),
-                line_type="line",
-                title="Idle connections",
-            ),
+    assert get_graph_plugin_from_id(graphs_from_api, "db_connections") == graphs_api.Graph(
+        name="db_connections",
+        title=graphing_api.Title("DB Connections"),
+        simple_lines=[
+            "active_connections",
+            "idle_connections",
+            metrics_api.WarningOf("active_connections"),
+            metrics_api.CriticalOf("active_connections"),
         ],
     )

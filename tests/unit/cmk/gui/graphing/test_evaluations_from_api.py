@@ -422,7 +422,7 @@ def test_evaluate_graph_plugin_scalars(
                             precision=AutoPrecision(digits=2),
                         ),
                         color="#123456",
-                    )
+                    ),
                 ],
                 metric_names=["metric"],
             ),
@@ -611,7 +611,7 @@ def test_evaluate_graph_plugin_scalars(
                         color="#222222",
                     ),
                 ],
-                metric_names=["metric_upper", "metric_lower"],
+                metric_names=["metric_lower", "metric_upper"],
             ),
             id="bidrectional-with-graphed-metrics",
         ),
@@ -628,6 +628,7 @@ def test_evaluate_graph_plugin_metrics(
             SiteId("site-id"),
             HostName("host-name"),
             ServiceName("service-name"),
+            "max",
             graph_plugin,
             translated_metrics,
         )

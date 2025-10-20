@@ -300,6 +300,34 @@ def _evaluate_quantity(
             )
 
 
+def _create_quantity_id(
+    quantity: Quantity, consolidation_function: GraphConsolidationFunction
+) -> str:
+    match quantity:
+        case str():
+            return f"Metric({quantity},{consolidation_function})"
+        case metrics_api.Constant():
+            return f"Constant({quantity.value})"
+        case metrics_api.WarningOf():
+            return f"WarningOf({_create_quantity_id(quantity.metric_name, consolidation_function)})"
+        case metrics_api.CriticalOf():
+            return (
+                f"CriticalOf({_create_quantity_id(quantity.metric_name, consolidation_function)})"
+            )
+        case metrics_api.MinimumOf():
+            return f"MinimumOf({_create_quantity_id(quantity.metric_name, consolidation_function)})"
+        case metrics_api.MaximumOf():
+            return f"MaximumOf({_create_quantity_id(quantity.metric_name, consolidation_function)})"
+        case metrics_api.Sum():
+            return f"Sum({','.join(_create_quantity_id(s, consolidation_function) for s in quantity.summands)})"
+        case metrics_api.Product():
+            return f"Product({','.join(_create_quantity_id(f, consolidation_function) for f in quantity.factors)})"
+        case metrics_api.Difference():
+            return f"Difference({_create_quantity_id(quantity.minuend, consolidation_function)},{_create_quantity_id(quantity.subtrahend, consolidation_function)})"
+        case metrics_api.Fraction():
+            return f"Fraction({_create_quantity_id(quantity.dividend, consolidation_function)},{_create_quantity_id(quantity.divisor, consolidation_function)})"
+
+
 def extract_raw_expressions_from_graph_title(title: str) -> list[str]:
     return re.findall(r"_EXPRESSION:\{.*?\}", title)
 
@@ -449,6 +477,24 @@ def _is_scalar(quantity: Quantity) -> bool:
             return _is_scalar(quantity.dividend) and _is_scalar(quantity.divisor)
 
 
+def _collect_graph_metrics(graph: graphs_api.Graph) -> Sequence[Quantity]:
+    return [q for q in graph.compound_lines if not _is_scalar(q)] + [
+        q for q in graph.simple_lines if not _is_scalar(q)
+    ]
+
+
+def collect_graph_plugin_metrics(
+    graph_plugin: graphs_api.Graph | graphs_api.Bidirectional,
+) -> Sequence[Quantity]:
+    match graph_plugin:
+        case graphs_api.Graph():
+            return _collect_graph_metrics(graph_plugin)
+        case graphs_api.Bidirectional():
+            return list(_collect_graph_metrics(graph_plugin.upper)) + list(
+                _collect_graph_metrics(graph_plugin.lower)
+            )
+
+
 def _evaluate_graph_scalars(
     registered_metrics: Mapping[str, RegisteredMetric],
     graph: graphs_api.Graph,
@@ -524,7 +570,7 @@ def _to_graph_metric_expression(
     host_name: HostName,
     service_name: ServiceName,
     translated_metrics: Mapping[str, TranslatedMetric],
-    consolidation_function: GraphConsolidationFunction | None,
+    consolidation_function: GraphConsolidationFunction,
     quantity: Quantity,
 ) -> GraphMetricExpression:
     # TODO remove duplicate eval
@@ -666,9 +712,15 @@ def _extract_metric_names(quantity: Quantity) -> Iterator[str]:
 
 
 @dataclass(frozen=True)
-class GraphedMetrics:
-    graph_metrics: Sequence[GraphMetric]
-    metric_names: Sequence[str]
+class GraphMetricWithId:
+    ident: str
+    graph_metric: GraphMetric
+
+
+@dataclass(frozen=True)
+class _GraphedMetricsWithIds:
+    graph_metrics: Sequence[GraphMetricWithId]
+    metric_names: frozenset[str]
 
 
 def _evaluate_graph_lines(
@@ -676,11 +728,12 @@ def _evaluate_graph_lines(
     site_id: SiteId,
     host_name: HostName,
     service_name: ServiceName,
+    consolidation_function: GraphConsolidationFunction,
     translated_metrics: Mapping[str, TranslatedMetric],
     optional: Sequence[str],
     quantities: Sequence[Quantity],
     line_type: Literal["stack", "-stack", "line", "-line"],
-) -> Result[GraphedMetrics, EvaluationError]:
+) -> Result[_GraphedMetricsWithIds, EvaluationError]:
     graph_metrics = []
     graphed_metric_names: set[str] = set()
     for quantity in quantities:
@@ -698,24 +751,27 @@ def _evaluate_graph_lines(
                 )
             )
         graph_metrics.append(
-            GraphMetric(
-                title=result.ok.title,
-                line_type=line_type,
-                operation=_to_graph_metric_expression(
-                    registered_metrics,
-                    site_id,
-                    host_name,
-                    service_name,
-                    translated_metrics,
-                    "max",
-                    quantity,
+            GraphMetricWithId(
+                _create_quantity_id(quantity, consolidation_function),
+                GraphMetric(
+                    title=result.ok.title,
+                    line_type=line_type,
+                    operation=_to_graph_metric_expression(
+                        registered_metrics,
+                        site_id,
+                        host_name,
+                        service_name,
+                        translated_metrics,
+                        consolidation_function,
+                        quantity,
+                    ),
+                    unit=result.ok.unit,
+                    color=result.ok.color,
                 ),
-                unit=result.ok.unit,
-                color=result.ok.color,
             )
         )
         graphed_metric_names.update(_extract_metric_names(quantity))
-    return OK(GraphedMetrics(graph_metrics, list(graphed_metric_names)))
+    return OK(_GraphedMetricsWithIds(graph_metrics, frozenset(graphed_metric_names)))
 
 
 def _evaluate_predictive_metrics(
@@ -723,10 +779,11 @@ def _evaluate_predictive_metrics(
     site_id: SiteId,
     host_name: HostName,
     service_name: ServiceName,
+    consolidation_function: GraphConsolidationFunction,
     translated_metrics: Mapping[str, TranslatedMetric],
     metric_names: Sequence[str],
     line_type: Literal["line", "-line"],
-) -> tuple[Sequence[GraphMetric], set[str]]:
+) -> _GraphedMetricsWithIds:
     graph_metrics = []
     graphed_metric_names: set[str] = set()
     for metric_name in metric_names:
@@ -737,24 +794,27 @@ def _evaluate_predictive_metrics(
                 )
             ).is_ok():
                 graph_metrics.append(
-                    GraphMetric(
-                        title=result.ok.title,
-                        line_type=line_type,
-                        operation=_to_graph_metric_expression(
-                            registered_metrics,
-                            site_id,
-                            host_name,
-                            service_name,
-                            translated_metrics,
-                            "max",
-                            predictive_metric_name,
+                    GraphMetricWithId(
+                        _create_quantity_id(predictive_metric_name, consolidation_function),
+                        GraphMetric(
+                            title=result.ok.title,
+                            line_type=line_type,
+                            operation=_to_graph_metric_expression(
+                                registered_metrics,
+                                site_id,
+                                host_name,
+                                service_name,
+                                translated_metrics,
+                                consolidation_function,
+                                predictive_metric_name,
+                            ),
+                            unit=result.ok.unit,
+                            color=result.ok.color,
                         ),
-                        unit=result.ok.unit,
-                        color=result.ok.color,
                     )
                 )
                 graphed_metric_names.add(predictive_metric_name)
-    return graph_metrics, graphed_metric_names
+    return _GraphedMetricsWithIds(graph_metrics, frozenset(graphed_metric_names))
 
 
 def _evaluate_graph_metrics(
@@ -762,15 +822,16 @@ def _evaluate_graph_metrics(
     site_id: SiteId,
     host_name: HostName,
     service_name: ServiceName,
+    consolidation_function: GraphConsolidationFunction,
     graph: graphs_api.Graph,
     translated_metrics: Mapping[str, TranslatedMetric],
     *,
     mirrored: bool,
-) -> GraphedMetrics:
+) -> _GraphedMetricsWithIds:
     # Skip early on conflicting_metrics
     for var in graph.conflicting:
         if var in translated_metrics:
-            return GraphedMetrics([], [])
+            return _GraphedMetricsWithIds([], frozenset())
 
     if (
         result_compound_lines := _evaluate_graph_lines(
@@ -778,13 +839,14 @@ def _evaluate_graph_metrics(
             site_id,
             host_name,
             service_name,
+            consolidation_function,
             translated_metrics,
             graph.optional,
             graph.compound_lines,
             "-stack" if mirrored else "stack",
         )
     ).is_error():
-        return GraphedMetrics([], [])
+        return _GraphedMetricsWithIds([], frozenset())
 
     if (
         result_simple_lines := _evaluate_graph_lines(
@@ -792,19 +854,21 @@ def _evaluate_graph_metrics(
             site_id,
             host_name,
             service_name,
+            consolidation_function,
             translated_metrics,
             graph.optional,
             graph.simple_lines,
             "-line" if mirrored else "line",
         )
     ).is_error():
-        return GraphedMetrics([], [])
+        return _GraphedMetricsWithIds([], frozenset())
 
-    predictive_graph_metrics, predictive_graphed_metrics = _evaluate_predictive_metrics(
+    predictive_graphed_metrics = _evaluate_predictive_metrics(
         registered_metrics,
         site_id,
         host_name,
         service_name,
+        consolidation_function,
         translated_metrics,
         sorted(
             set(result_compound_lines.ok.metric_names).union(result_simple_lines.ok.metric_names)
@@ -812,18 +876,24 @@ def _evaluate_graph_metrics(
         "-line" if mirrored else "line",
     )
 
-    return GraphedMetrics(
+    return _GraphedMetricsWithIds(
         (
             list(result_compound_lines.ok.graph_metrics)
             + list(result_simple_lines.ok.graph_metrics)
-            + list(predictive_graph_metrics)
+            + list(predictive_graphed_metrics.graph_metrics)
         ),
-        sorted(
-            set(result_compound_lines.ok.metric_names)
-            .union(result_simple_lines.ok.metric_names)
-            .union(predictive_graphed_metrics)
+        (
+            result_compound_lines.ok.metric_names.union(result_simple_lines.ok.metric_names).union(
+                predictive_graphed_metrics.metric_names
+            )
         ),
     )
+
+
+@dataclass(frozen=True)
+class GraphedMetrics:
+    graph_metrics: Sequence[GraphMetric]
+    metric_names: Sequence[str]
 
 
 def evaluate_graph_plugin_metrics(
@@ -831,19 +901,25 @@ def evaluate_graph_plugin_metrics(
     site_id: SiteId,
     host_name: HostName,
     service_name: ServiceName,
+    consolidation_function: GraphConsolidationFunction,
     graph_plugin: graphs_api.Graph | graphs_api.Bidirectional,
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> GraphedMetrics:
     match graph_plugin:
         case graphs_api.Graph():
-            return _evaluate_graph_metrics(
+            graphed_metrics = _evaluate_graph_metrics(
                 registered_metrics,
                 site_id,
                 host_name,
                 service_name,
+                consolidation_function,
                 graph_plugin,
                 translated_metrics,
                 mirrored=False,
+            )
+            return GraphedMetrics(
+                [gmwi.graph_metric for gmwi in graphed_metrics.graph_metrics],
+                sorted(graphed_metrics.metric_names),
             )
         case graphs_api.Bidirectional():
             graphed_metrics_upper = _evaluate_graph_metrics(
@@ -851,6 +927,7 @@ def evaluate_graph_plugin_metrics(
                 site_id,
                 host_name,
                 service_name,
+                consolidation_function,
                 graph_plugin.upper,
                 translated_metrics,
                 mirrored=False,
@@ -860,17 +937,63 @@ def evaluate_graph_plugin_metrics(
                 site_id,
                 host_name,
                 service_name,
+                consolidation_function,
                 graph_plugin.lower,
                 translated_metrics,
                 mirrored=True,
             )
             return GraphedMetrics(
                 (
-                    list(graphed_metrics_upper.graph_metrics)
-                    + list(graphed_metrics_lower.graph_metrics)
+                    [gmwi.graph_metric for gmwi in graphed_metrics_upper.graph_metrics]
+                    + [gmwi.graph_metric for gmwi in graphed_metrics_lower.graph_metrics]
                 ),
-                (
-                    list(graphed_metrics_upper.metric_names)
-                    + list(graphed_metrics_lower.metric_names)
+                sorted(
+                    graphed_metrics_upper.metric_names.union(graphed_metrics_lower.metric_names)
                 ),
             )
+
+
+def evaluate_graph_plugin_metrics_with_ids(
+    registered_metrics: Mapping[str, RegisteredMetric],
+    site_id: SiteId,
+    host_name: HostName,
+    service_name: ServiceName,
+    consolidation_function: GraphConsolidationFunction,
+    graph_plugin: graphs_api.Graph | graphs_api.Bidirectional,
+    translated_metrics: Mapping[str, TranslatedMetric],
+) -> Sequence[GraphMetricWithId]:
+    # TODO CMK-26857
+    match graph_plugin:
+        case graphs_api.Graph():
+            return _evaluate_graph_metrics(
+                registered_metrics,
+                site_id,
+                host_name,
+                service_name,
+                consolidation_function,
+                graph_plugin,
+                translated_metrics,
+                mirrored=False,
+            ).graph_metrics
+        case graphs_api.Bidirectional():
+            graph_metrics_upper = _evaluate_graph_metrics(
+                registered_metrics,
+                site_id,
+                host_name,
+                service_name,
+                consolidation_function,
+                graph_plugin.upper,
+                translated_metrics,
+                mirrored=False,
+            ).graph_metrics
+            graph_metrics_lower = _evaluate_graph_metrics(
+                registered_metrics,
+                site_id,
+                host_name,
+                service_name,
+                consolidation_function,
+                graph_plugin.lower,
+                translated_metrics,
+                mirrored=True,
+            ).graph_metrics
+            return list(graph_metrics_upper) + list(graph_metrics_lower)

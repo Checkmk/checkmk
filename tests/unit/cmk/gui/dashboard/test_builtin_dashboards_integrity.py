@@ -10,8 +10,8 @@ from cmk.gui.dashboard.dashlet.dashlets.graph import (
     TemplateGraphDashlet,
     TemplateGraphDashletConfig,
 )
-from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api
-from cmk.gui.graphing._graph_templates import get_graph_template_from_id
+from cmk.gui.graphing._from_api import graphs_from_api
+from cmk.gui.graphing._graph_templates import get_graph_plugin_from_id
 
 
 def test_all_template_graph_dashlets_reference_known_graph_templates() -> None:
@@ -20,8 +20,4 @@ def test_all_template_graph_dashlets_reference_known_graph_templates() -> None:
             if dashlet_config["type"] == TemplateGraphDashlet.type_name():
                 source = cast(TemplateGraphDashletConfig, dashlet_config)["source"]
                 assert isinstance(source, str), "Graph source must be string identifier"
-                get_graph_template_from_id(
-                    source,
-                    metrics_from_api,
-                    graphs_from_api,
-                )
+                get_graph_plugin_from_id(graphs_from_api, source)

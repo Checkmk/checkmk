@@ -15,7 +15,9 @@ from typing import assert_never, Literal, Self
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.graphing import v1 as graphing_api
 from cmk.graphing.v1 import graphs as graphs_api
+from cmk.graphing.v1 import metrics as metrics_api
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import Row
@@ -288,17 +290,25 @@ def _create_graph_template_from_template_id(template_id: str) -> GraphTemplate:
     )
 
 
-def get_graph_template_from_id(
-    template_id: str,
-    registered_metrics: Mapping[str, RegisteredMetric],
+def get_graph_plugin_from_id(
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
-) -> GraphTemplate:
-    if template_id.startswith("METRIC_"):
-        return _create_graph_template_from_template_id(template_id)
+    graph_id: str,
+) -> graphs_api.Graph | graphs_api.Bidirectional:
+    if graph_id.startswith("METRIC_"):
+        metric_name = graph_id[7:]
+        return graphs_api.Graph(
+            name=graph_id,
+            title=graphing_api.Title(""),
+            compound_lines=[metric_name],
+            simple_lines=[
+                metrics_api.WarningOf(metric_name),
+                metrics_api.CriticalOf(metric_name),
+            ],
+        )
     for name, graph_plugin in _sort_registered_graph_plugins(registered_graphs):
-        if template_id == name:
-            return _parse_graph_plugin(name, graph_plugin, registered_metrics)
-    raise MKGraphNotFound(_("There is no graph plug-in with the id '%s'") % template_id)
+        if graph_id == name:
+            return graph_plugin
+    raise MKGraphNotFound(_("There is no graph plug-in with the id '%s'") % graph_id)
 
 
 def get_graph_plugin_and_single_metric_choices(
@@ -318,6 +328,7 @@ def get_graph_plugin_and_single_metric_choices(
                 site_id,
                 host_name,
                 service_name,
+                "max",
                 graph_plugin,
                 translated_metrics,
             )
@@ -437,6 +448,7 @@ def _compute_graph_recipes(
                 site_id,
                 host_name,
                 service_name,
+                consolidation_function,
                 graph_plugin,
                 translated_metrics,
             )

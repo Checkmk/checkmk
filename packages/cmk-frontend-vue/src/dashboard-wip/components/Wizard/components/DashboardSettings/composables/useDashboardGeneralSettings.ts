@@ -14,8 +14,11 @@ import { isIdInUse, isValidSnakeCase } from '../utils'
 
 const { _t } = usei18n()
 
-export function useDashboardGeneralSettings() {
-  // --- General ---
+export function useDashboardGeneralSettings(initialSettings?: DashboardGeneralSettings) {
+  // shorthand
+  const s = initialSettings
+  console.log('S: ', s)
+
   const name = ref<string>('')
   const nameErrors = ref<string[]>([])
 
@@ -23,15 +26,13 @@ export function useDashboardGeneralSettings() {
   const uniqueId = ref<string>('')
   const uniqueIdErrors = ref<string[]>([])
 
-  const dashboardIcon = ref<string | null>(null)
-  const dashboardEmblem = ref<string | null>(null)
+  const dashboardIcon = ref<string | null>(s?.menu.icon?.name ?? null)
+  const dashboardEmblem = ref<string | null>(s?.menu.icon?.emblem ?? null)
 
-  // --- Visibility ---
-  const showInMonitorMenu = ref<boolean>(false)
-  const monitorMenu = ref<string>('dashboards')
+  const showInMonitorMenu = ref<boolean>(s ? !s.visibility.hide_in_monitor_menu : false)
+  const monitorMenu = ref<string>(s?.menu.topic ?? 'overview')
   const sortIndex = ref<number>(99)
 
-  // --- Validation ---
   const validateName = () => {
     nameErrors.value = []
     if (name.value.trim() === '') {
@@ -69,7 +70,7 @@ export function useDashboardGeneralSettings() {
   }
 
   const buildSettings = (): DashboardGeneralSettings => {
-    const title = {
+    const title: DashboardGeneralSettings['title'] = {
       text: name.value.trim(),
       render: true,
       include_context: false
@@ -83,13 +84,10 @@ export function useDashboardGeneralSettings() {
     }
 
     if (dashboardIcon.value) {
-      const icon: DashboardIcon = {
-        name: dashboardIcon.value
-      }
+      const icon: DashboardIcon = { name: dashboardIcon.value }
       if (dashboardEmblem.value) {
         icon.emblem = dashboardEmblem.value
       }
-
       menu.icon = icon
     }
 
@@ -99,10 +97,12 @@ export function useDashboardGeneralSettings() {
       share: 'no'
     }
 
+    // description is optional and not managed here
     return { title, menu, visibility }
   }
 
   return {
+    // state
     name,
     nameErrors,
     createUniqueId,
@@ -114,6 +114,7 @@ export function useDashboardGeneralSettings() {
     monitorMenu,
     sortIndex,
 
+    // api
     validateGeneralSettings,
     buildSettings
   }

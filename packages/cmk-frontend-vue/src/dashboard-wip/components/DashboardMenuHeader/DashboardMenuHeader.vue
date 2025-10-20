@@ -33,6 +33,7 @@ const props = defineProps<Props>()
 const emit = defineEmits<{
   'open-filter': []
   'open-settings': []
+  'open-clone-workflow': []
   'open-widget-workflow': []
   save: []
   'enter-edit': []
@@ -154,7 +155,15 @@ const pageNavigation = parsePageNavigation()
                 <div class="menu-label">{{ _t('Dashboard settings') }}</div>
               </div>
 
-              <div class="menu-item">
+              <div
+                class="menu-item"
+                @click="
+                  () => {
+                    emit('open-clone-workflow')
+                    hideMenu()
+                  }
+                "
+              >
                 <div class="menu-label">{{ _t('Clone dashboard') }}</div>
               </div>
 

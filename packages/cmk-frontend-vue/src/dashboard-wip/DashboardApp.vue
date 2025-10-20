@@ -18,6 +18,7 @@ import { createWidgetLayout } from '@/dashboard-wip/components/ResponsiveGrid/co
 import AddWidgetDialog from '@/dashboard-wip/components/WidgetWorkflow/StarterDialog/AddWidgetDialog.vue'
 import AddWidgetPage from '@/dashboard-wip/components/WidgetWorkflow/StarterPage/AddWidgetPage.vue'
 import { dashboardWidgetWorkflows } from '@/dashboard-wip/components/WidgetWorkflow/WidgetWorkflowTypes'
+import CloneDashboardWizard from '@/dashboard-wip/components/Wizard/CloneDashboardWizard.vue'
 import CreateDashboardWizard from '@/dashboard-wip/components/Wizard/CreateDashboardWizard.vue'
 import WizardSelector from '@/dashboard-wip/components/WizardSelector/WizardSelector.vue'
 import { widgetTypeToSelectorMatcher } from '@/dashboard-wip/components/WizardSelector/utils.ts'
@@ -28,12 +29,12 @@ import type {
 import { useDashboardFilters } from '@/dashboard-wip/composables/useDashboardFilters.ts'
 import { useDashboardWidgets } from '@/dashboard-wip/composables/useDashboardWidgets.ts'
 import { useDashboardsManager } from '@/dashboard-wip/composables/useDashboardsManager.ts'
-import type {
-  ContentResponsiveGrid,
-  DashboardGeneralSettings,
+import {
+  type ContentResponsiveGrid,
+  type DashboardGeneralSettings,
   DashboardLayout,
-  DashboardMetadata,
-  DashboardModel
+  type DashboardMetadata,
+  type DashboardModel
 } from '@/dashboard-wip/types/dashboard.ts'
 import { RuntimeFilterMode } from '@/dashboard-wip/types/filter.ts'
 import type { DashboardPageProperties } from '@/dashboard-wip/types/page.ts'
@@ -58,6 +59,7 @@ const openDashboardFilterSettings = ref(false)
 const openDashboardSettings = ref(false)
 const openAddWidgetDialog = ref(false)
 const openDashboardCreationDialog = ref(props.mode === 'create')
+const openDashboardCloneDialog = ref(false)
 const openWizard = ref(false)
 const selectedWizard = ref('')
 const widgetToEdit = ref<string | null>(null)
@@ -243,6 +245,35 @@ const createDashboard = async (
   }
 }
 
+const cloneDashboard = async (
+  dashboardId: string,
+  generalSettings: DashboardGeneralSettings,
+  layout: DashboardLayout,
+  nextStep: 'setFilters' | 'viewList'
+) => {
+  openDashboardCloneDialog.value = false
+  if (layout === DashboardLayout.RELATIVE_GRID) {
+    await dashboardAPI.cloneAsRelativeGridDashboard(
+      dashboardsManager.activeDashboardName.value!,
+      dashboardId,
+      generalSettings
+    )
+  } else {
+    await dashboardAPI.cloneAsResponsiveGridDashboard(
+      dashboardsManager.activeDashboardName.value!,
+      dashboardId,
+      generalSettings
+    )
+  }
+  if (nextStep === 'setFilters') {
+    openDashboardFilterSettings.value = true
+  } else if (nextStep === 'viewList') {
+    redirectToListDashboardsPage()
+  } else {
+    throw new Error(`Unknown next step: ${nextStep}`)
+  }
+}
+
 const redirectToListDashboardsPage = () => {
   window.location.href = props.links.list_dashboards
 }
@@ -304,6 +335,7 @@ function deepClone<T>(obj: T): T {
         :link-navigation-embedding-page="props.links.navigation_embedding_page"
         @open-filter="openDashboardFilterSettings = true"
         @open-settings="openDashboardSettings = true"
+        @open-clone-workflow="openDashboardCloneDialog = true"
         @open-widget-workflow="openAddWidgetDialog = true"
         @save="saveDashboard"
         @enter-edit="isDashboardEditingMode = true"
@@ -317,6 +349,25 @@ function deepClone<T>(obj: T): T {
         :available-layouts="available_layouts"
         @create-dashboard="(...args) => createDashboard(...args)"
         @cancel-creation="redirectToListDashboardsPage"
+      />
+      <CloneDashboardWizard
+        v-if="dashboardsManager.isInitialized.value"
+        v-model:open="openDashboardCloneDialog"
+        :active-dashboard-id="dashboardsManager.activeDashboardName.value || ''"
+        :available-layouts="available_layouts"
+        :reference-dashboard-general-settings="
+          deepClone(dashboardsManager.activeDashboard.value!.general_settings)
+        "
+        :reference-dashboard-restricted-to-single="
+          deepClone(
+            dashboardsManager.activeDashboard.value!.filter_context.restricted_to_single || []
+          )
+        "
+        :reference-dashboard-layout-type="
+          dashboardsManager.activeDashboard.value!.content.layout.type as DashboardLayout
+        "
+        @clone-dashboard="(...args) => cloneDashboard(...args)"
+        @cancel-clone="openDashboardCloneDialog = false"
       />
       <AddWidgetDialog
         v-model:open="openAddWidgetDialog"

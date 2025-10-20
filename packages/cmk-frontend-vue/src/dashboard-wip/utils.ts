@@ -11,6 +11,7 @@ import type {
   CreateRelativeDashboardBody,
   CreateResponsiveDashboardBody,
   DashboardConstants,
+  DashboardGeneralSettings,
   DashboardMetadata,
   DashboardMetadataModel,
   EditRelativeDashboardBody,
@@ -114,6 +115,32 @@ export const dashboardAPI = {
     const response = await fetchRestAPI(url, 'POST', dashboard)
     await response.raiseForStatus()
     return await response.json()
+  },
+  cloneAsRelativeGridDashboard: async (
+    referenceDashboardId: string,
+    dashboardId: string,
+    generalSettings: DashboardGeneralSettings
+  ): Promise<void> => {
+    const url = `${API_ROOT}/domain-types/dashboard_relative_grid/actions/clone/invoke`
+    const response = await fetchRestAPI(url, 'POST', {
+      dashboard_id: dashboardId,
+      reference_dashboard_id: referenceDashboardId,
+      general_settings: generalSettings
+    })
+    await response.raiseForStatus()
+  },
+  cloneAsResponsiveGridDashboard: async (
+    referenceDashboardId: string,
+    dashboardId: string,
+    generalSettings: DashboardGeneralSettings
+  ): Promise<void> => {
+    const url = `${API_ROOT}/domain-types/dashboard_responsive_grid/actions/clone/invoke`
+    const response = await fetchRestAPI(url, 'POST', {
+      dashboard_id: dashboardId,
+      reference_dashboard_id: referenceDashboardId,
+      general_settings: generalSettings
+    })
+    await response.raiseForStatus()
   },
   getDashboardConstants: async (): Promise<DashboardConstants> => {
     const url = `${API_ROOT}/objects/constant/dashboard`

@@ -155,6 +155,7 @@ edition_skel_permissions = {
         "//omd/non-free/packages/cmc:skel.permissions",
         "//omd/non-free/packages/cmk-dcd:skel.permissions",
         "//omd/non-free/packages/cmk-liveproxyd:skel.permissions",
+        "//omd/non-free/packages/saml2:skel.permissions",
         "//omd/packages/jaeger:skel.permissions",
         "//omd/packages/maintenance:skel.permissions",
         "//omd/packages/nagios:skel.permissions",

@@ -21,11 +21,13 @@ from cmk.ccc.site import omd_site
 from cmk.gui.background_job import BackgroundJob, BackgroundStatusSnapshot
 from cmk.gui.config import active_config
 from cmk.gui.http import Response
+from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.background_job.response_schemas import BackgroundJobSnapshotObject
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.site_config import get_site_config, site_is_local
+from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.automations import do_remote_automation
 
 from cmk import fields as gui_fields
@@ -66,11 +68,19 @@ class FieldSiteId:
             FieldSiteId.field_name: FieldSiteId.field_definition,
         }
     ],
+    permissions_required=permissions.AllPerm(
+        [
+            permissions.Perm("background_jobs.manage_jobs"),
+            permissions.Optional(permissions.Perm("background_jobs.delete_jobs")),
+        ]
+    ),
     response_schema=BackgroundJobSnapshotObject,
 )
 def show_background_job_snapshot(params: Mapping[str, Any]) -> Response:
     """Show the last status of a background job"""
+    user.need_permission("background_jobs.manage_jobs")
     job_id = params[JobID.field_name]
+
     if (site_id_value := params.get(FieldSiteId.field_name)) is not None:
         site_id = SiteId(site_id_value)
     else:

@@ -77,6 +77,19 @@ DISCOVERY_PERMISSIONS = permissions.AllPerm(
     ]
 )
 
+RO_PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("wato.edit"),
+        permissions.Perm("wato.services"),
+        permissions.Perm("wato.see_all_folders"),
+        # The permissions below are required to manage BackgroundJobs
+        permissions.Optional(permissions.Perm("background_jobs.stop_jobs")),
+        permissions.Optional(permissions.Perm("background_jobs.stop_foreign_jobs")),
+        permissions.Optional(permissions.Perm("background_jobs.delete_jobs")),
+        permissions.Optional(permissions.Perm("background_jobs.delete_foreign_jobs")),
+    ]
+)
+
 SERVICE_DISCOVERY_PHASES = {
     "undecided": DiscoveryState.UNDECIDED,
     "vanished": DiscoveryState.VANISHED,
@@ -163,9 +176,14 @@ DISCOVERY_ACTION = {
         }
     ],
     additional_status_codes=[400],
+    permissions_required=RO_PERMISSIONS,
 )
 def show_service_discovery_result(params: Mapping[str, Any]) -> Response:
     """Show the current service discovery result"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.services")
+    user.need_permission("wato.see_all_folders")
+
     host = Host.load_host(params["host_name"])
 
     try:
@@ -241,24 +259,24 @@ class UpdateDiscoveryPhase(BaseSchema):
     },
     request_schema=UpdateDiscoveryPhase,
     # TODO: CMK-10911 (permissions)
-    permissions_required=permissions.AnyPerm(
+    permissions_required=permissions.AllPerm(
         [
-            permissions.Optional(
-                permissions.AnyPerm(
-                    [
-                        permissions.Perm("wato.service_discovery_to_monitored"),
-                        permissions.Perm("wato.service_discovery_to_ignored"),
-                        permissions.Perm("wato.service_discovery_to_undecided"),
-                        permissions.Perm("wato.service_discovery_to_removed"),
-                        permissions.Undocumented(permissions.Perm("wato.see_all_folders")),
-                    ]
-                )
-            ),
+            permissions.Perm("wato.service_discovery_to_monitored"),
+            permissions.Perm("wato.service_discovery_to_ignored"),
+            permissions.Perm("wato.service_discovery_to_undecided"),
+            permissions.Perm("wato.service_discovery_to_removed"),
+            permissions.Perm("wato.see_all_folders"),
         ]
     ),
 )
 def update_service_phase(params: Mapping[str, Any]) -> Response:
     """Update the phase of a service"""
+    user.need_permission("wato.service_discovery_to_monitored")
+    user.need_permission("wato.service_discovery_to_ignored")
+    user.need_permission("wato.service_discovery_to_undecided")
+    user.need_permission("wato.service_discovery_to_removed")
+    user.need_permission("wato.see_all_folders")
+
     body = params["body"]
     host = Host.load_host(params["host_name"])
     target_phase = body["target_phase"]
@@ -296,9 +314,13 @@ def _update_single_service_phase(
     tag_group="Setup",
     path_params=[HOST_NAME],
     response_schema=response_schemas.DomainObject,
+    permissions_required=RO_PERMISSIONS,
 )
 def show_service_discovery_run(params: Mapping[str, Any]) -> Response:
     """Show the last service discovery background job on a host"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.services")
+    user.need_permission("wato.see_all_folders")
     host = Host.load_host(params["host_name"])
     snapshot = _job_snapshot(host)
     job_id = snapshot.job_id
@@ -335,12 +357,17 @@ def show_service_discovery_run(params: Mapping[str, Any]) -> Response:
     path_params=[HOST_NAME],
     additional_status_codes=[302],
     output_empty=True,
+    permissions_required=RO_PERMISSIONS,
 )
 def service_discovery_run_wait_for_completion(params: Mapping[str, Any]) -> Response:
     """Wait for service discovery completion
 
     This endpoint will periodically redirect on itself to prevent timeouts.
     """
+    user.need_permission("wato.edit")
+    user.need_permission("wato.services")
+    user.need_permission("wato.see_all_folders")
+
     host = Host.load_host(params["host_name"])
     snapshot = _job_snapshot(host)
     if not snapshot.exists:
